@@ -13,6 +13,7 @@ import RoadBlock from "../Stream/RoadBlock";
 import Dismissable from "../Stream/Dismissable";
 import { upgradeRecommendedDismissed } from "../store/versioning/actions";
 import { VersioningActionsType } from "../store/versioning/types";
+import { ApiVersioningActionsType } from "../store/apiVersioning/types";
 
 addLocaleData(englishLocaleData);
 
@@ -21,6 +22,7 @@ const mapStateToProps = state => ({
 	loggedIn: Boolean(state.session.userId),
 	team: state.teams[state.context.currentTeamId],
 	versioning: state.versioning,
+	apiVersioning: state.apiVersioning,
 	ide: state.ide && state.ide.name ? state.ide.name : undefined
 });
 
@@ -74,6 +76,16 @@ const Root = connect(mapStateToProps)(props => {
 			</RoadBlock>
 		);
 	if (!props.bootstrapped) return <Loading />;
+	if (props.apiVersioning && props.apiVersioning.type === ApiVersioningActionsType.ApiUpgradeRequired)
+		return (
+			<RoadBlock title="API Server Out of Date">
+				<p>
+				Your on-prem installation of CodeStream is running an outdated version of the API server that
+				is incompatible with this version of the CodeStream extension. Please ask your admin to update
+				the API server.
+				</p>
+			</RoadBlock>
+		);
 	if (!props.loggedIn) return <UnauthenticatedRoutes />;
 	if (props.team && props.team.plan === "TRIALEXPIRED")
 		return (

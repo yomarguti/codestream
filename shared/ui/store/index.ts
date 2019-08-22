@@ -1,8 +1,10 @@
+import { ApiVersioningState } from "./apiVersioning/types";
 import { applyMiddleware, createStore } from "redux";
 import { combineReducers } from "redux";
 import { batchedSubscribe } from "redux-batched-subscribe";
 import { composeWithDevTools } from "redux-devtools-extension";
 import thunk from "redux-thunk";
+import { reduceApiVersioning } from "../store/apiVersioning/reducer";
 import { reduceCapabilities, CapabilitiesState } from "../store/capabilities/reducer";
 import { reduceCodemarks } from "../store/codemarks/reducer";
 import { reduceConfigs } from "../store/configs/reducer";
@@ -70,7 +72,8 @@ const reducer = combineReducers({
 	users: reduceUsers,
 	services: reduceServices,
 	providers: reduceProviders,
-	versioning: reduceVersioning
+	versioning: reduceVersioning,
+	apiVersioning: reduceApiVersioning
 });
 
 export function createCodeStreamStore(
@@ -110,4 +113,5 @@ export interface CodeStreamState {
 	services: ServicesState;
 	providers: ProvidersState;
 	versioning: VersioningState;
+	apiVersioning: ApiVersioningState;
 }

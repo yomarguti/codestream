@@ -20,7 +20,11 @@ import {
 } from "../ipc/host.protocol";
 import { HostApi } from "../webview-api";
 import { updateConfigs } from "./configs/actions";
-import { BootstrapRequestType, VersionCompatibility } from "@codestream/protocols/agent";
+import { 
+	ApiVersionCompatibility,
+	BootstrapRequestType,
+	VersionCompatibility
+} from "@codestream/protocols/agent";
 import {
 	BootstrapInHostRequestType,
 	GetActiveEditorContextRequestType
@@ -29,6 +33,7 @@ import { BootstrapActionType } from "./bootstrapped/types";
 import { ValidateSignupInfo, startSSOSignin } from "../Authentication/actions";
 import { uuid } from "../utils";
 import { upgradeRequired } from "../store/versioning/actions";
+import { apiUpgradeRequired } from "../store/apiVersioning/actions";
 
 export const reset = () => action("RESET");
 
@@ -80,6 +85,9 @@ const bootstrapEssentials = (data: BootstrapInHostResponse) => dispatch => {
 
 	if (data.versionCompatibility === VersionCompatibility.UnsupportedUpgradeRequired) {
 		dispatch(upgradeRequired());
+	}
+	if (data.apiVersionCompatibility === ApiVersionCompatibility.ApiUpgradeRequired) {
+		dispatch(apiUpgradeRequired());
 	}
 };
 

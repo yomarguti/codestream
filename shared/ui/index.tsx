@@ -21,6 +21,8 @@ import {
 import { createCodeStreamStore } from "./store";
 import { HostApi } from "./webview-api";
 import {
+	ApiVersionCompatibility,
+	DidChangeApiVersionCompatibilityNotificationType,
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
@@ -32,6 +34,7 @@ import {
 	GetDocumentFromMarkerRequestType
 } from "@codestream/protocols/agent";
 import translations from "./translations/en";
+import { apiUpgradeRequired } from "./store/apiVersioning/actions";
 import { getCodemark } from "./store/codemarks/reducer";
 import { fetchCodemarks, openPanel } from "./Stream/actions";
 import { ContextState } from "./store/context/types";
@@ -92,6 +95,12 @@ export function listenForEvents(store) {
 			store.dispatch(upgradeRecommended());
 		} else if (e.compatibility === VersionCompatibility.UnsupportedUpgradeRequired) {
 			store.dispatch(upgradeRequired());
+		}
+	});
+
+	api.on(DidChangeApiVersionCompatibilityNotificationType, e => {
+		if (e.compatibility === ApiVersionCompatibility.ApiUpgradeRequired) {
+			store.dispatch(apiUpgradeRequired());
 		}
 	});
 

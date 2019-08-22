@@ -1,4 +1,5 @@
 import {
+	ApiVersionCompatibility,
 	Capabilities,
 	CodeStreamEnvironment,
 	ThirdPartyProviders,
@@ -32,6 +33,7 @@ export interface BootstrapInHostResponse {
 		userId?: string;
 	};
 	versionCompatibility?: VersionCompatibility | undefined;
+	apiVersionCompatibility?: ApiVersionCompatibility | undefined;
 }
 
 export const BootstrapInHostRequestType = new RequestType<
