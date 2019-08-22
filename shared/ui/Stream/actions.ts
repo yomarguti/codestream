@@ -493,22 +493,25 @@ export const leaveChannel = (streamId: string) => async (dispatch, getState) => 
 	}
 };
 
-export const removeUsersFromStream = async (streamId: string, userIds: string[]) => {
+export const removeUsersFromStream = (streamId: string, userIds: string[]) => async dispatch => {
 	try {
-		await HostApi.instance.send(UpdateStreamMembershipRequestType, {
+		const { stream } = await HostApi.instance.send(UpdateStreamMembershipRequestType, {
 			streamId,
 			remove: userIds
 		});
-		// dispatch(streamActions.update(stream));
+		return dispatch(streamActions.updateStream(stream));
 	} catch (error) {
 		logError(`There was an error removing user(s) from a stream: ${error}`, { streamId, userIds });
 	}
 };
 
-export const addUsersToStream = async (streamId: string, userIds: string[]) => {
+export const addUsersToStream = (streamId: string, userIds: string[]) => async dispatch => {
 	try {
-		await HostApi.instance.send(UpdateStreamMembershipRequestType, { streamId, add: userIds });
-		// if (streams.length > 0) dispatch(saveStreams(normalize(streams)));
+		const { stream } = await HostApi.instance.send(UpdateStreamMembershipRequestType, {
+			streamId,
+			add: userIds
+		});
+		return dispatch(streamActions.updateStream(stream));
 	} catch (error) {
 		logError(`There was an error adding user(s) to a stream: ${error}`, { streamId, userIds });
 	}
