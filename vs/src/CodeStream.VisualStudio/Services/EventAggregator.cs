@@ -2,14 +2,13 @@
 using Serilog;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Text;
-using System.Threading.Tasks;
 using CodeStream.VisualStudio.Core.Events;
+#if DEBUG
+using System.Runtime.CompilerServices;
+#endif
 
 namespace CodeStream.VisualStudio.Services {
 	[Export(typeof(IEventAggregator))]
@@ -19,22 +18,44 @@ namespace CodeStream.VisualStudio.Services {
 
 		private readonly ConcurrentDictionary<Type, object> _subjects = new ConcurrentDictionary<Type, object>();
 
-		public IObservable<TEvent> GetEvent<TEvent>() where TEvent : EventBase {
-			var subject = (ISubject<TEvent>)_subjects.GetOrAdd(typeof(TEvent),
-							t => new Subject<TEvent>());
-
+		public IObservable<TEvent> GetEvent<TEvent>(
+#if DEBUG
+		[CallerFilePath] string callerFilePath = "",
+		[CallerLineNumber] long callerLineNumber = 0,
+		[CallerMemberName] string callerMember = ""
+#endif
+			) where TEvent : EventBase {
+#if DEBUG
+			Log.DebugWithCaller($"Subscribed={typeof(TEvent)}", callerFilePath, callerLineNumber, callerMember);
+#else
 			Log.Debug($"Subscribed={typeof(TEvent)}");
-			return subject.AsObservable();
+#endif
+			return ((ISubject<TEvent>)_subjects.GetOrAdd(typeof(TEvent), t => new Subject<TEvent>())).AsObservable();
 		}
 
-		public void Publish<TEvent>(TEvent sampleEvent) where TEvent : EventBase {
+		public void Publish<TEvent>(TEvent sampleEvent
+#if DEBUG
+	, [CallerFilePath] string callerFilePath = "",
+	[CallerLineNumber] long callerLineNumber = 0,
+	[CallerMemberName] string callerMember = ""
+#endif
+
+			) where TEvent : EventBase {
 			if (_subjects.TryGetValue(typeof(TEvent), out var subject)) {
+#if DEBUG
+				Log.DebugWithCaller($"Published={typeof(TEvent)}", callerFilePath, callerLineNumber, callerMember);
+#else
 				Log.Debug($"Published={typeof(TEvent)}");
+#endif
 
 				((ISubject<TEvent>)subject).OnNext(sampleEvent);
 			}
 			else {
-				Log.LocalWarning($"Event Not Found={typeof(TEvent)}");
+#if DEBUG
+				Log.DebugWithCaller($"Event Not Found={typeof(TEvent)}", callerFilePath, callerLineNumber, callerMember);
+#else
+				Log.Debug($"Event Not Found={typeof(TEvent)}");
+#endif
 			}
 		}
 	}

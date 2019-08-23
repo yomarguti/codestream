@@ -1,11 +1,11 @@
-﻿using CodeStream.VisualStudio.Core.Logging.Instrumentation;
+﻿using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Logging.Instrumentation;
 using Serilog;
 using Serilog.Events;
 using SerilogTimings.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using CodeStream.VisualStudio.Core.Extensions;
 
 namespace CodeStream.VisualStudio.Core.Logging {
 	public static class LogExtensions {
@@ -50,7 +50,7 @@ namespace CodeStream.VisualStudio.Core.Logging {
 		public static void LocalWarning(this ILogger logger, string message) {
 			logger.Warning($"LOCAL=>{message}");
 		}
-		
+
 		public static void Ctor(this ILogger logger, string message = null) {
 			logger.Debug($"ctor {message}");
 		}
@@ -58,5 +58,15 @@ namespace CodeStream.VisualStudio.Core.Logging {
 		public static void IsNull(this ILogger logger, string message) {
 			logger.Warning($"{message} is null");
 		}
+
+#if DEBUG
+		public static void DebugWithCaller(this ILogger logger, string message, string callerFilePath, long callerLineNumber, string callerMember) {
+			if (!callerFilePath.IsNullOrWhiteSpace()) {
+				callerFilePath = System.IO.Path.GetFileName(callerFilePath);
+			}
+
+			logger.Debug($"{message} from {callerFilePath}:{callerLineNumber} {callerMember}");
+		}
+#endif
 	}
 }
