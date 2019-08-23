@@ -268,7 +268,7 @@ class CodemarkActions extends React.Component<Props, State> {
 		return [
 			<div className="related" style={{ padding: "0 10px", marginBottom: 0 }}>
 				<div className="related-label">
-					Original Code <span>(from {marker.commitHashWhenCreated.substring(0, 6)})</span>
+					Original Code <span>(from {marker.commitHashWhenCreated.substring(0, 7)})</span>
 				</div>
 				{this.state.warning && (
 					<div className="repo-warning">
