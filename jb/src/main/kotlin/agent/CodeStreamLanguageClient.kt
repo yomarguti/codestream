@@ -112,7 +112,7 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
 
     override fun logMessage(message: MessageParams?) {
         when (message?.type) {
-            MessageType.Log -> logger.debug(message.message)
+            MessageType.Log -> logger.info(message.message)
             MessageType.Info -> logger.info(message.message)
             MessageType.Warning -> logger.warn(message.message)
             MessageType.Error -> logger.warn(message.message)

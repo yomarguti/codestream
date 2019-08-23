@@ -14,6 +14,7 @@ import com.intellij.ide.plugins.PluginManager
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.project.Project
 import com.intellij.util.net.HttpConfigurable
@@ -55,6 +56,7 @@ data class SettingsServiceState(
 @State(name = "CodeStream", storages = [Storage("codestream.xml")])
 class SettingsService(val project: Project) : PersistentStateComponent<SettingsServiceState> {
     private var _state = SettingsServiceState()
+    private val logger = Logger.getInstance(SettingsService::class.java)
 
     override fun getState(): SettingsServiceState = _state
 
@@ -71,7 +73,7 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
         )!!.version
     val extensionInfo get() = Extension(environmentVersion)
     val ideInfo get() = Ide()
-    val traceLevel get() = TraceLevel.VERBOSE
+    val traceLevel get() = if (logger.isDebugEnabled) TraceLevel.DEBUG else TraceLevel.VERBOSE
     val isDebugging get() = DEBUG
     val currentStreamId get() = webViewContext?.currentStreamId
     val threadId get() = webViewContext?.threadId
