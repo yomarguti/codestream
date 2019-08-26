@@ -112,14 +112,13 @@ export enum ScmError {
 }
 
 export const getFileScmError = (scmInfo: GetFileScmInfoResponse | GetRangeScmInfoResponse) => {
-	if (!scmInfo.scm) {
-		if (!scmInfo.error) {
-			return ScmError.NoGit;
-		} else {
-			return ScmError.NoRepo;
-		}
-	} else if (scmInfo.scm!.remotes.length === 0) {
-		return ScmError.NoRemotes;
+	if (scmInfo.scm == null) {
+		if (scmInfo.error == null) return ScmError.NoRepo;
+
+		return ScmError.NoGit;
 	}
+
+	if (scmInfo.scm.remotes.length === 0) return ScmError.NoRemotes;
+
 	return undefined;
 };
