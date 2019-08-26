@@ -25,10 +25,10 @@ export class ScmManager {
 
 		const uri = URI.parse(documentUri);
 
+		let branch: string | undefined;
 		let file: string | undefined;
 		let remotes: { name: string; url: string }[] | undefined;
 		let rev: string | undefined;
-		let branch: string | undefined;
 
 		let gitError;
 		let repoPath;
@@ -43,11 +43,12 @@ export class ScmManager {
 						file = file.substr(1);
 					}
 
+					branch = await git.getCurrentBranch(uri.fsPath);
 					rev = await git.getFileCurrentRevision(uri.fsPath);
+
 					const gitRemotes = await git.getRepoRemotes(repoPath);
 					remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
 				}
-				branch = await git.getCurrentBranch(uri.fsPath);
 			} catch (ex) {
 				gitError = ex.toString();
 				Logger.error(ex, cc);
@@ -88,10 +89,10 @@ export class ScmManager {
 		const uri = URI.parse(documentUri);
 
 		let authors: { id: string; username: string }[] | undefined;
+		let branch: string | undefined;
 		let file: string | undefined;
 		let remotes: { name: string; url: string }[] | undefined;
 		let rev: string | undefined;
-		let branch: string | undefined;
 
 		let document;
 		if (contents == null) {
@@ -118,7 +119,9 @@ export class ScmManager {
 						file = file.substr(1);
 					}
 
+					branch = await git.getCurrentBranch(uri.fsPath);
 					rev = await git.getFileCurrentRevision(uri.fsPath);
+
 					const gitRemotes = await git.getRepoRemotes(repoPath);
 					remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
 
@@ -149,7 +152,6 @@ export class ScmManager {
 						authors = [...Iterables.map(users, u => ({ id: u.id, username: u.username }))];
 					}
 				}
-				branch = await git.getCurrentBranch(uri.fsPath);
 			} catch (ex) {
 				gitError = ex.toString();
 				Logger.error(ex, cc);

@@ -115,7 +115,10 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		const result = newGetLocationsResult();
 
 		const filePath = URI.parse(documentUri).fsPath;
-		const repoRoot = await git.getRepoRoot(filePath);
+		let repoRoot;
+		try {
+			repoRoot = await git.getRepoRoot(filePath);
+		} catch { }
 		if (!repoRoot) {
 			Logger.log(`MARKERS: no repo root for ${filePath}`);
 			return result;
@@ -404,8 +407,13 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 	) {
 		Logger.log(`MARKERS: saving uncommitted marker location ${location.id} to local cache`);
 		const { git } = SessionContainer.instance();
-		const repoRoot = await git.getRepoRoot(filePath);
 
+		let repoRoot;
+		try {
+			repoRoot = await git.getRepoRoot(filePath);
+		} catch {
+			throw new Error(`Unable to find Git`);
+		}
 		if (!repoRoot) {
 			throw new Error(`Could not find repo root for ${filePath}`);
 		}

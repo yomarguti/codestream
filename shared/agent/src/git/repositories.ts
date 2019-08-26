@@ -233,8 +233,11 @@ export class GitRepositories {
 
 		const repositories: GitRepository[] = [];
 
-		const rootPath = await this._git.getRepoRoot(folderUri.fsPath, true);
-		if (rootPath !== undefined) {
+		let rootPath;
+		try {
+			rootPath = await this._git.getRepoRoot(folderUri.fsPath, true);
+		} catch {}
+		if (rootPath) {
 			Logger.log(`Repository found in '${rootPath}'`);
 			const repo = new GitRepository(rootPath, true, folder, remoteToRepoMap);
 			await repo.ensureSearchComplete();
@@ -312,8 +315,11 @@ export class GitRepositories {
 			// If we are the same as the root, skip it
 			if (Strings.normalizePath(p) === rootPath) continue;
 
-			const rp = await this._git.getRepoRoot(p, true);
-			if (rp === undefined) continue;
+			let rp;
+			try {
+				rp = await this._git.getRepoRoot(p, true);
+			} catch {}
+			if (!rp) continue;
 
 			Logger.log(`Repository found in '${rp}'`);
 			const repo = new GitRepository(rp, false, folder, remoteToRepoMap);

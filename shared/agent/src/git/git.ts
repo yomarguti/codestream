@@ -46,6 +46,7 @@ export async function git(
 	} as CommandOptions;
 
 	const gitCommand = `git ${args.join(" ")}`;
+
 	const command = `(${runOpts.cwd}${
 		correlationKey !== undefined ? correlationKey : ""
 	}): ${gitCommand}`;

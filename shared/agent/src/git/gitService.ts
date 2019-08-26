@@ -352,7 +352,12 @@ export class GitService implements IGitService, Disposable {
 		try {
 			const data = (await git({ cwd: cwd }, "rev-parse", "--show-toplevel")).trim();
 			return data === "" ? undefined : this.sanitizePath(data);
-		} catch {
+		} catch (ex) {
+			// If we can't find the git executable, rethrow
+			if (/spawn (.*)? ENOENT/.test(ex.message)) {
+				throw ex;
+			}
+
 			return undefined;
 		}
 	}
