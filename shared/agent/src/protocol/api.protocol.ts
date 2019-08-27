@@ -76,6 +76,7 @@ export interface CSLoginResponse {
 	provider?: "codestream" | "slack" | "msteams" | string;
 	providerAccess?: "strict";
 	teamId?: string;
+	capabilities?: string[];
 }
 
 export interface CSRegisterRequest {

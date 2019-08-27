@@ -444,6 +444,11 @@ export class CodeStreamSession {
 		return this._teamId!;
 	}
 
+	private _apiCapabilities: string[] = [];
+	get apiCapabilities() {
+		return this._apiCapabilities;
+	}
+
 	private _telemetryData: TelemetryData = {
 		hasCreatedPost: false
 	};
@@ -605,6 +610,8 @@ export class CodeStreamSession {
 		const token = response.token;
 		this._teamId = (this._options as any).teamId = token.teamId;
 		this._codestreamUserId = response.user.id;
+		this._apiCapabilities = [...(response.capabilities || [])];
+
 		const currentTeam = response.teams.find(t => t.id === this._teamId)!;
 
 		if (response.provider === "codestream") {
