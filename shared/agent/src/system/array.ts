@@ -2,6 +2,17 @@
 import { Objects } from "./object";
 
 export namespace Arrays {
+	export function chunk<T>(source: T[], size: number): T[][] {
+		const chunks = [];
+
+		let index = 0;
+		while (index < source.length) {
+			chunks.push(source.slice(index, size + index));
+			index += size;
+		}
+		return chunks;
+	}
+
 	export function count<T>(source: T[], predicate: (item: T) => boolean): number {
 		return source.reduce((count, item) => (predicate(item) ? count + 1 : count), 0);
 	}

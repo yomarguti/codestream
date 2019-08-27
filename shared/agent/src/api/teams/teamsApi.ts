@@ -7,7 +7,6 @@ import { ServerError } from "../../agentError";
 import { SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import {
-	AccessToken,
 	AddEnterpriseProviderHostRequest,
 	ArchiveStreamRequest,
 	ArchiveStreamResponse,
@@ -92,7 +91,6 @@ import {
 import {
 	CSCodemark,
 	CSGetMeResponse,
-	CSLoginResponse,
 	CSMarker,
 	CSMarkerLocations,
 	CSMe,
@@ -105,7 +103,7 @@ import {
 	ProviderType,
 	StreamType
 } from "../../protocol/api.protocol";
-import { debug, Functions, Iterables, log } from "../../system";
+import { Arrays, debug, Functions, Iterables, log } from "../../system";
 import {
 	ApiProvider,
 	ApiProviderLoginResponse,
@@ -733,13 +731,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 				}
 			];
 
-			const response = await this.teamsApiCall<{ responses: GraphBatchResponse[] }>(
-				"beta/$batch",
-				(request, content) => request.post(content),
-				{
-					requests: requests
-				}
-			);
+			const response = await this.teamsApiCallBatch("beta/$batch", requests);
 
 			postResponse = response.responses.find(r => r.id === "post")!.body!;
 			const repliesResponse = response.responses.find(r => r.id === "replies")!;
@@ -789,14 +781,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 				};
 			})
 		];
-
-		const response = await this.teamsApiCall<{ responses: GraphBatchResponse[] }>(
-			"beta/$batch",
-			(request, content) => request.post(content),
-			{
-				requests: requests
-			}
-		);
+		const response = await this.teamsApiCallBatch("beta/$batch", requests);
 
 		const { teamId, channelId } = fromStreamId(request.streamId);
 		const userInfosById = await this.ensureUserInfosById();
@@ -866,13 +851,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 					url: `teams/${id}/channels`
 				}))
 			];
-			const response = await this.teamsApiCall<{ responses: GraphBatchResponse[] }>(
-				"v1.0/$batch",
-				(request, content) => request.post(content),
-				{
-					requests: requests
-				}
-			);
+			const response = await this.teamsApiCallBatch("v1.0/$batch", requests);
 
 			const streams = [
 				...Iterables.flatMap(response.responses, r =>
@@ -1043,13 +1022,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 		];
 
 		const [response, { user: me }, { users: codestreamUsers }] = await Promise.all([
-			this.teamsApiCall<{ responses: GraphBatchResponse[] }>(
-				"v1.0/$batch",
-				(request, content) => request.post(content),
-				{
-					requests: requests
-				}
-			),
+			this.teamsApiCallBatch("v1.0/$batch", requests),
 			this.getMeCore(),
 			(this._codestreamTeam !== undefined
 				? Promise.resolve({ team: this._codestreamTeam })
@@ -1181,6 +1154,64 @@ export class MSTeamsApiProvider implements ApiProvider {
 			);
 
 			return response as TResponse;
+		} catch (ex) {
+			if (ex instanceof GraphError) {
+				const data = ex;
+				ex = new ServerError(data.message || "Unknown Error", data, data.statusCode);
+				Logger.error(ex, cc, JSON.stringify(data));
+			} else {
+				Logger.error(ex, cc, ex.data != null ? JSON.stringify(ex.data) : undefined);
+			}
+
+			throw ex;
+		}
+	}
+
+	@debug<MSTeamsApiProvider, MSTeamsApiProvider["teamsApiCallBatch"]>({
+		args: {
+			0: () => false,
+			1: () => false
+		},
+		prefix: (context, path, fn) => `${context.prefix} ${path}`
+	})
+	protected async teamsApiCallBatch(
+		path: string,
+		requests: GraphBatchRequest[]
+	): Promise<{ responses: GraphBatchResponse[] }> {
+		const cc = Logger.getCorrelationContext();
+
+		const timeoutMs = 30000;
+		try {
+			if (requests.length < 20) {
+				const response = await Functions.cancellable<{ responses: GraphBatchResponse[] }>(
+					this._teams.api(`https://graph.microsoft.com/${path}`).post({ requests: requests }),
+					timeoutMs,
+					{
+						onDidCancel: (resolve, reject) =>
+							Logger.warn(cc, `TIMEOUT ${timeoutMs / 1000}s exceeded`)
+					}
+				);
+
+				return response;
+			}
+
+			const chunks = Arrays.chunk(requests, 19);
+			const chunkedResponses = await Functions.cancellable(
+				Promise.all<{ responses: GraphBatchResponse[] }>(
+					chunks.map(c =>
+						this._teams.api(`https://graph.microsoft.com/${path}`).post({ requests: c })
+					)
+				),
+				timeoutMs * chunks.length,
+				{
+					onDidCancel: (resolve, reject) => Logger.warn(cc, `TIMEOUT ${timeoutMs / 1000}s exceeded`)
+				}
+			);
+
+			const responses = ([] as GraphBatchResponse[]).concat(
+				...chunkedResponses.map(r => r.responses)
+			);
+			return { responses: responses };
 		} catch (ex) {
 			if (ex instanceof GraphError) {
 				const data = ex;
