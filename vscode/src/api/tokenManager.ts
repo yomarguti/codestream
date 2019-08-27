@@ -1,4 +1,5 @@
 import { AccessToken } from "@codestream/protocols/agent";
+import { Logger } from "logger";
 import { GlobalState } from "../common";
 import { extensionId } from "../constants";
 import { Container } from "../container";
@@ -48,7 +49,9 @@ export namespace TokenManager {
 			try {
 				await keychain.deletePassword(CredentialService, key);
 				return;
-			} catch (ex) {}
+			} catch (ex) {
+				Logger.error(ex, "Failed to clear credentials");
+			}
 		}
 
 		const tokens = getTokenMap();
