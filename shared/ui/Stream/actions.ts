@@ -48,7 +48,7 @@ import * as postsActions from "../store/posts/actions";
 import { updatePreferences } from "../store/preferences/actions";
 import * as streamActions from "../store/streams/actions";
 import { addUsers } from "../store/users/actions";
-import { uuid, isNotOnDisk } from "../utils";
+import { uuid, isNotOnDisk, uriToFilePath } from "../utils";
 import { updateTeam } from "../store/teams/actions";
 import { HostApi } from "../webview-api";
 import { CodeStreamState } from "../store";
@@ -123,8 +123,9 @@ export const createPostAndCodemark = (
 			case "NoRepo": {
 				warning = {
 					title: "Missing Git Info",
-					message:
-						"This repo doesn’t appear to be managed by Git. Your teammates won’t be able to see the codemark when viewing this source file."
+					message: `This repo doesn’t appear to be tracked by Git. Your teammates won’t be able to see the codemark when viewing this source file.\n\n${uriToFilePath(
+						codeBlock.uri
+					)}`
 				};
 				break;
 			}

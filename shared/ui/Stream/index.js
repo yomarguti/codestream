@@ -26,7 +26,14 @@ import ConfigureJiraServerPanel from "./ConfigureJiraServerPanel";
 import ConfigureEnterprisePanel from "./ConfigureEnterprisePanel";
 import * as actions from "./actions";
 import { editCodemark } from "../store/codemarks/actions";
-import { ComponentUpdateEmitter, isInVscode, safe, toMapBy, isNotOnDisk } from "../utils";
+import {
+	ComponentUpdateEmitter,
+	isInVscode,
+	safe,
+	toMapBy,
+	isNotOnDisk,
+	uriToFilePath
+} from "../utils";
 import { getSlashCommands } from "./SlashCommands";
 import { confirmPopup } from "./Confirm";
 import { getPostsForStream, getPost } from "../store/posts/reducer";
@@ -1923,8 +1930,9 @@ export class SimpleStream extends Component {
 					case "NoRepo": {
 						warning = {
 							title: "Missing Git Info",
-							message:
-								"This repo doesn’t appear to be managed by Git. Your teammates won’t be able to see the codemark when viewing this source file."
+							message: `This repo doesn’t appear to be tracked by Git. Your teammates won’t be able to see the codemark when viewing this source file.\n\n${uriToFilePath(
+								scmInfo.uri
+							)}`
 						};
 						break;
 					}
@@ -2037,7 +2045,7 @@ export class SimpleStream extends Component {
 				warning = {
 					title: "Missing Git Info",
 					message:
-						"This repo doesn’t appear to be managed by Git. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE."
+						"This repo doesn’t appear to be tracked by Git. When your teammates view this post, we won’t be able to connect the code block to the appropriate file in their IDE."
 				};
 			}
 

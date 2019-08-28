@@ -13,7 +13,8 @@ import {
 	isNotOnDisk,
 	areRangesEqual,
 	ComponentUpdateEmitter,
-	isRangeEmpty
+	isRangeEmpty,
+	uriToFilePath
 } from "../utils";
 import { HostApi } from "../webview-api";
 import {
@@ -708,9 +709,10 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					<div className="no-codemarks">
 						<h3>This file is not part of a git repository.</h3>
 						<p>
-							CodeStream requires files to be managed by git so that codemarks can be linked to the
+							CodeStream requires files to be tracked by Git so that codemarks can be linked to the
 							code.
 						</p>
+						<p>{uriToFilePath(textEditorUri)}</p>
 					</div>
 				);
 			}

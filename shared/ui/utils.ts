@@ -1,6 +1,7 @@
 import uuidv4 from "uuid/v4";
 import { Range } from "vscode-languageserver-types";
 import { MaxRangeValue } from "./ipc/webview.protocol";
+import { URI } from "vscode-uri";
 
 export const emptyObject = {};
 export const emptyArray = [];
@@ -355,4 +356,11 @@ export function replaceHtml(text: string) {
 	const replaceRegex = /<br>|<div>/g;
 	return domParser.parseFromString(text.replace(replaceRegex, "\n"), "text/html").documentElement
 		.textContent;
+}
+
+export function uriToFilePath(uri: URI | string) {
+	if (typeof uri === "string") {
+		return URI.parse(uri).fsPath;
+	}
+	return uri.fsPath;
 }
