@@ -90,6 +90,7 @@
     <Compile Include="Services\AuthenticationService.cs" />
     <Compile Include="Services\AuthenticationServiceFactory.cs" />
     <Compile Include="Services\CodeStreamAgentService.cs" />
+    <Compile Include="Services\CodeStreamAgentServiceFactory.cs" />
     <Compile Include="Services\CodeStreamService.cs" />
     <Compile Include="Services\CredentialsService.cs" />
     <Compile Include="Services\CredentialsServiceBase.cs" />

@@ -14,7 +14,7 @@ namespace CodeStream.VisualStudio.Core.Services {
 		void Navigate(string url);
 		System.Threading.Tasks.Task SetClipboardAsync(string text);
 		void ScrollEditor(Uri fileUri, int? scrollTo = null, int? deltaPixels = null, bool? atTop = false);
-		System.Threading.Tasks.Task<bool> OpenEditorAndRevealAsync(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false);
+		System.Threading.Tasks.Task<OpenEditorResult> OpenEditorAndRevealAsync(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false);
 		System.Threading.Tasks.Task<IWpfTextView> OpenEditorAtLineAsync(Uri fileUri, Range range, bool forceOpen = false);
 		//bool QueryExtensions(string author, params string[] names);
 		bool QueryExtension(ExtensionKind extensionKind);

@@ -24,15 +24,6 @@ using TraceLevel = CodeStream.VisualStudio.Core.Logging.TraceLevel;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace CodeStream.VisualStudio.Services {
-	[Export(typeof(ICodeStreamAgentServiceFactory))]
-	[PartCreationPolicy(CreationPolicy.Shared)]
-	public class CodeStreamAgentServiceFactory : ServiceFactory<ICodeStreamAgentService>, ICodeStreamAgentServiceFactory {
-		[ImportingConstructor]
-		public CodeStreamAgentServiceFactory([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) :
-			base(serviceProvider) {
-		}
-	}
-
 	[Export(typeof(ICodeStreamAgentService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
 	public class CodeStreamAgentService : ICodeStreamAgentService, IDisposable {
@@ -135,10 +126,17 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public Task<JToken> ReinitializeAsync() {
+			var isAgentReady = _sessionService.IsAgentReady;
+			Log.Debug($"{nameof(ReinitializeAsync)} IsAgentReady={isAgentReady}");
+
+			if (!isAgentReady) return Task.FromResult((JToken)null);
+
 			return InitializeAsync();
 		}
 
 		private Task<JToken> InitializeAsync() {
+			Log.Debug($"{nameof(InitializeAsync)}");
+
 			var settingsManager = _settingsServiceFactory.Create();
 			var extensionInfo = settingsManager.GetExtensionInfo();
 			var ideInfo = settingsManager.GetIdeInfo();

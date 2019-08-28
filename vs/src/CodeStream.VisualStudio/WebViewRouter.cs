@@ -8,6 +8,7 @@ using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Packages;
 using CodeStream.VisualStudio.Core.Services;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.WindowsAPICodePack.Dialogs;
@@ -100,7 +101,7 @@ namespace CodeStream.VisualStudio {
 													if (dialog.ShowDialog() == CommonFileDialogResult.Ok) {
 														if (!dialog.FileName.IsNullOrWhiteSpace()) {
 															response = new ShellPromptFolderResponse {
-																Path = dialog.FileName																
+																Path = dialog.FileName
 															};
 														}
 													}
@@ -136,7 +137,7 @@ namespace CodeStream.VisualStudio {
 
 													_eventAggregator.Publish(new MarkerGlyphVisibilityEvent { IsVisible = !visible });
 												}
-												_webviewUserSettingsService.SaveContext(_sessionService.SolutionName, @params.Context);												
+												_webviewUserSettingsService.SaveContext(_sessionService.SolutionName, @params.Context);
 											}
 											break;
 										}
@@ -203,7 +204,7 @@ namespace CodeStream.VisualStudio {
 											}
 											break;
 										}
-									case BootstrapInHostRequestType.MethodName: {											
+									case BootstrapInHostRequestType.MethodName: {
 											try {
 												string errorResponse = null;
 												JToken @params = null;
@@ -223,7 +224,7 @@ namespace CodeStream.VisualStudio {
 											}
 											catch (Exception ex) {
 												Log.Error(ex, nameof(BootstrapInHostRequestType));
-											}											
+											}
 											break;
 										}
 									case LogoutRequestType.MethodName: {
@@ -245,7 +246,7 @@ namespace CodeStream.VisualStudio {
 											break;
 										}
 									case EditorSelectRangeRequestType.MethodName: {
-											using (var scope = _browserService.CreateScope(message)) {
+											using (var scope = _browserService.CreateScope(message)) {												
 												bool result = false;
 												try {
 													var @params = message.Params.ToObject<EditorSelectRangeRequest>();
@@ -254,12 +255,11 @@ namespace CodeStream.VisualStudio {
 														await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 														var editorResponse = await _ideService.OpenEditorAtLineAsync(uri, @params.Selection.ToRange(), true);
 														if (editorResponse != null) {
-															var selectedRangeResponse = new ActiveTextEditor(editorResponse, uri.ToLocalPath(), uri, editorResponse.TextSnapshot?.LineCount)
+															  result = new ActiveTextEditor(editorResponse, uri.ToLocalPath(), uri, editorResponse.TextSnapshot?.LineCount)
 																.SelectRange(@params.Selection, @params.PreserveFocus == false);
-															if (!selectedRangeResponse) {
-																Log.Warning($"SelectedRange result is false");
-															}
-															result = true;
+															if (!result) {
+																Log.Warning($"SelectRange result is false");
+															}															 
 														}
 													}
 												}
@@ -291,16 +291,16 @@ namespace CodeStream.VisualStudio {
 										}
 									case EditorRevealRangeRequestType.MethodName: {
 											using (var scope = _browserService.CreateScope(message)) {
-												bool result = false;
+												OpenEditorResult openEditorResult = null;
 												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 												var @params = message.Params.ToObject<EditorRevealRangeRequest>();
 												if (@params != null) {
-													result = await _ideService.OpenEditorAndRevealAsync(@params.Uri.ToUri(), @params.Range?.Start?.Line, atTop: @params.AtTop, focus: @params.PreserveFocus == false);
-													if (!result) {
+													openEditorResult = await _ideService.OpenEditorAndRevealAsync(@params.Uri.ToUri(), @params.Range?.Start?.Line, atTop: @params.AtTop, focus: @params.PreserveFocus == false);													
+													if (openEditorResult?.Success != true) {
 														Log.Verbose($"{nameof(EditorRevealRangeRequestType)} result is false");
 													}
 												}
-												scope.FulfillRequest(new EditorRevealRangeResponse { Success = result }.ToJToken());
+												scope.FulfillRequest(new EditorRevealRangeResponse { Success = openEditorResult?.Success == true }.ToJToken());
 											}
 											break;
 										}

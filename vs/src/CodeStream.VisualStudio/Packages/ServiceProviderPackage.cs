@@ -206,7 +206,7 @@ namespace CodeStream.VisualStudio.Packages {
 
 				if (!TryGetWindowFrame(toolWindowId, out IVsWindowFrame frame)) return false;
 
-				frame.Show();
+				frame.Show();				
 				return true;
 			}
 			catch (Exception) {

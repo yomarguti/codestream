@@ -24,12 +24,21 @@ namespace CodeStream.VisualStudio.Packages {
 	[Guid(Guids.ProtocolPackagePackageId)]
 	[ProvideAppCommandLine(CliSwitch, typeof(ProtocolPackage), Arguments = "1", DemandLoad = 1)] // More info https://docs.microsoft.com/en-us/visualstudio/extensibility/adding-command-line-switches
 	public sealed class ProtocolPackage : AsyncPackage {
+
 		private static readonly ILogger Log = LogManager.ForContext<ProtocolPackage>();
 		private const string CliSwitch = "codestream";
 		private IComponentModel _componentModel;
 		private bool _processed;
 		private List<IDisposable> _disposables;
 		private ISettingsManager _settingsManager;
+
+
+		/// <summary>
+		/// From project settings this can be triggered with `/codestream codestream-vs://codestream/codemark/5d39c1c093008d247116bf94/open`
+		/// </summary>
+		/// <param name="cancellationToken"></param>
+		/// <param name="progress"></param>
+		/// <returns></returns>
 		protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
 			try {
 				AsyncPackageHelper.InitializePackage(GetType().Name);
@@ -79,6 +88,8 @@ namespace CodeStream.VisualStudio.Packages {
 		}
 
 		private async System.Threading.Tasks.Task HandleAsync() {
+			Log.Debug(nameof(HandleAsync));
+
 			if (_processed) return;
 
 			await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
@@ -105,7 +116,7 @@ namespace CodeStream.VisualStudio.Packages {
 					Log.IsNull(nameof(browserService));
 					return;
 				}
-
+				Log.Debug($"Sending optionValue={optionValue}");
 				_ = browserService.NotifyAsync(new HostDidReceiveRequestNotificationType() {
 					Params = new HostDidReceiveRequestNotification() {
 						Url = optionValue
@@ -114,11 +125,9 @@ namespace CodeStream.VisualStudio.Packages {
 				Log.Debug($"Sent optionValue={optionValue}");
 			}
 			catch (Exception ex) {
-				Log.Error(ex, "");
+				Log.Error(ex, nameof(HandleAsync));
 			}
 		}
-
-
 
 		protected override void Dispose(bool isDisposing) {
 			if (isDisposing) {

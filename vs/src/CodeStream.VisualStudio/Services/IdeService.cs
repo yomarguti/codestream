@@ -29,8 +29,6 @@ using ILogger = Serilog.ILogger;
 using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace CodeStream.VisualStudio.Services {
-
-
 	[Export(typeof(IIdeService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
 	public class IdeService : IIdeService {
@@ -57,9 +55,9 @@ namespace CodeStream.VisualStudio.Services {
 			//unit testing ctor
 		}
 
-		public async System.Threading.Tasks.Task<bool> OpenEditorAndRevealAsync(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false) {
+		public async System.Threading.Tasks.Task<OpenEditorResult> OpenEditorAndRevealAsync(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false) {
 			using (Log.CriticalOperation($"{nameof(OpenEditorAndRevealAsync)} {fileUri} scrollTo={scrollTo}")) {
-				if (scrollTo == null) return false;
+				if (scrollTo == null) return null;
 
 				var scrollToLine = scrollTo.Value;
 				try {
@@ -76,11 +74,14 @@ namespace CodeStream.VisualStudio.Services {
 							wpfTextView.VisualElement.Focus();
 						}
 					}
-					return true;
+					return new OpenEditorResult() {
+						Success = wpfTextView != null,
+						VisualElement = wpfTextView?.VisualElement
+					};
 				}
 				catch (Exception ex) {
 					Log.Error(ex, $"{nameof(OpenEditorAndRevealAsync)} failed for {fileUri}");
-					return false;
+					return null;
 				}
 			}
 		}
@@ -170,13 +171,9 @@ namespace CodeStream.VisualStudio.Services {
 				var view = _componentModel.GetService<IEditorService>().GetActiveTextEditor();
 				if (view == null || !view.Uri.EqualsIgnoreCase(fileUri)) {
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-					var dte = _serviceProvider.GetService(typeof(DTE)) as DTE;
-					if (dte == null) {
-						Log.Error($"{nameof(dte)} is null for {fileUri}");
-						return null;
-					}
 
-					EnvDTE.Window window = dte.ItemOperations.OpenFile(localPath, EnvDTE.Constants.vsViewKindCode);
+					EnvDTE.Window window = TryOpenFile(localPath);
+					if (window == null) return null;
 					// the TextView/WpfTextView may not be immediately available -- try to get it.
 					wpfTextView = TryGetPendingWpfTextView(localPath);
 				}
@@ -186,6 +183,32 @@ namespace CodeStream.VisualStudio.Services {
 			}
 
 			return wpfTextView;
+		}
+
+		private EnvDTE.Window TryOpenFile(string localPath, string viewKind = EnvDTE.Constants.vsViewKindCode) {
+			try {
+				ThreadHelper.ThrowIfNotOnUIThread();
+
+				var dte = _serviceProvider.GetService(typeof(DTE)) as DTE;
+				if (dte == null) {
+					Log.Error($"{nameof(dte)} is null for {localPath}");
+					return null;
+				}
+				var window = dte.ItemOperations.OpenFile(localPath, viewKind);
+				return window;
+			}
+			catch (ArgumentException ex) {
+				if (ex?.Message?.Contains("The parameter is incorrect") == true) {
+					Log.Warning(ex, $"{localPath} may not exist");
+				}
+				else {
+					Log.Warning(ex, $"{localPath}");
+				}
+			}
+			catch (Exception ex) {
+				Log.Error(ex, $"{localPath}");
+			}
+			return null;
 		}
 
 		private void EnsureTargetSpanVisible(IWpfTextView wpfTextView, int scrollToLine) {
