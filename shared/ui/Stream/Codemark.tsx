@@ -556,6 +556,7 @@ export class Codemark extends React.Component<Props, State> {
 					wait: true,
 					action: () => {
 						this.props.deleteCodemark(this.props.codemark.id);
+						this.props.setCurrentCodemark();
 					}
 				},
 				{ label: "Cancel" }
