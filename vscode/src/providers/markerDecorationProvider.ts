@@ -254,7 +254,10 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 		if (force) this._markersCache.delete(editor!.document.uri.toString());
 
 		const decorations = await this.provideDecorations(editor!);
-		if (Object.keys(decorations).length === 0) return;
+		if (Object.keys(decorations).length === 0) {
+			this.clear(editor);
+			return;
+		}
 
 		for (const [key, value] of Object.entries(this._decorationTypes)) {
 			editor!.setDecorations(value, (decorations[key] as any) || emptyArray);
