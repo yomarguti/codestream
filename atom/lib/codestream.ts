@@ -108,6 +108,10 @@ class CodestreamPackage {
 	// Package lifecyle
 	// activate() {}
 
+	handleURI(parsedUri: { href: string }) {
+		Container.viewController.handleProtocolRequest(parsedUri.href);
+	}
+
 	// Package lifecyle
 	serialize(): PackageState {
 		return {

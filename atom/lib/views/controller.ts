@@ -125,6 +125,12 @@ export class ViewController implements Disposable {
     return this.viewState;
   }
 
+  handleProtocolRequest(uri: string) {
+    if (!this.mainView) return;
+
+    this.mainView.handleProtocolRequest(uri);
+  }
+
   dispose() {
     this.subscriptions.dispose();
     this.mainView && this.destroyView(this.mainView.getURI());

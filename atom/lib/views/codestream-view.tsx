@@ -23,11 +23,14 @@ import {
 	HostDidChangeEditorVisibleRangesNotificationType,
 	HostDidChangeFocusNotificationType,
 	HostDidLogoutNotificationType,
+	HostDidReceiveRequestNotificationType,
 	isIpcRequestMessage,
 	LogoutRequestType,
 	LogoutResponse,
 	NewCodemarkNotificationType,
 	ReloadWebviewRequestType,
+	ShellPromptFolderRequestType,
+	ShellPromptFolderResponse,
 	ShowCodemarkNotificationType,
 	ShowStreamNotificationType,
 	UpdateConfigurationRequest,
@@ -57,8 +60,7 @@ import {
 	DidChangeVersionCompatibilityNotificationType,
 	ReportingMessageType,
 	ReportMessageRequestType,
-	TraceLevel,
-	VersionCompatibility,
+	TraceLevel
 } from "../protocols/agent/agent.protocol";
 import { CodemarkType } from "../protocols/agent/api.protocol";
 import { asAbsolutePath, Debug, Editor } from "../utils";
@@ -390,6 +392,19 @@ export class CodestreamView {
 				}
 				break;
 			}
+			case ShellPromptFolderRequestType.method: {
+				const result = remote.dialog.showOpenDialog({
+					title: message.params.message,
+					properties: ["openDirectory"]
+				});
+				this.respond<ShellPromptFolderResponse>({
+					id: message.id,
+					params: {
+						path: result && result.length ? result[0] : undefined,
+					},
+				});
+				break;
+			}
 			case GetActiveEditorContextRequestType.method: {
 				this.respond<GetActiveEditorContextResponse>({
 					id: message.id,
@@ -547,6 +562,10 @@ export class CodestreamView {
 		editor.setSelectedBufferRange(Convert.lsRangeToAtomRange(range));
 	}
 
+	handleProtocolRequest(uri: string) {
+		this.sendEvent(HostDidReceiveRequestNotificationType, { url: uri });
+	}
+
 	private onSelectionChanged = (event: { editor: TextEditor; range: Range; cursor: Point }) => {
 		this.sendEvent(HostDidChangeEditorSelectionNotificationType, {
 			uri: Editor.getUri(event.editor),
@@ -554,7 +573,7 @@ export class CodestreamView {
 			visibleRanges: Editor.getVisibleRanges(event.editor),
 			lineCount: event.editor.getLineCount(),
 		});
-	}
+	};
 
 	private onEditorActiveEditorChanged = (editor?: TextEditor) => {
 		const notification: HostDidChangeActiveEditorNotification = {};
@@ -573,5 +592,5 @@ export class CodestreamView {
 			};
 		}
 		this.sendEvent(HostDidChangeActiveEditorNotificationType, notification);
-	}
+	};
 }
