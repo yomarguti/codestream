@@ -19,7 +19,6 @@ import { HostApi } from "../webview-api";
 import {
 	EditorHighlightRangeRequestType,
 	EditorRevealRangeRequestType,
-	EditorSelectRangeRequestType,
 	MaxRangeValue,
 	EditorSelection,
 	EditorMetrics,
@@ -31,9 +30,7 @@ import {
 	DocumentMarker,
 	DidChangeDocumentMarkersNotificationType,
 	GetFileScmInfoResponse,
-	GetFileScmInfoRequestType,
-	GetRangeScmInfoRequestType,
-	GetRangeScmInfoResponse
+	GetFileScmInfoRequestType
 } from "@codestream/protocols/agent";
 import { Range, Position } from "vscode-languageserver-types";
 import { fetchDocumentMarkers, addDocumentMarker } from "../store/documentMarkers/actions";
@@ -135,7 +132,7 @@ interface State {
 	numBelow: number;
 	numLinesVisible: number;
 	problem: ScmError | undefined;
-	newCodemarkAttributes: { type: CodemarkType; codeBlock: GetRangeScmInfoResponse } | undefined;
+	newCodemarkAttributes: { type: CodemarkType } | undefined;
 }
 
 const NEW_CODEMARK_ATTRIBUTES_TO_RESTORE = "spatial-view:restore-codemark-form";
@@ -992,14 +989,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	renderCodemarkForm() {
 		if (this.state.newCodemarkAttributes == undefined) return null;
 
-		const { type, codeBlock } = this.state.newCodemarkAttributes;
-
 		return (
 			<ContainerAtEditorSelection>
 				<div className="codemark-form-container">
 					<CodemarkForm
-						commentType={type}
-						codeBlock={codeBlock}
+						commentType={this.state.newCodemarkAttributes.type}
 						streamId={this.props.currentStreamId!}
 						onSubmit={this.submitCodemark}
 						onClickClose={this.closeCodemarkForm}
@@ -1375,12 +1369,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		// Clear the previous highlight
 		this.handleUnhighlightLine(lineNum0);
 
-		const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
-			uri: this.props.textEditorUri!,
-			range: range,
-			dirty: true
-		});
-
 		// Clear the open icons
 		// this works subtly... we tell state to not open icons on any line,
 		// but normally getDerivedStateFromProps would override that. By
@@ -1388,7 +1376,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		// getDerivedStateFromProps won't fire.
 		this.setState({
 			clickedPlus: true,
-			newCodemarkAttributes: { type, codeBlock: scmInfo }
+			newCodemarkAttributes: { type }
 		});
 
 		this.props.setCurrentCodemark();
