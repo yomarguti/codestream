@@ -207,14 +207,14 @@ class CodemarkActions extends React.Component<Props, State> {
 					<div className="post-details" id={codemark.id}>
 						<div className="a-group" key="a">
 							{canApply && (
-								<Tooltip title="Apply patch to current buffer" placement="bottomRight">
+								<Tooltip title="Apply patch to current buffer" placement="bottomRight" delay={1}>
 									<div className="codemark-actions-button" onClick={this.handleClickApplyPatch}>
 										Apply
 									</div>
 								</Tooltip>
 							)}
 							{canCompare && (
-								<Tooltip title="Compare current code to original" placement="bottomRight">
+								<Tooltip title="Compare current code to original" placement="bottomRight" delay={1}>
 									<div className="codemark-actions-button" onClick={this.handleClickCompare}>
 										Compare
 									</div>
@@ -267,9 +267,15 @@ class CodemarkActions extends React.Component<Props, State> {
 		const codeHTML = prettyPrintOne(escapeHtml(marker.code), extension, startLine);
 		return [
 			<div className="related" style={{ padding: "0 10px", marginBottom: 0 }}>
-				<div className="related-label">
-					Original Code <span>(from {marker.commitHashWhenCreated.substring(0, 7)})</span>
-				</div>
+				<div className="related-label">Original Code</div>
+				{marker.branchWhenCreated && (
+					<span className="monospace" style={{ paddingRight: "20px" }}>
+						<Icon name="git-branch"></Icon> {marker.branchWhenCreated}
+					</span>
+				)}
+				<span className="monospace">
+					<Icon name="git-commit"></Icon> {marker.commitHashWhenCreated.substring(0, 7)}
+				</span>
 				{this.state.warning && (
 					<div className="repo-warning">
 						<Icon name="alert" /> {this.getWarningMessage()}
