@@ -7,7 +7,6 @@ namespace CodeStream.VisualStudio.Core.Models {
 
 	public class ShellPromptFolderResponse {
 		public string Path { get; set; }
-		public bool Success { get; set; }
 	}
 
 	public class ShellPromptFolderRequestType : RequestType<ShellPromptFolderRequest> {

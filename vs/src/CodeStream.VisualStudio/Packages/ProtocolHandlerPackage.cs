@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Threading;
+﻿using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Events;
+using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Packages;
 using CodeStream.VisualStudio.Core.Services;
 using CodeStream.VisualStudio.UI;
 using Microsoft;
@@ -12,11 +12,11 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Serilog;
-using CodeStream.VisualStudio.Core;
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Threading;
 using Task = System.Threading.Tasks.Task;
-using CodeStream.VisualStudio.Core.Extensions;
-using CodeStream.VisualStudio.Core.Models;
-using CodeStream.VisualStudio.Core.Packages;
 
 namespace CodeStream.VisualStudio.Packages {
 	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
@@ -43,6 +43,11 @@ namespace CodeStream.VisualStudio.Packages {
 				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
 				AsyncPackageHelper.InitializeLogging(_settingsManager);
+
+				//ensure the ToolWindow is visible
+				var toolWindowProvider = GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
+				toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
+
 				await AsyncPackageHelper.TryTriggerLspActivationAsync(Log);
 				await InfoBarProvider.InitializeAsync(this);
 
@@ -51,29 +56,28 @@ namespace CodeStream.VisualStudio.Packages {
 					return;
 				}
 
-				Log.Debug($"{nameof(sessionService.WebViewDidInitialize)}={sessionService.WebViewDidInitialize}");
+				Log.Debug($"{nameof(sessionService.WebViewDidInitialize)}={sessionService.WebViewDidInitialize} {nameof(sessionService.IsReady)}={sessionService.IsReady} {nameof(sessionService.IsAgentReady)}={sessionService.IsAgentReady}");
 				if (sessionService.WebViewDidInitialize == true) {
 					await HandleAsync();
 				}
 				else {
 					var eventAggregator = _componentModel.GetService<IEventAggregator>();
 					_disposables = new List<IDisposable>() {
-					eventAggregator.GetEvent<WebviewDidInitializeEvent>().Subscribe(e => {
-						Log.Debug(nameof(WebviewDidInitializeEvent));
+						eventAggregator.GetEvent<WebviewDidInitializeEvent>().Subscribe(e => {
+							Log.Debug(nameof(WebviewDidInitializeEvent));
 
-						ThreadHelper.JoinableTaskFactory.Run(async delegate {
-							await HandleAsync();
-						});
-					})
-				};
-
+							ThreadHelper.JoinableTaskFactory.Run(async delegate {
+								await HandleAsync();
+							});
+						})
+					};
 				}
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(InitializeAsync));
 			}
 		}
-		
+
 		private async System.Threading.Tasks.Task HandleAsync() {
 			if (_processed) return;
 
@@ -81,30 +85,27 @@ namespace CodeStream.VisualStudio.Packages {
 			_processed = true;
 			try {
 
-				Log.Debug(nameof(InitializeAsync) + "...Starting");				
+				Log.Debug(nameof(InitializeAsync) + "...Starting");
 				var commandLine = await GetServiceAsync(typeof(SVsAppCommandLine)) as IVsAppCommandLine;
-				Assumes.Present(commandLine);				
+				Assumes.Present(commandLine);
 				ErrorHandler.ThrowOnFailure(commandLine.GetOption(CliSwitch, out int isPresent, out string optionValue));
-				
+
 				if (isPresent != 1) {
 					Log.Warning($"isPresent={isPresent}");
 					return;
 				}
-				
+
 				if (optionValue.IsNullOrWhiteSpace()) {
 					Log.Warning($"optionValue missing");
 					return;
 				}
-				
-				var toolWindowProvider = GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
-				toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
-				
+
 				var browserService = _componentModel.GetService<IBrowserService>();
 				if (browserService == null) {
 					Log.IsNull(nameof(browserService));
 					return;
 				}
-				
+
 				_ = browserService.NotifyAsync(new HostDidReceiveRequestNotificationType() {
 					Params = new HostDidReceiveRequestNotification() {
 						Url = optionValue
@@ -114,10 +115,10 @@ namespace CodeStream.VisualStudio.Packages {
 			}
 			catch (Exception ex) {
 				Log.Error(ex, "");
-			}			
+			}
 		}
 
-	 
+
 
 		protected override void Dispose(bool isDisposing) {
 			if (isDisposing) {

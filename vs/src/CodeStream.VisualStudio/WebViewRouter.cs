@@ -100,8 +100,7 @@ namespace CodeStream.VisualStudio {
 													if (dialog.ShowDialog() == CommonFileDialogResult.Ok) {
 														if (!dialog.FileName.IsNullOrWhiteSpace()) {
 															response = new ShellPromptFolderResponse {
-																Path = dialog.FileName,
-																Success = true
+																Path = dialog.FileName																
 															};
 														}
 													}
