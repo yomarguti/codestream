@@ -1,7 +1,7 @@
 plugins {
     id "java"
-    id "org.jetbrains.intellij" version "0.4.9"
-    id "org.jetbrains.kotlin.jvm" version "1.3.31"
+    id "org.jetbrains.intellij" version "0.4.10"
+    id "org.jetbrains.kotlin.jvm" version "1.3.50"
 }
 
 group "com.codestream"
@@ -20,10 +20,10 @@ ext {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    implementation "org.jetbrains.kotlin:kotlin-reflect:1.3.31"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.2.1"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.2.1"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:1.3.50"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.3.0"
 
     implementation files("$rootDir/license.jar")
     implementation "com.teamdev.jxbrowser:jxbrowser-win32:${jxBrowserVersion}"
@@ -32,7 +32,7 @@ dependencies {
     implementation "com.teamdev.jxbrowser:jxbrowser-linux64:${jxBrowserVersion}"
     implementation files("$rootDir/jxbrowser-${jxBrowserVersion}.jar")
 
-    implementation group: "org.eclipse.lsp4j", name: "org.eclipse.lsp4j", version: "0.6.0"
+    implementation group: "org.eclipse.lsp4j", name: "org.eclipse.lsp4j", version: "0.8.0"
     implementation "com.github.salomonbrys.kotson:kotson:2.5.0"
     implementation("io.sentry:sentry:1.7.27") {
         exclude group: 'org.slf4j', module: 'slf4j-simple'
@@ -55,6 +55,7 @@ intellij {
 //    version "2018.2" // earliest version we support
 //    version "2018.3.4" // you can also specify dot dot releases
 //    version "IC-2018.2.7" //
+//    version "PC-2018.2"
     intellij.updateSinceUntilBuild false
 }
 
@@ -62,6 +63,7 @@ runIde {
 //    jbrVersion "8u202b1483.58"
 //    jbrVersion "11_0_2b159"
 //    jvmArgs '-Dsun.java2d.uiScale.enabled=false'
+//    jvmArgs '-Dkotlinx.coroutines.debug=on'
 }
 
 import org.gradle.internal.os.OperatingSystem
