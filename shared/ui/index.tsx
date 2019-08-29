@@ -237,7 +237,8 @@ export function listenForEvents(store) {
 	const parseProtocol = function(uriString): Route | undefined {
 		let uri: URI;
 		try {
-			uri = URI.parse(uriString);
+			const decodedUriString = decodeURIComponent(uriString);
+			uri = URI.parse(decodedUriString);
 			uri = URI.parse("codestream:/" + uri.path);
 		} catch (ex) {
 			return undefined;
