@@ -78,6 +78,7 @@ import {
 import {
 	CSAddProviderHostRequest,
 	CSAddProviderHostResponse,
+	CSApiCapabilities,
 	CSChannelStream,
 	CSCompleteSignupRequest,
 	CSConfirmRegistrationRequest,
@@ -101,6 +102,7 @@ import {
 	CSEditPostRequest,
 	CSEditPostResponse,
 	CSFileStream,
+	CSGetApiCapabilitiesResponse,
 	CSGetCodemarkResponse,
 	CSGetCodemarksResponse,
 	CSGetInviteInfoRequest,
@@ -1212,6 +1214,14 @@ export class CodeStreamApiProvider implements ApiProvider {
 			`/no-auth/telemetry-key?secret=${encodeURIComponent(telemetrySecret)}`
 		);
 		return response.key;
+	}
+
+	@log()
+	async getApiCapabilities(): Promise<CSApiCapabilities> {
+		const response = await this.get<CSGetApiCapabilitiesResponse>(
+			`/no-auth/capabilities`
+		);
+		return response.capabilities;
 	}
 
 	@log()

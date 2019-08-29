@@ -431,3 +431,13 @@ export interface CSMe extends CSUser {
 	preferences?: CSMePreferences;
 	providerInfo?: CSMeProviderInfo;
 }
+
+export interface CSApiCapability {
+	description?: string;
+	url?: string;
+	version?: string;
+}
+
+export interface CSApiCapabilities {
+	[id: string]: CSApiCapability;
+}

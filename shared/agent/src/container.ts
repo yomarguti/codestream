@@ -167,6 +167,10 @@ export namespace SessionContainer {
 		sessionContainer = new SessionServiceContainer(session);
 	}
 
+	export function isInitialized() {
+		return sessionContainer ? true : false;
+	}
+	
 	export function instance(): SessionServiceContainer {
 		if (sessionContainer === undefined) {
 			debugger;

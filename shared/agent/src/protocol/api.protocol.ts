@@ -2,6 +2,7 @@
 import {
 	ChannelServiceType,
 	CodemarkType,
+	CSApiCapabilities,
 	CSChannelStream,
 	CSCodemark,
 	CSCompany,
@@ -76,7 +77,7 @@ export interface CSLoginResponse {
 	provider?: "codestream" | "slack" | "msteams" | string;
 	providerAccess?: "strict";
 	teamId?: string;
-	capabilities?: string[];
+	capabilities?: CSApiCapabilities;
 }
 
 export interface CSRegisterRequest {
@@ -496,6 +497,10 @@ export interface CSTrackProviderPostRequest {
 
 export interface CSGetTelemetryKeyResponse {
 	key: string;
+}
+
+export interface CSGetApiCapabilitiesResponse {
+	capabilities: CSApiCapabilities;
 }
 
 export interface CSAddProviderHostRequest {

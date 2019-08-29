@@ -1,6 +1,7 @@
 "use strict";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
 import { ApiVersionCompatibility, VersionCompatibility } from "../../protocol/agent.protocol";
+import { CSApiCapability, CSApiCapabilities } from "../../protocol/api.protocol.models";
 import { log } from "../../system";
 import {
 	ApiProvider,
@@ -8,6 +9,7 @@ import {
 	CodeStreamApiMiddlewareContext
 } from "../apiProvider";
 import { APIServerVersionInfo } from "../codestream/apiServerVersionInfo";
+import { SessionContainer } from "../../container";
 
 export interface VersionCompatibilityChangedEvent {
 	compatibility: VersionCompatibility;
@@ -18,6 +20,7 @@ export interface VersionCompatibilityChangedEvent {
 export interface ApiVersionCompatibilityChangedEvent {
 	compatibility: ApiVersionCompatibility;
 	version: string;
+	missingCapabilities?: CSApiCapabilities;
 }
 
 export class VersionMiddlewareManager implements Disposable {
@@ -56,10 +59,15 @@ export class VersionMiddlewareManager implements Disposable {
 	}
 
 	@log()
-	async apiVersionNotify(compatibility: ApiVersionCompatibility, version: string) {
+	async apiVersionNotify(
+		compatibility: ApiVersionCompatibility,
+		version: string,
+		missingCapabilities: CSApiCapabilities
+	) {
 		this._onDidChangeApiCompatibility.fire({
-			compatibility: compatibility,
-			version: version
+			compatibility,
+			version,
+			missingCapabilities
 		});
 	}
 
@@ -67,6 +75,7 @@ export class VersionMiddlewareManager implements Disposable {
 	async setApiVersion(version: string) {
 		const prevApiVersion = this._apiVersion;
 		let compatibility = ApiVersionCompatibility.ApiCompatible;
+		let missingCapabilities = {};
 		if (version !== prevApiVersion) {
 			if (this.compareVersions(version, APIServerVersionInfo.minimumRequired) === -1) {
 				compatibility = ApiVersionCompatibility.ApiUpgradeRequired;
@@ -74,10 +83,23 @@ export class VersionMiddlewareManager implements Disposable {
 			else if (this.compareVersions(version, APIServerVersionInfo.minimumPreferred) === -1) {
 				compatibility = ApiVersionCompatibility.ApiUpgradeRecommended;
 			}
-			this.apiVersionNotify(compatibility, version);
-		}
-		if (compatibility !== ApiVersionCompatibility.ApiUpgradeRequired) {
-			this._apiVersion = version;
+
+			const preferredCapabilities: { [id: string]: CSApiCapability } = APIServerVersionInfo.preferredCapabilities;
+			missingCapabilities = Object.keys(preferredCapabilities).reduce((capabilities, id) => {
+				const capability = preferredCapabilities[id];
+				if (capability.version && this.compareVersions(version, capability.version) < 0) {
+					(capabilities as CSApiCapabilities)[id] = capability;
+				}
+				return capabilities;
+			}, {}) as CSApiCapabilities;
+
+			this.apiVersionNotify(compatibility, version, missingCapabilities);
+			if (compatibility !== ApiVersionCompatibility.ApiUpgradeRequired) {
+				if (SessionContainer.isInitialized()) {
+					await SessionContainer.instance().session.didChangeCodeStreamApiVersion();
+					this._apiVersion = version;
+				}
+			}
 		}
 	}
 

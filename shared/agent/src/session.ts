@@ -1,5 +1,6 @@
 "use strict";
 import HttpsProxyAgent from "https-proxy-agent";
+import { isEqual } from "lodash-es";
 import * as path from "path";
 import * as url from "url";
 import {
@@ -80,7 +81,8 @@ import {
 	CSStream,
 	CSTeam,
 	CSUser,
-	LoginResult
+	LoginResult,
+	CSApiCapabilities
 } from "./protocol/api.protocol";
 import { Functions, log, memoize, registerDecoratedHandlers, registerProviders } from "./system";
 
@@ -295,7 +297,8 @@ export class CodeStreamSession {
 					teams: teamsResponse.teams,
 					unreads: unreadsResponse.unreads,
 					users: usersResponse.users,
-					providers: this.providers
+					providers: this.providers,
+					apiCapabilities: this.apiCapabilities
 				};
 			}
 		);
@@ -401,7 +404,7 @@ export class CodeStreamSession {
 		this.agent.sendNotification(DidChangeApiVersionCompatibilityNotificationType, e);
 
 		if (e.compatibility === ApiVersionCompatibility.ApiUpgradeRequired) {
-			// this.logout(LogoutReason.UnsupportedVersion);
+			this.logout(LogoutReason.UnsupportedApiVersion);
 		}
 	}
 
@@ -444,7 +447,7 @@ export class CodeStreamSession {
 		return this._teamId!;
 	}
 
-	private _apiCapabilities: string[] = [];
+	private _apiCapabilities: CSApiCapabilities = {};
 	get apiCapabilities() {
 		return this._apiCapabilities;
 	}
@@ -610,7 +613,7 @@ export class CodeStreamSession {
 		const token = response.token;
 		this._teamId = (this._options as any).teamId = token.teamId;
 		this._codestreamUserId = response.user.id;
-		this._apiCapabilities = [...(response.capabilities || [])];
+		this._apiCapabilities = {...(response.capabilities || {})};
 
 		const currentTeam = response.teams.find(t => t.id === this._teamId)!;
 
@@ -943,6 +946,18 @@ export class CodeStreamSession {
 			this.agent.sendNotification(DidChangeDataNotificationType, {
 				type: ChangeDataType.Providers,
 				data: this._providers
+			});
+		}
+	}
+
+	@log()
+	async didChangeCodeStreamApiVersion(): Promise<void> {
+		const oldCapabilities = SessionContainer.instance().session.apiCapabilities;
+		const newCapabilities = await this.api.getApiCapabilities();
+		if (!isEqual(oldCapabilities, newCapabilities)) {
+			this.agent.sendNotification(DidChangeDataNotificationType, {
+				type: ChangeDataType.ApiCapabilities,
+				data: newCapabilities
 			});
 		}
 	}

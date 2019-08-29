@@ -114,6 +114,7 @@ import {
 	UpdateStreamMembershipResponse
 } from "../protocol/agent.protocol";
 import {
+	CSApiCapabilities,
 	CSChannelStream,
 	CSCodemark,
 	CSDirectStream,
@@ -262,6 +263,7 @@ export interface ApiProvider {
 	getPreferences(): Promise<GetPreferencesResponse>;
 	updatePresence(request: UpdatePresenceRequest): Promise<UpdatePresenceResponse>;
 	getTelemetryKey(): Promise<string>;
+	getApiCapabilities(): Promise<CSApiCapabilities>;
 
 	// createFileStream(request: CreateFileStreamRequest): Promise<CreateFileStreamResponse>;
 	fetchFileStreams(request: FetchFileStreamsRequest): Promise<FetchFileStreamsResponse>;

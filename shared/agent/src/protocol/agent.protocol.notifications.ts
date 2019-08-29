@@ -4,6 +4,7 @@ import { LoginSuccessResponse } from "./agent.protocol.auth";
 import { CodemarkPlus } from "./agent.protocol.codemarks";
 import { ThirdPartyProviders } from "./agent.protocol.providers";
 import {
+	CSApiCapabilities,
 	CSLastReads,
 	CSMarker,
 	CSMarkerLocations,
@@ -42,7 +43,8 @@ export enum ChangeDataType {
 	Teams = "teams",
 	Unreads = "unreads",
 	Users = "users",
-	Providers = "providers"
+	Providers = "providers",
+	ApiCapabilities = "apiCapabilities"
 }
 
 export interface CodemarksChangedNotification {
@@ -108,6 +110,11 @@ export interface ProvidersChangedNotification {
 	data: ThirdPartyProviders;
 }
 
+export interface ApiCapabilitiesChangedNotification {
+	type: ChangeDataType.ApiCapabilities;
+	data: CSApiCapabilities;
+}
+
 export type DidChangeDataNotification =
 	| CodemarksChangedNotification
 	| MarkerLocationsChangedNotification
@@ -119,7 +126,8 @@ export type DidChangeDataNotification =
 	| TeamsChangedNotification
 	| UnreadsChangedNotification
 	| UsersChangedNotification
-	| ProvidersChangedNotification;
+	| ProvidersChangedNotification
+	| ApiCapabilitiesChangedNotification;
 
 export const DidChangeDataNotificationType = new NotificationType<DidChangeDataNotification, void>(
 	"codestream/didChangeData"
@@ -163,6 +171,7 @@ export enum ApiVersionCompatibility {
 export interface DidChangeApiVersionCompatibilityNotification {
 	compatibility: ApiVersionCompatibility;
 	version: string;
+	missingCapabilities?: CSApiCapabilities;
 }
 
 export const DidChangeApiVersionCompatibilityNotificationType = new NotificationType<
@@ -173,7 +182,8 @@ export const DidChangeApiVersionCompatibilityNotificationType = new Notification
 export enum LogoutReason {
 	Token = "token",
 	Unknown = "unknown",
-	UnsupportedVersion = "unsupportedVersion"
+	UnsupportedVersion = "unsupportedVersion",
+	UnsupportedApiVersion = "unsupportedApiVersion"
 }
 
 export interface DidLogoutNotification {

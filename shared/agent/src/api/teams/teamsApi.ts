@@ -89,6 +89,7 @@ import {
 	UpdateStreamMembershipResponse
 } from "../../protocol/agent.protocol";
 import {
+	CSApiCapabilities,
 	CSCodemark,
 	CSGetMeResponse,
 	CSMarker,
@@ -886,6 +887,11 @@ export class MSTeamsApiProvider implements ApiProvider {
 	@log()
 	async getTelemetryKey(): Promise<string> {
 		return this._codestream.getTelemetryKey();
+	}
+
+	@log()
+	async getApiCapabilities(): Promise<CSApiCapabilities> {
+		return this._codestream.getApiCapabilities();
 	}
 
 	@log()

@@ -74,6 +74,7 @@ import {
 	UpdateStreamMembershipResponse
 } from "../../protocol/agent.protocol";
 import {
+	CSApiCapabilities,
 	CSChannelStream,
 	CSCodemark,
 	CSDirectStream,
@@ -1281,6 +1282,11 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	async getTelemetryKey(): Promise<string> {
 		return this._codestream.getTelemetryKey();
+	}
+
+	@log()
+	async getApiCapabilities(): Promise<CSApiCapabilities> {
+		return this._codestream.getApiCapabilities();
 	}
 
 	@log()
