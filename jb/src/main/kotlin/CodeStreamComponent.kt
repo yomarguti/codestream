@@ -8,6 +8,7 @@ import com.codestream.widgets.CodeStreamStatusBarWidget
 import com.intellij.ProjectTopics
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.project.Project
@@ -27,6 +28,7 @@ const val CODESTREAM_TOOL_WINDOW_ID = "CodeStream"
 
 class CodeStreamComponent(val project: Project) : Disposable {
 
+    private val logger = Logger.getInstance(CodeStreamComponent::class.java)
     private lateinit var toolWindow: ToolWindow
     private var statusBar: StatusBar? = null
     private var statusBarWidget: CodeStreamStatusBarWidget? = null
@@ -38,6 +40,7 @@ class CodeStreamComponent(val project: Project) : Disposable {
     }
 
     init {
+        logger.info("Initializing CodeStream")
         ApplicationManager.getApplication().invokeLater {
             initToolWindow()
             initWindowFocusListener()
