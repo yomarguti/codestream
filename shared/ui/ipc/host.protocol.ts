@@ -7,6 +7,7 @@ import {
 	VersionCompatibility
 } from "@codestream/protocols/agent";
 import {
+	CSApiCapabilities,
 	CSMarker,
 	CSMePreferences,
 	CSRepository,
@@ -34,6 +35,8 @@ export interface BootstrapInHostResponse {
 	};
 	versionCompatibility?: VersionCompatibility | undefined;
 	apiVersionCompatibility?: ApiVersionCompatibility | undefined;
+	missingCapabilities?: CSApiCapabilities;
+	apiCapabilities?: CSApiCapabilities;
 }
 
 export const BootstrapInHostRequestType = new RequestType<

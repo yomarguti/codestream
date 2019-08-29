@@ -33,14 +33,16 @@ import {
 	ThirdPartyProviders,
 	GetDocumentFromMarkerRequestType
 } from "@codestream/protocols/agent";
+import { CSApiCapabilities } from "@codestream/protocols/api";
 import translations from "./translations/en";
-import { apiUpgradeRequired } from "./store/apiVersioning/actions";
+import { apiUpgradeRecommended, apiUpgradeRequired } from "./store/apiVersioning/actions";
 import { getCodemark } from "./store/codemarks/reducer";
 import { fetchCodemarks, openPanel } from "./Stream/actions";
 import { ContextState } from "./store/context/types";
 import { CodemarksState } from "./store/codemarks/types";
 import { EditorContextState } from "./store/editorContext/types";
 import { updateProviders } from "./store/providers/actions";
+import { apiCapabilitiesUpdated } from "./store/apiVersioning/actions";
 import { bootstrap, reset } from "./store/actions";
 import { online, offline } from "./store/connectivity/actions";
 import { upgradeRequired, upgradeRecommended } from "./store/versioning/actions";
@@ -101,6 +103,8 @@ export function listenForEvents(store) {
 	api.on(DidChangeApiVersionCompatibilityNotificationType, e => {
 		if (e.compatibility === ApiVersionCompatibility.ApiUpgradeRequired) {
 			store.dispatch(apiUpgradeRequired());
+		} else if (e.compatibility === ApiVersionCompatibility.ApiUpgradeRecommended) {
+			store.dispatch(apiUpgradeRecommended(e.missingCapabilities || {}));
 		}
 	});
 
@@ -114,6 +118,9 @@ export function listenForEvents(store) {
 				break;
 			case ChangeDataType.Providers:
 				store.dispatch(updateProviders(data as ThirdPartyProviders));
+				break;
+			case ChangeDataType.ApiCapabilities:
+				store.dispatch(apiCapabilitiesUpdated(data as CSApiCapabilities));
 				break;
 			default:
 				store.dispatch({ type: `ADD_${type.toUpperCase()}`, payload: data });

@@ -13,6 +13,7 @@ import RoadBlock from "../Stream/RoadBlock";
 import Dismissable from "../Stream/Dismissable";
 import { upgradeRecommendedDismissed } from "../store/versioning/actions";
 import { VersioningActionsType } from "../store/versioning/types";
+import { apiUpgradeRecommendedDismissed } from "../store/apiVersioning/actions";
 import { ApiVersioningActionsType } from "../store/apiVersioning/types";
 
 addLocaleData(englishLocaleData);
@@ -107,12 +108,49 @@ const Root = connect(mapStateToProps)(props => {
 				}}
 			>
 				<p>
-					Your version of CodeStream is getting a little long in the tooth! We suggest that you
-					update to the latest version.
+					Your on-prem installation of CodeStream is running a version of the API server that seems 
+					is incompatible with this version of the CodeStream extension. Please ask your admin to update
+					the API server.
 				</p>
 				{getIdeInstallationInstructions(props)}
 			</Dismissable>
 		);
+	if (props.apiVersioning && props.apiVersioning.type === ApiVersioningActionsType.ApiUpgradeRecommended) {
+		const { missingCapabilities } = props.apiVersioning;
+		let haveFeatures = "new features.";
+		let missingFeatures = [];
+		if (Object.keys(missingCapabilities).length > 0) {
+			haveFeatures = "these features:";
+			missingFeatures = Object.values(missingCapabilities);
+		}
+		return (
+			<Dismissable
+				title="API Server Update Suggested"
+				onClick={e => {
+					e.preventDefault();
+					props.dispatch(apiUpgradeRecommendedDismissed());
+				}}
+			>
+				<p>
+					Your on-prem installation of CodeStream has an API server that seems to be getting a bit long
+					in the tooth. Please ask your admin to upgrade to the latest version to get access to {haveFeatures}
+				</p>
+				{ missingFeatures.map(feature => {
+					return (
+						<p>
+							&middot; {feature.description} 
+							{feature.url && " ("}
+							{feature.url && (
+								<a href="{feature.url}" target="_blank">{feature.url}</a>
+							)}
+							{feature.url && ")"}
+						</p>
+					);
+				})}
+			</Dismissable>
+		);
+	}
+
 	return <Stream />;
 });
 

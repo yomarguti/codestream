@@ -33,7 +33,11 @@ import { BootstrapActionType } from "./bootstrapped/types";
 import { ValidateSignupInfo, startSSOSignin } from "../Authentication/actions";
 import { uuid } from "../utils";
 import { upgradeRequired } from "../store/versioning/actions";
-import { apiUpgradeRequired } from "../store/apiVersioning/actions";
+import {
+	apiCapabilitiesUpdated,
+	apiUpgradeRecommended,
+	apiUpgradeRequired
+} from "../store/apiVersioning/actions";
 
 export const reset = () => action("RESET");
 
@@ -85,10 +89,13 @@ const bootstrapEssentials = (data: BootstrapInHostResponse) => dispatch => {
 
 	if (data.versionCompatibility === VersionCompatibility.UnsupportedUpgradeRequired) {
 		dispatch(upgradeRequired());
-	}
-	if (data.apiVersionCompatibility === ApiVersionCompatibility.ApiUpgradeRequired) {
+	} else if (data.apiVersionCompatibility === ApiVersionCompatibility.ApiUpgradeRequired) {
 		dispatch(apiUpgradeRequired());
+	} else if (data.apiVersionCompatibility === ApiVersionCompatibility.ApiUpgradeRecommended) {
+		dispatch(apiUpgradeRecommended(data.missingCapabilities || {}));
 	}
+	
+	dispatch(apiCapabilitiesUpdated(data.apiCapabilities || {}));
 };
 
 export const reAuthForFullChatProvider = (

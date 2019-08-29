@@ -2096,6 +2096,7 @@ const sum = (total, num) => total + Math.round(num);
  **/
 const mapStateToProps = state => {
 	const {
+		apiVersioning,
 		capabilities,
 		configs,
 		connectivity,
@@ -2154,6 +2155,7 @@ const mapStateToProps = state => {
 	}));
 
 	return {
+		apiCapabilities: apiVersioning.apiCapabilities,
 		currentCodemarkId: context.currentCodemarkId,
 		capabilities: capabilities,
 		editorHasFocus: context.hasFocus,
