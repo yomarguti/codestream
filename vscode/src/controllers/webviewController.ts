@@ -15,7 +15,7 @@ import {
 	ReportingMessageType,
 	VersionCompatibility
 } from "@codestream/protocols/agent";
-import { CodemarkType } from "@codestream/protocols/api";
+import { CodemarkType, CSApiCapabilities } from "@codestream/protocols/api";
 import {
 	ActiveEditorInfo,
 	ApplyMarkerRequestType,
@@ -104,6 +104,7 @@ export class WebviewController implements Disposable {
 	private _webview: CodeStreamWebviewPanel | undefined;
 	private _versionCompatibility: VersionCompatibility | undefined;
 	private _apiVersionCompatibility: ApiVersionCompatibility | undefined;
+	private _missingCapabilities: CSApiCapabilities | undefined;
 
 	private readonly _notifyActiveEditorChangedDebounced: (e: TextEditor | undefined) => void;
 
@@ -348,8 +349,9 @@ export class WebviewController implements Disposable {
 	
 	@log()
 	async onApiVersionChanged(e: DidChangeApiVersionCompatibilityNotification) {
-		if (e.compatibility === ApiVersionCompatibility.ApiUpgradeRequired) {
-			this._apiVersionCompatibility = e.compatibility;
+		this._apiVersionCompatibility = e.compatibility;
+		if (e.compatibility === ApiVersionCompatibility.ApiUpgradeRecommended) {
+			this._missingCapabilities = e.missingCapabilities || {};
 		}
 		if (!this.visible) {
 			await this.show();
@@ -751,7 +753,8 @@ export class WebviewController implements Disposable {
 				  },
 			version: Container.versionFormatted,
 			versionCompatibility: this._versionCompatibility,
-			apiVersionCompatibility: this._apiVersionCompatibility
+			apiVersionCompatibility: this._apiVersionCompatibility,
+			missingCapabilities: this._missingCapabilities
 		};
 	}
 
