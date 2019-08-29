@@ -2,20 +2,21 @@ import React from "react";
 import { render } from "react-dom";
 import Container from "./Container";
 import {
+	EditorRevealRangeRequestType,
 	HostDidChangeActiveEditorNotificationType,
 	HostDidChangeConfigNotificationType,
 	HostDidChangeFocusNotificationType,
-	HostDidLogoutNotificationType,
-	WebviewDidInitializeNotificationType,
 	HostDidChangeEditorSelectionNotificationType,
 	HostDidChangeEditorVisibleRangesNotificationType,
-	ShowCodemarkNotificationType,
-	ShowStreamNotificationType,
-	WebviewPanels,
+	HostDidLogoutNotificationType,
 	HostDidReceiveRequestNotificationType,
+	Route,
 	RouteControllerType,
 	RouteActionType,
-	Route
+	ShowCodemarkNotificationType,
+	ShowStreamNotificationType,
+	WebviewDidInitializeNotificationType,
+	WebviewPanels
 } from "./ipc/webview.protocol";
 import { createCodeStreamStore } from "./store";
 import { HostApi } from "./webview-api";
@@ -27,7 +28,8 @@ import {
 	ChangeDataType,
 	VersionCompatibility,
 	GetFileScmInfoRequestType,
-	ThirdPartyProviders
+	ThirdPartyProviders,
+	GetDocumentFromMarkerRequestType
 } from "@codestream/protocols/agent";
 import translations from "./translations/en";
 import { getCodemark } from "./store/codemarks/reducer";
@@ -46,6 +48,7 @@ import { setEditorContext } from "./store/editorContext/actions";
 import { blur, focus, setCurrentStream, setCurrentCodemark } from "./store/context/actions";
 import { isNotOnDisk } from "./utils";
 import { URI } from "vscode-uri";
+import { CodemarkDetails } from "./Stream/CodemarkDetails";
 
 export { HostApi };
 
@@ -186,7 +189,20 @@ export function listenForEvents(store) {
 			if (codemark == null) return;
 
 			store.dispatch(openPanel(WebviewPanels.Codemarks));
-			store.dispatch(setCurrentStream(codemark.streamId, codemark.postId));
+			if (codemark.streamId) {
+				store.dispatch(setCurrentStream(codemark.streamId, codemark.postId));
+			} else if (codemark.markerIds) {
+				const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
+					markerId: codemark.markerIds[0]
+				});
+				if (response) {
+					HostApi.instance.send(EditorRevealRangeRequestType, {
+						uri: response.textDocument.uri,
+						range: response.range,
+						atTop: true
+					});
+				}
+			}
 		} else {
 			store.dispatch(openPanel("main"));
 			store.dispatch(setCurrentStream(streamId, threadId));
