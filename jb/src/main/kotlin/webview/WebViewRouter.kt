@@ -42,7 +42,7 @@ class WebViewRouter(val project: Project) {
         val message = parse(rawMessage)
 
         try {
-            logger.debug("Handling ${message.method}")
+            logger.debug("Handling ${message.method} ${message.id}")
             when (message.target) {
                 "host" -> processHostMessage(message)
                 "codestream" -> processAgentMessage(message)
@@ -51,6 +51,7 @@ class WebViewRouter(val project: Project) {
         } catch (e: Exception) {
             logger.warn(e)
             if (message.id != null) {
+                logger.debug("Posting response ${message.id} - Error: ${e.message}")
                 project.webViewService?.postResponse(message.id, null, e.message)
             }
         }
@@ -61,6 +62,7 @@ class WebViewRouter(val project: Project) {
         val webViewService = project.webViewService ?: return
         val response = agentService.remoteEndpoint.request(message.method, message.params).await()
         if (message.id != null) {
+            logger.debug("Posting response (agent) ${message.id}")
             webViewService.postResponse(message.id, response)
         }
     }
@@ -87,6 +89,7 @@ class WebViewRouter(val project: Project) {
             else -> logger.warn("Unhandled host message ${message.method}")
         }
         if (message.id != null) {
+            logger.debug("Posting response (host) ${message.id}")
             project.webViewService?.postResponse(message.id, response.orEmptyObject)
         }
     }
