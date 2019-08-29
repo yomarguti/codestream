@@ -32,8 +32,12 @@ export namespace TokenManager {
 			try {
 				await keychain.setPassword(CredentialService, key, JSON.stringify(token));
 				return;
-			} catch (ex) {}
+			} catch (ex) {
+				Logger.error(ex, "TokenManager.addOrUpdate: Failed to set credentials");
+			}
 		}
+
+		Logger.log("TokenManager.addOrUpdate: Falling back to use local storage");
 
 		const tokens = getTokenMap();
 		tokens[key] = token;
@@ -48,9 +52,8 @@ export namespace TokenManager {
 		if (keychain !== undefined) {
 			try {
 				await keychain.deletePassword(CredentialService, key);
-				return;
 			} catch (ex) {
-				Logger.error(ex, "Failed to clear credentials");
+				Logger.error(ex, "TokenManager.clear: Failed to clear credentials");
 			}
 		}
 
@@ -83,6 +86,8 @@ export namespace TokenManager {
 			}
 		}
 
+		Logger.log(`TokenManager.get: Checking local storage; migrate=${migrate}`);
+
 		const tokens = getTokenMap();
 		const token = tokens[key];
 
@@ -102,6 +107,7 @@ export namespace TokenManager {
 		try {
 			await keychain.setPassword(CredentialService, key, JSON.stringify(token));
 		} catch (ex) {
+			Logger.error(ex, "TokenManager.migrateTokenToKeyChain: Failed to migrate credentials");
 			return;
 		}
 
