@@ -37,6 +37,7 @@ import com.teamdev.jxbrowser.chromium.swing.BrowserView
 import org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.charset.Charset
+import java.util.concurrent.atomic.AtomicInteger
 import javax.swing.UIManager
 
 class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHandler, ResourceHandler {
@@ -56,6 +57,11 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
                 browser.loadURL(htmlFile.url)
             }
         }
+    }
+
+    companion object {
+        private var debugPortSeed = AtomicInteger(9222)
+        private val debugPort get() = debugPortSeed.getAndAdd(1)
     }
 
     fun load() {
@@ -140,7 +146,7 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
         System.setProperty("jxbrowser.ipc.external", "true")
         BrowserPreferences.setChromiumSwitches(
             if (DEBUG) {
-                "--remote-debugging-port=9222"
+                "--remote-debugging-port=$debugPort"
             } else {
                 ""
             },
