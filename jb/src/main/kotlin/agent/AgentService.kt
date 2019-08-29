@@ -44,8 +44,14 @@ import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
 import java.util.Scanner
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.atomic.AtomicInteger
 
 class AgentService(private val project: Project) : Disposable {
+
+    companion object {
+        private var debugPortSeed = AtomicInteger(6010)
+        private val debugPort get() = debugPortSeed.getAndAdd(1)
+    }
 
     private val logger = Logger.getInstance(AgentService::class.java)
     private var initialization = CompletableFuture<Unit>()
@@ -100,11 +106,16 @@ class AgentService(private val project: Project) : Disposable {
                 if (autoSignIn) {
                     project.authenticationService?.let {
                         val success = it.autoSignIn()
-                        if (!success) restart()
+                        if (success) {
+                            initialization.complete(Unit)
+                        } else {
+                            restart()
+                        }
                     }
+                } else {
+                    initialization.complete(Unit)
                 }
             }
-            initialization.complete(Unit)
         } catch (e: Exception) {
             logger.error(e)
             e.printStackTrace()
@@ -137,7 +148,7 @@ class AgentService(private val project: Project) : Disposable {
             GeneralCommandLine(
                 "node",
                 "--nolazy",
-                "--inspect=6010",
+                "--inspect=$debugPort",
                 agentJs.absolutePath,
                 "--stdio"
                 // "--log=${agentLog.absolutePath}"
@@ -169,10 +180,7 @@ class AgentService(private val project: Project) : Disposable {
         }
 
         captureErrorStream(process)
-        GlobalScope.launch {
-            val code = process.waitFor()
-            logger.info("LSP agent terminated with exit code $code")
-        }
+        captureExitCode(process)
 
         return process
     }
@@ -184,6 +192,13 @@ class AgentService(private val project: Project) : Disposable {
                 val nextLine = sc.nextLine()
                 logger.warn(nextLine)
             }
+        }).start()
+    }
+
+    private fun captureExitCode(process: Process) {
+        Thread(Runnable {
+            val code = process.waitFor()
+            logger.info("LSP agent terminated with exit code $code")
         }).start()
     }
 
