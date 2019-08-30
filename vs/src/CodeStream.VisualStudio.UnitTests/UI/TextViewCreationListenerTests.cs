@@ -50,10 +50,26 @@ namespace CodeStream.VisualStudio.UnitTests.UI {
 			var reason = ConnectionReason.TextViewLifetime;
 			var textViewCache = new WpfTextViewCache();
 			var eventAggregator = new Mock<IEventAggregator>();
-			eventAggregator.Setup(_ => _.GetEvent<DocumentMarkerChangedEvent>("", 0,"")).Returns(new Subject<DocumentMarkerChangedEvent>());
-			eventAggregator.Setup(_ => _.GetEvent<SessionReadyEvent>("", 0, "")).Returns(new Subject<SessionReadyEvent>());
-			eventAggregator.Setup(_ => _.GetEvent<SessionLogoutEvent>("", 0, "")).Returns(new Subject<SessionLogoutEvent>());
-			eventAggregator.Setup(_ => _.GetEvent<MarkerGlyphVisibilityEvent>("", 0, "")).Returns(new Subject<MarkerGlyphVisibilityEvent>());
+			eventAggregator.Setup(_ => _.GetEvent<DocumentMarkerChangedEvent>(
+#if DEBUG
+				"", 0,""
+#endif
+				)).Returns(new Subject<DocumentMarkerChangedEvent>());
+			eventAggregator.Setup(_ => _.GetEvent<SessionReadyEvent>(
+#if DEBUG
+				"", 0, ""
+#endif
+				)).Returns(new Subject<SessionReadyEvent>());
+			eventAggregator.Setup(_ => _.GetEvent<SessionLogoutEvent>(
+#if DEBUG
+				"", 0, ""
+#endif
+				)).Returns(new Subject<SessionLogoutEvent>());
+			eventAggregator.Setup(_ => _.GetEvent<MarkerGlyphVisibilityEvent>(
+#if DEBUG
+				"", 0, ""
+#endif
+				)).Returns(new Subject<MarkerGlyphVisibilityEvent>());
 
 			var codeStreamAgentService = new Mock<ICodeStreamAgentServiceFactory>();
 
