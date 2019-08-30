@@ -402,10 +402,6 @@ export class CodeStreamSession {
 	@log()
 	private onApiVersionCompatibilityChanged(e: ApiVersionCompatibilityChangedEvent) {
 		this.agent.sendNotification(DidChangeApiVersionCompatibilityNotificationType, e);
-
-		if (e.compatibility === ApiVersionCompatibility.ApiUpgradeRequired) {
-			this.logout(LogoutReason.UnsupportedApiVersion);
-		}
 	}
 
 	private _api: ApiProvider | undefined;
