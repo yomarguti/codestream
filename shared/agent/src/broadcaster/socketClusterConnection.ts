@@ -113,6 +113,7 @@ export class SocketClusterConnection implements BroadcasterConnection {
 			*/
 
 			this._scClient!.on("message", (msg: string) => {
+				this._debug('Received SocketCluster message', msg);
 				let data: { event?: string } = {};
 				try {
 					data = JSON.parse(msg);
