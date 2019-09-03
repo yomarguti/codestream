@@ -1030,11 +1030,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 								areRangesEqual(documentMarker.range, attributes.codeBlock.range)
 							) {
 								docMarker = documentMarker;
-								return true;
+								return false;
 							}
 						}
 					}
-					return false;
+					return true;
 				});
 			}
 		);
