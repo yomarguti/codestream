@@ -9,14 +9,16 @@ class MiddlewareInjector {
 			return next => action => {
 				let result = action;
 
-				const injectedMiddleware = this.middleware.get(action.type);
+				try {
+					const injectedMiddleware = this.middleware.get(action.type);
 
-				if (injectedMiddleware != undefined && injectedMiddleware.size > 0) {
-					result.payload = [...injectedMiddleware.keys()].reduce(
-						(payload, transform) => transform(payload),
-						action.payload
-					);
-				}
+					if (injectedMiddleware != undefined && injectedMiddleware.size > 0) {
+						result.payload = [...injectedMiddleware.keys()].reduce(
+							(payload, transform) => transform(payload),
+							action.payload
+						);
+					}
+				} catch (error) {}
 
 				return next(result);
 			};
