@@ -46,6 +46,7 @@ export class SimpleChannelPanel extends Component {
 				liveShareSessions: true,
 				unreads: true
 			},
+			reAuthLoading: false,
 			checkedStreams: {}
 		};
 		this.showChannelsLabel = {
@@ -94,7 +95,8 @@ export class SimpleChannelPanel extends Component {
 		HostApi.instance.track("Slack Chat Selected");
 		localStore.set("enablingRealTime", true);
 		setTimeout(() => {
-			this.props.reAuthForFullChatProvider(this.props.teamProvider);
+			this.setState({ reAuthLoading: true });
+			this.props.reAuthForFullChatProvider(this.props.teamProvider);			
 		}, 500);
 	};
 
@@ -133,6 +135,7 @@ export class SimpleChannelPanel extends Component {
 									<Button
 										className="control-button"
 										type="button"
+										loading={this.state.reAuthLoading}
 										onClick={this.onClickEnableRealtimeChat}
 									>
 										Authenticate with Slack

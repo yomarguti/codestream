@@ -15,7 +15,8 @@ import { bootstrapUsers } from "./users/actions";
 import {
 	LogoutRequestType,
 	SignedInBootstrapData,
-	BootstrapInHostResponse
+	BootstrapInHostResponse,
+	LogoutReason
 } from "../ipc/host.protocol";
 import { HostApi } from "../webview-api";
 import { updateConfigs } from "./configs/actions";
@@ -86,7 +87,10 @@ export const reAuthForFullChatProvider = (
 	provider: string,
 	info?: ValidateSignupInfo
 ) => async dispatch => {
-	await HostApi.instance.send(LogoutRequestType, {});
+	await HostApi.instance.send(LogoutRequestType, {
+		reason: LogoutReason.ReAuthenticating
+	});
+	
 	dispatch(reset());
 
 	dispatch(startSSOSignin(provider, info, "permissive"));

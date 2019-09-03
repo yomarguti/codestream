@@ -53,7 +53,15 @@ export interface SignedInBootstrapData extends BootstrapInHostResponse {
 	providers: ThirdPartyProviders;
 }
 
-export interface LogoutRequest {}
+export enum LogoutReason {
+	Unknown = "unknown",
+	ReAuthenticating = "reAuthenticating"
+}
+
+export interface LogoutRequest {
+	reason?: LogoutReason;
+}
+
 export interface LogoutResponse {}
 export const LogoutRequestType = new RequestType<LogoutRequest, LogoutResponse, void, void>(
 	`${IpcRoutes.Host}/logout`
