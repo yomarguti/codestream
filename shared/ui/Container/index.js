@@ -108,9 +108,8 @@ const Root = connect(mapStateToProps)(props => {
 				}}
 			>
 				<p>
-					Your on-prem installation of CodeStream is running a version of the API server that seems 
-					is incompatible with this version of the CodeStream extension. Please ask your admin to update
-					the API server.
+					Your version of CodeStream is getting a little long in the tooth! We suggest that you
+					update to the latest version.
 				</p>
 				{getIdeInstallationInstructions(props)}
 			</Dismissable>
