@@ -59,6 +59,8 @@ import React from "react";
 import { getFileScmError } from "../store/editorContext/reducer";
 import { PostEntryPoint } from "../store/context/types";
 import { CodeDelimiterStyles } from "./CrossPostIssueControls/types";
+import { middlewareInjector } from "../store/middleware-injector";
+import { PostsActionsType, Post } from "../store/posts/types";
 
 export {
 	openPanel,
@@ -219,18 +221,42 @@ export const createPost = (
 ) => async (dispatch, getState: () => CodeStreamState) => {
 	const { session, context } = getState();
 	const pendingId = uuid();
-	dispatch(
-		postsActions.addPendingPost({
-			id: pendingId,
-			streamId,
-			parentPostId,
-			text,
-			codemark,
-			creatorId: session.userId!,
-			createdAt: new Date().getTime(),
-			pending: true
-		})
-	);
+
+	// no need for pending post when creating a codemark
+	if (!codemark) {
+		dispatch(
+			postsActions.addPendingPost({
+				id: pendingId,
+				streamId,
+				parentPostId,
+				text,
+				codemark,
+				creatorId: session.userId!,
+				createdAt: new Date().getTime(),
+				pending: true
+			})
+		);
+	}
+
+	const filteredPosts: any = [];
+	const removeMiddleware = middlewareInjector.inject(PostsActionsType.Add, (payload: CSPost[]) => {
+		return payload.filter(post => {
+			// third party post objects don't have a version property
+			if (post.version == undefined) {
+				if (post.creatorId === session.userId && post.streamId === streamId) {
+					filteredPosts.push(post);
+					return false;
+				}
+			} else {
+				if (post.version <= 1 && post.creatorId === session.userId && post.streamId === streamId) {
+					filteredPosts.push(post);
+					return false;
+				}
+			}
+
+			return true;
+		});
+	});
 
 	try {
 		let responsePromise: Promise<CreatePostResponse>;
@@ -292,6 +318,10 @@ export const createPost = (
 	} catch (error) {
 		logError(`Error creating a post: ${error}`);
 		return dispatch(postsActions.failPendingPost(pendingId));
+	} finally {
+		removeMiddleware();
+		// just to be sure no posts get missed
+		if (filteredPosts.length > 0) dispatch(postsActions.addPosts(filteredPosts));
 	}
 };
 
