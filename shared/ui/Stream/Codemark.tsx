@@ -7,6 +7,7 @@ import Headshot from "./Headshot";
 import Tag from "./Tag";
 import Icon from "./Icon";
 import Menu from "./Menu";
+import { InjectAsComment } from "./InjectAsComment";
 import { markdownify } from "./Markdowner";
 import Timestamp from "./Timestamp";
 import CodemarkDetails from "./CodemarkDetails";
@@ -44,6 +45,7 @@ import { RelatedCodemark } from "./RelatedCodemark";
 interface State {
 	hover: boolean;
 	isEditing: boolean;
+	isInjecting: boolean;
 	menuOpen?: boolean;
 	menuTarget?: any;
 }
@@ -107,6 +109,7 @@ export class Codemark extends React.Component<Props, State> {
 		this.state = {
 			hover: false,
 			isEditing: false,
+			isInjecting: false,
 			menuOpen: false
 		};
 	}
@@ -217,6 +220,12 @@ export class Codemark extends React.Component<Props, State> {
 	cancelEditing = () => {
 		this.setState({ isEditing: false });
 	};
+
+	cancelInjecting = () => {
+		this.setState({ isInjecting: false });
+	};
+
+	inject = () => {};
 
 	editCodemark = async ({ text, assignees, title, relatedCodemarkIds, tags }) => {
 		await this.props.editCodemark(this.props.codemark.id, {
@@ -395,6 +404,9 @@ export class Codemark extends React.Component<Props, State> {
 
 	renderStatus(codemark) {
 		const { type, status = "open" } = codemark;
+
+		if (this.state.isInjecting) return null;
+
 		if (type === CodemarkType.Issue) {
 			if (this.props.displayType === "default") {
 				return (
@@ -425,6 +437,9 @@ export class Codemark extends React.Component<Props, State> {
 
 	handleClickCodemark = (event: React.MouseEvent): any => {
 		const target = event && (event.target as HTMLElement);
+
+		if (this.state.isInjecting) return false;
+
 		if (target) {
 			if (
 				target.tagName === "A" ||
@@ -539,6 +554,9 @@ export class Codemark extends React.Component<Props, State> {
 				// if (!this.props.selected) this.props.setCurrentCodemark(this.props.codemark.id);
 				this.setState({ isEditing: true });
 				break;
+			}
+			case "inject": {
+				this.setState({ isInjecting: true });
 			}
 		}
 		var found = action.match(/set-keybinding-(\d)/);
@@ -856,7 +874,7 @@ export class Codemark extends React.Component<Props, State> {
 
 	renderInlineCodemark() {
 		const { codemark, codemarkKeybindings, hidden, selected, author } = this.props;
-		const { menuOpen, menuTarget } = this.state;
+		const { menuOpen, menuTarget, isInjecting } = this.state;
 
 		if (!codemark) return null;
 
@@ -883,6 +901,8 @@ export class Codemark extends React.Component<Props, State> {
 			);
 		}
 
+		menuItems.push({ label: "Inject as Inline Comment", action: "inject" });
+
 		const submenu = range(1, 10).map(index => {
 			const inUse = codemarkKeybindings[index] ? " (in use)" : "";
 			return {
@@ -902,7 +922,8 @@ export class Codemark extends React.Component<Props, State> {
 					"cs-hidden": !selected ? hidden : false,
 					// collapsed: !selected,
 					selected: selected,
-					unpinned: !codemark.pinned
+					unpinned: !codemark.pinned,
+					injecting: isInjecting
 				})}
 				onClick={this.handleClickCodemark}
 				onMouseEnter={this.handleMouseEnterCodemark}
@@ -959,13 +980,16 @@ export class Codemark extends React.Component<Props, State> {
 								<Menu items={menuItems} target={menuTarget} action={this.handleSelectMenu} />
 							)}
 						</div>
-						{selected || type !== "bookmark"
+						{selected || (type !== "bookmark" && !isInjecting)
 							? this.renderTextLinkified(codemark.title || codemark.text)
 							: null}
-						{!selected && this.renderPinnedReplies()}
-						{!selected && this.renderDetailIcons(codemark)}
+						{!selected && !isInjecting && this.renderPinnedReplies()}
+						{!selected && !isInjecting && this.renderDetailIcons(codemark)}
+						{isInjecting && (
+							<InjectAsComment cancel={this.cancelInjecting} codemark={codemark}></InjectAsComment>
+						)}
 					</div>
-					{selected && (
+					{selected && !isInjecting && (
 						<CodemarkDetails
 							codemark={codemark}
 							author={this.props.author}

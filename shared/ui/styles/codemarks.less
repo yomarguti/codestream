@@ -7,6 +7,14 @@
 .codemark {
 	padding-left: 10px;
 	// transition: top 0.1s;
+	&.injecting {
+		.header {
+			display: none;
+		}
+		.info-wrapper {
+			display: none;
+		}
+	}
 	&.collapsed {
 		height: 25px;
 		width: 100%;
@@ -468,6 +476,10 @@
 			padding-right: 5px;
 		}
 	}
+	form.standard-form .form-body {
+		padding: 0;
+		max-width: none;
+	}
 }
 .related-row {
 	display: flex;
@@ -632,5 +644,26 @@
 		position: absolute !important;
 		right: 20px;
 		top: 40px;
+	}
+}
+
+form#inject-form {
+	padding: 0 !important;
+	button {
+		padding-left: 10px;
+		padding-right: 10px;
+	}
+}
+#inject-form {
+	.control-group {
+		margin-bottom: 15px !important;
+	}
+	h4 {
+		padding: 0;
+		margin: 0;
+	}
+	.switch {
+		margin: 0 5px 5px 0;
+		vertical-align: -8px;
 	}
 }
