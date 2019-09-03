@@ -1,6 +1,31 @@
 "use strict";
 import { Range, RequestType } from "vscode-languageserver-protocol";
 
+export interface GetCommitScmInfoRequest {
+	revision: string;
+	repoPath?: string;
+	repoId?: string;
+}
+export interface GetCommitScmInfoResponse {
+	scm?: {
+		repoPath: string;
+		revision: string;
+		message: string;
+		shortMessage: string;
+		author: string;
+		authorDate: Date;
+		// committer: string;
+		// committerDate: string;
+	};
+	error?: string;
+}
+export const GetCommitScmInfoRequestType = new RequestType<
+	GetCommitScmInfoRequest,
+	GetCommitScmInfoResponse,
+	void,
+	void
+>("codestream/scm/commit");
+
 export interface GetFileScmInfoRequest {
 	uri: string;
 }

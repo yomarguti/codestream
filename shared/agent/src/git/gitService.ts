@@ -6,11 +6,11 @@ import { Disposable, Event } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
-import { log } from "../system";
-import { Strings } from "../system";
+import { Iterables, log, Strings } from "../system";
 import { git, GitErrors, GitWarnings } from "./git";
-import { GitAuthor, GitRemote, GitRepository } from "./models/models";
+import { GitAuthor, GitCommit, GitRemote, GitRepository } from "./models/models";
 import { GitAuthorParser } from "./parsers/authorParser";
+import { GitLogParser } from "./parsers/logParser";
 import { GitRemoteParser } from "./parsers/remoteParser";
 import { GitRepositories } from "./repositories";
 
@@ -358,6 +358,31 @@ export class GitService implements IGitService, Disposable {
 				throw ex;
 			}
 
+			return undefined;
+		}
+	}
+
+	async getCommit(repoUri: URI, ref: string): Promise<GitCommit | undefined>;
+	async getCommit(repoPath: string, ref: string): Promise<GitCommit | undefined>;
+	async getCommit(repoUriOrPath: URI | string, ref: string): Promise<GitCommit | undefined> {
+		const repoPath = typeof repoUriOrPath === "string" ? repoUriOrPath : repoUriOrPath.fsPath;
+
+		try {
+			const data = await git(
+				{ cwd: repoPath },
+				"log",
+				"-M",
+				"-n1",
+				GitLogParser.defaultFormat,
+				ref,
+				"--"
+			);
+
+			const commits = GitLogParser.parse(data.trim(), repoPath);
+			if (commits === undefined || commits.size === 0) return undefined;
+
+			return Iterables.first(commits.values());
+		} catch {
 			return undefined;
 		}
 	}

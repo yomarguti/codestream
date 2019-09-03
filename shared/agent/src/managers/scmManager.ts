@@ -3,6 +3,9 @@ import { URI } from "vscode-uri";
 import { Ranges } from "../api/extensions";
 import { Logger } from "../logger";
 import {
+	GetCommitScmInfoRequest,
+	GetCommitScmInfoRequestType,
+	GetCommitScmInfoResponse,
 	GetFileScmInfoRequest,
 	GetFileScmInfoRequestType,
 	GetFileScmInfoResponse,
@@ -18,6 +21,63 @@ import { Container, SessionContainer } from "./../container";
 
 @lsp
 export class ScmManager {
+	@lspHandler(GetCommitScmInfoRequestType)
+	@log()
+	async getCommitInfo({
+		revision,
+		repoPath,
+		repoId
+	}: GetCommitScmInfoRequest): Promise<GetCommitScmInfoResponse> {
+		const cc = Logger.getCorrelationContext();
+
+		const { git } = SessionContainer.instance();
+
+		if (!repoPath) {
+			if (!repoId) {
+				const ex = new Error("A repoPath or repoId is required");
+				Logger.error(ex, cc);
+				throw ex;
+			}
+
+			const repo = await git.getRepositoryById(repoId);
+			if (repo == null) {
+				const ex = new Error(`No repository could be found for repoId=${repoId}`);
+				Logger.error(ex, cc);
+				throw ex;
+			}
+
+			repoPath = repo.path;
+		}
+
+		let gitError;
+		let commit;
+		try {
+			if (repoPath !== undefined) {
+				commit = await git.getCommit(repoPath, revision);
+			}
+		} catch (ex) {
+			gitError = ex.toString();
+			Logger.error(ex, cc);
+			debugger;
+		}
+
+		return {
+			scm:
+				commit !== undefined
+					? {
+							repoPath: commit.repoPath,
+							revision: commit.ref,
+							message: commit.message,
+							shortMessage: commit.shortMessage,
+							author: commit.author,
+							authorDate: commit.authorDate
+							// committerDate: commit.committerDate,
+					  }
+					: undefined,
+			error: gitError
+		};
+	}
+
 	@lspHandler(GetFileScmInfoRequestType)
 	@log()
 	async getFileInfo({ uri: documentUri }: GetFileScmInfoRequest): Promise<GetFileScmInfoResponse> {
