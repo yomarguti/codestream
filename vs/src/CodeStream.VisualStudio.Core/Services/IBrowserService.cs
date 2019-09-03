@@ -47,5 +47,6 @@ namespace CodeStream.VisualStudio.Core.Services {
 		void Notify(INotificationType message);
 		Task NotifyAsync(INotificationType message);
 		void EnqueueNotification(INotificationType message);
+		T GetItem<T>(string name);
 	}
 }

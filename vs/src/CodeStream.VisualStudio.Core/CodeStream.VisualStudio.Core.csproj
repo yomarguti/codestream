@@ -57,6 +57,7 @@
     <Compile Include="CamelCaseStringEnumConverter.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="ContentTypes.cs" />
+    <Compile Include="LanguageServer\ILanguageServerClientManager.cs" />
     <Compile Include="Logging\CodeStreamSink.cs" />
     <Compile Include="Logging\CustomOutputPaneSink.cs" />
     <Compile Include="Logging\EmptyLogger.cs" />
@@ -75,6 +76,7 @@
     <Compile Include="Models\OpenEditorResult.cs" />
     <Compile Include="Models\Placement.cs" />
     <Compile Include="Models\Position.cs" />
+    <Compile Include="Models\SessionSignedOutReason.cs" />
     <Compile Include="Models\Webview.Protocol.Shell.cs" />
     <Compile Include="Packages\ToolWindowProvider.cs" />
     <Compile Include="Process\ProcessExtensions.cs" />

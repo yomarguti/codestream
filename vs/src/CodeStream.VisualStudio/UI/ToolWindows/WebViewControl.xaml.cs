@@ -51,6 +51,13 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 
 					_languageServerDisconnectedEvent = _eventAggregator?.GetEvent<LanguageServerDisconnectedEvent>()
 						.Subscribe(_ => {
+							Log.Debug($"{nameof(LanguageServerDisconnectedEvent)} IsReloading={_?.IsReloading}");
+
+							// if we're in the process of reloading the agent, don't show the splash screen
+							if (_.IsReloading) {								
+								return;
+							}
+
 							_browserService.LoadSplashView();
 						});
 

@@ -28,7 +28,6 @@ namespace CodeStream.VisualStudio.Services {
 	[PartCreationPolicy(CreationPolicy.Shared)]
 	public class CodeStreamAgentService : ICodeStreamAgentService, IDisposable {
 		private static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentService>();
-
 		private readonly ISessionService _sessionService;
 		private readonly IEventAggregator _eventAggregator;
 		private readonly ISettingsServiceFactory _settingsServiceFactory;
@@ -55,13 +54,13 @@ namespace CodeStream.VisualStudio.Services {
 		bool _disposed;
 
 		public async Task SetRpcAsync(JsonRpc rpc) {
-			_rpc = rpc;
-			_rpc.Disconnected += Rpc_Disconnected;
 			Log.Debug(nameof(SetRpcAsync));
+			_rpc = rpc;
 
-			try {
+			try {	
 				var initializationResult = await InitializeAsync();
 				Log.Verbose(initializationResult?.ToString());
+				_sessionService.SetAgentConnected();				
 			}
 			catch (Exception ex) {
 				Log.Fatal(ex, nameof(SetRpcAsync));
@@ -69,18 +68,6 @@ namespace CodeStream.VisualStudio.Services {
 			}
 
 			await System.Threading.Tasks.Task.CompletedTask;
-		}
-
-		private void Rpc_Disconnected(object sender, JsonRpcDisconnectedEventArgs e) {
-			Log.Debug(e.Exception, $"RPC Disconnected: LastMessage={e.LastMessage} Description={e.Description} Reason={e.Reason} Exception={e.Exception}");
-
-			try {
-				_sessionService.SetAgentDisconnected();
-				_eventAggregator?.Publish(new LanguageServerDisconnectedEvent(e.LastMessage, e.Description, e.Reason.ToString(), e.Exception));
-			}
-			catch (Exception ex) {
-				Log.Error(ex, nameof(Rpc_Disconnected));
-			}
 		}
 
 		private Task<T> SendCoreAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null) {
@@ -105,13 +92,13 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null) {
-			if (!_sessionService.IsAgentReady) {
+			if (!_sessionService.IsAgentReady) {				
 				if (Log.IsDebugEnabled()) {
 					try {
 #if DEBUG
 						Log.Warning($"Agent not ready. Status={_sessionService.StateString} Name={name}, Arguments={arguments?.ToJson()}");
 #else
-						Log.Warning($"Agent not ready. Name={name}");
+						Log.Warning($"Agent not ready. Status={_sessionService.StateString} Name={name}");
 #endif
 					}
 					catch (Exception ex) {
@@ -266,6 +253,7 @@ namespace CodeStream.VisualStudio.Services {
 
 		public async Task<JToken> LogoutAsync() {
 			var response = await SendAsync<JToken>("codestream/logout", new LogoutRequest());
+			//cheese?
 			await ReinitializeAsync();
 			return response;
 		}
@@ -392,11 +380,6 @@ namespace CodeStream.VisualStudio.Services {
 			if (_disposed)
 				return;
 
-			if (disposing) {
-				if (_rpc != null) {
-					_rpc.Disconnected -= Rpc_Disconnected;
-				}
-			}
 
 			_disposed = true;
 		}

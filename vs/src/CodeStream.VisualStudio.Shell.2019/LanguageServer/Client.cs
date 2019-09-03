@@ -25,9 +25,10 @@ namespace CodeStream.VisualStudio.Shell._2019.LanguageServer {
 	/// <summary>
 	/// NOTE: See ContentDefinitions.cs for the LanguageClient partial class attributes
 	/// </summary>
+	[Export(typeof(ICodestreamLanguageClient))]
 	[Export(typeof(ILanguageClient))]
 	[Guid(Guids.LanguageClientId)]
-	public partial class Client : LanguageServerClientBase, ILanguageClient, ILanguageClientCustomMessage, IDisposable {
+	public partial class Client : LanguageServerClientBase, ILanguageClient, ICodestreamLanguageClient, ILanguageClientCustomMessage, IDisposable {
 		private static readonly ILogger Log = LogManager.ForContext<LanguageServerClient2019>();
 		private bool _disposed;
 		private JsonRpc _rpc;
@@ -51,10 +52,11 @@ namespace CodeStream.VisualStudio.Shell._2019.LanguageServer {
 		[ImportingConstructor]
 		public Client(
 			[Import(typeof(Microsoft.VisualStudio.Shell.SVsServiceProvider))] IServiceProvider serviceProvider,
+			ISessionService sessionService,
 			IEventAggregator eventAggregator,
 			IBrowserServiceFactory browserServiceFactory,
 			ISettingsServiceFactory settingsServiceFactory)
-			: base(serviceProvider, eventAggregator, browserServiceFactory, settingsServiceFactory, Log) {
+			: base(serviceProvider, sessionService, eventAggregator, browserServiceFactory, settingsServiceFactory, Log) {
 		}
 
 		public string Name => Application.Name;
@@ -63,7 +65,7 @@ namespace CodeStream.VisualStudio.Shell._2019.LanguageServer {
 
 		public object InitializationOptions {
 			get {
-				return base.InitializationOptionsBase;
+				return InitializationOptionsBase;
 			}
 		}
 
@@ -73,14 +75,13 @@ namespace CodeStream.VisualStudio.Shell._2019.LanguageServer {
 
 		public object CustomMessageTarget {
 			get {
-				return base.CustomMessageTargetBase;
+				return CustomMessageTargetBase;
 			}
 		}
 
 		public async Task<Connection> ActivateAsync(CancellationToken token) {
-			await System.Threading.Tasks.Task.Yield();
+			await Task.Yield();
 			Connection connection = null;
-
 			try {
 				var settingsManager = SettingsServiceFactory.Create();
 				var process = LanguageServerProcess.Create(settingsManager?.GetAgentTraceLevel());
@@ -101,7 +102,44 @@ namespace CodeStream.VisualStudio.Shell._2019.LanguageServer {
 			return connection;
 		}
 
-		public async System.Threading.Tasks.Task OnLoadedAsync() {
+		public override async Task RestartAsync() {
+			await StartStopRestartAsync(true);
+		}
+
+		private async Task StartStopRestartAsync(bool isReload) {
+			try {
+				if (isReload) {
+					isReloading = true;
+				}
+				OnStopping();
+				await StopAsync?.InvokeAsync(this, EventArgs.Empty);
+				OnStopped();
+				await StartAsync?.InvokeAsync(this, EventArgs.Empty);
+
+				var componentModel = ServiceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+				Assumes.Present(componentModel);
+
+				var agentService = componentModel.GetService<ICodeStreamAgentService>();
+				await agentService.ReinitializeAsync();
+
+				Interlocked.Exchange(ref _state, 1);
+				Log.Debug($"SetState={_state}");
+			}
+			catch (NullReferenceException ex) {
+				Log.LocalWarning(ex?.Message);
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(RestartAsync));
+			}
+			finally {
+				if (isReload) {
+					isReloading = false;
+				}
+			}
+			await Task.CompletedTask;
+		}
+
+		public async Task OnLoadedAsync() {
 			try {
 				using (Log.CriticalOperation($"{nameof(OnLoadedAsync)}")) {
 					// ReSharper disable once PossibleNullReferenceException
@@ -125,8 +163,8 @@ namespace CodeStream.VisualStudio.Shell._2019.LanguageServer {
 			}
 		}
 
-		public async System.Threading.Tasks.Task AttachForCustomMessageAsync(JsonRpc rpc) {
-			await System.Threading.Tasks.Task.Yield();
+		public async Task AttachForCustomMessageAsync(JsonRpc rpc) {
+			await Task.Yield();
 			_rpc = rpc;
 
 			// Slight hack to use camelCased properties when serializing requests
@@ -136,25 +174,28 @@ namespace CodeStream.VisualStudio.Shell._2019.LanguageServer {
 			Log.Debug(nameof(AttachForCustomMessageAsync));
 		}
 
-		public async System.Threading.Tasks.Task OnServerInitializedAsync() {
+		public async Task OnServerInitializedAsync() {
 			try {
 				using (Log.CriticalOperation($"{nameof(OnServerInitializedAsync)}", Serilog.Events.LogEventLevel.Debug)) {
+					_rpc.Disconnected += Rpc_Disconnected;
+
 					var componentModel = ServiceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
 					Assumes.Present(componentModel);
-
-					var codeStreamAgentService = componentModel.GetService<ICodeStreamAgentService>();
-					await codeStreamAgentService.SetRpcAsync(_rpc);
-					await base.OnServerInitializedBaseAsync(codeStreamAgentService, componentModel);
+					await OnServerInitializedBaseAsync(_rpc, componentModel);
 				}
 			}
 			catch (Exception ex) {
 				Log.Fatal(ex, nameof(OnServerInitializedAsync));
 				throw;
 			}
-			await System.Threading.Tasks.Task.CompletedTask;
+			await Task.CompletedTask;
 		}
 
-		public System.Threading.Tasks.Task OnServerInitializeFailedAsync(Exception ex) {
+		private void Rpc_Disconnected(object sender, JsonRpcDisconnectedEventArgs e) {
+			base.OnRpcDisconnected(e);
+		}
+
+		public Task OnServerInitializeFailedAsync(Exception ex) {
 			if (_hasStartedOnce) {
 				Log.Warning(ex, nameof(OnServerInitializeFailedAsync));
 			}
@@ -162,7 +203,7 @@ namespace CodeStream.VisualStudio.Shell._2019.LanguageServer {
 				Log.Fatal(ex, nameof(OnServerInitializeFailedAsync));
 			}
 
-			return System.Threading.Tasks.Task.FromResult(0);
+			return Task.FromResult(0);
 		}
 
 		private readonly object locker = new object();
@@ -178,23 +219,12 @@ namespace CodeStream.VisualStudio.Shell._2019.LanguageServer {
 						try {
 							using (Log.CriticalOperation($"{nameof(SolutionOrFolder_Opened)}")) {
 								Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.RunAsync(async () => {
-									try {
-										// there's a bug in the MS LanguageServer code that creates
-										// an object disposed exception on the rpc object when
-										// a folder is opened after a solution (and the solutionClose triggered a StopAsync)
-										// so for now, solution closing won't trigger a LanguageServer Client Stop, it will stop/start
-										// when _another_ solution has opened
-										await StopAsync?.InvokeAsync(this, EventArgs.Empty);
-										await StartAsync?.InvokeAsync(this, EventArgs.Empty);
-										Interlocked.Exchange(ref _state, 1);
-										Log.Debug($"SetState={_state}");
-									}
-									catch (NullReferenceException ex) {
-										Log.LocalWarning(ex?.Message);
-									}
-									catch (Exception ex) {
-										Log.Error(ex, nameof(SolutionOrFolder_Opened));
-									}
+									// there's a bug in the MS LanguageServer code that creates
+									// an object disposed exception on the rpc object when
+									// a folder is opened after a solution (and the solutionClose triggered a StopAsync)
+									// so for now, solution closing won't trigger a LanguageServer Client Stop, it will stop/start
+									// when _another_ solution has opened
+									await RestartAsync();
 								});
 							}
 						}
@@ -238,6 +268,10 @@ namespace CodeStream.VisualStudio.Shell._2019.LanguageServer {
 			if (_disposed) return;
 
 			if (disposing) {
+				if (_rpc != null) {
+					_rpc.Disconnected -= Rpc_Disconnected;
+				}
+
 				var disposable = CustomMessageTarget as IDisposable;
 				disposable?.Dispose();
 

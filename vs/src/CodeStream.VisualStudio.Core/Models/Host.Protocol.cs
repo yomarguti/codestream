@@ -7,7 +7,15 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public override string Method => MethodName;
 	}
 
-	public class LogoutRequest { }
+	public enum LogoutReason1 {
+		Unknown,
+		Reauthenticating
+	}
+
+	public class LogoutRequest {
+		public LogoutReason1? Reason { get; set; }
+	}
+
 	public class LogoutResponse { }
 
 	public class LogoutRequestType : RequestType<LogoutRequest> {

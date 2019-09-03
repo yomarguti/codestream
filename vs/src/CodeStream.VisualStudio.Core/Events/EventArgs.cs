@@ -14,6 +14,7 @@ namespace CodeStream.VisualStudio.Core.Events {
 		public string Description { get; }
 		public string Reason { get; }
 		public Exception Exception { get; }
+		public bool IsReloading { get; set; }
 
 		public LanguageServerDisconnectedEvent(string message, string description, string reason, Exception exception) {
 			Message = message;

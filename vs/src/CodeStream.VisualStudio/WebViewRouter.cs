@@ -8,7 +8,6 @@ using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
-using CodeStream.VisualStudio.Core.Packages;
 using CodeStream.VisualStudio.Core.Services;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.WindowsAPICodePack.Dialogs;
@@ -233,7 +232,12 @@ namespace CodeStream.VisualStudio {
 												if (_authenticationServiceFactory != null) {
 													var authenticationService = _authenticationServiceFactory.Create();
 													if (authenticationService != null) {
-														await authenticationService.LogoutAsync();
+														var logoutRequest = message.Params.ToObject<LogoutRequest>();
+														var reason = logoutRequest != null && logoutRequest.Reason == LogoutReason1.Reauthenticating ?
+															SessionSignedOutReason.ReAuthenticating
+															: SessionSignedOutReason.UserSignedOutFromWebview;
+
+														await authenticationService.LogoutAsync(reason);
 													}
 												}
 											}
@@ -246,7 +250,7 @@ namespace CodeStream.VisualStudio {
 											break;
 										}
 									case EditorSelectRangeRequestType.MethodName: {
-											using (var scope = _browserService.CreateScope(message)) {												
+											using (var scope = _browserService.CreateScope(message)) {
 												bool result = false;
 												try {
 													var @params = message.Params.ToObject<EditorSelectRangeRequest>();
@@ -255,11 +259,11 @@ namespace CodeStream.VisualStudio {
 														await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 														var editorResponse = await _ideService.OpenEditorAtLineAsync(uri, @params.Selection.ToRange(), true);
 														if (editorResponse != null) {
-															  result = new ActiveTextEditor(editorResponse, uri.ToLocalPath(), uri, editorResponse.TextSnapshot?.LineCount)
-																.SelectRange(@params.Selection, @params.PreserveFocus == false);
+															result = new ActiveTextEditor(editorResponse, uri.ToLocalPath(), uri, editorResponse.TextSnapshot?.LineCount)
+															  .SelectRange(@params.Selection, @params.PreserveFocus == false);
 															if (!result) {
 																Log.Warning($"SelectRange result is false");
-															}															 
+															}
 														}
 													}
 												}
@@ -295,7 +299,7 @@ namespace CodeStream.VisualStudio {
 												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 												var @params = message.Params.ToObject<EditorRevealRangeRequest>();
 												if (@params != null) {
-													openEditorResult = await _ideService.OpenEditorAndRevealAsync(@params.Uri.ToUri(), @params.Range?.Start?.Line, atTop: @params.AtTop, focus: @params.PreserveFocus == false);													
+													openEditorResult = await _ideService.OpenEditorAndRevealAsync(@params.Uri.ToUri(), @params.Range?.Start?.Line, atTop: @params.AtTop, focus: @params.PreserveFocus == false);
 													if (openEditorResult?.Success != true) {
 														Log.Verbose($"{nameof(EditorRevealRangeRequestType)} result is false");
 													}

@@ -1,11 +1,11 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Services;
+using Newtonsoft.Json.Linq;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using CodeStream.VisualStudio.Core.Models;
-using CodeStream.VisualStudio.Core.Services;
-using CodeStream.VisualStudio.Core.Logging;
-using Serilog;
 
 namespace CodeStream.VisualStudio.Services {
 
@@ -38,15 +38,23 @@ namespace CodeStream.VisualStudio.Services {
 
 		public void SetAgentConnected() {
 			Log.Debug($"{nameof(SetState)}");
-			lock (locker) {
-				_agentState = AgentState.Ready;
+			if (_agentState != AgentState.Ready) {
+				lock (locker) {
+					if (_agentState != AgentState.Ready) {
+						_agentState = AgentState.Ready;
+					}
+				}
 			}
 		}
 
 		public void SetAgentDisconnected() {
 			Log.Debug($"{nameof(SetAgentDisconnected)}");
-			lock (locker) {
-				_agentState = AgentState.Disconnected;
+			if (_agentState != AgentState.Disconnected) {
+				lock (locker) {
+					if (_agentState != AgentState.Disconnected) {
+						_agentState = AgentState.Disconnected;
+					}
+				}
 			}
 		}
 

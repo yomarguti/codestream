@@ -43,7 +43,12 @@ namespace CodeStream.VisualStudio.Services {
 		public static WindowMessageHandler MessageHandler;
 	}
 
-	 
+	public enum WebviewState {
+		Unknown,
+		Waiting,
+		Loaded
+	}
+
 
 	[Export(typeof(IBrowserServiceFactory))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
@@ -77,6 +82,7 @@ namespace CodeStream.VisualStudio.Services {
 		private readonly CancellationTokenSource _processorTokenSource;
 		private CancellationTokenSource _queueTokenSource;
 		private static System.Threading.Tasks.Task _processor;
+		private WebviewState _state;
 
 		/// <summary>
 		/// This handles what is passed into DotNetBrowser as well as which Chromium switches get created
@@ -410,8 +416,8 @@ namespace CodeStream.VisualStudio.Services {
 		public virtual void ReloadWebView() {
 			ThreadHelper.JoinableTaskFactory.Run(async delegate {
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-				LoadWebView();
-				Log.Debug($"{nameof(ReloadWebView)}");
+				Log.Debug($"{nameof(ReloadWebView)}...");
+				LoadHtml(CreateWebViewHarness(Assembly.GetAssembly(typeof(IBrowserService)), "webview"));
 			});
 		}
 
@@ -420,23 +426,55 @@ namespace CodeStream.VisualStudio.Services {
 		/// Loads the Webview. Requires the UI thread
 		/// </summary>
 		public void LoadWebView() {
-			ThreadHelper.JoinableTaskFactory.Run(async delegate {
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-				LoadHtml(CreateWebViewHarness(Assembly.GetAssembly(typeof(IBrowserService)), "webview"));
-				Log.Debug(nameof(LoadWebView));
-			});
+			if (_state == WebviewState.Unknown || _state == WebviewState.Waiting) {
+				Log.Debug($"{nameof(LoadWebView)} State={_state}");
+				ThreadHelper.JoinableTaskFactory.Run(async delegate {
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+					LoadHtml(CreateWebViewHarness(Assembly.GetAssembly(typeof(IBrowserService)), "webview"));
+					_state = WebviewState.Loaded;
+				});
+			}
+			else {
+				Log.Debug($"Ignoring {nameof(LoadWebView)} State={_state}");
+			}
 		}
 
 		/// <summary>
 		/// Loads the Splash view. Requires the UI thread
 		/// </summary>
 		public void LoadSplashView() {
+			Log.Debug($"{nameof(LoadSplashView)} State={_state}");
 			ThreadHelper.JoinableTaskFactory.Run(async delegate {
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 				LoadHtml(CreateWebViewHarness(Assembly.GetAssembly(typeof(IBrowserService)), "waiting"));
-				Log.Debug(nameof(LoadSplashView));
+				_state = WebviewState.Waiting;
 			});
 		}
+
+		/// <summary>
+		/// Gets an item from localStorage
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="name"></param>
+		/// <returns></returns>
+		public T GetItem<T>(string name) {
+			try {
+				var value = _browserView.Browser.ExecuteJavaScriptAndReturnValue($"window.localStorage.getItem('{name}')");				
+				if (typeof(T) == typeof(bool)) {
+					if (value.IsUndefined()) return (T)(object)false;
+
+					return (T)(object)Convert.ToBoolean(value.ToString());
+				}
+				else {
+					throw new InvalidOperationException($"{typeof(T)} not supported");
+				}
+			}
+			catch(Exception ex) {
+				Log.Warning(ex, nameof(GetItem));
+			}
+			return default(T);
+		}
+
 
 		private bool _isDisposed;
 

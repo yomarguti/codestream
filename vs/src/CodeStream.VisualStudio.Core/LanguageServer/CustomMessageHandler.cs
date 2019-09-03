@@ -20,7 +20,7 @@ using System.Reactive.Subjects;
 namespace CodeStream.VisualStudio.Core.LanguageServer {
 	public class CustomMessageHandler : IDisposable {
 		private static readonly ILogger Log = LogManager.ForContext<CustomMessageHandler>();
-
+		
 		private readonly IServiceProvider _serviceProvider;
 		private readonly IEventAggregator _eventAggregator;
 		private readonly IBrowserService _browserService;
@@ -33,7 +33,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 			IServiceProvider serviceProvider,
 			IEventAggregator eventAggregator,
 			IBrowserService browserService,
-			ISettingsServiceFactory settingsServiceFactory) {
+			ISettingsServiceFactory settingsServiceFactory) {			
 			_serviceProvider = serviceProvider;
 			_eventAggregator = eventAggregator;
 			_browserService = browserService;
@@ -137,35 +137,33 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 		}
 
 		[JsonRpcMethod(DidLogoutNotificationType.MethodName)]
-		public void OnDidLogout(JToken e) {
+		public async System.Threading.Tasks.Task OnDidLogout(JToken e) {
 			try {
 				var @params = e.ToObject<DidLogoutNotification>();
 				using (Log.CriticalOperation($"{nameof(OnDidLogin)} Method={DidLogoutNotificationType.MethodName} Reason={@params?.Reason}", Serilog.Events.LogEventLevel.Information)) {
 					if (@params.Reason == LogoutReason.Token) {
-						ThreadHelper.JoinableTaskFactory.Run(async delegate {
-							try {
-								await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-								var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
-								Assumes.Present(componentModel);
+						try {
+							await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+							var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+							Assumes.Present(componentModel);
 
-								var authenticationServiceFactory = componentModel.GetService<IAuthenticationServiceFactory>();
-								if (authenticationServiceFactory != null) {
-									var authService = authenticationServiceFactory.Create();
-									if (authService == null) {
-										Log.Error(nameof(OnDidLogout) + " " + nameof(authService) + " is null");
-										return;
-									}
-									await authService.LogoutAsync();
+							var authenticationServiceFactory = componentModel.GetService<IAuthenticationServiceFactory>();
+							if (authenticationServiceFactory != null) {
+								var authService = authenticationServiceFactory.Create();
+								if (authService == null) {
+									Log.Error(nameof(OnDidLogout) + " " + nameof(authService) + " is null");
+									return;
 								}
+								await authService.LogoutAsync(SessionSignedOutReason.UserSignedOutFromWebview);
 							}
-							catch (Exception ex) {
-								Log.Error(ex, nameof(OnDidLogout));
-							}
-						});
+						}
+						catch (Exception ex) {
+							Log.Error(ex, nameof(OnDidLogout));
+						}
 					}
 					else {
 						// TODO: Handle this
-					}
+					}					
 				}
 			}
 			catch (Exception ex) {
