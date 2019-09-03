@@ -439,6 +439,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 		let scmInfo = this.props.scmInfo;
 		if (!scmInfo) {
+			this.setState({ isLoading: true });
 			scmInfo = await HostApi.instance.send(GetFileScmInfoRequestType, {
 				uri: textEditorUri!
 			});

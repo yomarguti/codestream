@@ -46,7 +46,13 @@ export function reduceEditorContext(state = initialState, action: EditorContextA
 				}
 			}
 
-			return { ...state, ...action.payload };
+			// scmInfo needs to be overwritten if the file is changing and the payload doesn't have one
+			const nextScmInfo =
+				action.payload.textEditorUri && action.payload.textEditorUri !== state.textEditorUri
+					? action.payload.scmInfo
+					: state.scmInfo;
+
+			return { ...state, ...action.payload, scmInfo: nextScmInfo };
 		}
 		case "RESET":
 			return initialState;
