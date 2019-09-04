@@ -621,8 +621,9 @@ export function toSlackPostAttachment(
 			const code = `\n\`\`\`${marker.code}\`\`\``;
 
 			fallback += `${fallback ? "\n" : ""}\n${title}${code}`;
-
-			if (
+			if (codemark.permalink) {
+				title = `<${codemark.permalink}|${title}>`;
+			} else if (
 				remotes !== undefined &&
 				remotes.length !== 0 &&
 				start !== undefined &&

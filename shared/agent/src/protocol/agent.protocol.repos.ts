@@ -44,3 +44,20 @@ export interface GetRepoResponse {
 export const GetRepoRequestType = new RequestType<GetRepoRequest, GetRepoResponse, void, void>(
 	"codestream/repo"
 );
+
+export interface RepoMap {
+	path: string;
+	repoId: string;
+}
+
+export interface MapReposRequest {
+	repos: RepoMap[];
+}
+
+export interface MapReposResponse {
+	success?: boolean;
+}
+
+export const MapReposRequestType = new RequestType<MapReposRequest, MapReposResponse, void, void>(
+	"codestream/repos/map"
+);

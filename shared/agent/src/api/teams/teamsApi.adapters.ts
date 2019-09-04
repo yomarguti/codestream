@@ -308,8 +308,9 @@ export function toTeamsMessageBody(
 			}
 
 			const code = `<code style="margin:7px 0;padding:10px;border:1px solid #d9d9d9;white-space:pre;display:block;overflow:auto;">${marker.code}</code>`;
-
-			if (
+			if (codemark.permalink) {
+				title = `<a href="${codemark.permalink}">${title}</a>`;
+			} else if (
 				remotes !== undefined &&
 				remotes.length !== 0 &&
 				start !== undefined &&

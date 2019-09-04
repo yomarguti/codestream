@@ -39,7 +39,7 @@ export interface CSCodemark extends CSEntity {
 	fileStreamIds: string[];
 	providerType?: ProviderType;
 	type: CodemarkType;
-
+	permalink?: string;
 	// color is no longer used; now we use tags
 	color?: "blue" | "green" | "yellow" | "orange" | "red" | "purple" | "aqua" | "gray" | string;
 	tags?: string[];

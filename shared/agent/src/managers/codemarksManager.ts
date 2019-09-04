@@ -172,6 +172,8 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 	}
 
 	private async canSeeCodemark(codemark: CSCodemark): Promise<boolean> {
+		if (!codemark.streamId) return true;
+
 		const stream = await SessionContainer.instance().streams.getByIdFromCache(codemark.streamId);
 		if (!stream || stream.deactivated || stream.isArchived) {
 			return false;

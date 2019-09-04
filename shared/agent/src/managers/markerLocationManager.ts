@@ -126,6 +126,10 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 
 		if (fileStreamId === undefined) {
 			const stream = await SessionContainer.instance().files.getByPath(filePath);
+			if (!stream) {
+				Logger.log(`MARKERS: no stream for for ${filePath}`);
+				return result;
+			}
 			fileStreamId = stream!.id;
 		}
 		if (markers === undefined) {

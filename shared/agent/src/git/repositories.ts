@@ -11,6 +11,7 @@ import {
 import { URI } from "vscode-uri";
 import { SessionContainer } from "../container";
 import { Logger } from "../logger";
+import { RepoMap } from "../protocol/agent.protocol.repos";
 import { CSRepository } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
 import { Iterables, Objects, Strings, TernarySearchTree } from "../system";
@@ -52,18 +53,29 @@ export class GitRepositories {
 		return tree.values();
 	}
 
-	async getById(id: string) {
+	async getById(id: string): Promise<GitRepository | undefined> {
 		const tree = await this.getRepositoryTree();
-		return Iterables.find(tree.values(), r => r.id === id);
+		const result = Iterables.find(tree.values(), r => r.id === id);
+		return result;
 	}
 
-	async getByFilePath(filePath: string) {
+	async getByFilePath(filePath: string): Promise<GitRepository | undefined> {
 		const tree = await this.getRepositoryTree();
-		return tree.findSubstr(filePath);
+		let result = tree.findSubstr(filePath);
+		if (!result) {
+			await this.repositorySearchByDocument({
+				uri: "file:///" + filePath
+			});
+			const tree = await this.getRepositoryTree();
+			result = tree.findSubstr(filePath);
+		}
+		return result;
 	}
 
 	private _syncPromise: Promise<void> | undefined;
-	async syncKnownRepositories() {
+	private _repositoryMappingSyncPromise: Promise<{ [key: string]: boolean }> | undefined;
+	async syncKnownRepositories(repos: CSRepository[]) {
+		Logger.debug(`syncing KnownRepositories...`);
 		const remoteToRepoMap = await this.getKnownRepositories();
 
 		// Don't call: const tree = await this.getRepositoryTree(); because it waits on the _syncPromise
@@ -74,11 +86,28 @@ export class GitRepositories {
 		}
 
 		const tree = this._repositoryTree;
+		const reposToMap = [];
 		for (const repo of tree.values()) {
+			Logger.debug(`RepositoryTree repo=${repo.path} repoId=${repo.id}`);
 			// TODO: Probably should update the repo even for ones that have matches, but right now we are only using the repo id
 			if (repo.id === undefined) {
 				await repo.searchForKnownRepository(remoteToRepoMap);
 			}
+
+			if (repo.id && repo.path) {
+				const found = repos.find(_ => _.id === repo.id);
+				if (found) {
+					reposToMap.push({
+						repoId: repo.id,
+						path: repo.path
+					});
+				}
+			}
+		}
+		if (reposToMap.length) {
+			SessionContainer.instance().repositoryMappings.mapRepos({
+				repos: reposToMap
+			});
 		}
 	}
 
@@ -101,16 +130,17 @@ export class GitRepositories {
 		return this.onWorkspaceFoldersChanged();
 	}
 
-	private async onRepositoriesChanged(repos: CSRepository[]) {
+	async onRepositoriesChanged(repos: CSRepository[]) {
 		if (this._syncPromise !== undefined) {
 			await this._syncPromise;
 		}
 
-		this._syncPromise = this.syncKnownRepositories();
+		this._syncPromise = this.syncKnownRepositories(repos);
 	}
 
 	private async onWorkspaceFoldersChanged(e?: WorkspaceFoldersChangeEvent) {
 		let initializing = false;
+		const repoMap: RepoMap[] = [];
 		if (e === undefined) {
 			initializing = true;
 			e = {
@@ -125,9 +155,15 @@ export class GitRepositories {
 			if (URI.parse(f.uri).scheme !== "file") continue;
 
 			// Search for and add all repositories (nested and/or submodules)
-			const repositories = await this.repositorySearch(f);
+			const repositories = await this.repositorySearch(f, this.session.workspace);
 			for (const r of repositories) {
 				this._repositoryTree.set(r.path, r);
+				if (initializing && r.id) {
+					repoMap.push({
+						repoId: r.id,
+						path: r.path
+					});
+				}
 			}
 		}
 
@@ -158,12 +194,77 @@ export class GitRepositories {
 			}
 		}
 
+		SessionContainer.instance().repositoryMappings.setRepoMappingData({ repos: repoMap });
+
 		if (!initializing) {
 			// Defer the event trigger enough to let everything unwind
 			setImmediate(() => this._onDidChange.fire(undefined));
 		}
 
 		await this.monitorRepos();
+	}
+
+	async setKnownRepository(
+		repos: { repoId: string; path: string }[]
+	): Promise<{ [key: string]: boolean } | undefined> {
+		if (!repos || !repos.length) return undefined;
+
+		if (this._repositoryMappingSyncPromise !== undefined) {
+			await this._repositoryMappingSyncPromise;
+			this._repositoryMappingSyncPromise = undefined;
+		}
+
+		this._repositoryMappingSyncPromise = this.setKnownRepositoryCore(repos);
+		return await this._repositoryMappingSyncPromise;
+	}
+
+	async setKnownRepositoryCore(
+		repos: { repoId: string; path: string }[]
+	): Promise<{ [key: string]: boolean }> {
+		const found: { [key: string]: boolean } = {};
+		for (const r in repos) {
+			const repo = repos[r];
+
+			const repositories = await this.repositorySearch({
+				uri: repo.path,
+				name: path.basename(repo.path)
+			});
+
+			Logger.debug(`repositorySearch found ${repositories.length} repos`);
+			for (const r of repositories) {
+				if (!r.id) {
+					Logger.debug(`Skipping ${r.path} (no id)`);
+					continue;
+				}
+
+				this._repositoryTree.set(r.path, r);
+				found[r.id] = true;
+				Logger.debug(`Added ${r.path} id=${r.id}`);
+			}
+		}
+		return found;
+	}
+
+	private async repositorySearchByDocument(document: { uri: string }) {
+		const dir = path.dirname(document.uri.toString());
+		Logger.log(`Starting repository search by file in ${dir} folder`);
+		let found;
+		if (URI.parse(document.uri).scheme === "file") {
+			// Search for and add all repositories (nested and/or submodules)
+			const repositories = await this.repositorySearch({
+				uri: dir,
+				name: path.basename(document.uri)
+			});
+
+			Logger.log(`repositorySearch found ${repositories.length} repos`);
+			found = repositories && repositories.length;
+			for (const r of repositories) {
+				this._repositoryTree.set(r.path, r);
+			}
+		}
+		if (found) {
+			await this.monitorRepos();
+		}
 	}
 
 	private _monitors: fs.FSWatcher[] = [];
@@ -211,11 +312,19 @@ export class GitRepositories {
 			this._syncPromise = undefined;
 		}
 
+		if (this._repositoryMappingSyncPromise !== undefined) {
+			await this._repositoryMappingSyncPromise;
+			this._repositoryMappingSyncPromise = undefined;
+		}
+
 		return this._repositoryTree;
 	}
 
-	private async repositorySearch(folder: WorkspaceFolder): Promise<GitRepository[]> {
-		const workspace = this.session.workspace;
+	private async repositorySearch(
+		folder: WorkspaceFolder,
+		workspace: any = null
+	): Promise<GitRepository[]> {
+		// const workspace = this.session.workspace;
 		const folderUri = URI.parse(folder.uri);
 
 		// TODO: Make this configurable
@@ -255,7 +364,7 @@ export class GitRepositories {
 		}
 
 		let excludes: { [key: string]: boolean } = Object.create(null);
-		if (this.session.agent.supportsConfiguration) {
+		if (workspace && this.session.agent.supportsConfiguration) {
 			// Get any specified excludes -- this is a total hack, but works for some simple cases and something is better than nothing :)
 			const [files, search] = await workspace.getConfiguration([
 				{

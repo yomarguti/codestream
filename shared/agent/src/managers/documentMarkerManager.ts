@@ -296,9 +296,7 @@ export class DocumentMarkerManager {
 						});
 						Logger.log(
 							cc,
-							`MARKERS: ${marker.id}=[${location.lineStart}, ${location.colStart}, ${
-								location.lineEnd
-							}, ${location.colEnd}]`
+							`MARKERS: ${marker.id}=[${location.lineStart}, ${location.colStart}, ${location.lineEnd}, ${location.colEnd}]`
 						);
 					} else {
 						const missingLocation = missingLocations[marker.id];
@@ -371,7 +369,7 @@ export class DocumentMarkerManager {
 		repoId,
 		file
 	}: GetDocumentFromMarkerRequest): Promise<GetDocumentFromMarkerResponse | undefined> {
-		const { git, markers, markerLocations } = SessionContainer.instance();
+		const { git, markers, markerLocations, repositoryMappings } = SessionContainer.instance();
 
 		const marker = await markers.getById(markerId);
 		if (repoId == null || file == null) {
@@ -380,9 +378,17 @@ export class DocumentMarkerManager {
 		}
 
 		const repo = await git.getRepositoryById(repoId);
-		if (repo === undefined) return undefined;
+		let repoPath;
+		if (repo === undefined) {
+			const mappedRepoPath = await repositoryMappings.getByRepoId(repoId);
+			if (!mappedRepoPath) return undefined;
 
-		const filePath = path.join(repo.path, file);
+			repoPath = mappedRepoPath;
+		} else {
+			repoPath = repo.path;
+		}
+
+		const filePath = path.join(repoPath, file);
 		const documentUri = URI.file(filePath).toString();
 
 		const result = await markerLocations.getCurrentLocations(documentUri);

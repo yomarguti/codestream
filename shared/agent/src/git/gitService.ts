@@ -427,6 +427,10 @@ export class GitService implements IGitService, Disposable {
 		return this._repositories.get();
 	}
 
+	async setKnownRepository(repos: { repoId: string; path: string }[]) {
+		return this._repositories.setKnownRepository(repos);
+	}
+
 	getRepositoryById(id: string): Promise<GitRepository | undefined> {
 		return this._repositories.getById(id);
 	}

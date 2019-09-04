@@ -49,7 +49,12 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 		const { streams } = SessionContainer.instance();
 
 		for (const marker of markers) {
-			if (!marker.postStreamId || marker.deactivated) {
+			if (marker.deactivated) {
+				continue;
+			}
+
+			if (!marker.postStreamId) {
+				includedMarkers.push(marker);
 				continue;
 			}
 

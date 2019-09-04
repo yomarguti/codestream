@@ -10,6 +10,7 @@ import { FilesManager } from "./managers/filesManager";
 import { MarkerLocationManager } from "./managers/markerLocationManager";
 import { MarkersManager } from "./managers/markersManager";
 import { PostsManager } from "./managers/postsManager";
+import { RepositoryMappingManager } from "./managers/repositoryMappingManager";
 import { ReposManager } from "./managers/reposManager";
 import { ScmManager } from "./managers/scmManager";
 import { StreamsManager } from "./managers/streamsManager";
@@ -86,6 +87,11 @@ class SessionServiceContainer {
 		return this._providerRegistry;
 	}
 
+	private readonly _repositoryMappings: RepositoryMappingManager;
+	get repositoryMappings() {
+		return this._repositoryMappings;
+	}
+
 	constructor(public readonly session: CodeStreamSession) {
 		this._git = new GitService(session);
 		this._scm = new ScmManager();
@@ -100,6 +106,7 @@ class SessionServiceContainer {
 		this._users = new UsersManager(session);
 		this._documentMarkers = new DocumentMarkerManager(session);
 		this._providerRegistry = new ThirdPartyProviderRegistry(session);
+		this._repositoryMappings = new RepositoryMappingManager(session);
 	}
 }
 
