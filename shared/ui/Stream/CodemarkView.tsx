@@ -44,6 +44,7 @@ export function CodemarkView() {
 	});
 
 	React.useEffect(() => {
+		HostApi.instance.track("Page Viewed", { "Page Name": "Codemark View" });
 		if (codemark == undefined) {
 			// TODO: fetch it when we have the api for that
 		}

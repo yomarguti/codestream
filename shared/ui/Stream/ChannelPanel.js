@@ -75,6 +75,7 @@ export class SimpleChannelPanel extends Component {
 	}
 
 	componentDidMount() {
+		HostApi.instance.track("Page Viewed", { "Page Name": "Channels Tab" });
 		if (isInVscode()) {
 			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
 				if (event.key === "Escape") {
@@ -96,7 +97,7 @@ export class SimpleChannelPanel extends Component {
 		localStore.set("enablingRealTime", true);
 		setTimeout(() => {
 			this.setState({ reAuthLoading: true });
-			this.props.reAuthForFullChatProvider(this.props.teamProvider);			
+			this.props.reAuthForFullChatProvider(this.props.teamProvider);
 		}, 500);
 	};
 

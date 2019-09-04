@@ -252,6 +252,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	componentDidMount() {
+		HostApi.instance.track("Page Viewed", { "Page Name": "CurrentFile Tab" });
 		const mutationObserver = new MutationObserver(() => this.repositionCodemarks());
 		mutationObserver.observe(document.getElementById("stream-root")!, {
 			childList: true,

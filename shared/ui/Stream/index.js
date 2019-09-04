@@ -59,8 +59,7 @@ import {
 	OpenUrlRequestType,
 	SetCodemarkPinnedRequestType,
 	TelemetryRequestType,
-	GetRangeScmInfoRequestType,
-	PinReplyToCodemarkRequestType
+	GetRangeScmInfoRequestType
 } from "@codestream/protocols/agent";
 import { getFileScmError } from "../store/editorContext/reducer";
 import { logout } from "../store/session/actions";
@@ -100,6 +99,9 @@ export class SimpleStream extends Component {
 	_pollingTimer;
 
 	componentDidMount() {
+		if (this.props.activePanel === "main" && this.props.postStreamId != undefined) {
+			HostApi.instance.track("Page Viewed", { "Page Name": "Stream" });
+		}
 		this.setUmiInfo();
 		this.disposables.push(
 			HostApi.instance.on(NewCodemarkNotificationType, this.handleNewCodemarkRequest, this)
@@ -222,6 +224,9 @@ export class SimpleStream extends Component {
 			this.setState({ selection: undefined });
 		}
 		if (this.props.activePanel === "main" && prevProps.activePanel !== "main") {
+			if (this.props.postStreamId != undefined) {
+				HostApi.instance.track("Page Viewed", { "Page Name": "Stream" });
+			}
 			// if we are switching from a non-main panel
 			this.focusInput();
 		}
