@@ -276,7 +276,7 @@ export function listenForEvents(store) {
 					switch (route.action) {
 						case "open": {
 							if (route.id) {
-								onShowStreamNotificationType(undefined, undefined, route.id);
+								store.dispatch(setCurrentCodemark(route.id));
 							}
 							break;
 						}
