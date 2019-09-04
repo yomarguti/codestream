@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { CodeStreamSession } from "session";
+import { URI } from "vscode-uri";
 import { SessionContainer } from "../container";
 import { Logger } from "../logger";
 import {
@@ -73,7 +74,14 @@ export class RepositoryMappingManager {
 			}
 
 			if (parsed && isChanging) {
-				const foundRepos = await SessionContainer.instance().git.setKnownRepository(request.repos);
+				const foundRepos = await SessionContainer.instance().git.setKnownRepository(
+					request.repos.map(_ => {
+						return {
+							repoId: _.repoId,
+							path: URI.file(_.path).toString()
+						};
+					})
+				);
 				let deleteCount = 0;
 				if (foundRepos && Object.keys(foundRepos).length) {
 					for (const repoMap of request.repos) {
@@ -118,10 +126,9 @@ export class RepositoryMappingManager {
 			const repo = parsed && parsed.repos[repoId];
 			if (!repo || !repo.defaultPath) return undefined;
 
-			const foundRepos = await SessionContainer.instance().git.setKnownRepository([
-				{
+			const foundRepos = await SessionContainer.instance().git.setKnownRepository([{
 					repoId: repoId,
-					path: repo.defaultPath
+					path: URI.file(repo.defaultPath).toString()
 				}
 			]);
 			if (foundRepos && Object.keys(foundRepos).length && foundRepos[repoId]) {
