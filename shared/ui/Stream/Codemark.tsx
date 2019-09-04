@@ -542,7 +542,7 @@ export class Codemark extends React.Component<Props, State> {
 
 		switch (action) {
 			case "toggle-pinned": {
-				this.togglePinned();
+				this.setPinned(!this.props.codemark.pinned);
 				break;
 			}
 			case "delete-post": {
@@ -557,6 +557,7 @@ export class Codemark extends React.Component<Props, State> {
 			}
 			case "inject": {
 				this.setState({ isInjecting: true });
+				break;
 			}
 		}
 		var found = action.match(/set-keybinding-(\d)/);
@@ -581,18 +582,18 @@ export class Codemark extends React.Component<Props, State> {
 		});
 	}
 
-	togglePinned = () => {
+	setPinned = value => {
 		const { codemark } = this.props;
 		if (!codemark) return;
 
 		// if it's pinned, we're hiding/archiving/unpinning it
-		if (codemark.pinned) {
+		if (!value) {
 			if (this.props.deselectCodemarks) this.props.deselectCodemarks();
 		}
 
 		HostApi.instance.send(SetCodemarkPinnedRequestType, {
 			codemarkId: codemark.id,
-			value: !codemark.pinned
+			value
 		});
 	};
 
@@ -980,13 +981,18 @@ export class Codemark extends React.Component<Props, State> {
 								<Menu items={menuItems} target={menuTarget} action={this.handleSelectMenu} />
 							)}
 						</div>
-						{selected || (type !== "bookmark" && !isInjecting)
+						{!isInjecting && (selected || type !== "bookmark")
 							? this.renderTextLinkified(codemark.title || codemark.text)
 							: null}
 						{!selected && !isInjecting && this.renderPinnedReplies()}
 						{!selected && !isInjecting && this.renderDetailIcons(codemark)}
 						{isInjecting && (
-							<InjectAsComment cancel={this.cancelInjecting} codemark={codemark}></InjectAsComment>
+							<InjectAsComment
+								cancel={this.cancelInjecting}
+								setPinned={this.setPinned}
+								codemark={codemark}
+								author={author}
+							></InjectAsComment>
 						)}
 					</div>
 					{selected && !isInjecting && (
