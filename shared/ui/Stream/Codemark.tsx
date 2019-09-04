@@ -29,7 +29,7 @@ import {
 } from "../store/users/reducer";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { CodemarkForm } from "./CodemarkForm";
-import { deleteCodemark, editCodemark } from "../store/codemarks/actions";
+import { deleteCodemark, editCodemark, addCodemarks } from "../store/codemarks/actions";
 import { confirmPopup } from "./Confirm";
 import { getPost } from "../store/posts/reducer";
 import { getPosts } from "../store/posts/actions";
@@ -40,6 +40,7 @@ import { CodeStreamState } from "../store";
 import { EditorHighlightRangeRequestType } from "@codestream/protocols/webview";
 import { setCurrentCodemark } from "../store/context/actions";
 import { RelatedCodemark } from "./RelatedCodemark";
+import { addDocumentMarker } from "../store/documentMarkers/actions";
 
 interface State {
 	hover: boolean;
@@ -56,6 +57,8 @@ interface DispatchProps {
 	setUserPreference: typeof setUserPreference;
 	getPosts: typeof getPosts;
 	setCurrentCodemark: typeof setCurrentCodemark;
+	addDocumentMarker: typeof addDocumentMarker;
+	addCodemarks: typeof addCodemarks;
 }
 
 interface ConnectedProps {
@@ -565,13 +568,21 @@ export class Codemark extends React.Component<Props, State> {
 	}
 
 	togglePinned = () => {
-		const { codemark } = this.props;
+		const { codemark, marker } = this.props;
 		if (!codemark) return;
 
 		// if it's pinned, we're hiding/archiving/unpinning it
 		if (codemark.pinned) {
 			if (this.props.deselectCodemarks) this.props.deselectCodemarks();
 		}
+
+		const updatedCodemark = { ...codemark, pinned: !codemark.pinned };
+
+		// updating optimistically. because spatial view renders DocumentMarkers, the corresponding one needs to be updated too
+		if (marker && this._fileUri != undefined) {
+			this.props.addDocumentMarker(this._fileUri, { ...marker, codemark: updatedCodemark });
+		}
+		this.props.addCodemarks([updatedCodemark]);
 
 		HostApi.instance.send(SetCodemarkPinnedRequestType, {
 			codemarkId: codemark.id,
@@ -1170,7 +1181,9 @@ export default connect(
 		editCodemark,
 		fetchThread,
 		getPosts,
-		setCurrentCodemark
+		setCurrentCodemark,
+		addDocumentMarker,
+		addCodemarks
 	}
 	// @ts-ignore
 )(Codemark);

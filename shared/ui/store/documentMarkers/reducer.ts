@@ -16,7 +16,7 @@ export function reduceDocumentMarkers(state = initialState, action: DocumentMark
 			return {
 				...state,
 				[action.payload.uri]: uniqBy(
-					[...state[action.payload.uri], action.payload.marker],
+					[action.payload.marker, ...state[action.payload.uri]],
 					m => m.id
 				)
 			};
