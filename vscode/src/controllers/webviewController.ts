@@ -29,6 +29,7 @@ import {
 	HostDidChangeEditorSelectionNotificationType,
 	HostDidChangeEditorVisibleRangesNotificationType,
 	HostDidLogoutNotificationType,
+	InsertTextRequestType,
 	IpcRoutes,
 	isIpcRequestMessage,
 	isIpcResponseMessage,
@@ -573,6 +574,14 @@ export class WebviewController implements Disposable {
 						}
 					);
 					return { success: success };
+				});
+
+				break;
+			}
+			case InsertTextRequestType.method: {
+				webview.onIpcRequest(InsertTextRequestType, e, async (type, params) => {
+					void (await Container.commands.insertText({ marker: params.marker, text: params.text }));
+					return emptyObj;
 				});
 
 				break;

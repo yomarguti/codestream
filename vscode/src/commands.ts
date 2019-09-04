@@ -23,6 +23,11 @@ import { Command, createCommandDecorator } from "./system";
 const commandRegistry: Command[] = [];
 const command = createCommandDecorator(commandRegistry);
 
+export interface InsertTextCommandArgs {
+	text: string;
+	marker: CSMarkerIdentifier;
+}
+
 export interface ApplyMarkerCommandArgs {
 	marker: CSMarkerIdentifier;
 }
@@ -71,6 +76,20 @@ export class Commands implements Disposable {
 	@command("goOffline")
 	goOffline() {
 		return Container.session.goOffline();
+	}
+
+	@command("insertText", { showErrorMessage: "Unable to insertText" })
+	async insertText(args: InsertTextCommandArgs): Promise<boolean> {
+		const editor = await this.openWorkingFileForMarkerCore(args.marker);
+		if (editor === undefined) return false;
+
+		const resp = await Container.agent.documentMarkers.getDocumentFromMarker(args.marker);
+		if (resp === undefined) return false;
+
+		const line = resp.range.start.line;
+		return editor.edit(builder => {
+			builder.replace(new Range(line, 0, line, 0), args.text);
+		});
 	}
 
 	@command("applyMarker", { showErrorMessage: "Unable to open comment" })
