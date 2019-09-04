@@ -74,7 +74,6 @@ import { localStore } from "../utilities/storage";
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 interface Props {
-	currentDocumentMarkerId: string | undefined;
 	currentStreamId?: string;
 	team: CSTeam;
 	viewInline: boolean;
@@ -462,7 +461,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	renderList = (paddingTop, fontSize, height) => {
 		const { documentMarkers, showUnpinned, showClosed } = this.props;
-		const { currentDocumentMarkerId } = this.props;
 
 		this.hiddenCodemarks = {};
 		return [
@@ -869,8 +867,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			lastVisibleLine,
 			documentMarkers,
 			showUnpinned,
-			showClosed,
-			currentDocumentMarkerId
+			showClosed
 		} = this.props;
 		const { numLinesVisible } = this.state;
 
@@ -1067,9 +1064,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	onWheel = (event: React.WheelEvent<HTMLDivElement>) => {
 		if (event.deltaY === 0) return;
 
-		// don't scroll the source file when there is a selected codemark
-		if (this.props.currentDocumentMarkerId) return;
-
 		const target = event.target as HTMLElement;
 		if (target.closest(".codemark.selected") != null) {
 			return;
@@ -1211,11 +1205,10 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	render() {
-		const { viewInline, currentDocumentMarkerId } = this.props;
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
 				{this.state.isLoading ? null : this.renderCodemarks()}
-				{currentDocumentMarkerId && viewInline ? null : this.printViewSelectors()}
+				{this.printViewSelectors()}
 			</div>
 		);
 	}
@@ -1459,7 +1452,6 @@ const mapStateToProps = (state: CodeStreamState) => {
 	}
 
 	return {
-		currentDocumentMarkerId: context.currentDocumentMarkerId,
 		currentStreamId: context.currentStreamId,
 		team: teams[context.currentTeamId],
 		viewInline: context.codemarksFileViewStyle === "inline",

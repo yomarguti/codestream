@@ -55,9 +55,6 @@ export const setCodemarksShowArchived = (enabled: boolean) =>
 export const setCodemarksShowResolved = (enabled: boolean) =>
 	action(ContextActionsType.SetCodemarksShowResolved, enabled);
 
-export const setCurrentDocumentMarker = (documentMarkerId?: string) =>
-	action(ContextActionsType.SetCurrentDocumentMarker, documentMarkerId);
-
 export const setCurrentCodemark = (codemarkId?: string) =>
 	action(ContextActionsType.SetCurrentCodemark, codemarkId);
 

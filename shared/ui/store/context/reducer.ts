@@ -16,7 +16,6 @@ const initialState: ContextState = {
 	newPostEntryPoint: undefined,
 	currentTeamId: "",
 	currentStreamId: "",
-	currentDocumentMarkerId: "",
 	currentCodemarkId: undefined,
 	issueProvider: undefined,
 	threadId: undefined,
@@ -45,8 +44,6 @@ export function reduceContext(
 			const { streamId, threadId } = action.payload;
 			return { ...state, currentStreamId: streamId, threadId };
 		}
-		case ContextActionsType.SetCurrentDocumentMarker:
-			return { ...state, currentDocumentMarkerId: action.payload };
 		case ContextActionsType.SetCurrentCodemark:
 			return { ...state, currentCodemarkId: action.payload };
 

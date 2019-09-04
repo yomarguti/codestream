@@ -65,11 +65,7 @@ import { getFileScmError } from "../store/editorContext/reducer";
 import { logout } from "../store/session/actions";
 import { CodemarkView } from "./CodemarkView";
 
-import {
-	setCurrentStream,
-	setCurrentDocumentMarker,
-	setNewPostEntry
-} from "../store/context/actions";
+import { setCurrentStream, setNewPostEntry } from "../store/context/actions";
 import { getTeamProvider } from "../store/teams/actions";
 import {
 	filter as _filter,
@@ -2240,7 +2236,6 @@ export default connect(
 	{
 		...actions,
 		setCurrentStream,
-		setCurrentDocumentMarker,
 		editCodemark,
 		setNewPostEntry,
 		logout
