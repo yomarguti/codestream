@@ -83,6 +83,20 @@ export const CompareMarkerRequestType = new RequestType<
 	void
 >(`${IpcRoutes.Host}/marker/compare`);
 
+export interface InsertTextRequest {
+	text: string;
+	marker: CSMarker;
+}
+
+export interface InsertTextResponse {}
+
+export const InsertTextRequestType = new RequestType<
+	InsertTextRequest,
+	InsertTextResponse,
+	void,
+	void
+>(`${IpcRoutes.Host}/marker/inserttext`);
+
 export interface ApplyMarkerRequest {
 	marker: CSMarker;
 }

@@ -7,6 +7,22 @@
 .codemark {
 	padding-left: 10px;
 	// transition: top 0.1s;
+	&.injecting {
+		width: 100% !important;
+		.header {
+			display: none;
+		}
+		.info-wrapper {
+			display: none;
+		}
+		.contents {
+			width: 100% !important;
+		}
+		.contents > .body {
+			overflow-x: hidden !important;
+			width: 100% !important;
+		}
+	}
 	&.collapsed {
 		height: 25px;
 		width: 100%;
@@ -468,6 +484,13 @@
 			padding-right: 5px;
 		}
 	}
+	form.standard-form .form-body {
+		padding: 0;
+		min-width: 0;
+		max-width: 100%;
+		width: 100%;
+		overflow: hidden;
+	}
 }
 .related-row {
 	display: flex;
@@ -633,4 +656,37 @@
 		right: 20px;
 		top: 40px;
 	}
+}
+
+form#inject-form {
+	padding: 0 !important;
+	button {
+		padding-left: 10px;
+		padding-right: 10px;
+	}
+}
+#inject-form {
+	.control-group {
+		margin-bottom: 0 !important;
+		max-width: 100%;
+	}
+	h4 {
+		padding: 0;
+		margin: 0;
+	}
+	.switch {
+		margin: 0 5px 5px 0;
+		vertical-align: -8px;
+	}
+	pre {
+		margin-top: 0;
+		margin-bottom: 0;
+		max-width: 100%;
+		overflow: auto;
+		padding: 10px !important;
+	}
+	max-width: 100%;
+}
+#switches div {
+	cursor: pointer;
 }
