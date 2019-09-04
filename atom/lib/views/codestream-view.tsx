@@ -24,6 +24,9 @@ import {
 	HostDidChangeFocusNotificationType,
 	HostDidLogoutNotificationType,
 	HostDidReceiveRequestNotificationType,
+	InsertTextRequest,
+	InsertTextRequestType,
+	InsertTextResponse,
 	isIpcRequestMessage,
 	LogoutRequestType,
 	LogoutResponse,
@@ -58,9 +61,10 @@ import {
 	DidChangeDocumentMarkersNotificationType,
 	DidChangeVersionCompatibilityNotification,
 	DidChangeVersionCompatibilityNotificationType,
+	GetDocumentFromMarkerRequestType,
 	ReportingMessageType,
 	ReportMessageRequestType,
-	TraceLevel
+	TraceLevel,
 } from "../protocols/agent/agent.protocol";
 import { CodemarkType } from "../protocols/agent/api.protocol";
 import { asAbsolutePath, Debug, Editor } from "../utils";
@@ -395,7 +399,7 @@ export class CodestreamView {
 			case ShellPromptFolderRequestType.method: {
 				const result = remote.dialog.showOpenDialog({
 					title: message.params.message,
-					properties: ["openDirectory"]
+					properties: ["openDirectory"],
 				});
 				this.respond<ShellPromptFolderResponse>({
 					id: message.id,
@@ -481,6 +485,36 @@ export class CodestreamView {
 			case ReloadWebviewRequestType.method: {
 				// TODO: technically, just the iframe could be replaced
 				Container.viewController.reload(this.getURI());
+				break;
+			}
+			case InsertTextRequestType.method: {
+				const { text, marker } = message.params as InsertTextRequest;
+
+				let response: InsertTextResponse = false;
+
+				const documentMarkerInfo = await Container.session.agent.request(
+					GetDocumentFromMarkerRequestType,
+					{
+						markerId: marker.id,
+					}
+				);
+
+				if (documentMarkerInfo) {
+					const editor = await Container.editorManipulator.open(
+						Convert.uriToPath(documentMarkerInfo.textDocument.uri)
+					);
+
+					if (editor) {
+						const bufferRange = Convert.lsRangeToAtomRange(documentMarkerInfo.range);
+						editor.setTextInBufferRange(
+							[[bufferRange.start.row, 0], [bufferRange.start.row, 0]],
+							text
+						);
+						response = true;
+					}
+				}
+
+				this.respond<InsertTextResponse>({ id: message.id, params: response });
 				break;
 			}
 			default: {
@@ -573,7 +607,7 @@ export class CodestreamView {
 			visibleRanges: Editor.getVisibleRanges(event.editor),
 			lineCount: event.editor.getLineCount(),
 		});
-	};
+	}
 
 	private onEditorActiveEditorChanged = (editor?: TextEditor) => {
 		const notification: HostDidChangeActiveEditorNotification = {};
@@ -592,5 +626,5 @@ export class CodestreamView {
 			};
 		}
 		this.sendEvent(HostDidChangeActiveEditorNotificationType, notification);
-	};
+	}
 }
