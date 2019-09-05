@@ -128,7 +128,7 @@ export interface ShellPromptFolderRequest {
 	message: string;
 }
 export interface ShellPromptFolderResponse {
-	path: string | undefined;	
+	path: string | undefined;
 }
 
 export const ShellPromptFolderRequestType = new RequestType<
