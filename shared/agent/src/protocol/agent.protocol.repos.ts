@@ -52,6 +52,7 @@ export interface RepoMap {
 
 export interface MapReposRequest {
 	repos: RepoMap[];
+	skipRepositoryIntegration?: boolean | undefined;
 }
 
 export interface MapReposResponse {

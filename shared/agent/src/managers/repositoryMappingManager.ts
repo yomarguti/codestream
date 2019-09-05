@@ -74,34 +74,44 @@ export class RepositoryMappingManager {
 			}
 
 			if (parsed && isChanging) {
-				const foundRepos = await SessionContainer.instance().git.setKnownRepository(
-					request.repos.map(_ => {
-						return {
-							repoId: _.repoId,
-							path: URI.file(_.path).toString()
-						};
-					})
-				);
-				let deleteCount = 0;
-				if (foundRepos && Object.keys(foundRepos).length) {
-					for (const repoMap of request.repos) {
-						if (!foundRepos[repoMap.repoId]) {
-							// wasn't found, don't include it in the mapepd data
-							delete parsed.repos[repoMap.repoId];
-							deleteCount++;
-							Logger.debug(`Removing RepoId=${repoMap.repoId} (not found)`);
-						}
-					}
-					if (
-						deleteCount !== request.repos.length &&
-						parsed.repos &&
-						Object.keys(parsed.repos).length
-					) {
+				if (request.skipRepositoryIntegration) {
+					if (parsed.repos && Object.keys(parsed.repos).length) {
 						fs.writeFileSync(p, JSON.stringify(parsed, null, 1));
-						Logger.debug(`Saved repo mapping file to ${p}`);
+						Logger.debug(`Saved repo mapping file to ${p} (skippedRepositoryIntegration)`);
 						return {
 							success: true
 						};
+					}
+				} else {
+					const foundRepos = await SessionContainer.instance().git.setKnownRepository(
+						request.repos.map(_ => {
+							return {
+								repoId: _.repoId,
+								path: URI.file(_.path).toString()
+							};
+						})
+					);
+					let deleteCount = 0;
+					if (foundRepos && Object.keys(foundRepos).length) {
+						for (const repoMap of request.repos) {
+							if (!foundRepos[repoMap.repoId]) {
+								// wasn't found, don't include it in the mapepd data
+								delete parsed.repos[repoMap.repoId];
+								deleteCount++;
+								Logger.debug(`Removing RepoId=${repoMap.repoId} (not found)`);
+							}
+						}
+						if (
+							deleteCount !== request.repos.length &&
+							parsed.repos &&
+							Object.keys(parsed.repos).length
+						) {
+							fs.writeFileSync(p, JSON.stringify(parsed, null, 1));
+							Logger.debug(`Saved repo mapping file to ${p}`);
+							return {
+								success: true
+							};
+						}
 					}
 				}
 			}
@@ -126,7 +136,8 @@ export class RepositoryMappingManager {
 			const repo = parsed && parsed.repos[repoId];
 			if (!repo || !repo.defaultPath) return undefined;
 
-			const foundRepos = await SessionContainer.instance().git.setKnownRepository([{
+			const foundRepos = await SessionContainer.instance().git.setKnownRepository([
+				{
 					repoId: repoId,
 					path: URI.file(repo.defaultPath).toString()
 				}
@@ -137,26 +148,6 @@ export class RepositoryMappingManager {
 		} catch (ex) {
 			Logger.error(ex);
 		}
-		return undefined;
-	}
-
-	async getOrCreateRepoMappingData(request?: MapReposRequest) {
-		try {
-			if (request && request.repos && request.repos.length) {
-				await this.mapRepos(request);
-			}
-			const p = this.mappingFilePath();
-			if (!fs.existsSync(p)) return undefined;
-
-			const data = fs.readFileSync(p, "utf8");
-			if (!data) return undefined;
-
-			const parsed: RepoMappingFile = JSON.parse(data);
-			return parsed;
-		} catch (ex) {
-			Logger.error(ex);
-		}
-
 		return undefined;
 	}
 

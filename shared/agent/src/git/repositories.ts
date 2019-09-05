@@ -32,6 +32,8 @@ export class GitRepositories {
 	private _disposable: Disposable | undefined;
 	private readonly _repositoryTree: TernarySearchTree<GitRepository>;
 	private _searchPromise: Promise<void> | undefined;
+	private _syncPromise: Promise<void> | undefined;
+	private _repositoryMappingSyncPromise: Promise<{ [key: string]: boolean }> | undefined;
 
 	constructor(private readonly _git: GitService, public readonly session: CodeStreamSession) {
 		this._repositoryTree = TernarySearchTree.forPaths();
@@ -64,7 +66,7 @@ export class GitRepositories {
 		let result = tree.findSubstr(filePath);
 		if (!result) {
 			await this.repositorySearchByDocument({
-				uri: "file:///" + filePath
+				uri: URI.file(filePath).toString()
 			});
 			const tree = await this.getRepositoryTree();
 			result = tree.findSubstr(filePath);
@@ -72,8 +74,6 @@ export class GitRepositories {
 		return result;
 	}
 
-	private _syncPromise: Promise<void> | undefined;
-	private _repositoryMappingSyncPromise: Promise<{ [key: string]: boolean }> | undefined;
 	async syncKnownRepositories(repos: CSRepository[]) {
 		Logger.debug(`syncing KnownRepositories...`);
 		const remoteToRepoMap = await this.getKnownRepositories();
@@ -194,7 +194,10 @@ export class GitRepositories {
 			}
 		}
 
-		SessionContainer.instance().repositoryMappings.setRepoMappingData({ repos: repoMap });
+		SessionContainer.instance().repositoryMappings.setRepoMappingData({
+			repos: repoMap,
+			skipRepositoryIntegration: true
+		});
 
 		if (!initializing) {
 			// Defer the event trigger enough to let everything unwind
