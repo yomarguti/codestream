@@ -163,7 +163,7 @@ export const DidChangeVersionCompatibilityNotificationType = new NotificationTyp
 >("codestream/didChangeVersionCompatibility");
 
 export enum ApiVersionCompatibility {
-	ApiCompatible = "ApiOk",
+	ApiCompatible = "apiCompatible",
 	ApiUpgradeRecommended = "apiUpgradeRecommended",
 	ApiUpgradeRequired = "apiUpgradeRequired"
 }
