@@ -51,8 +51,8 @@ namespace CodeStream.VisualStudio.Core.Extensions {
 		/// <param name="range"></param>
 		/// <returns></returns>
 		public static Span? ToSpan(this IWpfTextView wpfTextView, Range range) {
-			var sp1 = new SnapshotPoint();
-			var sp2 = new SnapshotPoint();
+			SnapshotPoint? sp1 = null;
+			SnapshotPoint? sp2 = null;
 			try {
 				foreach (var line in wpfTextView.VisualSnapshot.Lines) {
 					// GetLineNumberFromPosition is 0-based
@@ -69,7 +69,7 @@ namespace CodeStream.VisualStudio.Core.Extensions {
 				}
 				if (sp1 == null || sp2 == null) return null;
 
-				var span = new Span(sp1.Position, Math.Abs(sp1.Difference(sp2)));
+				var span = new Span(sp1.Value.Position, Math.Abs(sp1.Value.Difference(sp2.Value)));
 				return span;
 			}
 			catch { }
@@ -77,8 +77,38 @@ namespace CodeStream.VisualStudio.Core.Extensions {
 			return null;
 		}
 
+		/// <summary>
+		/// Creates a single lengthed Span based on starting line
+		/// </summary>
+		/// <param name="wpfTextView"></param>
+		/// <param name="startLine"></param>
+		/// <param name="startPosition">optional</param>
+		/// <returns></returns>
+		public static Span? ToStartLineSpan(this IWpfTextView wpfTextView, int startLine, int? startPosition = null) {
+			SnapshotPoint? sp = null;
+			try {
+				foreach (var line in wpfTextView.VisualSnapshot.Lines) {
+					// GetLineNumberFromPosition is 0-based					
+					if (startLine == wpfTextView.TextSnapshot.GetLineNumberFromPosition(line.Extent.Start.Position)) {
+						sp = new SnapshotPoint(line.Snapshot, startPosition.HasValue ? line.MinStartCharacter(startPosition.Value) : line.Start.Position);
+						break;
+					}
+				}
+				if (sp == null) return null;
+
+				return new Span(sp.Value.Position, 1);
+			}
+			catch { }
+
+			return null;
+		}
+
 		public static int MinStartCharacter(this ITextSnapshotLine line, Range range) {
-			var position = line.Start.Position + range.Start.Character;
+			return line.MinStartCharacter(range.Start.Character);
+		}
+
+		public static int MinStartCharacter(this ITextSnapshotLine line, int startCharacter) {
+			var position = line.Start.Position + startCharacter;
 			if (position > line.Extent.End.Position) {
 				position = line.Start.Position;
 			}

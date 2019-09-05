@@ -10,6 +10,7 @@ using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Services;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Newtonsoft.Json.Linq;
 using Serilog;
@@ -320,6 +321,43 @@ namespace CodeStream.VisualStudio {
 												}
 											}, DispatcherPriority.Input);
 #pragma warning restore VSTHRD001
+											break;
+										}
+									case InsertTextRequestType.MethodName: {
+											using (var scope = _browserService.CreateScope(message)) {
+												IWpfTextView openEditorResult = null;
+												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+												try {
+													var @params = message.Params.ToObject<InsertTextRequest>();
+													if (@params != null) {
+														var documentFromMarker = await _codeStreamAgent.GetDocumentFromMarkerAsync(new DocumentFromMarkerRequest(@params.Marker));
+														if (documentFromMarker != null) {
+															openEditorResult = await _ideService.OpenEditorAtLineAsync(documentFromMarker.TextDocument.Uri.ToUri(), documentFromMarker.Range, true);
+															if (openEditorResult == null) {
+																Log.Debug($"{nameof(InsertTextRequestType)} could not open editor");
+															}
+															else {
+																var span = openEditorResult.ToStartLineSpan(documentFromMarker.Range.Start.Line);
+																if (span != null) {
+																	using (var edit = openEditorResult.TextBuffer.CreateEdit()) {
+																		edit.Insert(span.Value.Start, @params.Text);
+																		edit.Apply();
+																	}
+																}
+																else {
+																	Log.Debug($"Could not locate Span. Range={documentFromMarker.Range}");
+																}
+															}
+														}
+													}
+												}
+												catch (Exception ex) {
+													Log.Warning(ex, nameof(InsertTextRequestType));
+												}
+												finally {
+													scope.FulfillRequest(new { }.ToJToken());
+												}
+											}
 											break;
 										}
 									case ReloadWebviewRequestType.MethodName: {

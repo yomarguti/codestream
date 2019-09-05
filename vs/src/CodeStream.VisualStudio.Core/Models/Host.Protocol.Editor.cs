@@ -105,9 +105,18 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public bool? AtTop { get; }
 	}
 
-
 	public class EditorScrollToNotificationType : NotificationType<EditorRevealRangeRequest> {
 		public const string MethodName = "host/editor/scrollTo";
+		public override string Method => MethodName;
+	}
+
+	public class InsertTextRequest {
+		public string Text { get; set; }
+		public CSMarkerIdentifier Marker { get; set; }
+	}
+
+	public class InsertTextRequestType : RequestType<InsertTextRequest> {
+		public const string MethodName = "host/marker/inserttext";
 		public override string Method => MethodName;
 	}
 }

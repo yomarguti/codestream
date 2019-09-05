@@ -129,7 +129,19 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public bool? HasMarkers { get; set; }
 	}
 
-	public class CsMarker : CsEntity {
+	public interface ICSMarkerIdentifier {
+		string Id { get; set; }
+		string File { get; set; }
+		string RepoId { get; set; }
+	}
+
+	public class CSMarkerIdentifier : ICSMarkerIdentifier {
+		public string Id { get; set; }
+		public string File { get; set; }
+		public string RepoId { get; set; }
+	}
+
+	public class CsMarker : CsEntity, ICSMarkerIdentifier {
 		public string TeamId { get; set; }
 		public string FileStreamId { get; set; }
 		public string PostStreamId { get; set; }
@@ -311,7 +323,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 	}
 
 	public class InitializationOptions {
-		 public string ServerUrl { get; set; }
+		public string ServerUrl { get; set; }
 		//public string GitPath { get; set; }
 
 		public Ide Ide { get; set; }
@@ -454,6 +466,13 @@ namespace CodeStream.VisualStudio.Core.Models {
 			MarkerId = marker.Id;
 		}
 
+		public DocumentFromMarkerRequest(ICSMarkerIdentifier marker) {
+			File = marker.File;
+			RepoId = marker.RepoId;
+			MarkerId = marker.Id;
+		}
+
+
 		public string File { get; set; }
 		public string RepoId { get; set; }
 		public string MarkerId { get; set; }
@@ -540,6 +559,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public List<StreamType> Types { get; set; }
 		public List<string> MemberIds { get; set; }
 	}
+
 	public class FetchStreamsRequest2 {
 		public List<string> Types { get; set; }
 		public List<string> MemberIds { get; set; }
