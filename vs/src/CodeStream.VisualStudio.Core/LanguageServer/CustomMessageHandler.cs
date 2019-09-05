@@ -83,6 +83,27 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 			}
 		}
 
+		[JsonRpcMethod(DidChangeApiVersionCompatibilityNotificationType.MethodName)]
+		public void OnDidChangeApiVersionCompatibilityNotification(JToken e) {
+			using (Log.CriticalOperation($"{nameof(OnDidChangeApiVersionCompatibilityNotification)} Method={DidChangeApiVersionCompatibilityNotificationType.MethodName}", Serilog.Events.LogEventLevel.Information)) {
+				ThreadHelper.JoinableTaskFactory.Run(async delegate {
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+					try {
+						var toolWindowProvider = _serviceProvider.GetService(typeof(SToolWindowProvider)) as IToolWindowProvider;
+						Assumes.Present(toolWindowProvider);
+						if (!toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid)) {
+							toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
+						}
+					}
+					catch (Exception ex) {
+						Log.Error(ex, nameof(OnDidChangeApiVersionCompatibilityNotification));
+					}
+				});
+
+				_browserService.EnqueueNotification(new DidChangeApiVersionCompatibilityNotificationType(e));
+			}
+		}
+
 		public class DocumentMarkerChangedSubjectArgs {
 			public DocumentMarkerChangedSubjectArgs(string uri) {
 				Uri = uri;

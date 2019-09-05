@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 
 namespace CodeStream.VisualStudio.Core.Models {
 	public class DidChangeConnectionStatusNotification {
@@ -31,6 +32,43 @@ namespace CodeStream.VisualStudio.Core.Models {
 			return CustomNotificationPayload.Create(Method, _token);
 		}
 	}
+
+	[JsonConverter(typeof(CamelCaseStringEnumConverter))]
+	public enum ApiVersionCompatibility {
+		ApiCompatible,
+		ApiUpgradeRecommended,
+		ApiUpgradeRequired
+	}
+
+	// not actually used -- JToken is used so we dont have to deserialze, then serialize
+	public class DidChangeApiVersionCompatibilityNotification {
+		public ApiVersionCompatibility Compatibility { get; set; }
+		public string Version { get; set; }
+		public CSApiCapabilities MissingCapabilities { get; set; }
+	}
+
+	public class DidChangeApiVersionCompatibilityNotificationType : NotificationType<DidChangeApiVersionCompatibilityNotification> {
+		private readonly JToken _token;
+		public DidChangeApiVersionCompatibilityNotificationType(JToken token) {
+			_token = token;
+		}
+		public const string MethodName = "codestream/didChangeApiVersionCompatibility";
+		public override string Method => MethodName;
+		public override string AsJson() {
+			return CustomNotificationPayload.Create(Method, _token);
+		}
+	}
+
+	public class CSApiCapabilities : Dictionary<string, CSApiCapability> {
+
+	}
+
+	public class CSApiCapability {
+		public string Description { get; set; }
+		public string Url { get; set; }
+		public string Version { get; set; }
+	}
+
 
 	[JsonConverter(typeof(CamelCaseStringEnumConverter))]
 	public enum ChangeReason {
