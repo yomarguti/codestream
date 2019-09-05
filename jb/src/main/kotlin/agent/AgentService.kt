@@ -143,7 +143,11 @@ class AgentService(private val project: Project) : Disposable {
             val agentJsMap = File(temp, "agent.js.map")
             // val agentLog = File(temp, "agent.log")
             FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent.js"), agentJs)
-            FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent.js.map"), agentJsMap)
+            try {
+                FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent.js.map"), agentJsMap)
+            } catch (ex: Exception) {
+                logger.warn("Could not extract agent.js.map", ex)
+            }
             logger.info("CodeStream LSP agent extracted to ${agentJs.absolutePath}")
             GeneralCommandLine(
                 "node",
