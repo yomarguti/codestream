@@ -1,5 +1,11 @@
 rootProject.name = 'codestream-jb'
 
+buildCache {
+    local {
+        removeUnusedEntriesAfterDays = 7
+    }
+}
+
 //sourceControl {
 //    gitRepository("https://github.com/gradle/native-samples-cpp-library.git") {
 //    gitRepository("https://github.com/gtache/intellij-lsp.git") {
