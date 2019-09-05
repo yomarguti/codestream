@@ -4,11 +4,12 @@ import {
 	GetDocumentFromKeyBindingRequestType,
 } from "@codestream/protocols/agent";
 import { CodemarkType } from "@codestream/protocols/api";
+import { doTimes } from "@teamcodestream/js-utils";
 import { CompositeDisposable, Disposable } from "atom";
 import { Convert } from "atom-languageclient";
 import { LOG_DIR } from "logger";
 import { SplitDiffService } from "types/package-services/split-diff";
-import { Debug, doTimes, Echo, Editor, Listener } from "utils";
+import { Debug, Echo, Editor, Listener } from "utils";
 import { CODESTREAM_VIEW_URI } from "views/codestream-view";
 import { Container } from "workspace/container";
 import {

@@ -18,12 +18,6 @@ export function createTempFile(name: string, text = "") {
 	});
 }
 
-export function doTimes(count: number, fn: (i: number) => void) {
-	for (let i = 0; i < count; i++) {
-		fn(i + 1);
-	}
-}
-
 export const accessSafely = <T>(f: () => T): T | void => {
 	try {
 		return f();
