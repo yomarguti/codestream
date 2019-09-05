@@ -905,7 +905,7 @@ export class CodeStreamSession {
 
 		const { telemetry } = Container.instance();
 		await telemetry.ready();
-		telemetry.identify(this._codestreamUserId!, props);
+		telemetry.identify(props);
 		telemetry.setSuperProps(props);
 		if (user.firstSessionStartedAt !== undefined) {
 			telemetry.setFirstSessionProps(user.firstSessionStartedAt, FIRST_SESSION_TIMEOUT);

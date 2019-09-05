@@ -21,8 +21,8 @@ export class TelemetryManager {
 		this._telemetry.alias(id);
 	}
 
-	identify(id: string, props: { [key: string]: any }) {
-		this._telemetry.identify(id, props);
+	identify(props: { [key: string]: any }) {
+		this._telemetry.identify(props);
 	}
 
 	setSuperProps(props: { [key: string]: string | number | boolean }) {
