@@ -1,6 +1,7 @@
 package com.codestream.authentication
 
 import com.codestream.agentService
+import com.codestream.extensions.merge
 import com.codestream.gson
 import com.codestream.sessionService
 import com.codestream.settingsService
@@ -20,9 +21,11 @@ import protocols.webview.Ide
 import protocols.webview.UserSession
 
 class AuthenticationService(val project: Project) {
+    
+    private val extensionCapabilities: JsonElement get() = gson.toJsonTree(Capabilities())
 
     private val logger = Logger.getInstance(AuthenticationService::class.java)
-    private var agentCapabilities: JsonElement = gson.toJsonTree(Capabilities())
+    private var mergedCapabilities: JsonElement = extensionCapabilities
 
     fun bootstrap(): Any? {
         val settings = project.settingsService ?: return Unit
@@ -30,7 +33,7 @@ class AuthenticationService(val project: Project) {
 
         return BootstrapResponse(
             UserSession(session.userLoggedIn?.userId),
-            agentCapabilities,
+            mergedCapabilities,
             settings.webViewConfigs,
             settings.getWebViewContextJson(),
             settings.extensionInfo.versionFormatted,
@@ -73,7 +76,7 @@ class AuthenticationService(val project: Project) {
     fun completeLogin(result: LoginResult) {
         if (project.sessionService?.userLoggedIn == null) {
             result.state?.let {
-                agentCapabilities = it.capabilities
+                mergedCapabilities = extensionCapabilities.merge(it.capabilities)
                 project.settingsService?.state?.teamId = it.teamId
                 saveAccessToken(it.token)
             }
