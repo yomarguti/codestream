@@ -899,13 +899,15 @@ export class CodeStreamSession {
 			props["Date of Last Post"] = new Date(user.lastPostCreatedAt).toISOString();
 		}
 
-		props["First Session"] =
+		const isFirstSession =
 			!!user.firstSessionStartedAt &&
 			user.firstSessionStartedAt <= Date.now() + FIRST_SESSION_TIMEOUT;
 
+		props["First Session"] = isFirstSession;
+
 		const { telemetry } = Container.instance();
 		await telemetry.ready();
-		telemetry.identify(this._codestreamUserId!, props);
+		telemetry.identify(isFirstSession ? undefined : this._codestreamUserId!, props);
 		telemetry.setSuperProps(props);
 		if (user.firstSessionStartedAt !== undefined) {
 			telemetry.setFirstSessionProps(user.firstSessionStartedAt, FIRST_SESSION_TIMEOUT);
