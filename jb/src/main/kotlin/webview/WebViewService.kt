@@ -155,8 +155,7 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
             "--enable-begin-frame-scheduling",
             "--software-rendering-fps=60",
             "--disable-web-security",
-            "--allow-file-access-from-files",
-            if (UIUtil.isJreHiDPIEnabled() && !SystemInfo.isMac) "--force-device-scale-factor=1" else ""
+            "--allow-file-access-from-files"
         )
     }
 
