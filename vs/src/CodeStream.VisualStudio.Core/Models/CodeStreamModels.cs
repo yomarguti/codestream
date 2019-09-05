@@ -299,19 +299,27 @@ namespace CodeStream.VisualStudio.Core.Models {
 	}
 
 	public class Extension {
+		[JsonProperty("build")]
 		public string Build { get; set; }
+		[JsonProperty("buildEnv")]
 		public string BuildEnv { get; set; }
+		[JsonProperty("version")]
 		public string Version { get; set; }
+		[JsonProperty("versionFormatted")]
 		public string VersionFormatted { get; set; }
 	}
 
 	public class Ide {
+		[JsonProperty("name")]
 		public string Name { get; set; }
+		[JsonProperty("version")]
 		public string Version { get; set; }
 	}
 
 	public class Proxy {
+		[JsonProperty("url")]
 		public string Url { get; set; }
+		[JsonProperty("strictSsl")]
 		public bool StrictSsl { get; set; }
 	}
 
@@ -323,14 +331,21 @@ namespace CodeStream.VisualStudio.Core.Models {
 	}
 
 	public class InitializationOptions {
+		[JsonProperty("serverUrl")]
 		public string ServerUrl { get; set; }
 		//public string GitPath { get; set; }
 
+		[JsonProperty("ide")]
 		public Ide Ide { get; set; }
+		[JsonProperty("extension")]
 		public Extension Extension { get; set; }
+		[JsonProperty("traceLevel")]
 		public string TraceLevel { get; set; }
+		[JsonProperty("isDebugging")]
 		public bool IsDebugging { get; set; }
+		[JsonProperty("proxySupport")]
 		public string ProxySupport { get; set; }
+		[JsonProperty("proxy")]
 		public Proxy Proxy { get; set; }
 	}
 
