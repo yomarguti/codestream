@@ -23,6 +23,8 @@ import {
 import {
 	AgentInitializeResult,
 	BaseAgentOptions,
+	DidChangeApiVersionCompatibilityNotification,
+	DidChangeApiVersionCompatibilityNotificationType,
 	DidChangeConnectionStatusNotification,
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotification,
@@ -380,6 +382,12 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 
 	onDidChangeVersionCompatibility(cb: (event: DidChangeVersionCompatibilityNotification) => void) {
 		return this.emitter.on(DidChangeVersionCompatibilityNotificationType.method, cb);
+	}
+
+	onDidChangeApiVersionCompatibility(
+		cb: (event: DidChangeApiVersionCompatibilityNotification) => void
+	) {
+		return this.emitter.on(DidChangeApiVersionCompatibilityNotificationType.method, cb);
 	}
 
 	@started

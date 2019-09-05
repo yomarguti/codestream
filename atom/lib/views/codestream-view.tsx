@@ -388,7 +388,6 @@ export class CodestreamView {
 							context: this.webviewContext || {
 								currentTeamId: this.session.isSignedIn ? this.session.teamId : undefined,
 							},
-							versionCompatibility: this.session.versionCompatibility,
 						},
 					});
 				} catch (error) {
@@ -579,7 +578,7 @@ export class CodestreamView {
 		this.channel.host.postMessage(message);
 	}
 
-	private sendEvent<ET extends NotificationType<any, any>>(
+	sendEvent<ET extends NotificationType<any, any>>(
 		eventType: ET,
 		params: ET extends NotificationType<infer P, any> ? P : never
 	) {

@@ -3,6 +3,7 @@ import { CompositeDisposable, Emitter } from "atom";
 import { EnvironmentConfig, PRODUCTION_CONFIG } from "../env-utils";
 import {
 	Capabilities,
+	DidChangeApiVersionCompatibilityNotification,
 	isLoginFailResponse,
 	LoginFailResponse,
 	LoginSuccessResponse,
@@ -80,6 +81,7 @@ export class WorkspaceSession {
 	private _isReady?: Promise<void>;
 
 	versionCompatibility: VersionCompatibility | undefined;
+	lastApiVersionCompatibilityNotification?: DidChangeApiVersionCompatibilityNotification;
 
 	get ready() {
 		return this._isReady;
@@ -201,14 +203,27 @@ export class WorkspaceSession {
 
 	getBootstrapInfo(): Pick<
 		BootstrapInHostResponse,
-		"session" | "capabilities" | "configs" | "version" | "ide"
+		| "session"
+		| "capabilities"
+		| "configs"
+		| "version"
+		| "ide"
+		| "versionCompatibility"
+		| "apiVersionCompatibility"
+		| "missingCapabilities"
 	> {
+		const apiCompability: Partial<DidChangeApiVersionCompatibilityNotification> =
+			this.lastApiVersionCompatibilityNotification || {};
+
 		return {
+			versionCompatibility: this.versionCompatibility,
+			apiVersionCompatibility: apiCompability.compatibility,
+			missingCapabilities: apiCompability.missingCapabilities,
 			session: { userId: this.isSignedIn ? this.user!.id : undefined },
 			capabilities: this.capabilities,
 			configs: Container.configs.getForWebview(this.environment.serverUrl, this.lastUsedEmail),
 			version: getPluginVersion(),
-			ide: { name: "Atom"}
+			ide: { name: "Atom" },
 		};
 	}
 
