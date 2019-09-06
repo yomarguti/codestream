@@ -341,12 +341,15 @@ export class WebviewController implements Disposable {
 		args: false
 	})
 	async handleProtocol(uri: Uri) {
-		await this.ensureWebView();
+		if (!this.visible) {
+			await this.show();
+		}
+
 		this._webview!.notify(HostDidReceiveRequestNotificationType, {
 			url: uri.toString()
 		});
 	}
-	
+
 	@log()
 	async onApiVersionChanged(e: DidChangeApiVersionCompatibilityNotification) {
 		this._apiVersionCompatibility = e.compatibility;
