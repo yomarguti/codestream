@@ -680,14 +680,16 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 		if (textEditorUri === undefined) {
 			return (
-				<div key="no-codemarks" className="no-codemarks">
-					<h3>No file open.</h3>
-					<p>
-						Open a file to to start discussing code with your teammates!{" "}
-						<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks">
-							View guide.
-						</a>
-					</p>
+				<div key="no-codemarks" className="no-codemarks-container">
+					<div key="no-codemarks" className="no-codemarks">
+						<h3>No file open.</h3>
+						<p>
+							Open a file to to start discussing code with your teammates!{" "}
+							<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks">
+								View guide.
+							</a>
+						</p>
+					</div>
 				</div>
 			);
 		} else {
@@ -695,43 +697,51 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
 			if (isNotOnDisk(textEditorUri)) {
 				return (
-					<div className="no-codemarks">
-						<h3>This file hasn't been saved.</h3>
-						<p>
-							Save the file before creating a codemark so that the codemark can be linked to the
-							code.
-						</p>
+					<div key="no-codemarks" className="no-codemarks-container">
+						<div className="no-codemarks">
+							<h3>This file hasn't been saved.</h3>
+							<p>
+								Save the file before creating a codemark so that the codemark can be linked to the
+								code.
+							</p>
+						</div>
 					</div>
 				);
 			}
 			if (this.state.problem === ScmError.NoRepo) {
 				return (
-					<div className="no-codemarks">
-						<h3>This file is not part of a git repository.</h3>
-						<p>
-							CodeStream requires files to be tracked by Git so that codemarks can be linked to the
-							code.
-						</p>
-						<p>{uriToFilePath(textEditorUri)}</p>
+					<div key="no-codemarks" className="no-codemarks-container">
+						<div className="no-codemarks">
+							<h3>This file is not part of a git repository.</h3>
+							<p>
+								CodeStream requires files to be tracked by Git so that codemarks can be linked to
+								the code.
+							</p>
+							<p>{uriToFilePath(textEditorUri)}</p>
+						</div>
 					</div>
 				);
 			}
 			if (this.state.problem === ScmError.NoRemotes) {
 				return (
-					<div className="no-codemarks">
-						<h3>This repository has no remotes.</h3>
-						<p>Please configure a remote URL for this repository before creating a codemark.</p>
+					<div key="no-codemarks" className="no-codemarks-container">
+						<div className="no-codemarks">
+							<h3>This repository has no remotes.</h3>
+							<p>Please configure a remote URL for this repository before creating a codemark.</p>
+						</div>
 					</div>
 				);
 			}
 			if (this.state.problem === ScmError.NoGit) {
 				return (
-					<div className="no-codemarks">
-						<h3>Git could not be located.</h3>
-						<p>
-							CodeStream was unable to find the `git` command. Make sure it's installed and
-							configured properly.
-						</p>
+					<div key="no-codemarks" className="no-codemarks-container">
+						<div className="no-codemarks">
+							<h3>Git could not be located.</h3>
+							<p>
+								CodeStream was unable to find the `git` command. Make sure it's installed and
+								configured properly.
+							</p>
+						</div>
 					</div>
 				);
 			}
