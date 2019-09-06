@@ -9,8 +9,6 @@ import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.SystemInfo
-import com.intellij.util.ui.UIUtil
 import com.teamdev.jxbrowser.chromium.Browser
 import com.teamdev.jxbrowser.chromium.BrowserContext
 import com.teamdev.jxbrowser.chromium.BrowserContextParams
