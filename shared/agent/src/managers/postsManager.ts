@@ -3,7 +3,7 @@ import * as fs from "fs";
 import { TextDocumentIdentifier } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
-import { MarkerLocation, Ranges } from "../api/extensions";
+import { Marker, MarkerLocation, Ranges } from "../api/extensions";
 import { Container, SessionContainer } from "../container";
 import { Logger } from "../logger";
 import {
@@ -689,7 +689,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		relatedCodemarkIds
 	}: CreatePostWithMarkerRequest): Promise<CreatePostResponse | undefined> {
 		const { documents } = Container.instance();
-		const { git } = SessionContainer.instance();
+		const { git, scm } = SessionContainer.instance();
 
 		const document = documents.get(documentId.uri);
 		if (document === undefined) {
@@ -753,6 +753,34 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			codemarkRequest.streamId = streamId;
 			codemarkRequest.markers = marker && [marker];
 			codemarkRequest.remotes = remotes;
+			try {
+				const scmResponse = await scm.getRangeInfo({
+					uri: documentId.uri,
+					range: range,
+					contents: code,
+					skipBlame: true
+				});
+
+				let remoteCodeUrl;
+				if (remotes !== undefined && scmResponse.scm !== undefined && scmResponse.scm.revision) {
+					for (const remote of remotes) {
+						remoteCodeUrl = Marker.getRemoteCodeUrl(
+							remote,
+							scmResponse.scm.revision,
+							scmResponse.scm.file,
+							scmResponse.range.start.line + 1,
+							scmResponse.range.end.line + 1
+						);
+
+						if (remoteCodeUrl !== undefined) {
+							codemarkRequest.remoteCodeUrl = remoteCodeUrl;
+							break;
+						}
+					}
+				}
+			} catch (ex) {
+				Logger.error(ex);
+			}
 		}
 
 		try {
