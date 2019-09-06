@@ -8,6 +8,7 @@ interface Props {
 	href?: string;
 	onClick?(event: React.SyntheticEvent): any;
 	children: React.ReactNode;
+	className?: string;
 }
 
 function Link(props: Props) {
@@ -24,7 +25,7 @@ function Link(props: Props) {
 			};
 	}
 
-	return <a {...{ href, onClick }}>{props.children}</a>;
+	return <a {...{ href, onClick, className: props.className }}>{props.children}</a>;
 }
 
 const mapStateToProps = (state, props: Props) => ({

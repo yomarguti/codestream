@@ -42,6 +42,7 @@ import { EditorHighlightRangeRequestType } from "@codestream/protocols/webview";
 import { setCurrentCodemark } from "../store/context/actions";
 import { RelatedCodemark } from "./RelatedCodemark";
 import { addDocumentMarker } from "../store/documentMarkers/actions";
+import { Link } from "./Link";
 
 interface State {
 	hover: boolean;
@@ -787,7 +788,7 @@ export class Codemark extends React.Component<Props, State> {
 			return (
 				<div className="related">
 					<div className="related-label">Open on</div>
-					<a className="external-link" href={codemark.externalProviderUrl}>
+					<Link className="external-link" href={codemark.externalProviderUrl}>
 						{providerDisplay.icon && (
 							<span>
 								<Icon name={providerDisplay.icon} />
@@ -795,7 +796,7 @@ export class Codemark extends React.Component<Props, State> {
 						)}
 						{providerDisplay.displayName}
 						<span className="external-url">{codemark.externalProviderUrl}</span>
-					</a>
+					</Link>
 				</div>
 			);
 		}
