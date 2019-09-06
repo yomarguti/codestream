@@ -29,6 +29,7 @@ import protocols.webview.EditorRangeSelectResponse
 import protocols.webview.EditorScrollToRequest
 import protocols.webview.MarkerApplyRequest
 import protocols.webview.MarkerCompareRequest
+import protocols.webview.MarkerInsertTextRequest
 import protocols.webview.ShellPromptFolderResponse
 import protocols.webview.UpdateConfigurationRequest
 
@@ -36,10 +37,6 @@ class WebViewRouter(val project: Project) {
     private val logger = Logger.getInstance(WebViewRouter::class.java)
     private var _isReady = false
     val isReady get() = _isReady
-
-    fun reload() {
-        _isReady = false
-    }
 
     fun handle(rawMessage: String, origin: String?) = GlobalScope.launch {
         val message = parse(rawMessage)
@@ -81,6 +78,7 @@ class WebViewRouter(val project: Project) {
             "host/webview/reload" -> project.webViewService?.load()
             "host/marker/compare" -> hostMarkerCompare(message)
             "host/marker/apply" -> hostMarkerApply(message)
+            "host/marker/inserttext" -> hostMarkerInsertText(message)
             "host/configuration/update" -> configurationUpdate(message)
             "host/editor/context" -> {
                 ActiveEditorContextResponse(project.editorService?.getEditorContext())
@@ -122,6 +120,11 @@ class WebViewRouter(val project: Project) {
     private fun hostMarkerCompare(message: WebViewMessage) {
         val request = gson.fromJson<MarkerCompareRequest>(message.params!!)
         project.editorService?.compareMarker(request.marker)
+    }
+
+    private fun hostMarkerInsertText(message: WebViewMessage) {
+        val request = gson.fromJson<MarkerInsertTextRequest>(message.params!!)
+        project.editorService?.insertText(request.marker, request.text)
     }
 
     private fun editorRangeHighlight(message: WebViewMessage) {

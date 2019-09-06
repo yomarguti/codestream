@@ -114,4 +114,9 @@ class MarkerApplyRequest(
     val marker: Marker
 )
 
+class MarkerInsertTextRequest(
+    val marker: Marker,
+    val text: String
+)
+
 

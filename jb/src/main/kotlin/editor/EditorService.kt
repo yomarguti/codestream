@@ -553,6 +553,19 @@ class EditorService(val project: Project) {
         }
     }
 
+    fun insertText(marker: Marker, text: String) = ApplicationManager.getApplication().invokeLater {
+        var editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return@invokeLater
+        val documentMarkers = documentMarkers[editor.document] ?: return@invokeLater
+        val documentMarker = documentMarkers.find { it.id == marker.id } ?: return@invokeLater
+
+        with(editor) {
+            val start = getOffset(documentMarker.range.start)
+            WriteCommandAction.runWriteCommandAction(project) {
+                document.replaceString(start, start, text)
+            }
+        }
+    }
+
     // var count = 0
     // fun toggleRangeHighlight2(range: Range, highlight: Boolean) = ApplicationManager.getApplication().invokeLater {
     //     val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return@invokeLater
