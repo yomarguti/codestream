@@ -70,7 +70,7 @@ export class ViewController implements Disposable {
 					this.session.lastApiVersionCompatibilityNotification = e;
 					if (this.mainView) {
 						await this.mainView.show();
-						this.mainView.sendEvent(DidChangeApiVersionCompatibilityNotificationType, e);
+						this.mainView.sendNotification(DidChangeApiVersionCompatibilityNotificationType, e);
 					}
 				})
 			);

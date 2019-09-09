@@ -189,6 +189,14 @@ export class Echo<T = void> implements Disposable {
 		});
 	}
 
+	once(listener: (value: T) => void) {
+		const listenerSubscription = this.add(value => {
+			listener(value);
+			listenerSubscription.dispose();
+		});
+		return listenerSubscription;
+	}
+
 	push(value: T) {
 		this.listeners.forEach(listener => listener(value));
 	}

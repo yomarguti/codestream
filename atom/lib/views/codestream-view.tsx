@@ -1,14 +1,18 @@
 import {
 	ApplyMarkerRequest,
 	ApplyMarkerRequestType,
+	ApplyMarkerResponse,
 	BootstrapInHostRequestType,
 	BootstrapInHostResponse,
 	CompareMarkerRequest,
 	CompareMarkerRequestType,
+	CompareMarkerResponse,
 	EditorContext,
 	EditorHighlightRangeRequestType,
+	EditorHighlightRangeResponse,
 	EditorRevealRangeRequest,
 	EditorRevealRangeRequestType,
+	EditorRevealRangeResponse,
 	EditorScrollToNotification,
 	EditorScrollToNotificationType,
 	EditorSelectRangeRequest,
@@ -35,14 +39,12 @@ import {
 	ShellPromptFolderRequestType,
 	ShellPromptFolderResponse,
 	ShowCodemarkNotificationType,
-	ShowStreamNotificationType,
 	UpdateConfigurationRequest,
 	UpdateConfigurationRequestType,
 	UpdateConfigurationResponse,
 	WebviewContext,
 	WebviewDidChangeContextNotificationType,
 	WebviewDidInitializeNotificationType,
-	WebviewIpcMessage,
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage,
 	WebviewPanels,
@@ -67,30 +69,13 @@ import {
 	TraceLevel,
 } from "../protocols/agent/agent.protocol";
 import { CodemarkType } from "../protocols/agent/api.protocol";
-import { asAbsolutePath, Debug, Editor } from "../utils";
+import { asAbsolutePath, createTempFile, Debug, Echo, Editor } from "../utils";
 import { Container } from "../workspace/container";
 import { EditorObserver } from "../workspace/editor-observer";
 import { SessionStatus, SignoutReason, WorkspaceSession } from "../workspace/workspace-session";
 import { isViewVisible } from "./controller";
 
-export class WebviewIpc {
-	private channel: MessageChannel;
-
-	constructor() {
-		this.channel = new MessageChannel();
-	}
-
-	get host() {
-		return this.channel.port1;
-	}
-
-	get webview() {
-		return this.channel.port2;
-	}
-}
-
 export const CODESTREAM_VIEW_URI = "atom://codestream";
-export const WEBVIEW_DID_INITIALIZE = "webview-ready";
 export const DID_CHANGE_STATE = "state-changed";
 export const WILL_DESTROY = "will-destroy";
 
@@ -98,29 +83,35 @@ export class CodestreamView {
 	element: HTMLElement;
 	private session: WorkspaceSession;
 	private subscriptions: CompositeDisposable;
-	private channel: WebviewIpc;
-	private iframe: HTMLIFrameElement;
+	private webview: any;
 	private emitter: Emitter;
-	private webviewReady?: Promise<void>;
 	private webviewContext: any;
 	private editorSelectionObserver?: EditorObserver;
 	private logger: FileLogger;
 	private timestamp = Date.now();
+	private webviewReadyEmitter = new Echo();
+	private _webviewInitialized = false;
 
 	constructor(session: WorkspaceSession, webviewContext: any) {
 		this.session = session;
 		this.webviewContext = webviewContext;
 		this.logger = new FileLogger("webview");
-		this.channel = new WebviewIpc();
 		this.emitter = new Emitter();
-		this.subscriptions = new CompositeDisposable();
+		this.subscriptions = new CompositeDisposable(
+			this.logger,
+			this.emitter,
+			this.webviewReadyEmitter
+		);
 		this.element = document.createElement("div");
-		this.element.classList.add("codestream");
-		this.iframe = document.createElement("iframe");
+		this.element.classList.add("codestream-view");
+		this.webview = document.createElement("webview");
 
-		this.initializeWebview(this.iframe);
-		this.initialize();
-		this.setupWebviewListener();
+		this.webviewReadyEmitter.add(() => {
+			this._webviewInitialized = true;
+			this.initialize();
+		});
+
+		this.initializeWebview(this.webview);
 	}
 
 	// update-able
@@ -153,53 +144,68 @@ export class CodestreamView {
 		return CODESTREAM_VIEW_URI;
 	}
 
-	async show(streamId?: string, threadId?: string) {
+	whenWebviewInitialized(cb: () => void) {
+		if (this._webviewInitialized) cb();
+		else this.webviewReadyEmitter.once(cb);
+	}
+
+	async show() {
 		await atom.workspace.open(this, { activatePane: true });
-		await this.webviewReady;
-		if (streamId) {
-			this.sendEvent(ShowStreamNotificationType, { streamId, threadId });
-		}
 	}
 
 	async showCodemark(codemarkId: string, sourceUri?: string) {
 		await this.show();
-		this.sendEvent(ShowCodemarkNotificationType, { codemarkId, sourceUri });
+		this.whenWebviewInitialized(() =>
+			this.sendNotification(ShowCodemarkNotificationType, { codemarkId, sourceUri })
+		);
 	}
 
-	private _html: string | undefined;
+	private _htmlPath: string | undefined;
 
-	private async getHtml() {
-		if (!Debug.isDebugging() && this._html) return this._html;
+	private async getWebviewSrc() {
+		if (!Debug.isDebugging() && this._htmlPath) return this._htmlPath;
 
 		return new Promise<string>((resolve, reject) => {
-			fs.readFile(asAbsolutePath("dist/webview/index.html"), "utf8", (error, data) => {
+			fs.readFile(asAbsolutePath("dist/webview/index.html"), "utf8", async (error, data) => {
 				if (error) return reject(error);
 
-				this._html = data.replace(/{{root}}/g, asAbsolutePath("."));
-				resolve(this._html);
+				if (!this._htmlPath) {
+					const htmlPath = (this._htmlPath = await createTempFile("codestream-atom-webview.html"));
+					this.subscriptions.add(new Disposable(() => fs.remove(htmlPath, () => {})));
+				}
+
+				fs.writeFile(this._htmlPath, data.replace(/{{root}}/g, asAbsolutePath(".")), () =>
+					resolve(this._htmlPath)
+				);
 			});
 		});
 	}
 
-	private async initializeWebview(iframe: HTMLIFrameElement) {
-		iframe.height = "100%";
-		iframe.width = "100%";
-		iframe.style.border = "none";
-		iframe.srcdoc = await this.getHtml();
+	private async initializeWebview(webview: any) {
+		webview.src = await this.getWebviewSrc();
+		webview.disablewebsecurity = true;
+		webview.preload = asAbsolutePath("webview-lib/preload.js");
+		webview.webpreferences = "allowRunningInsecureContent, javascript";
 
-		iframe.classList.add("webview", "native-key-bindings");
-		iframe.addEventListener("load", async () => {
-			iframe.contentWindow!.postMessage(
-				{
-					label: "codestream-webview-initialize",
-					styles: await Container.styles.getStylesheets(),
-					isDebugging: Debug.isDebugging(),
-				},
-				"*",
-				[this.channel.webview]
+		webview.classList.add("codestream-webview", "native-key-bindings");
+		webview.addEventListener("dom-ready", async () => {
+			this.subscriptions.add(
+				atom.commands.add("atom-workspace", "codestream:open-webview-devtools", () =>
+					webview.openDevTools()
+				),
+				Container.styles.onDidChange(styles => {
+					webview.send("harness", { label: "update-styles", styles });
+				})
 			);
-
-			iframe.contentWindow!.addEventListener("message", ({ data }: any) => {
+			webview.send("harness", {
+				label: "codestream-webview-initialize",
+				styles: await Container.styles.getStylesheets(),
+				isDebugging: Debug.isDebugging(),
+			});
+		});
+		webview.addEventListener("ipc-message", event => {
+			const data = event.args[0];
+			if (event.channel === "harness") {
 				switch (data.label) {
 					case "open-link": {
 						shell.openExternal(data.link);
@@ -210,18 +216,37 @@ export class CodestreamView {
 						this.logger.log(type, message, JSON.stringify(args));
 					}
 				}
-			});
+			} else {
+				if (isIpcRequestMessage(data)) {
+					const target = data.method.split("/")[0];
+					if (target === "host") {
+						// @ts-ignore
+						requestIdleCallback(() => {
+							this.handleWebviewRequest(data)
+								.then(result => {
+									this.webview.send("codestream-ui", { id: data.id, ...result });
+								})
+								.catch(error => {
+									this.webview.send("codestream-ui", { id: data.id, error: error.message });
+								});
+						});
+					} else {
+						// @ts-ignore
+						requestIdleCallback(async () => {
+							this.forwardWebviewRequest(data)
+								.then(result => {
+									this.webview.send("codestream-ui", { id: data.id, ...result });
+								})
+								.catch(error => {
+									this.webview.send("codestream-ui", { id: data.id, error: error.message });
+								});
+						});
+					}
+				} else this.onWebviewNotification(data as WebviewIpcNotificationMessage);
+			}
 		});
 
-		this.subscriptions.add(
-			Container.styles.onDidChange(styles => {
-				if (!iframe.contentWindow) return;
-				iframe.contentWindow.postMessage({ label: "update-styles", styles }, "*");
-			})
-		);
-
-		this.iframe = iframe;
-		this.element.append(iframe);
+		this.element.append(webview);
 	}
 
 	private observeWorkspace() {
@@ -229,7 +254,7 @@ export class CodestreamView {
 		this.editorSelectionObserver.onDidChangeSelection(this.onSelectionChanged);
 		this.editorSelectionObserver.onDidChangeActiveEditor(this.onEditorActiveEditorChanged);
 		this.editorSelectionObserver.onDidChangeVisibleRanges(editor => {
-			this.sendEvent(HostDidChangeEditorVisibleRangesNotificationType, {
+			this.sendNotification(HostDidChangeEditorVisibleRangesNotificationType, {
 				uri: Editor.getUri(editor),
 				selections: Editor.getCSSelections(editor),
 				visibleRanges: Editor.getVisibleRanges(editor),
@@ -239,8 +264,10 @@ export class CodestreamView {
 	}
 
 	private initialize() {
-		const onBlur = () => this.sendEvent(HostDidChangeFocusNotificationType, { focused: false });
-		const onFocus = () => this.sendEvent(HostDidChangeFocusNotificationType, { focused: true });
+		const onBlur = () =>
+			this.sendNotification(HostDidChangeFocusNotificationType, { focused: false });
+		const onFocus = () =>
+			this.sendNotification(HostDidChangeFocusNotificationType, { focused: true });
 		const window = remote.getCurrentWindow();
 		window.on("focus", onFocus);
 		window.on("blur", onBlur);
@@ -253,7 +280,7 @@ export class CodestreamView {
 				window.removeListener("focus", onFocus);
 			}),
 			this.session.agent.onDidChangeData(data =>
-				this.sendEvent(DidChangeDataNotificationType, data)
+				this.sendNotification(DidChangeDataNotificationType, data)
 			),
 			this.session.onDidChangeSessionStatus(change => {
 				if (change.current === SessionStatus.SignedIn) {
@@ -263,14 +290,14 @@ export class CodestreamView {
 					change.current === SessionStatus.SignedOut &&
 					change.signoutReason === SignoutReason.Extension
 				) {
-					this.sendEvent(HostDidLogoutNotificationType, {});
+					this.sendNotification(HostDidLogoutNotificationType, {});
 				}
 			}),
 			this.session.agent.onDidChangeDocumentMarkers(e =>
-				this.sendEvent(DidChangeDocumentMarkersNotificationType, e)
+				this.sendNotification(DidChangeDocumentMarkersNotificationType, e)
 			),
 			Container.configs.onDidChangeWebviewConfig(changes =>
-				this.sendEvent(HostDidChangeConfigNotificationType, changes)
+				this.sendNotification(HostDidChangeConfigNotificationType, changes)
 			),
 			this.session.agent.onDidChangeConnectionStatus(e => {
 				switch (e.status) {
@@ -278,7 +305,7 @@ export class CodestreamView {
 						break;
 					}
 					case ConnectionStatus.Reconnecting: {
-						this.sendEvent(DidChangeConnectionStatusNotificationType, e);
+						this.sendNotification(DidChangeConnectionStatusNotificationType, e);
 						break;
 					}
 					case ConnectionStatus.Reconnected: {
@@ -288,25 +315,17 @@ export class CodestreamView {
 							atom.workspace.open(CODESTREAM_VIEW_URI);
 							break;
 						}
-						this.sendEvent(DidChangeConnectionStatusNotificationType, e);
+						this.sendNotification(DidChangeConnectionStatusNotificationType, e);
 						break;
 					}
 				}
 			})
 		);
-
-		this.webviewReady = new Promise(resolve =>
-			this.subscriptions.add(
-				this.emitter.on(WEBVIEW_DID_INITIALIZE, () => {
-					resolve();
-				})
-			)
-		);
 	}
 
 	changeVersionCompatibility(e: DidChangeVersionCompatibilityNotification) {
 		atom.workspace.open(CODESTREAM_VIEW_URI);
-		this.sendEvent(DidChangeVersionCompatibilityNotificationType, e);
+		this.sendNotification(DidChangeVersionCompatibilityNotificationType, e);
 	}
 
 	serialize() {
@@ -318,9 +337,8 @@ export class CodestreamView {
 	destroy() {
 		this.emitter.emit(WILL_DESTROY);
 		this.element.remove();
-		this.subscriptions.dispose();
 		this.editorSelectionObserver && this.editorSelectionObserver.dispose();
-		this.logger.dispose();
+		this.subscriptions.dispose();
 	}
 
 	onWillDestroy(cb: () => void) {
@@ -359,79 +377,65 @@ export class CodestreamView {
 		return {};
 	}
 
-	private setupWebviewListener() {
-		this.channel.host.onmessage = ({ data }: { data: WebviewIpcMessage }) => {
-			if (isIpcRequestMessage(data)) {
-				const target = data.method.split("/")[0];
-				if (target === "host") return this.handleWebviewCommand(data);
-				return this.forwardWebviewRequest(data as any);
-			} else this.onWebviewNotification(data as WebviewIpcNotificationMessage);
-		};
-	}
-
 	private async forwardWebviewRequest(request: { id: string; method: string; params?: any }) {
 		const response = await this.session.agent.sendRequest(request.method, request.params);
-		this.respond({ id: request.id, params: response });
+		return { params: response };
 	}
 
-	private async handleWebviewCommand(message: WebviewIpcRequestMessage) {
+	private async handleWebviewRequest(
+		message: WebviewIpcRequestMessage
+	): Promise<{ params: any } | { error: any }> {
 		switch (message.method) {
 			case BootstrapInHostRequestType.method: {
 				try {
 					// TODO: is this still necessary?
 					await this.session.ready;
 
-					this.respond<BootstrapInHostResponse>({
-						id: message.id,
-						params: {
-							...this.session.getBootstrapInfo(),
-							context: this.webviewContext || {
-								currentTeamId: this.session.isSignedIn ? this.session.teamId : undefined,
-							},
+					const response: BootstrapInHostResponse = {
+						...this.session.getBootstrapInfo(),
+						context: this.webviewContext || {
+							currentTeamId: this.session.isSignedIn ? this.session.teamId : undefined,
 						},
-					});
+					};
+
+					return { params: response };
 				} catch (error) {
-					this.respond({ id: message.id, error: error.message });
+					return { error: error.message };
 				}
-				break;
 			}
 			case ShellPromptFolderRequestType.method: {
 				const result = remote.dialog.showOpenDialog({
 					title: message.params.message,
 					properties: ["openDirectory"],
 				});
-				this.respond<ShellPromptFolderResponse>({
-					id: message.id,
-					params: {
-						path: result && result.length ? result[0] : undefined,
-					},
-				});
-				break;
+				const response: ShellPromptFolderResponse = {
+					path: result && result.length ? result[0] : undefined,
+				};
+				return { params: response };
 			}
 			case GetActiveEditorContextRequestType.method: {
-				this.respond<GetActiveEditorContextResponse>({
-					id: message.id,
-					params: { editorContext: this.getActiveEditorContext() },
-				});
-				break;
+				return {
+					params: {
+						editorContext: this.getActiveEditorContext(),
+					} as GetActiveEditorContextResponse,
+				};
 			}
 			case UpdateConfigurationRequestType.method: {
 				const { name, value }: UpdateConfigurationRequest = message.params;
 				if (Container.configs.isUserSetting(name)) {
 					Container.configs.set(name as keyof ConfigSchema, value);
 				}
-				this.respond<UpdateConfigurationResponse>({ id: message.id, params: {} });
-				this.sendEvent(HostDidChangeConfigNotificationType, { [name]: value });
-				break;
+				this.sendNotification(HostDidChangeConfigNotificationType, { [name]: value });
+				return { params: {} as UpdateConfigurationResponse };
 			}
 			case EditorHighlightRangeRequestType.method: {
 				const { uri, highlight, range } = message.params;
-				Container.editorManipulator.highlight(
+				const success = await Container.editorManipulator.highlight(
 					highlight,
 					Convert.uriToPath(uri),
 					Convert.lsRangeToAtomRange(range)
 				);
-				break;
+				return { params: { success } as EditorHighlightRangeResponse };
 			}
 			case EditorSelectRangeRequestType.method: {
 				const { selection, uri, preserveFocus }: EditorSelectRangeRequest = message.params;
@@ -446,15 +450,20 @@ export class CodestreamView {
 						atom.views.getView(this).focus();
 					}
 
-					this.respond<EditorSelectRangeResponse>({ id: message.id, params: { success: true } });
+					return { params: { success: true } as EditorSelectRangeResponse };
 				} catch (error) {
-					this.respond<EditorSelectRangeResponse>({ id: message.id, params: { success: false } });
+					this.session.agent.request(ReportMessageRequestType, {
+						message: "Could not select range in buffer",
+						type: ReportingMessageType.Error,
+						source: "extension",
+						extra: error,
+					});
+					return { params: { success: false } as EditorSelectRangeResponse };
 				}
-				break;
 			}
 			case EditorRevealRangeRequestType.method: {
 				const { uri, range } = message.params as EditorRevealRangeRequest;
-				atom.workspace.getTextEditors().some(editor => {
+				const success = atom.workspace.getTextEditors().some(editor => {
 					if (editor.getPath() === Convert.uriToPath(uri)) {
 						// TODO: compute the scroll position that will make `range.start.row` the first visible line
 						editor.scrollToBufferPosition(Convert.lsRangeToAtomRange(range).start);
@@ -462,29 +471,28 @@ export class CodestreamView {
 					}
 					return false;
 				});
-				break;
+
+				return { params: { success } as EditorRevealRangeResponse };
 			}
 			case CompareMarkerRequestType.method: {
 				const { marker }: CompareMarkerRequest = message.params;
 				await Container.diffController.showDiff(marker);
-				this.respond({ id: message.id, params: {} });
-				break;
+				return { params: {} as CompareMarkerResponse };
 			}
 			case ApplyMarkerRequestType.method: {
 				const { marker }: ApplyMarkerRequest = message.params;
 				await Container.diffController.applyPatch(marker);
-				this.respond({ id: message.id, params: {} });
-				break;
+				return { params: {} as ApplyMarkerResponse };
 			}
 			case LogoutRequestType.method: {
 				await this.session.restart(SignoutReason.User);
-				this.respond<LogoutResponse>({ id: message.id, params: {} });
-				break;
+				return { params: {} as LogoutResponse };
 			}
 			case ReloadWebviewRequestType.method: {
 				// TODO: technically, just the iframe could be replaced
 				Container.viewController.reload(this.getURI());
-				break;
+				// TODO: shouldn't need a return
+				return { params: true };
 			}
 			case InsertTextRequestType.method: {
 				const { text, marker } = message.params as InsertTextRequest;
@@ -513,8 +521,7 @@ export class CodestreamView {
 					}
 				}
 
-				this.respond<InsertTextResponse>({ id: message.id, params: response });
-				break;
+				return { params: response as InsertTextResponse };
 			}
 			default: {
 				if (Debug.isDebugging()) {
@@ -529,6 +536,7 @@ export class CodestreamView {
 						source: "extension",
 					});
 				}
+				return { error: "No handler found" };
 			}
 		}
 	}
@@ -541,7 +549,7 @@ export class CodestreamView {
 						`CodeStream view created and interactive in ${Date.now() - this.timestamp} `
 					);
 				}
-				this.emitter.emit(WEBVIEW_DID_INITIALIZE);
+				this.webviewReadyEmitter.push();
 				break;
 			}
 			case WebviewDidChangeContextNotificationType.method: {
@@ -574,15 +582,11 @@ export class CodestreamView {
 		}
 	}
 
-	private respond<R = any>(message: { id: string; params: R } | { id: string; error: any }): void {
-		this.channel.host.postMessage(message);
-	}
-
-	sendEvent<ET extends NotificationType<any, any>>(
+	sendNotification<ET extends NotificationType<any, any>>(
 		eventType: ET,
 		params: ET extends NotificationType<infer P, any> ? P : never
 	) {
-		this.channel.host.postMessage({ method: eventType.method, params });
+		this.webview.send("codestream-ui", { method: eventType.method, params });
 	}
 
 	newCodemarkRequest(type: CodemarkType, source?: string) {
@@ -591,16 +595,16 @@ export class CodestreamView {
 
 		const uri = Editor.getUri(editor);
 		const range = Editor.getCurrentSelectionRange(editor);
-		this.sendEvent(NewCodemarkNotificationType, { type, uri, range, source });
+		this.sendNotification(NewCodemarkNotificationType, { type, uri, range, source });
 		editor.setSelectedBufferRange(Convert.lsRangeToAtomRange(range));
 	}
 
 	handleProtocolRequest(uri: string) {
-		this.sendEvent(HostDidReceiveRequestNotificationType, { url: uri });
+		this.sendNotification(HostDidReceiveRequestNotificationType, { url: uri });
 	}
 
 	private onSelectionChanged = (event: { editor: TextEditor; range: Range; cursor: Point }) => {
-		this.sendEvent(HostDidChangeEditorSelectionNotificationType, {
+		this.sendNotification(HostDidChangeEditorSelectionNotificationType, {
 			uri: Editor.getUri(event.editor),
 			selections: Editor.getCSSelections(event.editor),
 			visibleRanges: Editor.getVisibleRanges(event.editor),
@@ -624,6 +628,6 @@ export class CodestreamView {
 				lineCount: editor.getLineCount(),
 			};
 		}
-		this.sendEvent(HostDidChangeActiveEditorNotificationType, notification);
+		this.sendNotification(HostDidChangeActiveEditorNotificationType, notification);
 	}
 }

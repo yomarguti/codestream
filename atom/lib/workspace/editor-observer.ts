@@ -49,9 +49,7 @@ export class EditorObserver implements Disposable {
 						editorSubscriptions.add(
 							editor.onDidRequestAutoscroll(async event => {
 								await editorView.getNextUpdatePromise();
-								(window as any).requestIdleCallback(() => {
-									this.emitter.emit(DID_CHANGE_VISIBLE_RANGES, editor);
-								});
+								this.emitter.emit(DID_CHANGE_VISIBLE_RANGES, editor);
 							}),
 							editorView.onDidChangeScrollTop(async () => {
 								await editorView.getNextUpdatePromise();

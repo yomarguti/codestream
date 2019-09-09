@@ -1,5 +1,7 @@
 import { initialize, setupCommunication } from "@codestream/webview/index";
 
+declare function acquireAtomApi();
+
 const lightClass = "vscode-light";
 const darkClass = "vscode-dark";
 
@@ -52,36 +54,47 @@ const consoleProxy = new Proxy(window.console, {
 	},
 });
 
-window.addEventListener("message", ({ data, ports }) => {
-	if (data.label === "codestream-webview-initialize") {
-		setupCommunication(ports[0]);
-		setStyles(data.styles);
+const api = acquireAtomApi();
+const channel = new MessageChannel();
 
-		if (!data.isDebugging) {
-			Object.defineProperty(window, "console", {
-				value: consoleProxy,
-			});
-		}
+// receive message from host
+api.onDidReceiveCSMessage(message => channel.port1.postMessage(message), false);
+// send message to host
+channel.port1.onmessage = message => api.send(message.data);
+// port for ui code to listen and post to
+setupCommunication(channel.port2);
+
+api.onDidReceiveHarnessMessage(message => {
+	if (message.label === "codestream-webview-initialize") {
+		setStyles(message.styles);
+
+		// if (!data.isDebugging) {
+		// 	Object.defineProperty(window, "console", {
+		// 		value: consoleProxy,
+		// 	});
+		// }
 
 		initialize("#app");
 	}
-	if (data.label === "update-styles") {
-		setStyles(data.styles);
+	if (message.label === "update-styles") {
+		setStyles(message.styles);
 	}
 });
 
-document.addEventListener(
-	"click",
-	(e: MouseEvent) => {
-		if (e == null || e.target == null || (e.target as Element).tagName !== "A") return;
-
-		const target = e.target as HTMLAnchorElement;
-		if (target.href) {
-			window.postMessage({ label: "open-link", link: target.href }, "*");
-			e.preventDefault();
-			e.stopPropagation();
-			e.stopImmediatePropagation();
-		}
-	},
-	true
-);
+// document.addEventListener(
+// 	"click",
+// 	(e: MouseEvent) => {
+// 		if (e == null || e.target == null) return;
+//
+// 		if ((e.target as any).href) debugger;
+//
+// 		const target = e.target as HTMLAnchorElement;
+// 		if (target.href) {
+// 			api.sendHarnessMessage({ label: "open-link", link: target.href });
+// 			e.preventDefault();
+// 			e.stopPropagation();
+// 			e.stopImmediatePropagation();
+// 		}
+// 	},
+// 	true
+// );
