@@ -59,7 +59,7 @@
 ]]></description>
 
     <change-notes><![CDATA[
-<h4 id="2_1_0">2.1.2</h4>
+<h4 id="2_1_2">2.1.2</h4>
 <h5>Added</h5>
 <ul>
     <li>Addresses <a href="https://github.com/TeamCodeStream/CodeStream/issues/79">#79</a> - Adds branch info to codemark display when there's a diff</li>
