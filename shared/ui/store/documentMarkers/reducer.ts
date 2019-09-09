@@ -10,7 +10,10 @@ const initialState: DocumentMarkersState = {};
 export function reduceDocumentMarkers(state = initialState, action: DocumentMarkersAction) {
 	switch (action.type) {
 		case DocumentMarkersActionsType.SaveForFile: {
-			return { ...state, [action.payload.uri]: action.payload.markers };
+			return {
+				...state,
+				[action.payload.uri]: [...action.payload.markers, ...action.payload.markersNotLocated]
+			};
 		}
 		case DocumentMarkersActionsType.SaveOneForFile: {
 			return {

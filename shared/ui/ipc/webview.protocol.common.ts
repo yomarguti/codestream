@@ -40,6 +40,7 @@ export interface WebviewContext {
 	threadId?: string;
 	currentCodemarkId?: string;
 	currentMarkerId?: string;
+	isRepositioning?: boolean;
 	hasFocus: boolean;
 	panelStack?: (WebviewPanels | string)[];
 }

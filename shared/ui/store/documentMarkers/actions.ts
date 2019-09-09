@@ -1,12 +1,19 @@
 import { DocumentMarkersActionsType } from "./types";
-import { DocumentMarker, FetchDocumentMarkersRequestType } from "@codestream/protocols/agent";
+import {
+	DocumentMarker,
+	FetchDocumentMarkersRequestType,
+	MarkerNotLocated
+} from "@codestream/protocols/agent";
 import { action } from "../common";
 import { HostApi } from "@codestream/webview/webview-api";
 
 export const reset = () => action("RESET");
 
-export const saveDocumentMarkers = (uri: string, markers: DocumentMarker[]) =>
-	action(DocumentMarkersActionsType.SaveForFile, { uri, markers });
+export const saveDocumentMarkers = (
+	uri: string,
+	markers: DocumentMarker[],
+	markersNotLocated: MarkerNotLocated[]
+) => action(DocumentMarkersActionsType.SaveForFile, { uri, markers, markersNotLocated });
 
 export const addDocumentMarker = (uri: string, marker: DocumentMarker) =>
 	action(DocumentMarkersActionsType.SaveOneForFile, { uri, marker });
@@ -16,7 +23,9 @@ export const fetchDocumentMarkers = (uri: string) => async dispatch => {
 		textDocument: { uri }
 	});
 
-	if (response && response.markers) {
-		return dispatch(saveDocumentMarkers(uri, response.markers));
+	if (response) {
+		return dispatch(
+			saveDocumentMarkers(uri, response.markers || [], response.markersNotLocated || [])
+		);
 	}
 };

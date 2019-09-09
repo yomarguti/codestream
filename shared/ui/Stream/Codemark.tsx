@@ -8,6 +8,7 @@ import Tag from "./Tag";
 import Icon from "./Icon";
 import Menu from "./Menu";
 import { InjectAsComment } from "./InjectAsComment";
+import { RepositionCodemark } from "./RepositionCodemark";
 import { markdownify } from "./Markdowner";
 import Timestamp from "./Timestamp";
 import CodemarkDetails from "./CodemarkDetails";
@@ -16,9 +17,10 @@ import {
 	CodemarkPlus,
 	OpenUrlRequestType,
 	Capabilities,
-	GetDocumentFromMarkerRequestType
+	GetDocumentFromMarkerRequestType,
+	MarkerNotLocated
 } from "@codestream/protocols/agent";
-import { CodemarkType, CSUser, CSMe, CSPost, CSMarker } from "@codestream/protocols/api";
+import { CodemarkType, CSUser, CSMe, CSPost, CSApiCapabilities } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
 import { range, emptyArray, forceAsLine } from "../utils";
@@ -45,7 +47,7 @@ import {
 	EditorSelectRangeRequest,
 	EditorRevealRangeRequestType
 } from "@codestream/protocols/webview";
-import { setCurrentCodemark } from "../store/context/actions";
+import { setCurrentCodemark, repositionCodemark } from "../store/context/actions";
 import { RelatedCodemark } from "./RelatedCodemark";
 import { addDocumentMarker } from "../store/documentMarkers/actions";
 import { Link } from "./Link";
@@ -70,6 +72,7 @@ interface DispatchProps {
 	setUserPreference: typeof setUserPreference;
 	getPosts: typeof getPosts;
 	setCurrentCodemark: typeof setCurrentCodemark;
+	repositionCodemark: typeof repositionCodemark;
 	addDocumentMarker: typeof addDocumentMarker;
 	addCodemarks: typeof addCodemarks;
 }
@@ -90,6 +93,8 @@ interface ConnectedProps {
 	entirelyDeleted: boolean;
 	textEditorUri: string;
 	jumpToMarkerId?: string;
+	isRepositioning?: boolean;
+	apiCapabilities: CSApiCapabilities;
 }
 
 export type DisplayType = "default" | "collapsed";
@@ -664,6 +669,11 @@ export class Codemark extends React.Component<Props, State> {
 				this.setState({ isEditing: true });
 				break;
 			}
+			case "reposition": {
+				if (!this.props.codemark) break;
+				this.props.repositionCodemark(this.props.codemark.id, true);
+				break;
+			}
 		}
 		const found = action.match(/set-keybinding-(\d)/);
 		if (found) this.setKeybinding(found[1]);
@@ -1037,7 +1047,8 @@ export class Codemark extends React.Component<Props, State> {
 			selected,
 			entirelyDeleted,
 			author,
-			marker
+			marker,
+			isRepositioning
 		} = this.props;
 		const { menuOpen, menuTarget, isInjecting } = this.state;
 
@@ -1045,6 +1056,8 @@ export class Codemark extends React.Component<Props, State> {
 			if (this.props.marker.externalContent) return this.renderFromExternalContent();
 			return null;
 		}
+
+		const renderAlternateBody = isInjecting;
 
 		const type = codemark && codemark.type;
 
@@ -1081,7 +1094,10 @@ export class Codemark extends React.Component<Props, State> {
 			menuItems.push({
 				label: "Inject as Inline Comment",
 				action: () => this.setInjecting(marker.id)
-			});
+			});			
+
+		if (this.props.apiCapabilities.moveMarkers)
+			menuItems.push({ label: "Reposition Codemark", action: "reposition" });
 
 		const submenu = range(1, 10).map(index => {
 			const inUse = codemarkKeybindings[index] ? " (in use)" : "";
@@ -1101,6 +1117,10 @@ export class Codemark extends React.Component<Props, State> {
 		const showStripedHeader =
 			(selected || !hidden) &&
 			(!codemark.pinned || codemark.status === "closed" || entirelyDeleted);
+			
+		if (isRepositioning) {			
+			return <RepositionCodemark codemark={codemark} /*range={this_.range} file={this._fileUri}*/ />;
+		}
 
 		return (
 			<div
@@ -1110,7 +1130,8 @@ export class Codemark extends React.Component<Props, State> {
 					// collapsed: !selected,
 					selected: selected,
 					unpinned: !codemark.pinned,
-					injecting: isInjecting
+					injecting: isInjecting,
+					repositioning: isRepositioning
 				})}
 				onClick={this.handleClickCodemark}
 				onMouseEnter={this.handleMouseEnterCodemark}
@@ -1122,6 +1143,30 @@ export class Codemark extends React.Component<Props, State> {
 							{!codemark.pinned && <div>This codemark is archived.</div>}
 							{codemark.status == "closed" && <div>This codemark is resolved.</div>}
 							{entirelyDeleted && <div>This codemark refers to deleted code.</div>}
+						</div>
+					)}
+					{// foo
+					// @ts-ignore
+					marker && marker.notLocatedReason && (
+						<div className="archived">
+							Position lost for this codemark
+							<Tooltip
+								title="Connect this codemark to a block of code in this file or another"
+								placement="topRight"
+								delay={1}
+							>
+								<div className="right">
+									<div
+										className="resolve-button reposition-button"
+										onClick={e => {
+											e.stopPropagation();
+											this.props.repositionCodemark(codemark.id, true);
+										}}
+									>
+										Reposition
+									</div>
+								</div>
+							</Tooltip>
 						</div>
 					)}
 					<div className="body">
@@ -1179,11 +1224,11 @@ export class Codemark extends React.Component<Props, State> {
 								<Menu items={menuItems} target={menuTarget} action={this.handleSelectMenu} />
 							)}
 						</div>
-						{!isInjecting && (selected || type !== "bookmark")
+						{!renderAlternateBody && (selected || type !== "bookmark")
 							? this.renderTextLinkified(codemark.title || codemark.text)
 							: null}
-						{!selected && !isInjecting && this.renderPinnedReplies()}
-						{!selected && !isInjecting && this.renderDetailIcons(codemark)}
+						{!selected && !renderAlternateBody && this.renderPinnedReplies()}
+						{!selected && !renderAlternateBody && this.renderDetailIcons(codemark)}
 						{isInjecting && (
 							<InjectAsComment
 								cancel={this.cancelInjecting}
@@ -1191,10 +1236,10 @@ export class Codemark extends React.Component<Props, State> {
 								codemark={codemark}
 								markerId={this.state.injectingLocation}
 								author={author}
-							></InjectAsComment>
+							/>
 						)}
 					</div>
-					{selected && !isInjecting && (
+					{selected && !renderAlternateBody && (
 						<CodemarkDetails
 							codemark={codemark}
 							author={this.props.author}
@@ -1469,7 +1514,7 @@ const unknownAuthor = {
 };
 
 const mapStateToProps = (state: CodeStreamState, props: InheritedProps): ConnectedProps => {
-	const { capabilities, context, editorContext, preferences, users, session, posts } = state;
+	const { apiVersioning, capabilities, context, editorContext, preferences, users, session, posts } = state;
 	const { codemark, marker } = props;
 
 	const teamProvider = getCurrentTeamProvider(state);
@@ -1518,7 +1563,9 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		usernames: getUsernames(state),
 		teamTagsHash,
 		entirelyDeleted,
-		textEditorUri: editorContext.textEditorUri || ""
+		textEditorUri: editorContext.textEditorUri || "",
+		isRepositioning: context.isRepositioning,
+		apiCapabilities: apiVersioning.apiCapabilities
 	};
 };
 
@@ -1533,6 +1580,7 @@ export default connect(
 		fetchThread,
 		getPosts,
 		setCurrentCodemark,
+		repositionCodemark,
 		addDocumentMarker,
 		addCodemarks,
 		createPost

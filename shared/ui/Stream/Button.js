@@ -19,7 +19,8 @@ export default function Button({
 	return (
 		<button
 			className={createClassString("btn inline-block-tight", className, {
-				"btn-primary": true
+				"btn-primary": true,
+				disabled: disabled
 			})}
 			disabled={loading || disabled}
 			{...extraProps}

@@ -17,6 +17,7 @@ const initialState: ContextState = {
 	currentTeamId: "",
 	currentStreamId: "",
 	currentCodemarkId: undefined,
+	isRepositioning: false,
 	issueProvider: undefined,
 	threadId: undefined,
 	panelStack: [WebviewPanels.CodemarksForFile], // default view is the "in this file" view
@@ -51,7 +52,14 @@ export function reduceContext(
 			return {
 				...state,
 				currentCodemarkId: action.payload.codemarkId,
-				currentMarkerId: action.payload.markerId
+				currentMarkerId: action.payload.markerId,
+				isRepositioning: false
+			}
+		case ContextActionsType.RepositionCodemark:
+			return {
+				...state,
+				currentCodemarkId: action.payload.codemarkId,
+				isRepositioning: action.payload.value
 			};
 
 		case ContextActionsType.OpenPanel:

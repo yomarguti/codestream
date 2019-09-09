@@ -31,7 +31,8 @@ import {
 	DocumentMarker,
 	DidChangeDocumentMarkersNotificationType,
 	GetFileScmInfoResponse,
-	GetFileScmInfoRequestType
+	GetFileScmInfoRequestType,
+	MarkerNotLocated
 } from "@codestream/protocols/agent";
 import { Range, Position } from "vscode-languageserver-types";
 import { fetchDocumentMarkers, addDocumentMarker } from "../store/documentMarkers/actions";
@@ -48,7 +49,9 @@ import {
 	setCodemarksFileViewStyle,
 	setCodemarksShowArchived,
 	setCurrentCodemark,
-	setSpatialViewPRCommentsToggle
+	setSpatialViewPRCommentsToggle,
+	setCodemarksShowResolved,
+	repositionCodemark
 } from "../store/context/actions";
 import { sortBy as _sortBy } from "lodash-es";
 import { setEditorContext, changeSelection } from "../store/editorContext/actions";
@@ -94,7 +97,7 @@ interface Props {
 	textEditorVisibleRanges?: Range[];
 	textEditorSelection?: EditorSelection;
 	metrics: EditorMetrics;
-	documentMarkers: DocumentMarker[];
+	documentMarkers: (DocumentMarker | MarkerNotLocated)[];
 	numHidden: number;
 
 	setEditorContext: (
@@ -113,6 +116,9 @@ interface Props {
 	setCurrentCodemark: (
 		...args: Parameters<typeof setCurrentCodemark>
 	) => ReturnType<typeof setCurrentCodemark>;
+	repositionCodemark: (
+		...args: Parameters<typeof repositionCodemark>
+	) => ReturnType<typeof repositionCodemark>;
 
 	createPostAndCodemark: (...args: Parameters<typeof createPostAndCodemark>) => any;
 	addDocumentMarker: Function;
@@ -519,13 +525,13 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 								// 		(docMarker.externalContent && !this.props.showPRComments));
 
 								const hidden =
-									(!showHidden &&
-										(codemark && (!codemark.pinned || codemark.status === "closed"))) ||
-									(docMarker.externalContent && !this.props.showPRComments);
-								if (hidden) {
-									this.hiddenCodemarks[docMarker.id] = true;
-									return null;
-								}
+								(!showHidden &&
+									(codemark && (!codemark.pinned || codemark.status === "closed"))) ||
+								(docMarker.externalContent && !this.props.showPRComments);
+							if (hidden) {
+								this.hiddenCodemarks[docMarker.id] = true;
+								return null;
+							}
 
 								return (
 									<div key={docMarker.id} className="codemark-container">
@@ -808,6 +814,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	getMarkerStartLine = marker => {
+		if (marker.notLocatedReason) return 0;
+
 		if (marker.range) {
 			return marker.range.start.line;
 		}
@@ -1553,6 +1561,7 @@ export default connect(
 		setCodemarksFileViewStyle,
 		setCodemarksShowArchived,
 		setCurrentCodemark,
+		repositionCodemark,
 		setEditorContext,
 		createPostAndCodemark,
 		addDocumentMarker,

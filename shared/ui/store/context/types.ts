@@ -23,7 +23,8 @@ export enum ContextActionsType {
 	SetRoute = "@context/SetRoute",
 	SetChatProviderAccess = "@context/SetChatProviderAccess",
 	SetCurrentCodemark = "@context/SetCurrentCodemark",
-	SetSpatialViewPRCommentsToggle = "@context/SetSpatialViewPRCommentsToggle"
+	SetSpatialViewPRCommentsToggle = "@context/SetSpatialViewPRCommentsToggle",
+	RepositionCodemark = "@context/RepositionCodemark"
 }
 
 export type PostEntryPoint = "Stream" | "Global Nav" | "Spatial View" | undefined;
