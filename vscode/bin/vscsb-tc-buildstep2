@@ -65,6 +65,8 @@ elif args.action == 'tag':
 elif args.action == 'release':
 	# build.release()                           # release assets to the general public
 	if not su.someValueOrNone(os.environ, 'VSCSB_NOPUBLISH'):
+		# BAD BAD BAD BAD
+		build.execCmd("npm install --no-save")
 		vsixFile = f"{build.getDisplayVersion('full')}.vsix"
 		# build.execCmd("vscsb-publish-assets-to-cloudfront --no-prompt --asset-env prod")
 		build.execCmd(f"vsce publish --packagePath {vsixFile}")
