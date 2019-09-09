@@ -13,19 +13,20 @@ interface Props {
 
 function Link(props: Props) {
 	let href;
-	let onClick;
 	if (props.useHref) {
 		href = props.href;
-	} else {
-		onClick =
-			props.onClick ||
-			function(event: React.SyntheticEvent) {
-				event.preventDefault();
-				HostApi.instance.send(OpenUrlRequestType, { url: props.href! });
-			};
 	}
 
-	return <a {...{ href, onClick, className: props.className }}>{props.children}</a>;
+	const onClick =
+		props.onClick ||
+		function(event: React.SyntheticEvent) {
+			if (!(event.target as any).href) {
+				event.preventDefault();
+				HostApi.instance.send(OpenUrlRequestType, { url: props.href! });
+			}
+		};
+
+	return <a {...{ href, onClickCapture: onClick, className: props.className }}>{props.children}</a>;
 }
 
 const mapStateToProps = (state, props: Props) => ({
