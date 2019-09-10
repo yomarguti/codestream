@@ -20,7 +20,7 @@ using System.Reactive.Subjects;
 namespace CodeStream.VisualStudio.Core.LanguageServer {
 	public class CustomMessageHandler : IDisposable {
 		private static readonly ILogger Log = LogManager.ForContext<CustomMessageHandler>();
-		
+
 		private readonly IServiceProvider _serviceProvider;
 		private readonly IEventAggregator _eventAggregator;
 		private readonly IBrowserService _browserService;
@@ -33,7 +33,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 			IServiceProvider serviceProvider,
 			IEventAggregator eventAggregator,
 			IBrowserService browserService,
-			ISettingsServiceFactory settingsServiceFactory) {			
+			ISettingsServiceFactory settingsServiceFactory) {
 			_serviceProvider = serviceProvider;
 			_eventAggregator = eventAggregator;
 			_browserService = browserService;
@@ -86,19 +86,22 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 		[JsonRpcMethod(DidChangeApiVersionCompatibilityNotificationType.MethodName)]
 		public void OnDidChangeApiVersionCompatibilityNotification(JToken e) {
 			using (Log.CriticalOperation($"{nameof(OnDidChangeApiVersionCompatibilityNotification)} Method={DidChangeApiVersionCompatibilityNotificationType.MethodName}", Serilog.Events.LogEventLevel.Information)) {
-				ThreadHelper.JoinableTaskFactory.Run(async delegate {
-					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-					try {
-						var toolWindowProvider = _serviceProvider.GetService(typeof(SToolWindowProvider)) as IToolWindowProvider;
-						Assumes.Present(toolWindowProvider);
-						if (!toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid)) {
-							toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
+				var info = e.ToObject<DidChangeApiVersionCompatibilityNotification>();
+				if (info?.Compatibility != ApiVersionCompatibility.ApiCompatible) {
+					ThreadHelper.JoinableTaskFactory.Run(async delegate {
+						await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+						try {
+							var toolWindowProvider = _serviceProvider.GetService(typeof(SToolWindowProvider)) as IToolWindowProvider;
+							Assumes.Present(toolWindowProvider);
+							if (!toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid)) {
+								toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
+							}
 						}
-					}
-					catch (Exception ex) {
-						Log.Error(ex, nameof(OnDidChangeApiVersionCompatibilityNotification));
-					}
-				});
+						catch (Exception ex) {
+							Log.Error(ex, nameof(OnDidChangeApiVersionCompatibilityNotification));
+						}
+					});
+				}
 
 				_browserService.EnqueueNotification(new DidChangeApiVersionCompatibilityNotificationType(e));
 			}
@@ -184,7 +187,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 					}
 					else {
 						// TODO: Handle this
-					}					
+					}
 				}
 			}
 			catch (Exception ex) {
