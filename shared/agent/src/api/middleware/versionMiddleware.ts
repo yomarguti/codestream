@@ -1,7 +1,8 @@
 "use strict";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
+import { SessionContainer } from "../../container";
 import { ApiVersionCompatibility, VersionCompatibility } from "../../protocol/agent.protocol";
-import { CSApiCapability, CSApiCapabilities } from "../../protocol/api.protocol.models";
+import { CSApiCapabilities, CSApiCapability } from "../../protocol/api.protocol.models";
 import { log } from "../../system";
 import {
 	ApiProvider,
@@ -9,7 +10,6 @@ import {
 	CodeStreamApiMiddlewareContext
 } from "../apiProvider";
 import { APIServerVersionInfo } from "../codestream/apiServerVersionInfo";
-import { SessionContainer } from "../../container";
 
 export interface VersionCompatibilityChangedEvent {
 	compatibility: VersionCompatibility;
@@ -79,12 +79,12 @@ export class VersionMiddlewareManager implements Disposable {
 		if (version !== prevApiVersion) {
 			if (this.compareVersions(version, APIServerVersionInfo.minimumRequired) === -1) {
 				compatibility = ApiVersionCompatibility.ApiUpgradeRequired;
-			}
-			else if (this.compareVersions(version, APIServerVersionInfo.minimumPreferred) === -1) {
+			} else if (this.compareVersions(version, APIServerVersionInfo.minimumPreferred) === -1) {
 				compatibility = ApiVersionCompatibility.ApiUpgradeRecommended;
 			}
 
-			const preferredCapabilities: { [id: string]: CSApiCapability } = APIServerVersionInfo.preferredCapabilities;
+			const preferredCapabilities: { [id: string]: CSApiCapability } =
+				APIServerVersionInfo.preferredCapabilities;
 			missingCapabilities = Object.keys(preferredCapabilities).reduce((capabilities, id) => {
 				const capability = preferredCapabilities[id];
 				if (capability.version && this.compareVersions(version, capability.version) < 0) {
@@ -108,8 +108,8 @@ export class VersionMiddlewareManager implements Disposable {
 	}
 
 	compareVersions(version1: string, version2: string) {
-		const [ major1, minor1, patch1 ] = version1.split(".").map(str => parseInt(str, 10));
-		const [ major2, minor2, patch2 ] = version2.split(".").map(str => parseInt(str, 10));
+		const [major1, minor1, patch1] = version1.split(".").map(str => parseInt(str, 10));
+		const [major2, minor2, patch2] = version2.split(".").map(str => parseInt(str, 10));
 		if (major1 > major2) return 1;
 		else if (major1 < major2) return -1;
 		else if (minor1 > minor2) return 1;

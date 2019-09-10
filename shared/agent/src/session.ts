@@ -69,6 +69,7 @@ import {
 	VersionCompatibility
 } from "./protocol/agent.protocol";
 import {
+	CSApiCapabilities,
 	CSCodemark,
 	CSCompany,
 	CSLoginResponse,
@@ -81,8 +82,7 @@ import {
 	CSStream,
 	CSTeam,
 	CSUser,
-	LoginResult,
-	CSApiCapabilities
+	LoginResult
 } from "./protocol/api.protocol";
 import { Functions, log, memoize, registerDecoratedHandlers, registerProviders } from "./system";
 
@@ -609,7 +609,7 @@ export class CodeStreamSession {
 		const token = response.token;
 		this._teamId = (this._options as any).teamId = token.teamId;
 		this._codestreamUserId = response.user.id;
-		this._apiCapabilities = {...(response.capabilities || {})};
+		this._apiCapabilities = { ...(response.capabilities || {}) };
 
 		const currentTeam = response.teams.find(t => t.id === this._teamId)!;
 

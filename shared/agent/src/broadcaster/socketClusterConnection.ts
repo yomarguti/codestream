@@ -93,7 +93,7 @@ export class SocketClusterConnection implements BroadcasterConnection {
 			For some reason, the SocketCluster client is not always receiving
 			our "authed" event after the user is authorized, but SocketCluster
 			seems to have another event for this purpose ... this event may be
-			internal and maybe we shouldn't rely on it, but I can't figure out 
+			internal and maybe we shouldn't rely on it, but I can't figure out
 			any other way to ensure user authorization if our emitted event isn't
 			being received
 
@@ -113,14 +113,12 @@ export class SocketClusterConnection implements BroadcasterConnection {
 			*/
 
 			this._scClient!.on("message", (msg: string) => {
-				this._debug('Received SocketCluster message', msg);
+				this._debug("Received SocketCluster message", msg);
 				let data: { event?: string } = {};
 				try {
 					data = JSON.parse(msg);
-				}
-				catch (ex) {
-				}
-				if (data.event === '#setAuthToken') {
+				} catch (ex) {}
+				if (data.event === "#setAuthToken") {
 					// this._debug("Received SocketCluster authorization, but ignoring");
 					this._debug("SocketCluster authorized the connection");
 					if (this._connectionTimer) {
