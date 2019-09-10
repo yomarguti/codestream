@@ -1,9 +1,8 @@
 "use strict";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
-import { SessionContainer } from "../../container";
 import { ApiVersionCompatibility, VersionCompatibility } from "../../protocol/agent.protocol";
 import { CSApiCapabilities, CSApiCapability } from "../../protocol/api.protocol.models";
-import { log } from "../../system";
+import { log, Versions } from "../../system";
 import {
 	ApiProvider,
 	CodeStreamApiMiddleware,
@@ -73,50 +72,32 @@ export class VersionMiddlewareManager implements Disposable {
 
 	@log()
 	async setApiVersion(version: string) {
-		const prevApiVersion = this._apiVersion;
+		if (version === this._apiVersion) return;
+
+		this._apiVersion = version;
+
 		let compatibility = ApiVersionCompatibility.ApiCompatible;
-		let missingCapabilities = {};
-		if (version !== prevApiVersion) {
-			if (this.compareVersions(version, APIServerVersionInfo.minimumRequired) === -1) {
-				compatibility = ApiVersionCompatibility.ApiUpgradeRequired;
-			} else if (this.compareVersions(version, APIServerVersionInfo.minimumPreferred) === -1) {
-				compatibility = ApiVersionCompatibility.ApiUpgradeRecommended;
-			}
-
-			const preferredCapabilities: { [id: string]: CSApiCapability } =
-				APIServerVersionInfo.preferredCapabilities;
-			missingCapabilities = Object.keys(preferredCapabilities).reduce((capabilities, id) => {
-				const capability = preferredCapabilities[id];
-				if (capability.version && this.compareVersions(version, capability.version) < 0) {
-					(capabilities as CSApiCapabilities)[id] = capability;
-				}
-				return capabilities;
-			}, {}) as CSApiCapabilities;
-
-			this.apiVersionNotify(compatibility, version, missingCapabilities);
-			if (compatibility !== ApiVersionCompatibility.ApiUpgradeRequired) {
-				if (SessionContainer.isInitialized()) {
-					await SessionContainer.instance().session.didChangeCodeStreamApiVersion();
-					this._apiVersion = version;
-				}
-			}
+		if (Versions.compare(version, APIServerVersionInfo.minimumRequired) === -1) {
+			compatibility = ApiVersionCompatibility.ApiUpgradeRequired;
+		} else if (Versions.compare(version, APIServerVersionInfo.minimumPreferred) === -1) {
+			compatibility = ApiVersionCompatibility.ApiUpgradeRecommended;
 		}
+
+		const preferredCapabilities: { [id: string]: CSApiCapability } =
+			APIServerVersionInfo.preferredCapabilities;
+		const missingCapabilities = Object.keys(preferredCapabilities).reduce((capabilities, id) => {
+			const capability = preferredCapabilities[id];
+			if (capability.version && Versions.compare(version, capability.version) < 0) {
+				(capabilities as CSApiCapabilities)[id] = capability;
+			}
+			return capabilities;
+		}, {}) as CSApiCapabilities;
+
+		this.apiVersionNotify(compatibility, version, missingCapabilities);
 	}
 
 	get apiVersion() {
 		return this._apiVersion;
-	}
-
-	compareVersions(version1: string, version2: string) {
-		const [major1, minor1, patch1] = version1.split(".").map(str => parseInt(str, 10));
-		const [major2, minor2, patch2] = version2.split(".").map(str => parseInt(str, 10));
-		if (major1 > major2) return 1;
-		else if (major1 < major2) return -1;
-		else if (minor1 > minor2) return 1;
-		else if (minor1 < minor2) return -1;
-		else if (patch1 > patch2) return 1;
-		else if (patch1 < patch2) return -1;
-		else return 0;
 	}
 }
 

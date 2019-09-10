@@ -34,6 +34,7 @@ import { setGitPath } from "./git/git";
 import { Logger } from "./logger";
 import {
 	ApiRequestType,
+	ApiVersionCompatibility,
 	BaseAgentOptions,
 	BootstrapRequestType,
 	ChangeDataType,
@@ -402,8 +403,22 @@ export class CodeStreamSession {
 	}
 
 	@log()
-	private onApiVersionCompatibilityChanged(e: ApiVersionCompatibilityChangedEvent) {
+	private async onApiVersionCompatibilityChanged(e: ApiVersionCompatibilityChangedEvent) {
 		this.agent.sendNotification(DidChangeApiVersionCompatibilityNotificationType, e);
+
+		if (
+			e.compatibility !== ApiVersionCompatibility.ApiUpgradeRequired &&
+			SessionContainer.isInitialized()
+		) {
+			const oldCapabilities = SessionContainer.instance().session.apiCapabilities;
+			const newCapabilities = await this.api.getApiCapabilities();
+			if (!isEqual(oldCapabilities, newCapabilities)) {
+				this.agent.sendNotification(DidChangeDataNotificationType, {
+					type: ChangeDataType.ApiCapabilities,
+					data: newCapabilities
+				});
+			}
+		}
 	}
 
 	private _api: ApiProvider | undefined;
@@ -950,18 +965,6 @@ export class CodeStreamSession {
 			this.agent.sendNotification(DidChangeDataNotificationType, {
 				type: ChangeDataType.Providers,
 				data: this._providers
-			});
-		}
-	}
-
-	@log()
-	async didChangeCodeStreamApiVersion(): Promise<void> {
-		const oldCapabilities = SessionContainer.instance().session.apiCapabilities;
-		const newCapabilities = await this.api.getApiCapabilities();
-		if (!isEqual(oldCapabilities, newCapabilities)) {
-			this.agent.sendNotification(DidChangeDataNotificationType, {
-				type: ChangeDataType.ApiCapabilities,
-				data: newCapabilities
 			});
 		}
 	}
