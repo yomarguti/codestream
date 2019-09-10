@@ -51,7 +51,7 @@ import {
 } from "@codestream/protocols/webview";
 import { CompositeDisposable, Disposable, Emitter, Point, Range, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
-import { remote, shell } from "electron";
+import { remote, shell, WebviewTag } from "electron";
 import * as fs from "fs-plus";
 import { FileLogger } from "logger";
 import { NotificationType } from "vscode-languageserver-protocol";
@@ -83,7 +83,7 @@ export class CodestreamView {
 	element: HTMLElement;
 	private session: WorkspaceSession;
 	private subscriptions: CompositeDisposable;
-	private webview: any;
+	private webview: WebviewTag;
 	private emitter: Emitter;
 	private webviewContext: any;
 	private editorSelectionObserver?: EditorObserver;
@@ -111,7 +111,7 @@ export class CodestreamView {
 			this.initialize();
 		});
 
-		this.initializeWebview(this.webview);
+		this.initializeWebview();
 	}
 
 	// update-able
@@ -181,29 +181,29 @@ export class CodestreamView {
 		});
 	}
 
-	private async initializeWebview(webview: any) {
-		webview.src = await this.getWebviewSrc();
-		webview.disablewebsecurity = true;
-		webview.preload = asAbsolutePath("webview-lib/preload.js");
-		webview.webpreferences = "allowRunningInsecureContent, javascript";
+	private async initializeWebview() {
+		this.webview.src = await this.getWebviewSrc();
+		this.webview.disablewebsecurity = "true";
+		this.webview.preload = asAbsolutePath("webview-lib/preload.js");
+		this.webview.webpreferences = "allowRunningInsecureContent, javascript";
 
-		webview.classList.add("codestream-webview", "native-key-bindings");
-		webview.addEventListener("dom-ready", async () => {
+		this.webview.classList.add("codestream-webview", "native-key-bindings");
+		this.webview.addEventListener("dom-ready", async () => {
 			this.subscriptions.add(
 				atom.commands.add("atom-workspace", "codestream:open-webview-devtools", () =>
-					webview.openDevTools()
+					this.webview.openDevTools()
 				),
 				Container.styles.onDidChange(styles => {
-					webview.send("harness", { label: "update-styles", styles });
+					this.webview.send("harness", { label: "update-styles", styles });
 				})
 			);
-			webview.send("harness", {
+			this.webview.send("harness", {
 				label: "codestream-webview-initialize",
 				styles: await Container.styles.getStylesheets(),
 				isDebugging: Debug.isDebugging(),
 			});
 		});
-		webview.addEventListener("ipc-message", event => {
+		this.webview.addEventListener("ipc-message", event => {
 			const data = event.args[0];
 			if (event.channel === "harness") {
 				switch (data.label) {
@@ -246,7 +246,7 @@ export class CodestreamView {
 			}
 		});
 
-		this.element.append(webview);
+		this.element.append(this.webview);
 	}
 
 	private observeWorkspace() {
