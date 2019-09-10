@@ -1,6 +1,7 @@
 import { initialize, setupCommunication } from "@codestream/webview/index";
 
 declare function acquireAtomApi();
+const api = acquireAtomApi();
 
 const lightClass = "vscode-light";
 const darkClass = "vscode-dark";
@@ -24,37 +25,47 @@ const setStyles = (stylesheets: string[]) => {
 	document.body.classList.add(set);
 };
 
-const extensionLogMethods = {
-	log(message: any, ...args: any[]) {
-		window.postMessage({ label: "log", type: "log", message, args }, "*");
-	},
-	debug(message: any, ...args: any[]) {
-		window.postMessage({ label: "log", type: "debug", message, args }, "*");
-	},
-	warn(message: any, ...args: any[]) {
-		window.postMessage({ label: "log", type: "warn", message, args }, "*");
-	},
-	error(message: any, ...args: any[]) {
-		window.postMessage({ label: "log", type: "error", message, args }, "*");
-	},
-};
+function patchConsole() {
+	const supportedLogMethods = ["log", "debug", "warn", "error"];
 
-function noop() {}
+	const console = window.console;
 
-const logMethods = ["log", "debug", "warn", "error"];
+	const patch = {};
 
-const consoleProxy = new Proxy(window.console, {
-	get(target: any, property: any) {
-		if (property === "groupCollapsed") return noop;
+	const patchedLogMethods = {
+		log(message: any, ...args: any[]) {
+			api.sendHarnessMessage({ label: "log", type: "log", message, args });
+			console.log.apply(console, [message, ...args]);
+		},
+		debug(message: any, ...args: any[]) {
+			api.sendHarnessMessage({ label: "log", type: "debug", message, args });
+			console.debug.apply(console, [message, ...args]);
+		},
+		warn(message: any, ...args: any[]) {
+			api.sendHarnessMessage({ label: "log", type: "warn", message, args });
+			console.warn.apply(console, [message, ...args]);
+		},
+		error(message: any, ...args: any[]) {
+			api.sendHarnessMessage({ label: "log", type: "error", message, args });
+			console.error.apply(console, [message, ...args]);
+		},
+	};
 
-		if (logMethods.includes(property)) {
-			return extensionLogMethods[property];
-		}
-		return target[property];
-	},
-});
+	const consoleProxy = new Proxy(patch, {
+		get(target: any, property: any) {
+			if (supportedLogMethods.includes(property)) {
+				return patchedLogMethods[property];
+			}
 
-const api = acquireAtomApi();
+			return console[property];
+		},
+	});
+
+	Object.defineProperty(window, "console", {
+		value: consoleProxy,
+	});
+}
+
 const channel = new MessageChannel();
 
 // receive message from host
@@ -66,13 +77,11 @@ setupCommunication(channel.port2);
 
 api.onDidReceiveHarnessMessage(message => {
 	if (message.label === "codestream-webview-initialize") {
-		setStyles(message.styles);
+		if (!message.isDebugging) {
+			patchConsole();
+		}
 
-		// if (!data.isDebugging) {
-		// 	Object.defineProperty(window, "console", {
-		// 		value: consoleProxy,
-		// 	});
-		// }
+		setStyles(message.styles);
 
 		initialize("#app");
 	}
@@ -80,21 +89,3 @@ api.onDidReceiveHarnessMessage(message => {
 		setStyles(message.styles);
 	}
 });
-
-// document.addEventListener(
-// 	"click",
-// 	(e: MouseEvent) => {
-// 		if (e == null || e.target == null) return;
-//
-// 		if ((e.target as any).href) debugger;
-//
-// 		const target = e.target as HTMLAnchorElement;
-// 		if (target.href) {
-// 			api.sendHarnessMessage({ label: "open-link", link: target.href });
-// 			e.preventDefault();
-// 			e.stopPropagation();
-// 			e.stopImmediatePropagation();
-// 		}
-// 	},
-// 	true
-// );
