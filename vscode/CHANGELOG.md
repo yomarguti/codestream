@@ -1,5 +1,11 @@
 # Change Log
 
+## [2.1.3] - 2019-9-10
+
+### Fixed
+
+- Fixes [#102](]https://github.com/TeamCodeStream/CodeStream/issues/102) &mdash; Unable to prevent auto-opening of the CodeStream pane
+
 ## [2.1.2] - 2019-9-9
 
 ### Added
