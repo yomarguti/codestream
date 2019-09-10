@@ -62,7 +62,7 @@ import {
 	GetRangeScmInfoRequestType
 } from "@codestream/protocols/agent";
 import { getFileScmError } from "../store/editorContext/reducer";
-import { logout } from "../store/session/actions";
+import { logout, switchToTeam } from "../store/session/actions";
 import { CodemarkView } from "./CodemarkView";
 
 import { setCurrentStream, setNewPostEntry } from "../store/context/actions";
@@ -345,8 +345,39 @@ export class SimpleStream extends Component {
 			? "Invite People"
 			: "Invite People to CodeStream";
 
+		const { otherTeams } = this.props;
+		const hasOtherTeams = otherTeams.length > 0;
+
+		const teamItem = {
+			label: this.props.teamName,
+			noHover: !hasOtherTeams,
+			submenu: !hasOtherTeams
+				? null
+				: otherTeams.map(team => {
+						const label = safe(() => {
+							if (team.providerInfo.slack) {
+								return (
+									<span>
+										<Icon name={PROVIDER_MAPPINGS.slack.icon} />
+										{team.name}
+									</span>
+								);
+							}
+							if (team.providerInfo.msteams) {
+								return (
+									<span>
+										<Icon name={PROVIDER_MAPPINGS.msteams.icon} />
+										{team.name}
+									</span>
+								);
+							}
+						});
+						return { label: label || team.name, action: `switch-to-team-${team.id}` };
+				  })
+		};
+
 		const menuItems = [
-			{ label: this.props.teamName, action: "", noHover: true },
+			teamItem,
 			{ label: "-" },
 			{ label: inviteLabel, action: "invite" },
 			// { label: "Settings", action: "settings" },
@@ -1022,6 +1053,13 @@ export class SimpleStream extends Component {
 		} else if (arg.startsWith("configure-enterprise-") || arg.startsWith("configure-provider-")) {
 			return this.setActivePanel(arg);
 		}
+
+		if (arg.startsWith("switch-to-team-")) {
+			const teamId = arg.split("switch-to-team-")[1];
+			this.props.switchToTeam(teamId);
+			return;
+		}
+
 		switch (arg) {
 			case "invite":
 				return this.setActivePanel("invite");
@@ -2194,6 +2232,10 @@ const mapStateToProps = state => {
 		mutedStreams: preferences.mutedStreams || {},
 		starredStreams: preferences.starredStreams || {},
 		slashCommands: getSlashCommands(capabilities),
+		otherTeams: _sortBy(
+			Object.values(teams).filter(t => !t.deactivated && t.id !== context.currentTeamId),
+			"name"
+		),
 		team: team,
 		teamProvider: teamProvider,
 		isCodeStreamTeam: teamProvider === "codestream",
@@ -2240,6 +2282,7 @@ export default connect(
 		setCurrentStream,
 		editCodemark,
 		setNewPostEntry,
-		logout
+		logout,
+		switchToTeam
 	}
 )(injectIntl(SimpleStream));
