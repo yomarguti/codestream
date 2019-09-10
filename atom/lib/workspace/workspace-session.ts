@@ -1,5 +1,6 @@
 import { BootstrapInHostResponse } from "@codestream/protocols/webview";
-import { CompositeDisposable, Emitter } from "atom";
+import { Emitter } from "atom";
+import { FileLogger } from "logger";
 import { EnvironmentConfig, PRODUCTION_CONFIG } from "../env-utils";
 import {
 	Capabilities,
@@ -285,6 +286,7 @@ export class WorkspaceSession {
 			this.setStatus(SessionStatus.SignedOut, reason);
 		}
 		this._agent.dispose();
+		FileLogger.nuke();
 	}
 
 	async restart(reason?: SignoutReason) {
