@@ -110,9 +110,11 @@ class AuthenticationService(val project: Project) {
         if (notification.compatibility == ApiVersionCompatibility.API_UPGRADE_RECOMMENDED) {
             missingCapabilities = notification.missingCapabilities
         }
-        ApplicationManager.getApplication().invokeLater {
-            project.codeStream?.show {
-                project.webViewService?.postNotification(DidChangeApiVersionCompatibility())
+
+        project.webViewService?.postNotification(DidChangeApiVersionCompatibility())
+        if (notification.compatibility == ApiVersionCompatibility.API_UPGRADE_REQUIRED) {
+            ApplicationManager.getApplication().invokeLater {
+                project.codeStream?.show()
             }
         }
     }

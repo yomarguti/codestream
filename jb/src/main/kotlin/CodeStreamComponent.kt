@@ -143,7 +143,7 @@ class CodeStreamComponent(val project: Project) : Disposable {
         }
     }
 
-    fun show(afterShow: (() -> Unit)?) {
+    fun show(afterShow: (() -> Unit)? = null) {
         toolWindow.show {
             project.webViewService?.webView?.grabFocus()
             afterShow?.invoke()
