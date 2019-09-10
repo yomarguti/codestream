@@ -27,7 +27,7 @@ import protocols.webview.Ide
 import protocols.webview.UserSession
 
 class AuthenticationService(val project: Project) {
-    
+
     private val extensionCapabilities: JsonElement get() = gson.toJsonTree(Capabilities())
 
     private val logger = Logger.getInstance(AuthenticationService::class.java)
@@ -112,7 +112,7 @@ class AuthenticationService(val project: Project) {
         }
 
         project.webViewService?.postNotification(DidChangeApiVersionCompatibility())
-        if (notification.compatibility == ApiVersionCompatibility.API_UPGRADE_REQUIRED) {
+        if (notification.compatibility != ApiVersionCompatibility.API_COMPATIBLE) {
             ApplicationManager.getApplication().invokeLater {
                 project.codeStream?.show()
             }
