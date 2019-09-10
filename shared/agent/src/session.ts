@@ -33,9 +33,7 @@ import { Container, SessionContainer } from "./container";
 import { setGitPath } from "./git/git";
 import { Logger } from "./logger";
 import {
-	AccessToken,
 	ApiRequestType,
-	ApiVersionCompatibility,
 	BaseAgentOptions,
 	BootstrapRequestType,
 	ChangeDataType,
@@ -52,6 +50,7 @@ import {
 	DidLogoutNotificationType,
 	DidStartLoginNotificationType,
 	FetchMarkerLocationsRequestType,
+	GetAccessTokenRequestType,
 	GetInviteInfoRequest,
 	GetInviteInfoRequestType,
 	LoginResponse,
@@ -84,7 +83,7 @@ import {
 	CSUser,
 	LoginResult
 } from "./protocol/api.protocol";
-import { Functions, log, memoize, registerDecoratedHandlers, registerProviders } from "./system";
+import { log, memoize, registerDecoratedHandlers, registerProviders } from "./system";
 
 // FIXME: Must keep this in sync with vscode-codestream/src/api/session.ts
 const envRegex = /https?:\/\/((?:(\w+)-)?api|localhost)\.codestream\.(?:us|com)(?::\d+$)?/i;
@@ -259,6 +258,9 @@ export class CodeStreamSession {
 
 		registerDecoratedHandlers(this.agent);
 
+		this.agent.registerHandler(GetAccessTokenRequestType, e => {
+			return { accessToken: this._codestreamAccessToken! };
+		});
 		this.agent.registerHandler(PasswordLoginRequestType, e => this.passwordLogin(e));
 		this.agent.registerHandler(TokenLoginRequestType, e => this.tokenLogin(e));
 		this.agent.registerHandler(OtcLoginRequestType, e => this.otcLogin(e));
@@ -417,6 +419,11 @@ export class CodeStreamSession {
 	private _email: string | undefined;
 	get email() {
 		return this._email!;
+	}
+
+	private _codestreamAccessToken: string | undefined;
+	get codestreamAccessToken() {
+		return this._codestreamAccessToken;
 	}
 
 	private _environment: CodeStreamEnvironment | string = CodeStreamEnvironment.Unknown;
@@ -607,6 +614,7 @@ export class CodeStreamSession {
 		}
 
 		const token = response.token;
+		this._codestreamAccessToken = token.value;
 		this._teamId = (this._options as any).teamId = token.teamId;
 		this._codestreamUserId = response.user.id;
 		this._apiCapabilities = { ...(response.capabilities || {}) };

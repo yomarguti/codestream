@@ -114,3 +114,16 @@ export const SendPasswordResetEmailRequestType = new RequestType<
 	void,
 	void
 >("codestream/sendPasswordResetEmail");
+
+interface GetAccessTokenRequest {}
+
+interface GetAccessTokenResponse {
+	accessToken: string;
+}
+
+export const GetAccessTokenRequestType = new RequestType<
+	GetAccessTokenRequest,
+	GetAccessTokenResponse,
+	void,
+	void
+>("codestream/accessToken");
