@@ -9,7 +9,10 @@ import com.codestream.gson
 import com.codestream.sessionService
 import com.codestream.webViewService
 import com.github.salomonbrys.kotson.fromJson
+import com.github.salomonbrys.kotson.jsonObject
 import com.google.gson.JsonElement
+import com.google.gson.JsonObject
+import com.google.gson.annotations.SerializedName
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
@@ -65,6 +68,12 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
                 project.webViewService?.postNotification("codestream/didChangeVersionCompatibility", json, true)
             }
         }
+    }
+
+    @JsonNotification("codestream/didChangeApiVersionCompatibility")
+    fun didChangeApiVersionCompatibility(json: JsonElement) {
+        val notification = gson.fromJson<DidChangeApiVersionCompatibilityNotification>(json)
+        project.authenticationService?.onApiVersionChanged(notification)
     }
 
     @JsonNotification("codestream/didLogin")
@@ -143,3 +152,17 @@ class DidChangeUnreadsNotification(
 )
 
 class DidLoginNotification(val data: LoginResult)
+
+class DidChangeApiVersionCompatibilityNotification(
+    val compatibility: ApiVersionCompatibility,
+    val missingCapabilities: JsonObject = jsonObject()
+)
+
+enum class ApiVersionCompatibility {
+    @SerializedName("apiCompatible")
+    API_COMPATIBLE,
+    @SerializedName("apiUpgradeRecommended")
+    API_UPGRADE_RECOMMENDED,
+    @SerializedName("apiUpgradeRequired")
+    API_UPGRADE_REQUIRED
+}

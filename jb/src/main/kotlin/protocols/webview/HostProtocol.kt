@@ -1,6 +1,8 @@
 package protocols.webview
 
+import com.codestream.agent.ApiVersionCompatibility
 import com.google.gson.JsonElement
+import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
@@ -12,7 +14,9 @@ class BootstrapResponse(
     val configs: Configs,
     val context: JsonElement,
     val version: String,
-    val ide: Ide
+    val ide: Ide,
+    val apiVersionCompatibility: ApiVersionCompatibility?,
+    val missingCapabilities: JsonObject?
 )
 
 class Capabilities {

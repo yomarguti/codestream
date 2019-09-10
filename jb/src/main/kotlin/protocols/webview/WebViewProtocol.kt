@@ -3,7 +3,6 @@ package com.codestream.protocols.webview
 import com.codestream.models.CodemarkType
 import org.eclipse.lsp4j.Range
 import protocols.webview.EditorInformation
-import protocols.webview.EditorMetrics
 import protocols.webview.EditorSelection
 
 interface WebViewNotification {
@@ -78,6 +77,10 @@ object HostNotifications {
     ) : WebViewNotification {
         override fun getMethod(): String = "webview/request/parse"
     }
+}
+
+class DidChangeApiVersionCompatibility : WebViewNotification {
+    override fun getMethod(): String = "codestream/didChangeApiVersionCompatibility"
 }
 
 class DidLogout() : WebViewNotification {

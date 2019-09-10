@@ -1,15 +1,21 @@
 package com.codestream.authentication
 
+import com.codestream.agent.ApiVersionCompatibility
+import com.codestream.agent.DidChangeApiVersionCompatibilityNotification
 import com.codestream.agentService
+import com.codestream.codeStream
 import com.codestream.extensions.merge
 import com.codestream.gson
+import com.codestream.protocols.webview.DidChangeApiVersionCompatibility
 import com.codestream.sessionService
 import com.codestream.settingsService
+import com.codestream.webViewService
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.intellij.credentialStore.Credentials
 import com.intellij.ide.passwordSafe.PasswordSafe
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.future.await
@@ -26,6 +32,8 @@ class AuthenticationService(val project: Project) {
 
     private val logger = Logger.getInstance(AuthenticationService::class.java)
     private var mergedCapabilities: JsonElement = extensionCapabilities
+    private var apiVersionCompatibility: ApiVersionCompatibility? = null
+    private var missingCapabilities: JsonObject? = null
 
     fun bootstrap(): Any? {
         val settings = project.settingsService ?: return Unit
@@ -37,7 +45,9 @@ class AuthenticationService(val project: Project) {
             settings.webViewConfigs,
             settings.getWebViewContextJson(),
             settings.extensionInfo.versionFormatted,
-            Ide(settings.ideInfo.name)
+            Ide(settings.ideInfo.name),
+            apiVersionCompatibility,
+            missingCapabilities
         )
     }
 
@@ -93,6 +103,18 @@ class AuthenticationService(val project: Project) {
         agent.restart()
         settings.state.teamId = null
         saveAccessToken(null)
+    }
+
+    fun onApiVersionChanged(notification: DidChangeApiVersionCompatibilityNotification) {
+        apiVersionCompatibility = notification.compatibility
+        if (notification.compatibility == ApiVersionCompatibility.API_UPGRADE_RECOMMENDED) {
+            missingCapabilities = notification.missingCapabilities
+        }
+        ApplicationManager.getApplication().invokeLater {
+            project.codeStream?.show {
+                project.webViewService?.postNotification(DidChangeApiVersionCompatibility())
+            }
+        }
     }
 
     private fun saveAccessToken(accessToken: JsonObject?) {
