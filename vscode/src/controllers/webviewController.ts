@@ -330,10 +330,10 @@ export class WebviewController implements Disposable {
 		if (e.compatibility === VersionCompatibility.UnsupportedUpgradeRequired) {
 			this._versionCompatibility = e.compatibility;
 		}
+
 		if (!this.visible) {
 			await this.show();
 		}
-
 		this._webview!.notify(DidChangeVersionCompatibilityNotificationType, e);
 	}
 
@@ -356,7 +356,10 @@ export class WebviewController implements Disposable {
 		if (e.compatibility === ApiVersionCompatibility.ApiUpgradeRecommended) {
 			this._missingCapabilities = e.missingCapabilities || {};
 		}
+
 		if (!this.visible) {
+			if (e.compatibility === ApiVersionCompatibility.ApiCompatible) return;
+
 			await this.show();
 		}
 

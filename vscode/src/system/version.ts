@@ -8,7 +8,14 @@ export namespace Versions {
 		pre?: string;
 	}
 
-	export function compare(v1: Version, v2: Version): number {
+	export function compare(v1: string | Version, v2: string | Version): number {
+		if (typeof v1 === "string") {
+			v1 = fromString(v1);
+		}
+		if (typeof v2 === "string") {
+			v2 = fromString(v2);
+		}
+
 		if (v1.major > v2.major) return 1;
 		if (v1.major < v2.major) return -1;
 
