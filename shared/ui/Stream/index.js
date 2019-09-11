@@ -1244,31 +1244,6 @@ export class SimpleStream extends Component {
 		this.setState({ editingPostId: postDiv.id });
 	};
 
-	handleDeletePost = event => {
-		var postDiv = event.target.closest(".post");
-		if (!postDiv || !postDiv.id) return;
-		this.confirmDeletePost(postDiv.id);
-	};
-
-	confirmDeletePost = postId => {
-		confirmPopup({
-			title: "Are you sure?",
-			message: "Deleting a post cannot be undone.",
-			centered: true,
-			buttons: [
-				{
-					label: "Delete Post",
-					wait: true,
-					action: () => {
-						this.props.deletePost(this.props.postStreamId, postId);
-						this.props.setCurrentStream(this.props.postStreamId);
-					}
-				},
-				{ label: "Cancel" }
-			]
-		});
-	};
-
 	markUnread = postId => {
 		this.props.markPostUnread(this.props.postStreamId, postId);
 	};
@@ -1331,8 +1306,6 @@ export class SimpleStream extends Component {
 				return this.props.setCurrentStream(post.streamId, post.parentPostId || post.id);
 			case "edit-post":
 				return this.editLastPost(post.id);
-			case "delete-post":
-				return this.confirmDeletePost(post.id);
 			case "mark-unread":
 				return this.markUnread(post.id);
 			case "quote":

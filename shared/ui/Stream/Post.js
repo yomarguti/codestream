@@ -8,7 +8,7 @@ import Icon from "./Icon";
 import Timestamp from "./Timestamp";
 import CodemarkActions from "./CodemarkActions";
 import RetrySpinner from "./RetrySpinner";
-import { retryPost, cancelPost, editPost } from "./actions";
+import { retryPost, cancelPost, editPost, deletePost } from "./actions";
 import ContentEditable from "react-contenteditable";
 import { LocateRepoButton } from "./LocateRepoButton";
 import Menu from "./Menu";
@@ -312,7 +312,35 @@ class Post extends React.Component {
 				menuItems.push({ label: `Edit ${typeString}`, action: "edit-post" });
 			}
 			if (!this.props.disableDeletes) {
-				menuItems.push({ label: `Delete ${typeString}`, action: "delete-post" });
+				menuItems.push({
+					label: `Delete ${typeString}`,
+					action: () => {
+						const { post, deletePost } = this.props;
+						if (post.parentPostId) {
+							deletePost(post.streamId, post.id);
+						} else {
+							confirmPopup({
+								title: "Are you sure?",
+								message: "Deleting a post cannot be undone.",
+								centered: true,
+								buttons: [
+									{
+										label: "Delete Post",
+										wait: true,
+										action: () => {
+											deletePost(post.streamId, post.id);
+											// if this was a parent post, exit thread view
+											if (this.props.threadId === post.id) {
+												this.props.setCurrentStream(post.streamId);
+											}
+										}
+									},
+									{ label: "Cancel" }
+								]
+							});
+						}
+					}
+				});
 			}
 		}
 
@@ -952,5 +980,14 @@ const mapStateToProps = (state, props) => {
 
 export default connect(
 	mapStateToProps,
-	{ cancelPost, retryPost, editPost, reactToPost, setCodemarkStatus, pinReply, unpinReply }
+	{
+		cancelPost,
+		retryPost,
+		editPost,
+		deletePost,
+		reactToPost,
+		setCodemarkStatus,
+		pinReply,
+		unpinReply
+	}
 )(injectIntl(Post));

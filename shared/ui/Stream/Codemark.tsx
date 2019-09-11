@@ -549,10 +549,6 @@ export class Codemark extends React.Component<Props, State> {
 				this.setPinned(!this.props.codemark.pinned);
 				break;
 			}
-			case "delete-post": {
-				this.deleteCodemark();
-				break;
-			}
 			case "edit-post": {
 				// TODO: ideally should also open the <CodemarkView/> but that's more complicated
 				// if (!this.props.selected) this.props.setCurrentCodemark(this.props.codemark.id);
@@ -911,7 +907,7 @@ export class Codemark extends React.Component<Props, State> {
 		if (mine) {
 			menuItems.push(
 				{ label: "Edit", action: "edit-post" },
-				{ label: "Delete", action: "delete-post" }
+				{ label: "Delete", action: this.deleteCodemark }
 			);
 		}
 
