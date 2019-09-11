@@ -250,12 +250,16 @@ export function listenForEvents(store) {
 		store.dispatch(setCurrentCodemark(codemark.id));
 	});
 
-	const parseProtocol = function(uriString): Route | undefined {
+	const parseProtocol = function(uriString: string | undefined): Route | undefined {
+		if (!uriString) return undefined;
+
 		let uri: URI;
 		try {
 			const decodedUriString = decodeURIComponent(uriString);
 			uri = URI.parse(decodedUriString);
-			uri = URI.parse("codestream:/" + uri.path);
+			while (uri.authority.indexOf("codestream") === -1) {
+				uri = URI.parse(uri.scheme + ":/" + uri.path);
+			}
 		} catch (ex) {
 			return undefined;
 		}
@@ -264,13 +268,16 @@ export function listenForEvents(store) {
 			return p;
 		});
 
-		const controller: RouteControllerType = uri.authority as RouteControllerType;
+		let controller: RouteControllerType | undefined;
 		let action: RouteActionType | undefined;
 		let id: string | undefined;
 
 		if (paths.length > 0) {
-			action = paths[1] as RouteActionType;
-			id = paths[0];
+			controller = paths[0] as RouteControllerType;
+			id = paths[1];
+			if (paths.length > 1) {
+				action = paths[2] as RouteActionType;
+			}
 		}
 
 		return {

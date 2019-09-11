@@ -79,7 +79,7 @@ export enum RouteActionType {
 	Open = "open"
 }
 export interface Route {
-	controller: RouteControllerType;
+	controller?: RouteControllerType;
 	action?: RouteActionType;
 	id?: string;
 	parameters?: any;
