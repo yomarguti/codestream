@@ -47,7 +47,6 @@ import { CSTeam, CodemarkType } from "@codestream/protocols/api";
 import {
 	setCodemarksFileViewStyle,
 	setCodemarksShowArchived,
-	setCodemarksShowResolved,
 	setCurrentCodemark
 } from "../store/context/actions";
 import { sortBy as _sortBy } from "lodash-es";
@@ -79,8 +78,7 @@ interface Props {
 	viewInline: boolean;
 	viewHeadshots: boolean;
 	showLabelText: boolean;
-	showClosed: boolean;
-	showUnpinned: boolean;
+	showHidden: boolean;
 	fileNameToFilterFor?: string;
 	scmInfo?: GetFileScmInfoResponse;
 	textEditorUri?: string;
@@ -92,8 +90,7 @@ interface Props {
 	textEditorSelection?: EditorSelection;
 	metrics: EditorMetrics;
 	documentMarkers: DocumentMarker[];
-	numUnpinned: number;
-	numClosed: number;
+	numHidden: number;
 
 	setEditorContext: (
 		...args: Parameters<typeof setEditorContext>
@@ -108,9 +105,6 @@ interface Props {
 	setCodemarksShowArchived: (
 		...args: Parameters<typeof setCodemarksShowArchived>
 	) => ReturnType<typeof setCodemarksShowArchived>;
-	setCodemarksShowResolved: (
-		...args: Parameters<typeof setCodemarksShowResolved>
-	) => ReturnType<typeof setCodemarksShowResolved>;
 	setCurrentCodemark: (
 		...args: Parameters<typeof setCurrentCodemark>
 	) => ReturnType<typeof setCurrentCodemark>;
@@ -460,7 +454,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	renderList = (paddingTop, fontSize, height) => {
-		const { documentMarkers, showUnpinned, showClosed } = this.props;
+		const { documentMarkers, showHidden } = this.props;
 
 		this.hiddenCodemarks = {};
 		return [
@@ -500,12 +494,10 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 							.map(docMarker => {
 								const { codemark } = docMarker;
 								// @ts-ignore
-								//if (!codemark.pinned && !showUnpinned) return null;
+								//if (!codemark.pinned && !showHidden) return null;
 								// if (codemark.type === "issue" && codemark.status === "closed" && !showClosed)
 								// return null;
-								const hidden =
-									(!codemark.pinned && !showUnpinned) ||
-									(codemark.type === "issue" && codemark.status === "closed" && !showClosed);
+								const hidden = !showHidden && (!codemark.pinned || codemark.status === "closed");
 								if (hidden) {
 									this.hiddenCodemarks[docMarker.id] = true;
 									return null;
@@ -876,8 +868,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			firstVisibleLine,
 			lastVisibleLine,
 			documentMarkers,
-			showUnpinned,
-			showClosed
+			showHidden
 		} = this.props;
 		const { numLinesVisible } = this.state;
 
@@ -896,10 +887,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			// if there is already a codemark on this line, keep skipping to the next one
 			while (this.docMarkersByStartLine[startLine]) startLine++;
 			this.docMarkersByStartLine[startLine] = docMarker;
-			if (
-				(!codemark.pinned && !showUnpinned) ||
-				(codemark.type === "issue" && codemark.status === "closed" && !showClosed)
-			) {
+			const hidden = !showHidden && (!codemark.pinned || codemark.status === "closed");
+			if (hidden) {
 				this.hiddenCodemarks[docMarker.id] = true;
 			} else {
 				if (startLine < firstVisibleLine) numAbove++;
@@ -1169,8 +1158,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	printViewSelectors() {
-		const { numClosed, numUnpinned, viewInline } = this.props;
+		const { numHidden, viewInline } = this.props;
 		const { numAbove, numBelow } = this.state;
+
 		return (
 			<div className="view-selectors">
 				{viewInline && numAbove > 0 && (
@@ -1183,19 +1173,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						{numBelow} <Icon name="arrow-down" />
 					</span>
 				)}
-				{numClosed > 0 && (
-					<Tooltip title="Show/hide resolved issues" placement="top" delay={1}>
-						<span className="count" onClick={this.toggleShowClosed}>
-							{numClosed} resolved
-							<label className={cx("switch", { checked: this.props.showClosed })} />
-						</span>
-					</Tooltip>
-				)}
-				{numUnpinned > 0 && (
+				{numHidden > 0 && (
 					<Tooltip title="Show/hide archived codemarks" placement="top" delay={1}>
-						<span className="count" onClick={this.toggleShowUnpinned}>
-							{numUnpinned} archived
-							<label className={cx("switch", { checked: this.props.showUnpinned })} />
+						<span className="count" onClick={this.toggleShowHidden}>
+							{numHidden} archived
+							<label className={cx("switch", { checked: this.props.showHidden })} />
 						</span>
 					</Tooltip>
 				)}
@@ -1270,12 +1252,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		this.props.setCodemarksFileViewStyle(this.props.viewInline ? "list" : "inline");
 	};
 
-	toggleShowUnpinned = () => {
-		this.enableAnimations(() => this.props.setCodemarksShowArchived(!this.props.showUnpinned));
-	};
-
-	toggleShowClosed = () => {
-		this.enableAnimations(() => this.props.setCodemarksShowResolved(!this.props.showClosed));
+	toggleShowHidden = () => {
+		this.enableAnimations(() => this.props.setCodemarksShowArchived(!this.props.showHidden));
 	};
 
 	showAbove = () => {
@@ -1447,8 +1425,8 @@ const mapStateToProps = (state: CodeStreamState) => {
 	const { context, editorContext, teams, configs, documentMarkers } = state;
 
 	const docMarkers = documentMarkers[editorContext.textEditorUri || ""] || EMPTY_ARRAY;
-	const numUnpinned = docMarkers.filter(d => !d.codemark.pinned).length;
-	const numClosed = docMarkers.filter(d => d.codemark.status === "closed").length;
+	const numHidden = docMarkers.filter(d => !d.codemark.pinned || d.codemark.status === "closed")
+		.length;
 
 	const textEditorVisibleRanges = getVisibleRanges(editorContext);
 	const numVisibleRanges = textEditorVisibleRanges.length;
@@ -1467,8 +1445,7 @@ const mapStateToProps = (state: CodeStreamState) => {
 		viewInline: context.codemarksFileViewStyle === "inline",
 		viewHeadshots: configs.showHeadshots,
 		showLabelText: false, //configs.showLabelText,
-		showClosed: context.codemarksShowResolved || false,
-		showUnpinned: context.codemarksShowArchived || false,
+		showHidden: context.codemarksShowArchived || false,
 		fileNameToFilterFor: editorContext.activeFile,
 		scmInfo: editorContext.scmInfo,
 		textEditorUri: editorContext.textEditorUri,
@@ -1480,8 +1457,7 @@ const mapStateToProps = (state: CodeStreamState) => {
 		metrics: editorContext.metrics || EMPTY_OBJECT,
 		documentMarkers: docMarkers,
 		numLinesVisible: getVisibleLineCount(textEditorVisibleRanges),
-		numUnpinned,
-		numClosed
+		numHidden
 	};
 };
 
@@ -1491,7 +1467,6 @@ export default connect(
 		fetchDocumentMarkers,
 		setCodemarksFileViewStyle,
 		setCodemarksShowArchived,
-		setCodemarksShowResolved,
 		setCurrentCodemark,
 		setEditorContext,
 		createPostAndCodemark,

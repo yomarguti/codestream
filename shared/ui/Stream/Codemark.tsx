@@ -77,6 +77,7 @@ interface ConnectedProps {
 	relatedCodemarkIds: string[];
 	isCodeStreamTeam: boolean;
 	teamTagsHash: any;
+	entirelyDeleted: boolean;
 }
 
 export type DisplayType = "default" | "collapsed";
@@ -883,7 +884,7 @@ export class Codemark extends React.Component<Props, State> {
 	};
 
 	renderInlineCodemark() {
-		const { codemark, codemarkKeybindings, hidden, selected, author } = this.props;
+		const { codemark, codemarkKeybindings, hidden, selected, entirelyDeleted, author } = this.props;
 		const { menuOpen, menuTarget, isInjecting } = this.state;
 
 		if (!codemark) return null;
@@ -925,6 +926,13 @@ export class Codemark extends React.Component<Props, State> {
 
 		const description =
 			codemark.title && codemark.text ? this.renderTextLinkified(codemark.text) : null;
+
+		// show a striped header if the codemark is selected, or unhidden, and it matches
+		// manual-archive, resolved, or deleted state
+		const showStripedHeader =
+			(selected || !hidden) &&
+			(!codemark.pinned || codemark.status === "closed" || entirelyDeleted);
+
 		return (
 			<div
 				className={cx("codemark inline type-" + type, {
@@ -940,8 +948,12 @@ export class Codemark extends React.Component<Props, State> {
 				onMouseLeave={this.handleMouseLeaveCodemark}
 			>
 				<div className="contents">
-					{(selected || !hidden) && !codemark.pinned && (
-						<div className="archived">This codemark is archived</div>
+					{showStripedHeader && (
+						<div className="archived">
+							{!codemark.pinned && <div>This codemark is archived.</div>}
+							{codemark.status == "closed" && <div>This codemark is resolved.</div>}
+							{entirelyDeleted && <div>This codemark refers to deleted code.</div>}
+						</div>
 					)}
 					<div className="body">
 						<div className="header">
@@ -1168,7 +1180,7 @@ const unkownAuthor = {
 
 const mapStateToProps = (state: CodeStreamState, props: InheritedProps): ConnectedProps => {
 	const { capabilities, context, preferences, users, session, posts } = state;
-	const { codemark } = props;
+	const { codemark, marker } = props;
 
 	const teamProvider = getCurrentTeamProvider(state);
 
@@ -1182,6 +1194,10 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 
 	const teamTagsHash = getTeamTagsHash(state);
 
+	let entirelyDeleted = false;
+	if (marker && marker.location && marker.location.meta && marker.location.meta.entirelyDeleted)
+		entirelyDeleted = true;
+
 	return {
 		capabilities: capabilities,
 		editorHasFocus: context.hasFocus,
@@ -1194,7 +1210,8 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		isCodeStreamTeam: teamProvider === "codestream",
 		teammates: getTeamMembers(state),
 		usernames: getUsernames(state),
-		teamTagsHash
+		teamTagsHash,
+		entirelyDeleted
 	};
 };
 
