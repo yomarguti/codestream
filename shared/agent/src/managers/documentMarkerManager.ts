@@ -292,7 +292,8 @@ export class DocumentMarkerManager {
 								.replace(/\n/g, "\t\n>  ")}`,
 							creatorName: (creator && creator.username) || "Unknown",
 							codemark: codemark,
-							range: MarkerLocation.toRange(location)
+							range: MarkerLocation.toRange(location),
+							location
 						});
 						Logger.log(
 							cc,

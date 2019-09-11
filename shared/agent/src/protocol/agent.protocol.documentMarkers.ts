@@ -2,6 +2,7 @@
 import { Range, RequestType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
 import { CodemarkPlus } from "./agent.protocol.codemarks";
 import { CSMarker } from "./api.protocol";
+import { CSMarkerLocation } from "./api.protocol.models";
 
 export interface CreateDocumentMarkerPermalinkRequest {
 	range: Range;
@@ -25,6 +26,10 @@ export interface DocumentMarker extends CSMarker {
 	codemark: CodemarkPlus;
 	creatorName: string;
 	range: Range;
+	// location is somewhat redundant because we have the calculated `range`
+	// property already, however there is additional data on the location
+	// object, called `meta` that we also want to expose
+	location: CSMarkerLocation;
 	summary: string;
 	summaryMarkdown: string;
 }
@@ -44,7 +49,7 @@ export interface MarkerNotLocated extends CSMarker {
 export interface FetchDocumentMarkersRequest {
 	textDocument: TextDocumentIdentifier;
 	filters?: {
-		excludeArchived?: boolean
+		excludeArchived?: boolean;
 	};
 }
 export interface FetchDocumentMarkersResponse {
