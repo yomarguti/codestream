@@ -6,7 +6,7 @@ import com.intellij.openapi.application.JBProtocolCommand
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.ProjectManager
 
-class CodeStreamCommand : JBProtocolCommand("idea/codestream") {
+class CodeStreamCommand : JBProtocolCommand("codestream") {
     private val logger = Logger.getInstance(CodeStreamCommand::class.java)
 
     override fun perform(target: String?, parameters: MutableMap<String, String>) {
