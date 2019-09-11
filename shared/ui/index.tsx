@@ -250,6 +250,16 @@ export function listenForEvents(store) {
 		store.dispatch(setCurrentCodemark(codemark.id));
 	});
 
+	const parseQuery = function(queryString: string) {
+		var query = {};
+		var pairs = (queryString[0] === "?" ? queryString.substr(1) : queryString).split("&");
+		for (var i = 0; i < pairs.length; i++) {
+			var pair = pairs[i].split("=");
+			query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || "");
+		}
+		return query;
+	}
+
 	const parseProtocol = function(uriString: string | undefined): Route | undefined {
 		if (!uriString) return undefined;
 
@@ -272,10 +282,23 @@ export function listenForEvents(store) {
 		let action: RouteActionType | undefined;
 		let id: string | undefined;
 
+		if (uri.query) {
+			const parsedQuery = parseQuery(uri.query) as any;
+			if (parsedQuery) {
+				controller = parsedQuery.controller;
+				action = parsedQuery.action;
+				id = parsedQuery.id;
+			}
+		}
+
 		if (paths.length > 0) {
-			controller = paths[0] as RouteControllerType;
-			id = paths[1];
-			if (paths.length > 1) {
+			if (!controller) {
+				controller = paths[0] as RouteControllerType;
+			}
+			if (!id) {
+				id = paths[1];
+			}
+			if (!action && paths.length > 1) {
 				action = paths[2] as RouteActionType;
 			}
 		}
