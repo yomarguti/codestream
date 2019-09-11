@@ -225,6 +225,17 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			}
 		}
 
+		for (const marker of markers) {
+			const location = result.locations[marker.id];
+			if (location !== undefined && location.lineStart === location.lineEnd && location.colStart === location.colEnd) {
+				const [lineStartWhenCreated, colStartWhenCreated, lineEndWhenCreated, colEndWhenCreated] = marker.locationWhenCreated;
+				if (location.meta === undefined) location.meta = {};
+				if (lineStartWhenCreated !== lineEndWhenCreated || colStartWhenCreated !== colEndWhenCreated) {
+					location.meta.entirelyDeleted = true;
+				}
+			}
+		}
+
 		return result;
 	}
 
