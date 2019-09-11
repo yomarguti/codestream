@@ -335,6 +335,7 @@ export class CodestreamView {
 	}
 
 	destroy() {
+		Container.markerDecorationProvider.enable();
 		this.emitter.emit(WILL_DESTROY);
 		this.element.remove();
 		this.editorSelectionObserver && this.editorSelectionObserver.dispose();
