@@ -89,3 +89,43 @@ api.onDidReceiveHarnessMessage(message => {
 		setStyles(message.styles);
 	}
 });
+
+// attempting to polyfill the default editing keybindings because they don't work in a <webview> tag for some reason
+document.addEventListener(
+	"keydown",
+	(e: KeyboardEvent) => {
+		if (e == null || e.target == null) return;
+
+		if (e.metaKey && e.key === "a") {
+			document.execCommand("selectAll");
+			return;
+		}
+
+		if (e.shiftKey) {
+			if (e.metaKey && e.key === "z") {
+				document.execCommand("redo");
+			}
+			return;
+		}
+
+		if (e.metaKey) {
+			switch (e.key) {
+				case "c":
+					document.execCommand("copy");
+					break;
+				case "v":
+					document.execCommand("paste");
+					break;
+				case "x":
+					document.execCommand("cut");
+					break;
+				case "z":
+					document.execCommand("undo");
+					break;
+				default:
+					return;
+			}
+		}
+	},
+	{ capture: true, passive: true }
+);
