@@ -564,7 +564,7 @@ export class Codemark extends React.Component<Props, State> {
 		if (found) this.setKeybinding(found[1]);
 	};
 
-	deleteCodemark() {
+	deleteCodemark = () => {
 		confirmPopup({
 			title: "Are you sure?",
 			message: "Deleting a codemark cannot be undone.",
@@ -581,7 +581,7 @@ export class Codemark extends React.Component<Props, State> {
 				{ label: "Cancel" }
 			]
 		});
-	}
+	};
 
 	setPinned = value => {
 		const { codemark, marker } = this.props;
