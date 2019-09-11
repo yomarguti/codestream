@@ -193,7 +193,11 @@ export default class Menu extends Component {
 	};
 
 	handleClickItem = async (event, item) => {
-		this.props.action(item.disabled ? null : item.action);
 		event.stopPropagation();
+		// support functions as item actions
+		if (typeof item.action === "function" && !item.disabled) {
+			item.action();
+			this.props.action(null); // invoke the action callback for entire menu so it can removed
+		} else this.props.action(item.disabled ? null : item.action);
 	};
 }
