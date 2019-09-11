@@ -15,7 +15,7 @@
 	"repository": "https://github.com/TeamCodeStream/atom-client",
 	"license": "",
 	"engines": {
-		"atom": ">=1.34.0 <2.0.0"
+		"atom": ">=1.40.0 <2.0.0"
 	},
 	"deserializers": {
 		"codestream/CodestreamView": "deserializeCodestreamView"
