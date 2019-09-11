@@ -710,7 +710,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			if (channel.isArchived || (filterSelected && !selectedStreams[channel.id])) return;
 
 			if (channel.id === selectedChannelId) {
-				selectedChannelName = channel.name!;
+				selectedChannelName = "#" + channel.name!;
 			}
 			if (!firstChannel) {
 				firstChannel = channel;
@@ -737,7 +737,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				}
 
 				if (channel.id === selectedChannelId) {
-					selectedChannelName = channel.name!;
+					selectedChannelName = "@" + channel.name!;
 				}
 				if (!firstChannel) {
 					firstChannel = channel;
