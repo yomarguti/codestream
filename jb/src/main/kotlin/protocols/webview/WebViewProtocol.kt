@@ -73,7 +73,7 @@ object FocusNotifications {
 
 object HostNotifications {
     class DidReceiveRequest(
-        url: String?
+        val url: String?
     ) : WebViewNotification {
         override fun getMethod(): String = "webview/request/parse"
     }
