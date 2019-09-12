@@ -29,7 +29,7 @@ export const logout = () => async dispatch => {
 export const switchToTeam = (id: string) => async (dispatch, getState: () => CodeStreamState) => {
 	const { accessToken } = await HostApi.instance.send(GetAccessTokenRequestType, {});
 
-	const { configs, users, session } = getState();
+	const { configs,context, users, session } = getState();
 	const user = users[session.userId!] as CSMe;
 
 	dispatch(setBootstrapped(false));
@@ -37,7 +37,7 @@ export const switchToTeam = (id: string) => async (dispatch, getState: () => Cod
 
 	await HostApi.instance.send(LogoutRequestType, {});
 	const response = await HostApi.instance.send(TokenLoginRequestType, {
-		token: { email: user.email, value: accessToken, url: configs.serverUrl, teamId: id },
+		token: { email: user.email, value: accessToken, url: configs.serverUrl, teamId: id, providerAccess: context.chatProviderAccess as any },
 		teamId: id
 	});
 
