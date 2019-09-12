@@ -1,56 +1,24 @@
+// @ts-check
 const { ipcRenderer } = require("electron");
 
-class AtomApi {
-	constructor(_ipc) {
-		this._ipc = _ipc;
-		this._webviewMessageListeners = [];
-		this._harnessMessageListeners = [];
+const host = {
+	on(channel, cb) {
+		ipcRenderer.on(channel, (e, args) => cb(args));
+	},
 
-		this._ipc.on("harness", (e, message) => {
-			this._harnessMessageListeners.forEach(l => {
-				try {
-					l(message);
-				} catch (error) {}
-			});
-		});
-		_ipc.on("codestream-ui", (e, message) => {
-			this._webviewMessageListeners.forEach(l => {
-				try {
-					l(message);
-				} catch (error) {}
-			});
-		});
-	}
-
-	onDidReceiveCSMessage(cb) {
-		this._webviewMessageListeners.push(cb);
-	}
-
-	onDidReceiveHarnessMessage(cb) {
-		this._harnessMessageListeners.push(cb);
-	}
-
-	sendHarnessMessage(message) {
-		this._ipc.sendToHost("harness", message);
-	}
-
-	send(message) {
-		this._ipc.sendToHost("codestream-ui", message);
-	}
-}
-
-let api;
+	send(channel, message) {
+		ipcRenderer.sendToHost(channel, message);
+	},
+};
 
 Object.defineProperty(window, "acquireAtomApi", {
-	value: () => {
-		if (!api) api = new AtomApi(ipcRenderer);
-		return api;
-	},
+	value: () => host,
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+	host.send("ready");
 	document.addEventListener("keydown", e => {
-		ipcRenderer.sendToHost("did-keydown", {
+		host.send("did-keydown", {
 			key: e.key,
 			keyCode: e.keyCode,
 			code: e.code,

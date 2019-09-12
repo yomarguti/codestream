@@ -191,60 +191,62 @@ export class CodestreamView {
 			this.subscriptions.add(
 				atom.commands.add("atom-workspace", "codestream:open-webview-devtools", () =>
 					this.webview.openDevTools()
-				),
-				Container.styles.onDidChange(styles => {
-					this.webview.send("harness", { label: "update-styles", styles });
-				})
+				)
 			);
-			this.webview.send("harness", {
-				label: "codestream-webview-initialize",
-				styles: await Container.styles.getStylesheets(),
-				isDebugging: Debug.isDebugging(),
-			});
 		});
-		this.webview.addEventListener("ipc-message", event => {
-			const data = event.args[0];
-			if (event.channel === "harness") {
-				switch (data.label) {
-					case "open-link": {
-						shell.openExternal(data.link);
-						break;
-					}
-					case "log": {
-						const { type, message, args } = data;
-						this.logger.log(type, message, JSON.stringify(args));
-					}
+		this.webview.addEventListener("ipc-message", async event => {
+			switch (event.channel) {
+				case "ready": {
+					this.webview.send("initialize", {
+						styles: await Container.styles.getStylesheets(),
+						isDebugging: Debug.isDebugging(),
+					});
+					this.subscriptions.add(
+						Container.styles.onDidChange(styles => {
+							this.webview.send("did-change-styles", styles);
+						})
+					);
+					break;
 				}
-			}
-			if (event.channel === "did-keydown") {
-				this._handleKeydownEvent(data as KeyboardEvent);
-			} else {
-				if (isIpcRequestMessage(data)) {
-					const target = data.method.split("/")[0];
-					if (target === "host") {
-						// @ts-ignore
-						requestIdleCallback(() => {
-							this.handleWebviewRequest(data)
-								.then(result => {
-									this.webview.send("codestream-ui", { id: data.id, ...result });
-								})
-								.catch(error => {
-									this.webview.send("codestream-ui", { id: data.id, error: error.message });
-								});
-						});
-					} else {
-						// @ts-ignore
-						requestIdleCallback(async () => {
-							this.forwardWebviewRequest(data)
-								.then(result => {
-									this.webview.send("codestream-ui", { id: data.id, ...result });
-								})
-								.catch(error => {
-									this.webview.send("codestream-ui", { id: data.id, error: error.message });
-								});
-						});
-					}
-				} else this.onWebviewNotification(data as WebviewIpcNotificationMessage);
+				case "did-keydown": {
+					this._handleKeydownEvent(event.args[0]);
+					break;
+				}
+				case "did-log": {
+					const { type, message, args } = event.args[0];
+					this.logger.log(type, message, JSON.stringify(args));
+					break;
+				}
+				case "codestream-ui": {
+					const data = event.args[0];
+					if (isIpcRequestMessage(data)) {
+						const target = data.method.split("/")[0];
+						if (target === "host") {
+							// @ts-ignore
+							requestIdleCallback(() => {
+								this.handleWebviewRequest(data)
+									.then(result => {
+										this.webview.send("codestream-ui", { id: data.id, ...result });
+									})
+									.catch(error => {
+										this.webview.send("codestream-ui", { id: data.id, error: error.message });
+									});
+							});
+						} else {
+							// @ts-ignore
+							requestIdleCallback(async () => {
+								this.forwardWebviewRequest(data)
+									.then(result => {
+										this.webview.send("codestream-ui", { id: data.id, ...result });
+									})
+									.catch(error => {
+										this.webview.send("codestream-ui", { id: data.id, error: error.message });
+									});
+							});
+						}
+					} else this.onWebviewNotification(data as WebviewIpcNotificationMessage);
+					break;
+				}
 			}
 		});
 

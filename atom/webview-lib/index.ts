@@ -34,19 +34,19 @@ function patchConsole() {
 
 	const patchedLogMethods = {
 		log(message: any, ...args: any[]) {
-			api.sendHarnessMessage({ label: "log", type: "log", message, args });
+			api.send("did-log", { type: "log", message, args });
 			console.log.apply(console, [message, ...args]);
 		},
 		debug(message: any, ...args: any[]) {
-			api.sendHarnessMessage({ label: "log", type: "debug", message, args });
+			api.send("did-log", { type: "debug", message, args });
 			console.debug.apply(console, [message, ...args]);
 		},
 		warn(message: any, ...args: any[]) {
-			api.sendHarnessMessage({ label: "log", type: "warn", message, args });
+			api.send("did-log", { type: "warn", message, args });
 			console.warn.apply(console, [message, ...args]);
 		},
 		error(message: any, ...args: any[]) {
-			api.sendHarnessMessage({ label: "log", type: "error", message, args });
+			api.send("did-log", { type: "error", message, args });
 			console.error.apply(console, [message, ...args]);
 		},
 	};
@@ -69,23 +69,20 @@ function patchConsole() {
 const channel = new MessageChannel();
 
 // receive message from host
-api.onDidReceiveCSMessage(message => channel.port1.postMessage(message), false);
+api.on("codestream-ui", message => channel.port1.postMessage(message));
 // send message to host
-channel.port1.onmessage = message => api.send(message.data);
+channel.port1.onmessage = message => api.send("codestream-ui", message.data);
 // port for ui code to listen and post to
 setupCommunication(channel.port2);
 
-api.onDidReceiveHarnessMessage(message => {
-	if (message.label === "codestream-webview-initialize") {
-		if (!message.isDebugging) {
-			patchConsole();
-		}
-
-		setStyles(message.styles);
-
-		initialize("#app");
+api.on("initialize", ({ isDebugging, styles }) => {
+	if (!isDebugging) {
+		patchConsole();
 	}
-	if (message.label === "update-styles") {
-		setStyles(message.styles);
-	}
+
+	setStyles(styles);
+
+	initialize("#app");
 });
+
+api.on("did-change-styles", setStyles);
