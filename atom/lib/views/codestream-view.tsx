@@ -183,10 +183,8 @@ export class CodestreamView {
 
 	private async initializeWebview() {
 		this.webview.src = await this.getWebviewSrc();
-		this.webview.disablewebsecurity = "true";
 		this.webview.preload = asAbsolutePath("webview-lib/preload.js");
 		this.webview.plugins = "true";
-		this.webview.webpreferences = "allowRunningInsecureContent, javascript";
 
 		this.webview.classList.add("codestream-webview", "native-key-bindings");
 		this.webview.addEventListener("dom-ready", async () => {
