@@ -12,9 +12,11 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
     override fun perform(target: String?, parameters: MutableMap<String, String>) {
         logger.info("Handling $target $parameters")
         // TODO which project should be notified?
-        val project = ProjectManager.getInstance().defaultProject
+        val project = ProjectManager.getInstance().openProjects.getOrNull(0) ?: return
         if (!project.isDisposed) {
-            val url = "$target?" + parameters.map { entry -> entry.key + "=" + entry.value }.joinToString("&")
+            val url = "codestream://codestream/$target?" +
+                parameters.map { entry -> entry.key + "=" + entry.value }.joinToString("&")
+            logger.info("Opening $url in project ${project.basePath}")
             project.webViewService?.postNotification(HostNotifications.DidReceiveRequest(url))
         }
     }
