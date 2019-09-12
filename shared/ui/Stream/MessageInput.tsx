@@ -699,6 +699,7 @@ export class MessageInput extends React.Component<Props, State> {
 						action: codemark.id
 					};
 				})
+				.reverse()
 				.filter(Boolean)
 		);
 		if (codemarks.length === 0) {
