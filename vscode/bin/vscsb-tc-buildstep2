@@ -53,6 +53,7 @@ elif args.action == 'pack':
 	# build.pack()                              # create asset info file and package assets
 	buildName = build.getDisplayVersion("name-version")  # codestream-1.2.3
 	fullName = build.getDisplayVersion("full")           # [prefix-]codestream-1.2.3+1000
+	build.writeAssetInfo()                      # this is an 'early' asset info file (w/out md5 sums)
 	os.rename(f"{fullName}.info", f"{buildName}.info")
 	build.execCmd("npm run pack")
 	os.rename(f"{buildName}.vsix", f"{fullName}.vsix")
