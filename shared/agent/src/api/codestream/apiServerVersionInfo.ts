@@ -4,13 +4,13 @@ export const APIServerVersionInfo = {
 	// this is the minimum API server version required to run
 	// this version of the CodeStream plugin, if an earlier API
 	// server version is detected, the plugin won't run at all
-	minimumRequired: "1.21.12",
+	minimumRequired: "1.21.0",
 
 	// this is the minimum "preferred" API server version,
 	// if an earlier API server version is detected, the user
 	// will be recommended to get their admin to install a
 	// newer version
-	minimumPreferred: "1.21.12",
+	minimumPreferred: "1.21.11",
 
 	// this enumerates the capabilities that are available if
 	// the admin installs a newer version of the API server ...
