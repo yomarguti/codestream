@@ -47,3 +47,18 @@ Object.defineProperty(window, "acquireAtomApi", {
 		return api;
 	},
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+	document.addEventListener("keydown", e => {
+		ipcRenderer.sendToHost("did-keydown", {
+			key: e.key,
+			keyCode: e.keyCode,
+			code: e.code,
+			shiftKey: e.shiftKey,
+			altKey: e.altKey,
+			ctrlKey: e.ctrlKey,
+			metaKey: e.metaKey,
+			repeat: e.repeat,
+		});
+	});
+});

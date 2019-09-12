@@ -217,6 +217,9 @@ export class CodestreamView {
 						this.logger.log(type, message, JSON.stringify(args));
 					}
 				}
+			}
+			if (event.channel === "did-keydown") {
+				this._handleKeydownEvent(data as KeyboardEvent);
 			} else {
 				if (isIpcRequestMessage(data)) {
 					const target = data.method.split("/")[0];
@@ -248,6 +251,46 @@ export class CodestreamView {
 		});
 
 		this.element.append(this.webview);
+	}
+
+	private _handleKeydownEvent(event: KeyboardEvent) {
+		if (["Alt", "Meta", "Control", "Shift", "CapsLock"].includes(event.key)) return;
+
+		if (event.shiftKey) {
+			if (event.metaKey && event.key === "z") {
+				this.webview.redo();
+			}
+			return;
+		}
+
+		if (event.metaKey) {
+			switch (event.key) {
+				case "a":
+					this.webview.selectAll();
+					break;
+				case "c":
+					this.webview.copy();
+					break;
+				case "v":
+					this.webview.paste();
+					break;
+				case "x":
+					this.webview.cut();
+					break;
+				case "z":
+					this.webview.undo();
+					break;
+				default:
+			}
+		}
+
+		const emulatedKeyboardEvent = new KeyboardEvent("keydown", event);
+
+		Object.defineProperty(emulatedKeyboardEvent, "target", {
+			get: () => this.webview,
+		});
+		// not sure this is worth it
+		atom.keymaps.handleKeyboardEvent(emulatedKeyboardEvent);
 	}
 
 	private observeWorkspace() {
