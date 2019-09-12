@@ -47,6 +47,7 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
     private lateinit var htmlFile: File
 
     init {
+        logger.info("Initializing WebViewService for project ${project.basePath}")
         extractAssets()
 
         UIManager.addPropertyChangeListener {
@@ -123,7 +124,7 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
     }
 
     override fun dispose() {
-        logger.info("Disposing JxBrowser")
+        logger.info("Disposing WebViewService for project ${project.basePath}")
         browser.dispose()
 //        BrowserCore.shutdown()
     }
