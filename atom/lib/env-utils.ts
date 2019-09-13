@@ -29,14 +29,8 @@ export function getEnvConfigForServerUrl(url?: string): EnvironmentConfig {
 	if (!url) return PRODUCTION_CONFIG;
 
 	const matchedConfig = [PRODUCTION_CONFIG, PD_CONFIG, QA_CONFIG].find(
-		config => config.serverUrl === normalizeServerUrl(url)
+		config => config.serverUrl === url
 	);
 
-	return matchedConfig || { name: Environment.Unknown, serverUrl: normalizeServerUrl(url) };
-}
-
-export function normalizeServerUrl(url: string) {
-	if (url.endsWith("/")) return normalizeServerUrl(url.substring(0, url.length - 1));
-
-	return url;
+	return matchedConfig || { name: Environment.Unknown, serverUrl: url };
 }

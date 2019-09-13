@@ -2,7 +2,7 @@ import { BootstrapInHostResponse } from "@codestream/protocols/webview";
 import { Emitter } from "atom";
 import { debounce } from "lodash-es";
 import { FileLogger } from "logger";
-import { EnvironmentConfig, getEnvConfigForServerUrl, normalizeServerUrl } from "../env-utils";
+import { EnvironmentConfig, getEnvConfigForServerUrl } from "../env-utils";
 import {
 	Capabilities,
 	DidChangeApiVersionCompatibilityNotification,
@@ -91,10 +91,7 @@ export class WorkspaceSession {
 
 	static create(state: PackageState) {
 		let session = state.session;
-		if (
-			state.session &&
-			state.session.token.url !== normalizeServerUrl(Container.configs.get("serverUrl"))
-		) {
+		if (state.session && state.session.token.url !== Container.configs.get("serverUrl")) {
 			session = undefined;
 		}
 		return new WorkspaceSession(session, state.lastUsedEmail);
@@ -106,14 +103,6 @@ export class WorkspaceSession {
 		this.emitter = new Emitter();
 		this._agent = new CodeStreamAgent(this.envConfig);
 		this.lastUsedEmail = lastUsedEmail;
-		Container.configs.onDidChange(
-			"serverUrl",
-			debounce(() => {
-				if (!this.session) {
-					this.restart();
-				}
-			}, 2000)
-		);
 		this.initialize();
 	}
 
@@ -302,9 +291,7 @@ export class WorkspaceSession {
 
 	async restart(reason?: SignoutReason) {
 		this.signOut(reason);
-		this.envConfig = getEnvConfigForServerUrl(
-			normalizeServerUrl(Container.configs.get("serverUrl"))
-		);
+		this.envConfig = getEnvConfigForServerUrl(Container.configs.get("serverUrl"));
 		await this.initializeAgent();
 	}
 }
