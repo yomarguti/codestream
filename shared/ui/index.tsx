@@ -33,7 +33,7 @@ import {
 	ThirdPartyProviders,
 	GetDocumentFromMarkerRequestType
 } from "@codestream/protocols/agent";
-import { CSApiCapabilities } from "@codestream/protocols/api";
+import { CSApiCapabilities, CodemarkType } from "@codestream/protocols/api";
 import translations from "./translations/en";
 import { apiUpgradeRecommended, apiUpgradeRequired } from "./store/apiVersioning/actions";
 import { getCodemark } from "./store/codemarks/reducer";
@@ -54,6 +54,7 @@ import { blur, focus, setCurrentStream, setCurrentCodemark } from "./store/conte
 import { isNotOnDisk } from "./utils";
 import { URI } from "vscode-uri";
 import { CodemarkDetails } from "./Stream/CodemarkDetails";
+import { moveCursorToLine } from "./Stream/CodemarkView";
 
 export { HostApi };
 
@@ -258,7 +259,7 @@ export function listenForEvents(store) {
 			query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || "");
 		}
 		return query;
-	}
+	};
 
 	const parseProtocol = function(uriString: string | undefined): Route | undefined {
 		if (!uriString) return undefined;
@@ -322,7 +323,10 @@ export function listenForEvents(store) {
 					switch (route.action) {
 						case "open": {
 							if (route.id) {
-								store.dispatch(setCurrentCodemark(route.id));
+								const codemark = getCodemark(store.getState().codemarks, route.id);
+								if (codemark && codemark.type === CodemarkType.Link)
+									moveCursorToLine(codemark!.markerIds![0]);
+								else store.dispatch(setCurrentCodemark(route.id));
 							}
 							break;
 						}

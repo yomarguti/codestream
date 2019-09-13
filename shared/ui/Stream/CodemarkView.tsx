@@ -12,7 +12,7 @@ import { HostApi } from "../webview-api";
 import { GetDocumentFromMarkerRequestType } from "@codestream/protocols/agent";
 import { EditorSelectRangeRequestType } from "@codestream/protocols/webview";
 
-async function moveCursorToLine(markerId: string) {
+export async function moveCursorToLine(markerId: string) {
 	const hostApi = HostApi.instance;
 	try {
 		const response = await hostApi.send(GetDocumentFromMarkerRequestType, {
