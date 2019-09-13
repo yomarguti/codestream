@@ -263,7 +263,7 @@ class Post extends React.Component {
 						<CodemarkActions
 							codemark={codemark}
 							capabilities={this.props.capabilities}
-							isAuthor={this.props.author.id === this.props.codemarkAuthor.id}
+							isAuthor={safe(() => this.props.author.id === this.props.codemarkAuthor.id) || false}
 							alwaysRenderCode={true}
 						/>
 					) : (

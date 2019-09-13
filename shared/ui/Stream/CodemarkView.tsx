@@ -47,6 +47,7 @@ export function CodemarkView() {
 		HostApi.instance.track("Page Viewed", { "Page Name": "Codemark View" });
 		if (codemark == undefined) {
 			// TODO: fetch it when we have the api for that
+			dispatch(setCurrentCodemark());
 		}
 
 		const subscription = VsCodeKeystrokeDispatcher.on("keydown", event => {
