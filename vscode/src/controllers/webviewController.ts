@@ -255,9 +255,12 @@ export class WebviewController implements Disposable {
 	}
 
 	@log()
-	reload() {
+	reload(reset: boolean = false) {
 		if (this._webview === undefined || !this.visible) return;
 
+		if (reset) {
+			this._context = undefined;
+		}
 		return this._webview.reload();
 	}
 
@@ -640,7 +643,9 @@ export class WebviewController implements Disposable {
 				break;
 			}
 			case ReloadWebviewRequestType.method: {
-				webview.onIpcRequest(ReloadWebviewRequestType, e, async (type, params) => this.reload());
+				webview.onIpcRequest(ReloadWebviewRequestType, e, async (type, params) =>
+					this.reload(true)
+				);
 
 				break;
 			}
