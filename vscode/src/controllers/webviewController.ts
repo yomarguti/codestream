@@ -115,7 +115,7 @@ export class WebviewController implements Disposable {
 			window.onDidChangeVisibleTextEditors(this.onVisibleEditorsChanged, this)
 		);
 
-		this._lastEditor = Editor.getActiveOrVisible();
+		this._lastEditor = Editor.getActiveOrVisible(undefined, this._lastEditor);
 
 		this._notifyActiveEditorChangedDebounced = Functions.debounce(
 			this.notifyActiveEditorChanged,
@@ -140,7 +140,7 @@ export class WebviewController implements Disposable {
 	}
 
 	private onActiveEditorChanged(e: TextEditor | undefined) {
-		this.setLastEditor(Editor.getActiveOrVisible(e));
+		this.setLastEditor(Editor.getActiveOrVisible(e, this._lastEditor));
 	}
 
 	private async onSessionStatusChanged(e: SessionStatusChangedEvent) {
@@ -167,7 +167,7 @@ export class WebviewController implements Disposable {
 				break;
 
 			case SessionStatus.SignedIn:
-				this._lastEditor = Editor.getActiveOrVisible();
+				this._lastEditor = Editor.getActiveOrVisible(undefined, this._lastEditor);
 
 				const state = Container.context.workspaceState.get<WebviewState>(
 					WorkspaceState.webviewState,
@@ -191,7 +191,7 @@ export class WebviewController implements Disposable {
 		// If the last editor is still in the visible list do nothing
 		if (this._lastEditor !== undefined && e.includes(this._lastEditor)) return;
 
-		this.setLastEditor(Editor.getActiveOrVisible());
+		this.setLastEditor(Editor.getActiveOrVisible(undefined, this._lastEditor));
 	}
 
 	get activeStreamThread() {

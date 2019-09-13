@@ -26,19 +26,34 @@ const highlightDecorationType = window.createTextEditorDecorationType({
 });
 
 export namespace Editor {
+	export function findEditor(uri: Uri): TextEditor | undefined {
+		const normalizedUri = uri.toString(false);
+
+		let e = window.activeTextEditor;
+		if (e !== undefined && e.document.uri.toString(false) === normalizedUri) {
+			return e;
+		}
+
+		for (e of window.visibleTextEditors) {
+			if (e.document.uri.toString(false) === normalizedUri) {
+				return e;
+			}
+		}
+
+		return undefined;
+	}
+
 	export async function findOrOpenEditor(
 		uri: Uri,
 		options: TextDocumentShowOptions & { rethrow?: boolean } = {}
 	): Promise<TextEditor | undefined> {
-		const normalizedUri = uri.toString(false);
-
-		for (const e of window.visibleTextEditors) {
-			if (e.document.uri.toString(false) === normalizedUri) {
-				if (!options.preserveFocus) {
-					await window.showTextDocument(e.document, { ...options, viewColumn: e.viewColumn });
-				}
-				return e;
+		const e = findEditor(uri);
+		if (e !== undefined) {
+			if (!options.preserveFocus) {
+				await window.showTextDocument(e.document, { ...options, viewColumn: e.viewColumn });
 			}
+
+			return e;
 		}
 
 		// FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
@@ -53,18 +68,26 @@ export namespace Editor {
 		return openEditor(uri, { viewColumn: column, ...options });
 	}
 
-	export function getActiveOrVisible(active?: TextEditor) {
+	export function getActiveOrVisible(active?: TextEditor, lastActive?: TextEditor) {
 		const editor = active || window.activeTextEditor;
 		if (editor !== undefined && Editor.isTextEditor(editor)) {
 			return editor;
 		}
 
 		if (window.visibleTextEditors.length !== 0) {
+			let firstValid;
+
 			for (const e of window.visibleTextEditors) {
 				if (Editor.isTextEditor(e)) {
-					return e;
+					if (firstValid === undefined) {
+						firstValid = e;
+					}
 				}
+
+				if (e === lastActive) return e;
 			}
+
+			return firstValid;
 		}
 
 		return undefined;
@@ -94,7 +117,6 @@ export namespace Editor {
 			for (const e of window.visibleTextEditors) {
 				if (e.document.uri.toString(false) === normalizedUri) {
 					e.setDecorations(highlightDecorationType, []);
-					return true;
 				}
 			}
 			return true;
@@ -147,16 +169,7 @@ export namespace Editor {
 		position: Position,
 		options: { atTop?: boolean } = {}
 	): Promise<void> {
-		const normalizedUri = uri.toString(false);
-
-		let editor;
-		for (const e of window.visibleTextEditors) {
-			if (e.document.uri.toString(false) === normalizedUri) {
-				editor = e;
-				break;
-			}
-		}
-
+		const editor = findEditor(uri);
 		if (editor === undefined) return;
 
 		const revealType = options.atTop
