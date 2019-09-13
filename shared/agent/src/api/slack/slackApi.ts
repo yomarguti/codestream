@@ -808,8 +808,8 @@ export class SlackApiProvider implements ApiProvider {
 		if (!ok) return { posts: [] };
 		// if (!ok) throw new Error(error);
 
-		// Ensure the correct ordering
-		messages.sort((a: any, b: any) => a.ts - b.ts);
+		// Filter out the parent post (don't ask me why slack includes it) and ensure the correct ordering
+		messages.filter((m: any) => m.ts !== postId).sort((a: any, b: any) => a.ts - b.ts);
 
 		const usernamesById = await this.ensureUsernamesById();
 		const posts = await Promise.all(messages.map((m: any) =>
