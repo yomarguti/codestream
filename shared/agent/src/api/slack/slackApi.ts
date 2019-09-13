@@ -2151,12 +2151,12 @@ export class SlackApiProvider implements ApiProvider {
 			members.push(...data);
 		}
 
-		const users: CSUser[] = members
-			.map((m: any) =>
-				// Find ourselves and replace it with our model
-				m.id === this._slackUserId ? me : fromSlackUser(m, this._codestreamTeamId, codestreamUsers)
-			)
-			.filter(u => !u.deactivated);
+		const users: CSUser[] = members.map((m: any) =>
+			// Find ourselves and replace it with our model
+			m.id === this._slackUserId ? me : fromSlackUser(m, this._codestreamTeamId, codestreamUsers)
+		);
+		// Don't filter out deactivated users anymore to allow codemark by deleted users to show up properly
+		// .filter(u => !u.deactivated);
 
 		this._userIdMap = new Map(
 			users

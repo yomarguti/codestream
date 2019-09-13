@@ -1049,7 +1049,10 @@ export class MSTeamsApiProvider implements ApiProvider {
 				// Find ourselves and replace it with our model
 				if (m.id === this._teamsUserId) {
 					usersById.set(m.id, me);
-				} else if (m.deletedDateTime == null) {
+				}
+				// Don't filter out deactivated users anymore to allow codemark by deleted users to show up properly
+				// } else if (m.deletedDateTime == null) {
+				else {
 					usersById.set(m.id, fromTeamsUser(m, this._codestreamTeamId, codestreamUsers));
 				}
 			}
