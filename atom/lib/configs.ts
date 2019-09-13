@@ -1,9 +1,11 @@
 import { TraceLevel } from "@codestream/protocols/agent";
 import { WebviewConfigs } from "@codestream/protocols/webview";
 import { Disposable } from "atom";
+import { normalizeServerUrl } from "env-utils";
 import { PackageState } from "types/package";
 
 export interface ConfigSchema {
+	serverUrl: string;
 	team: string;
 	avatars: boolean;
 	showMarkers: boolean;
@@ -32,12 +34,12 @@ export class ConfigManager implements Disposable {
 		return atom.config.get(`codestream.${name}`);
 	}
 
-	getForWebview(serverUrl: string, email?: string): WebviewConfigs {
+	getForWebview(email?: string): WebviewConfigs {
 		return {
 			showHeadshots: this.get("avatars"),
 			debug: atom.inDevMode(),
 			team: this.get("team"),
-			serverUrl,
+			serverUrl: normalizeServerUrl(this.get("serverUrl")),
 			email,
 		};
 	}

@@ -264,6 +264,7 @@ class CodestreamPackage {
 				const env = Container.session.environment.name;
 				switch (env) {
 					case Environment.PD:
+					case Environment.QA:
 						return `${env}:`;
 					default:
 						return "";

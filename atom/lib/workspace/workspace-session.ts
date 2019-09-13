@@ -1,7 +1,8 @@
 import { BootstrapInHostResponse } from "@codestream/protocols/webview";
 import { Emitter } from "atom";
+import { debounce } from "lodash-es";
 import { FileLogger } from "logger";
-import { EnvironmentConfig, PRODUCTION_CONFIG } from "../env-utils";
+import { EnvironmentConfig, getEnvConfigForServerUrl, normalizeServerUrl } from "../env-utils";
 import {
 	Capabilities,
 	DidChangeApiVersionCompatibilityNotification,
@@ -89,19 +90,32 @@ export class WorkspaceSession {
 	}
 
 	static create(state: PackageState) {
-		return new WorkspaceSession(state.session, state.lastUsedEmail, state.environment);
+		let session = state.session;
+		if (state.session && state.session.token.url !== Container.configs.get("serverUrl")) {
+			session = undefined;
+		}
+		return new WorkspaceSession(session, state.lastUsedEmail);
 	}
 
-	protected constructor(
-		session?: Session,
-		lastUsedEmail?: string,
-		envConfig: EnvironmentConfig = PRODUCTION_CONFIG
-	) {
-		this.emitter = new Emitter();
-		this._agent = new CodeStreamAgent(envConfig);
+	protected constructor(session?: Session, lastUsedEmail?: string) {
 		this.session = session;
+		this.envConfig = getEnvConfigForServerUrl(Container.configs.get("serverUrl"));
+		this.emitter = new Emitter();
+		this._agent = new CodeStreamAgent(this.envConfig);
 		this.lastUsedEmail = lastUsedEmail;
-		this.envConfig = envConfig;
+		Container.configs.onDidChange(
+			"serverUrl",
+			debounce(async ({ newValue }) => {
+				const normalizedServerUrl = normalizeServerUrl(newValue);
+				if (normalizedServerUrl !== newValue) {
+					Container.configs.set("serverUrl", normalizedServerUrl);
+				} else {
+					if (!this.session) {
+						this.changeEnvironment(getEnvConfigForServerUrl(newValue));
+					}
+				}
+			}, 2000)
+		);
 		this.initialize();
 	}
 
@@ -147,7 +161,6 @@ export class WorkspaceSession {
 		return {
 			session: this.session,
 			lastUsedEmail: this.session ? this.session.user.email : this.lastUsedEmail,
-			environment: this.envConfig,
 		};
 	}
 
@@ -222,7 +235,7 @@ export class WorkspaceSession {
 			missingCapabilities: apiCompability.missingCapabilities,
 			session: { userId: this.isSignedIn ? this.user!.id : undefined },
 			capabilities: this.capabilities,
-			configs: Container.configs.getForWebview(this.environment.serverUrl, this.lastUsedEmail),
+			configs: Container.configs.getForWebview(this.lastUsedEmail),
 			version: getPluginVersion(),
 			ide: { name: "Atom" },
 		};
@@ -291,6 +304,7 @@ export class WorkspaceSession {
 
 	async restart(reason?: SignoutReason) {
 		this.signOut(reason);
+		this.envConfig = getEnvConfigForServerUrl(Container.configs.get("serverUrl"));
 		await this.initializeAgent();
 	}
 

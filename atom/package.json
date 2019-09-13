@@ -51,6 +51,11 @@
 		}
 	},
 	"configSchema": {
+		"serverUrl": {
+			"type": "string",
+			"default": "https://api.codestream.com",
+			"description": "Specifies the url to use to connect to the CodeStream service"
+		},
 		"team": {
 			"type": "string",
 			"default": "",
@@ -125,6 +130,7 @@
 		"atom-package-deps": "5.1.0",
 		"core-js": "2.6.9",
 		"fs-plus": "3.1.1",
+		"lodash-es": "4.17.15",
 		"uuid": "3.3.2",
 		"vscode-jsonrpc": "4.0.0",
 		"vscode-languageserver-protocol": "3.14.1"
