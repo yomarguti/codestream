@@ -76,7 +76,8 @@ class CodestreamPackage {
 			}),
 			atom.commands.add("atom-workspace", "codestream:point-to-qa", {
 				didDispatch: async () => {
-					await session.changeEnvironment(QA_CONFIG);
+					Container.configs.set("serverUrl", QA_CONFIG.serverUrl);
+					await session.restart();
 					this.environmentChangeEmitter.push(QA_CONFIG);
 					Container.viewController.reload(CODESTREAM_VIEW_URI);
 				},
@@ -84,7 +85,8 @@ class CodestreamPackage {
 			}),
 			atom.commands.add("atom-workspace", "codestream:point-to-dev", {
 				didDispatch: async () => {
-					await session.changeEnvironment(PD_CONFIG);
+					Container.configs.set("serverUrl", PD_CONFIG.serverUrl);
+					await session.restart();
 					this.environmentChangeEmitter.push(PD_CONFIG);
 					Container.viewController.reload(CODESTREAM_VIEW_URI);
 				},
@@ -92,7 +94,8 @@ class CodestreamPackage {
 			}),
 			atom.commands.add("atom-workspace", "codestream:point-to-production", {
 				didDispatch: async () => {
-					await session.changeEnvironment(PRODUCTION_CONFIG);
+					Container.configs.set("serverUrl", PRODUCTION_CONFIG.serverUrl);
+					await session.restart();
 					this.environmentChangeEmitter.push(PRODUCTION_CONFIG);
 					Container.viewController.reload(CODESTREAM_VIEW_URI);
 				},
