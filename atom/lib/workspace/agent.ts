@@ -348,6 +348,9 @@ export class CodeStreamAgent extends AgentConnection implements Disposable {
 		connection.onCustom(DidChangeVersionCompatibilityNotificationType.method, notification =>
 			this.emitter.emit(DidChangeVersionCompatibilityNotificationType.method, notification)
 		);
+		connection.onCustom(DidChangeApiVersionCompatibilityNotificationType.method, notification =>
+			this.emitter.emit(DidChangeApiVersionCompatibilityNotificationType.method, notification)
+		);
 	}
 
 	private onLogMessage = (params: LogMessageParams) => {
