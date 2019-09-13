@@ -322,6 +322,7 @@ namespace CodeStream.VisualStudio.Services {
 
 				WebviewContext webviewContext;
 				var teamId = state["teamId"].ToString();
+				_sessionService.TeamId = teamId;
 				var webViewUserSettingsService = componentModel.GetService<IWebviewUserSettingsService>();
 				var userSettings = webViewUserSettingsService?.TryGetWebviewContext(_sessionService.SolutionName, teamId);
 				if (userSettings != null) {

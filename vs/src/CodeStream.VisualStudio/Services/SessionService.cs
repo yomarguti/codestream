@@ -17,6 +17,7 @@ namespace CodeStream.VisualStudio.Services {
 
 		public User User { get; private set; }
 		public JToken State { get; private set; }
+		public string TeamId { get; set; }
 		public SessionState SessionState { get; private set; }
 		public List<string> PanelStack { get; set; }
 		public bool IsWebViewVisible { get; set; }
@@ -73,6 +74,7 @@ namespace CodeStream.VisualStudio.Services {
 			WebViewDidInitialize = false;
 			User = null;
 			State = null;
+			TeamId = null;
 			SetState(SessionState.UserSignedOut);
 		}
 

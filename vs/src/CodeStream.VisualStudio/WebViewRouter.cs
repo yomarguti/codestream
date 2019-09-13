@@ -362,6 +362,7 @@ namespace CodeStream.VisualStudio {
 										}
 									case ReloadWebviewRequestType.MethodName: {
 											using (_browserService.CreateScope(message)) {
+												_webviewUserSettingsService.TryClearContext(_sessionService.SolutionName, _sessionService.TeamId);
 												_browserService.ReloadWebView();
 											}
 											break;

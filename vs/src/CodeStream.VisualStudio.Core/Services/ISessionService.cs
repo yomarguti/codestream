@@ -1,12 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Threading;
-using CodeStream.VisualStudio.Core.Models;
+﻿using CodeStream.VisualStudio.Core.Models;
 using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 
 namespace CodeStream.VisualStudio.Core.Services {
 	public interface ISessionService {
 		User User { get; }
-		JToken State { get; }		
+		JToken State { get; }
+		string TeamId { get; set; }
 		void SetState(SessionState state);
 		SessionState SessionState { get; }
 		void SetUser(User user, JToken state);

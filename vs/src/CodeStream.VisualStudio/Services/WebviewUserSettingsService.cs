@@ -1,10 +1,11 @@
 ﻿using System;
 using System.ComponentModel.Composition;
-using System.Threading.Tasks;
 using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Services;
 using Microsoft.VisualStudio.Shell;
+using Serilog;
 
 namespace CodeStream.VisualStudio.Services {
 	/// <summary>
@@ -13,7 +14,9 @@ namespace CodeStream.VisualStudio.Services {
 	/// </summary>
 	[Export(typeof(IWebviewUserSettingsService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
-	public class WebviewUserSettingsService : UserSettingsService, IWebviewUserSettingsService { 
+	public class WebviewUserSettingsService : UserSettingsService, IWebviewUserSettingsService {
+		private static readonly ILogger Log = LogManager.ForContext<WebviewUserSettingsService>();
+
 		[ImportingConstructor]
 		public WebviewUserSettingsService([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) : base(serviceProvider) { }
 
@@ -29,6 +32,18 @@ namespace CodeStream.VisualStudio.Services {
 			if (context == null || context.CurrentTeamId.IsNullOrWhiteSpace()) return false;
 
 			return Save($"{solutionName}.{context.CurrentTeamId}", UserSettingsKeys.WebviewContext, context);
+		}
+
+		public bool TryClearContext(string solutionName, string teamId) {
+			try {
+				if (teamId.IsNullOrWhiteSpace()) return false;
+
+				return Save($"{solutionName}.{teamId}", UserSettingsKeys.WebviewContext, null);
+			}
+			catch (Exception ex) {
+				Log.Warning(ex, nameof(TryClearContext));
+				return false;
+			}
 		}
 
 		public WebviewContext TryGetWebviewContext(string solutionName, string teamId) {
