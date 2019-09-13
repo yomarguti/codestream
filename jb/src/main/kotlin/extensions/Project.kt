@@ -45,3 +45,30 @@ val Project.baseUri: String?
             null
         }
     }
+
+val Project.projectPaths: Set<String>
+    get() {
+        var paths = basePath?.let { mutableSetOf(it) } ?: mutableSetOf()
+        val moduleManager = getComponent(ModuleManager::class.java)
+        for (module in moduleManager.modules) {
+            val roots = (module.moduleContentScope as? ModuleWithDependenciesScope)?.roots ?: continue
+            val modulePaths = roots.map { it.path }
+            paths.addAll(modulePaths)
+        }
+        return paths
+    }
+
+fun Project.intersectsAny(paths: Array<String>): Boolean {
+    val projectDirs = projectPaths.map { File(it) }
+    val otherDirs = paths.map { File(it) }
+
+    for (projectDir in projectDirs) {
+        for (otherDir in otherDirs) {
+            if (projectDir.startsWith(otherDir) || otherDir.startsWith(projectDir)) {
+                return true
+            }
+        }
+    }
+
+    return false
+}
