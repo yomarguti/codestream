@@ -51,13 +51,12 @@ elif args.action == 'citest':
 	print("there are no tests for this project")
 elif args.action == 'pack':
 	# build.pack()                              # create asset info file and package assets
-	buildName = build.getDisplayVersion("name-version")  # codestream-1.2.3
-	fullName = build.getDisplayVersion("full")           # [prefix-]codestream-1.2.3+1000
-	build.writeAssetInfo()                      # this is an 'early' asset info file (w/out md5 sums)
-	os.rename(f"{fullName}.info", f"{buildName}.info")
+	buildName = build.getDisplayVersion("name-version")          # codestream-1.2.3
+	fullName = build.getDisplayVersion("full")                   # [prefix-]codestream-1.2.3+1000
+	build.writeAssetInfo(assetInfoFileName=f"{buildName}.info")  # used by vsix to display version & build info
 	build.execCmd("npm run pack")
 	os.rename(f"{buildName}.vsix", f"{fullName}.vsix")
-	os.rename(f"{buildName}.info", f"{fullName}.info")
+	os.unlink(f"{buildName}.info")
 	build.getMD5SumsForAssets()
 	build.writeAssetInfo()
 elif args.action == 'publish':
