@@ -50,12 +50,13 @@ namespace CodeStream.VisualStudio.Core.Logging {
 						fileSizeLimitBytes: 52428800,
 						shared: true);
 
-				if (ProcessExtensions.IsVisualStudioProcess()) {
-					// this can cause performance issues if used at Verbose mode
-					configuration.WriteTo.CustomOutput(Guids.LoggingOutputPaneGuid, "CodeStream",
-						outputTemplate: template,
-						restrictedToMinimumLevel: LogEventLevel.Error);
-				}
+				// writing to this output request the UI thread...
+				//if (ProcessExtensions.IsVisualStudioProcess()) {
+				//	// this can cause performance issues if used at Verbose mode
+				//	configuration.WriteTo.CustomOutput(Guids.LoggingOutputPaneGuid, "CodeStream",
+				//		outputTemplate: template,
+				//		restrictedToMinimumLevel: LogEventLevel.Error);
+				//}
 
 				return configuration.CreateLogger();
 			}

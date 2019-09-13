@@ -34,6 +34,8 @@ namespace CodeStream.VisualStudio.Core.Logging {
 
 		public static bool IsDebugEnabled(this ILogger log) => log.IsEnabled(LogEventLevel.Debug);
 
+		public static bool IsInformationEnabled(this ILogger log) => log.IsEnabled(LogEventLevel.Information);
+
 		public static bool IsVerboseEnabled(this ILogger log) => log.IsEnabled(LogEventLevel.Verbose);
 
 		public static Metrics WithMetrics(this ILogger log, string message) {

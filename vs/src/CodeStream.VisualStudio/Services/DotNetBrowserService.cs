@@ -1,17 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Diagnostics;
-using System.IO;
-using System.Reflection;
-using System.Resources;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using CodeStream.VisualStudio.Commands;
+﻿using CodeStream.VisualStudio.Commands;
 using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Extensions;
@@ -26,6 +13,19 @@ using DotNetBrowser.WPF;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 using Serilog;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.ComponentModel.Composition;
+using System.Diagnostics;
+using System.IO;
+using System.Reflection;
+using System.Resources;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using static CodeStream.VisualStudio.Core.Extensions.FileSystemExtensions;
 using Application = CodeStream.VisualStudio.Core.Application;
 
@@ -210,9 +210,7 @@ namespace CodeStream.VisualStudio.Services {
 			browser.ScriptContextCreated += Browser_ScriptContextCreated;
 
 			_browserView = new WPFBrowserView(browser);
-#if DEBUG
 			browser.ConsoleMessageEvent += Browser_ConsoleMessageEvent;
-#endif
 
 			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut1Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D1)));
 			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut2Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D2)));
@@ -254,21 +252,6 @@ namespace CodeStream.VisualStudio.Services {
 			   ");
 
 			Log.Verbose($"{nameof(Browser_ScriptContextCreated)} ExecuteJavaScript");
-		}
-
-		private void Browser_ConsoleMessageEvent(object sender, ConsoleEventArgs e) {
-			if (e.Level == ConsoleEventArgs.MessageLevel.DEBUG) {
-				Log.Verbose($"Browser:Message={e.Message} Source={e.Source} Line={e.LineNumber}");
-			}
-			else if (e.Level == ConsoleEventArgs.MessageLevel.LOG) {
-				Log.Verbose($"Browser:Message={e.Message} Source={e.Source} Line={e.LineNumber}");
-			}
-			else if (e.Level == ConsoleEventArgs.MessageLevel.WARNING && Log.IsVerboseEnabled()) {
-				Log.Warning($"Browser:Message={e.Message} Source={e.Source} Line={e.LineNumber}");
-			}
-			else if (e.Level == ConsoleEventArgs.MessageLevel.ERROR && Log.IsVerboseEnabled()) {
-				Log.Error($"Browser:Message={e.Message} Source={e.Source} Line={e.LineNumber}");
-			}
 		}
 
 		public void AddWindowMessageEvent(WindowMessageHandler messageHandler) {
@@ -475,6 +458,27 @@ namespace CodeStream.VisualStudio.Services {
 			return default(T);
 		}
 
+		private static string FormatConsoleMessage(ConsoleEventArgs e) {			
+			return $"Browser: Message={e?.Message} Source={e?.Source} Line={e?.LineNumber} Level={e.Level}";
+		}
+
+		private void Browser_ConsoleMessageEvent(object sender, ConsoleEventArgs e) {
+			if (e.Level == ConsoleEventArgs.MessageLevel.DEBUG && Log.IsVerboseEnabled()) {
+				Log.Verbose(FormatConsoleMessage(e));
+			}
+			if (e.Level == ConsoleEventArgs.MessageLevel.LOG && Log.IsDebugEnabled()) {
+				Log.Debug(FormatConsoleMessage(e));
+			}
+			else if (e.Level == ConsoleEventArgs.MessageLevel.WARNING) {
+				Log.Warning(FormatConsoleMessage(e));
+			}
+			else if (e.Level == ConsoleEventArgs.MessageLevel.ERROR) {
+				Log.Error(FormatConsoleMessage(e));
+			}
+			else {
+				Log.Verbose(FormatConsoleMessage(e));
+			}
+		}
 
 		private bool _isDisposed;
 
@@ -501,14 +505,13 @@ namespace CodeStream.VisualStudio.Services {
 					catch (Exception ex) {
 						Log.Warning(ex, "aux component failed to dispose");
 					}
-#if DEBUG
+
 					try {
 						_browserView.Browser.ConsoleMessageEvent -= Browser_ConsoleMessageEvent;
 					}
 					catch (Exception ex) {
 						Log.Error(ex, nameof(Browser_ConsoleMessageEvent));
 					}
-#endif
 
 					if (_browserView == null) {
 						Log.Verbose("DotNetBrowser is null");
