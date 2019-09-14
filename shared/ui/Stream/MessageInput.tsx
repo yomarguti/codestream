@@ -676,6 +676,7 @@ export class MessageInput extends React.Component<Props, State> {
 		const { codemarks = [] } = this.props;
 		menuItems = menuItems.concat(
 			codemarks
+				.sort((a, b) => b.createdAt - a.createdAt)
 				.map(codemark => {
 					if (codemark.deactivated) return null;
 					const title = codemark.title || codemark.text;
@@ -699,7 +700,6 @@ export class MessageInput extends React.Component<Props, State> {
 						action: codemark.id
 					};
 				})
-				.reverse()
 				.filter(Boolean)
 		);
 		if (codemarks.length === 0) {
