@@ -1,5 +1,5 @@
 "use strict";
-import { ActionsBlock, Block, KnownBlock, MessageAttachment } from "@slack/web-api";
+import { ActionsBlock, KnownBlock, MessageAttachment } from "@slack/web-api";
 import { SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import {
@@ -759,7 +759,7 @@ export function toSlackPostBlocks(
 				elements: [
 					{
 						type: "button",
-						action_id: `${counter}:Permalink|${codemark.id}|${marker.id}`,
+						action_id: `${counter}:Permalink|${id}&markerId=${marker.id}`,
 						text: {
 							type: "plain_text",
 							text: "Open on CodeStream"
@@ -773,7 +773,7 @@ export function toSlackPostBlocks(
 			if (codemark.externalProvider !== undefined && codemark.externalProviderUrl !== undefined) {
 				actions.elements.push({
 					type: "button",
-					action_id: `${counter}:IssueProvider(${codemark.externalProvider})|${codemark.id}`,
+					action_id: `${counter}:IssueProvider(${codemark.externalProvider})|${id}`,
 					text: {
 						type: "plain_text",
 						text: `Open on ${providerNamesById.get(codemark.externalProvider) ||
@@ -785,7 +785,7 @@ export function toSlackPostBlocks(
 
 			actions.elements.push({
 				type: "button",
-				action_id: `${counter}:Permalink-IDE|${codemark.id}|${marker.id}`,
+				action_id: `${counter}:Permalink-IDE|${id}&markerId=${marker.id}`,
 				text: {
 					type: "plain_text",
 					text: "Open in IDE"
@@ -797,7 +797,7 @@ export function toSlackPostBlocks(
 			if (url !== undefined) {
 				actions.elements.push({
 					type: "button",
-					action_id: `${counter}:CodeProvider(${url.displayName})|${codemark.id}|${marker.id}`,
+					action_id: `${counter}:CodeProvider(${url.name})|${id}&markerId=${marker.id}`,
 					text: {
 						type: "plain_text",
 						text: `Open on ${url.displayName}`
@@ -817,7 +817,7 @@ export function toSlackPostBlocks(
 			elements: [
 				{
 					type: "button",
-					action_id: `${counter}:Permalink|${codemark.id}`,
+					action_id: `${counter}:Permalink|${id}`,
 					text: {
 						type: "plain_text",
 						text: "Open on CodeStream"
@@ -831,7 +831,7 @@ export function toSlackPostBlocks(
 		if (codemark.externalProvider !== undefined && codemark.externalProviderUrl !== undefined) {
 			actions.elements.push({
 				type: "button",
-				action_id: `${counter}:IssueProvider(${codemark.externalProvider})|${codemark.id}`,
+				action_id: `${counter}:IssueProvider(${codemark.externalProvider})|${id}`,
 				text: {
 					type: "plain_text",
 					text: `Open on ${codemark.externalProvider}`
@@ -842,7 +842,7 @@ export function toSlackPostBlocks(
 
 		actions.elements.push({
 			type: "button",
-			action_id: `${counter}:Permalink-IDE|${codemark.id}`,
+			action_id: `${counter}:Permalink-IDE|${id}`,
 			text: {
 				type: "plain_text",
 				text: "Open in IDE"
