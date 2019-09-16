@@ -219,12 +219,13 @@ class CodestreamPackage {
 			})
 		);
 		doTimes(9, i => {
+			const count = i + 1;
 			this.subscriptions.add(
-				atom.commands.add("atom-workspace", `codestream:go-to-codemark-${i}`, async () => {
+				atom.commands.add("atom-workspace", `codestream:go-to-codemark-${count}`, async () => {
 					const response = await Container.session.agent.request(
 						GetDocumentFromKeyBindingRequestType,
 						{
-							key: i,
+							key: count,
 						}
 					);
 

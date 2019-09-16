@@ -110,6 +110,7 @@ function getExtensionConfig(env) {
 					},
 				}),
 			],
+			usedExports: true,
 		},
 		resolve: {
 			extensions: [".ts", ".tsx", ".js", ".jsx"],

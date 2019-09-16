@@ -125,7 +125,7 @@
 		"split-diff"
 	],
 	"dependencies": {
-		"@teamcodestream/js-utils": "0.1.0",
+		"@teamcodestream/js-utils": "0.2.0",
 		"atom-languageclient": "0.9.9",
 		"atom-package-deps": "5.1.0",
 		"core-js": "2.6.9",
