@@ -776,7 +776,7 @@ export function toSlackPostBlocks(
 					action_id: `${counter}:IssueProvider(${codemark.externalProvider})|${id}`,
 					text: {
 						type: "plain_text",
-						text: `Open on ${providerNamesById.get(codemark.externalProvider) ||
+						text: `Open Issue on ${providerNamesById.get(codemark.externalProvider) ||
 							codemark.externalProvider}`
 					},
 					url: codemark.externalProviderUrl
@@ -834,7 +834,7 @@ export function toSlackPostBlocks(
 				action_id: `${counter}:IssueProvider(${codemark.externalProvider})|${id}`,
 				text: {
 					type: "plain_text",
-					text: `Open on ${codemark.externalProvider}`
+					text: `Open Issue on ${codemark.externalProvider}`
 				},
 				url: codemark.externalProviderUrl
 			});
