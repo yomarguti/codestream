@@ -1,5 +1,6 @@
 "use strict";
 import { RequestType } from "vscode-languageserver-protocol";
+import { ThirdPartyProviderUser } from "./agent.protocol";
 import {
 	CodemarkType,
 	CSCodemark,
@@ -148,6 +149,10 @@ export interface UpdateCodemarkRequest {
 	assignees?: string[];
 	title?: string;
 	text?: string;
+	externalAssignees?: ThirdPartyProviderUser[];
+	externalProvider?: string;
+	externalProviderHost?: string;
+	externalProviderUrl?: string;
 }
 export interface UpdateCodemarkResponse {
 	codemark: CodemarkPlus;
