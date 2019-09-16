@@ -1,5 +1,5 @@
 "use strict";
-import { MessageAttachment } from "@slack/web-api";
+import { ActionsBlock, Block, KnownBlock, MessageAttachment } from "@slack/web-api";
 import { SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import {
@@ -14,6 +14,7 @@ import {
 	CSUser,
 	StreamType
 } from "../../protocol/api.protocol";
+import { providerNamesById } from "../../providers/provider";
 import { Marker } from "../extensions";
 
 const defaultCreatedAt = 181886400000;
@@ -31,6 +32,8 @@ const slackChannelsRegex = /\<#(\w+)\|(\w+)\>/g;
 const slackMentionsRegex = /\<[@!](\w+)(?:\|(\w+))?\>/g;
 const slackLinkRegex = /\<((?:https?:\/\/|mailto:).*?)(?:\|(.*?))?\>/g;
 // const slackSlashCommandRegex = /^\/(\w+)(?:\b(?!@|[\(\{\[\<\-])|$)/;
+
+type Blocks = KnownBlock[];
 
 export function fromSlackChannelIdToType(
 	streamId: string
@@ -238,21 +241,30 @@ export async function fromSlackPost(
 	if (post.attachments && post.attachments.length !== 0) {
 		// Filter out unfurled links
 		// TODO: Turn unfurled images into files
-		const attachments = post.attachments.filter((a: any) => a.from_url == null);
-		if (attachments.length !== 0) {
-			codemark = await fromSlackPostCodemark(attachments, teamId);
-			if (!codemark) {
-				// legacy markers
-				const marker = await fromSlackPostMarker(attachments);
-				if (marker) {
-					codemark = await SessionContainer.instance().codemarks.getById(marker.codemarkId);
+
+		const blocks = post.blocks;
+		if (blocks != null && blocks.length !== 0) {
+			codemark = await fromSlackPostBlocksToCodemark(blocks, teamId);
+		}
+
+		if (codemark == null) {
+			// legacy slack posts with codemarks
+			const attachments = post.attachments.filter((a: any) => a.from_url == null);
+			if (attachments.length !== 0) {
+				codemark = await fromSlackPostAttachmentToCodemark(attachments, teamId);
+				if (codemark == null) {
+					// legacy markers
+					const marker = await fromSlackPostAttachmentToMarker(attachments);
+					if (marker) {
+						codemark = await SessionContainer.instance().codemarks.getById(marker.codemarkId);
+					}
 				}
-			}
-			if (!codemark) {
-				// Get text/fallback for attachments
-				text += "\n";
-				for (const attachment of attachments) {
-					text += `\n${attachment.text || attachment.fallback}`;
+				if (codemark == null) {
+					// Get text/fallback for attachments
+					text += "\n";
+					for (const attachment of attachments) {
+						text += `\n${attachment.text || attachment.fallback}`;
+					}
 				}
 			}
 		}
@@ -284,7 +296,22 @@ export async function fromSlackPost(
 	};
 }
 
-export async function fromSlackPostCodemark(
+export function fromSlackPostId<T extends string | undefined>(
+	postId: T,
+	streamId: string
+): { streamId: string; postId: T } {
+	if (postId == null) {
+		return { streamId: streamId, postId: postId };
+	}
+
+	const [sid, pid] = postId.split("|");
+	if (!pid) {
+		return { streamId: streamId, postId: postId };
+	}
+	return { streamId: sid, postId: pid as T };
+}
+
+async function fromSlackPostAttachmentToCodemark(
 	attachments: MessageAttachment[],
 	codestreamTeamId: string
 ): Promise<CSCodemark | undefined> {
@@ -310,23 +337,29 @@ export async function fromSlackPostCodemark(
 	}
 }
 
-export async function fromSlackPostMarker(
-	attachments: MessageAttachment[]
-): Promise<CSMarker | undefined> {
-	const attachment = attachments.find(
-		(a: any) => a.callback_id != null && markerAttachmentRegex.test(a.callback_id)
+async function fromSlackPostBlocksToCodemark(
+	blocks: Blocks,
+	codestreamTeamId: string
+): Promise<CSCodemark | undefined> {
+	const block = blocks.find(
+		(b: KnownBlock) =>
+			b.type === "context" && b.block_id != null && codemarkAttachmentRegex.test(b.block_id)
 	);
-	if (attachment == null) return undefined;
+	if (block == null) return undefined;
 
-	const match = markerAttachmentRegex.exec(attachment.callback_id || "");
+	const match = codemarkAttachmentRegex.exec(block.block_id || "");
 	if (match == null) return undefined;
 
-	const [, markerId] = match;
+	const [, codemarkId, teamId] = match;
+
+	if (teamId && teamId !== codestreamTeamId) {
+		return undefined;
+	}
 
 	try {
-		return await SessionContainer.instance().markers.getById(markerId);
+		return await SessionContainer.instance().codemarks.getById(codemarkId);
 	} catch (ex) {
-		Logger.error(ex, `Failed to find marker=${markerId}`);
+		Logger.error(ex, `Failed to find codemark=${codemarkId}`);
 		return undefined;
 	}
 }
@@ -374,23 +407,25 @@ export function fromSlackPostFile(file: any) {
 	};
 }
 
-export function fromSlackPostId<T extends string | undefined>(
-	postId: T,
-	streamId: string
-): { streamId: string; postId: T } {
-	if (postId == null) {
-		return { streamId: streamId, postId: postId };
-	}
+export async function fromSlackPostAttachmentToMarker(
+	attachments: MessageAttachment[]
+): Promise<CSMarker | undefined> {
+	const attachment = attachments.find(
+		(a: any) => a.callback_id != null && markerAttachmentRegex.test(a.callback_id)
+	);
+	if (attachment == null) return undefined;
 
-	const [sid, pid] = postId.split("|");
-	if (!pid) {
-		return { streamId: streamId, postId: postId };
-	}
-	return { streamId: sid, postId: pid as T };
-}
+	const match = markerAttachmentRegex.exec(attachment.callback_id || "");
+	if (match == null) return undefined;
 
-export function toSlackPostId(postId: string, streamId: string) {
-	return `${streamId}|${postId}`;
+	const [, markerId] = match;
+
+	try {
+		return await SessionContainer.instance().markers.getById(markerId);
+	} catch (ex) {
+		Logger.error(ex, `Failed to find marker=${markerId}`);
+		return undefined;
+	}
 }
 
 export function fromSlackPostText(
@@ -439,246 +474,6 @@ export function fromSlackPostText(
 	return text;
 }
 
-export function toSlackPostText(
-	text: string,
-	mentionedUserIds: string[] | undefined,
-	userIdsByName: Map<string, string>
-) {
-	if (text == null || text.length === 0) return text;
-
-	text = text
-		.replace("&", "&amp;")
-		.replace("<", "&lt;")
-		.replace(">", "&gt;");
-
-	const hasMentionedUsers = mentionedUserIds != null && mentionedUserIds.length !== 0;
-	if (hasMentionedUsers || pseudoMentionsRegex.test(text)) {
-		text = text.replace(mentionsRegex, (match: string, prefix: string, mentionName: string) => {
-			if (mentionName === "everyone" || mentionName === "channel" || mentionName === "here") {
-				return `${prefix}<!${mentionName}>`;
-			}
-
-			if (hasMentionedUsers) {
-				const userId = userIdsByName.get(mentionName);
-				if (userId !== undefined && mentionedUserIds!.includes(userId)) {
-					return `${prefix}<@${userId}>`;
-				}
-			}
-
-			return match;
-		});
-	}
-
-	if (text.startsWith("/me ")) {
-		text = text.substring(4);
-	}
-
-	return text;
-}
-
-export function toSlackPostAttachment(
-	codemark: CSCodemark,
-	remotes: string[] | undefined,
-	markers: CSMarker[] | undefined,
-	markerLocations: CSMarkerLocations[] | undefined,
-	usernamesById: Map<string, string>,
-	slackUserId: string
-): MessageAttachment {
-	let { color } = codemark;
-	if (color !== undefined) {
-		switch (color) {
-			case "blue":
-				color = "#3578ba";
-				break;
-			case "green":
-				color = "#7aba5d";
-				break;
-			case "yellow":
-				color = "#edd648";
-				break;
-			case "orange":
-				color = "#f1a340";
-				break;
-			case "red":
-				color = "#d9634f";
-				break;
-			case "purple":
-				color = "#b87cda";
-				break;
-			case "aqua":
-				color = "#5abfdc";
-				break;
-			case "gray":
-				color = "#888888";
-				break;
-			default:
-				color = undefined!;
-				break;
-		}
-	}
-
-	let author;
-	// let authorIcon;
-	let fields:
-		| {
-				title: string;
-				value: string;
-				short?: boolean;
-		  }[]
-		| undefined;
-	let text;
-	let title;
-	let fallback;
-
-	switch (codemark.type) {
-		case CodemarkType.Comment:
-			author = `${usernamesById.get(slackUserId)} commented on code`;
-			fallback = `\n${author}`;
-
-			text = codemark.text;
-			if (text) {
-				fallback = `\n${text}`;
-			}
-			break;
-		case CodemarkType.Bookmark:
-			author = `${usernamesById.get(slackUserId)} set a bookmark`;
-			fallback = `\n${author}`;
-
-			// Bookmarks use the title rather than text
-			text = codemark.title;
-			if (text) {
-				fallback = `\n${text}`;
-			}
-			break;
-		case CodemarkType.Issue:
-			author = `${usernamesById.get(slackUserId)} posted an issue`;
-			fallback = `\n${author}`;
-
-			title = codemark.title;
-			if (title) {
-				fallback = `\n${title}`;
-			}
-
-			text = codemark.text;
-			if (text) {
-				fallback += `\n${text}`;
-			}
-
-			if (codemark.assignees !== undefined && codemark.assignees.length !== 0) {
-				if (fields === undefined) {
-					fields = [];
-				}
-
-				fields.push({
-					title: "Assignees",
-					value: codemark.assignees.map(a => usernamesById.get(a)).join(", ")
-				});
-			}
-
-			break;
-		case CodemarkType.Question:
-			author = `${usernamesById.get(slackUserId)} has a question`;
-			fallback = `\n${author}`;
-
-			title = codemark.title;
-			if (title) {
-				fallback = `\n${title}`;
-			}
-			text = codemark.text;
-			if (text) {
-				fallback += `\n${text}`;
-			}
-			break;
-		case CodemarkType.Trap:
-			author = `${usernamesById.get(slackUserId)} created a trap`;
-			fallback = `\n${author}`;
-
-			text = codemark.text;
-			if (text) {
-				fallback = `\n${text}`;
-			}
-			break;
-	}
-
-	if (markers !== undefined && markers.length !== 0) {
-		if (fields === undefined) {
-			fields = [];
-		}
-
-		for (const marker of markers) {
-			let title;
-			let start;
-			let end;
-
-			if (markerLocations) {
-				const location = markerLocations[0].locations[marker.id];
-				[start, , end] = location!;
-				title = `*${marker.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})*`;
-			} else {
-				title = `*${marker.file}*`;
-			}
-
-			const code = `\n\`\`\`${marker.code}\`\`\``;
-
-			fallback += `${fallback ? "\n" : ""}\n${title}${code}`;
-			if (codemark.permalink) {
-				title = `<${codemark.permalink}|${title}>`;
-			} else if (
-				remotes !== undefined &&
-				remotes.length !== 0 &&
-				start !== undefined &&
-				end !== undefined
-			) {
-				let url;
-				for (const remote of remotes) {
-					url = Marker.getRemoteCodeUrl(
-						remote,
-						marker.commitHashWhenCreated,
-						marker.file,
-						start,
-						end
-					);
-
-					if (url !== undefined) {
-						break;
-					}
-				}
-
-				if (url !== undefined) {
-					title = `<${url.url}|${title}>`;
-				}
-			}
-
-			fields.push({
-				title: undefined!, // This is because slack has the wrong type def here
-				value: `${title}${code}`
-			});
-		}
-	}
-
-	const attachment: MessageAttachment = {
-		fallback: fallback !== undefined ? fallback.substr(1) : undefined,
-		author_name: author,
-		title: title,
-		fields: fields,
-		text: text,
-		footer: "Posted via CodeStream",
-		ts: (new Date().getTime() / 1000) as any,
-		color: color,
-		callback_id: `codestream://codemark/${codemark.id}?teamId=${codemark.teamId}`,
-		mrkdwn_in: ["fields", "pretext", "text"]
-	};
-	return attachment;
-}
-
-export function toSlackTeam(team: CSTeam, usernamesById: Map<string, string>) {
-	team.memberIds = [...usernamesById.keys()];
-	// team.memberIds = team.memberIds.map(m => {
-	// 	const u = usernamesById.get(m);
-	// 	return u !== undefined ? u.id : m;
-	// });
-}
-
 export function fromSlackUser(user: any, teamId: string, codestreamUsers: CSUser[]): CSUser {
 	let codestreamId: string | undefined;
 	if (codestreamUsers.length !== 0) {
@@ -720,4 +515,422 @@ export function fromSlackUser(user: any, teamId: string, codestreamUsers: CSUser
 		totalPosts: 0,
 		username: user.profile.display_name || user.name
 	};
+}
+
+export function toSlackPostId(postId: string, streamId: string) {
+	return `${streamId}|${postId}`;
+}
+
+export function toSlackPostBlocks(
+	codemark: CSCodemark,
+	remotes: string[] | undefined,
+	markers: CSMarker[] | undefined,
+	markerLocations: CSMarkerLocations[] | undefined,
+	usernamesById: Map<string, string>,
+	userIdsByName: Map<string, string>
+): Blocks {
+	const blocks: Blocks = [];
+
+	// MUST keep this data in sync with codemarkAttachmentRegex above
+	const id = `codestream://codemark/${codemark.id}?teamId=${codemark.teamId}`;
+
+	switch (codemark.type) {
+		case CodemarkType.Comment: {
+			const sections: KnownBlock[] = [
+				{
+					type: "section",
+					text: {
+						type: "mrkdwn",
+						text: "_commented on code_"
+					}
+				},
+				{ type: "divider" },
+				{
+					type: "section",
+					text: {
+						type: "mrkdwn",
+						text: toSlackText(codemark.text, userIdsByName)
+					}
+				}
+			];
+			blocks.push(...sections);
+
+			break;
+		}
+		case CodemarkType.Bookmark: {
+			const sections: KnownBlock[] = [
+				{
+					type: "section",
+					text: {
+						type: "mrkdwn",
+						text: "_set a bookmark_"
+					}
+				},
+				{ type: "divider" },
+				{
+					type: "section",
+					text: {
+						type: "mrkdwn",
+						// Bookmarks use the title rather than text
+						text: toSlackText(codemark.title, userIdsByName)
+					}
+				}
+			];
+			blocks.push(...sections);
+
+			break;
+		}
+		case CodemarkType.Issue: {
+			const sections: KnownBlock[] = [
+				{
+					type: "section",
+					text: {
+						type: "mrkdwn",
+						text: "_opened an issue_"
+					}
+				},
+				{ type: "divider" },
+				{
+					type: "section",
+					text: {
+						type: "mrkdwn",
+						text: `*${toSlackText(codemark.title, userIdsByName)}*`
+					}
+				},
+				{
+					type: "section",
+					text: {
+						type: "mrkdwn",
+						text: toSlackText(codemark.text, userIdsByName)
+					}
+				}
+			];
+
+			blocks.push(...sections);
+
+			break;
+		}
+		case CodemarkType.Question: {
+			const sections: KnownBlock[] = [
+				{
+					type: "section",
+					text: {
+						type: "mrkdwn",
+						text: "_has a question_"
+					}
+				},
+				{ type: "divider" },
+				{
+					type: "section",
+					text: {
+						type: "mrkdwn",
+						text: `*${toSlackText(codemark.title, userIdsByName)}*`
+					}
+				},
+				{
+					type: "section",
+					text: {
+						type: "mrkdwn",
+						text: toSlackText(codemark.text, userIdsByName)
+					}
+				}
+			];
+			blocks.push(...sections);
+
+			break;
+		}
+		case CodemarkType.Trap: {
+			const sections: KnownBlock[] = [
+				{
+					type: "section",
+					text: {
+						type: "mrkdwn",
+						text: "_set a trap_"
+					}
+				},
+				{ type: "divider" },
+				{
+					type: "section",
+					text: {
+						type: "mrkdwn",
+						text: toSlackText(codemark.text, userIdsByName)
+					}
+				}
+			];
+			blocks.push(...sections);
+
+			break;
+		}
+	}
+
+	if (codemark.assignees !== undefined && codemark.assignees.length !== 0) {
+		blocks.push({
+			type: "section",
+			text: {
+				type: "mrkdwn",
+				text: "*Assignees*"
+			},
+			fields: codemark.assignees.map(a => ({
+				type: "plain_text",
+				text: usernamesById.get(a) || ""
+			}))
+		});
+	}
+
+	if (
+		codemark.externalProvider !== undefined &&
+		codemark.externalAssignees !== undefined &&
+		codemark.externalAssignees.length !== 0
+	) {
+		blocks.push({
+			type: "section",
+			text: {
+				type: "mrkdwn",
+				text: "*Assignees*"
+			},
+			fields: codemark.externalAssignees.map(a => ({
+				type: "plain_text",
+				text: a.displayName
+			}))
+		});
+	}
+
+	let counter = 0;
+
+	if (markers !== undefined && markers.length !== 0) {
+		for (const marker of markers) {
+			counter++;
+
+			let filename;
+			let start;
+			let end;
+
+			if (markerLocations) {
+				const location = markerLocations[0].locations[marker.id];
+				[start, , end] = location!;
+				filename = `${marker.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})`;
+			} else {
+				filename = marker.file;
+			}
+
+			let url;
+			if (
+				remotes !== undefined &&
+				remotes.length !== 0 &&
+				start !== undefined &&
+				end !== undefined
+			) {
+				for (const remote of remotes) {
+					url = Marker.getRemoteCodeUrl(
+						remote,
+						marker.commitHashWhenCreated,
+						marker.file,
+						start,
+						end
+					);
+
+					if (url !== undefined) {
+						break;
+					}
+				}
+			}
+
+			blocks.push(
+				url !== undefined
+					? {
+							type: "section",
+							text: {
+								type: "mrkdwn",
+								text: `${filename}\n\`\`\`${marker.code}\`\`\``
+							}
+					  }
+					: {
+							type: "section",
+							text: {
+								type: "mrkdwn",
+								text: `${filename}\n\`\`\`${marker.code}\`\`\``
+							}
+					  }
+			);
+
+			const actions: ActionsBlock = {
+				type: "actions",
+				block_id: `${counter}:actions-codeblock|${id}`,
+				elements: [
+					{
+						type: "button",
+						action_id: `${counter}:Permalink|${codemark.id}|${marker.id}`,
+						text: {
+							type: "plain_text",
+							text: "Open on CodeStream"
+						},
+						value: id,
+						url: `${codemark.permalink}?marker=${marker.id}`
+					}
+				]
+			};
+
+			if (codemark.externalProvider !== undefined && codemark.externalProviderUrl !== undefined) {
+				actions.elements.push({
+					type: "button",
+					action_id: `${counter}:IssueProvider(${codemark.externalProvider})|${codemark.id}`,
+					text: {
+						type: "plain_text",
+						text: `Open on ${providerNamesById.get(codemark.externalProvider) ||
+							codemark.externalProvider}`
+					},
+					url: codemark.externalProviderUrl
+				});
+			}
+
+			actions.elements.push({
+				type: "button",
+				action_id: `${counter}:Permalink-IDE|${codemark.id}|${marker.id}`,
+				text: {
+					type: "plain_text",
+					text: "Open in IDE"
+				},
+				value: id,
+				url: `${codemark.permalink}?ide=default&marker=${marker.id}`
+			});
+
+			if (url !== undefined) {
+				actions.elements.push({
+					type: "button",
+					action_id: `${counter}:CodeProvider(${url.displayName})|${codemark.id}|${marker.id}`,
+					text: {
+						type: "plain_text",
+						text: `Open on ${url.displayName}`
+					},
+					url: url.url
+				});
+			}
+
+			blocks.push(actions);
+		}
+	} else {
+		counter++;
+
+		const actions: ActionsBlock = {
+			type: "actions",
+			block_id: `1:actions|${id}`,
+			elements: [
+				{
+					type: "button",
+					action_id: `${counter}:Permalink|${codemark.id}`,
+					text: {
+						type: "plain_text",
+						text: "Open on CodeStream"
+					},
+					value: id,
+					url: codemark.permalink
+				}
+			]
+		};
+
+		if (codemark.externalProvider !== undefined && codemark.externalProviderUrl !== undefined) {
+			actions.elements.push({
+				type: "button",
+				action_id: `${counter}:IssueProvider(${codemark.externalProvider})|${codemark.id}`,
+				text: {
+					type: "plain_text",
+					text: `Open on ${codemark.externalProvider}`
+				},
+				url: codemark.externalProviderUrl
+			});
+		}
+
+		actions.elements.push({
+			type: "button",
+			action_id: `${counter}:Permalink-IDE|${codemark.id}`,
+			text: {
+				type: "plain_text",
+				text: "Open in IDE"
+			},
+			value: id,
+			url: `${codemark.permalink}?ide=default`
+		});
+
+		blocks.push(actions);
+	}
+
+	blocks.push({
+		type: "context",
+		block_id: `context|${id}`,
+		elements: [
+			{
+				type: "image",
+				image_url: "https://images.codestream.com/logos/grey_blue_transparent-400x400.png",
+				alt_text: "CodeStream Logo"
+			},
+			{
+				type: "plain_text",
+				text: "Posted via CodeStream"
+			}
+		]
+	});
+
+	return blocks;
+}
+
+export function toSlackPostText(
+	text: string,
+	userIdsByName: Map<string, string>,
+	mentionedUserIds: string[] | undefined
+) {
+	if (text == null || text.length === 0) return text;
+
+	text = toSlackText(text, userIdsByName, mentionedUserIds || []);
+	if (text.startsWith("/me ")) {
+		text = text.substring(4);
+	}
+
+	return text;
+}
+
+export function toSlackTeam(team: CSTeam, usernamesById: Map<string, string>) {
+	team.memberIds = [...usernamesById.keys()];
+	// team.memberIds = team.memberIds.map(m => {
+	// 	const u = usernamesById.get(m);
+	// 	return u !== undefined ? u.id : m;
+	// });
+}
+
+export function toSlackText(
+	text: string,
+	userIdsByName: Map<string, string>,
+	mentionedUserIds?: string[]
+) {
+	if (text == null || text.length === 0) return text;
+
+	text = text
+		.replace("&", "&amp;")
+		.replace("<", "&lt;")
+		.replace(">", "&gt;");
+
+	if (
+		mentionedUserIds === undefined ||
+		mentionedUserIds.length !== 0 ||
+		(mentionedUserIds.length === 0 && pseudoMentionsRegex.test(text))
+	) {
+		text = text.replace(mentionsRegex, (match: string, prefix: string, mentionName: string) => {
+			if (mentionName === "everyone" || mentionName === "channel" || mentionName === "here") {
+				return `${prefix}<!${mentionName}>`;
+			}
+
+			if (mentionedUserIds === undefined || mentionedUserIds.length !== 0) {
+				const userId = userIdsByName.get(mentionName);
+				if (
+					userId !== undefined &&
+					(mentionedUserIds === undefined || mentionedUserIds.includes(userId))
+				) {
+					return `${prefix}<@${userId}>`;
+				}
+			}
+
+			return match;
+		});
+	}
+
+	return text;
 }

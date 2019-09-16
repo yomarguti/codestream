@@ -19,6 +19,21 @@ import { CSMe, CSProviderInfos } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
 import { Functions, Strings } from "../system";
 
+export const providerNamesById = new Map<string, string>([
+	["asana", "Asana"],
+	["bitbucket", "Bitbucket"],
+	["github", "GitHub"],
+	["github_enterprise", "GitHub Enterprise"],
+	["gitlab", "GitLab"],
+	["jira", "Jira"],
+	["jiraserver", "Jira Server"],
+	["trello", "Trello"],
+	["youtrack", "YouTrack"],
+	["azuredevops", "Azure DevOps"],
+	["slack", "Slack"],
+	["msteams", "Microsoft Teams"]
+]);
+
 export interface ThirdPartyProvider {
 	readonly name: string;
 	connect(): Promise<void>;
@@ -57,8 +72,7 @@ export abstract class ThirdPartyProviderBase<
 	constructor(
 		public readonly session: CodeStreamSession,
 		protected readonly providerConfig: ThirdPartyProviderConfig
-	) {
-	}
+	) {}
 
 	abstract get displayName(): string;
 	abstract get name(): string;
@@ -128,7 +142,9 @@ export abstract class ThirdPartyProviderBase<
 		await this.onDisconnected();
 	}
 
-	async addEnterpriseHost(request: AddEnterpriseProviderRequest): Promise<AddEnterpriseProviderResponse> {
+	async addEnterpriseHost(
+		request: AddEnterpriseProviderRequest
+	): Promise<AddEnterpriseProviderResponse> {
 		return await this.session.api.addEnterpriseProviderHost({
 			provider: this.providerConfig.name,
 			teamId: this.session.teamId,

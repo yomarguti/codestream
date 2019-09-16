@@ -1,7 +1,8 @@
 "use strict";
 import {
+	Block,
+	KnownBlock,
 	LogLevel,
-	MessageAttachment,
 	WebAPICallOptions,
 	WebAPICallResult,
 	WebClient,
@@ -112,7 +113,7 @@ import {
 	fromSlackPost,
 	fromSlackPostId,
 	fromSlackUser,
-	toSlackPostAttachment,
+	toSlackPostBlocks,
 	toSlackPostText,
 	toSlackTeam
 } from "./slackApi.adapters";
@@ -608,7 +609,7 @@ export class SlackApiProvider implements ApiProvider {
 			}
 
 			if (text) {
-				text = toSlackPostText(text, request.mentionedUserIds, userIdsByName);
+				text = toSlackPostText(text, userIdsByName, request.mentionedUserIds);
 			}
 
 			const { streamId, postId: parentPostId } = fromSlackPostId(
@@ -629,7 +630,7 @@ export class SlackApiProvider implements ApiProvider {
 				return postResponse;
 			}
 
-			let attachment: MessageAttachment | undefined;
+			let blocks: (KnownBlock | Block)[] | undefined;
 			let codemark: CSCodemark | undefined;
 			let markers: CSMarker[] | undefined;
 			let markerLocations: CSMarkerLocations[] | undefined;
@@ -645,26 +646,14 @@ export class SlackApiProvider implements ApiProvider {
 
 				({ codemark, markers, markerLocations, streams, repos } = codemarkResponse);
 
-				attachment = toSlackPostAttachment(
+				blocks = toSlackPostBlocks(
 					codemark,
 					request.codemark.remotes,
 					markers,
 					markerLocations,
 					usernamesById,
-					this._slackUserId
+					userIdsByName
 				);
-
-				if (attachment.author_name) {
-					text = attachment.author_name;
-					attachment.author_name = undefined;
-
-					if (request.mentionedUserIds != null && request.mentionedUserIds.length !== 0) {
-						text += ` /cc ${request.mentionedUserIds
-							.map(u => `@${usernamesById.get(u)}`)
-							.join(", ")}`;
-					}
-					text = toSlackPostText(text, request.mentionedUserIds, userIdsByName);
-				}
 			}
 
 			const response = await this.slackApiCall("chat.postMessage", {
@@ -674,7 +663,7 @@ export class SlackApiProvider implements ApiProvider {
 				thread_ts: parentPostId,
 				unfurl_links: true,
 				reply_broadcast: false, // parentPostId ? true : undefined --- because of slack bug (https://trello.com/c/Y48QI6Z9/919)
-				attachments: attachment !== undefined ? [attachment] : undefined
+				blocks: blocks !== undefined ? blocks : undefined
 			});
 
 			const { ok, error, message } = response as WebAPICallResult & { message?: any; ts?: any };
@@ -748,8 +737,8 @@ export class SlackApiProvider implements ApiProvider {
 		if (request.text) {
 			text = toSlackPostText(
 				request.text,
-				request.mentionedUserIds,
-				await this.ensureUserIdsByName()
+				await this.ensureUserIdsByName(),
+				request.mentionedUserIds
 			);
 		} else {
 			text = request.text;
