@@ -108,6 +108,7 @@ export class Codemark extends React.Component<Props, State> {
 	private _fileUri?: string;
 	private _isHighlightedInTextEditor = false;
 	private _range?: Range;
+	private permalinkRef = React.createRef<HTMLTextAreaElement>();
 
 	constructor(props: Props) {
 		super(props);
@@ -550,6 +551,10 @@ export class Codemark extends React.Component<Props, State> {
 				this.setPinned(!this.props.codemark.pinned);
 				break;
 			}
+			case "copy-permalink": {
+				this.copyPermalink();
+				break;
+			}
 			case "edit-post": {
 				// TODO: ideally should also open the <CodemarkView/> but that's more complicated
 				// if (!this.props.selected) this.props.setCurrentCodemark(this.props.codemark.id);
@@ -800,6 +805,13 @@ export class Codemark extends React.Component<Props, State> {
 		return null;
 	};
 
+	copyPermalink = () => {
+		if (this.permalinkRef.current) {
+			this.permalinkRef.current.select();
+			document.execCommand("copy");
+		}
+	};
+
 	renderDetailIcons = codemark => {
 		const { hover } = this.state;
 		const { selected, relatedCodemarkIds } = this.props;
@@ -899,18 +911,20 @@ export class Codemark extends React.Component<Props, State> {
 			// { label: "-" }
 		];
 
+		menuItems.push({ label: "Copy link", action: "copy-permalink" });
+				
 		if (codemark.pinned) {
 			menuItems.push({ label: "Archive", action: "toggle-pinned" });
 		} else {
 			menuItems.push({ label: "Unarchive", action: "toggle-pinned" });
-		}
+		}		
 
 		if (mine) {
 			menuItems.push(
 				{ label: "Edit", action: "edit-post" },
 				{ label: "Delete", action: this.deleteCodemark }
 			);
-		}
+		}		
 
 		menuItems.push({ label: "Inject as Inline Comment", action: "inject" });
 
@@ -994,6 +1008,14 @@ export class Codemark extends React.Component<Props, State> {
 								</>
 							)}
 						</div>
+						{menuOpen && (
+							<textarea
+								key="permalink-offscreen"
+								ref={this.permalinkRef}
+								value={codemark.permalink}
+								style={{ position: "absolute", left: "-9999px" }}
+							/>
+						)}
 						<div
 							style={{ position: "absolute", top: "5px", right: "5px" }}
 							onClick={this.handleMenuClick}
