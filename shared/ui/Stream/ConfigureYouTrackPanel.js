@@ -52,7 +52,7 @@ export class ConfigureYouTrackPanel extends Component {
 		// set the access token ... sending the fourth argument as true here lets the 
 		// configureProvider function know that they can mark YouTrack as connected as soon
 		// as the access token entered by the user has been saved to the server
-		this.props.configureProvider(providerId, { url, token }, this.props.fromMenu, true);
+		this.props.configureProvider(providerId, { baseUrl: url, token }, this.props.fromMenu, true);
 		
 		this.props.closePanel();
 	};
