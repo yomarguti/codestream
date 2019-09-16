@@ -21,7 +21,7 @@ export class TelemetryManager {
 		this._telemetry.alias(id);
 	}
 
-	identify(id: string | undefined, props: { [key: string]: any }) {
+	identify(id: string, props: { [key: string]: any }) {
 		this._telemetry.identify(id, props);
 	}
 

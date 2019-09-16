@@ -95,8 +95,8 @@ export class TelemetryService {
 		this._segmentInstance.flush();
 	}
 
-	identify(id: string | undefined, props?: { [key: string]: any }) {
-		this._distinctId = id || this._anonymousId;
+	identify(id: string, props?: { [key: string]: any }) {
+		this._distinctId = id;
 		if (this._hasOptedOut || this._segmentInstance == null) {
 			return;
 		}
