@@ -323,7 +323,12 @@ export function listenForEvents(store) {
 					switch (route.action) {
 						case "open": {
 							if (route.id) {
-								const codemark = getCodemark(store.getState().codemarks, route.id);
+								let { codemarks } = store.getState();
+								if (Object.keys(codemarks).length === 0) {
+									await store.dispatch(fetchCodemarks());
+									codemarks = store.getState().codemarks;
+								}
+								const codemark = getCodemark(codemarks, route.id);
 								if (codemark && codemark.type === CodemarkType.Link)
 									moveCursorToLine(codemark!.markerIds![0]);
 								else store.dispatch(setCurrentCodemark(route.id));
