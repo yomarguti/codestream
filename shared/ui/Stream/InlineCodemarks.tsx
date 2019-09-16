@@ -1014,26 +1014,27 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	submitCodemark = async (attributes, event) => {
-		let docMarker;
+		let docMarker: DocumentMarker | undefined;
 		const removeTransformer = middlewareInjector.inject(
 			DocumentMarkersActionsType.SaveForFile,
 			(payload: { uri: string; markers: DocumentMarker[] }) => {
-				return payload.markers.filter(documentMarker => {
-					if (documentMarker.version === 1) {
+				return {
+					...payload,
+					markers: payload.markers.filter(documentMarker => {
 						const storeState: CodeStreamState = this.context.store.getState();
 						const author = userSelectors.getUserByCsId(storeState.users, documentMarker.creatorId);
 						if (author != undefined && author.id === storeState.session.userId) {
 							if (
 								documentMarker.commitHashWhenCreated === attributes.codeBlock.scm.revision &&
-								areRangesEqual(documentMarker.range, attributes.codeBlock.range)
+								documentMarker.code === attributes.codeBlock.contents
 							) {
 								docMarker = documentMarker;
 								return false;
 							}
 						}
-					}
-					return true;
-				});
+						return true;
+					})
+				};
 			}
 		);
 		await this.props.createPostAndCodemark(
