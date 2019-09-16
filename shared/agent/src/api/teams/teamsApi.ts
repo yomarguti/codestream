@@ -1194,7 +1194,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 			if (requests.length < 20) {
 				const response = await Functions.cancellable<{ responses: GraphBatchResponse[] }>(
 					this._teams.api(`https://graph.microsoft.com/${path}`).post({ requests: requests }),
-					timeoutMs,
+					timeoutMs * requests.length,
 					{
 						onDidCancel: (resolve, reject) =>
 							Logger.warn(cc, `TIMEOUT ${timeoutMs / 1000}s exceeded`)
@@ -1211,7 +1211,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 						this._teams.api(`https://graph.microsoft.com/${path}`).post({ requests: c })
 					)
 				),
-				timeoutMs * chunks.length,
+				timeoutMs * 19 * chunks.length,
 				{
 					onDidCancel: (resolve, reject) => Logger.warn(cc, `TIMEOUT ${timeoutMs / 1000}s exceeded`)
 				}
