@@ -237,10 +237,22 @@ namespace CodeStream.VisualStudio.Packages {
 					 args.PropertyName == nameof(_settingsManager.ProxyStrictSsl)) {
 				Log.Information($"Url(s) or Team or Proxy changed");
 				try {
-					var codeStreamAgentService = _componentModel.GetService<ICodeStreamAgentService>();
-					ThreadHelper.JoinableTaskFactory.Run(async () => {
-						await codeStreamAgentService.ReinitializeAsync();
-					});
+					try {						
+						var languageServerClientManager = _componentModel.GetService<ILanguageServerClientManager>();
+						if (languageServerClientManager != null) {
+							try {
+								ThreadHelper.JoinableTaskFactory.Run(async () => {
+									await languageServerClientManager.RestartAsync();
+								});
+							}
+							catch (Exception ex) {
+								Log.Warning(ex, string.Empty);
+							}
+						}
+					}
+					catch {
+						//languageServerClientManager won't be there if the agent is not already activated
+					}
 
 					var sessionService = _componentModel.GetService<ISessionService>();
 					if (sessionService?.IsAgentReady == true || sessionService?.IsReady == true) {
