@@ -101,7 +101,7 @@ export const FetchThirdPartyBoardsRequestType = new RequestType<
 >("codestream/provider/boards");
 
 export interface ThirdPartyProviderUser {
-	id: string;
+	id?: string;
 	displayName: string;
 	email?: string;
 }

@@ -193,6 +193,12 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 
 	@lspHandler(UpdateCodemarkRequestType)
 	async edit(request: UpdateCodemarkRequest): Promise<UpdateCodemarkResponse> {
+		if (request.externalAssignees && request.externalAssignees.length) {
+			request.externalAssignees = request.externalAssignees.map(a => ({
+				displayName: a.displayName,
+				email: a.email
+			}));
+		}
 		const updateResponse = await this.session.api.updateCodemark(request);
 		const [codemark] = await this.resolve({
 			type: MessageType.Codemarks,
