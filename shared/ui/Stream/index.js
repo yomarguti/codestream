@@ -345,34 +345,55 @@ export class SimpleStream extends Component {
 			? "Invite People"
 			: "Invite People to CodeStream";
 
-		const { otherTeams } = this.props;
-		const hasOtherTeams = otherTeams.length > 0;
+		const { userTeams, teamId: currentTeamId } = this.props;
+		const hasOtherTeams = userTeams.length > 1;
 
 		const teamItem = {
 			label: this.props.teamName,
 			noHover: !hasOtherTeams,
 			submenu: !hasOtherTeams
 				? null
-				: otherTeams.map(team => {
-						const label = safe(() => {
-							if (team.providerInfo.slack) {
+				: userTeams.map(team => {
+						const label = (() => {
+							if (safe(() => team.providerInfo.slack)) {
 								return (
 									<span>
 										<Icon name={PROVIDER_MAPPINGS.slack.icon} />
+										{team.id === currentTeamId && <Icon name="check" />}
 										{team.name}
 									</span>
 								);
 							}
-							if (team.providerInfo.msteams) {
+							if (safe(() => team.providerInfo.msteams)) {
 								return (
 									<span>
 										<Icon name={PROVIDER_MAPPINGS.msteams.icon} />
+										{team.id === currentTeamId && <Icon name="check" />}
 										{team.name}
 									</span>
 								);
 							}
-						});
-						return { label: label || team.name, action: `switch-to-team-${team.id}` };
+							return (
+								<span>
+									<Icon name="codestream" />
+									{team.id === currentTeamId && <Icon name="check" />}
+									{team.name}
+								</span>
+							);
+						})();
+
+						const isCurrentTeam = team.id === currentTeamId;
+
+						return {
+							key: team.id,
+							label: label,
+							noHover: isCurrentTeam,
+							action: () => {
+								if (isCurrentTeam) return;
+
+								this.props.switchToTeam(team.id);
+							}
+						};
 				  })
 		};
 
@@ -1052,12 +1073,6 @@ export class SimpleStream extends Component {
 			return this.props.disconnectProvider(providerId, true);
 		} else if (arg.startsWith("configure-enterprise-") || arg.startsWith("configure-provider-")) {
 			return this.setActivePanel(arg);
-		}
-
-		if (arg.startsWith("switch-to-team-")) {
-			const teamId = arg.split("switch-to-team-")[1];
-			this.props.switchToTeam(teamId);
-			return;
 		}
 
 		switch (arg) {
@@ -2205,10 +2220,7 @@ const mapStateToProps = state => {
 		mutedStreams: preferences.mutedStreams || {},
 		starredStreams: preferences.starredStreams || {},
 		slashCommands: getSlashCommands(capabilities),
-		otherTeams: _sortBy(
-			Object.values(teams).filter(t => !t.deactivated && t.id !== context.currentTeamId),
-			"name"
-		),
+		userTeams: _sortBy(Object.values(teams).filter(t => !t.deactivated), "name"),
 		team: team,
 		teamProvider: teamProvider,
 		isCodeStreamTeam: teamProvider === "codestream",
