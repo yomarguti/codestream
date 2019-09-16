@@ -63,6 +63,11 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
         private val debugPort get() = debugPortSeed.getAndAdd(1)
     }
 
+    fun onDidInitialize(cb: () -> Unit) {
+        if (router.initialization.isDone) cb()
+        else router.initialization.thenRun(cb)
+    }
+
     fun load() {
         logger.info("Loading WebView")
         browser.loadURL(htmlFile.url)
@@ -101,13 +106,13 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
         postMessage(message, true)
     }
 
-    fun postNotification(notification: WebViewNotification) {
+    fun postNotification(notification: WebViewNotification, force: Boolean? = false) {
         logger.debug("Posting ${notification.getMethod()}")
         val message = jsonObject(
             "method" to notification.getMethod(),
             "params" to gson.toJsonTree(notification)
         )
-        postMessage(message)
+        postMessage(message, force)
     }
 
     fun postNotification(method: String, params: Any?, force: Boolean? = false) {

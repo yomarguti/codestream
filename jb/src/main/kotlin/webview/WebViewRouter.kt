@@ -32,11 +32,13 @@ import protocols.webview.MarkerCompareRequest
 import protocols.webview.MarkerInsertTextRequest
 import protocols.webview.ShellPromptFolderResponse
 import protocols.webview.UpdateConfigurationRequest
+import java.util.concurrent.CompletableFuture
 
 class WebViewRouter(val project: Project) {
     private val logger = Logger.getInstance(WebViewRouter::class.java)
     private var _isReady = false
     val isReady get() = _isReady
+    val initialization = CompletableFuture<Unit>()
 
     fun handle(rawMessage: String, origin: String?) = GlobalScope.launch {
         val message = parse(rawMessage)
@@ -72,7 +74,10 @@ class WebViewRouter(val project: Project) {
 
         val response = when (message.method) {
             "host/bootstrap" -> authentication.bootstrap()
-            "host/didInitialize" -> _isReady = true
+            "host/didInitialize" -> {
+                _isReady = true
+                initialization.complete(Unit)
+            }
             "host/logout" -> authentication.logout()
             "host/context/didChange" -> contextDidChange(message)
             "host/webview/reload" -> project.webViewService?.load()

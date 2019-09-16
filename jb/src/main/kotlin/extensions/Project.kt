@@ -57,18 +57,3 @@ val Project.projectPaths: Set<String>
         }
         return paths
     }
-
-fun Project.intersectsAny(paths: Array<String>): Boolean {
-    val projectDirs = projectPaths.map { File(it) }
-    val otherDirs = paths.map { File(it) }
-
-    for (projectDir in projectDirs) {
-        for (otherDir in otherDirs) {
-            if (projectDir.startsWith(otherDir) || otherDir.startsWith(projectDir)) {
-                return true
-            }
-        }
-    }
-
-    return false
-}
