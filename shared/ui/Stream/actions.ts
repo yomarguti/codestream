@@ -61,6 +61,7 @@ import { PostEntryPoint } from "../store/context/types";
 import { CodeDelimiterStyles } from "./CrossPostIssueControls/types";
 import { middlewareInjector } from "../store/middleware-injector";
 import { PostsActionsType, Post } from "../store/posts/types";
+import { interpolate } from "../system/string";
 
 export {
 	openPanel,
@@ -259,23 +260,10 @@ export const createPost = (
 	});
 
 	try {
+		let response: CreatePostResponse;
 		let responsePromise: Promise<CreatePostResponse>;
 		if (codemark) {
-			let externalProviderUrl;
-			let externalProvider;
-			let externalProviderHost;
-			let externalAssignees;
-			if (extra.crossPostIssueValues) {
-				const cardResponse = await createProviderCard(extra.crossPostIssueValues, codemark);
-				if (cardResponse) {
-					externalProviderUrl = cardResponse.url;
-					externalProvider = extra.crossPostIssueValues.issueProvider.name;
-					externalProviderHost = extra.crossPostIssueValues.issueProvider.host;
-					externalAssignees = extra.crossPostIssueValues.assignees;
-				}
-			}
 			const block = codemark.markers[0] || {};
-
 			responsePromise = HostApi.instance.send(CreatePostWithMarkerRequestType, {
 				streamId,
 				text: codemark.text,
@@ -289,14 +277,29 @@ export const createPost = (
 				color: codemark.color,
 				mentionedUserIds: mentions,
 				entryPoint: extra.entryPoint || context.newPostEntryPoint,
-				externalProvider,
-				externalProviderHost,
-				externalAssignees,
-				externalProviderUrl,
 				parentPostId,
 				tags: codemark.tags,
 				relatedCodemarkIds: codemark.relatedCodemarkIds
 			});
+
+			response = await responsePromise;
+
+			if (response && response.codemark && extra.crossPostIssueValues) {
+				const cardResponse = await createProviderCard(extra.crossPostIssueValues, {
+					...codemark,
+					permalink: response.codemark.permalink
+				});
+				if (cardResponse) {
+					const updateCodemarkResponse = await HostApi.instance.send(UpdateCodemarkRequestType, {
+						codemarkId: response.codemark.id,
+						externalAssignees: extra.crossPostIssueValues.assignees,
+						externalProvider: extra.crossPostIssueValues.issueProvider.name,
+						externalProviderHost: extra.crossPostIssueValues.issueProvider.host,
+						externalProviderUrl: cardResponse.url
+					});
+					response.codemark = updateCodemarkResponse.codemark;
+				}
+			}
 		} else {
 			responsePromise = HostApi.instance.send(CreatePostRequestType, {
 				streamId,
@@ -305,8 +308,9 @@ export const createPost = (
 				mentionedUserIds: mentions,
 				entryPoint: extra.entryPoint
 			});
+			response = await responsePromise;
 		}
-		const response = await responsePromise;
+
 		if (!response) logError("DID NOT GET A RESPONSE FROM: ", responsePromise);
 
 		if (response.codemark) {
@@ -694,42 +698,53 @@ const getCodeDelimiters = (
 	start: string;
 	end: string;
 	linefeed: string;
+	anchorFormat: string;
 } => {
 	switch (codeDelimiterStyle) {
+		// https://asana.com/guide/help/fundamentals/text
 		case CodeDelimiterStyles.NONE:
 			return {
 				start: "",
 				end: "",
-				linefeed: "\n"
+				linefeed: "\n",
+				anchorFormat: "${text} ${url}"
 			};
 
+		// https://docs.microsoft.com/en-us/azure/devops/project/wiki/markdown-guidance?view=azure-devops
 		case CodeDelimiterStyles.HTML_MARKUP:
 			return {
 				start: "<pre><div><code>",
 				end: "</code></div></pre>",
-				linefeed: "<br/>"
+				linefeed: "<br/>",
+				anchorFormat: '<a href="${url}">${text}</a>'
 			};
 
-		default:
-		case CodeDelimiterStyles.TRIPLE_BACK_QUOTE:
-			return {
-				start: "```\n",
-				end: "```\n",
-				linefeed: "\n"
-			};
-
+		// https://www.jetbrains.com/help/youtrack/incloud/youtrack-markdown-syntax-issues.html
 		case CodeDelimiterStyles.SINGLE_BACK_QUOTE:
 			return {
 				start: "`",
 				end: "`",
-				linefeed: "\n"
+				linefeed: "\n",
+				anchorFormat: "[${text}](${url})"
 			};
 
+		// https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all
 		case CodeDelimiterStyles.CODE_BRACE:
 			return {
 				start: "{code}",
 				end: "{code}",
-				linefeed: "\n"
+				linefeed: "\n",
+				anchorFormat: "[${text}|${url}]"
+			};
+		// https://confluence.atlassian.com/bitbucketserver/markdown-syntax-guide-776639995.html
+		// https://help.trello.com/article/821-using-markdown-in-trello
+		case CodeDelimiterStyles.TRIPLE_BACK_QUOTE:
+		default:
+			return {
+				start: "```\n",
+				end: "```\n",
+				linefeed: "\n",
+				anchorFormat: "[${text}](${url})"
 			};
 	}
 };
@@ -750,7 +765,20 @@ export const createProviderCard = async (attributes, codemark) => {
 		}
 		description += `${linefeed}${linefeed}${start}${linefeed}${marker.code}${linefeed}${end}${linefeed}${linefeed}`;
 	}
-	description += `Posted via CodeStream${linefeed}`;
+
+	if (codemark.permalink) {
+		const link = interpolate(delimiters.anchorFormat, {
+			text: "Open on CodeStream",
+			url: codemark.permalink
+		});
+		if (link) {
+			description += `${link}${linefeed}`;
+		} else {
+			description += `Posted via CodeStream${linefeed}`;
+		}
+	} else {
+		description += `Posted via CodeStream${linefeed}`;
+	}
 
 	try {
 		let response;
