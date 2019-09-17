@@ -38,7 +38,6 @@ data class SettingsServiceState(
     var serverUrl: String = API_PROD,
     var avatars: Boolean = true,
     var notifications: String? = null,
-    var muteAll: Boolean = false,
     var team: String? = null,
     var teamId: String? = null,
     var showFeedbackSmiley: Boolean = true,
@@ -97,7 +96,6 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
             state.serverUrl,
             state.email,
             state.avatars,
-            state.muteAll,
             isDebugging,
             state.showFeedbackSmiley,
             state.team
@@ -129,12 +127,6 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
     fun set(name: String, value: String?) {
         if (state.webViewConfig.containsKey(name)) {
             state.webViewConfig[name] = value
-        } else {
-            when (name) {
-                "muteAll" -> value?.let {
-                    state.muteAll = it.toBoolean()
-                }
-            }
         }
     }
 

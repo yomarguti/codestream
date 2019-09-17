@@ -28,7 +28,6 @@ class CodeStreamConfigurable(val project: Project) : SearchableConfigurable {
             state.serverUrl = if (gui.serverUrl.text.isNullOrEmpty()) gui.serverUrl.text else gui.serverUrl.text.trimEnd('/')
             state.avatars = gui.showAvatars.isSelected
             state.notifications = gui.showNotifications.selectedItem as String?
-            state.muteAll = gui.muteAll.isSelected
             state.team = gui.team.text
             state.showFeedbackSmiley = gui.showFeedbackSmiley.isSelected
             state.showMarkers = gui.showMarkers.isSelected
@@ -48,7 +47,6 @@ class CodeStreamConfigurable(val project: Project) : SearchableConfigurable {
                 serverUrl.text = it.serverUrl
                 showAvatars.isSelected = it.avatars
                 showNotifications.selectedItem = it.notifications
-                muteAll.isSelected = it.muteAll
                 team.text = it.team
                 showFeedbackSmiley.isSelected = it.showFeedbackSmiley
                 showMarkers.isSelected = it.showMarkers

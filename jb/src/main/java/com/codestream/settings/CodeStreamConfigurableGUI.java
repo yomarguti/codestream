@@ -8,7 +8,6 @@ public class CodeStreamConfigurableGUI {
     private JCheckBox autoSignIn;
     private JTextField serverUrl;
     private JCheckBox showAvatars;
-    private JCheckBox muteAll;
     private JTextField team;
     private JCheckBox showFeedbackSmiley;
     private JCheckBox autoHideMarkers;
@@ -41,10 +40,6 @@ public class CodeStreamConfigurableGUI {
 
     public JCheckBox getShowAvatars() {
         return showAvatars;
-    }
-
-    public JCheckBox getMuteAll() {
-        return muteAll;
     }
 
     public JTextField getTeam() {

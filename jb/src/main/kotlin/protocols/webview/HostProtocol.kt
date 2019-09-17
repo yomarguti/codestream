@@ -34,7 +34,6 @@ class Configs(
     val serverUrl: String,
     val email: String?,
     val showHeadshots: Boolean,
-    val muteAll: Boolean,
     val debug: Boolean,
     val showFeedbackSmiley: Boolean,
     val team: String?
