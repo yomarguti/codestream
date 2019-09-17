@@ -524,7 +524,7 @@ export function toSlackPostId(postId: string, streamId: string) {
 interface ActionId {
 	id: number;
 	linkType: "web" | "ide" | "external";
-	externalProviderType?: "issue" | "code";
+	externalType?: "issue" | "code";
 	externalProvider?: string;
 	teamId: string;
 	codemarkId: string;
@@ -558,7 +558,7 @@ function toExternalActionId(
 	const actionId: ActionId = {
 		id: id,
 		linkType: "external",
-		externalProviderType: providerType,
+		externalType: providerType,
 		externalProvider: provider,
 		teamId: codemark.teamId,
 		codemarkId: codemark.id,
