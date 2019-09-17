@@ -13,6 +13,7 @@ import com.intellij.openapi.application.JBProtocolCommand
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
+import com.intellij.openapi.project.ProjectManagerListener
 import org.apache.commons.io.FileUtils
 import java.io.File
 import java.net.URLDecoder
@@ -25,6 +26,7 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
         ApplicationManager.getApplication().invokeLater {
             logger.info("Handling $target $parameters")
 
+            val projectManager = ProjectManager.getInstance()
             val repoId = parameters["repoId"]
             val filePathEncoded = parameters["file"] ?: ""
             val filePath = URLDecoder.decode(filePathEncoded, "UTF-8")
@@ -35,7 +37,7 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
 
             var project: Project? = if (repoMapping != null) {
                 logger.info("Found mapping for repo $repoId")
-                logger.info("Repo paths: ${repoMapping.paths.joinToString(",")}")
+                logger.info("Repo paths: ${repoMapping.paths.joinToString(", ")}")
                 logger.info("File path: $filePath")
                 findOpenProject(repoMapping, filePath) ?: findRecentProject(repoMapping, filePath)
             } else {
@@ -47,21 +49,38 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
                 logger.info("Repo $repoId maps to project ${project.basePath}")
             } else {
                 logger.info("Could not find open or recent project based on repo mappings")
-                val openProjects = ProjectManager.getInstance().openProjects
+                val openProjects = projectManager.openProjects
                 if (openProjects.isNotEmpty()) {
                     logger.info("Defaulting to first open project")
                     project = openProjects.first()
+                } else if (repoMapping != null) {
+                    try {
+                        logger.info("Attempting to open ${repoMapping.defaultPath}")
+                        project = ProjectUtil.openProject(repoMapping.defaultPath, null, true)
+                    } catch (ex: Exception) {
+                        logger.warn(ex)
+                    }
                 } else {
-                    logger.info("No open projects")
+                    logger.info("No open projects or repo mapping")
                 }
             }
 
             if (project == null) {
-                return@invokeLater
+                var posted = false
+                logger.info("Awaiting for open project")
+                ApplicationManager.getApplication().messageBus.connect()
+                    .subscribe(ProjectManager.TOPIC, object : ProjectManagerListener {
+                        override fun projectOpened(project: Project) {
+                            if (!posted) {
+                                project.handleUrlWhenReady(target, parameters)
+                                posted = true
+                            }
+                        }
+                    })
+            } else {
+                project.ensureOpened()
+                project.handleUrlWhenReady(target, parameters)
             }
-
-            project.ensureOpened()
-            project.handleUrlWhenReady(target, parameters)
         }
 
     private fun findOpenProject(repoMapping: RepoMapping, filePath: String): Project? {
