@@ -8,6 +8,7 @@ import { Id } from "../managers/entityManager";
 import { CSLocationMeta, CSMarkerLocation } from "../protocol/api.protocol";
 import { buildChangeset, Change, Changeset } from "./changeset";
 
+const MAX_RANGE_VALUE = 2147483647;
 const LINE_SIMILARITY_THRESHOLD = 0.6;
 const CHANGE_SIMILARITY_THRESHOLD = 0.5;
 const DELETED = -1;
@@ -84,7 +85,7 @@ class CalculatedLocation {
 	trimLineEndChange() {
 		const change = this.lineEndChange();
 		this.lineEndNew = change.addStart - 1;
-		this.colEndNew = 1;
+		this.colEndNew = MAX_RANGE_VALUE;
 		this.meta.endWasDeleted = true;
 	}
 
