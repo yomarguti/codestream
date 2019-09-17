@@ -255,25 +255,9 @@ export function toTeamsMessageBody(
 
 			break;
 		case CodemarkType.Issue:
-			message = `${me} posted an issue`;
+			message = `${me} opened an issue`;
 			title = codemark.title;
 			text = codemark.text;
-
-			if (codemark.assignees !== undefined && codemark.assignees.length !== 0) {
-				if (fields === undefined) {
-					fields = [];
-				}
-
-				fields.push({
-					title: "Assignees",
-					value: codemark.assignees
-						.map(a => {
-							const u = userInfosById.get(a);
-							return (u && u.displayName) || "Someone";
-						})
-						.join(", ")
-				});
-			}
 
 			break;
 		case CodemarkType.Question:
@@ -283,10 +267,41 @@ export function toTeamsMessageBody(
 
 			break;
 		case CodemarkType.Trap:
-			message = `${me} created a trap`;
+			message = `${me} set a trap`;
 			text = codemark.text;
 
 			break;
+	}
+
+	if (codemark.assignees !== undefined && codemark.assignees.length !== 0) {
+		if (fields === undefined) {
+			fields = [];
+		}
+
+		fields.push({
+			title: "Assignees",
+			value: codemark.assignees
+				.map(a => {
+					const u = userInfosById.get(a);
+					return (u && u.displayName) || "Someone";
+				})
+				.join(", ")
+		});
+	}
+
+	if (
+		codemark.externalProvider !== undefined &&
+		codemark.externalAssignees !== undefined &&
+		codemark.externalAssignees.length !== 0
+	) {
+		if (fields === undefined) {
+			fields = [];
+		}
+
+		fields.push({
+			title: "Assignees",
+			value: codemark.externalAssignees.map(a => a.displayName).join(", ")
+		});
 	}
 
 	if (markers !== undefined && markers.length !== 0) {
@@ -295,21 +310,23 @@ export function toTeamsMessageBody(
 		}
 
 		for (const marker of markers) {
-			let title;
+			let filename;
 			let start;
 			let end;
 
 			if (markerLocations) {
 				const location = markerLocations[0].locations[marker.id];
 				[start, , end] = location!;
-				title = `<b>${marker.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})</b>`;
+				filename = `<b>${marker.file} (Line${
+					start === end ? ` ${start}` : `s ${start}-${end}`
+				})</b>`;
 			} else {
-				title = `<b>${marker.file}</b>`;
+				filename = `<b>${marker.file}</b>`;
 			}
 
 			const code = `<code style="margin:7px 0;padding:10px;border:1px solid #d9d9d9;white-space:pre;display:block;overflow:auto;">${marker.code}</code>`;
 			if (codemark.permalink) {
-				title = `<a href="${codemark.permalink}">${title}</a>`;
+				filename = `<a href="${codemark.permalink}">${filename}</a>`;
 			} else if (
 				remotes !== undefined &&
 				remotes.length !== 0 &&
@@ -332,15 +349,15 @@ export function toTeamsMessageBody(
 				}
 
 				if (url !== undefined) {
-					title = `<a href="${url.url}">${title}</a>`;
+					filename = `<a href="${url.url}">${filename}</a>`;
 				} else {
-					title = `<p>${title}</p>`;
+					filename = `<p>${filename}</p>`;
 				}
 			}
 
 			fields.push({
 				title: undefined,
-				value: `${title}${code}`
+				value: `${filename}${code}`
 			});
 		}
 	}
