@@ -17,6 +17,7 @@ export class LocateRepoButton extends React.Component<Props, State> {
 	state: State = {
 		locateLoading: false
 	};
+	mounted = false;
 
 	async locateCode() {
 		HostApi.instance.send(TelemetryRequestType, { eventName: "Locate Repo" });
@@ -30,25 +31,36 @@ export class LocateRepoButton extends React.Component<Props, State> {
 		let response = await HostApi.instance.send(ShellPromptFolderRequestType, {
 			message: `Please select the root folder for the ${repoName} repository.`
 		});
-		if (response && response.path) {
-			const result = await HostApi.instance.send(MapReposRequestType, {
-				repos: [{ repoId: repoId, ...response } as RepoMap]
-			});
+		try {
+			if (response && response.path) {
+				const result = await HostApi.instance.send(MapReposRequestType, {
+					repos: [{ repoId: repoId, ...response } as RepoMap]
+				});
 
-			if (this.props.callback) {
-				await this.props.callback(result && result.success);
+				if (this.props.callback) {
+					await this.props.callback(result && result.success);
+				}
 			}
 		}
-		this.setState({
-			locateLoading: false
-		});
+		catch (e) { }
+		finally {
+			if (this.mounted) this.setState({ locateLoading: false });
+		}
+	}
+
+	componentDidMount() {
+		this.mounted = true;
+	}
+
+	componentWillUnmount() {
+		this.mounted = false;
 	}
 
 	render() {
 		return (
 			<Button
 				className="btn-locate-repo"
-				loading={this.state.locateLoading}				
+				loading={this.state.locateLoading}
 				title="Locate this repository on your file system"
 				onClick={event => {
 					event.stopPropagation();

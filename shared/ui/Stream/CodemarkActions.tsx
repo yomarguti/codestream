@@ -54,6 +54,10 @@ class CodemarkActions extends React.Component<Props, State> {
 
 	async componentDidMount() {
 		const { codemark } = this.props;
+		this.openCodemark(codemark);
+	}
+
+	async openCodemark(codemark: CodemarkPlus) {
 		if (codemark == null) return;
 
 		const marker =
@@ -88,7 +92,7 @@ class CodemarkActions extends React.Component<Props, State> {
 						},
 						preserveFocus: true
 					});
-					this.setState({ warning: success ? undefined : "FILE_NOT_FOUND" });
+					this.setState({ warning: success ? undefined : "FILE_NOT_FOUND" });					
 				} else {
 					// assumption based on GetDocumentFromMarkerRequestType api requiring the workspace to be available
 					this.setState({ warning: "REPO_NOT_IN_WORKSPACE" });
@@ -169,6 +173,9 @@ class CodemarkActions extends React.Component<Props, State> {
 								repoName={this.props.repoName}
 								callback={async success => {
 									this.setState({ warning: success ? undefined : "REPO_NOT_IN_WORKSPACE" });
+									if (success) {
+										this.openCodemark(this.props.codemark);
+									}
 								}}
 							></LocateRepoButton>
 						</span>
