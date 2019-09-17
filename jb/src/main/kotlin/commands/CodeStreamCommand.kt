@@ -66,10 +66,10 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
             }
 
             if (project == null) {
-                var posted = false
                 logger.info("Awaiting for open project")
                 ApplicationManager.getApplication().messageBus.connect()
                     .subscribe(ProjectManager.TOPIC, object : ProjectManagerListener {
+                        var posted = false
                         override fun projectOpened(project: Project) {
                             if (!posted) {
                                 project.handleUrlWhenReady(target, parameters)
