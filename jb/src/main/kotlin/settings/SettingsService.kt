@@ -65,7 +65,6 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
         ErrorHandler.environment = environmentName
     }
 
-    private val viewCodemarksInline get() = state.webViewConfig[INLINE_CODEMARKS]?.toBoolean() ?: true
     val environmentVersion: String
         get() = PluginManager.getPlugin(
             PluginId.findId("com.codestream.jetbrains-codestream")
@@ -75,7 +74,6 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
     val traceLevel get() = if (logger.isDebugEnabled) TraceLevel.DEBUG else TraceLevel.VERBOSE
     val isDebugging get() = DEBUG
     val currentStreamId get() = webViewContext?.currentStreamId
-    val threadId get() = webViewContext?.threadId
     val team get() = state.team
     val autoHideMarkers get() = state.autoHideMarkers
     val showMarkers get() = state.showMarkers
