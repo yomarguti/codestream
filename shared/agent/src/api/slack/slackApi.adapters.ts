@@ -1,5 +1,5 @@
 "use strict";
-import { ActionsBlock, KnownBlock, MessageAttachment } from "@slack/web-api";
+import { Action, ActionsBlock, KnownBlock, MessageAttachment } from "@slack/web-api";
 import { SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import {
@@ -521,6 +521,53 @@ export function toSlackPostId(postId: string, streamId: string) {
 	return `${streamId}|${postId}`;
 }
 
+interface ActionId {
+	id: number;
+	linkType: "web" | "ide" | "external";
+	externalProviderType?: "issue" | "code";
+	externalProvider?: string;
+	teamId: string;
+	codemarkId: string;
+	markerId?: string;
+}
+
+function toActionId(
+	id: number,
+	linkType: "web" | "ide",
+	codemark: CSCodemark,
+	marker?: CSMarker
+): string {
+	const actionId: ActionId = {
+		id: id,
+		linkType: linkType,
+		teamId: codemark.teamId,
+		codemarkId: codemark.id,
+		markerId: marker && marker.id
+	};
+
+	return JSON.stringify(actionId);
+}
+
+function toExternalActionId(
+	id: number,
+	providerType: "issue" | "code",
+	provider: string,
+	codemark: CSCodemark,
+	marker?: CSMarker
+): string {
+	const actionId: ActionId = {
+		id: id,
+		linkType: "external",
+		externalProviderType: providerType,
+		externalProvider: provider,
+		teamId: codemark.teamId,
+		codemarkId: codemark.id,
+		markerId: marker && marker.id
+	};
+
+	return JSON.stringify(actionId);
+}
+
 export function toSlackPostBlocks(
 	codemark: CSCodemark,
 	remotes: string[] | undefined,
@@ -530,9 +577,6 @@ export function toSlackPostBlocks(
 	userIdsByName: Map<string, string>
 ): Blocks {
 	const blocks: Blocks = [];
-
-	// MUST keep this data in sync with codemarkAttachmentRegex above
-	const id = `codestream://codemark/${codemark.id}?teamId=${codemark.teamId}`;
 
 	switch (codemark.type) {
 		case CodemarkType.Comment: {
@@ -753,27 +797,28 @@ export function toSlackPostBlocks(
 					  }
 			);
 
+			let actionId = toActionId(counter, "web", codemark, marker);
 			const actions: ActionsBlock = {
 				type: "actions",
-				block_id: `${counter}:actions-codeblock|${id}`,
+				block_id: `codeblock-actions:${counter}`,
 				elements: [
 					{
 						type: "button",
-						action_id: `${counter}:Permalink|${id}&markerId=${marker.id}`,
+						action_id: actionId,
 						text: {
 							type: "plain_text",
 							text: "Open on CodeStream"
 						},
-						value: id,
 						url: `${codemark.permalink}?marker=${marker.id}`
 					}
 				]
 			};
 
 			if (codemark.externalProvider !== undefined && codemark.externalProviderUrl !== undefined) {
+				actionId = toExternalActionId(counter, "issue", codemark.externalProvider, codemark);
 				actions.elements.push({
 					type: "button",
-					action_id: `${counter}:IssueProvider(${codemark.externalProvider})|${id}`,
+					action_id: actionId,
 					text: {
 						type: "plain_text",
 						text: `Open Issue on ${providerNamesById.get(codemark.externalProvider) ||
@@ -783,21 +828,22 @@ export function toSlackPostBlocks(
 				});
 			}
 
+			actionId = toActionId(counter, "ide", codemark, marker);
 			actions.elements.push({
 				type: "button",
-				action_id: `${counter}:Permalink-IDE|${id}&markerId=${marker.id}`,
+				action_id: actionId,
 				text: {
 					type: "plain_text",
 					text: "Open in IDE"
 				},
-				value: id,
 				url: `${codemark.permalink}?ide=default&marker=${marker.id}`
 			});
 
 			if (url !== undefined) {
+				actionId = toExternalActionId(counter, "code", url.name, codemark, marker);
 				actions.elements.push({
 					type: "button",
-					action_id: `${counter}:CodeProvider(${url.name})|${id}&markerId=${marker.id}`,
+					action_id: actionId,
 					text: {
 						type: "plain_text",
 						text: `Open on ${url.displayName}`
@@ -811,27 +857,29 @@ export function toSlackPostBlocks(
 	} else {
 		counter++;
 
+		let actionId = toActionId(counter, "web", codemark);
+
 		const actions: ActionsBlock = {
 			type: "actions",
-			block_id: `1:actions|${id}`,
+			block_id: "actions",
 			elements: [
 				{
 					type: "button",
-					action_id: `${counter}:Permalink|${id}`,
+					action_id: actionId,
 					text: {
 						type: "plain_text",
 						text: "Open on CodeStream"
 					},
-					value: id,
 					url: codemark.permalink
 				}
 			]
 		};
 
 		if (codemark.externalProvider !== undefined && codemark.externalProviderUrl !== undefined) {
+			actionId = toExternalActionId(counter, "issue", codemark.externalProvider, codemark);
 			actions.elements.push({
 				type: "button",
-				action_id: `${counter}:IssueProvider(${codemark.externalProvider})|${id}`,
+				action_id: actionId,
 				text: {
 					type: "plain_text",
 					text: `Open Issue on ${codemark.externalProvider}`
@@ -840,14 +888,14 @@ export function toSlackPostBlocks(
 			});
 		}
 
+		actionId = toActionId(counter, "ide", codemark);
 		actions.elements.push({
 			type: "button",
-			action_id: `${counter}:Permalink-IDE|${id}`,
+			action_id: actionId,
 			text: {
 				type: "plain_text",
 				text: "Open in IDE"
 			},
-			value: id,
 			url: `${codemark.permalink}?ide=default`
 		});
 
@@ -856,7 +904,8 @@ export function toSlackPostBlocks(
 
 	blocks.push({
 		type: "context",
-		block_id: `context|${id}`,
+		// MUST keep this data in sync with codemarkAttachmentRegex above
+		block_id: `codestream://codemark/${codemark.id}?teamId=${codemark.teamId}`,
 		elements: [
 			{
 				type: "image",
