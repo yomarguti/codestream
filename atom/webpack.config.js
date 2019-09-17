@@ -192,6 +192,16 @@ function getWebviewConfig(env) {
 					],
 				},
 			],
+			onEnd: [
+				{
+					copy: [
+						{
+							source: path.resolve(__dirname, "webview-lib/preload.js"),
+							destination: "dist/webview/",
+						},
+					],
+				},
+			],
 		}),
 		new HtmlPlugin({
 			template: "index.html",

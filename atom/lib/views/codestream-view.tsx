@@ -183,7 +183,7 @@ export class CodestreamView {
 
 	private async initializeWebview() {
 		this.webview.src = await this.getWebviewSrc();
-		this.webview.preload = asAbsolutePath("webview-lib/preload.js");
+		this.webview.preload = asAbsolutePath("dist/webview/preload.js");
 		this.webview.plugins = "true";
 
 		this.webview.classList.add("codestream-webview", "native-key-bindings");
