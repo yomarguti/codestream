@@ -13,10 +13,12 @@ import com.github.salomonbrys.kotson.nullString
 import com.github.salomonbrys.kotson.string
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.fileChooser.FileChooser
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
@@ -163,12 +165,16 @@ class WebViewRouter(val project: Project) {
         project.editorService?.scroll(request.uri, request.position, request.atTop)
     }
 
-    private fun shellPromptFolder(message: WebViewMessage): ShellPromptFolderResponse {
-        val file = FileChooser.chooseFile(
-            FileChooserDescriptor(false, true, false, false, false, false),
-            null, null
-        )
-
+    private suspend fun shellPromptFolder(message: WebViewMessage): ShellPromptFolderResponse {
+        val fileFuture = CompletableFuture<VirtualFile?>()
+        ApplicationManager.getApplication().invokeLater {
+            val file = FileChooser.chooseFile(
+                FileChooserDescriptor(false, true, false, false, false, false),
+                null, null
+            )
+            fileFuture.complete(file)
+        }
+        val file = fileFuture.await()
         return ShellPromptFolderResponse(file?.path, file != null)
     }
 
