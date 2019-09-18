@@ -11,7 +11,6 @@ import {
 	range,
 	debounceToAnimationFrame,
 	isNotOnDisk,
-	areRangesEqual,
 	ComponentUpdateEmitter,
 	isRangeEmpty,
 	uriToFilePath
@@ -126,7 +125,7 @@ interface State {
 	numBelow: number;
 	numLinesVisible: number;
 	problem: ScmError | undefined;
-	newCodemarkAttributes: { type: CodemarkType } | undefined;
+	newCodemarkAttributes: { type: CodemarkType; viewingInline: boolean } | undefined;
 }
 
 const NEW_CODEMARK_ATTRIBUTES_TO_RESTORE = "spatial-view:restore-codemark-form";
@@ -1005,8 +1004,15 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	closeCodemarkForm = () => {
-		this.setState({ newCodemarkAttributes: undefined });
 		this.clearSelection();
+
+		const { newCodemarkAttributes } = this.state;
+		if (newCodemarkAttributes && !newCodemarkAttributes.viewingInline) {
+			batch(() => {
+				this.setState({ newCodemarkAttributes: undefined });
+				this.props.setCodemarksFileViewStyle("list");
+			});
+		} else this.setState({ newCodemarkAttributes: undefined });
 	};
 
 	static contextTypes = {
@@ -1049,12 +1055,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		if (docMarker) {
 			batch(() => {
 				this._updateEmitter.enqueue(() => {
-					this.setState({ newCodemarkAttributes: undefined });
+					this.closeCodemarkForm();
 				});
 				this.props.addDocumentMarker(this.props.textEditorUri!, docMarker);
 			});
 		} else {
-			this.setState({ newCodemarkAttributes: undefined });
+			this.closeCodemarkForm();
 		}
 	};
 
@@ -1314,7 +1320,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	) => {
 		if (event) event.preventDefault();
 
-		if (!this.props.viewInline) {
+		const viewingInline = this.props.viewInline;
+		if (!viewingInline) {
 			this.props.setCodemarksFileViewStyle("inline");
 			try {
 				await new Promise((resolve, reject) => {
@@ -1362,7 +1369,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		// getDerivedStateFromProps won't fire.
 		this.setState({
 			clickedPlus: true,
-			newCodemarkAttributes: { type }
+			newCodemarkAttributes: { type, viewingInline }
 		});
 
 		this.props.setCurrentCodemark();
