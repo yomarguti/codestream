@@ -779,23 +779,13 @@ export function toSlackPostBlocks(
 				}
 			}
 
-			blocks.push(
-				url !== undefined
-					? {
-							type: "section",
-							text: {
-								type: "mrkdwn",
-								text: `${filename}\n\`\`\`${marker.code}\`\`\``
-							}
-					  }
-					: {
-							type: "section",
-							text: {
-								type: "mrkdwn",
-								text: `${filename}\n\`\`\`${marker.code}\`\`\``
-							}
-					  }
-			);
+			blocks.push({
+				type: "section",
+				text: {
+					type: "mrkdwn",
+					text: `${filename}\n\`\`\`${marker.code}\`\`\``
+				}
+			});
 
 			let actionId = toActionId(counter, "web", codemark, marker);
 			const actions: ActionsBlock = {
