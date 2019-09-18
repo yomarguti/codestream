@@ -44,16 +44,25 @@ function isNotLinkType(codemark: CodemarkPlus) {
 	return codemark.type !== CodemarkType.Link;
 }
 
+function isNotDeprecatedType(codemark: CodemarkPlus) {
+	return codemark.type !== CodemarkType.Trap && codemark.type !== CodemarkType.Question;
+}
+
 const getCodemarks = state => state.codemarks;
 const getCodemarkTypeFilter = state => state.context.codemarkTypeFilter;
 export const getTypeFilteredCodemarks = createSelector(
 	getCodemarks,
 	getCodemarkTypeFilter,
 	(codemarks: CodemarksState, filter: string) => {
-		if (filter === "all") return Object.values(codemarks).filter(isNotLinkType);
+		if (filter === "all")
+			return Object.values(codemarks).filter(c => isNotLinkType(c) && isNotDeprecatedType(c));
 		else {
 			return Object.values(codemarks).filter(
-				codemark => isNotLinkType(codemark) && codemark.type === filter && !codemark.deactivated
+				codemark =>
+					isNotLinkType(codemark) &&
+					isNotDeprecatedType(codemark) &&
+					codemark.type === filter &&
+					!codemark.deactivated
 			);
 		}
 	}
