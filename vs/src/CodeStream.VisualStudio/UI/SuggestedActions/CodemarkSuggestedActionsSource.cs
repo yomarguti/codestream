@@ -58,8 +58,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 					new SuggestedActionSet(
 						actions: new ISuggestedAction[] {
 							new CodemarkCommentSuggestedAction(_componentModel, _textDocument, editorState),
-							new CodemarkIssueSuggestedAction(_componentModel, _textDocument, editorState),
-							new CodemarkBookmarkSuggestedAction(_componentModel, _textDocument, editorState),
+							new CodemarkIssueSuggestedAction(_componentModel, _textDocument, editorState),							
 							new CodemarkPermalinkSuggestedAction(_componentModel, _textDocument, editorState)
 						},
 						categoryName: null,
@@ -110,12 +109,6 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 		public CodemarkIssueSuggestedAction(IComponentModel componentModel, ITextDocument textDocument, EditorState textSelection) : base(componentModel, textDocument, textSelection) { }
 		protected override CodemarkType CodemarkType => CodemarkType.Issue;
 		public override string DisplayText { get; } = $"Create Issue";
-	}
-
-	internal class CodemarkBookmarkSuggestedAction : CodemarkSuggestedActionBase {
-		public CodemarkBookmarkSuggestedAction(IComponentModel componentModel, ITextDocument textDocument, EditorState textSelection) : base(componentModel, textDocument, textSelection) { }
-		protected override CodemarkType CodemarkType => CodemarkType.Bookmark;
-		public override string DisplayText { get; } = $"Create Bookmark";
 	}
 
 	internal class CodemarkPermalinkSuggestedAction : CodemarkSuggestedActionBase {

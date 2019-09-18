@@ -1,5 +1,4 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
@@ -17,11 +16,6 @@ namespace CodeStream.VisualStudio.Commands {
 	internal class AddCodemarkIssueCommand : AddCodemarkCommandBase {
 		public AddCodemarkIssueCommand(Guid commandSet) : base(commandSet, PackageIds.AddCodemarkIssueCommandId) { }
 		protected override CodemarkType CodemarkType => CodemarkType.Issue;
-	}
-
-	internal class AddCodemarkBookmarkCommand : AddCodemarkCommandBase {
-		public AddCodemarkBookmarkCommand(Guid commandSet) : base(commandSet, PackageIds.AddCodemarkBookmarkCommandId) { }
-		protected override CodemarkType CodemarkType => CodemarkType.Bookmark;
 	}
 
 	internal class AddCodemarkPermalinkCommand : AddCodemarkCommandBase {

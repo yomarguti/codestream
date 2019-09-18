@@ -39,8 +39,7 @@ namespace CodeStream.VisualStudio {
 		public const int WebViewDevToolsCommandId = 0x0600;
 		public const int CodeStreamEditorCommands = 0x1023;
 		public const int AddCodemarkCommentCommandId = 0x0400;
-		public const int AddCodemarkIssueCommandId = 0x0401;
-		public const int AddCodemarkBookmarkCommandId = 0x0402;
+		public const int AddCodemarkIssueCommandId = 0x0401;		
 		public const int AddCodemarkPermalinkCommandId = 0x0403;
 		public const int AddCodemarkPermalinkInstantCommandId = 0x0413;		
 		public const int BookmarkCommand1CommandId = 0x0501;

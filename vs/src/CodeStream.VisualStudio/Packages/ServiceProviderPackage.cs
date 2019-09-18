@@ -81,14 +81,12 @@ namespace CodeStream.VisualStudio.Packages {
 					new WebViewDevToolsCommand(),
 #endif
 					new AddCodemarkCommentCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
-					new AddCodemarkIssueCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
-					new AddCodemarkBookmarkCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+					new AddCodemarkIssueCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),					
 					new AddCodemarkPermalinkCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
 					new AddCodemarkPermalinkInstantCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
 
 					new AddCodemarkCommentCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
-					new AddCodemarkIssueCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
-					new AddCodemarkBookmarkCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
+					new AddCodemarkIssueCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),					
 					new AddCodemarkPermalinkCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
 					new AddCodemarkPermalinkInstantCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
 

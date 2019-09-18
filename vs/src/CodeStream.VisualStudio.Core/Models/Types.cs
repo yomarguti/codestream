@@ -29,6 +29,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 	public enum CodemarkType {
 		Comment,
 		Issue,
+		// Obsolete
 		Bookmark,
 		Question,
 		Trap,
