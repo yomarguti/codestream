@@ -173,10 +173,6 @@ class CodestreamPackage {
 				hiddenInCommandPalette: true,
 				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Issue, "Context Menu"),
 			}),
-			atom.commands.add("atom-workspace", "codestream:context-create-bookmark", {
-				hiddenInCommandPalette: true,
-				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Bookmark, "Context Menu"),
-			}),
 			atom.commands.add("atom-workspace", "codestream:context-get-permalink", {
 				hiddenInCommandPalette: true,
 				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Link, "Context Menu"),
@@ -189,10 +185,6 @@ class CodestreamPackage {
 			atom.commands.add("atom-workspace", "codestream:keymap-create-issue", {
 				hiddenInCommandPalette: true,
 				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Issue, "Shortcut"),
-			}),
-			atom.commands.add("atom-workspace", "codestream:keymap-create-bookmark", {
-				hiddenInCommandPalette: true,
-				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Bookmark, "Shortcut"),
 			}),
 			atom.commands.add("atom-workspace", "codestream:keymap-get-permalink", {
 				hiddenInCommandPalette: true,
