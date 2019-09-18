@@ -580,7 +580,7 @@ export function toSlackPostBlocks(
 
 	switch (codemark.type) {
 		case CodemarkType.Comment: {
-			const sections: KnownBlock[] = [
+			blocks.push(
 				{
 					type: "section",
 					text: {
@@ -596,13 +596,12 @@ export function toSlackPostBlocks(
 						text: toSlackText(codemark.text, userIdsByName)
 					}
 				}
-			];
-			blocks.push(...sections);
+			);
 
 			break;
 		}
 		case CodemarkType.Bookmark: {
-			const sections: KnownBlock[] = [
+			blocks.push(
 				{
 					type: "section",
 					text: {
@@ -619,13 +618,12 @@ export function toSlackPostBlocks(
 						text: toSlackText(codemark.title, userIdsByName)
 					}
 				}
-			];
-			blocks.push(...sections);
+			);
 
 			break;
 		}
 		case CodemarkType.Issue: {
-			const sections: KnownBlock[] = [
+			blocks.push(
 				{
 					type: "section",
 					text: {
@@ -648,14 +646,12 @@ export function toSlackPostBlocks(
 						text: toSlackText(codemark.text, userIdsByName)
 					}
 				}
-			];
-
-			blocks.push(...sections);
+			);
 
 			break;
 		}
 		case CodemarkType.Question: {
-			const sections: KnownBlock[] = [
+			blocks.push(
 				{
 					type: "section",
 					text: {
@@ -678,13 +674,12 @@ export function toSlackPostBlocks(
 						text: toSlackText(codemark.text, userIdsByName)
 					}
 				}
-			];
-			blocks.push(...sections);
+			);
 
 			break;
 		}
 		case CodemarkType.Trap: {
-			const sections: KnownBlock[] = [
+			blocks.push(
 				{
 					type: "section",
 					text: {
@@ -700,8 +695,7 @@ export function toSlackPostBlocks(
 						text: toSlackText(codemark.text, userIdsByName)
 					}
 				}
-			];
-			blocks.push(...sections);
+			);
 
 			break;
 		}
