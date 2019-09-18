@@ -45,7 +45,11 @@ function isNotLinkType(codemark: CodemarkPlus) {
 }
 
 function isNotDeprecatedType(codemark: CodemarkPlus) {
-	return codemark.type !== CodemarkType.Trap && codemark.type !== CodemarkType.Question;
+	return (
+		codemark.type !== CodemarkType.Trap &&
+		codemark.type !== CodemarkType.Question &&
+		codemark.type !== CodemarkType.Bookmark
+	);
 }
 
 const getCodemarks = state => state.codemarks;

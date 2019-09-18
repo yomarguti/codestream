@@ -36,19 +36,19 @@ export class SimpleKnowledgePanel extends Component {
 		this.typeLabels = {
 			comment: "Code Comments",
 			// question: "Questions & Answers",
-			issue: "Issues",
-			trap: "Traps",
-			snippet: "Snippets",
-			bookmark: "Bookmarks"
+			issue: "Issues"
+			// trap: "Traps"
+			// snippet: "Snippets",
+			// bookmark: "Bookmarks"
 		};
 		this.typeLabelsLower = {
 			all: "all codemarks",
 			comment: "code comments",
 			// question: "questions & answers",
-			issue: "issues",
-			trap: "traps",
-			snippet: "snippets",
-			bookmark: "bookmarks"
+			issue: "issues"
+			// trap: "traps",
+			// snippet: "snippets",
+			// bookmark: "bookmarks"
 		};
 		this.fileFiltersLabelsLower = {
 			current: "in current file only",
@@ -275,9 +275,9 @@ export class SimpleKnowledgePanel extends Component {
 			{ label: "-" },
 			{ label: "Code Comments", action: "comment" },
 			// { label: "Questions & Answers", action: "question" },
-			{ label: "Issues", action: "issue" },
+			{ label: "Issues", action: "issue" }
 			// { label: "Traps", action: "trap" },
-			{ label: "Bookmarks", action: "bookmark" }
+			// { label: "Bookmarks", action: "bookmark" }
 		];
 
 		// let fileMenuItems = [
@@ -390,13 +390,15 @@ export class SimpleKnowledgePanel extends Component {
 							// 	</div>
 							// </div>
 						}
-						<div className="codemark-info" onClick={this.onClickCodemarkTypeFor("bookmark")}>
-							<Icon name="bookmark" className="type-icon" />
-							<div className="text">
-								<h3>Bookmark</h3>
-								<p>Bookmark parts of the code you want to be able to get back to quickly.</p>
-							</div>
-						</div>
+						{
+							// 	<div className="codemark-info" onClick={this.onClickCodemarkTypeFor("bookmark")}>
+							// 	<Icon name="bookmark" className="type-icon" />
+							// 	<div className="text">
+							// 		<h3>Bookmark</h3>
+							// 		<p>Bookmark parts of the code you want to be able to get back to quickly.</p>
+							// 	</div>
+							// </div>
+						}
 						<div className="codemark-info" onClick={this.onClickCodemarkTypeFor("link")}>
 							<Icon name="link" className="type-icon" />
 							<div className="text">

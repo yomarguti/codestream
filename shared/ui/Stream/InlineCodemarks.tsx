@@ -134,7 +134,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	disposables: { dispose(): void }[] = [];
 	titles: {
 		comment: JSX.Element;
-		bookmark: JSX.Element;
+		// bookmark: JSX.Element;
 		link: JSX.Element;
 		issue: JSX.Element;
 		about: JSX.Element;
@@ -172,13 +172,13 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					<span className="keybinding">c</span>
 				</span>
 			),
-			bookmark: (
-				<span>
-					<span className="function">Create Bookmark</span>{" "}
-					<span className="keybinding extra-pad">{modifier}</span>
-					<span className="keybinding">b</span>
-				</span>
-			),
+			// bookmark: (
+			// 	<span>
+			// 		<span className="function">Create Bookmark</span>{" "}
+			// 		<span className="keybinding extra-pad">{modifier}</span>
+			// 		<span className="keybinding">b</span>
+			// 	</span>
+			// ),
 			link: (
 				<span>
 					<span className="function">Get Permalink</span>{" "}
@@ -563,15 +563,15 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						align={{ offset: [-3, 10] }}
 						delay={1}
 					/>,
-					<Icon
-						onClick={e => this.handleClickPlus(e, CodemarkType.Bookmark, lineNum0)}
-						name="bookmark"
-						key="bookmark"
-						title={this.titles.bookmark}
-						placement="bottomLeft"
-						align={{ offset: [-3, 10] }}
-						delay={1}
-					/>,
+					// <Icon
+					// 	onClick={e => this.handleClickPlus(e, CodemarkType.Bookmark, lineNum0)}
+					// 	name="bookmark"
+					// 	key="bookmark"
+					// 	title={this.titles.bookmark}
+					// 	placement="bottomLeft"
+					// 	align={{ offset: [-3, 10] }}
+					// 	delay={1}
+					// />,
 					// <Icon
 					//  key="about"
 					// 	onClick={e => this.handleClickPlus(e, "about", lineNum0, top)}
@@ -739,9 +739,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			// touch the left and right edges of the panel -Pez
 			const title = (
 				<div style={{ maxWidth: "70vw" }}>
-					A codemark is a link between a block of code and a conversation, an issue, or a bookmark.
-					Codemarks work across branches, and stay pinned to the block of code even as your codebase
-					changes.
+					A codemark is a link between a block of code and a conversation or an issue. Codemarks
+					work across branches, and stay pinned to the block of code even as your codebase changes.
 				</div>
 			);
 			return (
@@ -758,7 +757,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						<div className="keybindings">
 							<div className="function-row">{this.titles.comment}</div>
 							<div className="function-row">{this.titles.issue}</div>
-							<div className="function-row">{this.titles.bookmark}</div>
+							{
+								// <div className="function-row">{this.titles.bookmark}</div>
+							}
 							<div className="function-row">{this.titles.link}</div>
 							<div className="function-row">
 								<span className="function">Copy Private Permalink</span>
