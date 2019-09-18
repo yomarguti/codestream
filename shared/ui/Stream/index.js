@@ -349,7 +349,7 @@ export class SimpleStream extends Component {
 		const hasOtherTeams = userTeams.length > 1;
 
 		const teamItem = {
-			label: this.props.teamName,
+			label: "Switch Team",
 			noHover: !hasOtherTeams,
 			submenu: !hasOtherTeams
 				? null
@@ -398,14 +398,15 @@ export class SimpleStream extends Component {
 		};
 
 		const menuItems = [
-			teamItem,
+			{ label: this.props.teamName, noHover: true, action: () => {} },
+			hasOtherTeams ? teamItem : undefined,
 			{ label: "-" },
 			{ label: inviteLabel, action: "invite" },
 			// { label: "Settings", action: "settings" },
 			{ label: "Feedback", action: "feedback" },
 			{ label: "Help", action: "help" },
 			{ label: "-" }
-		];
+		].filter(Boolean);
 
 		const providerMenuItems = this.addProvidersToMenu();
 		if (providerMenuItems.length > 0) {
