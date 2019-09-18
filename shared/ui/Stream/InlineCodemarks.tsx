@@ -266,11 +266,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			},
 			HostApi.instance.on(NewCodemarkNotificationType, e => {
 				this.currentPostEntryPoint = e.source as PostEntryPoint;
-				this.handleClickPlus(
-					undefined,
-					e.type,
-					getLine0ForEditorLine(this.props.textEditorVisibleRanges, e.range.start.line)
-				);
+				this.handleClickPlus(undefined, e.type, undefined as any, false);
 			})
 		);
 
@@ -1316,7 +1312,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	handleClickPlus = async (
 		event: React.SyntheticEvent | undefined,
 		type: CodemarkType,
-		lineNum0: number
+		lineNum0: number,
+		shouldChangeSelection = true
 	) => {
 		if (event) event.preventDefault();
 
@@ -1340,27 +1337,29 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 		const mappedLineNum = this.mapLine0ToVisibleRange(lineNum0);
 
-		let range: Range | undefined;
-		if (
-			mappedLineNum === openIconsOnLine &&
-			textEditorSelection &&
-			// if these aren't equal, we have an active selection
-			(textEditorSelection.start.line !== textEditorSelection.end.line ||
-				textEditorSelection.start.character !== textEditorSelection.end.character)
-		) {
-			range = Range.create(textEditorSelection.start, textEditorSelection.end);
-		} else {
-			range = Range.create(mappedLineNum, 0, mappedLineNum, MaxRangeValue);
-			const newSelection: EditorSelection = { ...range, cursor: range.end };
-			// HACK: although the changeSelection action creator will update the redux store,
-			// this component needs to update the store pre-emptively to avoid flashing the hover button
-			// before the form appears. the flash is because as the selection changes, we try to show the hover button to initiate opening the form
-			this.props.setEditorContext({ textEditorSelections: [newSelection] });
-			this.props.changeSelection(this.props.textEditorUri!, newSelection);
-		}
+		if (shouldChangeSelection) {
+			let range: Range | undefined;
+			if (
+				mappedLineNum === openIconsOnLine &&
+				textEditorSelection &&
+				// if these aren't equal, we have an active selection
+				(textEditorSelection.start.line !== textEditorSelection.end.line ||
+					textEditorSelection.start.character !== textEditorSelection.end.character)
+			) {
+				range = Range.create(textEditorSelection.start, textEditorSelection.end);
+			} else {
+				range = Range.create(mappedLineNum, 0, mappedLineNum, MaxRangeValue);
+				const newSelection: EditorSelection = { ...range, cursor: range.end };
+				// HACK: although the changeSelection action creator will update the redux store,
+				// this component needs to update the store pre-emptively to avoid flashing the hover button
+				// before the form appears. the flash is because as the selection changes, we try to show the hover button to initiate opening the form
+				this.props.setEditorContext({ textEditorSelections: [newSelection] });
+				this.props.changeSelection(this.props.textEditorUri!, newSelection);
+			}
 
-		// Clear the previous highlight
-		this.handleUnhighlightLine(lineNum0);
+			// Clear the previous highlight
+			this.handleUnhighlightLine(lineNum0);
+		}
 
 		// Clear the open icons
 		// this works subtly... we tell state to not open icons on any line,
@@ -1373,9 +1372,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		});
 
 		this.props.setCurrentCodemark();
-
-		// setup git context for codemark form
-		// setTimeout(() => this.props.focusInput(), 500);
 	};
 
 	mapLine0ToVisibleRange = fromLineNum0 => {
