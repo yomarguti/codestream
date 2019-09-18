@@ -17,10 +17,9 @@ export function reduceCodemarks(state = initialState, action: CodemarksActions) 
 			return { ...state, ...toMapBy("id", action.payload) };
 		}
 		case CodemarksActionsTypes.Delete: {
-			return {
-				...state,
-				[action.payload]: undefined! // Needs the ! to avoid undefined everywhere
-			};
+			const nextState = { ...state };
+			delete nextState[action.payload];
+			return nextState;
 		}
 		case "RESET":
 			return initialState;
