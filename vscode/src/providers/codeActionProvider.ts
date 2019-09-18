@@ -70,11 +70,11 @@ export class CodeStreamCodeActionProvider implements CodeActionProvider, Disposa
 				command: "codestream.newIssue",
 				arguments: [args]
 			},
-			{
-				title: `Create Bookmark`,
-				command: "codestream.newBookmark",
-				arguments: [args]
-			},
+			// {
+			// 	title: `Create Bookmark`,
+			// 	command: "codestream.newBookmark",
+			// 	arguments: [args]
+			// },
 			{
 				title: `Get Permalink`,
 				command: "codestream.newPermalink",

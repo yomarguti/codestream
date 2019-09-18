@@ -182,11 +182,6 @@
                 "category": "CodeStream"
             },
             {
-                "command": "codestream.newBookmark",
-                "title": "Create Bookmark",
-                "category": "CodeStream"
-            },
-            {
                 "command": "codestream.newPermalink",
                 "title": "Get Permalink",
                 "category": "CodeStream"
@@ -295,24 +290,6 @@
                 },
                 "key": "ctrl+shift+/ ctrl+shift+i",
                 "mac": "ctrl+/ ctrl+i",
-                "when": "editorTextFocus && codestream:status == signedIn"
-            },
-            {
-                "command": "codestream.newBookmark",
-                "args": {
-                    "source": "Shortcut"
-                },
-                "key": "ctrl+shift+/ b",
-                "mac": "ctrl+/ b",
-                "when": "editorTextFocus && codestream:status == signedIn"
-            },
-            {
-                "command": "codestream.newBookmark",
-                "args": {
-                    "source": "Shortcut"
-                },
-                "key": "ctrl+shift+/ ctrl+shift+b",
-                "mac": "ctrl+/ ctrl+b",
                 "when": "editorTextFocus && codestream:status == signedIn"
             },
             {
@@ -451,10 +428,6 @@
                     "when": "codestream:status == signedIn"
                 },
                 {
-                    "command": "codestream.newBookmark",
-                    "when": "codestream:status == signedIn"
-                },
-                {
                     "command": "codestream.newPermalink",
                     "when": "codestream:status == signedIn"
                 },
@@ -509,11 +482,6 @@
                     "command": "codestream.newIssue",
                     "when": "codestream:status == signedIn",
                     "group": "9_zcodestream@2"
-                },
-                {
-                    "command": "codestream.newBookmark",
-                    "when": "codestream:status == signedIn",
-                    "group": "9_zcodestream@3"
                 },
                 {
                     "command": "codestream.newPermalink",
