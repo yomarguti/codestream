@@ -10,11 +10,6 @@ import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
 import Codemark from "./Codemark";
 import { HostApi } from "../webview-api";
-import {
-	GetDocumentFromMarkerRequestType,
-	TelemetryRequestType
-} from "@codestream/protocols/agent";
-import { EditorRevealRangeRequestType } from "../ipc/webview.protocol";
 import { includes as _includes, sortBy as _sortBy } from "lodash-es";
 import { setCurrentStream, setCurrentCodemark } from "../store/context/actions";
 

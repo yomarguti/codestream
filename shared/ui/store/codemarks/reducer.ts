@@ -4,6 +4,7 @@ import { ActionType } from "../common";
 import * as actions from "./actions";
 import { CodemarksActionsTypes, CodemarksState } from "./types";
 import { CodemarkPlus } from "@codestream/protocols/agent";
+import { CodemarkType } from "@codestream/protocols/api";
 
 type CodemarksActions = ActionType<typeof actions>;
 
@@ -39,16 +40,20 @@ export function getByType(state: CodemarksState, type?: string): CodemarkPlus[] 
 	return Object.values(state).filter(codemark => codemark.type === type);
 }
 
+function isNotLinkType(codemark: CodemarkPlus) {
+	return codemark.type !== CodemarkType.Link;
+}
+
 const getCodemarks = state => state.codemarks;
 const getCodemarkTypeFilter = state => state.context.codemarkTypeFilter;
 export const getTypeFilteredCodemarks = createSelector(
 	getCodemarks,
 	getCodemarkTypeFilter,
 	(codemarks: CodemarksState, filter: string) => {
-		if (filter === "all") return Object.values(codemarks);
+		if (filter === "all") return Object.values(codemarks).filter(isNotLinkType);
 		else {
 			return Object.values(codemarks).filter(
-				codemark => codemark.type === filter && !codemark.deactivated
+				codemark => isNotLinkType(codemark) && codemark.type === filter && !codemark.deactivated
 			);
 		}
 	}
@@ -73,6 +78,8 @@ export const getFileFilteredCodemarks = createSelector(
 	getCodemarkFileFilter,
 	(codemarks: CodemarksState, filter: string) => {
 		return Object.values(codemarks).filter(codemark => {
+			if (isNotLinkType(codemark) === false) return false;
+
 			const codeBlock = codemark.markers && codemark.markers.length && codemark.markers[0];
 			const codeBlockFileStreamId = codeBlock && codeBlock.fileStreamId;
 			return !codemark.deactivated && codeBlockFileStreamId === filter;
