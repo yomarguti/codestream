@@ -12,6 +12,7 @@ import {
 	CSUser,
 	StreamType
 } from "../../protocol/api.protocol";
+import { providerNamesById } from "../../providers/provider";
 
 const defaultCreatedAt = 181886400000;
 const defaultCreator = "0";
@@ -240,34 +241,32 @@ export function toTeamsMessageBody(
 	let text;
 	let title;
 
-	const me = userInfosById.get(teamsUserId)!.displayName;
-
 	switch (codemark.type) {
 		case CodemarkType.Comment:
-			message = `${me} commented on code`;
+			message = "<i>commented on code</i>";
 			text = codemark.text;
 
 			break;
 		case CodemarkType.Bookmark:
-			message = `${me} set a bookmark`;
+			message = "<i>set a bookmark";
 			// Bookmarks use the title rather than text
 			text = codemark.title;
 
 			break;
 		case CodemarkType.Issue:
-			message = `${me} opened an issue`;
+			message = "<i>opened an issue";
 			title = codemark.title;
 			text = codemark.text;
 
 			break;
 		case CodemarkType.Question:
-			message = `${me} has a question`;
+			message = "<i>has a question";
 			title = codemark.title;
 			text = codemark.text;
 
 			break;
 		case CodemarkType.Trap:
-			message = `${me} set a trap`;
+			message = "<i>set a trap";
 			text = codemark.text;
 
 			break;
@@ -304,6 +303,8 @@ export function toTeamsMessageBody(
 		});
 	}
 
+	const buttons = [];
+
 	if (markers !== undefined && markers.length !== 0) {
 		if (fields === undefined) {
 			fields = [];
@@ -317,23 +318,20 @@ export function toTeamsMessageBody(
 			if (markerLocations) {
 				const location = markerLocations[0].locations[marker.id];
 				[start, , end] = location!;
-				filename = `<b>${marker.file} (Line${
+				filename = `<span style="display:inline-block;padding-top:1rem;">${marker.file} (Line${
 					start === end ? ` ${start}` : `s ${start}-${end}`
-				})</b>`;
+				})</span>`;
 			} else {
-				filename = `<b>${marker.file}</b>`;
+				filename = `<span style="display:inline-block;padding-top:1rem;">${marker.file}</span>`;
 			}
 
-			const code = `<code style="margin:7px 0;padding:10px;border:1px solid #d9d9d9;white-space:pre;display:block;overflow:auto;">${marker.code}</code>`;
-			if (codemark.permalink) {
-				filename = `<a href="${codemark.permalink}">${filename}</a>`;
-			} else if (
+			let url;
+			if (
 				remotes !== undefined &&
 				remotes.length !== 0 &&
 				start !== undefined &&
 				end !== undefined
 			) {
-				let url;
 				for (const remote of remotes) {
 					url = Marker.getRemoteCodeUrl(
 						remote,
@@ -347,19 +345,72 @@ export function toTeamsMessageBody(
 						break;
 					}
 				}
-
-				if (url !== undefined) {
-					filename = `<a href="${url.url}">${filename}</a>`;
-				} else {
-					filename = `<p>${filename}</p>`;
-				}
 			}
 
 			fields.push({
 				title: undefined,
-				value: `${filename}${code}`
+				value: `${filename}<code style="margin:7px 0;padding:10px;border:1px solid #d9d9d9;white-space:pre;display:block;overflow:auto;">${marker.code}</code>`
+			});
+
+			// Since MSTeams only allows a max of 6 buttons, only add the Open on CodeStream & Open Issue on X buttons to the first code block
+			if (buttons.length < 2) {
+				buttons.push({
+					type: "openUrl",
+					title: "Open on CodeStream",
+					value: `${codemark.permalink}?marker=${marker.id}`
+				});
+
+				if (codemark.externalProvider !== undefined && codemark.externalProviderUrl !== undefined) {
+					buttons.push({
+						type: "openUrl",
+						title: `Open Issue on ${providerNamesById.get(codemark.externalProvider) ||
+							codemark.externalProvider}`,
+						value: codemark.externalProviderUrl
+					});
+				}
+			}
+
+			// MSTeams only allows a max of 6 buttons
+			if (buttons.length < 6) {
+				buttons.push({
+					type: "openUrl",
+					title: "Open in IDE",
+					value: `${codemark.permalink}?ide=default&marker=${marker.id}`
+				});
+			}
+
+			// MSTeams only allows a max of 6 buttons
+			if (buttons.length < 6) {
+				if (url !== undefined) {
+					buttons.push({
+						type: "openUrl",
+						title: `Open on ${url.displayName}`,
+						value: url.url
+					});
+				}
+			}
+		}
+	} else {
+		buttons.push({
+			type: "openUrl",
+			title: "Open on CodeStream",
+			value: codemark.permalink
+		});
+
+		if (codemark.externalProvider !== undefined && codemark.externalProviderUrl !== undefined) {
+			buttons.push({
+				type: "openUrl",
+				title: `Open Issue on ${providerNamesById.get(codemark.externalProvider) ||
+					codemark.externalProvider}`,
+				value: codemark.externalProviderUrl
 			});
 		}
+
+		buttons.push({
+			type: "openUrl",
+			title: "Open in IDE",
+			value: `${codemark.permalink}?ide=default`
+		});
 	}
 
 	let fieldsHtml = "";
@@ -368,7 +419,7 @@ export function toTeamsMessageBody(
 			.map(
 				f =>
 					`<div style="margin-top:5px;">${
-						f.title ? `<p style="font-weight:600;">${f.title}</p>` : ""
+						f.title ? `<p style="font-weight:600;padding: 1rem 0;">${f.title}</p>` : ""
 					}${f.value}</div>`
 			)
 			.join("");
@@ -419,14 +470,12 @@ export function toTeamsMessageBody(
 		contentType: "application/vnd.microsoft.card.thumbnail",
 		content: JSON.stringify({
 			title: title,
-			text: `<div data-codestream="codestream://codemark/${codemark.id}?teamId=${
-				codemark.teamId
-			}" style="margin-top:0.25em;border-left:4px solid ${color};padding-left:0.75em;">
-	${false && title ? `<p style="font-weight:600;">${title}</p>` : ""}
+			text: `<div data-codestream="codestream://codemark/${codemark.id}?teamId=${codemark.teamId}" style="margin-top:0.25em;border-left:4px solid ${color};padding-left:0.75em;">
 	<p>${text}</p>
 	${fieldsHtml}
 	<p style="font-size:x-small;font-weight:600;opacity:0.6;">Posted via CodeStream</p>
-</div>`
+</div>`,
+			buttons: buttons
 		})
 	});
 
