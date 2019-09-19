@@ -14,6 +14,32 @@ export namespace Strings {
 		Backslash = 92
 	}
 
+	export function escapeHtml(s: string) {
+		return s
+			.replace(/&/g, "&amp;")
+			.replace(/</g, "&lt;")
+			.replace(/>/g, "&gt;")
+			.replace(/"/g, "&quot;")
+			.replace(/'/g, "&#039;");
+	}
+
+	const escapeMarkdownRegex = /[\\`*_{}[\]()#+\-.!]/g;
+	// const sampleMarkdown = '## message `not code` *not important* _no underline_ \n> don\'t quote me \n- don\'t list me \n+ don\'t list me \n1. don\'t list me \nnot h1 \n=== \nnot h2 \n---\n***\n---\n___';
+	const markdownHeaderReplacement = "\u200b===";
+
+	export function escapeMarkdown(s: string, options: { quoted?: boolean } = {}) {
+		s = s
+			// Escape markdown
+			.replace(escapeMarkdownRegex, "\\$&")
+			// Escape markdown header (since the above regex won't match it)
+			.replace(/^===/gm, markdownHeaderReplacement);
+
+		if (!options.quoted) return s;
+
+		// Keep under the same block-quote but with line breaks
+		return `> ${s.replace(/\n/g, "\t\n>  ")}`;
+	}
+
 	export function getDurationMilliseconds(start: [number, number]) {
 		const [secs, nanosecs] = process.hrtime(start);
 		return secs * 1000 + Math.floor(nanosecs / 1000000);

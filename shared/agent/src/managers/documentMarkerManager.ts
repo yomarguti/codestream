@@ -31,13 +31,10 @@ import {
 	CSMarker,
 	CSUser
 } from "../protocol/api.protocol";
-import { Functions, log, lsp, lspHandler } from "../system";
+import { Functions, log, lsp, lspHandler, Strings } from "../system";
 
 const emojiMap: { [key: string]: string } = require("../../emoji/emojis.json");
 const emojiRegex = /:([-+_a-z0-9]+):/g;
-const escapeMarkdownRegex = /[`\>\#\*\_\-\+\.]/g;
-// const sampleMarkdown = '## message `not code` *not important* _no underline_ \n> don\'t quote me \n- don\'t list me \n+ don\'t list me \n1. don\'t list me \nnot h1 \n=== \nnot h2 \n---\n***\n---\n___';
-const markdownHeaderReplacement = "\u200b===";
 
 const emptyResponse = {
 	markers: [],
@@ -283,13 +280,7 @@ export class DocumentMarkerManager {
 						documentMarkers.push({
 							...marker,
 							summary: summary,
-							summaryMarkdown: `\n\n> ${summary
-								// Escape markdown
-								.replace(escapeMarkdownRegex, "\\$&")
-								// Escape markdown header (since the above regex won't match it)
-								.replace(/^===/gm, markdownHeaderReplacement)
-								// Keep under the same block-quote but with line breaks
-								.replace(/\n/g, "\t\n>  ")}`,
+							summaryMarkdown: `\n\n${Strings.escapeMarkdown(summary, { quoted: true })}`,
 							creatorName: (creator && creator.username) || "Unknown",
 							codemark: codemark,
 							range: MarkerLocation.toRange(location),
