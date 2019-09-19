@@ -118,7 +118,7 @@ class CodeStreamComponent(val project: Project) : Disposable {
     private fun initStatusBarWidget() {
         if (project.isDisposed) return
         val widget = CodeStreamStatusBarWidget(project)
-        statusBar = WindowManager.getInstance().getIdeFrame(project).statusBar
+        statusBar = WindowManager.getInstance().getIdeFrame(project)?.statusBar
         statusBar?.addWidget(widget)
         statusBarWidget = widget
     }
