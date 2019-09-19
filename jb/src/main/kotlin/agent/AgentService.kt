@@ -129,6 +129,9 @@ class AgentService(private val project: Project) : Disposable {
 
     suspend fun restart() {
         logger.info("Restarting CodeStream LSP agent")
+        if (initialization.isDone) {
+            initialization = CompletableFuture()
+        }
         agent.shutdown().await()
         agent.exit()
         initAgent(false)

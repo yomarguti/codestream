@@ -405,6 +405,8 @@
     </project-components>
 
     <actions>
+        <action id="CodeStream.SignOut" class="com.codestream.actions.SignOut" text="CodeStream: Sign out"/>
+
         <group id="com.codestream.Actions" popup="true" text="CodeStream" icon="/images/codestream-color.svg">
             <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="EditorPopupMenu2"/>
             <action id="CodeStream.AddComment" class="com.codestream.actions.AddComment" text="Add _Comment"
