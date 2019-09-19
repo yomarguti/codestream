@@ -1,5 +1,17 @@
 "use strict";
-import { Marker } from "../../api/extensions";
+import {
+	IAction,
+	IAdaptiveCard,
+	ICardElement,
+	IColumn,
+	IColumnSet,
+	IContainer,
+	IFactSet,
+	IImage,
+	IImageSet,
+	IOpenUrlAction,
+	ITextBlock
+} from "adaptivecards/lib/schema";
 import { SessionContainer } from "../../container";
 import {
 	CodemarkType,
@@ -13,6 +25,7 @@ import {
 	StreamType
 } from "../../protocol/api.protocol";
 import { providerNamesById } from "../../providers/provider";
+import { Marker, toActionId, toExternalActionId } from "../extensions";
 
 const defaultCreatedAt = 181886400000;
 const defaultCreator = "0";
@@ -29,21 +42,33 @@ export interface UserInfo {
 	type: string;
 }
 
-export interface TeamsMessageAttachmentButton {
-	type: string;
-	title: string;
-	text: string;
-	displayText: string;
-	value: string;
+interface TeamsAdaptiveCard extends IAdaptiveCard {
+	$schema: "http://adaptivecards.io/schemas/adaptive-card.json";
 }
 
-export interface TeamsMessageAttachment {
-	id: string;
+interface IActionSet extends ICardElement {
+	type: "ActionSet";
+	actions: IAction[];
+}
+
+type TeamsAdaptiveCardBlocks = ITextBlock | IImage | IImageSet | IFactSet | IColumnSet | IContainer; // | IActionSet;
+
+interface TeamsThumbnailCard {
 	contentType: "application/vnd.microsoft.card.thumbnail";
+
+	id: string;
 	contentUrl?: string;
 	content?: string;
 	name?: string;
 	thumbnailUrl?: string;
+}
+
+export interface TeamsMessageAttachment {
+	contentType:
+		| "application/vnd.microsoft.card.thumbnail"
+		| "application/vnd.microsoft.card.adaptive";
+	content: string;
+	id: string;
 }
 
 export interface TeamsMessageBody {
@@ -195,7 +220,6 @@ export function toTeamsMessageBody(
 	mentionedUserIds: string[] | undefined,
 	userInfosById: Map<string, UserInfo>,
 	userIdsByName: Map<string, string>,
-	teamsUserId: string,
 	mentionsOut: TeamsMessageMention[],
 	attachmentsOut: TeamsMessageAttachment[]
 ): { contentType: "text" | "html"; content: string } {
@@ -230,7 +254,7 @@ export function toTeamsMessageBody(
 		}
 	}
 
-	let message;
+	let preamble: string | undefined;
 	let fields:
 		| {
 				title?: string;
@@ -243,30 +267,30 @@ export function toTeamsMessageBody(
 
 	switch (codemark.type) {
 		case CodemarkType.Comment:
-			message = "<i>commented on code</i>";
+			preamble = "<i>commented on code</i>";
 			text = codemark.text;
 
 			break;
 		case CodemarkType.Bookmark:
-			message = "<i>set a bookmark";
+			preamble = "<i>set a bookmark</i>";
 			// Bookmarks use the title rather than text
 			text = codemark.title;
 
 			break;
 		case CodemarkType.Issue:
-			message = "<i>opened an issue";
+			preamble = "<i>opened an issue</i>";
 			title = codemark.title;
 			text = codemark.text;
 
 			break;
 		case CodemarkType.Question:
-			message = "<i>has a question";
+			preamble = "<i>has a question</i>";
 			title = codemark.title;
 			text = codemark.text;
 
 			break;
 		case CodemarkType.Trap:
-			message = "<i>set a trap";
+			preamble = "<i>set a trap</i>";
 			text = codemark.text;
 
 			break;
@@ -282,8 +306,9 @@ export function toTeamsMessageBody(
 			value: codemark.assignees
 				.map(a => {
 					const u = userInfosById.get(a);
-					return (u && u.displayName) || "Someone";
+					return u && u.displayName;
 				})
+				.filter(Boolean)
 				.join(", ")
 		});
 	}
@@ -303,7 +328,7 @@ export function toTeamsMessageBody(
 		});
 	}
 
-	const buttons = [];
+	const buttons: { type: "openUrl"; title: string; value: string }[] = [];
 
 	if (markers !== undefined && markers.length !== 0) {
 		if (fields === undefined) {
@@ -425,44 +450,25 @@ export function toTeamsMessageBody(
 			.join("");
 	}
 
-	if (message) {
+	if (preamble) {
+		// Add any mentions onto the preamble, because mentions aren't supported in attachments
 		if (mentionedUserIds != null && mentionedUserIds.length !== 0) {
-			message += ` /cc ${mentionedUserIds
+			preamble += `  /cc ${mentionedUserIds
 				.map(u => `@${userInfosById.get(u)!.username}`)
 				.join(", ")}`;
 		}
 
-		message = toTeamsMessageText(
-			message,
-			mentionedUserIds,
-			userInfosById,
-			userIdsByName,
-			mentionsOut
-		);
+		preamble = toTeamsText(preamble, mentionedUserIds, userInfosById, userIdsByName, mentionsOut);
 	}
 
 	if (title) {
 		// Ensure we skip mention linking, because they aren't supported in attachments
-		title = toTeamsMessageText(
-			title,
-			mentionedUserIds,
-			userInfosById,
-			userIdsByName,
-			mentionsOut,
-			true
-		);
+		title = toTeamsText(title, mentionedUserIds, userInfosById, userIdsByName, mentionsOut, true);
 	}
 
 	if (text) {
 		// Ensure we skip mention linking, because they aren't supported in attachments
-		text = toTeamsMessageText(
-			text,
-			mentionedUserIds,
-			userInfosById,
-			userIdsByName,
-			mentionsOut,
-			true
-		);
+		text = toTeamsText(text, mentionedUserIds, userInfosById, userIdsByName, mentionsOut, true);
 	}
 
 	attachmentsOut.push({
@@ -481,7 +487,423 @@ export function toTeamsMessageBody(
 
 	return {
 		contentType: "html",
-		content: `${message}<attachment id="${codemark.id}"></attachment>`
+		content: `${preamble}<attachment id="${codemark.id}"></attachment>`
+	};
+}
+
+// Ultimately switch to this method, once AdaptiveCards can support code blocks
+export function toTeamsMessageBodyAdaptiveCard(
+	codemark: CSCodemark,
+	remotes: string[] | undefined,
+	markers: CSMarker[] | undefined,
+	markerLocations: CSMarkerLocations[] | undefined,
+	mentionedUserIds: string[] | undefined,
+	userInfosById: Map<string, UserInfo>,
+	userIdsByName: Map<string, string>,
+	mentionsOut: TeamsMessageMention[],
+	attachmentsOut: TeamsMessageAttachment[]
+): { contentType: "text" | "html"; content: string } {
+	const card: TeamsAdaptiveCard = {
+		$schema: "http://adaptivecards.io/schemas/adaptive-card.json",
+		contentType: "application/vnd.microsoft.card.adaptive",
+		type: "AdaptiveCard",
+		version: "1.0",
+		id: codemark.id
+	};
+
+	const blocks: TeamsAdaptiveCardBlocks[] = [];
+
+	let preamble: string | undefined;
+
+	switch (codemark.type) {
+		case CodemarkType.Comment: {
+			preamble = "<i>commented on code</i>";
+
+			const text: ITextBlock = {
+				type: "TextBlock",
+				text: codemark.text,
+				size: "medium",
+				wrap: true
+			};
+
+			blocks.push({
+				type: "Container",
+				bleed: true,
+				items: [text]
+			});
+
+			break;
+		}
+		case CodemarkType.Bookmark: {
+			preamble = "<i>set a bookmark</i>";
+
+			const text: ITextBlock = {
+				type: "TextBlock",
+				// Bookmarks use the title rather than text
+				text: codemark.title,
+				size: "medium",
+				wrap: true
+			};
+
+			blocks.push({
+				type: "Container",
+				items: [text]
+			});
+
+			break;
+		}
+		case CodemarkType.Issue: {
+			preamble = "<i>opened an issue</i>";
+
+			const title: ITextBlock = {
+				type: "TextBlock",
+				text: codemark.title,
+				weight: "bolder",
+				size: "large",
+				wrap: true
+			};
+
+			const text: ITextBlock = {
+				type: "TextBlock",
+				text: codemark.text,
+				size: "medium",
+				wrap: true
+			};
+
+			blocks.push({
+				type: "Container",
+				items: [title, text]
+			});
+
+			break;
+		}
+		case CodemarkType.Question: {
+			preamble = "<i>has a question</i>";
+
+			const title: ITextBlock = {
+				type: "TextBlock",
+				text: codemark.title,
+				weight: "bolder",
+				size: "large",
+				wrap: true
+			};
+
+			const text: ITextBlock = {
+				type: "TextBlock",
+				text: codemark.text,
+				size: "medium",
+				wrap: true
+			};
+
+			blocks.push({
+				type: "Container",
+				items: [title, text]
+			});
+
+			break;
+		}
+		case CodemarkType.Trap: {
+			preamble = "<i>set a trap</i>";
+
+			const text: ITextBlock = {
+				type: "TextBlock",
+				text: codemark.text,
+				size: "medium",
+				wrap: true
+			};
+
+			blocks.push({
+				type: "Container",
+				items: [text]
+			});
+
+			break;
+		}
+	}
+
+	if (codemark.assignees !== undefined && codemark.assignees.length !== 0) {
+		const title: ITextBlock = {
+			type: "TextBlock",
+			text: "Assignees",
+			size: "large",
+			weight: "bolder"
+		};
+
+		const column1: IColumn = {
+			type: "Column",
+			width: "stretch",
+			items: []
+		};
+
+		const column2: IColumn = {
+			type: "Column",
+			width: "stretch",
+			items: []
+		};
+
+		blocks.push({
+			type: "Container",
+			spacing: "large",
+			items: [
+				title,
+				{
+					type: "ColumnSet",
+					columns: [column1, column2]
+				}
+			]
+		});
+
+		let assignee;
+		let text: ITextBlock;
+		let user;
+		let useFirst = true;
+		for (assignee of codemark.assignees) {
+			user = userInfosById.get(assignee);
+			if (user === undefined) continue;
+
+			text = {
+				type: "TextBlock",
+				text: user.displayName,
+				wrap: true
+			};
+
+			if (useFirst) {
+				column1.items!.push(text);
+			} else {
+				column2.items!.push(text);
+			}
+
+			useFirst = !useFirst;
+		}
+	}
+
+	if (
+		codemark.externalProvider !== undefined &&
+		codemark.externalAssignees !== undefined &&
+		codemark.externalAssignees.length !== 0
+	) {
+		const title: ITextBlock = {
+			type: "TextBlock",
+			text: "Assignees",
+			size: "large",
+			weight: "bolder"
+		};
+
+		const column1: IColumn = {
+			type: "Column",
+			width: "stretch",
+			items: []
+		};
+
+		const column2: IColumn = {
+			type: "Column",
+			width: "stretch",
+			items: []
+		};
+
+		blocks.push({
+			type: "Container",
+			spacing: "large",
+			items: [
+				title,
+				{
+					type: "ColumnSet",
+					columns: [column1, column2]
+				}
+			]
+		});
+
+		let assignee;
+		let text: ITextBlock;
+		let useFirst = true;
+		for (assignee of codemark.externalAssignees) {
+			text = {
+				type: "TextBlock",
+				text: assignee.displayName,
+				wrap: true
+			};
+
+			if (useFirst) {
+				column1.items!.push(text);
+			} else {
+				column2.items!.push(text);
+			}
+
+			useFirst = !useFirst;
+		}
+	}
+
+	const actions: IOpenUrlAction[] = [];
+
+	let counter = 0;
+
+	if (markers !== undefined && markers.length !== 0) {
+		for (const marker of markers) {
+			counter++;
+
+			let filename;
+			let start;
+			let end;
+
+			if (markerLocations) {
+				const location = markerLocations[0].locations[marker.id];
+				[start, , end] = location!;
+				filename = `${marker.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})`;
+			} else {
+				filename = marker.file;
+			}
+
+			let url;
+			if (
+				remotes !== undefined &&
+				remotes.length !== 0 &&
+				start !== undefined &&
+				end !== undefined
+			) {
+				for (const remote of remotes) {
+					url = Marker.getRemoteCodeUrl(
+						remote,
+						marker.commitHashWhenCreated,
+						marker.file,
+						start,
+						end
+					);
+
+					if (url !== undefined) {
+						break;
+					}
+				}
+			}
+
+			let text: ITextBlock = {
+				type: "TextBlock",
+				text: filename,
+				wrap: true
+			};
+			let container: IContainer = {
+				type: "Container",
+				spacing: "large",
+				items: [text]
+			};
+			blocks.push(container);
+
+			text = {
+				type: "TextBlock",
+				fontType: "monospace",
+				// This currently does NOT work in Teams 😡
+				text: `\`\`\`\n${marker.code}\n\`\`\``,
+				wrap: true
+			};
+			container = {
+				type: "Container",
+				spacing: "small",
+				style: "emphasis",
+				items: [text]
+			};
+			blocks.push(container);
+
+			if (actions.length === 0) {
+				let actionId = toActionId(counter, "web", codemark, marker);
+				actions.push({
+					type: "Action.OpenUrl",
+					id: actionId,
+					title: "Open on CodeStream",
+					url: `${codemark.permalink}?marker=${marker.id}`
+				});
+
+				if (codemark.externalProvider !== undefined && codemark.externalProviderUrl !== undefined) {
+					actionId = toExternalActionId(counter, "issue", codemark.externalProvider, codemark);
+					actions.push({
+						type: "Action.OpenUrl",
+						id: actionId,
+						title: `Open Issue on ${providerNamesById.get(codemark.externalProvider) ||
+							codemark.externalProvider}`,
+						url: codemark.externalProviderUrl
+					});
+				}
+
+				actionId = toActionId(counter, "ide", codemark, marker);
+				actions.push({
+					type: "Action.OpenUrl",
+					id: actionId,
+					title: "Open in IDE",
+					url: `${codemark.permalink}?ide=default&marker=${marker.id}`
+				});
+
+				if (url !== undefined) {
+					actionId = toExternalActionId(counter, "code", url.name, codemark, marker);
+					actions.push({
+						type: "Action.OpenUrl",
+						id: actionId,
+						title: `Open on ${url.displayName}`,
+						url: url.url
+					});
+				}
+
+				card.actions = actions;
+			}
+
+			// Teams doesn't support `ActionSet` :(
+			// blocks.push({
+			// 	type: "ActionSet",
+			// 	actions: actions
+			// });
+		}
+	} else {
+		counter++;
+
+		let actionId = toActionId(counter, "web", codemark);
+		actions.push({
+			type: "Action.OpenUrl",
+			id: actionId,
+			title: "Open on CodeStream",
+			url: codemark.permalink
+		});
+
+		if (codemark.externalProvider !== undefined && codemark.externalProviderUrl !== undefined) {
+			actionId = toExternalActionId(counter, "issue", codemark.externalProvider, codemark);
+			actions.push({
+				type: "Action.OpenUrl",
+				id: actionId,
+				title: `Open Issue on ${providerNamesById.get(codemark.externalProvider) ||
+					codemark.externalProvider}`,
+				url: codemark.externalProviderUrl
+			});
+		}
+
+		actionId = toActionId(counter, "ide", codemark);
+		actions.push({
+			type: "Action.OpenUrl",
+			id: actionId,
+			title: "Open in IDE",
+			url: `${codemark.permalink}?ide=default`
+		});
+
+		card.actions = actions;
+	}
+
+	if (preamble) {
+		// Add any mentions onto the preamble, because mentions aren't supported in attachments
+		if (mentionedUserIds != null && mentionedUserIds.length !== 0) {
+			preamble += `  /cc ${mentionedUserIds
+				.map(u => `@${userInfosById.get(u)!.username}`)
+				.join(", ")}`;
+		}
+
+		preamble = toTeamsText(preamble, mentionedUserIds, userInfosById, userIdsByName, mentionsOut);
+	}
+
+	card.body = blocks;
+
+	attachmentsOut.push({
+		id: codemark.id,
+		contentType: "application/vnd.microsoft.card.adaptive",
+		content: JSON.stringify(card)
+	});
+
+	return {
+		contentType: "html",
+		content: `${preamble}<attachment id="${codemark.id}"></attachment>`
 	};
 }
 
@@ -512,7 +934,7 @@ export function fromTeamsMessageText(
 	return text;
 }
 
-export function toTeamsMessageText(
+export function toTeamsText(
 	text: string,
 	mentionedUserIds: string[] | undefined,
 	userInfosById: Map<string, UserInfo>,

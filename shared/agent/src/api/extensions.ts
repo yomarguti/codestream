@@ -2,6 +2,7 @@
 import { Range } from "vscode-languageserver";
 import { Logger } from "../logger";
 import {
+	CSCodemark,
 	CSLocationArray,
 	CSMarker,
 	CSMarkerLocation,
@@ -295,4 +296,51 @@ export namespace User {
 
 		return undefined;
 	}
+}
+
+export interface ActionId {
+	id: number;
+	linkType: "web" | "ide" | "external";
+	externalType?: "issue" | "code";
+	externalProvider?: string;
+	teamId: string;
+	codemarkId: string;
+	markerId?: string;
+}
+
+export function toActionId(
+	id: number,
+	linkType: "web" | "ide",
+	codemark: CSCodemark,
+	marker?: CSMarker
+): string {
+	const actionId: ActionId = {
+		id: id,
+		linkType: linkType,
+		teamId: codemark.teamId,
+		codemarkId: codemark.id,
+		markerId: marker && marker.id
+	};
+
+	return JSON.stringify(actionId);
+}
+
+export function toExternalActionId(
+	id: number,
+	providerType: "issue" | "code",
+	provider: string,
+	codemark: CSCodemark,
+	marker?: CSMarker
+): string {
+	const actionId: ActionId = {
+		id: id,
+		linkType: "external",
+		externalType: providerType,
+		externalProvider: provider,
+		teamId: codemark.teamId,
+		codemarkId: codemark.id,
+		markerId: marker && marker.id
+	};
+
+	return JSON.stringify(actionId);
 }

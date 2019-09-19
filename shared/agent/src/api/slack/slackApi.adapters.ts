@@ -1,5 +1,5 @@
 "use strict";
-import { Action, ActionsBlock, KnownBlock, MessageAttachment } from "@slack/web-api";
+import { ActionsBlock, KnownBlock, MessageAttachment } from "@slack/web-api";
 import { SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import {
@@ -15,7 +15,7 @@ import {
 	StreamType
 } from "../../protocol/api.protocol";
 import { providerNamesById } from "../../providers/provider";
-import { Marker } from "../extensions";
+import { Marker, toActionId, toExternalActionId } from "../extensions";
 
 const defaultCreatedAt = 181886400000;
 const multiPartyNamesRegEx = /^mpdm-([^-]+)(--.*)-1$/;
@@ -519,53 +519,6 @@ export function fromSlackUser(user: any, teamId: string, codestreamUsers: CSUser
 
 export function toSlackPostId(postId: string, streamId: string) {
 	return `${streamId}|${postId}`;
-}
-
-interface ActionId {
-	id: number;
-	linkType: "web" | "ide" | "external";
-	externalType?: "issue" | "code";
-	externalProvider?: string;
-	teamId: string;
-	codemarkId: string;
-	markerId?: string;
-}
-
-function toActionId(
-	id: number,
-	linkType: "web" | "ide",
-	codemark: CSCodemark,
-	marker?: CSMarker
-): string {
-	const actionId: ActionId = {
-		id: id,
-		linkType: linkType,
-		teamId: codemark.teamId,
-		codemarkId: codemark.id,
-		markerId: marker && marker.id
-	};
-
-	return JSON.stringify(actionId);
-}
-
-function toExternalActionId(
-	id: number,
-	providerType: "issue" | "code",
-	provider: string,
-	codemark: CSCodemark,
-	marker?: CSMarker
-): string {
-	const actionId: ActionId = {
-		id: id,
-		linkType: "external",
-		externalType: providerType,
-		externalProvider: provider,
-		teamId: codemark.teamId,
-		codemarkId: codemark.id,
-		markerId: marker && marker.id
-	};
-
-	return JSON.stringify(actionId);
 }
 
 export function toSlackPostBlocks(

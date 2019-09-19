@@ -127,8 +127,8 @@ import {
 	TeamsMessageBody,
 	TeamsMessageMention,
 	toTeamsMessageBody,
-	toTeamsMessageText,
 	toTeamsTeam,
+	toTeamsText,
 	UserInfo
 } from "./teamsApi.adapters";
 import { TeamsUnreads } from "./unreads";
@@ -558,13 +558,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 
 			let text = request.text;
 			if (text) {
-				text = toTeamsMessageText(
-					text,
-					request.mentionedUserIds,
-					userInfosById,
-					userIdsByName,
-					mentions
-				);
+				text = toTeamsText(text, request.mentionedUserIds, userInfosById, userIdsByName, mentions);
 			}
 
 			const { teamId, channelId, messageId: parentMessageId } = fromPostId(
@@ -601,7 +595,6 @@ export class MSTeamsApiProvider implements ApiProvider {
 					request.mentionedUserIds,
 					userInfosById,
 					userIdsByName,
-					this._teamsUserId,
 					mentions,
 					attachments
 				);
