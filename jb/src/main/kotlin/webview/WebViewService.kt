@@ -3,6 +3,7 @@ package com.codestream.webview
 import com.codestream.DEBUG
 import com.codestream.gson
 import com.codestream.protocols.webview.WebViewNotification
+import com.codestream.settingsService
 import com.github.salomonbrys.kotson.jsonObject
 import com.google.gson.JsonElement
 import com.intellij.ide.BrowserUtil
@@ -68,8 +69,11 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
         else router.initialization.thenRun(cb)
     }
 
-    fun load() {
+    fun load(resetContext: Boolean = false) {
         logger.info("Loading WebView")
+        if (resetContext) {
+            project.settingsService?.clearWebViewContext()
+        }
         browser.loadURL(htmlFile.url)
     }
 

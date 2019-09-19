@@ -5,6 +5,7 @@ import com.codestream.error.ErrorHandler
 import com.codestream.gson
 import com.codestream.sessionService
 import com.github.salomonbrys.kotson.fromJson
+import com.github.salomonbrys.kotson.jsonObject
 import com.github.salomonbrys.kotson.set
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
@@ -170,6 +171,10 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
         }
         jsonObject["hasFocus"] = true
         return jsonObject
+    }
+
+    fun clearWebViewContext() {
+        setWebViewContextJson(jsonObject())
     }
 
     fun setWebViewContextJson(json: JsonElement) {

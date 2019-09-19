@@ -14,7 +14,7 @@ class SignOut : AnAction() {
             e.project?.let {
                 it.authenticationService?.logout()
                 it.agentService?.onDidStart {
-                    it.webViewService?.load()
+                    it.webViewService?.load(true)
                 }
             }
         }
