@@ -59,6 +59,26 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="3_0_1">3.0.1</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds options to codemarks shared on Microsoft Teams to open a codemark on the web, in your IDE or, in the case of issues, on the issue-tracking service</li>
+    <li>Adds new tophat to display of codemarks when the referenced code has been deleted</li>
+    <li>Adds "CodeStream: Sign out" to JetBrains actions list</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>The bookmark codemark type has been removed, to be brought back at a future date</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/119">#119</a> - Plugin Crashes When Launched</li>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/117">#117</a> - Deleting codemark from Search tab causes unexpected error</li>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/116">#116</a> - Creating codemark takes you out of List view</li>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/115">#115</a> - Tab then enter discards codemark</li>
+    <li>Fixes an issue with some users getting a blank CodeStream pane</li>
+    <li>Fixes issues with IntelliJ 2019.3 EAP compatibility</li>
+</ul>
 <h4 id="3_0_0">3.0.0</h4>
 <h5>Added</h5>
 <ul>
