@@ -14,7 +14,7 @@ import { CodemarkCodeLensProvider } from "./providers/markerCodeLensProvider";
 import { CodemarkDecorationProvider } from "./providers/markerDecorationProvider";
 import { CodemarkPatchContentProvider } from "./providers/patchContentProvider";
 import { SelectionDecorationProvider } from "./providers/selectionDecorationProvider";
-import { WebviewSidebarActivator } from "./views/webviewSidebarActivator";
+// import { WebviewSidebarActivator } from "./views/webviewSidebarActivator";
 
 export class Container {
 	static async initialize(
@@ -44,7 +44,7 @@ export class Container {
 		context.subscriptions.push((this._statusBar = new StatusBarController()));
 
 		context.subscriptions.push((this._webview = new WebviewController(this._session)));
-		context.subscriptions.push(new WebviewSidebarActivator());
+		// context.subscriptions.push(new WebviewSidebarActivator());
 
 		context.subscriptions.push(configuration.onWillChange(this.onConfigurationChanging, this));
 

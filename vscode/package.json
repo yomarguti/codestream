@@ -489,23 +489,6 @@
                     "group": "9_zcodestream@4"
                 }
             ]
-        },
-        "views": {
-            "codestream": [
-                {
-                    "id": "codestream",
-                    "name": "CodeStream"
-                }
-            ]
-        },
-        "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "codestream",
-                    "title": "CodeStream",
-                    "icon": "assets/images/codestream.svg"
-                }
-            ]
         }
     },
     "activationEvents": [
