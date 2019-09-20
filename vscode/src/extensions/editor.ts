@@ -26,7 +26,7 @@ const highlightDecorationType = window.createTextEditorDecorationType({
 });
 
 export namespace Editor {
-	export function findEditor(uri: Uri): TextEditor | undefined {
+	export function findEditor(uri: Uri, lastActive?: TextEditor): TextEditor | undefined {
 		const normalizedUri = uri.toString(false);
 
 		let e = window.activeTextEditor;
@@ -34,20 +34,27 @@ export namespace Editor {
 			return e;
 		}
 
+		let found;
 		for (e of window.visibleTextEditors) {
-			if (e.document.uri.toString(false) === normalizedUri) {
+			// Prioritize the last active window over other visible ones
+			if (e === lastActive && e.document.uri.toString(false) === normalizedUri) {
 				return e;
+			}
+
+			if (e.document.uri.toString(false) === normalizedUri) {
+				found = e;
 			}
 		}
 
-		return undefined;
+		return found;
 	}
 
 	export async function findOrOpenEditor(
 		uri: Uri,
-		options: TextDocumentShowOptions & { rethrow?: boolean } = {}
+		options: TextDocumentShowOptions & { rethrow?: boolean } = {},
+		lastActive?: TextEditor
 	): Promise<TextEditor | undefined> {
-		const e = findEditor(uri);
+		const e = findEditor(uri, lastActive);
 		if (e !== undefined) {
 			if (!options.preserveFocus) {
 				await window.showTextDocument(e.document, { ...options, viewColumn: e.viewColumn });
@@ -110,7 +117,12 @@ export namespace Editor {
 		return metrics;
 	}
 
-	export async function highlightRange(uri: Uri, range: Range, clear?: boolean): Promise<boolean> {
+	export async function highlightRange(
+		uri: Uri,
+		range: Range,
+		lastActive: TextEditor | undefined,
+		clear?: boolean
+	): Promise<boolean> {
 		if (clear) {
 			// while removing, only do anything if the uri is already open. otherwise, vscode will clear the highlight
 			const normalizedUri = uri.toString(false);
@@ -122,7 +134,7 @@ export namespace Editor {
 			return true;
 		}
 
-		const editor = await findOrOpenEditor(uri, { preserveFocus: true });
+		const editor = await findOrOpenEditor(uri, { preserveFocus: true }, lastActive);
 		if (editor === undefined) return false;
 
 		editor.setDecorations(highlightDecorationType, clear ? [] : [range]);
@@ -139,9 +151,10 @@ export namespace Editor {
 	export async function revealRange(
 		uri: Uri,
 		range: Range,
+		lastActive: TextEditor | undefined,
 		{ atTop, ...options }: TextDocumentShowOptions & { atTop?: boolean }
 	): Promise<boolean> {
-		const editor = await findOrOpenEditor(uri, { ...options });
+		const editor = await findOrOpenEditor(uri, { ...options }, lastActive);
 		if (editor === undefined) return false;
 
 		const revealType = atTop
@@ -154,9 +167,10 @@ export namespace Editor {
 	export async function selectRange(
 		uri: Uri,
 		range: Range,
+		lastActive: TextEditor | undefined,
 		options: TextDocumentShowOptions
 	): Promise<boolean> {
-		const editor = await findOrOpenEditor(uri, { ...options });
+		const editor = await findOrOpenEditor(uri, { ...options }, lastActive);
 		if (editor === undefined) return false;
 
 		editor.selection = new Selection(range.start, range.end);
@@ -167,9 +181,10 @@ export namespace Editor {
 	export async function scrollTo(
 		uri: Uri,
 		position: Position,
+		lastActive: TextEditor | undefined,
 		options: { atTop?: boolean } = {}
 	): Promise<void> {
-		const editor = findEditor(uri);
+		const editor = findEditor(uri, lastActive);
 		if (editor === undefined) return;
 
 		const revealType = options.atTop

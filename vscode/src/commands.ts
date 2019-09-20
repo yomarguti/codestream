@@ -247,6 +247,7 @@ export class Commands implements Disposable {
 				response.range.start.line,
 				response.range.start.character
 			),
+			undefined,
 			{
 				preserveFocus: false
 			}

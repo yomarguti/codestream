@@ -520,7 +520,12 @@ export class WebviewController implements Disposable {
 					EditorScrollToNotificationType,
 					e,
 					(type, { uri, position, ...options }) => {
-						Editor.scrollTo(Uri.parse(uri), Editor.fromSerializablePosition(position), options);
+						Editor.scrollTo(
+							Uri.parse(uri),
+							Editor.fromSerializablePosition(position),
+							this._lastEditor,
+							options
+						);
 					}
 				);
 
@@ -582,6 +587,7 @@ export class WebviewController implements Disposable {
 					const success = await Editor.highlightRange(
 						Uri.parse(params.uri),
 						Editor.fromSerializableRange(params.range),
+						this._lastEditor,
 						!params.highlight
 					);
 					return { success: success };
@@ -594,6 +600,7 @@ export class WebviewController implements Disposable {
 					const success = await Editor.revealRange(
 						Uri.parse(params.uri),
 						Editor.fromSerializableRange(params.range),
+						this._lastEditor,
 						{
 							preserveFocus: params.preserveFocus,
 							atTop: params.atTop
@@ -609,6 +616,7 @@ export class WebviewController implements Disposable {
 					const success = await Editor.selectRange(
 						Uri.parse(params.uri),
 						Editor.fromSerializableRange(params.selection),
+						this._lastEditor,
 						{
 							preserveFocus: params.preserveFocus
 						}
