@@ -48,7 +48,9 @@ export enum LoginResult {
 	MultipleWorkspaces = "MULTIPLE_WORKSPACES",
 	AlreadyConfirmed = "ALREADY_CONFIRMED",
 	InviteConflict = "INVITE_CONFLICT",
-	AlreadySignedIn = "ALREADY_SIGNED_IN"
+	AlreadySignedIn = "ALREADY_SIGNED_IN",
+	SignupRequired = "SIGNUP_REQUIRED",
+	SignInRequired = "SIGNIN_REQUIRED"
 }
 
 export interface CSCompleteSignupRequest {

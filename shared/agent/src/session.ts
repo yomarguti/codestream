@@ -112,6 +112,8 @@ export const loginApiErrorMappings: { [k: string]: LoginResult } = {
 	"USRC-1022": LoginResult.ProviderConnectFailed,
 	"USRC-1015": LoginResult.MultipleWorkspaces, // deprecated in favor of below...
 	"PRVD-1002": LoginResult.MultipleWorkspaces,
+	"PRVD-1005": LoginResult.SignupRequired,
+	"PRVD-1006": LoginResult.SignInRequired,
 	"USRC-1020": LoginResult.InviteConflict
 };
 
