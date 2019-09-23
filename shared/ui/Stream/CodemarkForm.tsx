@@ -54,7 +54,7 @@ import Headshot from "./Headshot";
 import { getTeamMembers, getTeamTagsArray } from "../store/users/reducer";
 import MessageInput from "./MessageInput";
 import { getSlashCommands } from "./SlashCommands";
-import { getCurrentTeamProvider } from "../store/teams/actions";
+import { getCurrentTeamProvider } from "../store/teams/reducer";
 import { getCodemark } from "../store/codemarks/reducer";
 import { CodemarksState } from "../store/codemarks/types";
 import { setCurrentStream } from "../store/context/actions";

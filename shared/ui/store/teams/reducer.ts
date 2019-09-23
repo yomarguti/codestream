@@ -3,6 +3,7 @@ import { toMapBy } from "../../utils";
 import { ActionType } from "../common";
 import * as actions from "./actions";
 import { TeamsState, TeamsActionsType } from "./types";
+import { CodeStreamState } from "..";
 
 type TeamsActions = ActionType<typeof actions>;
 
@@ -26,4 +27,16 @@ export function reduceTeams(state = initialState, action: TeamsActions) {
 		default:
 			return state;
 	}
+}
+
+export function getCurrentTeamProvider(state: CodeStreamState) {
+	return getTeamProvider(state.teams[state.context.currentTeamId]);
+}
+
+export function getTeamProvider(team: CSTeam): "codestream" | "slack" | "msteams" | string {
+	if (team.providerInfo == null || Object.keys(team.providerInfo).length === 0) {
+		return "codestream";
+	}
+
+	return Object.keys(team.providerInfo)[0];
 }

@@ -8,7 +8,7 @@ import { closePanel, invite } from "./actions";
 import { isInVscode, mapFilter } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { sortBy as _sortBy } from "lodash-es";
-import { getTeamProvider } from "../store/teams/actions";
+import { getTeamProvider } from "../store/teams/reducer";
 import { HostApi } from "../webview-api";
 
 const EMAIL_REGEX = new RegExp(

@@ -45,9 +45,7 @@ export const startSSOSignin = (
 	try {
 		await HostApi.instance.send(OpenUrlRequestType, {
 			url: encodeURI(
-				`${configs.serverUrl}/web/provider-auth/${provider}?${queryString}signupToken=${
-					session.otc
-				}`
+				`${configs.serverUrl}/web/provider-auth/${provider}?${queryString}signupToken=${session.otc}`
 			)
 		});
 		return dispatch(goToSSOAuth(provider, { ...(info || emptyObject), mode: access }));

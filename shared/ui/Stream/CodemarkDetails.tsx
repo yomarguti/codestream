@@ -9,7 +9,7 @@ import CodemarkActions from "./CodemarkActions";
 import { CodemarkPlus, Capabilities } from "@codestream/protocols/agent";
 import { createPost } from "./actions";
 import { CSUser, CSMe, CSPost } from "@codestream/protocols/api";
-import { getTeamProvider } from "../store/teams/actions";
+import { getTeamProvider } from "../store/teams/reducer";
 import { replaceHtml } from "../utils";
 import { DelayedRender } from "../Container/DelayedRender";
 import { localStore } from "../utilities/storage";

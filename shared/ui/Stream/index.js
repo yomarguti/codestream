@@ -66,7 +66,7 @@ import { logout, switchToTeam } from "../store/session/actions";
 import { CodemarkView } from "./CodemarkView";
 
 import { setCurrentStream, setNewPostEntry } from "../store/context/actions";
-import { getTeamProvider } from "../store/teams/actions";
+import { getTeamProvider } from "../store/teams/reducer";
 import {
 	filter as _filter,
 	includes as _includes,

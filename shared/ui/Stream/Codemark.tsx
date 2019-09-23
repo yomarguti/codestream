@@ -35,7 +35,7 @@ import { confirmPopup } from "./Confirm";
 import { getPost } from "../store/posts/reducer";
 import { getPosts } from "../store/posts/actions";
 import Tooltip from "./Tooltip";
-import { getCurrentTeamProvider } from "../store/teams/actions";
+import { getCurrentTeamProvider } from "../store/teams/reducer";
 import { isNil } from "lodash-es";
 import { CodeStreamState } from "../store";
 import { EditorHighlightRangeRequestType } from "@codestream/protocols/webview";
@@ -912,19 +912,19 @@ export class Codemark extends React.Component<Props, State> {
 		];
 
 		menuItems.push({ label: "Copy link", action: "copy-permalink" });
-				
+
 		if (codemark.pinned) {
 			menuItems.push({ label: "Archive", action: "toggle-pinned" });
 		} else {
 			menuItems.push({ label: "Unarchive", action: "toggle-pinned" });
-		}		
+		}
 
 		if (mine) {
 			menuItems.push(
 				{ label: "Edit", action: "edit-post" },
 				{ label: "Delete", action: this.deleteCodemark }
 			);
-		}		
+		}
 
 		menuItems.push({ label: "Inject as Inline Comment", action: "inject" });
 
