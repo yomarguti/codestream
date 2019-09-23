@@ -65,7 +65,15 @@ export namespace Editor {
 
 		// FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
 		let column = Container.webview.viewColumn as number | undefined;
-		if (column !== undefined) {
+
+		// If we have a last active view column and it isn't the same as the webview's, then use it
+		if (
+			lastActive !== undefined &&
+			lastActive.viewColumn !== undefined &&
+			lastActive.viewColumn !== column
+		) {
+			column = lastActive.viewColumn;
+		} else if (column !== undefined) {
 			column--;
 			if (column <= 0) {
 				column = undefined;
