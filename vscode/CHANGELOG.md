@@ -1,5 +1,11 @@
 # Change Log
 
+## [3.0.2] - 2019-9-23
+
+### Fixed
+
+- Fixes an issue with files being opened in the CodeStream pane instead the last active editor group
+
 ## [3.0.1] - 2019-9-20
 
 ### Added
