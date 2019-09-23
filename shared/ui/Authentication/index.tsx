@@ -3,7 +3,6 @@ import { connect } from "react-redux";
 import { CodeStreamState } from "../store";
 import { Login } from "./Login";
 import { NewUserEntry } from "./NewUserEntry";
-import { ChatProviderSelection } from "./ChatProviderSelection";
 import { SlackAuth } from "./SlackAuth";
 import { MSTeamsAuth } from "./MSTeamsAuth";
 import { Signup } from "./Signup";
@@ -22,8 +21,6 @@ export const UnauthenticatedRoutes = connect<ConnectedProps, void, void, CodeStr
 	switch (props.name) {
 		case Route.NewUser:
 			return <NewUserEntry {...props.params} />;
-		case Route.ChatProviderSelection:
-			return <ChatProviderSelection {...props.params} />;
 		case Route.SlackAuth:
 			return <SlackAuth {...props.params} />;
 		case Route.MSTeamsAdminApprovalInfo:
@@ -37,7 +34,7 @@ export const UnauthenticatedRoutes = connect<ConnectedProps, void, void, CodeStr
 		case Route.JoinTeam:
 			return <JoinTeam {...props.params} />;
 		case Route.EmailConfirmation:
-			return <EmailConfirmation {...props.params as any} />;
+			return <EmailConfirmation {...(props.params as any)} />;
 		case Route.TeamCreation:
 			return <TeamCreation {...props.params} />;
 		case Route.ForgotPassword:

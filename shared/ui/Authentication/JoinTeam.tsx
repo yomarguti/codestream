@@ -1,5 +1,4 @@
 import React, { useState, useCallback } from "react";
-import Icon from "../Stream/Icon";
 import Button from "../Stream/Button";
 import { connect } from "react-redux";
 import { goToNewUserEntry, goToSignup } from "../store/context/actions";
@@ -10,7 +9,7 @@ import { DispatchProp } from "../store/common";
 import { GetInviteInfoRequestType } from "@codestream/protocols/agent";
 import { LoginResult } from "@codestream/protocols/api";
 import { FormattedMessage } from "react-intl";
-import { SignupType, startSSOSignin } from "./actions";
+import { SignupType } from "./actions";
 
 const errorToMessageId = {
 	[LoginResult.InvalidToken]: "confirmation.invalid",
@@ -85,42 +84,6 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 									</Button>
 								</div>
 							</div>
-						</div>
-					</div>
-					<br />
-					<div className="outline-box">
-						<h3>Do you use Slack or Microsoft Teams?</h3>
-						<p>
-							Use this option if your organization's CodeStream team is connected to a Slack
-							workspace or a Microsoft Teams organization.
-						</p>
-						<div id="controls">
-							<Button
-								className="row-button"
-								onClick={e => {
-									e.preventDefault();
-									HostApi.instance.track("Join Path Selected", { "Path Type": "Slack" });
-									props.dispatch(startSSOSignin("slack", { type: SignupType.JoinTeam }));
-								}}
-							>
-								<Icon name="slack" />
-								<div className="copy">Sign Up with Slack</div>
-								<Icon name="chevron-right" />
-							</Button>
-						</div>
-						<div id="controls">
-							<Button
-								className="row-button"
-								onClick={e => {
-									e.preventDefault();
-									HostApi.instance.track("Join Path Selected", { "Path Type": "MSTeams" });
-									props.dispatch(startSSOSignin("msteams", { type: SignupType.JoinTeam }));
-								}}
-							>
-								<Icon name="msteams" />
-								<div className="copy">Sign Up with Microsoft Teams</div>
-								<Icon name="chevron-right" />
-							</Button>
 						</div>
 					</div>
 					<div id="controls">

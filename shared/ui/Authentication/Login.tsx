@@ -181,28 +181,6 @@ class Login extends React.Component<Props, State> {
 						<fieldset className="form-body">
 							<div id="controls">
 								<div className="outline-box">
-									<Button
-										className="row-button no-top-margin"
-										onClick={this.handleClickSlackSignup}
-									>
-										<Icon name="slack" />
-										<div className="copy">Sign In with Slack</div>
-										<Icon name="chevron-right" />
-									</Button>
-									<Button className="row-button" onClick={this.handleClickMSTeamsSignup}>
-										<Icon name="msteams" />
-										<div className="copy">Sign In with Microsoft Teams</div>
-										<Icon name="chevron-right" />
-									</Button>
-								</div>
-							</div>
-						</fieldset>
-					</form>
-					<form className="standard-form">
-						<fieldset className="form-body">
-							{/* this.renderAccountMessage() */}
-							<div id="controls">
-								<div className="outline-box">
 									<div className="small-spacer" />
 									{this.renderError()}
 									<div id="email-controls" className="control-group">
@@ -251,6 +229,28 @@ class Login extends React.Component<Props, State> {
 									>
 										<Icon name="codestream" />
 										<div className="copy">Sign In with CodeStream</div>
+										<Icon name="chevron-right" />
+									</Button>
+								</div>
+							</div>
+						</fieldset>
+					</form>
+					<form className="standard-form">
+						<fieldset className="form-body">
+							{/* this.renderAccountMessage() */}
+							<div id="controls">
+								<div className="outline-box">
+									<Button
+										className="row-button no-top-margin"
+										onClick={this.handleClickSlackSignup}
+									>
+										<Icon name="slack" />
+										<div className="copy">Sign In with Slack</div>
+										<Icon name="chevron-right" />
+									</Button>
+									<Button className="row-button" onClick={this.handleClickMSTeamsSignup}>
+										<Icon name="msteams" />
+										<div className="copy">Sign In with Microsoft Teams</div>
 										<Icon name="chevron-right" />
 									</Button>
 								</div>

@@ -4,9 +4,10 @@ import Icon from "../Stream/Icon";
 import { connect } from "react-redux";
 import { CodeStreamState } from "../store";
 import { Link } from "../Stream/Link";
-import { goToLogin, goToChatProviderSelection, goToJoinTeam } from "../store/context/actions";
+import { goToLogin, goToJoinTeam, goToSignup } from "../store/context/actions";
 import { DispatchProp } from "../store/common";
 import { HostApi } from "../webview-api";
+import { SignupType } from "./actions";
 
 interface ConnectedProps {
 	pluginVersion: string;
@@ -22,7 +23,7 @@ export const NewUserEntry = (connect(mapStateToProps) as any)((props: Props) => 
 		HostApi.instance.track("Reg Path Selected", {
 			"Reg Path": "Create Team"
 		});
-		props.dispatch(goToChatProviderSelection());
+		props.dispatch(goToSignup({ type: SignupType.CreateTeam }));
 	};
 
 	const onClickJoinTeam = (event: React.SyntheticEvent) => {

@@ -4,8 +4,8 @@ import { Link } from "../Stream/Link";
 import Icon from "../Stream/Icon";
 import { HostApi } from "../webview-api";
 import { useDispatch } from "react-redux";
-import { goToChatProviderSelection } from "../store/context/actions";
 import { startSSOSignin, SignupType } from "./actions";
+import { goToLogin } from "../store/context/actions";
 
 const azureUrl = "https://www.codestream.com/azure";
 
@@ -20,7 +20,7 @@ export function MSTeamsAdminApprovalInfo() {
 
 	const onClickGoBack = (event: React.SyntheticEvent) => {
 		event.preventDefault();
-		dispatch(goToChatProviderSelection());
+		dispatch(goToLogin());
 	};
 
 	return (

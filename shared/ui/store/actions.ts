@@ -20,7 +20,7 @@ import {
 } from "../ipc/host.protocol";
 import { HostApi } from "../webview-api";
 import { updateConfigs } from "./configs/actions";
-import { 
+import {
 	ApiVersionCompatibility,
 	BootstrapRequestType,
 	VersionCompatibility
@@ -94,18 +94,18 @@ const bootstrapEssentials = (data: BootstrapInHostResponse) => dispatch => {
 	} else if (data.apiVersionCompatibility === ApiVersionCompatibility.ApiUpgradeRecommended) {
 		dispatch(apiUpgradeRecommended(data.missingCapabilities || {}));
 	}
-	
+
 	dispatch(apiCapabilitiesUpdated(data.apiCapabilities || {}));
 };
 
 export const reAuthForFullChatProvider = (
-	provider: string,
+	provider: contextActions.SupportedChatProvider,
 	info?: ValidateSignupInfo
 ) => async dispatch => {
 	await HostApi.instance.send(LogoutRequestType, {
 		reason: LogoutReason.ReAuthenticating
 	});
-	
+
 	dispatch(reset());
 
 	dispatch(startSSOSignin(provider, info, "permissive"));

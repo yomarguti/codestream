@@ -11,7 +11,12 @@ import {
 import { CodeStreamState } from "../store";
 import { HostApi } from "../webview-api";
 import { LoginResult } from "@codestream/protocols/api";
-import { goToTeamCreation, goToSSOAuth, setContext } from "../store/context/actions";
+import {
+	goToTeamCreation,
+	goToSSOAuth,
+	setContext,
+	SupportedChatProvider
+} from "../store/context/actions";
 import { GetActiveEditorContextRequestType } from "../ipc/host.protocol.editor";
 import { BootstrapInHostRequestType } from "../ipc/host.protocol";
 import { bootstrap } from "../store/actions";
@@ -31,7 +36,7 @@ export interface ValidateSignupInfo {
 }
 
 export const startSSOSignin = (
-	provider: string,
+	provider: SupportedChatProvider,
 	info?: ValidateSignupInfo,
 	access?: ChatProviderAccess
 ) => async (dispatch, getState: () => CodeStreamState) => {

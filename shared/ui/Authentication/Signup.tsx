@@ -1,24 +1,22 @@
 import React, { useCallback, useState } from "react";
 import cx from "classnames";
 import { FormattedMessage } from "react-intl";
-import { connect } from "react-redux";
 import Icon from "../Stream/Icon";
 import Button from "../Stream/Button";
 import { Link } from "../Stream/Link";
 import {
-	goToChatProviderSelection,
 	goToJoinTeam,
 	goToNewUserEntry,
 	goToEmailConfirmation,
 	goToTeamCreation
 } from "../store/context/actions";
 import { TextInput } from "./TextInput";
-import { DispatchProp } from "../store/common";
 import { LoginResult } from "@codestream/protocols/api";
 import { RegisterUserRequestType } from "@codestream/protocols/agent";
 import { HostApi } from "../webview-api";
 import { completeSignup, SignupType } from "./actions";
 import { logError } from "../logger";
+import { useDispatch } from "react-redux";
 
 const isPasswordValid = (password: string) => password.length >= 6;
 export const isEmailValid = (email: string) => {
@@ -31,7 +29,7 @@ const isUsernameValid = (username: string) => new RegExp("^[-a-zA-Z0-9_.]{1,21}$
 
 const isNotEmpty = s => s.length > 0;
 
-interface InheritedProps {
+interface Props {
 	email?: string;
 	teamName?: string;
 	teamId?: string;
@@ -39,9 +37,8 @@ interface InheritedProps {
 	type?: SignupType;
 }
 
-interface Props extends InheritedProps, DispatchProp {}
-
-export const Signup = (connect() as any)((props: Props) => {
+export const Signup = (props: Props) => {
+	const dispatch = useDispatch();
 	const [email, setEmail] = useState(props.email || "");
 	const [emailValidity, setEmailValidity] = useState(true);
 	const [username, setUsername] = useState("");
@@ -125,7 +122,7 @@ export const Signup = (connect() as any)((props: Props) => {
 			switch (status) {
 				case LoginResult.Success: {
 					sendTelemetry();
-					props.dispatch(
+					dispatch(
 						goToEmailConfirmation({
 							email: attributes.email,
 							teamId: props.teamId,
@@ -136,13 +133,13 @@ export const Signup = (connect() as any)((props: Props) => {
 				}
 				case LoginResult.NotOnTeam: {
 					sendTelemetry();
-					props.dispatch(goToTeamCreation({ token, email: attributes.email }));
+					dispatch(goToTeamCreation({ token, email: attributes.email }));
 					break;
 				}
 				case LoginResult.AlreadyConfirmed: {
 					// because user was invited
 					sendTelemetry();
-					props.dispatch(
+					dispatch(
 						completeSignup(attributes.email, token!, props.teamId!, {
 							createdTeam: false
 						})
@@ -170,14 +167,12 @@ export const Signup = (connect() as any)((props: Props) => {
 		(event: React.SyntheticEvent) => {
 			event.preventDefault();
 			switch (props.type) {
-				case SignupType.CreateTeam: {
-					return props.dispatch(goToChatProviderSelection());
-				}
 				case SignupType.JoinTeam: {
-					return props.dispatch(goToJoinTeam());
+					return dispatch(goToJoinTeam());
 				}
+				case SignupType.CreateTeam:
 				default:
-					return props.dispatch(goToNewUserEntry());
+					return dispatch(goToNewUserEntry());
 			}
 		},
 		[props.type]
@@ -336,4 +331,4 @@ export const Signup = (connect() as any)((props: Props) => {
 			</div>
 		</div>
 	);
-});
+};

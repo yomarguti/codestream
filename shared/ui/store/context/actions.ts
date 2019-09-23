@@ -102,20 +102,19 @@ export const goToNewUserEntry = (params = {}) =>
 export const goToForgotPassword = (params = {}) =>
 	action(ContextActionsType.SetRoute, { name: Route.ForgotPassword, params });
 
-export const goToChatProviderSelection = (params = {}) =>
-	action(ContextActionsType.SetRoute, { name: Route.ChatProviderSelection, params });
-
 export const goToMSTeamsAdminApprovalInfo = (params = {}) =>
 	action(ContextActionsType.SetRoute, { name: Route.MSTeamsAdminApprovalInfo, params });
 
-export const goToSSOAuth = (provider: string, params = {}) => {
+export type SupportedChatProvider = "slack" | "msteams";
+
+export const goToSSOAuth = (provider: SupportedChatProvider, params = {}) => {
 	switch (provider) {
 		case "slack":
 			return action(ContextActionsType.SetRoute, { name: Route.SlackAuth, params });
 		case "msteams":
 			return action(ContextActionsType.SetRoute, { name: Route.MSTeamsAuth, params });
 		default:
-			return action(ContextActionsType.SetRoute, { name: Route.ChatProviderSelection, params });
+			throw Error("An invalid auth provider was specified");
 	}
 };
 
