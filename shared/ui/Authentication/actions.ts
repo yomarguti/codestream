@@ -15,7 +15,9 @@ import {
 	goToTeamCreation,
 	goToSSOAuth,
 	setContext,
-	SupportedChatProvider
+	SupportedChatProvider,
+	goToSignup,
+	goToLogin
 } from "../store/context/actions";
 import { GetActiveEditorContextRequestType } from "../ipc/host.protocol.editor";
 import { BootstrapInHostRequestType } from "../ipc/host.protocol";
@@ -50,7 +52,7 @@ export const startSSOSignin = (
 	try {
 		await HostApi.instance.send(OpenUrlRequestType, {
 			url: encodeURI(
-				`${configs.serverUrl}/web/provider-auth/${provider}?${queryString}signupToken=${session.otc}`
+				`${configs.serverUrl}/web/provider-auth/${provider}?sharing=1&${queryString}signupToken=${session.otc}`
 			)
 		});
 		return dispatch(goToSSOAuth(provider, { ...(info || emptyObject), mode: access }));
@@ -141,6 +143,12 @@ export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo
 	});
 
 	if (isLoginFailResponse(response)) {
+		if (response.error === LoginResult.SignupRequired) {
+			return dispatch(goToSignup({ type: SignupType.CreateTeam }));
+		}
+		if (response.error === LoginResult.SignInRequired) {
+			return dispatch(goToLogin());
+		}
 		if (response.error === LoginResult.AlreadySignedIn) {
 			return dispatch(bootstrap());
 		}
