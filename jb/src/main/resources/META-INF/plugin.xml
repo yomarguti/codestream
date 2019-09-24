@@ -59,6 +59,11 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="3_0_2">3.0.2</h4>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes compatibility issues with IntelliJ 2019.2.3</li>
+</ul>
 <h4 id="3_0_1">3.0.1</h4>
 <h5>Added</h5>
 <ul>
