@@ -5,11 +5,13 @@ import Menu from "./Menu";
 import Icon from "./Icon";
 import Button from "./Button";
 import { prettyPrintOne } from "code-prettify";
-import { CSUser } from "@codestream/protocols/api";
+import { CSUser, CSPost } from "@codestream/protocols/api";
 import { CodemarkPlus } from "@codestream/protocols/agent";
 import { HostApi } from "../webview-api";
 import { TelemetryRequestType } from "@codestream/protocols/agent";
 import { InsertTextRequestType } from "@codestream/protocols/webview";
+import { getPostsForStream } from "../store/posts/reducer";
+import { fetchThread } from "./actions";
 
 const noop = () => Promise.resolve();
 
@@ -17,17 +19,47 @@ interface Props {
 	cancel: Function;
 	setPinned: Function;
 	codemark: CodemarkPlus;
+	replies: any[];
 	author: CSUser;
-	access: "permissive" | "strict";
+	fetchThread: Function;
 }
 
-export const InjectAsComment = (connect(undefined) as any)((props: Props) => {
+const mapStateToProps = (state, props) => {
+	const { users, context } = state;
+	const { codemark } = props;
+
+	let posts = getPostsForStream(state.posts, codemark.streamId).filter(
+		post => post.parentPostId === codemark.postId
+	);
+
+	posts.forEach(post => {
+		let author = users[post.creatorId];
+		if (!author) {
+			author = { email: "", fullName: "" };
+			if (post.creatorId === "codestream") author.username = "CodeStream";
+			else author.username = post.creatorId;
+		}
+		post.author = author;
+	});
+
+	return {
+		teamId: context.currentTeamId,
+		replies: posts
+	};
+};
+
+export const InjectAsComment = (connect(
+	mapStateToProps,
+	{ fetchThread }
+) as any)((props: Props) => {
 	const [archive, setArchive] = useState(false);
-	const [wrapAt80, setWrapAt80] = useState(false);
-	const [includeReplies, setIncludeReplies] = useState(false);
+	const [wrapAt80, setWrapAt80] = useState(true);
+	const [includeReplies, setIncludeReplies] = useState(true);
+	const [includeTimestamps, setIncludeTimestamps] = useState(true);
 	const [menuOpen, setMenuOpen] = useState(false);
 	const [menuTarget, setMenuTarget] = useState();
 	const [selectedCommentStyle, setSelectedCommentStyle] = useState("//");
+	const [hasPosts, setHasPosts] = useState(false);
 
 	const inject = () => {
 		HostApi.instance.send(TelemetryRequestType, {
@@ -98,12 +130,49 @@ export const InjectAsComment = (connect(undefined) as any)((props: Props) => {
 	});
 
 	const codemarkAsCommentString = () => {
-		const { codemark, author } = props;
-		let string = (author.fullName || author.username) + ":\n";
+		const { codemark, replies, author } = props;
+
+		let string = (author.fullName || author.username) + prettyTimestamp(codemark.createdAt) + "\n";
 		string += codemark.title ? codemark.title + "\n\n" + codemark.text : codemark.text;
 		if (codemark.externalProviderUrl) string += "\n\n" + codemark.externalProviderUrl;
+
+		if (includeReplies) {
+			replies.forEach(reply => {
+				const { author, text = "", createdAt } = reply;
+				string += "\n\n" + (author.fullName || author.username) + prettyTimestamp(createdAt) + "\n";
+				string += text.trim();
+			});
+		}
 		return makeComment(string, selectedCommentStyle);
 	};
+
+	const prettyTimestamp = function(time) {
+		if (!includeTimestamps) return ":";
+
+		if (!time) return "";
+
+		let dateStamp = new Intl.DateTimeFormat("en", {
+			day: "numeric",
+			month: "short",
+			year: "numeric"
+		}).format(time);
+
+		let timeStamp;
+		timeStamp = new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit" }).format(time);
+		timeStamp = timeStamp.replace(/^0:/, "12:");
+
+		return " on " + dateStamp + " at " + timeStamp;
+	};
+
+	const getPosts = async function() {
+		const { codemark } = props;
+		await props.fetchThread(codemark.streamId, codemark.postId);
+	};
+
+	if (!hasPosts) {
+		setHasPosts(true);
+		getPosts();
+	}
 
 	return (
 		<form id="inject-form" className="standard-form">
@@ -133,7 +202,10 @@ export const InjectAsComment = (connect(undefined) as any)((props: Props) => {
 						</span>
 					</div>
 					<div id="switches" className="control-group">
-						<div style={{ display: "none" }} onClick={() => setIncludeReplies(!includeReplies)}>
+						<div onClick={() => setIncludeTimestamps(!includeTimestamps)}>
+							<div className={cx("switch", { checked: includeTimestamps })} /> Include timestamps
+						</div>
+						<div onClick={() => setIncludeReplies(!includeReplies)}>
 							<div className={cx("switch", { checked: includeReplies })} /> Include replies
 						</div>
 						<div onClick={() => setWrapAt80(!wrapAt80)}>
@@ -148,7 +220,7 @@ export const InjectAsComment = (connect(undefined) as any)((props: Props) => {
 				<div style={{ marginTop: "10px" }} className="related-label">
 					PREVIEW
 				</div>
-				<pre className="code prettyprint">{codemarkAsCommentString()}</pre>
+				<pre className="code prettyprint preview">{codemarkAsCommentString()}</pre>
 				<div
 					key="buttons"
 					className="button-group"

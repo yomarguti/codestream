@@ -1072,6 +1072,10 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			return;
 		}
 
+		if (target.closest(".code.preview") != null) {
+			return;
+		}
+
 		if (target.classList.contains("message-input") || target.closest(".compose") != null) {
 			return;
 		}
