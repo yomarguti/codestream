@@ -53,7 +53,8 @@ compileTestKotlin {
 intellij {
     type "IC"
     // the version parameter also dictates which jars will be used at compilation time
-    version "2018.2" // earliest version we support
+    // version "2018.2" // earliest version we support
+    // version "2019.3"
     // version "IC-2019.2.2"
     // version "2018.3.4" // you can also specify dot dot releases
     // version "IC-2018.2.7" //
