@@ -424,47 +424,6 @@ export class CodeStreamAgentConnection implements Disposable {
 			});
 		}
 
-		createWithCode(
-			uri: Uri,
-			// document: TextDocument,
-			text: string,
-			mentionedUserIds: string[],
-			code: string,
-			range: Range | undefined,
-			source:
-				| {
-						file: string;
-						repoPath: string;
-						revision: string;
-						authors: { id: string; username: string }[];
-						remotes: { name: string; url: string }[];
-				  }
-				| undefined,
-			parentPostId: string | undefined,
-			streamId: string,
-			title?: string,
-			type?: CodemarkType,
-			assignees?: [],
-			color?: string
-		): Promise<CreatePostResponse> {
-			return this._connection.sendRequest(CreatePostWithMarkerRequestType, {
-				textDocument: { uri: uri.toString() },
-				// range: range,
-				// dirty: document.isDirty,
-				mentionedUserIds: mentionedUserIds,
-				text: text,
-				code: code,
-				range: range,
-				source: source,
-				parentPostId: parentPostId,
-				streamId: streamId,
-				title: title,
-				type: type || CodemarkType.Comment,
-				assignees: assignees,
-				color: color
-			});
-		}
-
 		fetch(
 			streamId: string,
 			options: {
