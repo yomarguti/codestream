@@ -1,14 +1,5 @@
 "use strict";
-import {
-	IAdaptiveCard,
-	IColumn,
-	IColumnSet,
-	IContainer,
-	IFactSet,
-	IImage,
-	IImageSet,
-	ITextBlock
-} from "adaptivecards/lib/schema";
+import { IAdaptiveCard, IColumn, ITextBlock } from "adaptivecards/lib/schema";
 import { SessionContainer } from "../../container";
 import {
 	CodemarkType,
@@ -286,24 +277,32 @@ export function toTeamsMessageBody(
 		case CodemarkType.Issue: {
 			preamble = "<i>opened an issue</i>";
 
-			const title: ITextBlock = {
-				type: "TextBlock",
-				text: codemark.title,
-				weight: "bolder",
-				size: "large",
-				wrap: true
-			};
+			const items: ITextBlock[] = [];
 
-			const text: ITextBlock = {
-				type: "TextBlock",
-				text: codemark.text.replace(preserveWhitespaceRegex, "\n\n"),
-				size: "medium",
-				wrap: true
-			};
+			if (codemark.title) {
+				const title: ITextBlock = {
+					type: "TextBlock",
+					text: codemark.title,
+					weight: "bolder",
+					size: "large",
+					wrap: true
+				};
+				items.push(title);
+			}
+
+			if (codemark.text) {
+				const text: ITextBlock = {
+					type: "TextBlock",
+					text: codemark.text.replace(preserveWhitespaceRegex, "\n\n"),
+					size: "medium",
+					wrap: true
+				};
+				items.push(text);
+			}
 
 			mainCard.body!.push({
 				type: "Container",
-				items: [title, text]
+				items: items
 			});
 
 			break;
@@ -311,24 +310,32 @@ export function toTeamsMessageBody(
 		case CodemarkType.Question: {
 			preamble = "<i>has a question</i>";
 
-			const title: ITextBlock = {
-				type: "TextBlock",
-				text: codemark.title,
-				weight: "bolder",
-				size: "large",
-				wrap: true
-			};
+			const items: ITextBlock[] = [];
 
-			const text: ITextBlock = {
-				type: "TextBlock",
-				text: codemark.text.replace(preserveWhitespaceRegex, "\n\n"),
-				size: "medium",
-				wrap: true
-			};
+			if (codemark.title) {
+				const title: ITextBlock = {
+					type: "TextBlock",
+					text: codemark.title,
+					weight: "bolder",
+					size: "large",
+					wrap: true
+				};
+				items.push(title);
+			}
+
+			if (codemark.text) {
+				const text: ITextBlock = {
+					type: "TextBlock",
+					text: codemark.text.replace(preserveWhitespaceRegex, "\n\n"),
+					size: "medium",
+					wrap: true
+				};
+				items.push(text);
+			}
 
 			mainCard.body!.push({
 				type: "Container",
-				items: [title, text]
+				items: items
 			});
 
 			break;

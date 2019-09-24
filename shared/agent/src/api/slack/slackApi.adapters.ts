@@ -584,22 +584,28 @@ export function toSlackPostBlocks(
 						text: "_opened an issue_"
 					}
 				},
-				{ type: "divider" },
-				{
+				{ type: "divider" }
+			);
+
+			if (codemark.title) {
+				blocks.push({
 					type: "section",
 					text: {
 						type: "mrkdwn",
 						text: `*${toSlackText(codemark.title, userIdsByName)}*`
 					}
-				},
-				{
+				});
+			}
+
+			if (codemark.text) {
+				blocks.push({
 					type: "section",
 					text: {
 						type: "mrkdwn",
 						text: toSlackText(codemark.text, userIdsByName)
 					}
-				}
-			);
+				});
+			}
 
 			break;
 		}
@@ -612,22 +618,28 @@ export function toSlackPostBlocks(
 						text: "_has a question_"
 					}
 				},
-				{ type: "divider" },
-				{
+				{ type: "divider" }
+			);
+
+			if (codemark.title) {
+				blocks.push({
 					type: "section",
 					text: {
 						type: "mrkdwn",
 						text: `*${toSlackText(codemark.title, userIdsByName)}*`
 					}
-				},
-				{
+				});
+			}
+
+			if (codemark.text) {
+				blocks.push({
 					type: "section",
 					text: {
 						type: "mrkdwn",
 						text: toSlackText(codemark.text, userIdsByName)
 					}
-				}
-			);
+				});
+			}
 
 			break;
 		}
