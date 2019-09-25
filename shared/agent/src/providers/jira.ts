@@ -1,4 +1,5 @@
 "use strict";
+import { sortBy } from "lodash-es";
 import * as qs from "querystring";
 import { Container } from "../container";
 import { Logger } from "../logger";
@@ -140,9 +141,9 @@ export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
 
 			Logger.debug(`Jira: total compatible projects: ${jiraBoards.length}`);
 
-			this.boards = jiraBoards;
+			this.boards = sortBy(jiraBoards, board => board.name.toLowerCase());
 
-			return { boards: jiraBoards };
+			return { boards: this.boards };
 		} catch (error) {
 			debugger;
 			Container.instance().errorReporter.reportMessage({
