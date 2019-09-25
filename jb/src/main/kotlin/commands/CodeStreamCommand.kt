@@ -7,7 +7,7 @@ import com.codestream.sessionService
 import com.codestream.webViewService
 import com.github.salomonbrys.kotson.fromJson
 import com.intellij.ide.RecentProjectsManager
-import com.intellij.ide.RecentProjectsManagerBase
+import com.intellij.ide.ReopenProjectAction
 import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.JBProtocolCommand
@@ -95,14 +95,9 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
 
     private fun findRecentProject(repoMapping: RepoMapping, filePath: String): Project? {
         logger.info("Checking recent projects")
-        val manager = RecentProjectsManager.getInstance() as? RecentProjectsManagerBase
-        val recentPaths = manager?.state?.recentPaths
-
-        if (recentPaths == null) {
-            logger.info("Could not read recent project paths")
-            return null
-        }
-
+        val manager = RecentProjectsManager.getInstance()
+        val actions = manager.getRecentProjectsActions(false, false)
+        val recentPaths = actions.filterIsInstance<ReopenProjectAction>().map { it.projectPath }
         logger.info("Recent project paths: ${recentPaths.commaSeparated}")
 
         for (repoPath in repoMapping.paths) {
