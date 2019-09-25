@@ -159,10 +159,17 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
                 state.proxySupport
 
     val credentialAttributes: CredentialAttributes
-        get() = CredentialAttributes(
-            generateServiceName("CodeStream", state.serverUrl),
-            state.email
-        )
+        get() {
+            // https://youtrack.jetbrains.com/issue/IDEA-223257?p=WI-48781
+            val constructor = CredentialAttributes::class.constructors.first()
+            val serviceName = generateServiceName("CodeStream", state.serverUrl)
+            val userName = state.email
+            return if (constructor.parameters.size == 4) {
+                constructor.call(serviceName, userName, null, false)
+            } else {
+                constructor.call(serviceName, userName, null, false, true)
+            }
+        }
 
     fun getWebViewContextJson(): JsonElement {
         var jsonObject = gson.fromJson<JsonObject>(state.webViewContext)
