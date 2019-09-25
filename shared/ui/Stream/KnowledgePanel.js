@@ -137,7 +137,6 @@ export class SimpleKnowledgePanel extends Component {
 						displayType="collapsed"
 						currentUserName={this.props.currentUserName}
 						usernames={this.props.usernames}
-						action={this.props.postAction}
 						query={this.state.q}
 					/>
 				);

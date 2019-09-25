@@ -507,7 +507,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 											marker={docMarker}
 											hidden={hidden}
 											highlightCodeInTextEditor
-											action={this.props.postAction}
 											query={this.state.query}
 											viewHeadshots={this.props.viewHeadshots}
 											postAction={this.props.postAction}
@@ -973,7 +972,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						deselectCodemarks={this.deselectCodemarks}
 						hidden={hidden}
 						highlightCodeInTextEditor
-						action={this.props.postAction}
 						query={this.state.query}
 						postAction={this.props.postAction}
 					/>
