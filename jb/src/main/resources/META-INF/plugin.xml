@@ -59,6 +59,11 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="3_0_3">3.0.3</h4>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue with opening codemark links in older IDE versions</li>
+</ul>
 <h4 id="3_0_2">3.0.2</h4>
 <h5>Fixed</h5>
 <ul>
