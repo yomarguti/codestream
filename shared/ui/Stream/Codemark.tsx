@@ -2,7 +2,7 @@ import cx from "classnames";
 import React from "react";
 import { connect } from "react-redux";
 import { Range } from "vscode-languageserver-protocol";
-import { fetchThread, setCodemarkStatus, setUserPreference } from "./actions";
+import { fetchThread, setCodemarkStatus, setUserPreference, createPost } from "./actions";
 import Headshot from "./Headshot";
 import Tag from "./Tag";
 import Icon from "./Icon";
@@ -53,6 +53,7 @@ interface State {
 }
 
 interface DispatchProps {
+	createPost: typeof createPost;
 	deleteCodemark: typeof deleteCodemark;
 	editCodemark: typeof editCodemark;
 	fetchThread: typeof fetchThread;
@@ -89,7 +90,6 @@ interface InheritedProps {
 	codemark: CodemarkPlus;
 	marker: DocumentMarker;
 	postAction?(...args: any[]): any;
-	action(action: string, post: any, args: any): any;
 	onClick?(event: React.SyntheticEvent, codemark: CodemarkPlus, marker: DocumentMarker): any;
 	highlightCodeInTextEditor?: boolean;
 	query?: string;
@@ -391,21 +391,17 @@ export class Codemark extends React.Component<Props, State> {
 	};
 
 	closeIssue = () => {
-		const { codemark, setCodemarkStatus } = this.props;
+		const { codemark, setCodemarkStatus, createPost } = this.props;
 		setCodemarkStatus(codemark.id, "closed");
-		this.submitReply("/me closed this issue");
+		const forceThreadId = codemark.parentPostId || codemark.postId;
+		createPost(codemark.streamId, forceThreadId, "/me closed this issue");
 	};
 
 	openIssue = () => {
-		const { codemark, setCodemarkStatus } = this.props;
+		const { codemark, setCodemarkStatus, createPost } = this.props;
 		setCodemarkStatus(codemark.id, "open");
-		this.submitReply("/me reopened this issue");
-	};
-
-	submitReply = text => {
-		const { action, codemark } = this.props;
 		const forceThreadId = codemark.parentPostId || codemark.postId;
-		action("submit-post", null, { forceStreamId: codemark.streamId, forceThreadId, text });
+		createPost(codemark.streamId, forceThreadId, "/me reopened this issue");
 	};
 
 	renderStatus(codemark) {
@@ -1249,7 +1245,8 @@ export default connect(
 		getPosts,
 		setCurrentCodemark,
 		addDocumentMarker,
-		addCodemarks
+		addCodemarks,
+		createPost
 	}
 	// @ts-ignore
 )(Codemark);
