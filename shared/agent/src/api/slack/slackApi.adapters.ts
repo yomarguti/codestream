@@ -238,14 +238,13 @@ export async function fromSlackPost(
 	}
 
 	let codemark: CSCodemark | undefined;
-	if (post.attachments && post.attachments.length !== 0) {
+	if (post.blocks != null && post.blocks.length !== 0) {
+		codemark = await fromSlackPostBlocksToCodemark(post.blocks, teamId);
+	}
+
+	if (post.attachments != null && post.attachments.length !== 0) {
 		// Filter out unfurled links
 		// TODO: Turn unfurled images into files
-
-		const blocks = post.blocks;
-		if (blocks != null && blocks.length !== 0) {
-			codemark = await fromSlackPostBlocksToCodemark(blocks, teamId);
-		}
 
 		if (codemark == null) {
 			// legacy slack posts with codemarks
