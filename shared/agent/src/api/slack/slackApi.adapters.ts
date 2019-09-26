@@ -531,135 +531,50 @@ export function toSlackPostBlocks(
 	const blocks: Blocks = [];
 
 	switch (codemark.type) {
-		case CodemarkType.Comment: {
-			blocks.push(
-				{
-					type: "section",
-					text: {
-						type: "mrkdwn",
-						text: "_commented on code_"
-					}
-				},
-				{ type: "divider" },
-				{
-					type: "section",
-					text: {
-						type: "mrkdwn",
-						text: toSlackText(codemark.text, userIdsByName)
-					}
+		case CodemarkType.Comment:
+		case CodemarkType.Trap: {
+			blocks.push({
+				type: "section",
+				text: {
+					type: "mrkdwn",
+					text: toSlackText(codemark.text, userIdsByName)
 				}
-			);
+			});
 
 			break;
 		}
 		case CodemarkType.Bookmark: {
-			blocks.push(
-				{
-					type: "section",
-					text: {
-						type: "mrkdwn",
-						text: "_set a bookmark_"
-					}
-				},
-				{ type: "divider" },
-				{
-					type: "section",
-					text: {
-						type: "mrkdwn",
-						// Bookmarks use the title rather than text
-						text: toSlackText(codemark.title, userIdsByName)
-					}
+			blocks.push({
+				type: "section",
+				text: {
+					type: "mrkdwn",
+					// Bookmarks use the title rather than text
+					text: toSlackText(codemark.title, userIdsByName)
 				}
-			);
+			});
 
 			break;
 		}
-		case CodemarkType.Issue: {
-			blocks.push(
-				{
-					type: "section",
-					text: {
-						type: "mrkdwn",
-						text: "_opened an issue_"
-					}
-				},
-				{ type: "divider" }
-			);
-
-			if (codemark.title) {
-				blocks.push({
-					type: "section",
-					text: {
-						type: "mrkdwn",
-						text: `*${toSlackText(codemark.title, userIdsByName)}*`
-					}
-				});
-			}
-
-			if (codemark.text) {
-				blocks.push({
-					type: "section",
-					text: {
-						type: "mrkdwn",
-						text: toSlackText(codemark.text, userIdsByName)
-					}
-				});
-			}
-
-			break;
-		}
+		case CodemarkType.Issue:
 		case CodemarkType.Question: {
-			blocks.push(
-				{
-					type: "section",
-					text: {
-						type: "mrkdwn",
-						text: "_has a question_"
-					}
-				},
-				{ type: "divider" }
-			);
-
+			let text;
 			if (codemark.title) {
-				blocks.push({
-					type: "section",
-					text: {
-						type: "mrkdwn",
-						text: `*${toSlackText(codemark.title, userIdsByName)}*`
-					}
-				});
+				text = `*${toSlackText(codemark.title, userIdsByName)}*`;
 			}
 
 			if (codemark.text) {
+				text = `${text ? `${text}\n` : ""}${toSlackText(codemark.text, userIdsByName)}`;
+			}
+
+			if (text) {
 				blocks.push({
 					type: "section",
 					text: {
 						type: "mrkdwn",
-						text: toSlackText(codemark.text, userIdsByName)
+						text: text
 					}
 				});
 			}
-
-			break;
-		}
-		case CodemarkType.Trap: {
-			blocks.push(
-				{
-					type: "section",
-					text: {
-						type: "mrkdwn",
-						text: "_set a trap_"
-					}
-				},
-				{ type: "divider" },
-				{
-					type: "section",
-					text: {
-						type: "mrkdwn",
-						text: toSlackText(codemark.text, userIdsByName)
-					}
-				}
-			);
 
 			break;
 		}
@@ -670,12 +585,8 @@ export function toSlackPostBlocks(
 			type: "section",
 			text: {
 				type: "mrkdwn",
-				text: "*Assignees*"
-			},
-			fields: codemark.assignees.map(a => ({
-				type: "plain_text",
-				text: usernamesById.get(a) || ""
-			}))
+				text: `*Assignees*\n${codemark.assignees.map(a => usernamesById.get(a) || "").join(", ")}`
+			}
 		});
 	}
 
@@ -688,12 +599,8 @@ export function toSlackPostBlocks(
 			type: "section",
 			text: {
 				type: "mrkdwn",
-				text: "*Assignees*"
-			},
-			fields: codemark.externalAssignees.map(a => ({
-				type: "plain_text",
-				text: a.displayName
-			}))
+				text: `*Assignees*\n${codemark.externalAssignees.map(a => a.displayName).join(", ")}`
+			}
 		});
 	}
 
@@ -855,11 +762,6 @@ export function toSlackPostBlocks(
 		// MUST keep this data in sync with codemarkAttachmentRegex above
 		block_id: `codestream://codemark/${codemark.id}?teamId=${codemark.teamId}`,
 		elements: [
-			{
-				type: "image",
-				image_url: "https://images.codestream.com/logos/grey_blue_transparent-400x400.png",
-				alt_text: "CodeStream Logo"
-			},
 			{
 				type: "plain_text",
 				text: "Posted via CodeStream"
