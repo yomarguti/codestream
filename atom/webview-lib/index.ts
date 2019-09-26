@@ -86,3 +86,18 @@ api.on("initialize", ({ isDebugging, styles }) => {
 });
 
 api.on("did-change-styles", setStyles);
+
+document.addEventListener(
+	"click",
+	e => {
+		if (e == null || e.target == null) return;
+		const url = (e.target as HTMLAnchorElement).href;
+		if (url) {
+			api.send("did-click-link", url);
+			e.preventDefault();
+			e.stopPropagation();
+			e.stopImmediatePropagation();
+		}
+	},
+	true
+);

@@ -217,6 +217,11 @@ export class CodestreamView {
 					this.logger.log(type, message, JSON.stringify(args));
 					break;
 				}
+				case "did-click-link": {
+					const url = event.args[0];
+					shell.openExternal(url);
+					break;
+				}
 				case "codestream-ui": {
 					const data = event.args[0];
 					if (isIpcRequestMessage(data)) {
