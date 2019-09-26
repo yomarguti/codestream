@@ -1193,7 +1193,18 @@ export class Codemark extends React.Component<Props, State> {
 										<span style={{ marginRight: "5px" }}>
 											<Icon name="link-external" />
 										</span>
-										<Link href={action.uri}>{action.label}</Link>
+										<Link
+											onClick={e => {
+												e.preventDefault();
+												HostApi.instance.send(OpenUrlRequestType, { url: action.uri });
+												HostApi.instance.track("PR Comment Action", {
+													Host: marker.externalContent!.provider.name,
+													"Action Label": action.label
+												});
+											}}
+										>
+											{action.label}
+										</Link>
 									</span>
 								))}
 							</div>
