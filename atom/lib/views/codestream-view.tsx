@@ -1,4 +1,17 @@
 import {
+	ConnectionStatus,
+	DidChangeConnectionStatusNotificationType,
+	DidChangeDataNotificationType,
+	DidChangeDocumentMarkersNotificationType,
+	DidChangeVersionCompatibilityNotification,
+	DidChangeVersionCompatibilityNotificationType,
+	GetDocumentFromMarkerRequestType,
+	ReportingMessageType,
+	ReportMessageRequestType,
+	TraceLevel,
+} from "@codestream/protocols/agent";
+import { CodemarkType } from "@codestream/protocols/api";
+import {
 	ApplyMarkerRequest,
 	ApplyMarkerRequestType,
 	ApplyMarkerResponse,
@@ -56,19 +69,6 @@ import * as fs from "fs-plus";
 import { FileLogger } from "logger";
 import { NotificationType } from "vscode-languageserver-protocol";
 import { ConfigSchema } from "../configs";
-import {
-	ConnectionStatus,
-	DidChangeConnectionStatusNotificationType,
-	DidChangeDataNotificationType,
-	DidChangeDocumentMarkersNotificationType,
-	DidChangeVersionCompatibilityNotification,
-	DidChangeVersionCompatibilityNotificationType,
-	GetDocumentFromMarkerRequestType,
-	ReportingMessageType,
-	ReportMessageRequestType,
-	TraceLevel,
-} from "../protocols/agent/agent.protocol";
-import { CodemarkType } from "../protocols/agent/api.protocol";
 import { asAbsolutePath, createTempFile, Debug, Echo, Editor } from "../utils";
 import { Container } from "../workspace/container";
 import { EditorObserver } from "../workspace/editor-observer";

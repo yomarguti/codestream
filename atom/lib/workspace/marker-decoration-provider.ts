@@ -130,6 +130,7 @@ export class MarkerDecorationProvider implements Disposable {
 
 		if (response && response.markers) {
 			response.markers = response.markers.filter(m => {
+				if (m.codemark == undefined) return false;
 				if (m.codemark.color === "none") return false;
 				if (m.codemark.type === CodemarkType.Issue) {
 					return m.codemark.status === CodemarkStatus.Open;
@@ -156,11 +157,14 @@ export class MarkerDecorationProvider implements Disposable {
 
 		const marker = this.getOrCreateDisplayMarker(docMarker, markerLayer);
 
-		let color = docMarker.codemark.color || "blue";
+		// for now, `createMarker` is invoked with docMarkers guaranteed to have codemarks
+		const codemark = docMarker.codemark!;
+
+		let color = codemark.color || "blue";
 		color = color === "none" ? "" : `-${color}`;
 
 		const iconPath = Convert.pathToUri(
-			asAbsolutePath(`dist/icons/marker-${docMarker.codemark.type}${color}.svg`)
+			asAbsolutePath(`dist/icons/marker-${codemark.type}${color}.svg`)
 		);
 
 		const img = document.createElement("img");
@@ -169,7 +173,7 @@ export class MarkerDecorationProvider implements Disposable {
 		const item = document.createElement("div");
 		item.onclick = event => {
 			event.preventDefault();
-			this.viewController.getMainView().showCodemark(docMarker.codemarkId, Editor.getUri(editor));
+			this.viewController.getMainView().showCodemark(codemark.id, Editor.getUri(editor));
 			Container.session.agent.telemetry({
 				eventName: "Codemark Clicked",
 				properties: { "Codemark Location": "Source File" },
