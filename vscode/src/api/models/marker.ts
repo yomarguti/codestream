@@ -1,6 +1,6 @@
 "use strict";
 import { DocumentMarker } from "@codestream/protocols/agent";
-import { CSMarker, CSMarkerIdentifier } from "@codestream/protocols/api";
+import { CSMarkerIdentifier } from "@codestream/protocols/api";
 import { Range } from "vscode";
 import { Dates, memoize } from "../../system";
 import { CodeStreamSession } from "../session";
@@ -29,7 +29,8 @@ export class DocMarker {
 	}
 
 	get color(): string {
-		return this._entity.codemark.color || "blue";
+		// TODO: -- Use a setting
+		return "blue";
 	}
 
 	get creatorName() {
@@ -38,13 +39,13 @@ export class DocMarker {
 
 	@memoize
 	get date() {
-		return new Date(this.entity.createdAt);
+		return new Date(this._entity.createdAt);
 	}
 
-	@memoize
-	get entity(): CSMarker {
-		return this._entity;
-	}
+	// @memoize
+	// get entity(): CSMarker {
+	// 	return this._entity;
+	// }
 
 	@memoize
 	get hoverRange() {
@@ -57,15 +58,7 @@ export class DocMarker {
 
 	@memoize
 	get identifier(): CSMarkerIdentifier {
-		return { id: this.entity.id, file: this.entity.file, repoId: this.entity.repoId };
-	}
-
-	get postId() {
-		return this._entity.postId || this._entity.codemark.postId;
-	}
-
-	get postStreamId() {
-		return this._entity.postStreamId || this._entity.codemark.streamId;
+		return { id: this._entity.id, file: this._entity.file, repoId: this._entity.repoId };
 	}
 
 	get range() {
@@ -73,7 +66,7 @@ export class DocMarker {
 	}
 
 	get status(): string {
-		return this._entity.codemark.status || "open";
+		return (this._entity.codemark && this._entity.codemark.status) || "open";
 	}
 
 	get summary() {
@@ -85,11 +78,11 @@ export class DocMarker {
 	}
 
 	get pinned() {
-		return this._entity.codemark.pinned;
+		return (this._entity.codemark && this._entity.codemark.pinned) || false;
 	}
 
 	get type(): string {
-		return this._entity.codemark.type || "comment";
+		return this._entity.type || "comment";
 	}
 
 	private _dateFormatter?: Dates.IDateFormatter;

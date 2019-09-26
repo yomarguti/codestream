@@ -325,7 +325,7 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 
 			decorations[overviewRulerKey].push(marker.hoverRange);
 
-			if (!this._suspended) {
+			if (!this._suspended && marker.codemarkId != null) {
 				// Determine if the marker needs to be inline (i.e. part of the content or overlayed)
 				const position =
 					editor.document.lineAt(start).firstNonWhitespaceCharacterIndex === 0
@@ -389,36 +389,44 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 			for (const m of markers) {
 				try {
 					if (token.isCancellationRequested) return undefined;
-
-					const viewCommandArgs: OpenCodemarkCommandArgs = {
-						codemarkId: m.codemarkId,
-						sourceUri: uri
-					};
-
-					const compareCommandArgs: ShowMarkerDiffCommandArgs = {
-						marker: m.identifier
-					};
-
-					if (firstMarkerArgs === undefined) {
-						firstMarkerArgs = viewCommandArgs;
-					}
+					if (m.codemarkId == null) continue;
 
 					if (range) {
 						message += "\n\n-----\n\n";
 					}
 
-					const typeString = Strings.toTitleCase(m.type);
-					message += `__${m.creatorName}__, ${m.fromNow()} &nbsp; _(${m.formatDate()})_ ${
-						m.summaryMarkdown
-					}\n\n[__View ${typeString} \u2197__](command:codestream.openCodemark?${encodeURIComponent(
-						JSON.stringify(viewCommandArgs)
-					)} "View ${typeString}") &nbsp; | &nbsp; [__Compare__](command:codestream.showMarkerDiff?${encodeURIComponent(
-						JSON.stringify(compareCommandArgs)
-					)} "Compare to Current Version")`;
+					if (m.codemarkId) {
+						const viewCommandArgs: OpenCodemarkCommandArgs = {
+							codemarkId: m.codemarkId,
+							sourceUri: uri
+						};
 
-					// &nbsp; &middot; &nbsp; [__Unpin Marker \u1F4CC__](command:codestream.openStream?${encodeURIComponent(
-					// 	JSON.stringify(args)
-					// )} "Unpin Marker")
+						const compareCommandArgs: ShowMarkerDiffCommandArgs = {
+							marker: m.identifier
+						};
+
+						if (firstMarkerArgs === undefined) {
+							firstMarkerArgs = viewCommandArgs;
+						}
+
+						const typeString = Strings.toTitleCase(m.type);
+						message += `__${m.creatorName}__, ${m.fromNow()} &nbsp; _(${m.formatDate()})_ ${
+							m.summaryMarkdown
+						}\n\n[__View ${typeString} \u2197__](command:codestream.openCodemark?${encodeURIComponent(
+							JSON.stringify(viewCommandArgs)
+						)} "View ${typeString}") &nbsp; | &nbsp; [__Compare__](command:codestream.showMarkerDiff?${encodeURIComponent(
+							JSON.stringify(compareCommandArgs)
+						)} "Compare to Current Version")`;
+
+						// &nbsp; &middot; &nbsp; [__Unpin Marker \u1F4CC__](command:codestream.openStream?${encodeURIComponent(
+						// 	JSON.stringify(args)
+						// )} "Unpin Marker")
+					} else {
+						// TODO: Add actions from the external content
+						// message += `__${m.creatorName}__, ${m.fromNow()} &nbsp; _(${m.formatDate()})_ ${
+						// 	m.summaryMarkdown
+						// }`;
+					}
 
 					if (range) {
 						range.union(m.hoverRange); // document.validateRange(m.hoverRange));
@@ -465,9 +473,9 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 	private async getMarkersCore(uri: Uri) {
 		try {
 			const resp = await Container.agent.documentMarkers.fetch(uri, true);
-			return resp !== undefined
-				? resp.markers.map(m => new DocMarker(Container.session, m))
-				: emptyArray;
+			if (resp === undefined) return emptyArray;
+
+			return resp.markers.map(m => new DocMarker(Container.session, m));
 		} catch (ex) {
 			Logger.error(ex);
 			return emptyArray;

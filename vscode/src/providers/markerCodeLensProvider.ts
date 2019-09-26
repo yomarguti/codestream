@@ -116,6 +116,14 @@ export class CodemarkCodeLensProvider implements CodeLensProvider, Disposable {
 		if (markers == null || markers.length === 0) return [];
 
 		const lenses = markers.map<CodeLens>(m => {
+			if (m.codemarkId == null) {
+				// TODO: Add action for external content
+				return new CodeLens(m.range, {
+					title: `// ${m.creatorName}: ${Strings.truncate(m.summary, 60)}`,
+					command: undefined!
+				});
+			}
+
 			const args: OpenCodemarkCommandArgs = {
 				codemarkId: m.codemarkId,
 				sourceUri: uri
@@ -135,7 +143,12 @@ export class CodemarkCodeLensProvider implements CodeLensProvider, Disposable {
 			const response = await Container.agent.documentMarkers.fetch(uri, true);
 			if (response == null) return undefined;
 
-			return response.markers.map(m => new DocMarker(Container.session, m));
+			return (
+				response.markers
+					// NOTE: Remove this once we support external content in the editor
+					.filter(m => m.codemark != null)
+					.map(m => new DocMarker(Container.session, m))
+			);
 		} catch (ex) {
 			Logger.error(ex);
 			return undefined;
