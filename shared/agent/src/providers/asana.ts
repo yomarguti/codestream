@@ -2,7 +2,6 @@
 import * as qs from "querystring";
 import { Logger } from "../logger";
 import {
-	AsanaBoard,
 	AsanaCreateCardRequest,
 	AsanaCreateCardResponse,
 	AsanaList,
@@ -49,9 +48,9 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 	}
 
 	@log()
-	async getBoards(
-		request: FetchThirdPartyBoardsRequest
-	): Promise<FetchThirdPartyBoardsResponse> {
+	async getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
+		await this.ensureConnected();
+
 		const workspaces = await this.getWorkspaces();
 		let projects: AsanaProject[] = [];
 		for (const workspace of workspaces) {
@@ -101,7 +100,7 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 		return { boards };
 	}
 
-	async getWorkspaces(): Promise<AsanaWorkspace[]> {
+	private async getWorkspaces(): Promise<AsanaWorkspace[]> {
 		let workspaces: AsanaWorkspace[] = [];
 
 		try {
@@ -125,7 +124,7 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 		return workspaces;
 	}
 
-	async getWorkspaceProjects(workspace: AsanaWorkspace): Promise<AsanaProject[]> {
+	private async getWorkspaceProjects(workspace: AsanaWorkspace): Promise<AsanaProject[]> {
 		let projects: AsanaProject[] = [];
 
 		try {
@@ -153,6 +152,8 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 
 	@log()
 	async createCard(request: CreateThirdPartyCardRequest) {
+		await this.ensureConnected();
+
 		const data = request.data as AsanaCreateCardRequest;
 		const cardData = {
 			data: {
@@ -189,6 +190,8 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {
+		await this.ensureConnected();
+
 		const response = await this.get<AsanaProjectData>(`/api/1.0/projects/${request.boardId}`);
 		const workspaceId = response.body.data.workspace.gid;
 

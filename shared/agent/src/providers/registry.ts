@@ -1,4 +1,5 @@
 "use strict";
+import { CSMe } from "protocol/api.protocol";
 import {
 	AddEnterpriseProviderRequest,
 	AddEnterpriseProviderRequestType,
@@ -22,7 +23,8 @@ import {
 	FetchThirdPartyBoardsResponse
 } from "../protocol/agent.protocol";
 import { CodeStreamSession } from "../session";
-import { getProvider, log, lsp, lspHandler } from "../system";
+import { getProvider, getRegisteredProviders, log, lsp, lspHandler } from "../system";
+import { ThirdPartyProvider } from "./provider";
 
 // NOTE: You must include all new providers here, otherwise the webpack build will exclude them
 export * from "./trello";
@@ -98,6 +100,9 @@ export class ThirdPartyProviderRegistry {
 		if (provider === undefined) {
 			throw new Error(`No registered provider for '${request.providerId}'`);
 		}
+		if (!provider.supportsIssues()) {
+			throw new Error(`Provider(${provider.name}) doesn't support issues`);
+		}
 
 		return provider.getAssignableUsers(request);
 	}
@@ -108,6 +113,9 @@ export class ThirdPartyProviderRegistry {
 		const provider = getProvider(request.providerId);
 		if (provider === undefined) {
 			throw new Error(`No registered provider for '${request.providerId}'`);
+		}
+		if (!provider.supportsIssues()) {
+			throw new Error(`Provider(${provider.name}) doesn't support issues`);
 		}
 
 		return provider.getBoards(request);
@@ -120,7 +128,33 @@ export class ThirdPartyProviderRegistry {
 		if (provider === undefined) {
 			throw new Error(`No registered provider for '${request.providerId}'`);
 		}
+		if (!provider.supportsIssues()) {
+			throw new Error(`Provider(${provider.name}) doesn't support issues`);
+		}
 
 		return provider.createCard(request);
+	}
+
+	getProviders(): ThirdPartyProvider[];
+	getProviders<T extends ThirdPartyProvider>(predicate: (p: ThirdPartyProvider) => p is T): T[];
+	getProviders(predicate?: (p: ThirdPartyProvider) => boolean) {
+		const providers = getRegisteredProviders();
+		if (predicate === undefined) return providers;
+
+		return providers.filter(predicate);
+	}
+
+	getConnectedProviders(user: CSMe): ThirdPartyProvider[];
+	getConnectedProviders<T extends ThirdPartyProvider>(
+		user: CSMe,
+		predicate: (p: ThirdPartyProvider) => p is T
+	): T[];
+	getConnectedProviders<T extends ThirdPartyProvider>(
+		user: CSMe,
+		predicate?: (p: ThirdPartyProvider) => boolean
+	) {
+		return this.getProviders(
+			(p): p is T => p.isConnected(user) && (predicate == null || predicate(p))
+		);
 	}
 }

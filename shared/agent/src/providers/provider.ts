@@ -1,20 +1,23 @@
 "use strict";
 import fetch, { RequestInit, Response } from "node-fetch";
+import { URI } from "vscode-uri";
+import { MessageType } from "../api/apiProvider";
+import { User } from "../api/extensions";
+import { SessionContainer } from "../container";
+import { GitRemote } from "../git/gitService";
+import { Logger } from "../logger";
 import {
 	AddEnterpriseProviderRequest,
 	AddEnterpriseProviderResponse,
 	CreateThirdPartyCardRequest,
 	CreateThirdPartyCardResponse,
+	DocumentMarker,
 	FetchAssignableUsersRequest,
 	FetchAssignableUsersResponse,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
 	ThirdPartyProviderConfig
-} from "protocol/agent.protocol";
-import { MessageType } from "../api/apiProvider";
-import { User } from "../api/extensions";
-import { SessionContainer } from "../container";
-import { Logger } from "../logger";
+} from "../protocol/agent.protocol";
 import { CSMe, CSProviderInfos } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
 import { Functions, Strings } from "../system";
@@ -34,16 +37,48 @@ export const providerNamesById = new Map<string, string>([
 	["msteams", "Microsoft Teams"]
 ]);
 
+export interface ThirdPartyProviderSupportsIssues {
+	getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse>;
+	getAssignableUsers(request: FetchAssignableUsersRequest): Promise<FetchAssignableUsersResponse>;
+	createCard(request: CreateThirdPartyCardRequest): Promise<CreateThirdPartyCardResponse>;
+}
+
+export interface ThirdPartyProviderSupportsPullRequests {
+	getPullRequestDocumentMarkers(request: {
+		uri: URI;
+		revision: string | undefined;
+		repoId: string | undefined;
+		streamId: string | undefined;
+	}): Promise<DocumentMarker[]>;
+}
+
+export namespace ThirdPartyProvider {
+	export function supportsIssues(
+		provider: ThirdPartyProvider
+	): provider is ThirdPartyProvider & ThirdPartyProviderSupportsIssues {
+		return (
+			(provider as any).getBoards !== undefined &&
+			(provider as any).getAssignableUsers !== undefined &&
+			(provider as any).createCard !== undefined
+		);
+	}
+	export function supportsPullRequests(
+		provider: ThirdPartyProvider
+	): provider is ThirdPartyProvider & ThirdPartyProviderSupportsPullRequests {
+		return (provider as any).getPullRequestDocumentMarkers !== undefined;
+	}
+}
+
 export interface ThirdPartyProvider {
 	readonly name: string;
+	supportsIssues(): this is ThirdPartyProvider & ThirdPartyProviderSupportsIssues;
+	supportsPullRequests(): this is ThirdPartyProvider & ThirdPartyProviderSupportsPullRequests;
 	connect(): Promise<void>;
 	configure(data: { [key: string]: any }): Promise<void>;
 	disconnect(): Promise<void>;
 	addEnterpriseHost(request: AddEnterpriseProviderRequest): Promise<AddEnterpriseProviderResponse>;
 	getConfig(): ThirdPartyProviderConfig;
-	getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse>;
-	getAssignableUsers(request: FetchAssignableUsersRequest): Promise<FetchAssignableUsersResponse>;
-	createCard(request: CreateThirdPartyCardRequest): Promise<CreateThirdPartyCardResponse>;
+	isConnected(me: CSMe): boolean;
 }
 
 export interface ApiResponse<T> {
@@ -77,15 +112,10 @@ export abstract class ThirdPartyProviderBase<
 	abstract get displayName(): string;
 	abstract get name(): string;
 	abstract get headers(): { [key: string]: string };
-	abstract async getBoards(
-		request: FetchThirdPartyBoardsRequest
-	): Promise<FetchThirdPartyBoardsResponse>;
-	abstract async getAssignableUsers(
-		request: FetchAssignableUsersRequest
-	): Promise<FetchAssignableUsersResponse>;
-	abstract async createCard(
-		request: CreateThirdPartyCardRequest
-	): Promise<CreateThirdPartyCardResponse>;
+
+	get accessToken() {
+		return this._providerInfo && this._providerInfo.accessToken;
+	}
 
 	get apiPath() {
 		return "";
@@ -97,12 +127,31 @@ export abstract class ThirdPartyProviderBase<
 		return `${returnHost}${this.apiPath}`;
 	}
 
-	get accessToken() {
-		return this._providerInfo && this._providerInfo.accessToken;
+	supportsIssues(): this is ThirdPartyProvider & ThirdPartyProviderSupportsIssues {
+		return ThirdPartyProvider.supportsIssues(this);
+	}
+	supportsPullRequests(): this is ThirdPartyProvider & ThirdPartyProviderSupportsPullRequests {
+		return ThirdPartyProvider.supportsPullRequests(this);
+	}
+
+	async addEnterpriseHost(
+		request: AddEnterpriseProviderRequest
+	): Promise<AddEnterpriseProviderResponse> {
+		return await this.session.api.addEnterpriseProviderHost({
+			provider: this.providerConfig.name,
+			teamId: this.session.teamId,
+			host: request.host,
+			data: request.data
+		});
 	}
 
 	getConfig() {
 		return this.providerConfig;
+	}
+
+	isConnected(user: CSMe): boolean {
+		const providerInfo = this.getProviderInfo(user);
+		return Boolean(providerInfo && providerInfo.accessToken);
 	}
 
 	async connect() {
@@ -142,25 +191,14 @@ export abstract class ThirdPartyProviderBase<
 		await this.onDisconnected();
 	}
 
-	async addEnterpriseHost(
-		request: AddEnterpriseProviderRequest
-	): Promise<AddEnterpriseProviderResponse> {
-		return await this.session.api.addEnterpriseProviderHost({
-			provider: this.providerConfig.name,
-			teamId: this.session.teamId,
-			host: request.host,
-			data: request.data
-		});
-	}
-
 	protected async onDisconnected() {}
 
 	async ensureConnected() {
-		if (this._readyPromise) {
-			return this._readyPromise;
-		}
+		if (this._readyPromise !== undefined) return this._readyPromise;
+
 		if (this._providerInfo !== undefined) {
 			await this.refreshToken();
+
 			return;
 		}
 
@@ -171,30 +209,28 @@ export abstract class ThirdPartyProviderBase<
 	}
 
 	private async refreshToken() {
-		if (this._providerInfo === undefined) {
+		if (this._providerInfo === undefined || !isRefreshable(this._providerInfo)) {
 			return;
 		}
 
-		if (isRefreshable(this._providerInfo)) {
-			const oneMinuteBeforeExpiration = this._providerInfo.expiresAt - 1000 * 60;
-			if (oneMinuteBeforeExpiration <= new Date().getTime()) {
-				try {
-					const me = await this.session.api.refreshThirdPartyProvider({
-						providerId: this.providerConfig.id,
-						refreshToken: this._providerInfo.refreshToken
-					});
-					this._providerInfo = this.getProviderInfo(me);
-				} catch (error) {
-					await this.disconnect();
-					return this.ensureConnected();
-				}
-			}
+		const oneMinuteBeforeExpiration = this._providerInfo.expiresAt - 1000 * 60;
+		if (oneMinuteBeforeExpiration > new Date().getTime()) return;
+
+		try {
+			const me = await this.session.api.refreshThirdPartyProvider({
+				providerId: this.providerConfig.id,
+				refreshToken: this._providerInfo.refreshToken
+			});
+			this._providerInfo = this.getProviderInfo(me);
+		} catch (error) {
+			await this.disconnect();
+			return this.ensureConnected();
 		}
 	}
 
 	private async ensureConnectedCore() {
-		const response = await SessionContainer.instance().users.getMe();
-		this._providerInfo = this.getProviderInfo(response.user);
+		const { user } = await SessionContainer.instance().users.getMe();
+		this._providerInfo = this.getProviderInfo(user);
 
 		if (this._providerInfo === undefined) {
 			throw new Error(`You must authenticate with ${this.displayName} first.`);
@@ -405,5 +441,95 @@ export abstract class ThirdPartyProviderBase<
 			} catch {}
 		}
 		return new Error(message);
+	}
+}
+
+export interface PullRequestComment {
+	author: {
+		id: string;
+		nickname: string;
+	};
+	createdAt: number;
+	id: string;
+	path: string;
+	pullRequest: {
+		id: number;
+		url: string;
+	};
+	text: string;
+	code: string;
+	url: string;
+
+	commit: string;
+	originalCommit?: string;
+	line: number;
+	originalLine?: number;
+	diffHunk?: string;
+	outdated?: boolean;
+}
+
+export async function getOpenedRepos<R>(
+	predicate: (remote: GitRemote) => boolean,
+	queryFn: (path: string) => Promise<ApiResponse<R>>,
+	remoteRepos: Map<string, R>
+): Promise<Map<string, R>> {
+	const openRepos = new Map<string, R>();
+
+	const { git } = SessionContainer.instance();
+	const gitRepos = await git.getRepositories();
+
+	for (const gitRepo of gitRepos) {
+		const remotes = await git.getRepoRemotes(gitRepo.path);
+		for (const remote of remotes) {
+			if (!openRepos.has(remote.path) && predicate(remote)) {
+				let remoteRepo = remoteRepos.get(remote.path);
+				if (remoteRepo == null) {
+					try {
+						const response = await queryFn(remote.path);
+						remoteRepo = {
+							...response.body,
+							path: gitRepo.path
+						};
+						remoteRepos.set(remote.path, remoteRepo);
+					} catch (ex) {
+						Logger.error(ex);
+						debugger;
+					}
+				}
+
+				if (remoteRepo != null) {
+					openRepos.set(remote.path, remoteRepo);
+				}
+			}
+		}
+	}
+
+	return openRepos;
+}
+
+export async function getRepoRemotePaths<R extends { path: string }>(
+	filePath: string,
+	predicate: (remote: GitRemote) => boolean,
+	remoteRepos: Map<string, R>
+): Promise<{ remotePath: string | undefined; repoPath: string | undefined }> {
+	try {
+		const repo = await SessionContainer.instance().git.getRepositoryByFilePath(filePath);
+		if (repo === undefined) return { remotePath: undefined, repoPath: undefined };
+
+		const remotes = await repo.getRemotes();
+
+		let remotePath;
+		for (const [path, remoteRepo] of remoteRepos.entries()) {
+			if (remoteRepo.path === repo.path) {
+				remotePath = path;
+			}
+		}
+
+		if (remotePath) return { remotePath: remotePath, repoPath: repo.path };
+
+		const remote = remotes.find(predicate);
+		return { remotePath: remote && remote.path, repoPath: repo.path };
+	} catch (ex) {
+		return { remotePath: undefined, repoPath: undefined };
 	}
 }

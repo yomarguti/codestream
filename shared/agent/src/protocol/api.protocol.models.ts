@@ -83,7 +83,6 @@ export interface CSMarker extends CSEntity, CSMarkerIdentifier {
 	branchWhenCreated?: string;
 	locationWhenCreated: CSLocationArray;
 	code: string;
-	repo: string;
 }
 
 export interface CSLocationMeta {

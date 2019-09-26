@@ -140,6 +140,16 @@ export interface VersionInfo {
 }
 
 export class CodeStreamSession {
+	private _onDidChangeCodemarks = new Emitter<CSCodemark[]>();
+	get onDidChangeCodemarks(): Event<CSCodemark[]> {
+		return this._onDidChangeCodemarks.event;
+	}
+
+	private _onDidChangeCurrentUser = new Emitter<CSMe>();
+	get onDidChangeCurrentUser(): Event<CSMe> {
+		return this._onDidChangeCurrentUser.event;
+	}
+
 	private _onDidChangeMarkerLocations = new Emitter<CSMarkerLocations[]>();
 	get onDidChangeMarkerLocations(): Event<CSMarkerLocations[]> {
 		return this._onDidChangeMarkerLocations.event;
@@ -148,11 +158,6 @@ export class CodeStreamSession {
 	private _onDidChangeMarkers = new Emitter<CSMarker[]>();
 	get onDidChangeMarkers(): Event<CSMarker[]> {
 		return this._onDidChangeMarkers.event;
-	}
-
-	private _onDidChangeCodemarks = new Emitter<CSCodemark[]>();
-	get onDidChangeCodemarks(): Event<CSCodemark[]> {
-		return this._onDidChangeCodemarks.event;
 	}
 
 	private _onDidChangePosts = new Emitter<CSPost[]>();
@@ -384,6 +389,11 @@ export class CodeStreamSession {
 				});
 				break;
 			case MessageType.Users:
+				const me = e.data.find(u => u.id === this._userId);
+				if (me != null) {
+					this._onDidChangeCurrentUser.fire(me as CSMe);
+				}
+
 				this._onDidChangeUsers.fire(e.data);
 				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: ChangeDataType.Users,

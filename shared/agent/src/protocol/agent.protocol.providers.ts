@@ -143,7 +143,7 @@ export const CreateThirdPartyCardRequestType = new RequestType<
 interface ThirdPartyProviderSetTokenData {
 	host?: string;
 	token: string;
-	data?: { [ key: string ]: any };
+	data?: { [key: string]: any };
 }
 
 export interface ThirdPartyProviderSetTokenRequestData extends ThirdPartyProviderSetTokenData {

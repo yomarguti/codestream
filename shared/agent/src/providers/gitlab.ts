@@ -12,7 +12,7 @@ import {
 	GitLabCreateCardResponse
 } from "../protocol/agent.protocol";
 import { CSGitLabProviderInfo } from "../protocol/api.protocol";
-import { log, lspHandler, lspProvider } from "../system";
+import { log, lspProvider } from "../system";
 import { ThirdPartyProviderBase } from "./provider";
 
 interface GitLabProject {
@@ -31,7 +31,7 @@ interface GitLabUser {
 export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo> {
 	private _gitlabUserId: string | undefined;
 
-	private _knownProjects = new Map<String, GitLabProject>();
+	private _knownProjects = new Map<string, GitLabProject>();
 
 	get displayName() {
 		return "GitLab";
@@ -49,15 +49,17 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 
 	async onConnected() {
 		this._gitlabUserId = await this.getMemberId();
-		this._knownProjects = new Map<String, GitLabProject>();
+		this._knownProjects = new Map<string, GitLabProject>();
 	}
 
 	@log()
 	async getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
+		await this.ensureConnected();
+
 		const { git } = SessionContainer.instance();
 		const gitRepos = await git.getRepositories();
 
-		const openProjects = new Map<String, GitLabProject>();
+		const openProjects = new Map<string, GitLabProject>();
 
 		for (const gitRepo of gitRepos) {
 			const remotes = await git.getRepoRemotes(gitRepo.path);
@@ -135,6 +137,8 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 
 	@log()
 	async createCard(request: CreateThirdPartyCardRequest) {
+		await this.ensureConnected();
+
 		const data = request.data as GitLabCreateCardRequest;
 		const card: { [key: string]: any } = {
 			title: data.title,
@@ -173,6 +177,8 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {
+		await this.ensureConnected();
+
 		const response = await this.get<GitLabUser[]>(`/projects/${request.boardId}/users`);
 		return { users: response.body.map(u => ({ ...u, displayName: u.name })) };
 	}

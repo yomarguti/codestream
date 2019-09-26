@@ -51,6 +51,8 @@ export class AzureDevOpsProvider extends ThirdPartyProviderBase<CSAzureDevOpsPro
 
 	@log()
 	async getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
+		await this.ensureConnected();
+
 		let boards: ThirdPartyProviderBoard[] = [];
 		try {
 			const response = await this.get<{ value: AzureDevOpsProject[] }>(
@@ -74,6 +76,8 @@ export class AzureDevOpsProvider extends ThirdPartyProviderBase<CSAzureDevOpsPro
 
 	@log()
 	async createCard(request: CreateThirdPartyCardRequest) {
+		await this.ensureConnected();
+
 		const data = request.data as AzureDevOpsCreateCardRequest;
 		const cardData: { [key: string]: any }[] = [
 			{
@@ -114,6 +118,8 @@ export class AzureDevOpsProvider extends ThirdPartyProviderBase<CSAzureDevOpsPro
 
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {
+		await this.ensureConnected();
+
 		let users: ThirdPartyProviderUser[] = [];
 
 		try {
@@ -146,8 +152,8 @@ export class AzureDevOpsProvider extends ThirdPartyProviderBase<CSAzureDevOpsPro
 					];
 				})
 			);
-		} catch (err) {
-			Logger.error(err);
+		} catch (ex) {
+			Logger.error(ex);
 			debugger;
 		}
 		return { users };

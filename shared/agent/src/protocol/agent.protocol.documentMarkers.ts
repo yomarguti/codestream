@@ -1,8 +1,13 @@
 "use strict";
 import { Range, RequestType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
 import { CodemarkPlus } from "./agent.protocol.codemarks";
-import { CSMarker } from "./api.protocol";
-import { CSMarkerLocation } from "./api.protocol.models";
+import {
+	CodemarkType,
+	CSEntity,
+	CSMarker,
+	CSMarkerIdentifier,
+	CSMarkerLocation
+} from "./api.protocol";
 
 export interface CreateDocumentMarkerPermalinkRequest {
 	range: Range;
@@ -22,17 +27,43 @@ export const CreateDocumentMarkerPermalinkRequestType = new RequestType<
 	void
 >("codestream/textDocument/markers/create/link");
 
-export interface DocumentMarker extends CSMarker {
-	codemark: CodemarkPlus;
-	creatorName: string;
-	range: Range;
-	// location is somewhat redundant because we have the calculated `range`
-	// property already, however there is additional data on the location
-	// object, called `meta` that we also want to expose
-	location: CSMarkerLocation;
-	summary: string;
-	summaryMarkdown: string;
-}
+export type DocumentMarker = CSEntity &
+	CSMarkerIdentifier & {
+		teamId: string;
+		fileStreamId: string;
+
+		creatorAvatar?: string;
+		creatorName: string;
+		code: string;
+		commitHashWhenCreated?: string;
+		range: Range;
+		// location is somewhat redundant because we have the calculated `range`
+		// property already, however there is additional data on the location
+		// object, called `meta` that we also want to expose
+		location: CSMarkerLocation;
+		summary: string;
+		summaryMarkdown: string;
+		type: CodemarkType;
+	} & (
+		| {
+				fileUri: string;
+				codemark: CodemarkPlus;
+				codemarkId: string;
+				externalContent?: undefined;
+		  }
+		| {
+				fileUri: string;
+				codemark?: undefined;
+				codemarkId?: undefined;
+				externalContent: {
+					provider: {
+						name: string;
+						icon?: string;
+					};
+					subhead?: string;
+					actions?: { label?: string; icon?: string; uri: string }[];
+				};
+		  });
 
 export enum MarkerNotLocatedReason {
 	MISSING_ORIGINAL_LOCATION = "missing original location",

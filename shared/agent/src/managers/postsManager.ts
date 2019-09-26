@@ -401,7 +401,7 @@ function trackPostCreation(request: CreatePostRequest, textDocument?: TextDocume
 			streams
 				.getById(request.streamId)
 				.then(async (stream: CSStream) => {
-					let streamType: String = "Unknown";
+					let streamType = "Unknown";
 					switch (stream.type) {
 						case StreamType.Channel:
 							stream.privacy === "private"

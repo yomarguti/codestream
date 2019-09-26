@@ -1,5 +1,6 @@
 "use strict";
 import * as path from "path";
+import { ThirdPartyProvider, ThirdPartyProviderSupportsPullRequests } from "providers/provider";
 import { CodeStreamSession } from "session";
 import { Range, TextDocumentChangeEvent } from "vscode-languageserver";
 import { URI } from "vscode-uri";
@@ -29,6 +30,7 @@ import {
 	CodemarkType,
 	CSCodemark,
 	CSMarker,
+	CSMe,
 	CSUser
 } from "../protocol/api.protocol";
 import { Functions, log, lsp, lspHandler, Strings } from "../system";
@@ -36,15 +38,19 @@ import { Functions, log, lsp, lspHandler, Strings } from "../system";
 const emojiMap: { [key: string]: string } = require("../../emoji/emojis.json");
 const emojiRegex = /:([-+_a-z0-9]+):/g;
 
+const emptyArray = (Object.freeze([]) as any) as any[];
 const emptyResponse = {
-	markers: [],
-	markersNotLocated: []
+	markers: emptyArray,
+	markersNotLocated: emptyArray
 };
 
 @lsp
 export class DocumentMarkerManager {
+	private _user: CSMe | undefined;
+
 	constructor(readonly session: CodeStreamSession) {
 		this.session.onDidChangeCodemarks(this.onCodemarksChanged, this);
+		this.session.onDidChangeCurrentUser(this.onCurrentUserChanged, this);
 		this.session.onDidChangeMarkers(this.onMarkersChanged, this);
 		this.session.agent.documents.onDidChangeContent(this.onDocumentContentChanged, this);
 	}
@@ -60,6 +66,11 @@ export class DocumentMarkerManager {
 		}
 
 		this.onFileStreamsChanged(fileStreamIds);
+	}
+
+	private onCurrentUserChanged(me: CSMe) {
+		this._user = me;
+		// TODO: Clear the cache if we changed? or at least if the providers changed
 	}
 
 	private onDocumentContentChanged(e: TextDocumentChangeEvent) {
@@ -212,108 +223,122 @@ export class DocumentMarkerManager {
 
 			const filePath = documentUri.fsPath;
 			Logger.log(cc, `MARKERS: requested markers for ${filePath}`);
-			const stream = await files.getByPath(filePath);
-			if (!stream) {
-				Logger.log(`MARKERS: no streamId found for ${filePath} - returning empty response`);
-				return emptyResponse;
-			}
 
-			const markersForDocument = await markers.getByStreamId(stream.id, true);
-			Logger.log(
-				cc,
-				`MARKERS: found ${markersForDocument.length} markers - retrieving current locations`
-			);
-
-			const { locations, missingLocations } = await markerLocations.getCurrentLocations(
-				documentId.uri,
-				stream.id,
-				markersForDocument
-			);
-
-			const usersById = new Map<string, CSUser>();
 			const documentMarkers: DocumentMarker[] = [];
 			const markersNotLocated: MarkerNotLocated[] = [];
 
-			Logger.log(cc, `MARKERS: results:`);
+			const stream = await files.getByPath(filePath);
+			if (stream != null) {
+				const markersForDocument = await markers.getByStreamId(stream.id, true);
+				Logger.log(
+					cc,
+					`MARKERS: found ${markersForDocument.length} markers - retrieving current locations`
+				);
 
-			for (const marker of markersForDocument) {
-				try {
-					const codemark = await codemarks.getEnrichedCodemarkById(marker.codemarkId);
+				const { locations, missingLocations } = await markerLocations.getCurrentLocations(
+					documentId.uri,
+					stream.id,
+					markersForDocument
+				);
 
-					// Only return markers that are not links and match the filter[s] (if any)
-					if (
-						codemark.type === CodemarkType.Link ||
-						(filters &&
-							filters.excludeArchived &&
-							(!codemark.pinned ||
-								(codemark.type === CodemarkType.Issue &&
-									codemark.status === CodemarkStatus.Closed)))
-					) {
-						continue;
-					}
+				const usersById = new Map<string, CSUser>();
 
-					const location = locations[marker.id];
-					if (location) {
-						let creator;
-						try {
-							creator = usersById.get(marker.creatorId);
-							if (creator === undefined) {
-								// HACK: This is a total hack for non-CS teams (slack, msteams) to avoid getting codestream users mixed with slack users in the cache
-								creator = await users.getById(marker.creatorId, { avoidCachingOnFetch: true });
+				Logger.log(cc, `MARKERS: results:`);
 
-								if (creator !== undefined) {
-									usersById.set(marker.creatorId, creator);
+				for (const marker of markersForDocument) {
+					try {
+						const codemark = await codemarks.getEnrichedCodemarkById(marker.codemarkId);
+
+						// Only return markers that are not links and match the filter[s] (if any)
+						if (
+							codemark.type === CodemarkType.Link ||
+							(filters &&
+								filters.excludeArchived &&
+								(!codemark.pinned ||
+									(codemark.type === CodemarkType.Issue &&
+										codemark.status === CodemarkStatus.Closed)))
+						) {
+							continue;
+						}
+
+						const location = locations[marker.id];
+						if (location) {
+							let creator;
+							try {
+								creator = usersById.get(marker.creatorId);
+								if (creator === undefined) {
+									// HACK: This is a total hack for non-CS teams (slack, msteams) to avoid getting codestream users mixed with slack users in the cache
+									creator = await users.getById(marker.creatorId, { avoidCachingOnFetch: true });
+
+									if (creator !== undefined) {
+										usersById.set(marker.creatorId, creator);
+									}
 								}
+							} catch (ex) {
+								debugger;
 							}
-						} catch (ex) {
-							debugger;
-						}
 
-						let summary = codemark.title || codemark.text || "";
-						if (summary.length !== 0) {
-							summary = (codemark.title || codemark.text).replace(
-								emojiRegex,
-								(s, code) => emojiMap[code] || s
-							);
-						}
+							let summary = codemark.title || codemark.text || "";
+							if (summary.length !== 0) {
+								summary = (codemark.title || codemark.text).replace(
+									emojiRegex,
+									(s, code) => emojiMap[code] || s
+								);
+							}
 
-						documentMarkers.push({
-							...marker,
-							summary: summary,
-							summaryMarkdown: `\n\n${Strings.escapeMarkdown(summary, { quoted: true })}`,
-							creatorName: (creator && creator.username) || "Unknown",
-							codemark: codemark,
-							range: MarkerLocation.toRange(location),
-							location
-						});
-						Logger.log(
-							cc,
-							`MARKERS: ${marker.id}=[${location.lineStart}, ${location.colStart}, ${location.lineEnd}, ${location.colEnd}]`
-						);
-					} else {
-						const missingLocation = missingLocations[marker.id];
-						if (missingLocation) {
-							markersNotLocated.push({
+							documentMarkers.push({
 								...marker,
-								notLocatedReason: missingLocation.reason,
-								notLocatedDetails: missingLocation.details
+								fileUri: documentUri.toString(),
+								codemark: codemark,
+								creatorName: (creator && creator.username) || "Unknown",
+								range: MarkerLocation.toRange(location),
+								location: location,
+								summary: summary,
+								summaryMarkdown: `\n\n${Strings.escapeMarkdown(summary, { quoted: true })}`,
+								type: codemark.type
 							});
 							Logger.log(
 								cc,
-								`MARKERS: ${marker.id}=${missingLocation.details ||
-									"location not found"}, reason: ${missingLocation.reason}`
+								`MARKERS: ${marker.id}=[${location.lineStart}, ${location.colStart}, ${location.lineEnd}, ${location.colEnd}]`
 							);
 						} else {
-							markersNotLocated.push({
-								...marker,
-								notLocatedReason: MarkerNotLocatedReason.UNKNOWN
-							});
-							Logger.log(cc, `MARKERS: ${marker.id}=location not found, reason: unknown`);
+							const missingLocation = missingLocations[marker.id];
+							if (missingLocation) {
+								markersNotLocated.push({
+									...marker,
+									notLocatedReason: missingLocation.reason,
+									notLocatedDetails: missingLocation.details
+								});
+								Logger.log(
+									cc,
+									`MARKERS: ${marker.id}=${missingLocation.details ||
+										"location not found"}, reason: ${missingLocation.reason}`
+								);
+							} else {
+								markersNotLocated.push({
+									...marker,
+									notLocatedReason: MarkerNotLocatedReason.UNKNOWN
+								});
+								Logger.log(cc, `MARKERS: ${marker.id}=location not found, reason: unknown`);
+							}
 						}
+					} catch (ex) {
+						Logger.error(ex, cc);
 					}
-				} catch (ex) {
-					Logger.error(ex, cc);
 				}
+			}
+
+			try {
+				const prMarkers = await this.getPullRequestDocumentMarkers({
+					uri: documentUri,
+					streamId: stream && stream.id
+				});
+				if (prMarkers.length > 0) {
+					documentMarkers.push(...prMarkers);
+				}
+			} catch (ex) {
+				Logger.error(ex, cc);
+				debugger;
 			}
 
 			return {
@@ -324,6 +349,77 @@ export class DocumentMarkerManager {
 			Logger.error(ex, cc);
 			debugger;
 			return emptyResponse;
+		}
+	}
+
+	private _prMarkers = new Map<
+		string,
+		{ expiresAt: number; markers: DocumentMarker[] | Promise<DocumentMarker[]> }
+	>();
+
+	@log()
+	async getPullRequestDocumentMarkers(request: {
+		uri: URI;
+		streamId: string | undefined;
+	}): Promise<DocumentMarker[]> {
+		const user = await this.getMe();
+
+		const { providerRegistry } = SessionContainer.instance();
+		const providers = providerRegistry.getConnectedProviders(user, (p): p is ThirdPartyProvider &
+			ThirdPartyProviderSupportsPullRequests => p.supportsPullRequests());
+		if (providers.length === 0) return emptyArray;
+
+		const cached = this._prMarkers.get(request.uri.fsPath);
+		if (cached !== undefined) {
+			if (cached.expiresAt <= new Date().getTime()) {
+				void this.getPullRequestDocumentMarkersCore(request, providers);
+			}
+
+			return cached.markers;
+		}
+
+		void this.getPullRequestDocumentMarkersCore(request, providers);
+		return emptyArray;
+	}
+
+	@log()
+	private async getPullRequestDocumentMarkersCore(
+		{
+			uri,
+			streamId
+		}: {
+			uri: URI;
+			streamId: string | undefined;
+		},
+		providers: (ThirdPartyProvider & ThirdPartyProviderSupportsPullRequests)[]
+	) {
+		const { git } = SessionContainer.instance();
+
+		const [repo, revision] = await Promise.all([
+			git.getRepositoryByFilePath(uri.fsPath),
+			git.getFileCurrentRevision(uri.fsPath)
+		]);
+
+		const markers = [];
+		const requests = providers.map(p =>
+			p.getPullRequestDocumentMarkers({
+				uri: uri,
+				revision: revision,
+				repoId: repo!.id,
+				streamId: streamId
+			})
+		);
+		for await (const response of requests) {
+			markers.push(...response);
+		}
+
+		this._prMarkers.set(uri.fsPath, {
+			expiresAt: new Date().setMinutes(new Date().getMinutes() + 5),
+			markers: markers
+		});
+
+		if (markers.length !== 0) {
+			this.fireDidChangeDocumentMarkers(uri.toString(true), "codemarks");
 		}
 	}
 
@@ -392,5 +488,12 @@ export class DocumentMarkerManager {
 			marker: marker,
 			range: range
 		};
+	}
+
+	private async getMe() {
+		if (this._user === undefined) {
+			({ user: this._user } = await this.session.api.getMe());
+		}
+		return this._user;
 	}
 }

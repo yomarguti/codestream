@@ -1,10 +1,7 @@
 "use strict";
 import { RequestHandler0, RequestType } from "vscode-languageserver-protocol";
 import { CodeStreamAgent } from "../../agent";
-import {
-	ThirdPartyProviderConfig,
-	ThirdPartyProviders
-} from "../../protocol/agent.protocol.providers";
+import { ThirdPartyProviders } from "../../protocol/agent.protocol.providers";
 import { ThirdPartyProvider } from "../../providers/provider";
 import { CodeStreamSession } from "../../session";
 
@@ -67,6 +64,10 @@ const providerRegistry = new Map<string, ThirdPartyProvider>();
 const providerTypeRegistry = new Map<string, any>();
 export function getProvider(providerId: string) {
 	return providerRegistry.get(providerId);
+}
+
+export function getRegisteredProviders() {
+	return [...providerRegistry.values()];
 }
 
 export function lspProvider<T extends object>(name: string): Function {

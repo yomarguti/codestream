@@ -23,6 +23,11 @@ import { IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { Id } from "./entityManager";
 
+export interface Markerish {
+	id: string;
+	locationWhenCreated: CSLocationArray;
+}
+
 export interface MissingLocationsById {
 	[id: string]: {
 		reason: MarkerNotLocatedReason;
@@ -165,7 +170,9 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			currentBufferText = await xfs.readText(filePath);
 		}
 		if (!currentBufferText) {
-			Logger.log(`MARKERS: Could not retrieve contents for ${filePath} from document manager or file system. File does not exist in current branch.`);
+			Logger.log(
+				`MARKERS: Could not retrieve contents for ${filePath} from document manager or file system. File does not exist in current branch.`
+			);
 			return result;
 		}
 
@@ -188,9 +195,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 				const commLoc = committedLocations[id];
 				const currLoc = calculatedLocations[id];
 				Logger.log(
-					`MARKERS: ${id} [${commLoc.lineStart}, ${commLoc.colStart}, ${commLoc.lineEnd}, ${
-						commLoc.colEnd
-					}] => [${currLoc.lineStart}, ${currLoc.colStart}, ${currLoc.lineEnd}, ${currLoc.colEnd}]`
+					`MARKERS: ${id} [${commLoc.lineStart}, ${commLoc.colStart}, ${commLoc.lineEnd}, ${commLoc.colEnd}] => [${currLoc.lineStart}, ${currLoc.colStart}, ${currLoc.lineEnd}, ${currLoc.colEnd}]`
 				);
 				if (currLoc.meta && currLoc.meta.contentChanged) {
 					// Logger.log("IT'S A TRAP!!!!!!!!!!!");
@@ -218,9 +223,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 				const uncommLoc = uncommittedLocation.location || {};
 
 				Logger.log(
-					`MARKERS: ${id} [${uncommLoc.lineStart}, ${uncommLoc.colStart}, ${uncommLoc.lineEnd}, ${
-						uncommLoc.colEnd
-					}] => [${currLoc.lineStart}, ${currLoc.colStart}, ${currLoc.lineEnd}, ${currLoc.colEnd}]`
+					`MARKERS: ${id} [${uncommLoc.lineStart}, ${uncommLoc.colStart}, ${uncommLoc.lineEnd}, ${uncommLoc.colEnd}] => [${currLoc.lineStart}, ${currLoc.colStart}, ${currLoc.lineEnd}, ${currLoc.colEnd}]`
 				);
 			}
 		}
@@ -345,9 +348,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 
 		for (const [commitHashWhenCreated, missingMarkers] of missingMarkersByCommit.entries()) {
 			Logger.log(
-				`MARKERS: Getting original locations for ${
-					missingMarkers.length
-				} markers created at ${commitHashWhenCreated}`
+				`MARKERS: Getting original locations for ${missingMarkers.length} markers created at ${commitHashWhenCreated}`
 			);
 
 			const allCommitLocations = await this.getMarkerLocationsById(
@@ -390,9 +391,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 				const origLoc = locationsToCalculate[id] || {};
 				const currLoc = calculatedLocations[id] || {};
 				Logger.log(
-					`MARKERS: ${id} [${origLoc.lineStart}, ${origLoc.colStart}, ${origLoc.lineEnd}, ${
-						origLoc.colEnd
-					}] => [${currLoc.lineStart}, ${currLoc.colStart}, ${currLoc.lineEnd}, ${currLoc.colEnd}]`
+					`MARKERS: ${id} [${origLoc.lineStart}, ${origLoc.colStart}, ${origLoc.lineEnd}, ${origLoc.colEnd}] => [${currLoc.lineStart}, ${currLoc.colStart}, ${currLoc.lineEnd}, ${currLoc.colEnd}]`
 				);
 				currentCommitLocations[id] = calculatedLocations[id];
 			}
@@ -486,9 +485,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			};
 			locationArraysById[id] = MarkerLocation.toArray(location);
 			Logger.log(
-				`MARKERS: committed ${id}@${commitHash} => [${location.lineStart}, ${location.colStart}, ${
-					location.lineEnd
-				}, ${location.colEnd}] - saving to API server`
+				`MARKERS: committed ${id}@${commitHash} => [${location.lineStart}, ${location.colStart}, ${location.lineEnd}, ${location.colEnd}] - saving to API server`
 			);
 			await session.api.createMarkerLocation({
 				streamId: fileStream.id,
@@ -521,5 +518,52 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 
 	protected getEntityName(): string {
 		return "MarkerLocation";
+	}
+
+	static async computeCurrentLocations(
+		filePath: string,
+		currentFileRevision: string,
+		markersByCommit: Map<string, Markerish[]>
+	) {
+		const { git } = SessionContainer.instance();
+
+		const locations: MarkerLocationsById = Object.create(null);
+		const orphans: MissingLocationsById = Object.create(null);
+
+		for (const [revision, markers] of markersByCommit.entries()) {
+			const diff = await git.getDiffBetweenCommits(revision, currentFileRevision, filePath);
+			if (!diff) {
+				const details = `cannot obtain diff - skipping calculation from ${revision} to ${currentFileRevision}`;
+				for (const marker of markers) {
+					orphans[marker.id] = {
+						reason: MarkerNotLocatedReason.MISSING_ORIGINAL_COMMIT,
+						details
+					};
+				}
+
+				continue;
+			}
+
+			const locationsToCalculate: MarkerLocationsById = Object.create(null);
+			for (const marker of markers) {
+				locationsToCalculate[marker.id] = {
+					id: marker.id,
+					lineStart: marker.locationWhenCreated[0],
+					colStart: marker.locationWhenCreated[1],
+					lineEnd: marker.locationWhenCreated[2],
+					colEnd: marker.locationWhenCreated[3]
+				};
+			}
+
+			const calculatedLocations = await calculateLocations(locationsToCalculate, diff);
+			for (const [id, location] of Object.entries(calculatedLocations)) {
+				locations[id] = location;
+			}
+		}
+
+		return {
+			locations: locations,
+			orphans: orphans
+		};
 	}
 }

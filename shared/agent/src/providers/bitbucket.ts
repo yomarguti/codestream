@@ -1,19 +1,31 @@
 "use strict";
+import * as paths from "path";
 import * as qs from "querystring";
+import { URI } from "vscode-uri";
 import { SessionContainer } from "../container";
 import { Logger } from "../logger";
+import { Markerish, MarkerLocationManager } from "../managers/markerLocationManager";
 import {
 	BitbucketBoard,
 	BitbucketCard,
 	BitbucketCreateCardRequest,
 	BitbucketCreateCardResponse,
 	CreateThirdPartyCardRequest,
+	DocumentMarker,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse
 } from "../protocol/agent.protocol";
-import { CSBitbucketProviderInfo } from "../protocol/api.protocol";
-import { log, lspProvider } from "../system";
-import { ThirdPartyProviderBase } from "./provider";
+import { CodemarkType, CSBitbucketProviderInfo, CSLocationArray } from "../protocol/api.protocol";
+import { Arrays, log, lspProvider, Strings } from "../system";
+import {
+	ApiResponse,
+	getOpenedRepos,
+	getRepoRemotePaths,
+	PullRequestComment,
+	ThirdPartyProviderBase,
+	ThirdPartyProviderSupportsIssues,
+	ThirdPartyProviderSupportsPullRequests
+} from "./provider";
 
 interface BitbucketRepo {
 	uuid: string;
@@ -43,11 +55,54 @@ interface BitbucketValues<T> {
 	next: string;
 }
 
-@lspProvider("bitbucket")
-export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProviderInfo> {
-	private _bitbucketUserId: string | undefined;
+interface BitbucketPullRequest {
+	id: number;
+	title: string;
+	links: {
+		html: { href: string };
+		comments: {
+			href: string;
+		};
+	};
+}
 
-	private _knownRepos = new Map<String, BitbucketRepo>();
+interface BitbucketPullRequestComment {
+	id: string;
+	user: {
+		account_id: string;
+		nickname: string;
+	};
+	content: {
+		raw: string;
+	};
+	created_on: string;
+	links: { html: { href: string }; code: { href: string } };
+	inline: {
+		to?: number;
+		from?: number;
+		outdated?: boolean;
+		path: string;
+	};
+	pullrequest: {
+		id: number;
+		title: string;
+		links: {
+			html: {
+				href: string;
+			};
+		};
+	};
+}
+
+interface GetPullRequestsResponse extends BitbucketValues<BitbucketPullRequest[]> {}
+
+interface GetPullRequestCommentsResponse extends BitbucketValues<BitbucketPullRequestComment[]> {}
+
+@lspProvider("bitbucket")
+export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProviderInfo>
+	implements ThirdPartyProviderSupportsIssues, ThirdPartyProviderSupportsPullRequests {
+	private _bitbucketUserId: string | undefined;
+	private _knownRepos = new Map<string, BitbucketRepo>();
 
 	get displayName() {
 		return "Bitbucket";
@@ -66,40 +121,18 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 
 	async onConnected() {
 		this._bitbucketUserId = await this.getMemberId();
-		this._knownRepos = new Map<String, BitbucketRepo>();
+		this._knownRepos = new Map<string, BitbucketRepo>();
 	}
 
 	@log()
 	async getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
-		const { git } = SessionContainer.instance();
-		const gitRepos = await git.getRepositories();
-		const openRepos = new Map<String, BitbucketRepo>();
+		void (await this.ensureConnected());
 
-		for (const gitRepo of gitRepos) {
-			const remotes = await git.getRepoRemotes(gitRepo.path);
-			for (const remote of remotes) {
-				if (remote.domain === "bitbucket.org" && !openRepos.has(remote.path)) {
-					let bitbucketRepo = this._knownRepos.get(remote.path);
-					if (!bitbucketRepo) {
-						try {
-							const response = await this.get<BitbucketRepo>(`/repositories/${remote.path}`);
-							bitbucketRepo = {
-								...response.body,
-								path: gitRepo.path
-							};
-							this._knownRepos.set(remote.path, bitbucketRepo);
-						} catch (err) {
-							Logger.error(err);
-							debugger;
-						}
-					}
-
-					if (bitbucketRepo) {
-						openRepos.set(remote.path, bitbucketRepo);
-					}
-				}
-			}
-		}
+		const openRepos = await getOpenedRepos<BitbucketRepo>(
+			r => r.domain === "bitbucket.org",
+			p => this.get<BitbucketRepo>(`/repositories/${p}`),
+			this._knownRepos
+		);
 
 		let boards: BitbucketBoard[];
 		if (openRepos.size > 0) {
@@ -149,6 +182,8 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 
 	@log()
 	async createCard(request: CreateThirdPartyCardRequest) {
+		void (await this.ensureConnected());
+
 		const data = request.data as BitbucketCreateCardRequest;
 		const cardData: { [key: string]: any } = {
 			title: data.title,
@@ -186,6 +221,8 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {
+		void (await this.ensureConnected());
+
 		try {
 			const repoResponse = await this.get<BitbucketRepo>(`/repositories/${request.boardId}`);
 			if (repoResponse.body.owner.type === "team") {
@@ -207,9 +244,210 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 				const user = userResponse.body;
 				return { users: [{ ...user, id: user.account_id, displayName: user.display_name }] };
 			}
-		} catch (err) {
-			Logger.error(err);
+		} catch (ex) {
+			Logger.error(ex);
 			return { users: [] };
 		}
+	}
+
+	@log()
+	async getPullRequestDocumentMarkers({
+		uri,
+		revision,
+		repoId,
+		streamId
+	}: {
+		uri: URI;
+		revision: string | undefined;
+		repoId: string | undefined;
+		streamId: string;
+	}): Promise<DocumentMarker[]> {
+		void (await this.ensureConnected());
+
+		const comments = await this.getCommentsForPath(uri.fsPath);
+
+		const documentMarkers: DocumentMarker[] = [];
+
+		const commentsById: { [id: string]: PullRequestComment } = Object.create(null);
+		if (comments === undefined) return documentMarkers;
+
+		const teamId = SessionContainer.instance().session.teamId;
+
+		const markersByCommit = new Map<string, Markerish[]>();
+		for (const c of comments) {
+			let markers = markersByCommit.get(c.commit);
+			if (markers === undefined) {
+				markers = [];
+				markersByCommit.set(c.commit, markers);
+			}
+
+			commentsById[c.id] = c;
+			markers.push({
+				id: c.id,
+				locationWhenCreated: [c.line, 1, c.line + 1, 1, undefined] as CSLocationArray
+			});
+		}
+
+		const locations = await MarkerLocationManager.computeCurrentLocations(
+			uri.fsPath,
+			revision!,
+			markersByCommit
+		);
+
+		for (const [id, location] of Object.entries(locations.locations)) {
+			const comment = commentsById[id];
+
+			documentMarkers.push({
+				id: id,
+				fileUri: uri.toString(),
+				codemarkId: undefined,
+				fileStreamId: streamId,
+				// postId: undefined!,
+				// postStreamId: undefined!,
+				repoId: repoId!,
+				teamId: teamId,
+				file: uri.fsPath,
+				// commitHashWhenCreated: revision!,
+				// locationWhenCreated: MarkerLocation.toArray(location),
+				modifiedAt: new Date(comment.createdAt).getTime(),
+				code: comment.code,
+
+				createdAt: new Date(comment.createdAt).getTime(),
+				creatorId: comment.author.id,
+				creatorName: comment.author.nickname,
+				externalContent: {
+					provider: {
+						name: this.displayName,
+						icon: this.name
+					},
+					subhead: `#${comment.pullRequest.id}`,
+					actions: [
+						{
+							label: "Open Comment",
+							uri: comment.url
+						},
+						{
+							label: `Open Merge Request #${comment.pullRequest.id}`,
+							uri: comment.pullRequest.url
+						}
+					]
+				},
+				range: {
+					start: {
+						line: location.lineStart - 1,
+						character: 0
+					},
+					end: {
+						line: location.lineEnd - 1,
+						character: 0
+					}
+				},
+				location: location,
+				summary: comment.text,
+				summaryMarkdown: `\n\n${Strings.escapeMarkdown(comment.text)}`,
+				type: CodemarkType.Comment
+			});
+		}
+
+		return documentMarkers;
+	}
+	private _commentsByRepoAndPath = new Map<
+		string,
+		{ expiresAt: number; comments: PullRequestComment[] }
+	>();
+
+	@log()
+	private async getCommentsForPath(filePath: string): Promise<PullRequestComment[] | undefined> {
+		const cc = Logger.getCorrelationContext();
+
+		try {
+			const { remotePath, repoPath } = await getRepoRemotePaths(
+				filePath,
+				r => r.domain === "bitbucket.org",
+				this._knownRepos
+			);
+			if (remotePath == null || repoPath == null) return undefined;
+
+			const relativePath = Strings.normalizePath(paths.relative(repoPath, filePath));
+			const cacheKey = `${repoPath}|${relativePath}`;
+
+			const cachedComments = this._commentsByRepoAndPath.get(cacheKey);
+			if (cachedComments !== undefined && cachedComments.expiresAt > new Date().getTime()) {
+				return cachedComments.comments;
+			}
+
+			const pullRequestsResponse = await this.get<GetPullRequestsResponse>(
+				`/repositories/${remotePath}/pullrequests?${qs.stringify({ q: "comment_count>0" })}`
+			);
+
+			const comments = (await Promise.all(
+				pullRequestsResponse.body.values.map(pr => this.getPullRequestComments(pr, relativePath))
+			)).reduce((group, current) => group.concat(current));
+
+			this._commentsByRepoAndPath.set(cacheKey, {
+				expiresAt: new Date().setMinutes(new Date().getMinutes() + 30),
+				comments: comments
+			});
+
+			return comments;
+		} catch (ex) {
+			Logger.error(ex, cc);
+			return undefined;
+		}
+	}
+
+	private async getPullRequestComments(
+		pr: BitbucketPullRequest,
+		filePath: string
+	): Promise<PullRequestComment[]> {
+		const comments: PullRequestComment[] = [];
+		let nextPage: string | undefined = pr.links.comments.href.replace(this.baseUrl, "");
+
+		while (nextPage) {
+			const commentsResponse: ApiResponse<GetPullRequestCommentsResponse> = await this.get(
+				`${nextPage}?${qs.stringify({
+					q: `inline.path="${filePath}"`,
+					fields:
+						"values.inline.*,values.content.raw,values.user.nickname,values.user.account_id,values.links.html.href,values.created_on,values.links.code.href,values.id"
+				})}`
+			);
+			comments.push(
+				...Arrays.filterMap(commentsResponse.body.values, comment => {
+					if (comment.inline.outdated) return undefined;
+
+					const [source, destination] = comment.links.code.href
+						.match(/\:([^\/][\d\S]+)\?/)![1]
+						.split("..");
+
+					const [commit, line] = comment.inline.from
+						? [destination, comment.inline.from]
+						: [source, comment.inline.to];
+
+					return {
+						commit,
+						id: comment.id,
+						text: comment.content.raw,
+						code: "",
+						author: { ...comment.user, id: comment.user.account_id },
+						line: Number(line),
+						path: comment.inline.path,
+						url: comment.links.html.href,
+						createdAt: new Date(comment.created_on).getTime(),
+						pullRequest: {
+							id: pr.id,
+							title: pr.title,
+							url: pr.links.html.href
+						}
+					};
+				})
+			);
+
+			if (commentsResponse.body.next) {
+				nextPage = commentsResponse.body.next.replace(this.baseUrl, "");
+			} else {
+				nextPage = undefined;
+			}
+		}
+		return comments;
 	}
 }

@@ -7,7 +7,6 @@ import {
 	TrelloBoard,
 	TrelloCreateCardRequest,
 	TrelloCreateCardResponse,
-	TrelloList,
 	TrelloMember
 } from "../protocol/agent.protocol";
 import { CSTrelloProviderInfo } from "../protocol/api.protocol";
@@ -39,11 +38,10 @@ export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo>
 	}
 
 	@log()
-	async getBoards(
-		request: FetchThirdPartyBoardsRequest
-	): Promise<FetchThirdPartyBoardsResponse> {
+	async getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
 		// have to force connection here because we need apiKey and accessToken to even create our request
 		await this.ensureConnected();
+
 		const response = await this.get<TrelloBoard[]>(
 			`/members/${this._trelloUserId}/boards?${qs.stringify({
 				filter: "open",
@@ -63,6 +61,8 @@ export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo>
 
 	@log()
 	async createCard(request: CreateThirdPartyCardRequest) {
+		await this.ensureConnected();
+
 		const data = request.data as TrelloCreateCardRequest;
 		const response = await this.post<{}, TrelloCreateCardResponse>(
 			`/cards?${qs.stringify({
@@ -80,6 +80,8 @@ export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo>
 
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {
+		await this.ensureConnected();
+
 		const { body } = await this.get<TrelloMember[]>(
 			`/boards/${request.boardId}/members?${qs.stringify({
 				key: this.apiKey,
