@@ -654,6 +654,11 @@ export class SlackApiProvider implements ApiProvider {
 					usernamesById,
 					userIdsByName
 				);
+
+				// Set the fallback (notification) content for the message
+				text = `${codemark.title || ""}${
+					codemark.title && codemark.text ? `\n\n` : ""
+				}${codemark.text || ""}`;
 			}
 
 			const response = await this.slackApiCall("chat.postMessage", {
