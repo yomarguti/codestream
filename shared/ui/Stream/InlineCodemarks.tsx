@@ -13,6 +13,7 @@ import {
 	isNotOnDisk,
 	ComponentUpdateEmitter,
 	isRangeEmpty,
+	safe,
 	uriToFilePath
 } from "../utils";
 import { HostApi } from "../webview-api";
@@ -42,11 +43,12 @@ import {
 	ScmError,
 	getFileScmError
 } from "../store/editorContext/reducer";
-import { CSTeam, CodemarkType } from "@codestream/protocols/api";
+import { CSTeam, CodemarkType, CSMe } from "@codestream/protocols/api";
 import {
 	setCodemarksFileViewStyle,
 	setCodemarksShowArchived,
-	setCurrentCodemark
+	setCurrentCodemark,
+	setSpatialViewPRCommentsToggle
 } from "../store/context/actions";
 import { sortBy as _sortBy } from "lodash-es";
 import { setEditorContext, changeSelection } from "../store/editorContext/actions";
@@ -60,6 +62,7 @@ import { createPostAndCodemark } from "./actions";
 import Codemark from "./Codemark";
 import { PostEntryPoint } from "../store/context/types";
 import { localStore } from "../utilities/storage";
+import { PRInfoModal } from "./SpatialView/PRInfoModal";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -72,6 +75,8 @@ import { localStore } from "../utilities/storage";
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 interface Props {
+	hasPRProvider: boolean;
+	showPRComments: boolean;
 	currentStreamId?: string;
 	team: CSTeam;
 	viewInline: boolean;
@@ -111,9 +116,11 @@ interface Props {
 	createPostAndCodemark: (...args: Parameters<typeof createPostAndCodemark>) => any;
 	addDocumentMarker: Function;
 	changeSelection: Function;
+	setSpatialViewPRCommentsToggle: Function;
 }
 
 interface State {
+	showPRInfoModal: boolean;
 	lastSelectedLine: number;
 	clickedPlus: boolean;
 	isLoading: boolean;
@@ -146,11 +153,13 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	currentPostEntryPoint?: PostEntryPoint;
 	_updateEmitter = new ComponentUpdateEmitter();
 	minimumDistance = 20;
+	_waitingForPRProviderConnection = false;
 
 	constructor(props: Props) {
 		super(props);
 
 		this.state = {
+			showPRInfoModal: false,
 			newCodemarkAttributes: localStore.get(NEW_CODEMARK_ATTRIBUTES_TO_RESTORE),
 			isLoading: props.documentMarkers.length === 0,
 			lastSelectedLine: 0,
@@ -288,6 +297,14 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		);
 		if (didStartLineChange) {
 			this.scrollTo(this.props.metrics.lineHeight!);
+		}
+
+		if (
+			this.props.hasPRProvider &&
+			!prevProps.hasPRProvider &&
+			this._waitingForPRProviderConnection
+		) {
+			this.props.setSpatialViewPRCommentsToggle(true);
 		}
 
 		this.repositionCodemarks();
@@ -488,21 +505,20 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 							)
 							.map(docMarker => {
 								const { codemark } = docMarker;
-								// @ts-ignore
-								//if (!codemark.pinned && !showHidden) return null;
-								// if (codemark.type === "issue" && codemark.status === "closed" && !showClosed)
-								// return null;
+
+								// TODO: Implement externalContent
+								if (!codemark) return null;
+
 								const hidden = !showHidden && (!codemark.pinned || codemark.status === "closed");
 								if (hidden) {
 									this.hiddenCodemarks[docMarker.id] = true;
 									return null;
 								}
+
 								return (
-									<div className="codemark-container">
+									<div key={docMarker.id} className="codemark-container">
 										<Codemark
 											contextName="Spatial View"
-											key={codemark.id}
-											// @ts-ignore
 											codemark={docMarker.codemark}
 											marker={docMarker}
 											hidden={hidden}
@@ -877,12 +893,14 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		this.hiddenCodemarks = {};
 		documentMarkers.forEach(docMarker => {
 			const codemark = docMarker.codemark;
-			// @ts-ignore
 			let startLine = Number(this.getMarkerStartLine(docMarker));
 			// if there is already a codemark on this line, keep skipping to the next one
 			while (this.docMarkersByStartLine[startLine]) startLine++;
 			this.docMarkersByStartLine[startLine] = docMarker;
-			const hidden = !showHidden && (!codemark.pinned || codemark.status === "closed");
+			const hidden =
+				!showHidden &&
+				((codemark && (!codemark.pinned || codemark.status === "closed")) ||
+					(docMarker.externalContent && !this.props.showPRComments));
 			if (hidden) {
 				this.hiddenCodemarks[docMarker.id] = true;
 			} else {
@@ -1179,6 +1197,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						{numBelow} <Icon name="arrow-down" />
 					</span>
 				)}
+				<Tooltip title="Show/hide pull request comments" placement="top" delay={1}>
+					<span className="count" onClick={this.togglePRComments}>
+						PRs <label className={cx("switch", { checked: this.props.showPRComments })} />
+					</span>
+				</Tooltip>
 				{numHidden > 0 && (
 					<Tooltip title="Show/hide archived codemarks" placement="top" delay={1}>
 						<span className="count" onClick={this.toggleShowHidden}>
@@ -1205,6 +1228,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	render() {
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
+				{this.state.showPRInfoModal && (
+					<PRInfoModal onClose={() => this.setState({ showPRInfoModal: false })} />
+				)}
 				{this.state.isLoading ? null : this.renderCodemarks()}
 				{this.printViewSelectors()}
 			</div>
@@ -1260,6 +1286,17 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	toggleShowHidden = () => {
 		this.enableAnimations(() => this.props.setCodemarksShowArchived(!this.props.showHidden));
+	};
+
+	togglePRComments = () => {
+		if (this.props.hasPRProvider)
+			this.enableAnimations(() =>
+				this.props.setSpatialViewPRCommentsToggle(!this.props.showPRComments)
+			);
+		else {
+			this._waitingForPRProviderConnection = true;
+			this.setState({ showPRInfoModal: true });
+		}
 	};
 
 	showAbove = () => {
@@ -1428,12 +1465,27 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 const EMPTY_ARRAY = [];
 const EMPTY_OBJECT = {};
 
+// const fakeDocMarker = {
+// 	createdAt: new Date().getTime(),
+// 	creatorId: "github",
+// 	creatorName: "GitHub",
+// 	externalContent: {
+// 		providerName: "github",
+// 		url: "https://github.com/akonwi/git-plus/issues/1",
+// 		pr:
+// 			comment.pullRequest == null
+// 				? undefined
+// 				: { id: comment.pullRequest.id, url: comment.pullRequest.url }
+// 	}
+// };
+
 const mapStateToProps = (state: CodeStreamState) => {
 	const { context, editorContext, teams, configs, documentMarkers } = state;
 
 	const docMarkers = documentMarkers[editorContext.textEditorUri || ""] || EMPTY_ARRAY;
-	const numHidden = docMarkers.filter(d => !d.codemark.pinned || d.codemark.status === "closed")
-		.length;
+	const numHidden = docMarkers.filter(
+		d => d.codemark && (!d.codemark.pinned || d.codemark.status === "closed")
+	).length;
 
 	const textEditorVisibleRanges = getVisibleRanges(editorContext);
 	const numVisibleRanges = textEditorVisibleRanges.length;
@@ -1446,13 +1498,23 @@ const mapStateToProps = (state: CodeStreamState) => {
 		firstVisibleLine = textEditorVisibleRanges[0].start.line;
 	}
 
+	const currentUserProviders =
+		safe(() => (state.users[state.session.userId!] as CSMe).providerInfo![context.currentTeamId]) ||
+		{};
+
+	const hasPRProvider = Object.keys(currentUserProviders).some(
+		p => p === "github" || p === "gitlab" || p === "bitbucket"
+	);
+
 	return {
+		hasPRProvider,
 		currentStreamId: context.currentStreamId,
 		team: teams[context.currentTeamId],
 		viewInline: context.codemarksFileViewStyle === "inline",
 		viewHeadshots: configs.showHeadshots,
 		showLabelText: false, //configs.showLabelText,
 		showHidden: context.codemarksShowArchived || false,
+		showPRComments: hasPRProvider && context.spatialViewShowPRComments,
 		fileNameToFilterFor: editorContext.activeFile,
 		scmInfo: editorContext.scmInfo,
 		textEditorUri: editorContext.textEditorUri,
@@ -1478,6 +1540,7 @@ export default connect(
 		setEditorContext,
 		createPostAndCodemark,
 		addDocumentMarker,
-		changeSelection
+		changeSelection,
+		setSpatialViewPRCommentsToggle
 	}
 )(SimpleInlineCodemarks);

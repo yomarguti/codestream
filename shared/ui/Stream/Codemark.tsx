@@ -21,7 +21,7 @@ import {
 import { CodemarkType, CSUser, CSMe, CSPost } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
-import { range, areRangesEqual } from "../utils";
+import { range, areRangesEqual, emptyArray, safe } from "../utils";
 import {
 	getUserByCsId,
 	getTeamMembers,
@@ -38,11 +38,15 @@ import Tooltip from "./Tooltip";
 import { getCurrentTeamProvider } from "../store/teams/reducer";
 import { isNil } from "lodash-es";
 import { CodeStreamState } from "../store";
-import { EditorHighlightRangeRequestType } from "@codestream/protocols/webview";
+import {
+	EditorHighlightRangeRequestType,
+	EditorHighlightRangeRequest
+} from "@codestream/protocols/webview";
 import { setCurrentCodemark } from "../store/context/actions";
 import { RelatedCodemark } from "./RelatedCodemark";
 import { addDocumentMarker } from "../store/documentMarkers/actions";
 import { Link } from "./Link";
+import { logError } from "../logger";
 
 interface State {
 	hover: boolean;
@@ -87,10 +91,11 @@ interface InheritedProps {
 	contextName?: "Spatial View" | "Codemarks Tab";
 	displayType?: DisplayType;
 	selected?: boolean;
-	codemark: CodemarkPlus;
+	codemark?: CodemarkPlus;
 	marker: DocumentMarker;
 	postAction?(...args: any[]): any;
-	onClick?(event: React.SyntheticEvent, codemark: CodemarkPlus, marker: DocumentMarker): any;
+	action(action: string, post: any, args: any): any;
+	onClick?(event: React.SyntheticEvent, marker: DocumentMarker): any;
 	highlightCodeInTextEditor?: boolean;
 	query?: string;
 	hidden?: boolean;
@@ -99,15 +104,31 @@ interface InheritedProps {
 
 type Props = InheritedProps & DispatchProps & ConnectedProps;
 
+async function getDocumentFromMarker(markerId: string) {
+	try {
+		const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
+			markerId: markerId
+		});
+
+		if (response) return { fileUri: response.textDocument.uri, range: response.range };
+
+		return undefined;
+	} catch (error) {
+		logError("Error making request 'GetDocumentFromMarkerRequestType'", error);
+		return undefined;
+	}
+}
+
 export class Codemark extends React.Component<Props, State> {
 	static defaultProps: Partial<Props> = {
 		displayType: "default"
 	};
 
 	private _pollingTimer?: any;
-	private _fileUri?: string;
-	private _isHighlightedInTextEditor = false;
-	private _range?: Range;
+
+	// when there's no `marker` prop (in CodemarkView), the info required to highlight the range needs to be retrieved and stored
+	private _markersToHighlight: { [markerId: string]: { range: Range; fileUri: string } } = {};
+	private _isHighlightedInTextEditor = false; // TODO: when there are multiple markers, this should be inside _markersToHighlight
 	private permalinkRef = React.createRef<HTMLTextAreaElement>();
 
 	constructor(props: Props) {
@@ -122,46 +143,71 @@ export class Codemark extends React.Component<Props, State> {
 
 	componentDidMount() {
 		const { codemark, pinnedReplies, getPosts, selected } = this.props;
-		if (codemark.pinnedReplies && codemark.pinnedReplies.length > 0 && pinnedReplies.length === 0) {
-			getPosts(codemark.streamId, codemark.pinnedReplies!, codemark.postId);
+		if (codemark != undefined) {
+			if (
+				codemark.pinnedReplies &&
+				codemark.pinnedReplies.length > 0 &&
+				pinnedReplies.length === 0
+			) {
+				getPosts(codemark.streamId, codemark.pinnedReplies!, codemark.postId);
+			}
 		}
 
 		if (selected) {
 			this.startPollingReplies(false);
-			this.toggleCodeHighlightInTextEditor(true);
+			this._highlightWhileSelected();
 		}
 	}
 
 	componentDidUpdate(prevProps: Props, _prevState: State) {
 		if (prevProps.selected && !this.props.selected) {
 			this.stopPollingReplies();
-			this.toggleCodeHighlightInTextEditor(false, true);
+			this._cleanUpHighlights();
 		} else if (this.props.selected && this._pollingTimer === undefined) {
 			this.startPollingReplies(true);
-			this.toggleCodeHighlightInTextEditor(true);
+			this._highlightWhileSelected();
 		}
 
 		// if selected codemark changes, then clean up highlight in file and highlight for new codemark
-		if (prevProps.codemark.id !== this.props.codemark.id && this.props.selected) {
-			this.toggleCodeHighlightInTextEditor(false, true);
-			this._fileUri = this._range = undefined;
-			this.toggleCodeHighlightInTextEditor(true);
-		}
-
 		if (
-			prevProps.marker &&
-			this.props.marker &&
-			prevProps.marker.range &&
-			this.props.marker.range &&
-			!areRangesEqual(prevProps.marker.range, this.props.marker.range)
+			prevProps.codemark &&
+			this.props.codemark &&
+			prevProps.codemark.id !== this.props.codemark.id &&
+			this.props.selected
 		) {
-			this._range = this.props.marker.range;
+			this._cleanUpHighlights();
+			this._highlightWhileSelected();
 		}
 	}
 
 	componentWillUnmount() {
 		this.stopPollingReplies();
-		if (this._isHighlightedInTextEditor) this.toggleCodeHighlightInTextEditor(false, true);
+		this._cleanUpHighlights();
+	}
+
+	private _highlightWhileSelected() {
+		const { codemark, marker } = this.props;
+
+		if (!marker && codemark!.markerIds != undefined) {
+			const markerId = codemark!.markerIds[0];
+			getDocumentFromMarker(codemark!.markerIds[0]).then(info => {
+				if (info) {
+					this._markersToHighlight[markerId] = info;
+					this._sendHighlightRequest({ uri: info.fileUri, range: info.range, highlight: true });
+				}
+			});
+		}
+	}
+
+	private _cleanUpHighlights() {
+		for (let { fileUri, range } of Object.values(this._markersToHighlight)) {
+			this._sendHighlightRequest({
+				uri: fileUri,
+				range: range,
+				highlight: false
+			});
+		}
+		this._markersToHighlight = {};
 	}
 
 	private startPollingReplies(prefetch: boolean) {
@@ -188,6 +234,8 @@ export class Codemark extends React.Component<Props, State> {
 	}
 
 	private async fetchReplies() {
+		if (this.props.codemark == undefined) return;
+
 		const postId = this.props.codemark.postId;
 		// because the codemark is created before the third party chat post,
 		// `postId` can be undefined for a period. in the case of ms teams at least,
@@ -205,10 +253,10 @@ export class Codemark extends React.Component<Props, State> {
 					<CodemarkForm
 						isEditing
 						editingCodemark={this.props.codemark}
-						commentType={this.props.codemark.type}
+						commentType={this.props.codemark!.type}
 						onSubmit={this.editCodemark}
 						onClickClose={this.cancelEditing}
-						streamId={this.props.codemark.streamId}
+						streamId={this.props.codemark!.streamId}
 						collapsed={false}
 					/>
 				</div>
@@ -234,7 +282,7 @@ export class Codemark extends React.Component<Props, State> {
 	inject = () => {};
 
 	editCodemark = async ({ text, assignees, title, relatedCodemarkIds, tags }) => {
-		await this.props.editCodemark(this.props.codemark.id, {
+		await this.props.editCodemark(this.props.codemark!.id, {
 			text,
 			title,
 			assignees,
@@ -274,24 +322,27 @@ export class Codemark extends React.Component<Props, State> {
 	};
 
 	renderTypeIcon() {
-		const { codemark } = this.props;
 		let icon: JSX.Element | null = null;
-		switch (codemark.type) {
-			case "question":
-				icon = <Icon name="question" className="type-icon" />;
-				break;
-			case "bookmark":
-				icon = <Icon name="bookmark" className="type-icon" />;
-				break;
-			case "trap":
-				icon = <Icon name="trap" className="type-icon" />;
-				break;
-			case "issue":
-				icon = <Icon name="issue" className="type-icon" />;
-				break;
-			default:
-				icon = <Icon name="comment" className="type-icon" />;
+		const { codemark } = this.props;
+		if (codemark) {
+			switch (codemark.type) {
+				case "question":
+					icon = <Icon name="question" className="type-icon" />;
+					break;
+				case "bookmark":
+					icon = <Icon name="bookmark" className="type-icon" />;
+					break;
+				case "trap":
+					icon = <Icon name="trap" className="type-icon" />;
+					break;
+				case "issue":
+					icon = <Icon name="issue" className="type-icon" />;
+					break;
+				default:
+					icon = <Icon name="comment" className="type-icon" />;
+			}
 		}
+
 		return icon;
 	}
 
@@ -386,22 +437,26 @@ export class Codemark extends React.Component<Props, State> {
 	handleClickStatusToggle = (event: React.SyntheticEvent): any => {
 		event.stopPropagation();
 		const { codemark } = this.props;
-		if (codemark.status === "closed") this.openIssue();
+		if (codemark!.status === "closed") this.openIssue();
 		else this.closeIssue();
 	};
 
 	closeIssue = () => {
-		const { codemark, setCodemarkStatus, createPost } = this.props;
-		setCodemarkStatus(codemark.id, "closed");
-		const forceThreadId = codemark.parentPostId || codemark.postId;
-		createPost(codemark.streamId, forceThreadId, "/me closed this issue");
+		const { codemark, setCodemarkStatus } = this.props;
+		setCodemarkStatus(codemark!.id, "closed");
+		this.submitReply("/me closed this issue");
 	};
 
 	openIssue = () => {
-		const { codemark, setCodemarkStatus, createPost } = this.props;
-		setCodemarkStatus(codemark.id, "open");
-		const forceThreadId = codemark.parentPostId || codemark.postId;
-		createPost(codemark.streamId, forceThreadId, "/me reopened this issue");
+		const { codemark, setCodemarkStatus } = this.props;
+		setCodemarkStatus(codemark!.id, "open");
+		this.submitReply("/me reopened this issue");
+	};
+
+	submitReply = text => {
+		const { action, codemark } = this.props;
+		const forceThreadId = codemark!.parentPostId || codemark!.postId;
+		action("submit-post", null, { forceStreamId: codemark!.streamId, forceThreadId, text });
 	};
 
 	renderStatus(codemark) {
@@ -485,11 +540,16 @@ export class Codemark extends React.Component<Props, State> {
 		}
 
 		if (this.props.onClick) {
-			this.props.onClick(event, this.props.codemark, this.props.marker);
+			this.props.onClick(event, this.props.marker);
 		} else {
-			if (!this.props.selected) this.props.setCurrentCodemark(this.props.codemark.id);
+			if (!this.props.selected && this.props.codemark)
+				this.props.setCurrentCodemark(this.props.codemark.id);
 		}
 	};
+
+	private _sendHighlightRequest(request: EditorHighlightRangeRequest) {
+		HostApi.instance.send(EditorHighlightRangeRequestType, request);
+	}
 
 	async toggleCodeHighlightInTextEditor(highlight: boolean, forceRemoval = false) {
 		// don't do anything if trying to highlight already highlighted code
@@ -497,27 +557,23 @@ export class Codemark extends React.Component<Props, State> {
 		// require explicitly forcing de-highlighting while selected
 		if (this.props.selected && this._isHighlightedInTextEditor && !forceRemoval) return;
 
-		if (!this._range || !this._fileUri) {
-			const marker =
-				this.props.marker || (this.props.codemark.markers && this.props.codemark.markers[0]);
-			if (marker == undefined) return;
-
-			const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
-				markerId: marker.id
+		if (this.props.marker) {
+			this._isHighlightedInTextEditor = highlight;
+			this._sendHighlightRequest({
+				uri: this.props.marker.fileUri,
+				range: this.props.marker.range,
+				highlight: highlight
 			});
-			// TODO: What should we do if we don't find the marker?
-			if (response == undefined) return;
-
-			this._fileUri = response.textDocument.uri;
-			this._range = response.range;
+		} else {
+			for (let { fileUri: uri, range } of Object.values(this._markersToHighlight)) {
+				this._isHighlightedInTextEditor = highlight;
+				this._sendHighlightRequest({
+					uri,
+					range,
+					highlight: highlight
+				});
+			}
 		}
-
-		this._isHighlightedInTextEditor = highlight;
-		HostApi.instance.send(EditorHighlightRangeRequestType, {
-			uri: this._fileUri,
-			range: this._range,
-			highlight: highlight
-		});
 	}
 
 	handleMouseEnterCodemark = (event: React.MouseEvent): any => {
@@ -544,7 +600,7 @@ export class Codemark extends React.Component<Props, State> {
 
 		switch (action) {
 			case "toggle-pinned": {
-				this.setPinned(!this.props.codemark.pinned);
+				this.setPinned(!this.props.codemark!.pinned);
 				break;
 			}
 			case "copy-permalink": {
@@ -576,7 +632,7 @@ export class Codemark extends React.Component<Props, State> {
 					label: "Delete Codemark",
 					wait: true,
 					action: () => {
-						this.props.deleteCodemark(this.props.codemark.id);
+						this.props.deleteCodemark(this.props.codemark!.id);
 						this.props.setCurrentCodemark();
 					}
 				},
@@ -594,11 +650,16 @@ export class Codemark extends React.Component<Props, State> {
 			if (this.props.deselectCodemarks) this.props.deselectCodemarks();
 		}
 
-		const updatedCodemark = { ...codemark, pinned: value };
+		const updatedCodemark: CodemarkPlus = { ...codemark, pinned: value };
 
 		// updating optimistically. because spatial view renders DocumentMarkers, the corresponding one needs to be updated too
-		if (marker && this._fileUri != undefined) {
-			this.props.addDocumentMarker(this._fileUri, { ...marker, codemark: updatedCodemark });
+		if (marker && marker.fileUri != undefined) {
+			this.props.addDocumentMarker(marker.fileUri, {
+				...marker,
+				codemark: updatedCodemark,
+				codemarkId: marker.codemarkId!,
+				externalContent: undefined
+			} as DocumentMarker);
 		}
 		this.props.addCodemarks([updatedCodemark]);
 
@@ -618,11 +679,22 @@ export class Codemark extends React.Component<Props, State> {
 	};
 
 	renderCollapsedCodemark() {
-		const { codemark } = this.props;
-		const file = codemark.markers && codemark.markers[0] && codemark.markers[0].file;
+		const { codemark, marker } = this.props;
+
+		const file: string | undefined = (() => {
+			if (!marker) {
+				// because this is being rendered in <KnowledgePanel />
+				if ((codemark!.markers || emptyArray).length > 0) {
+					return codemark!.markers![0].file;
+				}
+				return;
+			}
+			return marker.file;
+		})();
 
 		if (!codemark) return null;
 
+		// TODO: tweak this to support externalContent like PRs
 		return (
 			<div
 				className={cx("codemark collapsed")}
@@ -648,11 +720,11 @@ export class Codemark extends React.Component<Props, State> {
 		const bindings = { ...codemarkKeybindings };
 
 		for (const [k, codemarkId] of Object.entries(codemarkKeybindings)) {
-			if (codemarkId !== codemark.id) continue;
+			if (codemarkId !== codemark!.id) continue;
 
 			bindings[k] = "";
 		}
-		bindings[key] = codemark.id;
+		bindings[key] = codemark!.id;
 
 		this.props.setUserPreference(["codemarkKeybindings"], bindings);
 	}
@@ -895,7 +967,10 @@ export class Codemark extends React.Component<Props, State> {
 		const { codemark, codemarkKeybindings, hidden, selected, entirelyDeleted, author } = this.props;
 		const { menuOpen, menuTarget, isInjecting } = this.state;
 
-		if (!codemark) return null;
+		if (!codemark) {
+			if (this.props.marker.externalContent) return this.renderFromExternalContent();
+			return null;
+		}
 
 		const type = codemark && codemark.type;
 
@@ -1075,6 +1150,96 @@ export class Codemark extends React.Component<Props, State> {
 		);
 	}
 
+	renderFromExternalContent() {
+		const { hidden, selected, author, marker } = this.props;
+		return (
+			<div
+				className={cx("codemark inline", {
+					// if it's selected, we don't render as hidden
+					"cs-hidden": !selected ? hidden : false,
+					selected: selected
+				})}
+				onClick={this.handleClickCodemark}
+				onMouseEnter={this.handleMouseEnterCodemark}
+				onMouseLeave={this.handleMouseLeaveCodemark}
+			>
+				<div className="contents">
+					<div className="body">
+						<div className="header">
+							<div className="author">
+								<span style={{ paddingRight: "5px" }}>
+									<Icon name={marker.externalContent!.provider.icon || "codestream"} />
+								</span>
+								{author.username} commented on pull request {marker.externalContent!.subhead}
+								<Timestamp time={marker.createdAt} />
+							</div>
+							{/* <div className="right">
+								<span onClick={this.handleMenuClick}>
+									<Icon name="kebab-vertical" className="kebab-vertical clickable" />
+								</span>
+							</div> */}
+						</div>
+						<div
+							style={{ position: "absolute", top: "5px", right: "5px" }}
+							onClick={this.handleMenuClick}
+						></div>
+						{this.renderTextLinkified(marker.summary)}
+						{!selected && this.renderPinnedReplies()}
+						{!selected && this.renderDetailIcons(marker)}
+						{(marker.externalContent!.actions || emptyArray).length > 0 && (
+							<div style={{ marginTop: "10px" }}>
+								{(marker.externalContent!.actions || emptyArray).map(action => (
+									<span key={action.uri} style={{ marginRight: "10px" }}>
+										<span style={{ marginRight: "5px" }}>
+											<Icon name="link-external" />
+										</span>
+										<Link href={action.uri}>{action.label}</Link>
+									</span>
+								))}
+							</div>
+						)}
+					</div>
+					{/* selected && (
+						<CodemarkDetails
+							codemark={codemark}
+							author={this.props.author}
+							postAction={this.props.postAction}
+						>
+							<div className="description">
+								{this.renderTagsAndAssigneesSelected(codemark)}
+								{description && (
+									<div className="related">
+										<div className="related-label">Description</div>
+										<div className="description-body" style={{ display: "flex" }}>
+											<Icon name="description" />
+											<div className="description-text" style={{ paddingLeft: "5px" }}>
+												{description}
+											</div>
+										</div>
+									</div>
+								)}
+								{this.renderExternalLink(codemark)}
+								{this.renderRelatedCodemarks()}
+								{this.renderPinnedRepliesSelected()}
+							</div>
+						</CodemarkDetails>
+					) */}
+					{/* this.state.hover && !selected && type !== "bookmark" && (
+						<div className="info-wrapper">
+							<Icon
+								className="info"
+								title={this.renderCodemarkFAQ()}
+								placement="bottomRight"
+								delay={1}
+								name="info"
+							/>
+						</div>
+					) */}
+				</div>
+			</div>
+		);
+	}
+
 	renderPinnedRepliesSelected() {
 		const renderedPinnedReplies = this.renderPinnedReplies();
 
@@ -1189,11 +1354,10 @@ export class Codemark extends React.Component<Props, State> {
 }
 
 const EMPTY_OBJECT = {};
-const EMPTY_ARRAY = [];
 
-const unkownAuthor = {
+const unknownAuthor = {
 	username: "CodeStream",
-	fullName: "Uknown User"
+	fullName: "Unknown User"
 };
 
 const mapStateToProps = (state: CodeStreamState, props: InheritedProps): ConnectedProps => {
@@ -1202,19 +1366,34 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 
 	const teamProvider = getCurrentTeamProvider(state);
 
-	const pinnedReplies = (codemark.pinnedReplies || EMPTY_ARRAY)
-		.map(id => getPost(posts, codemark.streamId, id))
+	const pinnedReplies = ((codemark && codemark.pinnedReplies) || emptyArray)
+		.map(id => getPost(posts, codemark!.streamId, id))
 		.filter(Boolean);
 
 	const pinnedAuthors = pinnedReplies.map(post => users[post.creatorId]);
 
-	const relatedCodemarkIds = codemark.relatedCodemarkIds || EMPTY_ARRAY;
+	const relatedCodemarkIds = (codemark && codemark.relatedCodemarkIds) || emptyArray;
 
 	const teamTagsHash = getTeamTagsHash(state);
 
 	let entirelyDeleted = false;
 	if (marker && marker.location && marker.location.meta && marker.location.meta.entirelyDeleted)
 		entirelyDeleted = true;
+
+	const author = (() => {
+		if (codemark != undefined) {
+			return getUserByCsId(users, codemark.creatorId);
+		}
+
+		if (marker.externalContent != undefined) {
+			return {
+				username: marker.creatorName,
+				avatar: { image: marker.externalContent.provider.name },
+				fullName: ""
+			} as CSUser;
+		}
+		return unknownAuthor;
+	})();
 
 	return {
 		capabilities: capabilities,
@@ -1223,7 +1402,7 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		pinnedAuthors,
 		relatedCodemarkIds,
 		currentUser: users[session.userId!] as CSMe,
-		author: getUserByCsId(users, props.codemark.creatorId) || (unkownAuthor as CSUser),
+		author: author as CSUser,
 		codemarkKeybindings: preferences.codemarkKeybindings || EMPTY_OBJECT,
 		isCodeStreamTeam: teamProvider === "codestream",
 		teammates: getTeamMembers(state),

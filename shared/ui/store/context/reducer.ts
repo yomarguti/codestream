@@ -30,7 +30,8 @@ const initialState: ContextState = {
 	codemarksShowArchived: false,
 	codemarksShowResolved: false,
 	showFeedbackSmiley: true,
-	route: { name: Route.NewUser, params: {} }
+	route: { name: Route.NewUser, params: {} },
+	spatialViewShowPRComments: false
 };
 
 export function reduceContext(
@@ -74,6 +75,9 @@ export function reduceContext(
 			return { ...state, codemarksShowArchived: action.payload };
 		case ContextActionsType.SetCodemarksShowResolved:
 			return { ...state, codemarksShowResolved: action.payload };
+
+		case ContextActionsType.SetSpatialViewPRCommentsToggle:
+			return { ...state, spatialViewShowPRComments: action.payload };
 
 		case ContextActionsType.SetShowFeedbackSmiley:
 			return { ...state, showFeedbackSmiley: action.payload };

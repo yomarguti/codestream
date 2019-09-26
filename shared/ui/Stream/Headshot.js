@@ -1,17 +1,8 @@
 import React, { Component } from "react";
 import Gravatar from "react-gravatar";
-import Tooltip from "./Tooltip";
 import { confirmPopup } from "./Confirm";
 
 export default class Headshot extends Component {
-	state = { img: null };
-	_div = React.createRef();
-
-	componentDidMount() {
-		const img = this._div.current.querySelector("img");
-		if (img) this.setState({ img });
-	}
-
 	render() {
 		const person = this.props.person;
 		if (!person) return null;
@@ -34,7 +25,7 @@ export default class Headshot extends Component {
 			const uri = this.props.size > 48 ? person.avatar.image : person.avatar.image48;
 
 			return (
-				<div className="headshot" ref={this._div} onClick={this.props.onClick}>
+				<div className="headshot" onClick={this.props.onClick}>
 					<img className="headshot-image" src={uri} />
 				</div>
 			);
@@ -43,7 +34,7 @@ export default class Headshot extends Component {
 		const classNameInitials = `headshot-initials color-${person.color || 1}`;
 
 		return (
-			<div className="headshot" ref={this._div} onClick={this.props.onClick}>
+			<div className="headshot" onClick={this.props.onClick}>
 				<Gravatar
 					className="headshot-gravatar"
 					size={this.props.size}
@@ -70,7 +61,7 @@ export default class Headshot extends Component {
 
 	renderCodeStream() {
 		return (
-			<div className="headshot" ref={this._div}>
+			<div className="headshot">
 				<img
 					className="headshot-system"
 					src="https://images.codestream.com/logos/grey_blue_transparent-400x400.png"

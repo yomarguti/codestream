@@ -20,7 +20,8 @@ export enum ContextActionsType {
 	SetNewPostEntryPoint = "@context/SetNewPostEntryPoint",
 	SetRoute = "@context/SetRoute",
 	SetChatProviderAccess = "@context/SetChatProviderAccess",
-	SetCurrentCodemark = "@context/SetCurrentCodemark"
+	SetCurrentCodemark = "@context/SetCurrentCodemark",
+	SetSpatialViewPRCommentsToggle = "@context/SetSpatialViewPRCommentsToggle"
 }
 
 export type PostEntryPoint = "Stream" | "Global Nav" | "Spatial View" | undefined;
@@ -36,6 +37,8 @@ export interface ContextState extends WebviewContext {
 	codemarksFileViewStyle: "list" | "inline";
 	codemarksShowArchived: boolean;
 	codemarksShowResolved: boolean;
+
+	spatialViewShowPRComments: boolean;
 
 	issueProvider?: string;
 	panelStack: (WebviewPanels | string)[];

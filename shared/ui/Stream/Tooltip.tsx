@@ -1,5 +1,6 @@
 import * as React from "react";
-import RCTooltip, { RCTooltip as RCT } from "rc-tooltip";
+import { default as RCTooltip, RCTooltip as RCT } from "rc-tooltip";
+import { AnyObject, emptyObject } from "../utils";
 
 interface Props {
 	children: any;
@@ -8,6 +9,7 @@ interface Props {
 	placement?: RCT.Placement;
 	align?: any;
 	delay?: number;
+	overlayStyle?: AnyObject;
 }
 
 export type Placement = RCT.Placement;
@@ -22,7 +24,7 @@ export default function Tooltip(props: Props) {
 			align={props.align}
 			overlay={content}
 			trigger={["hover", "click"]}
-			overlayStyle={{ opacity: 1 }}
+			overlayStyle={{ opacity: 1, ...(props.overlayStyle || emptyObject) }}
 			mouseEnterDelay={props.delay || 0}
 		>
 			{props.children}

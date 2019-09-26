@@ -104,6 +104,7 @@ export interface CodeStreamState {
 	pluginVersion: string;
 	posts: PostsState;
 	preferences: PreferencesState;
+	providers: ProvidersState;
 	repos: ReposState;
 	session: SessionState;
 	streams: StreamsState;
@@ -111,7 +112,6 @@ export interface CodeStreamState {
 	umis: UnreadsState;
 	users: UsersState;
 	services: ServicesState;
-	providers: ProvidersState;
 	versioning: VersioningState;
 	apiVersioning: ApiVersioningState;
 }

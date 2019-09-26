@@ -20,8 +20,8 @@ import {
 	ThirdPartyProviderConfig,
 	ThirdPartyProviders
 } from "@codestream/protocols/agent";
-import { CSMe, ProviderType } from "@codestream/protocols/api";
-import Select from "react-select";
+import { CSMe } from "@codestream/protocols/api";
+import { PrePRProviderInfoModalProps, PrePRProviderInfoModal } from "../PrePRProviderInfoModal";
 
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
@@ -51,6 +51,7 @@ interface State {
 	loadingProvider?: ProviderInfo;
 	issueProviderMenuOpen: boolean;
 	issueProviderMenuTarget: any;
+	propsForPrePRProviderInfoModal?: PrePRProviderInfoModalProps;
 }
 
 class CrossPostIssueControls extends React.Component<Props, State> {
@@ -289,10 +290,15 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			return <div className="connect-issue">{this.renderProviderControls(providerOptions)}</div>;
 		} else {
 			return (
-				<div className="connect-issue">
-					<span className="connect-issue-label">Create an issue on</span>
-					{providerOptions}
-				</div>
+				<>
+					{this.state.propsForPrePRProviderInfoModal && (
+						<PrePRProviderInfoModal {...this.state.propsForPrePRProviderInfoModal} />
+					)}
+					<div className="connect-issue">
+						<span className="connect-issue-label">Create an issue on</span>
+						{providerOptions}
+					</div>
+				</>
 			);
 		}
 	}
@@ -339,15 +345,40 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 	};
 
 	async onChangeProvider(providerInfo: ProviderInfo) {
-		this.setState({ isLoading: true, loadingProvider: providerInfo });
-		if (providerInfo.provider.needsConfigure && !this.providerIsConnected(providerInfo.provider.id)) {
+		if (
+			providerInfo.provider.needsConfigure &&
+			!this.providerIsConnected(providerInfo.provider.id)
+		) {
 			const { name, id } = providerInfo.provider;
 			this.props.openPanel(`configure-provider-${name}-${id}`);
 		} else if (providerInfo.provider.forEnterprise) {
 			const { name, id } = providerInfo.provider;
-			this.props.openPanel(`configure-enterprise-${name}-${id}`);
+			if (name === "github_enterprise") {
+				this.setState({
+					propsForPrePRProviderInfoModal: {
+						providerName: name,
+						onClose: () => this.setState({ propsForPrePRProviderInfoModal: undefined }),
+						action: () => this.props.openPanel(`configure-enterprise-${name}-${id}`)
+					}
+				});
+			} else this.props.openPanel(`configure-enterprise-${name}-${id}`);
 		} else {
-			await this.props.connectProvider(providerInfo.provider.id);
+			const { name } = providerInfo.provider;
+			if (name === "github" || name === "bitbucket" || name === "gitlab") {
+				this.setState({
+					propsForPrePRProviderInfoModal: {
+						providerName: name,
+						onClose: () => this.setState({ propsForPrePRProviderInfoModal: undefined }),
+						action: () => {
+							this.setState({ isLoading: true, loadingProvider: providerInfo });
+							this.props.connectProvider(providerInfo.provider.id);
+						}
+					}
+				});
+			} else {
+				this.setState({ isLoading: true, loadingProvider: providerInfo });
+				await this.props.connectProvider(providerInfo.provider.id);
+			}
 		}
 	}
 
@@ -375,7 +406,9 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 	providerIsConnected(providerId: string): boolean {
 		const provider = this.props.providers ? this.props.providers[providerId] : undefined;
 		if (!provider) return false;
-		let providerInfo = this.props.currentUser.providerInfo![this.props.currentTeamId][provider.name];
+		let providerInfo = this.props.currentUser.providerInfo![this.props.currentTeamId][
+			provider.name
+		];
 		if (provider.isEnterprise) {
 			if (!providerInfo!.hosts) return false;
 			providerInfo = providerInfo!.hosts![provider.id];

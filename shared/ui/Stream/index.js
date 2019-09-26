@@ -24,6 +24,7 @@ import ConfigureAzureDevOpsPanel from "./ConfigureAzureDevOpsPanel";
 import ConfigureYouTrackPanel from "./ConfigureYouTrackPanel";
 import ConfigureJiraServerPanel from "./ConfigureJiraServerPanel";
 import ConfigureEnterprisePanel from "./ConfigureEnterprisePanel";
+import { PrePRProviderInfoModal } from "./PrePRProviderInfoModal";
 import * as actions from "./actions";
 import { editCodemark } from "../store/codemarks/actions";
 import {
@@ -36,6 +37,7 @@ import {
 } from "../utils";
 import { getSlashCommands } from "./SlashCommands";
 import { confirmPopup } from "./Confirm";
+import { ModalRoot } from "./Modal";
 import { getPostsForStream, getPost } from "../store/posts/reducer";
 import {
 	getStreamForId,
@@ -444,19 +446,39 @@ export class SimpleStream extends Component {
 					// if you have a token and are connected to the provider,
 					// offer to disconnect
 					label = `Disconnect ${displayName}`;
-					action = `disconnect-${providerId}`;
+					action = () => this.props.disconnectProvider(providerId, true);
 				} else if (needsConfigure) {
 					// otherwise, if it's a provider that needs to be pre-configured,
 					// bring up the custom popup for configuring it
-					action = `configure-provider-${name}-${providerId}-true`;
+					action = () => this.setActivePanel(`configure-provider-${name}-${providerId}-true`);
 				} else if (forEnterprise) {
 					// otherwise if it's for an enterprise provider, configure for enterprise
-					action = `configure-enterprise-${name}-${providerId}-true`;
+					action = () => {
+						if (name === "github_enterprise") {
+							this.setState({
+								propsForPrePRProviderInfoModal: {
+									providerName: name,
+									action: () =>
+										this.setActivePanel(`configure-enterprise-${name}-${providerId}-true`),
+									onClose: () => this.setState({ propsForPrePRProviderInfoModal: undefined })
+								}
+							});
+						} else this.setActivePanel(`configure-enterprise-${name}-${providerId}-true`);
+					};
 				} else {
 					// otherwise it's just a simple oauth redirect
-					action = `connect-${providerId}`;
+					if (name === "github" || name === "bitbucket" || name === "gitlab") {
+						action = () =>
+							this.setState({
+								propsForPrePRProviderInfoModal: {
+									providerName: name,
+									action: () => this.props.connectProvider(providerId, true),
+									onClose: () => this.setState({ propsForPrePRProviderInfoModal: undefined })
+								}
+							});
+					} else action = () => this.props.connectProvider(providerId, true);
 				}
-				menuItems.push({ label, action, displayName });
+				menuItems.push({ key: name, label, action, displayName });
 			}
 		}
 		menuItems.sort((a, b) => {
@@ -744,7 +766,10 @@ export class SimpleStream extends Component {
 				: null;
 		return (
 			<div id="stream-root" className={streamClass}>
-				<div id="modal-root" />
+				<ModalRoot />
+				{this.state.propsForPrePRProviderInfoModal && (
+					<PrePRProviderInfoModal {...this.state.propsForPrePRProviderInfoModal} />
+				)}
 				<div id="confirm-root" />
 				{(threadId || this.props.currentCodemarkId) && (
 					<>

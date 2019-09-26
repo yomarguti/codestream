@@ -49,6 +49,9 @@ export const setCodemarkTypeFilter = (value: string) =>
 export const setCodemarksFileViewStyle = (style: "list" | "inline") =>
 	action(ContextActionsType.SetCodemarksFileViewStyle, style);
 
+export const setSpatialViewPRCommentsToggle = (value: boolean) =>
+	action(ContextActionsType.SetSpatialViewPRCommentsToggle, value);
+
 export const setCodemarksShowArchived = (enabled: boolean) =>
 	action(ContextActionsType.SetCodemarksShowArchived, enabled);
 
