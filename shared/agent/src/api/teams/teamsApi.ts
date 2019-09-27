@@ -1016,7 +1016,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 			...Iterables.map(this._teamsById!.keys(), id => ({
 				id: id,
 				method: "GET",
-				url: `groups/${id}/members?$select=id,createdDateTime,deletedDateTime,mail,givenName,displayName,surname,`
+				url: `groups/${id}/members?$select=id,createdDateTime,deletedDateTime,mail,givenName,displayName,surname`
 			}))
 		];
 
@@ -1172,7 +1172,8 @@ export class MSTeamsApiProvider implements ApiProvider {
 	@debug<MSTeamsApiProvider, MSTeamsApiProvider["teamsApiCallBatch"]>({
 		args: {
 			0: () => false,
-			1: () => false
+			1: (requests: GraphBatchRequest[]) =>
+				`${requests.length}:\n${requests.map(r => r.url).join("\n")}`
 		},
 		prefix: (context, path, fn) => `${context.prefix} ${path}`
 	})
