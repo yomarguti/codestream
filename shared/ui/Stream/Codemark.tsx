@@ -857,7 +857,7 @@ export class Codemark extends React.Component<Props, State> {
 			}
 			return (
 				<div className="related">
-					<div className="related-label">Open on</div>
+					<div className="related-label">Linked issues</div>
 					<Link className="external-link" href={codemark.externalProviderUrl}>
 						{providerDisplay.icon && (
 							<span>
