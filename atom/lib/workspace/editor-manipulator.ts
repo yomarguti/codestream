@@ -2,10 +2,10 @@ import { CompositeDisposable, Disposable, Point, Range, TextEditor } from "atom"
 import { exists } from "fs-plus";
 
 export class EditorManipulator implements Disposable {
-	private highlights = new Map<number, Disposable>();
+	private _highlightResources = new Map<number, Disposable>();
 
 	dispose() {
-		this.highlights.forEach(highlight => highlight.dispose());
+		this._highlightResources.forEach(highlight => highlight.dispose());
 	}
 
 	async open(filePath: string, force = false) {
@@ -23,11 +23,11 @@ export class EditorManipulator implements Disposable {
 	}
 
 	async highlight(enable: boolean, file: string, range: Range): Promise<boolean> {
-		const editor = await this.open(file);
-
-		if (!editor) return false;
-
 		if (enable) {
+			const editor = await this.open(file);
+
+			if (!editor) return false;
+
 			this.scrollIntoView(editor, range.start.row, { center: false });
 			const marker = editor.markBufferRange(range, {
 				invalidate: "never",
@@ -37,16 +37,19 @@ export class EditorManipulator implements Disposable {
 				class: "codestream-highlight",
 			});
 
-			this.highlights.set(
+			this._highlightResources.set(
 				(marker as any).id,
 				new CompositeDisposable(
 					new Disposable(() => {
 						marker.destroy();
-					}),
-					editor.onDidChangeSelectionRange(() => this.removeHighlight((marker as any).id))
+					})
 				)
 			);
 		} else {
+			const editor = atom.workspace.getTextEditors().find(editor => editor.getPath() === file);
+
+			if (!editor) return false;
+
 			const markers = editor.findMarkers({
 				startBufferRow: range.start.row,
 			});
@@ -57,8 +60,9 @@ export class EditorManipulator implements Disposable {
 
 		return true;
 	}
+
 	private removeHighlight(markerId: number) {
-		const disposable = this.highlights.get(markerId);
+		const disposable = this._highlightResources.get(markerId);
 		disposable && disposable.dispose();
 	}
 
