@@ -33,6 +33,28 @@ namespace CodeStream.VisualStudio {
 		private readonly IAuthenticationServiceFactory _authenticationServiceFactory;
 
 		public WebViewRouter(
+			IWebviewUserSettingsService webviewUserSettingsService,
+			ISessionService sessionService,
+			ICodeStreamAgentService codeStreamAgent,
+			ISettingsServiceFactory settingsServiceFactory,
+			IEventAggregator eventAggregator,
+			IBrowserService browserService,
+			IIdeService ideService,
+			IEditorService editorService,
+			IAuthenticationServiceFactory authenticationServiceFactory) :
+			this(null,
+				webviewUserSettingsService,
+				sessionService,
+				codeStreamAgent,
+				settingsServiceFactory,
+				eventAggregator,
+				browserService,
+				ideService,
+				editorService,
+				authenticationServiceFactory) {			 
+		}
+
+		public WebViewRouter(
 			IComponentModel componentModel,
 			IWebviewUserSettingsService webviewUserSettingsService,
 			ISessionService sessionService,
