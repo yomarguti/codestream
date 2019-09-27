@@ -205,6 +205,11 @@ namespace CodeStream.VisualStudio.Core.Managers {
 		/// </summary>
 		private static Color DefaultColor = Color.FromArgb(0, 110, 183);
 
+		/// <summary>
+		/// if color is missing (might be externalContent instead of Codemark) -- use default
+		/// </summary>
+		/// <param name="colorName"></param>
+		/// <returns></returns>
 		public static System.Drawing.Color GetCodemarkColorSafe(string colorName) {
 			if (colorName.IsNullOrWhiteSpace()) return DefaultColor;
 

@@ -97,7 +97,6 @@ namespace CodeStream.VisualStudio.UI {
 			return result;
 		}
 
-
 		public void Reset() {
 			_markers = null;
 		}

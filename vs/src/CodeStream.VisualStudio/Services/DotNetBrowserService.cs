@@ -505,22 +505,19 @@ namespace CodeStream.VisualStudio.Services {
 					catch (Exception ex) {
 						Log.Warning(ex, "aux component failed to dispose");
 					}
-
+					if (_browserView == null) {
+						Log.Verbose("DotNetBrowser is null");
+						return;
+					}
+					if (_browserView?.IsDisposed == true) {
+						Log.Verbose("DotNetBrowser already disposed");
+						return;
+					}
 					try {
 						_browserView.Browser.ConsoleMessageEvent -= Browser_ConsoleMessageEvent;
 					}
 					catch (Exception ex) {
 						Log.Error(ex, nameof(Browser_ConsoleMessageEvent));
-					}
-
-					if (_browserView == null) {
-						Log.Verbose("DotNetBrowser is null");
-						return;
-					}
-
-					if (_browserView?.IsDisposed == true) {
-						Log.Verbose("DotNetBrowser already disposed");
-						return;
 					}
 					try {
 						_browserView.InputBindings.Clear();
@@ -533,7 +530,6 @@ namespace CodeStream.VisualStudio.Services {
 					catch (Exception ex) {
 						Log.Warning(ex, "aux component failed to dispose");
 					}
-
 					_browserView.Dispose();
 					_browserView.Browser.Dispose();
 					_browserView.Browser.Context.Dispose();

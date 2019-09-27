@@ -203,12 +203,39 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public string Email { get; set; }
 	}
 
-	public class DocumentMarker : CsMarker {
-		public CsCodemark Codemark { get; set; }
+	public class DocumentMarker : CsEntity, ICSMarkerIdentifier {
+		public string TeamId { get; set; }
+		public string FileStreamId { get; set; }
+		public string CodemarkId { get; set; }
+		public string Code { get; set; }
+		public string CreatorAvatar { get; set; }
 		public string CreatorName { get; set; }
+		public string CommitHashWhenCreated { get; set; }
+		public CsCodemark Codemark { get; set; }
+		public ExternalContent ExternalContent { get; set; }		 
 		public Range Range { get; set; }
 		public string Summary { get; set; }
 		public string SummaryMarkdown { get; set; }
+		public CodemarkType Type { get; set; }
+		public string File { get; set ; }
+		public string RepoId { get; set; }
+	}
+
+	public class ExternalContent {
+		public ExternalContentProvider Provider { get; set; }
+		public string Subhead { get; set; }
+		public List<ExternalContentActions> Actions { get; set; }
+	}
+
+	public class ExternalContentProvider {
+		public string Name { get; set; }
+		public string Icon { get; set; }
+	}
+
+	public class ExternalContentActions {
+		public string Label { get; set; }
+		public string Icon { get; set; }
+		public string Uri { get; set; }
 	}
 
 	public class CsFullCodemark : CsMarker {

@@ -387,6 +387,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 
 					if (_markers == null) return;
 
+					// we want all markers, those with Codemarks as well as those without (externalContent)
 					foreach (var span in snapshot.Lines) {
 						if (_abort) break;
 
@@ -395,7 +396,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 						if (marker == null) continue;
 
 						var start = span.Start == 0 ? span.Start : span.Start - 1;
-						newMatches.Add(new SnapshotSpanMarker(new SnapshotSpan(start, 1), ThemeManager.GetCodemarkColorSafe(marker.Codemark?.Color)));
+						newMatches.Add(new SnapshotSpanMarker(new SnapshotSpan(start, 1), ThemeManager.GetCodemarkColorSafe(marker?.Codemark?.Color)));
 					}
 
 					if (_abort) return;

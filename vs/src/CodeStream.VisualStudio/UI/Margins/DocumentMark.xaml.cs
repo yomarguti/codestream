@@ -24,14 +24,12 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			_viewModel = viewModel;
 			InitializeComponent();
 			DataContext = this;
-			string color = _viewModel.Marker.Codemark.Color;
-			if (_viewModel.Marker.Codemark.Color.IsNullOrWhiteSpace()) {
+			string color = _viewModel.Marker?.Codemark?.Color;
+			if (_viewModel.Marker?.Codemark?.Color.IsNullOrWhiteSpace() == true) {
 				color = "blue";
-				//this local warning is loud...
-				//Log.LocalWarning($"Color missing for {_viewModel.Marker.Codemark.Id} Defaulting to {color}");
 			}
 
-			ImageUri = $"pack://application:,,,/CodeStream.VisualStudio;component/Resources/Assets/marker-{_viewModel.Marker.Codemark.Type}-{color}.png";
+			ImageUri = $"pack://application:,,,/CodeStream.VisualStudio;component/Resources/Assets/marker-{_viewModel.Marker.Type}-{color}.png";
 		}
 
 		protected override void OnMouseEnter(MouseEventArgs e) {
@@ -41,7 +39,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 					  $"{Environment.NewLine}{Environment.NewLine}" +
 					  $"\t{_viewModel.Marker.Summary}" +
 					  $"{Environment.NewLine}{Environment.NewLine}" +
-					  $"Click to View {_viewModel.Marker.Codemark.Type}";
+					  $"Click to View {_viewModel.Marker.Type}";
 		}
 
 		public static readonly DependencyProperty ImageUriProperty =
