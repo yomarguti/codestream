@@ -40,7 +40,7 @@
         "test-unit-ci": "npm run test-unit -- --reporter mocha-teamcity-reporter"
     },
     "dependencies": {
-        "@microsoft/microsoft-graph-client": "1.7.0",
+        "@microsoft/microsoft-graph-client": "2.0.0",
         "@sentry/node": "5.5.0",
         "@slack/rtm-api": "5.0.2",
         "@slack/web-api": "5.1.0",
