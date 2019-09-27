@@ -226,134 +226,78 @@ export function toTeamsMessageBody(
 	mentionsOut: TeamsMessageMention[],
 	attachmentsOut: TeamsMessageAttachment[]
 ): { contentType: "text" | "html"; content: string } {
-	let preamble: string | undefined;
-
 	const mainCard: TeamsAdaptiveCard = {
 		$schema: "http://adaptivecards.io/schemas/adaptive-card.json",
 		type: "AdaptiveCard",
 		version: "1.0",
 		// Must keep this ID in sync with `teamsMainAttachmentRegex` above
 		id: `main|${codemark.id}`,
+		spacing: "none",
 		body: []
 	};
 
+	// Add any mentions to a preamble, because mentions aren't supported in attachments
+	let mentions;
+	let preamble;
+	if (mentionedUserIds != null && mentionedUserIds.length !== 0) {
+		mentions = `${mentionedUserIds.map(u => `@${userInfosById.get(u)!.username}`).join(", ")}: `;
+		preamble = toTeamsText(mentions, mentionedUserIds, userInfosById, userIdsByName, mentionsOut);
+	}
+
+	const items: ITextBlock[] = [];
+
 	switch (codemark.type) {
-		case CodemarkType.Comment: {
-			preamble = "<i>commented on code</i>";
+		case CodemarkType.Comment:
+		case CodemarkType.Trap: {
+			// Remove any duplicate mentions at the start of the text
+			let text = codemark.text;
+			if (mentions && text.startsWith(mentions)) {
+				text = text.substr(mentions.length - 1);
+			}
 
-			const text: ITextBlock = {
+			items.push({
 				type: "TextBlock",
-				text: codemark.text.replace(preserveWhitespaceRegex, "\n\n"),
-				size: "medium",
+				text: text.replace(preserveWhitespaceRegex, "\n\n"),
 				wrap: true
-			};
-
-			mainCard.body!.push({
-				type: "Container",
-				bleed: true,
-				items: [text]
 			});
 
 			break;
 		}
 		case CodemarkType.Bookmark: {
-			preamble = "<i>set a bookmark</i>";
-
-			const text: ITextBlock = {
+			items.push({
 				type: "TextBlock",
 				// Bookmarks use the title rather than text
 				text: codemark.title,
-				size: "medium",
 				wrap: true
-			};
-
-			mainCard.body!.push({
-				type: "Container",
-				items: [text]
 			});
 
 			break;
 		}
-		case CodemarkType.Issue: {
-			preamble = "<i>opened an issue</i>";
-
-			const items: ITextBlock[] = [];
-
-			if (codemark.title) {
-				const title: ITextBlock = {
-					type: "TextBlock",
-					text: codemark.title,
-					weight: "bolder",
-					size: "large",
-					wrap: true
-				};
-				items.push(title);
-			}
-
-			if (codemark.text) {
-				const text: ITextBlock = {
-					type: "TextBlock",
-					text: codemark.text.replace(preserveWhitespaceRegex, "\n\n"),
-					size: "medium",
-					wrap: true
-				};
-				items.push(text);
-			}
-
-			mainCard.body!.push({
-				type: "Container",
-				items: items
-			});
-
-			break;
-		}
+		case CodemarkType.Issue:
 		case CodemarkType.Question: {
-			preamble = "<i>has a question</i>";
-
-			const items: ITextBlock[] = [];
-
 			if (codemark.title) {
-				const title: ITextBlock = {
+				items.push({
 					type: "TextBlock",
 					text: codemark.title,
 					weight: "bolder",
-					size: "large",
 					wrap: true
-				};
-				items.push(title);
+				});
 			}
 
 			if (codemark.text) {
-				const text: ITextBlock = {
+				// Remove any duplicate mentions at the start of the text
+				let text = codemark.text;
+				if (mentions && text.startsWith(mentions)) {
+					text = text.substr(mentions.length - 1);
+				}
+
+				items.push({
 					type: "TextBlock",
-					text: codemark.text.replace(preserveWhitespaceRegex, "\n\n"),
-					size: "medium",
+					text: text.replace(preserveWhitespaceRegex, "\n\n"),
+					spacing: "none",
 					wrap: true
-				};
-				items.push(text);
+				});
 			}
-
-			mainCard.body!.push({
-				type: "Container",
-				items: items
-			});
-
-			break;
-		}
-		case CodemarkType.Trap: {
-			preamble = "<i>set a trap</i>";
-
-			const text: ITextBlock = {
-				type: "TextBlock",
-				text: codemark.text.replace(preserveWhitespaceRegex, "\n\n"),
-				size: "medium",
-				wrap: true
-			};
-
-			mainCard.body!.push({
-				type: "Container",
-				items: [text]
-			});
 
 			break;
 		}
@@ -362,73 +306,23 @@ export function toTeamsMessageBody(
 	const attachments: TeamsMessageAttachment[] = [];
 
 	if (codemark.assignees !== undefined && codemark.assignees.length !== 0) {
-		const assigneesCard: TeamsAdaptiveCard = {
-			$schema: "http://adaptivecards.io/schemas/adaptive-card.json",
-			type: "AdaptiveCard",
-			version: "1.0",
-			id: `assignees|${codemark.id}`,
-			body: []
-		};
-
-		const title: ITextBlock = {
-			type: "TextBlock",
-			text: "Assignees",
-			size: "large",
-			weight: "bolder"
-		};
-
-		const column1: IColumn = {
-			type: "Column",
-			width: "stretch",
-			items: []
-		};
-
-		const column2: IColumn = {
-			type: "Column",
-			width: "stretch",
-			items: []
-		};
-
-		assigneesCard.body!.push({
-			type: "Container",
-			spacing: "large",
-			items: [
-				title,
-				{
-					type: "ColumnSet",
-					columns: [column1, column2]
-				}
-			]
-		});
-
-		let assignee;
-		let text: ITextBlock;
-		let user;
-		let useFirst = true;
-		for (assignee of codemark.assignees) {
-			user = userInfosById.get(assignee);
-			if (user === undefined) continue;
-
-			text = {
+		items.push(
+			{
 				type: "TextBlock",
-				text: user.displayName,
-				wrap: true
-			};
-
-			if (useFirst) {
-				column1.items!.push(text);
-			} else {
-				column2.items!.push(text);
+				text: "Assignees",
+				weight: "bolder"
+			},
+			{
+				type: "TextBlock",
+				text: codemark.assignees
+					.map(a => {
+						const user = userInfosById.get(a);
+						return user ? user.displayName : "";
+					})
+					.join(", "),
+				spacing: "none"
 			}
-
-			useFirst = !useFirst;
-		}
-
-		attachments.push({
-			id: assigneesCard.id!,
-			contentType: "application/vnd.microsoft.card.adaptive",
-			content: JSON.stringify(assigneesCard)
-		});
+		);
 	}
 
 	if (
@@ -436,69 +330,18 @@ export function toTeamsMessageBody(
 		codemark.externalAssignees !== undefined &&
 		codemark.externalAssignees.length !== 0
 	) {
-		const assigneesCard: TeamsAdaptiveCard = {
-			$schema: "http://adaptivecards.io/schemas/adaptive-card.json",
-			type: "AdaptiveCard",
-			version: "1.0",
-			id: `assignees|${codemark.id}`,
-			body: []
-		};
-
-		const title: ITextBlock = {
-			type: "TextBlock",
-			text: "Assignees",
-			size: "large",
-			weight: "bolder"
-		};
-
-		const column1: IColumn = {
-			type: "Column",
-			width: "stretch",
-			items: []
-		};
-
-		const column2: IColumn = {
-			type: "Column",
-			width: "stretch",
-			items: []
-		};
-
-		assigneesCard.body!.push({
-			type: "Container",
-			spacing: "large",
-			items: [
-				title,
-				{
-					type: "ColumnSet",
-					columns: [column1, column2]
-				}
-			]
-		});
-
-		let assignee;
-		let text: ITextBlock;
-		let useFirst = true;
-		for (assignee of codemark.externalAssignees) {
-			text = {
+		items.push(
+			{
 				type: "TextBlock",
-				text: assignee.displayName,
-				wrap: true
-			};
-
-			if (useFirst) {
-				column1.items!.push(text);
-			} else {
-				column2.items!.push(text);
+				text: "Assignees",
+				weight: "bolder"
+			},
+			{
+				type: "TextBlock",
+				text: codemark.externalAssignees.map(a => a.displayName).join(", "),
+				spacing: "none"
 			}
-
-			useFirst = !useFirst;
-		}
-
-		attachments.push({
-			id: assigneesCard.id!,
-			contentType: "application/vnd.microsoft.card.adaptive",
-			content: JSON.stringify(assigneesCard)
-		});
+		);
 	}
 
 	if (markers !== undefined && markers.length !== 0) {
@@ -582,58 +425,39 @@ export function toTeamsMessageBody(
 			});
 		}
 	} else {
-		const actionsCard: TeamsAdaptiveCard = {
-			$schema: "http://adaptivecards.io/schemas/adaptive-card.json",
-			type: "AdaptiveCard",
-			version: "1.0",
-			id: `actions|${codemark.id}`,
-			actions: []
-		};
-
-		let actionId = toActionId(1, "web", codemark);
-		actionsCard.actions!.push({
-			type: "Action.OpenUrl",
-			id: actionId,
+		mainCard.buttons!.push({
+			type: "openUrl",
 			title: "Open on CodeStream",
-			url: codemark.permalink
+			value: codemark.permalink
 		});
 
 		if (codemark.externalProvider !== undefined && codemark.externalProviderUrl !== undefined) {
-			actionId = toExternalActionId(1, "issue", codemark.externalProvider, codemark);
-			actionsCard.actions!.push({
-				type: "Action.OpenUrl",
-				id: actionId,
+			mainCard.buttons!.push({
+				type: "openUrl",
 				title: `Open Issue on ${providerNamesById.get(codemark.externalProvider) ||
 					codemark.externalProvider}`,
-				url: codemark.externalProviderUrl
+				value: codemark.externalProviderUrl
 			});
 		}
 
-		actionId = toActionId(1, "ide", codemark);
-		actionsCard.actions!.push({
-			type: "Action.OpenUrl",
-			id: actionId,
+		mainCard.buttons!.push({
+			type: "openUrl",
 			title: "Open in IDE",
-			url: `${codemark.permalink}?ide=default`
-		});
-
-		attachments.push({
-			id: actionsCard.id!,
-			contentType: "application/vnd.microsoft.card.adaptive",
-			content: JSON.stringify(actionsCard)
+			value: `${codemark.permalink}?ide=default`
 		});
 	}
 
-	if (preamble) {
-		// Add any mentions onto the preamble, because mentions aren't supported in attachments
-		if (mentionedUserIds != null && mentionedUserIds.length !== 0) {
-			preamble += `  /cc ${mentionedUserIds
-				.map(u => `@${userInfosById.get(u)!.username}`)
-				.join(", ")}`;
-		}
+	mainCard.body!.push({
+		type: "Container",
+		spacing: "none",
+		style: "default",
+		items: items
+	});
 
-		preamble = toTeamsText(preamble, mentionedUserIds, userInfosById, userIdsByName, mentionsOut);
-	}
+	// Set the fallback (notification) content for the message
+	mainCard.fallbackText = `${codemark.title || ""}${
+		codemark.title && codemark.text ? `\n\n` : ""
+	}${codemark.text || ""}`;
 
 	attachments.splice(0, 0, {
 		id: mainCard.id!,
