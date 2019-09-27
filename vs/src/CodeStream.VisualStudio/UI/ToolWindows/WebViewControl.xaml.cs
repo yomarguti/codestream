@@ -130,6 +130,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 						try {
 							using (Log.CriticalOperation(nameof(InitializeCore), Serilog.Events.LogEventLevel.Debug)) {
 								var router = new WebViewRouter(
+									_componentModel,
 									_componentModel.GetService<IWebviewUserSettingsService>(),
 									_componentModel.GetService<ISessionService>(),
 									_componentModel.GetService<ICodeStreamAgentService>(),

@@ -1,12 +1,10 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Threading.Tasks;
-using CodeStream.VisualStudio.Core;
-using CodeStream.VisualStudio.Core.Events;
+﻿using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Services;
-using CodeStream.VisualStudio.Services;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Newtonsoft.Json.Linq;
+using System.Threading.Tasks;
 
 namespace CodeStream.VisualStudio.UnitTests {
 	[TestClass]
@@ -17,7 +15,7 @@ namespace CodeStream.VisualStudio.UnitTests {
 			var browserServiceMock = new Mock<IBrowserService>();		 
 
 			var codeStreamAgentServiceMock = new Mock<ICodeStreamAgentService>();
-			var router = new WebViewRouter(
+			var router = new WebViewRouter(				
 				new Mock<IWebviewUserSettingsService>().Object,				
 				new Mock<ISessionService>().Object,
 				codeStreamAgentServiceMock.Object,

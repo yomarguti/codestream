@@ -155,4 +155,11 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public string Team { get; set; }
 		public bool? Alias { get; set; }
 	}
+	
+	public class RestartRequiredNotification { }
+
+	public class RestartRequiredNotificationType : NotificationType<RestartRequiredNotification> {
+		public const string MethodName = "codestream/restartRequired";
+		public override string Method => MethodName;
+	}
 }

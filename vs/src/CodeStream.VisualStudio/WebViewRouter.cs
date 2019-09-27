@@ -6,9 +6,11 @@ using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Controllers;
 using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.LanguageServer;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Services;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.WindowsAPICodePack.Dialogs;
@@ -19,6 +21,7 @@ namespace CodeStream.VisualStudio {
 	public class WebViewRouter {
 		private static readonly ILogger Log = LogManager.ForContext<WebViewRouter>();
 
+		private readonly IComponentModel _componentModel;
 		private readonly IWebviewUserSettingsService _webviewUserSettingsService;
 		private readonly ISessionService _sessionService;
 		private readonly ICodeStreamAgentService _codeStreamAgent;
@@ -30,6 +33,7 @@ namespace CodeStream.VisualStudio {
 		private readonly IAuthenticationServiceFactory _authenticationServiceFactory;
 
 		public WebViewRouter(
+			IComponentModel componentModel,
 			IWebviewUserSettingsService webviewUserSettingsService,
 			ISessionService sessionService,
 			ICodeStreamAgentService codeStreamAgent,
@@ -39,6 +43,7 @@ namespace CodeStream.VisualStudio {
 			IIdeService ideService,
 			IEditorService editorService,
 			IAuthenticationServiceFactory authenticationServiceFactory) {
+			_componentModel = componentModel;
 			_webviewUserSettingsService = webviewUserSettingsService;
 			_sessionService = sessionService;
 			_codeStreamAgent = codeStreamAgent;
@@ -123,6 +128,22 @@ namespace CodeStream.VisualStudio {
 											_eventAggregator.Publish(new WebviewDidInitializeEvent());
 
 											Log.Debug(nameof(_sessionService.WebViewDidInitialize));
+											break;
+										}
+
+									case RestartRequiredNotificationType.MethodName: {
+											try {
+												var languageServerClientManager = _componentModel.GetService<ILanguageServerClientManager>();
+												if (languageServerClientManager != null) {
+													await languageServerClientManager.RestartAsync();
+												}
+												else {
+													Log.IsNull(nameof(ILanguageServerClientManager));
+												}
+											}
+											catch(Exception ex) {
+												Log.Error(ex, nameof(RestartRequiredNotificationType));
+											}
 											break;
 										}
 									case WebviewDidChangeContextNotificationType.MethodName: {
