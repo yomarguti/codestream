@@ -5,6 +5,7 @@ import {
 	DisplayMarker,
 	DisplayMarkerLayer,
 	Disposable,
+	Point,
 	TextEditor,
 } from "atom";
 import { Convert } from "atom-languageclient";
@@ -182,6 +183,16 @@ export class MarkerDecorationProvider implements Disposable {
 				properties: { "Codemark Location": "Source File" },
 			});
 		};
+
+		const docMarkerBufferRange = Convert.lsRangeToAtomRange(docMarker.range);
+		item.onmouseenter = event => {
+			event.preventDefault();
+			Container.editorManipulator.highlight(true, editor.getPath()!, docMarkerBufferRange);
+		};
+		item.onmouseleave = event => {
+			event.preventDefault();
+			Container.editorManipulator.highlight(false, editor.getPath()!, docMarkerBufferRange);
+		};
 		item.classList.add("codemark");
 		item.appendChild(img);
 
@@ -219,8 +230,11 @@ export class MarkerDecorationProvider implements Disposable {
 			this.markers.delete(docMarker.id);
 		}
 
-		const displayMarker = markerLayer.markBufferRange(Convert.lsRangeToAtomRange(docMarker.range), {
-			invalidate: "never",
+		const docMarkerBufferRange = Convert.lsRangeToAtomRange(docMarker.range);
+
+		const displayMarker = markerLayer.markBufferRange({
+			start: docMarkerBufferRange.start,
+			end: docMarkerBufferRange.start,
 		});
 		displayMarker.onDidDestroy(() => {
 			this.markers.delete(docMarker.id);
