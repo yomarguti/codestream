@@ -132,6 +132,9 @@ export class WorkspaceSession {
 
 		if (this._agent.initialized) return;
 
+		this._agent.onDidRequireRestart(() => {
+			this.restart();
+		});
 		this._agent.onDidCrash(() => this.signOut());
 		this._agent.onDidStartLogin(() => this.setStatus(SessionStatus.SigningIn));
 		this._agent.onDidFailLogin(() => this.setStatus(SessionStatus.SignedOut));

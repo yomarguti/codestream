@@ -37,6 +37,7 @@ import {
 	DidLoginNotification,
 	DidLoginNotificationType,
 	DidStartLoginNotificationType,
+	RestartRequiredNotificationType,
 	TelemetryRequest,
 	TelemetryRequestType,
 } from "../protocols/agent/agent.protocol";
@@ -64,6 +65,7 @@ abstract class AgentConnection {
 	private _agentProcess: ChildProcess | undefined;
 	private _initializedEvent = new Echo();
 	private _crashEmitter = new Echo();
+	private _restartNeededEmitter = new Echo();
 	private _initialized = false;
 	private stopped = false;
 
@@ -81,6 +83,10 @@ abstract class AgentConnection {
 
 	onDidCrash(cb: () => void) {
 		return this._crashEmitter.add(cb);
+	}
+
+	onDidRequireRestart(cb: () => void) {
+		return this._restartNeededEmitter.add(cb);
 	}
 
 	protected abstract preInitialization(
@@ -102,6 +108,9 @@ abstract class AgentConnection {
 
 		this._connection = new LanguageClientConnection(rpc);
 
+		this._connection.onCustom(RestartRequiredNotificationType.method, e => {
+			this._restartNeededEmitter.push();
+		});
 		this.preInitialization(this._connection, rpc);
 
 		const initializationOptions: Partial<BaseAgentOptions> = {
