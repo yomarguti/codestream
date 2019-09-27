@@ -129,9 +129,12 @@ export class MarkerDecorationProvider implements Disposable {
 		});
 
 		if (response && response.markers) {
+			this.markers.forEach(displayMarker => displayMarker.destroy());
+			this.markers.clear();
+
 			response.markers = response.markers.filter(m => {
 				if (m.codemark == undefined) return false;
-				if (m.codemark.color === "none") return false;
+				if (m.codemark.color === "none" || !m.codemark.pinned) return false;
 				if (m.codemark.type === CodemarkType.Issue) {
 					return m.codemark.status === CodemarkStatus.Open;
 				}
