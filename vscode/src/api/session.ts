@@ -18,19 +18,9 @@ import {
 	CSDirectStream,
 	LoginResult
 } from "@codestream/protocols/api";
-import {
-	commands,
-	ConfigurationTarget,
-	Disposable,
-	Event,
-	EventEmitter,
-	MessageItem,
-	Uri,
-	window
-} from "vscode";
+import { ConfigurationTarget, Disposable, Event, EventEmitter, Uri } from "vscode";
 import { WorkspaceState } from "../common";
 import { configuration } from "../configuration";
-import { extensionQualifiedId } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions, log, Strings } from "../system";
@@ -168,6 +158,9 @@ export class CodeStreamSession implements Disposable {
 			Container.agent.onDidFailLogin(() => this.setStatus(SessionStatus.SignedOut)),
 			Container.agent.onDidLogin(params => {
 				this.completeLogin(params.data);
+			}),
+			Container.agent.onDidRequireRestart(() => {
+				this.logout();
 			})
 		);
 

@@ -72,6 +72,7 @@ import {
 	RenameStreamRequestType,
 	ReportingMessageType,
 	ReportMessageRequestType,
+	RestartRequiredNotificationType,
 	SetCodemarkStatusRequestType,
 	SetStreamPurposeRequestType,
 	TelemetryRequestType,
@@ -80,8 +81,7 @@ import {
 	UpdatePreferencesRequestType,
 	UpdatePresenceRequestType,
 	UpdateStreamMembershipRequestType,
-	UpdateStreamMembershipResponse,
-	VersionCompatibility
+	UpdateStreamMembershipResponse
 } from "@codestream/protocols/agent";
 import {
 	ChannelServiceType,
@@ -92,12 +92,9 @@ import {
 	StreamType
 } from "@codestream/protocols/api";
 import {
-	commands,
-	env,
 	Event,
 	EventEmitter,
 	ExtensionContext,
-	MessageItem,
 	OutputChannel,
 	Uri,
 	window,
@@ -120,7 +117,6 @@ import {
 	TransportKind
 } from "vscode-languageclient";
 import { SessionSignedOutReason } from "../api/session";
-import { extensionQualifiedId } from "../constants";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions, log } from "../system";
@@ -145,6 +141,11 @@ export class CodeStreamAgentConnection implements Disposable {
 	private _onDidFailLogin = new EventEmitter<void>();
 	get onDidFailLogin(): Event<void> {
 		return this._onDidFailLogin.event;
+	}
+
+	private _onDidRequireRestart = new EventEmitter<void>();
+	get onDidRequireRestart(): Event<void> {
+		return this._onDidRequireRestart.event;
 	}
 
 	private _onDidChangeConnectionStatus = new EventEmitter<DidChangeConnectionStatusNotification>();
@@ -976,6 +977,9 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._client.onNotification(DidStartLoginNotificationType, () => this._onDidStartLogin.fire());
 		this._client.onNotification(DidFailLoginNotificationType, () => this._onDidFailLogin.fire());
 		this._client.onNotification(DidLogoutNotificationType, this.onLogout.bind(this));
+		this._client.onNotification(RestartRequiredNotificationType, () =>
+			this._onDidRequireRestart.fire()
+		);
 		// this._client.onNotification(DidResetNotificationType, this.onReset.bind(this));
 
 		this._onDidStart.fire();
