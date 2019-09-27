@@ -63,6 +63,7 @@ import {
 	RegisterUserRequest,
 	RegisterUserRequestType,
 	ReportingMessageType,
+	RestartRequiredNotificationType,
 	ThirdPartyProviders,
 	TokenLoginRequest,
 	TokenLoginRequestType,
@@ -665,32 +666,38 @@ export class CodeStreamSession {
 		// re-register to acknowledge lsp handlers from newly instantiated classes
 		registerDecoratedHandlers(this.agent);
 
-		if (User.isSlack(response.user) && Team.isSlack(currentTeam)) {
-			Logger.log(
-				cc,
-				`Logging into Slack because team '${currentTeam.name}' (${currentTeam.id}) is a Slack-based team`
-			);
+		try {
+			if (User.isSlack(response.user) && Team.isSlack(currentTeam)) {
+				Logger.log(
+					cc,
+					`Logging into Slack because team '${currentTeam.name}' (${currentTeam.id}) is a Slack-based team`
+				);
 
-			this._api = this.newSlackApiProvider(response.user);
-			await (this._api as SlackApiProvider).processLoginResponse(response);
+				this._api = this.newSlackApiProvider(response.user);
+				await (this._api as SlackApiProvider).processLoginResponse(response);
 
-			Logger.log(
-				cc,
-				`Logged into Slack as '${response.user.username}' (${response.user.id}), Slack team ${currentTeam.providerInfo.slack.teamId}`
-			);
-		} else if (User.isMSTeams(response.user) && Team.isMSTeams(currentTeam)) {
-			Logger.log(
-				cc,
-				`Logging into MS Teams because team '${currentTeam.name}' (${currentTeam.id}) is a MS Teams-based team`
-			);
+				Logger.log(
+					cc,
+					`Logged into Slack as '${response.user.username}' (${response.user.id}), Slack team ${currentTeam.providerInfo.slack.teamId}`
+				);
+			} else if (User.isMSTeams(response.user) && Team.isMSTeams(currentTeam)) {
+				Logger.log(
+					cc,
+					`Logging into MS Teams because team '${currentTeam.name}' (${currentTeam.id}) is a MS Teams-based team`
+				);
 
-			this._api = this.newMSTeamsApiProvider(response.user);
-			await (this._api as MSTeamsApiProvider).processLoginResponse(response);
+				this._api = this.newMSTeamsApiProvider(response.user);
+				await (this._api as MSTeamsApiProvider).processLoginResponse(response);
 
-			Logger.log(
-				cc,
-				`Logged into MS Teams as '${response.user.username}' (${response.user.id}), MS Teams team ${currentTeam.providerInfo.msteams.teamId}`
-			);
+				Logger.log(
+					cc,
+					`Logged into MS Teams as '${response.user.username}' (${response.user.id}), MS Teams team ${currentTeam.providerInfo.msteams.teamId}`
+				);
+			}
+		} catch (error) {
+			this.agent.sendNotification(DidFailLoginNotificationType, undefined);
+			this.agent.sendNotification(RestartRequiredNotificationType, {});
+			return { error: LoginResult.ProviderConnectFailed };
 		}
 
 		// Make sure to update this after the slack/msteams switch as the userId will change

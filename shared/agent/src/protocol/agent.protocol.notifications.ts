@@ -16,6 +16,13 @@ import {
 	CSUser
 } from "./api.protocol";
 
+export interface RestartRequiredNotification {}
+
+export const RestartRequiredNotificationType = new NotificationType<
+	RestartRequiredNotification,
+	void
+>("codestream/restartRequired");
+
 export enum ConnectionStatus {
 	Disconnected = "disconnected",
 	Reconnected = "reconnected",
