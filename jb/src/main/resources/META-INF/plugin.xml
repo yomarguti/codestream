@@ -59,6 +59,20 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="4_0_0">4.0.0</h4>
+<h5>Added</h5>
+<ul>
+    <li>Comments on merged-in pull requests from either GitHub or Bitbucket are now displayed right alongside the code blocks they refer to</li>
+    <li>The ability to inject a codemark as an inline comment now has an option to include replies</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue where an issue codemark with a blank description would not get posted to Slack</li>
+    <li>Fixes an issue where automated closed/opened messages for issue codemarks were not getting posted to Slack</li>
+    <li>Fixes the sort order of Jira projects so that they are in alphabetical order</li>
+    <li>Fixes an issue where the ability to star a reply was missing for Slack-connected teams</li>
+    <li>Fixes an issue where Slack desktop notifications for codemarks would not include any content</li>
+</ul>
 <h4 id="3_0_3">3.0.3</h4>
 <h5>Fixed</h5>
 <ul>
