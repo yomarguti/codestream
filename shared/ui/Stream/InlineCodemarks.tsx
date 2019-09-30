@@ -507,10 +507,15 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 							.map(docMarker => {
 								const { codemark } = docMarker;
 
-								// TODO: Implement externalContent
-								if (!codemark) return null;
+								// const hidden =
+								// 	!showHidden &&
+								// 	((codemark && (!codemark.pinned || codemark.status === "closed")) ||
+								// 		(docMarker.externalContent && !this.props.showPRComments));
 
-								const hidden = !showHidden && (!codemark.pinned || codemark.status === "closed");
+								const hidden =
+									(!showHidden &&
+										(codemark && (!codemark.pinned || codemark.status === "closed"))) ||
+									(docMarker.externalContent && !this.props.showPRComments);
 								if (hidden) {
 									this.hiddenCodemarks[docMarker.id] = true;
 									return null;
