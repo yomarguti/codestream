@@ -111,7 +111,8 @@ class DocumentMarkersResult(val markers: List<DocumentMarker>, val markersNotLoc
 
 class DocumentMarker(
     val id: String,
-    val codemark: Codemark,
+    val codemark: Codemark?,
+    val type: String?,
 //    creatorName: string;
     val range: Range,
     val summary: String
@@ -143,7 +144,6 @@ class TextDocumentFromKeyResult(
 
 class Codemark(
     val id: String,
-    val type: String?,
     val color: String?,
     val streamId: String,
     val postId: String?,

@@ -15,7 +15,7 @@ import javax.swing.Icon
 
 class GutterIconRendererImpl(val editor: Editor, val marker: DocumentMarker) : GutterIconRenderer() {
     val id: String
-        get() = marker.codemark.id
+        get() = marker.id
 
     override fun isNavigateAction(): Boolean {
         return true
@@ -24,10 +24,11 @@ class GutterIconRendererImpl(val editor: Editor, val marker: DocumentMarker) : G
     override fun getClickAction(): AnAction? = object : AnAction() {
         override fun actionPerformed(e: AnActionEvent) {
             val project = editor.project ?: return
+            val codemark = marker.codemark ?: return
             project.codeStream?.show {
                 project.webViewService?.postNotification(
                     CodemarkNotifications.Show(
-                        marker.codemark.id,
+                        codemark.id,
                         editor.document.uri
                     )
                 )
@@ -40,8 +41,8 @@ class GutterIconRendererImpl(val editor: Editor, val marker: DocumentMarker) : G
     }
 
     override fun getIcon(): Icon {
-        val type = marker.codemark.type.ifNullOrBlank { "comment" }
-        val color = marker.codemark.color.ifNullOrBlank { "blue" }
+        val type = marker.type.ifNullOrBlank { "comment" }
+        val color = marker.codemark?.color.ifNullOrBlank { "blue" }
         return IconLoader.getIcon("/images/marker-$type-$color.svg")
     }
 

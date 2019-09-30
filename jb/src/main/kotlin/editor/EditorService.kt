@@ -217,7 +217,7 @@ class EditorService(val project: Project) {
         documentMarkers[document] = markers
 
         return markers.filter {
-            it.codemark.status != "closed" && it.codemark.pinned == true
+            it.codemark == null || (it.codemark.status != "closed" && it.codemark.pinned == true)
         }
     }
 
@@ -316,11 +316,11 @@ class EditorService(val project: Project) {
                 null,
                 HighlighterTargetArea.EXACT_RANGE
             ).also {
-                if (showGutterIcons) {
+                if (showGutterIcons && marker.codemark != null) {
                     it.gutterIconRenderer = GutterIconRendererImpl(this, marker)
                 }
                 it.isThinErrorStripeMark = true
-                it.errorStripeMarkColor = marker.codemark.color()
+                it.errorStripeMarkColor = marker.codemark?.color() ?: blue
                 it.errorStripeTooltip = marker.summary
             }
         }
