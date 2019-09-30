@@ -249,6 +249,20 @@ export class SlackApiProvider implements ApiProvider {
 				case MessageType.Preferences:
 					this._preferences.update(e.data);
 					break;
+
+				case MessageType.Users:
+					let user = e.data.find(u =>
+						u.codestreamId == null
+							? u.id === this._slackUserId
+							: u.codestreamId === this._codestreamUserId
+					);
+					if (user === undefined) return;
+
+					// this.getMe() will update the user's cache so no need to do it here
+					({ user } = await this.getMe());
+					this._onDidReceiveMessage.fire({ type: e.type, data: [user] });
+					break;
+
 				default:
 					this._onDidReceiveMessage.fire(e);
 			}

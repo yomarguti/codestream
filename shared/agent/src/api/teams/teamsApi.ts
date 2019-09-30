@@ -254,18 +254,21 @@ export class MSTeamsApiProvider implements ApiProvider {
 					}
 					break;
 
-				case MessageType.Preferences: {
+				case MessageType.Preferences:
 					this._preferences.update(e.data);
 					break;
-				}
+
 				case MessageType.Users:
-					// TODO: Map with teams data
-					const user = e.data.find(u => u.id === this._codestreamUserId);
+					let user = e.data.find(u =>
+						u.codestreamId == null
+							? u.id === this._teamsUserId
+							: u.codestreamId === this._codestreamUserId
+					);
 					if (user === undefined) return;
 
 					// this.getMe() will update the user's cache so no need to do it here
-					const meResponse = await this.getMe();
-					this._onDidReceiveMessage.fire({ type: e.type, data: [meResponse.user] });
+					({ user } = await this.getMe());
+					this._onDidReceiveMessage.fire({ type: e.type, data: [user] });
 					break;
 
 				default:
