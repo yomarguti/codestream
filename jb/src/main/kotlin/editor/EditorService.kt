@@ -305,7 +305,9 @@ class EditorService(val project: Project) {
             }
         }
 
-        markerHighlighters[this] = markers.map { marker ->
+        markerHighlighters[this] = markers.filter { marker ->
+            marker.range.start.line >= 0
+        }.map { marker ->
             val start = getOffset(marker.range.start)
             val end = getOffset(marker.range.end)
 
