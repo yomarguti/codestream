@@ -1,4 +1,5 @@
 "use strict";
+import { GitRemote } from "git/gitService";
 import { GraphQLClient } from "graphql-request";
 import { Response } from "node-fetch";
 import * as paths from "path";
@@ -17,7 +18,7 @@ import {
 	GitHubUser
 } from "../protocol/agent.protocol";
 import { CodemarkType, CSGitHubProviderInfo, CSLocationArray } from "../protocol/api.protocol";
-import { Arrays, log, lspProvider, Strings } from "../system";
+import { Arrays, Functions, log, lspProvider, Strings } from "../system";
 import {
 	getOpenedRepos,
 	getRepoRemotePaths,
@@ -41,7 +42,6 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 	implements ThirdPartyProviderSupportsIssues, ThirdPartyProviderSupportsPullRequests {
 	private _githubUserId: string | undefined;
 	private _knownRepos = new Map<string, GitHubRepo>();
-	private _isPRApiCompatible: boolean | undefined;
 
 	get displayName() {
 		return "GitHub";
@@ -59,19 +59,8 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 		};
 	}
 
-	get isEnterprise() {
-		return this.name === "github_enterprise";
-	}
-
-	get isPRApiCompatible() {
-		return this._isPRApiCompatible;
-	}
-
-	private async _checkEnterpriseVersionPRCompatibility() {
-		const response = await this.get<{ installed_version: string }>("/meta");
-
-		const [major, minor] = response.body.installed_version.split(".").map(Number);
-		return major > 2 || (major === 2 && minor >= 15);
+	protected isPRApiCompatible(): Promise<boolean> {
+		return Promise.resolve(true);
 	}
 
 	private _client: GraphQLClient | undefined;
@@ -81,9 +70,7 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 				throw new Error("No GitHub personal access token could be found");
 			}
 
-			const baseUrl = this.isEnterprise ? `${this.getConfig().host}/api` : "https://api.github.com";
-
-			this._client = new GraphQLClient(`${baseUrl}/graphql`, {
+			this._client = new GraphQLClient(`${this.baseUrl}/graphql`, {
 				headers: {
 					Authorization: `Bearer ${this.accessToken}`
 				}
@@ -208,17 +195,11 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 	}): Promise<DocumentMarker[]> {
 		void (await this.ensureConnected());
 
-		if (this.isEnterprise) {
-			if (this.isPRApiCompatible == null) {
-				this._isPRApiCompatible = await this._checkEnterpriseVersionPRCompatibility();
-			}
-
-			if (!this.isPRApiCompatible) return [];
-		}
-
 		const documentMarkers: DocumentMarker[] = [];
 
-		const comments = await this.getCommentsForPath(uri.fsPath);
+		if (!(await this.isPRApiCompatible())) return documentMarkers;
+
+		const comments = await this._getCommentsForPath(uri.fsPath);
 		if (comments === undefined) return documentMarkers;
 
 		const teamId = SessionContainer.instance().session.teamId;
@@ -310,25 +291,23 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 
 	private _commentsByRepoAndPath = new Map<
 		string,
-		{ expiresAt: number; comments: PullRequestComment[] }
+		{ expiresAt: number; comments: Promise<PullRequestComment[]> }
 	>();
-	private _prsByRepo = new Map<string, { expiresAt: number; prs: GitHubPullRequest[] }>();
+	private _prsByRepo = new Map<string, { expiresAt: number; prs: Promise<GitHubPullRequest[]> }>();
+
+	private _isMatchingRemotePredicate = (r: GitRemote) => r.domain === "github.com";
+	protected getIsMatchingRemotePredicate() {
+		return this._isMatchingRemotePredicate;
+	}
 
 	@log()
-	private async getCommentsForPath(filePath: string): Promise<PullRequestComment[] | undefined> {
+	private async _getCommentsForPath(filePath: string): Promise<PullRequestComment[] | undefined> {
 		const cc = Logger.getCorrelationContext();
 
 		try {
 			const { remotePath, repoPath } = await getRepoRemotePaths(
 				filePath,
-				r => {
-					if (this.isEnterprise) {
-						const configDomain = URI.parse(this.getConfig().host).authority;
-						return configDomain === r.domain;
-					}
-
-					return r.domain === "github.com";
-				},
+				this.getIsMatchingRemotePredicate(),
 				this._knownRepos
 			);
 			if (remotePath == null || repoPath == null) return undefined;
@@ -341,99 +320,13 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 				return cachedComments.comments;
 			}
 
-			let prs: GitHubPullRequest[];
-
-			const cachedPRs = this._prsByRepo.get(repoPath);
-
-			if (cachedPRs !== undefined && cachedPRs.expiresAt > new Date().getTime()) {
-				prs = cachedPRs.prs;
-			} else {
-				prs = [];
-
-				const [owner, repo] = remotePath.split("/");
-
-				let pullRequestsResponse;
-				do {
-					pullRequestsResponse = await this.prQuery(owner, repo);
-					prs.push(...pullRequestsResponse!.nodes);
-				} while (pullRequestsResponse!.pageInfo.hasNextPage);
-
-				this._prsByRepo.set(repoPath, {
-					expiresAt: new Date().setMinutes(new Date().getMinutes() + 30),
-					prs: prs
-				});
-			}
-
-			const comments: PullRequestComment[] = [];
-
-			for (const pr of prs) {
-				if (pr.reviewThreads.totalCount === 0) continue;
-
-				let comment: PullRequestComment;
-				let prComment;
-				for (const rt of pr.reviewThreads.nodes) {
-					if (rt.comments.totalCount === 0) continue;
-
-					prComment = rt.comments.nodes[0];
-					if (prComment.path !== relativePath) continue;
-
-					comment = {
-						id: rt.id,
-						author: {
-							id: prComment.author.login,
-							nickname: prComment.author.login
-						},
-						path: prComment.path,
-						text: prComment.bodyText,
-						code: "",
-						commit: prComment.outdated ? prComment.originalCommit.oid : prComment.commit.oid,
-						originalCommit: prComment.originalCommit.oid,
-						line: prComment.position || prComment.originalPosition,
-						originalLine: prComment.originalPosition,
-						url: prComment.url,
-						createdAt: new Date(prComment.createdAt).getTime(),
-						pullRequest: {
-							id: pr.number,
-							url: pr.url
-						},
-						diffHunk: prComment.diffHunk,
-						outdated: prComment.outdated
-					};
-
-					const diffLines = comment.diffHunk!.split("\n");
-					// Get rid of the hunk header
-					diffLines.shift();
-
-					// Since we can't trust the positions from GitHub, we "calc" them by counting the number of original/new lines in the diff hunk
-					// Because the diff hunk that GitHub returns always ends at the commented on line
-					const originalPosition =
-						Arrays.count(diffLines, l => l.startsWith("-") || l.startsWith(" ")) - 1;
-					const position = Arrays.count(diffLines, l => l.startsWith("+") || l.startsWith(" ")) - 1;
-
-					// Get the code from the diff hunk
-					comment.code = diffLines[diffLines.length - 1] || "";
-					if (comment.code) {
-						// Strip off the diff hunk +/-
-						comment.code = comment.code.substr(1);
-					}
-
-					// Since the provided line numbers are offsets in the diff hunk, add the diff hunk line to the offset line
-					const match = diffHunkRegex.exec(comment.diffHunk!);
-					if (match == null) return undefined;
-
-					const [, originalLine, , line] = match;
-
-					comment.originalLine! = Number(originalLine) + originalPosition;
-					comment.line = Number(line) + position;
-
-					comments.push(comment);
-				}
-			}
-
+			const commentsPromise = this._getCommentsForPathCore(relativePath, remotePath, repoPath);
 			this._commentsByRepoAndPath.set(cacheKey, {
 				expiresAt: new Date().setMinutes(new Date().getMinutes() + 30),
-				comments: comments
+				comments: commentsPromise
 			});
+
+			const comments = await commentsPromise;
 
 			return comments;
 		} catch (ex) {
@@ -442,6 +335,125 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 		}
 	}
 
+	private async _getCommentsForPathCore(
+		relativePath: string,
+		remotePath: string,
+		repoPath: string
+	): Promise<PullRequestComment[]> {
+		let prs: GitHubPullRequest[];
+
+		const cachedPRs = this._prsByRepo.get(repoPath);
+
+		if (cachedPRs !== undefined && cachedPRs.expiresAt > new Date().getTime()) {
+			prs = await cachedPRs.prs;
+		} else {
+			const [owner, repo] = remotePath.split("/");
+
+			const prsPromise = this._getPullRequests(owner, repo);
+			this._prsByRepo.set(repoPath, {
+				expiresAt: new Date().setMinutes(new Date().getMinutes() + 30),
+				prs: prsPromise
+			});
+
+			prs = await prsPromise;
+		}
+
+		const comments: PullRequestComment[] = [];
+
+		for (const pr of prs) {
+			if (pr.reviewThreads.totalCount === 0) continue;
+
+			let comment: PullRequestComment;
+			let prComment;
+			for (const rt of pr.reviewThreads.nodes) {
+				if (rt.comments.totalCount === 0) continue;
+
+				prComment = rt.comments.nodes[0];
+				if (prComment.path !== relativePath) continue;
+
+				comment = {
+					id: rt.id,
+					author: {
+						id: prComment.author.login,
+						nickname: prComment.author.login
+					},
+					path: prComment.path,
+					text: prComment.bodyText,
+					code: "",
+					commit: prComment.outdated ? prComment.originalCommit.oid : prComment.commit.oid,
+					originalCommit: prComment.originalCommit.oid,
+					line: prComment.position || prComment.originalPosition,
+					originalLine: prComment.originalPosition,
+					url: prComment.url,
+					createdAt: new Date(prComment.createdAt).getTime(),
+					pullRequest: {
+						id: pr.number,
+						url: pr.url
+					},
+					diffHunk: prComment.diffHunk,
+					outdated: prComment.outdated
+				};
+
+				const diffLines = comment.diffHunk!.split("\n");
+				// Get rid of the hunk header
+				diffLines.shift();
+
+				// Since we can't trust the positions from GitHub, we "calc" them by counting the number of original/new lines in the diff hunk
+				// Because the diff hunk that GitHub returns always ends at the commented on line
+				const originalPosition =
+					Arrays.count(diffLines, l => l.startsWith("-") || l.startsWith(" ")) - 1;
+				const position = Arrays.count(diffLines, l => l.startsWith("+") || l.startsWith(" ")) - 1;
+
+				// Get the code from the diff hunk
+				comment.code = diffLines[diffLines.length - 1] || "";
+				if (comment.code) {
+					// Strip off the diff hunk +/-
+					comment.code = comment.code.substr(1);
+				}
+
+				// Since the provided line numbers are offsets in the diff hunk, add the diff hunk line to the offset line
+				const match = diffHunkRegex.exec(comment.diffHunk!);
+				if (match == null) continue;
+
+				const [, originalLine, , line] = match;
+
+				comment.originalLine! = Number(originalLine) + originalPosition;
+				comment.line = Number(line) + position;
+
+				comments.push(comment);
+			}
+		}
+
+		return comments;
+	}
+
+	private async _getPullRequests(owner: string, repo: string) {
+		const prs = [];
+
+		try {
+			let response;
+			do {
+				response = await this.prQuery(owner, repo, response && response.pageInfo.endCursor);
+				if (response === undefined) break;
+
+				prs.push(...response.nodes);
+			} while (response.pageInfo.hasNextPage);
+		} catch (ex) {
+			Logger.error(ex);
+		}
+
+		return prs;
+	}
+
+	private _prQueryRateLimit:
+		| {
+				limit: number;
+				cost: number;
+				remaining: number;
+				resetAt: Date;
+		  }
+		| undefined;
+
 	async prQuery(
 		owner: string,
 		repo: string,
@@ -449,10 +461,23 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 	): Promise<GitHubPullRequests | undefined> {
 		const cc = Logger.getCorrelationContext();
 
+		// If we are or will be over the rate limit, wait until it gets reset
+		if (
+			this._prQueryRateLimit !== undefined &&
+			this._prQueryRateLimit.remaining - this._prQueryRateLimit.cost < 0
+		) {
+			// TODO: Probably should send a notification to the webview here
+
+			// If we are currently paging, just give up and return what we have
+			if (cursor === undefined) return undefined;
+
+			await Functions.wait(this._prQueryRateLimit.resetAt.getTime() - new Date().getTime());
+		}
+
 		// TODO: Need to page if there are more than 100 review threads
 		try {
 			const query = `query pr($owner: String!, $repo: String!) {
-				repository(name: $repo, owner: $owner${cursor ? `after: ${cursor}` : ""}) {
+				repository(name: $repo, owner: $owner${cursor ? `after: $cursor` : ""}) {
 					pullRequests(states: MERGED, first: 100, orderBy: { field: UPDATED_AT, direction: DESC }) {
 						totalCount
 						pageInfo {
@@ -501,17 +526,36 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 							}
 						}
 					}
+				},
+				rateLimit {
+					limit
+					cost
+					remaining
+					resetAt
 				}
 			}`;
 
 			const rsp = await this.client.request<GetPullRequestsResponse>(query, {
 				owner: owner,
-				repo: repo
+				repo: repo,
+				cursor: cursor
 			});
+
+			this._prQueryRateLimit = {
+				cost: rsp.rateLimit.cost,
+				limit: rsp.rateLimit.limit,
+				remaining: rsp.rateLimit.remaining,
+				resetAt: new Date(rsp.rateLimit.resetAt)
+			};
+
 			return rsp.repository.pullRequests;
 		} catch (ex) {
 			Logger.error(ex, cc);
-			return undefined;
+
+			// If we are currently paging, just give up and return what we have
+			if (cursor !== undefined) return undefined;
+
+			throw ex;
 		}
 	}
 }
@@ -569,5 +613,11 @@ interface GitHubPullRequests {
 interface GetPullRequestsResponse {
 	repository: {
 		pullRequests: GitHubPullRequests;
+	};
+	rateLimit: {
+		limit: number;
+		cost: number;
+		remaining: number;
+		resetAt: string;
 	};
 }

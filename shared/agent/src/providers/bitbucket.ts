@@ -1,4 +1,5 @@
 "use strict";
+import { GitRemote } from "git/gitService";
 import * as paths from "path";
 import * as qs from "querystring";
 import { URI } from "vscode-uri";
@@ -264,16 +265,16 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 	}): Promise<DocumentMarker[]> {
 		void (await this.ensureConnected());
 
-		const comments = await this.getCommentsForPath(uri.fsPath);
-
 		const documentMarkers: DocumentMarker[] = [];
 
-		const commentsById: { [id: string]: PullRequestComment } = Object.create(null);
+		const comments = await this._getCommentsForPath(uri.fsPath);
 		if (comments === undefined) return documentMarkers;
 
 		const teamId = SessionContainer.instance().session.teamId;
 
+		const commentsById: { [id: string]: PullRequestComment } = Object.create(null);
 		const markersByCommit = new Map<string, Markerish[]>();
+
 		for (const c of comments) {
 			let markers = markersByCommit.get(c.commit);
 			if (markers === undefined) {
@@ -353,17 +354,22 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 	}
 	private _commentsByRepoAndPath = new Map<
 		string,
-		{ expiresAt: number; comments: PullRequestComment[] }
+		{ expiresAt: number; comments: Promise<PullRequestComment[]> }
 	>();
 
+	private _isMatchingRemotePredicate = (r: GitRemote) => r.domain === "bitbucket.org";
+	protected getIsMatchingRemotePredicate() {
+		return this._isMatchingRemotePredicate;
+	}
+
 	@log()
-	private async getCommentsForPath(filePath: string): Promise<PullRequestComment[] | undefined> {
+	private async _getCommentsForPath(filePath: string): Promise<PullRequestComment[] | undefined> {
 		const cc = Logger.getCorrelationContext();
 
 		try {
 			const { remotePath, repoPath } = await getRepoRemotePaths(
 				filePath,
-				r => r.domain === "bitbucket.org",
+				this.getIsMatchingRemotePredicate(),
 				this._knownRepos
 			);
 			if (remotePath == null || repoPath == null) return undefined;
@@ -376,18 +382,13 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 				return cachedComments.comments;
 			}
 
-			const pullRequestsResponse = await this.get<GetPullRequestsResponse>(
-				`/repositories/${remotePath}/pullrequests?${qs.stringify({ q: "comment_count>0" })}`
-			);
-
-			const comments = (await Promise.all(
-				pullRequestsResponse.body.values.map(pr => this.getPullRequestComments(pr, relativePath))
-			)).reduce((group, current) => group.concat(current));
-
+			const commentsPromise = this._getCommentsForPathCore(relativePath, remotePath);
 			this._commentsByRepoAndPath.set(cacheKey, {
 				expiresAt: new Date().setMinutes(new Date().getMinutes() + 30),
-				comments: comments
+				comments: commentsPromise
 			});
+
+			const comments = await commentsPromise;
 
 			return comments;
 		} catch (ex) {
@@ -396,7 +397,18 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 		}
 	}
 
-	private async getPullRequestComments(
+	private async _getCommentsForPathCore(relativePath: string, remotePath: string) {
+		const pullRequestsResponse = await this.get<GetPullRequestsResponse>(
+			`/repositories/${remotePath}/pullrequests?${qs.stringify({ q: "comment_count>0" })}`
+		);
+
+		const comments = (await Promise.all(
+			pullRequestsResponse.body.values.map(pr => this._getPullRequestComments(pr, relativePath))
+		)).reduce((group, current) => group.concat(current));
+		return comments;
+	}
+
+	private async _getPullRequestComments(
 		pr: BitbucketPullRequest,
 		filePath: string
 	): Promise<PullRequestComment[]> {
