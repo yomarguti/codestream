@@ -16,6 +16,8 @@ import { GitRepositories } from "./repositories";
 
 export * from "./models/models";
 
+const cygwinRegex = /\/cygdrive\/([a-zA-Z])/;
+
 export interface IGitService extends Disposable {
 	getFileAuthors(
 		uri: URI,
@@ -57,6 +59,9 @@ export interface IGitService extends Disposable {
 	getRepositoryById(id: string): Promise<GitRepository | undefined>;
 	getRepositoryByFilePath(filePath: string): Promise<GitRepository | undefined>;
 
+	isValidReference(repoUri: URI, ref: string): Promise<boolean>;
+	isValidReference(repoPath: string, ref: string): Promise<boolean>;
+
 	resolveRef(uri: URI, ref: string): Promise<string | undefined>;
 	resolveRef(path: string, ref: string): Promise<string | undefined>;
 	//   resolveRef(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
@@ -72,6 +77,10 @@ export class GitService implements IGitService, Disposable {
 
 	dispose() {
 		this._disposable && this._disposable.dispose();
+	}
+
+	get onRepositoryCommitHashChanged(): Event<GitRepository> {
+		return this._repositories.onCommitHashChanged;
 	}
 
 	async getFileAuthors(
@@ -351,7 +360,7 @@ export class GitService implements IGitService, Disposable {
 
 		try {
 			const data = (await git({ cwd: cwd }, "rev-parse", "--show-toplevel")).trim();
-			return data === "" ? undefined : this.sanitizePath(data);
+			return data === "" ? undefined : this._sanitizePath(data);
 		} catch (ex) {
 			// If we can't find the git executable, rethrow
 			if (/spawn (.*)? ENOENT/.test(ex.message)) {
@@ -409,26 +418,8 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
-	cygwinRegex = /\/cygdrive\/([a-zA-Z])/;
-
-	sanitizePath(path: string): string {
-		const cygwinMatch = this.cygwinRegex.exec(path);
-		if (cygwinMatch != null) {
-			const [, drive] = cygwinMatch;
-			let sanitized = `${drive}:${path.substr("/cygdrive/c".length)}`;
-			sanitized = sanitized.replace(/\//g, "\\");
-			Logger.debug(`Cygwin git path sanitized: ${path} -> ${sanitized}`);
-			return sanitized;
-		}
-		return path;
-	}
-
 	getRepositories(): Promise<Iterable<GitRepository>> {
 		return this._repositories.get();
-	}
-
-	async setKnownRepository(repos: { repoId: string; path: string }[]) {
-		return this._repositories.setKnownRepository(repos);
 	}
 
 	getRepositoryById(id: string): Promise<GitRepository | undefined> {
@@ -439,8 +430,17 @@ export class GitService implements IGitService, Disposable {
 		return this._repositories.getByFilePath(filePath);
 	}
 
-	get onRepositoryCommitHashChanged(): Event<GitRepository> {
-		return this._repositories.onCommitHashChanged;
+	async isValidReference(repoUri: URI, ref: string): Promise<boolean>;
+	async isValidReference(repoPath: string, ref: string): Promise<boolean>;
+	async isValidReference(repoUriOrPath: URI | string, ref: string): Promise<boolean> {
+		const repoPath = typeof repoUriOrPath === "string" ? repoUriOrPath : repoUriOrPath.fsPath;
+
+		try {
+			void (await git({ cwd: repoPath }, "cat-file", "-t", ref));
+			return true;
+		} catch {
+			return false;
+		}
 	}
 
 	async resolveRef(uri: URI, ref: string): Promise<string | undefined>;
@@ -456,5 +456,21 @@ export class GitService implements IGitService, Disposable {
 		} catch {
 			return undefined;
 		}
+	}
+
+	async setKnownRepository(repos: { repoId: string; path: string }[]) {
+		return this._repositories.setKnownRepository(repos);
+	}
+
+	private _sanitizePath(path: string): string {
+		const cygwinMatch = cygwinRegex.exec(path);
+		if (cygwinMatch != null) {
+			const [, drive] = cygwinMatch;
+			let sanitized = `${drive}:${path.substr("/cygdrive/c".length)}`;
+			sanitized = sanitized.replace(/\//g, "\\");
+			Logger.debug(`Cygwin git path sanitized: ${path} -> ${sanitized}`);
+			return sanitized;
+		}
+		return path;
 	}
 }

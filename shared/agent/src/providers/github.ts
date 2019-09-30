@@ -1,5 +1,6 @@
 "use strict";
-import { GitRemote } from "git/gitService";
+import { git } from "git/git";
+import { GitRemote, GitRepository } from "git/gitService";
 import { GraphQLClient } from "graphql-request";
 import { Response } from "node-fetch";
 import * as paths from "path";
@@ -21,7 +22,7 @@ import { CodemarkType, CSGitHubProviderInfo, CSLocationArray } from "../protocol
 import { Arrays, Functions, log, lspProvider, Strings } from "../system";
 import {
 	getOpenedRepos,
-	getRepoRemotePaths,
+	getRemotePath,
 	PullRequestComment,
 	ThirdPartyProviderBase,
 	ThirdPartyProviderSupportsIssues,
@@ -199,25 +200,36 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 
 		if (!(await this.isPRApiCompatible())) return documentMarkers;
 
-		const comments = await this._getCommentsForPath(uri.fsPath);
-		if (comments === undefined) return documentMarkers;
+		const { git, session } = SessionContainer.instance();
 
-		const teamId = SessionContainer.instance().session.teamId;
+		const repo = await git.getRepositoryByFilePath(uri.fsPath);
+		if (repo === undefined) return documentMarkers;
+
+		const comments = await this._getCommentsForPath(uri.fsPath, repo);
+		if (comments === undefined) return documentMarkers;
 
 		const commentsById: { [id: string]: PullRequestComment } = Object.create(null);
 		const markersByCommit = new Map<string, Markerish[]>();
 
 		let line;
 		let rev;
+		let outdated;
 		for (const c of comments) {
-			rev = c.outdated ? c.originalCommit! : c.commit;
+			outdated = c.outdated;
+			if (!outdated) {
+				outdated = !(await git.isValidReference(repo.path, c.commit));
+				outdated;
+			}
+
+			rev = outdated ? c.originalCommit! : c.commit;
+
 			let markers = markersByCommit.get(rev);
 			if (markers === undefined) {
 				markers = [];
 				markersByCommit.set(rev, markers);
 			}
 
-			line = c.outdated ? c.originalLine! : c.line;
+			line = outdated ? c.originalLine! : c.line;
 			commentsById[c.id] = c;
 			markers.push({
 				id: c.id,
@@ -230,6 +242,8 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 			revision!,
 			markersByCommit
 		);
+
+		const teamId = session.teamId;
 
 		for (const [id, location] of Object.entries(locations.locations)) {
 			const comment = commentsById[id];
@@ -301,26 +315,29 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 	}
 
 	@log()
-	private async _getCommentsForPath(filePath: string): Promise<PullRequestComment[] | undefined> {
+	private async _getCommentsForPath(
+		filePath: string,
+		repo: GitRepository
+	): Promise<PullRequestComment[] | undefined> {
 		const cc = Logger.getCorrelationContext();
 
 		try {
-			const { remotePath, repoPath } = await getRepoRemotePaths(
-				filePath,
+			const remotePath = await getRemotePath(
+				repo,
 				this.getIsMatchingRemotePredicate(),
 				this._knownRepos
 			);
-			if (remotePath == null || repoPath == null) return undefined;
+			if (remotePath == null) return undefined;
 
-			const relativePath = Strings.normalizePath(paths.relative(repoPath, filePath));
-			const cacheKey = `${repoPath}|${relativePath}`;
+			const relativePath = Strings.normalizePath(paths.relative(repo.path, filePath));
+			const cacheKey = `${repo.path}|${relativePath}`;
 
 			const cachedComments = this._commentsByRepoAndPath.get(cacheKey);
 			if (cachedComments !== undefined && cachedComments.expiresAt > new Date().getTime()) {
 				return cachedComments.comments;
 			}
 
-			const commentsPromise = this._getCommentsForPathCore(relativePath, remotePath, repoPath);
+			const commentsPromise = this._getCommentsForPathCore(relativePath, remotePath, repo.path);
 			this._commentsByRepoAndPath.set(cacheKey, {
 				expiresAt: new Date().setMinutes(new Date().getMinutes() + 30),
 				comments: commentsPromise

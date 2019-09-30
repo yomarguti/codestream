@@ -1,5 +1,5 @@
 "use strict";
-import { GitRemote } from "git/gitService";
+import { GitRemote, GitRepository } from "git/gitService";
 import * as paths from "path";
 import * as qs from "querystring";
 import { URI } from "vscode-uri";
@@ -21,7 +21,7 @@ import { Arrays, log, lspProvider, Strings } from "../system";
 import {
 	ApiResponse,
 	getOpenedRepos,
-	getRepoRemotePaths,
+	getRemotePath,
 	PullRequestComment,
 	ThirdPartyProviderBase,
 	ThirdPartyProviderSupportsIssues,
@@ -267,10 +267,13 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 
 		const documentMarkers: DocumentMarker[] = [];
 
-		const comments = await this._getCommentsForPath(uri.fsPath);
-		if (comments === undefined) return documentMarkers;
+		const { git, session } = SessionContainer.instance();
 
-		const teamId = SessionContainer.instance().session.teamId;
+		const repo = await git.getRepositoryByFilePath(uri.fsPath);
+		if (repo === undefined) return documentMarkers;
+
+		const comments = await this._getCommentsForPath(uri.fsPath, repo);
+		if (comments === undefined) return documentMarkers;
 
 		const commentsById: { [id: string]: PullRequestComment } = Object.create(null);
 		const markersByCommit = new Map<string, Markerish[]>();
@@ -294,6 +297,8 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 			revision!,
 			markersByCommit
 		);
+
+		const teamId = session.teamId;
 
 		for (const [id, location] of Object.entries(locations.locations)) {
 			const comment = commentsById[id];
@@ -363,19 +368,22 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 	}
 
 	@log()
-	private async _getCommentsForPath(filePath: string): Promise<PullRequestComment[] | undefined> {
+	private async _getCommentsForPath(
+		filePath: string,
+		repo: GitRepository
+	): Promise<PullRequestComment[] | undefined> {
 		const cc = Logger.getCorrelationContext();
 
 		try {
-			const { remotePath, repoPath } = await getRepoRemotePaths(
-				filePath,
+			const remotePath = await getRemotePath(
+				repo,
 				this.getIsMatchingRemotePredicate(),
 				this._knownRepos
 			);
-			if (remotePath == null || repoPath == null) return undefined;
+			if (remotePath == null) return undefined;
 
-			const relativePath = Strings.normalizePath(paths.relative(repoPath, filePath));
-			const cacheKey = `${repoPath}|${relativePath}`;
+			const relativePath = Strings.normalizePath(paths.relative(repo.path, filePath));
+			const cacheKey = `${repo.path}|${relativePath}`;
 
 			const cachedComments = this._commentsByRepoAndPath.get(cacheKey);
 			if (cachedComments !== undefined && cachedComments.expiresAt > new Date().getTime()) {

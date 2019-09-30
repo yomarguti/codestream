@@ -4,7 +4,7 @@ import { URI } from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
 import { User } from "../api/extensions";
 import { SessionContainer } from "../container";
-import { GitRemote } from "../git/gitService";
+import { GitRemote, GitRepository } from "../git/gitService";
 import { Logger } from "../logger";
 import {
 	AddEnterpriseProviderRequest,
@@ -507,14 +507,13 @@ export async function getOpenedRepos<R>(
 	return openRepos;
 }
 
-export async function getRepoRemotePaths<R extends { path: string }>(
-	filePath: string,
+export async function getRemotePath<R extends { path: string }>(
+	repo: GitRepository | undefined,
 	predicate: (remote: GitRemote) => boolean,
 	remoteRepos: Map<string, R>
-): Promise<{ remotePath: string | undefined; repoPath: string | undefined }> {
+): Promise<string | undefined> {
 	try {
-		const repo = await SessionContainer.instance().git.getRepositoryByFilePath(filePath);
-		if (repo === undefined) return { remotePath: undefined, repoPath: undefined };
+		if (repo === undefined) return undefined;
 
 		const remotes = await repo.getRemotes();
 
@@ -525,11 +524,11 @@ export async function getRepoRemotePaths<R extends { path: string }>(
 			}
 		}
 
-		if (remotePath) return { remotePath: remotePath, repoPath: repo.path };
+		if (remotePath) return remotePath;
 
 		const remote = remotes.find(predicate);
-		return { remotePath: remote && remote.path, repoPath: repo.path };
+		return remote && remote.path;
 	} catch (ex) {
-		return { remotePath: undefined, repoPath: undefined };
+		return undefined;
 	}
 }

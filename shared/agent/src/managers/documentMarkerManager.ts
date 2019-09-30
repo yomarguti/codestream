@@ -368,12 +368,7 @@ export class DocumentMarkerManager {
 
 		const cacheKey = `${request.uri.fsPath}|${providers.map(p => p.name).join(",")}`;
 		const cachedMarkers = this._prMarkers.get(cacheKey);
-		if (cachedMarkers !== undefined) {
-			// Once it's completed (and requested), clear the cached request
-			// this._prMarkers.delete(cacheKey);
-
-			return cachedMarkers;
-		}
+		if (cachedMarkers !== undefined) return cachedMarkers;
 
 		// If we don't have the request cached, kick it off, but don't wait (since we want our markers to show as quickly as possible)
 		const promise = this.getPullRequestDocumentMarkersCore(request, cacheKey, providers);
