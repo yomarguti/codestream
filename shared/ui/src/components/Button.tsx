@@ -107,7 +107,7 @@ export const Button = (props: PropsWithChildren<Props>) => {
 	const internals = (
 		<>
 			{props.prependIcon && <ButtonPrepend>{props.prependIcon}</ButtonPrepend>}
-			{props.children}
+			<span style={{ textOverflow: "ellipsis", overflow: "hidden" }}>{props.children}</span>
 			{props.appendIcon && <ButtonAppend>{props.appendIcon}</ButtonAppend>}
 		</>
 	);

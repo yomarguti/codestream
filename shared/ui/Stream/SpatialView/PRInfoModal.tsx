@@ -19,10 +19,9 @@ const VerticallyCentered = styled.div`
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	padding: 20%;
-	@media (max-width: 650px) {
-		padding: 10%;
-	}
+	min-width: 350px;
+	max-width: 450px;
+	margin: 0 auto;
 `;
 
 const Spacer = styled.div`
