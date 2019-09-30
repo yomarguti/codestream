@@ -41,6 +41,7 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 	implements ThirdPartyProviderSupportsIssues, ThirdPartyProviderSupportsPullRequests {
 	private _githubUserId: string | undefined;
 	private _knownRepos = new Map<string, GitHubRepo>();
+	private _isPRApiCompatible: boolean | undefined;
 
 	get displayName() {
 		return "GitHub";
@@ -60,6 +61,17 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 
 	get isEnterprise() {
 		return this.name === "github_enterprise";
+	}
+
+	get isPRApiCompatible() {
+		return this._isPRApiCompatible;
+	}
+
+	private async _checkEnterpriseVersionPRCompatibility() {
+		const response = await this.get<{ installed_version: string }>("/meta");
+
+		const [major, minor] = response.body.installed_version.split(".").map(Number);
+		return major > 2 || (major === 2 && minor >= 15);
 	}
 
 	private _client: GraphQLClient | undefined;
@@ -195,6 +207,12 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 		streamId: string;
 	}): Promise<DocumentMarker[]> {
 		void (await this.ensureConnected());
+
+		if (this.isPRApiCompatible == null) {
+			this._isPRApiCompatible = await this._checkEnterpriseVersionPRCompatibility();
+		}
+
+		if (!this.isPRApiCompatible) return [];
 
 		const documentMarkers: DocumentMarker[] = [];
 
