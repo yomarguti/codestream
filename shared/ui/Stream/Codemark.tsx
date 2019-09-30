@@ -21,7 +21,7 @@ import {
 import { CodemarkType, CSUser, CSMe, CSPost } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
-import { range, areRangesEqual, emptyArray, safe } from "../utils";
+import { range, emptyArray } from "../utils";
 import {
 	getUserByCsId,
 	getTeamMembers,
@@ -40,7 +40,8 @@ import { isNil } from "lodash-es";
 import { CodeStreamState } from "../store";
 import {
 	EditorHighlightRangeRequestType,
-	EditorHighlightRangeRequest
+	EditorHighlightRangeRequest,
+	EditorRevealRangeRequestType
 } from "@codestream/protocols/webview";
 import { setCurrentCodemark } from "../store/context/actions";
 import { RelatedCodemark } from "./RelatedCodemark";
@@ -1159,7 +1160,14 @@ export class Codemark extends React.Component<Props, State> {
 					"cs-hidden": !selected ? hidden : false,
 					selected: selected
 				})}
-				onClick={this.handleClickCodemark}
+				onClick={e => {
+					e.preventDefault();
+					HostApi.instance.send(EditorRevealRangeRequestType, {
+						uri: marker.fileUri,
+						range: marker.range,
+						preserveFocus: true
+					});
+				}}
 				onMouseEnter={this.handleMouseEnterCodemark}
 				onMouseLeave={this.handleMouseLeaveCodemark}
 			>
