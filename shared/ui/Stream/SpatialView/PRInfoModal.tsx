@@ -40,8 +40,8 @@ export const PRInfoModal = (props: { onClose: () => void }) => {
 				if (
 					provider.name === "github" ||
 					provider.name === "github_enterprise" ||
-					provider.name === "bitbucket" ||
-					provider.name === "gitlab"
+					provider.name === "bitbucket"
+					// provider.name === "gitlab"
 				) {
 					const { icon, displayName } = PROVIDER_MAPPINGS[provider.name];
 
@@ -61,7 +61,7 @@ export const PRInfoModal = (props: { onClose: () => void }) => {
 								}
 							}}
 						>
-							<strong>Connect to {displayName}</strong>
+							<strong>Connect to {provider.isEnterprise ? provider.host : displayName}</strong>
 						</Button>
 					);
 				}

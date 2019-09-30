@@ -63,6 +63,7 @@ import Codemark from "./Codemark";
 import { PostEntryPoint } from "../store/context/types";
 import { localStore } from "../utilities/storage";
 import { PRInfoModal } from "./SpatialView/PRInfoModal";
+import { isConnected } from "../store/providers/reducer";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -1498,12 +1499,8 @@ const mapStateToProps = (state: CodeStreamState) => {
 		firstVisibleLine = textEditorVisibleRanges[0].start.line;
 	}
 
-	const currentUserProviders =
-		safe(() => (state.users[state.session.userId!] as CSMe).providerInfo![context.currentTeamId]) ||
-		{};
-
-	const hasPRProvider = Object.keys(currentUserProviders).some(
-		p => p === "github" || p === "gitlab" || p === "bitbucket"
+	const hasPRProvider = ["github", "github_enterprise", "bitbucket"].some(name =>
+		isConnected(state, name)
 	);
 
 	return {
