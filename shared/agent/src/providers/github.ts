@@ -58,6 +58,10 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 		};
 	}
 
+	get isEnterprise() {
+		return this.name === "github_enterprise";
+	}
+
 	private _client: GraphQLClient | undefined;
 	private get client(): GraphQLClient {
 		if (this._client === undefined) {
@@ -65,7 +69,9 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 				throw new Error("No GitHub personal access token could be found");
 			}
 
-			this._client = new GraphQLClient("https://api.github.com/graphql", {
+			const baseUrl = this.isEnterprise ? `${this.getConfig().host}/api` : "https://api.github.com";
+
+			this._client = new GraphQLClient(`${baseUrl}/graphql`, {
 				headers: {
 					Authorization: `Bearer ${this.accessToken}`
 				}
@@ -295,7 +301,14 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 		try {
 			const { remotePath, repoPath } = await getRepoRemotePaths(
 				filePath,
-				r => r.domain === "github.com",
+				r => {
+					if (this.isEnterprise) {
+						const configDomain = URI.parse(this.getConfig().host).authority;
+						return configDomain === r.domain;
+					}
+
+					return r.domain === "github.com";
+				},
 				this._knownRepos
 			);
 			if (remotePath == null || repoPath == null) return undefined;
