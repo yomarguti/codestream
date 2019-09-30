@@ -208,11 +208,13 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 	}): Promise<DocumentMarker[]> {
 		void (await this.ensureConnected());
 
-		if (this.isPRApiCompatible == null) {
-			this._isPRApiCompatible = await this._checkEnterpriseVersionPRCompatibility();
-		}
+		if (this.isEnterprise) {
+			if (this.isPRApiCompatible == null) {
+				this._isPRApiCompatible = await this._checkEnterpriseVersionPRCompatibility();
+			}
 
-		if (!this.isPRApiCompatible) return [];
+			if (!this.isPRApiCompatible) return [];
+		}
 
 		const documentMarkers: DocumentMarker[] = [];
 
