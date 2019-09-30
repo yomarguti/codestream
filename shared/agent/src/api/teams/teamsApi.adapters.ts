@@ -1,5 +1,5 @@
 "use strict";
-import { IAdaptiveCard, IColumn, ITextBlock } from "adaptivecards/lib/schema";
+import { IAdaptiveCard, ITextBlock } from "adaptivecards/lib/schema";
 import { SessionContainer } from "../../container";
 import {
 	CodemarkType,
@@ -14,7 +14,7 @@ import {
 } from "../../protocol/api.protocol";
 import { providerNamesById } from "../../providers/provider";
 import { Strings } from "../../system";
-import { Marker, toActionId, toExternalActionId } from "../extensions";
+import { Marker } from "../extensions";
 
 const defaultCreatedAt = 181886400000;
 const defaultCreator = "0";
@@ -238,7 +238,7 @@ export function toTeamsMessageBody(
 
 	// Add any mentions to a preamble, because mentions aren't supported in attachments
 	let mentions;
-	let preamble;
+	let preamble = "";
 	if (mentionedUserIds != null && mentionedUserIds.length !== 0) {
 		mentions = `${mentionedUserIds.map(u => `@${userInfosById.get(u)!.username}`).join(", ")}: `;
 		preamble = toTeamsText(mentions, mentionedUserIds, userInfosById, userIdsByName, mentionsOut);
