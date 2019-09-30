@@ -292,11 +292,7 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 			});
 		}
 
-		const locations = await MarkerLocationManager.computeCurrentLocations(
-			uri.fsPath,
-			revision!,
-			markersByCommit
-		);
+		const locations = await MarkerLocationManager.computeCurrentLocations(uri, revision!, markersByCommit);
 
 		const teamId = session.teamId;
 

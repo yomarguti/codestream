@@ -238,7 +238,7 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 		}
 
 		const locations = await MarkerLocationManager.computeCurrentLocations(
-			uri.fsPath,
+			uri,
 			revision!,
 			markersByCommit
 		);

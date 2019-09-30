@@ -521,15 +521,17 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 	}
 
 	static async computeCurrentLocations(
-		filePath: string,
+		uri: URI,
 		currentFileRevision: string,
 		markersByCommit: Map<string, Markerish[]>
 	) {
+		const { documents } = Container.instance();
 		const { git } = SessionContainer.instance();
 
 		const locations: MarkerLocationsById = Object.create(null);
 		const orphans: MissingLocationsById = Object.create(null);
 
+		const filePath = uri.fsPath;
 		for (const [revision, markers] of markersByCommit.entries()) {
 			const diff = await git.getDiffBetweenCommits(revision, currentFileRevision, filePath);
 			if (!diff) {
@@ -561,8 +563,44 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			}
 		}
 
-		return {
+		const locationsInCurrentCommit = {
 			locations: locations,
+			orphans: orphans
+		};
+
+		const currentCommitText = await git.getFileContentForRevision(uri, currentFileRevision);
+		if (currentCommitText === undefined) {
+			Logger.warn(`Could not retrieve contents for ${uri}@${currentFileRevision}`);
+			return locationsInCurrentCommit;
+		}
+
+		const doc = documents.get(uri.toString(true));
+		Logger.log(`MARKERS: retrieving current text from document manager`);
+		let currentBufferText = doc && doc.getText();
+		if (currentBufferText == null) {
+			Logger.log(`MARKERS: current text not found in document manager - reading from disk`);
+			currentBufferText = await xfs.readText(filePath);
+		}
+		if (!currentBufferText) {
+			Logger.warn(
+				`MARKERS: Could not retrieve contents for ${uri} from document manager or file system. File does not exist in current branch.`
+			);
+			return locationsInCurrentCommit;
+		}
+
+		const diff = structuredPatch(
+			filePath,
+			filePath,
+			stripEof(eol.auto(currentCommitText)),
+			stripEof(eol.auto(currentBufferText)),
+			"",
+			""
+		);
+
+		const locationsInCurrentBuffer = await calculateLocations(locations, diff);
+
+		return {
+			locations: locationsInCurrentBuffer,
 			orphans: orphans
 		};
 	}
