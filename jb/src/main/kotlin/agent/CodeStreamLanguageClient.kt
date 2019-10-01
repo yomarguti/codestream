@@ -16,6 +16,8 @@ import com.google.gson.annotations.SerializedName
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.ConfigurationParams
 import org.eclipse.lsp4j.MessageActionItem
 import org.eclipse.lsp4j.MessageParams
@@ -87,6 +89,11 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
     @JsonNotification("codestream/didLogout")
     fun didLogout(json: JsonElement) {
         project.webViewService?.postNotification("codestream/didLogout", json)
+    }
+
+    @JsonNotification("codestream/restartRequired")
+    fun restartRequired(json: JsonElement) = GlobalScope.launch {
+        project.agentService?.restart()
     }
 
     override fun workspaceFolders(): CompletableFuture<MutableList<WorkspaceFolder>> {
