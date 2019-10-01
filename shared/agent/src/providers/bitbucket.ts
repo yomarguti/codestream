@@ -292,7 +292,11 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 			});
 		}
 
-		const locations = await MarkerLocationManager.computeCurrentLocations(uri, revision!, markersByCommit);
+		const locations = await MarkerLocationManager.computeCurrentLocations(
+			uri,
+			revision!,
+			markersByCommit
+		);
 
 		const teamId = session.teamId;
 
@@ -383,25 +387,30 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 
 			const cachedComments = this._commentsByRepoAndPath.get(cacheKey);
 			if (cachedComments !== undefined && cachedComments.expiresAt > new Date().getTime()) {
-				return cachedComments.comments;
+				// NOTE: Keep this await here, so any errors are caught here
+				return await cachedComments.comments;
 			}
 
-			const commentsPromise = this._getCommentsForPathCore(relativePath, remotePath);
+			const commentsPromise = this._getCommentsForPathCore(filePath, relativePath, remotePath);
 			this._commentsByRepoAndPath.set(cacheKey, {
 				expiresAt: new Date().setMinutes(new Date().getMinutes() + 30),
 				comments: commentsPromise
 			});
 
-			const comments = await commentsPromise;
-
-			return comments;
+			// Since we aren't cached, we want to just kick of the request to get the comments (which will fire a notification)
+			// This could probably be enhanced to wait for the commentsPromise for a short period of time (maybe 1s?) to see if it will complete, to avoid the notification roundtrip for fast requests
+			return undefined;
 		} catch (ex) {
 			Logger.error(ex, cc);
 			return undefined;
 		}
 	}
 
-	private async _getCommentsForPathCore(relativePath: string, remotePath: string) {
+	private async _getCommentsForPathCore(
+		filePath: string,
+		relativePath: string,
+		remotePath: string
+	) {
 		const pullRequestsResponse = await this.get<GetPullRequestsResponse>(
 			`/repositories/${remotePath}/pullrequests?${qs.stringify({ q: "comment_count>0" })}`
 		);
@@ -409,6 +418,15 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 		const comments = (await Promise.all(
 			pullRequestsResponse.body.values.map(pr => this._getPullRequestComments(pr, relativePath))
 		)).reduce((group, current) => group.concat(current));
+
+		// If we have any comments, fire a notification
+		if (comments.length !== 0) {
+			SessionContainer.instance().documentMarkers.fireDidChangeDocumentMarkers(
+				filePath,
+				"codemarks"
+			);
+		}
+
 		return comments;
 	}
 
@@ -439,7 +457,7 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 						? [destination, comment.inline.from]
 						: [source, comment.inline.to];
 
-						if (line == null) return undefined;
+					if (line == null) return undefined;
 
 					return {
 						commit,

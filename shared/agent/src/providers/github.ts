@@ -334,18 +334,24 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 
 			const cachedComments = this._commentsByRepoAndPath.get(cacheKey);
 			if (cachedComments !== undefined && cachedComments.expiresAt > new Date().getTime()) {
-				return cachedComments.comments;
+				// NOTE: Keep this await here, so any errors are caught here
+				return await cachedComments.comments;
 			}
 
-			const commentsPromise = this._getCommentsForPathCore(relativePath, remotePath, repo.path);
+			const commentsPromise = this._getCommentsForPathCore(
+				filePath,
+				relativePath,
+				remotePath,
+				repo.path
+			);
 			this._commentsByRepoAndPath.set(cacheKey, {
 				expiresAt: new Date().setMinutes(new Date().getMinutes() + 30),
 				comments: commentsPromise
 			});
 
-			const comments = await commentsPromise;
-
-			return comments;
+			// Since we aren't cached, we want to just kick of the request to get the comments (which will fire a notification)
+			// This could probably be enhanced to wait for the commentsPromise for a short period of time (maybe 1s?) to see if it will complete, to avoid the notification roundtrip for fast requests
+			return undefined;
 		} catch (ex) {
 			Logger.error(ex, cc);
 			return undefined;
@@ -353,6 +359,7 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 	}
 
 	private async _getCommentsForPathCore(
+		filePath: string,
 		relativePath: string,
 		remotePath: string,
 		repoPath: string
@@ -439,6 +446,14 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 
 				comments.push(comment);
 			}
+		}
+
+		// If we have any comments, fire a notification
+		if (comments.length !== 0) {
+			SessionContainer.instance().documentMarkers.fireDidChangeDocumentMarkers(
+				filePath,
+				"codemarks"
+			);
 		}
 
 		return comments;

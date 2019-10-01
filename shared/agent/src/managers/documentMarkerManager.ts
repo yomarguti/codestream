@@ -102,7 +102,7 @@ export class DocumentMarkerManager {
 		(uri: string, reason: "document" | "codemarks") => Promise<void>
 	>();
 
-	private async fireDidChangeDocumentMarkers(uri: string, reason: "document" | "codemarks") {
+	async fireDidChangeDocumentMarkers(uri: string, reason: "document" | "codemarks") {
 		// Normalize the uri to vscode style uri formating
 		uri = URI.parse(uri).toString();
 
@@ -352,10 +352,11 @@ export class DocumentMarkerManager {
 		}
 	}
 
-	private _prMarkers = new Map<string, Promise<DocumentMarker[]>>();
-
 	@log()
-	async getPullRequestDocumentMarkers(request: {
+	async getPullRequestDocumentMarkers({
+		uri,
+		streamId
+	}: {
 		uri: URI;
 		streamId: string | undefined;
 	}): Promise<DocumentMarker[]> {
@@ -366,29 +367,6 @@ export class DocumentMarkerManager {
 			ThirdPartyProviderSupportsPullRequests => p.supportsPullRequests());
 		if (providers.length === 0) return emptyArray;
 
-		const cacheKey = `${request.uri.fsPath}|${providers.map(p => p.name).join(",")}`;
-		const cachedMarkers = this._prMarkers.get(cacheKey);
-		if (cachedMarkers !== undefined) return cachedMarkers;
-
-		// If we don't have the request cached, kick it off, but don't wait (since we want our markers to show as quickly as possible)
-		const promise = this.getPullRequestDocumentMarkersCore(request, cacheKey, providers);
-		this._prMarkers.set(cacheKey, promise);
-
-		return emptyArray;
-	}
-
-	@log({ args: { 1: () => false } })
-	private async getPullRequestDocumentMarkersCore(
-		{
-			uri,
-			streamId
-		}: {
-			uri: URI;
-			streamId: string | undefined;
-		},
-		cacheKey: string,
-		providers: (ThirdPartyProvider & ThirdPartyProviderSupportsPullRequests)[]
-	) {
 		const { git } = SessionContainer.instance();
 
 		const [repo, revision] = await Promise.all([
@@ -405,21 +383,15 @@ export class DocumentMarkerManager {
 				streamId: streamId
 			})
 		);
+
 		for await (const response of requests) {
 			markers.push(...response);
 		}
 
-		// If we have any markers, notify the webview, so it can request them again
-		if (markers.length !== 0) {
-			this.fireDidChangeDocumentMarkers(uri.toString(true), "codemarks");
-
-			// Once the request is completed and we've given the webview some time to request markers again, clear the cached request
-			setTimeout(() => {
-				this._prMarkers.delete(cacheKey);
-			}, 10000);
-		} else {
-			this._prMarkers.delete(cacheKey);
-		}
+		// // If we have any markers, notify the webview, so it can request them again
+		// if (markers.length !== 0) {
+		// 	this.fireDidChangeDocumentMarkers(uri.toString(true), "codemarks");
+		// }
 
 		return markers;
 	}
