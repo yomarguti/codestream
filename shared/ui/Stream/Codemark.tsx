@@ -21,7 +21,7 @@ import {
 import { CodemarkType, CSUser, CSMe, CSPost } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
-import { range, emptyArray } from "../utils";
+import { range, emptyArray, forceAsLine } from "../utils";
 import {
 	getUserByCsId,
 	getTeamMembers,
@@ -562,7 +562,7 @@ export class Codemark extends React.Component<Props, State> {
 			this._isHighlightedInTextEditor = highlight;
 			this._sendHighlightRequest({
 				uri: this.props.marker.fileUri,
-				range: this.props.marker.range,
+				range: forceAsLine(this.props.marker.range),
 				highlight: highlight
 			});
 		} else {
@@ -570,7 +570,7 @@ export class Codemark extends React.Component<Props, State> {
 				this._isHighlightedInTextEditor = highlight;
 				this._sendHighlightRequest({
 					uri,
-					range,
+					range: forceAsLine(range),
 					highlight: highlight
 				});
 			}
