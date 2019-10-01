@@ -454,7 +454,7 @@ export class SimpleStream extends Component {
 				} else if (forEnterprise) {
 					// otherwise if it's for an enterprise provider, configure for enterprise
 					action = () => {
-						if (name === "github_enterprise") {
+						/* if (name === "github_enterprise") {
 							this.setState({
 								propsForPrePRProviderInfoModal: {
 									providerName: name,
@@ -464,7 +464,9 @@ export class SimpleStream extends Component {
 									onClose: () => this.setState({ propsForPrePRProviderInfoModal: undefined })
 								}
 							});
-						} else this.setActivePanel(`configure-enterprise-${name}-${providerId}-true`);
+						} else */ this.setActivePanel(
+							`configure-enterprise-${name}-${providerId}-true`
+						);
 					};
 				} else {
 					// otherwise it's just a simple oauth redirect

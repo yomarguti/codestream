@@ -38,8 +38,8 @@ export const PRInfoModal = (props: { onClose: () => void }) => {
 			mapFilter(Object.values(allProviders), (provider: ThirdPartyProviderConfig) => {
 				if (
 					provider.name === "github" ||
-					provider.name === "github_enterprise" ||
 					provider.name === "bitbucket"
+					// provider.name === "github_enterprise" ||
 					// provider.name === "gitlab"
 				) {
 					const { icon, displayName } = PROVIDER_MAPPINGS[provider.name];
@@ -87,8 +87,8 @@ export const PRInfoModal = (props: { onClose: () => void }) => {
 					<CSText>Select the service you use for pull requests below to get started.</CSText>
 					<Spacer />
 					<ButtonGroup direction="column">{buttons}</ButtonGroup>
-					<Spacer />
-					<CSText as="small">* Requires GitHub Enterprise version 2.17 or higher</CSText>
+
+					{/* <Spacer /><CSText as="small">* Requires GitHub Enterprise version 2.17 or higher</CSText> */}
 				</BoxedContent>
 			</VerticallyCentered>
 		</Modal>
