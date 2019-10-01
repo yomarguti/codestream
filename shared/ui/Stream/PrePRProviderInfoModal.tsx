@@ -12,10 +12,9 @@ const VerticallyCentered = styled.div`
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	padding: 20%;
-	@media (max-width: 650px) {
-		padding: 10%;
-	}
+	min-width: 350px;
+	max-width: 450px;
+	margin: 0 auto;
 	.octicon {
 		vertical-align: middle;
 	}
@@ -29,6 +28,7 @@ export interface PrePRProviderInfoModalProps {
 	onClose: () => void;
 	providerName: string;
 	action: () => void;
+	helpText?: string;
 }
 
 export const PrePRProviderInfoModal = (props: PrePRProviderInfoModalProps) => {
@@ -61,7 +61,7 @@ export const PrePRProviderInfoModal = (props: PrePRProviderInfoModalProps) => {
 					</CSText>
 					<CSText>
 						Display comments on merged-in pull requests right along side the code blocks they refer
-						to.
+						to. {props.helpText ? `(${props.helpText})` : null}
 					</CSText>
 					<Spacer />
 					<Button fillParent prependIcon={<Icon name={icon!} />} onClick={onClickConnect}>

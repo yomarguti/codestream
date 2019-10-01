@@ -458,6 +458,7 @@ export class SimpleStream extends Component {
 							this.setState({
 								propsForPrePRProviderInfoModal: {
 									providerName: name,
+									helpText: "Requires GitHub Enterprise version 2.17 or higher",
 									action: () =>
 										this.setActivePanel(`configure-enterprise-${name}-${providerId}-true`),
 									onClose: () => this.setState({ propsForPrePRProviderInfoModal: undefined })
