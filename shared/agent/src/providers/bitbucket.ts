@@ -439,6 +439,8 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 						? [destination, comment.inline.from]
 						: [source, comment.inline.to];
 
+						if (line == null) return undefined;
+
 					return {
 						commit,
 						id: comment.id,
