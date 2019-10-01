@@ -1,5 +1,6 @@
 import React from "react";
 import Button from "./Button";
+import Tooltip from "./Tooltip";
 import { HostApi } from "../webview-api";
 import { ShellPromptFolderRequestType } from "../ipc/host.protocol";
 import { MapReposRequestType, RepoMap } from "@codestream/protocols/agent";
@@ -41,9 +42,8 @@ export class LocateRepoButton extends React.Component<Props, State> {
 					await this.props.callback(result && result.success);
 				}
 			}
-		}
-		catch (e) { }
-		finally {
+		} catch (e) {
+		} finally {
 			if (this.mounted) this.setState({ locateLoading: false });
 		}
 	}
@@ -58,17 +58,18 @@ export class LocateRepoButton extends React.Component<Props, State> {
 
 	render() {
 		return (
-			<Button
-				className="btn-locate-repo"
-				loading={this.state.locateLoading}
-				title="Locate this repository on your file system"
-				onClick={event => {
-					event.stopPropagation();
-					this.locateCode();
-				}}
-			>
-				Locate...
-			</Button>
+			<Tooltip title="Locate this repository on your file system" delay={1} placement="topRight">
+				<Button
+					className="btn-locate-repo"
+					loading={this.state.locateLoading}
+					onClick={event => {
+						event.stopPropagation();
+						this.locateCode();
+					}}
+				>
+					Locate...
+				</Button>
+			</Tooltip>
 		);
 	}
 }
