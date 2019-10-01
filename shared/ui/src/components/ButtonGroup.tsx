@@ -7,11 +7,11 @@ interface Props {
 
 export const ButtonGroup = styled.div<Props>(
 	props => `
-	width: 100%;
+	width: inherit;
 	display: flex;
 	justify-content: space-between;
 	${StyledButton} {
-		margin: 5px;
+		margin: 5px 0;
 		justify-content: start;
 	}
 	${getGroupStyles(props.direction)}

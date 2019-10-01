@@ -60,7 +60,12 @@ export const PRInfoModal = (props: { onClose: () => void }) => {
 								}
 							}}
 						>
-							<strong>Connect to {provider.isEnterprise ? provider.host : displayName}</strong>
+							<strong>
+								Connect to{" "}
+								{provider.isEnterprise
+									? `${provider.host}*`
+									: `${displayName}${provider.forEnterprise ? "*" : ""}`}
+							</strong>
 						</Button>
 					);
 				}
@@ -82,6 +87,8 @@ export const PRInfoModal = (props: { onClose: () => void }) => {
 					<CSText>Select the service you use for pull requests below to get started.</CSText>
 					<Spacer />
 					<ButtonGroup direction="column">{buttons}</ButtonGroup>
+					<Spacer />
+					<CSText as="small">* Requires GitHub Enterprise version 2.17 or higher</CSText>
 				</BoxedContent>
 			</VerticallyCentered>
 		</Modal>
