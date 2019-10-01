@@ -40,6 +40,8 @@ import {
 	openPanel,
 	setChannelFilter,
 	setCodemarkTagFilter,
+	setCodemarkBranchFilter,
+	setCodemarkAuthorFilter,
 	setCodemarkFileFilter,
 	setCodemarkTypeFilter
 } from "../store/context/actions";
@@ -68,6 +70,8 @@ export {
 	setCodemarkTypeFilter,
 	setCodemarkFileFilter,
 	setCodemarkTagFilter,
+	setCodemarkBranchFilter,
+	setCodemarkAuthorFilter,
 	setChannelFilter
 };
 export { connectProvider, disconnectProvider } from "../store/providers/actions";

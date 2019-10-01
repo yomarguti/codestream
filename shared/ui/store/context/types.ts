@@ -5,6 +5,8 @@ export enum ContextActionsType {
 	SetCodemarkFileFilter = "@context/SetCodemarkFileFilter",
 	SetCodemarkTypeFilter = "@context/SetCodemarkTypeFilter",
 	SetCodemarkTagFilter = "@context/SetCodemarkTagFilter",
+	SetCodemarkBranchFilter = "@context/SetCodemarkBranchFilter",
+	SetCodemarkAuthorFilter = "@context/SetCodemarkAuthorFilter",
 	SetChannelFilter = "@context/SetChannelFilter",
 	SetContext = "@context/Set",
 	OpenPanel = "@context/OpenPanel",
@@ -33,6 +35,8 @@ export interface ContextState extends WebviewContext {
 	codemarkFileFilter: string; // TODO: specify types
 	codemarkTypeFilter: string;
 	codemarkTagFilter: string;
+	codemarkBranchFilter: string;
+	codemarkAuthorFilter: string;
 
 	codemarksFileViewStyle: "list" | "inline";
 	codemarksShowArchived: boolean;

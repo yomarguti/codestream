@@ -30,18 +30,24 @@ export default class Menu extends Component {
 
 	repositionIfNecessary() {
 		if (this.props && this.props.target) {
+			const align = this.props.align;
 			const rect = this.props.target.getBoundingClientRect();
 			this._div.style.top = rect.top + "px";
 
-			if (this.props.align === "left") {
+			if (align === "left") {
 				// const left = rect.right - this._div.offsetWidth + 5;
 				// this._div.style.left = left + "px";
-			} else if (this.props.align === "center") {
+			} else if (align === "center") {
 				const targetMiddle = (rect.right + rect.left) / 2;
 				const left = targetMiddle - this._div.offsetWidth / 2 + 5;
-				if (left < 10) this._div.style.left = "10px";
+				// if it's too far off the right of the window
+				if (left + this._div.offsetWidth + 10 > window.innerWidth) this._div.style.right = "10px";
+				// if it's too far to the left
+				else if (left < 10) this._div.style.left = "10px";
+				// normal case: reposition centrally
 				else this._div.style.left = left + "px";
 			} else {
+				// right
 				const left = rect.right - this._div.offsetWidth + 5;
 				this._div.style.left = left + "px";
 			}

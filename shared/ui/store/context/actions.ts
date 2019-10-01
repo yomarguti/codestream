@@ -40,6 +40,12 @@ export const setChannelsMuteAll = (enabled: boolean) =>
 export const setCodemarkTagFilter = (value: string) =>
 	action(ContextActionsType.SetCodemarkTagFilter, value);
 
+export const setCodemarkAuthorFilter = (value: string) =>
+	action(ContextActionsType.SetCodemarkAuthorFilter, value);
+
+export const setCodemarkBranchFilter = (value: string) =>
+	action(ContextActionsType.SetCodemarkBranchFilter, value);
+
 export const setCodemarkFileFilter = (value: string) =>
 	action(ContextActionsType.SetCodemarkFileFilter, value);
 

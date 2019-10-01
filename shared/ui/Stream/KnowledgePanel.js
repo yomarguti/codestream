@@ -9,6 +9,7 @@ import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
 import Codemark from "./Codemark";
+import Headshot from "./Headshot";
 import { HostApi } from "../webview-api";
 import { includes as _includes, sortBy as _sortBy } from "lodash-es";
 import { setCurrentStream, setCurrentCodemark } from "../store/context/actions";
@@ -181,6 +182,17 @@ export class SimpleKnowledgePanel extends Component {
 		return tags.includes(tagFilter);
 	};
 
+	codemarkOnBranch = (codemark, branchFilter) => {
+		if (branchFilter === "all") return true;
+
+		return (
+			codemark.markers.filter(
+				marker =>
+					branchFilter === marker.branchWhenCreated || branchFilter === marker.commitHashWhenCreated
+			).length > 0
+		);
+	};
+
 	render() {
 		if (this.state.isLoading) return null;
 
@@ -195,7 +207,12 @@ export class SimpleKnowledgePanel extends Component {
 			fileStreamIdToFilterFor,
 			fileFilter,
 			typeFilter,
-			tagFilter
+			tagFilter,
+			authorFilter,
+			branchFilter,
+			commitArray,
+			branchArray,
+			authorArray
 		} = this.props;
 		const { thisRepo } = this.state;
 
@@ -218,7 +235,9 @@ export class SimpleKnowledgePanel extends Component {
 			const codemarkType = codemark.type || "comment";
 			if (codemark.deactivated) return null;
 			if (typeFilter !== "all" && codemarkType !== typeFilter) return null;
+			if (authorFilter !== "all" && codemark.creatorId !== authorFilter) return null;
 			if (!this.codemarkHasTag(codemark, tagFilter)) return null;
+			if (!this.codemarkOnBranch(codemark, branchFilter)) return null;
 
 			const codeBlock = codemark.markers && codemark.markers.length && codemark.markers[0];
 
@@ -286,7 +305,7 @@ export class SimpleKnowledgePanel extends Component {
 		// 	{ label: "In Current File Only", action: "current" }
 		// ];
 
-		let tagMenuItems = [{ label: "Any Tag", action: "all" }];
+		let tagMenuItems = [{ label: "Any Tag", action: "all" }, { label: "-" }];
 		tagMenuItems = tagMenuItems.concat(
 			this.props.teamTagsArray.map(tag => {
 				let className = "tag-menu-block wide";
@@ -307,6 +326,55 @@ export class SimpleKnowledgePanel extends Component {
 					action: tag.id
 				};
 			})
+		);
+
+		let branchMenuItems = [{ label: "Any Branch", action: "all" }, { label: "-" }];
+		branchMenuItems = branchMenuItems.concat(
+			Object.keys(branchArray)
+				.sort()
+				.map(branch => {
+					return {
+						label: (
+							<span className="branch-menu-selector">
+								<Icon name="git-branch" /> {branch}
+							</span>
+						),
+						searchLabel: branch,
+						action: branch
+					};
+				}),
+			{ label: "-" },
+			Object.keys(commitArray)
+				.sort((a, b) => commitArray[a] - commitArray[b])
+				.map(commit => {
+					return {
+						label: (
+							<span className="branch-menu-selector">
+								<Icon name="git-commit" /> {commit.substr(0, 8)}
+							</span>
+						),
+						searchLabel: commit,
+						action: commit
+					};
+				})
+		);
+
+		let authorMenuItems = [{ label: "Anyone", action: "all" }, { label: "-" }];
+		authorMenuItems = authorMenuItems.concat(
+			Object.values(authorArray)
+				// .sort((a, b) => a.fullName )
+				.map(author => {
+					return {
+						label: (
+							<span className="branch-menu-selector">
+								<Headshot size={18} person={author} />
+								{author.name}
+							</span>
+						),
+						searchLabel: author.name,
+						action: author.id
+					};
+				})
 		);
 
 		// console.log("SELECTED AG FILTER: ", tagFilter);
@@ -332,10 +400,22 @@ export class SimpleKnowledgePanel extends Component {
 						items={typeMenuItems}
 					/>
 					<Filter
+						onValue={this.props.setCodemarkAuthorFilter}
+						selected={authorFilter}
+						labels={this.props.authorFiltersLabelsLower}
+						items={authorMenuItems}
+					/>
+					<Filter
 						onValue={this.props.setCodemarkTagFilter}
 						selected={tagFilter}
 						labels={this.props.tagFiltersLabelsLower}
 						items={tagMenuItems}
+					/>
+					<Filter
+						onValue={this.props.setCodemarkBranchFilter}
+						selected={branchFilter}
+						labels={this.props.branchFiltersLabelsLower}
+						items={branchMenuItems}
 					/>
 				</div>
 				<ScrollBox>
@@ -449,7 +529,7 @@ export class SimpleKnowledgePanel extends Component {
 }
 
 const mapStateToProps = state => {
-	const { context, teams } = state;
+	const { context, teams, users } = state;
 
 	let fileNameToFilterFor;
 	let fileStreamIdToFilterFor;
@@ -463,6 +543,10 @@ const mapStateToProps = state => {
 		fileStreamIdToFilterFor = context.lastFileStreamId;
 	}
 
+	const codemarks = codemarkSelectors.getTypeFilteredCodemarks(state);
+	const usernames = userSelectors.getUsernames(state);
+	const usernameMap = userSelectors.getUsernamesById(state);
+
 	const teamTagsArray = userSelectors.getTeamTagsArray(state);
 	let tagFiltersLabelsLower = { all: "with any tag" };
 	teamTagsArray.map(tag => {
@@ -474,18 +558,69 @@ const mapStateToProps = state => {
 		);
 	});
 
+	let branchFiltersLabelsLower = { all: "on any branch" };
+	let authorFiltersLabelsLower = { all: "by anyone" };
+	let branchArray = {};
+	let commitArray = {};
+	let authorArray = {};
+	codemarks.forEach(codemark => {
+		const { markers, createdAt, creatorId } = codemark;
+		const author = users[creatorId];
+		author.name = author.fullName || author.username || author.email;
+		authorArray[creatorId] = author;
+		authorFiltersLabelsLower[creatorId] = (
+			<span className="headshot-wrapper">
+				by &nbsp;
+				<Headshot size={18} person={author} />
+				{author.name}
+			</span>
+		);
+		markers.forEach(marker => {
+			const { branchWhenCreated: branch, commitHashWhenCreated: commit } = marker;
+			if (branch) {
+				// keep track of the most recent comment on the branch
+				branchArray[branch] = Math.max(createdAt, branchArray[branch]);
+				branchFiltersLabelsLower[branch] = (
+					<span>
+						on &nbsp;
+						<Icon name="git-branch" />
+						&nbsp;{branch}
+					</span>
+				);
+			}
+			if (commit) {
+				// keep track of the most recent comment on the commit
+				commitArray[commit] = Math.max(createdAt, commitArray[commit]);
+				branchFiltersLabelsLower[commit] = (
+					<span>
+						on &nbsp;
+						<Icon name="git-commit" />
+						&nbsp;{commit.substr(0, 8)}
+					</span>
+				);
+			}
+		});
+	});
+
 	return {
-		usernames: userSelectors.getUsernames(state),
 		noCodemarksAtAll: !codemarkSelectors.teamHasCodemarks(state),
-		codemarks: codemarkSelectors.getTypeFilteredCodemarks(state),
+		usernames,
+		codemarks,
 		team: teams[context.currentTeamId],
 		fileFilter: context.codemarkFileFilter,
 		typeFilter: context.codemarkTypeFilter,
 		tagFilter: context.codemarkTagFilter,
+		authorFilter: context.codemarkAuthorFilter,
+		branchFilter: context.codemarkBranchFilter,
 		fileNameToFilterFor,
 		fileStreamIdToFilterFor,
 		teamTagsArray,
-		tagFiltersLabelsLower
+		tagFiltersLabelsLower,
+		branchArray,
+		commitArray,
+		authorArray,
+		branchFiltersLabelsLower,
+		authorFiltersLabelsLower
 	};
 };
 

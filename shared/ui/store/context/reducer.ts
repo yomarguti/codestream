@@ -26,6 +26,8 @@ const initialState: ContextState = {
 	codemarkFileFilter: "all",
 	codemarkTypeFilter: "all",
 	codemarkTagFilter: "all",
+	codemarkBranchFilter: "all",
+	codemarkAuthorFilter: "all",
 	codemarksFileViewStyle: "inline",
 	codemarksShowArchived: false,
 	codemarksShowResolved: false,
@@ -65,6 +67,10 @@ export function reduceContext(
 
 		case ContextActionsType.SetCodemarkTagFilter:
 			return { ...state, codemarkTagFilter: action.payload };
+		case ContextActionsType.SetCodemarkBranchFilter:
+			return { ...state, codemarkBranchFilter: action.payload };
+		case ContextActionsType.SetCodemarkAuthorFilter:
+			return { ...state, codemarkAuthorFilter: action.payload };
 		case ContextActionsType.SetCodemarkFileFilter:
 			return { ...state, codemarkFileFilter: action.payload };
 		case ContextActionsType.SetCodemarkTypeFilter:
