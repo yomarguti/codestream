@@ -1153,6 +1153,10 @@ export class Codemark extends React.Component<Props, State> {
 
 	renderFromExternalContent() {
 		const { hidden, selected, author, marker } = this.props;
+
+		const pullOrMergeRequestText =
+			marker.externalContent!.provider.name === "Bitbucket" ? "merge" : "pull";
+
 		return (
 			<div
 				className={cx("codemark inline", {
@@ -1178,7 +1182,8 @@ export class Codemark extends React.Component<Props, State> {
 								<span style={{ paddingRight: "5px" }}>
 									<Icon name={marker.externalContent!.provider.icon || "codestream"} />
 								</span>
-								{author.username} commented on pull request {marker.externalContent!.subhead}
+								{author.username} commented on {pullOrMergeRequestText} request{" "}
+								{marker.externalContent!.subhead}
 								<Timestamp time={marker.createdAt} />
 							</div>
 							{/* <div className="right">
