@@ -151,23 +151,7 @@ namespace CodeStream.VisualStudio {
 
 											Log.Debug(nameof(_sessionService.WebViewDidInitialize));
 											break;
-										}
-
-									case RestartRequiredNotificationType.MethodName: {
-											try {
-												var languageServerClientManager = _componentModel.GetService<ILanguageServerClientManager>();
-												if (languageServerClientManager != null) {
-													await languageServerClientManager.RestartAsync();
-												}
-												else {
-													Log.IsNull(nameof(ILanguageServerClientManager));
-												}
-											}
-											catch(Exception ex) {
-												Log.Error(ex, nameof(RestartRequiredNotificationType));
-											}
-											break;
-										}
+										}								
 									case WebviewDidChangeContextNotificationType.MethodName: {
 											var @params = message.Params.ToObject<WebviewDidChangeContextNotification>();
 											if (@params != null) {

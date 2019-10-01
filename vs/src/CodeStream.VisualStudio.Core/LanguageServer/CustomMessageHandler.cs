@@ -223,6 +223,29 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 			}
 		}
 
+		[JsonRpcMethod(RestartRequiredNotificationType.MethodName)]
+		public async System.Threading.Tasks.Task RestartRequiredAsync() {
+			using (Log.CriticalOperation($"{nameof(RestartRequiredAsync)} Method={RestartRequiredNotificationType.MethodName}", Serilog.Events.LogEventLevel.Debug)) {
+				try {
+					var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+					Assumes.Present(componentModel);
+
+					var languageServerClientManager = componentModel.GetService<ILanguageServerClientManager>();
+					if (languageServerClientManager != null) {
+						await languageServerClientManager.RestartAsync();
+					}
+					else {
+						Log.IsNull(nameof(ILanguageServerClientManager));
+					}
+				}
+				catch (Exception ex) {
+					Log.Error(ex, $"Problem with {nameof(RestartRequiredAsync)}");
+				}
+			}
+
+			await System.Threading.Tasks.Task.CompletedTask;
+		}
+
 		//[JsonRpcMethod(DidStartLoginNotificationType.MethodName)]
 		//public void OnDidStartLogin() {
 		//	using (Log.CriticalOperation($"{nameof(OnDidStartLogin)} Method={DidStartLoginNotificationType.MethodName}", Serilog.Events.LogEventLevel.Debug)) {
