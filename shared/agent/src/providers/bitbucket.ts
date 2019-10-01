@@ -422,7 +422,7 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 		// If we have any comments, fire a notification
 		if (comments.length !== 0) {
 			SessionContainer.instance().documentMarkers.fireDidChangeDocumentMarkers(
-				filePath,
+				URI.file(filePath).toString(),
 				"codemarks"
 			);
 		}
