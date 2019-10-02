@@ -3,6 +3,8 @@ import * as actions from "./actions";
 import { ProvidersState, ProvidersActionsType } from "./types";
 import { CodeStreamState } from "..";
 import { CSMe } from "@codestream/protocols/api";
+import { mapFilter } from "@codestream/webview/utils";
+import { ThirdPartyProviderConfig } from "@codestream/protocols/agent";
 
 type ProviderActions = ActionType<typeof actions>;
 
@@ -43,4 +45,11 @@ export const isConnected = (state: CodeStreamState, providerName: string) => {
 			const info = currentUser.providerInfo[currentTeamId][providerName];
 			return info != undefined && info.accessToken != undefined;
 	}
+};
+
+export const getConnectedProviderNames = (state: CodeStreamState) => {
+	return mapFilter<ThirdPartyProviderConfig, string>(
+		Object.values(state.providers),
+		providerConfig => isConnected(state, providerConfig.name) && providerConfig.name
+	);
 };
