@@ -80,9 +80,7 @@ export const PRInfoModal = (props: { onClose: () => void }) => {
 			<VerticallyCentered>
 				<BoxedContent title="Pull Requests">
 					<CSText>
-						Make comments on merged-in pull requests a valuable part of your team's knowledge base
-						by displaying them right along side the code blocks they refer to, just like codemarks
-						you create on CodeStream.
+						Display merged-in pull request code comments right alongside the code blocks they refer to.
 					</CSText>
 					<CSText>Select the service you use for pull requests below to get started.</CSText>
 					<Spacer />
