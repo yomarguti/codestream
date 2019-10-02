@@ -67,6 +67,7 @@
 <h5>Fixed</h5>
 <ul>
     <li>Fixes an issue with changing issue-tracking services via the dropdown on the codemark form</li>
+    <li>Fixes an issue with Codemark creation in Rider</li>
 </ul>
 <h4 id="4_0_0">4.0.0</h4>
 <h5>Added</h5>
