@@ -565,7 +565,7 @@ const mapStateToProps = state => {
 	let authorArray = {};
 	codemarks.forEach(codemark => {
 		const { markers, createdAt, creatorId } = codemark;
-		const author = users[creatorId];
+		const author = userSelectors.getUserByCsId(users, creatorId);
 		author.name = author.fullName || author.username || author.email;
 		authorArray[creatorId] = author;
 		authorFiltersLabelsLower[creatorId] = (
