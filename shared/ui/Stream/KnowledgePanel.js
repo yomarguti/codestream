@@ -372,7 +372,7 @@ export class SimpleKnowledgePanel extends Component {
 							</span>
 						),
 						searchLabel: author.name,
-						action: author.id
+						action: author.codestreamId
 					};
 				})
 		);
