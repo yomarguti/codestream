@@ -59,6 +59,15 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="4_0_1">4.0.1</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds the ability to filter codemarks on the Search tab by author, branch or commit</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue with changing issue-tracking services via the dropdown on the codemark form</li>
+</ul>
 <h4 id="4_0_0">4.0.0</h4>
 <h5>Added</h5>
 <ul>
