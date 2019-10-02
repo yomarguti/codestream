@@ -41,10 +41,10 @@ class CodeStreamComponent(val project: Project) : Disposable {
 
     init {
         logger.info("Initializing CodeStream")
+        initEditorFactoryListener()
         ApplicationManager.getApplication().invokeLater {
             initToolWindow()
             initWindowFocusListener()
-            initEditorFactoryListener()
             initMessageBusSubscriptions()
             initStatusBarWidget()
             initUnreadsListener()
