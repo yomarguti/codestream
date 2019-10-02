@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { injectIntl } from "react-intl";
 import { connect } from "react-redux";
 import { closePanel } from "./actions";
-import { configureProvider, sendIssueProviderConnected } from "../store/providers/actions";
+import { configureProvider } from "../store/providers/actions";
 import { setIssueProvider } from "../store/context/actions";
 import CancelButton from "./CancelButton";
 import Tooltip from "./Tooltip";
@@ -46,14 +46,19 @@ export class ConfigureYouTrackPanel extends Component {
 
 		let url = baseUrl.trim().toLowerCase();
 		url = url.match(/^http/) ? url : `https://${url}`;
-		url = url.replace(/\/*$/g, '');
+		url = url.replace(/\/*$/g, "");
 
 		// for YouTrack, configuring is as good as connecting, since we are letting the user
-		// set the access token ... sending the fourth argument as true here lets the 
+		// set the access token ... sending the fourth argument as true here lets the
 		// configureProvider function know that they can mark YouTrack as connected as soon
 		// as the access token entered by the user has been saved to the server
-		this.props.configureProvider(providerId, { baseUrl: url, token }, this.props.fromMenu, true);
-		
+		this.props.configureProvider(
+			providerId,
+			{ baseUrl: url, token },
+			true,
+			this.props.originLocation
+		);
+
 		this.props.closePanel();
 	};
 
@@ -109,8 +114,17 @@ export class ConfigureYouTrackPanel extends Component {
 						{this.renderError()}
 						<div id="controls">
 							<div id="configure-youtrack-controls" className="control-group">
-								<label><strong>{providerName} Base URL</strong></label>
-								<label>Please provide the Base URL used by your team to access YouTrack. This can be found under your <a href="https://www.jetbrains.com/help/youtrack/incloud/Domain-Settings.html">Domain Settings</a>.</label>
+								<label>
+									<strong>{providerName} Base URL</strong>
+								</label>
+								<label>
+									Please provide the Base URL used by your team to access YouTrack. This can be
+									found under your{" "}
+									<a href="https://www.jetbrains.com/help/youtrack/incloud/Domain-Settings.html">
+										Domain Settings
+									</a>
+									.
+								</label>
 								<input
 									className="input-text control"
 									type="text"
@@ -126,7 +140,7 @@ export class ConfigureYouTrackPanel extends Component {
 								/>
 								{this.renderBaseUrlHelp()}
 							</div>
-							<br/>
+							<br />
 							{false && (
 								<div id="username-controls" className="control-group">
 									<label>{providerName} Username</label>
@@ -141,8 +155,16 @@ export class ConfigureYouTrackPanel extends Component {
 								</div>
 							)}
 							<div id="token-controls" className="control-group">
-								<label><strong>{providerName} Permanent Token</strong></label>
-								<label>Please provide a <a href="https://www.jetbrains.com/help/youtrack/standalone/Manage-Permanent-Token.html">permanent token</a> we can use to access your YouTrack projects and issues.</label>
+								<label>
+									<strong>{providerName} Permanent Token</strong>
+								</label>
+								<label>
+									Please provide a{" "}
+									<a href="https://www.jetbrains.com/help/youtrack/standalone/Manage-Permanent-Token.html">
+										permanent token
+									</a>{" "}
+									we can use to access your YouTrack projects and issues.
+								</label>
 								<input
 									className="input-text control"
 									type="text"
@@ -189,5 +211,5 @@ const mapStateToProps = ({ providers, context, teams }) => {
 
 export default connect(
 	mapStateToProps,
-	{ closePanel, configureProvider, sendIssueProviderConnected, setIssueProvider }
+	{ closePanel, configureProvider, setIssueProvider }
 )(injectIntl(ConfigureYouTrackPanel));

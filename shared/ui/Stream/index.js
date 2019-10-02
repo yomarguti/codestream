@@ -446,11 +446,11 @@ export class SimpleStream extends Component {
 					// if you have a token and are connected to the provider,
 					// offer to disconnect
 					label = `Disconnect ${displayName}`;
-					action = () => this.props.disconnectProvider(providerId, true);
+					action = () => this.props.disconnectProvider(providerId, "Global Nav");
 				} else if (needsConfigure) {
 					// otherwise, if it's a provider that needs to be pre-configured,
 					// bring up the custom popup for configuring it
-					action = () => this.setActivePanel(`configure-provider-${name}-${providerId}-true`);
+					action = () => this.setActivePanel(`configure-provider-${name}-${providerId}-Global Nav`);
 				} else if (forEnterprise) {
 					// otherwise if it's for an enterprise provider, configure for enterprise
 					action = () => {
@@ -465,7 +465,7 @@ export class SimpleStream extends Component {
 								}
 							});
 						} else */ this.setActivePanel(
-							`configure-enterprise-${name}-${providerId}-true`
+							`configure-enterprise-${name}-${providerId}-Global Nav`
 						);
 					};
 				} else {
@@ -475,11 +475,11 @@ export class SimpleStream extends Component {
 							this.setState({
 								propsForPrePRProviderInfoModal: {
 									providerName: name,
-									action: () => this.props.connectProvider(providerId, true),
+									action: () => this.props.connectProvider(providerId, "Global Nav"),
 									onClose: () => this.setState({ propsForPrePRProviderInfoModal: undefined })
 								}
 							});
-					} else action = () => this.props.connectProvider(providerId, true);
+					} else action = () => this.props.connectProvider(providerId, "Global Nav");
 				}
 				menuItems.push({
 					key: providerId,
@@ -868,25 +868,25 @@ export class SimpleStream extends Component {
 					{activePanel.startsWith("configure-provider-youtrack-") && (
 						<ConfigureYouTrackPanel
 							providerId={configureProviderInfo[3]}
-							fromMenu={configureProviderInfo[4]}
+							originLocation={configureProviderInfo[4]}
 						/>
 					)}
 					{activePanel.startsWith("configure-provider-azuredevops-") && (
 						<ConfigureAzureDevOpsPanel
 							providerId={configureProviderInfo[3]}
-							fromMenu={configureProviderInfo[4]}
+							originLocation={configureProviderInfo[4]}
 						/>
 					)}
 					{activePanel.startsWith("configure-provider-jiraserver-") && (
 						<ConfigureJiraServerPanel
 							providerId={configureProviderInfo[3]}
-							fromMenu={configureProviderInfo[4]}
+							originLocation={configureProviderInfo[4]}
 						/>
 					)}
 					{activePanel.startsWith("configure-enterprise-") && (
 						<ConfigureEnterprisePanel
 							providerId={configureProviderInfo[3]}
-							fromMenu={configureProviderInfo[4]}
+							originLocation={configureProviderInfo[4]}
 						/>
 					)}
 					{activePanel === "main" && (
@@ -1099,13 +1099,7 @@ export class SimpleStream extends Component {
 
 		if (!arg) return;
 
-		if (arg.startsWith("connect-")) {
-			const providerId = arg.split("connect-")[1];
-			return this.props.connectProvider(providerId, true);
-		} else if (arg.startsWith("disconnect-")) {
-			const providerId = arg.split("disconnect-")[1];
-			return this.props.disconnectProvider(providerId, true);
-		} else if (arg.startsWith("configure-enterprise-") || arg.startsWith("configure-provider-")) {
+		if (arg.startsWith("configure-enterprise-") || arg.startsWith("configure-provider-")) {
 			return this.setActivePanel(arg);
 		}
 

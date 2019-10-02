@@ -42,7 +42,7 @@ export class ConfigureEnterprisePanel extends Component {
 
 	componentDidUpdate() {
 		if (this.wantProviderId && this.props.providers[this.wantProviderId]) {
-			this.props.connectProvider(this.wantProviderId, this.props.fromMenu);
+			this.props.connectProvider(this.wantProviderId, this.props.originLocation);
 			this.props.closePanel();
 		}
 	}
@@ -54,8 +54,11 @@ export class ConfigureEnterprisePanel extends Component {
 		const { baseUrl, appClientId, appClientSecret } = this.state;
 		let url = baseUrl.trim().toLowerCase();
 		url = url.match(/^http/) ? url : `https://${url}`;
-		url = url.replace(/\/*$/g, '');
-		const newProviderId = await this.props.addEnterpriseProvider(providerId, url, { appClientId, appClientSecret });
+		url = url.replace(/\/*$/g, "");
+		const newProviderId = await this.props.addEnterpriseProvider(providerId, url, {
+			appClientId,
+			appClientSecret
+		});
 		if (newProviderId) {
 			this.wantProviderId = newProviderId;
 		}
@@ -127,8 +130,12 @@ export class ConfigureEnterprisePanel extends Component {
 						{this.renderError()}
 						<div id="controls">
 							<div id="configure-enterprise-controls" className="control-group">
-								<label><strong>{providerName} Base URL</strong></label>
-								<label>Please provide the Base URL used by your team to access {providerName}.</label>
+								<label>
+									<strong>{providerName} Base URL</strong>
+								</label>
+								<label>
+									Please provide the Base URL used by your team to access {providerName}.
+								</label>
 								<input
 									className="native-key-bindings input-text control"
 									type="text"
@@ -144,10 +151,19 @@ export class ConfigureEnterprisePanel extends Component {
 								/>
 								{this.renderBaseUrlHelp()}
 							</div>
-							<br/>
-							<label>Contact your {providerName} admin to get the client ID and secret required below, and send them a link to <a href="https://github.com/TeamCodeStream/CodeStream/wiki/Configuring-the-GitHub-Enterprise-Integration">these instructions</a>.</label>
+							<br />
+							<label>
+								Contact your {providerName} admin to get the client ID and secret required below,
+								and send them a link to{" "}
+								<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Configuring-the-GitHub-Enterprise-Integration">
+									these instructions
+								</a>
+								.
+							</label>
 							<div id="app-clientid-controls" className="control-group">
-								<label><strong>Client ID</strong></label>
+								<label>
+									<strong>Client ID</strong>
+								</label>
 								<input
 									className="native-key-bindings input-text control"
 									type="text"
@@ -161,7 +177,9 @@ export class ConfigureEnterprisePanel extends Component {
 								{this.renderAppClientIdHelp()}
 							</div>
 							<div id="app-clientsecret-controls" className="control-group">
-								<label><strong>Client Secret</strong></label>
+								<label>
+									<strong>Client Secret</strong>
+								</label>
 								<input
 									className="native-key-bindings input-text control"
 									type="text"

@@ -41,7 +41,7 @@ export class ConfigureAzureDevOpsPanel extends Component {
 		const { providerId } = this.props;
 		const { organization } = this.state;
 		this.props.configureProvider(providerId, { organization });
-		this.props.connectProvider(providerId, this.props.fromMenu);
+		this.props.connectProvider(providerId, this.props.originLocation);
 		this.props.closePanel();
 	};
 

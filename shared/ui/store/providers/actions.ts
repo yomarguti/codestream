@@ -15,7 +15,7 @@ export const reset = () => action("RESET");
 
 export const updateProviders = (data: ProvidersState) => action(ProvidersActionsType.Update, data);
 
-export const connectProvider = (providerId: string, fromMenu = false) => async (
+export const connectProvider = (providerId: string, connectionLocation: ViewLocation) => async (
 	dispatch,
 	getState
 ) => {
@@ -38,7 +38,7 @@ export const connectProvider = (providerId: string, fromMenu = false) => async (
 		const api = HostApi.instance;
 		await api.send(ConnectThirdPartyProviderRequestType, { providerId });
 		if (provider.hasIssues) {
-			dispatch(sendIssueProviderConnected(providerId, fromMenu));
+			dispatch(sendIssueProviderConnected(providerId, connectionLocation));
 			return dispatch(setIssueProvider(providerId));
 		}
 	} catch (error) {
@@ -46,10 +46,12 @@ export const connectProvider = (providerId: string, fromMenu = false) => async (
 	}
 };
 
-export const sendIssueProviderConnected = (providerId: string, fromMenu = false) => async (
-	dispatch,
-	getState
-) => {
+export type ViewLocation = "Global Nav" | "Compose Modal" | "PR Toggle";
+
+export const sendIssueProviderConnected = (
+	providerId: string,
+	connectionLocation: ViewLocation = "Compose Modal"
+) => async (dispatch, getState) => {
 	const { providers } = getState();
 	const provider = providers[providerId];
 	if (!provider) return;
@@ -61,7 +63,7 @@ export const sendIssueProviderConnected = (providerId: string, fromMenu = false)
 			Service: name,
 			Host: isEnterprise ? host : null,
 			Connection: "On",
-			"Connection Location": fromMenu ? "Global Nav" : "Compose Modal"
+			"Connection Location": connectionLocation
 		}
 	});
 };
@@ -69,8 +71,8 @@ export const sendIssueProviderConnected = (providerId: string, fromMenu = false)
 export const configureProvider = (
 	providerId: string,
 	data: { [key: string]: any },
-	fromMenu = false,
-	setConnectedWhenConfigured = false
+	setConnectedWhenConfigured = false,
+	connectionLocation?: ViewLocation
 ) => async (dispatch, getState) => {
 	const { providers } = getState();
 	const provider = providers[providerId];
@@ -88,7 +90,7 @@ export const configureProvider = (
 		// for some providers (namely YouTrack), configuring is as good as connecting,
 		// since we allow the user to set their own access token
 		if (setConnectedWhenConfigured && provider.hasIssues) {
-			dispatch(sendIssueProviderConnected(providerId, fromMenu));
+			dispatch(sendIssueProviderConnected(providerId, connectionLocation));
 			dispatch(setIssueProvider(providerId));
 		}
 	} catch (error) {
@@ -99,8 +101,7 @@ export const configureProvider = (
 export const addEnterpriseProvider = (
 	providerId: string,
 	host: string,
-	data: { [key: string]: any },
-	fromMenu = false
+	data: { [key: string]: any }
 ) => async (dispatch, getState) => {
 	const { providers } = getState();
 	const provider = providers[providerId];
@@ -121,7 +122,7 @@ export const addEnterpriseProvider = (
 	}
 };
 
-export const disconnectProvider = (providerId: string, fromMenu = false) => async (
+export const disconnectProvider = (providerId: string, connectionLocation: ViewLocation) => async (
 	dispatch,
 	getState
 ) => {
@@ -137,7 +138,7 @@ export const disconnectProvider = (providerId: string, fromMenu = false) => asyn
 				Service: provider.name,
 				Host: provider.isEnterprise ? provider.host : null,
 				Connection: "Off",
-				"Connection Location": fromMenu ? "Global Nav" : "Compose Modal"
+				"Connection Location": connectionLocation // ? "Global Nav" : "Compose Modal"
 			}
 		});
 		if (getState().context.issueProvider.host === provider.host) {

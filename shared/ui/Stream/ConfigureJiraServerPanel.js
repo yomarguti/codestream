@@ -42,7 +42,7 @@ export class ConfigureJiraServerPanel extends Component {
 
 	componentDidUpdate() {
 		if (this.wantProviderId && this.props.providers[this.wantProviderId]) {
-			this.props.connectProvider(this.wantProviderId, this.props.fromMenu);
+			this.props.connectProvider(this.wantProviderId, this.props.originLocation);
 			this.props.closePanel();
 		}
 	}
@@ -54,7 +54,7 @@ export class ConfigureJiraServerPanel extends Component {
 		const { baseUrl, consumerKey, privateKey } = this.state;
 		let url = baseUrl.trim().toLowerCase();
 		url = url.match(/^http/) ? url : `https://${url}`;
-		url = url.replace(/\/*$/g, '');
+		url = url.replace(/\/*$/g, "");
 		const newProviderId = await this.props.addEnterpriseProvider(providerId, url, {
 			oauthData: { consumerKey, privateKey }
 		});
@@ -151,7 +151,14 @@ export class ConfigureJiraServerPanel extends Component {
 								{this.renderBaseUrlHelp()}
 							</div>
 							<br />
-							<label>Contact your {providerName} admin to get the consumer key and private key required below, and send them a link to <a href="https://github.com/TeamCodeStream/CodeStream/wiki/Configuring-the-Jira-Server-Integration">these instructions</a>.</label>
+							<label>
+								Contact your {providerName} admin to get the consumer key and private key required
+								below, and send them a link to{" "}
+								<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Configuring-the-Jira-Server-Integration">
+									these instructions
+								</a>
+								.
+							</label>
 							<div id="app-clientid-controls" className="control-group">
 								<label>
 									<strong>Consumer Key</strong>

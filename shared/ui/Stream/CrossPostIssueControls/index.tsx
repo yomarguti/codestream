@@ -31,7 +31,7 @@ interface ProviderInfo {
 }
 
 interface Props {
-	connectProvider(providerId: string): any;
+	connectProvider(...args: Parameters<typeof connectProvider>): any;
 	setIssueProvider(providerId?: string): void;
 	openPanel(...args: Parameters<typeof openPanel>): void;
 	onValues: CrossPostIssueValuesListener;
@@ -360,7 +360,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			!this.providerIsConnected(providerInfo.provider.id)
 		) {
 			const { name, id } = providerInfo.provider;
-			this.props.openPanel(`configure-provider-${name}-${id}`);
+			this.props.openPanel(`configure-provider-${name}-${id}-Compose Modal`);
 		} else if (providerInfo.provider.forEnterprise) {
 			const { name, id } = providerInfo.provider;
 			/* if (name === "github_enterprise") {
@@ -372,7 +372,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 					}
 				});
 			} else */ this.props.openPanel(
-				`configure-enterprise-${name}-${id}`
+				`configure-enterprise-${name}-${id}-Compose Modal`
 			);
 		} else {
 			const { name } = providerInfo.provider;
@@ -393,13 +393,13 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 						},
 						action: () => {
 							this.setState({ isLoading: true, loadingProvider: providerInfo });
-							this.props.connectProvider(providerInfo.provider.id);
+							this.props.connectProvider(providerInfo.provider.id, "Compose Modal");
 						}
 					}
 				});
 			} else {
 				this.setState({ isLoading: true, loadingProvider: providerInfo });
-				await this.props.connectProvider(providerInfo.provider.id);
+				await this.props.connectProvider(providerInfo.provider.id, "Compose Modal");
 			}
 		}
 	}

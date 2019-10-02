@@ -54,7 +54,7 @@ export const PRInfoModal = (props: { onClose: () => void }) => {
 								if (provider.forEnterprise) {
 									dispatch(openPanel(`configure-enterprise-${provider.name}-${provider.id}-true`));
 								} else {
-									await dispatch(connectProvider(provider.id));
+									await dispatch(connectProvider(provider.id, "PR Toggle"));
 									if (textEditorUri) dispatch(fetchDocumentMarkers(textEditorUri));
 									props.onClose();
 								}
@@ -80,7 +80,8 @@ export const PRInfoModal = (props: { onClose: () => void }) => {
 			<VerticallyCentered>
 				<BoxedContent title="Pull Requests">
 					<CSText>
-						Display merged-in pull request code comments right alongside the code blocks they refer to.
+						Display merged-in pull request code comments right alongside the code blocks they refer
+						to.
 					</CSText>
 					<CSText>Select the service you use for pull requests below to get started.</CSText>
 					<Spacer />
