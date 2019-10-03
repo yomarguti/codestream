@@ -6,11 +6,9 @@ using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Controllers;
 using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Extensions;
-using CodeStream.VisualStudio.Core.LanguageServer;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Services;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.WindowsAPICodePack.Dialogs;
@@ -20,8 +18,7 @@ using Serilog;
 namespace CodeStream.VisualStudio {
 	public class WebViewRouter {
 		private static readonly ILogger Log = LogManager.ForContext<WebViewRouter>();
-
-		private readonly IComponentModel _componentModel;
+		
 		private readonly IWebviewUserSettingsService _webviewUserSettingsService;
 		private readonly ISessionService _sessionService;
 		private readonly ICodeStreamAgentService _codeStreamAgent;
@@ -30,7 +27,7 @@ namespace CodeStream.VisualStudio {
 		private readonly IBrowserService _browserService;
 		private readonly IIdeService _ideService;
 		private readonly IEditorService _editorService;
-		private readonly IAuthenticationServiceFactory _authenticationServiceFactory;
+		private readonly IAuthenticationServiceFactory _authenticationServiceFactory;		 
 
 		public WebViewRouter(
 			IWebviewUserSettingsService webviewUserSettingsService,
@@ -41,31 +38,7 @@ namespace CodeStream.VisualStudio {
 			IBrowserService browserService,
 			IIdeService ideService,
 			IEditorService editorService,
-			IAuthenticationServiceFactory authenticationServiceFactory) :
-			this(null,
-				webviewUserSettingsService,
-				sessionService,
-				codeStreamAgent,
-				settingsServiceFactory,
-				eventAggregator,
-				browserService,
-				ideService,
-				editorService,
-				authenticationServiceFactory) {			 
-		}
-
-		public WebViewRouter(
-			IComponentModel componentModel,
-			IWebviewUserSettingsService webviewUserSettingsService,
-			ISessionService sessionService,
-			ICodeStreamAgentService codeStreamAgent,
-			ISettingsServiceFactory settingsServiceFactory,
-			IEventAggregator eventAggregator,
-			IBrowserService browserService,
-			IIdeService ideService,
-			IEditorService editorService,
-			IAuthenticationServiceFactory authenticationServiceFactory) {
-			_componentModel = componentModel;
+			IAuthenticationServiceFactory authenticationServiceFactory) {			
 			_webviewUserSettingsService = webviewUserSettingsService;
 			_sessionService = sessionService;
 			_codeStreamAgent = codeStreamAgent;
