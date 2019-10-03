@@ -196,7 +196,8 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 					</GitHubCardControls>
 				);
 			}
-			case "gitlab": {
+			case "gitlab":
+			case "gitlab_enterprise": {
 				return (
 					<GitLabCardControls
 						boards={boards}

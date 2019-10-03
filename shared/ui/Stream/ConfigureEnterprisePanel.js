@@ -114,6 +114,7 @@ export class ConfigureEnterprisePanel extends Component {
 		const providerName = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].displayName : "";
 		const placeholder = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].urlPlaceholder : "";
 		const getUrl = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].getUrl : "";
+		const helpUrl = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].helpUrl : "";
 		return (
 			<div className="panel configure-provider-panel">
 				<form className="standard-form vscroll" onSubmit={this.onSubmit}>
@@ -152,14 +153,16 @@ export class ConfigureEnterprisePanel extends Component {
 								{this.renderBaseUrlHelp()}
 							</div>
 							<br />
-							<label>
-								Contact your {providerName} admin to get the client ID and secret required below,
-								and send them a link to{" "}
-								<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Configuring-the-GitHub-Enterprise-Integration">
-									these instructions
-								</a>
-								.
-							</label>
+							{helpUrl && (
+								<label>
+									Contact your {providerName} admin to get the client ID and secret required below,
+									and send them a link to{" "}
+									<a href={helpUrl}>
+										these instructions
+									</a>
+									.
+								</label>
+							)}
 							<div id="app-clientid-controls" className="control-group">
 								<label>
 									<strong>Client ID</strong>

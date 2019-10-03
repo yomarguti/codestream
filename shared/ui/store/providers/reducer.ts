@@ -31,7 +31,8 @@ export const isConnected = (state: CodeStreamState, providerName: string) => {
 
 	switch (providerName) {
 		case "jiraserver":
-		case "github_enterprise": {
+		case "github_enterprise":
+		case "gitlab_enterprise": {
 			// enterprise/on-prem providers need the `hosts` validated
 			const info = currentUser.providerInfo[currentTeamId][providerName];
 			return (

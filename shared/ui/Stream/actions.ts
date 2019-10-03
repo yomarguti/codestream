@@ -798,7 +798,8 @@ export const createProviderCard = async (attributes, codemark) => {
 				});
 				break;
 			}
-			case "gitlab": {
+			case "gitlab":
+			case "gitlab_enterprise": {
 				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
 					providerId: attributes.issueProvider.id,
 					data: {

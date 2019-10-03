@@ -13,6 +13,7 @@ export interface ProviderDisplay {
 	icon?: string;
 	getUrl?: string;
 	urlPlaceholder?: string;
+	helpUrl?: string;
 }
 
 export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
@@ -22,9 +23,16 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 	github_enterprise: {
 		displayName: "GitHub Enterprise",
 		icon: "mark-github",
-		urlPlaceholder: "https://git.myorg.com"
+		urlPlaceholder: "https://git.myorg.com",
+		helpUrl: "https://github.com/TeamCodeStream/CodeStream/wiki/Configuring-the-GitHub-Enterprise-Integration"
 	},
 	gitlab: { displayName: "GitLab", icon: "gitlab" },
+	gitlab_enterprise: {
+		displayName: "GitLab Enterprise",
+		icon: "gitlab",
+		urlPlaceholder: "https://gitlab.myorg.com",
+		helpUrl: "https://github.com/TeamCodeStream/CodeStream/wiki/Configuring-the-GitLab-Enterprise-Integration"
+	},
 	jira: { displayName: "Jira", icon: "jira" },
 	jiraserver: {
 		displayName: "Jira Server",
