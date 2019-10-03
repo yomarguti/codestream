@@ -33,6 +33,7 @@ export * from "./jiraserver";
 export * from "./github";
 export * from "./githubEnterprise";
 export * from "./gitlab";
+export * from "./gitlabEnterprise";
 export * from "./asana";
 export * from "./bitbucket";
 export * from "./youtrack";

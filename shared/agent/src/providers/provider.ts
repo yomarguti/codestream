@@ -28,6 +28,7 @@ export const providerNamesById = new Map<string, string>([
 	["github", "GitHub"],
 	["github_enterprise", "GitHub Enterprise"],
 	["gitlab", "GitLab"],
+	["gitlab_enterprise", "GitLab Enterprise"],
 	["jira", "Jira"],
 	["jiraserver", "Jira Server"],
 	["trello", "Trello"],
