@@ -149,7 +149,7 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 			card.assignee_ids = [data.assignee.id];
 		}
 		const response = await this.post<{}, GitLabCreateCardResponse>(
-			`/projects/${encodeURIComponent(data.repoName)}/issues?${qs.stringify(data)}`,
+			`/projects/${encodeURIComponent(data.repoName)}/issues?${qs.stringify(card)}`,
 			{}
 		);
 		return { ...response.body, url: response.body.web_url };
