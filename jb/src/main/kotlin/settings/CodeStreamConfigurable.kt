@@ -1,11 +1,10 @@
 package com.codestream.settings
 
-import com.codestream.settingsService
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.options.SearchableConfigurable
-import com.intellij.openapi.project.Project
 import javax.swing.JComponent
 
-class CodeStreamConfigurable(val project: Project) : SearchableConfigurable {
+class CodeStreamConfigurable : SearchableConfigurable {
     private var _gui: CodeStreamConfigurableGUI? = null
 
     override fun isModified(): Boolean {
@@ -21,7 +20,8 @@ class CodeStreamConfigurable(val project: Project) : SearchableConfigurable {
     }
 
     override fun apply() {
-        val state = project.settingsService?.state ?: return
+        val settingsService = ServiceManager.getService(ApplicationSettingsService::class.java)
+        val state = settingsService.state
         val gui = _gui
         gui?.let {
             state.autoSignIn = gui.autoSignIn.isSelected
@@ -40,8 +40,10 @@ class CodeStreamConfigurable(val project: Project) : SearchableConfigurable {
 
     override fun createComponent(): JComponent? {
         val gui = CodeStreamConfigurableGUI()
+        val settingsService = ServiceManager.getService(ApplicationSettingsService::class.java)
+        val state = settingsService.state
 
-        project.settingsService?.state?.let {
+        state.let {
             gui.apply {
                 autoSignIn.isSelected = it.autoSignIn
                 serverUrl.text = it.serverUrl

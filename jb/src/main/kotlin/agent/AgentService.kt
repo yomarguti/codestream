@@ -4,13 +4,14 @@ import com.codestream.DEBUG
 import com.codestream.authenticationService
 import com.codestream.extensions.baseUri
 import com.codestream.gson
-import com.codestream.settingsService
+import com.codestream.settings.ApplicationSettingsService
 import com.codestream.system.Platform
 import com.codestream.system.platform
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.JsonObject
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.GlobalScope
@@ -246,14 +247,14 @@ class AgentService(private val project: Project) : Disposable {
     }
 
     private fun initializationOptions(): InitializationOptions? {
-        val settings = project.settingsService ?: return null
+        val settings = ServiceManager.getService(ApplicationSettingsService::class.java)
         return InitializationOptions(
             settings.extensionInfo,
             Ide(),
             DEBUG,
             settings.proxySettings,
             settings.proxySupport,
-            settings.state.serverUrl,
+            settings.serverUrl,
             settings.traceLevel.value
         )
     }

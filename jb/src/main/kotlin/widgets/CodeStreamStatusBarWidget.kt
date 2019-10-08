@@ -2,7 +2,8 @@ package com.codestream.widgets
 
 import com.codestream.codeStream
 import com.codestream.sessionService
-import com.codestream.settingsService
+import com.codestream.settings.ApplicationSettingsService
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.StatusBar
 import com.intellij.openapi.wm.StatusBarWidget
@@ -12,6 +13,7 @@ import java.awt.event.MouseEvent
 
 class CodeStreamStatusBarWidget(val project: Project) : StatusBarWidget, StatusBarWidget.TextPresentation {
 
+    private val appSettings = ServiceManager.getService(ApplicationSettingsService::class.java)
     var myStatusBar: StatusBar? = null
 
     init {
@@ -45,10 +47,9 @@ class CodeStreamStatusBarWidget(val project: Project) : StatusBarWidget, StatusB
     }
 
     override fun getText(): String {
-        val settingsService = project.settingsService ?: return ""
         val sessionService = project.sessionService ?: return ""
 
-        val prefix = settingsService.environmentDisplayPrefix
+        val prefix = appSettings.environmentDisplayPrefix
 
         val userLoggedIn = sessionService.userLoggedIn ?: return "$prefix Sign in..."
         val username = if (userLoggedIn.teamsCount == 1) {

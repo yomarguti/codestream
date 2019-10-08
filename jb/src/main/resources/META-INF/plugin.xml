@@ -417,6 +417,8 @@
     </change-notes>
 
     <extensions defaultExtensionNs="com.intellij">
+        <applicationService serviceImplementation="com.codestream.settings.ApplicationSettingsService"/>
+
         <projectService serviceImplementation="com.codestream.agent.AgentService"/>
         <projectService serviceImplementation="com.codestream.authentication.AuthenticationService"/>
         <projectService serviceImplementation="com.codestream.settings.SettingsService"/>
@@ -424,8 +426,8 @@
         <projectService serviceImplementation="com.codestream.webview.WebViewService"/>
         <projectService serviceImplementation="com.codestream.editor.EditorService"/>
 
-        <projectConfigurable groupId="tools" displayName="CodeStream" id="preferences.CodeStreamConfigurable"
-                             instance="com.codestream.settings.CodeStreamConfigurable"/>
+        <applicationConfigurable groupId="tools" displayName="CodeStream" id="preferences.CodeStreamConfigurable"
+                                 instance="com.codestream.settings.CodeStreamConfigurable"/>
 
         <errorHandler implementation="com.codestream.error.ErrorHandler"/>
 

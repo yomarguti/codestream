@@ -15,6 +15,7 @@ import com.codestream.extensions.uri
 import com.codestream.extensions.visibleRanges
 import com.codestream.protocols.webview.EditorNotifications
 import com.codestream.sessionService
+import com.codestream.settings.ApplicationSettingsService
 import com.codestream.settingsService
 import com.codestream.system.sanitizeURI
 import com.codestream.webViewService
@@ -24,6 +25,7 @@ import com.intellij.diff.requests.SimpleDiffRequest
 import com.intellij.diff.util.DiffUserDataKeys
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
@@ -79,6 +81,7 @@ class EditorService(val project: Project) {
     }
 
     private val logger = Logger.getInstance(EditorService::class.java)
+    private val appSettings = ServiceManager.getService(ApplicationSettingsService::class.java)
 
     private val managedDocuments = mutableMapOf<Document, DocumentVersion>()
     private val managedEditors = mutableSetOf<Editor>()
@@ -204,10 +207,9 @@ class EditorService(val project: Project) {
     private suspend fun getDocumentMarkers(document: Document): List<DocumentMarker> {
         val agent = project.agentService ?: return emptyList()
         val session = project.sessionService ?: return emptyList()
-        val settings = project.settingsService ?: return emptyList()
         val uri = document.uri
 
-        val markers = if (uri == null || session.userLoggedIn == null || !settings.showMarkers) {
+        val markers = if (uri == null || session.userLoggedIn == null || !appSettings.showMarkers) {
             emptyList()
         } else {
             val result = agent.documentMarkers(DocumentMarkersParams(TextDocument(uri)))
@@ -223,8 +225,7 @@ class EditorService(val project: Project) {
 
     private val showGutterIcons: Boolean
         get() {
-            val settings = project.settingsService ?: return false
-            return !codeStreamVisible || !spatialViewActive || !settings.autoHideMarkers
+            return !codeStreamVisible || !spatialViewActive || !appSettings.autoHideMarkers
         }
 
     inner class DocumentSynchronizer : DocumentListener {

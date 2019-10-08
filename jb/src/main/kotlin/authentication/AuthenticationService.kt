@@ -8,6 +8,7 @@ import com.codestream.extensions.merge
 import com.codestream.gson
 import com.codestream.protocols.webview.DidChangeApiVersionCompatibility
 import com.codestream.sessionService
+import com.codestream.settings.ApplicationSettingsService
 import com.codestream.settingsService
 import com.codestream.webViewService
 import com.github.salomonbrys.kotson.fromJson
@@ -16,6 +17,7 @@ import com.google.gson.JsonObject
 import com.intellij.credentialStore.Credentials
 import com.intellij.ide.passwordSafe.PasswordSafe
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.future.await
@@ -29,6 +31,7 @@ import protocols.webview.UserSession
 class AuthenticationService(val project: Project) {
 
     private val extensionCapabilities: JsonElement get() = gson.toJsonTree(Capabilities())
+    private val appSettings = ServiceManager.getService(ApplicationSettingsService::class.java)
 
     private val logger = Logger.getInstance(AuthenticationService::class.java)
     private var mergedCapabilities: JsonElement = extensionCapabilities
@@ -42,10 +45,10 @@ class AuthenticationService(val project: Project) {
         return BootstrapResponse(
             UserSession(session.userLoggedIn?.userId),
             mergedCapabilities,
-            settings.webViewConfigs,
+            appSettings.webViewConfigs,
             settings.getWebViewContextJson(),
-            settings.extensionInfo.versionFormatted,
-            Ide(settings.ideInfo.name),
+            appSettings.extensionInfo.versionFormatted,
+            Ide(appSettings.ideInfo.name),
             apiVersionCompatibility,
             missingCapabilities
         )
@@ -53,8 +56,8 @@ class AuthenticationService(val project: Project) {
 
     suspend fun autoSignIn(): Boolean {
         val settings = project.settingsService ?: return true
-        if (!settings.state.autoSignIn) return true
-        val tokenStr = PasswordSafe.instance.getPassword(settings.credentialAttributes) ?: return true
+        if (!appSettings.autoSignIn) return true
+        val tokenStr = PasswordSafe.instance.getPassword(appSettings.credentialAttributes) ?: return true
         val agent = project.agentService?.agent ?: return true
 
         try {
@@ -64,7 +67,7 @@ class AuthenticationService(val project: Project) {
                     LoginWithTokenParams(
                         token,
                         settings.state.teamId,
-                        settings.team
+                        appSettings.team
                     )
                 ).await()
 
@@ -120,13 +123,12 @@ class AuthenticationService(val project: Project) {
     }
 
     private fun saveAccessToken(accessToken: JsonObject?) {
-        val settings = project.settingsService ?: return
         val credentials = accessToken?.let {
             Credentials(null, it.toString())
         }
 
         PasswordSafe.instance.set(
-            settings.credentialAttributes,
+            appSettings.credentialAttributes,
             credentials
         )
     }
