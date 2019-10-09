@@ -793,7 +793,10 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 							);
 
 							if (remoteCodeUrl !== undefined) {
-								codemarkRequest.remoteCodeUrl = remoteCodeUrl;
+								if (!codemarkRequest.remoteCodeUrl) {
+									codemarkRequest.remoteCodeUrl = remoteCodeUrl;
+								}
+								marker.remoteCodeUrl = remoteCodeUrl;
 								break;
 							}
 						}
