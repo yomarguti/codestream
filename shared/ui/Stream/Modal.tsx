@@ -35,7 +35,10 @@ const ModalWrapper = styled.div`
 
 	& > div {
 		height: 100%;
-		padding: 25px 20px;
+		padding-top: 0;
+		padding-bottom: 0;
+		padding-left: 20px;
+		padding-right: 20px;
 	}
 `;
 
@@ -88,7 +91,7 @@ const CancelButton = styled(function(props: { onClick: () => void }) {
 })`
 	cursor: pointer;
 	position: absolute;
-	right: 20px;
+	right: 10px;
 	padding: 2px 8px 0px 8px;
 	:hover {
 		color: var(--text-color-highlight);

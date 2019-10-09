@@ -875,7 +875,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					}}
 				>
 					{this.renderHoverIcons(numLinesVisible)}
-					{this.renderCodemarkForm() || this.renderNoCodemarks()}
+					{!this.state.newCodemarkAttributes && this.renderNoCodemarks()}
 					{this.props.children}
 				</div>
 			);
@@ -953,7 +953,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						id="inline-codemarks-field"
 					>
 						<div className="inline-codemarks vscroll-x">
-							{this.renderCodemarkForm()}
 							{textEditorVisibleRanges.map((lineRange, rangeIndex) => {
 								const realFirstLine = lineRange.start.line;
 								const realLastLine = lineRange.end.line;
@@ -1246,14 +1245,13 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	render() {
-		if (this.state.multiLocationCodemarkForm) return this.renderCodemarkForm();
-
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
 				{this.state.showPRInfoModal && (
 					<PRInfoModal onClose={() => this.setState({ showPRInfoModal: false })} />
 				)}
 				{this.state.isLoading ? null : this.renderCodemarks()}
+				{this.renderCodemarkForm()}
 				{this.printViewSelectors()}
 			</div>
 		);
