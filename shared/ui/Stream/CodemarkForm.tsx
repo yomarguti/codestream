@@ -1137,7 +1137,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	}
 
 	renderAddLocation() {
-		if (!this.props.apiCapabilities.multipleMarkers) return null;
+		if (!this.props.apiCapabilities.multipleMarkers || this.props.isEditing) return null;
 
 		return (
 			<div className="add-location">
