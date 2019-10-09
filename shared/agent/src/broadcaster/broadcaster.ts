@@ -226,13 +226,17 @@ export class Broadcaster {
 	private normalizeChannelDescriptors(
 		channels: (ChannelDescriptor | string)[]
 	): ChannelDescriptor[] {
-		return channels.map(channel => {
+		const normalizedChannels: ChannelDescriptor[] = [];
+		channels.forEach(channel => {
 			if (typeof channel === "string") {
-				return { name: channel };
-			} else {
-				return channel;
+				if (channel.length > 0) {
+					normalizedChannels.push({ name: channel });
+				}
+			} else if (channel.name.length > 0) {
+				normalizedChannels.push(channel);
 			}
 		});
+		return normalizedChannels;
 	}
 
 	// we're not in a position to subscribe to these channels, queue them up for later
