@@ -42,7 +42,8 @@ import {
 	EditorHighlightRangeRequestType,
 	EditorHighlightRangeRequest,
 	EditorSelectRangeRequestType,
-	EditorSelectRangeRequest
+	EditorSelectRangeRequest,
+	EditorRevealRangeRequestType
 } from "@codestream/protocols/webview";
 import { setCurrentCodemark } from "../store/context/actions";
 import { RelatedCodemark } from "./RelatedCodemark";
