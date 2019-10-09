@@ -714,16 +714,16 @@ class CodemarkForm extends React.Component<Props, State> {
 			locationMenuOpen: "closed",
 			codeBlocks: newCodeBlocks
 		});
-		this.addLocation(0);
+		this.addLocation();
 		this.focus();
 	};
 
-	addLocation = (index?: number) => {
-		this.setState({
+	addLocation = () => {
+		this.setState(state => ({
 			locationMenuOpen: "closed",
 			addingLocation: true,
-			liveLocation: this.state.codeBlocks.length
-		});
+			liveLocation: state.codeBlocks.length
+		}));
 		if (this.props.setMultiLocation && !this.props.multiLocation) this.props.setMultiLocation(true);
 	};
 
@@ -742,7 +742,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			});
 		} catch (e) {}
 
-		this.addLocation(0);
+		this.addLocation();
 		this.focus();
 	};
 
@@ -1302,7 +1302,7 @@ class CodemarkForm extends React.Component<Props, State> {
 										</div>
 										<div
 											className="codemark-actions-button"
-											onClick={e => this.deleteLocation(index)}
+											onClick={e => this.deleteLocation(index, e)}
 										>
 											Cancel
 										</div>
@@ -1454,7 +1454,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		const locationItems: any[] = [];
 		if (this.props.apiCapabilities.multipleMarkers)
-			locationItems.push({ label: "Add Range", action: () => this.addLocation(0) });
+			locationItems.push({ label: "Add Range", action: () => this.addLocation() });
 		// { label: "Change Location", action: () => this.editLocation(0) }
 
 		if (!this.props.multiLocation)
