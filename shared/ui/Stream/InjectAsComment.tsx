@@ -5,7 +5,7 @@ import Menu from "./Menu";
 import Icon from "./Icon";
 import Button from "./Button";
 import { prettyPrintOne } from "code-prettify";
-import { CSUser, CSPost } from "@codestream/protocols/api";
+import { CSUser, CSMarker } from "@codestream/protocols/api";
 import { CodemarkPlus } from "@codestream/protocols/agent";
 import { HostApi } from "../webview-api";
 import { TelemetryRequestType } from "@codestream/protocols/agent";
@@ -20,6 +20,7 @@ interface Props {
 	setPinned: Function;
 	codemark: CodemarkPlus;
 	replies: any[];
+	marker?: CSMarker;
 	author: CSUser;
 	fetchThread: Function;
 }
@@ -68,7 +69,7 @@ export const InjectAsComment = (connect(
 		});
 		// HostApi.instance.send(ApplyMarkerRequestType, { marker: props.codemark.markers![0] });
 		HostApi.instance.send(InsertTextRequestType, {
-			marker: props.codemark.markers![0],
+			marker: props.marker || props.codemark.markers![0],
 			text: codemarkAsCommentString()
 		});
 		props.cancel();

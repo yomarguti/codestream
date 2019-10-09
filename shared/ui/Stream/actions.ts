@@ -92,7 +92,7 @@ export const markPostUnread = (streamId: string, postId: string) => () => {
 
 export const createPostAndCodemark = (
 	attributes: {
-		codeBlock?: any;
+		codeBlocks: any[];
 		streamId: string;
 		text: string;
 		color: string;
@@ -105,56 +105,60 @@ export const createPostAndCodemark = (
 	},
 	entryPoint?: PostEntryPoint
 ) => async (dispatch, getState: () => CodeStreamState) => {
-	const { codeBlock } = attributes;
-	let marker: any = {
-		code: codeBlock.contents,
-		range: codeBlock.range
-	};
-
-	if (codeBlock.scm) {
-		marker.file = codeBlock.scm.file;
-		marker.source = codeBlock.scm;
-	}
-	const markers = [marker];
-
+	const { codeBlocks } = attributes;
+	let markers: any = [];
 	let warning;
-	if (isNotOnDisk(codeBlock.uri))
-		warning = {
-			title: "Unsaved File",
-			message:
-				"Your teammates won't be able to see the codemark when viewing this file unless you save the file first."
+
+	codeBlocks.forEach(codeBlock => {
+		let marker: any = {
+			code: codeBlock.contents,
+			range: codeBlock.range
 		};
-	else {
-		switch (getFileScmError(codeBlock)) {
-			case "NoRepo": {
-				warning = {
-					title: "Missing Git Info",
-					message: `This repo doesn’t appear to be tracked by Git. Your teammates won’t be able to see the codemark when viewing this source file.\n\n${uriToFilePath(
-						codeBlock.uri
-					)}`
-				};
-				break;
-			}
-			case "NoRemotes": {
-				warning = {
-					title: "No Remote URL",
-					message:
-						"This repo doesn’t have a remote URL configured. Your teammates won’t be able to see the codemark when viewing this source file."
-				};
-				break;
-			}
-			case "NoGit": {
-				warning = {
-					title: "Git could not be located",
-					message:
-						"CodeStream was unable to find the `git` command. Make sure it's installed and configured properly."
-				};
-				break;
-			}
-			default: {
+
+		if (codeBlock.scm) {
+			marker.file = codeBlock.scm.file;
+			marker.source = codeBlock.scm;
+		}
+		markers.push(marker);
+
+		if (isNotOnDisk(codeBlock.uri))
+			warning = {
+				title: "Unsaved File",
+				message:
+					"Your teammates won't be able to see the codemark when viewing this file unless you save the file first."
+			};
+		else {
+			switch (getFileScmError(codeBlock)) {
+				case "NoRepo": {
+					warning = {
+						title: "Missing Git Info",
+						message: `This repo doesn’t appear to be tracked by Git. Your teammates won’t be able to see the codemark when viewing this source file.\n\n${uriToFilePath(
+							codeBlock.uri
+						)}`
+					};
+					break;
+				}
+				case "NoRemotes": {
+					warning = {
+						title: "No Remote URL",
+						message:
+							"This repo doesn’t have a remote URL configured. Your teammates won’t be able to see the codemark when viewing this source file."
+					};
+					break;
+				}
+				case "NoGit": {
+					warning = {
+						title: "Git could not be located",
+						message:
+							"CodeStream was unable to find the `git` command. Make sure it's installed and configured properly."
+					};
+					break;
+				}
+				default: {
+				}
 			}
 		}
-	}
+	});
 
 	if (warning) {
 		try {
@@ -204,7 +208,7 @@ export const createPostAndCodemark = (
 					"relatedCodemarkIds"
 				),
 				markers,
-				textEditorUri: attributes.codeBlock.uri
+				textEditorUri: attributes.codeBlocks[0].uri
 			},
 			findMentionedUserIds(getTeamMembers(getState()), attributes.text || ""),
 			{
@@ -284,9 +288,10 @@ export const createPost = (
 				streamId,
 				text: codemark.text,
 				textDocument: { uri: codemark.textEditorUri },
-				code: block.code,
-				range: block.range,
-				source: block.source,
+				// code: block.code,
+				// range: block.range,
+				// source: block.source,
+				markers: codemark.markers,
 				title: codemark.title,
 				type: codemark.type,
 				assignees: codemark.assignees,

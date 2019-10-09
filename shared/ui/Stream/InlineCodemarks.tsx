@@ -134,6 +134,7 @@ interface State {
 	numLinesVisible: number;
 	problem: ScmError | undefined;
 	newCodemarkAttributes: { type: CodemarkType; viewingInline: boolean } | undefined;
+	multiLocationCodemarkForm: boolean;
 }
 
 const NEW_CODEMARK_ATTRIBUTES_TO_RESTORE = "spatial-view:restore-codemark-form";
@@ -170,7 +171,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			numAbove: 0,
 			numBelow: 0,
 			numLinesVisible: props.numLinesVisible,
-			problem: props.scmInfo && getFileScmError(props.scmInfo)
+			problem: props.scmInfo && getFileScmError(props.scmInfo),
+			multiLocationCodemarkForm: false
 		};
 
 		const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
@@ -433,7 +435,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	async onFileChanged(isInitialRender = false) {
 		const { textEditorUri, setEditorContext } = this.props;
 
-		if (textEditorUri === undefined && this.state.newCodemarkAttributes) {
+		if (
+			textEditorUri === undefined &&
+			this.state.newCodemarkAttributes &&
+			!this.state.multiLocationCodemarkForm
+		) {
 			this.setState({ newCodemarkAttributes: undefined });
 		}
 
@@ -1008,21 +1014,27 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		if (this.state.newCodemarkAttributes == undefined) return null;
 
 		return (
-			<ContainerAtEditorSelection>
-				<div className="codemark-form-container">
-					<CodemarkForm
-						commentType={this.state.newCodemarkAttributes.type}
-						streamId={this.props.currentStreamId!}
-						onSubmit={this.submitCodemark}
-						onClickClose={this.closeCodemarkForm}
-						collapsed={false}
-					/>
-				</div>
-			</ContainerAtEditorSelection>
+			// <ContainerAtEditorSelection>
+			<CodemarkForm
+				commentType={this.state.newCodemarkAttributes.type}
+				streamId={this.props.currentStreamId!}
+				onSubmit={this.submitCodemark}
+				onClickClose={this.closeCodemarkForm}
+				collapsed={false}
+				positionAtLocation={true}
+				multiLocation={this.state.multiLocationCodemarkForm}
+				setMultiLocation={this.setMultiLocation}
+			/>
+			// </ContainerAtEditorSelection>
 		);
 	}
 
+	setMultiLocation = value => {
+		this.setState({ multiLocationCodemarkForm: value });
+	};
+
 	closeCodemarkForm = () => {
+		this.setState({ newCodemarkAttributes: undefined, multiLocationCodemarkForm: false });
 		this.clearSelection();
 
 		const { newCodemarkAttributes } = this.state;
@@ -1088,6 +1100,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	onWheel = (event: React.WheelEvent<HTMLDivElement>) => {
 		if (event.deltaY === 0) return;
+
+		if (this.state.multiLocationCodemarkForm) return;
 
 		const target = event.target as HTMLElement;
 		if (target.closest(".codemark.selected") != null) {
@@ -1232,6 +1246,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	render() {
+		if (this.state.multiLocationCodemarkForm) return this.renderCodemarkForm();
+
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
 				{this.state.showPRInfoModal && (

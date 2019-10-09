@@ -82,7 +82,7 @@ export interface Route {
 	controller?: RouteControllerType;
 	action?: RouteActionType;
 	id?: string;
-	parameters?: any;
+	query?: any;
 }
 
 export const HostDidReceiveRequestNotificationType = new NotificationType<

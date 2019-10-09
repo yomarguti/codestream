@@ -137,12 +137,14 @@ export function listenForEvents(store) {
 				activeFile: params.editor.fileName,
 				textEditorUri: params.editor.uri,
 				textEditorVisibleRanges: params.editor.visibleRanges,
-				textEditorSelections: params.editor.selections,
-				metrics: params.editor.metrics,
 				textEditorLineCount: params.editor.lineCount,
-				scmInfo: isNotOnDisk(params.editor.uri)
-					? undefined
-					: await api.send(GetFileScmInfoRequestType, { uri: params.editor.uri })
+				metrics: params.editor.metrics,
+
+				textEditorSelections: [],
+				scmInfo: undefined
+				// scmInfo: isNotOnDisk(params.editor.uri)
+				// 	? undefined
+				// 	: await api.send(GetFileScmInfoRequestType, { uri: params.editor.uri })
 			};
 		} else {
 			context = {
@@ -282,9 +284,9 @@ export function listenForEvents(store) {
 		let controller: RouteControllerType | undefined;
 		let action: RouteActionType | undefined;
 		let id: string | undefined;
-
+		let parsedQuery;
 		if (uri.query) {
-			const parsedQuery = parseQuery(uri.query) as any;
+			parsedQuery = parseQuery(uri.query) as any;
 			if (parsedQuery) {
 				controller = parsedQuery.controller;
 				action = parsedQuery.action;
@@ -307,7 +309,8 @@ export function listenForEvents(store) {
 		return {
 			controller,
 			action,
-			id
+			id,
+			query: parsedQuery
 		};
 	};
 
@@ -331,7 +334,11 @@ export function listenForEvents(store) {
 								const codemark = getCodemark(codemarks, route.id);
 								if (codemark && codemark.type === CodemarkType.Link)
 									moveCursorToLine(codemark!.markerIds![0]);
-								else store.dispatch(setCurrentCodemark(route.id));
+								else {
+									const markerId =
+										route.query && route.query.marker ? route.query.marker : undefined;
+									store.dispatch(setCurrentCodemark(route.id, markerId));
+								}
 							}
 							break;
 						}

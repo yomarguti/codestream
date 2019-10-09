@@ -15,7 +15,8 @@ import {
 	CSDirectStream,
 	CSStream,
 	CSUser,
-	StreamType
+	StreamType,
+	CSApiCapabilities
 } from "@codestream/protocols/api";
 import cx from "classnames";
 import * as paths from "path-browserify";
@@ -48,7 +49,11 @@ import Icon from "./Icon";
 import Menu from "./Menu";
 import Tooltip from "./Tooltip";
 import { sortBy as _sortBy, sortBy } from "lodash-es";
-import { EditorSelectRangeRequestType, EditorSelection } from "@codestream/protocols/webview";
+import {
+	EditorSelectRangeRequestType,
+	EditorSelection,
+	EditorHighlightRangeRequestType
+} from "@codestream/protocols/webview";
 import { getCurrentSelection } from "../store/editorContext/reducer";
 import Headshot from "./Headshot";
 import { getTeamMembers, getTeamTagsArray } from "../store/users/reducer";
@@ -58,6 +63,11 @@ import { getCurrentTeamProvider } from "../store/teams/reducer";
 import { getCodemark } from "../store/codemarks/reducer";
 import { CodemarksState } from "../store/codemarks/types";
 import { setCurrentStream } from "../store/context/actions";
+import ContainerAtEditorLine from "./SpatialView/ContainerAtEditorLine";
+import ContainerAtEditorSelection from "./SpatialView/ContainerAtEditorSelection";
+import { prettyPrintOne } from "code-prettify";
+import { escapeHtml, safe } from "../utils";
+import { ReposActionsType } from "../store/repos/types";
 
 interface Props extends ConnectedProps {
 	streamId: string;
@@ -73,6 +83,9 @@ interface Props extends ConnectedProps {
 	editingCodemark?: CodemarkPlus;
 	placeholder?: string;
 	onDidChangeSelection?(location: EditorSelection): void;
+	positionAtLocation?: boolean;
+	multiLocation?: boolean;
+	setMultiLocation?: Function;
 }
 
 interface ConnectedProps {
@@ -94,13 +107,14 @@ interface ConnectedProps {
 	teamProvider: "codestream" | "slack" | "msteams" | string;
 	teamTagsArray: any;
 	codemarkState: CodemarksState;
+	apiCapabilities: CSApiCapabilities;
 }
 
 interface State {
 	text: string;
 	formatCode: boolean;
 	type: string;
-	codeBlock?: GetRangeScmInfoResponse;
+	codeBlocks: GetRangeScmInfoResponse[];
 	assignees: { value: any; label: string }[] | { value: any; label: string };
 	assigneesRequired: boolean;
 	assigneesDisabled: boolean;
@@ -114,6 +128,8 @@ interface State {
 	channelMenuTarget: any;
 	labelMenuOpen: boolean;
 	labelMenuTarget: any;
+	locationMenuOpen: number | "header" | "closed";
+	locationMenuTarget: any;
 	selectedChannelName?: string;
 	selectedChannelId?: string;
 	title?: string;
@@ -126,6 +142,9 @@ interface State {
 	copied: boolean;
 	selectedTags?: any;
 	relatedCodemarkIds?: any;
+	addingLocation?: boolean;
+	editingLocation: number;
+	liveLocation: number;
 }
 
 function merge(defaults: Partial<State>, codemark: CSCodemark): State {
@@ -156,7 +175,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			text: "",
 			formatCode: false,
 			type: defaultType,
-			codeBlock: props.codeBlock,
+			codeBlocks: props.codeBlock ? [props.codeBlock] : [],
 			assignees: [],
 			assigneesDisabled: false,
 			assigneesRequired: false,
@@ -166,7 +185,11 @@ class CodemarkForm extends React.Component<Props, State> {
 			assignableUsers: this.getAssignableCSUsers(),
 			privacy: "private",
 			selectedTags: {},
-			relatedCodemarkIds: {}
+			relatedCodemarkIds: {},
+			locationMenuOpen: "closed",
+			editingLocation: -1,
+			addingLocation: false,
+			liveLocation: -1
 		};
 
 		const state = props.editingCodemark
@@ -229,10 +252,12 @@ class CodemarkForm extends React.Component<Props, State> {
 	}
 
 	componentDidMount() {
-		const { codeBlock } = this.state;
-		if (codeBlock) {
-			if (isRangeEmpty(codeBlock.range)) {
-				this.selectRangeInEditor(codeBlock.uri, forceAsLine(codeBlock.range));
+		const { multiLocation } = this.props;
+		const { codeBlocks } = this.state;
+
+		if (codeBlocks.length === 1) {
+			if (isRangeEmpty(codeBlocks[0].range)) {
+				this.selectRangeInEditor(codeBlocks[0].uri, forceAsLine(codeBlocks[0].range));
 			}
 			this.handleScmChange();
 		} else {
@@ -242,21 +267,59 @@ class CodemarkForm extends React.Component<Props, State> {
 				const isEmpty = isRangeEmpty(textEditorSelection);
 				const range = isEmpty ? forceAsLine(textEditorSelection) : textEditorSelection;
 				if (isEmpty) this.selectRangeInEditor(textEditorUri, range);
-				this.getScmInfoForSelection(textEditorUri, range);
+				this.getScmInfoForSelection(textEditorUri, range, () => {
+					if (multiLocation) this.setState({ addingLocation: true, liveLocation: 1 });
+					else this.focus();
+				});
 			}
 		}
-		this.focus();
+		// if (!multiLocation) this.focus();
+	}
+
+	rangesAreEqual(range1?: Range, range2?: Range) {
+		if ((range1 && !range2) || (!range1 && range2)) return false;
+		if (range1 && range2) {
+			if (
+				range1.start.line !== range2.start.line ||
+				range1.start.character !== range2.start.character ||
+				range1.end.line !== range2.end.line ||
+				range1.end.character !== range2.end.character
+			)
+				return false;
+		}
+		return true;
+	}
+
+	isNonzeroSelection(range?: Range) {
+		if (!range) return false;
+		if (range.start.line === range.end.line && range.start.character === range.end.character)
+			return false;
+		return true;
 	}
 
 	componentDidUpdate(prevProps: Props) {
-		const { isEditing, textEditorSelection, textEditorUri } = this.props;
+		const {
+			isEditing,
+			textEditorSelection,
+			textEditorUri,
+			multiLocation,
+			setMultiLocation
+		} = this.props;
+
 		if (
-			prevProps.textEditorSelection !== textEditorSelection &&
+			// make sure there an actual selection, not just a cursor
+			this.isNonzeroSelection(textEditorSelection) &&
+			// if the range didn't change, don't do anything
+			!this.rangesAreEqual(prevProps.textEditorSelection, textEditorSelection) &&
+			// make sure the range didn't change because we switched editors(files)
+			prevProps.textEditorUri == textEditorUri &&
 			!isEditing &&
-			!this.state.linkURI
+			!this.state.linkURI &&
+			this.state.liveLocation >= 0
 		) {
 			this.getScmInfoForSelection(textEditorUri!, forceAsLine(textEditorSelection!));
 			this.props.onDidChangeSelection && this.props.onDidChangeSelection(textEditorSelection!);
+			// this.setState({ addingLocation: false });
 		}
 
 		const prevProviderHost = prevProps.issueProvider ? prevProps.issueProvider.host : undefined;
@@ -281,14 +344,18 @@ class CodemarkForm extends React.Component<Props, State> {
 		});
 	}
 
-	private async getScmInfoForSelection(uri: string, range: Range) {
+	private async getScmInfoForSelection(uri: string, range: Range, callback?: Function) {
 		const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
 			uri: uri,
 			range: range,
 			dirty: true // should this be determined here? using true to be safe
 		});
-		this.setState({ codeBlock: scmInfo }, () => {
+		let newCodeBlocks = [...this.state.codeBlocks];
+		if (this.state.liveLocation >= 0) newCodeBlocks[this.state.liveLocation] = scmInfo;
+		else newCodeBlocks.push(scmInfo);
+		this.setState({ codeBlocks: newCodeBlocks, addingLocation: false }, () => {
 			this.handleScmChange();
+			if (callback) callback();
 		});
 	}
 
@@ -347,6 +414,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		this.crossPostIssueValues = values;
 	};
 
+	// this doesn't appear to be used anywhere -Pez
 	handleSelectionChange = () => {
 		const { textEditorSelection, textEditorUri } = this.props;
 		if (textEditorSelection) {
@@ -355,9 +423,14 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 
 	handleScmChange = () => {
-		const { codeBlock } = this.state;
+		const { codeBlocks } = this.state;
 
 		this.setState({ codeBlockInvalid: false });
+
+		if (!codeBlocks.length) return;
+
+		const codeBlock =
+			this.state.liveLocation >= 0 ? codeBlocks[this.state.liveLocation] : codeBlocks[0];
 
 		if (!codeBlock) return;
 
@@ -440,7 +513,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (this.isFormInvalid()) return;
 
 		const {
-			codeBlock,
+			codeBlocks,
 			privacy,
 			type,
 			title,
@@ -449,6 +522,9 @@ class CodemarkForm extends React.Component<Props, State> {
 			selectedTags,
 			relatedCodemarkIds
 		} = this.state;
+
+		// FIXME
+		const codeBlock = codeBlocks[0];
 
 		if (type === "link") {
 			let request;
@@ -506,7 +582,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		try {
 			await this.props.onSubmit(
 				{
-					codeBlock: this.state.codeBlock,
+					codeBlocks,
 					streamId: selectedChannelId,
 					text: replaceHtml(text)!,
 					type,
@@ -528,8 +604,11 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 
 	isFormInvalid = () => {
-		const { codeBlock } = this.state;
+		const { codeBlocks } = this.state;
 		const { text, title, assignees, assigneesRequired, type } = this.state;
+
+		// FIXME
+		const codeBlock = codeBlocks[0];
 
 		const validationState = {
 			codeBlockInvalid: false,
@@ -611,6 +690,71 @@ class CodemarkForm extends React.Component<Props, State> {
 		this.setState({ channelMenuOpen: false });
 	};
 
+	switchLocation = (event: React.SyntheticEvent, index: number | "header") => {
+		if (this.props.isEditing) return;
+
+		const target = event.target;
+		this.setState({
+			liveLocation: -1,
+			locationMenuOpen: index,
+			locationMenuTarget: target
+		});
+	};
+
+	editLocation = (index: number, event?: React.SyntheticEvent) => {
+		if (event) event.stopPropagation();
+		this.setState({ locationMenuOpen: "closed", liveLocation: index, addingLocation: false });
+	};
+
+	deleteLocation = (index: number, event?: React.SyntheticEvent) => {
+		if (event) event.stopPropagation();
+		let newCodeBlocks = [...this.state.codeBlocks];
+		newCodeBlocks.splice(index, 1);
+		this.setState({
+			locationMenuOpen: "closed",
+			codeBlocks: newCodeBlocks
+		});
+		this.addLocation(0);
+		this.focus();
+	};
+
+	addLocation = (index?: number) => {
+		this.setState({
+			locationMenuOpen: "closed",
+			addingLocation: true,
+			liveLocation: this.state.codeBlocks.length
+		});
+		if (this.props.setMultiLocation && !this.props.multiLocation) this.props.setMultiLocation(true);
+	};
+
+	cementLocation = (event: React.SyntheticEvent) => {
+		const { codeBlocks, liveLocation } = this.state;
+		event.stopPropagation();
+
+		try {
+			const { file: newFile, repoPath: newRepoPath } = codeBlocks[liveLocation].scm!;
+			const { file, repoPath } = codeBlocks[0].scm!;
+			let location = "Same File";
+			if (repoPath !== newRepoPath) location = "Different Repo";
+			else if (file !== newFile) location = "Different File";
+			HostApi.instance.track("Marker Added", {
+				"Marker Location": location
+			});
+		} catch (e) {}
+
+		this.addLocation(0);
+		this.focus();
+	};
+
+	jumpToLocation = (index: number, event?: React.SyntheticEvent) => {
+		if (event) event.stopPropagation();
+		this.toggleCodeHighlightInTextEditor(true, index);
+	};
+
+	selectLocation = (action: "add" | "edit" | "delete") => {
+		this.setState({ locationMenuOpen: "closed" });
+	};
+
 	switchLabel = (event: React.SyntheticEvent) => {
 		event.stopPropagation();
 		const target = event.target;
@@ -637,11 +781,14 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (keys.length === 0) return null;
 
 		return (
-			<div className="tags" key="tags" style={{ margin: "10px 0 -10px 0" }}>
-				{this.props.teamTagsArray.map(tag => {
-					return selectedTags[tag.id] ? <Tag tag={tag} /> : null;
-				})}
-				<div style={{ clear: "both" }} />
+			<div className="related">
+				<div className="related-label">Tags</div>
+				<div style={{ marginBottom: "-5px" }}>
+					{this.props.teamTagsArray.map(tag => {
+						return selectedTags[tag.id] ? <Tag tag={tag} /> : null;
+					})}
+					<div style={{ clear: "both" }} />
+				</div>
 			</div>
 		);
 	};
@@ -652,30 +799,33 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (keys.length === 0) return null;
 
 		return (
-			<div className="related-codemarks" key="related-codemarks" style={{ margin: "10px 0 0 0" }}>
-				{keys.map(key => {
-					const codemark = relatedCodemarkIds[key];
-					if (!codemark) return null;
+			<div className="related" key="related-codemarks">
+				<div className="related-label">Related</div>
+				<div className="related-codemarks" key="related-codemarks" style={{ margin: "0 0 0 0" }}>
+					{keys.map(key => {
+						const codemark = relatedCodemarkIds[key];
+						if (!codemark) return null;
 
-					const title = codemark.title || codemark.text;
-					const icon = (
-						<Icon
-							name={codemark.type || "comment"}
-							className={`${codemark.color}-color type-icon`}
-						/>
-					);
-					const file = codemark.markers && codemark.markers[0] && codemark.markers[0].file;
+						const title = codemark.title || codemark.text;
+						const icon = (
+							<Icon
+								name={codemark.type || "comment"}
+								className={`${codemark.color}-color type-icon`}
+							/>
+						);
+						const file = codemark.markers && codemark.markers[0] && codemark.markers[0].file;
 
-					return (
-						<div key={key} className="related-codemark">
-							{icon}&nbsp;{title}&nbsp;&nbsp;<span className="codemark-file">{file}</span>
-							<span style={{ marginLeft: 5 }}>
-								<Icon name="x" onClick={() => this.handleToggleCodemark(codemark)} />
-							</span>
-						</div>
-					);
-				})}
-				<div style={{ clear: "both" }} />
+						return (
+							<div key={key} className="related-codemark">
+								{icon}&nbsp;{title}&nbsp;&nbsp;<span className="codemark-file">{file}</span>
+								<span style={{ marginLeft: 5 }}>
+									<Icon name="x" onClick={() => this.handleToggleCodemark(codemark)} />
+								</span>
+							</div>
+						);
+					})}
+					<div style={{ clear: "both" }} />
+				</div>
 			</div>
 		);
 	};
@@ -850,58 +1000,177 @@ class CodemarkForm extends React.Component<Props, State> {
 		this.setState({ relatedCodemarkIds: codemarkIds });
 	};
 
+	renderCodeblock(marker) {
+		if (marker === undefined) return;
+
+		const path = marker.file || "";
+		let extension = paths.extname(path).toLowerCase();
+		if (extension.startsWith(".")) {
+			extension = extension.substring(1);
+		}
+
+		let startLine = 1;
+		// `range` is not a property of CSMarker
+		/* if (marker.range) {
+			startLine = marker.range.start.line;
+		} else if (marker.location) {
+			startLine = marker.location[0];
+		} else */ if (
+			marker.locationWhenCreated
+		) {
+			startLine = marker.locationWhenCreated[0];
+		}
+
+		const codeHTML = prettyPrintOne(escapeHtml(marker.code), extension, startLine);
+		return [
+			<div className="related" style={{ padding: "0 10px", marginBottom: 0, position: "relative" }}>
+				<div className="file-info">
+					<span className="monospace" style={{ paddingRight: "20px" }}>
+						<Icon name="file"></Icon> {marker.file}
+					</span>{" "}
+					{marker.branchWhenCreated && (
+						<>
+							<span className="monospace" style={{ paddingRight: "20px" }}>
+								<Icon name="git-branch"></Icon> {marker.branchWhenCreated}
+							</span>{" "}
+						</>
+					)}
+					<span className="monospace">
+						<Icon name="git-commit"></Icon> {marker.commitHashWhenCreated.substring(0, 7)}
+					</span>
+				</div>
+				<pre
+					className="code prettyprint"
+					data-scrollable="true"
+					dangerouslySetInnerHTML={{ __html: codeHTML }}
+				/>
+			</div>
+		];
+	}
+
+	getTitleLabel() {
+		const { editingCodemark } = this.props;
+		const commentType = editingCodemark ? editingCodemark.type : this.state.type;
+		return commentType === "issue"
+			? "issue in "
+			: commentType === "question"
+			? "question in "
+			: commentType === "bookmark"
+			? "bookmark in "
+			: commentType === "link"
+			? "permalink for "
+			: commentType === "comment"
+			? "comment in "
+			: "";
+	}
+
 	getCodeBlockHint() {
 		const { editingCodemark } = this.props;
-		const { codeBlock } = this.state;
-		if (!codeBlock || !codeBlock.range) return "Select a range to comment on a block of code.";
+		const { codeBlocks, liveLocation } = this.state;
+		if (!codeBlocks.length)
+			return (
+				<span className="add-range" style={{ display: "none" }}>
+					&nbsp;Select a range to comment on a block of code.
+				</span>
+			);
 
-		const scm = codeBlock.scm;
-		let file = scm && scm.file ? paths.basename(scm.file) : "";
-
-		let range: any = codeBlock.range;
-		if (editingCodemark) {
-			if (editingCodemark.markers) {
-				const marker = editingCodemark.markers[0];
-				if (marker.locationWhenCreated) {
-					// TODO: location is likely invalid
-					range = arrayToRange(marker.locationWhenCreated as any);
-				} else {
-					range = undefined;
-				}
-				file = marker.file || "";
-			}
-		}
-
-		let lines: string;
-		if (range === undefined) lines = "";
-		else if (range.start.line === range.end.line) {
-			lines = `(Line ${range.start.line + 1})`;
+		if (this.props.multiLocation) {
+			const numLocations = codeBlocks.length; // + (this.state.addingLocation ? 1 : 0);
+			return (
+				<>
+					<span className="subhead">{this.getTitleLabel()}&nbsp;</span>
+					<span className="channel-label" style={{ display: "inline-block" }}>
+						<div className="location">
+							{numLocations} location{numLocations > 1 ? "s" : ""}
+						</div>
+					</span>
+					{this.state.addingLocation || liveLocation >= 0 || this.renderAddLocation()}
+				</>
+			);
 		} else {
-			lines = `(Lines ${range.start.line + 1}-${range.end.line + 1})`;
+			const codeBlock = codeBlocks[0];
+			if (!codeBlock) return null;
+			if (liveLocation == 0 && !codeBlock.range)
+				return <span className="add-range">Select a range to add a code location</span>;
+
+			if (!codeBlock.range) return null;
+
+			const scm = codeBlock.scm;
+			let file = scm && scm.file ? paths.basename(scm.file) : "";
+
+			let range: any = codeBlock.range;
+			if (editingCodemark) {
+				if (editingCodemark.markers) {
+					const marker = editingCodemark.markers[0];
+					if (marker.locationWhenCreated) {
+						// TODO: location is likely invalid
+						range = arrayToRange(marker.locationWhenCreated as any);
+					} else {
+						range = undefined;
+					}
+					file = marker.file || "";
+				}
+			}
+
+			let lines: string;
+			if (range === undefined) lines = "";
+			else if (range.start.line === range.end.line) {
+				lines = `(Line ${range.start.line + 1})`;
+			} else {
+				lines = `(Lines ${range.start.line + 1}-${range.end.line + 1})`;
+			}
+			return (
+				<>
+					<span className="subhead">{this.getTitleLabel()}&nbsp;</span>
+					<span className="channel-label" style={{ display: "inline-block" }}>
+						<div
+							className={cx("location", { live: liveLocation == 0 })}
+							onClick={e => this.switchLocation(e, "header")}
+						>
+							{file} {lines}
+						</div>
+					</span>
+					{this.renderAddLocation()}
+				</>
+			);
 		}
+	}
 
-		const commentType = editingCodemark ? editingCodemark.type : this.state.type;
-		const titleLabel =
-			commentType === "issue"
-				? "issue in "
-				: commentType === "question"
-				? "question in "
-				: commentType === "bookmark"
-				? "bookmark in "
-				: commentType === "link"
-				? "permalink for "
-				: commentType === "comment"
-				? "comment in "
-				: "";
+	renderAddLocation() {
+		if (!this.props.apiCapabilities.multipleMarkers) return null;
 
-		return titleLabel + file + " " + lines;
+		return (
+			<div className="add-location">
+				<Tooltip
+					placement="topRight"
+					title="Codemarks can refer to one or more blocks of code, even across files."
+					delay={1}
+				>
+					<span onClick={e => this.addLocation()}>
+						<Icon name="plus" />
+						add range
+					</span>
+				</Tooltip>
+			</div>
+		);
+	}
+
+	async toggleCodeHighlightInTextEditor(highlight: boolean, index: number) {
+		const codeBlock = this.state.codeBlocks[index];
+		if (!codeBlock || !codeBlock.range || !codeBlock.uri) return;
+
+		HostApi.instance.send(EditorHighlightRangeRequestType, {
+			uri: codeBlock.uri,
+			range: codeBlock.range,
+			highlight: highlight
+		});
 	}
 
 	renderMessageInput = () => {
-		const { codeBlock, type, text } = this.state;
+		const { codeBlocks, type, text } = this.state;
 		let placeholder = this.props.placeholder;
 
-		if (codeBlock) {
+		if (codeBlocks.length) {
 			// const range = codeBlock ? arrayToRange(codeBlock.location) : null;
 			// let rangeText = "";
 			// if (range && codeBlock && codeBlock.file) {
@@ -957,8 +1226,190 @@ class CodemarkForm extends React.Component<Props, State> {
 		}
 	};
 
+	renderCodeBlocks = () => {
+		const { codeBlocks, liveLocation } = this.state;
+		const { editingCodemark, multiLocation } = this.props;
+
+		const numCodeBlocks = codeBlocks.length;
+
+		if (multiLocation) {
+			return (
+				<>
+					{codeBlocks.map((codeBlock, index) => {
+						if (!codeBlock) return null;
+						if (liveLocation == index && !codeBlock.range)
+							return <span className="add-range">Select a range to add a code location</span>;
+
+						if (!codeBlock.range) return null;
+
+						const scm = codeBlock.scm;
+						if (!scm) return;
+
+						let file = scm.file ? paths.basename(scm.file) : "";
+
+						let range: any = codeBlock.range;
+						if (editingCodemark) {
+							if (editingCodemark.markers) {
+								const marker = editingCodemark.markers[0];
+								if (marker.locationWhenCreated) {
+									// TODO: location is likely invalid
+									range = arrayToRange(marker.locationWhenCreated as any);
+								} else {
+									range = undefined;
+								}
+								file = marker.file || "";
+							}
+						}
+						let extension = paths.extname(file).toLowerCase();
+						if (extension.startsWith(".")) extension = extension.substring(1);
+
+						const codeHTML = prettyPrintOne(
+							escapeHtml(codeBlock.contents),
+							extension,
+							range.start.line + 1
+						);
+						return (
+							<div
+								className={cx("related", { live: liveLocation == index })}
+								style={{ padding: "0", marginBottom: 0, position: "relative" }}
+							>
+								<div className="file-info">
+									<span className="monospace" style={{ paddingRight: "20px" }}>
+										<Icon name="file"></Icon> {file}
+									</span>{" "}
+									{scm.branch && (
+										<>
+											<span className="monospace" style={{ paddingRight: "20px" }}>
+												<Icon name="git-branch"></Icon> {scm.branch}
+											</span>{" "}
+										</>
+									)}
+									{scm.revision && (
+										<span className="monospace">
+											<Icon name="git-commit"></Icon> {scm.revision.substring(0, 7)}
+										</span>
+									)}
+								</div>
+								<pre
+									className="code prettyprint"
+									data-scrollable="true"
+									dangerouslySetInnerHTML={{ __html: codeHTML }}
+								/>
+								{liveLocation == index && (
+									<div className="code-buttons live">
+										<div className="codemark-actions-button ok" onClick={this.cementLocation}>
+											OK
+										</div>
+										<div
+											className="codemark-actions-button"
+											onClick={e => this.deleteLocation(index)}
+										>
+											Cancel
+										</div>
+									</div>
+								)}
+								{liveLocation != index && (
+									<div className="code-buttons">
+										<Icon
+											title={"Jump to this range in " + file}
+											placement="bottom"
+											name="link-external"
+											className="clickable"
+											onClick={e => this.jumpToLocation(index, e)}
+										/>
+										<Icon
+											title="Select new range"
+											placement="bottom"
+											name="select"
+											className="clickable"
+											onClick={e => this.editLocation(index, e)}
+										/>
+										{numCodeBlocks > 1 && (
+											<Icon
+												title="Delete Range"
+												placement="bottom"
+												name="x"
+												className="clickable"
+												onClick={e => this.deleteLocation(index, e)}
+											/>
+										)}
+									</div>
+								)}
+								<div style={{ clear: "both" }}></div>
+							</div>
+						);
+					})}
+					{this.state.addingLocation && (
+						<div className="add-range" style={{ clear: "both", position: "relative" }}>
+							Select code in your editor to add a range
+							<div className="code-buttons live">
+								<div
+									className="codemark-actions-button"
+									style={{ margin: "2px 0" }}
+									onClick={e => {
+										this.setState({ addingLocation: false, liveLocation: -1 });
+										this.focus();
+									}}
+								>
+									Cancel
+								</div>
+							</div>
+						</div>
+					)}
+				</>
+			);
+		} else if (liveLocation == 0) {
+			return (
+				<div className="add-range" style={{ clear: "both", position: "relative" }}>
+					Select a new range
+					<div className="code-buttons live">
+						<div
+							className="codemark-actions-button"
+							style={{ margin: "2px 0" }}
+							onClick={e => this.setState({ liveLocation: -1 })}
+						>
+							OK
+						</div>
+					</div>
+				</div>
+			);
+		} else return null;
+	};
+
 	render() {
+		const { codeBlocks } = this.state;
+
+		if (this.props.multiLocation) {
+			return (
+				<div className="full-height-codemark-form">
+					<span className="plane-container">
+						<div className="codemark-form-container">{this.renderCodemarkForm()}</div>
+					</span>
+				</div>
+			);
+		} else if (this.props.positionAtLocation) {
+			if (codeBlocks[0]) {
+				const lineNumber = codeBlocks[0].range.start.line;
+				return (
+					<ContainerAtEditorLine lineNumber={lineNumber} className="cs-has-form">
+						<div className="codemark-form-container">{this.renderCodemarkForm()}</div>
+					</ContainerAtEditorLine>
+				);
+			} else {
+				return (
+					<ContainerAtEditorSelection className="cs-has-form">
+						<div className="codemark-form-container">{this.renderCodemarkForm()}</div>
+					</ContainerAtEditorSelection>
+				);
+			}
+		} else {
+			return this.renderCodemarkForm();
+		}
+	}
+
+	renderCodemarkForm() {
 		const { editingCodemark, currentUser } = this.props;
+		const { addingLocation, liveLocation } = this.state;
 		const commentType = editingCodemark ? editingCodemark.type : this.state.type || "comment";
 
 		const titlePlaceholder =
@@ -1001,6 +1452,16 @@ class CodemarkForm extends React.Component<Props, State> {
 			</span>
 		);
 
+		const locationItems: any[] = [];
+		if (this.props.apiCapabilities.multipleMarkers)
+			locationItems.push({ label: "Add Range", action: () => this.addLocation(0) });
+		// { label: "Change Location", action: () => this.editLocation(0) }
+
+		if (!this.props.multiLocation)
+			locationItems.push({ label: "Select New Range", action: () => this.editLocation(0) });
+		// if (this.state.codeBlocks.length > 1)
+		// locationItems.push({ label: "Remove Location", action: "delete" });
+
 		return [
 			<form
 				id="code-comment-form"
@@ -1012,7 +1473,15 @@ class CodemarkForm extends React.Component<Props, State> {
 						<div key="headshot" className="headline">
 							<Headshot person={currentUser} />
 							<b>{currentUser.username}</b>
-							<span className="subhead">{this.getCodeBlockHint()}</span>
+							{this.getCodeBlockHint()}
+							{this.state.locationMenuOpen == "header" && (
+								<Menu
+									align="center"
+									target={this.state.locationMenuTarget}
+									items={locationItems}
+									action={this.selectLocation}
+								/>
+							)}
 						</div>
 						{/* false && commentType === "bookmark" && (
 							<div className="hint frame control-group" style={{ marginBottom: "10px" }}>
@@ -1022,7 +1491,7 @@ class CodemarkForm extends React.Component<Props, State> {
 						{commentType === "issue" && !this.props.isEditing && (
 							<CrossPostIssueControls
 								onValues={this.handleCrossPostIssueValues}
-								codeBlock={this.state.codeBlock as any}
+								codeBlock={this.state.codeBlocks[0] as any}
 							/>
 						)}
 						{(commentType === "issue" ||
@@ -1129,61 +1598,65 @@ class CodemarkForm extends React.Component<Props, State> {
 					)}
 					{this.renderRelatedCodemarks()}
 					{this.renderTags()}
-					{commentType !== "link" && this.renderCrossPostMessage(commentType)}
-					<div
-						key="buttons"
-						className="button-group"
-						style={{
-							marginLeft: "10px",
-							marginTop: "10px",
-							float: "right",
-							width: "auto",
-							marginRight: 0
-						}}
-					>
-						<Tooltip title={cancelTip} placement="bottom" delay={1}>
-							<Button
-								key="cancel"
-								style={{
-									paddingLeft: "10px",
-									paddingRight: "10px",
-									width: "auto"
-								}}
-								className="control-button cancel"
-								type="submit"
-								onClick={this.props.onClickClose}
-							>
-								{this.state.copied ? "Close" : "Cancel"}
-							</Button>
-						</Tooltip>
-						<Tooltip title={submitTip} placement="bottom" delay={1}>
-							<Button
-								key="submit"
-								style={{
-									paddingLeft: "10px",
-									paddingRight: "10px",
-									// fixed width to handle the isLoading case
-									width: "80px",
-									marginRight: 0
-								}}
-								className="control-button"
-								type="submit"
-								loading={this.state.isLoading}
-								onClick={this.state.linkURI ? this.copyPermalink : this.handleClickSubmit}
-							>
-								{commentType === "link"
-									? this.state.copied
-										? "Copied!"
-										: this.state.linkURI
-										? "Copy Link"
-										: "Create Link"
-									: "Submit"}
-							</Button>
-						</Tooltip>
-						{/*
+					{this.renderCodeBlocks()}
+					{this.props.multiLocation && <div style={{ height: "10px" }} />}
+					{commentType !== "link" && true && this.renderCrossPostMessage(commentType)}
+					{true && (
+						<div
+							key="buttons"
+							className="button-group"
+							style={{
+								marginLeft: "10px",
+								marginTop: "10px",
+								float: "right",
+								width: "auto",
+								marginRight: 0
+							}}
+						>
+							<Tooltip title={cancelTip} placement="bottom" delay={1}>
+								<Button
+									key="cancel"
+									style={{
+										paddingLeft: "10px",
+										paddingRight: "10px",
+										width: "auto"
+									}}
+									className="control-button cancel"
+									type="submit"
+									onClick={this.props.onClickClose}
+								>
+									{this.state.copied ? "Close" : "Cancel"}
+								</Button>
+							</Tooltip>
+							<Tooltip title={submitTip} placement="bottom" delay={1}>
+								<Button
+									key="submit"
+									style={{
+										paddingLeft: "10px",
+										paddingRight: "10px",
+										// fixed width to handle the isLoading case
+										width: "80px",
+										marginRight: 0
+									}}
+									className="control-button"
+									type="submit"
+									loading={this.state.isLoading}
+									onClick={this.state.linkURI ? this.copyPermalink : this.handleClickSubmit}
+								>
+									{commentType === "link"
+										? this.state.copied
+											? "Copied!"
+											: this.state.linkURI
+											? "Copy Link"
+											: "Create Link"
+										: "Submit"}
+								</Button>
+							</Tooltip>
+							{/*
 							<span className="hint">Styling with Markdown is supported</span>
 						*/}
-					</div>
+						</div>
+					)}
 					<div key="clear" style={{ clear: "both" }} />
 				</fieldset>
 			</form>
@@ -1213,7 +1686,16 @@ class CodemarkForm extends React.Component<Props, State> {
 const EMPTY_OBJECT = {};
 
 const mapStateToProps = (state): ConnectedProps => {
-	const { context, editorContext, users, session, preferences, providers, codemarks } = state;
+	const {
+		context,
+		editorContext,
+		users,
+		session,
+		preferences,
+		providers,
+		codemarks,
+		apiVersioning
+	} = state;
 	const user = users[session.userId];
 	const channel = context.currentStreamId
 		? getStreamForId(state.streams, context.currentTeamId, context.currentStreamId) ||
@@ -1255,7 +1737,8 @@ const mapStateToProps = (state): ConnectedProps => {
 		slashCommands: getSlashCommands(state.capabilities),
 		services: state.services,
 		teamTagsArray,
-		codemarkState: codemarks
+		codemarkState: codemarks,
+		apiCapabilities: apiVersioning.apiCapabilities
 	};
 };
 

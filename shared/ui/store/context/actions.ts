@@ -64,8 +64,8 @@ export const setCodemarksShowArchived = (enabled: boolean) =>
 export const setCodemarksShowResolved = (enabled: boolean) =>
 	action(ContextActionsType.SetCodemarksShowResolved, enabled);
 
-export const setCurrentCodemark = (codemarkId?: string) =>
-	action(ContextActionsType.SetCurrentCodemark, codemarkId);
+export const setCurrentCodemark = (codemarkId?: string, markerId?: string) =>
+	action(ContextActionsType.SetCurrentCodemark, { codemarkId, markerId });
 
 export const _setCurrentStream = (streamId?: string, threadId?: string) =>
 	action(ContextActionsType.SetCurrentStream, { streamId, threadId });

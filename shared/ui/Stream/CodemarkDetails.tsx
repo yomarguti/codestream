@@ -1,5 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
+import cx from "classnames";
 import Button from "./Button";
 import PostList from "./PostList";
 import Tooltip from "./Tooltip";
@@ -88,6 +89,9 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		this.setState({ text: "" });
 		this.cacheText("");
 
+		// don't create empty replies
+		if (!text.length) return;
+
 		let replyText = formatCode ? "```" + text + "```" : text;
 		await createPost(codemark.streamId, threadId, replaceHtml(replyText)!, null, mentionedUserIds, {
 			entryPoint: "Codemark"
@@ -124,7 +128,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 
 		const submitTip = (
 			<span>
-				Submit Comment<span className="keybinding extra-pad">{modifier} ENTER</span>
+				Submit Reply<span className="keybinding extra-pad">{modifier} ENTER</span>
 			</span>
 		);
 
@@ -164,7 +168,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 											margin: "10px 0",
 											float: "right"
 										}}
-										className="control-button"
+										className={cx("control-button", { cancel: !this.state.text })}
 										type="submit"
 										onClick={this.submitReply}
 									>

@@ -39,6 +39,7 @@ export interface WebviewContext {
 	currentStreamId?: string;
 	threadId?: string;
 	currentCodemarkId?: string;
+	currentMarkerId?: string;
 	hasFocus: boolean;
 	panelStack?: (WebviewPanels | string)[];
 }

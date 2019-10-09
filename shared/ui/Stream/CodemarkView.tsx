@@ -9,17 +9,15 @@ import { DelayedRender } from "../Container/DelayedRender";
 import { setCurrentCodemark } from "../store/context/actions";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { HostApi } from "../webview-api";
-import { GetDocumentFromMarkerRequestType } from "@codestream/protocols/agent";
 import { EditorSelectRangeRequestType } from "@codestream/protocols/webview";
+import { useDidMount } from "../utilities/hooks";
+import { getDocumentFromMarker } from "./api-functions";
 
 export async function moveCursorToLine(markerId: string) {
 	const hostApi = HostApi.instance;
 	try {
-		const response = await hostApi.send(GetDocumentFromMarkerRequestType, {
-			markerId: markerId
-		});
+		const response = await getDocumentFromMarker(markerId);
 
-		// TODO: What should we do if we don't find the marker? Is that possible?
 		if (response) {
 			// Ensure we put the cursor at the right line (don't actually select the whole range)
 			hostApi.send(EditorSelectRangeRequestType, {
@@ -43,7 +41,7 @@ export function CodemarkView() {
 		return getCodemark(state.codemarks, state.context.currentCodemarkId);
 	});
 
-	React.useEffect(() => {
+	useDidMount(() => {
 		HostApi.instance.track("Page Viewed", { "Page Name": "Codemark View" });
 		if (codemark == undefined) {
 			// TODO: fetch it when we have the api for that
@@ -60,22 +58,7 @@ export function CodemarkView() {
 		return () => {
 			subscription.dispose();
 		};
-	}, []);
-
-	React.useEffect(() => {
-		if (!codemark) return;
-
-		let markerId: string | undefined;
-		if (codemark.markers) {
-			markerId = codemark.markers[0].id;
-		} else if (codemark.markerIds) {
-			markerId = codemark.markerIds[0];
-		}
-
-		if (markerId) {
-			moveCursorToLine(markerId);
-		}
-	}, [codemark && codemark.id]);
+	});
 
 	const handleClickCancel = React.useCallback(event => {
 		event.preventDefault();
@@ -104,7 +87,7 @@ export function CodemarkView() {
 		<div className="codemark-view" onClick={handleClickField}>
 			<CancelButton className="cancel-icon clickable" onClick={handleClickCancel} />
 			<div className="codemark-container">
-				<Codemark codemark={codemark} selected highlightCodeInTextEditor />
+				<Codemark codemark={codemark} selected />
 			</div>
 		</div>
 	);

@@ -48,7 +48,11 @@ export function reduceContext(
 			return { ...state, currentStreamId: streamId, threadId };
 		}
 		case ContextActionsType.SetCurrentCodemark:
-			return { ...state, currentCodemarkId: action.payload };
+			return {
+				...state,
+				currentCodemarkId: action.payload.codemarkId,
+				currentMarkerId: action.payload.markerId
+			};
 
 		case ContextActionsType.OpenPanel:
 			return { ...state, panelStack: [action.payload, ...state.panelStack].slice(0, 10) };

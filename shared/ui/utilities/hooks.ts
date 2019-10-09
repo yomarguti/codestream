@@ -1,6 +1,10 @@
-import { useEffect, useRef, useState, useCallback, useLayoutEffect } from "react";
+import { useEffect, useRef, useState, useCallback, useLayoutEffect, EffectCallback } from "react";
 
 type Fn = () => void;
+
+export function useDidMount(callback: EffectCallback) {
+	useEffect(callback, []);
+}
 
 export function useUpdates(callback: Fn, dependencies: any[] = []) {
 	const onMount = useCallback(() => {

@@ -18,7 +18,7 @@ import {
 	Capabilities,
 	GetDocumentFromMarkerRequestType
 } from "@codestream/protocols/agent";
-import { CodemarkType, CSUser, CSMe, CSPost } from "@codestream/protocols/api";
+import { CodemarkType, CSUser, CSMe, CSPost, CSMarker } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
 import { range, emptyArray, forceAsLine } from "../utils";
@@ -41,18 +41,21 @@ import { CodeStreamState } from "../store";
 import {
 	EditorHighlightRangeRequestType,
 	EditorHighlightRangeRequest,
-	EditorRevealRangeRequestType
+	EditorSelectRangeRequestType,
+	EditorSelectRangeRequest
 } from "@codestream/protocols/webview";
 import { setCurrentCodemark } from "../store/context/actions";
 import { RelatedCodemark } from "./RelatedCodemark";
 import { addDocumentMarker } from "../store/documentMarkers/actions";
 import { Link } from "./Link";
 import { logError } from "../logger";
+import infiniteLoadable from "./infiniteLoadable";
 
 interface State {
 	hover: boolean;
 	isEditing: boolean;
 	isInjecting: boolean;
+	injectingLocation?: string;
 	menuOpen?: boolean;
 	menuTarget?: any;
 }
@@ -84,6 +87,8 @@ interface ConnectedProps {
 	isCodeStreamTeam: boolean;
 	teamTagsHash: any;
 	entirelyDeleted: boolean;
+	textEditorUri: string;
+	jumpToMarkerId?: string;
 }
 
 export type DisplayType = "default" | "collapsed";
@@ -156,17 +161,14 @@ export class Codemark extends React.Component<Props, State> {
 
 		if (selected) {
 			this.startPollingReplies(false);
-			this._highlightWhileSelected();
 		}
 	}
 
 	componentDidUpdate(prevProps: Props, _prevState: State) {
 		if (prevProps.selected && !this.props.selected) {
 			this.stopPollingReplies();
-			this._cleanUpHighlights();
 		} else if (this.props.selected && this._pollingTimer === undefined) {
 			this.startPollingReplies(true);
-			this._highlightWhileSelected();
 		}
 
 		// if selected codemark changes, then clean up highlight in file and highlight for new codemark
@@ -177,27 +179,12 @@ export class Codemark extends React.Component<Props, State> {
 			this.props.selected
 		) {
 			this._cleanUpHighlights();
-			this._highlightWhileSelected();
 		}
 	}
 
 	componentWillUnmount() {
 		this.stopPollingReplies();
 		this._cleanUpHighlights();
-	}
-
-	private _highlightWhileSelected() {
-		const { codemark, marker } = this.props;
-
-		if (!marker && codemark!.markerIds != undefined) {
-			const markerId = codemark!.markerIds[0];
-			getDocumentFromMarker(codemark!.markerIds[0]).then(info => {
-				if (info) {
-					this._markersToHighlight[markerId] = info;
-					this._sendHighlightRequest({ uri: info.fileUri, range: info.range, highlight: true });
-				}
-			});
-		}
 	}
 
 	private _cleanUpHighlights() {
@@ -544,7 +531,10 @@ export class Codemark extends React.Component<Props, State> {
 			this.props.onClick(event, this.props.marker);
 		} else {
 			if (!this.props.selected && this.props.codemark)
-				this.props.setCurrentCodemark(this.props.codemark.id);
+				this.props.setCurrentCodemark(
+					this.props.codemark.id,
+					this.props.marker ? this.props.marker.id : undefined
+				);
 		}
 	};
 
@@ -552,30 +542,88 @@ export class Codemark extends React.Component<Props, State> {
 		HostApi.instance.send(EditorHighlightRangeRequestType, request);
 	}
 
-	async toggleCodeHighlightInTextEditor(highlight: boolean, forceRemoval = false) {
-		// don't do anything if trying to highlight already highlighted code
-		if (highlight && this._isHighlightedInTextEditor) return;
-		// require explicitly forcing de-highlighting while selected
-		if (this.props.selected && this._isHighlightedInTextEditor && !forceRemoval) return;
+	private _sendSelectRequest(request: EditorSelectRangeRequest) {
+		HostApi.instance.send(EditorSelectRangeRequestType, request);
+	}
 
-		if (this.props.marker) {
-			this._isHighlightedInTextEditor = highlight;
-			this._sendHighlightRequest({
-				uri: this.props.marker.fileUri,
-				range: forceAsLine(this.props.marker.range),
-				highlight: highlight
+	jumpToMarker = markerId => {
+		getDocumentFromMarker(markerId).then(info => {
+			if (info) {
+				this._markersToHighlight[markerId] = info;
+				const position = { line: info.range.start.line, character: 0 };
+				const range = { start: position, end: position, cursor: position };
+				this._sendSelectRequest({ uri: info.fileUri, selection: range });
+				this._sendHighlightRequest({ uri: info.fileUri, range, highlight: true });
+			}
+		});
+	};
+
+	toggleCodeHighlightInTextEditor = async (
+		highlight: boolean,
+		forceRemoval = false,
+		// markerId is optionally passed in when we want to highlight a specific codeblock
+		markerId?: string
+	) => {
+		const { codemark, selected, marker } = this.props;
+		if (selected) return;
+
+		const selectedMultiMarker =
+			selected && codemark && codemark.markers && codemark.markers.length > 1;
+
+		// if the codemark is selected, and has multiple markers, and nobody told us which
+		// marker to highlight explicitly, then don't do anything by default, because each
+		// individual marker is going to highlight itself when hovering on that codeblock
+		if (selectedMultiMarker && !markerId) return;
+
+		// don't do anything if trying to highlight already highlighted code
+		if (!selectedMultiMarker && highlight && this._isHighlightedInTextEditor) return;
+		// require explicitly forcing de-highlighting while selected
+		if (!selectedMultiMarker && selected && this._isHighlightedInTextEditor && !forceRemoval)
+			return;
+
+		if (markerId && codemark && codemark.markers) {
+			getDocumentFromMarker(markerId).then(info => {
+				if (info) {
+					this._markersToHighlight[markerId] = info;
+					this._sendHighlightRequest({ uri: info.fileUri, range: info.range, highlight });
+				}
 			});
+			return;
+		}
+
+		if (marker) {
+			this._isHighlightedInTextEditor = highlight;
+			this._sendHighlightRequest({ uri: marker.fileUri, range: marker.range, highlight });
 		} else {
 			for (let { fileUri: uri, range } of Object.values(this._markersToHighlight)) {
 				this._isHighlightedInTextEditor = highlight;
-				this._sendHighlightRequest({
-					uri,
-					range: forceAsLine(range),
-					highlight: highlight
-				});
+				this._sendHighlightRequest({ uri, range, highlight });
 			}
 		}
-	}
+
+		// if (jump) {
+		// 	await HostApi.instance.send(EditorSelectRangeRequestType, {
+		// 		uri: this._fileUri[marker.id],
+		// 		// Ensure we put the cursor at the right line (don't actually select the whole range)
+		// 		selection: {
+		// 			start: this._range[marker.id].start,
+		// 			end: this._range[marker.id].start,
+		// 			cursor: this._range[marker.id].start
+		// 		},
+		// 		preserveFocus: true
+		// 	});
+		// } else {
+		// 	// don't jump to a new file to highlight it, unless we explicitly ask to
+		// 	if (this._fileUri[marker.id] !== this.props.textEditorUri) return;
+		// }
+
+		// this._isHighlightedInTextEditor = highlight;
+		// HostApi.instance.send(EditorHighlightRangeRequestType, {
+		// 	uri: this._fileUri[marker.id],
+		// 	range: this._range[marker.id],
+		// 	highlight: highlight
+		// });
+	};
 
 	handleMouseEnterCodemark = (event: React.MouseEvent): any => {
 		event.preventDefault();
@@ -594,7 +642,7 @@ export class Codemark extends React.Component<Props, State> {
 		this.setState({ menuOpen: !this.state.menuOpen, menuTarget: event.target });
 	};
 
-	handleSelectMenu = action => {
+	handleSelectMenu = (action, arg) => {
 		this.setState({ menuOpen: false });
 
 		if (!action) return;
@@ -614,12 +662,8 @@ export class Codemark extends React.Component<Props, State> {
 				this.setState({ isEditing: true });
 				break;
 			}
-			case "inject": {
-				this.setState({ isInjecting: true });
-				break;
-			}
 		}
-		var found = action.match(/set-keybinding-(\d)/);
+		const found = action.match(/set-keybinding-(\d)/);
 		if (found) this.setKeybinding(found[1]);
 	};
 
@@ -917,13 +961,16 @@ export class Codemark extends React.Component<Props, State> {
 
 		const renderedAssignees = this.renderAssignees(codemark);
 
+		const numMarkers = codemark.markers ? codemark.markers.length : 0;
+
 		if (
 			relatedCodemarkIds.length ||
 			renderedTags ||
 			externalLink ||
 			hasDescription ||
 			hasReplies ||
-			renderedAssignees
+			renderedAssignees ||
+			numMarkers > 1
 		) {
 			return (
 				<div className="detail-icons">
@@ -937,6 +984,16 @@ export class Codemark extends React.Component<Props, State> {
 								placement="bottom"
 								name="description"
 							/>
+						</span>
+					)}
+					{numMarkers > 1 && (
+						<span className="detail-icon">
+							<Icon
+								title={hover && !selected ? "Multiple code locations" : undefined}
+								placement="bottom"
+								name="code"
+							/>{" "}
+							{numMarkers}
 						</span>
 					)}
 					{relatedCodemarkIds.length > 0 && (
@@ -964,8 +1021,22 @@ export class Codemark extends React.Component<Props, State> {
 		} else return name;
 	};
 
+	setInjecting = (markerId: string) => {
+		this.jumpToMarker(markerId);
+		// this.toggleCodeHighlightInTextEditor(true, false, markerId, true);
+		this.setState({ isInjecting: true, injectingLocation: markerId });
+	};
+
 	renderInlineCodemark() {
-		const { codemark, codemarkKeybindings, hidden, selected, entirelyDeleted, author } = this.props;
+		const {
+			codemark,
+			codemarkKeybindings,
+			hidden,
+			selected,
+			entirelyDeleted,
+			author,
+			marker
+		} = this.props;
 		const { menuOpen, menuTarget, isInjecting } = this.state;
 
 		if (!codemark) {
@@ -998,7 +1069,17 @@ export class Codemark extends React.Component<Props, State> {
 			);
 		}
 
-		menuItems.push({ label: "Inject as Inline Comment", action: "inject" });
+		if (selected && codemark.markers && codemark.markers.length > 1) {
+			const submenu = codemark.markers.map((m, index) => {
+				let label = "At Code Location #" + (index + 1);
+				return { label, action: () => this.setInjecting(m.id), key: index };
+			});
+			menuItems.push({ label: "Inject as Inline Comment", submenu: submenu });
+		} else
+			menuItems.push({
+				label: "Inject as Inline Comment",
+				action: () => this.setInjecting(marker.id)
+			});
 
 		const submenu = range(1, 10).map(index => {
 			const inUse = codemarkKeybindings[index] ? " (in use)" : "";
@@ -1106,6 +1187,7 @@ export class Codemark extends React.Component<Props, State> {
 								cancel={this.cancelInjecting}
 								setPinned={this.setPinned}
 								codemark={codemark}
+								markerId={this.state.injectingLocation}
 								author={author}
 							></InjectAsComment>
 						)}
@@ -1385,7 +1467,7 @@ const unknownAuthor = {
 };
 
 const mapStateToProps = (state: CodeStreamState, props: InheritedProps): ConnectedProps => {
-	const { capabilities, context, preferences, users, session, posts } = state;
+	const { capabilities, context, editorContext, preferences, users, session, posts } = state;
 	const { codemark, marker } = props;
 
 	const teamProvider = getCurrentTeamProvider(state);
@@ -1422,6 +1504,7 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 	return {
 		capabilities: capabilities,
 		editorHasFocus: context.hasFocus,
+		jumpToMarkerId: context.currentMarkerId,
 		pinnedReplies,
 		pinnedAuthors,
 		relatedCodemarkIds,
@@ -1432,7 +1515,8 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		teammates: getTeamMembers(state),
 		usernames: getUsernames(state),
 		teamTagsHash,
-		entirelyDeleted
+		entirelyDeleted,
+		textEditorUri: editorContext.textEditorUri || ""
 	};
 };
 

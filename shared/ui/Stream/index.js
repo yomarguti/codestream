@@ -2211,6 +2211,7 @@ const mapStateToProps = state => {
 	return {
 		apiCapabilities: apiVersioning.apiCapabilities,
 		currentCodemarkId: context.currentCodemarkId,
+		currentMarkerId: context.currentMarkerId,
 		capabilities: capabilities,
 		editorHasFocus: context.hasFocus,
 		pluginVersion,
