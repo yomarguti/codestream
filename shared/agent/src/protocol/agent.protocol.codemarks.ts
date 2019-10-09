@@ -166,6 +166,7 @@ export const UpdateCodemarkRequestType = new RequestType<
 
 export interface GetCodemarkSha1Request {
 	codemarkId: string;
+	markerId?: string;
 }
 export interface GetCodemarkSha1Response {
 	codemarkSha1: string | undefined;

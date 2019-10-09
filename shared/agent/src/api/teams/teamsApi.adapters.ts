@@ -348,10 +348,11 @@ export function toTeamsMessageBody(
 		let filename;
 		let start;
 		let end;
-
+		let counter = 0;
 		for (const marker of markers) {
+			counter++;
 			if (markerLocations) {
-				const location = markerLocations[0].locations[marker.id];
+				const location = markerLocations[counter - 1].locations[marker.id];
 				[start, , end] = location!;
 				filename = `${marker.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})`;
 			} else {

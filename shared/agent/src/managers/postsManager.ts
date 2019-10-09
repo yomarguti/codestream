@@ -1,6 +1,6 @@
 "use strict";
 import * as fs from "fs";
-import { TextDocumentIdentifier } from "vscode-languageserver";
+import { Range, TextDocumentIdentifier } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
 import { Marker, MarkerLocation, Ranges } from "../api/extensions";
@@ -668,10 +668,11 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	@lspHandler(CreatePostWithMarkerRequestType)
 	async createPostWithMarker({
 		textDocument: documentId,
-		range,
 		text,
-		code,
-		source,
+		// code,
+		// source,
+		// range,
+		markers,
 		streamId,
 		parentPostId,
 		mentionedUserIds,
@@ -713,73 +714,91 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				externalAssignees.map(a => ({ displayName: a.displayName, email: a.email })),
 			externalProviderUrl,
 			tags,
-			relatedCodemarkIds
+			relatedCodemarkIds,
+			markers: []
 		} as CreateCodemarkRequest;
-		let marker: CreateCodemarkRequestMarker | undefined;
-		let commitHashWhenPosted: string | undefined;
-		let location: CSMarkerLocation | undefined;
-		let backtrackedLocation: CSMarkerLocation | undefined;
-		let remotes: string[] | undefined;
-		if (range) {
-			// Ensure range end is >= start
-			range = Ranges.ensureStartBeforeEnd(range);
-			location = MarkerLocation.fromRange(range);
-			if (source) {
-				if (source.revision) {
-					commitHashWhenPosted = source.revision;
-					backtrackedLocation = await SessionContainer.instance().markerLocations.backtrackLocation(
-						documentId,
-						fileContents,
-						location
-					);
-				} else {
-					commitHashWhenPosted = (await git.getRepoHeadRevision(source.repoPath))!;
-					backtrackedLocation = MarkerLocation.empty();
-				}
-				if (source.remotes && source.remotes.length > 0) {
-					remotes = source.remotes.map(r => r.url);
-				}
-			}
 
-			marker = {
-				code,
-				remotes,
-				file: source && source.file,
-				commitHash: commitHashWhenPosted,
-				location: backtrackedLocation && MarkerLocation.toArray(backtrackedLocation),
-				branchWhenCreated: (source && source.branch) || undefined
-			};
+		const backtrackedLocations: {
+			location: CSMarkerLocation;
+			backtrackedLocation: CSMarkerLocation;
+		}[] = [];
 
-			codemarkRequest.streamId = streamId;
-			codemarkRequest.markers = marker && [marker];
-			codemarkRequest.remotes = remotes;
-			try {
-				const scmResponse = await scm.getRangeInfo({
-					uri: documentId.uri,
-					range: range,
-					contents: code,
-					skipBlame: true
-				});
+		let index = -1;
+		for (const m of markers) {
+			index++;
+			let marker: CreateCodemarkRequestMarker | undefined;
+			let location: CSMarkerLocation | undefined;
+			let commitHashWhenPosted: string | undefined;
+			let backtrackedLocation: CSMarkerLocation | undefined;
+			let remotes: string[] | undefined;
+			let range: Range | undefined = m.range;
+			const source = m.source;
 
-				let remoteCodeUrl;
-				if (remotes !== undefined && scmResponse.scm !== undefined && scmResponse.scm.revision) {
-					for (const remote of remotes) {
-						remoteCodeUrl = Marker.getRemoteCodeUrl(
-							remote,
-							scmResponse.scm.revision,
-							scmResponse.scm.file,
-							scmResponse.range.start.line + 1,
-							scmResponse.range.end.line + 1
+			if (range) {
+				// Ensure range end is >= start
+				range = Ranges.ensureStartBeforeEnd(range);
+				location = MarkerLocation.fromRange(range);
+				if (source) {
+					if (source.revision) {
+						commitHashWhenPosted = source.revision;
+						backtrackedLocation = await SessionContainer.instance().markerLocations.backtrackLocation(
+							documentId,
+							fileContents,
+							location
 						);
-
-						if (remoteCodeUrl !== undefined) {
-							codemarkRequest.remoteCodeUrl = remoteCodeUrl;
-							break;
-						}
+					} else {
+						commitHashWhenPosted = (await git.getRepoHeadRevision(source.repoPath))!;
+						backtrackedLocation = MarkerLocation.empty();
+					}
+					backtrackedLocations[index] = {
+						location,
+						backtrackedLocation
+					};
+					if (source.remotes && source.remotes.length > 0) {
+						remotes = source.remotes.map(r => r.url);
 					}
 				}
-			} catch (ex) {
-				Logger.error(ex);
+
+				marker = {
+					code: m.code,
+					remotes,
+					file: source && source.file,
+					commitHash: commitHashWhenPosted,
+					location: backtrackedLocation && MarkerLocation.toArray(backtrackedLocation),
+					branchWhenCreated: (source && source.branch) || undefined
+				};
+
+				codemarkRequest.streamId = streamId;
+				if (codemarkRequest.markers) codemarkRequest.markers.push(marker);
+				codemarkRequest.remotes = remotes;
+				try {
+					const scmResponse = await scm.getRangeInfo({
+						uri: documentId.uri,
+						range: range,
+						contents: m.code,
+						skipBlame: true
+					});
+
+					let remoteCodeUrl;
+					if (remotes !== undefined && scmResponse.scm !== undefined && scmResponse.scm.revision) {
+						for (const remote of remotes) {
+							remoteCodeUrl = Marker.getRemoteCodeUrl(
+								remote,
+								scmResponse.scm.revision,
+								scmResponse.scm.file,
+								scmResponse.range.start.line + 1,
+								scmResponse.range.end.line + 1
+							);
+
+							if (remoteCodeUrl !== undefined) {
+								codemarkRequest.remoteCodeUrl = remoteCodeUrl;
+								break;
+							}
+						}
+					}
+				} catch (ex) {
+					Logger.error(ex);
+				}
 			}
 		}
 
@@ -797,20 +816,27 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			);
 
 			const { markers } = response;
-			if (markers && markers.length && backtrackedLocation) {
-				const meta = backtrackedLocation.meta;
-				if (meta && (meta.startWasDeleted || meta.endWasDeleted)) {
-					const uncommittedLocation = {
-						...location!,
-						id: markers[0].id
-					};
+			if (markers && markers.length) {
+				markers.forEach(async (marker, index) => {
+					if (backtrackedLocations[index]) {
+						const location = backtrackedLocations[index].location;
+						const backtrackedLocation = backtrackedLocations[index].backtrackedLocation;
 
-					await SessionContainer.instance().markerLocations.saveUncommittedLocation(
-						filePath,
-						fileContents,
-						uncommittedLocation
-					);
-				}
+						const meta = backtrackedLocation.meta;
+						if (meta && (meta.startWasDeleted || meta.endWasDeleted)) {
+							const uncommittedLocation = {
+								...location!,
+								id: marker.id
+							};
+
+							await SessionContainer.instance().markerLocations.saveUncommittedLocation(
+								filePath,
+								fileContents,
+								uncommittedLocation
+							);
+						}
+					}
+				});
 			}
 
 			response.codemark!.markers = response.markers || [];

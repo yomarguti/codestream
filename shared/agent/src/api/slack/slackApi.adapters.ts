@@ -615,7 +615,7 @@ export function toSlackPostBlocks(
 			let end;
 
 			if (markerLocations) {
-				const location = markerLocations[0].locations[marker.id];
+				const location = markerLocations[counter - 1].locations[marker.id];
 				[start, , end] = location!;
 				filename = `${marker.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})`;
 			} else {

@@ -82,7 +82,10 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 
 	@lspHandler(GetCodemarkSha1RequestType)
 	@log()
-	async getCodemarkSha1({ codemarkId }: GetCodemarkSha1Request): Promise<GetCodemarkSha1Response> {
+	async getCodemarkSha1({
+		codemarkId,
+		markerId
+	}: GetCodemarkSha1Request): Promise<GetCodemarkSha1Response> {
 		const cc = Logger.getCorrelationContext();
 
 		const { codemarks, files, markerLocations, scm } = SessionContainer.instance();
@@ -102,15 +105,18 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 			return { codemarkSha1: undefined, documentSha1: undefined };
 		}
 
-		const fileStreamId = codemark.fileStreamIds[0];
+		// Get the most up-to-date location for the codemark
+		const marker = markerId
+			? codemark.markers.find(m => m.id === markerId) || codemark.markers[0]
+			: codemark.markers[0];
+
+		const fileStreamId = marker.fileStreamId;
 		const uri = await files.getDocumentUri(fileStreamId);
 		if (uri === undefined) {
 			Logger.warn(cc, `No document could be loaded for codemark Id(${codemarkId})`);
 			return { codemarkSha1: undefined, documentSha1: undefined };
 		}
 
-		// Get the most up-to-date location for the codemark
-		const marker = codemark.markers[0];
 		const { locations } = await markerLocations.getCurrentLocations(uri, fileStreamId, [marker]);
 
 		let documentSha1;

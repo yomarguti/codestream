@@ -53,9 +53,14 @@ export interface CreatePostWithMarkerRequest {
 	textDocument: TextDocumentIdentifier;
 	text: string;
 	mentionedUserIds?: string[];
-	code: string;
-	range?: Range;
-	source?: CodeBlockSource;
+	// code: string;
+	// range?: Range;
+	// source?: CodeBlockSource;
+	markers: {
+		code: string;
+		range?: Range;
+		source?: CodeBlockSource;
+	}[];
 	parentPostId?: string;
 	streamId: string;
 	title?: string;
