@@ -466,12 +466,14 @@ function trackPostCreation(request: CreatePostRequest, textDocument?: TextDocume
 					}
 					telemetry.track({ eventName: "Post Created", properties: payload });
 					if (request.codemark) {
+						const { markers = [] } = request.codemark;
 						const codemarkProperties: {
 							[key: string]: any;
 						} = {
 							"Codemark Type": request.codemark.type,
 							"Linked Service": request.codemark.externalProvider,
 							Tags: (request.codemark.tags || []).length,
+							Markers: markers.length,
 							"Git Error": await getGitError(textDocument)
 						};
 						telemetry.track({ eventName: "Codemark Created", properties: codemarkProperties });
