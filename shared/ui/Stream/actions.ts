@@ -746,18 +746,19 @@ export const createProviderCard = async (attributes, codemark) => {
 	const delimiters = getCodeDelimiters(attributes.codeDelimiterStyle);
 	const { linefeed, start, end } = delimiters;
 	let description = `${codemark.text}${linefeed}${linefeed}`;
-	if (codemark.markers && codemark.markers.length > 0) {
-		const marker = codemark.markers[0];
-		description += `In ${marker.file}`;
-		const range = marker.range;
-		if (range) {
-			if (range.start.line === range.end.line) {
-				description += ` (Line ${range.start.line + 1})`;
-			} else {
-				description += ` (Lines ${range.start.line + 1}-${range.end.line + 1})`;
+	if (codemark.markers && codemark.markers.length) {
+		for (const marker of codemark.markers) {
+			description += `In ${marker.file}`;
+			const range = marker.range;
+			if (range) {
+				if (range.start.line === range.end.line) {
+					description += ` (Line ${range.start.line + 1})`;
+				} else {
+					description += ` (Lines ${range.start.line + 1}-${range.end.line + 1})`;
+				}
 			}
+			description += `${linefeed}${linefeed}${start}${linefeed}${marker.code}${linefeed}${end}${linefeed}${linefeed}`;
 		}
-		description += `${linefeed}${linefeed}${start}${linefeed}${marker.code}${linefeed}${end}${linefeed}${linefeed}`;
 	}
 	description += `Posted via CodeStream${linefeed}`;
 
