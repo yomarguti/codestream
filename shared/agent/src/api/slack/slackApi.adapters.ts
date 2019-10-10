@@ -610,16 +610,16 @@ export function toSlackPostBlocks(
 		for (const marker of markers) {
 			counter++;
 
-			let filename;
+			let filename = marker.file;
 			let start;
 			let end;
 
 			if (markerLocations) {
-				const location = markerLocations[counter - 1].locations[marker.id];
-				[start, , end] = location!;
-				filename = `${marker.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})`;
-			} else {
-				filename = marker.file;
+				const location = markerLocations[0].locations[marker.id];
+				if (location && location.length) {
+					[start, , end] = location!;
+					filename = `${marker.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})`;
+				}
 			}
 
 			let url;
