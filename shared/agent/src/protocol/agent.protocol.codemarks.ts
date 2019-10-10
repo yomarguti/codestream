@@ -6,7 +6,7 @@ import {
 	CSCodemark,
 	CSLocationArray,
 	CSMarker,
-	CSMarkerLocations,
+	CSMarkerLocations, CSReferenceLocation,
 	CSRepository,
 	CSStream,
 	ProviderType
@@ -40,6 +40,7 @@ export interface CreateCodemarkRequestMarker {
 	code: string;
 	remotes?: string[];
 	file?: string;
+	referenceLocations?: CSReferenceLocation[];
 	commitHash?: string;
 	location?: CSLocationArray;
 	branchWhenCreated?: string;

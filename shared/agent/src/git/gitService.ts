@@ -10,6 +10,7 @@ import { Iterables, log, Strings } from "../system";
 import { git, GitErrors, GitWarnings } from "./git";
 import { GitAuthor, GitCommit, GitRemote, GitRepository } from "./models/models";
 import { GitAuthorParser } from "./parsers/authorParser";
+import { GitBlameRevisionParser, RevisionEntry } from "./parsers/blameRevisionParser";
 import { GitLogParser } from "./parsers/logParser";
 import { GitRemoteParser } from "./parsers/remoteParser";
 import { GitRepositories } from "./repositories";
@@ -95,6 +96,30 @@ export class GitService implements IGitService, Disposable {
 		uriOrPath: URI | string,
 		options: { ref?: string; contents?: string; startLine?: number; endLine?: number } = {}
 	): Promise<GitAuthor[]> {
+		const data = await this.getRawBlame(uriOrPath, options);
+		return GitAuthorParser.parse(data);
+	}
+
+	async getBlameRevisions(
+		uri: URI,
+		options?: { ref?: string; contents?: string; startLine?: number; endLine?: number }
+	): Promise<RevisionEntry[]>;
+	async getBlameRevisions(
+		path: string,
+		options?: { ref?: string; contents?: string; startLine?: number; endLine?: number }
+	): Promise<RevisionEntry[]>;
+	async getBlameRevisions(
+		uriOrPath: URI | string,
+		options: { ref?: string; contents?: string; startLine?: number; endLine?: number } = {}
+	): Promise<RevisionEntry[]> {
+		const data = await this.getRawBlame(uriOrPath, options);
+		return GitBlameRevisionParser.parse(data);
+	}
+
+	private async getRawBlame(
+		uriOrPath: URI | string,
+		options: { ref?: string; contents?: string; startLine?: number; endLine?: number } = {}
+	): Promise<string> {
 		const [dir, filename] = Strings.splitPath(
 			typeof uriOrPath === "string" ? uriOrPath : uriOrPath.fsPath
 		);
@@ -114,8 +139,7 @@ export class GitService implements IGitService, Disposable {
 			stdin = options.contents;
 		}
 
-		const data = await git({ cwd: dir, stdin: stdin }, ...params, "--", filename);
-		return GitAuthorParser.parse(data);
+		return git({ cwd: dir, stdin: stdin }, ...params, "--", filename);
 	}
 
 	async getFileCurrentRevision(uri: URI): Promise<string | undefined>;

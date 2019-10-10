@@ -6,6 +6,7 @@ import { MessageType } from "../api/apiProvider";
 import { Marker, MarkerLocation, Ranges } from "../api/extensions";
 import { Container, SessionContainer } from "../container";
 import { Logger } from "../logger";
+import { calculateLocation } from "../markerLocation/calculator";
 import {
 	CreateCodemarkRequest,
 	CreateCodemarkRequestMarker,
@@ -43,10 +44,10 @@ import {
 	CodemarkType,
 	CSMarkerLocation,
 	CSPost,
+	CSReferenceLocation,
 	CSStream,
 	StreamType
 } from "../protocol/api.protocol";
-import { CodeStreamSession } from "../session";
 import { Arrays, debug, lsp, lspHandler } from "../system";
 import { BaseIndex, IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
@@ -721,41 +722,101 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		} as CreateCodemarkRequest;
 
 		const backtrackedLocations: {
-			location: CSMarkerLocation;
-			backtrackedLocation: CSMarkerLocation;
+			atDocument: CSMarkerLocation;
+			atCurrentCommit: CSMarkerLocation;
 		}[] = [];
 
 		let index = -1;
 		for (const m of markers) {
 			index++;
 			let marker: CreateCodemarkRequestMarker | undefined;
+			let fileCurrentCommit: string | undefined;
 			let location: CSMarkerLocation | undefined;
-			let commitHashWhenPosted: string | undefined;
-			let backtrackedLocation: CSMarkerLocation | undefined;
+			let locationAtCurrentCommit: CSMarkerLocation | undefined;
 			let remotes: string[] | undefined;
 			let range: Range | undefined = m.range;
 			const source = m.source;
 
 			if (range) {
+				Logger.log("createPostWithMarker: creating post with associated range");
 				// Ensure range end is >= start
 				range = Ranges.ensureStartBeforeEnd(range);
 				location = MarkerLocation.fromRange(range);
+				let referenceLocations: CSReferenceLocation[] = [];
 				if (source) {
+					Logger.log("createPostWithMarker: source information provided");
 					if (source.revision) {
-						commitHashWhenPosted = source.revision;
-						backtrackedLocation = await SessionContainer.instance().markerLocations.backtrackLocation(
+						const filePath = URI.parse(documentId.uri).fsPath;
+						fileCurrentCommit = source.revision;
+						Logger.log(`createPostWithMarker: source revision ${fileCurrentCommit}`);
+						locationAtCurrentCommit = await SessionContainer.instance().markerLocations.backtrackLocation(
 							documentId,
 							fileContents,
-							location
+							location,
+							fileCurrentCommit
 						);
+						Logger.log(
+							`createPostWithMarker: location at current commit ${MarkerLocation.toArray(
+								locationAtCurrentCommit
+							)}`
+						);
+
+						const blameRevisions = await git.getBlameRevisions(filePath, {
+							ref: fileCurrentCommit,
+							// it expects 0-based ranges
+							startLine: locationAtCurrentCommit.lineStart - 1,
+							endLine: locationAtCurrentCommit.lineEnd - 1
+						});
+						Logger.log(
+							`createPostWithMarker: backtracking location to ${blameRevisions.length} in the blame of selected range`
+						);
+						const promises = blameRevisions.map(async (revision, index) => {
+							const diff = await git.getDiffBetweenCommits(
+								fileCurrentCommit!,
+								revision.sha,
+								filePath
+							);
+							const location = await calculateLocation(locationAtCurrentCommit!, diff!);
+							const locationArray = MarkerLocation.toArray(location);
+							Logger.log(
+								`createPostWithMarker: backtracked at ${revision.sha} to ${locationArray}`
+							);
+							return {
+								commitHash: revision.sha,
+								location: locationArray,
+								flags: {
+									backtracked: true
+								}
+							};
+						});
+						const canonicalLocation = {
+							commitHash: fileCurrentCommit,
+							location: MarkerLocation.toArray(locationAtCurrentCommit),
+							flags: {
+								canonical: true
+							}
+						};
+						const backtrackedLocations = await Promise.all(promises);
+						referenceLocations = [canonicalLocation, ...backtrackedLocations];
 					} else {
-						commitHashWhenPosted = (await git.getRepoHeadRevision(source.repoPath))!;
-						backtrackedLocation = MarkerLocation.empty();
+						Logger.log(`createPostWithMarker: no source revision - file has no commits`);
+						fileCurrentCommit = (await git.getRepoHeadRevision(source.repoPath))!;
+						referenceLocations = [
+							{
+								commitHash: fileCurrentCommit,
+								location: MarkerLocation.toArray(MarkerLocation.empty()),
+								flags: {
+									unversionedFile: true
+								}
+							}
+						];
 					}
+
 					backtrackedLocations[index] = {
-						location,
-						backtrackedLocation
+						atDocument: location,
+						atCurrentCommit: locationAtCurrentCommit || MarkerLocation.empty()
 					};
+
 					if (source.remotes && source.remotes.length > 0) {
 						remotes = source.remotes.map(r => r.url);
 					}
@@ -765,8 +826,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					code: m.code,
 					remotes,
 					file: source && source.file,
-					commitHash: commitHashWhenPosted,
-					location: backtrackedLocation && MarkerLocation.toArray(backtrackedLocation),
+					commitHash: fileCurrentCommit,
+					referenceLocations,
 					branchWhenCreated: (source && source.branch) || undefined
 				};
 
@@ -822,10 +883,10 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 			const { markers } = response;
 			if (markers && markers.length) {
-				markers.forEach(async (marker, index) => {
+				markers.forEach((marker, index) => {
 					if (backtrackedLocations[index]) {
-						const location = backtrackedLocations[index].location;
-						const backtrackedLocation = backtrackedLocations[index].backtrackedLocation;
+						const location = backtrackedLocations[index].atDocument;
+						const backtrackedLocation = backtrackedLocations[index].atCurrentCommit;
 
 						const meta = backtrackedLocation.meta;
 						if (meta && (meta.startWasDeleted || meta.endWasDeleted)) {
@@ -834,7 +895,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 								id: marker.id
 							};
 
-							await SessionContainer.instance().markerLocations.saveUncommittedLocation(
+							SessionContainer.instance().markerLocations.saveUncommittedLocation(
 								filePath,
 								fileContents,
 								uncommittedLocation

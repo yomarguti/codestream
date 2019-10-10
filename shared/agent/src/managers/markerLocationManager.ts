@@ -1,5 +1,5 @@
 "use strict";
-import { structuredPatch } from "diff";
+import { ParsedDiff, structuredPatch } from "diff";
 import * as eol from "eol";
 import * as path from "path";
 import { TextDocumentIdentifier } from "vscode-languageserver";
@@ -123,7 +123,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		let repoRoot;
 		try {
 			repoRoot = await git.getRepoRoot(filePath);
-		} catch { }
+		} catch {}
 		if (!repoRoot) {
 			Logger.log(`MARKERS: no repo root for ${filePath}`);
 			return result;
@@ -230,10 +230,22 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 
 		for (const marker of markers) {
 			const location = result.locations[marker.id];
-			if (location !== undefined && location.lineStart === location.lineEnd && location.colStart === location.colEnd) {
-				const [lineStartWhenCreated, colStartWhenCreated, lineEndWhenCreated, colEndWhenCreated] = marker.locationWhenCreated;
+			if (
+				location !== undefined &&
+				location.lineStart === location.lineEnd &&
+				location.colStart === location.colEnd
+			) {
+				const [
+					lineStartWhenCreated,
+					colStartWhenCreated,
+					lineEndWhenCreated,
+					colEndWhenCreated
+				] = marker.locationWhenCreated;
 				if (location.meta === undefined) location.meta = {};
-				if (lineStartWhenCreated !== lineEndWhenCreated || colStartWhenCreated !== colEndWhenCreated) {
+				if (
+					lineStartWhenCreated !== lineEndWhenCreated ||
+					colStartWhenCreated !== colEndWhenCreated
+				) {
 					location.meta.entirelyDeleted = true;
 				}
 			}
@@ -275,22 +287,22 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 	async backtrackLocation(
 		documentId: TextDocumentIdentifier,
 		text: string,
-		location: CSMarkerLocation
+		location: CSMarkerLocation,
+		revision: string
 	): Promise<CSMarkerLocation> {
 		const { git } = SessionContainer.instance();
 		const documentUri = documentId.uri;
 		const filePath = URI.parse(documentUri).fsPath;
 
-		const fileCurrentRevision = await git.getFileCurrentRevision(filePath);
-		if (!fileCurrentRevision) {
+		if (!revision) {
 			// TODO marcelo - must signal
 			return location;
 			// return deletedLocation(location);
 		}
 
-		const currentCommitText = await git.getFileContentForRevision(filePath, fileCurrentRevision);
+		const currentCommitText = await git.getFileContentForRevision(filePath, revision);
 		if (currentCommitText === undefined) {
-			throw new Error(`Could not retrieve contents for ${filePath}@${fileCurrentRevision}`);
+			throw new Error(`Could not retrieve contents for ${filePath}@${revision}`);
 		}
 
 		// Maybe in this case the IDE should inform the buffer contents to ensure we have the exact same
@@ -333,67 +345,71 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 
 		const currentCommitLocations = await this.getMarkerLocationsById(fileStreamId, commitHash);
 		const missingLocations: MissingLocationsById = {};
-		const missingMarkersByCommit = Marker.getMissingMarkersByCommit(
-			markers,
-			currentCommitLocations
-		);
 
-		if (missingMarkersByCommit.size === 0) {
+		const missingMarkers = markers.filter(m => !currentCommitLocations[m.id]);
+		if (missingMarkers.length === 0) {
 			Logger.log(`MARKERS: no missing locations`);
 		} else {
 			Logger.log(`MARKERS: missing locations detected - will calculate`);
 		}
 
 		const { git, session } = SessionContainer.instance();
+		const diffsByCommitHash: Map<string, ParsedDiff> = new Map();
+		const locationsByCommitHash: Map<string, MarkerLocationsById> = new Map();
+		for (const missingMarker of missingMarkers) {
+			// TODO sort reference locations based on flags
+			let canCalculate = false;
+			for (const referenceLocation of missingMarker.referenceLocations) {
+				if (!diffsByCommitHash.has(referenceLocation.commitHash)) {
+					// TODO git fetch --all (once)
+					const diff = await git.getDiffBetweenCommits(
+						referenceLocation.commitHash,
+						commitHash,
+						filePath
+					);
+					if (diff) {
+						diffsByCommitHash.set(referenceLocation.commitHash, diff);
+						if (!locationsByCommitHash.has(referenceLocation.commitHash)) {
+							locationsByCommitHash.set(referenceLocation.commitHash, {});
+						}
+						const locationsById = locationsByCommitHash.get(referenceLocation.commitHash)!!;
+						locationsById[missingMarker.id] = MarkerLocation.fromArray(
+							referenceLocation.location,
+							missingMarker.id
+						);
+						canCalculate = true;
+					}
+				}
+			}
 
-		for (const [commitHashWhenCreated, missingMarkers] of missingMarkersByCommit.entries()) {
+			if (!canCalculate) {
+				const details = `Could not find any of the following reference commit hashes for marker ${
+					missingMarker.id
+				} in local git repository: ${missingMarker.referenceLocations
+					.map(rl => rl.commitHash)
+					.join(", ")}`;
+				missingLocations[missingMarker.id] = {
+					reason: MarkerNotLocatedReason.MISSING_ORIGINAL_COMMIT,
+					details
+				};
+				Logger.warn(details);
+			}
+		}
+
+		for (const [referenceCommitHash, diff] of diffsByCommitHash.entries()) {
 			Logger.log(
-				`MARKERS: Getting original locations for ${missingMarkers.length} markers created at ${commitHashWhenCreated}`
+				`MARKERS: calculating locations based on diff from ${referenceCommitHash} to ${commitHash}`
 			);
-
-			const allCommitLocations = await this.getMarkerLocationsById(
-				fileStreamId,
-				commitHashWhenCreated
-			);
-
-			const locationsToCalculate: MarkerLocationsById = {};
-			for (const marker of missingMarkers) {
-				const originalLocation = allCommitLocations[marker.id];
-				if (originalLocation) {
-					locationsToCalculate[marker.id] = originalLocation;
-				} else {
-					const details = `Could not find original location for marker ${marker.id}`;
-					missingLocations[marker.id] = {
-						reason: MarkerNotLocatedReason.MISSING_ORIGINAL_LOCATION,
-						details
-					};
-					Logger.warn(details);
-				}
-			}
-
-			Logger.log(`MARKERS: diffing ${filePath} from ${commitHashWhenCreated} to ${commitHash}`);
-			const diff = await git.getDiffBetweenCommits(commitHashWhenCreated, commitHash, filePath);
-			if (!diff) {
-				const details = `cannot obtain diff - skipping calculation from ${commitHashWhenCreated} to ${commitHash}`;
-				for (const marker of missingMarkers) {
-					missingLocations[marker.id] = {
-						reason: MarkerNotLocatedReason.MISSING_ORIGINAL_COMMIT,
-						details
-					};
-				}
-				Logger.log(`MARKERS: ${details}`);
-				continue;
-			}
-
-			Logger.log(`MARKERS: calculating locations`);
+			const locationsToCalculate = locationsByCommitHash.get(referenceCommitHash)!!;
 			const calculatedLocations = await calculateLocations(locationsToCalculate, diff);
+			Object.assign(currentCommitLocations, calculatedLocations);
+
 			for (const id in calculatedLocations) {
 				const origLoc = locationsToCalculate[id] || {};
 				const currLoc = calculatedLocations[id] || {};
 				Logger.log(
 					`MARKERS: ${id} [${origLoc.lineStart}, ${origLoc.colStart}, ${origLoc.lineEnd}, ${origLoc.colEnd}] => [${currLoc.lineStart}, ${currLoc.colStart}, ${currLoc.lineEnd}, ${currLoc.colEnd}]`
 				);
-				currentCommitLocations[id] = calculatedLocations[id];
 			}
 
 			Logger.log(

@@ -83,6 +83,7 @@ export interface CSMarker extends CSEntity, CSMarkerIdentifier {
 	branchWhenCreated?: string;
 	locationWhenCreated: CSLocationArray;
 	code: string;
+    referenceLocations: CSReferenceLocation[];
 }
 
 export interface CSLocationMeta {
@@ -93,6 +94,12 @@ export interface CSLocationMeta {
 }
 
 export type CSLocationArray = [number, number, number, number, CSLocationMeta | undefined];
+
+export interface CSReferenceLocation {
+	commitHash: string;
+	location: CSLocationArray;
+	flags: { [id: string]: boolean };
+}
 
 export interface CSMarkerLocations {
 	teamId: string;
