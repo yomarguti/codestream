@@ -768,7 +768,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 							endLine: locationAtCurrentCommit.lineEnd - 1
 						});
 						Logger.log(
-							`createPostWithMarker: backtracking location to ${blameRevisions.length} in the blame of selected range`
+							`createPostWithMarker: backtracking location to ${blameRevisions.length} revisions in the blame of selected range`
 						);
 						const promises = blameRevisions.map(async (revision, index) => {
 							const diff = await git.getDiffBetweenCommits(
@@ -789,15 +789,19 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 								}
 							};
 						});
-						const canonicalLocation = {
+
+						const meta = locationAtCurrentCommit.meta || {};
+						const canonical = !meta.startWasDeleted || !meta.endWasDeleted;
+						const referenceLocation = {
 							commitHash: fileCurrentCommit,
 							location: MarkerLocation.toArray(locationAtCurrentCommit),
 							flags: {
-								canonical: true
+								canonical,
+								backtracked: !canonical
 							}
 						};
 						const backtrackedLocations = await Promise.all(promises);
-						referenceLocations = [canonicalLocation, ...backtrackedLocations];
+						referenceLocations = [referenceLocation, ...backtrackedLocations];
 					} else {
 						Logger.log(`createPostWithMarker: no source revision - file has no commits`);
 						fileCurrentCommit = (await git.getRepoHeadRevision(source.repoPath))!;

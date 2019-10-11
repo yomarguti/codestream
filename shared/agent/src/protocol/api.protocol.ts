@@ -451,6 +451,17 @@ export interface CSUpdateMarkerRequest {
 	commitHashWhenCreated?: string;
 }
 
+export interface CSAddReferenceLocationRequest {
+	commitHash: string;
+	location: CSLocationArray;
+	flags: { [id: string]: boolean };
+}
+
+export interface CSAddReferenceLocationResponse {
+	// marker: < some directive >,
+	// markerLocations: < markerLocations update >
+}
+
 export interface CSUpdateMarkerResponse {
 	marker: CSMarker;
 }

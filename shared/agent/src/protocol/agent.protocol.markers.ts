@@ -90,3 +90,15 @@ export const UpdateMarkerRequestType = new RequestType<
 	void,
 	void
 >("codestream/marker/update");
+
+export interface AddReferenceLocationRequest {
+	markerId: string;
+	commitHash: string;
+	location: CSLocationArray;
+	flags: { [id: string]: boolean };
+}
+
+export interface AddReferenceLocationResponse {
+	// marker: < some directive >,
+	// markerLocations: < markerLocations update >
+}

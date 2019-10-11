@@ -12,7 +12,7 @@ import { isDirective, resolve } from "../../managers/operations";
 import {
 	AccessToken,
 	AddEnterpriseProviderHostRequest,
-	AddEnterpriseProviderHostResponse,
+	AddEnterpriseProviderHostResponse, AddReferenceLocationRequest, AddReferenceLocationResponse,
 	ArchiveStreamRequest,
 	Capabilities,
 	CloseStreamRequest,
@@ -77,7 +77,7 @@ import {
 } from "../../protocol/agent.protocol";
 import {
 	CSAddProviderHostRequest,
-	CSAddProviderHostResponse,
+	CSAddProviderHostResponse, CSAddReferenceLocationRequest, CSAddReferenceLocationResponse,
 	CSApiCapabilities,
 	CSChannelStream,
 	CSCompleteSignupRequest,
@@ -683,6 +683,15 @@ export class CodeStreamApiProvider implements ApiProvider {
 	fetchMarkerLocations(request: FetchMarkerLocationsRequest) {
 		return this.get<CSGetMarkerLocationsResponse>(
 			`/marker-locations?teamId=${this.teamId}&streamId=${request.streamId}&commitHash=${request.commitHash}`,
+			this._token
+		);
+	}
+
+	@log()
+	addReferenceLocation(request: AddReferenceLocationRequest) {
+		return this.put<CSAddReferenceLocationRequest, CSAddReferenceLocationResponse>(
+			`/markers/${request.markerId}/reference-location`,
+			request,
 			this._token
 		);
 	}

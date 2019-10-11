@@ -3,7 +3,7 @@ import { Disposable, Event } from "vscode-languageserver";
 import {
 	AccessToken,
 	AddEnterpriseProviderHostRequest,
-	AddEnterpriseProviderHostResponse,
+	AddEnterpriseProviderHostResponse, AddReferenceLocationRequest, AddReferenceLocationResponse,
 	ArchiveStreamRequest,
 	ArchiveStreamResponse,
 	Capabilities,
@@ -283,6 +283,7 @@ export interface ApiProvider {
 
 	createMarkerLocation(request: CreateMarkerLocationRequest): Promise<CreateMarkerLocationResponse>;
 	fetchMarkerLocations(request: FetchMarkerLocationsRequest): Promise<FetchMarkerLocationsResponse>;
+	addReferenceLocation(request: AddReferenceLocationRequest): Promise<AddReferenceLocationResponse>;
 
 	fetchMarkers(request: FetchMarkersRequest): Promise<FetchMarkersResponse>;
 	getMarker(request: GetMarkerRequest): Promise<GetMarkerResponse>;

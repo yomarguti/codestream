@@ -14,7 +14,7 @@ import { Emitter, Event } from "vscode-languageserver";
 import { Container, SessionContainer } from "../../container";
 import { Logger, TraceLevel } from "../../logger";
 import {
-	AddEnterpriseProviderHostRequest,
+	AddEnterpriseProviderHostRequest, AddReferenceLocationRequest,
 	ArchiveStreamRequest,
 	Capabilities,
 	CloseStreamRequest,
@@ -590,6 +590,11 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	fetchMarkerLocations(request: FetchMarkerLocationsRequest) {
 		return this._codestream.fetchMarkerLocations(request);
+	}
+
+	@log()
+	addReferenceLocation(request: AddReferenceLocationRequest) {
+		return this._codestream.addReferenceLocation(request);
 	}
 
 	@log()

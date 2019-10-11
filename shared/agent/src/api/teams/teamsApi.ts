@@ -7,7 +7,7 @@ import { ServerError } from "../../agentError";
 import { SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import {
-	AddEnterpriseProviderHostRequest,
+	AddEnterpriseProviderHostRequest, AddReferenceLocationRequest, AddReferenceLocationResponse,
 	ArchiveStreamRequest,
 	ArchiveStreamResponse,
 	Capabilities,
@@ -533,6 +533,11 @@ export class MSTeamsApiProvider implements ApiProvider {
 	@log()
 	fetchMarkerLocations(request: FetchMarkerLocationsRequest) {
 		return this._codestream.fetchMarkerLocations(request);
+	}
+
+	@log()
+	addReferenceLocation(request: AddReferenceLocationRequest) {
+		return this._codestream.addReferenceLocation(request);
 	}
 
 	@log()

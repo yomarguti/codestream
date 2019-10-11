@@ -15,7 +15,7 @@ import {
 	CSLocationArray,
 	CSMarker,
 	CSMarkerLocation,
-	CSMarkerLocations
+	CSMarkerLocations, CSReferenceLocation
 } from "../protocol/api.protocol";
 import { xfs } from "../xfs";
 import { ManagerBase } from "./baseManager";
@@ -69,6 +69,13 @@ function stripEof(x: any) {
 	}
 
 	return x;
+}
+
+function compareReferenceLocations(a: CSReferenceLocation, b: CSReferenceLocation): number {
+	const aIsCanonical = Number(!!a.flags.canonical);
+	const bIsCanonical = Number(!!b.flags.canonical);
+
+	return bIsCanonical - aIsCanonical;
 }
 
 export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
@@ -357,7 +364,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		const diffsByCommitHash: Map<string, ParsedDiff> = new Map();
 		const locationsByCommitHash: Map<string, MarkerLocationsById> = new Map();
 		for (const missingMarker of missingMarkers) {
-			// TODO sort reference locations based on flags
+			missingMarker.referenceLocations.sort(compareReferenceLocations);
 			let canCalculate = false;
 			for (const referenceLocation of missingMarker.referenceLocations) {
 				if (!diffsByCommitHash.has(referenceLocation.commitHash)) {
@@ -508,10 +515,15 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 				commitHash,
 				locations: locationArraysById
 			});
-			Logger.log(`MARKERS: updating marker => commitHashWhenCreated:${commitHash}`);
-			await session.api.updateMarker({
+			Logger.log(`MARKERS: adding canonical reference location for ${id}@${commitHash}`);
+			await session.api.addReferenceLocation({
 				markerId: id,
-				commitHashWhenCreated: commitHash
+				commitHash,
+				location: MarkerLocation.toArray(location),
+				flags: {
+					canonical: true,
+					committedAfterCreation: true
+				}
 			});
 			uncommittedLocations.delete(id);
 			Logger.log(`MARKERS: flushing local cache`);
