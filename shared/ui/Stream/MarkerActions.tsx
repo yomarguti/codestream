@@ -27,6 +27,7 @@ import Icon from "./Icon";
 import { CSMarker } from "@codestream/protocols/api";
 import { getVisibleRanges } from "../store/editorContext/reducer";
 import { getDocumentFromMarker, highlightRange } from "./api-functions";
+import { Marker } from "./Marker";
 
 interface State {
 	hasDiff: boolean;
@@ -513,25 +514,6 @@ class MarkerActions extends React.Component<Props, State> {
 		const { scrollingCodeBlock, expandCodeBlock } = this.state;
 		if (marker === undefined) return;
 
-		const path = marker.file || "";
-		let extension = paths.extname(path).toLowerCase();
-		if (extension.startsWith(".")) {
-			extension = extension.substring(1);
-		}
-
-		let startLine = 1;
-		// `range` is not a property of CSMarker
-		/* if (marker.range) {
-			startLine = marker.range.start.line;
-		} else if (marker.location) {
-			startLine = marker.location[0];
-		} else */ if (
-			marker.locationWhenCreated
-		) {
-			startLine = marker.locationWhenCreated[0];
-		}
-
-		const codeHTML = prettyPrintOne(escapeHtml(marker.code), extension, startLine);
 		return (
 			<div
 				className="related"
@@ -551,27 +533,7 @@ class MarkerActions extends React.Component<Props, State> {
 					this._toggleCodeHighlight(false);
 				}}
 			>
-				<div className="file-info">
-					<span className="monospace" style={{ paddingRight: "20px" }}>
-						<Icon name="file" /> {marker.file}
-					</span>{" "}
-					{marker.branchWhenCreated && (
-						<>
-							<span className="monospace" style={{ paddingRight: "20px" }}>
-								<Icon name="git-branch" /> {marker.branchWhenCreated}
-							</span>{" "}
-						</>
-					)}
-					<span className="monospace">
-						<Icon name="git-commit" /> {marker.commitHashWhenCreated.substring(0, 7)}
-					</span>
-				</div>
-				<pre
-					ref={ref => (this._codeBlockDiv = ref)}
-					className={cx("code prettyprint", { expanded: this.state.expandCodeBlock })}
-					data-scrollable="true"
-					dangerouslySetInnerHTML={{ __html: codeHTML }}
-				/>
+				<Marker marker={marker} />
 				{this.state.warning && (
 					<div className="repo-warning">
 						<Icon name="alert" /> {this.getWarningMessage()}

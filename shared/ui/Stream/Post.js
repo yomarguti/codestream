@@ -11,6 +11,7 @@ import RetrySpinner from "./RetrySpinner";
 import { retryPost, cancelPost, editPost, deletePost } from "./actions";
 import ContentEditable from "react-contenteditable";
 import { LocateRepoButton } from "./LocateRepoButton";
+import { Marker } from "./Marker";
 import Menu from "./Menu";
 import Tooltip from "./Tooltip";
 import { getById } from "../store/repos/reducer";
@@ -32,7 +33,6 @@ import { EditorSelectRangeRequestType } from "../ipc/webview.protocol";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { HostApi } from "../webview-api";
 import { includes as _includes } from "lodash-es";
-import { prettyPrintOne } from "code-prettify";
 
 class Post extends React.Component {
 	state = {
@@ -172,32 +172,6 @@ class Post extends React.Component {
 		}
 	}
 
-	renderCode(marker) {
-		const path = marker.file || "";
-		let extension = Path.extname(path).toLowerCase();
-		if (extension.startsWith(".")) {
-			extension = extension.substring(1);
-		}
-
-		let startLine = 1;
-		if (marker.range) {
-			startLine = marker.range.start.line;
-		} else if (marker.location) {
-			startLine = marker.location[0];
-		} else if (marker.locationWhenCreated) {
-			startLine = marker.locationWhenCreated[0];
-		}
-
-		const codeHTML = prettyPrintOne(escapeHtml(marker.code), extension, startLine);
-		return (
-			<pre
-				className="code prettyprint"
-				data-scrollable="true"
-				dangerouslySetInnerHTML={{ __html: codeHTML }}
-			/>
-		);
-	}
-
 	render() {
 		if (this.props.deactivated) return null;
 
@@ -267,7 +241,8 @@ class Post extends React.Component {
 							alwaysRenderCode={true}
 						/>
 					) : (
-						this.renderCode(codemark.markers[0])
+						codemark.markers.map(marker => <Marker marker={marker} />)
+						// this.renderCode(codemark.markers[0])
 					)}
 				</div>
 			);
