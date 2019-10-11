@@ -363,6 +363,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		const { git, session } = SessionContainer.instance();
 		const diffsByCommitHash: Map<string, ParsedDiff> = new Map();
 		const locationsByCommitHash: Map<string, MarkerLocationsById> = new Map();
+		let fetchIfCommitNotFound = true;
 		for (const missingMarker of missingMarkers) {
 			missingMarker.referenceLocations.sort(compareReferenceLocations);
 			let canCalculate = false;
@@ -372,8 +373,10 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 					const diff = await git.getDiffBetweenCommits(
 						referenceLocation.commitHash,
 						commitHash,
-						filePath
+						filePath,
+						fetchIfCommitNotFound
 					);
+					fetchIfCommitNotFound = false;
 					if (diff) {
 						diffsByCommitHash.set(referenceLocation.commitHash, diff);
 						if (!locationsByCommitHash.has(referenceLocation.commitHash)) {
@@ -560,8 +563,10 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		const orphans: MissingLocationsById = Object.create(null);
 
 		const filePath = uri.fsPath;
+		let fetchIfCommitNotFound = true;
 		for (const [revision, markers] of markersByCommit.entries()) {
-			const diff = await git.getDiffBetweenCommits(revision, currentFileRevision, filePath);
+			const diff = await git.getDiffBetweenCommits(revision, currentFileRevision, filePath, fetchIfCommitNotFound);
+			fetchIfCommitNotFound = false;
 			if (!diff) {
 				const details = `cannot obtain diff - skipping calculation from ${revision} to ${currentFileRevision}`;
 				for (const marker of markers) {
