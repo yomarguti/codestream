@@ -155,15 +155,16 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 		await this.ensureConnected();
 
 		const data = request.data as AsanaCreateCardRequest;
+		// apparently, this is the syntax: https://forum.asana.com/t/how-create-task-with-membership-via-api/10481/15
 		const cardData = {
 			data: {
 				name: data.name,
 				notes: data.description,
-				projects: [data.boardId],
+				projects: data.boardId,
 				memberships: [
 					{
-						project: data.boardId,
-						section: data.listId
+						project: data.boardId && data.boardId.toString(),
+						section: data.listId && data.listId.toString()
 					}
 				],
 				assignee: data.assignee || undefined
