@@ -50,7 +50,7 @@ export interface CodeBlockSource {
 	branch?: string;
 }
 export interface CreatePostWithMarkerRequest {
-	textDocument: TextDocumentIdentifier;
+	textDocuments: TextDocumentIdentifier[];
 	text: string;
 	mentionedUserIds?: string[];
 	// code: string;
@@ -60,6 +60,7 @@ export interface CreatePostWithMarkerRequest {
 		code: string;
 		range?: Range;
 		source?: CodeBlockSource;
+		documentId: TextDocumentIdentifier;
 	}[];
 	parentPostId?: string;
 	streamId: string;

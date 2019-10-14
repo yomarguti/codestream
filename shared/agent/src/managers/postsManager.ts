@@ -394,7 +394,7 @@ class PostsCache extends EntityCache<CSPost> {
 	}
 }
 
-function trackPostCreation(request: CreatePostRequest, textDocument?: TextDocumentIdentifier) {
+function trackPostCreation(request: CreatePostRequest, textDocuments?: TextDocumentIdentifier[]) {
 	process.nextTick(() => {
 		const { session, streams } = SessionContainer.instance();
 		try {
@@ -474,9 +474,18 @@ function trackPostCreation(request: CreatePostRequest, textDocument?: TextDocume
 							"Codemark Type": request.codemark.type,
 							"Linked Service": request.codemark.externalProvider,
 							Tags: (request.codemark.tags || []).length,
-							Markers: markers.length,
-							"Git Error": await getGitError(textDocument)
+							Markers: markers.length
 						};
+						if (textDocuments && textDocuments.length) {
+							for (const textDocument of textDocuments) {
+								const firstError = await getGitError(textDocument);
+								codemarkProperties["Git Error"] = firstError;
+								if (firstError) {
+									// stop after the first
+									break;
+								}
+							}
+						}
 						telemetry.track({ eventName: "Codemark Created", properties: codemarkProperties });
 					}
 				})
@@ -657,10 +666,10 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	@lspHandler(CreatePostRequestType)
 	async createPost(
 		request: CreatePostRequest,
-		textDocument?: TextDocumentIdentifier
+		textDocuments?: TextDocumentIdentifier[]
 	): Promise<CreatePostResponse> {
 		const response = await this.session.api.createPost(request);
-		trackPostCreation(request, textDocument);
+		trackPostCreation(request, textDocuments);
 		await resolveCreatePostResponse(response);
 		return {
 			...response,
@@ -670,7 +679,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 	@lspHandler(CreatePostWithMarkerRequestType)
 	async createPostWithMarker({
-		textDocument: documentId,
+		textDocuments,
 		text,
 		// code,
 		// source,
@@ -695,14 +704,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		const { documents } = Container.instance();
 		const { git, scm } = SessionContainer.instance();
 
-		const document = documents.get(documentId.uri);
-		if (document === undefined) {
-			throw new Error(`No document could be found for Uri(${documentId.uri})`);
-		}
-
-		const filePath = URI.parse(documentId.uri).fsPath;
-		const fileContents = document.getText();
-
 		const codemarkRequest = {
 			title,
 			text,
@@ -724,9 +725,18 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		const backtrackedLocations: {
 			atDocument: CSMarkerLocation;
 			atCurrentCommit: CSMarkerLocation;
+			fileContents: string;
+			filePath: string;
 		}[] = [];
 
 		let index = -1;
+		const textDocumentInfo: {
+			[key: string]: {
+				documentId: TextDocumentIdentifier;
+				filePath: string;
+				fileContents: string;
+			};
+		} = {};
 		for (const m of markers) {
 			index++;
 			let marker: CreateCodemarkRequestMarker | undefined;
@@ -743,10 +753,23 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				range = Ranges.ensureStartBeforeEnd(range);
 				location = MarkerLocation.fromRange(range);
 				let referenceLocations: CSReferenceLocation[] = [];
+
+				if (!textDocumentInfo[m.documentId.uri]) {
+					const document = documents.get(m.documentId.uri);
+					if (document === undefined) {
+						throw new Error(`No document could be found for Uri(${m.documentId.uri})`);
+					}
+					textDocumentInfo[m.documentId.uri] = {
+						documentId: m.documentId,
+						filePath: URI.parse(m.documentId.uri).fsPath,
+						fileContents: document.getText()
+					};
+				}
+				const { documentId, filePath, fileContents } = textDocumentInfo[m.documentId.uri];
+
 				if (source) {
 					Logger.log("createPostWithMarker: source information provided");
 					if (source.revision) {
-						const filePath = URI.parse(documentId.uri).fsPath;
 						fileCurrentCommit = source.revision;
 						Logger.log(`createPostWithMarker: source revision ${fileCurrentCommit}`);
 						locationAtCurrentCommit = await SessionContainer.instance().markerLocations.backtrackLocation(
@@ -818,7 +841,9 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 					backtrackedLocations[index] = {
 						atDocument: location,
-						atCurrentCommit: locationAtCurrentCommit || MarkerLocation.empty()
+						atCurrentCommit: locationAtCurrentCommit || MarkerLocation.empty(),
+						filePath: filePath,
+						fileContents: fileContents
 					};
 
 					if (source.remotes && source.remotes.length > 0) {
@@ -882,7 +907,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					mentionedUserIds,
 					entryPoint
 				},
-				documentId
+				textDocuments
 			);
 
 			const { markers } = response;
@@ -891,6 +916,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					if (backtrackedLocations[index]) {
 						const location = backtrackedLocations[index].atDocument;
 						const backtrackedLocation = backtrackedLocations[index].atCurrentCommit;
+						const filePath = backtrackedLocations[index].filePath;
+						const fileContents = backtrackedLocations[index].fileContents;
 
 						const meta = backtrackedLocation.meta;
 						if (meta && (meta.startWasDeleted || meta.endWasDeleted)) {
