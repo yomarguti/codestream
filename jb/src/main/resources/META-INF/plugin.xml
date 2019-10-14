@@ -59,6 +59,22 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="5_0_0">5.0.0</h4>
+<h5>Added</h5>
+<ul>
+    <li>Add the ability to have multiple blocks of code, even across files/repos, associated with a single codemark</li>
+    <li>Adds the ability to create issues on GitLab Enterprise</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>Codemarks can now be created and shared with your teammates even if you have unpushed commits</li>
+    <li>CodeStream settings now apply globally, instead of at the project level, so you no longer need to sign in again when opening a new project</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue where assignee wasn't being set correctly for issues created on GitLab</li>
+    <li>Fixes an issue with the Asana integration where tasks weren't getting created</li>
+</ul>
 <h4 id="4_0_1">4.0.1</h4>
 <h5>Added</h5>
 <ul>
