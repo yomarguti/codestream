@@ -66,9 +66,7 @@ import { setCurrentStream } from "../store/context/actions";
 import ContainerAtEditorLine from "./SpatialView/ContainerAtEditorLine";
 import ContainerAtEditorSelection from "./SpatialView/ContainerAtEditorSelection";
 import { prettyPrintOne } from "code-prettify";
-import { escapeHtml, safe } from "../utils";
-import { ReposActionsType } from "../store/repos/types";
-import { Modal } from "./Modal";
+import { escapeHtml } from "../utils";
 
 interface Props extends ConnectedProps {
 	streamId: string;
@@ -1382,9 +1380,11 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		if (this.props.multiLocation) {
 			return (
-				<Modal onClose={this.props.onClickClose}>
-					<div className="codemark-form-container">{this.renderCodemarkForm()}</div>
-				</Modal>
+				<div className="full-height-codemark-form">
+					<span className="plane-container">
+						<div className="codemark-form-container">{this.renderCodemarkForm()}</div>
+					</span>
+				</div>
 			);
 		} else if (this.props.positionAtLocation) {
 			if (codeBlocks[0]) {
