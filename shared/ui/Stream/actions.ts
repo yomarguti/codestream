@@ -112,7 +112,8 @@ export const createPostAndCodemark = (
 	codeBlocks.forEach(codeBlock => {
 		let marker: any = {
 			code: codeBlock.contents,
-			range: codeBlock.range
+			range: codeBlock.range,
+			documentId: { uri: codeBlock.uri }
 		};
 
 		if (codeBlock.scm) {
@@ -208,7 +209,9 @@ export const createPostAndCodemark = (
 					"relatedCodemarkIds"
 				),
 				markers,
-				textEditorUri: attributes.codeBlocks[0].uri
+				textEditorUris: attributes.codeBlocks.map(_ => { 					
+					return { uri: _.uri }
+				})
 			},
 			findMentionedUserIds(getTeamMembers(getState()), attributes.text || ""),
 			{
@@ -282,12 +285,12 @@ export const createPost = (
 					externalAssignees = extra.crossPostIssueValues.assignees;
 				}
 			}
-			const block = codemark.markers[0] || {};
+			//const block = codemark.markers[0] || {};
 
 			responsePromise = HostApi.instance.send(CreatePostWithMarkerRequestType, {
 				streamId,
 				text: codemark.text,
-				textDocument: { uri: codemark.textEditorUri },
+				textDocuments: codemark.textEditorUris,
 				// code: block.code,
 				// range: block.range,
 				// source: block.source,
