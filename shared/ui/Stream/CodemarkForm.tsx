@@ -353,6 +353,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		let newCodeBlocks = [...this.state.codeBlocks];
 		if (this.state.liveLocation >= 0) newCodeBlocks[this.state.liveLocation] = scmInfo;
 		else newCodeBlocks.push(scmInfo);
+
 		this.setState({ codeBlocks: newCodeBlocks, addingLocation: false }, () => {
 			this.handleScmChange();
 			if (callback) callback();
@@ -1243,9 +1244,8 @@ class CodemarkForm extends React.Component<Props, State> {
 						if (!codeBlock.range) return null;
 
 						const scm = codeBlock.scm;
-						if (!scm) return;
 
-						let file = scm.file ? paths.basename(scm.file) : "";
+						let file = scm && scm.file ? paths.basename(scm.file) : "";
 
 						let range: any = codeBlock.range;
 						if (editingCodemark) {
@@ -1274,17 +1274,21 @@ class CodemarkForm extends React.Component<Props, State> {
 								style={{ padding: "0", marginBottom: 0, position: "relative" }}
 							>
 								<div className="file-info">
-									<span className="monospace" style={{ paddingRight: "20px" }}>
-										<Icon name="file"></Icon> {file}
-									</span>{" "}
-									{scm.branch && (
+									{file && (
+										<>
+											<span className="monospace" style={{ paddingRight: "20px" }}>
+												<Icon name="file"></Icon> {file}
+											</span>{" "}
+										</>
+									)}
+									{scm && scm.branch && (
 										<>
 											<span className="monospace" style={{ paddingRight: "20px" }}>
 												<Icon name="git-branch"></Icon> {scm.branch}
 											</span>{" "}
 										</>
 									)}
-									{scm.revision && (
+									{scm && scm.revision && (
 										<span className="monospace">
 											<Icon name="git-commit"></Icon> {scm.revision.substring(0, 7)}
 										</span>
