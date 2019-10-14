@@ -20,7 +20,9 @@ function Marker(props: Props) {
 	}
 
 	let startLine = 1;
-	if (marker.locationWhenCreated) startLine = marker.locationWhenCreated[0];
+	if (marker.locationWhenCreated && marker.locationWhenCreated.length) startLine = marker.locationWhenCreated[0];
+	else if (marker.referenceLocations && marker.referenceLocations.length) startLine = marker.referenceLocations[0].location[0];
+
 	const codeHTML = prettyPrintOne(escapeHtml(marker.code), extension, startLine);
 	return (
 		<div style={{ marginTop: "10px" }}>
