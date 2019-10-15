@@ -69,6 +69,7 @@
 <ul>
     <li>Codemarks can now be created and shared with your teammates even if you have unpushed commits</li>
     <li>CodeStream settings now apply globally, instead of at the project level, so you no longer need to sign in again when opening a new project</li>
+    <li>Archived codemarks and resolved issues are now both controlled by the Archived filter on the Current File tab</li>
 </ul>
 <h5>Fixed</h5>
 <ul>
