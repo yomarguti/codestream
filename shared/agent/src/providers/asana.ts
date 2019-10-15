@@ -194,11 +194,19 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 		await this.ensureConnected();
 
 		const response = await this.get<AsanaProjectData>(`/api/1.0/projects/${request.boardId}`);
-		const teamId = response.body.data.team.gid;
-
-		const { body } = await this.get<AsanaUsersData>(
-			`/api/1.0/teams/${teamId}/users?${qs.stringify({ opt_fields: "name,email" })}`
-		);
-		return { users: body.data.map(u => ({ ...u, displayName: u.name, id: u.gid })) };
+		const team = response.body.data.team;
+		let userResponse;
+		if (team) {
+			userResponse = await this.get<AsanaUsersData>(
+				`/api/1.0/teams/${team.gid}/users?${qs.stringify({ opt_fields: "name,email" })}`
+			);
+		} else {
+			userResponse = await this.get<AsanaUsersData>(
+				`/api/1.0/workspaces/${response.body.data.workspace.gid}/users?${qs.stringify({
+					opt_fields: "name,email"
+				})}`
+			);
+		}
+		return { users: userResponse.body.data.map(u => ({ ...u, displayName: u.name, id: u.gid })) };
 	}
 }

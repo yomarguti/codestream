@@ -25,7 +25,7 @@ export interface AsanaProject {
 	name: string;
 	sections: AsanaSection[];
 	workspace: AsanaWorkspace;
-	team: AsanaTeam;
+	team?: AsanaTeam;
 }
 
 export interface AsanaSection {
