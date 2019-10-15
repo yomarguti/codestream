@@ -19,6 +19,7 @@ export interface GitLabFetchBoardsRequest {
 export interface GitLabBoard {
 	id: string;
 	name: string;
+	path?: string;
 }
 
 export interface GitLabFetchBoardsResponse {

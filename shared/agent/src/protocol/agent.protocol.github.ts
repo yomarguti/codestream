@@ -19,6 +19,8 @@ export interface GitHubFetchBoardsRequest {
 export interface GitHubBoard {
 	id: string;
 	name: string;
+	path?: string;
+	apiIdentifier: string;
 }
 
 export interface GitHubFetchBoardsResponse {

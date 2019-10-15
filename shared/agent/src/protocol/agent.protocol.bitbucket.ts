@@ -25,6 +25,8 @@ export interface BitbucketCreateCardResponse extends BitbucketCard {}
 export interface BitbucketBoard {
 	id: string;
 	name: string;
+	path: string;
+	apiIdentifier: string;
 }
 
 export interface BitbucketFetchBoardsResponse {

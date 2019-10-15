@@ -13,6 +13,11 @@ export interface AsanaWorkspace {
 	gid: string;
 }
 
+export interface AsanaTeam {
+	id: number;
+	gid: string;
+}
+
 export interface AsanaProject {
 	id: number;
 	gid: string;
@@ -20,6 +25,7 @@ export interface AsanaProject {
 	name: string;
 	sections: AsanaSection[];
 	workspace: AsanaWorkspace;
+	team: AsanaTeam;
 }
 
 export interface AsanaSection {
@@ -50,7 +56,7 @@ export interface AsanaFetchBoardsRequest {
 }
 
 export interface AsanaBoard {
-	id: number;
+	id: string;
 	name: string;
 	lists: AsanaList[];
 	singleAssignee?: boolean;
@@ -61,6 +67,6 @@ export interface AsanaFetchBoardsResponse {
 }
 
 export interface AsanaList {
-	id: number;
+	id: string;
 	name: string;
 }

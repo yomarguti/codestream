@@ -61,7 +61,7 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 		const boards: ThirdPartyProviderBoard[] = [];
 		for (const project of projects) {
 			const board: ThirdPartyProviderBoard = {
-				id: project.id.toString(),
+				id: project.gid,
 				name: project.name,
 				lists: [],
 				singleAssignee: true // asana cards allow only a single assignee
@@ -76,7 +76,7 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 
 			for (const section of project.sections) {
 				const list: AsanaList = {
-					id: section.id,
+					id: section.gid,
 					name: section.name
 				};
 				board.lists.push(list);
@@ -194,10 +194,10 @@ export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
 		await this.ensureConnected();
 
 		const response = await this.get<AsanaProjectData>(`/api/1.0/projects/${request.boardId}`);
-		const workspaceId = response.body.data.workspace.gid;
+		const teamId = response.body.data.team.gid;
 
 		const { body } = await this.get<AsanaUsersData>(
-			`/api/1.0/workspaces/${workspaceId}/users?${qs.stringify({ opt_fields: "name,email" })}`
+			`/api/1.0/teams/${teamId}/users?${qs.stringify({ opt_fields: "name,email" })}`
 		);
 		return { users: body.data.map(u => ({ ...u, displayName: u.name, id: u.gid })) };
 	}
