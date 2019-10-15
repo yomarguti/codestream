@@ -1,6 +1,6 @@
 # Change Log
 
-## [5.0.0] - 2019-10-15
+## [5.0.0] - 2019-10-16
 
 ### Added
 
@@ -10,6 +10,7 @@
 ### Changed
 
 - Codemarks can now be created and shared with your teammates even if you have unpushed commits
+- Archived codemarks and resolved issues are now both controlled by the Archived filter on the Current File tab
 
 ### Fixed
 
