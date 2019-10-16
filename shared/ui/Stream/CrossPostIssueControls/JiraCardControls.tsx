@@ -1,145 +1,257 @@
 import React from "react";
 import Icon from "../Icon";
 import Menu from "../Menu";
-import { CrossPostIssueValuesListener, PROVIDER_MAPPINGS, CodeDelimiterStyles } from "./types";
-import { ThirdPartyProviderBoard, ThirdPartyProviderConfig } from "@codestream/protocols/agent";
+import AsyncSelect from "react-select/async";
+import { CodeDelimiterStyles } from "./types";
+import {
+	ThirdPartyProviderConfig,
+	FetchThirdPartyBoardsRequestType,
+	JiraBoard,
+	FetchAssignableUsersRequestType
+} from "@codestream/protocols/agent";
+import { useDispatch, useSelector } from "react-redux";
+import { setIssueProvider } from "@codestream/webview/store/context/actions";
+import { CodeStreamState } from "@codestream/webview/store";
+import { getIntegrationData } from "@codestream/webview/store/activeIntegrations/reducer";
+import { JiraIntegrationData } from "@codestream/webview/store/activeIntegrations/types";
+import { updateForProvider } from "@codestream/webview/store/activeIntegrations/actions";
+import { useDidMount } from "@codestream/webview/utilities/hooks";
+import { HostApi } from "../..";
+import { CrossPostIssueContext } from "../CodemarkForm";
+import { emptyArray, mapFilter } from "@codestream/webview/utils";
+import ReactDOM from "react-dom";
+import { disconnectProvider } from "../actions";
 
-interface State {
-	board?: ThirdPartyProviderBoard;
-	issueType?: string;
-	issueTypeMenuOpen: boolean;
-	issueTypeMenuTarget?: any;
-	boardMenuOpen: boolean;
-	boardMenuTarget?: any;
-	isEnabled: boolean;
-}
+export function JiraCardControls(
+	props: React.PropsWithChildren<{ provider: ThirdPartyProviderConfig }>
+) {
+	const dispatch = useDispatch();
+	const data = useSelector((state: CodeStreamState) =>
+		getIntegrationData<JiraIntegrationData>(state.activeIntegrations, props.provider.id)
+	);
+	const updateDataState = React.useCallback(
+		(data: Partial<JiraIntegrationData>) => {
+			dispatch(updateForProvider<JiraIntegrationData>(props.provider.id, data));
+		},
+		[props.provider.id]
+	);
 
-interface Props {
-	boards: ThirdPartyProviderBoard[];
-	onValues: CrossPostIssueValuesListener;
-	provider: ThirdPartyProviderConfig;
-}
+	const crossPostIssueContext = React.useContext(CrossPostIssueContext);
 
-export default class JiraCardControls extends React.Component<Props, State> {
-	constructor(props) {
-		super(props);
-		const hasBoards = props.boards.length > 0;
-		const firstBoard = hasBoards && props.boards[0];
-		const issueType = firstBoard.issueTypes && firstBoard.issueTypes[0];
-		this.state = {
-			board: hasBoards && props.boards[0],
-			issueType,
-			issueTypeMenuOpen: false,
-			boardMenuOpen: false,
-			isEnabled: true
+	useDidMount(() => {
+		if (data.projects && data.projects.length > 0) return;
+		if (!data.isLoading) {
+			updateDataState({
+				isLoading: true
+			});
+		}
+
+		let isValid = true;
+
+		const fetchBoards = async () => {
+			let response = await HostApi.instance.send(FetchThirdPartyBoardsRequestType, {
+				providerId: props.provider.id
+			});
+
+			if (!isValid) return;
+
+			if (response.boards.length === 0) {
+				// 💩 retry in case there was a race condition (continues until this component is unmounted)
+				await fetchBoards();
+				return;
+			}
+			// make sure to persist current selections if possible
+			const newCurrentProject = (data.currentProject
+				? response.boards.find(b => b.id === data.currentProject!.id)
+				: response.boards[0]) as JiraBoard;
+
+			const newCurrentIssueType = data.currentIssueType
+				? newCurrentProject.issueTypes.find(type => type === data.currentIssueType)
+				: newCurrentProject.issueTypes[0];
+
+			updateDataState({
+				isLoading: false,
+				projects: response.boards as JiraBoard[],
+				currentProject: newCurrentProject,
+				currentIssueType: newCurrentIssueType
+			});
+
+			crossPostIssueContext.setValues({
+				codeDelimiterStyle: CodeDelimiterStyles.CODE_BRACE,
+				issueType: newCurrentIssueType,
+				boardId: newCurrentProject.id
+			});
 		};
-	}
 
-	componentDidMount() {
-		this.onValuesChanged();
-	}
+		fetchBoards();
 
-	onValuesChanged = () => {
-		const { board, issueType, isEnabled } = this.state;
-		this.props.onValues({
-			board,
-			boardId: board && board.id,
-			issueType,
-			isEnabled,
-			issueProvider: this.props.provider,
-			codeDelimiterStyle: CodeDelimiterStyles.CODE_BRACE
-		});
-	};
+		return () => {
+			isValid = false;
+		};
+	});
 
-	switchIssueType = event => {
-		event.stopPropagation();
-		this.setState({
-			issueTypeMenuOpen: !this.state.issueTypeMenuOpen,
-			issueTypeMenuTarget: event.target
-		});
-	};
+	const [issueTypeMenuState, setIssueTypeMenuState] = React.useState<{
+		open: boolean;
+		target?: EventTarget;
+	}>({ open: false, target: undefined });
 
-	selectIssueType = issueType => {
+	const [projectMenuState, setProjectMenuState] = React.useState<{
+		open: boolean;
+		target?: EventTarget;
+	}>({ open: false, target: undefined });
+
+	const handleClickIssueType = React.useCallback((event: React.MouseEvent) => {
+		event.preventDefault();
+		event.persist();
+		setIssueTypeMenuState(state => ({ target: event.target, open: !state.open }));
+	}, []);
+
+	const selectIssueType = React.useCallback((issueType?: string) => {
+		setIssueTypeMenuState({ target: undefined, open: false });
 		if (issueType) {
-			this.setState({ issueType }, this.onValuesChanged);
+			updateDataState({ currentIssueType: issueType });
+			crossPostIssueContext.setValues({
+				issueType
+			});
 		}
-		this.setState({ issueTypeMenuOpen: false });
-	};
+	}, []);
 
-	switchBoard = event => {
-		event.stopPropagation();
-		this.setState({
-			boardMenuOpen: !this.state.boardMenuOpen,
-			boardMenuTarget: event.target
-		});
-	};
+	const handleClickProject = React.useCallback((event: React.MouseEvent) => {
+		event.preventDefault();
+		event.persist();
+		setProjectMenuState(state => ({ open: !state.open, target: event.target }));
+	}, []);
 
-	selectBoard = board => {
-		if (board) {
-			this.setState({ board }, this.onValuesChanged);
+	const selectProject = React.useCallback((project?: JiraBoard) => {
+		setProjectMenuState({ open: false, target: undefined });
+		if (project) {
+			const boardId = project.id;
+			const issueType = project.issueTypes[0];
+			updateDataState({ currentProject: project, currentIssueType: issueType });
+			crossPostIssueContext.setValues({
+				boardId,
+				issueType
+			});
 		}
-		this.setState({ boardMenuOpen: false });
-	};
+	}, []);
 
-	toggleCrossPostIssue = () => {
-		this.setState(state => ({ isEnabled: !state.isEnabled }), this.onValuesChanged);
-	};
+	const loadAssignableUsers = React.useCallback(
+		async (inputValue: string) => {
+			if (!data.currentProject) return [];
 
-	render() {
-		const { board, issueType } = this.state;
-		const { provider } = this.props;
-		const { host, name } = provider;
-		const issueTypeItems = board ? board.issueTypes.map(it => ({ label: it, action: it })) : [];
-		const boardItems = (this.props.boards || []).map(board => ({
-			label: board.name,
-			key: board.id,
-			action: board
-		}));
-		const providerDisplay = PROVIDER_MAPPINGS[name];
-		let displayName = providerDisplay.displayName;
-		if (host && provider.isEnterprise) {
-			const displayHost = host.startsWith("http://")
-				? host.split("http://")[1]
-				: host.startsWith("https://")
-				? host.split("https://")[1]
-				: host;
-			displayName += ` - ${displayHost}`;
-		}
+			try {
+				const { users } = await HostApi.instance.send(FetchAssignableUsersRequestType, {
+					providerId: props.provider.id,
+					boardId: data.currentProject.id
+				});
+				return mapFilter(users, user => {
+					if (user.displayName.toLowerCase().includes(inputValue.toLowerCase()))
+						return { label: user.displayName, value: user };
+					return;
+				});
+			} catch (error) {
+				// in case auth tokens have expired
+				// TODO: needs to be communicated to the user
+				dispatch(disconnectProvider(props.provider.id, "Compose Modal"));
+				return [];
+			}
+		},
+		[data.currentProject]
+	);
 
+	const assigneesInput = (() => {
+		if (crossPostIssueContext.assigneesInputTarget == undefined) return null;
+
+		const { currentProject } = data;
+
+		const isDisabled = currentProject && currentProject.assigneesDisabled;
+		const isRequired = currentProject && currentProject.assigneesRequired;
+
+		return ReactDOM.createPortal(
+			<AsyncSelect
+				key={currentProject ? currentProject.id : "no-project"}
+				id="input-assignees"
+				name="assignees"
+				classNamePrefix="react-select"
+				defaultOptions
+				loadOptions={loadAssignableUsers}
+				value={crossPostIssueContext.selectedAssignees}
+				isClearable
+				placeholder={`Assignee${
+					isRequired ? " (required)" : isDisabled ? " (N/A)" : " (optional)"
+				}`}
+				isDisabled={isDisabled}
+				onChange={value => crossPostIssueContext.setSelectedAssignees(value)}
+			/>,
+			crossPostIssueContext.assigneesInputTarget
+		);
+	})();
+
+	if (data.isLoading) {
 		return (
-			<div className="checkbox-row" onClick={this.toggleCrossPostIssue}>
-				<input type="checkbox" checked={this.state.isEnabled} />
+			<>
+				{assigneesInput}
+				<span>
+					<Icon className="spin" name="sync" /> Syncing projects...
+				</span>
+				<a
+					style={{ marginLeft: "5px" }}
+					onClick={e => {
+						e.preventDefault();
+						dispatch(setIssueProvider(undefined));
+						updateDataState({ isLoading: false });
+					}}
+				>
+					cancel
+				</a>
+			</>
+		);
+	}
+
+	return (
+		<>
+			{assigneesInput}
+			<div className="checkbox-row">
+				<input type="checkbox" checked onChange={_ => dispatch(setIssueProvider(undefined))} />
 				{"Add a "}
-				<span className="channel-label" onClick={this.switchIssueType}>
-					{issueType}
+				<span className="channel-label" onClick={handleClickIssueType}>
+					{data.currentIssueType}
 					<Icon name="chevron-down" />
-					{this.state.issueTypeMenuOpen && (
+					{issueTypeMenuState.open && (
 						<Menu
 							align="center"
 							compact={true}
-							target={this.state.issueTypeMenuTarget}
-							items={issueTypeItems}
-							action={this.selectIssueType}
+							target={issueTypeMenuState.target}
+							items={
+								data.currentProject
+									? data.currentProject.issueTypes.map(it => ({ label: it, action: it }))
+									: []
+							}
+							action={selectIssueType}
 						/>
 					)}
 				</span>
 				{" on "}
-				<span className="channel-label" onClick={this.switchBoard}>
-					{board && board.name}
+				<span className="channel-label" onClick={handleClickProject}>
+					{data.currentProject && data.currentProject.name}
 					<Icon name="chevron-down" />
-					{this.state.boardMenuOpen && (
+					{projectMenuState.open && (
 						<Menu
 							align="center"
 							compact={true}
-							target={this.state.boardMenuTarget}
-							items={boardItems}
-							action={this.selectBoard}
+							target={projectMenuState.target}
+							items={(data.projects || emptyArray).map(project => ({
+								key: project.id,
+								label: project.name,
+								action: project
+							}))}
+							action={selectProject}
 						/>
 					)}
 				</span>
 				{` on `}
-				{this.props.children}
+				{props.children}
 			</div>
-		);
-	}
+		</>
+	);
 }

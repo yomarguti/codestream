@@ -1,13 +1,3 @@
-import { ThirdPartyProviderConfig, ThirdPartyProviderBoard } from "@codestream/protocols/agent";
-
-export interface CardValues {
-	isEnabled: boolean;
-	issueProvider: ThirdPartyProviderConfig;
-	board?: ThirdPartyProviderBoard;
-	[key: string]: any;
-}
-export type CrossPostIssueValuesListener = (values: CardValues) => any;
-
 export interface ProviderDisplay {
 	displayName: string;
 	icon?: string;
@@ -24,14 +14,16 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		displayName: "GitHub Enterprise",
 		icon: "mark-github",
 		urlPlaceholder: "https://git.myorg.com",
-		helpUrl: "https://github.com/TeamCodeStream/CodeStream/wiki/Configuring-the-GitHub-Enterprise-Integration"
+		helpUrl:
+			"https://github.com/TeamCodeStream/CodeStream/wiki/Configuring-the-GitHub-Enterprise-Integration"
 	},
 	gitlab: { displayName: "GitLab", icon: "gitlab" },
 	gitlab_enterprise: {
 		displayName: "GitLab Enterprise",
 		icon: "gitlab",
 		urlPlaceholder: "https://gitlab.myorg.com",
-		helpUrl: "https://github.com/TeamCodeStream/CodeStream/wiki/Configuring-the-GitLab-Enterprise-Integration"
+		helpUrl:
+			"https://github.com/TeamCodeStream/CodeStream/wiki/Configuring-the-GitLab-Enterprise-Integration"
 	},
 	jira: { displayName: "Jira", icon: "jira" },
 	jiraserver: {
@@ -60,4 +52,4 @@ export enum CodeDelimiterStyles {
 	SINGLE_BACK_QUOTE = "singleBackQuote",
 	HTML_MARKUP = "htmlMarkup",
 	CODE_BRACE = "codeBrace"
-};
+}

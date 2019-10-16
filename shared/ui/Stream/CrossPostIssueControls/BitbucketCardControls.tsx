@@ -1,129 +1,202 @@
 import React from "react";
+import AsyncSelect from "react-select/async";
 import Icon from "../Icon";
 import Menu from "../Menu";
-import { CrossPostIssueValuesListener, PROVIDER_MAPPINGS, CodeDelimiterStyles } from "./types";
-import { ThirdPartyProviderBoard, ThirdPartyProviderConfig } from "@codestream/protocols/agent";
+import { CodeDelimiterStyles } from "./types";
+import {
+	ThirdPartyProviderConfig,
+	BitbucketBoard,
+	FetchThirdPartyBoardsRequestType,
+	FetchAssignableUsersRequestType
+} from "@codestream/protocols/agent";
+import { useDispatch, useSelector } from "react-redux";
+import { CodeStreamState } from "@codestream/webview/store";
+import { getIntegrationData } from "@codestream/webview/store/activeIntegrations/reducer";
+import { BitbucketIntegrationData } from "@codestream/webview/store/activeIntegrations/types";
+import { updateForProvider } from "@codestream/webview/store/activeIntegrations/actions";
+import { CrossPostIssueContext } from "../CodemarkForm";
+import { emptyArray, mapFilter } from "@codestream/webview/utils";
+import { useDidMount } from "@codestream/webview/utilities/hooks";
+import { HostApi } from "../..";
+import { setIssueProvider } from "@codestream/webview/store/context/actions";
+import ReactDOM from "react-dom";
 
-interface State {
-	board?: ThirdPartyProviderBoard;
-	isEnabled: boolean;
-	boardMenuOpen: boolean;
-	boardMenuTarget?: any;
-}
+export function BitbucketCardControls(
+	props: React.PropsWithChildren<{ provider: ThirdPartyProviderConfig }>
+) {
+	const dispatch = useDispatch();
+	const data = useSelector((state: CodeStreamState) =>
+		getIntegrationData<BitbucketIntegrationData>(state.activeIntegrations, props.provider.id)
+	);
+	const updateDataState = React.useCallback(
+		(data: Partial<BitbucketIntegrationData>) => {
+			dispatch(updateForProvider<BitbucketIntegrationData>(props.provider.id, data));
+		},
+		[props.provider.id]
+	);
 
-interface Props {
-	boards: ThirdPartyProviderBoard[];
-	onValues: CrossPostIssueValuesListener;
-	provider: ThirdPartyProviderConfig;
-	codeBlock?: {
-		source?: {
-			repoPath: string;
-		};
-	};
-}
+	const crossPostIssueContext = React.useContext(CrossPostIssueContext);
 
-export default class BitbucketCardControls extends React.Component<Props, State> {
-	constructor(props) {
-		super(props);
-		const firstBoard = props.boards[0];
-		this.state = {
-			board: firstBoard,
-			isEnabled: true,
-			boardMenuOpen: false
-		};
-	}
-
-	componentDidUpdate(prevProps: Props) {
-		if (prevProps.codeBlock !== this.props.codeBlock) {
-			this.selectBoardForCodeBlock();
-		}
-	}
-
-	componentDidMount() {
-		this.selectBoardForCodeBlock();
-		this.onValuesChanged();
-	}
-
-	selectBoardForCodeBlock = () => {
-		const { codeBlock } = this.props;
-		for (const board of this.props.boards) {
-			if (board.path === (codeBlock && codeBlock.source && codeBlock.source.repoPath)) {
-				this.setState({ board }, this.onValuesChanged);
-				break;
+	const selectRepoForCodeBlock = (repos: BitbucketBoard[] = emptyArray) => {
+		const { codeBlock } = crossPostIssueContext;
+		let repoToSelect = repos[0];
+		for (const repo of repos) {
+			if (repo.path === (codeBlock && codeBlock.scm && codeBlock.scm.repoPath)) {
+				repoToSelect = repo;
 			}
 		}
-	};
 
-	onValuesChanged = () => {
-		const { isEnabled, board } = this.state;
-		this.props.onValues({
-			board,
-			boardName: board && board.name,
-			isEnabled,
-			issueProvider: this.props.provider,
-			codeDelimiterStyle: CodeDelimiterStyles.TRIPLE_BACK_QUOTE
-		});
-	};
-
-	switchBoard = event => {
-		event.stopPropagation();
-		this.setState({
-			boardMenuOpen: !this.state.boardMenuOpen,
-			boardMenuTarget: event.target
-		});
-	};
-
-	selectBoard = (board: ThirdPartyProviderBoard) => {
-		if (board) {
-			this.setState({ board }, this.onValuesChanged);
+		if (repoToSelect) {
+			updateDataState({ currentRepo: repoToSelect });
+			crossPostIssueContext.setValues({ boardName: repoToSelect.name });
 		}
-		this.setState({ boardMenuOpen: false });
 	};
 
-	toggleCrossPostIssue = () => {
-		this.setState(state => ({ isEnabled: !state.isEnabled }), this.onValuesChanged);
-	};
-
-	render() {
-		const { board } = this.state;
-		const { provider } = this.props;
-		const { host, name } = provider;
-		const boardItems = this.props.boards.map(board => ({
-			label: board.name,
-			key: board.id,
-			action: board
-		}));
-		const providerDisplay = PROVIDER_MAPPINGS[name];
-		let displayName = providerDisplay.displayName;
-		if (host && provider.isEnterprise) {
-			const displayHost = host.startsWith("http://")
-				? host.split("http://")[1]
-				: host.startsWith("https://")
-				? host.split("https://")[1]
-				: host;
-			displayName += ` - ${displayHost}`;
+	useDidMount(() => {
+		if (data.repos && data.repos.length > 0) {
+			selectRepoForCodeBlock(data.repos);
+		}
+		if (!data.isLoading) {
+			updateDataState({
+				isLoading: true
+			});
 		}
 
+		let isValid = true;
+
+		const fetchBoards = async () => {
+			let response = await HostApi.instance.send(FetchThirdPartyBoardsRequestType, {
+				providerId: props.provider.id
+			});
+
+			if (!isValid) return;
+
+			if (response.boards.length === 0) {
+				// 💩 retry in case there was a race condition (continues until this component is unmounted)
+				await fetchBoards();
+				return;
+			}
+
+			crossPostIssueContext.setValues({
+				codeDelimiterStyle: CodeDelimiterStyles.TRIPLE_BACK_QUOTE
+			});
+			selectRepoForCodeBlock(response.boards as BitbucketBoard[]);
+			updateDataState({
+				isLoading: false,
+				repos: response.boards as BitbucketBoard[]
+			});
+		};
+
+		fetchBoards();
+
+		return () => {
+			isValid = false;
+		};
+	});
+
+	const [repoMenuState, setRepoMenuState] = React.useState<{ open: boolean; target?: EventTarget }>(
+		{ open: false }
+	);
+	const handleClickRepo = React.useCallback((event: React.MouseEvent) => {
+		event.preventDefault();
+		event.persist();
+		setRepoMenuState(state => ({ open: !state.open, target: event.target }));
+	}, []);
+	const selectRepo = React.useCallback((repo?: BitbucketBoard) => {
+		setRepoMenuState({ open: false, target: undefined });
+		if (repo) {
+			updateDataState({
+				currentRepo: repo
+			});
+			crossPostIssueContext.setValues({ boardName: repo.name });
+		}
+	}, []);
+
+	const loadAssignableUsers = React.useCallback(
+		async (inputValue: string) => {
+			if (!data.currentRepo) return [];
+
+			const { users } = await HostApi.instance.send(FetchAssignableUsersRequestType, {
+				providerId: props.provider.id,
+				boardId: data.currentRepo.apiIdentifier
+			});
+
+			return mapFilter(users, u => {
+				if (u.displayName.toLowerCase().includes(inputValue.toLowerCase()))
+					return { label: u.displayName, value: u };
+				else return;
+			});
+		},
+		[data.currentRepo]
+	);
+
+	const assigneesInput = (() => {
+		if (crossPostIssueContext.assigneesInputTarget == undefined) return null;
+
+		const { currentRepo } = data;
+
+		return ReactDOM.createPortal(
+			<AsyncSelect
+				key={currentRepo ? currentRepo.id : "no-board"}
+				id="input-assignees"
+				name="assignees"
+				classNamePrefix="react-select"
+				defaultOptions
+				loadOptions={loadAssignableUsers}
+				value={crossPostIssueContext.selectedAssignees}
+				placeholder="Assignee (optional)"
+				onChange={value => crossPostIssueContext.setSelectedAssignees(value)}
+			/>,
+			crossPostIssueContext.assigneesInputTarget
+		);
+	})();
+
+	if (data.isLoading)
 		return (
-			<div className="checkbox-row" onClick={this.toggleCrossPostIssue}>
-				<input type="checkbox" checked={this.state.isEnabled} />
-				{"Add an issue on "}
-				<span className="channel-label" onClick={this.switchBoard}>
-					{board && board.name}
+			<>
+				{assigneesInput}
+				<span>
+					<Icon className="spin" name="sync" /> Fetching repositories...
+				</span>
+				<a
+					style={{ marginLeft: "5px" }}
+					onClick={e => {
+						e.preventDefault();
+						dispatch(setIssueProvider(undefined));
+						updateDataState({ isLoading: false });
+					}}
+				>
+					cancel
+				</a>
+			</>
+		);
+
+	return (
+		<>
+			{assigneesInput}
+			<div className="checkbox-row">
+				<input type="checkbox" checked onChange={_ => dispatch(setIssueProvider(undefined))} />
+				{" Add an issue on "}
+				<span className="channel-label" onClick={handleClickRepo}>
+					{data.currentRepo && data.currentRepo.name}
 					<Icon name="chevron-down" />
-					{this.state.boardMenuOpen && (
+					{repoMenuState.open && (
 						<Menu
 							align="center"
 							compact={true}
-							target={this.state.boardMenuTarget}
-							items={boardItems}
-							action={this.selectBoard}
+							target={repoMenuState.target}
+							items={(data.repos || emptyArray).map(board => ({
+								label: board.name,
+								key: board.id,
+								action: board
+							}))}
+							action={selectRepo}
 						/>
 					)}
 				</span>
 				{` on `}
-				{this.props.children}
+				{props.children}
 			</div>
-		);
-	}
+		</>
+	);
 }

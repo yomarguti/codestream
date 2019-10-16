@@ -2,54 +2,47 @@ import React from "react";
 import { connect } from "react-redux";
 import { connectProvider } from "../../store/providers/actions";
 import { openPanel, setIssueProvider } from "../../store/context/actions";
-import { HostApi } from "../../webview-api";
 import Icon from "../Icon";
 import Menu from "../Menu";
-import AsanaCardControls from "./AsanaCardControls";
-import BitbucketCardControls from "./BitbucketCardControls";
-import GitHubCardControls from "./GitHubCardControls";
-import GitLabCardControls from "./GitLabCardControls";
-import JiraCardControls from "./JiraCardControls";
-import TrelloCardControls from "./TrelloCardControls";
-import YouTrackCardControls from "./YouTrackCardControls";
-import AzureDevOpsCardControls from "./AzureDevOpsCardControls";
-import { CrossPostIssueValuesListener, ProviderDisplay, PROVIDER_MAPPINGS } from "./types";
-import {
-	FetchThirdPartyBoardsRequestType,
-	ThirdPartyProviderBoard,
-	ThirdPartyProviderConfig,
-	ThirdPartyProviders
-} from "@codestream/protocols/agent";
+import { AsanaCardControls } from "./AsanaCardControls";
+import { BitbucketCardControls } from "./BitbucketCardControls";
+import { GitHubCardControls } from "./GitHubCardControls";
+import { GitLabCardControls } from "./GitLabCardControls";
+import { JiraCardControls } from "./JiraCardControls";
+import { TrelloCardControls } from "./TrelloCardControls";
+import { YouTrackCardControls } from "./YouTrackCardControls";
+import { AzureDevOpsCardControls } from "./AzureDevOpsCardControls";
+import { ProviderDisplay, PROVIDER_MAPPINGS } from "./types";
+import { ThirdPartyProviderConfig, ThirdPartyProviders } from "@codestream/protocols/agent";
 import { CSMe } from "@codestream/protocols/api";
 import { PrePRProviderInfoModalProps, PrePRProviderInfoModal } from "../PrePRProviderInfoModal";
 import { CodeStreamState } from "@codestream/webview/store";
 import { getConnectedProviderNames } from "@codestream/webview/store/providers/reducer";
+import { updateForProvider } from "@codestream/webview/store/activeIntegrations/actions";
+import { CodeStreamIssueControls } from "./CodeStreamIssueControls";
 
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
 	display: ProviderDisplay;
 }
 
-interface Props {
+interface ConnectedProps {
+	connectedProviderNames: string[];
+	currentTeamId: string;
+	currentUser: CSMe;
+	issueProviderConfig?: ThirdPartyProviderConfig;
+	providers: ThirdPartyProviders;
+}
+
+interface Props extends ConnectedProps {
 	connectProvider(...args: Parameters<typeof connectProvider>): any;
+	updateForProvider(...args: Parameters<typeof updateForProvider>): any;
 	setIssueProvider(providerId?: string): void;
 	openPanel(...args: Parameters<typeof openPanel>): void;
-	onValues: CrossPostIssueValuesListener;
-	issueProvider?: ThirdPartyProviderConfig;
-	codeBlock?: {
-		source?: {
-			repoPath: string;
-		};
-	};
-	providers?: ThirdPartyProviders;
-	connectedProviderNames: string[];
-	currentUser: CSMe;
-	currentTeamId: string;
 	isEditing?: boolean;
 }
 
 interface State {
-	boards: ThirdPartyProviderBoard[];
 	isLoading: boolean;
 	loadingProvider?: ProviderInfo;
 	issueProviderMenuOpen: boolean;
@@ -60,14 +53,12 @@ interface State {
 class CrossPostIssueControls extends React.Component<Props, State> {
 	constructor(props: Props) {
 		super(props);
-		const providerInfo = props.issueProvider
-			? this.getProviderInfo(props.issueProvider.id)
+		const providerInfo = props.issueProviderConfig
+			? this.getProviderInfo(props.issueProviderConfig.id)
 			: undefined;
-		const isLoading = !!providerInfo;
 		const loadingProvider = providerInfo;
 		this.state = {
-			boards: [],
-			isLoading,
+			isLoading: false,
 			loadingProvider,
 			issueProviderMenuOpen: false,
 			issueProviderMenuTarget: undefined
@@ -75,49 +66,32 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 	}
 
 	componentDidMount() {
-		const { issueProvider } = this.props;
-		const providerInfo = issueProvider ? this.getProviderInfo(issueProvider.id) : undefined;
-		if (issueProvider && providerInfo) {
-			this.loadBoards(issueProvider);
-		} else {
+		const { issueProviderConfig } = this.props;
+		const providerInfo = issueProviderConfig
+			? this.getProviderInfo(issueProviderConfig.id)
+			: undefined;
+		if (!issueProviderConfig || !providerInfo) {
 			this.props.setIssueProvider(undefined);
 		}
 	}
 
 	componentDidUpdate(prevProps: Props, prevState: State) {
-		const { issueProvider } = this.props;
-		const providerInfo = issueProvider ? this.getProviderInfo(issueProvider.id) : undefined;
+		const { issueProviderConfig } = this.props;
+		const providerInfo = issueProviderConfig
+			? this.getProviderInfo(issueProviderConfig.id)
+			: undefined;
 		if (
 			providerInfo &&
-			issueProvider &&
-			(!prevProps.issueProvider || prevProps.issueProvider.id !== issueProvider.id)
+			issueProviderConfig &&
+			(!prevProps.issueProviderConfig ||
+				prevProps.issueProviderConfig.id !== issueProviderConfig.id)
 		) {
-			this.loadBoards(issueProvider!);
-		} else if (!providerInfo && prevProps.issueProvider) {
+			this.setState({ isLoading: false });
+		} else if (!providerInfo && prevProps.issueProviderConfig) {
 			if (this.state.isLoading) {
-				this.setState({ boards: [], isLoading: false, loadingProvider: undefined });
+				this.setState({ isLoading: false, loadingProvider: undefined });
 			}
 		}
-	}
-
-	async loadBoards(provider: ThirdPartyProviderConfig) {
-		const providerInfo = this.getProviderInfo(provider.id);
-		if (!this.state.isLoading && providerInfo) {
-			this.setState({
-				isLoading: true,
-				loadingProvider: providerInfo
-			});
-		}
-
-		const response = await HostApi.instance.send(FetchThirdPartyBoardsRequestType, {
-			providerId: provider.id
-		});
-
-		this.setState({
-			isLoading: false,
-			loadingProvider: undefined,
-			boards: response.boards
-		});
 	}
 
 	renderLoading() {
@@ -126,7 +100,8 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		return (
 			<div className="connect-issue">
 				<span>
-					<Icon className="spin" name="sync" /> Syncing with {loadingProvider!.display.displayName}
+					<Icon className="spin" name="sync" /> Authenticating with{" "}
+					{loadingProvider!.display.displayName}
 					...
 				</span>
 				<a style={{ marginLeft: "5px" }} onClick={this.cancelLoading}>
@@ -142,56 +117,36 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 	};
 
 	renderProviderControls(providerOptions) {
-		const { boards } = this.state;
-		const { issueProvider } = this.props;
-		const providerInfo = issueProvider ? this.getProviderInfo(issueProvider.id) : undefined;
+		const { issueProviderConfig } = this.props;
+		const providerInfo = issueProviderConfig
+			? this.getProviderInfo(issueProviderConfig.id)
+			: undefined;
 		if (!providerInfo) {
-			return null;
+			return <CodeStreamIssueControls>{providerOptions}</CodeStreamIssueControls>;
 		}
 		switch (providerInfo.provider.name) {
 			case "jira":
 			case "jiraserver": {
 				return (
-					<JiraCardControls
-						boards={boards}
-						onValues={this.props.onValues}
-						provider={providerInfo.provider}
-					>
-						{providerOptions}
-					</JiraCardControls>
+					<JiraCardControls provider={providerInfo.provider}>{providerOptions}</JiraCardControls>
 				);
 			}
 			case "trello": {
 				return (
-					<TrelloCardControls
-						boards={boards}
-						onValues={this.props.onValues}
-						provider={providerInfo.provider}
-					>
+					<TrelloCardControls provider={providerInfo.provider}>
 						{providerOptions}
 					</TrelloCardControls>
 				);
 			}
 			case "asana": {
 				return (
-					<AsanaCardControls
-						boards={boards}
-						onValues={this.props.onValues}
-						provider={providerInfo.provider}
-					>
-						{providerOptions}
-					</AsanaCardControls>
+					<AsanaCardControls provider={providerInfo.provider}>{providerOptions}</AsanaCardControls>
 				);
 			}
 			case "github":
 			case "github_enterprise": {
 				return (
-					<GitHubCardControls
-						boards={boards}
-						onValues={this.props.onValues}
-						provider={providerInfo.provider}
-						codeBlock={this.props.codeBlock}
-					>
+					<GitHubCardControls provider={providerInfo.provider}>
 						{providerOptions}
 					</GitHubCardControls>
 				);
@@ -199,46 +154,28 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			case "gitlab":
 			case "gitlab_enterprise": {
 				return (
-					<GitLabCardControls
-						boards={boards}
-						onValues={this.props.onValues}
-						provider={providerInfo.provider}
-						codeBlock={this.props.codeBlock}
-					>
+					<GitLabCardControls provider={providerInfo.provider}>
 						{providerOptions}
 					</GitLabCardControls>
 				);
 			}
 			case "youtrack": {
 				return (
-					<YouTrackCardControls
-						boards={boards}
-						onValues={this.props.onValues}
-						provider={providerInfo.provider}
-					>
+					<YouTrackCardControls provider={providerInfo.provider}>
 						{providerOptions}
 					</YouTrackCardControls>
 				);
 			}
 			case "bitbucket": {
 				return (
-					<BitbucketCardControls
-						boards={boards}
-						onValues={this.props.onValues}
-						provider={providerInfo.provider}
-						codeBlock={this.props.codeBlock}
-					>
+					<BitbucketCardControls provider={providerInfo.provider}>
 						{providerOptions}
 					</BitbucketCardControls>
 				);
 			}
 			case "azuredevops": {
 				return (
-					<AzureDevOpsCardControls
-						boards={boards}
-						onValues={this.props.onValues}
-						provider={providerInfo.provider}
-					>
+					<AzureDevOpsCardControls provider={providerInfo.provider}>
 						{providerOptions}
 					</AzureDevOpsCardControls>
 				);
@@ -250,9 +187,10 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 	}
 
 	render() {
-		const { issueProvider } = this.props;
-		const providerInfo = issueProvider ? this.getProviderInfo(issueProvider.id) : undefined;
-		const providerName = providerInfo && providerInfo.provider.name;
+		const { issueProviderConfig } = this.props;
+		const providerInfo = issueProviderConfig
+			? this.getProviderInfo(issueProviderConfig.id)
+			: undefined;
 
 		if (this.state.isLoading) return this.renderLoading();
 
@@ -290,28 +228,14 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 
 		const providerOptions = this.renderProviderOptions(selectedProvider, knownIssueProviderOptions);
 
-		if (providerName) {
-			return (
-				<>
-					{this.state.propsForPrePRProviderInfoModal && (
-						<PrePRProviderInfoModal {...this.state.propsForPrePRProviderInfoModal} />
-					)}
-					<div className="connect-issue">{this.renderProviderControls(providerOptions)}</div>
-				</>
-			);
-		} else {
-			return (
-				<>
-					{this.state.propsForPrePRProviderInfoModal && (
-						<PrePRProviderInfoModal {...this.state.propsForPrePRProviderInfoModal} />
-					)}
-					<div className="connect-issue">
-						<span className="connect-issue-label">Create an issue on</span>
-						{providerOptions}
-					</div>
-				</>
-			);
-		}
+		return (
+			<>
+				{this.state.propsForPrePRProviderInfoModal && (
+					<PrePRProviderInfoModal {...this.state.propsForPrePRProviderInfoModal} />
+				)}
+				<div className="connect-issue">{this.renderProviderControls(providerOptions)}</div>
+			</>
+		);
 	}
 
 	renderProviderOptions = (selectedProvider, knownIssueProviderOptions) => {
@@ -377,9 +301,9 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			);
 		} else {
 			const { name } = providerInfo.provider;
-			const { connectedProviderNames, issueProvider } = this.props;
+			const { connectedProviderNames, issueProviderConfig } = this.props;
 			const newValueIsNotCurrentProvider =
-				issueProvider == undefined || issueProvider.name !== name;
+				issueProviderConfig == undefined || issueProviderConfig.name !== name;
 			const newValueIsNotAlreadyConnected = !connectedProviderNames.includes(name);
 			if (
 				newValueIsNotCurrentProvider &&
@@ -439,20 +363,24 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 	}
 }
 
-const mapStateToProps = (state: CodeStreamState) => {
+const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 	const { users, session, context, providers } = state;
+	const currentIssueProviderConfig = context.issueProvider
+		? providers[context.issueProvider]
+		: undefined;
+
 	return {
 		currentUser: users[session.userId!] as CSMe,
 		currentTeamId: context.currentTeamId,
 		providers,
-		issueProvider: providers[context.issueProvider!],
+		issueProviderConfig: currentIssueProviderConfig,
 		connectedProviderNames: getConnectedProviderNames(state)
 	};
 };
 
 export default connect(
 	mapStateToProps,
-	{ connectProvider, setIssueProvider, openPanel }
+	{ connectProvider, setIssueProvider, openPanel, updateForProvider }
 )(CrossPostIssueControls);
 
 // {false && (

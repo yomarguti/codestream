@@ -51,6 +51,6 @@ export const isConnected = (state: CodeStreamState, providerName: string) => {
 export const getConnectedProviderNames = (state: CodeStreamState) => {
 	return mapFilter<ThirdPartyProviderConfig, string>(
 		Object.values(state.providers),
-		providerConfig => isConnected(state, providerConfig.name) && providerConfig.name
+		providerConfig => (isConnected(state, providerConfig.name) ? providerConfig.name : undefined)
 	);
 };

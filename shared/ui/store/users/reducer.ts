@@ -45,7 +45,7 @@ export const getTeamMembers = createSelector(
 	getTeam,
 	getUsers,
 	(team, users) => {
-		return mapFilter(team.memberIds, id => {
+		return mapFilter(team.memberIds, (id: string) => {
 			const user: CSUser = users[id];
 			return user && !user.deactivated ? user : undefined;
 		});

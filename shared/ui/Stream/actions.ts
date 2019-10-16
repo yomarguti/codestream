@@ -745,6 +745,7 @@ const getCodeDelimiters = (
 			};
 	}
 };
+
 export const createProviderCard = async (attributes, codemark) => {
 	const delimiters = getCodeDelimiters(attributes.codeDelimiterStyle);
 	const { linefeed, start, end } = delimiters;

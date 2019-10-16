@@ -1,148 +1,255 @@
 import React from "react";
+import ReactDOM from "react-dom";
+import AsyncSelect from "react-select/async";
 import Icon from "../Icon";
 import Menu from "../Menu";
-import { CrossPostIssueValuesListener, PROVIDER_MAPPINGS } from "./types";
-import { ThirdPartyProviderBoard, ThirdPartyProviderConfig } from "@codestream/protocols/agent";
-
-interface List {
-	id: string;
-	name: string;
-}
-
-interface State {
-	board: ThirdPartyProviderBoard;
-	list?: List;
-	isEnabled: boolean;
-	boardMenuOpen: boolean;
-	boardMenuTarget?: any;
-	listMenuOpen: boolean;
-	listMenuTarget?: any;
-}
+import {
+	ThirdPartyProviderConfig,
+	FetchThirdPartyBoardsRequestType,
+	TrelloList,
+	TrelloBoard,
+	FetchAssignableUsersRequestType
+} from "@codestream/protocols/agent";
+import { useSelector, useDispatch } from "react-redux";
+import { CodeStreamState } from "@codestream/webview/store";
+import { getIntegrationData } from "@codestream/webview/store/activeIntegrations/reducer";
+import { updateForProvider } from "@codestream/webview/store/activeIntegrations/actions";
+import { emptyArray, mapFilter } from "@codestream/webview/utils";
+import { HostApi } from "@codestream/webview/webview-api";
+import { TrelloIntegrationData } from "@codestream/webview/store/activeIntegrations/types";
+import { setIssueProvider } from "@codestream/webview/store/context/actions";
+import { CrossPostIssueContext } from "../CodemarkForm";
+import { useDidMount } from "@codestream/webview/utilities/hooks";
 
 interface Props {
-	boards: ThirdPartyProviderBoard[];
-	onValues: CrossPostIssueValuesListener;
 	provider: ThirdPartyProviderConfig;
 }
 
-export default class TrelloCardControls extends React.Component<Props, State> {
-	constructor(props) {
-		super(props);
-		const firstBoard = props.boards[0];
-		this.state = {
-			board: firstBoard,
-			list: firstBoard && firstBoard.lists[0],
-			isEnabled: true,
-			boardMenuOpen: false,
-			listMenuOpen: false
+export function TrelloCardControls(props: React.PropsWithChildren<Props>) {
+	const dispatch = useDispatch();
+	const data = useSelector((state: CodeStreamState) =>
+		getIntegrationData<TrelloIntegrationData>(state.activeIntegrations, props.provider.id)
+	);
+	const updateDataState = React.useCallback(
+		(data: Partial<TrelloIntegrationData>) => {
+			dispatch(updateForProvider<TrelloIntegrationData>(props.provider.id, data));
+		},
+		[props.provider.id]
+	);
+
+	useDidMount(() => {
+		if (data.boards && data.boards.length > 0) return;
+
+		if (!data.isLoading) {
+			updateDataState({
+				isLoading: true
+			});
+		}
+
+		let isValid = true;
+
+		const fetchBoards = async () => {
+			const response = await HostApi.instance.send(FetchThirdPartyBoardsRequestType, {
+				providerId: props.provider.id
+			});
+
+			if (!isValid) return;
+			// make sure to persist current board/list selection if possible
+			const newCurrentBoard = (data.currentBoard
+				? response.boards.find(b => b.id === data.currentBoard!.id)
+				: response.boards[0]) as TrelloBoard;
+
+			const newCurrentList = (data.currentList
+				? newCurrentBoard.lists.find(l => l.id === data.currentList!.id)
+				: newCurrentBoard.lists[0]) as TrelloList;
+
+			updateDataState({
+				isLoading: false,
+				boards: response.boards as TrelloBoard[],
+				currentBoard: newCurrentBoard,
+				currentList: newCurrentList
+			});
+
+			crossPostIssueContext.setValues({
+				listId: newCurrentList.id,
+				issueProvider: props.provider!
+			});
 		};
-	}
 
-	componentDidMount() {
-		this.onValuesChanged();
-	}
+		fetchBoards();
 
-	onValuesChanged = () => {
-		const { board, isEnabled, list } = this.state;
-		this.props.onValues({
-			board: board,
-			listId: list && list.id,
-			isEnabled,
-			issueProvider: this.props.provider
-		});
-	};
+		return () => {
+			isValid = false;
+		};
+	});
 
-	switchBoard = event => {
+	const [boardMenuState, setBoardMenuState] = React.useState<{
+		open: boolean;
+		target?: EventTarget;
+	}>({ open: false, target: undefined });
+	const [listMenuState, setListMenuState] = React.useState<{
+		open: boolean;
+		target?: EventTarget;
+	}>({ open: false, target: undefined });
+
+	const handleClickBoard = React.useCallback((event: React.MouseEvent) => {
 		event.stopPropagation();
-		this.setState({
-			boardMenuOpen: !this.state.boardMenuOpen,
-			boardMenuTarget: event.target
-		});
-	};
-
-	selectBoard = board => {
-		if (board) {
-			this.setState({ board, list: board.lists[0] }, this.onValuesChanged);
-		}
-		this.setState({ boardMenuOpen: false });
-	};
-
-	switchList = event => {
-		event.stopPropagation();
-		this.setState({
-			listMenuOpen: !this.state.listMenuOpen,
-			listMenuTarget: event.target
-		});
-	};
-
-	selectList = (list: List) => {
-		this.setState({ listMenuOpen: false });
-		if (list && list.id) {
-			this.setState({ list }, this.onValuesChanged);
-		}
-	};
-
-	toggleCrossPostIssue = () => {
-		this.setState(state => ({ isEnabled: !state.isEnabled }), this.onValuesChanged);
-	};
-
-	render() {
-		const { board, list } = this.state;
-		const { provider } = this.props;
-		const boardItems = this.props.boards.map(board => ({
-			label: board.name,
-			key: board.id,
-			action: board
+		const target = event.target;
+		setBoardMenuState(state => ({
+			open: !state.open,
+			target
 		}));
-		const listItems = board
-			? board.lists.map(list => ({
-					label: list.name,
-					key: list.id,
-					action: list
-			  }))
-			: [];
-		const providerDisplay = PROVIDER_MAPPINGS[provider.name];
-		const displayName = provider.isEnterprise
-			? `${providerDisplay.displayName} - ${provider.host}`
-			: providerDisplay.displayName;
+	}, []);
 
+	const selectBoard = React.useCallback((board?: TrelloBoard) => {
+		setBoardMenuState({ open: false });
+		if (board) {
+			updateDataState({
+				currentBoard: board,
+				currentList: board.lists[0]
+			});
+			crossPostIssueContext.setValues({
+				listId: board.lists[0].id
+			});
+		}
+	}, []);
+
+	const handleClickList = React.useCallback((event: React.MouseEvent) => {
+		event.stopPropagation();
+		const target = event.target;
+		setListMenuState(state => ({
+			open: !state.open,
+			target
+		}));
+	}, []);
+
+	const selectList = React.useCallback((list?: TrelloList) => {
+		setListMenuState({ open: false });
+
+		if (list) {
+			crossPostIssueContext.setValues({
+				listId: list.id
+			});
+			updateDataState({
+				currentList: list
+			});
+		}
+	}, []);
+
+	const loadAssignableUsers = React.useCallback(
+		async (inputValue: string) => {
+			if (!data.currentBoard) return [];
+
+			const { users } = await HostApi.instance.send(FetchAssignableUsersRequestType, {
+				providerId: props.provider.id,
+				boardId: data.currentBoard!.id
+			});
+			return mapFilter(users, u => {
+				if (u.displayName.toLowerCase().includes(inputValue.toLowerCase()))
+					return { label: u.displayName, value: u };
+				else return;
+			});
+		},
+		[data.currentBoard]
+	);
+
+	const crossPostIssueContext = React.useContext(CrossPostIssueContext);
+
+	const assigneesInput = (() => {
+		if (crossPostIssueContext.assigneesInputTarget == undefined) return null;
+
+		const { currentBoard } = data;
+
+		return ReactDOM.createPortal(
+			<AsyncSelect
+				key={currentBoard ? currentBoard.id : "no-board"}
+				id="input-assignees"
+				name="assignees"
+				classNamePrefix="react-select"
+				defaultOptions
+				loadOptions={loadAssignableUsers}
+				value={crossPostIssueContext.selectedAssignees}
+				isMulti
+				placeholder="Members (optional)"
+				onChange={value => crossPostIssueContext.setSelectedAssignees(value)}
+			/>,
+			crossPostIssueContext.assigneesInputTarget
+		);
+	})();
+
+	if (data.isLoading)
 		return (
-			<div className="checkbox-row" onClick={this.toggleCrossPostIssue}>
-				<input type="checkbox" checked={this.state.isEnabled} />
-				{"Add a card on "}
-				<span className="channel-label" onClick={this.switchBoard}>
-					{board && board.name}
+			<>
+				{assigneesInput}
+				<span>
+					<Icon className="spin" name="sync" /> Fetching boards...
+				</span>
+				<a
+					style={{ marginLeft: "5px" }}
+					onClick={e => {
+						e.preventDefault();
+						dispatch(setIssueProvider(undefined));
+						updateDataState({ isLoading: false });
+					}}
+				>
+					cancel
+				</a>
+			</>
+		);
+
+	const boardItems = (data.boards || emptyArray).map(board => ({
+		label: board.name,
+		key: board.id,
+		action: board
+	}));
+	const listItems = data.currentBoard
+		? data.currentBoard.lists.map(list => ({
+				label: list.name,
+				key: list.id,
+				action: list
+		  }))
+		: [];
+
+	return (
+		<>
+			{assigneesInput}
+			<div className="checkbox-row">
+				<input type="checkbox" checked onChange={e => dispatch(setIssueProvider(undefined))} />
+				{" Add a card on "}
+				<span className="channel-label" onClick={handleClickBoard}>
+					{data.currentBoard && data.currentBoard.name}
 					<Icon name="chevron-down" />
-					{this.state.boardMenuOpen && (
+					{boardMenuState.open && (
 						<Menu
 							align="center"
 							compact={true}
-							target={this.state.boardMenuTarget}
+							target={boardMenuState.target}
 							items={boardItems}
-							action={this.selectBoard}
+							action={selectBoard}
 						/>
 					)}
 				</span>
-				{listItems.length > 0 && [
-					" in ",
-					<span className="channel-label" onClick={this.switchList}>
-						{list ? list.name : ""}
-						<Icon name="chevron-down" />
-						{this.state.listMenuOpen && (
-							<Menu
-								align="center"
-								compact={true}
-								target={this.state.listMenuTarget}
-								items={listItems}
-								action={this.selectList}
-							/>
-						)}
-					</span>,
-					" "
-				]}
+				{listItems.length > 0 && (
+					<>
+						{" in "}
+						<span className="channel-label" onClick={handleClickList}>
+							{data.currentList ? data.currentList.name : ""}
+							<Icon name="chevron-down" />
+							{listMenuState.open && (
+								<Menu
+									align="center"
+									compact={true}
+									target={listMenuState.target}
+									items={listItems}
+									action={selectList}
+								/>
+							)}
+						</span>{" "}
+					</>
+				)}
 				{` on `}
-				{this.props.children}
+				{props.children}
 			</div>
-		);
-	}
+		</>
+	);
 }

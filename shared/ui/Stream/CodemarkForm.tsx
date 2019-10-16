@@ -16,7 +16,8 @@ import {
 	CSStream,
 	CSUser,
 	StreamType,
-	CSApiCapabilities
+	CSApiCapabilities,
+	CSMe
 } from "@codestream/protocols/api";
 import cx from "classnames";
 import * as paths from "path-browserify";
@@ -43,7 +44,6 @@ import {
 import { HostApi } from "../webview-api";
 import Button from "./Button";
 import CrossPostIssueControls from "./CrossPostIssueControls";
-import { CardValues } from "./CrossPostIssueControls/types";
 import Tag from "./Tag";
 import Icon from "./Icon";
 import Menu from "./Menu";
@@ -66,8 +66,21 @@ import { setCurrentStream } from "../store/context/actions";
 import ContainerAtEditorLine from "./SpatialView/ContainerAtEditorLine";
 import ContainerAtEditorSelection from "./SpatialView/ContainerAtEditorSelection";
 import { prettyPrintOne } from "code-prettify";
-import { escapeHtml, safe } from "../utils";
-import { ReposActionsType } from "../store/repos/types";
+import { escapeHtml } from "../utils";
+import { CodeStreamState } from "../store";
+
+export interface ICrossPostIssueContext {
+	setSelectedAssignees(any: any): void;
+	setValues(values: any): void;
+	selectedAssignees: any[];
+	assigneesInputTarget?: HTMLElement;
+	codeBlock?: GetRangeScmInfoResponse;
+}
+export const CrossPostIssueContext = React.createContext<ICrossPostIssueContext>({
+	selectedAssignees: [],
+	setSelectedAssignees: () => {},
+	setValues: () => {}
+});
 
 interface Props extends ConnectedProps {
 	streamId: string;
@@ -123,6 +136,7 @@ interface State {
 	notify: boolean;
 	isLoading: boolean;
 	crossPostMessage: boolean;
+	crossPostIssueValues: any;
 	assignableUsers: { value: any; label: string }[];
 	channelMenuOpen: boolean;
 	channelMenuTarget: any;
@@ -164,13 +178,14 @@ class CodemarkForm extends React.Component<Props, State> {
 	_titleInput: HTMLElement | null = null;
 	insertTextAtCursor?: Function;
 	focusOnMessageInput?: Function;
-	crossPostIssueValues?: CardValues;
 	permalinkRef = React.createRef<HTMLTextAreaElement>();
+	private _assigneesContainerRef = React.createRef<HTMLDivElement>();
 
 	constructor(props: Props) {
 		super(props);
 		const defaultType = props.commentType;
 		const defaultState: Partial<State> = {
+			crossPostIssueValues: {},
 			title: "",
 			text: "",
 			formatCode: false,
@@ -235,7 +250,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				relatedCodemarkIds[id] = getCodemark(props.codemarkState, id);
 			});
 			this.state = {
-				...state,
+				...this.state,
 				selectedTags,
 				relatedCodemarkIds
 			};
@@ -298,13 +313,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	}
 
 	componentDidUpdate(prevProps: Props) {
-		const {
-			isEditing,
-			textEditorSelection,
-			textEditorUri,
-			multiLocation,
-			setMultiLocation
-		} = this.props;
+		const { isEditing, textEditorSelection, textEditorUri } = this.props;
 
 		if (
 			// make sure there an actual selection, not just a cursor
@@ -325,14 +334,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		const prevProviderHost = prevProps.issueProvider ? prevProps.issueProvider.host : undefined;
 		const providerHost = this.props.issueProvider ? this.props.issueProvider.host : undefined;
 		if (prevProviderHost !== providerHost) {
-			this.setState({
-				assignableUsers: this.getAssignableCSUsers(),
-				assignees: [],
-				assigneesDisabled: false,
-				assigneesRequired: false,
-				singleAssignee: false
-			});
-			this.crossPostIssueValues = undefined;
+			this.setState({ assignees: [], crossPostIssueValues: {} });
 		}
 	}
 
@@ -395,25 +397,6 @@ class CodemarkForm extends React.Component<Props, State> {
 			this.setState({ assignableUsers: [] });
 		}
 	}
-
-	handleCrossPostIssueValues = (values: CardValues) => {
-		const selectedNewBoard = Boolean(values.board);
-		if (values.isEnabled) {
-			// new settings enable cross posting
-			if (
-				(this.crossPostIssueValues && !this.crossPostIssueValues.isEnabled) || // cross posting was disabled before OR...
-				(selectedNewBoard && // there is a new board and...
-					(!this.crossPostIssueValues || values.board !== this.crossPostIssueValues!.board)) // didn't have values before || new board is different
-			) {
-				this.setState({ assignees: [] }); // reset selected assignees because they may not be valid with the new board
-				this.loadAssignableUsers(values.issueProvider.id, values.board!);
-			}
-		} else if (this.crossPostIssueValues && this.crossPostIssueValues.isEnabled) {
-			// cross posting is now disabled so reset selected assignees and show cs options
-			this.setState({ assignees: [], assignableUsers: this.getAssignableCSUsers() });
-		}
-		this.crossPostIssueValues = values;
-	};
 
 	// this doesn't appear to be used anywhere -Pez
 	handleSelectionChange = () => {
@@ -554,10 +537,9 @@ class CodemarkForm extends React.Component<Props, State> {
 			return;
 		}
 
+		const crossPostIssueValues = { ...this.state.crossPostIssueValues };
 		const crossPostIssueEnabled =
-			type === CodemarkType.Issue &&
-			this.crossPostIssueValues &&
-			this.crossPostIssueValues.isEnabled;
+			type === CodemarkType.Issue && this.props.issueProvider != undefined;
 
 		let csAssignees: string[] = [];
 		if (crossPostIssueEnabled) {
@@ -573,7 +555,8 @@ class CodemarkForm extends React.Component<Props, State> {
 				if (codestreamUser) return codestreamUser.id;
 				return undefined;
 			});
-			this.crossPostIssueValues!.assignees = assignees.map(a => a.value);
+			crossPostIssueValues.assignees = assignees.map(a => a.value);
+			crossPostIssueValues.issueProvider = this.props.issueProvider;
 		} else
 			csAssignees = this.props.isEditing
 				? this.props.editingCodemark!.assignees
@@ -589,7 +572,7 @@ class CodemarkForm extends React.Component<Props, State> {
 					type,
 					assignees: csAssignees,
 					title,
-					crossPostIssueValues: crossPostIssueEnabled ? this.crossPostIssueValues : undefined,
+					crossPostIssueValues: crossPostIssueEnabled ? crossPostIssueValues : undefined,
 					tags: keyFilter(selectedTags),
 					relatedCodemarkIds: keyFilter(relatedCodemarkIds)
 					// notify,
@@ -606,7 +589,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	isFormInvalid = () => {
 		const { codeBlocks } = this.state;
-		const { text, title, assignees, assigneesRequired, type } = this.state;
+		const { text, title, assignees, crossPostIssueValues, type } = this.state;
 
 		// FIXME
 		const codeBlock = codeBlocks[0];
@@ -631,7 +614,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				invalid = true;
 			}
 			if (
-				assigneesRequired &&
+				crossPostIssueValues.assigneesRequired &&
 				(!assignees || (Array.isArray(assignees) && assignees.length === 0))
 			) {
 				invalid = validationState.assigneesInvalid = true;
@@ -1380,6 +1363,20 @@ class CodemarkForm extends React.Component<Props, State> {
 		} else return null;
 	};
 
+	private _getCrossPostIssueContext(): ICrossPostIssueContext {
+		return {
+			setSelectedAssignees: assignees => this.setState({ assignees }),
+			selectedAssignees: this.state.assignees as any,
+			assigneesInputTarget: this._assigneesContainerRef.current || undefined,
+			setValues: values => {
+				this.setState(state => ({
+					crossPostIssueValues: { ...state.crossPostIssueValues, ...values }
+				}));
+			},
+			codeBlock: this.state.codeBlocks[0]
+		};
+	}
+
 	render() {
 		const { codeBlocks } = this.state;
 
@@ -1493,10 +1490,9 @@ class CodemarkForm extends React.Component<Props, State> {
 							</div>
 						) */}
 						{commentType === "issue" && !this.props.isEditing && (
-							<CrossPostIssueControls
-								onValues={this.handleCrossPostIssueValues}
-								codeBlock={this.state.codeBlocks[0] as any}
-							/>
+							<CrossPostIssueContext.Provider value={this._getCrossPostIssueContext()}>
+								<CrossPostIssueControls />
+							</CrossPostIssueContext.Provider>
 						)}
 						{(commentType === "issue" ||
 							commentType === "question" ||
@@ -1519,27 +1515,17 @@ class CodemarkForm extends React.Component<Props, State> {
 						)}
 						{commentType === "issue" && (
 							<div
+								ref={this._assigneesContainerRef}
 								key="members"
 								id="members-controls"
 								className="control-group"
 								style={{ marginBottom: "10px" }}
 							>
-								{!this.state.assigneesDisabled && !this.props.isEditing && (
-									<Select
-										key="input-assignees"
-										id="input-assignees"
-										name="assignees"
-										classNamePrefix="react-select"
-										isMulti={!this.state.singleAssignee}
-										value={this.state.assignees}
-										options={this.state.assignableUsers}
-										closeMenuOnSelect={true}
-										isClearable={this.state.singleAssignee}
-										placeholder={assigneesPlaceholder}
-										onChange={value => this.setState({ assignees: value! })}
-										tabIndex={this.tabIndex().toString()}
-									/>
-								)}
+								{/*
+									There's some magic here. The specific control components for the issue provider,
+									will render the input for assignees in here. And since those components aren't used
+									while editing, a disabled input will be rendered here.
+								*/}
 								{this.props.isEditing && (
 									<Select
 										key="input-assignees2"
@@ -1689,7 +1675,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 const EMPTY_OBJECT = {};
 
-const mapStateToProps = (state): ConnectedProps => {
+const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 	const {
 		context,
 		editorContext,
@@ -1700,7 +1686,7 @@ const mapStateToProps = (state): ConnectedProps => {
 		codemarks,
 		apiVersioning
 	} = state;
-	const user = users[session.userId];
+	const user = users[session.userId!] as CSMe;
 	const channel = context.currentStreamId
 		? getStreamForId(state.streams, context.currentTeamId, context.currentStreamId) ||
 		  getStreamForTeam(state.streams, context.currentTeamId)
@@ -1713,7 +1699,7 @@ const mapStateToProps = (state): ConnectedProps => {
 		(getChannelStreamsForTeam(
 			state.streams,
 			context.currentTeamId,
-			session.userId
+			session.userId!
 		) as CSChannelStream[]) || [],
 		stream => (stream.name || "").toLowerCase()
 	);
@@ -1730,7 +1716,7 @@ const mapStateToProps = (state): ConnectedProps => {
 		teammates,
 		channelStreams: channelStreams,
 		directMessageStreams: directMessageStreams,
-		issueProvider: providers[context.issueProvider],
+		issueProvider: providers[context.issueProvider!],
 		providerInfo: (user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT,
 		teamProvider: getCurrentTeamProvider(state),
 		currentUser: user,

@@ -10,6 +10,7 @@ import {
 } from "@codestream/protocols/agent";
 import { logError } from "../../logger";
 import { setIssueProvider } from "../context/actions";
+import { deleteForProvider } from "../activeIntegrations/actions";
 
 export const reset = () => action("RESET");
 
@@ -141,6 +142,7 @@ export const disconnectProvider = (providerId: string, connectionLocation: ViewL
 				"Connection Location": connectionLocation // ? "Global Nav" : "Compose Modal"
 			}
 		});
+		dispatch(deleteForProvider(providerId));
 		if (getState().context.issueProvider.host === provider.host) {
 			dispatch(setIssueProvider(undefined));
 		}
