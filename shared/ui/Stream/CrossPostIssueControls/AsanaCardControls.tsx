@@ -39,7 +39,14 @@ export function AsanaCardControls(
 	const crossPostIssueContext = React.useContext(CrossPostIssueContext);
 
 	useDidMount(() => {
-		if (data.boards && data.boards.length > 0) return;
+		crossPostIssueContext.setValues({ codeDelimiterStyle: CodeDelimiterStyles.NONE });
+
+		if (data.boards && data.boards.length > 0) {
+			const boardId = (data.currentBoard || data.boards[0]).id;
+			const listId = (data.currentList || data.boards[0].lists[0]).id;
+			crossPostIssueContext.setValues({ boardId, listId });
+			return;
+		}
 
 		if (!data.isLoading) {
 			updateDataState({
@@ -76,8 +83,6 @@ export function AsanaCardControls(
 				listId: newCurrentList.id
 			});
 		};
-
-		crossPostIssueContext.setValues({ codeDelimiterStyle: CodeDelimiterStyles.NONE });
 
 		fetchBoards();
 

@@ -38,7 +38,12 @@ export function TrelloCardControls(props: React.PropsWithChildren<Props>) {
 	);
 
 	useDidMount(() => {
-		if (data.boards && data.boards.length > 0) return;
+		if (data.boards && data.boards.length > 0) {
+			crossPostIssueContext.setValues({
+				listId: data.currentList ? data.currentList.id : data.boards[0].lists[0].id
+			});
+			return;
+		}
 
 		if (!data.isLoading) {
 			updateDataState({
@@ -71,8 +76,7 @@ export function TrelloCardControls(props: React.PropsWithChildren<Props>) {
 			});
 
 			crossPostIssueContext.setValues({
-				listId: newCurrentList.id,
-				issueProvider: props.provider!
+				listId: newCurrentList.id
 			});
 		};
 

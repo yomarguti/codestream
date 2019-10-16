@@ -39,7 +39,17 @@ export function JiraCardControls(
 	const crossPostIssueContext = React.useContext(CrossPostIssueContext);
 
 	useDidMount(() => {
-		if (data.projects && data.projects.length > 0) return;
+		crossPostIssueContext.setValues({
+			codeDelimiterStyle: CodeDelimiterStyles.CODE_BRACE
+		});
+		if (data.projects && data.projects.length > 0) {
+			const project = data.currentProject || data.projects[0];
+			crossPostIssueContext.setValues({
+				boardId: project.id,
+				issueType: data.currentIssueType || project.issueTypes[0]
+			});
+			return;
+		}
 		if (!data.isLoading) {
 			updateDataState({
 				isLoading: true
@@ -213,7 +223,7 @@ export function JiraCardControls(
 			{assigneesInput}
 			<div className="checkbox-row">
 				<input type="checkbox" checked onChange={_ => dispatch(setIssueProvider(undefined))} />
-				{"Add a "}
+				{" Add a "}
 				<span className="channel-label" onClick={handleClickIssueType}>
 					{data.currentIssueType}
 					<Icon name="chevron-down" />

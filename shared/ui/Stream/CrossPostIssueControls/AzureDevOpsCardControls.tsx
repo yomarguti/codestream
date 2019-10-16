@@ -38,7 +38,16 @@ export function AzureDevOpsCardControls(
 	const crossPostIssueContext = React.useContext(CrossPostIssueContext);
 
 	useDidMount(() => {
-		if (data.projects && data.projects.length > 0) return;
+		crossPostIssueContext.setValues({
+			codeDelimiterStyle: CodeDelimiterStyles.HTML_MARKUP
+		});
+
+		if (data.projects && data.projects.length > 0) {
+			crossPostIssueContext.setValues({
+				board: data.currentProject || data.projects[0]
+			});
+			return;
+		}
 		if (!data.isLoading) {
 			updateDataState({
 				isLoading: true
@@ -71,7 +80,6 @@ export function AzureDevOpsCardControls(
 			});
 
 			crossPostIssueContext.setValues({
-				codeDelimiterStyle: CodeDelimiterStyles.HTML_MARKUP,
 				board: newCurrentProject
 			});
 		};

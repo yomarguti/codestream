@@ -7,8 +7,7 @@ import { CodeDelimiterStyles } from "./types";
 import {
 	ThirdPartyProviderConfig,
 	FetchThirdPartyBoardsRequestType,
-	YouTrackBoard,
-	FetchAssignableUsersRequestType
+	YouTrackBoard
 } from "@codestream/protocols/agent";
 import { useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "@codestream/webview/store";
@@ -18,7 +17,7 @@ import { updateForProvider } from "@codestream/webview/store/activeIntegrations/
 import { CrossPostIssueContext } from "../CodemarkForm";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "../..";
-import { mapFilter, emptyArray } from "@codestream/webview/utils";
+import { emptyArray } from "@codestream/webview/utils";
 import { setIssueProvider } from "@codestream/webview/store/context/actions";
 
 export function YouTrackCardControls(
@@ -38,7 +37,19 @@ export function YouTrackCardControls(
 	const crossPostIssueContext = React.useContext(CrossPostIssueContext);
 
 	useDidMount(() => {
-		if (data.projects && data.projects.length > 0) return;
+		// initialize values required for creating the issue in the service
+		crossPostIssueContext.setValues({
+			codeDelimiterStyle: CodeDelimiterStyles.SINGLE_BACK_QUOTE
+		});
+
+		if (data.projects && data.projects.length > 0) {
+			// set a board value for the card
+			crossPostIssueContext.setValues({
+				board: data.currentProject || data.projects[0]
+			});
+			return;
+		}
+
 		if (!data.isLoading) {
 			updateDataState({
 				isLoading: true
@@ -70,8 +81,8 @@ export function YouTrackCardControls(
 				currentProject: newCurrentProject
 			});
 
+			// now set a board value for the card
 			crossPostIssueContext.setValues({
-				codeDelimiterStyle: CodeDelimiterStyles.SINGLE_BACK_QUOTE,
 				board: newCurrentProject
 			});
 		};
@@ -106,17 +117,19 @@ export function YouTrackCardControls(
 
 	const loadAssignableUsers = React.useCallback(
 		async (inputValue: string) => {
-			if (!data.currentProject) return [];
-
-			const { users } = await HostApi.instance.send(FetchAssignableUsersRequestType, {
-				providerId: props.provider.id,
-				boardId: data.currentProject.id
-			});
-			return mapFilter(users, user => {
-				if (user.displayName.toLowerCase().includes(inputValue.toLowerCase()))
-					return { label: user.displayName, value: user };
-				return;
-			});
+			// because we don't support the assignee field in yourack yet
+			return [];
+			// if (!data.currentProject) return [];
+			//
+			// const { users } = await HostApi.instance.send(FetchAssignableUsersRequestType, {
+			// 	providerId: props.provider.id,
+			// 	boardId: data.currentProject.id
+			// });
+			// return mapFilter(users, user => {
+			// 	if (user.displayName.toLowerCase().includes(inputValue.toLowerCase()))
+			// 		return { label: user.displayName, value: user };
+			// 	return;
+			// });
 		},
 		[data.currentProject]
 	);
@@ -136,7 +149,7 @@ export function YouTrackCardControls(
 				loadOptions={loadAssignableUsers}
 				value={crossPostIssueContext.selectedAssignees}
 				isClearable
-				placeholder={`Assignee (optional)`}
+				placeholder={`Assignee (Not yet supported in CodeStream)`}
 				isDisabled
 				onChange={value => crossPostIssueContext.setSelectedAssignees(value)}
 			/>,
