@@ -388,7 +388,8 @@ export class Codemark extends React.Component<Props, State> {
 		const { teamTagsHash, selected } = this.props;
 		const { hover } = this.state;
 
-		const title = hover && !selected ? "Show matching tags" : "";
+		// don't display this tooltip right now because showing matching tags is not a feature yet
+		// const title = hover && !selected ? "Show matching tags" : "";
 
 		// LEGACY (backward compat) we used to store one "color" property on a codemark
 		// so now we promote it to a tag if it exists. We should remove this code if we
@@ -396,14 +397,14 @@ export class Codemark extends React.Component<Props, State> {
 		// tags. note that we don't do any backward compat if tags have been set
 		if (tags.length === 0 && codemark.color) {
 			const tag = { id: "_" + codemark.color, label: "", color: codemark.color };
-			return <Tag tag={tag} title={title} placement="bottom" />;
+			return <Tag tag={tag} placement="bottom" />;
 		}
 
 		return tags.length === 0
 			? null
 			: tags.map(tagId => {
 					const tag = teamTagsHash[tagId];
-					return tag ? <Tag tag={tag} title={title} placement="bottom" /> : null;
+					return tag ? <Tag tag={tag} placement="bottom" /> : null;
 			  });
 	};
 
