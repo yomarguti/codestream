@@ -721,9 +721,6 @@ class CodemarkForm extends React.Component<Props, State> {
 			let location = "Same File";
 			if (repoPath !== newRepoPath) location = "Different Repo";
 			else if (file !== newFile) location = "Different File";
-			HostApi.instance.track("Marker Added", {
-				"Marker Location": location
-			});
 		} catch (e) {}
 
 		this.addLocation();
