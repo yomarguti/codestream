@@ -122,7 +122,12 @@ export class MessageInput extends React.Component<Props, State> {
 
 		const text = this.props.text;
 		if (text !== "") {
-			this.setCurrentCursorPosition(text.length);
+			const position = this.setCurrentCursorPosition(text.length);
+			if (position) {
+				this.setState({
+					cursorPosition: position
+				});
+			}
 		}
 	}
 
@@ -201,18 +206,20 @@ export class MessageInput extends React.Component<Props, State> {
 		}
 		if (chars < 0) chars = 0;
 
-		const selection = window.getSelection()!;
-
 		const inputDiv = document.getElementById("input-div");
 		if (inputDiv) {
-			const range = createRange(inputDiv.parentNode, { count: chars });
+			inputDiv.focus();
+			const selection = window.getSelection()!;
+			const range = createRange(inputDiv, { count: chars });
 
 			if (range) {
 				range.collapse(false);
 				selection.removeAllRanges();
 				selection.addRange(range);
+				return (inputDiv.textContent && inputDiv.textContent.length) || 0;
 			}
 		}
+		return 0;
 	};
 
 	// set up the parameters to pass to the at mention popup
