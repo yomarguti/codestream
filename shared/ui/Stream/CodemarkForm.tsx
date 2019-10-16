@@ -1121,9 +1121,12 @@ class CodemarkForm extends React.Component<Props, State> {
 	}
 
 	renderAddLocation() {
-		if (!this.props.apiCapabilities.multipleMarkers || 
-			this.props.isEditing || 
-			this.props.commentType === 'link') return null;
+		if (
+			!this.props.apiCapabilities.multipleMarkers ||
+			this.props.isEditing ||
+			this.props.commentType === "link"
+		)
+			return null;
 
 		return (
 			<div className="add-location">
@@ -1369,7 +1372,10 @@ class CodemarkForm extends React.Component<Props, State> {
 		return {
 			setSelectedAssignees: assignees => this.setState({ assignees }),
 			selectedAssignees: this.state.assignees as any,
-			assigneesInputTarget: this._assigneesContainerRef.current || undefined,
+			assigneesInputTarget:
+				this._assigneesContainerRef.current ||
+				(document.querySelector("#members-controls")! as any) ||
+				document.createElement("span"),
 			setValues: values => {
 				this.setState(state => ({
 					crossPostIssueValues: { ...state.crossPostIssueValues, ...values }
@@ -1456,7 +1462,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		);
 
 		const locationItems: any[] = [];
-		if (this.props.apiCapabilities.multipleMarkers && this.props.commentType !== 'link')
+		if (this.props.apiCapabilities.multipleMarkers && this.props.commentType !== "link")
 			locationItems.push({ label: "Add Range", action: () => this.addLocation() });
 		// { label: "Change Location", action: () => this.editLocation(0) }
 
