@@ -19,13 +19,13 @@ const Tag = React.forwardRef<any, Props>((props, ref) => {
 	let tagDiv;
 	if (tag.color.startsWith("#"))
 		tagDiv = (
-			<div key={tag.id} className="tag" style={{ background: tag.color }}>
+			<div key={tag.id} className="cs-tag" style={{ background: tag.color }}>
 				<div>&nbsp;{tag.label}&nbsp;</div>
 			</div>
 		);
 	else
 		tagDiv = (
-			<div key={tag.id} className={`tag ${tag.color}-background`}>
+			<div key={tag.id} className={`cs-tag ${tag.color}-background`}>
 				<div>&nbsp;{tag.label}&nbsp;</div>
 			</div>
 		);
