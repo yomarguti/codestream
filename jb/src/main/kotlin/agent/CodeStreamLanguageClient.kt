@@ -87,8 +87,11 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
     }
 
     @JsonNotification("codestream/didLogout")
-    fun didLogout(json: JsonElement) {
-        project.webViewService?.postNotification("codestream/didLogout", json)
+    fun didLogout(json: JsonElement) = GlobalScope.launch {
+        project.authenticationService?.logout()
+        project.agentService?.onDidStart {
+            project.webViewService?.load(true)
+        }
     }
 
     @JsonNotification("codestream/restartRequired")
