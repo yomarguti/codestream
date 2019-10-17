@@ -238,6 +238,8 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		for (const marker of markers) {
 			const location = result.locations[marker.id];
 			if (
+				marker.referenceLocations &&
+				marker.referenceLocations.length &&
 				location !== undefined &&
 				location.lineStart === location.lineEnd &&
 				location.colStart === location.colEnd
