@@ -14,7 +14,8 @@ import { Emitter, Event } from "vscode-languageserver";
 import { Container, SessionContainer } from "../../container";
 import { Logger, TraceLevel } from "../../logger";
 import {
-	AddEnterpriseProviderHostRequest, AddReferenceLocationRequest,
+	AddEnterpriseProviderHostRequest,
+	AddReferenceLocationRequest,
 	ArchiveStreamRequest,
 	Capabilities,
 	CloseStreamRequest,
@@ -202,13 +203,43 @@ export class SlackApiProvider implements ApiProvider {
 					Logger.log("SLACK", ...msgs);
 				},
 				warn(...msgs) {
+					SlackApiProvider.tryTrackConnectivityIssues(msgs);
 					Logger.warn("SLACK", ...msgs);
 				},
 				error(...msgs) {
+					SlackApiProvider.tryTrackConnectivityIssues(msgs);
 					Logger.warn("SLACK [ERROR]", ...msgs);
 				}
 			}
 		});
+	}
+
+	private static tryTrackConnectivityIssues(msgs: string[]) {
+		try {
+			if (!msgs || !msgs.length) return;
+
+			const msg = msgs[0];
+			if (
+				!msg ||
+				typeof msg !== "string" ||
+				msg.indexOf("self signed certificate in certificate chain") === -1
+			) {
+				return;
+			}
+
+			const telemetry = Container.instance().telemetry;
+			if (!telemetry) return;
+
+			telemetry.track({
+				eventName: "Connect Error",
+				properties: {
+					Error: msg,
+					Provider: "Slack"
+				}
+			});
+		} catch (error) {
+			Logger.error(error);
+		}
 	}
 
 	@log({
