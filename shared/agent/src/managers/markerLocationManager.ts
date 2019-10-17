@@ -247,7 +247,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 					colStartWhenCreated,
 					lineEndWhenCreated,
 					colEndWhenCreated
-				] = marker.locationWhenCreated;
+				] = marker.referenceLocations[0].location;
 				if (location.meta === undefined) location.meta = {};
 				if (
 					lineStartWhenCreated !== lineEndWhenCreated ||
