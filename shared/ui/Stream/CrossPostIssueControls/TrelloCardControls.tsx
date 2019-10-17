@@ -175,6 +175,7 @@ export function TrelloCardControls(props: React.PropsWithChildren<Props>) {
 				value={crossPostIssueContext.selectedAssignees}
 				isMulti
 				placeholder="Members (optional)"
+				getOptionValue={option => option.value.id}
 				onChange={value => crossPostIssueContext.setSelectedAssignees(value)}
 			/>,
 			crossPostIssueContext.assigneesInputTarget

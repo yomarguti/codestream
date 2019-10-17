@@ -135,6 +135,7 @@ export function GitHubCardControls(
 				loadOptions={loadAssignableUsers}
 				value={crossPostIssueContext.selectedAssignees}
 				isMulti
+				getOptionValue={option => option.value.id}
 				placeholder="Assignees (optional)"
 				onChange={value => crossPostIssueContext.setSelectedAssignees(value)}
 			/>,
