@@ -371,7 +371,6 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			let canCalculate = false;
 			for (const referenceLocation of missingMarker.referenceLocations) {
 				if (!diffsByCommitHash.has(referenceLocation.commitHash)) {
-					// TODO git fetch --all (once)
 					const diff = await git.getDiffBetweenCommits(
 						referenceLocation.commitHash,
 						commitHash,
