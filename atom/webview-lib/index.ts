@@ -16,6 +16,7 @@ const setStyles = (stylesheets: string[]) => {
 	});
 
 	const computedStyle = getComputedStyle(document.body);
+	// toggle between dark and light modes
 	const [set, remove] =
 		computedStyle.getPropertyValue("--in-dark-mode").trim() === "true"
 			? [darkClass, lightClass]

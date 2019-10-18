@@ -123,7 +123,13 @@ export class StylesProvider implements Disposable {
 		const [atomStyles, editorStyles, ...rest] = styles;
 		const [uiStyles, syntaxStyles] = rest.reverse();
 
+		const computedStyle = getComputedStyle(document.body);
+
 		this._atomStyles = [
+			`body {
+				--font-size: ${computedStyle.getPropertyValue("font-size").trim()};
+				--font-weight: ${computedStyle.getPropertyValue("font-weight").trim()};
+			}`,
 			atomStyles.innerHTML,
 			editorStyles.innerHTML,
 			uiStyles.innerHTML,
