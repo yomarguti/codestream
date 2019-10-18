@@ -59,6 +59,12 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="5_0_1">5.0.1</h4>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/124">#124</a> - CodeStream Panel Empty. Slack API Error Found In Log</li>
+    <li>Fixes an issue with Codemarks disappearing after a commit</li>
+</ul>
 <h4 id="5_0_0">5.0.0</h4>
 <h5>Added</h5>
 <ul>
