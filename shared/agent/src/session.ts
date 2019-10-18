@@ -918,7 +918,7 @@ export class CodeStreamSession {
 		this._telemetryData.hasCreatedPost = user.totalPosts > 0;
 
 		const props: { [key: string]: any } = {
-			email: user.email,
+			$email: user.email,
 			name: user.fullName,
 			"Team ID": this._teamId,
 			"Join Method": user.joinMethod,
@@ -951,7 +951,7 @@ export class CodeStreamSession {
 		}
 
 		if (user.registeredAt) {
-			props.createdAt = new Date(user.registeredAt).toISOString();
+			props.$created = new Date(user.registeredAt).toISOString();
 		}
 
 		if (user.lastPostCreatedAt) {
