@@ -180,6 +180,27 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
+	async getDefaultBranch(repoPath: string, remote: string): Promise<string | undefined> {
+		try {
+			const data = await git(
+				{cwd: repoPath},
+				"remote",
+				"show",
+				remote
+			);
+			const headBranchLine = data.trim()
+				.split("\n")
+				.find(line => line.indexOf("HEAD branch:") >= 0);
+
+			return headBranchLine
+				? headBranchLine.split(":")[1].trim()
+				: undefined;
+		} catch (ex) {
+			Logger.warn(ex);
+			return undefined;
+		}
+	}
+
 	async getDiffBetweenCommits(
 		initialCommitHash: string,
 		finalCommitHash: string,
@@ -272,6 +293,36 @@ export class GitService implements IGitService, Disposable {
 				}
 			);
 		});
+	}
+
+	async getHeadRevision(repoPath: string, reference: string): Promise<string | undefined> {
+		try {
+			const data = await git(
+				{cwd: repoPath},
+				"show-ref",
+				"-s",
+				reference
+			);
+			return data.trim();
+		} catch (ex) {
+			Logger.warn(ex);
+			return undefined;
+		}
+	}
+
+	async getRemoteDefaultBranchHeadRevisions(repoUri: URI, remotes: string[]): Promise<string[]>;
+	async getRemoteDefaultBranchHeadRevisions(repoPath: string, remotes: string[]): Promise<string[]>;
+	async getRemoteDefaultBranchHeadRevisions(repoUriOrPath: URI | string, remotes: string[]): Promise<string[]> {
+		const repoPath = typeof repoUriOrPath === "string" ? repoUriOrPath : repoUriOrPath.fsPath;
+		const revisions = new Set<string>();
+
+		for (const remote of remotes) {
+			const defaultBranch = await this.getDefaultBranch(repoPath, remote);
+			const revision = defaultBranch && await this.getHeadRevision(repoPath, `refs/remotes/${remote}/${defaultBranch}`);
+			if (revision) revisions.add(revision);
+		}
+
+		return Array.from(revisions);
 	}
 
 	async getRepoFirstCommits(repoUri: URI): Promise<string[]>;

@@ -874,28 +874,37 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 							)}`
 						);
 
-						const blameRevisions = await git.getBlameRevisions(filePath, {
+						const blameRevisionsPromises = git.getBlameRevisions(filePath, {
 							ref: fileCurrentCommit,
 							// it expects 0-based ranges
 							startLine: locationAtCurrentCommit.lineStart - 1,
 							endLine: locationAtCurrentCommit.lineEnd - 1
 						});
+						const remoteDefaultBranchRevisionsPromises = git.getRemoteDefaultBranchHeadRevisions(source.repoPath, ["upstream", "origin"]);
+
+						const backtrackShas = [
+							...(await blameRevisionsPromises).map(revision => revision.sha),
+							...(await remoteDefaultBranchRevisionsPromises)
+						].filter(function(sha, index, self) {
+							return sha !== fileCurrentCommit && index === self.indexOf(sha);
+						});
 						Logger.log(
-							`createPostWithMarker: backtracking location to ${blameRevisions.length} revisions in the blame of selected range`
+							`createPostWithMarker: backtracking location to ${backtrackShas.length} revisions`
 						);
-						const promises = blameRevisions.map(async (revision, index) => {
+
+						const promises = backtrackShas.map(async (sha, index) => {
 							const diff = await git.getDiffBetweenCommits(
 								fileCurrentCommit!,
-								revision.sha,
+								sha,
 								filePath
 							);
 							const location = await calculateLocation(locationAtCurrentCommit!, diff!);
 							const locationArray = MarkerLocation.toArray(location);
 							Logger.log(
-								`createPostWithMarker: backtracked at ${revision.sha} to ${locationArray}`
+								`createPostWithMarker: backtracked at ${sha} to ${locationArray}`
 							);
 							return {
-								commitHash: revision.sha,
+								commitHash: sha,
 								location: locationArray,
 								flags: {
 									backtracked: true
