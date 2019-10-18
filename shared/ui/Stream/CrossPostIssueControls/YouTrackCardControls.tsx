@@ -39,7 +39,7 @@ export function YouTrackCardControls(
 	useDidMount(() => {
 		// initialize values required for creating the issue in the service
 		crossPostIssueContext.setValues({
-			codeDelimiterStyle: CodeDelimiterStyles.SINGLE_BACK_QUOTE
+			codeDelimiterStyle: CodeDelimiterStyles.TRIPLE_BACK_QUOTE
 		});
 
 		if (data.projects && data.projects.length > 0) {
