@@ -1136,9 +1136,10 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		const { linefeed, start, end } = delimiters;
 		let description = `${providerCardRequest.codemark.text}${linefeed}${linefeed}`;
 
-		const links = [];
 		if (providerCardRequest.codemark.markers && providerCardRequest.codemark.markers.length) {
+			let createdAtLeastOne = false;
 			for (const marker of providerCardRequest.codemark.markers) {
+				const links = [];
 				description += `In ${marker.file}`;
 				let range;
 				if (marker.locationWhenCreated) {
@@ -1210,12 +1211,14 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						}
 					}
 				}
+				if (links.length) {
+					description += links.join(" · ") + linefeed + linefeed;
+					createdAtLeastOne = true;
+				}
 			}
-		}
-		if (links.length) {
-			description += links.join(" · ") + linefeed;
-		} else {
-			description += `${linefeed}Posted via CodeStream${linefeed}`;
+			if (!createdAtLeastOne) {
+				description += `${linefeed}Posted via CodeStream${linefeed}`;
+			}
 		}
 
 		try {
