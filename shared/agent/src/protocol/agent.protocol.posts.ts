@@ -5,6 +5,7 @@ import { ThirdPartyProviderUser } from "./agent.protocol.providers";
 import {
 	CodemarkType,
 	CSCodemark,
+	CSCreateCodemarkResponse,
 	CSMarker,
 	CSMarkerLocations,
 	CSPost,
@@ -18,6 +19,17 @@ export interface PostPlus extends CSPost {
 	hasMarkers?: boolean;
 }
 
+export interface CreateExternalPostRequest {
+	streamId: string;
+	text: string;
+	mentionedUserIds?: string[];
+	parentPostId?: string;
+	remotes?: string[];
+	entryPoint?: string;
+	codemarkResponse?: CSCreateCodemarkResponse;
+	crossPostIssueValues?: CrossPostIssueValues;
+}
+
 export interface CreatePostRequest {
 	streamId: string;
 	text: string;
@@ -25,7 +37,19 @@ export interface CreatePostRequest {
 	parentPostId?: string;
 	codemark?: CreateCodemarkRequest;
 	entryPoint?: string;
+	crossPostIssueValues?: CrossPostIssueValues;
 }
+
+export interface CrossPostIssueValues {
+	externalProvider?: string;
+	externalProviderHost?: string;
+	externalProviderUrl?: string;
+	externalAssignees?: ThirdPartyProviderUser[];
+	codeDelimiterStyle: string;
+	issueProvider: { name: string; id: string; host: string };
+	[key: string]: any;
+}
+
 export interface CreatePostResponse {
 	post: PostPlus;
 	codemark?: CodemarkPlus;
@@ -53,9 +77,6 @@ export interface CreatePostWithMarkerRequest {
 	textDocuments: TextDocumentIdentifier[];
 	text: string;
 	mentionedUserIds?: string[];
-	// code: string;
-	// range?: Range;
-	// source?: CodeBlockSource;
 	markers: {
 		code: string;
 		range?: Range;
@@ -69,14 +90,12 @@ export interface CreatePostWithMarkerRequest {
 	assignees?: string[];
 	color?: string;
 	status?: string;
-	externalProvider?: string;
-	externalProviderHost?: string;
-	externalProviderUrl?: string;
-	externalAssignees?: ThirdPartyProviderUser[];
 	entryPoint?: string;
 	tags?: string[];
 	relatedCodemarkIds?: string[];
+	crossPostIssueValues?: CrossPostIssueValues;
 }
+
 export const CreatePostWithMarkerRequestType = new RequestType<
 	CreatePostWithMarkerRequest,
 	CreatePostResponse,

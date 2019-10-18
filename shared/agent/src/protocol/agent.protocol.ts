@@ -54,6 +54,14 @@ export interface Capabilities {
 	};
 }
 
+export enum CodeDelimiterStyles {
+	NONE = "none",
+	TRIPLE_BACK_QUOTE = "tripleBackQuote",
+	SINGLE_BACK_QUOTE = "singleBackQuote",
+	HTML_MARKUP = "htmlMarkup",
+	CODE_BRACE = "codeBrace"
+}
+
 export interface AccessToken {
 	email: string;
 	url: string;

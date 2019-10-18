@@ -109,6 +109,15 @@ export namespace MarkerLocation {
 			Math.max(location.colEnd - 1, 0)
 		);
 	}
+
+	export function toRangeFromArray(locationLike: CSLocationArray): Range {
+		return Range.create(
+			Math.max(locationLike[0] - 1, 0),
+			Math.max(locationLike[1] - 1, 0),
+			Math.max(locationLike[2] - 1, 0),
+			Math.max(locationLike[3] - 1, 0)
+		);
+	}
 }
 
 const remoteProviders: [

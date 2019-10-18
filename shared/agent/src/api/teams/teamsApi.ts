@@ -20,6 +20,7 @@ import {
 	CreateCodemarkRequest,
 	CreateDirectStreamRequest,
 	CreateDirectStreamResponse,
+	CreateExternalPostRequest,
 	CreateMarkerLocationRequest,
 	CreatePostRequest,
 	CreatePostResponse,
@@ -160,6 +161,8 @@ export class MSTeamsApiProvider implements ApiProvider {
 		providerSupportsRealtimeChat: false,
 		providerSupportsRealtimeEvents: false
 	};
+
+	providerType = ProviderType.MSTeams;
 
 	constructor(
 		private _codestream: CodeStreamApiProvider,
@@ -557,6 +560,11 @@ export class MSTeamsApiProvider implements ApiProvider {
 
 	@log()
 	async createPost(request: CreatePostRequest): Promise<CreatePostResponse> {
+		throw new Error("Not supported");
+	}
+
+	@log()
+	async createExternalPost(request: CreateExternalPostRequest): Promise<CreatePostResponse> {
 		let createdPostId;
 		try {
 			const userInfosById = await this.ensureUserInfosById();
@@ -582,22 +590,17 @@ export class MSTeamsApiProvider implements ApiProvider {
 			let streams: CSStream[] | undefined;
 			let repos: CSRepository[] | undefined;
 
-			if (request.codemark != null) {
+			if (request.codemarkResponse != null) {
 				if (!text) {
-					text = request.codemark.text || request.codemark.title || "";
+					text =
+						request.codemarkResponse.codemark.text || request.codemarkResponse.codemark.title || "";
 				}
 
-				const codemarkResponse = await this.createCodemark({
-					...request.codemark,
-					parentPostId: request.parentPostId,
-					providerType: ProviderType.MSTeams
-				});
-
-				({ codemark, markers, markerLocations, streams, repos } = codemarkResponse);
+				({ codemark, markers, markerLocations, streams, repos } = request.codemarkResponse);
 
 				body = toTeamsMessageBody(
 					codemark,
-					request.codemark.remotes,
+					request.remotes,
 					markers,
 					markerLocations,
 					request.mentionedUserIds,
@@ -630,17 +633,6 @@ export class MSTeamsApiProvider implements ApiProvider {
 				this._codestreamTeamId
 			);
 			createdPostId = post.id;
-
-			if (codemark) {
-				void (await this._codestream.updateCodemark({
-					codemarkId: codemark.id,
-					streamId: post.streamId,
-					postId: post.id
-				}));
-
-				codemark.postId = post.id;
-				codemark.streamId = post.streamId;
-			}
 
 			return {
 				post: post,

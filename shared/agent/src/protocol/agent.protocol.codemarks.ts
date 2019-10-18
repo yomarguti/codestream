@@ -18,7 +18,7 @@ export interface CodemarkPlus extends CSCodemark {
 
 export interface CreateCodemarkRequest {
 	type: CodemarkType;
-	providerType?: ProviderType;
+	providerType?: ProviderType | undefined;
 	text?: string;
 	streamId?: string;
 	postId?: string;
@@ -33,6 +33,7 @@ export interface CreateCodemarkRequest {
 	externalProvider?: string;
 	externalProviderUrl?: string;
 	externalAssignees?: { displayName: string; email?: string }[];
+	externalProviderHost?: string;
 	remoteCodeUrl?: { name: string; url: string };
 	createPermalink?: false | "public" | "private";
 }

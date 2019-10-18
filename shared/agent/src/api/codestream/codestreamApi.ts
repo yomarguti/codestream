@@ -20,6 +20,7 @@ import {
 	CreateCodemarkPermalinkRequest,
 	CreateCodemarkRequest,
 	CreateDirectStreamRequest,
+	CreateExternalPostRequest,
 	CreateMarkerLocationRequest,
 	CreatePostRequest,
 	CreateRepoRequest,
@@ -156,6 +157,7 @@ import {
 	CSUpdateStreamResponse,
 	CSUser,
 	LoginResult,
+	ProviderType,
 	StreamType
 } from "../../protocol/api.protocol";
 import { VersionInfo } from "../../session";
@@ -177,6 +179,7 @@ import { CodeStreamUnreads } from "./unreads";
 
 @lsp
 export class CodeStreamApiProvider implements ApiProvider {
+	providerType = ProviderType.CodeStream;
 	private _onDidReceiveMessage = new Emitter<RTMessage>();
 	get onDidReceiveMessage(): Event<RTMessage> {
 		return this._onDidReceiveMessage.event;
@@ -786,6 +789,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 			{ isPublic: request.isPublic },
 			this._token
 		);
+	}
+
+	@log()
+	async createExternalPost(request: CreateExternalPostRequest): Promise<CSCreatePostResponse> {
+		throw new Error("Not supported");
 	}
 
 	@log()

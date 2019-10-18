@@ -389,7 +389,7 @@ export enum CSPresenceStatus {
 
 export interface CSCreateCodemarkRequest {
 	teamId: string;
-	providerType?: ProviderType;
+	providerType?: ProviderType | undefined;
 	type: CodemarkType;
 	streamId?: string;
 	postId?: string;

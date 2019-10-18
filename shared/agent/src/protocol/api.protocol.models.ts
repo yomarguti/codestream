@@ -13,7 +13,8 @@ export interface CSEntity {
 
 export enum ProviderType {
 	MSTeams = "msteams",
-	Slack = "slack"
+	Slack = "slack",
+	CodeStream = "codestream"
 }
 
 export enum CodemarkType {

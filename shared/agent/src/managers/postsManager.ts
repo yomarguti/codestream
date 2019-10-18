@@ -8,6 +8,7 @@ import { Container, SessionContainer } from "../container";
 import { Logger } from "../logger";
 import { calculateLocation } from "../markerLocation/calculator";
 import {
+	CodeDelimiterStyles,
 	CreateCodemarkRequest,
 	CreateCodemarkRequestMarker,
 	CreatePostRequest,
@@ -38,17 +39,22 @@ import {
 	PostPlus,
 	ReactToPostRequest,
 	ReactToPostRequestType,
-	ReactToPostResponse
+	ReactToPostResponse,
+	ReportingMessageType
 } from "../protocol/agent.protocol";
 import {
 	CodemarkType,
+	CSCreateCodemarkResponse,
+	CSMarker,
 	CSMarkerLocation,
 	CSPost,
 	CSReferenceLocation,
 	CSStream,
+	ProviderType,
 	StreamType
 } from "../protocol/api.protocol";
 import { Arrays, debug, lsp, lspHandler } from "../system";
+import { Strings } from "../system/string";
 import { BaseIndex, IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { EntityCache, EntityCacheCfg } from "./cache/entityCache";
@@ -668,12 +674,101 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		request: CreatePostRequest,
 		textDocuments?: TextDocumentIdentifier[]
 	): Promise<CreatePostResponse> {
-		const response = await this.session.api.createPost(request);
+		let codemarkResponse: CSCreateCodemarkResponse | undefined;
+		let cardResponse;
+		let externalProviderUrl;
+		let externalProvider;
+		let externalProviderHost;
+		let externalAssignees;
+		let response: CreatePostResponse;
+		let providerCardRequest;
+		let postId;
+		let streamId;
+		let requiresUpdate;
+		let codemarkId;
+		if (this.session.api.providerType !== ProviderType.CodeStream) {
+			if (request.codemark) {
+				codemarkResponse = await this.session.api.createCodemark({
+					...request.codemark,
+					parentPostId: request.parentPostId,
+					providerType: this.session.api.providerType
+				});
+				if (request.crossPostIssueValues) {
+					providerCardRequest = {
+						title: request.codemark.title,
+						text: request.codemark.text,
+						markers: codemarkResponse.markers,
+						permalink: codemarkResponse.codemark.permalink
+					};
+				}
+				codemarkId = codemarkResponse.codemark.id;
+				requiresUpdate = true;
+			}
+		} else {
+			// is CS team -- this createPost will create a Post and a Codemark
+			response = await this.session.api.createPost(request);
+			if (request.codemark) {
+				if (request.crossPostIssueValues) {
+					providerCardRequest = {
+						title: request.codemark.title,
+						text: request.codemark.text,
+						markers: response.markers,
+						permalink: response.codemark && response.codemark.permalink
+					};
+				}
+				codemarkId = response.codemark && response.codemark.id;
+			}
+		}
+
+		if (providerCardRequest && request.codemark && request.crossPostIssueValues) {
+			cardResponse = await this.createProviderCard(
+				providerCardRequest,
+				request.crossPostIssueValues
+			);
+			if (cardResponse) {
+				externalProviderUrl = cardResponse.url;
+				externalProvider = request.crossPostIssueValues.issueProvider.name;
+				externalProviderHost = request.crossPostIssueValues.issueProvider.host;
+				externalAssignees = request.crossPostIssueValues.assignees;
+
+				request.codemark.externalProviderUrl = externalProviderUrl;
+				request.codemark.externalProvider = externalProvider;
+				request.codemark.externalAssignees = externalAssignees;
+				request.codemark.externalProviderHost = externalProviderHost;
+				requiresUpdate = true;
+			}
+		}
+
+		if (this.session.api.providerType !== ProviderType.CodeStream) {
+			response = await this.session.api.createExternalPost({
+				...request,
+				remotes: request.codemark && request.codemark.remotes,
+				codemarkResponse: codemarkResponse
+			});
+			postId = response.post.id;
+			streamId = response.post.streamId;
+			requiresUpdate = true;
+		}
+
+		if (codemarkId && requiresUpdate) {
+			await this.session.api.updateCodemark({
+				codemarkId: codemarkId,
+				streamId: streamId,
+				postId: postId,
+				externalProvider: externalProvider,
+				externalProviderHost: externalProviderHost,
+				externalAssignees:
+					externalAssignees &&
+					externalAssignees.map((a: any) => ({ displayName: a.displayName, email: a.email })),
+				externalProviderUrl: externalProviderUrl
+			});
+		}
+
 		trackPostCreation(request, textDocuments);
-		await resolveCreatePostResponse(response);
+		await resolveCreatePostResponse(response!);
 		return {
-			...response,
-			post: await this.enrichPost(response.post)
+			...response!,
+			post: await this.enrichPost(response!.post)
 		};
 	}
 
@@ -681,9 +776,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	async createPostWithMarker({
 		textDocuments,
 		text,
-		// code,
-		// source,
-		// range,
 		markers,
 		streamId,
 		parentPostId,
@@ -692,14 +784,11 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		type,
 		assignees,
 		color,
-		externalProvider,
-		externalProviderHost,
-		externalAssignees,
-		externalProviderUrl,
 		entryPoint,
 		status = "open",
 		tags,
-		relatedCodemarkIds
+		relatedCodemarkIds,
+		crossPostIssueValues
 	}: CreatePostWithMarkerRequest): Promise<CreatePostResponse | undefined> {
 		const { documents } = Container.instance();
 		const { git, scm } = SessionContainer.instance();
@@ -711,12 +800,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			assignees,
 			color,
 			status: type === CodemarkType.Issue ? status : undefined,
-			externalProvider,
-			externalProviderHost,
-			externalAssignees:
-				externalAssignees &&
-				externalAssignees.map(a => ({ displayName: a.displayName, email: a.email })),
-			externalProviderUrl,
 			tags,
 			relatedCodemarkIds,
 			markers: []
@@ -905,12 +988,13 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					parentPostId,
 					codemark: codemarkRequest,
 					mentionedUserIds,
-					entryPoint
+					entryPoint,
+					crossPostIssueValues
 				},
 				textDocuments
 			);
 
-			const { markers } = response;
+			const { markers } = response!;
 			if (markers && markers.length) {
 				markers.forEach((marker, index) => {
 					if (backtrackedLocations[index]) {
@@ -972,6 +1056,233 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 	protected getEntityName(): string {
 		return "Post";
+	}
+
+	getCodeDelimiters = (
+		codeDelimiterStyle: CodeDelimiterStyles
+	): {
+		start: string;
+		end: string;
+		linefeed: string;
+		anchorFormat: string;
+	} => {
+		switch (codeDelimiterStyle) {
+			// https://asana.com/guide/help/fundamentals/text
+			case CodeDelimiterStyles.NONE:
+				return {
+					start: "",
+					end: "",
+					linefeed: "\n",
+					anchorFormat: "${text} ${url}"
+				};
+			// https://docs.microsoft.com/en-us/azure/devops/project/wiki/markdown-guidance?view=azure-devops
+			case CodeDelimiterStyles.HTML_MARKUP:
+				return {
+					start: "<pre><div><code>",
+					end: "</code></div></pre>",
+					linefeed: "<br/>",
+					anchorFormat: '<a href="${url}">${text}</a>'
+				};
+
+			// https://www.jetbrains.com/help/youtrack/incloud/youtrack-markdown-syntax-issues.html
+			case CodeDelimiterStyles.SINGLE_BACK_QUOTE:
+				return {
+					start: "`",
+					end: "`",
+					linefeed: "\n",
+					anchorFormat: "[${text}](${url})"
+				};
+			// https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all
+			case CodeDelimiterStyles.CODE_BRACE:
+				return {
+					start: "{code}",
+					end: "{code}",
+					linefeed: "\n",
+					anchorFormat: "[${text}|${url}]"
+				};
+			// https://confluence.atlassian.com/bitbucketserver/markdown-syntax-guide-776639995.html
+			// https://help.trello.com/article/821-using-markdown-in-trello
+			default:
+			case CodeDelimiterStyles.TRIPLE_BACK_QUOTE:
+				return {
+					start: "```\n",
+					end: "```\n",
+					linefeed: "\n",
+					anchorFormat: "[${text}](${url})"
+				};
+		}
+	}
+
+	createProviderCard = async (
+		codemark: {
+			text: string | undefined;
+			title: string | undefined;
+			markers?: CSMarker[];
+			permalink?: string;
+		},
+		attributes: any
+	) => {
+		const delimiters = this.getCodeDelimiters(attributes.codeDelimiterStyle);
+		const { linefeed, start, end } = delimiters;
+		let description = `${codemark.text}${linefeed}${linefeed}`;
+		let createdAtLeastOneLink;
+		if (codemark.markers && codemark.markers.length) {
+			for (const marker of codemark.markers) {
+				description += `In ${marker.file}`;
+				let range;
+				if (marker.locationWhenCreated) {
+					range = MarkerLocation.toRangeFromArray(marker.locationWhenCreated);
+				} else if (marker.referenceLocations && marker.referenceLocations.length) {
+					const referenceLocation =
+						marker.referenceLocations[0] && marker.referenceLocations[0].location;
+					if (referenceLocation) {
+						range = MarkerLocation.toRangeFromArray(referenceLocation);
+					}
+				}
+				if (range) {
+					if (range.start.line === range.end.line) {
+						description += ` (Line ${range.start.line + 1})`;
+					} else {
+						description += ` (Lines ${range.start.line + 1}-${range.end.line + 1})`;
+					}
+				}
+
+				description += `${linefeed}${linefeed}${start}${linefeed}${marker.code}${linefeed}${end}${linefeed}${linefeed}`;
+				if (codemark.permalink) {
+					const link = Strings.interpolate(delimiters.anchorFormat, {
+						text: "Open on CodeStream",
+						url: `${codemark.permalink}?marker=${marker.id}`
+					});
+					if (link) {
+						description += `${link}${linefeed}${linefeed}`;
+						createdAtLeastOneLink = true;
+					}
+				}
+			}
+		}
+		if (!createdAtLeastOneLink) {
+			description += `${linefeed}Posted via CodeStream${linefeed}`;
+		}
+
+		try {
+			let response;
+			const { providerRegistry } = SessionContainer.instance();
+			switch (attributes.issueProvider.name) {
+				case "jira":
+				case "jiraserver": {
+					response = await providerRegistry.createCard({
+						providerId: attributes.issueProvider.id,
+						data: {
+							description,
+							summary: codemark.title,
+							issueType: attributes.issueType,
+							project: attributes.boardId,
+							assignees: attributes.assignees
+						}
+					});
+					break;
+				}
+				case "trello": {
+					response = await providerRegistry.createCard({
+						providerId: attributes.issueProvider.id,
+						data: {
+							listId: attributes.listId,
+							name: codemark.title,
+							assignees: attributes.assignees,
+							description
+						}
+					});
+					break;
+				}
+				case "github":
+				case "github_enterprise": {
+					response = await providerRegistry.createCard({
+						providerId: attributes.issueProvider.id,
+						data: {
+							description,
+							title: codemark.title,
+							repoName: attributes.boardName,
+							assignees: attributes.assignees
+						}
+					});
+					break;
+				}
+				case "gitlab": {
+					response = await providerRegistry.createCard({
+						providerId: attributes.issueProvider.id,
+						data: {
+							description,
+							title: codemark.title,
+							repoName: attributes.boardName,
+							assignee: attributes.assignees[0]
+						}
+					});
+					break;
+				}
+				case "youtrack": {
+					response = await providerRegistry.createCard({
+						providerId: attributes.issueProvider.id,
+						data: {
+							description,
+							name: codemark.title,
+							boardId: attributes.board.id,
+							assignee: attributes.assignees[0]
+						}
+					});
+					break;
+				}
+				case "asana": {
+					response = await providerRegistry.createCard({
+						providerId: attributes.issueProvider.id,
+						data: {
+							description,
+							boardId: attributes.boardId,
+							listId: attributes.listId,
+							name: codemark.title,
+							assignee: attributes.assignees[0]
+						}
+					});
+					break;
+				}
+				case "bitbucket": {
+					response = await providerRegistry.createCard({
+						providerId: attributes.issueProvider.id,
+						data: {
+							description,
+							title: codemark.title,
+							repoName: attributes.boardName,
+							assignee: attributes.assignees[0]
+						}
+					});
+					break;
+				}
+				case "azuredevops": {
+					response = await providerRegistry.createCard({
+						providerId: attributes.issueProvider.id,
+						data: {
+							description,
+							title: codemark.title,
+							boardId: attributes.board.id,
+							assignee: attributes.assignees[0]
+						}
+					});
+					break;
+				}
+
+				default:
+					return undefined;
+			}
+			return response;
+		} catch (error) {
+			Container.instance().errorReporter.reportMessage({
+				type: ReportingMessageType.Error,
+				message: `Failed to create a ${attributes.issueProvider.name} card`,
+				source: "agent",
+				extra: { message: error.message }
+			});
+			Logger.error(error, `failed to create a ${attributes.issueProvider.name} card:`);
+			return undefined;
+		}
 	}
 }
 

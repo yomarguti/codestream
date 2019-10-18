@@ -245,10 +245,12 @@ export function toTeamsMessageBody(
 	}
 
 	const items: ITextBlock[] = [];
+	let actionType = "";
 
 	switch (codemark.type) {
 		case CodemarkType.Comment:
 		case CodemarkType.Trap: {
+			actionType = "<i>commented on code</i>";
 			// Remove any duplicate mentions at the start of the text
 			let text = codemark.text;
 			if (mentions && text.startsWith(mentions)) {
@@ -264,6 +266,7 @@ export function toTeamsMessageBody(
 			break;
 		}
 		case CodemarkType.Bookmark: {
+			actionType = "<i>set a bookmark</i>";
 			items.push({
 				type: "TextBlock",
 				// Bookmarks use the title rather than text
@@ -275,6 +278,7 @@ export function toTeamsMessageBody(
 		}
 		case CodemarkType.Issue:
 		case CodemarkType.Question: {
+			actionType = "<i>opened an issue</i>";
 			if (codemark.title) {
 				items.push({
 					type: "TextBlock",
@@ -468,7 +472,9 @@ export function toTeamsMessageBody(
 		content: JSON.stringify(mainCard)
 	});
 	attachmentsOut.push(...attachments);
-
+	if (!preamble) {
+		preamble = actionType;
+	}
 	return {
 		contentType: "html",
 		content: `${preamble}${attachments.map(c => `<attachment id="${c.id}"></attachment>`).join("")}`

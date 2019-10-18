@@ -192,7 +192,7 @@ export class GitService implements IGitService, Disposable {
 			data = await git({ cwd: dir }, "diff", initialCommitHash, finalCommitHash, "--", filename);
 		} catch (err) {
 			if (fetchIfCommitNotFound) {
-				Logger.log("Commit not found - fetching all remotes")
+				Logger.log("Commit not found - fetching all remotes");
 				await git({ cwd: dir }, "fetch", "--all");
 				return this.getDiffBetweenCommits(initialCommitHash, finalCommitHash, filePath, false);
 			}

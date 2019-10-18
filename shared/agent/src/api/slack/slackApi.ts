@@ -24,6 +24,7 @@ import {
 	CreateCodemarkPermalinkRequest,
 	CreateCodemarkRequest,
 	CreateDirectStreamRequest,
+	CreateExternalPostRequest,
 	CreateMarkerLocationRequest,
 	CreatePostRequest,
 	CreatePostResponse,
@@ -137,7 +138,7 @@ export class SlackApiProvider implements ApiProvider {
 	get onDidReceiveMessage(): Event<RTMessage> {
 		return this._onDidReceiveMessage.event;
 	}
-
+	providerType = ProviderType.Slack;
 	private _slack: WebClient;
 	private _events: SlackEvents | undefined;
 	private readonly _codestreamUserId: string;
@@ -645,6 +646,11 @@ export class SlackApiProvider implements ApiProvider {
 
 	@log()
 	async createPost(request: CreatePostRequest): Promise<CreatePostResponse> {
+		throw new Error("Not supported");
+	}
+
+	@log()
+	async createExternalPost(request: CreateExternalPostRequest): Promise<CreatePostResponse> {
 		let createdPostId;
 		try {
 			const usernamesById = await this.ensureUsernamesById();
@@ -687,18 +693,11 @@ export class SlackApiProvider implements ApiProvider {
 			let streams: CSStream[] | undefined;
 			let repos: CSRepository[] | undefined;
 
-			if (request.codemark != null) {
-				const codemarkResponse = await this.createCodemark({
-					...request.codemark,
-					parentPostId: request.parentPostId,
-					providerType: ProviderType.Slack
-				});
-
-				({ codemark, markers, markerLocations, streams, repos } = codemarkResponse);
-
+			if (request.codemarkResponse != null) {
+				({ codemark, markers, markerLocations, streams, repos } = request.codemarkResponse);
 				blocks = toSlackPostBlocks(
 					codemark,
-					request.codemark.remotes,
+					request.remotes,
 					markers,
 					markerLocations,
 					usernamesById,
@@ -727,16 +726,6 @@ export class SlackApiProvider implements ApiProvider {
 			const post = await fromSlackPost(message, streamId, usernamesById, this._codestreamTeamId);
 			const { postId } = fromSlackPostId(post.id, post.streamId);
 			createdPostId = postId;
-
-			if (codemark) {
-				await this._codestream.updateCodemark({
-					codemarkId: codemark.id,
-					streamId: post.streamId,
-					postId: post.id
-				});
-				codemark.postId = post.id;
-				codemark.streamId = post.streamId;
-			}
 
 			const postResponse = await this.getPost({ streamId: streamId, postId: postId });
 			return {

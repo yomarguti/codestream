@@ -18,6 +18,7 @@ import {
 	CreateCodemarkResponse,
 	CreateDirectStreamRequest,
 	CreateDirectStreamResponse,
+	CreateExternalPostRequest,
 	CreateMarkerLocationRequest,
 	CreateMarkerLocationResponse,
 	CreatePostRequest,
@@ -126,7 +127,8 @@ import {
 	CSPost,
 	CSRepository,
 	CSTeam,
-	CSUser
+	CSUser,
+	ProviderType
 } from "../protocol/api.protocol";
 
 export type ApiProviderLoginResponse = CSLoginResponse & { token: AccessToken };
@@ -247,6 +249,7 @@ export interface ApiProvider {
 	readonly teamId: string;
 	readonly userId: string;
 	readonly capabilities: Capabilities;
+	providerType: ProviderType;
 
 	fetch<R extends object>(url: string, init?: RequestInit, token?: string): Promise<R>;
 	useMiddleware(middleware: CodeStreamApiMiddleware): Disposable;
@@ -289,6 +292,7 @@ export interface ApiProvider {
 	getMarker(request: GetMarkerRequest): Promise<GetMarkerResponse>;
 	updateMarker(request: UpdateMarkerRequest): Promise<UpdateMarkerResponse>;
 
+	createExternalPost(request: CreateExternalPostRequest): Promise<CreatePostResponse>;
 	createPost(request: CreatePostRequest): Promise<CreatePostResponse>;
 	deletePost(request: DeletePostRequest): Promise<DeletePostResponse>;
 	editPost(request: EditPostRequest): Promise<EditPostResponse>;
