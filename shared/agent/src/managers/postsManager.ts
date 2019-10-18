@@ -1192,8 +1192,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 								remote,
 								marker.commitHashWhenCreated,
 								marker.file,
-								range.start.line,
-								range.end.line
+								range.start.line + 1,
+								range.end.line + 1
 							);
 
 							if (url !== undefined) {
