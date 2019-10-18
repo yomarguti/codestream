@@ -1,5 +1,4 @@
 "use strict";
-import { git } from "git/git";
 import { GitRemote, GitRepository } from "git/gitService";
 import { GraphQLClient } from "graphql-request";
 import { Response } from "node-fetch";

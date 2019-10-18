@@ -417,7 +417,7 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 
 		const comments = (await Promise.all(
 			pullRequestsResponse.body.values.map(pr => this._getPullRequestComments(pr, relativePath))
-		)).reduce((group, current) => group.concat(current));
+		)).reduce((group, current) => group.concat(current), []);
 
 		// If we have any comments, fire a notification
 		if (comments.length !== 0) {
