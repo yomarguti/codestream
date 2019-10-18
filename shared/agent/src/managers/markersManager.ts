@@ -15,6 +15,7 @@ import { EntityManagerBase, Id } from "./entityManager";
 export class MarkersManager extends EntityManagerBase<CSMarker> {
 	async getByStreamId(streamId: Id, visibleOnly?: boolean): Promise<CSMarker[]> {
 		const markers = await this.cache.getGroup([["fileStreamId", streamId]]);
+		this.polyfill(markers);
 		return visibleOnly ? await this.filterMarkers(markers) : markers;
 	}
 
@@ -84,10 +85,24 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 	@lspHandler(GetMarkerRequestType)
 	protected async getMarker(request: GetMarkerRequest): Promise<GetMarkerResponse> {
 		const marker = await this.getById(request.markerId);
+		this.polyfill([marker]);
 		return { marker: marker };
 	}
 
 	protected getEntityName(): string {
 		return "Marker";
 	}
+
+	private polyfill(markers: CSMarker[]) {
+		for (const marker of markers) {
+			if (!marker.referenceLocations && marker.locationWhenCreated) {
+				marker.referenceLocations = [{
+					location: marker.locationWhenCreated,
+					commitHash: marker.commitHashWhenCreated,
+					flags: { canonical: true }
+				}]
+			}
+		}
+	}
+
 }
