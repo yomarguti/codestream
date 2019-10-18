@@ -1220,7 +1220,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				)}
 				<Tooltip title="Show/hide pull request comments" placement="top" delay={1}>
 					<span className="count" onClick={this.togglePRComments}>
-						pull requests <label className={cx("switch", { checked: this.props.showPRComments })} />
+						PRs <label className={cx("switch", { checked: this.props.showPRComments })} />
 					</span>
 				</Tooltip>
 				{numHidden > 0 && (
