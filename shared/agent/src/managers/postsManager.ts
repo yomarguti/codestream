@@ -1,5 +1,6 @@
 "use strict";
 import * as fs from "fs";
+import { providerNamesById } from "providers/provider";
 import { Range, TextDocumentIdentifier } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
@@ -695,10 +696,13 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				});
 				if (request.crossPostIssueValues) {
 					providerCardRequest = {
-						title: request.codemark.title,
-						text: request.codemark.text,
-						markers: codemarkResponse.markers,
-						permalink: codemarkResponse.codemark.permalink
+						codemark: {
+							title: request.codemark.title,
+							text: request.codemark.text,
+							markers: codemarkResponse.markers,
+							permalink: codemarkResponse.codemark.permalink
+						},
+						remotes: request.codemark.remotes
 					};
 				}
 				codemarkId = codemarkResponse.codemark.id;
@@ -710,10 +714,13 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			if (request.codemark) {
 				if (request.crossPostIssueValues) {
 					providerCardRequest = {
-						title: request.codemark.title,
-						text: request.codemark.text,
-						markers: response.markers,
-						permalink: response.codemark && response.codemark.permalink
+						codemark: {
+							title: request.codemark.title,
+							text: request.codemark.text,
+							markers: response.markers,
+							permalink: response.codemark && response.codemark.permalink
+						},
+						remotes: request.codemark.remotes
 					};
 				}
 				codemarkId = response.codemark && response.codemark.id;
@@ -1114,20 +1121,24 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	}
 
 	createProviderCard = async (
-		codemark: {
-			text: string | undefined;
-			title: string | undefined;
-			markers?: CSMarker[];
-			permalink?: string;
+		providerCardRequest: {
+			codemark: {
+				text: string | undefined;
+				title: string | undefined;
+				markers?: CSMarker[];
+				permalink?: string;
+			};
+			remotes?: string[];
 		},
 		attributes: any
 	) => {
 		const delimiters = this.getCodeDelimiters(attributes.codeDelimiterStyle);
 		const { linefeed, start, end } = delimiters;
-		let description = `${codemark.text}${linefeed}${linefeed}`;
-		let createdAtLeastOneLink;
-		if (codemark.markers && codemark.markers.length) {
-			for (const marker of codemark.markers) {
+		let description = `${providerCardRequest.codemark.text}${linefeed}${linefeed}`;
+
+		const links = [];
+		if (providerCardRequest.codemark.markers && providerCardRequest.codemark.markers.length) {
+			for (const marker of providerCardRequest.codemark.markers) {
 				description += `In ${marker.file}`;
 				let range;
 				if (marker.locationWhenCreated) {
@@ -1148,19 +1159,62 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				}
 
 				description += `${linefeed}${linefeed}${start}${linefeed}${marker.code}${linefeed}${end}${linefeed}${linefeed}`;
-				if (codemark.permalink) {
-					const link = Strings.interpolate(delimiters.anchorFormat, {
-						text: "Open on CodeStream",
-						url: `${codemark.permalink}?marker=${marker.id}`
+
+				if (providerCardRequest.codemark.permalink) {
+					let link = Strings.interpolate(delimiters.anchorFormat, {
+						text: "Open on Web",
+						url: `${providerCardRequest.codemark.permalink}?marker=${marker.id}`
 					});
 					if (link) {
-						description += `${link}${linefeed}${linefeed}`;
-						createdAtLeastOneLink = true;
+						links.push(link);
+					}
+
+					link = Strings.interpolate(delimiters.anchorFormat, {
+						text: "Open in IDE",
+						url: `${providerCardRequest.codemark.permalink}?marker=${marker.id}&ide=default`
+					});
+					if (link) {
+						links.push(link);
+					}
+				}
+				if (providerCardRequest.remotes) {
+					let url;
+					if (
+						providerCardRequest.remotes !== undefined &&
+						providerCardRequest.remotes.length !== 0 &&
+						range &&
+						range.start !== undefined &&
+						range.end !== undefined
+					) {
+						for (const remote of providerCardRequest.remotes) {
+							url = Marker.getRemoteCodeUrl(
+								remote,
+								marker.commitHashWhenCreated,
+								marker.file,
+								range.start.line,
+								range.end.line
+							);
+
+							if (url !== undefined) {
+								break;
+							}
+						}
+					}
+					if (url) {
+						const link = Strings.interpolate(delimiters.anchorFormat, {
+							text: `Open on ${url.displayName}`,
+							url: url.url
+						});
+						if (link) {
+							links.push(link);
+						}
 					}
 				}
 			}
 		}
-		if (!createdAtLeastOneLink) {
+		if (links.length) {
+			description += links.join(" · ") + linefeed;
+		} else {
 			description += `${linefeed}Posted via CodeStream${linefeed}`;
 		}
 
@@ -1174,7 +1228,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						providerId: attributes.issueProvider.id,
 						data: {
 							description,
-							summary: codemark.title,
+							summary: providerCardRequest.codemark.title,
 							issueType: attributes.issueType,
 							project: attributes.boardId,
 							assignees: attributes.assignees
@@ -1187,7 +1241,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						providerId: attributes.issueProvider.id,
 						data: {
 							listId: attributes.listId,
-							name: codemark.title,
+							name: providerCardRequest.codemark.title,
 							assignees: attributes.assignees,
 							description
 						}
@@ -1200,7 +1254,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						providerId: attributes.issueProvider.id,
 						data: {
 							description,
-							title: codemark.title,
+							title: providerCardRequest.codemark.title,
 							repoName: attributes.boardName,
 							assignees: attributes.assignees
 						}
@@ -1212,7 +1266,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						providerId: attributes.issueProvider.id,
 						data: {
 							description,
-							title: codemark.title,
+							title: providerCardRequest.codemark.title,
 							repoName: attributes.boardName,
 							assignee: attributes.assignees[0]
 						}
@@ -1224,7 +1278,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						providerId: attributes.issueProvider.id,
 						data: {
 							description,
-							name: codemark.title,
+							name: providerCardRequest.codemark.title,
 							boardId: attributes.board.id,
 							assignee: attributes.assignees[0]
 						}
@@ -1238,7 +1292,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 							description,
 							boardId: attributes.boardId,
 							listId: attributes.listId,
-							name: codemark.title,
+							name: providerCardRequest.codemark.title,
 							assignee: attributes.assignees[0]
 						}
 					});
@@ -1249,7 +1303,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						providerId: attributes.issueProvider.id,
 						data: {
 							description,
-							title: codemark.title,
+							title: providerCardRequest.codemark.title,
 							repoName: attributes.boardName,
 							assignee: attributes.assignees[0]
 						}
@@ -1261,7 +1315,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						providerId: attributes.issueProvider.id,
 						data: {
 							description,
-							title: codemark.title,
+							title: providerCardRequest.codemark.title,
 							boardId: attributes.board.id,
 							assignee: attributes.assignees[0]
 						}
