@@ -389,6 +389,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 							missingMarker.id
 						);
 						canCalculate = true;
+						break;
 					}
 				}
 			}
