@@ -46,10 +46,3 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 	msteams: { displayName: "Microsoft Teams", icon: "msteams" }
 };
 
-export enum CodeDelimiterStyles {
-	NONE = "none",
-	TRIPLE_BACK_QUOTE = "tripleBackQuote",
-	SINGLE_BACK_QUOTE = "singleBackQuote",
-	HTML_MARKUP = "htmlMarkup",
-	CODE_BRACE = "codeBrace"
-}

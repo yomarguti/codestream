@@ -3,8 +3,8 @@ import ReactDOM from "react-dom";
 import AsyncSelect from "react-select/async";
 import Icon from "../Icon";
 import Menu from "../Menu";
-import { CodeDelimiterStyles } from "./types";
 import {
+	CodeDelimiterStyles,
 	ThirdPartyProviderConfig,
 	FetchThirdPartyBoardsRequestType,
 	AzureDevOpsBoard,

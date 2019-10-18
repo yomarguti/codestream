@@ -2,8 +2,8 @@ import React from "react";
 import Icon from "../Icon";
 import Menu from "../Menu";
 import AsyncSelect from "react-select/async";
-import { CodeDelimiterStyles } from "./types";
 import {
+	CodeDelimiterStyles,
 	ThirdPartyProviderConfig,
 	FetchThirdPartyBoardsRequestType,
 	JiraBoard,

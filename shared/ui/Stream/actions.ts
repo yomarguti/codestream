@@ -27,7 +27,6 @@ import {
 	UpdateCodemarkRequestType,
 	UpdatePreferencesRequestType,
 	UpdateStreamMembershipRequestType,
-	CreateThirdPartyCardRequestType,
 	CreateTeamTagRequestType,
 	UpdateTeamTagRequestType,
 	DeleteTeamTagRequestType
@@ -40,8 +39,6 @@ import {
 	openPanel,
 	setChannelFilter,
 	setCodemarkTagFilter,
-	setCodemarkBranchFilter,
-	setCodemarkAuthorFilter,
 	setCodemarkFileFilter,
 	setCodemarkTypeFilter
 } from "../store/context/actions";
@@ -60,7 +57,6 @@ import { confirmPopup } from "./Confirm";
 import React from "react";
 import { getFileScmError } from "../store/editorContext/reducer";
 import { PostEntryPoint } from "../store/context/types";
-import { CodeDelimiterStyles } from "./CrossPostIssueControls/types";
 import { middlewareInjector } from "../store/middleware-injector";
 import { PostsActionsType, Post } from "../store/posts/types";
 
@@ -70,8 +66,6 @@ export {
 	setCodemarkTypeFilter,
 	setCodemarkFileFilter,
 	setCodemarkTagFilter,
-	setCodemarkBranchFilter,
-	setCodemarkAuthorFilter,
 	setChannelFilter
 };
 export { connectProvider, disconnectProvider } from "../store/providers/actions";
@@ -270,64 +264,48 @@ export const createPost = (
 	});
 
 	try {
-		let responsePromise: Promise<CreatePostResponse>;
-		if (codemark) {
-			let externalProviderUrl;
-			let externalProvider;
-			let externalProviderHost;
-			let externalAssignees;
-			if (extra.crossPostIssueValues) {
-				const cardResponse = await createProviderCard(extra.crossPostIssueValues, codemark);
-				if (cardResponse) {
-					externalProviderUrl = cardResponse.url;
-					externalProvider = extra.crossPostIssueValues.issueProvider.name;
-					externalProviderHost = extra.crossPostIssueValues.issueProvider.host;
-					externalAssignees = extra.crossPostIssueValues.assignees;
+				let responsePromise: Promise<CreatePostResponse>;
+				if (codemark) {
+					responsePromise = HostApi.instance.send(CreatePostWithMarkerRequestType, {
+						streamId,
+						text: codemark.text,
+						textDocuments: codemark.textEditorUris,
+						markers: codemark.markers,
+						title: codemark.title,
+						type: codemark.type,
+						assignees: codemark.assignees,
+						color: codemark.color,
+						mentionedUserIds: mentions,
+						entryPoint: extra.entryPoint || context.newPostEntryPoint,
+						parentPostId,
+						tags: codemark.tags,
+						relatedCodemarkIds: codemark.relatedCodemarkIds,
+						crossPostIssueValues: extra.crossPostIssueValues ? {
+							...extra.crossPostIssueValues,
+							externalProvider: extra.crossPostIssueValues.issueProvider.name,
+							externalProviderHost: extra.crossPostIssueValues.issueProvider.host,
+							externalAssignees: extra.crossPostIssueValues.assignees,
+						} : undefined
+					});
+				} else {
+					responsePromise = HostApi.instance.send(CreatePostRequestType, {
+						streamId,
+						text,
+						parentPostId,
+						mentionedUserIds: mentions,
+						entryPoint: extra.entryPoint
+					});
 				}
-			}
-			//const block = codemark.markers[0] || {};
+				const response = await responsePromise;
+				if (!response) logError("DID NOT GET A RESPONSE FROM: ", responsePromise);
 
-			responsePromise = HostApi.instance.send(CreatePostWithMarkerRequestType, {
-				streamId,
-				text: codemark.text,
-				textDocuments: codemark.textEditorUris,
-				// code: block.code,
-				// range: block.range,
-				// source: block.source,
-				markers: codemark.markers,
-				title: codemark.title,
-				type: codemark.type,
-				assignees: codemark.assignees,
-				color: codemark.color,
-				mentionedUserIds: mentions,
-				entryPoint: extra.entryPoint || context.newPostEntryPoint,
-				externalProvider,
-				externalProviderHost,
-				externalAssignees,
-				externalProviderUrl,
-				parentPostId,
-				tags: codemark.tags,
-				relatedCodemarkIds: codemark.relatedCodemarkIds
-			});
-		} else {
-			responsePromise = HostApi.instance.send(CreatePostRequestType, {
-				streamId,
-				text,
-				parentPostId,
-				mentionedUserIds: mentions,
-				entryPoint: extra.entryPoint
-			});
-		}
-		const response = await responsePromise;
-		if (!response) logError("DID NOT GET A RESPONSE FROM: ", responsePromise);
-
-		if (response.codemark) {
-			dispatch(saveCodemarks([response.codemark]));
-		}
-		response.streams &&
-			response.streams.forEach(stream => dispatch(streamActions.updateStream(stream)));
-		return dispatch(postsActions.resolvePendingPost(pendingId, response.post));
-	} catch (error) {
+				if (response.codemark) {
+					dispatch(saveCodemarks([response.codemark]));
+				}
+				response.streams &&
+					response.streams.forEach(stream => dispatch(streamActions.updateStream(stream)));
+				return dispatch(postsActions.resolvePendingPost(pendingId, response.post));
+			} catch (error) {
 		logError(`Error creating a post: ${error}`);
 		return dispatch(postsActions.failPendingPost(pendingId));
 	} finally {
@@ -699,187 +677,8 @@ export const setCodemarkStatus = (
 		return undefined;
 	}
 };
-
-const getCodeDelimiters = (
-	codeDelimiterStyle: CodeDelimiterStyles
-): {
-	start: string;
-	end: string;
-	linefeed: string;
-} => {
-	switch (codeDelimiterStyle) {
-		case CodeDelimiterStyles.NONE:
-			return {
-				start: "",
-				end: "",
-				linefeed: "\n"
-			};
-
-		case CodeDelimiterStyles.HTML_MARKUP:
-			return {
-				start: "<pre><div><code>",
-				end: "</code></div></pre>",
-				linefeed: "<br/>"
-			};
-
-		default:
-		case CodeDelimiterStyles.TRIPLE_BACK_QUOTE:
-			return {
-				start: "```\n",
-				end: "```\n",
-				linefeed: "\n"
-			};
-
-		case CodeDelimiterStyles.SINGLE_BACK_QUOTE:
-			return {
-				start: "`",
-				end: "`",
-				linefeed: "\n"
-			};
-
-		case CodeDelimiterStyles.CODE_BRACE:
-			return {
-				start: "{code}",
-				end: "{code}",
-				linefeed: "\n"
-			};
-	}
-};
-
-export const createProviderCard = async (attributes, codemark) => {
-	const delimiters = getCodeDelimiters(attributes.codeDelimiterStyle);
-	const { linefeed, start, end } = delimiters;
-	let description = `${codemark.text}${linefeed}${linefeed}`;
-	if (codemark.markers && codemark.markers.length) {
-		for (const marker of codemark.markers) {
-			description += `In ${marker.file}`;
-			const range = marker.range;
-			if (range) {
-				if (range.start.line === range.end.line) {
-					description += ` (Line ${range.start.line + 1})`;
-				} else {
-					description += ` (Lines ${range.start.line + 1}-${range.end.line + 1})`;
-				}
-			}
-			description += `${linefeed}${linefeed}${start}${linefeed}${marker.code}${linefeed}${end}${linefeed}${linefeed}`;
-		}
-	}
-	description += `Posted via CodeStream${linefeed}`;
-
-	try {
-		let response;
-		switch (attributes.issueProvider.name) {
-			case "jira":
-			case "jiraserver": {
-				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
-					providerId: attributes.issueProvider.id,
-					data: {
-						description,
-						summary: codemark.title,
-						issueType: attributes.issueType,
-						project: attributes.boardId,
-						assignees: attributes.assignees
-					}
-				});
-				break;
-			}
-			case "trello": {
-				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
-					providerId: attributes.issueProvider.id,
-					data: {
-						listId: attributes.listId,
-						name: codemark.title,
-						assignees: attributes.assignees,
-						description
-					}
-				});
-				break;
-			}
-			case "github":
-			case "github_enterprise": {
-				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
-					providerId: attributes.issueProvider.id,
-					data: {
-						description,
-						title: codemark.title,
-						repoName: attributes.boardName,
-						assignees: attributes.assignees
-					}
-				});
-				break;
-			}
-			case "gitlab":
-			case "gitlab_enterprise": {
-				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
-					providerId: attributes.issueProvider.id,
-					data: {
-						description,
-						title: codemark.title,
-						repoName: attributes.boardName,
-						assignee: attributes.assignees[0]
-					}
-				});
-				break;
-			}
-			case "youtrack": {
-				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
-					providerId: attributes.issueProvider.id,
-					data: {
-						description,
-						name: codemark.title,
-						boardId: attributes.board.id,
-						assignee: attributes.assignees[0]
-					}
-				});
-				break;
-			}
-			case "asana": {
-				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
-					providerId: attributes.issueProvider.id,
-					data: {
-						description,
-						boardId: attributes.boardId,
-						listId: attributes.listId,
-						name: codemark.title,
-						assignee: attributes.assignees[0]
-					}
-				});
-				break;
-			}
-			case "bitbucket": {
-				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
-					providerId: attributes.issueProvider.id,
-					data: {
-						description,
-						title: codemark.title,
-						repoName: attributes.boardName,
-						assignee: attributes.assignees[0]
-					}
-				});
-				break;
-			}
-			case "azuredevops": {
-				response = await HostApi.instance.send(CreateThirdPartyCardRequestType, {
-					providerId: attributes.issueProvider.id,
-					data: {
-						description,
-						title: codemark.title,
-						boardId: attributes.board.id,
-						assignee: attributes.assignees[0]
-					}
-				});
-				break;
-			}
-
-			default:
-				return undefined;
-		}
-		return response;
-	} catch (error) {
-		logError(`failed to create a ${attributes.issueProvider.name} card: ${error}`);
-		return undefined;
-	}
-};
+ 
+ 
 
 const tuple = <T extends string[]>(...args: T) => args;
 const COLOR_OPTIONS = tuple("blue", "green", "yellow", "orange", "red", "purple", "aqua", "gray");
