@@ -24,7 +24,7 @@ const VerticallyCentered = styled.div`
 	margin: 0 auto;
 `;
 
-const Spacer = styled.div`
+export const Spacer = styled.div`
 	height: 10px;
 `;
 

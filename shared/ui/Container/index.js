@@ -15,6 +15,8 @@ import { VersioningActionsType } from "../store/versioning/types";
 import { apiUpgradeRecommendedDismissed } from "../store/apiVersioning/actions";
 import { ApiVersioningActionsType } from "../store/apiVersioning/types";
 import { errorDismissed } from "@codestream/webview/store/connectivity/actions";
+import { ThemeProvider } from "styled-components";
+import { defaultTheme } from "../src/themes";
 
 const mapStateToProps = state => ({
 	bootstrapped: state.bootstrapped,
@@ -96,13 +98,16 @@ const Root = connect(mapStateToProps)(props => {
 			</RoadBlock>
 		);
 	if (!props.bootstrapped) return <Loading />;
-	if (props.apiVersioning && props.apiVersioning.type === ApiVersioningActionsType.ApiUpgradeRequired)
+	if (
+		props.apiVersioning &&
+		props.apiVersioning.type === ApiVersioningActionsType.ApiUpgradeRequired
+	)
 		return (
 			<RoadBlock title="API Server Out of Date">
 				<p>
-					Your on-prem installation of CodeStream is running an outdated version of the API server that
-					is incompatible with this version of the CodeStream extension. Please ask your admin to update
-					the API server.
+					Your on-prem installation of CodeStream is running an outdated version of the API server
+					that is incompatible with this version of the CodeStream extension. Please ask your admin
+					to update the API server.
 				</p>
 			</RoadBlock>
 		);
@@ -136,7 +141,10 @@ const Root = connect(mapStateToProps)(props => {
 				{getIdeInstallationInstructions(props)}
 			</Dismissable>
 		);
-	if (props.apiVersioning && props.apiVersioning.type === ApiVersioningActionsType.ApiUpgradeRecommended) {
+	if (
+		props.apiVersioning &&
+		props.apiVersioning.type === ApiVersioningActionsType.ApiUpgradeRecommended
+	) {
 		const { missingCapabilities } = props.apiVersioning;
 		let haveFeatures = "new features.";
 		let missingFeatures = [];
@@ -156,8 +164,9 @@ const Root = connect(mapStateToProps)(props => {
 				}]}
 			>
 				<p>
-					Your on-prem installation of CodeStream has an API server that seems to be getting a bit long
-					in the tooth. Please ask your admin to upgrade to the latest version to get access to {haveFeatures}
+					Your on-prem installation of CodeStream has an API server that seems to be getting a bit
+					long in the tooth. Please ask your admin to upgrade to the latest version to get access to{" "}
+					{haveFeatures}
 				</p>
 				{missingFeatures.map(feature => {
 					return (
@@ -165,7 +174,9 @@ const Root = connect(mapStateToProps)(props => {
 							&middot; {feature.description}
 							{feature.url && " ("}
 							{feature.url && (
-								<a href="{feature.url}" target="_blank">{feature.url}</a>
+								<a href="{feature.url}" target="_blank">
+									{feature.url}
+								</a>
 							)}
 							{feature.url && ")"}
 						</p>
@@ -229,7 +240,9 @@ export default class Container extends React.Component {
 
 		return (
 			<IntlProvider locale={i18n.locale} messages={i18n.messages}>
-				<Provider store={store}>{content}</Provider>
+				<Provider store={store}>
+					<ThemeProvider theme={defaultTheme}>{content}</ThemeProvider>
+				</Provider>
 			</IntlProvider>
 		);
 	}

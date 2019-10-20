@@ -4,6 +4,7 @@ import { mapFilter, toMapBy } from "../../utils";
 import { ActionType } from "../common";
 import * as actions from "./actions";
 import { UsersState, UsersActionsType } from "./types";
+import { CodeStreamState } from "..";
 
 type UsersActions = ActionType<typeof actions>;
 
@@ -50,6 +51,12 @@ export const getTeamMembers = createSelector(
 			return user && !user.deactivated ? user : undefined;
 		});
 	}
+);
+
+export const getTeamMates = createSelector(
+	getTeamMembers,
+	(state: CodeStreamState) => state.session.userId!,
+	(members: CSUser[], userId: string) => members.filter(m => m.id !== userId && m.isRegistered)
 );
 
 // return the team tags as an array, in sort order

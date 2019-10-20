@@ -56,7 +56,7 @@ import {
 } from "@codestream/protocols/webview";
 import { getCurrentSelection } from "../store/editorContext/reducer";
 import Headshot from "./Headshot";
-import { getTeamMembers, getTeamTagsArray } from "../store/users/reducer";
+import { getTeamMembers, getTeamTagsArray, getTeamMates } from "../store/users/reducer";
 import MessageInput from "./MessageInput";
 import { getSlashCommands } from "./SlashCommands";
 import { getCurrentTeamProvider } from "../store/teams/reducer";
@@ -68,6 +68,9 @@ import ContainerAtEditorSelection from "./SpatialView/ContainerAtEditorSelection
 import { prettyPrintOne } from "code-prettify";
 import { escapeHtml } from "../utils";
 import { CodeStreamState } from "../store";
+import { LabeledSwitch } from "../src/components/controls/LabeledSwitch";
+import { Spacer } from "./SpatialView/PRInfoModal";
+import { CSText } from "../src/components/CSText";
 
 export interface ICrossPostIssueContext {
 	setSelectedAssignees(any: any): void;
@@ -102,7 +105,8 @@ interface Props extends ConnectedProps {
 }
 
 interface ConnectedProps {
-	teammates: CSUser[];
+	teamMates: CSUser[];
+	teamMembers: CSUser[];
 	channelStreams: CSChannelStream[];
 	directMessageStreams: CSDirectStream[];
 	channel: Stream;
@@ -133,6 +137,8 @@ interface State {
 	assigneesDisabled: boolean;
 	singleAssignee: boolean;
 	privacy: "private" | "public";
+	isPublic: boolean;
+	privacyMembers: { value: string; label: string }[];
 	notify: boolean;
 	isLoading: boolean;
 	crossPostMessage: boolean;
@@ -151,6 +157,7 @@ interface State {
 	titleInvalid?: boolean;
 	textInvalid?: boolean;
 	assigneesInvalid?: boolean;
+	privacyMembersInvalid?: boolean;
 	showAllChannels?: boolean;
 	linkURI?: string;
 	copied: boolean;
@@ -198,7 +205,9 @@ class CodemarkForm extends React.Component<Props, State> {
 			selectedChannelName: props.channel.name,
 			selectedChannelId: props.channel.id,
 			assignableUsers: this.getAssignableCSUsers(),
-			privacy: "private",
+			privacy: "public",
+			isPublic: true,
+			privacyMembers: [],
 			selectedTags: {},
 			relatedCodemarkIds: {},
 			locationMenuOpen: "closed",
@@ -363,7 +372,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	}
 
 	getAssignableCSUsers() {
-		return mapFilter(this.props.teammates, user => {
+		return mapFilter(this.props.teamMembers, user => {
 			if (!user.isRegistered) return;
 			return {
 				value: user.id,
@@ -480,8 +489,13 @@ class CodemarkForm extends React.Component<Props, State> {
 		// }, 20);
 	};
 
-	togglePrivacy = () => {
+	togglePrivacy = e => {
+		e.preventDefault();
 		this.setState(state => ({ privacy: state.privacy === "public" ? "private" : "public" }));
+	};
+
+	toggleCodemarkPrivacy = (isPublic: boolean) => {
+		this.setState({ isPublic, privacyMembersInvalid: false });
 	};
 
 	toggleNotify = () => {
@@ -550,7 +564,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 			csAssignees = mapFilter(assignees, a => {
 				const user = a.value;
-				const codestreamUser = this.props.teammates.find(
+				const codestreamUser = this.props.teamMembers.find(
 					t => Boolean(user.email) && t.email === user.email
 				);
 				if (codestreamUser) return codestreamUser.id;
@@ -595,7 +609,8 @@ class CodemarkForm extends React.Component<Props, State> {
 		// FIXME
 		const codeBlock = codeBlocks[0];
 
-		const validationState = {
+		const validationState: Partial<State> = {
+			privacyMembersInvalid: false,
 			codeBlockInvalid: false,
 			titleInvalid: false,
 			textInvalid: false,
@@ -628,7 +643,12 @@ class CodemarkForm extends React.Component<Props, State> {
 			}
 		}
 
-		this.setState(validationState);
+		if (!this.state.isPublic && this.state.privacyMembers.length === 0) {
+			invalid = true;
+			validationState.privacyMembersInvalid = true;
+		}
+
+		this.setState(validationState as State);
 		return invalid;
 	};
 
@@ -776,6 +796,69 @@ class CodemarkForm extends React.Component<Props, State> {
 				</div>
 			</div>
 		);
+	};
+
+	renderPrivacyControls = () => {
+		const { isPublic, privacyMembersInvalid } = this.state;
+		if (this.props.teamProvider === "codestream" && this.props.commentType !== CodemarkType.Link) {
+			return (
+				<>
+					<Spacer />
+					{privacyMembersInvalid && (
+						<div style={{ display: "flex", flexDirection: "row-reverse", color: "red" }}>
+							<CSText as="small">Required</CSText>
+						</div>
+					)}
+					<div style={{ display: "flex", alignItems: "center", minHeight: "30px" }}>
+						<span style={{ marginTop: "2px" }}>
+							<LabeledSwitch
+								colored
+								on={isPublic}
+								onChange={this.toggleCodemarkPrivacy}
+								offLabel="Private"
+								onLabel="Team"
+								height={28}
+								width={80}
+							/>
+						</span>
+						<div style={{ width: "100%" }}>
+							<div style={{ marginLeft: "10px", width: "calc(100% - 10px)" }}>
+								{isPublic ? (
+									<CSText muted>Visible to the entire team</CSText>
+								) : (
+									<div style={{ display: "inline-flex", width: "100%", alignItems: "center" }}>
+										<span style={{ minWidth: "max-content" }}>
+											<CSText muted as="div">
+												Visible to
+											</CSText>
+										</span>
+										<span style={{ marginLeft: "10px", width: "100%" }}>
+											<Select
+												id="input-assignees"
+												classNamePrefix="react-select"
+												isMulti
+												defaultValue={this.state.privacyMembers}
+												options={this.props.teamMates.map(u => ({
+													label: u.username,
+													value: u.id
+												}))}
+												closeMenuOnSelect={false}
+												isClearable
+												placeholder="Enter names..."
+												onChange={(value: any) => {
+													this.setState({ privacyMembers: value });
+												}}
+											/>
+										</span>
+									</div>
+								)}
+							</div>
+						</div>
+					</div>
+				</>
+			);
+		}
+		return null;
 	};
 
 	renderRelatedCodemarks = () => {
@@ -1217,7 +1300,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		return (
 			<MessageInput
-				teammates={this.props.teammates}
+				teammates={this.props.teamMates}
 				currentUserId={this.props.currentUser.id}
 				slashCommands={this.props.slashCommands}
 				services={this.props.services}
@@ -1454,7 +1537,6 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	renderCodemarkForm() {
 		const { editingCodemark, currentUser } = this.props;
-		const { addingLocation, liveLocation } = this.state;
 		const commentType = editingCodemark ? editingCodemark.type : this.state.type || "comment";
 
 		const titlePlaceholder =
@@ -1465,10 +1547,6 @@ class CodemarkForm extends React.Component<Props, State> {
 				: commentType === "bookmark"
 				? "Bookmark Name (optional)"
 				: "Title (optional)";
-
-		const assigneesPlaceholder = this.props.providerInfo["trello"]
-			? "Members (optional)"
-			: "Assignees (optional)";
 
 		const modifier = navigator.appVersion.includes("Macintosh") ? "⌘" : "Alt";
 
@@ -1630,6 +1708,7 @@ class CodemarkForm extends React.Component<Props, State> {
 							</Tooltip>
 						</div>
 					)}
+					{this.renderPrivacyControls()}
 					{this.renderRelatedCodemarks()}
 					{this.renderTags()}
 					{this.renderCodeBlocks()}
@@ -1736,7 +1815,8 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		  getStreamForTeam(state.streams, context.currentTeamId)
 		: getStreamForTeam(state.streams, context.currentTeamId);
 
-	const teammates = getTeamMembers(state);
+	const teamMates = getTeamMates(state);
+	const teamMembers = getTeamMembers(state);
 	const teamTagsArray = getTeamTagsArray(state);
 
 	const channelStreams: CSChannelStream[] = sortBy(
@@ -1752,12 +1832,13 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		getDirectMessageStreamsForTeam(state.streams, context.currentTeamId) || []
 	).map(stream => ({
 		...(stream as CSDirectStream),
-		name: getDMName(stream, toMapBy("id", teammates), session.userId)
+		name: getDMName(stream, toMapBy("id", teamMates), session.userId)
 	}));
 
 	return {
 		channel,
-		teammates,
+		teamMates,
+		teamMembers,
 		channelStreams: channelStreams,
 		directMessageStreams: directMessageStreams,
 		issueProvider: providers[context.issueProvider!],
