@@ -4,7 +4,7 @@ import * as eol from "eol";
 import * as path from "path";
 import { TextDocumentIdentifier } from "vscode-languageserver";
 import { URI } from "vscode-uri";
-import { Marker, MarkerLocation, MarkerLocationsById } from "../api/extensions";
+import { MarkerLocation, MarkerLocationsById } from "../api/extensions";
 import { getCache } from "../cache";
 import { Container, SessionContainer } from "../container";
 import { GitRepository } from "../git/models/repository";
@@ -22,6 +22,7 @@ import { ManagerBase } from "./baseManager";
 import { IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { Id } from "./entityManager";
+import { BacktrackedLocation } from "./markersManager";
 
 export interface Markerish {
 	id: string;
@@ -638,5 +639,31 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			locations: locationsInCurrentBuffer,
 			orphans: orphans
 		};
+	}
+
+	static saveUncommittedLocations(markers: CSMarker[], backtrackedLocations: (BacktrackedLocation | undefined)[]) {
+		markers.forEach((marker, index) => {
+			const backtrackedLocation = backtrackedLocations[index];
+			if (!backtrackedLocation) return;
+
+			const atDocument = backtrackedLocation.atDocument;
+			const atCurrentCommit = backtrackedLocation.atCurrentCommit;
+			const filePath = backtrackedLocation.filePath;
+			const fileContents = backtrackedLocation.fileContents;
+
+			const meta = atCurrentCommit.meta;
+			if (meta && (meta.startWasDeleted || meta.endWasDeleted)) {
+				const uncommittedLocation = {
+					...atDocument!,
+					id: marker.id
+				};
+
+				SessionContainer.instance().markerLocations.saveUncommittedLocation(
+					filePath,
+					fileContents,
+					uncommittedLocation
+				);
+			}
+		});
 	}
 }
