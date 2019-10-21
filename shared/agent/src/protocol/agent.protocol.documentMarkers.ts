@@ -73,8 +73,13 @@ export enum MarkerNotLocatedReason {
 }
 
 export interface MarkerNotLocated extends CSMarker {
+	codemark: CodemarkPlus;
+	creatorName: string;
 	notLocatedReason: MarkerNotLocatedReason;
 	notLocatedDetails?: string;
+	summary: string;
+	summaryMarkdown: string;
+	externalContent?: undefined;
 }
 
 export interface FetchDocumentMarkersRequest {
