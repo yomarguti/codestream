@@ -1,17 +1,14 @@
 "use strict";
 import * as fs from "fs";
-import { providerNamesById } from "providers/provider";
-import { Range, TextDocumentIdentifier } from "vscode-languageserver";
+import { TextDocumentIdentifier } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
-import { Marker, MarkerLocation, Ranges } from "../api/extensions";
+import { Marker, MarkerLocation } from "../api/extensions";
 import { Container, SessionContainer } from "../container";
 import { Logger } from "../logger";
-import { calculateLocation } from "../markerLocation/calculator";
 import {
 	CodeDelimiterStyles,
 	CreateCodemarkRequest,
-	CreateCodemarkRequestMarker,
 	CreatePostRequest,
 	CreatePostRequestType,
 	CreatePostResponse,
@@ -47,9 +44,7 @@ import {
 	CodemarkType,
 	CSCreateCodemarkResponse,
 	CSMarker,
-	CSMarkerLocation,
 	CSPost,
-	CSReferenceLocation,
 	CSStream,
 	ProviderType,
 	StreamType
