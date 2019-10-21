@@ -1081,7 +1081,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					});
 					break;
 				}
-				case "gitlab": {
+				case "gitlab": 
+				case "gitlab_enterprise": {
 					response = await providerRegistry.createCard({
 						providerId: attributes.issueProvider.id,
 						data: {
