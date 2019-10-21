@@ -6,7 +6,7 @@ import { Container, SessionContainer } from "../container";
 import { Logger } from "../logger";
 import { calculateLocation } from "../markerLocation/calculator";
 import {
-    CodeBlockSource, CreateCodemarkRequestMarker,
+    CodeBlockSource, CreateMarkerRequest,
     GetMarkerRequest,
     GetMarkerRequestType,
     GetMarkerResponse
@@ -120,7 +120,7 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
     ): Promise<MarkerCreationDescriptor> {
         const { documents } = Container.instance();
         const { git, scm } = SessionContainer.instance();
-        let marker: CreateCodemarkRequestMarker | undefined;
+        let marker: CreateMarkerRequest | undefined;
         let backtrackedLocation: BacktrackedLocation | undefined;
         let fileCurrentCommit: string | undefined;
         let location: CSMarkerLocation | undefined;
@@ -287,6 +287,6 @@ export interface BacktrackedLocation {
 }
 
 export interface MarkerCreationDescriptor {
-    marker: CreateCodemarkRequestMarker;
+    marker: CreateMarkerRequest;
     backtrackedLocation: BacktrackedLocation | undefined;
 }

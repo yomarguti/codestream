@@ -28,7 +28,7 @@ export interface CreateCodemarkRequest {
 	title?: string;
 	assignees?: string[];
 	tags?: string[];
-	markers?: CreateCodemarkRequestMarker[];
+	markers?: CreateMarkerRequest[];
 	remotes?: string[];
 	externalProvider?: string;
 	externalProviderUrl?: string;
@@ -38,7 +38,7 @@ export interface CreateCodemarkRequest {
 	createPermalink?: false | "public" | "private";
 	relatedCodemarkIds?: string[];
 }
-export interface CreateCodemarkRequestMarker {
+export interface CreateMarkerRequest {
 	code: string;
 	remotes?: string[];
 	file?: string;

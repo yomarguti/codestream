@@ -397,7 +397,7 @@ export interface CSCreateCodemarkRequest {
 	status?: string;
 	title?: string;
 	assignees?: string[];
-	markers?: CSCreateCodemarkRequestMarker[];
+	markers?: CSCreateMarkerRequest[];
 	remotes?: string[];
 	externalProvider?: string;
 	externalProviderUrl?: string;
@@ -406,7 +406,7 @@ export interface CSCreateCodemarkRequest {
 	threadUrl?: string;
 	createPermalink?: false | "public" | "private";
 }
-export interface CSCreateCodemarkRequestMarker {
+export interface CSCreateMarkerRequest {
 	code: string;
 	remotes?: string[];
 	file?: string;
