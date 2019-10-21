@@ -136,8 +136,8 @@ interface State {
 	assigneesRequired: boolean;
 	assigneesDisabled: boolean;
 	singleAssignee: boolean;
-	privacy: "private" | "public";
-	isPublic: boolean;
+	isPermalinkPublic: boolean;
+	isCodemarkPublic: boolean;
 	privacyMembers: { value: string; label: string }[];
 	notify: boolean;
 	isLoading: boolean;
@@ -205,8 +205,8 @@ class CodemarkForm extends React.Component<Props, State> {
 			selectedChannelName: props.channel.name,
 			selectedChannelId: props.channel.id,
 			assignableUsers: this.getAssignableCSUsers(),
-			privacy: "public",
-			isPublic: true,
+			isPermalinkPublic: false,
+			isCodemarkPublic: true,
 			privacyMembers: [],
 			selectedTags: {},
 			relatedCodemarkIds: {},
@@ -489,13 +489,14 @@ class CodemarkForm extends React.Component<Props, State> {
 		// }, 20);
 	};
 
-	togglePrivacy = e => {
-		e.preventDefault();
-		this.setState(state => ({ privacy: state.privacy === "public" ? "private" : "public" }));
+	togglePermalinkPrivacy = (isPermalinkPublic: boolean) => {
+		this.setState({
+			isPermalinkPublic
+		});
 	};
 
-	toggleCodemarkPrivacy = (isPublic: boolean) => {
-		this.setState({ isPublic, privacyMembersInvalid: false });
+	toggleCodemarkPrivacy = (isCodemarkPublic: boolean) => {
+		this.setState({ isCodemarkPublic, privacyMembersInvalid: false });
 	};
 
 	toggleNotify = () => {
@@ -513,7 +514,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		const {
 			codeBlocks,
-			privacy,
+			isPermalinkPublic,
 			type,
 			title,
 			text,
@@ -527,6 +528,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		if (type === "link") {
 			let request;
+			const privacy = isPermalinkPublic ? "public" : "private";
 			if (codeBlock) {
 				request = {
 					uri: codeBlock.uri,
@@ -606,6 +608,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		const { codeBlocks } = this.state;
 		const { text, title, assignees, crossPostIssueValues, type } = this.state;
 
+		if (type === CodemarkType.Link) return false;
 		// FIXME
 		const codeBlock = codeBlocks[0];
 
@@ -643,7 +646,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			}
 		}
 
-		if (!this.state.isPublic && this.state.privacyMembers.length === 0) {
+		if (!this.state.isCodemarkPublic && this.state.privacyMembers.length === 0) {
 			invalid = true;
 			validationState.privacyMembersInvalid = true;
 		}
@@ -799,7 +802,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 
 	renderPrivacyControls = () => {
-		const { isPublic, privacyMembersInvalid } = this.state;
+		const { isCodemarkPublic, privacyMembersInvalid } = this.state;
 		if (this.props.teamProvider === "codestream" && this.props.commentType !== CodemarkType.Link) {
 			return (
 				<>
@@ -813,7 +816,7 @@ class CodemarkForm extends React.Component<Props, State> {
 						<span style={{ marginTop: "2px" }}>
 							<LabeledSwitch
 								colored
-								on={isPublic}
+								on={isCodemarkPublic}
 								onChange={this.toggleCodemarkPrivacy}
 								offLabel="Private"
 								onLabel="Team"
@@ -823,7 +826,7 @@ class CodemarkForm extends React.Component<Props, State> {
 						</span>
 						<div style={{ width: "100%" }}>
 							<div style={{ marginLeft: "10px", width: "calc(100% - 10px)" }}>
-								{isPublic ? (
+								{isCodemarkPublic ? (
 									<CSText muted>Visible to the entire team</CSText>
 								) : (
 									<div style={{ display: "inline-flex", width: "100%", alignItems: "center" }}>
@@ -1663,7 +1666,7 @@ class CodemarkForm extends React.Component<Props, State> {
 						)}
 						{this.renderTextHelp()}
 						{this.state.linkURI &&
-							this.state.privacy === "public" && [
+							this.state.isPermalinkPublic && [
 								<div key="permalink-warning" className="permalink-warning">
 									<Icon name="alert" />
 									Note that this is a public URL. Anyone with the link will be able to see the
@@ -1682,16 +1685,19 @@ class CodemarkForm extends React.Component<Props, State> {
 						{commentType === "link" && !this.state.linkURI && (
 							<div id="privacy-controls" className="control-group" key="1">
 								<div className="public-private-hint" key="privacy-hint">
-									{this.state.privacy === "private"
-										? "Only members of your team can access this link."
-										: "Anyone can view this link, including quoted codeblock."}
+									{this.state.isPermalinkPublic
+										? "Anyone can view this link, including the quoted codeblock."
+										: "Only members of your team can access this link."}
 								</div>
-								<div
+								<LabeledSwitch
 									key="privacy"
-									className={cx("switch public-private", {
-										checked: this.state.privacy === "private"
-									})}
-									onClick={this.togglePrivacy}
+									colored
+									on={this.state.isPermalinkPublic}
+									offLabel="Private"
+									onLabel="Public"
+									onChange={this.togglePermalinkPrivacy}
+									height={28}
+									width={80}
 								/>
 							</div>
 						)}
