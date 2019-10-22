@@ -23,7 +23,7 @@ import {
 import { CodemarkType, CSUser, CSMe, CSPost, CSApiCapabilities } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
-import { range, emptyArray, forceAsLine } from "../utils";
+import { range, emptyArray } from "../utils";
 import {
 	getUserByCsId,
 	getTeamMembers,
@@ -32,7 +32,12 @@ import {
 } from "../store/users/reducer";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { CodemarkForm } from "./CodemarkForm";
-import { deleteCodemark, editCodemark, addCodemarks } from "../store/codemarks/actions";
+import {
+	deleteCodemark,
+	editCodemark,
+	addCodemarks,
+	NewCodemarkAttributes
+} from "../store/codemarks/actions";
 import { confirmPopup } from "./Confirm";
 import { getPost } from "../store/posts/reducer";
 import { getPosts } from "../store/posts/actions";
@@ -52,7 +57,6 @@ import { RelatedCodemark } from "./RelatedCodemark";
 import { addDocumentMarker } from "../store/documentMarkers/actions";
 import { Link } from "./Link";
 import { logError } from "../logger";
-import infiniteLoadable from "./infiniteLoadable";
 import { getDocumentFromMarker } from "./api-functions";
 
 interface State {
@@ -260,9 +264,8 @@ export class Codemark extends React.Component<Props, State> {
 		this.setState({ isInjecting: false });
 	};
 
-	inject = () => {};
-
-	editCodemark = async ({ text, assignees, title, relatedCodemarkIds, tags }) => {
+	editCodemark = async (attributes: NewCodemarkAttributes) => {
+		const { text, assignees, title, relatedCodemarkIds, tags } = attributes;
 		await this.props.editCodemark(this.props.codemark!.id, {
 			text,
 			title,

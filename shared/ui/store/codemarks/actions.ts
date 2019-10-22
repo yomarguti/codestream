@@ -1,4 +1,4 @@
-import { CSCodemark } from "@codestream/protocols/api";
+import { CSCodemark, CodemarkType } from "@codestream/protocols/api";
 import { action } from "../common";
 import { CodemarksActionsTypes } from "./types";
 import { HostApi } from "@codestream/webview/webview-api";
@@ -6,9 +6,14 @@ import {
 	UpdateCodemarkRequestType,
 	DeleteCodemarkRequestType,
 	PinReplyToCodemarkRequestType,
-	CodemarkPlus
+	CodemarkPlus,
+	GetRangeScmInfoResponse,
+	CrossPostIssueValues,
+	CreateShareableCodemarkRequestType
 } from "@codestream/protocols/agent";
 import { logError } from "@codestream/webview/logger";
+import { codemarks as codemarkApi } from "../../Stream/api-functions";
+import { addStreams } from "../streams/actions";
 
 export const reset = () => action("RESET");
 
@@ -20,6 +25,51 @@ export const saveCodemarks = (codemarks: CSCodemark[]) =>
 
 export const updateCodemarks = (codemarks: CSCodemark[]) =>
 	action(CodemarksActionsTypes.UpdateCodemarks, codemarks);
+
+export interface BaseNewCodemarkAttributes {
+	codeBlocks: GetRangeScmInfoResponse[];
+	text: string;
+	type: CodemarkType;
+	assignees: string[];
+	title?: string;
+	crossPostIssueValues?: CrossPostIssueValues;
+	tags: string[];
+	relatedCodemarkIds: string[];
+}
+
+export interface SharingNewCodemarkAttributes extends BaseNewCodemarkAttributes {
+	accessMemberIds: string[];
+}
+
+export interface LegacyNewCodemarkAttributes extends BaseNewCodemarkAttributes {
+	streamId: string;
+}
+
+export type NewCodemarkAttributes = LegacyNewCodemarkAttributes | SharingNewCodemarkAttributes;
+
+export function isLegacyNewCodemarkAttributes(
+	object: NewCodemarkAttributes
+): object is LegacyNewCodemarkAttributes {
+	return (object as any).streamId != undefined;
+}
+
+export const createCodemark = (attributes: SharingNewCodemarkAttributes) => async dispatch => {
+	const { accessMemberIds, ...rest } = attributes;
+
+	try {
+		const response = await HostApi.instance.send(CreateShareableCodemarkRequestType, {
+			attributes: rest,
+			memberIds: accessMemberIds
+		});
+		if (response) {
+			dispatch(addCodemarks([response.codemark]));
+			dispatch(addStreams([response.stream]));
+		}
+	} catch (error) {
+		logError("Error creating a codemark in the sharing model", { message: error.message });
+		throw error;
+	}
+};
 
 export const _deleteCodemark = (codemarkId: string) =>
 	action(CodemarksActionsTypes.Delete, codemarkId);

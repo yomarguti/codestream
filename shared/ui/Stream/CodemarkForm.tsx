@@ -6,7 +6,8 @@ import {
 	GetRangeScmInfoResponse,
 	CreateDocumentMarkerPermalinkRequestType,
 	ThirdPartyProviderBoard,
-	ThirdPartyProviderConfig
+	ThirdPartyProviderConfig,
+	CrossPostIssueValues
 } from "@codestream/protocols/agent";
 import {
 	CodemarkType,
@@ -71,6 +72,7 @@ import { CodeStreamState } from "../store";
 import { LabeledSwitch } from "../src/components/controls/LabeledSwitch";
 import { Spacer } from "./SpatialView/PRInfoModal";
 import { CSText } from "../src/components/CSText";
+import { NewCodemarkAttributes } from "../store/codemarks/actions";
 
 export interface ICrossPostIssueContext {
 	setSelectedAssignees(any: any): void;
@@ -88,7 +90,7 @@ export const CrossPostIssueContext = React.createContext<ICrossPostIssueContext>
 interface Props extends ConnectedProps {
 	streamId: string;
 	collapseForm?: Function;
-	onSubmit: Function;
+	onSubmit: (attributes: NewCodemarkAttributes, event?: React.SyntheticEvent) => any;
 	onClickClose(): any;
 	openCodemarkForm?(type: string): any;
 	slackInfo?: {};
@@ -142,7 +144,7 @@ interface State {
 	notify: boolean;
 	isLoading: boolean;
 	crossPostMessage: boolean;
-	crossPostIssueValues: any;
+	crossPostIssueValues: Partial<CrossPostIssueValues>;
 	assignableUsers: { value: any; label: string }[];
 	channelMenuOpen: boolean;
 	channelMenuTarget: any;
@@ -581,23 +583,34 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		this.setState({ isLoading: true });
 		try {
-			await this.props.onSubmit(
-				{
-					codeBlocks,
-					streamId: selectedChannelId,
-					text: replaceHtml(text)!,
-					type,
-					assignees: csAssignees,
-					title,
-					crossPostIssueValues: crossPostIssueEnabled ? crossPostIssueValues : undefined,
-					tags: keyFilter(selectedTags),
-					relatedCodemarkIds: keyFilter(relatedCodemarkIds)
-					// notify,
-					// crossPostMessage,
-				},
-				event
-			);
-			(this.props as any).dispatch(setCurrentStream(selectedChannelId));
+			const baseAttributes = {
+				codeBlocks,
+				text: replaceHtml(text)!,
+				type: type as CodemarkType,
+				assignees: csAssignees,
+				title,
+				crossPostIssueValues: crossPostIssueEnabled
+					? (crossPostIssueValues as CrossPostIssueValues)
+					: undefined,
+				tags: keyFilter(selectedTags),
+				relatedCodemarkIds: keyFilter(relatedCodemarkIds)
+				// notify,
+				// crossPostMessage,
+			};
+			if (this.props.teamProvider === "codestream") {
+				await this.props.onSubmit(
+					{
+						...baseAttributes,
+						accessMemberIds: this.state.isCodemarkPublic
+							? []
+							: this.state.privacyMembers.map(m => m.value)
+					},
+					event
+				);
+			} else {
+				await this.props.onSubmit({ ...baseAttributes, streamId: selectedChannelId! }, event);
+				(this.props as any).dispatch(setCurrentStream(selectedChannelId));
+			}
 		} catch (error) {
 		} finally {
 			this.setState({ isLoading: false });

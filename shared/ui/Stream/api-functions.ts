@@ -1,5 +1,10 @@
 import { HostApi } from "../webview-api";
-import { GetDocumentFromMarkerRequestType } from "@codestream/protocols/agent";
+import {
+	GetDocumentFromMarkerRequestType,
+	CreateShareableCodemarkRequestType,
+	ShareableCodemarkAttributes,
+	CreateShareableCodemarkResponse
+} from "@codestream/protocols/agent";
 import { logError } from "../logger";
 import {
 	EditorHighlightRangeRequestType,
@@ -32,3 +37,15 @@ export async function highlightRange(request: EditorHighlightRangeRequest) {
 		return false;
 	}
 }
+
+export const codemarks = {
+	async create(
+		attributes: ShareableCodemarkAttributes,
+		memberIds?: string[]
+	): Promise<CreateShareableCodemarkResponse | void> {
+		return HostApi.instance.send(CreateShareableCodemarkRequestType, {
+			attributes,
+			memberIds
+		});
+	}
+};

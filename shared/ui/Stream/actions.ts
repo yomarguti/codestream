@@ -33,7 +33,13 @@ import {
 } from "@codestream/protocols/agent";
 import { CSPost, StreamType } from "@codestream/protocols/api";
 import { logError } from "../logger";
-import { saveCodemarks, updateCodemarks } from "../store/codemarks/actions";
+import {
+	saveCodemarks,
+	updateCodemarks,
+	createCodemark,
+	NewCodemarkAttributes,
+	isLegacyNewCodemarkAttributes
+} from "../store/codemarks/actions";
 import {
 	closePanel,
 	openPanel,
@@ -60,7 +66,7 @@ import React from "react";
 import { getFileScmError } from "../store/editorContext/reducer";
 import { PostEntryPoint } from "../store/context/types";
 import { middlewareInjector } from "../store/middleware-injector";
-import { PostsActionsType, Post } from "../store/posts/types";
+import { PostsActionsType } from "../store/posts/types";
 
 export {
 	openPanel,
@@ -89,18 +95,7 @@ export const markPostUnread = (streamId: string, postId: string) => () => {
 };
 
 export const createPostAndCodemark = (
-	attributes: {
-		codeBlocks: any[];
-		streamId: string;
-		text: string;
-		color: string;
-		type: string;
-		assignees: any[];
-		tags: string[];
-		relatedCodemarkIds: string[];
-		title?: string;
-		crossPostIssueValues?: any;
-	},
+	attributes: NewCodemarkAttributes,
 	entryPoint?: PostEntryPoint
 ) => async (dispatch, getState: () => CodeStreamState) => {
 	const { codeBlocks } = attributes;
@@ -190,34 +185,38 @@ export const createPostAndCodemark = (
 		}
 	}
 
-	return dispatch(
-		createPost(
-			attributes.streamId,
-			undefined,
-			attributes.text,
-			{
-				...pick(
-					attributes,
-					"title",
-					"text",
-					"streamId",
-					"type",
-					"assignees",
-					"tags",
-					"relatedCodemarkIds"
-				),
-				markers,
-				textEditorUris: attributes.codeBlocks.map(_ => {
-					return { uri: _.uri };
-				})
-			},
-			findMentionedUserIds(getTeamMembers(getState()), attributes.text || ""),
-			{
-				crossPostIssueValues: attributes.crossPostIssueValues,
-				entryPoint: entryPoint
-			}
-		)
-	);
+	if (isLegacyNewCodemarkAttributes(attributes)) {
+		return dispatch(
+			createPost(
+				attributes.streamId,
+				undefined,
+				attributes.text,
+				{
+					...pick(
+						attributes,
+						"title",
+						"text",
+						"streamId",
+						"type",
+						"assignees",
+						"tags",
+						"relatedCodemarkIds"
+					),
+					markers,
+					textEditorUris: attributes.codeBlocks.map(_ => {
+						return { uri: _.uri };
+					})
+				},
+				findMentionedUserIds(getTeamMembers(getState()), attributes.text || ""),
+				{
+					crossPostIssueValues: attributes.crossPostIssueValues,
+					entryPoint: entryPoint
+				}
+			)
+		);
+	} else {
+		return dispatch(createCodemark(attributes));
+	}
 };
 
 export const createPost = (
@@ -278,7 +277,6 @@ export const createPost = (
 				title: codemark.title,
 				type: codemark.type,
 				assignees: codemark.assignees,
-				color: codemark.color,
 				mentionedUserIds: mentions,
 				entryPoint: extra.entryPoint || context.newPostEntryPoint,
 				parentPostId,
@@ -325,7 +323,7 @@ export const createPost = (
 				})
 			);
 		} else {
-			logError(`Error creating a post: ${error}`);
+			logError("Error creating a post", {message: error.toString()});
 		}
 		return dispatch(postsActions.failPendingPost(pendingId));
 	} finally {
@@ -697,9 +695,6 @@ export const setCodemarkStatus = (
 		return undefined;
 	}
 };
-
-const tuple = <T extends string[]>(...args: T) => args;
-const COLOR_OPTIONS = tuple("blue", "green", "yellow", "orange", "red", "purple", "aqua", "gray");
 
 export const updateTeamTag = (
 	team,

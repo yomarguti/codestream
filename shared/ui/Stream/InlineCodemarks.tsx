@@ -65,6 +65,7 @@ import { isConnected } from "../store/providers/reducer";
 import { confirmPopup } from "./Confirm";
 import ComposeTitles from "./ComposeTitles";
 import { PostsActionsType } from "../store/posts/types";
+import { NewCodemarkAttributes } from "../store/codemarks/actions";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -910,7 +911,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		store: PropTypes.object
 	};
 
-	submitCodemark = async (attributes, event) => {
+	submitCodemark = async (attributes: NewCodemarkAttributes, _event) => {
 		let docMarker: DocumentMarker | undefined;
 		const removeTransformer = middlewareInjector.inject(
 			DocumentMarkersActionsType.SaveForFile,
@@ -925,7 +926,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 							// marker codemark in spatial view
 							const codeBlock = attributes.codeBlocks[0];
 							if (
-								codeBlock.scm.file === documentMarker.file &&
+								safe(() => codeBlock.scm!.file) === documentMarker.file &&
 								codeBlock.contents === documentMarker.code
 							) {
 								docMarker = documentMarker;
