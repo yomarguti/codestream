@@ -1,5 +1,6 @@
 "use strict";
-import { RequestType } from "vscode-languageserver-protocol";
+import { Range, RequestType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
+import { CodeBlockSource } from "./agent.protocol.posts";
 import {
 	CSCodemark,
 	CSLocationArray,
@@ -90,6 +91,25 @@ export const UpdateMarkerRequestType = new RequestType<
 	void,
 	void
 >("codestream/marker/update");
+
+export interface MoveMarkerRequest {
+	markerId: string;
+	code: string;
+	documentId: TextDocumentIdentifier;
+	range: Range;
+	source: CodeBlockSource;
+}
+
+export interface MoveMarkerResponse {
+	marker: CSMarker;
+}
+
+export const MoveMarkerRequestType = new RequestType<
+	MoveMarkerRequest,
+	MoveMarkerResponse,
+	void,
+	void
+>("codestream/marker/move");
 
 export interface AddReferenceLocationRequest {
 	markerId: string;

@@ -85,6 +85,7 @@ export interface CSMarker extends CSEntity, CSMarkerIdentifier {
 	locationWhenCreated: CSLocationArray;
 	code: string;
     referenceLocations: CSReferenceLocation[];
+	supersededByMarkerId: string;
 }
 
 export interface CSLocationMeta {

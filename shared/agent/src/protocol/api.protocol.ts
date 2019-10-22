@@ -413,6 +413,11 @@ export interface CSCreateMarkerRequest {
 	commitHash?: string;
 	location?: CSLocationArray;
 }
+
+export interface CSCreateMarkerResponse {
+	marker: CSMarker;
+}
+
 export interface CSCreateCodemarkResponse {
 	codemark: CSCodemark;
 	markers?: CSMarker[];

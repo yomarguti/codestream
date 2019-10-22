@@ -21,6 +21,7 @@ import {
 	CreateExternalPostRequest,
 	CreateMarkerLocationRequest,
 	CreateMarkerLocationResponse,
+	CreateMarkerRequest,
 	CreatePostRequest,
 	CreatePostResponse,
 	CreateRepoRequest,
@@ -83,6 +84,7 @@ import {
 	MarkPostUnreadResponse,
 	MarkStreamReadRequest,
 	MarkStreamReadResponse,
+	MoveMarkerResponse,
 	MuteStreamRequest,
 	MuteStreamResponse,
 	OpenStreamRequest,
@@ -291,6 +293,7 @@ export interface ApiProvider {
 	fetchMarkers(request: FetchMarkersRequest): Promise<FetchMarkersResponse>;
 	getMarker(request: GetMarkerRequest): Promise<GetMarkerResponse>;
 	updateMarker(request: UpdateMarkerRequest): Promise<UpdateMarkerResponse>;
+	moveMarker(request: { oldMarkerId: string, newMarker: CreateMarkerRequest }): Promise<MoveMarkerResponse>;
 
 	createExternalPost(request: CreateExternalPostRequest): Promise<CreatePostResponse>;
 	createPost(request: CreatePostRequest): Promise<CreatePostResponse>;

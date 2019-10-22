@@ -22,6 +22,7 @@ import {
 	CreateDirectStreamResponse,
 	CreateExternalPostRequest,
 	CreateMarkerLocationRequest,
+	CreateMarkerRequest,
 	CreatePostRequest,
 	CreatePostResponse,
 	CreateRepoRequest,
@@ -556,6 +557,11 @@ export class MSTeamsApiProvider implements ApiProvider {
 	@log()
 	updateMarker(request: UpdateMarkerRequest) {
 		return this._codestream.updateMarker(request);
+	}
+
+	@log()
+	moveMarker(request: { oldMarkerId: string, newMarker: CreateMarkerRequest }) {
+		return this._codestream.moveMarker(request);
 	}
 
 	@log()

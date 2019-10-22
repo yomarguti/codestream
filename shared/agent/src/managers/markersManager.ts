@@ -9,13 +9,14 @@ import {
     CodeBlockSource, CreateMarkerRequest,
     GetMarkerRequest,
     GetMarkerRequestType,
-    GetMarkerResponse
+    GetMarkerResponse, MoveMarkerRequest, MoveMarkerRequestType, MoveMarkerResponse
 } from "../protocol/agent.protocol";
 import { CSMarker, CSMarkerLocation, CSReferenceLocation, CSStream, StreamType } from "../protocol/api.protocol";
 import { lsp, lspHandler } from "../system";
 import { IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { EntityManagerBase, Id } from "./entityManager";
+import { MarkerLocationManager } from "./markerLocationManager";
 
 @lsp
 export class MarkersManager extends EntityManagerBase<CSMarker> {
@@ -56,6 +57,10 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 		const { streams } = SessionContainer.instance();
 
 		for (const marker of markers) {
+		    if (marker.supersededByMarkerId != null) {
+		        continue;
+            }
+
 			if (marker.deactivated) {
 				continue;
 			}
@@ -110,6 +115,23 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 			}
 		}
 	}
+
+    @lspHandler(MoveMarkerRequestType)
+    protected async moveMarker(request: MoveMarkerRequest): Promise<MoveMarkerResponse> {
+	    const { code, documentId, range, source } = request;
+	    const descriptor = await MarkersManager.prepareMarkerCreationDescriptor(code, documentId, range, source);
+	    const response = await this.session.api.moveMarker({
+            oldMarkerId: request.markerId,
+            newMarker: descriptor.marker
+        });
+
+        MarkerLocationManager.saveUncommittedLocations(
+            [ response.marker ],
+            [ descriptor.backtrackedLocation ]
+        );
+
+        return response;
+    }
 
 
     static async prepareMarkerCreationDescriptor(
