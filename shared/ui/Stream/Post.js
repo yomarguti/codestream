@@ -1,15 +1,18 @@
-import React from "react";
+// @ts-check
+import createClassString from "classnames";
 import * as Path from "path-browserify";
+import React from "react";
+import ContentEditable from "react-contenteditable";
 import { connect } from "react-redux";
 import { injectIntl } from "react-intl";
-import createClassString from "classnames";
+import { retryPost, cancelPost, editPost, deletePost } from "./actions";
+import Button from "./Button";
+import { confirmPopup } from "./Confirm";
 import Headshot from "./Headshot";
 import Icon from "./Icon";
 import Timestamp from "./Timestamp";
 import CodemarkActions from "./CodemarkActions";
 import RetrySpinner from "./RetrySpinner";
-import { retryPost, cancelPost, editPost, deletePost } from "./actions";
-import ContentEditable from "react-contenteditable";
 import { LocateRepoButton } from "./LocateRepoButton";
 import { Marker } from "./Marker";
 import Menu from "./Menu";
@@ -41,7 +44,7 @@ class Post extends React.Component {
 		menuOpen: false,
 		menuTarget: null,
 		authorMenuOpen: false,
-		warning: null
+		warning: ""
 	};
 
 	componentDidMount() {
@@ -56,7 +59,10 @@ class Post extends React.Component {
 	componentDidUpdate(prevProps, _prevState) {
 		const editStateToggledOn = this.props.editing && !prevProps.editing;
 		if (editStateToggledOn) {
-			document.getElementById(this.getEditInputId()).focus();
+			const el = document.getElementById(this.getEditInputId());
+			if (el) {
+				el.focus();
+			}
 		}
 
 		if (prevProps.threadId !== this.props.threadId && this.props.threadId === this.props.id) {
@@ -341,13 +347,14 @@ class Post extends React.Component {
 		}
 
 		const showIcons = !systemPost && !post.error;
-
+		const customAttrs = { thread: post.parentPostId || post.id};
 		return (
 			<div
+				
 				className={postClass}
 				id={post.id}
-				data-seq-num={post.seqNum}
-				thread={post.parentPostId || post.id}
+				data-seq-num={post.seqNum}				
+				{...customAttrs}
 				ref={ref => (this._div = ref)}
 			>
 				{showAssigneeHeadshots && this.renderAssigneeHeadshots()}
@@ -528,7 +535,7 @@ class Post extends React.Component {
 		else return null;
 	};
 
-	renderAssignees = () => {
+	renderAssignees = (post) => {
 		const { collapsed, codemark } = this.props;
 
 		if (collapsed) return null;
@@ -642,7 +649,7 @@ class Post extends React.Component {
 				{assignees.map(userId => {
 					const person = this.props.teammates.find(user => user.id === userId);
 					return (
-						<Tooltip key={userId} title={"hi"} placement="above">
+						<Tooltip key={userId} title={"hi"} placement="top">
 							<Headshot size={18} person={person} />
 						</Tooltip>
 					);
@@ -740,7 +747,7 @@ class Post extends React.Component {
 			const { post, id, teamMembers } = this.props;
 
 			const text = replaceHtml(this._contentEditable.htmlEl.innerText);
-			await this.props.editPost(post.streamId, id, text, findMentionedUserIds(teamMembers, text));
+			await this.props.editPost(post.streamId, id, text, findMentionedUserIds(teamMembers, text == null ? "" : text));
 			this.props.onDidSaveEdit();
 		}
 	};
@@ -760,8 +767,7 @@ class Post extends React.Component {
 					className="message-input"
 					id={id}
 					rows="1"
-					tabIndex="-1"
-					onBlur={this.handleOnBlur}
+					tabIndex="-1"					
 					html={post.text}
 					ref={ref => (this._contentEditable = ref)}
 				/>
