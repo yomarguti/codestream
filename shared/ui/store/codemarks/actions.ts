@@ -14,7 +14,7 @@ import {
 } from "@codestream/protocols/agent";
 import { logError } from "@codestream/webview/logger";
 import { addStreams } from "../streams/actions";
-import { TextDocumentIdentifier } from 'vscode-languageserver-types';
+import { TextDocumentIdentifier } from "vscode-languageserver-types";
 
 export const reset = () => action("RESET");
 

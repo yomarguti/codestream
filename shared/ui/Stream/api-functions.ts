@@ -1,10 +1,5 @@
 import { HostApi } from "../webview-api";
-import {
-	GetDocumentFromMarkerRequestType,
-	CreateShareableCodemarkRequestType,
-	ShareableCodemarkAttributes,
-	CreateShareableCodemarkResponse
-} from "@codestream/protocols/agent";
+import { GetDocumentFromMarkerRequestType } from "@codestream/protocols/agent";
 import { logError } from "../logger";
 import {
 	EditorHighlightRangeRequestType,
