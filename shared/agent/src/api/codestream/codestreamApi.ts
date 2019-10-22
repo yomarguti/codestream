@@ -15,7 +15,9 @@ import { isDirective, resolve } from "../../managers/operations";
 import {
 	AccessToken,
 	AddEnterpriseProviderHostRequest,
-	AddEnterpriseProviderHostResponse, AddReferenceLocationRequest, AddReferenceLocationResponse,
+	AddEnterpriseProviderHostResponse,
+	AddReferenceLocationRequest,
+	AddReferenceLocationResponse,
 	ArchiveStreamRequest,
 	Capabilities,
 	CloseStreamRequest,
@@ -85,7 +87,9 @@ import {
 } from "../../protocol/agent.protocol";
 import {
 	CSAddProviderHostRequest,
-	CSAddProviderHostResponse, CSAddReferenceLocationRequest, CSAddReferenceLocationResponse,
+	CSAddProviderHostResponse,
+	CSAddReferenceLocationRequest,
+	CSAddReferenceLocationResponse,
 	CSApiCapabilities,
 	CSChannelStream,
 	CSCompleteSignupRequest,
@@ -583,7 +587,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 				try {
 					if (
 						this._unreads !== undefined &&
-						(me.lastReads == null || Objects.isEmpty(me.lastReads) ||
+						(me.lastReads == null ||
+							Objects.isEmpty(me.lastReads) ||
 							!Objects.shallowEquals(lastReads, this._user.lastReads))
 					) {
 						this._unreads.compute(me.lastReads);
@@ -791,13 +796,20 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	updateCodemark(request: UpdateCodemarkRequest) {
+	async updateCodemark(request: UpdateCodemarkRequest) {
 		const { codemarkId, ...attributes } = request;
-		return this.put<CSUpdateCodemarkRequest, CSUpdateCodemarkResponse>(
+		const response = await this.put<CSUpdateCodemarkRequest, CSUpdateCodemarkResponse>(
 			`/codemarks/${codemarkId}`,
 			attributes,
 			this._token
 		);
+
+		const [codemark] = await SessionContainer.instance().codemarks.resolve({
+			type: MessageType.Codemarks,
+			data: [response.codemark]
+		});
+
+		return { codemark };
 	}
 
 	@log()
@@ -1262,9 +1274,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	async getApiCapabilities(): Promise<CSApiCapabilities> {
-		const response = await this.get<CSGetApiCapabilitiesResponse>(
-			`/no-auth/capabilities`
-		);
+		const response = await this.get<CSGetApiCapabilitiesResponse>(`/no-auth/capabilities`);
 		return response.capabilities;
 	}
 

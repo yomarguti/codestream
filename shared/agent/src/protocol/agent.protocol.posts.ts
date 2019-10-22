@@ -1,5 +1,6 @@
 "use strict";
 import { Range, RequestType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
+import { CodeDelimiterStyles } from "./agent.protocol";
 import { CodemarkPlus, CreateCodemarkRequest } from "./agent.protocol.codemarks";
 import { ThirdPartyProviderUser } from "./agent.protocol.providers";
 import {
@@ -44,8 +45,8 @@ export interface CrossPostIssueValues {
 	externalProvider?: string;
 	externalProviderHost?: string;
 	externalProviderUrl?: string;
-	externalAssignees?: ThirdPartyProviderUser[];
-	codeDelimiterStyle: string;
+	assignees?: ThirdPartyProviderUser[];
+	codeDelimiterStyle?: CodeDelimiterStyles;
 	issueProvider: { name: string; id: string; host: string };
 	[key: string]: any;
 }
@@ -88,7 +89,6 @@ export interface CreatePostWithMarkerRequest {
 	title?: string;
 	type: CodemarkType;
 	assignees?: string[];
-	color?: string;
 	status?: string;
 	entryPoint?: string;
 	tags?: string[];

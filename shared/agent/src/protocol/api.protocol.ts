@@ -393,20 +393,24 @@ export interface CSCreateCodemarkRequest {
 	teamId: string;
 	providerType?: ProviderType | undefined;
 	type: CodemarkType;
+	text?: string;
 	streamId?: string;
 	postId?: string;
-	color?: string;
+	parentPostId?: string;
 	status?: string;
 	title?: string;
 	assignees?: string[];
+	tags?: string[];
 	markers?: CSCreateMarkerRequest[];
 	remotes?: string[];
 	externalProvider?: string;
 	externalProviderUrl?: string;
+	externalProviderHost?: string;
 	externalAssignees?: { displayName: string; email?: string }[];
 	remoteCodeUrl?: { name: string; url: string };
 	threadUrl?: string;
 	createPermalink?: false | "public" | "private";
+	relatedCodemarkIds?: string[];
 }
 export interface CSCreateMarkerRequest {
 	code: string;

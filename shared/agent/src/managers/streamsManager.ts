@@ -86,6 +86,12 @@ export class StreamsManager extends CachedEntityManagerBase<CSChannelStream | CS
 		return { streams: streams };
 	}
 
+	async getTeamStream(): Promise<CSChannelStream> {
+		const streams = (await this.get({ types: [StreamType.Channel] })).streams as CSChannelStream[];
+
+		return streams.find(stream => stream.isTeamStream)!;
+	}
+
 	protected async loadCache() {
 		const response = await this.session.api.fetchStreams({});
 		this.cache.reset(response.streams);

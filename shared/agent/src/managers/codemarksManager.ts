@@ -2,7 +2,7 @@
 import { MessageType } from "../api/apiProvider";
 import { MarkerLocation } from "../api/extensions";
 import { SlackApiProvider } from "../api/slack/slackApi";
-import { Container, SessionContainer } from "../container";
+import { SessionContainer } from "../container";
 import { Logger } from "../logger";
 import {
 	CodemarkPlus,
@@ -12,6 +12,9 @@ import {
 	CreateCodemarkRequest,
 	CreateCodemarkRequestType,
 	CreateCodemarkResponse,
+	CreateShareableCodemarkRequest,
+	CreateShareableCodemarkRequestType,
+	CreateShareableCodemarkResponse,
 	DeleteCodemarkRequest,
 	DeleteCodemarkRequestType,
 	DeleteCodemarkResponse,
@@ -34,9 +37,16 @@ import {
 	UpdateCodemarkRequestType,
 	UpdateCodemarkResponse
 } from "../protocol/agent.protocol";
-import { CSCodemark } from "../protocol/api.protocol";
+import {
+	CodemarkType,
+	CSChannelStream,
+	CSCodemark,
+	CSDirectStream,
+	StreamType
+} from "../protocol/api.protocol";
 import { log, lsp, lspHandler, Strings } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
+import { MarkerCreationDescriptor, MarkersManager } from "./markersManager";
 
 @lsp
 export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
@@ -46,6 +56,99 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		} else {
 			return undefined;
 		}
+	}
+
+	// this is what the webview will call to create codemarks in the sharing model
+	@lspHandler(CreateShareableCodemarkRequestType)
+	async createV2(
+		request: CreateShareableCodemarkRequest
+	): Promise<CreateShareableCodemarkResponse> {
+		const codemarkRequest: CreateCodemarkRequest = {
+			...request.attributes,
+			status:
+				request.attributes.type === CodemarkType.Issue ? request.attributes.status : undefined,
+			markers: []
+		};
+
+		const markerCreationDescriptors: MarkerCreationDescriptor[] = [];
+
+		for (const codeBlock of request.attributes.codeBlocks) {
+			if (!codeBlock.range) continue;
+			const descriptor = await MarkersManager.prepareMarkerCreationDescriptor(
+				codeBlock.contents,
+				{ uri: codeBlock.uri },
+				codeBlock.range,
+				codeBlock.scm
+			);
+			markerCreationDescriptors.push(descriptor);
+			codemarkRequest.markers!.push(descriptor.marker);
+
+			if (!codemarkRequest.remoteCodeUrl) {
+				codemarkRequest.remoteCodeUrl = descriptor.marker.remoteCodeUrl;
+			}
+			if (!codemarkRequest.remotes) {
+				codemarkRequest.remotes = descriptor.marker.remotes;
+			}
+		}
+
+		let stream: CSDirectStream | CSChannelStream;
+
+		if (request.memberIds && request.memberIds.length > 0) {
+			const response = await SessionContainer.instance().streams.get({
+				memberIds: request.memberIds,
+				types: [StreamType.Direct]
+			});
+			if (response.streams.length > 0) {
+				stream = response.streams[0] as CSDirectStream;
+			} else {
+				const response = await SessionContainer.instance().streams.createDirectStream({
+					memberIds: request.memberIds,
+					type: StreamType.Direct
+				});
+				stream = response.stream;
+			}
+		} else {
+			stream = await SessionContainer.instance().streams.getTeamStream();
+		}
+
+		const response = await this.session.api.createCodemark({
+			...codemarkRequest,
+			streamId: stream.id
+		});
+
+		let codemark: CSCodemark | CodemarkPlus = response.codemark;
+
+		if (request.attributes.crossPostIssueValues) {
+			const cardResponse = await SessionContainer.instance().posts.createProviderCard(
+				{
+					codemark: {
+						title: response.codemark.title,
+						text: response.codemark.text,
+						markers: response.markers,
+						permalink: response.codemark.permalink
+					}
+				},
+				request.attributes.crossPostIssueValues
+			);
+
+			if (cardResponse != undefined) {
+				const { assignees, issueProvider } = request.attributes.crossPostIssueValues;
+				const r = await this.session.api.updateCodemark({
+					codemarkId: response.codemark.id,
+					externalProvider: issueProvider.name,
+					externalProviderHost: issueProvider.host,
+					externalProviderUrl: cardResponse.url,
+					externalAssignees:
+						assignees && assignees.map((a: any) => ({ displayName: a.displayName, email: a.email }))
+				});
+				codemark = r.codemark;
+			}
+		}
+
+		return {
+			stream,
+			codemark: (codemark as CodemarkPlus).markers ? codemark : await this.enrichCodemark(codemark)
+		};
 	}
 
 	@lspHandler(CreateCodemarkRequestType)

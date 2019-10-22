@@ -1,43 +1,31 @@
 "use strict";
 import { RequestType } from "vscode-languageserver-protocol";
-import { ThirdPartyProviderUser } from "./agent.protocol";
 import {
-	CodemarkType,
+	CrossPostIssueValues,
+	GetRangeScmInfoResponse,
+	ThirdPartyProviderUser
+} from "./agent.protocol";
+import {
+	CSChannelStream,
 	CSCodemark,
+	CSCreateCodemarkRequest,
+	CSDirectStream,
 	CSLocationArray,
 	CSMarker,
-	CSMarkerLocations, CSReferenceLocation,
+	CSMarkerLocations,
+	CSReferenceLocation,
 	CSRepository,
-	CSStream,
-	ProviderType
+	CSStream
 } from "./api.protocol";
 
 export interface CodemarkPlus extends CSCodemark {
 	markers?: CSMarker[];
 }
 
-export interface CreateCodemarkRequest {
-	type: CodemarkType;
-	providerType?: ProviderType | undefined;
-	text?: string;
-	streamId?: string;
-	postId?: string;
-	parentPostId?: string;
-	color?: string;
-	status?: string;
-	title?: string;
-	assignees?: string[];
-	tags?: string[];
+export interface CreateCodemarkRequest extends Omit<CSCreateCodemarkRequest, "teamId"> {
 	markers?: CreateMarkerRequest[];
-	remotes?: string[];
-	externalProvider?: string;
-	externalProviderUrl?: string;
-	externalAssignees?: { displayName: string; email?: string }[];
-	externalProviderHost?: string;
-	remoteCodeUrl?: { name: string; url: string };
-	createPermalink?: false | "public" | "private";
-	relatedCodemarkIds?: string[];
 }
+
 export interface CreateMarkerRequest {
 	code: string;
 	repoId?: string;
@@ -65,6 +53,28 @@ export const CreateCodemarkRequestType = new RequestType<
 	void,
 	void
 >("codestream/codemarks/create");
+
+export interface ShareableCodemarkAttributes extends Omit<CreateCodemarkRequest, "markers"> {
+	codeBlocks: GetRangeScmInfoResponse[];
+	crossPostIssueValues?: CrossPostIssueValues;
+}
+
+export interface CreateShareableCodemarkRequest {
+	attributes: ShareableCodemarkAttributes;
+	memberIds?: string[];
+}
+
+export interface CreateShareableCodemarkResponse {
+	codemark: CodemarkPlus;
+	stream: CSDirectStream | CSChannelStream;
+}
+
+export const CreateShareableCodemarkRequestType = new RequestType<
+	CreateShareableCodemarkRequest,
+	CreateShareableCodemarkResponse,
+	void,
+	void
+>("codestream/codemarks/sharing/create");
 
 export interface CreateCodemarkPermalinkRequest {
 	codemarkId: string;

@@ -14,6 +14,7 @@ import {
 	CreatePostResponse,
 	CreatePostWithMarkerRequest,
 	CreatePostWithMarkerRequestType,
+	CrossPostIssueValues,
 	DeletePostRequest,
 	DeletePostRequestType,
 	DeletePostResponse,
@@ -805,7 +806,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		title,
 		type,
 		assignees,
-		color,
 		entryPoint,
 		status = "open",
 		tags,
@@ -817,7 +817,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			text,
 			type,
 			assignees,
-			color,
 			status: type === CodemarkType.Issue ? status : undefined,
 			tags,
 			relatedCodemarkIds,
@@ -923,7 +922,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	}
 
 	getCodeDelimiters = (
-		codeDelimiterStyle: CodeDelimiterStyles
+		codeDelimiterStyle?: CodeDelimiterStyles
 	): {
 		start: string;
 		end: string;
@@ -987,7 +986,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			};
 			remotes?: string[];
 		},
-		attributes: any
+		attributes: CrossPostIssueValues
 	) => {
 		const delimiters = this.getCodeDelimiters(attributes.codeDelimiterStyle);
 		const { linefeed, start, end } = delimiters;
@@ -1129,7 +1128,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 							description,
 							title: providerCardRequest.codemark.title,
 							repoName: attributes.boardName,
-							assignee: attributes.assignees[0]
+							assignee: attributes.assignees && attributes.assignees[0]
 						}
 					});
 					break;
@@ -1141,7 +1140,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 							description,
 							name: providerCardRequest.codemark.title,
 							boardId: attributes.board.id,
-							assignee: attributes.assignees[0]
+							assignee: attributes.assignees && attributes.assignees[0]
 						}
 					});
 					break;
@@ -1154,7 +1153,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 							boardId: attributes.boardId,
 							listId: attributes.listId,
 							name: providerCardRequest.codemark.title,
-							assignee: attributes.assignees[0]
+							assignee: attributes.assignees && attributes.assignees[0]
 						}
 					});
 					break;
@@ -1166,7 +1165,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 							description,
 							title: providerCardRequest.codemark.title,
 							repoName: attributes.boardName,
-							assignee: attributes.assignees[0]
+							assignee: attributes.assignees && attributes.assignees[0]
 						}
 					});
 					break;
@@ -1178,7 +1177,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 							description,
 							title: providerCardRequest.codemark.title,
 							boardId: attributes.board.id,
-							assignee: attributes.assignees[0]
+							assignee: attributes.assignees && attributes.assignees[0]
 						}
 					});
 					break;
