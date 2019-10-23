@@ -54,11 +54,12 @@ export function reduceContext(
 				currentCodemarkId: action.payload.codemarkId,
 				currentMarkerId: action.payload.markerId,
 				isRepositioning: false
-			}
+			};
 		case ContextActionsType.RepositionCodemark:
 			return {
 				...state,
 				currentCodemarkId: action.payload.codemarkId,
+				currentMarkerId: action.payload.markerId,
 				isRepositioning: action.payload.value
 			};
 

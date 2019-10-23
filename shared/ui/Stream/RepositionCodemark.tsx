@@ -3,9 +3,9 @@ import React, { useState } from "react";
 import { connect, useSelector, useDispatch } from "react-redux";
 import Icon from "./Icon";
 import Button from "./Button";
-import { CodemarkPlus } from "@codestream/protocols/agent";
+import { CodemarkPlus, GetRangeScmInfoRequestType } from "@codestream/protocols/agent";
 import { HostApi } from "../webview-api";
-import { TelemetryRequestType } from "@codestream/protocols/agent";
+import { TelemetryRequestType, MoveMarkerRequestType } from "@codestream/protocols/agent";
 import { Range } from "vscode-languageserver-protocol";
 import { setCurrentCodemark, repositionCodemark } from "../store/context/actions";
 import { CodeStreamState } from "../store";
@@ -16,8 +16,7 @@ const noop = () => Promise.resolve();
 interface Props {
 	cancel: Function;
 	codemark: CodemarkPlus;
-	range?: Range;
-	file?: string;
+	markerId?: string;
 }
 
 export const RepositionCodemark = (connect(undefined) as any)((props: Props) => {
@@ -25,22 +24,25 @@ export const RepositionCodemark = (connect(undefined) as any)((props: Props) => 
 	const [loading, setLoading] = useState(false);
 	const [scm, setScm] = useState();
 
-	const reposition = () => {
+	const reposition = async () => {
+		if (!marker || !textEditorUri) return;
+
 		setLoading(true);
 		let location = "Same File";
-		// const { file: newFile, repoPath: newRepo } = scm;
-		// const { file, repo } = props.marker;
-		// if (repo !== newRepo) location = "Different Repo";
-		// else if (file !== newFile) location = "Different File";
-
-		// console.log("LOCATION IS: ", location);
 		HostApi.instance.track("RepositionCodemark", { "New Location": location });
-		// HostApi.instance.send(ApplyMarkerRequestType, { marker: props.codemark.markers![0] });
-		// HostApi.instance.send(SetCodemarkRangeRequestType, {
-		// 	codemark: props.codemark,
-		// 	commitSHA: "foo",
-		// 	range: makeRange()
-		// });
+		const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
+			uri: textEditorUri,
+			range: textEditorSelection!
+		});
+		if (scmInfo && scmInfo.scm) {
+			HostApi.instance.send(MoveMarkerRequestType, {
+				markerId: marker.id,
+				code: scmInfo.contents,
+				range: textEditorSelection,
+				documentId: { uri: textEditorUri },
+				source: scmInfo.scm
+			});
+		}
 		setLoading(false);
 		cancel();
 	};
@@ -52,17 +54,12 @@ export const RepositionCodemark = (connect(undefined) as any)((props: Props) => 
 		return state.editorContext.textEditorUri;
 	});
 
+	const { markers } = props.codemark;
+	const marker = markers && (markers.find(m => m.id === props.markerId) || markers[0]);
+
 	const makeRange = () => {};
 
 	const renderRange = (file, range) => {
-		if (!range && props.codemark.markers) {
-			const location = props.codemark.markers[0].locationWhenCreated;
-			range = {
-				start: { line: location[0] - 1, character: location[1] - 1 },
-				end: { line: location[2] - 1, character: location[3] - 1 }
-			};
-			file = props.codemark.markers[0].file;
-		}
 		if (!range) {
 			return (
 				<span className="repo-warning">
@@ -87,7 +84,7 @@ export const RepositionCodemark = (connect(undefined) as any)((props: Props) => 
 		);
 	};
 
-	const selectPropmpt = (
+	const selectPrompt = (
 		<span className="info-text">
 			<Icon name="info" /> <b>Select a new range to reposition this codemark.</b>
 		</span>
@@ -95,14 +92,16 @@ export const RepositionCodemark = (connect(undefined) as any)((props: Props) => 
 
 	const isRangeDifferent = () => {
 		// if we don't know where the
-		if (!props.range) return true;
-		if (textEditorUri !== props.file) return true;
+		if (!marker) return true;
+		if (textEditorUri !== marker.file) return true;
+
+		const { location } = marker.referenceLocations[0];
 
 		// cursor is at the begging of the codemark range. this is where it starts,
 		// so we assume it hasn't been moved
 		if (
-			textEditorSelection.start.line === props.range.start.line &&
-			textEditorSelection.end.line === props.range.start.line &&
+			textEditorSelection.start.line === location[0] &&
+			textEditorSelection.end.line === location[0] &&
 			textEditorSelection.start.character === 0 &&
 			textEditorSelection.end.character === 0
 		) {
@@ -111,10 +110,10 @@ export const RepositionCodemark = (connect(undefined) as any)((props: Props) => 
 
 		// same exact range
 		if (
-			textEditorSelection.start.line === props.range.start.line &&
-			textEditorSelection.end.line === props.range.end.line &&
-			textEditorSelection.start.character === props.range.start.character &&
-			textEditorSelection.end.character === props.range.end.character
+			textEditorSelection.start.line === location[0] &&
+			textEditorSelection.end.line === location[2] &&
+			textEditorSelection.start.character === location[1] &&
+			textEditorSelection.end.character === location[3]
 		) {
 			return false;
 		}
@@ -122,11 +121,29 @@ export const RepositionCodemark = (connect(undefined) as any)((props: Props) => 
 		return true;
 	};
 
+	const noSelection = () => {
+		if (!textEditorSelection) return true;
+		return (
+			textEditorSelection.start.line === textEditorSelection.end.line &&
+			textEditorSelection.start.character === textEditorSelection.end.character
+		);
+	};
+
 	const renderNewRange = () => {
-		if (!props.range) return selectPropmpt;
-		if (!textEditorSelection) return selectPropmpt;
-		if (!isRangeDifferent()) return selectPropmpt;
+		// if (!props.range) return selectPropmpt;
+		if (noSelection()) return selectPrompt;
+		if (!isRangeDifferent()) return selectPrompt;
 		return renderRange(textEditorUri, textEditorSelection);
+	};
+
+	const renderMarkerRange = () => {
+		if (!marker) return null;
+		const { location } = marker.referenceLocations[0];
+		const range = {
+			start: { line: location[0], character: location[1] },
+			end: { line: location[2], character: location[3] }
+		};
+		return renderRange(marker.file, range);
 	};
 
 	const cancel = React.useCallback(() => {
@@ -141,8 +158,8 @@ export const RepositionCodemark = (connect(undefined) as any)((props: Props) => 
 					<fieldset className="form-body">
 						<div id="controls">
 							<div className="related" style={{ marginTop: 0 }}>
-								<div className="related-label">ORIGINAL RANGE</div>
-								{renderRange(props.file, props.range)}
+								<div className="related-label">CURRENT RANGE</div>
+								{renderMarkerRange()}
 							</div>
 							<div className="related">
 								<div className="related-label">NEW RANGE</div>
@@ -188,7 +205,7 @@ export const RepositionCodemark = (connect(undefined) as any)((props: Props) => 
 								className="control-button"
 								type="submit"
 								loading={loading}
-								disabled={isRangeDifferent() ? false : true}
+								disabled={!noSelection() && isRangeDifferent() ? false : true}
 								onClick={reposition}
 							>
 								Save New Position

@@ -93,6 +93,7 @@ interface ConnectedProps {
 	entirelyDeleted: boolean;
 	textEditorUri: string;
 	jumpToMarkerId?: string;
+	currentMarkerId?: string;
 	isRepositioning?: boolean;
 	apiCapabilities: CSApiCapabilities;
 }
@@ -669,11 +670,6 @@ export class Codemark extends React.Component<Props, State> {
 				this.setState({ isEditing: true });
 				break;
 			}
-			case "reposition": {
-				if (!this.props.codemark) break;
-				this.props.repositionCodemark(this.props.codemark.id, true);
-				break;
-			}
 		}
 		const found = action.match(/set-keybinding-(\d)/);
 		if (found) this.setKeybinding(found[1]);
@@ -1048,7 +1044,9 @@ export class Codemark extends React.Component<Props, State> {
 			entirelyDeleted,
 			author,
 			marker,
-			isRepositioning
+			isRepositioning,
+			repositionCodemark,
+			apiCapabilities
 		} = this.props;
 		const { menuOpen, menuTarget, isInjecting } = this.state;
 
@@ -1089,15 +1087,30 @@ export class Codemark extends React.Component<Props, State> {
 				let label = "At Code Location #" + (index + 1);
 				return { label, action: () => this.setInjecting(m.id), key: index };
 			});
-			menuItems.push({ label: "Inject as Inline Comment", submenu: submenu });
-		} else
+			menuItems.push({ label: "Inject as Inline Comment", submenu: submenu, key: "inject" });
+		} else {
 			menuItems.push({
 				label: "Inject as Inline Comment",
-				action: () => this.setInjecting(marker.id)
-			});			
+				action: () => this.setInjecting(marker.id),
+				key: "inject"
+			});
+		}
 
-		if (this.props.apiCapabilities.moveMarkers)
-			menuItems.push({ label: "Reposition Codemark", action: "reposition" });
+		if (apiCapabilities.moveMarkers && repositionCodemark) {
+			if (selected && codemark.markers && codemark.markers.length > 1) {
+				const submenu = codemark.markers.map((m, index) => {
+					let label = "Code Location #" + (index + 1);
+					return { label, action: () => repositionCodemark(codemark.id, m.id, true), key: index };
+				});
+				menuItems.push({ label: "Reposition Codemark", submenu: submenu, key: "reposition" });
+			} else {
+				menuItems.push({
+					label: "Reposition Codemark",
+					action: () => repositionCodemark(codemark.id, marker.id, true),
+					key: "reposition"
+				});
+			}
+		}
 
 		const submenu = range(1, 10).map(index => {
 			const inUse = codemarkKeybindings[index] ? " (in use)" : "";
@@ -1116,10 +1129,19 @@ export class Codemark extends React.Component<Props, State> {
 		// manual-archive, resolved, or deleted state
 		const showStripedHeader =
 			(selected || !hidden) &&
-			(!codemark.pinned || codemark.status === "closed" || entirelyDeleted);
-			
-		if (isRepositioning) {			
-			return <RepositionCodemark codemark={codemark} /*range={this_.range} file={this._fileUri}*/ />;
+			(!codemark.pinned ||
+				codemark.status === "closed" ||
+				entirelyDeleted ||
+				// @ts-ignore
+				(marker && marker.notLocatedReason));
+
+		if (isRepositioning) {
+			return (
+				<RepositionCodemark
+					codemark={codemark}
+					markerId={this.props.currentMarkerId} /*range={this_.range} file={this._fileUri}*/
+				/>
+			);
 		}
 
 		return (
@@ -1140,33 +1162,33 @@ export class Codemark extends React.Component<Props, State> {
 				<div className="contents">
 					{showStripedHeader && (
 						<div className="archived">
+							{// foo
+							// @ts-ignore
+							marker && marker.notLocatedReason && (
+								<>
+									Position lost for this codemark
+									<Tooltip
+										title="Connect this codemark to a block of code in this file or another"
+										placement="topRight"
+										delay={1}
+									>
+										<div className="right">
+											<div
+												className="resolve-button reposition-button"
+												onClick={e => {
+													e.stopPropagation();
+													this.props.repositionCodemark(codemark.id, marker.id, true);
+												}}
+											>
+												Reposition
+											</div>
+										</div>
+									</Tooltip>
+								</>
+							)}
 							{!codemark.pinned && <div>This codemark is archived.</div>}
 							{codemark.status == "closed" && <div>This codemark is resolved.</div>}
 							{entirelyDeleted && <div>This codemark refers to deleted code.</div>}
-						</div>
-					)}
-					{// foo
-					// @ts-ignore
-					marker && marker.notLocatedReason && (
-						<div className="archived">
-							Position lost for this codemark
-							<Tooltip
-								title="Connect this codemark to a block of code in this file or another"
-								placement="topRight"
-								delay={1}
-							>
-								<div className="right">
-									<div
-										className="resolve-button reposition-button"
-										onClick={e => {
-											e.stopPropagation();
-											this.props.repositionCodemark(codemark.id, true);
-										}}
-									>
-										Reposition
-									</div>
-								</div>
-							</Tooltip>
 						</div>
 					)}
 					<div className="body">
@@ -1514,7 +1536,16 @@ const unknownAuthor = {
 };
 
 const mapStateToProps = (state: CodeStreamState, props: InheritedProps): ConnectedProps => {
-	const { apiVersioning, capabilities, context, editorContext, preferences, users, session, posts } = state;
+	const {
+		apiVersioning,
+		capabilities,
+		context,
+		editorContext,
+		preferences,
+		users,
+		session,
+		posts
+	} = state;
 	const { codemark, marker } = props;
 
 	const teamProvider = getCurrentTeamProvider(state);
@@ -1552,6 +1583,7 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		capabilities: capabilities,
 		editorHasFocus: context.hasFocus,
 		jumpToMarkerId: context.currentMarkerId,
+		currentMarkerId: context.currentMarkerId,
 		pinnedReplies,
 		pinnedAuthors,
 		relatedCodemarkIds,
