@@ -3,6 +3,9 @@ import { Range } from "vscode-languageserver-types";
 import { MaxRangeValue } from "./ipc/webview.protocol";
 import { URI } from "vscode-uri";
 
+// creates a union type from an an array of things
+export const tuple = <T extends string[]>(...args: T) => args;
+
 export const emptyObject = {};
 export const emptyArray = [];
 export function noop() {}
