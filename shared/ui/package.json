@@ -5,6 +5,7 @@
 	"main": "./dist/codestream-components.cjs.js",
 	"module": "./dist/codestream-components.es.js",
 	"scripts": {
+		"clean:ci": "git clean -xdf",
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"sb": "start-storybook -p 6006",
 		"build-storybook": "build-storybook"
