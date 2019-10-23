@@ -332,6 +332,23 @@ export class Codemark extends React.Component<Props, State> {
 		return icon;
 	}
 
+	renderVisibilitySelected = () => {
+		return this.props.usersWithAccess.length > 0 ? (
+			<div className="related" style={{ marginBottom: "0" }}>
+				<div className="related-label">Visible to</div>
+				{mapFilter(this.props.usersWithAccess, user =>
+					user.id !== this.props.currentUser.id ? (
+						<span style={{ marginRight: "5px" }}>
+							<Headshot size={18} person={user} />
+							<span>{user.username}</span>
+						</span>
+					) : null
+				)}
+				<div style={{ clear: "both" }} />
+			</div>
+		) : null;
+	};
+
 	renderTagsAndAssigneesSelected = codemark => {
 		const renderedTagsSelected = this.renderTagsSelected(codemark);
 		const renderedAssigneesSelected = this.renderAssigneesSelected(codemark);
@@ -1317,6 +1334,7 @@ export class Codemark extends React.Component<Props, State> {
 							postAction={this.props.postAction}
 						>
 							<div className="description">
+								{this.renderVisibilitySelected()}
 								{this.renderTagsAndAssigneesSelected(codemark)}
 								{description && (
 									<div className="related">
