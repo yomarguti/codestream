@@ -50,7 +50,10 @@ export const reduceStreams = (state: StreamsState = initialState, action: Stream
 // TODO: memoize
 export const getStreamForTeam = (state: StreamsState, teamId: string) => {
 	const streams = state.byTeam[teamId] || {};
-	return _sortBy(Object.values(streams).filter(stream => stream.isTeamStream), "createdAt")[0];
+	return _sortBy(
+		Object.values(streams).filter(stream => (stream as any).isTeamStream),
+		"createdAt"
+	)[0];
 };
 
 export const getChannelStreamsForTeam = (state: StreamsState, teamId: string, userId: string) => {
@@ -141,7 +144,8 @@ export const getServiceStreamsForTeam = (state: StreamsState, teamId: string, us
 			(stream.isTeamStream || (stream.memberIds && stream.memberIds!.includes(userId)))
 	);
 	serviceStreams.map(stream => {
-		stream.displayName = "Live Share";
+		// We need to stop doing this
+		(stream as any).displayName = "Live Share";
 	});
 	return serviceStreams;
 };

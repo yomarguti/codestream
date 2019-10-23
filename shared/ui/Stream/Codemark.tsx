@@ -23,12 +23,13 @@ import {
 import { CodemarkType, CSUser, CSMe, CSPost, CSApiCapabilities } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
-import { range, emptyArray } from "../utils";
+import { range, emptyArray, mapFilter } from "../utils";
 import {
 	getUserByCsId,
 	getTeamMembers,
 	getUsernames,
-	getTeamTagsHash
+	getTeamTagsHash,
+	getStreamMembers
 } from "../store/users/reducer";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { CodemarkForm } from "./CodemarkForm";
@@ -97,6 +98,7 @@ interface ConnectedProps {
 	teamTagsHash: any;
 	entirelyDeleted: boolean;
 	textEditorUri: string;
+	usersWithAccess: CSUser[];
 	jumpToMarkerId?: string;
 	currentMarkerId?: string;
 	isRepositioning?: boolean;
@@ -966,6 +968,41 @@ export class Codemark extends React.Component<Props, State> {
 
 		const numMarkers = codemark.markers ? codemark.markers.length : 0;
 
+		const privateIndicator = (() => {
+			if (!this.props.isCodeStreamTeam || this.props.usersWithAccess.length === 0) return null;
+
+			const usernames = mapFilter(this.props.usersWithAccess, user =>
+				user.id !== this.props.currentUser.id ? user.username : undefined
+			);
+
+			const tooltipText = `Visible to ${(() => {
+				switch (usernames.length) {
+					case 1:
+						return usernames[0];
+					case 2:
+						return usernames.join(" and ");
+					case 3: {
+						const [first, second, third] = usernames;
+						return `${first}, ${second} and ${third}`;
+					}
+					default: {
+						const [first, second, third, ...others] = usernames;
+						return `${first}, ${second}, ${third} and ${others.length} others`;
+					}
+				}
+			})()}`;
+
+			return (
+				<span className="detail-icon">
+					<Icon
+						name="lock"
+						title={hover && !selected ? tooltipText : undefined}
+						placement="bottom"
+					/>
+				</span>
+			);
+		})();
+
 		if (
 			relatedCodemarkIds.length ||
 			renderedTags ||
@@ -973,10 +1010,12 @@ export class Codemark extends React.Component<Props, State> {
 			hasDescription ||
 			hasReplies ||
 			renderedAssignees ||
-			numMarkers > 1
+			numMarkers > 1 ||
+			privateIndicator
 		) {
 			return (
 				<div className="detail-icons">
+					{privateIndicator}
 					{renderedTags}
 					{renderedAssignees}
 					{externalLink}
@@ -1021,7 +1060,8 @@ export class Codemark extends React.Component<Props, State> {
 					)}
 				</div>
 			);
-		} else return name;
+		}
+		return null;
 	};
 
 	setInjecting = (markerId: string) => {
@@ -1589,6 +1629,8 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		return unknownAuthor;
 	})();
 
+	const usersWithAccess = getStreamMembers(state, codemark!.streamId);
+
 	return {
 		capabilities: capabilities,
 		editorHasFocus: context.hasFocus,
@@ -1607,7 +1649,8 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		entirelyDeleted,
 		textEditorUri: editorContext.textEditorUri || "",
 		isRepositioning: context.isRepositioning,
-		apiCapabilities: apiVersioning.apiCapabilities
+		apiCapabilities: apiVersioning.apiCapabilities,
+		usersWithAccess
 	};
 };
 

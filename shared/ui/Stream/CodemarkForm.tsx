@@ -32,7 +32,6 @@ import {
 	getDirectMessageStreamsForTeam,
 	getDMName
 } from "../store/streams/reducer";
-import { Stream } from "../store/streams/types";
 import {
 	mapFilter,
 	arrayToRange,
@@ -111,7 +110,7 @@ interface ConnectedProps {
 	teamMembers: CSUser[];
 	channelStreams: CSChannelStream[];
 	directMessageStreams: CSDirectStream[];
-	channel: Stream;
+	channel: CSStream;
 	issueProvider?: ThirdPartyProviderConfig;
 	providerInfo: {
 		[service: string]: {};
@@ -204,7 +203,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			assigneesDisabled: false,
 			assigneesRequired: false,
 			singleAssignee: false,
-			selectedChannelName: props.channel.name,
+			selectedChannelName: (props.channel as any).name,
 			selectedChannelId: props.channel.id,
 			assignableUsers: this.getAssignableCSUsers(),
 			isPermalinkPublic: false,
@@ -702,12 +701,12 @@ class CodemarkForm extends React.Component<Props, State> {
 		}
 	};
 
-	selectChannel = (stream: Stream | "show-all") => {
+	selectChannel = (stream: CSStream | "show-all") => {
 		if (stream === "show-all") {
 			this.setState({ showAllChannels: true });
 			return;
 		} else if (stream && stream.id) {
-			const channelName = (stream.type === StreamType.Direct ? "@" : "#") + stream.name;
+			const channelName = (stream.type === StreamType.Direct ? "@" : "#") + (stream as any).name;
 			this.setState({ selectedChannelName: channelName, selectedChannelId: stream.id });
 		}
 		this.setState({ channelMenuOpen: false });

@@ -1,10 +1,12 @@
-import { CSUser } from "@codestream/protocols/api";
+import { CSUser, CSStream, StreamType } from "@codestream/protocols/api";
 import { createSelector } from "reselect";
 import { mapFilter, toMapBy } from "../../utils";
 import { ActionType } from "../common";
 import * as actions from "./actions";
 import { UsersState, UsersActionsType } from "./types";
 import { CodeStreamState } from "..";
+import { isString } from "lodash-es";
+import { getStreamForId } from "../streams/reducer";
 
 type UsersActions = ActionType<typeof actions>;
 
@@ -149,3 +151,22 @@ export const findMentionedUserIds = (members: CSUser[], text: string) => {
 	});
 	return mentionedUserIds;
 };
+
+export const getStreamMembers = createSelector(
+	state => state.users,
+	(state: CodeStreamState, streamOrId: CSStream | string) => {
+		return isString(streamOrId)
+			? getStreamForId(state.streams, state.context.currentTeamId, streamOrId)
+			: streamOrId;
+	},
+	(users: UsersState, stream?: CSStream) => {
+		if (stream == undefined || stream.type === StreamType.File || stream.memberIds == undefined)
+			return [];
+
+		return mapFilter(stream.memberIds, id => {
+			const user = users[id];
+			if (user && user.isRegistered) return user;
+			return;
+		});
+	}
+);

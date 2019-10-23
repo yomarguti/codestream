@@ -1,24 +1,10 @@
 import { Index } from "../common";
+import { CSStream } from "@codestream/protocols/api";
 
 export interface StreamsState {
 	byTeam: {
-		[teamId: string]: Index<Stream>;
+		[teamId: string]: Index<CSStream>;
 	};
-}
-
-export interface Stream {
-	id: string;
-	teamId: string;
-	isTeamStream?: boolean;
-	type: string;
-	name: string;
-	deactivated: boolean;
-	privacy: "public" | "private";
-	purpose?: string;
-	isArchived?: boolean;
-	serviceType?: string;
-	memberIds?: string[];
-	displayName?: string; // TOOO: remove
 }
 
 export enum StreamActionType {
