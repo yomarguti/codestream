@@ -815,7 +815,11 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	renderPrivacyControls = () => {
 		const { isCodemarkPublic, privacyMembersInvalid } = this.state;
-		if (this.props.teamProvider === "codestream" && this.props.commentType !== CodemarkType.Link) {
+		if (
+			!this.props.isEditing &&
+			this.props.teamProvider === "codestream" &&
+			this.props.commentType !== CodemarkType.Link
+		) {
 			return (
 				<>
 					<Spacer />
