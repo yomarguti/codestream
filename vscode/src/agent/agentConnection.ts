@@ -306,7 +306,7 @@ export class CodeStreamAgentConnection implements Disposable {
 	get codemarks() {
 		return this._codemarks;
 	}
-	private readonly _codemarks = new class {
+	private readonly _codemarks = new (class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
 		fetch() {
@@ -323,12 +323,12 @@ export class CodeStreamAgentConnection implements Disposable {
 		setStatus(codemarkId: string, status: string) {
 			return this._connection.sendRequest(SetCodemarkStatusRequestType, { codemarkId, status });
 		}
-	}(this);
+	})(this);
 
 	get documentMarkers() {
 		return this._documentMarkers;
 	}
-	private readonly _documentMarkers = new class {
+	private readonly _documentMarkers = new (class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
 		createPermalink(uri: Uri, range: Range, privacy: "public" | "private") {
@@ -365,12 +365,12 @@ export class CodeStreamAgentConnection implements Disposable {
 				markerId: marker.id
 			});
 		}
-	}(this);
+	})(this);
 
 	get markers() {
 		return this._markers;
 	}
-	private readonly _markers = new class {
+	private readonly _markers = new (class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
 		fetch(streamId: string) {
@@ -387,12 +387,12 @@ export class CodeStreamAgentConnection implements Disposable {
 				commitHash: commitHash
 			});
 		}
-	}(this);
+	})(this);
 
 	get posts() {
 		return this._posts;
 	}
-	private readonly _posts = new class {
+	private readonly _posts = new (class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
 		create(
@@ -402,16 +402,14 @@ export class CodeStreamAgentConnection implements Disposable {
 			parentPostId?: string,
 			title?: string,
 			type?: CodemarkType,
-			assignees?: [],
-			color?: string
+			assignees?: []
 		) {
 			let codemark;
-			if (type || title || assignees || color) {
+			if (type || title || assignees) {
 				codemark = {
 					title: title,
 					type: type || CodemarkType.Comment,
-					assignees: assignees,
-					color: color
+					assignees: assignees
 				};
 			}
 
@@ -496,12 +494,12 @@ export class CodeStreamAgentConnection implements Disposable {
 				emojis: reactions
 			});
 		}
-	}(this);
+	})(this);
 
 	get repos() {
 		return this._repos;
 	}
-	private readonly _repos = new class {
+	private readonly _repos = new (class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
 		create(url: string, knownCommitHashes: string[]) {
@@ -520,12 +518,12 @@ export class CodeStreamAgentConnection implements Disposable {
 				repoId: repoId
 			});
 		}
-	}(this);
+	})(this);
 
 	get scm() {
 		return this._scm;
 	}
-	private readonly _scm = new class {
+	private readonly _scm = new (class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
 		getFileInfo(uri: Uri) {
@@ -533,12 +531,12 @@ export class CodeStreamAgentConnection implements Disposable {
 				uri: uri.toString()
 			});
 		}
-	}(this);
+	})(this);
 
 	get streams() {
 		return this._streams;
 	}
-	private readonly _streams = new class {
+	private readonly _streams = new (class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
 		createChannel(
@@ -684,12 +682,12 @@ export class CodeStreamAgentConnection implements Disposable {
 				streamId: streamId
 			});
 		}
-	}(this);
+	})(this);
 
 	get teams() {
 		return this._teams;
 	}
-	private readonly _teams = new class {
+	private readonly _teams = new (class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
 		fetch(teamIds?: string[]) {
@@ -704,12 +702,12 @@ export class CodeStreamAgentConnection implements Disposable {
 				teamId: teamId
 			});
 		}
-	}(this);
+	})(this);
 
 	get telemetry() {
 		return this._telemetry;
 	}
-	private readonly _telemetry = new class {
+	private readonly _telemetry = new (class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
 		async track(eventName: string, properties?: { [key: string]: string | number | boolean }) {
@@ -727,12 +725,12 @@ export class CodeStreamAgentConnection implements Disposable {
 				Logger.error(ex);
 			}
 		}
-	}(this);
+	})(this);
 
 	get users() {
 		return this._users;
 	}
-	private readonly _users = new class {
+	private readonly _users = new (class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
 		fetch() {
@@ -776,7 +774,7 @@ export class CodeStreamAgentConnection implements Disposable {
 		preferences() {
 			return this._connection.sendRequest(GetPreferencesRequestType, undefined);
 		}
-	}(this);
+	})(this);
 
 	@log({
 		prefix: (context, e: DidChangeConnectionStatusNotification) => `${context.prefix}(${e.status})`
