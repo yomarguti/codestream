@@ -1139,7 +1139,7 @@ export class Codemark extends React.Component<Props, State> {
 			return (
 				<RepositionCodemark
 					codemark={codemark}
-					markerId={this.props.currentMarkerId} /*range={this_.range} file={this._fileUri}*/
+					markerId={this.props.currentMarkerId!} /*range={this_.range} file={this._fileUri}*/
 				/>
 			);
 		}

@@ -1,32 +1,34 @@
 import cx from "classnames";
+import * as Path from "path-browserify";
+import { Range } from "vscode-languageserver-types";
 import React, { useState } from "react";
-import { connect, useSelector, useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import Icon from "./Icon";
 import Button from "./Button";
 import { CodemarkPlus, GetRangeScmInfoRequestType } from "@codestream/protocols/agent";
 import { HostApi } from "../webview-api";
-import { TelemetryRequestType, MoveMarkerRequestType } from "@codestream/protocols/agent";
-import { Range, DidChangeWorkspaceFoldersNotification } from "vscode-languageserver-protocol";
-import { setCurrentCodemark, repositionCodemark } from "../store/context/actions";
+import { MoveMarkerRequestType } from "@codestream/protocols/agent";
 import { CodeStreamState } from "../store";
 import { getCurrentSelection } from "../store/editorContext/reducer";
 import { getDocumentFromMarker } from "./api-functions";
-import { EditorSelectRangeRequestType } from "@codestream/protocols/webview";
-import { Codemark } from "./Codemark";
-
-const noop = () => Promise.resolve();
+import { setCurrentCodemark } from "../store/context/actions";
+import { CSMarker } from "@codestream/protocols/api";
+import { URI } from "vscode-uri";
+import { useDidMount } from "../utilities/hooks";
 
 interface Props {
-	cancel: Function;
 	codemark: CodemarkPlus;
 	markerId: string;
 }
 
-export const RepositionCodemark = (connect(undefined) as any)((props: Props) => {
+export const RepositionCodemark = (props: Props) => {
 	const dispatch = useDispatch();
 	const [loading, setLoading] = useState(false);
-	const [scm, setScm] = useState();
-	const [docMarker, setDocMarker] = useState();
+	const [docMarker, setDocMarker] = useState<{
+		range: Range;
+		textDocument: { uri: string };
+		marker: CSMarker;
+	} | void>();
 
 	const reposition = async () => {
 		if (!docMarker || !textEditorUri) return;
@@ -61,25 +63,17 @@ export const RepositionCodemark = (connect(undefined) as any)((props: Props) => 
 		return state.editorContext.textEditorUri;
 	});
 
-	const getDocumentMarker = async markerId => {
-		try {
-			const response = await getDocumentFromMarker(markerId);
-			if (response) return setDocMarker(response);
-		} catch (error) {
-			// TODO:
-		}
-		return {
-			textDocument: "",
-			range: undefined,
-			marker: undefined
+	useDidMount(() => {
+		let isValid = true;
+		getDocumentFromMarker(props.markerId).then(response => {
+			if (response && isValid) setDocMarker(response);
+		});
+		return () => {
+			isValid = false;
 		};
-	};
+	});
 
-	getDocumentMarker(props.markerId);
-
-	const makeRange = () => {};
-
-	const renderRange = (file, range) => {
+	const renderRange = (file: string, range: Range) => {
 		if (!range) {
 			return (
 				<span className="repo-warning">
@@ -152,12 +146,12 @@ export const RepositionCodemark = (connect(undefined) as any)((props: Props) => 
 		// if (!props.range) return selectPropmpt;
 		if (noSelection()) return selectPrompt;
 		if (!isRangeDifferent()) return selectPrompt;
-		return renderRange(textEditorUri, textEditorSelection);
+		return renderRange(Path.basename(URI.parse(textEditorUri!).path), textEditorSelection);
 	};
 
 	const renderMarkerRange = () => {
 		if (!docMarker) return null;
-		return renderRange(docMarker.textDocument.uri, docMarker.range);
+		return renderRange(Path.basename(URI.parse(docMarker.textDocument.uri).path), docMarker.range);
 	};
 
 	const cancel = React.useCallback(() => {
@@ -231,4 +225,4 @@ export const RepositionCodemark = (connect(undefined) as any)((props: Props) => 
 			</div>
 		</div>
 	);
-});
+};

@@ -1,6 +1,5 @@
 // @ts-check
 import createClassString from "classnames";
-import * as Path from "path-browserify";
 import React from "react";
 import ContentEditable from "react-contenteditable";
 import { connect } from "react-redux";
@@ -347,13 +346,12 @@ class Post extends React.Component {
 		}
 
 		const showIcons = !systemPost && !post.error;
-		const customAttrs = { thread: post.parentPostId || post.id};
+		const customAttrs = { thread: post.parentPostId || post.id };
 		return (
 			<div
-				
 				className={postClass}
 				id={post.id}
-				data-seq-num={post.seqNum}				
+				data-seq-num={post.seqNum}
 				{...customAttrs}
 				ref={ref => (this._div = ref)}
 			>
@@ -535,7 +533,7 @@ class Post extends React.Component {
 		else return null;
 	};
 
-	renderAssignees = (post) => {
+	renderAssignees = post => {
 		const { collapsed, codemark } = this.props;
 
 		if (collapsed) return null;
@@ -747,7 +745,12 @@ class Post extends React.Component {
 			const { post, id, teamMembers } = this.props;
 
 			const text = replaceHtml(this._contentEditable.htmlEl.innerText);
-			await this.props.editPost(post.streamId, id, text, findMentionedUserIds(teamMembers, text == null ? "" : text));
+			await this.props.editPost(
+				post.streamId,
+				id,
+				text,
+				findMentionedUserIds(teamMembers, text == null ? "" : text)
+			);
 			this.props.onDidSaveEdit();
 		}
 	};
@@ -767,7 +770,7 @@ class Post extends React.Component {
 					className="message-input"
 					id={id}
 					rows="1"
-					tabIndex="-1"					
+					tabIndex="-1"
 					html={post.text}
 					ref={ref => (this._contentEditable = ref)}
 				/>
