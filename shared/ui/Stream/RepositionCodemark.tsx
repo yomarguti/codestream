@@ -6,42 +6,49 @@ import Button from "./Button";
 import { CodemarkPlus, GetRangeScmInfoRequestType } from "@codestream/protocols/agent";
 import { HostApi } from "../webview-api";
 import { TelemetryRequestType, MoveMarkerRequestType } from "@codestream/protocols/agent";
-import { Range } from "vscode-languageserver-protocol";
+import { Range, DidChangeWorkspaceFoldersNotification } from "vscode-languageserver-protocol";
 import { setCurrentCodemark, repositionCodemark } from "../store/context/actions";
 import { CodeStreamState } from "../store";
 import { getCurrentSelection } from "../store/editorContext/reducer";
+import { getDocumentFromMarker } from "./api-functions";
+import { EditorSelectRangeRequestType } from "@codestream/protocols/webview";
+import { Codemark } from "./Codemark";
 
 const noop = () => Promise.resolve();
 
 interface Props {
 	cancel: Function;
 	codemark: CodemarkPlus;
-	markerId?: string;
+	markerId: string;
 }
 
 export const RepositionCodemark = (connect(undefined) as any)((props: Props) => {
 	const dispatch = useDispatch();
 	const [loading, setLoading] = useState(false);
 	const [scm, setScm] = useState();
+	const [docMarker, setDocMarker] = useState();
 
 	const reposition = async () => {
-		if (!marker || !textEditorUri) return;
+		if (!docMarker || !textEditorUri) return;
 
 		setLoading(true);
 		let location = "Same File";
+		if (textEditorUri !== docMarker.textDocument.uri) location = "Different File";
 		HostApi.instance.track("RepositionCodemark", { "New Location": location });
 		const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
 			uri: textEditorUri,
 			range: textEditorSelection!
 		});
 		if (scmInfo && scmInfo.scm) {
-			HostApi.instance.send(MoveMarkerRequestType, {
-				markerId: marker.id,
+			const payload = {
+				markerId: props.markerId,
 				code: scmInfo.contents,
 				range: textEditorSelection,
 				documentId: { uri: textEditorUri },
 				source: scmInfo.scm
-			});
+			};
+			console.log("Payload: ", payload);
+			HostApi.instance.send(MoveMarkerRequestType, payload);
 		}
 		setLoading(false);
 		cancel();
@@ -54,8 +61,21 @@ export const RepositionCodemark = (connect(undefined) as any)((props: Props) => 
 		return state.editorContext.textEditorUri;
 	});
 
-	const { markers } = props.codemark;
-	const marker = markers && (markers.find(m => m.id === props.markerId) || markers[0]);
+	const getDocumentMarker = async markerId => {
+		try {
+			const response = await getDocumentFromMarker(markerId);
+			if (response) return setDocMarker(response);
+		} catch (error) {
+			// TODO:
+		}
+		return {
+			textDocument: "",
+			range: undefined,
+			marker: undefined
+		};
+	};
+
+	getDocumentMarker(props.markerId);
 
 	const makeRange = () => {};
 
@@ -92,16 +112,15 @@ export const RepositionCodemark = (connect(undefined) as any)((props: Props) => 
 
 	const isRangeDifferent = () => {
 		// if we don't know where the
-		if (!marker) return true;
-		if (textEditorUri !== marker.file) return true;
-
-		const { location } = marker.referenceLocations[0] || marker.locationWhenCreated;
+		if (!docMarker) return true;
+		const { range, textDocument } = docMarker;
+		if (textEditorUri !== textDocument.uri) return true;
 
 		// cursor is at the begging of the codemark range. this is where it starts,
 		// so we assume it hasn't been moved
 		if (
-			textEditorSelection.start.line === location[0] &&
-			textEditorSelection.end.line === location[0] &&
+			textEditorSelection.start.line === range.start.line &&
+			textEditorSelection.end.line === range.start.line &&
 			textEditorSelection.start.character === 0 &&
 			textEditorSelection.end.character === 0
 		) {
@@ -110,10 +129,10 @@ export const RepositionCodemark = (connect(undefined) as any)((props: Props) => 
 
 		// same exact range
 		if (
-			textEditorSelection.start.line === location[0] &&
-			textEditorSelection.end.line === location[2] &&
-			textEditorSelection.start.character === location[1] &&
-			textEditorSelection.end.character === location[3]
+			textEditorSelection.start.line === range.start.line &&
+			textEditorSelection.end.line === range.end.line &&
+			textEditorSelection.start.character === range.start.character &&
+			textEditorSelection.end.character === range.end.character
 		) {
 			return false;
 		}
@@ -137,13 +156,8 @@ export const RepositionCodemark = (connect(undefined) as any)((props: Props) => 
 	};
 
 	const renderMarkerRange = () => {
-		if (!marker) return null;
-		const { location } = marker.referenceLocations[0];
-		const range = {
-			start: { line: location[0], character: location[1] },
-			end: { line: location[2], character: location[3] }
-		};
-		return renderRange(marker.file, range);
+		if (!docMarker) return null;
+		return renderRange(docMarker.textDocument.uri, docMarker.range);
 	};
 
 	const cancel = React.useCallback(() => {
@@ -200,7 +214,8 @@ export const RepositionCodemark = (connect(undefined) as any)((props: Props) => 
 								style={{
 									paddingLeft: "10px",
 									paddingRight: "10px",
-									marginRight: 0
+									marginRight: 0,
+									width: "12em" // fixed width to accomodate spinner
 								}}
 								className="control-button"
 								type="submit"
