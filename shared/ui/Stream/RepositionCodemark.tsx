@@ -95,7 +95,7 @@ export const RepositionCodemark = (connect(undefined) as any)((props: Props) => 
 		if (!marker) return true;
 		if (textEditorUri !== marker.file) return true;
 
-		const { location } = marker.referenceLocations[0];
+		const { location } = marker.referenceLocations[0] || marker.locationWhenCreated;
 
 		// cursor is at the begging of the codemark range. this is where it starts,
 		// so we assume it hasn't been moved
