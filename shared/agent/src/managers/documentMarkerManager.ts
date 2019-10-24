@@ -261,31 +261,31 @@ export class DocumentMarkerManager {
 							continue;
 						}
 
+						let creator;
+						try {
+							creator = usersById.get(marker.creatorId);
+							if (creator === undefined) {
+								// HACK: This is a total hack for non-CS teams (slack, msteams) to avoid getting codestream users mixed with slack users in the cache
+								creator = await users.getById(marker.creatorId, { avoidCachingOnFetch: true });
+
+								if (creator !== undefined) {
+									usersById.set(marker.creatorId, creator);
+								}
+							}
+						} catch (ex) {
+							debugger;
+						}
+
+						let summary = codemark.title || codemark.text || "";
+						if (summary.length !== 0) {
+							summary = (codemark.title || codemark.text).replace(
+								emojiRegex,
+								(s, code) => emojiMap[code] || s
+							);
+						}
+
 						const location = locations[marker.id];
 						if (location) {
-							let creator;
-							try {
-								creator = usersById.get(marker.creatorId);
-								if (creator === undefined) {
-									// HACK: This is a total hack for non-CS teams (slack, msteams) to avoid getting codestream users mixed with slack users in the cache
-									creator = await users.getById(marker.creatorId, { avoidCachingOnFetch: true });
-
-									if (creator !== undefined) {
-										usersById.set(marker.creatorId, creator);
-									}
-								}
-							} catch (ex) {
-								debugger;
-							}
-
-							let summary = codemark.title || codemark.text || "";
-							if (summary.length !== 0) {
-								summary = (codemark.title || codemark.text).replace(
-									emojiRegex,
-									(s, code) => emojiMap[code] || s
-								);
-							}
-
 							documentMarkers.push({
 								...marker,
 								fileUri: documentUri.toString(),
@@ -306,6 +306,10 @@ export class DocumentMarkerManager {
 							if (missingLocation) {
 								markersNotLocated.push({
 									...marker,
+									summary: summary,
+									summaryMarkdown: `\n\n${Strings.escapeMarkdown(summary, { quoted: true })}`,
+									creatorName: (creator && creator.username) || "Unknown",
+									codemark: codemark,
 									notLocatedReason: missingLocation.reason,
 									notLocatedDetails: missingLocation.details
 								});
@@ -317,6 +321,10 @@ export class DocumentMarkerManager {
 							} else {
 								markersNotLocated.push({
 									...marker,
+									summary: summary,
+									summaryMarkdown: `\n\n${Strings.escapeMarkdown(summary, { quoted: true })}`,
+									creatorName: (creator && creator.username) || "Unknown",
+									codemark: codemark,
 									notLocatedReason: MarkerNotLocatedReason.UNKNOWN
 								});
 								Logger.log(cc, `MARKERS: ${marker.id}=location not found, reason: unknown`);
