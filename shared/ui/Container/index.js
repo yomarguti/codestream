@@ -16,7 +16,7 @@ import { apiUpgradeRecommendedDismissed } from "../store/apiVersioning/actions";
 import { ApiVersioningActionsType } from "../store/apiVersioning/types";
 import { errorDismissed } from "@codestream/webview/store/connectivity/actions";
 import { ThemeProvider } from "styled-components";
-import { defaultTheme } from "../src/themes";
+import { darkTheme, createTheme } from "../src/themes";
 
 const mapStateToProps = state => ({
 	bootstrapped: state.bootstrapped,
@@ -190,7 +190,8 @@ const Root = connect(mapStateToProps)(props => {
 });
 
 export default class Container extends React.Component {
-	state = { hasError: false };
+	state = { hasError: false, theme: darkTheme };
+	_mutationObserver;
 
 	static getDerivedStateFromError(error) {
 		return { hasError: true };
@@ -204,11 +205,22 @@ export default class Container extends React.Component {
 		return { store: this.props.store };
 	}
 
+	componentDidMount() {
+		this._mutationObserver = new MutationObserver(() => {
+			this.setState({ theme: createTheme() });
+		});
+		this._mutationObserver.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+	}
+
 	componentDidCatch(error, info) {
 		logError(`Exception caught in React component tree: ${error.message}`, {
 			stacktrace: error.stack,
 			info
 		});
+	}
+
+	componentWillUnmount() {
+		this._mutationObserver.disconnect();
 	}
 
 	handleClickReload = event => {
@@ -241,7 +253,7 @@ export default class Container extends React.Component {
 		return (
 			<IntlProvider locale={i18n.locale} messages={i18n.messages}>
 				<Provider store={store}>
-					<ThemeProvider theme={defaultTheme}>{content}</ThemeProvider>
+					<ThemeProvider theme={this.state.theme}>{content}</ThemeProvider>
 				</Provider>
 			</IntlProvider>
 		);
