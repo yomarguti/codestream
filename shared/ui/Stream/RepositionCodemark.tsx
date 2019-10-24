@@ -15,6 +15,7 @@ import { setCurrentCodemark } from "../store/context/actions";
 import { CSMarker } from "@codestream/protocols/api";
 import { URI } from "vscode-uri";
 import { useDidMount } from "../utilities/hooks";
+import { areRangesEqual, isRangeEmpty } from "../utils";
 
 interface Props {
 	codemark: CodemarkPlus;
@@ -121,13 +122,7 @@ export const RepositionCodemark = (props: Props) => {
 			return false;
 		}
 
-		// same exact range
-		if (
-			textEditorSelection.start.line === range.start.line &&
-			textEditorSelection.end.line === range.end.line &&
-			textEditorSelection.start.character === range.start.character &&
-			textEditorSelection.end.character === range.end.character
-		) {
+		if (areRangesEqual(textEditorSelection, range)) {
 			return false;
 		}
 
@@ -136,10 +131,7 @@ export const RepositionCodemark = (props: Props) => {
 
 	const noSelection = () => {
 		if (!textEditorSelection) return true;
-		return (
-			textEditorSelection.start.line === textEditorSelection.end.line &&
-			textEditorSelection.start.character === textEditorSelection.end.character
-		);
+		return isRangeEmpty(textEditorSelection);
 	};
 
 	const renderNewRange = () => {
