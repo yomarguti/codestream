@@ -40,13 +40,16 @@ export interface CreateCodemarkRequest {
 }
 export interface CreateMarkerRequest {
 	code: string;
+	repoId?: string;
 	remotes?: string[];
 	file?: string;
+	fileStreamId?: string;
 	referenceLocations?: CSReferenceLocation[];
 	commitHash?: string;
 	location?: CSLocationArray;
 	branchWhenCreated?: string;
 	remoteCodeUrl?: { name: string; url: string };
+	knownCommitHashes?: string[];
 }
 export interface CreateCodemarkResponse {
 	codemark: CSCodemark;

@@ -46,6 +46,14 @@ export interface IGitService extends Disposable {
 	getRepoFirstCommits(repoPath: string): Promise<string[]>;
 	// getRepoFirstCommits(repoUriOrPath: Uri | string): Promise<string[]>;
 
+	getRepoCommitHistory(repoUri: URI): Promise<string[]>;
+	getRepoCommitHistory(repoPath: string): Promise<string[]>;
+	// getRepoCommitHistory(repoUriOrPath: URI | string): Promise<string[]> {
+
+	getRepoBranchForkCommits(repoUri: URI): Promise<string[]>;
+	getRepoBranchForkCommits(repoPath: string): Promise<string[]>;
+	// getRepoBranchForkCommits(repoUriOrPath: Uri | string): Promise<string[]>;
+
 	getRepoHeadRevision(repoUri: URI): Promise<string | undefined>;
 	getRepoHeadRevision(repoPath: string): Promise<string | undefined>;
 
@@ -358,6 +366,78 @@ export class GitService implements IGitService, Disposable {
 		if (!data) return [];
 
 		return data.trim().split("\n");
+	}
+
+	async getRepoCommitHistory(repoUri: URI): Promise<string[]>;
+	async getRepoCommitHistory(repoPath: string): Promise<string[]>;
+	async getRepoCommitHistory(repoUriOrPath: URI | string): Promise<string[]> {
+		const repoPath = typeof repoUriOrPath === "string" ? repoUriOrPath : repoUriOrPath.fsPath;
+
+		let data;
+		try {
+			data = await git(
+				{ cwd: repoPath },
+				"rev-list",
+				"--date-order",
+				"master",
+				"--"
+			);
+		} catch {}
+		if (!data) {
+			try {
+				data = await git(
+					{ cwd: repoPath },
+					"rev-list",
+					"--date-order",
+					"HEAD",
+					"--"
+				);
+			} catch {}
+		}
+
+		if (!data) return [];
+
+		return data.trim().split("\n");
+	}
+
+	async getRepoBranchForkCommits(repoUri: URI): Promise<string[]>;
+	async getRepoBranchForkCommits(repoPath: string): Promise<string[]>;
+	async getRepoBranchForkCommits(repoUriOrPath: URI | string): Promise<string[]> {
+		const repoPath = typeof repoUriOrPath === "string" ? repoUriOrPath : repoUriOrPath.fsPath;
+
+		let data: string | undefined;
+		try {
+			data = await git(
+				{ cwd: repoPath },
+				"branch",
+				"--"
+			);
+		} catch {}
+		if (!data) return [];
+
+		const branches = data.trim().split("\n");
+		const commits: string[] = [];
+		await Promise.all(branches.map(async branch => {
+			branch = branch.trim();
+			if (branch.startsWith("*")) {
+				branch = branch.split("*")[1].trim();
+			}
+			let result: string | undefined;
+			try {
+				result = await git(
+					{ cwd: repoPath },
+					"merge-base",
+					"--fork-point",
+					branch,
+					"--"
+				);
+			} catch {}
+			if (result) {
+				commits.push(result.split("\n")[0]);
+			}
+		}));
+
+		return commits;
 	}
 
 	async getRepoHeadRevision(repoUri: URI): Promise<string | undefined>;

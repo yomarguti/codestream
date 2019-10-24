@@ -1,4 +1,5 @@
 "use strict";
+import * as path from "path";
 import { Range, TextDocumentIdentifier } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 import { Marker, MarkerLocation, Ranges } from "../api/extensions";
@@ -133,7 +134,6 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
         return response;
     }
 
-
     static async prepareMarkerCreationDescriptor(
         code: string,
         documentId: TextDocumentIdentifier,
@@ -141,7 +141,7 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
         source?: CodeBlockSource
     ): Promise<MarkerCreationDescriptor> {
         const { documents } = Container.instance();
-        const { git, scm } = SessionContainer.instance();
+        const { git, files, scm } = SessionContainer.instance();
         let marker: CreateMarkerRequest | undefined;
         let backtrackedLocation: BacktrackedLocation | undefined;
         let fileCurrentCommit: string | undefined;
@@ -187,7 +187,6 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
                     endLine: locationAtCurrentCommit.lineEnd - 1
                 });
                 const remoteDefaultBranchRevisionsPromises = git.getRemoteDefaultBranchHeadRevisions(source.repoPath, ["upstream", "origin"]);
-
                 const backtrackShas = [
                     ...(await blameRevisionsPromises).map(revision => revision.sha),
                     ...(await remoteDefaultBranchRevisionsPromises)
@@ -258,12 +257,29 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 
         marker = {
             code,
-            remotes,
-            file: source && source.file,
             commitHash: fileCurrentCommit,
             referenceLocations,
             branchWhenCreated: (source && source.branch) || undefined
         };
+
+        if (source && source.file) {
+            const fullPath = path.join(source.repoPath, source.file);
+            const stream = await files.getByPath(fullPath);
+            if (stream && stream.id) {
+                marker.fileStreamId = stream.id;
+            } else {
+                marker.file = source.file;
+                const repo = await git.getRepositoryByFilePath(fullPath);
+                if (repo && repo.id) {
+                    marker.repoId = repo.id;
+                } else {
+                    marker.remotes = remotes;
+                    marker.knownCommitHashes = await MarkersManager.getKnownCommitHashes(source.repoPath);
+                }
+            }
+        } else {
+            marker.remotes = remotes;
+        }
 
         try {
             const scmResponse = await scm.getRangeInfo({
@@ -299,6 +315,15 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
         };
     }
 
+    static async getKnownCommitHashes(filePath: string): Promise<string []> {
+        const { git } = SessionContainer.instance();
+        const commitHistory = await git.getRepoCommitHistory(filePath);
+        const firstLastCommits = commitHistory.length > 10 ? 
+            [...commitHistory.slice(0, 5), ...commitHistory.slice(-5)] :
+            commitHistory;
+        const branchPoints = await git.getRepoBranchForkCommits(filePath);
+        return [...firstLastCommits, ...branchPoints];
+    }
 }
 
 export interface BacktrackedLocation {
