@@ -678,7 +678,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		let externalProvider;
 		let externalProviderHost;
 		let externalAssignees;
-		let response: CreatePostResponse;
+		let response: CreatePostResponse | undefined;
 		let providerCardRequest;
 		let postId;
 		let streamId;
@@ -739,6 +739,19 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				request.codemark.externalProvider = externalProvider;
 				request.codemark.externalAssignees = externalAssignees;
 				request.codemark.externalProviderHost = externalProviderHost;
+				if (codemarkResponse && codemarkResponse.codemark) {
+					codemarkResponse.codemark.externalProviderUrl = externalProviderUrl;
+					codemarkResponse.codemark.externalProvider = externalProvider;
+					codemarkResponse.codemark.externalAssignees = externalAssignees;
+					codemarkResponse.codemark.externalProviderHost = externalProviderHost;
+				}
+				if (response && response.codemark) {
+					response.codemark.externalProviderUrl = externalProviderUrl;
+					response.codemark.externalProvider = externalProvider;
+					response.codemark.externalAssignees = externalAssignees;
+					response.codemark.externalProviderHost = externalProviderHost;
+				}
+
 				requiresUpdate = true;
 			}
 		}
@@ -811,7 +824,12 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		codemarkRequest.streamId = streamId;
 		for (const m of markers) {
 			if (!m.range) continue;
-			const descriptor = await MarkersManager.prepareMarkerCreationDescriptor(m.code, m.documentId, m.range, m.source);
+			const descriptor = await MarkersManager.prepareMarkerCreationDescriptor(
+				m.code,
+				m.documentId,
+				m.range,
+				m.source
+			);
 			markerCreationDescriptors.push(descriptor);
 			codemarkRequest.markers!.push(descriptor.marker);
 
@@ -841,7 +859,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			if (markers) {
 				MarkerLocationManager.saveUncommittedLocations(
 					markers,
-					markerCreationDescriptors.map(descriptor => descriptor.backtrackedLocation));
+					markerCreationDescriptors.map(descriptor => descriptor.backtrackedLocation)
+				);
 			}
 
 			response.codemark!.markers = response.markers || [];
@@ -1081,7 +1100,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					});
 					break;
 				}
-				case "gitlab": 
+				case "gitlab":
 				case "gitlab_enterprise": {
 					response = await providerRegistry.createCard({
 						providerId: attributes.issueProvider.id,
