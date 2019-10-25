@@ -388,7 +388,7 @@ class EditorService(val project: Project) {
         editor.highlightTextAttributes
     }
 
-    fun toggleRangeHighlight(range: Range, highlight: Boolean) = ApplicationManager.getApplication().invokeLater {
+    fun toggleRangeHighlight(range: Range?, highlight: Boolean) = ApplicationManager.getApplication().invokeLater {
         val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return@invokeLater
         val highlighters = rangeHighlighters[editor]
 
@@ -397,7 +397,7 @@ class EditorService(val project: Project) {
             return@invokeLater
         }
 
-        if (!highlight) {
+        if (!highlight || range == null) {
             synchronized(highlighters) {
                 for (highlighter in highlighters) {
                     editor.markupModel.removeHighlighter(highlighter)

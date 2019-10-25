@@ -72,8 +72,8 @@ class UpdateConfigurationRequest(
 class ActiveEditorContextResponse(val editorContext: EditorContext? = EditorContext())
 
 class EditorRangeHighlightRequest(
-    val uri: String,
-    val range: Range,
+    val uri: String?,
+    val range: Range?,
     val highlight: Boolean
 )
 

@@ -139,8 +139,10 @@ class WebViewRouter(val project: Project) {
 
         // Numbers greater than Integer.MAX_VALUE are deserialized as -1. It should not happen,
         // but some versions of the plugin might do that trying to represent a whole line.
-        if (request.range.end.character == -1) {
-            request.range.end.character = Integer.MAX_VALUE
+        request.range?.end?.let {
+            if (it.character == -1) {
+                it.character = Integer.MAX_VALUE
+            }
         }
 
         project.editorService?.toggleRangeHighlight(request.range, request.highlight)
