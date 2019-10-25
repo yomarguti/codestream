@@ -665,7 +665,7 @@ export function toSlackPostBlocks(
 						action_id: actionId,
 						text: {
 							type: "plain_text",
-							text: "Open on CodeStream"
+							text: "Open on Web"
 						},
 						url: `${codemark.permalink}?marker=${marker.id}`
 					}
@@ -726,7 +726,7 @@ export function toSlackPostBlocks(
 					action_id: actionId,
 					text: {
 						type: "plain_text",
-						text: "Open on CodeStream"
+						text: "Open on Web"
 					},
 					url: codemark.permalink
 				}

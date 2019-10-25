@@ -399,7 +399,7 @@ export function toTeamsMessageBody(
 
 			markerCard.buttons!.push({
 				type: "openUrl",
-				title: "Open on CodeStream",
+				title: "Open on Web",
 				value: `${codemark.permalink}?marker=${marker.id}`
 			});
 
@@ -434,7 +434,7 @@ export function toTeamsMessageBody(
 	} else {
 		mainCard.buttons!.push({
 			type: "openUrl",
-			title: "Open on CodeStream",
+			title: "Open on Web",
 			value: codemark.permalink
 		});
 
