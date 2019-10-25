@@ -1,5 +1,6 @@
 export interface ProviderDisplay {
 	displayName: string;
+	shortDisplayName?: string;
 	icon?: string;
 	getUrl?: string;
 	urlPlaceholder?: string;
@@ -19,7 +20,8 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 	},
 	gitlab: { displayName: "GitLab", icon: "gitlab" },
 	gitlab_enterprise: {
-		displayName: "GitLab Enterprise",
+		displayName: "GitLab Self-Managed",
+		shortDisplayName: "GitLab",
 		icon: "gitlab",
 		urlPlaceholder: "https://gitlab.myorg.com",
 		helpUrl:

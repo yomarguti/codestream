@@ -112,6 +112,7 @@ export class ConfigureEnterprisePanel extends Component {
 		const inactive = false;
 		const { name } = this.props.providers[providerId] || {};
 		const providerName = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].displayName : "";
+		const providerShortName = PROVIDER_MAPPINGS[name] ? (PROVIDER_MAPPINGS[name].shortDisplayName || providerName) : "";
 		const placeholder = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].urlPlaceholder : "";
 		const getUrl = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].getUrl : "";
 		const helpUrl = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].helpUrl : "";
@@ -132,10 +133,10 @@ export class ConfigureEnterprisePanel extends Component {
 						<div id="controls">
 							<div id="configure-enterprise-controls" className="control-group">
 								<label>
-									<strong>{providerName} Base URL</strong>
+									<strong>{providerShortName} Base URL</strong>
 								</label>
 								<label>
-									Please provide the Base URL used by your team to access {providerName}.
+									Please provide the Base URL used by your team to access {providerShortName}.
 								</label>
 								<input
 									className="native-key-bindings input-text control"
@@ -155,7 +156,7 @@ export class ConfigureEnterprisePanel extends Component {
 							<br />
 							{helpUrl && (
 								<label>
-									Contact your {providerName} admin to get the client ID and secret required below,
+									Contact your {providerShortName} admin to get the client ID and secret required below,
 									and send them a link to{" "}
 									<a href={helpUrl}>
 										these instructions
