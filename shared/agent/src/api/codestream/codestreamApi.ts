@@ -731,7 +731,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@log()
 	moveMarker(request: { oldMarkerId: string, newMarker: CreateMarkerRequest }): Promise<MoveMarkerResponse> {
 		return this.put<CSCreateMarkerRequest, CSCreateMarkerResponse>(
-			`/markers/${request.oldMarkerId}`,
+			`/markers/${request.oldMarkerId}/move`,
 			request.newMarker,
 			this._token
 		);
