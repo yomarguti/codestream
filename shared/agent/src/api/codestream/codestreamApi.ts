@@ -1713,8 +1713,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 				if (data.message) {
 					message += `: ${data.message}`;
 				}
-				if (data.info && data.info.name) {
-					message += `\n${data.info.name}`;
+				if (data.info) {
+					message += `\n${data.info.name || data.info}`;
 				}
 			} catch {}
 		}
