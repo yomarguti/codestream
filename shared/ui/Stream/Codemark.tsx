@@ -1035,6 +1035,12 @@ export class Codemark extends React.Component<Props, State> {
 		this.setState({ isInjecting: true, injectingLocation: markerId });
 	};
 
+	startRepositioning = (codemarkId, markerId, value) => {
+		this.props.repositionCodemark(codemarkId, markerId, value);
+		this.toggleCodeHighlightInTextEditor(false, true);
+		this._cleanUpHighlights();
+	};
+
 	renderInlineCodemark() {
 		const {
 			codemark,
@@ -1101,14 +1107,18 @@ export class Codemark extends React.Component<Props, State> {
 			if (selected && codemark.markers && codemark.markers.length > 1) {
 				const submenu = codemark.markers.map((m, index) => {
 					let label = "Code Location #" + (index + 1);
-					return { label, action: () => repositionCodemark(codemark.id, m.id, true), key: index };
+					return {
+						label,
+						action: () => this.startRepositioning(codemark.id, m.id, true),
+						key: index
+					};
 				});
 				menuItems.push({ label: "Reposition Codemark", submenu: submenu, key: "reposition" });
 			} else if (codemark.markers && codemark.markers[0]) {
 				const m = codemark.markers[0];
 				menuItems.push({
 					label: "Reposition Codemark",
-					action: () => repositionCodemark(codemark.id, m.id, true),
+					action: () => this.startRepositioning(codemark.id, m.id, true),
 					key: "reposition"
 				});
 			}
