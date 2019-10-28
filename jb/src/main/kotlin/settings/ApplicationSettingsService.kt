@@ -95,7 +95,14 @@ class ApplicationSettingsService : PersistentStateComponent<ApplicationSettingsS
             } else {
                 val httpConfig = HttpConfigurable.getInstance()
                 if (httpConfig.USE_HTTP_PROXY && !httpConfig.PROXY_HOST.isNullOrBlank()) {
-                    url = httpConfig.PROXY_HOST
+                    url = if (httpConfig.PROXY_AUTHENTICATION) {
+                        val login = httpConfig.proxyLogin
+                        val password = httpConfig.plainProxyPassword
+                        "http://${login}:${password}@${httpConfig.PROXY_HOST}"
+                    } else {
+                        httpConfig.PROXY_HOST
+                    }
+
                     if (httpConfig.PROXY_PORT != null) {
                         url = url + ":" + httpConfig.PROXY_PORT
                     }
