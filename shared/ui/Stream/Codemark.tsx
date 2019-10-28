@@ -1088,10 +1088,11 @@ export class Codemark extends React.Component<Props, State> {
 				return { label, action: () => this.setInjecting(m.id), key: index };
 			});
 			menuItems.push({ label: "Inject as Inline Comment", submenu: submenu, key: "inject" });
-		} else {
+		} else if (codemark.markers && codemark.markers[0]) {
+			const m = codemark.markers[0];
 			menuItems.push({
 				label: "Inject as Inline Comment",
-				action: () => this.setInjecting(marker.id),
+				action: () => this.setInjecting(m.id),
 				key: "inject"
 			});
 		}
@@ -1103,10 +1104,11 @@ export class Codemark extends React.Component<Props, State> {
 					return { label, action: () => repositionCodemark(codemark.id, m.id, true), key: index };
 				});
 				menuItems.push({ label: "Reposition Codemark", submenu: submenu, key: "reposition" });
-			} else {
+			} else if (codemark.markers && codemark.markers[0]) {
+				const m = codemark.markers[0];
 				menuItems.push({
 					label: "Reposition Codemark",
-					action: () => repositionCodemark(codemark.id, marker.id, true),
+					action: () => repositionCodemark(codemark.id, m.id, true),
 					key: "reposition"
 				});
 			}
