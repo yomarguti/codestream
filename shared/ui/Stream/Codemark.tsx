@@ -1103,7 +1103,7 @@ export class Codemark extends React.Component<Props, State> {
 			});
 		}
 
-		if (apiCapabilities.moveMarkers && repositionCodemark) {
+		if (apiCapabilities.moveMarkers2 && repositionCodemark) {
 			if (selected && codemark.markers && codemark.markers.length > 1) {
 				const submenu = codemark.markers.map((m, index) => {
 					let label = "Code Location #" + (index + 1);
@@ -1179,7 +1179,7 @@ export class Codemark extends React.Component<Props, State> {
 							marker && marker.notLocatedReason && (
 								<>
 									Position lost for this codemark
-									{apiCapabilities.moveMarkers && (
+									{apiCapabilities.moveMarkers2 && (
 										<Tooltip
 											title="Connect this codemark to a block of code in this file or another"
 											placement="topRight"
