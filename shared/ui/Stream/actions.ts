@@ -37,6 +37,8 @@ import { saveCodemarks, updateCodemarks } from "../store/codemarks/actions";
 import {
 	closePanel,
 	openPanel,
+	setCodemarkAuthorFilter,
+	setCodemarkBranchFilter,
 	setChannelFilter,
 	setCodemarkTagFilter,
 	setCodemarkFileFilter,
@@ -63,7 +65,9 @@ import { PostsActionsType, Post } from "../store/posts/types";
 export {
 	openPanel,
 	closePanel,
+	setCodemarkAuthorFilter,
 	setCodemarkTypeFilter,
+	setCodemarkBranchFilter,
 	setCodemarkFileFilter,
 	setCodemarkTagFilter,
 	setChannelFilter
