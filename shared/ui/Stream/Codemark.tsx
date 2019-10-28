@@ -1179,23 +1179,25 @@ export class Codemark extends React.Component<Props, State> {
 							marker && marker.notLocatedReason && (
 								<>
 									Position lost for this codemark
-									<Tooltip
-										title="Connect this codemark to a block of code in this file or another"
-										placement="topRight"
-										delay={1}
-									>
-										<div className="right">
-											<div
-												className="resolve-button reposition-button"
-												onClick={e => {
-													e.stopPropagation();
-													this.props.repositionCodemark(codemark.id, marker.id, true);
-												}}
-											>
-												Reposition
+									{apiCapabilities.moveMarkers && (
+										<Tooltip
+											title="Connect this codemark to a block of code in this file or another"
+											placement="topRight"
+											delay={1}
+										>
+											<div className="right">
+												<div
+													className="resolve-button reposition-button"
+													onClick={e => {
+														e.stopPropagation();
+														this.props.repositionCodemark(codemark.id, marker.id, true);
+													}}
+												>
+													Reposition
+												</div>
 											</div>
-										</div>
-									</Tooltip>
+										</Tooltip>
+									)}
 								</>
 							)}
 							{!codemark.pinned && <div>This codemark is archived.</div>}
