@@ -152,7 +152,10 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		const markers = [];
 		if (codemark.markerIds != null && codemark.markerIds.length !== 0) {
 			for (const markerId of codemark.markerIds) {
-				markers.push(await markersManager.getById(markerId));
+				const marker = await markersManager.getById(markerId);
+				if (marker.supersededByMarkerId == null) {
+					markers.push(marker);
+				}
 			}
 		}
 
