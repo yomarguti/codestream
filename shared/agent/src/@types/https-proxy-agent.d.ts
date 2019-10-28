@@ -6,6 +6,7 @@ declare module "https-proxy-agent" {
 	interface HttpsProxyAgentOptions {
 		host: string;
 		port: number;
+		auth?: string;
 		secureProxy?: boolean;
 		headers?: {
 			[key: string]: string;
