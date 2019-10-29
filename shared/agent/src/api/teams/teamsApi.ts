@@ -67,6 +67,7 @@ import {
 	MarkPostUnreadResponse,
 	MarkStreamReadRequest,
 	MarkStreamReadResponse,
+	MatchReposRequest,
 	MuteStreamRequest,
 	MuteStreamResponse,
 	OpenStreamRequest,
@@ -818,6 +819,11 @@ export class MSTeamsApiProvider implements ApiProvider {
 	@log()
 	getRepo(request: GetRepoRequest) {
 		return this._codestream.getRepo(request);
+	}
+
+	@log()
+	matchRepos(request: MatchReposRequest) {
+		return this._codestream.matchRepos(request);
 	}
 
 	@log()

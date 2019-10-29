@@ -59,6 +59,7 @@ import {
 	LeaveStreamRequest,
 	MarkPostUnreadRequest,
 	MarkStreamReadRequest,
+	MatchReposRequest,
 	MuteStreamRequest,
 	MuteStreamResponse,
 	OpenStreamRequest,
@@ -1072,6 +1073,11 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	getRepo(request: GetRepoRequest) {
 		return this._codestream.getRepo(request);
+	}
+
+	@log()
+	matchRepos(request: MatchReposRequest) {
+		return this._codestream.matchRepos(request);
 	}
 
 	@log()

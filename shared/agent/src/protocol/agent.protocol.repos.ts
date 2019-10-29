@@ -62,3 +62,16 @@ export interface MapReposResponse {
 export const MapReposRequestType = new RequestType<MapReposRequest, MapReposResponse, void, void>(
 	"codestream/repos/map"
 );
+
+export interface MatchRepoInfo {
+	remotes: string[];
+	knownCommitHashes?: string[];
+}
+
+export interface MatchReposRequest {
+	repos: MatchRepoInfo[];
+}
+
+export interface MatchReposResponse {
+	repos: CSRepository[];
+}

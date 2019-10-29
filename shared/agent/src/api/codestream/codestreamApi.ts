@@ -56,6 +56,8 @@ import {
 	LeaveStreamRequest,
 	MarkPostUnreadRequest,
 	MarkStreamReadRequest,
+	MatchReposRequest,
+	MatchReposResponse,
 	MoveMarkerResponse,
 	MuteStreamRequest,
 	OpenStreamRequest,
@@ -948,6 +950,15 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@log()
 	getRepo(request: GetRepoRequest) {
 		return this.get<CSGetRepoResponse>(`/repos/${request.repoId}`, this._token);
+	}
+
+	@log()
+	async matchRepos(request: MatchReposRequest) {
+		return this.put<MatchReposRequest, MatchReposResponse>(
+			`/repos/match/${this.teamId}`,
+			request,
+			this._token
+		);
 	}
 
 	@log()

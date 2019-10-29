@@ -11,7 +11,8 @@ import {
 import { URI } from "vscode-uri";
 import { SessionContainer } from "../container";
 import { Logger } from "../logger";
-import { RepoMap } from "../protocol/agent.protocol.repos";
+import { MarkersManager } from "../managers/markersManager";
+import { MatchReposRequest, MatchReposResponse, RepoMap } from "../protocol/agent.protocol.repos";
 import { CSRepository } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
 import { Iterables, Objects, Strings, TernarySearchTree } from "../system";
@@ -151,19 +152,38 @@ export class GitRepositories {
 			Logger.log(`Starting repository search in ${e.added.length} folders`);
 		}
 
+		let allAddedRepositories: GitRepository[] = [];
 		for (const f of e.added) {
 			if (URI.parse(f.uri).scheme !== "file") continue;
 
 			// Search for and add all repositories (nested and/or submodules)
 			const repositories = await this.repositorySearch(f, this.session.workspace);
-			for (const r of repositories) {
-				this._repositoryTree.set(r.path, r);
-				if (initializing && r.id) {
-					repoMap.push({
-						repoId: r.id,
-						path: r.path
-					});
-				}
+			allAddedRepositories = [...allAddedRepositories, ...repositories];
+		}
+
+		// for all repositories without a CodeStream repo ID, ask the server for matches,
+		// and create new CodeStream repos for any we have found that aren't known to the team
+		const unassignedRepositories = allAddedRepositories.filter(repo => !repo.id);
+		if (unassignedRepositories.length > 0) {
+			const repoInfo: MatchReposRequest = { repos: [] };
+			await Promise.all(unassignedRepositories.map(async repo => {
+				const remotes = (await repo.getRemotes()).map(r => r.path);
+				const knownCommitHashes = await MarkersManager.getKnownCommitHashes(repo.path);
+				repoInfo.repos.push({ remotes, knownCommitHashes });
+			}));
+			const repoMatches = await this.session.api.matchRepos(repoInfo);
+			for (let i = 0; i < repoMatches.repos.length; i++) {
+				unassignedRepositories[i].setKnownRepository(repoMatches.repos[i]);
+			}
+		}
+
+		for (const r of allAddedRepositories) {
+			this._repositoryTree.set(r.path, r);
+			if (initializing && r.id) {
+				repoMap.push({
+					repoId: r.id,
+					path: r.path
+				});
 			}
 		}
 

@@ -84,6 +84,8 @@ import {
 	MarkPostUnreadResponse,
 	MarkStreamReadRequest,
 	MarkStreamReadResponse,
+	MatchReposRequest,
+	MatchReposResponse,
 	MoveMarkerResponse,
 	MuteStreamRequest,
 	MuteStreamResponse,
@@ -309,6 +311,7 @@ export interface ApiProvider {
 	createRepo(request: CreateRepoRequest): Promise<CreateRepoResponse>;
 	fetchRepos(request: FetchReposRequest): Promise<FetchReposResponse>;
 	getRepo(request: GetRepoRequest): Promise<GetRepoResponse>;
+	matchRepos(request: MatchReposRequest): Promise<MatchReposResponse>;
 
 	createChannelStream(request: CreateChannelStreamRequest): Promise<CreateChannelStreamResponse>;
 	createDirectStream(request: CreateDirectStreamRequest): Promise<CreateDirectStreamResponse>;

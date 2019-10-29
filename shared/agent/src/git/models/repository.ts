@@ -53,4 +53,8 @@ export class GitRepository {
 		this._knownRepository = found;
 		return this._knownRepository;
 	}
+
+	setKnownRepository(repo: CSRepository) {
+		this._knownRepository = repo;
+	}
 }
