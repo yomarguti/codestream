@@ -59,6 +59,26 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="5_1_0">5.1.0</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds support for HTTP proxy authentication</li>
+    <li>Adds "Open in IDE", "Open on Web" and "Open on GitHub" (or Bitbucket/GitLab) links to issues created in external issue-tracking services (Jira, Trello, etc.)</li>
+    <li>Adds the ability to manually reposition a codemark in cases where its location isn't automatically updated based on changes to the code</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>Changed the "Open on CodeStream" button in posts to Slack / MS Teams to "Open on Web"</li>
+    <li>Improvements on codemark location calulation</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue with editing replies</li>
+    <li>Fixes an issue with the dropdowns for Author and Branch on the Search tab not working</li>
+    <li>Fixes an issue with the formatting of code blocks in issues created on YouTrack</li>
+    <li>Fixes an issue where the "Open in IDE" button, for codemarks with multiple locations, would always open to the first location</li>
+    <li>Fixes issues with "Open in IDE" from codemark pages in Firefox</li>
+</ul>
 <h4 id="5_0_1">5.0.1</h4>
 <h5>Fixed</h5>
 <ul>
