@@ -163,17 +163,20 @@ export class GitRepositories {
 
 		// for all repositories without a CodeStream repo ID, ask the server for matches,
 		// and create new CodeStream repos for any we have found that aren't known to the team
-		const unassignedRepositories = allAddedRepositories.filter(repo => !repo.id);
-		if (unassignedRepositories.length > 0) {
-			const repoInfo: MatchReposRequest = { repos: [] };
-			await Promise.all(unassignedRepositories.map(async repo => {
-				const remotes = (await repo.getRemotes()).map(r => r.path);
-				const knownCommitHashes = await MarkersManager.getKnownCommitHashes(repo.path);
-				repoInfo.repos.push({ remotes, knownCommitHashes });
-			}));
-			const repoMatches = await this.session.api.matchRepos(repoInfo);
-			for (let i = 0; i < repoMatches.repos.length; i++) {
-				unassignedRepositories[i].setKnownRepository(repoMatches.repos[i]);
+		const apiCapabilities = await this.session.api.getApiCapabilities();
+		if (apiCapabilities["repoCommitMatching"]) {
+			const unassignedRepositories = allAddedRepositories.filter(repo => !repo.id);
+			if (unassignedRepositories.length > 0) {
+				const repoInfo: MatchReposRequest = { repos: [] };
+				await Promise.all(unassignedRepositories.map(async repo => {
+					const remotes = (await repo.getRemotes()).map(r => r.path);
+					const knownCommitHashes = await MarkersManager.getKnownCommitHashes(repo.path);
+					repoInfo.repos.push({ remotes, knownCommitHashes });
+				}));
+				const repoMatches = await this.session.api.matchRepos(repoInfo);
+				for (let i = 0; i < repoMatches.repos.length; i++) {
+					unassignedRepositories[i].setKnownRepository(repoMatches.repos[i]);
+				}
 			}
 		}
 
