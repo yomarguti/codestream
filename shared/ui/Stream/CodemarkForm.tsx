@@ -971,6 +971,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		else {
 			relatedCodemarkIds[codemark.id] = codemark;
 			HostApi.instance.track("Related Codemark Added", {
+				"Codemark ID": this.props.editingCodemark ? this.props.editingCodemark.id : undefined,
 				"Sibling Status": this.props.isEditing ? "Existing Codemark" : "New Codemark"
 			});
 		}

@@ -1454,11 +1454,9 @@ export class SimpleStream extends Component {
 		this.focusInput();
 
 		if (post.codemark && !this.props.threadId) {
-			HostApi.instance.send(TelemetryRequestType, {
-				eventName: "Codemark Clicked",
-				properties: {
-					"Codemark Location": "Stream"
-				}
+			HostApi.track("Codemark Clicked", {
+				"Codemark Location": "Stream",
+				"Codemark ID": post.codemark.id
 			});
 		}
 	};

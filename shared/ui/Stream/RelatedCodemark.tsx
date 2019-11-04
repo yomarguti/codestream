@@ -24,6 +24,7 @@ export function RelatedCodemark(props: { id: string }) {
 			event.preventDefault();
 			event.stopPropagation();
 			HostApi.instance.track("Codemark Clicked", {
+				"Codemark ID": props.id,
 				"Codemark Location": "Related List"
 			});
 
