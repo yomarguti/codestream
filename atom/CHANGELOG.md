@@ -11,6 +11,7 @@
 
 - Changed the "Open on CodeStream" button in posts to Slack / MS Teams to "Open on Web"
 - Improvements on codemark location calulation
+- The standard font size in the CodeStream tab will match that of the tree-view and status bar
 
 ### Fixed
 
