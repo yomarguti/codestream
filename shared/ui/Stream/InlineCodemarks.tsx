@@ -525,13 +525,13 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 								// 		(docMarker.externalContent && !this.props.showPRComments));
 
 								const hidden =
-								(!showHidden &&
-									(codemark && (!codemark.pinned || codemark.status === "closed"))) ||
-								(docMarker.externalContent && !this.props.showPRComments);
-							if (hidden) {
-								this.hiddenCodemarks[docMarker.id] = true;
-								return null;
-							}
+									(!showHidden &&
+										(codemark && (!codemark.pinned || codemark.status === "closed"))) ||
+									(docMarker.externalContent && !this.props.showPRComments);
+								if (hidden) {
+									this.hiddenCodemarks[docMarker.id] = true;
+									return null;
+								}
 
 								return (
 									<div key={docMarker.id} className="codemark-container">
@@ -1070,9 +1070,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						const storeState: CodeStreamState = this.context.store.getState();
 						const author = userSelectors.getUserByCsId(storeState.users, documentMarker.creatorId);
 						if (author != undefined && author.id === storeState.session.userId) {
+							// only taking the first one here because this code only applies to creating a single
+							// marker codemark in spatial view
+							const codeBlock = attributes.codeBlocks[0];
 							if (
-								documentMarker.commitHashWhenCreated === attributes.codeBlock.scm.revision &&
-								documentMarker.code === attributes.codeBlock.contents
+								codeBlock.scm.file === documentMarker.file &&
+								codeBlock.contents === documentMarker.code
 							) {
 								docMarker = documentMarker;
 								return false;
