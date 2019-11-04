@@ -84,6 +84,11 @@ export default function ContainerAtEditorLine(props: {
 					return;
 				}
 			}
+			// if the line isn't in view, set position to something way out of view
+			if (line0 < 0) {
+				setPosition(-2000);
+				return;
+			}
 			// if still adjusted and logicalPosition has changed, update position and potentially adjustment
 			if (position !== logicalPosition) {
 				setPosition(logicalPosition);

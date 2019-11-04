@@ -1,13 +1,14 @@
-import React, { ReactNode } from "react";
+import React from "react";
 import { useSelector } from "react-redux";
 import { getCurrentSelection } from "@codestream/webview/store/editorContext/reducer";
 import { CodeStreamState } from "@codestream/webview/store";
 import ContainerAtEditorLine from "./ContainerAtEditorLine";
 
-export default function ContainerAtEditorSelection(props: {
-	children: ReactNode | ReactNode[];
-	className?: string;
-}) {
+export default function ContainerAtEditorSelection(
+	props: React.PropsWithChildren<{
+		className?: string;
+	}>
+) {
 	const lineNumber = useSelector((state: CodeStreamState) => {
 		const { textEditorUri } = state.editorContext;
 		if (textEditorUri !== "" && textEditorUri != undefined) {

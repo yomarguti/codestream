@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback, useLayoutEffect, EffectCallback } from "react";
+import { noop } from "../utils";
 
 type Fn = () => void;
 
@@ -6,12 +7,16 @@ export function useDidMount(callback: EffectCallback) {
 	useEffect(callback, []);
 }
 
+/*
+	This hook runs the provided callback only when the component has been mounted and provided dependencies change.
+	The callback IS NOT invoked when the component is initially mounted.
+*/
 export function useUpdates(callback: Fn, dependencies: any[] = []) {
-	const onMount = useCallback(() => {
-		isMountedRef.current = true;
-	}, []);
 	const isMountedRef = useRef(false);
-	useEffect(isMountedRef.current ? callback : onMount, dependencies);
+	useDidMount(() => {
+		isMountedRef.current = true;
+	});
+	useEffect(isMountedRef.current ? callback : noop, dependencies);
 }
 
 export function useInterval(callback: Fn, delay = 1000) {

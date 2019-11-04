@@ -1401,7 +1401,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			if (codeBlocks[0]) {
 				const lineNumber = codeBlocks[0].range.start.line;
 				return (
-					<ContainerAtEditorLine lineNumber={lineNumber} className="cs-has-form">
+					<ContainerAtEditorLine repositionToFit lineNumber={lineNumber} className="cs-has-form">
 						<div className="codemark-form-container">{this.renderCodemarkForm()}</div>
 					</ContainerAtEditorLine>
 				);
