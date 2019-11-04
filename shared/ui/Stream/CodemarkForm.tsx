@@ -1195,6 +1195,9 @@ class CodemarkForm extends React.Component<Props, State> {
 				onChange={this.handleChange}
 				toggleTag={this.handleToggleTag}
 				toggleCodemark={this.handleToggleCodemark}
+				shouldShowRelatableCodemark={codemark =>
+					this.props.editingCodemark ? codemark.id !== this.props.editingCodemark.id : true
+				}
 				onSubmit={this.handleClickSubmit}
 				teamTags={this.props.teamTagsArray}
 				selectedTags={this.state.selectedTags}

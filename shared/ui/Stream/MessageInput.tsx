@@ -19,6 +19,7 @@ import Menu from "./Menu";
 import Button from "./Button";
 import Icon from "./Icon";
 import { confirmPopup } from "./Confirm";
+import { CodemarkPlus } from "@codestream/protocols/agent";
 
 type PopupType = "at-mentions" | "slash-commands" | "channels" | "emojis";
 
@@ -62,6 +63,7 @@ interface Props {
 	submitOnEnter?: boolean;
 	placeholder?: string;
 	quotePost?: QuotePost;
+	shouldShowRelatableCodemark?(codemark: CodemarkPlus): boolean;
 	onChange?(text: string, formatCode: boolean): any;
 	updateTeamTag?(team: any, tag: any): any;
 	onChangeSelectedTags?(tag: any): any;
@@ -686,6 +688,12 @@ export class MessageInput extends React.Component<Props, State> {
 				.sort((a, b) => b.createdAt - a.createdAt)
 				.map(codemark => {
 					if (codemark.deactivated) return null;
+					if (
+						this.props.shouldShowRelatableCodemark &&
+						!this.props.shouldShowRelatableCodemark(codemark)
+					)
+						return null;
+
 					const title = codemark.title || codemark.text;
 					const icon = this.props.relatedCodemarkIds[codemark.id] ? (
 						<Icon style={{ margin: "0 2px 0 2px" }} name="check" />
