@@ -105,7 +105,7 @@ interface ConnectedProps {
 	apiCapabilities: CSApiCapabilities;
 }
 
-export type DisplayType = "default" | "collapsed";
+export type DisplayType = "default" | "collapsed" | "activity";
 
 interface InheritedProps {
 	contextName?: "Spatial View" | "Codemarks Tab";
@@ -252,6 +252,7 @@ export class Codemark extends React.Component<Props, State> {
 		switch (this.props.displayType) {
 			case "collapsed":
 				return this.renderCollapsedCodemark();
+			case "activity":
 			case "default":
 			default:
 				return this.renderInlineCodemark();
