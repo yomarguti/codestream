@@ -202,7 +202,10 @@ export class DocumentMarkerManager {
 		});
 
 		const telemetry = Container.instance().telemetry;
-		const payload = { Access: privacy === "public" ? "Public" : "Private" };
+		const payload = {
+			Access: privacy === "public" ? "Public" : "Private",
+			"Codemark ID": response.codemark.id
+		};
 		telemetry.track({ eventName: "Permalink Created", properties: payload });
 
 		return { linkUrl: response.permalink! };

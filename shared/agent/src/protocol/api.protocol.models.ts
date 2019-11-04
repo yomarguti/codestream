@@ -84,7 +84,7 @@ export interface CSMarker extends CSEntity, CSMarkerIdentifier {
 	branchWhenCreated?: string;
 	locationWhenCreated: CSLocationArray;
 	code: string;
-    referenceLocations: CSReferenceLocation[];
+	referenceLocations: CSReferenceLocation[];
 	supersededByMarkerId: string;
 }
 
@@ -267,6 +267,8 @@ export interface CSTeam extends CSEntity {
 	tags?: {
 		[id: string]: CSTag;
 	};
+	// only used for analytics and reporting. differentiates between teams created by us employees
+	reportingGroup?: string;
 }
 
 export interface CSTag {

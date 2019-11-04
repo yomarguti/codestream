@@ -398,7 +398,11 @@ class PostsCache extends EntityCache<CSPost> {
 	}
 }
 
-function trackPostCreation(request: CreatePostRequest, textDocuments?: TextDocumentIdentifier[]) {
+function trackPostCreation(
+	request: CreatePostRequest,
+	textDocuments?: TextDocumentIdentifier[],
+	codemarkId?: string
+) {
 	process.nextTick(() => {
 		const { session, streams } = SessionContainer.instance();
 		try {
@@ -475,6 +479,7 @@ function trackPostCreation(request: CreatePostRequest, textDocuments?: TextDocum
 						const codemarkProperties: {
 							[key: string]: any;
 						} = {
+							"Codemark ID": codemarkId,
 							"Codemark Type": request.codemark.type,
 							"Linked Service": request.codemark.externalProvider,
 							Tags: (request.codemark.tags || []).length,
@@ -781,7 +786,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			});
 		}
 
-		trackPostCreation(request, textDocuments);
+		trackPostCreation(request, textDocuments, codemarkId);
 		await resolveCreatePostResponse(response!);
 		return {
 			...response!,
