@@ -65,7 +65,9 @@ import { isConnected } from "../store/providers/reducer";
 import { confirmPopup } from "./Confirm";
 import ComposeTitles from "./ComposeTitles";
 import { PostsActionsType } from "../store/posts/types";
+import { Switch } from "../src/components/controls/Switch";
 import { NewCodemarkAttributes } from "../store/codemarks/actions";
+import styled from "styled-components";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -1070,28 +1072,29 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const { numAbove, numBelow } = this.state;
 
 		return (
-			<div className="view-selectors">
+			<ViewSelectors>
 				{viewInline && numAbove > 0 && (
-					<span className="count" onClick={this.showAbove}>
-						{numAbove} <Icon name="arrow-up" />
-					</span>
+					<ViewSelectorControl onClick={this.showAbove}>
+						<span>{numAbove}</span> <Icon name="arrow-up" />
+					</ViewSelectorControl>
 				)}
 				{viewInline && numBelow > 0 && (
-					<span className="count" onClick={this.showBelow}>
-						{numBelow} <Icon name="arrow-down" />
-					</span>
+					<ViewSelectorControl onClick={this.showBelow}>
+						<span>{numBelow}</span> <Icon name="arrow-down" />
+					</ViewSelectorControl>
 				)}
 				<Tooltip title="Show/hide pull request comments" placement="top" delay={1}>
-					<span className="count" onClick={this.togglePRComments}>
-						PRs <label className={cx("switch", { checked: this.props.showPRComments })} />
-					</span>
+					<ViewSelectorControl onClick={this.togglePRComments}>
+						<span>PRs</span>{" "}
+						<Switch size="small" on={this.props.showPRComments} onChange={this.togglePRComments} />
+					</ViewSelectorControl>
 				</Tooltip>
 				{numHidden > 0 && (
 					<Tooltip title="Show/hide archived codemarks" placement="top" delay={1}>
-						<span className="count" onClick={this.toggleShowHidden}>
-							{numHidden} archived
-							<label className={cx("switch", { checked: this.props.showHidden })} />
-						</span>
+						<ViewSelectorControl onClick={this.toggleShowHidden}>
+							<span>{numHidden} archived</span>
+							<Switch size="small" on={this.props.showHidden} onChange={this.toggleShowHidden} />
+						</ViewSelectorControl>
 					</Tooltip>
 				)}
 				<Tooltip
@@ -1099,13 +1102,15 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					placement="topRight"
 					delay={1}
 				>
-					<span className="count" onClick={this.toggleViewCodemarksInline}>
-						list
-						<label className={cx("switch ", { checked: !viewInline })} />
-					</span>
+					<ViewSelectorControl onClick={this.toggleViewCodemarksInline}>
+						<span>list</span>
+						<Switch size="small" on={!viewInline} onChange={this.toggleViewCodemarksInline} />
+					</ViewSelectorControl>
 				</Tooltip>
-				<Feedback />
-			</div>
+				<ViewSelectorControl>
+					<Feedback />
+				</ViewSelectorControl>
+			</ViewSelectors>
 		);
 	}
 
@@ -1340,3 +1345,38 @@ export default connect(mapStateToProps, {
 	changeSelection,
 	setSpatialViewPRCommentsToggle
 })(SimpleInlineCodemarks);
+
+const ViewSelectorControl = styled.span`
+	cursor: pointer;
+	opacity: 0.75;
+	padding: 5px 2%;
+	white-space: nowrap;
+	:hover {
+		opacity: 1;
+		color: var(--text-color-highlight);
+	}
+
+	span:first-child {
+		margin-right: 5px;
+	}
+
+	display: inline-flex;
+	align-items: center;
+	justify-content: space-evenly;
+`;
+
+const ViewSelectors = styled.div`
+	width: 100%;
+	height: 30px;
+	position: fixed;
+	bottom: 0px;
+	right: 0;
+	display: flex;
+	justify-content: flex-end;
+	z-index: 45;
+	background: var(--app-background-color);
+	padding-top: 3px;
+	padding-bottom: 5px;
+	border-top: 1px solid var(--base-border-color);
+	text-align: right;
+`;
