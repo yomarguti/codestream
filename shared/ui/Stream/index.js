@@ -5,6 +5,7 @@ import { connect } from "react-redux";
 import createClassString from "classnames";
 import ComposeBox from "./ComposeBox";
 import PostList from "./PostList";
+import { ActivityPanel } from "./ActivityPanel";
 import ChannelPanel from "./ChannelPanel";
 import PeoplePanel from "./PeoplePanel";
 import InvitePanel from "./InvitePanel";
@@ -583,20 +584,19 @@ export class SimpleStream extends Component {
 							</span>
 						</Tooltip>
 					</label>
-					{
-						// <label
-						// 	className={createClassString({
-						// 		selected: activePanel === "activity"
-						// 	})}
-						// 	onClick={e => this.setActivePanel("activity")}
-						// >
-						// 	<Tooltip title="Activity Feed" placement="bottom">
-						// 		<span>
-						// 			<Icon name="activity" />
-						// 		</span>
-						// 	</Tooltip>
-						// </label>
-					}
+					<label
+						className={createClassString({
+							selected: activePanel === WebviewPanels.Activity
+						})}
+						onClick={e => this.setActivePanel(WebviewPanels.Activity)}
+					>
+						<Tooltip title="Activity Feed" placement="bottom">
+							<span>
+								<Icon name="activity" />
+								{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
+							</span>
+						</Tooltip>
+					</label>
 					{
 						// <label
 						// 	className={createClassString({
@@ -649,27 +649,29 @@ export class SimpleStream extends Component {
 						// 	</Tooltip>
 						// </label>
 					}
-					{(this.props.capabilities.providerSupportsRealtimeChat ||
-						this.props.capabilities.providerCanSupportRealtimeChat) && (
-						<label
-							className={createClassString({
-								selected:
-									activePanel === "channels" || activePanel === "main" || activePanel === "thread"
-							})}
-							onClick={e => this.setActivePanel("channels")}
-						>
-							<Tooltip title="Channels &amp; DMs" placement="bottom">
-								<span>
-									{this.props.isCodeStreamTeam ? (
-										<Icon name="chatroom" />
-									) : (
-										<Icon className={this.props.teamProvider} name={this.props.teamProvider} />
-									)}
-									{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
-								</span>
-							</Tooltip>
-						</label>
-					)}
+					{
+						// 	(this.props.capabilities.providerSupportsRealtimeChat ||
+						// 	this.props.capabilities.providerCanSupportRealtimeChat) && (
+						// 	<label
+						// 		className={createClassString({
+						// 			selected:
+						// 				activePanel === "channels" || activePanel === "main" || activePanel === "thread"
+						// 		})}
+						// 		onClick={e => this.setActivePanel("channels")}
+						// 	>
+						// 		<Tooltip title="Channels &amp; DMs" placement="bottom">
+						// 			<span>
+						// 				{this.props.isCodeStreamTeam ? (
+						// 					<Icon name="chatroom" />
+						// 				) : (
+						// 					<Icon className={this.props.teamProvider} name={this.props.teamProvider} />
+						// 				)}
+						// 				{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
+						// 			</span>
+						// 		</Tooltip>
+						// 	</label>
+						// )
+					}
 					<label
 						className={createClassString({
 							selected: activePanel === WebviewPanels.Codemarks
@@ -851,6 +853,7 @@ export class SimpleStream extends Component {
 							typeFilter={this.state.knowledgeType}
 						/>
 					)}
+					{activePanel === WebviewPanels.Activity && <ActivityPanel />}
 					{activePanel === "channels" && (
 						<ChannelPanel
 							activePanel={activePanel}
@@ -863,7 +866,6 @@ export class SimpleStream extends Component {
 							services={this.props.services}
 						/>
 					)}
-
 					{activePanel === "public-channels" && (
 						<PublicChannelPanel
 							activePanel={activePanel}
