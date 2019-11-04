@@ -155,7 +155,6 @@ export const ActivityPanel = (connect(
 						key={codemark.id}
 						contextName="Activity Panel"
 						codemark={codemark}
-						selected={true}
 						displayType="activity"
 						currentUserName={props.currentUserName}
 						usernames={props.usernames}

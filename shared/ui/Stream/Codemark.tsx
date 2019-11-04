@@ -1114,6 +1114,7 @@ export class Codemark extends React.Component<Props, State> {
 			return null;
 		}
 
+		const renderExpandedBody = selected || this.props.displayType === "activity";
 		const renderAlternateBody = isInjecting;
 
 		const type = codemark && codemark.type;
@@ -1141,7 +1142,7 @@ export class Codemark extends React.Component<Props, State> {
 			);
 		}
 
-		if (selected && codemark.markers && codemark.markers.length > 1) {
+		if (renderExpandedBody && codemark.markers && codemark.markers.length > 1) {
 			const submenu = codemark.markers.map((m, index) => {
 				let label = "At Code Location #" + (index + 1);
 				return { label, action: () => this.setInjecting(m.id), key: index };
@@ -1157,7 +1158,7 @@ export class Codemark extends React.Component<Props, State> {
 		}
 
 		if (apiCapabilities.moveMarkers2 && repositionCodemark) {
-			if (selected && codemark.markers && codemark.markers.length > 1) {
+			if (renderExpandedBody && codemark.markers && codemark.markers.length > 1) {
 				const submenu = codemark.markers.map((m, index) => {
 					let label = "Code Location #" + (index + 1);
 					return {
@@ -1193,7 +1194,7 @@ export class Codemark extends React.Component<Props, State> {
 		// show a striped header if the codemark is selected, or unhidden, and it matches
 		// manual-archive, resolved, or deleted state
 		const showStripedHeader =
-			(selected || !hidden) &&
+			(renderExpandedBody || !hidden) &&
 			(!codemark.pinned ||
 				codemark.status === "closed" ||
 				entirelyDeleted ||
@@ -1213,9 +1214,9 @@ export class Codemark extends React.Component<Props, State> {
 			<div
 				className={cx("codemark inline type-" + type, {
 					// if it's selected, we don't render as hidden
-					"cs-hidden": !selected ? hidden : false,
+					"cs-hidden": !renderExpandedBody ? hidden : false,
 					// collapsed: !selected,
-					selected: selected,
+					selected: renderExpandedBody,
 					unpinned: !codemark.pinned,
 					injecting: isInjecting,
 					repositioning: isRepositioning
@@ -1260,7 +1261,7 @@ export class Codemark extends React.Component<Props, State> {
 					)}
 					<div className="body">
 						<div className="header">
-							{!selected && type === "bookmark" ? (
+							{!renderExpandedBody && type === "bookmark" ? (
 								<>
 									<span className={codemark.color}>{this.renderTypeIcon()}</span>
 									{this.renderTextLinkified(codemark.title || codemark.text)}
@@ -1313,11 +1314,11 @@ export class Codemark extends React.Component<Props, State> {
 								<Menu items={menuItems} target={menuTarget} action={this.handleSelectMenu} />
 							)}
 						</div>
-						{!renderAlternateBody && (selected || type !== "bookmark")
+						{!renderAlternateBody && (renderExpandedBody || type !== "bookmark")
 							? this.renderTextLinkified(codemark.title || codemark.text)
 							: null}
-						{!selected && !renderAlternateBody && this.renderPinnedReplies()}
-						{!selected && !renderAlternateBody && this.renderDetailIcons(codemark)}
+						{!renderExpandedBody && !renderAlternateBody && this.renderPinnedReplies()}
+						{!renderExpandedBody && !renderAlternateBody && this.renderDetailIcons(codemark)}
 						{isInjecting && (
 							<InjectAsComment
 								cancel={this.cancelInjecting}
@@ -1328,11 +1329,12 @@ export class Codemark extends React.Component<Props, State> {
 							/>
 						)}
 					</div>
-					{selected && !renderAlternateBody && (
+					{renderExpandedBody && !renderAlternateBody && (
 						<CodemarkDetails
 							codemark={codemark}
 							author={this.props.author}
 							postAction={this.props.postAction}
+							displayType={this.props.displayType}
 						>
 							<div className="description">
 								{this.renderVisibilitySelected()}
@@ -1354,7 +1356,7 @@ export class Codemark extends React.Component<Props, State> {
 							</div>
 						</CodemarkDetails>
 					)}
-					{this.state.hover && !selected && type !== "bookmark" && (
+					{this.state.hover && !renderExpandedBody && type !== "bookmark" && (
 						<div className="info-wrapper">
 							<Icon
 								className="info"

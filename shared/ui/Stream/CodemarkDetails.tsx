@@ -35,6 +35,7 @@ interface Props {
 	hasFocus: boolean;
 	currentUserName: string;
 	teamId: string;
+	displayType?: "collapsed" | "default" | "activity";
 
 	onSubmitPost?: any;
 	createPost(...args: Parameters<typeof createPost>): ReturnType<ReturnType<typeof createPost>>;
@@ -140,44 +141,47 @@ export class CodemarkDetails extends React.Component<Props, State> {
 					codemark={codemark}
 					isAuthor={author.id === currentUserId}
 					capabilities={capabilities}
+					displayType={this.props.displayType}
 				/>
 				<div className="replies">
-					<div className="compose codemark-compose">
-						<div className="related-label">Add Reply</div>
-						<MessageInput
-							teammates={this.props.teammates}
-							currentUserId={this.props.currentUserId}
-							slashCommands={this.props.slashCommands}
-							services={this.props.services}
-							teamProvider={this.props.teamProvider}
-							text={this.state.text}
-							placeholder="Reply..."
-							onChange={this.handleOnChange}
-							onSubmit={this.submitReply}
-							multiCompose={true}
-						/>
-						<div style={{ display: "flex" }}>
-							<div style={{ opacity: 0.4, paddingTop: "3px" }}>Markdown is supported</div>
-							<div style={{ textAlign: "right", flexGrow: 1 }}>
-								<Tooltip title={submitTip} placement="bottom" delay={1}>
-									<Button
-										key="submit"
-										style={{
-											// fixed width to handle the isLoading case
-											width: "80px",
-											margin: "10px 0",
-											float: "right"
-										}}
-										className={cx("control-button", { cancel: !this.state.text })}
-										type="submit"
-										onClick={this.submitReply}
-									>
-										Submit
-									</Button>
-								</Tooltip>
+					{this.props.displayType !== "activity" && (
+						<div className="compose codemark-compose">
+							<div className="related-label">Add Reply</div>
+							<MessageInput
+								teammates={this.props.teammates}
+								currentUserId={this.props.currentUserId}
+								slashCommands={this.props.slashCommands}
+								services={this.props.services}
+								teamProvider={this.props.teamProvider}
+								text={this.state.text}
+								placeholder="Reply..."
+								onChange={this.handleOnChange}
+								onSubmit={this.submitReply}
+								multiCompose={true}
+							/>
+							<div style={{ display: "flex" }}>
+								<div style={{ opacity: 0.4, paddingTop: "3px" }}>Markdown is supported</div>
+								<div style={{ textAlign: "right", flexGrow: 1 }}>
+									<Tooltip title={submitTip} placement="bottom" delay={1}>
+										<Button
+											key="submit"
+											style={{
+												// fixed width to handle the isLoading case
+												width: "80px",
+												margin: "10px 0",
+												float: "right"
+											}}
+											className={cx("control-button", { cancel: !this.state.text })}
+											type="submit"
+											onClick={this.submitReply}
+										>
+											Submit
+										</Button>
+									</Tooltip>
+								</div>
 							</div>
 						</div>
-					</div>
+					)}
 					{this.state.isLoadingReplies && (
 						<DelayedRender>
 							<div className="progress-container">

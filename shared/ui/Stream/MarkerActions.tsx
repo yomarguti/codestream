@@ -59,6 +59,7 @@ interface InheritedProps {
 	alwaysRenderCode?: boolean;
 	jumpToMarker?: boolean;
 	jumpToMarkerId?: string;
+	selected: boolean;
 }
 
 type Props = InheritedProps & ConnectedProps & IntlProps;
@@ -95,7 +96,7 @@ class MarkerActions extends React.Component<Props, State> {
 			this.openCodemark();
 		}
 
-		this.startCheckingDiffs();
+		if (this.props.selected) this.startCheckingDiffs();
 		if (this._codeBlockDiv && this._codeBlockDiv.scrollHeight > this._codeBlockDiv.offsetHeight)
 			this.setState({ scrollingCodeBlock: true });
 	}
@@ -388,7 +389,7 @@ class MarkerActions extends React.Component<Props, State> {
 	}
 
 	render() {
-		const { codemark, marker, firstVisibleLine = 0, lastVisibleLine = 0 } = this.props;
+		const { codemark, marker, selected, firstVisibleLine = 0, lastVisibleLine = 0 } = this.props;
 		const { startLine, endLine } = this.state;
 		if (codemark == null || marker == null) return null;
 
@@ -427,7 +428,7 @@ class MarkerActions extends React.Component<Props, State> {
 			<>
 				{(this.props.alwaysRenderCode || this.state.hasDiff || this.state.warning || canJump) &&
 					this.renderCodeblock(marker)}
-				{(canCompare || canApply || canOpenRevision || canJump) && (
+				{(canCompare || canApply || canOpenRevision || canJump) && selected && (
 					<div className="button-spread" id={codemark.id} key="left">
 						{this.state.hasDiff && (
 							<div className="left">
