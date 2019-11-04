@@ -29,7 +29,6 @@ import {
 	ConnectionStatus,
 	ChangeDataType,
 	VersionCompatibility,
-	GetFileScmInfoRequestType,
 	ThirdPartyProviders,
 	GetDocumentFromMarkerRequestType,
 	VerifyConnectivityRequestType
@@ -52,9 +51,7 @@ import { updateUnreads } from "./store/unreads/actions";
 import { updateConfigs } from "./store/configs/actions";
 import { setEditorContext } from "./store/editorContext/actions";
 import { blur, focus, setCurrentStream, setCurrentCodemark } from "./store/context/actions";
-import { isNotOnDisk } from "./utils";
 import { URI } from "vscode-uri";
-import { CodemarkDetails } from "./Stream/CodemarkDetails";
 import { moveCursorToLine } from "./Stream/CodemarkView";
 
 export { HostApi };

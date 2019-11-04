@@ -1274,20 +1274,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 const EMPTY_ARRAY = [];
 const EMPTY_OBJECT = {};
 
-// const fakeDocMarker = {
-// 	createdAt: new Date().getTime(),
-// 	creatorId: "github",
-// 	creatorName: "GitHub",
-// 	externalContent: {
-// 		providerName: "github",
-// 		url: "https://github.com/akonwi/git-plus/issues/1",
-// 		pr:
-// 			comment.pullRequest == null
-// 				? undefined
-// 				: { id: comment.pullRequest.id, url: comment.pullRequest.url }
-// 	}
-// };
-
 const mapStateToProps = (state: CodeStreamState) => {
 	const { context, editorContext, teams, configs, documentMarkers } = state;
 
