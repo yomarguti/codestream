@@ -215,13 +215,15 @@ export class CodeStreamSession {
 
 		Container.initialize(agent, this);
 
+		const redactProxyPasswdRegex = /(http:\/\/.*:)(.*)(@.*)/gi;
 		if (
 			_options.proxySupport === "override" ||
 			(_options.proxySupport == null && _options.proxy != null)
 		) {
 			if (_options.proxy != null) {
+				const redactedUrl = _options.proxy.url.replace(redactProxyPasswdRegex, "$1*****$3");
 				Logger.log(
-					`Proxy support is in override with url=${_options.proxy.url}, strictSSL=${_options.proxy.strictSSL}`
+					`Proxy support is in override with url=${redactedUrl}, strictSSL=${_options.proxy.strictSSL}`
 				);
 
 				this._proxyAgent = new HttpsProxyAgent({
@@ -235,7 +237,8 @@ export class CodeStreamSession {
 			const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
 			if (proxyUrl) {
 				const strictSSL = _options.proxy ? _options.proxy.strictSSL : true;
-				Logger.log(`Proxy support is on with url=${proxyUrl}, strictSSL=${strictSSL}`);
+				const redactedUrl = proxyUrl.replace(redactProxyPasswdRegex, "$1*****$3");
+				Logger.log(`Proxy support is on with url=${redactedUrl}, strictSSL=${strictSSL}`);
 
 				let proxyUri;
 				try {
