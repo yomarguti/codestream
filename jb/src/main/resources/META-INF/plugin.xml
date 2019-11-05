@@ -59,6 +59,16 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="5_2_0">5.2.0</h4>
+<h5>Changed</h5>
+<ul>
+    <li>Repo matching logic now also includes commit hashes to better handle scenarios where teammates don't have a common remote URL for the same repo</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue where the codemark compose form and the newly-created codemark would briefly appear at the same time</li>
+    <li>Fixes an issue where the current codemark was available for selection as a related codemark</li>
+</ul>
 <h4 id="5_1_0">5.1.0</h4>
 <h5>Added</h5>
 <ul>
