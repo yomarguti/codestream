@@ -26,7 +26,8 @@ interface Props {
 
 const ActivityWrapper = styled.div`
 	margin: 0 40px 20px 45px;
-	overflow: visible;
+	// for now this is only to explore the aesthetic... doesn't actually work
+	// it should be .post.unread
 	.post {
 		border-left: 2px solid var(--text-color-info);
 	}

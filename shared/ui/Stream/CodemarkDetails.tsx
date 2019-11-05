@@ -208,6 +208,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 							threadId={threadId}
 							teamId={this.props.teamId}
 							skipParentPost={true}
+							skipReadPosts={this.props.displayType === "activity"}
 							onCancelEdit={this.cancelEdit}
 							onDidSaveEdit={this.cancelEdit}
 							disableEdits
