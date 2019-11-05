@@ -60,7 +60,7 @@ export const ActivityPanel = (connect(
 			if (counter++ > 10) return null;
 
 			return (
-				<ActivityWrapper className={Math.random() < 0.5 ? "new" : ""}>
+				<ActivityWrapper>
 					<Codemark
 						key={codemark.id}
 						contextName="Activity Panel"
