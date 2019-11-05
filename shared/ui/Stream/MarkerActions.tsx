@@ -478,6 +478,8 @@ class MarkerActions extends React.Component<Props, State> {
 	};
 
 	private _toggleCodeHighlight = (highlight: boolean) => {
+		if (!this.props.selected) return;
+
 		if (!highlight && this._highlightDisposable) {
 			this._highlightDisposable.dispose();
 			this._highlightDisposable = undefined;
