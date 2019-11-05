@@ -27,13 +27,8 @@ interface Props {
 const ActivityWrapper = styled.div`
 	margin: 0 40px 20px 45px;
 	overflow: visible;
-	.unread:before {
-		content: "";
-		position: absolute;
-		top: 0;
-		left: -10px;
-		height: 100%;
-		border-left: 3px solid var(--text-color-info);
+	.post {
+		border-left: 2px solid var(--text-color-info);
 	}
 `;
 
