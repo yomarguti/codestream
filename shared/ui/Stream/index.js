@@ -592,7 +592,7 @@ export class SimpleStream extends Component {
 					>
 						<Tooltip title="Activity Feed" placement="bottom">
 							<span>
-								<Icon name="activity" />
+								<Icon name="list" />
 								{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
 							</span>
 						</Tooltip>
