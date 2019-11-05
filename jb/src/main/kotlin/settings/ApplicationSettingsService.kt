@@ -9,6 +9,7 @@ import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.extensions.PluginId
+import com.intellij.util.io.encodeUrlQueryParameter
 import com.intellij.util.net.HttpConfigurable
 import protocols.agent.Extension
 import protocols.agent.Ide
@@ -96,8 +97,8 @@ class ApplicationSettingsService : PersistentStateComponent<ApplicationSettingsS
                 val httpConfig = HttpConfigurable.getInstance()
                 if (httpConfig.USE_HTTP_PROXY && !httpConfig.PROXY_HOST.isNullOrBlank()) {
                     url = if (httpConfig.PROXY_AUTHENTICATION) {
-                        val login = httpConfig.proxyLogin
-                        val password = httpConfig.plainProxyPassword
+                        val login = httpConfig.proxyLogin?.encodeUrlQueryParameter()
+                        val password = httpConfig.plainProxyPassword?.encodeUrlQueryParameter()
                         "http://${login}:${password}@${httpConfig.PROXY_HOST}"
                     } else {
                         httpConfig.PROXY_HOST
