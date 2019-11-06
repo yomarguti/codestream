@@ -470,6 +470,8 @@
     </change-notes>
 
     <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="CodeStream" icon="/images/codestream.svg" anchor="right" factoryClass="com.codestream.webview.CodeStreamToolWindowFactory"/>
+
         <applicationService serviceImplementation="com.codestream.settings.ApplicationSettingsService"/>
 
         <projectService serviceImplementation="com.codestream.agent.AgentService"/>
@@ -492,10 +494,6 @@
             <className>com.codestream.actions.CreateIssue</className>
             <category>Other</category>
         </intentionAction>
-<!--        <intentionAction>-->
-<!--            <className>com.codestream.actions.CreateBookmark</className>-->
-<!--            <category>Other</category>-->
-<!--        </intentionAction>-->
         <intentionAction>
             <className>com.codestream.actions.GetPermalink</className>
             <category>Other</category>
@@ -534,15 +532,6 @@
                 <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="I"
                                    replace-all="true"/>
             </action>
-<!--            <action id="CodeStream.CreateBookmark" class="com.codestream.actions.CreateBookmark"-->
-<!--                    text="Create _Bookmark"-->
-<!--                    description="Add comment" icon="/images/marker-bookmark.svg">-->
-<!--                <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH" second-keystroke="B"/>-->
-<!--                <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="B"-->
-<!--                                   replace-all="true"/>-->
-<!--                <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="B"-->
-<!--                                   replace-all="true"/>-->
-<!--            </action>-->
             <action id="CodeStream.GetPermalink" class="com.codestream.actions.GetPermalink" text="Get _Permalink"
                     description="Get permalink" icon="/images/marker-permalink.svg">
                 <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH" second-keystroke="P"/>

@@ -15,13 +15,13 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.wm.StatusBar
 import com.intellij.openapi.wm.ToolWindow
-import com.intellij.openapi.wm.ToolWindowAnchor
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.openapi.wm.ex.ToolWindowManagerListener
 import com.intellij.util.ui.UIUtil
 import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
+import javax.swing.JLabel
 import kotlin.properties.Delegates
 
 const val CODESTREAM_TOOL_WINDOW_ID = "CodeStream"
@@ -29,7 +29,10 @@ const val CODESTREAM_TOOL_WINDOW_ID = "CodeStream"
 class CodeStreamComponent(val project: Project) : Disposable {
 
     private val logger = Logger.getInstance(CodeStreamComponent::class.java)
-    private lateinit var toolWindow: ToolWindow
+    private val toolWindow: ToolWindow?
+        get() = ToolWindowManager.getInstance(project).getToolWindow(
+            CODESTREAM_TOOL_WINDOW_ID
+        )
     private var statusBar: StatusBar? = null
     private var statusBarWidget: CodeStreamStatusBarWidget? = null
     private var isFocused by Delegates.observable(true) { _, _, _ ->
@@ -43,31 +46,11 @@ class CodeStreamComponent(val project: Project) : Disposable {
         logger.info("Initializing CodeStream")
         initEditorFactoryListener()
         ApplicationManager.getApplication().invokeLater {
-            initToolWindow()
             initWindowFocusListener()
             initMessageBusSubscriptions()
             initStatusBarWidget()
             initUnreadsListener()
-
-            project.agentService?.onDidStart {
-                val webViewService = project.webViewService ?: return@onDidStart
-                webViewService.load()
-                toolWindow.component.add(webViewService.webView)
-            }
         }
-    }
-
-    private fun initToolWindow() {
-        if (project.isDisposed) return
-        val toolWindowManager = ToolWindowManager.getInstance(project) ?: return
-        toolWindow = toolWindowManager.registerToolWindow(
-            CODESTREAM_TOOL_WINDOW_ID,
-            false,
-            ToolWindowAnchor.RIGHT,
-            this,
-            true
-        )
-        toolWindow.icon = IconLoader.getIcon("/images/codestream.svg")
     }
 
     private fun initWindowFocusListener() {
@@ -106,8 +89,22 @@ class CodeStreamComponent(val project: Project) : Disposable {
             it.subscribe(
                 ToolWindowManagerListener.TOPIC,
                 object : ToolWindowManagerListener {
+                    override fun toolWindowRegistered(id: String) {
+                        if (id != CODESTREAM_TOOL_WINDOW_ID) return
+                        val loadingLabel = JLabel("Loading...", IconLoader.getIcon("/images/codestream.svg"), JLabel.CENTER)
+                        toolWindow!!.component.add(loadingLabel)
+                        project.agentService?.onDidStart {
+                            val webViewService = project.webViewService ?: return@onDidStart
+                            webViewService.load()
+                            toolWindow?.component?.let { cmp ->
+                                cmp.remove(loadingLabel)
+                                cmp.add(webViewService.webView)
+                            }
+                        }
+                    }
+
                     override fun stateChanged() {
-                        isVisible = toolWindow.isVisible
+                        isVisible = toolWindow?.isVisible ?: false
                         updateWebViewFocus()
                     }
                 }
@@ -127,7 +124,7 @@ class CodeStreamComponent(val project: Project) : Disposable {
         if (project.isDisposed) return
         project.sessionService?.onUnreadsChanged {
             ApplicationManager.getApplication().invokeLater {
-                toolWindow.icon = if (it > 0) {
+                toolWindow?.icon = if (it > 0) {
                     IconLoader.getIcon("/images/codestream-unread.svg")
                 } else {
                     IconLoader.getIcon("/images/codestream.svg")
@@ -144,7 +141,7 @@ class CodeStreamComponent(val project: Project) : Disposable {
     }
 
     fun show(afterShow: (() -> Unit)? = null) {
-        toolWindow.show {
+        toolWindow?.show {
             project.webViewService?.webView?.grabFocus()
             afterShow?.invoke()
         }
@@ -155,7 +152,7 @@ class CodeStreamComponent(val project: Project) : Disposable {
     }
 
     private fun hide() {
-        toolWindow.hide(null)
+        toolWindow?.hide(null)
     }
 
     private fun updateWebViewFocus() {
