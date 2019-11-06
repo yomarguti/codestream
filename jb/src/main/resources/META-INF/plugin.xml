@@ -59,6 +59,11 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="5_2_1">5.2.1</h4>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue with some users getting a blank CodeStream pane</li>
+</ul>
 <h4 id="5_2_0">5.2.0</h4>
 <h5>Changed</h5>
 <ul>
