@@ -65,7 +65,8 @@ intellij {
 
     // Use alternativeIdePath to run on a locally installed IDE, different from the build dependency specified via type/version
     // intellij.alternativeIdePath "/Users/mfarias/Library/Application Support/JetBrains/Toolbox/apps/PhpStorm/ch-0/192.6817.12/PhpStorm.app"
-    // intellij.alternativeIdePath "/Users/mfarias/Library/Application Support/JetBrains/Toolbox/apps/PhpStorm/ch-0/193.2956.42/PhpStorm 2019.3 EAP.app"
+    // intellij.alternativeIdePath "/Users/mfarias/Library/Application Support/JetBrains/Toolbox/apps/PhpStorm/ch-0/193.4932.16/PhpStorm 2019.3 EAP.app"
+    // intellij.alternativeIdePath "/Users/mfarias/Library/Application Support/JetBrains/Toolbox/apps/Rider/ch-0/192.6584.65/Rider.app"
     // intellij.alternativeIdePath "/Applications/IntelliJ IDEA.app"
     // intellij.alternativeIdePath "/Applications/CLion.app"
 }
@@ -120,15 +121,3 @@ copyDebugAgent.dependsOn buildDebugDeps
 
 task buildDebugDependencies {}
 buildDebugDependencies.dependsOn buildDebugDeps, copyDebugAgent
-
-
-
-
-
-
-
-
-
-
-
-
