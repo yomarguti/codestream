@@ -26,6 +26,11 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 		private readonly ITextView _textView;
 		private readonly ITextDocument _textDocument;
 
+		private readonly object _currentLock = new object();
+		private IEnumerable<SuggestedActionSet> _current;
+		private SnapshotSpan _currentSpan;
+		private ISessionService _sessionService;
+
 		public CodemarkSuggestedActionsSource(IComponentModel componentModel,
 			ITextView textView,
 			ITextBuffer textBuffer,
@@ -34,6 +39,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 			_textBuffer = textBuffer;
 			_textView = textView;
 			_textDocument = textDocument;
+			_sessionService = _componentModel.GetService<ISessionService>();
 		}
 
 		public bool TryGetTelemetryId(out Guid telemetryId) {
@@ -46,19 +52,49 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 #pragma warning restore 0067
 
 		public IEnumerable<SuggestedActionSet> GetSuggestedActions(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken) {
+			lock (_currentLock) {
+				if (_currentSpan == range) {
+					if (_sessionService == null || _sessionService.IsReady == false) return Enumerable.Empty<SuggestedActionSet>();
+					return _current;
+				}
+			}
+			return null;
+		}
+
+		public async Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken) {
+			await System.Threading.Tasks.Task.Yield();
+
+			if (_sessionService == null || _sessionService.IsReady == false) return false;
+
+			var wpfTextView = _textView as IWpfTextView;
+			if (wpfTextView == null) return false;
+
+			System.Diagnostics.Debug.WriteLine($"HasSuggestedActions HasEditorSelection={!range.IsEmpty}");
+
+			cancellationToken.ThrowIfCancellationRequested();
+			var suggestions = GetSuggestedActionsCore(wpfTextView);
+			if (!suggestions.Any()) {
+				return false;
+			}
+			lock (_currentLock) {
+				cancellationToken.ThrowIfCancellationRequested();
+				_current = suggestions;
+				_currentSpan = range;
+			}
+			return true;
+		}
+
+		private IEnumerable<SuggestedActionSet> GetSuggestedActionsCore(IWpfTextView wpfTextView) {
 			try {
-				var wpfTextView = _textView as IWpfTextView;
 				if (wpfTextView == null) return Enumerable.Empty<SuggestedActionSet>();
 
 				var editorState = wpfTextView.GetEditorState();
-				if (editorState?.HasSelectedText == false) return Enumerable.Empty<SuggestedActionSet>();
-
 				System.Diagnostics.Debug.WriteLine($"GetSuggestedActions");
 				return new[] {
 					new SuggestedActionSet(
 						actions: new ISuggestedAction[] {
 							new CodemarkCommentSuggestedAction(_componentModel, _textDocument, editorState),
-							new CodemarkIssueSuggestedAction(_componentModel, _textDocument, editorState),							
+							new CodemarkIssueSuggestedAction(_componentModel, _textDocument, editorState),
 							new CodemarkPermalinkSuggestedAction(_componentModel, _textDocument, editorState)
 						},
 						categoryName: null,
@@ -69,30 +105,12 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 				};
 			}
 			catch (Exception ex) {
-				Log.Warning(ex, nameof(GetSuggestedActions));
+				Log.Warning(ex, nameof(GetSuggestedActionsCore));
 			}
 
 			return Enumerable.Empty<SuggestedActionSet>();
 		}
 
-		public Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken) {
-			try {
-				var sessionService = _componentModel.GetService<ISessionService>();
-				if (sessionService == null || sessionService.IsReady == false) return System.Threading.Tasks.Task.FromResult(false);
-
-				var wpfTextView = _textView as IWpfTextView;
-				if (wpfTextView == null) return System.Threading.Tasks.Task.FromResult(false);
-
-				var hasEditorSelection = wpfTextView.HasEditorSelection();
-				System.Diagnostics.Debug.WriteLine($"HasSuggestedActions HasEditorSelection={hasEditorSelection}");
-
-				return System.Threading.Tasks.Task.FromResult(hasEditorSelection);
-			}
-			catch (Exception ex) {
-				Log.Warning(ex, nameof(HasSuggestedActionsAsync));
-				return System.Threading.Tasks.Task.FromResult(false);
-			}
-		}
 
 		public void Dispose() {
 			Log.Verbose($"{nameof(CodemarkSuggestedActionsSource)} disposed");
