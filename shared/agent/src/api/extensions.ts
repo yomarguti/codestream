@@ -309,17 +309,20 @@ export namespace User {
 
 export interface ActionId {
 	id: number;
-	linkType: "web" | "ide" | "external";
+	linkType: "web" | "ide" | "external" | "reply";
 	externalType?: "issue" | "code";
 	externalProvider?: string;
 	teamId: string;
 	codemarkId: string;
 	markerId?: string;
+	streamId?: string;
+	parentPostId?: string;
+	creatorId?: string;
 }
 
 export function toActionId(
 	id: number,
-	linkType: "web" | "ide",
+	linkType: "web" | "ide" | "reply",
 	codemark: CSCodemark,
 	marker?: CSMarker
 ): string {
@@ -349,6 +352,25 @@ export function toExternalActionId(
 		teamId: codemark.teamId,
 		codemarkId: codemark.id,
 		markerId: marker && marker.id
+	};
+
+	return JSON.stringify(actionId);
+}
+
+export function toReplyActionId(
+	id: number,
+	codemark: CSCodemark,
+	marker?: CSMarker
+): string {
+	const actionId: ActionId = {
+		id: id,
+		linkType: "reply",
+		streamId: codemark.streamId,
+		teamId: codemark.teamId,
+		codemarkId: codemark.id,
+		parentPostId: codemark.postId,
+		markerId: marker && marker.id,
+		creatorId: codemark.creatorId
 	};
 
 	return JSON.stringify(actionId);

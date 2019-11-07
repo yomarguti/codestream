@@ -340,7 +340,7 @@ export interface ApiProvider {
 	getUser(request: GetUserRequest): Promise<GetUserResponse>;
 	inviteUser(request: InviteUserRequest): Promise<InviteUserResponse>;
 
-	connectThirdPartyProvider(request: { providerId: string }): Promise<{ code: string }>;
+	connectThirdPartyProvider(request: { providerId: string, sharing?: boolean }): Promise<{ code: string }>;
 	setThirdPartyProviderToken(request: ThirdPartyProviderSetTokenRequest): Promise<void>;
 	setThirdPartyProviderInfo(request: {
 		providerId: string;

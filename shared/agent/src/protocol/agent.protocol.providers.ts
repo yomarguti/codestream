@@ -9,6 +9,7 @@ export interface ThirdPartyProviderConfig {
 	isEnterprise?: boolean;
 	forEnterprise?: boolean;
 	hasIssues?: boolean;
+	hasSharing?: boolean;
 	needsConfigure?: boolean;
 	oauthData?: { [key: string]: any };
 }

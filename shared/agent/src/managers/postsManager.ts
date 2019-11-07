@@ -14,6 +14,8 @@ import {
 	CreatePostResponse,
 	CreatePostWithMarkerRequest,
 	CreatePostWithMarkerRequestType,
+	CreateSharedPostRequest,
+	CreateSharedPostRequestType,
 	CrossPostIssueValues,
 	DeletePostRequest,
 	DeletePostRequestType,
@@ -671,6 +673,25 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		);
 
 		return { posts, codemarks };
+	}
+
+	@lspHandler(CreateSharedPostRequestType)
+	async sharePost(request: CreateSharedPostRequest) {
+		const providerRegistry = SessionContainer.instance().providerRegistry;
+		// TODO cheese
+		const response = await providerRegistry.createCard({
+			providerId: "slack*com",
+			data: {
+				// todo cheese
+				streamId: "CJ7PH1NDP",
+				codemark: request.codemark,
+				text: request.attributes.text
+			}
+		});
+
+		return {
+			cheese: true
+		};
 	}
 
 	@lspHandler(CreatePostRequestType)

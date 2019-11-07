@@ -201,7 +201,11 @@ export class CodeStreamSession {
 		return this._onDidChangeSessionStatus.event;
 	}
 
-	private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined;
+	get proxyAgent():  HttpsAgent | HttpsProxyAgent | undefined {
+		return this._proxyAgent;
+	}
+
+	private readonly _proxyAgent:  HttpsAgent | HttpsProxyAgent | undefined;
 	private readonly _readyPromise: Promise<void>;
 
 	constructor(

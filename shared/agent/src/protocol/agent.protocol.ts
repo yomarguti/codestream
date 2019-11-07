@@ -34,6 +34,7 @@ export * from "./agent.protocol.bitbucket";
 export * from "./agent.protocol.github";
 export * from "./agent.protocol.gitlab";
 export * from "./agent.protocol.jira";
+export * from "./agent.protocol.slack";
 export * from "./agent.protocol.trello";
 export * from "./agent.protocol.youtrack";
 export * from "./agent.protocol.azuredevops";

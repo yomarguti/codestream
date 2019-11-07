@@ -213,6 +213,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private _socketCluster: { host: string; port: string } | undefined;
 	private _subscribedMessageTypes: Set<MessageType> | undefined;
 	private _teamId: string | undefined;
+	private _team: CSTeam | undefined;
 	private _token: string | undefined;
 	private _unreads: CodeStreamUnreads | undefined;
 	private _user: CSMe | undefined;
@@ -236,6 +237,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	get teamId(): string {
 		return this._teamId!;
+	}
+
+	get team(): CSTeam | undefined {
+		return this._team!;
 	}
 
 	get userId(): string {
@@ -400,6 +405,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		this._socketCluster = response.socketCluster;
 
 		this._teamId = team.id;
+		this._team = team;
 		this._user = response.user;
 		this._userId = response.user.id;
 
@@ -739,7 +745,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	moveMarker(request: { oldMarkerId: string, newMarker: CreateMarkerRequest }): Promise<MoveMarkerResponse> {
+	moveMarker(request: {
+		oldMarkerId: string;
+		newMarker: CreateMarkerRequest;
+	}): Promise<MoveMarkerResponse> {
 		return this.put<CSCreateMarkerRequest, CSCreateMarkerResponse>(
 			`/markers/${request.oldMarkerId}/move`,
 			request.newMarker,
@@ -1279,7 +1288,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	async connectThirdPartyProvider(request: { providerId: string }) {
+	async connectThirdPartyProvider(request: { providerId: string; sharing?: boolean }) {
 		const cc = Logger.getCorrelationContext();
 		try {
 			const provider = getProvider(request.providerId);
@@ -1287,7 +1296,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			const providerConfig = provider.getConfig();
 
 			const response = await this.get<{ code: string }>(
-				`/provider-auth-code?teamId=${this.teamId}`,
+				`/provider-auth-code?teamId=${this.teamId}${request.sharing ? "&sharing=true" : ""}`,
 				this._token
 			);
 			const params: { [key: string]: string } = {
@@ -1296,6 +1305,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 			if (providerConfig.isEnterprise) {
 				params.host = providerConfig.host;
 			}
+			if (request.sharing) {
+				params.sharing = true.toString();
+			}
+
 			const query = Object.keys(params)
 				.map(param => `${param}=${encodeURIComponent(params[param])}`)
 				.join("&");

@@ -340,6 +340,7 @@ export interface CSSlackProviderInfo {
 	teamId: string;
 	userId: string;
 	hosts?: { [host: string]: CSSlackProviderInfo };
+	data?: { [key: string]: any };
 }
 
 export interface CSTrelloProviderInfo {

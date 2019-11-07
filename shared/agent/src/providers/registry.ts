@@ -38,6 +38,7 @@ export * from "./asana";
 export * from "./bitbucket";
 export * from "./youtrack";
 export * from "./azuredevops";
+export * from "./slack";
 
 @lsp
 export class ThirdPartyProviderRegistry {

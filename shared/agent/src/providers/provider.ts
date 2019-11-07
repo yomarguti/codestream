@@ -155,10 +155,14 @@ export abstract class ThirdPartyProviderBase<
 		return Boolean(providerInfo && providerInfo.accessToken);
 	}
 
-	async connect() {
-		void (await this.session.api.connectThirdPartyProvider({
+	getConnectionData() {
+		return {
 			providerId: this.providerConfig.id
-		}));
+		};
+	}
+
+	async connect() {
+		void (await this.session.api.connectThirdPartyProvider(this.getConnectionData()));
 
 		// FIXME - this rather sucks as a way to ensure we have the access token
 		this._providerInfo = await new Promise<TProviderInfo>(resolve => {

@@ -1,7 +1,7 @@
 "use strict";
 import { Range, RequestType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
 import { CodeDelimiterStyles } from "./agent.protocol";
-import { CodemarkPlus, CreateCodemarkRequest } from "./agent.protocol.codemarks";
+import { CodemarkPlus, CreateCodemarkRequest, CreateCodemarkResponse } from "./agent.protocol.codemarks";
 import { ThirdPartyProviderUser } from "./agent.protocol.providers";
 import {
 	CodemarkType,
@@ -27,7 +27,18 @@ export interface CreateExternalPostRequest {
 	parentPostId?: string;
 	remotes?: string[];
 	entryPoint?: string;
-	codemarkResponse?: CSCreateCodemarkResponse;
+	codemarkResponse?: CreateCodemarkResponse;
+	crossPostIssueValues?: CrossPostIssueValues;
+}
+
+export interface CreateSharedExternalPostRequest {
+	streamId: string;
+	text: string;
+	mentionedUserIds?: string[];
+	parentPostId?: string;
+	remotes?: string[];
+	entryPoint?: string;
+	codemark?: CodemarkPlus;
 	crossPostIssueValues?: CrossPostIssueValues;
 }
 
@@ -38,6 +49,18 @@ export interface CreatePostRequest {
 	parentPostId?: string;
 	codemark?: CreateCodemarkRequest;
 	entryPoint?: string;
+	crossPostIssueValues?: CrossPostIssueValues;
+}
+
+export interface CreateSharedPostRequest {
+	streamId: string;
+	attributes: any;
+	text?: string;
+	memberIds?: any;
+	parentPostId?: string;
+	codemark?: CodemarkPlus;
+	entryPoint?: string;
+	providerId?: string;
 	crossPostIssueValues?: CrossPostIssueValues;
 }
 
@@ -65,6 +88,13 @@ export const CreatePostRequestType = new RequestType<
 	void,
 	void
 >("codestream/posts/create");
+
+export const CreateSharedPostRequestType = new RequestType<
+	CreateSharedPostRequest,
+	CreatePostResponse,
+	void,
+	void
+>("codestream/posts/share");
 
 export interface CodeBlockSource {
 	file: string;
