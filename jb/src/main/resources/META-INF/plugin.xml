@@ -478,6 +478,8 @@
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="CodeStream" icon="/images/codestream.svg" anchor="right" factoryClass="com.codestream.webview.CodeStreamToolWindowFactory"/>
 
+        <statusBarWidgetProvider implementation="com.codestream.widgets.CodeStreamStatusBarWidgetProvider"/>
+
         <applicationService serviceImplementation="com.codestream.settings.ApplicationSettingsService"/>
 
         <projectService serviceImplementation="com.codestream.agent.AgentService"/>
@@ -642,5 +644,5 @@
     </actions>
 
     <depends>com.intellij.modules.platform</depends>
-    <idea-version since-build="182.2371.4"/>
+    <idea-version since-build="182.2757.3"/>
 </idea-plugin>

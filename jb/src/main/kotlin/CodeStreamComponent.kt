@@ -4,7 +4,6 @@ import com.codestream.agent.ModuleListenerImpl
 import com.codestream.editor.EditorFactoryListenerImpl
 import com.codestream.editor.FileEditorManagerListenerImpl
 import com.codestream.protocols.webview.FocusNotifications
-import com.codestream.widgets.CodeStreamStatusBarWidget
 import com.intellij.ProjectTopics
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
@@ -13,7 +12,6 @@ import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
-import com.intellij.openapi.wm.StatusBar
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.openapi.wm.WindowManager
@@ -33,8 +31,6 @@ class CodeStreamComponent(val project: Project) : Disposable {
         get() = ToolWindowManager.getInstance(project).getToolWindow(
             CODESTREAM_TOOL_WINDOW_ID
         )
-    private var statusBar: StatusBar? = null
-    private var statusBarWidget: CodeStreamStatusBarWidget? = null
     private var isFocused by Delegates.observable(true) { _, _, _ ->
         updateWebViewFocus()
     }
@@ -48,7 +44,6 @@ class CodeStreamComponent(val project: Project) : Disposable {
         initMessageBusSubscriptions()
         ApplicationManager.getApplication().invokeLater {
             initWindowFocusListener()
-            initStatusBarWidget()
             initUnreadsListener()
         }
     }
@@ -112,14 +107,6 @@ class CodeStreamComponent(val project: Project) : Disposable {
         }
     }
 
-    private fun initStatusBarWidget() {
-        if (project.isDisposed) return
-        val widget = CodeStreamStatusBarWidget(project)
-        statusBar = WindowManager.getInstance().getIdeFrame(project)?.statusBar
-        statusBar?.addWidget(widget)
-        statusBarWidget = widget
-    }
-
     private fun initUnreadsListener() {
         if (project.isDisposed) return
         project.sessionService?.onUnreadsChanged {
@@ -162,8 +149,6 @@ class CodeStreamComponent(val project: Project) : Disposable {
     }
 
     override fun dispose() {
-        val widget = statusBarWidget?.ID() ?: return
-        statusBar?.removeWidget(widget)
     }
 
     private val _isVisibleObservers = mutableListOf<(Boolean) -> Unit>()
