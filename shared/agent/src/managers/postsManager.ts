@@ -769,18 +769,24 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			}
 		}
 
-		trackPostCreation({
-			streamId: stream.id,
-			codemark: codemark,
-			text: request.attributes.text!,
-			entryPoint: request.entryPoint
-		}, request.textDocuments, codemark.id);
+		trackPostCreation(
+			{
+				streamId: stream.id,
+				codemark: codemark,
+				text: request.attributes.text!,
+				entryPoint: request.entryPoint
+			},
+			request.textDocuments,
+			codemark.id
+		);
 		await resolveCreatePostResponse(response!);
 		return {
 			stream,
 			markerLocations: response.markerLocations,
 			post: await this.enrichPost(response!.post),
-			codemark: (codemark as CodemarkPlus).markers ? codemark : await SessionContainer.instance().codemarks.enrichCodemark(codemark)
+			codemark: (codemark as CodemarkPlus).markers
+				? codemark
+				: await SessionContainer.instance().codemarks.enrichCodemark(codemark)
 		};
 	}
 

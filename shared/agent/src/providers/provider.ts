@@ -187,7 +187,10 @@ export abstract class ThirdPartyProviderBase<
 		const multiProviderInfo = providerInfo as { multiple: any };
 		if (multiProviderInfo && multiProviderInfo.multiple) {
 			for (const providerTeamId of Object.keys(multiProviderInfo.multiple)) {
-				if (multiProviderInfo.multiple[providerTeamId] && multiProviderInfo.multiple[providerTeamId].accessToken) {
+				if (
+					multiProviderInfo.multiple[providerTeamId] &&
+					multiProviderInfo.multiple[providerTeamId].accessToken
+				) {
 					return true;
 				}
 			}

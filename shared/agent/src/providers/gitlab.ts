@@ -10,7 +10,8 @@ import { Logger } from "../logger";
 import { Markerish, MarkerLocationManager } from "../managers/markerLocationManager";
 import { MAX_RANGE_VALUE } from "../markerLocation/calculator";
 import {
-	CreateThirdPartyCardRequest, DocumentMarker,
+	CreateThirdPartyCardRequest,
+	DocumentMarker,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
 	GitLabBoard,
@@ -19,11 +20,7 @@ import {
 } from "../protocol/agent.protocol";
 import { CodemarkType, CSGitLabProviderInfo, CSLocationArray, CSReferenceLocation } from "../protocol/api.protocol";
 import { log, lspProvider, Strings } from "../system";
-import {
-	getRemotePath,
-	PullRequestComment,
-	ThirdPartyIssueProviderBase
-} from "./provider";
+import { getRemotePath, PullRequestComment, ThirdPartyIssueProviderBase } from "./provider";
 
 interface GitLabProject {
 	path_with_namespace: any;
@@ -327,7 +324,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	private _commentsByRepoAndPath = new Map<
 		string,
 		{ expiresAt: number; comments: Promise<PullRequestComment[]> }
-		>();
+	>();
 
 	private _isMatchingRemotePredicate = (r: GitRemote) => r.domain === "gitlab.com";
 	protected getIsMatchingRemotePredicate() {
@@ -358,11 +355,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				return await cachedComments.comments;
 			}
 
-			const commentsPromise = this._getCommentsForPathCore(
-				filePath,
-				relativePath,
-				remotePath
-			);
+			const commentsPromise = this._getCommentsForPathCore(filePath, relativePath, remotePath);
 			this._commentsByRepoAndPath.set(cacheKey, {
 				expiresAt: new Date().setMinutes(new Date().getMinutes() + 30),
 				comments: commentsPromise
@@ -387,7 +380,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		const comments = (await Promise.all(
 			prs.map(pr => this._getPullRequestComments(remotePath, pr, relativePath))
 		)).reduce((group, current) => group.concat(current), []);
-
 
 		// If we have any comments, fire a notification
 		if (comments.length !== 0) {
@@ -421,7 +413,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return prs;
 	}
 
-	private async _getPullRequestComments(remotePath: string, pr: GitLabPullRequest, relativePath: string): Promise<PullRequestComment[]> {
+	private async _getPullRequestComments(
+		remotePath: string,
+		pr: GitLabPullRequest,
+		relativePath: string
+	): Promise<PullRequestComment[]> {
 		let gitLabComments: GitLabPullRequestComment[] = [];
 
 		try {
