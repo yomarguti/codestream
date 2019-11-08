@@ -14,7 +14,7 @@ import {
 } from "../protocol/agent.protocol";
 import { CSJiraProviderInfo } from "../protocol/api.protocol";
 import { Iterables, log, lspProvider } from "../system";
-import { ThirdPartyProviderBase } from "./provider";
+import { ThirdPartyIssueProviderBase } from "./provider";
 
 type AccessibleResourcesResponse = { id: string; name: string }[];
 interface JiraProject {
@@ -48,7 +48,7 @@ interface CreateJiraIssueResponse {
 }
 
 @lspProvider("jira")
-export class JiraProvider extends ThirdPartyProviderBase<CSJiraProviderInfo> {
+export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo> {
 	private _urlAddon = "";
 	private boards: JiraBoard[] = [];
 	private domain?: string;

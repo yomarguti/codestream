@@ -6,7 +6,6 @@ import { ThirdPartyProviderUser } from "./agent.protocol.providers";
 import {
 	CodemarkType,
 	CSCodemark,
-	CSCreateCodemarkResponse,
 	CSMarker,
 	CSMarkerLocations,
 	CSPost,
@@ -32,7 +31,7 @@ export interface CreateExternalPostRequest {
 }
 
 export interface CreateSharedExternalPostRequest {
-	streamId: string;
+	channelId: string;
 	text: string;
 	mentionedUserIds?: string[];
 	parentPostId?: string;
@@ -49,18 +48,6 @@ export interface CreatePostRequest {
 	parentPostId?: string;
 	codemark?: CreateCodemarkRequest;
 	entryPoint?: string;
-	crossPostIssueValues?: CrossPostIssueValues;
-}
-
-export interface CreateSharedPostRequest {
-	streamId: string;
-	attributes: any;
-	text?: string;
-	memberIds?: any;
-	parentPostId?: string;
-	codemark?: CodemarkPlus;
-	entryPoint?: string;
-	providerId?: string;
 	crossPostIssueValues?: CrossPostIssueValues;
 }
 
@@ -88,13 +75,6 @@ export const CreatePostRequestType = new RequestType<
 	void,
 	void
 >("codestream/posts/create");
-
-export const CreateSharedPostRequestType = new RequestType<
-	CreateSharedPostRequest,
-	CreatePostResponse,
-	void,
-	void
->("codestream/posts/share");
 
 export interface CodeBlockSource {
 	file: string;

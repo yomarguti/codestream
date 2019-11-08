@@ -1,19 +1,20 @@
 "use strict";
 import { CodeStreamApiProvider } from "api/codestream/codestreamApi";
+import { sortBy } from "lodash-es";
 import { SlackSharingApiProvider } from "../api/slack/slackSharingApi";
 import { SessionContainer } from "../container";
 import {
-	CreateThirdPartyCardRequest,
-	CreateThirdPartyCardResponse,
-	FetchThirdPartyBoardsRequest,
-	FetchThirdPartyBoardsResponse
+	CreateThirdPartyPostRequest,
+	CreateThirdPartyPostResponse,
+	FetchThirdPartyChannelsRequest,
+	FetchThirdPartyChannelsResponse
 } from "../protocol/agent.protocol";
-import { CSSlackProviderInfo } from "../protocol/api.protocol";
+import { CSSlackProviderInfo, StreamType } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
-import { ThirdPartyProviderBase } from "./provider";
+import { ThirdPartyPostProviderBase } from "./provider";
 
 @lspProvider("slack")
-export class SlackProvider extends ThirdPartyProviderBase<CSSlackProviderInfo> {
+export class SlackProvider extends ThirdPartyPostProviderBase<CSSlackProviderInfo> {
 	get displayName() {
 		return "Slack";
 	}
@@ -30,11 +31,11 @@ export class SlackProvider extends ThirdPartyProviderBase<CSSlackProviderInfo> {
 
 	async onConnected() {}
 
-	private createProvider(): SlackSharingApiProvider {
+	private createClient(): SlackSharingApiProvider {
 		const session = SessionContainer.instance().session;
 		const providerInfo = this._providerInfo as CSSlackProviderInfo;
-		// TODO cheese
-		const whatever = new SlackSharingApiProvider(
+
+		const slackApi = new SlackSharingApiProvider(
 			session.api as CodeStreamApiProvider,
 			(session.api as CodeStreamApiProvider).team,
 			{
@@ -46,24 +47,7 @@ export class SlackProvider extends ThirdPartyProviderBase<CSSlackProviderInfo> {
 			session.api.teamId,
 			SessionContainer.instance().session.proxyAgent
 		);
-		return whatever;
-	}
-
-	@log()
-	async getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
-		await this.ensureConnected();
-
-		// TODO cheese
-		const whatever = this.createProvider();
-		const streamsAsBoards = await whatever.fetchStreams({});
-		return {
-			boards: streamsAsBoards.streams.map(_ => {
-				return {
-					id: _.id,
-					name: _.name!
-				};
-			})
-		};
+		return slackApi;
 	}
 
 	getConnectionData() {
@@ -71,26 +55,40 @@ export class SlackProvider extends ThirdPartyProviderBase<CSSlackProviderInfo> {
 		return { ...data, sharing: true };
 	}
 
-	// TODO use a createPost fn?
 	@log()
-	async createCard(request: CreateThirdPartyCardRequest): Promise<CreateThirdPartyCardResponse> {
+	async getChannels(
+		request: FetchThirdPartyChannelsRequest
+	): Promise<FetchThirdPartyChannelsResponse> {
 		await this.ensureConnected();
-		// TODO cheese
-		const whatever = this.createProvider();
-		const post = await whatever.createExternalPost({
-			streamId: "CJ7PH1NDP",
-			text: request.data.text,
-			codemark: request.data.codemark
-		});
-		return post;
+
+		const slackClient = this.createClient();
+		const streams = await slackClient.fetchStreams({});
+		const channels = sortBy(
+			streams.streams.map(_ => {
+				return {
+					id: _.id,
+					name: _.name!,
+					type: _.type,
+					order: _.type === StreamType.Channel ? 0 : _.type === StreamType.Direct ? 2 : 1
+				};
+			}),
+			[_ => _.order, _ => _.name]
+		);
+		return {
+			channels: channels
+		};
 	}
 
 	@log()
-	async getAssignableUsers(request: { boardId: string }) {
-		// TODO cheese
-		// await this.ensureConnected();
-		// const response = await this.get<GitLabUser[]>(`/projects/${request.boardId}/users`);
-		// return { users: response.body.map(u => ({ ...u, displayName: u.name })) };
-		throw Error("Not yet");
+	async createPost(request: CreateThirdPartyPostRequest): Promise<CreateThirdPartyPostResponse> {
+		await this.ensureConnected();
+
+		const slackClient = this.createClient();
+		const post = await slackClient.createExternalPost({
+			channelId: request.channelId, // "CJ7PH1NDP",
+			text: request.text,
+			codemark: request.codemark
+		});
+		return post;
 	}
 }

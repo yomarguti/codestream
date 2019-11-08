@@ -1,5 +1,7 @@
 "use strict";
 import { RequestType } from "vscode-languageserver-protocol";
+import { CrossPostIssueValues } from "./agent.protocol";
+import { CodemarkPlus } from "./agent.protocol.codemarks";
 
 export interface ThirdPartyProviderConfig {
 	id: string;
@@ -100,6 +102,47 @@ export const FetchThirdPartyBoardsRequestType = new RequestType<
 	void,
 	void
 >("codestream/provider/boards");
+
+export interface CreateThirdPartyPostRequest {
+	providerId: string;
+	channelId: string;
+	text: string;
+	attributes?: any;
+	memberIds?: any;
+	codemark?: CodemarkPlus;
+	entryPoint?: string;
+	crossPostIssueValues?: CrossPostIssueValues;
+}
+export interface CreateThirdPartyPostResponse {}
+
+export const CreateThirdPartyPostRequestType = new RequestType<
+	CreateThirdPartyPostRequest,
+	CreateThirdPartyPostResponse,
+	void,
+	void
+>("codestream/provider/posts/create");
+
+export const FetchThirdPartyChannelsRequestType = new RequestType<
+	FetchThirdPartyChannelsRequest,
+	FetchThirdPartyChannelsResponse,
+	void,
+	void
+>("codestream/provider/channels");
+
+export interface FetchThirdPartyChannelsRequest {
+	providerId: string;
+	[key: string]: any;
+}
+
+export interface ThirdPartyChannel {
+	id: string;
+	name: string;
+	type: string;
+}
+
+export interface FetchThirdPartyChannelsResponse {
+	channels: ThirdPartyChannel[];
+}
 
 export interface ThirdPartyProviderUser {
 	id?: string;

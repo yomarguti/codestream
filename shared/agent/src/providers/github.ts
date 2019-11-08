@@ -26,7 +26,7 @@ import {
 	getOpenedRepos,
 	getRemotePath,
 	PullRequestComment,
-	ThirdPartyProviderBase,
+	ThirdPartyIssueProviderBase,
 	ThirdPartyProviderSupportsIssues,
 	ThirdPartyProviderSupportsPullRequests
 } from "./provider";
@@ -41,7 +41,7 @@ interface GitHubRepo {
 const diffHunkRegex = /^@@ -([\d]+)(?:,([\d]+))? \+([\d]+)(?:,([\d]+))? @@/;
 
 @lspProvider("github")
-export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
+export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProviderInfo>
 	implements ThirdPartyProviderSupportsIssues, ThirdPartyProviderSupportsPullRequests {
 	private _githubUserId: string | undefined;
 	private _knownRepos = new Map<string, GitHubRepo>();

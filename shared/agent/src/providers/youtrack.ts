@@ -13,10 +13,10 @@ import {
 } from "../protocol/agent.protocol";
 import { CSMe, CSYouTrackProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
-import { ThirdPartyProviderBase } from "./provider";
+import { ThirdPartyIssueProviderBase } from "./provider";
 
 @lspProvider("youtrack")
-export class YouTrackProvider extends ThirdPartyProviderBase<CSYouTrackProviderInfo> {
+export class YouTrackProvider extends ThirdPartyIssueProviderBase<CSYouTrackProviderInfo> {
 
 	get displayName() {
 		return "YouTrack";

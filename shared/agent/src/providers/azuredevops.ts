@@ -16,7 +16,7 @@ import {
 } from "../protocol/agent.protocol";
 import { CSAzureDevOpsProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
-import { ThirdPartyProviderBase } from "./provider";
+import { ThirdPartyIssueProviderBase } from "./provider";
 
 interface AzureDevOpsProfile {
 	emailAddress: string;
@@ -25,7 +25,7 @@ interface AzureDevOpsProfile {
 }
 
 @lspProvider("azuredevops")
-export class AzureDevOpsProvider extends ThirdPartyProviderBase<CSAzureDevOpsProviderInfo> {
+export class AzureDevOpsProvider extends ThirdPartyIssueProviderBase<CSAzureDevOpsProviderInfo> {
 	private _user: AzureDevOpsProfile | undefined;
 
 	get displayName() {

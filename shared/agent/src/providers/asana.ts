@@ -15,7 +15,7 @@ import {
 } from "../protocol/agent.protocol";
 import { CSAsanaProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
-import { ThirdPartyProviderBase } from "./provider";
+import { ThirdPartyIssueProviderBase } from "./provider";
 
 interface AsanaProjectData {
 	data: AsanaProject;
@@ -26,7 +26,7 @@ interface AsanaUsersData {
 }
 
 @lspProvider("asana")
-export class AsanaProvider extends ThirdPartyProviderBase<CSAsanaProviderInfo> {
+export class AsanaProvider extends ThirdPartyIssueProviderBase<CSAsanaProviderInfo> {
 	private _asanaUser: AsanaUser | undefined;
 
 	get displayName() {

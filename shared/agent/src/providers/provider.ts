@@ -11,11 +11,15 @@ import {
 	AddEnterpriseProviderResponse,
 	CreateThirdPartyCardRequest,
 	CreateThirdPartyCardResponse,
+	CreateThirdPartyPostRequest,
+	CreateThirdPartyPostResponse,
 	DocumentMarker,
 	FetchAssignableUsersRequest,
 	FetchAssignableUsersResponse,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
+	FetchThirdPartyChannelsRequest,
+	FetchThirdPartyChannelsResponse,
 	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
 import { CSMe, CSProviderInfos } from "../protocol/api.protocol";
@@ -44,6 +48,11 @@ export interface ThirdPartyProviderSupportsIssues {
 	createCard(request: CreateThirdPartyCardRequest): Promise<CreateThirdPartyCardResponse>;
 }
 
+export interface ThirdPartyProviderSupportsPosts {
+	createPost(request: CreateThirdPartyPostRequest): Promise<CreateThirdPartyPostResponse>;
+	getChannels(request: FetchThirdPartyChannelsRequest): Promise<FetchThirdPartyChannelsResponse>;
+}
+
 export interface ThirdPartyProviderSupportsPullRequests {
 	getPullRequestDocumentMarkers(request: {
 		uri: URI;
@@ -53,7 +62,7 @@ export interface ThirdPartyProviderSupportsPullRequests {
 	}): Promise<DocumentMarker[]>;
 }
 
-export namespace ThirdPartyProvider {
+export namespace ThirdPartyIssueProvider {
 	export function supportsIssues(
 		provider: ThirdPartyProvider
 	): provider is ThirdPartyProvider & ThirdPartyProviderSupportsIssues {
@@ -70,16 +79,31 @@ export namespace ThirdPartyProvider {
 	}
 }
 
+export namespace ThirdPartyPostProvider {
+	export function supportsSharing(
+		provider: ThirdPartyPostProvider
+	): provider is ThirdPartyPostProvider & ThirdPartyProviderSupportsPosts {
+		return (provider as any).createPost !== undefined;
+	}
+}
+
 export interface ThirdPartyProvider {
 	readonly name: string;
-	supportsIssues(): this is ThirdPartyProvider & ThirdPartyProviderSupportsIssues;
-	supportsPullRequests(): this is ThirdPartyProvider & ThirdPartyProviderSupportsPullRequests;
 	connect(): Promise<void>;
 	configure(data: { [key: string]: any }): Promise<void>;
 	disconnect(): Promise<void>;
 	addEnterpriseHost(request: AddEnterpriseProviderRequest): Promise<AddEnterpriseProviderResponse>;
 	getConfig(): ThirdPartyProviderConfig;
 	isConnected(me: CSMe): boolean;
+}
+
+export interface ThirdPartyIssueProvider extends ThirdPartyProvider {
+	supportsIssues(): this is ThirdPartyIssueProvider & ThirdPartyProviderSupportsIssues;
+	supportsPullRequests(): this is ThirdPartyIssueProvider & ThirdPartyProviderSupportsPullRequests;
+}
+
+export interface ThirdPartyPostProvider extends ThirdPartyProvider {
+	supportsSharing(): this is ThirdPartyPostProvider & ThirdPartyProviderSupportsPosts;
 }
 
 export interface ApiResponse<T> {
@@ -126,13 +150,6 @@ export abstract class ThirdPartyProviderBase<
 		const { host, apiHost, isEnterprise } = this.providerConfig;
 		const returnHost = isEnterprise ? host : `https://${apiHost}`;
 		return `${returnHost}${this.apiPath}`;
-	}
-
-	supportsIssues(): this is ThirdPartyProvider & ThirdPartyProviderSupportsIssues {
-		return ThirdPartyProvider.supportsIssues(this);
-	}
-	supportsPullRequests(): this is ThirdPartyProvider & ThirdPartyProviderSupportsPullRequests {
-		return ThirdPartyProvider.supportsPullRequests(this);
 	}
 
 	async addEnterpriseHost(
@@ -447,6 +464,30 @@ export abstract class ThirdPartyProviderBase<
 		}
 		return new Error(message);
 	}
+}
+
+export abstract class ThirdPartyIssueProviderBase<
+	TProviderInfo extends CSProviderInfos = CSProviderInfos
+> extends ThirdPartyProviderBase<TProviderInfo> implements ThirdPartyIssueProvider {
+	supportsIssues(): this is ThirdPartyIssueProvider & ThirdPartyProviderSupportsIssues {
+		return ThirdPartyIssueProvider.supportsIssues(this);
+	}
+	supportsPullRequests(): this is ThirdPartyIssueProvider & ThirdPartyProviderSupportsPullRequests {
+		return ThirdPartyIssueProvider.supportsPullRequests(this);
+	}
+}
+
+export abstract class ThirdPartyPostProviderBase<
+	TProviderInfo extends CSProviderInfos = CSProviderInfos
+> extends ThirdPartyProviderBase<TProviderInfo> implements ThirdPartyPostProvider {
+	supportsSharing(): this is ThirdPartyPostProvider & ThirdPartyProviderSupportsPosts {
+		return ThirdPartyPostProvider.supportsSharing(this);
+	}
+	abstract getChannels(
+		request: FetchThirdPartyChannelsRequest
+	): Promise<FetchThirdPartyChannelsResponse>;
+
+	abstract createPost(request: CreateThirdPartyPostRequest): Promise<CreateThirdPartyPostResponse>;
 }
 
 export interface PullRequestComment {

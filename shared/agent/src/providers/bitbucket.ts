@@ -24,7 +24,7 @@ import {
 	getOpenedRepos,
 	getRemotePath,
 	PullRequestComment,
-	ThirdPartyProviderBase,
+	ThirdPartyIssueProviderBase,
 	ThirdPartyProviderSupportsIssues,
 	ThirdPartyProviderSupportsPullRequests
 } from "./provider";
@@ -101,7 +101,7 @@ interface GetPullRequestsResponse extends BitbucketValues<BitbucketPullRequest[]
 interface GetPullRequestCommentsResponse extends BitbucketValues<BitbucketPullRequestComment[]> {}
 
 @lspProvider("bitbucket")
-export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProviderInfo>
+export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketProviderInfo>
 	implements ThirdPartyProviderSupportsIssues, ThirdPartyProviderSupportsPullRequests {
 	private _bitbucketUserId: string | undefined;
 	private _knownRepos = new Map<string, BitbucketRepo>();

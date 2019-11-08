@@ -16,7 +16,7 @@ import {
 import { CSJiraServerProviderInfo } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
 import { Iterables, log, lspProvider } from "../system";
-import { ThirdPartyProviderBase } from "./provider";
+import { ThirdPartyIssueProviderBase } from "./provider";
 
 export type jsonCallback = (
 	err?: {statusCode: number, data?: any},
@@ -90,7 +90,7 @@ interface CreateJiraIssueResponse {
 }
 
 @lspProvider("jiraserver")
-export class JiraServerProvider extends ThirdPartyProviderBase<CSJiraServerProviderInfo> {
+export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServerProviderInfo> {
 	private boards: JiraBoard[] = [];
 	private oauth: OAuthExtended | undefined;
 

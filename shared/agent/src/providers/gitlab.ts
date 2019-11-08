@@ -22,9 +22,7 @@ import { log, lspProvider, Strings } from "../system";
 import {
 	getRemotePath,
 	PullRequestComment,
-	ThirdPartyProviderBase,
-	ThirdPartyProviderSupportsIssues,
-	ThirdPartyProviderSupportsPullRequests
+	ThirdPartyIssueProviderBase	
 } from "./provider";
 
 interface GitLabProject {
@@ -40,8 +38,7 @@ interface GitLabUser {
 }
 
 @lspProvider("gitlab")
-export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
-	implements ThirdPartyProviderSupportsIssues, ThirdPartyProviderSupportsPullRequests {
+export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProviderInfo> {
 	private _gitlabUserId: string | undefined;
 	private _projectsByRemotePath = new Map<string, GitLabProject>();
 

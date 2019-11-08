@@ -238,7 +238,7 @@ export class SlackSharingApiProvider {
 
 			const { streamId, postId: parentPostId } = fromSlackPostId(
 				request.parentPostId,
-				request.streamId!
+				request.channelId!
 			);
 
 			// if (meMessage) {

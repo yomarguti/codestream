@@ -13,6 +13,9 @@ import {
 	CreateThirdPartyCardRequest,
 	CreateThirdPartyCardRequestType,
 	CreateThirdPartyCardResponse,
+	CreateThirdPartyPostRequest,
+	CreateThirdPartyPostRequestType,
+	CreateThirdPartyPostResponse,
 	DisconnectThirdPartyProviderRequest,
 	DisconnectThirdPartyProviderRequestType,
 	DisconnectThirdPartyProviderResponse,
@@ -20,11 +23,14 @@ import {
 	FetchAssignableUsersRequestType,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsRequestType,
-	FetchThirdPartyBoardsResponse
+	FetchThirdPartyBoardsResponse,
+	FetchThirdPartyChannelsRequest,
+	FetchThirdPartyChannelsRequestType,
+	FetchThirdPartyChannelsResponse
 } from "../protocol/agent.protocol";
 import { CodeStreamSession } from "../session";
 import { getProvider, getRegisteredProviders, log, lsp, lspHandler } from "../system";
-import { ThirdPartyProvider } from "./provider";
+import { ThirdPartyIssueProvider, ThirdPartyPostProvider, ThirdPartyProvider } from "./provider";
 
 // NOTE: You must include all new providers here, otherwise the webpack build will exclude them
 export * from "./trello";
@@ -102,11 +108,16 @@ export class ThirdPartyProviderRegistry {
 		if (provider === undefined) {
 			throw new Error(`No registered provider for '${request.providerId}'`);
 		}
-		if (!provider.supportsIssues()) {
+		const issueProvider = provider as ThirdPartyIssueProvider;
+		if (
+			issueProvider == null ||
+			typeof issueProvider.supportsIssues !== "function" ||
+			!issueProvider.supportsIssues()
+		) {
 			throw new Error(`Provider(${provider.name}) doesn't support issues`);
 		}
 
-		return provider.getAssignableUsers(request);
+		return issueProvider.getAssignableUsers(request);
 	}
 
 	@log()
@@ -116,11 +127,16 @@ export class ThirdPartyProviderRegistry {
 		if (provider === undefined) {
 			throw new Error(`No registered provider for '${request.providerId}'`);
 		}
-		if (!provider.supportsIssues()) {
+		const issueProvider = provider as ThirdPartyIssueProvider;
+		if (
+			issueProvider == null ||
+			typeof issueProvider.supportsIssues !== "function" ||
+			!issueProvider.supportsIssues()
+		) {
 			throw new Error(`Provider(${provider.name}) doesn't support issues`);
 		}
 
-		return provider.getBoards(request);
+		return issueProvider.getBoards(request);
 	}
 
 	@log()
@@ -130,11 +146,66 @@ export class ThirdPartyProviderRegistry {
 		if (provider === undefined) {
 			throw new Error(`No registered provider for '${request.providerId}'`);
 		}
-		if (!provider.supportsIssues()) {
+		const issueProvider = provider as ThirdPartyIssueProvider;
+		if (
+			issueProvider == null ||
+			typeof issueProvider.supportsIssues !== "function" ||
+			!issueProvider.supportsIssues()
+		) {
 			throw new Error(`Provider(${provider.name}) doesn't support issues`);
 		}
 
-		return provider.createCard(request);
+		return issueProvider.createCard(request);
+	}
+
+	@log()
+	@lspHandler(FetchThirdPartyChannelsRequestType)
+	async getChannels(
+		request: FetchThirdPartyChannelsRequest
+	): Promise<FetchThirdPartyChannelsResponse> {
+		const provider = getProvider(request.providerId);
+		if (provider === undefined) {
+			throw new Error(`No registered provider for '${request.providerId}'`);
+		}
+
+		const postProvider = provider as ThirdPartyPostProvider;
+		if (
+			postProvider == null ||
+			typeof postProvider.supportsSharing !== "function" ||
+			!postProvider.supportsSharing()
+		) {
+			throw new Error(`Provider(${provider.name}) doesn't support sharing`);
+		}
+
+		return postProvider.getChannels({
+			providerId: request.providerId
+		});
+	}
+
+	@log()
+	@lspHandler(CreateThirdPartyPostRequestType)
+	async createPost(request: CreateThirdPartyPostRequest): Promise<CreateThirdPartyPostResponse> {
+		const provider = getProvider(request.providerId);
+		if (provider === undefined) {
+			throw new Error(`No registered provider for '${request.providerId}'`);
+		}
+
+		const postProvider = provider as ThirdPartyPostProvider;
+		if (
+			postProvider == null ||
+			typeof postProvider.supportsSharing !== "function" ||
+			!postProvider.supportsSharing()
+		) {
+			throw new Error(`Provider(${provider.name}) doesn't support sharing`);
+		}
+
+		const response = await postProvider.createPost({
+			providerId: request.providerId,
+			channelId: request.channelId,
+			codemark: request.codemark,
+			text: request.text
+		});
+		return {};
 	}
 
 	getProviders(): ThirdPartyProvider[];

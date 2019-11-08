@@ -11,10 +11,10 @@ import {
 } from "../protocol/agent.protocol";
 import { CSTrelloProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
-import { ThirdPartyProviderBase } from "./provider";
+import { ThirdPartyIssueProviderBase } from "./provider";
 
 @lspProvider("trello")
-export class TrelloProvider extends ThirdPartyProviderBase<CSTrelloProviderInfo> {
+export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProviderInfo> {
 	private _trelloUserId: string | undefined;
 
 	get displayName() {

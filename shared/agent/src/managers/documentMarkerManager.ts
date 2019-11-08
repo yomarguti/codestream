@@ -1,6 +1,9 @@
 "use strict";
 import * as path from "path";
-import { ThirdPartyProvider, ThirdPartyProviderSupportsPullRequests } from "providers/provider";
+import {
+	ThirdPartyIssueProvider,
+	ThirdPartyProviderSupportsPullRequests
+} from "providers/provider";
 import { CodeStreamSession } from "session";
 import { Range, TextDocumentChangeEvent } from "vscode-languageserver";
 import { URI } from "vscode-uri";
@@ -374,8 +377,13 @@ export class DocumentMarkerManager {
 		const user = await this.getMe();
 
 		const { providerRegistry } = SessionContainer.instance();
-		const providers = providerRegistry.getConnectedProviders(user, (p): p is ThirdPartyProvider &
-			ThirdPartyProviderSupportsPullRequests => p.supportsPullRequests());
+		const providers = providerRegistry.getConnectedProviders(
+			user,
+			(p): p is ThirdPartyIssueProvider & ThirdPartyProviderSupportsPullRequests => {
+				const thirdPartyIssueProvider = p as ThirdPartyIssueProvider;
+				return thirdPartyIssueProvider && typeof thirdPartyIssueProvider.supportsPullRequests === "function" && thirdPartyIssueProvider.supportsPullRequests();
+			}
+		);
 		if (providers.length === 0) return emptyArray;
 
 		const { git } = SessionContainer.instance();
