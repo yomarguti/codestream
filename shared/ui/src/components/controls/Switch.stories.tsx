@@ -11,7 +11,6 @@ const Column = styled.div`
 	display: flex;
 	flex-direction: column;
 	justify-content: space-evenly;
-	background-color: ${props => props.theme.colors.baseBackground};
 	color: ${props => props.theme.colors.text};
 	> div {
 		margin: 5px;

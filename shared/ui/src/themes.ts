@@ -1,10 +1,12 @@
-import { readableColor } from "polished";
+import { readableColor, rgba } from "polished";
 
 export type PropsWithTheme<P = any> = { theme: CSTheme } & P;
 
 export const lightTheme: CSTheme = {
 	colors: {
-		text: "black",
+		text: rgba("#333333", 0.8),
+		textHighlight: "#333333",
+		textSubtle: rgba("#333333", 0.6),
 		appBackground: "white",
 		baseBackground: "white",
 		grey1: "#c4c4c4",
@@ -22,7 +24,9 @@ export const lightTheme: CSTheme = {
 
 export const darkTheme: CSTheme = {
 	colors: {
-		text: "rgb(220, 223, 228)",
+		text: rgba("#c7c7c6", 0.8),
+		textHighlight: "#c7c7c6",
+		textSubtle: rgba("#c7c7c6", 0.6),
 		appBackground: "#1e1e1e",
 		baseBackground: "#1e1e1e",
 		grey1: "#6c757d",
@@ -46,6 +50,8 @@ export interface CSTheme {
 	};
 	colors: {
 		text: string;
+		textHighlight: string;
+		textSubtle: string;
 		appBackground: string;
 		baseBackground: string;
 		success: string;
@@ -56,7 +62,7 @@ export interface CSTheme {
 	};
 }
 
-export function isDark(color: string) {
+export function isDark(color: string): boolean {
 	return JSON.parse(readableColor(color, "false", "true"));
 }
 
@@ -68,6 +74,8 @@ export function createTheme(): CSTheme {
 		colors: {
 			...darkTheme.colors,
 			text: computedStyle.getPropertyValue("--text-color").trim() || darkTheme.colors.text,
+			textHighlight: computedStyle.getPropertyValue("--text-color-highlight").trim(),
+			textSubtle: computedStyle.getPropertyValue("--text-color-subtle").trim(),
 			appBackground:
 				computedStyle.getPropertyValue("--app-background-color").trim() ||
 				darkTheme.colors.appBackground,
