@@ -8,12 +8,19 @@ import {
 	AsanaBoard,
 	AsanaList,
 	GitLabBoard,
+	SlackChannel,
 	AzureDevOpsBoard,
 	YouTrackBoard
 } from "@codestream/protocols/agent";
 
 export interface ActiveIntegrationData {
 	isLoading?: boolean;
+}
+
+export interface SlackIntegrationData extends ActiveIntegrationData {
+	boards?: SlackChannel[];
+	currentBoard?: SlackChannel;
+	//currentList?: TrelloList;
 }
 
 export interface TrelloIntegrationData extends ActiveIntegrationData {

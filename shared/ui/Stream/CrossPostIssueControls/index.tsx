@@ -9,6 +9,7 @@ import { BitbucketCardControls } from "./BitbucketCardControls";
 import { GitHubCardControls } from "./GitHubCardControls";
 import { GitLabCardControls } from "./GitLabCardControls";
 import { JiraCardControls } from "./JiraCardControls";
+import { SlackCardControls } from "./SlackCardControls";
 import { TrelloCardControls } from "./TrelloCardControls";
 import { YouTrackCardControls } from "./YouTrackCardControls";
 import { AzureDevOpsCardControls } from "./AzureDevOpsCardControls";
@@ -178,6 +179,13 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 					<AzureDevOpsCardControls provider={providerInfo.provider}>
 						{providerOptions}
 					</AzureDevOpsCardControls>
+				);
+			}
+				case "slack": {
+				return (
+					<SlackCardControls provider={providerInfo.provider}>
+						{providerOptions}
+					</SlackCardControls>
 				);
 			}
 

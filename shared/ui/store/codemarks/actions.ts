@@ -9,7 +9,8 @@ import {
 	CodemarkPlus,
 	GetRangeScmInfoResponse,
 	CrossPostIssueValues,
-	CreateShareableCodemarkRequestType
+	CreateShareableCodemarkRequestType,
+	CreateSharedPostRequestType
 } from "@codestream/protocols/agent";
 import { logError } from "@codestream/webview/logger";
 import { codemarks as codemarkApi } from "../../Stream/api-functions";
@@ -64,6 +65,17 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 		if (response) {
 			dispatch(addCodemarks([response.codemark]));
 			dispatch(addStreams([response.stream]));
+
+			try {
+				const response2 = await HostApi.instance.send(CreateSharedPostRequestType, {
+					attributes: rest,
+					codemark: response.codemark,
+					streamId: rest.crossPostIssueValues && rest.crossPostIssueValues.streamId,
+					memberIds: accessMemberIds
+				});
+			} catch (error) {
+				logError("Error sharing a codemark in the sharing model", { message: error.message });
+			}
 		}
 	} catch (error) {
 		logError("Error creating a codemark in the sharing model", { message: error.message });
