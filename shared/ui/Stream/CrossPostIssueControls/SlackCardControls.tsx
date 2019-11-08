@@ -5,7 +5,7 @@ import Icon from "../Icon";
 import Menu from "../Menu";
 import {
 	ThirdPartyProviderConfig,
-	FetchThirdPartyBoardsRequestType,
+	FetchThirdPartyChannelsRequestType,
 	SlackChannel,
 	FetchAssignableUsersRequestType
 } from "@codestream/protocols/agent";
@@ -52,16 +52,16 @@ export function SlackCardControls(props: React.PropsWithChildren<Props>) {
 
 		let isValid = true;
 
-		const fetchBoards = async () => {
-			const response = await HostApi.instance.send(FetchThirdPartyBoardsRequestType, {
+		const fetchChannels = async () => {
+			const response = await HostApi.instance.send(FetchThirdPartyChannelsRequestType, {
 				providerId: props.provider.id
 			});
 
 			if (!isValid) return;
 			// make sure to persist current board/list selection if possible
 			const newCurrentBoard = (data.currentBoard
-				? response.boards.find(b => b.id === data.currentBoard!.id)
-				: response.boards[0]) as SlackChannel;
+				? response.channels.find(b => b.id === data.currentBoard!.id)
+				: response.channels[0]) as SlackChannel;
 
 			// const newCurrentList = (data.currentList
 			// 	? newCurrentBoard.lists.find(l => l.id === data.currentList!.id)
@@ -69,7 +69,7 @@ export function SlackCardControls(props: React.PropsWithChildren<Props>) {
 
 			updateDataState({
 				isLoading: false,
-				boards: response.boards as SlackChannel[],
+				boards: response.channels as SlackChannel[],
 				currentBoard: newCurrentBoard,
 				//currentList: newCurrentList
 			});
@@ -79,7 +79,7 @@ export function SlackCardControls(props: React.PropsWithChildren<Props>) {
 			// });
 		};
 
-		fetchBoards();
+		fetchChannels();
 
 		return () => {
 			isValid = false;

@@ -69,8 +69,10 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 			try {
 				const response2 = await HostApi.instance.send(CreateSharedPostRequestType, {
 					attributes: rest,
+					providerId: "slack*com",
 					codemark: response.codemark,
-					streamId: rest.crossPostIssueValues && rest.crossPostIssueValues.streamId,
+					//TODO cheese
+					channelId: "CJ7PH1NDP",
 					memberIds: accessMemberIds
 				});
 			} catch (error) {
