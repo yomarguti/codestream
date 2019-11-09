@@ -191,10 +191,8 @@ export class GitService implements IGitService, Disposable {
 	async getDefaultBranch(repoPath: string, remote: string): Promise<string | undefined> {
 		try {
 			const data = await git(
-				{cwd: repoPath},
-				"remote",
-				"show",
-				remote
+				{ cwd: repoPath, env: { GIT_TERMINAL_PROMPT: "0" } },
+				"remote", "show", remote
 			);
 			const headBranchLine = data.trim()
 				.split("\n")
@@ -222,7 +220,10 @@ export class GitService implements IGitService, Disposable {
 		} catch (err) {
 			if (fetchIfCommitNotFound) {
 				Logger.log("Commit not found - fetching all remotes");
-				await git({ cwd: dir }, "fetch", "--all");
+				await git(
+					{ cwd: dir, env: { GIT_TERMINAL_PROMPT: "0" } },
+					"fetch", "--all"
+				);
 				return this.getDiffBetweenCommits(initialCommitHash, finalCommitHash, filePath, false);
 			}
 
