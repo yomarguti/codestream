@@ -535,8 +535,7 @@ export function toSlackPostId(postId: string, streamId: string) {
 export function toSlackPostBlocks(
 	codemark: CodemarkPlus,
 	remotes: string[] | undefined,
-	// markersa: CSMarker[] | undefined,
-	// markerLocations: CSMarkerLocations[] | undefined,
+	markerLocations: CSMarkerLocations[] | undefined,
 	usernamesById: Map<string, string>,
 	userIdsByName: Map<string, string>
 ): Blocks {
@@ -622,21 +621,20 @@ export function toSlackPostBlocks(
 		for (const marker of codemark.markers) {
 			counter++;
 
-			const filename = marker.file;
+			let filename = marker.file;
 			let start = undefined;
 			let end = undefined;
 
-			// TODO cheese
-			// if (markerLocations && markerLocations.length) {
-			// 	const markerLocation = markerLocations[0];
-			// 	if (markerLocation) {
-			// 		const location = markerLocation.locations[marker.id];
-			// 		if (location && location.length) {
-			// 			[start, , end] = location!;
-			// 			filename = `${marker.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})`;
-			// 		}
-			// 	}
-			// }
+			if (markerLocations && markerLocations.length) {
+				const markerLocation = markerLocations[0];
+				if (markerLocation) {
+					const location = markerLocation.locations[marker.id];
+					if (location && location.length) {
+						[start, , end] = location!;
+						filename = `${marker.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})`;
+					}
+				}
+			}
 
 			let url;
 			if (

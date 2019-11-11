@@ -205,11 +205,6 @@ export class SlackSharingApiProvider {
 				text = toSlackPostText(text, userIdsByName, request.mentionedUserIds);
 			}
 
-			// const { streamId, postId: parentPostId } = fromSlackPostId(
-			// 	request.parentPostId,
-			// 	request.channelId!
-			// );
-
 			// TODO cheese fix me
 			if (meMessage) {
 				const response = await this.slackApiCall("chat.meMessage", {
@@ -234,8 +229,7 @@ export class SlackSharingApiProvider {
 			let blocks: (KnownBlock | Block)[] | undefined;
 			if (request.codemark != null) {
 				const codemark = request.codemark;
-				// TODO cheese need markerLocations here
-				blocks = toSlackPostBlocks(codemark, request.remotes, usernamesById, userIdsByName);
+				blocks = toSlackPostBlocks(codemark, request.remotes, request.markerLocations, usernamesById, userIdsByName);
 
 				// Set the fallback (notification) content for the message
 				text = `${codemark.title || ""}${
@@ -247,8 +241,6 @@ export class SlackSharingApiProvider {
 				channel: channelId,
 				text: text,
 				as_user: true,
-				// TODO cheese - check this parentPostId -- pretty sure it will be ""/null
-				// thread_ts: parentPostId,
 				unfurl_links: true,
 				reply_broadcast: false, // parentPostId ? true : undefined --- because of slack bug (https://trello.com/c/Y48QI6Z9/919)
 				blocks: blocks !== undefined ? blocks : undefined
@@ -257,7 +249,6 @@ export class SlackSharingApiProvider {
 			const { ok, error, message } = response as WebAPICallResult & { message?: any; ts?: any };
 			if (!ok) throw new Error(error);
 
-			// todo fix me cheese
 			const post = await fromSlackPost(message, channelId, usernamesById, this._codestreamTeamId);
 			const { postId } = fromSlackPostId(post.id, post.streamId);
 			createdPostId = postId;
@@ -270,10 +261,8 @@ export class SlackSharingApiProvider {
 				this._codestream.trackProviderPost({
 					provider: "slack",
 					teamId: this._codestreamTeamId,
-					// TODO cheese
-					streamId: request.channelId, // request.streamId,
+					streamId: request.channelId,
 					postId: createdPostId
-					// parentPostId: request.parentPostId
 				});
 			}
 		}

@@ -84,11 +84,7 @@ export class SlackProvider extends ThirdPartyPostProviderBase<CSSlackProviderInf
 		await this.ensureConnected();
 
 		const slackClient = this.createClient();
-		const post = await slackClient.createExternalPost({
-			channelId: request.channelId, // "CJ7PH1NDP",
-			text: request.text,
-			codemark: request.codemark
-		});
+		const post = await slackClient.createExternalPost(request);
 		return post;
 	}
 }

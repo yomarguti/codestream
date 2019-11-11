@@ -2,6 +2,7 @@
 import { RequestType } from "vscode-languageserver-protocol";
 import { CrossPostIssueValues } from "./agent.protocol";
 import { CodemarkPlus } from "./agent.protocol.codemarks";
+import { CSMarkerLocations } from "./api.protocol";
 
 export interface ThirdPartyProviderConfig {
 	id: string;
@@ -110,10 +111,14 @@ export interface CreateThirdPartyPostRequest {
 	attributes?: any;
 	memberIds?: any;
 	codemark?: CodemarkPlus;
+	remotes?: string[];
 	entryPoint?: string;
 	crossPostIssueValues?: CrossPostIssueValues;
+	markerLocations?: CSMarkerLocations[];
 }
-export interface CreateThirdPartyPostResponse {}
+export interface CreateThirdPartyPostResponse {
+	post: any;
+}
 
 export const CreateThirdPartyPostRequestType = new RequestType<
 	CreateThirdPartyPostRequest,

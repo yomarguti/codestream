@@ -199,13 +199,8 @@ export class ThirdPartyProviderRegistry {
 			throw new Error(`Provider(${provider.name}) doesn't support sharing`);
 		}
 
-		const response = await postProvider.createPost({
-			providerId: request.providerId,
-			channelId: request.channelId,
-			codemark: request.codemark,
-			text: request.text
-		});
-		return {};
+		const response = await postProvider.createPost(request);
+		return response;
 	}
 
 	getProviders(): ThirdPartyProvider[];

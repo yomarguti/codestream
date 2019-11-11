@@ -147,6 +147,7 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 
 		return {
 			stream,
+			markerLocations: response.markerLocations,
 			codemark: (codemark as CodemarkPlus).markers ? codemark : await this.enrichCodemark(codemark)
 		};
 	}

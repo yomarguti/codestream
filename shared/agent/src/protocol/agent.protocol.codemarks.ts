@@ -67,6 +67,7 @@ export interface CreateShareableCodemarkRequest {
 export interface CreateShareableCodemarkResponse {
 	codemark: CodemarkPlus;
 	stream: CSDirectStream | CSChannelStream;
+	markerLocations?: CSMarkerLocations[];
 }
 
 export const CreateShareableCodemarkRequestType = new RequestType<
