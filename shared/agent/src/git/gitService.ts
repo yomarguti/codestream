@@ -220,10 +220,14 @@ export class GitService implements IGitService, Disposable {
 		} catch (err) {
 			if (fetchIfCommitNotFound) {
 				Logger.log("Commit not found - fetching all remotes");
-				await git(
-					{ cwd: dir, env: { GIT_TERMINAL_PROMPT: "0" } },
-					"fetch", "--all"
-				);
+				try {
+					await git(
+						{ cwd: dir, env: { GIT_TERMINAL_PROMPT: "0" } },
+						"fetch", "--all"
+					);
+				} catch {
+					Logger.log("Could not fetch all remotes");
+				}
 				return this.getDiffBetweenCommits(initialCommitHash, finalCommitHash, filePath, false);
 			}
 
