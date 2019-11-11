@@ -40,6 +40,7 @@ export interface BaseNewCodemarkAttributes {
 
 export interface SharingNewCodemarkAttributes extends BaseNewCodemarkAttributes {
 	accessMemberIds: string[];
+	remotes?: string[];
 }
 
 export interface LegacyNewCodemarkAttributes extends BaseNewCodemarkAttributes {
@@ -72,6 +73,8 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 					providerId:  "slack*com",
 					text: rest.text,
 					codemark: response.codemark,
+					remotes: attributes.remotes,
+					markerLocations: response.markerLocations,
 					//TODO cheese
 					channelId: "CJ7PH1NDP",
 					memberIds: accessMemberIds

@@ -101,6 +101,7 @@ export const createPostAndCodemark = (
 	const { codeBlocks } = attributes;
 	let markers: any = [];
 	let warning;
+	let remotes: string[] = [];
 
 	codeBlocks.forEach(codeBlock => {
 		let marker: any = {
@@ -112,6 +113,9 @@ export const createPostAndCodemark = (
 		if (codeBlock.scm) {
 			marker.file = codeBlock.scm.file;
 			marker.source = codeBlock.scm;
+			if (codeBlock.scm.remotes && codeBlock.scm.remotes.length) {
+				remotes = remotes.concat(codeBlock.scm.remotes.map(_ => _.url));
+			}
 		}
 		markers.push(marker);
 
@@ -184,6 +188,9 @@ export const createPostAndCodemark = (
 			return;
 		}
 	}
+	if (remotes && remotes.length && remotes.length > 1) {
+		remotes = Array.from(new Set(remotes))
+	}
 
 	if (isLegacyNewCodemarkAttributes(attributes)) {
 		return dispatch(
@@ -215,7 +222,7 @@ export const createPostAndCodemark = (
 			)
 		);
 	} else {
-		return dispatch(createCodemark(attributes));
+		return dispatch(createCodemark({...attributes, remotes: remotes}));
 	}
 };
 
