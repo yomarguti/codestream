@@ -10,7 +10,7 @@ import {
 	GetRangeScmInfoResponse,
 	CrossPostIssueValues,
 	CreateShareableCodemarkRequestType,
-	CreateSharedPostRequestType
+	CreateThirdPartyPostRequestType
 } from "@codestream/protocols/agent";
 import { logError } from "@codestream/webview/logger";
 import { codemarks as codemarkApi } from "../../Stream/api-functions";
@@ -67,9 +67,10 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 			dispatch(addStreams([response.stream]));
 
 			try {
-				const response2 = await HostApi.instance.send(CreateSharedPostRequestType, {
-					attributes: rest,
-					providerId: "slack*com",
+				const response2 = await HostApi.instance.send(CreateThirdPartyPostRequestType, {
+					//TODO cheese
+					providerId:  "slack*com",
+					text: rest.text,
 					codemark: response.codemark,
 					//TODO cheese
 					channelId: "CJ7PH1NDP",
