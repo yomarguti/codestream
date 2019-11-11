@@ -316,7 +316,6 @@ export interface ActionId {
 	codemarkId: string;
 	markerId?: string;
 	streamId?: string;
-	parentPostId?: string;
 	creatorId?: string;
 }
 
@@ -359,8 +358,7 @@ export function toExternalActionId(
 
 export function toReplyActionId(
 	id: number,
-	codemark: CSCodemark,
-	marker?: CSMarker
+	codemark: CSCodemark
 ): string {
 	const actionId: ActionId = {
 		id: id,
@@ -368,8 +366,6 @@ export function toReplyActionId(
 		streamId: codemark.streamId,
 		teamId: codemark.teamId,
 		codemarkId: codemark.id,
-		parentPostId: codemark.postId,
-		markerId: marker && marker.id,
 		creatorId: codemark.creatorId
 	};
 

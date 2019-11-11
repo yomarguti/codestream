@@ -153,40 +153,9 @@ export class SlackSharingApiProvider {
 		}
 	}
 
-	// private async getSlackPreferences() {
-	// 	// Use real-time events as a proxy for limited-slack mode (which can't use undocumented apis)
-	// 	if (!this.capabilities.providerSupportsRealtimeEvents) {
-	// 		return { muted_channels: "" };
-	// 	}
-
-	// 	try {
-	// 		// Undocumented API: https://github.com/ErikKalkoken/slackApiDoc/blob/master/users.prefs.get.md
-	// 		const response = await this.slackApiCall("users.prefs.get", undefined);
-
-	// 		const { ok, error, prefs } = response as WebAPICallResult & { prefs: any };
-	// 		if (!ok) {
-	// 			Logger.error(new Error(error));
-	// 			return { muted_channels: "" };
-	// 		}
-
-	// 		return prefs as { [key: string]: any };
-	// 	} catch (ex) {
-	// 		Logger.error(ex);
-	// 		return { muted_channels: "" };
-	// 	}
-	// }
-
-	// get unreads(): SlackUnreads {
-	// 	return undefined;
-	// }
-
 	get userId(): string {
 		return this._slackUserId;
 	}
-
-	// protected newSlackEvents() {
-	// 	return new SlackEvents(this._slackToken, this, this._proxyAgent);
-	// }
 
 	async ensureUsernamesById(): Promise<Map<string, string>> {
 		if (this._usernamesById === undefined) {
@@ -223,7 +192,7 @@ export class SlackSharingApiProvider {
 		try {
 			const usernamesById = await this.ensureUsernamesById();
 			const userIdsByName = await this.ensureUserIdsByName();
-
+			const channelId = request.channelId;
 			let text = request.text;
 			let meMessage = meMessageRegex.test(text);
 			// If we are trying post a me message as a reply, send it as a normal reply with /me replaced with the username
@@ -236,33 +205,36 @@ export class SlackSharingApiProvider {
 				text = toSlackPostText(text, userIdsByName, request.mentionedUserIds);
 			}
 
-			const { streamId, postId: parentPostId } = fromSlackPostId(
-				request.parentPostId,
-				request.channelId!
-			);
+			// const { streamId, postId: parentPostId } = fromSlackPostId(
+			// 	request.parentPostId,
+			// 	request.channelId!
+			// );
 
-			// if (meMessage) {
-			// 	const response = await this.slackApiCall("chat.meMessage", {
-			// 		channel: streamId,
-			// 		text: text
-			// 	});
+			// TODO cheese fix me
+			if (meMessage) {
+				const response = await this.slackApiCall("chat.meMessage", {
+					channel: channelId,
+					text: text
+				});
 
-			// 	const { ok, error, ts: postId } = response as WebAPICallResult & { ts?: any };
-			// 	if (!ok) throw new Error(error);
+				const { ok, error, message, ts: postId } = response as WebAPICallResult & {
+					message?: any;
+					ts?: any;
+				};
+				if (!ok) throw new Error(error);
 
-			// 	const postResponse = await this.getPost({ streamId: streamId, postId: postId });
-			// 	return postResponse;
-			// }
+				// todo fix me cheese
+				const post = await fromSlackPost(message, channelId, usernamesById, this._codestreamTeamId);
+				const { postId: postId2 } = fromSlackPostId(post.id, post.streamId);
+				createdPostId = postId2;
+
+				return { post: post };
+			}
 
 			let blocks: (KnownBlock | Block)[] | undefined;
-			// let codemark: CSCodemark | undefined;
-			// let markers: CSMarker[] | undefined;
-			// let markerLocations: CSMarkerLocations[] | undefined;
-			// let streams: CSStream[] | undefined;
-			// let repos: CSRepository[] | undefined;
-
 			if (request.codemark != null) {
 				const codemark = request.codemark;
+				// TODO cheese need markerLocations here
 				blocks = toSlackPostBlocks(codemark, request.remotes, usernamesById, userIdsByName);
 
 				// Set the fallback (notification) content for the message
@@ -272,10 +244,11 @@ export class SlackSharingApiProvider {
 			}
 
 			const response = await this.slackApiCall("chat.postMessage", {
-				channel: streamId,
+				channel: channelId,
 				text: text,
 				as_user: true,
-				thread_ts: parentPostId,
+				// TODO cheese - check this parentPostId -- pretty sure it will be ""/null
+				// thread_ts: parentPostId,
 				unfurl_links: true,
 				reply_broadcast: false, // parentPostId ? true : undefined --- because of slack bug (https://trello.com/c/Y48QI6Z9/919)
 				blocks: blocks !== undefined ? blocks : undefined
@@ -285,84 +258,24 @@ export class SlackSharingApiProvider {
 			if (!ok) throw new Error(error);
 
 			// todo fix me cheese
-			const post = await fromSlackPost(message, streamId, usernamesById, this._codestreamTeamId);
+			const post = await fromSlackPost(message, channelId, usernamesById, this._codestreamTeamId);
 			const { postId } = fromSlackPostId(post.id, post.streamId);
 			createdPostId = postId;
 
 			return {
 				post: post
-				// codemark,
-				// markers,
-				// markerLocations,
-				// streams,
-				// repos
 			};
 		} finally {
 			if (createdPostId) {
-				// this._codestream.trackProviderPost({
-				// 	provider: "slack",
-				// 	teamId: this.teamId,
-				// 	streamId: request.streamId,
-				// 	postId: createdPostId,
-				// 	parentPostId: request.parentPostId
-				// });
+				this._codestream.trackProviderPost({
+					provider: "slack",
+					teamId: this._codestreamTeamId,
+					// TODO cheese
+					streamId: request.channelId, // request.streamId,
+					postId: createdPostId
+					// parentPostId: request.parentPostId
+				});
 			}
-		}
-	}
-
-	@log()
-	async fetchCounts(): Promise<
-		| {
-				channels: { [id: string]: any };
-				groups: { [id: string]: any };
-				ims: { [id: string]: any };
-		  }
-		| undefined
-	> {
-		// Use real-time events as a proxy for limited-slack mode (which can't use undocumented apis)
-		if (!this.capabilities.providerSupportsRealtimeEvents) {
-			return undefined;
-		}
-
-		const cc = Logger.getCorrelationContext();
-
-		try {
-			// Undocumented API
-			const response = await this.slackApiCall("users.counts", {
-				include_threads: true,
-				// mpim_aware: true,
-				only_relevant_ims: true,
-				simple_unreads: true
-			});
-
-			const { ok, error, channels, groups, ims } = response as WebAPICallResult & {
-				channels: any[];
-				groups: any[];
-				ims: any[];
-			};
-			if (!ok) throw new Error(error);
-
-			return {
-				channels: (channels == null ? [] : channels).reduce((map, c) => {
-					if (!c.is_archived) {
-						map[c.id] = c;
-					}
-					return map;
-				}, Object.create(null)),
-				groups: (groups == null ? [] : groups).reduce((map, g) => {
-					if (!g.is_archived) {
-						map[g.id] = g;
-					}
-					return map;
-				}, Object.create(null)),
-				ims: (ims == null ? [] : ims).reduce((map, im) => {
-					map[im.id] = im;
-					return map;
-				}, Object.create(null))
-			};
-		} catch (ex) {
-			Logger.error(ex, cc);
-			return undefined;
 		}
 	}
 
@@ -409,7 +322,6 @@ export class SlackSharingApiProvider {
 			Logger.log(cc, `Fetched pages \u2022 ${Strings.getDurationMilliseconds(start)} ms`);
 
 			const usernamesById = await this.ensureUsernamesById();
-			const counts = await this.fetchCounts();
 
 			const pendingRequestsQueue: DeferredStreamRequest<CSChannelStream | CSDirectStream>[] = [];
 
@@ -417,28 +329,25 @@ export class SlackSharingApiProvider {
 				this.fetchChannels(
 					// Filter out shared channels for now, until we can convert to the conversation apis
 					conversations.filter(c => c.is_channel && !c.is_shared),
-					counts && counts.channels,
+					undefined,
 					pendingRequestsQueue
 				),
 				this.fetchGroups(
 					// Filter out shared channels for now, until we can convert to the conversation apis
 					conversations.filter(c => c.is_group && !c.is_shared),
 					usernamesById,
-					counts && counts.groups,
+					undefined,
 					pendingRequestsQueue
 				),
 				this.fetchIMs(
 					conversations.filter(c => c.is_im),
 					usernamesById,
-					counts && counts.ims,
+					undefined,
 					pendingRequestsQueue
 				)
 			]);
 
 			const streams = channels.concat(...groups, ...ims);
-			// if (counts !== undefined) {
-			// 	this._unreads.updateFromCounts(counts);
-			// }
 			if (this.capabilities.providerSupportsRealtimeEvents && pendingRequestsQueue.length !== 0) {
 				this.processPendingStreamsQueue(pendingRequestsQueue);
 			}
@@ -597,7 +506,6 @@ export class SlackSharingApiProvider {
 
 			if (countsByChannel !== undefined && counts === undefined) continue;
 
-			// if (c.is_member) {
 			if (pending === undefined) {
 				pending = [];
 			}
@@ -607,7 +515,6 @@ export class SlackSharingApiProvider {
 				id: c.id,
 				name: c.name as string
 			});
-			// }
 		}
 
 		if (pending !== undefined) {
@@ -636,8 +543,6 @@ export class SlackSharingApiProvider {
 
 			const { ok, error, channel } = response as WebAPICallResult & { channel: any };
 			if (!ok) throw new Error(error);
-
-			// this._unreads.update(channel.id, channel.last_read, 0, channel.unread_count_display || 0);
 
 			return fromSlackChannel(channel, this._slackUserId, this._codestreamTeamId);
 		} catch (ex) {
@@ -906,30 +811,6 @@ export class SlackSharingApiProvider {
 		}
 	}
 
-	@log()
-	async getStream(request: GetStreamRequest) {
-		// if (request.type === StreamType.File) {
-		// 	return this._codestream.getStream(request);
-		// }
-
-		let stream;
-		switch (fromSlackChannelIdToType(request.streamId)) {
-			case "channel":
-				stream = await this.fetchChannel(request.streamId);
-				break;
-			case "group":
-				stream = await this.fetchGroup(request.streamId, await this.ensureUsernamesById());
-				break;
-			case "direct":
-				stream = await this.fetchIM(request.streamId, await this.ensureUsernamesById());
-				break;
-			default:
-				throw new Error(`Invalid stream type: ${request.streamId}`);
-		}
-
-		return { stream: stream };
-	}
-
 	private _userIdMap: Map<string, string> | undefined;
 	convertUserIdToCodeStreamUserId(id: string): string {
 		if (this._userIdMap === undefined) return id;
@@ -941,22 +822,6 @@ export class SlackSharingApiProvider {
 		// Use real-time events as a proxy for limited-slack mode (which can't use undocumented apis)
 		// if (!this.capabilities.providerSupportsRealtimeEvents) {
 		return { muted_channels: "" };
-		// }
-
-		// try {
-		// 	// Undocumented API: https://github.com/ErikKalkoken/slackApiDoc/blob/master/users.prefs.get.md
-		// 	const response = await this.slackApiCall("users.prefs.get", undefined);
-
-		// 	const { ok, error, prefs } = response as WebAPICallResult & { prefs: any };
-		// 	if (!ok) {
-		// 		Logger.error(new Error(error));
-		// 		return { muted_channels: "" };
-		// 	}
-
-		// 	return prefs as { [key: string]: any };
-		// } catch (ex) {
-		// 	Logger.error(ex);
-		// 	return { muted_channels: "" };
 		// }
 	}
 
@@ -1078,39 +943,6 @@ export class SlackSharingApiProvider {
 		return { users: users };
 	}
 
-	// @log()
-	// async getUser(request: GetUserRequest) {
-	// 	if (request.userId === this.userId) {
-	// 		return this.getMe();
-	// 	}
-
-	// 	// HACK: Forward to CodeStream if this isn't a slack user id
-	// 	if (!request.userId.startsWith("U") && !request.userId.startsWith("W")) {
-	// 		return this._codestream.getUser(request);
-	// 	}
-
-	// 	const [response, { users: codestreamUsers }] = await Promise.all([
-	// 		this.slackApiCall("users.info", {
-	// 			user: request.userId
-	// 		}),
-	// 		(this._codestreamTeam !== undefined
-	// 			? Promise.resolve({ team: this._codestreamTeam })
-	// 			: this._codestream.getTeam({ teamId: this._codestreamTeamId })
-	// 		).then(({ team }) =>
-	// 			this._codestream.fetchUsers({
-	// 				userIds: team.memberIds
-	// 			})
-	// 		)
-	// 	]);
-
-	// 	const { ok, error, user: usr } = response as WebAPICallResult & { user: any };
-	// 	if (!ok) throw new Error(error);
-
-	// 	const user = fromSlackUser(usr, this._codestreamTeamId, codestreamUsers);
-
-	// 	return { user: user };
-	// }
-
 	@debug({
 		args: false,
 		prefix: (context, method, request) =>
@@ -1198,12 +1030,7 @@ export class SlackSharingApiProvider {
 		}
 	}
 
-	async dispose() {
-		// await this._codestream.dispose();
-		// if (this._events !== undefined) {
-		// 	await this._events.dispose();
-		// }
-	}
+	async dispose() {}
 }
 
 const logFilterKeys = new Set(["text", "attachments"]);
