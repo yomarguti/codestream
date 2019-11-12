@@ -17,6 +17,12 @@ export interface ActiveIntegrationData {
 	isLoading?: boolean;
 }
 
+export type SlackV2IntegrationData = ActiveIntegrationData & {
+	[slackTeamId: string]: {
+		channels: { type: string; name: string; id: string }[];
+	};
+};
+
 export interface SlackIntegrationData extends ActiveIntegrationData {
 	boards?: SlackChannel[];
 	currentBoard?: SlackChannel;

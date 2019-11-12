@@ -72,6 +72,7 @@ import { LabeledSwitch } from "../src/components/controls/LabeledSwitch";
 import { Spacer } from "./SpatialView/PRInfoModal";
 import { CSText } from "../src/components/CSText";
 import { NewCodemarkAttributes } from "../store/codemarks/actions";
+import { SharingControls } from "./SharingControls";
 
 export interface ICrossPostIssueContext {
 	setSelectedAssignees(any: any): void;
@@ -878,6 +879,14 @@ class CodemarkForm extends React.Component<Props, State> {
 			);
 		}
 		return null;
+	};
+
+	renderSharingControls = () => {
+		return (
+			<div className="checkbox-row" style={{ float: "left" }}>
+				<SharingControls />
+			</div>
+		);
 	};
 
 	renderRelatedCodemarks = () => {
@@ -1735,7 +1744,9 @@ class CodemarkForm extends React.Component<Props, State> {
 					{this.renderTags()}
 					{this.renderCodeBlocks()}
 					{this.props.multiLocation && <div style={{ height: "10px" }} />}
-					{commentType !== "link" && true && this.renderCrossPostMessage(commentType)}
+					{commentType !== "link" && this.props.teamProvider === "codestream"
+						? this.renderSharingControls()
+						: this.renderCrossPostMessage(commentType)}
 					{true && (
 						<div
 							key="buttons"
