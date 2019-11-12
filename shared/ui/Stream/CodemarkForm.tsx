@@ -152,6 +152,7 @@ interface State {
 	labelMenuTarget: any;
 	locationMenuOpen: number | "header" | "closed";
 	locationMenuTarget: any;
+	sharingEnabled: boolean;
 	selectedChannelName?: string;
 	selectedChannelId?: string;
 	title?: string;
@@ -215,7 +216,8 @@ class CodemarkForm extends React.Component<Props, State> {
 			locationMenuOpen: "closed",
 			editingLocation: -1,
 			addingLocation: false,
-			liveLocation: -1
+			liveLocation: -1,
+			sharingEnabled: false
 		};
 
 		const state = props.editingCodemark
@@ -884,7 +886,10 @@ class CodemarkForm extends React.Component<Props, State> {
 	renderSharingControls = () => {
 		return (
 			<div className="checkbox-row" style={{ float: "left" }}>
-				<SharingControls />
+				<SharingControls
+					sharingEnabled={this.state.sharingEnabled}
+					setSharingEnabled={value => this.setState({ sharingEnabled: value })}
+				/>
 			</div>
 		);
 	};

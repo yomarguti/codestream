@@ -17,7 +17,7 @@ import { useDidMount } from "../utilities/hooks";
 import { getIntegrationData } from "../store/activeIntegrations/reducer";
 import { updateForProvider } from "../store/activeIntegrations/actions";
 import { SlackV2IntegrationData } from "../store/activeIntegrations/types";
-import { emptyObject, safe } from "../utils";
+import { setContext } from "../store/context/actions";
 
 const TextButton = styled.span`
 	color: ${(props: PropsWithTheme<{}>) => props.theme.colors.textHighlight};
@@ -74,41 +74,61 @@ function useActiveIntegrationData<T>(providerId: string) {
 	}, [data]);
 }
 
-export function SharingControls() {
+function useDataForTeam(providerId: string, providerTeamId: string = "") {
+	const data = useActiveIntegrationData<SlackV2IntegrationData>(providerId);
+	const teamData = data.get()[providerTeamId] || { channels: [] };
+
+	return React.useMemo(() => {
+		return {
+			get() {
+				return teamData;
+			},
+			set(fn: (currentTeamData: typeof teamData) => typeof teamData) {
+				data.set(d => ({ ...d, [providerTeamId]: fn(teamData) }));
+			}
+		};
+	}, [data]);
+}
+
+export function SharingControls(props: {
+	sharingEnabled: boolean;
+	setSharingEnabled: (value: boolean) => void;
+}) {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
+		const shareTargets = getConnectedSharingTargets(state);
+		const selectedShareTarget = shareTargets.find(
+			target => target.teamId === state.context.shareTargetTeamId
+		);
 		return {
 			slackConfig: getProviderConfig(state, "slack"),
 			msTeamsConfig: getProviderConfig(state, "msteams"),
 			isConnectedToSlack: isConnected(state, "slack"),
-			shareTargets: getConnectedSharingTargets(state)
+			shareTargets,
+			selectedShareTarget: selectedShareTarget || shareTargets[0]
 		};
 	});
-	const [sharingEnabled, setSharingEnabled] = React.useState(false);
 	const [isLoading, setIsLoading] = React.useState<boolean>(false);
-	const [selectedShareProvider, setSelectedShareProvider] = React.useState<
-		{ providerId: string; teamId: string; teamName: string } | undefined
-	>(derivedState.shareTargets[0]);
-	const data = useActiveIntegrationData<SlackV2IntegrationData>(
-		derivedState.slackConfig ? derivedState.slackConfig.id : ""
+	const data = useDataForTeam(
+		derivedState.slackConfig ? derivedState.slackConfig.id : "",
+		derivedState.selectedShareTarget.teamId
 	);
+
+	const setSelectedShareTarget = target =>
+		dispatch(setContext({ shareTargetTeamId: target.teamId }));
 
 	useDidMount(() => {
 		let isValid = true;
-		if (selectedShareProvider) {
-			if (!safe(() => data.get()[selectedShareProvider.teamId].channels.length > 0)) {
+		if (derivedState.selectedShareTarget) {
+			if (data.get().channels.length === 0) {
 				void (async () => {
 					setIsLoading(true);
 					const response = await HostApi.instance.send(FetchThirdPartyChannelsRequestType, {
 						providerId: derivedState.slackConfig!.id,
-						teamId: selectedShareProvider.teamId
+						teamId: derivedState.selectedShareTarget!.teamId
 					});
 					if (isValid) {
-						data.set(currentData => {
-							const teamData = { ...(currentData[selectedShareProvider.teamId] || emptyObject) };
-							teamData.channels = response.channels;
-							return { ...currentData, [selectedShareProvider.teamId]: teamData };
-						});
+						data.set(teamData => ({ ...teamData, channels: response.channels }));
 						setIsLoading(false);
 					}
 				})();
@@ -122,29 +142,23 @@ export function SharingControls() {
 	React.useEffect(() => {
 		let isValid = true;
 		if (isLoading && derivedState.isConnectedToSlack) {
-			setSelectedShareProvider(derivedState.shareTargets[0]);
+			setSelectedShareTarget(derivedState.shareTargets[0]);
 			void (async () => {
 				const response = await HostApi.instance.send(FetchThirdPartyChannelsRequestType, {
 					providerId: derivedState.slackConfig!.id,
 					teamId: derivedState.shareTargets[0].teamId
 				});
 				if (isValid) {
-					data.set(currentData => {
-						const teamData = { ...(currentData[selectedShareProvider!.teamId] || emptyObject) };
-						teamData.channels = response.channels;
-						return { ...currentData, [selectedShareProvider!.teamId]: teamData };
-					});
+					data.set(teamData => ({ ...teamData, channels: response.channels }));
 					setIsLoading(false);
 				}
 			})();
-			setSharingEnabled(true);
+			props.setSharingEnabled(true);
 		}
 		return () => {
 			isValid = false;
 		};
 	}, [isLoading, derivedState.isConnectedToSlack]);
-
-	const [selectedChannel, setSelectedChannel] = React.useState<any>();
 
 	const shareProviderMenuItems = React.useMemo(() => {
 		const targetItems = derivedState.shareTargets.map(target => ({
@@ -157,12 +171,7 @@ export function SharingControls() {
 					{target.teamName}
 				</>
 			),
-			action: () =>
-				setSelectedShareProvider({
-					providerId: target.providerId,
-					teamId: target.teamId,
-					teamName: target.teamName
-				})
+			action: () => setSelectedShareTarget(target)
 		}));
 		if (derivedState.slackConfig || derivedState.msTeamsConfig) {
 			targetItems.push({ label: "-" } as any);
@@ -170,15 +179,15 @@ export function SharingControls() {
 				targetItems.push({
 					key: "add-slack",
 					label: "Add Slack workspace" as any,
-					action: () => {
+					action: (() => {
 						dispatch(connectProvider(derivedState.slackConfig!.id, "Compose Modal"));
-					}
+					}) as any
 				});
 			if (derivedState.msTeamsConfig) {
 				targetItems.push({
 					key: "add-msteams",
 					label: "Add Teams organization" as any,
-					action: () => {}
+					action: (() => {}) as any
 				});
 			}
 		}
@@ -186,19 +195,19 @@ export function SharingControls() {
 	}, [derivedState.shareTargets, derivedState.slackConfig, derivedState.msTeamsConfig]);
 
 	const channelMenuItems = React.useMemo(() => {
-		if (selectedShareProvider == undefined) return [];
+		if (derivedState.selectedShareTarget == undefined) return [];
 
-		const dataForTeam = data.get()[selectedShareProvider.teamId];
-		if (dataForTeam == undefined) return [];
+		const dataForTeam = data.get();
+		if (dataForTeam.channels == undefined) return [];
 
 		return dataForTeam.channels.map(channel => ({
 			key: channel.name,
 			label: formatChannelName(channel),
-			action: () => setSelectedChannel(channel)
+			action: () => data.set(teamData => ({ ...teamData, lastSelectedChannel: channel }))
 		}));
 	}, [data]);
 
-	const authenticateWithSlack = async () => {
+	const authenticateWithSlack = () => {
 		setIsLoading(true);
 		dispatch(connectProvider(derivedState.slackConfig!.id, "Compose Modal"));
 	};
@@ -249,15 +258,20 @@ export function SharingControls() {
 			</Root>
 		);
 
+	const selectedChannel = data.get().lastSelectedChannel;
+
 	return (
 		<Root>
 			<input
 				type="checkbox"
-				checked={sharingEnabled}
-				onChange={() => setSharingEnabled(enabled => !enabled)}
+				checked={props.sharingEnabled}
+				onChange={() => props.setSharingEnabled(!props.sharingEnabled)}
 			/>{" "}
 			Share on{" "}
-			<SharingMenu items={shareProviderMenuItems}>{selectedShareProvider!.teamName}</SharingMenu> in{" "}
+			<SharingMenu items={shareProviderMenuItems}>
+				{derivedState.selectedShareTarget!.teamName}
+			</SharingMenu>{" "}
+			in{" "}
 			<SharingMenu items={channelMenuItems}>
 				{selectedChannel == undefined ? "select a channel" : formatChannelName(selectedChannel)}
 			</SharingMenu>

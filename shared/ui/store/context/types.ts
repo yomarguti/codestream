@@ -46,6 +46,7 @@ export interface ContextState extends WebviewContext {
 	spatialViewShowPRComments: boolean;
 
 	issueProvider?: string;
+	shareTargetTeamId?: string;
 	panelStack: (WebviewPanels | string)[];
 
 	showFeedbackSmiley: boolean;
