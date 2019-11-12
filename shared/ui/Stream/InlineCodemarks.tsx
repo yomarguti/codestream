@@ -67,6 +67,7 @@ import { PostEntryPoint } from "../store/context/types";
 import { localStore } from "../utilities/storage";
 import { PRInfoModal } from "./SpatialView/PRInfoModal";
 import { isConnected } from "../store/providers/reducer";
+import { confirmPopup } from "./Confirm";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -1043,16 +1044,30 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	closeCodemarkForm = () => {
-		this.setState({ newCodemarkAttributes: undefined, multiLocationCodemarkForm: false });
-		this.clearSelection();
+		confirmPopup({
+			title: "Are you sure?",
+			message: "Changes you made will not be saved.",
+			centered: true,
+			buttons: [
+				{
+					label: "Discard Codemark",
+					wait: true,
+					action: () => {
+						this.setState({ newCodemarkAttributes: undefined, multiLocationCodemarkForm: false });
+						this.clearSelection();
 
-		const { newCodemarkAttributes } = this.state;
-		if (newCodemarkAttributes && !newCodemarkAttributes.viewingInline) {
-			batch(() => {
-				this.setState({ newCodemarkAttributes: undefined });
-				this.props.setCodemarksFileViewStyle("list");
-			});
-		} else this.setState({ newCodemarkAttributes: undefined });
+						const { newCodemarkAttributes } = this.state;
+						if (newCodemarkAttributes && !newCodemarkAttributes.viewingInline) {
+							batch(() => {
+								this.setState({ newCodemarkAttributes: undefined });
+								this.props.setCodemarksFileViewStyle("list");
+							});
+						} else this.setState({ newCodemarkAttributes: undefined });
+					}
+				},
+				{ label: "Go Back" }
+			]
+		});
 	};
 
 	static contextTypes = {
