@@ -1029,7 +1029,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				commentType={this.state.newCodemarkAttributes.type}
 				streamId={this.props.currentStreamId!}
 				onSubmit={this.submitCodemark}
-				onClickClose={this.closeCodemarkForm}
+				onClickClose={this.closeCodemarkFormWithConfirmation}
 				collapsed={false}
 				positionAtLocation={true}
 				multiLocation={this.state.multiLocationCodemarkForm}
@@ -1044,6 +1044,19 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	closeCodemarkForm = () => {
+		this.setState({ newCodemarkAttributes: undefined, multiLocationCodemarkForm: false });
+		this.clearSelection();
+
+		const { newCodemarkAttributes } = this.state;
+		if (newCodemarkAttributes && !newCodemarkAttributes.viewingInline) {
+			batch(() => {
+				this.setState({ newCodemarkAttributes: undefined });
+				this.props.setCodemarksFileViewStyle("list");
+			});
+		} else this.setState({ newCodemarkAttributes: undefined });
+	};
+
+	closeCodemarkFormWithConfirmation = () => {
 		confirmPopup({
 			title: "Are you sure?",
 			message: "Changes you made will not be saved.",
@@ -1052,18 +1065,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				{
 					label: "Discard Codemark",
 					wait: true,
-					action: () => {
-						this.setState({ newCodemarkAttributes: undefined, multiLocationCodemarkForm: false });
-						this.clearSelection();
-
-						const { newCodemarkAttributes } = this.state;
-						if (newCodemarkAttributes && !newCodemarkAttributes.viewingInline) {
-							batch(() => {
-								this.setState({ newCodemarkAttributes: undefined });
-								this.props.setCodemarksFileViewStyle("list");
-							});
-						} else this.setState({ newCodemarkAttributes: undefined });
-					}
+					action: this.closeCodemarkForm
 				},
 				{ label: "Go Back" }
 			]
