@@ -153,7 +153,7 @@ export function initializeColorPalette() {
 		switch (theme) {
 			case "dark":
 				bodyStyle.setProperty("--app-background-color-darker", darken(color, 4));
-				bodyStyle.setProperty("--app-background-color-hover", lighten(color, 3));
+				bodyStyle.setProperty("--app-background-color-hover", lighten(color, 5));
 
 				bodyStyle.setProperty("--base-background-color", lighten(color, 4));
 				bodyStyle.setProperty("--base-border-color", lighten(color, 10));
