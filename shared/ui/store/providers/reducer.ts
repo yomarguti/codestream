@@ -39,7 +39,9 @@ export const isConnected = (state: CodeStreamState, providerName: string) => {
 			return (
 				info != undefined &&
 				info.hosts != undefined &&
-				Object.keys(info.hosts).some(host => state.providers[host] != undefined)
+				Object.keys(info.hosts).some(host => {
+					return state.providers[host] != undefined && info.hosts![host].accessToken != undefined;
+				})
 			);
 		}
 		case "slack": {
