@@ -54,7 +54,9 @@ export function SlackCardControls(props: React.PropsWithChildren<Props>) {
 
 		const fetchChannels = async () => {
 			const response = await HostApi.instance.send(FetchThirdPartyChannelsRequestType, {
-				providerId: props.provider.id
+				providerId: props.provider.id,
+				// TODO need the real providerTeamId
+				providerTeamId: "T7DDT1L5R"
 			});
 
 			if (!isValid) return;

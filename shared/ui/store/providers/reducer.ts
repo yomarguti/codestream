@@ -42,6 +42,21 @@ export const isConnected = (state: CodeStreamState, providerName: string) => {
 				Object.keys(info.hosts).some(host => state.providers[host] != undefined)
 			);
 		}
+		case "slack": {
+			// is there an accessToken for the provider?
+			const info = currentUser.providerInfo[currentTeamId][providerName];
+			if (info == null) return false;
+			if (info.accessToken) return true;
+			if (info.multiple) {
+				for (const providerTeamId of Object.keys(info.multiple)) {
+					if (info.multiple[providerTeamId] && info.multiple[providerTeamId].accessToken) {
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
 		default:
 			// is there an accessToken for the provider?
 			const info = currentUser.providerInfo[currentTeamId][providerName];
@@ -81,8 +96,8 @@ export const getConnectedSharingTargets = (state: CodeStreamState) => {
 			{
 				icon: "slack",
 				providerId: getProviderConfig(state, "slack")!.id,
-				teamId: providerInfo.slack.data!.team_id,
-				teamName: providerInfo.slack.data!.team_name
+				teamId: "T7DDT1L5R", // providerInfo.slack.data!.team_id,
+				teamName: "CodeStreammmmmmm" // providerInfo.slack.data!.team_name
 			}
 		];
 

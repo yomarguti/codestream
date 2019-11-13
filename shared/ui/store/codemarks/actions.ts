@@ -77,7 +77,9 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 					markerLocations: response.markerLocations,
 					//TODO cheese
 					channelId: "CJ7PH1NDP",
-					memberIds: accessMemberIds
+					memberIds: accessMemberIds,
+					// TODO need the real providerTeamId
+					providerTeamId: "T7DDT1L5R"
 				});
 			} catch (error) {
 				logError("Error sharing a codemark in the sharing model", { message: error.message });

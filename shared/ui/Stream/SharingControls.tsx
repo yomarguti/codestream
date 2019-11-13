@@ -125,7 +125,7 @@ export function SharingControls(props: {
 					setIsLoading(true);
 					const response = await HostApi.instance.send(FetchThirdPartyChannelsRequestType, {
 						providerId: derivedState.slackConfig!.id,
-						teamId: derivedState.selectedShareTarget!.teamId
+						providerTeamId: derivedState.selectedShareTarget!.teamId
 					});
 					if (isValid) {
 						data.set(teamData => ({ ...teamData, channels: response.channels }));
@@ -146,7 +146,7 @@ export function SharingControls(props: {
 			void (async () => {
 				const response = await HostApi.instance.send(FetchThirdPartyChannelsRequestType, {
 					providerId: derivedState.slackConfig!.id,
-					teamId: derivedState.shareTargets[0].teamId
+					providerTeamId: derivedState.shareTargets[0].teamId
 				});
 				if (isValid) {
 					data.set(teamData => ({ ...teamData, channels: response.channels }));
