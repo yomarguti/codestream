@@ -52,7 +52,7 @@ export const startSSOSignin = (
 	try {
 		await HostApi.instance.send(OpenUrlRequestType, {
 			url: encodeURI(
-				`${configs.serverUrl}/web/provider-auth/${provider}?sharing=1&${queryString}signupToken=${session.otc}`
+				`${configs.serverUrl}/web/provider-auth/${provider}?noSignup=1&${queryString}signupToken=${session.otc}`
 			)
 		});
 		return dispatch(goToSSOAuth(provider, { ...(info || emptyObject), mode: access }));
