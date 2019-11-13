@@ -20,6 +20,7 @@ import {
 	FetchThirdPartyBoardsResponse,
 	FetchThirdPartyChannelsRequest,
 	FetchThirdPartyChannelsResponse,
+	ThirdPartyDisconnect,
 	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
 import { CSMe, CSProviderInfos } from "../protocol/api.protocol";
@@ -91,7 +92,7 @@ export interface ThirdPartyProvider {
 	readonly name: string;
 	connect(): Promise<void>;
 	configure(data: { [key: string]: any }): Promise<void>;
-	disconnect(): Promise<void>;
+	disconnect(request: ThirdPartyDisconnect): Promise<void>;
 	addEnterpriseHost(request: AddEnterpriseProviderRequest): Promise<AddEnterpriseProviderResponse>;
 	getConfig(): ThirdPartyProviderConfig;
 	isConnected(me: CSMe): boolean;
@@ -222,13 +223,13 @@ export abstract class ThirdPartyProviderBase<
 
 	protected async onConfigured() {}
 
-	async disconnect(providerTeamId?: string) {
+	async disconnect(request?: ThirdPartyDisconnect) {
 		void (await this.session.api.disconnectThirdPartyProvider({
 			providerId: this.providerConfig.id,
-			providerTeamId: providerTeamId
+			providerTeamId: request && request.providerTeamId
 		}));
 		this._readyPromise = this._providerInfo = undefined;
-		await this.onDisconnected(providerTeamId);
+		await this.onDisconnected(request && request.providerTeamId);
 	}
 
 	protected async onDisconnected(providerTeamId?: string) {}

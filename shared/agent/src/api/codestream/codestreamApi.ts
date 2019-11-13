@@ -1380,18 +1380,21 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	async disconnectThirdPartyProvider(request: { providerId: string }) {
+	async disconnectThirdPartyProvider(request: { providerId: string, providerTeamId?: string }) {
 		const cc = Logger.getCorrelationContext();
 		try {
 			const provider = getProvider(request.providerId);
 			if (!provider) throw new Error(`provider ${request.providerId} not found`);
 			const providerConfig = provider.getConfig();
 
-			const params: { teamId: string; host?: string } = {
+			const params: { teamId: string; host?: string, providerTeamId?: string } = {
 				teamId: this.teamId
 			};
 			if (providerConfig.isEnterprise) {
 				params.host = providerConfig.host;
+			}
+			if (request.providerTeamId) {
+				params.providerTeamId = request.providerTeamId;
 			}
 
 			void (await this.put<{ teamId: string; host?: string }, {}>(

@@ -97,7 +97,7 @@ export class ThirdPartyProviderRegistry {
 		const provider = getProvider(request.providerId);
 		if (provider === undefined) return {};
 
-		await provider.disconnect();
+		await provider.disconnect(request);
 		return {};
 	}
 

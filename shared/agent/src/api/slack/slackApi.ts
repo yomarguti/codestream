@@ -2276,7 +2276,7 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log()
-	disconnectThirdPartyProvider(request: { providerId: string }) {
+	disconnectThirdPartyProvider(request: { providerId: string, providerTeamId?: string }) {
 		return this._codestream.disconnectThirdPartyProvider(request);
 	}
 

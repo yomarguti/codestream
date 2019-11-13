@@ -17,6 +17,10 @@ export interface ThirdPartyProviderConfig {
 	oauthData?: { [key: string]: any };
 }
 
+export interface ThirdPartyDisconnect {
+	providerTeamId?: string;
+}
+
 export interface ThirdPartyProviders {
 	[providerId: string]: ThirdPartyProviderConfig;
 }
