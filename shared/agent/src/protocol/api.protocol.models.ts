@@ -342,8 +342,8 @@ export interface CSSlackProviderInfo {
 	hosts?: { [host: string]: CSSlackProviderInfo };
 	data?: { [key: string]: any };
 	multiple?: {
-        [teamId: string]: Omit<CSSlackProviderInfo, "multiple">;
-    };
+		[teamId: string]: Omit<CSSlackProviderInfo, "multiple">;
+	};
 }
 
 export interface CSTrelloProviderInfo {
