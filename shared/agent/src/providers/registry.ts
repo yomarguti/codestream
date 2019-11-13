@@ -177,9 +177,7 @@ export class ThirdPartyProviderRegistry {
 			throw new Error(`Provider(${provider.name}) doesn't support sharing`);
 		}
 
-		return postProvider.getChannels({
-			providerId: request.providerId
-		});
+		return postProvider.getChannels(request);
 	}
 
 	@log()

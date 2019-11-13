@@ -347,7 +347,7 @@ export interface ApiProvider {
 		host?: string;
 		data: { [key: string]: any };
 	}): Promise<void>;
-	disconnectThirdPartyProvider(request: { providerId: string }): Promise<void>;
+	disconnectThirdPartyProvider(request: { providerId: string, providerTeamId?: string }): Promise<void>;
 	addEnterpriseProviderHost(
 		request: AddEnterpriseProviderHostRequest
 	): Promise<AddEnterpriseProviderHostResponse>;

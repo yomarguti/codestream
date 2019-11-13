@@ -169,7 +169,24 @@ export abstract class ThirdPartyProviderBase<
 
 	isConnected(user: CSMe): boolean {
 		const providerInfo = this.getProviderInfo(user);
-		return Boolean(providerInfo && providerInfo.accessToken);
+		return this.hasAccessToken(providerInfo);
+	}
+
+	hasAccessToken(providerInfo: TProviderInfo | undefined) {
+		if (!providerInfo) return false;
+
+		const multiProviderInfo = providerInfo as { multiple: any };
+		if (multiProviderInfo && multiProviderInfo.multiple) {
+			for (const providerTeamId of Object.keys(multiProviderInfo.multiple)) {
+				if (multiProviderInfo.multiple[providerTeamId] && multiProviderInfo.multiple[providerTeamId].accessToken) {
+					return true;
+				}
+			}
+		} else {
+			return !!providerInfo.accessToken;
+		}
+
+		return false;
 	}
 
 	getConnectionData() {
@@ -205,15 +222,16 @@ export abstract class ThirdPartyProviderBase<
 
 	protected async onConfigured() {}
 
-	async disconnect() {
+	async disconnect(providerTeamId?: string) {
 		void (await this.session.api.disconnectThirdPartyProvider({
-			providerId: this.providerConfig.id
+			providerId: this.providerConfig.id,
+			providerTeamId: providerTeamId
 		}));
 		this._readyPromise = this._providerInfo = undefined;
-		await this.onDisconnected();
+		await this.onDisconnected(providerTeamId);
 	}
 
-	protected async onDisconnected() {}
+	protected async onDisconnected(providerTeamId?: string) {}
 
 	async ensureConnected() {
 		if (this._readyPromise !== undefined) return this._readyPromise;
@@ -483,11 +501,6 @@ export abstract class ThirdPartyPostProviderBase<
 	supportsSharing(): this is ThirdPartyPostProvider & ThirdPartyProviderSupportsPosts {
 		return ThirdPartyPostProvider.supportsSharing(this);
 	}
-	abstract getChannels(
-		request: FetchThirdPartyChannelsRequest
-	): Promise<FetchThirdPartyChannelsResponse>;
-
-	abstract createPost(request: CreateThirdPartyPostRequest): Promise<CreateThirdPartyPostResponse>;
 }
 
 export interface PullRequestComment {

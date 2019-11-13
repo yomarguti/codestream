@@ -307,6 +307,36 @@ export async function fromSlackPost(
 	};
 }
 
+export async function fromMeMessageSlackPost(
+	ts: string,
+	streamId: string,
+	teamId: string,
+	text: string,
+	codemark?: CodemarkPlus
+): Promise<CSPost> {
+	const mentionedUserIds: string[] = [];
+
+	const timestamp = Number(ts.split(".")[0]) * 1000;
+	return {
+		codemarkId: codemark && codemark.id,
+		createdAt: timestamp,
+		creatorId: "codestream",
+		deactivated: false,
+		files: undefined,
+		hasBeenEdited: false,
+		numReplies: 0,
+		id: toSlackPostId(ts, streamId),
+		mentionedUserIds: mentionedUserIds,
+		modifiedAt: timestamp,
+		parentPostId: undefined,
+		reactions: undefined,
+		text: text,
+		seqNum: ts,
+		streamId: streamId,
+		teamId: teamId
+	};
+}
+
 export function fromSlackPostId<T extends string | undefined>(
 	postId: T,
 	streamId: string

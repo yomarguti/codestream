@@ -67,6 +67,7 @@ export const AddEnterpriseProviderRequestType = new RequestType<
 
 export interface DisconnectThirdPartyProviderRequest {
 	providerId: string;
+	providerTeamId?: string;
 }
 
 export interface DisconnectThirdPartyProviderResponse {}
@@ -106,6 +107,7 @@ export const FetchThirdPartyBoardsRequestType = new RequestType<
 
 export interface CreateThirdPartyPostRequest {
 	providerId: string;
+	providerTeamId: string;
 	channelId: string;
 	text: string;
 	attributes?: any;
@@ -136,6 +138,7 @@ export const FetchThirdPartyChannelsRequestType = new RequestType<
 
 export interface FetchThirdPartyChannelsRequest {
 	providerId: string;
+	providerTeamId: string;
 	[key: string]: any;
 }
 

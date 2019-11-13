@@ -29,25 +29,41 @@ export class SlackProvider extends ThirdPartyPostProviderBase<CSSlackProviderInf
 		};
 	}
 
-	async onConnected() {}
+	private _clientCache: { [key: string]: SlackSharingApiProvider } | undefined;
+	private _lastTeamId: string | undefined;
 
-	private createClient(): SlackSharingApiProvider {
+	private createClient(providerInfo: CSSlackProviderInfo): SlackSharingApiProvider {
 		const session = SessionContainer.instance().session;
-		const providerInfo = this._providerInfo as CSSlackProviderInfo;
-
 		const slackApi = new SlackSharingApiProvider(
 			session.api as CodeStreamApiProvider,
 			(session.api as CodeStreamApiProvider).team,
 			{
-				accessToken: this.accessToken!,
+				accessToken: providerInfo.accessToken!,
 				teamId: session.api.teamId,
 				// this is the slack userId
 				userId: providerInfo && providerInfo!.data && providerInfo!.data.user_id // session.api.userId
 			},
+			// codestream teamId
 			session.api.teamId,
 			SessionContainer.instance().session.proxyAgent
 		);
 		return slackApi;
+	}
+
+	private getClient(providerTeamId: string) {
+		if (!this._providerInfo) return undefined;
+
+		if (!this._clientCache) {
+			this._clientCache = {};
+		}
+		let cachedClient = this._clientCache![providerTeamId];
+		if (!cachedClient) {
+			cachedClient = this._clientCache[providerTeamId] = this.createClient(
+				this._providerInfo!.multiple![providerTeamId]!
+			);
+		}
+
+		return cachedClient;
 	}
 
 	getConnectionData() {
@@ -60,8 +76,14 @@ export class SlackProvider extends ThirdPartyPostProviderBase<CSSlackProviderInf
 		request: FetchThirdPartyChannelsRequest
 	): Promise<FetchThirdPartyChannelsResponse> {
 		await this.ensureConnected();
+		this._lastTeamId = request.providerTeamId;
 
-		const slackClient = this.createClient();
+		const slackClient = this.getClient(request.providerTeamId);
+		if (!slackClient) {
+			return {
+				channels: []
+			};
+		}
 		const streams = await slackClient.fetchStreams({});
 		const channels = sortBy(
 			streams.streams.map(_ => {
@@ -82,8 +104,12 @@ export class SlackProvider extends ThirdPartyPostProviderBase<CSSlackProviderInf
 	@log()
 	async createPost(request: CreateThirdPartyPostRequest): Promise<CreateThirdPartyPostResponse> {
 		await this.ensureConnected();
+		this._lastTeamId = request.providerTeamId;
 
-		const slackClient = this.createClient();
+		const slackClient = this.getClient(request.providerTeamId);
+		if (!slackClient) {
+			return { post: undefined };
+		}
 		const post = await slackClient.createExternalPost(request);
 		return post;
 	}

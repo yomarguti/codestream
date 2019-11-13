@@ -17,8 +17,7 @@ import {
 	CreateSharedExternalPostRequest,
 	FetchStreamsRequest,
 	FetchStreamsResponse,
-	FetchUsersResponse,
-	GetStreamRequest
+	FetchUsersResponse
 } from "../../protocol/agent.protocol";
 import {
 	CSChannelStream,
@@ -36,8 +35,8 @@ import { MessageType, StreamsRTMessage } from "../apiProvider";
 
 import { CodeStreamApiProvider } from "api/codestream/codestreamApi";
 import {
+	fromMeMessageSlackPost,
 	fromSlackChannel,
-	fromSlackChannelIdToType,
 	fromSlackChannelOrDirect,
 	fromSlackDirect,
 	fromSlackPost,
@@ -58,6 +57,15 @@ interface DeferredStreamRequest<TResult> {
 }
 
 const meMessageRegex = /^\/me /;
+
+// these are the slack api endpoints that are currently in use. add more as needed.
+type SlackMethods =
+	| "channels.info"
+	| "chat.meMessage"
+	| "chat.postMessage"
+	| "conversations.info"
+	| "groups.info"
+	| "users.info";
 
 export class SlackSharingApiProvider {
 	providerType = ProviderType.Slack;
@@ -194,32 +202,31 @@ export class SlackSharingApiProvider {
 			const userIdsByName = await this.ensureUserIdsByName();
 			const channelId = request.channelId;
 			let text = request.text;
-			let meMessage = meMessageRegex.test(text);
-			// If we are trying post a me message as a reply, send it as a normal reply with /me replaced with the username
-			if (meMessage && request.parentPostId != null) {
-				text = text.replace(meMessageRegex, `${usernamesById.get(this._slackUserId)} `);
-				meMessage = false;
-			}
+			const meMessage = meMessageRegex.test(text);
 
 			if (text) {
 				text = toSlackPostText(text, userIdsByName, request.mentionedUserIds);
 			}
 
-			// TODO cheese fix me
 			if (meMessage) {
 				const response = await this.slackApiCall("chat.meMessage", {
 					channel: channelId,
 					text: text
 				});
 
-				const { ok, error, message, ts: postId } = response as WebAPICallResult & {
+				const { ok, error, ts: postId } = response as WebAPICallResult & {
 					message?: any;
 					ts?: any;
 				};
 				if (!ok) throw new Error(error);
 
-				// todo fix me cheese
-				const post = await fromSlackPost(message, channelId, usernamesById, this._codestreamTeamId);
+				const post = await fromMeMessageSlackPost(
+					postId,
+					channelId,
+					this._codestreamTeamId,
+					request.text,
+					request.codemark
+				);
 				const { postId: postId2 } = fromSlackPostId(post.id, post.streamId);
 				createdPostId = postId2;
 
@@ -229,7 +236,13 @@ export class SlackSharingApiProvider {
 			let blocks: (KnownBlock | Block)[] | undefined;
 			if (request.codemark != null) {
 				const codemark = request.codemark;
-				blocks = toSlackPostBlocks(codemark, request.remotes, request.markerLocations, usernamesById, userIdsByName);
+				blocks = toSlackPostBlocks(
+					codemark,
+					request.remotes,
+					request.markerLocations,
+					usernamesById,
+					userIdsByName
+				);
 
 				// Set the fallback (notification) content for the message
 				text = `${codemark.title || ""}${
@@ -946,7 +959,7 @@ export class SlackSharingApiProvider {
 	protected async slackApiCall<
 		TRequest extends WebAPICallOptions,
 		TResponse extends WebAPICallResult
-	>(method: string, request?: TRequest): Promise<TResponse> {
+	>(method: SlackMethods, request?: TRequest): Promise<TResponse> {
 		const cc = Logger.getCorrelationContext();
 
 		const timeoutMs = 30000;
