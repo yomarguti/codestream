@@ -14,7 +14,8 @@ import {
 	isNotOnDisk,
 	ComponentUpdateEmitter,
 	isRangeEmpty,
-	uriToFilePath
+	uriToFilePath,
+  safe
 } from "../utils";
 import { HostApi } from "../webview-api";
 import {
@@ -41,7 +42,7 @@ import {
 	ScmError,
 	getFileScmError
 } from "../store/editorContext/reducer";
-import { CSTeam, CodemarkType, CSMe } from "@codestream/protocols/api";
+import { CSTeam, CodemarkType } from "@codestream/protocols/api";
 import {
 	setCodemarksFileViewStyle,
 	setCodemarksShowArchived,
@@ -913,7 +914,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		store: PropTypes.object
 	};
 
-	submitCodemark = async (attributes: NewCodemarkAttributes, _event) => {
+	submitCodemark = async (attributes: NewCodemarkAttributes) => {
 		let docMarker: DocumentMarker | undefined;
 		const removeTransformer = middlewareInjector.inject(
 			DocumentMarkersActionsType.SaveForFile,

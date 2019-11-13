@@ -4,7 +4,10 @@ import { PropsWithTheme } from "../src/themes";
 import Menu from "./Menu";
 import Icon from "./Icon";
 import { HostApi } from "../webview-api";
-import { FetchThirdPartyChannelsRequestType } from "@codestream/protocols/agent";
+import {
+	FetchThirdPartyChannelsRequestType,
+	CreateThirdPartyPostRequest
+} from "@codestream/protocols/agent";
 import { CodeStreamState } from "../store";
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -90,9 +93,16 @@ function useDataForTeam(providerId: string, providerTeamId: string = "") {
 	}, [data]);
 }
 
+export type SharingAttributes = Pick<
+	CreateThirdPartyPostRequest,
+	"providerId" | "providerTeamId" | "channelId"
+>;
+
 export function SharingControls(props: {
 	sharingEnabled: boolean;
 	setSharingEnabled: (value: boolean) => void;
+	onChange: (values?: SharingAttributes) => void;
+	showError?: boolean;
 }) {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
@@ -159,6 +169,20 @@ export function SharingControls(props: {
 			isValid = false;
 		};
 	}, [isLoading, derivedState.isConnectedToSlack]);
+
+	const selectedChannel = data.get().lastSelectedChannel;
+
+	React.useEffect(() => {
+		const shareTarget = derivedState.selectedShareTarget;
+
+		if (shareTarget && selectedChannel)
+			props.onChange({
+				providerId: shareTarget.providerId,
+				providerTeamId: shareTarget.teamId,
+				channelId: selectedChannel && selectedChannel.id
+			});
+		else props.onChange(undefined);
+	}, [derivedState.selectedShareTarget, selectedChannel]);
 
 	const shareProviderMenuItems = React.useMemo(() => {
 		const targetItems = derivedState.shareTargets.map(target => ({
@@ -258,8 +282,6 @@ export function SharingControls(props: {
 			</Root>
 		);
 
-	const selectedChannel = data.get().lastSelectedChannel;
-
 	return (
 		<Root>
 			<input
@@ -274,7 +296,10 @@ export function SharingControls(props: {
 			in{" "}
 			<SharingMenu items={channelMenuItems}>
 				{selectedChannel == undefined ? "select a channel" : formatChannelName(selectedChannel)}
-			</SharingMenu>
+			</SharingMenu>{" "}
+			{props.showError && selectedChannel == undefined && (
+				<small style={{ color: "red" }}>required</small>
+			)}
 		</Root>
 	);
 }

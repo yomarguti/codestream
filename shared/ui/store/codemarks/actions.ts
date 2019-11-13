@@ -41,6 +41,11 @@ export interface BaseNewCodemarkAttributes {
 export interface SharingNewCodemarkAttributes extends BaseNewCodemarkAttributes {
 	accessMemberIds: string[];
 	remotes?: string[];
+	sharingAttributes?: {
+		providerId: string;
+		providerTeamId: string;
+		channelId: string;
+	};
 }
 
 export interface LegacyNewCodemarkAttributes extends BaseNewCodemarkAttributes {
@@ -55,6 +60,10 @@ export function isLegacyNewCodemarkAttributes(
 	return (object as any).streamId != undefined;
 }
 
+export interface CreateCodemarkError {
+	reason: "share" | "create";
+}
+
 export const createCodemark = (attributes: SharingNewCodemarkAttributes) => async dispatch => {
 	const { accessMemberIds, ...rest } = attributes;
 
@@ -67,27 +76,27 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 			dispatch(addCodemarks([response.codemark]));
 			dispatch(addStreams([response.stream]));
 
-			try {
-				const response2 = await HostApi.instance.send(CreateThirdPartyPostRequestType, {
-					//TODO cheese
-					providerId:  "slack*com",
-					text: rest.text,
-					codemark: response.codemark,
-					remotes: attributes.remotes,
-					markerLocations: response.markerLocations,
-					//TODO cheese
-					channelId: "CJ7PH1NDP",
-					memberIds: accessMemberIds,
-					// TODO need the real providerTeamId
-					providerTeamId: "T7DDT1L5R"
-				});
-			} catch (error) {
-				logError("Error sharing a codemark in the sharing model", { message: error.message });
+			if (attributes.sharingAttributes) {
+				try {
+					await HostApi.instance.send(CreateThirdPartyPostRequestType, {
+						providerId: attributes.sharingAttributes.providerId,
+						channelId: attributes.sharingAttributes.channelId,
+						providerTeamId: attributes.sharingAttributes.providerTeamId,
+						text: rest.text,
+						codemark: response.codemark,
+						remotes: attributes.remotes,
+						markerLocations: response.markerLocations
+					});
+				} catch (error) {
+					logError("Error sharing a codemark in the sharing model", { message: error.message });
+					// TODO: communicate failure to users
+					throw { reason: "share" } as CreateCodemarkError;
+				}
 			}
 		}
 	} catch (error) {
 		logError("Error creating a codemark in the sharing model", { message: error.message });
-		throw error;
+		throw { reason: "create" } as CreateCodemarkError;
 	}
 };
 

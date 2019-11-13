@@ -124,21 +124,25 @@ export const addEnterpriseProvider = (
 	}
 };
 
-export const disconnectProvider = (providerId: string, connectionLocation: ViewLocation) => async (
-	dispatch,
-	getState: () => CodeStreamState
-) => {
+export const disconnectProvider = (
+	providerId: string,
+	connectionLocation: ViewLocation,
+	providerTeamId?: string
+) => async (dispatch, getState) => {
 	try {
 		const { providers } = getState();
 		const provider = providers[providerId];
 		if (!provider) return;
 		const api = HostApi.instance;
-		await api.send(DisconnectThirdPartyProviderRequestType, { providerId });
-		api.track("Issue Service Connected", {
-			Service: provider.name,
-			Host: provider.isEnterprise ? provider.host : null,
-			Connection: "Off",
-			"Connection Location": connectionLocation // ? "Global Nav" : "Compose Modal"
+		await api.send(DisconnectThirdPartyProviderRequestType, { providerId, providerTeamId });
+		api.send(TelemetryRequestType, {
+			eventName: "Issue Service Connected",
+			properties: {
+				Service: provider.name,
+				Host: provider.isEnterprise ? provider.host : null,
+				Connection: "Off",
+				"Connection Location": connectionLocation // ? "Global Nav" : "Compose Modal"
+			}
 		});
 		dispatch(deleteForProvider(providerId));
 		if (getState().context.issueProvider === provider.host) {

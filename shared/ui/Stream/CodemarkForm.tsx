@@ -72,7 +72,7 @@ import { LabeledSwitch } from "../src/components/controls/LabeledSwitch";
 import { Spacer } from "./SpatialView/PRInfoModal";
 import { CSText } from "../src/components/CSText";
 import { NewCodemarkAttributes } from "../store/codemarks/actions";
-import { SharingControls } from "./SharingControls";
+import { SharingControls, SharingAttributes } from "./SharingControls";
 
 export interface ICrossPostIssueContext {
 	setSelectedAssignees(any: any): void;
@@ -161,6 +161,7 @@ interface State {
 	textInvalid?: boolean;
 	assigneesInvalid?: boolean;
 	privacyMembersInvalid?: boolean;
+	sharingAttributesInvalid?: boolean;
 	showAllChannels?: boolean;
 	linkURI?: string;
 	copied: boolean;
@@ -190,6 +191,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	focusOnMessageInput?: Function;
 	permalinkRef = React.createRef<HTMLTextAreaElement>();
 	private _assigneesContainerRef = React.createRef<HTMLDivElement>();
+	private _sharingAttributes?: SharingAttributes;
 
 	constructor(props: Props) {
 		super(props);
@@ -596,19 +598,15 @@ class CodemarkForm extends React.Component<Props, State> {
 					: undefined,
 				tags: keyFilter(selectedTags),
 				relatedCodemarkIds: keyFilter(relatedCodemarkIds)
-				// notify,
-				// crossPostMessage,
 			};
 			if (this.props.teamProvider === "codestream") {
-				await this.props.onSubmit(
-					{
-						...baseAttributes,
-						accessMemberIds: this.state.isCodemarkPublic
-							? []
-							: this.state.privacyMembers.map(m => m.value)
-					},
-					event
-				);
+				await this.props.onSubmit({
+					...baseAttributes,
+					sharingAttributes: this.state.sharingEnabled ? this._sharingAttributes : undefined,
+					accessMemberIds: this.state.isCodemarkPublic
+						? []
+						: this.state.privacyMembers.map(m => m.value)
+				});
 			} else {
 				await this.props.onSubmit({ ...baseAttributes, streamId: selectedChannelId! }, event);
 				(this.props as any).dispatch(setCurrentStream(selectedChannelId));
@@ -632,7 +630,8 @@ class CodemarkForm extends React.Component<Props, State> {
 			codeBlockInvalid: false,
 			titleInvalid: false,
 			textInvalid: false,
-			assigneesInvalid: false
+			assigneesInvalid: false,
+			sharingAttributesInvalid: false
 		};
 
 		let invalid = false;
@@ -664,6 +663,11 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (!this.state.isCodemarkPublic && this.state.privacyMembers.length === 0) {
 			invalid = true;
 			validationState.privacyMembersInvalid = true;
+		}
+
+		if (this.state.sharingEnabled && !this._sharingAttributes) {
+			invalid = true;
+			validationState.sharingAttributesInvalid = true;
 		}
 
 		this.setState(validationState as State);
@@ -887,8 +891,12 @@ class CodemarkForm extends React.Component<Props, State> {
 		return (
 			<div className="checkbox-row" style={{ float: "left" }}>
 				<SharingControls
+					showError={this.state.sharingAttributesInvalid}
 					sharingEnabled={this.state.sharingEnabled}
 					setSharingEnabled={value => this.setState({ sharingEnabled: value })}
+					onChange={values => {
+						this._sharingAttributes = values;
+					}}
 				/>
 			</div>
 		);

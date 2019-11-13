@@ -33,13 +33,17 @@ import {
 	safe,
 	toMapBy,
 	isNotOnDisk,
-	uriToFilePath
+	uriToFilePath,
+	mapFilter
 } from "../utils";
 import { getSlashCommands } from "./SlashCommands";
 import { confirmPopup } from "./Confirm";
 import { ModalRoot } from "./Modal";
 import { getPostsForStream, getPost } from "../store/posts/reducer";
-import { isConnected as isConnectedToProvider } from "../store/providers/reducer";
+import {
+	isConnected as isConnectedToProvider,
+	getConnectedSharingTargets
+} from "../store/providers/reducer";
 import {
 	getStreamForId,
 	getStreamForTeam,
@@ -494,6 +498,34 @@ export class SimpleStream extends Component {
 					action,
 					displayName
 				});
+			}
+			if (display && provider.hasSharing) {
+				const isConnected = isConnectedToProvider(this.context.store.getState(), {
+					id: provider.id
+				});
+				if (isConnected) {
+					menuItems.push({
+						label: `Disconnect ${display.displayName}`,
+						displayName: display.displayName,
+						subMenu: [
+							mapFilter(getConnectedSharingTargets(this.context.store.getState()), shareTarget => {
+								if (shareTarget.providerId !== provider.id) return undefined;
+
+								return {
+									label: `Disconnect ${shareTarget.teamName}`,
+									action: () => {
+										this.props.disconnectProvider(provider.id, "Global Nav", shareTarget.teamId);
+									}
+								};
+							})
+						]
+					});
+				} else
+					menuItems.push({
+						label: `Connect ${display.displayName}`,
+						action: () => {},
+						displayName: display.displayName
+					});
 			}
 		}
 		menuItems.sort((a, b) => {
