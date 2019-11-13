@@ -633,7 +633,7 @@ export class CodeStreamSession {
 			this.agent.sendNotification(DidFailLoginNotificationType, undefined);
 			if (ex instanceof ServerError) {
 				if (ex.statusCode !== undefined && ex.statusCode >= 400 && ex.statusCode < 500) {
-					const error = loginApiErrorMappings[ex.info.code] || LoginResult.Unknown;
+					let error = loginApiErrorMappings[ex.info.code] || LoginResult.Unknown;
 					if (error === LoginResult.ProviderConnectFailed) {
 						Container.instance().telemetry.track({
 							eventName: "Provider Connect Failed",
@@ -642,6 +642,8 @@ export class CodeStreamSession {
 								Provider: ex.info && ex.info.provider
 							}
 						});
+						// map the reason for provider auth failure
+						error = loginApiErrorMappings[ex.info.error];
 					}
 					return {
 						error: error,
