@@ -127,7 +127,7 @@ Probably the easiest way to switch between environments is to create separate wo
 Use the following settings:
 
 ```json
-"codestream.serverUrl": "https://pd-api.codestream.us:9443",
+"codestream.serverUrl": "https://pd-api.codestream.us",
 "codestream.email": "<email>",
 "codestream.team": "<team>", // Shouldn't really be needed unless there are issues and you belong to more than 1 team
 ```
@@ -142,7 +142,7 @@ Example workspace file &mdash; save as pd.code-workspace
 		}
 	],
 	"settings": {
-		"codestream.serverUrl": "https://pd-api.codestream.us:9443",		
+		"codestream.serverUrl": "https://pd-api.codestream.us",		
 		"codestream.email": "<email>",
 		"codestream.team": "<team>" // Shouldn't really be needed unless there are issues and you belong to more than 1 team
 	}

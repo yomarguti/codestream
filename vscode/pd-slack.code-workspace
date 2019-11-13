@@ -20,7 +20,7 @@
 		]
 	},
 	"settings": {
-		"codestream.serverUrl": "https://pd-api.codestream.us:9443",
+		"codestream.serverUrl": "https://pd-api.codestream.us",
 		"codestream.team": "CodeStream",
 		"editor.insertSpaces": false,
 		"prettier.requireConfig": true,
