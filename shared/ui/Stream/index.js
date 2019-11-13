@@ -40,6 +40,7 @@ import { getSlashCommands } from "./SlashCommands";
 import { confirmPopup } from "./Confirm";
 import { ModalRoot } from "./Modal";
 import { getPostsForStream, getPost } from "../store/posts/reducer";
+import { isConnected as isConnectedToProvider } from "../store/providers/reducer";
 import {
 	isConnected as isConnectedToProvider,
 	getConnectedSharingTargets
