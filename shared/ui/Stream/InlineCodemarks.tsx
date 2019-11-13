@@ -1293,7 +1293,9 @@ const mapStateToProps = (state: CodeStreamState) => {
 		firstVisibleLine = textEditorVisibleRanges[0].start.line;
 	}
 
-	const hasPRProvider = ["github", "bitbucket", "gitlab"].some(name => isConnected(state, name));
+	const hasPRProvider = ["github", "bitbucket", "gitlab"].some(name =>
+		isConnected(state, { name })
+	);
 
 	return {
 		hasPRProvider,

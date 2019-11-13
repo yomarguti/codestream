@@ -103,7 +103,7 @@ export function SharingControls(props: {
 		return {
 			slackConfig: getProviderConfig(state, "slack"),
 			msTeamsConfig: getProviderConfig(state, "msteams"),
-			isConnectedToSlack: isConnected(state, "slack"),
+			isConnectedToSlack: isConnected(state, { name: "slack" }),
 			shareTargets,
 			selectedShareTarget: selectedShareTarget || shareTargets[0]
 		};
@@ -111,7 +111,7 @@ export function SharingControls(props: {
 	const [isLoading, setIsLoading] = React.useState<boolean>(false);
 	const data = useDataForTeam(
 		derivedState.slackConfig ? derivedState.slackConfig.id : "",
-		derivedState.selectedShareTarget.teamId
+		derivedState.selectedShareTarget && derivedState.selectedShareTarget.teamId
 	);
 
 	const setSelectedShareTarget = target =>

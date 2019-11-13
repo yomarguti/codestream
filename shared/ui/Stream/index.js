@@ -39,6 +39,7 @@ import { getSlashCommands } from "./SlashCommands";
 import { confirmPopup } from "./Confirm";
 import { ModalRoot } from "./Modal";
 import { getPostsForStream, getPost } from "../store/posts/reducer";
+import { isConnected as isConnectedToProvider } from "../store/providers/reducer";
 import {
 	getStreamForId,
 	getStreamForTeam,
@@ -443,7 +444,9 @@ export class SimpleStream extends Component {
 				const displayName = isEnterprise
 					? `${display.displayName} - ${displayHost}`
 					: display.displayName;
-				const isConnected = this.isConnectedToProvider(provider);
+				const isConnected = isConnectedToProvider(this.context.store.getState(), {
+					id: provider.id
+				});
 				let label = `Connect to ${displayName}`;
 				let action;
 				if (isConnected) {
@@ -497,22 +500,6 @@ export class SimpleStream extends Component {
 			return a.displayName.localeCompare(b.displayName);
 		});
 		return menuItems;
-	}
-
-	isConnectedToProvider(provider) {
-		const { providerInfo = {} } = this.props;
-		const userProviderInfo = providerInfo[provider.name];
-		if (!userProviderInfo) {
-			return false;
-		}
-		if (!provider.isEnterprise && userProviderInfo.accessToken) {
-			return true;
-		}
-		return !!(
-			userProviderInfo.hosts &&
-			userProviderInfo.hosts[provider.id] &&
-			userProviderInfo.hosts[provider.id].accessToken
-		);
 	}
 
 	renderNavIcons() {

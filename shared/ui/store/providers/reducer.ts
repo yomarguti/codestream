@@ -2,10 +2,11 @@ import { ActionType } from "../common";
 import * as actions from "./actions";
 import { ProvidersState, ProvidersActionsType } from "./types";
 import { CodeStreamState } from "..";
-import { CSMe } from "@codestream/protocols/api";
-import { mapFilter } from "@codestream/webview/utils";
+import { CSMe, CSSlackProviderInfo, CSProviderInfos } from "@codestream/protocols/api";
+import { mapFilter, safe } from "@codestream/webview/utils";
 import { ThirdPartyProviderConfig } from "@codestream/protocols/agent";
 import { createSelector } from "reselect";
+import { PROVIDER_MAPPINGS } from "@codestream/webview/Stream/CrossPostIssueControls/types";
 
 type ProviderActions = ActionType<typeof actions>;
 
@@ -22,7 +23,12 @@ export function reduceProviders(state = initialState, action: ProviderActions) {
 	}
 }
 
-export const isConnected = (state: CodeStreamState, providerName: string) => {
+type ProviderPropertyOption = { name: string } | { id: string };
+function isNameOption(o: ProviderPropertyOption): o is { name: string } {
+	return (o as any).name != undefined;
+}
+
+export const isConnected = (state: CodeStreamState, option: ProviderPropertyOption) => {
 	const currentUser = state.users[state.session.userId!] as CSMe;
 	const { currentTeamId } = state.context;
 
@@ -30,48 +36,61 @@ export const isConnected = (state: CodeStreamState, providerName: string) => {
 	if (currentUser.providerInfo == undefined || currentUser.providerInfo[currentTeamId] == undefined)
 		return false;
 
-	switch (providerName) {
-		case "jiraserver":
-		case "github_enterprise":
-		case "gitlab_enterprise": {
-			// enterprise/on-prem providers need the `hosts` validated
-			const info = currentUser.providerInfo[currentTeamId][providerName];
-			return (
-				info != undefined &&
-				info.hosts != undefined &&
-				Object.keys(info.hosts).some(host => {
-					return state.providers[host] != undefined && info.hosts![host].accessToken != undefined;
-				})
-			);
-		}
-		case "slack": {
-			// is there an accessToken for the provider?
-			const info = currentUser.providerInfo[currentTeamId][providerName];
-			if (info == null) return false;
-			if (info.accessToken) return true;
-			if (info.multiple) {
-				for (const providerTeamId of Object.keys(info.multiple)) {
-					if (info.multiple[providerTeamId] && info.multiple[providerTeamId].accessToken) {
-						return true;
-					}
-				}
+	if (isNameOption(option)) {
+		const providerName = option.name;
+		switch (providerName) {
+			case "jiraserver":
+			case "github_enterprise":
+			case "gitlab_enterprise": {
+				// enterprise/on-prem providers need the `hosts` validated
+				const info = currentUser.providerInfo[currentTeamId][providerName];
+				return (
+					info != undefined &&
+					info.hosts != undefined &&
+					Object.keys(info.hosts).some(host => {
+						return state.providers[host] != undefined && info.hosts![host].accessToken != undefined;
+					})
+				);
 			}
+			default: {
+				// is there an accessToken for the provider?
+				const info = currentUser.providerInfo[currentTeamId][providerName];
+				if (info == undefined) return false;
+				if (info.accessToken != undefined) return true;
 
+				if (["slack", "msteams"].includes(providerName)) {
+					const infoPerTeam = (info as any).multiple as { [key: string]: CSProviderInfos };
+					if (infoPerTeam && Object.values(infoPerTeam).some(i => i.accessToken != undefined))
+						return true;
+				}
+				return false;
+			}
+		}
+	} else {
+		const providerConfig = state.providers[option.id];
+		const infoForProvider = currentUser.providerInfo![currentTeamId][providerConfig.name];
+		if (infoForProvider == undefined) return false;
+
+		if (!providerConfig.isEnterprise) {
+			if (infoForProvider.accessToken) return true;
+			const infoPerTeam = (infoForProvider as any).multiple as { [key: string]: CSProviderInfos };
+			if (infoPerTeam && Object.values(infoPerTeam).some(i => i.accessToken != undefined))
+				return true;
 			return false;
 		}
-		default:
-			// is there an accessToken for the provider?
-			const info = currentUser.providerInfo[currentTeamId][providerName];
-			if (info == undefined) return false;
 
-			return info != undefined && info.accessToken != undefined;
+		return !!(
+			infoForProvider.hosts &&
+			infoForProvider.hosts[providerConfig.id] &&
+			infoForProvider.hosts[providerConfig.id].accessToken
+		);
 	}
 };
 
 export const getConnectedProviderNames = (state: CodeStreamState) => {
 	return mapFilter<ThirdPartyProviderConfig, string>(
 		Object.values(state.providers),
-		providerConfig => (isConnected(state, providerConfig.name) ? providerConfig.name : undefined)
+		providerConfig => (isConnected(state, providerConfig) ? providerConfig.name : undefined)
 	);
 };
 
@@ -79,7 +98,7 @@ export const getConnectedProviders = createSelector(
 	(state: CodeStreamState) => state,
 	(state: CodeStreamState) => {
 		return Object.values(state.providers).filter(providerConfig =>
-			isConnected(state, providerConfig.name)
+			isConnected(state, providerConfig)
 		);
 	}
 );
@@ -93,15 +112,16 @@ export const getConnectedSharingTargets = (state: CodeStreamState) => {
 
 	const providerInfo = currentUser.providerInfo[state.context.currentTeamId];
 
-	if (providerInfo && providerInfo.slack)
-		return [
-			{
-				icon: "slack",
-				providerId: getProviderConfig(state, "slack")!.id,
-				teamId: "T7DDT1L5R", // providerInfo.slack.data!.team_id,
-				teamName: "CodeStreammmmmmm" // providerInfo.slack.data!.team_name
-			}
-		];
+	const slackInfos = safe(() => providerInfo!.slack!.multiple);
+
+	if (slackInfos)
+		return Object.entries(slackInfos).map(([teamId, info]) => ({
+			icon: PROVIDER_MAPPINGS.slack.icon!,
+			providerId: getProviderConfig(state, "slack")!.id,
+			teamId,
+			teamName: info.data!.team_name
+		}));
+	// TODO: get msteams infos
 
 	return [];
 };
