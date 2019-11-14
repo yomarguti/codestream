@@ -499,29 +499,34 @@ export class SimpleStream extends Component {
 					displayName
 				});
 			}
-			if (display && provider.hasSharing) {
+			// sharing model only
+			if (this.props.isCodeStreamTeam && display && provider.hasSharing) {
 				const isConnected = isConnectedToProvider(this.context.store.getState(), {
 					id: provider.id
 				});
 				if (isConnected) {
 					menuItems.push({
+						key: providerId,
 						label: `Disconnect ${display.displayName}`,
 						displayName: display.displayName,
-						subMenu: [
-							mapFilter(getConnectedSharingTargets(this.context.store.getState()), shareTarget => {
+						submenu: mapFilter(
+							getConnectedSharingTargets(this.context.store.getState()),
+							shareTarget => {
 								if (shareTarget.providerId !== provider.id) return undefined;
 
 								return {
-									label: `Disconnect ${shareTarget.teamName}`,
+									key: shareTarget.teamName,
+									label: shareTarget.teamName,
 									action: () => {
 										this.props.disconnectProvider(provider.id, "Global Nav", shareTarget.teamId);
 									}
 								};
-							})
-						]
+							}
+						)
 					});
 				} else
 					menuItems.push({
+						key: providerId,
 						label: `Connect ${display.displayName}`,
 						action: () => {},
 						displayName: display.displayName
