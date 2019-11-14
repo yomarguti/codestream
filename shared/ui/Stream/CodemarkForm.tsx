@@ -152,7 +152,8 @@ interface State {
 	labelMenuTarget: any;
 	locationMenuOpen: number | "header" | "closed";
 	locationMenuTarget: any;
-	sharingEnabled: boolean;
+	shouldShare: boolean;
+	sharingDisabled?: boolean;
 	selectedChannelName?: string;
 	selectedChannelId?: string;
 	title?: string;
@@ -219,7 +220,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			editingLocation: -1,
 			addingLocation: false,
 			liveLocation: -1,
-			sharingEnabled: false
+			shouldShare: false
 		};
 
 		const state = props.editingCodemark
@@ -502,7 +503,11 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 
 	toggleCodemarkPrivacy = (isCodemarkPublic: boolean) => {
-		this.setState({ isCodemarkPublic, privacyMembersInvalid: false });
+		this.setState(state => {
+			const sharingDisabled = !isCodemarkPublic;
+			const shouldShare = sharingDisabled ? false : state.shouldShare;
+			return { isCodemarkPublic, privacyMembersInvalid: false, sharingDisabled, shouldShare };
+		});
 	};
 
 	toggleNotify = () => {
@@ -602,7 +607,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			if (this.props.teamProvider === "codestream") {
 				await this.props.onSubmit({
 					...baseAttributes,
-					sharingAttributes: this.state.sharingEnabled ? this._sharingAttributes : undefined,
+					sharingAttributes: this.state.shouldShare ? this._sharingAttributes : undefined,
 					accessMemberIds: this.state.isCodemarkPublic
 						? []
 						: this.state.privacyMembers.map(m => m.value)
@@ -665,7 +670,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			validationState.privacyMembersInvalid = true;
 		}
 
-		if (this.state.sharingEnabled && !this._sharingAttributes) {
+		if (this.state.shouldShare && !this._sharingAttributes) {
 			invalid = true;
 			validationState.sharingAttributesInvalid = true;
 		}
@@ -892,9 +897,10 @@ class CodemarkForm extends React.Component<Props, State> {
 			<div className="checkbox-row" style={{ float: "left" }}>
 				<SharingControls
 					showError={this.state.sharingAttributesInvalid}
-					sharingEnabled={this.state.sharingEnabled}
-					setSharingEnabled={value => this.setState({ sharingEnabled: value })}
-					onChange={values => {
+					on={this.state.shouldShare}
+					disabled={this.state.sharingDisabled}
+					onToggle={value => this.setState({ shouldShare: value })}
+					onChangeValues={values => {
 						this._sharingAttributes = values;
 					}}
 				/>

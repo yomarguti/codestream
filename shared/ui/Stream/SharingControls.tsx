@@ -90,7 +90,7 @@ function useDataForTeam(providerId: string, providerTeamId: string = "") {
 				data.set(d => ({ ...d, [providerTeamId]: fn(teamData) }));
 			}
 		};
-	}, [data]);
+	}, [data, teamData]);
 }
 
 export type SharingAttributes = Pick<
@@ -99,10 +99,11 @@ export type SharingAttributes = Pick<
 >;
 
 export function SharingControls(props: {
-	sharingEnabled: boolean;
-	setSharingEnabled: (value: boolean) => void;
-	onChange: (values?: SharingAttributes) => void;
+	on: boolean;
+	onToggle: (value: boolean) => void;
+	onChangeValues: (values?: SharingAttributes) => void;
 	showError?: boolean;
+	disabled?: boolean;
 }) {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
@@ -155,15 +156,15 @@ export function SharingControls(props: {
 			setSelectedShareTarget(derivedState.shareTargets[0]);
 			void (async () => {
 				const response = await HostApi.instance.send(FetchThirdPartyChannelsRequestType, {
-					providerId: derivedState.slackConfig!.id,
-					providerTeamId: derivedState.shareTargets[0].teamId
+					providerId: derivedState.selectedShareTarget!.providerId,
+					providerTeamId: derivedState.selectedShareTarget!.teamId
 				});
 				if (isValid) {
 					data.set(teamData => ({ ...teamData, channels: response.channels }));
 					setIsLoading(false);
 				}
 			})();
-			props.setSharingEnabled(true);
+			props.onToggle(true);
 		}
 		return () => {
 			isValid = false;
@@ -176,12 +177,12 @@ export function SharingControls(props: {
 		const shareTarget = derivedState.selectedShareTarget;
 
 		if (shareTarget && selectedChannel)
-			props.onChange({
+			props.onChangeValues({
 				providerId: shareTarget.providerId,
 				providerTeamId: shareTarget.teamId,
 				channelId: selectedChannel && selectedChannel.id
 			});
-		else props.onChange(undefined);
+		else props.onChangeValues(undefined);
 	}, [derivedState.selectedShareTarget, selectedChannel]);
 
 	const shareProviderMenuItems = React.useMemo(() => {
@@ -285,9 +286,10 @@ export function SharingControls(props: {
 	return (
 		<Root>
 			<input
+				disabled={props.disabled}
 				type="checkbox"
-				checked={props.sharingEnabled}
-				onChange={() => props.setSharingEnabled(!props.sharingEnabled)}
+				checked={props.on}
+				onChange={() => props.onToggle(!props.on)}
 			/>{" "}
 			Share on{" "}
 			<SharingMenu items={shareProviderMenuItems}>
