@@ -470,7 +470,7 @@ export class SimpleStream extends Component {
 					};
 				} else {
 					// otherwise it's just a simple oauth redirect
-					if (name === "github" || name === "bitbucket") {
+					if (name === "github" || name === "bitbucket" || name === "gitlab") {
 						action = () =>
 							this.setState({
 								propsForPrePRProviderInfoModal: {

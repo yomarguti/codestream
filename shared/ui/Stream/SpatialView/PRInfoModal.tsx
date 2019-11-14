@@ -38,9 +38,9 @@ export const PRInfoModal = (props: { onClose: () => void }) => {
 			mapFilter(Object.values(allProviders), (provider: ThirdPartyProviderConfig) => {
 				if (
 					provider.name === "github" ||
-					provider.name === "bitbucket"
+					provider.name === "bitbucket" ||
+					provider.name === "gitlab"
 					// provider.name === "github_enterprise" ||
-					// provider.name === "gitlab"
 				) {
 					const { icon, displayName } = PROVIDER_MAPPINGS[provider.name];
 

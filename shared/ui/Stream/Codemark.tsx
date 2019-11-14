@@ -1316,9 +1316,10 @@ export class Codemark extends React.Component<Props, State> {
 
 	renderFromExternalContent() {
 		const { hidden, selected, author, marker } = this.props;
+		const providerName = marker.externalContent!.provider.name;
 
 		const pullOrMergeRequestText =
-			marker.externalContent!.provider.name === "Bitbucket" ? "merge" : "pull";
+			(providerName === "Bitbucket" || providerName === "GitLab") ? "merge" : "pull";
 
 		return (
 			<div

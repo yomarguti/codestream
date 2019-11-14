@@ -308,7 +308,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			if (
 				newValueIsNotCurrentProvider &&
 				newValueIsNotAlreadyConnected &&
-				(name === "github" || name === "bitbucket")
+				(name === "github" || name === "bitbucket" || name === "gitlab")
 			) {
 				this.setState({
 					propsForPrePRProviderInfoModal: {
