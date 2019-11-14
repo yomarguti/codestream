@@ -8,7 +8,7 @@ import { Id } from "../managers/entityManager";
 import { CSLocationMeta, CSMarkerLocation } from "../protocol/api.protocol";
 import { buildChangeset, Change, Changeset } from "./changeset";
 
-const MAX_RANGE_VALUE = 2147483647;
+export const MAX_RANGE_VALUE = 2147483647;
 const LINE_SIMILARITY_THRESHOLD = 0.6;
 const CHANGE_SIMILARITY_THRESHOLD = 0.5;
 const DELETED = -1;
