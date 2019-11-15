@@ -1,6 +1,8 @@
 import { action } from "../common";
 import { ActiveIntegrationsActionType, ActiveIntegrationData } from "./types";
 
+export { reset } from "../actions";
+
 export function updateForProvider<T extends ActiveIntegrationData>(
 	providerId: string,
 	data: Partial<T>

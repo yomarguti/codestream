@@ -26,7 +26,9 @@ export function reduceActiveIntegrations(state = initialState, action: ActiveInt
 			delete nextState[action.payload.providerId];
 			return nextState;
 		}
-
+		case "RESET": {
+			return initialState;
+		}
 		default:
 			return state;
 	}
