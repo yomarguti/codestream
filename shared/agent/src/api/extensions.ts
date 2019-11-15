@@ -317,6 +317,7 @@ export interface ActionId {
 	markerId?: string;
 	streamId?: string;
 	creatorId?: string;
+	parentPostId?: string;
 }
 
 export function toActionId(
@@ -366,7 +367,8 @@ export function toReplyActionId(
 		streamId: codemark.streamId,
 		teamId: codemark.teamId,
 		codemarkId: codemark.id,
-		creatorId: codemark.creatorId
+		creatorId: codemark.creatorId,
+		parentPostId: codemark.postId
 	};
 
 	return JSON.stringify(actionId);

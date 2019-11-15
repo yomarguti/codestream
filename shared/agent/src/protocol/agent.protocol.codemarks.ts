@@ -1,8 +1,9 @@
 "use strict";
-import { RequestType } from "vscode-languageserver-protocol";
+import { RequestType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
 import {
 	CrossPostIssueValues,
 	GetRangeScmInfoResponse,
+	PostPlus,
 	ThirdPartyProviderUser
 } from "./agent.protocol";
 import {
@@ -62,10 +63,13 @@ export interface ShareableCodemarkAttributes extends Omit<CreateCodemarkRequest,
 export interface CreateShareableCodemarkRequest {
 	attributes: ShareableCodemarkAttributes;
 	memberIds?: string[];
+	textDocuments?: TextDocumentIdentifier[];
+	entryPoint?: string;
 }
 
 export interface CreateShareableCodemarkResponse {
 	codemark: CodemarkPlus;
+	post: PostPlus;
 	stream: CSDirectStream | CSChannelStream;
 	markerLocations?: CSMarkerLocations[];
 }
