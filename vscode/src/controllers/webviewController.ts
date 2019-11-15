@@ -176,8 +176,9 @@ export class WebviewController implements Disposable {
 						teams: {}
 					}
 				);
-				const { context } = state.teams[this.session.team.id];
-				this._context = context;
+
+				const teamState = state.teams[this.session.team.id];
+				this._context = teamState && teamState.context;
 
 				if (!state.hidden) {
 					this.show();
