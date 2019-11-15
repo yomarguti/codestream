@@ -696,7 +696,7 @@ export function toSlackPostBlocks(
 				}
 			});
 
-			let actionId = toActionId(counter, "web", codemark, marker);
+			let actionId = toReplyActionId(counter, codemark);
 			const actions: ActionsBlock = {
 				type: "actions",
 				block_id: `codeblock-actions:${counter}`,
@@ -704,11 +704,11 @@ export function toSlackPostBlocks(
 					{
 						type: "button",
 						action_id: actionId,
+						style: "primary",
 						text: {
 							type: "plain_text",
-							text: "Open on Web"
-						},
-						url: `${codemark.permalink}?marker=${marker.id}`
+							text: "View Discussion & Reply"
+						}
 					}
 				]
 			};
@@ -751,23 +751,12 @@ export function toSlackPostBlocks(
 				});
 			}
 
-			actionId = toReplyActionId(counter, codemark);
-			actions.elements.push({
-				type: "button",
-				action_id: actionId,
-				text: {
-					type: "plain_text",
-					text: "Reply"
-				}
-			});
-
 			blocks.push(actions);
 		}
 	} else {
 		counter++;
 
-		let actionId = toActionId(counter, "web", codemark);
-
+		let actionId = toReplyActionId(counter, codemark);
 		const actions: ActionsBlock = {
 			type: "actions",
 			block_id: "actions",
@@ -775,11 +764,11 @@ export function toSlackPostBlocks(
 				{
 					type: "button",
 					action_id: actionId,
+					style: "primary",
 					text: {
 						type: "plain_text",
-						text: "Open on Web"
-					},
-					url: codemark.permalink
+						text: "View Discussion & Reply"
+					}
 				}
 			]
 		};
@@ -806,16 +795,6 @@ export function toSlackPostBlocks(
 				text: "Open in IDE"
 			},
 			url: `${codemark.permalink}?ide=default`
-		});
-
-		actionId = toReplyActionId(counter, codemark);
-		actions.elements.push({
-			type: "button",
-			action_id: actionId,
-			text: {
-				type: "plain_text",
-				text: "Reply"
-			}
 		});
 
 		blocks.push(actions);
