@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "styled-components";
+import { last as getLast } from "lodash-es";
 import { PropsWithTheme } from "../src/themes";
 import Menu from "./Menu";
 import Icon from "./Icon";
@@ -16,11 +17,12 @@ import {
 	getConnectedSharingTargets
 } from "../store/providers/reducer";
 import { connectProvider } from "../store/providers/actions";
-import { useDidMount } from "../utilities/hooks";
 import { getIntegrationData } from "../store/activeIntegrations/reducer";
 import { updateForProvider } from "../store/activeIntegrations/actions";
 import { SlackV2IntegrationData } from "../store/activeIntegrations/types";
 import { setContext } from "../store/context/actions";
+import { safe } from "../utils";
+import { useUpdates } from "../utilities/hooks";
 
 const TextButton = styled.span`
 	color: ${(props: PropsWithTheme<{}>) => props.theme.colors.textHighlight};
@@ -90,7 +92,7 @@ function useDataForTeam(providerId: string, providerTeamId: string = "") {
 				data.set(d => ({ ...d, [providerTeamId]: fn(teamData) }));
 			}
 		};
-	}, [data, teamData]);
+	}, [teamData]);
 }
 
 export type SharingAttributes = Pick<
@@ -119,57 +121,55 @@ export function SharingControls(props: {
 			selectedShareTarget: selectedShareTarget || shareTargets[0]
 		};
 	});
-	const [isLoading, setIsLoading] = React.useState<boolean>(false);
+	const [isAuthenticating, setIsAuthenticating] = React.useState<boolean>(false);
+	const [isFetchingData, setIsFetchingData] = React.useState<boolean>(false);
+
+	const selectedShareTargetTeamId = safe(() => derivedState.selectedShareTarget.teamId) as
+		| string
+		| undefined;
+
 	const data = useDataForTeam(
 		derivedState.slackConfig ? derivedState.slackConfig.id : "",
-		derivedState.selectedShareTarget && derivedState.selectedShareTarget.teamId
+		selectedShareTargetTeamId
 	);
 
 	const setSelectedShareTarget = target =>
 		dispatch(setContext({ shareTargetTeamId: target.teamId }));
 
-	useDidMount(() => {
-		let isValid = true;
-		if (derivedState.selectedShareTarget) {
-			if (data.get().channels.length === 0) {
-				void (async () => {
-					setIsLoading(true);
-					const response = await HostApi.instance.send(FetchThirdPartyChannelsRequestType, {
-						providerId: derivedState.slackConfig!.id,
-						providerTeamId: derivedState.selectedShareTarget!.teamId
-					});
-					if (isValid) {
-						data.set(teamData => ({ ...teamData, channels: response.channels }));
-						setIsLoading(false);
-					}
-				})();
-			}
-		}
-		return () => {
-			isValid = false;
-		};
-	});
+	useUpdates(() => {
+		const numberOfTargets = derivedState.shareTargets.length;
+		if (numberOfTargets === 0) return;
 
+		// when the first share target is connected, turn on sharing
+		if (numberOfTargets === 1) props.onToggle(true);
+
+		// if we're waiting on something to be added, this is it so make it the current selection
+		if (isAuthenticating) {
+			const newShareTarget = getLast(derivedState.shareTargets)!;
+			setSelectedShareTarget(newShareTarget);
+			setIsAuthenticating(false);
+		}
+	}, [derivedState.shareTargets.length]);
+
+	// when selected share target changes, fetch channels
 	React.useEffect(() => {
-		let isValid = true;
-		if (isLoading && derivedState.isConnectedToSlack) {
-			setSelectedShareTarget(derivedState.shareTargets[0]);
+		const { selectedShareTarget } = derivedState;
+		if (selectedShareTarget) {
+			setIsFetchingData(true);
 			void (async () => {
-				const response = await HostApi.instance.send(FetchThirdPartyChannelsRequestType, {
-					providerId: derivedState.selectedShareTarget!.providerId,
-					providerTeamId: derivedState.selectedShareTarget!.teamId
-				});
-				if (isValid) {
+				try {
+					const response = await HostApi.instance.send(FetchThirdPartyChannelsRequestType, {
+						providerId: selectedShareTarget.providerId,
+						providerTeamId: selectedShareTarget.teamId
+					});
 					data.set(teamData => ({ ...teamData, channels: response.channels }));
-					setIsLoading(false);
+				} catch (error) {
+				} finally {
+					setIsFetchingData(false);
 				}
 			})();
-			props.onToggle(true);
 		}
-		return () => {
-			isValid = false;
-		};
-	}, [isLoading, derivedState.isConnectedToSlack]);
+	}, [selectedShareTargetTeamId]);
 
 	const selectedChannel = data.get().lastSelectedChannel;
 
@@ -205,7 +205,7 @@ export function SharingControls(props: {
 					key: "add-slack",
 					label: "Add Slack workspace" as any,
 					action: (() => {
-						dispatch(connectProvider(derivedState.slackConfig!.id, "Compose Modal"));
+						authenticateWithSlack();
 					}) as any
 				});
 			if (derivedState.msTeamsConfig) {
@@ -233,20 +233,35 @@ export function SharingControls(props: {
 	}, [data]);
 
 	const authenticateWithSlack = () => {
-		setIsLoading(true);
+		setIsAuthenticating(true);
 		dispatch(connectProvider(derivedState.slackConfig!.id, "Compose Modal"));
 	};
 
 	if (derivedState.slackConfig == undefined) return null;
 
-	if (isLoading)
+	if (isAuthenticating)
 		return (
 			<Root>
 				<Icon name="sync" className="spin" /> Authenticating with Slack...{" "}
 				<a
 					onClick={e => {
 						e.preventDefault();
-						setIsLoading(false);
+						setIsAuthenticating(false);
+					}}
+				>
+					cancel
+				</a>
+			</Root>
+		);
+
+	if (isFetchingData)
+		return (
+			<Root>
+				<Icon name="sync" className="spin" /> Fetching channels...{" "}
+				<a
+					onClick={e => {
+						e.preventDefault();
+						setIsFetchingData(false);
 					}}
 				>
 					cancel
