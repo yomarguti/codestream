@@ -13,8 +13,8 @@ import {
 	CreateThirdPartyPostRequestType
 } from "@codestream/protocols/agent";
 import { logError } from "@codestream/webview/logger";
-import { codemarks as codemarkApi } from "../../Stream/api-functions";
 import { addStreams } from "../streams/actions";
+import { TextDocumentIdentifier } from 'vscode-languageserver-types';
 
 export const reset = () => action("RESET");
 
@@ -46,6 +46,8 @@ export interface SharingNewCodemarkAttributes extends BaseNewCodemarkAttributes 
 		providerTeamId: string;
 		channelId: string;
 	};
+	textDocuments?: TextDocumentIdentifier[];
+	entryPoint?: string;
 }
 
 export interface LegacyNewCodemarkAttributes extends BaseNewCodemarkAttributes {
@@ -70,7 +72,9 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 	try {
 		const response = await HostApi.instance.send(CreateShareableCodemarkRequestType, {
 			attributes: rest,
-			memberIds: accessMemberIds
+			memberIds: accessMemberIds,
+			textDocuments: attributes.textDocuments,
+			entryPoint: attributes.entryPoint
 		});
 		if (response) {
 			dispatch(addCodemarks([response.codemark]));

@@ -222,7 +222,14 @@ export const createPostAndCodemark = (
 			)
 		);
 	} else {
-		return dispatch(createCodemark({...attributes, remotes: remotes}));
+		return dispatch(createCodemark({
+			...attributes,
+			textDocuments: attributes.codeBlocks.map(_ => {
+				return { uri: _.uri };
+			}),
+			entryPoint: entryPoint,
+			remotes: remotes
+		}));
 	}
 };
 
@@ -291,11 +298,11 @@ export const createPost = (
 				relatedCodemarkIds: codemark.relatedCodemarkIds,
 				crossPostIssueValues: extra.crossPostIssueValues
 					? {
-							...extra.crossPostIssueValues,
-							externalProvider: extra.crossPostIssueValues.issueProvider.name,
-							externalProviderHost: extra.crossPostIssueValues.issueProvider.host,
-							externalAssignees: extra.crossPostIssueValues.assignees
-					  }
+						...extra.crossPostIssueValues,
+						externalProvider: extra.crossPostIssueValues.issueProvider.name,
+						externalProviderHost: extra.crossPostIssueValues.issueProvider.host,
+						externalAssignees: extra.crossPostIssueValues.assignees
+					}
 					: undefined
 			});
 		} else {
@@ -469,12 +476,12 @@ export const setUserPreference = (prefPath: string[], value: any) => async (disp
 export const createStream = (
 	attributes:
 		| {
-				name: string;
-				type: StreamType.Channel;
-				memberIds: string[];
-				privacy: "public" | "private";
-				purpose?: string;
-		  }
+			name: string;
+			type: StreamType.Channel;
+			memberIds: string[];
+			privacy: "public" | "private";
+			purpose?: string;
+		}
 		| { type: StreamType.Direct; memberIds: string[] }
 ) => async dispatch => {
 	let responsePromise: Promise<CreateChannelStreamResponse | CreateDirectStreamResponse>;

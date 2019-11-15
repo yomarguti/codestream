@@ -38,14 +38,15 @@ export async function highlightRange(request: EditorHighlightRangeRequest) {
 	}
 }
 
-export const codemarks = {
-	async create(
-		attributes: ShareableCodemarkAttributes,
-		memberIds?: string[]
-	): Promise<CreateShareableCodemarkResponse | void> {
-		return HostApi.instance.send(CreateShareableCodemarkRequestType, {
-			attributes,
-			memberIds
-		});
-	}
-};
+// TODO unused?
+// export const codemarks = {
+// 	async create(
+// 		attributes: ShareableCodemarkAttributes,
+// 		memberIds?: string[]
+// 	): Promise<CreateShareableCodemarkResponse | void> {
+// 		return HostApi.instance.send(CreateShareableCodemarkRequestType, {
+// 			attributes,
+// 			memberIds
+// 		});
+// 	}
+// };
