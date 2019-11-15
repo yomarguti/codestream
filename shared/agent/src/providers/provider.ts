@@ -164,6 +164,14 @@ export abstract class ThirdPartyProviderBase<
 		});
 	}
 
+	isReady() {
+		return !!(this._readyPromise !== undefined);
+	}
+
+	resetReady() {
+		this._readyPromise = undefined;
+	}
+
 	getConfig() {
 		return this.providerConfig;
 	}
@@ -208,16 +216,16 @@ export abstract class ThirdPartyProviderBase<
 				if (me == null) return;
 
 				const providerInfo = this.getProviderInfo(me);
-				if (providerInfo == null || !providerInfo.accessToken) return;
+				if (!this.hasAccessToken(providerInfo)) return;
 				resolve(providerInfo);
 			});
 		});
 
-		this._readyPromise = this.onConnected();
+		this._readyPromise = this.onConnected(this._providerInfo);
 		await this._readyPromise;
 	}
 
-	protected async onConnected() {}
+	protected async onConnected(providerInfo?: TProviderInfo) {}
 
 	async configure(data: { [key: string]: any }) {}
 
@@ -278,7 +286,7 @@ export abstract class ThirdPartyProviderBase<
 		}
 
 		await this.refreshToken();
-		await this.onConnected();
+		await this.onConnected(this._providerInfo);
 
 		this._ensuringConnection = undefined;
 	}

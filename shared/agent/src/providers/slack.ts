@@ -31,6 +31,16 @@ export class SlackProvider extends ThirdPartyPostProviderBase<CSSlackProviderInf
 
 	private _clientCache: { [key: string]: SlackSharingApiProvider } | undefined;
 	private _lastTeamId: string | undefined;
+	private _multiProviderInfo: CSSlackProviderInfo | undefined;
+
+	async connect() {
+		if (this._multiProviderInfo !== undefined && super.isReady()) {
+			this._multiProviderInfo = undefined;
+			this._clientCache = undefined;
+			this.resetReady();
+		}
+		super.connect();
+	}
 
 	private createClient(providerInfo: CSSlackProviderInfo): SlackSharingApiProvider {
 		const session = SessionContainer.instance().session;
@@ -50,8 +60,12 @@ export class SlackProvider extends ThirdPartyPostProviderBase<CSSlackProviderInf
 		return slackApi;
 	}
 
+	protected async onConnected(providerInfo: CSSlackProviderInfo) {
+		this._multiProviderInfo = providerInfo;
+	}
+
 	private getClient(providerTeamId: string) {
-		if (!this._providerInfo) return undefined;
+		if (!this._multiProviderInfo) return undefined;
 
 		if (!this._clientCache) {
 			this._clientCache = {};
@@ -59,7 +73,7 @@ export class SlackProvider extends ThirdPartyPostProviderBase<CSSlackProviderInf
 		let cachedClient = this._clientCache![providerTeamId];
 		if (!cachedClient) {
 			cachedClient = this._clientCache[providerTeamId] = this.createClient(
-				this._providerInfo!.multiple![providerTeamId]!
+				this._multiProviderInfo!.multiple![providerTeamId]!
 			);
 		}
 
