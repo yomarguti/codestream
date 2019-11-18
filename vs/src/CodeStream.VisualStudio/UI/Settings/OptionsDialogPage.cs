@@ -20,7 +20,7 @@ namespace CodeStream.VisualStudio.UI.Settings {
 		private string _team;
 		private bool _autoSignIn = true;
 #if DEBUG
-		private string _serverUrl = "https://pd-api.codestream.us:9443";
+		private string _serverUrl = "https://pd-api.codestream.us";
 #else
         private string _serverUrl = "https://api.codestream.com";
 #endif
