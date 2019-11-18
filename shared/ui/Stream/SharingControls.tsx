@@ -59,7 +59,7 @@ const Root = styled.div<PropsWithTheme<{}>>`
 `;
 
 const formatChannelName = (channel: { type: string; name: string }) =>
-	channel.type === "direct" ? `@${channel.name}` : `#${channel.name}`;
+	channel.type === "direct" ? channel.name : `#${channel.name}`;
 
 function useActiveIntegrationData<T>(providerId: string) {
 	const dispatch = useDispatch();
@@ -225,12 +225,24 @@ export function SharingControls(props: {
 		const dataForTeam = data.get();
 		if (dataForTeam.channels == undefined) return [];
 
-		return dataForTeam.channels.map(channel => ({
-			key: channel.name,
-			label: formatChannelName(channel),
-			action: () => data.set(teamData => ({ ...teamData, lastSelectedChannel: channel }))
-		}));
-	}, [data]);
+		const { dms, others } = dataForTeam.channels.reduce(
+			(group, channel) => {
+				const item = {
+					key: channel.name,
+					label: formatChannelName(channel),
+					action: () => data.set(teamData => ({ ...teamData, lastSelectedChannel: channel }))
+				};
+				if (channel.type === "direct") {
+					group.dms.push(item);
+				} else group.others.push(item);
+
+				return group;
+			},
+			{ dms: [], others: [] } as { dms: any[]; others: any[] }
+		);
+
+		return [...others, { label: "-" }, ...dms];
+	}, [data.get().channels]);
 
 	const authenticateWithSlack = () => {
 		setIsAuthenticating(true);
