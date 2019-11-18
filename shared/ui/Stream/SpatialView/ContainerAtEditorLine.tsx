@@ -14,6 +14,7 @@ export default function ContainerAtEditorLine(props: {
 	children: ReactNode | ReactNode[];
 	className?: string;
 	repositionToFit?: boolean;
+	lineHeight?: number;
 }) {
 	const { logicalVisibleLineCount, line0 } = useSelector((state: CodeStreamState) => {
 		const visibleRanges = getVisibleRanges(state.editorContext);
@@ -36,11 +37,9 @@ export default function ContainerAtEditorLine(props: {
 	}, [logicalVisibleLineCount]);
 
 	// allow negative line0 values here in case the codemark is above the viewport
-	const logicalPosition = React.useMemo(() => (window.innerHeight * line0) / visibleLineCount, [
-		props.lineNumber,
-		line0,
-		visibleLineCount
-	]);
+	const logicalPosition = props.lineHeight
+		? line0 * props.lineHeight
+		: (line0 * window.innerHeight) / visibleLineCount;
 
 	const rootRef = React.useRef<HTMLElement>(null);
 	const rootDimensions = useRect(rootRef, [logicalPosition]);

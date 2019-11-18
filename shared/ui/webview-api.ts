@@ -161,7 +161,7 @@ export class HostApi extends EventEmitter {
 				return;
 			}
 
-			console.debug(`received ${data.method} from host`);
+			console.debug(`received notification ${data.method} from host`);
 			this.emit(data.method, data.params);
 		};
 	}

@@ -4,6 +4,7 @@ import { connect, batch } from "react-redux";
 import * as userSelectors from "../store/users/reducer";
 import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
+import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import Tooltip from "./Tooltip"; // careful with tooltips on codemarks; they are not performant
 import Feedback from "./Feedback";
 import cx from "classnames";
@@ -13,14 +14,11 @@ import {
 	isNotOnDisk,
 	ComponentUpdateEmitter,
 	isRangeEmpty,
-	safe,
 	uriToFilePath
 } from "../utils";
 import { HostApi } from "../webview-api";
 import {
-	EditorHighlightRangeRequestType,
 	EditorRevealRangeRequestType,
-	MaxRangeValue,
 	EditorSelection,
 	EditorMetrics,
 	EditorScrollToNotificationType,
@@ -40,7 +38,6 @@ import {
 	getCurrentSelection,
 	getVisibleLineCount,
 	getVisibleRanges,
-	getLine0ForEditorLine,
 	ScmError,
 	getFileScmError
 } from "../store/editorContext/reducer";
@@ -50,14 +47,12 @@ import {
 	setCodemarksShowArchived,
 	setCurrentCodemark,
 	setSpatialViewPRCommentsToggle,
-	setCodemarksShowResolved,
 	repositionCodemark
 } from "../store/context/actions";
 import { sortBy as _sortBy } from "lodash-es";
 import { setEditorContext, changeSelection } from "../store/editorContext/actions";
 import { CodeStreamState } from "../store";
 import ContainerAtEditorLine from "./SpatialView/ContainerAtEditorLine";
-import ContainerAtEditorSelection from "./SpatialView/ContainerAtEditorSelection";
 import { CodemarkForm } from "./CodemarkForm";
 import { middlewareInjector } from "../store/middleware-injector";
 import { DocumentMarkersActionsType } from "../store/documentMarkers/types";
@@ -68,6 +63,7 @@ import { localStore } from "../utilities/storage";
 import { PRInfoModal } from "./SpatialView/PRInfoModal";
 import { isConnected } from "../store/providers/reducer";
 import { confirmPopup } from "./Confirm";
+import ComposeTitles from "./ComposeTitles";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -148,13 +144,6 @@ const NEW_CODEMARK_ATTRIBUTES_TO_RESTORE = "spatial-view:restore-codemark-form";
 
 export class SimpleInlineCodemarks extends Component<Props, State> {
 	disposables: { dispose(): void }[] = [];
-	titles: {
-		comment: JSX.Element;
-		// bookmark: JSX.Element;
-		link: JSX.Element;
-		issue: JSX.Element;
-		about: JSX.Element;
-	};
 	docMarkersByStartLine: {};
 	_scrollDiv: HTMLDivElement | null | undefined;
 	private root = React.createRef<HTMLDivElement>();
@@ -163,6 +152,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	_updateEmitter = new ComponentUpdateEmitter();
 	minimumDistance = 20;
 	_waitingForPRProviderConnection = false;
+	_mounted = false;
 
 	constructor(props: Props) {
 		super(props);
@@ -182,43 +172,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			multiLocationCodemarkForm: false
 		};
 
-		const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
-		this.titles = {
-			comment: (
-				<span>
-					<span className="function">Add Comment</span>{" "}
-					<span className="keybinding extra-pad">{modifier}</span>
-					<span className="keybinding">c</span>
-				</span>
-			),
-			// bookmark: (
-			// 	<span>
-			// 		<span className="function">Create Bookmark</span>{" "}
-			// 		<span className="keybinding extra-pad">{modifier}</span>
-			// 		<span className="keybinding">b</span>
-			// 	</span>
-			// ),
-			link: (
-				<span>
-					<span className="function">Get Permalink</span>{" "}
-					<span className="keybinding extra-pad">{modifier}</span>
-					<span className="keybinding">p</span>
-				</span>
-			),
-			issue: (
-				<span>
-					<span className="function">Create Issue</span>{" "}
-					<span className="keybinding extra-pad">{modifier}</span>
-					<span className="keybinding">i</span>
-				</span>
-			),
-			about: (
-				<span>
-					Get Info<span className="keybinding extra-pad">{modifier}</span>
-					<span className="keybinding">a</span>
-				</span>
-			)
-		};
 		this.docMarkersByStartLine = {};
 	}
 
@@ -250,10 +203,13 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				};
 			}
 			if (textEditorSelection.cursor.line !== state.lastSelectedLine) {
-				return {
-					openIconsOnLine: textEditorSelection.cursor.line,
-					lastSelectedLine: textEditorSelection.cursor.line
-				};
+				let line = textEditorSelection.cursor.line;
+
+				// if the cursor is on character 0, use the line above
+				// as it looks better aesthetically
+				if (textEditorSelection.cursor.character === 0) line--;
+
+				return { openIconsOnLine: line, lastSelectedLine: line };
 			}
 		} else {
 			return { openIconsOnLine: -1, lastSelectedLine: -1 };
@@ -263,6 +219,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	componentDidMount() {
+		this._mounted = true;
 		HostApi.instance.track("Page Viewed", { "Page Name": "CurrentFile Tab" });
 		const mutationObserver = new MutationObserver(() => this.repositionCodemarks());
 		mutationObserver.observe(document.getElementById("stream-root")!, {
@@ -285,7 +242,14 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			},
 			HostApi.instance.on(NewCodemarkNotificationType, e => {
 				this.currentPostEntryPoint = e.source as PostEntryPoint;
-				this.handleClickPlus(undefined, e.type, undefined as any, false);
+				if (!this._mounted) {
+					console.debug(
+						`<InlineCodemarks/>: notification ${NewCodemarkNotificationType.method} received but the component is not mounted yet so the notification will be re-emitted`
+					);
+					Promise.resolve().then(() => {
+						HostApi.instance.emit(NewCodemarkNotificationType.method, e);
+					});
+				}
 			})
 		);
 
@@ -321,6 +285,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	componentWillUnmount() {
+		this._mounted = false;
 		if (this.state.newCodemarkAttributes != undefined) {
 			localStore.set(NEW_CODEMARK_ATTRIBUTES_TO_RESTORE, this.state.newCodemarkAttributes);
 		} else {
@@ -498,9 +463,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					zIndex: 5000
 				}}
 			>
-				<div style={{ position: "relative", background: "red" }}>
-					{this.renderHoverIcons(this.state.numLinesVisible)}
-				</div>
+				<div style={{ position: "relative", background: "red" }}>{this.renderHoverIcons()}</div>
 			</div>,
 			<div style={{ height: "100%", paddingTop: "55px" }}>
 				<ScrollBox>
@@ -526,8 +489,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 								// 		(docMarker.externalContent && !this.props.showPRComments));
 
 								const hidden =
-									(!showHidden &&
-										(codemark && (!codemark.pinned || codemark.status === "closed"))) ||
+									(!showHidden && codemark && (!codemark.pinned || codemark.status === "closed")) ||
 									(docMarker.externalContent && !this.props.showPRComments);
 								if (hidden) {
 									this.hiddenCodemarks[docMarker.id] = true;
@@ -555,145 +517,23 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		];
 	};
 
-	onMouseEnterHoverIcon = lineNum0 => {
-		// lineNum is 0 based
-		this.handleHighlightLine(lineNum0);
-	};
-
-	onMouseLeaveHoverIcon = lineNum0 => {
-		// lineNum is 0 based
-		this.handleUnhighlightLine(lineNum0);
-		// this.setState({ openIconsOnLine: undefined });
-	};
-
-	renderIconRow(lineNum0, top, hover, open) {
-		// we only add the title properties (which add tooltips)
-		// when you mouse over them for performance reasons. adding
-		// tool tips on each one slowed things down a lot. -Pez
-		return (
-			<div
-				onMouseEnter={() => this.onMouseEnterHoverIcon(lineNum0)}
-				onMouseLeave={() => this.onMouseLeaveHoverIcon(lineNum0)}
-				className={cx("hover-plus", { open, hover })}
-				key={lineNum0}
-				style={{ top }}
-			>
-				{(hover || open) && [
-					<Icon
-						key="comment"
-						onClick={e => this.handleClickPlus(e, CodemarkType.Comment, lineNum0)}
-						name="comment"
-						title={this.titles.comment}
-						placement="bottomLeft"
-						align={{ offset: [-3, 10] }}
-						delay={1}
-					/>,
-					<Icon
-						onClick={e => this.handleClickPlus(e, CodemarkType.Issue, lineNum0)}
-						name="issue"
-						key="issue"
-						title={this.titles.issue}
-						placement="bottomLeft"
-						align={{ offset: [-3, 10] }}
-						delay={1}
-					/>,
-					// <Icon
-					// 	onClick={e => this.handleClickPlus(e, CodemarkType.Bookmark, lineNum0)}
-					// 	name="bookmark"
-					// 	key="bookmark"
-					// 	title={this.titles.bookmark}
-					// 	placement="bottomLeft"
-					// 	align={{ offset: [-3, 10] }}
-					// 	delay={1}
-					// />,
-					// <Icon
-					//  key="about"
-					// 	onClick={e => this.handleClickPlus(e, "about", lineNum0, top)}
-					// 	name="about"
-					// 	title={this.titles.about}
-					// 	placement="bottomLeft"
-					// 	align={{ offset: [-3, 10] }}
-					// 	delay={1}
-					// />,
-					<Icon
-						onClick={e => this.handleClickPlus(e, CodemarkType.Link, lineNum0)}
-						name="link"
-						key="link"
-						title={this.titles.link}
-						placement="bottomLeft"
-						align={{ offset: [-3, 10] }}
-						delay={1}
-					/>
-				]}
-			</div>
-		);
-	}
-
 	codeHeight = () => {
 		const $field = document.getElementById("inline-codemarks-field") as HTMLDivElement;
 		return $field ? $field.offsetHeight : 100;
 	};
 
-	rippleHoverIcons = lineNum => {
-		const { firstVisibleLine, lastVisibleLine } = this.props;
-
-		if (lineNum === undefined) {
-			// start the ripple
-			this.rippleHoverIcons(firstVisibleLine);
-		} else if (lineNum > lastVisibleLine) {
-			// we're done with the ripple
-			this.setState({ rippledLine: undefined });
-		} else {
-			// set the current line active, and set a timeout
-			// to ripple to the next line
-			setTimeout(() => {
-				this.setState({ rippledLine: lineNum });
-				this.rippleHoverIcons(lineNum + 1);
-			}, 5);
-		}
-	};
-
-	renderHoverIcons = numLinesVisible => {
-		const iconsOnLine0 = getLine0ForEditorLine(
-			this.props.textEditorVisibleRanges,
-			this.state.openIconsOnLine
+	renderHoverIcons = () => {
+		return (
+			<CreateCodemarkIcons
+				openIconsOnLine={this.state.openIconsOnLine}
+				codeHeight={this.codeHeight()}
+				numLinesVisible={this.state.numLinesVisible}
+				lineHeight={this.props.metrics.lineHeight!}
+				composeBoxActive={this.state.newCodemarkAttributes ? true : false}
+				setNewCodemarkAttributes={this.setNewCodemarkAttributes}
+				switchToInlineView={this.switchToInlineView}
+			/>
 		);
-		// console.log("IOL IS: ", iconsOnLine0, " FROM: ", this.state.openIconsOnLine);
-		const { highlightedLine, rippledLine, newCodemarkAttributes } = this.state;
-
-		// if the compose box is active, don't render the
-		// hover icons. even though you could technically
-		// argue that this is a loss of fucntionality
-		// (one extra click to reposition the compose box)
-		// the UX is just too weird/messy keeping those
-		// buttons active. see google docs for comparison,
-		// who hide the (+) when you have a compose box
-		if (newCodemarkAttributes != undefined) return null;
-
-		const codeHeight = this.codeHeight();
-		if (iconsOnLine0 >= 0) {
-			const top = (codeHeight * iconsOnLine0) / numLinesVisible;
-			// const top = paddingTop ? "calc(" + topPct + " + " + paddingTop + "px)" : topPct;
-			return this.renderIconRow(iconsOnLine0, top, false, true);
-		} else {
-			// const heightPerLine = (window.innerHeight - 22) / (numLinesVisible + 2);
-			return (
-				<div>
-					{range(0, numLinesVisible).map(lineNum0 => {
-						const top = (codeHeight * lineNum0) / numLinesVisible;
-						// const top = paddingTop ? "calc(" + topPct + " + " + paddingTop + "px)" : topPct;
-						const hover = lineNum0 === highlightedLine;
-						const open = lineNum0 === rippledLine;
-						return this.renderIconRow(lineNum0, top, hover, open);
-					})}
-					{
-						// <div style={{ position: "fixed", bottom: "30px", right: "20px", whiteSpace: "pre" }}>
-						// {JSON.stringify(metrics)} height: {heightPerLine} numVisible: {numLinesVisible}
-						// </div>
-					}
-				</div>
-			);
-		}
 	};
 
 	renderNoCodemarks = () => {
@@ -791,22 +631,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						<br />
 						<br />
 						<div className="keybindings">
-							<div className="function-row">{this.titles.comment}</div>
-							<div className="function-row">{this.titles.issue}</div>
-							{
-								// <div className="function-row">{this.titles.bookmark}</div>
-							}
-							<div className="function-row">{this.titles.link}</div>
-							<div className="function-row">
-								<span className="function">Copy Private Permalink</span>
-								<span className="keybinding extra-pad">{modifier}</span>
-								<span className="keybinding extra-pad">⇧ p</span>
-							</div>
-							<div className="function-row">
-								<span className="function">Toggle CodeStream Panel</span>
-								<span className="keybinding extra-pad">{modifier}</span>
-								<span className="keybinding extra-pad">{modifier}</span>
-							</div>
+							<div className="function-row">{ComposeTitles.comment}</div>
+							<div className="function-row">{ComposeTitles.issue}</div>
+							<div className="function-row">{ComposeTitles.link}</div>
+							<div className="function-row">{ComposeTitles.privatePermalink}</div>
+							<div className="function-row">{ComposeTitles.toggleCodeStreamPanel}</div>
 						</div>
 					</div>
 				</div>
@@ -885,7 +714,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						height: height
 					}}
 				>
-					{this.renderHoverIcons(numLinesVisible)}
 					{this.renderNoCodemarks()}
 					{this.props.children}
 				</div>
@@ -906,6 +734,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		} = this.props;
 		const { numLinesVisible } = this.state;
 
+		console.log("HEIGHT IS: ", height);
 		const numVisibleRanges = textEditorVisibleRanges.length;
 		let numAbove = 0,
 			numBelow = 0;
@@ -975,7 +804,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 								const marksInRange = range(lineToStartOn, realLastLine + 1).map(lineNum => {
 									const docMarker = this.docMarkersByStartLine[lineNum];
 									if (!docMarker) return null;
-									return this.renderInlineCodemark(docMarker, lineNum);
+									return this.renderInlineCodemark(docMarker, lineNum, height);
 								});
 								rangeStartOffset += linesInRange;
 								if (rangeIndex + 1 < numVisibleRanges) {
@@ -985,20 +814,20 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 								return marksInRange;
 							})}
 						</div>
-						{this.renderHoverIcons(numLinesVisible)}
 					</div>
 				</div>
 			</div>
 		);
 	}
 
-	renderInlineCodemark(docMarker, lineNum) {
+	renderInlineCodemark(docMarker, lineNum, height) {
 		const codemark = docMarker.codemark;
 		const hidden = this.hiddenCodemarks[docMarker.id] ? true : false;
 		return (
 			<ContainerAtEditorLine
 				key={docMarker.id}
 				lineNumber={lineNum}
+				lineHeight={this.props.metrics.lineHeight}
 				className={cx({
 					"cs-hidden": hidden,
 					"cs-off-plane": hidden
@@ -1070,6 +899,10 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				{ label: "Go Back" }
 			]
 		});
+	};
+
+	setNewCodemarkAttributes = attributes => {
+		this.setState({ newCodemarkAttributes: attributes, clickedPlus: true });
 	};
 
 	static contextTypes = {
@@ -1277,6 +1110,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	render() {
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
+				{this.renderHoverIcons()}
 				{this.renderCodemarkForm()}
 				{this.state.showPRInfoModal && (
 					<PRInfoModal onClose={() => this.setState({ showPRInfoModal: false })} />
@@ -1399,69 +1233,18 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			});
 	};
 
-	handleClickPlus = async (
-		event: React.SyntheticEvent | undefined,
-		type: CodemarkType,
-		lineNum0: number,
-		shouldChangeSelection = true
-	) => {
-		if (event) event.preventDefault();
-
-		const viewingInline = this.props.viewInline;
-		if (!viewingInline) {
-			this.props.setCodemarksFileViewStyle("inline");
-			try {
-				await new Promise((resolve, reject) => {
-					this._updateEmitter.enqueue(() => {
-						if (this.props.viewInline) resolve();
-						else reject();
-					});
+	switchToInlineView = async () => {
+		this.props.setCodemarksFileViewStyle("inline");
+		try {
+			await new Promise((resolve, reject) => {
+				this._updateEmitter.enqueue(() => {
+					if (this.props.viewInline) resolve();
+					else reject();
 				});
-			} catch (error) {
-				return;
-			}
+			});
+		} catch (error) {
+			return;
 		}
-
-		const { openIconsOnLine } = this.state;
-		const { textEditorSelection } = this.props;
-
-		const mappedLineNum = this.mapLine0ToVisibleRange(lineNum0);
-
-		if (shouldChangeSelection) {
-			let range: Range | undefined;
-			if (
-				mappedLineNum === openIconsOnLine &&
-				textEditorSelection &&
-				// if these aren't equal, we have an active selection
-				(textEditorSelection.start.line !== textEditorSelection.end.line ||
-					textEditorSelection.start.character !== textEditorSelection.end.character)
-			) {
-				range = Range.create(textEditorSelection.start, textEditorSelection.end);
-			} else {
-				range = Range.create(mappedLineNum, 0, mappedLineNum, MaxRangeValue);
-				const newSelection: EditorSelection = { ...range, cursor: range.end };
-				// HACK: although the changeSelection action creator will update the redux store,
-				// this component needs to update the store pre-emptively to avoid flashing the hover button
-				// before the form appears. the flash is because as the selection changes, we try to show the hover button to initiate opening the form
-				this.props.setEditorContext({ textEditorSelections: [newSelection] });
-				this.props.changeSelection(this.props.textEditorUri!, newSelection);
-			}
-
-			// Clear the previous highlight
-			this.handleUnhighlightLine(lineNum0);
-		}
-
-		// Clear the open icons
-		// this works subtly... we tell state to not open icons on any line,
-		// but normally getDerivedStateFromProps would override that. By
-		// resetting openIconsOnLine but *not* lastSelectedLine,
-		// getDerivedStateFromProps won't fire.
-		this.setState({
-			clickedPlus: true,
-			newCodemarkAttributes: { type, viewingInline }
-		});
-
-		this.props.setCurrentCodemark();
 	};
 
 	mapLine0ToVisibleRange = fromLineNum0 => {
@@ -1478,37 +1261,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			});
 		}
 		return toLineNum;
-	};
-
-	highlightLine(line0, highlight) {
-		const { openIconsOnLine } = this.state;
-		const { textEditorSelection } = this.props;
-
-		const mappedLineNum = this.mapLine0ToVisibleRange(line0);
-		if (
-			mappedLineNum === openIconsOnLine &&
-			textEditorSelection &&
-			(textEditorSelection.start.line !== textEditorSelection.end.line ||
-				textEditorSelection.start.character !== textEditorSelection.end.character)
-		) {
-			return;
-		}
-
-		HostApi.instance.send(EditorHighlightRangeRequestType, {
-			uri: this.props.textEditorUri!,
-			range: Range.create(mappedLineNum, 0, mappedLineNum, MaxRangeValue),
-			highlight: highlight
-		});
-
-		this.setState({ highlightedLine: highlight ? line0 : null });
-	}
-
-	handleHighlightLine = line0 => {
-		this.highlightLine(line0, true);
-	};
-
-	handleUnhighlightLine = line0 => {
-		this.highlightLine(line0, false);
 	};
 }
 
@@ -1574,18 +1326,15 @@ const mapStateToProps = (state: CodeStreamState) => {
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{
-		fetchDocumentMarkers,
-		setCodemarksFileViewStyle,
-		setCodemarksShowArchived,
-		setCurrentCodemark,
-		repositionCodemark,
-		setEditorContext,
-		createPostAndCodemark,
-		addDocumentMarker,
-		changeSelection,
-		setSpatialViewPRCommentsToggle
-	}
-)(SimpleInlineCodemarks);
+export default connect(mapStateToProps, {
+	fetchDocumentMarkers,
+	setCodemarksFileViewStyle,
+	setCodemarksShowArchived,
+	setCurrentCodemark,
+	repositionCodemark,
+	setEditorContext,
+	createPostAndCodemark,
+	addDocumentMarker,
+	changeSelection,
+	setSpatialViewPRCommentsToggle
+})(SimpleInlineCodemarks);

@@ -1103,6 +1103,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			}
 			return (
 				<>
+					{this.renderAddLocation()}
 					<span className="subhead">{this.getTitleLabel()}&nbsp;</span>
 					<span className="channel-label" style={{ display: "inline-block" }}>
 						<div
@@ -1112,7 +1113,6 @@ class CodemarkForm extends React.Component<Props, State> {
 							{file} {lines}
 						</div>
 					</span>
-					{this.renderAddLocation()}
 				</>
 			);
 		}

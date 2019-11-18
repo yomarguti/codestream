@@ -190,6 +190,7 @@ export class SimpleStream extends Component {
 	handleNewCodemarkRequest(e) {
 		if (this.props.activePanel === "codemarks-for-file") return;
 
+		// re-emit the the notification after switching to spatial view
 		this.updateEmitter.enqueue(() => {
 			HostApi.instance.emit(NewCodemarkNotificationType.method, e);
 		});
