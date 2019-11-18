@@ -2,7 +2,7 @@
 	"name": "codestream",
 	"main": "./dist/codestream",
 	"version": "5.2.1",
-	"description": "Discuss, review, and share code with your team. Integrates w/ Slack, Jira, Trello, and GitHub",
+	"description": "Discuss code easily. Streamline Code Reviews. Improve code quality. Works w/ Slack, Teams, Jira, Trello, git, and more.",
 	"keywords": [
 		"git",
 		"team",
