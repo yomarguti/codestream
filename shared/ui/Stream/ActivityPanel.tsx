@@ -1,29 +1,18 @@
-import cx from "classnames";
-import { Range } from "vscode-languageserver-types";
-import React, { useState } from "react";
-import { connect } from "react-redux";
-import { useSelector, useDispatch } from "react-redux";
+import React from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
 import Headshot from "./Headshot";
 import Filter from "./Filter";
 import Timestamp from "./Timestamp";
 import Codemark from "./Codemark";
-import { CSMarker, CSCodemark } from "@codestream/protocols/api";
-import * as actions from "./actions";
-import { setCurrentStream, setCurrentCodemark } from "../store/context/actions";
 import * as codemarkSelectors from "../store/codemarks/reducer";
 import * as userSelectors from "../store/users/reducer";
 import styled from "styled-components";
 import { includes as _includes, sortBy as _sortBy } from "lodash-es";
 import Feedback from "./Feedback";
-
-interface Props {
-	codemarks: CSCodemark[];
-	setChannelFilter: Function;
-	usernames: string[];
-	currentUserName: string;
-}
+import { CodeStreamState } from "../store";
+import { setCodemarkTypeFilter } from "../store/context/actions";
 
 const ActivityWrapper = styled.div`
 	margin: 0 40px 20px 45px;
@@ -49,25 +38,22 @@ const ActivityWrapper = styled.div`
 	}
 `;
 
-const mapStateToProps = state => {
-	const { context, teams, users } = state;
+export const ActivityPanel = () => {
+	const dispatch = useDispatch();
+	const derivedState = useSelector((state: CodeStreamState) => {
+		const codemarks = codemarkSelectors.getTypeFilteredCodemarks(state);
+		const usernames = userSelectors.getUsernames(state);
 
-	const codemarks = codemarkSelectors.getTypeFilteredCodemarks(state);
-	const usernames = userSelectors.getUsernames(state);
+		return {
+			noCodemarksAtAll: !codemarkSelectors.teamHasCodemarks(state),
+			currentUserName: state.users[state.session.userId!].username,
+			usernames,
+			codemarks
+		};
+	});
 
-	return {
-		noCodemarksAtAll: !codemarkSelectors.teamHasCodemarks(state),
-		usernames,
-		codemarks
-	};
-};
-
-export const ActivityPanel = (connect(
-	mapStateToProps,
-	{ ...actions, setCurrentStream, setCurrentCodemark }
-) as any)((props: Props) => {
 	const renderActivity = () => {
-		const { codemarks } = props;
+		const { codemarks } = derivedState;
 		let counter = 0;
 		const demoMode = false;
 		const dave = { username: "dave", fullName: "David Hersh" };
@@ -130,8 +116,8 @@ export const ActivityPanel = (connect(
 						contextName="Activity Panel"
 						codemark={codemark}
 						displayType="activity"
-						currentUserName={props.currentUserName}
-						usernames={props.usernames}
+						currentUserName={derivedState.currentUserName}
+						usernames={derivedState.usernames}
 						selected={false}
 					/>
 				</ActivityWrapper>
@@ -158,7 +144,7 @@ export const ActivityPanel = (connect(
 			<div className="filters" style={{ textAlign: "left", padding: "0px 30px 15px 45px" }}>
 				Show{" "}
 				<Filter
-					onValue={props.setChannelFilter}
+					onValue={value => dispatch(setCodemarkTypeFilter(value))}
 					selected={showActivity}
 					labels={showActivityLabels}
 					items={menuItems}
@@ -178,4 +164,4 @@ export const ActivityPanel = (connect(
 			</div>
 		</div>
 	);
-});
+};
