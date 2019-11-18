@@ -71,7 +71,7 @@
 		},
 		"autoHideMarkers": {
 			"type": "boolean",
-			"default": true
+			"default": false
 		},
 		"autoSignIn": {
 			"type": "boolean",
