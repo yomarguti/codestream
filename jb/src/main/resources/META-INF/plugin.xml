@@ -4,9 +4,9 @@
     <vendor email="support@codestream.com" url="http://www.codestream.com">CodeStream</vendor>
 
     <description><![CDATA[
-<p>CodeStream helps dev teams discuss, review, and understand code. Discussing code is now as simple as commenting on a Google Doc — select the code and type your question.</p>
+<p>The World's Best Code Discussion Tool. Take the pain out of code reviews, resolve issues faster, and dramatically improve code quality by increasing communication between the developers on your team.</p>
 <p><img src="https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/animated/Spatial%20JB.gif" alt="CodeStream" /></p>
-<p>CodeStream turns conversation into documentation by capturing all of the discussion about your code, and saving it with your code. Each discussion is represented as a "codemark" that is permanently connected to the lines of code to which it refers.</p>
+<p>Discussing code is now as easy as highlighting a code block and typing a comment or question. No PRs required.</p>
 
 <h2 id="doesyourteamuseslack">Does your team use Slack or Microsoft Teams?</h2>
 <p>Sign up for CodeStream using Slack or Microsoft Teams so that discussions about code can be shared in your workspace's/organization's existing channels. You and your teammates can participate in the discussion, even when you're not in the IDE!</p>
@@ -59,6 +59,21 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="5_3_0">5.3.0</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds support for merge request comments from GitLab via the "PR" toggle on the Current File tab</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>When you cancel the creation of a codemark you are now prompted to confirm the action</li>
+    <li>By default, codemarks are now displayed as glyphs in the editor even when the Current File tab is selected</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes in issue with the CodeStream status bar entry no longer being displayed</li>
+    <li>Fixes an issue with the display of codemarks, as well as the codemark creation form, near the bottom of a file</li>
+</ul>
 <h4 id="5_2_1">5.2.1</h4>
 <h5>Fixed</h5>
 <ul>
