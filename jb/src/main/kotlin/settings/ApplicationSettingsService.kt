@@ -30,7 +30,7 @@ data class ApplicationSettingsServiceState(
     var team: String? = null,
     var showFeedbackSmiley: Boolean = true,
     var showMarkers: Boolean = true,
-    var autoHideMarkers: Boolean = true,
+    var autoHideMarkers: Boolean = false,
     var proxySupport: String = "on",
     var proxyUrl: String = "",
     var proxyStrictSSL: Boolean = true
