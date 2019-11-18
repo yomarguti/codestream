@@ -1,7 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { addLocaleData, IntlProvider } from "react-intl";
-import englishLocaleData from "react-intl/locale-data/en";
+import { IntlProvider } from "react-intl";
 import { connect, Provider } from "react-redux";
 import Stream from "../Stream/index";
 import { UnauthenticatedRoutes } from "../Authentication";
@@ -15,8 +14,6 @@ import { upgradeRecommendedDismissed } from "../store/versioning/actions";
 import { VersioningActionsType } from "../store/versioning/types";
 import { apiUpgradeRecommendedDismissed } from "../store/apiVersioning/actions";
 import { ApiVersioningActionsType } from "../store/apiVersioning/types";
-
-addLocaleData(englishLocaleData);
 
 const mapStateToProps = state => ({
 	bootstrapped: state.bootstrapped,

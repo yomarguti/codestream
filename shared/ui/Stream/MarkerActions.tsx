@@ -1,8 +1,5 @@
 import React from "react";
-import * as paths from "path-browserify";
-import { escapeHtml, safe } from "../utils";
-import cx from "classnames";
-import { prettyPrintOne } from "code-prettify";
+import { safe } from "../utils";
 import { HostApi } from "../webview-api";
 import { LocateRepoButton } from "./LocateRepoButton";
 import Tooltip from "./Tooltip";
@@ -19,7 +16,7 @@ import {
 	TelemetryRequestType,
 	GetDocumentFromMarkerRequestType
 } from "@codestream/protocols/agent";
-import { injectIntl, InjectedIntl } from "react-intl";
+import { injectIntl, WrappedComponentProps } from "react-intl";
 import { CodeStreamState } from "../store";
 import { connect } from "react-redux";
 import { getById } from "../store/repos/reducer";
@@ -50,9 +47,7 @@ interface ConnectedProps {
 	jumpToMarkerId?: string;
 }
 
-interface IntlProps {
-	intl: InjectedIntl;
-}
+type IntlProps = WrappedComponentProps<"intl">;
 
 interface InheritedProps {
 	codemark: CodemarkPlus;

@@ -1,15 +1,13 @@
 import React from "react";
 import { Capabilities, CodemarkPlus } from "@codestream/protocols/agent";
-import { injectIntl, InjectedIntl } from "react-intl";
+import { injectIntl, WrappedComponentProps } from "react-intl";
 import { CodeStreamState } from "../store";
 import { connect } from "react-redux";
 import MarkerActions from "./MarkerActions";
 
 interface State {}
 
-interface IntlProps {
-	intl: InjectedIntl;
-}
+type IntlProps = WrappedComponentProps<"intl">;
 
 interface InheritedProps {
 	codemark: CodemarkPlus;
