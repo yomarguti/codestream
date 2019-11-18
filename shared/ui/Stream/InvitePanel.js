@@ -203,7 +203,7 @@ export class InvitePanel extends Component {
 								id="discard-button"
 								className="control-button cancel"
 								type="submit"
-								onClick={() => this.setState({ isInviting: false })}
+								onClick={() => this.setState(this.initialState)}
 							>
 								Cancel
 							</Button>
