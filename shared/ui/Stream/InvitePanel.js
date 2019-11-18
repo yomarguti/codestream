@@ -1,15 +1,20 @@
 import React, { Component } from "react";
 import { FormattedMessage, injectIntl } from "react-intl";
 import { connect } from "react-redux";
+import Icon from "./Icon";
 import Button from "./Button";
+import Headshot from "./Headshot";
 import CancelButton from "./CancelButton";
+import ScrollBox from "./ScrollBox";
+import { FileTree } from "./FileTree";
 import createClassString from "classnames";
-import { closePanel, invite } from "./actions";
+import { invite } from "./actions";
 import { isInVscode, mapFilter } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { sortBy as _sortBy } from "lodash-es";
 import { getTeamProvider } from "../store/teams/reducer";
 import { HostApi } from "../webview-api";
+import { WebviewPanels } from "@codestream/protocols/webview";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -18,6 +23,8 @@ const EMAIL_REGEX = new RegExp(
 export class InvitePanel extends Component {
 	initialState = {
 		loading: false,
+		isInviting: false,
+		invitingEmails: {},
 		newMemberEmail: "",
 		newMemberName: "",
 		newMemberInvalid: false,
@@ -25,16 +32,6 @@ export class InvitePanel extends Component {
 	};
 
 	state = this.initialState;
-
-	componentDidMount() {
-		if (isInVscode()) {
-			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
-				if (event.key === "Escape") {
-					this.props.closePanel();
-				}
-			});
-		}
-	}
 
 	componentWillUnmount() {
 		this.disposable && this.disposable.dispose();
@@ -66,6 +63,8 @@ export class InvitePanel extends Component {
 	};
 
 	onClickReinvite = user => {
+		const { email } = user;
+		this.setState({ invitingEmails: { ...this.state.invitingEmails, [email]: 1 } });
 		this.props.invite({ email: user.email, teamId: this.props.teamId }).then(() => {
 			// TODO: show notification
 			// atom.notifications.addInfo(
@@ -74,11 +73,15 @@ export class InvitePanel extends Component {
 			// 		defaultMessage: `Invitation sent to ${user.email}!`
 			// 	})
 			// );
+			this.setState({ invitingEmails: { ...this.state.invitingEmails, [email]: 2 } });
 		});
 	};
 
 	componentDidUpdate(prevProps, prevState) {
-		if (this.props.activePanel === "invite" && prevProps.activePanel !== "invite") {
+		if (
+			this.props.activePanel === WebviewPanels.People &&
+			prevProps.activePanel !== this.props.activePanel
+		) {
 			setTimeout(() => {
 				this.focusEmailInput();
 			}, 500);
@@ -133,7 +136,7 @@ export class InvitePanel extends Component {
 	// <Button>Go</Button>
 
 	renderFieldset = inactive => {
-		const { newMemberEmail, newMemberName } = this.state;
+		const { newMemberEmail, newMemberName, isInviting } = this.state;
 
 		if (
 			this.props.teamPlan &&
@@ -149,113 +152,182 @@ export class InvitePanel extends Component {
 
 		if (!this.props.isCodeStreamTeam) return this.renderThirdParyInvite(this.props.teamProvider);
 
+		if (false) {
+			return (
+				<div style={{ padding: "0 0 20px 15px" }}>
+					<Button className="standard" onClick={e => this.setState({ isInviting: true })}>
+						Invite Teammates
+					</Button>
+				</div>
+			);
+		}
 		return (
 			<fieldset className="form-body" disabled={inactive}>
-				<div id="controls">
-					<div className="control-group">
-						<label>Email</label>
-						<input
-							className="input-text"
-							id="invite-email-input"
-							type="text"
-							value={newMemberEmail}
-							onChange={this.onEmailChange}
-							onBlur={this.onEmailBlur}
-							autoFocus
-						/>
-						{this.renderEmailHelp()}
-					</div>
-					<div className="control-group">
-						<label>
-							Name <span className="optional">(optional)</span>
-						</label>
-						<input
-							className="input-text"
-							type="text"
-							value={newMemberName}
-							onChange={this.onNameChange}
-						/>
-					</div>
-					<div className="button-group">
-						<Button
-							id="add-button"
-							className="control-button"
-							type="submit"
-							loading={this.state.loading}
-						>
-							<FormattedMessage id="teamMemberSelection.invite" defaultMessage="Invite" />
-						</Button>
-						<Button
-							id="discard-button"
-							className="control-button cancel"
-							type="submit"
-							onClick={() => this.props.setActivePanel("channels")}
-						>
-							Cancel
-						</Button>
+				<div className="outline-box">
+					<h3>Invite a Teammate</h3>
+					<div id="controls">
+						<div className="control-group">
+							<label>Email</label>
+							<input
+								className="input-text"
+								id="invite-email-input"
+								type="text"
+								value={newMemberEmail}
+								onChange={this.onEmailChange}
+								onBlur={this.onEmailBlur}
+								autoFocus
+							/>
+							{this.renderEmailHelp()}
+						</div>
+						<div className="control-group">
+							<label>
+								Name <span className="optional">(optional)</span>
+							</label>
+							<input
+								className="input-text"
+								type="text"
+								value={newMemberName}
+								onChange={this.onNameChange}
+							/>
+						</div>
+						<div className="button-group">
+							<Button
+								id="add-button"
+								className="control-button"
+								type="submit"
+								loading={this.state.loading}
+							>
+								<FormattedMessage id="teamMemberSelection.invite" defaultMessage="Invite" />
+							</Button>
+							<Button
+								id="discard-button"
+								className="control-button cancel"
+								type="submit"
+								onClick={() => this.setState({ isInviting: false })}
+							>
+								Cancel
+							</Button>
+						</div>
 					</div>
 				</div>
 			</fieldset>
 		);
 	};
 
-	render() {
-		const inactive = this.props.activePanel !== "invite";
+	renderEmailUser(user) {
+		const { invitingEmails } = this.state;
+		switch (invitingEmails[user.email]) {
+			case 1:
+				return (
+					<span className="reinvite">
+						<Icon className="spin" name="sync" />
+					</span>
+				);
+			case 2:
+				return <span className="reinvite">email sent</span>;
+			default:
+				return (
+					<a
+						className="reinvite"
+						onClick={event => {
+							event.preventDefault();
+							this.onClickReinvite(user);
+						}}
+					>
+						reinvite
+					</a>
+				);
+		}
+	}
 
-		const panelClass = createClassString({
-			panel: true,
-			"invite-panel": true
-		});
+	renderUserStatus(user) {
+		if (user.username === "pez") {
+			const files = [
+				"codestream-components/InlineCodemarks.tsx",
+				"codestream-components/KnowledgePanel.tsx",
+				"codestream-components/index.js"
+			];
+			return (
+				<>
+					<li className="status" style={{ paddingLeft: "48px" }}>
+						<Icon name="git-branch" /> feature/sharing
+					</li>
+					<FileTree files={files} indent={40} />
+				</>
+			);
+		}
+		if (user.username === "pezg") {
+			const files = [
+				"codestream-lsp-agent/.tsx",
+				"codestream-lsp-agent/.tsx",
+				"codestream-lsp-agent/.tsx"
+			];
+			return (
+				<>
+					<li className="status" style={{ paddingLeft: "48px" }}>
+						<Icon name="git-branch" /> feature/big-brother
+					</li>
+					<FileTree files={files} indent={40} />
+				</>
+			);
+		}
+		return null;
+	}
+
+	render() {
+		const inactive =
+			this.props.activePanel !== WebviewPanels.Invite &&
+			this.props.activePanel !== WebviewPanels.People;
 
 		return (
-			<div className={panelClass}>
-				<div className="panel-header">
-					<CancelButton onClick={this.props.closePanel} />
-					<span className="panel-title">Invite People</span>
+			<div className="panel full-height invite-panel">
+				<div className="panel-header" style={{ textAlign: "left", padding: "15px 30px 5px 45px" }}>
+					Your Team
 				</div>
-				<form className="standard-form vscroll" onSubmit={this.onSubmit}>
-					{this.renderFieldset(inactive)}
-					{this.props.invited.length > 0 && (
+				<ScrollBox>
+					<div className="vscroll">
+						<form className="standard-form" onSubmit={this.onSubmit}>
+							{this.renderFieldset(inactive)}
+						</form>
+						{this.props.invited.length > 0 && (
+							<div className="section">
+								<div className="header">
+									<span>Outstanding Invitations</span>
+								</div>
+								<ul>
+									{this.props.invited.map(user => (
+										<li key={user.email}>
+											<div className="committer-email">
+												{user.email}
+												{this.renderEmailUser(user)}
+											</div>
+										</li>
+									))}
+								</ul>
+							</div>
+						)}
 						<div className="section">
 							<div className="header">
-								<span>Outstanding Invitations</span>
+								<span>Current Team</span>
 							</div>
 							<ul>
-								{this.props.invited.map(user => (
-									<li key={user.email}>
-										<div className="committer-email">
-											{user.email}
-											<a
-												className="reinvite"
-												onClick={event => {
-													event.preventDefault();
-													this.onClickReinvite(user);
-												}}
-											>
-												reinvite
-											</a>
-										</div>
-									</li>
+								{/* FIXME -- sort these users somehow */
+								this.props.members.map(user => (
+									<>
+										<li key={user.email}>
+											<div className="committer-name">
+												<Headshot person={user}></Headshot>
+												{user.fullName} (@
+												{user.username})<span className="committer-email"> {user.email}</span>
+											</div>
+										</li>
+										{this.renderUserStatus(user)}
+									</>
 								))}
 							</ul>
 						</div>
-					)}
-					<div className="section">
-						<div className="header">
-							<span>Current Team</span>
-						</div>
-						<ul>
-							{this.props.members.map(user => (
-								<li key={user.email}>
-									<div className="committer-name">
-										{user.fullName} (@
-										{user.username})<span className="committer-email"> {user.email}</span>
-									</div>
-								</li>
-							))}
-						</ul>
 					</div>
-				</form>
+				</ScrollBox>
 			</div>
 		);
 	}
@@ -297,8 +369,5 @@ const mapStateToProps = ({ users, context, teams }) => {
 
 export default connect(
 	mapStateToProps,
-	{
-		closePanel,
-		invite
-	}
+	{ invite }
 )(injectIntl(InvitePanel));

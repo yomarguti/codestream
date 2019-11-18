@@ -8,6 +8,7 @@ import PostList from "./PostList";
 import { ActivityPanel } from "./ActivityPanel";
 import ChannelPanel from "./ChannelPanel";
 import PeoplePanel from "./PeoplePanel";
+import { TasksPanel } from "./TasksPanel";
 import InvitePanel from "./InvitePanel";
 import PublicChannelPanel from "./PublicChannelPanel";
 import CreateChannelPanel from "./CreateChannelPanel";
@@ -545,11 +546,15 @@ export class SimpleStream extends Component {
 	}
 
 	renderNavIcons() {
-		const { configs, umis, postStreamPurpose, providerInfo = {} } = this.props;
+		const { configs, umis2, postStreamPurpose, providerInfo = {} } = this.props;
 		let { activePanel } = this.props;
 		const { searchBarOpen, q } = this.state;
 		if (searchBarOpen) activePanel = WebviewPanels.Codemarks;
 		// if (searchBarOpen && q) activePanel = WebviewPanels.Codemarks;
+		const umis = {
+			totalMentions: 0,
+			totalUnread: 2
+		};
 		const umisClass = createClassString("umis", {
 			mentions: umis.totalMentions > 0,
 			unread: umis.totalMentions == 0 && umis.totalUnread > 0
@@ -594,6 +599,35 @@ export class SimpleStream extends Component {
 							<span>
 								<Icon name="list" />
 								{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
+							</span>
+						</Tooltip>
+					</label>
+					{/*
+						<label
+							className={createClassString({
+								selected: activePanel === WebviewPanels.Tasks
+							})}
+							onClick={e => this.setActivePanel(WebviewPanels.Tasks)}
+						>
+							<Tooltip title="Your Tasks" placement="bottom">
+								<span>
+									<Icon name="checked-checkbox" />
+									<span className={umisClass}>
+										<div className="mentions-badge">5</div>
+									</span>
+								</span>
+							</Tooltip>
+						</label>
+						*/}
+					<label
+						className={createClassString({
+							selected: activePanel === WebviewPanels.People
+						})}
+						onClick={e => this.setActivePanel(WebviewPanels.People)}
+					>
+						<Tooltip title="Your Team" placement="bottom">
+							<span>
+								<Icon name="organization" />
 							</span>
 						</Tooltip>
 					</label>
@@ -789,7 +823,7 @@ export class SimpleStream extends Component {
 
 		// these panels do not have global nav
 		let renderNav =
-			!["create-channel", "create-dm", "public-channels", "invite"].includes(activePanel) &&
+			!["create-channel", "create-dm", "public-channels"].includes(activePanel) &&
 			!activePanel.startsWith("configure-provider-") &&
 			!activePanel.startsWith("configure-enterprise-");
 
@@ -887,7 +921,7 @@ export class SimpleStream extends Component {
 							isSlackTeam={this.props.teamProvider === "slack"}
 						/>
 					)}
-					{activePanel === "invite" && (
+					{(activePanel === WebviewPanels.People || activePanel === "invite") && (
 						<InvitePanel
 							activePanel={activePanel}
 							setActivePanel={this.setActivePanel}
@@ -896,8 +930,8 @@ export class SimpleStream extends Component {
 							teamPlan={this.props.team.plan}
 						/>
 					)}
-					{activePanel === "people" && (
-						<PeoplePanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
+					{activePanel === WebviewPanels.Tasks && (
+						<TasksPanel activePanel={activePanel} setActivePanel={this.setActivePanel} />
 					)}
 					{activePanel.startsWith("configure-provider-youtrack-") && (
 						<ConfigureYouTrackPanel
@@ -1139,7 +1173,7 @@ export class SimpleStream extends Component {
 
 		switch (arg) {
 			case "invite":
-				return this.setActivePanel("invite");
+				return this.setActivePanel(WebviewPanels.People);
 			case "help":
 				return this.handleClickHelpLink();
 			case "feedback":

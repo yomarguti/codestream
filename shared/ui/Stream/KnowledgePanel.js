@@ -379,7 +379,10 @@ export class SimpleKnowledgePanel extends Component {
 
 		// console.log("SELECTED AG FILTER: ", tagFilter);
 		return (
-			<div className="panel knowledge-panel">
+			<div className="panel full-height knowledge-panel">
+				<div className="panel-header" style={{ textAlign: "left", padding: "15px 30px 0px 45px" }}>
+					Search
+				</div>
 				<div className="search-bar">
 					<input
 						name="q"

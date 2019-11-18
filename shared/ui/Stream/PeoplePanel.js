@@ -12,7 +12,10 @@ export class PeoplePanel extends Component {
 
 	render() {
 		return (
-			<div className="panel people-panel">
+			<div className="panel full-height invite-panel">
+				<div className="panel-header" style={{ textAlign: "left", padding: "15px 30px 15px 25px" }}>
+					Your Team
+				</div>
 				<form className="standard-form vscroll" onSubmit={this.onSubmit}>
 					{this.props.invited.length > 0 && (
 						<div className="section">

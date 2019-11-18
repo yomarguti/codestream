@@ -5,9 +5,9 @@ import { connect } from "react-redux";
 import { useSelector, useDispatch } from "react-redux";
 import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
-import Headshot from "./Headshot";
+import Tag from "./Tag";
 import Filter from "./Filter";
-import Timestamp from "./Timestamp";
+import Headshot from "./Headshot";
 import Codemark from "./Codemark";
 import { CSMarker, CSCodemark } from "@codestream/protocols/api";
 import * as actions from "./actions";
@@ -16,7 +16,6 @@ import * as codemarkSelectors from "../store/codemarks/reducer";
 import * as userSelectors from "../store/users/reducer";
 import styled from "styled-components";
 import { includes as _includes, sortBy as _sortBy } from "lodash-es";
-import Feedback from "./Feedback";
 
 interface Props {
 	codemarks: CSCodemark[];
@@ -25,27 +24,12 @@ interface Props {
 	currentUserName: string;
 }
 
-const ActivityWrapper = styled.div`
+const PersonWrapper = styled.div`
 	margin: 0 40px 20px 45px;
 	// for now this is only to explore the aesthetic... doesn't actually work
 	// it should be .post.unread
 	.post {
 		border-left: 2px solid var(--text-color-info);
-	}
-	> time,
-	> .activity {
-		display: block;
-		margin-bottom: 20px !important;
-		text-align: center;
-		.details {
-		}
-	}
-	.emote {
-		font-weight: normal;
-		padding-left: 4px;
-	}
-	.codemark-details {
-		margin-bottom: 5px;
 	}
 `;
 
@@ -62,69 +46,21 @@ const mapStateToProps = state => {
 	};
 };
 
-export const ActivityPanel = (connect(
+export const TasksPanel = (connect(
 	mapStateToProps,
 	{ ...actions, setCurrentStream, setCurrentCodemark }
 ) as any)((props: Props) => {
 	const renderActivity = () => {
 		const { codemarks } = props;
 		let counter = 0;
-		const demoMode = false;
-		const dave = { username: "dave", fullName: "David Hersh" };
-		const akon = { username: "akonwi", fullName: "Akonwi Ngoh", email: "akonwi@codestream.com" };
-
 		return _sortBy(codemarks, codemark => -codemark.createdAt).map(codemark => {
 			const codemarkType = codemark.type || "comment";
 			if (codemark.deactivated) return null;
 			// FIXME TODO load the next 10 when you scroll
 			if (counter++ > 10) return null;
 
-			return [
-				demoMode && counter == 2 ? (
-					<ActivityWrapper>
-						<div className="codemark inline">
-							<div className="contents">
-								<div className="body">
-									<div className="header" style={{ margin: 0 }}>
-										<div className="author">
-											<Headshot person={dave} />
-											dave <span className="emote">joined CodeStream</span>
-											<Timestamp time={codemark.createdAt} />
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</ActivityWrapper>
-				) : null,
-				demoMode && counter == 3 ? (
-					<ActivityWrapper>
-						<div className="codemark inline">
-							<div className="contents">
-								<div className="body">
-									<div className="header">
-										<div className="author">
-											<Headshot person={akon} />
-											akon <span className="emote"> created </span> &nbsp;{" "}
-											<Icon name="git-branch" />
-											<span className="monospace" style={{ paddingLeft: "5px" }}>
-												feature/sharing
-											</span>
-											<Timestamp time={codemark.createdAt} />
-										</div>
-									</div>
-									<div className="right" style={{ margin: "10px 0 0 0" }}>
-										<div className="codemark-actions-button">Checkout</div>
-										<div className="codemark-actions-button">Open on GitHub</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</ActivityWrapper>
-				) : null,
-				<ActivityWrapper>
-					{/* <Timestamp dateOnly={true} time={codemark.createdAt} /> */}
-					{demoMode && counter == 5 && <Timestamp dateOnly={true} time={codemark.createdAt} />}
+			return (
+				<PersonWrapper>
 					<Codemark
 						key={codemark.id}
 						contextName="Activity Panel"
@@ -132,28 +68,27 @@ export const ActivityPanel = (connect(
 						displayType="activity"
 						currentUserName={props.currentUserName}
 						usernames={props.usernames}
-						selected={false}
 					/>
-				</ActivityWrapper>
-			];
+				</PersonWrapper>
+			);
 		});
 	};
 
-	const showActivity = "all";
+	const showActivity = "open";
 	const showActivityLabels = {
-		all: "all activity"
+		open: "open tasks"
 	};
 	const menuItems = [
-		{ label: "All Activity", action: "all" },
-		{ label: "-" },
-		{ label: "Code Comments", action: "comment" },
+		{ label: "Open Tasks", action: "open" },
+		{ label: "Closed Tasks", action: "closed" },
 		// { label: "Questions & Answers", action: "question" },
-		{ label: "Issues", action: "issue" }
+		{ label: "All Tasks", action: "all" }
 	];
+
 	return (
 		<div className="panel full-height activity-panel">
 			<div className="panel-header" style={{ textAlign: "left", padding: "15px 30px 5px 45px" }}>
-				Activity
+				Your Tasks
 			</div>
 			<div className="filters" style={{ textAlign: "left", padding: "0px 30px 15px 45px" }}>
 				Show{" "}
@@ -167,15 +102,6 @@ export const ActivityPanel = (connect(
 			<ScrollBox>
 				<div className="channel-list vscroll">{renderActivity()}</div>
 			</ScrollBox>
-			<div className="view-selectors">
-				<span className="count">
-					Commits<div className="switch"></div>
-				</span>
-				<span className="count">
-					Branches<div className="switch"></div>
-				</span>
-				<Feedback />
-			</div>
 		</div>
 	);
 });

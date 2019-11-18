@@ -192,7 +192,7 @@
 			// width: 100%;
 			.icon {
 				display: inline-block;
-				transform: scale(1.5);
+				// transform: scale(1.5);
 				vertical-align: 2px;
 			}
 			label {
@@ -220,8 +220,9 @@
 			font-size: 11px;
 			min-width: 17px;
 			position: absolute;
-			bottom: 0px;
-			right: 0px;
+			bottom: -3px;
+			right: -3px;
+			z-index: 5;
 		}
 		.unread-badge {
 			color: @background-color-umi;
@@ -1131,40 +1132,16 @@
 		}
 
 		.editing-indicator {
-			display: none;
-			position: absolute;
-			top: 30px;
-			width: 100%;
-			z-index: 12;
-			// background: @app-background-color;
-			// border-bottom: 1px solid @base-border-color;
-			border-top: 1px solid @base-border-color;
-			padding: 0;
-			// box-shadow: 0 0 10px @app-background-color;
-			div {
-				width: calc(~"100% - 20px");
-				margin: 0 10px;
-
-				padding: 8px 15px;
-				background-color: @background-color-warning;
-				color: white;
-				// color: @text-color-warning;
-				text-align: center;
-				width: auto;
-				top: 40px;
-				border-radius: 0 0 5px 5px;
-				// border: 1px solid @base-border-color;
+			padding-top: 5px;
+			font-size: 12px;
+			color: @text-color-subtle;
+			&.conflict {
+				color: @text-color-warning;
 			}
-			transition: top 0.2s;
-		}
-		.editing-indicator.conflict {
-			div {
-				background-color: @background-color-error;
+			.icon {
+				display: inline-block;
+				transform: scale(0.7);
 			}
-		}
-
-		.editing-indicator.inactive {
-			top: -2em;
 		}
 
 		.icon {
@@ -1432,12 +1409,10 @@
 					}
 				}
 			}
-			.committer-email {
-				font-size: smaller;
-				color: @text-color-subtle;
-			}
 			.reinvite {
 				float: right;
+			}
+			a.reinvite {
 				color: @text-color-info;
 			}
 		}
@@ -2529,6 +2504,7 @@
 			> span {
 				display: inline-block;
 				padding: 8px 10px;
+				padding: 5px 6px;
 				// border-bottom: 1px solid rgba(127, 127, 127, 0.5);
 			}
 			&.checked > span {

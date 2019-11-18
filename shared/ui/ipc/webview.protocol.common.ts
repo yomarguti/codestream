@@ -30,9 +30,13 @@ export interface EditorSelection extends Range {
 }
 
 export enum WebviewPanels {
+	Activity = "activity",
 	Codemarks = "knowledge",
 	CodemarksForFile = "codemarks-for-file",
-	Activity = "activity"
+	Invite = "invite",
+	People = "people",
+	Person = "person",
+	Tasks = "tasks"
 }
 
 export interface WebviewContext {

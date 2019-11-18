@@ -6,6 +6,7 @@ import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
 import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import Tooltip from "./Tooltip"; // careful with tooltips on codemarks; they are not performant
+import EditingIndicator from "./EditingIndicator";
 import Feedback from "./Feedback";
 import cx from "classnames";
 import {

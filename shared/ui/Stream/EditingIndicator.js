@@ -1,8 +1,9 @@
 import React from "react";
-import _ from "underscore";
+import { connect } from "react-redux";
 import createClassString from "classnames";
+import Icon from "./Icon";
 
-export default class EditingIndicator extends React.Component {
+export class SimpleEditingIndicator extends React.Component {
 	makeNameList(names, hasConflict) {
 		let message = "";
 
@@ -29,13 +30,13 @@ export default class EditingIndicator extends React.Component {
 	render() {
 		const { teamMembers, currentUser, editingUsers = {} } = this.props;
 
-		let names = _.compact(
-			Object.keys(editingUsers).map(userId => {
+		let names = Object.keys(editingUsers)
+			.map(userId => {
 				return userId !== currentUser.id && editingUsers[userId]
 					? teamMembers[userId].username
 					: null;
 			})
-		);
+			.filter(Boolean);
 
 		// you can test what it looks like by hard-coding this
 		// names = ["larry", "fred"];
@@ -46,14 +47,33 @@ export default class EditingIndicator extends React.Component {
 
 		const editingIndicatorClass = createClassString({
 			"editing-indicator": true,
-			conflict: hasConflict,
-			inactive: this.props.inactive || !modifiedByOthers
+			conflict: hasConflict
 		});
+
+		if (!modifiedByOthers) return null;
 
 		return (
 			<div className={editingIndicatorClass}>
-				<div>{this.makeNameList(names, hasConflict)}</div>
+				{hasConflict && <Icon name="alert" />}
+				{this.makeNameList(names, hasConflict)}
 			</div>
 		);
 	}
 }
+
+const mapStateToProps = ({ capabilities, context, session, teams, users }) => {
+	const team = teams[context.currentTeamId];
+
+	const teamMembers = team.memberIds.map(id => users[id]).filter(Boolean);
+	// .filter(user => user && user.isRegistered);
+
+	return {
+		teamMembers: users,
+		currentUser: users[session.userId]
+	};
+};
+
+export default connect(
+	mapStateToProps,
+	{}
+)(SimpleEditingIndicator);

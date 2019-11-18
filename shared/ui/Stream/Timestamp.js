@@ -12,12 +12,14 @@ export default class Timestamp extends Component {
 
 		if (!this.props.time) return null;
 
-		return (
-			<time>
-				{timeText}
-				<span className="details">{timeDetails}</span>
-			</time>
-		);
+		if (this.props.dateOnly) return <time>{timeDetails}</time>;
+		else
+			return (
+				<time>
+					{timeText}
+					<span className="details">{timeDetails}</span>
+				</time>
+			);
 	}
 
 	sameDateAs(date1, date2) {

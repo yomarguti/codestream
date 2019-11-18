@@ -1216,7 +1216,7 @@ export class Codemark extends React.Component<Props, State> {
 					// if it's selected, we don't render as hidden
 					"cs-hidden": !renderExpandedBody ? hidden : false,
 					// collapsed: !selected,
-					selected: renderExpandedBody,
+					selected: selected,
 					unpinned: !codemark.pinned,
 					injecting: isInjecting,
 					repositioning: isRepositioning
