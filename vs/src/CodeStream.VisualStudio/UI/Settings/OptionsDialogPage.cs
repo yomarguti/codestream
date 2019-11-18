@@ -10,7 +10,7 @@ namespace CodeStream.VisualStudio.UI.Settings {
 	public class OptionsDialogPage : Microsoft.VisualStudio.Shell.DialogPage, IOptionsDialogPage {	
 
 		private string _email;
-		private bool _autoHideMarkers = true;
+		private bool _autoHideMarkers = false;
 		//// not supported yet
 		//private bool _showMarkerCodeLens = false;
 		private bool _showMarkerGlyphs = true;
