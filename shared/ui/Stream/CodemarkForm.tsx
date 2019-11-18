@@ -185,7 +185,6 @@ class CodemarkForm extends React.Component<Props, State> {
 		commentType: "comment",
 		isEditing: false
 	};
-	tabIndexCount = 0;
 	_titleInput: HTMLElement | null = null;
 	insertTextAtCursor?: Function;
 	focusOnMessageInput?: Function;
