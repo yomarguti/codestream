@@ -3,12 +3,12 @@
   <Metadata>
     <Identity Id="codestream-vs" Version="5.2.0.0" Language="en-US" Publisher="CodeStream" />
     <DisplayName>CodeStream</DisplayName>
-    <Description xml:space="preserve">Discuss, review, and share code with your team. Integrates w/ Slack, MS Teams, Jira, and Trello</Description>
+    <Description xml:space="preserve">Discuss code easily. Streamline Code Reviews. Improve code quality. Works w/ Slack, Teams, Jira, Trello, git, and more.</Description>
     <MoreInfo>https://codestream.com/</MoreInfo>
     <ReleaseNotes>CHANGELOG.txt</ReleaseNotes>
     <Icon>Resources\Assets\codestream.png</Icon>
     <PreviewImage>Resources\CodeStreamPackage.ico</PreviewImage>
-    <Tags>chat;collaboration;comment;keybindings;live;slack</Tags>
+    <Tags>chat;collaboration;review;documentation;slack</Tags>
   </Metadata>
   <Installation Experimental="false" AllUsers="true">
     <!-- Targetting the first release after Preview 3 which is: 15.0.15	Release	July 10, 2018  -->
