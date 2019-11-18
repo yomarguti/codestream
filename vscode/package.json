@@ -1,7 +1,7 @@
 {
     "name": "codestream",
     "displayName": "CodeStream",
-    "description": "Discuss, review, and share code with your team. Integrates w/ Slack, MS Teams, Jira, and Trello",
+    "description": "Discuss code easily. Streamline Code Reviews. Improve code quality. Works w/ Slack, Teams, Jira, Trello, git, and more.",
     "version": "5.2.1",
     "author": "CodeStream",
     "publisher": "CodeStream",
@@ -29,10 +29,10 @@
     },
     "keywords": [
         "chat",
-        "slack",
-        "comment",
         "collaboration",
-        "live"
+        "review",
+        "documentation",
+        "slack"
     ],
     "contributes": {
         "configuration": {
