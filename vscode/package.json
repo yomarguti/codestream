@@ -41,7 +41,7 @@
             "properties": {
                 "codestream.autoHideMarkers": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "Specifies whether to automatically hide editor marker glyphs when the CodeStream panel is showing codemarks in the current file",
                     "scope": "window"
                 },
