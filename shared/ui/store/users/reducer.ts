@@ -44,16 +44,12 @@ const getUsername = (user: CSUser) => {
 
 const getUsers = state => state.users;
 const getTeam = state => state.teams[state.context.currentTeamId];
-export const getTeamMembers = createSelector(
-	getTeam,
-	getUsers,
-	(team, users) => {
-		return mapFilter(team.memberIds, (id: string) => {
-			const user: CSUser = users[id];
-			return user && !user.deactivated ? user : undefined;
-		});
-	}
-);
+export const getTeamMembers = createSelector(getTeam, getUsers, (team, users) => {
+	return mapFilter(team.memberIds, (id: string) => {
+		const user: CSUser = users[id];
+		return user && !user.deactivated ? user : undefined;
+	}).sort((a, b) => a.username.localeCompare(b.username));
+});
 
 export const getTeamMates = createSelector(
 	getTeamMembers,
@@ -62,69 +58,51 @@ export const getTeamMates = createSelector(
 );
 
 // return the team tags as an array, in sort order
-export const getTeamTagsArray = createSelector(
-	getTeam,
-	team => {
-		if (team.tags == null) {
-			team.tags = Object.create(null);
-		}
-
-		return mapFilter(
-			Object.keys(team.tags)
-				.map(id => {
-					return { id, ...team.tags[id] };
-				})
-				.sort((a, b) => a.sortOrder - b.sortOrder),
-			tag => (tag.deactivated ? null : tag)
-		);
+export const getTeamTagsArray = createSelector(getTeam, team => {
+	if (team.tags == null) {
+		team.tags = Object.create(null);
 	}
-);
+
+	return mapFilter(
+		Object.keys(team.tags)
+			.map(id => {
+				return { id, ...team.tags[id] };
+			})
+			.sort((a, b) => a.sortOrder - b.sortOrder),
+		tag => (tag.deactivated ? null : tag)
+	);
+});
 
 // return the team tags as an associative array (hash)
-export const getTeamTagsHash = createSelector(
-	getTeam,
-	team => {
-		if (team.tags == null) {
-			team.tags = Object.create(null);
-		}
-
-		const keys = Object.keys(team.tags);
-		const tags = {};
-		keys.forEach(id => {
-			if (!team.tags[id].deactivated) tags[id] = { id, ...team.tags[id] };
-		});
-		return tags;
+export const getTeamTagsHash = createSelector(getTeam, team => {
+	if (team.tags == null) {
+		team.tags = Object.create(null);
 	}
-);
 
-export const getAllUsers = createSelector(
-	getUsers,
-	(users: UsersState) => Object.values(users)
-);
-export const getUsernames = createSelector(
-	getAllUsers,
-	users => {
-		return users.map(getUsername);
-	}
-);
+	const keys = Object.keys(team.tags);
+	const tags = {};
+	keys.forEach(id => {
+		if (!team.tags[id].deactivated) tags[id] = { id, ...team.tags[id] };
+	});
+	return tags;
+});
 
-export const getUsernamesById = createSelector(
-	getAllUsers,
-	users => {
-		const map = {};
-		users.forEach(user => {
-			map[user.id] = getUsername(user);
-		});
-		return map;
-	}
-);
+export const getAllUsers = createSelector(getUsers, (users: UsersState) => Object.values(users));
+export const getUsernames = createSelector(getAllUsers, users => {
+	return users.map(getUsername);
+});
 
-export const getNormalizedUsernames = createSelector(
-	getUsernames,
-	usernames => {
-		return mapFilter(usernames, username => username && username.toLowerCase());
-	}
-);
+export const getUsernamesById = createSelector(getAllUsers, users => {
+	const map = {};
+	users.forEach(user => {
+		map[user.id] = getUsername(user);
+	});
+	return map;
+});
+
+export const getNormalizedUsernames = createSelector(getUsernames, usernames => {
+	return mapFilter(usernames, username => username && username.toLowerCase());
+});
 
 export const getUserByCsId = createSelector(
 	(state: UsersState) => state,

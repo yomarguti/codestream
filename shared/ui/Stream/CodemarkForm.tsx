@@ -73,6 +73,7 @@ import { Spacer } from "./SpatialView/PRInfoModal";
 import { CSText } from "../src/components/CSText";
 import { NewCodemarkAttributes } from "../store/codemarks/actions";
 import { SharingControls, SharingAttributes } from "./SharingControls";
+import { SmartFormattedList } from "./SmartFormattedList";
 
 export interface ICrossPostIssueContext {
 	setSelectedAssignees(any: any): void;
@@ -139,7 +140,6 @@ interface State {
 	assigneesDisabled: boolean;
 	singleAssignee: boolean;
 	isPermalinkPublic: boolean;
-	isCodemarkPublic: boolean;
 	privacyMembers: { value: string; label: string }[];
 	notify: boolean;
 	isLoading: boolean;
@@ -161,7 +161,6 @@ interface State {
 	titleInvalid?: boolean;
 	textInvalid?: boolean;
 	assigneesInvalid?: boolean;
-	privacyMembersInvalid?: boolean;
 	sharingAttributesInvalid?: boolean;
 	showAllChannels?: boolean;
 	linkURI?: string;
@@ -212,7 +211,6 @@ class CodemarkForm extends React.Component<Props, State> {
 			selectedChannelId: props.channel.id,
 			assignableUsers: this.getAssignableCSUsers(),
 			isPermalinkPublic: false,
-			isCodemarkPublic: true,
 			privacyMembers: [],
 			selectedTags: {},
 			relatedCodemarkIds: {},
@@ -506,7 +504,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		this.setState(state => {
 			const sharingDisabled = !isCodemarkPublic;
 			const shouldShare = sharingDisabled ? false : state.shouldShare;
-			return { isCodemarkPublic, privacyMembersInvalid: false, sharingDisabled, shouldShare };
+			return { sharingDisabled, shouldShare };
 		});
 	};
 
@@ -608,9 +606,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				await this.props.onSubmit({
 					...baseAttributes,
 					sharingAttributes: this.state.shouldShare ? this._sharingAttributes : undefined,
-					accessMemberIds: this.state.isCodemarkPublic
-						? []
-						: this.state.privacyMembers.map(m => m.value)
+					accessMemberIds: this.state.privacyMembers.map(m => m.value)
 				});
 			} else {
 				await this.props.onSubmit({ ...baseAttributes, streamId: selectedChannelId! }, event);
@@ -631,7 +627,6 @@ class CodemarkForm extends React.Component<Props, State> {
 		const codeBlock = codeBlocks[0];
 
 		const validationState: Partial<State> = {
-			privacyMembersInvalid: false,
 			codeBlockInvalid: false,
 			titleInvalid: false,
 			textInvalid: false,
@@ -663,11 +658,6 @@ class CodemarkForm extends React.Component<Props, State> {
 				validationState.textInvalid = true;
 				invalid = true;
 			}
-		}
-
-		if (!this.state.isCodemarkPublic && this.state.privacyMembers.length === 0) {
-			invalid = true;
-			validationState.privacyMembersInvalid = true;
 		}
 
 		if (this.state.shouldShare && !this._sharingAttributes) {
@@ -826,7 +816,6 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 
 	renderPrivacyControls = () => {
-		const { isCodemarkPublic, privacyMembersInvalid } = this.state;
 		if (
 			!this.props.isEditing &&
 			this.props.teamProvider === "codestream" &&
@@ -835,55 +824,34 @@ class CodemarkForm extends React.Component<Props, State> {
 			return (
 				<>
 					<Spacer />
-					{privacyMembersInvalid && (
-						<div style={{ display: "flex", flexDirection: "row-reverse", color: "red" }}>
-							<CSText as="small">Required</CSText>
-						</div>
-					)}
-					<div style={{ display: "flex", alignItems: "center", minHeight: "30px" }}>
-						<span style={{ marginTop: "2px" }}>
-							<LabeledSwitch
-								colored
-								on={isCodemarkPublic}
-								onChange={this.toggleCodemarkPrivacy}
-								offLabel="Private"
-								onLabel="Team"
-								height={28}
-								width={80}
-							/>
-						</span>
-						<div style={{ width: "100%" }}>
-							<div style={{ marginLeft: "10px", width: "calc(100% - 10px)" }}>
-								{isCodemarkPublic ? (
-									<CSText muted>Visible to the entire team</CSText>
-								) : (
-									<div style={{ display: "inline-flex", width: "100%", alignItems: "center" }}>
-										<span style={{ minWidth: "max-content" }}>
-											<CSText muted as="div">
-												Visible to
-											</CSText>
-										</span>
-										<span style={{ marginLeft: "10px", width: "100%" }}>
-											<Select
-												id="input-assignees"
-												classNamePrefix="react-select"
-												isMulti
-												defaultValue={this.state.privacyMembers}
-												options={this.props.teamMates.map(u => ({
-													label: u.username,
-													value: u.id
-												}))}
-												closeMenuOnSelect={false}
-												isClearable
-												placeholder="Enter names..."
-												onChange={(value: any) => {
-													this.setState({ privacyMembers: value });
-												}}
-											/>
-										</span>
-									</div>
-								)}
-							</div>
+					<div style={{ display: "flex", alignItems: "center", minHeight: "40px" }}>
+						<div style={{ display: "inline-flex", width: "100%", alignItems: "center" }}>
+							<span style={{ minWidth: "max-content" }}>
+								<CSText muted as="div">
+									Who can see this?
+								</CSText>
+							</span>
+							<span style={{ marginLeft: "10px", width: "100%" }}>
+								<Select
+									id="input-assignees"
+									classNamePrefix="react-select"
+									isMulti
+									defaultValue={this.state.privacyMembers}
+									options={this.props.teamMates.map(u => ({
+										label: u.username,
+										value: u.id
+									}))}
+									closeMenuOnSelect={false}
+									isClearable
+									placeholder="Entire Team"
+									onChange={(value: any, meta: any) => {
+										this.setState({
+											privacyMembers: value,
+											sharingDisabled: meta.action === "select-option"
+										});
+									}}
+								/>
+							</span>
 						</div>
 					</div>
 				</>
@@ -895,15 +863,20 @@ class CodemarkForm extends React.Component<Props, State> {
 	renderSharingControls = () => {
 		return (
 			<div className="checkbox-row" style={{ float: "left" }}>
-				<SharingControls
-					showError={this.state.sharingAttributesInvalid}
-					on={this.state.shouldShare}
-					disabled={this.state.sharingDisabled}
-					onToggle={value => this.setState({ shouldShare: value })}
-					onChangeValues={values => {
-						this._sharingAttributes = values;
-					}}
-				/>
+				{this.state.sharingDisabled ? (
+					<CSText muted>
+						<SmartFormattedList value={this.state.privacyMembers.map(m => m.label)} /> will be
+						notified via email
+					</CSText>
+				) : (
+					<SharingControls
+						on={this.state.shouldShare}
+						onToggle={value => this.setState({ shouldShare: value })}
+						onChangeValues={values => {
+							this._sharingAttributes = values;
+						}}
+					/>
+				)}
 			</div>
 		);
 	};

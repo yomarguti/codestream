@@ -104,8 +104,6 @@ export function SharingControls(props: {
 	on: boolean;
 	onToggle: (value: boolean) => void;
 	onChangeValues: (values?: SharingAttributes) => void;
-	showError?: boolean;
-	disabled?: boolean;
 }) {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
@@ -319,13 +317,8 @@ export function SharingControls(props: {
 
 	return (
 		<Root>
-			<input
-				disabled={props.disabled}
-				type="checkbox"
-				checked={props.on}
-				onChange={() => props.onToggle(!props.on)}
-			/>{" "}
-			Share on{" "}
+			<input type="checkbox" checked={props.on} onChange={() => props.onToggle(!props.on)} /> Share
+			on{" "}
 			<SharingMenu items={shareProviderMenuItems}>
 				{derivedState.selectedShareTarget!.teamName}
 			</SharingMenu>{" "}
@@ -333,9 +326,6 @@ export function SharingControls(props: {
 			<SharingMenu items={channelMenuItems}>
 				{selectedChannel == undefined ? "select a channel" : formatChannelName(selectedChannel)}
 			</SharingMenu>{" "}
-			{props.showError && selectedChannel == undefined && (
-				<small style={{ color: "red" }}>required</small>
-			)}
 		</Root>
 	);
 }
