@@ -203,7 +203,14 @@ export function SharingControls(props: {
 			if (derivedState.slackConfig)
 				targetItems.push({
 					key: "add-slack",
-					label: "Add Slack workspace" as any,
+					label: (
+						<>
+							<span style={{ marginRight: "5px" }}>
+								<Icon name="slack" />
+							</span>
+							Add Slack workspace
+						</>
+					),
 					action: (() => {
 						authenticateWithSlack();
 					}) as any
