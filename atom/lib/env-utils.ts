@@ -17,7 +17,7 @@ export const PRODUCTION_CONFIG: EnvironmentConfig = {
 
 export const PD_CONFIG: EnvironmentConfig = {
 	name: Environment.PD,
-	serverUrl: "https://pd-api.codestream.us:9443",
+	serverUrl: "https://pd-api.codestream.us",
 };
 
 export const QA_CONFIG: EnvironmentConfig = {
