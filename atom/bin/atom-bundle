@@ -6,6 +6,15 @@ echo "==== building agent ===="
 cd ../codestream-lsp-agent
 npm run bundle
 
+echo "==== updating webview dependencies ===="
+cd ../codestream-components
+rm -rf node_modules
+npm install --no-save
+
+echo "==== updating package dependencies ===="
+cd ../atom-codestream
+rm -rf node_modules
+npm install --no-save
+
 echo "==== building atom package ===="
-cd -
 npx webpack --env.production
