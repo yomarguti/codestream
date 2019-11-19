@@ -80,6 +80,7 @@
     <Compile Include="Models\SessionSignedOutReason.cs" />
     <Compile Include="Models\Webview.Protocol.Shell.cs" />
     <Compile Include="Packages\ToolWindowProvider.cs" />
+    <Compile Include="Process\Node.cs" />
     <Compile Include="Process\ProcessExtensions.cs" />
     <Compile Include="RegularExpressions.cs" />
     <Compile Include="Retry.cs" />
