@@ -861,7 +861,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			).forEach((channel: CSDirectStream) => {
 				if (
 					channel.isArchived ||
-					channel.isClosed ||
+					(channel.isClosed && items.length - firstDM > 10) ||
 					(filterSelected && !selectedStreams[channel.id])
 				) {
 					return;
