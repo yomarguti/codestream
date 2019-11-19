@@ -1,6 +1,6 @@
 # Change Log
 
-## [5.3.0] - 2019-11-19
+## [5.2.2] - 2019-11-19
 
 ### Added
 
@@ -14,6 +14,7 @@
 ### Fixed
 
 - Fixes an issue with the display of codemarks, as well as the codemark creation form, near the bottom of a file
+- Fixes an issue where Slack DMs sometimes weren't available for sharing a codemark
 
 ## [5.2.0] - 2019-11-6
 
