@@ -34,5 +34,6 @@ namespace CodeStream.VisualStudio.Core.Services {
 		/// Name of the current solution (.sln) file OR open folder
 		/// </summary>
 		string SolutionName { get; set; }
+		ProjectType? ProjectType { get; set; }
 	}
 }

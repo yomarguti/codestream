@@ -76,6 +76,7 @@ namespace CodeStream.VisualStudio.Packages {
 				_solutionEventListener = _componentModel.GetService<ISolutionEventsListener>();
 				_solutionEventListener.Opened += SolutionOrFolder_Opened;
 				_solutionEventListener.Closed += SolutionOrFolder_Closed;
+				_solutionEventListener.Loaded += SolutionOrFolder_Loaded;
 
 				_themeEventsService = _componentModel.GetService<IThemeEventsListener>();
 				_themeEventsService.ThemeChangedEventHandler += Theme_Changed;
@@ -97,6 +98,24 @@ namespace CodeStream.VisualStudio.Packages {
 			}
 			catch (Exception ex) {
 				Log.Fatal(ex, nameof(InitializeAsync));
+			}
+		}
+
+		private void SolutionOrFolder_Loaded(object sender, EventArgs e) {
+			var sessionService = _componentModel?.GetService<ISessionService>();
+			if (sessionService == null) {
+				Log.IsNull(nameof(sessionService));
+				return;
+			}
+
+			if (sessionService.ProjectType == ProjectType.Solution) {
+				Log.Debug($"About to {nameof(TryTriggerLspActivationAsync)} for {sessionService.ProjectType}...");
+				ThreadHelper.JoinableTaskFactory.Run(async delegate {
+					await TryTriggerLspActivationAsync();
+				});
+			}
+			else {
+				Log.Debug($"Skipped {nameof(TryTriggerLspActivationAsync)} for {sessionService.ProjectType}");
 			}
 		}
 
@@ -126,6 +145,7 @@ namespace CodeStream.VisualStudio.Packages {
 			}
 
 			sessionService.SolutionName = null;
+			sessionService.ProjectType = null;
 		}
 
 		private void SolutionOrFolder_Opened(object sender, HostOpenedEventArgs e) {
@@ -144,15 +164,7 @@ namespace CodeStream.VisualStudio.Packages {
 				}
 
 				sessionService.SolutionName = e.FileName;
-				if (e.ProjectType == ProjectType.Solution) {
-					Log.Debug($"About to {nameof(TryTriggerLspActivationAsync)} for {e.ProjectType}...");
-					ThreadHelper.JoinableTaskFactory.Run(async delegate {
-						await TryTriggerLspActivationAsync();
-					});
-				}
-				else {
-					Log.Debug($"Skipped {nameof(TryTriggerLspActivationAsync)} for {e.ProjectType}");
-				}
+				sessionService.ProjectType = e.ProjectType;				 
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(SolutionOrFolder_Opened));
@@ -280,6 +292,7 @@ namespace CodeStream.VisualStudio.Packages {
 					if (_solutionEventListener != null) {
 						_solutionEventListener.Opened -= SolutionOrFolder_Opened;
 						_solutionEventListener.Closed -= SolutionOrFolder_Closed;
+						_solutionEventListener.Loaded -= SolutionOrFolder_Loaded;
 					}
 					if (_themeEventsService != null) {
 						_themeEventsService.ThemeChangedEventHandler -= Theme_Changed;

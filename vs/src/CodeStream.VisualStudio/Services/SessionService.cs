@@ -28,6 +28,8 @@ namespace CodeStream.VisualStudio.Services {
 		public bool IsCodemarksForFileVisible { get; set; }
 		public string LastActiveFileUrl { get; set; }
 		public bool? WebViewDidInitialize { get; set; }
+		public ProjectType? ProjectType { get; set; }
+
 		private bool _disposed = false;
 
 		public SessionService() {
