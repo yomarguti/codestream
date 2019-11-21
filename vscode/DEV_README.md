@@ -40,11 +40,10 @@ npm run watch
 
 It will do an initial full build and then watch for file changes, compiling those changes incrementally, enabling a fast, iterative coding experience.
 
-To watch the extension and agent, use the following in separate terminals:
+To watch the extension and agent, use the following in separate terminals in vscode-codestream/ and codestream-lsp-agent/:
 
 ```
-In vscode-codestream: npm run watch
-In codestream-lsp-agent: npm run watch
+npm run watch
 ```
 
 Or use the provided `watch` task in VS Code, execute the following from the command palette (be sure there is no `>` at the start):
