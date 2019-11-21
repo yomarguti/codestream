@@ -43,8 +43,8 @@ It will do an initial full build and then watch for file changes, compiling thos
 To watch the extension and agent, use the following in separate terminals:
 
 ```
-npm run watch
-npm run agent:watch
+In vscode-codestream: npm run watch
+In codestream-lsp-agent: npm run watch
 ```
 
 Or use the provided `watch` task in VS Code, execute the following from the command palette (be sure there is no `>` at the start):
