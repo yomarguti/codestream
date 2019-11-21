@@ -49,7 +49,7 @@ import {
 	ProviderType,
 	StreamType
 } from "../protocol/api.protocol";
-import { Arrays, debug, lsp, lspHandler } from "../system";
+import { Arrays, debug, log, lsp, lspHandler } from "../system";
 import { Strings } from "../system/string";
 import { BaseIndex, IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
@@ -865,14 +865,25 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				MarkerLocationManager.saveUncommittedLocations(
 					markers,
 					markerCreationDescriptors.map(descriptor => descriptor.backtrackedLocation)
-				);
+				).then(() => {
+					Logger.log("Uncommitted locations saved to local cache");
+				});
 			}
 
 			response.codemark!.markers = response.markers || [];
 			return response;
 		} catch (ex) {
-			debugger;
-			return;
+			Logger.error(ex);
+			Container.instance().errorReporter.reportMessage({
+				type: ReportingMessageType.Error,
+				source: "agent",
+				message: "Post creation with markers failed",
+				extra: {
+					message: ex.message,
+					streamId
+				}
+			});
+			throw ex;
 		}
 	}
 

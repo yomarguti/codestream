@@ -10,12 +10,13 @@ import { Container, SessionContainer } from "../container";
 import { GitRepository } from "../git/models/repository";
 import { Logger } from "../logger";
 import { calculateLocation, calculateLocations } from "../markerLocation/calculator";
-import { MarkerNotLocatedReason } from "../protocol/agent.protocol";
+import { MarkerNotLocatedReason, ReportingMessageType } from "../protocol/agent.protocol";
 import {
 	CSLocationArray,
 	CSMarker,
 	CSMarkerLocation,
-	CSMarkerLocations, CSReferenceLocation
+	CSMarkerLocations,
+	CSReferenceLocation
 } from "../protocol/api.protocol";
 import { xfs } from "../xfs";
 import { ManagerBase } from "./baseManager";
@@ -641,29 +642,41 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		};
 	}
 
-	static saveUncommittedLocations(markers: CSMarker[], backtrackedLocations: (BacktrackedLocation | undefined)[]) {
-		markers.forEach((marker, index) => {
-			const backtrackedLocation = backtrackedLocations[index];
-			if (!backtrackedLocation) return;
+	static async saveUncommittedLocations(markers: CSMarker[], backtrackedLocations: (BacktrackedLocation | undefined)[]) {
+		let index = 0;
+		for await (const marker of markers) {
+			try {
+				const backtrackedLocation = backtrackedLocations[index];
+				if (!backtrackedLocation) return;
 
-			const atDocument = backtrackedLocation.atDocument;
-			const atCurrentCommit = backtrackedLocation.atCurrentCommit;
-			const filePath = backtrackedLocation.filePath;
-			const fileContents = backtrackedLocation.fileContents;
+				const atDocument = backtrackedLocation.atDocument;
+				const atCurrentCommit = backtrackedLocation.atCurrentCommit;
+				const filePath = backtrackedLocation.filePath;
+				const fileContents = backtrackedLocation.fileContents;
 
-			const meta = atCurrentCommit.meta;
-			if (meta && (meta.startWasDeleted || meta.endWasDeleted)) {
-				const uncommittedLocation = {
-					...atDocument!,
-					id: marker.id
-				};
+				const meta = atCurrentCommit.meta;
+				if (meta && (meta.startWasDeleted || meta.endWasDeleted)) {
+					const uncommittedLocation = {
+						...atDocument!,
+						id: marker.id
+					};
 
-				SessionContainer.instance().markerLocations.saveUncommittedLocation(
-					filePath,
-					fileContents,
-					uncommittedLocation
-				);
+					await SessionContainer.instance().markerLocations.saveUncommittedLocation(
+						filePath,
+						fileContents,
+						uncommittedLocation
+					);
+				}
+			} catch (ex) {
+				Logger.log(ex);
+				Container.instance().errorReporter.reportMessage({
+					type: ReportingMessageType.Error,
+					message: ex.message,
+					source: "agent",
+					extra: ex.toString()
+				});
 			}
-		});
+			index++;
+		}
 	}
 }
