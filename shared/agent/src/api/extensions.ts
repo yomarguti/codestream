@@ -365,11 +365,12 @@ export function toReplyActionId(
 		id: id,
 		linkType: "reply",
 		streamId: codemark.streamId,
+		externalProvider: codemark.externalProvider,
 		teamId: codemark.teamId,
 		codemarkId: codemark.id,
 		creatorId: codemark.creatorId,
 		parentPostId: codemark.postId
-	};
+	};	
 
 	return JSON.stringify(actionId);
 }
