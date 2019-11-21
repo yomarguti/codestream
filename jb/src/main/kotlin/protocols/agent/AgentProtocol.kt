@@ -16,6 +16,7 @@ class InitializationOptions(
     val proxy: ProxySettings?,
     val proxySupport: String?,
     val serverUrl: String,
+    val strictSSL: Boolean,
     val traceLevel: String,
     val recordRequests: Boolean = false
 )

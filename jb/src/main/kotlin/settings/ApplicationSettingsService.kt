@@ -17,7 +17,7 @@ import protocols.agent.ProxySettings
 import protocols.agent.TraceLevel
 import protocols.webview.Configs
 
-private const val API_PD = "https://pd-api.codestream.us:9443"
+private const val API_PD = "https://pd-api.codestream.us"
 private const val API_QA = "https://qa-api.codestream.us"
 private const val API_PROD = "https://api.codestream.com"
 
@@ -25,6 +25,7 @@ data class ApplicationSettingsServiceState(
     var autoSignIn: Boolean = true,
     var email: String? = null,
     var serverUrl: String = API_PROD,
+    var strictSSL: Boolean = true,
     var avatars: Boolean = true,
     var notifications: String? = null,
     var team: String? = null,
@@ -61,6 +62,7 @@ class ApplicationSettingsService : PersistentStateComponent<ApplicationSettingsS
     val showMarkers get() = state.showMarkers
     val notifications get() = state.notifications
     val serverUrl get() = state.serverUrl
+    val strictSSL get() = state.strictSSL
     val email get() = state.email
     val avatars get() = state.avatars
     val showFeedbackSmiley get() = state.showFeedbackSmiley
