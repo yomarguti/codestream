@@ -827,6 +827,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		const markerCreationDescriptors: MarkerCreationDescriptor[] = [];
 
 		codemarkRequest.streamId = streamId;
+		Logger.log(`createPostWithMarker: preparing descriptors for ${markers.length} markers`);
 		for (const m of markers) {
 			if (!m.range) continue;
 			const descriptor = await MarkersManager.prepareMarkerCreationDescriptor(
@@ -847,6 +848,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		}
 
 		try {
+			Logger.log(`createPostWithMarker: creating post`);
 			const response = await this.createPost(
 				{
 					streamId,
@@ -859,9 +861,11 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				},
 				textDocuments
 			);
+			Logger.log(`createPostWithMarker: post creation completed`);
 
 			const { markers } = response!;
 			if (markers) {
+				Logger.log(`createPostWithMarker: will save uncommitted locations`);
 				MarkerLocationManager.saveUncommittedLocations(
 					markers,
 					markerCreationDescriptors.map(descriptor => descriptor.backtrackedLocation)
@@ -871,6 +875,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			}
 
 			response.codemark!.markers = response.markers || [];
+			Logger.log(`createPostWithMarker: returning`);
 			return response;
 		} catch (ex) {
 			Logger.error(ex);

@@ -243,6 +243,7 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 				};
 				const backtrackedLocations = await Promise.all(promises);
 				referenceLocations = [referenceLocation, ...backtrackedLocations];
+				Logger.log(`prepareMarkerCreationDescriptor: ${referenceLocations.length} reference locations calculated`);
 			} else {
 				Logger.log(`prepareMarkerCreationDescriptor: no source revision - file has no commits`);
 				fileCurrentCommit = (await git.getRepoHeadRevision(source.repoPath))!;
@@ -267,6 +268,7 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 			if (source.remotes && source.remotes.length > 0) {
 				remotes = source.remotes.map(r => r.url);
 			}
+			Logger.log(`prepareMarkerCreationDescriptor: no source revision - file has no commits`);
 		}
 
 		marker = {
@@ -278,22 +280,30 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 		};
 
 		if (source && source.file) {
+			Logger.log(`prepareMarkerCreationDescriptor: identifying stream for file ${source.file}`);
 			const fullPath = path.join(source.repoPath, source.file);
 			const stream = await files.getByPath(fullPath);
 			if (stream && stream.id) {
+				Logger.log(`prepareMarkerCreationDescriptor: stream id=${stream.id}`);
 				marker.fileStreamId = stream.id;
 			} else {
+				Logger.log(`prepareMarkerCreationDescriptor: no stream id found`);
 				marker.file = source.file;
 				const repo = await git.getRepositoryByFilePath(fullPath);
 				if (repo && repo.id) {
+					Logger.log(`prepareMarkerCreationDescriptor: repo id=${repo.id}`);
 					marker.repoId = repo.id;
 				} else {
 					marker.knownCommitHashes = await MarkersManager.getKnownCommitHashes(source.repoPath);
+					Logger.log(`prepareMarkerCreationDescriptor: known commit hashes = ${marker.knownCommitHashes.join(", ")}`);
 				}
 			}
+		} else {
+			Logger.log(`prepareMarkerCreationDescriptor: marker has no source file`);
 		}
 
 		try {
+			Logger.log(`prepareMarkerCreationDescriptor: retrieving range information`);
 			const scmResponse = await scm.getRangeInfo({
 				uri: documentId.uri,
 				range: range,
@@ -316,11 +326,13 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 						break;
 					}
 				}
+				Logger.log(`prepareMarkerCreationDescriptor: remote code URL = ${marker.remoteCodeUrl}`);
 			}
 		} catch (ex) {
 			Logger.error(ex);
 		}
 
+		Logger.log(`prepareMarkerCreationDescriptor: preparation complete`);
 		return {
 			marker,
 			backtrackedLocation
