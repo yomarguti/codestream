@@ -7,6 +7,7 @@ public class CodeStreamConfigurableGUI {
     private JPanel rootPanel;
     private JCheckBox autoSignIn;
     private JTextField serverUrl;
+    private JCheckBox strictSSL;
     private JCheckBox showAvatars;
     private JTextField team;
     private JCheckBox showFeedbackSmiley;
@@ -22,6 +23,7 @@ public class CodeStreamConfigurableGUI {
             if (event.getStateChange() == ItemEvent.SELECTED) {
                 Object item = event.getItem();
                 proxyUrl.setEnabled(item.equals("override"));
+                proxyStrictSSL.setEnabled(item.equals("override") || item.equals("on"));
             }
         });
     }
@@ -36,6 +38,10 @@ public class CodeStreamConfigurableGUI {
 
     public JTextField getServerUrl() {
         return serverUrl;
+    }
+
+    public JCheckBox getStrictSSL() {
+        return strictSSL;
     }
 
     public JCheckBox getShowAvatars() {
