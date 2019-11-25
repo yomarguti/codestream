@@ -18,7 +18,8 @@ const mapStateToProps = (state, props) => {
 	return {
 		isThread,
 		posts,
-		postIds: posts.map(p => p.id)
+		postIds: posts.map(p => p.id),
+		lastReadForStream: state.umis.lastReads[streamId]
 	};
 };
 
@@ -26,13 +27,10 @@ export default Child => {
 	const initializeCount = 50;
 	const batchCount = 100;
 
-	const DataProvider = connect(
-		mapStateToProps,
-		{
-			fetchPosts,
-			fetchThread
-		}
-	)(
+	const DataProvider = connect(mapStateToProps, {
+		fetchPosts,
+		fetchThread
+	})(
 		class Provider extends React.Component {
 			state = { isFetching: false, isInitialized: false, posts: [], hasMore: true };
 
@@ -65,34 +63,46 @@ export default Child => {
 			async initialize() {
 				this.setState({ isInitialized: false });
 
-				const { childProps, isThread, fetchPosts, fetchThread } = this.props;
+				const { useCache, childProps, isThread, fetchPosts, fetchThread } = this.props;
 				const { streamId, teamId, threadId } = childProps;
 
 				if (isThread) {
-					if (threadId && !this.props.posts.some(p => p.id === threadId)) {
+					if (!useCache && threadId && !this.props.posts.some(p => p.id === threadId)) {
 						await fetchThread(streamId, threadId);
 					}
+
 					this.setState({
 						isInitialized: true,
-						posts: this.props.posts,
+						posts: this._prunePosts(),
 						hasMore: false
 					});
 				} else {
 					if (this.props.posts.length < initializeCount) {
-						const { more } = await fetchPosts({ streamId, teamId, limit: initializeCount });
+						const { more } = useCache
+							? { more: false }
+							: await fetchPosts({ streamId, teamId, limit: initializeCount });
+
 						this.setState({
 							isInitialized: true,
-							posts: this.props.posts,
+							posts: this._prunePosts(),
 							hasMore: more
 						});
 					} else {
 						this.setState({
 							isInitialized: true,
-							posts: this.props.posts,
-							hasMore: true
+							posts: this._prunePosts(),
+							hasMore: useCache ? false : true
 						});
 					}
 				}
+			}
+
+			_prunePosts() {
+				if (this.props.skipReadPosts) {
+					if (!this.props.lastReadForStream) return [];
+					return this.props.posts.filter(post => post.seqNum > this.props.lastReadForStream);
+				}
+				return this.props.posts;
 			}
 
 			// Might need to create `onDidScrollToBottom` too
@@ -186,7 +196,14 @@ export default Child => {
 	);
 
 	return React.forwardRef((props, ref) => {
-		const { onDidInitialize, ...childProps } = props;
-		return <DataProvider onDidInitialize={onDidInitialize} childProps={{ ...childProps, ref }} />;
+		const { onDidInitialize, useCache, skipReadPosts, ...childProps } = props;
+		return (
+			<DataProvider
+				onDidInitialize={onDidInitialize}
+				useCache={useCache}
+				skipReadPosts={skipReadPosts}
+				childProps={{ ...childProps, ref }}
+			/>
+		);
 	});
 };

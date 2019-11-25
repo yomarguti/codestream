@@ -9,10 +9,19 @@ import Codemark from "./Codemark";
 import * as codemarkSelectors from "../store/codemarks/reducer";
 import * as userSelectors from "../store/users/reducer";
 import styled from "styled-components";
-import { includes as _includes, sortBy as _sortBy } from "lodash-es";
+import { includes as _includes, sortBy as _sortBy, last as _last } from "lodash-es";
 import Feedback from "./Feedback";
 import { CodeStreamState } from "../store";
 import { setCodemarkTypeFilter } from "../store/context/actions";
+import { getActivity } from "../store/activityFeed/reducer";
+import { useDidMount } from "../utilities/hooks";
+import { HostApi } from "../webview-api";
+import { FetchActivityRequestType } from "@codestream/protocols/agent";
+import { addPosts } from "../store/posts/actions";
+import { saveActivity } from "../store/activityFeed/actions";
+import { saveCodemarks } from "../store/codemarks/actions";
+import { safe } from "../utils";
+import { markStreamRead } from "./actions";
 
 const ActivityWrapper = styled.div`
 	margin: 0 40px 20px 45px;
@@ -38,36 +47,70 @@ const ActivityWrapper = styled.div`
 	}
 `;
 
+const LoadingMessage = styled.div`
+	width: 100%;
+	margin: 0 auto;
+	text-align: center;
+`;
+
+const BATCH_COUNT = 50;
+
 export const ActivityPanel = () => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
-		const codemarks = codemarkSelectors.getTypeFilteredCodemarks(state);
 		const usernames = userSelectors.getUsernames(state);
 
 		return {
 			noCodemarksAtAll: !codemarkSelectors.teamHasCodemarks(state),
 			currentUserName: state.users[state.session.userId!].username,
 			usernames,
-			codemarks
+			activity: getActivity(state),
+			codemarkTypeFilter: state.context.codemarkTypeFilter,
+			lastReads: state.umis.lastReads
 		};
 	});
 
+	const [hasMore, setHasMore] = React.useState(derivedState.activity.length > 0);
+
+	const fetchActivity = React.useCallback(async () => {
+		const response = await HostApi.instance.send(FetchActivityRequestType, {
+			limit: BATCH_COUNT,
+			before: safe(() => _last(derivedState.activity)!.id)
+		});
+		dispatch(addPosts(response.posts));
+		dispatch(saveCodemarks(response.codemarks));
+		dispatch(saveActivity("codemark", response.codemarks));
+		setHasMore(Boolean(response.more));
+	}, [derivedState.activity]);
+
+	useDidMount(() => {
+		if (!hasMore) fetchActivity();
+		else {
+			for (let streamId in derivedState.lastReads) {
+				dispatch(markStreamRead(streamId));
+			}
+		}
+	});
+
+	const intersectionCallback = async () => {
+		if (!hasMore) return;
+		fetchActivity();
+	};
+
+	const { targetRef, rootRef } = useIntersectionObserver(intersectionCallback);
+
 	const renderActivity = () => {
-		const { codemarks } = derivedState;
 		let counter = 0;
 		const demoMode = false;
 		const dave = { username: "dave", fullName: "David Hersh" };
 		const akon = { username: "akonwi", fullName: "Akonwi Ngoh", email: "akonwi@codestream.com" };
 
-		return _sortBy(codemarks, codemark => -codemark.createdAt).map(codemark => {
-			const codemarkType = codemark.type || "comment";
+		return derivedState.activity.map(codemark => {
 			if (codemark.deactivated) return null;
-			// FIXME TODO load the next 10 when you scroll
-			if (counter++ > 10) return null;
 
 			return [
 				demoMode && counter == 2 ? (
-					<ActivityWrapper>
+					<ActivityWrapper key={counter}>
 						<div className="codemark inline">
 							<div className="contents">
 								<div className="body">
@@ -84,7 +127,7 @@ export const ActivityPanel = () => {
 					</ActivityWrapper>
 				) : null,
 				demoMode && counter == 3 ? (
-					<ActivityWrapper>
+					<ActivityWrapper key={counter}>
 						<div className="codemark inline">
 							<div className="contents">
 								<div className="body">
@@ -108,7 +151,7 @@ export const ActivityPanel = () => {
 						</div>
 					</ActivityWrapper>
 				) : null,
-				<ActivityWrapper>
+				<ActivityWrapper key={codemark.id}>
 					{/* <Timestamp dateOnly={true} time={codemark.createdAt} /> */}
 					{demoMode && counter == 5 && <Timestamp dateOnly={true} time={codemark.createdAt} />}
 					<Codemark
@@ -125,7 +168,6 @@ export const ActivityPanel = () => {
 		});
 	};
 
-	const showActivity = "all";
 	const showActivityLabels = {
 		all: "all activity"
 	};
@@ -136,6 +178,7 @@ export const ActivityPanel = () => {
 		// { label: "Questions & Answers", action: "question" },
 		{ label: "Issues", action: "issue" }
 	];
+
 	return (
 		<div className="panel full-height activity-panel">
 			<div className="panel-header" style={{ textAlign: "left", padding: "15px 30px 5px 45px" }}>
@@ -145,13 +188,20 @@ export const ActivityPanel = () => {
 				Show{" "}
 				<Filter
 					onValue={value => dispatch(setCodemarkTypeFilter(value))}
-					selected={showActivity}
+					selected={derivedState.codemarkTypeFilter}
 					labels={showActivityLabels}
 					items={menuItems}
 				/>
 			</div>
 			<ScrollBox>
-				<div className="channel-list vscroll">{renderActivity()}</div>
+				<div ref={rootRef} className="channel-list vscroll">
+					{renderActivity()}
+					{hasMore && (
+						<LoadingMessage ref={targetRef}>
+							<Icon className="spin" name="sync" /> Loading more...
+						</LoadingMessage>
+					)}
+				</div>
 			</ScrollBox>
 			<div className="view-selectors">
 				<span className="count">
@@ -165,3 +215,49 @@ export const ActivityPanel = () => {
 		</div>
 	);
 };
+
+function useIntersectionObserver(
+	callback: IntersectionObserverCallback,
+	options: Pick<IntersectionObserverInit, "threshold" | "rootMargin"> = {}
+) {
+	const callbackRef = React.useRef(callback);
+	React.useEffect(() => {
+		callbackRef.current = callback;
+	});
+	const observerRef = React.useRef<IntersectionObserver>();
+	const rootRef = React.useRef<HTMLElement>(null);
+	const targetRef = React.useCallback(element => {
+		if (element == undefined) {
+			// clean up
+			if (observerRef.current != undefined) {
+				observerRef.current.disconnect();
+				observerRef.current = undefined;
+			}
+			return;
+		}
+
+		// can't observe yet
+		if (!rootRef.current) return;
+
+		const observer = new IntersectionObserver(
+			function(...args: Parameters<IntersectionObserverCallback>) {
+				callbackRef.current.call(undefined, ...args);
+			},
+			{
+				...options,
+				root: rootRef.current
+			}
+		);
+		observer.observe(element);
+
+		observerRef.current = observer;
+	}, []);
+
+	React.useEffect(() => {
+		return () => {
+			observerRef.current && observerRef.current.disconnect();
+		};
+	}, []);
+
+	return { targetRef, rootRef: rootRef as any };
+}

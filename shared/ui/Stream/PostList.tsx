@@ -20,7 +20,6 @@ export interface Props {
 	posts: CSPost[];
 	renderIntro?: any;
 	skipParentPost: boolean;
-	skipReadPosts: boolean;
 	streamId: string;
 	teamId: string;
 	teammates?: CSUser[];

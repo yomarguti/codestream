@@ -47,6 +47,8 @@ import { reduceBootstrapped } from "./bootstrapped/reducer";
 import { VersioningState } from "./versioning/types";
 import { ActiveIntegrationsState } from "./activeIntegrations/types";
 import { reduceActiveIntegrations } from "./activeIntegrations/reducer";
+import { reduceActivityFeed } from "./activityFeed/reducer";
+import { ActivityFeedState } from "./activityFeed/types";
 
 const pluginVersion = (state = "", action) => {
 	if (action.type === "@pluginVersion/Set") return action.payload;
@@ -55,6 +57,7 @@ const pluginVersion = (state = "", action) => {
 
 const reducer = combineReducers({
 	activeIntegrations: reduceActiveIntegrations,
+	activityFeed: reduceActivityFeed,
 	bootstrapped: reduceBootstrapped,
 	capabilities: reduceCapabilities,
 	codemarks: reduceCodemarks,
@@ -96,6 +99,7 @@ export function createCodeStreamStore(
 
 export interface CodeStreamState {
 	activeIntegrations: ActiveIntegrationsState;
+	activityFeed: ActivityFeedState;
 	bootstrapped: boolean;
 	capabilities: CapabilitiesState;
 	codemarks: CodemarksState;

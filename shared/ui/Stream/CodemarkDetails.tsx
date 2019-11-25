@@ -14,6 +14,7 @@ import { getTeamProvider } from "../store/teams/reducer";
 import { replaceHtml } from "../utils";
 import { DelayedRender } from "../Container/DelayedRender";
 import { localStore } from "../utilities/storage";
+import { CodeStreamState } from "../store";
 
 interface State {
 	editingPostId?: string;
@@ -209,6 +210,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 							teamId={this.props.teamId}
 							skipParentPost={true}
 							skipReadPosts={this.props.displayType === "activity"}
+							useCache={this.props.displayType === "activity"}
 							onCancelEdit={this.cancelEdit}
 							onDidSaveEdit={this.cancelEdit}
 							disableEdits
@@ -226,14 +228,14 @@ export class CodemarkDetails extends React.Component<Props, State> {
 }
 
 const EMPTY_OBJECT = {};
-const mapStateToProps = state => {
+const mapStateToProps = (state: CodeStreamState, props: { codemark: CodemarkPlus }) => {
 	const { capabilities, configs, connectivity, session, context, users, teams, services } = state;
 
 	const team = teams[context.currentTeamId];
 	const teamProvider = getTeamProvider(team);
 	const teamMembers = getTeamMembers(state);
 
-	const user: CSMe = users[session.userId];
+	const user: CSMe = users[session.userId!] as CSMe;
 
 	const providerInfo =
 		(user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT;
@@ -247,7 +249,6 @@ const mapStateToProps = state => {
 		providerInfo,
 		teamId: context.currentTeamId,
 		teamName: team.name || "",
-		repoId: context.currentRepoId,
 		hasFocus: context.hasFocus,
 		currentUserId: user.id,
 		currentUserName: user.username,
@@ -256,7 +257,4 @@ const mapStateToProps = state => {
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{ createPost }
-)(CodemarkDetails);
+export default connect(mapStateToProps, { createPost })(CodemarkDetails);
