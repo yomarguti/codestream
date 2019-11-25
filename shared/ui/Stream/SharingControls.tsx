@@ -183,18 +183,16 @@ export function SharingControls(props: {
 		else props.onChangeValues(undefined);
 	}, [derivedState.selectedShareTarget, selectedChannel]);
 
-	const selectedChannel = data.get().lastSelectedChannel;
-
 	React.useEffect(() => {
 		const shareTarget = derivedState.selectedShareTarget;
 
 		if (shareTarget && selectedChannel)
-			props.onChange({
+			props.onChangeValues({
 				providerId: shareTarget.providerId,
 				providerTeamId: shareTarget.teamId,
 				channelId: selectedChannel && selectedChannel.id
 			});
-		else props.onChange(undefined);
+		else props.onChangeValues(undefined);
 	}, [derivedState.selectedShareTarget, selectedChannel]);
 
 	const shareProviderMenuItems = React.useMemo(() => {

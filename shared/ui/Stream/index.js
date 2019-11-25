@@ -47,10 +47,6 @@ import {
 	getConnectedSharingTargets
 } from "../store/providers/reducer";
 import {
-	isConnected as isConnectedToProvider,
-	getConnectedSharingTargets
-} from "../store/providers/reducer";
-import {
 	getStreamForId,
 	getStreamForTeam,
 	getChannelStreamsForTeam,
