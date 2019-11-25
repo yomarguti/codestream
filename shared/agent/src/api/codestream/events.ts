@@ -1,4 +1,5 @@
 "use strict";
+import { Agent as HttpsAgent } from "https";
 import HttpsProxyAgent from "https-proxy-agent";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
 import {
@@ -51,7 +52,7 @@ export interface BroadcasterEventsInitializer {
 		host: string,
 		port: string
 	};
-	proxyAgent?: HttpsProxyAgent;
+	httpsAgent?: HttpsAgent | HttpsProxyAgent;
 }
 
 export class BroadcasterEvents implements Disposable {
@@ -67,7 +68,7 @@ export class BroadcasterEvents implements Disposable {
 	constructor (
 		private readonly _options: BroadcasterEventsInitializer
 	) {
-		this._broadcaster = new Broadcaster(this._options.api, this._options.proxyAgent);
+		this._broadcaster = new Broadcaster(this._options.api, this._options.httpsAgent);
 		this._broadcaster.onDidStatusChange(this.onBroadcasterStatusChanged, this);
 		this._broadcaster.onDidReceiveMessages(this.onBroadcasterMessagesReceived, this);
 	}
@@ -81,7 +82,7 @@ export class BroadcasterEvents implements Disposable {
 			authKey: this._options.broadcasterToken,
 			userId: this._options.api.userId,
 			debug: this.debug.bind(this),
-			proxyAgent: this._options.proxyAgent
+			httpsAgent: this._options.httpsAgent
 		});
 
 		const channels: ChannelDescriptor[] = [

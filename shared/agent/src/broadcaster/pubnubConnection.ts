@@ -1,6 +1,7 @@
 // Provide the PubnubConnection class, which encapsulates communications with Pubnub to receive
 // messages in real-time
 "use strict";
+import { Agent as HttpsAgent } from "https";
 import HttpsProxyAgent from "https-proxy-agent";
 import Pubnub from "pubnub";
 import { Disposable } from "vscode-languageserver";
@@ -38,7 +39,7 @@ export interface PubnubInitializer {
 	authKey: string; // unique Pubnub token provided in the login response
 	userId: string; // ID of the current user
 	debug?(msg: string, info?: any): void; // for debug messages
-	proxyAgent?: HttpsProxyAgent;
+	httpsAgent?: HttpsAgent | HttpsProxyAgent;
 	onMessage: MessageCallback;
 	onStatus: StatusCallback;
 }
@@ -78,7 +79,7 @@ export class PubnubConnection implements BroadcasterConnection {
 			logVerbosity: false,
 			heartbeatInterval: 30,
 			autoNetworkDetection: true,
-			proxy: options.proxyAgent && options.proxyAgent.proxy
+			proxy: options.httpsAgent instanceof HttpsProxyAgent && options.httpsAgent.proxy
 		} as Pubnub.PubnubConfig);
 
 		this._messageCallback = options.onMessage;

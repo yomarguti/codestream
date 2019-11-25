@@ -1,5 +1,6 @@
 "use strict";
 import { LogLevel, RTMClient } from "@slack/rtm-api";
+import { Agent as HttpsAgent } from "https";
 import HttpsProxyAgent from "https-proxy-agent";
 import { Emitter, Event } from "vscode-languageserver";
 import { SessionContainer } from "../../container";
@@ -109,10 +110,10 @@ export class SlackEvents implements Disposable {
 	constructor(
 		slackToken: string,
 		private readonly _api: SlackApiProvider,
-		proxyAgent: HttpsProxyAgent | undefined
+		httpsAgent: HttpsAgent | HttpsProxyAgent | undefined
 	) {
 		this._slackRTM = new RTMClient(slackToken, {
-			agent: proxyAgent,
+			agent: httpsAgent,
 			// Only log INFO because otherwise its just too noisy
 			logLevel: LogLevel.INFO, // Logger.level === TraceLevel.Debug ? LogLevel.DEBUG : LogLevel.INFO,
 			logger: {

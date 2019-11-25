@@ -103,6 +103,7 @@ export interface BaseAgentOptions {
 	};
 	proxySupport?: "override" | "on" | "off";
 	serverUrl: string;
+	strictSSL: boolean;
 	traceLevel: TraceLevel;
 	recordRequests?: boolean;
 }

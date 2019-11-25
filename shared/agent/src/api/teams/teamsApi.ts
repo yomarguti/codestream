@@ -1,5 +1,6 @@
 "use strict";
 import { Client, ClientOptions, GraphError, GraphRequest } from "@microsoft/microsoft-graph-client";
+import { Agent as HttpsAgent } from "https";
 import HttpsProxyAgent from "https-proxy-agent";
 import { RequestInit } from "node-fetch";
 import { Emitter, Event } from "vscode-languageserver";
@@ -171,7 +172,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 		providerInfo: CSMSTeamsProviderInfo,
 		user: CSMe,
 		private readonly _codestreamTeamId: string,
-		private readonly _proxyAgent: HttpsProxyAgent | undefined
+		private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined
 	) {
 		this._providerInfo = providerInfo;
 		this._teams = this.newClient();

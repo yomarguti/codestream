@@ -8,6 +8,7 @@ import {
 	WebClient,
 	WebClientEvent
 } from "@slack/web-api";
+import { Agent as HttpsAgent } from "https";
 import HttpsProxyAgent from "https-proxy-agent";
 import { RequestInit } from "node-fetch";
 import { Emitter, Event } from "vscode-languageserver";
@@ -172,7 +173,7 @@ export class SlackApiProvider implements ApiProvider {
 		providerInfo: CSSlackProviderInfo,
 		user: CSMe,
 		private readonly _codestreamTeamId: string,
-		private readonly _proxyAgent: HttpsProxyAgent | undefined
+		private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined
 	) {
 		this._slackToken = providerInfo.accessToken;
 		this._slack = this.newWebClient();
@@ -194,7 +195,7 @@ export class SlackApiProvider implements ApiProvider {
 
 	protected newWebClient() {
 		return new WebClient(this._slackToken, {
-			agent: this._proxyAgent,
+			agent: this._httpsAgent,
 			logLevel: Logger.level === TraceLevel.Debug ? LogLevel.DEBUG : LogLevel.INFO,
 			logger: {
 				setLevel() {},
@@ -437,7 +438,7 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	protected newSlackEvents() {
-		return new SlackEvents(this._slackToken, this, this._proxyAgent);
+		return new SlackEvents(this._slackToken, this, this._httpsAgent);
 	}
 
 	async ensureUsernamesById(): Promise<Map<string, string>> {

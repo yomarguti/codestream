@@ -1,4 +1,5 @@
 "use strict";
+import { Agent as HttpsAgent } from "https";
 import HttpsProxyAgent from "https-proxy-agent";
 import { isEqual } from "lodash-es";
 import fetch, { Headers, RequestInit, Response } from "node-fetch";
@@ -224,7 +225,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	constructor(
 		public readonly baseUrl: string,
 		private readonly _version: VersionInfo,
-		private readonly _proxyAgent: HttpsProxyAgent | undefined
+		private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined
 	) {}
 
 	get teamId(): string {
@@ -449,7 +450,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			pubnubSubscribeKey: this._pubnubSubscribeKey,
 			broadcasterToken: this._broadcasterToken!,
 			api: this,
-			proxyAgent: this._proxyAgent,
+			httpsAgent: this._httpsAgent,
 			socketCluster: this._socketCluster
 		});
 		this._events.onDidReceiveMessage(this.onPubnubMessageReceived, this);
@@ -1555,12 +1556,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 				}
 			}
 
-			if (this._proxyAgent !== undefined) {
+			if (this._httpsAgent !== undefined) {
 				if (init === undefined) {
 					init = {};
 				}
 
-				init.agent = this._proxyAgent;
+				init.agent = this._httpsAgent;
 			}
 
 			const method = (init && init.method) || "GET";
