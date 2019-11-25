@@ -105,8 +105,8 @@ export function fromSlackChannel(
 		mostRecentPostId: mostRecentId,
 		priority: channel.priority,
 		privacy: (channel.is_private == null
-		? channel.is_group
-		: channel.is_private)
+			? channel.is_group
+			: channel.is_private)
 			? "private"
 			: "public",
 		purpose: channel.purpose && channel.purpose.value,
@@ -647,13 +647,33 @@ export function toSlackPostBlocks(
 				}
 			}
 
+			let isTruncated = false;
+			const text1 = `${filename}\n\`\`\``;
+			let text2 = marker.code;
+			const text3 = `\`\`\``;
+			if (text1.length + text2.length + text3.length >= 3000) {
+				text2 = text2.substr(0, Math.min(text2.length, 2999) - (text1.length + text3.length));
+				isTruncated = true;
+			}
 			blocks.push({
 				type: "section",
 				text: {
 					type: "mrkdwn",
-					text: `${filename}\n\`\`\`${marker.code}\`\`\``
+					text: `${text1}${text2}${text3}`
 				}
 			});
+
+			if (isTruncated) {
+				blocks.push({
+					type: "context",
+					elements: [
+						{
+							type: "mrkdwn",
+							text: "_We've truncated this Codemark, but you can view the complete version by opening it in your IDE_"
+						}
+					]
+				});
+			}
 
 			let actionId = toActionId(counter, "web", codemark, marker);
 			const actions: ActionsBlock = {
