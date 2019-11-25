@@ -3,9 +3,6 @@ import { Range } from "vscode-languageserver-types";
 import { MaxRangeValue } from "./ipc/webview.protocol";
 import { URI } from "vscode-uri";
 
-// creates a union type from an an array of things
-export const tuple = <T extends string[]>(...args: T) => args;
-
 export const emptyObject = {};
 export const emptyArray = [];
 export function noop() {}
@@ -72,9 +69,9 @@ export function forceAsLine(range: Range): Range {
 	return range;
 }
 
-export function is<T>(o: any, prop: keyof (T)): o is T;
+export function is<T>(o: any, prop: keyof T): o is T;
 export function is<T>(o: any, matcher: (o: any) => boolean): o is T;
-export function is<T>(o: any, matcher: keyof (T) | ((o: any) => boolean)): o is T {
+export function is<T>(o: any, matcher: keyof T | ((o: any) => boolean)): o is T {
 	if (typeof matcher === "function") {
 		return matcher(o);
 	}

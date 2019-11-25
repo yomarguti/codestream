@@ -20,6 +20,7 @@ import ChannelMenu from "./ChannelMenu";
 import Icon from "./Icon";
 import Menu from "./Menu";
 import CancelButton from "./CancelButton";
+import { FeatureFlag } from "./FeatureFlag";
 import Tooltip from "./Tooltip";
 import OfflineBanner from "./OfflineBanner";
 import ConfigureAzureDevOpsPanel from "./ConfigureAzureDevOpsPanel";
@@ -585,19 +586,52 @@ export class SimpleStream extends Component {
 							</span>
 						</Tooltip>
 					</label>
-					<label
-						className={createClassString({
-							selected: activePanel === WebviewPanels.Activity
-						})}
-						onClick={e => this.setActivePanel(WebviewPanels.Activity)}
-					>
-						<Tooltip title="Activity Feed" placement="bottom">
-							<span>
-								<Icon name="list" />
-								{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
-							</span>
-						</Tooltip>
-					</label>
+					<FeatureFlag flag="sharing">
+						{isSharingModel =>
+							isSharingModel ? (
+								<label
+									className={createClassString({
+										selected: activePanel === WebviewPanels.Activity
+									})}
+									onClick={e => this.setActivePanel(WebviewPanels.Activity)}
+								>
+									<Tooltip title="Activity Feed" placement="bottom">
+										<span>
+											<Icon name="list" />
+											{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
+										</span>
+									</Tooltip>
+								</label>
+							) : (
+								(this.props.capabilities.providerSupportsRealtimeChat ||
+									this.props.capabilities.providerCanSupportRealtimeChat) && (
+									<label
+										className={createClassString({
+											selected:
+												activePanel === "channels" ||
+												activePanel === "main" ||
+												activePanel === "thread"
+										})}
+										onClick={e => this.setActivePanel("channels")}
+									>
+										<Tooltip title="Channels &amp; DMs" placement="bottom">
+											<span>
+												{this.props.isCodeStreamTeam ? (
+													<Icon name="chatroom" />
+												) : (
+													<Icon
+														className={this.props.teamProvider}
+														name={this.props.teamProvider}
+													/>
+												)}
+												{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
+											</span>
+										</Tooltip>
+									</label>
+								)
+							)
+						}
+					</FeatureFlag>
 					{/*
 						<label
 							className={createClassString({
@@ -678,29 +712,6 @@ export class SimpleStream extends Component {
 						// 		</span>
 						// 	</Tooltip>
 						// </label>
-					}
-					{
-						// 	(this.props.capabilities.providerSupportsRealtimeChat ||
-						// 	this.props.capabilities.providerCanSupportRealtimeChat) && (
-						// 	<label
-						// 		className={createClassString({
-						// 			selected:
-						// 				activePanel === "channels" || activePanel === "main" || activePanel === "thread"
-						// 		})}
-						// 		onClick={e => this.setActivePanel("channels")}
-						// 	>
-						// 		<Tooltip title="Channels &amp; DMs" placement="bottom">
-						// 			<span>
-						// 				{this.props.isCodeStreamTeam ? (
-						// 					<Icon name="chatroom" />
-						// 				) : (
-						// 					<Icon className={this.props.teamProvider} name={this.props.teamProvider} />
-						// 				)}
-						// 				{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
-						// 			</span>
-						// 		</Tooltip>
-						// 	</label>
-						// )
 					}
 					<label
 						className={createClassString({

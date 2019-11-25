@@ -49,6 +49,8 @@ import { ActiveIntegrationsState } from "./activeIntegrations/types";
 import { reduceActiveIntegrations } from "./activeIntegrations/reducer";
 import { reduceActivityFeed } from "./activityFeed/reducer";
 import { ActivityFeedState } from "./activityFeed/types";
+import { reduceFeatureFlags } from "./featureFlags/reducer";
+import { FeatureFlagsState } from "./featureFlags/types";
 
 const pluginVersion = (state = "", action) => {
 	if (action.type === "@pluginVersion/Set") return action.payload;
@@ -66,6 +68,7 @@ const reducer = combineReducers({
 	context: reduceContext,
 	documentMarkers: reduceDocumentMarkers,
 	editorContext: reduceEditorContext,
+	featureFlags: reduceFeatureFlags,
 	ide: reduceIde,
 	pluginVersion,
 	posts: reducePosts,
@@ -108,6 +111,7 @@ export interface CodeStreamState {
 	context: ContextState;
 	documentMarkers: DocumentMarkersState;
 	editorContext: EditorContextState;
+	featureFlags: FeatureFlagsState;
 	ide: IdeState;
 	pluginVersion: string;
 	posts: PostsState;
