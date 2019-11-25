@@ -1,5 +1,7 @@
 "use strict";
+import { CodeStreamApiProvider } from "api/codestream/codestreamApi";
 import * as fs from "fs";
+import { sortBy } from "lodash-es";
 import { TextDocumentIdentifier } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
@@ -25,6 +27,9 @@ import {
 	EditPostRequest,
 	EditPostRequestType,
 	EditPostResponse,
+	FetchActivityRequest,
+	FetchActivityRequestType,
+	FetchActivityResponse,
 	FetchPostRepliesRequest,
 	FetchPostRepliesRequestType,
 	FetchPostRepliesResponse,
@@ -617,6 +622,42 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	@lspHandler(GetPostsRequestType)
 	async getPostsByIds(request: GetPostsRequest) {
 		return this.session.api.getPosts(request);
+	}
+
+	@log()
+	@lspHandler(FetchActivityRequestType)
+	async getActivity(request: FetchActivityRequest): Promise<FetchActivityResponse> {
+		const response = await (this.session.api as CodeStreamApiProvider).fetchPosts({
+			...request
+		});
+
+		const unreads = await SessionContainer.instance().users.getUnreads({});
+		const codemarksManager = SessionContainer.instance().codemarks;
+		const posts: PostPlus[] = await this.enrichPosts(response.posts || []);
+
+		const codemarks = await Arrays.filterMapAsync(response.codemarks || [], async codemark => {
+			if (codemark.deactivated) return;
+
+			codemarksManager.cacheSet(codemark);
+			if (unreads.unreads.lastReads[codemark.streamId]) {
+				try {
+					const threadResponse = await this.session.api.fetchPostReplies({
+						postId: codemark.postId,
+						streamId: codemark.streamId
+					});
+					posts.push(...(await this.enrichPosts(threadResponse.posts)));
+				} catch (error) {
+					debugger;
+				}
+			}
+			return codemarksManager.enrichCodemark(codemark);
+		});
+
+		return {
+			posts,
+			codemarks: sortBy(codemarks, c => -c.lastActivityAt),
+			more: response.more
+		};
 	}
 
 	private async enrichPost(post: CSPost): Promise<PostPlus> {

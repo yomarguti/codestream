@@ -5,6 +5,7 @@ import { Agent as HttpsAgent } from "https";
 import HttpsProxyAgent from "https-proxy-agent";
 import { isEqual } from "lodash-es";
 import fetch, { Headers, RequestInit, Response } from "node-fetch";
+import * as qs from "querystring";
 import { URLSearchParams } from "url";
 import { Emitter, Event } from "vscode-languageserver";
 import { ServerError } from "../../agentError";
@@ -773,12 +774,23 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	fetchCodemarks(request: FetchCodemarksRequest) {
-		return this.get<CSGetCodemarksResponse>(`/codemarks?teamId=${this.teamId}`, this._token);
+		return this.get<CSGetCodemarksResponse>(
+			`/codemarks?${qs.stringify({
+				teamId: this.teamId,
+				byLastAcivityAt: request.byLastAcivityAt
+			})}${request.before ? `&before=${request.before}` : ""}`,
+			this._token
+		);
 	}
 
 	@log()
 	getCodemark(request: GetCodemarkRequest) {
-		return this.get<CSGetCodemarkResponse>(`/codemarks/${request.codemarkId}`, this._token);
+		return this.get<CSGetCodemarkResponse>(
+			`/codemarks/${request.codemarkId}?${qs.stringify({
+				byLastAcivityAt: request.sortByActivity
+			})}`,
+			this._token
+		);
 	}
 
 	@log()
@@ -889,28 +901,33 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	async fetchPosts(request: FetchPostsRequest) {
-		if (!request.limit || request.limit > 100) {
-			request.limit = 100;
+	async fetchPosts(request: FetchPostsRequest | Partial<FetchPostsRequest>) {
+		let limit = request.limit;
+		if (!limit || limit > 100) {
+			limit = 100;
 		}
 
-		let params = `&limit=${request.limit}`;
+		const params: { [k: string]: any } = { teamId: this.teamId, limit };
+
+		if (request.streamId) {
+			params.streamId = request.streamId;
+		}
 		if (request.before) {
-			params += `&before=${request.before}`;
+			params.before = request.before;
 		}
 		if (request.after) {
-			params += `&after=${request.after}`;
+			params.after = request.after;
 		}
 		if (request.inclusive === true) {
-			params += `&inclusive`;
+			params.inclusive = request.inclusive;
 		}
 
 		const response = await this.get<CSGetPostsResponse>(
-			`/posts?teamId=${this.teamId}&streamId=${request.streamId}${params}`,
+			`/posts?${qs.stringify(params)}`,
 			this._token
 		);
 
-		if (response.posts) {
+		if (response.posts && request.streamId) {
 			response.posts.sort((a: CSPost, b: CSPost) => (a.seqNum as number) - (b.seqNum as number));
 		}
 
@@ -928,7 +945,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@log()
 	getPosts(request: GetPostsRequest) {
 		return this.get<CSGetPostsResponse>(
-			`/posts?teamId=${this.teamId}&streamId=${request.streamId}&ids=${request.postIds.join(",")}`,
+			`/posts?${qs.stringify({
+				teamId: this.teamId,
+				streamId: request.streamId,
+				ids: request.postIds && request.postIds.join(",")
+			})}`,
 			this._token
 		);
 	}
@@ -1380,14 +1401,14 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	async disconnectThirdPartyProvider(request: { providerId: string, providerTeamId?: string }) {
+	async disconnectThirdPartyProvider(request: { providerId: string; providerTeamId?: string }) {
 		const cc = Logger.getCorrelationContext();
 		try {
 			const provider = getProvider(request.providerId);
 			if (!provider) throw new Error(`provider ${request.providerId} not found`);
 			const providerConfig = provider.getConfig();
 
-			const params: { teamId: string; host?: string, providerTeamId?: string } = {
+			const params: { teamId: string; host?: string; providerTeamId?: string } = {
 				teamId: this.teamId
 			};
 			if (providerConfig.isEnterprise) {

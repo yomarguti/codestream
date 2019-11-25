@@ -1,7 +1,11 @@
 "use strict";
 import { Range, RequestType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
 import { CodeDelimiterStyles } from "./agent.protocol";
-import { CodemarkPlus, CreateCodemarkRequest, CreateCodemarkResponse } from "./agent.protocol.codemarks";
+import {
+	CodemarkPlus,
+	CreateCodemarkRequest,
+	CreateCodemarkResponse
+} from "./agent.protocol.codemarks";
 import { ThirdPartyProviderUser } from "./agent.protocol.providers";
 import {
 	CodemarkType,
@@ -148,6 +152,24 @@ export const FetchPostsRequestType = new RequestType<
 	void,
 	void
 >("codestream/posts");
+
+export interface FetchActivityRequest {
+	limit?: number;
+	before?: string;
+}
+
+export interface FetchActivityResponse {
+	posts: PostPlus[];
+	codemarks: CodemarkPlus[];
+	more?: boolean;
+}
+
+export const FetchActivityRequestType = new RequestType<
+	FetchActivityRequest,
+	FetchActivityResponse,
+	void,
+	void
+>("codestream/posts/activity");
 
 export interface DeletePostRequest {
 	streamId: string;

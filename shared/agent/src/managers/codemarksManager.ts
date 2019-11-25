@@ -34,9 +34,7 @@ import {
 	UpdateCodemarkRequestType,
 	UpdateCodemarkResponse
 } from "../protocol/agent.protocol";
-import {
-	CSCodemark
-} from "../protocol/api.protocol";
+import { CSCodemark } from "../protocol/api.protocol";
 import { log, lsp, lspHandler, Strings } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 

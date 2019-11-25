@@ -49,16 +49,15 @@ export namespace Arrays {
 		source: T[],
 		predicateMapper: (item: T) => Promise<TMapped | null | undefined>
 	): Promise<TMapped[]> {
-		return source.reduce(
-			async (accumulator, current) => {
-				const mapped = await predicateMapper(current);
-				if (mapped != null) {
-					accumulator.push(mapped);
-				}
-				return accumulator;
-			},
-			[] as any
-		);
+		const result: TMapped[] = [];
+		for await (const thing of source) {
+			const mapped = await predicateMapper(thing);
+			if (mapped != null) {
+				result.push(mapped);
+			}
+		}
+
+		return result;
 	}
 
 	export function groupBy<T>(source: T[], accessor: (item: T) => string): { [key: string]: T[] } {

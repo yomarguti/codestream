@@ -97,6 +97,8 @@ export const CreateCodemarkPermalinkRequestType = new RequestType<
 
 export interface FetchCodemarksRequest {
 	streamId?: string;
+	before?: number;
+	byLastAcivityAt?: boolean;
 }
 export interface FetchCodemarksResponse {
 	codemarks: CodemarkPlus[];
@@ -122,6 +124,7 @@ export const DeleteCodemarkRequestType = new RequestType<
 
 export interface GetCodemarkRequest {
 	codemarkId: string;
+	sortByActivity?: boolean;
 }
 
 export interface GetCodemarkResponse {

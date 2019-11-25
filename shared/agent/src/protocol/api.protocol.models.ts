@@ -65,6 +65,9 @@ export interface CSCodemark extends CSEntity {
 	externalProvider?: string;
 	externalProviderHost?: string;
 	externalProviderUrl?: string;
+
+	lastActivityAt: number;
+	lastReplyAt: number;
 }
 
 export interface CSMarkerIdentifier {

@@ -3,7 +3,9 @@ import { Disposable, Event } from "vscode-languageserver";
 import {
 	AccessToken,
 	AddEnterpriseProviderHostRequest,
-	AddEnterpriseProviderHostResponse, AddReferenceLocationRequest, AddReferenceLocationResponse,
+	AddEnterpriseProviderHostResponse,
+	AddReferenceLocationRequest,
+	AddReferenceLocationResponse,
 	ArchiveStreamRequest,
 	ArchiveStreamResponse,
 	Capabilities,
@@ -295,7 +297,10 @@ export interface ApiProvider {
 	fetchMarkers(request: FetchMarkersRequest): Promise<FetchMarkersResponse>;
 	getMarker(request: GetMarkerRequest): Promise<GetMarkerResponse>;
 	updateMarker(request: UpdateMarkerRequest): Promise<UpdateMarkerResponse>;
-	moveMarker(request: { oldMarkerId: string, newMarker: CreateMarkerRequest }): Promise<MoveMarkerResponse>;
+	moveMarker(request: {
+		oldMarkerId: string;
+		newMarker: CreateMarkerRequest;
+	}): Promise<MoveMarkerResponse>;
 
 	createExternalPost(request: CreateExternalPostRequest): Promise<CreatePostResponse>;
 	createPost(request: CreatePostRequest): Promise<CreatePostResponse>;
@@ -304,7 +309,7 @@ export interface ApiProvider {
 	fetchPostReplies(request: FetchPostRepliesRequest): Promise<FetchPostRepliesResponse>;
 	fetchPosts(request: FetchPostsRequest): Promise<FetchPostsResponse>;
 	getPost(request: GetPostRequest): Promise<GetPostResponse>;
-	getPosts(request: GetPostsRequest): Promise<GetPostsResponse>;
+	getPosts(request: GetPostsRequest | Partial<GetPostRequest>): Promise<GetPostsResponse>;
 	markPostUnread(request: MarkPostUnreadRequest): Promise<MarkPostUnreadResponse>;
 	reactToPost(request: ReactToPostRequest): Promise<ReactToPostResponse>;
 
@@ -340,14 +345,20 @@ export interface ApiProvider {
 	getUser(request: GetUserRequest): Promise<GetUserResponse>;
 	inviteUser(request: InviteUserRequest): Promise<InviteUserResponse>;
 
-	connectThirdPartyProvider(request: { providerId: string, sharing?: boolean }): Promise<{ code: string }>;
+	connectThirdPartyProvider(request: {
+		providerId: string;
+		sharing?: boolean;
+	}): Promise<{ code: string }>;
 	setThirdPartyProviderToken(request: ThirdPartyProviderSetTokenRequest): Promise<void>;
 	setThirdPartyProviderInfo(request: {
 		providerId: string;
 		host?: string;
 		data: { [key: string]: any };
 	}): Promise<void>;
-	disconnectThirdPartyProvider(request: { providerId: string, providerTeamId?: string }): Promise<void>;
+	disconnectThirdPartyProvider(request: {
+		providerId: string;
+		providerTeamId?: string;
+	}): Promise<void>;
 	addEnterpriseProviderHost(
 		request: AddEnterpriseProviderHostRequest
 	): Promise<AddEnterpriseProviderHostResponse>;
