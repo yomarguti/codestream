@@ -22,7 +22,7 @@ import { log, lspProvider, Strings } from "../system";
 import {
 	getRemotePath,
 	PullRequestComment,
-	ThirdPartyIssueProviderBase	
+	ThirdPartyIssueProviderBase
 } from "./provider";
 
 interface GitLabProject {
