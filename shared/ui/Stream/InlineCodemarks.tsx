@@ -64,6 +64,7 @@ import { PRInfoModal } from "./SpatialView/PRInfoModal";
 import { isConnected } from "../store/providers/reducer";
 import { confirmPopup } from "./Confirm";
 import ComposeTitles from "./ComposeTitles";
+import { PostsActionsType } from "../store/posts/types";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -936,7 +937,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				};
 			}
 		);
-		await this.props.createPostAndCodemark(
+		const { type: createResult } = await this.props.createPostAndCodemark(
 			attributes,
 			this.currentPostEntryPoint || "Spatial View"
 		);
@@ -948,12 +949,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		if (docMarker) {
 			batch(() => {
 				this._updateEmitter.enqueue(() => {
-					this.closeCodemarkForm();
+					if (createResult !== PostsActionsType.FailPendingPost) this.closeCodemarkForm();
 				});
 				this.props.addDocumentMarker(this.props.textEditorUri!, docMarker);
 			});
 		} else {
-			this.closeCodemarkForm();
+			if (createResult !== PostsActionsType.FailPendingPost) this.closeCodemarkForm();
 		}
 	};
 

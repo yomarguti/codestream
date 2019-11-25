@@ -207,8 +207,8 @@ export const createPostAndCodemark = (
 					"relatedCodemarkIds"
 				),
 				markers,
-				textEditorUris: attributes.codeBlocks.map(_ => { 					
-					return { uri: _.uri }
+				textEditorUris: attributes.codeBlocks.map(_ => {
+					return { uri: _.uri };
 				})
 			},
 			findMentionedUserIds(getTeamMembers(getState()), attributes.text || ""),
@@ -268,49 +268,65 @@ export const createPost = (
 	});
 
 	try {
-				let responsePromise: Promise<CreatePostResponse>;
-				if (codemark) {
-					responsePromise = HostApi.instance.send(CreatePostWithMarkerRequestType, {
-						streamId,
-						text: codemark.text,
-						textDocuments: codemark.textEditorUris,
-						markers: codemark.markers,
-						title: codemark.title,
-						type: codemark.type,
-						assignees: codemark.assignees,
-						color: codemark.color,
-						mentionedUserIds: mentions,
-						entryPoint: extra.entryPoint || context.newPostEntryPoint,
-						parentPostId,
-						tags: codemark.tags,
-						relatedCodemarkIds: codemark.relatedCodemarkIds,
-						crossPostIssueValues: extra.crossPostIssueValues ? {
+		let responsePromise: Promise<CreatePostResponse>;
+		if (codemark) {
+			responsePromise = HostApi.instance.send(CreatePostWithMarkerRequestType, {
+				streamId,
+				text: codemark.text,
+				textDocuments: codemark.textEditorUris,
+				markers: codemark.markers,
+				title: codemark.title,
+				type: codemark.type,
+				assignees: codemark.assignees,
+				color: codemark.color,
+				mentionedUserIds: mentions,
+				entryPoint: extra.entryPoint || context.newPostEntryPoint,
+				parentPostId,
+				tags: codemark.tags,
+				relatedCodemarkIds: codemark.relatedCodemarkIds,
+				crossPostIssueValues: extra.crossPostIssueValues
+					? {
 							...extra.crossPostIssueValues,
 							externalProvider: extra.crossPostIssueValues.issueProvider.name,
 							externalProviderHost: extra.crossPostIssueValues.issueProvider.host,
-							externalAssignees: extra.crossPostIssueValues.assignees,
-						} : undefined
-					});
-				} else {
-					responsePromise = HostApi.instance.send(CreatePostRequestType, {
-						streamId,
-						text,
-						parentPostId,
-						mentionedUserIds: mentions,
-						entryPoint: extra.entryPoint
-					});
-				}
-				const response = await responsePromise;
-				if (!response) logError("DID NOT GET A RESPONSE FROM: ", responsePromise);
+							externalAssignees: extra.crossPostIssueValues.assignees
+					  }
+					: undefined
+			});
+		} else {
+			responsePromise = HostApi.instance.send(CreatePostRequestType, {
+				streamId,
+				text,
+				parentPostId,
+				mentionedUserIds: mentions,
+				entryPoint: extra.entryPoint
+			});
+		}
+		const response = await responsePromise;
 
-				if (response.codemark) {
-					dispatch(saveCodemarks([response.codemark]));
-				}
-				response.streams &&
-					response.streams.forEach(stream => dispatch(streamActions.updateStream(stream)));
-				return dispatch(postsActions.resolvePendingPost(pendingId, response.post));
-			} catch (error) {
-		logError(`Error creating a post: ${error}`);
+		if (response.codemark) {
+			dispatch(saveCodemarks([response.codemark]));
+		}
+		response.streams &&
+			response.streams.forEach(stream => dispatch(streamActions.updateStream(stream)));
+		return dispatch(postsActions.resolvePendingPost(pendingId, response.post));
+	} catch (error) {
+		if ((error.message as string).includes("No document could be found for Uri")) {
+			logError("Error creating a post - No document could be found for uri", {
+				message: error.message
+			});
+			await new Promise(resolve =>
+				confirmPopup({
+					title: "This codemark can't be created.",
+					message:
+						"CodeStream is is unable to determine which file this is. Please close the file, reopen it, and try again.",
+					buttons: [{ label: "Ok", action: resolve, wait: true }],
+					centered: true
+				})
+			);
+		} else {
+			logError(`Error creating a post: ${error}`);
+		}
 		return dispatch(postsActions.failPendingPost(pendingId));
 	} finally {
 		removeMiddleware();
@@ -681,8 +697,6 @@ export const setCodemarkStatus = (
 		return undefined;
 	}
 };
- 
- 
 
 const tuple = <T extends string[]>(...args: T) => args;
 const COLOR_OPTIONS = tuple("blue", "green", "yellow", "orange", "red", "purple", "aqua", "gray");
