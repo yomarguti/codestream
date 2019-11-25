@@ -60,9 +60,15 @@ export class GitRemoteParser {
 		const match = urlRegex.exec(url);
 		if (match == null) return [emptyStr, emptyStr, emptyStr];
 
+		let host = match[5];
+		const githubHost = 'github.com';
+		if (host && host.toLowerCase().startsWith(githubHost)) {
+			host = githubHost;
+		}
+
 		return [
 			match[1] || match[3] || match[6],
-			match[2] || match[4] || match[5] || match[7] || match[8],
+			match[2] || match[4] || host || match[7] || match[8],
 			match[9].replace(/\.git\/?$/, emptyStr)
 		];
 	}
