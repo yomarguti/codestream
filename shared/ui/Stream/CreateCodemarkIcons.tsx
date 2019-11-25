@@ -253,13 +253,13 @@ export const CreateCodemarkIcons = (props: Props) => {
 	// who hide the (+) when you have a compose box
 	if (props.composeBoxActive) return null;
 
-	console.log("**********************************************");
-	console.log("WINDOW HEIGHT: ", window.innerHeight);
-	console.log("codeHeight: ", codeHeight);
-	console.log("numLinesVisible: ", numLinesVisible);
-	console.log("lineHeight: ", codeHeight / numLinesVisible);
-	console.log("lineHeightApprox: ", codeHeight / (numLinesVisible + 1));
-	console.log("lineHeightProps", props.lineHeight);
+	// console.log("**********************************************");
+	// console.log("WINDOW HEIGHT: ", window.innerHeight);
+	// console.log("codeHeight: ", codeHeight);
+	// console.log("numLinesVisible: ", numLinesVisible);
+	// console.log("lineHeight: ", codeHeight / numLinesVisible);
+	// console.log("lineHeightApprox: ", codeHeight / (numLinesVisible + 1));
+	// console.log("lineHeightProps", props.lineHeight);
 
 	const lineHeight = props.lineHeight || codeHeight / numLinesVisible;
 
