@@ -55,41 +55,38 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 
 		public object CustomMessageTargetBase { get; }
 
-		private object _initializationOptionsBase;
+
 		public object InitializationOptionsBase {
 			get {
-				if (_initializationOptionsBase == null) {
-					var settingsManager = SettingsServiceFactory.Create();
-					if (settingsManager == null) {
-						Log.Fatal($"{nameof(settingsManager)} is null");
-					}
-					var initializationOptions = new InitializationOptions {
-						ServerUrl = settingsManager.ServerUrl,
-						Extension = settingsManager.GetExtensionInfo(),
-						Ide = settingsManager.GetIdeInfo(),
-#if DEBUG
-						TraceLevel = TraceLevel.Verbose.ToJsonValue(),
-						IsDebugging = true,
-#else
-                        TraceLevel = settingsManager.GetAgentTraceLevel().ToJsonValue(),
-#endif
-						Proxy = settingsManager.Proxy,
-						ProxySupport = settingsManager.ProxySupport.ToJsonValue(),
-						StrictSSL = settingsManager.StrictSSL
-					};
-					if (Log.IsDebugEnabled()) {
-						Log.Debug(nameof(InitializationOptions) + " {@InitializationOptions}", initializationOptions);
-					}
-					else {
-						Log.Information(nameof(InitializationOptions) + " {@InitializationOptions}", new {
-							TraceLevel = initializationOptions.TraceLevel,
-							Proxy = initializationOptions.Proxy != null
-						});
-					}
-					_initializationOptionsBase = initializationOptions;
+				var settingsManager = SettingsServiceFactory.Create();
+				if (settingsManager == null) {
+					Log.Fatal($"{nameof(settingsManager)} is null");
 				}
+				var initializationOptions = new InitializationOptions {
+					ServerUrl = settingsManager.ServerUrl,
+					Extension = settingsManager.GetExtensionInfo(),
+					Ide = settingsManager.GetIdeInfo(),
+#if DEBUG
+					TraceLevel = TraceLevel.Verbose.ToJsonValue(),
+					IsDebugging = true,
+#else
+                    TraceLevel = settingsManager.GetAgentTraceLevel().ToJsonValue(),
+#endif
+					Proxy = settingsManager.Proxy,
+					ProxySupport = settingsManager.ProxySupport.ToJsonValue(),
+					StrictSSL = settingsManager.StrictSSL
+				};
 
-				return _initializationOptionsBase;
+				if (Log.IsDebugEnabled()) {
+					Log.Debug(nameof(InitializationOptions) + " {@InitializationOptions}", initializationOptions);
+				}
+				else {
+					Log.Information(nameof(InitializationOptions) + " {@InitializationOptions}", new {
+						TraceLevel = initializationOptions.TraceLevel,
+						Proxy = initializationOptions.Proxy != null
+					});
+				}
+				return initializationOptions;
 			}
 		}
 
