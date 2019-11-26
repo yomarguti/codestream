@@ -1,6 +1,6 @@
 "use strict";
-import HttpsProxyAgent from "https-proxy-agent";
 import { Agent as HttpsAgent } from "https";
+import HttpsProxyAgent from "https-proxy-agent";
 import { isEqual } from "lodash-es";
 import * as path from "path";
 import * as url from "url";
@@ -244,7 +244,7 @@ export class CodeStreamSession {
 				let proxyUri;
 				try {
 					proxyUri = url.parse(proxyUrl);
-				} catch {}
+				} catch { }
 
 				if (proxyUri) {
 					this._httpsAgent = new HttpsProxyAgent({
@@ -256,10 +256,13 @@ export class CodeStreamSession {
 				Logger.log("Proxy support is on, but no proxy url was found");
 			}
 		} else {
+			Logger.log("Proxy support is off");
+		}
+
+		if (!this._httpsAgent) {
 			this._httpsAgent = new HttpsAgent({
 				rejectUnauthorized: _options.strictSSL != null ? _options.strictSSL : true
 			});
-			Logger.log("Proxy support is off");
 		}
 
 		this._api = new CodeStreamApiProvider(_options.serverUrl, this.versionInfo, this._httpsAgent);
@@ -866,7 +869,7 @@ export class CodeStreamSession {
 		return new SlackApiProvider(
 			this._api! as CodeStreamApiProvider,
 			user.providerInfo!.slack ||
-				(user.providerInfo![this._teamId!] && user.providerInfo![this._teamId!].slack)!,
+			(user.providerInfo![this._teamId!] && user.providerInfo![this._teamId!].slack)!,
 			user,
 			this._teamId!,
 			this._httpsAgent
