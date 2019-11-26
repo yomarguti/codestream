@@ -330,6 +330,9 @@ export interface CSMSTeamsProviderInfo {
 	teamId: string;
 	userId: string;
 	hosts?: { [host: string]: CSMSTeamsProviderInfo };
+	multiple?: {
+		[teamId: string]: Omit<CSSlackProviderInfo, "multiple">;
+	};
 }
 
 export interface CSJiraServerProviderInfo {
