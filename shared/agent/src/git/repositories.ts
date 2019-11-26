@@ -199,12 +199,12 @@ export class GitRepositories {
 			const reposToDelete =
 				filteredTree !== undefined
 					? [
-							// Since the filtered tree will have keys that are relative to the fsPath, normalize to the full path
-							...Iterables.map<[GitRepository, string], [GitRepository, string]>(
-								filteredTree.entries(),
-								([r, k]) => [r, path.join(fsPath, k)]
-							)
-					  ]
+						// Since the filtered tree will have keys that are relative to the fsPath, normalize to the full path
+						...Iterables.map<[GitRepository, string], [GitRepository, string]>(
+							filteredTree.entries(),
+							([r, k]) => [r, path.join(fsPath, k)]
+						)
+					]
 					: [];
 
 			const repo = this._repositoryTree.get(fsPath);
@@ -371,7 +371,7 @@ export class GitRepositories {
 		let rootPath;
 		try {
 			rootPath = await this._git.getRepoRoot(folderUri.fsPath, true);
-		} catch {}
+		} catch { }
 		if (rootPath) {
 			Logger.log(`Repository found in '${rootPath}'`);
 			const repo = new GitRepository(rootPath, true, folder, remoteToRepoMap);
@@ -382,7 +382,7 @@ export class GitRepositories {
 		if (depth <= 0) {
 			Logger.log(
 				`Searching for repositories (depth=${depth}) in '${
-					folderUri.fsPath
+				folderUri.fsPath
 				}' took ${Strings.getDurationMilliseconds(start)} ms`
 			);
 
@@ -429,10 +429,12 @@ export class GitRepositories {
 		try {
 			paths = await this.repositorySearchCore(folderUri.fsPath, depth, excludes);
 		} catch (ex) {
-			if (/no such file or directory/i.test(ex.message || "")) {
+			if (/no such file or directory/i.test(ex.message || "") ||
+				/EPERM: operation not permitted, scandir/i.test(ex.message || "")
+			) {
 				Logger.log(
 					`Searching for repositories (depth=${depth}) in '${folderUri.fsPath}' FAILED${
-						ex.message ? ` (${ex.message})` : ""
+					ex.message ? ` (${ex.message})` : ""
 					}`
 				);
 			} else {
@@ -453,7 +455,7 @@ export class GitRepositories {
 			let rp;
 			try {
 				rp = await this._git.getRepoRoot(p, true);
-			} catch {}
+			} catch { }
 			if (!rp) continue;
 
 			Logger.log(`Repository found in '${rp}'`);
@@ -464,7 +466,7 @@ export class GitRepositories {
 
 		Logger.log(
 			`Searching for repositories (depth=${depth}) in '${
-				folderUri.fsPath
+			folderUri.fsPath
 			}' took ${Strings.getDurationMilliseconds(start)} ms`
 		);
 
@@ -516,7 +518,13 @@ export class GitRepositories {
 
 				if (depth-- > 0) {
 					for (const folder of folders) {
-						await this.repositorySearchCore(folder, depth, excludes, repositories);
+						try {
+							await this.repositorySearchCore(folder, depth, excludes, repositories);
+						}
+						catch (ex) {
+							reject(ex);
+							return;
+						}
 					}
 				}
 
