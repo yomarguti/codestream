@@ -339,13 +339,13 @@ export const createPost = (
 				})
 			);
 		} else {
-			logError("Error creating a post", {message: error.toString()});
+			logError("Error creating a post", { message: error.toString() });
 		}
 		return dispatch(postsActions.failPendingPost(pendingId));
 	} finally {
 		removeMiddleware();
 		// just to be sure no posts get missed
-		if (filteredPosts.length > 0) dispatch(postsActions.addPosts(filteredPosts));
+		if (filteredPosts.length > 0) dispatch(postsActions.savePosts(filteredPosts));
 	}
 };
 
@@ -387,7 +387,7 @@ export const createSystemPost = (
 		modifiedAt: new Date().getTime()
 	};
 
-	dispatch(postsActions.addPosts([post]));
+	dispatch(postsActions.savePosts([post]));
 };
 
 export const editPost = (

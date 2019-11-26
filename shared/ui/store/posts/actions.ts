@@ -9,7 +9,10 @@ export const reset = () => action("RESET");
 
 export const bootstrapPosts = (posts: Post[]) => action(PostsActionsType.Bootstrap, posts);
 
+// this is for posts in onDidChangeData notifications
 export const addPosts = (posts: Post[]) => action(PostsActionsType.Add, posts);
+
+export const savePosts = (posts: Post[]) => action(PostsActionsType.Save, posts);
 
 export const addPendingPost = (post: PendingPost) => action(PostsActionsType.AddPendingPost, post);
 
@@ -40,7 +43,7 @@ export const getPosts = (
 			postIds,
 			parentPostId
 		});
-		dispatch(addPosts(posts));
+		dispatch(savePosts(posts));
 	} catch (error) {
 		logError(error, {
 			streamId,

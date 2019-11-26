@@ -5,6 +5,7 @@ import { createSelector } from "reselect";
 import { mapFilter } from "@codestream/webview/utils";
 import * as actions from "./actions";
 import { ActionType } from "../common";
+import { uniq } from "lodash-es";
 
 type ActivityFeedAction = ActionType<typeof actions>;
 
@@ -12,8 +13,11 @@ const initialState: ActivityFeedState = [];
 
 export function reduceActivityFeed(state = initialState, action: ActivityFeedAction) {
 	switch (action.type) {
-		case ActivityFeedActionType.Save: {
-			return [...action.payload, ...state];
+		case ActivityFeedActionType.AddOlder: {
+			return uniq([...state, ...action.payload]);
+		}
+		case ActivityFeedActionType.AddNew: {
+			return uniq([...action.payload, ...state]);
 		}
 		default:
 			return state;

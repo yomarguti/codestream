@@ -543,15 +543,15 @@ export class SimpleStream extends Component {
 	}
 
 	renderNavIcons() {
-		const { configs, umis2, postStreamPurpose, providerInfo = {} } = this.props;
+		const { configs, umis, postStreamPurpose, providerInfo = {} } = this.props;
 		let { activePanel } = this.props;
 		const { searchBarOpen, q } = this.state;
 		if (searchBarOpen) activePanel = WebviewPanels.Codemarks;
 		// if (searchBarOpen && q) activePanel = WebviewPanels.Codemarks;
-		const umis = {
-			totalMentions: 0,
-			totalUnread: 2
-		};
+		// const umis = {
+		// 	totalMentions: 0,
+		// 	totalUnread: 2
+		// };
 		const umisClass = createClassString("umis", {
 			mentions: umis.totalMentions > 0,
 			unread: umis.totalMentions == 0 && umis.totalUnread > 0
@@ -560,12 +560,7 @@ export class SimpleStream extends Component {
 			<div className="mentions-badge">{umis.totalMentions > 99 ? "99+" : umis.totalMentions}</div>
 		) : umis.totalUnread ? (
 			<div className="unread-badge">.</div>
-		) : (
-			// <Icon name="chevron-left" className="show-channels-icon" />
-			""
-		);
-
-		const menu = this.renderMenu();
+		) : null;
 
 		return (
 			<nav className="inline">

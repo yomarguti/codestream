@@ -56,7 +56,7 @@ export default Child => {
 					return this.initialize();
 				}
 				if (!this.state.isFetching && !_isEqual(prevProps.postIds, this.props.postIds)) {
-					this.setState({ posts: this.props.posts });
+					this.setState({ posts: this._prunePosts() });
 				}
 			}
 
@@ -136,7 +136,7 @@ export default Child => {
 
 				this.onScrollStop(() => {
 					this.setState({
-						posts: this.props.posts,
+						posts: this._prunePosts(),
 						isFetching: false,
 						hasMore: more
 					});

@@ -17,8 +17,8 @@ import { getActivity } from "../store/activityFeed/reducer";
 import { useDidMount } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import { FetchActivityRequestType } from "@codestream/protocols/agent";
-import { addPosts } from "../store/posts/actions";
-import { saveActivity } from "../store/activityFeed/actions";
+import { savePosts } from "../store/posts/actions";
+import { addOlderActivity } from "../store/activityFeed/actions";
 import { saveCodemarks } from "../store/codemarks/actions";
 import { safe } from "../utils";
 import { markStreamRead } from "./actions";
@@ -66,7 +66,8 @@ export const ActivityPanel = () => {
 			usernames,
 			activity: getActivity(state),
 			codemarkTypeFilter: state.context.codemarkTypeFilter,
-			lastReads: state.umis.lastReads
+			lastReads: state.umis.lastReads,
+			webviewFocused: state.context.hasFocus
 		};
 	});
 
@@ -77,22 +78,23 @@ export const ActivityPanel = () => {
 			limit: BATCH_COUNT,
 			before: safe(() => _last(derivedState.activity)!.id)
 		});
-		dispatch(addPosts(response.posts));
+		dispatch(savePosts(response.posts));
 		dispatch(saveCodemarks(response.codemarks));
-		dispatch(saveActivity("codemark", response.codemarks));
+		dispatch(addOlderActivity("codemark", response.codemarks));
 		setHasMore(Boolean(response.more));
 	}, [derivedState.activity]);
 
 	useDidMount(() => {
 		if (!hasMore) fetchActivity();
-		else {
-			for (let streamId in derivedState.lastReads) {
-				dispatch(markStreamRead(streamId));
-			}
-		}
 	});
 
-	const intersectionCallback = async () => {
+	React.useEffect(() => {
+		for (let streamId in derivedState.lastReads) {
+			dispatch(markStreamRead(streamId));
+		}
+	}, [derivedState.webviewFocused]);
+
+	const intersectionCallback = () => {
 		if (!hasMore) return;
 		fetchActivity();
 	};

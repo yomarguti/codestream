@@ -1,14 +1,14 @@
-import { CSPost } from "@codestream/protocols/api";
 import { Index } from "../common";
+import { PostPlus } from "@codestream/protocols/agent";
 
 export interface PendingPost
-	extends Pick<CSPost, "id" | "text" | "streamId" | "parentPostId" | "creatorId" | "createdAt"> {
+	extends Pick<PostPlus, "id" | "text" | "streamId" | "parentPostId" | "creatorId" | "createdAt"> {
 	pending: true;
 	codemark: {};
 	error?: boolean;
 }
 
-export type Post = PendingPost | CSPost;
+export type Post = PendingPost | PostPlus;
 
 export function isPending(post: Post): post is PendingPost {
 	return (post as PendingPost).pending;
@@ -16,7 +16,7 @@ export function isPending(post: Post): post is PendingPost {
 
 export interface PostsState {
 	byStream: {
-		[streamId: string]: Index<CSPost>;
+		[streamId: string]: Index<PostPlus>;
 	};
 	pending: PendingPost[];
 }
@@ -30,5 +30,6 @@ export enum PostsActionsType {
 	ResolvePendingPost = "RESOLVE_PENDING_POST",
 	FailPendingPost = "PENDING_POST_FAILED",
 	CancelPendingPost = "CANCEL_PENDING_POST",
-	Delete = "DELETE_POST"
+	Delete = "DELETE_POST",
+	Save = "@posts/Save"
 }
