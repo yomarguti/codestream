@@ -419,6 +419,14 @@ export class SimpleStream extends Component {
 
 		menuItems.push({ label: "Sign Out", action: "signout" });
 
+		menuItems.push({ label: "-" });
+		const text = (
+			<span style={{ fontSize: "smaller" }}>
+				This is CodeStream version {this.props.pluginVersion}
+			</span>
+		);
+		menuItems.push({ label: text, action: "", noHover: true, disabled: true });
+
 		const menu = menuOpen ? (
 			<Menu items={menuItems} target={menuTarget} action={this.menuAction} align="right" />
 		) : null;
@@ -2248,7 +2256,10 @@ const mapStateToProps = state => {
 		mutedStreams: preferences.mutedStreams || {},
 		starredStreams: preferences.starredStreams || {},
 		slashCommands: getSlashCommands(capabilities),
-		userTeams: _sortBy(Object.values(teams).filter(t => !t.deactivated), "name"),
+		userTeams: _sortBy(
+			Object.values(teams).filter(t => !t.deactivated),
+			"name"
+		),
 		team: team,
 		teamProvider: teamProvider,
 		isCodeStreamTeam: teamProvider === "codestream",
@@ -2288,14 +2299,11 @@ const mapStateToProps = state => {
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{
-		...actions,
-		setCurrentStream,
-		editCodemark,
-		setNewPostEntry,
-		logout,
-		switchToTeam
-	}
-)(injectIntl(SimpleStream));
+export default connect(mapStateToProps, {
+	...actions,
+	setCurrentStream,
+	editCodemark,
+	setNewPostEntry,
+	logout,
+	switchToTeam
+})(injectIntl(SimpleStream));
