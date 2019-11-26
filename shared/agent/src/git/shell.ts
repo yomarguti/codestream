@@ -116,6 +116,10 @@ export interface CommandOptions {
 	 * parameter is a string.
 	 */
 	readonly stdinEncoding?: string;
+	/**
+	 * If true, errors won't be logged
+	 */
+	readonly suppressErrors?: boolean;
 }
 
 export function runCommand(command: string, args: any[], options: CommandOptions = {}) {

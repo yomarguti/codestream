@@ -191,7 +191,7 @@ export class GitService implements IGitService, Disposable {
 	async getDefaultBranch(repoPath: string, remote: string): Promise<string | undefined> {
 		try {
 			const data = await git(
-				{ cwd: repoPath, env: { GIT_TERMINAL_PROMPT: "0" } },
+				{ cwd: repoPath, env: { GIT_TERMINAL_PROMPT: "0" }, suppressErrors: true },
 				"remote", "show", remote
 			);
 			const headBranchLine = data.trim()
@@ -202,7 +202,7 @@ export class GitService implements IGitService, Disposable {
 				? headBranchLine.split(":")[1].trim()
 				: undefined;
 		} catch (ex) {
-			Logger.warn(ex);
+			Logger.debug(ex.message);
 			return undefined;
 		}
 	}
@@ -222,7 +222,7 @@ export class GitService implements IGitService, Disposable {
 				Logger.log("Commit not found - fetching all remotes");
 				try {
 					await git(
-						{ cwd: dir, env: { GIT_TERMINAL_PROMPT: "0" } },
+						{ cwd: dir, env: { GIT_TERMINAL_PROMPT: "0" }, suppressErrors: true },
 						"fetch", "--all"
 					);
 				} catch {

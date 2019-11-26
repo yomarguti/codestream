@@ -69,6 +69,8 @@ export async function git(
 	try {
 		data = await promise;
 	} catch (ex) {
+		if (options.suppressErrors) throw ex;
+
 		const msg = ex && ex.toString();
 		if (msg) {
 			for (const warning of Object.values(GitWarnings)) {
