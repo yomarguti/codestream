@@ -8,6 +8,7 @@ import {
 	WebClient,
 	WebClientEvent
 } from "@slack/web-api";
+import { Agent as HttpsAgent } from "https";
 import HttpsProxyAgent from "https-proxy-agent";
 import { Container, SessionContainer } from "../../container";
 import { Logger, TraceLevel } from "../../logger";
@@ -96,7 +97,7 @@ export class SlackSharingApiProvider {
 		providerInfo: CSSlackProviderInfo,
 
 		private readonly _codestreamTeamId: string,
-		private readonly _proxyAgent: HttpsProxyAgent | undefined
+		private readonly _proxyAgent: HttpsAgent | HttpsProxyAgent | undefined
 	) {
 		this._slackToken = providerInfo.accessToken;
 		this._slack = this.newWebClient();

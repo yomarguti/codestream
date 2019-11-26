@@ -202,10 +202,10 @@ export class CodeStreamSession {
 	}
 
 	get proxyAgent():  HttpsAgent | HttpsProxyAgent | undefined {
-		return this._proxyAgent;
+		return this._httpsAgent;
 	}
 
-	private readonly _proxyAgent:  HttpsAgent | HttpsProxyAgent | undefined;
+	private readonly _httpsAgent:  HttpsAgent | HttpsProxyAgent | undefined;
 	private readonly _readyPromise: Promise<void>;
 
 	constructor(
