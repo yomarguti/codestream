@@ -206,7 +206,7 @@ export interface GetPostRequest {
 }
 
 export interface GetPostResponse {
-	post: CSPost;
+	post: PostPlus;
 }
 
 export const GetPostRequestType = new RequestType<GetPostRequest, GetPostResponse, void, void>(
