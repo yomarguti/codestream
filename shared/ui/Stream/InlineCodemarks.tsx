@@ -735,7 +735,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		} = this.props;
 		const { numLinesVisible } = this.state;
 
-		console.log("HEIGHT IS: ", height);
+		// console.log("HEIGHT IS: ", height);
 		const numVisibleRanges = textEditorVisibleRanges.length;
 		let numAbove = 0,
 			numBelow = 0;

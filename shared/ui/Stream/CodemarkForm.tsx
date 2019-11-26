@@ -494,6 +494,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	handleClickSubmit = async (event?: React.SyntheticEvent) => {
 		event && event.preventDefault();
+		if (this.state.isLoading) return;
 		if (this.isFormInvalid()) return;
 
 		const {
