@@ -24,7 +24,7 @@ namespace CodeStream.VisualStudio.UI.Settings {
 #else
         private string _serverUrl = "https://api.codestream.com";
 #endif
-
+		private bool _strictSsl = true;
 		private string _proxyUrl;
 		private bool _proxyStrictSsl;
 		private ProxySupport _proxySupport;
@@ -165,6 +165,21 @@ namespace CodeStream.VisualStudio.UI.Settings {
 				}
 			}
 		}
+
+		[Category("Connectivity")]
+		[DisplayName("Strict SSL")]
+		[Description("Specifies whether requests returning self-signed certificate errors will be enforced. For CodeStream On-Prem users only")]
+		public bool StrictSSL {
+			get => _strictSsl;
+			set {
+				if (_strictSsl != value) {
+					_strictSsl = value;
+					 
+					NotifyPropertyChanged();
+				}
+			}
+		}
+
 		[Category("UI")]
 		[DisplayName()]
 		[Description("Specifies whether to automatically hide editor marker glyphs when the CodeStream panel is showing codemarks in the current file")]

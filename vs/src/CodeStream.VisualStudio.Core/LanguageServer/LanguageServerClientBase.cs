@@ -44,7 +44,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 				Log.Fatal(ex, nameof(LanguageServerClientBase));
 			}
 		}
-		
+
 		public virtual async System.Threading.Tasks.Task RestartAsync() {
 			await System.Threading.Tasks.Task.CompletedTask;
 		}
@@ -74,7 +74,8 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
                         TraceLevel = settingsManager.GetAgentTraceLevel().ToJsonValue(),
 #endif
 						Proxy = settingsManager.Proxy,
-						ProxySupport = settingsManager.ProxySupport.ToJsonValue()
+						ProxySupport = settingsManager.ProxySupport.ToJsonValue(),
+						StrictSSL = settingsManager.StrictSSL
 					};
 					if (Log.IsDebugEnabled()) {
 						Log.Debug(nameof(InitializationOptions) + " {@InitializationOptions}", initializationOptions);
@@ -94,15 +95,15 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 
 
 		protected virtual void OnStopping() {
-			try {				
-				SessionService.SetAgentDisconnected();				
+			try {
+				SessionService.SetAgentDisconnected();
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(OnStopping));
 			}
 		}
-		
-		protected virtual void OnStopped() {}
+
+		protected virtual void OnStopped() { }
 
 		protected void OnRpcDisconnected(JsonRpcDisconnectedEventArgs e) {
 			try {

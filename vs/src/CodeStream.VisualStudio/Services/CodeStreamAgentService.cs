@@ -131,6 +131,9 @@ namespace CodeStream.VisualStudio.Services {
 				ServerUrl = settingsManager.ServerUrl,
 				Extension = extensionInfo,
 				Ide = ideInfo,
+				Proxy = settingsManager.Proxy,
+				ProxySupport = settingsManager.ProxySupport.ToJsonValue(),
+				StrictSSL = settingsManager.StrictSSL,
 #if DEBUG
 				TraceLevel = TraceLevel.Verbose.ToJsonValue(),
 				IsDebugging = true
@@ -266,7 +269,7 @@ namespace CodeStream.VisualStudio.Services {
 			using (Log.CriticalOperation(nameof(GetBootstrapAsync), Serilog.Events.LogEventLevel.Debug)) {
 				var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
 				var ideService = componentModel?.GetService<IIdeService>();
-				var _settingsManager = _settingsServiceFactory.Create();
+				var settingsManager = _settingsServiceFactory.Create();
 				var vslsEnabled = ideService?.QueryExtension(ExtensionKind.LiveShare) == true;
 
 				// NOTE: this camelCaseSerializer is important because FromObject doesn't
@@ -291,14 +294,14 @@ namespace CodeStream.VisualStudio.Services {
 					var bootstrapAnonymous = new BootstrapPartialResponseAnonymous {
 						Capabilities = capabilitiesObject,
 						Configs = new Configs {
-							Email = _settingsManager.Email,
-							Team = _settingsManager.Team,
-							ShowAvatars = _settingsManager.ShowAvatars,
-							ServerUrl = _settingsManager.ServerUrl,
-							TraceLevel = _settingsManager.GetAgentTraceLevel()
+							Email = settingsManager.Email,
+							Team = settingsManager.Team,
+							ShowAvatars = settingsManager.ShowAvatars,
+							ServerUrl = settingsManager.ServerUrl,
+							TraceLevel = settingsManager.GetAgentTraceLevel()
 						},
-						Env = _settingsManager.GetEnvironmentName(),
-						Version = _settingsManager.GetEnvironmentVersionFormatted(),
+						Env = settingsManager.GetEnvironmentName(),
+						Version = settingsManager.GetEnvironmentVersionFormatted(),
 						Context = new WebviewContext {
 							HasFocus = true
 						},
@@ -345,7 +348,7 @@ namespace CodeStream.VisualStudio.Services {
 						Team = settings.Options.Team,
 						ShowAvatars = settings.Options.ShowAvatars,
 						ServerUrl = settings.Options.ServerUrl,
-						TraceLevel = _settingsManager.GetAgentTraceLevel()
+						TraceLevel = settingsManager.GetAgentTraceLevel()
 					},
 					Context = webviewContext,
 					EditorContext = editorContext,

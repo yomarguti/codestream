@@ -151,6 +151,11 @@ namespace CodeStream.VisualStudio.Services {
 
 		public Proxy Proxy => DialogPage.Proxy;
 
+		public bool StrictSSL {
+			get => DialogPage.StrictSSL;
+			set => DialogPage.StrictSSL = value;
+		}
+
 		public Ide GetIdeInfo() {
 			return new Ide {
 				Name = Application.IdeMoniker,

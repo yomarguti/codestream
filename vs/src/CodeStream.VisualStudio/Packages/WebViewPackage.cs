@@ -246,7 +246,8 @@ namespace CodeStream.VisualStudio.Packages {
 			else if (args.PropertyName == nameof(_settingsManager.ServerUrl) ||
 					 args.PropertyName == nameof(_settingsManager.Team) ||
 					 args.PropertyName == nameof(_settingsManager.ProxyUrl) ||
-					 args.PropertyName == nameof(_settingsManager.ProxyStrictSsl)) {
+					 args.PropertyName == nameof(_settingsManager.ProxyStrictSsl) ||
+					 args.PropertyName == nameof(_settingsManager.StrictSSL)) {
 				Log.Information($"Url(s) or Team or Proxy changed");
 				try {
 					try {						
