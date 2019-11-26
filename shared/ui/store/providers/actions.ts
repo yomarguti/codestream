@@ -11,6 +11,7 @@ import {
 import { logError } from "../../logger";
 import { setIssueProvider } from "../context/actions";
 import { deleteForProvider } from "../activeIntegrations/actions";
+import { CodeStreamState } from "..";
 
 export const reset = () => action("RESET");
 
@@ -125,7 +126,7 @@ export const addEnterpriseProvider = (
 
 export const disconnectProvider = (providerId: string, connectionLocation: ViewLocation) => async (
 	dispatch,
-	getState
+	getState: () => CodeStreamState
 ) => {
 	try {
 		const { providers } = getState();
@@ -133,20 +134,17 @@ export const disconnectProvider = (providerId: string, connectionLocation: ViewL
 		if (!provider) return;
 		const api = HostApi.instance;
 		await api.send(DisconnectThirdPartyProviderRequestType, { providerId });
-		api.send(TelemetryRequestType, {
-			eventName: "Issue Service Connected",
-			properties: {
-				Service: provider.name,
-				Host: provider.isEnterprise ? provider.host : null,
-				Connection: "Off",
-				"Connection Location": connectionLocation // ? "Global Nav" : "Compose Modal"
-			}
+		api.track("Issue Service Connected", {
+			Service: provider.name,
+			Host: provider.isEnterprise ? provider.host : null,
+			Connection: "Off",
+			"Connection Location": connectionLocation // ? "Global Nav" : "Compose Modal"
 		});
 		dispatch(deleteForProvider(providerId));
-		if (getState().context.issueProvider.host === provider.host) {
+		if (getState().context.issueProvider === provider.host) {
 			dispatch(setIssueProvider(undefined));
 		}
 	} catch (error) {
-		logError(`failed to disconnect service ${providerId}: ${error}`);
+		logError("failed to disconnect service", { providerId, message: error.toString() });
 	}
 };
