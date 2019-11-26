@@ -19,6 +19,7 @@ export interface Config {
 	showMarkerCodeLens: boolean;
 	showMarkerGlyphs: boolean;
 	showShortcutTipOnSelection: boolean;
+	strictSSL: boolean;
 	team: string;
 	traceLevel: TraceLevel;
 }

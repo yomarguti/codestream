@@ -130,6 +130,12 @@
                     "description": "Specifies whether to show a shortcut key tip attached to the selection when you select code",
                     "scope": "window"
                 },
+                "codestream.strictSSL": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Specifies whether requests returning self-signed certificate errors will be enforced. For CodeStream On-Prem users only",
+                    "scope": "window"
+                },
                 "codestream.team": {
                     "type": "string",
                     "default": null,
