@@ -22,8 +22,8 @@ import {
 } from "@codestream/protocols/agent";
 import { CodemarkType, CSUser, CSMe, CSPost, CSApiCapabilities } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
-import { SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
-import { range, emptyArray, mapFilter } from "../utils";
+import { FollowCodemarkRequestType, SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
+import { range, emptyArray, forceAsLine, mapFilter } from "../utils";
 import {
 	getUserByCsId,
 	getTeamMembers,
@@ -685,6 +685,14 @@ export class Codemark extends React.Component<Props, State> {
 				this.setState({ isEditing: true });
 				break;
 			}
+			case "follow": {
+				this.followCodemark();
+				break;
+			}
+			case "unfollow": {
+				this.unfollowCodemark();
+				break;
+			}
 		}
 		const found = action.match(/set-keybinding-(\d)/);
 		if (found) this.setKeybinding(found[1]);
@@ -744,6 +752,30 @@ export class Codemark extends React.Component<Props, State> {
 		// 	value: !this.props.showLabelText
 		// });
 		// this.setState({ showLabelText: !this.state.showLabelText });
+	};
+
+	followCodemark = () => {
+		const { codemark } = this.props;
+		HostApi.instance.send(FollowCodemarkRequestType, {
+			codemarkId: codemark!.id,
+			value: true
+		});
+		HostApi.instance.track("Notification Change", {
+			"Change": "Codemark Followed",
+			"Source of Change": "Codemark menu"
+		});
+	};
+
+	unfollowCodemark = () => {
+		const { codemark } = this.props;
+		HostApi.instance.send(FollowCodemarkRequestType, {
+			codemarkId: codemark!.id,
+			value: false
+		});
+		HostApi.instance.track("Notification Change", {
+			"Change": "Codemark Unfollowed",
+			"Source of Change": "Codemark menu"
+		});
 	};
 
 	renderCollapsedCodemark() {
@@ -1126,6 +1158,14 @@ export class Codemark extends React.Component<Props, State> {
 			// { label: "Get Permalink", action: "get-permalink" },
 			// { label: "-" }
 		];
+
+		if (apiCapabilities['follow']) {
+			if (codemark && (codemark.followerIds || []).indexOf(this.props.currentUser.id) !== -1) {
+				menuItems.push({ label: "Unfollow", action: "unfollow" });
+			} else {
+				menuItems.push({ label: "Follow", action: "follow" });
+			}
+		}
 
 		menuItems.push({ label: "Copy link", action: "copy-permalink" });
 
