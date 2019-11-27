@@ -48,10 +48,13 @@ import {
 	FetchTeamsRequest,
 	FetchUnreadStreamsRequest,
 	FetchUsersRequest,
+	FollowCodemarkRequest,
+	FollowCodemarkResponse,
 	GetCodemarkRequest,
 	GetMarkerRequest,
 	GetPostRequest,
 	GetPostsRequest,
+	GetPreferencesResponse,
 	GetRepoRequest,
 	GetStreamRequest,
 	GetTeamRequest,
@@ -583,6 +586,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 					...(this._unreads ? (await this._unreads.get()).lastReads : this._user!.lastReads)
 				};
 
+				const userPreferencesBefore = JSON.stringify(me.preferences);
 				e.data = await SessionContainer.instance().users.resolve(e, {
 					onlyIfNeeded: true
 				});
@@ -600,7 +604,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 					) {
 						this._unreads.compute(me.lastReads);
 					}
-					if (this._preferences && me.preferences && this._user.preferences) {
+					if (!this._preferences) {
+						this._preferences = new CodeStreamPreferences(this._user.preferences);
+					}
+					if (this._user.preferences && JSON.stringify(this._user.preferences) !== userPreferencesBefore) {
 						this._preferences.update(this._user.preferences);
 					}
 				} catch {
@@ -806,6 +813,16 @@ export class CodeStreamApiProvider implements ApiProvider {
 	pinReplyToCodemark(request: PinReplyToCodemarkRequest) {
 		return this.put<CSPinReplyToCodemarkRequest, CSPinReplyToCodemarkResponse>(
 			request.value ? "/pin-post" : "/unpin-post",
+			request,
+			this._token
+		);
+	}
+
+	@log()
+	followCodemark(request: FollowCodemarkRequest) {
+		const pathType = request.value ? "follow" : "unfollow";
+		return this.put<FollowCodemarkRequest, FollowCodemarkResponse>(
+			`/codemarks/${pathType}/${request.codemarkId}`,
 			request,
 			this._token
 		);
@@ -1289,8 +1306,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	async getPreferences() {
-		await this._subscribePromise;
-		return { preferences: this._preferences!.get() };
+		return this.get<GetPreferencesResponse>(
+			"/preferences",
+			this._token
+		);
 	}
 
 	@log()

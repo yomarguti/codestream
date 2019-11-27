@@ -45,6 +45,8 @@ import {
 	FetchTeamsRequest,
 	FetchUnreadStreamsRequest,
 	FetchUsersRequest,
+	FollowCodemarkRequest,
+	FollowCodemarkResponse,
 	GetCodemarkRequest,
 	GetMarkerRequest,
 	GetPostRequest,
@@ -600,6 +602,11 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	pinReplyToCodemark(request: PinReplyToCodemarkRequest) {
 		return this._codestream.pinReplyToCodemark(request);
+	}
+
+	@log()
+	followCodemark(request: FollowCodemarkRequest) {
+		return this._codestream.followCodemark(request);
 	}
 
 	@log()

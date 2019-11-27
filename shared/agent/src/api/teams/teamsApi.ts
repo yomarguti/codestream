@@ -46,6 +46,8 @@ import {
 	FetchUnreadStreamsRequest,
 	FetchUsersRequest,
 	FetchUsersResponse,
+	FollowCodemarkRequest,
+	FollowCodemarkResponse,
 	GetCodemarkRequest,
 	GetMarkerRequest,
 	GetPostRequest,
@@ -514,6 +516,11 @@ export class MSTeamsApiProvider implements ApiProvider {
 	@log()
 	pinReplyToCodemark(request: PinReplyToCodemarkRequest) {
 		return this._codestream.pinReplyToCodemark(request);
+	}
+
+	@log()
+	followCodemark(request: FollowCodemarkRequest) {
+		return this._codestream.followCodemark(request);
 	}
 
 	@log()

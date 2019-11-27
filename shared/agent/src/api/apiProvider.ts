@@ -56,6 +56,8 @@ import {
 	FetchUnreadStreamsResponse,
 	FetchUsersRequest,
 	FetchUsersResponse,
+	FollowCodemarkRequest,
+	FollowCodemarkResponse,
 	GetCodemarkRequest,
 	GetCodemarkResponse,
 	GetMarkerRequest,
@@ -285,6 +287,7 @@ export interface ApiProvider {
 	pinReplyToCodemark(request: PinReplyToCodemarkRequest): Promise<PinReplyToCodemarkResponse>;
 	setCodemarkStatus(request: SetCodemarkStatusRequest): Promise<SetCodemarkStatusResponse>;
 	updateCodemark(request: UpdateCodemarkRequest): Promise<UpdateCodemarkResponse>;
+	followCodemark(request: FollowCodemarkRequest): Promise<FollowCodemarkResponse>;
 
 	createCodemarkPermalink(
 		request: CreateCodemarkPermalinkRequest

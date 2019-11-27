@@ -218,3 +218,15 @@ export const PinReplyToCodemarkRequestType = new RequestType<
 	void,
 	void
 >("codestream/codemark/pinReply");
+
+export interface FollowCodemarkRequest {
+	codemarkId: string;
+	value: boolean;
+}
+export interface FollowCodemarkResponse {}
+export const FollowCodemarkRequestType = new RequestType<
+	FollowCodemarkRequest,
+	FollowCodemarkResponse,
+	void,
+	void
+>("codestream/codemark/follow");
