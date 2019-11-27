@@ -9,6 +9,7 @@ import {
 	TextDocuments
 } from "vscode-languageserver";
 import { URI } from "vscode-uri";
+import { Logger } from "./logger";
 import { Disposables } from "./system";
 
 const escapedRegex = /(^.*?:\/\/\/)([a-z])%3A(\/.*$)/;
@@ -29,7 +30,9 @@ export class DocumentManager implements Disposable {
 		this._isWindows = process.platform === "win32";
 
 		this._disposable = Disposables.from(
-			this._documents.onDidChangeContent(e => this._onDidChangeContent.fire(e))
+			this._documents.onDidChangeContent(e => this._onDidChangeContent.fire(e)),
+			this._documents.onDidOpen(e => Logger.log(`Document opened: ${e.document.uri}`)),
+			this._documents.onDidClose(e => Logger.log(`Document closed: ${e.document.uri}`))
 		);
 
 		this._documents.listen(connection);
