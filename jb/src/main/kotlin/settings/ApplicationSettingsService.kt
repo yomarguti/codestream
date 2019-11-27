@@ -25,7 +25,7 @@ data class ApplicationSettingsServiceState(
     var autoSignIn: Boolean = true,
     var email: String? = null,
     var serverUrl: String = API_PROD,
-    var strictSSL: Boolean = true,
+    var disableStrictSSL: Boolean = false,
     var avatars: Boolean = true,
     var notifications: String? = null,
     var team: String? = null,
@@ -62,7 +62,7 @@ class ApplicationSettingsService : PersistentStateComponent<ApplicationSettingsS
     val showMarkers get() = state.showMarkers
     val notifications get() = state.notifications
     val serverUrl get() = state.serverUrl
-    val strictSSL get() = state.strictSSL
+    val disableStrictSSL get() = state.disableStrictSSL
     val email get() = state.email
     val avatars get() = state.avatars
     val showFeedbackSmiley get() = state.showFeedbackSmiley

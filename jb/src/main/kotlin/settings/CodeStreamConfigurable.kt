@@ -26,7 +26,7 @@ class CodeStreamConfigurable : SearchableConfigurable {
         gui?.let {
             state.autoSignIn = gui.autoSignIn.isSelected
             state.serverUrl = if (gui.serverUrl.text.isNullOrEmpty()) gui.serverUrl.text else gui.serverUrl.text.trimEnd('/')
-            state.strictSSL = gui.strictSSL.isSelected
+            state.disableStrictSSL = gui.disableStrictSSL.isSelected
             state.avatars = gui.showAvatars.isSelected
             state.notifications = gui.showNotifications.selectedItem as String?
             state.team = gui.team.text
@@ -48,7 +48,7 @@ class CodeStreamConfigurable : SearchableConfigurable {
             gui.apply {
                 autoSignIn.isSelected = it.autoSignIn
                 serverUrl.text = it.serverUrl
-                strictSSL.isSelected = it.strictSSL
+                disableStrictSSL.isSelected = it.disableStrictSSL
                 showAvatars.isSelected = it.avatars
                 showNotifications.selectedItem = it.notifications
                 team.text = it.team

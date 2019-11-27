@@ -7,7 +7,7 @@ public class CodeStreamConfigurableGUI {
     private JPanel rootPanel;
     private JCheckBox autoSignIn;
     private JTextField serverUrl;
-    private JCheckBox strictSSL;
+    private JCheckBox disableStrictSSL;
     private JCheckBox showAvatars;
     private JTextField team;
     private JCheckBox showFeedbackSmiley;
@@ -40,8 +40,8 @@ public class CodeStreamConfigurableGUI {
         return serverUrl;
     }
 
-    public JCheckBox getStrictSSL() {
-        return strictSSL;
+    public JCheckBox getDisableStrictSSL() {
+        return disableStrictSSL;
     }
 
     public JCheckBox getShowAvatars() {
