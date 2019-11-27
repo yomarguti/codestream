@@ -77,7 +77,7 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 			entryPoint: attributes.entryPoint
 		});
 		if (response) {
-			dispatch(addCodemarks([response.codemark]));
+			const result = dispatch(addCodemarks([response.codemark]));
 			dispatch(addStreams([response.stream]));
 
 			if (attributes.sharingAttributes) {
@@ -97,6 +97,7 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 					throw { reason: "share" } as CreateCodemarkError;
 				}
 			}
+			return result;
 		}
 	} catch (error) {
 		logError("Error creating a codemark in the sharing model", { message: error.message });

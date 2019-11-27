@@ -16,7 +16,7 @@ import {
 	ComponentUpdateEmitter,
 	isRangeEmpty,
 	uriToFilePath,
-  safe
+	safe
 } from "../utils";
 import { HostApi } from "../webview-api";
 import {
