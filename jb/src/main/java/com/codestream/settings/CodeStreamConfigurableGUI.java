@@ -1,7 +1,11 @@
 package com.codestream.settings;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.event.ItemEvent;
+
+import static com.codestream.settings.ApplicationSettingsServiceKt.API_PROD;
 
 public class CodeStreamConfigurableGUI {
     private JPanel rootPanel;
@@ -26,6 +30,34 @@ public class CodeStreamConfigurableGUI {
                 proxyStrictSSL.setEnabled(item.equals("override") || item.equals("on"));
             }
         });
+
+        serverUrl.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                validateServerUrl(serverUrl.getText());
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                validateServerUrl(serverUrl.getText());
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                validateServerUrl(serverUrl.getText());
+            }
+        });
+
+        validateServerUrl(serverUrl.getText());
+    }
+
+    private void validateServerUrl(String text) {
+        if (text.equals(API_PROD)) {
+            disableStrictSSL.setSelected(false);
+            disableStrictSSL.setEnabled(false);
+        } else {
+            disableStrictSSL.setEnabled(true);
+        }
     }
 
     public JPanel getRootPanel() {

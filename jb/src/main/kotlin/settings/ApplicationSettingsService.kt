@@ -17,9 +17,9 @@ import protocols.agent.ProxySettings
 import protocols.agent.TraceLevel
 import protocols.webview.Configs
 
-private const val API_PD = "https://pd-api.codestream.us"
-private const val API_QA = "https://qa-api.codestream.us"
-private const val API_PROD = "https://api.codestream.com"
+const val API_PD = "https://pd-api.codestream.us"
+const val API_QA = "https://qa-api.codestream.us"
+const val API_PROD = "https://api.codestream.com"
 
 data class ApplicationSettingsServiceState(
     var autoSignIn: Boolean = true,
