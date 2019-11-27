@@ -10,6 +10,7 @@ export enum Notifications {
 export interface Config {
 	autoHideMarkers: boolean;
 	autoSignIn: boolean;
+	disableStrictSSL: boolean;
 	email: string;
 	notifications: Notifications | null;
 	proxySupport: "override" | "on" | "off" | null;
@@ -19,7 +20,6 @@ export interface Config {
 	showMarkerCodeLens: boolean;
 	showMarkerGlyphs: boolean;
 	showShortcutTipOnSelection: boolean;
-	strictSSL: boolean;
 	team: string;
 	traceLevel: TraceLevel;
 }

@@ -76,7 +76,7 @@ export async function activate(context: ExtensionContext) {
 		},
 		isDebugging: Logger.isDebugging,
 		serverUrl: cfg.serverUrl,
-		strictSSL: cfg.strictSSL,
+		disableStrictSSL: cfg.disableStrictSSL,
 		traceLevel: Logger.level
 	});
 

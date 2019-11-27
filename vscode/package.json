@@ -51,7 +51,13 @@
                     "description": "Specifies whether to automatically sign in to CodeStream",
                     "scope": "window"
                 },
-                "codestream.email": {
+                "codestream.disableStrictSSL": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Allow self-signed certificates to be used in network requests (On-Prem)",
+                    "scope": "window"
+                },
+                "codestream.email": {                    
                     "type": "string",
                     "default": null,
                     "description": "Specifies the email address to use to connect to the CodeStream service",
@@ -128,12 +134,6 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Specifies whether to show a shortcut key tip attached to the selection when you select code",
-                    "scope": "window"
-                },
-                "codestream.strictSSL": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Specifies whether requests returning self-signed certificate errors will be enforced. For CodeStream On-Prem users only",
                     "scope": "window"
                 },
                 "codestream.team": {
