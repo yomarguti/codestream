@@ -261,7 +261,7 @@ export class CodeStreamSession {
 
 		if (!this._httpsAgent) {
 			this._httpsAgent = new HttpsAgent({
-				rejectUnauthorized: _options.strictSSL != null ? _options.strictSSL : true
+				rejectUnauthorized: _options.disableStrictSSL != null ? !_options.disableStrictSSL : false
 			});
 		}
 
