@@ -22,6 +22,7 @@ import { addOlderActivity } from "../store/activityFeed/actions";
 import { saveCodemarks } from "../store/codemarks/actions";
 import { safe } from "../utils";
 import { markStreamRead } from "./actions";
+import { CodemarkType } from "@codestream/protocols/api";
 
 const ActivityWrapper = styled.div`
 	margin: 0 40px 20px 45px;
@@ -109,6 +110,11 @@ export const ActivityPanel = () => {
 
 		return derivedState.activity.map(codemark => {
 			if (codemark.deactivated) return null;
+			if (
+				derivedState.codemarkTypeFilter != "all" &&
+				codemark.type !== derivedState.codemarkTypeFilter
+			)
+				return null;
 
 			return [
 				demoMode && counter == 2 ? (
@@ -171,14 +177,16 @@ export const ActivityPanel = () => {
 	};
 
 	const showActivityLabels = {
-		all: "all activity"
+		all: "all activity",
+		[CodemarkType.Comment]: "comments",
+		[CodemarkType.Issue]: "issues"
 	};
+
 	const menuItems = [
 		{ label: "All Activity", action: "all" },
 		{ label: "-" },
-		{ label: "Code Comments", action: "comment" },
-		// { label: "Questions & Answers", action: "question" },
-		{ label: "Issues", action: "issue" }
+		{ label: "Code Comments", action: CodemarkType.Comment },
+		{ label: "Issues", action: CodemarkType.Issue }
 	];
 
 	return (
@@ -205,6 +213,7 @@ export const ActivityPanel = () => {
 					)}
 				</div>
 			</ScrollBox>
+			{/*
 			<div className="view-selectors">
 				<span className="count">
 					Commits<div className="switch"></div>
@@ -214,6 +223,7 @@ export const ActivityPanel = () => {
 				</span>
 				<Feedback />
 			</div>
+			*/}
 		</div>
 	);
 };
