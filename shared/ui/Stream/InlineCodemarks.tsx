@@ -1119,6 +1119,13 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	render() {
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
+				<div
+					className="panel-header"
+					style={{ textAlign: "left", padding: "15px 30px 25px 45px", position: "fixed" }}
+				>
+					{this.props.fileNameToFilterFor!.replace(/.*\//, "")}
+					<EditingIndicator />
+				</div>
 				{this.renderHoverIcons()}
 				{this.renderCodemarkForm()}
 				{this.state.showPRInfoModal && (

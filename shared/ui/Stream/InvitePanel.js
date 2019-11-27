@@ -37,7 +37,15 @@ export class InvitePanel extends Component {
 		this.disposable && this.disposable.dispose();
 	}
 
-	onEmailChange = event => this.setState({ newMemberEmail: event.target.value });
+	onEmailChange = event => {
+		this.setState({ newMemberEmail: event.target.value });
+		if (this.state.newMemberEmailInvalid) {
+			this.setState(state => ({
+				newMemberEmailInvalid:
+					state.newMemberEmail !== "" && EMAIL_REGEX.test(state.newMemberEmail) === false
+			}));
+		}
+	};
 
 	onEmailBlur = event => {
 		this.setState(state => ({
@@ -99,7 +107,7 @@ export class InvitePanel extends Component {
 		if (inputTouched && newMemberEmailInvalid) {
 			return (
 				<small className="error-message">
-					<FormattedMessage id="signUp.email.invalid" />
+					<FormattedMessage id="login.email.invalid" />
 				</small>
 			);
 		} else return null;
@@ -164,48 +172,30 @@ export class InvitePanel extends Component {
 		return (
 			<fieldset className="form-body" disabled={inactive}>
 				<div className="outline-box">
-					<h3>Invite a Teammate</h3>
 					<div id="controls">
-						<div className="control-group">
-							<label>Email</label>
-							<input
-								className="input-text"
-								id="invite-email-input"
-								type="text"
-								value={newMemberEmail}
-								onChange={this.onEmailChange}
-								onBlur={this.onEmailBlur}
-								autoFocus
-							/>
-							{this.renderEmailHelp()}
-						</div>
-						<div className="control-group">
-							<label>
-								Name <span className="optional">(optional)</span>
-							</label>
-							<input
-								className="input-text"
-								type="text"
-								value={newMemberName}
-								onChange={this.onNameChange}
-							/>
-						</div>
-						<div className="button-group">
+						<div style={{ display: "flex", alignItems: "flex-end" }}>
+							<div className="control-group" style={{ flexGrow: 3 }}>
+								<label>Invite a Teammate</label>
+								<input
+									className="input-text"
+									id="invite-email-input"
+									type="text"
+									value={newMemberEmail}
+									onChange={this.onEmailChange}
+									onBlur={this.onEmailBlur}
+									placeholder="Email..."
+									autoFocus
+								/>
+								{this.renderEmailHelp()}
+							</div>
 							<Button
+								style={{ width: "60px", margin: "0 0 6px 10px" }}
 								id="add-button"
 								className="control-button"
 								type="submit"
 								loading={this.state.loading}
 							>
 								<FormattedMessage id="teamMemberSelection.invite" defaultMessage="Invite" />
-							</Button>
-							<Button
-								id="discard-button"
-								className="control-button cancel"
-								type="submit"
-								onClick={() => this.setState(this.initialState)}
-							>
-								Cancel
 							</Button>
 						</div>
 					</div>
@@ -367,7 +357,4 @@ const mapStateToProps = ({ users, context, teams }) => {
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{ invite }
-)(injectIntl(InvitePanel));
+export default connect(mapStateToProps, { invite })(injectIntl(InvitePanel));
