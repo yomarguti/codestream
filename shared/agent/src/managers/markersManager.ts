@@ -24,6 +24,7 @@ import {
 	StreamType
 } from "../protocol/api.protocol";
 import { lsp, lspHandler } from "../system";
+import { xfs } from "../xfs";
 import { IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { EntityManagerBase, Id } from "./entityManager";
@@ -174,11 +175,11 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 		let referenceLocations: CSReferenceLocation[] = [];
 
 		const document = documents.get(documentId.uri);
-		if (document === undefined) {
-			throw new Error(`No document could be found for Uri(${documentId.uri})`);
-		}
 		const filePath = URI.parse(documentId.uri).fsPath;
-		const fileContents = document.getText();
+		const fileContents = document ? document.getText() : await xfs.readText(filePath);
+		if (fileContents === undefined) {
+			throw new Error(`prepareMarkerCreationDescriptor: Could not retrieve contents for ${documentId.uri} from document manager or file system. File does not exist in current branch.`);
+		}
 
 		if (source) {
 			Logger.log("prepareMarkerCreationDescriptor: source information provided");
