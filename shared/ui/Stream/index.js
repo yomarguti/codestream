@@ -133,17 +133,6 @@ export class SimpleStream extends Component {
 						const postId = event.target.id.split("-").pop();
 						return this.editPost(postId);
 					}
-					if (event.key === "ArrowUp") {
-						if (event.target.id === "input-div") {
-							if (event.target.textContent.length === 0) {
-								event.stopPropagation();
-								this.editLastPost();
-							}
-						} else {
-							event.stopPropagation();
-							this.editLastPost();
-						}
-					}
 				})
 			);
 		}
@@ -401,7 +390,6 @@ export class SimpleStream extends Component {
 		};
 
 		const menuItems = [
-			{ label: this.props.teamName, noHover: true, action: () => {} },
 			hasOtherTeams ? teamItem : undefined,
 			{ label: "-" },
 			{ label: inviteLabel, action: "invite" },
@@ -413,6 +401,7 @@ export class SimpleStream extends Component {
 
 		const providerMenuItems = this.addProvidersToMenu();
 		if (providerMenuItems.length > 0) {
+			// menuItems.push({ label: "Integrations", key: "integrations", submenu: providerMenuItems });
 			menuItems.push(...providerMenuItems);
 			menuItems.push({ label: "-" });
 		}
@@ -428,7 +417,13 @@ export class SimpleStream extends Component {
 		menuItems.push({ label: text, action: "", noHover: true, disabled: true });
 
 		const menu = menuOpen ? (
-			<Menu items={menuItems} target={menuTarget} action={this.menuAction} align="right" />
+			<Menu
+				title={this.props.teamName}
+				items={menuItems}
+				target={menuTarget}
+				action={this.menuAction}
+				align="right"
+			/>
 		) : null;
 		return menu;
 	}

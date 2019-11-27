@@ -10,6 +10,7 @@ export default class Menu extends Component {
 		this.state = { selected: props.selected || "" };
 		this.el = document.createElement("div");
 		this.count = 0;
+		this.programaticScrolling = 0;
 	}
 
 	componentDidMount() {
@@ -24,6 +25,7 @@ export default class Menu extends Component {
 		if (this.el) {
 			const inputs = this.el.getElementsByTagName("input");
 			if (inputs[0]) inputs[0].focus();
+			else this.el.getElementsByClassName("focus-button")[0].focus();
 		}
 		this.repositionIfNecessary();
 	}
@@ -94,13 +96,17 @@ export default class Menu extends Component {
 		if (this.state.selected !== prevState.selected) this.repositionSubmenuIfNecessary();
 	}
 
-	renderItem = (item, parentItem) => {
+	calculateKey(item, parentItem) {
+		const itemKey = item.key || item.action;
+		return parentItem ? `${parentItem.key || parentItem.action}/${itemKey}` : itemKey;
+	}
+
+	renderItem = (item, parentItem, index) => {
 		if (item.label === "-") return <hr key={this.count++} />;
 		if (item.fragment) return item.fragment;
-		const itemKey = item.key || item.action;
-		const key = parentItem ? `${parentItem.key || parentItem.action}/${itemKey}` : itemKey;
+		const key = this.calculateKey(item, parentItem);
 		let selected = key === this.state.selected || (this.state.selected + "").startsWith(key + "/");
-		if (item.type === "search" || item.noHover) {
+		if (item.type === "search") {
 			selected = false;
 		}
 
@@ -109,8 +115,10 @@ export default class Menu extends Component {
 				className={createClassString({
 					"menu-item": true,
 					disabled: item.disabled,
-					hover: selected
+					hover: selected && !item.noHover && !item.customHover,
+					"custom-hover": selected && item.customHover
 				})}
+				id={`li-item-${key}`}
 				key={key}
 				onMouseEnter={() => this.handleMouseEnter(key)}
 				onClick={event => this.handleClickItem(event, item)}
@@ -127,6 +135,7 @@ export default class Menu extends Component {
 				)}
 				{item.type === "search" && (
 					<input
+						className="input-text control"
 						style={{ width: "100%" }}
 						type="text"
 						placeholder={item.placeholder}
@@ -150,13 +159,22 @@ export default class Menu extends Component {
 		);
 	};
 
-	filterItems = items => {
+	filterItems = (items, skipDisabled) => {
 		let count = 0;
 		const q = (this.state.q || "").toLowerCase();
 
 		const filteredItems = _filter(items, item => {
-			if (item.searchLabel !== undefined && !item.searchLabel.toLowerCase().includes(q)) {
+			if (skipDisabled && item.disabled) {
 				return false;
+			} else if (skipDisabled && item.label === "-") {
+				return false;
+			} else if (skipDisabled && item.type === "search") {
+				return false;
+			} else if (skipDisabled && item.noHover) {
+				return false;
+			} else if (item.searchLabel !== undefined && !item.searchLabel.toLowerCase().includes(q)) {
+				return false;
+				// maxitems doesn't work yet....
 			} else if (count < this.props.startItem || count > this.props.maxItems) {
 				return false;
 			} else {
@@ -173,12 +191,19 @@ export default class Menu extends Component {
 
 		return (
 			<div className="menu-popup-body">
-				{this.props.title && (
+				{this.props.title && !parentItem && (
 					<h3>
 						{this.props.title} <Icon onClick={e => this.props.action()} name="x" />
 					</h3>
 				)}
-				<ul className="compact">{itemsToRender.map(item => this.renderItem(item, parentItem))}</ul>
+				<ul className="compact">
+					{itemsToRender.map((item, index) => this.renderItem(item, parentItem, index))}
+				</ul>
+				<button
+					className="focus-button"
+					style={{ position: "absolute", left: "-1000px" }}
+					onKeyDown={this.handleKeyDown}
+				></button>
 			</div>
 		);
 	};
@@ -187,15 +212,90 @@ export default class Menu extends Component {
 		this.count = 0;
 		const className = this.props.compact ? "menu-popup compact" : "menu-popup";
 		return ReactDOM.createPortal(
-			<div className={className} ref={ref => (this._div = ref)}>
+			<div className={className} ref={ref => (this._div = ref)} onKeyDown={this.handleKeyDown}>
 				{this.renderMenu(this.props.items, null)}
 			</div>,
 			this.el
 		);
 	}
 
+	findIndex(key, items) {
+		let index = -1;
+		items.map((item, counter) => {
+			if (key === this.calculateKey(item)) index = counter;
+		});
+		return index;
+	}
+
+	// the keypress handler for tracking up and down arrow and enter
+	handleMenuKeyPress = (event, eventType) => {
+		const { selected } = this.state;
+		event.preventDefault();
+		if (eventType == "escape") {
+			this.closeMenu();
+		} else {
+			let newIndex = 0;
+			const filteredItems = this.filterItems(this.props.items, true);
+			const selectedIndex = this.findIndex(selected, filteredItems);
+			if (eventType == "down") {
+				if (selectedIndex < filteredItems.length - 1) {
+					newIndex = selectedIndex + 1;
+				} else {
+					newIndex = 0;
+				}
+			} else if (eventType == "up") {
+				if (selectedIndex == 0) {
+					newIndex = filteredItems.length - 1;
+				} else {
+					newIndex = selectedIndex - 1;
+				}
+			} else if (eventType == "tab") {
+				// this.handleSelectAtMention();
+			} else if (eventType === "enter") {
+				const item = filteredItems[selectedIndex];
+				this.handleClickItem(event, item);
+			}
+			const selectedItem = filteredItems[newIndex];
+			const key = this.calculateKey(selectedItem);
+
+			this.setState({ selected: key });
+
+			// while we manually scroll the viewport, we do not want
+			// the mouseEnter events to fire, which would select
+			// the "wrong" menu item. So we set a value and a timer
+			// to clear it.
+			this.programaticScrolling++;
+			document
+				.getElementById("li-item-" + key)
+				.scrollIntoView({ behavior: "smooth", block: "nearest" });
+			setTimeout(() => {
+				this.programaticScrolling--;
+			}, 750);
+		}
+	};
+
+	handleKeyDown = event => {
+		if (event.key === "ArrowUp") {
+			event.stopPropagation();
+			this.handleMenuKeyPress(event, "up");
+		}
+		if (event.key === "ArrowDown") {
+			event.stopPropagation();
+			this.handleMenuKeyPress(event, "down");
+		}
+		if (event.key === "Tab") this.handleMenuKeyPress(event, "tab");
+		if (event.key === "Escape") {
+			this.props.action(null); // invoke the action callback for entire menu so it can removed
+			event.preventDefault();
+		}
+		if (event.key === "Enter") {
+			event.preventDefault();
+			this.handleMenuKeyPress(event, "enter");
+		}
+	};
+
 	handleMouseEnter = key => {
-		this.setState({ selected: key });
+		if (!this.programaticScrolling) this.setState({ selected: key });
 	};
 
 	handleClickItem = async (event, item) => {

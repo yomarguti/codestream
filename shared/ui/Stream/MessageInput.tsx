@@ -576,6 +576,7 @@ export class MessageInput extends React.Component<Props, State> {
 	handleKeyDown = (event: React.KeyboardEvent) => {
 		const multiCompose = this.props.multiCompose;
 
+		console.log("IN HKD IN MI");
 		if (this.state.currentPopup) {
 			if (event.key === "ArrowUp") {
 				event.stopPropagation();
@@ -603,11 +604,7 @@ export class MessageInput extends React.Component<Props, State> {
 				event.preventDefault();
 			}
 		} else {
-			if (event.key === "ArrowUp" && this.props.text === "" && this.props.onEmptyUpArrow) {
-				event.persist();
-				event.stopPropagation();
-				this.props.onEmptyUpArrow(event);
-			} else if (event.key == "Escape" && multiCompose && this.props.onDismiss) {
+			if (event.key == "Escape" && multiCompose && this.props.onDismiss) {
 				this.props.onDismiss();
 			} else if (event.key === "Enter" && event.metaKey && multiCompose) {
 				// command-enter should submit for multiCompose
@@ -963,7 +960,7 @@ export class MessageInput extends React.Component<Props, State> {
 							/>
 						</span>
 					),
-					noHover: true,
+					customHover: true,
 					searchLabel: tag.label || tag.color,
 					action: tag.id
 				};
@@ -1127,7 +1124,4 @@ const mapStateToProps = state => {
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{ ...actions }
-)(MessageInput);
+export default connect(mapStateToProps, { ...actions })(MessageInput);

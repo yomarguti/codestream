@@ -656,12 +656,14 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (this.props.isEditing) return;
 
 		event.stopPropagation();
-		const target = event.target;
-		this.setState(state => ({
-			channelMenuOpen: !state.channelMenuOpen,
-			channelMenuTarget: target,
-			crossPostMessage: true
-		}));
+		if (!this.state.channelMenuOpen) {
+			const target = event.target;
+			this.setState(state => ({
+				channelMenuOpen: !state.channelMenuOpen,
+				channelMenuTarget: target,
+				crossPostMessage: true
+			}));
+		}
 	};
 
 	selectChannel = (stream: Stream | "show-all") => {
@@ -673,6 +675,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			this.setState({ selectedChannelName: channelName, selectedChannelId: stream.id });
 		}
 		this.setState({ channelMenuOpen: false });
+		this.focus();
 	};
 
 	switchLocation = (event: React.SyntheticEvent, index: number | "header") => {
@@ -816,7 +819,14 @@ class CodemarkForm extends React.Component<Props, State> {
 		const { selectedStreams, showChannels } = this.props;
 		const { showAllChannels, selectedChannelId } = this.state;
 		// if (this.props.slackInfo || this.props.providerInfo.slack) {
-		const items: { label: string; action?: CSStream | "show-all"; key?: string }[] = [];
+		const items: {
+			label?: string;
+			searchLabel?: string;
+			action?: CSStream | "show-all" | "search";
+			key?: string;
+			type?: string;
+			placeholder?: string;
+		}[] = [];
 
 		// let labelMenuItems: any = [{ label: "None", action: "" }, { label: "-" }];
 
@@ -848,7 +858,12 @@ class CodemarkForm extends React.Component<Props, State> {
 				firstChannel = channel;
 			}
 
-			items.push({ label: `#${channel.name}`, action: channel, key: channel.id });
+			items.push({
+				label: `#${channel.name}`,
+				action: channel,
+				key: channel.id,
+				searchLabel: `#${channel.name}`
+			});
 		});
 
 		if (this.props.directMessageStreams.length > 0) {
@@ -875,7 +890,12 @@ class CodemarkForm extends React.Component<Props, State> {
 					firstChannel = channel;
 				}
 
-				const item = { label: channel.name!, action: channel, key: channel.id };
+				const item = {
+					label: channel.name!,
+					action: channel,
+					key: channel.id,
+					searchLabel: channel.name!
+				};
 				// Ensure Slackbot is first (if there), then your own DM
 				if (channel.memberIds.length === 2 && channel.memberIds.includes("USLACKBOT")) {
 					items.splice(firstDM, 0, item);
@@ -904,6 +924,11 @@ class CodemarkForm extends React.Component<Props, State> {
 			items.push({ label: "Show All Channels & DMs", action: "show-all" });
 		}
 
+		if (items.length >= 1) {
+			items.unshift({ label: "-" });
+			items.unshift({ type: "search", placeholder: "Search...", action: "search" });
+		}
+
 		return (
 			<div key="crosspost" className="checkbox-row" style={{ float: "left" }}>
 				{/*<input type="checkbox" checked={this.state.crossPostMessage} /> */} Post to{" "}
@@ -912,8 +937,8 @@ class CodemarkForm extends React.Component<Props, State> {
 					<Icon name="chevron-down" />
 					{this.state.channelMenuOpen && (
 						<Menu
+							title="Post to..."
 							align="center"
-							compact={true}
 							target={this.state.channelMenuTarget}
 							items={items}
 							action={this.selectChannel}
