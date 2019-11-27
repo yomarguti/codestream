@@ -59,6 +59,17 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="5_2_3">5.2.3</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds support for self-signed SSL certificates for CodeStream On-Prem</li>
+    <li>Adds display of CodeStream version number at the bottom of the ellipses menu</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue with very large codemarks not being displayed on Slack</li>
+    <li>Fixes an issue with "Open on GitHub" buttons not accounting for .com-githubHandle remote syntax</li>
+</ul>
 <h4 id="5_2_2">5.2.2</h4>
 <h5>Added</h5>
 <ul>
