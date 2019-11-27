@@ -124,7 +124,7 @@ abstract class AgentConnection {
 				name: "Atom",
 				version: atom.getVersion(),
 			},
-			strictSSL: Container.configs.get("strictSSL"),
+			disableStrictSSL: Container.configs.get("disableStrictSSL"),
 			isDebugging: atom.inDevMode(),
 			traceLevel: Container.configs.get("traceLevel"),
 			gitPath: "git",

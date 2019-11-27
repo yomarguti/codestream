@@ -14,7 +14,7 @@ export interface ConfigSchema {
 	proxySupport: "off" | "on" | "override";
 	proxyUrl: string;
 	proxyStrictSSL: boolean;
-	strictSSL: boolean;
+	disableStrictSSL: boolean;
 }
 
 const KEYS_FOR_WEBVIEW = ["avatars", "showMarkers"];

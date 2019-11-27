@@ -107,10 +107,10 @@
 			"type": "boolean",
 			"default": true
 		},
-		"strictSSL": {
+		"disableStrictSSL": {
 			"type": "boolean",
-			"default": true,
-			"description": "Specifies whether requests returning self-signed certificate errors will be enforced. For CodeStream On-Prem users only"
+			"default": false,
+			"description": "Allow self-signed certificates to be used in network requests (On-Prem)"
 		}
 	},
 	"scripts": {
