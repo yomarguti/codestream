@@ -17,12 +17,12 @@ fun Document.lspPosition(offset: Int): Position {
 
 val Document.uri: String?
     get() {
-        val file = FileDocumentManager.getInstance().getFile(this) ?: return null
-        return file.uri
+        val file = FileDocumentManager.getInstance().getFile(this)
+        return file?.uri
     }
 
 val Document.textDocumentIdentifier: TextDocumentIdentifier?
-    get() = TextDocumentIdentifier(uri)
+    get() = uri?.let { TextDocumentIdentifier(uri) }
 
 val Document.file: VirtualFile?
     get() = FileDocumentManager.getInstance().getFile(this)

@@ -123,11 +123,13 @@ class EditorService(val project: Project) {
         agentService.onDidStart {
             synchronized(managedDocuments) {
                 val editors = EditorFactory.getInstance().getEditors(document, project)
-                if (editors.isEmpty()) {
+                if (editors.none { it != editor }) {
                     managedDocuments.remove(document)
-                    agentService.agent.textDocumentService.didClose(
-                        DidCloseTextDocumentParams(document.textDocumentIdentifier)
-                    )
+                    document.textDocumentIdentifier?.let {
+                        agentService.agent.textDocumentService.didClose(
+                            DidCloseTextDocumentParams(it)
+                        )
+                    }
                 }
             }
         }
