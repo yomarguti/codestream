@@ -24,7 +24,7 @@ namespace CodeStream.VisualStudio.UI.Settings {
 #else
         private string _serverUrl = "https://api.codestream.com";
 #endif
-		private bool _strictSsl = true;
+		private bool _disableStrictSsl = false;
 		private string _proxyUrl;
 		private bool _proxyStrictSsl;
 		private ProxySupport _proxySupport;
@@ -167,13 +167,13 @@ namespace CodeStream.VisualStudio.UI.Settings {
 		}
 
 		[Category("Connectivity")]
-		[DisplayName("Strict SSL")]
-		[Description("Specifies whether requests returning self-signed certificate errors will be enforced. For CodeStream On-Prem users only")]
-		public bool StrictSSL {
-			get => _strictSsl;
+		[DisplayName("Disable Strict SSL")]
+		[Description("Allow self-signed certificates to be used in network requests (On-Prem)")]
+		public bool DisableStrictSSL {
+			get => _disableStrictSsl;
 			set {
-				if (_strictSsl != value) {
-					_strictSsl = value;
+				if (_disableStrictSsl != value) {
+					_disableStrictSsl = value;
 					 
 					NotifyPropertyChanged();
 				}

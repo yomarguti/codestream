@@ -247,7 +247,7 @@ namespace CodeStream.VisualStudio.Packages {
 					 args.PropertyName == nameof(_settingsManager.Team) ||
 					 args.PropertyName == nameof(_settingsManager.ProxyUrl) ||
 					 args.PropertyName == nameof(_settingsManager.ProxyStrictSsl) ||
-					 args.PropertyName == nameof(_settingsManager.StrictSSL)) {
+					 args.PropertyName == nameof(_settingsManager.DisableStrictSSL)) {
 				Log.Information($"Url(s) or Team or Proxy changed");
 				try {
 					try {						

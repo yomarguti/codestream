@@ -375,9 +375,9 @@ namespace CodeStream.VisualStudio.Core.Models {
 		[JsonProperty("proxy")]
 		public Proxy Proxy { get; set; }
 
-		[JsonProperty("strictSSL")]
+		[JsonProperty("disableStrictSSL")]
 		// ReSharper disable once InconsistentNaming
-		public bool StrictSSL { get; set; }
+		public bool DisableStrictSSL { get; set; }
 	}
 
 	public class CreatePostResponse {
@@ -491,8 +491,9 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public Ide Ide { get; set; }
 		public string TraceLevel { get; set; }
 
-		[JsonProperty("strictSSL")]
-		public bool StrictSSL { get; set; }
+		[JsonProperty("disableStrictSSL")]
+		// ReSharper disable once InconsistentNaming
+		public bool DisableStrictSSL { get; set; }
 		public bool IsDebugging { get; set; }
 		[JsonProperty("proxySupport")]
 		public string ProxySupport { get; set; }

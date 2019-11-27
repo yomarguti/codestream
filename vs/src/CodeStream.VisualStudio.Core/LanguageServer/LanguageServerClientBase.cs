@@ -74,7 +74,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 #endif
 					Proxy = settingsManager.Proxy,
 					ProxySupport = settingsManager.ProxySupport.ToJsonValue(),
-					StrictSSL = settingsManager.StrictSSL
+					DisableStrictSSL = settingsManager.DisableStrictSSL
 				};
 
 				if (Log.IsDebugEnabled()) {

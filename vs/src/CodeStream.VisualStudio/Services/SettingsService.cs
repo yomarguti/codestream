@@ -151,9 +151,9 @@ namespace CodeStream.VisualStudio.Services {
 
 		public Proxy Proxy => DialogPage.Proxy;
 
-		public bool StrictSSL {
-			get => DialogPage.StrictSSL;
-			set => DialogPage.StrictSSL = value;
+		public bool DisableStrictSSL {
+			get => DialogPage.DisableStrictSSL;
+			set => DialogPage.DisableStrictSSL = value;
 		}
 
 		public Ide GetIdeInfo() {
