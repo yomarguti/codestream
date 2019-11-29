@@ -19,6 +19,7 @@
 		"@primer/octicons": "9.1.1",
 		"classnames": "2.2.6",
 		"code-prettify": "git:github.com/TeamCodeStream/code-prettify.git#62943684566f616b403ac354a1b5a094344c85bc",
+		"convert-svg-to-png": "^0.5.0",
 		"emoji-mart": "2.11.1",
 		"lodash-es": "4.17.14",
 		"markdown-it": "9.0.0",
@@ -43,7 +44,8 @@
 		"styled-components": "4.3.2",
 		"uuid": "3.3.2",
 		"vscode-languageserver-protocol": "3.14.1",
-		"vscode-uri": "2.0.3"
+		"vscode-uri": "2.0.3",
+		"yargs": "^15.0.2"
 	},
 	"peerDependencies": {
 		"react": "16.8.6",
