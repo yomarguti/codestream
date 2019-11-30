@@ -1,5 +1,6 @@
 const { convert } = require("convert-svg-to-png");
-const data = require("../Stream/icons8-data.json");
+const icons8 = require("../Stream/icons8-data.json");
+const octicons = require("@primer/octicons");
 const fs = require("fs");
 const yargs = require("yargs");
 
@@ -17,39 +18,33 @@ const argv = yargs
 		type: "string",
 		default: "black"
 	})
+	.option("output-directory", {
+		alias: "o",
+		description: "the color of the icons",
+		type: "string",
+		default: "/tmp/"
+	})
 	.help()
 	.alias("help", "h").argv;
 
-const convertAll = async () => {
-	Object.keys(data).map(async key => {
-		const icon = data[key];
-		const svg =
-			'<svg width="' +
-			argv.size +
-			'" height="' +
-			argv.size +
-			'" fill="' +
-			argv.color +
-			'" viewBox="' +
-			icon.viewBox +
-			'">' +
-			icon.path +
-			'"</svg>';
-		const png = await convert(svg, {});
-		fs.writeFile("/tmp/" + key + ".png", png, function(err) {
-			if (err) {
-				return console.log(err);
-			}
-			console.log("The file /tmp/" + key + ".png was saved!");
-		});
+const dir = argv["output-directory"];
+const convertIcon = async icon => {
+	const viewBox = icon.viewBox || (icon.options ? icon.options.viewBox : "0 0 30 30");
+	const svgTag = `<svg width="${argv.size}" height="${argv.size}" fill="${argv.color}" viewBox="${viewBox}">`;
+	const svgString = svgTag + icon.path + "</svg>";
+	const png = await convert(svgString, {});
+	fs.writeFile(dir + icon.name + ".png", png, function(err) {
+		if (err) return console.log(err);
+		console.log("The file " + dir + icon.name + ".png was saved!");
 	});
 };
 
-convertAll();
-// (async () => {
-// 	const inputFilePath = "/path/to/my-image.svg";
-// 	const outputFilePath = await convertFile(inputFilePath);
+const convertIcons = async hash => {
+	const array = Object.values(hash);
+	for (let index = 0; index < array.length; index++) {
+		await convertIcon(array[index]);
+	}
+};
 
-// 	console.log(outputFilePath);
-// 	//=> "/path/to/my-image.png"
-// })();
+convertIcons(icons8);
+convertIcons(octicons);
