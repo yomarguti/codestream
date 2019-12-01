@@ -815,6 +815,10 @@ class CodemarkForm extends React.Component<Props, State> {
 		);
 	};
 
+	handleKeyPress = (event: React.KeyboardEvent) => {
+		if (event.key == "Enter") return this.switchChannel(event);
+	};
+
 	renderCrossPostMessage = commentType => {
 		const { selectedStreams, showChannels } = this.props;
 		const { showAllChannels, selectedChannelId } = this.state;
@@ -932,7 +936,12 @@ class CodemarkForm extends React.Component<Props, State> {
 		return (
 			<div key="crosspost" className="checkbox-row" style={{ float: "left" }}>
 				{/*<input type="checkbox" checked={this.state.crossPostMessage} /> */} Post to{" "}
-				<span className="channel-label" onClick={this.switchChannel}>
+				<span
+					className="channel-label"
+					onClick={this.switchChannel}
+					onKeyPress={this.handleKeyPress}
+					tabIndex={this.tabIndex()}
+				>
 					{selectedChannelName}
 					<Icon name="chevron-down" />
 					{this.state.channelMenuOpen && (
