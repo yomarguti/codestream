@@ -7,7 +7,8 @@ import {
 	CreateThirdPartyPostRequest,
 	CreateThirdPartyPostResponse,
 	FetchThirdPartyChannelsRequest,
-	FetchThirdPartyChannelsResponse
+	FetchThirdPartyChannelsResponse,
+	ThirdPartyDisconnect
 } from "../protocol/agent.protocol";
 import { CSSlackProviderInfo, StreamType } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
@@ -62,6 +63,23 @@ export class SlackProvider extends ThirdPartyPostProviderBase<CSSlackProviderInf
 
 	protected async onConnected(providerInfo: CSSlackProviderInfo) {
 		this._multiProviderInfo = providerInfo;
+	}
+
+	protected async onDisconnected(request?: ThirdPartyDisconnect) {
+		if (!request || !request.providerTeamId) return;
+
+		if (this._clientCache) {
+			const client = this._clientCache[request.providerTeamId];
+			if (client) {
+				if (client.dispose) {
+					await client.dispose();
+				}
+				delete this._clientCache[request.providerTeamId];
+			}
+		}
+		if (this._multiProviderInfo && this._multiProviderInfo.multiple) {
+			delete this._multiProviderInfo.multiple[request.providerTeamId];
+		}
 	}
 
 	private getClient(providerTeamId: string) {

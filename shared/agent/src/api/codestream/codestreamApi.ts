@@ -1408,14 +1408,14 @@ export class CodeStreamApiProvider implements ApiProvider {
 			if (!provider) throw new Error(`provider ${request.providerId} not found`);
 			const providerConfig = provider.getConfig();
 
-			const params: { teamId: string; host?: string; providerTeamId?: string } = {
+			const params: { teamId: string; host?: string; subId?: string } = {
 				teamId: this.teamId
 			};
 			if (providerConfig.isEnterprise) {
 				params.host = providerConfig.host;
 			}
 			if (request.providerTeamId) {
-				params.providerTeamId = request.providerTeamId;
+				params.subId = request.providerTeamId;
 			}
 
 			void (await this.put<{ teamId: string; host?: string }, {}>(
