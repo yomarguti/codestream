@@ -4,11 +4,14 @@ import { ActivityFeedActionType } from "./types";
 import { sortBy } from "lodash-es";
 import { CodemarkPlus } from "@codestream/protocols/agent";
 
-export const addOlderActivity = (model: string, activities: CSEntity[]) => {
-	return action(
-		ActivityFeedActionType.AddOlder,
-		activities.map(a => `${model}|${a.id}`)
-	);
+export const addOlderActivity = (
+	model: string,
+	payload: { activities: CSEntity[]; hasMore: boolean }
+) => {
+	return action(ActivityFeedActionType.AddOlder, {
+		...payload,
+		activities: payload.activities.map(a => `${model}|${a.id}`)
+	});
 };
 
 export const addNewActivity = (model: string, activities: CSEntity[]) => {

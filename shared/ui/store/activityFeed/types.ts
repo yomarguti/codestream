@@ -1,4 +1,4 @@
-export type ActivityFeedState = ActivityFeedActivity[];
+export type ActivityFeedState = { records: ActivityFeedActivity[]; hasMore: boolean };
 
 export type ActivityFeedActivity = string;
 

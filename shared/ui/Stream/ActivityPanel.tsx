@@ -66,13 +66,12 @@ export const ActivityPanel = () => {
 			currentUserName: state.users[state.session.userId!].username,
 			usernames,
 			activity: getActivity(state),
+			hasMoreActivity: state.activityFeed.hasMore,
 			codemarkTypeFilter: state.context.codemarkTypeFilter,
 			lastReads: state.umis.lastReads,
 			webviewFocused: state.context.hasFocus
 		};
 	});
-
-	const [hasMore, setHasMore] = React.useState(derivedState.activity.length > 0);
 
 	const fetchActivity = React.useCallback(async () => {
 		const response = await HostApi.instance.send(FetchActivityRequestType, {
@@ -81,12 +80,16 @@ export const ActivityPanel = () => {
 		});
 		dispatch(savePosts(response.posts));
 		dispatch(saveCodemarks(response.codemarks));
-		dispatch(addOlderActivity("codemark", response.codemarks));
-		setHasMore(Boolean(response.more));
+		dispatch(
+			addOlderActivity("codemark", {
+				activities: response.codemarks,
+				hasMore: Boolean(response.more)
+			})
+		);
 	}, [derivedState.activity]);
 
 	useDidMount(() => {
-		if (!hasMore) fetchActivity();
+		if (derivedState.activity.length === 0) fetchActivity();
 	});
 
 	React.useEffect(() => {
@@ -96,7 +99,7 @@ export const ActivityPanel = () => {
 	}, [derivedState.webviewFocused]);
 
 	const intersectionCallback = () => {
-		if (!hasMore) return;
+		if (!derivedState.hasMoreActivity) return;
 		fetchActivity();
 	};
 
@@ -206,7 +209,7 @@ export const ActivityPanel = () => {
 			<ScrollBox>
 				<div ref={rootRef} className="channel-list vscroll">
 					{renderActivity()}
-					{hasMore && (
+					{derivedState.hasMoreActivity && (
 						<LoadingMessage ref={targetRef}>
 							<Icon className="spin" name="sync" /> Loading more...
 						</LoadingMessage>
