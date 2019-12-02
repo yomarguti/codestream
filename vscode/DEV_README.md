@@ -1,5 +1,7 @@
 # CodeStream for Visual Studio Code
 
+New to VSCode/Codestream? Look for a novice debugging examples at the end of this file.
+
 ### Getting the code
 
 ```
@@ -40,10 +42,11 @@ npm run watch
 
 It will do an initial full build and then watch for file changes, compiling those changes incrementally, enabling a fast, iterative coding experience.
 
-To watch the extension and agent, use the following in separate terminals in vscode-codestream/ and codestream-lsp-agent/:
+To watch the extension and agent, use the following in separate terminals:
 
 ```
 npm run watch
+npm run agent:watch
 ```
 
 Or use the provided `watch` task in VS Code, execute the following from the command palette (be sure there is no `>` at the start):
@@ -208,3 +211,41 @@ Here's what I do --
 2. Install the latest approved vsix running in qa or pd or prod (currently qa) by using `qa.code-workspace` or `pd.code-workspace` or just opening a folder (or nothing) for prod
 
 Typically I develop/debug against prod (so I open a folder or something other than the workspace files), but if I want to debug against qa or pd, I'd open the corresponding workspace file in the debug host vscode window
+
+#### Debug logs
+
+https://github.com/TeamCodeStream/CodeStream/wiki/Instructions-for-finding-CodeStream-log-files
+
+#### New to VSCode example, debugging agent startup code ####
+
+The agent startup code is run only when the agent first starts, and there is no restart mechanism that does not kill and restart the process. We use a feature in VSCode that allows us to wait for a process to spawn, and then automatically attaches to it. 
+
+1. Start VSCode 
+
+2. Open a workspace in the VSCode folder vscode-codestream/pd-slack.code-workspace
+
+3. Create two terminal windows in VSCode, and then 'npm run watch' for each VSCode and agent source.
+	
+	VSCode, View > Terminal, then toward the bottom right there is a :heavy_plus_sign: button to add additional terminals (you can choose the shell as well)
+	
+4. Set a breakpoint in [container.ts before the agent starts](https://github.com/teamcodestream/vscode-codestream/blob/877568f625f3e6b70bc2c4bad8706c558b918260/src/container.ts#L31-L32)
+
+5. Choose the bug symbol on the left VSCode pane
+
+6. On the Debug dropdown, choose "Launch Codestream"
+
+7. Press the green triangle or F5 to start debugging instance
+
+8. If this is the first time starting debug instance, open a folder with a git repo in the launched debug VSCode app (Otherwise will not hit the breakpoint you just set) Stop the debug instance and restart as in steps 6 and 7. 
+
+9. Debugger should stop at breakpoint in container.ts
+
+10. Set a breakpoint in the startup agent code, such as [here](https://pd-api.codestream.us/c/W7URAFha2ilAHunF/MmiwpTChSm6lG1n_oHI2BQ)
+
+11. On the Debug dropdown, choose "Attach to Agent"
+
+12. Press the green triangle AND within 10 seconds:
+
+13. Press the blue run button on the debug tool bar to the right
+
+14. If you have no other breakpoints set, debugger should stop at the breakpoint [here](ttps://pd-api.codestream.us/c/W7URAFha2ilAHunF/MmiwpTChSm6lG1n_oHI2BQ)
