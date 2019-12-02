@@ -21,7 +21,7 @@
 	},
 	"settings": {
 		"codestream.serverUrl": "https://pd-api.codestream.us",
-		"codestream.team": "Team CodeStream",
+		"codestream.team": "PD Dogfooding",
 		"editor.insertSpaces": false,
 		"prettier.requireConfig": true,
 		"prettier.tslintIntegration": true,
