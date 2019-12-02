@@ -204,7 +204,8 @@ export class ScmManager {
 						const gitAuthors = await git.getFileAuthors(uri.fsPath, {
 							startLine: range.start.line,
 							endLine: range.end.line,
-							contents: blameContents
+							contents: blameContents,
+							retryWithTrimmedEndOnFailure: true
 						});
 						const authorEmails = gitAuthors.map(a => a.email);
 

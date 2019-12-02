@@ -19,15 +19,17 @@ export * from "./models/models";
 
 const cygwinRegex = /\/cygdrive\/([a-zA-Z])/;
 
+export interface BlameOptions {
+	ref?: string;
+	contents?: string;
+	startLine?: number;
+	endLine?: number;
+	retryWithTrimmedEndOnFailure?: boolean;
+}
+
 export interface IGitService extends Disposable {
-	getFileAuthors(
-		uri: URI,
-		options?: { ref?: string; contents?: string; startLine?: number; endLine?: number }
-	): Promise<GitAuthor[]>;
-	getFileAuthors(
-		path: string,
-		options?: { ref?: string; contents?: string; startLine?: number; endLine?: number }
-	): Promise<GitAuthor[]>;
+	getFileAuthors(uri: URI, options?: BlameOptions): Promise<GitAuthor[]>;
+	getFileAuthors(path: string, options?: BlameOptions): Promise<GitAuthor[]>;
 	// getFileAuthors(uriOrPath: Uri | string, options?: { ref?: string, contents?: string, startLine?: number, endLine?: number }): Promise<GitAuthor[]>;
 
 	getFileCurrentRevision(uri: URI): Promise<string | undefined>;
@@ -92,36 +94,59 @@ export class GitService implements IGitService, Disposable {
 		return this._repositories.onCommitHashChanged;
 	}
 
-	async getFileAuthors(
-		uri: URI,
-		options?: { ref?: string; contents?: string; startLine?: number; endLine?: number }
-	): Promise<GitAuthor[]>;
-	async getFileAuthors(
-		path: string,
-		options?: { ref?: string; contents?: string; startLine?: number; endLine?: number }
-	): Promise<GitAuthor[]>;
-	async getFileAuthors(
-		uriOrPath: URI | string,
-		options: { ref?: string; contents?: string; startLine?: number; endLine?: number } = {}
-	): Promise<GitAuthor[]> {
-		const data = await this.getRawBlame(uriOrPath, options);
-		return GitAuthorParser.parse(data);
+	async getFileAuthors(uri: URI, options?: BlameOptions): Promise<GitAuthor[]>;
+	async getFileAuthors(path: string, options?: BlameOptions): Promise<GitAuthor[]>;
+	async getFileAuthors(uriOrPath: URI | string, options: BlameOptions): Promise<GitAuthor[]> {
+		try {
+			const data = await this.getRawBlame(uriOrPath, options);
+			return GitAuthorParser.parse(data);
+		} catch (error) {
+			if (options.retryWithTrimmedEndOnFailure && this._isRangeOutOfBoundsError(error.message)) {
+				const actualLength = this._getFileLengthFromOutOfBoundsError(error.message);
+				if (actualLength) {
+					return this.getFileAuthors(uriOrPath as any, {
+						...options,
+						endLine: actualLength - 1,
+						retryWithTrimmedEndOnFailure: false
+					});
+				}
+			}
+			throw error;
+		}
 	}
 
-	async getBlameRevisions(
-		uri: URI,
-		options?: { ref?: string; contents?: string; startLine?: number; endLine?: number }
-	): Promise<RevisionEntry[]>;
-	async getBlameRevisions(
-		path: string,
-		options?: { ref?: string; contents?: string; startLine?: number; endLine?: number }
-	): Promise<RevisionEntry[]>;
+	async getBlameRevisions(uri: URI, options?: BlameOptions): Promise<RevisionEntry[]>;
+	async getBlameRevisions(path: string, options?: BlameOptions): Promise<RevisionEntry[]>;
 	async getBlameRevisions(
 		uriOrPath: URI | string,
-		options: { ref?: string; contents?: string; startLine?: number; endLine?: number } = {}
+		options: BlameOptions = {}
 	): Promise<RevisionEntry[]> {
-		const data = await this.getRawBlame(uriOrPath, options);
-		return GitBlameRevisionParser.parse(data);
+		try {
+			const data = await this.getRawBlame(uriOrPath, options);
+			return GitBlameRevisionParser.parse(data);
+		} catch (error) {
+			const { message } = error;
+			if (options.retryWithTrimmedEndOnFailure && this._isRangeOutOfBoundsError(message)) {
+				const actualLength = this._getFileLengthFromOutOfBoundsError(message);
+				if (actualLength) {
+					return this.getBlameRevisions(uriOrPath as any, {
+						...options,
+						endLine: actualLength - 1,
+						retryWithTrimmedEndOnFailure: false
+					});
+				}
+			}
+			throw error;
+		}
+	}
+
+	private _isRangeOutOfBoundsError(message: string) {
+		return /((fatal: file )(\S+)\s(has only )\d+\s(lines))/.test(message);
+	}
+
+	private _getFileLengthFromOutOfBoundsError(message: string) {
+		const lengthString = message.substring(message.indexOf("fatal: file")).match(/\d+/)?.[0];
+		return lengthString ? parseInt(lengthString, 10) : undefined;
 	}
 
 	private async getRawBlame(

@@ -178,7 +178,9 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 		const filePath = URI.parse(documentId.uri).fsPath;
 		const fileContents = document ? document.getText() : await xfs.readText(filePath);
 		if (fileContents === undefined) {
-			throw new Error(`prepareMarkerCreationDescriptor: Could not retrieve contents for ${documentId.uri} from document manager or file system. File does not exist in current branch.`);
+			throw new Error(
+				`prepareMarkerCreationDescriptor: Could not retrieve contents for ${documentId.uri} from document manager or file system. File does not exist in current branch.`
+			);
 		}
 
 		if (source) {
@@ -202,7 +204,8 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 					ref: fileCurrentCommit,
 					// it expects 0-based ranges
 					startLine: locationAtCurrentCommit.lineStart - 1,
-					endLine: locationAtCurrentCommit.lineEnd - 1
+					endLine: locationAtCurrentCommit.lineEnd - 1,
+					retryWithTrimmedEndOnFailure: true
 				});
 				const remoteDefaultBranchRevisionsPromises = git.getRemoteDefaultBranchHeadRevisions(
 					source.repoPath,
@@ -244,7 +247,9 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 				};
 				const backtrackedLocations = await Promise.all(promises);
 				referenceLocations = [referenceLocation, ...backtrackedLocations];
-				Logger.log(`prepareMarkerCreationDescriptor: ${referenceLocations.length} reference locations calculated`);
+				Logger.log(
+					`prepareMarkerCreationDescriptor: ${referenceLocations.length} reference locations calculated`
+				);
 			} else {
 				Logger.log(`prepareMarkerCreationDescriptor: no source revision - file has no commits`);
 				fileCurrentCommit = (await git.getRepoHeadRevision(source.repoPath))!;
@@ -296,7 +301,11 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 					marker.repoId = repo.id;
 				} else {
 					marker.knownCommitHashes = await MarkersManager.getKnownCommitHashes(source.repoPath);
-					Logger.log(`prepareMarkerCreationDescriptor: known commit hashes = ${marker.knownCommitHashes.join(", ")}`);
+					Logger.log(
+						`prepareMarkerCreationDescriptor: known commit hashes = ${marker.knownCommitHashes.join(
+							", "
+						)}`
+					);
 				}
 			}
 		} else {
