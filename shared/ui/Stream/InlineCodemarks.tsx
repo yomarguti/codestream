@@ -82,6 +82,7 @@ import styled from "styled-components";
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 interface Props {
+	showFeedbackSmiley: boolean;
 	hasPRProvider: boolean;
 	showPRComments: boolean;
 	currentStreamId?: string;
@@ -1109,21 +1110,25 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						<Switch size="small" on={!viewInline} onChange={this.toggleViewCodemarksInline} />
 					</ViewSelectorControl>
 				</Tooltip>
-				<ViewSelectorControl>
-					<Feedback />
-				</ViewSelectorControl>
+				{this.props.showFeedbackSmiley && (
+					<ViewSelectorControl>
+						<Feedback />
+					</ViewSelectorControl>
+				)}
 			</ViewSelectors>
 		);
 	}
 
 	render() {
+		const { fileNameToFilterFor } = this.props;
+		const fileName = fileNameToFilterFor ? fileNameToFilterFor.replace(/.*\//, "") : "";
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
 				<div
 					className="panel-header"
 					style={{ textAlign: "left", padding: "15px 30px 25px 45px", position: "fixed" }}
 				>
-					{this.props.fileNameToFilterFor!.replace(/.*\//, "")}
+					{fileName}
 					<EditingIndicator />
 				</div>
 				{this.renderHoverIcons()}
@@ -1307,6 +1312,7 @@ const mapStateToProps = (state: CodeStreamState) => {
 	);
 
 	return {
+		showFeedbackSmiley: context.showFeedbackSmiley,
 		hasPRProvider,
 		currentStreamId: context.currentStreamId,
 		team: teams[context.currentTeamId],

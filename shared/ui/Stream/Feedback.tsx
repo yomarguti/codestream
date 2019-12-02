@@ -74,7 +74,7 @@ export class Feedback extends React.Component<Props, State> {
 		if (!dialogOpen) return null;
 
 		return ReactDOM.createPortal(
-			<div className="feedback">
+			<div className="feedback-popup">
 				<div className="dialog standard-form" style={{ padding: 0 }}>
 					<div className="form-body">
 						<div id="controls">
@@ -212,9 +212,6 @@ const mapStateToProps = ({ context }: CodeStreamState) => {
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{
-		setShowFeedbackSmiley: setShowFeedbackSmiley
-	}
-)(Feedback);
+export default connect(mapStateToProps, {
+	setShowFeedbackSmiley: setShowFeedbackSmiley
+})(Feedback);
