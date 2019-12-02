@@ -57,7 +57,7 @@
                     "description": "Allow self-signed certificates to be used in network requests (On-Prem)",
                     "scope": "window"
                 },
-                "codestream.email": {                    
+                "codestream.email": {
                     "type": "string",
                     "default": null,
                     "description": "Specifies the email address to use to connect to the CodeStream service",
@@ -552,6 +552,7 @@
         "@types/uuid": "3.4.5",
         "@types/vscode": "1.31.0",
         "babel-loader": "8.0.6",
+        "babel-plugin-styled-components": "1.10.6",
         "circular-dependency-plugin": "5.0.2",
         "clean-webpack-plugin": "1.0.1",
         "css-loader": "3.1.0",

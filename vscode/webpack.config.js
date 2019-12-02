@@ -255,7 +255,12 @@ function getWebviewConfig(env) {
 				},
 				{
 					test: /\.(js|ts)x?$/,
-					use: "babel-loader",
+					use: {
+						loader: "babel-loader",
+						options: {
+							plugins: ["babel-plugin-styled-components"]
+						}
+					},
 					exclude: /node_modules/
 				},
 				{
