@@ -10,15 +10,15 @@ git clone https://github.com/TeamCodeStream/vscode-codestream.git
 
 👉 **NOTE!** Make sure to clone the `vscode-codestream` repository into a folder that is a sibling of the `codestream-component` and `codestream-lsp-agent` repositories
 
-Prerequisites
+Versions
 
-- [Git](https://git-scm.com/)
-- [NodeJS](https://nodejs.org/en/), `>= 8.9.1, < 9.0.0`
-- [npm](https://npmjs.com/), `>= 6.2.0`
+- [Git](https://git-scm.com/), 2.17.1
+- [NodeJS](https://nodejs.org/en/), 10.15.3 (Nov 2019)
+- [npm](https://npmjs.com/), 6.11.3 (Dec 2019)
 
 ### Build
 
-From a terminal, where you have cloned the repository, execute the following command to re-build the agent from scratch:
+From a terminal, where you have cloned the repository, execute the following command to build the agent from scratch:
 
 ```
 npm run rebuild
@@ -34,7 +34,7 @@ npm run build
 
 ### Watch
 
-During development you can use a watcher to make builds on changes quick and easy. From a terminal, where you have cloned the repository, execute the following command:
+During development you can use a watcher to automatically updating your running builds on editor code changes. From a terminal, where you have cloned the repository, execute the following command:
 
 ```
 npm run watch
@@ -42,12 +42,14 @@ npm run watch
 
 It will do an initial full build and then watch for file changes, compiling those changes incrementally, enabling a fast, iterative coding experience.
 
-To watch the extension and agent, use the following in separate terminals:
+To watch the extension and agent, use the following in separate terminals :
 
 ```
 npm run watch
-npm run agent:watch
+npm run watch
 ```
+
+👉 **Tip!** You can use terminals built into VSCode to reduce the number of free floating windows
 
 Or use the provided `watch` task in VS Code, execute the following from the command palette (be sure there is no `>` at the start):
 
