@@ -24,6 +24,9 @@ export function reduceUnreads(state = initialState, action: UnreadsActions) {
 				unreads: payload.unreads
 			};
 		}
+		case UnreadsActionsType.ResetLastReads: {
+			return { ...state, lastReads: {} };
+		}
 		case "RESET":
 			return initialState;
 		default:

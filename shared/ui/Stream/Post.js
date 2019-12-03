@@ -1,4 +1,3 @@
-// @ts-check
 import createClassString from "classnames";
 import React from "react";
 import ContentEditable from "react-contenteditable";
@@ -962,16 +961,13 @@ const mapStateToProps = (state, props) => {
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{
-		cancelPost,
-		retryPost,
-		editPost,
-		deletePost,
-		reactToPost,
-		setCodemarkStatus,
-		pinReply,
-		unpinReply
-	}
-)(injectIntl(Post));
+export default connect(mapStateToProps, {
+	cancelPost,
+	retryPost,
+	editPost,
+	deletePost,
+	reactToPost,
+	setCodemarkStatus,
+	pinReply,
+	unpinReply
+})(injectIntl(Post));

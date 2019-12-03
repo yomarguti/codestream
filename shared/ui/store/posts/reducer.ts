@@ -1,7 +1,7 @@
 import { CSPost } from "@codestream/protocols/api";
 import { ActionType } from "../common";
 import * as actions from "./actions";
-import { isPending, PostsActionsType, PostsState } from "./types";
+import { isPending, PostsActionsType, PostsState, Post } from "./types";
 import { sortBy as _sortBy } from "lodash-es";
 
 type PostsActions = ActionType<typeof actions>;
@@ -106,7 +106,7 @@ export const getPostsForStream = ({ byStream, pending }, streamId) => {
 	];
 };
 
-export const getPost = ({ byStream, pending }, streamId, postId) => {
+export const getPost = ({ byStream, pending }: PostsState, streamId: string, postId: string) => {
 	const post = (byStream[streamId] || {})[postId];
 	return post || pending.find(p => p.id === postId);
 };

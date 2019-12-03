@@ -16,16 +16,20 @@ import { setCodemarkTypeFilter } from "../store/context/actions";
 import { getActivity } from "../store/activityFeed/reducer";
 import { useDidMount } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
-import { FetchActivityRequestType } from "@codestream/protocols/agent";
+import { FetchActivityRequestType, PostPlus } from "@codestream/protocols/agent";
 import { savePosts } from "../store/posts/actions";
 import { addOlderActivity } from "../store/activityFeed/actions";
 import { saveCodemarks } from "../store/codemarks/actions";
 import { safe } from "../utils";
 import { markStreamRead } from "./actions";
 import { CodemarkType } from "@codestream/protocols/api";
+import { resetLastReads } from "../store/unreads/actions";
 
-const ActivityWrapper = styled.div`
+const ActivityWrapper = styled.div<{ unread?: boolean }>`
 	margin: 0 40px 20px 45px;
+	.codemark.inline {
+		${props => (props.unread ? `border-left: 2px solid var(--text-color-info);` : "")}
+	}
 	// for now this is only to explore the aesthetic... doesn't actually work
 	// it should be .post.unread
 	.post {
@@ -68,7 +72,7 @@ export const ActivityPanel = () => {
 			activity: getActivity(state),
 			hasMoreActivity: state.activityFeed.hasMore,
 			codemarkTypeFilter: state.context.codemarkTypeFilter,
-			lastReads: state.umis.lastReads,
+			umis: state.umis,
 			webviewFocused: state.context.hasFocus
 		};
 	});
@@ -90,10 +94,13 @@ export const ActivityPanel = () => {
 
 	useDidMount(() => {
 		if (derivedState.activity.length === 0) fetchActivity();
+		return () => {
+			dispatch(resetLastReads());
+		};
 	});
 
 	React.useEffect(() => {
-		for (let streamId in derivedState.lastReads) {
+		for (let streamId in derivedState.umis.unreads) {
 			dispatch(markStreamRead(streamId));
 		}
 	}, [derivedState.webviewFocused]);
@@ -118,6 +125,12 @@ export const ActivityPanel = () => {
 				codemark.type !== derivedState.codemarkTypeFilter
 			)
 				return null;
+
+			const lastReadForStream = derivedState.umis.lastReads[codemark.streamId];
+			const isUnread =
+				lastReadForStream != undefined &&
+				codemark.post != undefined &&
+				(codemark.post as PostPlus).seqNum > lastReadForStream;
 
 			return [
 				demoMode && counter == 2 ? (
@@ -162,7 +175,7 @@ export const ActivityPanel = () => {
 						</div>
 					</ActivityWrapper>
 				) : null,
-				<ActivityWrapper key={codemark.id}>
+				<ActivityWrapper key={codemark.id} unread={isUnread}>
 					{/* <Timestamp dateOnly={true} time={codemark.createdAt} /> */}
 					{demoMode && counter == 5 && <Timestamp dateOnly={true} time={codemark.createdAt} />}
 					<Codemark

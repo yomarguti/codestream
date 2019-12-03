@@ -1,6 +1,8 @@
 import { action } from "../common";
 import { UnreadsState, UnreadsActionsType } from "./types";
 
-export const reset = () => action("RESET");
+export { reset } from "../actions";
 
 export const updateUnreads = (data: UnreadsState) => action(UnreadsActionsType.Update, data);
+
+export const resetLastReads = () => action(UnreadsActionsType.ResetLastReads);

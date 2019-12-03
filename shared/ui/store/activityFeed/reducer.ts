@@ -6,6 +6,8 @@ import { mapFilter } from "@codestream/webview/utils";
 import * as actions from "./actions";
 import { ActionType } from "../common";
 import { uniq } from "lodash-es";
+import { PostsState } from "../posts/types";
+import { getPost } from "../posts/reducer";
 
 type ActivityFeedAction = ActionType<typeof actions>;
 
@@ -30,12 +32,14 @@ export function reduceActivityFeed(state = initialState, action: ActivityFeedAct
 export const getActivity = createSelector(
 	(state: CodeStreamState) => state.codemarks,
 	(state: CodeStreamState) => state.activityFeed.records,
-	(codemarks: CodemarksState, activityFeed: ActivityFeedActivity[]) => {
+	(state: CodeStreamState) => state.posts,
+	(codemarks: CodemarksState, activityFeed: ActivityFeedActivity[], posts: PostsState) => {
 		return mapFilter(activityFeed, activity => {
 			const [model, id] = activity.split("|");
 			switch (model) {
 				case "codemark":
-					return codemarks[id];
+					const codemark = codemarks[id];
+					return { ...codemark, post: getPost(posts, codemark.streamId, codemark.postId) };
 				default:
 					return;
 			}
