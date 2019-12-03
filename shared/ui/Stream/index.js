@@ -341,9 +341,9 @@ export class SimpleStream extends Component {
 
 	renderMenu() {
 		const { menuOpen, menuTarget } = this.state;
-		const inviteLabel = this.props.isCodeStreamTeam
-			? "Invite People"
-			: "Invite People to CodeStream";
+		// const inviteLabel = this.props.isCodeStreamTeam
+		// 	? "Invite People"
+		// 	: "Invite People to CodeStream";
 
 		const { userTeams, teamId: currentTeamId } = this.props;
 		const hasOtherTeams = userTeams.length > 1;
@@ -399,12 +399,9 @@ export class SimpleStream extends Component {
 
 		const menuItems = [
 			hasOtherTeams ? teamItem : undefined,
-			{ label: "-" },
-			{ label: inviteLabel, action: "invite" },
-			// { label: "Settings", action: "settings" },
-			{ label: "Feedback", action: "feedback" },
-			{ label: "Help", action: "help" },
 			{ label: "-" }
+			// { label: inviteLabel, action: "invite" },
+			// { label: "Settings", action: "settings" },
 		].filter(Boolean);
 
 		const providerMenuItems = this.addProvidersToMenu();
@@ -413,6 +410,11 @@ export class SimpleStream extends Component {
 			menuItems.push(...providerMenuItems);
 			menuItems.push({ label: "-" });
 		}
+		menuItems.push(
+			{ label: "Feedback", action: "feedback" },
+			{ label: "Help", action: "help" },
+			{ label: "-" }
+		);
 
 		menuItems.push({ label: "Sign Out", action: "signout" });
 

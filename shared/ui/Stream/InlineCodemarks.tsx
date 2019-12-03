@@ -70,6 +70,7 @@ import { PostsActionsType } from "../store/posts/types";
 import { Switch } from "../src/components/controls/Switch";
 import { NewCodemarkAttributes } from "../store/codemarks/actions";
 import styled from "styled-components";
+import { PanelHeader } from "../src/components/PanelHeader";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -1124,13 +1125,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const fileName = fileNameToFilterFor ? fileNameToFilterFor.replace(/.*\//, "") : "";
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
-				<div
-					className="panel-header"
-					style={{ textAlign: "left", padding: "15px 30px 25px 45px", position: "fixed" }}
-				>
-					{fileName}
+				<PanelHeader title={fileName} position="fixed">
 					<EditingIndicator />
-				</div>
+				</PanelHeader>
 				{this.renderHoverIcons()}
 				{this.renderCodemarkForm()}
 				{this.state.showPRInfoModal && (

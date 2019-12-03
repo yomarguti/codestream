@@ -13,6 +13,7 @@ import Headshot from "./Headshot";
 import { HostApi } from "../webview-api";
 import { includes as _includes, sortBy as _sortBy } from "lodash-es";
 import { setCurrentStream, setCurrentCodemark } from "../store/context/actions";
+import { PanelHeader } from "../src/components/PanelHeader";
 
 export class SimpleKnowledgePanel extends Component {
 	disposables = [];
@@ -380,47 +381,46 @@ export class SimpleKnowledgePanel extends Component {
 		// console.log("SELECTED AG FILTER: ", tagFilter);
 		return (
 			<div className="panel full-height knowledge-panel">
-				<div className="panel-header" style={{ textAlign: "left", padding: "15px 30px 0px 45px" }}>
-					Search
-				</div>
-				<div className="search-bar">
-					<input
-						name="q"
-						className="input-text control"
-						type="text"
-						ref={ref => (this._searchInput = ref)}
-						onChange={e => this.setState({ q: e.target.value })}
-						placeholder="Search Codemarks"
-					/>
-				</div>
+				<PanelHeader title="Search">
+					<div className="search-bar">
+						<input
+							name="q"
+							className="input-text control"
+							type="text"
+							ref={ref => (this._searchInput = ref)}
+							onChange={e => this.setState({ q: e.target.value })}
+							placeholder="Search Codemarks"
+						/>
+					</div>
 
-				<div className="filters">
-					Show{" "}
-					<Filter
-						onValue={this.props.setCodemarkTypeFilter}
-						selected={typeFilter}
-						labels={this.typeLabelsLower}
-						items={typeMenuItems}
-					/>
-					<Filter
-						onValue={this.props.setCodemarkAuthorFilter}
-						selected={authorFilter}
-						labels={this.props.authorFiltersLabelsLower}
-						items={authorMenuItems}
-					/>
-					<Filter
-						onValue={this.props.setCodemarkTagFilter}
-						selected={tagFilter}
-						labels={this.props.tagFiltersLabelsLower}
-						items={tagMenuItems}
-					/>
-					<Filter
-						onValue={this.props.setCodemarkBranchFilter}
-						selected={branchFilter}
-						labels={this.props.branchFiltersLabelsLower}
-						items={branchMenuItems}
-					/>
-				</div>
+					<div className="filters">
+						Show{" "}
+						<Filter
+							onValue={this.props.setCodemarkTypeFilter}
+							selected={typeFilter}
+							labels={this.typeLabelsLower}
+							items={typeMenuItems}
+						/>
+						<Filter
+							onValue={this.props.setCodemarkAuthorFilter}
+							selected={authorFilter}
+							labels={this.props.authorFiltersLabelsLower}
+							items={authorMenuItems}
+						/>
+						<Filter
+							onValue={this.props.setCodemarkTagFilter}
+							selected={tagFilter}
+							labels={this.props.tagFiltersLabelsLower}
+							items={tagMenuItems}
+						/>
+						<Filter
+							onValue={this.props.setCodemarkBranchFilter}
+							selected={branchFilter}
+							labels={this.props.branchFiltersLabelsLower}
+							items={branchMenuItems}
+						/>
+					</div>
+				</PanelHeader>
 				<ScrollBox>
 					<div className="channel-list vscroll">
 						{totalCodemarks > 0 &&
@@ -569,15 +569,17 @@ const mapStateToProps = state => {
 	codemarks.forEach(codemark => {
 		const { markers, createdAt, creatorId } = codemark;
 		const author = userSelectors.getUserByCsId(users, creatorId);
-		author.name = author.fullName || author.username || author.email;
-		authorArray[creatorId] = author;
-		authorFiltersLabelsLower[creatorId] = (
-			<span className="headshot-wrapper">
-				by &nbsp;
-				<Headshot size={18} person={author} />
-				{author.name}
-			</span>
-		);
+		if (author) {
+			author.name = author.fullName || author.username || author.email;
+			authorArray[creatorId] = author;
+			authorFiltersLabelsLower[creatorId] = (
+				<span className="headshot-wrapper">
+					by &nbsp;
+					<Headshot size={18} person={author} />
+					{author.name}
+				</span>
+			);
+		}
 		markers.forEach(marker => {
 			const { branchWhenCreated: branch, commitHashWhenCreated: commit } = marker;
 			if (branch) {
@@ -627,7 +629,6 @@ const mapStateToProps = state => {
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{ ...actions, setCurrentStream, setCurrentCodemark }
-)(SimpleKnowledgePanel);
+export default connect(mapStateToProps, { ...actions, setCurrentStream, setCurrentCodemark })(
+	SimpleKnowledgePanel
+);

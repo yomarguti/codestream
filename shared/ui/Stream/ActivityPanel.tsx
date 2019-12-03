@@ -24,6 +24,7 @@ import { safe } from "../utils";
 import { markStreamRead } from "./actions";
 import { CodemarkType } from "@codestream/protocols/api";
 import { resetLastReads } from "../store/unreads/actions";
+import { PanelHeader } from "../src/components/PanelHeader";
 
 const ActivityWrapper = styled.div<{ unread?: boolean }>`
 	margin: 0 40px 20px 45px;
@@ -207,18 +208,17 @@ export const ActivityPanel = () => {
 
 	return (
 		<div className="panel full-height activity-panel">
-			<div className="panel-header" style={{ textAlign: "left", padding: "15px 30px 5px 45px" }}>
-				Activity
-			</div>
-			<div className="filters" style={{ textAlign: "left", padding: "0px 30px 15px 45px" }}>
-				Show{" "}
-				<Filter
-					onValue={value => dispatch(setCodemarkTypeFilter(value))}
-					selected={derivedState.codemarkTypeFilter}
-					labels={showActivityLabels}
-					items={menuItems}
-				/>
-			</div>
+			<PanelHeader title="Activity">
+				<div className="filters">
+					Show{" "}
+					<Filter
+						onValue={value => dispatch(setCodemarkTypeFilter(value))}
+						selected={derivedState.codemarkTypeFilter}
+						labels={showActivityLabels}
+						items={menuItems}
+					/>
+				</div>
+			</PanelHeader>
 			<ScrollBox>
 				<div ref={rootRef} className="channel-list vscroll">
 					{renderActivity()}

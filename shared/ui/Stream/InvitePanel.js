@@ -15,6 +15,7 @@ import { sortBy as _sortBy } from "lodash-es";
 import { getTeamProvider } from "../store/teams/reducer";
 import { HostApi } from "../webview-api";
 import { WebviewPanels } from "@codestream/protocols/webview";
+import { PanelHeader } from "../src/components/PanelHeader";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -170,12 +171,16 @@ export class InvitePanel extends Component {
 			);
 		}
 		return (
-			<fieldset className="form-body" disabled={inactive}>
-				<div className="outline-box">
+			<>
+				<PanelHeader title="Invite a Teammate" />
+				<fieldset
+					className="form-body"
+					disabled={inactive}
+					style={{ padding: "0 20px", maxWidth: "none" }}
+				>
 					<div id="controls">
 						<div style={{ display: "flex", alignItems: "flex-end" }}>
 							<div className="control-group" style={{ flexGrow: 3 }}>
-								<label>Invite a Teammate</label>
 								<input
 									className="input-text"
 									id="invite-email-input"
@@ -199,8 +204,8 @@ export class InvitePanel extends Component {
 							</Button>
 						</div>
 					</div>
-				</div>
-			</fieldset>
+				</fieldset>
+			</>
 		);
 	};
 
@@ -231,6 +236,9 @@ export class InvitePanel extends Component {
 	}
 
 	renderUserStatus(user) {
+		// turn this off, as it is just a mockup exploration -Pez
+		return null;
+
 		if (user.username === "pez") {
 			const files = [
 				"codestream-components/InlineCodemarks.tsx",
@@ -271,35 +279,10 @@ export class InvitePanel extends Component {
 
 		return (
 			<div className="panel full-height invite-panel">
-				<div className="panel-header" style={{ textAlign: "left", padding: "15px 30px 5px 45px" }}>
-					Your Team
-				</div>
+				<PanelHeader title="Your Team" />
 				<ScrollBox>
 					<div className="vscroll">
-						<form className="standard-form" onSubmit={this.onSubmit}>
-							{this.renderFieldset(inactive)}
-						</form>
-						{this.props.invited.length > 0 && (
-							<div className="section">
-								<div className="header">
-									<span>Outstanding Invitations</span>
-								</div>
-								<ul>
-									{this.props.invited.map(user => (
-										<li key={user.email}>
-											<div className="committer-email">
-												{user.email}
-												{this.renderEmailUser(user)}
-											</div>
-										</li>
-									))}
-								</ul>
-							</div>
-						)}
-						<div className="section">
-							<div className="header">
-								<span>Current Team</span>
-							</div>
+						<div className="section" style={{ paddingTop: "10px" }}>
 							<ul>
 								{/* FIXME -- sort these users somehow */
 								this.props.members.map(user => (
@@ -316,6 +299,24 @@ export class InvitePanel extends Component {
 								))}
 							</ul>
 						</div>
+						<form className="standard-form" onSubmit={this.onSubmit} style={{ padding: "10px 0" }}>
+							{this.renderFieldset(inactive)}
+						</form>
+						{this.props.invited.length > 0 && (
+							<div className="section">
+								<PanelHeader title="Outstanding Invitations" />
+								<ul>
+									{this.props.invited.map(user => (
+										<li key={user.email}>
+											<div className="committer-email">
+												{user.email}
+												{this.renderEmailUser(user)}
+											</div>
+										</li>
+									))}
+								</ul>
+							</div>
+						)}
 					</div>
 				</ScrollBox>
 			</div>
@@ -352,7 +353,7 @@ const mapStateToProps = ({ users, context, teams }) => {
 	return {
 		teamId: team.id,
 		teamName: team.name,
-		members: _sortBy(members, "name"),
+		members: _sortBy(members, m => (m.fullName || "").toLowerCase()),
 		invited: _sortBy(invited, "email")
 	};
 };
