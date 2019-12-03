@@ -65,7 +65,7 @@ npm run webview:watch
 
 👉 **Tip!** You don't need to stop and restart the development version of Code after each change. You can just execute `Reload Window` from the command palette. We like to assign the keyboard shortcut <kbd>CMD+R</kbd> (<kbd>CTRL+R</kbd> on Windows, Linux) to this command.
 
-### Formatting
+### Code Formatting
 
 We use [prettier](https://prettier.io/) for formatting our code. You can run prettier across the code by calling `npm run pretty` from a terminal.
 
@@ -75,9 +75,11 @@ Add the following to your User Settings to run prettier:
 
 `"editor.formatOnSave": true,`
 
-### Linting
+#### Linting
 
-We use [tslint](https://palantir.github.io/tslint/) for linting our code. You can run tslint across the code by calling `npm run lint` from a terminal. Warnings from tslint show up in the `Errors and Warnings` quick box and you can navigate to them from inside VS Code.
+We use [tslint](https://palantir.github.io/tslint/) for linting our code. In most cases, tslint will show directly inline in VSCode files.
+
+You can also run tslint across the code by calling `npm run lint` from a terminal. Warnings from tslint show up in the `Errors and Warnings` quick box and you can navigate to them from inside VS Code.
 
 To lint the code as you make changes you can install the [TSLint](https://marketplace.visualstudio.com/items/eg2.tslint) extension.
 
@@ -90,6 +92,8 @@ npm run test
 ```
 
 ### Bundling
+
+Note: In many cases, you can use a pre-built .vsix file (see below)
 
 To generate a production bundle (without packaging) run the following from a terminal:
 
@@ -106,25 +110,28 @@ npm run pack
 
 ### Debugging
 
-#### Using VS Code
+#### Using VSCode
 
 - Open the `vscode-codestream` repository folder
-- Choose the `Launch CodeStream` launch configuration from the launch dropdown in the Debug viewlet and press `F5`.
+- Choose the `Launch CodeStream` launch configuration from the launch dropdown in the Debug dropdown and press `F5`.
 
-### Downloading Built VSIXs
+### Downloading Built VSIXs (common)
 
 Here are the download links for pre-built vsix bundles:
 
-- **CI**: https://assets.codestream.com/local/vscode/codestream-latest.vsix
-- **PD**: https://assets.codestream.com/pd/vscode/codestream-latest.vsix
-- **QA**: https://assets.codestream.com/qa/vscode/codestream-latest.vsix
-- **Production**: https://assets.codestream.com/prod/vscode/codestream-latest.vsix
+- [TeamCity builds](http://teamcity.codestream.us/project.html?projectId=VisualStudioCode&tab=projectOverview)
 
-### Connecting to a CodeStream environment
+### Connecting to a CodeStream backend environment (common)
 
-Probably the easiest way to switch between environments is to create separate workspace files for each using the example workspace files below.
+You'll find a number of preconfigured workspace files in the vscode-codestream base folder.
 
-#### Connecting to the PD environment
+Most likely, you can start with [pd.code-workspace] (https://pd-api.codestream.us/c/XeVt1z0FRWDASwNz/oKXkL03ESYi1xHxRM8akig) for most work. The "pd" prefix stands for "Persistent Development" and is for most on-going product development.
+
+### Writing your own workspace files  (less common)
+
+When you need to switch between environments not covered by one of the existing workspace files, you can create workspace files for each using the example workspace files below.
+
+#### Connects to the PD environment
 
 Use the following settings:
 
@@ -151,7 +158,7 @@ Example workspace file &mdash; save as pd.code-workspace
 }
 ```
 
-#### Connecting to the QA environment
+#### Connects to the QA environment
 
 Use the following settings:
 
@@ -178,7 +185,7 @@ Example workspace file &mdash; save as qa.code-workspace
 }
 ```
 
-#### Connecting to the Production environment
+#### Connects to the Production environment
 
 Use the following settings:
 
@@ -207,8 +214,8 @@ Example workspace file &mdash; save as prod.code-workspace
 
 Here's what I do --
 
-1. Install the latest approved vsix in the insiders version of vscode (which is what I use for development/debugging) and I open the `codestream.code-workspace` running in prod
-2. Install the latest approved vsix running in qa or pd or prod (currently qa) by using `qa.code-workspace` or `pd.code-workspace` or just opening a folder (or nothing) for prod
+1. Install the latest approved vsix in the insiders version of vscode (which is what I use for development/debugging) and I open the `codestream.code-workspace` running in prod (As of Dec 2019, normally do not use prod)
+2. Install the latest approved vsix running in qa or pd or prod (currently qa) by using `qa.code-workspace` or `pd.code-workspace` or just opening a folder (or nothing) for prod (as of Dec 2019, normally do not use prod)
 
 Typically I develop/debug against prod (so I open a folder or something other than the workspace files), but if I want to debug against qa or pd, I'd open the corresponding workspace file in the debug host vscode window
 
@@ -216,7 +223,7 @@ Typically I develop/debug against prod (so I open a folder or something other th
 
 https://github.com/TeamCodeStream/CodeStream/wiki/Instructions-for-finding-CodeStream-log-files
 
-#### New to VSCode example, debugging agent startup code ####
+### New to VSCode example: debugging agent startup code (Novice) ###
 
 The agent startup code is run only when the agent first starts, and there is no restart mechanism that does not kill and restart the process. We use a feature in VSCode that allows us to wait for a process to spawn, and then automatically attaches to it. 
 
