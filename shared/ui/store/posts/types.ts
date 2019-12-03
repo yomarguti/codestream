@@ -23,7 +23,7 @@ export interface PostsState {
 
 export enum PostsActionsType {
 	Bootstrap = "BOOTSTRAP_POSTS",
-	Add = "ADD_POSTS",
+	Add = "ADD_POSTS", // this is a legacy action dispatched on pubnub updates
 	AddPendingPost = "ADD_PENDING_POST",
 	AddForStream = "ADD_POSTS_FOR_STREAM",
 	Update = "UPDATE_POST",

@@ -206,6 +206,7 @@ export default class Container extends React.Component {
 	}
 
 	componentDidMount() {
+		this.setState({ theme: createTheme() });
 		this._mutationObserver = new MutationObserver(() => {
 			this.setState({ theme: createTheme() });
 		});

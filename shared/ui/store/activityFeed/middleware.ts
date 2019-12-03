@@ -12,14 +12,14 @@ import { addNewActivity } from "./actions";
 export const activityFeedMiddleware = (
 	store: MiddlewareAPI<Dispatch, CodeStreamState>
 ) => next => (action: { type: string }) => {
-	const currentUserId = store.getState().session.userId!;
+	const { bootstrapped } = store.getState();
 
-	if (action.type === PostsActionsType.Add) {
+	if (bootstrapped && action.type === PostsActionsType.Add) {
 		const payload = (action as ReturnType<typeof addPosts>).payload as readonly PostPlus[];
 		payload.forEach(post => {
 			if (post.deactivated) return;
 
-			if (post.creatorId !== currentUserId && post.parentPostId && post.version === 1) {
+			if (post.parentPostId && post.version === 1) {
 				store.dispatch(fetchPostForActivity(post.parentPostId, post.streamId));
 			} else if (post.codemark && post.version === 1) {
 				store.dispatch(addNewActivity("codemark", [post.codemark]));
