@@ -65,6 +65,7 @@ export interface CreateShareableCodemarkRequest {
 	memberIds?: string[];
 	textDocuments?: TextDocumentIdentifier[];
 	entryPoint?: string;
+	mentionedUserIds?: string[];
 }
 
 export interface CreateShareableCodemarkResponse {

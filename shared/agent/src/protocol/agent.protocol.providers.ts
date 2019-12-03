@@ -121,6 +121,7 @@ export interface CreateThirdPartyPostRequest {
 	entryPoint?: string;
 	crossPostIssueValues?: CrossPostIssueValues;
 	markerLocations?: CSMarkerLocations[];
+	mentionedUserIds?: string[];
 }
 export interface CreateThirdPartyPostResponse {
 	post: any;

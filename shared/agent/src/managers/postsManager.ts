@@ -778,7 +778,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			codemark: codemarkRequest,
 			text: codemarkRequest.text!,
 			streamId: stream.id,
-			crossPostIssueValues: request.attributes.crossPostIssueValues
+			crossPostIssueValues: request.attributes.crossPostIssueValues,
+			mentionedUserIds: request.mentionedUserIds
 		});
 
 		codemark = response.codemark!;
