@@ -229,7 +229,8 @@ export const createPostAndCodemark = (
 					return { uri: _.uri };
 				}),
 				entryPoint: entryPoint,
-				remotes: remotes
+				remotes: remotes,
+				mentionedUserIds: findMentionedUserIds(getTeamMembers(getState()), attributes.text || ""),
 			})
 		);
 	}

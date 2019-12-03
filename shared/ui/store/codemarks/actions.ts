@@ -48,6 +48,7 @@ export interface SharingNewCodemarkAttributes extends BaseNewCodemarkAttributes 
 	};
 	textDocuments?: TextDocumentIdentifier[];
 	entryPoint?: string;
+	mentionedUserIds?: string[];
 }
 
 export interface LegacyNewCodemarkAttributes extends BaseNewCodemarkAttributes {
@@ -74,7 +75,8 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 			attributes: rest,
 			memberIds: accessMemberIds,
 			textDocuments: attributes.textDocuments,
-			entryPoint: attributes.entryPoint
+			entryPoint: attributes.entryPoint,
+			mentionedUserIds: attributes.mentionedUserIds
 		});
 		if (response) {
 			const result = dispatch(addCodemarks([response.codemark]));
@@ -89,7 +91,8 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 						text: rest.text,
 						codemark: response.codemark,
 						remotes: attributes.remotes,
-						markerLocations: response.markerLocations
+						markerLocations: response.markerLocations,
+						mentionedUserIds: attributes.mentionedUserIds						
 					});
 				} catch (error) {
 					logError("Error sharing a codemark in the sharing model", { message: error.message });
