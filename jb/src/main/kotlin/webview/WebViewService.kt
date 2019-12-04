@@ -160,7 +160,7 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
     private fun configureJxBrowser() {
         System.setProperty("jxbrowser.ipc.external", "true")
         BrowserPreferences.setChromiumSwitches(
-            if (DEBUG) {
+            if (DEBUG || WEBVIEW_PATH != null) {
                 "--remote-debugging-port=$debugPort"
             } else {
                 ""
