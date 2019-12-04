@@ -1,6 +1,7 @@
 package com.codestream.webview
 
 import com.codestream.DEBUG
+import com.codestream.WEBVIEW_PATH
 import com.codestream.gson
 import com.codestream.protocols.webview.WebViewNotification
 import com.codestream.settingsService
@@ -47,6 +48,12 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
     private lateinit var tempDir: File
     private lateinit var htmlFile: File
 
+    private val webviewUrl: String get() = if (WEBVIEW_PATH != null) {
+        "file://$WEBVIEW_PATH"
+    } else {
+        htmlFile.url
+    }
+
     init {
         logger.info("Initializing WebViewService for project ${project.basePath}")
         extractAssets()
@@ -54,7 +61,7 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
         UIManager.addPropertyChangeListener {
             if (it.propertyName == "lookAndFeel") {
                 extractHtml()
-                browser.loadURL(htmlFile.url)
+                browser.loadURL(webviewUrl)
             }
         }
     }
@@ -74,7 +81,7 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
         if (resetContext) {
             project.settingsService?.clearWebViewContext()
         }
-        browser.loadURL(htmlFile.url)
+        browser.loadURL(webviewUrl)
     }
 
     private fun extractAssets() {
