@@ -41,27 +41,29 @@ import java.util.concurrent.atomic.AtomicInteger
 import javax.swing.UIManager
 
 class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHandler, ResourceHandler {
+    private val utf8 = Charset.forName("UTF-8")
     private val logger = Logger.getInstance(WebViewService::class.java)
     private val router = WebViewRouter(project)
     private val browser = createBrowser(router)
     val webView = BrowserView(browser)
     private lateinit var tempDir: File
-    private lateinit var htmlFile: File
+    private lateinit var extractedHtmlFile: File
 
-    private val webviewUrl: String get() = if (WEBVIEW_PATH != null) {
-        "file://$WEBVIEW_PATH"
+    private val htmlFile: File get() = if (WEBVIEW_PATH != null) {
+        File(WEBVIEW_PATH)
     } else {
-        htmlFile.url
+        extractedHtmlFile
     }
 
     init {
         logger.info("Initializing WebViewService for project ${project.basePath}")
         extractAssets()
+        applyStylesheet()
 
         UIManager.addPropertyChangeListener {
             if (it.propertyName == "lookAndFeel") {
-                extractHtml()
-                browser.loadURL(webviewUrl)
+                applyStylesheet()
+                browser.loadURL(htmlFile.url)
             }
         }
     }
@@ -81,14 +83,14 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
         if (resetContext) {
             project.settingsService?.clearWebViewContext()
         }
-        browser.loadURL(webviewUrl)
+        browser.loadURL(htmlFile.url)
     }
 
     private fun extractAssets() {
         tempDir = createTempDir("codestream")
         logger.info("Extracting webview to ${tempDir.absolutePath}")
         tempDir.deleteOnExit()
-        htmlFile = File(tempDir, "webview.html")
+        extractedHtmlFile = File(tempDir, "webview.html")
 
         FileUtils.copyToFile(javaClass.getResourceAsStream("/webview/webview.js"), File(tempDir, "webview.js"))
         FileUtils.copyToFile(
@@ -96,16 +98,15 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
             File(tempDir, "webview-data.js")
         )
         FileUtils.copyToFile(javaClass.getResourceAsStream("/webview/webview.css"), File(tempDir, "webview.css"))
-        extractHtml()
+        FileUtils.copyToFile(javaClass.getResourceAsStream("/webview/webview.html"), File(tempDir, "webview.html"))
     }
 
-    private fun extractHtml() {
+    private fun applyStylesheet() {
         val theme = WebViewTheme.build()
-        val htmlContent = javaClass.getResource("/webview/webview.html")
-            .readText()
+        val htmlContent = FileUtils.readFileToString(htmlFile, utf8)
             .replace("{bodyClass}", theme.name)
             .replace("<style id=\"theme\"></style>", "<style id=\"theme\">${theme.stylesheet}</style>")
-        FileUtils.write(htmlFile, htmlContent, Charset.forName("UTF-8"))
+        FileUtils.write(htmlFile, htmlContent, utf8)
     }
 
     fun postResponse(id: String, params: Any?, error: String? = null) {
