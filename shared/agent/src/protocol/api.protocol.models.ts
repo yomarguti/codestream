@@ -427,13 +427,6 @@ export interface CSLastReads {
 	[streamId: string]: number | string;
 }
 
-export interface CSNotificationPreferences {
-	all?: boolean;
-	replies?: boolean;
-	created?: boolean;
-	mentions?: boolean;
-}
-
 export enum CSNotificationPreference {
 	All = "all",
 	InvolveMe = "involveMe",
@@ -443,7 +436,7 @@ export enum CSNotificationPreference {
 export interface CSMePreferences {
 	telemetryConsent?: boolean; // legacy
 	telemetryOptOut?: boolean;
-	notifications?: CSNotificationPreferences;
+	notifications?: CSNotificationPreference;
 	[key: string]: any;
 }
 
