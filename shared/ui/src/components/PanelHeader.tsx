@@ -4,6 +4,21 @@ import styled, { CSSProperties } from "styled-components";
 
 const Header = styled.div`
 	padding: 15px 20px 0 20px;
+	.align-right-button {
+		position: absolute;
+		opacity: 0.4;
+		cursor: pointer;
+		transition: transform 0.1s;
+		display: inline-block;
+		top: 10px;
+		right: 20px;
+		&:hover {
+			opacity: 1;
+			color: var(--text-color-info);
+			transform: scale(1.4);
+			background: none;
+		}
+	}
 `;
 
 const Title = styled.div`

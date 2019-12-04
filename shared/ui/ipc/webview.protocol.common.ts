@@ -36,7 +36,8 @@ export enum WebviewPanels {
 	Invite = "invite",
 	People = "people",
 	Person = "person",
-	Tasks = "tasks"
+	Tasks = "tasks",
+	Notifications = "notifications"
 }
 
 export interface WebviewContext {

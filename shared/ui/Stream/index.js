@@ -6,6 +6,7 @@ import createClassString from "classnames";
 import ComposeBox from "./ComposeBox";
 import PostList from "./PostList";
 import { ActivityPanel } from "./ActivityPanel";
+import { NotificationsPanel } from "./NotificationsPanel";
 import ChannelPanel from "./ChannelPanel";
 import PeoplePanel from "./PeoplePanel";
 import { TasksPanel } from "./TasksPanel";
@@ -401,8 +402,17 @@ export class SimpleStream extends Component {
 			hasOtherTeams ? teamItem : undefined,
 			{ label: "-" }
 			// { label: inviteLabel, action: "invite" },
-			// { label: "Settings", action: "settings" },
 		].filter(Boolean);
+
+		if (this.props.isCodeStreamTeam) {
+			menuItems.push(
+				{
+					label: "Notifications...",
+					action: () => this.setActivePanel(WebviewPanels.Notifications)
+				},
+				{ label: "-" }
+			);
+		}
 
 		const providerMenuItems = this.addProvidersToMenu();
 		if (providerMenuItems.length > 0) {
@@ -923,6 +933,12 @@ export class SimpleStream extends Component {
 							activePanel={activePanel}
 							setActivePanel={this.setActivePanel}
 							isSlackTeam={this.props.teamProvider === "slack"}
+						/>
+					)}
+					{activePanel === WebviewPanels.Notifications && (
+						<NotificationsPanel
+							isCodeStreamTeam={this.props.isCodeStreamTeam}
+							closePanel={this.props.closePanel}
 						/>
 					)}
 					{(activePanel === WebviewPanels.People || activePanel === "invite") && (
