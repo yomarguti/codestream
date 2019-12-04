@@ -1,6 +1,7 @@
 "use strict";
 
 import { ParsedDiff } from "diff";
+import * as diffMatchPatch from "diff-match-patch";
 import { compareTwoStrings, findBestMatch, Rating } from "string-similarity";
 import { MarkerLocation, MarkerLocationsById } from "../api/extensions";
 import { Logger } from "../logger";
@@ -12,6 +13,28 @@ export const MAX_RANGE_VALUE = 2147483647;
 const LINE_SIMILARITY_THRESHOLD = 0.6;
 const CHANGE_SIMILARITY_THRESHOLD = 0.5;
 const DELETED = -1;
+
+export async function findBestMatchingLine(text: string, lineContent: string, originalLineNumber: number) {
+	try {
+		const dmp = new diffMatchPatch.diff_match_patch();
+		const lines = text.split("\n");
+		let guessOffset = 0;
+		for (let i = 0; i < originalLineNumber - 1; i++) {
+			guessOffset += lines[i].length + 1;
+		}
+		const dmpOffset = dmp.match_main(text, lineContent, guessOffset);
+		let dmpLineIndex = 0;
+		let offset = 0;
+		while (offset < dmpOffset && dmpLineIndex < lines.length) {
+			offset += lines[dmpLineIndex++].length + 1;
+		}
+
+		return dmpLineIndex + 1;
+	} catch (e) {
+		Logger.warn(`Error calculating location based on content: ${e.message}`);
+		return -1;
+	}
+}
 
 export async function calculateLocations(
 	locations: MarkerLocationsById,

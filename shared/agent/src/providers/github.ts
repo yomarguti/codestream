@@ -7,6 +7,7 @@ import { URI } from "vscode-uri";
 import { SessionContainer } from "../container";
 import { Logger } from "../logger";
 import { Markerish, MarkerLocationManager } from "../managers/markerLocationManager";
+import { findBestMatchingLine, MAX_RANGE_VALUE } from "../markerLocation/calculator";
 import {
 	CreateThirdPartyCardRequest,
 	DocumentMarker,
@@ -19,6 +20,7 @@ import {
 } from "../protocol/agent.protocol";
 import { CodemarkType, CSGitHubProviderInfo, CSLocationArray } from "../protocol/api.protocol";
 import { Arrays, Functions, log, lspProvider, Strings } from "../system";
+import { xfs } from "../xfs";
 import {
 	getOpenedRepos,
 	getRemotePath,
@@ -229,10 +231,18 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 			}
 
 			line = outdated ? c.originalLine! : c.line;
+
+            if (line === -1) {
+                const contents = await xfs.readText(uri.fsPath);
+                if (contents != null) {
+					line = await findBestMatchingLine(contents, c.code, c.line);
+				}
+            }
+
 			commentsById[c.id] = c;
 			markers.push({
 				id: c.id,
-				locationWhenCreated: [line, 1, line + 1, 1, undefined] as CSLocationArray
+				locationWhenCreated: [line, 1, line, MAX_RANGE_VALUE, undefined] as CSLocationArray
 			});
 		}
 
