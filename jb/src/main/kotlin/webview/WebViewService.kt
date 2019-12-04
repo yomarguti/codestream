@@ -83,6 +83,7 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
         if (resetContext) {
             project.settingsService?.clearWebViewContext()
         }
+        applyStylesheet()
         browser.loadURL(htmlFile.url)
     }
 
