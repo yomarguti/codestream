@@ -12,10 +12,10 @@ export default class Timestamp extends Component {
 
 		if (!this.props.time) return null;
 
-		if (this.props.dateOnly) return <time>{timeDetails}</time>;
+		if (this.props.dateOnly) return <time className={this.props.className}>{timeDetails}</time>;
 		else
 			return (
-				<time>
+				<time className={this.props.className}>
 					{timeText}
 					<span className="details">{timeDetails}</span>
 				</time>

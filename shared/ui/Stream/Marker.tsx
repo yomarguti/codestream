@@ -8,6 +8,7 @@ import Icon from "./Icon";
 
 interface Props {
 	marker: CSMarker;
+	className?: string;
 }
 
 function Marker(props: Props) {
@@ -27,7 +28,7 @@ function Marker(props: Props) {
 
 	const codeHTML = prettyPrintOne(escapeHtml(marker.code), extension, startLine);
 	return (
-		<div style={{ marginTop: "10px" }}>
+		<div style={{ marginTop: "10px" }} className={props.className}>
 			<div className="file-info">
 				{marker.file && (
 					<>

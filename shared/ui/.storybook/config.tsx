@@ -1,8 +1,14 @@
 import * as React from "react";
 import addons from "@storybook/addons";
 import { configure, addDecorator } from "@storybook/react";
-import { ThemeProvider } from "styled-components";
+import { ThemeProvider, createGlobalStyle } from "styled-components";
 import { lightTheme, darkTheme } from "../src/themes";
+
+const GlobalStyle = createGlobalStyle`
+* {
+	box-sizing: border-box;
+}
+`;
 
 configure(require.context("../src", true, /\.stories\.tsx$/), module);
 
@@ -20,5 +26,10 @@ addDecorator(story => {
 		return () => channel.removeListener("DARK_MODE", setIsDark);
 	}, [channel]);
 
-	return <ThemeProvider theme={isDark ? darkTheme : lightTheme}>{story()}</ThemeProvider>;
+	return (
+		<>
+			<GlobalStyle />
+			<ThemeProvider theme={isDark ? darkTheme : lightTheme}>{story()}</ThemeProvider>
+		</>
+	);
 });

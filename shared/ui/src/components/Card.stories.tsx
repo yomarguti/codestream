@@ -1,4 +1,4 @@
-import { Card } from "./Card";
+import { Card, CardBody, CardBanner, CardFooter } from "./Card";
 import React from "react";
 import styled from "styled-components";
 
@@ -13,7 +13,7 @@ const P = styled.p`
 	margin: 0;
 `;
 
-export const basic = () => (
+export const simple = () => (
 	<Card>
 		<P>This is a card</P>
 	</Card>
@@ -26,7 +26,33 @@ export const withHoverHighlight = () => (
 );
 
 export const withBanner = () => (
-	<Card hoverEffect banner={<P>This is a banner for the card</P>}>
+	<Card hoverEffect>
+		<CardBanner>
+			<P>This is a banner for the card</P>
+		</CardBanner>
+		<CardBody>
+			<P>This is a card</P>
+		</CardBody>
+	</Card>
+);
+
+export const withFooter = () => (
+	<Card hoverEffect>
 		<P>This is a card</P>
+		<CardFooter>
+			<P>This is the footer of the card</P>
+		</CardFooter>
+	</Card>
+);
+
+export const withFooterAndBanner = () => (
+	<Card>
+		<CardBanner>
+			<P>Banner</P>
+		</CardBanner>
+		<CardBody>
+			<P>Body</P>
+		</CardBody>
+		<CardFooter>Footer</CardFooter>
 	</Card>
 );

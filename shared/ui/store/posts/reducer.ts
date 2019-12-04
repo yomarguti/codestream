@@ -19,6 +19,7 @@ const addPost = (byStream, post: CSPost) => {
 
 export function reducePosts(state: PostsState = initialState, action: PostsActions) {
 	switch (action.type) {
+		case PostsActionsType.Save:
 		case PostsActionsType.Add:
 		case PostsActionsType.Bootstrap: {
 			const nextState = {

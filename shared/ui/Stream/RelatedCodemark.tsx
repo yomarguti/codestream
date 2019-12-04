@@ -7,7 +7,7 @@ import Icon from "./Icon";
 import { HostApi } from "../webview-api";
 import { setCurrentCodemark } from "../store/context/actions";
 
-export function RelatedCodemark(props: { id: string }) {
+export function RelatedCodemark(props: { id: string; className?: string }) {
 	const dispatch = useDispatch();
 	const codemark = useSelector((state: CodeStreamState) => {
 		return getCodemark(state.codemarks, props.id);
@@ -48,7 +48,7 @@ export function RelatedCodemark(props: { id: string }) {
 	return (
 		<div
 			key={codemark.id}
-			className={cx("related-codemark", { resolved })}
+			className={cx("related-codemark", { resolved }, props.className)}
 			onClick={handleClickRelatedCodemark}
 		>
 			{icon}&nbsp;{codemark.title || codemark.text}

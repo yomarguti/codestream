@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
 import Headshot from "./Headshot";
+import { Headshot as HeadshotV2 } from "../src/components/Headshot";
 import Filter from "./Filter";
 import Timestamp from "./Timestamp";
 import Codemark from "./Codemark";
@@ -10,32 +11,39 @@ import * as codemarkSelectors from "../store/codemarks/reducer";
 import * as userSelectors from "../store/users/reducer";
 import styled from "styled-components";
 import { includes as _includes, sortBy as _sortBy, last as _last } from "lodash-es";
-import Feedback from "./Feedback";
 import { CodeStreamState } from "../store";
-import { setCodemarkTypeFilter } from "../store/context/actions";
+import { setCodemarkTypeFilter, setCurrentCodemark } from "../store/context/actions";
 import { getActivity } from "../store/activityFeed/reducer";
-import { useDidMount } from "../utilities/hooks";
+import { useDidMount, useIntersectionObserver } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
-import { FetchActivityRequestType, PostPlus } from "@codestream/protocols/agent";
+import {
+	FetchActivityRequestType,
+	PostPlus,
+	CodemarkPlus,
+	FollowCodemarkRequestType,
+	SetCodemarkPinnedRequestType
+} from "@codestream/protocols/agent";
 import { savePosts } from "../store/posts/actions";
 import { addOlderActivity } from "../store/activityFeed/actions";
 import { saveCodemarks } from "../store/codemarks/actions";
 import { safe } from "../utils";
 import { markStreamRead } from "./actions";
 import { CodemarkType } from "@codestream/protocols/api";
+import { Card, CardBody, CardFooter, CardBanner } from "../src/components/Card";
 import { resetLastReads } from "../store/unreads/actions";
 import { PanelHeader } from "../src/components/PanelHeader";
+import { markdownify } from "./Markdowner";
+import { Marker } from "./Marker";
+import { getPost, getPostsForStream } from "../store/posts/reducer";
+import Tag from "./Tag";
+import { UsersState } from "../store/users/types";
+import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
+import { Link } from "./Link";
+import { RelatedCodemark } from "./RelatedCodemark";
+import Menu from "./Menu";
 
-const ActivityWrapper = styled.div<{ unread?: boolean }>`
+const ActivityWrapper = styled.div`
 	margin: 0 40px 20px 45px;
-	.codemark.inline {
-		${props => (props.unread ? `border-left: 2px solid var(--text-color-info);` : "")}
-	}
-	// for now this is only to explore the aesthetic... doesn't actually work
-	// it should be .post.unread
-	.post {
-		border-left: 2px solid var(--text-color-info);
-	}
 	> time,
 	> .activity {
 		display: block;
@@ -53,13 +61,137 @@ const ActivityWrapper = styled.div<{ unread?: boolean }>`
 	}
 `;
 
+const ActivityCard = styled(Card)<{ unread?: boolean }>`
+	:hover {
+		cursor: pointer;
+	}
+	${CardFooter} {
+		border-top: none;
+		padding-left: 0;
+		padding-right: 0;
+		margin-top: 0;
+	}
+	${props => (props.unread ? `border-left: 2px solid var(--text-color-info);` : "")}
+`;
+
 const LoadingMessage = styled.div`
 	width: 100%;
 	margin: 0 auto;
 	text-align: center;
 `;
 
-const BATCH_COUNT = 50;
+const CardHeader = styled.div`
+	width: 100%;
+	margin-bottom: 8px;
+	display: flex;
+	font-size: 13px;
+	font-weight: 700;
+`;
+
+const StyledTimestamp = styled(Timestamp)`
+	opacity: 0.4;
+	font-size: 11px;
+	padding-left: 5px;
+	.details {
+		padding-left: 5px;
+		transition: opacity 0.4s;
+	}
+`;
+
+const AuthorInfo = styled.div`
+	display: flex;
+	align-items: center;
+	${HeadshotV2} {
+		margin-right: 7px;
+	}
+`;
+
+const CardTitle = styled.div`
+	margin-bottom: 10px;
+`;
+
+const LinkifiedText = styled.span`
+	white-space: normal;
+	text-overflow: initial;
+	p {
+		margin: 0;
+	}
+`;
+
+const MetaRow = styled.div`
+	display: flex;
+	justify-content: space-between;
+`;
+
+const Meta = styled.div`
+	display: flex;
+	flex-direction: column;
+	margin-right: auto;
+	width: 100%;
+`;
+
+const MetaStuff = styled.div`
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	${Meta} {
+		padding: 10px 0;
+	}
+`;
+
+const RelatedLabel = styled.div`
+	text-transform: uppercase;
+	font-weight: 800;
+	opacity: 0.5;
+	font-size: 11px;
+	margin-bottom: 3px;
+`;
+
+const Description = styled.div`
+	display: flex;
+	> *:not(:first-child) {
+		margin-left: 5px;
+	}
+`;
+
+const StyledMarker = styled(Marker)`
+	.code {
+		margin: 5px 0 !important;
+	}
+`;
+
+const StyledLink = styled(Link)`
+	color: var(--text-color);
+	text-decoration: none !important;
+	&:hover {
+		color: var(--text-color-info);
+	}
+	${Description} {
+		display: block;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+`;
+
+const StyledRelatedCodemark = styled(RelatedCodemark)`
+	white-space: normal;
+`;
+
+const renderAssigneeHeadshots = (codemark: CodemarkPlus, users: UsersState) => {
+	const assignees = (codemark.assignees || []).map(id => users[id]).filter(Boolean);
+	const externalAssignees = (codemark.externalAssignees || [])
+		.filter(user => !assignees.find(a => a.email === user.email))
+		.filter(Boolean)
+		.map(a => ({ fullName: a.displayName, email: a.email }));
+
+	return [...assignees, ...externalAssignees].map((assignee, i) => (
+		<>
+			<HeadshotV2 person={assignee} size={18} />
+			<span style={{ marginLeft: "5px" }}>{assignee.fullName || assignee.email}</span>
+		</>
+	));
+};
 
 export const ActivityPanel = () => {
 	const dispatch = useDispatch();
@@ -67,9 +199,10 @@ export const ActivityPanel = () => {
 		const usernames = userSelectors.getUsernames(state);
 
 		return {
+			usernames,
+			users: state.users,
 			noCodemarksAtAll: !codemarkSelectors.teamHasCodemarks(state),
 			currentUserName: state.users[state.session.userId!].username,
-			usernames,
 			activity: getActivity(state),
 			hasMoreActivity: state.activityFeed.hasMore,
 			codemarkTypeFilter: state.context.codemarkTypeFilter,
@@ -80,7 +213,7 @@ export const ActivityPanel = () => {
 
 	const fetchActivity = React.useCallback(async () => {
 		const response = await HostApi.instance.send(FetchActivityRequestType, {
-			limit: BATCH_COUNT,
+			limit: 50,
 			before: safe(() => _last(derivedState.activity)!.id)
 		});
 		dispatch(savePosts(response.posts));
@@ -113,6 +246,33 @@ export const ActivityPanel = () => {
 
 	const { targetRef, rootRef } = useIntersectionObserver(intersectionCallback);
 
+	const renderTextLinkified = React.useCallback(
+		(text: string) => {
+			let html: string;
+			if (text == null || text === "") {
+				html = "";
+			} else {
+				const me = derivedState.currentUserName;
+				html = markdownify(text).replace(/@(\w+)/g, (match: string, name: string) => {
+					if (
+						derivedState.usernames.some(
+							n => name.localeCompare(n, undefined, { sensitivity: "accent" }) === 0
+						)
+					) {
+						return `<span class="at-mention${
+							me.localeCompare(name, undefined, { sensitivity: "accent" }) === 0 ? " me" : ""
+						}">${match}</span>`;
+					}
+
+					return match;
+				});
+			}
+
+			return html;
+		},
+		[derivedState.usernames]
+	);
+
 	const renderActivity = () => {
 		let counter = 0;
 		const demoMode = false;
@@ -126,12 +286,6 @@ export const ActivityPanel = () => {
 				codemark.type !== derivedState.codemarkTypeFilter
 			)
 				return null;
-
-			const lastReadForStream = derivedState.umis.lastReads[codemark.streamId];
-			const isUnread =
-				lastReadForStream != undefined &&
-				codemark.post != undefined &&
-				(codemark.post as PostPlus).seqNum > lastReadForStream;
 
 			return [
 				demoMode && counter == 2 ? (
@@ -176,10 +330,12 @@ export const ActivityPanel = () => {
 						</div>
 					</ActivityWrapper>
 				) : null,
-				<ActivityWrapper key={codemark.id} unread={isUnread}>
+				<ActivityWrapper key={codemark.id}>
 					{/* <Timestamp dateOnly={true} time={codemark.createdAt} /> */}
 					{demoMode && counter == 5 && <Timestamp dateOnly={true} time={codemark.createdAt} />}
-					<Codemark
+					<ActivityItem codemark={codemark} getLinkifiedHtml={renderTextLinkified} />
+					{/*
+						<Codemark
 						key={codemark.id}
 						contextName="Activity Panel"
 						codemark={codemark}
@@ -188,6 +344,7 @@ export const ActivityPanel = () => {
 						usernames={derivedState.usernames}
 						selected={false}
 					/>
+					 */}
 				</ActivityWrapper>
 			];
 		});
@@ -244,48 +401,336 @@ export const ActivityPanel = () => {
 	);
 };
 
-function useIntersectionObserver(
-	callback: IntersectionObserverCallback,
-	options: Pick<IntersectionObserverInit, "threshold" | "rootMargin"> = {}
-) {
-	const callbackRef = React.useRef(callback);
-	React.useEffect(() => {
-		callbackRef.current = callback;
-	});
-	const observerRef = React.useRef<IntersectionObserver>();
-	const rootRef = React.useRef<HTMLElement>(null);
-	const targetRef = React.useCallback(element => {
-		if (element == undefined) {
-			// clean up
-			if (observerRef.current != undefined) {
-				observerRef.current.disconnect();
-				observerRef.current = undefined;
-			}
-			return;
+const KebabIcon = styled.span`
+	opacity: 0.5;
+	width: 20px;
+	display: flex;
+	justify-content: flex-end;
+	:hover {
+		opacity: 1;
+		.icon {
+			color: var(--text-color-info);
 		}
+	}
+`;
 
-		// can't observe yet
-		if (!rootRef.current) return;
+const ActivityItem = (props: {
+	codemark: CodemarkPlus;
+	getLinkifiedHtml: (text: string) => string;
+}) => {
+	const { codemark } = props;
+	const dispatch = useDispatch();
+	const derivedState = useSelector((state: CodeStreamState) => {
+		const codemarkPost = getPost(state.posts, codemark.streamId, codemark.postId);
+		const lastReadForStream = state.umis.lastReads[codemark.streamId];
+		const isUnread =
+			lastReadForStream != undefined &&
+			codemarkPost != undefined &&
+			(codemarkPost as PostPlus).seqNum > lastReadForStream;
+		const assignees = (codemark.assignees || []).map(id => state.users[id]).filter(Boolean);
+		const externalAssignees = (codemark.externalAssignees || [])
+			.filter(user => !assignees.find(a => a.email === user.email))
+			.filter(Boolean)
+			.map(a => ({ fullName: a.displayName, email: a.email }));
 
-		const observer = new IntersectionObserver(
-			function(...args: Parameters<IntersectionObserverCallback>) {
-				callbackRef.current.call(undefined, ...args);
+		return {
+			isUnread,
+			followingEnabled: state.apiVersioning.apiCapabilities.follow != undefined,
+			userIsFollowingCodemark: (codemark.followerIds || []).includes(
+				state.users[state.session.userId!].id
+			),
+			post: codemarkPost,
+			author: state.users[codemark.creatorId],
+			teamTags: userSelectors.getTeamTagsHash(state),
+			assignees: [...assignees, ...externalAssignees]
+		};
+	});
+	const [menuState, setMenuState] = React.useState<{
+		open: boolean;
+		target?: any;
+	}>({ open: false, target: undefined });
+
+	const permalinkRef = React.useRef<HTMLTextAreaElement>(null);
+
+	const tagIds = codemark.tags || [];
+	const descriptionHTML =
+		codemark.title && codemark.text ? props.getLinkifiedHtml(codemark.text) : null;
+	const providerDisplay =
+		codemark.externalProviderUrl && PROVIDER_MAPPINGS[codemark.externalProvider!];
+	const relatedCodemarkIds = codemark.relatedCodemarkIds || [];
+
+	const menuItems: any[] = React.useMemo(() => {
+		const items: any[] = [
+			{
+				label: "Copy link",
+				key: "copy-permalink",
+				action: () => {
+					if (permalinkRef.current) {
+						permalinkRef.current.select();
+						document.execCommand("copy");
+					}
+				}
 			},
 			{
-				...options,
-				root: rootRef.current
+				label: codemark.pinned ? "Archive" : "Unarchive",
+				key: "toggle-pinned",
+				action: () => {
+					HostApi.instance.send(SetCodemarkPinnedRequestType, {
+						codemarkId: codemark.id,
+						value: !props.codemark.pinned
+					});
+				}
 			}
-		);
-		observer.observe(element);
+		];
+		if (derivedState.followingEnabled) {
+			items.unshift({
+				label: derivedState.userIsFollowingCodemark ? "Unfollow" : "Follow",
+				key: "toggle-follow",
+				action: () => {
+					const value = !derivedState.userIsFollowingCodemark;
+					const changeType = value ? "Followed" : "Unfollowed";
+					HostApi.instance.send(FollowCodemarkRequestType, {
+						codemarkId: codemark.id,
+						value
+					});
+					HostApi.instance.track("Notification Change", {
+						Change: `Codemark ${changeType}`,
+						"Source of Change": "Activity Feed"
+					});
+				}
+			});
+		}
 
-		observerRef.current = observer;
-	}, []);
+		return items;
+	}, [props.codemark]);
 
-	React.useEffect(() => {
-		return () => {
-			observerRef.current && observerRef.current.disconnect();
+	const closeMenu = React.useCallback(() => setMenuState({ open: false }), []);
+	const handleMenuClick = (e: React.MouseEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		if (menuState.open) {
+			closeMenu();
+		} else {
+			setMenuState({ open: true, target: e.currentTarget as HTMLElement });
+		}
+	};
+
+	return (
+		<ActivityCard
+			hoverEffect
+			onClick={() => {
+				// somehow a click right next to the menu over the kebab icon registers
+				if (menuState.open) {
+					return setMenuState({ open: false });
+				}
+				dispatch(setCurrentCodemark(codemark.id));
+			}}
+			unread={derivedState.isUnread}
+		>
+			{!codemark.pinned && <CardBanner>This codemark is archived.</CardBanner>}
+			<CardBody>
+				<CardHeader>
+					<AuthorInfo>
+						<HeadshotV2 person={derivedState.author} /> {derivedState.author.username}{" "}
+						<StyledTimestamp time={codemark.createdAt} />
+					</AuthorInfo>
+					<div style={{ marginLeft: "auto" }}>
+						{menuState.open && (
+							<>
+								<Menu items={menuItems} target={menuState.target} action={closeMenu} />
+								<textarea
+									ref={permalinkRef}
+									value={codemark.permalink}
+									style={{ position: "absolute", left: "-9999px" }}
+								/>
+							</>
+						)}
+						<KebabIcon onClickCapture={handleMenuClick}>
+							<Icon name="kebab-vertical" className="clickable" />
+						</KebabIcon>
+					</div>
+				</CardHeader>
+				<CardTitle>
+					<LinkifiedText
+						dangerouslySetInnerHTML={{
+							__html: props.getLinkifiedHtml(codemark.title || codemark.text)
+						}}
+					/>
+				</CardTitle>
+				<MetaStuff>
+					<MetaRow>
+						{tagIds.length > 0 && (
+							<Meta>
+								<RelatedLabel>Tags</RelatedLabel>
+								<Description>
+									{tagIds.map(tagId => {
+										const tag = derivedState.teamTags[tagId];
+										return tag ? <Tag tag={tag} key={tagId} /> : null;
+									})}
+								</Description>
+							</Meta>
+						)}
+						{derivedState.assignees.length > 0 && (
+							<Meta>
+								<RelatedLabel>Assignees</RelatedLabel>
+								<Description>
+									{derivedState.assignees.map(assignee => (
+										<>
+											<HeadshotV2 person={assignee as any} size={18} />
+											<span style={{ marginLeft: "5px" }}>
+												{assignee.fullName || assignee.email}
+											</span>
+										</>
+									))}
+								</Description>
+							</Meta>
+						)}
+					</MetaRow>
+					{descriptionHTML && (
+						<Meta>
+							<RelatedLabel>Description</RelatedLabel>
+							<Description>
+								<Icon name="description" />
+								<LinkifiedText dangerouslySetInnerHTML={{ __html: descriptionHTML }} />
+							</Description>
+						</Meta>
+					)}
+					{providerDisplay && (
+						<Meta>
+							<RelatedLabel>Linked Issues</RelatedLabel>
+							<StyledLink href={codemark.externalProviderUrl}>
+								<Description>
+									{providerDisplay.icon && <Icon name={providerDisplay.icon} />}
+									<span>{providerDisplay.displayName}</span>
+									<span style={{ opacity: 0.5 }}>{codemark.externalProviderUrl}</span>
+								</Description>
+							</StyledLink>
+						</Meta>
+					)}
+					{relatedCodemarkIds.length > 0 && (
+						<Meta>
+							<RelatedLabel>Related</RelatedLabel>
+							{relatedCodemarkIds.map(id => (
+								<StyledRelatedCodemark key={id} id={id} />
+							))}
+						</Meta>
+					)}
+					{codemark.pinnedReplies && (
+						<PinnedReplies
+							streamId={codemark.streamId}
+							replyIds={codemark.pinnedReplies}
+							renderTextLinkified={props.getLinkifiedHtml}
+						/>
+					)}
+				</MetaStuff>
+				{codemark.markers &&
+					codemark.markers.map(marker => <StyledMarker key={marker.id} marker={marker} />)}
+			</CardBody>
+			<CardFooter>
+				<RepliesForCodemark parentPost={derivedState.post} />
+			</CardFooter>
+		</ActivityCard>
+	);
+};
+
+const SeeReplies = styled.div`
+	margin-top: 5px;
+	text-align: center;
+`;
+
+const Reply = styled.div`
+	padding-left: 10px;
+	padding-bottom: 10px;
+	display: flex;
+	flex-direction: column;
+	border-left: 2px solid var(--text-color-info);
+	${AuthorInfo} {
+		font-weight: 700;
+	}
+`;
+
+const RepliesForCodemark = (props: { parentPost?: PostPlus }) => {
+	const derivedState = useSelector((state: CodeStreamState) => {
+		if (props.parentPost == undefined) return { numberOfReplies: 0, unreadReplies: [] };
+		const lastUnreadForStream = state.umis.lastReads[props.parentPost.streamId] as
+			| number
+			| undefined;
+		const unreadReplies: PostPlus[] =
+			lastUnreadForStream != undefined
+				? getPostsForStream(state.posts, props.parentPost.streamId)
+						.filter(
+							post =>
+								post.parentPostId === props.parentPost!.id && post.seqNum > lastUnreadForStream
+						)
+						.reverse()
+				: [];
+
+		return { numberOfReplies: props.parentPost.numReplies, unreadReplies };
+	});
+
+	const users = useSelector((state: CodeStreamState) => state.users);
+
+	if (derivedState.numberOfReplies === 0) return null;
+
+	if (derivedState.unreadReplies.length === 0) return <SeeReplies>See replies</SeeReplies>;
+
+	const hasMoreReplies = derivedState.numberOfReplies > derivedState.unreadReplies.length;
+
+	return (
+		<>
+			{derivedState.unreadReplies.map(post => {
+				const author = users[post.creatorId];
+				return (
+					<Reply>
+						<AuthorInfo style={{ fontWeight: 700 }}>
+							<HeadshotV2 person={author} /> {author.username}
+							<StyledTimestamp time={post.createdAt} />
+						</AuthorInfo>
+						<div style={{ marginLeft: "23px" }}>{post.text}</div>
+					</Reply>
+				);
+			})}
+			{hasMoreReplies && <SeeReplies>See earlier replies</SeeReplies>}
+		</>
+	);
+};
+
+const PinnedReply = styled.div`
+	display: flex;
+	> * {
+		margin-right: 5px;
+	}
+`;
+
+const PinnedReplyText = styled.div`
+	opacity: 0.5;
+`;
+
+const PinnedReplies = (props: {
+	replyIds: string[];
+	streamId: string;
+	renderTextLinkified(text: string): string;
+}) => {
+	const { users, posts } = useSelector((state: CodeStreamState) => {
+		return {
+			users: state.users,
+			posts: props.replyIds.map(id => getPost(state.posts, props.streamId, id))
 		};
-	}, []);
+	});
 
-	return { targetRef, rootRef: rootRef as any };
-}
+	if (posts.length === 0) return null;
+
+	return (
+		<Meta>
+			<RelatedLabel>Starred Replies</RelatedLabel>
+			{posts.map(post => (
+				<PinnedReply>
+					<Icon name="star" /> <HeadshotV2 person={users[post.creatorId]} />
+					<PinnedReplyText
+						dangerouslySetInnerHTML={{ __html: props.renderTextLinkified(post.text) }}
+					/>
+				</PinnedReply>
+			))}
+		</Meta>
+	);
+};

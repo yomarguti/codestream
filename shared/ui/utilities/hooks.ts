@@ -120,3 +120,49 @@ export function useRect<T extends HTMLElement>(
 
 	return rect;
 }
+
+export function useIntersectionObserver(
+	callback: IntersectionObserverCallback,
+	options: Pick<IntersectionObserverInit, "threshold" | "rootMargin"> = {}
+) {
+	const callbackRef = useRef(callback);
+	useEffect(() => {
+		callbackRef.current = callback;
+	});
+	const observerRef = useRef<IntersectionObserver>();
+	const rootRef = useRef<HTMLElement>(null);
+	const targetRef = useCallback(element => {
+		if (element == undefined) {
+			// clean up
+			if (observerRef.current != undefined) {
+				observerRef.current.disconnect();
+				observerRef.current = undefined;
+			}
+			return;
+		}
+
+		// can't observe yet
+		if (!rootRef.current) return;
+
+		const observer = new IntersectionObserver(
+			function(...args: Parameters<IntersectionObserverCallback>) {
+				callbackRef.current.call(undefined, ...args);
+			},
+			{
+				...options,
+				root: rootRef.current
+			}
+		);
+		observer.observe(element);
+
+		observerRef.current = observer;
+	}, []);
+
+	useEffect(() => {
+		return () => {
+			observerRef.current && observerRef.current.disconnect();
+		};
+	}, []);
+
+	return { targetRef, rootRef: rootRef as any };
+}

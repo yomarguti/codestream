@@ -3,8 +3,9 @@ import styled from "styled-components";
 import { PropsWithTheme, isDarkTheme } from "../themes";
 
 export interface CardProps {
+	onClick?: React.MouseEventHandler;
 	hoverEffect?: boolean;
-	banner?: React.ReactNode;
+	className?: string;
 }
 
 const Root = styled.div((props: PropsWithTheme<CardProps>) => {
@@ -21,29 +22,12 @@ const Root = styled.div((props: PropsWithTheme<CardProps>) => {
   `;
 });
 
-const Content = styled.div`
-	width: 100%;
-	height: 100%;
-	padding: 10px;
-	position: relative;
-	background-color: transparent;
-	${(props: PropsWithTheme<CardProps>) => {
-		if (!props.hoverEffect) return "";
-
-		return `
-		${Root}:hover & {
-			color: ${({ theme }) => theme.colors.textHighlight};
-			background: rgba(127, 127, 127, 0.05);
-		}`;
-	}}
-`;
-
-const Banner = styled.div`
+export const CardBanner = styled.div`
 	margin-top: -10px;
 	margin-left: -10px;
 	margin-bottom: 10px;
 	padding: 10px;
-	width: 100%;
+	width: calc(100% + 20px);
 	border-bottom: 1px solid ${props => props.theme.colors.baseBorder};
 	background: repeating-linear-gradient(
 		-45deg,
@@ -52,9 +36,24 @@ const Banner = styled.div`
 		${props => props.theme.colors.appBackground} 5px,
 		${props => props.theme.colors.appBackground} 10px
 	);
+	:empty {
+		display: none;
+	}
 `;
 
-const Body = styled.div`
+export const CardFooter = styled.div`
+	margin-top: 10px;
+	margin-left: -10px;
+	margin-bottom: -10px;
+	padding: 10px;
+	width: calc(100% + 20px);
+	border-top: 1px solid ${props => props.theme.colors.baseBorder};
+	:empty {
+		display: none;
+	}
+`;
+
+export const CardBody = styled.div`
 	display: flex;
 	flex-direction: column;
 	white-space: nowrap;
@@ -62,14 +61,39 @@ const Body = styled.div`
 	overflow-x: hidden;
 `;
 
-export function Card(props: React.PropsWithChildren<CardProps>) {
-	const { banner: bannerContent, hoverEffect } = props;
+const Content = styled.div<CardProps>`
+	width: 100%;
+	height: 100%;
+	padding: 10px;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	background-color: transparent;
+	${CardBanner} {
+		order: 1;
+	}
+	${CardBody} {
+		order: 2;
+	}
+	${CardFooter} {
+		order: 3;
+	}
+	color: ${props => props.theme.colors.text};
+	${props => {
+		if (!props.hoverEffect) return "";
+
+		return `
+		${Root}:hover & {
+			background: rgba(127, 127, 127, 0.05);
+			color: ${props.theme.colors.textHighlight};
+		}`;
+	}}
+`;
+
+export const Card = (props: React.PropsWithChildren<CardProps>) => {
 	return (
-		<Root>
-			<Content hoverEffect={hoverEffect}>
-				{bannerContent && <Banner>{bannerContent}</Banner>}
-				<Body>{props.children}</Body>
-			</Content>
+		<Root onClick={props.onClick} className={props.className}>
+			<Content hoverEffect={props.hoverEffect}>{props.children}</Content>
 		</Root>
 	);
-}
+};
