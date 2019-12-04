@@ -23,7 +23,17 @@ export function reduceActiveIntegrations(state = initialState, action: ActiveInt
 		}
 		case ActiveIntegrationsActionType.DeleteForProvider: {
 			const nextState = { ...state };
-			delete nextState[action.payload.providerId];
+			if (action.payload.providerTeamId) {
+				if (nextState[action.payload.providerId]) {
+					delete nextState[action.payload.providerId][action.payload.providerTeamId];
+					if (Object.keys(nextState[action.payload.providerId]).length === 0) {
+						delete nextState[action.payload.providerId];
+					}
+				}
+			}
+			else {
+				delete nextState[action.payload.providerId];
+			}
 			return nextState;
 		}
 		case "RESET": {

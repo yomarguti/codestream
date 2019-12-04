@@ -10,6 +10,6 @@ export function updateForProvider<T extends ActiveIntegrationData>(
 	return action(ActiveIntegrationsActionType.UpdateForProvider, { providerId, data });
 }
 
-export function deleteForProvider(providerId: string) {
-	return action(ActiveIntegrationsActionType.DeleteForProvider, { providerId });
+export function deleteForProvider(providerId: string, providerTeamId?: string) {
+	return action(ActiveIntegrationsActionType.DeleteForProvider, { providerId, providerTeamId });
 }

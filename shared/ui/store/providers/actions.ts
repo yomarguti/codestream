@@ -144,7 +144,7 @@ export const disconnectProvider = (
 				"Connection Location": connectionLocation // ? "Global Nav" : "Compose Modal"
 			}
 		});
-		dispatch(deleteForProvider(providerId));
+		dispatch(deleteForProvider(providerId, providerTeamId));
 		if (getState().context.issueProvider === provider.host) {
 			dispatch(setIssueProvider(undefined));
 		}
