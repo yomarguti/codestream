@@ -456,7 +456,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		this._events.onDidReceiveMessage(this.onPubnubMessageReceived, this);
 
 		if (types === undefined || types.includes(MessageType.Streams)) {
-			const streams = (await SessionContainer.instance().streams.getSubscribable()).streams;
+			const streams = (await SessionContainer.instance().streams.getSubscribable(this.teamId)).streams;
 			await this._events.connect(streams.map(s => s.id));
 		} else {
 			await this._events.connect();
@@ -508,7 +508,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 				if (this._events !== undefined) {
 					for (const stream of e.data as (CSChannelStream | CSDirectStream)[]) {
-						if (CodeStreamApiProvider.isStreamSubscriptionRequired(stream, this.userId)) {
+						if (CodeStreamApiProvider.isStreamSubscriptionRequired(stream, this.userId, this.teamId)) {
 							this._events.subscribeToStream(stream.id);
 						} else if (CodeStreamApiProvider.isStreamUnsubscribeRequired(stream, this.userId)) {
 							this._events.unsubscribeFromStream(stream.id);
@@ -1734,7 +1734,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	// TODO: Move somewhere more generic
-	static isStreamSubscriptionRequired(stream: CSStream, userId: string): boolean {
+	static isStreamSubscriptionRequired(stream: CSStream, userId: string, teamId: string): boolean {
+		if (stream.teamId !== teamId) return false;
 		if (stream.deactivated || stream.type === StreamType.File) return false;
 		if (stream.type === StreamType.Channel) {
 			if (stream.memberIds === undefined) return false;

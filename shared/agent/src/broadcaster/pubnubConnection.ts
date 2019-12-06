@@ -147,7 +147,7 @@ export class PubnubConnection implements BroadcasterConnection {
 	// when a message is received from Pubnub...
 	private onMessage(event: Pubnub.MessageEvent) {
 		const receivedAt = this.timetokenToTimeStamp(event.timetoken);
-		this._debug("Pubnub message received at", receivedAt);
+		this._debug(`Pubnub message received on ${event.channel} at ${receivedAt}`);
 		const messageEvent: MessageEvent = {
 			receivedAt,
 			message: event.message

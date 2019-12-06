@@ -91,11 +91,11 @@ export class StreamsManager extends CachedEntityManagerBase<CSChannelStream | CS
 		this.cache.reset(response.streams);
 	}
 
-	async getSubscribable() {
+	async getSubscribable(teamId: string) {
 		const response = await this.get({ types: [StreamType.Channel, StreamType.Direct] });
 		return {
 			streams: response.streams.filter(s =>
-				CodeStreamApiProvider.isStreamSubscriptionRequired(s, this.session.userId)
+				CodeStreamApiProvider.isStreamSubscriptionRequired(s, this.session.userId, teamId)
 			)
 		};
 	}
