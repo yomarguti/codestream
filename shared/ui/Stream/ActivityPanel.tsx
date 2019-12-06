@@ -6,7 +6,6 @@ import Headshot from "./Headshot";
 import { Headshot as HeadshotV2 } from "../src/components/Headshot";
 import Filter from "./Filter";
 import Timestamp from "./Timestamp";
-import Codemark from "./Codemark";
 import * as codemarkSelectors from "../store/codemarks/reducer";
 import * as userSelectors from "../store/users/reducer";
 import styled from "styled-components";
@@ -328,17 +327,6 @@ export const ActivityPanel = () => {
 					{/* <Timestamp dateOnly={true} time={codemark.createdAt} /> */}
 					{demoMode && counter == 5 && <Timestamp dateOnly={true} time={codemark.createdAt} />}
 					<ActivityItem codemark={codemark} getLinkifiedHtml={renderTextLinkified} />
-					{/*
-						<Codemark
-						key={codemark.id}
-						contextName="Activity Panel"
-						codemark={codemark}
-						displayType="activity"
-						currentUserName={derivedState.currentUserName}
-						usernames={derivedState.usernames}
-						selected={false}
-					/>
-					 */}
 				</ActivityWrapper>
 			];
 		});
