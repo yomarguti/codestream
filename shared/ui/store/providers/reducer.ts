@@ -12,6 +12,13 @@ type ProviderActions = ActionType<typeof actions>;
 
 const initialState: ProvidersState = {};
 
+interface ThirdPartyTeam {
+	icon: string;
+	providerId: string;
+	teamId: string;
+	teamName: string;
+}
+
 export function reduceProviders(state = initialState, action: ProviderActions) {
 	switch (action.type) {
 		case "RESET":
@@ -112,18 +119,27 @@ export const getConnectedSharingTargets = (state: CodeStreamState) => {
 
 	const providerInfo = currentUser.providerInfo[state.context.currentTeamId];
 
-	const slackInfos = safe(() => providerInfo!.slack!.multiple);
+	let teams: ThirdPartyTeam[] = [];
 
+	const slackInfos = safe(() => providerInfo!.slack!.multiple);
 	if (slackInfos)
-		return Object.entries(slackInfos).map(([teamId, info]) => ({
+		teams = teams.concat(Object.entries(slackInfos).map(([teamId, info]) => ({
 			icon: PROVIDER_MAPPINGS.slack.icon!,
 			providerId: getProviderConfig(state, "slack")!.id,
 			teamId,
 			teamName: info.data!.team_name
-		}));
-	// TODO: get msteams infos
+		})));
 
-	return [];
+	// const msTeamInfos = safe(() => providerInfo!.msteams!.multiple);
+	// if (msTeamInfos)
+	// 	teams = teams.concat(Object.entries(msTeamInfos).map(([teamId, info]) => ({
+	// 		icon: PROVIDER_MAPPINGS.msteams.icon!,
+	// 		providerId: getProviderConfig(state, "msteams")!.id,
+	// 		teamId,
+	// 		teamName: info.extra!.team_name
+	// 	})));
+
+	return teams;
 };
 
 export const getProviderConfig = createSelector(

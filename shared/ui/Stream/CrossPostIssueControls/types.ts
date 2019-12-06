@@ -5,6 +5,7 @@ export interface ProviderDisplay {
 	getUrl?: string;
 	urlPlaceholder?: string;
 	helpUrl?: string;
+	groupName?: string;
 }
 
 export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
@@ -44,7 +45,7 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		icon: "azuredevops",
 		getUrl: "https://azure.microsoft.com/en-us/services/devops"
 	},
-	slack: { displayName: "Slack", icon: "slack" },
-	msteams: { displayName: "Microsoft Teams", icon: "msteams" }
+	slack: { displayName: "Slack", icon: "slack", groupName: "Workspace" },
+	msteams: { displayName: "Microsoft Teams", icon: "msteams", groupName: "Organization" }
 };
 

@@ -520,30 +520,43 @@ export class SimpleStream extends Component {
 					id: provider.id
 				});
 				if (isConnected) {
+					let subMenu = mapFilter(
+						getConnectedSharingTargets(this.context.store.getState()),
+						shareTarget => {
+							if (shareTarget.providerId !== provider.id) return undefined;
+
+							return {
+								key: shareTarget.teamName,
+								label: `Disconnect ${shareTarget.teamName}`,
+								action: () => {
+									this.props.disconnectProvider(provider.id, "Global Nav", shareTarget.teamId);
+								}
+							};
+						}
+					);
+					if (subMenu.length) {
+						subMenu.push({ label: "-" });
+						subMenu.push({
+							label: `Add ${display.groupName}`,
+							action: () => {
+								this.props.connectProvider(providerId, "Global Nav");
+							}
+						});
+					}
+
 					menuItems.push({
 						key: providerId,
-						label: `Disconnect ${display.displayName}`,
+						label: `${display.displayName} Connections`,
 						displayName: display.displayName,
-						submenu: mapFilter(
-							getConnectedSharingTargets(this.context.store.getState()),
-							shareTarget => {
-								if (shareTarget.providerId !== provider.id) return undefined;
-
-								return {
-									key: shareTarget.teamName,
-									label: shareTarget.teamName,
-									action: () => {
-										this.props.disconnectProvider(provider.id, "Global Nav", shareTarget.teamId);
-									}
-								};
-							}
-						)
+						submenu: subMenu
 					});
 				} else
 					menuItems.push({
 						key: providerId,
-						label: `Connect ${display.displayName}`,
-						action: () => {},
+						label: `Connect to ${display.displayName}`,
+						action: () => {
+							this.props.connectProvider(providerId, "Global Nav");
+						},
 						displayName: display.displayName
 					});
 			}

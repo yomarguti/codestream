@@ -115,11 +115,15 @@ export function SharingControls(props: {
 			slackConfig: getProviderConfig(state, "slack"),
 			msTeamsConfig: getProviderConfig(state, "msteams"),
 			isConnectedToSlack: isConnected(state, { name: "slack" }),
+			isConnectedToMSTeams: isConnected(state, { name: "msteams" }),
 			shareTargets,
 			selectedShareTarget: selectedShareTarget || shareTargets[0]
 		};
 	});
-	const [isAuthenticating, setIsAuthenticating] = React.useState<boolean>(false);
+	const [authenticationState, setAuthenticationState] = React.useState<{
+		isAuthenticating: boolean;
+		label: string;
+	}>({ isAuthenticating: false, label: "" });
 	const [isFetchingData, setIsFetchingData] = React.useState<boolean>(false);
 
 	const selectedShareTargetTeamId = safe(() => derivedState.selectedShareTarget.teamId) as
@@ -127,7 +131,11 @@ export function SharingControls(props: {
 		| undefined;
 
 	const data = useDataForTeam(
-		derivedState.slackConfig ? derivedState.slackConfig.id : "",
+		derivedState.slackConfig
+			? derivedState.slackConfig.id
+			: derivedState.msTeamsConfig
+			? derivedState.msTeamsConfig.id
+			: "",
 		selectedShareTargetTeamId
 	);
 
@@ -142,10 +150,10 @@ export function SharingControls(props: {
 		if (numberOfTargets === 1) props.onToggle(true);
 
 		// if we're waiting on something to be added, this is it so make it the current selection
-		if (isAuthenticating) {
+		if (authenticationState && authenticationState.isAuthenticating) {
 			const newShareTarget = getLast(derivedState.shareTargets)!;
 			setSelectedShareTarget(newShareTarget);
-			setIsAuthenticating(false);
+			setAuthenticationState({ isAuthenticating: false, label: "" });
 		}
 	}, [derivedState.shareTargets.length]);
 
@@ -229,7 +237,9 @@ export function SharingControls(props: {
 				targetItems.push({
 					key: "add-msteams",
 					label: "Add Teams organization" as any,
-					action: (() => {}) as any
+					action: (() => {
+						authenticateWithMSTeams();
+					}) as any
 				});
 			}
 		}
@@ -262,20 +272,25 @@ export function SharingControls(props: {
 	}, [data.get().channels]);
 
 	const authenticateWithSlack = () => {
-		setIsAuthenticating(true);
+		setAuthenticationState({ isAuthenticating: true, label: "Slack" });
 		dispatch(connectProvider(derivedState.slackConfig!.id, "Compose Modal"));
+	};
+
+	const authenticateWithMSTeams = () => {
+		setAuthenticationState({ isAuthenticating: true, label: "MS Teams" });
+		dispatch(connectProvider(derivedState.msTeamsConfig!.id, "Compose Modal"));
 	};
 
 	if (derivedState.slackConfig == undefined) return null;
 
-	if (isAuthenticating)
+	if (authenticationState && authenticationState.isAuthenticating)
 		return (
 			<Root>
-				<Icon name="sync" className="spin" /> Authenticating with Slack...{" "}
+				<Icon name="sync" className="spin" /> Authenticating with {authenticationState.label}...{" "}
 				<a
 					onClick={e => {
 						e.preventDefault();
-						setIsAuthenticating(false);
+						setAuthenticationState({ isAuthenticating: false, label: "" });
 					}}
 				>
 					cancel
@@ -298,7 +313,7 @@ export function SharingControls(props: {
 			</Root>
 		);
 
-	if (!derivedState.isConnectedToSlack)
+	if (!derivedState.isConnectedToSlack && !derivedState.isConnectedToMSTeams)
 		return (
 			<Root>
 				Share on{" "}
@@ -310,6 +325,7 @@ export function SharingControls(props: {
 				>
 					<Icon name="slack" /> Slack
 				</TextButton>
+				{/*
 				{derivedState.msTeamsConfig != undefined && (
 					<>
 						{" "}
@@ -317,13 +333,14 @@ export function SharingControls(props: {
 						<TextButton
 							onClick={e => {
 								e.preventDefault();
-								// setIsLoading("msteams");
+								authenticateWithMSTeams();
 							}}
 						>
 							<Icon name="msteams" /> MS Teams
 						</TextButton>
 					</>
 				)}
+						*/}
 			</Root>
 		);
 
