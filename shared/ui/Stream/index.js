@@ -33,7 +33,6 @@ import * as actions from "./actions";
 import { editCodemark } from "../store/codemarks/actions";
 import {
 	ComponentUpdateEmitter,
-	isInVscode,
 	safe,
 	toMapBy,
 	isNotOnDisk,
@@ -124,7 +123,7 @@ export class SimpleStream extends Component {
 		// polyfill for ResizeObserver which won't be triggered automatically
 		this.handleResizeCompose();
 
-		if (isInVscode()) {
+		if (this.props.isInVscode) {
 			this.disposables.push(
 				VsCodeKeystrokeDispatcher.on("keydown", event => {
 					if (event.key === "Escape") {
@@ -2357,6 +2356,7 @@ const mapStateToProps = state => {
 		isCodeStreamTeam: teamProvider === "codestream",
 		channelMembers,
 		services,
+		isInVscode: state.ide.name === "VSC",
 		posts: streamPosts.map(post => {
 			let user = users[post.creatorId];
 			if (!user) {

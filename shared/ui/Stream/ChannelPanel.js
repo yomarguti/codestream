@@ -24,7 +24,7 @@ import Button from "./Button";
 import ChannelMenu from "./ChannelMenu";
 import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
-import { isInVscode, safe } from "../utils";
+import { safe } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { sortBy as _sortBy } from "lodash-es";
 import { ContextState } from "../store/context/types";
@@ -76,7 +76,7 @@ export class SimpleChannelPanel extends Component {
 
 	componentDidMount() {
 		HostApi.instance.track("Page Viewed", { "Page Name": "Channels Tab" });
-		if (isInVscode()) {
+		if (this.props.isInVscode) {
 			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
 				if (event.key === "Escape") {
 					this.props.setChannelFilter(this.state.previousShowChannelsValue);
@@ -808,6 +808,7 @@ const EMPTY_OBJECT = Object.freeze({});
  * @param {Object} state.umis
  * @param {Object} state.users
  * @param {Object} state.teams
+ * @param {Object} state.ide
  **/
 const mapStateToProps = ({
 	capabilities,
@@ -817,7 +818,8 @@ const mapStateToProps = ({
 	streams,
 	teams,
 	umis,
-	users
+	users,
+	ide
 }) => {
 	const team = teams[context.currentTeamId];
 
@@ -888,21 +890,19 @@ const mapStateToProps = ({
 		meStreamId,
 		streamPresence,
 		team: team,
-		showChannels: context.channelFilter
+		showChannels: context.channelFilter,
+		isInVscode: ide.name === "VSC"
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{
-		changeStreamMuteState,
-		closeDirectMessage,
-		createStream,
-		setUserPreference,
-		setCurrentStream,
-		openPanel,
-		setChannelFilter,
-		setChannelsMuteAll,
-		reAuthForFullChatProvider
-	}
-)(SimpleChannelPanel);
+export default connect(mapStateToProps, {
+	changeStreamMuteState,
+	closeDirectMessage,
+	createStream,
+	setUserPreference,
+	setCurrentStream,
+	openPanel,
+	setChannelFilter,
+	setChannelsMuteAll,
+	reAuthForFullChatProvider
+})(SimpleChannelPanel);

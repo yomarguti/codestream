@@ -9,7 +9,7 @@ import CancelButton from "./CancelButton";
 import { FormattedMessage } from "react-intl";
 import Select from "react-select";
 import Timestamp from "./Timestamp";
-import { isInVscode, toMapBy, mapFilter } from "../utils";
+import { toMapBy, mapFilter } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { includes as _includes, sortBy as _sortBy, union as _union } from "lodash-es";
 
@@ -22,7 +22,7 @@ export class SimpleCreateDMPanel extends Component {
 	}
 
 	componentDidMount() {
-		if (isInVscode()) {
+		if (this.props.isInVscode) {
 			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
 				if (event.key === "Escape") {
 					this.props.closePanel();
@@ -266,7 +266,7 @@ export class SimpleCreateDMPanel extends Component {
 	};
 }
 
-const mapStateToProps = ({ context, streams, users, teams, session, umis }) => {
+const mapStateToProps = ({ context, streams, users, teams, session, umis, ide }) => {
 	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
 	const members = teamMembers
 		.map(user => {
@@ -310,15 +310,13 @@ const mapStateToProps = ({ context, streams, users, teams, session, umis }) => {
 		directMessageStreams,
 		currentUserId: user.id,
 		teammates: _sortBy(members, member => member.label.toLowerCase()),
-		team: teams[context.currentTeamId]
+		team: teams[context.currentTeamId],
+		isInVscode: ide.name === "VSC"
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{
-		...contextActions,
-		createStream,
-		openDirectMessage
-	}
-)(SimpleCreateDMPanel);
+export default connect(mapStateToProps, {
+	...contextActions,
+	createStream,
+	openDirectMessage
+})(SimpleCreateDMPanel);

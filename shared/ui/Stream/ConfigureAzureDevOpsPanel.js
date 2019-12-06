@@ -4,10 +4,7 @@ import { connect } from "react-redux";
 import { closePanel } from "./actions";
 import { configureProvider, connectProvider } from "../store/providers/actions";
 import CancelButton from "./CancelButton";
-import Tooltip from "./Tooltip";
 import Button from "./Button";
-import createClassString from "classnames";
-import { isInVscode } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 
@@ -25,7 +22,7 @@ export class ConfigureAzureDevOpsPanel extends Component {
 	}
 
 	componentDidMount() {
-		if (isInVscode()) {
+		if (this.props.isInVscode) {
 			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
 				if (event.key === "Escape") {
 					this.props.closePanel();
@@ -134,11 +131,10 @@ export class ConfigureAzureDevOpsPanel extends Component {
 	}
 }
 
-const mapStateToProps = ({ providers, context, teams }) => {
-	return { providers };
+const mapStateToProps = ({ providers, ide }) => {
+	return { providers, isInVscode: ide.name === "VSC" };
 };
 
-export default connect(
-	mapStateToProps,
-	{ closePanel, configureProvider, connectProvider }
-)(injectIntl(ConfigureAzureDevOpsPanel));
+export default connect(mapStateToProps, { closePanel, configureProvider, connectProvider })(
+	injectIntl(ConfigureAzureDevOpsPanel)
+);

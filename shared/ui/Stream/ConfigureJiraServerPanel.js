@@ -4,10 +4,7 @@ import { connect } from "react-redux";
 import { closePanel } from "./actions";
 import { addEnterpriseProvider, connectProvider } from "../store/providers/actions";
 import CancelButton from "./CancelButton";
-import Tooltip from "./Tooltip";
 import Button from "./Button";
-import createClassString from "classnames";
-import { isInVscode } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 
@@ -30,7 +27,7 @@ export class ConfigureJiraServerPanel extends Component {
 	}
 
 	componentDidMount() {
-		if (isInVscode()) {
+		if (this.props.isInVscode) {
 			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
 				if (event.key === "Escape") {
 					this.props.closePanel();
@@ -218,11 +215,10 @@ export class ConfigureJiraServerPanel extends Component {
 	}
 }
 
-const mapStateToProps = ({ providers }) => {
-	return { providers };
+const mapStateToProps = ({ providers, ide }) => {
+	return { providers, isInVscode: ide.name === "VSC" };
 };
 
-export default connect(
-	mapStateToProps,
-	{ closePanel, addEnterpriseProvider, connectProvider }
-)(injectIntl(ConfigureJiraServerPanel));
+export default connect(mapStateToProps, { closePanel, addEnterpriseProvider, connectProvider })(
+	injectIntl(ConfigureJiraServerPanel)
+);

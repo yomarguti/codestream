@@ -4,10 +4,7 @@ import { connect } from "react-redux";
 import { closePanel } from "./actions";
 import { addEnterpriseProvider, connectProvider } from "../store/providers/actions";
 import CancelButton from "./CancelButton";
-import Tooltip from "./Tooltip";
 import Button from "./Button";
-import createClassString from "classnames";
-import { isInVscode } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 
@@ -30,7 +27,7 @@ export class ConfigureEnterprisePanel extends Component {
 	}
 
 	componentDidMount() {
-		if (isInVscode()) {
+		if (this.props.isInVscode) {
 			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
 				if (event.key === "Escape") {
 					this.props.closePanel();
@@ -112,7 +109,9 @@ export class ConfigureEnterprisePanel extends Component {
 		const inactive = false;
 		const { name } = this.props.providers[providerId] || {};
 		const providerName = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].displayName : "";
-		const providerShortName = PROVIDER_MAPPINGS[name] ? (PROVIDER_MAPPINGS[name].shortDisplayName || providerName) : "";
+		const providerShortName = PROVIDER_MAPPINGS[name]
+			? PROVIDER_MAPPINGS[name].shortDisplayName || providerName
+			: "";
 		const placeholder = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].urlPlaceholder : "";
 		const getUrl = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].getUrl : "";
 		const helpUrl = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].helpUrl : "";
@@ -156,12 +155,8 @@ export class ConfigureEnterprisePanel extends Component {
 							<br />
 							{helpUrl && (
 								<label>
-									Contact your {providerShortName} admin to get the client ID and secret required below,
-									and send them a link to{" "}
-									<a href={helpUrl}>
-										these instructions
-									</a>
-									.
+									Contact your {providerShortName} admin to get the client ID and secret required
+									below, and send them a link to <a href={helpUrl}>these instructions</a>.
 								</label>
 							)}
 							<div id="app-clientid-controls" className="control-group">
@@ -224,11 +219,10 @@ export class ConfigureEnterprisePanel extends Component {
 	}
 }
 
-const mapStateToProps = ({ providers }) => {
-	return { providers };
+const mapStateToProps = ({ providers, ide }) => {
+	return { providers, isInVscode: ide.name === "VSC" };
 };
 
-export default connect(
-	mapStateToProps,
-	{ closePanel, addEnterpriseProvider, connectProvider }
-)(injectIntl(ConfigureEnterprisePanel));
+export default connect(mapStateToProps, { closePanel, addEnterpriseProvider, connectProvider })(
+	injectIntl(ConfigureEnterprisePanel)
+);

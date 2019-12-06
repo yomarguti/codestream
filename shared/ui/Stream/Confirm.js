@@ -2,8 +2,16 @@ import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import createClassString from "classnames";
 import Button from "./Button";
-import { isInVscode } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
+
+// this is a 'deprecated' strategy to determine which ide is hosting this
+// the better method is to refer to the `ide` slice of redux state
+// unfortunately, there is code that renders the Confirm component in a separate react tree,
+// which means it needs its own reference to the redux store.
+// Once this component is using the new <Modal/> api, we can delete this functiona
+function isInVscode() {
+	return !!document.querySelector("body.codestream");
+}
 
 export default class Confirm extends Component {
 	disposables = [];

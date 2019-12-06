@@ -9,7 +9,6 @@ import Button from "./Button";
 import Tooltip from "./Tooltip";
 import { FormattedMessage } from "react-intl";
 import Select from "react-select";
-import { isInVscode } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { sortBy as _sortBy } from "lodash-es";
 
@@ -22,7 +21,7 @@ export class SimpleCreateChannelPanel extends Component {
 	}
 
 	componentDidMount() {
-		if (isInVscode()) {
+		if (this.props.isInVscode) {
 			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
 				if (event.key === "Escape") {
 					this.props.closePanel();
@@ -251,7 +250,7 @@ export class SimpleCreateChannelPanel extends Component {
 	};
 }
 
-const mapStateToProps = ({ context, streams, users, teams }) => {
+const mapStateToProps = ({ context, streams, users, teams, ide }) => {
 	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
 
 	const channelStreams = getChannelStreamsForTeam(streams, context.currentTeamId) || {};
@@ -263,16 +262,14 @@ const mapStateToProps = ({ context, streams, users, teams }) => {
 		};
 	});
 	return {
+		isInVscode: ide.name === "VSC",
 		channelStreams,
 		teammates: _sortBy(members, member => member.label.toLowerCase()),
 		team: teams[context.currentTeamId]
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{
-		...contextActions,
-		createStream
-	}
-)(SimpleCreateChannelPanel);
+export default connect(mapStateToProps, {
+	...contextActions,
+	createStream
+})(SimpleCreateChannelPanel);

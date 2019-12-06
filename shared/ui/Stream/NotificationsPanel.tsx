@@ -1,24 +1,25 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import CancelButton from "./CancelButton";
-import styled from "styled-components";
 import { CodeStreamState } from "../store";
 import { RadioGroup, Radio } from "../src/components/RadioGroup";
-import { isInVscode } from "../utils";
 import { setUserPreference } from "./actions";
 import { HostApi } from "../webview-api";
 
 export const NotificationsPanel = props => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
-		return { notificationPreference: state.preferences.notifications || "involveMe" };
+		return {
+			notificationPreference: state.preferences.notifications || "involveMe",
+			isInVscode: state.ide.name === "VSC"
+		};
 	});
 	const [loading, setLoading] = useState(false);
 
 	const handleChange = async (value: string) => {
 		setLoading(true);
 		HostApi.instance.track("Notification Preference Changed", { Value: value });
-		await dispatch(setUserPreference(["notifications"], value));
+		dispatch(setUserPreference(["notifications"], value));
 		setLoading(false);
 	};
 
@@ -31,7 +32,7 @@ export const NotificationsPanel = props => {
 				</div>
 				<fieldset className="form-body">
 					<p className="explainer">
-						{isInVscode()
+						{derivedState.isInVscode
 							? "Follow codemarks to receive desktop and email notifications."
 							: "Follow codemarks to receive email notifications."}
 					</p>

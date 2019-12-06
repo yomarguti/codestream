@@ -11,7 +11,6 @@ import {
 } from "../store/streams/reducer";
 import Icon from "./Icon";
 import Timestamp from "./Timestamp";
-import { isInVscode } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import CancelButton from "./CancelButton";
 
@@ -23,7 +22,7 @@ export class SimplePublicChannelPanel extends Component {
 	}
 
 	componentDidMount() {
-		if (isInVscode()) {
+		if (this.props.isInVscode) {
 			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
 				if (event.key === "Escape") {
 					this.props.closePanel();
@@ -145,7 +144,7 @@ export class SimplePublicChannelPanel extends Component {
 	};
 }
 
-const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
+const mapStateToProps = ({ context, streams, users, teams, umis, session, ide }) => {
 	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
 
 	const channelStreams = _sortBy(
@@ -170,14 +169,12 @@ const mapStateToProps = ({ context, streams, users, teams, umis, session }) => {
 		publicStreams,
 		archivedStreams,
 		teammates: teamMembers,
-		team: teams[context.currentTeamId]
+		team: teams[context.currentTeamId],
+		isInVscode: ide.name === "VSC"
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{
-		...contextActions,
-		...streamActions
-	}
-)(SimplePublicChannelPanel);
+export default connect(mapStateToProps, {
+	...contextActions,
+	...streamActions
+})(SimplePublicChannelPanel);

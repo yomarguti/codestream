@@ -10,7 +10,6 @@ import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher"
 import {
 	createRange,
 	getCurrentCursorPosition,
-	isInVscode,
 	debounceAndCollectToAnimationFrame
 } from "../utils";
 import AtMentionsPopup from "./AtMentionsPopup";
@@ -51,6 +50,7 @@ interface State {
 }
 
 interface Props {
+	isInVscode: boolean;
 	text: string;
 	teammates: CSUser[];
 	currentUserId: string;
@@ -112,7 +112,7 @@ export class MessageInput extends React.Component<Props, State> {
 			});
 		}
 
-		if (isInVscode()) {
+		if (this.props.isInVscode) {
 			this.disposables.push(
 				VsCodeKeystrokeDispatcher.on("keydown", event => {
 					if (event.key === "Escape" && event.target.id !== "input-div") {
@@ -1120,7 +1120,8 @@ const mapStateToProps = state => {
 
 	return {
 		currentTeam,
-		codemarks: codemarkSelectors.getTypeFilteredCodemarks(state) || []
+		codemarks: codemarkSelectors.getTypeFilteredCodemarks(state) || [],
+		isInVscode: state.ide.name === "VSC"
 	};
 };
 
