@@ -10,7 +10,7 @@
 
 Because this repo uses an npm package hosted privately in our github, you'll need to ensure your GitHub acess token has rights to use our package registry.
 
-If you're not sure it does or you want to create a new one:
+If you're not sure it does or you want to create a new one follow these steps. (If you do have one, skip to step 6):
 
 1. Go to the [token settings](https://github.com/settings/tokens) in GitHub
 2. Click 'Generate new token'
