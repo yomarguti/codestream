@@ -1,8 +1,10 @@
 ## To get started
 
 1. clone the repo and make sure it's a sibling to the `codestream-lsp-agent` and `codestream-components` repos
-2. `cd` into the repo
-3. run `apm install && apm link`
+2. Build [codestream-components](https://github.com/TeamCodeStream/codestream-components/blob/develop/README.md)
+3. Build [codestream-lsp-agent](https://github.com/TeamCodeStream/codestream-lsp-agent/blob/develop/README.md)
+4. `cd` into the repo
+5. run `apm install && apm link`
 
 ## To create a working build
 
