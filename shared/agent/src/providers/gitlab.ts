@@ -17,7 +17,7 @@ import {
 	GitLabCreateCardRequest,
 	GitLabCreateCardResponse
 } from "../protocol/agent.protocol";
-import { CodemarkType, CSGitLabProviderInfo, CSLocationArray } from "../protocol/api.protocol";
+import { CodemarkType, CSGitLabProviderInfo, CSLocationArray, CSReferenceLocation } from "../protocol/api.protocol";
 import { log, lspProvider, Strings } from "../system";
 import {
 	getRemotePath,
@@ -245,9 +245,19 @@ export class GitLabProvider extends ThirdPartyProviderBase<CSGitLabProviderInfo>
 
 			line = outdated ? c.originalLine! : c.line;
 			commentsById[c.id] = c;
+			const referenceLocations: CSReferenceLocation[] = [];
+			if (line >= 0) {
+				referenceLocations.push({
+					commitHash: rev,
+					location: [line, 1, line, MAX_RANGE_VALUE, undefined] as CSLocationArray,
+					flags: {
+						canonical: true
+					}
+				});
+			}
 			markers.push({
 				id: c.id,
-				locationWhenCreated: [line, 1, line, MAX_RANGE_VALUE, undefined] as CSLocationArray
+				referenceLocations
 			});
 		}
 

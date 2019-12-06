@@ -4,6 +4,7 @@ import { GraphQLClient } from "graphql-request";
 import { Response } from "node-fetch";
 import * as paths from "path";
 import { URI } from "vscode-uri";
+import { MarkerLocation } from "../api/extensions";
 import { SessionContainer } from "../container";
 import { Logger } from "../logger";
 import { Markerish, MarkerLocationManager } from "../managers/markerLocationManager";
@@ -18,7 +19,7 @@ import {
 	GitHubCreateCardResponse,
 	GitHubUser
 } from "../protocol/agent.protocol";
-import { CodemarkType, CSGitHubProviderInfo, CSLocationArray } from "../protocol/api.protocol";
+import { CodemarkType, CSGitHubProviderInfo, CSLocationArray, CSReferenceLocation } from "../protocol/api.protocol";
 import { Arrays, Functions, log, lspProvider, Strings } from "../system";
 import { xfs } from "../xfs";
 import {
@@ -216,6 +217,7 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 		let rev;
 		let outdated;
 		for (const c of comments) {
+			Logger.log(`GitHub.getPullRequestDocumentMarkers: processing comment ${c.id}`);
 			outdated = c.outdated;
 			if (!outdated) {
 				outdated = !(await git.isValidReference(repo.path, c.commit));
@@ -223,6 +225,29 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 			}
 
 			rev = outdated ? c.originalCommit! : c.commit;
+			line = outdated ? c.originalLine! : c.line;
+
+			if (line === -1) {
+				Logger.log(`GitHub.getPullRequestDocumentMarkers: could not get position information comment ${c.id} from PR`);
+				Logger.log(`GitHub.getPullRequestDocumentMarkers: attempting to determine current revision for content-based calculation`);
+				rev = await git.getFileCurrentRevision(uri);
+				if (!rev) {
+					Logger.log(`GitHub.getPullRequestDocumentMarkers: could not determine current revision for file ${uri.fsPath}`);
+					continue;
+				}
+
+				Logger.log(`GitHub.getPullRequestDocumentMarkers: attempting to determine current revision for content-based calculation`);
+                const contents = await xfs.readText(uri.fsPath);
+                if (!contents) {
+					Logger.log(`GitHub.getPullRequestDocumentMarkers: could not read contents of ${uri.fsPath} from disk`);
+					continue;
+				}
+
+				Logger.log(`GitHub.getPullRequestDocumentMarkers: calculating comment line via content analysis`);
+				line = await findBestMatchingLine(contents, c.code, c.line);
+			}
+
+			Logger.log(`GitHub.getPullRequestDocumentMarkers: comment ${c.id} located at line ${line}, commit ${rev}`);
 
 			let markers = markersByCommit.get(rev);
 			if (markers === undefined) {
@@ -230,19 +255,20 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 				markersByCommit.set(rev, markers);
 			}
 
-			line = outdated ? c.originalLine! : c.line;
-
-            if (line === -1) {
-                const contents = await xfs.readText(uri.fsPath);
-                if (contents != null) {
-					line = await findBestMatchingLine(contents, c.code, c.line);
-				}
-            }
-
 			commentsById[c.id] = c;
+			const referenceLocations: CSReferenceLocation[] = [];
+			if (line >= 0) {
+				referenceLocations.push({
+					commitHash: rev,
+					location: [line, 1, line, MAX_RANGE_VALUE, undefined] as CSLocationArray,
+					flags: {
+						canonical: true
+					}
+				});
+			}
 			markers.push({
 				id: c.id,
-				locationWhenCreated: [line, 1, line, MAX_RANGE_VALUE, undefined] as CSLocationArray
+				referenceLocations
 			});
 		}
 
@@ -292,16 +318,7 @@ export class GitHubProvider extends ThirdPartyProviderBase<CSGitHubProviderInfo>
 						}
 					]
 				},
-				range: {
-					start: {
-						line: location.lineStart - 1,
-						character: 0
-					},
-					end: {
-						line: location.lineEnd - 1,
-						character: 0
-					}
-				},
+				range: MarkerLocation.toRange(location),
 				location: location,
 				summary: comment.text,
 				summaryMarkdown: `\n\n${Strings.escapeMarkdown(comment.text)}`,

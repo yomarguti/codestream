@@ -6,6 +6,7 @@ import { URI } from "vscode-uri";
 import { SessionContainer } from "../container";
 import { Logger } from "../logger";
 import { Markerish, MarkerLocationManager } from "../managers/markerLocationManager";
+import { MAX_RANGE_VALUE } from "../markerLocation/calculator";
 import {
 	BitbucketBoard,
 	BitbucketCard,
@@ -16,7 +17,7 @@ import {
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse
 } from "../protocol/agent.protocol";
-import { CodemarkType, CSBitbucketProviderInfo, CSLocationArray } from "../protocol/api.protocol";
+import { CodemarkType, CSBitbucketProviderInfo, CSLocationArray, CSReferenceLocation } from "../protocol/api.protocol";
 import { Arrays, log, lspProvider, Strings } from "../system";
 import {
 	ApiResponse,
@@ -286,9 +287,19 @@ export class BitbucketProvider extends ThirdPartyProviderBase<CSBitbucketProvide
 			}
 
 			commentsById[c.id] = c;
+			const referenceLocations: CSReferenceLocation[] = [];
+			if (c.line >= 0) {
+				referenceLocations.push({
+					commitHash: c.commit,
+					location: [c.line, 1, c.line, MAX_RANGE_VALUE, undefined] as CSLocationArray,
+					flags: {
+						canonical: true
+					}
+				});
+			}
 			markers.push({
 				id: c.id,
-				locationWhenCreated: [c.line, 1, c.line + 1, 1, undefined] as CSLocationArray
+				referenceLocations
 			});
 		}
 

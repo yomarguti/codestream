@@ -27,7 +27,7 @@ import { BacktrackedLocation } from "./markersManager";
 
 export interface Markerish {
 	id: string;
-	locationWhenCreated: CSLocationArray;
+	referenceLocations: CSReferenceLocation[];
 }
 
 export interface MissingLocationsById {
@@ -585,12 +585,13 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 
 			const locationsToCalculate: MarkerLocationsById = Object.create(null);
 			for (const marker of markers) {
+				const location = marker.referenceLocations[0].location;
 				locationsToCalculate[marker.id] = {
 					id: marker.id,
-					lineStart: marker.locationWhenCreated[0],
-					colStart: marker.locationWhenCreated[1],
-					lineEnd: marker.locationWhenCreated[2],
-					colEnd: marker.locationWhenCreated[3]
+					lineStart: location[0],
+					colStart: location[1],
+					lineEnd: location[2],
+					colEnd: location[3]
 				};
 			}
 
