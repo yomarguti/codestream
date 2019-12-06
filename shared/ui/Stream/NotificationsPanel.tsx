@@ -44,7 +44,7 @@ export const NotificationsPanel = props => {
 						>
 							<Radio value="all">Automatically follow all new codemarks</Radio>
 							<Radio value="involveMe">
-								Follow codemarks I have created, I have been mentioned, or I have replied to
+								Follow codemarks I have created, I have been mentioned in, or I have replied to
 							</Radio>
 							<Radio value="off">Don't automatically follow any codemarks</Radio>
 						</RadioGroup>
