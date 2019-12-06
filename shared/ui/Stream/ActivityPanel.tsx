@@ -158,6 +158,16 @@ const StyledMarker = styled(Marker)`
 	.code {
 		margin: 5px 0 !important;
 	}
+	.file-info {
+		font-size: 11px;
+		display: flex;
+		flex-flow: row wrap;
+	}
+	.file-info .monospace {
+		display: block;
+		white-space: nowrap;
+		flex: 1;
+	}
 `;
 
 const StyledLink = styled(Link)`
