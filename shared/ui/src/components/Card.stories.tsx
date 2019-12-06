@@ -4,7 +4,8 @@ import styled from "styled-components";
 
 export default {
 	title: "Card",
-	component: Card
+	component: Card,
+	decorators: [storyFn => <div style={{ width: "300px" }}>{storyFn()}</div>]
 };
 
 const P = styled.p`
