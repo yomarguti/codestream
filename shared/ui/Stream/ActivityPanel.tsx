@@ -166,7 +166,6 @@ const StyledMarker = styled(Marker)`
 	.file-info .monospace {
 		display: block;
 		white-space: nowrap;
-		flex: 1;
 	}
 `;
 
