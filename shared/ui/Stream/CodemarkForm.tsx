@@ -814,6 +814,11 @@ class CodemarkForm extends React.Component<Props, State> {
 		);
 	};
 
+	/*
+	Sharing model v1 will only be public codemarks
+	 see https://trello.com/c/M3KV7p4g/2728-make-all-codemarks-in-sharing-model-team-accessible
+	*/
+	/*
 	renderPrivacyControls = () => {
 		if (
 			!this.props.isEditing &&
@@ -858,6 +863,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		}
 		return null;
 	};
+	 */
 
 	renderSharingControls = () => {
 		return (
@@ -1730,7 +1736,7 @@ class CodemarkForm extends React.Component<Props, State> {
 							</Tooltip>
 						</div>
 					)}
-					{this.renderPrivacyControls()}
+					{/* this.renderPrivacyControls() */}
 					{this.renderRelatedCodemarks()}
 					{this.renderTags()}
 					{this.renderCodeBlocks()}
