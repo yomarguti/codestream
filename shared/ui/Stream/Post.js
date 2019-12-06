@@ -19,7 +19,6 @@ import { getById } from "../store/repos/reducer";
 import { getPost } from "../store/posts/reducer";
 import { getUserByCsId } from "../store/users/reducer";
 import { getCodemark } from "../store/codemarks/reducer";
-import { pinReply, unpinReply } from "../store/codemarks/actions";
 import { markdownify, emojify } from "./Markdowner";
 import { reactToPost, setCodemarkStatus } from "./actions";
 import { escapeHtml, safe, replaceHtml } from "../utils";
@@ -29,7 +28,10 @@ import {
 	getTeamMembers,
 	findMentionedUserIds
 } from "../store/users/reducer";
-import { GetDocumentFromMarkerRequestType } from "@codestream/protocols/agent";
+import {
+	GetDocumentFromMarkerRequestType,
+	PinReplyToCodemarkRequestType
+} from "@codestream/protocols/agent";
 import { EditorSelectRangeRequestType } from "../ipc/webview.protocol";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { HostApi } from "../webview-api";
@@ -877,9 +879,29 @@ class Post extends React.Component {
 
 	handleSelectMenu = action => {
 		if (action === "pin-reply") {
-			this.props.pinReply(this.props.parentPostCodemark, this.props.post.id);
+			if (
+				this.props.parentPostCodemark.pinnedReplies &&
+				this.props.parentPostCodemark.pinnedReplies.includes(this.props.post.id)
+			)
+				return;
+
+			HostApi.instance.send(PinReplyToCodemarkRequestType, {
+				codemarkId: this.props.parentPostCodemark.id,
+				postId: this.props.post.id,
+				value: true
+			});
 		} else if (action === "unpin-reply") {
-			this.props.unpinReply(this.props.parentPostCodemark, this.props.post.id);
+			if (
+				!this.props.parentPostCodemark.pinnedReplies ||
+				!this.props.parentPostCodemark.pinnedReplies.includes(this.props.post.id)
+			)
+				return;
+
+			HostApi.instance.send(PinReplyToCodemarkRequestType, {
+				codemarkId: this.props.parentPostCodemark.id,
+				postId: this.props.post.id,
+				value: false
+			});
 		} else {
 			this.props.action(action, {
 				...this.props.post,
@@ -967,7 +989,5 @@ export default connect(mapStateToProps, {
 	editPost,
 	deletePost,
 	reactToPost,
-	setCodemarkStatus,
-	pinReply,
-	unpinReply
+	setCodemarkStatus
 })(injectIntl(Post));

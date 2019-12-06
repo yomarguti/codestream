@@ -21,14 +21,15 @@ import {
 	PostPlus,
 	CodemarkPlus,
 	FollowCodemarkRequestType,
-	SetCodemarkPinnedRequestType
+	SetCodemarkPinnedRequestType,
+	PinReplyToCodemarkRequestType
 } from "@codestream/protocols/agent";
 import { savePosts } from "../store/posts/actions";
 import { addOlderActivity } from "../store/activityFeed/actions";
 import { saveCodemarks } from "../store/codemarks/actions";
 import { safe } from "../utils";
 import { markStreamRead } from "./actions";
-import { CodemarkType } from "@codestream/protocols/api";
+import { CodemarkType, CSUser } from "@codestream/protocols/api";
 import { Card, CardBody, CardFooter, CardBanner } from "../src/components/Card";
 import { resetLastReads } from "../store/unreads/actions";
 import { PanelHeader } from "../src/components/PanelHeader";
@@ -36,7 +37,6 @@ import { markdownify } from "./Markdowner";
 import { Marker } from "./Marker";
 import { getPost, getPostsForStream } from "../store/posts/reducer";
 import Tag from "./Tag";
-import { UsersState } from "../store/users/types";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { Link } from "./Link";
 import { RelatedCodemark } from "./RelatedCodemark";
@@ -621,7 +621,7 @@ const ActivityItem = (props: {
 					codemark.markers.map(marker => <StyledMarker key={marker.id} marker={marker} />)}
 			</CardBody>
 			<CardFooter>
-				<RepliesForCodemark parentPost={derivedState.post} />
+				<RepliesForCodemark parentPost={derivedState.post} pinnedReplies={codemark.pinnedReplies} />
 			</CardFooter>
 		</ActivityCard>
 	);
@@ -632,7 +632,7 @@ const SeeReplies = styled.div`
 	text-align: center;
 `;
 
-const Reply = styled.div`
+const ReplyRoot = styled.div`
 	padding-left: 10px;
 	padding-bottom: 10px;
 	display: flex;
@@ -643,7 +643,66 @@ const Reply = styled.div`
 	}
 `;
 
-const RepliesForCodemark = (props: { parentPost?: PostPlus }) => {
+const Reply = (props: {
+	author: Partial<CSUser>;
+	post: PostPlus;
+	starred: boolean;
+	codemarkId: string;
+}) => {
+	const [menuState, setMenuState] = React.useState<{
+		open: boolean;
+		target?: any;
+	}>({ open: false, target: undefined });
+
+	const closeMenu = React.useCallback(() => setMenuState({ open: false }), []);
+
+	const menuItems = React.useMemo(
+		() => [
+			{
+				label: props.starred ? "Un-Star Reply" : "Star Reply",
+				key: "star",
+				action: () => {
+					HostApi.instance.send(PinReplyToCodemarkRequestType, {
+						codemarkId: props.codemarkId,
+						postId: props.post.id,
+						value: !props.starred
+					});
+				}
+			}
+		],
+		[props.starred]
+	);
+
+	return (
+		<ReplyRoot>
+			<AuthorInfo style={{ fontWeight: 700 }}>
+				<HeadshotV2 person={props.author} /> {props.author.username}
+				<StyledTimestamp time={props.post.createdAt} />
+				<div style={{ marginLeft: "auto", marginRight: "10px" }}>
+					<KebabIcon
+						onClick={e => {
+							e.preventDefault();
+							e.stopPropagation();
+							if (menuState.open) {
+								closeMenu();
+							} else {
+								setMenuState({ open: true, target: e.currentTarget });
+							}
+						}}
+					>
+						<Icon name="kebab-vertical" />
+					</KebabIcon>
+					{menuState.open && (
+						<Menu items={menuItems} target={menuState.target} action={closeMenu} />
+					)}
+				</div>
+			</AuthorInfo>
+			<div style={{ marginLeft: "23px" }}>{props.post.text}</div>
+		</ReplyRoot>
+	);
+};
+
+const RepliesForCodemark = (props: { parentPost?: PostPlus; pinnedReplies?: string[] }) => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		if (props.parentPost == undefined) return { numberOfReplies: 0, unreadReplies: [] };
 		const lastUnreadForStream = state.umis.lastReads[props.parentPost.streamId] as
@@ -672,18 +731,14 @@ const RepliesForCodemark = (props: { parentPost?: PostPlus }) => {
 
 	return (
 		<>
-			{derivedState.unreadReplies.map(post => {
-				const author = users[post.creatorId];
-				return (
-					<Reply>
-						<AuthorInfo style={{ fontWeight: 700 }}>
-							<HeadshotV2 person={author} /> {author.username}
-							<StyledTimestamp time={post.createdAt} />
-						</AuthorInfo>
-						<div style={{ marginLeft: "23px" }}>{post.text}</div>
-					</Reply>
-				);
-			})}
+			{derivedState.unreadReplies.map(post => (
+				<Reply
+					post={post}
+					author={users[post.creatorId]}
+					starred={Boolean(props.pinnedReplies && props.pinnedReplies.includes(post.id))}
+					codemarkId={props.parentPost!.codemarkId!}
+				/>
+			))}
 			{hasMoreReplies && <SeeReplies>See earlier replies</SeeReplies>}
 		</>
 	);

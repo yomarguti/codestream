@@ -92,7 +92,7 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 						codemark: response.codemark,
 						remotes: attributes.remotes,
 						markerLocations: response.markerLocations,
-						mentionedUserIds: attributes.mentionedUserIds						
+						mentionedUserIds: attributes.mentionedUserIds
 					});
 				} catch (error) {
 					logError("Error sharing a codemark in the sharing model", { message: error.message });
@@ -139,24 +139,4 @@ export const editCodemark = (
 	} catch (error) {
 		logError(`failed to update codemark: ${error}`, { codemarkId });
 	}
-};
-
-export const pinReply = (codemark: CodemarkPlus, postId: string) => () => {
-	if (codemark.pinnedReplies && codemark.pinnedReplies.includes(postId)) return;
-
-	HostApi.instance.send(PinReplyToCodemarkRequestType, {
-		codemarkId: codemark.id,
-		postId,
-		value: true
-	});
-};
-
-export const unpinReply = (codemark: CodemarkPlus, postId: string) => () => {
-	if (!codemark.pinnedReplies || !codemark.pinnedReplies.includes(postId)) return;
-
-	HostApi.instance.send(PinReplyToCodemarkRequestType, {
-		codemarkId: codemark.id,
-		postId,
-		value: false
-	});
 };
