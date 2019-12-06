@@ -245,22 +245,21 @@ export abstract class ThirdPartyProviderBase<
 
 	protected async onDisconnected(request?: ThirdPartyDisconnect) {}
 
-	async ensureConnected() {
-		if (this._readyPromise !== undefined) return this._readyPromise;
+	async ensureConnected(request?: {providerTeamId?: string}) {
+		 if (this._readyPromise !== undefined) return this._readyPromise;
 
 		if (this._providerInfo !== undefined) {
-			await this.refreshToken();
-
+			await this.refreshToken(request);
 			return;
 		}
 
 		if (this._ensuringConnection === undefined) {
-			this._ensuringConnection = this.ensureConnectedCore();
+			this._ensuringConnection = this.ensureConnectedCore(request);
 		}
 		void (await this._ensuringConnection);
 	}
 
-	private async refreshToken() {
+	async refreshToken(request?: {providerTeamId?: string}) {
 		if (this._providerInfo === undefined || !isRefreshable(this._providerInfo)) {
 			return;
 		}
@@ -271,7 +270,8 @@ export abstract class ThirdPartyProviderBase<
 		try {
 			const me = await this.session.api.refreshThirdPartyProvider({
 				providerId: this.providerConfig.id,
-				refreshToken: this._providerInfo.refreshToken
+				refreshToken: this._providerInfo.refreshToken,
+				subId: request && request.providerTeamId
 			});
 			this._providerInfo = this.getProviderInfo(me);
 		} catch (error) {
@@ -280,7 +280,7 @@ export abstract class ThirdPartyProviderBase<
 		}
 	}
 
-	private async ensureConnectedCore() {
+	private async ensureConnectedCore(request?: {providerTeamId?: string}) {
 		const { user } = await SessionContainer.instance().users.getMe();
 		this._providerInfo = this.getProviderInfo(user);
 
@@ -288,7 +288,7 @@ export abstract class ThirdPartyProviderBase<
 			throw new Error(`You must authenticate with ${this.displayName} first.`);
 		}
 
-		await this.refreshToken();
+		await this.refreshToken(request);
 		await this.onConnected(this._providerInfo);
 
 		this._ensuringConnection = undefined;

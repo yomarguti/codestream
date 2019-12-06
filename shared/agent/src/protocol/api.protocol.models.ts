@@ -333,8 +333,9 @@ export interface CSMSTeamsProviderInfo {
 	teamId: string;
 	userId: string;
 	hosts?: { [host: string]: CSMSTeamsProviderInfo };
+	extra?: { [host: string]: any };
 	multiple?: {
-		[teamId: string]: Omit<CSSlackProviderInfo, "multiple">;
+		[teamId: string]: Omit<CSMSTeamsProviderInfo, "multiple">;
 	};
 }
 
@@ -350,8 +351,23 @@ export interface CSSlackProviderInfo {
 	userId: string;
 	hosts?: { [host: string]: CSSlackProviderInfo };
 	data?: { [key: string]: any };
+	extra?: { [host: string]: any };
 	multiple?: {
 		[teamId: string]: Omit<CSSlackProviderInfo, "multiple">;
+	};
+}
+
+export interface MSTeamsProviderInfo {
+	accessToken: string;
+	refreshToken: string;
+	expiresAt: number;
+	teamId: string;
+	userId: string;
+	hosts?: { [host: string]: MSTeamsProviderInfo };
+	data?: { [key: string]: any };
+	extra?: { [key: string]: any };
+	multiple?: {
+		[teamId: string]: Omit<MSTeamsProviderInfo, "multiple">;
 	};
 }
 

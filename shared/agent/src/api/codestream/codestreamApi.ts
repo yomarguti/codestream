@@ -308,9 +308,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 		Logger.log(
 			`CodeStream user '${response.user.username}' (${
-				response.user.id
+			response.user.id
 			}) is logging into ${provider || "uknown"}${
-				response.providerAccess ? `:${response.providerAccess}` : ""
+			response.providerAccess ? `:${response.providerAccess}` : ""
 			} and belongs to ${response.teams.length} team(s)\n${response.teams
 				.map(t => `\t${t.name} (${t.id})`)
 				.join("\n")}`
@@ -732,7 +732,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		// TODO: This doesn't handle all the request params
 		return this.get<CSGetMarkersResponse>(
 			`/markers?teamId=${this.teamId}&streamId=${request.streamId}${
-				request.commitHash ? `&commitHash=${request.commitHash}` : ""
+			request.commitHash ? `&commitHash=${request.commitHash}` : ""
 			}`,
 			this._token
 		);
@@ -1486,6 +1486,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 	async refreshThirdPartyProvider(request: {
 		providerId: string;
 		refreshToken: string;
+		sharing?: boolean;
+		subId?: string;
 	}): Promise<CSMe> {
 		const cc = Logger.getCorrelationContext();
 		try {
@@ -1506,7 +1508,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 			const host = providerConfig.isEnterprise
 				? `&host=${encodeURIComponent(providerConfig.host!)}`
 				: "";
-			const url = `/provider-refresh/${providerConfig.name}?${team}&${token}${host}`;
+			const sharing = request.sharing ? "&sharing=true" : "";
+			const subId = request.subId ? `&subId=${request.subId}` : "";
+			const url = `/provider-refresh/${providerConfig.name}?${team}&${token}${host}${sharing}${subId}`;
 			const response = await this.get<{ user: any }>(url, this._token);
 
 			const [user] = await SessionContainer.instance().users.resolve({
@@ -1638,10 +1642,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 			const context =
 				this._middleware.length > 0
 					? ({
-							url: absoluteUrl,
-							method: method,
-							request: init
-					  } as CodeStreamApiMiddlewareContext)
+						url: absoluteUrl,
+						method: method,
+						request: init
+					} as CodeStreamApiMiddlewareContext)
 					: undefined;
 
 			if (context !== undefined) {
@@ -1745,7 +1749,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		} finally {
 			Logger.log(
 				`${traceResult}${
-					init && init.body ? ` body=${CodeStreamApiProvider.sanitize(init && init.body)}` : ""
+				init && init.body ? ` body=${CodeStreamApiProvider.sanitize(init && init.body)}` : ""
 				} \u2022 ${Strings.getDurationMilliseconds(start)} ms`
 			);
 		}

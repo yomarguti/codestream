@@ -45,6 +45,7 @@ export * from "./bitbucket";
 export * from "./youtrack";
 export * from "./azuredevops";
 export * from "./slack";
+// export * from "./msteams";
 
 @lsp
 export class ThirdPartyProviderRegistry {

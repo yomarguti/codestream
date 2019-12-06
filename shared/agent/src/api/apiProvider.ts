@@ -365,7 +365,7 @@ export interface ApiProvider {
 	addEnterpriseProviderHost(
 		request: AddEnterpriseProviderHostRequest
 	): Promise<AddEnterpriseProviderHostResponse>;
-	refreshThirdPartyProvider(request: { providerId: string; refreshToken: string }): Promise<CSMe>;
+	refreshThirdPartyProvider(request: { providerId: string; refreshToken: string, sharing?: boolean, subId?: string }): Promise<CSMe>;
 
     verifyConnectivity(): Promise<VerifyConnectivityResponse>;
 }
