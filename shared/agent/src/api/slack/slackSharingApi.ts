@@ -241,7 +241,8 @@ export class SlackSharingApiProvider {
 					request.remotes,
 					request.markerLocations,
 					usernamesById,
-					userIdsByName
+					userIdsByName,
+					this._slackUserId
 				);
 
 				// Set the fallback (notification) content for the message

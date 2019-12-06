@@ -320,6 +320,28 @@ export interface ActionId {
 	parentPostId?: string;
 }
 
+export interface ReplyActionId {
+	id: number;
+	linkType: "web" | "ide" | "external" | "reply";
+	externalType?: "issue" | "code";
+	// external provider name
+	eP?: string;
+	// teamId
+	tId: string;
+	// codemarkId
+	cId: string;
+	// markerId
+	mId?: string;
+	// streamId
+	sId?: string;
+	// creatorId
+	crId?: string;
+	// parent postId
+	ppId?: string;
+	// provider creator user id, a slack userId, for example
+	pcuId?: string;
+}
+
 export function toActionId(
 	id: number,
 	linkType: "web" | "ide" | "reply",
@@ -359,18 +381,20 @@ export function toExternalActionId(
 
 export function toReplyActionId(
 	id: number,
-	codemark: CSCodemark
+	codemark: CSCodemark,
+	providerCreatorUserId: string
 ): string {
-	const actionId: ActionId = {
+	const actionId: ReplyActionId = {
 		id: id,
 		linkType: "reply",
-		streamId: codemark.streamId,
-		externalProvider: codemark.externalProvider,
-		teamId: codemark.teamId,
-		codemarkId: codemark.id,
-		creatorId: codemark.creatorId,
-		parentPostId: codemark.postId
-	};	
+		sId: codemark.streamId,
+		eP: codemark.externalProvider,
+		tId: codemark.teamId,
+		cId: codemark.id,
+		crId: codemark.creatorId,
+		ppId: codemark.postId,
+		pcuId: providerCreatorUserId
+	};
 
 	return JSON.stringify(actionId);
 }

@@ -567,7 +567,8 @@ export function toSlackPostBlocks(
 	remotes: string[] | undefined,
 	markerLocations: CSMarkerLocations[] | undefined,
 	usernamesById: Map<string, string>,
-	userIdsByName: Map<string, string>
+	userIdsByName: Map<string, string>,
+	slackUserId: string
 ): Blocks {
 	const blocks: Blocks = [];
 
@@ -696,7 +697,7 @@ export function toSlackPostBlocks(
 				}
 			});
 
-			let actionId = toReplyActionId(counter, codemark);
+			let actionId = toReplyActionId(counter, codemark, slackUserId);
 			const actions: ActionsBlock = {
 				type: "actions",
 				block_id: `codeblock-actions:${counter}`,
@@ -756,7 +757,7 @@ export function toSlackPostBlocks(
 	} else {
 		counter++;
 
-		let actionId = toReplyActionId(counter, codemark);
+		let actionId = toReplyActionId(counter, codemark, slackUserId);
 		const actions: ActionsBlock = {
 			type: "actions",
 			block_id: "actions",
