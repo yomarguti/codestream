@@ -894,6 +894,10 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	closeCodemarkFormWithConfirmation = () => {
+		const { newCodemarkAttributes } = this.state;
+		if (newCodemarkAttributes && newCodemarkAttributes.type === "link")
+			return this.closeCodemarkForm();
+
 		confirmPopup({
 			title: "Are you sure?",
 			message: "Changes you made will not be saved.",
