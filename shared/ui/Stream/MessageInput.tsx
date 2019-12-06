@@ -50,7 +50,7 @@ interface State {
 }
 
 interface Props {
-	isInVscode: boolean;
+	isInVscode?: boolean;
 	text: string;
 	teammates: CSUser[];
 	currentUserId: string;
