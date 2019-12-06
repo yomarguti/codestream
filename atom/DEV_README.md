@@ -4,7 +4,21 @@
 2. Build [codestream-components](https://github.com/TeamCodeStream/codestream-components/blob/develop/README.md)
 3. Build [codestream-lsp-agent](https://github.com/TeamCodeStream/codestream-lsp-agent/blob/develop/README.md)
 4. `cd` into the repo
-5. run `apm install && apm link`
+5. run `apm link`, which tells atom to use this directory as the package source
+
+## Github access token
+
+Because this repo uses an npm package hosted privately in our github, you'll need to ensure your GitHub acess token has rights to use our package registry.
+
+If you're not sure it does or you want to create a new one:
+
+1. Go to the [token settings](https://github.com/settings/tokens) in GitHub
+2. Click 'Generate new token'
+3. Name this token whatever you want
+4. Check the boxes for `write:packages`, `read:packages`, and `delete:packages`. You can select anything else you want this token to support
+5. Scroll to the bottom and click 'Generate token'
+6. Copy the token
+7. In your `~/.npmrc` file (create it if you don't have it), put this - `//npm.pkg.github.com/:_authToken=`, with your new token at the end
 
 ## To create a working build
 
