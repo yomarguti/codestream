@@ -178,21 +178,6 @@ const StyledRelatedCodemark = styled(RelatedCodemark)`
 	white-space: normal;
 `;
 
-const renderAssigneeHeadshots = (codemark: CodemarkPlus, users: UsersState) => {
-	const assignees = (codemark.assignees || []).map(id => users[id]).filter(Boolean);
-	const externalAssignees = (codemark.externalAssignees || [])
-		.filter(user => !assignees.find(a => a.email === user.email))
-		.filter(Boolean)
-		.map(a => ({ fullName: a.displayName, email: a.email }));
-
-	return [...assignees, ...externalAssignees].map((assignee, i) => (
-		<>
-			<HeadshotV2 person={assignee} size={18} />
-			<span style={{ marginLeft: "5px" }}>{assignee.fullName || assignee.email}</span>
-		</>
-	));
-};
-
 export const ActivityPanel = () => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
