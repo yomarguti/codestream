@@ -40,6 +40,10 @@ import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { Link } from "./Link";
 import { RelatedCodemark } from "./RelatedCodemark";
 import Menu from "./Menu";
+import { FormattedPlural } from "react-intl";
+
+// see comment in SmartFormattedList.tsx
+const FormattedPluralAlias = FormattedPlural as any;
 
 const ActivityWrapper = styled.div`
 	margin: 0 40px 20px 45px;
@@ -715,19 +719,25 @@ const RepliesForCodemark = (props: { parentPost?: PostPlus; pinnedReplies?: stri
 
 	if (derivedState.unreadReplies.length === 0) return <SeeReplies>See replies</SeeReplies>;
 
-	const hasMoreReplies = derivedState.numberOfReplies > derivedState.unreadReplies.length;
+	const otherReplyCount = derivedState.numberOfReplies - derivedState.unreadReplies.length;
 
 	return (
 		<>
 			{derivedState.unreadReplies.map(post => (
 				<Reply
+					key={post.id}
 					post={post}
 					author={users[post.creatorId]}
 					starred={Boolean(props.pinnedReplies && props.pinnedReplies.includes(post.id))}
 					codemarkId={props.parentPost!.codemarkId!}
 				/>
 			))}
-			{hasMoreReplies && <SeeReplies>See earlier replies</SeeReplies>}
+			{otherReplyCount > 0 && (
+				<SeeReplies>
+					See {otherReplyCount} earlier{" "}
+					<FormattedPluralAlias value={otherReplyCount} one="reply" other="replies" />
+				</SeeReplies>
+			)}
 		</>
 	);
 };
@@ -761,7 +771,7 @@ const PinnedReplies = (props: {
 		<Meta>
 			<RelatedLabel>Starred Replies</RelatedLabel>
 			{posts.map(post => (
-				<PinnedReply>
+				<PinnedReply key={post.id}>
 					<Icon name="star" /> <HeadshotV2 person={users[post.creatorId]} />
 					<PinnedReplyText
 						dangerouslySetInnerHTML={{ __html: props.renderTextLinkified(post.text) }}
