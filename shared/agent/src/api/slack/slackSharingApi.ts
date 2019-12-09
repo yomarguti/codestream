@@ -814,13 +814,6 @@ export class SlackSharingApiProvider {
 		}
 	}
 
-	private _userIdMap: Map<string, string> | undefined;
-	convertUserIdToCodeStreamUserId(id: string): string {
-		if (this._userIdMap === undefined) return id;
-
-		return this._userIdMap.get(id) || id;
-	}
-
 	private async getSlackPreferences() {
 		// Use real-time events as a proxy for limited-slack mode (which can't use undocumented apis)
 		// if (!this.capabilities.providerSupportsRealtimeEvents) {
@@ -852,7 +845,7 @@ export class SlackSharingApiProvider {
 		const { ok, user: usr } = response as WebAPICallResult & { user: any };
 		if (ok) {
 			// Don't need to pass the codestream users here, since we set the codestreamId already above
-			user = fromSlackUser(usr, this._codestreamTeamId, []);
+			user = fromSlackUser(usr, this._codestreamTeamId);
 			me = {
 				...me,
 				avatar: user.avatar,
@@ -901,7 +894,7 @@ export class SlackSharingApiProvider {
 	async fetchUsers(): Promise<FetchUsersResponse> {
 		const cc = Logger.getCorrelationContext();
 
-		const [responses, { user: me }, { users: codestreamUsers }] = await Promise.all([
+		const [responses, { user: me }] = await Promise.all([
 			this.slackApiCallPaginated("users.list", { limit: 1000 }),
 			this.getMeCore(),
 			(this._codestreamTeam !== undefined
@@ -932,16 +925,10 @@ export class SlackSharingApiProvider {
 
 		const users: CSUser[] = members.map((m: any) =>
 			// Find ourselves and replace it with our model
-			m.id === this._slackUserId ? me : fromSlackUser(m, this._codestreamTeamId, codestreamUsers)
+			m.id === this._slackUserId ? me : fromSlackUser(m, this._codestreamTeamId)
 		);
 		// Don't filter out deactivated users anymore to allow codemark by deleted users to show up properly
 		// .filter(u => !u.deactivated);
-
-		this._userIdMap = new Map(
-			users
-				.filter(u => u.codestreamId !== undefined)
-				.map<[string, string]>(u => [u.codestreamId!, u.id])
-		);
 
 		return { users: users };
 	}

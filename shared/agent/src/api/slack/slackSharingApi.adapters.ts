@@ -106,8 +106,8 @@ export function fromSlackChannel(
 		mostRecentPostId: mostRecentId,
 		priority: channel.priority,
 		privacy: (channel.is_private == null
-		? channel.is_group
-		: channel.is_private)
+			? channel.is_group
+			: channel.is_private)
 			? "private"
 			: "public",
 		purpose: channel.purpose && channel.purpose.value,
@@ -515,18 +515,8 @@ export function fromSlackPostText(
 	return text;
 }
 
-export function fromSlackUser(user: any, teamId: string, codestreamUsers: CSUser[]): CSUser {
-	let codestreamId: string | undefined;
-	if (codestreamUsers.length !== 0) {
-		const identity = `slack::${user.id}`;
-		const u = codestreamUsers.find(m =>
-			m.providerIdentities == null ? false : m.providerIdentities.includes(identity)
-		);
-		if (u !== undefined) {
-			codestreamId = u.id;
-		}
-	}
-
+export function fromSlackUser(user: any, teamId: string): CSUser {
+	const codestreamId: string | undefined = undefined;
 	return {
 		avatar: {
 			image: user.profile.image_original,
