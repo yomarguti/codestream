@@ -63,22 +63,6 @@
                     "description": "Specifies the email address to use to connect to the CodeStream service",
                     "scope": "window"
                 },
-                "codestream.notifications": {
-                    "type": "string",
-                    "default": null,
-                    "enum": [
-                        "all",
-                        "mentions",
-                        "none"
-                    ],
-                    "enumDescriptions": [
-                        "Shows notifications for all incoming messages",
-                        "Shows notifications for all direct messages and @mentions",
-                        "No notifications will be shown"
-                    ],
-                    "description": "Specifies when to show notifications for incoming messages",
-                    "scope": "window"
-                },
                 "codestream.proxySupport": {
                     "type": "string",
                     "default": "on",
