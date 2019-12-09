@@ -233,15 +233,15 @@ export function SharingControls(props: {
 						authenticateWithSlack();
 					}) as any
 				});
-			if (derivedState.msTeamsConfig) {
-				targetItems.push({
-					key: "add-msteams",
-					label: "Add Teams organization" as any,
-					action: (() => {
-						authenticateWithMSTeams();
-					}) as any
-				});
-			}
+			// if (derivedState.msTeamsConfig) {
+			// 	targetItems.push({
+			// 		key: "add-msteams",
+			// 		label: "Add Teams organization" as any,
+			// 		action: (() => {
+			// 			authenticateWithMSTeams();
+			// 		}) as any
+			// 	});
+			// }
 		}
 		return targetItems;
 	}, [derivedState.shareTargets, derivedState.slackConfig, derivedState.msTeamsConfig]);
