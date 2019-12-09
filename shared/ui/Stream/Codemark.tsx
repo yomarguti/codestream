@@ -22,7 +22,10 @@ import {
 } from "@codestream/protocols/agent";
 import { CodemarkType, CSUser, CSMe, CSPost, CSApiCapabilities } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
-import { FollowCodemarkRequestType, SetCodemarkPinnedRequestType } from "@codestream/protocols/agent";
+import {
+	FollowCodemarkRequestType,
+	SetCodemarkPinnedRequestType
+} from "@codestream/protocols/agent";
 import { range, emptyArray, forceAsLine, mapFilter } from "../utils";
 import {
 	getUserByCsId,
@@ -761,7 +764,7 @@ export class Codemark extends React.Component<Props, State> {
 			value: true
 		});
 		HostApi.instance.track("Notification Change", {
-			"Change": "Codemark Followed",
+			Change: "Codemark Followed",
 			"Source of Change": "Codemark menu"
 		});
 	};
@@ -773,7 +776,7 @@ export class Codemark extends React.Component<Props, State> {
 			value: false
 		});
 		HostApi.instance.track("Notification Change", {
-			"Change": "Codemark Unfollowed",
+			Change: "Codemark Unfollowed",
 			"Source of Change": "Codemark menu"
 		});
 	};
@@ -1018,6 +1021,9 @@ export class Codemark extends React.Component<Props, State> {
 
 		const numMarkers = codemark.markers ? codemark.markers.length : 0;
 
+		const following =
+			codemark && (codemark.followerIds || []).indexOf(this.props.currentUser.id) !== -1;
+
 		const privateIndicator = (() => {
 			if (!this.props.isCodeStreamTeam || this.props.usersWithAccess.length === 0) return null;
 
@@ -1061,10 +1067,20 @@ export class Codemark extends React.Component<Props, State> {
 			hasReplies ||
 			renderedAssignees ||
 			numMarkers > 1 ||
-			privateIndicator
+			privateIndicator ||
+			following
 		) {
 			return (
 				<div className="detail-icons">
+					{following && (
+						<span className="detail-icon">
+							<Icon
+								title={hover && !selected ? "You are following this codemark" : undefined}
+								placement="bottomRight"
+								name="eye"
+							/>
+						</span>
+					)}
 					{privateIndicator}
 					{renderedTags}
 					{renderedAssignees}
@@ -1159,7 +1175,7 @@ export class Codemark extends React.Component<Props, State> {
 			// { label: "-" }
 		];
 
-		if (apiCapabilities['follow']) {
+		if (apiCapabilities["follow"]) {
 			if (codemark && (codemark.followerIds || []).indexOf(this.props.currentUser.id) !== -1) {
 				menuItems.push({ label: "Unfollow", action: "unfollow" });
 			} else {
