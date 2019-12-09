@@ -1,6 +1,6 @@
 "use strict";
 import { CodeStreamApiProvider } from "api/codestream/codestreamApi";
-import { sortBy } from "lodash-es";
+import { flatten, sortBy } from "lodash-es";
 import { SlackSharingApiProvider } from "../api/slack/slackSharingApi";
 import { SessionContainer } from "../container";
 import {
@@ -10,7 +10,7 @@ import {
 	FetchThirdPartyChannelsResponse,
 	ThirdPartyDisconnect
 } from "../protocol/agent.protocol";
-import { CSSlackProviderInfo, StreamType } from "../protocol/api.protocol";
+import { CSMarkerLocations, CSSlackProviderInfo, StreamType } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
 import { ThirdPartyPostProviderBase } from "./provider";
 
@@ -141,6 +141,31 @@ export class SlackProvider extends ThirdPartyPostProviderBase<CSSlackProviderInf
 		const slackClient = this.getClient(request.providerTeamId);
 		if (!slackClient) {
 			return { post: undefined };
+		}
+		if (request.codemark && request.codemark.markers) {
+			if (request.remotes == undefined) {
+				request.remotes = flatten(
+					await Promise.all(
+						request.codemark.markers.map(async m => {
+							return (await SessionContainer.instance().repos.getById(m.repoId)).remotes.map(
+								r => r.url
+							);
+						})
+					)
+				);
+			}
+			if (request.markerLocations == undefined) {
+				request.markerLocations = flatten(
+					await Promise.all(
+						request.codemark.markers.map(async m =>
+							SessionContainer.instance().markerLocations.getMarkerLocations(
+								m.fileStreamId,
+								m.commitHashWhenCreated
+							)
+						)
+					)
+				).filter(Boolean) as CSMarkerLocations[];
+			}
 		}
 		const post = await slackClient.createExternalPost(request);
 		return post;

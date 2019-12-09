@@ -607,7 +607,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 					if (!this._preferences) {
 						this._preferences = new CodeStreamPreferences(this._user.preferences);
 					}
-					if (this._user.preferences && JSON.stringify(this._user.preferences) !== userPreferencesBefore) {
+					if (
+						this._user.preferences &&
+						JSON.stringify(this._user.preferences) !== userPreferencesBefore
+					) {
 						this._preferences.update(this._user.preferences);
 					}
 				} catch {
@@ -1306,10 +1309,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	async getPreferences() {
-		return this.get<GetPreferencesResponse>(
-			"/preferences",
-			this._token
-		);
+		return this.get<GetPreferencesResponse>("/preferences", this._token);
 	}
 
 	@log()
