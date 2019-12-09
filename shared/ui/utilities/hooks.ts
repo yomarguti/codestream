@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState, useCallback, useLayoutEffect, EffectCallback } from "react";
 import { noop } from "../utils";
+import { CodeStreamState } from "../store";
+import { useSelector } from "react-redux";
+import { getUsernames } from "../store/users/reducer";
+import { markdownify } from "../Stream/Markdowner";
 
 type Fn = () => void;
 
@@ -165,4 +169,38 @@ export function useIntersectionObserver(
 	}, []);
 
 	return { targetRef, rootRef: rootRef as any };
+}
+
+export function useMarkdownifyToHtml() {
+	const derivedState = useSelector((state: CodeStreamState) => {
+		const currentUser = state.users[state.session.userId!];
+		return { currentUserName: currentUser.username, usernames: getUsernames(state) };
+	});
+
+	return useCallback(
+		(text: string) => {
+			let html: string;
+			if (text == null || text === "") {
+				html = "";
+			} else {
+				const me = derivedState.currentUserName;
+				html = markdownify(text).replace(/@(\w+)/g, (match: string, name: string) => {
+					if (
+						derivedState.usernames.some(
+							n => name.localeCompare(n, undefined, { sensitivity: "accent" }) === 0
+						)
+					) {
+						return `<span class="at-mention${
+							me.localeCompare(name, undefined, { sensitivity: "accent" }) === 0 ? " me" : ""
+						}">${match}</span>`;
+					}
+
+					return match;
+				});
+			}
+
+			return html;
+		},
+		[derivedState.usernames]
+	);
 }

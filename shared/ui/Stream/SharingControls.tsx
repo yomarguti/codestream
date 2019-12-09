@@ -1,7 +1,6 @@
 import React from "react";
 import styled from "styled-components";
 import { last as getLast } from "lodash-es";
-import { PropsWithTheme } from "../src/themes";
 import Menu from "./Menu";
 import Icon from "./Icon";
 import { HostApi } from "../webview-api";
@@ -25,7 +24,7 @@ import { safe } from "../utils";
 import { useUpdates } from "../utilities/hooks";
 
 const TextButton = styled.span`
-	color: ${(props: PropsWithTheme<{}>) => props.theme.colors.textHighlight};
+	color: ${props => props.theme.colors.textHighlight};
 	cursor: pointer;
 	.octicon-chevron-down {
 		transform: scale(0.7);
@@ -34,7 +33,7 @@ const TextButton = styled.span`
 
 export type SharingMenuProps = React.PropsWithChildren<{ items: any[] }>;
 
-function SharingMenu(props: SharingMenuProps) {
+export function SharingMenu(props: SharingMenuProps) {
 	const buttonRef = React.useRef<HTMLSpanElement>(null);
 	const [isOpen, toggleMenu] = React.useReducer((open: boolean) => !open, false);
 
@@ -50,8 +49,8 @@ function SharingMenu(props: SharingMenuProps) {
 	);
 }
 
-const Root = styled.div<PropsWithTheme<{}>>`
-	color: ${(props: PropsWithTheme<{}>) => props.theme.colors.textSubtle};
+const Root = styled.div`
+	color: ${props => props.theme.colors.textSubtle};
 	.octicon {
 		fill: currentColor;
 		vertical-align: text-top;
@@ -100,232 +99,224 @@ export type SharingAttributes = Pick<
 	"providerId" | "providerTeamId" | "channelId"
 >;
 
-export function SharingControls(props: {
-	on: boolean;
-	onToggle: (value: boolean) => void;
-	onChangeValues: (values?: SharingAttributes) => void;
-}) {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
-		const shareTargets = getConnectedSharingTargets(state);
-		const selectedShareTarget = shareTargets.find(
-			target => target.teamId === state.context.shareTargetTeamId
-		);
-		return {
-			slackConfig: getProviderConfig(state, "slack"),
-			msTeamsConfig: getProviderConfig(state, "msteams"),
-			isConnectedToSlack: isConnected(state, { name: "slack" }),
-			isConnectedToMSTeams: isConnected(state, { name: "msteams" }),
-			shareTargets,
-			selectedShareTarget: selectedShareTarget || shareTargets[0]
-		};
-	});
-	const [authenticationState, setAuthenticationState] = React.useState<{
-		isAuthenticating: boolean;
-		label: string;
-	}>({ isAuthenticating: false, label: "" });
-	const [isFetchingData, setIsFetchingData] = React.useState<boolean>(false);
+export const SharingControls = React.memo(
+	(props: {
+		onChangeValues: (values?: SharingAttributes) => void;
+		on: boolean;
+		onToggle?: (value: boolean) => void;
+	}) => {
+		const dispatch = useDispatch();
+		const derivedState = useSelector((state: CodeStreamState) => {
+			const shareTargets = getConnectedSharingTargets(state);
+			const selectedShareTarget = shareTargets.find(
+				target => target.teamId === state.context.shareTargetTeamId
+			);
+			return {
+				slackConfig: getProviderConfig(state, "slack"),
+				msTeamsConfig: getProviderConfig(state, "msteams"),
+				isConnectedToSlack: isConnected(state, { name: "slack" }),
+				isConnectedToMSTeams: isConnected(state, { name: "msteams" }),
+				shareTargets,
+				selectedShareTarget: selectedShareTarget || shareTargets[0]
+			};
+		});
+		const [authenticationState, setAuthenticationState] = React.useState<{
+			isAuthenticating: boolean;
+			label: string;
+		}>({ isAuthenticating: false, label: "" });
+		const [isFetchingData, setIsFetchingData] = React.useState<boolean>(false);
 
-	const selectedShareTargetTeamId = safe(() => derivedState.selectedShareTarget.teamId) as
-		| string
-		| undefined;
+		const selectedShareTargetTeamId = safe(() => derivedState.selectedShareTarget.teamId) as
+			| string
+			| undefined;
 
-	const data = useDataForTeam(
-		derivedState.slackConfig
-			? derivedState.slackConfig.id
-			: derivedState.msTeamsConfig
-			? derivedState.msTeamsConfig.id
-			: "",
-		selectedShareTargetTeamId
-	);
-
-	const setSelectedShareTarget = target =>
-		dispatch(setContext({ shareTargetTeamId: target.teamId }));
-
-	useUpdates(() => {
-		const numberOfTargets = derivedState.shareTargets.length;
-		if (numberOfTargets === 0) return;
-
-		// when the first share target is connected, turn on sharing
-		if (numberOfTargets === 1) props.onToggle(true);
-
-		// if we're waiting on something to be added, this is it so make it the current selection
-		if (authenticationState && authenticationState.isAuthenticating) {
-			const newShareTarget = getLast(derivedState.shareTargets)!;
-			setSelectedShareTarget(newShareTarget);
-			setAuthenticationState({ isAuthenticating: false, label: "" });
-		}
-	}, [derivedState.shareTargets.length]);
-
-	// when selected share target changes, fetch channels
-	React.useEffect(() => {
-		const { selectedShareTarget } = derivedState;
-		if (selectedShareTarget) {
-			setIsFetchingData(true);
-			void (async () => {
-				try {
-					const response = await HostApi.instance.send(FetchThirdPartyChannelsRequestType, {
-						providerId: selectedShareTarget.providerId,
-						providerTeamId: selectedShareTarget.teamId
-					});
-					data.set(teamData => ({ ...teamData, channels: response.channels }));
-				} catch (error) {
-				} finally {
-					setIsFetchingData(false);
-				}
-			})();
-		}
-	}, [selectedShareTargetTeamId]);
-
-	const selectedChannel = data.get().lastSelectedChannel;
-
-	React.useEffect(() => {
-		const shareTarget = derivedState.selectedShareTarget;
-
-		if (shareTarget && selectedChannel)
-			props.onChangeValues({
-				providerId: shareTarget.providerId,
-				providerTeamId: shareTarget.teamId,
-				channelId: selectedChannel && selectedChannel.id
-			});
-		else props.onChangeValues(undefined);
-	}, [derivedState.selectedShareTarget, selectedChannel]);
-
-	React.useEffect(() => {
-		const shareTarget = derivedState.selectedShareTarget;
-
-		if (shareTarget && selectedChannel)
-			props.onChangeValues({
-				providerId: shareTarget.providerId,
-				providerTeamId: shareTarget.teamId,
-				channelId: selectedChannel && selectedChannel.id
-			});
-		else props.onChangeValues(undefined);
-	}, [derivedState.selectedShareTarget, selectedChannel]);
-
-	const shareProviderMenuItems = React.useMemo(() => {
-		const targetItems = derivedState.shareTargets.map(target => ({
-			key: target.teamId,
-			label: (
-				<>
-					<span style={{ marginRight: "5px" }}>
-						<Icon name={target.icon} />
-					</span>
-					{target.teamName}
-				</>
-			),
-			action: () => setSelectedShareTarget(target)
-		}));
-		if (derivedState.slackConfig || derivedState.msTeamsConfig) {
-			targetItems.push({ label: "-" } as any);
-			if (derivedState.slackConfig)
-				targetItems.push({
-					key: "add-slack",
-					label: (
-						<>
-							<span style={{ marginRight: "5px" }}>
-								<Icon name="slack" />
-							</span>
-							Add Slack workspace
-						</>
-					),
-					action: (() => {
-						authenticateWithSlack();
-					}) as any
-				});
-			// if (derivedState.msTeamsConfig) {
-			// 	targetItems.push({
-			// 		key: "add-msteams",
-			// 		label: "Add Teams organization" as any,
-			// 		action: (() => {
-			// 			authenticateWithMSTeams();
-			// 		}) as any
-			// 	});
-			// }
-		}
-		return targetItems;
-	}, [derivedState.shareTargets, derivedState.slackConfig, derivedState.msTeamsConfig]);
-
-	const channelMenuItems = React.useMemo(() => {
-		if (derivedState.selectedShareTarget == undefined) return [];
-
-		const dataForTeam = data.get();
-		if (dataForTeam.channels == undefined) return [];
-
-		const { dms, others } = dataForTeam.channels.reduce(
-			(group, channel) => {
-				const item = {
-					key: channel.name,
-					label: formatChannelName(channel),
-					action: () => data.set(teamData => ({ ...teamData, lastSelectedChannel: channel }))
-				};
-				if (channel.type === "direct") {
-					group.dms.push(item);
-				} else group.others.push(item);
-
-				return group;
-			},
-			{ dms: [], others: [] } as { dms: any[]; others: any[] }
+		const data = useDataForTeam(
+			derivedState.slackConfig
+				? derivedState.slackConfig.id
+				: derivedState.msTeamsConfig
+				? derivedState.msTeamsConfig.id
+				: "",
+			selectedShareTargetTeamId
 		);
 
-		return [...others, { label: "-" }, ...dms];
-	}, [data.get().channels]);
+		const setSelectedShareTarget = target =>
+			dispatch(setContext({ shareTargetTeamId: target.teamId }));
 
-	const authenticateWithSlack = () => {
-		setAuthenticationState({ isAuthenticating: true, label: "Slack" });
-		dispatch(connectProvider(derivedState.slackConfig!.id, "Compose Modal"));
-	};
+		useUpdates(() => {
+			const numberOfTargets = derivedState.shareTargets.length;
+			if (numberOfTargets === 0) return;
 
-	const authenticateWithMSTeams = () => {
-		setAuthenticationState({ isAuthenticating: true, label: "MS Teams" });
-		dispatch(connectProvider(derivedState.msTeamsConfig!.id, "Compose Modal"));
-	};
+			// when the first share target is connected, turn on sharing
+			if (numberOfTargets === 1 && props.onToggle) props.onToggle(true);
 
-	if (derivedState.slackConfig == undefined) return null;
+			// if we're waiting on something to be added, this is it so make it the current selection
+			if (authenticationState && authenticationState.isAuthenticating) {
+				const newShareTarget = getLast(derivedState.shareTargets)!;
+				setSelectedShareTarget(newShareTarget);
+				setAuthenticationState({ isAuthenticating: false, label: "" });
+			}
+		}, [derivedState.shareTargets.length]);
 
-	if (authenticationState && authenticationState.isAuthenticating)
-		return (
-			<Root>
-				<Icon name="sync" className="spin" /> Authenticating with {authenticationState.label}...{" "}
-				<a
-					onClick={e => {
-						e.preventDefault();
-						setAuthenticationState({ isAuthenticating: false, label: "" });
-					}}
-				>
-					cancel
-				</a>
-			</Root>
-		);
-
-	if (isFetchingData)
-		return (
-			<Root>
-				<Icon name="sync" className="spin" /> Fetching channels...{" "}
-				<a
-					onClick={e => {
-						e.preventDefault();
+		// when selected share target changes, fetch channels
+		React.useEffect(() => {
+			const { selectedShareTarget } = derivedState;
+			if (selectedShareTarget) {
+				setIsFetchingData(true);
+				void (async () => {
+					try {
+						const response = await HostApi.instance.send(FetchThirdPartyChannelsRequestType, {
+							providerId: selectedShareTarget.providerId,
+							providerTeamId: selectedShareTarget.teamId
+						});
+						data.set(teamData => ({ ...teamData, channels: response.channels }));
+					} catch (error) {
+					} finally {
 						setIsFetchingData(false);
-					}}
-				>
-					cancel
-				</a>
-			</Root>
-		);
+					}
+				})();
+			}
+		}, [selectedShareTargetTeamId]);
 
-	if (!derivedState.isConnectedToSlack && !derivedState.isConnectedToMSTeams)
-		return (
-			<Root>
-				Share on{" "}
-				<TextButton
-					onClick={async e => {
-						e.preventDefault();
-						authenticateWithSlack();
-					}}
-				>
-					<Icon name="slack" /> Slack
-				</TextButton>
-				{/*
+		const selectedChannel = data.get().lastSelectedChannel;
+
+		React.useEffect(() => {
+			const shareTarget = derivedState.selectedShareTarget;
+
+			if (shareTarget && selectedChannel)
+				props.onChangeValues({
+					providerId: shareTarget.providerId,
+					providerTeamId: shareTarget.teamId,
+					channelId: selectedChannel && selectedChannel.id
+				});
+			else props.onChangeValues(undefined);
+		}, [
+			derivedState.selectedShareTarget && derivedState.selectedShareTarget.teamId,
+			selectedChannel && selectedChannel.id
+		]);
+
+		const shareProviderMenuItems = React.useMemo(() => {
+			const targetItems = derivedState.shareTargets.map(target => ({
+				key: target.teamId,
+				label: (
+					<>
+						<span style={{ marginRight: "5px" }}>
+							<Icon name={target.icon} />
+						</span>
+						{target.teamName}
+					</>
+				),
+				action: () => setSelectedShareTarget(target)
+			}));
+			if (derivedState.slackConfig || derivedState.msTeamsConfig) {
+				targetItems.push({ label: "-" } as any);
+				if (derivedState.slackConfig)
+					targetItems.push({
+						key: "add-slack",
+						label: (
+							<>
+								<span style={{ marginRight: "5px" }}>
+									<Icon name="slack" />
+								</span>
+								Add Slack workspace
+							</>
+						),
+						action: (() => {
+							authenticateWithSlack();
+						}) as any
+					});
+				// if (derivedState.msTeamsConfig) {
+				// 	targetItems.push({
+				// 		key: "add-msteams",
+				// 		label: "Add Teams organization" as any,
+				// 		action: (() => {
+				// 			authenticateWithMSTeams();
+				// 		}) as any
+				// 	});
+				// }
+			}
+			return targetItems;
+		}, [derivedState.shareTargets, derivedState.slackConfig, derivedState.msTeamsConfig]);
+
+		const channelMenuItems = React.useMemo(() => {
+			if (derivedState.selectedShareTarget == undefined) return [];
+
+			const dataForTeam = data.get();
+			if (dataForTeam.channels == undefined) return [];
+
+			const { dms, others } = dataForTeam.channels.reduce(
+				(group, channel) => {
+					const item = {
+						key: channel.name,
+						label: formatChannelName(channel),
+						action: () => data.set(teamData => ({ ...teamData, lastSelectedChannel: channel }))
+					};
+					if (channel.type === "direct") {
+						group.dms.push(item);
+					} else group.others.push(item);
+
+					return group;
+				},
+				{ dms: [], others: [] } as { dms: any[]; others: any[] }
+			);
+
+			return [...others, { label: "-" }, ...dms];
+		}, [data.get().channels]);
+
+		const authenticateWithSlack = () => {
+			setAuthenticationState({ isAuthenticating: true, label: "Slack" });
+			dispatch(connectProvider(derivedState.slackConfig!.id, "Compose Modal"));
+		};
+
+		const authenticateWithMSTeams = () => {
+			setAuthenticationState({ isAuthenticating: true, label: "MS Teams" });
+			dispatch(connectProvider(derivedState.msTeamsConfig!.id, "Compose Modal"));
+		};
+
+		if (derivedState.slackConfig == undefined) return null;
+
+		if (authenticationState && authenticationState.isAuthenticating)
+			return (
+				<Root>
+					<Icon name="sync" className="spin" /> Authenticating with {authenticationState.label}...{" "}
+					<a
+						onClick={e => {
+							e.preventDefault();
+							setAuthenticationState({ isAuthenticating: false, label: "" });
+						}}
+					>
+						cancel
+					</a>
+				</Root>
+			);
+
+		if (isFetchingData)
+			return (
+				<Root>
+					<Icon name="sync" className="spin" /> Fetching channels...{" "}
+					<a
+						onClick={e => {
+							e.preventDefault();
+							setIsFetchingData(false);
+						}}
+					>
+						cancel
+					</a>
+				</Root>
+			);
+
+		if (!derivedState.isConnectedToSlack && !derivedState.isConnectedToMSTeams)
+			return (
+				<Root>
+					Share on{" "}
+					<TextButton
+						onClick={async e => {
+							e.preventDefault();
+							authenticateWithSlack();
+						}}
+					>
+						<Icon name="slack" /> Slack
+					</TextButton>
+					{/*
 				{derivedState.msTeamsConfig != undefined && (
 					<>
 						{" "}
@@ -341,20 +332,25 @@ export function SharingControls(props: {
 					</>
 				)}
 						*/}
+				</Root>
+			);
+
+		return (
+			<Root>
+				{props.onToggle != undefined && (
+					<>
+						<input type="checkbox" checked={props.on} onChange={() => props.onToggle!(!props.on)} />
+					</>
+				)}
+				Share on{" "}
+				<SharingMenu items={shareProviderMenuItems}>
+					{derivedState.selectedShareTarget!.teamName}
+				</SharingMenu>{" "}
+				in{" "}
+				<SharingMenu items={channelMenuItems}>
+					{selectedChannel == undefined ? "select a channel" : formatChannelName(selectedChannel)}
+				</SharingMenu>
 			</Root>
 		);
-
-	return (
-		<Root>
-			<input type="checkbox" checked={props.on} onChange={() => props.onToggle(!props.on)} /> Share
-			on{" "}
-			<SharingMenu items={shareProviderMenuItems}>
-				{derivedState.selectedShareTarget!.teamName}
-			</SharingMenu>{" "}
-			in{" "}
-			<SharingMenu items={channelMenuItems}>
-				{selectedChannel == undefined ? "select a channel" : formatChannelName(selectedChannel)}
-			</SharingMenu>{" "}
-		</Root>
-	);
-}
+	}
+);

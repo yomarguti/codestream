@@ -3,6 +3,8 @@ import ReactDOM from "react-dom";
 import createClassString from "classnames";
 import Icon from "./Icon";
 import { filter as _filter } from "lodash-es";
+import { ModalContext } from "./Modal";
+import { shortUuid } from "../utils";
 
 export default class Menu extends Component {
 	constructor(props) {
@@ -20,6 +22,22 @@ export default class Menu extends Component {
 		modalRoot.onclick = event => {
 			if (event.target.id === "modal-root") {
 				this.setState({ closed: true });
+				return;
+			}
+			// bit of a hack for determining if the click was inside the modal area but outside of the menu
+			const randomClassString = `__${shortUuid()}`;
+			event.target.classList.add(randomClassString);
+			const targetSelector = `.${randomClassString}`;
+			const clickedInMenu = this.el.querySelector(targetSelector) != null;
+			try {
+				if (clickedInMenu) {
+					return;
+				}
+				const clickedInModalRoot = modalRoot.querySelector(targetSelector) != null;
+				if (clickedInModalRoot) this.setState({ closed: true });
+			} catch {
+			} finally {
+				event.target.classList.remove(randomClassString);
 			}
 		};
 		if (this.el) {
@@ -211,10 +229,24 @@ export default class Menu extends Component {
 	render() {
 		this.count = 0;
 		const className = this.props.compact ? "menu-popup compact" : "menu-popup";
+
+		/*
+			Using the ModalContext z-index as an override in case this is being rendered from inside a Modal,
+			where it needs a z index equivalent to the modal
+		*/
 		return ReactDOM.createPortal(
-			<div className={className} ref={ref => (this._div = ref)} onKeyDown={this.handleKeyDown}>
-				{this.renderMenu(this.props.items, null)}
-			</div>,
+			<ModalContext.Consumer>
+				{({ zIndex }) => (
+					<div
+						style={{ zIndex }}
+						className={className}
+						ref={ref => (this._div = ref)}
+						onKeyDown={this.handleKeyDown}
+					>
+						{this.renderMenu(this.props.items, null)}
+					</div>
+				)}
+			</ModalContext.Consumer>,
 			this.el
 		);
 	}

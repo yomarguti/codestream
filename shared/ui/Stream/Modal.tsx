@@ -40,7 +40,11 @@ const ModalWrapper = styled.div`
 	}
 `;
 
-interface ModalProps {
+const MODAL_CONTEXT = { zIndex: 3000 };
+
+export const ModalContext = React.createContext({ zIndex: 50 });
+
+export interface ModalProps {
 	onClose: () => void;
 }
 
@@ -61,10 +65,12 @@ export function Modal(props: PropsWithChildren<ModalProps>) {
 	}, [props.onClose]);
 
 	return createPortal(
-		<ModalWrapper>
-			<CancelButton onClick={props.onClose} />
-			<div>{props.children}</div>
-		</ModalWrapper>,
+		<ModalContext.Provider value={MODAL_CONTEXT}>
+			<ModalWrapper>
+				<CancelButton onClick={props.onClose} />
+				<div>{props.children}</div>
+			</ModalWrapper>
+		</ModalContext.Provider>,
 		modalRoot
 	);
 }

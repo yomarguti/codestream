@@ -34,6 +34,9 @@ const getColors = (variant = "primary") => {
 			return `
 				background-color: rgba(255, 255, 255, 0.07);
 				color: var(--text-color);
+				:hover {
+					color: var(--text-color-highlight);
+				}
 			`;
 		}
 		case "primary":
@@ -41,6 +44,10 @@ const getColors = (variant = "primary") => {
 			return `
 				background-color: var(--button-background-color);
 				color: var(--button-foreground-color);
+				:hover {
+					color: var(--text-color-highlight);
+					background-color: var(--button-background-color-hover);
+				}
 			`;
 		}
 	}
@@ -66,10 +73,6 @@ export const StyledButton = styled.button<Props>(props => {
 	border-radius: 0;
 	border: 1px solid transparent !important;
 	outline: none !important;
-
-	:hover {
-		background-color: var(--button-background-color-hover);
-	}
 `;
 });
 

@@ -26,7 +26,7 @@ import {
 	FollowCodemarkRequestType,
 	SetCodemarkPinnedRequestType
 } from "@codestream/protocols/agent";
-import { range, emptyArray, forceAsLine, mapFilter } from "../utils";
+import { range, emptyArray, forceAsLine, mapFilter, emptyObject } from "../utils";
 import {
 	getUserByCsId,
 	getTeamMembers,
@@ -62,6 +62,7 @@ import { addDocumentMarker } from "../store/documentMarkers/actions";
 import { Link } from "./Link";
 import { logError } from "../logger";
 import { getDocumentFromMarker } from "./api-functions";
+import { SharingModal } from "./SharingModal";
 
 interface State {
 	hover: boolean;
@@ -70,6 +71,7 @@ interface State {
 	injectingLocation?: string;
 	menuOpen?: boolean;
 	menuTarget?: any;
+	shareModalOpen: boolean;
 }
 
 interface DispatchProps {
@@ -146,7 +148,8 @@ export class Codemark extends React.Component<Props, State> {
 			hover: false,
 			isEditing: false,
 			isInjecting: false,
-			menuOpen: false
+			menuOpen: false,
+			shareModalOpen: false
 		};
 	}
 
@@ -238,6 +241,13 @@ export class Codemark extends React.Component<Props, State> {
 	}
 
 	render() {
+		if (this.state.shareModalOpen)
+			return (
+				<SharingModal
+					codemark={this.props.codemark!}
+					onClose={() => this.setState({ shareModalOpen: false })}
+				/>
+			);
 		if (this.state.isEditing)
 			return (
 				<div className="editing-codemark-container">
@@ -1176,6 +1186,15 @@ export class Codemark extends React.Component<Props, State> {
 			// { label: "-" }
 		];
 
+		if (this.props.inSharingModel) {
+			menuItems.push({
+				label: "Share",
+				key: "share",
+				action: () => {
+					this.setState({ shareModalOpen: true });
+				}
+			});
+		}
 		if (apiCapabilities["follow"] && this.props.inSharingModel) {
 			if (codemark && (codemark.followerIds || []).indexOf(this.props.currentUser.id) !== -1) {
 				menuItems.push({ label: "Unfollow", action: "unfollow" });
@@ -1656,8 +1675,6 @@ export class Codemark extends React.Component<Props, State> {
 	}
 }
 
-const EMPTY_OBJECT = {};
-
 const unknownAuthor = {
 	username: "CodeStream",
 	fullName: "Unknown User"
@@ -1720,7 +1737,7 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		relatedCodemarkIds,
 		currentUser: users[session.userId!] as CSMe,
 		author: author as CSUser,
-		codemarkKeybindings: preferences.codemarkKeybindings || EMPTY_OBJECT,
+		codemarkKeybindings: preferences.codemarkKeybindings || emptyObject,
 		isCodeStreamTeam: teamProvider === "codestream",
 		teammates: getTeamMembers(state),
 		usernames: getUsernames(state),

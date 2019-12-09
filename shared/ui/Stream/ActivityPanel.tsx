@@ -41,6 +41,7 @@ import { Link } from "./Link";
 import { RelatedCodemark } from "./RelatedCodemark";
 import Menu from "./Menu";
 import { FormattedPlural } from "react-intl";
+import { SharingModal } from "./SharingModal";
 
 // see comment in SmartFormattedList.tsx
 const FormattedPluralAlias = FormattedPlural as any;
@@ -436,6 +437,9 @@ const ActivityItem = (props: {
 		target?: any;
 	}>({ open: false, target: undefined });
 
+	const [shareModalOpen, setShareModalOpen] = React.useState(false);
+	const closeShareModal = React.useCallback(() => setShareModalOpen(false), []);
+
 	const permalinkRef = React.useRef<HTMLTextAreaElement>(null);
 
 	const tagIds = codemark.tags || [];
@@ -446,7 +450,14 @@ const ActivityItem = (props: {
 	const relatedCodemarkIds = codemark.relatedCodemarkIds || [];
 
 	const menuItems: any[] = React.useMemo(() => {
-		const items: any[] = [
+		let items: any[] = [
+			{
+				label: "Share",
+				key: "share",
+				action: () => {
+					setShareModalOpen(true);
+				}
+			},
 			{
 				label: "Copy link",
 				key: "copy-permalink",
@@ -469,22 +480,27 @@ const ActivityItem = (props: {
 			}
 		];
 		if (derivedState.followingEnabled) {
-			items.unshift({
-				label: derivedState.userIsFollowingCodemark ? "Unfollow" : "Follow",
-				key: "toggle-follow",
-				action: () => {
-					const value = !derivedState.userIsFollowingCodemark;
-					const changeType = value ? "Followed" : "Unfollowed";
-					HostApi.instance.send(FollowCodemarkRequestType, {
-						codemarkId: codemark.id,
-						value
-					});
-					HostApi.instance.track("Notification Change", {
-						Change: `Codemark ${changeType}`,
-						"Source of Change": "Activity Feed"
-					});
-				}
-			});
+			const [first, ...rest] = items;
+			items = [
+				first,
+				{
+					label: derivedState.userIsFollowingCodemark ? "Unfollow" : "Follow",
+					key: "toggle-follow",
+					action: () => {
+						const value = !derivedState.userIsFollowingCodemark;
+						const changeType = value ? "Followed" : "Unfollowed";
+						HostApi.instance.send(FollowCodemarkRequestType, {
+							codemarkId: codemark.id,
+							value
+						});
+						HostApi.instance.track("Notification Change", {
+							Change: `Codemark ${changeType}`,
+							"Source of Change": "Activity Feed"
+						});
+					}
+				},
+				...rest
+			];
 		}
 
 		return items;
@@ -502,133 +518,139 @@ const ActivityItem = (props: {
 	};
 
 	return (
-		<ActivityCard
-			hoverEffect
-			onClick={() => {
-				// somehow a click right next to the menu over the kebab icon registers
-				if (menuState.open) {
-					return setMenuState({ open: false });
-				}
-				dispatch(setCurrentCodemark(codemark.id));
-			}}
-			unread={derivedState.isUnread}
-		>
-			<CardBanner>
-				{!codemark.pinned && <div>This codemark is archived.</div>}
-				{codemark.status == "closed" && <div>This codemark is resolved.</div>}
-			</CardBanner>
-			<CardBody>
-				<CardHeader>
-					<AuthorInfo>
-						<HeadshotV2 person={derivedState.author} /> {derivedState.author.username}{" "}
-						<StyledTimestamp time={codemark.createdAt} />
-					</AuthorInfo>
-					<div style={{ marginLeft: "auto" }}>
-						{menuState.open && (
-							<>
-								<Menu items={menuItems} target={menuState.target} action={closeMenu} />
-								<textarea
-									ref={permalinkRef}
-									value={codemark.permalink}
-									style={{ position: "absolute", left: "-9999px" }}
-								/>
-							</>
-						)}
-						<KebabIcon onClickCapture={handleMenuClick}>
-							<Icon name="kebab-vertical" className="clickable" />
-						</KebabIcon>
-					</div>
-				</CardHeader>
-				<CardTitle>
-					<LinkifiedText
-						dangerouslySetInnerHTML={{
-							__html: props.getLinkifiedHtml(codemark.title || codemark.text)
-						}}
-					/>
-				</CardTitle>
-				<MetaStuff>
-					<MetaRow>
-						{tagIds.length > 0 && (
-							<Meta>
-								<RelatedLabel>Tags</RelatedLabel>
-								<Description>
-									{tagIds.map(tagId => {
-										const tag = derivedState.teamTags[tagId];
-										return tag ? <Tag tag={tag} key={tagId} /> : null;
-									})}
-								</Description>
-							</Meta>
-						)}
-						{derivedState.assignees.length > 0 && (
-							<Meta>
-								<RelatedLabel>Assignees</RelatedLabel>
-								<Description>
-									{derivedState.assignees.map(assignee => (
-										<>
-											<HeadshotV2 person={assignee as any} size={18} />
-											<span style={{ marginLeft: "5px" }}>
-												{assignee.fullName || assignee.email}
-											</span>
-										</>
-									))}
-								</Description>
-							</Meta>
-						)}
-					</MetaRow>
-					{descriptionHTML && (
-						<Meta>
-							<RelatedLabel>Description</RelatedLabel>
-							<Description>
-								<Icon name="description" />
-								<LinkifiedText dangerouslySetInnerHTML={{ __html: descriptionHTML }} />
-							</Description>
-						</Meta>
-					)}
-					{providerDisplay && (
-						<Meta>
-							<RelatedLabel>Linked Issues</RelatedLabel>
-							<StyledLink href={codemark.externalProviderUrl}>
-								<Description>
-									{providerDisplay.icon && <Icon name={providerDisplay.icon} />}
-									<span>{providerDisplay.displayName}</span>
-									<span style={{ opacity: 0.5 }}>{codemark.externalProviderUrl}</span>
-								</Description>
-							</StyledLink>
-						</Meta>
-					)}
-					{relatedCodemarkIds.length > 0 && (
-						<Meta>
-							<RelatedLabel>Related</RelatedLabel>
-							{relatedCodemarkIds.map(id => (
-								<StyledRelatedCodemark key={id} id={id} />
-							))}
-						</Meta>
-					)}
-					{codemark.pinnedReplies && (
-						<PinnedReplies
-							streamId={codemark.streamId}
-							replyIds={codemark.pinnedReplies}
-							renderTextLinkified={props.getLinkifiedHtml}
+		<>
+			{shareModalOpen && <SharingModal codemark={codemark} onClose={closeShareModal} />}
+			<ActivityCard
+				hoverEffect
+				onClick={() => {
+					// somehow a click right next to the menu over the kebab icon registers
+					if (menuState.open) {
+						return setMenuState({ open: false });
+					}
+					dispatch(setCurrentCodemark(codemark.id));
+				}}
+				unread={derivedState.isUnread}
+			>
+				<CardBanner>
+					{!codemark.pinned && <div>This codemark is archived.</div>}
+					{codemark.status == "closed" && <div>This codemark is resolved.</div>}
+				</CardBanner>
+				<CardBody>
+					<CardHeader>
+						<AuthorInfo>
+							<HeadshotV2 person={derivedState.author} /> {derivedState.author.username}{" "}
+							<StyledTimestamp time={codemark.createdAt} />
+						</AuthorInfo>
+						<div style={{ marginLeft: "auto" }}>
+							{menuState.open && (
+								<>
+									<Menu items={menuItems} target={menuState.target} action={closeMenu} />
+									<textarea
+										ref={permalinkRef}
+										value={codemark.permalink}
+										style={{ position: "absolute", left: "-9999px" }}
+									/>
+								</>
+							)}
+							<KebabIcon onClickCapture={handleMenuClick}>
+								<Icon name="kebab-vertical" className="clickable" />
+							</KebabIcon>
+						</div>
+					</CardHeader>
+					<CardTitle>
+						<LinkifiedText
+							dangerouslySetInnerHTML={{
+								__html: props.getLinkifiedHtml(codemark.title || codemark.text)
+							}}
 						/>
-					)}
-					{/* this is here just to get feedback... we should prolly have some sort of indicator on the codemark if you are following it */
-					derivedState.userIsFollowingCodemark && (
-						<Meta>
-							<RelatedLabel>Notifications</RelatedLabel>
-							<Description>
-								<Icon name="eye" />{" "}
-								<span>You are following activity on this codemark. [unfollow]</span>
-							</Description>
-						</Meta>
-					)}
-				</MetaStuff>
-				{codemark.markers &&
-					codemark.markers.map(marker => <StyledMarker key={marker.id} marker={marker} />)}
-			</CardBody>
-			<CardFooter>
-				<RepliesForCodemark parentPost={derivedState.post} pinnedReplies={codemark.pinnedReplies} />
-			</CardFooter>
-		</ActivityCard>
+					</CardTitle>
+					<MetaStuff>
+						<MetaRow>
+							{tagIds.length > 0 && (
+								<Meta>
+									<RelatedLabel>Tags</RelatedLabel>
+									<Description>
+										{tagIds.map(tagId => {
+											const tag = derivedState.teamTags[tagId];
+											return tag ? <Tag tag={tag} key={tagId} /> : null;
+										})}
+									</Description>
+								</Meta>
+							)}
+							{derivedState.assignees.length > 0 && (
+								<Meta>
+									<RelatedLabel>Assignees</RelatedLabel>
+									<Description>
+										{derivedState.assignees.map(assignee => (
+											<>
+												<HeadshotV2 person={assignee as any} size={18} />
+												<span style={{ marginLeft: "5px" }}>
+													{assignee.fullName || assignee.email}
+												</span>
+											</>
+										))}
+									</Description>
+								</Meta>
+							)}
+						</MetaRow>
+						{descriptionHTML && (
+							<Meta>
+								<RelatedLabel>Description</RelatedLabel>
+								<Description>
+									<Icon name="description" />
+									<LinkifiedText dangerouslySetInnerHTML={{ __html: descriptionHTML }} />
+								</Description>
+							</Meta>
+						)}
+						{providerDisplay && (
+							<Meta>
+								<RelatedLabel>Linked Issues</RelatedLabel>
+								<StyledLink href={codemark.externalProviderUrl}>
+									<Description>
+										{providerDisplay.icon && <Icon name={providerDisplay.icon} />}
+										<span>{providerDisplay.displayName}</span>
+										<span style={{ opacity: 0.5 }}>{codemark.externalProviderUrl}</span>
+									</Description>
+								</StyledLink>
+							</Meta>
+						)}
+						{relatedCodemarkIds.length > 0 && (
+							<Meta>
+								<RelatedLabel>Related</RelatedLabel>
+								{relatedCodemarkIds.map(id => (
+									<StyledRelatedCodemark key={id} id={id} />
+								))}
+							</Meta>
+						)}
+						{codemark.pinnedReplies && (
+							<PinnedReplies
+								streamId={codemark.streamId}
+								replyIds={codemark.pinnedReplies}
+								renderTextLinkified={props.getLinkifiedHtml}
+							/>
+						)}
+						{/* this is here just to get feedback... we should prolly have some sort of indicator on the codemark if you are following it */
+						derivedState.userIsFollowingCodemark && (
+							<Meta>
+								<RelatedLabel>Notifications</RelatedLabel>
+								<Description>
+									<Icon name="eye" />{" "}
+									<span>You are following activity on this codemark. [unfollow]</span>
+								</Description>
+							</Meta>
+						)}
+					</MetaStuff>
+					{codemark.markers &&
+						codemark.markers.map(marker => <StyledMarker key={marker.id} marker={marker} />)}
+				</CardBody>
+				<CardFooter>
+					<RepliesForCodemark
+						parentPost={derivedState.post}
+						pinnedReplies={codemark.pinnedReplies}
+					/>
+				</CardFooter>
+			</ActivityCard>
+		</>
 	);
 };
 
