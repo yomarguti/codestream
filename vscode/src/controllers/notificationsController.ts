@@ -1,8 +1,8 @@
 "use strict";
 import { Disposable, MessageItem, window } from "vscode";
-import { Post, PostsChangedEvent, StreamType } from "../api/session";
-import { Notifications } from "../configuration";
+import { Post, PostsChangedEvent } from "../api/session";
 import { Container } from "../container";
+import { CodemarkPlus } from "../protocols/agent/agent.protocol";
 import { vslsUrlRegex } from "./liveShareController";
 
 export class NotificationsController implements Disposable {
@@ -19,21 +19,23 @@ export class NotificationsController implements Disposable {
 	}
 
 	private async onSessionPostsReceived(e: PostsChangedEvent) {
-		const { team, user } = Container.session;
+		const { user } = Container.session;
 		const { activeStreamThread: activeStream, visible: streamVisible } = Container.webview;
-
-		let { notifications } = Container.config;
-		if (notifications === null) {
-			notifications = team.isCodeStreamTeam ? Notifications.Mentions : Notifications.None;
-		}
-
-		if (notifications === Notifications.None) return;
 
 		for (const post of e.items()) {
 			// Don't show notifications for deleted, edited (if edited it isn't the first time its been seen), has replies (same as edited), has reactions, or was posted by the current user
 			if (!post.isNew() || post.senderId === user.id) {
 				continue;
 			}
+
+			let codemark;
+			const parentPost = await post.parentPost();
+			if (parentPost) {
+				codemark = parentPost.codemark;
+			} else {
+				codemark = post.codemark;
+			}
+			if (!codemark) continue;
 
 			const mentioned = post.mentioned(user.id);
 			// If we are muted and not mentioned, skip it
@@ -42,31 +44,14 @@ export class NotificationsController implements Disposable {
 			const isPostStreamVisible =
 				streamVisible && !(activeStream === undefined || activeStream.streamId !== post.streamId);
 
-			switch (notifications) {
-				case Notifications.All:
-					if (!isPostStreamVisible) {
-						this.showNotification(post, false);
-					} else if (
-						mentioned ||
-						(!isPostStreamVisible && (await post.stream()).type === StreamType.Direct)
-					) {
-						this.showNotification(post, true);
-					}
-					break;
-
-				case Notifications.Mentions:
-					if (
-						mentioned ||
-						(!isPostStreamVisible && (await post.stream()).type === StreamType.Direct)
-					) {
-						this.showNotification(post, true);
-					}
-					break;
+			const isUserFollowing = (codemark.followerIds || []).includes(user.id);
+			if (isUserFollowing && (!isPostStreamVisible || mentioned)) {
+				this.showNotification(post, codemark, mentioned);
 			}
 		}
 	}
 
-	async showNotification(post: Post, mentioned: boolean) {
+	async showNotification(post: Post, codemark: CodemarkPlus, mentioned: boolean) {
 		const sender = await post.sender();
 
 		const text = post.text;
@@ -99,7 +84,7 @@ export class NotificationsController implements Disposable {
 			...actions
 		);
 		if (result === actions[0]) {
-			Container.commands.openStream({ streamThread: { id: undefined, streamId: post.streamId } });
+			Container.webview.openCodemark(codemark.id);
 		}
 	}
 }

@@ -116,4 +116,16 @@ export class Post extends CodeStreamItem<PostPlus> {
 		}
 		return this._stream;
 	}
+
+	async parentPost(): Promise<Post | undefined> {
+		if (!this.entity.parentPostId) return undefined;
+
+		const response = await Container.agent.posts.get(
+			this.entity.streamId,
+			this.entity.parentPostId
+		);
+		if (!response.post) return undefined;
+
+		return new Post(this.session, response.post);
+	}
 }
