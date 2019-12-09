@@ -106,6 +106,7 @@ interface ConnectedProps {
 	currentMarkerId?: string;
 	isRepositioning?: boolean;
 	apiCapabilities: CSApiCapabilities;
+	inSharingModel: boolean;
 }
 
 export type DisplayType = "default" | "collapsed" | "activity";
@@ -1175,7 +1176,7 @@ export class Codemark extends React.Component<Props, State> {
 			// { label: "-" }
 		];
 
-		if (apiCapabilities["follow"]) {
+		if (apiCapabilities["follow"] && this.props.inSharingModel) {
 			if (codemark && (codemark.followerIds || []).indexOf(this.props.currentUser.id) !== -1) {
 				menuItems.push({ label: "Unfollow", action: "unfollow" });
 			} else {
@@ -1709,6 +1710,7 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 	const usersWithAccess = getStreamMembers(state, codemark!.streamId);
 
 	return {
+		inSharingModel: state.featureFlags.sharing,
 		capabilities: capabilities,
 		editorHasFocus: context.hasFocus,
 		jumpToMarkerId: context.currentMarkerId,
