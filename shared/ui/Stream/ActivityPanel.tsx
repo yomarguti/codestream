@@ -513,7 +513,10 @@ const ActivityItem = (props: {
 			}}
 			unread={derivedState.isUnread}
 		>
-			{!codemark.pinned && <CardBanner>This codemark is archived.</CardBanner>}
+			<CardBanner>
+				{!codemark.pinned && <div>This codemark is archived.</div>}
+				{codemark.status == "closed" && <div>This codemark is resolved.</div>}
+			</CardBanner>
 			<CardBody>
 				<CardHeader>
 					<AuthorInfo>
