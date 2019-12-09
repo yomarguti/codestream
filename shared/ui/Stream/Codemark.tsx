@@ -1394,7 +1394,7 @@ export class Codemark extends React.Component<Props, State> {
 							displayType={this.props.displayType}
 						>
 							<div className="description">
-								{this.renderVisibilitySelected()}
+								{/* this.renderVisibilitySelected() */}
 								{this.renderTagsAndAssigneesSelected(codemark)}
 								{description && (
 									<div className="related">
