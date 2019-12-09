@@ -608,6 +608,16 @@ const ActivityItem = (props: {
 							renderTextLinkified={props.getLinkifiedHtml}
 						/>
 					)}
+					{/* this is here just to get feedback... we should prolly have some sort of indicator on the codemark if you are following it */
+					derivedState.userIsFollowingCodemark && (
+						<Meta>
+							<RelatedLabel>Notifications</RelatedLabel>
+							<Description>
+								<Icon name="eye" />{" "}
+								<span>You are following activity on this codemark. [unfollow]</span>
+							</Description>
+						</Meta>
+					)}
 				</MetaStuff>
 				{codemark.markers &&
 					codemark.markers.map(marker => <StyledMarker key={marker.id} marker={marker} />)}
