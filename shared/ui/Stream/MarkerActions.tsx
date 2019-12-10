@@ -428,7 +428,7 @@ class MarkerActions extends React.Component<Props, State> {
 			<>
 				{(this.props.alwaysRenderCode || this.state.hasDiff || this.state.warning || canJump) &&
 					this.renderCodeblock(marker)}
-				{(canCompare || canApply || canOpenRevision || canJump) && selected && (
+				{(canCompare || canApply || canOpenRevision || canJump) && selected && !this.state.warning && (
 					<div className="button-spread" id={codemark.id} key="left">
 						{this.state.hasDiff && (
 							<div className="left">

@@ -28,6 +28,7 @@ const TextButton = styled.span`
 	cursor: pointer;
 	.octicon-chevron-down {
 		transform: scale(0.7);
+		margin-right: 2px;
 	}
 	&:focus {
 		margin: -3px;
@@ -57,7 +58,8 @@ export function SharingMenu(props: SharingMenuProps) {
 				/>
 			)}
 			<TextButton ref={buttonRef} onClick={toggleMenu} tabIndex={0} onKeyPress={handleKeyPress}>
-				{props.children} <Icon name="chevron-down" />
+				{props.children}
+				<Icon name="chevron-down" />
 			</TextButton>
 		</>
 	);
