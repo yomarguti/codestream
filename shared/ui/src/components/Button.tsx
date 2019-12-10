@@ -115,7 +115,7 @@ export const Button = (props: PropsWithChildren<Props>) => {
 		</>
 	);
 	return (
-		<StyledButton {...rest} onClick={props.isLoading ? undefined : onClick}>
+		<StyledButton {...rest} onClick={props.isLoading || props.disabled ? undefined : onClick}>
 			{props.isLoading ? (
 				<>
 					<div style={{ opacity: 0, display: "flex" }}>{internals}</div>

@@ -92,7 +92,6 @@ const ErrorMessage = styled.p`
 `;
 
 type FormStateType = "not-ready" | "ready" | "submitted" | "failure" | "success";
-type FormState = { name: FormStateType; message?: string };
 
 interface SharingModalProps extends ModalProps {
 	codemark: CodemarkPlus;
@@ -108,35 +107,26 @@ export function SharingModal(props: SharingModalProps) {
 	}));
 
 	const valuesRef = React.useRef<SharingAttributes>();
-	const [state, dispatch] = React.useReducer<
-		React.Reducer<FormState, { type: FormStateType; payload?: any }>
-	>(
-		function(state, action) {
-			switch (action.type) {
-				case "ready":
-					return { name: "ready" };
-				case "submitted":
-					return { name: "submitted" };
-				case "success":
-					return { name: "success" };
-				case "failure":
-					return { name: "failure", message: action.payload };
-				default:
-					return state;
+	const [state, setState] = React.useState<{ name: FormStateType; message?: string }>({
+		name: "not-ready"
+	});
+
+	const handleValues = React.useCallback(
+		v => {
+			valuesRef.current = v;
+			if (v != undefined && state.name == "not-ready") {
+				setState({ name: "ready" });
+			} else if (v === undefined && state.name != "not-ready") {
+				setState({ name: "not-ready" });
 			}
 		},
-		{ name: "not-ready" }
+		[state.name]
 	);
-
-	const handleValues = React.useCallback(v => {
-		valuesRef.current = v;
-		if (v != undefined && state.name == "not-ready") dispatch({ type: "ready" });
-	}, []);
 
 	const handleClickShare: React.MouseEventHandler = async e => {
 		e.preventDefault();
 
-		dispatch({ type: "submitted" });
+		setState({ name: "submitted" });
 		try {
 			await HostApi.instance.send(CreateThirdPartyPostRequestType, {
 				providerId: valuesRef.current!.providerId,
@@ -146,9 +136,9 @@ export function SharingModal(props: SharingModalProps) {
 				codemark: props.codemark,
 				mentionedUserIds
 			});
-			dispatch({ type: "success" });
+			setState({ name: "success" });
 		} catch (error) {
-			dispatch({ type: "failure", payload: error.message });
+			setState({ name: "failure", message: error.message });
 			logError("Failed to share an existing codemark", { message: error.message });
 		}
 	};
