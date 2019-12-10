@@ -169,7 +169,6 @@ export class InvitePanel extends Component {
 		}
 		return (
 			<>
-				<PanelHeader title="Invite a Teammate" />
 				<fieldset
 					className="form-body"
 					disabled={inactive}
@@ -296,13 +295,16 @@ export class InvitePanel extends Component {
 								))}
 							</ul>
 						</div>
-						<form
-							className="standard-form"
-							onSubmit={this.onSubmit}
-							style={{ padding: "5px 0 10px 0" }}
-						>
-							{this.renderFieldset(inactive)}
-						</form>
+						<div className="section">
+							<PanelHeader title="Invite a Teammate" />
+							<form
+								className="standard-form"
+								onSubmit={this.onSubmit}
+								style={{ padding: "0 0 10px 0" }}
+							>
+								{this.renderFieldset(inactive)}
+							</form>
+						</div>
 						{this.props.invited.length > 0 && (
 							<div className="section">
 								<PanelHeader title="Outstanding Invitations" />
