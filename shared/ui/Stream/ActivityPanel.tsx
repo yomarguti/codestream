@@ -332,6 +332,7 @@ export const ActivityPanel = () => {
 	return (
 		<div className="panel full-height activity-panel">
 			<PanelHeader title="Activity">
+				{/* commented out for now as per Dave
 				<div className="filters">
 					Show{" "}
 					<Filter
@@ -341,6 +342,7 @@ export const ActivityPanel = () => {
 						items={menuItems}
 					/>
 				</div>
+				*/}
 			</PanelHeader>
 			<ScrollBox>
 				<div ref={rootRef} className="channel-list vscroll">

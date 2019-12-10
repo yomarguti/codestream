@@ -2506,13 +2506,15 @@
 				padding: 8px 10px;
 				padding: 5px 6px;
 				// border-bottom: 1px solid rgba(127, 127, 127, 0.5);
+				color: @text-color-subtle;
 			}
 			&.checked > span {
 				color: @text-color-highlight;
 				// border-bottom: 1px solid @text-color-highlight;
 				font-weight: 500;
 			}
-			&:hover > span {
+			&:hover > span,
+			&.selected > span {
 				color: @text-color-highlight;
 			}
 			.open-menu {

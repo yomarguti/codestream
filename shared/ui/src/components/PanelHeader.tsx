@@ -3,7 +3,7 @@ import React from "react";
 import styled, { CSSProperties } from "styled-components";
 
 const Header = styled.div`
-	padding: 15px 20px 0 20px;
+	padding: 15px 20px 5px 20px;
 	.align-right-button {
 		position: absolute;
 		opacity: 0.4;

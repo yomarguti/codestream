@@ -279,7 +279,7 @@ export class InvitePanel extends Component {
 				<PanelHeader title="Your Team" />
 				<ScrollBox>
 					<div className="vscroll">
-						<div className="section" style={{ paddingTop: "10px" }}>
+						<div className="section">
 							<ul>
 								{/* FIXME -- sort these users somehow */
 								this.props.members.map(user => (
@@ -296,7 +296,11 @@ export class InvitePanel extends Component {
 								))}
 							</ul>
 						</div>
-						<form className="standard-form" onSubmit={this.onSubmit} style={{ padding: "10px 0" }}>
+						<form
+							className="standard-form"
+							onSubmit={this.onSubmit}
+							style={{ padding: "5px 0 10px 0" }}
+						>
 							{this.renderFieldset(inactive)}
 						</form>
 						{this.props.invited.length > 0 && (
