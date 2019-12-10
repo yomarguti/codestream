@@ -633,7 +633,9 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 		const unreads = await SessionContainer.instance().users.getUnreads({});
 		const codemarksManager = SessionContainer.instance().codemarks;
-		const posts: PostPlus[] = await this.enrichPosts(response.posts || []);
+		const posts: PostPlus[] = response.posts.filter(p => !p.deactivated);
+
+		response.codemarks = sortBy(response.codemarks, c => -(c.lastActivityAt || c.createdAt));
 
 		const codemarks = await Arrays.filterMapAsync(response.codemarks || [], async codemark => {
 			if (codemark.deactivated) return;
@@ -645,7 +647,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						postId: codemark.postId,
 						streamId: codemark.streamId
 					});
-					posts.push(...(await this.enrichPosts(threadResponse.posts)));
+					posts.push(...threadResponse.posts);
 				} catch (error) {
 					debugger;
 				}
@@ -653,9 +655,21 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			return codemarksManager.enrichCodemark(codemark);
 		});
 
+		// if there are no valid codemarks in this batch, recurse
+		if (codemarks.length === 0) {
+			const beforePostId =
+				response.codemarks.length > 0
+					? response.codemarks[response.codemarks.length - 1].postId
+					: response.posts[response.posts.length - 1].id;
+			return this.getActivity({
+				...request,
+				before: beforePostId
+			});
+		}
+
 		return {
-			posts,
-			codemarks: sortBy(codemarks, c => -c.lastActivityAt),
+			posts: await this.enrichPosts(posts),
+			codemarks,
 			more: response.more
 		};
 	}
