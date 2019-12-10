@@ -32,7 +32,6 @@ import { CodemarkType, CSUser } from "@codestream/protocols/api";
 import { Card, CardBody, CardFooter, CardBanner } from "../src/components/Card";
 import { resetLastReads } from "../store/unreads/actions";
 import { PanelHeader } from "../src/components/PanelHeader";
-import { markdownify } from "./Markdowner";
 import { Marker } from "./Marker";
 import { getPost, getPostsForStream } from "../store/posts/reducer";
 import Tag from "./Tag";
@@ -42,6 +41,7 @@ import { RelatedCodemark } from "./RelatedCodemark";
 import Menu from "./Menu";
 import { FormattedPlural } from "react-intl";
 import { SharingModal } from "./SharingModal";
+import { useMarkdownifyToHtml } from "./Markdowner";
 
 // see comment in SmartFormattedList.tsx
 const FormattedPluralAlias = FormattedPlural as any;
@@ -244,33 +244,6 @@ export const ActivityPanel = () => {
 
 	const { targetRef, rootRef } = useIntersectionObserver(intersectionCallback);
 
-	const renderTextLinkified = React.useCallback(
-		(text: string) => {
-			let html: string;
-			if (text == null || text === "") {
-				html = "";
-			} else {
-				const me = derivedState.currentUserName;
-				html = markdownify(text).replace(/@(\w+)/g, (match: string, name: string) => {
-					if (
-						derivedState.usernames.some(
-							n => name.localeCompare(n, undefined, { sensitivity: "accent" }) === 0
-						)
-					) {
-						return `<span class="at-mention${
-							me.localeCompare(name, undefined, { sensitivity: "accent" }) === 0 ? " me" : ""
-						}">${match}</span>`;
-					}
-
-					return match;
-				});
-			}
-
-			return html;
-		},
-		[derivedState.usernames]
-	);
-
 	const renderActivity = () => {
 		let counter = 0;
 		const demoMode = false;
@@ -331,7 +304,7 @@ export const ActivityPanel = () => {
 				<ActivityWrapper key={codemark.id}>
 					{/* <Timestamp dateOnly={true} time={codemark.createdAt} /> */}
 					{demoMode && counter == 5 && <Timestamp dateOnly={true} time={codemark.createdAt} />}
-					<ActivityItem codemark={codemark} getLinkifiedHtml={renderTextLinkified} />
+					<ActivityItem codemark={codemark} />
 				</ActivityWrapper>
 			];
 		});
@@ -401,10 +374,7 @@ const KebabIcon = styled.span`
 	}
 `;
 
-const ActivityItem = (props: {
-	codemark: CodemarkPlus;
-	getLinkifiedHtml: (text: string) => string;
-}) => {
+const ActivityItem = (props: { codemark: CodemarkPlus }) => {
 	const { codemark } = props;
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
@@ -442,9 +412,10 @@ const ActivityItem = (props: {
 
 	const permalinkRef = React.useRef<HTMLTextAreaElement>(null);
 
+	const markdownifyToHtml = useMarkdownifyToHtml();
+
 	const tagIds = codemark.tags || [];
-	const descriptionHTML =
-		codemark.title && codemark.text ? props.getLinkifiedHtml(codemark.text) : null;
+	const descriptionHTML = codemark.title && codemark.text ? markdownifyToHtml(codemark.text) : null;
 	const providerDisplay =
 		codemark.externalProviderUrl && PROVIDER_MAPPINGS[codemark.externalProvider!];
 	const relatedCodemarkIds = codemark.relatedCodemarkIds || [];
@@ -560,7 +531,7 @@ const ActivityItem = (props: {
 					<CardTitle>
 						<LinkifiedText
 							dangerouslySetInnerHTML={{
-								__html: props.getLinkifiedHtml(codemark.title || codemark.text)
+								__html: markdownifyToHtml(codemark.title || codemark.text)
 							}}
 						/>
 					</CardTitle>
@@ -623,11 +594,7 @@ const ActivityItem = (props: {
 							</Meta>
 						)}
 						{codemark.pinnedReplies && (
-							<PinnedReplies
-								streamId={codemark.streamId}
-								replyIds={codemark.pinnedReplies}
-								renderTextLinkified={props.getLinkifiedHtml}
-							/>
+							<PinnedReplies streamId={codemark.streamId} replyIds={codemark.pinnedReplies} />
 						)}
 						{/* this is here just to get feedback... we should prolly have some sort of indicator on the codemark if you are following it */
 						derivedState.userIsFollowingCodemark && (
@@ -660,8 +627,7 @@ const SeeReplies = styled.div`
 `;
 
 const ReplyRoot = styled.div`
-	padding-left: 10px;
-	padding-bottom: 10px;
+	padding: 0 10px 10px 10px;
 	display: flex;
 	flex-direction: column;
 	border-left: 2px solid var(--text-color-info);
@@ -700,12 +666,14 @@ const Reply = (props: {
 		[props.starred]
 	);
 
+	const markdownifyToHtml = useMarkdownifyToHtml();
+
 	return (
 		<ReplyRoot>
 			<AuthorInfo style={{ fontWeight: 700 }}>
 				<HeadshotV2 person={props.author} /> {props.author.username}
 				<StyledTimestamp time={props.post.createdAt} />
-				<div style={{ marginLeft: "auto", marginRight: "10px" }}>
+				<div style={{ marginLeft: "auto" }}>
 					<KebabIcon
 						onClick={e => {
 							e.preventDefault();
@@ -724,7 +692,10 @@ const Reply = (props: {
 					)}
 				</div>
 			</AuthorInfo>
-			<div style={{ marginLeft: "23px" }}>{props.post.text}</div>
+			<LinkifiedText
+				style={{ marginLeft: "23px" }}
+				dangerouslySetInnerHTML={{ __html: markdownifyToHtml(props.post.text) }}
+			/>
 		</ReplyRoot>
 	);
 };
@@ -784,21 +755,19 @@ const PinnedReply = styled.div`
 	}
 `;
 
-const PinnedReplyText = styled.div`
+const PinnedReplyText = styled(LinkifiedText)`
 	opacity: 0.5;
 `;
 
-const PinnedReplies = (props: {
-	replyIds: string[];
-	streamId: string;
-	renderTextLinkified(text: string): string;
-}) => {
+const PinnedReplies = (props: { replyIds: string[]; streamId: string }) => {
 	const { users, posts } = useSelector((state: CodeStreamState) => {
 		return {
 			users: state.users,
 			posts: props.replyIds.map(id => getPost(state.posts, props.streamId, id))
 		};
 	});
+
+	const markdownifyToHtml = useMarkdownifyToHtml();
 
 	if (posts.length === 0) return null;
 
@@ -808,9 +777,7 @@ const PinnedReplies = (props: {
 			{posts.map(post => (
 				<PinnedReply key={post.id}>
 					<Icon name="star" /> <HeadshotV2 person={users[post.creatorId]} />
-					<PinnedReplyText
-						dangerouslySetInnerHTML={{ __html: props.renderTextLinkified(post.text) }}
-					/>
+					<PinnedReplyText dangerouslySetInnerHTML={{ __html: markdownifyToHtml(post.text) }} />
 				</PinnedReply>
 			))}
 		</Meta>
