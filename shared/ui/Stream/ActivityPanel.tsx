@@ -218,7 +218,7 @@ export const ActivityPanel = () => {
 	const fetchActivity = React.useCallback(async () => {
 		const response = await HostApi.instance.send(FetchActivityRequestType, {
 			limit: 50,
-			before: safe(() => _last(derivedState.activity)!.id)
+			before: safe(() => _last(derivedState.activity)!.postId)
 		});
 		dispatch(savePosts(response.posts));
 		dispatch(saveCodemarks(response.codemarks));
