@@ -230,7 +230,10 @@ export const createPostAndCodemark = (
 				}),
 				entryPoint: entryPoint,
 				remotes: remotes,
-				mentionedUserIds: findMentionedUserIds(getTeamMembers(getState()), attributes.text || ""),
+				mentionedUserIds: findMentionedUserIds(
+					getTeamMembers(getState()),
+					attributes.text || ""
+				).concat(attributes.assignees)
 			})
 		);
 	}
