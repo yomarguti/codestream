@@ -75,7 +75,13 @@ const ActivityCard = styled(Card)<{ unread?: boolean }>`
 		padding-right: 0;
 		margin-top: 0;
 	}
-	${props => (props.unread ? `border-left: 2px solid var(--text-color-info);` : "")}
+	${props =>
+		props.unread
+			? `
+		border-left: 2px solid var(--text-color-info);
+		${ReplyRoot} { border-left: none; }
+		`
+			: ""}
 `;
 
 const LoadingMessage = styled.div`
