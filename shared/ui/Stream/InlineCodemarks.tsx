@@ -71,6 +71,7 @@ import { Switch } from "../src/components/controls/Switch";
 import { NewCodemarkAttributes } from "../store/codemarks/actions";
 import styled from "styled-components";
 import { PanelHeader } from "../src/components/PanelHeader";
+import * as Path from "path-browserify";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -1125,11 +1126,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	render() {
-		const { fileNameToFilterFor } = this.props;
-		const fileName = fileNameToFilterFor ? fileNameToFilterFor.replace(/.*\//, "") : "";
+		const { fileNameToFilterFor = "" } = this.props;
+
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
-				<PanelHeader title={fileName} position="fixed">
+				<PanelHeader title={Path.basename(fileNameToFilterFor)} position="fixed">
 					<EditingIndicator />
 				</PanelHeader>
 				{this.renderHoverIcons()}
