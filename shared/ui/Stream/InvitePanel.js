@@ -203,7 +203,7 @@ export class InvitePanel extends Component {
 		);
 	};
 
-	renderEmailUser(user) {
+	renderEmailUser(user, linkText = "reinvite") {
 		const { invitingEmails } = this.state;
 		switch (invitingEmails[user.email]) {
 			case 1:
@@ -223,7 +223,7 @@ export class InvitePanel extends Component {
 							this.onClickReinvite(user);
 						}}
 					>
-						reinvite
+						{linkText}
 					</a>
 				);
 		}
@@ -267,10 +267,12 @@ export class InvitePanel extends Component {
 	}
 
 	render() {
+		const { invitingEmails } = this.state;
 		const inactive =
 			this.props.activePanel !== WebviewPanels.Invite &&
 			this.props.activePanel !== WebviewPanels.People;
 
+		const suggested = this.props.suggested.filter(u => !invitingEmails[u.email]);
 		return (
 			<div className="panel full-height invite-panel">
 				<PanelHeader title={this.props.teamName} />
@@ -315,6 +317,23 @@ export class InvitePanel extends Component {
 								</ul>
 							</div>
 						)}
+						{suggested.length > 0 && (
+							<div className="section">
+								<PanelHeader title="Suggested Invitations">
+									<i style={{ opacity: 0.5 }}>From git history</i>
+								</PanelHeader>
+								<ul>
+									{suggested.map(user => (
+										<li key={user.email}>
+											<div className="committer-email">
+												{user.fullName} {user.email}
+												{this.renderEmailUser(user, "invite")}
+											</div>
+										</li>
+									))}
+								</ul>
+							</div>
+						)}
 					</div>
 				</ScrollBox>
 			</div>
@@ -348,11 +367,17 @@ const mapStateToProps = ({ users, context, teams }) => {
 			  })
 			: [];
 
+	// this should be populated by something like
+	// git log --pretty=format:"%an|%aE" | sort -u
+	// and then filter out noreply.github.com (what else?)
+	const suggested = []; //[{ fullName: "Fred", email: "pez+555t@codestream.com" }];
+
 	return {
 		teamId: team.id,
 		teamName: team.name,
 		members: _sortBy(members, m => (m.fullName || "").toLowerCase()),
-		invited: _sortBy(invited, "email")
+		invited: _sortBy(invited, "email"),
+		suggested: _sortBy(suggested, m => (m.fullName || "").toLowerCase())
 	};
 };
 
