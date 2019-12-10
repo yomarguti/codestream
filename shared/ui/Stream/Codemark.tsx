@@ -17,8 +17,7 @@ import {
 	CodemarkPlus,
 	OpenUrlRequestType,
 	Capabilities,
-	GetDocumentFromMarkerRequestType,
-	MarkerNotLocated
+	GetDocumentFromMarkerRequestType
 } from "@codestream/protocols/agent";
 import { CodemarkType, CSUser, CSMe, CSPost, CSApiCapabilities } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
@@ -26,13 +25,12 @@ import {
 	FollowCodemarkRequestType,
 	SetCodemarkPinnedRequestType
 } from "@codestream/protocols/agent";
-import { range, emptyArray, forceAsLine, mapFilter, emptyObject } from "../utils";
+import { range, emptyArray, emptyObject } from "../utils";
 import {
 	getUserByCsId,
 	getTeamMembers,
 	getUsernames,
-	getTeamTagsHash,
-	getStreamMembers
+	getTeamTagsHash
 } from "../store/users/reducer";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { CodemarkForm } from "./CodemarkForm";
@@ -103,7 +101,6 @@ interface ConnectedProps {
 	teamTagsHash: any;
 	entirelyDeleted: boolean;
 	textEditorUri: string;
-	usersWithAccess: CSUser[];
 	jumpToMarkerId?: string;
 	currentMarkerId?: string;
 	isRepositioning?: boolean;
@@ -347,22 +344,22 @@ export class Codemark extends React.Component<Props, State> {
 		return icon;
 	}
 
-	renderVisibilitySelected = () => {
-		return this.props.usersWithAccess.length > 0 ? (
-			<div className="related" style={{ marginBottom: "0" }}>
-				<div className="related-label">Visible to</div>
-				{mapFilter(this.props.usersWithAccess, user =>
-					user.id !== this.props.currentUser.id ? (
-						<span style={{ marginRight: "5px" }}>
-							<Headshot size={18} person={user} />
-							<span>{user.username}</span>
-						</span>
-					) : null
-				)}
-				<div style={{ clear: "both" }} />
-			</div>
-		) : null;
-	};
+	// renderVisibilitySelected = () => {
+	// 	return this.props.usersWithAccess.length > 0 ? (
+	// 		<div className="related" style={{ marginBottom: "0" }}>
+	// 			<div className="related-label">Visible to</div>
+	// 			{mapFilter(this.props.usersWithAccess, user =>
+	// 				user.id !== this.props.currentUser.id ? (
+	// 					<span style={{ marginRight: "5px" }}>
+	// 						<Headshot size={18} person={user} />
+	// 						<span>{user.username}</span>
+	// 					</span>
+	// 				) : null
+	// 			)}
+	// 			<div style={{ clear: "both" }} />
+	// 		</div>
+	// 	) : null;
+	// };
 
 	renderTagsAndAssigneesSelected = codemark => {
 		const renderedTagsSelected = this.renderTagsSelected(codemark);
@@ -1037,40 +1034,40 @@ export class Codemark extends React.Component<Props, State> {
 		const following =
 			codemark && (codemark.followerIds || []).indexOf(this.props.currentUser.id) !== -1;
 
-		const privateIndicator = (() => {
-			if (!this.props.isCodeStreamTeam || this.props.usersWithAccess.length === 0) return null;
-
-			const usernames = mapFilter(this.props.usersWithAccess, user =>
-				user.id !== this.props.currentUser.id ? user.username : undefined
-			);
-
-			const tooltipText = `Visible to ${(() => {
-				switch (usernames.length) {
-					case 1:
-						return usernames[0];
-					case 2:
-						return usernames.join(" and ");
-					case 3: {
-						const [first, second, third] = usernames;
-						return `${first}, ${second} and ${third}`;
-					}
-					default: {
-						const [first, second, third, ...others] = usernames;
-						return `${first}, ${second}, ${third} and ${others.length} others`;
-					}
-				}
-			})()}`;
-
-			return (
-				<span className="detail-icon">
-					<Icon
-						name="lock"
-						title={hover && !selected ? tooltipText : undefined}
-						placement="bottom"
-					/>
-				</span>
-			);
-		})();
+		// const privateIndicator = (() => {
+		// 	if (!this.props.isCodeStreamTeam || this.props.usersWithAccess.length === 0) return null;
+		//
+		// 	const usernames = mapFilter(this.props.usersWithAccess, user =>
+		// 		user.id !== this.props.currentUser.id ? user.username : undefined
+		// 	);
+		//
+		// 	const tooltipText = `Visible to ${(() => {
+		// 		switch (usernames.length) {
+		// 			case 1:
+		// 				return usernames[0];
+		// 			case 2:
+		// 				return usernames.join(" and ");
+		// 			case 3: {
+		// 				const [first, second, third] = usernames;
+		// 				return `${first}, ${second} and ${third}`;
+		// 			}
+		// 			default: {
+		// 				const [first, second, third, ...others] = usernames;
+		// 				return `${first}, ${second}, ${third} and ${others.length} others`;
+		// 			}
+		// 		}
+		// 	})()}`;
+		//
+		// 	return (
+		// 		<span className="detail-icon">
+		// 			<Icon
+		// 				name="lock"
+		// 				title={hover && !selected ? tooltipText : undefined}
+		// 				placement="bottom"
+		// 			/>
+		// 		</span>
+		// 	);
+		// })();
 
 		if (
 			relatedCodemarkIds.length ||
@@ -1080,8 +1077,8 @@ export class Codemark extends React.Component<Props, State> {
 			hasReplies ||
 			renderedAssignees ||
 			numMarkers > 1 ||
-			privateIndicator ||
 			following
+			// || privateIndicator
 		) {
 			return (
 				<div className="detail-icons">
@@ -1094,7 +1091,7 @@ export class Codemark extends React.Component<Props, State> {
 							/>
 						</span>
 					)}
-					{privateIndicator}
+					{/* privateIndicator */}
 					{renderedTags}
 					{renderedAssignees}
 					{externalLink}
@@ -1726,8 +1723,6 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		return unknownAuthor;
 	})();
 
-	const usersWithAccess = getStreamMembers(state, codemark!.streamId);
-
 	return {
 		inSharingModel: state.featureFlags.sharing,
 		capabilities: capabilities,
@@ -1747,8 +1742,7 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		entirelyDeleted,
 		textEditorUri: editorContext.textEditorUri || "",
 		isRepositioning: context.isRepositioning,
-		apiCapabilities: apiVersioning.apiCapabilities,
-		usersWithAccess
+		apiCapabilities: apiVersioning.apiCapabilities
 	};
 };
 
