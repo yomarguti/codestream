@@ -1,4 +1,12 @@
-import { useEffect, useRef, useState, useCallback, useLayoutEffect, EffectCallback } from "react";
+import {
+	useEffect,
+	useRef,
+	useState,
+	useCallback,
+	useLayoutEffect,
+	EffectCallback,
+	useMemo
+} from "react";
 import { noop } from "../utils";
 
 type Fn = () => void;
@@ -130,39 +138,50 @@ export function useIntersectionObserver(
 		callbackRef.current = callback;
 	});
 	const observerRef = useRef<IntersectionObserver>();
-	const rootRef = useRef<HTMLElement>(null);
-	const targetRef = useCallback(element => {
-		if (element == undefined) {
-			// clean up
-			if (observerRef.current != undefined) {
-				observerRef.current.disconnect();
-				observerRef.current = undefined;
-			}
-			return;
+	const cleanupObserver = () => {
+		if (observerRef.current != undefined) {
+			observerRef.current.disconnect();
+			observerRef.current = undefined;
 		}
+	};
+	const _rootRef = useRef<HTMLElement>();
+	const _targetRef = useRef<HTMLElement>();
 
-		// can't observe yet
-		if (!rootRef.current) return;
-
-		const observer = new IntersectionObserver(
-			function(...args: Parameters<IntersectionObserverCallback>) {
-				callbackRef.current.call(undefined, ...args);
-			},
-			{
-				...options,
-				root: rootRef.current
-			}
-		);
-		observer.observe(element);
-
-		observerRef.current = observer;
-	}, []);
-
+	// after updates, check whether the observer needs to be created or destroyed
 	useEffect(() => {
-		return () => {
-			observerRef.current && observerRef.current.disconnect();
-		};
-	}, []);
+		// if ready to observe
+		if (_rootRef.current && _targetRef.current) {
+			if (observerRef.current == undefined) {
+				const observer = new IntersectionObserver(
+					function(...args: Parameters<IntersectionObserverCallback>) {
+						callbackRef.current.call(undefined, ...args);
+					},
+					{
+						...options,
+						root: _rootRef.current
+					}
+				);
+				observer.observe(_targetRef.current);
+				observerRef.current = observer;
+			}
+		} else {
+			cleanupObserver();
+		}
+	});
 
-	return { targetRef, rootRef: rootRef as any };
+	// cleanup when the consuming component is unmounted
+	useEffect(() => cleanupObserver, []);
+
+	// return the same object to guarantee referential identity
+	return useMemo(
+		() => ({
+			targetRef(element) {
+				_targetRef.current = element;
+			},
+			rootRef(element) {
+				_rootRef.current = element;
+			}
+		}),
+		[]
+	);
 }

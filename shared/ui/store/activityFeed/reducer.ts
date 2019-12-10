@@ -11,7 +11,10 @@ import { getPost } from "../posts/reducer";
 
 type ActivityFeedAction = ActionType<typeof actions>;
 
-const initialState: ActivityFeedState = { records: [], hasMore: false };
+const initialState: ActivityFeedState = {
+	records: [],
+	hasMore: true /* assume yes to start, as history is fetched, we'll know when there's no more  */
+};
 
 export function reduceActivityFeed(state = initialState, action: ActivityFeedAction) {
 	switch (action.type) {
