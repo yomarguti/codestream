@@ -6,6 +6,8 @@ import { logError } from "../logger";
 import { escapeHtml } from "../utils";
 import { useSelector } from "react-redux";
 import { getUsernames } from "../store/users/reducer";
+import React from "react";
+import { CodeStreamState } from "../store";
 
 const md = new MarkdownIt({
 	breaks: true,
@@ -26,7 +28,7 @@ export const emojify = text => {
 	return md.render(text);
 };
 
-export const markdownify = text => {
+export const markdownify = (text: string) => {
 	try {
 		const replaced = md
 			.render(text, { references: {} })
@@ -50,14 +52,14 @@ export const markdownify = text => {
 	they can be accepted as parameters to the hook or the returned function
 */
 export function useMarkdownifyToHtml() {
-	const derivedState = useSelector(state => {
-		const currentUser = state.users[state.session.userId];
+	const derivedState = useSelector((state: CodeStreamState) => {
+		const currentUser = state.users[state.session.userId!];
 		return { currentUserName: currentUser.username, usernames: getUsernames(state) };
 	});
 
-	return useCallback(
-		text => {
-			let html;
+	return React.useCallback(
+		(text: string) => {
+			let html: string;
 			if (text == null || text === "") {
 				html = "";
 			} else {
