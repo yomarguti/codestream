@@ -101,7 +101,7 @@ export function SharingModal(props: SharingModalProps) {
 	const { author, mentionedUserIds } = useSelector((state: CodeStreamState) => ({
 		author: state.users[props.codemark.creatorId],
 		mentionedUserIds: uniq([
-			...findMentionedUserIds(getTeamMembers(state), props.codemark.text),
+			...findMentionedUserIds(getTeamMembers(state), props.codemark.text || ""),
 			...findMentionedUserIds(getTeamMembers(state), props.codemark.title || "")
 		])
 	}));
