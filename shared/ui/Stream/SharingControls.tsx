@@ -29,20 +29,34 @@ const TextButton = styled.span`
 	.octicon-chevron-down {
 		transform: scale(0.7);
 	}
+	&:focus {
+		margin: -3px;
+		border: 3px solid transparent;
+	}
 `;
 
-export type SharingMenuProps = React.PropsWithChildren<{ items: any[] }>;
+export type SharingMenuProps = React.PropsWithChildren<{ items: any[]; title?: string }>;
 
 export function SharingMenu(props: SharingMenuProps) {
 	const buttonRef = React.useRef<HTMLSpanElement>(null);
 	const [isOpen, toggleMenu] = React.useReducer((open: boolean) => !open, false);
 
+	const handleKeyPress = (event: React.KeyboardEvent) => {
+		if (event.key == "Enter") return toggleMenu(event);
+	};
+
 	return (
 		<>
 			{isOpen && buttonRef.current && (
-				<Menu align="center" action={toggleMenu} target={buttonRef.current} items={props.items} />
+				<Menu
+					align="center"
+					action={toggleMenu}
+					title={props.title}
+					target={buttonRef.current}
+					items={props.items}
+				/>
 			)}
-			<TextButton ref={buttonRef} onClick={toggleMenu}>
+			<TextButton ref={buttonRef} onClick={toggleMenu} tabIndex={0} onKeyPress={handleKeyPress}>
 				{props.children} <Icon name="chevron-down" />
 			</TextButton>
 		</>
@@ -258,8 +272,12 @@ export const SharingControls = React.memo(
 				},
 				{ dms: [], others: [] } as { dms: any[]; others: any[] }
 			);
+			const search =
+				others.length + dms.length > 5
+					? [{ label: "-" }, { type: "search", placeholder: "Search...", action: "search" }]
+					: [];
 
-			return [...others, { label: "-" }, ...dms];
+			return [...search, ...others, { label: "-" }, ...dms];
 		}, [data.get().channels]);
 
 		const authenticateWithSlack = () => {
@@ -347,7 +365,7 @@ export const SharingControls = React.memo(
 					{derivedState.selectedShareTarget!.teamName}
 				</SharingMenu>{" "}
 				in{" "}
-				<SharingMenu items={channelMenuItems}>
+				<SharingMenu items={channelMenuItems} title="Post to...">
 					{selectedChannel == undefined ? "select a channel" : formatChannelName(selectedChannel)}
 				</SharingMenu>
 			</Root>
