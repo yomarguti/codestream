@@ -25,7 +25,7 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		icon: "gitlab",
 		urlPlaceholder: "https://gitlab.myorg.com",
 		helpUrl:
-			"https://github.com/TeamCodeStream/CodeStream/wiki/Configuring-the-GitLab-Enterprise-Integration"
+			"https://github.com/TeamCodeStream/CodeStream/wiki/Configuring-the-GitLab-Self-Managed-Integration"
 	},
 	jira: { displayName: "Jira", icon: "jira" },
 	jiraserver: {
