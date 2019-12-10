@@ -950,7 +950,9 @@ export class Codemark extends React.Component<Props, State> {
 					return (
 						<div style={{ marginTop: "3px" }}>
 							<Headshot size={18} person={a} />
-							{a.fullName || a.email}
+							<span className={cx({ "at-mention me": a.email === this.props.currentUser.email })}>
+								{a.fullName || a.email}
+							</span>
 						</div>
 					);
 				} else return <Headshot size={18} person={a} />;
