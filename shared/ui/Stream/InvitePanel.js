@@ -168,40 +168,38 @@ export class InvitePanel extends Component {
 			);
 		}
 		return (
-			<>
-				<fieldset
-					className="form-body"
-					disabled={inactive}
-					style={{ padding: "0 20px", maxWidth: "none" }}
-				>
-					<div id="controls">
-						<div style={{ display: "flex", alignItems: "flex-end" }}>
-							<div className="control-group" style={{ flexGrow: 3 }}>
-								<input
-									className="input-text"
-									id="invite-email-input"
-									type="text"
-									value={newMemberEmail}
-									onChange={this.onEmailChange}
-									onBlur={this.onEmailBlur}
-									placeholder="Email..."
-									autoFocus
-								/>
-								{this.renderEmailHelp()}
-							</div>
-							<Button
-								style={{ width: "60px", margin: "0 0 6px 10px" }}
-								id="add-button"
-								className="control-button"
-								type="submit"
-								loading={this.state.loading}
-							>
-								<FormattedMessage id="teamMemberSelection.invite" defaultMessage="Invite" />
-							</Button>
+			<fieldset
+				className="form-body"
+				disabled={inactive}
+				style={{ padding: "0 20px", maxWidth: "none" }}
+			>
+				<div id="controls">
+					<div style={{ display: "flex", alignItems: "flex-end" }}>
+						<div className="control-group" style={{ flexGrow: 3 }}>
+							<input
+								className="input-text"
+								id="invite-email-input"
+								type="text"
+								value={newMemberEmail}
+								onChange={this.onEmailChange}
+								onBlur={this.onEmailBlur}
+								placeholder="Email..."
+								autoFocus
+							/>
+							{this.renderEmailHelp()}
 						</div>
+						<Button
+							style={{ width: "60px", margin: "0 0 6px 10px" }}
+							id="add-button"
+							className="control-button"
+							type="submit"
+							loading={this.state.loading}
+						>
+							<FormattedMessage id="teamMemberSelection.invite" defaultMessage="Invite" />
+						</Button>
 					</div>
-				</fieldset>
-			</>
+				</div>
+			</fieldset>
 		);
 	};
 
