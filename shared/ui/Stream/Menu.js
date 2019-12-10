@@ -319,6 +319,7 @@ export default class Menu extends Component {
 		if (event.key === "Escape") {
 			this.props.action(null); // invoke the action callback for entire menu so it can removed
 			event.preventDefault();
+			if (this.props.focusOnSelect) this.props.focusOnSelect.focus();
 		}
 		if (event.key === "Enter") {
 			event.preventDefault();
@@ -337,5 +338,6 @@ export default class Menu extends Component {
 			item.action();
 			this.props.action(null); // invoke the action callback for entire menu so it can removed
 		} else this.props.action(item.disabled ? null : item.action);
+		if (this.props.focusOnSelect) this.props.focusOnSelect.focus();
 	};
 }

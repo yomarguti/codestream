@@ -273,7 +273,7 @@ export class InvitePanel extends Component {
 
 		return (
 			<div className="panel full-height invite-panel">
-				<PanelHeader title="Your Team" />
+				<PanelHeader title={this.props.teamName} />
 				<ScrollBox>
 					<div className="vscroll">
 						<div className="section">

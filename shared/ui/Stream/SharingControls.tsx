@@ -55,6 +55,7 @@ export function SharingMenu(props: SharingMenuProps) {
 					title={props.title}
 					target={buttonRef.current}
 					items={props.items}
+					focusOnSelect={buttonRef.current}
 				/>
 			)}
 			<TextButton ref={buttonRef} onClick={toggleMenu} tabIndex={0} onKeyPress={handleKeyPress}>
