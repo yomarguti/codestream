@@ -636,8 +636,17 @@ export function toSlackPostBlocks(
 		});
 	}
 
-	let counter = 0;
+	if (codemark.externalProviderUrl !== undefined) {
+		blocks.push({
+			type: "section",
+			text: {
+				type: "mrkdwn",
+				text: `*Linked Issues*\n${codemark.externalProviderUrl}`
+			}
+		});
+	}
 
+	let counter = 0;
 	if (codemark.markers !== undefined && codemark.markers.length) {
 		for (const marker of codemark.markers) {
 			counter++;
@@ -704,20 +713,6 @@ export function toSlackPostBlocks(
 				]
 			};
 
-			if (codemark.externalProvider !== undefined && codemark.externalProviderUrl !== undefined) {
-				actionId = toExternalActionId(counter, "issue", codemark.externalProvider, codemark);
-				actions.elements.push({
-					type: "button",
-					action_id: actionId,
-					text: {
-						type: "plain_text",
-						text: `Open Issue on ${providerNamesById.get(codemark.externalProvider) ||
-							codemark.externalProvider}`
-					},
-					url: codemark.externalProviderUrl
-				});
-			}
-
 			actionId = toActionId(counter, "ide", codemark, marker);
 			actions.elements.push({
 				type: "button",
@@ -763,19 +758,6 @@ export function toSlackPostBlocks(
 				}
 			]
 		};
-
-		if (codemark.externalProvider !== undefined && codemark.externalProviderUrl !== undefined) {
-			actionId = toExternalActionId(counter, "issue", codemark.externalProvider, codemark);
-			actions.elements.push({
-				type: "button",
-				action_id: actionId,
-				text: {
-					type: "plain_text",
-					text: `Open Issue on ${codemark.externalProvider}`
-				},
-				url: codemark.externalProviderUrl
-			});
-		}
 
 		actionId = toActionId(counter, "ide", codemark);
 		actions.elements.push({
