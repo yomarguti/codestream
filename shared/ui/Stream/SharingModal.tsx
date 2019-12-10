@@ -12,10 +12,10 @@ import { useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
 import { Card, CardBody } from "../src/components/Card";
 import Timestamp from "./Timestamp";
-import { useMarkdownifyToHtml } from "../utilities/hooks";
 import { findMentionedUserIds, getTeamMembers } from "../store/users/reducer";
 import { uniq } from "lodash-es";
 import { logError } from "../logger";
+import { useMarkdownifyToHtml } from "./Markdowner";
 
 const StyledCard = styled(Card)``;
 
@@ -153,7 +153,7 @@ export function SharingModal(props: SharingModalProps) {
 		}
 	};
 
-	const getLinkifiedHtml = useMarkdownifyToHtml();
+	const markdownifyToHtml = useMarkdownifyToHtml();
 
 	return (
 		<Modal onClose={props.onClose}>
@@ -182,7 +182,7 @@ export function SharingModal(props: SharingModalProps) {
 							<CardTitle>
 								<LinkifiedText
 									dangerouslySetInnerHTML={{
-										__html: getLinkifiedHtml(props.codemark.title || props.codemark.text)
+										__html: markdownifyToHtml(props.codemark.title || props.codemark.text)
 									}}
 								/>
 							</CardTitle>

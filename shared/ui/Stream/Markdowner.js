@@ -6,7 +6,6 @@ import { logError } from "../logger";
 import { escapeHtml } from "../utils";
 import { useSelector } from "react-redux";
 import { getUsernames } from "../store/users/reducer";
-import { markdownify } from "../Stream/Markdowner";
 
 const md = new MarkdownIt({
 	breaks: true,
