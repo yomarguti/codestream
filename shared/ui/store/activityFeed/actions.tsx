@@ -4,6 +4,8 @@ import { ActivityFeedActionType } from "./types";
 import { sortBy } from "lodash-es";
 import { CodemarkPlus } from "@codestream/protocols/agent";
 
+export { reset } from "../actions";
+
 export const addOlderActivity = (
 	model: string,
 	payload: { activities: CSEntity[]; hasMore: boolean }

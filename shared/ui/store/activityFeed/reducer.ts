@@ -27,6 +27,9 @@ export function reduceActivityFeed(state = initialState, action: ActivityFeedAct
 		case ActivityFeedActionType.AddNew: {
 			return { ...state, records: uniq([...action.payload, ...state.records]) };
 		}
+		case "RESET": {
+			return initialState;
+		}
 		default:
 			return state;
 	}
