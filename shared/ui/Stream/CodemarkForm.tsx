@@ -69,7 +69,6 @@ import { prettyPrintOne } from "code-prettify";
 import { escapeHtml } from "../utils";
 import { CodeStreamState } from "../store";
 import { LabeledSwitch } from "../src/components/controls/LabeledSwitch";
-import { Spacer } from "./SpatialView/PRInfoModal";
 import { CSText } from "../src/components/CSText";
 import { NewCodemarkAttributes } from "../store/codemarks/actions";
 import { SharingControls, SharingAttributes } from "./SharingControls";

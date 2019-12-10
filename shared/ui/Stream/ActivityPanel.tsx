@@ -1,17 +1,17 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
+import cx from "classnames";
 import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
 import Headshot from "./Headshot";
 import { Headshot as HeadshotV2 } from "../src/components/Headshot";
-import Filter from "./Filter";
 import Timestamp from "./Timestamp";
 import * as codemarkSelectors from "../store/codemarks/reducer";
 import * as userSelectors from "../store/users/reducer";
 import styled from "styled-components";
 import { includes as _includes, sortBy as _sortBy, last as _last } from "lodash-es";
 import { CodeStreamState } from "../store";
-import { setCodemarkTypeFilter, setCurrentCodemark } from "../store/context/actions";
+import { setCurrentCodemark } from "../store/context/actions";
 import { getActivity } from "../store/activityFeed/reducer";
 import { useDidMount, useIntersectionObserver } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
@@ -28,7 +28,7 @@ import { addOlderActivity } from "../store/activityFeed/actions";
 import { saveCodemarks } from "../store/codemarks/actions";
 import { safe } from "../utils";
 import { markStreamRead } from "./actions";
-import { CodemarkType, CSUser } from "@codestream/protocols/api";
+import { CSUser } from "@codestream/protocols/api";
 import { Card, CardBody, CardFooter, CardBanner } from "../src/components/Card";
 import { resetLastReads } from "../store/unreads/actions";
 import { PanelHeader } from "../src/components/PanelHeader";
@@ -316,18 +316,18 @@ export const ActivityPanel = () => {
 		});
 	};
 
-	const showActivityLabels = {
-		all: "all activity",
-		[CodemarkType.Comment]: "comments",
-		[CodemarkType.Issue]: "issues"
-	};
-
-	const menuItems = [
-		{ label: "All Activity", action: "all" },
-		{ label: "-" },
-		{ label: "Code Comments", action: CodemarkType.Comment },
-		{ label: "Issues", action: CodemarkType.Issue }
-	];
+	// const showActivityLabels = {
+	// 	all: "all activity",
+	// 	[CodemarkType.Comment]: "comments",
+	// 	[CodemarkType.Issue]: "issues"
+	// };
+	//
+	// const menuItems = [
+	// 	{ label: "All Activity", action: "all" },
+	// 	{ label: "-" },
+	// 	{ label: "Code Comments", action: CodemarkType.Comment },
+	// 	{ label: "Issues", action: CodemarkType.Issue }
+	// ];
 
 	return (
 		<div className="panel full-height activity-panel">
@@ -400,6 +400,7 @@ const ActivityItem = (props: { codemark: CodemarkPlus }) => {
 
 		return {
 			isUnread,
+			currentUserEmail: state.users[state.session.userId!].email,
 			followingEnabled: state.apiVersioning.apiCapabilities.follow != undefined,
 			userIsFollowingCodemark: (codemark.followerIds || []).includes(
 				state.users[state.session.userId!].id
@@ -563,7 +564,12 @@ const ActivityItem = (props: { codemark: CodemarkPlus }) => {
 										{derivedState.assignees.map(assignee => (
 											<>
 												<HeadshotV2 person={assignee as any} size={18} />
-												<span style={{ marginLeft: "5px" }}>
+												<span
+													style={{ marginLeft: "5px" }}
+													className={cx({
+														"at-mention me": assignee.email === derivedState.currentUserEmail
+													})}
+												>
 													{assignee.fullName || assignee.email}
 												</span>
 											</>
