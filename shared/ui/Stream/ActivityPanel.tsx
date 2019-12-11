@@ -616,7 +616,7 @@ const ActivityItem = (props: { codemark: CodemarkPlus }) => {
 						{codemark.pinnedReplies && (
 							<PinnedReplies streamId={codemark.streamId} replyIds={codemark.pinnedReplies} />
 						)}
-						{/* this is here just to get feedback... we should prolly have some sort of indicator on the codemark if you are following it */
+						{/* this is here just to get feedback... we should prolly have some sort of indicator on the codemark if you are following it
 						derivedState.userIsFollowingCodemark && (
 							<Meta>
 								<RelatedLabel>Notifications</RelatedLabel>
@@ -625,7 +625,7 @@ const ActivityItem = (props: { codemark: CodemarkPlus }) => {
 									<span>You are following activity on this codemark. [unfollow]</span>
 								</Description>
 							</Meta>
-						)}
+						) */}
 					</MetaStuff>
 					{codemark.markers &&
 						codemark.markers.map(marker => <StyledMarker key={marker.id} marker={marker} />)}
