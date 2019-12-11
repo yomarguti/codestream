@@ -2,7 +2,7 @@
 
 1.  clone the repo
 2.  `cd` into it
-3.  run `npm link` (On Windows 10, install npm from https://nodejs.org/en/) You may need to close and open the terminal after the install
+3.  run `npm link` (On Windows 10, install npm from https://nodejs.org/en/) You may need to close and open the terminal after the install (Linux: `sudo npm link`)
 4.  run `yarn` ([install OSX](https://yarnpkg.com/en/docs/install#mac-stable), [install Windows](https://yarnpkg.com/en/docs/install#windows-stable) ) You may need to close and open the terminal after the install
 5.  before you start developing, run `yarn build-watch` in the root directory of the codestream-components repository to have the bundle generated automatically after you make changes
 
