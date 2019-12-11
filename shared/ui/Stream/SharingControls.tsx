@@ -178,7 +178,7 @@ export const SharingControls = React.memo(
 		React.useEffect(() => {
 			const { selectedShareTarget } = derivedState;
 			if (selectedShareTarget) {
-				setIsFetchingData(true);
+				if (data.get().channels.length === 0) setIsFetchingData(true);
 				void (async () => {
 					try {
 						const response = await HostApi.instance.send(FetchThirdPartyChannelsRequestType, {
