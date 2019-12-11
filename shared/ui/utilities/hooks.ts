@@ -7,6 +7,7 @@ import {
 	EffectCallback,
 	useMemo
 } from "react";
+import { noop } from "../utils";
 
 type Fn = () => void;
 
