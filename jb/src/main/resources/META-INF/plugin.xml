@@ -22,7 +22,7 @@
 <h2 id="createacodemarkanddiscusssomecode">Create a codemark and discuss some code</h2>
 <p>Create a codemark by selecting a block of code in your editor and then typing a question or comment. Keep in mind that, unlike with other solutions, you can discuss any line of code in any source file at any time, even if it’s code that you just typed into your editor and haven’t yet saved or committed.</p>
 <p><img src="https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/NewCodemark3.png" alt="New Codemark" /></p>
-<p>In addition to general comments and questions, there are specific types of codemarks for assigning issues, saving bookmarks, or generating a permalink to a specific block of code.</p>
+<p>In addition to general comments and questions, there are specific types of codemarks for assigning issues, or generating a permalink to a specific block of code.</p>
 <p><img src="https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/CodemarkIssue3.png" alt="Issue Codemark" /></p>
 <p>CodeStream integrates with Jira, Trello, GitHub, Asana, Bitbucket, and GitLab, making it easy to create an issue tied to a specific block of code, and have that issue appear in your existing issue-tracking service.</p>
 
