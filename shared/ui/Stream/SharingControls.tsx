@@ -22,6 +22,7 @@ import { SlackV2IntegrationData } from "../store/activeIntegrations/types";
 import { setContext } from "../store/context/actions";
 import { safe } from "../utils";
 import { useUpdates } from "../utilities/hooks";
+import { setUserPreference } from "./actions";
 
 const TextButton = styled.span`
 	color: ${props => props.theme.colors.textHighlight};
@@ -117,24 +118,34 @@ export type SharingAttributes = Pick<
 >;
 
 export const SharingControls = React.memo(
-	(props: {
-		onChangeValues: (values?: SharingAttributes) => void;
-		on: boolean;
-		onToggle?: (value: boolean) => void;
-	}) => {
+	(props: { onChangeValues: (values?: SharingAttributes) => void; showToggle?: boolean }) => {
 		const dispatch = useDispatch();
+
 		const derivedState = useSelector((state: CodeStreamState) => {
+			const currentTeamId = state.context.currentTeamId;
+			const preferencesForTeam = state.preferences[currentTeamId] || {};
+			// this is what we've persisted in the server as the last selection the user made
+			const lastShareAttributes: SharingAttributes | undefined =
+				preferencesForTeam.lastShareAttributes;
+
 			const shareTargets = getConnectedSharingTargets(state);
 			const selectedShareTarget = shareTargets.find(
-				target => target.teamId === state.context.shareTargetTeamId
+				target =>
+					target.teamId ===
+					(state.context.shareTargetTeamId ||
+						(lastShareAttributes && lastShareAttributes.providerTeamId))
 			);
+
 			return {
+				currentTeamId,
+				on: shareTargets.length > 0 && Boolean(preferencesForTeam.shareCodemarkEnabled),
 				slackConfig: getProviderConfig(state, "slack"),
 				msTeamsConfig: getProviderConfig(state, "msteams"),
 				isConnectedToSlack: isConnected(state, { name: "slack" }),
 				isConnectedToMSTeams: isConnected(state, { name: "msteams" }),
 				shareTargets,
-				selectedShareTarget: selectedShareTarget || shareTargets[0]
+				selectedShareTarget: selectedShareTarget || shareTargets[0],
+				lastSelectedChannelId: lastShareAttributes && lastShareAttributes.channelId
 			};
 		});
 		const [authenticationState, setAuthenticationState] = React.useState<{
@@ -156,6 +167,12 @@ export const SharingControls = React.memo(
 			selectedShareTargetTeamId
 		);
 
+		const toggle = () => {
+			dispatch(
+				setUserPreference([derivedState.currentTeamId, "shareCodemarkEnabled"], !derivedState.on)
+			);
+		};
+
 		const setSelectedShareTarget = target =>
 			dispatch(setContext({ shareTargetTeamId: target.teamId }));
 
@@ -164,7 +181,7 @@ export const SharingControls = React.memo(
 			if (numberOfTargets === 0) return;
 
 			// when the first share target is connected, turn on sharing
-			if (numberOfTargets === 1 && props.onToggle) props.onToggle(true);
+			if (numberOfTargets === 1 && !derivedState.on) toggle();
 
 			// if we're waiting on something to be added, this is it so make it the current selection
 			if (authenticationState && authenticationState.isAuthenticating) {
@@ -185,7 +202,20 @@ export const SharingControls = React.memo(
 							providerId: selectedShareTarget.providerId,
 							providerTeamId: selectedShareTarget.teamId
 						});
-						data.set(teamData => ({ ...teamData, channels: response.channels }));
+						/*
+							if we know the channel the user last selected for this target
+							AND the webview doesn't currently have one selected,
+							use the last selected one if it still exists
+						 */
+						const channelToSelect =
+							derivedState.lastSelectedChannelId != undefined
+								? response.channels.find(c => c.id === derivedState.lastSelectedChannelId)
+								: undefined;
+						data.set(teamData => ({
+							...teamData,
+							channels: response.channels,
+							lastSelectedChannel: teamData.lastSelectedChannel || channelToSelect
+						}));
 					} catch (error) {
 					} finally {
 						setIsFetchingData(false);
@@ -199,13 +229,20 @@ export const SharingControls = React.memo(
 		React.useEffect(() => {
 			const shareTarget = derivedState.selectedShareTarget;
 
-			if (shareTarget && selectedChannel)
+			if (shareTarget && selectedChannel) {
 				props.onChangeValues({
 					providerId: shareTarget.providerId,
 					providerTeamId: shareTarget.teamId,
 					channelId: selectedChannel && selectedChannel.id
 				});
-			else props.onChangeValues(undefined);
+				dispatch(
+					setUserPreference([derivedState.currentTeamId, "lastShareAttributes"], {
+						channelId: selectedChannel.id,
+						providerId: shareTarget.providerId,
+						providerTeamId: shareTarget.teamId
+					})
+				);
+			} else props.onChangeValues(undefined);
 		}, [
 			derivedState.selectedShareTarget && derivedState.selectedShareTarget.teamId,
 			selectedChannel && selectedChannel.id
@@ -358,9 +395,9 @@ export const SharingControls = React.memo(
 
 		return (
 			<Root>
-				{props.onToggle != undefined && (
+				{props.showToggle && (
 					<>
-						<input type="checkbox" checked={props.on} onChange={() => props.onToggle!(!props.on)} />
+						<input type="checkbox" checked={derivedState.on} onChange={toggle} />
 					</>
 				)}
 				Share on{" "}

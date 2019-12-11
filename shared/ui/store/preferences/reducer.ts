@@ -1,6 +1,7 @@
 import { ActionType } from "../common";
 import * as actions from "./actions";
 import { PreferencesActionsType, PreferencesState } from "./types";
+import { merge } from "lodash-es";
 
 type PreferencesActions = ActionType<typeof actions>;
 
@@ -10,7 +11,7 @@ export function reducePreferences(state = initialState, action: PreferencesActio
 	switch (action.type) {
 		case PreferencesActionsType.Set:
 		case PreferencesActionsType.Update:
-			return { ...state, ...action.payload };
+			return merge({}, state, action.payload);
 		case "RESET":
 			return initialState;
 		default:

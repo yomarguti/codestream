@@ -191,7 +191,7 @@ export function SharingModal(props: SharingModalProps) {
 							</CardTitle>
 						</CardBody>
 					</StyledCard>
-					<SharingControls on onChangeValues={handleValues} />
+					<SharingControls onChangeValues={handleValues} />
 					<Spacer />
 					<ButtonRow>
 						{state.name === "success" ? (

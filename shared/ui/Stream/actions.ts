@@ -449,33 +449,27 @@ export const deletePost = (streamId: string, postId: string) => async dispatch =
 };
 
 // usage: setUserPreference(["favorites", "shoes", "wedges"], "red")
-export const setUserPreference = (prefPath: string[], value: any) => async (dispatch, getState) => {
-	const { session, users } = getState();
-	const user = users[session.userId];
-	if (!user) return;
-
-	// we walk down the existing user preference to set the value
-	// and simultaneously create a new preference object to pass
-	// to the API server
-	const preferences = JSON.parse(JSON.stringify(user.preferences || {}));
-	let preferencesPointer = preferences;
+export const setUserPreference = (prefPath: string[], value: any) => async dispatch => {
+	// create an object out of the provided path
 	const newPreference = {};
 	let newPreferencePointer = newPreference;
 	while (prefPath.length > 1) {
 		const part = prefPath.shift()!.replace(/\./g, "*");
-		if (!preferencesPointer[part]) preferencesPointer[part] = {};
-		preferencesPointer = preferencesPointer[part];
 		newPreferencePointer[part] = {};
 		newPreferencePointer = newPreferencePointer[part];
 	}
-	preferencesPointer[prefPath[0].replace(/\./g, "*")] = value;
 	newPreferencePointer[prefPath[0].replace(/\./g, "*")] = value;
 
 	try {
+		// optimistically merge it into current preferences
 		dispatch(updatePreferences(newPreference));
-		await HostApi.instance.send(UpdatePreferencesRequestType, { preferences: newPreference });
+		const response = await HostApi.instance.send(UpdatePreferencesRequestType, {
+			preferences: newPreference
+		});
+		// update with confirmed server response
+		dispatch(updatePreferences(response.preferences));
 	} catch (error) {
-		logError(`Error trying to update preferences: ${error}`);
+		logError(`Error trying to update preferences`, { message: error.message });
 	}
 };
 

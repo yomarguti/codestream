@@ -39,7 +39,8 @@ import {
 	isRangeEmpty,
 	toMapBy,
 	replaceHtml,
-	keyFilter
+	keyFilter,
+	safe
 } from "../utils";
 import { HostApi } from "../webview-api";
 import Button from "./Button";
@@ -127,6 +128,8 @@ interface ConnectedProps {
 	teamTagsArray: any;
 	codemarkState: CodemarksState;
 	apiCapabilities: CSApiCapabilities;
+	shouldShare: boolean;
+	currentTeamId: string;
 }
 
 interface State {
@@ -151,7 +154,6 @@ interface State {
 	labelMenuTarget: any;
 	locationMenuOpen: number | "header" | "closed";
 	locationMenuTarget: any;
-	shouldShare: boolean;
 	sharingDisabled?: boolean;
 	selectedChannelName?: string;
 	selectedChannelId?: string;
@@ -215,8 +217,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			locationMenuOpen: "closed",
 			editingLocation: -1,
 			addingLocation: false,
-			liveLocation: -1,
-			shouldShare: false
+			liveLocation: -1
 		};
 
 		const state = props.editingCodemark
@@ -498,13 +499,13 @@ class CodemarkForm extends React.Component<Props, State> {
 		});
 	};
 
-	toggleCodemarkPrivacy = (isCodemarkPublic: boolean) => {
-		this.setState(state => {
-			const sharingDisabled = !isCodemarkPublic;
-			const shouldShare = sharingDisabled ? false : state.shouldShare;
-			return { sharingDisabled, shouldShare };
-		});
-	};
+	// toggleCodemarkPrivacy = (isCodemarkPublic: boolean) => {
+	// 	this.setState(state => {
+	// 		const sharingDisabled = !isCodemarkPublic;
+	// 		const shouldShare = sharingDisabled ? false : state.shouldShare;
+	// 		return { sharingDisabled, shouldShare };
+	// 	});
+	// };
 
 	toggleNotify = () => {
 		this.setState({ notify: !this.state.notify });
@@ -603,7 +604,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			if (this.props.teamProvider === "codestream") {
 				await this.props.onSubmit({
 					...baseAttributes,
-					sharingAttributes: this.state.shouldShare ? this._sharingAttributes : undefined,
+					sharingAttributes: this.props.shouldShare ? this._sharingAttributes : undefined,
 					accessMemberIds: this.state.privacyMembers.map(m => m.value)
 				});
 			} else {
@@ -658,7 +659,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			}
 		}
 
-		if (this.state.shouldShare && !this._sharingAttributes) {
+		if (this.props.shouldShare && !this._sharingAttributes) {
 			invalid = true;
 			validationState.sharingAttributesInvalid = true;
 		}
@@ -874,8 +875,7 @@ class CodemarkForm extends React.Component<Props, State> {
 					</CSText>
 				) : (
 					<SharingControls
-						on={this.state.shouldShare}
-						onToggle={value => this.setState({ shouldShare: value })}
+						showToggle
 						onChangeValues={values => {
 							this._sharingAttributes = values;
 						}}
@@ -1868,6 +1868,9 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		channel,
 		teamMates,
 		teamMembers,
+		currentTeamId: state.context.currentTeamId,
+		shouldShare:
+			safe(() => state.preferences[state.context.currentTeamId].shareCodemarkEnabled) || false,
 		channelStreams: channelStreams,
 		directMessageStreams: directMessageStreams,
 		issueProvider: providers[context.issueProvider!],

@@ -7,10 +7,13 @@ import {
 	EffectCallback,
 	useMemo
 } from "react";
-import { noop } from "../utils";
 
 type Fn = () => void;
 
+/*
+	This is mostly just to be an explicit label for what the hook does because useEffect rules
+	can be hard to remember.
+*/
 export function useDidMount(callback: EffectCallback) {
 	useEffect(callback, []);
 }
