@@ -466,26 +466,6 @@ function trackPostCreation(
 						}
 					}
 
-					const payload: {
-						[key: string]: any;
-					} = {
-						"Stream Type": streamType,
-						Type: markerType,
-						Thread: request.parentPostId ? "Reply" : "Parent",
-						Marker: isMarker
-					};
-					if (request.entryPoint) {
-						payload["Entry Point"] = request.entryPoint;
-					}
-					if (request.codemark && request.codemark.externalProvider) {
-						payload["Linked Service"] = request.codemark.externalProvider;
-					}
-					// TODO: Add Category
-					if (!session.telemetryData.hasCreatedPost) {
-						payload["First Post?"] = new Date().toISOString();
-						session.telemetryData.hasCreatedPost = true;
-					}
-					telemetry.track({ eventName: "Post Created", properties: payload });
 					if (request.codemark) {
 						const { markers = [] } = request.codemark;
 						const codemarkProperties: {
@@ -494,6 +474,7 @@ function trackPostCreation(
 							"Codemark ID": codemarkId,
 							"Codemark Type": request.codemark.type,
 							"Linked Service": request.codemark.externalProvider,
+							"Entry Point": request.entryPoint,
 							Tags: (request.codemark.tags || []).length,
 							Markers: markers.length
 						};

@@ -201,11 +201,11 @@ export class CodeStreamSession {
 		return this._onDidChangeSessionStatus.event;
 	}
 
-	get proxyAgent():  HttpsAgent | HttpsProxyAgent | undefined {
+	get proxyAgent(): HttpsAgent | HttpsProxyAgent | undefined {
 		return this._httpsAgent;
 	}
 
-	private readonly _httpsAgent:  HttpsAgent | HttpsProxyAgent | undefined;
+	private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined;
 	private readonly _readyPromise: Promise<void>;
 
 	constructor(
@@ -255,7 +255,7 @@ export class CodeStreamSession {
 				let proxyUri;
 				try {
 					proxyUri = url.parse(proxyUrl);
-				} catch { }
+				} catch {}
 
 				if (proxyUri) {
 					this._httpsAgent = new HttpsProxyAgent({
@@ -888,7 +888,7 @@ export class CodeStreamSession {
 		return new SlackApiProvider(
 			this._api! as CodeStreamApiProvider,
 			user.providerInfo!.slack ||
-			(user.providerInfo![this._teamId!] && user.providerInfo![this._teamId!].slack)!,
+				(user.providerInfo![this._teamId!] && user.providerInfo![this._teamId!].slack)!,
 			user,
 			this._teamId!,
 			this._httpsAgent
@@ -950,6 +950,7 @@ export class CodeStreamSession {
 			$email: user.email,
 			name: user.fullName,
 			"Team ID": this._teamId,
+			"Company ID": team.companyId,
 			"Team Created Date": team.createdAt,
 			Plan: team.plan,
 			"Reporting Group": team.reportingGroup,
