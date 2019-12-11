@@ -5,8 +5,6 @@ import { HostApi } from "@codestream/webview/webview-api";
 import {
 	UpdateCodemarkRequestType,
 	DeleteCodemarkRequestType,
-	PinReplyToCodemarkRequestType,
-	CodemarkPlus,
 	GetRangeScmInfoResponse,
 	CrossPostIssueValues,
 	CreateShareableCodemarkRequestType,
@@ -15,6 +13,9 @@ import {
 import { logError } from "@codestream/webview/logger";
 import { addStreams } from "../streams/actions";
 import { TextDocumentIdentifier } from "vscode-languageserver-types";
+import { getConnectedProviders } from "../providers/reducer";
+import { CodeStreamState } from "..";
+import { capitalize } from "@codestream/webview/utils";
 
 export const reset = () => action("RESET");
 
@@ -67,7 +68,10 @@ export interface CreateCodemarkError {
 	reason: "share" | "create";
 }
 
-export const createCodemark = (attributes: SharingNewCodemarkAttributes) => async dispatch => {
+export const createCodemark = (attributes: SharingNewCodemarkAttributes) => async (
+	dispatch,
+	getState: () => CodeStreamState
+) => {
 	const { accessMemberIds, ...rest } = attributes;
 
 	try {
@@ -93,6 +97,14 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 						remotes: attributes.remotes,
 						markerLocations: response.markerLocations,
 						mentionedUserIds: attributes.mentionedUserIds
+					});
+					HostApi.instance.track("Shared Codemark", {
+						Destination: capitalize(
+							getConnectedProviders(getState()).find(
+								config => config.id === attributes.sharingAttributes!.providerId
+							)!.name
+						),
+						"Codemark Status": "New"
 					});
 				} catch (error) {
 					logError("Error sharing a codemark in the sharing model", { message: error.message });

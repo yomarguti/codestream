@@ -15,6 +15,7 @@ import { replaceHtml } from "../utils";
 import { DelayedRender } from "../Container/DelayedRender";
 import { localStore } from "../utilities/storage";
 import { CodeStreamState } from "../store";
+import { HostApi } from "../webview-api";
 
 interface State {
 	editingPostId?: string;
@@ -98,6 +99,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		await createPost(codemark.streamId, threadId, replaceHtml(replyText)!, null, mentionedUserIds, {
 			entryPoint: "Codemark"
 		});
+		HostApi.instance.track("Replied to Codemark", { "Codemark ID": codemark.id });
 	};
 
 	handleOnChange = (text: string, formatCode: boolean) => {

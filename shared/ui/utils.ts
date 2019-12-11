@@ -103,7 +103,7 @@ export function pick<T, K extends keyof T>(object: T, keys: K[]): { [K in keyof 
 	}, Object.create(null));
 }
 
-export function capitalize([first, ...rest]: string[]) {
+export function capitalize([first, ...rest]: string) {
 	return first.toUpperCase() + rest.join("");
 }
 

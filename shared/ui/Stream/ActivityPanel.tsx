@@ -231,6 +231,8 @@ export const ActivityPanel = () => {
 	}, [derivedState.activity]);
 
 	useDidMount(() => {
+		HostApi.instance.track("Page Viewed", { "Page Name": "Activity Feed" });
+
 		if (derivedState.activity.length === 0) fetchActivity();
 		return () => {
 			dispatch(resetLastReads());
@@ -475,7 +477,7 @@ const ActivityItem = (props: { codemark: CodemarkPlus }) => {
 						});
 						HostApi.instance.track("Notification Change", {
 							Change: `Codemark ${changeType}`,
-							"Source of Change": "Activity Feed"
+							"Source of Change": "Codemark menu"
 						});
 					}
 				},
@@ -503,6 +505,10 @@ const ActivityItem = (props: { codemark: CodemarkPlus }) => {
 			<ActivityCard
 				hoverEffect
 				onClick={() => {
+					HostApi.instance.track("Codemark Clicked", {
+						"Codemark ID": codemark.id,
+						"Codemark Location": "Activity Feed"
+					});
 					// somehow a click right next to the menu over the kebab icon registers
 					if (menuState.open) {
 						return setMenuState({ open: false });

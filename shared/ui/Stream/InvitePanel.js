@@ -31,6 +31,10 @@ export class InvitePanel extends Component {
 
 	state = this.initialState;
 
+	componentDidMount() {
+		HostApi.instance.track("Page Viewed", { "Page Name": "Team Tab" });
+	}
+
 	componentWillUnmount() {
 		this.disposable && this.disposable.dispose();
 	}

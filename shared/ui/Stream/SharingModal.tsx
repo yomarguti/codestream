@@ -8,7 +8,7 @@ import { Spacer } from "./SpatialView/PRInfoModal";
 import { Button } from "../src/components/Button";
 import { CodemarkPlus, CreateThirdPartyPostRequestType } from "@codestream/protocols/agent";
 import { HostApi } from "..";
-import { useSelector } from "react-redux";
+import { useSelector, useStore } from "react-redux";
 import { CodeStreamState } from "../store";
 import { Card, CardBody } from "../src/components/Card";
 import Timestamp from "./Timestamp";
@@ -16,6 +16,8 @@ import { findMentionedUserIds, getTeamMembers } from "../store/users/reducer";
 import { uniq } from "lodash-es";
 import { logError } from "../logger";
 import { useMarkdownifyToHtml } from "./Markdowner";
+import { getConnectedProviders } from "../store/providers/reducer";
+import { capitalize } from "../utils";
 
 const StyledCard = styled(Card)``;
 
@@ -106,6 +108,13 @@ export function SharingModal(props: SharingModalProps) {
 		])
 	}));
 
+	const store = useStore();
+	const getProviderName = providerId => {
+		return capitalize(
+			getConnectedProviders(store.getState()).find(config => config.id === providerId)!.name
+		);
+	};
+
 	const valuesRef = React.useRef<SharingAttributes>();
 	const [state, setState] = React.useState<{ name: FormStateType; message?: string }>({
 		name: "not-ready"
@@ -135,6 +144,10 @@ export function SharingModal(props: SharingModalProps) {
 				text: props.codemark.text,
 				codemark: props.codemark,
 				mentionedUserIds
+			});
+			HostApi.instance.track("Shared Codemark", {
+				Destination: getProviderName(valuesRef.current!.providerId),
+				"Codemark Status": "Existing"
 			});
 			setState({ name: "success" });
 		} catch (error) {
