@@ -576,12 +576,7 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps) => {
 		firstVisibleLine = textEditorVisibleRanges[0].start.line;
 	}
 
-	const repoName =
-		(props.codemark &&
-			safe(() => {
-				return getById(state.repos, props.codemark.markers![0].repoId).name;
-			})) ||
-		"";
+	const repoName = safe(() => getById(state.repos, props.marker.repoId).name) || "";
 
 	return {
 		repoName,

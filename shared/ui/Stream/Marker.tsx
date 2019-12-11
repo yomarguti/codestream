@@ -3,11 +3,14 @@ import * as Path from "path-browserify";
 import { connect } from "react-redux";
 import { prettyPrintOne } from "code-prettify";
 import { CSMarker } from "@codestream/protocols/api";
-import { escapeHtml } from "../utils";
+import { escapeHtml, safe } from "../utils";
 import Icon from "./Icon";
+import { CodeStreamState } from "../store";
+import { getById } from "../store/repos/reducer";
 
 interface Props {
 	marker: CSMarker;
+	repoName?: string;
 	className?: string;
 }
 
@@ -27,9 +30,17 @@ function Marker(props: Props) {
 		startLine = marker.referenceLocations[0].location[0];
 
 	const codeHTML = prettyPrintOne(escapeHtml(marker.code), extension, startLine);
+	const repoLabel = props.repoName ? `[${props.repoName}] ` : "";
 	return (
 		<div style={{ marginTop: "10px" }} className={props.className}>
 			<div className="file-info">
+				{props.repoName && (
+					<>
+						<span className="monospace" style={{ paddingRight: "20px" }}>
+							<Icon name="repo" /> {props.repoName}
+						</span>{" "}
+					</>
+				)}
 				{marker.file && (
 					<>
 						<span className="monospace" style={{ paddingRight: "20px" }}>
@@ -59,7 +70,15 @@ function Marker(props: Props) {
 	);
 }
 
-const mapStateToProps = (state, props: Props) => ({});
+const mapStateToProps = (state: CodeStreamState, props: Props) => {
+	const { editorContext, context } = state;
+	//console.log(ownState);
+
+	const repoName =
+		(props.marker && safe(() => getById(state.repos, props.marker.repoId).name)) || "";
+
+	return { repoName };
+};
 
 const Component = connect(mapStateToProps)(Marker);
 
