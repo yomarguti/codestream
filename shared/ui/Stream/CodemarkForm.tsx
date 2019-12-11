@@ -1606,8 +1606,8 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		if (!this.props.multiLocation)
 			locationItems.push({ label: "Select New Range", action: () => this.editLocation(0) });
-		// if (this.state.codeBlocks.length > 1)
-		// locationItems.push({ label: "Remove Location", action: "delete" });
+		if (this.state.codeBlocks.length == 1)
+			locationItems.push({ label: "Remove Location", action: () => this.deleteLocation(0) });
 
 		return [
 			<form

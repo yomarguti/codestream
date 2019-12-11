@@ -541,6 +541,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				composeBoxActive={this.state.newCodemarkAttributes ? true : false}
 				setNewCodemarkAttributes={this.setNewCodemarkAttributes}
 				switchToInlineView={this.switchToInlineView}
+				metrics={this.props.metrics}
 			/>
 		);
 	};

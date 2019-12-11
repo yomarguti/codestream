@@ -47,7 +47,7 @@ import { useMarkdownifyToHtml } from "./Markdowner";
 const FormattedPluralAlias = FormattedPlural as any;
 
 const ActivityWrapper = styled.div`
-	margin: 0 40px 20px 45px;
+	margin: 5px 40px 20px 45px;
 	> time,
 	> .activity {
 		display: block;

@@ -9,7 +9,8 @@ import {
 	EditorHighlightRangeRequestType,
 	MaxRangeValue,
 	EditorSelection,
-	NewCodemarkNotificationType
+	NewCodemarkNotificationType,
+	EditorMetrics
 } from "../ipc/webview.protocol";
 import { range } from "../utils";
 import { CodemarkType } from "@codestream/protocols/api";
@@ -28,6 +29,7 @@ interface Props {
 	codeHeight: number;
 	numLinesVisible: number;
 	lineHeight?: number;
+	metrics: EditorMetrics;
 
 	// FIXME -- these should not be passed as props
 	composeBoxActive: boolean;
@@ -236,7 +238,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 		);
 	};
 
-	const { codeHeight, numLinesVisible } = props;
+	const { codeHeight, numLinesVisible, metrics } = props;
 
 	const iconsOnLine0 = getLine0ForEditorLine(
 		derivedState.textEditorVisibleRanges,
@@ -262,11 +264,12 @@ export const CreateCodemarkIcons = (props: Props) => {
 	// console.log("lineHeightProps", props.lineHeight);
 
 	const lineHeight = props.lineHeight || codeHeight / numLinesVisible;
+	const paddingTop = (metrics && metrics.margins && metrics.margins.top) || 0;
 
 	if (iconsOnLine0 >= 0) {
 		// const top = (codeHeight * iconsOnLine0) / (numLinesVisible + 1);
 		// const top = paddingTop ? "calc(" + topPct + " + " + paddingTop + "px)" : topPct;
-		const top = lineHeight * iconsOnLine0;
+		const top = lineHeight * iconsOnLine0 + paddingTop;
 		return renderIconRow(iconsOnLine0, top, false, true);
 	} else {
 		// const heightPerLine = (window.innerHeight - 22) / (numLinesVisible + 2);
@@ -274,7 +277,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 			<>
 				{range(0, numLinesVisible).map(lineNum0 => {
 					// const top = (codeHeight * lineNum0) / (numLinesVisible + 1);
-					const top = lineHeight * lineNum0;
+					const top = lineHeight * lineNum0 + paddingTop;
 					// const top = paddingTop ? "calc(" + topPct + " + " + paddingTop + "px)" : topPct;
 					const hover = lineNum0 === highlightedLine;
 					return renderIconRow(lineNum0, top, hover, false);
