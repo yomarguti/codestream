@@ -299,9 +299,11 @@ export const SharingControls = React.memo(
 
 			const { dms, others } = dataForTeam.channels.reduce(
 				(group, channel) => {
+					const channelName = formatChannelName(channel);
 					const item = {
 						key: channel.name,
-						label: formatChannelName(channel),
+						label: channelName,
+						searchLabel: channelName,
 						action: () => data.set(teamData => ({ ...teamData, lastSelectedChannel: channel }))
 					};
 					if (channel.type === "direct") {

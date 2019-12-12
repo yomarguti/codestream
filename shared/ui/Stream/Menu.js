@@ -112,6 +112,13 @@ export default class Menu extends Component {
 		}
 		if (this.props.items.length !== prevProps.items.length) this.repositionIfNecessary();
 		if (this.state.selected !== prevState.selected) this.repositionSubmenuIfNecessary();
+
+		if (this.state.q !== prevState.q) {
+			// if, after performing the search, there is only one item left, then select it
+			const filteredItems = this.filterItems(this.props.items, true);
+			if (filteredItems.length === 1)
+				this.setState({ selected: this.calculateKey(filteredItems[0]) });
+		}
 	}
 
 	calculateKey(item, parentItem) {
@@ -166,6 +173,7 @@ export default class Menu extends Component {
 
 	changeSearch = e => {
 		this.setState({ q: e.target.value });
+
 		if (this.props.onChangeSearch) this.props.onChangeSearch(e.target.value);
 	};
 
