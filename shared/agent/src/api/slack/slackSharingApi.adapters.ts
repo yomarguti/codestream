@@ -558,6 +558,7 @@ export function toSlackPostBlocks(
 	markerLocations: CSMarkerLocations[] | undefined,
 	usernamesById: Map<string, string>,
 	userIdsByName: Map<string, string>,
+	repoNames: { [key: string]: string },
 	slackUserId: string
 ): Blocks {
 	const blocks: Blocks = [];
@@ -685,6 +686,13 @@ export function toSlackPostBlocks(
 					if (url !== undefined) {
 						break;
 					}
+				}
+			}
+
+			if (repoNames && marker.repoId) {
+				const repoName = repoNames[marker.repoId];
+				if (repoName) {
+					filename = `[${repoName}] ${filename}`;
 				}
 			}
 

@@ -29,7 +29,8 @@ import {
 	CSTeam,
 	CSUser,
 	ProviderType,
-	StreamType
+	StreamType,
+	CSMarker
 } from "../../protocol/api.protocol";
 import { debug, Functions, log, Strings } from "../../system";
 import { MessageType, StreamsRTMessage } from "../apiProvider";
@@ -236,12 +237,27 @@ export class SlackSharingApiProvider {
 			let blocks: (KnownBlock | Block)[] | undefined;
 			if (request.codemark != null) {
 				const codemark = request.codemark;
+				const repoNames = request.codemark.markers &&
+					await request.codemark.markers.reduce(async function(map: any, marker: CSMarker) {
+						try {
+							const repo = await SessionContainer.instance().repos.getById(marker.repoId);
+							if (repo) {
+								map[marker.repoId] = repo.name;
+							}
+						}
+						catch (e) {
+							Logger.error(e);
+						}
+						return map;
+					}, {});
+
 				blocks = toSlackPostBlocks(
 					codemark,
 					request.remotes,
 					request.markerLocations,
 					usernamesById,
 					userIdsByName,
+					repoNames,
 					this._slackUserId
 				);
 
