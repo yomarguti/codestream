@@ -866,6 +866,8 @@ class CodemarkForm extends React.Component<Props, State> {
 	 */
 
 	renderSharingControls = () => {
+		if (this.props.isEditing) return null;
+
 		return (
 			<div className="checkbox-row" style={{ float: "left" }}>
 				{this.state.sharingDisabled ? (
