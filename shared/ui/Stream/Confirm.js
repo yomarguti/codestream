@@ -36,6 +36,8 @@ export default class Confirm extends Component {
 				})
 			);
 		}
+
+		this.el.getElementsByTagName("button")[0].focus();
 	}
 
 	componentWillUnmount() {
@@ -78,11 +80,14 @@ export default class Confirm extends Component {
 					{this.props.title && <div className="confirm-title">{this.props.title}</div>}
 					{this.renderMessage()}
 					<div className="button-group">
-						{this.props.buttons.map(button => {
-							const buttonClass = createClassString({
-								"control-button": true,
-								cancel: !button.action && !button.uri
-							});
+						{this.props.buttons.map((button, index) => {
+							const buttonClass = createClassString(
+								{
+									"control-button": true,
+									cancel: !button.action && !button.uri && !button.className
+								},
+								button.className
+							);
 
 							const buttonComponent = (
 								<Button
@@ -105,6 +110,7 @@ export default class Confirm extends Component {
 									}}
 									key={button.label}
 									loading={this.state.loading === button.label}
+									tabIndex={0}
 								>
 									{button.label}
 								</Button>

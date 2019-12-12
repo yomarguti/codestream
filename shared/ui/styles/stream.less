@@ -2267,8 +2267,12 @@
 		background: @background-color-highlight !important;
 	}
 	button.delete {
-		color: @text-color-highlight;
+		color: var(--button-foreground-color);
 		background: @background-color-error;
+		&:hover {
+			background: @background-color-error;
+			opacity: 0.85;
+		}
 	}
 
 	.invite-panel .standard-form,

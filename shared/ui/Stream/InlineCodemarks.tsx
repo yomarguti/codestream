@@ -905,12 +905,13 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			message: "Changes you made will not be saved.",
 			centered: true,
 			buttons: [
+				{ label: "Go Back", className: "control-button" },
 				{
 					label: "Discard Codemark",
 					wait: true,
-					action: this.closeCodemarkForm
-				},
-				{ label: "Go Back" }
+					action: this.closeCodemarkForm,
+					className: "delete"
+				}
 			]
 		});
 	};

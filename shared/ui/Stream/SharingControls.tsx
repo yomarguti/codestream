@@ -167,21 +167,22 @@ export const SharingControls = React.memo(
 			selectedShareTargetTeamId
 		);
 
-		const toggle = () => {
-			dispatch(
-				setUserPreference([derivedState.currentTeamId, "shareCodemarkEnabled"], !derivedState.on)
-			);
-		};
+		const setCheckbox = value =>
+			dispatch(setUserPreference([derivedState.currentTeamId, "shareCodemarkEnabled"], value));
 
-		const setSelectedShareTarget = target =>
+		const toggleCheckbox = () => setCheckbox(!derivedState.on);
+
+		const setSelectedShareTarget = target => {
+			setCheckbox(true);
 			dispatch(setContext({ shareTargetTeamId: target.teamId }));
+		};
 
 		useUpdates(() => {
 			const numberOfTargets = derivedState.shareTargets.length;
 			if (numberOfTargets === 0) return;
 
 			// when the first share target is connected, turn on sharing
-			if (numberOfTargets === 1 && !derivedState.on) toggle();
+			if (numberOfTargets === 1 && !derivedState.on) toggleCheckbox();
 
 			// if we're waiting on something to be added, this is it so make it the current selection
 			if (authenticationState && authenticationState.isAuthenticating) {
@@ -304,7 +305,10 @@ export const SharingControls = React.memo(
 						key: channel.name,
 						label: channelName,
 						searchLabel: channelName,
-						action: () => data.set(teamData => ({ ...teamData, lastSelectedChannel: channel }))
+						action: () => {
+							if (props.showToggle) setCheckbox(true);
+							data.set(teamData => ({ ...teamData, lastSelectedChannel: channel }));
+						}
 					};
 					if (channel.type === "direct") {
 						group.dms.push(item);
@@ -399,7 +403,7 @@ export const SharingControls = React.memo(
 			<Root>
 				{props.showToggle && (
 					<>
-						<input type="checkbox" checked={derivedState.on} onChange={toggle} />
+						<input type="checkbox" checked={derivedState.on} onChange={toggleCheckbox} />
 					</>
 				)}
 				Share on{" "}
