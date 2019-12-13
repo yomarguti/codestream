@@ -121,8 +121,8 @@ npm run pack
 
 - **in the agent code**: need to attach agent (see **Debugging agent startup code**, below)
 - **in the webview code**: 
-  1. Choose "Launch Codestream" and start debug 
-  2. In the launched Extension Host VSCode debug instance, Ctrl-shift-P to open the VSCode command palette
+  1. Choose "Launch Codestream" and start debug instance
+  2. In the launched Extension Host VSCode debug instance, Ctrl-shift-P to open the VSCode command palette (Because the extension executes in a browser rendering window, we must use browser tools to debug)
   3. Start typing: "> Developer: Open Webview Developer Tools" and choose that option
   4. Ctrl-P and use the search box to select the webview file you want to set a breakpoint in
   5. Set breakpoint
@@ -235,6 +235,10 @@ Typically I develop/debug against prod (so I open a folder or something other th
 #### Debug logs
 
 https://github.com/TeamCodeStream/CodeStream/wiki/Instructions-for-finding-CodeStream-log-files
+
+### Learning the codebase
+
+Helpful: https://github.com/microsoft/vscode-extension-samples
 
 ### New to VSCode example: debugging agent startup code (Novice) ###
 
