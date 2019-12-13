@@ -659,7 +659,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			}
 		}
 
-		if (this.props.shouldShare && !this._sharingAttributes) {
+		if (!this.props.isEditing && this.props.shouldShare && !this._sharingAttributes) {
 			invalid = true;
 			validationState.sharingAttributesInvalid = true;
 		}
