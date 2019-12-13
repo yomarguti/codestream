@@ -45,6 +45,7 @@ export const getActivity = createSelector(
 			switch (model) {
 				case "codemark":
 					const codemark = codemarks[id];
+					if (codemark == undefined || codemark.deactivated) return;
 					return { ...codemark, post: getPost(posts, codemark.streamId, codemark.postId) };
 				default:
 					return;
