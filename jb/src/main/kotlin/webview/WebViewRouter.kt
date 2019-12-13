@@ -81,6 +81,7 @@ class WebViewRouter(val project: Project) {
                 initialization.complete(Unit)
             }
             "host/logout" -> authentication.logout()
+            "host/restart" -> restart(message)
             "host/context/didChange" -> contextDidChange(message)
             "host/webview/reload" -> project.webViewService?.load(true)
             "host/marker/compare" -> hostMarkerCompare(message)
@@ -100,6 +101,15 @@ class WebViewRouter(val project: Project) {
         if (message.id != null) {
             logger.debug("Posting response (host) ${message.id}")
             project.webViewService?.postResponse(message.id, response.orEmptyObject)
+        }
+    }
+
+    private suspend fun restart(message: WebViewMessage) {
+        val agent = project.agentService ?: return
+        val webview = project.webViewService ?: return
+        agent.restart()
+        agent.onDidStart {
+            webview.load()
         }
     }
 
