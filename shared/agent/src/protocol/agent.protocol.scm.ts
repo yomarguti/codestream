@@ -61,6 +61,7 @@ export interface GetRangeScmInfoResponse {
 	scm?: {
 		file: string;
 		repoPath: string;
+		repoId?: string;
 		revision: string;
 		authors: { id: string; username: string }[];
 		remotes: { name: string; url: string }[];
