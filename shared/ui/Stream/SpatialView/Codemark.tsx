@@ -219,7 +219,7 @@ export function CodemarkBase(props: BaseCodemarkProps) {
 					</AuthorInfo>
 					<div style={{ marginLeft: "auto" }}>
 						{renderedMenu}
-						{renderedMenu && (
+						{props.renderMenu && (
 							<KebabIcon
 								onClickCapture={e => {
 									e.preventDefault();
