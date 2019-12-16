@@ -76,6 +76,10 @@ export const ReloadWebviewRequestType = new RequestType<void, void, void, void>(
 	`${IpcRoutes.Host}/webview/reload`
 );
 
+export const RestartRequestType = new RequestType<void, void, void, void>(
+	`${IpcRoutes.Host}/restart`
+);
+
 export interface CompareMarkerRequest {
 	marker: CSMarker;
 }

@@ -5,15 +5,18 @@ import { ConnectivityActionsType, ConnectivityState } from "./types";
 type ConnectivityActions = ActionType<typeof actions>;
 
 const initialState: ConnectivityState = {
-	offline: false // !navigator.onLine
+	offline: false, // !navigator.onLine
+	error: undefined
 };
 
-export function reduceConnectivity(state = initialState, { type }: ConnectivityActions) {
-	switch (type) {
+export function reduceConnectivity(state = initialState, action: ConnectivityActions) {
+	switch (action.type) {
 		case ConnectivityActionsType.Offline:
 			return { ...state, offline: true };
 		case ConnectivityActionsType.Online:
 			return { ...state, offline: false };
+		case ConnectivityActionsType.ErrorOccurred:
+			return { ...state, error: action.payload };
 		case "RESET":
 			return initialState;
 		default:

@@ -1,22 +1,27 @@
 import React from "react";
 import Button from "./Button";
+import styled from "styled-components";
 
 interface State {}
 
 export interface Props {
 	title: string;
-	buttonText: string;
-	onClick: any;
+	buttons: { text: string; onClick: React.MouseEventHandler }[];
 }
+
+const StyledButton = styled(Button)`
+margin: 5px 0;
+`;
+
 
 export default class Dismissable extends React.Component<Props, State> {
 	static defaultProps = {
 		title: "",
-		buttonText: "Dismiss"
+		buttons: [{ text: "Dismiss", onClick: () => {} }]
 	};
 
 	render() {
-		const { title, children, buttonText, onClick } = this.props;
+		const { title, children, buttons } = this.props;
 		return (
 			<div className="onboarding-page">
 				<form className="standard-form">
@@ -26,9 +31,11 @@ export default class Dismissable extends React.Component<Props, State> {
 							{children}
 							<div id="controls">
 								<div className="button-group">
-									<Button className="control-button" onClick={onClick}>
-										{buttonText}
-									</Button>
+									{buttons.map(button => (
+										<StyledButton className="control-button" onClick={button.onClick}>
+											{button.text}
+										</StyledButton>
+									))}
 								</div>
 							</div>
 						</div>

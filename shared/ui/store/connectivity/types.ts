@@ -1,8 +1,11 @@
 export interface ConnectivityState {
 	offline: boolean;
+	error: undefined | { message: string; details?: string };
 }
 
 export enum ConnectivityActionsType {
 	Online = "ONLINE",
-	Offline = "OFFLINE"
+	Offline = "OFFLINE",
+	ErrorOccurred = "CONNECTIVITY_ERROR_OCCURRED"
 }
+

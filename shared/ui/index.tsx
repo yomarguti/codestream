@@ -31,7 +31,8 @@ import {
 	VersionCompatibility,
 	GetFileScmInfoRequestType,
 	ThirdPartyProviders,
-	GetDocumentFromMarkerRequestType
+	GetDocumentFromMarkerRequestType,
+	VerifyConnectivityRequestType
 } from "@codestream/protocols/agent";
 import { CSApiCapabilities, CodemarkType } from "@codestream/protocols/api";
 import translations from "./translations/en";
@@ -44,7 +45,7 @@ import { EditorContextState } from "./store/editorContext/types";
 import { updateProviders } from "./store/providers/actions";
 import { apiCapabilitiesUpdated } from "./store/apiVersioning/actions";
 import { bootstrap, reset } from "./store/actions";
-import { online, offline } from "./store/connectivity/actions";
+import { online, offline, errorOccurred } from "./store/connectivity/actions";
 import { upgradeRequired, upgradeRecommended } from "./store/versioning/actions";
 import { updatePreferences } from "./store/preferences/actions";
 import { updateUnreads } from "./store/unreads/actions";
@@ -79,6 +80,12 @@ export async function initialize(selector: string) {
 	await store.dispatch(bootstrap() as any);
 
 	HostApi.instance.notify(WebviewDidInitializeNotificationType, {});
+
+	HostApi.instance.send(VerifyConnectivityRequestType, void {}).then(resp => {
+		if (resp.error) {
+			store.dispatch(errorOccurred(resp.error.message, resp.error.details));
+		}
+	});
 }
 
 // TODO: type up the store state
@@ -351,4 +358,5 @@ export function listenForEvents(store) {
 			}
 		}
 	});
+
 }

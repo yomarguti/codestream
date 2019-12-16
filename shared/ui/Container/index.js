@@ -6,7 +6,7 @@ import Stream from "../Stream/index";
 import { UnauthenticatedRoutes } from "../Authentication";
 import { logError } from "../logger";
 import { HostApi } from "../webview-api";
-import { ReloadWebviewRequestType } from "../ipc/webview.protocol";
+import { ReloadWebviewRequestType, RestartRequestType } from "../ipc/webview.protocol";
 import { Loading } from "./Loading";
 import RoadBlock from "../Stream/RoadBlock";
 import Dismissable from "../Stream/Dismissable";
@@ -17,6 +17,7 @@ import { ApiVersioningActionsType } from "../store/apiVersioning/types";
 
 const mapStateToProps = state => ({
 	bootstrapped: state.bootstrapped,
+	connectivityError: state.connectivity.error,
 	loggedIn: Boolean(state.session.userId),
 	team: state.teams[state.context.currentTeamId],
 	versioning: state.versioning,
@@ -63,6 +64,21 @@ const getIdeInstallationInstructions = props => {
 };
 
 const Root = connect(mapStateToProps)(props => {
+	if (props.connectivityError) {
+		return (
+			<Dismissable
+				title="Can't connect"
+				buttons={[
+					{text: "Dismiss"},
+					{text: "Retry", onClick: () => { HostApi.instance.send(RestartRequestType) } }
+				]}
+			>
+				<p>We are unable to connect to CodeStream's backend. Please check your connectivity and try again.</p>
+				<p>If you are behind a network proxy, <a href="https://github.com/TeamCodeStream/CodeStream/wiki/CodeStream-proxy-support">turn on CodeStream's proxy support</a>.</p>
+				<p>Error: {props.connectivityError.message}</p>
+			</Dismissable>
+		);
+	}
 	if (props.versioning && props.versioning.type === VersioningActionsType.UpgradeRequired)
 		return (
 			<RoadBlock title="Update Required">
@@ -99,10 +115,13 @@ const Root = connect(mapStateToProps)(props => {
 		return (
 			<Dismissable
 				title="Update Suggested"
-				onClick={e => {
-					e.preventDefault();
-					props.dispatch(upgradeRecommendedDismissed());
-				}}
+				buttons={[{
+					text: "Dismiss",
+					onClick: e => {
+						e.preventDefault();
+						props.dispatch(upgradeRecommendedDismissed());
+					}
+				}]}
 			>
 				<p>
 					Your version of CodeStream is getting a little long in the tooth! We suggest that you
@@ -122,10 +141,13 @@ const Root = connect(mapStateToProps)(props => {
 		return (
 			<Dismissable
 				title="API Server Update Suggested"
-				onClick={e => {
-					e.preventDefault();
-					props.dispatch(apiUpgradeRecommendedDismissed());
-				}}
+				buttons={[{
+					text: "Dismiss",
+					onClick: e => {
+						e.preventDefault();
+						props.dispatch(apiUpgradeRecommendedDismissed());
+					}
+				}]}
 			>
 				<p>
 					Your on-prem installation of CodeStream has an API server that seems to be getting a bit long
@@ -134,7 +156,7 @@ const Root = connect(mapStateToProps)(props => {
 				{ missingFeatures.map(feature => {
 					return (
 						<p>
-							&middot; {feature.description} 
+							&middot; {feature.description}
 							{feature.url && " ("}
 							{feature.url && (
 								<a href="{feature.url}" target="_blank">{feature.url}</a>
