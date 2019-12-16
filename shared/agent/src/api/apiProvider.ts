@@ -116,7 +116,7 @@ import {
 	UpdatePresenceRequest,
 	UpdatePresenceResponse,
 	UpdateStreamMembershipRequest,
-	UpdateStreamMembershipResponse
+	UpdateStreamMembershipResponse, VerifyConnectivityResponse
 } from "../protocol/agent.protocol";
 import {
 	CSApiCapabilities,
@@ -352,6 +352,8 @@ export interface ApiProvider {
 		request: AddEnterpriseProviderHostRequest
 	): Promise<AddEnterpriseProviderHostResponse>;
 	refreshThirdPartyProvider(request: { providerId: string; refreshToken: string }): Promise<CSMe>;
+
+    verifyConnectivity(): Promise<VerifyConnectivityResponse>;
 }
 
 export interface CodeStreamApiMiddlewareContext {

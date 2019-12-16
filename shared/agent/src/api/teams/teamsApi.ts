@@ -1144,6 +1144,11 @@ export class MSTeamsApiProvider implements ApiProvider {
 		return this._codestream.refreshThirdPartyProvider(request);
 	}
 
+	@log()
+	verifyConnectivity() {
+		return this._codestream.verifyConnectivity();
+	}
+
 	@debug<MSTeamsApiProvider, MSTeamsApiProvider["teamsApiCall"]>({
 		args: {
 			0: () => false,

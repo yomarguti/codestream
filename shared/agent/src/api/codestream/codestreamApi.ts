@@ -1,4 +1,6 @@
 "use strict";
+
+import AbortController from "abort-controller";
 import { Agent as HttpsAgent } from "https";
 import HttpsProxyAgent from "https-proxy-agent";
 import { isEqual } from "lodash-es";
@@ -79,7 +81,7 @@ import {
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
 	UpdateStreamMembershipRequest,
-	UpdateTeamTagRequestType
+	UpdateTeamTagRequestType, VerifyConnectivityResponse
 } from "../../protocol/agent.protocol";
 import {
 	CSAddProviderHostRequest,
@@ -1796,5 +1798,46 @@ export class CodeStreamApiProvider implements ApiProvider {
 			/(\b\w*?apikey\w*?=|\b\w*?password\w*?=|\b\w*?secret\w*?=|\b\w*?token\w*?=)(?:.+?)(?=&|$)/gi,
 			"$1<hidden>"
 		);
+	}
+
+	async verifyConnectivity() {
+		const controller = new AbortController();
+		const timeout = setTimeout(() => controller.abort(), 5000);
+		const response: VerifyConnectivityResponse = {
+			ok: true
+		};
+
+		try {
+			Logger.log("Verifying API server connectivity");
+
+			const resp = await fetch(
+				this.baseUrl + "/no-auth/capabilities",
+				{ agent: this._httpsAgent, signal: controller.signal }
+			);
+			
+			Logger.log(`API server status: ${resp.status}`);
+			if (!resp.ok) {
+				response.ok = false;
+				response.error = {
+					message: resp.status.toString() + resp.statusText
+				};
+			}
+		} catch (err) {
+			Logger.log(`Error connecting to the API server: ${err.message}`);
+			response.ok = false;
+			if (err.name === "AbortError") {
+				response.error = {
+					message: "Connection to CodeStream API server timed out after 5 seconds"
+				};
+			} else {
+				response.error = {
+					message: err.message
+				};
+			}
+		} finally {
+			clearTimeout(timeout);
+		}
+
+		return response;
 	}
 }

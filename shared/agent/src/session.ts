@@ -68,7 +68,9 @@ import {
 	ThirdPartyProviders,
 	TokenLoginRequest,
 	TokenLoginRequestType,
-	VersionCompatibility
+	VersionCompatibility,
+	VerifyConnectivityRequestType,
+	VerifyConnectivityResponse
 } from "./protocol/agent.protocol";
 import {
 	CSApiCapabilities,
@@ -278,6 +280,7 @@ export class CodeStreamSession {
 
 		registerDecoratedHandlers(this.agent);
 
+		this.agent.registerHandler(VerifyConnectivityRequestType, () => this.verifyConnectivity());
 		this.agent.registerHandler(GetAccessTokenRequestType, e => {
 			return { accessToken: this._codestreamAccessToken! };
 		});
@@ -547,6 +550,11 @@ export class CodeStreamSession {
 				resolve([]);
 			}
 		});
+	}
+
+	@log({ singleLine: true })
+	async verifyConnectivity(): Promise<VerifyConnectivityResponse> {
+		return this.api.verifyConnectivity();
 	}
 
 	@log({ singleLine: true })

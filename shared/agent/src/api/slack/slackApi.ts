@@ -2285,6 +2285,11 @@ export class SlackApiProvider implements ApiProvider {
 		return this._codestream.refreshThirdPartyProvider(request);
 	}
 
+	@log()
+	verifyConnectivity() {
+		return this._codestream.verifyConnectivity();
+	}
+
 	@debug({
 		args: false,
 		prefix: (context, method, request) =>

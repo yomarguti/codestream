@@ -137,6 +137,16 @@ export interface ApiRequest {
 }
 export const ApiRequestType = new RequestType<ApiRequest, any, void, void>("codestream/api");
 
+export interface VerifyConnectivityResponse {
+	ok: boolean;
+	error?: {
+		message: string;
+		details?: string;
+	};
+}
+
+export const VerifyConnectivityRequestType = new RequestType<void, VerifyConnectivityResponse, void, void>("codestream/verifyConnectivity");
+
 export interface BootstrapRequest {}
 export interface BootstrapResponse {
 	preferences: CSMePreferences;
