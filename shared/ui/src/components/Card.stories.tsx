@@ -26,6 +26,22 @@ export const withHoverHighlight = () => (
 	</Card>
 );
 
+export const withClickHandler = () => (
+	<div
+		style={{
+			display: "flex",
+			flexDirection: "column",
+			justifyContent: "space-between",
+			minHeight: 100
+		}}
+	>
+		<Card onClick={() => alert("hi")}>The cursor changes on hover</Card>
+		<Card hoverEffect onClick={() => alert("hi")}>
+			Also with hover effect
+		</Card>
+	</div>
+);
+
 export const withBanner = () => (
 	<Card hoverEffect>
 		<CardBanner>

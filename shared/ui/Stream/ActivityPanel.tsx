@@ -1,6 +1,5 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import cx from "classnames";
 import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
 import Headshot from "./Headshot";
@@ -19,8 +18,6 @@ import {
 	FetchActivityRequestType,
 	PostPlus,
 	CodemarkPlus,
-	FollowCodemarkRequestType,
-	SetCodemarkPinnedRequestType,
 	PinReplyToCodemarkRequestType
 } from "@codestream/protocols/agent";
 import { savePosts } from "../store/posts/actions";
@@ -29,19 +26,13 @@ import { saveCodemarks } from "../store/codemarks/actions";
 import { safe } from "../utils";
 import { markStreamRead } from "./actions";
 import { CSUser } from "@codestream/protocols/api";
-import { Card, CardBody, CardFooter, CardBanner } from "../src/components/Card";
 import { resetLastReads } from "../store/unreads/actions";
 import { PanelHeader } from "../src/components/PanelHeader";
-import { Marker } from "./Marker";
 import { getPost, getPostsForStream } from "../store/posts/reducer";
-import Tag from "./Tag";
-import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
-import { Link } from "./Link";
-import { RelatedCodemark } from "./RelatedCodemark";
 import Menu from "./Menu";
 import { FormattedPlural } from "react-intl";
-import { SharingModal } from "./SharingModal";
 import { useMarkdownifyToHtml } from "./Markdowner";
+import { Codemark } from "./SpatialView/Codemark";
 
 // see comment in SmartFormattedList.tsx
 const FormattedPluralAlias = FormattedPlural as any;
@@ -65,37 +56,10 @@ const ActivityWrapper = styled.div`
 	}
 `;
 
-const ActivityCard = styled(Card)<{ unread?: boolean }>`
-	:hover {
-		cursor: pointer;
-	}
-	${CardFooter} {
-		border-top: none;
-		padding-left: 0;
-		padding-right: 0;
-		margin-top: 0;
-	}
-	${props =>
-		props.unread
-			? `
-		border-left: 2px solid var(--text-color-info);
-		${ReplyRoot} { border-left: none; }
-		`
-			: ""}
-`;
-
 const LoadingMessage = styled.div`
 	width: 100%;
 	margin: 0 auto;
 	text-align: center;
-`;
-
-const CardHeader = styled.div`
-	width: 100%;
-	margin-bottom: 8px;
-	display: flex;
-	font-size: 13px;
-	font-weight: 700;
 `;
 
 const StyledTimestamp = styled(Timestamp)`
@@ -116,85 +80,12 @@ const AuthorInfo = styled.div`
 	}
 `;
 
-const CardTitle = styled.div`
-	margin-bottom: 10px;
-`;
-
 const LinkifiedText = styled.span`
 	white-space: normal;
 	text-overflow: initial;
 	p {
 		margin: 0;
 	}
-`;
-
-const MetaRow = styled.div`
-	display: flex;
-	justify-content: space-between;
-`;
-
-const Meta = styled.div`
-	display: flex;
-	flex-direction: column;
-	margin-right: auto;
-	width: 100%;
-`;
-
-const MetaStuff = styled.div`
-	display: flex;
-	flex-direction: column;
-	justify-content: space-between;
-	${Meta} {
-		padding: 10px 0;
-	}
-`;
-
-const RelatedLabel = styled.div`
-	text-transform: uppercase;
-	font-weight: 800;
-	opacity: 0.5;
-	font-size: 11px;
-	margin-bottom: 3px;
-`;
-
-const Description = styled.div`
-	display: flex;
-	> *:not(:first-child) {
-		margin-left: 5px;
-	}
-`;
-
-const StyledMarker = styled(Marker)`
-	.code {
-		margin: 5px 0 !important;
-	}
-	.file-info {
-		font-size: 11px;
-		display: flex;
-		flex-flow: row wrap;
-	}
-	.file-info .monospace {
-		display: block;
-		white-space: nowrap;
-	}
-`;
-
-const StyledLink = styled(Link)`
-	color: var(--text-color);
-	text-decoration: none !important;
-	&:hover {
-		color: var(--text-color-info);
-	}
-	${Description} {
-		display: block;
-		overflow: hidden;
-		white-space: nowrap;
-		text-overflow: ellipsis;
-	}
-`;
-
-const StyledRelatedCodemark = styled(RelatedCodemark)`
-	white-space: normal;
 `;
 
 export const ActivityPanel = () => {
@@ -371,6 +262,54 @@ export const ActivityPanel = () => {
 	);
 };
 
+const ActivityCodemark = styled(Codemark)<{ isUnread?: boolean }>`
+	${props =>
+		props.isUnread
+			? `
+		border-left: 2px solid var(--text-color-info);
+		${ReplyRoot} { border-left: none; }
+		`
+			: ""}
+`;
+
+const ActivityItem = (props: { codemark: CodemarkPlus }) => {
+	const dispatch = useDispatch();
+	const { isUnread, post } = useSelector((state: CodeStreamState) => {
+		const codemarkPost = getPost(state.posts, props.codemark.streamId, props.codemark.postId);
+		const lastReadForStream = state.umis.lastReads[props.codemark.streamId];
+
+		return {
+			isUnread:
+				lastReadForStream != undefined &&
+				codemarkPost != undefined &&
+				(codemarkPost as PostPlus).seqNum > lastReadForStream,
+			post: codemarkPost
+		};
+	});
+
+	return (
+		// @ts-ignore because typescript isn't handling the union props well
+		<ActivityCodemark
+			codemark={props.codemark}
+			hoverEffect
+			isUnread={isUnread}
+			onClick={() => {
+				HostApi.instance.track("Codemark Clicked", {
+					"Codemark ID": props.codemark.id,
+					"Codemark Location": "Activity Feed"
+				});
+				dispatch(setCurrentCodemark(props.codemark.id));
+			}}
+			renderMarkers={isUnread}
+			renderFooter={Footer => (
+				<Footer style={{ borderTop: "none", paddingLeft: 0, paddingRight: 0, marginTop: 0 }}>
+					<RepliesForCodemark parentPost={post} pinnedReplies={props.codemark.pinnedReplies} />
+				</Footer>
+			)}
+		/>
+	);
+};
+
 const KebabIcon = styled.span`
 	opacity: 0.5;
 	width: 20px;
@@ -383,263 +322,6 @@ const KebabIcon = styled.span`
 		}
 	}
 `;
-
-const ActivityItem = (props: { codemark: CodemarkPlus }) => {
-	const { codemark } = props;
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
-		const codemarkPost = getPost(state.posts, codemark.streamId, codemark.postId);
-		const lastReadForStream = state.umis.lastReads[codemark.streamId];
-		const isUnread =
-			lastReadForStream != undefined &&
-			codemarkPost != undefined &&
-			(codemarkPost as PostPlus).seqNum > lastReadForStream;
-		const assignees = (codemark.assignees || []).map(id => state.users[id]).filter(Boolean);
-		const externalAssignees = (codemark.externalAssignees || [])
-			.filter(user => !assignees.find(a => a.email === user.email))
-			.filter(Boolean)
-			.map(a => ({ fullName: a.displayName, email: a.email }));
-
-		return {
-			isUnread,
-			currentUserEmail: state.users[state.session.userId!].email,
-			followingEnabled: state.apiVersioning.apiCapabilities.follow != undefined,
-			userIsFollowingCodemark: (codemark.followerIds || []).includes(
-				state.users[state.session.userId!].id
-			),
-			post: codemarkPost,
-			author: state.users[codemark.creatorId],
-			teamTags: userSelectors.getTeamTagsHash(state),
-			assignees: [...assignees, ...externalAssignees]
-		};
-	});
-	const [menuState, setMenuState] = React.useState<{
-		open: boolean;
-		target?: any;
-	}>({ open: false, target: undefined });
-
-	const [shareModalOpen, setShareModalOpen] = React.useState(false);
-	const closeShareModal = React.useCallback(() => setShareModalOpen(false), []);
-
-	const permalinkRef = React.useRef<HTMLTextAreaElement>(null);
-
-	const markdownifyToHtml = useMarkdownifyToHtml();
-
-	const tagIds = codemark.tags || [];
-	const descriptionHTML = codemark.title && codemark.text ? markdownifyToHtml(codemark.text) : null;
-	const providerDisplay =
-		codemark.externalProviderUrl && PROVIDER_MAPPINGS[codemark.externalProvider!];
-	const relatedCodemarkIds = codemark.relatedCodemarkIds || [];
-
-	const menuItems: any[] = React.useMemo(() => {
-		let items: any[] = [
-			{
-				label: "Share",
-				key: "share",
-				action: () => {
-					setShareModalOpen(true);
-				}
-			},
-			{
-				label: "Copy link",
-				key: "copy-permalink",
-				action: () => {
-					if (permalinkRef.current) {
-						permalinkRef.current.select();
-						document.execCommand("copy");
-					}
-				}
-			},
-			{
-				label: codemark.pinned ? "Archive" : "Unarchive",
-				key: "toggle-pinned",
-				action: () => {
-					HostApi.instance.send(SetCodemarkPinnedRequestType, {
-						codemarkId: codemark.id,
-						value: !props.codemark.pinned
-					});
-				}
-			}
-		];
-		if (derivedState.followingEnabled) {
-			const [first, ...rest] = items;
-			items = [
-				first,
-				{
-					label: derivedState.userIsFollowingCodemark ? "Unfollow" : "Follow",
-					key: "toggle-follow",
-					action: () => {
-						const value = !derivedState.userIsFollowingCodemark;
-						const changeType = value ? "Followed" : "Unfollowed";
-						HostApi.instance.send(FollowCodemarkRequestType, {
-							codemarkId: codemark.id,
-							value
-						});
-						HostApi.instance.track("Notification Change", {
-							Change: `Codemark ${changeType}`,
-							"Source of Change": "Codemark menu"
-						});
-					}
-				},
-				...rest
-			];
-		}
-
-		return items;
-	}, [props.codemark]);
-
-	const closeMenu = React.useCallback(() => setMenuState({ open: false }), []);
-	const handleMenuClick = (e: React.MouseEvent) => {
-		e.preventDefault();
-		e.stopPropagation();
-		if (menuState.open) {
-			closeMenu();
-		} else {
-			setMenuState({ open: true, target: e.currentTarget as HTMLElement });
-		}
-	};
-
-	return (
-		<>
-			{shareModalOpen && <SharingModal codemark={codemark} onClose={closeShareModal} />}
-			<ActivityCard
-				hoverEffect
-				onClick={() => {
-					HostApi.instance.track("Codemark Clicked", {
-						"Codemark ID": codemark.id,
-						"Codemark Location": "Activity Feed"
-					});
-					// somehow a click right next to the menu over the kebab icon registers
-					if (menuState.open) {
-						return setMenuState({ open: false });
-					}
-					dispatch(setCurrentCodemark(codemark.id));
-				}}
-				unread={derivedState.isUnread}
-			>
-				<CardBanner>
-					{!codemark.pinned && <div>This codemark is archived.</div>}
-					{codemark.status == "closed" && <div>This codemark is resolved.</div>}
-				</CardBanner>
-				<CardBody>
-					<CardHeader>
-						<AuthorInfo>
-							<HeadshotV2 person={derivedState.author} /> {derivedState.author.username}{" "}
-							<StyledTimestamp time={codemark.createdAt} />
-						</AuthorInfo>
-						<div style={{ marginLeft: "auto" }}>
-							{menuState.open && (
-								<>
-									<Menu items={menuItems} target={menuState.target} action={closeMenu} />
-									<textarea
-										ref={permalinkRef}
-										value={codemark.permalink}
-										style={{ position: "absolute", left: "-9999px" }}
-									/>
-								</>
-							)}
-							<KebabIcon onClickCapture={handleMenuClick}>
-								<Icon name="kebab-vertical" className="clickable" />
-							</KebabIcon>
-						</div>
-					</CardHeader>
-					<CardTitle>
-						<LinkifiedText
-							dangerouslySetInnerHTML={{
-								__html: markdownifyToHtml(codemark.title || codemark.text)
-							}}
-						/>
-					</CardTitle>
-					<MetaStuff>
-						<MetaRow>
-							{tagIds.length > 0 && (
-								<Meta>
-									<RelatedLabel>Tags</RelatedLabel>
-									<Description>
-										{tagIds.map(tagId => {
-											const tag = derivedState.teamTags[tagId];
-											return tag ? <Tag tag={tag} key={tagId} /> : null;
-										})}
-									</Description>
-								</Meta>
-							)}
-							{derivedState.assignees.length > 0 && (
-								<Meta>
-									<RelatedLabel>Assignees</RelatedLabel>
-									<Description>
-										{derivedState.assignees.map(assignee => (
-											<>
-												<HeadshotV2 person={assignee as any} size={18} />
-												<span
-													style={{ marginLeft: "5px" }}
-													className={cx({
-														"at-mention me": assignee.email === derivedState.currentUserEmail
-													})}
-												>
-													{assignee.fullName || assignee.email}
-												</span>
-											</>
-										))}
-									</Description>
-								</Meta>
-							)}
-						</MetaRow>
-						{descriptionHTML && (
-							<Meta>
-								<RelatedLabel>Description</RelatedLabel>
-								<Description>
-									<Icon name="description" />
-									<LinkifiedText dangerouslySetInnerHTML={{ __html: descriptionHTML }} />
-								</Description>
-							</Meta>
-						)}
-						{providerDisplay && (
-							<Meta>
-								<RelatedLabel>Linked Issues</RelatedLabel>
-								<StyledLink href={codemark.externalProviderUrl}>
-									<Description>
-										{providerDisplay.icon && <Icon name={providerDisplay.icon} />}
-										<span>{providerDisplay.displayName}</span>
-										<span style={{ opacity: 0.5 }}>{codemark.externalProviderUrl}</span>
-									</Description>
-								</StyledLink>
-							</Meta>
-						)}
-						{relatedCodemarkIds.length > 0 && (
-							<Meta>
-								<RelatedLabel>Related</RelatedLabel>
-								{relatedCodemarkIds.map(id => (
-									<StyledRelatedCodemark key={id} id={id} />
-								))}
-							</Meta>
-						)}
-						{codemark.pinnedReplies && (
-							<PinnedReplies streamId={codemark.streamId} replyIds={codemark.pinnedReplies} />
-						)}
-						{/* this is here just to get feedback... we should prolly have some sort of indicator on the codemark if you are following it
-						derivedState.userIsFollowingCodemark && (
-							<Meta>
-								<RelatedLabel>Notifications</RelatedLabel>
-								<Description>
-									<Icon name="eye" />{" "}
-									<span>You are following activity on this codemark. [unfollow]</span>
-								</Description>
-							</Meta>
-						) */}
-					</MetaStuff>
-					{codemark.markers &&
-						codemark.markers.map(marker => <StyledMarker key={marker.id} marker={marker} />)}
-				</CardBody>
-				<CardFooter>
-					<RepliesForCodemark
-						parentPost={derivedState.post}
-						pinnedReplies={codemark.pinnedReplies}
-					/>
-				</CardFooter>
-			</ActivityCard>
-		</>
-	);
-};
 
 const SeeReplies = styled.div`
 	margin-top: 5px;
@@ -765,41 +447,5 @@ const RepliesForCodemark = (props: { parentPost?: PostPlus; pinnedReplies?: stri
 				</SeeReplies>
 			)}
 		</>
-	);
-};
-
-const PinnedReply = styled.div`
-	display: flex;
-	> * {
-		margin-right: 5px;
-	}
-`;
-
-const PinnedReplyText = styled(LinkifiedText)`
-	opacity: 0.5;
-`;
-
-const PinnedReplies = (props: { replyIds: string[]; streamId: string }) => {
-	const { users, posts } = useSelector((state: CodeStreamState) => {
-		return {
-			users: state.users,
-			posts: props.replyIds.map(id => getPost(state.posts, props.streamId, id))
-		};
-	});
-
-	const markdownifyToHtml = useMarkdownifyToHtml();
-
-	if (posts.length === 0) return null;
-
-	return (
-		<Meta>
-			<RelatedLabel>Starred Replies</RelatedLabel>
-			{posts.map(post => (
-				<PinnedReply key={post.id}>
-					<Icon name="star" /> <HeadshotV2 person={users[post.creatorId]} />
-					<PinnedReplyText dangerouslySetInnerHTML={{ __html: markdownifyToHtml(post.text) }} />
-				</PinnedReply>
-			))}
-		</Meta>
 	);
 };

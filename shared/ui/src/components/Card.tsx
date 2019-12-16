@@ -15,6 +15,7 @@ const Root = styled.div((props: PropsWithTheme<CardProps>) => {
 		: "0 2px 5px rgba(0, 0, 0, 0.08)";
 
 	return `
+	cursor: ${props.onClick != undefined ? "pointer" : "default"};
 		display: flex;
   	box-shadow: ${boxShadow};
     background: ${theme.colors.baseBackground};
