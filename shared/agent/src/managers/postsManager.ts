@@ -637,7 +637,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		});
 
 		// if there are no valid codemarks in this batch, recurse
-		if (codemarks.length === 0) {
+		if (codemarks.length === 0 && response.posts.length > 0 && response.more) {
 			const beforePostId =
 				response.codemarks.length > 0
 					? response.codemarks[response.codemarks.length - 1].postId
