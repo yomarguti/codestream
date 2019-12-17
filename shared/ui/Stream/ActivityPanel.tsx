@@ -163,7 +163,7 @@ export const ActivityPanel = () => {
 		const dave = { username: "dave", fullName: "David Hersh" };
 		const akon = { username: "akonwi", fullName: "Akonwi Ngoh", email: "akonwi@codestream.com" };
 
-		if (derivedState.activity.length === 0) {
+		if (derivedState.activity.length === 0 && !derivedState.hasMoreActivity) {
 			return (
 				<EmptyMessage>
 					<p>
