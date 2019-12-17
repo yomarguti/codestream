@@ -257,10 +257,9 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 								</span>
 							)}
 							{codemark.markers && codemark.markers.length > 1 && (
-								<Tooltip>
+								<Tooltip title="Multiple code locations" placement="bottom">
 									<span className="detail-icon">
-										<Icon title="Multiple code locations" placement="bottom" name="code" />{" "}
-										{codemark.markers.length}
+										<Icon name="code" /> {codemark.markers.length}
 									</span>
 								</Tooltip>
 							)}
