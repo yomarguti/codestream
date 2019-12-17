@@ -1075,6 +1075,21 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		return "Post";
 	}
 
+	protected bareRepo(repo: string): string {
+		if (repo.match(/^(bitbucket\.org|github\.com)\/(.+)\//)) {
+			repo = repo
+				.split("/")
+				.splice(2)
+				.join("/");
+		} else if (repo.indexOf("/") !== -1) {
+			repo = repo
+				.split("/")
+				.splice(1)
+				.join("/");
+		}
+		return repo;
+	}
+
 	getCodeDelimiters = (
 		codeDelimiterStyle?: CodeDelimiterStyles
 	): {
@@ -1150,7 +1165,12 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			let createdAtLeastOne = false;
 			for (const marker of providerCardRequest.codemark.markers) {
 				const links = [];
-				description += `In ${marker.file}`;
+				const repo = await SessionContainer.instance().repos.getById(marker.repoId);
+				if (repo) {
+					const repoName = this.bareRepo(repo.name);
+					description += `[${repoName}] `;
+				}
+				description += marker.file;
 				let range;
 				if (marker.locationWhenCreated) {
 					range = MarkerLocation.toRangeFromArray(marker.locationWhenCreated);
