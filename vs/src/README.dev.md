@@ -102,3 +102,5 @@ Menus are attached to the VisualStudio shell with a `.vsct` file. Here, they are
 ### Tools
 
 Highly recommend installing: https://marketplace.visualstudio.com/items?itemName=MadsKristensen.ExtensibilityTools (Clearing MEF cache, VSCT support)
+
+
