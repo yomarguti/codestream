@@ -21,6 +21,14 @@ const val API_PD = "https://pd-api.codestream.us"
 const val API_QA = "https://qa-api.codestream.us"
 const val API_PROD = "https://api.codestream.com"
 
+enum class ProxySupport(val label: String) {
+    OVERRIDE("Inherit from IDE"),
+    ON("Inherit from OS/environment"),
+    OFF("Off");
+
+    override fun toString() = label
+}
+
 data class ApplicationSettingsServiceState(
     var autoSignIn: Boolean = true,
     var email: String? = null,
@@ -32,8 +40,7 @@ data class ApplicationSettingsServiceState(
     var showFeedbackSmiley: Boolean = true,
     var showMarkers: Boolean = true,
     var autoHideMarkers: Boolean = false,
-    var proxySupport: String = "on",
-    var proxyUrl: String = "",
+    var proxySupport: String = ProxySupport.ON.name,
     var proxyStrictSSL: Boolean = true
 )
 
@@ -93,30 +100,22 @@ class ApplicationSettingsService : PersistentStateComponent<ApplicationSettingsS
     val proxySettings
         get(): ProxySettings? {
             var url: String? = null
-            if (!state.proxyUrl.isNullOrBlank()) {
-                url = state.proxyUrl
-            } else {
-                val httpConfig = HttpConfigurable.getInstance()
-                if (httpConfig.USE_HTTP_PROXY && !httpConfig.PROXY_HOST.isNullOrBlank()) {
-                    url = if (httpConfig.PROXY_AUTHENTICATION) {
-                        val login = httpConfig.proxyLogin?.encodeUrlQueryParameter()
-                        val password = httpConfig.plainProxyPassword?.encodeUrlQueryParameter()
-                        "http://${login}:${password}@${httpConfig.PROXY_HOST}"
-                    } else {
-                        httpConfig.PROXY_HOST
-                    }
+            val httpConfig = HttpConfigurable.getInstance()
+            if (httpConfig.USE_HTTP_PROXY && !httpConfig.PROXY_HOST.isNullOrBlank()) {
+                url = if (httpConfig.PROXY_AUTHENTICATION) {
+                    val login = httpConfig.proxyLogin?.encodeUrlQueryParameter()
+                    val password = httpConfig.plainProxyPassword?.encodeUrlQueryParameter()
+                    "http://${login}:${password}@${httpConfig.PROXY_HOST}"
+                } else {
+                    httpConfig.PROXY_HOST
+                }
 
-                    if (httpConfig.PROXY_PORT != null) {
-                        url = url + ":" + httpConfig.PROXY_PORT
-                    }
+                if (httpConfig.PROXY_PORT != null) {
+                    url = url + ":" + httpConfig.PROXY_PORT
                 }
             }
 
-            return if (url != null) {
-                ProxySettings(url, state.proxyStrictSSL)
-            } else {
-                null
-            }
+            return url?.let { ProxySettings(it, state.proxyStrictSSL) }
         }
 
     val proxySupport

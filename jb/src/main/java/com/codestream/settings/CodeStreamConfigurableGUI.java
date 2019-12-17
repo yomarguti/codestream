@@ -1,5 +1,8 @@
 package com.codestream.settings;
 
+import com.intellij.openapi.ui.ComboBox;
+import com.intellij.ui.EnumComboBoxModel;
+
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -17,7 +20,6 @@ public class CodeStreamConfigurableGUI {
     private JCheckBox showFeedbackSmiley;
     private JCheckBox autoHideMarkers;
     private JCheckBox showMarkers;
-    private JTextField proxyUrl;
     private JComboBox proxySupport;
     private JCheckBox proxyStrictSSL;
     private JComboBox showNotifications;
@@ -26,8 +28,7 @@ public class CodeStreamConfigurableGUI {
         proxySupport.addItemListener(event -> {
             if (event.getStateChange() == ItemEvent.SELECTED) {
                 Object item = event.getItem();
-                proxyUrl.setEnabled(item.equals("override"));
-                proxyStrictSSL.setEnabled(item.equals("override") || item.equals("on"));
+                proxyStrictSSL.setEnabled(item.equals(ProxySupport.OVERRIDE) || item.equals(ProxySupport.ON));
             }
         });
 
@@ -96,11 +97,7 @@ public class CodeStreamConfigurableGUI {
         return showMarkers;
     }
 
-    public JTextField getProxyUrl() {
-        return proxyUrl;
-    }
-
-    public JComboBox<String> getProxySupport() {
+    public JComboBox<ProxySupport> getProxySupport() {
         return proxySupport;
     }
 
@@ -108,5 +105,9 @@ public class CodeStreamConfigurableGUI {
 
     public JCheckBox getProxyStrictSSL() {
         return proxyStrictSSL;
+    }
+
+    private void createUIComponents() {
+        proxySupport = new ComboBox(new EnumComboBoxModel(ProxySupport.class));
     }
 }
