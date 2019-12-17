@@ -27,6 +27,7 @@ export default class Confirm extends Component {
 		modalRoot.appendChild(this.el);
 		modalRoot.classList.add("active");
 
+		console.log("************************************************");
 		if (isInVscode()) {
 			this.disposables.push(
 				VsCodeKeystrokeDispatcher.on("keydown", event => {
@@ -36,7 +37,6 @@ export default class Confirm extends Component {
 				})
 			);
 		}
-
 		this.el.getElementsByTagName("button")[0].focus();
 	}
 
@@ -49,6 +49,7 @@ export default class Confirm extends Component {
 		const modalRoot = document.getElementById("confirm-root");
 		modalRoot.classList.remove("active");
 		// modalRoot.removeChild(this.el);
+		ReactDOM.unmountComponentAtNode(modalRoot);
 	};
 
 	componentDidUpdate(prevProps, prevState) {
