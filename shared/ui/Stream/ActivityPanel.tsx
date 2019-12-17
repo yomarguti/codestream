@@ -88,6 +88,20 @@ const LinkifiedText = styled.span`
 	}
 `;
 
+const EmptyMessage = styled.div`
+	height: 100%;
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	p {
+		width: 20em;
+		margin: 0 auto;
+		color: var(--text-color-subtle);
+		text-align: center;
+	}
+`;
+
 export const ActivityPanel = () => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
@@ -148,6 +162,17 @@ export const ActivityPanel = () => {
 		const demoMode = false;
 		const dave = { username: "dave", fullName: "David Hersh" };
 		const akon = { username: "akonwi", fullName: "Akonwi Ngoh", email: "akonwi@codestream.com" };
+
+		if (derivedState.activity.length === 0) {
+			return (
+				<EmptyMessage>
+					<p>
+						The activity feed will let you know when your teammates create codemarks, or add
+						replies.
+					</p>
+				</EmptyMessage>
+			);
+		}
 
 		return derivedState.activity.map(codemark => {
 			if (codemark.deactivated) return null;
