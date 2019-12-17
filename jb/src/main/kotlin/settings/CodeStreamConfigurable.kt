@@ -33,7 +33,7 @@ class CodeStreamConfigurable : SearchableConfigurable {
             state.showFeedbackSmiley = gui.showFeedbackSmiley.isSelected
             state.showMarkers = gui.showMarkers.isSelected
             state.autoHideMarkers = gui.autoHideMarkers.isSelected
-            state.proxySupport = (gui.proxySupport.selectedItem as ProxySupport).name
+            state.proxySupport = gui.proxySupport.selectedItem as ProxySupport
             state.proxyStrictSSL = gui.proxyStrictSSL.isSelected
         }
     }
@@ -54,7 +54,7 @@ class CodeStreamConfigurable : SearchableConfigurable {
                 showFeedbackSmiley.isSelected = it.showFeedbackSmiley
                 showMarkers.isSelected = it.showMarkers
                 autoHideMarkers.isSelected = it.autoHideMarkers
-                proxySupport.selectedItem = ProxySupport.valueOf(it.proxySupport.toUpperCase())
+                proxySupport.selectedItem = it.proxySupport
                 proxyStrictSSL.isSelected = it.proxyStrictSSL
             }
         }

@@ -21,10 +21,10 @@ const val API_PD = "https://pd-api.codestream.us"
 const val API_QA = "https://qa-api.codestream.us"
 const val API_PROD = "https://api.codestream.com"
 
-enum class ProxySupport(val label: String) {
-    OVERRIDE("Inherit from IDE"),
-    ON("Inherit from OS/environment"),
-    OFF("Off");
+enum class ProxySupport(val value: String, val label: String) {
+    OVERRIDE("override","Inherit from IDE"),
+    ON("on","Inherit from OS/environment"),
+    OFF("off","Off");
 
     override fun toString() = label
 }
@@ -40,7 +40,7 @@ data class ApplicationSettingsServiceState(
     var showFeedbackSmiley: Boolean = true,
     var showMarkers: Boolean = true,
     var autoHideMarkers: Boolean = false,
-    var proxySupport: String = ProxySupport.ON.name,
+    var proxySupport: ProxySupport = ProxySupport.OVERRIDE,
     var proxyStrictSSL: Boolean = true
 )
 
@@ -71,7 +71,6 @@ class ApplicationSettingsService : PersistentStateComponent<ApplicationSettingsS
     val serverUrl get() = state.serverUrl
     val disableStrictSSL get() = state.disableStrictSSL
     val email get() = state.email
-    val avatars get() = state.avatars
     val showFeedbackSmiley get() = state.showFeedbackSmiley
     val autoSignIn get() = state.autoSignIn
 
@@ -118,12 +117,7 @@ class ApplicationSettingsService : PersistentStateComponent<ApplicationSettingsS
             return url?.let { ProxySettings(it, state.proxyStrictSSL) }
         }
 
-    val proxySupport
-        get(): String? =
-            if (state.proxySupport == "on" && proxySettings != null)
-                "override"
-            else
-                state.proxySupport
+    val proxySupport get() = state.proxySupport
 
     val credentialAttributes: CredentialAttributes
         get() {

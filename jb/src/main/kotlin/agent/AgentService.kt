@@ -253,7 +253,7 @@ class AgentService(private val project: Project) : Disposable {
             Ide(),
             DEBUG,
             settings.proxySettings,
-            settings.proxySupport,
+            settings.proxySupport.value,
             settings.serverUrl,
             settings.disableStrictSSL,
             settings.traceLevel.value
