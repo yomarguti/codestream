@@ -842,12 +842,6 @@ export class SlackSharingApiProvider {
 			meResponse = await this._codestream.getMe();
 		}
 
-		// Only get the data if we already have it cached (otherwise we'll loop infinitely 😀)
-		const { users } = SessionContainer.instance();
-		const prevMe = users.cached
-			? ((await users.getByIdFromCache(this._slackUserId)) as CSMe)
-			: undefined;
-
 		let me = meResponse.user;
 		me.codestreamId = me.id;
 		me.id = this.userId;
@@ -872,36 +866,13 @@ export class SlackSharingApiProvider {
 				fullName: user.fullName,
 				id: user.id,
 				lastName: user.lastName,
-				username: user.username,
-				presence: prevMe && prevMe.presence
+				username: user.username
 			};
 		}
 
 		if (me.lastReads == null) {
 			me.lastReads = {};
 		}
-
-		try {
-			const { muted_channels } = await this.getSlackPreferences();
-
-			// Don't update our prefs, since they aren't per-team
-			// void this.updatePreferences({
-			// 	preferences: {
-			// 		$set: { mutedStreams: mutedStreams }
-			// 	}
-			// });
-
-			me.preferences = {
-				...me.preferences,
-				mutedStreams: muted_channels
-					.split(",")
-					.reduce((result: object, streamId: string) => ({ ...result, [streamId]: true }), {})
-			};
-		} catch (ex) {
-			Logger.error(ex);
-		}
-
-		SessionContainer.instance().users.resolve({ type: MessageType.Users, data: [me] });
 
 		return { user: me };
 	}

@@ -260,7 +260,7 @@ export class MSTeamsSharingApiProvider {
 			me.lastReads = {};
 		}
 
-		users.resolve({ type: MessageType.Users, data: [me] });
+		// users.resolve({ type: MessageType.Users, data: [me] });
 
 		return { user: me };
 	}
