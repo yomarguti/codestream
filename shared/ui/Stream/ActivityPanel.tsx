@@ -32,7 +32,7 @@ import { getPost, getPostsForStream } from "../store/posts/reducer";
 import Menu from "./Menu";
 import { FormattedPlural } from "react-intl";
 import { useMarkdownifyToHtml } from "./Markdowner";
-import { Codemark } from "./SpatialView/Codemark";
+import { Codemark } from "./Codemark/index";
 
 // see comment in SmartFormattedList.tsx
 const FormattedPluralAlias = FormattedPlural as any;
@@ -290,6 +290,7 @@ const ActivityItem = (props: { codemark: CodemarkPlus }) => {
 	return (
 		// @ts-ignore because typescript isn't handling the union props well
 		<ActivityCodemark
+			collapsed={!isUnread}
 			codemark={props.codemark}
 			hoverEffect
 			isUnread={isUnread}
@@ -300,7 +301,7 @@ const ActivityItem = (props: { codemark: CodemarkPlus }) => {
 				});
 				dispatch(setCurrentCodemark(props.codemark.id));
 			}}
-			renderMarkers={isUnread}
+			renderActions={false}
 			renderFooter={Footer => (
 				<Footer style={{ borderTop: "none", paddingLeft: 0, paddingRight: 0, marginTop: 0 }}>
 					<RepliesForCodemark parentPost={post} pinnedReplies={props.codemark.pinnedReplies} />
