@@ -351,7 +351,7 @@ const mapStateToProps = ({ users, context, teams }) => {
 
 	const members = mapFilter(team.memberIds, id => {
 		const user = users[id];
-		if (!user || !user.isRegistered || user.deactivated) return;
+		if (!user || !user.isRegistered || user.deactivated || user.externalUserId) return;
 
 		if (!user.fullName) {
 			let email = user.email;
@@ -364,7 +364,7 @@ const mapStateToProps = ({ users, context, teams }) => {
 		teamProvider === "codestream"
 			? mapFilter(team.memberIds, id => {
 					const user = users[id];
-					if (!user || user.isRegistered || user.deactivated) return;
+					if (!user || user.isRegistered || user.deactivated || user.externalUserId) return;
 					let email = user.email;
 					if (email) user.fullName = email.replace(/@.*/, "");
 					return user;

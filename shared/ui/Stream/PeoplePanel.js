@@ -65,7 +65,7 @@ const mapStateToProps = ({ users, context, teams }) => {
 	const team = teams[context.currentTeamId];
 	const members = mapFilter(team.memberIds, id => {
 		const user = users[id];
-		if (!user || !user.isRegistered || user.deactivated) return;
+		if (!user || !user.isRegistered || user.deactivated || user.externalUserId) return;
 		if (!user.fullName) {
 			let email = user.email;
 			if (email) user.fullName = email.replace(/@.*/, "");
@@ -74,7 +74,7 @@ const mapStateToProps = ({ users, context, teams }) => {
 	});
 	const invited = mapFilter(team.memberIds, id => {
 		const user = users[id];
-		if (!user || user.isRegistered || user.deactivated) return;
+		if (!user || user.isRegistered || user.deactivated || user.externalUserId) return;
 		let email = user.email;
 		if (email) user.fullName = email.replace(/@.*/, "");
 		return user;
