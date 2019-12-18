@@ -27,8 +27,7 @@ public class CodeStreamConfigurableGUI {
     public CodeStreamConfigurableGUI() {
         proxySupport.addItemListener(event -> {
             if (event.getStateChange() == ItemEvent.SELECTED) {
-                Object item = event.getItem();
-                proxyStrictSSL.setEnabled(item.equals(ProxySupport.OVERRIDE) || item.equals(ProxySupport.ON));
+                proxyStrictSSL.setEnabled(event.getItem().equals(ProxySupport.ON));
             }
         });
 
