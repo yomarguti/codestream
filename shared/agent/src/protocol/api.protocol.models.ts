@@ -428,6 +428,7 @@ export interface CSUser extends CSEntity {
 	username: string;
 	providerIdentities?: string[];
 	codestreamId?: string;
+	externalUserId?: string;
 
 	avatar?: {
 		image?: string;
