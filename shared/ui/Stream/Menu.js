@@ -148,6 +148,7 @@ export default class Menu extends Component {
 				onMouseEnter={() => this.handleMouseEnter(key)}
 				onClick={event => this.handleClickItem(event, item)}
 			>
+				{item.floatRight && <span className="float-right">{item.floatRight.label}</span>}
 				{item.icon && <span className="icon">{item.icon}</span>}
 				{item.label && <span className="label">{item.label}</span>}
 				{item.shortcut && <span className="shortcut">{item.shortcut}</span>}
@@ -198,6 +199,8 @@ export default class Menu extends Component {
 				return false;
 			} else if (skipDisabled && item.noHover) {
 				return false;
+			} else if (q.length && item.skipSearch) {
+				return false;
 			} else if (item.searchLabel !== undefined && !item.searchLabel.toLowerCase().includes(q)) {
 				return false;
 				// maxitems doesn't work yet....
@@ -219,7 +222,16 @@ export default class Menu extends Component {
 			<div className="menu-popup-body">
 				{this.props.title && !parentItem && (
 					<h3>
-						{this.props.title} <Icon onClick={e => this.props.action()} name="x" />
+						{this.props.title}
+						<span className="icons">
+							{this.props.titleIcon}
+							<Icon
+								title="Close Menu"
+								placement="top"
+								onClick={e => this.props.action()}
+								name="x"
+							/>
+						</span>
 					</h3>
 				)}
 				<ul className="compact">
@@ -341,6 +353,7 @@ export default class Menu extends Component {
 
 	handleClickItem = async (event, item) => {
 		event.stopPropagation();
+		if (item.type === "search") return;
 		// support functions as item actions
 		if (typeof item.action === "function" && !item.disabled) {
 			item.action();

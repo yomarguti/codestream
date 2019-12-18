@@ -345,7 +345,7 @@ export class SimpleStream extends Component {
 		// 	? "Invite People"
 		// 	: "Invite People to CodeStream";
 
-		const { userTeams, teamId: currentTeamId } = this.props;
+		const { userTeams, teamId: currentTeamId, apiCapabilities, inSharingModel } = this.props;
 		const hasOtherTeams = userTeams.length > 1;
 
 		const teamItem = {
@@ -403,7 +403,7 @@ export class SimpleStream extends Component {
 			// { label: inviteLabel, action: "invite" },
 		].filter(Boolean);
 
-		if (this.props.isCodeStreamTeam) {
+		if (apiCapabilities["follow"] && inSharingModel) {
 			menuItems.push(
 				{
 					label: "Notifications...",
@@ -2307,6 +2307,7 @@ const mapStateToProps = state => {
 	}));
 
 	return {
+		inSharingModel: state.featureFlags.sharing,
 		apiCapabilities: apiVersioning.apiCapabilities,
 		currentCodemarkId: context.currentCodemarkId,
 		currentMarkerId: context.currentMarkerId,

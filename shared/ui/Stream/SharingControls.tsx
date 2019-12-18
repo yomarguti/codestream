@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { last as getLast } from "lodash-es";
 import Menu from "./Menu";
 import Icon from "./Icon";
+import { Button } from "../src/components/Button";
 import { HostApi } from "../webview-api";
 import {
 	FetchThirdPartyChannelsRequestType,
@@ -23,13 +24,15 @@ import { setContext } from "../store/context/actions";
 import { safe } from "../utils";
 import { useUpdates } from "../utilities/hooks";
 import { setUserPreference } from "./actions";
+import { Modal } from "./Modal";
 
 const TextButton = styled.span`
 	color: ${props => props.theme.colors.textHighlight};
 	cursor: pointer;
 	.octicon-chevron-down {
 		transform: scale(0.7);
-		margin-right: 2px;
+		margin-left: 2px;
+		margin-right: 5px;
 	}
 	&:focus {
 		margin: -3px;
@@ -37,7 +40,11 @@ const TextButton = styled.span`
 	}
 `;
 
-export type SharingMenuProps = React.PropsWithChildren<{ items: any[]; title?: string }>;
+export type SharingMenuProps = React.PropsWithChildren<{
+	items: any[];
+	title?: string;
+	titleIcon?: any;
+}>;
 
 export function SharingMenu(props: SharingMenuProps) {
 	const buttonRef = React.useRef<HTMLSpanElement>(null);
@@ -47,13 +54,18 @@ export function SharingMenu(props: SharingMenuProps) {
 		if (event.key == "Enter") return toggleMenu(event);
 	};
 
+	const maybeToggleMenu = action => {
+		if (action !== "noop") toggleMenu(action);
+	};
+
 	return (
 		<>
 			{isOpen && buttonRef.current && (
 				<Menu
 					align="center"
-					action={toggleMenu}
+					action={maybeToggleMenu}
 					title={props.title}
+					titleIcon={props.titleIcon}
 					target={buttonRef.current}
 					items={props.items}
 					focusOnSelect={buttonRef.current}
@@ -66,6 +78,27 @@ export function SharingMenu(props: SharingMenuProps) {
 		</>
 	);
 }
+
+const ChannelTable = styled.table`
+	color: ${props => props.theme.colors.text};
+	margin: 0 auto;
+	border-collapse: collapse;
+	td {
+		text-align: left;
+		white-space: nowrap;
+		padding: 2px 10px;
+		.icon {
+			vertical-align: -2px;
+		}
+	}
+	tbody tr:hover td {
+		background: rgba(127, 127, 127, 0.1);
+	}
+	hr {
+		border: none;
+		border-bottom: 1px solid ${props => props.theme.colors.baseBorder};
+	}
+`;
 
 const Root = styled.div`
 	color: ${props => props.theme.colors.textSubtle};
@@ -118,12 +151,20 @@ export type SharingAttributes = Pick<
 >;
 
 export const SharingControls = React.memo(
-	(props: { onChangeValues: (values?: SharingAttributes) => void; showToggle?: boolean }) => {
+	(props: {
+		onChangeValues: (values?: SharingAttributes) => void;
+		showToggle?: boolean;
+		repoId?: string;
+	}) => {
 		const dispatch = useDispatch();
 
 		const derivedState = useSelector((state: CodeStreamState) => {
 			const currentTeamId = state.context.currentTeamId;
 			const preferencesForTeam = state.preferences[currentTeamId] || {};
+
+			const defaultChannels = preferencesForTeam.defaultChannel || {};
+			const defaultChannel = props.repoId && defaultChannels[props.repoId];
+
 			// this is what we've persisted in the server as the last selection the user made
 			const lastShareAttributes: SharingAttributes | undefined =
 				preferencesForTeam.lastShareAttributes;
@@ -132,7 +173,8 @@ export const SharingControls = React.memo(
 			const selectedShareTarget = shareTargets.find(
 				target =>
 					target.teamId ===
-					(state.context.shareTargetTeamId ||
+					((defaultChannel && defaultChannel.providerTeamId) ||
+						state.context.shareTargetTeamId ||
 						(lastShareAttributes && lastShareAttributes.providerTeamId))
 			);
 
@@ -145,7 +187,12 @@ export const SharingControls = React.memo(
 				isConnectedToMSTeams: isConnected(state, { name: "msteams" }),
 				shareTargets,
 				selectedShareTarget: selectedShareTarget || shareTargets[0],
-				lastSelectedChannelId: lastShareAttributes && lastShareAttributes.channelId
+				lastSelectedChannelId:
+					(defaultChannel && defaultChannel.channelId) ||
+					(lastShareAttributes && lastShareAttributes.channelId),
+				repos: state.repos,
+				defaultChannelId: defaultChannel && defaultChannel.channelId,
+				defaultChannels
 			};
 		});
 		const [authenticationState, setAuthenticationState] = React.useState<{
@@ -153,6 +200,7 @@ export const SharingControls = React.memo(
 			label: string;
 		}>({ isAuthenticating: false, label: "" });
 		const [isFetchingData, setIsFetchingData] = React.useState<boolean>(false);
+		const [editingChannels, setEditingChannels] = React.useState<boolean>(false);
 
 		const selectedShareTargetTeamId = safe(() => derivedState.selectedShareTarget.teamId) as
 			| string
@@ -215,7 +263,7 @@ export const SharingControls = React.memo(
 						data.set(teamData => ({
 							...teamData,
 							channels: response.channels,
-							lastSelectedChannel: teamData.lastSelectedChannel || channelToSelect
+							lastSelectedChannel: channelToSelect || teamData.lastSelectedChannel
 						}));
 					} catch (error) {
 					} finally {
@@ -225,7 +273,15 @@ export const SharingControls = React.memo(
 			}
 		}, [selectedShareTargetTeamId]);
 
-		const selectedChannel = data.get().lastSelectedChannel;
+		const selectedChannel = React.useMemo(() => {
+			const { channels, lastSelectedChannel } = data.get();
+			if (derivedState.defaultChannelId != undefined) {
+				const channel = channels.find(c => c.id === derivedState.defaultChannelId);
+				if (channel) return channel;
+			}
+
+			return lastSelectedChannel;
+		}, [data, derivedState.defaultChannelId]);
 
 		React.useEffect(() => {
 			const shareTarget = derivedState.selectedShareTarget;
@@ -292,7 +348,8 @@ export const SharingControls = React.memo(
 			return targetItems;
 		}, [derivedState.shareTargets, derivedState.slackConfig, derivedState.msTeamsConfig]);
 
-		const channelMenuItems = React.useMemo(() => {
+		const getChannelMenuItems = action => {
+			// return React.useMemo(() => {
 			if (derivedState.selectedShareTarget == undefined) return [];
 
 			const dataForTeam = data.get();
@@ -305,10 +362,7 @@ export const SharingControls = React.memo(
 						key: channel.name,
 						label: channelName,
 						searchLabel: channelName,
-						action: () => {
-							if (props.showToggle) setCheckbox(true);
-							data.set(teamData => ({ ...teamData, lastSelectedChannel: channel }));
-						}
+						action: () => action(channel)
 					};
 					if (channel.type === "direct") {
 						group.dms.push(item);
@@ -319,12 +373,18 @@ export const SharingControls = React.memo(
 				{ dms: [], others: [] } as { dms: any[]; others: any[] }
 			);
 			const search =
-				others.length + dms.length > 5
-					? [{ label: "-" }, { type: "search", placeholder: "Search...", action: "search" }]
+				dataForTeam.channels.length > 5
+					? [{ type: "search", placeholder: "Search..." }, { label: "-" }]
 					: [];
 
 			return [...search, ...others, { label: "-" }, ...dms];
-		}, [data.get().channels]);
+			// }, [data.get().channels]);
+		};
+
+		const setChannel = channel => {
+			if (props.showToggle) setCheckbox(true);
+			data.set(teamData => ({ ...teamData, lastSelectedChannel: channel }));
+		};
 
 		const authenticateWithSlack = () => {
 			setAuthenticationState({ isAuthenticating: true, label: "Slack" });
@@ -399,6 +459,85 @@ export const SharingControls = React.memo(
 				</Root>
 			);
 
+		const setDefaultChannel = (repoId, providerTeamId, channelId) => {
+			const value = { providerTeamId, channelId };
+			dispatch(setUserPreference([derivedState.currentTeamId, "defaultChannel", repoId], value));
+		};
+
+		const getChannelById = id => {
+			return data.get().channels.find(c => c.id == id);
+		};
+
+		const renderDefaultChannels = () => {
+			const { repos, defaultChannels } = derivedState;
+			return (
+				<Root>
+					<ChannelTable>
+						<thead>
+							<tr>
+								<td>Repo</td>
+								<td>Default</td>
+							</tr>
+							<tr>
+								<td colSpan={2}>
+									<hr />
+								</td>
+							</tr>
+						</thead>
+						<tbody>
+							{Object.keys(repos)
+								.sort((a, b) => repos[a].name.localeCompare(repos[b].name))
+								.map(key => {
+									const defaultSettings = defaultChannels[key];
+									const defaultChannel = defaultSettings
+										? getChannelById(defaultSettings.channelId)
+										: undefined;
+									return (
+										<tr>
+											<td>
+												<Icon name="repo" /> {repos[key].name}
+											</td>
+											<td>
+												<SharingMenu
+													items={getChannelMenuItems(channel =>
+														setDefaultChannel(
+															key,
+															derivedState.selectedShareTarget!.teamId,
+															channel.id
+														)
+													)}
+													title={`Default Channel for ${repos[key].name}`}
+												>
+													{defaultChannel == undefined
+														? "last channel used "
+														: formatChannelName(defaultChannel)}
+												</SharingMenu>
+											</td>
+										</tr>
+									);
+								})}
+						</tbody>
+					</ChannelTable>
+					<div style={{ textAlign: "center", margin: "20px auto" }}>
+						<Button onClick={e => setEditingChannels(false)}>Done</Button>
+					</div>
+				</Root>
+			);
+		};
+
+		if (editingChannels) {
+			return <Modal onClose={() => setEditingChannels(false)}>{renderDefaultChannels()}</Modal>;
+		}
+
+		const hasRepos = derivedState.repos && Object.keys(derivedState.repos).length > 0;
+		const channelTitleIcon = hasRepos ? (
+			<Icon
+				name="gear"
+				title="Set Default Channels"
+				placement="top"
+				onClick={e => setEditingChannels(!editingChannels)}
+			/>
+		) : null;
 		return (
 			<Root>
 				{props.showToggle && (
@@ -408,10 +547,15 @@ export const SharingControls = React.memo(
 				)}
 				Share on{" "}
 				<SharingMenu items={shareProviderMenuItems}>
+					<Icon name={derivedState.selectedShareTarget!.icon} />{" "}
 					{derivedState.selectedShareTarget!.teamName}
 				</SharingMenu>{" "}
 				in{" "}
-				<SharingMenu items={channelMenuItems} title="Post to...">
+				<SharingMenu
+					items={getChannelMenuItems(channel => setChannel(channel))}
+					title="Post to..."
+					titleIcon={channelTitleIcon}
+				>
 					{selectedChannel == undefined ? "select a channel" : formatChannelName(selectedChannel)}
 				</SharingMenu>
 			</Root>

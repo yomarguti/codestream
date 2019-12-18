@@ -576,7 +576,6 @@ export class MessageInput extends React.Component<Props, State> {
 	handleKeyDown = (event: React.KeyboardEvent) => {
 		const multiCompose = this.props.multiCompose;
 
-		console.log("IN HKD IN MI");
 		if (this.state.currentPopup) {
 			if (event.key === "ArrowUp") {
 				event.stopPropagation();

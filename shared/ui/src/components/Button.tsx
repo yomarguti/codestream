@@ -35,6 +35,7 @@ const getColors = (variant = "primary") => {
 				background-color: rgba(255, 255, 255, 0.07);
 				color: var(--text-color);
 				:hover {
+					background-color: rgba(255, 255, 255, 0.09);
 					color: var(--text-color-highlight);
 				}
 			`;
@@ -45,7 +46,6 @@ const getColors = (variant = "primary") => {
 				background-color: var(--button-background-color);
 				color: var(--button-foreground-color);
 				:hover {
-					color: var(--text-color-highlight);
 					background-color: var(--button-background-color-hover);
 				}
 			`;

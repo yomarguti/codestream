@@ -868,6 +868,11 @@ class CodemarkForm extends React.Component<Props, State> {
 	renderSharingControls = () => {
 		if (this.props.isEditing) return null;
 
+		const { codeBlocks } = this.state;
+		// we only look at the first code range here because we're using it to default
+		// the channel based on the selected repo -- so we look at the first one
+		const repoId = codeBlocks[0] && codeBlocks[0].scm && codeBlocks[0].scm.repoId;
+
 		return (
 			<div className="checkbox-row" style={{ float: "left" }}>
 				{this.state.sharingDisabled ? (
@@ -881,6 +886,7 @@ class CodemarkForm extends React.Component<Props, State> {
 						onChangeValues={values => {
 							this._sharingAttributes = values;
 						}}
+						repoId={repoId}
 					/>
 				)}
 			</div>

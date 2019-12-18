@@ -30,7 +30,6 @@ function Marker(props: Props) {
 		startLine = marker.referenceLocations[0].location[0];
 
 	const codeHTML = prettyPrintOne(escapeHtml(marker.code), extension, startLine);
-	const repoLabel = props.repoName ? `[${props.repoName}] ` : "";
 	return (
 		<div style={{ marginTop: "10px" }} className={props.className}>
 			<div className="file-info">
