@@ -94,7 +94,7 @@
 			"default": "off",
 			"enum": [
 				"override",
-				"on",
+				"inherit from OS/environment",
 				"off"
 			],
 			"description": "Specifies whether to support proxy servers. If 'override', a url is required"

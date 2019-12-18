@@ -151,7 +151,7 @@ abstract class AgentConnection {
 				initializationOptions.proxySupport = "on";
 			}
 		} else {
-			initializationOptions.proxySupport = proxySupport;
+			initializationOptions.proxySupport = proxySupport === "off" ? proxySupport : "on";
 		}
 
 		const firstProject = atom.project.getPaths()[0]; // TODO: what if there are no projects
