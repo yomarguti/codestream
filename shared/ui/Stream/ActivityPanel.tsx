@@ -33,6 +33,7 @@ import Menu from "./Menu";
 import { FormattedPlural } from "react-intl";
 import { useMarkdownifyToHtml } from "./Markdowner";
 import { Codemark } from "./Codemark/index";
+import { logError } from "../logger";
 
 // see comment in SmartFormattedList.tsx
 const FormattedPluralAlias = FormattedPlural as any;
@@ -370,6 +371,16 @@ const Reply = (props: {
 	starred: boolean;
 	codemarkId: string;
 }) => {
+	// this is to try and figure out why and when this error might occur
+	React.useEffect(() => {
+		if (props.author == undefined) {
+			logError("<CodemarkForCodemark/> derivedState.author is undefined", {
+				codemarkId: props.codemarkId,
+				authorId: props.post.creatorId
+			});
+		}
+	}, [props.author]);
+
 	const [menuState, setMenuState] = React.useState<{
 		open: boolean;
 		target?: any;

@@ -27,6 +27,7 @@ import { BaseCodemarkProps, BaseCodemark, Text } from "./BaseCodemark";
 import { useMarkdownifyToHtml } from "../Markdowner";
 import Icon from "../Icon";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
+import { logError } from "@codestream/webview/logger";
 
 const StyledRelatedCodemark = styled(RelatedCodemark)`
 	white-space: normal;
@@ -107,6 +108,15 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 			)
 		};
 	});
+	// this is to try and figure out why and when this error might occur
+	React.useEffect(() => {
+		if (derivedState.author == undefined) {
+			logError("<CodemarkForCodemark/> derivedState.author is undefined", {
+				codemarkId: props.codemark.id,
+				authorId: props.codemark.creatorId
+			});
+		}
+	}, [derivedState.author]);
 	const permalinkRef = React.useRef<HTMLTextAreaElement>(null);
 	const [isEditing, setIsEditing] = React.useState(false);
 	// const [injectingMarkerId, setInjectingMarkerId] = React.useState<string | undefined>();

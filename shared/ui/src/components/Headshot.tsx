@@ -75,6 +75,9 @@ export const Headshot = styled((props: HeadshotProps) => {
 	const person = props.person;
 	if (!person) return null;
 
+	if (person == undefined || person.username === "CodeStream")
+		return <CodeStreamHeadshot {...props} />;
+
 	let initials = (person.email && person.email.charAt(0)) || "";
 	if (person.fullName) {
 		initials = person.fullName.replace(/(\w)\w*/g, "$1").replace(/\s/g, "");
