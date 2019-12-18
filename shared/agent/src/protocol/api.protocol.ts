@@ -374,6 +374,16 @@ export interface CSInviteUserResponse {
 	user: CSUser;
 }
 
+export interface CSUpdateUserRequest {
+	username?: string;
+	fullName?: string;
+	timeZone?: string;
+}
+
+export interface CSUpdateUserResponse {
+	user: CSUser;
+}
+
 export interface CSJoinStreamRequest {}
 
 export interface CSJoinStreamResponse {

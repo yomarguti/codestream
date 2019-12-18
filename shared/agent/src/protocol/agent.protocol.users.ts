@@ -46,6 +46,23 @@ export const InviteUserRequestType = new RequestType<
 	void
 >("codestream/user/invite");
 
+export interface UpdateUserRequest {
+	username?: string;
+	fullName?: string;
+	timeZone?: string;
+}
+
+export interface UpdateUserResponse {
+	user: CSUser;
+}
+
+export const UpdateUserRequestType = new RequestType<
+	UpdateUserRequest,
+	UpdateUserResponse,
+	void,
+	void
+>("codestream/user/update");
+
 export interface UpdatePresenceRequest {
 	sessionId: string;
 	status: CSPresenceStatus;

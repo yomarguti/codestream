@@ -79,7 +79,8 @@ import {
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
 	UpdateStreamMembershipRequest,
-	UpdateStreamMembershipResponse
+	UpdateStreamMembershipResponse,
+	UpdateUserRequest
 } from "../../protocol/agent.protocol";
 import {
 	CSApiCapabilities,
@@ -2256,6 +2257,11 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	inviteUser(request: InviteUserRequest) {
 		return this._codestream.inviteUser(request);
+	}
+
+	@log()
+	updateUser(request: UpdateUserRequest) {
+		return this._codestream.updateUser(request);
 	}
 
 	@log()

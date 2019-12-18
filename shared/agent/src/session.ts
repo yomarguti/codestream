@@ -770,6 +770,11 @@ export class CodeStreamSession {
 			this.agent.sendNotification(DidLoginNotificationType, { data: loginResponse })
 		);
 
+		if (!response.user.timeZone) {
+			const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+			this.api.updateUser({ timeZone });
+		}
+
 		return loginResponse;
 	}
 

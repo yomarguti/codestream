@@ -87,8 +87,9 @@ import {
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
 	UpdateStreamMembershipRequest,
-	UpdateTeamTagRequestType, VerifyConnectivityResponse
-} from "../../protocol/agent.protocol";
+	UpdateTeamTagRequestType,
+	UpdateUserRequest,	
+	VerifyConnectivityResponse} from "../../protocol/agent.protocol";
 import {
 	CSAddProviderHostRequest,
 	CSAddProviderHostResponse,
@@ -172,6 +173,8 @@ import {
 	CSUpdatePresenceResponse,
 	CSUpdateStreamRequest,
 	CSUpdateStreamResponse,
+	CSUpdateUserRequest,
+	CSUpdateUserResponse,
 	CSUser,
 	LoginResult,
 	ProviderType,
@@ -1303,6 +1306,15 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return this.post<CSInviteUserRequest, CSInviteUserResponse>(
 			"/users",
 			{ ...request, teamId: this.teamId },
+			this._token
+		);
+	}
+
+	@log()
+	updateUser(request: UpdateUserRequest) {
+		return this.put<CSUpdateUserRequest, CSUpdateUserResponse>(
+			"/users/" + this.userId,
+			request,
 			this._token
 		);
 	}

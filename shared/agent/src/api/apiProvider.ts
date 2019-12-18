@@ -120,7 +120,10 @@ import {
 	UpdatePresenceRequest,
 	UpdatePresenceResponse,
 	UpdateStreamMembershipRequest,
-	UpdateStreamMembershipResponse, VerifyConnectivityResponse
+	UpdateStreamMembershipResponse,	
+	UpdateUserRequest,
+	UpdateUserResponse,
+	VerifyConnectivityResponse
 } from "../protocol/agent.protocol";
 import {
 	CSApiCapabilities,
@@ -347,6 +350,7 @@ export interface ApiProvider {
 	fetchUsers(request: FetchUsersRequest): Promise<FetchUsersResponse>;
 	getUser(request: GetUserRequest): Promise<GetUserResponse>;
 	inviteUser(request: InviteUserRequest): Promise<InviteUserResponse>;
+	updateUser(request: UpdateUserRequest): Promise<UpdateUserResponse>;
 
 	connectThirdPartyProvider(request: {
 		providerId: string;
