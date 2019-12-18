@@ -14,6 +14,7 @@ import { upgradeRecommendedDismissed } from "../store/versioning/actions";
 import { VersioningActionsType } from "../store/versioning/types";
 import { apiUpgradeRecommendedDismissed } from "../store/apiVersioning/actions";
 import { ApiVersioningActionsType } from "../store/apiVersioning/types";
+import { errorDismissed } from "@codestream/webview/store/connectivity/actions";
 
 const mapStateToProps = state => ({
 	bootstrapped: state.bootstrapped,
@@ -69,7 +70,7 @@ const Root = connect(mapStateToProps)(props => {
 			<Dismissable
 				title="Can't connect"
 				buttons={[
-					{text: "Dismiss"},
+					{text: "Dismiss", onClick: e => { props.dispatch(errorDismissed()); } },
 					{text: "Retry", onClick: () => { HostApi.instance.send(RestartRequestType) } }
 				]}
 			>

@@ -17,6 +17,8 @@ export function reduceConnectivity(state = initialState, action: ConnectivityAct
 			return { ...state, offline: false };
 		case ConnectivityActionsType.ErrorOccurred:
 			return { ...state, error: action.payload };
+		case ConnectivityActionsType.ErrorDismissed:
+			return { ...state, error: undefined }
 		case "RESET":
 			return initialState;
 		default:

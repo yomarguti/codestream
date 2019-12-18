@@ -6,6 +6,7 @@ export interface ConnectivityState {
 export enum ConnectivityActionsType {
 	Online = "ONLINE",
 	Offline = "OFFLINE",
-	ErrorOccurred = "CONNECTIVITY_ERROR_OCCURRED"
+	ErrorOccurred = "CONNECTIVITY_ERROR_OCCURRED",
+	ErrorDismissed = "CONNECTIVITY_ERROR_DISMISSED"
 }
 
