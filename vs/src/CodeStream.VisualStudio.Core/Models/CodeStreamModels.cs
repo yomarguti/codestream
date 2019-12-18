@@ -353,8 +353,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 	[JsonConverter(typeof(StringEnumConverter))]
 	public enum ProxySupport {
 		On,
-		Off,
-		Override,
+		Off
 	}
 
 	public class InitializationOptions {

@@ -13,7 +13,6 @@ namespace CodeStream.VisualStudio.Core.Models {
 		bool ShowMarkerGlyphs { get; set; }
 
 		string ServerUrl { get; set; }
-		string ProxyUrl { get; set; }
 		bool ProxyStrictSsl { get; set; }
 		ProxySupport ProxySupport { get; set; }
 		bool DisableStrictSSL { get; set; }

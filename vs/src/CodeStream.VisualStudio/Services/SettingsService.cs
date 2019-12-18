@@ -134,11 +134,6 @@ namespace CodeStream.VisualStudio.Services {
 			set => DialogPage.AutoHideMarkers = value;
 		}
 
-		public string ProxyUrl {
-			get => DialogPage.ProxyUrl;
-			set => DialogPage.ProxyUrl = value;
-		}
-
 		public bool ProxyStrictSsl {
 			get => DialogPage.ProxyStrictSsl;
 			set => DialogPage.ProxyStrictSsl = value;

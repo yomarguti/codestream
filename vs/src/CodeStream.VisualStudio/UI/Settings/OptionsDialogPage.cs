@@ -57,15 +57,6 @@ namespace CodeStream.VisualStudio.UI.Settings {
 						StrictSsl = ProxyStrictSsl
 					};
 				}
-				else {
-					if (!ProxyUrl.IsNullOrWhiteSpace()) {
-						_proxySupport = ProxySupport.Override;
-						Proxy = new Proxy {
-							Url = ProxyUrl,
-							StrictSsl = ProxyStrictSsl
-						};
-					}
-				}
 			}
 			catch {
 				// suffer silently
@@ -124,19 +115,6 @@ namespace CodeStream.VisualStudio.UI.Settings {
 			}
 		}
 
-		[Category("Connectivity")]
-		[DisplayName("Proxy Url")]
-		[Description("Specifies an optional proxy url")]
-		public string ProxyUrl {
-			get => _proxyUrl;
-			set {
-				if (_proxyUrl != value) {
-					_proxyUrl = value;
-					ProxySetup();
-					NotifyPropertyChanged();
-				}
-			}
-		}
 
 		[Category("Connectivity")]
 		[DisplayName("Proxy Strict SSL")]
@@ -154,7 +132,7 @@ namespace CodeStream.VisualStudio.UI.Settings {
 
 		[Category("Connectivity")]
 		[DisplayName("Proxy Support")]
-		[Description("Specifies how proxies are handled. [On] Your system-level proxy will be used, if set. [Off] No support. [Override] The ProxyUrl value will be used, if set.")]
+		[Description("Specifies how proxies are handled. [On] Your system-level proxy will be used, if set. [Off] No support.")]
 		public ProxySupport ProxySupport {
 			get => _proxySupport;
 			set {

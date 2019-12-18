@@ -46,7 +46,8 @@ namespace CodeStream.VisualStudio.Services {
 	public enum WebviewState {
 		Unknown,
 		Waiting,
-		Loaded
+		Loaded,
+		Restarting
 	}
 
 
@@ -179,6 +180,10 @@ namespace CodeStream.VisualStudio.Services {
 			Log.Verbose($"{GetType()} {nameof(Initialize)} Browser...");
 			OnInitialized();
 			Log.Verbose($"{GetType()} {nameof(Initialize)} Browser");
+		}
+
+		public void SetIsReloading() {
+			_state = WebviewState.Restarting;
 		}
 
 		protected void OnInitialized() {
@@ -409,7 +414,7 @@ namespace CodeStream.VisualStudio.Services {
 		/// Loads the Webview. Requires the UI thread
 		/// </summary>
 		public void LoadWebView() {
-			if (_state == WebviewState.Unknown || _state == WebviewState.Waiting) {
+			if (_state == WebviewState.Unknown || _state == WebviewState.Waiting || _state == WebviewState.Restarting) {
 				Log.Debug($"{nameof(LoadWebView)} State={_state}");
 				ThreadHelper.JoinableTaskFactory.Run(async delegate {
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();

@@ -23,6 +23,11 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public override string Method => MethodName;
 	}
 
+	public class ReloadRequestType : RequestType<EmptyRequestTypeParams> {
+		public const string MethodName = "host/restart";
+		public override string Method => MethodName;
+	}
+	
 	public class ReloadWebviewRequestType : RequestType<EmptyRequestTypeParams> {
 		public const string MethodName = "host/webview/reload";
 		public override string Method => MethodName;

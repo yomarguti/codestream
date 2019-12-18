@@ -48,5 +48,6 @@ namespace CodeStream.VisualStudio.Core.Services {
 		Task NotifyAsync(INotificationType message);
 		void EnqueueNotification(INotificationType message);
 		T GetItem<T>(string name);
+		void SetIsReloading();
 	}
 }

@@ -6,9 +6,12 @@ using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Controllers;
 using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.LanguageServer;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Services;
+using Microsoft;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.WindowsAPICodePack.Dialogs;
@@ -18,7 +21,8 @@ using Serilog;
 namespace CodeStream.VisualStudio {
 	public class WebViewRouter {
 		private static readonly ILogger Log = LogManager.ForContext<WebViewRouter>();
-		
+
+		private readonly IComponentModel _componentModel;
 		private readonly IWebviewUserSettingsService _webviewUserSettingsService;
 		private readonly ISessionService _sessionService;
 		private readonly ICodeStreamAgentService _codeStreamAgent;
@@ -27,9 +31,10 @@ namespace CodeStream.VisualStudio {
 		private readonly IBrowserService _browserService;
 		private readonly IIdeService _ideService;
 		private readonly IEditorService _editorService;
-		private readonly IAuthenticationServiceFactory _authenticationServiceFactory;		 
+		private readonly IAuthenticationServiceFactory _authenticationServiceFactory;
 
 		public WebViewRouter(
+			IComponentModel componentModel,
 			IWebviewUserSettingsService webviewUserSettingsService,
 			ISessionService sessionService,
 			ICodeStreamAgentService codeStreamAgent,
@@ -38,7 +43,8 @@ namespace CodeStream.VisualStudio {
 			IBrowserService browserService,
 			IIdeService ideService,
 			IEditorService editorService,
-			IAuthenticationServiceFactory authenticationServiceFactory) {			
+			IAuthenticationServiceFactory authenticationServiceFactory) {
+			_componentModel = componentModel;
 			_webviewUserSettingsService = webviewUserSettingsService;
 			_sessionService = sessionService;
 			_codeStreamAgent = codeStreamAgent;
@@ -124,7 +130,7 @@ namespace CodeStream.VisualStudio {
 
 											Log.Debug(nameof(_sessionService.WebViewDidInitialize));
 											break;
-										}								
+										}
 									case WebviewDidChangeContextNotificationType.MethodName: {
 											var @params = message.Params.ToObject<WebviewDidChangeContextNotification>();
 											if (@params != null) {
@@ -357,6 +363,14 @@ namespace CodeStream.VisualStudio {
 												finally {
 													scope.FulfillRequest(new { }.ToJToken());
 												}
+											}
+											break;
+										}
+									case ReloadRequestType.MethodName: {
+											var languageServerClientManager = _componentModel.GetService<ILanguageServerClientManager>();
+											if (languageServerClientManager != null) {
+												_browserService.SetIsReloading();
+												await languageServerClientManager.RestartAsync();
 											}
 											break;
 										}
