@@ -49,6 +49,7 @@ import {
 	LogoutResponse,
 	NewCodemarkNotificationType,
 	ReloadWebviewRequestType,
+	RestartRequestType,
 	ShellPromptFolderRequestType,
 	ShellPromptFolderResponse,
 	ShowCodemarkNotificationType,
@@ -231,7 +232,7 @@ export class CodestreamView {
 							requestIdleCallback(() => {
 								this.handleWebviewRequest(data)
 									.then(result => {
-										this.webview.send("codestream-ui", { id: data.id, ...result });
+										if (result) this.webview.send("codestream-ui", { id: data.id, ...result });
 									})
 									.catch(error => {
 										this.webview.send("codestream-ui", { id: data.id, error: error.message });
@@ -434,7 +435,7 @@ export class CodestreamView {
 
 	private async handleWebviewRequest(
 		message: WebviewIpcRequestMessage
-	): Promise<{ params: any } | { error: any }> {
+	): Promise<{ params: any } | { error: any } | void> {
 		switch (message.method) {
 			case BootstrapInHostRequestType.method: {
 				try {
@@ -541,8 +542,12 @@ export class CodestreamView {
 			case ReloadWebviewRequestType.method: {
 				// TODO: technically, just the iframe could be replaced
 				Container.viewController.reload(this.getURI());
-				// TODO: shouldn't need a return
-				return { params: true };
+				return;
+			}
+			case RestartRequestType.method: {
+				await this.session.restart(SignoutReason.User);
+				Container.viewController.reload(this.getURI());
+				return;
 			}
 			case InsertTextRequestType.method: {
 				const { text, marker } = message.params as InsertTextRequest;
