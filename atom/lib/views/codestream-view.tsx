@@ -314,10 +314,17 @@ export class CodestreamView {
 	}
 
 	private initialize() {
-		const onBlur = () =>
-			this.sendNotification(HostDidChangeFocusNotificationType, { focused: false });
-		const onFocus = () =>
-			this.sendNotification(HostDidChangeFocusNotificationType, { focused: true });
+		const onBlur = () => {
+			if (isViewVisible(this.getURI())) {
+				this.sendNotification(HostDidChangeFocusNotificationType, { focused: false });
+			}
+		};
+		const onFocus = () => {
+			if (isViewVisible(this.getURI())) {
+				this.sendNotification(HostDidChangeFocusNotificationType, { focused: true });
+			}
+		};
+
 		const window = remote.getCurrentWindow();
 		window.on("focus", onFocus);
 		window.on("blur", onBlur);
