@@ -43,6 +43,7 @@ import {
 	LogoutRequestType,
 	NewCodemarkNotificationType,
 	ReloadWebviewRequestType,
+	RestartRequestType,
 	ShellPromptFolderRequestType,
 	ShowCodemarkNotificationType,
 	UpdateConfigurationRequestType,
@@ -57,6 +58,7 @@ import {
 import * as fs from "fs";
 import { gate } from "system/decorators/gate";
 import {
+	commands,
 	ConfigurationChangeEvent,
 	ConfigurationTarget,
 	Disposable,
@@ -655,6 +657,22 @@ export class WebviewController implements Disposable {
 				webview.onIpcRequest(ReloadWebviewRequestType, e, async (type, params) =>
 					this.reload(true)
 				);
+
+				break;
+			}
+			case RestartRequestType.method: {
+				webview.onIpcRequest(RestartRequestType, e, async (type, params) => {
+					const action = "Reload";
+					window.showInformationMessage(
+						"Reload window in order to reconnect CodeStream with updated network settings",
+						action
+					)
+					.then(selectedAction => {
+						if (selectedAction === action) {
+							commands.executeCommand("workbench.action.reloadWindow");
+						}
+					});
+				});
 
 				break;
 			}
