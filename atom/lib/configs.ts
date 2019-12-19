@@ -11,7 +11,7 @@ export interface ConfigSchema {
 	autoHideMarkers: boolean;
 	autoSignIn: boolean;
 	traceLevel: TraceLevel;
-	proxySupport: "off" | "inherit from OS/environment" | "override";
+	proxySupport: "off" | "on";
 	proxyUrl: string;
 	proxyStrictSSL: boolean;
 	disableStrictSSL: boolean;

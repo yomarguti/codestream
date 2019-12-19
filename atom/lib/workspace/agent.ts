@@ -134,24 +134,19 @@ abstract class AgentConnection {
 		const configs = Container.configs;
 		const proxySupport = configs.get("proxySupport");
 
-		if (proxySupport === "override") {
+		if (proxySupport === "on") {
 			const proxy = configs.get("proxyUrl");
 			if (proxy !== "") {
+				initializationOptions.proxySupport = "override";
 				initializationOptions.proxy = {
 					url: proxy,
 					strictSSL: configs.get("proxyStrictSSL"),
 				};
-				initializationOptions.proxySupport = "override";
 			} else {
-				atom.notifications.addWarning("CodeStream: Invalid Proxy Settings", {
-					dismissable: true,
-					detail: "We'll attempt to detect proxy settings from the shell environment.",
-					description: "Proxy Support set to `override` but a Proxy Url was not provided.",
-				});
 				initializationOptions.proxySupport = "on";
 			}
 		} else {
-			initializationOptions.proxySupport = proxySupport === "off" ? proxySupport : "on";
+			initializationOptions.proxySupport = proxySupport;
 		}
 
 		const firstProject = atom.project.getPaths()[0]; // TODO: what if there are no projects
