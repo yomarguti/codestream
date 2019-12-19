@@ -27,7 +27,6 @@ export default class Confirm extends Component {
 		modalRoot.appendChild(this.el);
 		modalRoot.classList.add("active");
 
-		console.log("************************************************");
 		if (isInVscode()) {
 			this.disposables.push(
 				VsCodeKeystrokeDispatcher.on("keydown", event => {
