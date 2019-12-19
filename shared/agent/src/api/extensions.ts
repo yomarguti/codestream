@@ -324,20 +324,8 @@ export interface ReplyActionId {
 	id: number;
 	linkType: "web" | "ide" | "external" | "reply";
 	externalType?: "issue" | "code";
-	// external provider name
-	eP?: string;
-	// teamId
-	tId: string;
 	// codemarkId
 	cId: string;
-	// markerId
-	mId?: string;
-	// streamId
-	sId?: string;
-	// creatorId
-	crId?: string;
-	// parent postId
-	ppId?: string;
 	// provider creator user id, a slack userId, for example
 	pcuId?: string;
 }
@@ -387,12 +375,7 @@ export function toReplyActionId(
 	const actionId: ReplyActionId = {
 		id: id,
 		linkType: "reply",
-		sId: codemark.streamId,
-		eP: codemark.externalProvider,
-		tId: codemark.teamId,
 		cId: codemark.id,
-		crId: codemark.creatorId,
-		ppId: codemark.postId,
 		pcuId: providerCreatorUserId
 	};
 
