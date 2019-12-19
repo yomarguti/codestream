@@ -47,7 +47,7 @@ const getTeam = state => state.teams[state.context.currentTeamId];
 export const getTeamMembers = createSelector(getTeam, getUsers, (team, users) => {
 	return mapFilter(team.memberIds, (id: string) => {
 		const user: CSUser = users[id];
-		return user && !user.deactivated ? user : undefined;
+		return user && !user.deactivated && !user.externalUserId ? user : undefined;
 	}).sort((a, b) => a.username.localeCompare(b.username));
 });
 
