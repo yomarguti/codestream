@@ -73,7 +73,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
                     TraceLevel = settingsManager.GetAgentTraceLevel().ToJsonValue(),
 #endif
 					Proxy = settingsManager.Proxy,
-					ProxySupport = settingsManager.ProxySupport.ToJsonValue(),
+					ProxySupport = settingsManager.Proxy?.Url?.IsNullOrWhiteSpace() == false ? "override" : settingsManager.ProxySupport.ToJsonValue(),
 					DisableStrictSSL = settingsManager.DisableStrictSSL
 				};
 

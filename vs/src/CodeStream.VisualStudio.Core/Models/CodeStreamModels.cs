@@ -346,8 +346,8 @@ namespace CodeStream.VisualStudio.Core.Models {
 	public class Proxy {
 		[JsonProperty("url")]
 		public string Url { get; set; }
-		[JsonProperty("strictSsl")]
-		public bool StrictSsl { get; set; }
+		[JsonProperty("strictSSL")]
+		public bool StrictSSL { get; set; }
 	}
 
 	[JsonConverter(typeof(StringEnumConverter))]

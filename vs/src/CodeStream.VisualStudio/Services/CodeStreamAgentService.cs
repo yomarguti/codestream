@@ -132,7 +132,7 @@ namespace CodeStream.VisualStudio.Services {
 				Extension = extensionInfo,
 				Ide = ideInfo,
 				Proxy = settingsManager.Proxy,
-				ProxySupport = settingsManager.ProxySupport.ToJsonValue(),
+				ProxySupport = settingsManager.Proxy?.Url?.IsNullOrWhiteSpace() == false ? "override" : settingsManager.ProxySupport.ToJsonValue(),
 				DisableStrictSSL = settingsManager.DisableStrictSSL,
 #if DEBUG
 				TraceLevel = TraceLevel.Verbose.ToJsonValue(),

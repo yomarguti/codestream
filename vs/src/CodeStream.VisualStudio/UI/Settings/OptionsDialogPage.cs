@@ -54,7 +54,7 @@ namespace CodeStream.VisualStudio.UI.Settings {
 					// has a system proxy
 					Proxy = new Proxy {
 						Url = possibleProxyUri.ToString(),
-						StrictSsl = ProxyStrictSsl
+						StrictSSL = ProxyStrictSsl
 					};
 				}
 			}
