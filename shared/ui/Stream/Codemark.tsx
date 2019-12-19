@@ -1088,6 +1088,7 @@ export class Codemark extends React.Component<Props, State> {
 								title={hover && !selected ? "You are following this codemark" : undefined}
 								placement="bottomRight"
 								name="eye"
+								align={{ offset: [22, 4] }}
 							/>
 						</span>
 					)}

@@ -216,6 +216,7 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 										className="detail-icon"
 										title="You are following this codemark"
 										placement="bottomRight"
+										align={{ offset: [22, 4] }}
 										name="eye"
 									/>
 								</span>
@@ -227,6 +228,7 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 										key={i}
 										title={`Assigned to ${assignee.fullName || assignee.username}`}
 										placement="bottomRight"
+										align={{ offset: [17, 4] }}
 									>
 										<span>
 											<Headshot person={assignee as any} size={18} />
