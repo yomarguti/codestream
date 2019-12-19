@@ -70,8 +70,13 @@ const Root = connect(mapStateToProps)(props => {
 			<Dismissable
 				title="Can't connect"
 				buttons={[
-					{text: "Dismiss", onClick: e => { props.dispatch(errorDismissed()); } },
-					{text: "Retry", onClick: () => { HostApi.instance.send(RestartRequestType) } }
+					{
+						text: "Dismiss", onClick: e => {
+							e.preventDefault();
+							props.dispatch(errorDismissed());
+						}
+					},
+					{ text: "Retry", onClick: () => { HostApi.instance.send(RestartRequestType) } }
 				]}
 			>
 				<p>We are unable to connect to CodeStream's backend. Please check your connectivity and try again.</p>
@@ -95,9 +100,9 @@ const Root = connect(mapStateToProps)(props => {
 		return (
 			<RoadBlock title="API Server Out of Date">
 				<p>
-				Your on-prem installation of CodeStream is running an outdated version of the API server that
-				is incompatible with this version of the CodeStream extension. Please ask your admin to update
-				the API server.
+					Your on-prem installation of CodeStream is running an outdated version of the API server that
+					is incompatible with this version of the CodeStream extension. Please ask your admin to update
+					the API server.
 				</p>
 			</RoadBlock>
 		);
@@ -154,7 +159,7 @@ const Root = connect(mapStateToProps)(props => {
 					Your on-prem installation of CodeStream has an API server that seems to be getting a bit long
 					in the tooth. Please ask your admin to upgrade to the latest version to get access to {haveFeatures}
 				</p>
-				{ missingFeatures.map(feature => {
+				{missingFeatures.map(feature => {
 					return (
 						<p>
 							&middot; {feature.description}
