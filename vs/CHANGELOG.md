@@ -2,7 +2,7 @@
 
 ## [5.2.4] - 2019-12-19
 
-### Added
+### Added 
 
 - Adds a roadblock to let people know when CodeStream can't connect due to possible proxy issues
 
