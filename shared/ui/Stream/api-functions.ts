@@ -14,7 +14,9 @@ export async function getDocumentFromMarker(markerId: string) {
 
 		return response || undefined;
 	} catch (error) {
-		logError("Error making request 'GetDocumentFromMarkerRequestType'", error);
+		logError("Error making request 'GetDocumentFromMarkerRequestType'", {
+			message: error.toString()
+		});
 		return undefined;
 	}
 }
@@ -24,7 +26,9 @@ export async function highlightRange(request: EditorHighlightRangeRequest) {
 		const { success } = await HostApi.instance.send(EditorHighlightRangeRequestType, request);
 		return success;
 	} catch (error) {
-		logError("Error making request 'EditorHighlightRangeRequestType'", error);
+		logError("Error making request 'EditorHighlightRangeRequestType'", {
+			message: error.toString()
+		});
 		return false;
 	}
 }

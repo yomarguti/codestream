@@ -53,6 +53,7 @@ import { addDocumentMarker } from "../store/documentMarkers/actions";
 import { Link } from "./Link";
 import { logError } from "../logger";
 import infiniteLoadable from "./infiniteLoadable";
+import { getDocumentFromMarker } from "./api-functions";
 
 interface State {
 	hover: boolean;
@@ -116,21 +117,6 @@ interface InheritedProps {
 }
 
 type Props = InheritedProps & DispatchProps & ConnectedProps;
-
-async function getDocumentFromMarker(markerId: string) {
-	try {
-		const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
-			markerId: markerId
-		});
-
-		if (response) return { fileUri: response.textDocument.uri, range: response.range };
-
-		return undefined;
-	} catch (error) {
-		logError("Error making request 'GetDocumentFromMarkerRequestType'", error);
-		return undefined;
-	}
-}
 
 export class Codemark extends React.Component<Props, State> {
 	static defaultProps: Partial<Props> = {
@@ -555,11 +541,16 @@ export class Codemark extends React.Component<Props, State> {
 	jumpToMarker = markerId => {
 		getDocumentFromMarker(markerId).then(info => {
 			if (info) {
-				this._markersToHighlight[markerId] = info;
+				const uri = info.textDocument.uri;
+
+				this._markersToHighlight[markerId] = {
+					fileUri: uri,
+					range: info.range
+				};
 				const position = { line: info.range.start.line, character: 0 };
 				const range = { start: position, end: position, cursor: position };
-				this._sendSelectRequest({ uri: info.fileUri, selection: range });
-				this._sendHighlightRequest({ uri: info.fileUri, range, highlight: true });
+				this._sendSelectRequest({ uri, selection: range });
+				this._sendHighlightRequest({ uri, range, highlight: true });
 			}
 		});
 	};
@@ -590,8 +581,11 @@ export class Codemark extends React.Component<Props, State> {
 		if (markerId && codemark && codemark.markers) {
 			getDocumentFromMarker(markerId).then(info => {
 				if (info) {
-					this._markersToHighlight[markerId] = info;
-					this._sendHighlightRequest({ uri: info.fileUri, range: info.range, highlight });
+					this._markersToHighlight[markerId] = {
+						fileUri: info.textDocument.uri,
+						range: info.range
+					};
+					this._sendHighlightRequest({ uri: info.textDocument.uri, range: info.range, highlight });
 				}
 			});
 			return;
@@ -1319,7 +1313,7 @@ export class Codemark extends React.Component<Props, State> {
 		const providerName = marker.externalContent!.provider.name;
 
 		const pullOrMergeRequestText =
-			(providerName === "Bitbucket" || providerName === "GitLab") ? "merge" : "pull";
+			providerName === "Bitbucket" || providerName === "GitLab" ? "merge" : "pull";
 
 		return (
 			<div
