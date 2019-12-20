@@ -61,7 +61,7 @@ export class GitRemoteParser {
 		if (match == null) return [emptyStr, emptyStr, emptyStr];
 
 		let host = match[5];
-		const githubHost = 'github.com';
+		const githubHost = "github.com";
 		if (host && host.toLowerCase().startsWith(githubHost)) {
 			host = githubHost;
 		}

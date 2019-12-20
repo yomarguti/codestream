@@ -24,13 +24,13 @@ import {
 	CSChannelStream,
 	CSDirectStream,
 	CSGetMeResponse,
+	CSMarker,
 	CSMe,
 	CSSlackProviderInfo,
 	CSTeam,
 	CSUser,
 	ProviderType,
-	StreamType,
-	CSMarker
+	StreamType
 } from "../../protocol/api.protocol";
 import { debug, Functions, log, Strings } from "../../system";
 import { MessageType, StreamsRTMessage } from "../apiProvider";

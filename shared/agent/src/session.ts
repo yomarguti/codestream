@@ -68,9 +68,9 @@ import {
 	ThirdPartyProviders,
 	TokenLoginRequest,
 	TokenLoginRequestType,
-	VersionCompatibility,
 	VerifyConnectivityRequestType,
-	VerifyConnectivityResponse
+	VerifyConnectivityResponse,
+	VersionCompatibility
 } from "./protocol/agent.protocol";
 import {
 	CSApiCapabilities,

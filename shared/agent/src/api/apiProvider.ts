@@ -120,7 +120,7 @@ import {
 	UpdatePresenceRequest,
 	UpdatePresenceResponse,
 	UpdateStreamMembershipRequest,
-	UpdateStreamMembershipResponse,	
+	UpdateStreamMembershipResponse,
 	UpdateUserRequest,
 	UpdateUserResponse,
 	VerifyConnectivityResponse

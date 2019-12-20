@@ -88,8 +88,8 @@ import {
 	UpdatePresenceRequest,
 	UpdateStreamMembershipRequest,
 	UpdateTeamTagRequestType,
-	UpdateUserRequest,	
-	VerifyConnectivityResponse} from "../../protocol/agent.protocol";
+	UpdateUserRequest,
+	VerifyConnectivityResponse } from "../../protocol/agent.protocol";
 import {
 	CSAddProviderHostRequest,
 	CSAddProviderHostResponse,
@@ -1896,7 +1896,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 				this.baseUrl + "/no-auth/capabilities",
 				{ agent: this._httpsAgent, signal: controller.signal }
 			);
-			
+
 			Logger.log(`API server status: ${resp.status}`);
 			if (!resp.ok) {
 				response.ok = false;
