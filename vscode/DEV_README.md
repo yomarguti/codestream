@@ -119,14 +119,18 @@ npm run pack
 
 ##### To set breakpoints
 
-- **in the agent code**: need to attach agent (see **Debugging agent startup code**, below)
-- **in the webview code**: 
-  1. Choose "Launch Codestream" and start debug instance
-  2. In the launched Extension Host VSCode debug instance, Ctrl-shift-P to open the VSCode command palette (Because the extension executes in a browser rendering window, we must use browser tools to debug)
-  3. Start typing: "> Developer: Open Webview Developer Tools" and choose that option
-  4. Ctrl-P and use the search box to select the webview file you want to set a breakpoint in
-  5. Set breakpoint
-  6. Note that F8 is debug-run, not F5. 
+**in the agent code**: need to attach agent (see **Debugging agent startup code**, below)
+
+​	IMPORTANT: The agent will restart on many operations, meaning you will need to manually reattach the debugger before execution reaches your breakpoint code.
+
+**in the webview code**: 
+
+1. Choose "Launch Codestream" and start debug instance
+2. In the launched Extension Host VSCode debug instance, Ctrl-shift-P to open the VSCode command palette (Because the extension executes in a browser rendering window, we must use browser tools to debug)
+3. Start typing: "> Developer: Open Webview Developer Tools" and choose that option
+4. Ctrl-P and use the search box to select the webview file you want to set a breakpoint in
+5. Set breakpoint
+6. Note that F8 is debug-run, not F5. 
 
 ### Downloading Built VSIXs (common)
 
