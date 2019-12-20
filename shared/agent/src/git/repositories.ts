@@ -12,7 +12,7 @@ import { URI } from "vscode-uri";
 import { SessionContainer } from "../container";
 import { Logger } from "../logger";
 import { MarkersManager } from "../managers/markersManager";
-import { MatchReposRequest, MatchReposResponse, RepoMap } from "../protocol/agent.protocol.repos";
+import { MatchReposRequest, RepoMap } from "../protocol/agent.protocol.repos";
 import { CSRepository } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
 import { Iterables, Objects, Strings, TernarySearchTree } from "../system";
@@ -167,15 +167,18 @@ export class GitRepositories {
 		if (apiCapabilities["repoCommitMatching"]) {
 			const unassignedRepositories = allAddedRepositories.filter(repo => !repo.id);
 			if (unassignedRepositories.length > 0) {
+				const orderedUnassignedRepos: GitRepository[] = [];
 				const repoInfo: MatchReposRequest = { repos: [] };
 				await Promise.all(unassignedRepositories.map(async repo => {
 					const remotes = (await repo.getRemotes()).map(r => r.path);
 					const knownCommitHashes = await MarkersManager.getKnownCommitHashes(repo.path);
+					orderedUnassignedRepos.push(repo);
 					repoInfo.repos.push({ remotes, knownCommitHashes });
 				}));
 				const repoMatches = await this.session.api.matchRepos(repoInfo);
 				for (let i = 0; i < repoMatches.repos.length; i++) {
-					unassignedRepositories[i].setKnownRepository(repoMatches.repos[i]);
+					Logger.debug(`Git repo ${orderedUnassignedRepos[i].path} matched to ${repoMatches.repos[i].id}:${repoMatches.repos[i].name}`);
+					orderedUnassignedRepos[i].setKnownRepository(repoMatches.repos[i]);
 				}
 			}
 		}
