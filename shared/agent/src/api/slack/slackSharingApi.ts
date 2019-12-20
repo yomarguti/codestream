@@ -79,6 +79,7 @@ export class SlackSharingApiProvider {
 	private _usernamesById: Map<string, string> | undefined;
 	// TODO: Convert to index on UserManager?
 	private _userIdsByName: Map<string, string> | undefined;
+	private _codeStreamUsersById: Map<string, string> | undefined;
 
 	readonly capabilities: Capabilities = {
 		channelMute: false,
@@ -181,8 +182,16 @@ export class SlackSharingApiProvider {
 		return this._userIdsByName!;
 	}
 
+	private async ensureCodeStreamUsersById(): Promise<Map<string, string>> {
+		if (this._codeStreamUsersById === undefined) {
+			void (await this.ensureUserMaps());
+		}
+
+		return this._codeStreamUsersById!;
+	}
+
 	private async ensureUserMaps(): Promise<void> {
-		if (this._usernamesById === undefined || this._userIdsByName === undefined) {
+		if (this._usernamesById === undefined || this._userIdsByName === undefined || this._codeStreamUsersById === undefined) {
 			const users = (await this.fetchUsers()).users;
 
 			this._usernamesById = new Map();
@@ -191,6 +200,12 @@ export class SlackSharingApiProvider {
 			for (const user of users) {
 				this._usernamesById.set(user.id, user.username);
 				this._userIdsByName.set(user.username, user.id);
+			}
+
+			this._codeStreamUsersById = new Map();
+			const codeStreamUsers = (await SessionContainer.instance().users.get()).users;
+			for (const user of codeStreamUsers) {
+				this._codeStreamUsersById.set(user.id, user.username);
 			}
 		}
 	}
@@ -201,6 +216,7 @@ export class SlackSharingApiProvider {
 		try {
 			const usernamesById = await this.ensureUsernamesById();
 			const userIdsByName = await this.ensureUserIdsByName();
+			const codeStreamUsersById = await this.ensureCodeStreamUsersById();
 			const channelId = request.channelId;
 			let text = request.text;
 			const meMessage = meMessageRegex.test(text);
@@ -257,6 +273,7 @@ export class SlackSharingApiProvider {
 					request.markerLocations,
 					usernamesById,
 					userIdsByName,
+					codeStreamUsersById,
 					repoNames,
 					this._slackUserId
 				);

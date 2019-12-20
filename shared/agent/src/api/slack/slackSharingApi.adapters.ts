@@ -558,6 +558,7 @@ export function toSlackPostBlocks(
 	markerLocations: CSMarkerLocations[] | undefined,
 	usernamesById: Map<string, string>,
 	userIdsByName: Map<string, string>,
+	codeStreamUsersById: Map<string, string>,
 	repoNames: { [key: string]: string },
 	slackUserId: string
 ): Blocks {
@@ -613,12 +614,12 @@ export function toSlackPostBlocks(
 		}
 	}
 
-	if (codemark.assignees !== undefined && codemark.assignees.length !== 0) {
+	if (codemark.assignees !== undefined && codemark.assignees.length !== 0 && codeStreamUsersById) {
 		blocks.push({
 			type: "section",
 			text: {
 				type: "mrkdwn",
-				text: `*Assignees*\n${codemark.assignees.map(a => usernamesById.get(a) || "").join(", ")}`
+				text: `*Assignees*\n${codemark.assignees.map(a => codeStreamUsersById.get(a) || "").join(", ")}`
 			}
 		});
 	}
