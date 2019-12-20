@@ -59,6 +59,11 @@
 ]]></description>
 
     <change-notes><![CDATA[
+<h4 id="5_2_5">5.2.5</h4>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue with repo matching on startup</li>
+</ul>
 <h4 id="5_2_4">5.2.4</h4>
 <h5>Added</h5>
 <ul>
@@ -73,8 +78,6 @@
     <li>Fixes an issue with creating codemarks that include blank line at the end of a file</li>
     <li>Fixes a broken link on the form to configure the GitLab Self-Managed integration</li>
 </ul>
-
-
 <h4 id="5_2_3">5.2.3</h4>
 <h5>Added</h5>
 <ul>
