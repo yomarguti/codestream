@@ -134,22 +134,21 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 									{hasTags && (
 										<Meta>
 											<MetaLabel>Tags</MetaLabel>
-											<MetaDescription>
+											<MetaDescriptionForTags>
 												{props.tags!.map(tag => (
 													<Tag tag={tag} key={tag.id} />
 												))}
-											</MetaDescription>
+											</MetaDescriptionForTags>
 										</Meta>
 									)}
 									{hasAssignees && (
 										<Meta>
 											<MetaLabel>Assignees</MetaLabel>
-											<MetaDescription>
+											<MetaDescriptionForAssignees>
 												{props.assignees!.map(assignee => (
-													<React.Fragment key={assignee.fullName || assignee.email}>
+													<MetaAssignee key={assignee.fullName || assignee.email}>
 														<Headshot person={assignee as any} size={18} />
 														<span
-															style={{ marginLeft: "5px" }}
 															className={cx({
 																"at-mention me":
 																	assignee.email != undefined &&
@@ -158,9 +157,9 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 														>
 															{assignee.fullName || assignee.email}
 														</span>
-													</React.Fragment>
+													</MetaAssignee>
 												))}
-											</MetaDescription>
+											</MetaDescriptionForAssignees>
 										</Meta>
 									)}
 								</MetaRow>
@@ -401,6 +400,28 @@ const MetaDescription = styled.div`
 	display: flex;
 	> *:not(:first-child) {
 		margin-left: 5px;
+	}
+`;
+
+const MetaDescriptionForAssignees = styled.div`
+	display: flex;
+	flex-direction: column;
+	> *:not(:last-child) {
+		margin-bottom: 5px;
+	}
+`;
+
+const MetaDescriptionForTags = styled.div`
+	display: flex;
+	> *:not(:last-child) {
+		margin-right: 5px;
+	}
+`;
+
+const MetaAssignee = styled.div`
+	display: flex;
+	${Headshot} {
+		margin-right: 5px;
 	}
 `;
 
