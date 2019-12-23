@@ -244,6 +244,12 @@ https://github.com/TeamCodeStream/CodeStream/wiki/Instructions-for-finding-CodeS
 
 Helpful: https://github.com/microsoft/vscode-extension-samples
 
+Looking at the database
+
+1. Get MongoDB Compass: https://www.mongodb.com/products/compass
+2. Point it to pd-api.codestream.us:27017
+3. To see the most recent database entries: OPTIONS -> Sort, enter "{createdAt : -1}"
+
 ### New to VSCode example: debugging agent startup code (Novice) ###
 
 The agent startup code is run only when the agent first starts, and there is no restart mechanism that does not kill and restart the process. We use a feature in VSCode that allows us to wait for a process to spawn, and then automatically attaches to it. 
