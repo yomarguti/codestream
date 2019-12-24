@@ -11,7 +11,8 @@ export const NotificationsPanel = props => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
 			notificationPreference: state.preferences.notifications || "involveMe",
-			isInVscode: state.ide.name === "VSC"
+			isInVscode: state.ide.name === "VSC",
+			isInJetbrains: state.ide.name === "JETBRAINS"
 		};
 	});
 	const [loading, setLoading] = useState(false);
@@ -32,7 +33,7 @@ export const NotificationsPanel = props => {
 				</div>
 				<fieldset className="form-body">
 					<p className="explainer">
-						{derivedState.isInVscode
+						{derivedState.isInVscode || derivedState.isInJetbrains
 							? "Follow codemarks to receive desktop and email notifications."
 							: "Follow codemarks to receive email notifications."}
 					</p>
