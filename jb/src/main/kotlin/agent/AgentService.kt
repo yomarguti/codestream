@@ -35,10 +35,12 @@ import protocols.agent.CreatePermalinkParams
 import protocols.agent.CreatePermalinkResult
 import protocols.agent.DocumentMarkersParams
 import protocols.agent.DocumentMarkersResult
+import protocols.agent.GetPostParams
 import protocols.agent.GetStreamParams
 import protocols.agent.GetUserParams
 import protocols.agent.Ide
 import protocols.agent.InitializationOptions
+import protocols.agent.Post
 import protocols.agent.Stream
 import java.io.File
 import java.nio.file.Files
@@ -289,6 +291,13 @@ class AgentService(private val project: Project) : Disposable {
             .request("codestream/user", GetUserParams(id))
             .await() as JsonObject
         return gson.fromJson(json.get("user"))
+    }
+
+    suspend fun getPost(streamId: String, id: String): Post {
+        val json = remoteEndpoint
+            .request("codestream/post", GetPostParams(streamId, id))
+            .await() as JsonObject
+        return gson.fromJson(json.get("post"))
     }
 
     suspend fun createPermalink(params: CreatePermalinkParams): CreatePermalinkResult {

@@ -38,14 +38,6 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
 
     val currentStreamId get() = webViewContext?.currentStreamId
 
-    val notifications: String?
-        get() {
-            if (applicationSettings.notifications == null) {
-                return if (project.sessionService?.isSlackTeam == true) "none" else "mentions"
-            }
-            return applicationSettings.notifications
-        }
-
     var webViewContext by Delegates.observable<WebViewContext?>(null) { _, _, new ->
         _webViewContextObservers.forEach { it(new) }
     }

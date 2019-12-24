@@ -1,8 +1,9 @@
 package com.codestream.notification
 
 import com.codestream.CODESTREAM_TOOL_WINDOW_ID
+import com.codestream.agentService
 import com.codestream.codeStream
-import com.codestream.protocols.webview.StreamNotifications
+import com.codestream.protocols.webview.CodemarkNotifications
 import com.codestream.sessionService
 import com.codestream.settingsService
 import com.codestream.webViewService
@@ -14,6 +15,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import protocols.agent.Codemark
 import protocols.agent.Post
 import protocols.agent.StreamType
 
@@ -34,10 +36,6 @@ class NotificationComponent(val project: Project) {
     }
 
     private fun didChangePosts(posts: List<Post>) {
-        val settings = project.settingsService ?: return
-
-        if (settings.notifications == "none") return
-
         GlobalScope.launch {
             posts.forEach { didChangePost(it) }
         }
@@ -53,6 +51,9 @@ class NotificationComponent(val project: Project) {
             return
         }
 
+        val parentPost = post.parentPostId?.let { project.agentService?.getPost(post.streamId, it) }
+        val codemark = parentPost?.codemark ?: post.codemark ?: return
+
         val isMentioned = post.mentionedUserIds?.contains(userLoggedIn.userId) ?: false
         val isMutedStream = userLoggedIn.user.preferences?.mutedStreams?.get(post.streamId) == true
         if (isMutedStream && !isMentioned) {
@@ -60,18 +61,10 @@ class NotificationComponent(val project: Project) {
         }
 
         val isStreamVisible = codeStream.isVisible && settings.currentStreamId == post.streamId
-        val stream = session.getStream(post.streamId)
+        val isUserFollowing = codemark.followerIds?.contains(userLoggedIn.userId) ?: false
 
-        if (settings.notifications == "all") {
-            if (!isStreamVisible) {
-                showNotification(post)
-            } else if (isMentioned || (!isStreamVisible && stream?.type == StreamType.DIRECT)) {
-                showNotification(post)
-            }
-        } else if (settings.notifications == "mentions") {
-            if (isMentioned || (!isStreamVisible && stream?.type == StreamType.DIRECT)) {
-                showNotification(post)
-            }
+        if (isUserFollowing && (!isStreamVisible || isMentioned)) {
+            showNotification(post, codemark)
         }
     }
 
@@ -80,7 +73,7 @@ class NotificationComponent(val project: Project) {
         notification.notify(project)
     }
 
-    private suspend fun showNotification(post: Post) {
+    private suspend fun showNotification(post: Post, codemark: Codemark) {
         val session = project.sessionService ?: return
         val sender =
             if (post.creatorId != null)
@@ -99,7 +92,7 @@ class NotificationComponent(val project: Project) {
         notification.addAction(NotificationAction.createSimple("Open") {
             project.codeStream?.show {
                 project.webViewService?.run {
-                    postNotification(StreamNotifications.Show(post.streamId))
+                    postNotification(CodemarkNotifications.Show(codemark.id))
                     notification.expire()
                 }
             }

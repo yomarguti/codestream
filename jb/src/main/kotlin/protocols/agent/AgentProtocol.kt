@@ -149,7 +149,8 @@ class Codemark(
     val streamId: String,
     val postId: String?,
     val status: String?,
-    val pinned: Boolean?
+    val pinned: Boolean?,
+    val followerIds: List<String>?
 )
 
 class TextDocument(val uri: String)
@@ -163,7 +164,9 @@ class Post(
     val deactivated: Boolean,
     val hasBeenEdited: Boolean,
     val numReplies: Int,
-    val reactions: JsonElement?
+    val reactions: JsonElement?,
+    val parentPostId: String?,
+    val codemark: Codemark?
 ) {
     val isNew: Boolean
         get() {
@@ -196,6 +199,11 @@ class GetStreamParams(
 
 class GetUserParams(
     val userId: String
+)
+
+class GetPostParams(
+    val streamId: String,
+    val postId: String
 )
 
 class Marker(

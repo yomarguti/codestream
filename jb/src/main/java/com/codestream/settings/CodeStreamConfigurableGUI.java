@@ -22,7 +22,6 @@ public class CodeStreamConfigurableGUI {
     private JCheckBox showMarkers;
     private JComboBox proxySupport;
     private JCheckBox proxyStrictSSL;
-    private JComboBox showNotifications;
 
     public CodeStreamConfigurableGUI() {
         proxySupport.addItemListener(event -> {
@@ -99,8 +98,6 @@ public class CodeStreamConfigurableGUI {
     public JComboBox<ProxySupport> getProxySupport() {
         return proxySupport;
     }
-
-    public JComboBox<String> getShowNotifications() { return showNotifications; }
 
     public JCheckBox getProxyStrictSSL() {
         return proxyStrictSSL;

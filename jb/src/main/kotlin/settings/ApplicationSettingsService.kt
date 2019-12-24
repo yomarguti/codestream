@@ -34,7 +34,6 @@ data class ApplicationSettingsServiceState(
     var serverUrl: String = API_PROD,
     var disableStrictSSL: Boolean = false,
     var avatars: Boolean = true,
-    var notifications: String? = null,
     var team: String? = null,
     var showFeedbackSmiley: Boolean = true,
     var showMarkers: Boolean = true,
@@ -66,7 +65,6 @@ class ApplicationSettingsService : PersistentStateComponent<ApplicationSettingsS
     val team get() = state.team
     val autoHideMarkers get() = state.autoHideMarkers
     val showMarkers get() = state.showMarkers
-    val notifications get() = state.notifications
     val serverUrl get() = state.serverUrl
     val disableStrictSSL get() = state.disableStrictSSL
     val email get() = state.email
