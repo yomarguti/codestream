@@ -1,51 +1,29 @@
 package com.codestream.webview
 
-import com.codestream.DEBUG
 import com.codestream.WEBVIEW_PATH
 import com.codestream.gson
 import com.codestream.protocols.webview.WebViewNotification
 import com.codestream.settingsService
 import com.github.salomonbrys.kotson.jsonObject
 import com.google.gson.JsonElement
-import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.teamdev.jxbrowser.chromium.Browser
-import com.teamdev.jxbrowser.chromium.BrowserContext
-import com.teamdev.jxbrowser.chromium.BrowserContextParams
-import com.teamdev.jxbrowser.chromium.BrowserPreferences
-import com.teamdev.jxbrowser.chromium.BrowserType
-import com.teamdev.jxbrowser.chromium.CertificateErrorParams
-import com.teamdev.jxbrowser.chromium.CertificatesDialogParams
-import com.teamdev.jxbrowser.chromium.CloseStatus
-import com.teamdev.jxbrowser.chromium.ColorChooserParams
-import com.teamdev.jxbrowser.chromium.DialogHandler
-import com.teamdev.jxbrowser.chromium.DialogParams
-import com.teamdev.jxbrowser.chromium.FileChooserParams
-import com.teamdev.jxbrowser.chromium.LoadHandler
-import com.teamdev.jxbrowser.chromium.LoadParams
-import com.teamdev.jxbrowser.chromium.PromptDialogParams
-import com.teamdev.jxbrowser.chromium.ReloadPostDataParams
-import com.teamdev.jxbrowser.chromium.ResourceHandler
-import com.teamdev.jxbrowser.chromium.ResourceParams
-import com.teamdev.jxbrowser.chromium.ResourceType
-import com.teamdev.jxbrowser.chromium.UnloadDialogParams
-import com.teamdev.jxbrowser.chromium.events.ScriptContextEvent
-import com.teamdev.jxbrowser.chromium.events.ScriptContextListener
-import com.teamdev.jxbrowser.chromium.swing.BrowserView
+import com.teamdev.jxbrowser.browser.Browser
+import com.teamdev.jxbrowser.browser.callback.InjectJsCallback
+import com.teamdev.jxbrowser.js.JsObject
+import com.teamdev.jxbrowser.view.swing.BrowserView
 import org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.charset.Charset
-import java.util.concurrent.atomic.AtomicInteger
 import javax.swing.UIManager
 
-class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHandler, ResourceHandler {
+class WebViewService(val project: Project) : Disposable {
     private val utf8 = Charset.forName("UTF-8")
     private val logger = Logger.getInstance(WebViewService::class.java)
     private val router = WebViewRouter(project)
     private val browser = createBrowser(router)
-    val webView = BrowserView(browser)
     private lateinit var tempDir: File
     private lateinit var extractedHtmlFile: File
 
@@ -63,14 +41,13 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
         UIManager.addPropertyChangeListener {
             if (it.propertyName == "lookAndFeel") {
                 applyStylesheet()
-                browser.loadURL(htmlFile.url)
+                browser.navigation().loadUrl(htmlFile.url)
             }
         }
     }
 
-    companion object {
-        private var debugPortSeed = AtomicInteger(9222)
-        private val debugPort get() = debugPortSeed.getAndAdd(1)
+    val webView: BrowserView by lazy {
+        BrowserView.newInstance(browser)
     }
 
     fun onDidInitialize(cb: () -> Unit) {
@@ -84,7 +61,7 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
             project.settingsService?.clearWebViewContext()
         }
         applyStylesheet()
-        browser.loadURL(htmlFile.url)
+        browser.navigation().loadUrl(htmlFile.url)
     }
 
     private fun extractAssets() {
@@ -138,117 +115,49 @@ class WebViewService(val project: Project) : Disposable, DialogHandler, LoadHand
     }
 
     private fun postMessage(message: JsonElement, force: Boolean? = false) {
-        if (router.isReady || force == true) browser.executeJavaScript("window.postMessage($message,'*');")
+        if (router.isReady || force == true) browser.mainFrame().ifPresent {
+            it.executeJavaScript<Unit>("window.postMessage($message,'*');")
+        }
     }
 
     override fun dispose() {
-        logger.info("Disposing WebViewService for project ${project.basePath}")
-        browser.dispose()
-//        BrowserCore.shutdown()
+        logger.info("Disposing JxBrowser instance")
+        browser.close()
     }
 
     private fun createBrowser(router: WebViewRouter): Browser {
-        configureJxBrowser()
-        val browser = Browser(BrowserType.LIGHTWEIGHT, createBrowserContext())
-        browser.dialogHandler = this
-        browser.loadHandler = this
-        browser.context.networkService.resourceHandler = this
-        browser.configurePreferences()
+        val engine = ServiceManager.getService(BrowserEngineService::class.java)
+        val browser = engine.newBrowser()
+
         browser.connectRouter(router)
 
         return browser
     }
 
-    private fun configureJxBrowser() {
-        System.setProperty("jxbrowser.ipc.external", "true")
-        BrowserPreferences.setChromiumSwitches(
-            if (DEBUG || WEBVIEW_PATH != null) {
-                "--remote-debugging-port=$debugPort"
-            } else {
-                ""
-            },
-            "--disable-gpu",
-            "--disable-gpu-compositing",
-            "--enable-begin-frame-scheduling",
-            "--software-rendering-fps=60",
-            "--disable-web-security",
-            "--allow-file-access-from-files"
-        )
-    }
-
-    private fun createBrowserContext(): BrowserContext {
-        val dir = createTempDir()
-        logger.info("JxBrowser work dir: $dir")
-        val params = BrowserContextParams(dir.absolutePath)
-        return BrowserContext(params)
-    }
-
-    private fun Browser.configurePreferences() {
-        preferences.apply {
-            isAllowDisplayingInsecureContent = false
-            isAllowRunningInsecureContent = false
-            isAllowScriptsToCloseWindows = false
-            isApplicationCacheEnabled = false
-            isDatabasesEnabled = false
-            isLocalStorageEnabled = false
-            isPluginsEnabled = false
-            isTransparentBackground = true
-            isUnifiedTextcheckerEnabled = false
-            isWebAudioEnabled = false
-        }
-    }
-
     private fun Browser.connectRouter(router: WebViewRouter) {
-        addScriptContextListener(object : ScriptContextListener {
-            override fun onScriptContextDestroyed(e: ScriptContextEvent?) {
-            }
 
-            override fun onScriptContextCreated(e: ScriptContextEvent?) {
-                val window = executeJavaScriptAndReturnValue("window")
-                window.asObject().setProperty("csRouter", router)
-                executeJavaScript(
-                    """
-                        window.acquireHostApi = function() {
-                            return {
-                                postMessage: function(message, origin) {
-                                    window.csRouter.handle(JSON.stringify(message), origin);
-                                }
+        set(InjectJsCallback::class.java, InjectJsCallback {
+            val frame = it.frame()
+
+            val window = frame.executeJavaScript<JsObject>("window")!!
+            window.putProperty("csRouter", router)
+
+            frame.executeJavaScript<Unit>(
+                """
+                    window.acquireHostApi = function() {
+                        return {
+                            postMessage: function(message, origin) {
+                                window.csRouter.handle(JSON.stringify(message), origin);
                             }
                         }
-                        """.trimIndent()
-                )
-            }
+                    }
+                    """.trimIndent()
+            )
+
+            InjectJsCallback.Response.proceed()
         })
     }
-
-    override fun canLoadResource(params: ResourceParams?): Boolean {
-        params?.let {
-            if (it.resourceType == ResourceType.IMAGE || params.url.startsWith("file://")) {
-                return true
-            }
-            if (params.resourceType == ResourceType.MAIN_FRAME) {
-                BrowserUtil.browse(params.url)
-            }
-        }
-
-        return false
-    }
-
-    override fun onLoad(params: LoadParams?) = false
-    override fun onCertificateError(params: CertificateErrorParams?) = false
-    override fun onBeforeUnload(params: UnloadDialogParams?) = CloseStatus.CANCEL
-    override fun onAlert(params: DialogParams?) = Unit
-    override fun onConfirmation(params: DialogParams?) = CloseStatus.CANCEL
-    override fun onFileChooser(params: FileChooserParams?) = CloseStatus.CANCEL
-    override fun onPrompt(params: PromptDialogParams?) = CloseStatus.CANCEL
-    override fun onReloadPostData(params: ReloadPostDataParams?) = CloseStatus.CANCEL
-    override fun onColorChooser(params: ColorChooserParams?) = CloseStatus.CANCEL
-    override fun onSelectCertificate(params: CertificatesDialogParams?) = CloseStatus.CANCEL
 }
 
 private val File.url: String
     get() = toURI().toURL().toString()
-
-
-
-
