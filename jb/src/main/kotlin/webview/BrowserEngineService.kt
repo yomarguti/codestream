@@ -12,7 +12,6 @@ import com.teamdev.jxbrowser.net.ResourceType
 import com.teamdev.jxbrowser.net.callback.LoadResourceCallback
 import com.teamdev.jxbrowser.plugin.callback.AllowPluginCallback
 import java.nio.file.Paths
-import java.util.concurrent.atomic.AtomicInteger
 
 class BrowserEngineService : Disposable {
 
