@@ -5,7 +5,7 @@ New to VSCode/Codestream? Look for a novice debugging examples at the end of thi
 ### Getting the code
 
 ```
-git clone https://github.com/TeamCodeStream/vscode-codestream.git
+git clone git@github.com:TeamCodeStream/vscode-codestream.git (ssh)
 ```
 
 👉 **NOTE!** Make sure to clone the `vscode-codestream` repository into a folder that is a sibling of the `codestream-component` and `codestream-lsp-agent` repositories
@@ -117,13 +117,15 @@ npm run pack
 1. Open the `vscode-codestream` repository folder
 2. Choose the `Launch CodeStream` launch configuration from the launch dropdown in the Debug dropdown and press `F5`.
 
-##### To set breakpoints
+#### To set breakpoints
 
-**in the agent code**: need to attach agent (see **Debugging agent startup code**, below)
+**In the agent code**: 
+
+1. need to attach agent (see **Debugging agent startup code**, below)
 
 ​	IMPORTANT: The agent will restart on many operations, meaning you will need to manually reattach the debugger before execution reaches your breakpoint code.
 
-**in the webview code**: 
+**In the webview code**: 
 
 1. Choose "Launch Codestream" and start debug instance
 2. In the launched Extension Host VSCode debug instance, Ctrl-shift-P to open the VSCode command palette (Because the extension executes in a browser rendering window, we must use browser tools to debug)
