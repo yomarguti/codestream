@@ -47,7 +47,7 @@ export const NewUserEntry = (connect(mapStateToProps) as any)((props: Props) => 
 						<h2>Start with a team</h2>
 						<p>
 							In CodeStream, everything happens in a team. A team is where you can discuss, review,
-							and understand code with your coworkers.
+							and share code with your coworkers.
 						</p>
 						<div id="controls">
 							<Button className="row-button" onClick={onClickJoinTeam}>
