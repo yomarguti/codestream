@@ -777,6 +777,17 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			mentionedUserIds: request.mentionedUserIds
 		});
 
+		const { markers } = response!;
+		if (markers) {
+			Logger.log(`createSharingCodemarkPost: will save uncommitted locations`);
+			MarkerLocationManager.saveUncommittedLocations(
+				markers,
+				markerCreationDescriptors.map(descriptor => descriptor.backtrackedLocation)
+			).then(() => {
+				Logger.log("Uncommitted locations saved to local cache");
+			});
+		}
+
 		codemark = response.codemark!;
 
 		if (request.attributes.crossPostIssueValues) {
