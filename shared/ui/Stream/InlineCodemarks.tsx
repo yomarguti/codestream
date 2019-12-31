@@ -105,6 +105,7 @@ interface Props {
 	metrics: EditorMetrics;
 	documentMarkers: (DocumentMarker | MarkerNotLocated)[];
 	numHidden: number;
+	isInVscode: boolean;
 
 	setEditorContext: (
 		...args: Parameters<typeof setEditorContext>
@@ -557,7 +558,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					<div key="no-codemarks" className="no-codemarks">
 						<h3>No file open.</h3>
 						<p>
-							Open a file to to start discussing code with your teammates!{" "}
+							Open a source file to to start discussing code with your teammates!{" "}
 							<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks">
 								View guide.
 							</a>
@@ -626,7 +627,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			const title = (
 				<div style={{ maxWidth: "70vw" }}>
 					A codemark is a link between a block of code and a conversation or an issue. Codemarks
-					work across branches, and stay pinned to the block of code even as your codebase changes.
+					work across branches, and stay anchored to the block of code even as your codebase
+					changes.
 				</div>
 			);
 			return (
@@ -647,6 +649,14 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 							<div className="function-row">{ComposeTitles.privatePermalink}</div>
 							<div className="function-row">{ComposeTitles.toggleCodeStreamPanel}</div>
 						</div>
+						{this.props.isInVscode && (
+							<>
+								<br />
+								Note: VS Code doesn't support <i>pinned</i> tabs, nor advanced tab management. The
+								solution is to put CodeStream in the Activity area. Help us by{" "}
+								<a href="https://github.com/microsoft/vscode/issues/83911">upvoting the issue</a>.
+							</>
+						)}
 					</div>
 				</div>
 			);
@@ -1292,7 +1302,7 @@ const EMPTY_ARRAY = [];
 const EMPTY_OBJECT = {};
 
 const mapStateToProps = (state: CodeStreamState) => {
-	const { context, editorContext, teams, configs, documentMarkers } = state;
+	const { context, editorContext, teams, configs, documentMarkers, ide } = state;
 
 	const docMarkers = documentMarkers[editorContext.textEditorUri || ""] || EMPTY_ARRAY;
 	const numHidden = docMarkers.filter(
@@ -1335,7 +1345,8 @@ const mapStateToProps = (state: CodeStreamState) => {
 		metrics: editorContext.metrics || EMPTY_OBJECT,
 		documentMarkers: docMarkers,
 		numLinesVisible: getVisibleLineCount(textEditorVisibleRanges),
-		numHidden
+		numHidden,
+		isInVscode: ide.name === "VSC"
 	};
 };
 
