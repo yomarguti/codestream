@@ -71,7 +71,7 @@ import { Switch } from "../src/components/controls/Switch";
 import { NewCodemarkAttributes } from "../store/codemarks/actions";
 import styled from "styled-components";
 import { PanelHeader } from "../src/components/PanelHeader";
-import * as fs from "../utilities/fs"
+import * as fs from "../utilities/fs";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -653,7 +653,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 							<>
 								<br />
 								Note: VS Code doesn't support <i>pinned</i> tabs, nor advanced tab management. The
-								solution is to put CodeStream in the Activity area. Help us by{" "}
+								solution is to put CodeStream in the Side Bar. Help us by{" "}
 								<a href="https://github.com/microsoft/vscode/issues/83911">upvoting the issue</a>.
 							</>
 						)}
