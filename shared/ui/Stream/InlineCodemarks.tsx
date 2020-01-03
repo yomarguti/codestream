@@ -652,8 +652,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						{this.props.isInVscode && (
 							<>
 								<br />
-								Note: VS Code doesn't support pinned tabs, nor advanced tab management. The
-								solution is to put CodeStream in the Side Bar. Help us by{" "}
+								Note: VS Code doesn't support pinned tabs, nor advanced tab management. The solution
+								is to put CodeStream in the Side Bar. Help us by{" "}
 								<a href="https://github.com/microsoft/vscode/issues/83911">upvoting the issue</a>.
 							</>
 						)}
@@ -847,7 +847,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			<ContainerAtEditorLine
 				key={docMarker.id}
 				lineNumber={lineNum}
-				lineHeight={this.props.metrics.lineHeight}
 				className={cx({
 					"cs-hidden": hidden,
 					"cs-off-plane": hidden
