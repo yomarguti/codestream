@@ -24,6 +24,15 @@ const Header = styled.div`
 const Title = styled.div`
 	color: var(--text-color-highlight);
 	font-size: 16px;
+	@media only screen and (max-width: 430px) {
+		font-size: 14px;
+	}
+	@media only screen and (max-width: 350px) {
+		font-size: 13px;
+	}
+	@media only screen and (max-width: 270px) {
+		font-size: 12px;
+	}
 `;
 
 interface Props {
