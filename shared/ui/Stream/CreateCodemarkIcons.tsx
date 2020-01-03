@@ -234,7 +234,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 						align={{ offset: [-3, 10] }}
 						delay={1}
 					/>
-				]}  
+				]}
 			</div>
 		);
 	};
