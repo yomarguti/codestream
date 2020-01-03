@@ -154,18 +154,6 @@ export class SlackProvider extends ThirdPartyPostProviderBase<CSSlackProviderInf
 					)
 				);
 			}
-			if (request.markerLocations == undefined) {
-				request.markerLocations = flatten(
-					await Promise.all(
-						request.codemark.markers.map(async m =>
-							SessionContainer.instance().markerLocations.getMarkerLocations(
-								m.fileStreamId,
-								m.commitHashWhenCreated
-							)
-						)
-					)
-				).filter(Boolean) as CSMarkerLocations[];
-			}
 		}
 		const post = await slackClient.createExternalPost(request);
 		return post;

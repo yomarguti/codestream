@@ -555,8 +555,6 @@ export function toSlackPostId(postId: string, streamId: string) {
 export function toSlackPostBlocks(
 	codemark: CodemarkPlus,
 	remotes: string[] | undefined,
-	markerLocations: CSMarkerLocations[] | undefined,
-	usernamesById: Map<string, string>,
 	userIdsByName: Map<string, string>,
 	codeStreamUsersById: Map<string, string>,
 	repoNames: { [key: string]: string },
@@ -657,10 +655,10 @@ export function toSlackPostBlocks(
 			let start = undefined;
 			let end = undefined;
 
-			if (markerLocations && markerLocations.length) {
-				const markerLocation = markerLocations[0];
+			if (marker.referenceLocations && marker.referenceLocations.length) {
+				const markerLocation = marker.referenceLocations.find(m => m.commitHash === marker.commitHashWhenCreated) || marker.referenceLocations[0];
 				if (markerLocation) {
-					const location = markerLocation.locations[marker.id];
+					const location = markerLocation.location;
 					if (location && location.length) {
 						[start, , end] = location!;
 						filename = `${marker.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})`;

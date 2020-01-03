@@ -209,7 +209,6 @@ export async function fromTeamsMessage(
 export function toTeamsMessageBody(
 	codemark: CodemarkPlus,
 	remotes: string[] | undefined,
-	markerLocations: CSMarkerLocations[] | undefined,
 	mentionedUserIds: string[] | undefined,
 	userInfosById: Map<string, UserInfo>,
 	userIdsByName: Map<string, string>,
@@ -344,10 +343,10 @@ export function toTeamsMessageBody(
 			let start;
 			let end;
 
-			if (markerLocations && markerLocations.length) {
-				const markerLocation = markerLocations[0];
+			if (marker.referenceLocations && marker.referenceLocations.length) {
+				const markerLocation = marker.referenceLocations.find(m => m.commitHash === marker.commitHashWhenCreated) || marker.referenceLocations[0];
 				if (markerLocation) {
-					const location = markerLocation.locations[marker.id];
+					const location = markerLocation.location;
 					if (location && location.length) {
 						[start, , end] = location!;
 						filename = `${marker.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})`;

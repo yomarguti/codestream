@@ -270,8 +270,6 @@ export class SlackSharingApiProvider {
 				blocks = toSlackPostBlocks(
 					codemark,
 					request.remotes,
-					request.markerLocations,
-					usernamesById,
 					userIdsByName,
 					codeStreamUsersById,
 					repoNames,

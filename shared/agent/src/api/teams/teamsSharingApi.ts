@@ -289,7 +289,6 @@ export class MSTeamsSharingApiProvider {
 			const attachments: TeamsMessageAttachment[] = [];
 			let body: TeamsMessageBody;
 			let codemark: CSCodemark | undefined;
-			let markerLocations: CSMarkerLocations[] | undefined;
 
 			if (request.codemark != null) {
 				if (!text) {
@@ -297,12 +296,11 @@ export class MSTeamsSharingApiProvider {
 						request.codemark.text || request.codemark.title || "";
 				}
 
-				({ codemark, markerLocations } = request);
+				({ codemark } = request);
 
 				body = toTeamsMessageBody(
 					codemark!,
 					request.remotes,
-					markerLocations,
 					request.mentionedUserIds,
 					userInfosById,
 					userIdsByName,

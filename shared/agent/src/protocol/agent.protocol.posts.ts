@@ -43,7 +43,6 @@ export interface CreateSharedExternalPostRequest {
 	entryPoint?: string;
 	codemark?: CodemarkPlus;
 	crossPostIssueValues?: CrossPostIssueValues;
-	markerLocations?: CSMarkerLocations[];
 }
 
 export interface CreatePostRequest {
