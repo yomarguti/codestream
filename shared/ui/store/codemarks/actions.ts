@@ -95,7 +95,6 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 						text: rest.text,
 						codemark: response.codemark,
 						remotes: attributes.remotes,
-						markerLocations: response.markerLocations,
 						mentionedUserIds: attributes.mentionedUserIds
 					});
 					HostApi.instance.track("Shared Codemark", {
