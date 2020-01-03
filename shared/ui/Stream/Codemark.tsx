@@ -715,15 +715,16 @@ export class Codemark extends React.Component<Props, State> {
 			message: "Deleting a codemark cannot be undone.",
 			centered: true,
 			buttons: [
+				{ label: "Go Back", className: "control-button" },
 				{
 					label: "Delete Codemark",
+					className: "delete",
 					wait: true,
 					action: () => {
 						this.props.deleteCodemark(this.props.codemark!.id);
 						this.props.setCurrentCodemark();
 					}
-				},
-				{ label: "Cancel" }
+				}
 			]
 		});
 	};
