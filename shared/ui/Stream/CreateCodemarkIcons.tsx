@@ -188,7 +188,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 				key={lineNum0}
 				style={{ top }}
 			>
-				 {(hover || open) && [
+				{(hover || open) && [
 					<Icon
 						key="comment"
 						onClick={e => handleClickPlus(e, CodemarkType.Comment, lineNum0)}
@@ -197,7 +197,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 						placement="bottomLeft"
 						align={{ offset: [-3, 10] }}
 						delay={1}
-					/>, 
+					/>,
 					<Icon
 						onClick={e => handleClickPlus(e, CodemarkType.Issue, lineNum0)}
 						name="issue"
