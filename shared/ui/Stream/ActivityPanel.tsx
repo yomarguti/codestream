@@ -351,7 +351,6 @@ const KebabIcon = styled.span`
 `;
 
 const SeeReplies = styled.div`
-	margin-top: 5px;
 	text-align: center;
 `;
 
