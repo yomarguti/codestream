@@ -55,6 +55,7 @@ const mapStateToProps = (state: CodeStreamState) => {
 		viewInline: context.codemarksFileViewStyle === "inline",
 		textEditorUri: editorContext.textEditorUri,
 		textEditorLineCount: editorContext.textEditorLineCount || 0,
+		textEditorSelections: editorContext.textEditorSelections,
 		firstVisibleLine,
 		lastVisibleLine,
 		textEditorVisibleRanges,
@@ -187,7 +188,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 				key={lineNum0}
 				style={{ top }}
 			>
-				{(hover || open) && [
+				 {(hover || open) && [
 					<Icon
 						key="comment"
 						onClick={e => handleClickPlus(e, CodemarkType.Comment, lineNum0)}
@@ -196,7 +197,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 						placement="bottomLeft"
 						align={{ offset: [-3, 10] }}
 						delay={1}
-					/>,
+					/>, 
 					<Icon
 						onClick={e => handleClickPlus(e, CodemarkType.Issue, lineNum0)}
 						name="issue"
@@ -233,7 +234,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 						align={{ offset: [-3, 10] }}
 						delay={1}
 					/>
-				]}
+				]}  
 			</div>
 		);
 	};
@@ -270,7 +271,10 @@ export const CreateCodemarkIcons = (props: Props) => {
 		// const top = (codeHeight * iconsOnLine0) / (numLinesVisible + 1);
 		// const top = paddingTop ? "calc(" + topPct + " + " + paddingTop + "px)" : topPct;
 		const top = lineHeight * iconsOnLine0 + paddingTop;
-		return renderIconRow(iconsOnLine0, top, false, true);
+		if (derivedState.textEditorSelections && derivedState.textEditorSelections.length == 0)
+			return renderIconRow(iconsOnLine0, top, false, false);	// suppress compose icon, editor selections is 1 when just cursor is in file 
+		else
+			return renderIconRow(iconsOnLine0, top, false, true);
 	} else {
 		// const heightPerLine = (window.innerHeight - 22) / (numLinesVisible + 2);
 		return (
