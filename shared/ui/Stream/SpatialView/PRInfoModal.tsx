@@ -19,7 +19,6 @@ const VerticallyCentered = styled.div`
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	min-width: 350px;
 	max-width: 450px;
 	margin: 0 auto;
 `;

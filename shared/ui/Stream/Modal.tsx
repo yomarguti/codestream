@@ -31,7 +31,7 @@ const ModalWrapper = styled.div`
 	z-index: 3000;
 	left: 0;
 	background-color: var(--app-background-color);
-	padding: 20px;
+	padding: 20px 0;
 	overflow: auto;
 
 	& > div {

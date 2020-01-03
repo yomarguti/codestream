@@ -64,7 +64,7 @@ export const StyledButton = styled.button<Props>(props => {
 	line-height: 2em;
 	user-select: none;
 	-webkit-user-select: none;
-	white-space: nowrap;
+	// white-space: nowrap;
 	z-index: 0;
 	text-shadow: none;
 
