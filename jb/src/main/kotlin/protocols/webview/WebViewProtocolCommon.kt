@@ -26,6 +26,7 @@ class EditorSelection(
 class WebViewContext(
     val currentTeamId: String? = null,
     val currentStreamId: String? = null,
+    val currentCodemarkId: String? = null,
     val threadId: String? = null,
     val hasFocus: Boolean? = null,
     val panelStack: Array<String>? = null

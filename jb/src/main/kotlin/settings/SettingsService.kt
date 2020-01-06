@@ -37,6 +37,7 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
     }
 
     val currentStreamId get() = webViewContext?.currentStreamId
+    val currentCodemarkId get() = webViewContext?.currentCodemarkId
 
     var webViewContext by Delegates.observable<WebViewContext?>(null) { _, _, new ->
         _webViewContextObservers.forEach { it(new) }

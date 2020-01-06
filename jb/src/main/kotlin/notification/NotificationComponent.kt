@@ -60,10 +60,10 @@ class NotificationComponent(val project: Project) {
             return
         }
 
-        val isStreamVisible = codeStream.isVisible && settings.currentStreamId == post.streamId
+        val isCodemarkVisible = codeStream.isVisible && settings.currentCodemarkId == codemark.id
         val isUserFollowing = codemark.followerIds?.contains(userLoggedIn.userId) ?: false
 
-        if (isUserFollowing && (!isStreamVisible || isMentioned)) {
+        if (isUserFollowing && (!isCodemarkVisible || isMentioned)) {
             showNotification(post, codemark)
         }
     }
