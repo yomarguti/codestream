@@ -28,6 +28,7 @@ import { useMarkdownifyToHtml } from "../Markdowner";
 import Icon from "../Icon";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { logError } from "@codestream/webview/logger";
+import { mapFilter } from "@codestream/webview/utils";
 
 const StyledRelatedCodemark = styled(RelatedCodemark)`
 	white-space: normal;
@@ -99,7 +100,7 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 			author,
 			inSharingModel: state.featureFlags.sharing,
 			isMine: author.id === state.session.userId!,
-			tags: codemark.tags ? codemark.tags.map(id => teamTagsById[id]) : [],
+			tags: codemark.tags ? mapFilter(codemark.tags, id => teamTagsById[id]) : [], // TODO: when a tag is not invalid, figure out a way to do an update to clean up the model
 			assignees: [...csAssignees, ...externalAssignees],
 			currentUserEmail: state.users[state.session.userId!].email,
 			followingEnabled: state.apiVersioning.apiCapabilities.follow != undefined,
