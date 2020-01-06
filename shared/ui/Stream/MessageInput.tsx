@@ -577,11 +577,11 @@ export class MessageInput extends React.Component<Props, State> {
 		const multiCompose = this.props.multiCompose;
 
 		if (this.state.currentPopup) {
-			if (event.key === "ArrowUp") {
+			if (event.key === "ArrowUp" || event.which === 38) {
 				event.stopPropagation();
 				this.handleAtMentionKeyPress(event, "up");
 			}
-			if (event.key === "ArrowDown") this.handleAtMentionKeyPress(event, "down");
+			if (event.key === "ArrowDown" || event.which === 40) this.handleAtMentionKeyPress(event, "down");
 			if (event.key === "Tab") this.handleAtMentionKeyPress(event, "tab");
 			if (event.key === "Escape") {
 				this.hidePopup();

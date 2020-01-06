@@ -327,11 +327,11 @@ export default class Menu extends Component {
 	};
 
 	handleKeyDown = event => {
-		if (event.key === "ArrowUp") {
+		if (event.key === "ArrowUp" || event.which === 38) {
 			event.stopPropagation();
 			this.handleMenuKeyPress(event, "up");
 		}
-		if (event.key === "ArrowDown") {
+		if (event.key === "ArrowDown" || event.which === 40) {
 			event.stopPropagation();
 			this.handleMenuKeyPress(event, "down");
 		}
