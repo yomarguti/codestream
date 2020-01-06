@@ -10,6 +10,7 @@ import {
 } from "@slack/web-api";
 import { Agent as HttpsAgent } from "https";
 import HttpsProxyAgent from "https-proxy-agent";
+import { uniq } from "lodash-es";
 import { Container, SessionContainer } from "../../container";
 import { Logger, TraceLevel } from "../../logger";
 import {
@@ -26,6 +27,7 @@ import {
 	CSGetMeResponse,
 	CSMarker,
 	CSMe,
+	CSRepository,
 	CSSlackProviderInfo,
 	CSTeam,
 	CSUser,
@@ -253,26 +255,28 @@ export class SlackSharingApiProvider {
 			let blocks: (KnownBlock | Block)[] | undefined;
 			if (request.codemark != null) {
 				const codemark = request.codemark;
-				const repoNames = request.codemark.markers &&
-					await request.codemark.markers.reduce(async function(map: any, marker: CSMarker) {
-						try {
-							const repo = await SessionContainer.instance().repos.getById(marker.repoId);
-							if (repo) {
-								map[marker.repoId] = repo.name;
-							}
+				let repoHash: { [key: string]: CSRepository } | undefined = undefined;
+				if (codemark.markers && codemark.markers.length) {
+					try {
+						const reposResponse = await SessionContainer.instance().repos.get({ repoIds: uniq(codemark.markers.map(_ => _.repoId)) });
+						if (reposResponse && reposResponse.repos.length) {
+							repoHash = reposResponse.repos.reduce((map: any, obj: CSRepository) => {
+								map[obj.id] = obj;
+								return map;
+							}, {});
 						}
-						catch (e) {
-							Logger.error(e);
-						}
-						return map;
-					}, {});
+					}
+					catch (er) {
+						Logger.error(er);
+					}
+				}
 
 				blocks = toSlackPostBlocks(
 					codemark,
 					request.remotes,
 					userIdsByName,
 					codeStreamUsersById,
-					repoNames,
+					repoHash,
 					this._slackUserId
 				);
 

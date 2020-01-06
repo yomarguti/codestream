@@ -9,8 +9,8 @@ import {
 	CSCodemark,
 	CSDirectStream,
 	CSMarker,
-	CSMarkerLocations,
 	CSPost,
+	CSRepository,
 	CSTeam,
 	CSUser,
 	StreamType
@@ -557,7 +557,7 @@ export function toSlackPostBlocks(
 	remotes: string[] | undefined,
 	userIdsByName: Map<string, string>,
 	codeStreamUsersById: Map<string, string>,
-	repoNames: { [key: string]: string },
+	repos: { [key: string]: CSRepository } | undefined,
 	slackUserId: string
 ): Blocks {
 	const blocks: Blocks = [];
@@ -666,6 +666,11 @@ export function toSlackPostBlocks(
 				}
 			}
 
+			let repo;
+			if (repos && marker.repoId) {
+				repo = repos[marker.repoId];
+			}
+
 			let url;
 			if (
 				remotes !== undefined &&
@@ -673,26 +678,34 @@ export function toSlackPostBlocks(
 				start !== undefined &&
 				end !== undefined
 			) {
-				for (const remote of remotes) {
-					url = Marker.getRemoteCodeUrl(
-						remote,
-						marker.commitHashWhenCreated,
-						marker.file,
-						start,
-						end
-					);
+				let remoteList: string[] | undefined;
+				if (repo && repo.remotes && repo.remotes.length) {
+					// if we have a list of remotes from the marker / repo (a.k.a. server)... use that
+					remoteList = repo.remotes.map(_ => _.normalizedUrl);
+				}
+				if (!remoteList) {
+					// fall back to what came from the client
+					remoteList = remotes;
+				}
+				if (remoteList) {
+					for (const remote of remoteList) {
+						url = Marker.getRemoteCodeUrl(
+							remote,
+							marker.commitHashWhenCreated,
+							marker.file,
+							start,
+							end
+						);
 
-					if (url !== undefined) {
-						break;
+						if (url !== undefined) {
+							break;
+						}
 					}
 				}
 			}
 
-			if (repoNames && marker.repoId) {
-				const repoName = repoNames[marker.repoId];
-				if (repoName) {
-					filename = `[${repoName}] ${filename}`;
-				}
+			if (repo) {
+				filename = `[${repo.name}] ${filename}`;
 			}
 
 			blocks.push({
