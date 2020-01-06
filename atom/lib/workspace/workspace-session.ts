@@ -1,6 +1,5 @@
 import { BootstrapInHostResponse } from "@codestream/protocols/webview";
 import { Emitter } from "atom";
-import { debounce } from "lodash-es";
 import { FileLogger } from "logger";
 import { EnvironmentConfig, getEnvConfigForServerUrl } from "../env-utils";
 import {
