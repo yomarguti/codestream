@@ -151,12 +151,11 @@ export const ActivityPanel = () => {
 		}
 	}, [derivedState.webviewFocused]);
 
-	const intersectionCallback = () => {
-		if (!derivedState.hasMoreActivity) return;
+	const { targetRef, rootRef } = useIntersectionObserver(entries => {
+		if (!entries[0].isIntersecting) return;
+		if (!derivedState.hasMoreActivity || derivedState.activity.length === 0) return;
 		fetchActivity();
-	};
-
-	const { targetRef, rootRef } = useIntersectionObserver(intersectionCallback);
+	});
 
 	const renderActivity = () => {
 		let counter = 0;
@@ -266,11 +265,16 @@ export const ActivityPanel = () => {
 			<ScrollBox>
 				<div ref={rootRef} className="channel-list vscroll">
 					{renderActivity()}
-					{derivedState.hasMoreActivity && (
-						<LoadingMessage ref={targetRef}>
-							<Icon className="spin" name="sync" /> Loading more...
-						</LoadingMessage>
-					)}
+					{derivedState.hasMoreActivity &&
+						(derivedState.activity.length === 0 ? (
+							<LoadingMessage>
+								<Icon className="spin" name="sync" /> Loading latest activity...
+							</LoadingMessage>
+						) : (
+							<LoadingMessage ref={targetRef}>
+								<Icon className="spin" name="sync" /> Loading more...
+							</LoadingMessage>
+						))}
 				</div>
 			</ScrollBox>
 			{/*
