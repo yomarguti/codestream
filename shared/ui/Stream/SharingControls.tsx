@@ -173,8 +173,8 @@ export const SharingControls = React.memo(
 			const selectedShareTarget = shareTargets.find(
 				target =>
 					target.teamId ===
-					((defaultChannel && defaultChannel.providerTeamId) ||
-						state.context.shareTargetTeamId ||
+					(state.context.shareTargetTeamId ||
+						(defaultChannel && defaultChannel.providerTeamId) ||
 						(lastShareAttributes && lastShareAttributes.providerTeamId))
 			);
 
@@ -187,9 +187,7 @@ export const SharingControls = React.memo(
 				isConnectedToMSTeams: isConnected(state, { name: "msteams" }),
 				shareTargets,
 				selectedShareTarget: selectedShareTarget || shareTargets[0],
-				lastSelectedChannelId:
-					(defaultChannel && defaultChannel.channelId) ||
-					(lastShareAttributes && lastShareAttributes.channelId),
+				lastSelectedChannelId: lastShareAttributes && lastShareAttributes.channelId,
 				repos: state.repos,
 				defaultChannelId: defaultChannel && defaultChannel.channelId,
 				defaultChannels
@@ -201,6 +199,7 @@ export const SharingControls = React.memo(
 		}>({ isAuthenticating: false, label: "" });
 		const [isFetchingData, setIsFetchingData] = React.useState<boolean>(false);
 		const [editingChannels, setEditingChannels] = React.useState<boolean>(false);
+		const [currentChannel, setCurrentChannel] = React.useState();
 
 		const selectedShareTargetTeamId = safe(() => derivedState.selectedShareTarget.teamId) as
 			| string
@@ -256,15 +255,18 @@ export const SharingControls = React.memo(
 							AND the webview doesn't currently have one selected,
 							use the last selected one if it still exists
 						 */
+						const channelIdToSelect =
+							derivedState.defaultChannelId || derivedState.lastSelectedChannelId;
 						const channelToSelect =
-							derivedState.lastSelectedChannelId != undefined
-								? response.channels.find(c => c.id === derivedState.lastSelectedChannelId)
+							channelIdToSelect != undefined
+								? response.channels.find(c => c.id === channelIdToSelect)
 								: undefined;
 						data.set(teamData => ({
 							...teamData,
 							channels: response.channels,
 							lastSelectedChannel: channelToSelect || teamData.lastSelectedChannel
 						}));
+						setCurrentChannel(undefined);
 					} catch (error) {
 					} finally {
 						setIsFetchingData(false);
@@ -275,13 +277,19 @@ export const SharingControls = React.memo(
 
 		const selectedChannel = React.useMemo(() => {
 			const { channels, lastSelectedChannel } = data.get();
+
+			// if the user has picked a channel this session, return it
+			if (currentChannel != undefined) return currentChannel;
+
+			// otherwise, if there is a default for this repo, return that
 			if (derivedState.defaultChannelId != undefined) {
 				const channel = channels.find(c => c.id === derivedState.defaultChannelId);
 				if (channel) return channel;
 			}
 
+			// otherwise, return the last selected channel (saved on server in preferences)
 			return lastSelectedChannel;
-		}, [data, derivedState.defaultChannelId]);
+		}, [currentChannel, derivedState.defaultChannelId, data]);
 
 		React.useEffect(() => {
 			const shareTarget = derivedState.selectedShareTarget;
@@ -383,6 +391,7 @@ export const SharingControls = React.memo(
 
 		const setChannel = channel => {
 			if (props.showToggle) setCheckbox(true);
+			setCurrentChannel(channel);
 			data.set(teamData => ({ ...teamData, lastSelectedChannel: channel }));
 		};
 
