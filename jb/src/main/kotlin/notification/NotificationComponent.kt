@@ -79,15 +79,9 @@ class NotificationComponent(val project: Project) {
             if (post.creatorId != null)
                 session.getUser(post.creatorId)?.username ?: "Someone"
             else "Someone"
-        val stream = session.getStream(post.streamId) ?: return
-        val subtitle = if (stream.type != StreamType.DIRECT) {
-            "${stream.name}: $sender"
-        } else {
-            sender
-        }
 
         val notification = notificationGroup.createNotification(
-            null, subtitle, post.text, NotificationType.INFORMATION
+            null, sender, post.text, NotificationType.INFORMATION
         )
         notification.addAction(NotificationAction.createSimple("Open") {
             project.codeStream?.show {
