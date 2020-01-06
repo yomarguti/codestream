@@ -252,7 +252,7 @@
                 },
                 "key": "ctrl+shift+/ c",
                 "mac": "ctrl+/ c",
-                "when": "editorTextFocus && codestream:status == signedIn"
+                "when": "codestream:status == signedIn"
             },
             {
                 "command": "codestream.newComment",
@@ -261,7 +261,7 @@
                 },
                 "key": "ctrl+shift+/ ctrl+shift+c",
                 "mac": "ctrl+/ ctrl+c",
-                "when": "editorTextFocus && codestream:status == signedIn"
+                "when": "codestream:status == signedIn"
             },
             {
                 "command": "codestream.newIssue",
@@ -270,7 +270,7 @@
                 },
                 "key": "ctrl+shift+/ i",
                 "mac": "ctrl+/ i",
-                "when": "editorTextFocus && codestream:status == signedIn"
+                "when": "codestream:status == signedIn"
             },
             {
                 "command": "codestream.newIssue",
@@ -279,7 +279,7 @@
                 },
                 "key": "ctrl+shift+/ ctrl+shift+i",
                 "mac": "ctrl+/ ctrl+i",
-                "when": "editorTextFocus && codestream:status == signedIn"
+                "when": "codestream:status == signedIn"
             },
             {
                 "command": "codestream.newPermalink",
@@ -288,7 +288,7 @@
                 },
                 "key": "ctrl+shift+/ p",
                 "mac": "ctrl+/ p",
-                "when": "editorTextFocus && codestream:status == signedIn"
+                "when": "codestream:status == signedIn"
             },
             {
                 "command": "codestream.newPermalink",
@@ -297,7 +297,7 @@
                 },
                 "key": "ctrl+shift+/ ctrl+shift+p",
                 "mac": "ctrl+/ ctrl+p",
-                "when": "editorTextFocus && codestream:status == signedIn"
+                "when": "codestream:status == signedIn"
             },
             {
                 "command": "codestream.copyPermalink",

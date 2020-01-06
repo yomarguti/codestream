@@ -223,7 +223,13 @@ export class WebviewController implements Disposable {
 	}
 
 	@log()
-	async newCodemarkRequest(type: CodemarkType, editor: TextEditor, source: string): Promise<void> {
+	async newCodemarkRequest(
+		type: CodemarkType,
+		editor: TextEditor | undefined = this._lastEditor,
+		source: string
+	): Promise<void> {
+		if (!editor) return;
+
 		if (this.visible) {
 			await this._webview!.show();
 		} else {
@@ -663,15 +669,16 @@ export class WebviewController implements Disposable {
 			case RestartRequestType.method: {
 				webview.onIpcRequest(RestartRequestType, e, async (type, params) => {
 					const action = "Reload";
-					window.showInformationMessage(
-						"Reload window in order to reconnect CodeStream with updated network settings",
-						action
-					)
-					.then(selectedAction => {
-						if (selectedAction === action) {
-							commands.executeCommand("workbench.action.reloadWindow");
-						}
-					});
+					window
+						.showInformationMessage(
+							"Reload window in order to reconnect CodeStream with updated network settings",
+							action
+						)
+						.then(selectedAction => {
+							if (selectedAction === action) {
+								commands.executeCommand("workbench.action.reloadWindow");
+							}
+						});
 				});
 
 				break;

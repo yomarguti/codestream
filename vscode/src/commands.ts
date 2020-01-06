@@ -314,7 +314,7 @@ export class Commands implements Disposable {
 
 	private async newCodemarkRequest(type: CodemarkType, args: NewCodemarkCommandArgs = {}) {
 		const editor = window.activeTextEditor;
-		if (editor === undefined) return;
+		// if (editor === undefined) return;
 
 		await Container.webview.newCodemarkRequest(type, editor, args.source || "Context Menu");
 	}
