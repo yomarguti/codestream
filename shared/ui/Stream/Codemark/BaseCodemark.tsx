@@ -74,7 +74,7 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 	const renderedFooter = props.renderFooter ? props.renderFooter(CardFooter) : null;
 
 	return (
-		<Card {...getCardProps(props)}>
+		<MinimumWidthCard {...getCardProps(props)}>
 			<CardBanner>
 				{!codemark.pinned && <div>This codemark is archived.</div>}
 				{codemark.status == "closed" && <div>This codemark is resolved.</div>}
@@ -283,9 +283,13 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 				)}
 			</CardBody>
 			{renderedFooter}
-		</Card>
+		</MinimumWidthCard>
 	);
 }
+
+const MinimumWidthCard = styled(Card)`
+	min-width: 200px;
+`;
 
 const Header = styled.div`
 	width: 100%;
@@ -385,7 +389,10 @@ const MetaSectionCollapsed = styled.div`
 
 const MetaRow = styled.div`
 	display: flex;
-	justify-content: space-between;
+	flex-flow: row wrap;
+	${Meta} {
+		width: auto;
+	}
 `;
 
 const MetaLabel = styled.div`
@@ -413,6 +420,7 @@ const MetaDescriptionForAssignees = styled.div`
 
 const MetaDescriptionForTags = styled.div`
 	display: flex;
+	flex-flow: row wrap;
 	> *:not(:last-child) {
 		margin-right: 5px;
 	}
