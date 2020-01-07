@@ -430,6 +430,9 @@ export class SimpleStream extends Component {
 		menuItems.push({ label: "-" });
 		const text = (
 			<span style={{ fontSize: "smaller" }}>
+				You are signed in as {this.props.currentUserName}
+				{this.props.currentUserEmail && <span> ({this.props.currentUserEmail})</span>}
+				<br />
 				This is CodeStream version {this.props.pluginVersion}
 			</span>
 		);
@@ -2345,6 +2348,7 @@ const mapStateToProps = state => {
 		hasFocus: context.hasFocus,
 		currentUserId: user.id,
 		currentUserName: user.username,
+		currentUserEmail: user.email,
 		mutedStreams: preferences.mutedStreams || {},
 		starredStreams: preferences.starredStreams || {},
 		slashCommands: getSlashCommands(capabilities),

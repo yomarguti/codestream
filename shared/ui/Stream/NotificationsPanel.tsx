@@ -20,7 +20,8 @@ export const NotificationsPanel = props => {
 	const handleChange = async (value: string) => {
 		setLoading(true);
 		HostApi.instance.track("Notification Preference Changed", { Value: value });
-		dispatch(setUserPreference(["notifications"], value));
+		// @ts-ignore
+		await dispatch(setUserPreference(["notifications"], value));
 		setLoading(false);
 	};
 
