@@ -1,6 +1,5 @@
 import { BootstrapInHostResponse } from "@codestream/protocols/webview";
 import { Emitter } from "atom";
-import { FileLogger } from "logger";
 import { EnvironmentConfig, getEnvConfigForServerUrl } from "../env-utils";
 import {
 	Capabilities,
@@ -16,7 +15,7 @@ import {
 import { CSMe, LoginResult } from "../protocols/agent/api.protocol";
 import { PackageState } from "../types/package";
 import { getPluginVersion } from "../utils";
-import { CodeStreamAgent, RequestOf } from "./agent";
+import { AgentConnection, RequestOf } from "./agent/connection";
 import { Container } from "./container";
 
 export interface Session {
@@ -73,7 +72,7 @@ export class WorkspaceSession {
 	private session?: Session;
 	private lastUsedEmail?: string;
 	private envConfig: EnvironmentConfig;
-	private _agent: CodeStreamAgent;
+	private _agent: AgentConnection;
 	get agent() {
 		return this._agent;
 	}
@@ -100,7 +99,7 @@ export class WorkspaceSession {
 		this.session = session;
 		this.envConfig = getEnvConfigForServerUrl(Container.configs.get("serverUrl"));
 		this.emitter = new Emitter();
-		this._agent = new CodeStreamAgent(this.envConfig);
+		this._agent = new AgentConnection(this.envConfig);
 		this.lastUsedEmail = lastUsedEmail;
 		this.initialize();
 	}
@@ -125,10 +124,6 @@ export class WorkspaceSession {
 	}
 
 	async initializeAgent() {
-		if (this._agent.isDisposed) {
-			this._agent = new CodeStreamAgent(this.envConfig);
-		}
-
 		if (this._agent.initialized) return;
 
 		this._agent.onDidRequireRestart(() => {
@@ -239,7 +234,6 @@ export class WorkspaceSession {
 		return {};
 	}
 
-	@initializesAgent
 	async login<RT extends LoginMethods>(requestType: RT, request: RequestOf<RT>) {
 		this.setStatus(SessionStatus.SigningIn);
 		try {
@@ -282,18 +276,16 @@ export class WorkspaceSession {
 		this.setStatus(SessionStatus.SignedIn);
 	}
 
-	signOut(reason = SignoutReason.Extension) {
+	async signOut(reason = SignoutReason.Extension) {
+		await this._agent.reset();
 		if (this.session) {
 			this.session = undefined;
 			this.setStatus(SessionStatus.SignedOut, reason);
 		}
-		this._agent.dispose();
-		FileLogger.nuke();
 	}
 
 	async restart(reason?: SignoutReason) {
-		this.signOut(reason);
 		this.envConfig = getEnvConfigForServerUrl(Container.configs.get("serverUrl"));
-		await this.initializeAgent();
+		await this.signOut(reason);
 	}
 }

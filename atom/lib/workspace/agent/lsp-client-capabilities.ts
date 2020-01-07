@@ -1,6 +1,6 @@
 import { ClientCapabilities } from "vscode-languageserver-protocol";
 
-export const capabilities: ClientCapabilities = {
+export const LSP_CLIENT_CAPABILITIES: ClientCapabilities = {
 	workspace: {
 		applyEdit: true,
 		configuration: true,

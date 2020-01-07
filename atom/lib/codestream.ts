@@ -7,7 +7,7 @@ import { CodemarkType } from "@codestream/protocols/api";
 import { doTimes } from "@teamcodestream/js-utils";
 import { CompositeDisposable, Disposable } from "atom";
 import { Convert } from "atom-languageclient";
-import { LOG_DIR } from "logger";
+import { FileLogger, LOG_DIR } from "logger";
 import { SplitDiffService } from "types/package-services/split-diff";
 import { Debug, Echo, Editor, Listener } from "utils";
 import { CODESTREAM_VIEW_URI } from "views/codestream-view";
@@ -126,7 +126,8 @@ class CodestreamPackage {
 	}
 
 	// Package lifecyle
-	deactivate() {
+	async deactivate() {
+		await FileLogger.nuke();
 		this.environmentChangeEmitter.dispose();
 		Container.session.dispose();
 		this.subscriptions.dispose();
