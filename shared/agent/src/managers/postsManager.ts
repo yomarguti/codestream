@@ -773,7 +773,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			codemark: codemarkRequest,
 			text: codemarkRequest.text!,
 			streamId: stream.id,
-			crossPostIssueValues: request.attributes.crossPostIssueValues,
+			dontSendEmail: !!request.attributes.crossPostIssueValues,
 			mentionedUserIds: request.mentionedUserIds
 		});
 
@@ -811,7 +811,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					externalProviderHost: issueProvider.host,
 					externalProviderUrl: cardResponse.url,
 					externalAssignees:
-						assignees && assignees.map((a: any) => ({ displayName: a.displayName, email: a.email }))
+						assignees && assignees.map((a: any) => ({ displayName: a.displayName, email: a.email })),
+					wantEmailNotification: true
 				});
 				codemark = r.codemark;
 			}

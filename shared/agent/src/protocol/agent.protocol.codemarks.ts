@@ -179,6 +179,7 @@ export interface UpdateCodemarkRequest {
 	externalProvider?: string;
 	externalProviderHost?: string;
 	externalProviderUrl?: string;
+	wantEmailNotification?: boolean;
 }
 export interface UpdateCodemarkResponse {
 	codemark: CodemarkPlus;

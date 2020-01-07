@@ -53,6 +53,7 @@ export interface CreatePostRequest {
 	codemark?: CreateCodemarkRequest;
 	entryPoint?: string;
 	crossPostIssueValues?: CrossPostIssueValues;
+	dontSendEmail?: boolean;
 }
 
 export interface CrossPostIssueValues {
