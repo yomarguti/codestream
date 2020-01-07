@@ -299,10 +299,10 @@ export class CodestreamView {
 		atom.keymaps.handleKeyboardEvent(emulatedKeyboardEvent);
 	}
 
-	private observeWorkspace() {
+	private _observeWorkspace() {
 		this.editorSelectionObserver = new EditorObserver();
-		this.editorSelectionObserver.onDidChangeSelection(this.onSelectionChanged);
-		this.editorSelectionObserver.onDidChangeActiveEditor(this.onEditorActiveEditorChanged);
+		this.editorSelectionObserver.onDidChangeSelection(this._onSelectionChanged);
+		this.editorSelectionObserver.onDidChangeActiveEditor(this._onEditorActiveEditorChanged);
 		this.editorSelectionObserver.onDidChangeVisibleRanges(editor => {
 			this.sendNotification(HostDidChangeEditorVisibleRangesNotificationType, {
 				uri: Editor.getUri(editor),
@@ -329,7 +329,7 @@ export class CodestreamView {
 		window.on("focus", onFocus);
 		window.on("blur", onBlur);
 
-		if (this.session.isSignedIn) this.observeWorkspace();
+		if (this.session.isSignedIn) this._observeWorkspace();
 
 		this.subscriptions.add(
 			new Disposable(() => {
@@ -341,7 +341,7 @@ export class CodestreamView {
 			),
 			this.session.onDidChangeSessionStatus(change => {
 				if (change.current === SessionStatus.SignedIn) {
-					this.observeWorkspace();
+					this._observeWorkspace();
 				}
 				if (
 					change.current === SessionStatus.SignedOut &&
@@ -666,7 +666,7 @@ export class CodestreamView {
 		this.sendNotification(HostDidReceiveRequestNotificationType, { url: uri });
 	}
 
-	private onSelectionChanged = (event: { editor: TextEditor; range: Range; cursor: Point }) => {
+	private _onSelectionChanged = (event: { editor: TextEditor; range: Range; cursor: Point }) => {
 		this.sendNotification(HostDidChangeEditorSelectionNotificationType, {
 			uri: Editor.getUri(event.editor),
 			selections: Editor.getCSSelections(event.editor),
@@ -675,7 +675,7 @@ export class CodestreamView {
 		});
 	}
 
-	private onEditorActiveEditorChanged = (editor?: TextEditor) => {
+	private _onEditorActiveEditorChanged = (editor?: TextEditor) => {
 		const notification: HostDidChangeActiveEditorNotification = {};
 		const fileName = editor && Editor.getRelativePath(editor);
 		if (editor) {
