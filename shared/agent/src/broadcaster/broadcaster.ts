@@ -434,8 +434,12 @@ export class Broadcaster {
 		this._debug("These channels are connected", channels);
 		const newlyConnected: string[] = [];
 		for (const channel of channels) {
-			if (!this._subscriptions[channel].subscribed) {
-				this._subscriptions[channel].subscribed = true;
+			if (!this._subscriptions[channel] || !this._subscriptions[channel].subscribed) {
+				if (!this._subscriptions[channel]) {
+					this._subscriptions[channel] = { subscribed: true };
+				} else {
+					this._subscriptions[channel].subscribed = true;
+				}
 				newlyConnected.push(channel);
 			}
 		}
