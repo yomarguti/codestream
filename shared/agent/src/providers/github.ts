@@ -91,48 +91,46 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	async getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
 		void (await this.ensureConnected());
 
-		const openRepos = await getOpenedRepos<GitHubRepo>(
+		const openReposMap = await getOpenedRepos<GitHubRepo>(
 			r => r.domain === "github.com",
 			p => this.get<GitHubRepo>(`/repos/${p}`),
 			this._knownRepos
 		);
 
-		let boards: GitHubBoard[];
-		if (openRepos.size > 0) {
-			const gitHubRepos = Array.from(openRepos.values());
-			boards = gitHubRepos
-				.filter(r => r.has_issues)
-				.map(r => ({
-					id: r.id,
-					name: r.full_name,
-					apiIdentifier: r.full_name,
-					path: r.path
-				}));
-		} else {
-			let gitHubRepos: { [key: string]: string }[] = [];
-			try {
-				let apiResponse = await this.get<{ [key: string]: string }[]>(`/user/repos`);
-				gitHubRepos = apiResponse.body;
+		const openRepos = Array.from(openReposMap.values());
+		const boards: GitHubBoard[] = openRepos
+			.filter(r => r.has_issues)
+			.map(r => ({
+				id: r.id,
+				name: r.full_name,
+				apiIdentifier: r.full_name,
+				path: r.path
+			}));
 
-				let nextPage: string | undefined;
-				while ((nextPage = this.nextPage(apiResponse.response))) {
-					apiResponse = await this.get<{ [key: string]: string }[]>(nextPage);
-					gitHubRepos = gitHubRepos.concat(apiResponse.body);
-				}
-			} catch (err) {
-				Logger.error(err);
-				debugger;
-			}
-			gitHubRepos = gitHubRepos.filter(r => r.has_issues);
-			boards = gitHubRepos.map(repo => {
+		const userRepos: { [key: string]: string }[] = [];
+		try {
+			let url: string | undefined = "/user/repos";
+			do {
+				const apiResponse = await this.get<{ [key: string]: string }[]>(url);
+				userRepos.push(...apiResponse.body);
+				url = this.nextPage(apiResponse.response);
+			} while (url);
+		} catch (err) {
+			Logger.error(err);
+			debugger;
+		}
+		userRepos.sort((b1, b2) => b1.full_name.localeCompare(b2.full_name));
+		boards.push(...userRepos
+			.filter(r => r.has_issues && !boards.find(b => b.id === r.id))
+			.map(repo => {
 				return {
 					...repo,
 					id: repo.id,
 					name: repo.full_name,
 					apiIdentifier: repo.full_name
 				};
-			});
-		}
+			})
+		);
 
 		return {
 			boards
