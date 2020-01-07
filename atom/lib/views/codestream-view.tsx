@@ -506,6 +506,7 @@ export class CodestreamView {
 
 					if (preserveFocus) {
 						atom.views.getView(this).focus();
+						this.webview.focus();
 					}
 
 					return { params: { success: true } as EditorSelectRangeResponse };
