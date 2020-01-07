@@ -127,7 +127,7 @@ export class WorkspaceSession {
 		if (this._agent.initialized) return;
 
 		this._agent.onDidRequireRestart(() => {
-			this.restart();
+			this.signOut();
 		});
 		this._agent.onDidCrash(() => this.signOut());
 		this._agent.onDidStartLogin(() => this.setStatus(SessionStatus.SigningIn));
@@ -277,15 +277,11 @@ export class WorkspaceSession {
 	}
 
 	async signOut(reason = SignoutReason.Extension) {
-		await this._agent.reset();
+		this.envConfig = getEnvConfigForServerUrl(Container.configs.get("serverUrl"));
+		await this._agent.reset(this.envConfig);
 		if (this.session) {
 			this.session = undefined;
 			this.setStatus(SessionStatus.SignedOut, reason);
 		}
-	}
-
-	async restart(reason?: SignoutReason) {
-		this.envConfig = getEnvConfigForServerUrl(Container.configs.get("serverUrl"));
-		await this.signOut(reason);
 	}
 }

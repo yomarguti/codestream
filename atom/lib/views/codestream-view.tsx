@@ -543,7 +543,7 @@ export class CodestreamView {
 				return { params: {} as ApplyMarkerResponse };
 			}
 			case LogoutRequestType.method: {
-				await this.session.restart(SignoutReason.User);
+				await this.session.signOut(SignoutReason.User);
 				return { params: {} as LogoutResponse };
 			}
 			case ReloadWebviewRequestType.method: {
@@ -552,7 +552,7 @@ export class CodestreamView {
 				return;
 			}
 			case RestartRequestType.method: {
-				await this.session.restart(SignoutReason.User);
+				await this.session.signOut(SignoutReason.User);
 				Container.viewController.reload(this.getURI());
 				return;
 			}

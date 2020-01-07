@@ -46,7 +46,7 @@ class CodestreamPackage {
 						"codestream:sign-out",
 						async () => {
 							Container.viewController.destroyView(CODESTREAM_VIEW_URI);
-							await session.restart();
+							await session.signOut();
 						}
 					);
 				}
@@ -77,7 +77,7 @@ class CodestreamPackage {
 			atom.commands.add("atom-workspace", "codestream:point-to-qa", {
 				didDispatch: async () => {
 					Container.configs.set("serverUrl", QA_CONFIG.serverUrl);
-					await session.restart();
+					await session.signOut();
 					this.environmentChangeEmitter.push(QA_CONFIG);
 					Container.viewController.reload(CODESTREAM_VIEW_URI);
 				},
@@ -86,7 +86,7 @@ class CodestreamPackage {
 			atom.commands.add("atom-workspace", "codestream:point-to-dev", {
 				didDispatch: async () => {
 					Container.configs.set("serverUrl", PD_CONFIG.serverUrl);
-					await session.restart();
+					await session.signOut();
 					this.environmentChangeEmitter.push(PD_CONFIG);
 					Container.viewController.reload(CODESTREAM_VIEW_URI);
 				},
@@ -95,7 +95,7 @@ class CodestreamPackage {
 			atom.commands.add("atom-workspace", "codestream:point-to-production", {
 				didDispatch: async () => {
 					Container.configs.set("serverUrl", PRODUCTION_CONFIG.serverUrl);
-					await session.restart();
+					await session.signOut();
 					this.environmentChangeEmitter.push(PRODUCTION_CONFIG);
 					Container.viewController.reload(CODESTREAM_VIEW_URI);
 				},

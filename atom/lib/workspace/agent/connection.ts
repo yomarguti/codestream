@@ -439,7 +439,8 @@ export class AgentConnection implements Disposable {
 		this._initialized = false;
 	}
 
-	async reset() {
+	async reset(newEnvironmentConfig?: EnvironmentConfig) {
+		if (newEnvironmentConfig != undefined) this._environment = newEnvironmentConfig;
 		this.stop();
 		await this.start();
 	}
