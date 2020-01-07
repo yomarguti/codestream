@@ -374,16 +374,6 @@ const Reply = (props: {
 	starred: boolean;
 	codemarkId: string;
 }) => {
-	// this is to try and figure out why and when this error might occur
-	React.useEffect(() => {
-		if (props.author == undefined) {
-			logError("<CodemarkForCodemark/> derivedState.author is undefined", {
-				codemarkId: props.codemarkId,
-				authorId: props.post.creatorId
-			});
-		}
-	}, [props.author]);
-
 	const [menuState, setMenuState] = React.useState<{
 		open: boolean;
 		target?: any;
@@ -442,6 +432,8 @@ const Reply = (props: {
 	);
 };
 
+const createUnknownUser = id => ({ username: id, fullName: "Unknown" });
+
 const RepliesForCodemark = (props: { parentPost?: PostPlus; pinnedReplies?: string[] }) => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		if (props.parentPost == undefined) return { numberOfReplies: 0, unreadReplies: [] };
@@ -475,7 +467,7 @@ const RepliesForCodemark = (props: { parentPost?: PostPlus; pinnedReplies?: stri
 				<Reply
 					key={post.id}
 					post={post}
-					author={users[post.creatorId]}
+					author={users[post.creatorId] || createUnknownUser(post.creatorId)}
 					starred={Boolean(props.pinnedReplies && props.pinnedReplies.includes(post.id))}
 					codemarkId={props.parentPost!.codemarkId!}
 				/>
