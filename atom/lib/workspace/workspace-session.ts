@@ -149,7 +149,9 @@ export class WorkspaceSession {
 	}
 
 	dispose() {
-		this.signOut();
+		this.session = undefined;
+		this._agent.dispose();
+		this.setStatus(SessionStatus.SignedOut);
 	}
 
 	observeSessionStatus(callback: (status: SessionStatus) => void) {

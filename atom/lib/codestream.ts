@@ -127,7 +127,6 @@ class CodestreamPackage {
 
 	// Package lifecyle
 	async deactivate() {
-		await FileLogger.nuke();
 		this.environmentChangeEmitter.dispose();
 		Container.session.dispose();
 		this.subscriptions.dispose();
@@ -137,6 +136,7 @@ class CodestreamPackage {
 		Container.styles.dispose();
 		Container.editorManipulator.dispose();
 		this.loggedInCommandsSubscription && this.loggedInCommandsSubscription.dispose();
+		await FileLogger.nuke();
 	}
 
 	provideEnvironmentConfig() {
@@ -348,8 +348,9 @@ class CodestreamPackage {
 	}
 }
 
-let codestream;
+let codestream: CodestreamPackage | undefined;
 const packageWrapper = {
+	// These methods will be favored over the ones in CodestreamPackage and they will delegate accordingly
 	initialize(state: PackageState) {
 		Container.initialize(state);
 		if (Debug.isDebugging()) {
@@ -357,18 +358,27 @@ const packageWrapper = {
 		}
 		codestream = new CodestreamPackage();
 	},
+
+	async deactivate() {
+		await codestream!.deactivate();
+		codestream = undefined;
+	},
 };
 
 export default new Proxy(packageWrapper, {
 	get(target: any, name: any) {
-		if (codestream && Reflect.has(codestream, name)) {
+		if (Reflect.has(target, name)) {
+			return target[name];
+		}
+
+		if (codestream != undefined && Reflect.has(codestream, name)) {
 			let property = codestream[name];
 			if (typeof property === "function") {
 				property = property.bind(codestream);
 			}
 			return property;
-		} else {
-			return target[name];
 		}
+
+		return undefined;
 	},
 });
