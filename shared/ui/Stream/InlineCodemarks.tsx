@@ -1169,6 +1169,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	handleClickField = (event: React.SyntheticEvent<HTMLDivElement>) => {
+		// if the compose box is open, then there is no selected codemark
+		// so no need to deselect it, plus we don't want the side-effect
+		// of clearSelection() which removes the highlight of what code
+		// you are commenting on
+		if (this.state.newCodemarkAttributes) return;
+
 		if (event && event.target) {
 			const id = (event.target as any).id;
 			if (
