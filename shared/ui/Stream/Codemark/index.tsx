@@ -161,15 +161,16 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 							message: "Deleting a codemark cannot be undone.",
 							centered: true,
 							buttons: [
+								{ label: "Go Back", className: "control-button" },
 								{
 									label: "Delete Codemark",
+									className: "delete",
 									wait: true,
 									action: () => {
 										dispatch(deleteCodemark(codemark.id));
 										dispatch(setCurrentCodemark());
 									}
-								},
-								{ label: "Cancel" }
+								}
 							]
 						});
 					}
