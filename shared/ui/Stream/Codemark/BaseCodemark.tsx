@@ -478,14 +478,9 @@ const ActionButton = styled.div`
 `;
 
 const KebabIcon = styled.span`
-	opacity: 0.5;
-	width: 20px;
-	display: flex;
-	justify-content: flex-end;
-	:hover {
-		opacity: 1;
-		.icon {
-			color: var(--text-color-info);
-		}
+	.icon {
+		opacity: 0.5;
+		margin-left: 2px;
+		padding: 0 5px;
 	}
 `;
