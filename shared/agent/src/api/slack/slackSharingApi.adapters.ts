@@ -708,11 +708,22 @@ export function toSlackPostBlocks(
 				filename = `[${repo.name}] ${filename}`;
 			}
 
+			// don't render backticks for "empty" codeblocks
+			let codeText = "";
+			if (marker.code) {
+				if (/\S+/.test(marker.code)) {
+					codeText = `\`\`\`${marker.code}\`\`\``;
+				}
+			}
+			else {
+				codeText = "";
+			}
+
 			blocks.push({
 				type: "section",
 				text: {
 					type: "mrkdwn",
-					text: `${filename}\n\`\`\`${marker.code}\`\`\``
+					text: `${filename}\n${codeText}`
 				}
 			});
 
