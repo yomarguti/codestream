@@ -105,6 +105,7 @@ interface Props extends ConnectedProps {
 	positionAtLocation?: boolean;
 	multiLocation?: boolean;
 	setMultiLocation?: Function;
+	noCodeLocation?: boolean;
 }
 
 interface ConnectedProps {
@@ -280,7 +281,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	}
 
 	componentDidMount() {
-		const { multiLocation } = this.props;
+		const { multiLocation, noCodeLocation } = this.props;
 		const { codeBlocks } = this.state;
 
 		if (codeBlocks.length === 1) {
@@ -288,6 +289,8 @@ class CodemarkForm extends React.Component<Props, State> {
 				this.selectRangeInEditor(codeBlocks[0].uri, forceAsLine(codeBlocks[0].range));
 			}
 			this.handleScmChange();
+		} else if (noCodeLocation) {
+			this.focus();
 		} else {
 			const { textEditorSelection, textEditorUri } = this.props;
 			if (textEditorSelection && textEditorUri) {
@@ -1199,12 +1202,8 @@ class CodemarkForm extends React.Component<Props, State> {
 	getCodeBlockHint() {
 		const { editingCodemark } = this.props;
 		const { codeBlocks, liveLocation } = this.state;
-		if (!codeBlocks.length)
-			return (
-				<span className="add-range" style={{ display: "none" }}>
-					&nbsp;Select a range to comment on a block of code.
-				</span>
-			);
+
+		if (!codeBlocks.length) return this.renderAddLocation()
 
 		if (this.props.multiLocation) {
 			const numLocations = codeBlocks.length; // + (this.state.addingLocation ? 1 : 0);

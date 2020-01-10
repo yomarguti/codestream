@@ -37,7 +37,8 @@ export enum WebviewPanels {
 	People = "people",
 	Person = "person",
 	Tasks = "tasks",
-	Notifications = "notifications"
+	Notifications = "notifications",
+	NewComment = "new-comment"
 }
 
 export interface WebviewContext {

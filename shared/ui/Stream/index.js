@@ -14,9 +14,11 @@ import InvitePanel from "./InvitePanel";
 import PublicChannelPanel from "./PublicChannelPanel";
 import CreateChannelPanel from "./CreateChannelPanel";
 import ScrollBox from "./ScrollBox";
+import { CodemarkForm } from "./CodemarkForm";
 import KnowledgePanel from "./KnowledgePanel";
 import InlineCodemarks from "./InlineCodemarks";
 import CreateDMPanel from "./CreateDMPanel";
+import { createPostAndCodemark } from "./actions";
 import ChannelMenu from "./ChannelMenu";
 import Icon from "./Icon";
 import Menu from "./Menu";
@@ -450,6 +452,27 @@ export class SimpleStream extends Component {
 		return menu;
 	}
 
+	newComment = () => {
+		this.setActivePanel(WebviewPanels.NewComment);
+	};
+
+	renderPlusMenu() {
+		const { plusMenuOpen, menuTarget } = this.state;
+
+		const menuItems = [
+			{ label: "New Comment", action: this.newComment, key: "new-comment" },
+			{ label: "-" },
+			{ label: "Request A Code Review", action: this.newCodeReview, key: "new-code-review" },
+			{ label: "Start A Code Review", action: this.newCodeReview, key: "start-code-review" }
+			// { label: "-" }
+			// { label: inviteLabel, action: "invite" },
+		].filter(Boolean);
+
+		return plusMenuOpen ? (
+			<Menu items={menuItems} target={menuTarget} action={this.plusMenuAction} align="right" />
+		) : null;
+	}
+
 	addProvidersToMenu() {
 		const menuItems = [];
 		for (let providerId of Object.keys(this.props.providers)) {
@@ -602,11 +625,7 @@ export class SimpleStream extends Component {
 						})}
 						onClick={e => this.setActivePanel(WebviewPanels.CodemarksForFile)}
 					>
-						<Tooltip title="Codemarks In Current File" placement="bottom">
-							<span>
-								<Icon name="document" />
-							</span>
-						</Tooltip>
+						<Icon name="document" title="Codemarks In Current File" placement="bottom" />
 					</label>
 					<FeatureFlag flag="sharing">
 						{isSharingModel =>
@@ -671,17 +690,17 @@ export class SimpleStream extends Component {
 							</Tooltip>
 						</label>
 						*/}
+					<label onClick={this.newComment /* this.togglePlusMenu */}>
+						<Icon name="plus" title="New Comment" placement="bottom" />
+						{/*this.renderPlusMenu()*/}
+					</label>
 					<label
 						className={createClassString({
 							selected: activePanel === WebviewPanels.People
 						})}
 						onClick={e => this.setActivePanel(WebviewPanels.People)}
 					>
-						<Tooltip title="Your Team" placement="bottom">
-							<span>
-								<Icon name="organization" />
-							</span>
-						</Tooltip>
+						<Icon name="organization" title="Your Team" placement="bottom" />
 					</label>
 					{
 						// <label
@@ -741,19 +760,16 @@ export class SimpleStream extends Component {
 						})}
 						onClick={this.handleClickSearch}
 					>
-						<Tooltip title="Search Codemarks" placement="bottomRight">
-							<span>
-								<Icon name="search" />
-							</span>
-						</Tooltip>
+						<Icon name="search" title="Search Codemarks" placement="bottomRight" />
 					</label>
-					<label onClick={this.handleClickNavMenu}>
-						<Tooltip title="More..." placement="bottomRight">
-							<span>
-								<Icon onClick={this.toggleMenu} name="kebab-horizontal" />
-								{this.renderMenu()}
-							</span>
-						</Tooltip>
+					<label>
+						<Icon
+							onClick={this.toggleMenu}
+							name="kebab-horizontal"
+							title="More..."
+							placement="bottomRight"
+						/>
+						{this.renderMenu()}
 					</label>
 				</div>
 			</nav>
@@ -917,6 +933,19 @@ export class SimpleStream extends Component {
 						/>
 					)}
 					{activePanel === WebviewPanels.Activity && <ActivityPanel />}
+					{activePanel === WebviewPanels.NewComment && (
+						<CodemarkForm
+							commentType="comment"
+							streamId={this.props.postStreamId}
+							onSubmit={this.submitNoCodeCodemark}
+							onClickClose={this.props.closePanel}
+							collapsed={false}
+							positionAtLocation={false}
+							multiLocation={true}
+							noCodeLocation={true}
+							setMultiLocation={this.setMultiLocation}
+						/>
+					)}
 					{activePanel === "channels" && (
 						<ChannelPanel
 							activePanel={activePanel}
@@ -1197,6 +1226,10 @@ export class SimpleStream extends Component {
 		);
 	};
 
+	plusMenuAction = arg => {
+		this.setState({ plusMenuOpen: false });
+	};
+
 	menuAction = arg => {
 		this.setState({ menuOpen: false });
 
@@ -1222,6 +1255,10 @@ export class SimpleStream extends Component {
 
 	toggleMenu = event => {
 		this.setState({ menuOpen: !this.state.menuOpen, menuTarget: event.target });
+	};
+
+	togglePlusMenu = event => {
+		this.setState({ plusMenuOpen: !this.state.plusMenuOpen, menuTarget: event.target });
 	};
 
 	openCodemarkMenu = type => {
@@ -2030,6 +2067,11 @@ export class SimpleStream extends Component {
 		if (activePanel === "main") {
 			safe(() => this.scrollPostsListToBottom());
 		}
+	};
+
+	submitNoCodeCodemark = async attributes => {
+		const { type } = await this.props.createPostAndCodemark(attributes, "Global Nav");
+		this.props.closePanel();
 	};
 
 	submitCodemark = async (attributes, crossPostIssueValues, scmInfo) => {

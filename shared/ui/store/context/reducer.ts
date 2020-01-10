@@ -66,7 +66,8 @@ export function reduceContext(
 		case ContextActionsType.OpenPanel:
 			return { ...state, panelStack: [action.payload, ...state.panelStack].slice(0, 10) };
 		case ContextActionsType.ClosePanel: {
-			if (state.panelStack.length === 1) return state;
+			if (state.panelStack.length === 1)
+				return { ...state, panelStack: [WebviewPanels.CodemarksForFile] };
 			const [, ...panelStack] = state.panelStack;
 			return { ...state, panelStack };
 		}

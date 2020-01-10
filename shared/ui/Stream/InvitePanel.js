@@ -235,7 +235,7 @@ export class InvitePanel extends Component {
 
 	renderUserStatus(user) {
 		// turn this off, as it is just a mockup exploration -Pez
-		return null;
+		// return null;
 
 		if (user.username === "pez") {
 			const files = [
@@ -252,12 +252,8 @@ export class InvitePanel extends Component {
 				</>
 			);
 		}
-		if (user.username === "pezg") {
-			const files = [
-				"codestream-lsp-agent/.tsx",
-				"codestream-lsp-agent/.tsx",
-				"codestream-lsp-agent/.tsx"
-			];
+		if (user.username === "jj") {
+			const files = ["codestream-lsp-agent/KnowledgePanel.tsx", "codestream-lsp-agent/foo.tsx"];
 			return (
 				<>
 					<li className="status" style={{ paddingLeft: "48px" }}>
