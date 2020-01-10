@@ -235,7 +235,7 @@ export class InvitePanel extends Component {
 
 	renderUserStatus(user) {
 		// turn this off, as it is just a mockup exploration -Pez
-		// return null;
+		return null;
 
 		if (user.username === "pez") {
 			const files = [
