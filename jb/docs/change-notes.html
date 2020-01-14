@@ -1,0 +1,483 @@
+<h4 id="6_0_0">6.0.0</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds a new Activity Feed to notify you about new codemarks and new replies to codemarks</li>
+    <li>Adds the ability for CodeStream teams to optionally share codemarks to Slack, without requiring broad access to your workspace</li>
+    <li>Adds the ability to share any existing codemark, including those created by teammates, to Slack</li>
+    <li>Adds the ability to reply to codemarks from Slack via a View Discussion & Reply button</li>
+    <li>Adds the ability to specify a default sharing destination on Slack per repo (look for gear menu at top of the channel-selection dropdown)</li>
+    <li>Adds new codemark-centric email notifications, which allow you to post replies by simply replying to the email</li>
+    <li>Adds new notification settings under the ellipses menu in the top nav</li>
+    <li>Adds the ability to manually follow/unfollow individual codemarks to control notifications</li>
+    <li>Adds the ability to create a codemark via the "+" button in the top nav, where the code block is optional</li>
+    <li>Adds a new Team tab to the top nav where you can invite teammates and see those already on the team</li>
+    <li>Adds repo name to the display of codemarks</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>Assignment of an issue (excluding those shared externally) is now treated like a mention so that the assignee is notified</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/139">#139</a> - GitHub PR comments not showing up</li>
+</ul>
+<h4 id="5_2_5">5.2.5</h4>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue with repo matching on startup</li>
+</ul>
+<h4 id="5_2_4">5.2.4</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds a roadblock to let people know when CodeStream can't connect due to possible proxy issues</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>The form to create a codemark is now keyboard navigable</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue with creating codemarks that include blank line at the end of a file</li>
+    <li>Fixes a broken link on the form to configure the GitLab Self-Managed integration</li>
+</ul>
+<h4 id="5_2_3">5.2.3</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds support for self-signed SSL certificates for CodeStream On-Prem</li>
+    <li>Adds display of CodeStream version number at the bottom of the ellipses menu</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue with very large codemarks not being displayed on Slack</li>
+    <li>Fixes an issue with "Open on GitHub" buttons not accounting for .com-githubHandle remote syntax</li>
+</ul>
+<h4 id="5_2_2">5.2.2</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds support for merge request comments from GitLab via the "PR" toggle on the Current File tab</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>When you cancel the creation of a codemark you are now prompted to confirm the action</li>
+    <li>By default, codemarks are now displayed as glyphs in the editor even when the Current File tab is selected</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an error that could prevent codemark creation and positioning when remote git operations require a password</li>
+    <li>Fixes in issue with the CodeStream status bar entry no longer being displayed</li>
+    <li>Fixes an issue with the display of codemarks, as well as the codemark creation form, near the bottom of a file</li>
+    <li>Fixes an issue where Slack DMs sometimes weren't available for sharing a codemark</li>
+</ul>
+<h4 id="5_2_1">5.2.1</h4>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue with some users getting a blank CodeStream pane</li>
+</ul>
+<h4 id="5_2_0">5.2.0</h4>
+<h5>Changed</h5>
+<ul>
+    <li>Repo matching logic now also includes commit hashes to better handle scenarios where teammates don't have a common remote URL for the same repo</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/127">#127</a> - Duplicate window frame on 2019.3 EAP</li>
+    <li>Fixes an issue where the codemark compose form and the newly-created codemark would briefly appear at the same time</li>
+    <li>Fixes an issue where the current codemark was available for selection as a related codemark</li>
+</ul>
+<h4 id="5_1_0">5.1.0</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds support for HTTP proxy authentication</li>
+    <li>Adds "Open in IDE", "Open on Web" and "Open on GitHub" (or Bitbucket/GitLab) links to issues created in external issue-tracking services (Jira, Trello, etc.)</li>
+    <li>Adds the ability to manually reposition a codemark in cases where its location isn't automatically updated based on changes to the code</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>Changed the "Open on CodeStream" button in posts to Slack / MS Teams to "Open on Web"</li>
+    <li>Improvements on codemark location calulation</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue with editing replies</li>
+    <li>Fixes an issue with the dropdowns for Author and Branch on the Search tab not working</li>
+    <li>Fixes an issue with the formatting of code blocks in issues created on YouTrack</li>
+    <li>Fixes an issue where the "Open in IDE" button, for codemarks with multiple locations, would always open to the first location</li>
+    <li>Fixes issues with "Open in IDE" from codemark pages in Firefox</li>
+</ul>
+<h4 id="5_0_1">5.0.1</h4>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/124">#124</a> - CodeStream Panel Empty. Slack API Error Found In Log</li>
+    <li>Fixes an issue with Codemarks disappearing after a commit</li>
+</ul>
+<h4 id="5_0_0">5.0.0</h4>
+<h5>Added</h5>
+<ul>
+    <li>Add the ability to have multiple blocks of code, even across files/repos, associated with a single codemark</li>
+    <li>Adds the ability to create issues on GitLab Enterprise</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>Codemarks can now be created and shared with your teammates even if you have unpushed commits</li>
+    <li>CodeStream settings now apply globally, instead of at the project level, so you no longer need to sign in again when opening a new project</li>
+    <li>Archived codemarks and resolved issues are now both controlled by the Archived filter on the Current File tab</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue where assignee wasn't being set correctly for issues created on GitLab</li>
+    <li>Fixes an issue with the Asana integration where tasks weren't getting created</li>
+</ul>
+<h4 id="4_0_1">4.0.1</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds the ability to filter codemarks on the Search tab by author, branch or commit</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue with changing issue-tracking services via the dropdown on the codemark form</li>
+    <li>Fixes an issue with Codemark creation in Rider</li>
+</ul>
+<h4 id="4_0_0">4.0.0</h4>
+<h5>Added</h5>
+<ul>
+    <li>Comments on merged-in pull requests from either GitHub or Bitbucket are now displayed right alongside the code blocks they refer to</li>
+    <li>The ability to inject a codemark as an inline comment now has an option to include replies</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue where an issue codemark with a blank description would not get posted to Slack</li>
+    <li>Fixes an issue where automated closed/opened messages for issue codemarks were not getting posted to Slack</li>
+    <li>Fixes the sort order of Jira projects so that they are in alphabetical order</li>
+    <li>Fixes an issue where the ability to star a reply was missing for Slack-connected teams</li>
+    <li>Fixes an issue where Slack desktop notifications for codemarks would not include any content</li>
+</ul>
+<h4 id="3_0_3">3.0.3</h4>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue with opening codemark links in older IDE versions</li>
+</ul>
+<h4 id="3_0_2">3.0.2</h4>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes compatibility issues with IntelliJ 2019.2.3</li>
+</ul>
+<h4 id="3_0_1">3.0.1</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds options to codemarks shared on Microsoft Teams to open a codemark on the web, in your IDE or, in the case of issues, on the issue-tracking service</li>
+    <li>Adds new tophat to display of codemarks when the referenced code has been deleted</li>
+    <li>Adds "CodeStream: Sign out" to JetBrains actions list</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>The bookmark codemark type has been removed, to be brought back at a future date</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/119">#119</a> - Plugin Crashes When Launched</li>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/117">#117</a> - Deleting codemark from Search tab causes unexpected error</li>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/116">#116</a> - Creating codemark takes you out of List view</li>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/115">#115</a> - Tab then enter discards codemark</li>
+    <li>Fixes an issue with some users getting a blank CodeStream pane</li>
+    <li>Fixes issues with IntelliJ 2019.3 EAP compatibility</li>
+</ul>
+<h4 id="3_0_0">3.0.0</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds a "Copy link" menu option for all codemarks so that they can be shared anywhere at any time</li>
+    <li>Adds new web-based codemark pages to display codemarks shared via link</li>
+    <li>Adds options to codemarks shared on Slack to open a codemark on the web, in your IDE or, in the case of issues, on the issue-tracking service</li>
+    <li>When opening a codemark in your IDE from Slack or the web, if you don't happen to have the given repo open, CodeStream will still open the file for you automatically if you've ever opened that repo while signed into CodeStream. If not, we'll prompt you to open the repo, and we'll remember the location so you don't have to do that again.</li>
+    <li>Adds a team switcher under the ellipses menu to switch between all of your CodeStream teams</li>
+    <li>For on-prem installations, adds a check to make sure that the version of the API server running is compatible with the extension</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes a rate limiting issue experienced by certain teams authenticating with Microsoft Teams</li>
+    <li>Fixes an issue with deleting replies to a codemark</li>
+    <li>Fixes an issue with syncing with YouTrack after authenticating</li>
+    <li>Fixes an issue where a codemark created against unsaved code would not appear immediately</li>
+</ul>
+<h4 id="2_1_3">2.1.3</h4>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/102">#102</a> - Unable to prevent auto-opening of the CodeStream pane</li>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/95">#95</a> - Plugin crashes on IDE startup</li>
+</ul>
+<h4 id="2_1_2">2.1.2</h4>
+<h5>Added</h5>
+<ul>
+    <li>Addresses <a href="https://github.com/TeamCodeStream/CodeStream/issues/79">#79</a> - Adds branch info to codemark display when there's a diff</li>
+    <li>Adds the ability to inject a codemark as an inline comment</li>
+    <li>Adds the ability to report errors directly to CodeStream from the event log</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes a rate limiting issue experienced by certain teams authenticating with Microsoft Teams</li>
+    <li>Fixes an issue where replies to a codemark in a Slack-connected team would briefly appear twice</li>
+    <li>Fixes an issue where there was no confirmation message when adding a user to a channel via slash command</li>
+    <li>Fixes an issue with blurry display on HiDPi Windows displays</li>
+    <li>Fixes an authentication issue when you have four or more projects open</li>
+    <li>Fixes an issue with the display of Compare/Apply buttons when the codemark's block of code doesn't match what you have locally</li>
+</ul>
+<h4 id="2_1_0">2.1.0</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds more robust tagging functionality, allowing you to create tags with any color / text label combination</li>
+    <li>Adds the ability to link parts of your codebase by adding "related" codemarks to a parent codemark, and then using the links to jump around the codebases</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>Improved display of collapsed codemarks to make it easy to see tags, assignees, linked issues (i.e., on an external service like Jira), and the presence of replies or related codemarks</li>
+    <li>All new cleaner display of expanded codemarks, with replies now displayed in descending order (i.e., most recent first)</li>
+    <li>Consistent display of codemarks across all areas of CodeStream</li>
+    <li>Smoother scrolling of codemarks in the CodeStream pane</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue with the positioning of the codemark form when creating a codemark at the bottom of the viewport</li>
+    <li>Fixes an issue with not being able to change issue-tracking selection once Azure DevOps has been selected</li>
+    <li>Fixes an issue with password reset in CodeStream on-prem</li>
+</ul>
+<h4 id="2_0_1">2.0.1</h4>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue where resizing the CodeStream pane would cause the IDE to freeze</li>
+    <li>Fixes an issue where you could no longer create a codemark after switching projects</li>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/82">#82</a> - IDE crashes on startup</li>
+</ul>
+<h4 id="2_0_0">2.0.0</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds issue-tracking integrations with Jira Server and GitHub Enterprise</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>Updates the UI for creating issues on external issue tracking services to allow you to be connected to multiple services at once and change the selection on an issue by issue basis</li>
+    <li>Codemarks now appear immediately upon submission</li>
+    <li>Trailing slashes are stripped off of the Server URL setting for on-prem installations</li>
+    <li>Reduce energy consumption by avoiding unnecessary use of discrete GPU</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue with not all DMs from Slack appearing in the conversation selector when creating a codemark</li>
+    <li>Fixes an issue with a lack of notification when viewing a codemark in a file you don't have</li>
+    <li>Fixes a display issue when doing a Compare in a codemark at the very end of a file</li>
+    <li>Fixes an issue where you couldn't edit a codemark from the Search tab or a stream</li>
+</ul>
+<h4 id="1_3_4">1.3.4</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds roadblocks when your extension is behind either a required or suggested version of CodeStream</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/71">#71</a> - You can edit channel selection when editing via thread view</li>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/78">#78</a> - Using keyboard shortcut doesn't set focus correctly</li>
+    <li>Fixes an error when switching between projects in your IDE</li>
+    <li>Fixes JxBrowser rendering issues on Windows HiDPI displays when running on JetBrains JRE version 8</li>
+    <li>Fixes an issue with the default conversation selection not being preserved across IDE sessions</li>
+    <li>Fixes an issue with the window size being way too large when doing a Compare</li>
+</ul>
+<h4 id="1_3_3">1.3.3</h4>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/73">#73</a> - Unable to load git repository because of wrong path</li>
+    <li>Fixes an error when switching between projects in your IDE</li>
+    <li>Fixes an error that would lead to a blank CodeStream pane on login</li>
+</ul>
+<h4 id="1_3_2">1.3.2</h4>
+<h5>Changed</h5>
+<ul>
+    <li>Added a "Back" link below the password-reset form in case you change your mind</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/70">#70</a> - Once joined more than one channel, I can't choose into which channel a comment should go to anymore</li>
+    <li>Fixes an issue with repos managed by Bitbucket Server incorrectly being identified as being managed by Bitbucket cloud</li>
+    <li>Fixes scrolling issues when creating and viewing longer codemarks</li>
+</ul>
+<h4 id="1_3_1">1.3.1</h4>
+<h5>Added</h5>
+<ul>
+    <li>Password reset. Sorry it took so long!</li>
+    <li>Enforcement of CodeStream's 30-day free trial, and 5-member limit for teams on the free plan</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>JxBrowser upgraded to 7.0</li>
+    <li>Optimizations to ipc between our processes and plugin startup</li>
+    <li>Improves contrast between text and background in CodeStream UI</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes display issues on HiDPi displays</li>
+    <li>Fixes an issue where opening a new project in an existing window would break CodeStream</li>
+    <li>Fixes an issue where scrolling in the CodeStream pane with the compose modal open would lose any information already entered</li>
+    <li>Fixes an issue where a codemark could get posted as a reply to another codemark if you had thread view open</li>
+    <li>Fixes a spacing issue on the Sign In page</li>
+    <li>Fixes an issue with new UI not being applied to email confirmation and Team Name pages</li>
+    <li>Fixes rendering issues with certain Slack bots when using Slack real-time channels</li>
+</ul>
+<h4 id="1_3_0">1.3.0</h4>
+<h5>Added</h5>
+<ul>
+    <li>New Microsoft Teams integration allows you to share codemarks in your organization's existing channels. <a href="https://www.codestream.com/blog/codestream-1-3">Learn more.</a></li>
+    <li>New Slack integration that reduces the amount of Slack that appears in CodeStream, with the full Channels tab now being optional</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>Updated the UI of CodeStream's signup flow</li>
+    <li>Asana projects are now listed in alphabetical order for selection</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue with code blocks in Trello cards not rendering properly, and not including the line numbers</li>
+</ul>
+<h4 id="1_2_0">1.2.0</h4>
+<h5>Changed</h5>
+<ul>
+    <li>The Invite People page now only shows teammates from your Slack workspace that have signed up for CodeStream</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue that would cause an error when opening a Slack channel with Japanese characters in the name</li>
+    <li>Fixes an issue where hovering over an expanded codemark wouldn't highlight the corresponding code block in the editor</li>
+    <li>Fixes an issue with text in backticks not rendering properly</li>
+    <li>Fixes an issue with new lines being displayed as html in posts on Slack</li>
+    <li>Fixes an issue with new lines in codemark text causing display issues on the Search tab</li>
+    <li>Fixes an issue with the Asana integration that was preventing projects from being listed</li>
+    <li>Fixes an issue with invitation codes incorrectly expiring after 10 minutes</li>
+    <li>Fixes an issue with editing a reply from a codemark's thread view</li>
+</ul>
+<h4 id="1_1_1">1.1.1</h4>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue with proxy support</li>
+</ul>
+<h4 id="1_1_0">1.1.0</h4>
+<h5>Changed</h5>
+<ul>
+    <li>Signup flow is now based in the IDE instead of on the web</li>
+    <li>For CodeStream teams, invitations are now code-based allowing for quicker signup</li>
+    <li>For Slack teams, invitation URLs have been simplified</li>
+    <li>Clicking on a codemark in the editor gutter opens the codemark in the Current File tab in CodeStream</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/60">#60</a> - can't delete codemark in vscode</li>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/57">#57</a> - Cygwin git support</li>
+    <li>Fixes an issue with bookmark titles not being displayed on Slack</li>
+    <li>Fixes an issue with code snippets added to a codemark via markdown not rendering</li>
+    <li>Fixes an issue with saving settings without a Notifications selection would cause an error</li>
+    <li>Fixes an issue with creating codeamarks in a file with spaces and special characters in the path</li>
+</ul>
+<h4 id="1_0_2">1.0.2</h4>
+<h5>Changed</h5>
+<ul>
+    <li>Desktop notifications now default to off for users on Slack teams</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue where a new codemark sometimes wouldn't appear right away</li>
+    <li>Fixes an issue where git repos with remote URLs containing port numbers would prevent codemarks from being displayed properly</li>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/59">#59</a> - IndexOutOfBoundsException</li>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/61">#61</a> - Formatting issues with codemarks</li>
+    <li>Prevent error when the first character of a document is in a collapsed region</li>
+    <li>Suppresses unnecessary error reporting</li>
+</ul>
+<h4 id="1_0_1">1.0.1</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds compare and apply links to codemarks when code block doesn't match your local buffer</li>
+    <li>Adds an integration with YouTrack issue tracking</li>
+</ul>
+<h4 id="1_0_0">1.0.0</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds preemptive warnings about creating codemarks in files that aren't managed by Git, don't have remote URLs, or haven't been saved</li>
+    <li>Adds support for folded ranges</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/54">#54</a> - Do not show notifications in event log by default</li>
+    <li>Fixes an issue with the wrapping of filename and line number information in the codemark form</li>
+</ul>
+<h4 id="0_53_0">0.53.0</h4>
+<h5>Added</h5>
+<ul>
+    <li>CodeStream now integrates with Azure DevOps issue tracking</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>CodeStream options now appear higher up in the editor context menu</li>
+    <li>When editing an issue codemark linked to an external service, assignees are read-only since they can't be edited from CodeStream</li>
+    <li>Increased the contrast of the code highlighting when hovering over a codemark to make it easier to see the associated code block</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/52">#52</a> - Not able to set comment bookmark or permalink in v0.52.3+1</li>
+    <li>Fixes an issue with mentions posted in a reply not being treated as a mention in terms of badges and notifications</li>
+    <li>Fixes an issue where codemarks would initially appear collapsed when the CodeStream pane was reopened</li>
+    <li>Fixes an issue where CodeStream would not recognize when a source file wasn't selected or open</li>
+    <li>Fixes an issue when changing the code selection with the codemark form already open</li>
+    <li>Fixes an issue with editing posts from the conversation stream</li>
+</ul>
+<h4 id="0_52_3">0.52.3</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds desktop notifications for when you're mentioned (or, optionally, all messages)</li>
+    <li>Adds markers to the editor scrollbar to indicate where codemarks exist in the file</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes <a href="https://github.com/TeamCodeStream/CodeStream/issues/51">#51</a> - JetBrains plugin causes exception if open file is not under VCS</li>
+    <li>Fixes an issue where codemarks would not display in the gutter when the CodeStream pane was closed</li>
+
+</ul>
+<h4 id="0_52_2">0.52.2</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds a guide to keyboard shortcuts in the default view of the Current File tab when there are no codemarks</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>Updated the Jira integration to accommodate the GDPR-related changes to the Jira Cloud REST APIs, which means that Jira assignees can no longer be mapped to a CodeStream user</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue that prevented users without Git installed from being able to sign in</li>
+    <li>Fixes an issue with Slack presence not being reflected on the Channels tab</li>
+</ul>
+<h4 id="0_52_1">0.52.1</h4>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an error that was triggered by switching branches</li>
+    <li>Fixes an issue that prevented CodeStream from running on certain flavors of Linux</li>
+    <li>Fixes an issue with archived codemarks and resolved issues being displayed in the gutter</li>
+    <li>Fixes an issue with the logos of issue-tracking services not being clickable in issue codemarks</li>
+</ul>
+<h4 id="0_52_0">0.52.0</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds a completely new view of codemarks that makes information much more accessible, with the ability to view and edit in-place. Read more on our blog.</li>
+    <li>Adds the ability to "star" a reply so that it's surfaced in the codemarks view</li>
+    <li>Adds the ability to assign shortcuts to individual codemarks, allowing you to quickly jump around the codebase</li>
+    <li>Adds a toolbar to the bottom of the Current File tab with filters to control whether or not you see completed issues or archived codemarks</li>
+    <li>Adds clickable indicators to the toolbar to let you know when there are codemarks above/below your current view</li>
+    <li>Archived codemarks and resolved issues are now displayed in a collapsed format in a new gutter at the right side of the CodeStream pane, with the ability to click to expand the display</li>
+    <li>Adds a new header treatment for archived codemarks</li>
+    <li>Scrolling the view of codemarks in the CodeStream pane will now scroll the source file as well</li>
+    <li>Adds a quick overview of codemarks accessible via an info icon at the bottom-right of each codemark</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>The display of an expanded codemark only includes the code block, as well as the Compare and Apply links, if there’s a diff from what you have locally</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue where using the “selected conversations” filter on the Channels tab, with only a single channel selected, would cause codemarks to get shared to the wrong conversation</li>
+    <li>Fixes an issue where a codemark would no longer render on CodeStream if the post was deleted via the Slack client</li>
+    <li>Fixes an issue where archived and closed Slack conversations were appearing in the conversation selector when creating a codemark</li>
+    <li>Fixes an issue that prevented an edited bookmark from being saved</li>
+</ul>

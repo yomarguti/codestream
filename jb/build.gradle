@@ -50,6 +50,11 @@ compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
 
+patchPluginXml {
+    changeNotes "${file('docs/change-notes.html').getText('UTF-8')}"
+    pluginDescription "${file('docs/description.html').getText('UTF-8')}"
+}
+
 intellij {
     type "IC"
     // the version parameter also dictates which jars will be used at compilation time
