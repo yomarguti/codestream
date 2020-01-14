@@ -10,7 +10,7 @@ import { CSLocationMeta, CSMarkerLocation } from "../protocol/api.protocol";
 import { buildChangeset, Change, Changeset } from "./changeset";
 
 export const MAX_RANGE_VALUE = 2147483647;
-const LINE_SIMILARITY_THRESHOLD = 0.6;
+const LINE_SIMILARITY_THRESHOLD = 0.5;
 const CHANGE_SIMILARITY_THRESHOLD = 0.5;
 const DELETED = -1;
 
