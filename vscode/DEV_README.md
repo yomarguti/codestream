@@ -1,3 +1,7 @@
+
+
+
+
 # CodeStream for Visual Studio Code
 
 New to VSCode/Codestream? Look for a novice debugging examples at the end of this file.
@@ -30,6 +34,22 @@ Or to just run a quick build, use:
 
 ```
 npm run build
+```
+
+##### Ubuntu 18.04: 'pushd not found'
+
+If you get a 'pushd not found' error on npm run rebuild, it's because Ubuntu uses sh for the default shell. Tell npm to use bash instead:
+
+Create a file in the vscode folder called
+
+```
+.npmrc
+```
+
+with content
+
+```
+script-shell=/bin/bash
 ```
 
 ### Watch
