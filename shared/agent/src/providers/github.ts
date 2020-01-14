@@ -19,9 +19,8 @@ import {
 	GitHubCreateCardResponse,
 	GitHubUser
 } from "../protocol/agent.protocol";
-import { CodemarkType, CSGitHubProviderInfo, CSLocationArray, CSReferenceLocation } from "../protocol/api.protocol";
+import { CodemarkType, CSGitHubProviderInfo, CSReferenceLocation } from "../protocol/api.protocol";
 import { Arrays, Functions, log, lspProvider, Strings } from "../system";
-import { xfs } from "../xfs";
 import {
 	getOpenedRepos,
 	getRemotePath,
@@ -212,41 +211,58 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		const commentsById: { [id: string]: PullRequestComment } = Object.create(null);
 		const markersByCommit = new Map<string, Markerish[]>();
 
-		let line;
-		let rev;
-		let outdated;
 		for (const c of comments) {
 			Logger.log(`GitHub.getPullRequestDocumentMarkers: processing comment ${c.id}`);
-			outdated = c.outdated;
-			if (!outdated) {
-				outdated = !(await git.isValidReference(repo.path, c.commit));
-				outdated;
+
+			let rev;
+			let line;
+			if (c.line !== -1 && (await git.isValidReference(repo.path, c.commit))) {
+				rev = c.commit;
+				line = c.line;
+			} else if (
+				c.originalLine !== -1 &&
+				c.originalCommit &&
+				(await git.isValidReference(repo.path, c.originalCommit))
+			) {
+				rev = c.originalCommit!;
+				line = c.originalLine;
 			}
 
-			rev = outdated ? c.originalCommit! : c.commit;
-			line = outdated ? c.originalLine! : c.line;
-
-			if (line === -1) {
-				Logger.log(`GitHub.getPullRequestDocumentMarkers: could not get position information comment ${c.id} from PR`);
-				Logger.log(`GitHub.getPullRequestDocumentMarkers: attempting to determine current revision for content-based calculation`);
+			if (rev == undefined || line === undefined || line === -1) {
+				Logger.log(
+					`GitHub.getPullRequestDocumentMarkers: could not get position information comment ${c.id} from PR`
+				);
+				Logger.log(
+					`GitHub.getPullRequestDocumentMarkers: attempting to determine current revision for content-based calculation`
+				);
 				rev = await git.getFileCurrentRevision(uri);
 				if (!rev) {
-					Logger.log(`GitHub.getPullRequestDocumentMarkers: could not determine current revision for file ${uri.fsPath}`);
+					Logger.log(
+						`GitHub.getPullRequestDocumentMarkers: could not determine current revision for file ${uri.fsPath}`
+					);
 					continue;
 				}
 
-				Logger.log(`GitHub.getPullRequestDocumentMarkers: attempting to determine current revision for content-based calculation`);
-                const contents = await xfs.readText(uri.fsPath);
-                if (!contents) {
-					Logger.log(`GitHub.getPullRequestDocumentMarkers: could not read contents of ${uri.fsPath} from disk`);
+				Logger.log(
+					`GitHub.getPullRequestDocumentMarkers: attempting to determine current revision for content-based calculation`
+				);
+				const contents = await git.getFileContentForRevision(uri, rev);
+				if (!contents) {
+					Logger.log(
+						`GitHub.getPullRequestDocumentMarkers: could not read contents of ${uri.fsPath}@${rev} from git`
+					);
 					continue;
 				}
 
-				Logger.log(`GitHub.getPullRequestDocumentMarkers: calculating comment line via content analysis`);
+				Logger.log(
+					`GitHub.getPullRequestDocumentMarkers: calculating comment line via content analysis`
+				);
 				line = await findBestMatchingLine(contents, c.code, c.line);
 			}
 
-			Logger.log(`GitHub.getPullRequestDocumentMarkers: comment ${c.id} located at line ${line}, commit ${rev}`);
+			Logger.log(
+				`GitHub.getPullRequestDocumentMarkers: comment ${c.id} located at line ${line}, commit ${rev}`
+			);
 
 			let markers = markersByCommit.get(rev);
 			if (markers === undefined) {
@@ -255,20 +271,23 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 
 			commentsById[c.id] = c;
-			const referenceLocations: CSReferenceLocation[] = [];
-			if (line >= 0) {
-				referenceLocations.push({
+			if (line !== -1) {
+				const referenceLocation: CSReferenceLocation = {
 					commitHash: rev,
-					location: [line, 1, line, MAX_RANGE_VALUE, undefined] as CSLocationArray,
+					location: [line, 1, line, MAX_RANGE_VALUE, undefined],
 					flags: {
 						canonical: true
 					}
+				};
+				markers.push({
+					id: c.id,
+					referenceLocations: [referenceLocation]
 				});
+			} else {
+				Logger.log(
+					`GitHub.getPullRequestDocumentMarkers: could not find current location for comment ${c.url}`
+				);
 			}
-			markers.push({
-				id: c.id,
-				referenceLocations
-			});
 		}
 
 		const locations = await MarkerLocationManager.computeCurrentLocations(
