@@ -22,11 +22,16 @@ export async function findBestMatchingLine(text: string, lineContent: string, or
 		for (let i = 0; i < originalLineNumber - 1; i++) {
 			guessOffset += lines[i].length + 1;
 		}
-		const dmpOffset = dmp.match_main(text, lineContent, guessOffset);
+		// patterns cannot be larger than 32 (number of bits in an int)
+		const trimmedLineContent = lineContent.trim().substring(0, 32);
+		const dmpOffset = dmp.match_main(text, trimmedLineContent, guessOffset);
+		if (dmpOffset === -1) return -1;
+
 		let dmpLineIndex = 0;
 		let offset = 0;
-		while (offset < dmpOffset && dmpLineIndex < lines.length) {
-			offset += lines[dmpLineIndex++].length + 1;
+		while (dmpOffset > offset + lines[dmpLineIndex].length + 1 && dmpLineIndex < lines.length) {
+			offset += lines[dmpLineIndex].length + 1;
+			dmpLineIndex++;
 		}
 
 		return dmpLineIndex + 1;
