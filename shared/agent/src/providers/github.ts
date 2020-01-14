@@ -120,16 +120,17 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			debugger;
 		}
 		userRepos.sort((b1, b2) => b1.full_name.localeCompare(b2.full_name));
-		boards.push(...userRepos
-			.filter(r => r.has_issues && !boards.find(b => b.id === r.id))
-			.map(repo => {
-				return {
-					...repo,
-					id: repo.id,
-					name: repo.full_name,
-					apiIdentifier: repo.full_name
-				};
-			})
+		boards.push(
+			...userRepos
+				.filter(r => r.has_issues && !boards.find(b => b.id === r.id))
+				.map(repo => {
+					return {
+						...repo,
+						id: repo.id,
+						name: repo.full_name,
+						apiIdentifier: repo.full_name
+					};
+				})
 		);
 
 		return {
