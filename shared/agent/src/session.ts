@@ -328,8 +328,9 @@ export class CodeStreamSession {
 		this.agent.registerHandler(
 			BootstrapRequestType,
 			async (e, cancellationToken: CancellationToken) => {
-				const { repos, streams, teams, users } = SessionContainer.instance();
+				const { companies, repos, streams, teams, users } = SessionContainer.instance();
 				const promise = Promise.all([
+					companies.get(),
 					repos.get(),
 					streams.get(),
 					teams.get(),
@@ -339,6 +340,7 @@ export class CodeStreamSession {
 				]);
 
 				const [
+					companiesResponse,
 					reposResponse,
 					streamsResponse,
 					teamsResponse,
@@ -348,6 +350,7 @@ export class CodeStreamSession {
 				] = await promise;
 
 				return {
+					companies: companiesResponse.companies,
 					preferences: preferencesResponse.preferences,
 					repos: reposResponse.repos,
 					streams: streamsResponse.streams,

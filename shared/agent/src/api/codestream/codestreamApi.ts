@@ -39,6 +39,8 @@ import {
 	DeleteTeamTagRequestType,
 	EditPostRequest,
 	FetchCodemarksRequest,
+	FetchCompaniesRequest,
+	FetchCompaniesResponse,
 	FetchFileStreamsRequest,
 	FetchMarkerLocationsRequest,
 	FetchMarkersRequest,
@@ -51,6 +53,8 @@ import {
 	FollowCodemarkRequest,
 	FollowCodemarkResponse,
 	GetCodemarkRequest,
+	GetCompanyRequest,
+	GetCompanyResponse,
 	GetMarkerRequest,
 	GetPostRequest,
 	GetPostsRequest,
@@ -127,6 +131,8 @@ import {
 	CSGetApiCapabilitiesResponse,
 	CSGetCodemarkResponse,
 	CSGetCodemarksResponse,
+	CSGetCompaniesResponse,
+	CSGetCompanyResponse,
 	CSGetInviteInfoRequest,
 	CSGetInviteInfoResponse,
 	CSGetMarkerLocationsResponse,
@@ -489,7 +495,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 		this._events.onDidReceiveMessage(this.onPubnubMessageReceived, this);
 
 		if (types === undefined || types.includes(MessageType.Streams)) {
-			const streams = (await SessionContainer.instance().streams.getSubscribable(this.teamId)).streams;
+			const streams = (await SessionContainer.instance().streams.getSubscribable(this.teamId))
+				.streams;
 			await this._events.connect(streams.map(s => s.id));
 		} else {
 			await this._events.connect();
@@ -541,7 +548,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 				if (this._events !== undefined) {
 					for (const stream of e.data as (CSChannelStream | CSDirectStream)[]) {
-						if (CodeStreamApiProvider.isStreamSubscriptionRequired(stream, this.userId, this.teamId)) {
+						if (
+							CodeStreamApiProvider.isStreamSubscriptionRequired(stream, this.userId, this.teamId)
+						) {
 							this._events.subscribeToStream(stream.id);
 						} else if (CodeStreamApiProvider.isStreamUnsubscribeRequired(stream, this.userId)) {
 							this._events.unsubscribeFromStream(stream.id);
@@ -574,6 +583,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 					void session.updateProviders();
 				}
 				break;
+			case MessageType.Companies: {
+				const { companies } = SessionContainer.instance();
+				e.data = await companies.resolve(e);
+				if (e.data == null || e.data.length === 0) return;
+				break;
+			}
 			case MessageType.Users:
 				const users: CSUser[] = e.data;
 				const meIndex = users.findIndex(u => u.id === this.userId);
@@ -752,7 +767,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		// TODO: This doesn't handle all the request params
 		return this.get<CSGetMarkersResponse>(
 			`/markers?teamId=${this.teamId}&streamId=${request.streamId}${
-			request.commitHash ? `&commitHash=${request.commitHash}` : ""
+				request.commitHash ? `&commitHash=${request.commitHash}` : ""
 			}`,
 			this._token
 		);
@@ -1274,6 +1289,21 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return this.get<CSGetTeamResponse>(`/teams/${request.teamId}`, this._token);
 	}
 
+	fetchCompanies(request: FetchCompaniesRequest): Promise<FetchCompaniesResponse> {
+		const params: { [k: string]: any } = {};
+
+		if (request.mine) params.mine = true;
+		else if (request.companyIds?.length ?? 0 > 0) {
+			params.ids = request.companyIds!.join(",");
+		}
+
+		return this.get<CSGetCompaniesResponse>(`/companies?${qs.stringify(params)}`, this._token);
+	}
+
+	getCompany(request: GetCompanyRequest): Promise<GetCompanyResponse> {
+		return this.get<CSGetCompanyResponse>(`/companies/${request.companyId}`, this._token);
+	}
+
 	@lspHandler(CreateTeamTagRequestType)
 	async createTeamTag(request: CSTeamTagRequest) {
 		await this.post(`/team-tags/${request.team.id}`, { ...request.tag }, this._token);
@@ -1677,10 +1707,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 			const context =
 				this._middleware.length > 0
 					? ({
-						url: absoluteUrl,
-						method: method,
-						request: init
-					} as CodeStreamApiMiddlewareContext)
+							url: absoluteUrl,
+							method: method,
+							request: init
+					  } as CodeStreamApiMiddlewareContext)
 					: undefined;
 
 			if (context !== undefined) {
@@ -1784,7 +1814,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		} finally {
 			Logger.log(
 				`${traceResult}${
-				init && init.body ? ` body=${CodeStreamApiProvider.sanitize(init && init.body)}` : ""
+					init && init.body ? ` body=${CodeStreamApiProvider.sanitize(init && init.body)}` : ""
 				} \u2022 ${Strings.getDurationMilliseconds(start)} ms`
 			);
 		}
@@ -1915,10 +1945,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 		try {
 			Logger.log("Verifying API server connectivity");
 
-			const resp = await fetch(
-				this.baseUrl + "/no-auth/capabilities",
-				{ agent: this._httpsAgent, signal: controller.signal }
-			);
+			const resp = await fetch(this.baseUrl + "/no-auth/capabilities", {
+				agent: this._httpsAgent,
+				signal: controller.signal
+			});
 
 			Logger.log(`API server status: ${resp.status}`);
 			if (!resp.ok) {

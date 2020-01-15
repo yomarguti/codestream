@@ -35,6 +35,8 @@ import {
 	DeletePostRequest,
 	EditPostRequest,
 	FetchCodemarksRequest,
+	FetchCompaniesRequest,
+	FetchCompaniesResponse,
 	FetchFileStreamsRequest,
 	FetchMarkerLocationsRequest,
 	FetchMarkersRequest,
@@ -48,6 +50,8 @@ import {
 	FollowCodemarkRequest,
 	FollowCodemarkResponse,
 	GetCodemarkRequest,
+	GetCompanyRequest,
+	GetCompanyResponse,
 	GetMarkerRequest,
 	GetPostRequest,
 	GetPostsRequest,
@@ -656,7 +660,7 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log()
-	moveMarker(request: { oldMarkerId: string, newMarker: CreateMarkerRequest }) {
+	moveMarker(request: { oldMarkerId: string; newMarker: CreateMarkerRequest }) {
 		return this._codestream.moveMarker(request);
 	}
 
@@ -861,9 +865,11 @@ export class SlackApiProvider implements ApiProvider {
 		messages.filter((m: any) => m.ts !== postId).sort((a: any, b: any) => a.ts - b.ts);
 
 		const usernamesById = await this.ensureUsernamesById();
-		const posts = await Promise.all(messages.map((m: any) =>
-			fromSlackPost(m, streamId, usernamesById, this._codestreamTeamId)
-		) as Promise<CSPost>[]);
+		const posts = await Promise.all(
+			messages.map((m: any) =>
+				fromSlackPost(m, streamId, usernamesById, this._codestreamTeamId)
+			) as Promise<CSPost>[]
+		);
 
 		return { posts: posts };
 	}
@@ -928,9 +934,11 @@ export class SlackApiProvider implements ApiProvider {
 
 		const usernamesById = await this.ensureUsernamesById();
 		await codemarksPromise;
-		const posts = await Promise.all(messages.map((m: any) =>
-			fromSlackPost(m, request.streamId, usernamesById, this._codestreamTeamId)
-		) as Promise<CSPost>[]);
+		const posts = await Promise.all(
+			messages.map((m: any) =>
+				fromSlackPost(m, request.streamId, usernamesById, this._codestreamTeamId)
+			) as Promise<CSPost>[]
+		);
 
 		return { posts: posts, more: has_more };
 	}
@@ -2289,7 +2297,7 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log()
-	disconnectThirdPartyProvider(request: { providerId: string, providerTeamId?: string }) {
+	disconnectThirdPartyProvider(request: { providerId: string; providerTeamId?: string }) {
 		return this._codestream.disconnectThirdPartyProvider(request);
 	}
 
@@ -2301,6 +2309,14 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	verifyConnectivity() {
 		return this._codestream.verifyConnectivity();
+	}
+
+	fetchCompanies(request: FetchCompaniesRequest): Promise<FetchCompaniesResponse> {
+		return this._codestream.fetchCompanies(request);
+	}
+
+	getCompany(request: GetCompanyRequest): Promise<GetCompanyResponse> {
+		return this._codestream.getCompany(request);
 	}
 
 	@debug({

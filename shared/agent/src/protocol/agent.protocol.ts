@@ -5,6 +5,7 @@ import { LoginResponse } from "./agent.protocol.auth";
 import { Unreads } from "./agent.protocol.notifications";
 import { ThirdPartyProviders } from "./agent.protocol.providers";
 import {
+	CSCompany,
 	CSLoginResponse,
 	CSMePreferences,
 	CSRepository,
@@ -19,6 +20,7 @@ export * from "./agent.protocol.notifications";
 export * from "./agent.protocol.auth";
 export * from "./agent.protocol.documentMarkers";
 export * from "./agent.protocol.codemarks";
+export * from "./agent.protocol.companies";
 export * from "./agent.protocol.markers";
 export * from "./agent.protocol.posts";
 export * from "./agent.protocol.repos";
@@ -146,7 +148,12 @@ export interface VerifyConnectivityResponse {
 	};
 }
 
-export const VerifyConnectivityRequestType = new RequestType<void, VerifyConnectivityResponse, void, void>("codestream/verifyConnectivity");
+export const VerifyConnectivityRequestType = new RequestType<
+	void,
+	VerifyConnectivityResponse,
+	void,
+	void
+>("codestream/verifyConnectivity");
 
 export interface BootstrapRequest {}
 export interface BootstrapResponse {
@@ -154,6 +161,7 @@ export interface BootstrapResponse {
 	repos: CSRepository[];
 	streams: CSStream[];
 	teams: CSTeam[];
+	companies: CSCompany[];
 	users: CSUser[];
 	unreads: Unreads;
 	providers: ThirdPartyProviders;

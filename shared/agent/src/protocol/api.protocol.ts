@@ -358,6 +358,14 @@ export interface CSGetTeamsResponse {
 	teams: CSTeam[];
 }
 
+export interface CSGetCompaniesResponse {
+	companies: CSCompany[];
+}
+
+export interface CSGetCompanyResponse {
+	company: CSCompany;
+}
+
 export interface CSGetUserResponse {
 	user: CSUser;
 }

@@ -8,7 +8,9 @@ import { ServerError } from "../../agentError";
 import { SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import {
-	AddEnterpriseProviderHostRequest, AddReferenceLocationRequest, AddReferenceLocationResponse,
+	AddEnterpriseProviderHostRequest,
+	AddReferenceLocationRequest,
+	AddReferenceLocationResponse,
 	ArchiveStreamRequest,
 	ArchiveStreamResponse,
 	Capabilities,
@@ -33,6 +35,8 @@ import {
 	EditPostRequest,
 	EditPostResponse,
 	FetchCodemarksRequest,
+	FetchCompaniesRequest,
+	FetchCompaniesResponse,
 	FetchFileStreamsRequest,
 	FetchMarkerLocationsRequest,
 	FetchMarkersRequest,
@@ -49,6 +53,8 @@ import {
 	FollowCodemarkRequest,
 	FollowCodemarkResponse,
 	GetCodemarkRequest,
+	GetCompanyRequest,
+	GetCompanyResponse,
 	GetMarkerRequest,
 	GetPostRequest,
 	GetPostResponse,
@@ -570,7 +576,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 	}
 
 	@log()
-	moveMarker(request: { oldMarkerId: string, newMarker: CreateMarkerRequest }) {
+	moveMarker(request: { oldMarkerId: string; newMarker: CreateMarkerRequest }) {
 		return this._codestream.moveMarker(request);
 	}
 
@@ -697,9 +703,11 @@ export class MSTeamsApiProvider implements ApiProvider {
 		// messages.sort((a: any, b: any) => a.ts - b.ts);
 
 		const userInfosById = await this.ensureUserInfosById();
-		const posts = await Promise.all(response.value.map((m: any) =>
-			fromTeamsMessage(m, channelId, teamId, userInfosById, this._codestreamTeamId)
-		) as Promise<CSPost>[]);
+		const posts = await Promise.all(
+			response.value.map((m: any) =>
+				fromTeamsMessage(m, channelId, teamId, userInfosById, this._codestreamTeamId)
+			) as Promise<CSPost>[]
+		);
 
 		return { posts: posts };
 	}
@@ -1143,7 +1151,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 	}
 
 	@log()
-	disconnectThirdPartyProvider(request: { providerId: string, providerTeamId?: string }) {
+	disconnectThirdPartyProvider(request: { providerId: string; providerTeamId?: string }) {
 		return this._codestream.disconnectThirdPartyProvider(request);
 	}
 
@@ -1155,6 +1163,14 @@ export class MSTeamsApiProvider implements ApiProvider {
 	@log()
 	refreshThirdPartyProvider(request: { providerId: string; refreshToken: string }): Promise<CSMe> {
 		return this._codestream.refreshThirdPartyProvider(request);
+	}
+
+	fetchCompanies(request: FetchCompaniesRequest): Promise<FetchCompaniesResponse> {
+		return this._codestream.fetchCompanies(request);
+	}
+
+	getCompany(request: GetCompanyRequest): Promise<GetCompanyResponse> {
+		return this._codestream.getCompany(request);
 	}
 
 	@log()

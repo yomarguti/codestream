@@ -36,6 +36,8 @@ import {
 	EditPostResponse,
 	FetchCodemarksRequest,
 	FetchCodemarksResponse,
+	FetchCompaniesRequest,
+	FetchCompaniesResponse,
 	FetchFileStreamsRequest,
 	FetchFileStreamsResponse,
 	FetchMarkerLocationsRequest,
@@ -60,6 +62,8 @@ import {
 	FollowCodemarkResponse,
 	GetCodemarkRequest,
 	GetCodemarkResponse,
+	GetCompanyRequest,
+	GetCompanyResponse,
 	GetMarkerRequest,
 	GetMarkerResponse,
 	GetMeResponse,
@@ -129,6 +133,7 @@ import {
 	CSApiCapabilities,
 	CSChannelStream,
 	CSCodemark,
+	CSCompany,
 	CSDirectStream,
 	CSLoginResponse,
 	CSMarker,
@@ -169,6 +174,7 @@ export type LoginOptions = CredentialsLoginOptions | OneTimeCodeLoginOptions | T
 
 export enum MessageType {
 	Connection = "connection",
+	Companies = "companies",
 	Codemarks = "codemarks",
 	MarkerLocations = "markerLocations",
 	Markers = "markers",
@@ -179,6 +185,11 @@ export enum MessageType {
 	Teams = "teams",
 	Unreads = "unreads",
 	Users = "users"
+}
+
+export interface CompaniesRTMessage {
+	type: MessageType.Companies;
+	data: CSCompany[];
 }
 
 export interface CodemarksRTMessage {
@@ -346,6 +357,9 @@ export interface ApiProvider {
 	fetchTeams(request: FetchTeamsRequest): Promise<FetchTeamsResponse>;
 	getTeam(request: GetTeamRequest): Promise<GetTeamResponse>;
 
+	fetchCompanies(request: FetchCompaniesRequest): Promise<FetchCompaniesResponse>;
+	getCompany(request: GetCompanyRequest): Promise<GetCompanyResponse>;
+
 	convertUserIdToCodeStreamUserId(id: string): string;
 	fetchUsers(request: FetchUsersRequest): Promise<FetchUsersResponse>;
 	getUser(request: GetUserRequest): Promise<GetUserResponse>;
@@ -369,9 +383,14 @@ export interface ApiProvider {
 	addEnterpriseProviderHost(
 		request: AddEnterpriseProviderHostRequest
 	): Promise<AddEnterpriseProviderHostResponse>;
-	refreshThirdPartyProvider(request: { providerId: string; refreshToken: string, sharing?: boolean, subId?: string }): Promise<CSMe>;
+	refreshThirdPartyProvider(request: {
+		providerId: string;
+		refreshToken: string;
+		sharing?: boolean;
+		subId?: string;
+	}): Promise<CSMe>;
 
-    verifyConnectivity(): Promise<VerifyConnectivityResponse>;
+	verifyConnectivity(): Promise<VerifyConnectivityResponse>;
 }
 
 export interface CodeStreamApiMiddlewareContext {

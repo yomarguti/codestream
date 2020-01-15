@@ -5,6 +5,7 @@ import { ErrorReporter } from "./errorReporter";
 import { GitService } from "./git/gitService";
 import { Logger } from "./logger";
 import { CodemarksManager } from "./managers/codemarksManager";
+import { CompaniesManager } from "./managers/companiesManager";
 import { DocumentMarkerManager } from "./managers/documentMarkerManager";
 import { FilesManager } from "./managers/filesManager";
 import { MarkerLocationManager } from "./managers/markerLocationManager";
@@ -72,6 +73,11 @@ class SessionServiceContainer {
 		return this._teams;
 	}
 
+	private readonly _companies: CompaniesManager;
+	get companies(): CompaniesManager {
+		return this._companies;
+	}
+
 	private readonly _users: UsersManager;
 	get users(): UsersManager {
 		return this._users;
@@ -107,6 +113,7 @@ class SessionServiceContainer {
 		this._documentMarkers = new DocumentMarkerManager(session);
 		this._providerRegistry = new ThirdPartyProviderRegistry(session);
 		this._repositoryMappings = new RepositoryMappingManager(session);
+		this._companies = new CompaniesManager(session);
 	}
 }
 
