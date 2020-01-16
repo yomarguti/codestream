@@ -625,6 +625,118 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
+	async getCommitsOnBranch(
+		repoPath: string,
+		branch: string
+	): Promise<{ sha: string; info: {} }[] | undefined> {
+		try {
+			// commits for a specific branch
+			// https://stackoverflow.com/questions/14848274/git-log-to-get-commits-only-for-a-specific-branch
+			// git log [BRANCHNAME] --not $(git for-each-ref --format='%(refname)' refs/heads/ | grep -v "refs/heads/[BRANCHNAME]")
+
+			let data: string | undefined;
+			try {
+				data = await git({ cwd: repoPath }, "branch", "--");
+			} catch {}
+			if (!data) return;
+			const otherBranches = data
+				.trim()
+				.split("\n")
+				.filter(b => !b.startsWith("*"))
+				.map(b => "refs/heads/" + b.trim());
+			// .join(" ");
+
+			const data2 = await git(
+				{ cwd: repoPath },
+				"log",
+				branch,
+				`--format='${GitLogParser.defaultFormat}`,
+				"--not",
+				...otherBranches,
+				"--"
+			);
+
+			const commits = GitLogParser.parse(data2.trim(), repoPath);
+			if (commits === undefined || commits.size === 0) return undefined;
+
+			const ret: { sha: string; info: {} }[] = [];
+			commits.forEach((val, key) => {
+				ret.push({ sha: key, info: val });
+			});
+			return ret;
+		} catch {
+			return undefined;
+		}
+	}
+
+	async getNumStat(
+		repoPath: string,
+		ref?: string
+	): Promise<{ file: string; linesAdded: number; linesRemoved: number }[] | undefined> {
+		try {
+			// files changed, lines added & deleted
+			// git diff --numstat --summary
+
+			let data: string | undefined;
+			try {
+				const options = ["diff", "--numstat", "--summary"];
+				if (ref && ref.length) options.push(ref);
+				options.push("--");
+				data = await git({ cwd: repoPath }, ...options);
+			} catch {}
+			if (!data) return undefined;
+
+			const ret: { file: string; linesAdded: number; linesRemoved: number }[] = [];
+			data
+				.trim()
+				.split("\n")
+				.forEach(line => {
+					const lineData = line.match(/(\d+)\s+(\d+)\s+(.*)/);
+
+					if (lineData && lineData[3]) {
+						if (!lineData[3].endsWith("/")) {
+							ret.push({
+								linesAdded: parseInt(lineData[1], 10),
+								linesRemoved: parseInt(lineData[2], 10),
+								file: lineData[3]
+							});
+						}
+					}
+				});
+			return ret;
+		} catch {
+			return undefined;
+		}
+	}
+
+	async getStatus(
+		repoPath: string,
+		indexOnly: boolean
+	): Promise<{ addedFiles: string[]; deletedFiles: string[] } | undefined> {
+		try {
+			let data: string | undefined;
+			try {
+				const options = ["status", "-v", "--porcelain"];
+				data = await git({ cwd: repoPath }, ...options);
+			} catch {}
+			if (!data) return undefined;
+
+			const addedFiles: string[] = [];
+			const deletedFiles: string[] = [];
+			data.split("\n").forEach(line => {
+				const lineData = line.match(/(.)(.)\s+(.*)/);
+				if (lineData && lineData[3]) {
+					if (lineData[1] === "?") {
+						addedFiles.push(lineData[3]);
+					}
+				}
+			});
+			return { addedFiles, deletedFiles };
+		} catch {
+			return undefined;
+		}
+	}
+
 	getRepositories(): Promise<Iterable<GitRepository>> {
 		return this._repositories.get();
 	}

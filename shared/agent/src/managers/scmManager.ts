@@ -1,6 +1,7 @@
 import * as paths from "path";
 import { URI } from "vscode-uri";
 import { Ranges } from "../api/extensions";
+import { GitCommit } from "../git/models/models";
 import { Logger } from "../logger";
 import {
 	GetCommitScmInfoRequest,
@@ -14,7 +15,10 @@ import {
 	GetRangeScmInfoResponse,
 	GetRangeSha1Request,
 	GetRangeSha1RequestType,
-	GetRangeSha1Response
+	GetRangeSha1Response,
+	GetRepoScmStatusRequest,
+	GetRepoScmStatusRequestType,
+	GetRepoScmStatusResponse
 } from "../protocol/agent.protocol";
 import { FileSystem, Iterables, log, lsp, lspHandler, Strings } from "../system";
 import { Container, SessionContainer } from "./../container";
@@ -72,6 +76,97 @@ export class ScmManager {
 							author: commit.author,
 							authorDate: commit.authorDate
 							// committerDate: commit.committerDate,
+					  }
+					: undefined,
+			error: gitError
+		};
+	}
+
+	@lspHandler(GetRepoScmStatusRequestType)
+	@log()
+	async getRepoStatus({
+		uri: documentUri,
+		localChangesToInclude,
+		startCommit
+	}: GetRepoScmStatusRequest): Promise<GetRepoScmStatusResponse> {
+		const cc = Logger.getCorrelationContext();
+
+		const uri = URI.parse(documentUri);
+
+		let branch: string | undefined;
+		let file: string | undefined;
+		let addedFiles: string[] = [];
+		let deletedFiles: string[] = [];
+		let modifiedFiles:
+			| {
+					file: string;
+					linesAdded: number;
+					linesRemoved: number;
+			  }[]
+			| undefined = [];
+		const authors: { id: string; username: string }[] = [];
+		let totalModifiedLines = 0;
+
+		let commits: { sha: string; info: {} }[] | undefined;
+		let gitError;
+		let repoPath;
+		let repoId;
+		if (uri.scheme === "file") {
+			const { git } = SessionContainer.instance();
+
+			try {
+				repoPath = await git.getRepoRoot(uri.fsPath);
+				if (repoPath !== undefined) {
+					file = Strings.normalizePath(paths.relative(repoPath, uri.fsPath));
+					if (file[0] === "/") {
+						file = file.substr(1);
+					}
+
+					branch = await git.getCurrentBranch(uri.fsPath);
+					if (branch) commits = await git.getCommitsOnBranch(repoPath, branch);
+
+					const repo = await git.getRepositoryByFilePath(uri.fsPath);
+					repoId = repo && repo.id;
+
+					// if we don't have a starting point to diff against,
+					// assume that we want to diff against the parent of
+					// the oldest ref, which should be the fork point of this branch
+					if (commits && commits.length && !startCommit) {
+						startCommit = commits[commits.length - 1].sha + "^";
+					}
+					modifiedFiles = await git.getNumStat(repoPath, startCommit);
+					if (modifiedFiles) {
+						modifiedFiles.forEach(file => {
+							totalModifiedLines += file.linesAdded + file.linesRemoved;
+						});
+					}
+					const ret = await git.getStatus(repoPath, false);
+					if (ret) {
+						addedFiles = ret.addedFiles;
+						deletedFiles = ret.deletedFiles;
+					}
+				}
+			} catch (ex) {
+				gitError = ex.toString();
+				Logger.error(ex, cc);
+				debugger;
+			}
+		}
+
+		return {
+			uri: uri.toString(),
+			scm:
+				repoPath !== undefined
+					? {
+							repoId,
+							repoPath,
+							branch,
+							addedFiles,
+							modifiedFiles: modifiedFiles || [],
+							deletedFiles,
+							authors,
+							commits: [...(commits || [])],
+							totalModifiedLines
 					  }
 					: undefined,
 			error: gitError

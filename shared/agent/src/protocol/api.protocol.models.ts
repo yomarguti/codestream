@@ -23,7 +23,8 @@ export enum CodemarkType {
 	Bookmark = "bookmark",
 	Question = "question",
 	Trap = "trap",
-	Link = "link"
+	Link = "link",
+	Review = "review"
 }
 
 export enum CodemarkStatus {
@@ -131,6 +132,21 @@ export interface CSCodeBlock {
 	file: string;
 	repoId: string;
 	streamId?: string;
+}
+
+export interface CSReview extends CSEntity {
+	teamId: string;
+	streamId: string;
+	postId: string;
+	fileStreamIds: string[];
+	providerType?: ProviderType;
+	status: string;
+	title: string;
+	assignees: string[];
+	text: string;
+	numReplies: number;
+	tags?: string[];
+	objects?: any[];
 }
 
 export interface CSPost extends CSEntity {
