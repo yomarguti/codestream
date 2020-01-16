@@ -38,7 +38,9 @@ export enum WebviewPanels {
 	Person = "person",
 	Tasks = "tasks",
 	Notifications = "notifications",
-	NewComment = "new-comment"
+	NewComment = "new-comment",
+	ComposeReview = "compose-review",
+	Review = "review"
 }
 
 export interface WebviewContext {
