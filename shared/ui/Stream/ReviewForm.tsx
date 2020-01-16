@@ -117,7 +117,7 @@ interface State {
 	includeUnsaved: boolean;
 	includeSaved: boolean;
 	includeStaged: boolean;
-	includeCommit: { [sha: string]: boolean };
+	excludeCommit: { [sha: string]: boolean };
 	startCommit: string;
 }
 
@@ -158,7 +158,7 @@ class ReviewForm extends React.Component<Props, State> {
 			includeUnsaved: true,
 			includeSaved: true,
 			includeStaged: true,
-			includeCommit: {},
+			excludeCommit: {},
 			startCommit: ""
 		};
 
@@ -455,8 +455,9 @@ class ReviewForm extends React.Component<Props, State> {
 					{totalModifiedLines > 25 && (
 						<>
 							<CSText muted>
-								<Icon name="alert" /> There are {totalModifiedLines} total modified lines in this
-								review, which is a lot to digest. Increase your development velocity with{" "}
+								<Icon name="alert" /> There are {totalModifiedLines.toLocaleString()} total modified
+								lines in this review, which is a lot to digest. Increase your development velocity
+								with{" "}
 								<a href="https://www.codestream.com/blog/reviewing-the-code-review-part-i">
 									shift left code reviews
 								</a>
@@ -544,44 +545,39 @@ class ReviewForm extends React.Component<Props, State> {
 		const { commits } = scm;
 		if (!commits) return;
 
-		// are we turning it on, or turning it off? true=on, false=off
-		const toggle = !this.state.includeCommit[sha];
+		// are we turning it on, or turning it off? checkbox=true means we're including
+		const exclude = !this.state.excludeCommit[sha];
 
-		const includeCommit: { [sha: string]: boolean } = {};
-		let newValue = true;
+		const excludeCommit: { [sha: string]: boolean } = {};
+		let newValue = false;
 		let startCommit = "";
-		let saveNext = false;
 		commits.forEach(commit => {
-			if (saveNext) {
-				startCommit = commit.sha;
-				saveNext = false;
-			}
 			// turning it on
-			if (toggle) {
-				includeCommit[commit.sha] = newValue;
+			if (exclude) {
 				if (commit.sha === sha) {
-					// all others after this will be off
-					newValue = false;
-					// save the next commit, as the starting point of the diff
-					saveNext = true;
-				}
-			}
-			// turning it off
-			else {
-				if (commit.sha === sha) {
-					// this one, plus all others after will be off
-					newValue = false;
+					// this one, plus all others after will be excluded
+					newValue = true;
 
 					// the commit to diff against is this one, since
 					// we don't want to include this (or any prior)
 					// in the review
 					startCommit = sha;
 				}
-				includeCommit[commit.sha] = newValue;
+				excludeCommit[commit.sha] = newValue;
+			}
+			// turning it off
+			else {
+				excludeCommit[commit.sha] = newValue;
+				if (commit.sha === sha) {
+					// all others after this will be excluded
+					newValue = true;
+					// start commit is the parent of this one
+					startCommit = commit.sha + "^";
+				}
 			}
 		});
 
-		this.setState({ startCommit, includeCommit }, () => this.handleRepoChange());
+		this.setState({ startCommit, excludeCommit }, () => this.handleRepoChange());
 	};
 
 	toggleUnsaved = () => {
@@ -631,7 +627,7 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	renderGroupsAndCommits() {
-		const { repoStatus, includeUnsaved, includeSaved, includeStaged, includeCommit } = this.state;
+		const { repoStatus, includeUnsaved, includeSaved, includeStaged, excludeCommit } = this.state;
 		if (!repoStatus) return null;
 		const { scm } = repoStatus;
 		if (!scm) return null;
@@ -640,7 +636,7 @@ class ReviewForm extends React.Component<Props, State> {
 		return (
 			<div className="related">
 				<div className="related-label">Changes to Include In Review</div>
-				{this.renderChange("unsaved", includeUnsaved, "Unsaved Files", "3 files", () =>
+				{this.renderChange("unsaved", includeUnsaved, "Unsaved Changes (In-IDE)", "3 files", () =>
 					this.toggleUnsaved()
 				)}
 				{this.renderChange("saved", includeSaved, "Saved Changes (Working Tree)", "4 files", () =>
@@ -653,7 +649,7 @@ class ReviewForm extends React.Component<Props, State> {
 					commits.map(commit =>
 						this.renderChange(
 							commit.sha,
-							includeCommit[commit.sha],
+							!excludeCommit[commit.sha],
 							<span className="monospace">{commit.sha.substr(0, 8)}</span>,
 							// @ts-ignore
 							commit.info.shortMessage,
