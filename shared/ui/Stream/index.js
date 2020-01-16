@@ -8,13 +8,13 @@ import PostList from "./PostList";
 import { ActivityPanel } from "./ActivityPanel";
 import { NotificationsPanel } from "./NotificationsPanel";
 import ChannelPanel from "./ChannelPanel";
-import PeoplePanel from "./PeoplePanel";
 import { TasksPanel } from "./TasksPanel";
 import InvitePanel from "./InvitePanel";
 import PublicChannelPanel from "./PublicChannelPanel";
 import CreateChannelPanel from "./CreateChannelPanel";
 import ScrollBox from "./ScrollBox";
 import { CodemarkForm } from "./CodemarkForm";
+import { ReviewForm } from "./ReviewForm";
 import KnowledgePanel from "./KnowledgePanel";
 import InlineCodemarks from "./InlineCodemarks";
 import CreateDMPanel from "./CreateDMPanel";
@@ -477,14 +477,18 @@ export class SimpleStream extends Component {
 		this.setActivePanel(WebviewPanels.NewComment);
 	};
 
+	newCodeReview = () => {
+		this.setActivePanel(WebviewPanels.ComposeReview);
+	};
+
 	renderPlusMenu() {
 		const { plusMenuOpen, menuTarget } = this.state;
 
 		const menuItems = [
 			{ label: "New Comment", action: this.newComment, key: "new-comment" },
 			{ label: "-" },
-			{ label: "Request A Code Review", action: this.newCodeReview, key: "new-code-review" },
-			{ label: "Start A Code Review", action: this.newCodeReview, key: "start-code-review" }
+			{ label: "Request A Code Review", action: this.newCodeReview, key: "new-code-review" }
+			// { label: "Start A Code Review", action: this.newCodeReview, key: "start-code-review" }
 			// { label: "-" }
 			// { label: inviteLabel, action: "invite" },
 		].filter(Boolean);
@@ -711,9 +715,9 @@ export class SimpleStream extends Component {
 							</Tooltip>
 						</label>
 						*/}
-					<label onClick={this.newComment /* this.togglePlusMenu */}>
-						<Icon name="plus" title="New Comment" placement="bottom" />
-						{/*this.renderPlusMenu()*/}
+					<label onClick={this.togglePlusMenu}>
+						<Icon name="plus" title="Create..." placement="bottom" />
+						{this.renderPlusMenu()}
 					</label>
 					<label
 						className={createClassString({
@@ -972,6 +976,7 @@ export class SimpleStream extends Component {
 							setMultiLocation={this.setMultiLocation}
 						/>
 					)}
+					{activePanel === WebviewPanels.ComposeReview && <ReviewForm />}
 					{activePanel === "channels" && (
 						<ChannelPanel
 							activePanel={activePanel}
