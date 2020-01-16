@@ -211,7 +211,17 @@
 
 .row-with-icon-actions {
 	cursor: pointer;
-	.monospace {
+	&.ellipsis-left-container {
+		height: 1.4em;
+		overflow: hidden;
+		display: flex;
+	}
+	&.ellipsis-right-container {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	&.monospace {
 		font-size: 12px;
 	}
 	&.muted {
@@ -222,6 +232,8 @@
 		background-color: @app-background-color-hover;
 		.icon.action {
 			display: inline-block;
+			visibility: visible;
+			pointer-events: all;
 			opacity: 0.5;
 			&:hover {
 				opacity: 1;
@@ -238,19 +250,36 @@
 		}
 	}
 	.icon.action {
-		display: none;
+		visibility: hidden;
+		pointer-events: none;
 		margin-left: 10px;
 	}
 	.added {
+		padding-left: 10px;
 		color: #66aa66;
 	}
 	.deleted {
+		padding-left: 10px;
 		color: #cc3366;
 	}
 	p {
 		display: inline;
 		margin: 0;
 	}
+}
+
+.ellipsis-container {
+	height: 1.4em;
+	overflow: hidden;
+	white-space: pre;
+}
+.ellipsis-left {
+	height: 1.4em;
+	overflow: hidden;
+	white-space: pre;
+	text-overflow: ellipsis;
+	text-align: left;
+	direction: rtl;
 }
 
 .message-attach-icons {

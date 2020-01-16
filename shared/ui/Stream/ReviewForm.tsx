@@ -606,7 +606,10 @@ class ReviewForm extends React.Component<Props, State> {
 
 	renderChange(id: string, onOff: boolean, title: string | ReactElement, message: string, onClick) {
 		return (
-			<div className={`row-with-icon-actions ${onOff ? "" : "muted"}`} key={id}>
+			<div
+				className={`row-with-icon-actions ellipsis-right-container ${onOff ? "" : "muted"}`}
+				key={id}
+			>
 				<input type="checkbox" checked={onOff} onClick={onClick} /> {title}{" "}
 				<span
 					className="message"
@@ -663,10 +666,9 @@ class ReviewForm extends React.Component<Props, State> {
 	renderFile(filename, children?) {
 		const { excludedFiles } = this.state;
 		return (
-			<div className="row-with-icon-actions">
-				<span className="file-info monospace">
-					{filename} {children}
-				</span>
+			<div className="row-with-icon-actions monospace ellipsis-left-container">
+				<span className="file-info ellipsis-left">{filename}</span>
+				{children}
 				{excludedFiles[filename] ? (
 					<span className="actions">
 						<Icon
