@@ -12,6 +12,7 @@ import {
 	DidChangeDocumentMarkersNotificationType,
 	DidChangeVersionCompatibilityNotification,
 	DidChangeVersionCompatibilityNotificationType,
+	DidEncounterMaintenanceModeNotificationType,
 	ReportingMessageType,
 	VersionCompatibility
 } from "@codestream/protocols/agent";
@@ -62,7 +63,6 @@ import {
 	ConfigurationChangeEvent,
 	ConfigurationTarget,
 	Disposable,
-	OpenDialogOptions,
 	TextEditor,
 	TextEditorSelectionChangeEvent,
 	TextEditorVisibleRangesChangeEvent,
@@ -114,7 +114,10 @@ export class WebviewController implements Disposable {
 		this._disposable = Disposable.from(
 			this.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
 			window.onDidChangeActiveTextEditor(this.onActiveEditorChanged, this),
-			window.onDidChangeVisibleTextEditors(this.onVisibleEditorsChanged, this)
+			window.onDidChangeVisibleTextEditors(this.onVisibleEditorsChanged, this),
+			Container.agent.onDidEncounterMaintenanceMode(e => {
+				if (this._webview) this._webview.notify(DidEncounterMaintenanceModeNotificationType, e);
+			})
 		);
 
 		this._lastEditor = Editor.getActiveOrVisible(undefined, this._lastEditor);

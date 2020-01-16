@@ -11,8 +11,6 @@ import {
 	CreateDirectStreamRequestType,
 	CreateDocumentMarkerPermalinkRequestType,
 	CreatePostRequestType,
-	CreatePostResponse,
-	CreatePostWithMarkerRequestType,
 	CreateRepoRequestType,
 	DeletePostRequestType,
 	DidChangeApiVersionCompatibilityNotification,
@@ -25,6 +23,8 @@ import {
 	DidChangeDocumentMarkersNotificationType,
 	DidChangeVersionCompatibilityNotification,
 	DidChangeVersionCompatibilityNotificationType,
+	DidEncounterMaintenanceModeNotification,
+	DidEncounterMaintenanceModeNotificationType,
 	DidFailLoginNotificationType,
 	DidLoginNotification,
 	DidLoginNotificationType,
@@ -69,7 +69,6 @@ import {
 	MuteStreamRequestType,
 	OpenStreamRequestType,
 	ReactToPostRequestType,
-	ReloadNotificationType,
 	RenameStreamRequestType,
 	ReportingMessageType,
 	ReportMessageRequestType,
@@ -82,7 +81,8 @@ import {
 	UpdatePreferencesRequestType,
 	UpdatePresenceRequestType,
 	UpdateStreamMembershipRequestType,
-	UpdateStreamMembershipResponse
+	UpdateStreamMembershipResponse,
+	VersionCompatibility
 } from "@codestream/protocols/agent";
 import {
 	ChannelServiceType,
@@ -152,6 +152,13 @@ export class CodeStreamAgentConnection implements Disposable {
 	private _onDidChangeConnectionStatus = new EventEmitter<DidChangeConnectionStatusNotification>();
 	get onDidChangeConnectionStatus(): Event<DidChangeConnectionStatusNotification> {
 		return this._onDidChangeConnectionStatus.event;
+	}
+
+	private _onDidEncounterMaintenanceMode = new EventEmitter<
+		DidEncounterMaintenanceModeNotification
+	>();
+	get onDidEncounterMaintenanceMode(): Event<DidEncounterMaintenanceModeNotification> {
+		return this._onDidEncounterMaintenanceMode.event;
 	}
 
 	private _onDidChangeData = new EventEmitter<DidChangeDataNotification>();
@@ -785,13 +792,6 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	@log({
-		prefix: (context, e: void) => `${context.prefix}`
-	})
-	private onReloadRequest(e: void) {
-		Container.webview.reload();
-	}
-
-	@log({
 		prefix: (context, e: DidChangeDocumentMarkersNotification) =>
 			`${context.prefix}(${e.textDocument.uri})`
 	})
@@ -947,9 +947,8 @@ export class CodeStreamAgentConnection implements Disposable {
 		);
 		// this._client.onNotification(DidResetNotificationType, this.onReset.bind(this));
 
-		this._client.onNotification(
-			ReloadNotificationType,
-			this.onReloadRequest.bind(this)
+		this._client.onNotification(DidEncounterMaintenanceModeNotificationType, e =>
+			this._onDidEncounterMaintenanceMode.fire(e)
 		);
 
 		this._onDidStart.fire();

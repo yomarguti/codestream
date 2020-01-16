@@ -82,7 +82,8 @@ export enum SessionSignedOutReason {
 	SignInFailure = "signInFailure",
 	UserSignedOutFromWebview = "userSignedOutFromWebview",
 	UserSignedOutFromExtension = "userSignedOutFromExtension",
-	UserWentOffline = "userWentOffline"
+	UserWentOffline = "userWentOffline",
+	MaintenanceMode = "maintenanceMode"
 }
 
 export enum SessionStatus {
@@ -160,6 +161,9 @@ export class CodeStreamSession implements Disposable {
 				this.completeLogin(params.data);
 			}),
 			Container.agent.onDidRequireRestart(() => {
+				this.logout();
+			}),
+			Container.agent.onDidEncounterMaintenanceMode(() => {
 				this.logout();
 			})
 		);
@@ -329,17 +333,19 @@ export class CodeStreamSession implements Disposable {
 			return stream;
 		}
 
-		const s = (await Container.agent.streams.createChannel(
-			creationOptions.name!,
-			creationOptions.membership,
-			creationOptions.privacy,
-			creationOptions.purpose,
-			{
-				serviceType: type,
-				serviceKey: key,
-				serviceInfo: creationOptions.serviceInfo
-			}
-		)).stream;
+		const s = (
+			await Container.agent.streams.createChannel(
+				creationOptions.name!,
+				creationOptions.membership,
+				creationOptions.privacy,
+				creationOptions.purpose,
+				{
+					serviceType: type,
+					serviceKey: key,
+					serviceInfo: creationOptions.serviceInfo
+				}
+			)
+		).stream;
 		if (s === undefined) throw new Error(`Unable to create stream`);
 
 		return new ChannelStream(this, s);
@@ -369,12 +375,14 @@ export class CodeStreamSession implements Disposable {
 			return stream;
 		}
 
-		const s = (await Container.agent.streams.createChannel(
-			name,
-			creationOptions.membership,
-			creationOptions.privacy,
-			creationOptions.purpose
-		)).stream;
+		const s = (
+			await Container.agent.streams.createChannel(
+				name,
+				creationOptions.membership,
+				creationOptions.privacy,
+				creationOptions.purpose
+			)
+		).stream;
 		if (s === undefined) throw new Error(`Unable to create stream`);
 
 		return new ChannelStream(this, s);
