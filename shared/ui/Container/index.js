@@ -23,6 +23,7 @@ const mapStateToProps = state => ({
 	bootstrapped: state.bootstrapped,
 	connectivityError: state.connectivity.error,
 	loggedIn: Boolean(state.session.userId),
+	inMaintenanceMode: Boolean(state.session.inMaintenanceMode),
 	team: state.teams[state.context.currentTeamId],
 	versioning: state.versioning,
 	apiVersioning: state.apiVersioning,
@@ -74,16 +75,31 @@ const Root = connect(mapStateToProps)(props => {
 				title="Can't connect"
 				buttons={[
 					{
-						text: "Dismiss", onClick: e => {
+						text: "Dismiss",
+						onClick: e => {
 							e.preventDefault();
 							props.dispatch(errorDismissed());
 						}
 					},
-					{ text: "Retry", onClick: () => { HostApi.instance.send(RestartRequestType) } }
+					{
+						text: "Retry",
+						onClick: () => {
+							HostApi.instance.send(RestartRequestType);
+						}
+					}
 				]}
 			>
-				<p>We are unable to connect to CodeStream's backend. Please check your connectivity and try again.</p>
-				<p>If you are behind a network proxy, <a href="https://github.com/TeamCodeStream/CodeStream/wiki/CodeStream-proxy-support">turn on CodeStream's proxy support</a>.</p>
+				<p>
+					We are unable to connect to CodeStream's backend. Please check your connectivity and try
+					again.
+				</p>
+				<p>
+					If you are behind a network proxy,{" "}
+					<a href="https://github.com/TeamCodeStream/CodeStream/wiki/CodeStream-proxy-support">
+						turn on CodeStream's proxy support
+					</a>
+					.
+				</p>
 				<p>Error: {props.connectivityError.message}</p>
 			</Dismissable>
 		);
@@ -98,19 +114,19 @@ const Root = connect(mapStateToProps)(props => {
 				{getIdeInstallationInstructions(props)}
 			</RoadBlock>
 		);
-	if (props.versioning && props.versioning.type === VersioningActionsType.MaintenanceMode)
+	if (props.inMaintenanceMode)
 		return (
 			<RoadBlock title="Down for Maintenance">
 				<p>
-					We're sorry, your account is currently unavailable while we work to improve
-					your CodeStream experience. Please standby, your account should be available shortly.
+					We're sorry, your account is currently unavailable while we work to improve your
+					CodeStream experience. Please standby, your account should be available shortly.
 				</p>
 				<p>
-					If your account doesn't become available soon, please 
+					If your account doesn't become available soon, please
 					<Link href="mailto:support@codestream.com"> contact support</Link>.
 				</p>
 			</RoadBlock>
-		)
+		);
 	if (!props.bootstrapped) return <Loading />;
 	if (
 		props.apiVersioning &&
@@ -140,13 +156,15 @@ const Root = connect(mapStateToProps)(props => {
 		return (
 			<Dismissable
 				title="Update Suggested"
-				buttons={[{
-					text: "Dismiss",
-					onClick: e => {
-						e.preventDefault();
-						props.dispatch(upgradeRecommendedDismissed());
+				buttons={[
+					{
+						text: "Dismiss",
+						onClick: e => {
+							e.preventDefault();
+							props.dispatch(upgradeRecommendedDismissed());
+						}
 					}
-				}]}
+				]}
 			>
 				<p>
 					Your version of CodeStream is getting a little long in the tooth! We suggest that you
@@ -169,13 +187,15 @@ const Root = connect(mapStateToProps)(props => {
 		return (
 			<Dismissable
 				title="API Server Update Suggested"
-				buttons={[{
-					text: "Dismiss",
-					onClick: e => {
-						e.preventDefault();
-						props.dispatch(apiUpgradeRecommendedDismissed());
+				buttons={[
+					{
+						text: "Dismiss",
+						onClick: e => {
+							e.preventDefault();
+							props.dispatch(apiUpgradeRecommendedDismissed());
+						}
 					}
-				}]}
+				]}
 			>
 				<p>
 					Your on-prem installation of CodeStream has an API server that seems to be getting a bit

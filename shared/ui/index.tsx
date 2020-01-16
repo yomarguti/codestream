@@ -16,8 +16,7 @@ import {
 	ShowCodemarkNotificationType,
 	ShowStreamNotificationType,
 	WebviewDidInitializeNotificationType,
-	WebviewPanels,
-	ReloadWebviewRequestType
+	WebviewPanels
 } from "./ipc/webview.protocol";
 import { createCodeStreamStore } from "./store";
 import { HostApi } from "./webview-api";
@@ -32,7 +31,7 @@ import {
 	VersionCompatibility,
 	ThirdPartyProviders,
 	GetDocumentFromMarkerRequestType,
-	ReloadNotificationType,
+	DidEncounterMaintenanceModeNotificationType,
 	VerifyConnectivityRequestType
 } from "@codestream/protocols/agent";
 import { CSApiCapabilities, CodemarkType } from "@codestream/protocols/api";
@@ -47,7 +46,7 @@ import { updateProviders } from "./store/providers/actions";
 import { apiCapabilitiesUpdated } from "./store/apiVersioning/actions";
 import { bootstrap, reset } from "./store/actions";
 import { online, offline, errorOccurred } from "./store/connectivity/actions";
-import { maintenanceMode, upgradeRequired, upgradeRecommended } from "./store/versioning/actions";
+import { upgradeRequired, upgradeRecommended } from "./store/versioning/actions";
 import { updatePreferences } from "./store/preferences/actions";
 import { updateUnreads } from "./store/unreads/actions";
 import { updateConfigs } from "./store/configs/actions";
@@ -55,6 +54,7 @@ import { setEditorContext } from "./store/editorContext/actions";
 import { blur, focus, setCurrentStream, setCurrentCodemark } from "./store/context/actions";
 import { URI } from "vscode-uri";
 import { moveCursorToLine } from "./Stream/CodemarkView";
+import { setMaintenanceMode } from "./store/session/actions";
 
 export { HostApi };
 
@@ -88,11 +88,18 @@ export async function initialize(selector: string) {
 }
 
 // TODO: type up the store state
-export function listenForEvents(store) {
+function listenForEvents(store) {
 	const api = HostApi.instance;
 
-	api.on(ReloadNotificationType, e => {
-		api.send(ReloadWebviewRequestType, void {});
+	api.on(DidEncounterMaintenanceModeNotificationType, async e => {
+		if (store.getState().session.userId) {
+			/*
+		 		don't logout here because the extension will do it since the webview isn't guaranteed to be available
+				and we don't want to attempt 2 logouts
+			*/
+			await store.dispatch(reset());
+			store.dispatch(setMaintenanceMode(true, e));
+		}
 	});
 
 	api.on(DidChangeConnectionStatusNotificationType, e => {
@@ -103,13 +110,11 @@ export function listenForEvents(store) {
 		}
 	});
 
-	api.on(DidChangeVersionCompatibilityNotificationType, e => {
+	api.on(DidChangeVersionCompatibilityNotificationType, async e => {
 		if (e.compatibility === VersionCompatibility.CompatibleUpgradeRecommended) {
 			store.dispatch(upgradeRecommended());
 		} else if (e.compatibility === VersionCompatibility.UnsupportedUpgradeRequired) {
 			store.dispatch(upgradeRequired());
-		} else if (e.compatibility === VersionCompatibility.MaintenanceMode) {
-			store.dispatch(maintenanceMode());
 		}
 	});
 
@@ -363,5 +368,4 @@ export function listenForEvents(store) {
 			}
 		}
 	});
-
 }

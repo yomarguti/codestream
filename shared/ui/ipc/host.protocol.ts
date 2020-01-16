@@ -16,7 +16,7 @@ import {
 	CSUser
 } from "@codestream/protocols/api";
 import { RequestType } from "vscode-jsonrpc";
-import { EditorContext, IpcRoutes, WebviewContext } from "./webview.protocol.common";
+import { EditorContext, IpcRoutes, WebviewContext, SessionState } from "./webview.protocol.common";
 
 export interface BootstrapInHostResponse {
 	capabilities: Capabilities;
@@ -29,10 +29,7 @@ export interface BootstrapInHostResponse {
 	ide?: {
 		name: string | undefined;
 	};
-	session: {
-		otc?: string;
-		userId?: string;
-	};
+	session: SessionState;
 	versionCompatibility?: VersionCompatibility | undefined;
 	apiVersionCompatibility?: ApiVersionCompatibility | undefined;
 	missingCapabilities?: CSApiCapabilities;

@@ -28,9 +28,10 @@ export type ActionType<ActionCreatorOrMap> = ActionCreatorOrMap extends ActionCr
 
 export function action<T extends StringType, P = undefined, M = undefined>(
 	type: T,
-	payload?: P
+	payload?: P,
+	meta?: M
 ): PayloadMetaAction<T, P, M> {
-	return { type, payload } as any;
+	return { type, payload, meta } as any;
 }
 
 export interface Action<T> {

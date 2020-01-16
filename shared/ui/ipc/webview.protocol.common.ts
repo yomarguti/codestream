@@ -52,6 +52,12 @@ export interface WebviewContext {
 	panelStack?: (WebviewPanels | string)[];
 }
 
+export interface SessionState {
+	otc?: string;
+	userId?: string;
+	inMaintenanceMode?: boolean;
+}
+
 export interface EditorContext {
 	scmInfo?: GetFileScmInfoResponse;
 	activeFile?: string;

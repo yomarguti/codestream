@@ -32,7 +32,7 @@ import {
 import { BootstrapActionType } from "./bootstrapped/types";
 import { ValidateSignupInfo, startSSOSignin } from "../Authentication/actions";
 import { uuid } from "../utils";
-import { maintenanceMode, upgradeRequired } from "../store/versioning/actions";
+import { upgradeRequired } from "../store/versioning/actions";
 import {
 	apiCapabilitiesUpdated,
 	apiUpgradeRecommended,
@@ -89,8 +89,6 @@ const bootstrapEssentials = (data: BootstrapInHostResponse) => dispatch => {
 
 	if (data.versionCompatibility === VersionCompatibility.UnsupportedUpgradeRequired) {
 		dispatch(upgradeRequired());
-	} else if (data.versionCompatibility === VersionCompatibility.MaintenanceMode) {
-		dispatch(maintenanceMode());
 	} else if (data.apiVersionCompatibility === ApiVersionCompatibility.ApiUpgradeRequired) {
 		dispatch(apiUpgradeRequired());
 	} else if (data.apiVersionCompatibility === ApiVersionCompatibility.ApiUpgradeRecommended) {

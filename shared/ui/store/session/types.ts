@@ -1,8 +1,6 @@
-export interface SessionState {
-	userId?: string;
-	otc?: string;
-}
+export { SessionState } from "@codestream/webview/ipc/webview.protocol";
 
 export enum SessionActionType {
-	Set = "SET_SESSION"
+	Set = "@session/SetSession",
+	SetMaintenanceMode = "@session/SetMaintenanceMode"
 }

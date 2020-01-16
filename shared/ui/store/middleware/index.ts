@@ -4,6 +4,7 @@ import { logging } from "./logging";
 import { middlewareInjector } from "../middleware-injector";
 import { featureFlagsMiddleware } from "../featureFlags/middleware";
 import { activityFeedMiddleware } from "../activityFeed/middleware";
+import { sessionMiddleware } from "../session/middleware";
 
 export default [
 	contextChangeObserver,
@@ -11,5 +12,6 @@ export default [
 	sideEffects,
 	logging,
 	featureFlagsMiddleware,
-	activityFeedMiddleware
+	activityFeedMiddleware,
+	sessionMiddleware
 ];

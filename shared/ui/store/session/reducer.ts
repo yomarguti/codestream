@@ -10,7 +10,9 @@ const initialState: SessionState = {};
 export function reduceSession(state = initialState, action: SessionActions) {
 	switch (action.type) {
 		case SessionActionType.Set:
-			return { ...state, ...action.payload };
+			return action.payload;
+		case SessionActionType.SetMaintenanceMode:
+			return { ...state, inMaintenanceMode: action.payload };
 		case "RESET":
 			return { ...initialState, otc: uuid() };
 		default:
