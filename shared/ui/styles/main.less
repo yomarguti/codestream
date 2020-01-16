@@ -113,6 +113,21 @@ body.preload * {
 			color: var(--text-color);
 		}
 	}
+	// this is to wrap an <Icon> with to make it look like a button like the checkbox
+	.icon-button {
+		-webkit-appearance: none;
+		background: rgba(127, 127, 127, 0.4);
+
+		padding-left: 4px;
+		width: 20px;
+		height: 20px;
+		display: inline-block;
+		position: relative;
+		border-radius: 3px;
+		margin-left: 0;
+		margin-right: 5px;
+		cursor: pointer;
+	}
 
 	input[type="checkbox"]:focus {
 		outline: 1px solid @text-focus-border-color !important;

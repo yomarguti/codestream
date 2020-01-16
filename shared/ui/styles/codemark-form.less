@@ -12,7 +12,8 @@
 		padding: 45px 45px;
 	}
 
-	.codemark-form {
+	.codemark-form,
+	.review-form {
 		max-height: none !important;
 	}
 }
@@ -25,7 +26,8 @@
 	position: relative;
 }
 
-.codemark-form {
+.codemark-form,
+.review-form {
 	width: 100%;
 	max-height: 100vh !important;
 	padding: 0 10px 10px 10px;
@@ -200,6 +202,54 @@
 		.icon {
 			margin-right: 5px;
 		}
+	}
+}
+
+.review-form .message-input {
+	min-height: 125px !important;
+}
+
+.row-with-icon-actions {
+	cursor: pointer;
+	.monospace {
+		font-size: 12px;
+	}
+	&.muted {
+		opacity: 0.5;
+	}
+	&:hover {
+		color: @text-color-highlight;
+		background-color: @app-background-color-hover;
+		.icon.action {
+			display: inline-block;
+			opacity: 0.5;
+			&:hover {
+				opacity: 1;
+			}
+		}
+		.message {
+			color: @text-color;
+		}
+	}
+	.message {
+		color: @text-color-subtle;
+		.emoji {
+			color: @text-color;
+		}
+	}
+	.icon.action {
+		display: none;
+		margin-left: 10px;
+	}
+	.added {
+		color: #66aa66;
+	}
+	.deleted {
+		color: #cc3366;
+	}
+	p {
+		display: inline;
+		margin: 0;
 	}
 }
 

@@ -80,7 +80,7 @@ const getKnobBackgroundColor = (props: PropsWithTheme<RootProps>) => {
 
 const Knob = styled.span<PropsWithTheme<RootProps>>(props => {
 	return `
-  transition: all 0.3s;
+  transition: all 0.2s;
   border-radius: ${props.$height * 2.2}px;
   position: absolute;
   background-color: ${getKnobBackgroundColor(props)};

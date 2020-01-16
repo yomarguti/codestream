@@ -1229,6 +1229,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	showBelow = () => {
 		const { lastVisibleLine, textEditorUri } = this.props;
 
+		console.log("URI IS: ", textEditorUri);
 		let done = false;
 		Object.keys(this.docMarkersByStartLine)
 			.sort((a, b) => parseInt(a, 10) - parseInt(b, 10))

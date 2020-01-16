@@ -15,7 +15,7 @@ import {
 	CSApiCapabilities,
 	CSMe
 } from "@codestream/protocols/api";
-import React from "react";
+import React, { ReactElement } from "react";
 import { connect } from "react-redux";
 import {
 	getStreamForId,
@@ -114,6 +114,11 @@ interface State {
 	excludedFiles: {};
 	fromCommit?: string;
 	showUnsaved?: boolean;
+	includeUnsaved: boolean;
+	includeSaved: boolean;
+	includeStaged: boolean;
+	includeCommit: { [sha: string]: boolean };
+	startCommit: string;
 }
 
 function merge(defaults: Partial<State>, review: CSReview): State {
@@ -149,7 +154,12 @@ class ReviewForm extends React.Component<Props, State> {
 			reviewers: [],
 			selectedTags: {},
 			repoName: "",
-			excludedFiles: {}
+			excludedFiles: {},
+			includeUnsaved: true,
+			includeSaved: true,
+			includeStaged: true,
+			includeCommit: {},
+			startCommit: ""
 		};
 
 		const state = props.editingReview
@@ -189,9 +199,10 @@ class ReviewForm extends React.Component<Props, State> {
 
 	private async getScmInfoForURI(uri: string, callback?: Function) {
 		this.setState({ isLoadingScm: true });
-		const scmInfo = await HostApi.instance.send(GetFileScmInfoRequestType, { uri: uri });
+		const scmInfo = await HostApi.instance.send(GetFileScmInfoRequestType, {
+			uri: uri
+		});
 		this.setState({ scmInfo }, () => {
-			console.log("********************************", scmInfo);
 			this.handleRepoChange();
 			if (callback) callback();
 			this.setState({ isLoadingScm: false });
@@ -210,13 +221,12 @@ class ReviewForm extends React.Component<Props, State> {
 		if (!scm) return;
 
 		const response = await HostApi.instance.send(GetRepoScmStatusRequestType, {
-			uri: this.state.scmInfo.uri
+			uri: this.state.scmInfo.uri,
+			startCommit: this.state.startCommit
 		});
 		const repoId: string = response.scm ? response.scm.repoId || "" : "";
 		const repoName = repos[repoId] ? repos[repoId].name : "";
-		this.setState({ repoStatus: response, repoName }, () => {
-			console.log("********************************", response);
-		});
+		this.setState({ repoStatus: response, repoName });
 	}
 
 	focus = () => {
@@ -465,18 +475,6 @@ class ReviewForm extends React.Component<Props, State> {
 		);
 	}
 
-	switchFromCommit = (event: React.SyntheticEvent) => {
-		if (this.props.isEditing) return;
-
-		this.setState({ fromCommitMenuOpen: true, fromCommitMenuTarget: event.target });
-	};
-
-	selectFromCommit = commit => {
-		// console.log("ARG IS: ", arg);
-
-		this.setState({ fromCommitMenuOpen: false, fromCommit: commit });
-	};
-
 	confirmCancel = () => {
 		confirmPopup({
 			title: "Are you sure?",
@@ -540,10 +538,80 @@ class ReviewForm extends React.Component<Props, State> {
 		return null;
 	};
 
-	renderChange(type, title, author, message) {
+	setChangeStart = sha => {
+		const { scm } = this.state.repoStatus;
+		if (!scm) return;
+		const { commits } = scm;
+		if (!commits) return;
+
+		// are we turning it on, or turning it off? true=on, false=off
+		const toggle = !this.state.includeCommit[sha];
+
+		const includeCommit: { [sha: string]: boolean } = {};
+		let newValue = true;
+		let startCommit = "";
+		let saveNext = false;
+		commits.forEach(commit => {
+			if (saveNext) {
+				startCommit = commit.sha;
+				saveNext = false;
+			}
+			// turning it on
+			if (toggle) {
+				includeCommit[commit.sha] = newValue;
+				if (commit.sha === sha) {
+					// all others after this will be off
+					newValue = false;
+					// save the next commit, as the starting point of the diff
+					saveNext = true;
+				}
+			}
+			// turning it off
+			else {
+				if (commit.sha === sha) {
+					// this one, plus all others after will be off
+					newValue = false;
+
+					// the commit to diff against is this one, since
+					// we don't want to include this (or any prior)
+					// in the review
+					startCommit = sha;
+				}
+				includeCommit[commit.sha] = newValue;
+			}
+		});
+
+		this.setState({ startCommit, includeCommit }, () => this.handleRepoChange());
+	};
+
+	toggleUnsaved = () => {
+		if (this.state.includeUnsaved) {
+			this.setState({ includeUnsaved: false, includeSaved: true, includeStaged: true });
+		} else {
+			this.setState({ includeUnsaved: true, includeSaved: true, includeStaged: true });
+		}
+	};
+
+	toggleSaved = () => {
+		if (this.state.includeSaved) {
+			this.setState({ includeUnsaved: false, includeSaved: false, includeStaged: true });
+		} else {
+			this.setState({ includeUnsaved: false, includeSaved: true, includeStaged: true });
+		}
+	};
+
+	toggleStaged = () => {
+		if (this.state.includeStaged) {
+			this.setState({ includeUnsaved: false, includeSaved: false, includeStaged: false });
+		} else {
+			this.setState({ includeUnsaved: false, includeSaved: false, includeStaged: true });
+		}
+	};
+
+	renderChange(id: string, onOff: boolean, title: string | ReactElement, message: string, onClick) {
 		return (
-			<div className="row-with-icon-actions">
-				<input type="checkbox" checked /> {title}{" "}
+			<div className={`row-with-icon-actions ${onOff ? "" : "muted"}`} key={id}>
+				<input type="checkbox" checked={onOff} onClick={onClick} /> {title}{" "}
 				<span
 					className="message"
 					dangerouslySetInnerHTML={{
@@ -563,7 +631,7 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	renderGroupsAndCommits() {
-		const { repoStatus } = this.state;
+		const { repoStatus, includeUnsaved, includeSaved, includeStaged, includeCommit } = this.state;
 		if (!repoStatus) return null;
 		const { scm } = repoStatus;
 		if (!scm) return null;
@@ -572,17 +640,24 @@ class ReviewForm extends React.Component<Props, State> {
 		return (
 			<div className="related">
 				<div className="related-label">Changes to Include In Review</div>
-				{this.renderChange("code", "Unsaved Files", "", "3 files")}
-				{this.renderChange("code", "Saved Changes (Working Tree)", "", "4 files")}
-				{this.renderChange("code", "Staged Changes (Index)", "", "6 files")}
+				{this.renderChange("unsaved", includeUnsaved, "Unsaved Files", "3 files", () =>
+					this.toggleUnsaved()
+				)}
+				{this.renderChange("saved", includeSaved, "Saved Changes (Working Tree)", "4 files", () =>
+					this.toggleSaved()
+				)}
+				{this.renderChange("staged", includeStaged, "Staged Changes (Index)", "6 files", () =>
+					this.toggleStaged()
+				)}
 				{commits &&
 					commits.map(commit =>
 						this.renderChange(
-							"git-commit",
+							commit.sha,
+							includeCommit[commit.sha],
 							<span className="monospace">{commit.sha.substr(0, 8)}</span>,
-							"",
 							// @ts-ignore
-							commit.info.shortMessage
+							commit.info.shortMessage,
+							() => this.setChangeStart(commit.sha)
 						)
 					)}
 			</div>
@@ -657,10 +732,6 @@ class ReviewForm extends React.Component<Props, State> {
 			</div>
 		];
 	}
-
-	toggleUnsaved = () => {
-		this.setState({ showUnsaved: !this.state.showUnsaved });
-	};
 
 	renderExcludedFiles() {
 		const { repoStatus, excludedFiles } = this.state;
@@ -767,7 +838,7 @@ class ReviewForm extends React.Component<Props, State> {
 							);
 						})}
 						<span className="icon-button">
-							<Icon name="plus" title="Specify whom you want to review your code" />
+							<Icon name="plus" title="Specify who you want to review your code" />
 						</span>
 					</div>
 					{this.renderChangedFiles()}
