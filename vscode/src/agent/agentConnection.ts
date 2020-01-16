@@ -69,6 +69,7 @@ import {
 	MuteStreamRequestType,
 	OpenStreamRequestType,
 	ReactToPostRequestType,
+	ReloadNotificationType,
 	RenameStreamRequestType,
 	ReportingMessageType,
 	ReportMessageRequestType,
@@ -784,6 +785,13 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	@log({
+		prefix: (context, e: void) => `${context.prefix}`
+	})
+	private onReloadRequest(e: void) {
+		Container.webview.reload();
+	}
+
+	@log({
 		prefix: (context, e: DidChangeDocumentMarkersNotification) =>
 			`${context.prefix}(${e.textDocument.uri})`
 	})
@@ -938,6 +946,11 @@ export class CodeStreamAgentConnection implements Disposable {
 			this._onDidRequireRestart.fire()
 		);
 		// this._client.onNotification(DidResetNotificationType, this.onReset.bind(this));
+
+		this._client.onNotification(
+			ReloadNotificationType,
+			this.onReloadRequest.bind(this)
+		);
 
 		this._onDidStart.fire();
 		return this._client.initializeResult! as AgentInitializeResult;
