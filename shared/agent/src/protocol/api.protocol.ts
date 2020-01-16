@@ -51,7 +51,8 @@ export enum LoginResult {
 	AlreadySignedIn = "ALREADY_SIGNED_IN",
 	SignupRequired = "SIGNUP_REQUIRED",
 	SignInRequired = "SIGNIN_REQUIRED",
-	MaintenanceMode = "MAINTENANCE_MODE"
+	MaintenanceMode = "MAINTENANCE_MODE",
+	MustSetPassword = "MUST_SET_PASSWORD"
 }
 
 export interface CSCompleteSignupRequest {
