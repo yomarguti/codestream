@@ -118,6 +118,11 @@ export class VersionMiddleware implements CodeStreamApiMiddleware {
 			"X-CS-Version-Disposition"
 		) as VersionCompatibility | null;
 
+		if (context.response.headers.get("X-CS-API-Maintenance-Mode")) {
+			this._manager.notify(VersionCompatibility.MaintenanceMode, "", undefined);
+			return;
+		}
+
 		if (
 			compatibility == null ||
 			compatibility === VersionCompatibility.Compatible ||

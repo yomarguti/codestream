@@ -61,6 +61,7 @@ import {
 	OtcLoginRequestType,
 	PasswordLoginRequest,
 	PasswordLoginRequestType,
+	ReloadNotificationType,
 	RegisterUserRequest,
 	RegisterUserRequestType,
 	ReportingMessageType,
@@ -109,6 +110,7 @@ export const loginApiErrorMappings: { [k: string]: LoginResult } = {
 	"RAPI-1003": LoginResult.InvalidToken,
 	"USRC-1012": LoginResult.NotOnTeam,
 	"VERS-1001": LoginResult.VersionUnsupported,
+	"VERS-1002": LoginResult.MaintenanceMode,
 	"USRC-1022": LoginResult.ProviderConnectFailed,
 	"USRC-1015": LoginResult.MultipleWorkspaces, // deprecated in favor of below...
 	"PRVD-1002": LoginResult.MultipleWorkspaces,
@@ -432,6 +434,9 @@ export class CodeStreamSession {
 
 		if (e.compatibility === VersionCompatibility.UnsupportedUpgradeRequired) {
 			this.logout(LogoutReason.UnsupportedVersion);
+		}
+		if (e.compatibility === VersionCompatibility.MaintenanceMode) {
+			this.waitForMaintenanceModeExit();
 		}
 	}
 
@@ -1019,6 +1024,29 @@ export class CodeStreamSession {
 				type: ChangeDataType.Providers,
 				data: this._providers
 			});
+		}
+	}
+
+	@log()
+	async waitForMaintenanceModeExit() {
+		let ready = false;
+		while (!ready) {
+			try {
+				await this.api.getMe();
+				ready = true;
+				this.agent.sendNotification(ReloadNotificationType, void {});
+			}
+			catch (ex) {
+				if (ex.info && ex.info.code === 'AUTH-1001') {
+					this.logout(LogoutReason.Token);
+				}
+				else if (!ex.info || ex.info.code !== 'VERS-1002') {
+					throw ex;
+				}
+				await new Promise(timeoutResolve => {
+					setTimeout(timeoutResolve, 10000);
+				});
+			}
 		}
 	}
 }

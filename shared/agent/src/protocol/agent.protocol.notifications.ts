@@ -155,6 +155,7 @@ export enum VersionCompatibility {
 	CompatibleUpgradeAvailable = "outdated",
 	CompatibleUpgradeRecommended = "deprecated",
 	UnsupportedUpgradeRequired = "incompatible",
+	MaintenanceMode = "maintenanceMode",
 	Unknown = "unknownVersion"
 }
 
@@ -214,4 +215,8 @@ export const DidStartLoginNotificationType = new NotificationType<void, void>(
 
 export const DidFailLoginNotificationType = new NotificationType<void, void>(
 	"codestream/didFailLogin"
+);
+
+export const ReloadNotificationType = new NotificationType<void, void>(
+	"codestream/reload"
 );

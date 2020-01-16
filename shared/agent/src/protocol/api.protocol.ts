@@ -50,7 +50,8 @@ export enum LoginResult {
 	InviteConflict = "INVITE_CONFLICT",
 	AlreadySignedIn = "ALREADY_SIGNED_IN",
 	SignupRequired = "SIGNUP_REQUIRED",
-	SignInRequired = "SIGNIN_REQUIRED"
+	SignInRequired = "SIGNIN_REQUIRED",
+	MaintenanceMode = "MAINTENANCE_MODE"
 }
 
 export interface CSCompleteSignupRequest {
