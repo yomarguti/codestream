@@ -87,6 +87,7 @@ interface State {
 	reviewers: CSUser[];
 	notify: boolean;
 	isLoading: boolean;
+	isLoadingScm: boolean;
 	crossPostMessage: boolean;
 	assignableUsers: { value: any; label: string }[];
 	channelMenuOpen: boolean;
@@ -155,6 +156,7 @@ class ReviewForm extends React.Component<Props, State> {
 			? merge(defaultState, props.editingReview)
 			: ({
 					isLoading: false,
+					isLoadingScm: false,
 					notify: false,
 					...defaultState
 			  } as State);
@@ -186,11 +188,13 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	private async getScmInfoForURI(uri: string, callback?: Function) {
+		this.setState({ isLoadingScm: true });
 		const scmInfo = await HostApi.instance.send(GetFileScmInfoRequestType, { uri: uri });
 		this.setState({ scmInfo }, () => {
 			console.log("********************************", scmInfo);
 			this.handleRepoChange();
 			if (callback) callback();
+			this.setState({ isLoadingScm: false });
 		});
 	}
 
@@ -623,7 +627,7 @@ class ReviewForm extends React.Component<Props, State> {
 		);
 	}
 
-	renderFileSet(title) {
+	renderChangedFiles() {
 		const { repoStatus, excludedFiles } = this.state;
 		if (!repoStatus) return null;
 		const { scm } = repoStatus;
@@ -636,14 +640,16 @@ class ReviewForm extends React.Component<Props, State> {
 
 		return [
 			<div className="related" style={{ padding: "0", marginBottom: 0, position: "relative" }}>
-				<div className="related-label">{title}</div>
+				<div className="related-label">
+					Changed Files{this.state.isLoadingScm && <Icon className="spin" name="sync" />}
+				</div>
 				{deleted.map(file => this.renderFile(file, <span className="deleted">deleted</span>))}
 				{modified.map(file =>
 					this.renderFile(
 						file.file,
 						<>
-							{file.linesAdded && <span className="added">+{file.linesAdded} </span>}
-							{file.linesRemoved && <span className="deleted">-{file.linesRemoved}</span>}
+							{file.linesAdded > 0 && <span className="added">+{file.linesAdded} </span>}
+							{file.linesRemoved > 0 && <span className="deleted">-{file.linesRemoved}</span>}
 						</>
 					)
 				)}
@@ -652,33 +658,9 @@ class ReviewForm extends React.Component<Props, State> {
 		];
 	}
 
-	renderChangedFiles() {
-		return this.renderFileSet("Changed Files");
-	}
-
 	toggleUnsaved = () => {
 		this.setState({ showUnsaved: !this.state.showUnsaved });
 	};
-
-	renderUnsavedFiles() {
-		return null;
-		return this.renderFileSet(
-			<div style={{ display: "flex" }}>
-				Unsaved Files&nbsp;&nbsp;
-				<Switch size="small" on={this.state.showUnsaved} onChange={this.toggleUnsaved} />
-			</div>
-		);
-	}
-
-	renderWorkingTree() {
-		return null;
-		return this.renderFileSet("Working Tree");
-	}
-
-	renderIndex() {
-		return null;
-		return this.renderFileSet("Index (Staged)");
-	}
 
 	renderExcludedFiles() {
 		const { repoStatus, excludedFiles } = this.state;
