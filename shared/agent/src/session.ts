@@ -17,6 +17,7 @@ import { AgentError, ServerError } from "./agentError";
 import {
 	ApiProvider,
 	ApiProviderLoginResponse,
+	CodeStreamApiMiddlewareContext,
 	LoginOptions,
 	MessageType,
 	RTMessage
@@ -47,6 +48,7 @@ import {
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
+	DidEncounterMaintenanceModeNotificationType,
 	DidFailLoginNotificationType,
 	DidLoginNotificationType,
 	DidLogoutNotificationType,
@@ -61,7 +63,6 @@ import {
 	OtcLoginRequestType,
 	PasswordLoginRequest,
 	PasswordLoginRequestType,
-	ReloadNotificationType,
 	RegisterUserRequest,
 	RegisterUserRequestType,
 	ReportingMessageType,
@@ -280,6 +281,28 @@ export class CodeStreamSession {
 
 		this._api = new CodeStreamApiProvider(_options.serverUrl, this.versionInfo, this._httpsAgent);
 
+		this._api.useMiddleware({
+			get name() {
+				return "MaintenanceMode";
+			},
+
+			onResponse: async (context: Readonly<CodeStreamApiMiddlewareContext>, _) => {
+				if (
+					context.response?.headers.get("X-CS-API-Maintenance-Mode") &&
+					this._codestreamAccessToken
+				) {
+					this.agent.sendNotification(DidEncounterMaintenanceModeNotificationType, {
+						teamId: this._teamId,
+						token: {
+							email: this._email!,
+							url: this._options.serverUrl,
+							value: this._codestreamAccessToken!
+						}
+					});
+				}
+			}
+		});
+
 		const versionManager = new VersionMiddlewareManager(this._api);
 		versionManager.onDidChangeCompatibility(this.onVersionCompatibilityChanged, this);
 		versionManager.onDidChangeApiCompatibility(this.onApiVersionCompatibilityChanged, this);
@@ -434,9 +457,6 @@ export class CodeStreamSession {
 
 		if (e.compatibility === VersionCompatibility.UnsupportedUpgradeRequired) {
 			this.logout(LogoutReason.UnsupportedVersion);
-		}
-		if (e.compatibility === VersionCompatibility.MaintenanceMode) {
-			this.waitForMaintenanceModeExit();
 		}
 	}
 
@@ -1024,29 +1044,6 @@ export class CodeStreamSession {
 				type: ChangeDataType.Providers,
 				data: this._providers
 			});
-		}
-	}
-
-	@log()
-	async waitForMaintenanceModeExit() {
-		let ready = false;
-		while (!ready) {
-			try {
-				await this.api.getMe();
-				ready = true;
-				this.agent.sendNotification(ReloadNotificationType, void {});
-			}
-			catch (ex) {
-				if (ex.info && ex.info.code === 'AUTH-1001') {
-					this.logout(LogoutReason.Token);
-				}
-				else if (!ex.info || ex.info.code !== 'VERS-1002') {
-					throw ex;
-				}
-				await new Promise(timeoutResolve => {
-					setTimeout(timeoutResolve, 10000);
-				});
-			}
 		}
 	}
 }

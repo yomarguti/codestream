@@ -1,6 +1,6 @@
 "use strict";
 import { NotificationType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
-import { LoginSuccessResponse } from "./agent.protocol.auth";
+import { LoginSuccessResponse, TokenLoginRequest } from "./agent.protocol.auth";
 import { CodemarkPlus } from "./agent.protocol.codemarks";
 import { ThirdPartyProviders } from "./agent.protocol.providers";
 import {
@@ -155,7 +155,6 @@ export enum VersionCompatibility {
 	CompatibleUpgradeAvailable = "outdated",
 	CompatibleUpgradeRecommended = "deprecated",
 	UnsupportedUpgradeRequired = "incompatible",
-	MaintenanceMode = "maintenanceMode",
 	Unknown = "unknownVersion"
 }
 
@@ -217,6 +216,9 @@ export const DidFailLoginNotificationType = new NotificationType<void, void>(
 	"codestream/didFailLogin"
 );
 
-export const ReloadNotificationType = new NotificationType<void, void>(
-	"codestream/reload"
-);
+export type DidEncounterMaintenanceModeNotification = TokenLoginRequest;
+
+export const DidEncounterMaintenanceModeNotificationType = new NotificationType<
+	DidEncounterMaintenanceModeNotification,
+	void
+>("codestream/didEncounterMaintenanceMode");

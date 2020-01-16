@@ -118,11 +118,6 @@ export class VersionMiddleware implements CodeStreamApiMiddleware {
 			"X-CS-Version-Disposition"
 		) as VersionCompatibility | null;
 
-		if (context.response.headers.get("X-CS-API-Maintenance-Mode")) {
-			this._manager.notify(VersionCompatibility.MaintenanceMode, "", undefined);
-			return;
-		}
-
 		if (
 			compatibility == null ||
 			compatibility === VersionCompatibility.Compatible ||
@@ -135,7 +130,8 @@ export class VersionMiddleware implements CodeStreamApiMiddleware {
 			(!context.response.ok && compatibility === VersionCompatibility.UnsupportedUpgradeRequired) ||
 			(context.response.ok &&
 				compatibility === VersionCompatibility.CompatibleUpgradeRecommended &&
-				(!context.url.endsWith("/login") && context.url.indexOf("no-auth") === -1))
+				!context.url.endsWith("/login") &&
+				context.url.indexOf("no-auth") === -1)
 		) {
 			// url checks are for trying not to fire this during the auth process
 			const url =
