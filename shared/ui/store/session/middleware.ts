@@ -64,7 +64,7 @@ class Poller {
 	}
 
 	start() {
-		this.schedule();
+		if (!this.isRunning) this.schedule();
 	}
 
 	private schedule() {
