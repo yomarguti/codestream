@@ -24,8 +24,8 @@ import { savePosts } from "../store/posts/actions";
 import { addOlderActivity } from "../store/activityFeed/actions";
 import { saveCodemarks } from "../store/codemarks/actions";
 import { safe } from "../utils";
-import { markStreamRead } from "./actions";
-import { CSUser } from "@codestream/protocols/api";
+import { markStreamRead, setCodemarkTypeFilter } from "./actions";
+import { CSUser, CodemarkType } from "@codestream/protocols/api";
 import { resetLastReads } from "../store/unreads/actions";
 import { PanelHeader } from "../src/components/PanelHeader";
 import { getPost, getPostsForStream } from "../store/posts/reducer";
@@ -34,6 +34,7 @@ import { FormattedPlural } from "react-intl";
 import { useMarkdownifyToHtml } from "./Markdowner";
 import { Codemark } from "./Codemark/index";
 import { logError } from "../logger";
+import Filter from "./Filter";
 
 // see comment in SmartFormattedList.tsx
 const FormattedPluralAlias = FormattedPlural as any;
@@ -235,33 +236,34 @@ export const ActivityPanel = () => {
 		});
 	};
 
-	// const showActivityLabels = {
-	// 	all: "all activity",
-	// 	[CodemarkType.Comment]: "comments",
-	// 	[CodemarkType.Issue]: "issues"
-	// };
-	//
-	// const menuItems = [
-	// 	{ label: "All Activity", action: "all" },
-	// 	{ label: "-" },
-	// 	{ label: "Code Comments", action: CodemarkType.Comment },
-	// 	{ label: "Issues", action: CodemarkType.Issue }
-	// ];
+	const showActivityLabels = {
+		all: "all activity",
+		[CodemarkType.Comment]: "comments",
+		[CodemarkType.Review]: "code reviews",
+		[CodemarkType.Issue]: "issues"
+	};
+
+	const menuItems = [
+		{ label: "Comments", action: CodemarkType.Comment },
+		{ label: "Issues", action: CodemarkType.Issue },
+		{ label: "Code Reviews", action: CodemarkType.Review }
+	];
 
 	return (
 		<div className="panel full-height activity-panel">
 			<PanelHeader title="Activity">
-				{/* commented out for now as per Dave
-				<div className="filters">
-					Show{" "}
-					<Filter
-						onValue={value => dispatch(setCodemarkTypeFilter(value))}
-						selected={derivedState.codemarkTypeFilter}
-						labels={showActivityLabels}
-						items={menuItems}
-					/>
-				</div>
-				*/}
+				{
+					<div className="filters">
+						Show{" "}
+						<Filter
+							type="toggle"
+							onValue={value => dispatch(setCodemarkTypeFilter(value))}
+							selected={derivedState.codemarkTypeFilter}
+							labels={showActivityLabels}
+							items={menuItems}
+						/>
+					</div>
+				}
 			</PanelHeader>
 			<ScrollBox>
 				<div ref={rootRef} className="channel-list vscroll">
