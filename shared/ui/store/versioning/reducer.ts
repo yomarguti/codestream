@@ -10,6 +10,8 @@ export function reduceVersioning(state = initialState, { type }: VersioningState
 			return { ...state, type: VersioningActionsType.UpgradeRequired };
 		case VersioningActionsType.UpgradeRecommended:
 			return { ...state, type: VersioningActionsType.UpgradeRecommended };
+		case VersioningActionsType.MaintenanceMode:
+			return { ...state, type: VersioningActionsType.MaintenanceMode };
 		case VersioningActionsType.Ok:
 			return { ...state, type: VersioningActionsType.Ok };
 		default:

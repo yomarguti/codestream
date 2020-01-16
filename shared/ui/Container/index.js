@@ -17,6 +17,7 @@ import { ApiVersioningActionsType } from "../store/apiVersioning/types";
 import { errorDismissed } from "@codestream/webview/store/connectivity/actions";
 import { ThemeProvider } from "styled-components";
 import { darkTheme, createTheme } from "../src/themes";
+import { Link } from "../Stream/Link";
 
 const mapStateToProps = state => ({
 	bootstrapped: state.bootstrapped,
@@ -97,6 +98,19 @@ const Root = connect(mapStateToProps)(props => {
 				{getIdeInstallationInstructions(props)}
 			</RoadBlock>
 		);
+	if (props.versioning && props.versioning.type === VersioningActionsType.MaintenanceMode)
+		return (
+			<RoadBlock title="Down for Maintenance">
+				<p>
+					We're sorry, your account is currently unavailable while we work to improve
+					your CodeStream experience. Please standby, your account should be available shortly.
+				</p>
+				<p>
+					If your account doesn't become available soon, please 
+					<Link href="mailto:support@codestream.com"> contact support</Link>.
+				</p>
+			</RoadBlock>
+		)
 	if (!props.bootstrapped) return <Loading />;
 	if (
 		props.apiVersioning &&

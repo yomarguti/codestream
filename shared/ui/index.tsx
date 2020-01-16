@@ -16,7 +16,8 @@ import {
 	ShowCodemarkNotificationType,
 	ShowStreamNotificationType,
 	WebviewDidInitializeNotificationType,
-	WebviewPanels
+	WebviewPanels,
+	ReloadWebviewRequestType
 } from "./ipc/webview.protocol";
 import { createCodeStreamStore } from "./store";
 import { HostApi } from "./webview-api";
@@ -31,6 +32,7 @@ import {
 	VersionCompatibility,
 	ThirdPartyProviders,
 	GetDocumentFromMarkerRequestType,
+	ReloadNotificationType,
 	VerifyConnectivityRequestType
 } from "@codestream/protocols/agent";
 import { CSApiCapabilities, CodemarkType } from "@codestream/protocols/api";
@@ -45,7 +47,7 @@ import { updateProviders } from "./store/providers/actions";
 import { apiCapabilitiesUpdated } from "./store/apiVersioning/actions";
 import { bootstrap, reset } from "./store/actions";
 import { online, offline, errorOccurred } from "./store/connectivity/actions";
-import { upgradeRequired, upgradeRecommended } from "./store/versioning/actions";
+import { maintenanceMode, upgradeRequired, upgradeRecommended } from "./store/versioning/actions";
 import { updatePreferences } from "./store/preferences/actions";
 import { updateUnreads } from "./store/unreads/actions";
 import { updateConfigs } from "./store/configs/actions";
@@ -89,6 +91,10 @@ export async function initialize(selector: string) {
 export function listenForEvents(store) {
 	const api = HostApi.instance;
 
+	api.on(ReloadNotificationType, e => {
+		api.send(ReloadWebviewRequestType, void {});
+	});
+
 	api.on(DidChangeConnectionStatusNotificationType, e => {
 		if (e.status === ConnectionStatus.Reconnected) {
 			store.dispatch(online());
@@ -102,6 +108,8 @@ export function listenForEvents(store) {
 			store.dispatch(upgradeRecommended());
 		} else if (e.compatibility === VersionCompatibility.UnsupportedUpgradeRequired) {
 			store.dispatch(upgradeRequired());
+		} else if (e.compatibility === VersionCompatibility.MaintenanceMode) {
+			store.dispatch(maintenanceMode());
 		}
 	});
 

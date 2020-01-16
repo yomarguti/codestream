@@ -10,5 +10,6 @@ export enum ApiVersioningActionsType {
 	ApiOk = "ApiOk",
 	ApiUpgradeRecommended = "ApiUpgradeRecommended",
 	ApiUpgradeRequired = "ApiUpgradeRequired",
-	UpdateApiCapabilities = "UpdateApiCapabilities"
+	UpdateApiCapabilities = "UpdateApiCapabilities",
+	MaintenanceMode = "MaintenanceMode"
 }
