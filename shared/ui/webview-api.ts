@@ -149,7 +149,10 @@ export class HostApi extends EventEmitter {
 					`received response from host for ${data.id}; found pending request: ${pending.method}`,
 					data
 				);
-				data.error != null ? pending.reject(data.error) : pending.resolve(data.params);
+				if (data.error != null) {
+					if (!data.error.toString().includes("maintenance mode")) pending.reject(data.error);
+				} else pending.resolve(data.params);
+
 				this._pendingRequests.delete(data.id);
 
 				return;
