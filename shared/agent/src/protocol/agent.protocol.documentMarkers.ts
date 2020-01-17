@@ -68,7 +68,8 @@ export type DocumentMarker = CSEntity &
 					subhead?: string;
 					actions?: { label?: string; icon?: string; uri: string }[];
 				};
-		  });
+		  }
+	);
 
 export enum MarkerNotLocatedReason {
 	MISSING_ORIGINAL_LOCATION = "missing original location",

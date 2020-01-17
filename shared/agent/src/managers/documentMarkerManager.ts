@@ -382,7 +382,11 @@ export class DocumentMarkerManager {
 			user,
 			(p): p is ThirdPartyIssueProvider & ThirdPartyProviderSupportsPullRequests => {
 				const thirdPartyIssueProvider = p as ThirdPartyIssueProvider;
-				return thirdPartyIssueProvider && typeof thirdPartyIssueProvider.supportsPullRequests === "function" && thirdPartyIssueProvider.supportsPullRequests();
+				return (
+					thirdPartyIssueProvider &&
+					typeof thirdPartyIssueProvider.supportsPullRequests === "function" &&
+					thirdPartyIssueProvider.supportsPullRequests()
+				);
 			}
 		);
 		if (providers.length === 0) return emptyArray;
