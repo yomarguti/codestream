@@ -696,7 +696,7 @@ export class GitService implements IGitService, Disposable {
 				.trim()
 				.split("\n")
 				.forEach(line => {
-					const lineData = line.match(/(\d+)\s+(\d+)\s+(.*)/);
+					const lineData = line.match(/(\d+)\s+(\d+)\s+(\S*)/);
 
 					if (lineData && lineData[3]) {
 						if (!lineData[3].endsWith("/")) {
