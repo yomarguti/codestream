@@ -665,9 +665,12 @@ class ReviewForm extends React.Component<Props, State> {
 
 	renderFile(filename, children?) {
 		const { excludedFiles } = this.state;
+		// https://davidwalsh.name/rtl-punctuation
 		return (
 			<div className="row-with-icon-actions monospace ellipsis-left-container">
-				<span className="file-info ellipsis-left">{filename}</span>
+				<span className="file-info ellipsis-left">
+					<bdi dir="ltr">{filename}</bdi>
+				</span>
 				{children}
 				{excludedFiles[filename] ? (
 					<span className="actions">
