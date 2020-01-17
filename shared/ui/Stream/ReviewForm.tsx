@@ -753,8 +753,8 @@ class ReviewForm extends React.Component<Props, State> {
 					this.renderFile(
 						file.file,
 						<>
-							{file.linesAdded && <span className="added">+{file.linesAdded} </span>}
-							{file.linesRemoved && <span className="deleted">-{file.linesRemoved}</span>}
+							{file.linesAdded > 0 && <span className="added">+{file.linesAdded} </span>}
+							{file.linesRemoved > 0 && <span className="deleted">-{file.linesRemoved}</span>}
 						</>
 					)
 				)}
