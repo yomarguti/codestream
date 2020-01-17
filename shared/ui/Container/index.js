@@ -116,14 +116,9 @@ const Root = connect(mapStateToProps)(props => {
 		);
 	if (props.inMaintenanceMode)
 		return (
-			<RoadBlock title="Down for Maintenance">
+			<RoadBlock title="Pardon the Interruption">
 				<p>
-					We're sorry, your account is currently unavailable while we work to improve your
-					CodeStream experience. Please standby, your account should be available shortly.
-				</p>
-				<p>
-					If your account doesn't become available soon, please
-					<Link href="mailto:support@codestream.com"> contact support</Link>.
+					CodeStream is undergoing a quick update. We'll be right back!
 				</p>
 			</RoadBlock>
 		);
