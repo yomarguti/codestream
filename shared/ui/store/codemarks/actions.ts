@@ -114,7 +114,7 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 			return result;
 		}
 	} catch (error) {
-		logError("Error creating a codemark in the sharing model", { message: error.message });
+		logError("Error creating a codemark in the sharing model", { message: error.toString() });
 		throw { reason: "create" } as CreateCodemarkError;
 	}
 };
