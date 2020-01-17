@@ -1,5 +1,10 @@
 "use strict";
-import { Range, RequestType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
+import {
+	Range,
+	RequestType,
+	TextDocumentIdentifier,
+	VersionedTextDocumentIdentifier
+} from "vscode-languageserver-protocol";
 import { CodemarkPlus } from "./agent.protocol.codemarks";
 import {
 	CodemarkType,
@@ -120,7 +125,7 @@ export interface GetDocumentFromMarkerRequest {
 	repoId?: string;
 }
 export interface GetDocumentFromMarkerResponse {
-	textDocument: TextDocumentIdentifier;
+	textDocument: VersionedTextDocumentIdentifier;
 	range: Range;
 	marker: CSMarker;
 }

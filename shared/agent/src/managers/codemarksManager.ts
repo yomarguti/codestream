@@ -2,7 +2,7 @@
 import { MessageType } from "../api/apiProvider";
 import { MarkerLocation } from "../api/extensions";
 import { SlackApiProvider } from "../api/slack/slackApi";
-import { SessionContainer } from "../container";
+import { Container, SessionContainer } from "../container";
 import { Logger } from "../logger";
 import {
 	CodemarkPlus,
@@ -43,6 +43,8 @@ import { CachedEntityManagerBase, Id } from "./entityManager";
 
 @lsp
 export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
+	private _codemarkSha1Cache = new Map<string, GetCodemarkSha1Response>();
+
 	async cacheSet(entity: CSCodemark, oldEntity?: CSCodemark): Promise<CSCodemark | undefined> {
 		if (await this.canSeeCodemark(entity)) {
 			return super.cacheSet(entity, oldEntity);
@@ -92,6 +94,7 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		const cc = Logger.getCorrelationContext();
 
 		const { codemarks, files, markerLocations, scm } = SessionContainer.instance();
+		const { documents } = Container.instance();
 
 		const codemark = await codemarks.getEnrichedCodemarkById(codemarkId);
 		if (codemark === undefined) {
@@ -120,6 +123,12 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 			return { codemarkSha1: undefined, documentSha1: undefined };
 		}
 
+		const document = documents.get(uri);
+		const cachedResponse = this._codemarkSha1Cache.get(marker.id);
+		if (document && cachedResponse && cachedResponse.documentVersion === document.version) {
+			return cachedResponse;
+		}
+
 		const { locations } = await markerLocations.getCurrentLocations(uri, fileStreamId, [marker]);
 
 		let documentSha1;
@@ -131,11 +140,20 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 			documentSha1 = response.sha1;
 		}
 
-		return {
+		const response = {
 			// Normalize to /n line endings
 			codemarkSha1: Strings.sha1(marker.code.replace(/\r\n/g, "\n")),
 			documentSha1: documentSha1
 		};
+
+		if (document && document.version) {
+			this._codemarkSha1Cache.set(marker.id, {
+				...response,
+				documentVersion: document.version
+			});
+		}
+
+		return response;
 	}
 
 	async getIdByPostId(postId: string): Promise<string | undefined> {

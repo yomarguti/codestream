@@ -50,6 +50,7 @@ const emptyResponse = {
 @lsp
 export class DocumentMarkerManager {
 	private _user: CSMe | undefined;
+	private _documentFromMarkerCache = new Map<string, GetDocumentFromMarkerResponse>();
 
 	constructor(readonly session: CodeStreamSession) {
 		this.session.onDidChangeCodemarks(this.onCodemarksChanged, this);
@@ -450,6 +451,7 @@ export class DocumentMarkerManager {
 		file
 	}: GetDocumentFromMarkerRequest): Promise<GetDocumentFromMarkerResponse | undefined> {
 		const { git, markers, markerLocations, repositoryMappings } = SessionContainer.instance();
+		const { documents } = Container.instance();
 
 		const marker = await markers.getById(markerId);
 		if (repoId == null || file == null) {
@@ -471,15 +473,27 @@ export class DocumentMarkerManager {
 		const filePath = path.join(repoPath, file);
 		const documentUri = URI.file(filePath).toString();
 
+		const cachedResponse = this._documentFromMarkerCache.get(markerId);
+		const document = documents.get(documentUri);
+		if (cachedResponse && document && cachedResponse.textDocument.version === document.version) {
+			return cachedResponse;
+		}
+
 		const result = await markerLocations.getCurrentLocations(documentUri);
 		const location = result.locations[markerId];
 		const range = location ? MarkerLocation.toRange(location) : Range.create(0, 0, 0, 0);
-
-		return {
-			textDocument: { uri: documentUri },
+		const version = (document && document.version) || 0;
+		const response = {
+			textDocument: { uri: documentUri, version },
 			marker: marker,
 			range: range
 		};
+
+		if (version !== 0) {
+			this._documentFromMarkerCache.set(markerId, response);
+		}
+
+		return response;
 	}
 
 	private async getMe() {

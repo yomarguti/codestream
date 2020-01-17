@@ -196,6 +196,7 @@ export interface GetCodemarkSha1Request {
 	markerId?: string;
 }
 export interface GetCodemarkSha1Response {
+	documentVersion?: number;
 	codemarkSha1: string | undefined;
 	documentSha1: string | undefined;
 }
