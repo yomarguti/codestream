@@ -11,6 +11,8 @@ import {
 	DidChangeDocumentMarkersNotificationType,
 	DidChangeVersionCompatibilityNotification,
 	DidChangeVersionCompatibilityNotificationType,
+	DidEncounterMaintenanceModeNotification,
+	DidEncounterMaintenanceModeNotificationType,
 	DidFailLoginNotificationType,
 	DidLoginNotification,
 	DidLoginNotificationType,
@@ -78,6 +80,7 @@ export class AgentConnection implements Disposable {
 	private _didChangeApiVersionCompatibility = new Echo<
 		DidChangeApiVersionCompatibilityNotification
 	>();
+	private _didEncounterMaintenanceMode = new Echo<DidEncounterMaintenanceModeNotification>();
 	private _restartNeededEmitter = new Echo();
 	private _initialized = false;
 	private _subscriptions = new CompositeDisposable();
@@ -148,6 +151,10 @@ export class AgentConnection implements Disposable {
 		cb: (event: DidChangeApiVersionCompatibilityNotification) => void
 	) {
 		return this._didChangeApiVersionCompatibility.add(cb);
+	}
+
+	onDidEncounterMaintenanceMode(cb: (event: DidEncounterMaintenanceModeNotification) => void) {
+		return this._didEncounterMaintenanceMode.add(cb);
 	}
 
 	onDidCrash(cb: () => void) {
@@ -361,6 +368,11 @@ export class AgentConnection implements Disposable {
 		connection.onCustom(DidChangeApiVersionCompatibilityNotificationType.method, notification =>
 			this._didChangeApiVersionCompatibility.push(
 				notification as DidChangeApiVersionCompatibilityNotification
+			)
+		);
+		connection.onCustom(DidEncounterMaintenanceModeNotificationType.method, notification =>
+			this._didEncounterMaintenanceMode.push(
+				notification as DidEncounterMaintenanceModeNotification
 			)
 		);
 	}

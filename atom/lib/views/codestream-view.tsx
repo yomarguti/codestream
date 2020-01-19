@@ -5,6 +5,7 @@ import {
 	DidChangeDocumentMarkersNotificationType,
 	DidChangeVersionCompatibilityNotification,
 	DidChangeVersionCompatibilityNotificationType,
+	DidEncounterMaintenanceModeNotificationType,
 	GetDocumentFromMarkerRequestType,
 	ReportingMessageType,
 	ReportMessageRequestType,
@@ -376,6 +377,9 @@ export class CodestreamView {
 						break;
 					}
 				}
+			}),
+			this.session.agent.onDidEncounterMaintenanceMode(e => {
+				this.sendNotification(DidEncounterMaintenanceModeNotificationType, e);
 			})
 		);
 	}

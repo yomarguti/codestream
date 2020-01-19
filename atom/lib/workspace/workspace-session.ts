@@ -56,17 +56,6 @@ interface EventEmissions {
 	[SESSION_STATUS_CHANGED]: SessionStatusChange;
 }
 
-function initializesAgent(target: WorkspaceSession, key: string, descriptor: PropertyDescriptor) {
-	const fn = descriptor.value;
-
-	descriptor.value = async function(this: WorkspaceSession, ...args: any[]) {
-		await this.initializeAgent();
-		return fn.apply(this, args);
-	};
-
-	return descriptor;
-}
-
 export class WorkspaceSession {
 	private emitter: Emitter<{}, EventEmissions>;
 	private session?: Session;
@@ -133,6 +122,7 @@ export class WorkspaceSession {
 		this._agent.onDidStartLogin(() => this.setStatus(SessionStatus.SigningIn));
 		this._agent.onDidFailLogin(() => this.setStatus(SessionStatus.SignedOut));
 		this._agent.onDidLogin(event => this.completeLogin(event.data));
+		this._agent.onDidEncounterMaintenanceMode(() => this.signOut());
 
 		await this.agent.start();
 	}
