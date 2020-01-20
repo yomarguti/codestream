@@ -7,5 +7,6 @@
 		UserSignedOutFromExtension,
 		UserWentOffline,
 		ReAuthenticating,
+		MaintenanceMode
 	}
 }

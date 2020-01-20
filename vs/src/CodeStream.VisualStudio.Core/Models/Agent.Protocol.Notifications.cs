@@ -162,4 +162,21 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public const string MethodName = "codestream/restartRequired";
 		public override string Method => MethodName;
 	}
+
+	public class DidEncounterMaintenanceModeNotification { }
+
+	public class DidEncounterMaintenanceModeNotificationType : NotificationType<DidEncounterMaintenanceModeNotification> {
+		public const string MethodName = "codestream/didEncounterMaintenanceMode";
+		public override string Method => MethodName;
+
+		private readonly JToken _token;
+
+		public DidEncounterMaintenanceModeNotificationType(JToken token) {
+			_token = token;
+		}
+
+		public override string AsJson() {
+			return CustomNotificationPayload.Create(Method, _token);
+		}
+	}
 }

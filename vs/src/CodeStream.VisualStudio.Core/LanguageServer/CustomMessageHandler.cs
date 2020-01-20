@@ -50,11 +50,21 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 				});
 		}
 
+		/// <summary>
+		/// Agent message stating we received data change
+		/// </summary>
+		/// <param name="e"></param>
+		/// <returns></returns>
 		[JsonRpcMethod(DidChangeDataNotificationType.MethodName)]
 		public void OnDidChangeData(JToken e) {
 			_browserService.EnqueueNotification(new DidChangeDataNotificationType(e));
 		}
 
+		/// <summary>
+		/// Agent message stating we have changed our connection status
+		/// </summary>
+		/// <param name="e"></param>
+		/// <returns></returns>
 		[JsonRpcMethod(DidChangeConnectionStatusNotificationType.MethodName)]
 		public void OnDidChangeConnectionStatus(JToken e) {
 			var @params = e.ToObject<DidChangeConnectionStatusNotification>();
@@ -83,6 +93,11 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 			}
 		}
 
+		/// <summary>
+		/// Agent message stating we need to react to a version compatibility message
+		/// </summary>
+		/// <param name="e"></param>
+		/// <returns></returns>
 		[JsonRpcMethod(DidChangeApiVersionCompatibilityNotificationType.MethodName)]
 		public void OnDidChangeApiVersionCompatibilityNotification(JToken e) {
 			using (Log.CriticalOperation($"{nameof(OnDidChangeApiVersionCompatibilityNotification)} Method={DidChangeApiVersionCompatibilityNotificationType.MethodName}", Serilog.Events.LogEventLevel.Information)) {
@@ -115,6 +130,11 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 			public JToken Token { get; set; }
 		}
 
+		/// <summary>
+		/// Agent message stating we need have changed document markers
+		/// </summary>
+		/// <param name="e"></param>
+		/// <returns></returns>
 		[JsonRpcMethod(DidChangeDocumentMarkersNotificationType.MethodName)]
 		public void OnDidChangeDocumentMarkers(JToken e) {
 			var @params = e.ToObject<DidChangeDocumentMarkersNotification>();
@@ -139,6 +159,11 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 			}
 		}
 
+		/// <summary>
+		/// Agent message stating we need to react to a version compatibility message
+		/// </summary>
+		/// <param name="e"></param>
+		/// <returns></returns>
 		[JsonRpcMethod(DidChangeVersionCompatibilityNotificationType.MethodName)]
 		public void OnDidChangeVersionCompatibility(JToken e) {
 			using (Log.CriticalOperation($"{nameof(OnDidChangeVersionCompatibility)} Method={DidChangeVersionCompatibilityNotificationType.MethodName}", Serilog.Events.LogEventLevel.Information)) {
@@ -160,30 +185,18 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 			}
 		}
 
+		/// <summary>
+		/// Agent message stating we need to react to a user logging out
+		/// </summary>
+		/// <param name="e"></param>
+		/// <returns></returns>
 		[JsonRpcMethod(DidLogoutNotificationType.MethodName)]
 		public async System.Threading.Tasks.Task OnDidLogout(JToken e) {
 			try {
 				var @params = e.ToObject<DidLogoutNotification>();
 				using (Log.CriticalOperation($"{nameof(OnDidLogin)} Method={DidLogoutNotificationType.MethodName} Reason={@params?.Reason}", Serilog.Events.LogEventLevel.Information)) {
 					if (@params.Reason == LogoutReason.Token) {
-						try {
-							await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-							var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
-							Assumes.Present(componentModel);
-
-							var authenticationServiceFactory = componentModel.GetService<IAuthenticationServiceFactory>();
-							if (authenticationServiceFactory != null) {
-								var authService = authenticationServiceFactory.Create();
-								if (authService == null) {
-									Log.Error(nameof(OnDidLogout) + " " + nameof(authService) + " is null");
-									return;
-								}
-								await authService.LogoutAsync(SessionSignedOutReason.UserSignedOutFromWebview);
-							}
-						}
-						catch (Exception ex) {
-							Log.Error(ex, nameof(OnDidLogout));
-						}
+						await LogoutAsync();
 					}
 					else {
 						// TODO: Handle this
@@ -195,6 +208,11 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 			}
 		}
 
+		/// <summary>
+		/// Agent message stating we need to react to a user logging in
+		/// </summary>
+		/// <param name="e"></param>
+		/// <returns></returns>
 		[JsonRpcMethod(DidLoginNotificationType.MethodName)]
 		public void OnDidLogin(JToken e) {
 			using (Log.CriticalOperation($"{nameof(OnDidLogin)} Method={DidLoginNotificationType.MethodName}", Serilog.Events.LogEventLevel.Debug)) {
@@ -223,28 +241,98 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 			}
 		}
 
+		/// <summary>
+		/// Agent message stating we need to restart the agent
+		/// </summary>
+		/// <returns></returns>
 		[JsonRpcMethod(RestartRequiredNotificationType.MethodName)]
 		public async System.Threading.Tasks.Task RestartRequiredAsync() {
 			using (Log.CriticalOperation($"{nameof(RestartRequiredAsync)} Method={RestartRequiredNotificationType.MethodName}", Serilog.Events.LogEventLevel.Debug)) {
-				try {
-					var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
-					Assumes.Present(componentModel);
+				await RestartLanguageServerAsync();
+			}
 
-					var languageServerClientManager = componentModel.GetService<ILanguageServerClientManager>();
-					if (languageServerClientManager != null) {
-						await languageServerClientManager.RestartAsync();
-					}
-					else {
-						Log.IsNull(nameof(ILanguageServerClientManager));
-					}
+			await System.Threading.Tasks.Task.CompletedTask;
+		}
+
+		/// <summary>
+		/// Agent message stating we need to react to maintenance mode
+		/// </summary>
+		/// <param name="e">the payload</param>
+		/// <returns></returns>
+		[JsonRpcMethod(DidEncounterMaintenanceModeNotificationType.MethodName)]
+		public async System.Threading.Tasks.Task MaintenanceModeAsync(JToken e) {
+			using (Log.CriticalOperation($"{nameof(RestartRequiredAsync)} Method={DidEncounterMaintenanceModeNotificationType.MethodName}", Serilog.Events.LogEventLevel.Debug)) {
+				try {
+					// log the user out
+					await LogoutAsync();
+					// restart the LSP agent
+					await RestartLanguageServerAsync();
+					// send a message to the browser component
+					_browserService.EnqueueNotification(new DidEncounterMaintenanceModeNotificationType(e));
 				}
 				catch (Exception ex) {
-					Log.Error(ex, $"Problem with {nameof(RestartRequiredAsync)}");
+					Log.Error(ex, $"Problem with {nameof(MaintenanceModeAsync)}");
 				}
 			}
 
 			await System.Threading.Tasks.Task.CompletedTask;
 		}
+
+		/// <summary>
+		/// Restarts the LSP agent based on the currently registered LSP manager
+		/// </summary>
+		/// <returns></returns>
+		private async System.Threading.Tasks.Task RestartLanguageServerAsync() {
+			try {
+				var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+				Assumes.Present(componentModel);
+				if (componentModel == null) {
+					Log.Error(nameof(componentModel) + " is null");
+				}
+
+				var languageServerClientManager = componentModel.GetService<ILanguageServerClientManager>();
+				if (languageServerClientManager != null) {
+					await languageServerClientManager.RestartAsync();
+				}
+				else {
+					Log.IsNull(nameof(ILanguageServerClientManager));
+				}
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(RestartLanguageServerAsync));
+			}
+		}
+
+		/// <summary>
+		/// Logs the current CodeSteam user our
+		/// </summary>
+		/// <returns></returns>
+		private async System.Threading.Tasks.Task LogoutAsync() {
+			try {
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+				Assumes.Present(componentModel);
+				if (componentModel == null) {
+					Log.Error(nameof(componentModel) + " is null");
+				}
+				var authenticationServiceFactory = componentModel.GetService<IAuthenticationServiceFactory>();
+
+				if (authenticationServiceFactory != null) {
+					var authService = authenticationServiceFactory.Create();
+					if (authService == null) {
+						Log.Error(nameof(LogoutAsync) + " " + nameof(authService) + " is null");
+					}
+					else {
+						await authService.LogoutAsync(SessionSignedOutReason.UserSignedOutFromWebview);
+					}
+				}
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(LogoutAsync));
+			}
+		}
+
+		// optional messages we could use for better UI notificaitons / messages
 
 		//[JsonRpcMethod(DidStartLoginNotificationType.MethodName)]
 		//public void OnDidStartLogin() {
