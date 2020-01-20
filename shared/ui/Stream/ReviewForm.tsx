@@ -639,9 +639,9 @@ class ReviewForm extends React.Component<Props, State> {
 		return (
 			<div className="related">
 				<div className="related-label">Changes to Include In Review</div>
-				{this.renderChange("unsaved", includeUnsaved, "Unsaved Changes (In-IDE)", "3 files", () =>
+				{/*this.renderChange("unsaved", includeUnsaved, "Unsaved Changes (In-IDE)", "3 files", () =>
 					this.toggleUnsaved()
-				)}
+				)*/}
 				{this.renderChange("saved", includeSaved, "Saved Changes (Working Tree)", "4 files", () =>
 					this.toggleSaved()
 				)}
