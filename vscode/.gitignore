@@ -6,3 +6,6 @@ npm-debug.log
 codestream-*.vsix
 codestream-*.info
 .idea
+.DS_Store
+.AppleDouble
+.LSOverride
