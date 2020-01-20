@@ -4,9 +4,11 @@ const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shif
 const ComposeTitles = {
 	comment: (
 		<span>
+			<span className="binding">
+				<span className="keybinding extra-pad">{modifier}</span>
+				<span className="keybinding">c</span>
+			</span>
 			<span className="function">Add Comment</span>{" "}
-			<span className="keybinding extra-pad">{modifier}</span>
-			<span className="keybinding">c</span>
 		</span>
 	),
 	// bookmark: (
@@ -18,16 +20,20 @@ const ComposeTitles = {
 	// ),
 	link: (
 		<span>
+			<span className="binding">
+				<span className="keybinding extra-pad">{modifier}</span>
+				<span className="keybinding">p</span>
+			</span>
 			<span className="function">Get Permalink</span>{" "}
-			<span className="keybinding extra-pad">{modifier}</span>
-			<span className="keybinding">p</span>
 		</span>
 	),
 	issue: (
 		<span>
+			<span className="binding">
+				<span className="keybinding extra-pad">{modifier}</span>
+				<span className="keybinding">i</span>
+			</span>
 			<span className="function">Create Issue</span>{" "}
-			<span className="keybinding extra-pad">{modifier}</span>
-			<span className="keybinding">i</span>
 		</span>
 	),
 	about: (
@@ -38,16 +44,20 @@ const ComposeTitles = {
 	),
 	toggleCodeStreamPanel: (
 		<span>
+			<span className="binding">
+				<span className="keybinding extra-pad">{modifier}</span>
+				<span className="keybinding extra-pad">{modifier}</span>
+			</span>
 			<span className="function">Toggle CodeStream Panel</span>{" "}
-			<span className="keybinding extra-pad">{modifier}</span>
-			<span className="keybinding extra-pad">{modifier}</span>
 		</span>
 	),
 	privatePermalink: (
 		<span>
+			<span className="binding">
+				<span className="keybinding extra-pad">{modifier}</span>
+				<span className="keybinding extra-pad">⇧ p</span>
+			</span>
 			<span className="function">Copy Private Permalink</span>
-			<span className="keybinding extra-pad">{modifier}</span>
-			<span className="keybinding extra-pad">⇧ p</span>
 		</span>
 	)
 };
