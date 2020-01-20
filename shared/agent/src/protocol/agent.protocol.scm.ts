@@ -38,6 +38,8 @@ export interface GetRepoScmStatusRequest {
 	uri: string;
 	localChangesToInclude?: LocalChangesToIncludeType;
 	startCommit?: string;
+	includeSaved: boolean;
+	includeStaged: boolean;
 }
 export interface GetRepoScmStatusResponse {
 	uri: string;

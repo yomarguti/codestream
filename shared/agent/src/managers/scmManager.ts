@@ -86,7 +86,8 @@ export class ScmManager {
 	@log()
 	async getRepoStatus({
 		uri: documentUri,
-		localChangesToInclude,
+		includeStaged,
+		includeSaved,
 		startCommit
 	}: GetRepoScmStatusRequest): Promise<GetRepoScmStatusResponse> {
 		const cc = Logger.getCorrelationContext();
@@ -134,7 +135,7 @@ export class ScmManager {
 					if (commits && commits.length && !startCommit) {
 						startCommit = commits[commits.length - 1].sha + "^";
 					}
-					modifiedFiles = await git.getNumStat(repoPath, startCommit);
+					modifiedFiles = await git.getNumStat(repoPath, includeSaved, includeStaged, startCommit);
 					if (modifiedFiles) {
 						modifiedFiles.forEach(file => {
 							totalModifiedLines += file.linesAdded + file.linesRemoved;
