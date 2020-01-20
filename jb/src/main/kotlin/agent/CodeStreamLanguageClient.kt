@@ -78,6 +78,18 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
         project.authenticationService?.onApiVersionChanged(notification)
     }
 
+    @JsonNotification("codestream/didEncounterMaintenanceMode")
+    fun didEncounterMaintenanceMode(json: JsonElement) {
+        ApplicationManager.getApplication().invokeLater {
+            project.codeStream?.show {
+                project.webViewService?.postNotification("codestream/didEncounterMaintenanceMode", json, true)
+                GlobalScope.launch {
+                    project.authenticationService?.logout()
+                }
+            }
+        }
+    }
+
     @JsonNotification("codestream/didLogin")
     fun didLogin(json: JsonElement) {
         val notification = gson.fromJson<DidLoginNotification>(json)
