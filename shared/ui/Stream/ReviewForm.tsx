@@ -213,12 +213,15 @@ class ReviewForm extends React.Component<Props, State> {
 
 	async handleRepoChange() {
 		const { repos } = this.props;
+		const { includeSaved, includeStaged, startCommit } = this.state;
 		const { scm } = this.state.scmInfo;
 		if (!scm) return;
 
 		const response = await HostApi.instance.send(GetRepoScmStatusRequestType, {
 			uri: this.state.scmInfo.uri,
-			startCommit: this.state.startCommit
+			startCommit,
+			includeStaged,
+			includeSaved
 		});
 		const repoId: string = response.scm ? response.scm.repoId || "" : "";
 		const repoName = repos[repoId] ? repos[repoId].name : "";
@@ -538,6 +541,10 @@ class ReviewForm extends React.Component<Props, State> {
 		return null;
 	};
 
+	changeScmState = settings => {
+		this.setState({ ...settings }, () => this.handleRepoChange());
+	};
+
 	setChangeStart = sha => {
 		const { scm } = this.state.repoStatus;
 		if (!scm) return;
@@ -576,22 +583,22 @@ class ReviewForm extends React.Component<Props, State> {
 			}
 		});
 
-		this.setState({ startCommit, excludeCommit }, () => this.handleRepoChange());
+		this.changeScmState({ startCommit, excludeCommit });
 	};
 
 	toggleSaved = () => {
 		if (this.state.includeSaved) {
-			this.setState({ includeSaved: false, includeStaged: true });
+			this.changeScmState({ includeSaved: false, includeStaged: true });
 		} else {
-			this.setState({ includeSaved: true, includeStaged: true });
+			this.changeScmState({ includeSaved: true, includeStaged: true });
 		}
 	};
 
 	toggleStaged = () => {
 		if (this.state.includeStaged) {
-			this.setState({ includeSaved: false, includeStaged: false });
+			this.changeScmState({ includeSaved: false, includeStaged: false });
 		} else {
-			this.setState({ includeSaved: false, includeStaged: true });
+			this.changeScmState({ includeSaved: false, includeStaged: true });
 		}
 	};
 
