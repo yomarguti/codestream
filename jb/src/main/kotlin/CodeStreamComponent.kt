@@ -111,11 +111,11 @@ class CodeStreamComponent(val project: Project) : Disposable {
         if (project.isDisposed) return
         project.sessionService?.onUnreadsChanged {
             ApplicationManager.getApplication().invokeLater {
-                toolWindow?.icon = if (it > 0) {
+                toolWindow?.setIcon(if (it > 0) {
                     IconLoader.getIcon("/images/codestream-unread.svg")
                 } else {
                     IconLoader.getIcon("/images/codestream.svg")
-                }
+                })
             }
         }
     }
