@@ -45,7 +45,6 @@ import { confirmPopup } from "./Confirm";
 import { markdownify } from "./Markdowner";
 import { EditorRevealRangeRequestType } from "../ipc/host.protocol.editor";
 import { Range } from "vscode-languageserver-types";
-import { Switch } from "../src/components/controls/Switch";
 
 interface Props extends ConnectedProps {
 	streamId: string;
@@ -113,8 +112,6 @@ interface State {
 	repoName: string;
 	excludedFiles: {};
 	fromCommit?: string;
-	showUnsaved?: boolean;
-	includeUnsaved: boolean;
 	includeSaved: boolean;
 	includeStaged: boolean;
 	excludeCommit: { [sha: string]: boolean };
@@ -155,7 +152,6 @@ class ReviewForm extends React.Component<Props, State> {
 			selectedTags: {},
 			repoName: "",
 			excludedFiles: {},
-			includeUnsaved: true,
 			includeSaved: true,
 			includeStaged: true,
 			excludeCommit: {},
@@ -454,16 +450,19 @@ class ReviewForm extends React.Component<Props, State> {
 					)}
 					{totalModifiedLines > 25 && (
 						<>
-							<CSText muted>
-								<Icon name="alert" /> There are {totalModifiedLines.toLocaleString()} total modified
-								lines in this review, which is a lot to digest. Increase your development velocity
-								with{" "}
-								<a href="https://www.codestream.com/blog/reviewing-the-code-review-part-i">
-									shift left code reviews
-								</a>
-								.
-							</CSText>
-							<div style={{ height: "10px" }} />
+							<div style={{ display: "flex", padding: "0 0 10px 2px" }}>
+								<Icon name="alert" muted />
+								<span style={{ paddingLeft: "10px" }}>
+									<CSText as="span" muted>
+										There are {totalModifiedLines.toLocaleString()} total modified lines in this
+										review, which is a lot to digest. Increase your development velocity with{" "}
+										<a href="https://www.codestream.com/blog/reviewing-the-code-review-part-i">
+											shift left code reviews
+										</a>
+										.
+									</CSText>
+								</span>
+							</div>
 						</>
 					)}
 					<CSText muted>
@@ -580,27 +579,19 @@ class ReviewForm extends React.Component<Props, State> {
 		this.setState({ startCommit, excludeCommit }, () => this.handleRepoChange());
 	};
 
-	toggleUnsaved = () => {
-		if (this.state.includeUnsaved) {
-			this.setState({ includeUnsaved: false, includeSaved: true, includeStaged: true });
-		} else {
-			this.setState({ includeUnsaved: true, includeSaved: true, includeStaged: true });
-		}
-	};
-
 	toggleSaved = () => {
 		if (this.state.includeSaved) {
-			this.setState({ includeUnsaved: false, includeSaved: false, includeStaged: true });
+			this.setState({ includeSaved: false, includeStaged: true });
 		} else {
-			this.setState({ includeUnsaved: false, includeSaved: true, includeStaged: true });
+			this.setState({ includeSaved: true, includeStaged: true });
 		}
 	};
 
 	toggleStaged = () => {
 		if (this.state.includeStaged) {
-			this.setState({ includeUnsaved: false, includeSaved: false, includeStaged: false });
+			this.setState({ includeSaved: false, includeStaged: false });
 		} else {
-			this.setState({ includeUnsaved: false, includeSaved: false, includeStaged: true });
+			this.setState({ includeSaved: false, includeStaged: true });
 		}
 	};
 
@@ -630,7 +621,7 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	renderGroupsAndCommits() {
-		const { repoStatus, includeUnsaved, includeSaved, includeStaged, excludeCommit } = this.state;
+		const { repoStatus, includeSaved, includeStaged, excludeCommit } = this.state;
 		if (!repoStatus) return null;
 		const { scm } = repoStatus;
 		if (!scm) return null;
@@ -639,9 +630,14 @@ class ReviewForm extends React.Component<Props, State> {
 		return (
 			<div className="related">
 				<div className="related-label">Changes to Include In Review</div>
-				{/*this.renderChange("unsaved", includeUnsaved, "Unsaved Changes (In-IDE)", "3 files", () =>
-					this.toggleUnsaved()
-				)*/}
+				{}
+				<div style={{ display: "flex", padding: "0 0 2px 2px" }}>
+					<Icon name="alert" muted />
+					<span style={{ paddingLeft: "10px" }}>
+						You have unsaved changes. If you want to include any of those changes in this review,
+						save them first.
+					</span>
+				</div>
 				{this.renderChange("saved", includeSaved, "Saved Changes (Working Tree)", "4 files", () =>
 					this.toggleSaved()
 				)}

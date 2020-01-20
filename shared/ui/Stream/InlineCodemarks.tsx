@@ -1119,6 +1119,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
 				<PanelHeader title={fs.pathBasename(fileNameToFilterFor)} position="fixed">
+					{/* file info, last commits, related PRs, related reviews */}
 					<EditingIndicator />
 				</PanelHeader>
 				{this.renderHoverIcons()}

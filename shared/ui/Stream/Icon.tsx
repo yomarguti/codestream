@@ -13,6 +13,7 @@ interface Props {
 	style?: any;
 	delay?: number;
 	clickable?: boolean;
+	muted?: boolean;
 	onClick?(event: React.SyntheticEvent): any;
 }
 
@@ -23,7 +24,10 @@ const Icon = React.forwardRef<any, Props>((props, ref) => {
 
 	const iconImage = (
 		<span
-			className={createClassString("icon", props.className, { clickable: props.clickable })}
+			className={createClassString("icon", props.className, {
+				clickable: props.clickable,
+				muted: props.muted
+			})}
 			onClick={props.onClick}
 			style={props.style}
 			dangerouslySetInnerHTML={{ __html: icon.toSVG() }}
@@ -47,6 +51,7 @@ const Icon = React.forwardRef<any, Props>((props, ref) => {
 
 Icon.defaultProps = {
 	clickable: false,
+	muted: false,
 	className: "",
 	onClick: event => event.preventDefault()
 };
