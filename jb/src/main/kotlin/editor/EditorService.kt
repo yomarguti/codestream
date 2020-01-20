@@ -40,10 +40,8 @@ import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.util.ui.UIUtil
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -66,8 +64,6 @@ import protocols.webview.EditorInformation
 import protocols.webview.EditorMetrics
 import protocols.webview.EditorSelection
 import protocols.webview.WebViewContext
-import java.awt.HeadlessException
-import java.awt.Toolkit
 import java.io.File
 import java.net.URI
 
@@ -166,7 +162,7 @@ class EditorService(val project: Project) {
             delay(250L)
             ApplicationManager.getApplication().invokeLater {
                 val editor = activeEditor
-                if (isVisible && editor != null && !editor.isDisposed)
+                if (isVisible && editor != null && editor.document.uri != null && !editor.isDisposed)
                     project.webViewService?.postNotification(
                         EditorNotifications.DidChangeVisibleRanges(
                             editor.document.uri,
@@ -335,9 +331,15 @@ class EditorService(val project: Project) {
     var activeEditor: Editor?
         get() = _activeEditor
         set(editor) {
-            _activeEditor = editor
+            val validEditor = if (editor?.document?.uri != null) {
+                editor
+            } else {
+                null
+            }
 
-            val editorInfo = editor?.run {
+            _activeEditor = validEditor
+
+            val editorInfo = validEditor?.run {
                 EditorInformation(
                     displayPath,
                     document.uri,
@@ -363,7 +365,7 @@ class EditorService(val project: Project) {
                 return@invokeLater
             }
             val editor = FileEditorManager.getInstance(project).selectedTextEditor
-            val context = if (editor != null) {
+            val context = if (editor?.document?.uri != null) {
                 EditorContext(
                     null,
                     editor.displayPath,
