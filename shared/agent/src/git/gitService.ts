@@ -716,7 +716,7 @@ export class GitService implements IGitService, Disposable {
 
 	async getStatus(
 		repoPath: string,
-		indexOnly: boolean
+		includeSaved: boolean
 	): Promise<{ addedFiles: string[]; deletedFiles: string[] } | undefined> {
 		try {
 			let data: string | undefined;
@@ -728,10 +728,14 @@ export class GitService implements IGitService, Disposable {
 
 			const addedFiles: string[] = [];
 			const deletedFiles: string[] = [];
+			// FIXME support deleted files
 			data.split("\n").forEach(line => {
 				const lineData = line.match(/(.)(.)\s+(.*)/);
 				if (lineData && lineData[3]) {
-					if (lineData[1] === "?") {
+					if (lineData[1] === "?" && includeSaved) {
+						addedFiles.push(lineData[3]);
+					}
+					if (lineData[1] === "A") {
 						addedFiles.push(lineData[3]);
 					}
 				}

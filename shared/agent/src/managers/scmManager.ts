@@ -141,8 +141,8 @@ export class ScmManager {
 							totalModifiedLines += file.linesAdded + file.linesRemoved;
 						});
 					}
-					if (includeSaved) {
-						const ret = await git.getStatus(repoPath, false);
+					if (includeSaved || includeStaged) {
+						const ret = await git.getStatus(repoPath, includeSaved);
 						if (ret) {
 							addedFiles = ret.addedFiles;
 							deletedFiles = ret.deletedFiles;
