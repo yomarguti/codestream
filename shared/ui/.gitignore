@@ -3,3 +3,4 @@ dist
 protocols
 .idea
 .vscode
+.DS_Store
