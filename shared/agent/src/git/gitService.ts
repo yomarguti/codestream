@@ -685,7 +685,7 @@ export class GitService implements IGitService, Disposable {
 				if (includeStaged && !includeSaved) options.push("--staged");
 				options.push("--numstat", "--summary");
 				if (ref && ref.length) options.push(ref);
-				if (!includeStaged) options.push("HEAD^");
+				if (!includeStaged) options.push("HEAD");
 				options.push("--");
 				data = await git({ cwd: repoPath }, ...options);
 			} catch {}
