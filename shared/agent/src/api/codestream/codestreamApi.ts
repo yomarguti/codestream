@@ -1233,7 +1233,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@lspHandler(SetPasswordRequestType)
 	async setPassword(request: SetPasswordRequest) {
-		await this.put("/password", request, this._token);
+		await this.put("/password", { newPassword: request.password }, this._token);
 	}
 
 	@log()
