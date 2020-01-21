@@ -222,3 +222,8 @@ export const DidEncounterMaintenanceModeNotificationType = new NotificationType<
 	DidEncounterMaintenanceModeNotification,
 	void
 >("codestream/didEncounterMaintenanceMode");
+
+export const DidEncounterMustSetPasswordNotificationType = new NotificationType<
+	void,
+	void
+>("codestream/didEncounterMustSetPassword");

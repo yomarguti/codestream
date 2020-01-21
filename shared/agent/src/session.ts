@@ -49,6 +49,7 @@ import {
 	DidChangeDataNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
 	DidEncounterMaintenanceModeNotificationType,
+	DidEncounterMustSetPasswordNotificationType,
 	DidFailLoginNotificationType,
 	DidLoginNotificationType,
 	DidLogoutNotificationType,
@@ -300,6 +301,21 @@ export class CodeStreamSession {
 							value: this._codestreamAccessToken!
 						}
 					});
+				}
+			}
+		});
+
+		this._api.useMiddleware({
+			get name() {
+				return "MustSetPassword";
+			},
+
+			onResponse: async (context: Readonly<CodeStreamApiMiddlewareContext>, _) => {
+				if (
+					context.response?.headers.get("X-CS-API-Must-Set-Password") &&
+					this._codestreamAccessToken
+				) {
+					this.agent.sendNotification(DidEncounterMustSetPasswordNotificationType, void {});
 				}
 			}
 		});

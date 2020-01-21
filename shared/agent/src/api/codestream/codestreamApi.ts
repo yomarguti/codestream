@@ -77,6 +77,8 @@ import {
 	SendPasswordResetEmailRequestType,
 	SetCodemarkPinnedRequest,
 	SetCodemarkStatusRequest,
+	SetPasswordRequest,
+	SetPasswordRequestType,
 	SetStreamPurposeRequest,
 	ThirdPartyProviderSetTokenRequest,
 	ThirdPartyProviderSetTokenRequestData,
@@ -1227,6 +1229,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@lspHandler(SendPasswordResetEmailRequestType)
 	async sendPasswordResetEmail(request: SendPasswordResetEmailRequest) {
 		await this.put("/no-auth/forgot-password", request);
+	}
+
+	@lspHandler(SetPasswordRequestType)
+	async setPassword(request: SetPasswordRequest) {
+		await this.put("/password", request, this._token);
 	}
 
 	@log()
