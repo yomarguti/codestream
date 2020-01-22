@@ -125,7 +125,7 @@ function isRefreshable<TProviderInfo extends CSProviderInfos>(
 
 export abstract class ThirdPartyProviderBase<
 	TProviderInfo extends CSProviderInfos = CSProviderInfos
-	> implements ThirdPartyProvider {
+> implements ThirdPartyProvider {
 	private _readyPromise: Promise<void> | undefined;
 	protected _ensuringConnection: Promise<void> | undefined;
 	protected _providerInfo: TProviderInfo | undefined;
@@ -133,7 +133,7 @@ export abstract class ThirdPartyProviderBase<
 	constructor(
 		public readonly session: CodeStreamSession,
 		protected readonly providerConfig: ThirdPartyProviderConfig
-	) { }
+	) {}
 
 	abstract get displayName(): string;
 	abstract get name(): string;
@@ -245,8 +245,8 @@ export abstract class ThirdPartyProviderBase<
 
 	protected async onDisconnected(request?: ThirdPartyDisconnect) {}
 
-	async ensureConnected(request?: {providerTeamId?: string}) {
-		 if (this._readyPromise !== undefined) return this._readyPromise;
+	async ensureConnected(request?: { providerTeamId?: string }) {
+		if (this._readyPromise !== undefined) return this._readyPromise;
 
 		if (this._providerInfo !== undefined) {
 			await this.refreshToken(request);
@@ -259,7 +259,7 @@ export abstract class ThirdPartyProviderBase<
 		void (await this._ensuringConnection);
 	}
 
-	async refreshToken(request?: {providerTeamId?: string}) {
+	async refreshToken(request?: { providerTeamId?: string }) {
 		if (this._providerInfo === undefined || !isRefreshable(this._providerInfo)) {
 			return;
 		}
@@ -280,7 +280,7 @@ export abstract class ThirdPartyProviderBase<
 		}
 	}
 
-	private async ensureConnectedCore(request?: {providerTeamId?: string}) {
+	private async ensureConnectedCore(request?: { providerTeamId?: string }) {
 		const { user } = await SessionContainer.instance().users.getMe();
 		this._providerInfo = this.getProviderInfo(user);
 
@@ -426,7 +426,7 @@ export abstract class ThirdPartyProviderBase<
 		} finally {
 			Logger.log(
 				`${traceResult}${
-				init && init.body ? ` body=${init && init.body}` : ""
+					init && init.body ? ` body=${init && init.body}` : ""
 				} \u2022 ${Strings.getDurationMilliseconds(start)} ms`
 			);
 		}
@@ -498,7 +498,7 @@ export abstract class ThirdPartyProviderBase<
 
 export abstract class ThirdPartyIssueProviderBase<
 	TProviderInfo extends CSProviderInfos = CSProviderInfos
-	> extends ThirdPartyProviderBase<TProviderInfo> implements ThirdPartyIssueProvider {
+> extends ThirdPartyProviderBase<TProviderInfo> implements ThirdPartyIssueProvider {
 	supportsIssues(): this is ThirdPartyIssueProvider & ThirdPartyProviderSupportsIssues {
 		return ThirdPartyIssueProvider.supportsIssues(this);
 	}
@@ -509,7 +509,7 @@ export abstract class ThirdPartyIssueProviderBase<
 
 export abstract class ThirdPartyPostProviderBase<
 	TProviderInfo extends CSProviderInfos = CSProviderInfos
-	> extends ThirdPartyProviderBase<TProviderInfo> implements ThirdPartyPostProvider {
+> extends ThirdPartyProviderBase<TProviderInfo> implements ThirdPartyPostProvider {
 	supportsSharing(): this is ThirdPartyPostProvider & ThirdPartyProviderSupportsPosts {
 		return ThirdPartyPostProvider.supportsSharing(this);
 	}

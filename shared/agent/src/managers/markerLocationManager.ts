@@ -116,7 +116,10 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 	}
 
 	protected fetchCriteria(obj: CSMarkerLocations): KeyValue<CSMarkerLocations>[] {
-		return [["streamId", obj.streamId], ["commitHash", obj.commitHash]];
+		return [
+			["streamId", obj.streamId],
+			["commitHash", obj.commitHash]
+		];
 	}
 
 	async getCurrentLocations(
@@ -543,7 +546,10 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		streamId: Id,
 		commitHash: string
 	): Promise<CSMarkerLocations | undefined> {
-		return this.cache.get([["streamId", streamId], ["commitHash", commitHash]]);
+		return this.cache.get([
+			["streamId", streamId],
+			["commitHash", commitHash]
+		]);
 	}
 
 	async getMarkerLocationsById(streamId: Id, commitHash: string): Promise<MarkerLocationsById> {
@@ -569,7 +575,12 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		const filePath = uri.fsPath;
 		let fetchIfCommitNotFound = true;
 		for (const [revision, markers] of markersByCommit.entries()) {
-			const diff = await git.getDiffBetweenCommits(revision, currentFileRevision, filePath, fetchIfCommitNotFound);
+			const diff = await git.getDiffBetweenCommits(
+				revision,
+				currentFileRevision,
+				filePath,
+				fetchIfCommitNotFound
+			);
 			fetchIfCommitNotFound = false;
 			if (!diff) {
 				const details = `cannot obtain diff - skipping calculation from ${revision} to ${currentFileRevision}`;
@@ -643,7 +654,10 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		};
 	}
 
-	static async saveUncommittedLocations(markers: CSMarker[], backtrackedLocations: (BacktrackedLocation | undefined)[]) {
+	static async saveUncommittedLocations(
+		markers: CSMarker[],
+		backtrackedLocations: (BacktrackedLocation | undefined)[]
+	) {
 		let index = 0;
 		for await (const marker of markers) {
 			try {

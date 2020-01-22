@@ -17,7 +17,12 @@ import {
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse
 } from "../protocol/agent.protocol";
-import { CodemarkType, CSBitbucketProviderInfo, CSLocationArray, CSReferenceLocation } from "../protocol/api.protocol";
+import {
+	CodemarkType,
+	CSBitbucketProviderInfo,
+	CSLocationArray,
+	CSReferenceLocation
+} from "../protocol/api.protocol";
 import { Arrays, log, lspProvider, Strings } from "../system";
 import {
 	ApiResponse,
@@ -426,9 +431,11 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 			`/repositories/${remotePath}/pullrequests?${qs.stringify({ q: "comment_count>0" })}`
 		);
 
-		const comments = (await Promise.all(
-			pullRequestsResponse.body.values.map(pr => this._getPullRequestComments(pr, relativePath))
-		)).reduce((group, current) => group.concat(current), []);
+		const comments = (
+			await Promise.all(
+				pullRequestsResponse.body.values.map(pr => this._getPullRequestComments(pr, relativePath))
+			)
+		).reduce((group, current) => group.concat(current), []);
 
 		// If we have any comments, fire a notification
 		if (comments.length !== 0) {

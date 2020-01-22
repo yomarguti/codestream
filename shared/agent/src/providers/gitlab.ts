@@ -18,7 +18,12 @@ import {
 	GitLabCreateCardRequest,
 	GitLabCreateCardResponse
 } from "../protocol/agent.protocol";
-import { CodemarkType, CSGitLabProviderInfo, CSLocationArray, CSReferenceLocation } from "../protocol/api.protocol";
+import {
+	CodemarkType,
+	CSGitLabProviderInfo,
+	CSLocationArray,
+	CSReferenceLocation
+} from "../protocol/api.protocol";
 import { log, lspProvider, Strings } from "../system";
 import { getRemotePath, PullRequestComment, ThirdPartyIssueProviderBase } from "./provider";
 
@@ -377,9 +382,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	): Promise<PullRequestComment[]> {
 		const prs = await this._getPullRequests(remotePath);
 
-		const comments = (await Promise.all(
-			prs.map(pr => this._getPullRequestComments(remotePath, pr, relativePath))
-		)).reduce((group, current) => group.concat(current), []);
+		const comments = (
+			await Promise.all(prs.map(pr => this._getPullRequestComments(remotePath, pr, relativePath)))
+		).reduce((group, current) => group.concat(current), []);
 
 		// If we have any comments, fire a notification
 		if (comments.length !== 0) {
