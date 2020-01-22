@@ -59,7 +59,11 @@ export const MustSetPassword = (props: MustSetPasswordProps) => {
 						<div id="controls">
 							<div className="control-group">
 								<br />
-								{!passwordIsValid && (
+								{passwordIsValid ? (
+									<small className="explainer">
+										<FormattedMessage id="setPassword.help" />
+									</small>
+								) : (
 									<small className="explainer error-message">
 										<FormattedMessage id="signUp.email.invalid" />
 									</small>
@@ -72,9 +76,6 @@ export const MustSetPassword = (props: MustSetPasswordProps) => {
 									validate={isPasswordValid}
 									onValidityChanged={onValidityChanged}
 								/>
-								<small className="">
-									<FormattedMessage id="setPassword.help" />
-								</small>
 							</div>
 							<div className="button-group">
 								<Button className="control-button">
