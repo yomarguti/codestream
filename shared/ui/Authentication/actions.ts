@@ -18,7 +18,8 @@ import {
 	setContext,
 	SupportedChatProvider,
 	goToSignup,
-	goToLogin
+	goToLogin,
+	goToSetPassword
 } from "../store/context/actions";
 import { GetActiveEditorContextRequestType } from "../ipc/host.protocol.editor";
 import { BootstrapInHostRequestType } from "../ipc/host.protocol";
@@ -88,7 +89,9 @@ export const authenticate = (params: PasswordLoginParams | TokenLoginRequest) =>
 
 		return dispatch(onLogin(response));
 	} catch (error) {
-		if (error.status === LoginResult.NotOnTeam) {
+		if (error.status === LoginResult.MustSetPassword) {
+			dispatch(goToSetPassword({ email: (params as PasswordLoginParams).email }));
+		} else if (error.status === LoginResult.NotOnTeam) {
 			dispatch(
 				goToTeamCreation({
 					loggedIn: true,

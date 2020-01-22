@@ -1,5 +1,5 @@
 import React from "react";
-import { connect } from "react-redux";
+import { useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
 import { Login } from "./Login";
 import { NewUserEntry } from "./NewUserEntry";
@@ -9,15 +9,14 @@ import { Signup } from "./Signup";
 import { JoinTeam } from "./JoinTeam";
 import { EmailConfirmation } from "./EmailConfirmation";
 import { TeamCreation } from "./TeamCreation";
-import { RouteState, Route } from "../store/context/types";
+import { Route } from "../store/context/types";
 import { ForgotPassword } from "./ForgotPassword";
 import { MSTeamsAdminApprovalInfo } from "./MSTeamsAdminApprovalInfo";
+import { MustSetPassword } from "./MustSetPassword";
 
-interface ConnectedProps extends RouteState {}
+export const UnauthenticatedRoutes = () => {
+	const props = useSelector((state: CodeStreamState) => state.context.route);
 
-export const UnauthenticatedRoutes = connect<ConnectedProps, void, void, CodeStreamState>(
-	state => state.context.route
-)((props: ConnectedProps) => {
 	switch (props.name) {
 		case Route.NewUser:
 			return <NewUserEntry {...props.params} />;
@@ -39,7 +38,9 @@ export const UnauthenticatedRoutes = connect<ConnectedProps, void, void, CodeStr
 			return <TeamCreation {...props.params} />;
 		case Route.ForgotPassword:
 			return <ForgotPassword {...props.params} />;
+		case Route.MustSetPassword:
+			return <MustSetPassword {...(props.params as any)} />;
 		default:
 			return <Login {...props.params} />;
 	}
-});
+};

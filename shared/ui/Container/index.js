@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
 import PropTypes from "prop-types";
 import { IntlProvider } from "react-intl";
 import { connect, Provider } from "react-redux";
@@ -7,6 +7,7 @@ import { UnauthenticatedRoutes } from "../Authentication";
 import { logError } from "../logger";
 import { HostApi } from "../webview-api";
 import { ReloadWebviewRequestType, RestartRequestType } from "../ipc/webview.protocol";
+import { SetPasswordRequestType } from "@codestream/protocols/agent";
 import { Loading } from "./Loading";
 import RoadBlock from "../Stream/RoadBlock";
 import Dismissable from "../Stream/Dismissable";
@@ -17,7 +18,8 @@ import { ApiVersioningActionsType } from "../store/apiVersioning/types";
 import { errorDismissed } from "@codestream/webview/store/connectivity/actions";
 import { ThemeProvider } from "styled-components";
 import { darkTheme, createTheme } from "../src/themes";
-import { Link } from "../Stream/Link";
+
+const isPasswordValid = password => password.length >= 6;
 
 const mapStateToProps = state => ({
 	bootstrapped: state.bootstrapped,
@@ -117,9 +119,7 @@ const Root = connect(mapStateToProps)(props => {
 	if (props.inMaintenanceMode)
 		return (
 			<RoadBlock title="Pardon the Interruption">
-				<p>
-					CodeStream is undergoing a quick update. We'll be right back!
-				</p>
+				<p>CodeStream is undergoing a quick update. We'll be right back!</p>
 			</RoadBlock>
 		);
 	if (!props.bootstrapped) return <Loading />;

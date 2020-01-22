@@ -93,5 +93,7 @@ export default {
 	"teamMemberSelection.add": "ADD",
 	"teamMemberSelection.invite": "Invite",
 	"createChannel.name.invalid": "Looks invalid?",
-	"createChannel.name.required": "Required"
+	"createChannel.name.required": "Required",
+	"setPassword.setPassword": "Set Password",
+	"setPassword.help": "6+ characters"
 };

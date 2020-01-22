@@ -69,7 +69,8 @@ export enum Route {
 	EmailConfirmation = "emailConfirmation",
 	TeamCreation = "teamCreation",
 	ForgotPassword = "forgotPassword",
-	MSTeamsAdminApprovalInfo = "MSTeamsAdminApprovalInfo"
+	MSTeamsAdminApprovalInfo = "MSTeamsAdminApprovalInfo",
+	MustSetPassword = "MustSetPassword"
 }
 
 export interface RouteState {
