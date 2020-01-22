@@ -116,6 +116,7 @@ interface State {
 	includeStaged: boolean;
 	excludeCommit: { [sha: string]: boolean };
 	startCommit: string;
+	unsavedFiles: string[];
 }
 
 function merge(defaults: Partial<State>, review: CSReview): State {
@@ -155,7 +156,8 @@ class ReviewForm extends React.Component<Props, State> {
 			includeSaved: true,
 			includeStaged: true,
 			excludeCommit: {},
-			startCommit: ""
+			startCommit: "",
+			unsavedFiles: []
 		};
 
 		const state = props.editingReview
@@ -479,20 +481,27 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	confirmCancel = () => {
-		confirmPopup({
-			title: "Are you sure?",
-			message: "Changes you made will not be saved.",
-			centered: true,
-			buttons: [
-				{ label: "Go Back", className: "control-button" },
-				{
-					label: "Discard Review",
-					wait: true,
-					action: this.props.closePanel,
-					className: "delete"
-				}
-			]
-		});
+		const { title, text, reviewers } = this.state;
+
+		// if the user has made any changes in the form, confirm before closing
+		if (title.length || text.length || reviewers.length) {
+			confirmPopup({
+				title: "Are you sure?",
+				message: "Changes you made will not be saved.",
+				centered: true,
+				buttons: [
+					{ label: "Go Back", className: "control-button" },
+					{
+						label: "Discard Review",
+						wait: true,
+						action: this.props.closePanel,
+						className: "delete"
+					}
+				]
+			});
+		} else if (this.props.closePanel) {
+			this.props.closePanel();
+		}
 	};
 
 	exclude = (event: React.SyntheticEvent, file: string) => {
@@ -628,7 +637,7 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	renderGroupsAndCommits() {
-		const { repoStatus, includeSaved, includeStaged, excludeCommit } = this.state;
+		const { repoStatus, includeSaved, includeStaged, excludeCommit, unsavedFiles } = this.state;
 		if (!repoStatus) return null;
 		const { scm } = repoStatus;
 		if (!scm) return null;
@@ -637,14 +646,15 @@ class ReviewForm extends React.Component<Props, State> {
 		return (
 			<div className="related">
 				<div className="related-label">Changes to Include In Review</div>
-				{}
-				<div style={{ display: "flex", padding: "0 0 2px 2px" }}>
-					<Icon name="alert" muted />
-					<span style={{ paddingLeft: "10px" }}>
-						You have unsaved changes. If you want to include any of those changes in this review,
-						save them first.
-					</span>
-				</div>
+				{unsavedFiles.length > 0 && (
+					<div style={{ display: "flex", padding: "0 0 2px 2px" }}>
+						<Icon name="alert" muted />
+						<span style={{ paddingLeft: "10px" }}>
+							You have unsaved changes. If you want to include any of those changes in this review,
+							save them first.
+						</span>
+					</div>
+				)}
 				{this.renderChange("saved", includeSaved, "Saved Changes (Working Tree)", "4 files", () =>
 					this.toggleSaved()
 				)}
