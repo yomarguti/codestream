@@ -336,7 +336,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		if (response.user.mustSetPassword) {
 			// save the accessToken for the call to set password
 			this._token = response.accessToken;
-			throw { status: LoginResult.MustSetPassword };
+			throw { status: LoginResult.MustSetPassword, token: response.accessToken };
 		}
 
 		// 💩see above
