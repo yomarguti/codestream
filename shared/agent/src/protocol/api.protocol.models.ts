@@ -477,6 +477,8 @@ export interface CSMe extends CSUser {
 	joinMethod: string;
 	preferences?: CSMePreferences;
 	providerInfo?: CSMeProviderInfo;
+	mustSetPassword?: boolean;
+	inMaintenanceMode?: boolean;
 }
 
 export interface CSApiCapability {

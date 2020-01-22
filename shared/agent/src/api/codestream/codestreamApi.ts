@@ -91,7 +91,8 @@ import {
 	UpdateStreamMembershipRequest,
 	UpdateTeamTagRequestType,
 	UpdateUserRequest,
-	VerifyConnectivityResponse } from "../../protocol/agent.protocol";
+	VerifyConnectivityResponse
+} from "../../protocol/agent.protocol";
 import {
 	CSAddProviderHostRequest,
 	CSAddProviderHostResponse,
@@ -163,6 +164,8 @@ import {
 	CSRegisterResponse,
 	CSSetCodemarkPinnedRequest,
 	CSSetCodemarkPinnedResponse,
+	CSSetPasswordRequest,
+	CSSetPasswordResponse,
 	CSStream,
 	CSTeam,
 	CSTeamTagRequest,
@@ -313,18 +316,27 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 		Logger.log(
 			`CodeStream user '${response.user.username}' (${
-			response.user.id
+				response.user.id
 			}) is logging into ${provider || "uknown"}${
-			response.providerAccess ? `:${response.providerAccess}` : ""
+				response.providerAccess ? `:${response.providerAccess}` : ""
 			} and belongs to ${response.teams.length} team(s)\n${response.teams
 				.map(t => `\t${t.name} (${t.id})`)
 				.join("\n")}`
 		);
 
+		/*
+			💩: the session/webview needs the accessToken token in order to rectify the user's account state
+		*/
+		if (response.user.mustSetPassword) {
+			// save the accessToken for the call to set password
+			this._token = response.accessToken;
+			throw { status: LoginResult.MustSetPassword };
+		}
+
+		// 💩see above
 		if (response.teams.length === 0) {
 			// save the accessToken for the call to create a team
 			this._token = response.accessToken;
-			// 💩: the session/webview need the accessToken token
 			throw { status: LoginResult.NotOnTeam, token: response.accessToken };
 		}
 
@@ -1233,7 +1245,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@lspHandler(SetPasswordRequestType)
 	async setPassword(request: SetPasswordRequest) {
-		await this.put("/password", { newPassword: request.password }, this._token);
+		return this.put<CSSetPasswordRequest, CSSetPasswordResponse>(
+			"/password",
+			{ newPassword: request.password },
+			this._token
+		);
 	}
 
 	@log()

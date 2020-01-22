@@ -557,3 +557,11 @@ export interface CSTeamTagRequest {
 export interface CSTeamTagResponse {
 	// name: string;
 }
+
+export interface CSSetPasswordRequest {
+	newPassword: string;
+}
+
+export interface CSSetPasswordResponse {
+	accessToken: string;
+}

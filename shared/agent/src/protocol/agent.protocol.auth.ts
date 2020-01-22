@@ -6,7 +6,8 @@ import {
 	CSGetInviteInfoResponse,
 	CSLoginResponse,
 	CSRegisterRequest,
-	LoginResult
+	LoginResult,
+	CSSetPasswordResponse
 } from "./api.protocol";
 
 export function isLoginFailResponse(
@@ -121,7 +122,7 @@ export interface SetPasswordRequest {
 
 export const SetPasswordRequestType = new RequestType<
 	SetPasswordRequest,
-	void,
+	CSSetPasswordResponse,
 	void,
 	void
 >("codestream/setPassword");
