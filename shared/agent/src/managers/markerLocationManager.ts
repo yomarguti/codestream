@@ -561,18 +561,26 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		return "MarkerLocation";
 	}
 
-	static async computeCurrentLocations(
-		uri: URI,
-		currentFileRevision: string,
-		markersByCommit: Map<string, Markerish[]>
-	) {
-		const { documents } = Container.instance();
-		const { git } = SessionContainer.instance();
-
+	static async computeCurrentLocations(uri: URI, markersByCommit: Map<string, Markerish[]>) {
 		const locations: MarkerLocationsById = Object.create(null);
 		const orphans: MissingLocationsById = Object.create(null);
 
+		if (markersByCommit.size === 0) {
+			return { locations, orphans };
+		}
+
+		const { documents } = Container.instance();
+		const { git } = SessionContainer.instance();
+
 		const filePath = uri.fsPath;
+		const currentFileRevision = await git.getFileCurrentRevision(uri);
+		if (currentFileRevision === undefined) {
+			Logger.warn(
+				`computeCurrentLocations: Could not determine current revision for ${uri.fsPath}`
+			);
+			return { locations, orphans };
+		}
+
 		let fetchIfCommitNotFound = true;
 		for (const [revision, markers] of markersByCommit.entries()) {
 			const diff = await git.getDiffBetweenCommits(

@@ -392,17 +392,12 @@ export class DocumentMarkerManager {
 		if (providers.length === 0) return emptyArray;
 
 		const { git } = SessionContainer.instance();
-
-		const [repo, revision] = await Promise.all([
-			git.getRepositoryByFilePath(uri.fsPath),
-			git.getFileCurrentRevision(uri.fsPath)
-		]);
+		const repo = await git.getRepositoryByFilePath(uri.fsPath);
 
 		const markers = [];
 		const requests = providers.map(p =>
 			p.getPullRequestDocumentMarkers({
 				uri: uri,
-				revision: revision,
 				repoId: repo!.id,
 				streamId: streamId
 			})

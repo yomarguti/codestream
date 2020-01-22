@@ -57,7 +57,6 @@ export interface ThirdPartyProviderSupportsPosts {
 export interface ThirdPartyProviderSupportsPullRequests {
 	getPullRequestDocumentMarkers(request: {
 		uri: URI;
-		revision: string | undefined;
 		repoId: string | undefined;
 		streamId: string | undefined;
 	}): Promise<DocumentMarker[]>;

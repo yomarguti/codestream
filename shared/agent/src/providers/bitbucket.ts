@@ -260,12 +260,10 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 	@log()
 	async getPullRequestDocumentMarkers({
 		uri,
-		revision,
 		repoId,
 		streamId
 	}: {
 		uri: URI;
-		revision: string | undefined;
 		repoId: string | undefined;
 		streamId: string;
 	}): Promise<DocumentMarker[]> {
@@ -308,11 +306,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 			});
 		}
 
-		const locations = await MarkerLocationManager.computeCurrentLocations(
-			uri,
-			revision!,
-			markersByCommit
-		);
+		const locations = await MarkerLocationManager.computeCurrentLocations(uri, markersByCommit);
 
 		const teamId = session.teamId;
 
@@ -391,13 +385,6 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 		const cc = Logger.getCorrelationContext();
 
 		try {
-			const remotePath = await getRemotePath(
-				repo,
-				this.getIsMatchingRemotePredicate(),
-				this._knownRepos
-			);
-			if (remotePath == null) return undefined;
-
 			const relativePath = Strings.normalizePath(paths.relative(repo.path, filePath));
 			const cacheKey = `${repo.path}|${relativePath}`;
 
@@ -407,7 +394,16 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 				return await cachedComments.comments;
 			}
 
-			const commentsPromise = this._getCommentsForPathCore(filePath, relativePath, remotePath);
+			const remotePath = await getRemotePath(
+				repo,
+				this.getIsMatchingRemotePredicate(),
+				this._knownRepos
+			);
+
+			const commentsPromise: Promise<PullRequestComment[]> =
+				remotePath != null
+					? this._getCommentsForPathCore(filePath, relativePath, remotePath)
+					: Promise.resolve([]);
 			this._commentsByRepoAndPath.set(cacheKey, {
 				expiresAt: new Date().setMinutes(new Date().getMinutes() + 30),
 				comments: commentsPromise
