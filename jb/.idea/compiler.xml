@@ -6,4 +6,7 @@
       <module name="jetbrains-codestream.test" target="1.8" />
     </bytecodeTargetLevel>
   </component>
+  <component name="TypeScriptCompiler">
+    <option name="versionType" value="EMBEDDED" />
+  </component>
 </project>
