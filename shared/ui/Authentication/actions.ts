@@ -82,6 +82,11 @@ export const authenticate = (params: PasswordLoginParams | TokenLoginRequest) =>
 			if (response.error === LoginResult.MaintenanceMode) {
 				return dispatch(setMaintenanceMode(true, params));
 			}
+
+			if (getState().session.inMaintenanceMode) {
+				dispatch(setMaintenanceMode(false));
+			}
+
 			throw response.error;
 		}
 
