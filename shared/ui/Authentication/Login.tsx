@@ -120,7 +120,10 @@ class Login extends React.Component<Props, State> {
 		if (this.state.error) {
 			return (
 				<div className="error-message form-error">
-					<FormattedMessage id="something-is-screwed" defaultMessage={this.state.error} />{" "}
+					<FormattedMessage
+						id="something-is-screwed"
+						defaultMessage={this.state.error.toString()}
+					/>{" "}
 					<a href="https://help.codestream.com">
 						<FormattedMessage id="contactSupport" defaultMessage="contact support" />
 					</a>
