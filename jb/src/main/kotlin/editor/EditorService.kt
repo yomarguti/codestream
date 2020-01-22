@@ -104,7 +104,6 @@ class EditorService(val project: Project) {
                         DidOpenTextDocumentParams(document.textDocumentItem)
                     )
                     document.addDocumentListener(DocumentSynchronizer())
-                    document.addDocumentListener(DocumentListenerImpl(project))
                 }
             }
         }
