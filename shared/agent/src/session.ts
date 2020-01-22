@@ -292,14 +292,7 @@ export class CodeStreamSession {
 					context.response?.headers.get("X-CS-API-Maintenance-Mode") &&
 					this._codestreamAccessToken
 				) {
-					this.agent.sendNotification(DidEncounterMaintenanceModeNotificationType, {
-						teamId: this._teamId,
-						token: {
-							email: this._email!,
-							url: this._options.serverUrl,
-							value: this._codestreamAccessToken!
-						}
-					});
+					this._didEncounterMaintenanceMode();
 				}
 			}
 		});
@@ -366,6 +359,17 @@ export class CodeStreamSession {
 		this.agent.registerHandler(FetchMarkerLocationsRequestType, r =>
 			this.api.fetchMarkerLocations(r)
 		);
+	}
+
+	private _didEncounterMaintenanceMode() {
+		this.agent.sendNotification(DidEncounterMaintenanceModeNotificationType, {
+			teamId: this._teamId,
+			token: {
+				email: this._email!,
+				url: this._options.serverUrl,
+				value: this._codestreamAccessToken!
+			}
+		});
 	}
 
 	private async onRTMessageReceived(e: RTMessage) {
@@ -441,8 +445,11 @@ export class CodeStreamSession {
 				});
 				break;
 			case MessageType.Users:
-				const me = e.data.find(u => u.id === this._userId);
+				const me = e.data.find(u => u.id === this._userId) as CSMe | undefined;
 				if (me != null) {
+					if (me.inMaintenanceMode) {
+						return this._didEncounterMaintenanceMode();
+					}
 					this._onDidChangeCurrentUser.fire(me as CSMe);
 				}
 
