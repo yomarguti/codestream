@@ -37,6 +37,7 @@ export enum SessionStatus {
 export enum SignoutReason {
 	Extension,
 	User,
+	MaintenanceMode,
 }
 
 export interface SessionStatusChange {
@@ -122,7 +123,7 @@ export class WorkspaceSession {
 		this._agent.onDidStartLogin(() => this.setStatus(SessionStatus.SigningIn));
 		this._agent.onDidFailLogin(() => this.setStatus(SessionStatus.SignedOut));
 		this._agent.onDidLogin(event => this.completeLogin(event.data));
-		this._agent.onDidEncounterMaintenanceMode(() => this.signOut());
+		this._agent.onDidEncounterMaintenanceMode(() => this.signOut(SignoutReason.MaintenanceMode));
 
 		await this.agent.start();
 	}
