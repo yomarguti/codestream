@@ -2,6 +2,8 @@ import React from "react";
 import styled from "styled-components";
 import { Headshot } from "./Headshot";
 
+// this displays a headshot and the username after it
+
 export interface HeadshotNameProps {
 	person: {
 		email?: string;

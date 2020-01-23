@@ -3,7 +3,8 @@ import {
 	GetFileScmInfoRequestType,
 	GetFileScmInfoResponse,
 	GetRepoScmStatusRequestType,
-	GetRepoScmStatusResponse
+	GetRepoScmStatusResponse,
+	FileStatus
 } from "@codestream/protocols/agent";
 import {
 	CSChannelStream,
@@ -747,10 +748,12 @@ class ReviewForm extends React.Component<Props, State> {
 		if (repoStatus) {
 			const { scm } = repoStatus;
 			if (scm) {
-				const { addedFiles, modifiedFiles, deletedFiles } = scm;
-				const added = addedFiles.filter(f => !excludedFiles[f]);
+				const { modifiedFiles, fileStatus } = scm;
+				// const added = addedFiles.filter(f => !excludedFiles[f]);
 				const modified = modifiedFiles.filter(f => !excludedFiles[f.file]);
-				const deleted = deletedFiles.filter(f => !excludedFiles[f]);
+				// const deleted = deletedFiles.filter(f => !excludedFiles[f]);
+				const added = [];
+				const deleted = [];
 				if (added.length + modified.length + deleted.length === 0) return null;
 				changedFiles = (
 					<>
@@ -761,6 +764,13 @@ class ReviewForm extends React.Component<Props, State> {
 								<>
 									{file.linesAdded > 0 && <span className="added">+{file.linesAdded} </span>}
 									{file.linesRemoved > 0 && <span className="deleted">-{file.linesRemoved}</span>}
+									{fileStatus[file.file] === FileStatus.new && <span className="added">new </span>}
+									{fileStatus[file.file] === FileStatus.added && (
+										<span className="added">added </span>
+									)}
+									{fileStatus[file.file] === FileStatus.renamed && (
+										<span className="added">renamed </span>
+									)}
 								</>
 							)
 						)}
@@ -786,10 +796,12 @@ class ReviewForm extends React.Component<Props, State> {
 		if (!repoStatus) return null;
 		const { scm } = repoStatus;
 		if (!scm) return null;
-		const { addedFiles, modifiedFiles, deletedFiles } = scm;
-		const added = addedFiles.filter(f => excludedFiles[f]);
+		const { modifiedFiles, fileStatus } = scm;
+		// const added = addedFiles.filter(f => excludedFiles[f]);
 		const modified = modifiedFiles.filter(f => excludedFiles[f.file]);
-		const deleted = deletedFiles.filter(f => excludedFiles[f]);
+		// const deleted = deletedFiles.filter(f => excludedFiles[f]);
+		const added = [];
+		const deleted = [];
 		if (added.length + modified.length + deleted.length === 0) return null;
 
 		return [
@@ -802,6 +814,8 @@ class ReviewForm extends React.Component<Props, State> {
 						<>
 							{file.linesAdded > 0 && <span className="added">+{file.linesAdded} </span>}
 							{file.linesRemoved > 0 && <span className="deleted">-{file.linesRemoved}</span>}
+							{fileStatus[file.file] === FileStatus.new && <span className="added">new </span>}
+							{fileStatus[file.file] === FileStatus.added && <span className="added">added </span>}
 						</>
 					)
 				)}
