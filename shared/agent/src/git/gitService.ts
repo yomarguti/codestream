@@ -678,6 +678,7 @@ export class GitService implements IGitService, Disposable {
 		try {
 			// files changed, lines added & deleted
 			// git diff --numstat --summary
+			// https://stackoverflow.com/questions/1587846/how-do-i-show-the-changes-which-have-been-staged
 
 			let data: string | undefined;
 			try {

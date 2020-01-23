@@ -150,6 +150,15 @@ export class ScmManager {
 							deletedFiles = ret.deletedFiles;
 						}
 					}
+
+					const ret1 = await git.getNumStat(repoPath, true, false);
+					if (ret1) {
+						savedFiles = ret1.map(line => line.file);
+					}
+					const ret2 = await git.getNumStat(repoPath, false, true);
+					if (ret2) {
+						stagedFiles = ret2.map(line => line.file);
+					}
 				}
 			} catch (ex) {
 				gitError = ex.toString();
