@@ -157,7 +157,7 @@ function listenForEvents(store) {
 				textEditorLineCount: params.editor.lineCount,
 				metrics: params.editor.metrics,
 
-				textEditorSelections: [],
+				textEditorSelections: params.editor.selections,
 				scmInfo: undefined
 				// scmInfo: isNotOnDisk(params.editor.uri)
 				// 	? undefined
