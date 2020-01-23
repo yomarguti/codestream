@@ -48,9 +48,6 @@ export interface GetRepoScmStatusResponse {
 		repoId?: string;
 		branch?: string;
 		commits?: { sha: string; info: {} }[];
-		// FIXME -- how do we get this?
-		// pushedCommits: { sha: string; author: string; message: string }[];
-		// localCommits: { sha: string; author: string; message: string }[];
 		addedFiles: string[];
 		deletedFiles: string[];
 		modifiedFiles: {
@@ -58,6 +55,8 @@ export interface GetRepoScmStatusResponse {
 			linesAdded: number;
 			linesRemoved: number;
 		}[];
+		savedFiles: string[];
+		stagedFiles: string[];
 		authors: { id: string; username: string }[];
 		// this is just the total number of lines modified so that
 		// we can throw up a warning if it's too many ("shift left")

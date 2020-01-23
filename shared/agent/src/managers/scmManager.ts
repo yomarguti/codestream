@@ -98,6 +98,8 @@ export class ScmManager {
 		let file: string | undefined;
 		let addedFiles: string[] = [];
 		let deletedFiles: string[] = [];
+		let stagedFiles: string[] = [];
+		let savedFiles: string[] = [];
 		let modifiedFiles:
 			| {
 					file: string;
@@ -167,6 +169,8 @@ export class ScmManager {
 							addedFiles,
 							modifiedFiles: modifiedFiles || [],
 							deletedFiles,
+							savedFiles,
+							stagedFiles,
 							authors,
 							commits: [...(commits || [])],
 							totalModifiedLines
