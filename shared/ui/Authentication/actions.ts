@@ -70,44 +70,42 @@ export const authenticate = (params: PasswordLoginParams | TokenLoginRequest) =>
 	getState: () => CodeStreamState
 ) => {
 	const api = HostApi.instance;
-	try {
-		const response = await api.send(
-			(params as any).password ? PasswordLoginRequestType : TokenLoginRequestType,
-			{
-				...params,
-				team: getState().configs.team
-			}
-		);
-		if (isLoginFailResponse(response)) {
-			if (response.error === LoginResult.MaintenanceMode) {
-				return dispatch(setMaintenanceMode(true, params));
-			}
+	const response = await api.send(
+		(params as any).password ? PasswordLoginRequestType : TokenLoginRequestType,
+		{
+			...params,
+			team: getState().configs.team
+		}
+	);
 
-			if (getState().session.inMaintenanceMode) {
-				dispatch(setMaintenanceMode(false));
-			}
-
-			throw response.error;
+	if (isLoginFailResponse(response)) {
+		if (getState().session.inMaintenanceMode && response.error !== LoginResult.MaintenanceMode) {
+			dispatch(setMaintenanceMode(false));
 		}
 
-		api.track("Signed In", { "Auth Type": "CodeStream" });
-
-		return dispatch(onLogin(response));
-	} catch (error) {
-		if (error.status === LoginResult.MustSetPassword) {
-			dispatch(goToSetPassword({ email: (params as PasswordLoginParams).email }));
-		} else if (error.status === LoginResult.NotOnTeam) {
-			dispatch(
-				goToTeamCreation({
-					loggedIn: true,
-					// since we're sure the error is NotOnTeam, params below must be email/password because token
-					// login is for resuming previous sessions and this error means you haven't ever fully signed into the extension
-					email: (params as PasswordLoginParams).email,
-					token: error.token
-				})
-			);
-		} else throw error;
+		switch (response.error) {
+			case LoginResult.MaintenanceMode:
+				return dispatch(setMaintenanceMode(true, params));
+			case LoginResult.MustSetPassword:
+				return dispatch(goToSetPassword({ email: (params as PasswordLoginParams).email }));
+			case LoginResult.NotOnTeam:
+				return dispatch(
+					goToTeamCreation({
+						loggedIn: true,
+						// since we're sure the error is NotOnTeam, params below must be email/password because token
+						// login is for resuming previous sessions and this error means you haven't ever fully signed into the extension
+						email: (params as PasswordLoginParams).email,
+						token: response.extra.token
+					})
+				);
+			default:
+				throw response.error;
+		}
 	}
+
+	api.track("Signed In", { "Auth Type": "CodeStream" });
+
+	return dispatch(onLogin(response));
 };
 
 export const onLogin = (response: LoginSuccessResponse) => async dispatch => {
@@ -168,32 +166,28 @@ export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo
 	});
 
 	if (isLoginFailResponse(response)) {
-		if (response.error === LoginResult.MaintenanceMode) {
-			return dispatch(setMaintenanceMode(true));
+		if (getState().session.inMaintenanceMode && response.error !== LoginResult.MaintenanceMode) {
+			dispatch(setMaintenanceMode(false));
 		}
 
-		if (safe(() => (response.error as any).status) === LoginResult.MustSetPassword) {
-			return dispatch(goToSetPassword({}));
+		switch (response.error) {
+			case LoginResult.MaintenanceMode:
+				return dispatch(setMaintenanceMode(true));
+			case LoginResult.MustSetPassword:
+				return dispatch(goToSetPassword({}));
+			case LoginResult.SignupRequired:
+				return dispatch(goToSignup({ type: SignupType.CreateTeam }));
+			case LoginResult.SignInRequired:
+				return dispatch(goToLogin());
+			case LoginResult.AlreadySignedIn:
+				return dispatch(bootstrap());
+			case LoginResult.ProviderConnectFailed:
+			// @ts-ignore - reset the otc and cascade to the default case
+			case LoginResult.ExpiredToken:
+				dispatch(setSession({ otc: uuid() }));
+			default:
+				throw response.error;
 		}
-
-		if (response.error === LoginResult.SignupRequired) {
-			return dispatch(goToSignup({ type: SignupType.CreateTeam }));
-		}
-		if (response.error === LoginResult.SignInRequired) {
-			return dispatch(goToLogin());
-		}
-		if (response.error === LoginResult.AlreadySignedIn) {
-			return dispatch(bootstrap());
-		}
-		if (
-			response.error === LoginResult.ProviderConnectFailed ||
-			response.error === LoginResult.ExpiredToken
-		) {
-			dispatch(setSession({ otc: uuid() }));
-			throw response.error;
-		}
-
-		return;
 	}
 
 	if (signupInfo) {
