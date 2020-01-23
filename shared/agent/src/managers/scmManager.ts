@@ -4,6 +4,7 @@ import { Ranges } from "../api/extensions";
 import { GitCommit } from "../git/models/models";
 import { Logger } from "../logger";
 import {
+	FileStatus,
 	GetCommitScmInfoRequest,
 	GetCommitScmInfoRequestType,
 	GetCommitScmInfoResponse,
@@ -96,8 +97,6 @@ export class ScmManager {
 
 		let branch: string | undefined;
 		let file: string | undefined;
-		let addedFiles: string[] = [];
-		let deletedFiles: string[] = [];
 		let stagedFiles: string[] = [];
 		let savedFiles: string[] = [];
 		let modifiedFiles:
@@ -105,6 +104,7 @@ export class ScmManager {
 					file: string;
 					linesAdded: number;
 					linesRemoved: number;
+					status: FileStatus;
 			  }[]
 			| undefined = [];
 		const authors: { id: string; username: string }[] = [];
@@ -143,14 +143,6 @@ export class ScmManager {
 							totalModifiedLines += file.linesAdded + file.linesRemoved;
 						});
 					}
-					if (includeSaved || includeStaged) {
-						const ret = await git.getStatus(repoPath, includeSaved);
-						if (ret) {
-							addedFiles = ret.addedFiles;
-							deletedFiles = ret.deletedFiles;
-						}
-					}
-
 					const ret1 = await git.getNumStat(repoPath, true, false);
 					if (ret1) {
 						savedFiles = ret1.map(line => line.file);
@@ -158,6 +150,24 @@ export class ScmManager {
 					const ret2 = await git.getNumStat(repoPath, false, true);
 					if (ret2) {
 						stagedFiles = ret2.map(line => line.file);
+					}
+					if (includeSaved || includeStaged) {
+						const ret = await git.getStatus(repoPath, includeSaved);
+						if (ret) {
+							Object.keys(ret).forEach(file => {
+								const found = modifiedFiles?.find(line => line.file === file);
+								if (found) {
+									found.status = ret[file];
+								}
+								else {
+									if (ret[file] === FileStatus.deleted) {
+										modifiedFiles?.unshift({ file, linesAdded: 0, linesRemoved: 0, status: ret[file] });
+									} else {
+										modifiedFiles?.push({ file, linesAdded: 0, linesRemoved: 0, status: ret[file] });
+									}
+								}
+							});
+						}
 					}
 				}
 			} catch (ex) {
@@ -175,9 +185,7 @@ export class ScmManager {
 							repoId,
 							repoPath,
 							branch,
-							addedFiles,
 							modifiedFiles: modifiedFiles || [],
-							deletedFiles,
 							savedFiles,
 							stagedFiles,
 							authors,

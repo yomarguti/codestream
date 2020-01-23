@@ -27,16 +27,18 @@ export const GetCommitScmInfoRequestType = new RequestType<
 	void
 >("codestream/scm/commit");
 
-export enum LocalChangesToIncludeType {
-	All = 0,
-	Saved = 1,
-	Staged = 2,
-	None = 3
+export enum FileStatus {
+	new = 0,
+	added = 1,
+	renamed = 2,
+	deleted = 3,
+	copied = 4,
+	unmerged = 5,
+	modified = 6
 }
 
 export interface GetRepoScmStatusRequest {
 	uri: string;
-	localChangesToInclude?: LocalChangesToIncludeType;
 	startCommit?: string;
 	includeSaved: boolean;
 	includeStaged: boolean;
@@ -48,12 +50,11 @@ export interface GetRepoScmStatusResponse {
 		repoId?: string;
 		branch?: string;
 		commits?: { sha: string; info: {} }[];
-		addedFiles: string[];
-		deletedFiles: string[];
 		modifiedFiles: {
 			file: string;
 			linesAdded: number;
 			linesRemoved: number;
+			status: FileStatus;
 		}[];
 		savedFiles: string[];
 		stagedFiles: string[];

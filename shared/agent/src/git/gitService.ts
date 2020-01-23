@@ -32,6 +32,16 @@ export interface TrackingBranch {
 	shortName?: string;
 }
 
+export enum FileStatus {
+	new = 0,
+	added = 1,
+	renamed = 2,
+	deleted = 3,
+	copied = 4,
+	unmerged = 5,
+	modified = 6
+}
+
 export interface IGitService extends Disposable {
 	getFileAuthors(uri: URI, options?: BlameOptions): Promise<GitAuthor[]>;
 	getFileAuthors(path: string, options?: BlameOptions): Promise<GitAuthor[]>;
@@ -674,7 +684,9 @@ export class GitService implements IGitService, Disposable {
 		includeSaved: boolean,
 		includeStaged: boolean,
 		ref?: string
-	): Promise<{ file: string; linesAdded: number; linesRemoved: number }[] | undefined> {
+	): Promise<
+		{ file: string; linesAdded: number; linesRemoved: number; status: FileStatus }[] | undefined
+	> {
 		try {
 			// files changed, lines added & deleted
 			// git diff --numstat --summary
@@ -684,7 +696,7 @@ export class GitService implements IGitService, Disposable {
 			try {
 				const options = ["diff"];
 				if (includeStaged && !includeSaved) options.push("--staged");
-				options.push("--numstat", "--summary");
+				options.push("--numstat");
 				if (ref && ref.length) options.push(ref);
 				if (!includeStaged) options.push("HEAD");
 				options.push("--");
@@ -692,19 +704,25 @@ export class GitService implements IGitService, Disposable {
 			} catch {}
 			if (!data) return undefined;
 
-			const ret: { file: string; linesAdded: number; linesRemoved: number }[] = [];
+			const ret: {
+				file: string;
+				linesAdded: number;
+				linesRemoved: number;
+				status: FileStatus;
+			}[] = [];
 			data
 				.trim()
 				.split("\n")
 				.forEach(line => {
-					const lineData = line.match(/(\d+)\s+(\d+)\s+(\S*)/);
+					const lineData = line.match(/^(\d+)\s+(\d+)\s+(\S*)/);
 
 					if (lineData && lineData[3]) {
 						if (!lineData[3].endsWith("/")) {
 							ret.push({
 								linesAdded: parseInt(lineData[1], 10),
 								linesRemoved: parseInt(lineData[2], 10),
-								file: lineData[3]
+								file: lineData[3],
+								status: FileStatus.modified
 							});
 						}
 					}
@@ -715,10 +733,28 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
+	getStatusByChar(character: string): FileStatus | undefined {
+		switch (character) {
+			case "A":
+				return FileStatus.added;
+			case "R":
+				return FileStatus.renamed;
+			case "D":
+				return FileStatus.deleted;
+			case "C":
+				return FileStatus.copied;
+			case "U":
+				return FileStatus.unmerged;
+			case "M":
+				return FileStatus.modified;
+		}
+		return undefined;
+	}
+
 	async getStatus(
 		repoPath: string,
 		includeSaved: boolean
-	): Promise<{ addedFiles: string[]; deletedFiles: string[] } | undefined> {
+	): Promise<{ [file: string]: FileStatus } | undefined> {
 		try {
 			let data: string | undefined;
 			try {
@@ -727,21 +763,27 @@ export class GitService implements IGitService, Disposable {
 			} catch {}
 			if (!data) return undefined;
 
-			const addedFiles: string[] = [];
-			const deletedFiles: string[] = [];
+			const ret: { [file: string]: FileStatus } = {};
 			// FIXME support deleted files
 			data.split("\n").forEach(line => {
 				const lineData = line.match(/(.)(.)\s+(.*)/);
 				if (lineData && lineData[3]) {
+					let file = lineData[3];
+					const rename = file.match(/ -> (.*)/);
+					if (rename) file = rename[1];
 					if (lineData[1] === "?" && includeSaved) {
-						addedFiles.push(lineData[3]);
-					}
-					if (lineData[1] === "A") {
-						addedFiles.push(lineData[3]);
+						ret[file] = FileStatus.new;
+					} else {
+						let status = this.getStatusByChar(lineData[1]);
+						if (status) ret[file] = status;
+						if (includeSaved) {
+							status = this.getStatusByChar(lineData[2]);
+							if (status) ret[file] = status;
+						}
 					}
 				}
 			});
-			return { addedFiles, deletedFiles };
+			return ret;
 		} catch {
 			return undefined;
 		}
