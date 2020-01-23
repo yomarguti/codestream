@@ -57,6 +57,7 @@ import {
 	GetAccessTokenRequestType,
 	GetInviteInfoRequest,
 	GetInviteInfoRequestType,
+	isLoginFailResponse,
 	LoginResponse,
 	LogoutReason,
 	OtcLoginRequest,
@@ -688,9 +689,9 @@ export class CodeStreamSession {
 				}
 			}
 
-			// 💩
-			if (ex.status && ex.token) {
-				return { error: ex };
+			// api.login() will throw a failed response object if it needs to send some extra data back
+			if (isLoginFailResponse(ex)) {
+				return ex;
 			}
 
 			Container.instance().errorReporter.reportMessage({

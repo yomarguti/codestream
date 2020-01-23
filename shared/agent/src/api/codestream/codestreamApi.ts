@@ -67,6 +67,7 @@ import {
 	InviteUserRequest,
 	JoinStreamRequest,
 	LeaveStreamRequest,
+	LoginFailResponse,
 	MarkPostUnreadRequest,
 	MarkStreamReadRequest,
 	MatchReposRequest,
@@ -331,19 +332,25 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 
 		/*
-			💩: the session/webview needs the accessToken token in order to rectify the user's account state
+			💩: the session needs the accessToken token in order to rectify the user's account state
 		*/
 		if (response.user.mustSetPassword) {
 			// save the accessToken for the call to set password
 			this._token = response.accessToken;
-			throw { status: LoginResult.MustSetPassword, token: response.accessToken };
+			throw {
+				error: LoginResult.MustSetPassword,
+				extra: { token: response.accessToken }
+			} as LoginFailResponse;
 		}
 
 		// 💩see above
 		if (response.teams.length === 0) {
 			// save the accessToken for the call to create a team
 			this._token = response.accessToken;
-			throw { status: LoginResult.NotOnTeam, token: response.accessToken };
+			throw {
+				error: LoginResult.NotOnTeam,
+				extra: { token: response.accessToken }
+			} as LoginFailResponse;
 		}
 
 		let pickedTeamReason;
