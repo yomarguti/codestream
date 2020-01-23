@@ -12,7 +12,7 @@ import { CodeStreamState } from "../store";
 import { goToLogin } from "../store/context/actions";
 
 export interface MustSetPasswordProps {
-	email: string;
+	email?: string;
 }
 
 const isPasswordValid = (password: string) => password.length >= 6;
@@ -34,7 +34,9 @@ export const MustSetPassword = (props: MustSetPasswordProps) => {
 		const response = await HostApi.instance.send(SetPasswordRequestType, { password });
 		try {
 			dispatch(
-				authenticate({ token: { email: props.email, url: serverUrl, value: response.accessToken } })
+				authenticate({
+					token: { email: props.email || "", url: serverUrl, value: response.accessToken }
+				})
 			);
 		} catch (error) {
 			dispatch(goToLogin());

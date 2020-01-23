@@ -168,6 +168,14 @@ export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo
 	});
 
 	if (isLoginFailResponse(response)) {
+		if (response.error === LoginResult.MaintenanceMode) {
+			return dispatch(setMaintenanceMode(true));
+		}
+
+		if (safe(() => (response.error as any).status) === LoginResult.MustSetPassword) {
+			return dispatch(goToSetPassword({}));
+		}
+
 		if (response.error === LoginResult.SignupRequired) {
 			return dispatch(goToSignup({ type: SignupType.CreateTeam }));
 		}
