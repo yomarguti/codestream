@@ -32,7 +32,8 @@ import Icon from "./Icon";
 import Menu from "./Menu";
 import Tooltip from "./Tooltip";
 import { sortBy as _sortBy, sortBy } from "lodash-es";
-import Headshot from "./Headshot";
+import { Headshot } from "@codestream/webview/src/components/Headshot";
+import { HeadshotName } from "@codestream/webview/src/components/HeadshotName";
 import { getTeamMembers, getTeamTagsArray, getTeamMates } from "../store/users/reducer";
 import MessageInput from "./MessageInput";
 import Select from "react-select";
@@ -149,7 +150,7 @@ class ReviewForm extends React.Component<Props, State> {
 			selectedChannelName: (props.channel as any).name,
 			selectedChannelId: props.channel.id,
 			assignableUsers: this.getAssignableCSUsers(),
-			reviewers: [],
+			reviewers: props.teamMates,
 			selectedTags: {},
 			repoName: "",
 			excludedFiles: {},
@@ -636,6 +637,17 @@ class ReviewForm extends React.Component<Props, State> {
 		);
 	}
 
+	fileListLabel = (files: string[]) => {
+		const fileLabel = files.length === 1 ? "file" : "files";
+		return `${files.length} ${fileLabel}`;
+		// const tip = <SmartFormattedList value={files} />;
+		// return (
+		// 	<Tooltip title={tip}>
+		// 		{files.length} {fileLabel}
+		// 	</Tooltip>
+		// );
+	};
+
 	renderGroupsAndCommits() {
 		const { repoStatus, includeSaved, includeStaged, excludeCommit, unsavedFiles } = this.state;
 		if (!repoStatus) return null;
@@ -643,6 +655,8 @@ class ReviewForm extends React.Component<Props, State> {
 		if (!scm) return null;
 		const { commits } = scm;
 
+		const numSavedFiles = scm.savedFiles.length;
+		const numStagedFiles = scm.stagedFiles.length;
 		return (
 			<div className="related">
 				<div className="related-label">Changes to Include In Review</div>
@@ -655,12 +669,22 @@ class ReviewForm extends React.Component<Props, State> {
 						</span>
 					</div>
 				)}
-				{this.renderChange("saved", includeSaved, "Saved Changes (Working Tree)", "4 files", () =>
-					this.toggleSaved()
-				)}
-				{this.renderChange("staged", includeStaged, "Staged Changes (Index)", "6 files", () =>
-					this.toggleStaged()
-				)}
+				{scm.savedFiles.length > 0 &&
+					this.renderChange(
+						"saved",
+						includeSaved,
+						"Saved Changes (Working Tree)",
+						this.fileListLabel(scm.savedFiles),
+						() => this.toggleSaved()
+					)}
+				{scm.stagedFiles.length > 0 &&
+					this.renderChange(
+						"staged",
+						includeStaged,
+						"Staged Changes (Index)",
+						this.fileListLabel(scm.stagedFiles),
+						() => this.toggleStaged()
+					)}
 				{commits &&
 					commits.map(commit =>
 						this.renderChange(
@@ -718,31 +742,41 @@ class ReviewForm extends React.Component<Props, State> {
 
 	renderChangedFiles() {
 		const { repoStatus, excludedFiles } = this.state;
-		if (!repoStatus) return null;
-		const { scm } = repoStatus;
-		if (!scm) return null;
-		const { addedFiles, modifiedFiles, deletedFiles } = scm;
-		const added = addedFiles.filter(f => !excludedFiles[f]);
-		const modified = modifiedFiles.filter(f => !excludedFiles[f.file]);
-		const deleted = deletedFiles.filter(f => !excludedFiles[f]);
-		if (added.length + modified.length + deleted.length === 0) return null;
+
+		let changedFiles = <></>;
+		if (repoStatus) {
+			const { scm } = repoStatus;
+			if (scm) {
+				const { addedFiles, modifiedFiles, deletedFiles } = scm;
+				const added = addedFiles.filter(f => !excludedFiles[f]);
+				const modified = modifiedFiles.filter(f => !excludedFiles[f.file]);
+				const deleted = deletedFiles.filter(f => !excludedFiles[f]);
+				if (added.length + modified.length + deleted.length === 0) return null;
+				changedFiles = (
+					<>
+						{deleted.map(file => this.renderFile(file, <span className="deleted">deleted</span>))}
+						{modified.map(file =>
+							this.renderFile(
+								file.file,
+								<>
+									{file.linesAdded > 0 && <span className="added">+{file.linesAdded} </span>}
+									{file.linesRemoved > 0 && <span className="deleted">-{file.linesRemoved}</span>}
+								</>
+							)
+						)}
+						{added.map(file => this.renderFile(file, <span className="added">new</span>))}
+					</>
+				);
+			}
+		}
 
 		return [
 			<div className="related" style={{ padding: "0", marginBottom: 0, position: "relative" }}>
 				<div className="related-label">
-					Changed Files{this.state.isLoadingScm && <Icon className="spin" name="sync" />}
+					Changed Files&nbsp;&nbsp;
+					{this.state.isLoadingScm && <Icon className="spin" name="sync" />}
 				</div>
-				{deleted.map(file => this.renderFile(file, <span className="deleted">deleted</span>))}
-				{modified.map(file =>
-					this.renderFile(
-						file.file,
-						<>
-							{file.linesAdded > 0 && <span className="added">+{file.linesAdded} </span>}
-							{file.linesRemoved > 0 && <span className="deleted">-{file.linesRemoved}</span>}
-						</>
-					)
-				)}
-				{added.map(file => this.renderFile(file, <span className="added">new</span>))}
+				{changedFiles}
 			</div>
 		];
 	}
@@ -843,14 +877,9 @@ class ReviewForm extends React.Component<Props, State> {
 					{this.renderTags()}
 					<div className="related" style={{ padding: "0", marginBottom: 0, position: "relative" }}>
 						<div className="related-label">Reviewers</div>
-						{this.state.reviewers.map(person => {
-							return (
-								<span style={{ paddingRight: "10px" }}>
-									<Headshot person={person} />
-									{person.fullName}
-								</span>
-							);
-						})}
+						{this.state.reviewers.map(person => (
+							<HeadshotName person={person} onClick={this.confirmCancel} />
+						))}
 						<span className="icon-button">
 							<Icon name="plus" title="Specify who you want to review your code" />
 						</span>
