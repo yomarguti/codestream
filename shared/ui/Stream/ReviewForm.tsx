@@ -701,30 +701,37 @@ class ReviewForm extends React.Component<Props, State> {
 		);
 	}
 
-	renderFile(filename, children?) {
+	renderFile(fileObject) {
 		const { excludedFiles } = this.state;
+		const { file, status } = fileObject;
 		// https://davidwalsh.name/rtl-punctuation
 		return (
 			<div className="row-with-icon-actions monospace ellipsis-left-container">
 				<span className="file-info ellipsis-left">
-					<bdi dir="ltr">{filename}</bdi>
+					<bdi dir="ltr">{file}</bdi>
 				</span>
-				{children}
-				{excludedFiles[filename] ? (
+				{fileObject.linesAdded > 0 && <span className="added">+{fileObject.linesAdded} </span>}
+				{fileObject.linesRemoved > 0 && <span className="deleted">-{fileObject.linesRemoved}</span>}
+				{fileObject.status === FileStatus.new && <span className="added">new </span>}
+				{fileObject.status === FileStatus.added && <span className="added">added </span>}
+				{fileObject.status === FileStatus.copied && <span className="added">copied </span>}
+				{fileObject.status === FileStatus.unmerged && <span className="deleted">conflict </span>}
+				{fileObject.status === FileStatus.deleted && <span className="deleted">deleted </span>}
+				{excludedFiles[file] ? (
 					<span className="actions">
 						<Icon
 							name="plus"
 							title="Add back to review"
 							placement="bottom"
 							className="clickable action"
-							onClick={e => this.exclude(e, filename)}
+							onClick={e => this.exclude(e, file)}
 						/>
 						<Icon
 							name="trashcan"
 							title="Exclude from future reviews"
 							placement="bottom"
 							className="clickable action"
-							onClick={e => this.excludeFuture(e, filename)}
+							onClick={e => this.excludeFuture(e, file)}
 						/>
 					</span>
 				) : (
@@ -733,7 +740,7 @@ class ReviewForm extends React.Component<Props, State> {
 							name="x"
 							title="Exclude from review"
 							className="clickable action"
-							onClick={e => this.exclude(e, filename)}
+							onClick={e => this.exclude(e, file)}
 						/>
 					</span>
 				)}
@@ -748,35 +755,10 @@ class ReviewForm extends React.Component<Props, State> {
 		if (repoStatus) {
 			const { scm } = repoStatus;
 			if (scm) {
-				const { modifiedFiles, fileStatus } = scm;
-				// const added = addedFiles.filter(f => !excludedFiles[f]);
+				const { modifiedFiles } = scm;
 				const modified = modifiedFiles.filter(f => !excludedFiles[f.file]);
-				// const deleted = deletedFiles.filter(f => !excludedFiles[f]);
-				const added = [];
-				const deleted = [];
-				if (added.length + modified.length + deleted.length === 0) return null;
-				changedFiles = (
-					<>
-						{deleted.map(file => this.renderFile(file, <span className="deleted">deleted</span>))}
-						{modified.map(file =>
-							this.renderFile(
-								file.file,
-								<>
-									{file.linesAdded > 0 && <span className="added">+{file.linesAdded} </span>}
-									{file.linesRemoved > 0 && <span className="deleted">-{file.linesRemoved}</span>}
-									{fileStatus[file.file] === FileStatus.new && <span className="added">new </span>}
-									{fileStatus[file.file] === FileStatus.added && (
-										<span className="added">added </span>
-									)}
-									{fileStatus[file.file] === FileStatus.renamed && (
-										<span className="added">renamed </span>
-									)}
-								</>
-							)
-						)}
-						{added.map(file => this.renderFile(file, <span className="added">new</span>))}
-					</>
-				);
+				if (modified.length === 0) return null;
+				changedFiles = <>{modified.map(file => this.renderFile(file))}</>;
 			}
 		}
 
@@ -796,30 +778,14 @@ class ReviewForm extends React.Component<Props, State> {
 		if (!repoStatus) return null;
 		const { scm } = repoStatus;
 		if (!scm) return null;
-		const { modifiedFiles, fileStatus } = scm;
-		// const added = addedFiles.filter(f => excludedFiles[f]);
+		const { modifiedFiles } = scm;
 		const modified = modifiedFiles.filter(f => excludedFiles[f.file]);
-		// const deleted = deletedFiles.filter(f => excludedFiles[f]);
-		const added = [];
-		const deleted = [];
-		if (added.length + modified.length + deleted.length === 0) return null;
+		if (modified.length === 0) return null;
 
 		return [
 			<div className="related" style={{ padding: "0", marginBottom: 0, position: "relative" }}>
 				<div className="related-label">Excluded from this Review</div>
-				{deleted.map(file => this.renderFile(file, <span className="deleted">deleted</span>))}
-				{modified.map(file =>
-					this.renderFile(
-						file.file,
-						<>
-							{file.linesAdded > 0 && <span className="added">+{file.linesAdded} </span>}
-							{file.linesRemoved > 0 && <span className="deleted">-{file.linesRemoved}</span>}
-							{fileStatus[file.file] === FileStatus.new && <span className="added">new </span>}
-							{fileStatus[file.file] === FileStatus.added && <span className="added">added </span>}
-						</>
-					)
-				)}
-				{added.map(file => this.renderFile(file, <span className="added">new</span>))}
+				{modified.map(file => this.renderFile(file))}
 			</div>
 		];
 	}
