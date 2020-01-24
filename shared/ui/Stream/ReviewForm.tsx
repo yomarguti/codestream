@@ -34,7 +34,8 @@ import Menu from "./Menu";
 import Tooltip from "./Tooltip";
 import { sortBy as _sortBy, sortBy } from "lodash-es";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
-import { HeadshotName } from "@codestream/webview/src/components/HeadshotName";
+import HeadshotMenu from "@codestream/webview/src/components/HeadshotMenu";
+import { SelectPeople } from "@codestream/webview/src/components/SelectPeople";
 import { getTeamMembers, getTeamTagsArray, getTeamMates } from "../store/users/reducer";
 import MessageInput from "./MessageInput";
 import Select from "react-select";
@@ -151,7 +152,7 @@ class ReviewForm extends React.Component<Props, State> {
 			selectedChannelName: (props.channel as any).name,
 			selectedChannelId: props.channel.id,
 			assignableUsers: this.getAssignableCSUsers(),
-			reviewers: props.teamMates,
+			reviewers: [],
 			selectedTags: {},
 			repoName: "",
 			excludedFiles: {},
@@ -449,8 +450,10 @@ class ReviewForm extends React.Component<Props, State> {
 					{this.state.reviewers.length > 0 && (
 						<>
 							<CSText muted>
-								<SmartFormattedList value={this.state.reviewers.map(m => m.fullName)} /> will be
-								notified via email
+								<SmartFormattedList
+									value={this.state.reviewers.map(m => m.fullName || m.username)}
+								/>{" "}
+								will be notified via email
 							</CSText>
 							<div style={{ height: "10px" }} />
 						</>
@@ -705,6 +708,10 @@ class ReviewForm extends React.Component<Props, State> {
 		const { excludedFiles } = this.state;
 		const { file, status } = fileObject;
 		// https://davidwalsh.name/rtl-punctuation
+		// ellipsis-left has direction: rtl so that the ellipsis
+		// go on the left side, but without the <bdi> component
+		// the punctuation would be messed up (such as filenames
+		// beginning with a period)
 		return (
 			<div className="row-with-icon-actions monospace ellipsis-left-container">
 				<span className="file-info ellipsis-left">
@@ -792,6 +799,21 @@ class ReviewForm extends React.Component<Props, State> {
 
 	setFrom = (commit: string) => {};
 
+	toggleReviewer = person => {
+		const { reviewers } = this.state;
+
+		if (reviewers.find(p => p.id === person.id)) {
+			this.setState({ reviewers: [...reviewers.filter(p => p.id !== person.id)] });
+		} else {
+			this.setState({ reviewers: [...reviewers, person].filter(Boolean) });
+		}
+	};
+
+	removeReviewer = person => {
+		const { reviewers } = this.state;
+		this.setState({ reviewers: [...reviewers.filter(p => p.id !== person.id)] });
+	};
+
 	renderReviewForm() {
 		const { editingReview, currentUser, repos } = this.props;
 		const { scmInfo, repoStatus, repoName } = this.state;
@@ -858,11 +880,26 @@ class ReviewForm extends React.Component<Props, State> {
 					<div className="related" style={{ padding: "0", marginBottom: 0, position: "relative" }}>
 						<div className="related-label">Reviewers</div>
 						{this.state.reviewers.map(person => (
-							<HeadshotName person={person} onClick={this.confirmCancel} />
+							<HeadshotMenu
+								person={person}
+								menuItems={[
+									{
+										label: "Remove from Review",
+										action: () => this.removeReviewer(person)
+									}
+								]}
+							/>
 						))}
-						<span className="icon-button">
-							<Icon name="plus" title="Specify who you want to review your code" />
-						</span>
+						<SelectPeople
+							title="Select Reviewers"
+							value={this.state.reviewers}
+							onChange={this.toggleReviewer}
+							multiSelect={true}
+						>
+							<span className="icon-button">
+								<Icon name="plus" title="Specify who you want to review your code" />
+							</span>
+						</SelectPeople>
 					</div>
 					{this.renderChangedFiles()}
 					{this.renderGroupsAndCommits()}

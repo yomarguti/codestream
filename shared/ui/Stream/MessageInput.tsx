@@ -581,7 +581,8 @@ export class MessageInput extends React.Component<Props, State> {
 				event.stopPropagation();
 				this.handleAtMentionKeyPress(event, "up");
 			}
-			if (event.key === "ArrowDown" || event.which === 40) this.handleAtMentionKeyPress(event, "down");
+			if (event.key === "ArrowDown" || event.which === 40)
+				this.handleAtMentionKeyPress(event, "down");
 			if (event.key === "Tab") this.handleAtMentionKeyPress(event, "tab");
 			if (event.key === "Escape") {
 				this.hidePopup();
@@ -946,7 +947,7 @@ export class MessageInput extends React.Component<Props, State> {
 								style={tag.color.startsWith("#") ? { background: tag.color } : {}}
 							>
 								{tag.label}&nbsp;
-								{this.props.selectedTags[tag.id] && <Icon name="check" className="check" />}
+								{this.props.selectedTags[tag.id] && <span className="check">✔</span>}
 							</span>
 							<Icon
 								name="pencil"
