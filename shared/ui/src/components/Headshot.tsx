@@ -25,6 +25,7 @@ export interface HeadshotProps {
 		color?: number;
 	};
 	size?: number;
+	display?: string;
 	onClick?: React.MouseEventHandler;
 	className?: string;
 }
@@ -33,10 +34,13 @@ interface DimensionProps {
 	size: number;
 }
 
-const Root = styled.div<DimensionProps>`
+const Root = styled.div<DimensionProps & { display?: string }>`
 	position: relative;
 	width: ${props => props.size}px;
 	height: ${props => props.size}px;
+	display: ${props => props.display};
+	vertical-align: ${props => (props.display === "inline-block" ? "-5px" : "0")};
+	margin-right: ${props => (props.display === "inline-block" ? "5px" : "0")};
 `;
 
 const Initials = styled.div<DimensionProps & { color: string }>`
@@ -87,19 +91,20 @@ export const Headshot = styled((props: HeadshotProps) => {
 	}
 
 	const size = props.size || 16;
+	const display = props.display || "block";
 
 	if (person.avatar) {
 		const uri = size > 48 ? person.avatar.image : person.avatar.image48;
 
 		return (
-			<Root size={size} onClick={props.onClick}>
+			<Root size={size} display={display} onClick={props.onClick}>
 				<Image size={size} src={uri} />
 			</Root>
 		);
 	}
 
 	return (
-		<Root size={size} className={props.className} onClick={props.onClick}>
+		<Root size={size} display={display} className={props.className} onClick={props.onClick}>
 			<StyledGravatar size={size} default="blank" protocol="https://" email={person.email} />
 			<Initials size={size} color={Colors[person.color || 1]}>
 				{initials}

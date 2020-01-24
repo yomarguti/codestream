@@ -616,27 +616,37 @@ class ReviewForm extends React.Component<Props, State> {
 		}
 	};
 
-	renderChange(id: string, onOff: boolean, title: string | ReactElement, message: string, onClick) {
+	renderChange(
+		id: string,
+		onOff: boolean,
+		headshot: ReactElement,
+		title: string,
+		message: string | ReactElement,
+		onClick
+	) {
 		return (
 			<div
-				className={`row-with-icon-actions ellipsis-right-container ${onOff ? "" : "muted"}`}
+				className={`row-with-icon-actions ${onOff ? "" : "muted"}`}
+				style={{ display: "flex", alignItems: "center" }}
 				key={id}
+				onClick={onClick}
 			>
-				<input type="checkbox" checked={onOff} onClick={onClick} /> {title}{" "}
+				<input type="checkbox" checked={onOff} style={{ flexShrink: 0 }} />
+				<label className="ellipsis-right-container no-margin">
+					{/* headshot */}
+					<span
+						dangerouslySetInnerHTML={{
+							__html: markdownify(title)
+						}}
+					/>
+				</label>
 				<span
 					className="message"
-					dangerouslySetInnerHTML={{
-						__html: markdownify(message)
-					}}
-				/>
-				<span className="actions" style={{ display: "none" }}>
-					<Icon
-						name="x"
-						title="Exclude from review"
-						className="clickable action"
-						onClick={e => this.exclude(e, "")}
-					/>
+					style={{ textAlign: "right", flexGrow: 10, whiteSpace: "nowrap" }}
+				>
+					{message}
 				</span>
+				<span />
 			</div>
 		);
 	}
@@ -650,6 +660,13 @@ class ReviewForm extends React.Component<Props, State> {
 		// 		{files.length} {fileLabel}
 		// 	</Tooltip>
 		// );
+	};
+
+	authorHeadshot = commit => {
+		const { teamMembers } = this.props;
+		const author = teamMembers.find(p => p.email === commit.info.email);
+		if (author) return <Headshot person={author} size={20} display="inline-block" />;
+		else return <></>;
 	};
 
 	renderGroupsAndCommits() {
@@ -673,30 +690,39 @@ class ReviewForm extends React.Component<Props, State> {
 						</span>
 					</div>
 				)}
-				{scm.savedFiles.length > 0 &&
+				{numSavedFiles > 0 &&
 					this.renderChange(
 						"saved",
 						includeSaved,
+						<Headshot person={this.props.currentUser} size={20} display="inline-block" />,
 						"Saved Changes (Working Tree)",
 						this.fileListLabel(scm.savedFiles),
 						() => this.toggleSaved()
 					)}
-				{scm.stagedFiles.length > 0 &&
+				{numStagedFiles > 0 &&
 					this.renderChange(
 						"staged",
 						includeStaged,
+						<Headshot person={this.props.currentUser} size={20} display="inline-block" />,
 						"Staged Changes (Index)",
 						this.fileListLabel(scm.stagedFiles),
 						() => this.toggleStaged()
 					)}
+				{(numSavedFiles > 0 || numStagedFiles > 0) && (
+					<div className="related-label">
+						<br />
+						Local Commits
+					</div>
+				)}
 				{commits &&
 					commits.map(commit =>
 						this.renderChange(
 							commit.sha,
 							!excludeCommit[commit.sha],
-							<span className="monospace">{commit.sha.substr(0, 8)}</span>,
+							this.authorHeadshot(commit),
 							// @ts-ignore
 							commit.info.shortMessage,
+							<span className="monospace">{commit.sha.substr(0, 8)}</span>,
 							() => this.setChangeStart(commit.sha)
 						)
 					)}
@@ -837,7 +863,7 @@ class ReviewForm extends React.Component<Props, State> {
 				<fieldset className="form-body">
 					<div id="controls" className="control-group" key="controls1">
 						<div key="headshot" className="headline">
-							<Headshot person={currentUser} />
+							<Headshot person={currentUser} display="inline-block" />
 							<b>{currentUser.username}</b>
 							<span className="subhead">
 								is requesting a code review
