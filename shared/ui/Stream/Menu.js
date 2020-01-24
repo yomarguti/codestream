@@ -52,7 +52,8 @@ export default class Menu extends Component {
 		if (this.props && this.props.target) {
 			const align = this.props.align;
 			const rect = this.props.target.getBoundingClientRect();
-			this._div.style.top = rect.top + "px";
+			this._div.style.top =
+				this.props.valign === "bottom" ? rect.bottom + 10 + "px" : rect.top + "px";
 
 			if (align === "left") {
 				// const left = rect.right - this._div.offsetWidth + 5;
@@ -150,6 +151,8 @@ export default class Menu extends Component {
 			>
 				{item.floatRight && <span className="float-right">{item.floatRight.label}</span>}
 				{item.icon && <span className="icon">{item.icon}</span>}
+				{item.checked === false && <span className="checkmark"> </span>}
+				{item.checked === true && <span className="checkmark">✔</span>}
 				{item.label && <span className="label">{item.label}</span>}
 				{item.shortcut && <span className="shortcut">{item.shortcut}</span>}
 				{item.disabled && <span className="disabled">{item.disabled}</span>}
@@ -357,7 +360,7 @@ export default class Menu extends Component {
 		// support functions as item actions
 		if (typeof item.action === "function" && !item.disabled) {
 			item.action();
-			this.props.action(null); // invoke the action callback for entire menu so it can removed
+			if (!this.props.dontCloseOnSelect) this.props.action(null); // invoke the action callback for entire menu so it can removed
 		} else this.props.action(item.disabled ? null : item.action);
 		if (this.props.focusOnSelect) this.props.focusOnSelect.focus();
 	};
