@@ -31,7 +31,7 @@ class CodeStreamComponent(val project: Project) : Disposable {
         get() = ToolWindowManager.getInstance(project).getToolWindow(
             CODESTREAM_TOOL_WINDOW_ID
         )
-    private var isFocused by Delegates.observable(true) { _, _, _ ->
+    var isFocused by Delegates.observable(true) { _, _, _ ->
         updateWebViewFocus()
     }
     var isVisible by Delegates.observable(false) { _, _, new ->

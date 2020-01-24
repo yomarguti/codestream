@@ -1,5 +1,6 @@
 package com.codestream.settings
 
+import com.codestream.codeStream
 import com.codestream.gson
 import com.codestream.sessionService
 import com.github.salomonbrys.kotson.fromJson
@@ -55,7 +56,10 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
         project.sessionService?.userLoggedIn?.team?.id.let {
             jsonObject["currentTeamId"] = it
         }
-        jsonObject["hasFocus"] = true
+        val codeStream = project.codeStream
+        jsonObject["hasFocus"] =
+            if (codeStream != null) codeStream.isVisible && codeStream.isFocused
+            else false
         return jsonObject
     }
 
