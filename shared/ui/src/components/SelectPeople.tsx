@@ -73,6 +73,7 @@ class SelectPeople extends React.Component<Props, State> {
 			const selected = value.find(p => p.id === person.id) ? true : false;
 			return {
 				label: person.username,
+				searchLabel: person.username,
 				checked: selected,
 				value: person.username,
 				action: () => onChange(person)
