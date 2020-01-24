@@ -22,6 +22,7 @@ export const MustSetPassword = (props: MustSetPasswordProps) => {
 	const serverUrl = useSelector((state: CodeStreamState) => state.configs.serverUrl);
 	const [password, setPassword] = useState("");
 	const [passwordIsValid, setPasswordIsValid] = useState(true);
+	const [isLoading, setIsLoading] = useState(false);
 
 	const onValidityChanged = useCallback((_, valid) => {
 		setPasswordIsValid(valid);
@@ -31,15 +32,19 @@ export const MustSetPassword = (props: MustSetPasswordProps) => {
 		event.preventDefault();
 		if (password === "" && !passwordIsValid) return;
 
+		setIsLoading(true);
 		const response = await HostApi.instance.send(SetPasswordRequestType, { password });
 		try {
-			dispatch(
+			// @ts-ignore - the await is necessary
+			await dispatch(
 				authenticate({
 					token: { email: props.email || "", url: serverUrl, value: response.accessToken }
 				})
 			);
 		} catch (error) {
 			dispatch(goToLogin());
+		} finally {
+			setIsLoading(false);
 		}
 	};
 
@@ -80,7 +85,11 @@ export const MustSetPassword = (props: MustSetPasswordProps) => {
 								/>
 							</div>
 							<div className="button-group">
-								<Button className="control-button">
+								<Button
+									className="control-button"
+									loading={isLoading}
+									disabled={!isPasswordValid(password)}
+								>
 									<FormattedMessage id="setPassword.setPassword" />
 								</Button>
 							</div>
