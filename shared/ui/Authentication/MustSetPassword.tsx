@@ -12,7 +12,7 @@ import { CodeStreamState } from "../store";
 import { goToLogin } from "../store/context/actions";
 
 export interface MustSetPasswordProps {
-	email?: string;
+	email: string;
 }
 
 const isPasswordValid = (password: string) => password.length >= 6;
@@ -54,8 +54,9 @@ export const MustSetPassword = (props: MustSetPasswordProps) => {
 				<fieldset className="form-body">
 					<BoxedContent title="Set a password">
 						<p>
-							CodeStream now requires you to sign in with email address and password, instead of
-							Slack or MS Teams. Please set a password below.
+							CodeStream now requires you to sign in with email address (
+							<strong>{props.email}</strong>) and password, instead of Slack or MS Teams. Please set
+							a password below.
 						</p>
 						<p>
 							Note that you are still able to share codemarks to Slack and MS Teams.{" "}
@@ -76,6 +77,7 @@ export const MustSetPassword = (props: MustSetPasswordProps) => {
 									</small>
 								)}
 								<TextInput
+									nativeProps={{ autoFocus: true }}
 									name="password"
 									type="password"
 									onChange={setPassword}

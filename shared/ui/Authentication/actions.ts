@@ -174,7 +174,7 @@ export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo
 			case LoginResult.MaintenanceMode:
 				return dispatch(setMaintenanceMode(true));
 			case LoginResult.MustSetPassword:
-				return dispatch(goToSetPassword({}));
+				return dispatch(goToSetPassword(response.extra));
 			case LoginResult.SignupRequired:
 				return dispatch(goToSignup({ type: SignupType.CreateTeam }));
 			case LoginResult.SignInRequired:
