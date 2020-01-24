@@ -992,36 +992,36 @@ export class CodeStreamSession {
 			$email: user.email,
 			name: user.fullName,
 			"Team ID": this._teamId,
-			"Company ID": team.companyId,
-			"Team Created Date": team.createdAt,
-			Plan: team.plan,
-			"Reporting Group": team.reportingGroup,
 			"Join Method": user.joinMethod,
 			"Plugin Version": this.versionInfo.extension.versionFormatted,
 			Endpoint: this.versionInfo.ide.name,
 			"IDE Version": this.versionInfo.ide.version,
-			Provider: Team.isSlack(team) ? "Slack" : Team.isMSTeams(team) ? "MSTeams" : "CodeStream",
 			Deployment: this.environment === CodeStreamEnvironment.Unknown ? "OnPrem" : "Cloud"
 		};
 
 		if (team != null) {
+			props["Company ID"] = team.companyId;
+			props["Team Created Date"] = new Date(team.createdAt!).toISOString();
+			props["Reporting Group"] = team.reportingGroup;
 			props["Team Name"] = team.name;
+			props["Provider"] = Team.isSlack(team) ? "Slack" : Team.isMSTeams(team) ? "MSTeams" : "CodeStream";
 			if (team.memberIds != null) {
 				props["Team Size"] = team.memberIds.length;
 			}
 			const company = companies.find(c => c.id === team.companyId);
 			if (company) {
+				props["Plan"] = company.plan;
 				props["Company Name"] = company.name;
-			}
-			props["company"] = {
-				id: team.id,
-				name: team.name,
-				plan: team.plan,
-				created_at: new Date(team.createdAt!).toISOString()
-			};
-			if (team.trialStartDate && team.trialEndDate) {
-				props["company"]["trialStart_at"] = new Date(team.trialStartDate).toISOString();
-				props["company"]["trialEnd_at"] = new Date(team.trialEndDate).toISOString();
+				props["company"] = {
+					id: company.id,
+					name: company.name,
+					plan: company.plan,
+					created_at: new Date(company.createdAt!).toISOString()
+				};
+				if (company.trialStartDate && company.trialEndDate) {
+					props["company"]["trialStart_at"] = new Date(company.trialStartDate).toISOString();
+					props["company"]["trialEnd_at"] = new Date(company.trialEndDate).toISOString();
+				}
 			}
 		}
 

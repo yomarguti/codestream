@@ -252,6 +252,9 @@ export type CSTeamProviderInfos = CSTeamMSTeamsProviderInfo | CSTeamSlackProvide
 
 export interface CSCompany extends CSEntity {
 	name: string;
+	trialStartDate?: number;
+	trialEndDate?: number;
+	plan?: number;
 }
 
 export interface CSTeam extends CSEntity {
