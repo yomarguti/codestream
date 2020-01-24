@@ -1,8 +1,10 @@
 "use strict";
 import { createHash, HexBase64Latin1Encoding } from "crypto";
 import * as path from "path";
+import { isWindows } from "../git/shell";
 
 export namespace Strings {
+
 	export const enum CharCode {
 		/**
 		 * The `/` character.
@@ -45,6 +47,7 @@ export namespace Strings {
 		return secs * 1000 + Math.floor(nanosecs / 1000000);
 	}
 
+	const driveLetterNormalizeRegex = /(?<=^\/?)([A-Z])(?=:\/)/;
 	const pathNormalizeRegex = /\\/g;
 	const pathStripTrailingSlashRegex = /\/$/g;
 	const TokenRegex = /\$\{(\W*)?([^|]*?)(?:\|(\d+)(\-|\?)?)?(\W*)?\}/g;
@@ -127,8 +130,14 @@ export namespace Strings {
 			normalized = `/${normalized}`;
 		}
 
+		if (isWindows) {
+			// Ensure that drive casing is normalized (lower case)
+			normalized = normalized.replace(driveLetterNormalizeRegex, (drive: string) => drive.toLowerCase());
+		}
+
 		return normalized;
 	}
+
 	export function pad(
 		s: string,
 		before: number = 0,

@@ -552,7 +552,7 @@ export class GitService implements IGitService, Disposable {
 
 		try {
 			const data = (await git({ cwd: cwd }, "rev-parse", "--show-toplevel")).trim();
-			return data === "" ? undefined : this._sanitizePath(data);
+			return data === "" ? undefined : this._normalizePath(data);
 		} catch (ex) {
 			// If we can't find the git executable, rethrow
 			if (/spawn (.*)? ENOENT/.test(ex.message)) {
@@ -654,15 +654,17 @@ export class GitService implements IGitService, Disposable {
 		return this._repositories.setKnownRepository(repos);
 	}
 
-	private _sanitizePath(path: string): string {
+	private _normalizePath(path: string): string {
 		const cygwinMatch = cygwinRegex.exec(path);
 		if (cygwinMatch != null) {
 			const [, drive] = cygwinMatch;
+			// c is just a placeholder to get the length, since drive letters are always 1 char
 			let sanitized = `${drive}:${path.substr("/cygdrive/c".length)}`;
 			sanitized = sanitized.replace(/\//g, "\\");
 			Logger.debug(`Cygwin git path sanitized: ${path} -> ${sanitized}`);
 			return sanitized;
 		}
-		return path;
+		// Make sure to normalize: https://github.com/git-for-windows/git/issues/2478
+		return Strings.normalizePath(path.trim());
 	}
 }

@@ -4,7 +4,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { Logger } from "../logger";
 
-const isWindows = process.platform === "win32";
+export const isWindows = process.platform === "win32";
 
 /**
  * Search PATH to see if a file exists in any of the path folders.
