@@ -32,7 +32,8 @@ export class InvitePanel extends Component {
 	state = this.initialState;
 
 	componentDidMount() {
-		HostApi.instance.track("Page Viewed", { "Page Name": "Team Tab" });
+		if (this.props.webviewFocused)
+			HostApi.instance.track("Page Viewed", { "Page Name": "Team Tab" });
 	}
 
 	componentWillUnmount() {
@@ -377,7 +378,8 @@ const mapStateToProps = ({ users, context, teams }) => {
 		teamName: team.name,
 		members: _sortBy(members, m => (m.fullName || "").toLowerCase()),
 		invited: _sortBy(invited, "email"),
-		suggested: _sortBy(suggested, m => (m.fullName || "").toLowerCase())
+		suggested: _sortBy(suggested, m => (m.fullName || "").toLowerCase()),
+		webviewFocused: context.hasFocus
 	};
 };
 

@@ -75,7 +75,9 @@ export class SimpleChannelPanel extends Component {
 	}
 
 	componentDidMount() {
-		HostApi.instance.track("Page Viewed", { "Page Name": "Channels Tab" });
+		if (this.props.webviewFocused)
+			HostApi.instance.track("Page Viewed", { "Page Name": "Channels Tab" });
+
 		if (this.props.isInVscode) {
 			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
 				if (event.key === "Escape") {
@@ -891,7 +893,8 @@ const mapStateToProps = ({
 		streamPresence,
 		team: team,
 		showChannels: context.channelFilter,
-		isInVscode: ide.name === "VSC"
+		isInVscode: ide.name === "VSC",
+		webviewFocused: context.hasFocus
 	};
 };
 

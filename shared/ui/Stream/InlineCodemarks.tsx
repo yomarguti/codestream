@@ -106,6 +106,7 @@ interface Props {
 	documentMarkers: (DocumentMarker | MarkerNotLocated)[];
 	numHidden: number;
 	isInVscode: boolean;
+	webviewFocused: boolean;
 
 	setEditorContext: (
 		...args: Parameters<typeof setEditorContext>
@@ -230,7 +231,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	componentDidMount() {
 		this._mounted = true;
-		HostApi.instance.track("Page Viewed", { "Page Name": "CurrentFile Tab" });
+		if (this.props.webviewFocused)
+			HostApi.instance.track("Page Viewed", { "Page Name": "CurrentFile Tab" });
 		const mutationObserver = new MutationObserver(() => this.repositionCodemarks());
 		mutationObserver.observe(document.getElementById("stream-root")!, {
 			childList: true,
@@ -1351,7 +1353,8 @@ const mapStateToProps = (state: CodeStreamState) => {
 		documentMarkers: docMarkers,
 		numLinesVisible: getVisibleLineCount(textEditorVisibleRanges),
 		numHidden,
-		isInVscode: ide.name === "VSC"
+		isInVscode: ide.name === "VSC",
+		webviewFocused: context.hasFocus
 	};
 };
 

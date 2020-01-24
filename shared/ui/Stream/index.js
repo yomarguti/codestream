@@ -107,7 +107,11 @@ export class SimpleStream extends Component {
 	_pollingTimer;
 
 	componentDidMount() {
-		if (this.props.activePanel === "main" && this.props.postStreamId != undefined) {
+		if (
+			this.props.activePanel === "main" &&
+			this.props.postStreamId != undefined &&
+			this.props.hasFocus
+		) {
 			HostApi.instance.track("Page Viewed", { "Page Name": "Stream" });
 		}
 		this.setUmiInfo();
@@ -166,7 +170,7 @@ export class SimpleStream extends Component {
 
 		this._pollingTimer = setInterval(() => {
 			if (
-				this.props.editorHasFocus &&
+				this.props.hasFocus &&
 				this.props.threadId !== undefined &&
 				this.props.activePanel === WebviewPanels.Codemarks
 			) {
@@ -222,7 +226,7 @@ export class SimpleStream extends Component {
 			this.setState({ selection: undefined });
 		}
 		if (this.props.activePanel === "main" && prevProps.activePanel !== "main") {
-			if (this.props.postStreamId != undefined) {
+			if (this.props.postStreamId != undefined && this.props.hasFocus) {
 				HostApi.instance.track("Page Viewed", { "Page Name": "Stream" });
 			}
 			// if we are switching from a non-main panel
@@ -2357,7 +2361,6 @@ const mapStateToProps = state => {
 		currentCodemarkId: context.currentCodemarkId,
 		currentMarkerId: context.currentMarkerId,
 		capabilities: capabilities,
-		editorHasFocus: context.hasFocus,
 		pluginVersion,
 		channelStreams,
 		directMessageStreams,

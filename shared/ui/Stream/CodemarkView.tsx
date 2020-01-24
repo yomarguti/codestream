@@ -1,13 +1,12 @@
 import React from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector, useDispatch, useStore } from "react-redux";
 import { CodeStreamState } from "../store";
 import { getCodemark } from "../store/codemarks/reducer";
 import { Loading } from "../Container/Loading";
 import Codemark from "./Codemark";
-import { RepositionCodemark } from "./RepositionCodemark";
 import CancelButton from "./CancelButton";
 import { DelayedRender } from "../Container/DelayedRender";
-import { setCurrentCodemark, repositionCodemark } from "../store/context/actions";
+import { setCurrentCodemark } from "../store/context/actions";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { HostApi } from "../webview-api";
 import { EditorSelectRangeRequestType } from "@codestream/protocols/webview";
@@ -41,9 +40,12 @@ export function CodemarkView() {
 	const codemark = useSelector((state: CodeStreamState) => {
 		return getCodemark(state.codemarks, state.context.currentCodemarkId);
 	});
+	const store = useStore<CodeStreamState>();
 
 	useDidMount(() => {
-		HostApi.instance.track("Page Viewed", { "Page Name": "Codemark View" });
+		if (store.getState().context.hasFocus)
+			HostApi.instance.track("Page Viewed", { "Page Name": "Codemark View" });
+
 		if (codemark == undefined) {
 			// TODO: fetch it when we have the api for that
 			dispatch(setCurrentCodemark());
