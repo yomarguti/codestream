@@ -339,7 +339,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			this._token = response.accessToken;
 			throw {
 				error: LoginResult.MustSetPassword,
-				extra: { token: response.accessToken }
+				extra: { email: response.user.email }
 			} as LoginFailResponse;
 		}
 
