@@ -4,6 +4,7 @@ import com.codestream.agent.ModuleListenerImpl
 import com.codestream.editor.EditorFactoryListenerImpl
 import com.codestream.editor.FileEditorManagerListenerImpl
 import com.codestream.protocols.webview.FocusNotifications
+import com.codestream.workaround.ToolWindowManagerWorkaround
 import com.intellij.ProjectTopics
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
@@ -13,7 +14,6 @@ import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.wm.ToolWindow
-import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.openapi.wm.ex.ToolWindowManagerListener
 import com.intellij.util.ui.UIUtil
@@ -28,9 +28,8 @@ class CodeStreamComponent(val project: Project) : Disposable {
 
     private val logger = Logger.getInstance(CodeStreamComponent::class.java)
     private val toolWindow: ToolWindow?
-        get() = ToolWindowManager.getInstance(project).getToolWindow(
-            CODESTREAM_TOOL_WINDOW_ID
-        )
+        get() = ToolWindowManagerWorkaround.getInstance(project)?.getToolWindow(CODESTREAM_TOOL_WINDOW_ID)
+
     var isFocused by Delegates.observable(true) { _, _, _ ->
         updateWebViewFocus()
     }
