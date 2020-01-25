@@ -263,12 +263,9 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 		public async System.Threading.Tasks.Task MaintenanceModeAsync(JToken e) {
 			using (Log.CriticalOperation($"{nameof(RestartRequiredAsync)} Method={DidEncounterMaintenanceModeNotificationType.MethodName}", Serilog.Events.LogEventLevel.Debug)) {
 				try {
-					// log the user out
-					await LogoutAsync();
-					// restart the LSP agent
-					await RestartLanguageServerAsync();
-					// send a message to the browser component
-					_browserService.EnqueueNotification(new DidEncounterMaintenanceModeNotificationType(e));
+					// log the user out, passing the agent payload data, we'll need it
+					// later when passing along to the webview
+					await LogoutAsync(SessionSignedOutReason.MaintenanceMode, e);
 				}
 				catch (Exception ex) {
 					Log.Error(ex, $"Problem with {nameof(MaintenanceModeAsync)}");
@@ -307,7 +304,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 		/// Logs the current CodeSteam user our
 		/// </summary>
 		/// <returns></returns>
-		private async System.Threading.Tasks.Task LogoutAsync() {
+		private async System.Threading.Tasks.Task LogoutAsync(SessionSignedOutReason reason = SessionSignedOutReason.UserSignedOutFromWebview, JToken payload = null) {
 			try {
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 				var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
@@ -323,7 +320,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 						Log.Error(nameof(LogoutAsync) + " " + nameof(authService) + " is null");
 					}
 					else {
-						await authService.LogoutAsync(SessionSignedOutReason.UserSignedOutFromWebview);
+						await authService.LogoutAsync(reason, payload);
 					}
 				}
 			}

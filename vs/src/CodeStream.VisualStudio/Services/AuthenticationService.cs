@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Serilog;
 using System;
 using System.ComponentModel.Composition;
+using Newtonsoft.Json.Linq;
 
 namespace CodeStream.VisualStudio.Services {
 
@@ -39,7 +40,7 @@ namespace CodeStream.VisualStudio.Services {
 		[Import]
 		public IWebviewUserSettingsService WebviewUserSettingsService { get; set; }
 
-		public async System.Threading.Tasks.Task LogoutAsync(SessionSignedOutReason reason = SessionSignedOutReason.UserSignedOutFromWebview) {
+		public async System.Threading.Tasks.Task LogoutAsync(SessionSignedOutReason reason = SessionSignedOutReason.UserSignedOutFromWebview, JToken payload = null) {
 			Log.Information($"{nameof(LogoutAsync)} starting");
 			try {
 				try {
@@ -59,6 +60,7 @@ namespace CodeStream.VisualStudio.Services {
 				if (
 					reason == SessionSignedOutReason.UserSignedOutFromWebview ||
 					reason == SessionSignedOutReason.UserSignedOutFromExtension ||
+					reason == SessionSignedOutReason.MaintenanceMode ||
 					reason == SessionSignedOutReason.ReAuthenticating) {
 					try {
 						var settingsService = SettingsServiceFactory.Create();
@@ -85,12 +87,24 @@ namespace CodeStream.VisualStudio.Services {
 				if (reason == SessionSignedOutReason.UserSignedOutFromWebview ||
 					reason == SessionSignedOutReason.UserSignedOutFromExtension
 				) {
-					//don't call this when ReAuthenticationg -- don't want to show the login screen
+					//don't call this when ReAuthenticating -- don't want to show the login screen
 					try {
 
 #pragma warning disable VSTHRD103 // Call async methods when in an async method
-						// it's possible that this Logout method is called before the webview is ready -- enqueue it
+						// it's possible that this method is called before the webview is ready -- enqueue it
 						WebviewIpc.EnqueueNotification(new HostDidLogoutNotificationType());
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
+					}
+					catch (Exception ex) {
+						Log.Error(ex, $"{nameof(LogoutAsync)} - {nameof(HostDidLogoutNotificationType)}");
+					}
+				}
+				else if (reason == SessionSignedOutReason.MaintenanceMode) {
+					try {
+
+#pragma warning disable VSTHRD103 // Call async methods when in an async method
+						// it's possible that this method is called before the webview is ready -- enqueue it
+						WebviewIpc.EnqueueNotification(new DidEncounterMaintenanceModeNotificationType(payload));
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
 					}
 					catch (Exception ex) {
@@ -99,7 +113,7 @@ namespace CodeStream.VisualStudio.Services {
 				}
 
 				try {
-					SessionService.Logout();
+					SessionService.Logout(reason);
 				}
 				catch (Exception ex) {
 					Log.Error(ex, $"{nameof(LogoutAsync)} - session");

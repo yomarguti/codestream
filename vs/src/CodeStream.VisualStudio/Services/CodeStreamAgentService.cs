@@ -256,7 +256,6 @@ namespace CodeStream.VisualStudio.Services {
 
 		public async Task<JToken> LogoutAsync() {
 			var response = await SendAsync<JToken>("codestream/logout", new LogoutRequest());
-			//cheese?
 			await ReinitializeAsync();
 			return response;
 		}
