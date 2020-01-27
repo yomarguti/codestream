@@ -4,7 +4,9 @@ import {
 	GetFileScmInfoResponse,
 	GetRepoScmStatusRequestType,
 	GetRepoScmStatusResponse,
-	FileStatus
+	FileStatus,
+	AddIgnoreFilesRequestType,
+	IgnoreFilesRequestType
 } from "@codestream/protocols/agent";
 import {
 	CSChannelStream,
@@ -73,9 +75,6 @@ interface ConnectedProps {
 	textEditorUri?: string;
 	closePanel?: Function;
 	repos: any;
-	ignoredFiles: {
-		[file: string]: boolean;
-	};
 }
 
 interface State {
@@ -120,6 +119,9 @@ interface State {
 	excludeCommit: { [sha: string]: boolean };
 	startCommit: string;
 	unsavedFiles: string[];
+	ignoredFiles: {
+		[file: string]: boolean;
+	};
 }
 
 function merge(defaults: Partial<State>, review: CSReview): State {
@@ -156,6 +158,7 @@ class ReviewForm extends React.Component<Props, State> {
 			selectedTags: {},
 			repoName: "",
 			excludedFiles: {},
+			ignoredFiles: {},
 			includeSaved: true,
 			includeStaged: true,
 			excludeCommit: {},
@@ -222,15 +225,32 @@ class ReviewForm extends React.Component<Props, State> {
 		const { scm } = this.state.scmInfo;
 		if (!scm) return;
 
-		const response = await HostApi.instance.send(GetRepoScmStatusRequestType, {
+		const statusInfo = await HostApi.instance.send(GetRepoScmStatusRequestType, {
 			uri: this.state.scmInfo.uri,
 			startCommit,
 			includeStaged,
 			includeSaved
 		});
-		const repoId: string = response.scm ? response.scm.repoId || "" : "";
+		const repoId: string = statusInfo.scm ? statusInfo.scm.repoId || "" : "";
 		const repoName = repos[repoId] ? repos[repoId].name : "";
-		this.setState({ repoStatus: response, repoName });
+		this.setState({ repoStatus: statusInfo, repoName });
+
+		const response = await HostApi.instance.send(IgnoreFilesRequestType, {
+			repoPath: scm.repoPath
+		});
+		if (response && response.paths) {
+			const ignoredFiles = {};
+			response.paths.forEach(path => (ignoredFiles[path] = true));
+			this.setState({ ignoredFiles });
+		}
+	}
+
+	async addIgnoreFile(filename: string) {
+		const { scm } = this.state.scmInfo;
+		if (!scm) return;
+		const { repoPath } = scm;
+
+		return await HostApi.instance.send(AddIgnoreFilesRequestType, { repoPath, path: filename });
 	}
 
 	focus = () => {
@@ -511,11 +531,12 @@ class ReviewForm extends React.Component<Props, State> {
 
 	exclude = (event: React.SyntheticEvent, file: string) => {
 		const { excludedFiles } = this.state;
+		event.stopPropagation();
 		this.setState({ excludedFiles: { ...excludedFiles, [file]: !excludedFiles[file] } });
 	};
 
 	excluded = (file: string) => {
-		return this.state.excludedFiles[file] || this.props.ignoredFiles[file];
+		return this.state.excludedFiles[file] || this.state.ignoredFiles[file];
 	};
 
 	excludeFuture = (event: React.SyntheticEvent, file: string) => {
@@ -525,33 +546,51 @@ class ReviewForm extends React.Component<Props, State> {
 		if (!scm) return null;
 
 		event.stopPropagation();
+
 		const ignoreFile = scm.repoPath + "/.codestreamignore";
-		confirmPopup({
-			title: "Exclude Files",
-			message: (
-				<>
-					<span className="monospace highlight bold">{file}</span>{" "}
-					<span className="subtle">has been added to the CodeStream ignore file </span>
-					<span className="monospace highlight bold">{ignoreFile}</span>
-				</>
-			),
-			centered: true,
-			buttons: [
-				{ label: "OK", className: "control-button" },
-				{
-					label: "Open Ignore File",
-					className: "cancel",
-					action: () => {
-						HostApi.instance.send(EditorRevealRangeRequestType, {
-							uri: "file://" + ignoreFile,
-							range: Range.create(0, 0, 0, 0),
-							atTop: true,
-							preserveFocus: true
-						});
+		const success = this.addIgnoreFile(file);
+		if (success) {
+			this.exclude(event, file);
+			this.setState({ ignoredFiles: { ...this.state.ignoredFiles, [file]: true } });
+			confirmPopup({
+				title: "Exclude Files",
+				message: (
+					<>
+						<span className="monospace highlight bold">{file}</span>{" "}
+						<span className="subtle">has been added to the CodeStream ignore file </span>
+						<span className="monospace highlight bold">{ignoreFile}</span>
+					</>
+				),
+				centered: true,
+				buttons: [
+					{ label: "OK", className: "control-button" },
+					{
+						label: "Open Ignore File",
+						className: "cancel",
+						action: () => {
+							HostApi.instance.send(EditorRevealRangeRequestType, {
+								uri: "file://" + ignoreFile,
+								range: Range.create(0, 0, 0, 0),
+								atTop: true,
+								preserveFocus: true
+							});
+						}
 					}
-				}
-			]
-		});
+				]
+			});
+		} else {
+			confirmPopup({
+				title: "Ooops",
+				message: (
+					<>
+						<span className="subtle">There was a problem adding </span>
+						<span className="monospace highlight bold">{file}</span>{" "}
+						<span className="subtle"> to the CodeStream ignore file </span>
+						<span className="monospace highlight bold">{ignoreFile}</span>
+					</>
+				)
+			});
+		}
 		return null;
 	};
 
@@ -731,8 +770,7 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	renderFile(fileObject) {
-		const { excludedFiles } = this.state;
-		const { file, status } = fileObject;
+		const { file, linesAdded, linesRemoved, status } = fileObject;
 		// https://davidwalsh.name/rtl-punctuation
 		// ellipsis-left has direction: rtl so that the ellipsis
 		// go on the left side, but without the <bdi> component
@@ -743,14 +781,14 @@ class ReviewForm extends React.Component<Props, State> {
 				<span className="file-info ellipsis-left">
 					<bdi dir="ltr">{file}</bdi>
 				</span>
-				{fileObject.linesAdded > 0 && <span className="added">+{fileObject.linesAdded} </span>}
-				{fileObject.linesRemoved > 0 && <span className="deleted">-{fileObject.linesRemoved}</span>}
-				{fileObject.status === FileStatus.new && <span className="added">new </span>}
-				{fileObject.status === FileStatus.added && <span className="added">added </span>}
-				{fileObject.status === FileStatus.copied && <span className="added">copied </span>}
-				{fileObject.status === FileStatus.unmerged && <span className="deleted">conflict </span>}
-				{fileObject.status === FileStatus.deleted && <span className="deleted">deleted </span>}
-				{excludedFiles[file] ? (
+				{linesAdded > 0 && <span className="added">+{linesAdded} </span>}
+				{linesRemoved > 0 && <span className="deleted">-{linesRemoved}</span>}
+				{status === FileStatus.new && <span className="added">new </span>}
+				{status === FileStatus.added && <span className="added">added </span>}
+				{status === FileStatus.copied && <span className="added">copied </span>}
+				{status === FileStatus.unmerged && <span className="deleted">conflict </span>}
+				{status === FileStatus.deleted && <span className="deleted">deleted </span>}
+				{this.excluded(file) ? (
 					<span className="actions">
 						<Icon
 							name="plus"
@@ -782,14 +820,14 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	renderChangedFiles() {
-		const { repoStatus, excludedFiles } = this.state;
+		const { repoStatus } = this.state;
 
 		let changedFiles = <></>;
 		if (repoStatus) {
 			const { scm } = repoStatus;
 			if (scm) {
 				const { modifiedFiles } = scm;
-				const modified = modifiedFiles.filter(f => !excludedFiles[f.file]);
+				const modified = modifiedFiles.filter(f => !this.excluded(f.file));
 				if (modified.length === 0) return null;
 				changedFiles = <>{modified.map(file => this.renderFile(file))}</>;
 			}
@@ -807,18 +845,18 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	renderExcludedFiles() {
-		const { repoStatus, excludedFiles } = this.state;
+		const { repoStatus } = this.state;
 		if (!repoStatus) return null;
 		const { scm } = repoStatus;
 		if (!scm) return null;
 		const { modifiedFiles } = scm;
-		const modified = modifiedFiles.filter(f => excludedFiles[f.file]);
-		if (modified.length === 0) return null;
+		const excluded = modifiedFiles.filter(f => this.state.excludedFiles[f.file]);
+		if (excluded.length === 0) return null;
 
 		return [
 			<div className="related" style={{ padding: "0", marginBottom: 0, position: "relative" }}>
 				<div className="related-label">Excluded from this Review</div>
-				{modified.map(file => this.renderFile(file))}
+				{excluded.map(file => this.renderFile(file))}
 			</div>
 		];
 	}
@@ -1026,8 +1064,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		services: state.services,
 		teamTagsArray,
 		repos,
-		apiCapabilities: apiVersioning.apiCapabilities,
-		ignoredFiles: {}
+		apiCapabilities: apiVersioning.apiCapabilities
 	};
 };
 
