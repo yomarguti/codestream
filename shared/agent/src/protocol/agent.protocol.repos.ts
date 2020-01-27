@@ -75,3 +75,34 @@ export interface MatchReposRequest {
 export interface MatchReposResponse {
 	repos: CSRepository[];
 }
+
+export interface IgnoreFilesRequest {
+	repoPath: string;
+}
+
+export interface IgnoreFilesResponse {
+	paths?: string[];
+}
+
+export const IgnoreFilesRequestType = new RequestType<
+	IgnoreFilesRequest,
+	IgnoreFilesResponse,
+	void,
+	void
+>("codestream/repos/ignore-files");
+
+export interface AddIgnoreFileRequest {
+	repoPath: string;
+	path: string;
+}
+
+export interface AddIgnoreFileResponse {
+	success?: boolean;
+}
+
+export const AddIgnoreFilesRequestType = new RequestType<
+	AddIgnoreFileRequest,
+	AddIgnoreFileResponse,
+	void,
+	void
+>("codestream/repos/ignore-files/add");

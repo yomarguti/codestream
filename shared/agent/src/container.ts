@@ -8,6 +8,7 @@ import { CodemarksManager } from "./managers/codemarksManager";
 import { CompaniesManager } from "./managers/companiesManager";
 import { DocumentMarkerManager } from "./managers/documentMarkerManager";
 import { FilesManager } from "./managers/filesManager";
+import { IgnoreFilesManager } from "./managers/ignoreFilesManager";
 import { MarkerLocationManager } from "./managers/markerLocationManager";
 import { MarkersManager } from "./managers/markersManager";
 import { PostsManager } from "./managers/postsManager";
@@ -98,6 +99,11 @@ class SessionServiceContainer {
 		return this._repositoryMappings;
 	}
 
+	private readonly _ignoreFiles: IgnoreFilesManager;
+	get ignoreFiles() {
+		return this._ignoreFiles;
+	}
+
 	constructor(public readonly session: CodeStreamSession) {
 		this._git = new GitService(session);
 		this._scm = new ScmManager();
@@ -114,6 +120,7 @@ class SessionServiceContainer {
 		this._providerRegistry = new ThirdPartyProviderRegistry(session);
 		this._repositoryMappings = new RepositoryMappingManager(session);
 		this._companies = new CompaniesManager(session);
+		this._ignoreFiles = new IgnoreFilesManager(session);
 	}
 }
 

@@ -158,12 +158,21 @@ export class ScmManager {
 								const found = modifiedFiles?.find(line => line.file === file);
 								if (found) {
 									found.status = ret[file];
-								}
-								else {
+								} else {
 									if (ret[file] === FileStatus.deleted) {
-										modifiedFiles?.unshift({ file, linesAdded: 0, linesRemoved: 0, status: ret[file] });
+										modifiedFiles?.unshift({
+											file,
+											linesAdded: 0,
+											linesRemoved: 0,
+											status: ret[file]
+										});
 									} else {
-										modifiedFiles?.push({ file, linesAdded: 0, linesRemoved: 0, status: ret[file] });
+										modifiedFiles?.push({
+											file,
+											linesAdded: 0,
+											linesRemoved: 0,
+											status: ret[file]
+										});
 									}
 								}
 							});
