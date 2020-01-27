@@ -173,9 +173,14 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		const markers = [];
 		if (codemark.markerIds != null && codemark.markerIds.length !== 0) {
 			for (const markerId of codemark.markerIds) {
-				const marker = await markersManager.getById(markerId);
-				if (marker.supersededByMarkerId == null) {
-					markers.push(marker);
+				try {
+					const marker = await markersManager.getById(markerId);
+					if (marker.supersededByMarkerId == null) {
+						markers.push(marker);
+					}
+				} catch (err) {
+					// https://trello.com/c/ti6neIz1/2969-activity-feed-loads-forever-if-restart-jb-while-on-the-feed
+					Logger.warn(err.message);
 				}
 			}
 		}
