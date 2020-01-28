@@ -222,15 +222,16 @@ export class GitService implements IGitService, Disposable {
 		try {
 			const data = await git(
 				{ cwd: repoPath, env: { GIT_TERMINAL_PROMPT: "0" }, suppressErrors: true },
-				"remote", "show", remote
+				"remote",
+				"show",
+				remote
 			);
-			const headBranchLine = data.trim()
+			const headBranchLine = data
+				.trim()
 				.split("\n")
 				.find(line => line.indexOf("HEAD branch:") >= 0);
 
-			return headBranchLine
-				? headBranchLine.split(":")[1].trim()
-				: undefined;
+			return headBranchLine ? headBranchLine.split(":")[1].trim() : undefined;
 		} catch (ex) {
 			Logger.debug(ex.message);
 			return undefined;
@@ -253,7 +254,8 @@ export class GitService implements IGitService, Disposable {
 				try {
 					await git(
 						{ cwd: dir, env: { GIT_TERMINAL_PROMPT: "0" }, suppressErrors: true },
-						"fetch", "--all"
+						"fetch",
+						"--all"
 					);
 				} catch {
 					Logger.log("Could not fetch all remotes");
@@ -340,12 +342,7 @@ export class GitService implements IGitService, Disposable {
 
 	async getHeadRevision(repoPath: string, reference: string): Promise<string | undefined> {
 		try {
-			const data = await git(
-				{cwd: repoPath},
-				"show-ref",
-				"-s",
-				reference
-			);
+			const data = await git({ cwd: repoPath }, "show-ref", "-s", reference);
 			return data.trim();
 		} catch (ex) {
 			Logger.warn(ex);
@@ -355,13 +352,18 @@ export class GitService implements IGitService, Disposable {
 
 	async getRemoteDefaultBranchHeadRevisions(repoUri: URI, remotes: string[]): Promise<string[]>;
 	async getRemoteDefaultBranchHeadRevisions(repoPath: string, remotes: string[]): Promise<string[]>;
-	async getRemoteDefaultBranchHeadRevisions(repoUriOrPath: URI | string, remotes: string[]): Promise<string[]> {
+	async getRemoteDefaultBranchHeadRevisions(
+		repoUriOrPath: URI | string,
+		remotes: string[]
+	): Promise<string[]> {
 		const repoPath = typeof repoUriOrPath === "string" ? repoUriOrPath : repoUriOrPath.fsPath;
 		const revisions = new Set<string>();
 
 		for (const remote of remotes) {
 			const defaultBranch = await this.getDefaultBranch(repoPath, remote);
-			const revision = defaultBranch && await this.getHeadRevision(repoPath, `refs/remotes/${remote}/${defaultBranch}`);
+			const revision =
+				defaultBranch &&
+				(await this.getHeadRevision(repoPath, `refs/remotes/${remote}/${defaultBranch}`));
 			if (revision) revisions.add(revision);
 		}
 
@@ -410,23 +412,11 @@ export class GitService implements IGitService, Disposable {
 
 		let data;
 		try {
-			data = await git(
-				{ cwd: repoPath },
-				"rev-list",
-				"--date-order",
-				"master",
-				"--"
-			);
+			data = await git({ cwd: repoPath }, "rev-list", "--date-order", "master", "--");
 		} catch {}
 		if (!data) {
 			try {
-				data = await git(
-					{ cwd: repoPath },
-					"rev-list",
-					"--date-order",
-					"HEAD",
-					"--"
-				);
+				data = await git({ cwd: repoPath }, "rev-list", "--date-order", "HEAD", "--");
 			} catch {}
 		}
 
@@ -442,35 +432,27 @@ export class GitService implements IGitService, Disposable {
 
 		let data: string | undefined;
 		try {
-			data = await git(
-				{ cwd: repoPath },
-				"branch",
-				"--"
-			);
+			data = await git({ cwd: repoPath }, "branch", "--");
 		} catch {}
 		if (!data) return [];
 
 		const branches = data.trim().split("\n");
 		const commits: string[] = [];
-		await Promise.all(branches.map(async branch => {
-			branch = branch.trim();
-			if (branch.startsWith("*")) {
-				branch = branch.split("*")[1].trim();
-			}
-			let result: string | undefined;
-			try {
-				result = await git(
-					{ cwd: repoPath },
-					"merge-base",
-					"--fork-point",
-					branch,
-					"--"
-				);
-			} catch {}
-			if (result) {
-				commits.push(result.split("\n")[0]);
-			}
-		}));
+		await Promise.all(
+			branches.map(async branch => {
+				branch = branch.trim();
+				if (branch.startsWith("*")) {
+					branch = branch.split("*")[1].trim();
+				}
+				let result: string | undefined;
+				try {
+					result = await git({ cwd: repoPath }, "merge-base", "--fork-point", branch, "--");
+				} catch {}
+				if (result) {
+					commits.push(result.split("\n")[0]);
+				}
+			})
+		);
 
 		return commits;
 	}
