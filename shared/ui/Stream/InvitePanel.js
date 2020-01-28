@@ -235,7 +235,7 @@ export class InvitePanel extends Component {
 
 	renderUserStatus(user) {
 		// turn this off, as it is just a mockup exploration -Pez
-		return null;
+		// return null;
 
 		if (user.username === "pez") {
 			const files = [
@@ -246,20 +246,26 @@ export class InvitePanel extends Component {
 			return (
 				<>
 					<li className="status" style={{ paddingLeft: "48px" }}>
+						<Icon name="repo" /> codestream-components
+					</li>
+					<li className="status" style={{ paddingLeft: "68px" }}>
 						<Icon name="git-branch" /> feature/sharing
 					</li>
-					<FileTree files={files} indent={40} />
+					<FileTree files={files} indent={60} />
 				</>
 			);
 		}
-		if (user.username === "jj") {
+		if (user.username === "eamodio") {
 			const files = ["codestream-lsp-agent/KnowledgePanel.tsx", "codestream-lsp-agent/foo.tsx"];
 			return (
 				<>
 					<li className="status" style={{ paddingLeft: "48px" }}>
-						<Icon name="git-branch" /> feature/big-brother
+						<Icon name="repo" /> lsp-agent
 					</li>
-					<FileTree files={files} indent={40} />
+					<li className="status" style={{ paddingLeft: "68px" }}>
+						<Icon name="git-branch" /> feature/sharing
+					</li>
+					<FileTree files={files} indent={60} />
 				</>
 			);
 		}

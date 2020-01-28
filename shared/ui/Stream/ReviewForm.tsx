@@ -32,7 +32,6 @@ import { HostApi } from "../webview-api";
 import Button from "./Button";
 import Tag from "./Tag";
 import Icon from "./Icon";
-import Menu from "./Menu";
 import Tooltip from "./Tooltip";
 import { sortBy as _sortBy, sortBy } from "lodash-es";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
@@ -40,8 +39,7 @@ import HeadshotMenu from "@codestream/webview/src/components/HeadshotMenu";
 import { SelectPeople } from "@codestream/webview/src/components/SelectPeople";
 import { getTeamMembers, getTeamTagsArray, getTeamMates } from "../store/users/reducer";
 import MessageInput from "./MessageInput";
-import Select from "react-select";
-import { closePanel } from "./actions";
+import { closePanel, createPostAndReview } from "./actions";
 import { CodeStreamState } from "../store";
 import { CSText } from "../src/components/CSText";
 import { SharingControls, SharingAttributes } from "./SharingControls";
@@ -74,6 +72,7 @@ interface ConnectedProps {
 	apiCapabilities: CSApiCapabilities;
 	textEditorUri?: string;
 	closePanel?: Function;
+	createPostAndReview?: Function;
 	repos: any;
 }
 
@@ -84,7 +83,6 @@ interface State {
 	assigneesRequired: boolean;
 	assigneesDisabled: boolean;
 	singleAssignee: boolean;
-	privacyMembers: { value: string; label: string }[];
 	reviewers: CSUser[];
 	notify: boolean;
 	isLoading: boolean;
@@ -107,12 +105,10 @@ interface State {
 	sharingAttributesInvalid?: boolean;
 	showAllChannels?: boolean;
 	scmInfo: GetFileScmInfoResponse;
-	defaultRepo?: any;
-	selectedRepo?: any;
 	selectedTags?: any;
 	repoStatus: GetRepoScmStatusResponse;
 	repoName: string;
-	excludedFiles: {};
+	excludedFiles?: any;
 	fromCommit?: string;
 	includeSaved: boolean;
 	includeStaged: boolean;
@@ -277,20 +273,32 @@ class ReviewForm extends React.Component<Props, State> {
 		// if (this.isFormInvalid()) return;
 		this.setState({ isLoading: true });
 
-		const { title, text, selectedChannelId, selectedTags } = this.state;
+		const { title, text, selectedChannelId, selectedTags, repoStatus } = this.state;
+		const { startCommit, excludeCommit, excludedFiles, includeSaved, includeStaged } = this.state;
 
-		const csReviewers = (this.state.reviewers as any[]).map(a => a.value);
+		const reviewerIds = (this.state.reviewers as any[]).map(r => r.id);
 
 		try {
 			let review = {
 				title,
 				text: replaceHtml(text)!,
-				selectedChannelId,
-				selectedTags,
-				reviewers: csReviewers,
-				tags: keyFilter(selectedTags)
+				reviewers: reviewerIds,
+				tags: keyFilter(selectedTags),
+				repoChanges: [
+					{
+						scm: repoStatus.scm,
+						startCommit,
+						excludeCommit,
+						excludedFiles: keyFilter(excludedFiles),
+						includeSaved,
+						includeStaged
+					}
+				]
 			} as any;
-			review.objects = [];
+
+			if (this.props.createPostAndReview) {
+				const { type: createResult } = await this.props.createPostAndReview(review);
+			}
 		} catch (error) {
 		} finally {
 			setTimeout(() => {
@@ -690,15 +698,19 @@ class ReviewForm extends React.Component<Props, State> {
 		);
 	}
 
+	// pluralize the label: "2 files" vs. "1 file"
+	// and provide a tooltip listing the files
 	fileListLabel = (files: string[]) => {
 		const fileLabel = files.length === 1 ? "file" : "files";
-		return `${files.length} ${fileLabel}`;
-		// const tip = <SmartFormattedList value={files} />;
-		// return (
-		// 	<Tooltip title={tip}>
-		// 		{files.length} {fileLabel}
-		// 	</Tooltip>
-		// );
+		const tip = files.map(file => <div>{file}</div>);
+
+		return (
+			<Tooltip title={tip}>
+				<span>
+					{files.length} {fileLabel}
+				</span>
+			</Tooltip>
+		);
 	};
 
 	authorHeadshot = commit => {
@@ -783,7 +795,7 @@ class ReviewForm extends React.Component<Props, State> {
 				</span>
 				{linesAdded > 0 && <span className="added">+{linesAdded} </span>}
 				{linesRemoved > 0 && <span className="deleted">-{linesRemoved}</span>}
-				{status === FileStatus.new && <span className="added">new </span>}
+				{status === FileStatus.untracked && <span className="added">new </span>}
 				{status === FileStatus.added && <span className="added">added </span>}
 				{status === FileStatus.copied && <span className="added">copied </span>}
 				{status === FileStatus.unmerged && <span className="deleted">conflict </span>}
@@ -1068,6 +1080,8 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 	};
 };
 
-const ConnectedReviewForm = connect(mapStateToProps, { closePanel })(ReviewForm);
+const ConnectedReviewForm = connect(mapStateToProps, { closePanel, createPostAndReview })(
+	ReviewForm
+);
 
 export { ConnectedReviewForm as ReviewForm };

@@ -40,6 +40,7 @@ import {
 	NewCodemarkAttributes,
 	isLegacyNewCodemarkAttributes
 } from "../store/codemarks/actions";
+import { createReview, NewReviewAttributes } from "../store/reviews/actions";
 import {
 	closePanel,
 	openPanel,
@@ -237,6 +238,27 @@ export const createPostAndCodemark = (
 			})
 		);
 	}
+};
+
+export const createPostAndReview = (attributes: NewReviewAttributes) => async (
+	dispatch,
+	getState: () => CodeStreamState
+) => {
+	const { repoChanges } = attributes;
+	let changeSets: any = [];
+	let markers: any = [];
+	let warning;
+	let remotes: string[] = [];
+
+	return dispatch(
+		createReview({
+			...attributes,
+			mentionedUserIds: findMentionedUserIds(
+				getTeamMembers(getState()),
+				attributes.text || ""
+			).concat(attributes.reviewers)
+		})
+	);
 };
 
 export const createPost = (
