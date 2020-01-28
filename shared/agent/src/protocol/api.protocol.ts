@@ -342,12 +342,27 @@ export interface CSGetStreamsResponse<T extends CSStream> {
 	streams: T[];
 }
 
-export interface CSCreateTeamRequest {
+export interface CSCreateTeamBaseRequest {
 	name: string;
 }
 
+export interface CSCreateTeamAndCompanyRequest extends CSCreateTeamBaseRequest {
+	company: { name: string };
+}
+
+export interface CSCreateTeamForCompanyRequest extends CSCreateTeamBaseRequest {
+	companyId: string;
+}
+
+export type CSCreateTeamRequest =
+	| CSCreateTeamBaseRequest
+	| CSCreateTeamAndCompanyRequest
+	| CSCreateTeamForCompanyRequest;
+
 export interface CSCreateTeamResponse {
-	team: CSUser;
+	team: CSTeam;
+	company?: CSCompany;
+	streams?: CSStream[];
 }
 
 export interface CSGetTeamResponse {

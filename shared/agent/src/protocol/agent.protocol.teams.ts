@@ -36,7 +36,7 @@ export const GetTeamRequestType = new RequestType<GetTeamRequest, GetTeamRespons
 	"codestream/team"
 );
 
-export interface CreateTeamRequest extends CSCreateTeamRequest {}
+export type CreateTeamRequest = CSCreateTeamRequest;
 
 export interface CreateTeamResponse extends CSCreateTeamResponse {}
 
