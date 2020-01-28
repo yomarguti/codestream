@@ -5,6 +5,7 @@ import * as path from "path";
 import { Disposable, Event } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 import { Logger } from "../logger";
+import { FileStatus } from "../protocol/api.protocol.models";
 import { CodeStreamSession } from "../session";
 import { Iterables, log, Strings } from "../system";
 import { git, GitErrors, GitWarnings } from "./git";
@@ -30,16 +31,6 @@ export interface BlameOptions {
 export interface TrackingBranch {
 	fullName?: string;
 	shortName?: string;
-}
-
-export enum FileStatus {
-	new = 0,
-	added = 1,
-	renamed = 2,
-	deleted = 3,
-	copied = 4,
-	unmerged = 5,
-	modified = 6
 }
 
 export interface IGitService extends Disposable {
@@ -772,7 +763,7 @@ export class GitService implements IGitService, Disposable {
 					const rename = file.match(/ -> (.*)/);
 					if (rename) file = rename[1];
 					if (lineData[1] === "?" && includeSaved) {
-						ret[file] = FileStatus.new;
+						ret[file] = FileStatus.untracked;
 					} else {
 						let status = this.getStatusByChar(lineData[1]);
 						if (status) ret[file] = status;

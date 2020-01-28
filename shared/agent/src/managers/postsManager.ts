@@ -17,9 +17,13 @@ import {
 	CreatePostResponse,
 	CreatePostWithMarkerRequest,
 	CreatePostWithMarkerRequestType,
+	CreateReviewRequest,
 	CreateShareableCodemarkRequest,
 	CreateShareableCodemarkRequestType,
 	CreateShareableCodemarkResponse,
+	CreateShareableReviewRequest,
+	CreateShareableReviewRequestType,
+	CreateShareableReviewResponse,
 	CrossPostIssueValues,
 	DeletePostRequest,
 	DeletePostRequestType,
@@ -48,7 +52,8 @@ import {
 	ReactToPostRequest,
 	ReactToPostRequestType,
 	ReactToPostResponse,
-	ReportingMessageType
+	ReportingMessageType,
+	ReviewPlus
 } from "../protocol/agent.protocol";
 import {
 	CodemarkType,
@@ -811,7 +816,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					externalProviderHost: issueProvider.host,
 					externalProviderUrl: cardResponse.url,
 					externalAssignees:
-						assignees && assignees.map((a: any) => ({ displayName: a.displayName, email: a.email })),
+						assignees &&
+						assignees.map((a: any) => ({ displayName: a.displayName, email: a.email })),
 					wantEmailNotification: true
 				});
 				codemark = r.codemark;
@@ -836,6 +842,71 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			codemark: (codemark as CodemarkPlus).markers
 				? codemark
 				: await SessionContainer.instance().codemarks.enrichCodemark(codemark)
+		};
+	}
+
+	// this is what the webview will call to create reviews in the sharing model
+	@lspHandler(CreateShareableReviewRequestType)
+	async createSharingReviewPost(
+		request: CreateShareableReviewRequest
+	): Promise<CreateShareableReviewResponse> {
+		const reviewRequest: CreateReviewRequest = {
+			...request.attributes,
+			repoChanges: []
+		};
+
+		const markerCreationDescriptors: MarkerCreationDescriptor[] = [];
+		let review: ReviewPlus | undefined;
+
+		for (const repoChange of request.attributes.repoChanges) {
+			if (!repoChange.scm) continue;
+		}
+
+		let stream: CSDirectStream | CSChannelStream;
+
+		if (request.memberIds && request.memberIds.length > 0) {
+			const response = await SessionContainer.instance().streams.get({
+				memberIds: request.memberIds,
+				types: [StreamType.Direct]
+			});
+			if (response.streams.length > 0) {
+				stream = response.streams[0] as CSDirectStream;
+			} else {
+				const response = await SessionContainer.instance().streams.createDirectStream({
+					memberIds: request.memberIds,
+					type: StreamType.Direct
+				});
+				stream = response.stream;
+			}
+		} else {
+			stream = await SessionContainer.instance().streams.getTeamStream();
+		}
+
+		const response = await this.session.api.createPost({
+			review: reviewRequest,
+			text: reviewRequest.title!,
+			streamId: stream.id,
+			dontSendEmail: false,
+			mentionedUserIds: request.mentionedUserIds
+		});
+
+		review = response.review!;
+
+		// trackPostCreation(
+		// 	{
+		// 		streamId: stream.id,
+		// 		review,
+		// 		title: request.attributes.title!,
+		// 		entryPoint: request.entryPoint
+		// 	},
+		// 	request.textDocuments,
+		// 	review.id
+		// );
+		await resolveCreatePostResponse(response!);
+		return {
+			stream,
+			post: await this.enrichPost(response!.post),
+			review
 		};
 	}
 

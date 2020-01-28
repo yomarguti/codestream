@@ -24,6 +24,7 @@ export * from "./agent.protocol.companies";
 export * from "./agent.protocol.markers";
 export * from "./agent.protocol.posts";
 export * from "./agent.protocol.repos";
+export * from "./agent.protocol.reviews";
 export * from "./agent.protocol.streams";
 export * from "./agent.protocol.teams";
 export * from "./agent.protocol.users";
@@ -52,6 +53,7 @@ export interface Capabilities {
 	providerCanSupportRealtimeChat?: boolean;
 	providerSupportsRealtimeChat?: boolean;
 	providerSupportsRealtimeEvents?: boolean;
+	reviewDiffs?: boolean;
 	services?: {
 		vsls?: boolean;
 	};

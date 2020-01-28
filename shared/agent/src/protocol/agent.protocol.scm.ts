@@ -28,13 +28,13 @@ export const GetCommitScmInfoRequestType = new RequestType<
 >("codestream/scm/commit");
 
 export enum FileStatus {
-	new = 0,
-	added = 1,
-	renamed = 2,
-	deleted = 3,
-	copied = 4,
-	unmerged = 5,
-	modified = 6
+	untracked = "U",
+	added = "A",
+	renamed = "R",
+	deleted = "D",
+	copied = "C",
+	unmerged = "U",
+	modified = "M"
 }
 
 export interface GetRepoScmStatusRequest {
@@ -43,26 +43,29 @@ export interface GetRepoScmStatusRequest {
 	includeSaved: boolean;
 	includeStaged: boolean;
 }
+
+export interface RepoScmStatus {
+	repoPath: string;
+	repoId?: string;
+	branch?: string;
+	commits?: { sha: string; info: {} }[];
+	modifiedFiles: {
+		file: string;
+		linesAdded: number;
+		linesRemoved: number;
+		status: FileStatus;
+	}[];
+	savedFiles: string[];
+	stagedFiles: string[];
+	authors: { id: string; username: string }[];
+	// this is just the total number of lines modified so that
+	// we can throw up a warning if it's too many ("shift left")
+	totalModifiedLines: number;
+}
+
 export interface GetRepoScmStatusResponse {
 	uri: string;
-	scm?: {
-		repoPath: string;
-		repoId?: string;
-		branch?: string;
-		commits?: { sha: string; info: {} }[];
-		modifiedFiles: {
-			file: string;
-			linesAdded: number;
-			linesRemoved: number;
-			status: FileStatus;
-		}[];
-		savedFiles: string[];
-		stagedFiles: string[];
-		authors: { id: string; username: string }[];
-		// this is just the total number of lines modified so that
-		// we can throw up a warning if it's too many ("shift left")
-		totalModifiedLines: number;
-	};
+	scm?: RepoScmStatus;
 	error?: string;
 }
 export const GetRepoScmStatusRequestType = new RequestType<

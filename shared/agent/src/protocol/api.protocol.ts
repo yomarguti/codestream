@@ -1,4 +1,6 @@
 "use strict";
+import { GetRepoScmStatusResponse } from "./agent.protocol";
+import { RepoScmStatus } from "./agent.protocol.scm";
 import {
 	ChannelServiceType,
 	CodemarkType,
@@ -16,6 +18,7 @@ import {
 	CSMe,
 	CSPost,
 	CSRepository,
+	CSReview,
 	CSStream,
 	CSTag,
 	CSTeam,
@@ -170,6 +173,7 @@ export interface CSCreatePostResponse {
 	markerLocations?: CSMarkerLocations[];
 	streams?: CSStream[];
 	repos?: CSRepository[];
+	reviews?: CSReview[];
 }
 
 export interface CSCreateRepoRequest {
@@ -315,6 +319,7 @@ export interface CSGetMarkersResponse {
 	markers: CSMarker[];
 	markerLocations: CSMarkerLocation[];
 	codemarks: CSCodemark[];
+	reviews: CSReview[];
 }
 
 export interface CSGetPostResponse {
@@ -324,6 +329,7 @@ export interface CSGetPostResponse {
 export interface CSGetPostsResponse {
 	posts: CSPost[];
 	codemarks?: CSCodemark[];
+	reviews?: CSReview[];
 	markers?: CSMarker[];
 	more?: boolean;
 }
@@ -494,6 +500,69 @@ export interface CSDeleteCodemarkRequest {
 	codemarkId: string;
 }
 export interface CSDeleteCodemarkResponse {}
+
+export interface CSCreateReviewRequest {
+	teamId: string;
+	title?: string;
+	text?: string;
+	streamId?: string;
+	postId?: string;
+	parentPostId?: string;
+	status?: string;
+	reviewers?: string[];
+	tags?: string[];
+
+	repoChanges: {
+		scm: RepoScmStatus;
+		startCommit: string;
+		excludeCommit: string;
+		excludedFiles: string[];
+		includeSaved: boolean;
+		includeStaged: boolean;
+	}[];
+
+	markers?: CSCreateMarkerRequest[];
+	remotes?: string[];
+
+	externalProvider?: string;
+	externalProviderUrl?: string;
+	externalProviderHost?: string;
+	remoteCodeUrl?: { name: string; url: string };
+	// threadUrl?: string;
+}
+
+export interface CSCreateReviewResponse {
+	review: CSReview;
+	streams?: CSStream[];
+	repos?: CSRepository[];
+}
+
+export interface CSCreateChangeSetRequest {}
+
+export interface CSGetReviewResponse {
+	review: CSReview;
+	post?: CSPost;
+	markers?: CSMarker[];
+}
+
+export interface CSGetReviewsResponse {
+	reviews: CSReview[];
+	posts?: CSPost[];
+	markers?: CSMarker[];
+}
+
+export interface CSUpdateReviewRequest {
+	streamId?: string;
+	postId?: string;
+}
+export interface CSUpdateReviewResponse {
+	review: CSReview;
+}
+
+export interface CSDeleteReviewRequest {
+	id: string;
+}
+export interface CSDeleteReviewResponse {}
 
 export interface CSUpdateMarkerRequest {
 	commitHashWhenCreated?: string;

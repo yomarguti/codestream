@@ -7,6 +7,7 @@ import {
 	CreateCodemarkResponse
 } from "./agent.protocol.codemarks";
 import { ThirdPartyProviderUser } from "./agent.protocol.providers";
+import { CreateReviewRequest, ReviewPlus } from "./agent.protocol.reviews";
 import {
 	CodemarkType,
 	CSCodemark,
@@ -51,6 +52,7 @@ export interface CreatePostRequest {
 	mentionedUserIds?: string[];
 	parentPostId?: string;
 	codemark?: CreateCodemarkRequest;
+	review?: CreateReviewRequest;
 	entryPoint?: string;
 	crossPostIssueValues?: CrossPostIssueValues;
 	dontSendEmail?: boolean;
@@ -68,6 +70,7 @@ export interface CrossPostIssueValues {
 
 export interface CreatePostResponse {
 	post: PostPlus;
+	review?: ReviewPlus;
 	codemark?: CodemarkPlus;
 	markers?: CSMarker[];
 	markerLocations?: CSMarkerLocations[];

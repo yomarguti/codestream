@@ -134,19 +134,46 @@ export interface CSCodeBlock {
 	streamId?: string;
 }
 
+// FIXME -- what other statuses do we need?
+export enum ReviewStatus {
+	Open = "open",
+	Closed = "closed"
+}
+
+export enum FileStatus {
+	untracked = "U",
+	added = "A",
+	renamed = "R",
+	deleted = "D",
+	copied = "C",
+	unmerged = "U",
+	modified = "M"
+}
+
+export interface CSRepoChangeset {
+	repoId: string;
+	branch: string;
+	commits: string[];
+	diff: { [file: string]: string }[];
+	changedFiles: {
+		[file: string]: { linesAdded: number; linesRemoved: number; status: FileStatus };
+	};
+	includeSaved: boolean;
+	includeStaged: boolean;
+}
+
 export interface CSReview extends CSEntity {
+	title: string;
+	text: string;
+	reviewers: string[];
 	teamId: string;
 	streamId: string;
 	postId: string;
 	fileStreamIds: string[];
-	providerType?: ProviderType;
 	status: string;
-	title: string;
-	assignees: string[];
-	text: string;
 	numReplies: number;
 	tags?: string[];
-	objects?: any[];
+	repoChangeset: CSRepoChangeset[];
 }
 
 export interface CSPost extends CSEntity {
