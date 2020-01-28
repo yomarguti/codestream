@@ -525,6 +525,9 @@ export interface PullRequestComment {
 	pullRequest: {
 		id: number;
 		url: string;
+		isOpen: boolean;
+		targetBranch: string;
+		sourceBranch: string;
 	};
 	text: string;
 	code: string;

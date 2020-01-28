@@ -1,4 +1,5 @@
 "use strict";
+import { flatten } from "lodash-es";
 import { Response } from "node-fetch";
 import * as paths from "path";
 import * as qs from "querystring";
@@ -226,10 +227,18 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 		const commentsById: { [id: string]: PullRequestComment } = Object.create(null);
 		const markersByCommit = new Map<string, Markerish[]>();
+		const trackingBranch = await git.getTrackingBranch(uri);
 
 		let line;
 		let rev;
 		for (const c of comments) {
+			if (
+				c.pullRequest.isOpen &&
+				c.pullRequest.targetBranch !== trackingBranch?.shortName &&
+				c.pullRequest.sourceBranch !== trackingBranch?.shortName
+			)
+				continue;
+
 			const outdated = !(await git.isValidReference(repo.path, c.commit));
 
 			rev = outdated ? c.originalCommit! : c.commit;
@@ -393,20 +402,30 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return comments;
 	}
 
-	private async _getPullRequests(remotePath: string) {
-		let prs: GitLabPullRequest[] = [];
+	private async _getPullRequests(remotePath: string): Promise<GitLabPullRequest[]> {
+		return flatten(
+			await Promise.all([
+				this._getPullRequestsByState(remotePath, "opened"),
+				this._getPullRequestsByState(remotePath, "merged")
+			])
+		);
+	}
+
+	private async _getPullRequestsByState(
+		remotePath: string,
+		state: string
+	): Promise<GitLabPullRequest[]> {
+		const prs: GitLabPullRequest[] = [];
 
 		try {
-			let apiResponse = await this.get<GitLabPullRequest[]>(
-				`/projects/${encodeURIComponent(remotePath)}/merge_requests?state=merged`
-			);
-			prs = apiResponse.body;
-
-			let nextPage: string | undefined;
-			while ((nextPage = this.nextPage(apiResponse.response))) {
-				apiResponse = await this.get<GitLabPullRequest[]>(nextPage);
-				prs = prs.concat(apiResponse.body);
-			}
+			let url: string | undefined = `/projects/${encodeURIComponent(
+				remotePath
+			)}/merge_requests?state=${state}`;
+			do {
+				const apiResponse = await this.get<GitLabPullRequest[]>(url);
+				prs.push(...apiResponse.body);
+				url = this.nextPage(apiResponse.response);
+			} while (url);
 		} catch (ex) {
 			Logger.error(ex);
 		}
@@ -456,7 +475,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					createdAt: new Date(glComment.created_at).getTime(),
 					pullRequest: {
 						id: pr.iid,
-						url: pr.web_url
+						url: pr.web_url,
+						isOpen: pr.state === "opened",
+						targetBranch: pr.target_branch,
+						sourceBranch: pr.source_branch
 					}
 				};
 			});
@@ -468,6 +490,9 @@ interface GitLabPullRequest {
 	iid: number;
 	title: string;
 	web_url: string;
+	state: string;
+	target_branch: string;
+	source_branch: string;
 }
 
 interface GitLabPullRequestComment {

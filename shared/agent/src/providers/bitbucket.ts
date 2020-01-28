@@ -65,6 +65,17 @@ interface BitbucketValues<T> {
 interface BitbucketPullRequest {
 	id: number;
 	title: string;
+	state: string;
+	destination: {
+		branch: {
+			name: string;
+		};
+	};
+	source: {
+		branch: {
+			name: string;
+		};
+	};
 	links: {
 		html: { href: string };
 		comments: {
@@ -281,8 +292,16 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 
 		const commentsById: { [id: string]: PullRequestComment } = Object.create(null);
 		const markersByCommit = new Map<string, Markerish[]>();
+		const trackingBranch = await git.getTrackingBranch(uri);
 
 		for (const c of comments) {
+			if (
+				c.pullRequest.isOpen &&
+				c.pullRequest.targetBranch !== trackingBranch?.shortName &&
+				c.pullRequest.sourceBranch !== trackingBranch?.shortName
+			)
+				continue;
+
 			let markers = markersByCommit.get(c.commit);
 			if (markers === undefined) {
 				markers = [];
@@ -486,7 +505,10 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 						pullRequest: {
 							id: pr.id,
 							title: pr.title,
-							url: pr.links.html.href
+							url: pr.links.html.href,
+							isOpen: pr.state === "OPEN",
+							targetBranch: pr.destination.branch.name,
+							sourceBranch: pr.source.branch.name
 						}
 					};
 				})

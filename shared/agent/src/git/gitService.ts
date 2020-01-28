@@ -27,6 +27,11 @@ export interface BlameOptions {
 	retryWithTrimmedEndOnFailure?: boolean;
 }
 
+export interface TrackingBranch {
+	fullName?: string;
+	shortName?: string;
+}
+
 export interface IGitService extends Disposable {
 	getFileAuthors(uri: URI, options?: BlameOptions): Promise<GitAuthor[]>;
 	getFileAuthors(path: string, options?: BlameOptions): Promise<GitAuthor[]>;
@@ -605,6 +610,34 @@ export class GitService implements IGitService, Disposable {
 		try {
 			const data = (await git({ cwd: cwd }, "rev-parse", "--abbrev-ref", "HEAD")).trim();
 			return data === "" || data === "HEAD" ? undefined : data;
+		} catch {
+			return undefined;
+		}
+	}
+
+	async getTrackingBranch(uri: URI, isDirectory?: boolean): Promise<TrackingBranch | undefined>;
+	async getTrackingBranch(path: string, isDirectory?: boolean): Promise<TrackingBranch | undefined>;
+	async getTrackingBranch(
+		uriOrPath: URI | string,
+		isDirectory: boolean = false
+	): Promise<TrackingBranch | undefined> {
+		const filePath = typeof uriOrPath === "string" ? uriOrPath : uriOrPath.fsPath;
+		let cwd;
+		if (isDirectory) {
+			cwd = filePath;
+		} else {
+			[cwd] = Strings.splitPath(filePath);
+		}
+
+		try {
+			const data = (await git({ cwd: cwd }, "rev-parse", "--abbrev-ref", "@{u}")).trim();
+			if (data !== undefined && data !== "") {
+				return {
+					fullName: data,
+					shortName: data.substring(data.indexOf("/") + 1)
+				};
+			}
+			return data === "" ? undefined : data;
 		} catch {
 			return undefined;
 		}

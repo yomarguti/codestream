@@ -208,9 +208,17 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 		const commentsById: { [id: string]: PullRequestComment } = Object.create(null);
 		const markersByCommit = new Map<string, Markerish[]>();
+		const trackingBranch = await git.getTrackingBranch(uri);
 
 		for (const c of comments) {
 			Logger.log(`GitHub.getPullRequestDocumentMarkers: processing comment ${c.id}`);
+
+			if (
+				c.pullRequest.isOpen &&
+				c.pullRequest.targetBranch !== trackingBranch?.shortName &&
+				c.pullRequest.sourceBranch !== trackingBranch?.shortName
+			)
+				continue;
 
 			let rev;
 			let line;
@@ -447,7 +455,10 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					createdAt: new Date(prComment.createdAt).getTime(),
 					pullRequest: {
 						id: pr.number,
-						url: pr.url
+						url: pr.url,
+						isOpen: pr.state === "OPEN",
+						targetBranch: pr.baseRefName,
+						sourceBranch: pr.headRefName
 					},
 					diffHunk: prComment.diffHunk,
 					outdated: prComment.outdated
@@ -545,7 +556,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		try {
 			const query = `query pr($owner: String!, $repo: String!) {
 				repository(name: $repo, owner: $owner${cursor ? `after: $cursor` : ""}) {
-					pullRequests(states: MERGED, first: 100, orderBy: { field: UPDATED_AT, direction: DESC }) {
+					pullRequests(states: [OPEN, MERGED], first: 100, orderBy: { field: UPDATED_AT, direction: DESC }) {
 						totalCount
 						pageInfo {
 							startCursor
@@ -556,6 +567,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 							title
 							number
 							url
+							state
+							baseRefName
+							headRefName
 							reviewThreads(first: 100) {
 								totalCount
 								pageInfo {
@@ -631,6 +645,9 @@ interface GitHubPullRequest {
 	title: string;
 	number: number;
 	url: string;
+	state: string;
+	baseRefName: string;
+	headRefName: string;
 	reviewThreads: {
 		totalCount: number;
 		pageInfo: {
