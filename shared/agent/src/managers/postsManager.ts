@@ -2,7 +2,7 @@
 import { CodeStreamApiProvider } from "api/codestream/codestreamApi";
 import * as fs from "fs";
 import { sortBy } from "lodash-es";
-import { TextDocumentIdentifier } from "vscode-languageserver";
+import { Range, TextDocumentIdentifier } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
 import { Marker, MarkerLocation } from "../api/extensions";
@@ -852,14 +852,49 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	): Promise<CreateShareableReviewResponse> {
 		const reviewRequest: CreateReviewRequest = {
 			...request.attributes,
-			repoChanges: []
+			markers: []
 		};
 
+		const { git } = SessionContainer.instance();
 		const markerCreationDescriptors: MarkerCreationDescriptor[] = [];
 		let review: ReviewPlus | undefined;
 
 		for (const repoChange of request.attributes.repoChanges) {
-			if (!repoChange.scm) continue;
+			const { scm, includeSaved, includeStaged, startCommit, excludedFiles } = repoChange;
+			if (!scm) continue;
+
+			const diffs = await git.getDiffs(scm.repoPath, includeSaved, includeStaged, startCommit);
+
+			for (const patch of diffs) {
+				const newFile = patch.newFileName?.substr(2);
+				if (newFile && !excludedFiles.includes(newFile)) {
+					for (const hunk of patch.hunks) {
+						const range: Range = {
+							start: { line: hunk.newStart, character: 0 },
+							end: { line: hunk.newStart + hunk.newLines + 1, character: 0 }
+						};
+
+						const descriptor = await MarkersManager.prepareMarkerCreationDescriptor(
+							hunk.lines.join("\n"),
+							// FIXME -- this isn't the best way to construct this URI
+							{ uri: "file://" + scm.repoPath + "/" + newFile },
+							range
+							// FIXME provide the CodeBlockSource
+							// codeBlock.scm
+						);
+
+						markerCreationDescriptors.push(descriptor);
+						reviewRequest.markers!.push(descriptor.marker);
+
+						if (!reviewRequest.remoteCodeUrl) {
+							reviewRequest.remoteCodeUrl = descriptor.marker.remoteCodeUrl;
+						}
+						if (!reviewRequest.remotes) {
+							reviewRequest.remotes = descriptor.marker.remotes;
+						}
+					}
+				}
+			}
 		}
 
 		let stream: CSDirectStream | CSChannelStream;

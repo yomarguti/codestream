@@ -44,9 +44,7 @@ export const CreateReviewRequestType = new RequestType<
 	void
 >("codestream/reviews/create");
 
-export interface ShareableReviewAttributes extends Omit<CreateReviewRequest, "markers"> {
-	codeBlocks?: GetRangeScmInfoResponse[];
-}
+export interface ShareableReviewAttributes extends Omit<CreateReviewRequest, "markers"> {}
 
 export interface CreateShareableReviewRequest {
 	attributes: ShareableReviewAttributes;

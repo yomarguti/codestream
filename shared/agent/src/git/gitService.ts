@@ -295,6 +295,29 @@ export class GitService implements IGitService, Disposable {
 		return patches[0];
 	}
 
+	async getDiffs(
+		repoPath: string,
+		includeSaved: boolean,
+		includeStaged: boolean,
+		ref?: string
+	): Promise<ParsedDiff[]> {
+		let data: string | undefined;
+		try {
+			const options = ["diff"];
+			if (includeStaged && !includeSaved) options.push("--staged");
+			if (ref && ref.length) options.push(ref);
+			if (!includeStaged) options.push("HEAD");
+			options.push("--");
+			data = await git({ cwd: repoPath }, ...options);
+		} catch (err) {
+			Logger.warn(`Error getting diff from ${repoPath}:${includeSaved}:${includeStaged}:${ref}`);
+			throw err;
+		}
+
+		const patches = parsePatch(data);
+		return patches;
+	}
+
 	async getFileForRevision(uri: URI, ref: string): Promise<string | undefined>;
 	async getFileForRevision(path: string, ref: string): Promise<string | undefined>;
 	async getFileForRevision(uriOrPath: URI | string, ref: string): Promise<string | undefined> {
