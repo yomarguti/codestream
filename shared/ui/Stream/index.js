@@ -18,7 +18,7 @@ import { CodemarkForm } from "./CodemarkForm";
 import KnowledgePanel from "./KnowledgePanel";
 import InlineCodemarks from "./InlineCodemarks";
 import CreateDMPanel from "./CreateDMPanel";
-import { createPostAndCodemark } from "./actions";
+import { CreateTeamPage } from "./CreateTeamPage";
 import ChannelMenu from "./ChannelMenu";
 import Icon from "./Icon";
 import Menu from "./Menu";
@@ -43,7 +43,7 @@ import {
 } from "../utils";
 import { getSlashCommands } from "./SlashCommands";
 import { confirmPopup } from "./Confirm";
-import { ModalRoot } from "./Modal";
+import { ModalRoot, Modal } from "./Modal";
 import { getPostsForStream, getPost } from "../store/posts/reducer";
 import {
 	isConnected as isConnectedToProvider,
@@ -345,66 +345,86 @@ export class SimpleStream extends Component {
 		);
 	}
 
+	buildTeamMenuItem() {
+		const { userTeams, teamId: currentTeamId } = this.props;
+
+		const buildSubmenu = () => {
+			const items = userTeams.map(team => {
+				const label = (() => {
+					if (safe(() => team.providerInfo.slack)) {
+						return (
+							<span>
+								<Icon name={PROVIDER_MAPPINGS.slack.icon} />
+								{team.id === currentTeamId && <Icon name="check" />}
+								{team.name}
+							</span>
+						);
+					}
+					if (safe(() => team.providerInfo.msteams)) {
+						return (
+							<span>
+								<Icon name={PROVIDER_MAPPINGS.msteams.icon} />
+								{team.id === currentTeamId && <Icon name="check" />}
+								{team.name}
+							</span>
+						);
+					}
+					return (
+						<span>
+							<Icon name="codestream" />
+							{team.id === currentTeamId && <Icon name="check" />}
+							{team.name}
+						</span>
+					);
+				})();
+
+				const isCurrentTeam = team.id === currentTeamId;
+
+				return {
+					key: team.id,
+					label: label,
+					noHover: isCurrentTeam,
+					action: () => {
+						if (isCurrentTeam) return;
+
+						this.props.switchToTeam(team.id);
+					}
+				};
+			});
+
+			const isOnACodestreamTeam = userTeams.find(team => getTeamProvider(team) === "codestream");
+			if (isOnACodestreamTeam) {
+				items.push(
+					{ label: "-" },
+					{
+						key: "create-team",
+						label: "Create New Team",
+						action: () => {
+							this.setState({ showCreateTeamModal: true });
+						}
+					}
+				);
+			}
+
+			return items;
+		};
+
+		return {
+			label: "Switch Team",
+			submenu: buildSubmenu()
+		};
+	}
+
 	renderMenu() {
 		const { menuOpen, menuTarget } = this.state;
 		// const inviteLabel = this.props.isCodeStreamTeam
 		// 	? "Invite People"
 		// 	: "Invite People to CodeStream";
 
-		const { userTeams, teamId: currentTeamId, apiCapabilities, inSharingModel } = this.props;
-		const hasOtherTeams = userTeams.length > 1;
-
-		const teamItem = {
-			label: "Switch Team",
-			noHover: !hasOtherTeams,
-			submenu: !hasOtherTeams
-				? null
-				: userTeams.map(team => {
-						const label = (() => {
-							if (safe(() => team.providerInfo.slack)) {
-								return (
-									<span>
-										<Icon name={PROVIDER_MAPPINGS.slack.icon} />
-										{team.id === currentTeamId && <Icon name="check" />}
-										{team.name}
-									</span>
-								);
-							}
-							if (safe(() => team.providerInfo.msteams)) {
-								return (
-									<span>
-										<Icon name={PROVIDER_MAPPINGS.msteams.icon} />
-										{team.id === currentTeamId && <Icon name="check" />}
-										{team.name}
-									</span>
-								);
-							}
-							return (
-								<span>
-									<Icon name="codestream" />
-									{team.id === currentTeamId && <Icon name="check" />}
-									{team.name}
-								</span>
-							);
-						})();
-
-						const isCurrentTeam = team.id === currentTeamId;
-
-						return {
-							key: team.id,
-							label: label,
-							noHover: isCurrentTeam,
-							action: () => {
-								if (isCurrentTeam) return;
-
-								this.props.switchToTeam(team.id);
-							}
-						};
-				  })
-		};
+		const { apiCapabilities, inSharingModel } = this.props;
 
 		const menuItems = [
-			hasOtherTeams ? teamItem : undefined,
+			this.buildTeamMenuItem(),
 			{ label: "-" }
 			// { label: inviteLabel, action: "invite" },
 		].filter(Boolean);
@@ -894,6 +914,11 @@ export class SimpleStream extends Component {
 				<ModalRoot />
 				{this.state.propsForPrePRProviderInfoModal && (
 					<PrePRProviderInfoModal {...this.state.propsForPrePRProviderInfoModal} />
+				)}
+				{this.state.showCreateTeamModal && (
+					<Modal onClose={() => this.setState({ showCreateTeamModal: false })}>
+						<CreateTeamPage />
+					</Modal>
 				)}
 				<div id="confirm-root" />
 				{(threadId || this.props.currentCodemarkId) && (

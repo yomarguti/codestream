@@ -13,7 +13,8 @@ import {
 	CSRepository,
 	CSStream,
 	CSTeam,
-	CSUser
+	CSUser,
+	CSCompany
 } from "@codestream/protocols/api";
 import { RequestType } from "vscode-jsonrpc";
 import { EditorContext, IpcRoutes, WebviewContext, SessionState } from "./webview.protocol.common";
@@ -50,6 +51,7 @@ export interface SignedInBootstrapData extends BootstrapInHostResponse {
 	repos: CSRepository[];
 	streams: CSStream[];
 	teams: CSTeam[];
+	companies: CSCompany[];
 	users: CSUser[];
 	unreads: Unreads;
 	providers: ThirdPartyProviders;

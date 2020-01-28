@@ -38,6 +38,7 @@ import {
 	apiUpgradeRecommended,
 	apiUpgradeRequired
 } from "../store/apiVersioning/actions";
+import { bootstrapCompanies } from "./companies/actions";
 
 export const reset = () => action("RESET");
 
@@ -65,6 +66,7 @@ export const bootstrap = (data?: SignedInBootstrapData) => async dispatch => {
 
 	dispatch(bootstrapUsers(data.users));
 	dispatch(bootstrapTeams(data.teams));
+	dispatch(bootstrapCompanies(data.companies));
 	dispatch(bootstrapStreams(data.streams));
 	dispatch(bootstrapRepos(data.repos));
 	// TODO: I think this should be removed and just live with the caps below

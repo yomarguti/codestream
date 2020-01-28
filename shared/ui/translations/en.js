@@ -95,5 +95,6 @@ export default {
 	"createChannel.name.invalid": "Looks invalid?",
 	"createChannel.name.required": "Required",
 	"setPassword.setPassword": "Set Password",
-	"setPassword.help": "6+ characters"
+	"setPassword.help": "6+ characters",
+	"createTeam.name.label": "Team Name"
 };
