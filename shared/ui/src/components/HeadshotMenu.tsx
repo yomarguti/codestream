@@ -52,7 +52,7 @@ export default class HeadshotMenu extends React.Component<Props, State> {
 			</Title>
 		);
 		return (
-			<>
+			<span>
 				<HeadshotName person={person} onClick={e => this.openMenu(e)} />
 				{this.state.open && (
 					<Menu
@@ -64,7 +64,7 @@ export default class HeadshotMenu extends React.Component<Props, State> {
 						action={this.openMenu}
 					/>
 				)}
-			</>
+			</span>
 		);
 	}
 }

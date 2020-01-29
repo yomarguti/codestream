@@ -208,7 +208,6 @@ class ReviewForm extends React.Component<Props, State> {
 		this.setState({ scmInfo }, () => {
 			this.handleRepoChange();
 			if (callback) callback();
-			this.setState({ isLoadingScm: false });
 		});
 	}
 
@@ -254,6 +253,7 @@ class ReviewForm extends React.Component<Props, State> {
 			response.paths.forEach(path => (ignoredFiles[path] = true));
 			this.setState({ ignoredFiles });
 		}
+		this.setState({ isLoadingScm: false });
 	}
 
 	async addIgnoreFile(filename: string) {
@@ -913,7 +913,9 @@ class ReviewForm extends React.Component<Props, State> {
 
 	renderReviewForm() {
 		const { editingReview, currentUser, repos } = this.props;
-		const { scmInfo, repoStatus, repoName } = this.state;
+		const { scmInfo, repoStatus, repoName, reviewers } = this.state;
+
+		const authors = repoStatus && repoStatus.scm ? repoStatus.scm.authors : {};
 
 		const modifier = navigator.appVersion.includes("Macintosh") ? "⌘" : "Alt";
 
@@ -975,21 +977,35 @@ class ReviewForm extends React.Component<Props, State> {
 					</div>
 					{this.renderTags()}
 					<div className="related" style={{ padding: "0", marginBottom: 0, position: "relative" }}>
-						<div className="related-label">Reviewers</div>
-						{this.state.reviewers.map(person => (
-							<HeadshotMenu
-								person={person}
-								menuItems={[
-									{
-										label: "Remove from Review",
-										action: () => this.removeReviewer(person)
-									}
-								]}
-							/>
-						))}
+						<div className="related-label">
+							{reviewers.length > 0 && !this.state.reviewersTouched && "Suggested "}Reviewers
+						</div>
+						{reviewers.map(person => {
+							const menu = (
+								<HeadshotMenu
+									person={person}
+									menuItems={[
+										{
+											label: "Remove from Review",
+											action: () => this.removeReviewer(person)
+										}
+									]}
+								/>
+							);
+							// # of times you stomped on their code
+							const stomps = authors[person.email];
+							if (stomps > 0) {
+								const title = stomps === 1 ? "1 edit" : `${stomps} edits`;
+								return (
+									<Tooltip placement="bottom" title={title}>
+										<span>{menu}</span>
+									</Tooltip>
+								);
+							} else return menu;
+						})}
 						<SelectPeople
 							title="Select Reviewers"
-							value={this.state.reviewers}
+							value={reviewers}
 							onChange={this.toggleReviewer}
 							multiSelect={true}
 						>
