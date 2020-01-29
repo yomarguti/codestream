@@ -354,7 +354,6 @@ export class SimpleStream extends Component {
 					if (safe(() => team.providerInfo.slack)) {
 						return (
 							<span>
-								<Icon name={PROVIDER_MAPPINGS.slack.icon} />
 								{team.id === currentTeamId && <Icon name="check" />}
 								{team.name}
 							</span>
@@ -363,7 +362,6 @@ export class SimpleStream extends Component {
 					if (safe(() => team.providerInfo.msteams)) {
 						return (
 							<span>
-								<Icon name={PROVIDER_MAPPINGS.msteams.icon} />
 								{team.id === currentTeamId && <Icon name="check" />}
 								{team.name}
 							</span>
@@ -371,7 +369,6 @@ export class SimpleStream extends Component {
 					}
 					return (
 						<span>
-							<Icon name="codestream" />
 							{team.id === currentTeamId && <Icon name="check" />}
 							{team.name}
 						</span>
