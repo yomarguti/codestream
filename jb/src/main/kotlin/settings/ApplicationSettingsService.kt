@@ -95,23 +95,26 @@ class ApplicationSettingsService : PersistentStateComponent<ApplicationSettingsS
 
     val proxySettings
         get(): ProxySettings? {
-            var url: String? = null
             val httpConfig = HttpConfigurable.getInstance()
-            if (httpConfig.USE_HTTP_PROXY && !httpConfig.PROXY_HOST.isNullOrBlank()) {
-                url = if (httpConfig.PROXY_AUTHENTICATION) {
+            return if (httpConfig.USE_HTTP_PROXY && !httpConfig.PROXY_HOST.isNullOrBlank()) {
+                val url = StringBuilder("http://")
+
+                if (httpConfig.PROXY_AUTHENTICATION) {
                     val login = httpConfig.proxyLogin?.encodeUrlQueryParameter()
                     val password = httpConfig.plainProxyPassword?.encodeUrlQueryParameter()
-                    "http://${login}:${password}@${httpConfig.PROXY_HOST}"
-                } else {
-                    httpConfig.PROXY_HOST
+                    url.append("${login}:${password}@")
                 }
+
+                url.append(httpConfig.PROXY_HOST)
 
                 if (httpConfig.PROXY_PORT != null) {
-                    url = url + ":" + httpConfig.PROXY_PORT
+                    url.append(":${httpConfig.PROXY_PORT}")
                 }
-            }
 
-            return url?.let { ProxySettings(it, state.proxyStrictSSL) }
+                return ProxySettings(url.toString(), state.proxyStrictSSL)
+            } else {
+                null
+            }
         }
 
     val proxySupport
