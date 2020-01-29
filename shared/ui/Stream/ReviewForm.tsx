@@ -106,6 +106,7 @@ interface State {
 	codeBlockInvalid?: boolean;
 	titleInvalid?: boolean;
 	textInvalid?: boolean;
+	reviewersInvalid?: boolean;
 	assigneesInvalid?: boolean;
 	sharingAttributesInvalid?: boolean;
 	showAllChannels?: boolean;
@@ -260,6 +261,15 @@ class ReviewForm extends React.Component<Props, State> {
 				// @ts-ignore
 				this.setState({ reviewers });
 			}
+
+			// if there is no title set, default it to a capitalized version
+			// of the branch name, with hypens replaced with spaces
+			if (statusInfo.scm.branch && !this.state.title) {
+				const { branch } = statusInfo.scm;
+				this.setState({
+					title: branch.charAt(0).toUpperCase() + branch.slice(1).replace("-", " ")
+				});
+			}
 		}
 
 		const response = await HostApi.instance.send(IgnoreFilesRequestType, {
@@ -302,7 +312,7 @@ class ReviewForm extends React.Component<Props, State> {
 	handleClickSubmit = async (event?: React.SyntheticEvent) => {
 		event && event.preventDefault();
 		if (this.state.isLoading) return;
-		// if (this.isFormInvalid()) return;
+		if (this.isFormInvalid()) return;
 		this.setState({ isLoading: true });
 
 		const { title, text, selectedChannelId, selectedTags, repoStatus } = this.state;
@@ -342,18 +352,18 @@ class ReviewForm extends React.Component<Props, State> {
 	};
 
 	isFormInvalid = () => {
-		const { text, title, assignees } = this.state;
+		const { text, title, reviewers } = this.state;
 
 		const validationState: Partial<State> = {
 			titleInvalid: false,
 			textInvalid: false,
-			assigneesInvalid: false,
+			reviewersInvalid: false,
 			sharingAttributesInvalid: false
 		};
 
 		let invalid = false;
-		if (text.length === 0) {
-			validationState.textInvalid = true;
+		if (title.length === 0) {
+			validationState.titleInvalid = true;
 			invalid = true;
 		}
 
