@@ -698,9 +698,7 @@ export class GitService implements IGitService, Disposable {
 		includeSaved: boolean,
 		includeStaged: boolean,
 		ref?: string
-	): Promise<
-		{ file: string; linesAdded: number; linesRemoved: number; status: FileStatus }[] | undefined
-	> {
+	): Promise<{ file: string; linesAdded: number; linesRemoved: number; status: FileStatus }[]> {
 		try {
 			// files changed, lines added & deleted
 			// git diff --numstat --summary
@@ -716,7 +714,7 @@ export class GitService implements IGitService, Disposable {
 				options.push("--");
 				data = await git({ cwd: repoPath }, ...options);
 			} catch {}
-			if (!data) return undefined;
+			if (!data) return [];
 
 			const ret: {
 				file: string;
@@ -743,7 +741,7 @@ export class GitService implements IGitService, Disposable {
 				});
 			return ret;
 		} catch {
-			return undefined;
+			return [];
 		}
 	}
 

@@ -99,14 +99,12 @@ export class ScmManager {
 		let file: string | undefined;
 		let stagedFiles: string[] = [];
 		let savedFiles: string[] = [];
-		let modifiedFiles:
-			| {
-					file: string;
-					linesAdded: number;
-					linesRemoved: number;
-					status: FileStatus;
-			  }[]
-			| undefined = [];
+		let modifiedFiles: {
+			file: string;
+			linesAdded: number;
+			linesRemoved: number;
+			status: FileStatus;
+		}[] = [];
 		const authors: { [id: string]: number } = {};
 		let totalModifiedLines = 0;
 
@@ -176,27 +174,27 @@ export class ScmManager {
 									}
 								}
 							});
-							(
-								await Promise.all(
-									Object.keys(ret).map(file => {
-										return git.getDiffAuthors(
-											repoPath,
-											file,
-											includeSaved,
-											includeStaged,
-											startCommit
-										);
-									})
-								)
-							)
-								.filter(Boolean)
-								.map(authorList =>
-									authorList.forEach(
-										author => (authors[author.email] = 1 + (authors[author.email] || 0))
-									)
-								);
 						}
 					}
+					(
+						await Promise.all(
+							modifiedFiles.map(f => {
+								return git.getDiffAuthors(
+									repoPath,
+									f.file,
+									includeSaved,
+									includeStaged,
+									startCommit
+								);
+							})
+						)
+					)
+						.filter(Boolean)
+						.map(authorList =>
+							authorList.forEach(
+								author => (authors[author.email] = 1 + (authors[author.email] || 0))
+							)
+						);
 				}
 			} catch (ex) {
 				gitError = ex.toString();
