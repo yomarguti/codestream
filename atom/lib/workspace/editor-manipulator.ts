@@ -30,11 +30,11 @@ export class EditorManipulator implements Disposable {
 
 			this.scrollIntoView(editor, range.start.row, { center: false });
 			const marker = editor.markBufferRange(range, {
-				invalidate: "never",
+				invalidate: "never"
 			});
 			editor.decorateMarker(marker, {
 				type: "highlight",
-				class: "codestream-highlight",
+				class: "codestream-highlight"
 			});
 
 			this._highlightResources.set(
@@ -51,7 +51,7 @@ export class EditorManipulator implements Disposable {
 			if (!editor) return false;
 
 			const markers = editor.findMarkers({
-				startBufferRow: range.start.row,
+				startBufferRow: range.start.row
 			});
 			markers.forEach(marker => {
 				this.removeHighlight((marker as any).id);

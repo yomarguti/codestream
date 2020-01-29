@@ -10,7 +10,7 @@ import {
 	OtcLoginRequestType,
 	PasswordLoginRequestType,
 	TokenLoginRequestType,
-	VersionCompatibility,
+	VersionCompatibility
 } from "../protocols/agent/agent.protocol";
 import { CSMe, LoginResult } from "../protocols/agent/api.protocol";
 import { PackageState } from "../types/package";
@@ -31,13 +31,13 @@ export interface Session {
 export enum SessionStatus {
 	SignedOut,
 	SigningIn,
-	SignedIn,
+	SignedIn
 }
 
 export enum SignoutReason {
 	Extension,
 	User,
-	MaintenanceMode,
+	MaintenanceMode
 }
 
 export interface SessionStatusChange {
@@ -135,7 +135,7 @@ export class WorkspaceSession {
 	serialize() {
 		return {
 			session: this.session,
-			lastUsedEmail: this.session ? this.session.user.email : this.lastUsedEmail,
+			lastUsedEmail: this.session ? this.session.user.email : this.lastUsedEmail
 		};
 	}
 
@@ -184,7 +184,7 @@ export class WorkspaceSession {
 			codemarkCompare: true,
 			editorTrackVisibleRange: true,
 			openLink: true,
-			services: {},
+			services: {}
 		};
 		if (!this.agentCapabilities) {
 			return editorCapabilities;
@@ -214,7 +214,7 @@ export class WorkspaceSession {
 			capabilities: this.capabilities,
 			configs: Container.configs.getForWebview(this.lastUsedEmail),
 			version: getPluginVersion(),
-			ide: { name: "Atom" },
+			ide: { name: "Atom" }
 		};
 	}
 
@@ -234,7 +234,7 @@ export class WorkspaceSession {
 				requestType,
 				{
 					...request,
-					...this.getTeamPreference(),
+					...this.getTeamPreference()
 				}
 			);
 
@@ -262,7 +262,7 @@ export class WorkspaceSession {
 		this.session = {
 			user: agentResult.loginResponse.user,
 			teamId: agentResult.state.teamId,
-			token: agentResult.state.token,
+			token: agentResult.state.token
 		};
 		this.lastUsedEmail = agentResult.loginResponse.user.email;
 		this.agentCapabilities = agentResult.state.capabilities;

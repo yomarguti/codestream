@@ -23,7 +23,7 @@ const keyForWebview = (key: string) => (key === "avatars" ? "showHeadshots" : ke
 
 export class ConfigManager implements Disposable {
 	readonly inMemory = {
-		debug: false,
+		debug: false
 	};
 
 	constructor(state: PackageState) {
@@ -40,7 +40,7 @@ export class ConfigManager implements Disposable {
 			debug: atom.inDevMode(),
 			team: this.get("team"),
 			serverUrl: this.get("serverUrl"),
-			email,
+			email
 		};
 	}
 

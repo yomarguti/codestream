@@ -1,8 +1,8 @@
+import * as os from "os";
+import * as path from "path";
 import { Disposable } from "atom";
 import { remote } from "electron";
 import * as fs from "fs-plus";
-import * as os from "os";
-import * as path from "path";
 import { Debug } from "utils";
 
 export const LOG_DIR = path.join(os.tmpdir(), `atom-codestream-${remote.getCurrentWindow().id}`);

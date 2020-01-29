@@ -2,7 +2,7 @@ export enum Environment {
 	Production = "Production",
 	PD = "PD",
 	QA = "QA",
-	Unknown = "Unknown",
+	Unknown = "Unknown"
 }
 
 export interface EnvironmentConfig {
@@ -12,17 +12,17 @@ export interface EnvironmentConfig {
 
 export const PRODUCTION_CONFIG: EnvironmentConfig = {
 	name: Environment.Production,
-	serverUrl: "https://api.codestream.com",
+	serverUrl: "https://api.codestream.com"
 };
 
 export const PD_CONFIG: EnvironmentConfig = {
 	name: Environment.PD,
-	serverUrl: "https://pd-api.codestream.us",
+	serverUrl: "https://pd-api.codestream.us"
 };
 
 export const QA_CONFIG: EnvironmentConfig = {
 	name: Environment.QA,
-	serverUrl: "https://qa-api.codestream.us",
+	serverUrl: "https://qa-api.codestream.us"
 };
 
 export function getEnvConfigForServerUrl(url?: string): EnvironmentConfig {

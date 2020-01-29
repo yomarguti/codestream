@@ -1,3 +1,4 @@
+import { ChildProcess, spawn } from "child_process";
 import {
 	AgentInitializeResult,
 	BaseAgentOptions,
@@ -19,11 +20,10 @@ import {
 	DidStartLoginNotificationType,
 	RestartRequiredNotificationType,
 	TelemetryRequest,
-	TelemetryRequestType,
+	TelemetryRequestType
 } from "@codestream/protocols/agent";
 import { CompositeDisposable, Disposable } from "atom";
 import { Convert, LanguageClientConnection } from "atom-languageclient";
-import { ChildProcess, spawn } from "child_process";
 import { EnvironmentConfig } from "env-utils";
 import { FileLogger } from "logger";
 import { asAbsolutePath, Debug, Echo, Editor, getAgentSource, getPluginVersion } from "utils";
@@ -33,7 +33,7 @@ import {
 	IPCMessageWriter,
 	MessageConnection,
 	NotificationType,
-	RequestType,
+	RequestType
 } from "vscode-jsonrpc";
 import {
 	ConfigurationParams,
@@ -41,7 +41,7 @@ import {
 	DidChangeWorkspaceFoldersParams,
 	MessageType,
 	RegistrationParams,
-	WorkspaceFoldersChangeEvent,
+	WorkspaceFoldersChangeEvent
 } from "vscode-languageserver-protocol";
 import { Container } from "workspace/container";
 import { LSP_CLIENT_CAPABILITIES } from "./lsp-client-capabilities";
@@ -180,7 +180,7 @@ export class AgentConnection implements Disposable {
 	}
 
 	async start() {
-		this._agentProcess = await this._startServer();
+		this._agentProcess = this._startServer();
 
 		const rpc = createMessageConnection(
 			new IPCMessageReader(this._agentProcess as ChildProcess),
@@ -189,7 +189,7 @@ export class AgentConnection implements Disposable {
 
 		this._connection = new LanguageClientConnection(rpc);
 
-		this._connection.onCustom(RestartRequiredNotificationType.method, e => {
+		this._connection.onCustom(RestartRequiredNotificationType.method, () => {
 			this._restartNeededEmitter.push();
 		});
 		this._preInitialization(this._connection, rpc);
@@ -201,11 +201,11 @@ export class AgentConnection implements Disposable {
 			workspaceFolders: [],
 			rootUri: firstProject ? Convert.pathToUri(firstProject) : null,
 			capabilities: LSP_CLIENT_CAPABILITIES,
-			initializationOptions: this._getInitializationOptions(),
+			initializationOptions: this._getInitializationOptions()
 		});
 
 		if (response.result.error) {
-			await this.stop();
+			this.stop();
 		} else {
 			this._connection.initialized();
 			this._initialized = true;
@@ -221,17 +221,17 @@ export class AgentConnection implements Disposable {
 				build: "",
 				buildEnv: "dev",
 				version: getPluginVersion(),
-				versionFormatted: `${getPluginVersion()}${atom.inDevMode() ? "(dev)" : ""}`,
+				versionFormatted: `${getPluginVersion()}${atom.inDevMode() ? "(dev)" : ""}`
 			},
 			ide: {
 				name: "Atom",
-				version: atom.getVersion(),
+				version: atom.getVersion()
 			},
 			disableStrictSSL: Container.configs.get("disableStrictSSL"),
 			isDebugging: atom.inDevMode(),
 			traceLevel: Container.configs.get("traceLevel"),
 			gitPath: "git",
-			serverUrl: this._environment.serverUrl,
+			serverUrl: this._environment.serverUrl
 		};
 
 		const configs = Container.configs;
@@ -243,7 +243,7 @@ export class AgentConnection implements Disposable {
 				initializationOptions.proxySupport = "override";
 				initializationOptions.proxy = {
 					url: proxy,
-					strictSSL: configs.get("proxyStrictSSL"),
+					strictSSL: configs.get("proxyStrictSSL")
 				};
 			} else {
 				initializationOptions.proxySupport = "on";
@@ -266,10 +266,10 @@ export class AgentConnection implements Disposable {
 								event: {
 									added: atom.project.getDirectories().map(dir => ({
 										uri: Convert.pathToUri(dir.getPath()),
-										name: dir.getBaseName(),
+										name: dir.getBaseName()
 									})),
-									removed: [],
-								} as WorkspaceFoldersChangeEvent,
+									removed: []
+								} as WorkspaceFoldersChangeEvent
 							} as DidChangeWorkspaceFoldersParams);
 						})
 					);
@@ -277,8 +277,8 @@ export class AgentConnection implements Disposable {
 			});
 		});
 
-		rpc.onRequest("workspace/configuration", (params: ConfigurationParams) => {
-			return params.items.map(({ section }) => {
+		rpc.onRequest("workspace/configuration", (params: ConfigurationParams) =>
+			params.items.map(({ section }) => {
 				const result = {};
 				if (section === "files.exclude" || section === "search.exclude") {
 					const ignoredPaths = atom.config.get("core.ignoredNames") as string[];
@@ -287,14 +287,14 @@ export class AgentConnection implements Disposable {
 					}
 					return result;
 				}
-			});
-		});
+			})
+		);
 
-		rpc.onRequest("workspace/workspaceFolders", () => {
-			return atom.project
+		rpc.onRequest("workspace/workspaceFolders", () =>
+			atom.project
 				.getDirectories()
-				.map(dir => ({ uri: Convert.pathToUri(dir.getPath()), name: dir.getBaseName() }));
-		});
+				.map(dir => ({ uri: Convert.pathToUri(dir.getPath()), name: dir.getBaseName() }))
+		);
 
 		this._subscriptions.add(
 			atom.workspace.observeTextEditors(editor => {
@@ -306,8 +306,8 @@ export class AgentConnection implements Disposable {
 						uri: Editor.getUri(editor),
 						languageId: "",
 						version: editor.getBuffer().createCheckpoint(),
-						text: editor.getText(),
-					},
+						text: editor.getText()
+					}
 				});
 				this._subscriptions.add(
 					editor.onDidDestroy(() =>
@@ -317,9 +317,9 @@ export class AgentConnection implements Disposable {
 						connection.didChangeTextDocument({
 							textDocument: {
 								uri: Editor.getUri(editor),
-								version: editor.createCheckpoint(),
+								version: editor.createCheckpoint()
 							},
-							contentChanges: [{ text: editor.getText() }],
+							contentChanges: [{ text: editor.getText() }]
 						});
 					}),
 					editor.onDidChangePath(path => {
@@ -329,8 +329,8 @@ export class AgentConnection implements Disposable {
 								uri: Convert.pathToUri(path),
 								languageId: "",
 								version: editor.getBuffer().createCheckpoint(),
-								text: editor.getText(),
-							},
+								text: editor.getText()
+							}
 						});
 					})
 				);
@@ -452,13 +452,13 @@ export class AgentConnection implements Disposable {
 	}
 
 	async reset(newEnvironmentConfig?: EnvironmentConfig) {
-		if (newEnvironmentConfig != undefined) this._environment = newEnvironmentConfig;
+		if (newEnvironmentConfig != null) this._environment = newEnvironmentConfig;
 		this.stop();
 		await this.start();
 	}
 }
 
-function started(target: AgentConnection, key: string, descriptor: PropertyDescriptor) {
+function started(_target: AgentConnection, _key: string, descriptor: PropertyDescriptor) {
 	const fn = descriptor.value;
 
 	descriptor.value = async function(this: AgentConnection, ...args: any[]) {

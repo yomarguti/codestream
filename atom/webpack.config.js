@@ -64,7 +64,7 @@ function getExtensionConfig(env) {
 						{
 							// TODO: Use environment variable if exists
 							source: path.resolve(__dirname, "../codestream-lsp-agent/dist"),
-							destination: "dist/agent",
+							destination: "dist/agent"
 						},
 						// {
 						// 	source: path.resolve(__dirname, "codestream-*.info"),
@@ -72,12 +72,12 @@ function getExtensionConfig(env) {
 						// },
 						{
 							source: path.resolve(__dirname, "../codestream-components/assets/icons"),
-							destination: "dist/icons",
-						},
-					],
-				},
-			],
-		}),
+							destination: "dist/icons"
+						}
+					]
+				}
+			]
+		})
 	];
 
 	if (env.analyzeBundle) {
@@ -94,7 +94,7 @@ function getExtensionConfig(env) {
 			libraryTarget: "commonjs2",
 			libraryExport: "default",
 			filename: "codestream.js",
-			devtoolModuleFilenameTemplate: "file:///[absolute-resource-path]",
+			devtoolModuleFilenameTemplate: "file:///[absolute-resource-path]"
 		},
 		optimization: {
 			minimizer: [
@@ -106,17 +106,17 @@ function getExtensionConfig(env) {
 						ecma: 8,
 						// Keep the class names otherwise @log won't provide a useful name
 						keep_classnames: true,
-						module: true,
-					},
-				}),
+						module: true
+					}
+				})
 			],
-			usedExports: true,
+			usedExports: true
 		},
 		resolve: {
 			extensions: [".ts", ".tsx", ".js", ".jsx"],
 			plugins: [new TsconfigPathsPlugin()],
 			// Treats symlinks as real files -- using their "current" path
-			symlinks: false,
+			symlinks: false
 		},
 		externals: [{ atom: "atom", electron: "electron" }],
 		module: {
@@ -124,15 +124,16 @@ function getExtensionConfig(env) {
 				{
 					test: /\.ts$/,
 					enforce: "pre",
-					use: "tslint-loader",
+					loader: "eslint-loader",
 					exclude: /node_modules/,
+					options: { fix: true }
 				},
 				{
 					test: /\.tsx?$/,
 					use: "ts-loader",
-					exclude: /node_modules|\.d\.ts$/,
-				},
-			],
+					exclude: /node_modules|\.d\.ts$/
+				}
+			]
 		},
 		plugins: plugins,
 		stats: {
@@ -142,8 +143,8 @@ function getExtensionConfig(env) {
 			env: true,
 			errors: true,
 			timings: true,
-			warnings: true,
-		},
+			warnings: true
+		}
 	};
 }
 
@@ -154,7 +155,7 @@ function getWebviewConfig(env) {
 		new CleanPlugin([
 			"dist/webview/*.{js,html}",
 			"dist/webview/node_modules",
-			"dist/webview/styles",
+			"dist/webview/styles"
 		]),
 		new webpack.DefinePlugin(
 			Object.assign(env.production ? { "process.env.NODE_ENV": JSON.stringify("production") } : {})
@@ -165,43 +166,43 @@ function getWebviewConfig(env) {
 					copy: [
 						{
 							source: path.resolve(__dirname, "webview-lib/webview.less"),
-							destination: "dist/webview/styles/",
+							destination: "dist/webview/styles/"
 						},
 						{
 							source: path.resolve(__dirname, "../codestream-components/styles/*"),
-							destination: "dist/webview/styles/",
+							destination: "dist/webview/styles/"
 						},
 						{
 							source: path.resolve(
 								__dirname,
 								"../codestream-components/node_modules/rc-tooltip/assets/bootstrap.css"
 							),
-							destination: "dist/webview/node_modules/rc-tooltip/assets/bootstrap.css",
+							destination: "dist/webview/node_modules/rc-tooltip/assets/bootstrap.css"
 						},
 						{
 							source: path.resolve(
 								__dirname,
 								"../codestream-components/node_modules/emoji-mart/css/emoji-mart.css"
 							),
-							destination: "dist/webview/node_modules/emoji-mart/css/emoji-mart.css",
+							destination: "dist/webview/node_modules/emoji-mart/css/emoji-mart.css"
 						},
 						{
 							source: path.resolve(__dirname, "../codestream-components/assets/icons"),
-							destination: "dist/icons",
-						},
-					],
-				},
+							destination: "dist/icons"
+						}
+					]
+				}
 			],
 			onEnd: [
 				{
 					copy: [
 						{
 							source: path.resolve(__dirname, "webview-lib/preload.js"),
-							destination: "dist/webview/",
-						},
-					],
-				},
-			],
+							destination: "dist/webview/"
+						}
+					]
+				}
+			]
 		}),
 		new HtmlPlugin({
 			template: "index.html",
@@ -215,14 +216,14 @@ function getWebviewConfig(env) {
 						useShortDoctype: true,
 						removeEmptyAttributes: true,
 						removeStyleLinkTypeAttributes: true,
-						keepClosingSlash: true,
+						keepClosingSlash: true
 				  }
-				: false,
+				: false
 		}),
 		new ForkTsCheckerPlugin({
 			async: false,
-			useTypescriptIncrementalApi: false,
-		}),
+			useTypescriptIncrementalApi: false
+		})
 	];
 
 	if (env.analyzeBundleWebview) {
@@ -233,7 +234,7 @@ function getWebviewConfig(env) {
 		name: "webview",
 		context: context,
 		entry: {
-			webview: "./index.ts",
+			webview: "./index.ts"
 		},
 		node: false,
 		mode: env.production ? "production" : "development",
@@ -241,7 +242,7 @@ function getWebviewConfig(env) {
 		output: {
 			filename: "[name].js",
 			path: path.resolve(__dirname, "dist/webview"),
-			publicPath: "{{root}}/dist/webview/",
+			publicPath: "{{root}}/dist/webview/"
 		},
 		optimization: {
 			minimizer: [
@@ -250,9 +251,9 @@ function getWebviewConfig(env) {
 					parallel: true,
 					sourceMap: !env.production,
 					terserOptions: {
-						ecma: 8,
-					},
-				}),
+						ecma: 8
+					}
+				})
 			],
 			splitChunks: {
 				cacheGroups: {
@@ -260,40 +261,40 @@ function getWebviewConfig(env) {
 					data: {
 						chunks: "all",
 						filename: "webview-data.js",
-						test: /\.json/,
-					},
-				},
-			},
+						test: /\.json/
+					}
+				}
+			}
 		},
 		module: {
 			rules: [
 				{
 					test: /\.html$/,
 					use: "html-loader",
-					exclude: /node_modules/,
+					exclude: /node_modules/
 				},
 				{
 					test: /\.(js|ts)x?$/,
 					use: {
 						loader: "babel-loader",
 						options: {
-							plugins: ["babel-plugin-styled-components"],
-						},
+							plugins: ["babel-plugin-styled-components"]
+						}
 					},
-					exclude: /node_modules/,
-				},
-			],
+					exclude: /node_modules/
+				}
+			]
 		},
 		resolve: {
 			extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
 			modules: [context, "node_modules"],
 			plugins: [
 				new TsconfigPathsPlugin({
-					configFile: path.resolve(context, "tsconfig.json"),
-				}),
+					configFile: path.resolve(context, "tsconfig.json")
+				})
 			],
 			// Treats symlinks as real files -- using their "current" path
-			symlinks: false,
+			symlinks: false
 		},
 		plugins: plugins,
 		stats: {
@@ -303,8 +304,8 @@ function getWebviewConfig(env) {
 			env: true,
 			errors: true,
 			timings: true,
-			warnings: true,
-		},
+			warnings: true
+		}
 	};
 }
 

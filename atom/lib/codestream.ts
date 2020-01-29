@@ -1,7 +1,7 @@
 import {
 	ChangeDataType,
 	CreateDocumentMarkerPermalinkRequestType,
-	GetDocumentFromKeyBindingRequestType,
+	GetDocumentFromKeyBindingRequestType
 } from "@codestream/protocols/agent";
 import { CodemarkType } from "@codestream/protocols/api";
 import { doTimes } from "@teamcodestream/js-utils";
@@ -17,7 +17,7 @@ import {
 	EnvironmentConfig,
 	PD_CONFIG,
 	PRODUCTION_CONFIG,
-	QA_CONFIG,
+	QA_CONFIG
 } from "./env-utils";
 import { PackageState } from "./types/package";
 import { StatusBar } from "./types/package-services/status-bar";
@@ -72,7 +72,7 @@ class CodestreamPackage {
 				didDispatch: () => {
 					Container.viewController.reload(CODESTREAM_VIEW_URI);
 				},
-				hiddenInCommandPalette,
+				hiddenInCommandPalette
 			}),
 			atom.commands.add("atom-workspace", "codestream:point-to-qa", {
 				didDispatch: async () => {
@@ -81,7 +81,7 @@ class CodestreamPackage {
 					this.environmentChangeEmitter.push(QA_CONFIG);
 					Container.viewController.reload(CODESTREAM_VIEW_URI);
 				},
-				hiddenInCommandPalette,
+				hiddenInCommandPalette
 			}),
 			atom.commands.add("atom-workspace", "codestream:point-to-dev", {
 				didDispatch: async () => {
@@ -90,7 +90,7 @@ class CodestreamPackage {
 					this.environmentChangeEmitter.push(PD_CONFIG);
 					Container.viewController.reload(CODESTREAM_VIEW_URI);
 				},
-				hiddenInCommandPalette,
+				hiddenInCommandPalette
 			}),
 			atom.commands.add("atom-workspace", "codestream:point-to-production", {
 				didDispatch: async () => {
@@ -99,7 +99,7 @@ class CodestreamPackage {
 					this.environmentChangeEmitter.push(PRODUCTION_CONFIG);
 					Container.viewController.reload(CODESTREAM_VIEW_URI);
 				},
-				hiddenInCommandPalette,
+				hiddenInCommandPalette
 			})
 		);
 	}
@@ -121,7 +121,7 @@ class CodestreamPackage {
 		return {
 			...Container.session.serialize(),
 			views: Container.viewController.serialize(),
-			debug: Debug.isDebugging(),
+			debug: Debug.isDebugging()
 		};
 	}
 
@@ -142,7 +142,7 @@ class CodestreamPackage {
 	provideEnvironmentConfig() {
 		return {
 			get: () => Container.session.environment,
-			onDidChange: (cb: Listener<EnvironmentConfig>) => this.environmentChangeEmitter.add(cb),
+			onDidChange: (cb: Listener<EnvironmentConfig>) => this.environmentChangeEmitter.add(cb)
 		};
 	}
 
@@ -152,7 +152,7 @@ class CodestreamPackage {
 				Debug.setDebugging(enable);
 				atom.reload();
 			},
-			get: () => Debug.isDebugging(),
+			get: () => Debug.isDebugging()
 		};
 	}
 
@@ -168,28 +168,28 @@ class CodestreamPackage {
 			// context menu options
 			atom.commands.add("atom-workspace", "codestream:context-create-comment", {
 				hiddenInCommandPalette: true,
-				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Comment, "Context Menu"),
+				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Comment, "Context Menu")
 			}),
 			atom.commands.add("atom-workspace", "codestream:context-create-issue", {
 				hiddenInCommandPalette: true,
-				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Issue, "Context Menu"),
+				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Issue, "Context Menu")
 			}),
 			atom.commands.add("atom-workspace", "codestream:context-get-permalink", {
 				hiddenInCommandPalette: true,
-				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Link, "Context Menu"),
+				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Link, "Context Menu")
 			}),
 			// keymappings
 			atom.commands.add("atom-workspace", "codestream:keymap-create-comment", {
 				hiddenInCommandPalette: true,
-				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Comment, "Shortcut"),
+				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Comment, "Shortcut")
 			}),
 			atom.commands.add("atom-workspace", "codestream:keymap-create-issue", {
 				hiddenInCommandPalette: true,
-				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Issue, "Shortcut"),
+				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Issue, "Shortcut")
 			}),
 			atom.commands.add("atom-workspace", "codestream:keymap-get-permalink", {
 				hiddenInCommandPalette: true,
-				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Link, "Shortcut"),
+				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Link, "Shortcut")
 			}),
 			atom.commands.add("atom-workspace", "codestream:keymap-copy-permalink", {
 				hiddenInCommandPalette: true,
@@ -203,12 +203,12 @@ class CodestreamPackage {
 						{
 							uri: Editor.getUri(editor),
 							range: Editor.getCurrentSelectionRange(editor),
-							privacy: "private",
+							privacy: "private"
 						}
 					);
 					atom.clipboard.write(response.linkUrl);
 					atom.notifications.addInfo("Permalink copied to clipboard!");
-				},
+				}
 			})
 		);
 		doTimes(9, i => {
@@ -218,7 +218,7 @@ class CodestreamPackage {
 					const response = await Container.session.agent.request(
 						GetDocumentFromKeyBindingRequestType,
 						{
-							key: count,
+							key: count
 						}
 					);
 
@@ -228,7 +228,7 @@ class CodestreamPackage {
 
 					Container.session.agent.telemetry({
 						eventName: "Codemark Clicked",
-						properties: { "Codemark Location": "Shortcut" },
+						properties: { "Codemark Location": "Shortcut" }
 					});
 
 					const atomRange = Convert.lsRangeToAtomRange(range);
@@ -287,7 +287,7 @@ class CodestreamPackage {
 
 		const getStatusBarIconClasses = (
 			status: SessionStatus,
-			unreads?: { totalMentions: number }
+			_unreads?: { totalMentions: number }
 		) => {
 			if (status === SessionStatus.SigningIn) {
 				return "icon loading loading-spinner-tiny inline-block".split(" ");
@@ -362,16 +362,18 @@ const packageWrapper = {
 	async deactivate() {
 		await codestream!.deactivate();
 		codestream = undefined;
-	},
+	}
 };
 
+// we need to export default for compatibilit with atom because it expects packages to be commonjs modules
+// eslint-disable-next-line import/no-default-export
 export default new Proxy(packageWrapper, {
 	get(target: any, name: any) {
 		if (Reflect.has(target, name)) {
 			return target[name];
 		}
 
-		if (codestream != undefined && Reflect.has(codestream, name)) {
+		if (codestream != null && Reflect.has(codestream, name)) {
 			let property = codestream[name];
 			if (typeof property === "function") {
 				property = property.bind(codestream);
@@ -380,5 +382,5 @@ export default new Proxy(packageWrapper, {
 		}
 
 		return undefined;
-	},
+	}
 });

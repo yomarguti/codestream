@@ -5,8 +5,7 @@ import {
 	DisplayMarker,
 	DisplayMarkerLayer,
 	Disposable,
-	Point,
-	TextEditor,
+	TextEditor
 } from "atom";
 import { Convert } from "atom-languageclient";
 import { asAbsolutePath, Editor } from "utils";
@@ -21,7 +20,7 @@ interface DefaultCreator<K = any, V = any> {
 class MapWithDefaults<K, V> extends Map<K, V> {
 	private createDefault: DefaultCreator<K, V>;
 
-	constructor(createDefault: DefaultCreator, entries?: ReadonlyArray<[K, V]>) {
+	constructor(createDefault: DefaultCreator, entries?: readonly [K, V][]) {
 		super(entries);
 		this.createDefault = createDefault;
 	}
@@ -122,11 +121,11 @@ export class MarkerDecorationProvider implements Disposable {
 		}
 
 		this.decorateEditor(editor);
-	}
+	};
 
 	private async decorateEditor(editor: TextEditor) {
 		const response = await this.session.agent.request(FetchDocumentMarkersRequestType, {
-			textDocument: { uri: Convert.pathToUri(editor.getPath()!) },
+			textDocument: { uri: Convert.pathToUri(editor.getPath()!) }
 		});
 
 		if (response && response.markers) {
@@ -134,7 +133,7 @@ export class MarkerDecorationProvider implements Disposable {
 			this.markers.clear();
 
 			response.markers = response.markers.filter(m => {
-				if (m.codemark == undefined) return false;
+				if (m.codemark == null) return false;
 				if (m.codemark.color === "none" || !m.codemark.pinned) return false;
 				if (m.codemark.type === CodemarkType.Issue) {
 					return m.codemark.status === CodemarkStatus.Open;
@@ -180,7 +179,7 @@ export class MarkerDecorationProvider implements Disposable {
 			this.viewController.getMainView().showCodemark(codemark.id, Editor.getUri(editor));
 			Container.session.agent.telemetry({
 				eventName: "Codemark Clicked",
-				properties: { "Codemark Location": "Source File" },
+				properties: { "Codemark Location": "Source File" }
 			});
 		};
 
@@ -199,7 +198,7 @@ export class MarkerDecorationProvider implements Disposable {
 		let gutter = editor.gutterWithName(this.getGutterName(editor.id));
 		if (gutter == null) {
 			gutter = editor.addGutter({
-				name: this.getGutterName(editor.id),
+				name: this.getGutterName(editor.id)
 			});
 		}
 		if (!gutter.isVisible()) {
@@ -210,7 +209,7 @@ export class MarkerDecorationProvider implements Disposable {
 
 		const tooltip = atom.tooltips.add(img, {
 			title: `${docMarker.creatorName}: ${docMarker.summary}`,
-			placement: "right",
+			placement: "right"
 		});
 
 		decoration.onDidDestroy(() => tooltip.dispose());
@@ -234,7 +233,7 @@ export class MarkerDecorationProvider implements Disposable {
 
 		const displayMarker = markerLayer.markBufferRange({
 			start: docMarkerBufferRange.start,
-			end: docMarkerBufferRange.start,
+			end: docMarkerBufferRange.start
 		});
 		displayMarker.onDidDestroy(() => {
 			this.markers.delete(docMarker.id);

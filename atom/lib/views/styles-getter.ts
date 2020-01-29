@@ -62,7 +62,7 @@ export class StylesProvider implements Disposable {
 									"CodeStream: could not copy codestream-components styles into `dist/`",
 									{
 										dismissable: true,
-										detail: error.message,
+										detail: error.message
 									}
 								);
 							}
@@ -74,7 +74,7 @@ export class StylesProvider implements Disposable {
 										"CodeStream: could not copy styles into `dist/`",
 										{
 											dismissable: true,
-											detail: error.message,
+											detail: error.message
 										}
 									);
 								}
@@ -133,7 +133,7 @@ export class StylesProvider implements Disposable {
 			atomStyles.innerHTML,
 			editorStyles.innerHTML,
 			uiStyles.innerHTML,
-			syntaxStyles.innerHTML,
+			syntaxStyles.innerHTML
 		];
 	}
 

@@ -25,7 +25,7 @@ export class EditorObserver implements Disposable {
 									this.emitter.emit(DID_CHANGE_SELECTION, {
 										editor,
 										range: event.selection.getBufferRange(),
-										cursor: editor.getCursorBufferPosition(),
+										cursor: editor.getCursorBufferPosition()
 									});
 								}
 							});
@@ -47,7 +47,7 @@ export class EditorObserver implements Disposable {
 					*/
 					if (editorView) {
 						editorSubscriptions.add(
-							editor.onDidRequestAutoscroll(async event => {
+							editor.onDidRequestAutoscroll(async _event => {
 								await editorView.getNextUpdatePromise();
 								this.emitter.emit(DID_CHANGE_VISIBLE_RANGES, editor);
 							}),

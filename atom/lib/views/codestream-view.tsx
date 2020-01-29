@@ -9,7 +9,7 @@ import {
 	GetDocumentFromMarkerRequestType,
 	ReportingMessageType,
 	ReportMessageRequestType,
-	TraceLevel,
+	TraceLevel
 } from "@codestream/protocols/agent";
 import { CodemarkType } from "@codestream/protocols/api";
 import {
@@ -62,7 +62,7 @@ import {
 	WebviewDidInitializeNotificationType,
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage,
-	WebviewPanels,
+	WebviewPanels
 } from "@codestream/protocols/webview";
 import { CompositeDisposable, Disposable, Emitter, Point, Range, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
@@ -201,7 +201,7 @@ export class CodestreamView {
 				case "ready": {
 					this.webview.send("initialize", {
 						styles: await Container.styles.getStylesheets(),
-						isDebugging: Debug.isDebugging(),
+						isDebugging: Debug.isDebugging()
 					});
 					this.subscriptions.add(
 						Container.styles.onDidChange(styles => {
@@ -294,7 +294,7 @@ export class CodestreamView {
 		const emulatedKeyboardEvent = new KeyboardEvent("keydown", event);
 
 		Object.defineProperty(emulatedKeyboardEvent, "target", {
-			get: () => this.webview,
+			get: () => this.webview
 		});
 		// not sure this is worth it
 		atom.keymaps.handleKeyboardEvent(emulatedKeyboardEvent);
@@ -309,7 +309,7 @@ export class CodestreamView {
 				uri: Editor.getUri(editor),
 				selections: Editor.getCSSelections(editor),
 				visibleRanges: Editor.getVisibleRanges(editor),
-				lineCount: editor.getLineCount(),
+				lineCount: editor.getLineCount()
 			});
 		});
 	}
@@ -391,7 +391,7 @@ export class CodestreamView {
 
 	serialize() {
 		return {
-			deserializer: "codestream/CodestreamView",
+			deserializer: "codestream/CodestreamView"
 		};
 	}
 
@@ -433,7 +433,7 @@ export class CodestreamView {
 				textEditorUri: uri,
 				textEditorVisibleRanges: Editor.getVisibleRanges(editor),
 				textEditorSelections: Editor.getCSSelections(editor),
-				textEditorLineCount: editor.getLineCount(),
+				textEditorLineCount: editor.getLineCount()
 			};
 		}
 		return {};
@@ -456,8 +456,8 @@ export class CodestreamView {
 					const response: BootstrapInHostResponse = {
 						...this.session.getBootstrapInfo(),
 						context: this.webviewContext || {
-							currentTeamId: this.session.isSignedIn ? this.session.teamId : undefined,
-						},
+							currentTeamId: this.session.isSignedIn ? this.session.teamId : undefined
+						}
 					};
 
 					return { params: response };
@@ -468,18 +468,18 @@ export class CodestreamView {
 			case ShellPromptFolderRequestType.method: {
 				const result = remote.dialog.showOpenDialog({
 					title: message.params.message,
-					properties: ["openDirectory"],
+					properties: ["openDirectory"]
 				});
 				const response: ShellPromptFolderResponse = {
-					path: result && result.length ? result[0] : undefined,
+					path: result && result.length ? result[0] : undefined
 				};
 				return { params: response };
 			}
 			case GetActiveEditorContextRequestType.method: {
 				return {
 					params: {
-						editorContext: this.getActiveEditorContext(),
-					} as GetActiveEditorContextResponse,
+						editorContext: this.getActiveEditorContext()
+					} as GetActiveEditorContextResponse
 				};
 			}
 			case UpdateConfigurationRequestType.method: {
@@ -519,7 +519,7 @@ export class CodestreamView {
 						message: "Could not select range in buffer",
 						type: ReportingMessageType.Error,
 						source: "extension",
-						extra: error,
+						extra: error
 					});
 					return { params: { success: false } as EditorSelectRangeResponse };
 				}
@@ -569,7 +569,7 @@ export class CodestreamView {
 				const documentMarkerInfo = await Container.session.agent.request(
 					GetDocumentFromMarkerRequestType,
 					{
-						markerId: marker.id,
+						markerId: marker.id
 					}
 				);
 
@@ -600,7 +600,7 @@ export class CodestreamView {
 					Container.session.agent.request(ReportMessageRequestType, {
 						type: ReportingMessageType.Warning,
 						message: `Unhandled request from webview: ${message.method}`,
-						source: "extension",
+						source: "extension"
 					});
 				}
 				return { error: "No handler found" };
@@ -640,7 +640,7 @@ export class CodestreamView {
 				Container.session.agent.request(ReportMessageRequestType, {
 					type: ReportingMessageType.Warning,
 					message: `Unhandled notification from webview: ${event.method}`,
-					source: "extension",
+					source: "extension"
 				});
 				if (atom.inDevMode() && Container.configs.get("traceLevel") === TraceLevel.Debug) {
 					atom.notifications.addWarning(`Unhandled webview notification: ${event.method}`);
@@ -675,9 +675,9 @@ export class CodestreamView {
 			uri: Editor.getUri(event.editor),
 			selections: Editor.getCSSelections(event.editor),
 			visibleRanges: Editor.getVisibleRanges(event.editor),
-			lineCount: event.editor.getLineCount(),
+			lineCount: event.editor.getLineCount()
 		});
-	}
+	};
 
 	private _onEditorActiveEditorChanged = (editor?: TextEditor) => {
 		const notification: HostDidChangeActiveEditorNotification = {};
@@ -690,11 +690,11 @@ export class CodestreamView {
 				selections: Editor.getCSSelections(editor),
 				metrics: {
 					lineHeight: editor.getLineHeightInPixels(),
-					fontSize: atom.config.get("editor.fontSize"),
+					fontSize: atom.config.get("editor.fontSize")
 				},
-				lineCount: editor.getLineCount(),
+				lineCount: editor.getLineCount()
 			};
 		}
 		this.sendNotification(HostDidChangeActiveEditorNotificationType, notification);
-	}
+	};
 }

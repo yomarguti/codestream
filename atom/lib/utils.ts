@@ -1,10 +1,10 @@
+import * as os from "os";
+import * as path from "path";
 import { TraceLevel } from "@codestream/protocols/agent";
 import { EditorSelection } from "@codestream/protocols/webview";
 import { Disposable, Range, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
 import * as fs from "fs-plus";
-import * as os from "os";
-import * as path from "path";
 import { Range as LSRange } from "vscode-languageserver-types";
 import { Container } from "workspace/container";
 
@@ -41,18 +41,15 @@ export const asAbsolutePath = (relativePath: string) => {
 	return path.join(packagePath, relativePath);
 };
 
-export const getPluginVersion = () => {
-	return (getPackage() as any).metadata.version;
-};
+export const getPluginVersion = () => (getPackage() as any).metadata.version;
 
 export const getDevPath = () => {
 	const distPath = path.dirname((getPackage() as any).mainModulePath);
 	return path.resolve(distPath, "..");
 };
 
-export const getAgentSource = () => {
-	return path.resolve(getDevPath(), "../codestream-lsp-agent/dist/agent.js");
-};
+export const getAgentSource = () =>
+	path.resolve(getDevPath(), "../codestream-lsp-agent/dist/agent.js");
 
 export namespace Debug {
 	export function setDebugging(value: boolean) {
@@ -108,7 +105,7 @@ export namespace Editor {
 			return {
 				cursor: { line: cursor.row, character: cursor.column },
 				start,
-				end,
+				end
 			};
 		});
 	}
@@ -152,7 +149,9 @@ interface CancelableFunction {
 	cancel(): void;
 }
 
-export function throttle<F extends (...args: any[]) => any>(fn: F, time = 500): CancelableFunction {
+type AnyCallback = (...args: any[]) => any;
+
+export function throttle<F extends AnyCallback>(fn: F, time = 500): CancelableFunction {
 	let requestId: any | undefined;
 	let lastArgs: any[] = [];
 

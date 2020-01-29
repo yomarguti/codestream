@@ -1,7 +1,7 @@
 import { CompositeDisposable, Disposable, Dock, WorkspaceCenter, WorkspaceItem } from "atom";
 import {
 	DidChangeApiVersionCompatibilityNotificationType,
-	DidChangeVersionCompatibilityNotification,
+	DidChangeVersionCompatibilityNotification
 } from "protocols/agent/agent.protocol.notifications";
 import { WorkspaceSession } from "workspace/workspace-session";
 import { Container } from "../workspace/container";
@@ -28,14 +28,14 @@ export interface ViewsState {
 }
 
 const initialViewState: ViewsState = {
-	[CODESTREAM_VIEW_URI]: { state: {} },
+	[CODESTREAM_VIEW_URI]: { state: {} }
 };
 
 const containers = [
 	atom.workspace.getCenter(),
 	atom.workspace.getLeftDock(),
 	atom.workspace.getRightDock(),
-	atom.workspace.getBottomDock(),
+	atom.workspace.getBottomDock()
 ];
 
 function isDock(container: Dock | WorkspaceCenter): container is Dock {
