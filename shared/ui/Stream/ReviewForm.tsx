@@ -48,6 +48,7 @@ import { confirmPopup } from "./Confirm";
 import { markdownify } from "./Markdowner";
 import { EditorRevealRangeRequestType } from "../ipc/host.protocol.editor";
 import { Range } from "vscode-languageserver-types";
+import { PostsActionsType } from "../store/posts/types";
 
 interface Props extends ConnectedProps {
 	streamId: string;
@@ -279,31 +280,33 @@ class ReviewForm extends React.Component<Props, State> {
 		const reviewerIds = (this.state.reviewers as any[]).map(r => r.id);
 
 		try {
-			let review = {
-				title,
-				text: replaceHtml(text)!,
-				reviewers: reviewerIds,
-				tags: keyFilter(selectedTags),
-				repoChanges: [
-					{
-						scm: repoStatus.scm,
-						startCommit,
-						excludeCommit,
-						excludedFiles: keyFilter(excludedFiles),
-						includeSaved,
-						includeStaged
-					}
-				]
-			} as any;
-
 			if (this.props.createPostAndReview) {
+				let review = {
+					title,
+					text: replaceHtml(text)!,
+					reviewers: reviewerIds,
+					tags: keyFilter(selectedTags),
+					repoChanges: [
+						{
+							scm: repoStatus.scm,
+							startCommit,
+							excludeCommit,
+							excludedFiles: keyFilter(excludedFiles),
+							includeSaved,
+							includeStaged
+						}
+					]
+				} as any;
 				const { type: createResult } = await this.props.createPostAndReview(review);
+				if (createResult !== PostsActionsType.FailPendingPost && this.props.closePanel)
+					this.props.closePanel();
 			}
 		} catch (error) {
+			console.log("ERROR FROM CREATE POST: ", error);
+			// FIXME handle the error
+			this.setState({ isLoading: false });
 		} finally {
-			setTimeout(() => {
-				this.setState({ isLoading: false });
-			}, 1000);
+			this.setState({ isLoading: false });
 		}
 	};
 
