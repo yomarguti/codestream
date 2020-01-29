@@ -153,11 +153,9 @@ export enum FileStatus {
 export interface CSRepoChangeset {
 	repoId: string;
 	branch: string;
-	commits: string[];
-	diff: { [file: string]: string }[];
-	changedFiles: {
-		[file: string]: { linesAdded: number; linesRemoved: number; status: FileStatus };
-	};
+	commits: { sha: string; info: {} }[];
+	diffs: any[]; // ParsedDiff[];
+	modifiedFiles: { file: string; linesAdded: number; linesRemoved: number; status: FileStatus }[];
 	includeSaved: boolean;
 	includeStaged: boolean;
 }

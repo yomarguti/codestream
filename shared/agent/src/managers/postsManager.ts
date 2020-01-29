@@ -852,7 +852,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	): Promise<CreateShareableReviewResponse> {
 		const reviewRequest: CreateReviewRequest = {
 			...request.attributes,
-			markers: []
+			markers: [],
+			repoChangeset: []
 		};
 
 		const { git } = SessionContainer.instance();
@@ -861,10 +862,34 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 		for (const repoChange of request.attributes.repoChanges) {
 			const { scm, includeSaved, includeStaged, startCommit, excludedFiles } = repoChange;
-			if (!scm) continue;
+			if (!scm || !scm.repoId || !scm.branch || !scm.commits) continue;
 
-			const diffs = await git.getDiffs(scm.repoPath, includeSaved, includeStaged, startCommit);
+			// filter out excluded files from the diffs and modified files
+			const diffs = (
+				await git.getDiffs(scm.repoPath, includeSaved, includeStaged, startCommit)
+			).filter(diff => diff.newFileName && !excludedFiles.includes(diff.newFileName.substr(2)));
+			const modifiedFiles = scm.modifiedFiles.filter(f => !excludedFiles.includes(f.file));
 
+			// filter out only to those commits that were chosen in the review
+			const commits = startCommit
+				? scm.commits.slice(
+						0,
+						scm.commits.findIndex(commit => commit.sha === startCommit)
+				  )
+				: scm.commits;
+
+			// WTF typescript, this is defined above
+			if (reviewRequest.repoChangeset) {
+				reviewRequest.repoChangeset.push({
+					repoId: scm.repoId,
+					branch: scm.branch,
+					commits,
+					diffs,
+					modifiedFiles,
+					includeSaved,
+					includeStaged
+				});
+			}
 			for (const patch of diffs) {
 				const newFile = patch.newFileName?.substr(2);
 				if (newFile && !excludedFiles.includes(newFile)) {
@@ -897,6 +922,9 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			}
 		}
 
+		// FIXME -- not sure if this is the right way to do this
+		delete reviewRequest.repoChanges;
+
 		let stream: CSDirectStream | CSChannelStream;
 
 		if (request.memberIds && request.memberIds.length > 0) {
@@ -927,6 +955,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 		review = response.review!;
 
+		// FIXME
 		// trackPostCreation(
 		// 	{
 		// 		streamId: stream.id,

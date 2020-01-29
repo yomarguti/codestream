@@ -40,6 +40,7 @@ export interface CreateMarkerRequest {
 	remoteCodeUrl?: { name: string; url: string };
 	knownCommitHashes?: string[];
 }
+
 export interface CreateCodemarkResponse {
 	codemark: CSCodemark;
 	markers?: CSMarker[];

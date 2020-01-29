@@ -26,7 +26,7 @@ export interface ReviewPlus extends CSReview {
 }
 
 export interface CreateReviewRequest extends Omit<CSCreateReviewRequest, "teamId"> {
-	// repoChangeset?: CreateRepoChangesetRequest[];
+	repoChangeset?: CSRepoChangeset[];
 	markers?: CreateMarkerRequest[];
 }
 
