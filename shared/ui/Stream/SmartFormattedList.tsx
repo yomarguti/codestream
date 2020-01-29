@@ -20,6 +20,9 @@ type PropsOf<FunctionComponent> = FunctionComponent extends React.FunctionCompon
 		a, b, and c
 		OR
 		a, b, c, and x others
+
+		note that if x is 1, instead of "and 1 other", it will say
+		a, b, c, and d
 */
 export function SmartFormattedList(props: Pick<PropsOf<typeof FormattedList>, "value">) {
 	const _value = props.value;
@@ -29,11 +32,10 @@ export function SmartFormattedList(props: Pick<PropsOf<typeof FormattedList>, "v
 	return (
 		<>
 			<FormattedList style={otherCount > 0 ? "narrow" : "long"} value={value} />
-			{otherCount > 0 ? (
-				<>
-					{" "}
-					and {otherCount} <FormattedPluralAlias value={otherCount} one="other" other="others" />
-				</>
+			{otherCount === 1 ? (
+				<> and {_value[_value.length - 1]}</>
+			) : otherCount > 0 ? (
+				<> and {otherCount} others</>
 			) : (
 				""
 			)}

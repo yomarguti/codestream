@@ -531,10 +531,10 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	confirmCancel = () => {
-		const { title, text, reviewers } = this.state;
+		const { title, text, reviewersTouched } = this.state;
 
 		// if the user has made any changes in the form, confirm before closing
-		if (title.length || text.length || reviewers.length) {
+		if (title.length || text.length || reviewersTouched) {
 			confirmPopup({
 				title: "Are you sure?",
 				message: "Changes you made will not be saved.",
