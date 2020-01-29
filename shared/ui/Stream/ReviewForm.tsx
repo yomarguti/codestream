@@ -85,6 +85,7 @@ interface State {
 	assigneesDisabled: boolean;
 	singleAssignee: boolean;
 	reviewers: CSUser[];
+	reviewersTouched: boolean;
 	notify: boolean;
 	isLoading: boolean;
 	isLoadingScm: boolean;
@@ -152,6 +153,7 @@ class ReviewForm extends React.Component<Props, State> {
 			selectedChannelId: props.channel.id,
 			assignableUsers: this.getAssignableCSUsers(),
 			reviewers: [],
+			reviewersTouched: false,
 			selectedTags: {},
 			repoName: "",
 			excludedFiles: {},
@@ -217,7 +219,7 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	async handleRepoChange() {
-		const { repos } = this.props;
+		const { repos, teamMates } = this.props;
 		const { includeSaved, includeStaged, startCommit } = this.state;
 		const { scm } = this.state.scmInfo;
 		if (!scm) return;
@@ -231,6 +233,18 @@ class ReviewForm extends React.Component<Props, State> {
 		const repoId: string = statusInfo.scm ? statusInfo.scm.repoId || "" : "";
 		const repoName = repos[repoId] ? repos[repoId].name : "";
 		this.setState({ repoStatus: statusInfo, repoName });
+
+		if (statusInfo.scm) {
+			const authors = statusInfo.scm.authors;
+			if (!this.state.reviewersTouched) {
+				const reviewers = Object.keys(authors)
+					.sort((a, b) => authors[a] - authors[b])
+					.map(a => teamMates.find(p => p.email == a))
+					.filter(Boolean);
+				// @ts-ignore
+				this.setState({ reviewers });
+			}
+		}
 
 		const response = await HostApi.instance.send(IgnoreFilesRequestType, {
 			repoPath: scm.repoPath
@@ -886,11 +900,15 @@ class ReviewForm extends React.Component<Props, State> {
 		} else {
 			this.setState({ reviewers: [...reviewers, person].filter(Boolean) });
 		}
+
+		this.setState({ reviewersTouched: true });
 	};
 
 	removeReviewer = person => {
 		const { reviewers } = this.state;
 		this.setState({ reviewers: [...reviewers.filter(p => p.id !== person.id)] });
+
+		this.setState({ reviewersTouched: true });
 	};
 
 	renderReviewForm() {
