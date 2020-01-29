@@ -51,22 +51,22 @@ export class CodeStreamCodeActionProvider implements CodeActionProvider, Disposa
 	}
 
 	provideCodeActions(
-		document: TextDocument,
+		_document: TextDocument,
 		range: Range,
-		context: CodeActionContext,
-		token: CancellationToken
+		_context: CodeActionContext,
+		_token: CancellationToken
 	): Command[] | Thenable<Command[]> {
 		if (!Container.session.signedIn || range.start.compareTo(range.end) === 0) return [];
 
 		const args: NewCodemarkCommandArgs = { source: "Lightbulb Menu" };
 		const commands: Command[] = [
 			{
-				title: `Add Comment`,
+				title: "Add Comment",
 				command: "codestream.newComment",
 				arguments: [args]
 			},
 			{
-				title: `Create Issue`,
+				title: "Create Issue",
 				command: "codestream.newIssue",
 				arguments: [args]
 			},
@@ -76,7 +76,7 @@ export class CodeStreamCodeActionProvider implements CodeActionProvider, Disposa
 			// 	arguments: [args]
 			// },
 			{
-				title: `Get Permalink`,
+				title: "Get Permalink",
 				command: "codestream.newPermalink",
 				arguments: [args]
 			}

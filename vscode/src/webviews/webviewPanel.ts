@@ -390,7 +390,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 	@gate()
 	private waitForWebviewIpcReadyNotification() {
 		// Wait until the webview is ready
-		return new Promise((resolve, reject) => {
+		return new Promise(resolve => {
 			let timer: NodeJS.Timer;
 			if (Logger.level !== TraceLevel.Debug && !Logger.isDebugging) {
 				timer = setTimeout(() => {

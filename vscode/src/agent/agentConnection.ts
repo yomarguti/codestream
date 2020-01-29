@@ -81,8 +81,7 @@ import {
 	UpdatePreferencesRequestType,
 	UpdatePresenceRequestType,
 	UpdateStreamMembershipRequestType,
-	UpdateStreamMembershipResponse,
-	VersionCompatibility
+	UpdateStreamMembershipResponse
 } from "@codestream/protocols/agent";
 import {
 	ChannelServiceType,
@@ -226,7 +225,7 @@ export class CodeStreamAgentConnection implements Disposable {
 
 					if (Container.session.environment !== CodeStreamEnvironment.Production) {
 						window.showErrorMessage(
-							`CodeStream Connection Closed\nAttempting to reestablish connection...`
+							"CodeStream Connection Closed\nAttempting to reestablish connection..."
 						);
 					}
 
@@ -854,7 +853,7 @@ export class CodeStreamAgentConnection implements Disposable {
 	async sendRequest<RT extends RequestType<any, any, any, any>>(
 		type: RT,
 		params: RequestParamsOf<RT>,
-		token?: CancellationToken
+		_token?: CancellationToken
 	): Promise<RequestResponseOf<RT>> {
 		await this.ensureStartingCompleted();
 

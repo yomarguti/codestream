@@ -99,9 +99,9 @@ function buildDistanceInWordsLocale() {
 
 		if (!options.addSuffix) return value;
 
-		if (options.comparison > 0) return "in " + value;
+		if (options.comparison > 0) return `in ${value}`;
 
-		return value + " ago";
+		return `${value} ago`;
 	}
 
 	return {
@@ -141,9 +141,7 @@ export namespace Dates {
 
 	export function toFormatter(date: Date): IDateFormatter {
 		return {
-			fromNow: () => {
-				return _fromNow(date, formatterOptions);
-			},
+			fromNow: () => _fromNow(date, formatterOptions),
 			format: (format: string) => _format(date, format)
 		};
 	}

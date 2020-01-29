@@ -28,7 +28,7 @@ export class CodemarkPatchContentProvider implements TextDocumentContentProvider
 
 	async provideTextDocumentContent(
 		uri: Uri,
-		token: CancellationToken
+		_token: CancellationToken
 	): Promise<string | undefined> {
 		try {
 			const marker: CSMarkerIdentifier = JSON.parse(decodeURIComponent(uri.query));

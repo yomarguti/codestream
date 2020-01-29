@@ -134,8 +134,8 @@ export class StatusBarController implements Disposable {
 						unreads.totalMentions === 1 ? "" : "s"
 					}`;
 				} else if (unreads.totalUnreads > 0) {
-					label += ` \u00a0\u2022`;
-					tooltip += `\nYou have unread messages`;
+					label += " \u00a0\u2022";
+					tooltip += "\nYou have unread messages";
 				}
 
 				// const unreadsOnly = unreads.totalUnreads - unreads.totalMentions;

@@ -1,4 +1,5 @@
 "use strict";
+import * as fs from "fs";
 import {
 	ApiVersionCompatibility,
 	ConnectionStatus,
@@ -56,7 +57,6 @@ import {
 	WebviewIpcRequestMessage,
 	WebviewPanels
 } from "@codestream/protocols/webview";
-import * as fs from "fs";
 import { gate } from "system/decorators/gate";
 import {
 	commands,
@@ -520,7 +520,7 @@ export class WebviewController implements Disposable {
 				break;
 			}
 			case WebviewDidChangeContextNotificationType.method: {
-				webview.onIpcNotification(WebviewDidChangeContextNotificationType, e, (type, params) => {
+				webview.onIpcNotification(WebviewDidChangeContextNotificationType, e, (_type, params) => {
 					this._context = params.context;
 					this.updateState();
 				});
@@ -531,7 +531,7 @@ export class WebviewController implements Disposable {
 				webview.onIpcNotification(
 					EditorScrollToNotificationType,
 					e,
-					(type, { uri, position, ...options }) => {
+					(_type, { uri, position, ...options }) => {
 						Editor.scrollTo(
 							Uri.parse(uri),
 							Editor.fromSerializablePosition(position),
@@ -560,8 +560,7 @@ export class WebviewController implements Disposable {
 		}
 
 		return new Promise(resolve => {
-			let disposable: Disposable;
-			disposable = this.session.onDidChangeSessionStatus(e => {
+			const disposable = this.session.onDidChangeSessionStatus(e => {
 				const status = e.getStatus();
 				if (status === SessionStatus.SignedIn || status === SessionStatus.SignedOut) {
 					resolve(status);
@@ -574,14 +573,16 @@ export class WebviewController implements Disposable {
 	private async onWebviewRequest(webview: CodeStreamWebviewPanel, e: WebviewIpcRequestMessage) {
 		switch (e.method) {
 			case BootstrapInHostRequestType.method: {
-				Logger.log(`WebviewPanel: Bootstrapping webview...`, `SignedIn=${this.session.signedIn}`);
-				webview.onIpcRequest(BootstrapInHostRequestType, e, async (type, params) => {
-					return await this.getBootstrap();
-				});
+				Logger.log("WebviewPanel: Bootstrapping webview...", `SignedIn=${this.session.signedIn}`);
+				webview.onIpcRequest(
+					BootstrapInHostRequestType,
+					e,
+					async (_type, _params) => await this.getBootstrap()
+				);
 				break;
 			}
 			case LogoutRequestType.method: {
-				webview.onIpcRequest(LogoutRequestType, e, async (type, params) => {
+				webview.onIpcRequest(LogoutRequestType, e, async (_type, _params) => {
 					await Container.commands.signOut(SessionSignedOutReason.UserSignedOutFromWebview);
 					return emptyObj;
 				});
@@ -589,13 +590,13 @@ export class WebviewController implements Disposable {
 				break;
 			}
 			case GetActiveEditorContextRequestType.method: {
-				webview.onIpcRequest(GetActiveEditorContextRequestType, e, async (type, params) => {
-					return { editorContext: this.getActiveEditorContext() };
-				});
+				webview.onIpcRequest(GetActiveEditorContextRequestType, e, async (_type, _params) => ({
+					editorContext: this.getActiveEditorContext()
+				}));
 				break;
 			}
 			case EditorHighlightRangeRequestType.method: {
-				webview.onIpcRequest(EditorHighlightRangeRequestType, e, async (type, params) => {
+				webview.onIpcRequest(EditorHighlightRangeRequestType, e, async (_type, params) => {
 					const success = await Editor.highlightRange(
 						Uri.parse(params.uri),
 						Editor.fromSerializableRange(params.range),
@@ -608,7 +609,7 @@ export class WebviewController implements Disposable {
 				break;
 			}
 			case EditorRevealRangeRequestType.method: {
-				webview.onIpcRequest(EditorRevealRangeRequestType, e, async (type, params) => {
+				webview.onIpcRequest(EditorRevealRangeRequestType, e, async (_type, params) => {
 					const success = await Editor.revealRange(
 						Uri.parse(params.uri),
 						Editor.fromSerializableRange(params.range),
@@ -624,7 +625,7 @@ export class WebviewController implements Disposable {
 				break;
 			}
 			case EditorSelectRangeRequestType.method: {
-				webview.onIpcRequest(EditorSelectRangeRequestType, e, async (type, params) => {
+				webview.onIpcRequest(EditorSelectRangeRequestType, e, async (_type, params) => {
 					const success = await Editor.selectRange(
 						Uri.parse(params.uri),
 						Editor.fromSerializableRange(params.selection),
@@ -639,7 +640,7 @@ export class WebviewController implements Disposable {
 				break;
 			}
 			case InsertTextRequestType.method: {
-				webview.onIpcRequest(InsertTextRequestType, e, async (type, params) => {
+				webview.onIpcRequest(InsertTextRequestType, e, async (_type, params) => {
 					void (await Container.commands.insertText({ marker: params.marker, text: params.text }));
 					return emptyObj;
 				});
@@ -647,7 +648,7 @@ export class WebviewController implements Disposable {
 				break;
 			}
 			case ApplyMarkerRequestType.method: {
-				webview.onIpcRequest(ApplyMarkerRequestType, e, async (type, params) => {
+				webview.onIpcRequest(ApplyMarkerRequestType, e, async (_type, params) => {
 					void (await Container.commands.applyMarker({ marker: params.marker }));
 					return emptyObj;
 				});
@@ -655,7 +656,7 @@ export class WebviewController implements Disposable {
 				break;
 			}
 			case CompareMarkerRequestType.method: {
-				webview.onIpcRequest(CompareMarkerRequestType, e, async (type, params) => {
+				webview.onIpcRequest(CompareMarkerRequestType, e, async (_type, params) => {
 					void (await Container.commands.showMarkerDiff({ marker: params.marker }));
 					return emptyObj;
 				});
@@ -663,14 +664,14 @@ export class WebviewController implements Disposable {
 				break;
 			}
 			case ReloadWebviewRequestType.method: {
-				webview.onIpcRequest(ReloadWebviewRequestType, e, async (type, params) =>
+				webview.onIpcRequest(ReloadWebviewRequestType, e, async (_type, _params) =>
 					this.reload(true)
 				);
 
 				break;
 			}
 			case RestartRequestType.method: {
-				webview.onIpcRequest(RestartRequestType, e, async (type, params) => {
+				webview.onIpcRequest(RestartRequestType, e, async (_type, _params) => {
 					const action = "Reload";
 					window
 						.showInformationMessage(
@@ -687,7 +688,7 @@ export class WebviewController implements Disposable {
 				break;
 			}
 			case ShellPromptFolderRequestType.method: {
-				webview.onIpcRequest(ShellPromptFolderRequestType, e, async (type, params) => {
+				webview.onIpcRequest(ShellPromptFolderRequestType, e, async (_type, _params) => {
 					const fileUri = await window.showOpenDialog({
 						canSelectMany: false,
 						canSelectFiles: false,
@@ -706,7 +707,7 @@ export class WebviewController implements Disposable {
 				break;
 			}
 			case UpdateConfigurationRequestType.method: {
-				webview.onIpcRequest(UpdateConfigurationRequestType, e, async (type, params) => {
+				webview.onIpcRequest(UpdateConfigurationRequestType, e, async (_type, params) => {
 					await configuration.update(params.name, params.value, ConfigurationTarget.Global);
 					return emptyObj;
 				});
@@ -714,7 +715,7 @@ export class WebviewController implements Disposable {
 				break;
 			}
 			case LiveShareInviteToSessionRequestType.method: {
-				webview.onIpcRequest(LiveShareInviteToSessionRequestType, e, async (type, params) => {
+				webview.onIpcRequest(LiveShareInviteToSessionRequestType, e, async (_type, params) => {
 					await Container.vsls.processRequest({
 						type: "invite",
 						userId: params.userId,
@@ -726,7 +727,7 @@ export class WebviewController implements Disposable {
 				break;
 			}
 			case LiveShareJoinSessionRequestType.method: {
-				webview.onIpcRequest(LiveShareJoinSessionRequestType, e, async (type, params) => {
+				webview.onIpcRequest(LiveShareJoinSessionRequestType, e, async (_type, params) => {
 					await Container.vsls.processRequest({
 						type: "join",
 						url: params.url
@@ -737,7 +738,7 @@ export class WebviewController implements Disposable {
 				break;
 			}
 			case LiveShareStartSessionRequestType.method: {
-				webview.onIpcRequest(LiveShareStartSessionRequestType, e, async (type, params) => {
+				webview.onIpcRequest(LiveShareStartSessionRequestType, e, async (_type, params) => {
 					await Container.vsls.processRequest({
 						type: "start",
 						streamId: params.streamId,

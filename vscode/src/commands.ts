@@ -1,17 +1,7 @@
+import * as paths from "path";
 import { CodemarkType, CSMarkerIdentifier } from "@codestream/protocols/api";
 import { Editor } from "extensions/editor";
-import * as paths from "path";
-import {
-	commands,
-	Disposable,
-	env,
-	Range,
-	Uri,
-	ViewColumn,
-	window,
-	workspace,
-	WorkspaceEdit
-} from "vscode";
+import { commands, Disposable, env, Range, Uri, ViewColumn, window, workspace } from "vscode";
 import { SessionSignedOutReason, StreamThread } from "./api/session";
 import { TokenManager } from "./api/tokenManager";
 import { WorkspaceState } from "./common";
@@ -60,7 +50,7 @@ export class Commands implements Disposable {
 
 	constructor() {
 		this._disposable = Disposable.from(
-			...commandRegistry.map(({ name, key, method }) =>
+			...commandRegistry.map(({ name, method }) =>
 				commands.registerCommand(name, (...args: any[]) => method.apply(this, args))
 			),
 			commands.registerCommand("workbench.view.extension.codestream", () =>
@@ -176,7 +166,7 @@ export class Commands implements Disposable {
 	}
 
 	@command("copyPermalink", { showErrorMessage: "Unable to copy permalink" })
-	async copyPermalink(args?: NewCodemarkCommandArgs) {
+	async copyPermalink(_args?: NewCodemarkCommandArgs) {
 		const editor = window.activeTextEditor;
 		if (editor === undefined) return;
 
@@ -265,7 +255,7 @@ export class Commands implements Disposable {
 
 		Container.agent.telemetry.track("Codemark Clicked", { "Codemark Location": "Source File" });
 
-		const { codemarkId, ...options } = args;
+		const { codemarkId: _codemarkId, ...options } = args;
 		return Container.webview.openCodemark(args.codemarkId, options);
 	}
 

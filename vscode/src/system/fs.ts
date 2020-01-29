@@ -3,7 +3,7 @@ import * as fs from "fs";
 
 export namespace FileSystem {
 	export function loadJsonFromFile<T>(file: string): Promise<T | undefined> {
-		return new Promise((resolve, reject) => {
+		return new Promise(resolve => {
 			fs.readFile(file, (err, data) => {
 				if (err) {
 					resolve(undefined);

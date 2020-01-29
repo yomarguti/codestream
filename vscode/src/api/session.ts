@@ -346,7 +346,7 @@ export class CodeStreamSession implements Disposable {
 				}
 			)
 		).stream;
-		if (s === undefined) throw new Error(`Unable to create stream`);
+		if (s === undefined) throw new Error("Unable to create stream");
 
 		return new ChannelStream(this, s);
 	}
@@ -383,7 +383,7 @@ export class CodeStreamSession implements Disposable {
 				creationOptions.purpose
 			)
 		).stream;
-		if (s === undefined) throw new Error(`Unable to create stream`);
+		if (s === undefined) throw new Error("Unable to create stream");
 
 		return new ChannelStream(this, s);
 	}
@@ -404,7 +404,7 @@ export class CodeStreamSession implements Disposable {
 		if (stream !== undefined) return stream;
 
 		const s = (await Container.agent.streams.createDirect(memberIds)).stream;
-		if (s === undefined) throw new Error(`Unable to create stream`);
+		if (s === undefined) throw new Error("Unable to create stream");
 
 		return new DirectStream(this, s);
 	}

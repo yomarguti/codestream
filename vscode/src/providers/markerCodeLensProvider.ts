@@ -95,13 +95,13 @@ export class CodemarkCodeLensProvider implements CodeLensProvider, Disposable {
 		);
 	}
 
-	private onMarkersChanged(e: TextDocumentMarkersChangedEvent) {
+	private onMarkersChanged(_e: TextDocumentMarkersChangedEvent) {
 		this._onDidChangeCodeLenses.fire();
 	}
 
 	async provideCodeLenses(
 		document: TextDocument,
-		token: CancellationToken
+		_token: CancellationToken
 	): Promise<CodeLens[] | null | undefined> {
 		if (
 			!Container.config.showMarkerCodeLens ||

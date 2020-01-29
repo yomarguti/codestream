@@ -2,6 +2,7 @@
 	"compilerOptions": {
 		"baseUrl": "src",
 		"esModuleInterop": true,
+		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
 		"forceConsistentCasingInFileNames": true,
 		"lib": ["es2017"],

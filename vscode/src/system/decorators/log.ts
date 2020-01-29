@@ -59,6 +59,7 @@ export function logName<T>(fn: (c: T, name: string) => string) {
 // 		timed?: boolean;
 // 	} = { timed: true }
 // ) {
+// eslint-disable-next-line space-before-function-paren
 export function debug<T, F extends (this: T, ...args: any[]) => any>(
 	options: {
 		args?: false | { [arg: number]: (arg: any) => string | false };

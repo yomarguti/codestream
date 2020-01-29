@@ -39,7 +39,7 @@ const positionStyleMap: { [key: string]: string } = {
 		"display: inline-block; left: 0; position: absolute; top: 50%; transform: translateY(-50%)"
 };
 
-const buildDecoration = (position: string, type: string, color: string, status: string) => ({
+const buildDecoration = (position: string, type: string, color: string, _status: string) => ({
 	contentText: "",
 	height: "16px",
 	width: "16px",
@@ -290,7 +290,7 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 	}
 
 	async provideDecorations(
-		editor: TextEditor /*, token: CancellationToken */
+		editor: TextEditor /* , token: CancellationToken */
 	): Promise<{ [key: string]: (DecorationOptions | Range)[] }> {
 		const markers = await this.getMarkers(editor.document.uri);
 		if (markers.length === 0) return {};

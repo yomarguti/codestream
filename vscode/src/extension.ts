@@ -142,7 +142,7 @@ async function showStartupMessage(context: ExtensionContext, version: string) {
 		if (
 			(major === prevMajor && minor === prevMinor) ||
 			// Don't notify on downgrades
-			(major < prevMajor || (major === prevMajor && minor < prevMinor))
+			major < prevMajor || (major === prevMajor && minor < prevMinor)
 		) {
 			return;
 		}
@@ -151,7 +151,7 @@ async function showStartupMessage(context: ExtensionContext, version: string) {
 	const compareTo = Versions.from(major, minor);
 	if (skipVersions.some(v => Versions.compare(compareTo, v) === 0)) return;
 
-	const actions: MessageItem[] = [{ title: "What's New" } /*, { title: "Release Notes" } */];
+	const actions: MessageItem[] = [{ title: "What's New" } /* , { title: "Release Notes" } */];
 
 	const result = await window.showInformationMessage(
 		`CodeStream has been updated to v${version} — check out what's new!`,

@@ -1,7 +1,3 @@
-
-
-
-
 # CodeStream for Visual Studio Code
 
 New to VSCode/Codestream? Look for a novice debugging examples at the end of this file.
@@ -93,17 +89,17 @@ We use [prettier](https://prettier.io/) for formatting our code. You can run pre
 
 To format the code as you make changes you can install the [Prettier - Code formatter](https://marketplace.visualstudio.com/items/esbenp.prettier-vscode) extension.
 
-Add the following to your User Settings to run prettier:
+Add the following to your User Settings to make prettier run as you save changes to files:
 
 `"editor.formatOnSave": true,`
 
 #### Linting
 
-We use [tslint](https://palantir.github.io/tslint/) for linting our code. In most cases, tslint will show directly inline in VSCode files.
+We use [eslint](https://eslint.org/) for linting our code. In most cases, eslint will show errors and warnings directly inline in file open in VSCode.
 
-You can also run tslint across the code by calling `npm run lint` from a terminal. Warnings from tslint show up in the `Errors and Warnings` quick box and you can navigate to them from inside VS Code.
+You can also lint the entire codebase by calling `npm run lint` from a terminal.
 
-To lint the code as you make changes you can install the [TSLint](https://marketplace.visualstudio.com/items/eg2.tslint) extension.
+To lint the code as you make changes you can install the [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) extension, which will enable warnings in the Problems tab of VSCode.
 
 ### Testing
 
@@ -139,20 +135,20 @@ npm run pack
 
 #### To set breakpoints
 
-**In the agent code**: 
+**In the agent code**:
 
 1. need to attach agent (see **Debugging agent startup code**, below)
 
-​	IMPORTANT: The agent will restart on many operations, meaning you will need to manually reattach the debugger before execution reaches your breakpoint code.
+​ IMPORTANT: The agent will restart on many operations, meaning you will need to manually reattach the debugger before execution reaches your breakpoint code.
 
-**In the webview code**: 
+**In the webview code**:
 
 1. Choose "Launch Codestream" and start debug instance
 2. In the launched Extension Host VSCode debug instance, Ctrl-shift-P to open the VSCode command palette (Because the extension executes in a browser rendering window, we must use browser tools to debug)
 3. Start typing: "> Developer: Open Webview Developer Tools" and choose that option
 4. Ctrl-P and use the search box to select the webview file you want to set a breakpoint in
 5. Set breakpoint
-6. Note that F8 is debug-run, not F5. 
+6. Note that F8 is debug-run, not F5.
 
 ### Downloading Built VSIXs (common)
 
@@ -164,9 +160,9 @@ Here are the download links for pre-built vsix bundles:
 
 You'll find a number of preconfigured workspace files in the vscode-codestream base folder.
 
-Most likely, you can start with [pd.code-workspace] (https://pd-api.codestream.us/c/XeVt1z0FRWDASwNz/oKXkL03ESYi1xHxRM8akig) for most work. The "pd" prefix stands for "Persistent Development" and is for most on-going product development.
+Most likely, you can start with [pd.code-workspace](https://pd-api.codestream.us/c/XeVt1z0FRWDASwNz/oKXkL03ESYi1xHxRM8akig) for most work. The "pd" prefix stands for "Persistent Development" and is for most on-going product development.
 
-### Writing your own workspace files  (less common)
+### Writing your own workspace files (less common)
 
 When you need to switch between environments not covered by one of the existing workspace files, you can create workspace files for each using the example workspace files below.
 
@@ -190,7 +186,7 @@ Example workspace file &mdash; save as pd.code-workspace
 		}
 	],
 	"settings": {
-		"codestream.serverUrl": "https://pd-api.codestream.us",		
+		"codestream.serverUrl": "https://pd-api.codestream.us",
 		"codestream.email": "<email>",
 		"codestream.team": "<team>" // Shouldn't really be needed unless there are issues and you belong to more than 1 team
 	}
@@ -217,7 +213,7 @@ Example workspace file &mdash; save as qa.code-workspace
 		}
 	],
 	"settings": {
-		"codestream.serverUrl": "https://qa-api.codestream.us",		
+		"codestream.serverUrl": "https://qa-api.codestream.us",
 		"codestream.email": "<email>",
 		"codestream.team": "<team>" // Shouldn't really be needed unless there are issues and you belong to more than 1 team
 	}
@@ -272,18 +268,18 @@ Looking at the database
 2. Point it to pd-api.codestream.us:27017
 3. To see the most recent database entries: OPTIONS -> Sort, enter "{createdAt : -1}"
 
-### New to VSCode example: debugging agent startup code (Novice) ###
+### New to VSCode example: debugging agent startup code (Novice)
 
-The agent startup code is run only when the agent first starts, and there is no restart mechanism that does not kill and restart the process. We use a feature in VSCode that allows us to wait for a process to spawn, and then automatically attaches to it. 
+The agent startup code is run only when the agent first starts, and there is no restart mechanism that does not kill and restart the process. We use a feature in VSCode that allows us to wait for a process to spawn, and then automatically attaches to it.
 
-1. Start VSCode 
+1. Start VSCode
 
 2. Open a workspace in the VSCode folder vscode-codestream/pd-slack.code-workspace
 
 3. Create two terminal windows in VSCode, and then 'npm run watch' for each VSCode and agent source.
-	
-	VSCode, View > Terminal, then toward the bottom right there is a :heavy_plus_sign: button to add additional terminals (you can choose the shell as well)
-	
+
+   VSCode, View > Terminal, then toward the bottom right there is a :heavy_plus_sign: button to add additional terminals (you can choose the shell as well)
+
 4. Set a breakpoint in [container.ts before the agent starts](https://github.com/teamcodestream/vscode-codestream/blob/877568f625f3e6b70bc2c4bad8706c558b918260/src/container.ts#L31-L32)
 
 5. Choose the bug symbol on the left VSCode pane
@@ -292,7 +288,7 @@ The agent startup code is run only when the agent first starts, and there is no 
 
 7. Press the green triangle or F5 to start debugging instance
 
-8. If this is the first time starting debug instance, open a folder with a git repo in the launched debug VSCode app (Otherwise will not hit the breakpoint you just set) Stop the debug instance and restart as in steps 6 and 7. 
+8. If this is the first time starting debug instance, open a folder with a git repo in the launched debug VSCode app (Otherwise will not hit the breakpoint you just set) Stop the debug instance and restart as in steps 6 and 7.
 
 9. Debugger should stop at breakpoint in container.ts
 

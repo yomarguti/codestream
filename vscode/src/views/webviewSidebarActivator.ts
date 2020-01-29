@@ -33,7 +33,7 @@ export class WebviewSidebarActivator implements TreeDataProvider<object>, Dispos
 		return node;
 	}
 
-	getChildren(node?: object): object[] {
+	getChildren(_node?: object): object[] {
 		this.activate();
 		return [];
 	}

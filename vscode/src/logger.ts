@@ -263,7 +263,7 @@ export class Logger {
 		try {
 			return JSON.stringify(p, sanitize);
 		} catch {
-			return `<error>`;
+			return "<error>";
 		}
 	}
 
@@ -283,7 +283,7 @@ export class Logger {
 		return `[${now
 			.toISOString()
 			.replace(/T/, " ")
-			.replace(/\..+/, "")}:${("00" + now.getUTCMilliseconds()).slice(-3)}]`;
+			.replace(/\..+/, "")}:${`00${now.getUTCMilliseconds()}`.slice(-3)}]`;
 	}
 
 	private static toLoggableParams(debugOnly: boolean, params: any[]) {

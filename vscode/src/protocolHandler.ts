@@ -1,5 +1,5 @@
 "use strict";
-import { commands, Disposable, Uri, UriHandler, window } from "vscode";
+import { Disposable, Uri, UriHandler, window } from "vscode";
 import { Container } from "./container";
 
 export class ProtocolHandler implements UriHandler {

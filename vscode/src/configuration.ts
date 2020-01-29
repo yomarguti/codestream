@@ -15,7 +15,7 @@ import { extensionId } from "./constants";
 import { Functions } from "./system";
 
 const emptyConfig: any = new Proxy<any>({} as Config, {
-	get(target, propKey, receiver) {
+	get() {
 		return emptyConfig;
 	}
 });
@@ -67,7 +67,7 @@ export class Configuration {
 	}
 
 	readonly initializingChangeEvent: ConfigurationChangeEvent = {
-		affectsConfiguration: (section: string, resource?: Uri) => true
+		affectsConfiguration: (_section: string, _resource?: Uri) => true
 	};
 
 	get<T>(section?: string, resource?: Uri | null, defaultValue?: T) {

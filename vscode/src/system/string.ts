@@ -107,7 +107,7 @@ export namespace Strings {
 		s: string,
 		before: number = 0,
 		after: number = 0,
-		padding: string = `\u00a0`
+		padding: string = "\u00a0"
 	) {
 		if (before === 0 && after === 0) return s;
 

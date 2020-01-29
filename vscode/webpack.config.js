@@ -135,8 +135,9 @@ function getExtensionConfig(env) {
 				{
 					test: /\.ts$/,
 					enforce: "pre",
-					use: "tslint-loader",
-					exclude: /node_modules/
+					loader: "eslint-loader",
+					exclude: /node_modules/,
+					options: { fix: true }
 				},
 				{
 					test: /\.tsx?$/,
