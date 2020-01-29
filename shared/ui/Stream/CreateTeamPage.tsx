@@ -10,6 +10,7 @@ import { createTeam } from "../store/teams/actions";
 import { switchToTeam } from "../store/session/actions";
 import { CSTeam } from "@codestream/protocols/api";
 import { CreateTeamRequest } from "@codestream/protocols/agent";
+import { wait } from "../utils";
 
 const Header = styled.h3`
 	text-align: center;
@@ -90,6 +91,10 @@ export function CreateTeamPage() {
 			}
 
 			const team = ((await dispatch(createTeam(request))) as unknown) as CSTeam;
+
+			// artificial delay to ensure analytics from creating the team are actually processed before we logout below
+			await wait(1000);
+
 			await dispatch(switchToTeam(team.id));
 		} catch (error) {
 		} finally {

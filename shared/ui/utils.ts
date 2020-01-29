@@ -7,6 +7,10 @@ export const emptyObject = {};
 export const emptyArray = [];
 export function noop() {}
 
+export async function wait(millis: number) {
+	await new Promise(resolve => setTimeout(resolve, millis));
+}
+
 /*
 	A hack to allow running a callback once after a specific update
 	when we know what the next state and props will be.
