@@ -57,7 +57,7 @@ export interface RepoScmStatus {
 	}[];
 	savedFiles: string[];
 	stagedFiles: string[];
-	authors: { id: string; username: string }[];
+	authors: { [email: string]: number };
 	// this is just the total number of lines modified so that
 	// we can throw up a warning if it's too many ("shift left")
 	totalModifiedLines: number;

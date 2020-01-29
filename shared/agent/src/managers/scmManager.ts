@@ -107,18 +107,18 @@ export class ScmManager {
 					status: FileStatus;
 			  }[]
 			| undefined = [];
-		const authors: { id: string; username: string }[] = [];
+		const authors: { [id: string]: number } = {};
 		let totalModifiedLines = 0;
 
 		let commits: { sha: string; info: {} }[] | undefined;
 		let gitError;
-		let repoPath;
+		let repoPath = "";
 		let repoId;
 		if (uri.scheme === "file") {
 			const { git } = SessionContainer.instance();
 
 			try {
-				repoPath = await git.getRepoRoot(uri.fsPath);
+				repoPath = (await git.getRepoRoot(uri.fsPath)) || "";
 				if (repoPath !== undefined) {
 					file = Strings.normalizePath(paths.relative(repoPath, uri.fsPath));
 					if (file[0] === "/") {
@@ -176,6 +176,25 @@ export class ScmManager {
 									}
 								}
 							});
+							(
+								await Promise.all(
+									Object.keys(ret).map(file => {
+										return git.getDiffAuthors(
+											repoPath,
+											file,
+											includeSaved,
+											includeStaged,
+											startCommit
+										);
+									})
+								)
+							)
+								.filter(Boolean)
+								.map(authorList =>
+									authorList.forEach(
+										author => (authors[author.email] = 1 + (authors[author.email] || 0))
+									)
+								);
 						}
 					}
 				}

@@ -761,6 +761,8 @@ export class GitService implements IGitService, Disposable {
 				return FileStatus.unmerged;
 			case "M":
 				return FileStatus.modified;
+			case "?":
+				return FileStatus.untracked;
 		}
 		return undefined;
 	}
@@ -800,6 +802,45 @@ export class GitService implements IGitService, Disposable {
 			return ret;
 		} catch {
 			return undefined;
+		}
+	}
+
+	async getDiffAuthors(
+		repoPath: string,
+		file: string,
+		includeSaved: boolean,
+		includeStaged: boolean,
+		ref: string | undefined
+	): Promise<GitAuthor[]> {
+		try {
+			let data: string | undefined;
+			try {
+				const options = ["diff"];
+				if (includeStaged && !includeSaved) options.push("--staged");
+				if (ref && ref.length) options.push(ref);
+				if (!includeStaged) options.push("HEAD");
+				options.push("--");
+				options.push(file);
+				data = await git({ cwd: repoPath }, ...options);
+			} catch {}
+			if (!data) return [];
+			const patch = parsePatch(data)[0];
+			try {
+				const options = ["blame"];
+				if (ref && ref.length) options.push(ref);
+				patch.hunks.forEach(hunk => {
+					const oldEnd = hunk.oldStart + hunk.oldLines;
+					options.push(`-L${hunk.oldStart},${oldEnd}`);
+				});
+				options.push("--root", "--incremental", "-w");
+				options.push("--");
+				options.push(file);
+				data = await git({ cwd: repoPath }, ...options);
+			} catch {}
+			if (!data) return [];
+			return GitAuthorParser.parse(data);
+		} catch {
+			return [];
 		}
 	}
 
