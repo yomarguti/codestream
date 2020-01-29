@@ -86,6 +86,9 @@ interface State {
 	singleAssignee: boolean;
 	reviewers: CSUser[];
 	reviewersTouched: boolean;
+	authorsById: {
+		[authorId: string]: number;
+	};
 	notify: boolean;
 	isLoading: boolean;
 	isLoadingScm: boolean;
@@ -154,6 +157,7 @@ class ReviewForm extends React.Component<Props, State> {
 			assignableUsers: this.getAssignableCSUsers(),
 			reviewers: [],
 			reviewersTouched: false,
+			authorsById: {},
 			selectedTags: {},
 			repoName: "",
 			excludedFiles: {},
@@ -235,11 +239,24 @@ class ReviewForm extends React.Component<Props, State> {
 
 		if (statusInfo.scm) {
 			const authors = statusInfo.scm.authors;
+			const authorsById = {};
+			Object.keys(authors)
+				.map(a => teamMates.find(p => p.email == a))
+				.forEach(person => {
+					if (person) authorsById[person.id] = authors[person.email];
+				});
+			this.setState({ authorsById });
+
 			if (!this.state.reviewersTouched) {
-				const reviewers = Object.keys(authors)
-					.sort((a, b) => authors[a] - authors[b])
-					.map(a => teamMates.find(p => p.email == a))
-					.filter(Boolean);
+				const reviewers = Object.keys(authorsById)
+					// get the top 2 most impacted authors
+					// based on how many times their code
+					// was stomped on, and make those
+					// "suggested reviewers"
+					.sort((a, b) => authorsById[b] - authorsById[a])
+					.map(id => teamMates.find(p => p.id === id))
+					.filter(Boolean)
+					.slice(0, 2);
 				// @ts-ignore
 				this.setState({ reviewers });
 			}
@@ -912,10 +929,16 @@ class ReviewForm extends React.Component<Props, State> {
 	};
 
 	renderReviewForm() {
-		const { editingReview, currentUser, repos } = this.props;
-		const { scmInfo, repoStatus, repoName, reviewers } = this.state;
+		const { editingReview, currentUser, teamMates } = this.props;
+		const { scmInfo, repoStatus, repoName, reviewers, authorsById } = this.state;
 
-		const authors = repoStatus && repoStatus.scm ? repoStatus.scm.authors : {};
+		// stompLabels are a mapping from teamMate ID to the # of edits represented in
+		// the autors variable
+		const stompLabels = {};
+		Object.keys(authorsById).map(id => {
+			if (authorsById[id] === 1) stompLabels[id] = " - 1 edit";
+			else if (authorsById[id] > 1) stompLabels[id] = " - " + authorsById[id] + " edits";
+		});
 
 		const modifier = navigator.appVersion.includes("Macintosh") ? "⌘" : "Alt";
 
@@ -993,7 +1016,7 @@ class ReviewForm extends React.Component<Props, State> {
 								/>
 							);
 							// # of times you stomped on their code
-							const stomps = authors[person.email];
+							const stomps = authorsById[person.id];
 							if (stomps > 0) {
 								const title = stomps === 1 ? "1 edit" : `${stomps} edits`;
 								return (
@@ -1008,6 +1031,7 @@ class ReviewForm extends React.Component<Props, State> {
 							value={reviewers}
 							onChange={this.toggleReviewer}
 							multiSelect={true}
+							labelExtras={stompLabels}
 						>
 							<span className="icon-button">
 								<Icon name="plus" title="Specify who you want to review your code" />

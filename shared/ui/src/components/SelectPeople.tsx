@@ -47,6 +47,7 @@ export interface Props extends ConnectedProps {
 	onChange: Function;
 	children?: React.ReactNode;
 	multiSelect?: boolean;
+	labelExtras?: { [id: string]: string };
 }
 
 interface ConnectedProps {
@@ -68,11 +69,20 @@ class SelectPeople extends React.Component<Props, State> {
 	};
 
 	render() {
-		const { value, title, children, teamMembers, onChange, multiSelect } = this.props;
+		const {
+			value,
+			title,
+			children,
+			teamMembers,
+			onChange,
+			multiSelect,
+			labelExtras = {}
+		} = this.props;
 		const items = teamMembers.map(person => {
 			const selected = value.find(p => p.id === person.id) ? true : false;
+			const label = person.fullName ? `${person.fullName} (@${person.username})` : person.username;
 			return {
-				label: person.username,
+				label: label + (labelExtras[person.id] || ""),
 				searchLabel: person.username,
 				checked: selected,
 				value: person.username,
