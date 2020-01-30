@@ -79,6 +79,7 @@ interface ConnectedProps {
 
 interface State {
 	title: string;
+	titleTouched: boolean;
 	text: string;
 	assignees: { value: any; label: string }[] | { value: any; label: string };
 	assigneesRequired: boolean;
@@ -148,6 +149,7 @@ class ReviewForm extends React.Component<Props, State> {
 		super(props);
 		const defaultState: Partial<State> = {
 			title: "",
+			titleTouched: false,
 			text: "",
 			assignees: [],
 			assigneesDisabled: false,
@@ -558,10 +560,10 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	confirmCancel = () => {
-		const { title, text, reviewersTouched } = this.state;
+		const { titleTouched, text, reviewersTouched } = this.state;
 
 		// if the user has made any changes in the form, confirm before closing
-		if (title.length || text.length || reviewersTouched) {
+		if (titleTouched || text.length || reviewersTouched) {
 			confirmPopup({
 				title: "Are you sure?",
 				message: "Changes you made will not be saved.",
@@ -769,10 +771,14 @@ class ReviewForm extends React.Component<Props, State> {
 		if (!repoStatus) return null;
 		const { scm } = repoStatus;
 		if (!scm) return null;
-		const { commits } = scm;
+		const { commits = [] } = scm;
 
 		const numSavedFiles = scm.savedFiles.length;
 		const numStagedFiles = scm.stagedFiles.length;
+
+		const localCommits = commits.filter(commit => commit.localOnly);
+		const remoteCommits = commits.filter(commit => !commit.localOnly);
+
 		return (
 			<div className="related">
 				<div className="related-label">Changes to Include In Review</div>
@@ -803,25 +809,43 @@ class ReviewForm extends React.Component<Props, State> {
 						this.fileListLabel(scm.stagedFiles),
 						() => this.toggleStaged()
 					)}
-				{(numSavedFiles > 0 || numStagedFiles > 0) && (
-					<div className="related-label">
-						<br />
-						Local Commits
-					</div>
+				{localCommits.length > 0 && (
+					<>
+						{(numSavedFiles > 0 || numStagedFiles > 0) && (
+							<div className="related-label">
+								<br />
+								Local Commits
+							</div>
+						)}
+						{this.renderCommitList(localCommits, excludeCommit)}
+					</>
 				)}
-				{commits &&
-					commits.map(commit =>
-						this.renderChange(
-							commit.sha,
-							!excludeCommit[commit.sha],
-							this.authorHeadshot(commit),
-							// @ts-ignore
-							commit.info.shortMessage,
-							<span className="monospace">{commit.sha.substr(0, 8)}</span>,
-							() => this.setChangeStart(commit.sha)
-						)
-					)}
+				{remoteCommits.length > 0 && (
+					<>
+						{(numSavedFiles > 0 || numStagedFiles > 0 || localCommits.length > 0) && (
+							<div className="related-label">
+								<br />
+								Pushed Commits
+							</div>
+						)}
+						{this.renderCommitList(remoteCommits, excludeCommit)}
+					</>
+				)}
 			</div>
+		);
+	}
+
+	renderCommitList(commits, excludeCommit) {
+		return commits.map(commit =>
+			this.renderChange(
+				commit.sha,
+				!excludeCommit[commit.sha],
+				this.authorHeadshot(commit),
+				// @ts-ignore
+				commit.info.shortMessage,
+				<span className="monospace">{commit.sha.substr(0, 8)}</span>,
+				() => this.setChangeStart(commit.sha)
+			)
 		);
 	}
 
@@ -1000,7 +1024,7 @@ class ReviewForm extends React.Component<Props, State> {
 								className="input-text control"
 								tabIndex={0}
 								value={this.state.title}
-								onChange={e => this.setState({ title: e.target.value })}
+								onChange={e => this.setState({ title: e.target.value, titleTouched: true })}
 								placeholder="Title (required)"
 								ref={ref => (this._titleInput = ref)}
 							/>
