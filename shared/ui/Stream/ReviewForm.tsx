@@ -20,6 +20,7 @@ import {
 } from "@codestream/protocols/api";
 import React, { ReactElement } from "react";
 import { connect } from "react-redux";
+import cx from "classnames";
 import {
 	getStreamForId,
 	getStreamForTeam,
@@ -652,11 +653,14 @@ class ReviewForm extends React.Component<Props, State> {
 		this.setState({ ...settings }, () => this.handleRepoChange());
 	};
 
-	setChangeStart = sha => {
+	setChangeStart = (event: React.SyntheticEvent, sha: string) => {
 		const { scm } = this.state.repoStatus;
 		if (!scm) return;
 		const { commits } = scm;
 		if (!commits) return;
+
+		const target = event.target as HTMLElement;
+		if (target.tagName === "A") return;
 
 		// are we turning it on, or turning it off? checkbox=true means we're including
 		const exclude = !this.state.excludeCommit[sha];
@@ -844,7 +848,7 @@ class ReviewForm extends React.Component<Props, State> {
 				// @ts-ignore
 				commit.info.shortMessage,
 				<span className="monospace">{commit.sha.substr(0, 8)}</span>,
-				() => this.setChangeStart(commit.sha)
+				e => this.setChangeStart(e, commit.sha)
 			)
 		);
 	}
@@ -1025,7 +1029,7 @@ class ReviewForm extends React.Component<Props, State> {
 								tabIndex={0}
 								value={this.state.title}
 								onChange={e => this.setState({ title: e.target.value, titleTouched: true })}
-								placeholder="Title (required)"
+								placeholder="Title"
 								ref={ref => (this._titleInput = ref)}
 							/>
 						</div>
@@ -1033,45 +1037,50 @@ class ReviewForm extends React.Component<Props, State> {
 						{this.renderMessageInput()}
 					</div>
 					{this.renderTags()}
-					<div className="related" style={{ padding: "0", marginBottom: 0, position: "relative" }}>
-						<div className="related-label">
-							{reviewers.length > 0 && !this.state.reviewersTouched && "Suggested "}Reviewers
-						</div>
-						{reviewers.map(person => {
-							const menu = (
-								<HeadshotMenu
-									person={person}
-									menuItems={[
-										{
-											label: "Remove from Review",
-											action: () => this.removeReviewer(person)
-										}
-									]}
-								/>
-							);
-							// # of times you stomped on their code
-							const stomps = authorsById[person.id];
-							if (stomps > 0) {
-								const title = stomps === 1 ? "1 edit" : `${stomps} edits`;
-								return (
-									<Tooltip placement="bottom" title={title}>
-										<span>{menu}</span>
-									</Tooltip>
-								);
-							} else return menu;
-						})}
-						<SelectPeople
-							title="Select Reviewers"
-							value={reviewers}
-							onChange={this.toggleReviewer}
-							multiSelect={true}
-							labelExtras={stompLabels}
+					{this.state.isLoadingScm || (
+						<div
+							className="related"
+							style={{ padding: "0", marginBottom: 0, position: "relative" }}
 						>
-							<span className="icon-button">
-								<Icon name="plus" title="Specify who you want to review your code" />
-							</span>
-						</SelectPeople>
-					</div>
+							<div className="related-label">
+								{reviewers.length > 0 && !this.state.reviewersTouched && "Suggested "}Reviewers
+							</div>
+							{reviewers.map(person => {
+								const menu = (
+									<HeadshotMenu
+										person={person}
+										menuItems={[
+											{
+												label: "Remove from Review",
+												action: () => this.removeReviewer(person)
+											}
+										]}
+									/>
+								);
+								// # of times you stomped on their code
+								const stomps = authorsById[person.id];
+								if (stomps > 0) {
+									const title = stomps === 1 ? "1 edit" : `${stomps} edits`;
+									return (
+										<Tooltip placement="bottom" title={title}>
+											<span>{menu}</span>
+										</Tooltip>
+									);
+								} else return menu;
+							})}
+							<SelectPeople
+								title="Select Reviewers"
+								value={reviewers}
+								onChange={this.toggleReviewer}
+								multiSelect={true}
+								labelExtras={stompLabels}
+							>
+								<span className="icon-button">
+									<Icon name="plus" title="Specify who you want to review your code" />
+								</span>
+							</SelectPeople>
+						</div>
+					)}
 					{this.renderChangedFiles()}
 					{this.renderGroupsAndCommits()}
 					{this.renderSharingControls()}
@@ -1111,7 +1120,7 @@ class ReviewForm extends React.Component<Props, State> {
 									width: "80px",
 									marginRight: 0
 								}}
-								className="control-button"
+								className={cx("control-button", { cancel: !this.state.title })}
 								type="submit"
 								loading={this.state.isLoading}
 								onClick={this.handleClickSubmit}
