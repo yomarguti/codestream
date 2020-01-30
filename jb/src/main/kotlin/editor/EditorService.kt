@@ -91,7 +91,6 @@ class EditorService(val project: Project) {
         val agentService = project.agentService ?: return
         managedEditors.add(editor)
         rangeHighlighters[editor] = mutableSetOf()
-        updateMarkers(editor)
         editor.selectionModel.addSelectionListener(SelectionListenerImpl(project))
         editor.scrollingModel.addVisibleAreaListener(VisibleAreaListenerImpl(project))
 
@@ -104,6 +103,11 @@ class EditorService(val project: Project) {
                         DidOpenTextDocumentParams(document.textDocumentItem)
                     )
                     document.addDocumentListener(DocumentSynchronizer())
+                }
+            }
+            ApplicationManager.getApplication().invokeLater {
+                GlobalScope.launch {
+                    editor.renderMarkers(getDocumentMarkers(editor.document))
                 }
             }
         }
@@ -192,12 +196,6 @@ class EditorService(val project: Project) {
         val markers = getDocumentMarkers(document)
         for (editor in editors) {
             editor.renderMarkers(markers)
-        }
-    }
-
-    private fun updateMarkers(editor: Editor) {
-        GlobalScope.launch {
-            editor.renderMarkers(getDocumentMarkers(editor.document))
         }
     }
 
