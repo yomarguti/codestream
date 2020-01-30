@@ -528,6 +528,7 @@ export interface CSCreateReviewRequest {
 	externalProviderUrl?: string;
 	externalProviderHost?: string;
 	remoteCodeUrl?: { name: string; url: string };
+	// commented out
 	// threadUrl?: string;
 }
 
