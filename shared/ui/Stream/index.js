@@ -1018,6 +1018,7 @@ export class SimpleStream extends Component {
 							isCodeStreamTeam={this.props.isCodeStreamTeam}
 							teamProvider={this.props.teamProvider}
 							teamPlan={this.props.team.plan}
+							companyMemberCount={this.props.team.companyMemberCount}
 						/>
 					)}
 					{activePanel === WebviewPanels.Tasks && (

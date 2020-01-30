@@ -152,8 +152,7 @@ export class InvitePanel extends Component {
 		if (
 			this.props.teamPlan &&
 			this.props.teamPlan === "FREEPLAN" &&
-			this.props.members &&
-			this.props.members.length >= 5
+			(this.props.companyMemberCount || 0) >= 5
 		) {
 			HostApi.instance.track("Paywall Hit", {
 				"Pay Wall": "Team Size"
