@@ -108,7 +108,7 @@ export class ScmManager {
 		const authors: { [id: string]: number } = {};
 		let totalModifiedLines = 0;
 
-		let commits: { sha: string; info: {} }[] | undefined;
+		let commits: { sha: string; info: {}; localOnly: boolean }[] | undefined;
 		let gitError;
 		let repoPath = "";
 		let repoId;

@@ -652,7 +652,7 @@ export class GitService implements IGitService, Disposable {
 	async getCommitsOnBranch(
 		repoPath: string,
 		branch: string
-	): Promise<{ sha: string; info: {} }[] | undefined> {
+	): Promise<{ sha: string; info: {}; localOnly: boolean }[] | undefined> {
 		try {
 			// commits for a specific branch
 			// https://stackoverflow.com/questions/14848274/git-log-to-get-commits-only-for-a-specific-branch
@@ -683,9 +683,13 @@ export class GitService implements IGitService, Disposable {
 			const commits = GitLogParser.parse(data2.trim(), repoPath);
 			if (commits === undefined || commits.size === 0) return undefined;
 
-			const ret: { sha: string; info: {} }[] = [];
+			// https://stackoverflow.com/questions/2016901/viewing-unpushed-git-commits
+			const data3 = await git({ cwd: repoPath }, "log", "@{push}..", "--format=%H", "--");
+			const localCommits = data3.trim().split("\n");
+
+			const ret: { sha: string; info: {}; localOnly: boolean }[] = [];
 			commits.forEach((val, key) => {
-				ret.push({ sha: key, info: val });
+				ret.push({ sha: key, info: val, localOnly: localCommits.includes(key) });
 			});
 			return ret;
 		} catch {
