@@ -268,6 +268,7 @@ export interface CSTeam extends CSEntity {
 	plan?: string;
 	trialStartDate?: number;
 	trialEndDate?: number;
+	companyMemberCount?: number;
 	// array of tags for a given team. note that there is
 	// a default set that can be modified for the entire team
 	tags?: {
