@@ -330,6 +330,7 @@ class ReviewForm extends React.Component<Props, State> {
 					text: replaceHtml(text)!,
 					reviewers: reviewerIds,
 					tags: keyFilter(selectedTags),
+					status: "open",
 					repoChanges: [
 						{
 							scm: repoStatus.scm,
@@ -368,11 +369,6 @@ class ReviewForm extends React.Component<Props, State> {
 		if (title.length === 0) {
 			validationState.titleInvalid = true;
 			invalid = true;
-		}
-
-		if (!this.props.isEditing && !this._sharingAttributes) {
-			invalid = true;
-			validationState.sharingAttributesInvalid = true;
 		}
 
 		this.setState(validationState as State);

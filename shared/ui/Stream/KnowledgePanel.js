@@ -3,6 +3,7 @@ import { connect } from "react-redux";
 import createClassString from "classnames";
 import * as actions from "./actions";
 import * as codemarkSelectors from "../store/codemarks/reducer";
+import * as reviewSelectors from "../store/reviews/reducer";
 import * as userSelectors from "../store/users/reducer";
 import Tag from "./Tag";
 import Icon from "./Icon";
@@ -548,6 +549,7 @@ const mapStateToProps = state => {
 	}
 
 	const codemarks = codemarkSelectors.getTypeFilteredCodemarks(state);
+	const reviews = reviewSelectors.getByStatus(state);
 	const usernames = userSelectors.getUsernames(state);
 	const usernameMap = userSelectors.getUsernamesById(state);
 
@@ -612,6 +614,7 @@ const mapStateToProps = state => {
 		noCodemarksAtAll: !codemarkSelectors.teamHasCodemarks(state),
 		usernames,
 		codemarks,
+		reviews,
 		team: teams[context.currentTeamId],
 		fileFilter: context.codemarkFileFilter,
 		typeFilter: context.codemarkTypeFilter,

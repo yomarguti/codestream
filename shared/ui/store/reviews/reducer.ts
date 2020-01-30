@@ -3,7 +3,7 @@ import { toMapBy } from "../../utils";
 import { ActionType } from "../common";
 import * as actions from "./actions";
 import { ReviewsActionsTypes, ReviewsState } from "./types";
-import { CSReview } from "@codestream/protocols/agent";
+import { ReviewPlus } from "@codestream/protocols/agent";
 
 type ReviewsActions = ActionType<typeof actions>;
 
@@ -28,12 +28,12 @@ export function reduceReviews(state = initialState, action: ReviewsActions) {
 	}
 }
 
-export function getReview(state: ReviewsState, id?: string): CSReview | undefined {
+export function getReview(state: ReviewsState, id?: string): ReviewPlus | undefined {
 	if (!id) return undefined;
 	return state[id];
 }
 
-export function getByStatus(state: ReviewsState, status?: string): CSReview[] {
+export function getByStatus(state: ReviewsState, status?: string): ReviewPlus[] {
 	if (!status) return Object.values(state);
 
 	return Object.values(state).filter(review => review.status === status);
