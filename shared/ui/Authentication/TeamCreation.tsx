@@ -62,6 +62,7 @@ export const TeamCreation = (connect() as any)((props: ConnectedProps & Dispatch
 								<div style={{ height: "20px" }} />
 								<TextInput
 									name="team"
+									placeholder="Ex: Acme Frontend Devs"
 									value={teamName}
 									onChange={setTeamName}
 									validate={isTeamNameValid}
