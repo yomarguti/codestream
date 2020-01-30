@@ -939,8 +939,8 @@ class ReviewForm extends React.Component<Props, State> {
 	};
 
 	renderReviewForm() {
-		const { editingReview, currentUser, teamMates } = this.props;
-		const { scmInfo, repoStatus, repoName, reviewers, authorsById } = this.state;
+		const { editingReview, currentUser } = this.props;
+		const { scmInfo, repoName, reviewers, authorsById } = this.state;
 
 		// stompLabels are a mapping from teamMate ID to the # of edits represented in
 		// the autors variable
