@@ -1,5 +1,4 @@
 "use strict";
-import { GetRepoScmStatusResponse } from "./agent.protocol";
 import { RepoScmStatus } from "./agent.protocol.scm";
 import {
 	ChannelServiceType,

@@ -911,7 +911,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 								revision: "",
 								authors: [],
 								// FIXME where do we get the remotes?
-								remotes: [],
+								remotes,
 								branch: scm.branch
 							}
 						);

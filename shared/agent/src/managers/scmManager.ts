@@ -1,9 +1,11 @@
+import { lastDayOfQuarter } from "date-fns";
 import * as paths from "path";
 import { URI } from "vscode-uri";
 import { Ranges } from "../api/extensions";
 import { GitCommit } from "../git/models/models";
 import { Logger } from "../logger";
 import {
+	CoAuthors,
 	FileStatus,
 	GetCommitScmInfoRequest,
 	GetCommitScmInfoRequestType,
@@ -105,7 +107,7 @@ export class ScmManager {
 			linesRemoved: number;
 			status: FileStatus;
 		}[] = [];
-		const authors: { [id: string]: number } = {};
+		const authors: CoAuthors = {};
 		let totalModifiedLines = 0;
 
 		let commits: { sha: string; info: {}; localOnly: boolean }[] | undefined;
@@ -138,6 +140,16 @@ export class ScmManager {
 					// the oldest ref, which should be the fork point of this branch
 					if (commits && commits.length && !startCommit) {
 						startCommit = commits[commits.length - 1].sha + "^";
+					}
+					if (commits) {
+						commits.forEach(commit => {
+							// @ts-ignore
+							const email = commit.info.email;
+							if (email) {
+								if (!authors[email]) authors[email] = { commits: 0, stomped: 0 };
+								authors[email].commits++;
+							}
+						});
 					}
 					modifiedFiles = await git.getNumStat(repoPath, includeSaved, includeStaged, startCommit);
 					if (modifiedFiles) {
@@ -195,9 +207,10 @@ export class ScmManager {
 					)
 						.filter(Boolean)
 						.map(authorList =>
-							authorList.forEach(
-								author => (authors[author.email] = 1 + (authors[author.email] || 0))
-							)
+							authorList.forEach(author => {
+								if (!authors[author.email]) authors[author.email] = { stomped: 0, commits: 0 };
+								authors[author.email].stomped = 1 + authors[author.email].stomped;
+							})
 						);
 				}
 			} catch (ex) {
