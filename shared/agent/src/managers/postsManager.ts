@@ -861,7 +861,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		let review: ReviewPlus | undefined;
 
 		for (const repoChange of request.attributes.repoChanges) {
-			const { scm, includeSaved, includeStaged, startCommit, excludedFiles } = repoChange;
+			const { scm, includeSaved, includeStaged, startCommit, excludedFiles, remotes } = repoChange;
 			if (!scm || !scm.repoId || !scm.branch || !scm.commits) continue;
 
 			// filter out excluded files from the diffs and modified files
@@ -887,12 +887,13 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					diffs,
 					modifiedFiles,
 					includeSaved,
-					includeStaged
+					includeStaged,
+					remotes
 				});
 			}
 			for (const patch of diffs) {
-				const newFile = patch.newFileName?.substr(2);
-				if (newFile && !excludedFiles.includes(newFile)) {
+				const file = patch.newFileName?.substr(2);
+				if (file && !excludedFiles.includes(file)) {
 					for (const hunk of patch.hunks) {
 						const range: Range = {
 							start: { line: hunk.newStart, character: 0 },
@@ -902,10 +903,17 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						const descriptor = await MarkersManager.prepareMarkerCreationDescriptor(
 							hunk.lines.join("\n"),
 							// FIXME -- this isn't the best way to construct this URI
-							{ uri: "file://" + scm.repoPath + "/" + newFile },
-							range
-							// FIXME provide the CodeBlockSource
-							// codeBlock.scm
+							{ uri: "file://" + scm.repoPath + "/" + file },
+							range,
+							{
+								file,
+								repoPath: scm.repoPath,
+								revision: "",
+								authors: [],
+								// FIXME where do we get the remotes?
+								remotes: [],
+								branch: scm.branch
+							}
 						);
 
 						markerCreationDescriptors.push(descriptor);

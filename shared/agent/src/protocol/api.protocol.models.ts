@@ -158,6 +158,7 @@ export interface CSRepoChangeset {
 	modifiedFiles: { file: string; linesAdded: number; linesRemoved: number; status: FileStatus }[];
 	includeSaved: boolean;
 	includeStaged: boolean;
+	remotes: { name: string; url: string }[];
 }
 
 export interface CSReview extends CSEntity {

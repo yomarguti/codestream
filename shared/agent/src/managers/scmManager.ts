@@ -112,6 +112,7 @@ export class ScmManager {
 		let gitError;
 		let repoPath = "";
 		let repoId;
+		let remotes: { name: string; url: string }[] | undefined;
 		if (uri.scheme === "file") {
 			const { git } = SessionContainer.instance();
 
@@ -128,6 +129,9 @@ export class ScmManager {
 
 					const repo = await git.getRepositoryByFilePath(uri.fsPath);
 					repoId = repo && repo.id;
+
+					const gitRemotes = await git.getRepoRemotes(repoPath);
+					remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
 
 					// if we don't have a starting point to diff against,
 					// assume that we want to diff against the parent of
@@ -216,6 +220,7 @@ export class ScmManager {
 							stagedFiles,
 							authors,
 							commits: [...(commits || [])],
+							remotes: remotes || [],
 							totalModifiedLines
 					  }
 					: undefined,

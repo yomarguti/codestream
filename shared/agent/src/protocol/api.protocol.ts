@@ -519,6 +519,7 @@ export interface CSCreateReviewRequest {
 		excludedFiles: string[];
 		includeSaved: boolean;
 		includeStaged: boolean;
+		remotes: { name: string; url: string }[];
 	}[];
 
 	markers?: CSCreateMarkerRequest[];
@@ -529,6 +530,7 @@ export interface CSCreateReviewRequest {
 	externalProviderHost?: string;
 	remoteCodeUrl?: { name: string; url: string };
 	// commented out
+	// another commetn
 	// threadUrl?: string;
 }
 
