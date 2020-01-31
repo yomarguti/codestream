@@ -992,28 +992,32 @@ class ReviewForm extends React.Component<Props, State> {
 			<form className="standard-form review-form" key="form">
 				<fieldset className="form-body">
 					<div id="controls" className="control-group" key="controls1">
-						<div key="headshot" className="headline">
-							<Headshot person={currentUser} display="inline-block" />
-							<b>{currentUser.username}</b>
-							<span className="subhead">
-								is requesting a code review
-								{scmInfo && scmInfo.scm && <>&nbsp;in&nbsp;</>}
-							</span>
-							{scmInfo && scmInfo.scm && (
-								<>
-									<span className="channel-label" style={{ display: "inline-block" }}>
-										{repoName}
-									</span>
-									{scmInfo.scm.branch && (
-										<>
-											<span className="subhead">on branch&nbsp;</span>
-											<span className="channel-label" style={{ display: "inline-block" }}>
-												{scmInfo.scm.branch}
-											</span>
-										</>
-									)}
-								</>
-							)}
+						<div key="headshot" className="headline-flex">
+							<div style={{ paddingRight: "7px" }}>
+								<Headshot person={currentUser} />
+							</div>
+							<div style={{ marginTop: "-1px" }}>
+								<b>{currentUser.username}</b>
+								<span className="subhead">
+									is requesting a code review
+									{scmInfo && scmInfo.scm && <>&nbsp;in&nbsp;</>}
+								</span>
+								{scmInfo && scmInfo.scm && (
+									<>
+										<span className="channel-label" style={{ display: "inline-block" }}>
+											{repoName}
+										</span>
+										{scmInfo.scm.branch && (
+											<>
+												<span className="subhead">on branch&nbsp;</span>
+												<span className="channel-label" style={{ display: "inline-block" }}>
+													{scmInfo.scm.branch}
+												</span>
+											</>
+										)}
+									</>
+								)}
+							</div>
 						</div>
 						<div key="title" className="control-group">
 							{this.renderTitleHelp()}
