@@ -460,23 +460,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const { documentMarkers, showHidden } = this.props;
 
 		this.hiddenCodemarks = {};
-		return [
-			<div
-				id="inline-codemarks-field"
-				style={{
-					top: paddingTop,
-					// purple background for debugging purposes
-					// background: "#333366",
-					fontSize: fontSize,
-					position: "fixed",
-					left: 0,
-					height: height,
-					width: "45px",
-					zIndex: 5000
-				}}
-			>
-				<div style={{ position: "relative", background: "red" }}>{this.renderHoverIcons()}</div>
-			</div>,
+		return (
 			<div style={{ height: "100%", paddingTop: "55px" }}>
 				<ScrollBox>
 					<div
@@ -526,7 +510,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					</div>
 				</ScrollBox>
 			</div>
-		];
+		);
 	};
 
 	codeHeight = () => {
