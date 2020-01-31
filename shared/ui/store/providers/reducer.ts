@@ -2,7 +2,7 @@ import { ActionType } from "../common";
 import * as actions from "./actions";
 import { ProvidersState, ProvidersActionsType } from "./types";
 import { CodeStreamState } from "..";
-import { CSMe, CSSlackProviderInfo, CSProviderInfos } from "@codestream/protocols/api";
+import { CSMe, CSProviderInfos } from "@codestream/protocols/api";
 import { mapFilter, safe } from "@codestream/webview/utils";
 import { ThirdPartyProviderConfig } from "@codestream/protocols/agent";
 import { createSelector } from "reselect";
@@ -130,15 +130,19 @@ export const getConnectedSharingTargets = (state: CodeStreamState) => {
 			teamName: info.data!.team_name
 		})));
 
-	// const msTeamInfos = safe(() => providerInfo!.msteams!.multiple);
-	// if (msTeamInfos)
-	// 	teams = teams.concat(Object.entries(msTeamInfos).map(([teamId, info]) => ({
-	// 		icon: PROVIDER_MAPPINGS.msteams.icon!,
-	// 		providerId: getProviderConfig(state, "msteams")!.id,
-	// 		teamId,
-	// 		teamName: info.extra!.team_name
-	// 	})));
-
+	const msTeamInfos = safe(() => providerInfo!.msteams!.multiple);
+	if (msTeamInfos) {
+		const entries = Object.entries(msTeamInfos);
+		const len = entries.length;
+		teams = teams.concat(entries.map(([teamId], index) => {
+			return {
+				icon: PROVIDER_MAPPINGS.msteams.icon!,
+				providerId: getProviderConfig(state, "msteams")!.id,
+				teamId,
+				teamName: len === 1 ? 'MS Teams Org' : `MS Teams Org ${(index + 1)}`
+			}
+		}));
+	}
 	return teams;
 };
 

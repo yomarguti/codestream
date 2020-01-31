@@ -343,15 +343,15 @@ export const SharingControls = React.memo(
 							authenticateWithSlack();
 						}) as any
 					});
-				// if (derivedState.msTeamsConfig) {
-				// 	targetItems.push({
-				// 		key: "add-msteams",
-				// 		label: "Add Teams organization" as any,
-				// 		action: (() => {
-				// 			authenticateWithMSTeams();
-				// 		}) as any
-				// 	});
-				// }
+				if (derivedState.msTeamsConfig) {
+					targetItems.push({
+						key: "add-msteams",
+						label: "Add Teams organization" as any,
+						action: (() => {
+							authenticateWithMSTeams();
+						}) as any
+					});
+				}
 			}
 			return targetItems;
 		}, [derivedState.shareTargets, derivedState.slackConfig, derivedState.msTeamsConfig]);
@@ -410,7 +410,7 @@ export const SharingControls = React.memo(
 		if (authenticationState && authenticationState.isAuthenticating)
 			return (
 				<Root>
-					<Icon name="sync" className="spin" /> Authenticating with {authenticationState.label}...{" "}
+					<Icon name="sync" className="spin" /> {(authenticationState.label == "MS Teams" ? "Setting up MS Teams bot": `Authenticating with ${authenticationState.label}`)}...{" "}
 					<a
 						onClick={e => {
 							e.preventDefault();
@@ -449,7 +449,7 @@ export const SharingControls = React.memo(
 					>
 						<Icon name="slack" /> Slack
 					</TextButton>
-					{/*
+					 
 				{derivedState.msTeamsConfig != undefined && (
 					<>
 						{" "}
@@ -464,7 +464,7 @@ export const SharingControls = React.memo(
 						</TextButton>
 					</>
 				)}
-						*/}
+						 
 				</Root>
 			);
 
