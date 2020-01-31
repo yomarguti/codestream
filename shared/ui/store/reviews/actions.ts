@@ -42,6 +42,7 @@ export interface NewReviewAttributes {
 		excludedFiles: string[];
 		includeSaved: boolean;
 		includeStaged: boolean;
+		remotes: { name: string; url: string }[];
 	}[];
 
 	accessMemberIds: string[];
