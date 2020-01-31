@@ -88,9 +88,7 @@ interface State {
 	singleAssignee: boolean;
 	reviewers: CSUser[];
 	reviewersTouched: boolean;
-	authorsById: {
-		[authorId: string]: number;
-	};
+	authorsById: { [authorId: string]: { stomped: number; commits: number } };
 	notify: boolean;
 	isLoading: boolean;
 	isLoadingScm: boolean;
@@ -972,12 +970,17 @@ class ReviewForm extends React.Component<Props, State> {
 		const { editingReview, currentUser } = this.props;
 		const { scmInfo, repoName, reviewers, authorsById } = this.state;
 
-		// stompLabels are a mapping from teamMate ID to the # of edits represented in
-		// the autors variable
-		const stompLabels = {};
+		// coAuthorLabels are a mapping from teamMate ID to the # of edits represented in
+		// the autors variable (number of times you stomped on their code), and the number
+		// of commits they pushed to this branch
+		const coAuthorLabels = {};
 		Object.keys(authorsById).map(id => {
-			if (authorsById[id] === 1) stompLabels[id] = " - 1 edit";
-			else if (authorsById[id] > 1) stompLabels[id] = " - " + authorsById[id] + " edits";
+			const label: string[] = [];
+			if (authorsById[id].stomped === 1) label.push("1 edit");
+			else if (authorsById[id].stomped > 1) label.push(authorsById[id].stomped + " edits");
+			if (authorsById[id].commits === 1) label.push("1 commit");
+			else if (authorsById[id].commits > 1) label.push(authorsById[id].stomped + " commits");
+			coAuthorLabels[id] = label.join(", ");
 		});
 
 		const modifier = navigator.appVersion.includes("Macintosh") ? "⌘" : "Alt";
@@ -1064,11 +1067,9 @@ class ReviewForm extends React.Component<Props, State> {
 									/>
 								);
 								// # of times you stomped on their code
-								const stomps = authorsById[person.id];
-								if (stomps > 0) {
-									const title = stomps === 1 ? "1 edit" : `${stomps} edits`;
+								if (coAuthorLabels[person.id]) {
 									return (
-										<Tooltip placement="bottom" title={title}>
+										<Tooltip placement="bottom" title={coAuthorLabels[person.id]}>
 											<span>{menu}</span>
 										</Tooltip>
 									);
@@ -1079,7 +1080,7 @@ class ReviewForm extends React.Component<Props, State> {
 								value={reviewers}
 								onChange={this.toggleReviewer}
 								multiSelect={true}
-								labelExtras={stompLabels}
+								labelExtras={coAuthorLabels}
 							>
 								<span className="icon-button">
 									<Icon name="plus" title="Specify who you want to review your code" />

@@ -82,7 +82,7 @@ class SelectPeople extends React.Component<Props, State> {
 			const selected = value.find(p => p.id === person.id) ? true : false;
 			const label = person.fullName ? `${person.fullName} (@${person.username})` : person.username;
 			return {
-				label: label + (labelExtras[person.id] || ""),
+				label: label + (labelExtras[person.id] ? " - " + labelExtras[person.id] : ""),
 				searchLabel: person.username,
 				checked: selected,
 				value: person.username,
