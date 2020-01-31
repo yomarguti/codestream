@@ -241,7 +241,8 @@ export interface CSFileStream extends CSEntity {
 export type CSStream = CSChannelStream | CSDirectStream | CSFileStream;
 
 export interface CSTeamMSTeamsProviderInfo {
-	teamId: string;
+	teamId?: string;
+	tenantId?: string;
 }
 
 export interface CSTeamSlackProviderInfo {

@@ -1,3 +1,5 @@
+// this is not used for the bot-based MS Teams sharing
+
 "use strict";
 import { Client, ClientOptions, GraphError, GraphRequest } from "@microsoft/microsoft-graph-client";
 import { RequestInit } from "node-fetch";

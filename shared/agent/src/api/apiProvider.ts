@@ -141,11 +141,15 @@ import {
 	CSMarkerLocations,
 	CSMe,
 	CSMePreferences,
+	CSMsTeamsConversationRequest,
+	CSMsTeamsConversationResponse,
 	CSPost,
 	CSRepository,
 	CSTeam,
 	CSUser,
-	ProviderType
+	ProviderType,
+	TriggerMsTeamsProactiveMessageRequest,
+	TriggerMsTeamsProactiveMessageResponse
 } from "../protocol/api.protocol";
 
 export type ApiProviderLoginResponse = CSLoginResponse & { token: AccessToken };
@@ -337,6 +341,9 @@ export interface ApiProvider {
 	fetchRepos(request: FetchReposRequest): Promise<FetchReposResponse>;
 	getRepo(request: GetRepoRequest): Promise<GetRepoResponse>;
 	matchRepos(request: MatchReposRequest): Promise<MatchReposResponse>;
+
+	fetchMsTeamsConversations(request: CSMsTeamsConversationRequest): Promise<CSMsTeamsConversationResponse>;
+	triggerMsTeamsProactiveMessage(request: TriggerMsTeamsProactiveMessageRequest): Promise<TriggerMsTeamsProactiveMessageResponse>;
 
 	createChannelStream(request: CreateChannelStreamRequest): Promise<CreateChannelStreamResponse>;
 	createDirectStream(request: CreateDirectStreamRequest): Promise<CreateDirectStreamResponse>;

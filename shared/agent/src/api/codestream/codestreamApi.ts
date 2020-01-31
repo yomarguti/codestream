@@ -162,6 +162,8 @@ import {
 	CSMarkPostUnreadResponse,
 	CSMe,
 	CSMePreferences,
+	CSMsTeamsConversationRequest,
+	CSMsTeamsConversationResponse,
 	CSPinReplyToCodemarkRequest,
 	CSPinReplyToCodemarkResponse,
 	CSPost,
@@ -191,7 +193,9 @@ import {
 	CSUser,
 	LoginResult,
 	ProviderType,
-	StreamType
+	StreamType,
+	TriggerMsTeamsProactiveMessageRequest,
+	TriggerMsTeamsProactiveMessageResponse
 } from "../../protocol/api.protocol";
 import { VersionInfo } from "../../session";
 import { Functions, getProvider, log, lsp, lspHandler, Objects, Strings } from "../../system";
@@ -254,7 +258,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		public readonly baseUrl: string,
 		private readonly _version: VersionInfo,
 		private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined
-	) {}
+	) { }
 
 	get teamId(): string {
 		return this._teamId!;
@@ -329,9 +333,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 		Logger.log(
 			`CodeStream user '${response.user.username}' (${
-				response.user.id
+			response.user.id
 			}) is logging into ${provider || "uknown"}${
-				response.providerAccess ? `:${response.providerAccess}` : ""
+			response.providerAccess ? `:${response.providerAccess}` : ""
 			} and belongs to ${response.teams.length} team(s)\n${response.teams
 				.map(t => `\t${t.name} (${t.id})`)
 				.join("\n")}`
@@ -1058,6 +1062,19 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return this.get<CSGetReposResponse>(`/repos?teamId=${this.teamId}`, this._token);
 	}
 
+	fetchMsTeamsConversations(request: CSMsTeamsConversationRequest): Promise<CSMsTeamsConversationResponse> {
+		return this.get<any>(`/msteams_conversations?teamId=${this.teamId}&tenantId=${request.tenantId}`, this._token);
+	}
+
+	triggerMsTeamsProactiveMessage(request: TriggerMsTeamsProactiveMessageRequest): Promise<TriggerMsTeamsProactiveMessageResponse> {
+		return this.post<any, any>("/msteams_conversations", {
+			teamId: this.teamId,
+			channelId: request.channelId,
+			providerTeamId: request.providerTeamId,
+			codemarkId: request.codemarkId
+		}, this._token);
+	}
+
 	@log()
 	getRepo(request: GetRepoRequest) {
 		return this.get<CSGetRepoResponse>(`/repos/${request.repoId}`, this._token);
@@ -1721,10 +1738,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 			const context =
 				this._middleware.length > 0
 					? ({
-							url: absoluteUrl,
-							method: method,
-							request: init
-					  } as CodeStreamApiMiddlewareContext)
+						url: absoluteUrl,
+						method: method,
+						request: init
+					} as CodeStreamApiMiddlewareContext)
 					: undefined;
 
 			if (context !== undefined) {
@@ -1828,7 +1845,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		} finally {
 			Logger.log(
 				`${traceResult}${
-					init && init.body ? ` body=${CodeStreamApiProvider.sanitize(init && init.body)}` : ""
+				init && init.body ? ` body=${CodeStreamApiProvider.sanitize(init && init.body)}` : ""
 				} \u2022 ${Strings.getDurationMilliseconds(start)} ms`
 			);
 		}
@@ -1879,7 +1896,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 				if (data.info) {
 					message += `\n${data.info.name || data.info}`;
 				}
-			} catch {}
+			} catch { }
 		}
 		return new ServerError(message, data, response.status);
 	}

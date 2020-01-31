@@ -590,3 +590,23 @@ export interface CSSetPasswordRequest {
 export interface CSSetPasswordResponse {
 	accessToken: string;
 }
+
+export interface CSMsTeamsConversationRequest {
+	tenantId: string;
+}
+
+export interface CSMsTeamsConversation {
+	conversationId: string;
+	channelName: string;
+}
+export interface CSMsTeamsConversationResponse {
+	msteams_conversations: CSMsTeamsConversation[];
+}
+
+export interface TriggerMsTeamsProactiveMessageRequest {
+	channelId: string;
+	providerTeamId: string;
+	codemarkId: string;
+}
+
+export interface TriggerMsTeamsProactiveMessageResponse { }

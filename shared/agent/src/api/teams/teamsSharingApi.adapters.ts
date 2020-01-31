@@ -1,3 +1,5 @@
+// this is not used for the bot-based MS Teams sharing
+
 "use strict";
 import { IAdaptiveCard, ITextBlock } from "adaptivecards/lib/schema";
 import { CodemarkPlus } from "protocol/agent.protocol";

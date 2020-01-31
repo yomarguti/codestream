@@ -108,6 +108,7 @@ import {
 	CSMarker,
 	CSMarkerLocations,
 	CSMe,
+	CSMsTeamsConversationRequest,
 	CSMSTeamsProviderInfo,
 	CSPost,
 	CSRepository,
@@ -115,7 +116,8 @@ import {
 	CSTeam,
 	CSUser,
 	ProviderType,
-	StreamType
+	StreamType,
+	TriggerMsTeamsProactiveMessageRequest
 } from "../../protocol/api.protocol";
 import { Arrays, debug, Functions, Iterables, log } from "../../system";
 import {
@@ -582,6 +584,16 @@ export class MSTeamsApiProvider implements ApiProvider {
 	@log()
 	moveMarker(request: { oldMarkerId: string; newMarker: CreateMarkerRequest }) {
 		return this._codestream.moveMarker(request);
+	}
+
+	@log()
+	fetchMsTeamsConversations(request: CSMsTeamsConversationRequest) {
+		return this._codestream.fetchMsTeamsConversations(request);
+	}
+
+	@log()
+	triggerMsTeamsProactiveMessage(request: TriggerMsTeamsProactiveMessageRequest) {
+		return this._codestream.triggerMsTeamsProactiveMessage(request);
 	}
 
 	@log()
