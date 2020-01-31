@@ -266,11 +266,17 @@ class ReviewForm extends React.Component<Props, State> {
 			}
 
 			// if there is no title set, default it to a capitalized version
-			// of the branch name, with hypens replaced with spaces
+			// of the branch name, with "feature/foo-bar" changed to
+			// "feature: foo bar"
 			if (statusInfo.scm.branch && !this.state.title) {
 				const { branch } = statusInfo.scm;
 				this.setState({
-					title: branch.charAt(0).toUpperCase() + branch.slice(1).replace("-", " ")
+					title:
+						branch.charAt(0).toUpperCase() +
+						branch
+							.slice(1)
+							.replace("-", " ")
+							.replace(/^(\w+)\//, "$1: ")
 				});
 			}
 		}
