@@ -40,6 +40,9 @@ export function getByStatus(state: ReviewsState, status?: string): ReviewPlus[] 
 }
 
 const getReviews = state => state.reviews;
+export const getAllReviews = createSelector(getReviews, (reviews: ReviewsState) =>
+	Object.values(reviews)
+);
 
 export const teamHasReviews = createSelector(getReviews, (reviews: ReviewsState) => {
 	return Object.keys(reviews).length > 0;

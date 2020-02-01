@@ -16,6 +16,7 @@ import ScrollBox from "./ScrollBox";
 import { CodemarkForm } from "./CodemarkForm";
 import { ReviewForm } from "./ReviewForm";
 import KnowledgePanel from "./KnowledgePanel";
+import ReviewsPanel from "./ReviewsPanel";
 import InlineCodemarks from "./InlineCodemarks";
 import CreateDMPanel from "./CreateDMPanel";
 import { CreateTeamPage } from "./CreateTeamPage";
@@ -715,6 +716,14 @@ export class SimpleStream extends Component {
 							</Tooltip>
 						</label>
 						*/}
+					<label
+						className={createClassString({
+							selected: activePanel === WebviewPanels.Reviews
+						})}
+						onClick={e => this.setActivePanel(WebviewPanels.Reviews)}
+					>
+						<Icon name="code" title="Code Reviews" placement="bottom" />
+					</label>
 					<label onClick={this.togglePlusMenu}>
 						<Icon name="plus" title="Create..." placement="bottom" />
 						{this.renderPlusMenu()}
@@ -962,6 +971,7 @@ export class SimpleStream extends Component {
 							typeFilter={this.state.knowledgeType}
 						/>
 					)}
+					{activePanel === WebviewPanels.Reviews && <ReviewsPanel />}
 					{activePanel === WebviewPanels.Activity && <ActivityPanel />}
 					{activePanel === WebviewPanels.NewComment && (
 						<CodemarkForm

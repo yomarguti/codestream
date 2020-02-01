@@ -37,6 +37,7 @@ import { IdeState } from "./ide/types";
 import { PostsState } from "./posts/types";
 import { PreferencesState } from "./preferences/types";
 import { ReposState } from "./repos/types";
+import { ReviewsState } from "./reviews/types";
 import { StreamsState } from "./streams/types";
 import { TeamsState } from "./teams/types";
 import { UnreadsState } from "./unreads/types";
@@ -53,6 +54,7 @@ import { reduceFeatureFlags } from "./featureFlags/reducer";
 import { FeatureFlagsState } from "./featureFlags/types";
 import { reduceCompanies } from "./companies/reducer";
 import { CompaniesState } from "./companies/types";
+import { reduceReviews } from "./reviews/reducer";
 
 const pluginVersion = (state = "", action) => {
 	if (action.type === "@pluginVersion/Set") return action.payload;
@@ -65,6 +67,7 @@ const reducer = combineReducers({
 	bootstrapped: reduceBootstrapped,
 	capabilities: reduceCapabilities,
 	codemarks: reduceCodemarks,
+	reviews: reduceReviews,
 	companies: reduceCompanies,
 	configs: reduceConfigs,
 	connectivity: reduceConnectivity,
@@ -109,6 +112,7 @@ export interface CodeStreamState {
 	bootstrapped: boolean;
 	capabilities: CapabilitiesState;
 	codemarks: CodemarksState;
+	reviews: ReviewsState;
 	configs: ConfigsState;
 	companies: CompaniesState;
 	connectivity: ConnectivityState;
