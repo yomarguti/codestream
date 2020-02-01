@@ -9,6 +9,7 @@ import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
 import Review from "./Review";
+import { ProTip } from "./ProTip";
 import Headshot from "./Headshot";
 import { HostApi } from "../webview-api";
 import { includes as _includes, sortBy as _sortBy } from "lodash-es";
@@ -50,6 +51,7 @@ export class SimpleReviewsPanel extends Component {
 		// this.disposables.push(
 		// 	EventEmitter.subscribe("interaction:active-editor-changed", this.handleFileChangedEvent)
 		// );
+		if (this._searchInput) this._searchInput.focus();
 	}
 
 	componentWillUnmount() {
@@ -112,9 +114,9 @@ export class SimpleReviewsPanel extends Component {
 	};
 
 	render() {
-		if (this.state.isLoading) return null;
+		// if (this.state.isLoading) return null;
 
-		if (this.props.noReviewsAtAll) {
+		if (false && this.props.noReviewsAtAll) {
 			return this.renderBlankFiller();
 		}
 
@@ -227,6 +229,16 @@ export class SimpleReviewsPanel extends Component {
 		return (
 			<div className="panel full-height reviews-panel">
 				<PanelHeader title="Code Reviews">
+					<div className="search-bar">
+						<input
+							name="q"
+							className="input-text control"
+							type="text"
+							ref={ref => (this._searchInput = ref)}
+							onChange={e => this.setState({ q: e.target.value })}
+							placeholder="Search Code Reviews"
+						/>
+					</div>
 					{/*
 					<div className="filters">
 						Show{" "}
@@ -252,6 +264,7 @@ export class SimpleReviewsPanel extends Component {
 								return this.renderSection(section, displayReviews[section] || []);
 							})}
 						{!totalReviews && <div className="no-matches">No reviews match this type.</div>}
+						<ProTip />
 					</div>
 				</ScrollBox>
 			</div>

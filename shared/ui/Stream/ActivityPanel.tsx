@@ -244,6 +244,8 @@ export const ActivityPanel = () => {
 	};
 
 	const menuItems = [
+		{ label: "All Activity", action: "all" },
+		{ label: "-" },
 		{ label: "Comments", action: CodemarkType.Comment },
 		{ label: "Issues", action: CodemarkType.Issue },
 		{ label: "Code Reviews", action: CodemarkType.Review }

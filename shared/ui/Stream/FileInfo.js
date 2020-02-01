@@ -1,9 +1,9 @@
 import React from "react";
 import { connect } from "react-redux";
-import createClassString from "classnames";
+import cx from "classnames";
 import Icon from "./Icon";
 
-export class SimpleEditingIndicator extends React.Component {
+export class SimpleFileInfo extends React.Component {
 	makeNameList(names, hasConflict) {
 		let message = "";
 
@@ -16,7 +16,8 @@ export class SimpleEditingIndicator extends React.Component {
 				message = "Potential merge conflict with " + names.join(", ") + ", and " + last;
 			}
 		} else {
-			if (names.length == 1) message = names[0] + " is editing this file";
+			if (names.length == 1)
+				message = names[0] + " is editing this file on branch feature/markdown";
 			else if (names.length == 2)
 				message = names[0] + " and " + names[1] + " are editing this file";
 			else if (names.length > 2) {
@@ -39,21 +40,16 @@ export class SimpleEditingIndicator extends React.Component {
 			.filter(Boolean);
 
 		// you can test what it looks like by hard-coding this
-		// names = ["larry", "fred"];
+		names = ["larry"];
 
 		const modifiedByMe = Boolean(editingUsers[currentUser.id]);
 		const modifiedByOthers = names.length > 0;
 		const hasConflict = modifiedByMe && modifiedByOthers;
 
-		const editingIndicatorClass = createClassString({
-			"editing-indicator": true,
-			conflict: hasConflict
-		});
-
 		if (!modifiedByOthers) return null;
 
 		return (
-			<div className={editingIndicatorClass}>
+			<div className={cx("file-info", { conflict: hasConflict })}>
 				{hasConflict && <Icon name="alert" />}
 				{this.makeNameList(names, hasConflict)}
 			</div>
@@ -73,7 +69,4 @@ const mapStateToProps = ({ capabilities, context, session, teams, users }) => {
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{}
-)(SimpleEditingIndicator);
+export default connect(mapStateToProps, {})(SimpleFileInfo);

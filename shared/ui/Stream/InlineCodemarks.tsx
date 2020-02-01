@@ -6,7 +6,7 @@ import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
 import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import Tooltip from "./Tooltip"; // careful with tooltips on codemarks; they are not performant
-import EditingIndicator from "./EditingIndicator";
+import FileInfo from "./FileInfo";
 import Feedback from "./Feedback";
 import cx from "classnames";
 import {
@@ -1119,8 +1119,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
 				<PanelHeader title={fs.pathBasename(fileNameToFilterFor)} position="fixed">
-					{/* file info, last commits, related PRs, related reviews */}
-					<EditingIndicator />
+					<FileInfo />
 				</PanelHeader>
 				{this.renderHoverIcons()}
 				{this.renderCodemarkForm()}

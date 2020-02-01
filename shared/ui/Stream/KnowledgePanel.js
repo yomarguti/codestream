@@ -166,7 +166,7 @@ export class SimpleKnowledgePanel extends Component {
 				})}
 			>
 				<div className="header" onClick={e => this.toggleSection(e, section)}>
-					<Icon name="triangle-right" className="triangle-right" />
+					<Icon name="chevron-right" className="triangle-right" />
 					<span className="clickable">{sectionLabel}</span>
 				</div>
 				<ul>{this.renderPosts(codemarks)}</ul>

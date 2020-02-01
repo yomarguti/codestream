@@ -651,7 +651,7 @@ export class SimpleStream extends Component {
 						})}
 						onClick={e => this.setActivePanel(WebviewPanels.CodemarksForFile)}
 					>
-						<Icon name="document" title="Codemarks In Current File" placement="bottom" />
+						<Icon name="file" title="Codemarks In Current File" placement="bottom" />
 					</label>
 					<FeatureFlag flag="sharing">
 						{isSharingModel =>
