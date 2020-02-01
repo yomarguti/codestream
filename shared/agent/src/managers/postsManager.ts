@@ -864,10 +864,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			const { scm, includeSaved, includeStaged, startCommit, excludedFiles, remotes } = repoChange;
 			if (!scm || !scm.repoId || !scm.branch || !scm.commits) continue;
 
-			// filter out excluded files from the diffs and modified files
-			const diffs = (
-				await git.getDiffs(scm.repoPath, includeSaved, includeStaged, startCommit)
-			).filter(diff => diff.newFileName && !excludedFiles.includes(diff.newFileName.substr(2)));
 			const modifiedFiles = scm.modifiedFiles.filter(f => !excludedFiles.includes(f.file));
 
 			// filter out only to those commits that were chosen in the review
@@ -877,6 +873,13 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						scm.commits.findIndex(commit => commit.sha === startCommit)
 				  )
 				: scm.commits;
+
+			const diffStart = startCommit || commits[commits.length - 1].sha + "^";
+
+			// filter out excluded files from the diffs and modified files
+			const diffs = (
+				await git.getDiffs(scm.repoPath, includeSaved, includeStaged, diffStart)
+			).filter(diff => diff.newFileName && !excludedFiles.includes(diff.newFileName.substr(2)));
 
 			// WTF typescript, this is defined above
 			if (reviewRequest.repoChangeset) {
