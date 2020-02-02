@@ -40,7 +40,8 @@ import Filter from "./Filter";
 const FormattedPluralAlias = FormattedPlural as any;
 
 const ActivityWrapper = styled.div`
-	margin: 5px 40px 20px 45px;
+	// tag: codemark-width
+	margin: 5px 40px 20px 20px;
 	> time,
 	> .activity {
 		display: block;
