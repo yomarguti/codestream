@@ -711,6 +711,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						fontSize: fontSize,
 						height: height
 					}}
+					onClick={this.handleClickField}
 				>
 					{this.renderNoCodemarks()}
 					{this.props.children}
