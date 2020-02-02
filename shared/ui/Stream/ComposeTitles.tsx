@@ -3,7 +3,7 @@ import React from "react";
 const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
 const ComposeTitles = {
 	comment: (
-		<span>
+		<span className="compose-title">
 			<span className="binding">
 				<span className="keybinding extra-pad">{modifier}</span>
 				<span className="keybinding">c</span>
@@ -19,7 +19,7 @@ const ComposeTitles = {
 	// 	</span>
 	// ),
 	link: (
-		<span>
+		<span className="compose-title">
 			<span className="binding">
 				<span className="keybinding extra-pad">{modifier}</span>
 				<span className="keybinding">p</span>
@@ -28,7 +28,7 @@ const ComposeTitles = {
 		</span>
 	),
 	issue: (
-		<span>
+		<span className="compose-title">
 			<span className="binding">
 				<span className="keybinding extra-pad">{modifier}</span>
 				<span className="keybinding">i</span>
@@ -37,13 +37,13 @@ const ComposeTitles = {
 		</span>
 	),
 	about: (
-		<span>
+		<span className="compose-title">
 			Get Info<span className="keybinding extra-pad">{modifier}</span>
 			<span className="keybinding">a</span>
 		</span>
 	),
 	toggleCodeStreamPanel: (
-		<span>
+		<span className="compose-title">
 			<span className="binding">
 				<span className="keybinding extra-pad">{modifier}</span>
 				<span className="keybinding extra-pad">{modifier}</span>
@@ -52,7 +52,7 @@ const ComposeTitles = {
 		</span>
 	),
 	privatePermalink: (
-		<span>
+		<span className="compose-title">
 			<span className="binding">
 				<span className="keybinding extra-pad">{modifier}</span>
 				<span className="keybinding extra-pad">⇧ p</span>
