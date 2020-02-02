@@ -14,6 +14,33 @@ import Headshot from "./Headshot";
 import { HostApi } from "../webview-api";
 import { includes as _includes, sortBy as _sortBy } from "lodash-es";
 import { PanelHeader } from "../src/components/PanelHeader";
+import styled from "styled-components";
+import { Button } from "../src/components/Button";
+
+const SearchBar = styled.div`
+	display: flex;
+	flex-direction: row;
+	input.control {
+		padding-left: 32px !important;
+		height: 100%;
+	}
+	.search-input {
+		position: relative;
+		flex-grow: 10;
+		width: 100%;
+		.icon {
+			position: absolute;
+			left: 0px;
+			top: 6px;
+			opacity: 0.5;
+		}
+	}
+`;
+
+const FiltersButton = styled(Button)`
+	flex-grow: 0;
+	white-space: nowrap;
+`;
 
 export class SimpleReviewsPanel extends Component {
 	disposables = [];
@@ -229,16 +256,23 @@ export class SimpleReviewsPanel extends Component {
 		return (
 			<div className="panel full-height reviews-panel">
 				<PanelHeader title="Code Reviews">
-					<div className="search-bar">
-						<input
-							name="q"
-							className="input-text control"
-							type="text"
-							ref={ref => (this._searchInput = ref)}
-							onChange={e => this.setState({ q: e.target.value })}
-							placeholder="Search Code Reviews"
-						/>
-					</div>
+					<SearchBar className="search-bar">
+						<FiltersButton>
+							Filters
+							<Icon name="chevron-down" />
+						</FiltersButton>
+						<div className="search-input">
+							<Icon name="search" />
+							<input
+								name="q"
+								className="input-text control"
+								type="text"
+								ref={ref => (this._searchInput = ref)}
+								onChange={e => this.setState({ q: e.target.value })}
+								placeholder="Search Code Reviews"
+							/>
+						</div>
+					</SearchBar>
 					{/*
 					<div className="filters">
 						Show{" "}

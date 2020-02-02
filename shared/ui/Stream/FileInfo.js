@@ -46,12 +46,13 @@ export class SimpleFileInfo extends React.Component {
 		const modifiedByOthers = names.length > 0;
 		const hasConflict = modifiedByMe && modifiedByOthers;
 
-		if (!modifiedByOthers) return null;
+		// if (!modifiedByOthers) return null;
 
 		return (
 			<div className={cx("file-info", { conflict: hasConflict })}>
 				{hasConflict && <Icon name="alert" />}
 				{this.makeNameList(names, hasConflict)}
+				&nbsp;&nbsp;more info <Icon name="chevron-down" />
 			</div>
 		);
 	}
