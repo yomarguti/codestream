@@ -94,6 +94,7 @@ export class SimpleReviewsPanel extends Component {
 			return <div className="no-matches">No {typeFilter}s in this file.</div>;
 		else {
 			return reviews.map(review => {
+				// FIXME -- turn this into a react component once we have finished with mockups
 				return (
 					<div style={{ padding: "5px 20px", fontSize: "larger" }}>
 						<Icon name="checked-checkbox" /> {review.title}&nbsp;
