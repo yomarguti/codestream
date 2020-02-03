@@ -90,7 +90,9 @@ export default class Menu extends Component {
 		if ($submenu) {
 			const rect = $submenu.getBoundingClientRect();
 			const tooFar = rect.top + $submenu.offsetHeight + 35 - window.innerHeight;
-			if (tooFar > 0) $submenu.style.bottom = "10px";
+			if (tooFar > 0) {
+				$submenu.style.top = "-10px";
+			}
 		}
 	}
 
