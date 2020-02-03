@@ -65,6 +65,14 @@ type RequestOrNotificationType<P, R> = RequestType<P, R, any, any> | Notificatio
 export type RequestOf<RT> = RT extends RequestOrNotificationType<infer RQ, any> ? RQ : never;
 export type ResponseOf<RT> = RT extends RequestOrNotificationType<any, infer R> ? R : never;
 
+const normalizeProxyUrl = (url: string) => {
+	const protocol = "http://";
+	if (!url.startsWith(protocol)) {
+		return `${protocol}${url}`;
+	}
+	return url;
+};
+
 export class AgentConnection implements Disposable {
 	private _connection: LanguageClientConnection | undefined;
 	private _agentProcess: ChildProcess | undefined;
@@ -242,7 +250,7 @@ export class AgentConnection implements Disposable {
 			if (proxy !== "") {
 				initializationOptions.proxySupport = "override";
 				initializationOptions.proxy = {
-					url: proxy,
+					url: normalizeProxyUrl(proxy),
 					strictSSL: configs.get("proxyStrictSSL")
 				};
 			} else {
