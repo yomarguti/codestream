@@ -1,7 +1,7 @@
 "use strict";
 import { CodeStreamApiProvider } from "api/codestream/codestreamApi";
 import * as fs from "fs";
-import { orderBy, last } from "lodash-es";
+import { orderBy, last, groupBy } from "lodash-es";
 import { Range, TextDocumentIdentifier } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
@@ -65,7 +65,8 @@ import {
 	CSStream,
 	ProviderType,
 	StreamType,
-	CSReview
+	CSReview,
+	isCSReview
 } from "../protocol/api.protocol";
 import { Arrays, debug, log, lsp, lspHandler } from "../system";
 import { Strings } from "../system/string";
@@ -611,67 +612,72 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		return this.session.api.getPosts(request);
 	}
 
-	@log()
 	@lspHandler(FetchActivityRequestType)
+	@log()
 	async getActivity(request: FetchActivityRequest): Promise<FetchActivityResponse> {
 		const response = await (this.session.api as CodeStreamApiProvider).fetchPosts({
 			...request
 		});
 
 		const unreads = await SessionContainer.instance().users.getUnreads({});
-		const { codemarks: codemarksManager, reviews: reviewsManager } = SessionContainer.instance();
+		const {
+			codemarks: codemarksManager,
+			markers: markersManager,
+			posts: postsManager,
+			reviews: reviewsManager
+		} = SessionContainer.instance();
+
+		const markers = response.markers ?? [];
+		// cache the markers
+		if (markers.length > 0) Promise.all(markers.map(marker => markersManager.cacheSet(marker)));
 
 		const posts: PostPlus[] = [];
-
+		// filter out deleted posts and cache valid ones
 		for (let post of response.posts) {
 			if (!post.deactivated) {
 				posts.push(post);
+				postsManager.cacheSet(post);
 			}
 		}
 
-		const codemarks = await Arrays.filterMapAsync(response.codemarks || [], async codemark => {
-			if (codemark.deactivated) return;
+		const codemarks: CodemarkPlus[] = [];
+		const reviews: CSReview[] = [];
 
-			codemarksManager.cacheSet(codemark);
-			if (unreads.unreads.lastReads[codemark.streamId]) {
-				try {
-					const threadResponse = await this.session.api.fetchPostReplies({
-						postId: codemark.postId,
-						streamId: codemark.streamId
+		const markersByCodemark = groupBy(markers, "codemarkId");
+
+		let records = await Arrays.filterMapAsync(
+			[...(response.codemarks ?? []), ...(response.reviews ?? [])],
+			async object => {
+				if (object.deactivated) return;
+
+				if (isCSReview(object)) {
+					reviewsManager.cacheSet(object);
+					reviews.push(object);
+				} else {
+					codemarksManager.cacheSet(object);
+					codemarks.push({
+						...object,
+						markers: markersByCodemark[object.id] || []
 					});
-					posts.push(...threadResponse.posts);
-				} catch (error) {
-					debugger;
 				}
-			}
-			return codemarksManager.enrichCodemark(codemark);
-		});
 
-		const reviews = await Arrays.filterMapAsync(response.reviews || [], async review => {
-			if (review.deactivated) return;
-
-			reviewsManager.cacheSet(review);
-
-			if (unreads.unreads.lastReads[review.streamId]) {
-				try {
-					const threadResponse = await this.session.api.fetchPostReplies({
-						postId: review.postId,
-						streamId: review.streamId
-					});
-					posts.push(...threadResponse.posts);
-				} catch (error) {
-					debugger;
+				if (unreads.unreads.lastReads[object.streamId]) {
+					try {
+						const threadResponse = await this.session.api.fetchPostReplies({
+							postId: object.postId,
+							streamId: object.streamId
+						});
+						posts.push(...threadResponse.posts);
+					} catch (error) {
+						debugger;
+					}
 				}
+
+				return object;
 			}
-
-			return ((await codemarksManager.enrichCodemark(review as any)) as unknown) as ReviewPlus;
-		});
-
-		const records: (ReviewPlus | CodemarkPlus)[] = orderBy(
-			[...reviews, ...codemarks],
-			r => r.lastActivityAt ?? r.createdAt,
-			"desc"
 		);
+
+		records = orderBy(records, r => r.lastActivityAt ?? r.createdAt, "desc");
 
 		// if there are no valid activities in this batch, recurse
 		if (records.length === 0 && response.posts.length > 0 && response.more) {
@@ -692,12 +698,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	}
 
 	private createRecords(records: (CSReview | CodemarkPlus)[]): string[] {
-		const isReview = function(r: any): r is CSReview {
-			return r.reviewers != undefined;
-		};
-
 		return records.map(r => {
-			if (isReview(r)) {
+			if (isCSReview(r)) {
 				return `review|${r.id}`;
 			}
 

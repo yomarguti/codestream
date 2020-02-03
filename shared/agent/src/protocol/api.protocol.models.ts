@@ -161,6 +161,10 @@ export interface CSRepoChangeset {
 	remotes: { name: string; url: string }[];
 }
 
+export function isCSReview(object: any): object is CSReview {
+	return object.reviewers != null && object.repoChangeset != null;
+}
+
 export interface CSReview extends CSEntity {
 	title: string;
 	text: string;

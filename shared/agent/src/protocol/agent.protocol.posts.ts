@@ -166,7 +166,7 @@ export interface FetchActivityRequest {
 export interface FetchActivityResponse {
 	posts: PostPlus[];
 	codemarks: CodemarkPlus[];
-	reviews: ReviewPlus[];
+	reviews: CSReview[];
 	records: string[];
 	more?: boolean;
 }
