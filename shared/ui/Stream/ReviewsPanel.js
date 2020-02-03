@@ -186,6 +186,16 @@ export class SimpleReviewsPanel extends Component {
 			filters.noTag = true;
 			text = text.replace(/\s*no:tag\s*/, " ");
 		}
+		match = text.match(/\bbranch:\"(.*?)\"(\s|$)/);
+		if (match) {
+			filters.branch = match[1];
+			text = text.replace(/\s*branch:\"(.*?)\"\s*/, " ");
+		}
+		match = text.match(/\bbranch:(\S+)(\s|$)/);
+		if (match) {
+			filters.branch = match[1];
+			text = text.replace(/\s*branch:(\S+)\s*/, " ");
+		}
 
 		filters.text = text.trim();
 
@@ -226,6 +236,10 @@ export class SimpleReviewsPanel extends Component {
 			// FIXME this will only work if we have issues in this query as well
 			if (filters.type && filters.type !== "review") return null;
 			if (filters.noTag && review.tags && review.tags.length) return null;
+			if (filters.branch) {
+				const branches = (review.repoChangeset || []).map(changeset => changeset.branch);
+				if (!branches.includes(filters.branch)) return null;
+			}
 			// if (!this.onBranch(review, branchFilter)) return null;
 
 			const title = review.title;
