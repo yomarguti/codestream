@@ -160,7 +160,7 @@ export default class Menu extends Component {
 				{item.disabled && <span className="disabled">{item.disabled}</span>}
 				{item.submenu && (
 					<span className="submenu">
-						<Icon name="triangle-right" />
+						<Icon name="triangle-right" className="triangle-right" />
 						{selected && this.renderSubmenu(item)}
 					</span>
 				)}

@@ -136,8 +136,7 @@ export class SimpleReviewsPanel extends Component {
 	};
 
 	onBranch = (review, branchFilter) => {
-		if (reviewFilter === "all") return true;
-
+		if (branchFilter === "all") return true;
 		return review.branch === branchFilter;
 	};
 
@@ -173,6 +172,11 @@ export class SimpleReviewsPanel extends Component {
 			filters.assignee = match[1];
 			text = text.replace(/\s*reviewer:@\S+/, " ");
 		}
+		match = text.match(/\btag:\"(.*?)\"(\s|$)/);
+		if (match) {
+			filters.tag = match[1];
+			text = text.replace(/\s*tag:\"(.*?)\"\s*/, " ");
+		}
 		match = text.match(/\btag:(\S+)(\s|$)/);
 		if (match) {
 			filters.tag = match[1];
@@ -185,6 +189,7 @@ export class SimpleReviewsPanel extends Component {
 
 		filters.text = text.trim();
 
+		console.log("FILTERS ARE: ", filters, " from ", q);
 		this.setState({ filters, q });
 	};
 
@@ -195,7 +200,7 @@ export class SimpleReviewsPanel extends Component {
 			return this.renderBlankFiller();
 		}
 
-		const { reviews, currentUserId, authorArray } = this.props;
+		const { reviews, currentUserId, authorArray, branchArray } = this.props;
 		const { thisRepo, filters } = this.state;
 
 		const sections = ["waitingForMe", "createdByMe", "open", "closed"];
@@ -255,29 +260,42 @@ export class SimpleReviewsPanel extends Component {
 			});
 		});
 
-		let tagMenuItems = [{ label: "Any Tag", action: "all" }, { label: "-" }];
-		tagMenuItems = tagMenuItems.concat(
-			this.props.teamTagsArray.map(tag => {
-				const color = tag.color.startsWith("#") ? "" : tag.color;
-				let className = "tag-menu-block wide";
-				if (!tag.color.startsWith("#")) className += " " + tag.color + "-background";
+		const tagMenuItems = this.props.teamTagsArray.map(tag => {
+			const color = tag.color.startsWith("#") ? "" : tag.color;
+			let className = "tag-menu-block wide";
+			if (!tag.color.startsWith("#")) className += " " + tag.color + "-background";
+			let label = tag.label || color;
+			if (label.match(/\s/)) label = `"${label}"`;
+			return {
+				label: (
+					<span className="tag-menu-selector">
+						<span
+							className={className}
+							style={tag.color.startsWith("#") ? { background: tag.color } : {}}
+						>
+							{tag.label || <span>&nbsp;</span>}
+						</span>
+					</span>
+				),
+				noHover: true,
+				searchLabel: tag.label || tag.color,
+				action: e => this.setQ(`tag:${label}`)
+			};
+		});
+
+		const branchMenuItems = Object.keys(branchArray)
+			.sort()
+			.map(branch => {
 				return {
 					label: (
-						<span className="tag-menu-selector">
-							<span
-								className={className}
-								style={tag.color.startsWith("#") ? { background: tag.color } : {}}
-							>
-								{tag.label || <span>&nbsp;</span>}
-							</span>
+						<span className="branch-menu-selector">
+							<Icon name="git-branch" /> {branch}
 						</span>
 					),
-					noHover: true,
-					searchLabel: tag.label || tag.color,
-					action: e => this.setQ("tag:" + (tag.label || color))
+					searchLabel: branch,
+					action: e => this.setQ(`branch:"${branch}"`)
 				};
-			})
-		);
+			});
 
 		// let authorMenuItems = [{ label: "Anyone", action: "all" }, { label: "-" }];
 		// authorMenuItems = authorMenuItems.concat(
@@ -319,7 +337,9 @@ export class SimpleReviewsPanel extends Component {
 				key: "mine",
 				action: () => this.setQ("is:open mentions:@me ")
 			},
-			{ label: "By Tag", key: "tag", submenu: tagMenuItems }
+			// { label: "-"},
+			{ label: "By Tag", key: "tag", submenu: tagMenuItems },
+			{ label: "By Branch", key: "branch", submenu: branchMenuItems }
 		];
 		// console.log("SELECTED AG FILTER: ", tagFilter);
 		return (
@@ -458,7 +478,7 @@ const mapStateToProps = state => {
 	let commitArray = {};
 	let authorArray = {};
 	reviews.forEach(review => {
-		const { markers, createdAt, creatorId } = review;
+		const { markers, createdAt, creatorId, repoChangeset = [] } = review;
 		const author = userSelectors.getUserByCsId(users, creatorId);
 		if (author) {
 			author.name = author.fullName || author.username || author.email;
@@ -471,31 +491,19 @@ const mapStateToProps = state => {
 				</span>
 			);
 		}
-		// markers.forEach(marker => {
-		// 	const { branchWhenCreated: branch, commitHashWhenCreated: commit } = marker;
-		// 	if (branch) {
-		// 		// keep track of the most recent comment on the branch
-		// 		branchArray[branch] = Math.max(createdAt, branchArray[branch]);
-		// 		branchFiltersLabelsLower[branch] = (
-		// 			<span>
-		// 				on &nbsp;
-		// 				<Icon name="git-branch" />
-		// 				&nbsp;{branch}
-		// 			</span>
-		// 		);
-		// 	}
-		// 	if (commit) {
-		// 		// keep track of the most recent comment on the commit
-		// 		commitArray[commit] = Math.max(createdAt, commitArray[commit]);
-		// 		branchFiltersLabelsLower[commit] = (
-		// 			<span>
-		// 				on &nbsp;
-		// 				<Icon name="git-commit" />
-		// 				&nbsp;{commit.substr(0, 8)}
-		// 			</span>
-		// 		);
-		// 	}
-		// });
+		repoChangeset.forEach(changeset => {
+			const { branch } = changeset;
+			if (branch) {
+				branchArray[branch] = createdAt;
+				branchFiltersLabelsLower[branch] = (
+					<span>
+						on &nbsp;
+						<Icon name="git-branch" />
+						&nbsp;{branch}
+					</span>
+				);
+			}
+		});
 	});
 
 	return {
@@ -508,6 +516,7 @@ const mapStateToProps = state => {
 		teamTagsArray,
 		// tagFiltersLabelsLower,
 		authorArray,
+		branchArray,
 		// authorFiltersLabelsLower,
 		webviewFocused: context.hasFocus
 	};
