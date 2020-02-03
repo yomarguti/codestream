@@ -8,7 +8,7 @@ import Tag from "./Tag";
 import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
-import Review from "./Review";
+// import Review from "./Review";
 import { ProTip } from "./ProTip";
 import Headshot from "./Headshot";
 import { HostApi } from "../webview-api";
