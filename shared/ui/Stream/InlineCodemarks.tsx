@@ -635,14 +635,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 							<div className="function-row">{ComposeTitles.privatePermalink}</div>
 							<div className="function-row">{ComposeTitles.toggleCodeStreamPanel}</div>
 						</div>
-						{this.props.isInVscode && (
-							<>
-								<br />
-								Note: VS Code doesn't support pinned tabs, nor advanced tab management. The solution
-								is to put CodeStream in the Side Bar. Help us by{" "}
-								<a href="https://github.com/microsoft/vscode/issues/83911">upvoting the issue</a>.
-							</>
-						)}
 					</div>
 				</div>
 			);
