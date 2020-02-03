@@ -12,7 +12,9 @@ import {
 	Meta,
 	MetaLabel,
 	MetaDescription,
-	MetaSectionCollapsed
+	MetaSectionCollapsed,
+	HeaderActions,
+	ActionButton
 } from "../Codemark/BaseCodemark";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { CSUser } from "@codestream/protocols/api";
@@ -45,6 +47,17 @@ const BaseReview = (props: BaseReviewProps) => {
 						<Headshot person={props.author} /> {props.author.username}{" "}
 						<StyledTimestamp time={props.review.createdAt} />
 					</AuthorInfo>
+					{props.collapsed && (
+						<HeaderActions>
+							<ActionButton
+								onClick={e => {
+									e.preventDefault();
+								}}
+							>
+								Review Changes
+							</ActionButton>
+						</HeaderActions>
+					)}
 				</Header>
 				<Title>
 					<Text

@@ -299,7 +299,7 @@ export const Header = styled.div`
 	font-weight: 700;
 `;
 
-const HeaderActions = styled.div`
+export const HeaderActions = styled.div`
 	display: flex;
 	margin-left: auto;
 	justify-content: space-between;
@@ -353,7 +353,7 @@ export const MetaSection = styled.div`
 `;
 
 export const MetaSectionCollapsed = styled.div`
-	padding: 2px 0;
+	padding: 2px 1px;
 	display: flex;
 	flex-flow: row wrap;
 	align-items: center;
@@ -465,7 +465,7 @@ const StyledMarker = styled(Marker)`
 	}
 `;
 
-const ActionButton = styled.div`
+export const ActionButton = styled.div`
 	border: 1px solid var(--base-border-color);
 	padding: 2px 10px;
 	cursor: pointer;
