@@ -12,7 +12,7 @@ import Filter from "./Filter";
 import { ProTip } from "./ProTip";
 import Headshot from "./Headshot";
 import { HostApi } from "../webview-api";
-import { includes as _includes, sortBy as _sortBy } from "lodash-es";
+import { includes as _includes, sortBy as _sortBy, filter } from "lodash-es";
 import { PanelHeader } from "../src/components/PanelHeader";
 import styled from "styled-components";
 import FiltersButton from "../src/components/FiltersButton";
@@ -52,7 +52,8 @@ export class SimpleReviewsPanel extends Component {
 				open: true,
 				closed: true
 			},
-			selectedTags: {}
+			selectedTags: {},
+			filters: {}
 		};
 
 		this.sectionLabel = {
@@ -124,15 +125,67 @@ export class SimpleReviewsPanel extends Component {
 	};
 
 	hasTag = (review, tagFilter) => {
+		const { teamTagsArray } = this.props;
 		if (tagFilter === "all") return true;
-		let tags = review.tags || [];
-		return tags.includes(tagFilter);
+
+		let reviewTags = review.tags || [];
+		return reviewTags.find(reviewTagId => {
+			const teamTag = teamTagsArray.find(tag => tag.id === reviewTagId);
+			return teamTag && (teamTag.label === tagFilter || teamTag.color === tagFilter);
+		});
 	};
 
 	onBranch = (review, branchFilter) => {
 		if (reviewFilter === "all") return true;
 
 		return review.branch === branchFilter;
+	};
+
+	setQ = q => {
+		let text = q;
+		const filters = {};
+		let match;
+
+		if (text.match(/\bis:open\b/)) {
+			filters.status = "open";
+			text = text.replace(/\s*is:open\s*/, " ");
+		}
+		if (text.match(/\bis:issue\b/)) {
+			filters.type = "issue";
+			text = text.replace(/\s*is:issue\s*/, " ");
+		}
+		if (text.match(/\bis:cr\b/)) {
+			filters.type = "review";
+			text = text.replace(/\s*is:cr\s*/, " ");
+		}
+		match = text.match(/\bauthor:@\S+(\s|$)/);
+		if (match) {
+			filters.author = match[1];
+			text = text.replace(/\s*author:@\S+/, " ");
+		}
+		match = text.match(/\bassignee:@\S+(\s|$)/);
+		if (match) {
+			filters.assignee = match[1];
+			text = text.replace(/\s*assignee:@\S+/, " ");
+		}
+		match = text.match(/\breviewer:@\S+[\s|$]/);
+		if (match) {
+			filters.assignee = match[1];
+			text = text.replace(/\s*reviewer:@\S+/, " ");
+		}
+		match = text.match(/\btag:(\S+)(\s|$)/);
+		if (match) {
+			filters.tag = match[1];
+			text = text.replace(/\s*tag:(\S+)\s*/, " ");
+		}
+		if (text.match(/\bno:tag\b/)) {
+			filters.noTag = true;
+			text = text.replace(/\s*no:tag\s*/, " ");
+		}
+
+		filters.text = text.trim();
+
+		this.setState({ filters, q });
 	};
 
 	render() {
@@ -142,17 +195,8 @@ export class SimpleReviewsPanel extends Component {
 			return this.renderBlankFiller();
 		}
 
-		const {
-			reviews,
-			currentUserId,
-			tagFilter,
-			authorFilter,
-			branchFilter,
-			commitArray,
-			branchArray,
-			authorArray
-		} = this.props;
-		const { thisRepo } = this.state;
+		const { reviews, currentUserId, authorArray } = this.props;
+		const { thisRepo, filters } = this.state;
 
 		const sections = ["waitingForMe", "createdByMe", "open", "closed"];
 
@@ -170,14 +214,19 @@ export class SimpleReviewsPanel extends Component {
 		// sort by most recent first
 		_sortBy(reviews, review => -review.createdAt).forEach(review => {
 			if (review.deactivated) return null;
-			if (authorFilter !== "all" && review.creatorId !== authorFilter) return null;
-			// if (!this.hasTag(review, tagFilter)) return null;
+			// FIXME author is text, creatorId is an id
+			if (filters.author && review.creatorId !== filters.author) return null;
+			if (filters.status && review.status !== filters.status) return null;
+			if (filters.tag && !this.hasTag(review, filters.tag)) return null;
+			// FIXME this will only work if we have issues in this query as well
+			if (filters.type && filters.type !== "review") return null;
+			if (filters.noTag && review.tags && review.tags.length) return null;
 			// if (!this.onBranch(review, branchFilter)) return null;
 
 			const title = review.title;
 			const reviewers = review.reviewers;
 			const status = review.status;
-			const q = this.state.q ? this.state.q.toLocaleLowerCase() : null;
+			const q = filters.text;
 
 			sections.forEach(section => {
 				if (assignedReviews[review.id]) return;
@@ -209,6 +258,7 @@ export class SimpleReviewsPanel extends Component {
 		let tagMenuItems = [{ label: "Any Tag", action: "all" }, { label: "-" }];
 		tagMenuItems = tagMenuItems.concat(
 			this.props.teamTagsArray.map(tag => {
+				const color = tag.color.startsWith("#") ? "" : tag.color;
 				let className = "tag-menu-block wide";
 				if (!tag.color.startsWith("#")) className += " " + tag.color + "-background";
 				return {
@@ -224,7 +274,7 @@ export class SimpleReviewsPanel extends Component {
 					),
 					noHover: true,
 					searchLabel: tag.label || tag.color,
-					action: tag.id
+					action: e => this.setQ("tag:" + (tag.label || color))
 				};
 			})
 		);
@@ -247,20 +297,36 @@ export class SimpleReviewsPanel extends Component {
 		// 		})
 		// );
 
-		const filters = [
-			{ label: "Open issues and Code Reviews", key: "open" },
-			{ label: "Your Issues", key: "issues" },
-			{ label: "Your Code Reviews", key: "reviews" },
-			{ label: "Everything assigned to you", key: "assigned" },
-			{ label: "Everything mentioning you", key: "mine" },
+		const filterItems = [
+			{ label: "Open Issues and Code Reviews", key: "open", action: () => this.setQ("is:open") },
+			{
+				label: "Your Issues",
+				key: "issues",
+				action: () => this.setQ("is:open is:issue author:@me")
+			},
+			{
+				label: "Your Code Reviews",
+				key: "reviews",
+				action: () => this.setQ("is:open is:cr author:@me ")
+			},
+			{
+				label: "Everything assigned to you",
+				key: "assigned",
+				action: () => this.setQ("is:open assignee:@me ")
+			},
+			{
+				label: "Everything mentioning you",
+				key: "mine",
+				action: () => this.setQ("is:open mentions:@me ")
+			},
 			{ label: "By Tag", key: "tag", submenu: tagMenuItems }
 		];
 		// console.log("SELECTED AG FILTER: ", tagFilter);
 		return (
 			<div className="panel full-height reviews-panel">
-				<PanelHeader title="Code Reviews">
+				<PanelHeader title="Code Reviews &amp; Issues">
 					<SearchBar className="search-bar">
-						<FiltersButton items={filters}>
+						<FiltersButton items={filterItems}>
 							Filters
 							<Icon name="chevron-down" />
 						</FiltersButton>
@@ -268,11 +334,12 @@ export class SimpleReviewsPanel extends Component {
 							<Icon name="search" />
 							<input
 								name="q"
+								value={this.state.q}
 								className="input-text control"
 								type="text"
 								ref={ref => (this._searchInput = ref)}
-								onChange={e => this.setState({ q: e.target.value })}
-								placeholder="Search Code Reviews"
+								onChange={e => this.setQ(e.target.value)}
+								placeholder="Search all code reviews and issues"
 							/>
 						</div>
 					</SearchBar>
@@ -300,7 +367,7 @@ export class SimpleReviewsPanel extends Component {
 							sections.map(section => {
 								return this.renderSection(section, displayReviews[section] || []);
 							})}
-						{!totalReviews && <div className="no-matches">No reviews match this type.</div>}
+						{!totalReviews && <div className="no-matches">No results match your search.</div>}
 						<ProTip />
 					</div>
 				</ScrollBox>

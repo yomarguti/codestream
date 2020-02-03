@@ -8,7 +8,7 @@ import { connect } from "react-redux";
 import Icon from "@codestream/webview/Stream/Icon";
 import { Button } from "./Button";
 
-const Root = styled(Button)`
+const StyledButton = styled(Button)`
 	flex-grow: 0;
 	white-space: nowrap;
 	.icon {
@@ -47,7 +47,7 @@ export default class FiltersButton extends React.Component<Props, State> {
 		const { items, title, children } = this.props;
 		return (
 			<>
-				<Root onClick={this.openMenu}>{children}</Root>
+				<StyledButton onClick={this.openMenu}>{children}</StyledButton>
 				{this.state.open && (
 					<Menu
 						title={title}
@@ -56,7 +56,6 @@ export default class FiltersButton extends React.Component<Props, State> {
 						items={items}
 						target={this.state.target}
 						action={this.openMenu}
-						dontCloseOnSelect={true}
 					/>
 				)}
 			</>
