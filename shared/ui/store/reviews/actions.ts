@@ -17,6 +17,7 @@ import { TextDocumentIdentifier } from "vscode-languageserver-types";
 import { getConnectedProviders } from "../providers/reducer";
 import { CodeStreamState } from "..";
 import { capitalize } from "@codestream/webview/utils";
+import { addPosts } from "../posts/actions";
 
 export const reset = () => action("RESET");
 
@@ -73,6 +74,7 @@ export const createReview = (attributes: NewReviewAttributes) => async (
 		if (response) {
 			const result = dispatch(addReviews([response.review]));
 			dispatch(addStreams([response.stream]));
+			dispatch(addPosts([response.post]));
 
 			if (attributes.sharingAttributes) {
 				try {
@@ -93,7 +95,7 @@ export const createReview = (attributes: NewReviewAttributes) => async (
 						"Review Status": "New"
 					});
 				} catch (error) {
-					logError("Error sharing a review in the sharing model", { message: error.message });
+					logError("Error sharing a review", { message: error.message });
 					// TODO: communicate failure to users
 					throw { reason: "share" } as CreateReviewError;
 				}
@@ -101,7 +103,7 @@ export const createReview = (attributes: NewReviewAttributes) => async (
 			return result;
 		}
 	} catch (error) {
-		logError("Error creating a review in the sharing model", { message: error.message });
+		logError("Error creating a review", { message: error.message });
 		throw { reason: "create" } as CreateReviewError;
 	}
 };

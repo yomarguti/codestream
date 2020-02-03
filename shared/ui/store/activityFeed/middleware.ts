@@ -19,10 +19,16 @@ export const activityFeedMiddleware = (
 		payload.forEach(post => {
 			if (post.deactivated) return;
 
-			if (post.parentPostId && post.version === 1) {
-				store.dispatch(fetchPostForActivity(post.parentPostId, post.streamId));
-			} else if (post.codemark && post.version === 1) {
-				store.dispatch(addNewActivity("codemark", [post.codemark]));
+			// if this is a new post
+			if (post.version === 1) {
+				if (post.parentPostId != null) {
+					// ensure we have the parent post
+					store.dispatch(fetchPostForActivity(post.parentPostId, post.streamId));
+				} else if (post.codemark != null) {
+					store.dispatch(addNewActivity("codemark", [post.codemark]));
+				} else if (post.reviewId != null) {
+					store.dispatch(addNewActivity("review", [post.reviewId]));
+				}
 			}
 		});
 	}

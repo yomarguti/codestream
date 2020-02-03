@@ -35,6 +35,8 @@ import { useMarkdownifyToHtml } from "./Markdowner";
 import { Codemark } from "./Codemark/index";
 import { logError } from "../logger";
 import Filter from "./Filter";
+import { ActivityReview } from "./Review";
+import { saveReviews } from "../store/reviews/actions";
 
 // see comment in SmartFormattedList.tsx
 const FormattedPluralAlias = FormattedPlural as any;
@@ -126,13 +128,14 @@ export const ActivityPanel = () => {
 	const fetchActivity = React.useCallback(async () => {
 		const response = await HostApi.instance.send(FetchActivityRequestType, {
 			limit: 50,
-			before: safe(() => _last(derivedState.activity)!.postId)
+			before: safe(() => _last(derivedState.activity)!.record.postId)
 		});
 		dispatch(savePosts(response.posts));
 		dispatch(saveCodemarks(response.codemarks));
+		dispatch(saveReviews(response.reviews));
 		dispatch(
-			addOlderActivity("codemark", {
-				activities: response.codemarks,
+			addOlderActivity({
+				activities: response.records,
 				hasMore: Boolean(response.more)
 			})
 		);
@@ -177,63 +180,105 @@ export const ActivityPanel = () => {
 			);
 		}
 
-		return derivedState.activity.map(codemark => {
-			if (codemark.deactivated) return null;
-			if (
-				derivedState.codemarkTypeFilter != "all" &&
-				codemark.type !== derivedState.codemarkTypeFilter
-			)
-				return null;
+		return derivedState.activity.map(({ type, record }) => {
+			if (type === "codemark") {
+				const codemark = record as CodemarkPlus;
+				if (
+					derivedState.codemarkTypeFilter != "all" &&
+					codemark.type !== derivedState.codemarkTypeFilter
+				)
+					return null;
 
-			return [
-				demoMode && counter == 2 ? (
-					<ActivityWrapper key={counter}>
-						<div className="codemark inline">
-							<div className="contents">
-								<div className="body">
-									<div className="header" style={{ margin: 0 }}>
-										<div className="author">
-											<Headshot person={dave} />
-											dave <span className="emote">joined CodeStream</span>
-											<Timestamp time={codemark.createdAt} />
+				return [
+					demoMode && counter == 2 ? (
+						<ActivityWrapper key={counter}>
+							<div className="codemark inline">
+								<div className="contents">
+									<div className="body">
+										<div className="header" style={{ margin: 0 }}>
+											<div className="author">
+												<Headshot person={dave} />
+												dave <span className="emote">joined CodeStream</span>
+												<Timestamp time={codemark.createdAt} />
+											</div>
 										</div>
 									</div>
 								</div>
 							</div>
-						</div>
-					</ActivityWrapper>
-				) : null,
-				demoMode && counter == 3 ? (
-					<ActivityWrapper key={counter}>
-						<div className="codemark inline">
-							<div className="contents">
-								<div className="body">
-									<div className="header">
-										<div className="author">
-											<Headshot person={akon} />
-											akon <span className="emote"> created </span> &nbsp;{" "}
-											<Icon name="git-branch" />
-											<span className="monospace" style={{ paddingLeft: "5px" }}>
-												feature/sharing
-											</span>
-											<Timestamp time={codemark.createdAt} />
+						</ActivityWrapper>
+					) : null,
+					demoMode && counter == 3 ? (
+						<ActivityWrapper key={counter}>
+							<div className="codemark inline">
+								<div className="contents">
+									<div className="body">
+										<div className="header">
+											<div className="author">
+												<Headshot person={akon} />
+												akon <span className="emote"> created </span> &nbsp;{" "}
+												<Icon name="git-branch" />
+												<span className="monospace" style={{ paddingLeft: "5px" }}>
+													feature/sharing
+												</span>
+												<Timestamp time={codemark.createdAt} />
+											</div>
 										</div>
-									</div>
-									<div className="right" style={{ margin: "10px 0 0 0" }}>
-										<div className="codemark-actions-button">Checkout</div>
-										<div className="codemark-actions-button">Open on GitHub</div>
+										<div className="right" style={{ margin: "10px 0 0 0" }}>
+											<div className="codemark-actions-button">Checkout</div>
+											<div className="codemark-actions-button">Open on GitHub</div>
+										</div>
 									</div>
 								</div>
 							</div>
-						</div>
+						</ActivityWrapper>
+					) : null,
+					<ActivityWrapper key={codemark.id}>
+						{/* <Timestamp dateOnly={true} time={codemark.createdAt} /> */}
+						{demoMode && counter == 5 && <Timestamp dateOnly={true} time={codemark.createdAt} />}
+						<ActivityItem streamId={codemark.streamId} postId={codemark.postId}>
+							{({ isUnread, post }) => (
+								// @ts-ignore because typescript isn't handling the union props well
+								<ActivityCodemark
+									collapsed={!isUnread}
+									codemark={codemark}
+									hoverEffect
+									isUnread={isUnread}
+									onClick={() => {
+										HostApi.instance.track("Codemark Clicked", {
+											"Codemark ID": codemark.id,
+											"Codemark Location": "Activity Feed"
+										});
+										dispatch(setCurrentCodemark(codemark.id));
+									}}
+									renderActions={false}
+									renderFooter={Footer => (
+										<Footer
+											style={{ borderTop: "none", paddingLeft: 0, paddingRight: 0, marginTop: 0 }}
+										>
+											<RepliesForCodemark
+												parentPost={post}
+												pinnedReplies={codemark.pinnedReplies}
+											/>
+										</Footer>
+									)}
+								/>
+							)}
+						</ActivityItem>
 					</ActivityWrapper>
-				) : null,
-				<ActivityWrapper key={codemark.id}>
-					{/* <Timestamp dateOnly={true} time={codemark.createdAt} /> */}
-					{demoMode && counter == 5 && <Timestamp dateOnly={true} time={codemark.createdAt} />}
-					<ActivityItem codemark={codemark} />
-				</ActivityWrapper>
-			];
+				];
+			}
+
+			if (type === "review") {
+				return (
+					<ActivityWrapper key={record.id}>
+						<ActivityItem streamId={record.streamId} postId={record.postId}>
+							{() => <ActivityReview />}
+						</ActivityItem>
+					</ActivityWrapper>
+				);
+			}
+
+			return null;
 		});
 	};
 
@@ -308,11 +353,14 @@ const ActivityCodemark = styled(Codemark)<{ isUnread?: boolean }>`
 			: ""}
 `;
 
-const ActivityItem = (props: { codemark: CodemarkPlus }) => {
-	const dispatch = useDispatch();
+const ActivityItem = (props: {
+	postId: string;
+	streamId: string;
+	children: (...args: any[]) => any;
+}) => {
 	const { isUnread, post } = useSelector((state: CodeStreamState) => {
-		const codemarkPost = getPost(state.posts, props.codemark.streamId, props.codemark.postId);
-		const lastReadForStream = state.umis.lastReads[props.codemark.streamId];
+		const codemarkPost = getPost(state.posts, props.streamId, props.postId);
+		const lastReadForStream = state.umis.lastReads[props.streamId];
 
 		return {
 			isUnread:
@@ -323,28 +371,7 @@ const ActivityItem = (props: { codemark: CodemarkPlus }) => {
 		};
 	});
 
-	return (
-		// @ts-ignore because typescript isn't handling the union props well
-		<ActivityCodemark
-			collapsed={!isUnread}
-			codemark={props.codemark}
-			hoverEffect
-			isUnread={isUnread}
-			onClick={() => {
-				HostApi.instance.track("Codemark Clicked", {
-					"Codemark ID": props.codemark.id,
-					"Codemark Location": "Activity Feed"
-				});
-				dispatch(setCurrentCodemark(props.codemark.id));
-			}}
-			renderActions={false}
-			renderFooter={Footer => (
-				<Footer style={{ borderTop: "none", paddingLeft: 0, paddingRight: 0, marginTop: 0 }}>
-					<RepliesForCodemark parentPost={post} pinnedReplies={props.codemark.pinnedReplies} />
-				</Footer>
-			)}
-		/>
-	);
+	return props.children({ isUnread, post });
 };
 
 const KebabIcon = styled.span`

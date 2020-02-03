@@ -67,7 +67,6 @@ const reducer = combineReducers({
 	bootstrapped: reduceBootstrapped,
 	capabilities: reduceCapabilities,
 	codemarks: reduceCodemarks,
-	reviews: reduceReviews,
 	companies: reduceCompanies,
 	configs: reduceConfigs,
 	connectivity: reduceConnectivity,
@@ -80,6 +79,7 @@ const reducer = combineReducers({
 	posts: reducePosts,
 	preferences: reducePreferences,
 	repos: reduceRepos,
+	reviews: reduceReviews,
 	session: reduceSession,
 	streams: reduceStreams,
 	teams: reduceTeams,
@@ -106,13 +106,14 @@ export function createCodeStreamStore(
 	);
 }
 
+// it's a good idea to keep this sorted alphabetically for debugging purposes
 export interface CodeStreamState {
 	activeIntegrations: ActiveIntegrationsState;
 	activityFeed: ActivityFeedState;
+	apiVersioning: ApiVersioningState;
 	bootstrapped: boolean;
 	capabilities: CapabilitiesState;
 	codemarks: CodemarksState;
-	reviews: ReviewsState;
 	configs: ConfigsState;
 	companies: CompaniesState;
 	connectivity: ConnectivityState;
@@ -126,12 +127,12 @@ export interface CodeStreamState {
 	preferences: PreferencesState;
 	providers: ProvidersState;
 	repos: ReposState;
+	reviews: ReviewsState;
+	services: ServicesState;
 	session: SessionState;
 	streams: StreamsState;
 	teams: TeamsState;
 	umis: UnreadsState;
 	users: UsersState;
-	services: ServicesState;
 	versioning: VersioningState;
-	apiVersioning: ApiVersioningState;
 }
