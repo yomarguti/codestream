@@ -174,6 +174,7 @@ export interface CSReview extends CSEntity {
 	tags?: string[];
 	repoChangeset: CSRepoChangeset[];
 	lastActivityAt: number;
+	followerIds?: string[];
 }
 
 export interface CSPost extends CSEntity {
