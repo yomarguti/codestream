@@ -95,8 +95,15 @@ export class SimpleReviewsPanel extends Component {
 		else {
 			return reviews.map(review => {
 				return (
-					<div style={{ padding: "5px 20px" }}>
-						<Icon name="checked-checkbox" /> {review.title}
+					<div style={{ padding: "5px 20px", fontSize: "larger" }}>
+						<Icon name="checked-checkbox" /> {review.title}&nbsp;
+						{(review.tags || []).map(tagId => {
+							const tag = this.props.teamTagsHash[tagId];
+							return tag ? <Tag tag={tag} /> : null;
+						})}
+						<div style={{ opacity: 0.5, fontSize: "smaller", paddingLeft: "22px" }}>
+							#12 was opened 3 days ago by pez &middot; open
+						</div>
 						{/*	FIXME <Review key={review.id} review={review} query={this.state.q} />*/}
 					</div>
 				);
@@ -157,17 +164,18 @@ export class SimpleReviewsPanel extends Component {
 			filters.type = "review";
 			text = text.replace(/\s*is:cr\s*/, " ");
 		}
-		match = text.match(/\bauthor:@\S+(\s|$)/);
+		match = text.match(/\bauthor:@(\S+)(\s|$)/);
 		if (match) {
 			filters.author = match[1];
+			if (filters.author === "me") filters.author = this.props.currentUsername;
 			text = text.replace(/\s*author:@\S+/, " ");
 		}
-		match = text.match(/\bassignee:@\S+(\s|$)/);
+		match = text.match(/\bassignee:@(\S+)(\s|$)/);
 		if (match) {
 			filters.assignee = match[1];
 			text = text.replace(/\s*assignee:@\S+/, " ");
 		}
-		match = text.match(/\breviewer:@\S+[\s|$]/);
+		match = text.match(/\breviewer:@(\S+)[\s|$]/);
 		if (match) {
 			filters.assignee = match[1];
 			text = text.replace(/\s*reviewer:@\S+/, " ");
@@ -199,7 +207,6 @@ export class SimpleReviewsPanel extends Component {
 
 		filters.text = text.trim();
 
-		console.log("FILTERS ARE: ", filters, " from ", q);
 		this.setState({ filters, q });
 	};
 
@@ -210,7 +217,7 @@ export class SimpleReviewsPanel extends Component {
 			return this.renderBlankFiller();
 		}
 
-		const { reviews, currentUserId, authorArray, branchArray } = this.props;
+		const { reviews, currentUserId, authorArray, branchArray, usernameMap } = this.props;
 		const { thisRepo, filters } = this.state;
 
 		const sections = ["waitingForMe", "createdByMe", "open", "closed"];
@@ -230,7 +237,10 @@ export class SimpleReviewsPanel extends Component {
 		_sortBy(reviews, review => -review.createdAt).forEach(review => {
 			if (review.deactivated) return null;
 			// FIXME author is text, creatorId is an id
-			if (filters.author && review.creatorId !== filters.author) return null;
+			const creator = usernameMap[review.creatorId];
+			const assignees = review.reviewers.map(id => usernameMap[id]);
+			if (filters.author && creator !== filters.author) return null;
+			if (filters.assignee && !assignes.includes(filters.assignee)) return null;
 			if (filters.status && review.status !== filters.status) return null;
 			if (filters.tag && !this.hasTag(review, filters.tag)) return null;
 			// FIXME this will only work if we have issues in this query as well
@@ -457,7 +467,7 @@ export class SimpleReviewsPanel extends Component {
 }
 
 const mapStateToProps = state => {
-	const { context, teams, users } = state;
+	const { context, session, teams, users } = state;
 
 	let fileNameToFilterFor;
 	let fileStreamIdToFilterFor;
@@ -523,8 +533,12 @@ const mapStateToProps = state => {
 	return {
 		noReviewsAtAll: !reviewSelectors.teamHasReviews(state),
 		usernames,
+		usernameMap,
+		currentUsername: users[session.userId].username,
 		reviews,
 		team: teams[context.currentTeamId],
+		teamMembers: userSelectors.getTeamMembers(state),
+		teamTagsHash: userSelectors.getTeamTagsHash(state),
 		// tagFilter: context.reviewTagFilter,
 		authorFilter: "all", // FIXME
 		teamTagsArray,
