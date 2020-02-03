@@ -15,7 +15,7 @@ import { HostApi } from "../webview-api";
 import { includes as _includes, sortBy as _sortBy } from "lodash-es";
 import { PanelHeader } from "../src/components/PanelHeader";
 import styled from "styled-components";
-import { Button } from "../src/components/Button";
+import FiltersButton from "../src/components/FiltersButton";
 
 const SearchBar = styled.div`
 	display: flex;
@@ -30,16 +30,11 @@ const SearchBar = styled.div`
 		width: 100%;
 		.icon {
 			position: absolute;
-			left: 0px;
+			left: 8px;
 			top: 6px;
 			opacity: 0.5;
 		}
 	}
-`;
-
-const FiltersButton = styled(Button)`
-	flex-grow: 0;
-	white-space: nowrap;
 `;
 
 export class SimpleReviewsPanel extends Component {
@@ -211,28 +206,28 @@ export class SimpleReviewsPanel extends Component {
 			});
 		});
 
-		// let tagMenuItems = [{ label: "Any Tag", action: "all" }, { label: "-" }];
-		// tagMenuItems = tagMenuItems.concat(
-		// 	this.props.teamTagsArray.map(tag => {
-		// 		let className = "tag-menu-block wide";
-		// 		if (!tag.color.startsWith("#")) className += " " + tag.color + "-background";
-		// 		return {
-		// 			label: (
-		// 				<span className="tag-menu-selector">
-		// 					<span
-		// 						className={className}
-		// 						style={tag.color.startsWith("#") ? { background: tag.color } : {}}
-		// 					>
-		// 						{tag.label || <span>&nbsp;</span>}
-		// 					</span>
-		// 				</span>
-		// 			),
-		// 			noHover: true,
-		// 			searchLabel: tag.label || tag.color,
-		// 			action: tag.id
-		// 		};
-		// 	})
-		// );
+		let tagMenuItems = [{ label: "Any Tag", action: "all" }, { label: "-" }];
+		tagMenuItems = tagMenuItems.concat(
+			this.props.teamTagsArray.map(tag => {
+				let className = "tag-menu-block wide";
+				if (!tag.color.startsWith("#")) className += " " + tag.color + "-background";
+				return {
+					label: (
+						<span className="tag-menu-selector">
+							<span
+								className={className}
+								style={tag.color.startsWith("#") ? { background: tag.color } : {}}
+							>
+								{tag.label || <span>&nbsp;</span>}
+							</span>
+						</span>
+					),
+					noHover: true,
+					searchLabel: tag.label || tag.color,
+					action: tag.id
+				};
+			})
+		);
 
 		// let authorMenuItems = [{ label: "Anyone", action: "all" }, { label: "-" }];
 		// authorMenuItems = authorMenuItems.concat(
@@ -252,12 +247,20 @@ export class SimpleReviewsPanel extends Component {
 		// 		})
 		// );
 
+		const filters = [
+			{ label: "Open issues and Code Reviews", key: "open" },
+			{ label: "Your Issues", key: "issues" },
+			{ label: "Your Code Reviews", key: "reviews" },
+			{ label: "Everything assigned to you", key: "assigned" },
+			{ label: "Everything mentioning you", key: "mine" },
+			{ label: "By Tag", key: "tag", submenu: tagMenuItems }
+		];
 		// console.log("SELECTED AG FILTER: ", tagFilter);
 		return (
 			<div className="panel full-height reviews-panel">
 				<PanelHeader title="Code Reviews">
 					<SearchBar className="search-bar">
-						<FiltersButton>
+						<FiltersButton items={filters}>
 							Filters
 							<Icon name="chevron-down" />
 						</FiltersButton>
