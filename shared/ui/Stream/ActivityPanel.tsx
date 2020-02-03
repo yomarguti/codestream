@@ -18,7 +18,8 @@ import {
 	FetchActivityRequestType,
 	PostPlus,
 	CodemarkPlus,
-	PinReplyToCodemarkRequestType
+	PinReplyToCodemarkRequestType,
+	ReviewPlus
 } from "@codestream/protocols/agent";
 import { savePosts } from "../store/posts/actions";
 import { addOlderActivity } from "../store/activityFeed/actions";
@@ -33,9 +34,8 @@ import Menu from "./Menu";
 import { FormattedPlural } from "react-intl";
 import { useMarkdownifyToHtml } from "./Markdowner";
 import { Codemark } from "./Codemark/index";
-import { logError } from "../logger";
 import Filter from "./Filter";
-import { ActivityReview } from "./Review";
+import { Review } from "./Review";
 import { saveReviews } from "../store/reviews/actions";
 
 // see comment in SmartFormattedList.tsx
@@ -272,7 +272,7 @@ export const ActivityPanel = () => {
 				return (
 					<ActivityWrapper key={record.id}>
 						<ActivityItem streamId={record.streamId} postId={record.postId}>
-							{() => <ActivityReview />}
+							{() => <Review review={record as ReviewPlus} collapsed hoverEffect />}
 						</ActivityItem>
 					</ActivityWrapper>
 				);

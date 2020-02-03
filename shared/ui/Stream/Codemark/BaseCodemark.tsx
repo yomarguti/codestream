@@ -287,11 +287,11 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 	);
 }
 
-const MinimumWidthCard = styled(Card)`
+export const MinimumWidthCard = styled(Card)`
 	min-width: 200px;
 `;
 
-const Header = styled.div`
+export const Header = styled.div`
 	width: 100%;
 	margin-bottom: 8px;
 	display: flex;
@@ -306,7 +306,7 @@ const HeaderActions = styled.div`
 	align-items: center;
 `;
 
-const AuthorInfo = styled.div`
+export const AuthorInfo = styled.div`
 	display: flex;
 	align-items: center;
 	${Headshot} {
@@ -314,7 +314,7 @@ const AuthorInfo = styled.div`
 	}
 `;
 
-const StyledTimestamp = styled(Timestamp)`
+export const StyledTimestamp = styled(Timestamp)`
 	opacity: 0.4;
 	font-size: 11px;
 	padding-left: 5px;
@@ -324,7 +324,7 @@ const StyledTimestamp = styled(Timestamp)`
 	}
 `;
 
-const Title = styled.div`
+export const Title = styled.div`
 	margin-bottom: 10px;
 `;
 
@@ -336,14 +336,14 @@ export const Text = styled.span`
 	}
 `;
 
-const Meta = styled.div`
+export const Meta = styled.div`
 	display: flex;
 	flex-direction: column;
 	margin-right: auto;
 	width: 100%;
 `;
 
-const MetaSection = styled.div`
+export const MetaSection = styled.div`
 	display: flex;
 	flex-direction: column;
 	justify-content: space-between;
@@ -352,7 +352,7 @@ const MetaSection = styled.div`
 	}
 `;
 
-const MetaSectionCollapsed = styled.div`
+export const MetaSectionCollapsed = styled.div`
 	padding: 2px 0;
 	display: flex;
 	flex-flow: row wrap;
@@ -395,7 +395,7 @@ const MetaRow = styled.div`
 	}
 `;
 
-const MetaLabel = styled.div`
+export const MetaLabel = styled.div`
 	text-transform: uppercase;
 	font-weight: 800;
 	opacity: 0.5;
@@ -403,7 +403,7 @@ const MetaLabel = styled.div`
 	margin-bottom: 3px;
 `;
 
-const MetaDescription = styled.div`
+export const MetaDescription = styled.div`
 	display: flex;
 	> *:not(:first-child) {
 		margin-left: 5px;

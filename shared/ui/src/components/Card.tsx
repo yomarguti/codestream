@@ -8,14 +8,14 @@ export interface CardProps {
 	className?: string;
 }
 
-const Root = styled.div((props: PropsWithTheme<CardProps>) => {
+const Root = styled.div((props: Omit<PropsWithTheme<CardProps>, "hoverEffect">) => {
 	const { theme } = props;
 	const boxShadow = isDarkTheme(theme)
 		? "0 5px 10px rgba(0, 0, 0, 0.2)"
 		: "0 2px 5px rgba(0, 0, 0, 0.08)";
 
 	return `
-	cursor: ${props.onClick != undefined ? "pointer" : "default"};
+		cursor: ${props.onClick != undefined ? "pointer" : "default"};
 		display: flex;
   	box-shadow: ${boxShadow};
     background: ${theme.colors.baseBackground};

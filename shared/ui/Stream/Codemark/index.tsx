@@ -104,9 +104,7 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 			assignees: [...csAssignees, ...externalAssignees],
 			currentUserEmail: state.users[state.session.userId!].email,
 			followingEnabled: state.apiVersioning.apiCapabilities.follow != undefined,
-			userIsFollowingCodemark: (codemark.followerIds || []).includes(
-				state.users[state.session.userId!].id
-			)
+			userIsFollowingCodemark: (codemark.followerIds || []).includes(state.session.userId!)
 		};
 	});
 	// this is to try and figure out why and when this error might occur
