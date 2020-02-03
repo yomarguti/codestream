@@ -16,7 +16,8 @@ import {
 	CSPost,
 	CSReactions,
 	CSRepository,
-	CSStream
+	CSStream,
+	CSReview
 } from "./api.protocol";
 
 export interface PostPlus extends CSPost {
@@ -147,6 +148,7 @@ export interface FetchPostsResponse {
 	posts: PostPlus[];
 	codemarks?: CodemarkPlus[];
 	markers?: CSMarker[];
+	reviews?: CSReview[];
 	more?: boolean;
 }
 export const FetchPostsRequestType = new RequestType<
@@ -164,6 +166,8 @@ export interface FetchActivityRequest {
 export interface FetchActivityResponse {
 	posts: PostPlus[];
 	codemarks: CodemarkPlus[];
+	reviews: ReviewPlus[];
+	records: string[];
 	more?: boolean;
 }
 

@@ -73,7 +73,8 @@ import {
 	TokenLoginRequestType,
 	VerifyConnectivityRequestType,
 	VerifyConnectivityResponse,
-	VersionCompatibility
+	VersionCompatibility,
+	ReviewPlus
 } from "./protocol/agent.protocol";
 import {
 	CSApiCapabilities,
@@ -384,6 +385,12 @@ export class CodeStreamSession {
 					data: codemarks
 				});
 				break;
+			case MessageType.Companies:
+				this.agent.sendNotification(DidChangeDataNotificationType, {
+					type: ChangeDataType.Companies,
+					data: e.data
+				});
+				break;
 			case MessageType.Connection:
 				if (e.data.status === ConnectionStatus.Reconnected && e.data.reset) {
 					void SessionContainer.instance().session.reset();
@@ -424,6 +431,14 @@ export class CodeStreamSession {
 				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: ChangeDataType.Repositories,
 					data: e.data
+				});
+				break;
+			case MessageType.Reviews:
+				this.agent.sendNotification(DidChangeDataNotificationType, {
+					type: ChangeDataType.Reviews,
+					data: ((await SessionContainer.instance().codemarks.enrichCodemarks(
+						e.data as any
+					)) as unknown) as ReviewPlus[]
 				});
 				break;
 			case MessageType.Streams:

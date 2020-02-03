@@ -22,6 +22,7 @@ import { UrlManager } from "./managers/urlManager";
 import { UsersManager } from "./managers/usersManager";
 import { ThirdPartyProviderRegistry } from "./providers/registry";
 import { CodeStreamSession } from "./session";
+import { ReviewsManager } from "./managers/reviewsManager";
 
 class SessionServiceContainer {
 	private readonly _git: GitService;
@@ -104,6 +105,11 @@ class SessionServiceContainer {
 		return this._ignoreFiles;
 	}
 
+	private readonly _reviews: ReviewsManager;
+	get reviews() {
+		return this._reviews;
+	}
+
 	constructor(public readonly session: CodeStreamSession) {
 		this._git = new GitService(session);
 		this._scm = new ScmManager();
@@ -121,6 +127,7 @@ class SessionServiceContainer {
 		this._repositoryMappings = new RepositoryMappingManager(session);
 		this._companies = new CompaniesManager(session);
 		this._ignoreFiles = new IgnoreFilesManager(session);
+		this._reviews = new ReviewsManager(session);
 	}
 }
 

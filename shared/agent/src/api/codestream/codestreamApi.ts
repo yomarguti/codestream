@@ -96,7 +96,11 @@ import {
 	UpdateStreamMembershipRequest,
 	UpdateTeamTagRequestType,
 	UpdateUserRequest,
-	VerifyConnectivityResponse
+	VerifyConnectivityResponse,
+	FetchReviewsRequest,
+	FetchReviewsResponse,
+	GetReviewRequest,
+	GetReviewResponse
 } from "../../protocol/agent.protocol";
 import {
 	CSAddProviderHostRequest,
@@ -226,9 +230,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 	get onDidSubscribe(): Event<void> {
 		return this._onDidSubscribe.event;
 	}
-	private _subscribePromise = new Promise<void>(resolve => {
-		this.onDidSubscribe(resolve);
-	});
 
 	private _events: BroadcasterEvents | undefined;
 	private readonly _middleware: CodeStreamApiMiddleware[] = [];
@@ -258,7 +259,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		public readonly baseUrl: string,
 		private readonly _version: VersionInfo,
 		private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined
-	) { }
+	) {}
 
 	get teamId(): string {
 		return this._teamId!;
@@ -333,9 +334,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 		Logger.log(
 			`CodeStream user '${response.user.username}' (${
-			response.user.id
+				response.user.id
 			}) is logging into ${provider || "uknown"}${
-			response.providerAccess ? `:${response.providerAccess}` : ""
+				response.providerAccess ? `:${response.providerAccess}` : ""
 			} and belongs to ${response.teams.length} team(s)\n${response.teams
 				.map(t => `\t${t.name} (${t.id})`)
 				.join("\n")}`
@@ -535,6 +536,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 				if (e.data == null || e.data.length === 0) return;
 
 				break;
+			case MessageType.Companies: {
+				const { companies } = SessionContainer.instance();
+				e.data = await companies.resolve(e);
+				if (e.data == null || e.data.length === 0) return;
+				break;
+			}
 			case MessageType.MarkerLocations:
 				e.data = await SessionContainer.instance().markerLocations.resolve(e, {
 					onlyIfNeeded: false
@@ -560,6 +567,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 				if (e.data == null || e.data.length === 0) return;
 
 				break;
+			case MessageType.Reviews: {
+				e.data = await SessionContainer.instance().repos.resolve(e, { onlyIfNeeded: false });
+				if (e.data == null || e.data.length === 0) return;
+				break;
+			}
 			case MessageType.Streams:
 				e.data = await SessionContainer.instance().streams.resolve(e, { onlyIfNeeded: false });
 				if (e.data == null || e.data.length === 0) return;
@@ -601,12 +613,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 					void session.updateProviders();
 				}
 				break;
-			case MessageType.Companies: {
-				const { companies } = SessionContainer.instance();
-				e.data = await companies.resolve(e);
-				if (e.data == null || e.data.length === 0) return;
-				break;
-			}
 			case MessageType.Users:
 				const users: CSUser[] = e.data;
 				const meIndex = users.findIndex(u => u.id === this.userId);
@@ -1062,17 +1068,28 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return this.get<CSGetReposResponse>(`/repos?teamId=${this.teamId}`, this._token);
 	}
 
-	fetchMsTeamsConversations(request: CSMsTeamsConversationRequest): Promise<CSMsTeamsConversationResponse> {
-		return this.get<any>(`/msteams_conversations?teamId=${this.teamId}&tenantId=${request.tenantId}`, this._token);
+	fetchMsTeamsConversations(
+		request: CSMsTeamsConversationRequest
+	): Promise<CSMsTeamsConversationResponse> {
+		return this.get<any>(
+			`/msteams_conversations?teamId=${this.teamId}&tenantId=${request.tenantId}`,
+			this._token
+		);
 	}
 
-	triggerMsTeamsProactiveMessage(request: TriggerMsTeamsProactiveMessageRequest): Promise<TriggerMsTeamsProactiveMessageResponse> {
-		return this.post<any, any>("/msteams_conversations", {
-			teamId: this.teamId,
-			channelId: request.channelId,
-			providerTeamId: request.providerTeamId,
-			codemarkId: request.codemarkId
-		}, this._token);
+	triggerMsTeamsProactiveMessage(
+		request: TriggerMsTeamsProactiveMessageRequest
+	): Promise<TriggerMsTeamsProactiveMessageResponse> {
+		return this.post<any, any>(
+			"/msteams_conversations",
+			{
+				teamId: this.teamId,
+				channelId: request.channelId,
+				providerTeamId: request.providerTeamId,
+				codemarkId: request.codemarkId
+			},
+			this._token
+		);
 	}
 
 	@log()
@@ -1087,6 +1104,26 @@ export class CodeStreamApiProvider implements ApiProvider {
 			request,
 			this._token
 		);
+	}
+
+	@log()
+	fetchReviews(request: FetchReviewsRequest): Promise<FetchReviewsResponse> {
+		const params: CSGetReviewsRequest = {
+			teamId: this.teamId
+		};
+		if (request.reviewIds?.length ?? 0 > 0) {
+			params.ids = request.reviewIds;
+		}
+		if (request.streamId != null) {
+			params.streamId = request.streamId;
+		}
+
+		return this.get<CSGetReviewsResponse>(`/reviews?${qs.stringify(params)}`, this._token);
+	}
+
+	@log()
+	getReview(request: GetReviewRequest): Promise<GetReviewResponse> {
+		return this.get<CSGetReviewResponse>(`/reviews/${request.reviewId}`, this._token);
 	}
 
 	@log()
@@ -1738,10 +1775,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 			const context =
 				this._middleware.length > 0
 					? ({
-						url: absoluteUrl,
-						method: method,
-						request: init
-					} as CodeStreamApiMiddlewareContext)
+							url: absoluteUrl,
+							method: method,
+							request: init
+					  } as CodeStreamApiMiddlewareContext)
 					: undefined;
 
 			if (context !== undefined) {
@@ -1845,7 +1882,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		} finally {
 			Logger.log(
 				`${traceResult}${
-				init && init.body ? ` body=${CodeStreamApiProvider.sanitize(init && init.body)}` : ""
+					init && init.body ? ` body=${CodeStreamApiProvider.sanitize(init && init.body)}` : ""
 				} \u2022 ${Strings.getDurationMilliseconds(start)} ms`
 			);
 		}
@@ -1896,7 +1933,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 				if (data.info) {
 					message += `\n${data.info.name || data.info}`;
 				}
-			} catch { }
+			} catch {}
 		}
 		return new ServerError(message, data, response.status);
 	}

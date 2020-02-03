@@ -17,10 +17,12 @@ import { CodeStreamApiProvider } from "./codestreamApi";
 const messageToType: {
 	[key: string]:
 		| MessageType.Codemarks
+		| MessageType.Companies
 		| MessageType.MarkerLocations
 		| MessageType.Markers
 		| MessageType.Posts
 		| MessageType.Repositories
+		| MessageType.Reviews
 		| MessageType.Streams
 		| MessageType.Teams
 		| MessageType.Users
@@ -28,6 +30,8 @@ const messageToType: {
 } = {
 	codemark: MessageType.Codemarks,
 	codemarks: MessageType.Codemarks,
+	company: MessageType.Companies,
+	companies: MessageType.Companies,
 	marker: MessageType.Markers,
 	markerLocations: MessageType.MarkerLocations,
 	markers: MessageType.Markers,
@@ -35,6 +39,8 @@ const messageToType: {
 	posts: MessageType.Posts,
 	repo: MessageType.Repositories,
 	repos: MessageType.Repositories,
+	review: MessageType.Reviews,
+	reviews: MessageType.Reviews,
 	stream: MessageType.Streams,
 	streams: MessageType.Streams,
 	team: MessageType.Teams,
@@ -49,8 +55,8 @@ export interface BroadcasterEventsInitializer {
 	api: CodeStreamApiProvider;
 	pubnubSubscribeKey?: string;
 	socketCluster?: {
-		host: string,
-		port: string
+		host: string;
+		port: string;
 	};
 	httpsAgent?: HttpsAgent | HttpsProxyAgent;
 }
@@ -65,9 +71,7 @@ export class BroadcasterEvents implements Disposable {
 	private readonly _broadcaster: Broadcaster;
 	private _subscribedStreamIds = new Set<string>();
 
-	constructor (
-		private readonly _options: BroadcasterEventsInitializer
-	) {
+	constructor(private readonly _options: BroadcasterEventsInitializer) {
 		this._broadcaster = new Broadcaster(this._options.api, this._options.httpsAgent);
 		this._broadcaster.onDidStatusChange(this.onBroadcasterStatusChanged, this);
 		this._broadcaster.onDidReceiveMessages(this.onBroadcasterMessagesReceived, this);

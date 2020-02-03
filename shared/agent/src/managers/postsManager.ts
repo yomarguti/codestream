@@ -1,7 +1,7 @@
 "use strict";
 import { CodeStreamApiProvider } from "api/codestream/codestreamApi";
 import * as fs from "fs";
-import { sortBy } from "lodash-es";
+import { orderBy, last } from "lodash-es";
 import { Range, TextDocumentIdentifier } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
@@ -64,7 +64,8 @@ import {
 	CSPost,
 	CSStream,
 	ProviderType,
-	StreamType
+	StreamType,
+	CSReview
 } from "../protocol/api.protocol";
 import { Arrays, debug, log, lsp, lspHandler } from "../system";
 import { Strings } from "../system/string";
@@ -618,10 +619,15 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		});
 
 		const unreads = await SessionContainer.instance().users.getUnreads({});
-		const codemarksManager = SessionContainer.instance().codemarks;
-		const posts: PostPlus[] = response.posts.filter(p => !p.deactivated);
+		const { codemarks: codemarksManager, reviews: reviewsManager } = SessionContainer.instance();
 
-		response.codemarks = sortBy(response.codemarks, c => -(c.lastActivityAt || c.createdAt));
+		const posts: PostPlus[] = [];
+
+		for (let post of response.posts) {
+			if (!post.deactivated) {
+				posts.push(post);
+			}
+		}
 
 		const codemarks = await Arrays.filterMapAsync(response.codemarks || [], async codemark => {
 			if (codemark.deactivated) return;
@@ -641,12 +647,35 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			return codemarksManager.enrichCodemark(codemark);
 		});
 
-		// if there are no valid codemarks in this batch, recurse
-		if (codemarks.length === 0 && response.posts.length > 0 && response.more) {
-			const beforePostId =
-				response.codemarks.length > 0
-					? response.codemarks[response.codemarks.length - 1].postId
-					: response.posts[response.posts.length - 1].id;
+		const reviews = await Arrays.filterMapAsync(response.reviews || [], async review => {
+			if (review.deactivated) return;
+
+			reviewsManager.cacheSet(review);
+
+			if (unreads.unreads.lastReads[review.streamId]) {
+				try {
+					const threadResponse = await this.session.api.fetchPostReplies({
+						postId: review.postId,
+						streamId: review.streamId
+					});
+					posts.push(...threadResponse.posts);
+				} catch (error) {
+					debugger;
+				}
+			}
+
+			return ((await codemarksManager.enrichCodemark(review as any)) as unknown) as ReviewPlus;
+		});
+
+		const records: (ReviewPlus | CodemarkPlus)[] = orderBy(
+			[...reviews, ...codemarks],
+			r => r.lastActivityAt ?? r.createdAt,
+			"desc"
+		);
+
+		// if there are no valid activities in this batch, recurse
+		if (records.length === 0 && response.posts.length > 0 && response.more) {
+			const beforePostId = last(response.posts)!.id;
 			return this.getActivity({
 				...request,
 				before: beforePostId
@@ -654,10 +683,26 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		}
 
 		return {
-			posts: await this.enrichPosts(posts),
 			codemarks,
+			reviews,
+			posts: await this.enrichPosts(posts),
+			records: this.createRecords(records),
 			more: response.more
 		};
+	}
+
+	private createRecords(records: (CSReview | CodemarkPlus)[]): string[] {
+		const isReview = function(r: any): r is CSReview {
+			return r.reviewers != undefined;
+		};
+
+		return records.map(r => {
+			if (isReview(r)) {
+				return `review|${r.id}`;
+			}
+
+			return `codemark|${r.id}`;
+		});
 	}
 
 	private async enrichPost(post: CSPost): Promise<PostPlus> {
@@ -1301,7 +1346,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					anchorFormat: "[${text}](${url})"
 				};
 		}
-	}
+	};
 
 	createProviderCard = async (
 		providerCardRequest: {
@@ -1529,7 +1574,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			Logger.error(error, `failed to create a ${attributes.issueProvider.name} card:`);
 			return undefined;
 		}
-	}
+	};
 }
 
 async function resolveCreatePostResponse(response: CreatePostResponse) {

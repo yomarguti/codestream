@@ -13,8 +13,10 @@ import {
 	CSRepository,
 	CSStream,
 	CSTeam,
-	CSUser
+	CSUser,
+	CSCompany
 } from "./api.protocol";
+import { ReviewPlus } from "./agent.protocol";
 
 export interface RestartRequiredNotification {}
 
@@ -41,11 +43,13 @@ export const DidChangeConnectionStatusNotificationType = new NotificationType<
 
 export enum ChangeDataType {
 	Codemarks = "codemarks",
+	Companies = "companies",
 	MarkerLocations = "markerLocations",
 	Markers = "markers",
 	Posts = "posts",
 	Preferences = "preferences",
 	Repositories = "repos",
+	Reviews = "reviews",
 	Streams = "streams",
 	Teams = "teams",
 	Unreads = "unreads",
@@ -57,6 +61,11 @@ export enum ChangeDataType {
 export interface CodemarksChangedNotification {
 	type: ChangeDataType.Codemarks;
 	data: CodemarkPlus[];
+}
+
+export interface CompaniesChangedNotification {
+	type: ChangeDataType.Companies;
+	data: CSCompany[];
 }
 
 export interface MarkerLocationsChangedNotification {
@@ -82,6 +91,11 @@ export interface PreferencesChangedNotification {
 export interface RepositoriesChangedNotification {
 	type: ChangeDataType.Repositories;
 	data: CSRepository[];
+}
+
+export interface ReviewsChangedNotification {
+	type: ChangeDataType.Reviews;
+	data: ReviewPlus[];
 }
 
 export interface StreamsChangedNotification {
@@ -124,11 +138,13 @@ export interface ApiCapabilitiesChangedNotification {
 
 export type DidChangeDataNotification =
 	| CodemarksChangedNotification
+	| CompaniesChangedNotification
 	| MarkerLocationsChangedNotification
 	| MarkersChangedNotification
 	| PostsChangedNotification
 	| PreferencesChangedNotification
 	| RepositoriesChangedNotification
+	| ReviewsChangedNotification
 	| StreamsChangedNotification
 	| TeamsChangedNotification
 	| UnreadsChangedNotification

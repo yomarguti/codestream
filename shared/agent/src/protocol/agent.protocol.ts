@@ -4,16 +4,7 @@ import { InitializeResult, RequestType } from "vscode-languageserver-protocol";
 import { LoginResponse } from "./agent.protocol.auth";
 import { Unreads } from "./agent.protocol.notifications";
 import { ThirdPartyProviders } from "./agent.protocol.providers";
-import {
-	CSCompany,
-	CSLoginResponse,
-	CSMePreferences,
-	CSRepository,
-	CSStream,
-	CSTeam,
-	CSUser,
-	LoginResult
-} from "./api.protocol";
+import { CSCompany, CSMePreferences, CSRepository, CSStream, CSTeam, CSUser } from "./api.protocol";
 
 export * from "./agent.protocol.notifications";
 
@@ -168,6 +159,7 @@ export interface BootstrapResponse {
 	unreads: Unreads;
 	providers: ThirdPartyProviders;
 }
+
 export const BootstrapRequestType = new RequestType<
 	BootstrapRequest,
 	BootstrapResponse,

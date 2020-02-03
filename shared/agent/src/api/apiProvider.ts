@@ -127,7 +127,11 @@ import {
 	UpdateStreamMembershipResponse,
 	UpdateUserRequest,
 	UpdateUserResponse,
-	VerifyConnectivityResponse
+	VerifyConnectivityResponse,
+	FetchReviewsResponse,
+	FetchReviewsRequest,
+	GetReviewResponse,
+	GetReviewRequest
 } from "../protocol/agent.protocol";
 import {
 	CSApiCapabilities,
@@ -149,7 +153,8 @@ import {
 	CSUser,
 	ProviderType,
 	TriggerMsTeamsProactiveMessageRequest,
-	TriggerMsTeamsProactiveMessageResponse
+	TriggerMsTeamsProactiveMessageResponse,
+	CSReview
 } from "../protocol/api.protocol";
 
 export type ApiProviderLoginResponse = CSLoginResponse & { token: AccessToken };
@@ -186,6 +191,7 @@ export enum MessageType {
 	Posts = "posts",
 	Preferences = "preferences",
 	Repositories = "repos",
+	Reviews = "reviews",
 	Streams = "streams",
 	Teams = "teams",
 	Unreads = "unreads",
@@ -232,6 +238,11 @@ export interface RepositoriesRTMessage {
 	data: CSRepository[];
 }
 
+export interface ReviewsRTMessage {
+	type: MessageType.Reviews;
+	data: CSReview[];
+}
+
 export interface StreamsRTMessage {
 	type: MessageType.Streams;
 	data: (CSChannelStream | CSDirectStream)[];
@@ -259,12 +270,14 @@ export interface RawRTMessage {
 
 export type RTMessage =
 	| CodemarksRTMessage
+	| CompaniesRTMessage
 	| ConnectionRTMessage
 	| MarkerLocationsRTMessage
 	| MarkersRTMessage
 	| PostsRTMessage
 	| PreferencesRTMessage
 	| RepositoriesRTMessage
+	| ReviewsRTMessage
 	| StreamsRTMessage
 	| TeamsRTMessage
 	| UnreadsRTMessage
@@ -342,8 +355,15 @@ export interface ApiProvider {
 	getRepo(request: GetRepoRequest): Promise<GetRepoResponse>;
 	matchRepos(request: MatchReposRequest): Promise<MatchReposResponse>;
 
-	fetchMsTeamsConversations(request: CSMsTeamsConversationRequest): Promise<CSMsTeamsConversationResponse>;
-	triggerMsTeamsProactiveMessage(request: TriggerMsTeamsProactiveMessageRequest): Promise<TriggerMsTeamsProactiveMessageResponse>;
+	fetchMsTeamsConversations(
+		request: CSMsTeamsConversationRequest
+	): Promise<CSMsTeamsConversationResponse>;
+	triggerMsTeamsProactiveMessage(
+		request: TriggerMsTeamsProactiveMessageRequest
+	): Promise<TriggerMsTeamsProactiveMessageResponse>;
+
+	fetchReviews(request: FetchReviewsRequest): Promise<FetchReviewsResponse>;
+	getReview(request: GetReviewRequest): Promise<GetReviewResponse>;
 
 	createChannelStream(request: CreateChannelStreamRequest): Promise<CreateChannelStreamResponse>;
 	createDirectStream(request: CreateDirectStreamRequest): Promise<CreateDirectStreamResponse>;

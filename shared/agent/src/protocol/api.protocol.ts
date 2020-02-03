@@ -541,10 +541,20 @@ export interface CSCreateReviewResponse {
 
 export interface CSCreateChangeSetRequest {}
 
+export interface CSGetReviewRequest {
+	id: string;
+}
+
 export interface CSGetReviewResponse {
 	review: CSReview;
-	post?: CSPost;
+	post: CSPost;
 	markers?: CSMarker[];
+}
+
+export interface CSGetReviewsRequest {
+	teamId: string;
+	streamId?: string;
+	ids?: string[];
 }
 
 export interface CSGetReviewsResponse {

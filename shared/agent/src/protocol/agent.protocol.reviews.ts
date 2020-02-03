@@ -1,24 +1,17 @@
 "use strict";
 import { RequestType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
-import {
-	CreateMarkerRequest,
-	CrossPostIssueValues,
-	GetRangeScmInfoResponse,
-	PostPlus,
-	ThirdPartyProviderUser
-} from "./agent.protocol";
+import { CreateMarkerRequest, PostPlus, ThirdPartyProviderUser } from "./agent.protocol";
 import {
 	CSChannelStream,
 	CSCreateReviewRequest,
 	CSDirectStream,
-	CSLocationArray,
 	CSMarker,
 	CSMarkerLocations,
-	CSReferenceLocation,
 	CSRepoChangeset,
 	CSRepository,
 	CSReview,
-	CSStream
+	CSStream,
+	CSGetReviewsResponse
 } from "./api.protocol";
 
 export interface ReviewPlus extends CSReview {
@@ -69,14 +62,15 @@ export const CreateShareableReviewRequestType = new RequestType<
 >("codestream/reviews/create");
 
 export interface FetchReviewsRequest {
+	reviewIds?: string[];
 	streamId?: string;
 	before?: number;
 	byLastAcivityAt?: boolean;
 }
-export interface FetchReviewsResponse {
-	reviews: ReviewPlus[];
-	markers?: CSMarker[];
-}
+
+// TODO: when the server starts returning the markers, this response should have ReviewPlus objects
+export type FetchReviewsResponse = Pick<CSGetReviewsResponse, "reviews">;
+
 export const FetchReviewsRequestType = new RequestType<
 	FetchReviewsRequest,
 	FetchReviewsResponse | undefined,
@@ -96,8 +90,7 @@ export const DeleteReviewRequestType = new RequestType<
 >("codestream/review/delete");
 
 export interface GetReviewRequest {
-	id: string;
-	sortByActivity?: boolean;
+	reviewId: string;
 }
 
 export interface GetReviewResponse {

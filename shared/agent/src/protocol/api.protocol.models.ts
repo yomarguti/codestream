@@ -173,6 +173,7 @@ export interface CSReview extends CSEntity {
 	numReplies: number;
 	tags?: string[];
 	repoChangeset: CSRepoChangeset[];
+	lastActivityAt: number;
 }
 
 export interface CSPost extends CSEntity {
@@ -187,6 +188,7 @@ export interface CSPost extends CSEntity {
 	origin?: "email" | "slack" | "msteams";
 	reactions?: { [key: string]: string[] };
 	codemarkId?: string;
+	reviewId?: string;
 	files?: [
 		{
 			mimetype: string;
