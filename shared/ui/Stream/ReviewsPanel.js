@@ -99,8 +99,8 @@ export class SimpleReviewsPanel extends Component {
 		else {
 			return reviews.map(review => {
 				return (
-					<div>
-						{review.title}
+					<div style={{ padding: "5px 20px" }}>
+						<Icon name="checked-checkbox" /> {review.title}
 						{/*	FIXME <Review key={review.id} review={review} query={this.state.q} />*/}
 					</div>
 				);
@@ -292,7 +292,7 @@ export class SimpleReviewsPanel extends Component {
 				*/}
 				</PanelHeader>
 				<ScrollBox>
-					<div className="channel-list vscroll">
+					<div className="channel-list vscroll" style={{ paddingTop: "10px" }}>
 						{totalReviews > 0 &&
 							sections.map(section => {
 								return this.renderSection(section, displayReviews[section] || []);
