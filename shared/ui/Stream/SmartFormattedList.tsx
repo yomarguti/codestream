@@ -1,8 +1,5 @@
-import { FormattedList, FormattedPlural } from "react-intl";
+import { FormattedList } from "react-intl";
 import React from "react";
-
-// because typescript is wrongly complaining about expected props in v3.6.4
-const FormattedPluralAlias = FormattedPlural as any;
 
 type PropsOf<FunctionComponent> = FunctionComponent extends React.FunctionComponent<infer P>
 	? P
