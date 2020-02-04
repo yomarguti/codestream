@@ -151,8 +151,8 @@ export const Review = (props: ReviewProps) => {
 
 	let repoNames = new Set<string>();
 
-	for (let changeset of review.repoChangeset) {
-		const repo = derivedState.repos[changeset.repoId];
+	for (let repoId of review.changesetRepoIds) {
+		const repo = derivedState.repos[repoId];
 		if (repo) repoNames.add(repo.name);
 	}
 
