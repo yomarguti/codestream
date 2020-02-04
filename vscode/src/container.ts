@@ -1,4 +1,5 @@
 "use strict";
+import { ReviewDiffContentProvider } from "providers/diffContentProvider";
 import { ExtensionContext } from "vscode";
 import { BaseAgentOptions, CodeStreamAgentConnection } from "./agent/agentConnection";
 import { CodeStreamSession } from "./api/session";
@@ -38,6 +39,7 @@ export class Container {
 		context.subscriptions.push((this._commands = new Commands()));
 		context.subscriptions.push((this._codeActions = new CodeStreamCodeActionProvider()));
 		context.subscriptions.push((this._codeLens = new CodemarkCodeLensProvider()));
+		context.subscriptions.push((this._diffContents = new ReviewDiffContentProvider()));
 		context.subscriptions.push((this._markerDecorations = new CodemarkDecorationProvider()));
 		context.subscriptions.push(new CodemarkPatchContentProvider());
 		context.subscriptions.push((this._selectionDecoration = new SelectionDecorationProvider()));
@@ -85,6 +87,11 @@ export class Container {
 			this._config = configuration.get<Config>();
 		}
 		return this._config;
+	}
+
+	private static _diffContents: ReviewDiffContentProvider;
+	static get diffContents() {
+		return this._diffContents;
 	}
 
 	private static _context: ExtensionContext;

@@ -1,7 +1,18 @@
-import * as paths from "path";
 import { CodemarkType, CSMarkerIdentifier } from "@codestream/protocols/api";
 import { Editor } from "extensions/editor";
-import { commands, Disposable, env, Range, Uri, ViewColumn, window, workspace } from "vscode";
+import * as paths from "path";
+import {
+	commands,
+	Disposable,
+	env,
+	Range,
+	scm,
+	Uri,
+	ViewColumn,
+	window,
+	workspace,
+	WorkspaceEdit
+} from "vscode";
 import { SessionSignedOutReason, StreamThread } from "./api/session";
 import { TokenManager } from "./api/tokenManager";
 import { WorkspaceState } from "./common";
@@ -24,6 +35,12 @@ export interface ApplyMarkerCommandArgs {
 
 export interface ShowMarkerDiffCommandArgs {
 	marker: CSMarkerIdentifier;
+}
+
+export interface ShowReviewDiffCommandArgs {
+	reviewId: string;
+	repoId: string;
+	path: string;
 }
 
 export interface GotoCodemarkCommandArgs {
@@ -140,6 +157,19 @@ export class Commands implements Disposable {
 				preview: true,
 				viewColumn: column || ViewColumn.Beside
 			}
+		);
+
+		return true;
+	}
+
+	@command("showReviewDiff", { showErrorMessage: "Unable to display review diff" })
+	async showReviewDiff(args: ShowReviewDiffCommandArgs): Promise<boolean> {
+		await Container.diffContents.loadContents(args.reviewId, args.repoId, args.path);
+		await commands.executeCommand(
+			"vscode.diff",
+			Uri.parse(`codestream-diff://${args.reviewId}/${args.repoId}/${args.path}@base`),
+			Uri.parse(`codestream-diff://${args.reviewId}/${args.repoId}/${args.path}@head`),
+			`${args.path} @ CodeStream Review #${args.reviewId}`
 		);
 
 		return true;

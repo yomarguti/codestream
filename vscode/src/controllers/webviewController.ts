@@ -46,6 +46,7 @@ import {
 	NewCodemarkNotificationType,
 	ReloadWebviewRequestType,
 	RestartRequestType,
+	ReviewShowDiffRequestType,
 	ShellPromptFolderRequestType,
 	ShowCodemarkNotificationType,
 	UpdateConfigurationRequestType,
@@ -745,6 +746,14 @@ export class WebviewController implements Disposable {
 						threadId: params.threadId,
 						createNewStream: params.createNewStream
 					});
+					return emptyObj;
+				});
+
+				break;
+			}
+			case ReviewShowDiffRequestType.method: {
+				webview.onIpcRequest(ReviewShowDiffRequestType, e, async (_type, params) => {
+					void (await Container.commands.showReviewDiff(params));
 					return emptyObj;
 				});
 
