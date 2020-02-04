@@ -5,6 +5,7 @@ import * as actions from "./actions";
 import * as reviewSelectors from "../store/reviews/reducer";
 import * as userSelectors from "../store/users/reducer";
 import Tag from "./Tag";
+import Menu from "./Menu";
 import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
@@ -22,17 +23,80 @@ const SearchBar = styled.div`
 	flex-direction: row;
 	input.control {
 		padding-left: 32px !important;
+		// the bookmark icon is narrower so requires less space
+		padding-right: 25px !important;
 		height: 100%;
 	}
 	.search-input {
 		position: relative;
 		flex-grow: 10;
 		width: 100%;
-		.icon {
+		.icon.search {
 			position: absolute;
 			left: 8px;
 			top: 6px;
 			opacity: 0.5;
+		}
+		.save {
+			position: absolute;
+			right: 6px;
+			top: 6px;
+			opacity: 0.5;
+			&:hover {
+				opacity: 1;
+			}
+		}
+	}
+`;
+
+const SaveFilter = styled.div`
+	position: relative;
+	display: inline-block;
+	margin: -1px 0 -1px 0;
+	input.control {
+		width: 8em;
+		font-size: 12px !important;
+		padding-left: 24px !important;
+		&::placeholder {
+			font-size: 12px !important;
+		}
+	}
+	.icon.bookmark {
+		position: absolute;
+		left: 5px;
+		top: 4px;
+		opacity: 0.5;
+	}
+`;
+
+const SavedFilter = styled.div`
+	position: relative;
+	display: inline-block;
+	label {
+		cursor: pointer;
+		display: inline-block;
+		padding: 2px 5px 2px 5px;
+		&:hover {
+			color: var(--text-color-highlight);
+		}
+	}
+	.icon.bookmark {
+		vertical-align: -1px;
+		opacity: 0.75;
+	}
+	.icon.gear {
+		display: inline-block;
+		padding-left: 5px;
+		visibility: hidden;
+		opacity: 0.5;
+		cursor: pointer;
+		&:hover {
+			opacity: 1;
+		}
+	}
+	&:hover {
+		.icon.gear {
+			visibility: visible;
 		}
 	}
 `;
@@ -53,7 +117,8 @@ export class SimpleReviewsPanel extends Component {
 				closed: true
 			},
 			selectedTags: {},
-			filters: {}
+			filters: {},
+			savedFilters: props.savedSearchFilters
 		};
 
 		this.sectionLabel = {
@@ -179,6 +244,7 @@ export class SimpleReviewsPanel extends Component {
 		match = text.match(/\breviewer:@(\S+)[\s|$]/);
 		if (match) {
 			filters.assignee = match[1];
+			if (filters.assignee === "me") filters.assignee = this.props.currentUsername;
 			text = text.replace(/\s*reviewer:@\S+/, " ");
 		}
 		match = text.match(/\btag:\"(.*?)\"(\s|$)/);
@@ -211,6 +277,66 @@ export class SimpleReviewsPanel extends Component {
 		this.setState({ filters, q });
 	};
 
+	saveFilter = () => {
+		this.setState({ savingFilter: true });
+		setTimeout(() => {
+			if (this._saveFilterInput) this._saveFilterInput.focus();
+		}, 200);
+	};
+
+	saveFilterSubmit = (label, q, index) => {
+		if (!q || q.length === 0) return;
+		let savedFilters = [];
+		if (index == undefined) {
+			savedFilters = [...this.state.savedFilters, { label, q }];
+		} else {
+			savedFilters = [...this.state.savedFilters];
+			savedFilters.splice(index, 1, { label, q });
+		}
+
+		this.props.setUserPreference(["savedSearchFilters"], [...savedFilters]);
+		this.setState({
+			savedFilters,
+			savingFilter: false,
+			editingFilterIndex: undefined,
+			editingFilterLabel: ""
+		});
+	};
+
+	deleteSavedFilter = index => {
+		const savedFilters = [...this.state.savedFilters];
+		savedFilters.splice(index, 1);
+		this.setState({ savedFilters });
+		this.props.setUserPreference(["savedSearchFilters"], [...savedFilters, { label: "", q: "" }]);
+	};
+
+	renderSaveFilter = index => {
+		const { savedFilters, editingFilterLabel } = this.state;
+		const value = index == undefined ? "" : savedFilters[index].label;
+		const q = index == undefined ? this.state.q : savedFilters[index].q;
+		return (
+			<SaveFilter>
+				<input
+					value={editingFilterLabel}
+					autoFocus={true}
+					placeholder="Filter name"
+					ref={ref => (this._saveFilterInput = ref)}
+					className="input-text control"
+					type="text"
+					onChange={e => this.setState({ editingFilterLabel: e.target.value })}
+					onBlur={e => this.saveFilterSubmit(e.target.value, q, index)}
+				/>
+				<Icon name="bookmark" className="bookmark" />
+			</SaveFilter>
+		);
+	};
+
+	editSavedFilter = index => {
+		const label = this.state.savedFilters[index].label;
+		this.setState({ editingFilterIndex: index, editingFilterLabel: label });
+		// FIXME -- focus the damn thing
+	};
+
 	render() {
 		// if (this.state.isLoading) return null;
 
@@ -219,7 +345,7 @@ export class SimpleReviewsPanel extends Component {
 		}
 
 		const { reviews, currentUserId, authorArray, branchArray, usernameMap } = this.props;
-		const { thisRepo, filters } = this.state;
+		const { thisRepo, filters, savedFilters } = this.state;
 
 		const sections = ["waitingForMe", "createdByMe", "open", "closed"];
 
@@ -241,7 +367,7 @@ export class SimpleReviewsPanel extends Component {
 			const creator = usernameMap[review.creatorId];
 			const assignees = review.reviewers.map(id => usernameMap[id]);
 			if (filters.author && creator !== filters.author) return null;
-			if (filters.assignee && !assignes.includes(filters.assignee)) return null;
+			if (filters.assignee && !assignees.includes(filters.assignee)) return null;
 			if (filters.status && review.status !== filters.status) return null;
 			if (filters.tag && !this.hasTag(review, filters.tag)) return null;
 			// FIXME this will only work if we have issues in this query as well
@@ -318,9 +444,12 @@ export class SimpleReviewsPanel extends Component {
 						</span>
 					),
 					searchLabel: branch,
+					key: branch,
 					action: e => this.setQ(`branch:"${branch}"`)
 				};
 			});
+
+		// BY REPO?
 
 		// let authorMenuItems = [{ label: "Anyone", action: "all" }, { label: "-" }];
 		// authorMenuItems = authorMenuItems.concat(
@@ -362,9 +491,10 @@ export class SimpleReviewsPanel extends Component {
 				key: "mine",
 				action: () => this.setQ("is:open mentions:@me ")
 			},
-			// { label: "-"},
 			{ label: "By Tag", key: "tag", submenu: tagMenuItems },
-			{ label: "By Branch", key: "branch", submenu: branchMenuItems }
+			{ label: "By Branch", key: "branch", submenu: branchMenuItems },
+			{ label: "-" },
+			{ label: "View advanced search syntax", key: "view" }
 		];
 		// console.log("SELECTED AG FILTER: ", tagFilter);
 		return (
@@ -376,7 +506,18 @@ export class SimpleReviewsPanel extends Component {
 							<Icon name="chevron-down" />
 						</FiltersButton>
 						<div className="search-input">
-							<Icon name="search" />
+							<Icon name="search" className="search" />
+							{this.state.q && (
+								<span className="save" onClick={this.saveFilter}>
+									<Icon
+										name="bookmark"
+										className="clickable"
+										title="Save custom filter"
+										placement="bottomRight"
+										align={{ offset: [15, 5] }}
+									/>
+								</span>
+							)}
 							<input
 								name="q"
 								value={this.state.q}
@@ -388,6 +529,43 @@ export class SimpleReviewsPanel extends Component {
 							/>
 						</div>
 					</SearchBar>
+					{savedFilters.map((filter, index) => {
+						if (index == this.state.editingFilterIndex) return this.renderSaveFilter(index);
+						return (
+							<SavedFilter onClick={() => this.setQ(filter.q)}>
+								<label>
+									<Icon name="bookmark" className="bookmark" /> {filter.label}
+								</label>
+								<Icon
+									name="gear"
+									className="gear"
+									onClick={e =>
+										this.setState({ filterMenuOpen: index, filterMenuTarget: e.target })
+									}
+								/>
+								{this.state.filterMenuOpen === index && (
+									<Menu
+										align="center"
+										items={[
+											{
+												label: "Edit Name",
+												key: "edit",
+												action: () => this.editSavedFilter(index)
+											},
+											{
+												label: "Delete",
+												key: "delete",
+												action: () => this.deleteSavedFilter(index)
+											}
+										]}
+										target={this.state.filterMenuTarget}
+										action={() => this.setState({ filterMenuOpen: -1 })}
+									/>
+								)}
+							</SavedFilter>
+						);
+					})}
+					{this.state.savingFilter && this.renderSaveFilter()}
 					{/*
 					<div className="filters">
 						Show{" "}
@@ -468,7 +646,7 @@ export class SimpleReviewsPanel extends Component {
 }
 
 const mapStateToProps = state => {
-	const { context, session, teams, users } = state;
+	const { context, session, teams, users, preferences } = state;
 
 	let fileNameToFilterFor;
 	let fileStreamIdToFilterFor;
@@ -531,10 +709,17 @@ const mapStateToProps = state => {
 		});
 	});
 
+	let savedSearchFilters = [];
+	Object.keys(preferences.savedSearchFilters || {}).forEach(key => {
+		savedSearchFilters[parseInt(key, 10)] = preferences.savedSearchFilters[key];
+	});
+	savedSearchFilters = savedSearchFilters.filter(filter => filter.label.length > 0);
+
 	return {
 		noReviewsAtAll: !reviewSelectors.teamHasReviews(state),
 		usernames,
 		usernameMap,
+		savedSearchFilters,
 		currentUsername: users[session.userId].username,
 		reviews,
 		team: teams[context.currentTeamId],
