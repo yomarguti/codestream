@@ -8,6 +8,7 @@ export * from "./webview.protocol.common";
 export * from "./host.protocol";
 export * from "./host.protocol.editor";
 export * from "./host.protocol.notifications";
+export * from "./host.protocol.review";
 export * from "./host.protocol.vsls";
 
 export * from "./webview.protocol.notifications";
