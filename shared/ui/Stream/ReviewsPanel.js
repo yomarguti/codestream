@@ -73,9 +73,10 @@ const SavedFilter = styled.div`
 	position: relative;
 	display: inline-block;
 	label {
+		font-size: 12px !important;
 		cursor: pointer;
 		display: inline-block;
-		padding: 2px 5px 2px 5px;
+		padding: 3px 5px 3px 5px;
 		&:hover {
 			color: var(--text-color-highlight);
 		}
