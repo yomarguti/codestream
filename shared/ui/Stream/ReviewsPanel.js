@@ -82,7 +82,6 @@ const SavedFilter = styled.div`
 		}
 	}
 	.icon.bookmark {
-		vertical-align: -1px;
 		opacity: 0.75;
 	}
 	.icon.gear {
@@ -222,6 +221,10 @@ export class SimpleReviewsPanel extends Component {
 		if (text.match(/\bis:open\b/)) {
 			filters.status = "open";
 			text = text.replace(/\s*is:open\s*/, " ");
+		}
+		if (text.match(/\bis:closed\b/)) {
+			filters.status = "closed";
+			text = text.replace(/\s*is:closed\s*/, " ");
 		}
 		if (text.match(/\bis:issue\b/)) {
 			filters.type = "issue";
