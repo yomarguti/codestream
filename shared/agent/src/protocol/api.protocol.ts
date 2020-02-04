@@ -23,7 +23,8 @@ import {
 	CSTeam,
 	CSUser,
 	ProviderType,
-	StreamType
+	StreamType,
+	CSRepoChangeset
 } from "./api.protocol.models";
 
 export * from "./api.protocol.models";
@@ -535,6 +536,7 @@ export interface CSCreateReviewRequest {
 
 export interface CSCreateReviewResponse {
 	review: CSReview;
+	repoChangesets: CSRepoChangeset[];
 	streams?: CSStream[];
 	repos?: CSRepository[];
 }

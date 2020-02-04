@@ -162,7 +162,7 @@ export interface CSRepoChangeset {
 }
 
 export function isCSReview(object: any): object is CSReview {
-	return object.reviewers != null && object.repoChangeset != null;
+	return object.reviewers != null && object.repoChangesetIds != null;
 }
 
 export interface CSReview extends CSEntity {
@@ -176,7 +176,8 @@ export interface CSReview extends CSEntity {
 	status: string;
 	numReplies: number;
 	tags?: string[];
-	repoChangeset: CSRepoChangeset[];
+	repoChangesetIds: string[];
+	changesetRepoIds: string[];
 	lastActivityAt: number;
 	followerIds?: string[];
 }

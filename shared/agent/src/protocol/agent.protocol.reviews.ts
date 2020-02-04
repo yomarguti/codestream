@@ -16,10 +16,11 @@ import {
 
 export interface ReviewPlus extends CSReview {
 	markers?: CSMarker[];
+	repoChangesets?: CSRepoChangeset[];
 }
 
 export interface CreateReviewRequest extends Omit<CSCreateReviewRequest, "teamId"> {
-	repoChangeset?: CSRepoChangeset[];
+	repoChangesets?: CSRepoChangeset[];
 	markers?: CreateMarkerRequest[];
 }
 

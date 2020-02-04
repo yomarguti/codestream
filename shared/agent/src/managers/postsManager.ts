@@ -900,7 +900,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		const reviewRequest: CreateReviewRequest = {
 			...request.attributes,
 			markers: [],
-			repoChangeset: []
+			repoChangesets: []
 		};
 
 		const { git } = SessionContainer.instance();
@@ -929,8 +929,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			).filter(diff => diff.newFileName && !excludedFiles.includes(diff.newFileName.substr(2)));
 
 			// WTF typescript, this is defined above
-			if (reviewRequest.repoChangeset) {
-				reviewRequest.repoChangeset.push({
+			if (reviewRequest.repoChangesets) {
+				reviewRequest.repoChangesets.push({
 					repoId: scm.repoId,
 					branch: scm.branch,
 					commits,

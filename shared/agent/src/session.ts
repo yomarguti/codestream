@@ -73,8 +73,7 @@ import {
 	TokenLoginRequestType,
 	VerifyConnectivityRequestType,
 	VerifyConnectivityResponse,
-	VersionCompatibility,
-	ReviewPlus
+	VersionCompatibility
 } from "./protocol/agent.protocol";
 import {
 	CSApiCapabilities,
@@ -87,7 +86,6 @@ import {
 	CSPost,
 	CSRegisterResponse,
 	CSRepository,
-	CSReview,
 	CSStream,
 	CSTeam,
 	CSUser,
@@ -436,9 +434,7 @@ export class CodeStreamSession {
 			case MessageType.Reviews:
 				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: ChangeDataType.Reviews,
-					data: ((await SessionContainer.instance().codemarks.enrichCodemarks(
-						e.data as any
-					)) as unknown) as ReviewPlus[]
+					data: e.data
 				});
 				break;
 			case MessageType.Streams:

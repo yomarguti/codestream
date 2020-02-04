@@ -14,9 +14,9 @@ import {
 	CSStream,
 	CSTeam,
 	CSUser,
-	CSCompany
+	CSCompany,
+	CSReview
 } from "./api.protocol";
-import { ReviewPlus } from "./agent.protocol";
 
 export interface RestartRequiredNotification {}
 
@@ -95,7 +95,7 @@ export interface RepositoriesChangedNotification {
 
 export interface ReviewsChangedNotification {
 	type: ChangeDataType.Reviews;
-	data: ReviewPlus[];
+	data: CSReview[];
 }
 
 export interface StreamsChangedNotification {
