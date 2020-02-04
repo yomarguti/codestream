@@ -155,3 +155,21 @@ export const FollowReviewRequestType = new RequestType<
 	void,
 	void
 >("codestream/review/follow");
+
+export interface GetReviewContentsRequest {
+	reviewId: string;
+	repoId: string;
+	path: string;
+}
+
+export interface GetReviewContentsResponse {
+	base: string;
+	head: string;
+}
+
+export const GetReviewContentsRequestType = new RequestType<
+	GetReviewContentsRequest,
+	GetReviewContentsResponse,
+	void,
+	void
+>("codestream/review/contents");

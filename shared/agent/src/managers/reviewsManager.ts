@@ -1,12 +1,15 @@
 "use strict";
+import {
+	FetchReviewsRequest,
+	FetchReviewsRequestType,
+	FetchReviewsResponse,
+	GetReviewContentsRequest,
+	GetReviewContentsResponse,
+	GetReviewContentsRequestType
+} from "../protocol/agent.protocol";
 import { CSReview } from "../protocol/api.protocol";
 import { lsp, lspHandler } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
-import {
-	FetchReviewsRequestType,
-	FetchReviewsRequest,
-	FetchReviewsResponse
-} from "../protocol/agent.protocol";
 
 @lsp
 export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
@@ -20,6 +23,14 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		}
 
 		return { reviews };
+	}
+
+	@lspHandler(GetReviewContentsRequestType)
+	async getContents(request: GetReviewContentsRequest): Promise<GetReviewContentsResponse> {
+		return {
+			base: "Work\nin\nprogress\n",
+			head: "Work\nundergoing some\nprogress"
+		};
 	}
 
 	protected async loadCache() {
