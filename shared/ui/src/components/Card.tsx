@@ -8,6 +8,12 @@ export interface CardProps {
 	className?: string;
 }
 
+export const getCardProps = (props: CardProps & { [k: string]: any }): CardProps => ({
+	onClick: props.onClick,
+	hoverEffect: props.hoverEffect,
+	className: props.className
+});
+
 const Root = styled.div((props: Omit<PropsWithTheme<CardProps>, "hoverEffect">) => {
 	const { theme } = props;
 	const boxShadow = isDarkTheme(theme)

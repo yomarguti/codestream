@@ -1,5 +1,5 @@
 import React from "react";
-import { CardBody, CardProps } from "@codestream/webview/src/components/Card";
+import { CardBody, CardProps, getCardProps } from "@codestream/webview/src/components/Card";
 import { ReviewPlus } from "@codestream/protocols/agent";
 import {
 	MinimumWidthCard,
@@ -40,7 +40,7 @@ const BaseReview = (props: BaseReviewProps) => {
 	const markdownifyToHtml = useMarkdownifyToHtml();
 
 	return (
-		<MinimumWidthCard>
+		<MinimumWidthCard {...getCardProps(props)}>
 			<CardBody>
 				<Header>
 					<AuthorInfo>

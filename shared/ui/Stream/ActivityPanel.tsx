@@ -236,9 +236,10 @@ export const ActivityPanel = () => {
 						{/* <Timestamp dateOnly={true} time={codemark.createdAt} /> */}
 						{demoMode && counter == 5 && <Timestamp dateOnly={true} time={codemark.createdAt} />}
 						<ActivityItem streamId={codemark.streamId} postId={codemark.postId}>
-							{({ isUnread, post }) => (
+							{({ className, isUnread, post }) => (
 								// @ts-ignore because typescript isn't handling the union props well
-								<ActivityCodemark
+								<Codemark
+									className={className}
 									collapsed={!isUnread}
 									codemark={codemark}
 									hoverEffect
@@ -272,7 +273,9 @@ export const ActivityPanel = () => {
 				return (
 					<ActivityWrapper key={record.id}>
 						<ActivityItem streamId={record.streamId} postId={record.postId}>
-							{() => <Review review={record as ReviewPlus} collapsed hoverEffect />}
+							{({ className }) => (
+								<Review className={className} review={record as ReviewPlus} collapsed hoverEffect />
+							)}
 						</ActivityItem>
 					</ActivityWrapper>
 				);
@@ -343,7 +346,24 @@ export const ActivityPanel = () => {
 	);
 };
 
-const ActivityCodemark = styled(Codemark)<{ isUnread?: boolean }>`
+type ActivityItemChildren = (props: {
+	post: PostPlus;
+	className?: string;
+	isUnread?: boolean;
+}) => any;
+
+// this component is a wrapper which generates the unread styling
+const ActivityItemWrapper = styled(
+	(props: {
+		post: PostPlus;
+		isUnread?: boolean;
+		children: ActivityItemChildren;
+		className?: string;
+	}) => {
+		const { children, ...childProps } = props;
+		return children(childProps);
+	}
+)`
 	${props =>
 		props.isUnread
 			? `
@@ -353,10 +373,16 @@ const ActivityCodemark = styled(Codemark)<{ isUnread?: boolean }>`
 			: ""}
 `;
 
+/*
+	For each activity, given postId + streamId, this component will look up the post
+	and determine if it's unread. The child to this is a render function that receives
+	the `ActivityItemChildren` args, which contains info about the activity and post and also
+	a `className` for style overrides
+*/
 const ActivityItem = (props: {
 	postId: string;
 	streamId: string;
-	children: (...args: any[]) => any;
+	children: ActivityItemChildren;
 }) => {
 	const { isUnread, post } = useSelector((state: CodeStreamState) => {
 		const codemarkPost = getPost(state.posts, props.streamId, props.postId);
@@ -371,7 +397,7 @@ const ActivityItem = (props: {
 		};
 	});
 
-	return props.children({ isUnread, post });
+	return <ActivityItemWrapper isUnread={isUnread} children={props.children} post={post} />;
 };
 
 const KebabIcon = styled.span`

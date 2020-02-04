@@ -1,5 +1,12 @@
 import cx from "classnames";
-import { Card, CardBanner, CardBody, CardFooter, CardProps } from "../../src/components/Card";
+import {
+	Card,
+	CardBanner,
+	CardBody,
+	CardFooter,
+	CardProps,
+	getCardProps
+} from "../../src/components/Card";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { CSUser, CSMarker, CodemarkType, CodemarkStatus } from "@codestream/protocols/api";
 import Timestamp from "../Timestamp";
@@ -35,12 +42,6 @@ export interface BaseCodemarkProps extends CardProps {
 	renderFooter?: (footer: typeof CardFooter) => React.ReactNode;
 	renderActions?: boolean;
 }
-
-const getCardProps = (props: BaseCodemarkProps) => ({
-	onClick: props.onClick,
-	hoverEffect: props.hoverEffect,
-	className: props.className
-});
 
 export function BaseCodemark(props: BaseCodemarkProps) {
 	const markdownifyToHtml = useMarkdownifyToHtml();
