@@ -9,6 +9,7 @@ import Menu from "./Menu";
 import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
+import Timestamp from "./Timestamp";
 // import Review from "./Review";
 import { ProTip } from "./ProTip";
 import Headshot from "./Headshot";
@@ -169,7 +170,7 @@ export class SimpleReviewsPanel extends Component {
 							return tag ? <Tag tag={tag} /> : null;
 						})}
 						<div style={{ opacity: 0.5, fontSize: "smaller", paddingLeft: "22px" }}>
-							#12 was opened 3 days ago by pez &middot; open
+							#12 opened <Timestamp relative time={review.createdAt} /> by pez &middot; open
 						</div>
 						{/*	FIXME <Review key={review.id} review={review} query={this.state.q} />*/}
 					</div>
