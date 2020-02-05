@@ -18,13 +18,13 @@ import {
 	CSPost,
 	CSRepository,
 	CSReview,
+	CSReviewChangeset,
 	CSStream,
 	CSTag,
 	CSTeam,
 	CSUser,
 	ProviderType,
-	StreamType,
-	CSRepoChangeset
+	StreamType
 } from "./api.protocol.models";
 
 export * from "./api.protocol.models";
@@ -537,7 +537,7 @@ export interface CSCreateReviewRequest {
 
 export interface CSCreateReviewResponse {
 	review: CSReview;
-	repoChangesets: CSRepoChangeset[];
+	reviewChangesets: CSReviewChangeset[];
 	streams?: CSStream[];
 	repos?: CSRepository[];
 }
@@ -589,7 +589,7 @@ export interface CSGetReviewChangesetsRequest {
 }
 
 export interface CSGetReviewChangesetsResponse {
-	changesets: CSRepoChangeset[];
+	changesets: CSReviewChangeset[];
 }
 
 export interface CSGetReviewChangesetRequest {
@@ -597,7 +597,7 @@ export interface CSGetReviewChangesetRequest {
 }
 
 export interface CSGetReviewChangesetResponse {
-	changeset: CSRepoChangeset;
+	changeset: CSReviewChangeset;
 }
 
 export interface CSAddReferenceLocationRequest {

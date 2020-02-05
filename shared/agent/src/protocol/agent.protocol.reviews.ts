@@ -5,34 +5,34 @@ import {
 	CSChannelStream,
 	CSCreateReviewRequest,
 	CSDirectStream,
-	CSMarker,
-	CSMarkerLocations,
-	CSRepoChangeset,
-	CSRepository,
-	CSReview,
-	CSStream,
-	CSGetReviewsResponse,
-	CSGetReviewChangesetsResponse,
-	CSGetReviewChangesetsRequest,
+	CSEntity,
 	CSGetReviewChangesetRequest,
 	CSGetReviewChangesetResponse,
-	CSEntity,
-	CSRepoChangesetBase
+	CSGetReviewChangesetsRequest,
+	CSGetReviewChangesetsResponse,
+	CSGetReviewsResponse,
+	CSMarker,
+	CSMarkerLocations,
+	CSRepository,
+	CSReview,
+	CSReviewChangeset,
+	CSReviewChangesetBase,
+	CSStream
 } from "./api.protocol";
 
 export interface ReviewPlus extends CSReview {
 	markers?: CSMarker[];
-	repoChangesets?: CSRepoChangeset[];
+	reviewChangesets?: CSReviewChangeset[];
 }
 
 export interface CreateRepoChangesetsRequest
-	extends Omit<CSRepoChangesetBase, "reviewId" | "repoId"> {
+	extends Omit<CSReviewChangesetBase, "reviewId" | "repoId"> {
 	repoId?: string;
 }
 
 export interface CreateReviewRequest extends Omit<CSCreateReviewRequest, "teamId"> {
-	repoChangesets?: CreateRepoChangesetsRequest[];
 	markers?: CreateMarkerRequest[];
+	reviewChangesets?: CreateRepoChangesetsRequest[];
 }
 
 export interface CreateReviewResponse {

@@ -1,7 +1,7 @@
 "use strict";
 import { CodeStreamApiProvider } from "api/codestream/codestreamApi";
 import * as fs from "fs";
-import { orderBy, last, groupBy } from "lodash-es";
+import { groupBy, last, orderBy } from "lodash-es";
 import { Range, TextDocumentIdentifier } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
@@ -62,11 +62,11 @@ import {
 	CSDirectStream,
 	CSMarker,
 	CSPost,
-	CSStream,
-	ProviderType,
-	StreamType,
 	CSReview,
-	isCSReview
+	CSStream,
+	isCSReview,
+	ProviderType,
+	StreamType
 } from "../protocol/api.protocol";
 import { Arrays, debug, log, lsp, lspHandler } from "../system";
 import { Strings } from "../system/string";
@@ -633,7 +633,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 		const posts: PostPlus[] = [];
 		// filter out deleted posts and cache valid ones
-		for (let post of response.posts) {
+		for (const post of response.posts) {
 			if (!post.deactivated) {
 				posts.push(post);
 				postsManager.cacheSet(post);
@@ -900,7 +900,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		const reviewRequest: CreateReviewRequest = {
 			...request.attributes,
 			markers: [],
-			repoChangesets: []
+			reviewChangesets: []
 		};
 
 		const { git } = SessionContainer.instance();
@@ -929,8 +929,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			).filter(diff => diff.newFileName && !excludedFiles.includes(diff.newFileName.substr(2)));
 
 			// WTF typescript, this is defined above
-			if (reviewRequest.repoChangesets) {
-				reviewRequest.repoChangesets.push({
+			if (reviewRequest.reviewChangesets) {
+				reviewRequest.reviewChangesets.push({
 					repoId: scm.repoId,
 					branch: scm.branch,
 					commits,
@@ -1348,7 +1348,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					anchorFormat: "[${text}](${url})"
 				};
 		}
-	};
+	}
 
 	createProviderCard = async (
 		providerCardRequest: {
@@ -1576,7 +1576,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			Logger.error(error, `failed to create a ${attributes.issueProvider.name} card:`);
 			return undefined;
 		}
-	};
+	}
 }
 
 async function resolveCreatePostResponse(response: CreatePostResponse) {

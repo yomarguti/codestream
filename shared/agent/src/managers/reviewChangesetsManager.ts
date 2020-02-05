@@ -1,15 +1,15 @@
 "use strict";
 import {
-	FetchReviewChangesetsRequestType,
 	FetchReviewChangesetsRequest,
+	FetchReviewChangesetsRequestType,
 	FetchReviewChangesetsResponse
 } from "../protocol/agent.protocol";
-import { CSRepoChangeset } from "../protocol/api.protocol";
-import { lsp, lspHandler, log } from "../system";
+import { CSReviewChangeset } from "../protocol/api.protocol";
+import { log, lsp, lspHandler } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 
 @lsp
-export class ReviewChangesetsManager extends CachedEntityManagerBase<CSRepoChangeset> {
+export class ReviewChangesetsManager extends CachedEntityManagerBase<CSReviewChangeset> {
 	@lspHandler(FetchReviewChangesetsRequestType)
 	@log()
 	async get(request: FetchReviewChangesetsRequest): Promise<FetchReviewChangesetsResponse> {
@@ -19,7 +19,7 @@ export class ReviewChangesetsManager extends CachedEntityManagerBase<CSRepoChang
 	protected async loadCache() {}
 
 	@log()
-	protected async fetchById(changesetId: Id): Promise<CSRepoChangeset> {
+	protected async fetchById(changesetId: Id): Promise<CSReviewChangeset> {
 		const response = await this.session.api.getReviewChangeset({ changesetId });
 		return response.changeset;
 	}
