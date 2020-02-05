@@ -50,15 +50,17 @@ export const FileTree = (props: Props) => {
 	};
 
 	const renderFile = file => {
-		const [directory, fileName] = splitPath(file[0]);
+		// const [directory, fileName] = splitPath(file[0]);
+		const fileName = file[0];
 		return (
 			<>
-				{directory === currentDirectory || renderDirectory(directory)}
+				{/* directory === currentDirectory || renderDirectory(directory) */}
 				<li
 					className="file row-with-icon-actions ellipsis-left-container"
 					style={{ paddingLeft: (props.indent || 0) + depth * 20 }}
 				>
-					<span className="ellipsis-left">
+					{file[3] && <Icon name="alert" className="merge" />}
+					<span className={"ellipsis-left" + (file[3] ? " merge" : "")}>
 						<bdi dir="ltr">{fileName}</bdi>
 					</span>
 					<span className="added">+{file[1]} </span>

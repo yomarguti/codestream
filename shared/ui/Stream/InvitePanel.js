@@ -239,17 +239,15 @@ export class InvitePanel extends Component {
 
 		if (user.username === "pez") {
 			const files = [
-				["codestream-components/InlineCodemarks.tsx", 3, 4],
-				["codestream-components/KnowledgePanel.tsx", 12, 2],
-				["codestream-components/index.js", 11, 9]
+				["src/InlineCodemarks.tsx", 3, 4],
+				["src/KnowledgePanel.tsx", 12, 2],
+				["src/index.js", 11, 9]
 			];
 			return (
 				<>
 					<li className="status" style={{ paddingLeft: "48px" }}>
-						<Icon name="repo" /> codestream-components
-					</li>
-					<li className="status" style={{ paddingLeft: "68px" }}>
-						<Icon name="git-branch" /> feature/sharing
+						<Icon name="repo" /> codestream-components &nbsp; <Icon name="git-branch" />{" "}
+						feature/sharing
 					</li>
 					<FileTree files={files} indent={60} />
 				</>
@@ -260,16 +258,13 @@ export class InvitePanel extends Component {
 				["client/KnowledgePanel.tsx", 0, 3],
 				["client/util.ts", 9, 22],
 				["client/difftool.ts", 1, 0],
-				["components/index.tsx", 0, 2],
+				["components/index.tsx", 0, 2, true],
 				["components/login.tsx", 38, 42]
 			];
 			return (
 				<>
 					<li className="status" style={{ paddingLeft: "48px" }}>
-						<Icon name="repo" /> lsp-agent
-					</li>
-					<li className="status" style={{ paddingLeft: "68px" }}>
-						<Icon name="git-branch" /> feature/sharing
+						<Icon name="repo" /> lsp-agent &nbsp; <Icon name="git-branch" /> feature/2fa
 					</li>
 					<FileTree files={files} indent={60} />
 				</>
