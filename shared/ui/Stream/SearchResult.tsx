@@ -6,9 +6,9 @@ import Icon from "./Icon";
 import { ReviewPlus } from "../protocols/agent/agent.protocol.reviews";
 import Tag from "./Tag";
 import Timestamp from "./Timestamp";
+import Tooltip from "./Tooltip";
 import { CodeStreamState } from "../store";
 import { markdownify } from "./Markdowner";
-import { teamHasCodemarks } from "../store/codemarks/reducer";
 
 const Root = styled.div`
 	padding: 5px 20px;
@@ -35,15 +35,18 @@ export default function SearchResult(props: Props) {
 		};
 	});
 	const { review } = props;
-	let __html = markdownify(review.title);
+	let title = markdownify(review.title);
 	if (props.query) {
 		const matchQueryRegexp = new RegExp(props.query, "gi");
-		__html = __html.replace(matchQueryRegexp, "<u><b>$&</b></u>");
+		title = title.replace(matchQueryRegexp, "<u><b>$&</b></u>");
 	}
 
 	return (
 		<Root>
-			<Icon name="checked-checkbox" /> <span dangerouslySetInnerHTML={{ __html }} />
+			<Icon name="checked-checkbox" />{" "}
+			<Tooltip title="FOO">
+				<span dangerouslySetInnerHTML={{ __html: title }} />
+			</Tooltip>
 			&nbsp;
 			{(review.tags || []).map(tagId => {
 				const tag = derivedState.teamTagsHash[tagId];
@@ -51,7 +54,7 @@ export default function SearchResult(props: Props) {
 			})}
 			<div style={{ opacity: 0.5, fontSize: "smaller", paddingLeft: "22px" }}>
 				#12 opened <Timestamp relative time={review.createdAt} /> by{" "}
-				{derivedState.usernames[review.creatorId]} &middot; open
+				{derivedState.usernames[review.creatorId]} &middot; {review.status}
 			</div>
 			{/*	FIXME <Review key={review.id} review={review} query={this.state.q} />*/}
 		</Root>
