@@ -15,7 +15,7 @@ const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shif
 const tips = [
 	<span>Adding no:label will show everything without a label.</span>,
 	<span>Updated in the last three days: updated:>2020-01-30.</span>,
-	<span>Flag tech debt with codemarks.</span>,
+	<span>Flag tech debt with tagged codemarks.</span>,
 	<span>
 		Share your work-in-progress as you develop. <a href="">See how.</a>
 	</span>,

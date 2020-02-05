@@ -17,6 +17,7 @@ import { includes as _includes, sortBy as _sortBy, filter } from "lodash-es";
 import { PanelHeader } from "../src/components/PanelHeader";
 import styled from "styled-components";
 import FiltersButton from "../src/components/FiltersButton";
+import { OpenUrlRequestType } from "@codestream/protocols/agent";
 
 const SearchBar = styled.div`
 	display: flex;
@@ -498,7 +499,14 @@ export class SimpleReviewsPanel extends Component {
 			{ label: "By Tag", key: "tag", submenu: tagMenuItems },
 			{ label: "By Branch", key: "branch", submenu: branchMenuItems },
 			{ label: "-" },
-			{ label: "View advanced search syntax", key: "view" }
+			{
+				label: "View advanced search syntax",
+				key: "view",
+				action: () =>
+					HostApi.instance.send(OpenUrlRequestType, {
+						url: "https://help.codestream.com/FIXME-URL-IN-ReviewsPanel.js"
+					})
+			}
 		];
 		// console.log("SELECTED AG FILTER: ", tagFilter);
 		return (
