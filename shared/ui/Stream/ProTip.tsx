@@ -16,9 +16,15 @@ const tips = [
 	<span>Adding no:label will show everything without a label.</span>,
 	<span>Updated in the last three days: updated:>2020-01-30.</span>,
 	<span>Flag tech debt with tagged codemarks.</span>,
+	<span>Use permalinks to share pointers to code on other platforms such as JIRA.</span>,
+	<span>CodeStream's comments can include multiple ranges, even across repos.</span>,
+	<span>Encourage new-hires to ask questions with CodeStream.</span>,
+	<span>Codemark content can be injected as an inline comment in your code.</span>,
+	<span>Set keybindings for codemarks to jump to different code locations</span>,
 	<span>
 		Share your work-in-progress as you develop. <a href="">See how.</a>
 	</span>,
+	<span>Create a saved query by typing a search term and clicking the bookmark icon</span>,
 	<span>
 		Type
 		<span className="binding">
@@ -30,10 +36,12 @@ const tips = [
 ];
 
 export function ProTip() {
+	// update once every 60 seconds
+	const index = Math.floor(Date.now() / 60000) % tips.length;
 	return (
 		<Root>
 			<Icon name="light-bulb" />
-			<b>Pro Tip!</b> {tips[Math.floor(Math.random() * tips.length)]}
+			<b>Pro Tip!</b> {tips[index]}
 		</Root>
 	);
 }
