@@ -239,9 +239,9 @@ export class InvitePanel extends Component {
 
 		if (user.username === "pez") {
 			const files = [
-				"codestream-components/InlineCodemarks.tsx",
-				"codestream-components/KnowledgePanel.tsx",
-				"codestream-components/index.js"
+				["codestream-components/InlineCodemarks.tsx", 3, 4],
+				["codestream-components/KnowledgePanel.tsx", 12, 2],
+				["codestream-components/index.js", 11, 9]
 			];
 			return (
 				<>
@@ -256,7 +256,13 @@ export class InvitePanel extends Component {
 			);
 		}
 		if (user.username === "eamodio") {
-			const files = ["codestream-lsp-agent/KnowledgePanel.tsx", "codestream-lsp-agent/foo.tsx"];
+			const files = [
+				["client/KnowledgePanel.tsx", 0, 3],
+				["client/util.ts", 9, 22],
+				["client/difftool.ts", 1, 0],
+				["components/index.tsx", 0, 2],
+				["components/login.tsx", 38, 42]
+			];
 			return (
 				<>
 					<li className="status" style={{ paddingLeft: "48px" }}>

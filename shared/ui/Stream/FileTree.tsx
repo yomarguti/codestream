@@ -49,13 +49,20 @@ export const FileTree = (props: Props) => {
 		);
 	};
 
-	const renderFile = filePath => {
-		const [directory, fileName] = splitPath(filePath);
+	const renderFile = file => {
+		const [directory, fileName] = splitPath(file[0]);
 		return (
 			<>
 				{directory === currentDirectory || renderDirectory(directory)}
-				<li className="file" style={{ paddingLeft: (props.indent || 0) + depth * 20 }}>
-					{fileName}
+				<li
+					className="file row-with-icon-actions ellipsis-left-container"
+					style={{ paddingLeft: (props.indent || 0) + depth * 20 }}
+				>
+					<span className="ellipsis-left">
+						<bdi dir="ltr">{fileName}</bdi>
+					</span>
+					<span className="added">+{file[1]} </span>
+					<span className="deleted">-{file[2]} </span>
 				</li>
 			</>
 		);
