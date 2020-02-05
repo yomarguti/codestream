@@ -15,8 +15,7 @@ import {
 	CSUser,
 	StreamType
 } from "../../protocol/api.protocol";
-import { providerNamesById } from "../../providers/provider";
-import { Marker, toActionId, toExternalActionId, toReplyActionId } from "../extensions";
+import { Marker, toActionId, toExternalActionId, toReplyActionId, toReplyDisabledActionId } from "../extensions";
 
 const defaultCreatedAt = 181886400000;
 const multiPartyNamesRegEx = /^mpdm-([^-]+)(--.*)-1$/;
@@ -726,12 +725,17 @@ export function toSlackPostBlocks(
 					text: `${filename}\n${codeText}`
 				}
 			});
-
-			let actionId = toReplyActionId(counter, codemark, slackUserId);
+			let actionId;
 			const actions: ActionsBlock = {
 				type: "actions",
 				block_id: `codeblock-actions:${counter}`,
-				elements: [
+				elements: []
+			};
+
+			const features = SessionContainer.instance().session.api.features;
+			if (features && features.slack && features.slack.interactiveComponentsEnabled) {
+				actionId = toReplyActionId(counter, codemark, slackUserId);
+				actions.elements.push(
 					{
 						type: "button",
 						action_id: actionId,
@@ -741,8 +745,41 @@ export function toSlackPostBlocks(
 							text: "View Discussion & Reply"
 						}
 					}
-				]
-			};
+				);
+			}
+			else {
+				actionId = toReplyDisabledActionId(counter, codemark, slackUserId);
+				actions.elements.push(
+					{
+						type: "button",
+						action_id: actionId,
+						confirm: {
+							title: {
+								// can't have markdown here, so using 'and' instead of '&' because it gets encoded to &amp;
+								type: "plain_text",
+								text: "View Discussion and Reply Disabled"
+							},
+							text: {
+								type: "mrkdwn",
+								text: `Contact your admin to enable replies from Slack.`
+							},
+							confirm: {
+								type: "plain_text",
+								text: "OK"
+							},
+							deny: {
+								type: "plain_text",
+								text: "Cancel"
+							}
+						},
+						// url: "https:// ... eventually a doc url here?",
+						text: {
+							type: "plain_text",
+							text: "View Discussion & Reply"
+						}
+					}
+				);
+			}
 
 			actionId = toActionId(counter, "ide", codemark, marker);
 			actions.elements.push({

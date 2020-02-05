@@ -131,6 +131,7 @@ import {
 } from "../protocol/agent.protocol";
 import {
 	CSApiCapabilities,
+	CSApiFeatures,
 	CSChannelStream,
 	CSCodemark,
 	CSCompany,
@@ -271,6 +272,8 @@ export interface ApiProvider {
 	readonly teamId: string;
 	readonly userId: string;
 	readonly capabilities: Capabilities;
+	readonly features: CSApiFeatures | undefined;
+
 	providerType: ProviderType;
 
 	fetch<R extends object>(url: string, init?: RequestInit, token?: string): Promise<R>;

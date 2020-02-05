@@ -174,6 +174,10 @@ export class MSTeamsApiProvider implements ApiProvider {
 		providerSupportsRealtimeEvents: false
 	};
 
+	get features() {
+		return undefined;
+	}
+
 	providerType = ProviderType.MSTeams;
 
 	constructor(

@@ -322,7 +322,7 @@ export interface ActionId {
 
 export interface ReplyActionId {
 	id: number;
-	linkType: "web" | "ide" | "external" | "reply";
+	linkType: "web" | "ide" | "external" | "reply" | "reply-disabled";
 	externalType?: "issue" | "code";
 	// codemarkId
 	cId: string;
@@ -375,6 +375,21 @@ export function toReplyActionId(
 	const actionId: ReplyActionId = {
 		id: id,
 		linkType: "reply",
+		cId: codemark.id,
+		pcuId: providerCreatorUserId
+	};
+
+	return JSON.stringify(actionId);
+}
+
+export function toReplyDisabledActionId(
+	id: number,
+	codemark: CSCodemark,
+	providerCreatorUserId: string
+): string {
+	const actionId: ReplyActionId = {
+		id: id,
+		linkType: "reply-disabled",
 		cId: codemark.id,
 		pcuId: providerCreatorUserId
 	};

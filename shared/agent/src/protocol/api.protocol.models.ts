@@ -494,3 +494,7 @@ export interface CSApiCapability {
 export interface CSApiCapabilities {
 	[id: string]: CSApiCapability;
 }
+
+export interface CSApiFeatures {
+	slack?: { interactiveComponentsEnabled?: boolean };
+}

@@ -3,6 +3,7 @@ import {
 	ChannelServiceType,
 	CodemarkType,
 	CSApiCapabilities,
+	CSApiFeatures,
 	CSChannelStream,
 	CSCodemark,
 	CSCompany,
@@ -82,6 +83,7 @@ export interface CSLoginResponse {
 	providerAccess?: "strict";
 	teamId?: string;
 	capabilities?: CSApiCapabilities;
+	features?: CSApiFeatures;
 }
 
 export interface CSRegisterRequest {

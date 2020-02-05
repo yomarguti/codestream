@@ -175,6 +175,10 @@ export class SlackApiProvider implements ApiProvider {
 		providerSupportsRealtimeEvents: false
 	};
 
+	get features() {
+		return undefined;
+	}
+
 	constructor(
 		private _codestream: CodeStreamApiProvider,
 		providerInfo: CSSlackProviderInfo,

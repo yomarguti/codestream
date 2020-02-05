@@ -104,6 +104,7 @@ import {
 	CSAddReferenceLocationRequest,
 	CSAddReferenceLocationResponse,
 	CSApiCapabilities,
+	CSApiFeatures,
 	CSChannelStream,
 	CSCompleteSignupRequest,
 	CSConfirmRegistrationRequest,
@@ -238,6 +239,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private _user: CSMe | undefined;
 	private _userId: string | undefined;
 	private _preferences: CodeStreamPreferences | undefined;
+	private _features: CSApiFeatures | undefined;
 
 	readonly capabilities: Capabilities = {
 		channelMute: true,
@@ -264,6 +266,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	get userId(): string {
 		return this._userId!;
+	}
+
+	get features() {
+		return this._features;
 	}
 
 	useMiddleware(middleware: CodeStreamApiMiddleware) {
@@ -442,6 +448,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		this._team = team;
 		this._user = response.user;
 		this._userId = response.user.id;
+		this._features = response.features;
 
 		const token: AccessToken = {
 			email: response.user.email,
