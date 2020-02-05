@@ -13,8 +13,7 @@ export interface YouTrackCreateCardResponse {
 	url: string;
 }
 
-export interface YouTrackFetchBoardsRequest {
-}
+export interface YouTrackFetchBoardsRequest {}
 
 export interface YouTrackBoard {
 	id: string;

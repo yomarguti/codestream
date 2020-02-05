@@ -5,10 +5,13 @@ import {
 	FetchReviewsResponse,
 	GetReviewContentsRequest,
 	GetReviewContentsResponse,
-	GetReviewContentsRequestType
+	GetReviewContentsRequestType,
+	GetReviewRequestType,
+	GetReviewRequest,
+	GetReviewResponse
 } from "../protocol/agent.protocol";
 import { CSReview } from "../protocol/api.protocol";
-import { lsp, lspHandler } from "../system";
+import { lsp, lspHandler, log } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 
 @lsp
@@ -23,6 +26,13 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		}
 
 		return { reviews };
+	}
+
+	@lspHandler(GetReviewRequestType)
+	@log()
+	async getReview(request: GetReviewRequest): Promise<GetReviewResponse> {
+		const review = await this.getById(request.reviewId);
+		return { review };
 	}
 
 	@lspHandler(GetReviewContentsRequestType)

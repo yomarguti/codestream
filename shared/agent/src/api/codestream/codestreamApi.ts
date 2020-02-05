@@ -18,7 +18,6 @@ import {
 	AddEnterpriseProviderHostRequest,
 	AddEnterpriseProviderHostResponse,
 	AddReferenceLocationRequest,
-	AddReferenceLocationResponse,
 	ArchiveStreamRequest,
 	Capabilities,
 	CloseStreamRequest,
@@ -100,7 +99,11 @@ import {
 	FetchReviewsRequest,
 	FetchReviewsResponse,
 	GetReviewRequest,
-	GetReviewResponse
+	GetReviewResponse,
+	FetchReviewChangesetsRequest,
+	FetchReviewChangesetsResponse,
+	GetReviewChangesetRequest,
+	GetReviewChangesetResponse
 } from "../../protocol/agent.protocol";
 import {
 	CSAddProviderHostRequest,
@@ -200,6 +203,11 @@ import {
 	StreamType,
 	TriggerMsTeamsProactiveMessageRequest,
 	TriggerMsTeamsProactiveMessageResponse
+	CSGetReviewsRequest,
+	CSGetReviewsResponse,
+	CSGetReviewResponse,
+	CSGetReviewChangesetsResponse,
+	CSGetReviewChangesetResponse
 } from "../../protocol/api.protocol";
 import { VersionInfo } from "../../session";
 import { Functions, getProvider, log, lsp, lspHandler, Objects, Strings } from "../../system";
@@ -1124,6 +1132,30 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@log()
 	getReview(request: GetReviewRequest): Promise<GetReviewResponse> {
 		return this.get<CSGetReviewResponse>(`/reviews/${request.reviewId}`, this._token);
+	}
+
+	@log()
+	fetchReviewChangesets(
+		request: FetchReviewChangesetsRequest
+	): Promise<FetchReviewChangesetsResponse> {
+		const params: { [k: string]: any } = {
+			reviewId: request.reviewId
+		};
+
+		if (request.ids?.[0] != null) params.ids = request.ids!.join(",");
+
+		return this.get<CSGetReviewChangesetsResponse>(
+			`/changesets?${qs.stringify(request)}`,
+			this._token
+		);
+	}
+
+	@log()
+	getReviewChangeset(request: GetReviewChangesetRequest): Promise<GetReviewChangesetResponse> {
+		return this.get<CSGetReviewChangesetResponse>(
+			`/changesets/${request.changesetId}`,
+			this._token
+		);
 	}
 
 	@log()

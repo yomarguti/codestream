@@ -33,7 +33,7 @@ export interface AzureDevOpsCreateCardResponse {
 	_links?: {
 		html?: {
 			href: string;
-		}
+		};
 	};
 	url?: string;
 }

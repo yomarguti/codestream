@@ -10,7 +10,6 @@ import { Logger } from "../../logger";
 import {
 	AddEnterpriseProviderHostRequest,
 	AddReferenceLocationRequest,
-	AddReferenceLocationResponse,
 	ArchiveStreamRequest,
 	ArchiveStreamResponse,
 	Capabilities,
@@ -149,6 +148,16 @@ import {
 import { TeamsUnreads } from "./unreads";
 
 export class MSTeamsApiProvider implements ApiProvider {
+	fetchReviewChangesets(
+		request: import("../../protocol/agent.protocol.reviews").FetchReviewChangesetsRequest
+	): Promise<import("../../protocol/agent.protocol.reviews").FetchReviewChangesetsResponse> {
+		throw new Error("Method not implemented.");
+	}
+	getReviewChangeset(
+		request: import("../../protocol/agent.protocol.reviews").GetReviewChangesetRequest
+	): Promise<import("../../protocol/agent.protocol.reviews").GetReviewChangesetResponse> {
+		throw new Error("Method not implemented.");
+	}
 	getReview(
 		request: import("../../protocol/agent.protocol.reviews").GetReviewRequest
 	): Promise<import("../../protocol/agent.protocol.reviews").GetReviewResponse> {

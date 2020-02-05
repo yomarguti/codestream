@@ -150,7 +150,8 @@ export enum FileStatus {
 	modified = "M"
 }
 
-export interface CSRepoChangeset {
+export interface CSRepoChangesetBase {
+	reviewId: string;
 	repoId: string;
 	branch: string;
 	commits: { sha: string; info: {}; localOnly: boolean }[];
@@ -160,6 +161,8 @@ export interface CSRepoChangeset {
 	includeStaged: boolean;
 	remotes: { name: string; url: string }[];
 }
+
+export interface CSRepoChangeset extends CSEntity, CSRepoChangesetBase {}
 
 export function isCSReview(object: any): object is CSReview {
 	return object.reviewers != null && object.repoChangesetIds != null;

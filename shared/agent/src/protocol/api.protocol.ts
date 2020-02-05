@@ -583,6 +583,23 @@ export interface CSUpdateMarkerRequest {
 	commitHashWhenCreated?: string;
 }
 
+export interface CSGetReviewChangesetsRequest {
+	reviewId: string;
+	ids?: string[];
+}
+
+export interface CSGetReviewChangesetsResponse {
+	changesets: CSRepoChangeset[];
+}
+
+export interface CSGetReviewChangesetRequest {
+	id: string;
+}
+
+export interface CSGetReviewChangesetResponse {
+	changeset: CSRepoChangeset;
+}
+
 export interface CSAddReferenceLocationRequest {
 	commitHash: string;
 	location: CSLocationArray;

@@ -11,7 +11,13 @@ import {
 	CSRepository,
 	CSReview,
 	CSStream,
-	CSGetReviewsResponse
+	CSGetReviewsResponse,
+	CSGetReviewChangesetsResponse,
+	CSGetReviewChangesetsRequest,
+	CSGetReviewChangesetRequest,
+	CSGetReviewChangesetResponse,
+	CSEntity,
+	CSRepoChangesetBase
 } from "./api.protocol";
 
 export interface ReviewPlus extends CSReview {
@@ -19,8 +25,13 @@ export interface ReviewPlus extends CSReview {
 	repoChangesets?: CSRepoChangeset[];
 }
 
+export interface CreateRepoChangesetsRequest
+	extends Omit<CSRepoChangesetBase, "reviewId" | "repoId"> {
+	repoId?: string;
+}
+
 export interface CreateReviewRequest extends Omit<CSCreateReviewRequest, "teamId"> {
-	repoChangesets?: CSRepoChangeset[];
+	repoChangesets?: CreateRepoChangesetsRequest[];
 	markers?: CreateMarkerRequest[];
 }
 
@@ -74,7 +85,7 @@ export type FetchReviewsResponse = Pick<CSGetReviewsResponse, "reviews">;
 
 export const FetchReviewsRequestType = new RequestType<
 	FetchReviewsRequest,
-	FetchReviewsResponse | undefined,
+	FetchReviewsResponse,
 	void,
 	void
 >("codestream/reviews");
@@ -174,3 +185,27 @@ export const GetReviewContentsRequestType = new RequestType<
 	void,
 	void
 >("codestream/review/contents");
+
+export interface FetchReviewChangesetsRequest extends CSGetReviewChangesetsRequest {}
+
+export interface FetchReviewChangesetsResponse extends CSGetReviewChangesetsResponse {}
+
+export const FetchReviewChangesetsRequestType = new RequestType<
+	FetchReviewChangesetsRequest,
+	FetchReviewChangesetsResponse,
+	void,
+	void
+>("codestream/review/changesets");
+
+export interface GetReviewChangesetRequest {
+	changesetId: string;
+}
+
+export interface GetReviewChangesetResponse extends CSGetReviewChangesetResponse {}
+
+export const GetReviewChangesetRequestType = new RequestType<
+	GetReviewChangesetRequest,
+	GetReviewChangesetResponse,
+	void,
+	void
+>("codestream/review/changeset");

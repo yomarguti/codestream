@@ -131,7 +131,11 @@ import {
 	FetchReviewsResponse,
 	FetchReviewsRequest,
 	GetReviewResponse,
-	GetReviewRequest
+	GetReviewRequest,
+	FetchReviewChangesetsRequest,
+	FetchReviewChangesetsResponse,
+	GetReviewChangesetRequest,
+	GetReviewChangesetResponse
 } from "../protocol/agent.protocol";
 import {
 	CSApiCapabilities,
@@ -364,6 +368,11 @@ export interface ApiProvider {
 
 	fetchReviews(request: FetchReviewsRequest): Promise<FetchReviewsResponse>;
 	getReview(request: GetReviewRequest): Promise<GetReviewResponse>;
+
+	fetchReviewChangesets(
+		request: FetchReviewChangesetsRequest
+	): Promise<FetchReviewChangesetsResponse>;
+	getReviewChangeset(request: GetReviewChangesetRequest): Promise<GetReviewChangesetResponse>;
 
 	createChannelStream(request: CreateChannelStreamRequest): Promise<CreateChannelStreamResponse>;
 	createDirectStream(request: CreateDirectStreamRequest): Promise<CreateDirectStreamResponse>;
