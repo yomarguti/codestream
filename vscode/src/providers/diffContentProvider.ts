@@ -4,7 +4,7 @@ import { GetReviewContentsResponse } from "@codestream/protocols/agent";
 
 export class ReviewDiffContentProvider implements TextDocumentContentProvider, Disposable {
 	private readonly _disposable: Disposable;
-	private readonly _contents = new Map<string, GetReviewContentsResponse>()
+	private readonly _contents = new Map<string, GetReviewContentsResponse>();
 	private readonly urlRegexp = /codestream-diff:\/\/(\w+)\/(\w+)\/(.+)@(\w+)/;
 
 	constructor() {
@@ -17,14 +17,14 @@ export class ReviewDiffContentProvider implements TextDocumentContentProvider, D
 		const match = this.urlRegexp.exec(uri.toString());
 		if (match === null) return "";
 
-		const [ , reviewId, repoId, path, version ] = match;
+		const [, reviewId, repoId, path, version] = match;
 		const key = this.key(reviewId, repoId, path);
 
 		const contents = this._contents.get(key);
 		if (contents === undefined) {
-			throw new Error(`Contents not loaded for ${uri}`)
+			throw new Error(`Contents not loaded for ${uri}`);
 		}
-		
+
 		return (contents as any)[version] as string;
 	}
 

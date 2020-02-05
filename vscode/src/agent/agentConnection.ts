@@ -82,7 +82,7 @@ import {
 	UpdatePreferencesRequestType,
 	UpdatePresenceRequestType,
 	UpdateStreamMembershipRequestType,
-	UpdateStreamMembershipResponse	
+	UpdateStreamMembershipResponse
 } from "@codestream/protocols/agent";
 import {
 	ChannelServiceType,
@@ -536,7 +536,9 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		getContents(reviewId: string, repoId: string, path: string) {
 			return this._connection.sendRequest(GetReviewContentsRequestType, {
-				reviewId, repoId, path
+				reviewId,
+				repoId,
+				path
 			});
 		}
 	})(this);

@@ -1,18 +1,7 @@
+import * as paths from "path";
 import { CodemarkType, CSMarkerIdentifier } from "@codestream/protocols/api";
 import { Editor } from "extensions/editor";
-import * as paths from "path";
-import {
-	commands,
-	Disposable,
-	env,
-	Range,
-	scm,
-	Uri,
-	ViewColumn,
-	window,
-	workspace,
-	WorkspaceEdit
-} from "vscode";
+import { commands, Disposable, env, Range, Uri, ViewColumn, window, workspace } from "vscode";
 import { SessionSignedOutReason, StreamThread } from "./api/session";
 import { TokenManager } from "./api/tokenManager";
 import { WorkspaceState } from "./common";
