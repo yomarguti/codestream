@@ -9,8 +9,7 @@ import Menu from "./Menu";
 import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
-import Timestamp from "./Timestamp";
-// import Review from "./Review";
+import SearchResult from "./SearchResult";
 import { ProTip } from "./ProTip";
 import Headshot from "./Headshot";
 import { HostApi } from "../webview-api";
@@ -155,27 +154,14 @@ export class SimpleReviewsPanel extends Component {
 		});
 	};
 
-	renderPosts = reviews => {
+	renderReviews = reviews => {
 		const { typeFilter } = this.props;
 		if (reviews.length === 0)
 			return <div className="no-matches">No {typeFilter}s in this file.</div>;
 		else {
-			return reviews.map(review => {
-				// FIXME -- turn this into a react component once we have finished with mockups
-				return (
-					<div style={{ padding: "5px 20px", fontSize: "larger" }}>
-						<Icon name="checked-checkbox" /> {review.title}&nbsp;
-						{(review.tags || []).map(tagId => {
-							const tag = this.props.teamTagsHash[tagId];
-							return tag ? <Tag tag={tag} /> : null;
-						})}
-						<div style={{ opacity: 0.5, fontSize: "smaller", paddingLeft: "22px" }}>
-							#12 opened <Timestamp relative time={review.createdAt} /> by pez &middot; open
-						</div>
-						{/*	FIXME <Review key={review.id} review={review} query={this.state.q} />*/}
-					</div>
-				);
-			});
+			return reviews.map(review => (
+				<SearchResult review={review} query={this.state.filters.text} />
+			));
 		}
 	};
 
@@ -194,7 +180,7 @@ export class SimpleReviewsPanel extends Component {
 					<Icon name="chevron-right" className="triangle-right" />
 					<span className="clickable">{sectionLabel}</span>
 				</div>
-				<ul>{this.renderPosts(reviews)}</ul>
+				<ul>{this.renderReviews(reviews)}</ul>
 			</div>
 		);
 	};
@@ -694,7 +680,7 @@ const mapStateToProps = state => {
 	let commitArray = {};
 	let authorArray = {};
 	reviews.forEach(review => {
-		const { markers, createdAt, creatorId, repoChangeset = [] } = review;
+		const { markers, createdAt, creatorId, repoChangesets = [] } = review;
 		const author = userSelectors.getUserByCsId(users, creatorId);
 		if (author) {
 			author.name = author.fullName || author.username || author.email;
@@ -707,7 +693,7 @@ const mapStateToProps = state => {
 				</span>
 			);
 		}
-		repoChangeset.forEach(changeset => {
+		repoChangesets.forEach(changeset => {
 			const { branch } = changeset;
 			if (branch) {
 				branchArray[branch] = createdAt;
@@ -737,7 +723,6 @@ const mapStateToProps = state => {
 		reviews,
 		team: teams[context.currentTeamId],
 		teamMembers: userSelectors.getTeamMembers(state),
-		teamTagsHash: userSelectors.getTeamTagsHash(state),
 		// tagFilter: context.reviewTagFilter,
 		authorFilter: "all", // FIXME
 		teamTagsArray,
