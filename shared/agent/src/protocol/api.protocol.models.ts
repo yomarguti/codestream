@@ -169,6 +169,11 @@ export interface CSReview extends CSEntity {
 	title: string;
 	text: string;
 	reviewers: string[];
+	// authorsById is whose code is impacted by this set of changes across
+	// all of the changesets. stomped is the # of lines of the author's
+	// code that have been changed, and commits is the # of commits in the
+	// review by that author, other than the person requesting the review
+	authorsById?: { [authorId: string]: { stomped: number; commits: number } };
 	teamId: string;
 	streamId: string;
 	postId: string;

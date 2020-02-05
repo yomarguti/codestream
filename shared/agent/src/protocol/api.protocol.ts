@@ -510,6 +510,7 @@ export interface CSCreateReviewRequest {
 	parentPostId?: string;
 	status?: string;
 	reviewers?: string[];
+	authorsById: { [authorId: string]: { stomped: number; commits: number } };
 	tags?: string[];
 
 	repoChanges: {
