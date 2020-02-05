@@ -33,6 +33,7 @@ export interface NewReviewAttributes {
 	title: string;
 	text: string;
 	reviewers: string[];
+	authorsById: { [authorId: string]: { stomped: number; commits: number } };
 	tags: string[];
 
 	// these changes will be massaged into a changeSet

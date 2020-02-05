@@ -322,7 +322,7 @@ class ReviewForm extends React.Component<Props, State> {
 		if (this.isFormInvalid()) return;
 		this.setState({ isLoading: true });
 
-		const { title, text, selectedChannelId, selectedTags, repoStatus } = this.state;
+		const { title, text, selectedChannelId, selectedTags, repoStatus, authorsById } = this.state;
 		const { startCommit, excludeCommit, excludedFiles, includeSaved, includeStaged } = this.state;
 
 		const reviewerIds = (this.state.reviewers as any[]).map(r => r.id);
@@ -333,6 +333,7 @@ class ReviewForm extends React.Component<Props, State> {
 					title,
 					text: replaceHtml(text)!,
 					reviewers: reviewerIds,
+					authorsById,
 					tags: keyFilter(selectedTags),
 					status: "open",
 					repoChanges: [
