@@ -366,7 +366,7 @@ export class SimpleReviewsPanel extends Component {
 			if (filters.type && filters.type !== "review") return null;
 			if (filters.noTag && review.tags && review.tags.length) return null;
 			if (filters.branch) {
-				const branches = (review.repoChangeset || []).map(changeset => changeset.branch);
+				const branches = (review.reviewChangeset || []).map(changeset => changeset.branch);
 				if (!branches.includes(filters.branch)) return null;
 			}
 			// if (!this.onBranch(review, branchFilter)) return null;
@@ -680,7 +680,7 @@ const mapStateToProps = state => {
 	let commitArray = {};
 	let authorArray = {};
 	reviews.forEach(review => {
-		const { markers, createdAt, creatorId, repoChangesets = [] } = review;
+		const { markers, createdAt, creatorId, reviewChangesets = [] } = review;
 		const author = userSelectors.getUserByCsId(users, creatorId);
 		if (author) {
 			author.name = author.fullName || author.username || author.email;
@@ -693,7 +693,7 @@ const mapStateToProps = state => {
 				</span>
 			);
 		}
-		repoChangesets.forEach(changeset => {
+		reviewChangesets.forEach(changeset => {
 			const { branch } = changeset;
 			if (branch) {
 				branchArray[branch] = createdAt;
