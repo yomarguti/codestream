@@ -19,7 +19,7 @@ interface Props {
 
 const Icon = React.forwardRef<any, Props>((props, ref) => {
 	const icon = Icons8[props.name] || octicons[props.name];
-	// const icon = octicons[props.name];
+	// const icon = octicons[props.name]; why is this commented out?
 	if (!icon) throw new Error(`No icon found for '${props.name}'`);
 
 	const iconImage = (
