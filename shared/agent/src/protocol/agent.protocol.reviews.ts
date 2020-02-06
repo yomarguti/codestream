@@ -22,14 +22,14 @@ export interface ReviewPlus extends CSReview {
 	reviewChangesets?: CSReviewChangeset[];
 }
 
-export interface CreateRepoChangesetsRequest
+export interface CreateReviewChangesetsRequest
 	extends Omit<CSReviewChangesetBase, "reviewId" | "repoId"> {
 	repoId?: string;
 }
 
 export interface CreateReviewRequest extends Omit<CSCreateReviewRequest, "teamId"> {
 	markers?: CreateMarkerRequest[];
-	reviewChangesets?: CreateRepoChangesetsRequest[];
+	reviewChangesets?: CreateReviewChangesetsRequest[];
 }
 
 export interface CreateReviewResponse {

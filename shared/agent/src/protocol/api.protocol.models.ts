@@ -164,6 +164,7 @@ export interface CSReviewChangesetBase {
 	commits: { sha: string; info: {}; localOnly: boolean }[];
 	diffs: any[]; // ParsedDiff[];
 	modifiedFiles: ReviewChangesetFileInfo[];
+	diffStart: string;
 	includeSaved: boolean;
 	includeStaged: boolean;
 	remotes: { name: string; url: string }[];

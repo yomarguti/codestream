@@ -942,6 +942,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					branch: scm.branch,
 					commits,
 					diffs,
+					diffStart,
 					modifiedFiles,
 					includeSaved,
 					includeStaged,
