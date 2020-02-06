@@ -8,6 +8,6 @@ export function logError(error: string | Error, extra?: object) {
 		source: "webview",
 		type: ReportingMessageType.Error,
 		message: typeof error === "string" ? error : error.message,
-		extra: typeof error === "string" ? extra : { ...(extra || {}), stackTrace: error.stack }
+		extra
 	});
 }
