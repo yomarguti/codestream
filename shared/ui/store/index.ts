@@ -55,6 +55,8 @@ import { FeatureFlagsState } from "./featureFlags/types";
 import { reduceCompanies } from "./companies/reducer";
 import { CompaniesState } from "./companies/types";
 import { reduceReviewsState } from "./reviews/reducer";
+import { reduceDocuments } from "./documents/reducer";
+import { DocumentsState } from "./documents/types";
 
 const pluginVersion = (state = "", action) => {
 	if (action.type === "@pluginVersion/Set") return action.payload;
@@ -71,6 +73,7 @@ const reducer = combineReducers({
 	configs: reduceConfigs,
 	connectivity: reduceConnectivity,
 	context: reduceContext,
+	documents: reduceDocuments,
 	documentMarkers: reduceDocumentMarkers,
 	editorContext: reduceEditorContext,
 	featureFlags: reduceFeatureFlags,
@@ -118,6 +121,7 @@ export interface CodeStreamState {
 	companies: CompaniesState;
 	connectivity: ConnectivityState;
 	context: ContextState;
+	documents: DocumentsState,
 	documentMarkers: DocumentMarkersState;
 	editorContext: EditorContextState;
 	featureFlags: FeatureFlagsState;

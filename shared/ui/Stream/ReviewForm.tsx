@@ -4,6 +4,8 @@ import {
 	GetFileScmInfoResponse,
 	GetRepoScmStatusRequestType,
 	GetRepoScmStatusResponse,
+	GetReposScmRequestType,
+	GetReposScmResponse,
 	FileStatus,
 	AddIgnoreFilesRequestType,
 	IgnoreFilesRequestType
@@ -50,6 +52,7 @@ import { markdownify } from "./Markdowner";
 import { EditorRevealRangeRequestType } from "../ipc/host.protocol.editor";
 import { Range } from "vscode-languageserver-types";
 import { PostsActionsType } from "../store/posts/types";
+import { URI } from "vscode-uri";
 
 interface Props extends ConnectedProps {
 	streamId: string;
@@ -76,6 +79,7 @@ interface ConnectedProps {
 	closePanel?: Function;
 	createPostAndReview?: Function;
 	repos: any;
+	unsavedFiles: string[];
 }
 
 interface State {
@@ -113,6 +117,7 @@ interface State {
 	scmInfo: GetFileScmInfoResponse;
 	selectedTags?: any;
 	repoStatus: GetRepoScmStatusResponse;
+	openRepos: GetReposScmResponse;
 	repoName: string;
 	excludedFiles?: any;
 	fromCommit?: string;
@@ -168,7 +173,7 @@ class ReviewForm extends React.Component<Props, State> {
 			includeStaged: true,
 			excludeCommit: {},
 			startCommit: "",
-			unsavedFiles: []
+			unsavedFiles: props.unsavedFiles
 		};
 
 		const state = props.editingReview
@@ -238,6 +243,9 @@ class ReviewForm extends React.Component<Props, State> {
 		const repoId: string = statusInfo.scm ? statusInfo.scm.repoId || "" : "";
 		const repoName = repos[repoId] ? repos[repoId].name : "";
 		this.setState({ repoStatus: statusInfo, repoName });
+
+		const openRepos = await HostApi.instance.send(GetReposScmRequestType, {});
+		this.setState({ openRepos: openRepos });
 
 		if (statusInfo.scm) {
 			const authors = statusInfo.scm.authors;
@@ -772,11 +780,27 @@ class ReviewForm extends React.Component<Props, State> {
 	};
 
 	renderGroupsAndCommits() {
-		const { repoStatus, includeSaved, includeStaged, excludeCommit, unsavedFiles } = this.state;
+		const { repoStatus, includeSaved, includeStaged, excludeCommit, openRepos } = this.state;
 		if (!repoStatus) return null;
 		const { scm } = repoStatus;
 		if (!scm) return null;
 		const { commits = [] } = scm;
+
+		const { unsavedFiles } = this.props;
+		let unsavedFilesInThisRepo: string[] = [];
+
+		if (scm.repoPath) {
+			for (let path of unsavedFiles) {
+				let uri = URI.parse(path);
+				let uriPath = uri.path;
+				if (uriPath[0] === "/") {
+					uriPath = uriPath.substring(1);
+				}
+				if (uriPath.indexOf(scm.repoPath) === 0) {
+					unsavedFilesInThisRepo.push(uriPath);
+				}
+			}
+		}
 
 		const numSavedFiles = scm.savedFiles.length;
 		const numStagedFiles = scm.stagedFiles.length;
@@ -787,7 +811,7 @@ class ReviewForm extends React.Component<Props, State> {
 		return (
 			<div className="related">
 				<div className="related-label">Changes to Include In Review</div>
-				{unsavedFiles.length > 0 && (
+				{unsavedFilesInThisRepo.length > 0 && (
 					<div style={{ display: "flex", padding: "0 0 2px 2px" }}>
 						<Icon name="alert" muted />
 						<span style={{ paddingLeft: "10px" }}>
@@ -1147,7 +1171,16 @@ class ReviewForm extends React.Component<Props, State> {
 const EMPTY_OBJECT = {};
 
 const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
-	const { context, editorContext, users, session, preferences, repos, apiVersioning } = state;
+	const {
+		context,
+		editorContext,
+		users,
+		session,
+		preferences,
+		repos,
+		apiVersioning,
+		documents
+	} = state;
 	const user = users[session.userId!] as CSMe;
 	const channel = context.currentStreamId
 		? getStreamForId(state.streams, context.currentTeamId, context.currentStreamId) ||
@@ -1174,7 +1207,15 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		name: getDMName(stream, toMapBy("id", teamMates), session.userId)
 	}));
 
+	let unsavedFiles: string[] = [];
+	if (documents) {
+		unsavedFiles = Object.keys(documents).filter(uri => {
+			return documents[uri].isDirty;
+		});
+	}
+
 	return {
+		unsavedFiles: unsavedFiles,
 		channel,
 		teamMates,
 		teamMembers,
