@@ -17,14 +17,18 @@ import {
 	CSReviewChangesetBase,
 	CSStream
 } from "./api.protocol";
+import { CSReviewDiffs } from "./api.protocol.models";
 
 export interface ReviewPlus extends CSReview {
-	reviewChangesets?: CSReviewChangeset[];
 }
 
+export interface CreateDiffsRequest extends Omit<CSReviewDiffs, "reviewId"> {
+	diffs?: any[];
+}
 export interface CreateReviewChangesetsRequest
-	extends Omit<CSReviewChangesetBase, "reviewId" | "repoId"> {
+	extends Omit<CSReviewChangesetBase, "reviewId" | "repoId" | "diffId"> {
 	repoId?: string;
+	diffs?: CreateDiffsRequest;
 }
 
 export interface CreateReviewRequest extends Omit<CSCreateReviewRequest, "teamId"> {

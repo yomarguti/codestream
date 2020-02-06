@@ -926,14 +926,19 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			// if we have a pushed commit on this branch, use the most recent.
 			// otherwise, use the start commit if specified by the user.
 			// otherwise, use the parent of the first commit of this branch (the fork point)
-			const diffStart = pushedCommit
+			const localDiffSha = pushedCommit
 				? pushedCommit.sha
 				: startCommit || commits[commits.length - 1].sha + "^";
 
 			// filter out excluded files from the diffs and modified files
-			const diffs = (
-				await git.getDiffs(scm.repoPath, includeSaved, includeStaged, diffStart)
+			const localDiffs = (
+				await git.getDiffs(scm.repoPath, includeSaved, includeStaged, localDiffSha)
 			).filter(diff => diff.newFileName && !excludedFiles.includes(diff.newFileName.substr(2)));
+
+			const latestCommitSha = commits[0] ? commits[0].sha : undefined;
+			const latestCommitDiffs = latestCommitSha ? (
+				await git.getDiffs(scm.repoPath, includeSaved, includeStaged, latestCommitSha)
+			).filter(diff => diff.newFileName && !excludedFiles.includes(diff.newFileName.substr(2))) : undefined;
 
 			// WTF typescript, this is defined above
 			if (reviewRequest.reviewChangesets) {
@@ -941,15 +946,14 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					repoId: scm.repoId,
 					branch: scm.branch,
 					commits,
-					diffs,
-					diffStart,
 					modifiedFiles,
 					includeSaved,
 					includeStaged,
-					remotes
+					remotes,
+					diffs: {localDiffSha, localDiffs, latestCommitDiffs },
 				});
 			}
-			for (const patch of diffs) {
+			for (const patch of localDiffs) {
 				const file = patch.newFileName?.substr(2);
 				if (file && !excludedFiles.includes(file)) {
 					for (const hunk of patch.hunks) {

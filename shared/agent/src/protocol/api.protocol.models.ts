@@ -157,17 +157,27 @@ export interface ReviewChangesetFileInfo {
 	status: FileStatus;
 }
 
-export interface CSReviewChangesetBase {
+export interface CSReviewDiffs {
 	reviewId: string;
+
+	// the start point of the local diffs
+	localDiffSha: string;
+	localDiffs: any[]; // ParsedDiff[];
+
+	// the latest local-only commit on the branch, and the diffs
+	latestCommitSha?: string;
+	latestCommitDiffs?: any[]; // ParsedDiff[];
+}
+
+export interface CSReviewChangesetBase {
 	repoId: string;
 	branch: string;
 	commits: { sha: string; info: {}; localOnly: boolean }[];
-	diffs: any[]; // ParsedDiff[];
 	modifiedFiles: ReviewChangesetFileInfo[];
-	diffStart: string;
 	includeSaved: boolean;
 	includeStaged: boolean;
 	remotes: { name: string; url: string }[];
+	diffId: string;
 }
 
 export interface CSReviewChangeset extends CSEntity, CSReviewChangesetBase {}
@@ -192,8 +202,7 @@ export interface CSReview extends CSEntity {
 	status: string;
 	numReplies: number;
 	tags?: string[];
-	reviewChangesetIds: string[];
-	changesetRepoIds: string[];
+	reviewChangesets: CSReviewChangeset[];
 	lastActivityAt: number;
 	followerIds?: string[];
 }
