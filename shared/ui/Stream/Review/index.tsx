@@ -34,6 +34,7 @@ import { saveReviews, fetchChangesets } from "@codestream/webview/store/reviews/
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import { ChangesetFile } from "./ChangesetFile";
 import { getReview, getChangesets } from "@codestream/webview/store/reviews/reducer";
+import { ReviewShowDiffRequestType } from "@codestream/protocols/webview";
 
 export interface BaseReviewProps extends CardProps {
 	review: ReviewPlus;
@@ -57,7 +58,14 @@ const BaseReview = (props: BaseReviewProps) => {
 		for (let changeset of props.changesets) {
 			files.push(
 				...changeset.modifiedFiles.map(f => (
-						<ChangesetFile key={f.file} {...f} />
+						<ChangesetFile onClick={e => {
+							e.preventDefault();
+							HostApi.instance.send(ReviewShowDiffRequestType, {
+								reviewId: changeset.reviewId,
+								repoId: changeset.repoId,
+								path: f.file
+							});
+						}} key={f.file} {...f} />
 				))
 			);
 		}
