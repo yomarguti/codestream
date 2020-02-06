@@ -921,7 +921,14 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				  )
 				: scm.commits;
 
-			const diffStart = startCommit || commits[commits.length - 1].sha + "^";
+			// perform a diff against the most recent pushed commit
+			const pushedCommit = commits.find(commit => !commit.localOnly);
+			// if we have a pushed commit on this branch, use the most recent.
+			// otherwise, use the start commit if specified by the user.
+			// otherwise, use the parent of the first commit of this branch (the fork point)
+			const diffStart = pushedCommit
+				? pushedCommit.sha
+				: startCommit || commits[commits.length - 1].sha + "^";
 
 			// filter out excluded files from the diffs and modified files
 			const diffs = (
