@@ -21,7 +21,9 @@ import {
 	GetRangeSha1Response,
 	GetRepoScmStatusRequest,
 	GetRepoScmStatusRequestType,
-	GetRepoScmStatusResponse
+	GetRepoScmStatusResponse,
+	GetReposScmRequestType,
+	GetReposScmResponse
 } from "../protocol/agent.protocol";
 import { FileSystem, Iterables, log, lsp, lspHandler, Strings } from "../system";
 import { Container, SessionContainer } from "./../container";
@@ -72,15 +74,43 @@ export class ScmManager {
 			scm:
 				commit !== undefined
 					? {
-							repoPath: commit.repoPath,
-							revision: commit.ref,
-							message: commit.message,
-							shortMessage: commit.shortMessage,
-							author: commit.author,
-							authorDate: commit.authorDate
-							// committerDate: commit.committerDate,
-					  }
+						repoPath: commit.repoPath,
+						revision: commit.ref,
+						message: commit.message,
+						shortMessage: commit.shortMessage,
+						author: commit.author,
+						authorDate: commit.authorDate
+						// committerDate: commit.committerDate,
+					}
 					: undefined,
+			error: gitError
+		};
+	}
+
+	@lspHandler(GetReposScmRequestType)
+	@log()
+	async getRepos({
+	}: GetRepoScmStatusRequest): Promise<GetReposScmResponse> {
+		const cc = Logger.getCorrelationContext();
+		let gitError;
+		let repositories;
+		try {
+			const { git } = SessionContainer.instance();
+			repositories = Array.from((await git.getRepositories()));
+		} catch (ex) {
+			gitError = ex.toString();
+			Logger.error(ex, cc);
+			debugger;
+		}
+		return {
+			repositories: repositories ? repositories.map(_ => {
+				return {
+					id: _.id,
+					path: _.path,
+					folder: _.folder,
+					root: _.root
+				};
+			}) : undefined,
 			error: gitError
 		};
 	}
@@ -284,12 +314,12 @@ export class ScmManager {
 			scm:
 				repoPath !== undefined
 					? {
-							file: file!,
-							repoPath: repoPath,
-							revision: rev!,
-							remotes: remotes || [],
-							branch
-					  }
+						file: file!,
+						repoPath: repoPath,
+						revision: rev!,
+						remotes: remotes || [],
+						branch
+					}
 					: undefined,
 			error: gitError
 		};
@@ -393,14 +423,14 @@ export class ScmManager {
 			scm:
 				repoPath !== undefined
 					? {
-							file: file!,
-							repoPath: repoPath,
-							repoId,
-							revision: rev!,
-							authors: authors || [],
-							remotes: remotes || [],
-							branch
-					  }
+						file: file!,
+						repoPath: repoPath,
+						repoId,
+						revision: rev!,
+						authors: authors || [],
+						remotes: remotes || [],
+						branch
+					}
 					: undefined,
 			error: gitError
 		};

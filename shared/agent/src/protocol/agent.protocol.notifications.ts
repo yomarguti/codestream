@@ -1,5 +1,6 @@
 "use strict";
 import { NotificationType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
+import { Document } from "./agent.protocol";
 import { LoginSuccessResponse, TokenLoginRequest } from "./agent.protocol.auth";
 import { CodemarkPlus } from "./agent.protocol.codemarks";
 import { ThirdPartyProviders } from "./agent.protocol.providers";
@@ -43,6 +44,7 @@ export const DidChangeConnectionStatusNotificationType = new NotificationType<
 
 export enum ChangeDataType {
 	Codemarks = "codemarks",
+	Documents = "documents",
 	Companies = "companies",
 	MarkerLocations = "markerLocations",
 	Markers = "markers",
@@ -136,6 +138,11 @@ export interface ApiCapabilitiesChangedNotification {
 	data: CSApiCapabilities;
 }
 
+export interface DocumentsChangedNotification {
+	type: ChangeDataType.Documents;
+	data: { reason: string, document: Document };
+}
+
 export type DidChangeDataNotification =
 	| CodemarksChangedNotification
 	| CompaniesChangedNotification
@@ -150,7 +157,8 @@ export type DidChangeDataNotification =
 	| UnreadsChangedNotification
 	| UsersChangedNotification
 	| ProvidersChangedNotification
-	| ApiCapabilitiesChangedNotification;
+	| ApiCapabilitiesChangedNotification
+	| DocumentsChangedNotification;
 
 export const DidChangeDataNotificationType = new NotificationType<DidChangeDataNotification, void>(
 	"codestream/didChangeData"

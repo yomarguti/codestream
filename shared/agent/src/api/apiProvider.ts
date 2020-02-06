@@ -190,6 +190,7 @@ export enum MessageType {
 	Connection = "connection",
 	Companies = "companies",
 	Codemarks = "codemarks",
+	Documents = "documents",
 	MarkerLocations = "markerLocations",
 	Markers = "markers",
 	Posts = "posts",

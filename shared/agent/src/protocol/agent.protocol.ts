@@ -33,6 +33,11 @@ export * from "./agent.protocol.trello";
 export * from "./agent.protocol.youtrack";
 export * from "./agent.protocol.azuredevops";
 
+export interface Document {
+	uri: string;
+	isDirty?: boolean;
+}
+
 export interface Capabilities {
 	channelMute?: boolean;
 	codemarkApply?: boolean;
