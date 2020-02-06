@@ -5,8 +5,6 @@ import {
 	CSChannelStream,
 	CSCreateReviewRequest,
 	CSDirectStream,
-	CSEntity,
-	CSGetReviewChangesetRequest,
 	CSGetReviewChangesetResponse,
 	CSGetReviewChangesetsRequest,
 	CSGetReviewChangesetsResponse,
@@ -21,7 +19,6 @@ import {
 } from "./api.protocol";
 
 export interface ReviewPlus extends CSReview {
-	markers?: CSMarker[];
 	reviewChangesets?: CSReviewChangeset[];
 }
 

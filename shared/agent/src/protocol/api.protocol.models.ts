@@ -150,13 +150,20 @@ export enum FileStatus {
 	modified = "M"
 }
 
+export interface ReviewChangesetFileInfo {
+	file: string;
+	linesAdded: number;
+	linesRemoved: number;
+	status: FileStatus;
+}
+
 export interface CSReviewChangesetBase {
 	reviewId: string;
 	repoId: string;
 	branch: string;
 	commits: { sha: string; info: {}; localOnly: boolean }[];
 	diffs: any[]; // ParsedDiff[];
-	modifiedFiles: { file: string; linesAdded: number; linesRemoved: number; status: FileStatus }[];
+	modifiedFiles: ReviewChangesetFileInfo[];
 	includeSaved: boolean;
 	includeStaged: boolean;
 	remotes: { name: string; url: string }[];

@@ -10,10 +10,19 @@ import { CachedEntityManagerBase, Id } from "./entityManager";
 
 @lsp
 export class ReviewChangesetsManager extends CachedEntityManagerBase<CSReviewChangeset> {
+	private cachePerReview = new Map<string, FetchReviewChangesetsResponse>();
+
 	@lspHandler(FetchReviewChangesetsRequestType)
 	@log()
 	async get(request: FetchReviewChangesetsRequest): Promise<FetchReviewChangesetsResponse> {
-		return this.session.api.fetchReviewChangesets(request);
+		if (this.cachePerReview.has(request.reviewId))
+			return this.cachePerReview.get(request.reviewId)!;
+
+		const response = await this.session.api.fetchReviewChangesets(request);
+
+		this.cachePerReview.set(request.reviewId, response);
+
+		return response;
 	}
 
 	protected async loadCache() {}
