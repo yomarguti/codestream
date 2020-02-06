@@ -40,7 +40,6 @@ export interface BaseReviewProps extends CardProps {
 	review: ReviewPlus;
 	author: CSUser;
 	repoNames: string[];
-	changesets: CSReviewChangeset[];
 	currentUserId?: string;
 	collapsed?: boolean;
 	isFollowing?: boolean;
@@ -55,22 +54,27 @@ const BaseReview = (props: BaseReviewProps) => {
 
 	const changedFiles = React.useMemo(() => {
 		const files: any[] = [];
-		for (let changeset of props.changesets) {
+		for (let changeset of review.reviewChangesets) {
 			files.push(
 				...changeset.modifiedFiles.map(f => (
-						<ChangesetFile onClick={e => {
+					<ChangesetFile
+						onClick={e => {
 							e.preventDefault();
 							HostApi.instance.send(ReviewShowDiffRequestType, {
-								reviewId: changeset.reviewId,
+								// FIXME
+								reviewId: "changeset.reviewId",
 								repoId: changeset.repoId,
 								path: f.file
 							});
-						}} key={f.file} {...f} />
+						}}
+						key={f.file}
+						{...f}
+					/>
 				))
 			);
 		}
 		return files;
-	}, [props.changesets]);
+	}, [props.review]);
 
 	return (
 		<MinimumWidthCard {...getCardProps(props)}>
@@ -217,21 +221,21 @@ const ReviewForReview = (props: PropsWithReview) => {
 			repos: state.repos,
 			userIsFollowing: (props.review.followerIds || []).includes(state.session.userId!),
 			reviewers:
-				props.review.reviewers != null ? props.review.reviewers.map(id => state.users[id]) : [],
-			changesets: getChangesets(state.reviews, review.id)
+				props.review.reviewers != null ? props.review.reviewers.map(id => state.users[id]) : []
+			// changesets: getChangesets(state.reviews, review.id)
 		};
 	});
 
-	useDidMount(() => {
-		if (props.collapsed !== true && derivedState.changesets == null) {
-			dispatch(fetchChangesets(review.id));
-		}
-	});
+	// useDidMount(() => {
+	// 	if (props.collapsed !== true && derivedState.changesets == null) {
+	// 		dispatch(fetchChangesets(review.id));
+	// 	}
+	// });
 
 	let repoNames = new Set<string>();
 
-	for (let repoId of review.changesetRepoIds) {
-		const repo = derivedState.repos[repoId];
+	for (let changeset of review.reviewChangesets) {
+		const repo = derivedState.repos[changeset.repoId];
 		if (repo) repoNames.add(repo.name);
 	}
 
@@ -244,7 +248,6 @@ const ReviewForReview = (props: PropsWithReview) => {
 			isFollowing={derivedState.userIsFollowing}
 			reviewers={derivedState.reviewers}
 			currentUserId={derivedState.currentUserId}
-			changesets={derivedState.changesets || emptyArray}
 		/>
 	);
 };
