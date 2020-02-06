@@ -25,7 +25,7 @@ export const distanceOfTimeInWords = (time: number, relativeToNow: boolean = tru
 
 	seconds = Math.abs(seconds);
 
-	if (relativeToNow && seconds < 60) return isAgo ? "just then" : "soon";
+	if (relativeToNow && seconds < 60) return isAgo ? "just now" : "soon";
 
 	let distance: number;
 	let when: string;

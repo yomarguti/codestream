@@ -100,6 +100,14 @@ export const getUsernamesById = createSelector(getAllUsers, users => {
 	return map;
 });
 
+export const getUsernamesByIdLowerCase = createSelector(getAllUsers, users => {
+	const map = {};
+	users.forEach(user => {
+		map[user.id] = getUsername(user).toLowerCase();
+	});
+	return map;
+});
+
 export const getNormalizedUsernames = createSelector(getUsernames, usernames => {
 	return mapFilter(usernames, username => username && username.toLowerCase());
 });

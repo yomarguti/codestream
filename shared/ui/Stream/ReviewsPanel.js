@@ -201,7 +201,11 @@ export class SimpleReviewsPanel extends Component {
 		return review.branch === branchFilter;
 	};
 
+	// when the query changes, parse it for different types of
+	// filters, and leave behind any non-filters as keywords
+	// to search for -- those keywords are left in the `text` variable
 	setQ = q => {
+		const me = this.props.currentUsername.toLowerCase();
 		let text = q;
 		const filters = {};
 		let match;
@@ -224,9 +228,13 @@ export class SimpleReviewsPanel extends Component {
 		}
 		match = text.match(/\bauthor:@(\S+)(\s|$)/);
 		if (match) {
-			filters.author = match[1];
-			if (filters.author === "me") filters.author = this.props.currentUsername;
+			filters.author = match[1] === "me" ? me : match[1].toLowerCase();
 			text = text.replace(/\s*author:@\S+/, " ");
+		}
+		match = text.match(/\bimpacts:@(\S+)(\s|$)/);
+		if (match) {
+			filters.impacts = match[1] === "me" ? me : match[1].toLowerCase();
+			text = text.replace(/\s*impacts:@\S+/, " ");
 		}
 		match = text.match(/\bassignee:@(\S+)(\s|$)/);
 		if (match) {
@@ -235,8 +243,7 @@ export class SimpleReviewsPanel extends Component {
 		}
 		match = text.match(/\breviewer:@(\S+)[\s|$]/);
 		if (match) {
-			filters.assignee = match[1];
-			if (filters.assignee === "me") filters.assignee = this.props.currentUsername;
+			filters.assignee = match[1] === "me" ? me : match[1].toLowerCase();
 			text = text.replace(/\s*reviewer:@\S+/, " ");
 		}
 		match = text.match(/\btag:\"(.*?)\"(\s|$)/);
@@ -336,7 +343,7 @@ export class SimpleReviewsPanel extends Component {
 			return this.renderBlankFiller();
 		}
 
-		const { reviews, currentUserId, authorArray, branchArray, usernameMap } = this.props;
+		const { reviews, currentUserId, authorArray, branchArray, repoArray, usernameMap } = this.props;
 		const { thisRepo, filters, savedFilters } = this.state;
 
 		const sections = ["waitingForMe", "createdByMe", "open", "closed"];
@@ -354,11 +361,14 @@ export class SimpleReviewsPanel extends Component {
 
 		// sort by most recent first
 		_sortBy(reviews, review => -review.createdAt).forEach(review => {
+			// console.log("REVIEW IS: ", review);
 			if (review.deactivated) return null;
 			// FIXME author is text, creatorId is an id
 			const creator = usernameMap[review.creatorId];
 			const assignees = review.reviewers.map(id => usernameMap[id]);
+			const impacted = Object.keys(review.authorsById || {}).map(id => usernameMap[id]);
 			if (filters.author && creator !== filters.author) return null;
+			if (filters.impacts && !impacted.includes(filters.impacts)) return null;
 			if (filters.assignee && !assignees.includes(filters.assignee)) return null;
 			if (filters.status && review.status !== filters.status) return null;
 			if (filters.tag && !this.hasTag(review, filters.tag)) return null;
@@ -368,6 +378,10 @@ export class SimpleReviewsPanel extends Component {
 			if (filters.branch) {
 				const branches = (review.reviewChangeset || []).map(changeset => changeset.branch);
 				if (!branches.includes(filters.branch)) return null;
+			}
+			if (filters.repo) {
+				const repoIds = (review.reviewChangeset || []).map(changeset => changeset.repoId);
+				if (!repoIds.includes(filters.repoId)) return null;
 			}
 			// if (!this.onBranch(review, branchFilter)) return null;
 
@@ -441,6 +455,21 @@ export class SimpleReviewsPanel extends Component {
 				};
 			});
 
+		const repoMenuItems = Object.keys(repoArray)
+			.sort()
+			.map(repo => {
+				return {
+					label: (
+						<span className="repo-menu-selector">
+							<Icon name="git-repo" /> {repo}
+						</span>
+					),
+					searchLabel: repo,
+					key: repo,
+					action: e => this.setQ(`repo:"${repo}"`)
+				};
+			});
+
 		// BY REPO?
 
 		// let authorMenuItems = [{ label: "Anyone", action: "all" }, { label: "-" }];
@@ -483,7 +512,13 @@ export class SimpleReviewsPanel extends Component {
 				key: "mine",
 				action: () => this.setQ("is:open mentions:@me ")
 			},
+			{
+				label: "Everything impacting code you wrote",
+				key: "mycode",
+				action: () => this.setQ("impacts:@me ")
+			},
 			{ label: "By Tag", key: "tag", submenu: tagMenuItems },
+			{ label: "By Repo", key: "repo", submenu: repoMenuItems },
 			{ label: "By Branch", key: "branch", submenu: branchMenuItems },
 			{ label: "-" },
 			{
@@ -565,23 +600,6 @@ export class SimpleReviewsPanel extends Component {
 						);
 					})}
 					{this.state.savingFilter && this.renderSaveFilter()}
-					{/*
-					<div className="filters">
-						Show{" "}
-						<Filter
-							onValue={this.props.setReviewAuthorFilter}
-							selected={authorFilter}
-							labels={this.props.authorFiltersLabelsLower}
-							items={authorMenuItems}
-						/>
-						<Filter
-							onValue={this.props.setReviewTagFilter}
-							selected={tagFilter}
-							labels={this.props.tagFiltersLabelsLower}
-							items={tagMenuItems}
-						/>
-					</div>
-				*/}
 				</PanelHeader>
 				<ScrollBox>
 					<div className="channel-list vscroll" style={{ paddingTop: "10px" }}>
@@ -661,7 +679,7 @@ const mapStateToProps = state => {
 
 	const reviews = reviewSelectors.getAllReviews(state);
 	const usernames = userSelectors.getUsernames(state);
-	const usernameMap = userSelectors.getUsernamesById(state);
+	const usernameMap = userSelectors.getUsernamesByIdLowerCase(state);
 
 	const teamTagsArray = userSelectors.getTeamTagsArray(state);
 	let tagFiltersLabelsLower = { all: "with any tag" };
@@ -674,37 +692,21 @@ const mapStateToProps = state => {
 		);
 	});
 
-	let branchFiltersLabelsLower = { all: "on any branch" };
-	let authorFiltersLabelsLower = { all: "by anyone" };
 	let branchArray = {};
 	let commitArray = {};
 	let authorArray = {};
+	let repoArray = {};
 	reviews.forEach(review => {
 		const { markers, createdAt, creatorId, reviewChangesets = [] } = review;
 		const author = userSelectors.getUserByCsId(users, creatorId);
 		if (author) {
 			author.name = author.fullName || author.username || author.email;
 			authorArray[creatorId] = author;
-			authorFiltersLabelsLower[creatorId] = (
-				<span className="headshot-wrapper">
-					by &nbsp;
-					<Headshot size={18} person={author} />
-					{author.name}
-				</span>
-			);
 		}
 		reviewChangesets.forEach(changeset => {
-			const { branch } = changeset;
-			if (branch) {
-				branchArray[branch] = createdAt;
-				branchFiltersLabelsLower[branch] = (
-					<span>
-						on &nbsp;
-						<Icon name="git-branch" />
-						&nbsp;{branch}
-					</span>
-				);
-			}
+			const { repoId, branch } = changeset;
+			if (repoId) repoArray[repo] = createdAt;
+			if (branch) branchArray[branch] = createdAt;
 		});
 	});
 
@@ -729,6 +731,7 @@ const mapStateToProps = state => {
 		// tagFiltersLabelsLower,
 		authorArray,
 		branchArray,
+		repoArray,
 		// authorFiltersLabelsLower,
 		webviewFocused: context.hasFocus
 	};
