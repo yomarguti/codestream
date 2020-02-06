@@ -6,7 +6,7 @@ import { mapFilter } from "@codestream/webview/utils";
 import * as actions from "./actions";
 import { ActionType } from "../common";
 import { uniq } from "lodash-es";
-import { ReviewsState } from "../reviews/types";
+import { ReviewsState, ReviewsDictionary } from "../reviews/types";
 
 type ActivityFeedAction = ActionType<typeof actions>;
 
@@ -36,12 +36,12 @@ export function reduceActivityFeed(state = initialState, action: ActivityFeedAct
 
 export const getActivity = createSelector(
 	(state: CodeStreamState) => state.codemarks,
-	(state: CodeStreamState) => state.reviews,
+	(state: CodeStreamState) => state.reviews.reviews,
 	(state: CodeStreamState) => state.activityFeed.records,
 	// (state: CodeStreamState) => state.posts,
 	(
 		codemarks: CodemarksState,
-		reviews: ReviewsState,
+		reviews: ReviewsDictionary,
 		activityFeed: ActivityFeedActivity[]
 		// posts: PostsState
 	) => {

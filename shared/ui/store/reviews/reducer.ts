@@ -2,14 +2,14 @@ import { createSelector } from "reselect";
 import { toMapBy } from "../../utils";
 import { ActionType } from "../common";
 import * as actions from "./actions";
-import { ReviewsActionsTypes, ReviewsState } from "./types";
-import { ReviewPlus } from "@codestream/protocols/agent";
+import { ReviewsActionsTypes, ReviewsState, ReviewsDictionary } from "./types";
+import { combineReducers } from "redux";
+import { CSReview, CSReviewChangeset } from "@codestream/protocols/api";
+import { CodeStreamState } from "..";
 
 type ReviewsActions = ActionType<typeof actions>;
 
-const initialState: ReviewsState = {};
-
-export function reduceReviews(state = initialState, action: ReviewsActions) {
+function reduceReviews(state = {}, action: ReviewsActions) {
 	switch (action.type) {
 		case ReviewsActionsTypes.AddReviews:
 		case ReviewsActionsTypes.UpdateReviews:
@@ -22,28 +22,52 @@ export function reduceReviews(state = initialState, action: ReviewsActions) {
 			return nextState;
 		}
 		case "RESET":
-			return initialState;
+			return {};
 		default:
 			return state;
 	}
 }
 
-export function getReview(state: ReviewsState, id?: string): ReviewPlus | undefined {
-	if (!id) return undefined;
-	return state[id];
+function reduceChangesets(state = {}, action: ReviewsActions) {
+	switch (action.type) {
+		case ReviewsActionsTypes.SaveChangesetsForReview:
+			const { reviewId, changesets } = action.payload;
+			return { ...state, [reviewId]: changesets };
+		case "RESET":
+			return {};
+		default:
+			return state;
+	}
 }
 
-export function getByStatus(state: ReviewsState, status?: string): ReviewPlus[] {
-	if (!status) return Object.values(state);
+export const reduceReviewsState = combineReducers({
+	reviews: reduceReviews,
+	changesets: reduceChangesets
+});
 
-	return Object.values(state).filter(review => review.status === status);
+export function getReview(state: ReviewsState, id: string): CSReview | undefined {
+	return state.reviews[id];
 }
 
-const getReviews = state => state.reviews;
-export const getAllReviews = createSelector(getReviews, (reviews: ReviewsState) =>
+export function getChangesets(
+	state: ReviewsState,
+	reviewId: string
+): CSReviewChangeset[] | undefined {
+	return state.changesets[reviewId];
+}
+
+export function getByStatus(state: CodeStreamState, status?: string): CSReview[] {
+	if (!status) return getAllReviews(state);
+
+	return getAllReviews(state).filter(review => review.status === status);
+}
+
+const getReviews = (state: CodeStreamState) => state.reviews.reviews;
+
+export const getAllReviews = createSelector(getReviews, (reviews: ReviewsDictionary) =>
 	Object.values(reviews)
 );
 
-export const teamHasReviews = createSelector(getReviews, (reviews: ReviewsState) => {
+export const teamHasReviews = createSelector(getReviews, (reviews: ReviewsDictionary) => {
 	return Object.keys(reviews).length > 0;
 });

@@ -1,19 +1,17 @@
-import { CSReview } from "@codestream/protocols/api";
+import { CSReview, CSReviewChangeset } from "@codestream/protocols/api";
 import { action } from "../common";
 import { ReviewsActionsTypes } from "./types";
 import { HostApi } from "@codestream/webview/webview-api";
 import {
 	UpdateReviewRequestType,
 	DeleteReviewRequestType,
-	CrossPostIssueValues,
-	CreateReviewRequestType,
 	CreateThirdPartyPostRequestType,
 	CreateShareableReviewRequestType,
-	RepoScmStatus
+	RepoScmStatus,
+	FetchReviewChangesetsRequestType
 } from "@codestream/protocols/agent";
 import { logError } from "@codestream/webview/logger";
 import { addStreams } from "../streams/actions";
-import { TextDocumentIdentifier } from "vscode-languageserver-types";
 import { getConnectedProviders } from "../providers/reducer";
 import { CodeStreamState } from "..";
 import { capitalize } from "@codestream/webview/utils";
@@ -134,4 +132,17 @@ export const editReview = (id: string, attributes: EditableAttributes) => async 
 	} catch (error) {
 		logError(`failed to update review: ${error}`, { id });
 	}
+};
+
+export const saveChangesetsForReview = (reviewId: string, changesets: CSReviewChangeset[]) =>
+	action(ReviewsActionsTypes.SaveChangesetsForReview, { reviewId, changesets });
+
+export const fetchChangesets = (reviewId: string) => async dispatch => {
+	try {
+		const response = await HostApi.instance.send(FetchReviewChangesetsRequestType, {
+			reviewId
+		});
+
+		return dispatch(saveChangesetsForReview(reviewId, response.changesets));
+	} catch (error) {}
 };

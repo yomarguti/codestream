@@ -96,6 +96,9 @@ export function reduceContext(
 		case ContextActionsType.SetCodemarksShowResolved:
 			return { ...state, codemarksShowResolved: action.payload };
 
+		case ContextActionsType.SetCurrentReview:
+			return { ...state, currentReviewId: action.payload.reviewId };
+
 		case ContextActionsType.SetSpatialViewPRCommentsToggle:
 			return { ...state, spatialViewShowPRComments: action.payload };
 

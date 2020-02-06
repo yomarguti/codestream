@@ -1,6 +1,7 @@
 import React from "react";
+import cx from "classnames";
 import { CardBody, CardProps, getCardProps } from "@codestream/webview/src/components/Card";
-import { ReviewPlus } from "@codestream/protocols/agent";
+import { ReviewPlus, GetReviewRequestType } from "@codestream/protocols/agent";
 import {
 	MinimumWidthCard,
 	Header,
@@ -14,22 +15,32 @@ import {
 	MetaDescription,
 	MetaSectionCollapsed,
 	HeaderActions,
-	ActionButton
+	ActionButton,
+	MetaDescriptionForAssignees,
+	MetaAssignee
 } from "../Codemark/BaseCodemark";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
-import { CSUser } from "@codestream/protocols/api";
+import { CSUser, CSReview, CSReviewChangeset } from "@codestream/protocols/api";
 import { CodeStreamState } from "@codestream/webview/store";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useMarkdownifyToHtml } from "../Markdowner";
 import Icon from "../Icon";
 import { SmartFormattedList } from "../SmartFormattedList";
 import Tooltip from "../Tooltip";
-import { capitalize } from "@codestream/webview/utils";
+import { capitalize, emptyArray } from "@codestream/webview/utils";
+import { useDidMount } from "@codestream/webview/utilities/hooks";
+import { HostApi } from "../..";
+import { saveReviews, fetchChangesets } from "@codestream/webview/store/reviews/actions";
+import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
+import { ChangesetFile } from "./ChangesetFile";
+import { getReview, getChangesets } from "@codestream/webview/store/reviews/reducer";
 
 export interface BaseReviewProps extends CardProps {
 	review: ReviewPlus;
 	author: CSUser;
 	repoNames: string[];
+	changesets: CSReviewChangeset[];
+	currentUserId?: string;
 	collapsed?: boolean;
 	isFollowing?: boolean;
 	reviewers?: CSUser[];
@@ -37,7 +48,21 @@ export interface BaseReviewProps extends CardProps {
 
 const BaseReview = (props: BaseReviewProps) => {
 	const { review } = props;
+
 	const markdownifyToHtml = useMarkdownifyToHtml();
+	const hasReviewers = props.reviewers != null && props.reviewers.length > 0;
+
+	const changedFiles = React.useMemo(() => {
+		const files: any[] = [];
+		for (let changeset of props.changesets) {
+			files.push(
+				...changeset.modifiedFiles.map(f => (
+						<ChangesetFile key={f.file} {...f} />
+				))
+			);
+		}
+		return files;
+	}, [props.changesets]);
 
 	return (
 		<MinimumWidthCard {...getCardProps(props)}>
@@ -67,6 +92,25 @@ const BaseReview = (props: BaseReviewProps) => {
 					/>
 				</Title>
 				<MetaSection>
+					{!props.collapsed && hasReviewers && (
+						<Meta>
+							<MetaLabel>Reviewers</MetaLabel>
+							<MetaDescriptionForAssignees>
+								{props.reviewers!.map(reviewer => (
+									<MetaAssignee key={reviewer.id}>
+										<Headshot person={reviewer as any} size={18} />
+										<span
+											className={cx({
+												"at-mention me": reviewer.id === props.currentUserId
+											})}
+										>
+											{reviewer.username}
+										</span>
+									</MetaAssignee>
+								))}
+							</MetaDescriptionForAssignees>
+						</Meta>
+					)}
 					<Meta>
 						<MetaLabel>Description</MetaLabel>
 						<MetaDescription>
@@ -89,14 +133,20 @@ const BaseReview = (props: BaseReviewProps) => {
 							</Text>
 						</MetaDescription>
 					</Meta>
+					{!props.collapsed && (
+						<Meta>
+							<MetaLabel>Changed Files</MetaLabel>
+							<MetaDescriptionForAssignees>{changedFiles}</MetaDescriptionForAssignees>
+						</Meta>
+					)}
 				</MetaSection>
-				{props.collapsed && getCollapsedView(props)}
+				{props.collapsed && renderMetaSectionCollapsed(props)}
 			</CardBody>
 		</MinimumWidthCard>
 	);
 };
 
-const getCollapsedView = (props: BaseReviewProps) => {
+const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 	return (
 		<>
 			<MetaSectionCollapsed>
@@ -131,22 +181,43 @@ const getCollapsedView = (props: BaseReviewProps) => {
 
 type FromBaseReviewProps = Pick<
 	BaseReviewProps,
-	"review" | "collapsed" | "hoverEffect" | "onClick" | "className"
+	"collapsed" | "hoverEffect" | "onClick" | "className"
 >;
 
-export interface ReviewProps extends FromBaseReviewProps {}
+interface PropsWithId extends FromBaseReviewProps {
+	id: string;
+}
 
-export const Review = (props: ReviewProps) => {
+interface PropsWithReview extends FromBaseReviewProps {
+	review: CSReview;
+}
+
+function isPropsWithId(props: PropsWithId | PropsWithReview): props is PropsWithId {
+	return (props as any).id != undefined;
+}
+
+export type ReviewProps = PropsWithId | PropsWithReview;
+
+const ReviewForReview = (props: PropsWithReview) => {
 	const { review, ...baseProps } = props;
 
+	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
+			currentUserId: state.session.userId,
 			author: state.users[props.review.creatorId],
 			repos: state.repos,
 			userIsFollowing: (props.review.followerIds || []).includes(state.session.userId!),
 			reviewers:
-				props.review.reviewers != null ? props.review.reviewers.map(id => state.users[id]) : []
+				props.review.reviewers != null ? props.review.reviewers.map(id => state.users[id]) : [],
+			changesets: getChangesets(state.reviews, review.id)
 		};
+	});
+
+	useDidMount(() => {
+		if (props.collapsed !== true && derivedState.changesets == null) {
+			dispatch(fetchChangesets(review.id));
+		}
 	});
 
 	let repoNames = new Set<string>();
@@ -164,6 +235,52 @@ export const Review = (props: ReviewProps) => {
 			repoNames={[...repoNames]}
 			isFollowing={derivedState.userIsFollowing}
 			reviewers={derivedState.reviewers}
+			currentUserId={derivedState.currentUserId}
+			changesets={derivedState.changesets || emptyArray}
 		/>
 	);
+};
+
+const ReviewForId = (props: PropsWithId) => {
+	const { id, ...otherProps } = props;
+
+	const dispatch = useDispatch();
+	const review = useSelector((state: CodeStreamState) => {
+		return getReview(state.reviews, id);
+	});
+	const [notFound, setNotFound] = React.useState(false);
+
+	useDidMount(() => {
+		let isValid = true;
+		const fetchReview = async () => {
+			try {
+				const response = await HostApi.instance.send(GetReviewRequestType, { reviewId: id });
+				if (!isValid) return;
+				else dispatch(saveReviews([response.review]));
+			} catch (error) {
+				setNotFound(true);
+			}
+		};
+
+		if (review == null) {
+			fetchReview();
+		}
+
+		return () => {
+			isValid = false;
+		};
+	});
+
+	if (notFound) return <MinimumWidthCard>This review was not found</MinimumWidthCard>;
+
+	return (
+		<DelayedRender>
+			{review != null && <ReviewForReview review={review} {...otherProps} />}
+		</DelayedRender>
+	);
+};
+
+export const Review = (props: ReviewProps) => {
+	if (isPropsWithId(props)) return <ReviewForId {...props} />;
+	return <ReviewForReview {...props} />;
 };

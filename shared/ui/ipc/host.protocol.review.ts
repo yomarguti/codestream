@@ -7,8 +7,7 @@ export interface ReviewShowDiffRequest {
 	path: string;
 }
 
-export interface ReviewShowDiffResponse {
-}
+export interface ReviewShowDiffResponse {}
 
 export const ReviewShowDiffRequestType = new RequestType<
 	ReviewShowDiffRequest,

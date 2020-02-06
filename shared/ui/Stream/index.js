@@ -77,8 +77,9 @@ import {
 import { getFileScmError } from "../store/editorContext/reducer";
 import { logout, switchToTeam } from "../store/session/actions";
 import { CodemarkView } from "./CodemarkView";
+import { Review } from "./Review";
 
-import { setCurrentStream, setNewPostEntry } from "../store/context/actions";
+import { setCurrentStream, setNewPostEntry, setCurrentReview } from "../store/context/actions";
 import { getTeamProvider } from "../store/teams/reducer";
 import {
 	filter as _filter,
@@ -936,6 +937,11 @@ export class SimpleStream extends Component {
 						<div id="panel-blanket" />
 						{this.props.currentCodemarkId && <CodemarkView />}
 					</>
+				)}
+				{this.props.currentReviewId && (
+					<Modal onClose={() => this.props.setCurrentReview()}>
+						<Review id={this.props.currentReviewId} />
+					</Modal>
 				)}
 				{renderNav && this.renderNavIcons()}
 				{this.state.floatCompose &&
@@ -2398,6 +2404,7 @@ const mapStateToProps = state => {
 		apiCapabilities: apiVersioning.apiCapabilities,
 		currentCodemarkId: context.currentCodemarkId,
 		currentMarkerId: context.currentMarkerId,
+		currentReviewId: context.currentReviewId,
 		capabilities: capabilities,
 		pluginVersion,
 		channelStreams,
@@ -2481,6 +2488,7 @@ const mapStateToProps = state => {
 
 export default connect(mapStateToProps, {
 	...actions,
+	setCurrentReview,
 	setCurrentStream,
 	editCodemark,
 	setNewPostEntry,

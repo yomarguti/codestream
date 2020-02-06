@@ -10,7 +10,7 @@ import * as userSelectors from "../store/users/reducer";
 import styled from "styled-components";
 import { includes as _includes, sortBy as _sortBy, last as _last } from "lodash-es";
 import { CodeStreamState } from "../store";
-import { setCurrentCodemark } from "../store/context/actions";
+import { setCurrentCodemark, setCurrentReview } from "../store/context/actions";
 import { getActivity } from "../store/activityFeed/reducer";
 import { useDidMount, useIntersectionObserver } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
@@ -18,15 +18,14 @@ import {
 	FetchActivityRequestType,
 	PostPlus,
 	CodemarkPlus,
-	PinReplyToCodemarkRequestType,
-	ReviewPlus
+	PinReplyToCodemarkRequestType
 } from "@codestream/protocols/agent";
 import { savePosts } from "../store/posts/actions";
 import { addOlderActivity } from "../store/activityFeed/actions";
 import { saveCodemarks } from "../store/codemarks/actions";
 import { safe } from "../utils";
 import { markStreamRead, setCodemarkTypeFilter } from "./actions";
-import { CSUser, CodemarkType } from "@codestream/protocols/api";
+import { CSUser, CodemarkType, CSReview } from "@codestream/protocols/api";
 import { resetLastReads } from "../store/unreads/actions";
 import { PanelHeader } from "../src/components/PanelHeader";
 import { getPost, getPostsForStream } from "../store/posts/reducer";
@@ -274,7 +273,13 @@ export const ActivityPanel = () => {
 					<ActivityWrapper key={record.id}>
 						<ActivityItem streamId={record.streamId} postId={record.postId}>
 							{({ className }) => (
-								<Review className={className} review={record as ReviewPlus} collapsed hoverEffect />
+								<Review
+									className={className}
+									review={record as CSReview}
+									collapsed
+									hoverEffect
+									onClick={() => dispatch(setCurrentReview(record.id))}
+								/>
 							)}
 						</ActivityItem>
 					</ActivityWrapper>

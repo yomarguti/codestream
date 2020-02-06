@@ -411,7 +411,7 @@ export const MetaDescription = styled.div`
 	}
 `;
 
-const MetaDescriptionForAssignees = styled.div`
+export const MetaDescriptionForAssignees = styled.div`
 	display: flex;
 	flex-direction: column;
 	> *:not(:last-child) {
@@ -427,7 +427,7 @@ const MetaDescriptionForTags = styled.div`
 	}
 `;
 
-const MetaAssignee = styled.div`
+export const MetaAssignee = styled.div`
 	display: flex;
 	${Headshot} {
 		margin-right: 5px;
