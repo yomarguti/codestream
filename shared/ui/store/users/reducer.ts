@@ -1,6 +1,6 @@
 import { CSUser, CSStream, StreamType } from "@codestream/protocols/api";
 import { createSelector } from "reselect";
-import { mapFilter, toMapBy } from "../../utils";
+import { mapFilter, toMapBy, emptyArray } from "../../utils";
 import { ActionType } from "../common";
 import * as actions from "./actions";
 import { UsersState, UsersActionsType } from "./types";
@@ -43,8 +43,10 @@ const getUsername = (user: CSUser) => {
 };
 
 const getUsers = state => state.users;
-const getTeam = state => state.teams[state.context.currentTeamId];
-export const getTeamMembers = createSelector(getTeam, getUsers, (team, users) => {
+
+const getCurrentTeam = (state: CodeStreamState) => state.teams[state.context.currentTeamId];
+
+export const getTeamMembers = createSelector(getCurrentTeam, getUsers, (team, users) => {
 	return mapFilter(team.memberIds, (id: string) => {
 		const user: CSUser = users[id];
 		return user && !user.deactivated && !user.externalUserId ? user : undefined;
@@ -58,33 +60,19 @@ export const getTeamMates = createSelector(
 );
 
 // return the team tags as an array, in sort order
-export const getTeamTagsArray = createSelector(getTeam, team => {
+export const getTeamTagsArray = createSelector(getCurrentTeam, team => {
 	if (team.tags == null) {
-		team.tags = Object.create(null);
+		return emptyArray;
 	}
 
-	return mapFilter(
-		Object.keys(team.tags)
-			.map(id => {
-				return { id, ...team.tags[id] };
-			})
-			.sort((a, b) => a.sortOrder - b.sortOrder),
-		tag => (tag.deactivated ? null : tag)
-	);
+	return mapFilter(Object.entries(team.tags), ([id, tag]) =>
+		tag.deactivated ? null : { id, ...tag }
+	).sort((a, b) => (a.sortOrder == null || b.sortOrder == null ? -1 : a.sortOrder - b.sortOrder));
 });
 
 // return the team tags as an associative array (hash)
-export const getTeamTagsHash = createSelector(getTeam, team => {
-	if (team.tags == null) {
-		team.tags = Object.create(null);
-	}
-
-	const keys = Object.keys(team.tags);
-	const tags = {};
-	keys.forEach(id => {
-		if (!team.tags[id].deactivated) tags[id] = { id, ...team.tags[id] };
-	});
-	return tags;
+export const getTeamTagsHash = createSelector(getTeamTagsArray, tagsArray => {
+	return toMapBy("id", tagsArray);
 });
 
 export const getAllUsers = createSelector(getUsers, (users: UsersState) => Object.values(users));

@@ -5,12 +5,13 @@ import ContentEditable from "react-contenteditable";
 import * as codemarkSelectors from "../store/codemarks/reducer";
 import * as actions from "./actions";
 const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.json");
-import { CSChannelStream, CSPost, CSUser } from "@codestream/protocols/api";
+import { CSChannelStream, CSPost, CSUser, CSTeam, CSTag } from "@codestream/protocols/api";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import {
 	createRange,
 	getCurrentCursorPosition,
-	debounceAndCollectToAnimationFrame
+	debounceAndCollectToAnimationFrame,
+	emptyArray
 } from "../utils";
 import AtMentionsPopup from "./AtMentionsPopup";
 import EmojiPicker from "./EmojiPicker";
@@ -19,6 +20,11 @@ import Button from "./Button";
 import Icon from "./Icon";
 import { confirmPopup } from "./Confirm";
 import { CodemarkPlus } from "@codestream/protocols/agent";
+import { CodeStreamState } from "../store";
+import { getTeamMates, getTeamTagsArray } from "../store/users/reducer";
+import { getChannelStreamsForTeam } from "../store/streams/reducer";
+import { ServicesState } from "../store/services/types";
+import { getSlashCommands } from "./SlashCommands";
 
 type PopupType = "at-mentions" | "slash-commands" | "channels" | "emojis";
 
@@ -49,15 +55,22 @@ interface State {
 	insertPrefix: string;
 }
 
-interface Props {
-	isInVscode?: boolean;
-	text: string;
+interface ConnectedProps {
+	isInVscode: boolean;
+	currentTeam: CSTeam;
+	codemarks: CodemarkPlus[];
 	teammates: CSUser[];
 	currentUserId: string;
-	slashCommands?: any[];
-	services: any;
-	channelStreams?: CSChannelStream[];
-	teamProvider: "codestream" | "slack" | "msteams" | string;
+	teamTags: CSTag[];
+	channelStreams: CSChannelStream[];
+	services: ServicesState;
+	slashCommands: any[];
+}
+
+interface Props extends ConnectedProps {
+	text: string;
+	withTags?: boolean;
+	teamProvider?: "codestream" | "slack" | "msteams" | string;
 	isDirectMessage?: boolean;
 	multiCompose?: boolean;
 	submitOnEnter?: boolean;
@@ -70,14 +83,10 @@ interface Props {
 	onEmptyUpArrow?(event: React.KeyboardEvent): any;
 	onDismiss?(): any;
 	onSubmit?(): any;
-	tabIndex?: number;
-	teamTags?: any;
 	selectedTags?: any;
 	toggleTag?: Function;
 	relatedCodemarkIds?: any;
 	toggleCodemark?: Function;
-	codemarks?: any;
-	currentTeam?: any;
 	__onDidRender?(stuff: { [key: string]: any }): any; // HACKy: sneaking internals to parent
 }
 
@@ -947,7 +956,7 @@ export class MessageInput extends React.Component<Props, State> {
 								style={tag.color.startsWith("#") ? { background: tag.color } : {}}
 							>
 								{tag.label}&nbsp;
-								{this.props.selectedTags[tag.id] && <span className="check">✔</span>}
+								{this.props.selectedTags[tag.id!] && <span className="check">✔</span>}
 							</span>
 							<Icon
 								name="pencil"
@@ -1083,7 +1092,7 @@ export class MessageInput extends React.Component<Props, State> {
 						/>
 					)}
 					{this.buildCodemarkMenu()}
-					{this.props.teamTags && (
+					{this.props.withTags && (
 						<Icon
 							key="tag"
 							name="tag"
@@ -1102,7 +1111,6 @@ export class MessageInput extends React.Component<Props, State> {
 						"format-code": this.state.formatCode
 					})}
 					id="input-div"
-					tabIndex={this.props.tabIndex}
 					onChange={this.handleChange}
 					onBlur={this.handleBlur}
 					onClick={this.handleClick}
@@ -1115,13 +1123,22 @@ export class MessageInput extends React.Component<Props, State> {
 	}
 }
 
-const mapStateToProps = state => {
+const mapStateToProps = (
+	state: CodeStreamState,
+	props: Omit<Props, keyof ConnectedProps>
+): ConnectedProps => {
 	const currentTeam = state.teams[state.context.currentTeamId];
 
 	return {
 		currentTeam,
+		currentUserId: state.session.userId!,
+		teammates: getTeamMates(state),
 		codemarks: codemarkSelectors.getTypeFilteredCodemarks(state) || [],
-		isInVscode: state.ide.name === "VSC"
+		isInVscode: state.ide.name === "VSC",
+		teamTags: Boolean(props.withTags) ? getTeamTagsArray(state) : emptyArray,
+		channelStreams: getChannelStreamsForTeam(state, state.context.currentTeamId),
+		services: state.services,
+		slashCommands: getSlashCommands(state.capabilities)
 	};
 };
 

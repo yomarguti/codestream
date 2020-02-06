@@ -812,26 +812,15 @@ const EMPTY_OBJECT = Object.freeze({});
  * @param {Object} state.teams
  * @param {Object} state.ide
  **/
-const mapStateToProps = ({
-	capabilities,
-	context,
-	preferences,
-	session,
-	streams,
-	teams,
-	umis,
-	users,
-	ide
-}) => {
+const mapStateToProps = state => {
+	const { capabilities, context, preferences, session, streams, teams, umis, users, ide } = state;
+
 	const team = teams[context.currentTeamId];
 
 	const teamMembers = team.memberIds.map(id => users[id]).filter(Boolean);
 	// .filter(user => user && user.isRegistered);
 
-	const channelStreams = _sortBy(
-		getChannelStreamsForTeam(streams, context.currentTeamId, session.userId) || [],
-		stream => (stream.name || "").toLowerCase()
-	);
+	const channelStreams = getChannelStreamsForTeam(state, context.currentTeamId);
 
 	let meStreamId;
 	let streamPresence = Object.create(null);

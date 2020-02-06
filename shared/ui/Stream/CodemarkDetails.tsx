@@ -4,7 +4,7 @@ import cx from "classnames";
 import Button from "./Button";
 import PostList from "./PostList";
 import Tooltip from "./Tooltip";
-import { MessageInput } from "./MessageInput";
+import MessageInput from "./MessageInput";
 import { findMentionedUserIds, getTeamMembers } from "../store/users/reducer";
 import CodemarkActions from "./CodemarkActions";
 import { CodemarkPlus, Capabilities } from "@codestream/protocols/agent";
@@ -29,8 +29,6 @@ interface Props {
 	codemark: CodemarkPlus;
 	teammates: CSUser[];
 	currentUserId: string;
-	slashCommands?: any;
-	services?: any;
 	teamProvider: "codestream" | "slack" | "msteams" | string;
 	height?: Number;
 	capabilities: Capabilities;
@@ -151,10 +149,6 @@ export class CodemarkDetails extends React.Component<Props, State> {
 						<div className="compose codemark-compose">
 							<div className="related-label">Add Reply</div>
 							<MessageInput
-								teammates={this.props.teammates}
-								currentUserId={this.props.currentUserId}
-								slashCommands={this.props.slashCommands}
-								services={this.props.services}
 								teamProvider={this.props.teamProvider}
 								text={this.state.text}
 								placeholder="Reply..."
@@ -231,7 +225,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 
 const EMPTY_OBJECT = {};
 const mapStateToProps = (state: CodeStreamState, props: { codemark: CodemarkPlus }) => {
-	const { capabilities, configs, connectivity, session, context, users, teams, services } = state;
+	const { capabilities, configs, connectivity, session, context, users, teams } = state;
 
 	const team = teams[context.currentTeamId];
 	const teamProvider = getTeamProvider(team);
@@ -254,7 +248,6 @@ const mapStateToProps = (state: CodeStreamState, props: { codemark: CodemarkPlus
 		hasFocus: context.hasFocus,
 		currentUserId: user.id,
 		currentUserName: user.username,
-		services,
 		teamProvider: teamProvider
 	};
 };

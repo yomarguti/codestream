@@ -2,8 +2,9 @@ import { Picker, store } from "emoji-mart";
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import * as actions from "./actions";
-import { safe } from "../utils";
+import { safe, shortUuid } from "../utils";
 import { connect } from "react-redux";
+import { ModalContext } from "./Modal";
 
 export class SimpleEmojiPicker extends Component {
 	constructor(props) {
@@ -30,6 +31,23 @@ export class SimpleEmojiPicker extends Component {
 		modalRoot.onclick = event => {
 			if (event.target.id === "modal-root") {
 				this.setState({ closed: true });
+			}
+
+			// bit of a hack for determining if the click was inside the modal area but outside of the menu
+			// copied from Menu.js
+			const randomClassString = `__${shortUuid()}`;
+			event.target.classList.add(randomClassString);
+			const targetSelector = `.${randomClassString}`;
+			const clickedInMenu = this.el.querySelector(targetSelector) != null;
+			try {
+				if (clickedInMenu) {
+					return;
+				}
+				const clickedInModalRoot = modalRoot.querySelector(targetSelector) != null;
+				if (clickedInModalRoot) this.setState({ closed: true });
+			} catch {
+			} finally {
+				event.target.classList.remove(randomClassString);
 			}
 		};
 		if (this.props && this.props.target) {
@@ -76,16 +94,23 @@ export class SimpleEmojiPicker extends Component {
 		let { addEmoji, style, target } = this.props;
 
 		return ReactDOM.createPortal(
-			<div ref={ref => (this._div = ref)} style={target ? { position: "absolute" } : {}}>
-				<Picker
-					autoFocus={this.props.autoFocus}
-					onSelect={addEmoji}
-					emoji=""
-					native={true}
-					title=""
-					style={style}
-				/>
-			</div>,
+			<ModalContext.Consumer>
+				{({ zIndex }) => (
+					<div
+						ref={ref => (this._div = ref)}
+						style={target ? { position: "absolute", zIndex } : {}}
+					>
+						<Picker
+							autoFocus={this.props.autoFocus}
+							onSelect={addEmoji}
+							emoji=""
+							native={true}
+							title=""
+							style={style}
+						/>
+					</div>
+				)}
+			</ModalContext.Consumer>,
 			this.el
 		);
 	}
@@ -98,9 +123,6 @@ const mapStateToProps = ({ session, users }) => {
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{
-		...actions
-	}
-)(SimpleEmojiPicker);
+export default connect(mapStateToProps, {
+	...actions
+})(SimpleEmojiPicker);

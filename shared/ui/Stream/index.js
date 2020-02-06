@@ -2387,10 +2387,7 @@ const mapStateToProps = state => {
 			? getDMName(postStream, teamMembersById, session.userId)
 			: postStream.name;
 
-	const channelStreams = _sortBy(
-		getChannelStreamsForTeam(streams, context.currentTeamId, session.userId) || [],
-		stream => (stream.name || "").toLowerCase()
-	);
+	const channelStreams = getChannelStreamsForTeam(state, context.currentTeamId);
 
 	const directMessageStreams = (
 		getDirectMessageStreamsForTeam(streams, context.currentTeamId) || []

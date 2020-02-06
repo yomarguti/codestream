@@ -59,7 +59,6 @@ import { getCurrentSelection } from "../store/editorContext/reducer";
 import Headshot from "./Headshot";
 import { getTeamMembers, getTeamTagsArray, getTeamMates } from "../store/users/reducer";
 import MessageInput from "./MessageInput";
-import { getSlashCommands } from "./SlashCommands";
 import { getCurrentTeamProvider } from "../store/teams/reducer";
 import { getCodemark } from "../store/codemarks/reducer";
 import { CodemarksState } from "../store/codemarks/types";
@@ -123,8 +122,6 @@ interface ConnectedProps {
 	showChannels: string;
 	textEditorUri?: string;
 	textEditorSelection?: EditorSelection;
-	slashCommands: any[];
-	services: {};
 	teamProvider: "codestream" | "slack" | "msteams" | string;
 	teamTagsArray: any;
 	codemarkState: CodemarksState;
@@ -1203,7 +1200,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		const { editingCodemark } = this.props;
 		const { codeBlocks, liveLocation } = this.state;
 
-		if (!codeBlocks.length) return this.renderAddLocation()
+		if (!codeBlocks.length) return this.renderAddLocation();
 
 		if (this.props.multiLocation) {
 			const numLocations = codeBlocks.length; // + (this.state.addingLocation ? 1 : 0);
@@ -1331,24 +1328,19 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		return (
 			<MessageInput
-				teammates={this.props.teamMates}
-				currentUserId={this.props.currentUser.id}
-				slashCommands={this.props.slashCommands}
-				services={this.props.services}
-				channelStreams={this.props.channelStreams}
 				teamProvider={this.props.teamProvider}
 				isDirectMessage={this.props.channel.type === StreamType.Direct}
 				text={text.replace(/\n/g, "<br/>")}
 				placeholder={placeholder}
 				multiCompose
 				onChange={this.handleChange}
+				withTags
 				toggleTag={this.handleToggleTag}
 				toggleCodemark={this.handleToggleCodemark}
 				shouldShowRelatableCodemark={codemark =>
 					this.props.editingCodemark ? codemark.id !== this.props.editingCodemark.id : true
 				}
 				onSubmit={this.handleClickSubmit}
-				teamTags={this.props.teamTagsArray}
 				selectedTags={this.state.selectedTags}
 				relatedCodemarkIds={this.state.relatedCodemarkIds}
 				__onDidRender={__onDidRender}
@@ -1855,14 +1847,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 	const teamMembers = getTeamMembers(state);
 	const teamTagsArray = getTeamTagsArray(state);
 
-	const channelStreams: CSChannelStream[] = sortBy(
-		(getChannelStreamsForTeam(
-			state.streams,
-			context.currentTeamId,
-			session.userId!
-		) as CSChannelStream[]) || [],
-		stream => (stream.name || "").toLowerCase()
-	);
+	const channelStreams = getChannelStreamsForTeam(state, context.currentTeamId);
 
 	const directMessageStreams: CSDirectStream[] = (
 		getDirectMessageStreamsForTeam(state.streams, context.currentTeamId) || []
@@ -1888,8 +1873,6 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		showChannels: context.channelFilter,
 		textEditorUri: editorContext.textEditorUri,
 		textEditorSelection: getCurrentSelection(editorContext),
-		slashCommands: getSlashCommands(state.capabilities),
-		services: state.services,
 		teamTagsArray,
 		codemarkState: codemarks,
 		apiCapabilities: apiVersioning.apiCapabilities

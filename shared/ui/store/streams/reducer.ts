@@ -1,7 +1,11 @@
 import { ActionType } from "../common";
 import * as actions from "./actions";
 import { StreamActionType, StreamsState } from "./types";
-import { includes as _includes, sortBy as _sortBy } from "lodash-es";
+import { includes as _includes, sortBy as _sortBy, sortBy } from "lodash-es";
+import { createSelector } from "reselect";
+import { CodeStreamState } from "..";
+import { emptyArray } from "@codestream/webview/utils";
+import { CSChannelStream } from "@codestream/protocols/api";
 
 type StreamsAction = ActionType<typeof actions>;
 
@@ -56,17 +60,28 @@ export const getStreamForTeam = (state: StreamsState, teamId: string) => {
 	)[0];
 };
 
-export const getChannelStreamsForTeam = (state: StreamsState, teamId: string, userId: string) => {
-	const streams = state.byTeam[teamId] || {};
-	return Object.values(streams).filter(
-		stream =>
-			stream.type === "channel" &&
-			!stream.deactivated &&
-			!stream.isArchived &&
-			!stream.serviceType &&
-			(stream.isTeamStream || _includes(stream.memberIds, userId))
-	);
-};
+export const getChannelStreamsForTeam = createSelector(
+	(state: CodeStreamState) => state.streams,
+	(_, teamId: string) => teamId,
+	(state: CodeStreamState) => state.session.userId!,
+	(state, teamId, userId) => {
+		const streams = state.byTeam[teamId];
+
+		if (streams == null) return emptyArray;
+
+		return sortBy(
+			Object.values(streams).filter(
+				stream =>
+					stream.type === "channel" &&
+					!stream.deactivated &&
+					!stream.isArchived &&
+					!stream.serviceType &&
+					(stream.isTeamStream || _includes(stream.memberIds, userId)),
+				stream => (stream.name || "").toLowerCase()
+			)
+		) as CSChannelStream[];
+	}
+);
 
 // TODO: memoize
 export const getPublicChannelStreamsForTeam = (

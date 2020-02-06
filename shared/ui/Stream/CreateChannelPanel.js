@@ -250,10 +250,11 @@ export class SimpleCreateChannelPanel extends Component {
 	};
 }
 
-const mapStateToProps = ({ context, streams, users, teams, ide }) => {
+const mapStateToProps = state => {
+	const { context, users, teams, ide } = state;
 	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
 
-	const channelStreams = getChannelStreamsForTeam(streams, context.currentTeamId) || {};
+	const channelStreams = getChannelStreamsForTeam(state, context.currentTeamId);
 
 	const members = teamMembers.map(user => {
 		return {

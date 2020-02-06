@@ -119,7 +119,7 @@ export const safe = <T>(fn: () => T): T | undefined => {
 	}
 };
 
-export function mapFilter<A, B>(array: A[], fn: (item: A) => B | undefined): B[] {
+export function mapFilter<A, B>(array: A[], fn: (item: A) => B | undefined | null): B[] {
 	const result: B[] = [];
 	array.forEach(a => {
 		const mapped = fn(a);

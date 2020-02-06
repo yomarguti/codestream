@@ -144,13 +144,12 @@ export class SimplePublicChannelPanel extends Component {
 	};
 }
 
-const mapStateToProps = ({ context, streams, users, teams, umis, session, ide }) => {
+const mapStateToProps = state => {
+	const { context, streams, users, teams, umis, session, ide } = state;
+
 	const teamMembers = teams[context.currentTeamId].memberIds.map(id => users[id]).filter(Boolean);
 
-	const channelStreams = _sortBy(
-		getChannelStreamsForTeam(streams, context.currentTeamId, session.userId) || [],
-		stream => stream.name.toLowerCase()
-	);
+	const channelStreams = getChannelStreamsForTeam(state, context.currentTeamId);
 
 	const publicStreams = _sortBy(
 		getPublicChannelStreamsForTeam(streams, context.currentTeamId, session.userId) || [],

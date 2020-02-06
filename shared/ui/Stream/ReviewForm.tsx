@@ -63,7 +63,6 @@ interface Props extends ConnectedProps {
 interface ConnectedProps {
 	teamMates: CSUser[];
 	teamMembers: CSUser[];
-	channelStreams: CSChannelStream[];
 	directMessageStreams: CSDirectStream[];
 	channel: CSStream;
 	providerInfo: {
@@ -72,7 +71,6 @@ interface ConnectedProps {
 	currentUser: CSUser;
 	selectedStreams: {};
 	showChannels: string;
-	services: {};
 	teamTagsArray: any;
 	apiCapabilities: CSApiCapabilities;
 	textEditorUri?: string;
@@ -499,10 +497,6 @@ class ReviewForm extends React.Component<Props, State> {
 
 		return (
 			<MessageInput
-				teammates={this.props.teamMates}
-				currentUserId={this.props.currentUser.id}
-				services={this.props.services}
-				channelStreams={this.props.channelStreams}
 				teamProvider={"codestream"}
 				isDirectMessage={this.props.channel.type === StreamType.Direct}
 				text={text.replace(/\n/g, "<br/>")}
@@ -514,7 +508,6 @@ class ReviewForm extends React.Component<Props, State> {
 					this.props.editingReview ? codemark.id !== this.props.editingReview.id : true
 				}
 				onSubmit={this.handleClickSubmit}
-				teamTags={this.props.teamTagsArray}
 				selectedTags={this.state.selectedTags}
 				__onDidRender={__onDidRender}
 			/>
@@ -1191,15 +1184,6 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 	const teamMembers = getTeamMembers(state);
 	const teamTagsArray = getTeamTagsArray(state);
 
-	const channelStreams: CSChannelStream[] = sortBy(
-		(getChannelStreamsForTeam(
-			state.streams,
-			context.currentTeamId,
-			session.userId!
-		) as CSChannelStream[]) || [],
-		stream => (stream.name || "").toLowerCase()
-	);
-
 	const directMessageStreams: CSDirectStream[] = (
 		getDirectMessageStreamsForTeam(state.streams, context.currentTeamId) || []
 	).map(stream => ({
@@ -1219,14 +1203,12 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		channel,
 		teamMates,
 		teamMembers,
-		channelStreams: channelStreams,
 		directMessageStreams: directMessageStreams,
 		providerInfo: (user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT,
 		currentUser: user,
 		selectedStreams: preferences.selectedStreams || EMPTY_OBJECT,
 		showChannels: context.channelFilter,
 		textEditorUri: editorContext.textEditorUri,
-		services: state.services,
 		teamTagsArray,
 		repos,
 		apiCapabilities: apiVersioning.apiCapabilities
