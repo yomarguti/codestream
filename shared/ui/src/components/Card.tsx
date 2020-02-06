@@ -66,6 +66,7 @@ export const CardBody = styled.div`
 	white-space: nowrap;
 	text-overflow: ellipsis;
 	overflow-x: hidden;
+	padding: 1px;
 `;
 
 const Content = styled.div<CardProps>`

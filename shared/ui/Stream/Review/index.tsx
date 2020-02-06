@@ -1,7 +1,7 @@
 import React from "react";
 import cx from "classnames";
 import { CardBody, CardProps, getCardProps } from "@codestream/webview/src/components/Card";
-import { ReviewPlus, GetReviewRequestType } from "@codestream/protocols/agent";
+import { GetReviewRequestType } from "@codestream/protocols/agent";
 import {
 	MinimumWidthCard,
 	Header,
@@ -20,7 +20,7 @@ import {
 	MetaAssignee
 } from "../Codemark/BaseCodemark";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
-import { CSUser, CSReview, CSReviewChangeset } from "@codestream/protocols/api";
+import { CSUser, CSReviewChangeset, CSReview } from "@codestream/protocols/api";
 import { CodeStreamState } from "@codestream/webview/store";
 import { useSelector, useDispatch } from "react-redux";
 import { useMarkdownifyToHtml } from "../Markdowner";
@@ -35,16 +35,28 @@ import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import { ChangesetFile } from "./ChangesetFile";
 import { getReview } from "@codestream/webview/store/reviews/reducer";
 import { ReviewShowDiffRequestType } from "@codestream/protocols/webview";
+import MessageInput from "../MessageInput";
+import styled from "styled-components";
+import Button from "../Button";
 
 export interface BaseReviewProps extends CardProps {
-	review: ReviewPlus;
+	review: CSReview;
 	author: CSUser;
 	repoNames: string[];
 	currentUserId?: string;
 	collapsed?: boolean;
 	isFollowing?: boolean;
 	reviewers?: CSUser[];
+	renderReplyInput?: () => any;
 }
+
+const ComposeWrapper = styled.div.attrs(() => ({
+	className: "compose codemark-compose"
+}))`
+	&&& {
+		padding: 0 !important;
+	}
+`;
 
 const BaseReview = (props: BaseReviewProps) => {
 	const { review } = props;
@@ -152,6 +164,9 @@ const BaseReview = (props: BaseReviewProps) => {
 					)}
 				</MetaSection>
 				{props.collapsed && renderMetaSectionCollapsed(props)}
+				{!props.collapsed && props.renderReplyInput != null && (
+					<ComposeWrapper>{props.renderReplyInput()}</ComposeWrapper>
+				)}
 			</CardBody>
 		</MinimumWidthCard>
 	);
@@ -186,6 +201,55 @@ const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 						</Tooltip>
 					))}
 			</MetaSectionCollapsed>
+		</>
+	);
+};
+
+const ReplyInput = (props: {}) => {
+	const [text, setText] = React.useState("");
+	const submit = () => {};
+
+	return (
+		<>
+			<MetaLabel>Add Reply</MetaLabel>
+			<MessageInput
+				text={text}
+				placeholder="Reply..."
+				onChange={value => {
+					setText(value);
+				}}
+			/>
+			<div style={{ display: "flex" }}>
+				<div style={{ opacity: 0.4, paddingTop: "3px" }}>Markdown is supported</div>
+				<div style={{ textAlign: "right", flexGrow: 1 }}>
+					<Tooltip
+						content={
+							<span>
+								Submit Reply
+								<span className="keybinding extra-pad">
+									{navigator.appVersion.includes("Macintosh") ? "⌘" : "Alt"} ENTER
+								</span>
+							</span>
+						}
+						placement="bottom"
+						delay={1}
+					>
+						<Button
+							style={{
+								// fixed width to handle the isLoading case
+								width: "80px",
+								margin: "10px 0",
+								float: "right"
+							}}
+							className={cx("control-button", { cancel: text.length === 0 })}
+							type="submit"
+							onClick={submit}
+						>
+							Submit
+						</Button>
+					</Tooltip>
+				</div>
+			</div>
 		</>
 	);
 };
@@ -247,6 +311,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 			isFollowing={derivedState.userIsFollowing}
 			reviewers={derivedState.reviewers}
 			currentUserId={derivedState.currentUserId}
+			renderReplyInput={() => <ReplyInput />}
 		/>
 	);
 };
