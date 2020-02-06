@@ -300,7 +300,7 @@ export class MSTeamsApiProvider implements ApiProvider {
 					break;
 
 				case MessageType.Users:
-					let user = e.data.find(u =>
+					let user = e.data.find((u: any) =>
 						u.codestreamId == null
 							? u.id === this._teamsUserId
 							: u.codestreamId === this._codestreamUserId

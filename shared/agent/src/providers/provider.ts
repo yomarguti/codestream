@@ -218,7 +218,7 @@ export abstract class ThirdPartyProviderBase<
 			this.session.api.onDidReceiveMessage(e => {
 				if (e.type !== MessageType.Users) return;
 
-				const me = e.data.find(u => u.id === this.session.userId) as CSMe | null | undefined;
+				const me = e.data.find((u: any) => u.id === this.session.userId) as CSMe | null | undefined;
 				if (me == null) return;
 
 				const providerInfo = this.getProviderInfo(me);

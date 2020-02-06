@@ -320,7 +320,7 @@ export class SlackApiProvider implements ApiProvider {
 					break;
 
 				case MessageType.Users:
-					let user = e.data.find(u =>
+					let user = e.data.find((u: any) =>
 						u.codestreamId == null
 							? u.id === this._slackUserId
 							: u.codestreamId === this._codestreamUserId
