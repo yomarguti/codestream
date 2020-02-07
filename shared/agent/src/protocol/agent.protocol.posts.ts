@@ -22,6 +22,7 @@ import {
 
 export interface PostPlus extends CSPost {
 	codemark?: CodemarkPlus;
+	review?: CSReview;
 	hasMarkers?: boolean;
 }
 

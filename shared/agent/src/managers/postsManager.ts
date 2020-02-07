@@ -709,6 +709,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 	private async enrichPost(post: CSPost): Promise<PostPlus> {
 		let codemark;
+		let review;
 		let hasMarkers = false;
 		if (post.codemarkId) {
 			try {
@@ -720,8 +721,13 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				Logger.error(ex);
 			}
 		}
+		if (post.reviewId) {
+			try {
+				review = await SessionContainer.instance().reviews.getById(post.reviewId);
+			} catch (error) {}
+		}
 
-		return { ...post, codemark: codemark, hasMarkers: hasMarkers };
+		return { ...post, codemark: codemark, hasMarkers: hasMarkers, review };
 	}
 
 	async enrichPosts(posts: CSPost[]): Promise<PostPlus[]> {
