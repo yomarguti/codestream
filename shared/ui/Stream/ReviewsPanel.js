@@ -736,7 +736,7 @@ const mapStateToProps = state => {
 		}
 		reviewChangesets.forEach(changeset => {
 			const { repoId, branch } = changeset;
-			if (repoId) repoArray[repo] = createdAt;
+			if (repoId) repoArray[repoId] = createdAt;
 			if (branch) branchArray[branch] = createdAt;
 		});
 	});
