@@ -30,10 +30,10 @@ import Tooltip from "../Tooltip";
 import { capitalize, emptyArray } from "@codestream/webview/utils";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "../..";
-import { saveReviews, fetchChangesets } from "@codestream/webview/store/reviews/actions";
+import { saveReviews } from "@codestream/webview/store/reviews/actions";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import { ChangesetFile } from "./ChangesetFile";
-import { getReview, getChangesets } from "@codestream/webview/store/reviews/reducer";
+import { getReview } from "@codestream/webview/store/reviews/reducer";
 import { ReviewShowDiffRequestType } from "@codestream/protocols/webview";
 
 export interface BaseReviewProps extends CardProps {
@@ -61,8 +61,7 @@ const BaseReview = (props: BaseReviewProps) => {
 						onClick={e => {
 							e.preventDefault();
 							HostApi.instance.send(ReviewShowDiffRequestType, {
-								// FIXME
-								reviewId: "changeset.reviewId",
+								reviewId: review.id,
 								repoId: changeset.repoId,
 								path: f.file
 							});

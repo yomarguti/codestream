@@ -54,9 +54,9 @@ import { reduceFeatureFlags } from "./featureFlags/reducer";
 import { FeatureFlagsState } from "./featureFlags/types";
 import { reduceCompanies } from "./companies/reducer";
 import { CompaniesState } from "./companies/types";
-import { reduceReviewsState } from "./reviews/reducer";
 import { reduceDocuments } from "./documents/reducer";
 import { DocumentsState } from "./documents/types";
+import { reduceReviews } from "./reviews/reducer";
 
 const pluginVersion = (state = "", action) => {
 	if (action.type === "@pluginVersion/Set") return action.payload;
@@ -82,7 +82,7 @@ const reducer = combineReducers({
 	posts: reducePosts,
 	preferences: reducePreferences,
 	repos: reduceRepos,
-	reviews: reduceReviewsState,
+	reviews: reduceReviews,
 	session: reduceSession,
 	streams: reduceStreams,
 	teams: reduceTeams,

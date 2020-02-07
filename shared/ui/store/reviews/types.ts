@@ -1,4 +1,4 @@
-import { CSReview, CSReviewChangeset } from "@codestream/protocols/api";
+import { CSReview } from "@codestream/protocols/api";
 import { Index } from "../common";
 
 export enum ReviewsActionsTypes {
@@ -6,13 +6,6 @@ export enum ReviewsActionsTypes {
 	SaveReviews = "@reviews/SaveReviews",
 	UpdateReviews = "@reviews/UpdateReviews",
 	Delete = "@reviews/Delete",
-	SaveChangesetsForReview = "@reviews/SaveChangesets"
 }
 
-export type ReviewsDictionary = Index<CSReview>;
-export type ChangesetsDictionary = Index<CSReviewChangeset[]>;
-
-export interface ReviewsState {
-	reviews: ReviewsDictionary;
-	changesets: ChangesetsDictionary;
-}
+export type ReviewsState = Index<CSReview>;
