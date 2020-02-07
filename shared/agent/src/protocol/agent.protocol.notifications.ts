@@ -140,7 +140,7 @@ export interface ApiCapabilitiesChangedNotification {
 
 export interface DocumentsChangedNotification {
 	type: ChangeDataType.Documents;
-	data: { reason: string, document: Document };
+	data: { reason: string; document: Document };
 }
 
 export type DidChangeDataNotification =

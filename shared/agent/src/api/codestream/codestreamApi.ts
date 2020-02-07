@@ -1137,7 +1137,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			reviewId: request.reviewId
 		};
 
-		return this.get<CSGetReviewDiffsResponse>(`/reviews/diff/${request.reviewId}`, this._token);
+		return this.get<CSGetReviewDiffsResponse>(`/reviews/diffs/${request.reviewId}`, this._token);
 	}
 
 	@log()

@@ -933,12 +933,12 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			// filter out excluded files from the diffs and modified files
 			const localDiffs = (
 				await git.getDiffs(scm.repoPath, includeSaved, includeStaged, localDiffSha)
-			).filter(diff => diff.newFileName && !excludedFiles.includes(diff.newFileName.substr(2)));
+			).filter(diff => diff.newFileName && !excludedFiles.includes(diff.newFileName));
 
 			const latestCommitSha = commits[0] ? commits[0].sha : undefined;
 			const latestCommitDiffs = latestCommitSha
 				? (await git.getDiffs(scm.repoPath, includeSaved, includeStaged, latestCommitSha)).filter(
-						diff => diff.newFileName && !excludedFiles.includes(diff.newFileName.substr(2))
+						diff => diff.newFileName && !excludedFiles.includes(diff.newFileName)
 				  )
 				: undefined;
 
@@ -952,11 +952,11 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					includeSaved,
 					includeStaged,
 					remotes,
-					diffs: { localDiffSha, localDiffs, latestCommitDiffs }
+					diffs: { localDiffSha, localDiffs, latestCommitSha, latestCommitDiffs }
 				});
 			}
 			for (const patch of localDiffs) {
-				const file = patch.newFileName?.substr(2);
+				const file = patch.newFileName;
 				if (file && !excludedFiles.includes(file)) {
 					for (const hunk of patch.hunks) {
 						const range: Range = {

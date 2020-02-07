@@ -5,28 +5,25 @@ import {
 	CSChannelStream,
 	CSCreateReviewRequest,
 	CSDirectStream,
+	CSGetReviewDiffsRequest,
+	CSGetReviewDiffsResponse,
 	CSGetReviewsResponse,
 	CSMarker,
 	CSMarkerLocations,
 	CSRepository,
 	CSReview,
-	CSReviewChangeset,
 	CSReviewChangesetBase,
-	CSStream,
-	CSGetReviewDiffsRequest,
-	CSGetReviewDiffsResponse
+	CSStream
 } from "./api.protocol";
 import { CSReviewDiffs } from "./api.protocol.models";
 
 export interface ReviewPlus extends CSReview {}
 
-export interface CreateDiffsRequest extends Omit<CSReviewDiffs, "reviewId"> {
-	diffs?: any[];
-}
+export interface CreateDiffsRequest extends CSReviewDiffs {}
 export interface CreateReviewChangesetsRequest
 	extends Omit<CSReviewChangesetBase, "reviewId" | "repoId" | "diffId"> {
-	repoId?: string;
-	diffs?: CreateDiffsRequest;
+	repoId: string;
+	diffs: CreateDiffsRequest;
 }
 
 export interface CreateReviewRequest extends Omit<CSCreateReviewRequest, "teamId"> {

@@ -88,7 +88,7 @@ export interface ReposScm {
 	root?: boolean;
 }
 
-export interface GetReposScmRequest { }
+export interface GetReposScmRequest {}
 
 export interface GetReposScmResponse {
 	repositories?: ReposScm[];

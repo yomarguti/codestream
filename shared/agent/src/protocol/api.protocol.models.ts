@@ -1,5 +1,6 @@
 "use strict";
 
+import { ParsedDiff } from "diff";
 import { ThirdPartyProviders } from "./agent.protocol";
 
 export interface CSEntity {
@@ -158,15 +159,13 @@ export interface ReviewChangesetFileInfo {
 }
 
 export interface CSReviewDiffs {
-	reviewId: string;
-
 	// the start point of the local diffs
 	localDiffSha: string;
-	localDiffs: any[]; // ParsedDiff[];
+	localDiffs: ParsedDiff[];
 
 	// the latest local-only commit on the branch, and the diffs
 	latestCommitSha?: string;
-	latestCommitDiffs?: any[]; // ParsedDiff[];
+	latestCommitDiffs?: ParsedDiff[];
 }
 
 export interface CSReviewChangesetBase {

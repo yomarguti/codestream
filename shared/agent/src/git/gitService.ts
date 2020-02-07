@@ -303,7 +303,7 @@ export class GitService implements IGitService, Disposable {
 	): Promise<ParsedDiff[]> {
 		let data: string | undefined;
 		try {
-			const options = ["diff"];
+			const options = ["diff", "--no-prefix"];
 			if (includeStaged && !includeSaved) options.push("--staged");
 			if (ref && ref.length) options.push(ref);
 			if (!includeStaged) options.push("HEAD");
@@ -693,6 +693,16 @@ export class GitService implements IGitService, Disposable {
 			});
 			return ret;
 		} catch {
+			return undefined;
+		}
+	}
+
+	async getParentCommit(repoPath: string, sha: string): Promise<string | undefined> {
+		try {
+			const data = await git({ cwd: repoPath }, "log", "--pretty=%P", "-n", "1", sha);
+			return data.trim().split("\n")[0];
+		} catch (err) {
+			Logger.log(err.message);
 			return undefined;
 		}
 	}

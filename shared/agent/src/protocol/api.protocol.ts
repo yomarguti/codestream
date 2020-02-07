@@ -24,7 +24,8 @@ import {
 	CSTeam,
 	CSUser,
 	ProviderType,
-	StreamType
+	StreamType,
+	CSReviewDiffs
 } from "./api.protocol.models";
 
 export * from "./api.protocol.models";
@@ -588,7 +589,7 @@ export interface CSGetReviewDiffsRequest {
 }
 
 export interface CSGetReviewDiffsResponse {
-	[repoId: string]: any;
+	[repoId: string]: CSReviewDiffs;
 }
 
 export interface CSAddReferenceLocationRequest {
