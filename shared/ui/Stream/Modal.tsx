@@ -17,7 +17,7 @@ const useModalRoot = () => {
 		};
 	}, []);
 
-	return element;
+	return element as HTMLElement;
 };
 
 export const ModalRoot = React.memo(() => {
@@ -40,9 +40,13 @@ const ModalWrapper = styled.div`
 	}
 `;
 
-const MODAL_CONTEXT = { zIndex: 3000 };
+interface ModalContextType {
+	zIndex: number;
+}
 
-export const ModalContext = React.createContext({ zIndex: 50 });
+export const ModalContext = React.createContext<ModalContextType>({
+	zIndex: 52
+});
 
 export interface ModalProps {
 	onClose: () => void;
@@ -50,6 +54,7 @@ export interface ModalProps {
 
 export function Modal(props: PropsWithChildren<ModalProps>) {
 	const modalRoot = useModalRoot();
+	const [context] = React.useState<ModalContextType>(() => ({ zIndex: 3000 }));
 
 	React.useEffect(() => {
 		const subscription = VsCodeKeystrokeDispatcher.on("keydown", event => {
@@ -65,7 +70,7 @@ export function Modal(props: PropsWithChildren<ModalProps>) {
 	}, [props.onClose]);
 
 	return createPortal(
-		<ModalContext.Provider value={MODAL_CONTEXT}>
+		<ModalContext.Provider value={context}>
 			<ModalWrapper>
 				<CancelButton onClick={props.onClose} />
 				<div>{props.children}</div>

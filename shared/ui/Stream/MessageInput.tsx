@@ -13,7 +13,7 @@ import {
 	debounceAndCollectToAnimationFrame,
 	emptyArray
 } from "../utils";
-import AtMentionsPopup from "./AtMentionsPopup";
+import { AtMentionsPopup } from "./AtMentionsPopup";
 import EmojiPicker from "./EmojiPicker";
 import Menu from "./Menu";
 import Button from "./Button";
@@ -1029,14 +1029,6 @@ export class MessageInput extends React.Component<Props, State> {
 				onKeyDown={this.handleKeyDown}
 				style={{ position: "relative" }}
 			>
-				<AtMentionsPopup
-					on={this.state.currentPopup}
-					items={this.state.popupItems}
-					prefix={this.state.popupPrefix}
-					selected={this.state.selectedPopupItem}
-					handleHoverAtMention={this.handleHoverAtMention}
-					handleSelectAtMention={this.handleSelectAtMention}
-				/>
 				<div key="message-attach-icons" className="message-attach-icons">
 					{
 						// <Icon
@@ -1106,18 +1098,27 @@ export class MessageInput extends React.Component<Props, State> {
 					)}
 					{this.buildTagMenu()}
 				</div>
-				<ContentEditable
-					className={cx("message-input", btoa(unescape(encodeURIComponent(placeholder || ""))), {
-						"format-code": this.state.formatCode
-					})}
-					id="input-div"
-					onChange={this.handleChange}
-					onBlur={this.handleBlur}
-					onClick={this.handleClick}
-					html={text}
-					placeholder={placeholder}
-					ref={ref => (this._contentEditable = ref)}
-				/>
+				<AtMentionsPopup
+					on={this.state.currentPopup}
+					items={this.state.popupItems || emptyArray}
+					prefix={this.state.popupPrefix}
+					selected={this.state.selectedPopupItem}
+					handleHoverAtMention={this.handleHoverAtMention}
+					handleSelectAtMention={this.handleSelectAtMention}
+				>
+					<ContentEditable
+						className={cx("message-input", btoa(unescape(encodeURIComponent(placeholder || ""))), {
+							"format-code": this.state.formatCode
+						})}
+						id="input-div"
+						onChange={this.handleChange}
+						onBlur={this.handleBlur}
+						onClick={this.handleClick}
+						html={text}
+						placeholder={placeholder}
+						ref={ref => (this._contentEditable = ref)}
+					/>
+				</AtMentionsPopup>
 			</div>
 		);
 	}
