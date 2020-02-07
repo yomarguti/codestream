@@ -25,8 +25,7 @@ import {
 	DidChangeApiVersionCompatibilityNotificationType,
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
-	DidChangeVersionCompatibilityNotificationType,
-	Document,
+	DidChangeVersionCompatibilityNotificationType,	
 	ConnectionStatus,
 	ChangeDataType,
 	VersionCompatibility,
@@ -49,7 +48,7 @@ import { bootstrap, reset } from "./store/actions";
 import { online, offline, errorOccurred } from "./store/connectivity/actions";
 import { upgradeRequired, upgradeRecommended } from "./store/versioning/actions";
 import { updatePreferences } from "./store/preferences/actions";
-import { updateDocument, removeDocument } from "./store/documents/actions";
+import { updateDocument, removeDocument, resetDocuments } from "./store/documents/actions";
 import { updateUnreads } from "./store/unreads/actions";
 import { updateConfigs } from "./store/configs/actions";
 import { setEditorContext } from "./store/editorContext/actions";
@@ -130,6 +129,9 @@ function listenForEvents(store) {
 
 	api.on(DidChangeDataNotificationType, ({ type, data }) => {
 		switch (type) {
+			case ChangeDataType.Commits:				
+				store.dispatch(resetDocuments());
+				break;
 			case ChangeDataType.Documents:
 				if ((data as any).reason === 'removed') {
 					store.dispatch(removeDocument((data as any).document));

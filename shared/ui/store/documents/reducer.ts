@@ -27,7 +27,7 @@ export function reduceDocuments(state = initialState, action: DocumentAction) {
 				[action.payload.uri]: document 
 			};
 		}	
-	 		 
+	 	case "RESET_DOCUMENTS":
 		case "RESET": {
 			return initialState;
 		}

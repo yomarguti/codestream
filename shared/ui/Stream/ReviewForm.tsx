@@ -9,7 +9,9 @@ import {
 	FileStatus,
 	AddIgnoreFilesRequestType,
 	IgnoreFilesRequestType,
-	ReposScm
+	ReposScm,
+	DidChangeDataNotificationType,
+	ChangeDataType
 } from "@codestream/protocols/agent";
 import {
 	CSChannelStream,
@@ -55,6 +57,7 @@ import { Range } from "vscode-languageserver-types";
 import { PostsActionsType } from "../store/posts/types";
 import { URI } from "vscode-uri";
 import { DropdownMenu } from "../src/components/DropdownMenu";
+import { DocumentData } from "../protocols/agent/agent.protocol.notifications";
 
 interface Props extends ConnectedProps {
 	streamId: string;
@@ -148,6 +151,7 @@ class ReviewForm extends React.Component<Props, State> {
 	focusOnMessageInput?: Function;
 	permalinkRef = React.createRef<HTMLTextAreaElement>();
 	private _sharingAttributes?: SharingAttributes;
+	private disposables: { dispose(): void }[] = [];
 
 	constructor(props: Props) {
 		super(props);
@@ -229,8 +233,28 @@ class ReviewForm extends React.Component<Props, State> {
 	componentDidMount() {
 		const { textEditorUri } = this.props;
 		if (textEditorUri) this.getScmInfoForURI(textEditorUri);
+
+		this.disposables.push(
+			HostApi.instance.on(DidChangeDataNotificationType, (e: any) => {
+				// if we have a change to scm OR a file has been saved, update
+				if (
+					e.type === ChangeDataType.Commits ||
+					(e.type === ChangeDataType.Documents &&
+						e.data &&
+						(e.data as DocumentData).reason === "saved")
+				) {
+					this.setState({ isLoadingScm: true });
+					this.handleRepoChange();
+				}
+			})
+		);
+
 		this.focus();
 	}
+
+	componentWillUnmount = () => {
+		this.disposables.forEach(d => d.dispose());
+	};
 
 	async handleRepoChange() {
 		const { repos, teamMates } = this.props;
