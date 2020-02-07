@@ -936,9 +936,11 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			).filter(diff => diff.newFileName && !excludedFiles.includes(diff.newFileName.substr(2)));
 
 			const latestCommitSha = commits[0] ? commits[0].sha : undefined;
-			const latestCommitDiffs = latestCommitSha ? (
-				await git.getDiffs(scm.repoPath, includeSaved, includeStaged, latestCommitSha)
-			).filter(diff => diff.newFileName && !excludedFiles.includes(diff.newFileName.substr(2))) : undefined;
+			const latestCommitDiffs = latestCommitSha
+				? (await git.getDiffs(scm.repoPath, includeSaved, includeStaged, latestCommitSha)).filter(
+						diff => diff.newFileName && !excludedFiles.includes(diff.newFileName.substr(2))
+				  )
+				: undefined;
 
 			// WTF typescript, this is defined above
 			if (reviewRequest.reviewChangesets) {
@@ -950,7 +952,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					includeSaved,
 					includeStaged,
 					remotes,
-					diffs: {localDiffSha, localDiffs, latestCommitDiffs },
+					diffs: { localDiffSha, localDiffs, latestCommitDiffs }
 				});
 			}
 			for (const patch of localDiffs) {
@@ -1360,7 +1362,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					anchorFormat: "[${text}](${url})"
 				};
 		}
-	}
+	};
 
 	createProviderCard = async (
 		providerCardRequest: {
@@ -1588,7 +1590,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			Logger.error(error, `failed to create a ${attributes.issueProvider.name} card:`);
 			return undefined;
 		}
-	}
+	};
 }
 
 async function resolveCreatePostResponse(response: CreatePostResponse) {

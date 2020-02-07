@@ -169,15 +169,19 @@ export class GitRepositories {
 			if (unassignedRepositories.length > 0) {
 				const orderedUnassignedRepos: GitRepository[] = [];
 				const repoInfo: MatchReposRequest = { repos: [] };
-				await Promise.all(unassignedRepositories.map(async repo => { 
-					const remotes = (await repo.getRemotes()).map(r => r.normalizedUrl);
-					const knownCommitHashes = await MarkersManager.getKnownCommitHashes(repo.path);
-					orderedUnassignedRepos.push(repo);
-					repoInfo.repos.push({ remotes, knownCommitHashes });
-				}));
+				await Promise.all(
+					unassignedRepositories.map(async repo => {
+						const remotes = (await repo.getRemotes()).map(r => r.normalizedUrl);
+						const knownCommitHashes = await MarkersManager.getKnownCommitHashes(repo.path);
+						orderedUnassignedRepos.push(repo);
+						repoInfo.repos.push({ remotes, knownCommitHashes });
+					})
+				);
 				const repoMatches = await this.session.api.matchRepos(repoInfo);
 				for (let i = 0; i < repoMatches.repos.length; i++) {
-					Logger.debug(`Git repo ${orderedUnassignedRepos[i].path} matched to ${repoMatches.repos[i].id}:${repoMatches.repos[i].name}`);
+					Logger.debug(
+						`Git repo ${orderedUnassignedRepos[i].path} matched to ${repoMatches.repos[i].id}:${repoMatches.repos[i].name}`
+					);
 					orderedUnassignedRepos[i].setKnownRepository(repoMatches.repos[i]);
 				}
 			}
@@ -202,12 +206,12 @@ export class GitRepositories {
 			const reposToDelete =
 				filteredTree !== undefined
 					? [
-						// Since the filtered tree will have keys that are relative to the fsPath, normalize to the full path
-						...Iterables.map<[GitRepository, string], [GitRepository, string]>(
-							filteredTree.entries(),
-							([r, k]) => [r, path.join(fsPath, k)]
-						)
-					]
+							// Since the filtered tree will have keys that are relative to the fsPath, normalize to the full path
+							...Iterables.map<[GitRepository, string], [GitRepository, string]>(
+								filteredTree.entries(),
+								([r, k]) => [r, path.join(fsPath, k)]
+							)
+					  ]
 					: [];
 
 			const repo = this._repositoryTree.get(fsPath);
@@ -374,7 +378,7 @@ export class GitRepositories {
 		let rootPath;
 		try {
 			rootPath = await this._git.getRepoRoot(folderUri.fsPath, true);
-		} catch { }
+		} catch {}
 		if (rootPath) {
 			Logger.log(`Repository found in '${rootPath}'`);
 			const repo = new GitRepository(rootPath, true, folder, remoteToRepoMap);
@@ -385,7 +389,7 @@ export class GitRepositories {
 		if (depth <= 0) {
 			Logger.log(
 				`Searching for repositories (depth=${depth}) in '${
-				folderUri.fsPath
+					folderUri.fsPath
 				}' took ${Strings.getDurationMilliseconds(start)} ms`
 			);
 
@@ -419,25 +423,23 @@ export class GitRepositories {
 				})
 			];
 
-			excludes = excludedPaths.reduce(
-				(accumulator, current) => {
-					accumulator[current] = true;
-					return accumulator;
-				},
-				Object.create(null) as any
-			);
+			excludes = excludedPaths.reduce((accumulator, current) => {
+				accumulator[current] = true;
+				return accumulator;
+			}, Object.create(null) as any);
 		}
 
 		let paths;
 		try {
 			paths = await this.repositorySearchCore(folderUri.fsPath, depth, excludes);
 		} catch (ex) {
-			if (/no such file or directory/i.test(ex.message || "") ||
+			if (
+				/no such file or directory/i.test(ex.message || "") ||
 				/EPERM: operation not permitted, scandir/i.test(ex.message || "")
 			) {
 				Logger.log(
 					`Searching for repositories (depth=${depth}) in '${folderUri.fsPath}' FAILED${
-					ex.message ? ` (${ex.message})` : ""
+						ex.message ? ` (${ex.message})` : ""
 					}`
 				);
 			} else {
@@ -458,7 +460,7 @@ export class GitRepositories {
 			let rp;
 			try {
 				rp = await this._git.getRepoRoot(p, true);
-			} catch { }
+			} catch {}
 			if (!rp) continue;
 
 			Logger.log(`Repository found in '${rp}'`);
@@ -469,7 +471,7 @@ export class GitRepositories {
 
 		Logger.log(
 			`Searching for repositories (depth=${depth}) in '${
-			folderUri.fsPath
+				folderUri.fsPath
 			}' took ${Strings.getDurationMilliseconds(start)} ms`
 		);
 
@@ -523,8 +525,7 @@ export class GitRepositories {
 					for (const folder of folders) {
 						try {
 							await this.repositorySearchCore(folder, depth, excludes, repositories);
-						}
-						catch (ex) {
+						} catch (ex) {
 							reject(ex);
 							return;
 						}

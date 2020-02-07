@@ -50,8 +50,7 @@ export class PubnubHistory {
 				if (await this.fetchByChannelSlice(channels, options.since)) {
 					this.processMessages();
 					startSlice += sliceSize;
-				}
-				else {
+				} else {
 					output.reset = true;
 					done = true;
 				}

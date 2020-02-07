@@ -19,7 +19,7 @@ import { Iterables, log, lspProvider } from "../system";
 import { ThirdPartyIssueProviderBase } from "./provider";
 
 export type jsonCallback = (
-	err?: {statusCode: number, data?: any},
+	err?: { statusCode: number; data?: any },
 	result?: { [key: string]: any }
 ) => any;
 
@@ -28,7 +28,7 @@ export type jsonCallback = (
 // create an extension of the class, calling an internal function (BAD) to do
 // the dirty work
 class OAuthExtended extends OAuth {
-	fetchJson (
+	fetchJson(
 		method: string,
 		url: string,
 		body: { [key: string]: any } | undefined,
@@ -45,12 +45,13 @@ class OAuthExtended extends OAuth {
 			body ? JSON.stringify(body) : undefined,
 			"application/json",
 			(error, result) => {
-				if (error) { return callback(error); }
+				if (error) {
+					return callback(error);
+				}
 				let json;
 				try {
 					json = JSON.parse(result as string);
-				}
-				catch (error) {
+				} catch (error) {
 					return callback({ statusCode: 500, data: "unable to parse returned data: " + error });
 				}
 				return callback(undefined, json);
@@ -125,15 +126,18 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 		return {};
 	}
 
-	async onConnected() {
-	}
+	async onConnected() {}
 
 	async onDisconnected() {
 		this.boards = [];
 	}
 
 	@log()
-	async _callWithOauth(path: string, method: string = "GET", body: { [key: string]: any } | undefined = undefined) {
+	async _callWithOauth(
+		path: string,
+		method: string = "GET",
+		body: { [key: string]: any } | undefined = undefined
+	) {
 		await this.ensureConnected();
 		return new Promise<any>((resolve, reject) => {
 			const url = `${this.baseUrl}${path}`;
@@ -253,11 +257,11 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 		if (data.assignees && data.assignees.length > 0) {
 			body.fields.assignee = { name: data.assignees[0].name };
 		}
-		const response = await this._callWithOauth(
+		const response = (await this._callWithOauth(
 			"/rest/api/2/issue",
 			"POST",
 			body
-		) as CreateJiraIssueResponse;
+		)) as CreateJiraIssueResponse;
 
 		return {
 			id: response.id,
@@ -271,11 +275,11 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 		if (!board) {
 			return { users: [] };
 		}
-		const result = await this._callWithOauth(
+		const result = (await this._callWithOauth(
 			`/rest/api/2/user/assignable/search?${qs.stringify({
 				project: board.key
 			})}`
-		) as JiraUser[];
+		)) as JiraUser[];
 		return { users: result.map(u => ({ ...u, id: u.accountId })) };
 	}
 }

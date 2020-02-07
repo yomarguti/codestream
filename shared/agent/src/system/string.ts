@@ -4,7 +4,6 @@ import * as path from "path";
 import { isWindows } from "../git/shell";
 
 export namespace Strings {
-
 	export const enum CharCode {
 		/**
 		 * The `/` character.
@@ -132,7 +131,9 @@ export namespace Strings {
 
 		if (isWindows) {
 			// Ensure that drive casing is normalized (lower case)
-			normalized = normalized.replace(driveLetterNormalizeRegex, (drive: string) => drive.toLowerCase());
+			normalized = normalized.replace(driveLetterNormalizeRegex, (drive: string) =>
+				drive.toLowerCase()
+			);
 		}
 
 		return normalized;

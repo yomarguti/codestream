@@ -50,7 +50,6 @@ interface TeamsHeroCard {
 	buttons?: { type: "openUrl"; title: string; value: string }[];
 }
 
-
 export interface TeamsMessageAttachment {
 	contentType:
 		| "application/vnd.microsoft.card.hero"
@@ -346,7 +345,9 @@ export function toTeamsMessageBody(
 			let end;
 
 			if (marker.referenceLocations && marker.referenceLocations.length) {
-				const markerLocation = marker.referenceLocations.find(m => m.commitHash === marker.commitHashWhenCreated) || marker.referenceLocations[0];
+				const markerLocation =
+					marker.referenceLocations.find(m => m.commitHash === marker.commitHashWhenCreated) ||
+					marker.referenceLocations[0];
 				if (markerLocation) {
 					const location = markerLocation.location;
 					if (location && location.length) {

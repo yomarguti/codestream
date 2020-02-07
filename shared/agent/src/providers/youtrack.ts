@@ -17,7 +17,6 @@ import { ThirdPartyIssueProviderBase } from "./provider";
 
 @lspProvider("youtrack")
 export class YouTrackProvider extends ThirdPartyIssueProviderBase<CSYouTrackProviderInfo> {
-
 	get displayName() {
 		return "YouTrack";
 	}
@@ -35,7 +34,8 @@ export class YouTrackProvider extends ThirdPartyIssueProviderBase<CSYouTrackProv
 	}
 
 	get myUrl() {
-		let url = (this._providerInfo && this._providerInfo.data && this._providerInfo.data.baseUrl) || "";
+		let url =
+			(this._providerInfo && this._providerInfo.data && this._providerInfo.data.baseUrl) || "";
 		if (url.endsWith("/hub")) {
 			url = url.split("/hub")[0];
 		} else if (url.endsWith("/youtrack")) {
@@ -44,7 +44,7 @@ export class YouTrackProvider extends ThirdPartyIssueProviderBase<CSYouTrackProv
 		return url;
 	}
 
-	get apiPath () {
+	get apiPath() {
 		return "/youtrack/api";
 	}
 
@@ -52,13 +52,10 @@ export class YouTrackProvider extends ThirdPartyIssueProviderBase<CSYouTrackProv
 		return `${this.myUrl}${this.apiPath}`;
 	}
 
-	async onConnected() {
-	}
+	async onConnected() {}
 
 	@log()
-	async getBoards(
-		request: FetchThirdPartyBoardsRequest
-	): Promise<FetchThirdPartyBoardsResponse> {
+	async getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
 		// have to force connection here because we need accessToken to even create our request
 		await this.ensureConnected();
 		const response = await this.get<YouTrackBoard[]>(
@@ -72,7 +69,7 @@ export class YouTrackProvider extends ThirdPartyIssueProviderBase<CSYouTrackProv
 					id: board.id,
 					name: board.name,
 					singleAssignee: true
-				 };
+				};
 			})
 		};
 	}

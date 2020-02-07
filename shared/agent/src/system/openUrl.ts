@@ -9,7 +9,7 @@ export function openUrl(target: string) {
 	} as any;
 
 	// @ts-ignore
-    if (process.pkg !== undefined && process.platform === "linux") {
+	if (process.pkg !== undefined && process.platform === "linux") {
 		// This script is part of the opn module, but it can't be invoked directly
 		// from the PKGed agent. All IDE plugins that care about Linux and use
 		// the PGKed agent must extract it as a sibling of the agent executable.

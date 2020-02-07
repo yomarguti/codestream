@@ -13,7 +13,8 @@ import {
 	FetchStreamsRequest,
 	FetchStreamsResponse,
 	FetchUsersResponse,
-	GetUserRequest} from "../../protocol/agent.protocol";
+	GetUserRequest
+} from "../../protocol/agent.protocol";
 import {
 	CSCodemark,
 	CSGetMeResponse,
@@ -26,11 +27,7 @@ import {
 	StreamType
 } from "../../protocol/api.protocol";
 import { Arrays, debug, Functions, Iterables, log } from "../../system";
-import {
-	ApiProviderLoginResponse,
-	CodeStreamApiMiddleware,
-	MessageType
-} from "../apiProvider";
+import { ApiProviderLoginResponse, CodeStreamApiMiddleware, MessageType } from "../apiProvider";
 import { CodeStreamApiProvider } from "../codestream/codestreamApi";
 import {
 	fromPostId,
@@ -72,7 +69,8 @@ export class MSTeamsSharingApiProvider {
 		providerInfo: CSMSTeamsProviderInfo,
 		private readonly _codestreamUserId: string,
 		private readonly _codestreamTeamId: string,
-		private _teamsById: Map<string, string> | undefined) {
+		private _teamsById: Map<string, string> | undefined
+	) {
 		this._providerInfo = providerInfo;
 		this._teams = this.newClient();
 
@@ -267,8 +265,6 @@ export class MSTeamsSharingApiProvider {
 		return { user: me };
 	}
 
-
-
 	@log()
 	async createExternalPost(request: CreateSharedExternalPostRequest): Promise<CreatePostResponse> {
 		let createdPostId;
@@ -294,8 +290,7 @@ export class MSTeamsSharingApiProvider {
 
 			if (request.codemark != null) {
 				if (!text) {
-					text =
-						request.codemark.text || request.codemark.title || "";
+					text = request.codemark.text || request.codemark.title || "";
 				}
 
 				({ codemark } = request);
@@ -315,7 +310,7 @@ export class MSTeamsSharingApiProvider {
 
 			const response = await this.teamsApiCall<any>(
 				`beta/teams/${teamId}/channels/${channelId}/messages${
-				parentMessageId ? `/${parentMessageId}/replies` : ""
+					parentMessageId ? `/${parentMessageId}/replies` : ""
 				}`,
 				(request, content) => request.post(content),
 				{
@@ -543,8 +538,7 @@ export class MSTeamsSharingApiProvider {
 					this._teams.api(`https://graph.microsoft.com/${path}`).post({ requests: requests }),
 					timeoutMs * requests.length,
 					{
-						onDidCancel: () =>
-							Logger.warn(cc, `TIMEOUT ${timeoutMs / 1000}s exceeded`)
+						onDidCancel: () => Logger.warn(cc, `TIMEOUT ${timeoutMs / 1000}s exceeded`)
 					}
 				);
 
@@ -581,7 +575,5 @@ export class MSTeamsSharingApiProvider {
 		}
 	}
 
-	async dispose() {
-
-	}
+	async dispose() {}
 }

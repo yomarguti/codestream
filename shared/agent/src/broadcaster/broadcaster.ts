@@ -13,7 +13,7 @@ export interface BroadcasterConnectionOptions {
 }
 
 export interface BroadcasterConnection {
-	disconnect():  void;
+	disconnect(): void;
 	subscribe(channels: string[], options?: BroadcasterConnectionOptions): void;
 	unsubscribe(channels: string[]): void;
 	reconnect(): void;
@@ -52,8 +52,8 @@ export interface BroadcasterInitializer {
 	debug?(msg: string, info?: any): void; // for debug messages
 	httpsAgent?: HttpsAgent | HttpsProxyAgent;
 	socketCluster?: {
-		host: string,
-		port: string
+		host: string;
+		port: string;
 	};
 }
 
@@ -242,7 +242,10 @@ export class Broadcaster {
 	// we're not in a position to subscribe to these channels, queue them up for later
 	private queueChannels(channels: ChannelDescriptor[]) {
 		if (this._testMode) {
-			this.emitStatus(BroadcasterStatusType.Queued, channels.map(channel => channel.name));
+			this.emitStatus(
+				BroadcasterStatusType.Queued,
+				channels.map(channel => channel.name)
+			);
 		}
 		this._debug("Queueing: " + JSON.stringify(channels));
 		this._queuedChannels.push(...channels);
@@ -560,8 +563,7 @@ export class Broadcaster {
 		if (this._simulateConfirmFailure) {
 			this._debug("Simulating a confirm failure");
 			troubleChannels = [...channels];
-		}
-		else {
+		} else {
 			troubleChannels = await this._broadcasterConnection!.confirmSubscriptions(channels);
 		}
 		if (troubleChannels.length > 0) {
@@ -622,10 +624,7 @@ export class Broadcaster {
 		// actually subscribed to any channels, we'll retry 10 times ... after that, we
 		// emit a total failure and stop accepting subscription requests ... this is the
 		// only way to abort an infinite loop if the broadcaster token was just plain wrong
-		if (
-			this.getSubscribedChannels().length === 0 &&
-			this._lastSuccessfulSubscription === 0
-		) {
+		if (this.getSubscribedChannels().length === 0 && this._lastSuccessfulSubscription === 0) {
 			if (this._numResubscribes >= 10) {
 				this._debug(
 					"All subscriptions so far have failed after 10 retries, going into aborted mode..."

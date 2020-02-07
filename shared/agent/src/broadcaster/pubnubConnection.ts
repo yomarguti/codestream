@@ -25,7 +25,7 @@ interface PubnubMessage {
 
 interface PubnubBatchHistoryResponse {
 	channels: {
-		[channel: string]: PubnubMessage[]
+		[channel: string]: PubnubMessage[];
 	};
 }
 
@@ -53,7 +53,6 @@ interface SubscriptionMap {
 }
 
 export class PubnubConnection implements BroadcasterConnection {
-
 	private _userId: string | undefined;
 	private _pubnub: Pubnub | undefined;
 	private _listener: Pubnub.ListenerParameters | undefined;
@@ -215,7 +214,7 @@ export class PubnubConnection implements BroadcasterConnection {
 		}
 	}
 
-	async confirmSubscriptions (channels: string[]): Promise<string[]> {
+	async confirmSubscriptions(channels: string[]): Promise<string[]> {
 		// look for the occupants of the given channels, and if we are not among
 		// them, something has gone wrong and we must resubscribe
 		let response: Pubnub.HereNowResponse;
@@ -245,7 +244,7 @@ export class PubnubConnection implements BroadcasterConnection {
 		return troubleChannels;
 	}
 
-	fetchHistory (options: BroadcasterHistoryInput): Promise<BroadcasterHistoryOutput> {
+	fetchHistory(options: BroadcasterHistoryInput): Promise<BroadcasterHistoryOutput> {
 		return new PubnubHistory().fetchHistory({
 			pubnub: this._pubnub!,
 			...options

@@ -63,13 +63,16 @@ export class MSTeamsProvider extends ThirdPartyPostProviderBase<MSTeamsProviderI
 		const response = await this.session.api.fetchMsTeamsConversations({
 			tenantId: request.providerTeamId
 		});
-		const channels = sortBy(response.msteams_conversations.map((_: any) => {
-			return {
-				id: _.conversationId,
-				name: `${_.teamName}/${_.channelName}`,
-				type: "channel"
-			};
-		}), [_ => _.name]);
+		const channels = sortBy(
+			response.msteams_conversations.map((_: any) => {
+				return {
+					id: _.conversationId,
+					name: `${_.teamName}/${_.channelName}`,
+					type: "channel"
+				};
+			}),
+			[_ => _.name]
+		);
 		return {
 			channels: channels
 		};

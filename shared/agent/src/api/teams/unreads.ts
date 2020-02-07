@@ -167,9 +167,7 @@ export class TeamsUnreads {
 			}
 
 			Logger.debug(
-				`Unreads.changed: mentions (${values.totalMentions}), unreads (${
-					values.totalUnreads
-				})${loggableUnreads}`
+				`Unreads.changed: mentions (${values.totalMentions}), unreads (${values.totalUnreads})${loggableUnreads}`
 			);
 		}
 

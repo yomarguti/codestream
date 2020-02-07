@@ -33,16 +33,13 @@ export namespace Arrays {
 		source: T[],
 		predicateMapper: (item: T) => TMapped | null | undefined
 	): TMapped[] {
-		return source.reduce(
-			(accumulator, current) => {
-				const mapped = predicateMapper(current);
-				if (mapped != null) {
-					accumulator.push(mapped);
-				}
-				return accumulator;
-			},
-			[] as TMapped[]
-		);
+		return source.reduce((accumulator, current) => {
+			const mapped = predicateMapper(current);
+			if (mapped != null) {
+				accumulator.push(mapped);
+			}
+			return accumulator;
+		}, [] as TMapped[]);
 	}
 
 	export async function filterMapAsync<T, TMapped>(

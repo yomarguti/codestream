@@ -105,8 +105,8 @@ export function fromSlackChannel(
 		mostRecentPostId: mostRecentId,
 		priority: channel.priority,
 		privacy: (channel.is_private == null
-			? channel.is_group
-			: channel.is_private)
+		? channel.is_group
+		: channel.is_private)
 			? "private"
 			: "public",
 		purpose: channel.purpose && channel.purpose.value,
@@ -669,7 +669,8 @@ export function toSlackPostBlocks(
 					elements: [
 						{
 							type: "mrkdwn",
-							text: "_We've truncated this Codemark, but you can view the complete version by opening it in your IDE_"
+							text:
+								"_We've truncated this Codemark, but you can view the complete version by opening it in your IDE_"
 						}
 					]
 				});

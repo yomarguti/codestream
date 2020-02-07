@@ -35,10 +35,12 @@ export class SocketClusterHistory {
 	private _socket: AGClientSocket | undefined;
 	private _allMessages: BroadcasterMessage[] = [];
 	private _debug: (msg: string, info?: any) => void = () => {};
-	private _historyPromise: {
-		resolve(): void,
-		reject(error: any): void
-	} | undefined;
+	private _historyPromise:
+		| {
+				resolve(): void;
+				reject(error: any): void;
+		  }
+		| undefined;
 	private _numRequests: number = 0;
 	private _requestId: string = "";
 	private _historyTimer: NodeJS.Timer | undefined;
@@ -61,8 +63,7 @@ export class SocketClusterHistory {
 			if (channels.length > 0) {
 				if (await this.fetchByChannelSlice(channels, options.since)) {
 					startSlice += sliceSize;
-				}
-				else {
+				} else {
 					output.reset = true;
 					done = true;
 				}

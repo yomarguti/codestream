@@ -14,7 +14,11 @@ const LINE_SIMILARITY_THRESHOLD = 0.5;
 const CHANGE_SIMILARITY_THRESHOLD = 0.5;
 const DELETED = -1;
 
-export async function findBestMatchingLine(text: string, lineContent: string, originalLineNumber: number) {
+export async function findBestMatchingLine(
+	text: string,
+	lineContent: string,
+	originalLineNumber: number
+) {
 	try {
 		const dmp = new diffMatchPatch.diff_match_patch();
 		const lines = text.split("\n");

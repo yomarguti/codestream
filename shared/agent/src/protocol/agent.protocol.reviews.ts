@@ -5,9 +5,6 @@ import {
 	CSChannelStream,
 	CSCreateReviewRequest,
 	CSDirectStream,
-	CSGetReviewChangesetResponse,
-	CSGetReviewChangesetsRequest,
-	CSGetReviewChangesetsResponse,
 	CSGetReviewsResponse,
 	CSMarker,
 	CSMarkerLocations,
@@ -15,12 +12,13 @@ import {
 	CSReview,
 	CSReviewChangeset,
 	CSReviewChangesetBase,
-	CSStream
+	CSStream,
+	CSGetReviewDiffsRequest,
+	CSGetReviewDiffsResponse
 } from "./api.protocol";
 import { CSReviewDiffs } from "./api.protocol.models";
 
-export interface ReviewPlus extends CSReview {
-}
+export interface ReviewPlus extends CSReview {}
 
 export interface CreateDiffsRequest extends Omit<CSReviewDiffs, "reviewId"> {
 	diffs?: any[];
@@ -187,26 +185,13 @@ export const GetReviewContentsRequestType = new RequestType<
 	void
 >("codestream/review/contents");
 
-export interface FetchReviewChangesetsRequest extends CSGetReviewChangesetsRequest {}
+export interface FetchReviewDiffsRequest extends CSGetReviewDiffsRequest {}
 
-export interface FetchReviewChangesetsResponse extends CSGetReviewChangesetsResponse {}
+export interface FetchReviewDiffsResponse extends CSGetReviewDiffsResponse {}
 
-export const FetchReviewChangesetsRequestType = new RequestType<
-	FetchReviewChangesetsRequest,
-	FetchReviewChangesetsResponse,
+export const FetchReviewDiffsRequestType = new RequestType<
+	FetchReviewDiffsRequest,
+	FetchReviewDiffsResponse,
 	void,
 	void
->("codestream/review/changesets");
-
-export interface GetReviewChangesetRequest {
-	changesetId: string;
-}
-
-export interface GetReviewChangesetResponse extends CSGetReviewChangesetResponse {}
-
-export const GetReviewChangesetRequestType = new RequestType<
-	GetReviewChangesetRequest,
-	GetReviewChangesetResponse,
-	void,
-	void
->("codestream/review/changeset");
+>("codestream/review/diffs");

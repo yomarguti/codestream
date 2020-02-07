@@ -56,8 +56,6 @@ export class GitBlameRevisionParser {
 			}
 		}
 
-		return [...references.values()].sort(
-			(a, b) => b.date.getTime() - a.date.getTime()
-		);
+		return [...references.values()].sort((a, b) => b.date.getTime() - a.date.getTime());
 	}
 }

@@ -56,9 +56,11 @@ export class CodeStreamUnreads {
 		Logger.debug(`Unreads.update:`, `Updating unreads for ${posts.length} posts...`);
 
 		const grouped = Arrays.groupBy(posts, p => p.streamId);
-		const streams = (await SessionContainer.instance().streams.get({
-			streamIds: Object.keys(grouped)
-		})).streams;
+		const streams = (
+			await SessionContainer.instance().streams.get({
+				streamIds: Object.keys(grouped)
+			})
+		).streams;
 
 		for (const [streamId, posts] of Object.entries(grouped)) {
 			const { preferences } = await this._api.getPreferences();
@@ -121,16 +123,20 @@ export class CodeStreamUnreads {
 					let latestPost;
 					let unreadPosts;
 					try {
-						latestPost = (await posts.get({
-							streamId: streamId,
-							limit: 1
-						})).posts[0];
-						unreadPosts = (await posts.get({
-							streamId: streamId,
-							before: latestPost.seqNum,
-							after: Number(lastReadSeqNum) + 1,
-							inclusive: true
-						})).posts;
+						latestPost = (
+							await posts.get({
+								streamId: streamId,
+								limit: 1
+							})
+						).posts[0];
+						unreadPosts = (
+							await posts.get({
+								streamId: streamId,
+								before: latestPost.seqNum,
+								after: Number(lastReadSeqNum) + 1,
+								inclusive: true
+							})
+						).posts;
 						unreadPosts = unreadPosts.filter(
 							p => !p.deactivated && p.creatorId !== this._api.userId
 						);

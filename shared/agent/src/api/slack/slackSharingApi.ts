@@ -117,8 +117,8 @@ export class SlackSharingApiProvider {
 			agent: this._proxyAgent,
 			logLevel: Logger.level === TraceLevel.Debug ? LogLevel.DEBUG : LogLevel.INFO,
 			logger: {
-				setLevel() { },
-				setName() { },
+				setLevel() {},
+				setName() {},
 				debug(...msgs) {
 					Logger.debug("SLACK", ...msgs);
 				},
@@ -193,7 +193,11 @@ export class SlackSharingApiProvider {
 	}
 
 	private async ensureUserMaps(): Promise<void> {
-		if (this._usernamesById === undefined || this._userIdsByName === undefined || this._codeStreamUsersById === undefined) {
+		if (
+			this._usernamesById === undefined ||
+			this._userIdsByName === undefined ||
+			this._codeStreamUsersById === undefined
+		) {
 			const users = (await this.fetchUsers()).users;
 
 			this._usernamesById = new Map();
@@ -258,15 +262,16 @@ export class SlackSharingApiProvider {
 				let repoHash: { [key: string]: CSRepository } | undefined = undefined;
 				if (codemark.markers && codemark.markers.length) {
 					try {
-						const reposResponse = await SessionContainer.instance().repos.get({ repoIds: uniq(codemark.markers.map(_ => _.repoId)) });
+						const reposResponse = await SessionContainer.instance().repos.get({
+							repoIds: uniq(codemark.markers.map(_ => _.repoId))
+						});
 						if (reposResponse && reposResponse.repos.length) {
 							repoHash = reposResponse.repos.reduce((map: any, obj: CSRepository) => {
 								map[obj.id] = obj;
 								return map;
 							}, {});
 						}
-					}
-					catch (er) {
+					} catch (er) {
 						Logger.error(er);
 					}
 				}
@@ -283,7 +288,7 @@ export class SlackSharingApiProvider {
 				// Set the fallback (notification) content for the message
 				text = `${codemark.title || ""}${
 					codemark.title && codemark.text ? `\n\n` : ""
-					}${codemark.text || ""}`;
+				}${codemark.text || ""}`;
 			}
 
 			const response = await this.slackApiCall("chat.postMessage", {
@@ -323,7 +328,7 @@ export class SlackSharingApiProvider {
 				.map(
 					s =>
 						`\t${s.id} = ${s.name}${s.priority == null ? "" : `, p=${s.priority}`}${
-						s.type === StreamType.Direct ? `, closed=${s.isClosed}` : ""
+							s.type === StreamType.Direct ? `, closed=${s.isClosed}` : ""
 						}`
 				)
 				.join("\n")}\ncompleted`
@@ -351,7 +356,7 @@ export class SlackSharingApiProvider {
 				Logger.log(
 					cc,
 					`Fetched page; cursor=${response.response_metadata &&
-					response.response_metadata.next_cursor}`
+						response.response_metadata.next_cursor}`
 				);
 
 				conversations.push(...data);
@@ -434,7 +439,7 @@ export class SlackSharingApiProvider {
 					Logger.warn(
 						cc,
 						`TIMEOUT ${timeoutMs / 1000}s exceeded while fetching stream '${
-						deferred.stream.id
+							deferred.stream.id
 						}' in the background`
 					);
 
@@ -507,7 +512,7 @@ export class SlackSharingApiProvider {
 				Logger.log(
 					cc,
 					`Fetched page; cursor=${response.response_metadata &&
-					response.response_metadata.next_cursor}`
+						response.response_metadata.next_cursor}`
 				);
 
 				channels.push(...data);
@@ -519,10 +524,10 @@ export class SlackSharingApiProvider {
 		const streams = [];
 		let pending:
 			| {
-				action(): Promise<CSChannelStream>;
-				id: string;
-				name: string;
-			}[]
+					action(): Promise<CSChannelStream>;
+					id: string;
+					name: string;
+			  }[]
 			| undefined;
 
 		let counts;
@@ -618,7 +623,7 @@ export class SlackSharingApiProvider {
 				Logger.log(
 					cc,
 					`Fetched page; cursor=${response.response_metadata &&
-					response.response_metadata.next_cursor}`
+						response.response_metadata.next_cursor}`
 				);
 
 				groups.push(...data);
@@ -629,11 +634,11 @@ export class SlackSharingApiProvider {
 		const streams = [];
 		let pending:
 			| {
-				action(): Promise<CSChannelStream | CSDirectStream>;
-				grouping: number;
-				id: string;
-				priority: number;
-			}[]
+					action(): Promise<CSChannelStream | CSDirectStream>;
+					grouping: number;
+					id: string;
+					priority: number;
+			  }[]
 			| undefined;
 		let counts;
 		let s;
@@ -751,7 +756,7 @@ export class SlackSharingApiProvider {
 				Logger.log(
 					cc,
 					`Fetched page; cursor=${response.response_metadata &&
-					response.response_metadata.next_cursor}`
+						response.response_metadata.next_cursor}`
 				);
 
 				ims.push(...data);
@@ -763,10 +768,10 @@ export class SlackSharingApiProvider {
 		const streams = [];
 		let pending:
 			| {
-				action(): Promise<CSDirectStream>;
-				id: string;
-				priority: number;
-			}[]
+					action(): Promise<CSDirectStream>;
+					id: string;
+					priority: number;
+			  }[]
 			| undefined;
 		let counts;
 		let s;
@@ -923,7 +928,7 @@ export class SlackSharingApiProvider {
 			Logger.log(
 				cc,
 				`Fetched page; cursor=${response.response_metadata &&
-				response.response_metadata.next_cursor}`
+					response.response_metadata.next_cursor}`
 			);
 
 			members.push(...data);
@@ -943,11 +948,11 @@ export class SlackSharingApiProvider {
 		args: false,
 		prefix: (context, method, request) =>
 			`${context.prefix} ${method}(${
-			request != null
-				? Logger.toLoggable(request, (key, value) =>
-					logFilterKeys.has(key) ? `<${key}>` : Logger.sanitize(key, value)
-				)
-				: ""
+				request != null
+					? Logger.toLoggable(request, (key, value) =>
+							logFilterKeys.has(key) ? `<${key}>` : Logger.sanitize(key, value)
+					  )
+					: ""
 			})`
 	})
 	protected async slackApiCall<
@@ -1004,11 +1009,11 @@ export class SlackSharingApiProvider {
 		args: false,
 		prefix: (context, method, request) =>
 			`${context.prefix} ${method}(${
-			request != null
-				? Logger.toLoggable(request, (key, value) =>
-					logFilterKeys.has(key) ? `<${key}>` : Logger.sanitize(key, value)
-				)
-				: ""
+				request != null
+					? Logger.toLoggable(request, (key, value) =>
+							logFilterKeys.has(key) ? `<${key}>` : Logger.sanitize(key, value)
+					  )
+					: ""
 			})`
 	})
 	protected async slackApiCallPaginated<
@@ -1026,9 +1031,7 @@ export class SlackSharingApiProvider {
 		}
 	}
 
-	async dispose() {
-
-	}
+	async dispose() {}
 }
 
 const logFilterKeys = new Set(["text", "attachments"]);

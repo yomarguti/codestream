@@ -100,10 +100,8 @@ import {
 	FetchReviewsResponse,
 	GetReviewRequest,
 	GetReviewResponse,
-	FetchReviewChangesetsRequest,
-	FetchReviewChangesetsResponse,
-	GetReviewChangesetRequest,
-	GetReviewChangesetResponse
+	FetchReviewDiffsRequest,
+	FetchReviewDiffsResponse
 } from "../../protocol/agent.protocol";
 import {
 	CSAddProviderHostRequest,
@@ -206,8 +204,7 @@ import {
 	CSGetReviewsRequest,
 	CSGetReviewsResponse,
 	CSGetReviewResponse,
-	CSGetReviewChangesetsResponse,
-	CSGetReviewChangesetResponse
+	CSGetReviewDiffsResponse
 } from "../../protocol/api.protocol";
 import { VersionInfo } from "../../session";
 import { Functions, getProvider, log, lsp, lspHandler, Objects, Strings } from "../../system";
@@ -1135,27 +1132,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	fetchReviewChangesets(
-		request: FetchReviewChangesetsRequest
-	): Promise<FetchReviewChangesetsResponse> {
+	fetchReviewDiffs(request: FetchReviewDiffsRequest): Promise<FetchReviewDiffsResponse> {
 		const params: { [k: string]: any } = {
 			reviewId: request.reviewId
 		};
 
-		if (request.ids?.[0] != null) params.ids = request.ids!.join(",");
-
-		return this.get<CSGetReviewChangesetsResponse>(
-			`/changesets?${qs.stringify(request)}`,
-			this._token
-		);
-	}
-
-	@log()
-	getReviewChangeset(request: GetReviewChangesetRequest): Promise<GetReviewChangesetResponse> {
-		return this.get<CSGetReviewChangesetResponse>(
-			`/changesets/${request.changesetId}`,
-			this._token
-		);
+		return this.get<CSGetReviewDiffsResponse>(`/reviews/diff/${request.reviewId}`, this._token);
 	}
 
 	@log()

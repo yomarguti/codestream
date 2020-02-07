@@ -105,8 +105,8 @@ export function fromSlackChannel(
 		mostRecentPostId: mostRecentId,
 		priority: channel.priority,
 		privacy: (channel.is_private == null
-			? channel.is_group
-			: channel.is_private)
+		? channel.is_group
+		: channel.is_private)
 			? "private"
 			: "public",
 		purpose: channel.purpose && channel.purpose.value,
@@ -616,7 +616,9 @@ export function toSlackPostBlocks(
 			type: "section",
 			text: {
 				type: "mrkdwn",
-				text: `*Assignees*\n${codemark.assignees.map(a => codeStreamUsersById.get(a) || "").join(", ")}`
+				text: `*Assignees*\n${codemark.assignees
+					.map(a => codeStreamUsersById.get(a) || "")
+					.join(", ")}`
 			}
 		});
 	}
@@ -655,7 +657,9 @@ export function toSlackPostBlocks(
 			let end = undefined;
 
 			if (marker.referenceLocations && marker.referenceLocations.length) {
-				const markerLocation = marker.referenceLocations.find(m => m.commitHash === marker.commitHashWhenCreated) || marker.referenceLocations[0];
+				const markerLocation =
+					marker.referenceLocations.find(m => m.commitHash === marker.commitHashWhenCreated) ||
+					marker.referenceLocations[0];
 				if (markerLocation) {
 					const location = markerLocation.location;
 					if (location && location.length) {
@@ -713,8 +717,7 @@ export function toSlackPostBlocks(
 				if (/\S+/.test(marker.code)) {
 					codeText = `\`\`\`${marker.code}\`\`\``;
 				}
-			}
-			else {
+			} else {
 				codeText = "";
 			}
 

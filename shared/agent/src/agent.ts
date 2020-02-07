@@ -128,9 +128,7 @@ export class CodeStreamAgent implements Disposable {
 			}
 
 			Logger.log(
-				`Agent for CodeStream v${agentOptions.extension.versionFormatted} in ${
-					agentOptions.ide.name
-				} (v${agentOptions.ide.version}) initializing...`
+				`Agent for CodeStream v${agentOptions.extension.versionFormatted} in ${agentOptions.ide.name} (v${agentOptions.ide.version}) initializing...`
 			);
 
 			this._recordRequests = Boolean(agentOptions.recordRequests);

@@ -133,7 +133,7 @@ export function runCommand(command: string, args: any[], options: CommandOptions
 			command,
 			args,
 			opts,
-			(err: Error & { code?: string | number } | null, stdout: string, stderr: string) => {
+			(err: (Error & { code?: string | number }) | null, stdout: string, stderr: string) => {
 				if (!err) {
 					if (stderr) {
 						Logger.warn(`Warning(${command} ${args.join(" ")}): ${stderr}`);
@@ -146,9 +146,7 @@ export function runCommand(command: string, args: any[], options: CommandOptions
 				if (err.message === "stdout maxBuffer exceeded") {
 					reject(
 						new Error(
-							`Command output exceeded the allocated stdout buffer. Set 'options.maxBuffer' to a larger value than ${
-								opts.maxBuffer
-							} bytes`
+							`Command output exceeded the allocated stdout buffer. Set 'options.maxBuffer' to a larger value than ${opts.maxBuffer} bytes`
 						)
 					);
 				}
