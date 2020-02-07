@@ -156,8 +156,8 @@ export class Commands implements Disposable {
 		await Container.diffContents.loadContents(args.reviewId, args.repoId, args.path);
 		await commands.executeCommand(
 			"vscode.diff",
-			Uri.parse(`codestream-diff://${args.reviewId}/${args.repoId}/${args.path}@base`),
-			Uri.parse(`codestream-diff://${args.reviewId}/${args.repoId}/${args.path}@head`),
+			Uri.parse(`codestream-diff://${args.reviewId}/${args.repoId}/base/${args.path}`),
+			Uri.parse(`codestream-diff://${args.reviewId}/${args.repoId}/head/${args.path}`),
 			`${args.path} @ CodeStream Review #${args.reviewId}`
 		);
 
