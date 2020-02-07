@@ -486,14 +486,15 @@ export class SimpleStream extends Component {
 	renderPlusMenu() {
 		const { plusMenuOpen, menuTarget } = this.state;
 
-		const menuItems = [
-			{ label: "New Comment", action: this.newComment, key: "new-comment" },
-			{ label: "-" },
-			{ label: "Request A Code Review", action: this.newCodeReview, key: "new-code-review" }
-			// { label: "Start A Code Review", action: this.newCodeReview, key: "start-code-review" }
-			// { label: "-" }
-			// { label: inviteLabel, action: "invite" },
-		].filter(Boolean);
+		const menuItems = [{ label: "New Comment", action: this.newComment, key: "new-comment" }];
+		if (this.props.apiCapabilities.lightningCodeReviews) {
+			menuItems.push(
+				{ label: "-" },
+				{ label: "Request A Code Review", action: this.newCodeReview, key: "new-code-review" }
+			);
+		}
+		// { label: "-" }
+		// { label: inviteLabel, action: "invite" },
 
 		return plusMenuOpen ? (
 			<Menu items={menuItems} target={menuTarget} action={this.plusMenuAction} align="right" />
@@ -639,6 +640,7 @@ export class SimpleStream extends Component {
 			<div className="unread-badge">.</div>
 		) : null;
 
+		console.log("PROPS: ", this.props.capabilities);
 		return (
 			<nav className="inline">
 				<div className="top-tab-group">
@@ -717,14 +719,16 @@ export class SimpleStream extends Component {
 							</Tooltip>
 						</label>
 						*/}
-					<label
-						className={createClassString({
-							selected: activePanel === WebviewPanels.Reviews
-						})}
-						onClick={e => this.setActivePanel(WebviewPanels.Reviews)}
-					>
-						<Icon name="code" title="Code Reviews" placement="bottom" />
-					</label>
+					{this.props.apiCapabilities.lightningCodeReviews && (
+						<label
+							className={createClassString({
+								selected: activePanel === WebviewPanels.Reviews
+							})}
+							onClick={e => this.setActivePanel(WebviewPanels.Reviews)}
+						>
+							<Icon name="code" title="Code Reviews" placement="bottom" />
+						</label>
+					)}
 					<label onClick={this.togglePlusMenu}>
 						<Icon name="plus" title="Create..." placement="bottom" />
 						{this.renderPlusMenu()}
