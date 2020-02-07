@@ -12,15 +12,16 @@ const Root = styled.div`
 `;
 const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
 const today = new Date();
-const todayFormatted = today.toISOString().substring(0, 10);
+const todayFormatted = today.getFullYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate();
 const fourDaysAgo = new Date(today.getTime() - 1000 * 60 * 60 * 24 * 4);
-const fourDaysAgoFormatted = fourDaysAgo.toISOString().substring(0, 10);
+const fourDaysAgoFormatted =
+	fourDaysAgo.getFullYear() + "-" + (fourDaysAgo.getMonth() + 1) + "-" + fourDaysAgo.getDate();
 
 const tips = [
-	<span>Adding no:label will show everything without a label.</span>,
-	<span>Updated in the last four days: updated:>{fourDaysAgoFormatted}.</span>,
-	<span>Created more than four days ago: created:>{fourDaysAgoFormatted}.</span>,
-	<span>Created today: created:{todayFormatted}.</span>,
+	// <span>Adding no:label will show everything without a label.</span>,
+	<span>Updated in the last four days: updated:&gt;{fourDaysAgoFormatted}</span>,
+	<span>Created more than four days ago: created:&lt;{fourDaysAgoFormatted}</span>,
+	<span>Created today: created:{todayFormatted}</span>,
 	<span>Flag tech debt with tagged codemarks.</span>,
 	<span>Use permalinks to share pointers to code on other platforms such as JIRA.</span>,
 	<span>CodeStream's comments can include multiple ranges, even across repos.</span>,
