@@ -294,6 +294,26 @@ export class SimpleReviewsPanel extends Component {
 			if (!match[1]) filters.createdOn = date;
 			text = text.replace(/\s*created:[<>]?(\S+)\s*/, " ");
 		}
+		match = text.match(/\bupdated:([<>]?)(\d\d\d\d)-(\d+)-(\d+)(\s|$)/);
+		if (match) {
+			const date = new Date();
+			date.setHours(0, 0, 0, 0);
+			if (match[2] === "yesterday") date.setDate(date.getDate() - 1);
+			if (match[1] === "<") filters.updatedBefore = date.getTime();
+			if (match[1] === ">") filters.updatedAfter = date.getTime();
+			if (!match[1]) filters.updatedOn = date;
+			text = text.replace(/\s*updated:[<>]?(\S+)\s*/, " ");
+		}
+		match = text.match(/\bcreated:([<>]?)(yesterday|today)(\s|$)/);
+		if (match) {
+			const date = new Date();
+			date.setHours(0, 0, 0, 0);
+			if (match[2] === "yesterday") date.setDate(date.getDate() - 1);
+			if (match[1] === "<") filters.createdBefore = date.getTime();
+			if (match[1] === ">") filters.createdAfter = date.getTime();
+			if (!match[1]) filters.createdOn = date;
+			text = text.replace(/\s*created:[<>]?(\S+)\s*/, " ");
+		}
 
 		filters.text = text.trim();
 
