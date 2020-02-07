@@ -8,7 +8,8 @@ import {
 	GetReposScmResponse,
 	FileStatus,
 	AddIgnoreFilesRequestType,
-	IgnoreFilesRequestType
+	IgnoreFilesRequestType,
+	ReposScm
 } from "@codestream/protocols/agent";
 import {
 	CSChannelStream,
@@ -53,6 +54,7 @@ import { EditorRevealRangeRequestType } from "../ipc/host.protocol.editor";
 import { Range } from "vscode-languageserver-types";
 import { PostsActionsType } from "../store/posts/types";
 import { URI } from "vscode-uri";
+import { DropdownMenu } from "../src/components/DropdownMenu";
 
 interface Props extends ConnectedProps {
 	streamId: string;
@@ -115,7 +117,7 @@ interface State {
 	scmInfo: GetFileScmInfoResponse;
 	selectedTags?: any;
 	repoStatus: GetRepoScmStatusResponse;
-	openRepos: GetReposScmResponse;
+	openRepos: ReposScm[];
 	repoName: string;
 	excludedFiles?: any;
 	fromCommit?: string;
@@ -211,6 +213,10 @@ class ReviewForm extends React.Component<Props, State> {
 
 	private async getScmInfoForURI(uri: string, callback?: Function) {
 		this.setState({ isLoadingScm: true });
+
+		const openRepos = await HostApi.instance.send(GetReposScmRequestType, {});
+		if (openRepos && openRepos.repositories) this.setState({ openRepos: openRepos.repositories });
+
 		const scmInfo = await HostApi.instance.send(GetFileScmInfoRequestType, {
 			uri: uri
 		});
@@ -241,9 +247,6 @@ class ReviewForm extends React.Component<Props, State> {
 		const repoId: string = statusInfo.scm ? statusInfo.scm.repoId || "" : "";
 		const repoName = repos[repoId] ? repos[repoId].name : "";
 		this.setState({ repoStatus: statusInfo, repoName });
-
-		const openRepos = await HostApi.instance.send(GetReposScmRequestType, {});
-		this.setState({ openRepos: openRepos });
 
 		if (statusInfo.scm) {
 			const authors = statusInfo.scm.authors;
@@ -984,9 +987,11 @@ class ReviewForm extends React.Component<Props, State> {
 		this.setState({ reviewersTouched: true });
 	};
 
+	setRepo = repoId => {};
+
 	renderReviewForm() {
-		const { editingReview, currentUser } = this.props;
-		const { scmInfo, repoName, reviewers, authorsById } = this.state;
+		const { editingReview, currentUser, repos } = this.props;
+		const { scmInfo, repoName, reviewers, authorsById, openRepos } = this.state;
 
 		// coAuthorLabels are a mapping from teamMate ID to the # of edits represented in
 		// the autors variable (number of times you stomped on their code), and the number
@@ -1015,6 +1020,17 @@ class ReviewForm extends React.Component<Props, State> {
 			</span>
 		);
 
+		const repoMenu = openRepos
+			? openRepos.map(repo => {
+					const repoName = repo.id && repos[repo.id] && repos[repo.id].name;
+					return {
+						label: repoName || repo.folder,
+						key: repo.id,
+						action: () => this.setRepo(repo.id)
+					};
+			  })
+			: [];
+
 		return [
 			<form className="standard-form review-form" key="form">
 				<fieldset className="form-body">
@@ -1031,9 +1047,7 @@ class ReviewForm extends React.Component<Props, State> {
 								</span>
 								{scmInfo && scmInfo.scm && (
 									<>
-										<span className="channel-label" style={{ display: "inline-block" }}>
-											{repoName}
-										</span>
+										<DropdownMenu items={repoMenu}>{repoName}</DropdownMenu>
 										{scmInfo.scm.branch && (
 											<>
 												<span className="subhead">on branch&nbsp;</span>
