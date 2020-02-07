@@ -26,8 +26,8 @@ export const activityFeedMiddleware = (
 					store.dispatch(fetchPostForActivity(post.parentPostId, post.streamId));
 				} else if (post.codemark != null) {
 					store.dispatch(addNewActivity("codemark", [post.codemark]));
-				} else if (post.reviewId != null) {
-					store.dispatch(addNewActivity("review", [post.reviewId]));
+				} else if (post.review != null) {
+					store.dispatch(addNewActivity("review", [post.review]));
 				}
 			}
 		});
@@ -54,4 +54,5 @@ const fetchPostForActivity = (postId: string, streamId: string) => async (
 	}
 
 	if (post.codemark) dispatch(addNewActivity("codemark", [post.codemark]));
+	if (post.review) dispatch(addNewActivity("review", [post.review]));
 };
