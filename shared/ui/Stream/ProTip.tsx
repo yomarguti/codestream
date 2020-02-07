@@ -18,15 +18,19 @@ const fourDaysAgoFormatted =
 	fourDaysAgo.getFullYear() + "-" + (fourDaysAgo.getMonth() + 1) + "-" + fourDaysAgo.getDate();
 
 const tips = [
-	// <span>Adding no:label will show everything without a label.</span>,
+	<span>Adding no:tag will show everything without a tag.</span>,
 	<span>Updated in the last four days: updated:&gt;{fourDaysAgoFormatted}</span>,
 	<span>Created more than four days ago: created:&lt;{fourDaysAgoFormatted}</span>,
 	<span>Created four days ago: created:{fourDaysAgoFormatted}</span>,
 	<span>Created before yesterday: created:&lt;yesterday</span>,
-	<span>Flag tech debt with tagged codemarks.</span>,
+	<span>
+		Flag tech debt with tagged codemarks. <a href="">See how.</a>
+	</span>,
 	<span>Use permalinks to share pointers to code on other platforms such as JIRA.</span>,
 	<span>CodeStream's comments can include multiple ranges, even across repos.</span>,
-	<span>Encourage new-hires to ask questions with CodeStream.</span>,
+	<span>
+		Encourage new-hires to ask questions with CodeStream, so the answers get saved with your code.
+	</span>,
 	<span>Codemark content can be injected as an inline comment in your code.</span>,
 	<span>Set keybindings for codemarks to jump to different code locations</span>,
 	<span>
@@ -40,6 +44,14 @@ const tips = [
 			<span className="keybinding">c</span>
 		</span>{" "}
 		to add a comment on code from anywhere.
+	</span>,
+	<span>
+		Type
+		<span className="binding">
+			<span className="keybinding extra-pad">{modifier}</span>
+			<span className="keybinding">r</span>
+		</span>{" "}
+		to request a code review.
 	</span>
 ];
 
