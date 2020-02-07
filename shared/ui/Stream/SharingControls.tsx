@@ -27,6 +27,20 @@ import { setUserPreference } from "./actions";
 import { Modal } from "./Modal";
 import { DropdownMenu } from "../src/components/DropdownMenu";
 
+const TextButton = styled.span`
+	color: ${props => props.theme.colors.textHighlight};
+	cursor: pointer;
+	.octicon-chevron-down {
+		transform: scale(0.7);
+		margin-left: 2px;
+		margin-right: 5px;
+	}
+	&:focus {
+		margin: -3px;
+		border: 3px solid transparent;
+	}
+`;
+
 const ChannelTable = styled.table`
 	color: ${props => props.theme.colors.text};
 	margin: 0 auto;
