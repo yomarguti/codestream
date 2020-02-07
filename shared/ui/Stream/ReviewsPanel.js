@@ -102,6 +102,14 @@ const SavedFilter = styled.div`
 	}
 `;
 
+const sameDay = (d1, d2) => {
+	return (
+		d1.getFullYear() === d2.getFullYear() &&
+		d1.getMonth() === d2.getMonth() &&
+		d1.getDate() === d2.getDate()
+	);
+};
+
 export class SimpleReviewsPanel extends Component {
 	disposables = [];
 
@@ -270,6 +278,22 @@ export class SimpleReviewsPanel extends Component {
 			filters.branch = match[1];
 			text = text.replace(/\s*branch:(\S+)\s*/, " ");
 		}
+		match = text.match(/\bupdated:([<>]?)(\d\d\d\d)-(\d+)-(\d+)(\s|$)/);
+		if (match) {
+			const date = new Date(match[2], match[3] - 1, match[4]);
+			if (match[1] === "<") filters.updatedBefore = date.getTime();
+			if (match[1] === ">") filters.updatedAfter = date.getTime();
+			if (!match[1]) filters.updatedOn = date;
+			text = text.replace(/\s*updated:[<>]?(\S+)\s*/, " ");
+		}
+		match = text.match(/\bcreated:([<>]?)(\d\d\d\d)-(\d+)-(\d+)(\s|$)/);
+		if (match) {
+			const date = new Date(match[2], match[3] - 1, match[4]);
+			if (match[1] === "<") filters.createdBefore = date.getTime();
+			if (match[1] === ">") filters.createdAfter = date.getTime();
+			if (!match[1]) filters.createdOn = date;
+			text = text.replace(/\s*created:[<>]?(\S+)\s*/, " ");
+		}
 
 		filters.text = text.trim();
 
@@ -383,6 +407,13 @@ export class SimpleReviewsPanel extends Component {
 				const repoIds = (review.reviewChangeset || []).map(changeset => changeset.repoId);
 				if (!repoIds.includes(filters.repoId)) return null;
 			}
+			if (filters.updatedAfter && review.modifiedAt < filters.updatedAfter) return null;
+			if (filters.updatedBefore && review.modifiedAt > filters.updatedBefore) return null;
+			if (filters.updatedOn && !sameDay(new Date(review.modifiedAt), filters.updatedOn))
+				return null;
+			if (filters.createdAfter && review.createdAt < filters.createdAfter) return null;
+			if (filters.createdBefore && review.createdAt > filters.createdBefore) return null;
+			if (filters.createdOn && !sameDay(new Date(review.createdAt), filters.createdOn)) return null;
 			// if (!this.onBranch(review, branchFilter)) return null;
 
 			const title = review.title;
@@ -530,7 +561,7 @@ export class SimpleReviewsPanel extends Component {
 					})
 			}
 		];
-		// console.log("SELECTED AG FILTER: ", tagFilter);
+		// console.log("FILTERS: ", filters);
 		return (
 			<div className="panel full-height reviews-panel">
 				<PanelHeader title="Code Reviews &amp; Issues">

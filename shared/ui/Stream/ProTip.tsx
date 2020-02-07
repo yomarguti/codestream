@@ -11,10 +11,16 @@ const Root = styled.div`
 	}
 `;
 const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
+const today = new Date();
+const todayFormatted = today.toISOString().substring(0, 10);
+const fourDaysAgo = new Date(today.getTime() - 1000 * 60 * 60 * 24 * 4);
+const fourDaysAgoFormatted = fourDaysAgo.toISOString().substring(0, 10);
 
 const tips = [
 	<span>Adding no:label will show everything without a label.</span>,
-	<span>Updated in the last three days: updated:>2020-01-30.</span>,
+	<span>Updated in the last four days: updated:>{fourDaysAgoFormatted}.</span>,
+	<span>Created more than four days ago: created:>{fourDaysAgoFormatted}.</span>,
+	<span>Created today: created:{todayFormatted}.</span>,
 	<span>Flag tech debt with tagged codemarks.</span>,
 	<span>Use permalinks to share pointers to code on other platforms such as JIRA.</span>,
 	<span>CodeStream's comments can include multiple ranges, even across repos.</span>,
@@ -36,8 +42,8 @@ const tips = [
 ];
 
 export function ProTip() {
-	// update once every 60 seconds
-	const index = Math.floor(Date.now() / 60000) % tips.length;
+	// update once every 30 seconds
+	const index = Math.floor(Date.now() / 30000) % tips.length;
 	return (
 		<Root>
 			<Icon name="light-bulb" />
