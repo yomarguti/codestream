@@ -23,7 +23,7 @@ import {
 import { confirmPopup } from "../Confirm";
 import { setCurrentCodemark } from "@codestream/webview/store/context/actions";
 import { SharingModal } from "../SharingModal";
-import { BaseCodemarkProps, BaseCodemark, Text } from "./BaseCodemark";
+import { BaseCodemarkProps, BaseCodemark, MarkdownText } from "./BaseCodemark";
 import { useMarkdownifyToHtml } from "../Markdowner";
 import Icon from "../Icon";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
@@ -65,7 +65,7 @@ const PinnedReply = styled.div`
 	}
 `;
 
-const PinnedReplyText = styled(Text)`
+const PinnedReplyText = styled(MarkdownText)`
 	opacity: 0.5;
 `;
 

@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
 import Headshot from "./Headshot";
-import { Headshot as HeadshotV2 } from "../src/components/Headshot";
 import Timestamp from "./Timestamp";
 import * as codemarkSelectors from "../store/codemarks/reducer";
 import * as userSelectors from "../store/users/reducer";
@@ -23,7 +22,7 @@ import {
 import { savePosts } from "../store/posts/actions";
 import { addOlderActivity } from "../store/activityFeed/actions";
 import { saveCodemarks } from "../store/codemarks/actions";
-import { safe } from "../utils";
+import { safe, emptyArray } from "../utils";
 import { markStreamRead, setCodemarkTypeFilter } from "./actions";
 import { CSUser, CodemarkType, CSReview } from "@codestream/protocols/api";
 import { resetLastReads } from "../store/unreads/actions";
@@ -31,11 +30,11 @@ import { PanelHeader } from "../src/components/PanelHeader";
 import { getPost, getThreadPosts } from "../store/posts/reducer";
 import Menu from "./Menu";
 import { FormattedPlural } from "react-intl";
-import { useMarkdownifyToHtml } from "./Markdowner";
 import { Codemark } from "./Codemark/index";
 import Filter from "./Filter";
 import { Review } from "./Review";
 import { saveReviews } from "../store/reviews/actions";
+import { Reply } from "./Posts/Reply";
 
 // see comment in SmartFormattedList.tsx
 const FormattedPluralAlias = FormattedPlural as any;
@@ -64,32 +63,6 @@ const LoadingMessage = styled.div`
 	width: 100%;
 	margin: 0 auto;
 	text-align: center;
-`;
-
-const StyledTimestamp = styled(Timestamp)`
-	opacity: 0.4;
-	font-size: 11px;
-	padding-left: 5px;
-	.details {
-		padding-left: 5px;
-		transition: opacity 0.4s;
-	}
-`;
-
-const AuthorInfo = styled.div`
-	display: flex;
-	align-items: center;
-	${HeadshotV2} {
-		margin-right: 7px;
-	}
-`;
-
-const LinkifiedText = styled.span`
-	white-space: normal;
-	text-overflow: initial;
-	p {
-		margin: 0;
-	}
 `;
 
 const EmptyMessage = styled.div`
@@ -380,7 +353,7 @@ const ActivityItemWrapper = styled(
 		props.isUnread
 			? `
 		border-left: 2px solid var(--text-color-info);
-		${ReplyRoot} { border-left: none; }
+		${StyledReply} { border-left: none; }
 		`
 			: ""}
 `;
@@ -412,94 +385,51 @@ const ActivityItem = (props: {
 	return <ActivityItemWrapper isUnread={isUnread} children={props.children} post={post} />;
 };
 
-const KebabIcon = styled.span`
-	opacity: 0.5;
-	width: 20px;
-	display: flex;
-	justify-content: flex-end;
-	:hover {
-		opacity: 1;
-		.icon {
-			color: var(--text-color-info);
-		}
-	}
-`;
-
 const SeeReplies = styled.div`
 	text-align: center;
 `;
 
-const ReplyRoot = styled.div`
-	padding: 0 10px 10px 10px;
-	display: flex;
-	flex-direction: column;
+const StyledReply = styled(Reply)`
+	padding-left: 10px;
+	padding-right: 10px;
 	border-left: 2px solid var(--text-color-info);
-	${AuthorInfo} {
-		font-weight: 700;
-	}
 `;
 
-const Reply = (props: {
+const UnreadReply = (props: {
 	author: Partial<CSUser>;
 	post: PostPlus;
-	starred: boolean;
-	codemarkId: string;
+	starred?: boolean;
+	codemarkId?: string;
 }) => {
-	const [menuState, setMenuState] = React.useState<{
-		open: boolean;
-		target?: any;
-	}>({ open: false, target: undefined });
+	const menuItems = React.useMemo(() => {
+		// sine the only menu item right now is for pinning replies, don't show it if this is not a reply to a codemark
+		if (props.codemarkId == null) return emptyArray;
 
-	const closeMenu = React.useCallback(() => setMenuState({ open: false }), []);
-
-	const menuItems = React.useMemo(
-		() => [
+		return [
 			{
 				label: props.starred ? "Un-Star Reply" : "Star Reply",
 				key: "star",
 				action: () => {
 					HostApi.instance.send(PinReplyToCodemarkRequestType, {
-						codemarkId: props.codemarkId,
+						codemarkId: props.codemarkId!,
 						postId: props.post.id,
 						value: !props.starred
 					});
 				}
 			}
-		],
-		[props.starred]
-	);
-
-	const markdownifyToHtml = useMarkdownifyToHtml();
+		];
+	}, [props.starred]);
 
 	return (
-		<ReplyRoot>
-			<AuthorInfo style={{ fontWeight: 700 }}>
-				<HeadshotV2 person={props.author} /> {props.author.username}
-				<StyledTimestamp time={props.post.createdAt} />
-				<div style={{ marginLeft: "auto" }}>
-					<KebabIcon
-						onClick={e => {
-							e.preventDefault();
-							e.stopPropagation();
-							if (menuState.open) {
-								closeMenu();
-							} else {
-								setMenuState({ open: true, target: e.currentTarget });
-							}
-						}}
-					>
-						<Icon name="kebab-vertical" />
-					</KebabIcon>
-					{menuState.open && (
-						<Menu items={menuItems} target={menuState.target} action={closeMenu} />
-					)}
-				</div>
-			</AuthorInfo>
-			<LinkifiedText
-				style={{ marginLeft: "23px" }}
-				dangerouslySetInnerHTML={{ __html: markdownifyToHtml(props.post.text) }}
-			/>
-		</ReplyRoot>
+		<StyledReply
+			author={props.author}
+			post={props.post}
+			renderMenu={
+				menuItems.length === 0
+					? undefined
+					: (target, close) => target && <Menu items={menuItems} target={target} action={close} />
+			}
+		/>
 	);
 };
 
@@ -532,12 +462,12 @@ const RepliesForActivity = (props: { parentPost?: PostPlus; pinnedReplies?: stri
 	return (
 		<>
 			{derivedState.unreadReplies.map(post => (
-				<Reply
+				<UnreadReply
 					key={post.id}
 					post={post}
 					author={users[post.creatorId] || createUnknownUser(post.creatorId)}
 					starred={Boolean(props.pinnedReplies && props.pinnedReplies.includes(post.id))}
-					codemarkId={props.parentPost!.codemarkId!}
+					codemarkId={props.parentPost!.codemarkId}
 				/>
 			))}
 			{otherReplyCount > 0 && (

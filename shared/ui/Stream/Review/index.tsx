@@ -13,7 +13,7 @@ import {
 	AuthorInfo,
 	StyledTimestamp,
 	Title,
-	Text,
+	MarkdownText,
 	MetaSection,
 	Meta,
 	MetaLabel,
@@ -32,7 +32,7 @@ import { useMarkdownifyToHtml } from "../Markdowner";
 import Icon from "../Icon";
 import { SmartFormattedList } from "../SmartFormattedList";
 import Tooltip from "../Tooltip";
-import { capitalize, replaceHtml } from "@codestream/webview/utils";
+import { capitalize, replaceHtml, emptyArray } from "@codestream/webview/utils";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "../..";
 import { saveReviews } from "@codestream/webview/store/reviews/actions";
@@ -46,7 +46,7 @@ import Button from "../Button";
 import { getTeamMates, findMentionedUserIds } from "@codestream/webview/store/users/reducer";
 import { createPost } from "../actions";
 import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
-import { isPending } from "@codestream/webview/store/posts/types";
+import { Reply } from "../Posts/Reply";
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
@@ -119,7 +119,7 @@ const BaseReview = (props: BaseReviewProps) => {
 					)}
 				</Header>
 				<Title>
-					<Text
+					<MarkdownText
 						dangerouslySetInnerHTML={{
 							__html: markdownifyToHtml(review.title)
 						}}
@@ -149,22 +149,24 @@ const BaseReview = (props: BaseReviewProps) => {
 						<MetaLabel>Description</MetaLabel>
 						<MetaDescription>
 							<Icon name="description" />
-							<Text dangerouslySetInnerHTML={{ __html: markdownifyToHtml(props.review.text) }} />
+							<MarkdownText
+								dangerouslySetInnerHTML={{ __html: markdownifyToHtml(props.review.text) }}
+							/>
 						</MetaDescription>
 					</Meta>
 					<Meta>
 						<MetaLabel>Status</MetaLabel>
 						<MetaDescription>
-							<Text>{capitalize(props.review.status)}</Text>
+							<MarkdownText>{capitalize(props.review.status)}</MarkdownText>
 						</MetaDescription>
 					</Meta>
 					<Meta>
 						<MetaLabel>Repositories</MetaLabel>
 						<MetaDescription>
 							<Icon name="repo" />
-							<Text>
+							<MarkdownText>
 								<SmartFormattedList value={props.repoNames} />
-							</Text>
+							</MarkdownText>
 						</MetaDescription>
 					</Meta>
 					{!props.collapsed && (
@@ -324,7 +326,9 @@ const ReviewForReview = (props: PropsWithReview) => {
 			userIsFollowing: (props.review.followerIds || []).includes(state.session.userId!),
 			reviewers:
 				props.review.reviewers != null ? props.review.reviewers.map(id => state.users[id]) : [],
-			teamMates: getTeamMates(state)
+			teamMates: getTeamMates(state),
+			replies: props.collapsed ? emptyArray : getThreadPosts(state, review.streamId, review.postId),
+			allUsers: useSelector((state: CodeStreamState) => state.users)
 		};
 	});
 
@@ -334,6 +338,29 @@ const ReviewForReview = (props: PropsWithReview) => {
 		const repo = derivedState.repos[changeset.repoId];
 		if (repo) repoNames.add(repo.name);
 	}
+
+	const renderFooter =
+		props.renderFooter ||
+		(Footer => {
+			if (props.collapsed) return null;
+			if (derivedState.replies.length === 0) return null;
+
+			return (
+				<Footer style={{ borderTop: "none", marginTop: 0 }}>
+					<MetaLabel>Activity</MetaLabel>
+					{derivedState.replies
+						.slice() // be sure to copy the array before reversing because `reverse` mutates the array
+						.reverse()
+						.map(reply => (
+							<Reply
+								key={reply.id}
+								author={derivedState.allUsers[reply.creatorId]}
+								post={reply as any}
+							/>
+						))}
+				</Footer>
+			);
+		});
 
 	return (
 		<BaseReview
@@ -347,44 +374,9 @@ const ReviewForReview = (props: PropsWithReview) => {
 			renderReplyInput={() => (
 				<ReplyInput parentPostId={review.postId} streamId={review.streamId} />
 			)}
+			renderFooter={renderFooter}
 		/>
 	);
-	// renderFooter={Footer =>
-	// 	(!props.collapsed || (props.collapsed && derivedState.hasUnreadReplies)) && (
-	// 		<Footer
-	// 			className="codemark-details"
-	// 			style={{ borderTop: "none", paddingLeft: 0, paddingRight: 0, marginTop: 0 }}
-	// 		>
-	// 			{isLoadingReplies && (
-	// 				<DelayedRender>
-	// 					<div className="progress-container">
-	// 						<div className="progress-bar">
-	// 							<div className="progress-cursor" />
-	// 						</div>
-	// 					</div>
-	// 				</DelayedRender>
-	// 			)}
-	// 			<div className="postslist threadlist">
-	// 				<PostList
-	// 					onDidInitialize={() => setIsLoadingReplies(false)}
-	// 					reverse
-	// 					teammates={derivedState.teamMates}
-	// 					currentUserId={derivedState.currentUser.id}
-	// 					currentUserName={derivedState.currentUser.username}
-	// 					postAction={() => {}}
-	// 					streamId={review.streamId}
-	// 					isThread
-	// 					threadId={review.postId}
-	// 					teamId={derivedState.currentTeamId}
-	// 					skipParentPost
-	// 					disableEdits
-	// 					onlyAfterSeqNum={props.collapsed ? derivedState.lastRead : undefined}
-	// 					renderHeaderIfPostsExist={props.collapsed ? null : "Activity"}
-	// 				/>
-	// 			</div>
-	// 		</Footer>
-	// 	)
-	// }
 };
 
 const ReviewForId = (props: PropsWithId) => {

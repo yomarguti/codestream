@@ -121,7 +121,7 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 					</HeaderActions>
 				</Header>
 				<Title>
-					<Text
+					<MarkdownText
 						dangerouslySetInnerHTML={{
 							__html: markdownifyToHtml(codemark.title || codemark.text)
 						}}
@@ -170,7 +170,9 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 									<MetaLabel>Description</MetaLabel>
 									<MetaDescription>
 										<Icon name="description" />
-										<Text dangerouslySetInnerHTML={{ __html: markdownifyToHtml(codemark.text) }} />
+										<MarkdownText
+											dangerouslySetInnerHTML={{ __html: markdownifyToHtml(codemark.text) }}
+										/>
 									</MetaDescription>
 								</Meta>
 							)}
@@ -329,7 +331,7 @@ export const Title = styled.div`
 	margin-bottom: 10px;
 `;
 
-export const Text = styled.span`
+export const MarkdownText = styled.span`
 	white-space: normal;
 	text-overflow: initial;
 	p {
@@ -478,7 +480,7 @@ export const ActionButton = styled.div`
 	}
 `;
 
-const KebabIcon = styled.span`
+export const KebabIcon = styled.span`
 	.icon {
 		opacity: 0.5;
 		margin-left: 2px;
