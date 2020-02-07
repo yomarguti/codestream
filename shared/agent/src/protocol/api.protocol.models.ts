@@ -183,7 +183,8 @@ export interface CSReviewChangesetBase {
 export interface CSReviewChangeset extends CSEntity, CSReviewChangesetBase {}
 
 export function isCSReview(object: any): object is CSReview {
-	return object.reviewers != null && object.reviewChangesetIds != null;
+	const maybeReview: Partial<CSReview> = object;
+	return maybeReview.reviewers != null && maybeReview.reviewChangesets != null;
 }
 
 export interface CSReview extends CSEntity {
