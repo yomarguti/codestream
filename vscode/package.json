@@ -534,6 +534,7 @@
         "@babel/preset-react": "7.7.0",
         "@babel/preset-typescript": "7.7.2",
         "@babel/runtime": "7.7.2",
+        "@types/diff": "4.0.2",
         "@types/keytar": "4.4.0",
         "@types/lodash-es": "4.17.3",
         "@types/node": "10.11.7",
