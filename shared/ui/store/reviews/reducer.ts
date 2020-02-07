@@ -28,7 +28,7 @@ export function reduceReviews(state = {}, action: ReviewsActions) {
 }
 
 export function getReview(state: ReviewsState, id: string): CSReview | undefined {
-	return state.reviews[id];
+	return state[id];
 }
 
 export function getByStatus(state: CodeStreamState, status?: string): CSReview[] {

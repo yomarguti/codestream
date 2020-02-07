@@ -276,7 +276,6 @@ export type ReviewProps = PropsWithId | PropsWithReview;
 const ReviewForReview = (props: PropsWithReview) => {
 	const { review, ...baseProps } = props;
 
-	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
 			currentUserId: state.session.userId,
@@ -285,15 +284,8 @@ const ReviewForReview = (props: PropsWithReview) => {
 			userIsFollowing: (props.review.followerIds || []).includes(state.session.userId!),
 			reviewers:
 				props.review.reviewers != null ? props.review.reviewers.map(id => state.users[id]) : []
-			// changesets: getChangesets(state.reviews, review.id)
 		};
 	});
-
-	// useDidMount(() => {
-	// 	if (props.collapsed !== true && derivedState.changesets == null) {
-	// 		dispatch(fetchChangesets(review.id));
-	// 	}
-	// });
 
 	let repoNames = new Set<string>();
 
