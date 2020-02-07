@@ -793,6 +793,10 @@ export class CodeStreamSession {
 
 		SessionContainer.instance().git.onRepositoryCommitHashChanged(repo => {
 			SessionContainer.instance().markerLocations.flushUncommittedLocations(repo);
+			this.agent.sendNotification(DidChangeDataNotificationType, {
+				type: ChangeDataType.Commits,
+				data: repo
+			});
 		});
 
 		// be sure to alias first if necessary

@@ -44,8 +44,9 @@ export const DidChangeConnectionStatusNotificationType = new NotificationType<
 
 export enum ChangeDataType {
 	Codemarks = "codemarks",
-	Documents = "documents",
+	Commits = "commits",
 	Companies = "companies",
+	Documents = "documents",
 	MarkerLocations = "markerLocations",
 	Markers = "markers",
 	Posts = "posts",
@@ -138,9 +139,20 @@ export interface ApiCapabilitiesChangedNotification {
 	data: CSApiCapabilities;
 }
 
+export interface DocumentData {
+	reason: "saved" | "changed" | "removed";
+	document: Document;
+}
+
 export interface DocumentsChangedNotification {
 	type: ChangeDataType.Documents;
-	data: { reason: string; document: Document };
+	data: DocumentData;
+}
+
+export interface CommitsChangedNotification {
+	type: ChangeDataType.Commits;
+	// at this point it doesn't really matter what the payload is -- it's unused
+	data: any;
 }
 
 export type DidChangeDataNotification =
@@ -158,7 +170,8 @@ export type DidChangeDataNotification =
 	| UsersChangedNotification
 	| ProvidersChangedNotification
 	| ApiCapabilitiesChangedNotification
-	| DocumentsChangedNotification;
+	| DocumentsChangedNotification
+	| CommitsChangedNotification;
 
 export const DidChangeDataNotificationType = new NotificationType<DidChangeDataNotification, void>(
 	"codestream/didChangeData"

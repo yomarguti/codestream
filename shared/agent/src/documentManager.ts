@@ -27,8 +27,8 @@ export class DocumentManager implements Disposable {
 	private readonly _isWindows: boolean;
 
 	private readonly _normalizedUriLookup = new Map<string, string>();
-	// store an array of line offsets for each
-	private readonly _contentCache: { [uri: string]: Number[] } = {};
+	// store an array of line offsets for each document's uri
+	private readonly _savedContentCache: { [uri: string]: Number[] } = {};
 
 	constructor(private readonly _documents: TextDocuments, connection: Connection) {
 		this._isWindows = process.platform === "win32";
@@ -36,21 +36,16 @@ export class DocumentManager implements Disposable {
 		this._disposable = Disposables.from(
 			this._documents.onDidChangeContent(e => {
 				this._onDidChangeContent.fire(e);
-
 				// we're trying to see if we've changed content back to
 				// the same state as it was when it was saved... therefore it's not dirty
 				let isDirty = true;
 				const offsets = this.getLineOffsets(e.document);
-				if (offsets) {
-					const cached = this._contentCache[e.document.uri];
-					if (cached) {
-						if (this.orderedArraysAreEqual(cached, offsets)) {
-							// if we've found these offsets are the same as what's cache...
-							// then it was an undo, or some other operation that made it the
-							// same as what was saved
-							isDirty = false;
-						}
-					}
+				const cached = this.isVersionCached(e.document, offsets);
+				if (cached) {
+					// if we've found these offsets are the same as what's cache...
+					// then it was an undo, or some other operation that made it the
+					// same as what was saved
+					isDirty = false;
 				}
 				SessionContainer.instance().session.agent.sendNotification(DidChangeDataNotificationType, {
 					type: ChangeDataType.Documents,
@@ -65,27 +60,37 @@ export class DocumentManager implements Disposable {
 			}),
 			this._documents.onDidSave(e => {
 				Logger.log(`Document saved: ${e.document.uri}`);
+				let store = true;
 				const offsets = this.getLineOffsets(e.document);
-				if (offsets) {
-					this._contentCache[e.document.uri] = offsets;
+				const cached = this.isVersionCached(e.document, offsets);
+				if (cached) {
+					// if we've found these offsets are the same as what's cache...
+					// then it was an undo or multiple saves, or some other operation that made it the
+					// same as what was saved
+					store = false;
 				}
-				SessionContainer.instance().session.agent.sendNotification(DidChangeDataNotificationType, {
-					type: ChangeDataType.Documents,
-					data: {
-						reason: "saved",
-						document: {
-							isDirty: false,
-							uri: e.document.uri
+
+				if (store && offsets) {
+					// if the content we're saving is the same that is in the cache don't notify
+					this._savedContentCache[e.document.uri] = offsets;
+					SessionContainer.instance().session.agent.sendNotification(DidChangeDataNotificationType, {
+						type: ChangeDataType.Documents,
+						data: {
+							reason: "saved",
+							document: {
+								isDirty: false,
+								uri: e.document.uri
+							}
 						}
-					}
-				});
+					});
+				}
 			}
 			),
 			this._documents.onDidOpen(e => {
 				Logger.log(`Document opened: ${e.document.uri}`);
 				const offsets = this.getLineOffsets(e.document);
 				if (offsets) {
-					this._contentCache[e.document.uri] = offsets;
+					this._savedContentCache[e.document.uri] = offsets;
 				}
 			}),
 			this._documents.onDidClose(e => {
@@ -100,12 +105,27 @@ export class DocumentManager implements Disposable {
 						}
 					}
 				});
-				delete this._contentCache[e.document.uri];
+				delete this._savedContentCache[e.document.uri];
 
 			})
 		);
 
 		this._documents.listen(connection);
+	}
+
+	// If this version of the document is in cache
+	// and its offsets are the same as in the cache -- true
+	isVersionCached(document: TextDocument, offsets: Number[] | undefined) {
+		if (!offsets || !offsets.length) return false;
+
+		const cached = this._savedContentCache[document.uri];
+		if (cached) {
+			if (this.orderedArraysAreEqual(cached, offsets)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	orderedArraysAreEqual(a1: Number[], a2: Number[]) {
@@ -118,7 +138,7 @@ export class DocumentManager implements Disposable {
 		return true;
 	}
 
-	getLineOffsets(document: TextDocument) {
+	getLineOffsets(document: TextDocument): Number[] | undefined {
 		// slightly naughty here... using an internal function 😬
 		try {
 			if (document) {
