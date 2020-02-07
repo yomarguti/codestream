@@ -25,59 +25,7 @@ import { safe } from "../utils";
 import { useUpdates } from "../utilities/hooks";
 import { setUserPreference } from "./actions";
 import { Modal } from "./Modal";
-
-const TextButton = styled.span`
-	color: ${props => props.theme.colors.textHighlight};
-	cursor: pointer;
-	.octicon-chevron-down {
-		transform: scale(0.7);
-		margin-left: 2px;
-		margin-right: 5px;
-	}
-	&:focus {
-		margin: -3px;
-		border: 3px solid transparent;
-	}
-`;
-
-export type SharingMenuProps = React.PropsWithChildren<{
-	items: any[];
-	title?: string;
-	titleIcon?: any;
-}>;
-
-export function SharingMenu(props: SharingMenuProps) {
-	const buttonRef = React.useRef<HTMLSpanElement>(null);
-	const [isOpen, toggleMenu] = React.useReducer((open: boolean) => !open, false);
-
-	const handleKeyPress = (event: React.KeyboardEvent) => {
-		if (event.key == "Enter") return toggleMenu(event);
-	};
-
-	const maybeToggleMenu = action => {
-		if (action !== "noop") toggleMenu(action);
-	};
-
-	return (
-		<>
-			{isOpen && buttonRef.current && (
-				<Menu
-					align="center"
-					action={maybeToggleMenu}
-					title={props.title}
-					titleIcon={props.titleIcon}
-					target={buttonRef.current}
-					items={props.items}
-					focusOnSelect={buttonRef.current}
-				/>
-			)}
-			<TextButton ref={buttonRef} onClick={toggleMenu} tabIndex={0} onKeyPress={handleKeyPress}>
-				{props.children}
-				<Icon name="chevron-down" />
-			</TextButton>
-		</>
-	);
-}
+import { DropdownMenu } from "../src/components/DropdownMenu";
 
 const ChannelTable = styled.table`
 	color: ${props => props.theme.colors.text};
@@ -521,7 +469,7 @@ export const SharingControls = React.memo(
 												<Icon name="repo" /> {repos[key].name}
 											</td>
 											<td>
-												<SharingMenu
+												<DropdownMenu
 													items={getChannelMenuItems(channel =>
 														setDefaultChannel(
 															key,
@@ -534,7 +482,7 @@ export const SharingControls = React.memo(
 													{defaultChannel == undefined
 														? "last channel used "
 														: formatChannelName(defaultChannel)}
-												</SharingMenu>
+												</DropdownMenu>
 											</td>
 										</tr>
 									);
@@ -569,18 +517,18 @@ export const SharingControls = React.memo(
 					</>
 				)}
 				Share on{" "}
-				<SharingMenu items={shareProviderMenuItems}>
+				<DropdownMenu items={shareProviderMenuItems}>
 					<Icon name={derivedState.selectedShareTarget!.icon} />{" "}
 					{derivedState.selectedShareTarget!.teamName}
-				</SharingMenu>{" "}
+				</DropdownMenu>{" "}
 				in{" "}
-				<SharingMenu
+				<DropdownMenu
 					items={getChannelMenuItems(channel => setChannel(channel))}
 					title="Post to..."
 					titleIcon={channelTitleIcon}
 				>
 					{selectedChannel == undefined ? "select a channel" : formatChannelName(selectedChannel)}
-				</SharingMenu>
+				</DropdownMenu>
 			</Root>
 		);
 	}

@@ -3,66 +3,61 @@ import styled from "styled-components";
 import Menu from "../../Stream/Menu";
 import Icon from "@codestream/webview/Stream/Icon";
 
-const Root = styled.div`
+const TextButton = styled.span`
 	display: inline-block;
 	white-space: nowrap;
 	cursor: pointer;
 	color: var(--text-color-highlight);
-	.chevron-down {
+	.octicon-chevron-down {
 		display: inline-block;
 		transform: scale(0.7);
 		margin-left: 2px;
 		margin-right: 5px;
 	}
+	&:focus {
+		margin: -3px;
+		border: 3px solid transparent;
+	}
 `;
 
-interface State {
-	open: boolean;
-	target?: any;
-}
-
-export interface Props {
-	items?: any[];
+export type Props = React.PropsWithChildren<{
+	items: any[];
 	title?: string;
-	children?: React.ReactNode;
-}
+	titleIcon?: any;
+}>;
 
-export class DropdownMenu extends React.Component<Props, State> {
-	constructor(props: Props) {
-		super(props);
-		this.state = { open: false, target: undefined };
-	}
+export function DropdownMenu(props: Props) {
+	const buttonRef = React.useRef<HTMLSpanElement>(null);
+	const [isOpen, toggleMenu] = React.useReducer((open: boolean) => !open, false);
 
-	toggleMenu = (e: React.SyntheticEvent) => {
-		this.setState({ open: !this.state.open, target: e && e.target });
+	const maybeToggleMenu = action => {
+		if (action !== "noop") toggleMenu(action);
+	};
+	const handleKeyPress = (event: React.KeyboardEvent) => {
+		if (event.key == "Enter") return toggleMenu(event);
 	};
 
-	noop = value => {
-		if (!value) this.setState({ open: false });
-	};
-
-	render() {
-		const { children, title, items = [] } = this.props;
-		if (!items.length) {
-			return children;
-		}
-		return (
-			<Root>
-				<span onClick={this.toggleMenu}>
-					{children}
-					<Icon name="chevron-down" className="chevron-down" />
-				</span>
-				{this.state.open && (
-					<Menu
-						title={title}
-						align="center"
-						valign="bottom"
-						items={items}
-						target={this.state.target}
-						action={this.toggleMenu}
-					/>
-				)}
-			</Root>
-		);
+	if (!props.items.length) {
+		return <>{props.children}</>;
 	}
+	return (
+		<>
+			<TextButton ref={buttonRef} onClick={toggleMenu} tabIndex={0} onKeyPress={handleKeyPress}>
+				{props.children}
+				<Icon name="chevron-down" />
+			</TextButton>
+			{isOpen && buttonRef.current && (
+				<Menu
+					title={props.title}
+					titleIcon={props.titleIcon}
+					align="center"
+					valign="bottom"
+					items={props.items}
+					target={buttonRef.current}
+					focusOnSelect={buttonRef.current}
+					action={maybeToggleMenu}
+				/>
+			)}
+		</>
+	);
 }
