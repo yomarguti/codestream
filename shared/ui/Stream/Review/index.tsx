@@ -20,14 +20,14 @@ import {
 	MetaAssignee
 } from "../Codemark/BaseCodemark";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
-import { CSUser, CSReviewChangeset, CSReview } from "@codestream/protocols/api";
+import { CSUser, CSReview } from "@codestream/protocols/api";
 import { CodeStreamState } from "@codestream/webview/store";
 import { useSelector, useDispatch } from "react-redux";
 import { useMarkdownifyToHtml } from "../Markdowner";
 import Icon from "../Icon";
 import { SmartFormattedList } from "../SmartFormattedList";
 import Tooltip from "../Tooltip";
-import { capitalize, emptyArray } from "@codestream/webview/utils";
+import { capitalize, replaceHtml } from "@codestream/webview/utils";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "../..";
 import { saveReviews } from "@codestream/webview/store/reviews/actions";
@@ -38,6 +38,8 @@ import { ReviewShowDiffRequestType } from "@codestream/protocols/webview";
 import MessageInput from "../MessageInput";
 import styled from "styled-components";
 import Button from "../Button";
+import { getTeamMates, findMentionedUserIds } from "@codestream/webview/store/users/reducer";
+import { createPost } from "../actions";
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
@@ -205,19 +207,49 @@ const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 	);
 };
 
-const ReplyInput = (props: {}) => {
+const ReplyInput = (props: { parentPostId: string; streamId: string }) => {
+	const dispatch = useDispatch();
 	const [text, setText] = React.useState("");
-	const submit = () => {};
+	const [isLoading, setIsLoading] = React.useState(false);
+	const teamMates = useSelector((state: CodeStreamState) => getTeamMates(state));
+
+	const _findMentionedUserIds = React.useCallback(
+		(text: string) => findMentionedUserIds(teamMates, text),
+		[teamMates]
+	);
+
+	const submit = async () => {
+		// don't create empty replies
+		if (text.length === 0) return;
+
+		setIsLoading(true);
+		// ignore the typescript warning that `await` isn't necessary below
+		await dispatch(
+			createPost(
+				props.streamId,
+				props.parentPostId,
+				replaceHtml(text)!,
+				null,
+				_findMentionedUserIds(text),
+				{
+					entryPoint: "Review"
+				}
+			)
+		);
+		setIsLoading(false);
+		setText("");
+		// HostApi.instance.track("Replied to Review", {});
+	};
 
 	return (
 		<>
 			<MetaLabel>Add Reply</MetaLabel>
 			<MessageInput
+				multiCompose
 				text={text}
 				placeholder="Reply..."
-				onChange={value => {
-					setText(value);
-				}}
+				onChange={setText}
+				onSubmit={submit}
 			/>
 			<div style={{ display: "flex" }}>
 				<div style={{ opacity: 0.4, paddingTop: "3px" }}>Markdown is supported</div>
@@ -243,7 +275,9 @@ const ReplyInput = (props: {}) => {
 							}}
 							className={cx("control-button", { cancel: text.length === 0 })}
 							type="submit"
+							disabled={text.length === 0}
 							onClick={submit}
+							loading={isLoading}
 						>
 							Submit
 						</Button>
@@ -303,7 +337,9 @@ const ReviewForReview = (props: PropsWithReview) => {
 			isFollowing={derivedState.userIsFollowing}
 			reviewers={derivedState.reviewers}
 			currentUserId={derivedState.currentUserId}
-			renderReplyInput={() => <ReplyInput />}
+			renderReplyInput={() => (
+				<ReplyInput parentPostId={review.postId} streamId={review.streamId} />
+			)}
 		/>
 	);
 };
