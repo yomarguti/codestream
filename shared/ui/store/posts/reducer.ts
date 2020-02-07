@@ -1,8 +1,10 @@
 import { CSPost } from "@codestream/protocols/api";
 import { ActionType } from "../common";
 import * as actions from "./actions";
-import { isPending, PostsActionsType, PostsState, Post } from "./types";
+import { isPending, PostsActionsType, PostsState } from "./types";
 import { sortBy as _sortBy } from "lodash-es";
+import { createSelector } from "reselect";
+import { CodeStreamState } from "..";
 
 type PostsActions = ActionType<typeof actions>;
 
@@ -92,20 +94,27 @@ export function reducePosts(state: PostsState = initialState, action: PostsActio
 	}
 }
 
-export const getPostsForStream = ({ byStream, pending }, streamId) => {
-	if (!streamId) return [];
-	const pendingForStream = pending.filter(it => {
-		try {
-			return it.streamId === streamId || it.stream.file === streamId;
-		} catch (e) {
-			return false;
-		}
-	});
-	return [
-		..._sortBy(byStream[streamId], "seqNum").filter(p => !p.deactivated),
-		...pendingForStream
-	];
-};
+export const getPostsForStream = createSelector(
+	(state: CodeStreamState) => state.posts,
+	(_, streamId?: string) => streamId,
+	(state, streamId) => {
+		if (streamId == null) return [];
+
+		const pendingForStream = state.pending.filter(it => it.streamId === streamId);
+		return [
+			..._sortBy(state.byStream[streamId], "seqNum").filter(p => !p.deactivated),
+			...pendingForStream
+		];
+	}
+);
+
+export const getThreadPosts = createSelector(
+	getPostsForStream,
+	(_, __, threadId: string) => threadId,
+	(posts, threadId) => {
+		return posts.filter(p => p.parentPostId === threadId);
+	}
+);
 
 export const getPost = ({ byStream, pending }: PostsState, streamId: string, postId: string) => {
 	const post = (byStream[streamId] || {})[postId];

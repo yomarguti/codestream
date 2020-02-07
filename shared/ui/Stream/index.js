@@ -2372,7 +2372,7 @@ const mapStateToProps = state => {
 	const teamStream = getStreamForTeam(streams, context.currentTeamId) || {};
 	const postStream =
 		getStreamForId(streams, context.currentTeamId, context.currentStreamId) || teamStream;
-	const streamPosts = getPostsForStream(posts, postStream.id);
+	const streamPosts = getPostsForStream(state, postStream.id);
 
 	const user = users[session.userId];
 

@@ -28,7 +28,7 @@ import { markStreamRead, setCodemarkTypeFilter } from "./actions";
 import { CSUser, CodemarkType, CSReview } from "@codestream/protocols/api";
 import { resetLastReads } from "../store/unreads/actions";
 import { PanelHeader } from "../src/components/PanelHeader";
-import { getPost, getPostsForStream } from "../store/posts/reducer";
+import { getPost, getThreadPosts } from "../store/posts/reducer";
 import Menu from "./Menu";
 import { FormattedPlural } from "react-intl";
 import { useMarkdownifyToHtml } from "./Markdowner";
@@ -255,7 +255,7 @@ export const ActivityPanel = () => {
 										<Footer
 											style={{ borderTop: "none", paddingLeft: 0, paddingRight: 0, marginTop: 0 }}
 										>
-											<RepliesForCodemark
+											<RepliesForActivity
 												parentPost={post}
 												pinnedReplies={codemark.pinnedReplies}
 											/>
@@ -272,13 +272,20 @@ export const ActivityPanel = () => {
 				return (
 					<ActivityWrapper key={record.id}>
 						<ActivityItem streamId={record.streamId} postId={record.postId}>
-							{({ className }) => (
+							{({ className, post }) => (
 								<Review
 									className={className}
 									review={record as CSReview}
 									collapsed
 									hoverEffect
 									onClick={() => dispatch(setCurrentReview(record.id))}
+									renderFooter={Footer => (
+										<Footer
+											style={{ borderTop: "none", paddingLeft: 0, paddingRight: 0, marginTop: 0 }}
+										>
+											<RepliesForActivity parentPost={post} />
+										</Footer>
+									)}
 								/>
 							)}
 						</ActivityItem>
@@ -390,15 +397,15 @@ const ActivityItem = (props: {
 	children: ActivityItemChildren;
 }) => {
 	const { isUnread, post } = useSelector((state: CodeStreamState) => {
-		const codemarkPost = getPost(state.posts, props.streamId, props.postId);
+		const post = getPost(state.posts, props.streamId, props.postId);
 		const lastReadForStream = state.umis.lastReads[props.streamId];
 
 		return {
 			isUnread:
 				lastReadForStream != undefined &&
-				codemarkPost != undefined &&
-				(codemarkPost as PostPlus).seqNum > lastReadForStream,
-			post: codemarkPost
+				post != undefined &&
+				(post as PostPlus).seqNum > lastReadForStream,
+			post
 		};
 	});
 
@@ -498,7 +505,7 @@ const Reply = (props: {
 
 const createUnknownUser = id => ({ username: id, fullName: "Unknown" });
 
-const RepliesForCodemark = (props: { parentPost?: PostPlus; pinnedReplies?: string[] }) => {
+const RepliesForActivity = (props: { parentPost?: PostPlus; pinnedReplies?: string[] }) => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		if (props.parentPost == undefined) return { numberOfReplies: 0, unreadReplies: [] };
 		const lastUnreadForStream = state.umis.lastReads[props.parentPost.streamId] as
@@ -506,12 +513,9 @@ const RepliesForCodemark = (props: { parentPost?: PostPlus; pinnedReplies?: stri
 			| undefined;
 		const unreadReplies: PostPlus[] =
 			lastUnreadForStream != undefined
-				? getPostsForStream(state.posts, props.parentPost.streamId)
-						.filter(
-							post =>
-								post.parentPostId === props.parentPost!.id && post.seqNum > lastUnreadForStream
-						)
-						.reverse()
+				? (getThreadPosts(state, props.parentPost.streamId, props.parentPost.id)
+						.filter(post => (post as any).seqNum > lastUnreadForStream)
+						.reverse() as PostPlus[])
 				: [];
 
 		return { numberOfReplies: props.parentPost.numReplies, unreadReplies };

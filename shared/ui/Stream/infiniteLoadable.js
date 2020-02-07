@@ -9,7 +9,7 @@ import { DelayedRender } from "../Container/DelayedRender";
 
 const mapStateToProps = (state, props) => {
 	const { streamId, isThread, threadId } = props.childProps;
-	let posts = getPostsForStream(state.posts, streamId);
+	let posts = getPostsForStream(state, streamId);
 
 	if (threadId) {
 		posts = posts.filter(p => p.id === threadId || p.parentPostId === threadId);

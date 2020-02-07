@@ -29,7 +29,7 @@ const mapStateToProps = (state, props) => {
 	const { users, context } = state;
 	const { codemark } = props;
 
-	let posts = getPostsForStream(state.posts, codemark.streamId).filter(
+	let posts = getPostsForStream(state, codemark.streamId).filter(
 		post => post.parentPostId === codemark.postId
 	);
 
@@ -40,6 +40,7 @@ const mapStateToProps = (state, props) => {
 			if (post.creatorId === "codestream") author.username = "CodeStream";
 			else author.username = post.creatorId;
 		}
+		// @ts-ignore // big no no. don't mutate redux state
 		post.author = author;
 	});
 

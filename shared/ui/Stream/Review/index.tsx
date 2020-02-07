@@ -1,6 +1,11 @@
 import React from "react";
 import cx from "classnames";
-import { CardBody, CardProps, getCardProps } from "@codestream/webview/src/components/Card";
+import {
+	CardBody,
+	CardProps,
+	getCardProps,
+	CardFooter
+} from "@codestream/webview/src/components/Card";
 import { GetReviewRequestType } from "@codestream/protocols/agent";
 import {
 	MinimumWidthCard,
@@ -40,6 +45,8 @@ import styled from "styled-components";
 import Button from "../Button";
 import { getTeamMates, findMentionedUserIds } from "@codestream/webview/store/users/reducer";
 import { createPost } from "../actions";
+import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
+import { isPending } from "@codestream/webview/store/posts/types";
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
@@ -49,7 +56,8 @@ export interface BaseReviewProps extends CardProps {
 	collapsed?: boolean;
 	isFollowing?: boolean;
 	reviewers?: CSUser[];
-	renderReplyInput?: () => any;
+	renderReplyInput?: () => React.ReactNode;
+	renderFooter?: (footer: typeof CardFooter) => React.ReactNode;
 }
 
 const ComposeWrapper = styled.div.attrs(() => ({
@@ -65,6 +73,7 @@ const BaseReview = (props: BaseReviewProps) => {
 
 	const markdownifyToHtml = useMarkdownifyToHtml();
 	const hasReviewers = props.reviewers != null && props.reviewers.length > 0;
+	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter);
 
 	const changedFiles = React.useMemo(() => {
 		const files: any[] = [];
@@ -170,6 +179,7 @@ const BaseReview = (props: BaseReviewProps) => {
 					<ComposeWrapper>{props.renderReplyInput()}</ComposeWrapper>
 				)}
 			</CardBody>
+			{renderedFooter}
 		</MinimumWidthCard>
 	);
 };
@@ -213,11 +223,6 @@ const ReplyInput = (props: { parentPostId: string; streamId: string }) => {
 	const [isLoading, setIsLoading] = React.useState(false);
 	const teamMates = useSelector((state: CodeStreamState) => getTeamMates(state));
 
-	const _findMentionedUserIds = React.useCallback(
-		(text: string) => findMentionedUserIds(teamMates, text),
-		[teamMates]
-	);
-
 	const submit = async () => {
 		// don't create empty replies
 		if (text.length === 0) return;
@@ -230,7 +235,7 @@ const ReplyInput = (props: { parentPostId: string; streamId: string }) => {
 				props.parentPostId,
 				replaceHtml(text)!,
 				null,
-				_findMentionedUserIds(text),
+				findMentionedUserIds(teamMates, text),
 				{
 					entryPoint: "Review"
 				}
@@ -290,7 +295,7 @@ const ReplyInput = (props: { parentPostId: string; streamId: string }) => {
 
 type FromBaseReviewProps = Pick<
 	BaseReviewProps,
-	"collapsed" | "hoverEffect" | "onClick" | "className"
+	"collapsed" | "hoverEffect" | "onClick" | "className" | "renderFooter"
 >;
 
 interface PropsWithId extends FromBaseReviewProps {
@@ -312,12 +317,14 @@ const ReviewForReview = (props: PropsWithReview) => {
 
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
-			currentUserId: state.session.userId,
+			currentTeamId: state.context.currentTeamId,
+			currentUser: state.users[state.session.userId!],
 			author: state.users[props.review.creatorId],
 			repos: state.repos,
 			userIsFollowing: (props.review.followerIds || []).includes(state.session.userId!),
 			reviewers:
-				props.review.reviewers != null ? props.review.reviewers.map(id => state.users[id]) : []
+				props.review.reviewers != null ? props.review.reviewers.map(id => state.users[id]) : [],
+			teamMates: getTeamMates(state)
 		};
 	});
 
@@ -336,12 +343,48 @@ const ReviewForReview = (props: PropsWithReview) => {
 			repoNames={[...repoNames]}
 			isFollowing={derivedState.userIsFollowing}
 			reviewers={derivedState.reviewers}
-			currentUserId={derivedState.currentUserId}
+			currentUserId={derivedState.currentUser.id}
 			renderReplyInput={() => (
 				<ReplyInput parentPostId={review.postId} streamId={review.streamId} />
 			)}
 		/>
 	);
+	// renderFooter={Footer =>
+	// 	(!props.collapsed || (props.collapsed && derivedState.hasUnreadReplies)) && (
+	// 		<Footer
+	// 			className="codemark-details"
+	// 			style={{ borderTop: "none", paddingLeft: 0, paddingRight: 0, marginTop: 0 }}
+	// 		>
+	// 			{isLoadingReplies && (
+	// 				<DelayedRender>
+	// 					<div className="progress-container">
+	// 						<div className="progress-bar">
+	// 							<div className="progress-cursor" />
+	// 						</div>
+	// 					</div>
+	// 				</DelayedRender>
+	// 			)}
+	// 			<div className="postslist threadlist">
+	// 				<PostList
+	// 					onDidInitialize={() => setIsLoadingReplies(false)}
+	// 					reverse
+	// 					teammates={derivedState.teamMates}
+	// 					currentUserId={derivedState.currentUser.id}
+	// 					currentUserName={derivedState.currentUser.username}
+	// 					postAction={() => {}}
+	// 					streamId={review.streamId}
+	// 					isThread
+	// 					threadId={review.postId}
+	// 					teamId={derivedState.currentTeamId}
+	// 					skipParentPost
+	// 					disableEdits
+	// 					onlyAfterSeqNum={props.collapsed ? derivedState.lastRead : undefined}
+	// 					renderHeaderIfPostsExist={props.collapsed ? null : "Activity"}
+	// 				/>
+	// 			</div>
+	// 		</Footer>
+	// 	)
+	// }
 };
 
 const ReviewForId = (props: PropsWithId) => {
