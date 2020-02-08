@@ -89,9 +89,14 @@ export default class Menu extends Component {
 		const $submenu = this._div.querySelector("#active-submenu");
 		if ($submenu) {
 			const rect = $submenu.getBoundingClientRect();
-			const tooFar = rect.top + $submenu.offsetHeight + 35 - window.innerHeight;
-			if (tooFar > 0) {
+			const tooFarDown = rect.top + $submenu.offsetHeight + 35 - window.innerHeight;
+			if (tooFarDown > 0) {
 				$submenu.style.top = "-10px";
+			}
+			const tooFarRight = rect.right > window.innerWidth;
+			if (tooFarRight) {
+				$submenu.style.left = "auto";
+				$submenu.style.right = "10px";
 			}
 		}
 	}
@@ -184,8 +189,9 @@ export default class Menu extends Component {
 	};
 
 	renderSubmenu = item => {
+		const leftClass = this.props.align === "center" ? " left" : "";
 		return (
-			<div id="active-submenu" className="menu-popup-submenu">
+			<div id="active-submenu" className={`menu-popup-submenu${leftClass}`}>
 				{this.renderMenu(item.submenu, item)}
 			</div>
 		);

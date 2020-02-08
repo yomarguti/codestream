@@ -436,11 +436,11 @@ export class SimpleReviewsPanel extends Component {
 			if (filters.type === "comment" && item.type !== filters.type) return null;
 			if (filters.noTag && item.tags && item.tags.length) return null;
 			if (filters.branch) {
-				const branches = (item.reviewChangeset || []).map(changeset => changeset.branch);
+				const branches = (item.reviewChangesets || []).map(changeset => changeset.branch);
 				if (!branches.includes(filters.branch)) return null;
 			}
 			if (filters.repo) {
-				const repoIds = (item.reviewChangeset || []).map(changeset => changeset.repoId);
+				const repoIds = (item.reviewChangesets || []).map(changeset => changeset.repoId);
 				if (!repoIds.includes(filters.repoId)) return null;
 			}
 			if (filters.updatedAfter && item.modifiedAt < filters.updatedAfter) return null;
@@ -782,6 +782,7 @@ const mapStateToProps = state => {
 			author.name = author.fullName || author.username || author.email;
 			authorArray[creatorId] = author;
 		}
+		console.log("LOOPING THROUGH REVIEW: ", review);
 		reviewChangesets.forEach(changeset => {
 			const { repoId, branch } = changeset;
 			if (repoId) repoArray[repoId] = createdAt;
