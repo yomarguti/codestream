@@ -484,18 +484,25 @@ export class SimpleStream extends Component {
 		this.setActivePanel(WebviewPanels.NewComment);
 	};
 
-	newCodeReview = () => {
+	newIssue = () => {
+		this.setActivePanel(WebviewPanels.NewIssue);
+	};
+
+	newReview = () => {
 		this.setActivePanel(WebviewPanels.ComposeReview);
 	};
 
 	renderPlusMenu() {
 		const { plusMenuOpen, menuTarget } = this.state;
 
-		const menuItems = [{ label: "New Comment", action: this.newComment, key: "new-comment" }];
+		const menuItems = [
+			{ label: "New Comment", action: this.newComment, key: "comment" },
+			{ label: "New Issue", action: this.newIssue, key: "issue" }
+		];
 		if (this.props.apiCapabilities.lightningCodeReviews) {
 			menuItems.push(
 				{ label: "-" },
-				{ label: "Request A Code Review", action: this.newCodeReview, key: "new-code-review" }
+				{ label: "Request A Code Review", action: this.newReview, key: "review" }
 			);
 		}
 		// { label: "-" }
@@ -731,7 +738,7 @@ export class SimpleStream extends Component {
 							})}
 							onClick={e => this.setActivePanel(WebviewPanels.Reviews)}
 						>
-							<Icon name="code" title="Code Reviews" placement="bottom" />
+							<Icon name="code" title="Filter &amp; Search" placement="bottom" />
 						</label>
 					)}
 					<label onClick={this.togglePlusMenu}>
@@ -992,6 +999,19 @@ export class SimpleStream extends Component {
 					{activePanel === WebviewPanels.NewComment && (
 						<CodemarkForm
 							commentType="comment"
+							streamId={this.props.postStreamId}
+							onSubmit={this.submitNoCodeCodemark}
+							onClickClose={this.props.closePanel}
+							collapsed={false}
+							positionAtLocation={false}
+							multiLocation={true}
+							noCodeLocation={true}
+							setMultiLocation={this.setMultiLocation}
+						/>
+					)}
+					{activePanel === WebviewPanels.NewIssue && (
+						<CodemarkForm
+							commentType="issue"
 							streamId={this.props.postStreamId}
 							onSubmit={this.submitNoCodeCodemark}
 							onClickClose={this.props.closePanel}

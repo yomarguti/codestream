@@ -105,7 +105,7 @@ export function ReviewNav(props: Props) {
 			</Nav>
 			<ReviewActions>
 				<div style={{ textAlign: "left", flexGrow: 2 }}>
-					{review && <SearchResult review={review} />}
+					{review && <SearchResult result={review} />}
 				</div>
 				<Button variant="secondary" onClick={pauseReview}>
 					Pause

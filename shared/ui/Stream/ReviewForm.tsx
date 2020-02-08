@@ -529,6 +529,7 @@ class ReviewForm extends React.Component<Props, State> {
 				text={text.replace(/\n/g, "<br/>")}
 				placeholder="Description (Optional)"
 				multiCompose
+				withTags
 				onChange={this.handleChange}
 				toggleTag={this.handleToggleTag}
 				shouldShowRelatableCodemark={codemark =>

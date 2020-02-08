@@ -39,6 +39,7 @@ export enum WebviewPanels {
 	Tasks = "tasks",
 	Notifications = "notifications",
 	NewComment = "new-comment",
+	NewIssue = "new-issue",
 	ComposeReview = "compose-review",
 	Review = "review",
 	Reviews = "reviews"

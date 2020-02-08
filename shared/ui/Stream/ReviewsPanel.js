@@ -18,6 +18,8 @@ import { PanelHeader } from "../src/components/PanelHeader";
 import styled from "styled-components";
 import FiltersButton from "../src/components/FiltersButton";
 import { OpenUrlRequestType } from "@codestream/protocols/agent";
+import { getActivity } from "../store/activityFeed/reducer";
+import { isCSReview } from "../protocols/agent/api.protocol.models";
 
 const SearchBar = styled.div`
 	display: flex;
@@ -123,7 +125,8 @@ export class SimpleReviewsPanel extends Component {
 				waitingForMe: true,
 				createdByMe: true,
 				open: true,
-				closed: true
+				closed: true,
+				recent: true
 			},
 			selectedTags: {},
 			filters: {},
@@ -131,10 +134,11 @@ export class SimpleReviewsPanel extends Component {
 		};
 
 		this.sectionLabel = {
-			waitingForMe: "Waiting For My Review",
+			waitingForMe: "Open & Assigned to Me",
 			createdByMe: "Created By Me",
 			open: "Open",
-			closed: "Closed"
+			closed: "Closed",
+			recent: "Recent"
 		};
 	}
 
@@ -162,14 +166,12 @@ export class SimpleReviewsPanel extends Component {
 		});
 	};
 
-	renderReviews = reviews => {
+	renderResultsForSection = results => {
 		const { typeFilter } = this.props;
-		if (reviews.length === 0)
+		if (results.length === 0)
 			return <div className="no-matches">No {typeFilter}s in this file.</div>;
 		else {
-			return reviews.map(review => (
-				<SearchResult review={review} query={this.state.filters.text} />
-			));
+			return results.map(a => <SearchResult result={a} query={this.state.filters.text} />);
 		}
 	};
 
@@ -179,17 +181,23 @@ export class SimpleReviewsPanel extends Component {
 		const sectionLabel = this.sectionLabel[section];
 
 		return (
-			<div
-				className={createClassString("section", "has-children", {
-					expanded: this.state.expanded[section]
-				})}
-			>
-				<div className="header" onClick={e => this.toggleSection(e, section)}>
-					<Icon name="chevron-right" className="triangle-right" />
-					<span className="clickable">{sectionLabel}</span>
-				</div>
-				<ul>{this.renderReviews(reviews)}</ul>
-			</div>
+			<>
+				<tr>
+					<td colspan={4}>
+						<div
+							className={createClassString("section", "has-children", {
+								expanded: this.state.expanded[section]
+							})}
+						>
+							<div className="header" onClick={e => this.toggleSection(e, section)}>
+								<Icon name="chevron-right" className="triangle-right" />
+								<span className="clickable">{sectionLabel}</span>
+							</div>
+						</div>
+					</td>
+				</tr>
+				{this.state.expanded[section] && this.renderResultsForSection(reviews)}
+			</>
 		);
 	};
 
@@ -218,21 +226,25 @@ export class SimpleReviewsPanel extends Component {
 		const filters = {};
 		let match;
 
-		if (text.match(/\bis:open\b/)) {
+		if (text.match(/\b(is|status):open\b/)) {
 			filters.status = "open";
-			text = text.replace(/\s*is:open\s*/, " ");
+			text = text.replace(/\s*(is|status):open\s*/, " ");
 		}
-		if (text.match(/\bis:closed\b/)) {
+		if (text.match(/\b(is|status):closed\b/)) {
 			filters.status = "closed";
-			text = text.replace(/\s*is:closed\s*/, " ");
+			text = text.replace(/\s*(is|status):closed\s*/, " ");
 		}
-		if (text.match(/\bis:issue\b/)) {
+		if (text.match(/\b(is|type):issue\b/)) {
 			filters.type = "issue";
-			text = text.replace(/\s*is:issue\s*/, " ");
+			text = text.replace(/\s*(is|type):issue\s*/, " ");
 		}
-		if (text.match(/\bis:cr\b/)) {
+		if (text.match(/\b(is|type):comment\b/)) {
+			filters.type = "issue";
+			text = text.replace(/\s*(is|type):comment\s*/, " ");
+		}
+		if (text.match(/\b(is|type):cr\b/)) {
 			filters.type = "review";
-			text = text.replace(/\s*is:cr\s*/, " ");
+			text = text.replace(/\s*(is|type):cr\s*/, " ");
 		}
 		match = text.match(/\bauthor:@(\S+)(\s|$)/);
 		if (match) {
@@ -387,82 +399,87 @@ export class SimpleReviewsPanel extends Component {
 			return this.renderBlankFiller();
 		}
 
-		const { reviews, currentUserId, authorArray, branchArray, repoArray, usernameMap } = this.props;
+		const { currentUserId, authorArray, branchArray, repoArray, usernameMap } = this.props;
 		const { thisRepo, filters, savedFilters } = this.state;
 
-		const sections = ["waitingForMe", "createdByMe", "open", "closed"];
+		// const sections = ["waitingForMe", "createdByMe", "open", "recent", "closed"];
+		const sections = ["waitingForMe", "open", "recent", "closed"];
 
-		let displayReviews = {};
-		let assignedReviews = {};
-		let totalReviews = 0;
+		let displayItems = {};
+		let assignedItems = {};
+		let totalItems = 0;
 
-		const assignReview = (review, section) => {
-			if (!displayReviews[section]) displayReviews[section] = [];
-			displayReviews[section].push(review);
-			assignedReviews[review.id] = true;
-			totalReviews++;
+		const assignItem = (item, section) => {
+			if (!displayItems[section]) displayItems[section] = [];
+			displayItems[section].push(item);
+			assignedItems[item.id] = true;
+			totalItems++;
 		};
 
 		// sort by most recent first
-		_sortBy(reviews, review => -review.createdAt).forEach(review => {
-			// console.log("REVIEW IS: ", review);
-			if (review.deactivated) return null;
+		_sortBy(this.props.activity, a => -a.record.createdAt).forEach(a => {
+			const item = a.record;
+			if (item.deactivated) return null;
 			// FIXME author is text, creatorId is an id
-			const creator = usernameMap[review.creatorId];
-			const assignees = review.reviewers.map(id => usernameMap[id]);
-			const impacted = Object.keys(review.authorsById || {}).map(id => usernameMap[id]);
-			if (filters.author && creator !== filters.author) return null;
-			if (filters.impacts && !impacted.includes(filters.impacts)) return null;
-			if (filters.assignee && !assignees.includes(filters.assignee)) return null;
-			if (filters.status && review.status !== filters.status) return null;
-			if (filters.tag && !this.hasTag(review, filters.tag)) return null;
+			const assignees = (isCSReview(item) ? item.reviewers : item.assignees) || [];
+			const creatorUsername = usernameMap[item.creatorId];
+			const assigneeUsernames = assignees.map(id => usernameMap[id]);
+			const impactedUsernames = Object.keys(item.authorsById || {}).map(id => usernameMap[id]);
+			if (filters.author && creatorUsername !== filters.author) return null;
+			if (filters.impacts && !impactedUsernames.includes(filters.impacts)) return null;
+			if (filters.assignee && !assigneeUsernames.includes(filters.assignee)) return null;
+			if (filters.status && item.status !== filters.status) return null;
+			if (filters.tag && !this.hasTag(item, filters.tag)) return null;
 			// FIXME this will only work if we have issues in this query as well
-			if (filters.type && filters.type !== "review") return null;
-			if (filters.noTag && review.tags && review.tags.length) return null;
+			if (filters.type === "review" && !isCSReview(item)) return null;
+			if (filters.type === "issue" && item.type !== filters.type) return null;
+			if (filters.type === "comment" && item.type !== filters.type) return null;
+			if (filters.noTag && item.tags && item.tags.length) return null;
 			if (filters.branch) {
-				const branches = (review.reviewChangeset || []).map(changeset => changeset.branch);
+				const branches = (item.reviewChangeset || []).map(changeset => changeset.branch);
 				if (!branches.includes(filters.branch)) return null;
 			}
 			if (filters.repo) {
-				const repoIds = (review.reviewChangeset || []).map(changeset => changeset.repoId);
+				const repoIds = (item.reviewChangeset || []).map(changeset => changeset.repoId);
 				if (!repoIds.includes(filters.repoId)) return null;
 			}
-			if (filters.updatedAfter && review.modifiedAt < filters.updatedAfter) return null;
-			if (filters.updatedBefore && review.modifiedAt > filters.updatedBefore) return null;
-			if (filters.updatedOn && !sameDay(new Date(review.modifiedAt), filters.updatedOn))
-				return null;
-			if (filters.createdAfter && review.createdAt < filters.createdAfter) return null;
-			if (filters.createdBefore && review.createdAt > filters.createdBefore) return null;
-			if (filters.createdOn && !sameDay(new Date(review.createdAt), filters.createdOn)) return null;
+			if (filters.updatedAfter && item.modifiedAt < filters.updatedAfter) return null;
+			if (filters.updatedBefore && item.modifiedAt > filters.updatedBefore) return null;
+			if (filters.updatedOn && !sameDay(new Date(item.modifiedAt), filters.updatedOn)) return null;
+			if (filters.createdAfter && item.createdAt < filters.createdAfter) return null;
+			if (filters.createdBefore && item.createdAt > filters.createdBefore) return null;
+			if (filters.createdOn && !sameDay(new Date(item.createdAt), filters.createdOn)) return null;
 			// if (!this.onBranch(review, branchFilter)) return null;
 
-			const title = review.title;
-			const reviewers = review.reviewers;
-			const status = review.status;
+			const title = item.title;
+			const status = item.status;
 			const q = filters.text;
 
 			sections.forEach(section => {
-				if (assignedReviews[review.id]) return;
+				if (assignedItems[item.id]) return;
 
 				if (
 					q &&
-					!(review.text || "").toLocaleLowerCase().includes(q) &&
+					!(item.text || "").toLocaleLowerCase().includes(q) &&
 					!(title || "").toLocaleLowerCase().includes(q)
 				)
 					return;
 				switch (section) {
 					case "waitingForMe":
-						if ((status === "open" || !status) && _includes(reviewers || [], currentUserId))
-							assignReview(review, "waitingForMe");
+						if (status === "open" && _includes(assignees || [], currentUserId))
+							assignItem(item, "waitingForMe");
 						break;
-					case "createdByMe":
-						if (review.creatorId === currentUserId) assignReview(review, "createdByMe");
-						break;
+					// case "createdByMe":
+					// if (item.creatorId === currentUserId) assignItem(item, "createdByMe");
+					// break;
 					case "open":
-						if (status === "open" || !status) assignReview(review, "open");
+						if (status === "open") assignItem(item, "open");
+						break;
+					case "closed":
+						if (status === "closed") assignItem(item, "closed");
 						break;
 					default:
-						assignReview(review, "closed");
+						assignItem(item, "recent");
 						break;
 				}
 			});
@@ -512,7 +529,7 @@ export class SimpleReviewsPanel extends Component {
 				return {
 					label: (
 						<span className="repo-menu-selector">
-							<Icon name="git-repo" /> {repo}
+							<Icon name="repo" /> {repo}
 						</span>
 					),
 					searchLabel: repo,
@@ -546,12 +563,17 @@ export class SimpleReviewsPanel extends Component {
 			{
 				label: "Your Issues",
 				key: "issues",
-				action: () => this.setQ("is:open is:issue author:@me")
+				action: () => this.setQ("is:issue author:@me")
 			},
 			{
 				label: "Your Code Reviews",
 				key: "reviews",
-				action: () => this.setQ("is:open is:cr author:@me ")
+				action: () => this.setQ("is:cr author:@me ")
+			},
+			{
+				label: "Your Code Comments",
+				key: "comments",
+				action: () => this.setQ("is:comment author:@me ")
 			},
 			{
 				label: "Everything assigned to you",
@@ -584,7 +606,7 @@ export class SimpleReviewsPanel extends Component {
 		// console.log("FILTERS: ", filters);
 		return (
 			<div className="panel full-height reviews-panel">
-				<PanelHeader title="Code Reviews &amp; Issues">
+				<PanelHeader title="Filter &amp; Search">
 					<SearchBar className="search-bar">
 						<FiltersButton items={filterItems}>
 							Filters
@@ -654,11 +676,16 @@ export class SimpleReviewsPanel extends Component {
 				</PanelHeader>
 				<ScrollBox>
 					<div className="channel-list vscroll" style={{ paddingTop: "10px" }}>
-						{totalReviews > 0 &&
-							sections.map(section => {
-								return this.renderSection(section, displayReviews[section] || []);
-							})}
-						{!totalReviews && <div className="no-matches">No results match your search.</div>}
+						{totalItems > 0 && (
+							<table style={{ width: "100%", borderCollapse: "collapse" }}>
+								<tbody>
+									{sections.map(section => {
+										return this.renderSection(section, displayItems[section] || []);
+									})}
+								</tbody>
+							</table>
+						)}
+						{!totalItems && <div className="no-matches">No results match your search.</div>}
 						<ProTip />
 					</div>
 				</ScrollBox>
@@ -728,6 +755,7 @@ const mapStateToProps = state => {
 		fileStreamIdToFilterFor = context.lastFileStreamId;
 	}
 
+	const activity = getActivity(state);
 	const reviews = reviewSelectors.getAllReviews(state);
 	const usernames = userSelectors.getUsernames(state);
 	const usernameMap = userSelectors.getUsernamesByIdLowerCase(state);
@@ -771,8 +799,10 @@ const mapStateToProps = state => {
 		noReviewsAtAll: !reviewSelectors.teamHasReviews(state),
 		usernames,
 		usernameMap,
+		currentUserId: session.userId,
 		savedSearchFilters,
 		currentUsername: users[session.userId].username,
+		activity,
 		reviews,
 		team: teams[context.currentTeamId],
 		teamMembers: userSelectors.getTeamMembers(state),
