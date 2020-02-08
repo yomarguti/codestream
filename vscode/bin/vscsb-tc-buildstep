@@ -1,102 +1,85 @@
 #!/usr/bin/env python3
 
-#desc# Standard interface to CodeStream's TeamCity build process for the VS Code Extension
+# desc# Standard interface to CodeStream's build process
+
+# https://github.com/TeamCodeStream/teamcity_tools/blob/master/README.md#Structured_Builds
 
 import os
 import sys
 
 sys.path.append(os.environ['DT_TOP'] + "/lib")
-import devTools
-import gitCS
-from sysUtils import dumpDict, shellExecNoBuffer, someValueOrNone
-from buildUtils import *
+import sysUtils as su
+import buildUtils
 
-supplementalRepos = ['codestream-components', 'codestream-lsp-agent']
-allRepos = supplementalRepos + ['vscode-codestream']
-assetExtensionList = ['info', 'vsix']
+# 1. add filename extensions for all assets created (tgz, vsix, zip, ...)
+assetExtensionList = ['vsix']
 
-args = parseStandardBuildArgs()
-dt = devTools.devTools()
-buildData = buildInit(__file__, dt, args)
-os.chdir(buildData['sandboxTop'])
-if args.verbose: print("current directory is", buildData['sandboxTop'])
-if args.debug: dumpDict(buildData, None, buildData)
-git = {}
-for repo in allRepos:
-	git[repo] = gitCS.gitCS(os.environ['VSCSB_SANDBOX'] + "/" + repo)
+# 2. add any additional repos to be included (do not include primary repo)
+additionalRepos = ['codestream-components', 'codestream-lsp-agent']
 
-if args.update_repos:
-	for repo in supplementalRepos:
-		if not git[repo].pull("origin", rebase = True):
-			print("pull/rebase failed for", repo)
-			exit(1)
+# 3. choose the build type (npm, intellijPlugin, custom)
+buildType = buildUtils.buildType.npm
 
+args = buildUtils.parseStandardBuildArgs()
+buildOptions = {
+	'verbose': args.verbose,
+	'assetExtensionList': assetExtensionList,
+	'additionalRepos': additionalRepos
+}
+
+# 4. Set this if you want your applied git tags to be something other than 'v' (v1.2.3)
+buildOptions['gitTagPrefix'] = "vscode-"
+
+if args.verbose:
+	print("buildstep running with", args.action)
+
+build = buildUtils.build(buildType, **buildOptions)
+if not build:
+	su.printErr("could not get a build object")
+	exit(1)
+
+# 5. Make sure the default actions apply, if not make changes as necessary.
+#    Use 'build.execCmd("command string")' to execute custom actions.
+#    https://github.com/TeamCodeStream/teamcity_tools/blob/master/README.project-build-types.md
 if args.action == 'prep':
-	buildstepPrep(args)
-	exit(0)
+	build.prep()                              # set teamcity variables / parameters
+elif args.action == 'build':
+	# build.build()                             # complete build so services can be started
+	build.execCmd("npm run bundle:ci")
+elif args.action == 'citest':
+	# build.citest()                            # run the continuous integration test suite
+	print("there are no tests for this project")
+elif args.action == 'pack':
+	# build.pack()                              # create asset info file and package assets
+	buildName = build.getDisplayVersion("name-version")          # codestream-1.2.3
+	fullName = build.getDisplayVersion("full")                   # [prefix-]codestream-1.2.3+1000
+	build.writeAssetInfo(assetInfoFileName=f"{buildName}.info")  # used by vsix to display version & build info
+	build.execCmd("npm run pack")
+	os.rename(f"{buildName}.vsix", f"{fullName}.vsix")
+	os.unlink(f"{buildName}.info")
+	build.getMD5SumsForAssets()
+	build.writeAssetInfo()
+elif args.action == 'publish':
+	# build.publish()                           # publish assets for distribution
+	print("there's nothing to publish")
+elif args.action == 'tag':
+	build.tag()                               # update version info and apply tags
+elif args.action == 'release':
+	# build.release()                           # release assets to the general public
+	if not su.someValueOrNone(os.environ, 'VSCSB_NOPUBLISH'):
+		# BAD BAD BAD BAD
+		build.execCmd("npm install --no-save")
+		vsixFile = f"{build.getDisplayVersion('full')}.vsix"
+		# build.execCmd("vscsb-publish-assets-to-cloudfront --no-prompt --asset-env prod")
+		build.execCmd(f"vsce publish --packagePath {vsixFile}")
+	else:
+		su.printErr("VSCSB_NOPUBLISH is set - skipping this step")
+elif args.action == 'update':
+	build.update()                            # update existing asset to create a new one
+elif args.action == 'docker':
+	build.docker()                            # create docker containers
+else:
+	su.printErr("invalid build args")
+	exit(1)
 
-if args.action in ['clean','destroy']:
-	buildstepGeneric(args, cmd = "npm run clean:ci", workingDir = buildData['sandboxTop'])
-
-if args.action == 'destroy':
-	buildstepDestroy(args, buildData, repoList = allRepos)
-
-# for a build:
-#   npm run build
-#   create generic info file (no build number)
-#   npm run pack (create the vsix with a generic name - no build number)
-#   create build number specific info file (includes md5sum of vsix)
-#   rename generic vsix to build specific vsix
-pkgInfo = None
-vsixFile = None
-infoFile = None
-gitVSCode = gitCS.gitCS(buildData['sandboxTop'])
-if args.action in ['build','info','release']:
-	if args.action == 'build':
-		# build the extension
-		shellExecNoBuffer("npm run bundle:ci", abortOnFail = True, printCmd = args.verbose)
-
-	# create asset info file (w/o md5sum)
-	pkgInfo = getPackageInfo(buildData = buildData, gitRepoCommitDir = buildData['sandboxTop'])
-	genericName = pkgInfo['name'] + "-" + pkgInfo['version']
-	genericVsixFile = genericName + ".vsix"
-	genericInfoFile = genericName + ".info"
-	vsixFile = pkgInfo['localAssetFilePrefix'] + ".vsix"
-	infoFile = pkgInfo['localAssetFilePrefix'] + ".info"
-	for repo in supplementalRepos:
-		git = gitCS.gitCS(os.environ['VSCSB_SANDBOX'] + "/" + repo)
-		pkgInfo['repoCommitId'][repo] = git.getCommitId()
-	pkgInfo['assetsMD5'][vsixFile] = "0"
-	dumpDict(pkgInfo, genericInfoFile)
-	if args.verbose: print("created preliminary info file", genericInfoFile)
-
-	if args.action == 'build':
-		# pack the extenstion (uses genericInfoFile, creates genericVsixFile)
-		shellExecNoBuffer("npm run pack", abortOnFail = True, printCmd = args.verbose)
-		md5sum = dt.md5Hash(genericVsixFile)
-		pkgInfo['assetsMD5'][vsixFile] = md5sum
-		dumpDict(pkgInfo, infoFile)
-		os.unlink(genericInfoFile)
-		os.rename(genericVsixFile, vsixFile)
-		if args.verbose:
-			dumpDict(pkgInfo, None, "packageInfo:")
-			shellExecNoBuffer("ls -l " + pkgInfo['localAssetFilePrefix'] + ".*", printCmd = True)
-
-if args.action == 'citest':
-	buildstepGeneric(args, cmd = "echo Testing not configured")
-
-if args.action == 'publish':
-	publishArtifacts(args, buildData, assetExtensionList)
-
-if args.action == 'release':
-	if not os.path.exists(vsixFile):
-		print("asset not found:", vsixFile)
-		exit(1)
-	if not os.path.exists(infoFile):
-		print("asset not found:", infoFile)
-		exit(1)
-	applyTagToRepos(os.environ['VSCSB_SANDBOX'], "vscode-" + pkgInfo['version'], pkgInfo['repoCommitId'])
-	updatePackageVersion(buildData['sandboxTop'] + "/package.json", "develop", pkgInfo['version'], bumpLevel = 'patch')
-	if not someValueOrNone(os.environ, 'VSCSB_NOPUBLISH'):
-		# buildstepGeneric(args, cmd = "vscsb-publish-assets-to-cloudfront --no-prompt --asset-env prod")
-		buildstepGeneric(args, cmd = "vsce publish --packagePath " + vsixFile)
+exit(0)
