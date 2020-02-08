@@ -50,6 +50,7 @@ export interface WebviewContext {
 	threadId?: string;
 	currentCodemarkId?: string;
 	currentReviewId?: string;
+	activeReviewId?: string;
 	currentMarkerId?: string;
 	isRepositioning?: boolean;
 	hasFocus: boolean;

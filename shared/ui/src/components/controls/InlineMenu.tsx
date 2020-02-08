@@ -4,7 +4,7 @@ import styled from "styled-components";
 import Icon from "../../../Stream/Icon";
 
 interface MenuItem {
-	label: string;
+	label: any;
 	action?: string | (() => void);
 	key?: string;
 	default?: boolean;
@@ -12,7 +12,7 @@ interface MenuItem {
 
 export interface InlineMenuProps {
 	items: MenuItem[];
-	value: string;
+	children?: React.ReactNode;
 	onChange?: (item: MenuItem) => void;
 	title?: string;
 	titleIcon?: any;
@@ -21,6 +21,7 @@ export interface InlineMenuProps {
 const TextButton = styled.span`
 	color: ${props => props.theme.colors.textHighlight};
 	cursor: pointer;
+	white-space: nowrap;
 	.octicon-chevron-down {
 		transform: scale(0.7);
 		margin-left: 2px;
@@ -44,6 +45,10 @@ export function InlineMenu(props: InlineMenuProps) {
 		if (action !== "noop") toggleMenu(action);
 	};
 
+	if (!props.items.length) {
+		return <>{props.children}</>;
+	}
+
 	return (
 		<>
 			{isOpen && buttonRef.current && (
@@ -58,7 +63,7 @@ export function InlineMenu(props: InlineMenuProps) {
 				/>
 			)}
 			<TextButton ref={buttonRef} onClick={toggleMenu} tabIndex={0} onKeyPress={handleKeyPress}>
-				{props.value}
+				{props.children}
 				<Icon name="chevron-down" />
 			</TextButton>
 		</>

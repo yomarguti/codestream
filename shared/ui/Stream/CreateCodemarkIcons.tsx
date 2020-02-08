@@ -59,6 +59,7 @@ const mapStateToProps = (state: CodeStreamState) => {
 		firstVisibleLine,
 		lastVisibleLine,
 		textEditorVisibleRanges,
+		activeReviewId: context.activeReviewId,
 		textEditorSelection: getCurrentSelection(editorContext)
 	};
 };
@@ -188,53 +189,41 @@ export const CreateCodemarkIcons = (props: Props) => {
 				key={lineNum0}
 				style={{ top }}
 			>
-				{(hover || open) && [
-					<Icon
-						key="comment"
-						onClick={e => handleClickPlus(e, CodemarkType.Comment, lineNum0)}
-						name="comment"
-						title={ComposeTitles.comment}
-						placement="bottomLeft"
-						align={{ offset: [-3, 10] }}
-						delay={1}
-					/>,
-					<Icon
-						onClick={e => handleClickPlus(e, CodemarkType.Issue, lineNum0)}
-						name="issue"
-						key="issue"
-						title={ComposeTitles.issue}
-						placement="bottomLeft"
-						align={{ offset: [-3, 10] }}
-						delay={1}
-					/>,
-					// <Icon
-					// 	onClick={e => this.handleClickPlus(e, CodemarkType.Bookmark, lineNum0)}
-					// 	name="bookmark"
-					// 	key="bookmark"
-					// 	title={ComposeTitles.bookmark}
-					// 	placement="bottomLeft"
-					// 	align={{ offset: [-3, 10] }}
-					// 	delay={1}
-					// />,
-					// <Icon
-					//  key="about"
-					// 	onClick={e => this.handleClickPlus(e, "about", lineNum0, top)}
-					// 	name="about"
-					// 	title={ComposeTitles.about}
-					// 	placement="bottomLeft"
-					// 	align={{ offset: [-3, 10] }}
-					// 	delay={1}
-					// />,
-					<Icon
-						onClick={e => handleClickPlus(e, CodemarkType.Link, lineNum0)}
-						name="link"
-						key="link"
-						title={ComposeTitles.link}
-						placement="bottomLeft"
-						align={{ offset: [-3, 10] }}
-						delay={1}
-					/>
-				]}
+				{(hover || open) && (
+					<>
+						<Icon
+							key="comment"
+							onClick={e => handleClickPlus(e, CodemarkType.Comment, lineNum0)}
+							name="comment"
+							title={ComposeTitles.comment}
+							placement="bottomLeft"
+							align={{ offset: [-3, 10] }}
+							delay={1}
+						/>
+						{!derivedState.activeReviewId && (
+							<Icon
+								onClick={e => handleClickPlus(e, CodemarkType.Issue, lineNum0)}
+								name="issue"
+								key="issue"
+								title={ComposeTitles.issue}
+								placement="bottomLeft"
+								align={{ offset: [-3, 10] }}
+								delay={1}
+							/>
+						)}
+						{!derivedState.activeReviewId && (
+							<Icon
+								onClick={e => handleClickPlus(e, CodemarkType.Link, lineNum0)}
+								name="link"
+								key="link"
+								title={ComposeTitles.link}
+								placement="bottomLeft"
+								align={{ offset: [-3, 10] }}
+								delay={1}
+							/>
+						)}
+					</>
+				)}
 			</div>
 		);
 	};
@@ -272,9 +261,9 @@ export const CreateCodemarkIcons = (props: Props) => {
 		// const top = paddingTop ? "calc(" + topPct + " + " + paddingTop + "px)" : topPct;
 		const top = lineHeight * iconsOnLine0 + paddingTop;
 		if (derivedState.textEditorSelections && derivedState.textEditorSelections.length == 0)
-			return renderIconRow(iconsOnLine0, top, false, false);	// suppress compose icon, editor selections is 1 when just cursor is in file 
-		else
-			return renderIconRow(iconsOnLine0, top, false, true);
+			return renderIconRow(iconsOnLine0, top, false, false);
+		// suppress compose icon, editor selections is 1 when just cursor is in file
+		else return renderIconRow(iconsOnLine0, top, false, true);
 	} else {
 		// const heightPerLine = (window.innerHeight - 22) / (numLinesVisible + 2);
 		return (

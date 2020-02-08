@@ -97,7 +97,14 @@ export function reduceContext(
 			return { ...state, codemarksShowResolved: action.payload };
 
 		case ContextActionsType.SetCurrentReview:
-			return { ...state, currentReviewId: action.payload.reviewId };
+			return { ...state, activeReviewId: undefined, currentReviewId: action.payload.reviewId };
+
+		case ContextActionsType.SetActiveReview:
+			return {
+				...state,
+				panelStack: [WebviewPanels.CodemarksForFile, ...state.panelStack].slice(0, 10),
+				activeReviewId: action.payload.reviewId
+			};
 
 		case ContextActionsType.SetSpatialViewPRCommentsToggle:
 			return { ...state, spatialViewShowPRComments: action.payload };

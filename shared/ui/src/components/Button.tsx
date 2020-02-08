@@ -40,6 +40,33 @@ const getColors = (variant = "primary") => {
 				}
 			`;
 		}
+		case "destructive": {
+			return `
+				background-color: #c00;
+				color: white;
+				:hover {
+					opacity: 0.85;
+				}
+			`;
+		}
+		case "success": {
+			return `
+				background-color: #17ca65;
+				color: white;
+				:hover {
+					opacity: 0.85;
+				}
+			`;
+		}
+		case "warning": {
+			return `
+				background-color: #ffaa2c;
+				color: white;
+				:hover {
+					opacity: 0.85;
+				}
+			`;
+		}
 		case "primary":
 		default: {
 			return `
@@ -91,7 +118,7 @@ const ButtonAppend = styled.div`
 	margin-left: 10px;
 `;
 
-type ButtonVariant = "primary" | "secondary";
+type ButtonVariant = "primary" | "secondary" | "destructive" | "success" | "warning";
 
 interface Props {
 	variant?: ButtonVariant;

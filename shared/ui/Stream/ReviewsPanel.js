@@ -246,7 +246,7 @@ export class SimpleReviewsPanel extends Component {
 		}
 		match = text.match(/\bassignee:@(\S+)(\s|$)/);
 		if (match) {
-			filters.assignee = match[1];
+			filters.assignee = match[1] === "me" ? me : match[1].toLowerCase();
 			text = text.replace(/\s*assignee:@\S+/, " ");
 		}
 		match = text.match(/\breviewer:@(\S+)[\s|$]/);

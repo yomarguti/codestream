@@ -6,7 +6,7 @@ import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
 import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import Tooltip from "./Tooltip"; // careful with tooltips on codemarks; they are not performant
-import FileInfo from "./FileInfo";
+import { ReviewNav } from "./ReviewNav";
 import Feedback from "./Feedback";
 import cx from "classnames";
 import {
@@ -72,6 +72,8 @@ import { NewCodemarkAttributes } from "../store/codemarks/actions";
 import styled from "styled-components";
 import { PanelHeader } from "../src/components/PanelHeader";
 import * as fs from "../utilities/fs";
+import { Review } from "./Review";
+import { Button } from "../src/components/Button";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -107,6 +109,7 @@ interface Props {
 	numHidden: number;
 	isInVscode: boolean;
 	webviewFocused: boolean;
+	activeReviewId?: string;
 
 	setEditorContext: (
 		...args: Parameters<typeof setEditorContext>
@@ -617,6 +620,13 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					changes.
 				</div>
 			);
+			if (this.props.activeReviewId) {
+				return (
+					<div key="no-codemarks" className="no-codemarks-container">
+						<div className="no-codemarks">Instructions how to do a review go here</div>
+					</div>
+				);
+			}
 			return (
 				<div key="no-codemarks" className="no-codemarks-container">
 					<div className="no-codemarks">
@@ -1066,7 +1076,16 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		});
 	};
 
-	printViewSelectors() {
+	renderHeader() {
+		const { fileNameToFilterFor = "" } = this.props;
+		return (
+			<PanelHeader title={fs.pathBasename(fileNameToFilterFor)} position="fixed">
+				{/*<FileInfo /> */}
+			</PanelHeader>
+		);
+	}
+
+	renderViewSelectors() {
 		const { numHidden, viewInline } = this.props;
 		const { numAbove, numBelow } = this.state;
 
@@ -1116,19 +1135,22 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	render() {
-		const { fileNameToFilterFor = "" } = this.props;
+		const { fileNameToFilterFor = "", activeReviewId } = this.props;
+
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
-				<PanelHeader title={fs.pathBasename(fileNameToFilterFor)} position="fixed">
-					<FileInfo />
-				</PanelHeader>
+				{activeReviewId ? (
+					<ReviewNav filename={fs.pathBasename(fileNameToFilterFor)} reviewId={activeReviewId} />
+				) : (
+					this.renderHeader()
+				)}
 				{this.renderHoverIcons()}
 				{this.renderCodemarkForm()}
 				{this.state.showPRInfoModal && (
 					<PRInfoModal onClose={() => this.setState({ showPRInfoModal: false })} />
 				)}
 				{this.state.isLoading ? null : this.renderCodemarks()}
-				{this.printViewSelectors()}
+				{activeReviewId || this.renderViewSelectors()}
 			</div>
 		);
 	}
@@ -1313,6 +1335,7 @@ const mapStateToProps = (state: CodeStreamState) => {
 		showFeedbackSmiley: context.showFeedbackSmiley,
 		hasPRProvider,
 		currentStreamId: context.currentStreamId,
+		activeReviewId: context.activeReviewId,
 		team: teams[context.currentTeamId],
 		viewInline: context.codemarksFileViewStyle === "inline",
 		viewHeadshots: configs.showHeadshots,

@@ -25,7 +25,7 @@ import { safe } from "../utils";
 import { useUpdates } from "../utilities/hooks";
 import { setUserPreference } from "./actions";
 import { Modal } from "./Modal";
-import { DropdownMenu } from "../src/components/DropdownMenu";
+import { InlineMenu } from "../src/components/controls/InlineMenu";
 
 const TextButton = styled.span`
 	color: ${props => props.theme.colors.textHighlight};
@@ -483,7 +483,7 @@ export const SharingControls = React.memo(
 												<Icon name="repo" /> {repos[key].name}
 											</td>
 											<td>
-												<DropdownMenu
+												<InlineMenu
 													items={getChannelMenuItems(channel =>
 														setDefaultChannel(
 															key,
@@ -496,7 +496,7 @@ export const SharingControls = React.memo(
 													{defaultChannel == undefined
 														? "last channel used "
 														: formatChannelName(defaultChannel)}
-												</DropdownMenu>
+												</InlineMenu>
 											</td>
 										</tr>
 									);
@@ -531,18 +531,18 @@ export const SharingControls = React.memo(
 					</>
 				)}
 				Share on{" "}
-				<DropdownMenu items={shareProviderMenuItems}>
+				<InlineMenu items={shareProviderMenuItems}>
 					<Icon name={derivedState.selectedShareTarget!.icon} />{" "}
 					{derivedState.selectedShareTarget!.teamName}
-				</DropdownMenu>{" "}
+				</InlineMenu>{" "}
 				in{" "}
-				<DropdownMenu
+				<InlineMenu
 					items={getChannelMenuItems(channel => setChannel(channel))}
 					title="Post to..."
 					titleIcon={channelTitleIcon}
 				>
 					{selectedChannel == undefined ? "select a channel" : formatChannelName(selectedChannel)}
-				</DropdownMenu>
+				</InlineMenu>
 			</Root>
 		);
 	}

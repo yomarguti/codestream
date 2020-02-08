@@ -133,15 +133,11 @@ export function CreateTeamPage() {
 							<div className="control-group">
 								<label>
 									Organization:{" "}
-									<InlineMenu
-										items={orgMenuItems}
-										title="Your Organizations"
-										value={
-											selectedCompanyId != undefined
-												? companiesById[selectedCompanyId].name
-												: "New Organization"
-										}
-									/>
+									<InlineMenu items={orgMenuItems} title="Your Organizations">
+										{selectedCompanyId != undefined
+											? companiesById[selectedCompanyId].name
+											: "New Organization"}
+									</InlineMenu>
 								</label>
 								{selectedCompanyId == undefined && (
 									<>

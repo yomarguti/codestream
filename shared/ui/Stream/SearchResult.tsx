@@ -9,6 +9,7 @@ import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
 import { CodeStreamState } from "../store";
 import { markdownify } from "./Markdowner";
+import { setActiveReview } from "../store/context/actions";
 
 const Root = styled.div`
 	padding: 5px 20px;
@@ -27,6 +28,7 @@ interface Props {
 }
 
 export default function SearchResult(props: Props) {
+	const { review } = props;
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
@@ -34,7 +36,11 @@ export default function SearchResult(props: Props) {
 			usernames: userSelectors.getUsernamesById(state)
 		};
 	});
-	const { review } = props;
+
+	const selectReview = () => {
+		dispatch(setActiveReview(review.id));
+	};
+
 	let title = markdownify(review.title);
 	if (props.query) {
 		const matchQueryRegexp = new RegExp(props.query, "gi");
@@ -42,9 +48,9 @@ export default function SearchResult(props: Props) {
 	}
 
 	return (
-		<Root>
+		<Root onClick={selectReview}>
 			<Icon name="checked-checkbox" />{" "}
-			<Tooltip title="FOO">
+			<Tooltip title="FOO" placement="top">
 				<span dangerouslySetInnerHTML={{ __html: title }} />
 			</Tooltip>
 			&nbsp;

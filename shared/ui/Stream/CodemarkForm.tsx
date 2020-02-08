@@ -128,6 +128,7 @@ interface ConnectedProps {
 	apiCapabilities: CSApiCapabilities;
 	shouldShare: boolean;
 	currentTeamId: string;
+	activeReviewId?: string;
 }
 
 interface State {
@@ -865,8 +866,18 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 	 */
 
+	renderRequireChange = () => {
+		return (
+			<div style={{ float: "left", paddingTop: "10px" }}>
+				<input type="checkbox" />
+				Change Request (require for approval)
+			</div>
+		);
+	};
+
 	renderSharingControls = () => {
 		if (this.props.isEditing) return null;
+		if (this.props.activeReviewId) return null;
 
 		const { codeBlocks } = this.state;
 		// we only look at the first code range here because we're using it to default
@@ -1742,6 +1753,7 @@ class CodemarkForm extends React.Component<Props, State> {
 					{commentType !== "link" && this.props.teamProvider === "codestream"
 						? this.renderSharingControls()
 						: this.renderCrossPostMessage(commentType)}
+					{this.props.activeReviewId && this.renderRequireChange()}
 					{true && (
 						<div
 							key="buttons"
@@ -1875,7 +1887,8 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		textEditorSelection: getCurrentSelection(editorContext),
 		teamTagsArray,
 		codemarkState: codemarks,
-		apiCapabilities: apiVersioning.apiCapabilities
+		apiCapabilities: apiVersioning.apiCapabilities,
+		activeReviewId: context.activeReviewId
 	};
 };
 

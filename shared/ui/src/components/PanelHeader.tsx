@@ -19,6 +19,12 @@ const Header = styled.div`
 			background: none;
 		}
 	}
+	&.active-review {
+		// background: var(--base-background-color);
+		// border-bottom: 1px solid var(--base-border-color);
+		width: 100%;
+		// z-index: 25;
+	}
 `;
 
 const Title = styled.div`
@@ -38,12 +44,13 @@ const Title = styled.div`
 interface Props {
 	position?: "static" | "fixed";
 	title?: string;
+	className?: string;
 }
 
 export function PanelHeader(props: PropsWithChildren<Props>) {
-	const { position = "static" } = props;
+	const { position = "static", className = "" } = props;
 	return (
-		<Header style={{ position }}>
+		<Header style={{ position }} className={className}>
 			{props.title && (
 				<Title>
 					{props.title}

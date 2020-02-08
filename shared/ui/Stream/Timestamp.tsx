@@ -35,7 +35,7 @@ export const distanceOfTimeInWords = (time: number, relativeToNow: boolean = tru
 		when = `${seconds} ${plural("second", seconds)}`;
 	} else if (seconds < HOUR) {
 		// 1 hour
-		distance = Math.round(seconds / 60);
+		distance = Math.floor(seconds / 60);
 		when = `${distance} ${plural("minute", distance)}`;
 	} else if (seconds < DAY) {
 		// 1 day

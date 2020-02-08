@@ -36,6 +36,7 @@ import { capitalize, replaceHtml, emptyArray } from "@codestream/webview/utils";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "../..";
 import { saveReviews } from "@codestream/webview/store/reviews/actions";
+import { setActiveReview } from "@codestream/webview/store/context/actions";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import { ChangesetFile } from "./ChangesetFile";
 import { getReview } from "@codestream/webview/store/reviews/reducer";
@@ -71,6 +72,8 @@ const ComposeWrapper = styled.div.attrs(() => ({
 const BaseReview = (props: BaseReviewProps) => {
 	const { review } = props;
 
+	const dispatch = useDispatch();
+
 	const markdownifyToHtml = useMarkdownifyToHtml();
 	const hasReviewers = props.reviewers != null && props.reviewers.length > 0;
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter);
@@ -97,6 +100,10 @@ const BaseReview = (props: BaseReviewProps) => {
 		}
 		return files;
 	}, [props.review]);
+
+	const startReview = () => {
+		dispatch(setActiveReview(review.id));
+	};
 
 	return (
 		<MinimumWidthCard {...getCardProps(props)}>
@@ -145,15 +152,17 @@ const BaseReview = (props: BaseReviewProps) => {
 							</MetaDescriptionForAssignees>
 						</Meta>
 					)}
-					<Meta>
-						<MetaLabel>Description</MetaLabel>
-						<MetaDescription>
-							<Icon name="description" />
-							<MarkdownText
-								dangerouslySetInnerHTML={{ __html: markdownifyToHtml(props.review.text) }}
-							/>
-						</MetaDescription>
-					</Meta>
+					{props.review.text && (
+						<Meta>
+							<MetaLabel>Description</MetaLabel>
+							<MetaDescription>
+								<Icon name="description" />
+								<MarkdownText
+									dangerouslySetInnerHTML={{ __html: markdownifyToHtml(props.review.text) }}
+								/>
+							</MetaDescription>
+						</Meta>
+					)}
 					<Meta>
 						<MetaLabel>Status</MetaLabel>
 						<MetaDescription>
@@ -175,7 +184,18 @@ const BaseReview = (props: BaseReviewProps) => {
 							<MetaDescriptionForAssignees>{changedFiles}</MetaDescriptionForAssignees>
 						</Meta>
 					)}
+					{/*!props.collapsed && (
+						<Meta>
+							<MetaLabel>Commits</MetaLabel>
+							<MetaDescription>{commits}</MetaDescription>
+						</Meta>
+					)*/}
 				</MetaSection>
+				{!props.collapsed && (
+					<Button className="control-button" onClick={startReview}>
+						Review Changes
+					</Button>
+				)}
 				{props.collapsed && renderMetaSectionCollapsed(props)}
 				{!props.collapsed && props.renderReplyInput != null && (
 					<ComposeWrapper>{props.renderReplyInput()}</ComposeWrapper>

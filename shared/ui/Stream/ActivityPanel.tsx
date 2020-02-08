@@ -9,7 +9,7 @@ import * as userSelectors from "../store/users/reducer";
 import styled from "styled-components";
 import { includes as _includes, sortBy as _sortBy, last as _last } from "lodash-es";
 import { CodeStreamState } from "../store";
-import { setCurrentCodemark, setCurrentReview } from "../store/context/actions";
+import { setCurrentCodemark, setCurrentReview, setActiveReview } from "../store/context/actions";
 import { getActivity } from "../store/activityFeed/reducer";
 import { useDidMount, useIntersectionObserver } from "../utilities/hooks";
 import { HostApi } from "../webview-api";

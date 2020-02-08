@@ -79,7 +79,12 @@ import { logout, switchToTeam } from "../store/session/actions";
 import { CodemarkView } from "./CodemarkView";
 import { Review } from "./Review";
 
-import { setCurrentStream, setNewPostEntry, setCurrentReview } from "../store/context/actions";
+import {
+	setCurrentStream,
+	setNewPostEntry,
+	setCurrentReview,
+	setActiveReview
+} from "../store/context/actions";
 import { getTeamProvider } from "../store/teams/reducer";
 import {
 	filter as _filter,
@@ -908,6 +913,7 @@ export class SimpleStream extends Component {
 		// these panels do not have global nav
 		let renderNav =
 			!["create-channel", "create-dm", "public-channels"].includes(activePanel) &&
+			!this.props.activeReviewId &&
 			!activePanel.startsWith("configure-provider-") &&
 			!activePanel.startsWith("configure-enterprise-");
 
@@ -942,7 +948,7 @@ export class SimpleStream extends Component {
 						{this.props.currentCodemarkId && <CodemarkView />}
 					</>
 				)}
-				{this.props.currentReviewId && (
+				{this.props.currentReviewId && !this.props.activeReviewId && (
 					<Modal onClose={() => this.props.setCurrentReview()}>
 						<Review id={this.props.currentReviewId} />
 					</Modal>
@@ -952,7 +958,7 @@ export class SimpleStream extends Component {
 					activePanel !== WebviewPanels.CodemarksForFile &&
 					this.renderComposeBox(placeholderText, channelName)}
 				<div className={contentClass}>
-					{activePanel === WebviewPanels.CodemarksForFile && (
+					{(activePanel === WebviewPanels.CodemarksForFile || this.props.activeReviewId) && (
 						<InlineCodemarks
 							activePanel={activePanel}
 							setActivePanel={this.setActivePanel}
@@ -2400,12 +2406,14 @@ const mapStateToProps = state => {
 		name: getDMName(stream, teamMembersById, session.userId)
 	}));
 
+	console.log("CONTEXT IS: ", context.activeReviewId);
 	return {
 		inSharingModel: state.featureFlags.sharing,
 		apiCapabilities: apiVersioning.apiCapabilities,
 		currentCodemarkId: context.currentCodemarkId,
 		currentMarkerId: context.currentMarkerId,
 		currentReviewId: context.currentReviewId,
+		activeReviewId: context.activeReviewId,
 		capabilities: capabilities,
 		pluginVersion,
 		channelStreams,

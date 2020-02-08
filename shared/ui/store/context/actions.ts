@@ -90,6 +90,9 @@ export const setCurrentStream = (streamId?: string, threadId?: string) => (dispa
 export const setCurrentReview = (reviewId?: string) =>
 	action(ContextActionsType.SetCurrentReview, { reviewId });
 
+export const setActiveReview = (reviewId?: string) =>
+	action(ContextActionsType.SetActiveReview, { reviewId });
+
 export const setShowFeedbackSmiley = (enabled: boolean) =>
 	action(ContextActionsType.SetShowFeedbackSmiley, enabled);
 

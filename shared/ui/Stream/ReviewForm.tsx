@@ -56,8 +56,8 @@ import { EditorRevealRangeRequestType } from "../ipc/host.protocol.editor";
 import { Range } from "vscode-languageserver-types";
 import { PostsActionsType } from "../store/posts/types";
 import { URI } from "vscode-uri";
-import { DropdownMenu } from "../src/components/DropdownMenu";
 import { DocumentData } from "../protocols/agent/agent.protocol.notifications";
+import { InlineMenu } from "../src/components/controls/InlineMenu";
 
 interface Props extends ConnectedProps {
 	streamId: string;
@@ -1071,7 +1071,7 @@ class ReviewForm extends React.Component<Props, State> {
 								</span>
 								{scmInfo && scmInfo.scm && (
 									<>
-										<DropdownMenu items={repoMenu}>{repoName}</DropdownMenu>
+										<InlineMenu items={repoMenu}>{repoName}</InlineMenu>
 										{scmInfo.scm.branch && (
 											<>
 												<span className="subhead">on branch&nbsp;</span>
