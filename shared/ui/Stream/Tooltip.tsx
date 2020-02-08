@@ -21,6 +21,10 @@ export default function Tooltip(props: Props) {
 	const overlayStyle = props.overlayStyle || emptyObject;
 	const content = props.content ? props.content : <span>{props.title}</span>;
 
+	// if there's no title, just return the children rather than
+	// creating a blank hover bubble
+	if (!props.content && !props.title) return props.children;
+
 	return (
 		<ModalContext.Consumer>
 			{({ zIndex }) => (

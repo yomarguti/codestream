@@ -26,6 +26,7 @@ import {
 	UnarchiveStreamRequestType,
 	UpdateCodemarkRequestType,
 	UpdatePreferencesRequestType,
+	UpdateReviewRequestType,
 	UpdateStreamMembershipRequestType,
 	CreateTeamTagRequestType,
 	UpdateTeamTagRequestType,
@@ -40,7 +41,7 @@ import {
 	NewCodemarkAttributes,
 	isLegacyNewCodemarkAttributes
 } from "../store/codemarks/actions";
-import { createReview, NewReviewAttributes } from "../store/reviews/actions";
+import { createReview, NewReviewAttributes, updateReviews } from "../store/reviews/actions";
 import {
 	closePanel,
 	openPanel,
@@ -728,6 +729,22 @@ export const setCodemarkStatus = (
 		return dispatch(updateCodemarks([response.codemark]));
 	} catch (error) {
 		logError(`failed to change codemark status: ${error}`, { codemarkId });
+		return undefined;
+	}
+};
+
+export const setReviewStatus = (
+	reviewId: string,
+	status: "closed" | "open" | "rejected"
+) => async dispatch => {
+	try {
+		const response = await HostApi.instance.send(UpdateReviewRequestType, {
+			id: reviewId,
+			status
+		});
+		return dispatch(updateReviews([response.review]));
+	} catch (error) {
+		logError(`failed to change review status: ${error}`, { reviewId });
 		return undefined;
 	}
 };

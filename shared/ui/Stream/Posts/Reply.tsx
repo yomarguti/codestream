@@ -20,6 +20,10 @@ const AuthorInfo = styled.div`
 	${Headshot} {
 		margin-right: 7px;
 	}
+	.emote {
+		font-weight: normal;
+		padding-left: 4px;
+	}
 `;
 
 export const Reply = styled((props: ReplyProps) => {
@@ -35,10 +39,18 @@ export const Reply = styled((props: ReplyProps) => {
 		menuState.open &&
 		props.renderMenu(menuState.target, () => setMenuState({ open: false }));
 
+	const renderEmote = () => {
+		let matches = (props.post.text || "").match(/^\/me\s+(.*)/);
+		if (matches) return <span className="emote">{matches[1]}</span>;
+		else return null;
+	};
+	const emote = renderEmote();
+
 	return (
 		<div className={props.className}>
 			<AuthorInfo style={{ fontWeight: 700 }}>
 				<Headshot person={props.author} /> {props.author.username}
+				{emote}
 				<StyledTimestamp time={props.post.createdAt} />
 				<div style={{ marginLeft: "auto" }}>
 					{renderedMenu}
@@ -59,10 +71,12 @@ export const Reply = styled((props: ReplyProps) => {
 					)}
 				</div>
 			</AuthorInfo>
-			<MarkdownText
-				style={{ marginLeft: "23px" }}
-				dangerouslySetInnerHTML={{ __html: markdownifyToHtml(props.post.text) }}
-			/>
+			{emote ? null : (
+				<MarkdownText
+					style={{ marginLeft: "23px" }}
+					dangerouslySetInnerHTML={{ __html: markdownifyToHtml(props.post.text) }}
+				/>
+			)}
 		</div>
 	);
 })`

@@ -16,6 +16,7 @@ import { getReview } from "../store/reviews/reducer";
 import { MinimumWidthCard } from "./Codemark/BaseCodemark";
 import SearchResult from "./SearchResult";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
+import { fetchThread, setReviewStatus, setUserPreference, createPost } from "./actions";
 
 const ReviewActions = styled.div`
 	width: 100%;
@@ -84,6 +85,47 @@ export function ReviewNav(props: Props) {
 		};
 	});
 
+	const submitReply = async text => {
+		await dispatch(createPost(review!.streamId, review!.postId, text));
+	};
+
+	const approve = () => {
+		dispatch(setReviewStatus(review!.id, "closed"));
+		submitReply("/me approved this review");
+	};
+	const reject = () => {
+		dispatch(setReviewStatus(review!.id, "rejected"));
+		submitReply("/me rejected this review");
+	};
+	const reopen = () => {
+		dispatch(setReviewStatus(review!.id, "open"));
+		submitReply("/me reopened this review");
+	};
+
+	const statusButtons = () => {
+		if (!review) return;
+		switch (review.status) {
+			case "open":
+				return (
+					<>
+						<Button variant="success" onClick={approve}>
+							Approve
+						</Button>
+						<Button variant="destructive" onClick={reject}>
+							Reject
+						</Button>
+					</>
+				);
+			case "closed":
+			case "rejected":
+				return (
+					<Button variant="secondary" onClick={reopen}>
+						Reopen
+					</Button>
+				);
+		}
+	};
+
 	if (notFound) return <MinimumWidthCard>This review was not found</MinimumWidthCard>;
 
 	const changeMenu = [{ label: "foo.js", key: "foo.js", action: () => {} }];
@@ -110,8 +152,7 @@ export function ReviewNav(props: Props) {
 				<Button variant="secondary" onClick={pauseReview}>
 					Pause
 				</Button>
-				<Button variant="success">Approve</Button>
-				<Button variant="destructive">Reject</Button>
+				{statusButtons()}
 			</ReviewActions>
 		</>
 	);

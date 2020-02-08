@@ -35,6 +35,8 @@ const Root = styled.tr`
 		padding: 8px 5px 5px 20px;
 		width: 20px;
 		.icon {
+			display: inline-block;
+			transform: scale(1.25);
 		}
 	}
 	td:nth-child(2) {
@@ -48,7 +50,18 @@ const Root = styled.tr`
 	td:nth-child(4) {
 		white-space: nowrap;
 		text-align: center;
-		padding: 5px 20px 5px 5px;
+		padding: 5px 10px 5px 5px;
+	}
+	td {
+		@media only screen and (max-width: 430px) {
+			font-size: 12px;
+		}
+		@media only screen and (max-width: 350px) {
+			font-size: 11px;
+		}
+		@media only screen and (max-width: 270px) {
+			font-size: 10px;
+		}
 	}
 `;
 
@@ -98,6 +111,8 @@ export default function SearchResult(props: Props) {
 			break;
 	}
 
+	const titleTip = result.text;
+
 	return (
 		<Root onClick={selectResult}>
 			<td>
@@ -105,7 +120,7 @@ export default function SearchResult(props: Props) {
 			</td>
 			<td>
 				<div className="title">
-					<Tooltip title="FOO" placement="top">
+					<Tooltip title={titleTip} placement="top" delay={1}>
 						<span dangerouslySetInnerHTML={{ __html: title }} />
 					</Tooltip>
 					&nbsp;
