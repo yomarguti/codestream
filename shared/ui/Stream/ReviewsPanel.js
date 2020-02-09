@@ -182,8 +182,8 @@ export class SimpleReviewsPanel extends Component {
 		}
 	};
 
-	renderSection = (section, reviews) => {
-		if (reviews.length === 0) return null;
+	renderSection = (section, results) => {
+		if (results.length === 0) return null;
 
 		const sectionLabel = this.sectionLabel[section];
 
@@ -198,12 +198,14 @@ export class SimpleReviewsPanel extends Component {
 						>
 							<div className="header" onClick={e => this.toggleSection(e, section)}>
 								<Icon name="chevron-right" className="triangle-right" />
-								<span className="clickable">{sectionLabel}</span>
+								<span className="clickable">
+									{sectionLabel} - {results.length}
+								</span>
 							</div>
 						</div>
 					</td>
 				</tr>
-				{this.state.expanded[section] && this.renderResultsForSection(reviews)}
+				{this.state.expanded[section] && this.renderResultsForSection(results)}
 			</>
 		);
 	};

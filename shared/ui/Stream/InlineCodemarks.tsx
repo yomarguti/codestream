@@ -72,8 +72,6 @@ import { NewCodemarkAttributes } from "../store/codemarks/actions";
 import styled from "styled-components";
 import { PanelHeader } from "../src/components/PanelHeader";
 import * as fs from "../utilities/fs";
-import { Review } from "./Review";
-import { Button } from "../src/components/Button";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -1128,23 +1126,24 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		);
 	}
 
+	ripple = () => {};
+
 	render() {
-		const { fileNameToFilterFor = "", activeReviewId, scmInfo } = this.props;
+		const { activeReviewId } = this.props;
 
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
-				{activeReviewId ? <ReviewNav reviewId={activeReviewId} /> : this.renderHeader()}
+				{activeReviewId ? (
+					<ReviewNav reviewId={activeReviewId} ripple={this.ripple} />
+				) : (
+					this.renderHeader()
+				)}
 				{this.renderHoverIcons()}
 				{this.renderCodemarkForm()}
 				{this.state.showPRInfoModal && (
 					<PRInfoModal onClose={() => this.setState({ showPRInfoModal: false })} />
 				)}
 				{this.state.isLoading ? null : this.renderCodemarks()}
-				{activeReviewId && (
-					<div key="no-codemarks" className="no-codemarks-container">
-						<div className="no-codemarks">Instructions how to do a review go here</div>
-					</div>
-				)}
 				{!activeReviewId && this.renderViewSelectors()}
 			</div>
 		);
