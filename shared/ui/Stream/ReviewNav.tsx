@@ -18,8 +18,12 @@ import SearchResult from "./SearchResult";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { fetchThread, setReviewStatus, setUserPreference, createPost } from "./actions";
 import * as fs from "../utilities/fs";
+import { ReviewShowDiffRequestType } from "../ipc/host.protocol.review";
+import { BoxedContent } from "../src/components/BoxedContent";
+import Icon from "./Icon";
+import { ChangesetFile } from "./Review/ChangesetFile";
 
-const ReviewActions = styled.div`
+const Actions = styled.div`
 	padding: 0 0 0 20px;
 	width: 100%;
 	position: fixed;
@@ -53,8 +57,24 @@ const Nav = styled.div`
 	top: 10px;
 	right: 10px;
 	z-index: 126;
-	button {
+	.btn-group {
+		display: inline-block;
 		margin-left: 10px;
+		transition: transform 0.2s;
+		transform-origin: 50% 0%;
+		&:last-child {
+			transform-origin: 100% 0%;
+		}
+		&.pulse {
+			transform: scale(1.5);
+			background: var(--app-background-color);
+		}
+		button {
+			margin-left: 10px;
+			&:first-child {
+				margin-left: 0;
+			}
+		}
 	}
 `;
 
@@ -62,8 +82,51 @@ const FileList = styled.div`
 	color: var(--text-color-subtle);
 `;
 
+const VerticallyCenter = styled.div`
+	position: fixed;
+	width: 100%;
+	top: 50%;
+	transform: translateY(-50%);
+	padding: 0 20px;
+	z-index: 1;
+`;
+
+const InstructionList = styled.ol`
+	padding-inline-start: 35px;
+	// font-size: larger;
+`;
+const InstructionItem = styled.li`
+	margin: 0 0 20px 0;
+	u {
+		cursor: pointer;
+	}
+	// color: var(--text-color-highlight);
+`;
+
+const Subtext = styled.div`
+	padding-top: 5px;
+	font-size: smaller;
+	color: var(--text-color-subtle);
+`;
+
+const StyledBoxedContent = styled(BoxedContent)`
+	max-width: 30em;
+	margin: 0 auto;
+	padding: 5px 0 0 0;
+	h2 {
+		font-size: 16px;
+		font-weight: normal;
+	}
+	> span {
+		top: -17px;
+	}
+`;
+
+const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
+
 export type Props = React.PropsWithChildren<{
 	reviewId: string;
+	ripple: Function;
 }>;
 
 export function ReviewNav(props: Props) {
@@ -71,20 +134,68 @@ export function ReviewNav(props: Props) {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { scmInfo } = state.editorContext;
 		const filePath = scmInfo && scmInfo.scm ? scmInfo.scm.file : "";
+		const review = getReview(state.reviews, props.reviewId);
+
+		const modifiedFilesByRepo = [] as any;
+		if (review) {
+			review.reviewChangesets.forEach(changeset => {
+				changeset.modifiedFiles.forEach(file => {
+					modifiedFilesByRepo.push({ ...file, repoId: changeset.repoId });
+				});
+			});
+		}
+
 		return {
+			review,
+			modifiedFilesByRepo,
 			editorContext: state.editorContext,
 			filePath,
 			currentCodemarkId: state.context.currentCodemarkId
 		};
 	});
 	const [notFound, setNotFound] = React.useState(false);
-	const review = useSelector((state: CodeStreamState) => {
-		return getReview(state.reviews, props.reviewId);
-	});
+	const [hoverButton, setHoverButton] = React.useState("");
+
+	const { review, modifiedFilesByRepo } = derivedState;
+
+	const changedFiles = React.useMemo(() => {
+		if (!review) return;
+		const files: any[] = [];
+		for (let changeset of review.reviewChangesets) {
+			files.push(
+				...changeset.modifiedFiles.map(f => {
+					// FIXME -- need to check for repoId here too
+					// console.log()
+					const selected = derivedState.filePath === f.file;
+					return (
+						<ChangesetFile
+							className={selected ? "selected" : undefined}
+							onClick={e => {
+								e.preventDefault();
+								HostApi.instance.send(ReviewShowDiffRequestType, {
+									reviewId: review.id,
+									repoId: changeset.repoId,
+									path: f.file
+								});
+							}}
+							key={f.file}
+							{...f}
+						/>
+					);
+				})
+			);
+		}
+		return files;
+	}, [review, derivedState.filePath]);
 
 	const exit = async () => {
 		await dispatch(setCurrentReview());
 		await dispatch(setActiveReview());
+	};
+
+	const showReview = async () => {
+		await dispatch(setActiveReview());
+		await dispatch(setCurrentReview(review && review.id));
 	};
 
 	useDidMount(() => {
@@ -132,52 +243,123 @@ export function ReviewNav(props: Props) {
 		switch (review.status) {
 			case "open":
 				return (
-					<>
-						<Button variant="secondary" onClick={exit}>
-							Pause
-						</Button>
-						<Button variant="success" onClick={approve}>
-							Approve
-						</Button>
-						<Button variant="destructive" onClick={reject}>
-							Reject
-						</Button>
-					</>
+					<div className={hoverButton == "actions" ? "btn-group pulse" : "btn-group"}>
+						<Tooltip title="Pause Review" placement="bottom">
+							<Button variant="secondary" onClick={exit}>
+								Pause
+							</Button>
+						</Tooltip>
+						<Tooltip title="Approve Review" placement="bottom">
+							<Button variant="success" onClick={approve}>
+								Approve
+							</Button>
+						</Tooltip>
+						<Tooltip title="Reject Review" placement="bottom">
+							<Button variant="destructive" onClick={reject}>
+								Reject
+							</Button>
+						</Tooltip>
+					</div>
 				);
 			case "closed":
 			case "rejected":
 				return (
-					<>
+					<div className={hoverButton == "actions" ? "btn-group pulse" : "btn-group"}>
 						<Button variant="secondary" onClick={exit}>
 							Exit
 						</Button>
 						<Button variant="secondary" onClick={reopen}>
 							Reopen
 						</Button>
-					</>
+					</div>
 				);
 		}
 	};
 
-	const switchToFile = file => {};
-
-	const filesByRepo = () => {
-		const ret = [] as any;
-		if (!review) return ret;
-		review.reviewChangesets.forEach(changeset => {
-			changeset.modifiedFiles.forEach(file => {
-				ret.push({ ...file, repoId: changeset.repoId });
-			});
-		});
-		return ret;
+	const Instructions = () => {
+		return (
+			<VerticallyCenter>
+				<StyledBoxedContent title="Review Instructions">
+					<InstructionList>
+						<InstructionItem>
+							View details of the review{" "}
+							<u onMouseOver={() => setHoverButton("info")} onMouseOut={() => setHoverButton("")}>
+								here
+							</u>
+						</InstructionItem>
+						<InstructionItem>
+							Step through the changes of the review{" "}
+							<u onMouseOver={() => setHoverButton("nav")} onMouseOut={() => setHoverButton("")}>
+								here
+							</u>
+							<Subtext>
+								Next change:
+								<span className="binding">
+									<span className="keybinding extra-pad">{modifier}</span>
+									<span className="keybinding">&darr;</span>
+								</span>
+								&nbsp;&nbsp;&nbsp; Previous Change:
+								<span className="binding">
+									<span className="keybinding extra-pad">{modifier}</span>
+									<span className="keybinding">&uarr;</span>
+								</span>
+							</Subtext>
+						</InstructionItem>
+						<InstructionItem>
+							Comment on changes by{" "}
+							<u onMouseOver={() => props.ripple()}>hovering in the left margin</u>
+							<Subtext>You can also add comments to related code as part of this review.</Subtext>
+							<Subtext>
+								Add Comment:
+								<span className="binding">
+									<span className="keybinding extra-pad">{modifier}</span>
+									<span className="keybinding">c</span>
+								</span>
+							</Subtext>
+						</InstructionItem>
+						<InstructionItem>
+							When finished,{" "}
+							<u
+								onMouseOver={() => setHoverButton("actions")}
+								onMouseOut={() => setHoverButton("")}
+							>
+								approve or reject
+							</u>{" "}
+							the review
+							<Subtext>Or pause to come back to it later</Subtext>
+							<Subtext>
+								Approve:
+								<span className="binding">
+									<span className="keybinding extra-pad">{modifier}</span>
+									<span className="keybinding">a</span>
+								</span>
+								&nbsp;&nbsp;&nbsp; Reject:
+								<span className="binding">
+									<span className="keybinding extra-pad">{modifier}</span>
+									<span className="keybinding">x</span>
+								</span>
+							</Subtext>
+						</InstructionItem>
+					</InstructionList>
+				</StyledBoxedContent>
+			</VerticallyCenter>
+		);
 	};
 
-	if (notFound) return <MinimumWidthCard>This review was not found</MinimumWidthCard>;
+	const switchToFile = fileRecord => {
+		if (!review) return;
+		HostApi.instance.send(ReviewShowDiffRequestType, {
+			reviewId: review.id,
+			repoId: fileRecord.repoId,
+			path: fileRecord.file
+		});
+	};
+
+	if (notFound || !review) return <MinimumWidthCard>This review was not found</MinimumWidthCard>;
 	if (derivedState.currentCodemarkId) return null;
 
-	const files = filesByRepo();
-	const fileIndex = files.findIndex(f => f.file === derivedState.filePath) + 1;
-	const fileMenu = files.map(f => {
+	const fileIndex = modifiedFilesByRepo.findIndex(f => f.file === derivedState.filePath) + 1;
+	const fileMenu = modifiedFilesByRepo.map(f => {
 		return { label: f.file, key: f.file, action: () => switchToFile(f) };
 	});
 
@@ -188,34 +370,56 @@ export function ReviewNav(props: Props) {
 	return (
 		<>
 			<PanelHeader title={title} position="fixed" className="active-review">
-				<FileList>
-					{fileIndex > 0 ? (
-						<span>
-							Reviewing change #5 of 17 in{" "}
-							<InlineMenu items={fileMenu}>
-								file #{fileIndex} of {files.length}
-							</InlineMenu>
-						</span>
-					) : (
-						<span>
-							This file is not one of the{" "}
-							<InlineMenu items={fileMenu}>{files.length} modified</InlineMenu> in this review.
-						</span>
-					)}
-				</FileList>
+				{false && (
+					<FileList>
+						{fileIndex > 0 ? (
+							<span>
+								Reviewing change #5 of 17 in{" "}
+								<InlineMenu items={fileMenu}>
+									file #{fileIndex} of {modifiedFilesByRepo.length}
+								</InlineMenu>
+							</span>
+						) : (
+							<span>
+								This file is not one of the{" "}
+								<InlineMenu items={fileMenu}>{modifiedFilesByRepo.length} modified</InlineMenu> in
+								this review.
+							</span>
+						)}
+					</FileList>
+				)}
 			</PanelHeader>
 			<Nav>
-				<Tooltip title="Next Change" placement="bottomRight">
-					<Button>4 &darr;</Button>
-				</Tooltip>
-				<Tooltip title="Previous Change" placement="bottomRight">
-					<Button>12 &uarr;</Button>
-				</Tooltip>
-			</Nav>
-			<ReviewActions>
-				<div className="review-title">{review && <SearchResult titleOnly result={review} />}</div>
+				<div className={hoverButton == "info" ? "btn-group pulse" : "btn-group"}>
+					<Tooltip
+						placement="bottom"
+						title={
+							<>
+								<SearchResult titleOnly result={review} />
+								<div style={{ height: "5px" }} />
+								{changedFiles}
+							</>
+						}
+					>
+						<Button variant="secondary" onClick={showReview}>
+							<Icon name="info" />
+						</Button>
+					</Tooltip>
+				</div>
 				{statusButtons()}
-			</ReviewActions>
+				<div className={hoverButton == "nav" ? "btn-group pulse" : "btn-group"}>
+					<Tooltip title="Next Change" placement="bottomRight">
+						<Button>4 &darr;</Button>
+					</Tooltip>
+					<Tooltip title="Previous Change" placement="bottomRight">
+						<Button>12 &uarr;</Button>
+					</Tooltip>
+				</div>
+			</Nav>
+			<Instructions />
+			<Actions>
+				{/*				<div className="review-title">{review && <SearchResult titleOnly result={review} />}</div> */}
+			</Actions>
 		</>
 	);
 }
