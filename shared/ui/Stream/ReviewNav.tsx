@@ -68,6 +68,9 @@ const Nav = styled.div`
 		&.pulse {
 			transform: scale(1.5);
 			background: var(--app-background-color);
+			button {
+				box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+			}
 		}
 		button {
 			margin-left: 10px;
@@ -117,17 +120,28 @@ const StyledBoxedContent = styled(BoxedContent)`
 		font-size: 16px;
 		font-weight: normal;
 	}
-	> span {
+	> span.title {
 		top: -17px;
+	}
+`;
+
+const ComposeArea = styled.div`
+	width: 150px;
+	height: 100%;
+	position: fixed;
+	left: -151px;
+	top: 0;
+	transition: left 0.1s;
+	background: var(--base-background-color);
+	border-right: 1px solid var(--base-border-color);
+	&.pulse {
+		left: 0;
 	}
 `;
 
 const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
 
-export type Props = React.PropsWithChildren<{
-	reviewId: string;
-	ripple: Function;
-}>;
+export type Props = React.PropsWithChildren<{ reviewId: string }>;
 
 export function ReviewNav(props: Props) {
 	const dispatch = useDispatch();
@@ -155,6 +169,7 @@ export function ReviewNav(props: Props) {
 	});
 	const [notFound, setNotFound] = React.useState(false);
 	const [hoverButton, setHoverButton] = React.useState("");
+	const [progressCounter, setProgressCounter] = React.useState(0);
 
 	const { review, modifiedFilesByRepo } = derivedState;
 
@@ -170,13 +185,8 @@ export function ReviewNav(props: Props) {
 					return (
 						<ChangesetFile
 							className={selected ? "selected" : undefined}
-							onClick={e => {
-								e.preventDefault();
-								HostApi.instance.send(ReviewShowDiffRequestType, {
-									reviewId: review.id,
-									repoId: changeset.repoId,
-									path: f.file
-								});
+							onClick={async e => {
+								jumpToFile({ ...f, repoId: changeset.repoId });
 							}}
 							key={f.file}
 							{...f}
@@ -276,16 +286,19 @@ export function ReviewNav(props: Props) {
 		}
 	};
 
+	const hideInstructions = () => {};
+
 	const Instructions = () => {
 		return (
 			<VerticallyCenter>
-				<StyledBoxedContent title="Review Instructions">
+				<StyledBoxedContent title="Review Instructions" onClose={hideInstructions}>
 					<InstructionList>
 						<InstructionItem>
 							View details of the review{" "}
 							<u onMouseOver={() => setHoverButton("info")} onMouseOut={() => setHoverButton("")}>
 								here
 							</u>
+							<Subtext>Including which files have changed</Subtext>
 						</InstructionItem>
 						<InstructionItem>
 							Step through the changes of the review{" "}
@@ -307,7 +320,12 @@ export function ReviewNav(props: Props) {
 						</InstructionItem>
 						<InstructionItem>
 							Comment on changes by{" "}
-							<u onMouseOver={() => props.ripple()}>hovering in the left margin</u>
+							<u
+								onMouseOver={() => setHoverButton("comment")}
+								onMouseOut={() => setHoverButton("")}
+							>
+								hovering in the left margin
+							</u>
 							<Subtext>You can also add comments to related code as part of this review.</Subtext>
 							<Subtext>
 								Add Comment:
@@ -346,21 +364,35 @@ export function ReviewNav(props: Props) {
 		);
 	};
 
-	const switchToFile = fileRecord => {
+	const jumpToFile = async (fileRecord, nextIndex?: number) => {
 		if (!review) return;
-		HostApi.instance.send(ReviewShowDiffRequestType, {
+		await HostApi.instance.send(ReviewShowDiffRequestType, {
 			reviewId: review.id,
 			repoId: fileRecord.repoId,
 			path: fileRecord.file
 		});
+		// await HostApi.instance.send(ReviewShowDiffRequestType, {
+		// 	reviewId: review.id,
+		// 	repoId: changeset.repoId,
+		// 	path: f.file
+		// });
+		nextIndex = nextIndex || modifiedFilesByRepo.findIndex(f => f.file === derivedState.filePath);
+		setProgressCounter(nextIndex || 0);
 	};
+
+	const jumpToPrev = () =>
+		jumpToFile(modifiedFilesByRepo[progressCounter - 1], progressCounter - 1);
+	const jumpToNext = () =>
+		jumpToFile(modifiedFilesByRepo[progressCounter + 1], progressCounter + 1);
+	const nextCount = modifiedFilesByRepo.length - progressCounter;
+	const prevCount = progressCounter;
 
 	if (notFound || !review) return <MinimumWidthCard>This review was not found</MinimumWidthCard>;
 	if (derivedState.currentCodemarkId) return null;
 
 	const fileIndex = modifiedFilesByRepo.findIndex(f => f.file === derivedState.filePath) + 1;
 	const fileMenu = modifiedFilesByRepo.map(f => {
-		return { label: f.file, key: f.file, action: () => switchToFile(f) };
+		return { label: f.file, key: f.file, action: () => jumpToFile(f, 0) };
 	});
 
 	// let title = fs.pathBasename(derivedState.filePath || "");
@@ -409,10 +441,10 @@ export function ReviewNav(props: Props) {
 				{statusButtons()}
 				<div className={hoverButton == "nav" ? "btn-group pulse" : "btn-group"}>
 					<Tooltip title="Next Change" placement="bottomRight">
-						<Button>4 &darr;</Button>
+						<Button onClick={jumpToNext}>{nextCount} &darr;</Button>
 					</Tooltip>
 					<Tooltip title="Previous Change" placement="bottomRight">
-						<Button>12 &uarr;</Button>
+						<Button onClick={jumpToPrev}>{prevCount} &uarr;</Button>
 					</Tooltip>
 				</div>
 			</Nav>
@@ -420,6 +452,7 @@ export function ReviewNav(props: Props) {
 			<Actions>
 				{/*				<div className="review-title">{review && <SearchResult titleOnly result={review} />}</div> */}
 			</Actions>
+			<ComposeArea className={hoverButton == "comment" ? "pulse" : ""} />
 		</>
 	);
 }

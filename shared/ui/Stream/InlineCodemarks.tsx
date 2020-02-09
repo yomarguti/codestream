@@ -165,6 +165,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	minimumDistance = 20;
 	_waitingForPRProviderConnection = false;
 	_mounted = false;
+	_rippleIcons = false;
 
 	constructor(props: Props) {
 		super(props);
@@ -1126,25 +1127,19 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		);
 	}
 
-	ripple = () => {};
-
 	render() {
 		const { activeReviewId } = this.props;
 
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
-				{activeReviewId ? (
-					<ReviewNav reviewId={activeReviewId} ripple={this.ripple} />
-				) : (
-					this.renderHeader()
-				)}
+				{activeReviewId ? <ReviewNav reviewId={activeReviewId} /> : this.renderHeader()}
 				{this.renderHoverIcons()}
 				{this.renderCodemarkForm()}
 				{this.state.showPRInfoModal && (
 					<PRInfoModal onClose={() => this.setState({ showPRInfoModal: false })} />
 				)}
 				{this.state.isLoading ? null : this.renderCodemarks()}
-				{!activeReviewId && this.renderViewSelectors()}
+				{this.renderViewSelectors()}
 			</div>
 		);
 	}

@@ -2,6 +2,7 @@ import { PropsWithChildren } from "react";
 import React from "react";
 import styled from "styled-components";
 import { CSText } from "./CSText";
+import Icon from "@codestream/webview/Stream/Icon";
 
 const Box = styled.div`
 	border: 1px solid var(--base-border-color);
@@ -15,6 +16,7 @@ const Box = styled.div`
 interface Props {
 	title?: string;
 	className?: string;
+	onClose?(event: React.SyntheticEvent): any;
 }
 
 export function BoxedContent(props: PropsWithChildren<Props>) {
@@ -22,9 +24,14 @@ export function BoxedContent(props: PropsWithChildren<Props>) {
 		<Box className={props.className}>
 			{props.title && (
 				<>
-					<Title>
+					<Title className="title">
 						<CSText as="h2">{props.title}</CSText>
 					</Title>
+					{props.onClose && (
+						<Close className="close">
+							<Icon className="clickable" name="x" onClick={props.onClose} />
+						</Close>
+					)}
 					<div style={{ height: "5px" }} />
 				</>
 			)}
@@ -37,6 +44,16 @@ const Title = styled.span`
 	position: absolute;
 	top: -20px;
 	left: 15px;
+	background: var(--app-background-color);
+	padding: 0 5px;
+	margin: 0;
+	display: inline-block;
+`;
+
+const Close = styled.span`
+	position: absolute;
+	top: -10px;
+	right: 15px;
 	background: var(--app-background-color);
 	padding: 0 5px;
 	margin: 0;
