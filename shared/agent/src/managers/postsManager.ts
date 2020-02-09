@@ -831,6 +831,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			codemark: codemarkRequest,
 			text: codemarkRequest.text!,
 			streamId: stream.id,
+			parentPostId: request.parentPostId,
 			dontSendEmail: !!request.attributes.crossPostIssueValues,
 			mentionedUserIds: request.mentionedUserIds
 		});
