@@ -14,8 +14,11 @@ import { HeadshotName } from "../src/components/HeadshotName";
 import { CodemarkPlus } from "@codestream/protocols/agent";
 import { isCSReview } from "../protocols/agent/api.protocol.models";
 
-const Root = styled.tr`
+const RootTR = styled.tr`
 	margin: 0;
+	&.archived td {
+		opacity: 0.5;
+	}
 	.title {
 		cursor: pointer;
 		font-size: larger;
@@ -65,8 +68,22 @@ const Root = styled.tr`
 	}
 `;
 
+const Title = styled.div`
+	p {
+		display: inline;
+		margin: 0;
+	}
+	.title {
+		font-size: larger;
+	}
+	.details {
+		opacity: 0.5;
+	}
+`;
+
 interface Props {
 	result: ReviewPlus | CodemarkPlus;
+	titleOnly?: boolean;
 	query?: string;
 	onClick?: Function;
 }
@@ -88,10 +105,10 @@ export default function SearchResult(props: Props) {
 
 	const type = isCSReview(result) ? "review" : result.type;
 
-	let title = markdownify(type === "comment" ? result.text.substr(0, 80) : result.title);
+	let titleHTML = markdownify(type === "comment" ? result.text.substr(0, 80) : result.title);
 	if (props.query) {
 		const matchQueryRegexp = new RegExp(props.query, "gi");
-		title = title.replace(matchQueryRegexp, "<u><b>$&</b></u>");
+		titleHTML = titleHTML.replace(matchQueryRegexp, "<u><b>$&</b></u>");
 	}
 
 	const assignees = (isCSReview(result) ? result.reviewers : result.assignees) || [];
@@ -113,29 +130,38 @@ export default function SearchResult(props: Props) {
 
 	const titleTip = result.text;
 
+	// @ts-ignore
+	const isArchived = isCSReview(result) ? false : result.pinned ? false : true;
+
+	const title = (
+		<Title>
+			<div className="title">
+				<Tooltip title={titleTip} placement="top" delay={1}>
+					<span dangerouslySetInnerHTML={{ __html: titleHTML }} />
+				</Tooltip>
+				&nbsp;
+				{(result.tags || []).map(tagId => {
+					const tag = derivedState.teamTagsHash[tagId];
+					return tag ? <Tag tag={tag} /> : null;
+				})}
+			</div>
+
+			<div className="details">
+				#12 {createdVerb} <Timestamp relative time={result.createdAt} /> by{" "}
+				{derivedState.usernames[result.creatorId]} {result.status && <>&middot; {result.status} </>}
+				{isArchived && <>&middot; archived </>}
+			</div>
+		</Title>
+	);
+
+	if (props.titleOnly) return title;
+
 	return (
-		<Root onClick={selectResult}>
+		<RootTR onClick={selectResult} className={isArchived ? "archived" : ""}>
 			<td>
 				<Icon name={icon} />
 			</td>
-			<td>
-				<div className="title">
-					<Tooltip title={titleTip} placement="top" delay={1}>
-						<span dangerouslySetInnerHTML={{ __html: title }} />
-					</Tooltip>
-					&nbsp;
-					{(result.tags || []).map(tagId => {
-						const tag = derivedState.teamTagsHash[tagId];
-						return tag ? <Tag tag={tag} /> : null;
-					})}
-				</div>
-
-				<div className="details">
-					#12 {createdVerb} <Timestamp relative time={result.createdAt} /> by{" "}
-					{derivedState.usernames[result.creatorId]}{" "}
-					{result.status && <>&middot; {result.status}</>}
-				</div>
-			</td>
+			<td>{title}</td>
 			<td>
 				{assignees.map(id => (
 					<HeadshotName id={id} />
@@ -148,6 +174,6 @@ export default function SearchResult(props: Props) {
 					</>
 				)}
 			</td>
-		</Root>
+		</RootTR>
 	);
 }

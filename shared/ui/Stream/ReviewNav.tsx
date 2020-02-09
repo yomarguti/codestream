@@ -19,9 +19,10 @@ import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { fetchThread, setReviewStatus, setUserPreference, createPost } from "./actions";
 
 const ReviewActions = styled.div`
+	padding: 0 0 0 20px;
 	width: 100%;
-	height: 55px;
 	position: fixed;
+	align-items: center;
 	bottom: 0px;
 	right: 0;
 	display: flex;
@@ -33,6 +34,17 @@ const ReviewActions = styled.div`
 	button {
 		margin: 10px 10px 10px 0;
 	}
+	.review-title {
+		max-height: 75px;
+		overflow: hidden;
+		text-align: left;
+		flex-grow: 2;
+		// to balance out the line-height to give it
+		// a vertically centered look
+		padding-top: 3px;
+		padding-bottom: 8px;
+	}
+	// white-space: nowrap;
 `;
 
 const Nav = styled.div`
@@ -45,8 +57,13 @@ const Nav = styled.div`
 	}
 `;
 
+const FileList = styled.div`
+	color: var(--text-color-subtle);
+`;
+
 export type Props = React.PropsWithChildren<{
 	filename: string;
+	path: string;
 	reviewId: string;
 }>;
 
@@ -134,16 +151,46 @@ export function ReviewNav(props: Props) {
 		}
 	};
 
+	const filesByRepo = () => {
+		const ret = [] as any;
+		if (!review) return ret;
+		review.reviewChangesets.forEach(changeset => {
+			changeset.modifiedFiles.forEach(file => {
+				ret.push({ ...file, repoId: changeset.repoId });
+			});
+		});
+		return ret;
+	};
+
 	if (notFound) return <MinimumWidthCard>This review was not found</MinimumWidthCard>;
 
-	const changeMenu = [{ label: "foo.js", key: "foo.js", action: () => {} }];
+	const files = filesByRepo();
+	const fileIndex = files.map(f => f.file === props.path) + 1;
+
+	const changeMenu = files.map(f => {
+		return { label: f.file, key: f.file, action: () => {} };
+	});
+
 	let title = props.filename + "";
 	return (
 		<>
 			<PanelHeader title={title} position="fixed" className="active-review">
-				<div style={{ opacity: 0.6 }}>
-					<InlineMenu items={changeMenu}>Reviewing change #5 of 17 in file #3 of 7</InlineMenu>
-				</div>
+				<FileList>
+					{fileIndex > 0 ? (
+						<span>
+							Reviewing change #5 of 17 in{" "}
+							<InlineMenu items={changeMenu}>
+								file #{fileIndex} of {files.length}
+							</InlineMenu>
+							.
+						</span>
+					) : (
+						<span>
+							This file is not one of the{" "}
+							<InlineMenu items={changeMenu}>{files.length} modified</InlineMenu> in this review.
+						</span>
+					)}
+				</FileList>
 			</PanelHeader>
 			<Nav>
 				<Tooltip title="Next Change" placement="bottomRight">
@@ -154,9 +201,7 @@ export function ReviewNav(props: Props) {
 				</Tooltip>
 			</Nav>
 			<ReviewActions>
-				<div style={{ textAlign: "left", flexGrow: 2 }}>
-					{review && <SearchResult result={review} />}
-				</div>
+				<div className="review-title">{review && <SearchResult titleOnly result={review} />}</div>
 				{statusButtons()}
 			</ReviewActions>
 		</>

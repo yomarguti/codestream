@@ -537,9 +537,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	renderNoCodemarks = () => {
-		const { textEditorUri } = this.props;
+		const { textEditorUri, activeReviewId } = this.props;
 
-		if (this.state.newCodemarkAttributes) return null;
+		if (this.state.newCodemarkAttributes || activeReviewId) return null;
 
 		if (textEditorUri === undefined) {
 			return (
@@ -620,13 +620,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					changes.
 				</div>
 			);
-			if (this.props.activeReviewId) {
-				return (
-					<div key="no-codemarks" className="no-codemarks-container">
-						<div className="no-codemarks">Instructions how to do a review go here</div>
-					</div>
-				);
-			}
+
 			return (
 				<div key="no-codemarks" className="no-codemarks-container">
 					<div className="no-codemarks">
@@ -1140,7 +1134,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
 				{activeReviewId ? (
-					<ReviewNav filename={fs.pathBasename(fileNameToFilterFor)} reviewId={activeReviewId} />
+					<ReviewNav
+						filename={fs.pathBasename(fileNameToFilterFor)}
+						path={fileNameToFilterFor}
+						reviewId={activeReviewId}
+					/>
 				) : (
 					this.renderHeader()
 				)}
@@ -1150,6 +1148,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					<PRInfoModal onClose={() => this.setState({ showPRInfoModal: false })} />
 				)}
 				{this.state.isLoading ? null : this.renderCodemarks()}
+				{activeReviewId && (
+					<div key="no-codemarks" className="no-codemarks-container">
+						<div className="no-codemarks">Instructions how to do a review go here</div>
+					</div>
+				)}
 				{!activeReviewId && this.renderViewSelectors()}
 			</div>
 		);

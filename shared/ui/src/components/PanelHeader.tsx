@@ -23,7 +23,7 @@ const Header = styled.div`
 		// background: var(--base-background-color);
 		// border-bottom: 1px solid var(--base-border-color);
 		width: 100%;
-		// z-index: 25;
+		z-index: 30;
 	}
 `;
 

@@ -10,7 +10,7 @@ import {
 import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { CSUser, CSMarker, CodemarkType, CodemarkStatus } from "@codestream/protocols/api";
 import Timestamp from "../Timestamp";
-import { useMarkdownifyToHtml } from "../Markdowner";
+import { useMarkdownifyToHtml, markdownify } from "../Markdowner";
 import Tag from "../Tag";
 import Icon from "../Icon";
 import { Link } from "../Link";
@@ -74,6 +74,13 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 
 	const renderedFooter = props.renderFooter ? props.renderFooter(CardFooter) : null;
 
+	const renderEmote = () => {
+		let matches = (codemark.text || "").match(/^\/me\s+(.*)/);
+		if (matches) return <span className="emote">{matches[1]}</span>;
+		else return null;
+	};
+	const emote = renderEmote();
+
 	return (
 		<MinimumWidthCard {...getCardProps(props)}>
 			<CardBanner>
@@ -83,7 +90,7 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 			<CardBody>
 				<Header>
 					<AuthorInfo>
-						<Headshot person={props.author} /> {props.author.username}{" "}
+						<Headshot person={props.author} /> {props.author.username} {emote}
 						<StyledTimestamp time={codemark.createdAt} />
 					</AuthorInfo>
 					<HeaderActions>
