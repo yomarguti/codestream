@@ -1129,19 +1129,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	render() {
-		const { fileNameToFilterFor = "", activeReviewId } = this.props;
+		const { fileNameToFilterFor = "", activeReviewId, scmInfo } = this.props;
 
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
-				{activeReviewId ? (
-					<ReviewNav
-						filename={fs.pathBasename(fileNameToFilterFor)}
-						path={fileNameToFilterFor}
-						reviewId={activeReviewId}
-					/>
-				) : (
-					this.renderHeader()
-				)}
+				{activeReviewId ? <ReviewNav reviewId={activeReviewId} /> : this.renderHeader()}
 				{this.renderHoverIcons()}
 				{this.renderCodemarkForm()}
 				{this.state.showPRInfoModal && (

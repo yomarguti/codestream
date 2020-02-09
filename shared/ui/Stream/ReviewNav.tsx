@@ -9,7 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setCurrentReview, setActiveReview } from "@codestream/webview/store/context/actions";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "..";
-import { GetReviewRequestType } from "@codestream/protocols/agent";
+import { GetReviewRequestType, GetFileScmInfoResponse } from "@codestream/protocols/agent";
 import { saveReviews } from "@codestream/webview/store/reviews/actions";
 import { CodeStreamState } from "../store";
 import { getReview } from "../store/reviews/reducer";
@@ -17,6 +17,7 @@ import { MinimumWidthCard } from "./Codemark/BaseCodemark";
 import SearchResult from "./SearchResult";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { fetchThread, setReviewStatus, setUserPreference, createPost } from "./actions";
+import * as fs from "../utilities/fs";
 
 const ReviewActions = styled.div`
 	padding: 0 0 0 20px;
@@ -51,7 +52,7 @@ const Nav = styled.div`
 	position: fixed;
 	top: 10px;
 	right: 10px;
-	z-index: 26;
+	z-index: 126;
 	button {
 		margin-left: 10px;
 	}
@@ -62,13 +63,20 @@ const FileList = styled.div`
 `;
 
 export type Props = React.PropsWithChildren<{
-	filename: string;
-	path: string;
 	reviewId: string;
 }>;
 
 export function ReviewNav(props: Props) {
 	const dispatch = useDispatch();
+	const derivedState = useSelector((state: CodeStreamState) => {
+		const { scmInfo } = state.editorContext;
+		const filePath = scmInfo && scmInfo.scm ? scmInfo.scm.file : "";
+		return {
+			editorContext: state.editorContext,
+			filePath,
+			currentCodemarkId: state.context.currentCodemarkId
+		};
+	});
 	const [notFound, setNotFound] = React.useState(false);
 	const review = useSelector((state: CodeStreamState) => {
 		return getReview(state.reviews, props.reviewId);
@@ -151,6 +159,8 @@ export function ReviewNav(props: Props) {
 		}
 	};
 
+	const switchToFile = file => {};
+
 	const filesByRepo = () => {
 		const ret = [] as any;
 		if (!review) return ret;
@@ -163,15 +173,18 @@ export function ReviewNav(props: Props) {
 	};
 
 	if (notFound) return <MinimumWidthCard>This review was not found</MinimumWidthCard>;
+	if (derivedState.currentCodemarkId) return null;
 
 	const files = filesByRepo();
-	const fileIndex = files.map(f => f.file === props.path) + 1;
-
-	const changeMenu = files.map(f => {
-		return { label: f.file, key: f.file, action: () => {} };
+	const fileIndex = files.findIndex(f => f.file === derivedState.filePath) + 1;
+	const fileMenu = files.map(f => {
+		return { label: f.file, key: f.file, action: () => switchToFile(f) };
 	});
 
-	let title = props.filename + "";
+	// let title = fs.pathBasename(derivedState.filePath || "");
+	let title = fs.pathBasename(
+		derivedState.filePath || derivedState.editorContext.activeFile || ""
+	) || <>&nbsp;</>;
 	return (
 		<>
 			<PanelHeader title={title} position="fixed" className="active-review">
@@ -179,15 +192,14 @@ export function ReviewNav(props: Props) {
 					{fileIndex > 0 ? (
 						<span>
 							Reviewing change #5 of 17 in{" "}
-							<InlineMenu items={changeMenu}>
+							<InlineMenu items={fileMenu}>
 								file #{fileIndex} of {files.length}
 							</InlineMenu>
-							.
 						</span>
 					) : (
 						<span>
 							This file is not one of the{" "}
-							<InlineMenu items={changeMenu}>{files.length} modified</InlineMenu> in this review.
+							<InlineMenu items={fileMenu}>{files.length} modified</InlineMenu> in this review.
 						</span>
 					)}
 				</FileList>

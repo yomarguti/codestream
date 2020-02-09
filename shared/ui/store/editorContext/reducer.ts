@@ -50,7 +50,7 @@ export function reduceEditorContext(state = initialState, action: EditorContextA
 			const nextScmInfo =
 				action.payload.textEditorUri && action.payload.textEditorUri !== state.textEditorUri
 					? action.payload.scmInfo
-					: state.scmInfo;
+					: action.payload.scmInfo || state.scmInfo;
 
 			return { ...state, ...action.payload, scmInfo: nextScmInfo };
 		}
