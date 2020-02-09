@@ -7,7 +7,8 @@ import {
 	CreateDocumentMarkerPermalinkRequestType,
 	ThirdPartyProviderBoard,
 	ThirdPartyProviderConfig,
-	CrossPostIssueValues
+	CrossPostIssueValues,
+	GetReviewRequestType
 } from "@codestream/protocols/agent";
 import {
 	CodemarkType,
@@ -589,6 +590,20 @@ class CodemarkForm extends React.Component<Props, State> {
 				: (this.state.assignees as any[]).map(a => a.value);
 
 		this.setState({ isLoading: true });
+
+		let parentPostId: string | undefined = undefined;
+		// all codemarks created while in a review are attached to that review
+		if (this.props.activeReviewId) {
+			try {
+				const response = await HostApi.instance.send(GetReviewRequestType, {
+					reviewId: this.props.activeReviewId
+				});
+				parentPostId = response.review.postId;
+			} catch (error) {
+				// FIXME what do we do if we don't find the review?
+			}
+		}
+
 		try {
 			const baseAttributes = {
 				codeBlocks,
@@ -601,8 +616,7 @@ class CodemarkForm extends React.Component<Props, State> {
 					: undefined,
 				tags: keyFilter(selectedTags),
 				relatedCodemarkIds: keyFilter(relatedCodemarkIds),
-				// all codemarks created while in a review are attached to that review
-				parentPostId: this.props.activeReviewId
+				parentPostId
 			};
 			if (this.props.teamProvider === "codestream") {
 				await this.props.onSubmit({
