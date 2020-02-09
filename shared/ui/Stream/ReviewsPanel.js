@@ -210,20 +210,20 @@ export class SimpleReviewsPanel extends Component {
 		);
 	};
 
-	hasTag = (review, tagFilter) => {
+	hasTag = (result, tagFilter) => {
 		const { teamTagsArray } = this.props;
 		if (tagFilter === "all") return true;
 
-		let reviewTags = review.tags || [];
-		return reviewTags.find(reviewTagId => {
-			const teamTag = teamTagsArray.find(tag => tag.id === reviewTagId);
+		let resultTags = result.tags || [];
+		return resultTags.find(resultTagId => {
+			const teamTag = teamTagsArray.find(tag => tag.id === resultTagId);
 			return teamTag && (teamTag.label === tagFilter || teamTag.color === tagFilter);
 		});
 	};
 
-	onBranch = (review, branchFilter) => {
+	onBranch = (result, branchFilter) => {
 		if (branchFilter === "all") return true;
-		return review.branch === branchFilter;
+		return result.branch === branchFilter;
 	};
 
 	// when the query changes, parse it for different types of
@@ -289,6 +289,7 @@ export class SimpleReviewsPanel extends Component {
 			filters.noTag = true;
 			text = text.replace(/\s*no:tag\s*/, " ");
 		}
+
 		match = text.match(/\bbranch:\"(.*?)\"(\s|$)/);
 		if (match) {
 			filters.branch = match[1];
@@ -299,6 +300,18 @@ export class SimpleReviewsPanel extends Component {
 			filters.branch = match[1];
 			text = text.replace(/\s*branch:(\S+)\s*/, " ");
 		}
+
+		match = text.match(/\brepo:\"(.*?)\"(\s|$)/);
+		if (match) {
+			filters.repo = match[1];
+			text = text.replace(/\s*repo:\"(.*?)\"\s*/, " ");
+		}
+		match = text.match(/\brepo:(\S+)(\s|$)/);
+		if (match) {
+			filters.repo = match[1];
+			text = text.replace(/\s*repo:(\S+)\s*/, " ");
+		}
+
 		match = text.match(/\bupdated:([<>]?)(\d\d\d\d)-(\d+)-(\d+)(\s|$)/);
 		if (match) {
 			const date = new Date(match[2], match[3] - 1, match[4]);
@@ -441,7 +454,7 @@ export class SimpleReviewsPanel extends Component {
 			if (filters.status && item.status !== filters.status) return null;
 			if (filters.tag && !this.hasTag(item, filters.tag)) return null;
 			// FIXME this will only work if we have issues in this query as well
-			if (filters.type === "review" && !isCSReview(item)) return null;
+			if (filters.type === "review" && !isReview) return null;
 			if (filters.type === "issue" && item.type !== filters.type) return null;
 			if (filters.type === "comment" && item.type !== filters.type) return null;
 			if (filters.noTag && item.tags && item.tags.length) return null;
@@ -454,8 +467,14 @@ export class SimpleReviewsPanel extends Component {
 				// else if (!filters.branch === item.branch)
 			}
 			if (filters.repo) {
-				const repoIds = (item.reviewChangesets || []).map(changeset => changeset.repoId);
-				if (!repoIds.includes(filters.repoId)) return null;
+				if (isReview) {
+					const repoNames = (item.reviewChangesets || []).map(changeset => {
+						const repo = this.props.repos[changeset.repoId];
+						if (repo) return repo.name;
+					});
+					if (!repoNames.includes(filters.repo)) return null;
+				}
+				// FIXME -- check the markers on the codemark for the repo
 			}
 			if (filters.updatedAfter && item.modifiedAt < filters.updatedAfter) return null;
 			if (filters.updatedBefore && item.modifiedAt > filters.updatedBefore) return null;
@@ -463,7 +482,6 @@ export class SimpleReviewsPanel extends Component {
 			if (filters.createdAfter && item.createdAt < filters.createdAfter) return null;
 			if (filters.createdBefore && item.createdAt > filters.createdBefore) return null;
 			if (filters.createdOn && !sameDay(new Date(item.createdAt), filters.createdOn)) return null;
-			// if (!this.onBranch(review, branchFilter)) return null;
 
 			const title = item.title;
 			const status = item.status;
@@ -540,19 +558,18 @@ export class SimpleReviewsPanel extends Component {
 		const repoMenuItems = Object.keys(repoArray)
 			.sort()
 			.map(repo => {
+				const name = this.props.repos[repo].name;
 				return {
 					label: (
 						<span className="repo-menu-selector">
-							<Icon name="repo" /> {repo}
+							<Icon name="repo" /> {name}
 						</span>
 					),
-					searchLabel: repo,
+					searchLabel: name,
 					key: repo,
-					action: e => this.setQ(`repo:"${repo}"`)
+					action: e => this.setQ(`repo:"${name}"`)
 				};
 			});
-
-		// BY REPO?
 
 		// let authorMenuItems = [{ label: "Anyone", action: "all" }, { label: "-" }];
 		// authorMenuItems = authorMenuItems.concat(
@@ -755,7 +772,7 @@ export class SimpleReviewsPanel extends Component {
 }
 
 const mapStateToProps = state => {
-	const { context, session, teams, users, preferences } = state;
+	const { context, session, teams, users, preferences, repos } = state;
 
 	let fileNameToFilterFor;
 	let fileStreamIdToFilterFor;
@@ -796,7 +813,6 @@ const mapStateToProps = state => {
 			author.name = author.fullName || author.username || author.email;
 			authorArray[creatorId] = author;
 		}
-		console.log("LOOPING THROUGH REVIEW: ", review);
 		reviewChangesets.forEach(changeset => {
 			const { repoId, branch } = changeset;
 			if (repoId) repoArray[repoId] = createdAt;
@@ -828,6 +844,7 @@ const mapStateToProps = state => {
 		authorArray,
 		branchArray,
 		repoArray,
+		repos,
 		// authorFiltersLabelsLower,
 		webviewFocused: context.hasFocus
 	};
