@@ -24,16 +24,23 @@ import { isCSReview } from "../protocols/agent/api.protocol.models";
 const SearchBar = styled.div`
 	display: flex;
 	flex-direction: row;
-	input.control {
-		padding-left: 32px !important;
-		// the bookmark icon is narrower so requires less space
-		padding-right: 25px !important;
-		height: 100%;
+	button {
+		z-index: 2;
 	}
 	.search-input {
 		position: relative;
 		flex-grow: 10;
 		width: 100%;
+		input.control {
+			// make space for the search icon
+			padding-left: 32px !important;
+			// the bookmark icon is narrower so requires less space
+			padding-right: 25px !important;
+			height: 100%;
+			border: 1px solid var(--base-border-color);
+			border-left: none;
+			margin-left: -1px;
+		}
 		.icon.search {
 			position: absolute;
 			left: 8px;
@@ -419,9 +426,10 @@ export class SimpleReviewsPanel extends Component {
 		// sort by most recent first
 		_sortBy(this.props.activity, a => -a.record.createdAt).forEach(a => {
 			const item = a.record;
+			const isReview = isCSReview(item);
 			if (item.deactivated) return null;
 			// FIXME author is text, creatorId is an id
-			const assignees = (isCSReview(item) ? item.reviewers : item.assignees) || [];
+			const assignees = (isReview ? item.reviewers : item.assignees) || [];
 			const creatorUsername = usernameMap[item.creatorId];
 			const assigneeUsernames = assignees.map(id => usernameMap[id]);
 			const impactedUsernames = Object.keys(item.authorsById || {}).map(id => usernameMap[id]);
@@ -436,8 +444,12 @@ export class SimpleReviewsPanel extends Component {
 			if (filters.type === "comment" && item.type !== filters.type) return null;
 			if (filters.noTag && item.tags && item.tags.length) return null;
 			if (filters.branch) {
-				const branches = (item.reviewChangesets || []).map(changeset => changeset.branch);
-				if (!branches.includes(filters.branch)) return null;
+				if (isReview) {
+					const branches = (item.reviewChangesets || []).map(changeset => changeset.branch);
+					if (!branches.includes(filters.branch)) return null;
+				}
+				// FIXME -- check the markers on the codemark for the branch
+				// else if (!filters.branch === item.branch)
 			}
 			if (filters.repo) {
 				const repoIds = (item.reviewChangesets || []).map(changeset => changeset.repoId);
