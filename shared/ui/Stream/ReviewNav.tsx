@@ -57,7 +57,7 @@ export function ReviewNav(props: Props) {
 		return getReview(state.reviews, props.reviewId);
 	});
 
-	const pauseReview = async () => {
+	const exit = async () => {
 		await dispatch(setCurrentReview());
 		await dispatch(setActiveReview());
 	};
@@ -108,6 +108,9 @@ export function ReviewNav(props: Props) {
 			case "open":
 				return (
 					<>
+						<Button variant="secondary" onClick={exit}>
+							Pause
+						</Button>
 						<Button variant="success" onClick={approve}>
 							Approve
 						</Button>
@@ -119,9 +122,14 @@ export function ReviewNav(props: Props) {
 			case "closed":
 			case "rejected":
 				return (
-					<Button variant="secondary" onClick={reopen}>
-						Reopen
-					</Button>
+					<>
+						<Button variant="secondary" onClick={exit}>
+							Exit
+						</Button>
+						<Button variant="secondary" onClick={reopen}>
+							Reopen
+						</Button>
+					</>
 				);
 		}
 	};
@@ -149,9 +157,6 @@ export function ReviewNav(props: Props) {
 				<div style={{ textAlign: "left", flexGrow: 2 }}>
 					{review && <SearchResult result={review} />}
 				</div>
-				<Button variant="secondary" onClick={pauseReview}>
-					Pause
-				</Button>
 				{statusButtons()}
 			</ReviewActions>
 		</>
