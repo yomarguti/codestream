@@ -50,6 +50,8 @@ export interface SharingNewCodemarkAttributes extends BaseNewCodemarkAttributes 
 	textDocuments?: TextDocumentIdentifier[];
 	entryPoint?: string;
 	mentionedUserIds?: string[];
+	// codemarks can now be replies
+	parentPostId?: string;
 }
 
 export interface LegacyNewCodemarkAttributes extends BaseNewCodemarkAttributes {
@@ -80,7 +82,8 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 			memberIds: accessMemberIds,
 			textDocuments: attributes.textDocuments,
 			entryPoint: attributes.entryPoint,
-			mentionedUserIds: attributes.mentionedUserIds
+			mentionedUserIds: attributes.mentionedUserIds,
+			parentPostId: attributes.parentPostId
 		});
 		if (response) {
 			const result = dispatch(addCodemarks([response.codemark]));

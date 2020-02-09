@@ -600,7 +600,9 @@ class CodemarkForm extends React.Component<Props, State> {
 					? (crossPostIssueValues as CrossPostIssueValues)
 					: undefined,
 				tags: keyFilter(selectedTags),
-				relatedCodemarkIds: keyFilter(relatedCodemarkIds)
+				relatedCodemarkIds: keyFilter(relatedCodemarkIds),
+				// all codemarks created while in a review are attached to that review
+				parentPostId: this.props.activeReviewId
 			};
 			if (this.props.teamProvider === "codestream") {
 				await this.props.onSubmit({
@@ -660,7 +662,12 @@ class CodemarkForm extends React.Component<Props, State> {
 			}
 		}
 
-		if (!this.props.isEditing && this.props.shouldShare && !this._sharingAttributes) {
+		if (
+			!this.props.isEditing &&
+			this.props.shouldShare &&
+			!this._sharingAttributes &&
+			!this.props.activeReviewId
+		) {
 			invalid = true;
 			validationState.sharingAttributesInvalid = true;
 		}

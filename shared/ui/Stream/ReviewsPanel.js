@@ -199,7 +199,7 @@ export class SimpleReviewsPanel extends Component {
 							<div className="header" onClick={e => this.toggleSection(e, section)}>
 								<Icon name="chevron-right" className="triangle-right" />
 								<span className="clickable">
-									{sectionLabel} - {results.length}
+									{sectionLabel} ({results.length})
 								</span>
 							</div>
 						</div>
