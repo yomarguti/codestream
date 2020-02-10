@@ -1130,9 +1130,14 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	render() {
 		const { activeReviewId } = this.props;
 
+		const composeOpen = this.state.newCodemarkAttributes ? true : false;
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
-				{activeReviewId ? <ReviewNav reviewId={activeReviewId} /> : this.renderHeader()}
+				{activeReviewId ? (
+					<ReviewNav reviewId={activeReviewId} composeOpen={composeOpen} />
+				) : (
+					this.renderHeader()
+				)}
 				{this.renderHoverIcons()}
 				{this.renderCodemarkForm()}
 				{this.state.showPRInfoModal && (

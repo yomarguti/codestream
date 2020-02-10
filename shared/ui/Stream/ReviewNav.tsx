@@ -71,13 +71,40 @@ const Nav = styled.div`
 			transform: scale(1.5);
 			background: var(--app-background-color);
 			button {
-				box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+				// box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+				box-shadow: 0 5px 30px rgba(0, 0, 0, 0.8);
+				// box-shadow: 0 0 10px rgba(255, 255, 0, 1);
 			}
 		}
 		button {
 			margin-left: 10px;
 			&:first-child {
 				margin-left: 0;
+			}
+			.narrow-icon {
+				display: none;
+			}
+		}
+	}
+	@media only screen and (max-width: 500px) {
+		.btn-group {
+			button {
+				.narrow-icon {
+					display: block;
+				}
+				.wide-text {
+					display: none;
+				}
+				padding: 3px 5px;
+				line-height: 1em;
+			}
+		}
+	}
+	@media only screen and (max-width: 350px) {
+		.btn-group {
+			margin-left: 5px;
+			button {
+				margin-left: 5px;
 			}
 		}
 	}
@@ -143,7 +170,7 @@ const ComposeArea = styled.div`
 
 const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
 
-export type Props = React.PropsWithChildren<{ reviewId: string }>;
+export type Props = React.PropsWithChildren<{ reviewId: string; composeOpen: boolean }>;
 
 export function ReviewNav(props: Props) {
 	const dispatch = useDispatch();
@@ -277,19 +304,55 @@ export function ReviewNav(props: Props) {
 			case "open":
 				return (
 					<div className={hoverButton == "actions" ? "btn-group pulse" : "btn-group"}>
-						<Tooltip title="Approve Review" placement="bottom">
+						<Tooltip
+							title={
+								<>
+									Approve Review{" "}
+									<span className="binding">
+										<span className="keybinding extra-pad">{modifier}</span>
+										<span className="keybinding">a</span>
+									</span>
+								</>
+							}
+							placement="bottom"
+						>
 							<Button variant="success" onClick={approve}>
-								Approve
+								<Icon className="narrow-icon" name="thumbsup" />
+								<span className="wide-text">Approve</span>
 							</Button>
 						</Tooltip>
-						<Tooltip title="Reject Review" placement="bottom">
+						<Tooltip
+							title={
+								<>
+									Reject Review{" "}
+									<span className="binding">
+										<span className="keybinding extra-pad">{modifier}</span>
+										<span className="keybinding">x</span>
+									</span>
+								</>
+							}
+							placement="bottom"
+						>
 							<Button variant="destructive" onClick={reject}>
-								Reject
+								<Icon className="narrow-icon" name="thumbsdown" />
+								<span className="wide-text">Reject</span>
 							</Button>
 						</Tooltip>
-						<Tooltip title="Pause Review" placement="bottomRight">
+						<Tooltip
+							title={
+								<>
+									Pause Review{" "}
+									<span className="binding">
+										<span className="keybinding extra-pad">{modifier}</span>
+										<span className="keybinding">z</span>
+									</span>
+								</>
+							}
+							placement="bottomRight"
+						>
 							<Button variant="secondary" onClick={exit}>
-								Pause
+								<Icon className="narrow-icon" name="pause" />
+								<span className="wide-text">Pause</span>
 							</Button>
 						</Tooltip>
 					</div>
@@ -298,14 +361,38 @@ export function ReviewNav(props: Props) {
 			case "rejected":
 				return (
 					<div className={hoverButton == "actions" ? "btn-group pulse" : "btn-group"}>
-						<Tooltip title="Exit Review" placement="bottom">
+						<Tooltip
+							title={
+								<>
+									Exit Review{" "}
+									<span className="binding">
+										<span className="keybinding extra-pad">{modifier}</span>
+										<span className="keybinding">z</span>
+									</span>
+								</>
+							}
+							placement="bottom"
+						>
 							<Button variant="secondary" onClick={exit}>
-								Exit
+								<Icon className="narrow-icon" name="x" />
+								<span className="wide-text">Exit</span>
 							</Button>
 						</Tooltip>
-						<Tooltip title="Reopen Review" placement="bottomRight">
+						<Tooltip
+							title={
+								<>
+									Reopen Review{" "}
+									<span className="binding">
+										<span className="keybinding extra-pad">{modifier}</span>
+										<span className="keybinding">&darr;</span>
+									</span>
+								</>
+							}
+							placement="bottomRight"
+						>
 							<Button variant="secondary" onClick={reopen}>
-								Reopen
+								<Icon className="narrow-icon" name="reopen" />
+								<span className="wide-text">o</span>
 							</Button>
 						</Tooltip>
 					</div>
@@ -317,7 +404,7 @@ export function ReviewNav(props: Props) {
 		dispatch(setUserPreference(["hideReviewInstructions"], !derivedState.hideReviewInstructions));
 
 	const Instructions = () => {
-		if (derivedState.hideReviewInstructions) return null;
+		if (derivedState.hideReviewInstructions || props.composeOpen) return null;
 		return (
 			<VerticallyCenter>
 				<StyledBoxedContent title="Review Instructions" onClose={toggleInstructions}>
@@ -337,20 +424,7 @@ export function ReviewNav(props: Props) {
 								Step through
 							</u>{" "}
 							the changes of the review
-							{false && (
-								<Subtext>
-									Next change:
-									<span className="binding">
-										<span className="keybinding extra-pad">{modifier}</span>
-										<span className="keybinding">&darr;</span>
-									</span>
-									&nbsp;&nbsp;&nbsp; Previous Change:
-									<span className="binding">
-										<span className="keybinding extra-pad">{modifier}</span>
-										<span className="keybinding">&uarr;</span>
-									</span>
-								</Subtext>
-							)}
+							<Subtext>Or jump from file to file using details button</Subtext>
 						</InstructionItem>
 						<InstructionItem>
 							<u
@@ -360,16 +434,7 @@ export function ReviewNav(props: Props) {
 								Comment on changes
 							</u>{" "}
 							in the left margin
-							<Subtext>You can also add comments to related code as part of this review.</Subtext>
-							{false && (
-								<Subtext>
-									Add Comment:
-									<span className="binding">
-										<span className="keybinding extra-pad">{modifier}</span>
-										<span className="keybinding">c</span>
-									</span>
-								</Subtext>
-							)}
+							<Subtext>You can also comment on related code as part of the review</Subtext>
 						</InstructionItem>
 						<InstructionItem>
 							<u
@@ -380,20 +445,6 @@ export function ReviewNav(props: Props) {
 							</u>{" "}
 							the review when finished
 							<Subtext>Or pause to come back to it later</Subtext>
-							{false && (
-								<Subtext>
-									Approve:
-									<span className="binding">
-										<span className="keybinding extra-pad">{modifier}</span>
-										<span className="keybinding">a</span>
-									</span>
-									&nbsp;&nbsp;&nbsp; Reject:
-									<span className="binding">
-										<span className="keybinding extra-pad">{modifier}</span>
-										<span className="keybinding">x</span>
-									</span>
-								</Subtext>
-							)}
 						</InstructionItem>
 					</InstructionList>
 				</StyledBoxedContent>
@@ -479,16 +530,44 @@ export function ReviewNav(props: Props) {
 						}
 					>
 						<Button variant="secondary" onClick={showReview}>
-							<Icon name="info" />
+							<Icon name="i" />
 						</Button>
 					</Tooltip>
 				</div>
 				<div className={hoverButton == "nav" ? "btn-group pulse" : "btn-group"}>
-					<Tooltip title="Next Change" placement="bottom">
-						<Button onClick={jumpToNext}>{nextCount} &darr;</Button>
+					<Tooltip
+						title={
+							<>
+								Next Change{" "}
+								<span className="binding">
+									<span className="keybinding extra-pad">{modifier}</span>
+									<span className="keybinding">&darr;</span>
+								</span>
+							</>
+						}
+						placement="bottom"
+					>
+						<Button onClick={jumpToNext}>
+							<span className="wide-text">{nextCount} </span>
+							<Icon name="arrow-down" />
+						</Button>
 					</Tooltip>
-					<Tooltip title="Previous Change" placement="bottom">
-						<Button onClick={jumpToPrev}>{prevCount} &uarr;</Button>
+					<Tooltip
+						title={
+							<>
+								Previous Change{" "}
+								<span className="binding">
+									<span className="keybinding extra-pad">{modifier}</span>
+									<span className="keybinding">&uarr;</span>
+								</span>
+							</>
+						}
+						placement="bottom"
+					>
+						<Button onClick={jumpToPrev}>
+							<span className="wide-text">{prevCount} </span>
+							<Icon name="arrow-up" />
+						</Button>
 					</Tooltip>
 				</div>
 				{statusButtons()}
