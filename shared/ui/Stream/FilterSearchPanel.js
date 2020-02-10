@@ -119,7 +119,7 @@ const sameDay = (d1, d2) => {
 	);
 };
 
-export class SimpleReviewsPanel extends Component {
+export class SimpleFilterSearchPanel extends Component {
 	disposables = [];
 
 	constructor(props) {
@@ -850,4 +850,4 @@ const mapStateToProps = state => {
 	};
 };
 
-export default connect(mapStateToProps, { ...actions })(SimpleReviewsPanel);
+export default connect(mapStateToProps, { ...actions })(SimpleFilterSearchPanel);

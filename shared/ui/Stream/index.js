@@ -501,7 +501,7 @@ export class SimpleStream extends Component {
 		];
 		if (this.props.apiCapabilities.lightningCodeReviews) {
 			menuItems.push(
-				{ label: "-" },
+				// { label: "-" },
 				{ label: "Request A Code Review", action: this.newReview, key: "review" }
 			);
 		}
@@ -509,7 +509,7 @@ export class SimpleStream extends Component {
 		// { label: inviteLabel, action: "invite" },
 
 		return plusMenuOpen ? (
-			<Menu items={menuItems} target={menuTarget} action={this.plusMenuAction} align="right" />
+			<Menu items={menuItems} target={menuTarget} action={this.plusMenuAction} align="center" />
 		) : null;
 	}
 

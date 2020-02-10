@@ -128,7 +128,7 @@ export default function SearchResult(props: Props) {
 			break;
 	}
 
-	const titleTip = result.text;
+	const titleTip = result.text ? <div style={{ maxWidth: "25em" }}>{result.text}</div> : undefined;
 
 	// @ts-ignore
 	const isArchived = isCSReview(result) ? false : result.pinned ? false : true;
