@@ -496,13 +496,37 @@ export class SimpleStream extends Component {
 		const { plusMenuOpen, menuTarget } = this.state;
 
 		const menuItems = [
-			{ label: "New Comment", action: this.newComment, key: "comment" },
-			{ label: "New Issue", action: this.newIssue, key: "issue" }
+			{
+				label: (
+					<>
+						<Icon name="comment" /> &nbsp;New Comment
+					</>
+				),
+				action: this.newComment,
+				key: "comment"
+			},
+			{
+				label: (
+					<>
+						<Icon name="issue" /> &nbsp;New Issue
+					</>
+				),
+				action: this.newIssue,
+				key: "issue"
+			}
 		];
 		if (this.props.apiCapabilities.lightningCodeReviews) {
 			menuItems.push(
 				// { label: "-" },
-				{ label: "Request A Code Review", action: this.newReview, key: "review" }
+				{
+					label: (
+						<>
+							<Icon name="review" /> &nbsp;Request A Code Review
+						</>
+					),
+					action: this.newReview,
+					key: "review"
+				}
 			);
 		}
 		// { label: "-" }

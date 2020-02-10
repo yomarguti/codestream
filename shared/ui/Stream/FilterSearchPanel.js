@@ -663,7 +663,7 @@ export class SimpleFilterSearchPanel extends Component {
 								type="text"
 								ref={ref => (this._searchInput = ref)}
 								onChange={e => this.setQ(e.target.value)}
-								placeholder="Search all code reviews and issues"
+								placeholder="Search all comments, issues and code reviews"
 							/>
 						</div>
 					</SearchBar>
