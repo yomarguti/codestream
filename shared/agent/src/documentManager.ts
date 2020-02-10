@@ -73,19 +73,21 @@ export class DocumentManager implements Disposable {
 				if (store && offsets) {
 					// if the content we're saving is the same that is in the cache don't notify
 					this._savedContentCache[e.document.uri] = offsets;
-					SessionContainer.instance().session.agent.sendNotification(DidChangeDataNotificationType, {
-						type: ChangeDataType.Documents,
-						data: {
-							reason: "saved",
-							document: {
-								isDirty: false,
-								uri: e.document.uri
+					SessionContainer.instance().session.agent.sendNotification(
+						DidChangeDataNotificationType,
+						{
+							type: ChangeDataType.Documents,
+							data: {
+								reason: "saved",
+								document: {
+									isDirty: false,
+									uri: e.document.uri
+								}
 							}
 						}
-					});
+					);
 				}
-			}
-			),
+			}),
 			this._documents.onDidOpen(e => {
 				Logger.log(`Document opened: ${e.document.uri}`);
 				const offsets = this.getLineOffsets(e.document);
@@ -106,7 +108,6 @@ export class DocumentManager implements Disposable {
 					}
 				});
 				delete this._savedContentCache[e.document.uri];
-
 			})
 		);
 
@@ -142,13 +143,12 @@ export class DocumentManager implements Disposable {
 		// slightly naughty here... using an internal function 😬
 		try {
 			if (document) {
-				const documentPlus = (document as any);
-				if (typeof (documentPlus.getLineOffsets) === "function") {
+				const documentPlus = document as any;
+				if (typeof documentPlus.getLineOffsets === "function") {
 					return documentPlus.getLineOffsets();
 				}
 			}
-		}
-		catch (ex) {
+		} catch (ex) {
 			// suffer
 		}
 		return undefined;
