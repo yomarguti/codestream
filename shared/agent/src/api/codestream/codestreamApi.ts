@@ -101,7 +101,8 @@ import {
 	GetReviewRequest,
 	GetReviewResponse,
 	FetchReviewDiffsRequest,
-	FetchReviewDiffsResponse
+	FetchReviewDiffsResponse,
+	UpdateReviewRequest
 } from "../../protocol/agent.protocol";
 import {
 	CSAddProviderHostRequest,
@@ -204,7 +205,9 @@ import {
 	CSGetReviewsRequest,
 	CSGetReviewsResponse,
 	CSGetReviewResponse,
-	CSGetReviewDiffsResponse
+	CSGetReviewDiffsResponse,
+	CSUpdateReviewRequest,
+	CSUpdateReviewResponse
 } from "../../protocol/api.protocol";
 import { VersionInfo } from "../../session";
 import { Functions, getProvider, log, lsp, lspHandler, Objects, Strings } from "../../system";
@@ -1129,6 +1132,17 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@log()
 	getReview(request: GetReviewRequest): Promise<GetReviewResponse> {
 		return this.get<CSGetReviewResponse>(`/reviews/${request.reviewId}`, this._token);
+	}
+
+	@log()
+	updateReview(request: UpdateReviewRequest) {
+		const { id, ...params } = request;
+
+		return this.put<CSUpdateReviewRequest, CSUpdateReviewResponse>(
+			`/reviews/${id}`,
+			params,
+			this._token
+		);
 	}
 
 	@log()

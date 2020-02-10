@@ -12,15 +12,18 @@ import {
 	GetReviewContentsResponse,
 	GetReviewRequest,
 	GetReviewRequestType,
-	GetReviewResponse
+	GetReviewResponse,
+	UpdateReviewRequestType,
+	UpdateReviewRequest,
+	UpdateReviewResponse
 } from "../protocol/agent.protocol";
 import { CSReview, CSReviewDiffs } from "../protocol/api.protocol";
 import { log, lsp, lspHandler } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
+import { MessageType } from "../api/apiProvider";
 
 @lsp
 export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
-
 	private readonly _diffs = new Map<string, { [repoId: string]: CSReviewDiffs }>();
 
 	@lspHandler(FetchReviewsRequestType)
@@ -50,7 +53,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 		const reviewDiffs = this._diffs.get(reviewId);
 		if (!reviewDiffs) {
-			throw new Error(`Cannot find diffs for reviewe ${reviewId}`);
+			throw new Error(`Cannot find diffs for review ${reviewId}`);
 		}
 
 		return reviewDiffs[repoId];
@@ -74,14 +77,27 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		const filePath = path.join(repo.normalizedPath, request.path);
 		const baseSha = await git.getParentCommit(repo.normalizedPath, changeset.commits[0].sha);
 
-		const baseContents = baseSha !== undefined ? await git.getFileContentForRevision(filePath, baseSha) || "" : "";
-		const pushedContents = await git.getFileContentForRevision(filePath, diffs.localDiffSha) || "";
+		const baseContents =
+			baseSha !== undefined ? (await git.getFileContentForRevision(filePath, baseSha)) || "" : "";
+		const pushedContents =
+			(await git.getFileContentForRevision(filePath, diffs.localDiffSha)) || "";
 		const headContents = diff !== undefined ? applyPatch(pushedContents, diff) : pushedContents;
 
 		return {
 			base: baseContents,
 			head: headContents
 		};
+	}
+
+	@lspHandler(UpdateReviewRequestType)
+	async update(request: UpdateReviewRequest): Promise<UpdateReviewResponse> {
+		const updateResponse = await this.session.api.updateReview(request);
+		const [review] = await this.resolve({
+			type: MessageType.Reviews,
+			data: [updateResponse.review]
+		});
+
+		return { review };
 	}
 
 	protected async loadCache() {

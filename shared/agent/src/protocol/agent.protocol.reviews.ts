@@ -13,7 +13,9 @@ import {
 	CSRepository,
 	CSReview,
 	CSReviewChangesetBase,
-	CSStream
+	CSStream,
+	CSUpdateReviewRequest,
+	CSUpdateReviewResponse
 } from "./api.protocol";
 import { CSReviewDiffs } from "./api.protocol.models";
 
@@ -126,25 +128,12 @@ export const SetReviewStatusRequestType = new RequestType<
 	void
 >("codestream/review/setStatus");
 
-export interface UpdateReviewRequest {
+export interface UpdateReviewRequest extends CSUpdateReviewRequest {
 	id: string;
-	streamId?: string;
-	postId?: string;
-	parentPostId?: string;
-	color?: string;
-	status?: string;
-	assignees?: string[];
-	title?: string;
-	text?: string;
-	externalAssignees?: ThirdPartyProviderUser[];
-	externalProvider?: string;
-	externalProviderHost?: string;
-	externalProviderUrl?: string;
-	wantEmailNotification?: boolean;
 }
-export interface UpdateReviewResponse {
-	review: ReviewPlus;
-}
+
+export interface UpdateReviewResponse extends CSUpdateReviewResponse {}
+
 export const UpdateReviewRequestType = new RequestType<
 	UpdateReviewRequest,
 	UpdateReviewResponse,

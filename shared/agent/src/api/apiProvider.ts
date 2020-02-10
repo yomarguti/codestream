@@ -133,7 +133,9 @@ import {
 	GetReviewResponse,
 	GetReviewRequest,
 	FetchReviewDiffsRequest,
-	FetchReviewDiffsResponse
+	FetchReviewDiffsResponse,
+	UpdateReviewRequest,
+	UpdateReviewResponse
 } from "../protocol/agent.protocol";
 import {
 	CSApiCapabilities,
@@ -367,6 +369,7 @@ export interface ApiProvider {
 
 	fetchReviews(request: FetchReviewsRequest): Promise<FetchReviewsResponse>;
 	getReview(request: GetReviewRequest): Promise<GetReviewResponse>;
+	updateReview(request: UpdateReviewRequest): Promise<UpdateReviewResponse>;
 
 	fetchReviewDiffs(request: FetchReviewDiffsRequest): Promise<FetchReviewDiffsResponse>;
 

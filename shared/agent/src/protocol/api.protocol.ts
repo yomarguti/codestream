@@ -568,9 +568,11 @@ export interface CSGetReviewsResponse {
 }
 
 export interface CSUpdateReviewRequest {
-	streamId?: string;
-	postId?: string;
+	status?: string;
+	title?: string;
+	text?: string;
 }
+
 export interface CSUpdateReviewResponse {
 	review: CSReview;
 }
