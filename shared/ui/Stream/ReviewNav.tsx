@@ -128,10 +128,10 @@ const StyledBoxedContent = styled(BoxedContent)`
 `;
 
 const ComposeArea = styled.div`
-	width: 150px;
+	width: 50px;
 	height: 100%;
 	position: fixed;
-	left: -151px;
+	left: -51px;
 	top: 0;
 	transition: left 0.1s;
 	background: var(--base-background-color);
