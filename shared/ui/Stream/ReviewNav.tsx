@@ -16,12 +16,14 @@ import { getReview } from "../store/reviews/reducer";
 import { MinimumWidthCard } from "./Codemark/BaseCodemark";
 import SearchResult from "./SearchResult";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
-import { fetchThread, setReviewStatus, setUserPreference, createPost } from "./actions";
+import { setReviewStatus, createPost } from "./actions";
 import * as fs from "../utilities/fs";
 import { ReviewShowDiffRequestType } from "../ipc/host.protocol.review";
 import { BoxedContent } from "../src/components/BoxedContent";
 import Icon from "./Icon";
 import { ChangesetFile } from "./Review/ChangesetFile";
+import { confirmPopup } from "./Confirm";
+import { setUserPreference } from "./actions";
 
 const Actions = styled.div`
 	padding: 0 0 0 20px;
@@ -60,7 +62,7 @@ const Nav = styled.div`
 	.btn-group {
 		display: inline-block;
 		margin-left: 10px;
-		transition: transform 0.2s;
+		transition: transform 0.1s;
 		transform-origin: 50% 0%;
 		&:last-child {
 			transform-origin: 100% 0%;
@@ -164,6 +166,7 @@ export function ReviewNav(props: Props) {
 			modifiedFilesByRepo,
 			editorContext: state.editorContext,
 			filePath,
+			hideReviewInstructions: state.preferences.hideReviewInstructions,
 			currentCodemarkId: state.context.currentCodemarkId
 		};
 	});
@@ -237,12 +240,32 @@ export function ReviewNav(props: Props) {
 
 	const approve = () => {
 		dispatch(setReviewStatus(review!.id, "closed"));
+		showReview();
 		submitReply("/me approved this review");
 	};
+
 	const reject = () => {
+		confirmPopup({
+			title: "Are you sure?",
+			message: "Author will be notified you have rejected this code review.",
+			buttons: [
+				{ label: "Go Back", className: "control-button" },
+				{
+					label: "Reject Changes",
+					wait: true,
+					action: rejectConfirm,
+					className: "delete"
+				}
+			]
+		});
+	};
+
+	const rejectConfirm = () => {
 		dispatch(setReviewStatus(review!.id, "rejected"));
 		submitReply("/me rejected this review");
+		showReview();
 	};
+
 	const reopen = () => {
 		dispatch(setReviewStatus(review!.id, "open"));
 		submitReply("/me reopened this review");
@@ -254,11 +277,6 @@ export function ReviewNav(props: Props) {
 			case "open":
 				return (
 					<div className={hoverButton == "actions" ? "btn-group pulse" : "btn-group"}>
-						<Tooltip title="Pause Review" placement="bottom">
-							<Button variant="secondary" onClick={exit}>
-								Pause
-							</Button>
-						</Tooltip>
 						<Tooltip title="Approve Review" placement="bottom">
 							<Button variant="success" onClick={approve}>
 								Approve
@@ -269,94 +287,114 @@ export function ReviewNav(props: Props) {
 								Reject
 							</Button>
 						</Tooltip>
+						<Tooltip title="Pause Review" placement="bottomRight">
+							<Button variant="secondary" onClick={exit}>
+								Pause
+							</Button>
+						</Tooltip>
 					</div>
 				);
 			case "closed":
 			case "rejected":
 				return (
 					<div className={hoverButton == "actions" ? "btn-group pulse" : "btn-group"}>
-						<Button variant="secondary" onClick={exit}>
-							Exit
-						</Button>
-						<Button variant="secondary" onClick={reopen}>
-							Reopen
-						</Button>
+						<Tooltip title="Exit Review" placement="bottom">
+							<Button variant="secondary" onClick={exit}>
+								Exit
+							</Button>
+						</Tooltip>
+						<Tooltip title="Reopen Review" placement="bottomRight">
+							<Button variant="secondary" onClick={reopen}>
+								Reopen
+							</Button>
+						</Tooltip>
 					</div>
 				);
 		}
 	};
 
-	const hideInstructions = () => {};
+	const toggleInstructions = () =>
+		dispatch(setUserPreference(["hideReviewInstructions"], !derivedState.hideReviewInstructions));
 
 	const Instructions = () => {
+		if (derivedState.hideReviewInstructions) return null;
 		return (
 			<VerticallyCenter>
-				<StyledBoxedContent title="Review Instructions" onClose={hideInstructions}>
+				<StyledBoxedContent title="Review Instructions" onClose={toggleInstructions}>
 					<InstructionList>
 						<InstructionItem>
 							View details of the review{" "}
-							<u onMouseOver={() => setHoverButton("info")} onMouseOut={() => setHoverButton("")}>
+							<u
+								onMouseEnter={() => setHoverButton("info")}
+								onMouseLeave={() => setHoverButton("")}
+							>
 								here
 							</u>
 							<Subtext>Including which files have changed</Subtext>
 						</InstructionItem>
 						<InstructionItem>
 							Step through the changes of the review{" "}
-							<u onMouseOver={() => setHoverButton("nav")} onMouseOut={() => setHoverButton("")}>
+							<u onMouseEnter={() => setHoverButton("nav")} onMouseLeave={() => setHoverButton("")}>
 								here
 							</u>
-							<Subtext>
-								Next change:
-								<span className="binding">
-									<span className="keybinding extra-pad">{modifier}</span>
-									<span className="keybinding">&darr;</span>
-								</span>
-								&nbsp;&nbsp;&nbsp; Previous Change:
-								<span className="binding">
-									<span className="keybinding extra-pad">{modifier}</span>
-									<span className="keybinding">&uarr;</span>
-								</span>
-							</Subtext>
+							{false && (
+								<Subtext>
+									Next change:
+									<span className="binding">
+										<span className="keybinding extra-pad">{modifier}</span>
+										<span className="keybinding">&darr;</span>
+									</span>
+									&nbsp;&nbsp;&nbsp; Previous Change:
+									<span className="binding">
+										<span className="keybinding extra-pad">{modifier}</span>
+										<span className="keybinding">&uarr;</span>
+									</span>
+								</Subtext>
+							)}
 						</InstructionItem>
 						<InstructionItem>
 							Comment on changes by{" "}
 							<u
-								onMouseOver={() => setHoverButton("comment")}
-								onMouseOut={() => setHoverButton("")}
+								onMouseEnter={() => setHoverButton("comment")}
+								onMouseLeave={() => setHoverButton("")}
 							>
 								hovering in the left margin
 							</u>
 							<Subtext>You can also add comments to related code as part of this review.</Subtext>
-							<Subtext>
-								Add Comment:
-								<span className="binding">
-									<span className="keybinding extra-pad">{modifier}</span>
-									<span className="keybinding">c</span>
-								</span>
-							</Subtext>
+							{false && (
+								<Subtext>
+									Add Comment:
+									<span className="binding">
+										<span className="keybinding extra-pad">{modifier}</span>
+										<span className="keybinding">c</span>
+									</span>
+								</Subtext>
+							)}
 						</InstructionItem>
 						<InstructionItem>
 							When finished,{" "}
 							<u
-								onMouseOver={() => setHoverButton("actions")}
-								onMouseOut={() => setHoverButton("")}
+								onMouseEnter={() => setHoverButton("actions")}
+								onMouseLeave={() => setHoverButton("")}
 							>
 								approve or reject
 							</u>{" "}
 							the review
 							<Subtext>Or pause to come back to it later</Subtext>
-							<Subtext>
-								Approve:
-								<span className="binding">
-									<span className="keybinding extra-pad">{modifier}</span>
-									<span className="keybinding">a</span>
-								</span>
-								&nbsp;&nbsp;&nbsp; Reject:
-								<span className="binding">
-									<span className="keybinding extra-pad">{modifier}</span>
-									<span className="keybinding">x</span>
-								</span>
-							</Subtext>
+							{false && (
+								<Subtext>
+									Approve:
+									<span className="binding">
+										<span className="keybinding extra-pad">{modifier}</span>
+										<span className="keybinding">a</span>
+									</span>
+									&nbsp;&nbsp;&nbsp; Reject:
+									<span className="binding">
+										<span className="keybinding extra-pad">{modifier}</span>
+										<span className="keybinding">x</span>
+									</span>
+								</Subtext>
+							)}
 						</InstructionItem>
 					</InstructionList>
 				</StyledBoxedContent>
@@ -430,6 +468,14 @@ export function ReviewNav(props: Props) {
 								<SearchResult titleOnly result={review} />
 								<div style={{ height: "5px" }} />
 								{changedFiles}
+								{derivedState.hideReviewInstructions && (
+									<div
+										style={{ marginTop: "5px", fontSize: "smaller", cursor: "pointer" }}
+										onClick={toggleInstructions}
+									>
+										Show Instructions
+									</div>
+								)}
 							</>
 						}
 					>
@@ -438,15 +484,15 @@ export function ReviewNav(props: Props) {
 						</Button>
 					</Tooltip>
 				</div>
-				{statusButtons()}
 				<div className={hoverButton == "nav" ? "btn-group pulse" : "btn-group"}>
-					<Tooltip title="Next Change" placement="bottomRight">
+					<Tooltip title="Next Change" placement="bottom">
 						<Button onClick={jumpToNext}>{nextCount} &darr;</Button>
 					</Tooltip>
-					<Tooltip title="Previous Change" placement="bottomRight">
+					<Tooltip title="Previous Change" placement="bottom">
 						<Button onClick={jumpToPrev}>{prevCount} &uarr;</Button>
 					</Tooltip>
 				</div>
+				{statusButtons()}
 			</Nav>
 			<Instructions />
 			<Actions>
