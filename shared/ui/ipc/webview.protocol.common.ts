@@ -42,7 +42,7 @@ export enum WebviewPanels {
 	NewIssue = "new-issue",
 	ComposeReview = "compose-review",
 	Review = "review",
-	Reviews = "reviews"
+	FilterSearch = "filter-search"
 }
 
 export interface WebviewContext {

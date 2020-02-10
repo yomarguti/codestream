@@ -117,7 +117,7 @@ export default function SearchResult(props: Props) {
 	let createdVerb = "opened";
 	switch (type) {
 		case "review":
-			icon = "code";
+			icon = "review";
 			break;
 		case "issue":
 			icon = "issue";

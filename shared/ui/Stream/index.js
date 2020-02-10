@@ -16,7 +16,7 @@ import ScrollBox from "./ScrollBox";
 import { CodemarkForm } from "./CodemarkForm";
 import { ReviewForm } from "./ReviewForm";
 import KnowledgePanel from "./KnowledgePanel";
-import ReviewsPanel from "./ReviewsPanel";
+import FilterSearchPanel from "./FilterSearchPanel";
 import InlineCodemarks from "./InlineCodemarks";
 import CreateDMPanel from "./CreateDMPanel";
 import { CreateTeamPage } from "./CreateTeamPage";
@@ -730,7 +730,6 @@ export class SimpleStream extends Component {
 								</span>
 							</Tooltip>
 						</label>
-						*/}
 					{this.props.apiCapabilities.lightningCodeReviews && (
 						<label
 							className={createClassString({
@@ -741,6 +740,7 @@ export class SimpleStream extends Component {
 							<Icon name="code" title="Filter &amp; Search" placement="bottom" />
 						</label>
 					)}
+					*/}
 					<label onClick={this.togglePlusMenu}>
 						<Icon name="plus" title="Create..." placement="bottom" />
 						{this.renderPlusMenu()}
@@ -807,11 +807,11 @@ export class SimpleStream extends Component {
 					}
 					<label
 						className={createClassString({
-							selected: activePanel === WebviewPanels.Codemarks
+							selected: activePanel === WebviewPanels.FilterSearch
 						})}
-						onClick={this.handleClickSearch}
+						onClick={e => this.setActivePanel(WebviewPanels.FilterSearch)}
 					>
-						<Icon name="search" title="Search Codemarks" placement="bottomRight" />
+						<Icon name="search" title="Filter &amp; Search Codemarks" placement="bottomRight" />
 					</label>
 					<label>
 						<Icon
@@ -994,7 +994,7 @@ export class SimpleStream extends Component {
 							typeFilter={this.state.knowledgeType}
 						/>
 					)}
-					{activePanel === WebviewPanels.Reviews && <ReviewsPanel />}
+					{activePanel === WebviewPanels.FilterSearch && <FilterSearchPanel />}
 					{activePanel === WebviewPanels.Activity && <ActivityPanel />}
 					{activePanel === WebviewPanels.NewComment && (
 						<CodemarkForm
