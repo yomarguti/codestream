@@ -226,6 +226,11 @@ export class SimpleFilterSearchPanel extends Component {
 		return result.branch === branchFilter;
 	};
 
+	clickFilter = (e, q) => {
+		if (e && e.target && e.target.closest(".gear")) return;
+		else this.setQ(q);
+	};
+
 	// when the query changes, parse it for different types of
 	// filters, and leave behind any non-filters as keywords
 	// to search for -- those keywords are left in the `text` variable
@@ -670,16 +675,17 @@ export class SimpleFilterSearchPanel extends Component {
 					{savedFilters.map((filter, index) => {
 						if (index == this.state.editingFilterIndex) return this.renderSaveFilter(index);
 						return (
-							<SavedFilter onClick={() => this.setQ(filter.q)}>
+							<SavedFilter onClick={e => this.clickFilter(e, filter.q)}>
 								<label>
 									<Icon name="bookmark" className="bookmark" /> {filter.label}
 								</label>
 								<Icon
 									name="gear"
 									className="gear"
-									onClick={e =>
-										this.setState({ filterMenuOpen: index, filterMenuTarget: e.target })
-									}
+									onClick={e => {
+										e.preventDefault();
+										this.setState({ filterMenuOpen: index, filterMenuTarget: e.target });
+									}}
 								/>
 								{this.state.filterMenuOpen === index && (
 									<Menu
