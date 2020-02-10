@@ -323,20 +323,20 @@ export function ReviewNav(props: Props) {
 				<StyledBoxedContent title="Review Instructions" onClose={toggleInstructions}>
 					<InstructionList>
 						<InstructionItem>
-							View details of the review{" "}
 							<u
 								onMouseEnter={() => setHoverButton("info")}
 								onMouseLeave={() => setHoverButton("")}
 							>
-								here
-							</u>
+								View details
+							</u>{" "}
+							of the review
 							<Subtext>Including which files have changed</Subtext>
 						</InstructionItem>
 						<InstructionItem>
-							Step through the changes of the review{" "}
 							<u onMouseEnter={() => setHoverButton("nav")} onMouseLeave={() => setHoverButton("")}>
-								here
-							</u>
+								Step through
+							</u>{" "}
+							the changes of the review
 							{false && (
 								<Subtext>
 									Next change:
@@ -353,13 +353,13 @@ export function ReviewNav(props: Props) {
 							)}
 						</InstructionItem>
 						<InstructionItem>
-							Comment on changes by{" "}
 							<u
 								onMouseEnter={() => setHoverButton("comment")}
 								onMouseLeave={() => setHoverButton("")}
 							>
-								hovering in the left margin
-							</u>
+								Comment on changes
+							</u>{" "}
+							in the left margin
 							<Subtext>You can also add comments to related code as part of this review.</Subtext>
 							{false && (
 								<Subtext>
@@ -372,14 +372,13 @@ export function ReviewNav(props: Props) {
 							)}
 						</InstructionItem>
 						<InstructionItem>
-							When finished,{" "}
 							<u
 								onMouseEnter={() => setHoverButton("actions")}
 								onMouseLeave={() => setHoverButton("")}
 							>
-								approve or reject
+								Approve or reject
 							</u>{" "}
-							the review
+							the review when finished
 							<Subtext>Or pause to come back to it later</Subtext>
 							{false && (
 								<Subtext>
