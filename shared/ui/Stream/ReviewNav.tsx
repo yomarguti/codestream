@@ -403,8 +403,7 @@ export function ReviewNav(props: Props) {
 	const toggleInstructions = () =>
 		dispatch(setUserPreference(["hideReviewInstructions"], !derivedState.hideReviewInstructions));
 
-	const Instructions = () => {
-		if (derivedState.hideReviewInstructions || props.composeOpen) return null;
+	const renderedInstructions = React.useMemo(() => {
 		return (
 			<VerticallyCenter>
 				<StyledBoxedContent title="Review Instructions" onClose={toggleInstructions}>
@@ -450,7 +449,7 @@ export function ReviewNav(props: Props) {
 				</StyledBoxedContent>
 			</VerticallyCenter>
 		);
-	};
+	}, []);
 
 	const jumpToFile = async (fileRecord, nextIndex?: number) => {
 		if (!review) return;
@@ -572,7 +571,7 @@ export function ReviewNav(props: Props) {
 				</div>
 				{statusButtons()}
 			</Nav>
-			<Instructions />
+			{derivedState.hideReviewInstructions || props.composeOpen ? null : renderedInstructions}
 			<Actions>
 				{/*				<div className="review-title">{review && <SearchResult titleOnly result={review} />}</div> */}
 			</Actions>
