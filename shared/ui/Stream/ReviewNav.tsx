@@ -274,7 +274,7 @@ export function ReviewNav(props: Props) {
 	const reject = () => {
 		confirmPopup({
 			title: "Are you sure?",
-			message: "Author will be notified you have rejected this code review.",
+			message: "Author will be notified you have rejected this set of changes.",
 			buttons: [
 				{ label: "Go Back", className: "control-button" },
 				{

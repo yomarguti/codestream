@@ -221,11 +221,6 @@ export class SimpleFilterSearchPanel extends Component {
 		});
 	};
 
-	onBranch = (result, branchFilter) => {
-		if (branchFilter === "all") return true;
-		return result.branch === branchFilter;
-	};
-
 	clickFilter = (e, q) => {
 		if (e && e.target && e.target.closest(".gear")) return;
 		else this.setQ(q);
