@@ -929,28 +929,31 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				: scm.commits;
 
 			// perform a diff against the most recent pushed commit
-			const pushedCommit = commits.find(commit => !commit.localOnly);
+			const pushedCommit = scm.commits.find(commit => !commit.localOnly);
 			// if we have a pushed commit on this branch, use the most recent.
 			// otherwise, use the start commit if specified by the user.
 			// otherwise, use the parent of the first commit of this branch (the fork point)
-			const localDiffSha = pushedCommit
+			const baseSha = pushedCommit
 				? pushedCommit.sha
-				: startCommit || commits[commits.length - 1].sha + "^";
+				: await git.getParentCommit(scm.repoPath, scm.commits[scm.commits.length - 1].sha);
 
+			// figure out the set of diffs from the baseSha to the start of this review
+			// so we can show the left side of the difftool
 			// filter out excluded files from the diffs and modified files
-			const localDiffs = (
-				await git.getDiffs(scm.repoPath, includeSaved, includeStaged, localDiffSha)
+			const leftDiffs = (
+				await git.getDiffs(scm.repoPath, false, false, baseSha, startCommit)
 			).filter(diff => diff.newFileName && !excludedFiles.includes(diff.newFileName));
 
-			const latestCommitSha = commits[0] ? commits[0].sha : undefined;
-			const latestCommitDiffs = latestCommitSha
-				? (await git.getDiffs(scm.repoPath, includeSaved, includeStaged, latestCommitSha)).filter(
+			// get the diffs from the baseSha+leftDiffs to current (what was requested
+			// in the review)
+			const rightDiffs = startCommit
+				? (await git.getDiffs(scm.repoPath, includeSaved, includeStaged, startCommit)).filter(
 						diff => diff.newFileName && !excludedFiles.includes(diff.newFileName)
 				  )
 				: undefined;
 
 			// WTF typescript, this is defined above
-			if (reviewRequest.reviewChangesets) {
+			if (reviewRequest.reviewChangesets && baseSha) {
 				reviewRequest.reviewChangesets.push({
 					repoId: scm.repoId,
 					branch: scm.branch,
@@ -959,10 +962,10 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					includeSaved,
 					includeStaged,
 					remotes,
-					diffs: { localDiffSha, localDiffs, latestCommitSha, latestCommitDiffs }
+					diffs: { baseSha, leftDiffs, rightDiffs }
 				});
 			}
-			for (const patch of localDiffs) {
+			/*for (const patch of localDiffs) {
 				const file = patch.newFileName;
 				if (file && !excludedFiles.includes(file)) {
 					for (const hunk of patch.hunks) {
@@ -998,7 +1001,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						}
 					}
 				}
-			}
+			}*/
 		}
 
 		// FIXME -- not sure if this is the right way to do this
@@ -1369,7 +1372,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					anchorFormat: "[${text}](${url})"
 				};
 		}
-	};
+	}
 
 	createProviderCard = async (
 		providerCardRequest: {
@@ -1597,7 +1600,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			Logger.error(error, `failed to create a ${attributes.issueProvider.name} card:`);
 			return undefined;
 		}
-	};
+	}
 }
 
 async function resolveCreatePostResponse(response: CreatePostResponse) {

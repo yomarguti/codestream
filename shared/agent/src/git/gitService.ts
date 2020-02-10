@@ -299,18 +299,22 @@ export class GitService implements IGitService, Disposable {
 		repoPath: string,
 		includeSaved: boolean,
 		includeStaged: boolean,
-		ref?: string
+		ref1?: string,
+		ref2?: string
 	): Promise<ParsedDiff[]> {
 		let data: string | undefined;
 		try {
 			const options = ["diff", "--no-prefix"];
 			if (includeStaged && !includeSaved) options.push("--staged");
-			if (ref && ref.length) options.push(ref);
+			if (ref1 && ref1.length) options.push(ref1);
+			if (ref2 && ref2.length) options.push(ref2);
 			if (!includeStaged) options.push("HEAD");
 			options.push("--");
 			data = await git({ cwd: repoPath }, ...options);
 		} catch (err) {
-			Logger.warn(`Error getting diff from ${repoPath}:${includeSaved}:${includeStaged}:${ref}`);
+			Logger.warn(
+				`Error getting diff from ${repoPath}:${includeSaved}:${includeStaged}:${ref1}:${ref2}}`
+			);
 			throw err;
 		}
 

@@ -67,7 +67,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		if (!changeset) throw new Error(`Could not find changeset with repoId ${request.repoId}`);
 
 		const diffs = await this.getDiffs(request.reviewId, request.repoId, request.path);
-		const diff = diffs.localDiffs.find(d => d.newFileName === request.path);
+		const diff = diffs.leftDiffs.find(d => d.newFileName === request.path);
 
 		const repo = await git.getRepositoryById(request.repoId);
 		if (!repo) {
@@ -75,12 +75,13 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		}
 
 		const filePath = path.join(repo.normalizedPath, request.path);
+
+		// MARCELO FIXME
 		const baseSha = await git.getParentCommit(repo.normalizedPath, changeset.commits[0].sha);
 
 		const baseContents =
 			baseSha !== undefined ? (await git.getFileContentForRevision(filePath, baseSha)) || "" : "";
-		const pushedContents =
-			(await git.getFileContentForRevision(filePath, diffs.localDiffSha)) || "";
+		const pushedContents = (await git.getFileContentForRevision(filePath, diffs.baseSha)) || "";
 		const headContents = diff !== undefined ? applyPatch(pushedContents, diff) : pushedContents;
 
 		return {

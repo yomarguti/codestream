@@ -159,13 +159,14 @@ export interface ReviewChangesetFileInfo {
 }
 
 export interface CSReviewDiffs {
-	// the start point of the local diffs
-	localDiffSha: string;
-	localDiffs: ParsedDiff[];
+	// the base sha of the left diffset, which represents the most
+	// recent pushed commit
+	baseSha: string;
+	// diffs to apply to bsaeSha to render the left side of the diffview
+	leftDiffs: ParsedDiff[];
 
-	// the latest local-only commit on the branch, and the diffs
-	latestCommitSha?: string;
-	latestCommitDiffs?: ParsedDiff[];
+	// diffs to apply on top of leftDiffs to render on the right side of the diffview
+	rightDiffs?: ParsedDiff[];
 }
 
 export interface CSReviewChangesetBase {
