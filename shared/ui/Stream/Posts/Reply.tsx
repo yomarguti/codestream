@@ -52,6 +52,8 @@ export const Reply = (props: ReplyProps) => {
 		getCodemark(state.codemarks, props.post.codemarkId)
 	);
 
+	const postText = codemark != null ? codemark.text : props.post.text;
+
 	const markdownifyToHtml = useMarkdownifyToHtml();
 
 	const renderedMenu =
@@ -101,7 +103,7 @@ export const Reply = (props: ReplyProps) => {
 				<>
 					<MarkdownText
 						style={{ marginLeft: "23px" }}
-						dangerouslySetInnerHTML={{ __html: markdownifyToHtml(props.post.text) }}
+						dangerouslySetInnerHTML={{ __html: markdownifyToHtml(postText) }}
 					/>
 					{markers}
 				</>
