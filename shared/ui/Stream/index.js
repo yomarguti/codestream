@@ -357,36 +357,11 @@ export class SimpleStream extends Component {
 
 		const buildSubmenu = () => {
 			const items = userTeams.map(team => {
-				const label = (() => {
-					if (safe(() => team.providerInfo.slack)) {
-						return (
-							<span>
-								{team.id === currentTeamId && <Icon name="check" />}
-								{team.name}
-							</span>
-						);
-					}
-					if (safe(() => team.providerInfo.msteams)) {
-						return (
-							<span>
-								{team.id === currentTeamId && <Icon name="check" />}
-								{team.name}
-							</span>
-						);
-					}
-					return (
-						<span>
-							{team.id === currentTeamId && <Icon name="check" />}
-							{team.name}
-						</span>
-					);
-				})();
-
 				const isCurrentTeam = team.id === currentTeamId;
-
 				return {
 					key: team.id,
-					label: label,
+					label: team.name,
+					icon: isCurrentTeam ? <Icon name="check" /> : undefined,
 					noHover: isCurrentTeam,
 					action: () => {
 						if (isCurrentTeam) return;
