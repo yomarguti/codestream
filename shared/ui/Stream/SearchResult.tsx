@@ -114,7 +114,7 @@ export default function SearchResult(props: Props) {
 	const assignees = (isCSReview(result) ? result.reviewers : result.assignees) || [];
 
 	let icon;
-	let createdVerb = "opened";
+	let createdVerb = "Opened";
 	switch (type) {
 		case "review":
 			icon = "review";
@@ -124,7 +124,7 @@ export default function SearchResult(props: Props) {
 			break;
 		default:
 			icon = "comment";
-			createdVerb = "posted";
+			createdVerb = "Posted";
 			break;
 	}
 
@@ -147,7 +147,7 @@ export default function SearchResult(props: Props) {
 			</div>
 
 			<div className="details">
-				#12 {createdVerb} <Timestamp relative time={result.createdAt} /> by{" "}
+				{createdVerb} <Timestamp relative time={result.createdAt} /> by{" "}
 				{derivedState.usernames[result.creatorId]} {result.status && <>&middot; {result.status} </>}
 				{isArchived && <>&middot; archived </>}
 			</div>
