@@ -56,7 +56,8 @@ import {
 	WebviewIpcMessage,
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage,
-	WebviewPanels
+	WebviewPanels,
+	TraverseDiffsRequestType
 } from "@codestream/protocols/webview";
 import { gate } from "system/decorators/gate";
 import {
@@ -87,6 +88,7 @@ import { Editor } from "../extensions";
 import { Logger } from "../logger";
 import { Functions, log } from "../system";
 import { CodeStreamWebviewPanel, toLoggableIpcMessage } from "../webviews/webviewPanel";
+import { BuiltInCommands } from "../constants";
 
 const emptyObj = {};
 
@@ -754,6 +756,19 @@ export class WebviewController implements Disposable {
 			case ReviewShowDiffRequestType.method: {
 				webview.onIpcRequest(ReviewShowDiffRequestType, e, async (_type, params) => {
 					void (await Container.commands.showReviewDiff(params));
+					return emptyObj;
+				});
+
+				break;
+			}
+			case TraverseDiffsRequestType.method: {
+				webview.onIpcRequest(TraverseDiffsRequestType, e, async (_type, params) => {
+					const command =
+						params.direction === "next"
+							? BuiltInCommands.GoToNextDiff
+							: BuiltInCommands.GoToPreviousDiff;
+					await commands.executeCommand(command);
+
 					return emptyObj;
 				});
 
