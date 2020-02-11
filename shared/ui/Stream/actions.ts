@@ -735,10 +735,12 @@ export const setCodemarkStatus = (
 
 type ReviewStatus = "closed" | "open" | "rejected";
 
-const getPastTenseOfStatusAction = (action: ReviewStatus) => {
+const describeStatusChange = (action: ReviewStatus) => {
 	switch (action) {
 		case "open":
 			return "re-opened";
+		case "closed":
+			return "approved";
 		default:
 			return action;
 	}
@@ -755,7 +757,7 @@ export const setReviewStatus = (reviewId: string, status: ReviewStatus) => async
 			createPost(
 				response.review.streamId,
 				response.review.postId,
-				`/me ${getPastTenseOfStatusAction(status)} this review`
+				`/me ${describeStatusChange(status)} this review`
 			)
 		);
 
