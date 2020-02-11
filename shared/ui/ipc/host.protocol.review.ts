@@ -15,3 +15,16 @@ export const ReviewShowDiffRequestType = new RequestType<
 	void,
 	void
 >(`${IpcRoutes.Host}/review/showDiff`);
+
+export interface TraverseDiffsRequest {
+	direction: "next" | "previous";
+}
+
+export interface TraverseDiffsResponse {}
+
+export const TraverseDiffsRequestType = new RequestType<
+	TraverseDiffsRequest,
+	TraverseDiffsResponse,
+	void,
+	void
+>(`${IpcRoutes.Host}/review/diffs/traverse`);

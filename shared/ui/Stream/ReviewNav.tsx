@@ -16,7 +16,7 @@ import SearchResult from "./SearchResult";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { setReviewStatus } from "./actions";
 import * as fs from "../utilities/fs";
-import { ReviewShowDiffRequestType } from "../ipc/host.protocol.review";
+import { ReviewShowDiffRequestType, TraverseDiffsRequestType } from "../ipc/host.protocol.review";
 import { BoxedContent } from "../src/components/BoxedContent";
 import Icon from "./Icon";
 import { ChangesetFile } from "./Review/ChangesetFile";
@@ -472,8 +472,18 @@ export function ReviewNav(props: Props) {
 		setProgressCounter(nextIndex || 0);
 	};
 
-	const jumpToPrev = () => jumpToFile(allModifiedFiles[progressCounter - 1], progressCounter - 1);
-	const jumpToNext = () => jumpToFile(allModifiedFiles[progressCounter + 1], progressCounter + 1);
+	const jumpToPrev = () => {
+		// HostApi.instance.send(TraverseDiffsRequestType, {
+		// 	direction: "previous"
+		// });
+		jumpToFile(allModifiedFiles[progressCounter - 1], progressCounter - 1);
+	};
+	const jumpToNext = () => {
+		// HostApi.instance.send(TraverseDiffsRequestType, {
+		// 	direction: "next"
+		// });
+		jumpToFile(allModifiedFiles[progressCounter + 1], progressCounter + 1);
+	};
 	const nextCount = allModifiedFiles.length - progressCounter;
 	const prevCount = progressCounter;
 
@@ -489,6 +499,7 @@ export function ReviewNav(props: Props) {
 	let title = fs.pathBasename(
 		derivedState.filePath || derivedState.editorContext.activeFile || ""
 	) || <>&nbsp;</>;
+
 	return (
 		<>
 			<PanelHeader title={title} position="fixed" className="active-review">
