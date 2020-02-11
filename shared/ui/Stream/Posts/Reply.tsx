@@ -4,8 +4,11 @@ import { PostPlus } from "@codestream/protocols/agent";
 import React from "react";
 import { useMarkdownifyToHtml } from "../Markdowner";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
-import { StyledTimestamp, MarkdownText, KebabIcon } from "../Codemark/BaseCodemark";
+import { StyledTimestamp, MarkdownText, KebabIcon, StyledMarker } from "../Codemark/BaseCodemark";
 import Icon from "../Icon";
+import { getCodemark } from "@codestream/webview/store/codemarks/reducer";
+import { CodeStreamState } from "@codestream/webview/store";
+import { useSelector } from "react-redux";
 
 export interface ReplyProps {
 	author: Partial<CSUser>;
@@ -26,11 +29,28 @@ const AuthorInfo = styled.div`
 	}
 `;
 
-export const Reply = styled((props: ReplyProps) => {
+const Root = styled.div`
+	padding-bottom: 10px;
+	display: flex;
+	flex-direction: column;
+	${AuthorInfo} {
+		font-weight: 700;
+	}
+
+	${StyledMarker} {
+		margin-left: 25px;
+	}
+`;
+
+export const Reply = (props: ReplyProps) => {
 	const [menuState, setMenuState] = React.useState<{
 		open: boolean;
 		target?: any;
 	}>({ open: false, target: undefined });
+
+	const codemark = useSelector((state: CodeStreamState) =>
+		getCodemark(state.codemarks, props.post.codemarkId)
+	);
 
 	const markdownifyToHtml = useMarkdownifyToHtml();
 
@@ -46,8 +66,14 @@ export const Reply = styled((props: ReplyProps) => {
 	};
 	const emote = renderEmote();
 
+	const markers = (() => {
+		if (codemark == null || codemark.markers == null || codemark.markers.length === 0) return;
+
+		return codemark.markers.map(marker => <StyledMarker key={marker.id} marker={marker} />);
+	})();
+
 	return (
-		<div className={props.className}>
+		<Root className={props.className}>
 			<AuthorInfo style={{ fontWeight: 700 }}>
 				<Headshot person={props.author} /> {props.author.username}
 				{emote}
@@ -72,18 +98,14 @@ export const Reply = styled((props: ReplyProps) => {
 				</div>
 			</AuthorInfo>
 			{emote ? null : (
-				<MarkdownText
-					style={{ marginLeft: "23px" }}
-					dangerouslySetInnerHTML={{ __html: markdownifyToHtml(props.post.text) }}
-				/>
+				<>
+					<MarkdownText
+						style={{ marginLeft: "23px" }}
+						dangerouslySetInnerHTML={{ __html: markdownifyToHtml(props.post.text) }}
+					/>
+					{markers}
+				</>
 			)}
-		</div>
+		</Root>
 	);
-})`
-	padding-bottom: 10px;
-	display: flex;
-	flex-direction: column;
-	${AuthorInfo} {
-		font-weight: 700;
-	}
-`;
+};

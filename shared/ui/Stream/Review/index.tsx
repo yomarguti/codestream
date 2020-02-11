@@ -27,7 +27,7 @@ import {
 import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { CSUser, CSReview } from "@codestream/protocols/api";
 import { CodeStreamState } from "@codestream/webview/store";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector, useDispatch, shallowEqual } from "react-redux";
 import { useMarkdownifyToHtml } from "../Markdowner";
 import Icon from "../Icon";
 import { SmartFormattedList } from "../SmartFormattedList";
@@ -379,19 +379,24 @@ const ReviewForReview = (props: PropsWithReview) => {
 			repos: state.repos,
 			userIsFollowing: (props.review.followerIds || []).includes(state.session.userId!),
 			reviewers:
-				props.review.reviewers != null ? props.review.reviewers.map(id => state.users[id]) : [],
+				props.review.reviewers != null
+					? props.review.reviewers.map(id => state.users[id])
+					: emptyArray,
 			teamMates: getTeamMates(state),
 			replies: props.collapsed ? emptyArray : getThreadPosts(state, review.streamId, review.postId),
-			allUsers: useSelector((state: CodeStreamState) => state.users)
+			allUsers: state.users
 		};
-	});
+	}, shallowEqual);
 
-	let repoNames = new Set<string>();
+	let repoNames = React.useMemo(() => {
+		const names = new Set<string>();
 
-	for (let changeset of review.reviewChangesets) {
-		const repo = derivedState.repos[changeset.repoId];
-		if (repo) repoNames.add(repo.name);
-	}
+		for (let changeset of review.reviewChangesets) {
+			const repo = derivedState.repos[changeset.repoId];
+			if (repo) names.add(repo.name);
+		}
+		return [...names];
+	}, [review, derivedState.repos]);
 
 	const renderFooter =
 		props.renderFooter ||
@@ -421,7 +426,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 			{...baseProps}
 			author={derivedState.author}
 			review={props.review}
-			repoNames={[...repoNames]}
+			repoNames={repoNames}
 			isFollowing={derivedState.userIsFollowing}
 			reviewers={derivedState.reviewers}
 			currentUserId={derivedState.currentUser.id}

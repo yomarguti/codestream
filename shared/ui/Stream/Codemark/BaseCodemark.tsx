@@ -10,7 +10,7 @@ import {
 import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { CSUser, CSMarker, CodemarkType, CodemarkStatus } from "@codestream/protocols/api";
 import Timestamp from "../Timestamp";
-import { useMarkdownifyToHtml, markdownify } from "../Markdowner";
+import { useMarkdownifyToHtml } from "../Markdowner";
 import Tag from "../Tag";
 import Icon from "../Icon";
 import { Link } from "../Link";
@@ -457,7 +457,7 @@ const LinkForExternalUrl = styled(Link)`
 	}
 `;
 
-const StyledMarker = styled(Marker)`
+export const StyledMarker = styled(Marker)`
 	.code {
 		margin: 5px 0 !important;
 	}
