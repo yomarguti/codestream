@@ -4,6 +4,7 @@ import { HostApi } from "../../webview-api";
 import { ContextActionsType, ContextState } from "../context/types";
 import { CodeStreamState } from "..";
 import { Dispatch, MiddlewareAPI } from "redux";
+import { UIStateRequestType } from '../../protocols/agent/agent.protocol';
 
 export const contextChangeObserver = (store: MiddlewareAPI<any, CodeStreamState>) => (
 	next: Dispatch
@@ -18,6 +19,12 @@ export const contextChangeObserver = (store: MiddlewareAPI<any, CodeStreamState>
 	window.requestIdleCallback(() => {
 		if (notEqual(oldContext, newContext)) {
 			HostApi.instance.notify(WebviewDidChangeContextNotificationType, {
+				context: newContext
+			});
+
+			// alert the agent so it may use more aggressive behaviors based upon
+			// which UI the user is looking at
+			void HostApi.instance.send(UIStateRequestType, {
 				context: newContext
 			});
 		}
