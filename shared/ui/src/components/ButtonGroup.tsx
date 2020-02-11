@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { StyledButton } from "./Button";
+import { ButtonRoot } from "./Button";
 
 interface Props {
 	direction?: "row" | "column";
@@ -10,7 +10,7 @@ export const ButtonGroup = styled.div<Props>(
 	width: inherit;
 	display: flex;
 	justify-content: space-between;
-	${StyledButton} {
+	${ButtonRoot} {
 		margin: 5px 0;
 		justify-content: start;
 	}
@@ -23,7 +23,7 @@ const getGroupStyles = (direction?: string) => {
 		case "column": {
 			return `
 				flex-direction: column;
-				${StyledButton} {
+				${ButtonRoot} {
 					width: inherit;
 				}
 				`;
@@ -33,7 +33,7 @@ const getGroupStyles = (direction?: string) => {
 			return `
 				flex-direction: row;
 				flex-wrap: wrap;
-				${StyledButton} {
+				${ButtonRoot} {
 					flex: 1 1 0;
 				}
 			`;

@@ -80,7 +80,7 @@ const getColors = (variant = "primary") => {
 	}
 };
 
-export const StyledButton = styled.button<Props>(props => {
+export const ButtonRoot = styled.button<ButtonProps>(props => {
 	return `
 	width: ${props.fillParent ? "100%" : "max-content"};
 	${getColors(props.variant)}
@@ -120,7 +120,7 @@ const ButtonAppend = styled.div`
 
 type ButtonVariant = "primary" | "secondary" | "destructive" | "success" | "warning";
 
-interface Props {
+export interface ButtonProps extends PropsWithChildren<{}> {
 	variant?: ButtonVariant;
 	disabled?: boolean;
 	isLoading?: boolean;
@@ -129,9 +129,23 @@ interface Props {
 	appendIcon?: React.ReactNode;
 	onClick?: React.MouseEventHandler;
 	fillParent?: boolean;
+	className?: string;
 }
 
-export const Button = (props: PropsWithChildren<Props>) => {
+export function getButtonProps<P extends ButtonProps>(props: P): ButtonProps {
+	return {
+		variant: props.variant,
+		disabled: props.disabled,
+		isLoading: props.isLoading,
+		size: props.size,
+		prependIcon: props.prependIcon,
+		appendIcon: props.appendIcon,
+		onClick: props.onClick,
+		fillParent: props.fillParent
+	};
+}
+
+export const Button = React.forwardRef((props: ButtonProps, ref?: React.Ref<any>) => {
 	const { children, onClick, ...rest } = props;
 
 	const internals = (
@@ -141,8 +155,14 @@ export const Button = (props: PropsWithChildren<Props>) => {
 			{props.appendIcon && <ButtonAppend>{props.appendIcon}</ButtonAppend>}
 		</>
 	);
+
 	return (
-		<StyledButton {...rest} onClick={props.isLoading || props.disabled ? undefined : onClick}>
+		<ButtonRoot
+			{...rest}
+			onClick={props.isLoading || props.disabled ? undefined : onClick}
+			className={props.className}
+			ref={ref}
+		>
 			{props.isLoading ? (
 				<>
 					<div style={{ opacity: 0, display: "flex" }}>{internals}</div>
@@ -153,6 +173,6 @@ export const Button = (props: PropsWithChildren<Props>) => {
 			) : (
 				internals
 			)}
-		</StyledButton>
+		</ButtonRoot>
 	);
-};
+});

@@ -261,14 +261,9 @@ export function ReviewNav(props: Props) {
 		};
 	});
 
-	const submitReply = async text => {
-		await dispatch(createPost(review!.streamId, review!.postId, text));
-	};
-
 	const approve = () => {
 		dispatch(setReviewStatus(review!.id, "closed"));
 		showReview();
-		submitReply("/me approved this review");
 	};
 
 	const reject = () => {
@@ -289,13 +284,11 @@ export function ReviewNav(props: Props) {
 
 	const rejectConfirm = () => {
 		dispatch(setReviewStatus(review!.id, "rejected"));
-		submitReply("/me rejected this review");
 		showReview();
 	};
 
 	const reopen = () => {
 		dispatch(setReviewStatus(review!.id, "open"));
-		submitReply("/me reopened this review");
 	};
 
 	const statusButtons = () => {
@@ -397,6 +390,8 @@ export function ReviewNav(props: Props) {
 						</Tooltip>
 					</div>
 				);
+			default:
+				return;
 		}
 	};
 

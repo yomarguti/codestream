@@ -45,9 +45,10 @@ import MessageInput from "../MessageInput";
 import styled from "styled-components";
 import Button from "../Button";
 import { getTeamMates, findMentionedUserIds } from "@codestream/webview/store/users/reducer";
-import { createPost } from "../actions";
+import { createPost, setReviewStatus } from "../actions";
 import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
 import { Reply } from "../Posts/Reply";
+import { DropdownButton } from "./DropdownButton";
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
@@ -101,6 +102,49 @@ const BaseReview = (props: BaseReviewProps) => {
 		return files;
 	}, [props.review]);
 
+	const renderedHeaderActions = (() => {
+		if (props.collapsed) {
+			if (props.review.status === "open")
+				return (
+					<HeaderActions>
+						<ActionButton
+							onClick={e => {
+								e.preventDefault();
+							}}
+						>
+							Review Changes
+						</ActionButton>
+					</HeaderActions>
+				);
+			else return;
+		} else {
+			if (props.review.status !== "open")
+				return (
+					<HeaderActions>
+						<ActionButton onClick={() => dispatch(setReviewStatus(props.review.id, "open"))}>
+							Reopen
+						</ActionButton>
+					</HeaderActions>
+				);
+			return (
+				<HeaderActions>
+					<DropdownButton
+						items={[
+							{
+								label: "Approve",
+								action: () => dispatch(setReviewStatus(props.review.id, "closed"))
+							},
+							{
+								label: "Reject",
+								action: () => dispatch(setReviewStatus(props.review.id, "rejected"))
+							}
+						]}
+					/>
+				</HeaderActions>
+			);
+		}
+	})();
+
 	const startReview = () => {
 		dispatch(setActiveReview(review.id));
 	};
@@ -113,17 +157,7 @@ const BaseReview = (props: BaseReviewProps) => {
 						<Headshot person={props.author} /> {props.author.username}{" "}
 						<StyledTimestamp time={props.review.createdAt} />
 					</AuthorInfo>
-					{props.collapsed && (
-						<HeaderActions>
-							<ActionButton
-								onClick={e => {
-									e.preventDefault();
-								}}
-							>
-								Review Changes
-							</ActionButton>
-						</HeaderActions>
-					)}
+					{renderedHeaderActions}
 				</Header>
 				<Title>
 					<MarkdownText

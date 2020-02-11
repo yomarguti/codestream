@@ -733,15 +733,32 @@ export const setCodemarkStatus = (
 	}
 };
 
-export const setReviewStatus = (
-	reviewId: string,
-	status: "closed" | "open" | "rejected"
-) => async dispatch => {
+type ReviewStatus = "closed" | "open" | "rejected";
+
+const getPastTenseOfStatusAction = (action: ReviewStatus) => {
+	switch (action) {
+		case "open":
+			return "re-opened";
+		default:
+			return action;
+	}
+};
+
+export const setReviewStatus = (reviewId: string, status: ReviewStatus) => async dispatch => {
 	try {
 		const response = await HostApi.instance.send(UpdateReviewRequestType, {
 			id: reviewId,
 			status
 		});
+
+		await dispatch(
+			createPost(
+				response.review.streamId,
+				response.review.postId,
+				`/me ${getPastTenseOfStatusAction(status)} this review`
+			)
+		);
+
 		return dispatch(updateReviews([response.review]));
 	} catch (error) {
 		logError(`failed to change review status: ${error}`, { reviewId });
