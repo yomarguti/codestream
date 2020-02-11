@@ -280,9 +280,9 @@ export const ActivityPanel = () => {
 	const menuItems = [
 		{ label: "All Activity", action: "all" },
 		{ label: "-" },
-		{ label: "Comments", action: CodemarkType.Comment },
-		{ label: "Issues", action: CodemarkType.Issue },
-		{ label: "Code Reviews", action: CodemarkType.Review }
+		{ label: "Comments", icon: <Icon name="comment" />, action: CodemarkType.Comment },
+		{ label: "Issues", icon: <Icon name="issue" />, action: CodemarkType.Issue },
+		{ label: "Code Reviews", icon: <Icon name="review" />, action: CodemarkType.Review }
 	];
 
 	return (

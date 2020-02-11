@@ -423,7 +423,7 @@ export function ReviewNav(props: Props) {
 								Step through
 							</u>{" "}
 							the changes of the review
-							<Subtext>Or jump from file to file using details button</Subtext>
+							<Subtext>Or jump between files using details button</Subtext>
 						</InstructionItem>
 						<InstructionItem>
 							<u

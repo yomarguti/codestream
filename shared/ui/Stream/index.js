@@ -497,20 +497,14 @@ export class SimpleStream extends Component {
 
 		const menuItems = [
 			{
-				label: (
-					<>
-						<Icon name="comment" /> &nbsp;New Comment
-					</>
-				),
+				icon: <Icon name="comment" />,
+				label: "New Comment",
 				action: this.newComment,
 				key: "comment"
 			},
 			{
-				label: (
-					<>
-						<Icon name="issue" /> &nbsp;New Issue
-					</>
-				),
+				icon: <Icon name="issue" />,
+				label: "New Issue",
 				action: this.newIssue,
 				key: "issue"
 			}
@@ -519,11 +513,8 @@ export class SimpleStream extends Component {
 			menuItems.push(
 				// { label: "-" },
 				{
-					label: (
-						<>
-							<Icon name="review" /> &nbsp;Request A Code Review
-						</>
-					),
+					icon: <Icon name="review" />,
+					label: "Request A Code Review",
 					action: this.newReview,
 					key: "review"
 				}
