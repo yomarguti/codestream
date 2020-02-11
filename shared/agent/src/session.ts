@@ -32,6 +32,7 @@ import {
 import { SlackApiProvider } from "./api/slack/slackApi";
 import { MSTeamsApiProvider } from "./api/teams/teamsApi";
 import { Container, SessionContainer } from "./container";
+import { DocumentEventHandler } from "./documentEventHandler";
 import { setGitPath } from "./git/git";
 import { Logger } from "./logger";
 import {
@@ -71,6 +72,7 @@ import {
 	ThirdPartyProviders,
 	TokenLoginRequest,
 	TokenLoginRequestType,
+	UIStateRequestType,
 	VerifyConnectivityRequestType,
 	VerifyConnectivityResponse,
 	VersionCompatibility
@@ -212,6 +214,18 @@ export class CodeStreamSession {
 
 	private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined;
 	private readonly _readyPromise: Promise<void>;
+	// in-memory store of what UI the user is current looking at
+	private uiState: string | undefined;
+	private _documentEventHandler: DocumentEventHandler | undefined;
+
+	// in certain scenarios the agent may want to use more performance-intensive
+	// operations when handling document change and saves. This is true for when
+	// a user is looking at the review screen, where we need to be able to live-update
+	// the view based on documents changing & saving, as well as git operations removing
+	// and/or squashing commits.
+	get useEnhancedDocumentChangeHandler(): boolean {
+		return this.uiState === "compose-review";
+	}
 
 	constructor(
 		public readonly agent: CodeStreamAgent,
@@ -305,6 +319,15 @@ export class CodeStreamSession {
 		// this.connection.onHover(e => MarkerHandler.onHover(e));
 
 		registerDecoratedHandlers(this.agent);
+
+		this.agent.registerHandler(UIStateRequestType, e => {
+			if (e && e.context && e.context.panelStack && e.context.panelStack[0]) {
+				this.uiState = e.context.panelStack[0];
+			}
+			else {
+				this.uiState = undefined;
+			}
+		});
 
 		this.agent.registerHandler(VerifyConnectivityRequestType, () => this.verifyConnectivity());
 		this.agent.registerHandler(GetAccessTokenRequestType, e => {
@@ -791,12 +814,13 @@ export class CodeStreamSession {
 		Logger.log(cc, `Subscribing to real-time events...`);
 		await this.api.subscribe();
 
+		this._documentEventHandler = new DocumentEventHandler(
+			this,
+			SessionContainer.instance().git,
+			SessionContainer.instance().session.agent.documents);
+
 		SessionContainer.instance().git.onRepositoryCommitHashChanged(repo => {
 			SessionContainer.instance().markerLocations.flushUncommittedLocations(repo);
-			this.agent.sendNotification(DidChangeDataNotificationType, {
-				type: ChangeDataType.Commits,
-				data: repo
-			});
 		});
 
 		// be sure to alias first if necessary
@@ -946,7 +970,7 @@ export class CodeStreamSession {
 		return new SlackApiProvider(
 			this._api! as CodeStreamApiProvider,
 			user.providerInfo!.slack ||
-				(user.providerInfo![this._teamId!] && user.providerInfo![this._teamId!].slack)!,
+			(user.providerInfo![this._teamId!] && user.providerInfo![this._teamId!].slack)!,
 			user,
 			this._teamId!,
 			this._httpsAgent
@@ -1072,6 +1096,12 @@ export class CodeStreamSession {
 				type: ChangeDataType.Providers,
 				data: this._providers
 			});
+		}
+	}
+
+	dispose(){
+		if(this._documentEventHandler) {
+			this._documentEventHandler.dispose();
 		}
 	}
 }

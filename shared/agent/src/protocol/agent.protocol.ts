@@ -153,7 +153,7 @@ export const VerifyConnectivityRequestType = new RequestType<
 	void
 >("codestream/verifyConnectivity");
 
-export interface BootstrapRequest {}
+export interface BootstrapRequest { }
 export interface BootstrapResponse {
 	preferences: CSMePreferences;
 	repos: CSRepository[];
@@ -210,4 +210,14 @@ export interface OpenUrlRequest {
 
 export const OpenUrlRequestType = new RequestType<OpenUrlRequest, void, void, void>(
 	"codestream/url/open"
+);
+
+export interface UIStateRequest {
+	context?: {
+		panelStack?: string[]
+	};
+}
+
+export const UIStateRequestType = new RequestType<UIStateRequest, void, void, void>(
+	"codestream/ui/state"
 );

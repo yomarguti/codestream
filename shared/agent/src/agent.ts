@@ -74,6 +74,7 @@ export class CodeStreamAgent implements Disposable {
 	dispose() {
 		this._disposable && this._disposable.dispose();
 		this.documents.dispose();
+		this._session && this._session.dispose();
 	}
 
 	get connection() {
