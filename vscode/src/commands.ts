@@ -127,6 +127,8 @@ export class Commands implements Disposable {
 		});
 
 		const fileName = paths.basename(originalUri.fsPath);
+
+		// Try to designate the diff view in the column to the left the webview
 		// FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
 		let column = Container.webview.viewColumn as number | undefined;
 		if (column !== undefined) {
@@ -154,11 +156,22 @@ export class Commands implements Disposable {
 	@command("showReviewDiff", { showErrorMessage: "Unable to display review diff" })
 	async showReviewDiff(args: ShowReviewDiffCommandArgs): Promise<boolean> {
 		await Container.diffContents.loadContents(args.reviewId, args.repoId, args.path);
+
+		// FYI, see showMarkerDiff() above
+		let column = Container.webview.viewColumn as number | undefined;
+		if (column !== undefined) {
+			column--;
+			if (column <= 0) {
+				column = undefined;
+			}
+		}
+
 		await commands.executeCommand(
-			"vscode.diff",
+			BuiltInCommands.Diff,
 			Uri.parse(`codestream-diff://${args.reviewId}/${args.repoId}/base/${args.path}`),
 			Uri.parse(`codestream-diff://${args.reviewId}/${args.repoId}/head/${args.path}`),
-			`${args.path} @ CodeStream Review #${args.reviewId}`
+			`${args.path} @ CodeStream Review #${args.reviewId}`,
+			{ preserveFocus: false, preview: true, viewColumn: column || ViewColumn.Beside }
 		);
 
 		return true;
