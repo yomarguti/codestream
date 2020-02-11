@@ -346,7 +346,14 @@ export const SharingControls = React.memo(
 				if (derivedState.msTeamsConfig) {
 					targetItems.push({
 						key: "add-msteams",
-						label: "Add Teams organization" as any,
+						label: (
+							<>
+								<span style={{ marginRight: "5px" }}>
+									<Icon name="msteams" />
+								</span>
+								Add Teams organization
+							</>
+						),
 						action: (() => {
 							authenticateWithMSTeams();
 						}) as any
@@ -385,7 +392,12 @@ export const SharingControls = React.memo(
 					? [{ type: "search", placeholder: "Search..." }, { label: "-" }]
 					: [];
 
-			return [...search, ...others, { label: "-" }, ...dms];
+			if (dms && dms.length) {
+				return [...search, ...others, { label: "-" }, ...dms];
+			} else {
+				return [...search, ...others];
+			}
+
 			// }, [data.get().channels]);
 		};
 
@@ -410,7 +422,11 @@ export const SharingControls = React.memo(
 		if (authenticationState && authenticationState.isAuthenticating)
 			return (
 				<Root>
-					<Icon name="sync" className="spin" /> {(authenticationState.label == "MS Teams" ? "Setting up MS Teams bot": `Authenticating with ${authenticationState.label}`)}...{" "}
+					<Icon name="sync" className="spin" />{" "}
+					{authenticationState.label == "MS Teams"
+						? "Setting up MS Teams bot"
+						: `Authenticating with ${authenticationState.label}`}
+					...{" "}
 					<a
 						onClick={e => {
 							e.preventDefault();
@@ -449,22 +465,20 @@ export const SharingControls = React.memo(
 					>
 						<Icon name="slack" /> Slack
 					</TextButton>
-					 
-				{derivedState.msTeamsConfig != undefined && (
-					<>
-						{" "}
-						or{" "}
-						<TextButton
-							onClick={e => {
-								e.preventDefault();
-								authenticateWithMSTeams();
-							}}
-						>
-							<Icon name="msteams" /> MS Teams
-						</TextButton>
-					</>
-				)}
-						 
+					{derivedState.msTeamsConfig != undefined && (
+						<>
+							{" "}
+							or{" "}
+							<TextButton
+								onClick={e => {
+									e.preventDefault();
+									authenticateWithMSTeams();
+								}}
+							>
+								<Icon name="msteams" /> MS Teams
+							</TextButton>
+						</>
+					)}
 				</Root>
 			);
 
