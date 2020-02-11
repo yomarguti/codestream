@@ -1,22 +1,20 @@
 import React from "react";
 import styled from "styled-components";
-import Menu from "./Menu";
 import Tooltip from "./Tooltip";
-import { Review } from "./Review";
 import { Button } from "../src/components/Button";
 import { PanelHeader } from "../src/components/PanelHeader";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { setCurrentReview, setActiveReview } from "@codestream/webview/store/context/actions";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "..";
-import { GetReviewRequestType, GetFileScmInfoResponse } from "@codestream/protocols/agent";
+import { GetReviewRequestType } from "@codestream/protocols/agent";
 import { saveReviews } from "@codestream/webview/store/reviews/actions";
 import { CodeStreamState } from "../store";
 import { getReview } from "../store/reviews/reducer";
 import { MinimumWidthCard } from "./Codemark/BaseCodemark";
 import SearchResult from "./SearchResult";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
-import { setReviewStatus, createPost } from "./actions";
+import { setReviewStatus } from "./actions";
 import * as fs from "../utilities/fs";
 import { ReviewShowDiffRequestType } from "../ipc/host.protocol.review";
 import { BoxedContent } from "../src/components/BoxedContent";
@@ -24,6 +22,7 @@ import Icon from "./Icon";
 import { ChangesetFile } from "./Review/ChangesetFile";
 import { confirmPopup } from "./Confirm";
 import { setUserPreference } from "./actions";
+import { ReviewChangesetFileInfo } from "@codestream/protocols/api";
 
 const Actions = styled.div`
 	padding: 0 0 0 20px;
@@ -179,29 +178,33 @@ export function ReviewNav(props: Props) {
 		const filePath = scmInfo && scmInfo.scm ? scmInfo.scm.file : "";
 		const review = getReview(state.reviews, props.reviewId);
 
-		const modifiedFilesByRepo = [] as any;
-		if (review) {
-			review.reviewChangesets.forEach(changeset => {
-				changeset.modifiedFiles.forEach(file => {
-					modifiedFilesByRepo.push({ ...file, repoId: changeset.repoId });
-				});
-			});
-		}
-
 		return {
 			review,
-			modifiedFilesByRepo,
 			editorContext: state.editorContext,
 			filePath,
 			hideReviewInstructions: state.preferences.hideReviewInstructions,
 			currentCodemarkId: state.context.currentCodemarkId
 		};
-	});
+	}, shallowEqual);
+
+	const allModifiedFiles = React.useMemo(() => {
+		const modifiedFiles: (ReviewChangesetFileInfo & { repoId: string })[] = [];
+
+		if (derivedState.review) {
+			derivedState.review.reviewChangesets.forEach(changeset => {
+				changeset.modifiedFiles.forEach(file => {
+					modifiedFiles.push({ ...file, repoId: changeset.repoId });
+				});
+			});
+		}
+
+		return modifiedFiles;
+	}, [derivedState.review]);
 	const [notFound, setNotFound] = React.useState(false);
 	const [hoverButton, setHoverButton] = React.useState("");
 	const [progressCounter, setProgressCounter] = React.useState(0);
 
-	const { review, modifiedFilesByRepo } = derivedState;
+	const { review } = derivedState;
 
 	const changedFiles = React.useMemo(() => {
 		if (!review) return;
@@ -254,6 +257,13 @@ export function ReviewNav(props: Props) {
 
 		if (review == null) {
 			fetchReview();
+		} else {
+			const currentFile = allModifiedFiles[progressCounter];
+			HostApi.instance.send(ReviewShowDiffRequestType, {
+				repoId: currentFile.repoId,
+				reviewId: review.id,
+				path: currentFile.file
+			});
 		}
 
 		return () => {
@@ -458,22 +468,20 @@ export function ReviewNav(props: Props) {
 		// 	repoId: changeset.repoId,
 		// 	path: f.file
 		// });
-		nextIndex = nextIndex || modifiedFilesByRepo.findIndex(f => f.file === derivedState.filePath);
+		nextIndex = nextIndex || allModifiedFiles.findIndex(f => f.file === derivedState.filePath);
 		setProgressCounter(nextIndex || 0);
 	};
 
-	const jumpToPrev = () =>
-		jumpToFile(modifiedFilesByRepo[progressCounter - 1], progressCounter - 1);
-	const jumpToNext = () =>
-		jumpToFile(modifiedFilesByRepo[progressCounter + 1], progressCounter + 1);
-	const nextCount = modifiedFilesByRepo.length - progressCounter;
+	const jumpToPrev = () => jumpToFile(allModifiedFiles[progressCounter - 1], progressCounter - 1);
+	const jumpToNext = () => jumpToFile(allModifiedFiles[progressCounter + 1], progressCounter + 1);
+	const nextCount = allModifiedFiles.length - progressCounter;
 	const prevCount = progressCounter;
 
 	if (notFound || !review) return <MinimumWidthCard>This review was not found</MinimumWidthCard>;
 	if (derivedState.currentCodemarkId) return null;
 
-	const fileIndex = modifiedFilesByRepo.findIndex(f => f.file === derivedState.filePath) + 1;
-	const fileMenu = modifiedFilesByRepo.map(f => {
+	const fileIndex = allModifiedFiles.findIndex(f => f.file === derivedState.filePath) + 1;
+	const fileMenu = allModifiedFiles.map(f => {
 		return { label: f.file, key: f.file, action: () => jumpToFile(f, 0) };
 	});
 
@@ -490,14 +498,14 @@ export function ReviewNav(props: Props) {
 							<span>
 								Reviewing change #5 of 17 in{" "}
 								<InlineMenu items={fileMenu}>
-									file #{fileIndex} of {modifiedFilesByRepo.length}
+									file #{fileIndex} of {allModifiedFiles.length}
 								</InlineMenu>
 							</span>
 						) : (
 							<span>
 								This file is not one of the{" "}
-								<InlineMenu items={fileMenu}>{modifiedFilesByRepo.length} modified</InlineMenu> in
-								this review.
+								<InlineMenu items={fileMenu}>{allModifiedFiles.length} modified</InlineMenu> in this
+								review.
 							</span>
 						)}
 					</FileList>
