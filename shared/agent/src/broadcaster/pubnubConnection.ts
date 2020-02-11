@@ -159,7 +159,7 @@ export class PubnubConnection implements BroadcasterConnection {
 
 	// respond to a Pubnub status event
 	private onStatus(status: Pubnub.StatusEvent | any) {
-		this._debug("Pubnub status received", status);
+		this._debug("Pubnub status received: " + JSON.stringify(status));
 		if ((status as any).error && status.operation === Pubnub.OPERATIONS.PNUnsubscribeOperation) {
 			// ignore any errors associated with unsubscribing
 			return;
@@ -221,13 +221,14 @@ export class PubnubConnection implements BroadcasterConnection {
 		let response: Pubnub.HereNowResponse;
 		let gotError = false;
 		try {
-			this._debug("Confirming subscription to", channels);
+			this._debug("Confirming subscription to: " + JSON.stringify(channels));
 			response = await this._pubnub!.hereNow({
 				channels,
 				includeUUIDs: true
 			} as Pubnub.HereNowParameters);
 		} catch (error) {
-			this._debug("Error confirming subscriptions", error);
+			const message = error instanceof Error ? error.message : JSON.stringify(error);
+			this._debug("Error confirming subscriptions: " + message);
 			gotError = true;
 		}
 		let troubleChannels: string[] = [];

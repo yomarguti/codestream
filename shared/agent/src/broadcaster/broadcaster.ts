@@ -200,7 +200,7 @@ export class Broadcaster {
 
 	// subscribe to the passed channels
 	subscribe(channels: (ChannelDescriptor | string)[]) {
-		this._debug("Request to subscribe to channels", channels);
+		this._debug("Request to subscribe to channels: " + JSON.stringify(channels));
 		if (this._aborted) {
 			this._debug("Broadcaster Connection is aborted");
 			return this.emitStatus(BroadcasterStatusType.Aborted);
@@ -219,7 +219,7 @@ export class Broadcaster {
 
 	// unsubscribe to the passed channels
 	unsubscribe(channels: string[]) {
-		this._debug("Request to unsubscribe from these channels", channels);
+		this._debug("Request to unsubscribe from these channels: ", JSON.stringify(channels));
 		this.removeChannels(channels);
 	}
 
@@ -245,7 +245,7 @@ export class Broadcaster {
 		if (this._testMode) {
 			this.emitStatus(BroadcasterStatusType.Queued, channels.map(channel => channel.name));
 		}
-		this._debug("Queueing " + channels);
+		this._debug("Queueing: " + JSON.stringify(channels));
 		this._queuedChannels.push(...channels);
 	}
 
@@ -254,7 +254,7 @@ export class Broadcaster {
 	private drainQueue() {
 		const channels = this._queuedChannels;
 		if (channels.length) {
-			this._debug("Draining subscription queue", channels);
+			this._debug("Draining subscription queue: " + JSON.stringify(channels));
 		}
 		this._queuedChannels = [];
 		this.subscribeToChannels(channels);
@@ -297,7 +297,7 @@ export class Broadcaster {
 		}
 		// track the last time a message was received, each time we encounter a disconnected situation,
 		// we'll fetch the message history from this point going forward
-		this._debug("Broadcaster message received at", event.receivedAt);
+		this._debug("Broadcaster message received at: " + event.receivedAt);
 		if (event.receivedAt > this._lastMessageReceivedAt && !this._subscriptionsPending) {
 			this._lastMessageReceivedAt = event.receivedAt;
 			this._debug("_lastMessageReceivedAt updated");
@@ -368,7 +368,7 @@ export class Broadcaster {
 	// subscribe to all requested channels that we are not yet subscribed to
 	private subscribeAll() {
 		const channels = this.getUnsubscribedChannels();
-		this._debug("Unsubscribed channels are", channels);
+		this._debug("Unsubscribed channels are: " + JSON.stringify(channels));
 		if (channels.length === 0) {
 			// no unsubscribed channels, just say we're fully subscribed
 			this._debug("No unsubscribed channels, we are fully subscribed");
@@ -392,11 +392,11 @@ export class Broadcaster {
 			}
 		});
 		if (channelsWithPresence.length > 0) {
-			this._debug("Broadcaster subscribing (with presence) to", channelsWithPresence);
+			this._debug("Broadcaster subscribing (with presence) to: " + JSON.stringify(channelsWithPresence));
 			this._broadcasterConnection!.subscribe(channelsWithPresence, { withPresence: true });
 		}
 		if (channelsWithoutPresence.length > 0) {
-			this._debug("Broadcaster subscribing to", channelsWithoutPresence);
+			this._debug("Broadcaster subscribing to: " + JSON.stringify(channelsWithoutPresence));
 			this._broadcasterConnection!.subscribe(channelsWithoutPresence);
 		}
 
@@ -431,7 +431,7 @@ export class Broadcaster {
 	// all channels that have been requested, catch up on any missed history and emit
 	// a Connected event when done
 	private setConnected(channels: string[]) {
-		this._debug("These channels are connected", channels);
+		this._debug("These channels are connected: ", JSON.stringify(channels));
 		const newlyConnected: string[] = [];
 		for (const channel of channels) {
 			if (!this._subscriptions[channel] || !this._subscriptions[channel].subscribed) {
@@ -448,7 +448,7 @@ export class Broadcaster {
 			clearTimeout(this._statusTimeout!);
 			delete this._statusTimeout;
 		}
-		this._debug("Catching up on these channels", newlyConnected);
+		this._debug("Catching up on these channels: " + JSON.stringify(newlyConnected));
 		this.catchUp(newlyConnected);
 	}
 
@@ -498,7 +498,7 @@ export class Broadcaster {
 		// fetch history since the last message received
 		let historyOutput: BroadcasterHistoryOutput;
 		try {
-			this._debug(`Fetching history since ${since} for`, channels);
+			this._debug(`Fetching history since ${since} for: ` + JSON.stringify(channels));
 			historyOutput = await this._broadcasterConnection!.fetchHistory({
 				channels,
 				since,
@@ -508,7 +508,7 @@ export class Broadcaster {
 			// this is bad ... if we can't catch up on history, we'll start
 			// with a clean slate and try to resubscribe all over again
 			error = error instanceof Error ? error.message : error;
-			this._debug("Fetch history error, resubscribing...", error);
+			this._debug(`Fetch history error (${error}), resubscribing...`);
 			this.emitTrouble();
 			return this.resubscribe(channels);
 		}
@@ -522,10 +522,7 @@ export class Broadcaster {
 		} else if (historyOutput.messages && historyOutput.messages.length > 0) {
 			// emit all messages found and update to timestamp of last message received
 			this._lastMessageReceivedAt = historyOutput.timestamp!;
-			this._debug(
-				`${historyOutput.messages.length} messages received from history`,
-				historyOutput.messages
-			);
+			this._debug(`${historyOutput.messages.length} messages received from history`);
 			this._debug(`_lastMessageReceivedAt updated to ${historyOutput.timestamp}`);
 			this.emitMessages(historyOutput.messages);
 		}
@@ -599,7 +596,7 @@ export class Broadcaster {
 	// unsubscribe to all channels and stop listening to messages and status updates (clean up)
 	private unsubscribeAll() {
 		const channels = this.getSubscribedChannels();
-		this._debug("Broadcaster unsubscribing", channels);
+		this._debug("Broadcaster unsubscribing: " + JSON.stringify(channels));
 		this._broadcasterConnection!.unsubscribe(channels);
 		this._subscriptions = {};
 		if (this._tickInterval) {
@@ -616,7 +613,7 @@ export class Broadcaster {
 	private async subscriptionTimeout() {
 		delete this._statusTimeout;
 		const failedChannels = this.getUnsubscribedChannels();
-		this._debug("Subscription timed out for", failedChannels);
+		this._debug("Subscription timed out for: " + JSON.stringify(failedChannels));
 		await this.subscriptionFailure(failedChannels);
 	}
 
@@ -626,7 +623,7 @@ export class Broadcaster {
 	private async subscriptionFailure(failedChannels: string[]) {
 		const channels = failedChannels.filter(channel => !this._activeFailures.includes(channel));
 		if (channels.length === 0) {
-			this._debug("Already handling subscription failures, ignoring", failedChannels);
+			this._debug("Already handling subscription failures, ignoring: " + JSON.stringify(failedChannels));
 			return;
 		}
 		this._activeFailures = [...this._activeFailures, ...channels];
@@ -675,7 +672,7 @@ export class Broadcaster {
 			this._activeFailures = [];
 			this._subscriptionsPending = false;
 			if (this.getSubscribedChannels().length > 0) {
-				this._debug("Subscription successful", this.getSubscribedChannels());
+				this._debug("Subscription successful: " + JSON.stringify(this.getSubscribedChannels()));
 				this._lastSuccessfulSubscription = Date.now();
 				this._numResubscribes = 0;
 			}
@@ -691,7 +688,7 @@ export class Broadcaster {
 
 	// emit a status update to the client, with channels of interest optionally specified
 	private emitStatus(status: BroadcasterStatusType, channels?: string[], reconnected?: boolean) {
-		this._debug(`Emitting status ${status}`, channels);
+		this._debug(`Emitting status ${status}: ` + JSON.stringify(channels));
 		this._statusEmitter.fire({
 			status: status,
 			channels: channels,
@@ -760,7 +757,7 @@ export class Broadcaster {
 		channels.forEach(channel => {
 			this._subscriptions[channel].subscribed = false;
 		});
-		this._debug("Resubscribing to", channels);
+		this._debug("Resubscribing to: " + JSON.stringify(channels));
 		// this._pubnub!.unsubscribeAll();
 		this._subscriptionsPending = true;
 		// also drain the queue and add any queued channels to the list, since we're
