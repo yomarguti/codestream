@@ -54,7 +54,7 @@ export function HeadshotName(props: HeadshotNameProps) {
 				<HeadshotWrapper>
 					<Headshot person={person} size={props.size || 20} className={props.className} />
 				</HeadshotWrapper>
-				{person.username}
+				<span className="headshot-name">{person.username}</span>
 			</Root>
 			&nbsp;
 		</>

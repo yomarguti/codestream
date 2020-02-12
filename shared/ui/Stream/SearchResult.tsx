@@ -42,22 +42,31 @@ const RootTR = styled.tr`
 			transform: scale(1.25);
 		}
 	}
+	// title & info
 	td:nth-child(2) {
 		vertical-align: top;
 		padding: 5px;
 	}
+	// headshots (which have right padding)
 	td:nth-child(3) {
 		text-align: left;
 		padding: 5px 0 0 0;
 	}
+	// comments
 	td:nth-child(4) {
 		white-space: nowrap;
 		text-align: center;
-		padding: 5px 10px 5px 5px;
+		padding: 5px 10px 5px 0;
 	}
 	td {
 		@media only screen and (max-width: 430px) {
 			font-size: 12px;
+			//${HeadshotName} {
+			//	padding-right: 5px;
+			//}
+			.headshot-name {
+				display: none;
+			}
 		}
 		@media only screen and (max-width: 350px) {
 			font-size: 11px;
