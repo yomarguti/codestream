@@ -5,7 +5,8 @@ import Icon from "../Icon";
 import Menu from "../Menu";
 import { mapFilter } from "@codestream/webview/utils";
 
-// This implementation isn't quite ideal. The <Menu/> should appear below the caret button as if they are connected
+// This implementation isn't quite ideal.
+// [The <Menu/> should appear below the caret button as if they are connected -this part is done now -Pez]
 // The api for consumers could probably be better, but it's only used in the review component for now
 
 export interface DropdownButtonProps extends ButtonProps {
