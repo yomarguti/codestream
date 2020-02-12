@@ -1,5 +1,6 @@
 "use strict";
 import { CodeStreamApiProvider } from "api/codestream/codestreamApi";
+import { ParsedDiff } from "diff";
 import * as fs from "fs";
 import { groupBy, last, orderBy } from "lodash-es";
 import { Range, TextDocumentIdentifier } from "vscode-languageserver";
@@ -937,20 +938,38 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				? pushedCommit.sha
 				: await git.getParentCommit(scm.repoPath, scm.commits[scm.commits.length - 1].sha);
 
-			// figure out the set of diffs from the baseSha to the start of this review
-			// so we can show the left side of the difftool
-			// filter out excluded files from the diffs and modified files
-			const leftDiffs = (
-				await git.getDiffs(scm.repoPath, false, false, baseSha, startCommit)
-			).filter(diff => diff.newFileName && !excludedFiles.includes(diff.newFileName));
+			if (baseSha == null) {
+				throw new Error("Could not determine oldest pushed commit for review creation");
+			}
 
-			// get the diffs from the baseSha+leftDiffs to current (what was requested
-			// in the review)
-			const rightDiffs = startCommit
-				? (await git.getDiffs(scm.repoPath, includeSaved, includeStaged, startCommit)).filter(
-						diff => diff.newFileName && !excludedFiles.includes(diff.newFileName)
-				  )
-				: undefined;
+			const oldestCommitInReview = commits[commits.length - 1];
+			const newestCommitInReview = commits[0];
+
+			let leftBaseSha: string;
+			let leftDiffs: ParsedDiff[];
+			if (oldestCommitInReview.localOnly) {
+				leftBaseSha = baseSha;
+				leftDiffs = (await git.getDiffs(scm.repoPath, false, false, baseSha, startCommit)).filter(
+					diff => diff.newFileName && !excludedFiles.includes(diff.newFileName)
+				);
+			} else {
+				leftBaseSha = oldestCommitInReview.sha;
+				leftDiffs = [];
+			}
+
+			let rightBaseSha: string;
+			let rightDiffs: ParsedDiff[];
+			if (newestCommitInReview.localOnly) {
+				rightBaseSha = baseSha;
+				rightDiffs = (await git.getDiffs(scm.repoPath, includeSaved, includeStaged, baseSha)).filter(
+					diff => diff.newFileName && !excludedFiles.includes(diff.newFileName)
+			  	);
+			} else {
+				rightBaseSha = newestCommitInReview.sha;
+				rightDiffs = (await git.getDiffs(scm.repoPath, includeSaved, includeStaged, newestCommitInReview.sha)).filter(
+					diff => diff.newFileName && !excludedFiles.includes(diff.newFileName)
+			  	);
+			}
 
 			// WTF typescript, this is defined above
 			if (reviewRequest.reviewChangesets && baseSha) {
@@ -962,7 +981,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					includeSaved,
 					includeStaged,
 					remotes,
-					diffs: { baseSha, leftDiffs, rightDiffs }
+					diffs: { leftBaseSha, leftDiffs, rightBaseSha, rightDiffs }
 				});
 			}
 			/*for (const patch of localDiffs) {

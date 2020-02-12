@@ -159,14 +159,10 @@ export interface ReviewChangesetFileInfo {
 }
 
 export interface CSReviewDiffs {
-	// the base sha of the left diffset, which represents the most
-	// recent pushed commit
-	baseSha: string;
-	// diffs to apply to bsaeSha to render the left side of the diffview
+	leftBaseSha: string;
 	leftDiffs: ParsedDiff[];
-
-	// diffs to apply on top of leftDiffs to render on the right side of the diffview
-	rightDiffs?: ParsedDiff[];
+	rightBaseSha: string;
+	rightDiffs: ParsedDiff[];
 }
 
 export interface CSReviewChangesetBase {

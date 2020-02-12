@@ -2,6 +2,7 @@
 import { applyPatch, ParsedDiff } from "diff";
 import * as path from "path";
 import { URI } from "vscode-uri";
+import { MessageType } from "../api/apiProvider";
 import { SessionContainer } from "../container";
 import {
 	FetchReviewsRequest,
@@ -13,14 +14,13 @@ import {
 	GetReviewRequest,
 	GetReviewRequestType,
 	GetReviewResponse,
-	UpdateReviewRequestType,
 	UpdateReviewRequest,
+	UpdateReviewRequestType,
 	UpdateReviewResponse
 } from "../protocol/agent.protocol";
 import { CSReview, CSReviewDiffs } from "../protocol/api.protocol";
 import { log, lsp, lspHandler } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
-import { MessageType } from "../api/apiProvider";
 
 @lsp
 export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
@@ -67,7 +67,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		if (!changeset) throw new Error(`Could not find changeset with repoId ${request.repoId}`);
 
 		const diffs = await this.getDiffs(request.reviewId, request.repoId, request.path);
-		const diff = diffs.leftDiffs.find(d => d.newFileName === request.path);
+		const leftDiff = diffs.leftDiffs.find(d => d.newFileName === request.path);
+		const rightDiff = diffs.rightDiffs?.find(d => d.newFileName === request.path);
 
 		const repo = await git.getRepositoryById(request.repoId);
 		if (!repo) {
@@ -76,17 +77,14 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 		const filePath = path.join(repo.normalizedPath, request.path);
 
-		// MARCELO FIXME
-		const baseSha = await git.getParentCommit(repo.normalizedPath, changeset.commits[0].sha);
-
-		const baseContents =
-			baseSha !== undefined ? (await git.getFileContentForRevision(filePath, baseSha)) || "" : "";
-		const pushedContents = (await git.getFileContentForRevision(filePath, diffs.baseSha)) || "";
-		const headContents = diff !== undefined ? applyPatch(pushedContents, diff) : pushedContents;
+		const leftBaseContents = (await git.getFileContentForRevision(filePath, diffs.leftBaseSha)) || "";
+		const leftContents = leftDiff !== undefined ? applyPatch(leftBaseContents, leftDiff) : leftBaseContents;
+		const rightBaseContents = diffs.leftBaseSha === diffs.rightBaseSha ? leftBaseContents : (await git.getFileContentForRevision(filePath, diffs.rightBaseSha) || "");
+		const rightContents = rightDiff !== undefined ? applyPatch(rightBaseContents, rightDiff) : rightBaseContents;
 
 		return {
-			base: baseContents,
-			head: headContents
+			base: leftContents,
+			head: rightContents
 		};
 	}
 
