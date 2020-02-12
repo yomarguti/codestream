@@ -130,7 +130,6 @@ export class Broadcaster {
 	private _aborted: boolean = false;
 	private _numResubscribes: number = 0;
 	private _debug: (msg: string, info?: any) => void = () => {};
-	private _catchingUpSince: number = 0;
 	private _activeFailures: string[] = [];
 	private _messagesReceived: { [key: string]: number } = {};
 
@@ -431,8 +430,7 @@ export class Broadcaster {
 	// all channels that have been requested, catch up on any missed history and emit
 	// a Connected event when done
 	private setConnected(channels: string[]) {
-		this._debug("These channels are connected: ", JSON.stringify(channels));
-		const newlyConnected: string[] = [];
+		this._debug("These channels are connected: " + JSON.stringify(channels));
 		for (const channel of channels) {
 			if (!this._subscriptions[channel] || !this._subscriptions[channel].subscribed) {
 				if (!this._subscriptions[channel]) {
@@ -440,16 +438,15 @@ export class Broadcaster {
 				} else {
 					this._subscriptions[channel].subscribed = true;
 				}
-				newlyConnected.push(channel);
 			}
 		}
 		if (this.getUnsubscribedChannels().length === 0) {
 			this._debug("No more unsubscribed channels");
 			clearTimeout(this._statusTimeout!);
 			delete this._statusTimeout;
+			this._debug("Catching up on all channels");
+			this.catchUp();
 		}
-		this._debug("Catching up on these channels: " + JSON.stringify(newlyConnected));
-		this.catchUp(newlyConnected);
 	}
 
 	// force-set the last message received timestamp, for testing catch-up
@@ -457,42 +454,35 @@ export class Broadcaster {
 		this._lastMessageReceivedAt = lastMessageReceivedAt;
 	}
 
-	// catch up on missed history, while disconnected
-	private async catchUp(channels: string[]) {
+	// catch up on missed history for all subscribed channels
+	private async catchUp() {
+		const channels = this.getSubscribedChannels();
+		if (channels.length === 0) {
+			this._debug("No channels to catch up with");
+			this.subscribed();
+			return;
+		}
+
 		// catch up since the last message received, or, if we are caught in a loop
 		// of trying to catch up already, continue to catch up from that point
 		let since = 0;
-		if (this._catchingUpSince > 0) {
-			since = this._catchingUpSince;
-			this._debug(`Already catching up since ${this._catchingUpSince}`);
-		} else if (this._lastMessageReceivedAt > 0) {
+		if (this._lastMessageReceivedAt > 0) {
 			since = this._lastMessageReceivedAt - THRESHOLD_BUFFER;
 			this._debug(`Last message was recevied at ${this._lastMessageReceivedAt}`);
-		}
-		if (!since) {
+		} else {
 			// assume a fresh session, with no catch up necessary
 			this._debug("No messages have been received yet, assume fresh session");
 			this._lastMessageReceivedAt = Date.now();
-			return this.subscribed();
+			this.subscribed();
+			return;
 		}
+
 		if (Date.now() - since > THRESHOLD_FOR_CATCHUP) {
 			// if it's been too long, we don't want to process a whole ton of messages,
 			// and in any case we only retain messages for one month ... so better to
 			// force the client to initiate a fresh session
 			this._debug("Been away for too long, forcing reset");
-			this._catchingUpSince = 0;
 			return this.reset();
-		}
-
-		if (channels.length === 0) {
-			this._debug("No channels to catch up with");
-			if (this.getUnsubscribedChannels().length === 0) {
-				this._debug("And no channels at all, no catch-up is needed");
-				// if no channels, we just assume we're fully subscribed
-				this._catchingUpSince = 0;
-				this.subscribed();
-			}
-			return;
 		}
 
 		// fetch history since the last message received
@@ -529,7 +519,6 @@ export class Broadcaster {
 
 		// nothing left to do ... we are successfully subscribed to all channels!
 		this._debug("Caught up!");
-		this._catchingUpSince = 0;
 		this.subscribed();
 	}
 
@@ -589,7 +578,7 @@ export class Broadcaster {
 			// message history
 			this._debug("Subscriptions confirmed, reconnect and catch up...");
 			this._broadcasterConnection!.reconnect();
-			this.catchUp(this.getSubscribedChannels());
+			this.catchUp();
 		}
 	}
 
