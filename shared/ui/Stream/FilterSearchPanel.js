@@ -96,7 +96,7 @@ const SavedFilter = styled.div`
 	}
 	.icon.gear {
 		display: inline-block;
-		padding-left: 5px;
+		padding-left: 3px;
 		visibility: hidden;
 		opacity: 0.5;
 		cursor: pointer;

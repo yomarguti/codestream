@@ -68,11 +68,11 @@ export default class Menu extends Component {
 				else if (left < 10) this._div.style.left = "10px";
 				// normal case: reposition centrally
 				else this._div.style.left = left + "px";
-			} else if (align === "dropdownRight") {
+			} else if (align === "dropdownRight" || align === "bottomRight") {
 				this._div.style.top = rect.bottom - 1 + "px";
 				const left = rect.right - this._div.offsetWidth + parseFloat(computedStyle.paddingRight);
 				this._div.style.left = left + "px";
-			} else if (align === "dropdownLeft") {
+			} else if (align === "dropdownLeft" || align === "botomLeft") {
 				this._div.style.top = rect.bottom - 1 + "px";
 				const left = rect.left - parseFloat(computedStyle.paddingRight);
 				this._div.style.left = left + "px";

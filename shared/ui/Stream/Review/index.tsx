@@ -142,7 +142,11 @@ const BaseReview = (props: BaseReviewProps) => {
 								label: (
 									<>
 										Create working tree &nbsp;
-										<Icon name="info" title="FIXME -- explain how this works" />
+										<Icon
+											name="info"
+											title="FIXME -- explain how this works"
+											placement="bottomRight"
+										/>
 									</>
 								),
 								action: () => dispatch(setReviewStatus(props.review.id, "rejected"))
