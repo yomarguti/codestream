@@ -22,7 +22,9 @@ import {
 	HeaderActions,
 	ActionButton,
 	MetaDescriptionForAssignees,
-	MetaAssignee
+	MetaAssignee,
+	MetaRow,
+	MetaDescriptionForTags
 } from "../Codemark/BaseCodemark";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { CSUser, CSReview } from "@codestream/protocols/api";
@@ -32,7 +34,7 @@ import { useMarkdownifyToHtml } from "../Markdowner";
 import Icon from "../Icon";
 import { SmartFormattedList } from "../SmartFormattedList";
 import Tooltip from "../Tooltip";
-import { capitalize, replaceHtml, emptyArray } from "@codestream/webview/utils";
+import { capitalize, replaceHtml, emptyArray, mapFilter } from "@codestream/webview/utils";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "../..";
 import { saveReviews } from "@codestream/webview/store/reviews/actions";
@@ -44,11 +46,16 @@ import { ReviewShowDiffRequestType } from "@codestream/protocols/webview";
 import MessageInput from "../MessageInput";
 import styled from "styled-components";
 import Button from "../Button";
-import { getTeamMates, findMentionedUserIds } from "@codestream/webview/store/users/reducer";
+import {
+	getTeamMates,
+	findMentionedUserIds,
+	getTeamTagsHash
+} from "@codestream/webview/store/users/reducer";
 import { createPost, setReviewStatus } from "../actions";
 import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
 import { Reply } from "../Posts/Reply";
 import { DropdownButton } from "./DropdownButton";
+import Tag from "../Tag";
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
@@ -58,6 +65,7 @@ export interface BaseReviewProps extends CardProps {
 	collapsed?: boolean;
 	isFollowing?: boolean;
 	reviewers?: CSUser[];
+	tags?: { id: string }[];
 	renderReplyInput?: () => React.ReactNode;
 	renderFooter?: (footer: typeof CardFooter) => React.ReactNode;
 }
@@ -76,6 +84,7 @@ const BaseReview = (props: BaseReviewProps) => {
 	const dispatch = useDispatch();
 
 	const markdownifyToHtml = useMarkdownifyToHtml();
+	const hasTags = props.tags && props.tags.length > 0;
 	const hasReviewers = props.reviewers != null && props.reviewers.length > 0;
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter);
 
@@ -192,24 +201,38 @@ const BaseReview = (props: BaseReviewProps) => {
 					/>
 				</Title>
 				<MetaSection>
-					{!props.collapsed && hasReviewers && (
-						<Meta>
-							<MetaLabel>Reviewers</MetaLabel>
-							<MetaDescriptionForAssignees>
-								{props.reviewers!.map(reviewer => (
-									<MetaAssignee key={reviewer.id}>
-										<Headshot person={reviewer as any} size={18} />
-										<span
-											className={cx({
-												"at-mention me": reviewer.id === props.currentUserId
-											})}
-										>
-											{reviewer.username}
-										</span>
-									</MetaAssignee>
-								))}
-							</MetaDescriptionForAssignees>
-						</Meta>
+					{!props.collapsed && (hasTags || hasReviewers) && (
+						<MetaRow>
+							{hasTags && (
+								<Meta>
+									<MetaLabel>Tags</MetaLabel>
+									<MetaDescriptionForTags>
+										{props.tags!.map(tag => (
+											<Tag tag={tag} key={tag.id} />
+										))}
+									</MetaDescriptionForTags>
+								</Meta>
+							)}
+							{hasReviewers && (
+								<Meta>
+									<MetaLabel>Reviewers</MetaLabel>
+									<MetaDescriptionForAssignees>
+										{props.reviewers!.map(reviewer => (
+											<MetaAssignee key={reviewer.id}>
+												<Headshot person={reviewer as any} size={18} />
+												<span
+													className={cx({
+														"at-mention me": reviewer.id === props.currentUserId
+													})}
+												>
+													{reviewer.username}
+												</span>
+											</MetaAssignee>
+										))}
+									</MetaDescriptionForAssignees>
+								</Meta>
+							)}
+						</MetaRow>
 					)}
 					{props.review.text && (
 						<Meta>
@@ -275,6 +298,7 @@ const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 						/>
 					</span>
 				)}
+				{props.tags && props.tags.map(tag => <Tag tag={tag} key={tag.id} />)}
 				{props.reviewers != null &&
 					props.reviewers.map(reviewer => (
 						<Tooltip
@@ -404,9 +428,15 @@ const ReviewForReview = (props: PropsWithReview) => {
 					: emptyArray,
 			teamMates: getTeamMates(state),
 			replies: props.collapsed ? emptyArray : getThreadPosts(state, review.streamId, review.postId),
-			allUsers: state.users
+			allUsers: state.users,
+			teamTagsById: getTeamTagsHash(state)
 		};
 	}, shallowEqual);
+
+	const tags = React.useMemo(
+		() => (review.tags ? mapFilter(review.tags, id => derivedState.teamTagsById[id]) : emptyArray),
+		[props.review, derivedState.teamTagsById]
+	);
 
 	let repoNames = React.useMemo(() => {
 		const names = new Set<string>();
@@ -447,6 +477,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 			author={derivedState.author}
 			review={props.review}
 			repoNames={repoNames}
+			tags={tags}
 			isFollowing={derivedState.userIsFollowing}
 			reviewers={derivedState.reviewers}
 			currentUserId={derivedState.currentUser.id}

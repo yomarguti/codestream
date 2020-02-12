@@ -5,7 +5,7 @@ import {
 	FollowCodemarkRequestType
 } from "@codestream/protocols/agent";
 import styled from "styled-components";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector, useDispatch, shallowEqual } from "react-redux";
 import { CodeStreamState } from "@codestream/webview/store";
 import { getCodemark } from "@codestream/webview/store/codemarks/reducer";
 import { getTeamTagsHash } from "@codestream/webview/store/users/reducer";
@@ -106,7 +106,7 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 			followingEnabled: state.apiVersioning.apiCapabilities.follow != undefined,
 			userIsFollowingCodemark: (codemark.followerIds || []).includes(state.session.userId!)
 		};
-	});
+	}, shallowEqual);
 	// this is to try and figure out why and when this error might occur
 	React.useEffect(() => {
 		if (derivedState.author == undefined) {

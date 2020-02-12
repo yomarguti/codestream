@@ -397,7 +397,7 @@ export const MetaSectionCollapsed = styled.div`
 	}
 `;
 
-const MetaRow = styled.div`
+export const MetaRow = styled.div`
 	display: flex;
 	flex-flow: row wrap;
 	${Meta} {
@@ -428,7 +428,7 @@ export const MetaDescriptionForAssignees = styled.div`
 	}
 `;
 
-const MetaDescriptionForTags = styled.div`
+export const MetaDescriptionForTags = styled.div`
 	display: flex;
 	flex-flow: row wrap;
 	> *:not(:last-child) {
