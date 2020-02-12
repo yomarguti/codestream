@@ -9,7 +9,7 @@ import { mapFilter } from "@codestream/webview/utils";
 // The api for consumers could probably be better, but it's only used in the review component for now
 
 export interface DropdownButtonProps extends ButtonProps {
-	items: { label: string; action: () => void }[];
+	items: { label: any; action: () => void }[];
 }
 
 export function DropdownButton(props: DropdownButtonProps) {
@@ -25,6 +25,7 @@ export function DropdownButton(props: DropdownButtonProps) {
 	);
 
 	const maybeToggleMenu = action => {
+		console.log("ACTION IS: ", action);
 		if (action !== "noop") toggleMenu(action);
 	};
 
@@ -38,7 +39,7 @@ export function DropdownButton(props: DropdownButtonProps) {
 			</StyledButton>
 			{menuIsOpen && buttonRef.current && (
 				<Menu
-					align="bottom"
+					align="dropdownRight"
 					action={maybeToggleMenu}
 					target={buttonRef.current}
 					items={items}
@@ -51,11 +52,19 @@ export function DropdownButton(props: DropdownButtonProps) {
 
 const Root = styled.div`
 	display: inline;
+	button + button {
+		border-left: 1px solid transparent !important;
+	}
+	// two dropdowns in a row
+	& + & {
+		padding-left: 10px;
+	}
 `;
 
 const StyledButton = styled(Button)`
 	border: 1px solid ${props => props.theme.colors.baseBorder} !important;
 	background: transparent !important;
+	color: var(--text-color) !important;
 	&:hover {
 		color: var(--button-foreground-color) !important;
 		background: var(--button-background-color) !important;

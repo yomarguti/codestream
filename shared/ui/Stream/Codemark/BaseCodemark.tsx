@@ -480,6 +480,7 @@ export const ActionButton = styled.div`
 	padding: 2px 10px;
 	cursor: pointer;
 	color: var(--text-color);
+	font-weight: normal;
 	&:hover {
 		color: var(--button-foreground-color);
 		background: var(--button-background-color);

@@ -131,6 +131,27 @@ const BaseReview = (props: BaseReviewProps) => {
 					<DropdownButton
 						items={[
 							{
+								label: "Review Changes",
+								action: () => startReview()
+							},
+							{
+								label: "Visual Inspection",
+								action: () => startReview()
+							},
+							{
+								label: (
+									<>
+										Create working tree &nbsp;
+										<Icon name="info" />
+									</>
+								),
+								action: () => dispatch(setReviewStatus(props.review.id, "rejected"))
+							}
+						]}
+					/>
+					<DropdownButton
+						items={[
+							{
 								label: "Approve",
 								action: () => dispatch(setReviewStatus(props.review.id, "closed"))
 							},
@@ -225,11 +246,6 @@ const BaseReview = (props: BaseReviewProps) => {
 						</Meta>
 					)*/}
 				</MetaSection>
-				{!props.collapsed && (
-					<Button className="control-button" onClick={startReview}>
-						Review Changes
-					</Button>
-				)}
 				{props.collapsed && renderMetaSectionCollapsed(props)}
 				{!props.collapsed && props.renderReplyInput != null && (
 					<ComposeWrapper>{props.renderReplyInput()}</ComposeWrapper>

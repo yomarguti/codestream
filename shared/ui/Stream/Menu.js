@@ -52,6 +52,7 @@ export default class Menu extends Component {
 		if (this.props && this.props.target) {
 			const align = this.props.align;
 			const rect = this.props.target.getBoundingClientRect();
+			var computedStyle = window.getComputedStyle(this.props.target);
 			this._div.style.top =
 				this.props.valign === "bottom" ? rect.bottom + 10 + "px" : rect.top + "px";
 
@@ -67,6 +68,14 @@ export default class Menu extends Component {
 				else if (left < 10) this._div.style.left = "10px";
 				// normal case: reposition centrally
 				else this._div.style.left = left + "px";
+			} else if (align === "dropdownRight") {
+				this._div.style.top = rect.bottom - 1 + "px";
+				const left = rect.right - this._div.offsetWidth + parseFloat(computedStyle.paddingRight);
+				this._div.style.left = left + "px";
+			} else if (align === "dropdownLeft") {
+				this._div.style.top = rect.bottom - 1 + "px";
+				const left = rect.left - parseFloat(computedStyle.paddingRight);
+				this._div.style.left = left + "px";
 			} else {
 				// right
 				const left = rect.right - this._div.offsetWidth + 5;
@@ -228,9 +237,10 @@ export default class Menu extends Component {
 
 	renderMenu = (items, parentItem) => {
 		let itemsToRender = this.filterItems(items);
+		const dropdown = (this.props.align || "").match(/^dropdown/);
 
 		return (
-			<div className="menu-popup-body">
+			<div className={createClassString("menu-popup-body", { dropdown })}>
 				{this.props.title && !parentItem && (
 					<h3>
 						{this.props.title}
