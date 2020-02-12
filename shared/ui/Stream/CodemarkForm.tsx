@@ -93,7 +93,7 @@ interface Props extends ConnectedProps {
 	streamId: string;
 	collapseForm?: Function;
 	onSubmit: (attributes: NewCodemarkAttributes, event?: React.SyntheticEvent) => any;
-	onClickClose(): any;
+	onClickClose(skipConfirmation?: boolean): any;
 	openCodemarkForm?(type: string): any;
 	slackInfo?: {};
 	codeBlock?: GetRangeScmInfoResponse;
@@ -1560,9 +1560,10 @@ class CodemarkForm extends React.Component<Props, State> {
 		};
 	}
 
-	cancelCompose() {
-		if (this.props.onClickClose) this.props.onClickClose();
-	}
+	cancelCompose = () => {
+		// skip confirmation
+		if (this.props.onClickClose) this.props.onClickClose(true);
+	};
 
 	render() {
 		const { codeBlocks } = this.state;
@@ -1573,7 +1574,19 @@ class CodemarkForm extends React.Component<Props, State> {
 		// if you are conducting a review, and somehow are able to try to
 		// create an issue or a permalink, stop the user from doing that
 		if (commentType !== "comment" && activeReviewId) {
-			return <Modal onClose={this.cancelCompose}>sorry buddy can't do that</Modal>;
+			return (
+				<Modal onClose={this.cancelCompose} verticallyCenter>
+					<div style={{ width: "20em", fontSize: "larger", margin: "0 auto" }}>
+						Sorry, you can't add an issue while doing a review. Please create a comment with a
+						"required change" instead.
+						<div className="button-group one-button">
+							<Button className="control-button" onClick={this.cancelCompose}>
+								OK
+							</Button>
+						</div>
+					</div>
+				</Modal>
+			);
 		}
 
 		if (this.props.multiLocation) {
@@ -1811,7 +1824,7 @@ class CodemarkForm extends React.Component<Props, State> {
 									}}
 									className="control-button cancel"
 									type="submit"
-									onClick={this.props.onClickClose}
+									onClick={() => this.props.onClickClose()}
 								>
 									{this.state.copied ? "Close" : "Cancel"}
 								</Button>

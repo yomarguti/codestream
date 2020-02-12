@@ -37,8 +37,21 @@ const ModalWrapper = styled.div`
 	& > div {
 		height: 100%;
 		padding: 25px 20px;
+
+		&.vcenter {
+			height: inherit;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			min-width: 350px;
+			max-width: 450px;
+			margin: 0 auto;
+			padding: 0 20px;
+		}
 	}
 `;
+
+const VerticallyCentered = styled.div``;
 
 interface ModalContextType {
 	zIndex: number;
@@ -50,6 +63,7 @@ export const ModalContext = React.createContext<ModalContextType>({
 
 export interface ModalProps {
 	onClose: () => void;
+	verticallyCenter?: boolean;
 }
 
 export function Modal(props: PropsWithChildren<ModalProps>) {
@@ -73,7 +87,7 @@ export function Modal(props: PropsWithChildren<ModalProps>) {
 		<ModalContext.Provider value={context}>
 			<ModalWrapper>
 				<CancelButton onClick={props.onClose} />
-				<div>{props.children}</div>
+				<div className={props.verticallyCenter ? "vcenter" : ""}>{props.children}</div>
 			</ModalWrapper>
 		</ModalContext.Provider>,
 		modalRoot

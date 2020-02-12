@@ -886,8 +886,10 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		} else this.setState({ newCodemarkAttributes: undefined });
 	};
 
-	closeCodemarkFormWithConfirmation = () => {
+	closeCodemarkFormWithConfirmation = (skipConfirmation?) => {
 		const { newCodemarkAttributes } = this.state;
+		if (skipConfirmation) return this.closeCodemarkForm();
+
 		if (newCodemarkAttributes && newCodemarkAttributes.type === "link")
 			return this.closeCodemarkForm();
 

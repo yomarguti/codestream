@@ -2416,7 +2416,6 @@ const mapStateToProps = state => {
 		name: getDMName(stream, teamMembersById, session.userId)
 	}));
 
-	console.log("CONTEXT IS: ", context.activeReviewId);
 	return {
 		inSharingModel: state.featureFlags.sharing,
 		apiCapabilities: apiVersioning.apiCapabilities,
