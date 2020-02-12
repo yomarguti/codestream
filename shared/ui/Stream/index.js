@@ -803,13 +803,8 @@ export class SimpleStream extends Component {
 					>
 						<Icon name="search" title="Filter &amp; Search Codemarks" placement="bottomRight" />
 					</label>
-					<label>
-						<Icon
-							onClick={this.toggleMenu}
-							name="kebab-horizontal"
-							title="More..."
-							placement="bottomRight"
-						/>
+					<label onClick={this.toggleMenu}>
+						<Icon name="kebab-horizontal" title="More..." placement="bottomRight" />
 						{this.renderMenu()}
 					</label>
 				</div>
