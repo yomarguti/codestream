@@ -60,7 +60,7 @@ import Tag from "../Tag";
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
 	author: CSUser;
-	repoNames: string[];
+	repoInfo: { repoName: string; branch: string }[];
 	currentUserId?: string;
 	collapsed?: boolean;
 	isFollowing?: boolean;
@@ -75,6 +75,21 @@ const ComposeWrapper = styled.div.attrs(() => ({
 }))`
 	&&& {
 		padding: 0 !important;
+	}
+`;
+
+const MetaRepoInfo = styled.div`
+	display: flex;
+	flex-direction: column;
+	&:not(:last) {
+		margin-bottom: 2px;
+	}
+`;
+
+const RepoInfo = styled.div`
+	display: flex;
+	*:first-child {
+		margin-right: 5px;
 	}
 `;
 
@@ -254,9 +269,19 @@ const BaseReview = (props: BaseReviewProps) => {
 					<Meta>
 						<MetaLabel>Repositories</MetaLabel>
 						<MetaDescription>
-							<Icon name="repo" />
 							<MarkdownText>
-								<SmartFormattedList value={props.repoNames} />
+								<MetaDescriptionForAssignees>
+									{props.repoInfo.map(r => (
+										<MetaRepoInfo>
+											<RepoInfo>
+												<Icon name="repo" /> {r.repoName}
+											</RepoInfo>
+											<RepoInfo>
+												<Icon name="git-branch" /> {r.branch}
+											</RepoInfo>
+										</MetaRepoInfo>
+									))}
+								</MetaDescriptionForAssignees>
 							</MarkdownText>
 						</MetaDescription>
 					</Meta>
@@ -438,14 +463,16 @@ const ReviewForReview = (props: PropsWithReview) => {
 		[props.review, derivedState.teamTagsById]
 	);
 
-	let repoNames = React.useMemo(() => {
-		const names = new Set<string>();
+	const repoInfo = React.useMemo(() => {
+		const reviewRepos = new Map<string, any>();
 
 		for (let changeset of review.reviewChangesets) {
 			const repo = derivedState.repos[changeset.repoId];
-			if (repo) names.add(repo.name);
+			if (repo && !reviewRepos.has(changeset.repoId))
+				reviewRepos.set(changeset.repoId, { repoName: repo.name, branch: changeset.branch });
 		}
-		return [...names];
+
+		return [...reviewRepos.values()];
 	}, [review, derivedState.repos]);
 
 	const renderFooter =
@@ -476,7 +503,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 			{...baseProps}
 			author={derivedState.author}
 			review={props.review}
-			repoNames={repoNames}
+			repoInfo={repoInfo}
 			tags={tags}
 			isFollowing={derivedState.userIsFollowing}
 			reviewers={derivedState.reviewers}
