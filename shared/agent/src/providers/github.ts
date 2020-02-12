@@ -217,8 +217,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				c.pullRequest.isOpen &&
 				c.pullRequest.targetBranch !== trackingBranch?.shortName &&
 				c.pullRequest.sourceBranch !== trackingBranch?.shortName
-			)
+			) {
 				continue;
+			}
 
 			let rev;
 			let line;

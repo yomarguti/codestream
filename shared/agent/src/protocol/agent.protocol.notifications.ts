@@ -6,17 +6,17 @@ import { CodemarkPlus } from "./agent.protocol.codemarks";
 import { ThirdPartyProviders } from "./agent.protocol.providers";
 import {
 	CSApiCapabilities,
+	CSCompany,
 	CSLastReads,
 	CSMarker,
 	CSMarkerLocations,
 	CSMePreferences,
 	CSPost,
 	CSRepository,
+	CSReview,
 	CSStream,
 	CSTeam,
-	CSUser,
-	CSCompany,
-	CSReview
+	CSUser
 } from "./api.protocol";
 
 export interface RestartRequiredNotification {}

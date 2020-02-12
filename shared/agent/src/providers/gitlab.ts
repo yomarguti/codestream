@@ -236,8 +236,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				c.pullRequest.isOpen &&
 				c.pullRequest.targetBranch !== trackingBranch?.shortName &&
 				c.pullRequest.sourceBranch !== trackingBranch?.shortName
-			)
+			) {
 				continue;
+			}
 
 			const outdated = !(await git.isValidReference(repo.path, c.commit));
 

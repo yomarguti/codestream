@@ -16,8 +16,8 @@ import {
 	CSPost,
 	CSReactions,
 	CSRepository,
-	CSStream,
-	CSReview
+	CSReview,
+	CSStream
 } from "./api.protocol";
 
 export interface PostPlus extends CSPost {

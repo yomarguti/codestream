@@ -14,6 +14,7 @@ import { MarkersManager } from "./managers/markersManager";
 import { PostsManager } from "./managers/postsManager";
 import { RepositoryMappingManager } from "./managers/repositoryMappingManager";
 import { ReposManager } from "./managers/reposManager";
+import { ReviewsManager } from "./managers/reviewsManager";
 import { ScmManager } from "./managers/scmManager";
 import { StreamsManager } from "./managers/streamsManager";
 import { TeamsManager } from "./managers/teamsManager";
@@ -22,7 +23,6 @@ import { UrlManager } from "./managers/urlManager";
 import { UsersManager } from "./managers/usersManager";
 import { ThirdPartyProviderRegistry } from "./providers/registry";
 import { CodeStreamSession } from "./session";
-import { ReviewsManager } from "./managers/reviewsManager";
 
 class SessionServiceContainer {
 	private readonly _git: GitService;

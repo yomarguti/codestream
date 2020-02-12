@@ -6,8 +6,8 @@ import {
 	CSGetInviteInfoResponse,
 	CSLoginResponse,
 	CSRegisterRequest,
-	LoginResult,
-	CSSetPasswordResponse
+	CSSetPasswordResponse,
+	LoginResult
 } from "./api.protocol";
 
 export function isLoginFailResponse(

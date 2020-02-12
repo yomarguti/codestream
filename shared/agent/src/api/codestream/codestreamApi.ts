@@ -45,6 +45,10 @@ import {
 	FetchMarkersRequest,
 	FetchPostRepliesRequest,
 	FetchPostsRequest,
+	FetchReviewDiffsRequest,
+	FetchReviewDiffsResponse,
+	FetchReviewsRequest,
+	FetchReviewsResponse,
 	FetchStreamsRequest,
 	FetchTeamsRequest,
 	FetchUnreadStreamsRequest,
@@ -59,6 +63,8 @@ import {
 	GetPostsRequest,
 	GetPreferencesResponse,
 	GetRepoRequest,
+	GetReviewRequest,
+	GetReviewResponse,
 	GetStreamRequest,
 	GetTeamRequest,
 	GetUnreadsRequest,
@@ -92,17 +98,11 @@ import {
 	UpdateMarkerRequest,
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
+	UpdateReviewRequest,
 	UpdateStreamMembershipRequest,
 	UpdateTeamTagRequestType,
 	UpdateUserRequest,
-	VerifyConnectivityResponse,
-	FetchReviewsRequest,
-	FetchReviewsResponse,
-	GetReviewRequest,
-	GetReviewResponse,
-	FetchReviewDiffsRequest,
-	FetchReviewDiffsResponse,
-	UpdateReviewRequest
+	VerifyConnectivityResponse
 } from "../../protocol/agent.protocol";
 import {
 	CSAddProviderHostRequest,
@@ -151,6 +151,10 @@ import {
 	CSGetPostsResponse,
 	CSGetRepoResponse,
 	CSGetReposResponse,
+	CSGetReviewDiffsResponse,
+	CSGetReviewResponse,
+	CSGetReviewsRequest,
+	CSGetReviewsResponse,
 	CSGetStreamResponse,
 	CSGetStreamsResponse,
 	CSGetTeamResponse,
@@ -192,6 +196,8 @@ import {
 	CSUpdateMarkerResponse,
 	CSUpdatePresenceRequest,
 	CSUpdatePresenceResponse,
+	CSUpdateReviewRequest,
+	CSUpdateReviewResponse,
 	CSUpdateStreamRequest,
 	CSUpdateStreamResponse,
 	CSUpdateUserRequest,
@@ -201,13 +207,7 @@ import {
 	ProviderType,
 	StreamType,
 	TriggerMsTeamsProactiveMessageRequest,
-	TriggerMsTeamsProactiveMessageResponse,
-	CSGetReviewsRequest,
-	CSGetReviewsResponse,
-	CSGetReviewResponse,
-	CSGetReviewDiffsResponse,
-	CSUpdateReviewRequest,
-	CSUpdateReviewResponse
+	TriggerMsTeamsProactiveMessageResponse
 } from "../../protocol/api.protocol";
 import { VersionInfo } from "../../session";
 import { Functions, getProvider, log, lsp, lspHandler, Objects, Strings } from "../../system";

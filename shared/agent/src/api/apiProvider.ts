@@ -50,6 +50,10 @@ import {
 	FetchPostsResponse,
 	FetchReposRequest,
 	FetchReposResponse,
+	FetchReviewDiffsRequest,
+	FetchReviewDiffsResponse,
+	FetchReviewsRequest,
+	FetchReviewsResponse,
 	FetchStreamsRequest,
 	FetchStreamsResponse,
 	FetchTeamsRequest,
@@ -74,6 +78,8 @@ import {
 	GetPreferencesResponse,
 	GetRepoRequest,
 	GetRepoResponse,
+	GetReviewRequest,
+	GetReviewResponse,
 	GetStreamRequest,
 	GetStreamResponse,
 	GetTeamRequest,
@@ -123,19 +129,13 @@ import {
 	UpdatePreferencesResponse,
 	UpdatePresenceRequest,
 	UpdatePresenceResponse,
+	UpdateReviewRequest,
+	UpdateReviewResponse,
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipResponse,
 	UpdateUserRequest,
 	UpdateUserResponse,
-	VerifyConnectivityResponse,
-	FetchReviewsResponse,
-	FetchReviewsRequest,
-	GetReviewResponse,
-	GetReviewRequest,
-	FetchReviewDiffsRequest,
-	FetchReviewDiffsResponse,
-	UpdateReviewRequest,
-	UpdateReviewResponse
+	VerifyConnectivityResponse
 } from "../protocol/agent.protocol";
 import {
 	CSApiCapabilities,
@@ -153,12 +153,12 @@ import {
 	CSMsTeamsConversationResponse,
 	CSPost,
 	CSRepository,
+	CSReview,
 	CSTeam,
 	CSUser,
 	ProviderType,
 	TriggerMsTeamsProactiveMessageRequest,
-	TriggerMsTeamsProactiveMessageResponse,
-	CSReview
+	TriggerMsTeamsProactiveMessageResponse
 } from "../protocol/api.protocol";
 
 export type ApiProviderLoginResponse = CSLoginResponse & { token: AccessToken };

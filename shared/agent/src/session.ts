@@ -1099,8 +1099,8 @@ export class CodeStreamSession {
 		}
 	}
 
-	dispose(){
-		if(this._documentEventHandler) {
+	dispose() {
+		if (this._documentEventHandler) {
 			this._documentEventHandler.dispose();
 		}
 	}

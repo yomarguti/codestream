@@ -19,13 +19,13 @@ import {
 	CSRepository,
 	CSReview,
 	CSReviewChangeset,
+	CSReviewDiffs,
 	CSStream,
 	CSTag,
 	CSTeam,
 	CSUser,
 	ProviderType,
-	StreamType,
-	CSReviewDiffs
+	StreamType
 } from "./api.protocol.models";
 
 export * from "./api.protocol.models";
@@ -704,4 +704,4 @@ export interface TriggerMsTeamsProactiveMessageRequest {
 	codemarkId: string;
 }
 
-export interface TriggerMsTeamsProactiveMessageResponse { }
+export interface TriggerMsTeamsProactiveMessageResponse {}

@@ -299,8 +299,9 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 				c.pullRequest.isOpen &&
 				c.pullRequest.targetBranch !== trackingBranch?.shortName &&
 				c.pullRequest.sourceBranch !== trackingBranch?.shortName
-			)
+			) {
 				continue;
+			}
 
 			let markers = markersByCommit.get(c.commit);
 			if (markers === undefined) {
