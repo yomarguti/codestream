@@ -26,7 +26,6 @@ export function DropdownButton(props: DropdownButtonProps) {
 	);
 
 	const maybeToggleMenu = action => {
-		console.log("ACTION IS: ", action);
 		if (action !== "noop") toggleMenu(action);
 	};
 

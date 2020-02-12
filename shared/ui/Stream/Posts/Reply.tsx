@@ -33,6 +33,12 @@ const Root = styled.div`
 	padding-bottom: 10px;
 	display: flex;
 	flex-direction: column;
+	// not sure if there is a better way to deal with this,
+	// but if the headshot is taller than the copy (i.e. in
+	// a zero-height post such as an emote) we end up with
+	// too little padding between the reply and the one below
+	// since the other reply has a 5px extra padding from that body
+	min-height: 35px;
 	${AuthorInfo} {
 		font-weight: 700;
 	}
