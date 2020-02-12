@@ -17,8 +17,8 @@ export class ReviewDiffContentProvider implements TextDocumentContentProvider, D
 		const match = this.urlRegexp.exec(uri.toString());
 		if (match === null) return "";
 
-		const [, changesetId, repoId, version, path] = match;
-		const key = this.key(changesetId, repoId, path);
+		const [, reviewId, repoId, version, path] = match;
+		const key = this.key(reviewId, repoId, path);
 
 		const contents = this._contents.get(key);
 		if (contents === undefined) {
@@ -28,20 +28,20 @@ export class ReviewDiffContentProvider implements TextDocumentContentProvider, D
 		return (contents as any)[version] as string;
 	}
 
-	async loadContents(changesetId: string, repoId: string, path: string) {
-		const key = this.key(changesetId, repoId, path);
+	async loadContents(reviewId: string, repoId: string, path: string) {
+		const key = this.key(reviewId, repoId, path);
 		const cached = this._contents.get(key);
 
 		if (cached !== undefined) return cached;
 
-		const contents = await Container.agent.reviews.getContents(changesetId, repoId, path);
+		const contents = await Container.agent.reviews.getContents(reviewId, repoId, path);
 		this._contents.set(key, contents);
 
 		return contents;
 	}
 
-	private key(changesetId: string, repoId: string, path: string) {
-		return `${changesetId}|${repoId}|${path}`;
+	private key(reviewId: string, repoId: string, path: string) {
+		return `${reviewId}|${repoId}|${path}`;
 	}
 
 	dispose() {
