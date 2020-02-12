@@ -74,6 +74,7 @@ import { CSText } from "../src/components/CSText";
 import { NewCodemarkAttributes } from "../store/codemarks/actions";
 import { SharingControls, SharingAttributes } from "./SharingControls";
 import { SmartFormattedList } from "./SmartFormattedList";
+import { Modal } from "./Modal";
 
 export interface ICrossPostIssueContext {
 	setSelectedAssignees(any: any): void;
@@ -1559,8 +1560,21 @@ class CodemarkForm extends React.Component<Props, State> {
 		};
 	}
 
+	cancelCompose() {
+		if (this.props.onClickClose) this.props.onClickClose();
+	}
+
 	render() {
 		const { codeBlocks } = this.state;
+		const { editingCodemark, activeReviewId } = this.props;
+
+		const commentType = editingCodemark ? editingCodemark.type : this.state.type || "comment";
+
+		// if you are conducting a review, and somehow are able to try to
+		// create an issue or a permalink, stop the user from doing that
+		if (commentType !== "comment" && activeReviewId) {
+			return <Modal onClose={this.cancelCompose}>sorry buddy can't do that</Modal>;
+		}
 
 		if (this.props.multiLocation) {
 			return (
