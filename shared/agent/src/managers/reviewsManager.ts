@@ -75,12 +75,18 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			throw new Error(`Could not load repo with ID ${request.repoId}`);
 		}
 
-		const filePath = path.join(repo.normalizedPath, request.path);
+		const filePath = path.join(repo.path, request.path);
 
-		const leftBaseContents = (await git.getFileContentForRevision(filePath, diffs.leftBaseSha)) || "";
-		const leftContents = leftDiff !== undefined ? applyPatch(leftBaseContents, leftDiff) : leftBaseContents;
-		const rightBaseContents = diffs.leftBaseSha === diffs.rightBaseSha ? leftBaseContents : (await git.getFileContentForRevision(filePath, diffs.rightBaseSha) || "");
-		const rightContents = rightDiff !== undefined ? applyPatch(rightBaseContents, rightDiff) : rightBaseContents;
+		const leftBaseContents =
+			(await git.getFileContentForRevision(filePath, diffs.leftBaseSha)) || "";
+		const leftContents =
+			leftDiff !== undefined ? applyPatch(leftBaseContents, leftDiff) : leftBaseContents;
+		const rightBaseContents =
+			diffs.leftBaseSha === diffs.rightBaseSha
+				? leftBaseContents
+				: (await git.getFileContentForRevision(filePath, diffs.rightBaseSha)) || "";
+		const rightContents =
+			rightDiff !== undefined ? applyPatch(rightBaseContents, rightDiff) : rightBaseContents;
 
 		return {
 			base: leftContents,
