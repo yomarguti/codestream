@@ -32,7 +32,6 @@ import { CodeStreamState } from "@codestream/webview/store";
 import { useSelector, useDispatch, shallowEqual } from "react-redux";
 import { useMarkdownifyToHtml } from "../Markdowner";
 import Icon from "../Icon";
-import { SmartFormattedList } from "../SmartFormattedList";
 import Tooltip from "../Tooltip";
 import { capitalize, replaceHtml, emptyArray, mapFilter } from "@codestream/webview/utils";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
@@ -66,8 +65,10 @@ export interface BaseReviewProps extends CardProps {
 	isFollowing?: boolean;
 	reviewers?: CSUser[];
 	tags?: { id: string }[];
-	renderReplyInput?: () => React.ReactNode;
-	renderFooter?: (footer: typeof CardFooter) => React.ReactNode;
+	renderFooter?: (
+		footer: typeof CardFooter,
+		inputContainer?: typeof ComposeWrapper
+	) => React.ReactNode;
 }
 
 const ComposeWrapper = styled.div.attrs(() => ({
@@ -101,7 +102,7 @@ const BaseReview = (props: BaseReviewProps) => {
 	const markdownifyToHtml = useMarkdownifyToHtml();
 	const hasTags = props.tags && props.tags.length > 0;
 	const hasReviewers = props.reviewers != null && props.reviewers.length > 0;
-	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter);
+	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
 
 	const changedFiles = React.useMemo(() => {
 		const files: any[] = [];
@@ -299,9 +300,6 @@ const BaseReview = (props: BaseReviewProps) => {
 					)*/}
 				</MetaSection>
 				{props.collapsed && renderMetaSectionCollapsed(props)}
-				{!props.collapsed && props.renderReplyInput != null && (
-					<ComposeWrapper>{props.renderReplyInput()}</ComposeWrapper>
-				)}
 			</CardBody>
 			{renderedFooter}
 		</MinimumWidthCard>
@@ -477,23 +475,25 @@ const ReviewForReview = (props: PropsWithReview) => {
 
 	const renderFooter =
 		props.renderFooter ||
-		(Footer => {
+		((Footer, InputContainer) => {
 			if (props.collapsed) return null;
 			if (derivedState.replies.length === 0) return null;
 
 			return (
 				<Footer style={{ borderTop: "none", marginTop: 0 }}>
 					<MetaLabel>Activity</MetaLabel>
-					{derivedState.replies
-						.slice() // be sure to copy the array before reversing because `reverse` mutates the array
-						.reverse()
-						.map(reply => (
-							<Reply
-								key={reply.id}
-								author={derivedState.allUsers[reply.creatorId]}
-								post={reply as any}
-							/>
-						))}
+					{derivedState.replies.map(reply => (
+						<Reply
+							key={reply.id}
+							author={derivedState.allUsers[reply.creatorId]}
+							post={reply as any}
+						/>
+					))}
+					{InputContainer && (
+						<InputContainer>
+							<ReplyInput parentPostId={review.postId} streamId={review.streamId} />
+						</InputContainer>
+					)}
 				</Footer>
 			);
 		});
@@ -508,9 +508,6 @@ const ReviewForReview = (props: PropsWithReview) => {
 			isFollowing={derivedState.userIsFollowing}
 			reviewers={derivedState.reviewers}
 			currentUserId={derivedState.currentUser.id}
-			renderReplyInput={() => (
-				<ReplyInput parentPostId={review.postId} streamId={review.streamId} />
-			)}
 			renderFooter={renderFooter}
 		/>
 	);

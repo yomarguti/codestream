@@ -208,7 +208,6 @@ export class CodemarkDetails extends React.Component<Props, State> {
 						<PostList
 							onDidInitialize={this.onRepliesLoaded}
 							ref={this.postList}
-							reverse={true}
 							isActive={true}
 							hasFocus={this.props.hasFocus}
 							teammates={this.props.teammates}

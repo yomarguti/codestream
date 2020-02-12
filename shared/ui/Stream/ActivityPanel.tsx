@@ -443,9 +443,9 @@ const RepliesForActivity = (props: { parentPost?: PostPlus; pinnedReplies?: stri
 			| undefined;
 		const unreadReplies: PostPlus[] =
 			lastUnreadForStream != undefined
-				? (getThreadPosts(state, props.parentPost.streamId, props.parentPost.id)
-						.filter(post => (post as any).seqNum > lastUnreadForStream)
-						.reverse() as PostPlus[])
+				? (getThreadPosts(state, props.parentPost.streamId, props.parentPost.id).filter(
+						post => (post as any).seqNum > lastUnreadForStream
+				  ) as PostPlus[])
 				: [];
 
 		return { numberOfReplies: props.parentPost.numReplies, unreadReplies };
