@@ -1,5 +1,6 @@
 import { lastDayOfQuarter } from "date-fns";
 import * as paths from "path";
+import { uriToFilePath } from "vscode-languageserver/lib/files";
 import { URI } from "vscode-uri";
 import { Ranges } from "../api/extensions";
 import { GitCommit } from "../git/models/models";
@@ -328,7 +329,53 @@ export class ScmManager {
 
 	@lspHandler(GetRangeScmInfoRequestType)
 	@log()
-	async getRangeInfo({
+	getRangeInfo(request: GetRangeScmInfoRequest): Promise<GetRangeScmInfoResponse> {
+		if (request.uri.startsWith("codestream://")) {
+			return this.getDiffRangeInfo(request);
+		} else {
+			return this.getFileRangeInfo(request);
+		}
+	}
+
+	private async getDiffRangeInfo({
+		uri,
+		range,
+		dirty,
+		contents,
+		skipBlame
+	}: GetRangeScmInfoRequest): Promise<GetRangeScmInfoResponse> {
+		const urlRegexp = /codestream-diff:\/\/(\w+)\/(\w+)\/(\w+)\/(.+)/;
+		const { git, reviews } = SessionContainer.instance();
+
+		const match = urlRegexp.exec(uri.toString());
+		if (match == null) throw new Error(`URI ${uri} doesn't match codestream-diff format`);
+
+		const [, reviewId, repoId, version, path] = match;
+		const repo = await git.getRepositoryById(repoId);
+		if (repo == null) throw new Error(`Could not find repo with ID ${repoId}`);
+
+		const review = await reviews.getById(reviewId);
+		const changeset = review.reviewChangesets.find(c => c.repoId === repoId);
+		if (!changeset) throw new Error(`Could not find changeset with repoId ${repoId}`);
+
+		return {
+			uri,
+			range: range,
+			contents: contents!,
+			scm: {
+				file: path,
+				repoPath: repo.normalizedPath,
+				repoId,
+				revision: changeset.commits[0].sha,
+				authors: [],
+				remotes: [],
+				branch: changeset.branch
+			},
+			error: undefined
+		};
+	}
+
+	private async getFileRangeInfo({
 		uri: documentUri,
 		range,
 		dirty,

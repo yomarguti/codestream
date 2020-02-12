@@ -949,7 +949,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			let leftDiffs: ParsedDiff[];
 			if (oldestCommitInReview.localOnly) {
 				leftBaseSha = baseSha;
-				leftDiffs = (await git.getDiffs(scm.repoPath, false, false, baseSha, startCommit)).filter(
+				leftDiffs = (await git.getDiffs(scm.repoPath, false, false, baseSha, oldestCommitInReview.sha)).filter(
 					diff => diff.newFileName && !excludedFiles.includes(diff.newFileName)
 				);
 			} else {
@@ -971,6 +971,13 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			  	);
 			}
 
+			const leftToRightDiffs = (await git.getDiffs(scm.repoPath, includeSaved, includeStaged, oldestCommitInReview.sha)).filter(
+				diff => diff.newFileName && !excludedFiles.includes(diff.newFileName)
+			);
+			const newestCommitToRightDiffs = (await git.getDiffs(scm.repoPath, includeSaved, includeStaged, newestCommitInReview.sha)).filter(
+				diff => diff.newFileName && !excludedFiles.includes(diff.newFileName)
+			);
+
 			// WTF typescript, this is defined above
 			if (reviewRequest.reviewChangesets && baseSha) {
 				reviewRequest.reviewChangesets.push({
@@ -981,7 +988,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					includeSaved,
 					includeStaged,
 					remotes,
-					diffs: { leftBaseSha, leftDiffs, rightBaseSha, rightDiffs }
+					diffs: { leftBaseSha, leftDiffs, rightBaseSha, rightDiffs, leftToRightDiffs, newestCommitToRightDiffs }
 				});
 			}
 			/*for (const patch of localDiffs) {
