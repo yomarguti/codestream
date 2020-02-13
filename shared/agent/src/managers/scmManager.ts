@@ -1,9 +1,7 @@
-import { lastDayOfQuarter } from "date-fns";
 import * as paths from "path";
-import { uriToFilePath } from "vscode-languageserver/lib/files";
+import { TextDocument } from "vscode-languageserver-types";
 import { URI } from "vscode-uri";
 import { Ranges } from "../api/extensions";
-import { GitCommit } from "../git/models/models";
 import { Logger } from "../logger";
 import {
 	CoAuthors,
@@ -339,17 +337,26 @@ export class ScmManager {
 	}
 
 	private async getDiffRangeInfo({
-		uri,
+		uri: documentUri,
 		range,
 		dirty,
 		contents,
 		skipBlame
 	}: GetRangeScmInfoRequest): Promise<GetRangeScmInfoResponse> {
 		const { git, reviews } = SessionContainer.instance();
+		range = Ranges.ensureStartBeforeEnd(range);
 
-		const { reviewId, repoId, version, path } = ReviewsManager.parseUri(uri);
+		const { reviewId, repoId, version, path } = ReviewsManager.parseUri(documentUri);
 		const repo = await git.getRepositoryById(repoId);
 		if (repo == null) throw new Error(`Could not find repo with ID ${repoId}`);
+
+		const uri = URI.parse(documentUri);
+		if (contents == null) {
+			const reviewContents = await reviews.getContents({reviewId, repoId, path});
+			const versionContents = (reviewContents as any)[version] as string;
+			const document  = TextDocument.create(uri.toString(), "codestream", 0, versionContents);
+			contents = document.getText(range);
+		}
 
 		const review = await reviews.getById(reviewId);
 		const changeset = review.reviewChangesets.find(c => c.repoId === repoId);
@@ -358,7 +365,7 @@ export class ScmManager {
 		const gitRemotes = await repo.getRemotes();
 		const remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
 		return {
-			uri,
+			uri: uri.toString(),
 			range: range,
 			contents: contents!,
 			scm: {
@@ -382,10 +389,7 @@ export class ScmManager {
 		skipBlame
 	}: GetRangeScmInfoRequest): Promise<GetRangeScmInfoResponse> {
 		const cc = Logger.getCorrelationContext();
-
-		// Ensure range end is >= start
 		range = Ranges.ensureStartBeforeEnd(range);
-
 		const uri = URI.parse(documentUri);
 
 		let authors: { id: string; username: string }[] | undefined;
