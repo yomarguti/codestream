@@ -1,7 +1,7 @@
 import { CSPost } from "@codestream/protocols/api";
 import { ActionType } from "../common";
 import * as actions from "./actions";
-import { isPending, PostsActionsType, PostsState } from "./types";
+import { isPending, PostsActionsType, PostsState, Post } from "./types";
 import { sortBy as _sortBy } from "lodash-es";
 import { createSelector } from "reselect";
 import { CodeStreamState } from "..";
@@ -112,7 +112,16 @@ export const getThreadPosts = createSelector(
 	getPostsForStream,
 	(_, __, threadId: string) => threadId,
 	(posts, threadId) => {
-		return posts.filter(p => p.parentPostId === threadId);
+		const result: Post[] = [];
+
+		// HACK: 💩 don't keep this around
+		// if replying to a reply, we need to include nested replies in the thread
+		for (let post of posts) {
+			if (post.parentPostId === threadId) result.push(post);
+			else if (result.find(p => p.id === post.parentPostId)) result.push(post);
+		}
+
+		return result;
 	}
 );
 

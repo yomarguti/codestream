@@ -52,9 +52,9 @@ import {
 } from "@codestream/webview/store/users/reducer";
 import { createPost, setReviewStatus } from "../actions";
 import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
-import { Reply } from "../Posts/Reply";
 import { DropdownButton } from "./DropdownButton";
 import Tag from "../Tag";
+import { RepliesToPost } from "../Posts/RepliesToPost";
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
@@ -482,13 +482,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 			return (
 				<Footer style={{ borderTop: "none", marginTop: 0 }}>
 					<MetaLabel>Activity</MetaLabel>
-					{derivedState.replies.map(reply => (
-						<Reply
-							key={reply.id}
-							author={derivedState.allUsers[reply.creatorId]}
-							post={reply as any}
-						/>
-					))}
+					<RepliesToPost streamId={props.review.streamId} parentPostId={props.review.postId} />
 					{InputContainer && (
 						<InputContainer>
 							<ReplyInput parentPostId={review.postId} streamId={review.streamId} />

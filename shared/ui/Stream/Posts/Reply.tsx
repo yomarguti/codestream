@@ -9,10 +9,12 @@ import Icon from "../Icon";
 import { getCodemark } from "@codestream/webview/store/codemarks/reducer";
 import { CodeStreamState } from "@codestream/webview/store";
 import { useSelector } from "react-redux";
+import { emptyObject } from "@codestream/webview/utils";
 
 export interface ReplyProps {
 	author: Partial<CSUser>;
 	post: PostPlus;
+	nestedReplies?: PostPlus[];
 	renderMenu?: (target: any, onClose: () => void) => React.ReactNode;
 	className?: string;
 }
@@ -46,6 +48,14 @@ const Root = styled.div`
 	${StyledMarker} {
 		margin-left: 25px;
 	}
+
+	${KebabIcon} {
+		visibility: hidden;
+	}
+
+	&:hover ${KebabIcon} {
+		visibility: visible;
+	}
 `;
 
 export const Reply = (props: ReplyProps) => {
@@ -54,6 +64,9 @@ export const Reply = (props: ReplyProps) => {
 		target?: any;
 	}>({ open: false, target: undefined });
 
+	const allUsers = useSelector((state: CodeStreamState) =>
+		props.nestedReplies ? state.users : emptyObject
+	);
 	const codemark = useSelector((state: CodeStreamState) =>
 		getCodemark(state.codemarks, props.post.codemarkId)
 	);
@@ -114,6 +127,19 @@ export const Reply = (props: ReplyProps) => {
 					{markers}
 				</>
 			)}
+			{props.nestedReplies && props.nestedReplies.length > 0 && (
+				<>
+					{props.nestedReplies.map(r => (
+						<NestedReply author={allUsers[r.creatorId]} post={r as PostPlus} />
+					))}
+				</>
+			)}
 		</Root>
 	);
 };
+
+const NestedReply = styled(Reply)`
+	padding-top: 10px;
+	padding-left: 25px;
+	padding-bottom: 0;
+`;

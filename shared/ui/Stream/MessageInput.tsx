@@ -87,6 +87,8 @@ interface Props extends ConnectedProps {
 	toggleTag?: Function;
 	relatedCodemarkIds?: any;
 	toggleCodemark?: Function;
+	autoFocus?: boolean;
+	className?: string;
 	__onDidRender?(stuff: { [key: string]: any }): any; // HACKy: sneaking internals to parent
 }
 
@@ -139,6 +141,10 @@ export class MessageInput extends React.Component<Props, State> {
 					cursorPosition: position
 				});
 			}
+		}
+
+		if (this.props.autoFocus && this._contentEditable) {
+			this._contentEditable.htmlEl.focus();
 		}
 	}
 
