@@ -331,7 +331,7 @@ export class ScmManager {
 	@lspHandler(GetRangeScmInfoRequestType)
 	@log()
 	getRangeInfo(request: GetRangeScmInfoRequest): Promise<GetRangeScmInfoResponse> {
-		if (request.uri.startsWith("codestream://")) {
+		if (request.uri.startsWith("codestream-diff://")) {
 			return this.getDiffRangeInfo(request);
 		} else {
 			return this.getFileRangeInfo(request);
@@ -355,6 +355,8 @@ export class ScmManager {
 		const changeset = review.reviewChangesets.find(c => c.repoId === repoId);
 		if (!changeset) throw new Error(`Could not find changeset with repoId ${repoId}`);
 
+		const gitRemotes = await repo.getRemotes();
+		const remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
 		return {
 			uri,
 			range: range,
@@ -365,7 +367,7 @@ export class ScmManager {
 				repoId,
 				revision: changeset.commits[0].sha,
 				authors: [],
-				remotes: [],
+				remotes,
 				branch: changeset.branch
 			},
 			error: undefined
