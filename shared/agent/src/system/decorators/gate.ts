@@ -25,15 +25,23 @@ export function gate() {
 
 			let promise = this[gateKey];
 			if (promise === undefined) {
-				const result = fn!.apply(this, args);
-				if (result == null || !Functions.isPromise(result)) {
-					return result;
-				}
-
-				this[gateKey] = promise = result.then((r: any) => {
+				let result;
+				try {
+					result = fn!.apply(this, args);
+					if (result == null || !Functions.isPromise(result)) {
+						return result;
+					}
+					this[gateKey] = promise = result.then((r: any) => {
+						this[gateKey] = undefined;
+						return r;
+					}).catch((ex: any) => {
+						this[gateKey] = undefined;
+						throw ex;
+					});
+				} catch (ex) {
 					this[gateKey] = undefined;
-					return r;
-				});
+					throw ex;
+				}
 			}
 
 			return promise;
