@@ -889,6 +889,7 @@ export class WebviewController implements Disposable {
 			switch (originalUri.scheme) {
 				case "file":
 				case "untitled":
+				case "codestream-diff":
 					uri = originalUri;
 					break;
 				case "git":
