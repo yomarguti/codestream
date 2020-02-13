@@ -61,7 +61,7 @@ const RootTR = styled.tr`
 	td {
 		@media only screen and (max-width: 430px) {
 			font-size: 12px;
-			//${HeadshotName} {
+			//$//{HeadshotName} {
 			//	padding-right: 5px;
 			//}
 			.headshot-name {
