@@ -163,8 +163,9 @@ export interface CSReviewDiffs {
 	leftDiffs: ParsedDiff[];
 	rightBaseSha: string;
 	rightDiffs: ParsedDiff[];
+	rightReverseDiffs: ParsedDiff[];
 	leftToRightDiffs: ParsedDiff[];
-	newestCommitToRightDiffs: ParsedDiff[];
+	rightToLatestCommit: ParsedDiff[];
 }
 
 export interface CSReviewChangesetBase {

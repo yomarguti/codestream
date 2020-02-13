@@ -3,7 +3,7 @@ import { CodeStreamApiProvider } from "api/codestream/codestreamApi";
 import { ParsedDiff } from "diff";
 import * as fs from "fs";
 import { groupBy, last, orderBy } from "lodash-es";
-import { Range, TextDocumentIdentifier } from "vscode-languageserver";
+import { TextDocumentIdentifier } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
 import { Marker, MarkerLocation } from "../api/extensions";
@@ -76,7 +76,7 @@ import { getValues, KeyValue } from "./cache/baseCache";
 import { EntityCache, EntityCacheCfg } from "./cache/entityCache";
 import { EntityManagerBase, Id } from "./entityManager";
 import { MarkerLocationManager } from "./markerLocationManager";
-import { MarkerCreationDescriptor, MarkersManager } from "./markersManager";
+import { MarkerCreationDescriptor, MarkersBuilder } from "./markersBuilder";
 
 export type FetchPostsFn = (request: FetchPostsRequest) => Promise<FetchPostsResponse>;
 
@@ -791,12 +791,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 		for (const codeBlock of request.attributes.codeBlocks) {
 			if (!codeBlock.range) continue;
-			const descriptor = await MarkersManager.prepareMarkerCreationDescriptor(
-				codeBlock.contents,
-				{ uri: codeBlock.uri },
-				codeBlock.range,
-				codeBlock.scm
-			);
+			const builder = MarkersBuilder.newBuilder({ uri: codeBlock.uri });
+			const descriptor = await builder.build(codeBlock.contents, codeBlock.range, codeBlock.scm);
 			markerCreationDescriptors.push(descriptor);
 			codemarkRequest.markers!.push(descriptor.marker);
 
@@ -919,6 +915,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			const { scm, includeSaved, includeStaged, startCommit, excludedFiles, remotes } = repoChange;
 			if (!scm || !scm.repoId || !scm.branch || !scm.commits) continue;
 
+			const removeExcluded = (diff: ParsedDiff) => diff.newFileName && !excludedFiles.includes(diff.newFileName);
 			const modifiedFiles = scm.modifiedFiles.filter(f => !excludedFiles.includes(f.file));
 
 			// filter out only to those commits that were chosen in the review
@@ -949,9 +946,14 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			let leftDiffs: ParsedDiff[];
 			if (oldestCommitInReview.localOnly) {
 				leftBaseSha = baseSha;
-				leftDiffs = (await git.getDiffs(scm.repoPath, false, false, baseSha, oldestCommitInReview.sha)).filter(
-					diff => diff.newFileName && !excludedFiles.includes(diff.newFileName)
-				);
+				leftDiffs = (
+					await git.getDiffs(
+						scm.repoPath,
+						{ includeSaved: false, includeStaged: false },
+						baseSha,
+						oldestCommitInReview.sha
+					)
+				).filter(removeExcluded);
 			} else {
 				leftBaseSha = oldestCommitInReview.sha;
 				leftDiffs = [];
@@ -959,24 +961,43 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 			let rightBaseSha: string;
 			let rightDiffs: ParsedDiff[];
+			let rightReverseDiffs: ParsedDiff[];
 			if (newestCommitInReview.localOnly) {
 				rightBaseSha = baseSha;
-				rightDiffs = (await git.getDiffs(scm.repoPath, includeSaved, includeStaged, baseSha)).filter(
-					diff => diff.newFileName && !excludedFiles.includes(diff.newFileName)
-			  	);
+				rightDiffs = (
+					await git.getDiffs(scm.repoPath, { includeSaved, includeStaged }, baseSha)
+				).filter(removeExcluded);
+				rightReverseDiffs = (
+					await git.getDiffs(scm.repoPath, { includeSaved, includeStaged, reverse: true }, baseSha)
+				).filter(removeExcluded);
 			} else {
 				rightBaseSha = newestCommitInReview.sha;
-				rightDiffs = (await git.getDiffs(scm.repoPath, includeSaved, includeStaged, newestCommitInReview.sha)).filter(
-					diff => diff.newFileName && !excludedFiles.includes(diff.newFileName)
-			  	);
+				rightDiffs = (
+					await git.getDiffs(
+						scm.repoPath,
+						{ includeSaved, includeStaged },
+						newestCommitInReview.sha
+					)
+				).filter(removeExcluded);
+				rightReverseDiffs = (
+					await git.getDiffs(
+						scm.repoPath,
+						{ includeSaved, includeStaged, reverse: true },
+						newestCommitInReview.sha
+					)
+				).filter(removeExcluded);
 			}
 
-			const leftToRightDiffs = (await git.getDiffs(scm.repoPath, includeSaved, includeStaged, oldestCommitInReview.sha)).filter(
-				diff => diff.newFileName && !excludedFiles.includes(diff.newFileName)
-			);
-			const newestCommitToRightDiffs = (await git.getDiffs(scm.repoPath, includeSaved, includeStaged, newestCommitInReview.sha)).filter(
-				diff => diff.newFileName && !excludedFiles.includes(diff.newFileName)
-			);
+			const leftToRightDiffs = (
+				await git.getDiffs(scm.repoPath, { includeSaved, includeStaged }, oldestCommitInReview.sha)
+			).filter(removeExcluded);
+			const rightToLatestCommit = (
+				await git.getDiffs(
+					scm.repoPath,
+					{ includeSaved, includeStaged, reverse: true },
+					newestCommitInReview.sha
+				)
+			).filter(removeExcluded);
 
 			// WTF typescript, this is defined above
 			if (reviewRequest.reviewChangesets && baseSha) {
@@ -988,7 +1009,15 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					includeSaved,
 					includeStaged,
 					remotes,
-					diffs: { leftBaseSha, leftDiffs, rightBaseSha, rightDiffs, leftToRightDiffs, newestCommitToRightDiffs }
+					diffs: {
+						leftBaseSha,
+						leftDiffs,
+						rightBaseSha,
+						rightDiffs,
+						rightReverseDiffs,
+						leftToRightDiffs,
+						rightToLatestCommit
+					}
 				});
 			}
 			/*for (const patch of localDiffs) {
@@ -1238,12 +1267,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		Logger.log(`createPostWithMarker: preparing descriptors for ${markers.length} markers`);
 		for (const m of markers) {
 			if (!m.range) continue;
-			const descriptor = await MarkersManager.prepareMarkerCreationDescriptor(
-				m.code,
-				m.documentId,
-				m.range,
-				m.source
-			);
+			const builder = MarkersBuilder.newBuilder(m.documentId);
+			const descriptor = await builder.build(m.code, m.range, m.source);
 			markerCreationDescriptors.push(descriptor);
 			codemarkRequest.markers!.push(descriptor.marker);
 

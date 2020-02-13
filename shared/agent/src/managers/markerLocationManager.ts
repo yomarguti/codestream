@@ -23,7 +23,7 @@ import { ManagerBase } from "./baseManager";
 import { IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { Id } from "./entityManager";
-import { BacktrackedLocation } from "./markersManager";
+import { BacktrackedLocation } from "./markersBuilder";
 
 export interface Markerish {
 	id: string;

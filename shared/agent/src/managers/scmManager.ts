@@ -28,6 +28,7 @@ import {
 } from "../protocol/agent.protocol";
 import { FileSystem, Iterables, log, lsp, lspHandler, Strings } from "../system";
 import { Container, SessionContainer } from "./../container";
+import { ReviewsManager } from "./reviewsManager";
 
 @lsp
 export class ScmManager {
@@ -344,13 +345,9 @@ export class ScmManager {
 		contents,
 		skipBlame
 	}: GetRangeScmInfoRequest): Promise<GetRangeScmInfoResponse> {
-		const urlRegexp = /codestream-diff:\/\/(\w+)\/(\w+)\/(\w+)\/(.+)/;
 		const { git, reviews } = SessionContainer.instance();
 
-		const match = urlRegexp.exec(uri.toString());
-		if (match == null) throw new Error(`URI ${uri} doesn't match codestream-diff format`);
-
-		const [, reviewId, repoId, version, path] = match;
+		const { reviewId, repoId, version, path } = ReviewsManager.parseUri(uri);
 		const repo = await git.getRepositoryById(repoId);
 		if (repo == null) throw new Error(`Could not find repo with ID ${repoId}`);
 
@@ -364,7 +361,7 @@ export class ScmManager {
 			contents: contents!,
 			scm: {
 				file: path,
-				repoPath: repo.normalizedPath,
+				repoPath: repo.path,
 				repoId,
 				revision: changeset.commits[0].sha,
 				authors: [],

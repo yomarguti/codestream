@@ -297,14 +297,19 @@ export class GitService implements IGitService, Disposable {
 
 	async getDiffs(
 		repoPath: string,
-		includeSaved: boolean,
-		includeStaged: boolean,
+		opts: {
+			includeSaved: boolean;
+			includeStaged: boolean;
+			reverse?: boolean;
+		},
 		ref1?: string,
 		ref2?: string
 	): Promise<ParsedDiff[]> {
 		let data: string | undefined;
+		const { includeSaved, includeStaged, reverse } = opts;
 		try {
 			const options = ["diff", "--no-prefix"];
+			if (reverse === true) options.push("-R");
 			if (includeStaged && !includeSaved) options.push("--staged");
 			if (ref1 && ref1.length) options.push(ref1);
 			if (ref2 && ref2.length) options.push(ref2);
@@ -898,6 +903,16 @@ export class GitService implements IGitService, Disposable {
 		} catch {
 			return undefined;
 		}
+	}
+
+	async getKnownCommitHashes(filePath: string): Promise<string[]> {
+		const commitHistory = await this.getRepoCommitHistory(filePath);
+		const firstLastCommits =
+			commitHistory.length > 10
+				? [...commitHistory.slice(0, 5), ...commitHistory.slice(-5)]
+				: commitHistory;
+		const branchPoints = await this.getRepoBranchForkCommits(filePath);
+		return [...firstLastCommits, ...branchPoints];
 	}
 
 	async setKnownRepository(repos: { repoId: string; path: string }[]) {

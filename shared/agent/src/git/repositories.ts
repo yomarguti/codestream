@@ -169,10 +169,11 @@ export class GitRepositories {
 			if (unassignedRepositories.length > 0) {
 				const orderedUnassignedRepos: GitRepository[] = [];
 				const repoInfo: MatchReposRequest = { repos: [] };
+				const { git } = SessionContainer.instance();
 				await Promise.all(
 					unassignedRepositories.map(async repo => {
 						const remotes = (await repo.getRemotes()).map(r => r.normalizedUrl);
-						const knownCommitHashes = await MarkersManager.getKnownCommitHashes(repo.path);
+						const knownCommitHashes = await git.getKnownCommitHashes(repo.path);
 						orderedUnassignedRepos.push(repo);
 						repoInfo.repos.push({ remotes, knownCommitHashes });
 					})
