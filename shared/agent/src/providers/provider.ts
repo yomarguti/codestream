@@ -229,6 +229,7 @@ export abstract class ThirdPartyProviderBase<
 
 		this._readyPromise = this.onConnected(this._providerInfo);
 		await this._readyPromise;
+		this.resetReady();
 	}
 
 	protected async onConnected(providerInfo?: TProviderInfo) {}
