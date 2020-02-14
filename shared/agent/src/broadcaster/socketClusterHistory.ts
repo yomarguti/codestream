@@ -2,12 +2,12 @@
 
 "use strict";
 
-import { SCClientSocket } from "socketcluster-client";
+import { AGClientSocket } from "socketcluster-client";
 import UUID from "uuid";
 import { BroadcasterHistoryOutput, BroadcasterMessage } from "./broadcaster";
 
 export interface SocketClusterHistoryInput {
-	scClient: SCClientSocket;
+	socket: AGClientSocket;
 	channels: string[];
 	since: number;
 	debug?(msg: string, info?: any): void; // for debug messages
@@ -32,7 +32,7 @@ export interface SocketClusterHistoryAPIOutput {
 }
 
 export class SocketClusterHistory {
-	private _scClient: SCClientSocket | undefined;
+	private _socket: AGClientSocket | undefined;
 	private _allMessages: BroadcasterMessage[] = [];
 	private _debug: (msg: string, info?: any) => void = () => {};
 	private _historyPromise: {
@@ -44,12 +44,10 @@ export class SocketClusterHistory {
 	private _historyTimer: NodeJS.Timer | undefined;
 
 	async fetchHistory(options: SocketClusterHistoryInput): Promise<BroadcasterHistoryOutput> {
-		this._scClient = options.scClient;
+		this._socket = options.socket;
 		if (options.debug) {
 			this._debug = options.debug;
 		}
-
-		this._scClient.on("history", this.handleHistory.bind(this));
 
 		const output: BroadcasterHistoryOutput = {};
 
@@ -100,48 +98,38 @@ export class SocketClusterHistory {
 	}
 
 	// retrieve historical messages in batch
-	private retrieveBatchHistory(channels: string[], since: number): Promise<void> | undefined {
+	private async retrieveBatchHistory(channels: string[], since: number): Promise<void> {
 		this._requestId = UUID();
 		const historyMessage = {
 			requestId: this._requestId,
 			channels,
 			since
 		} as SocketClusterHistoryAPIInput;
-		this._scClient!.emit("getHistory", historyMessage);
-		if (this._numRequests === 0) {
-			return new Promise((resolve, reject) => {
-				this._historyPromise = { resolve, reject };
-				this._historyTimer = setTimeout(() => {
-					reject("SocketCluster history request timed out");
-				}, 5000);
-			});
-		} else {
-			return undefined;
+
+		let response: any;
+		try {
+			response = await this._socket!.invoke("history", historyMessage);
 		}
+		catch (error) {
+			const message = error instanceof Error ? error.message : JSON.stringify(error);
+			throw `history fetch error: ${message}`;
+		}
+
+		await this.handleHistory(response as SocketClusterHistoryAPIOutput);
 	}
 
-	private handleHistory (output: SocketClusterHistoryAPIOutput) {
-		if (output.requestId !== this._requestId || !this._historyPromise) {
-			return;
-		}
-		if (this._historyTimer) {
-			clearTimeout(this._historyTimer);
-		}
-		if (output.error) {
-			this._historyPromise!.reject(output.error);
+	private async handleHistory (output: SocketClusterHistoryAPIOutput) {
+		if (output.requestId !== this._requestId) {
 			return;
 		}
 		this._allMessages.push(...output.messages);
 		if (output.messages.length >= 100) {
 			this._numRequests++;
 			if (this._numRequests === 10) {
-				this._historyPromise!.reject("RESET");
+				throw "RESET";
 			}
 			const since = output.messages[output.messages.length - 1].timestamp;
-			this.retrieveBatchHistory(output.channels, since);
-		}
-		else {
-			this._historyPromise!.resolve();
+			await this.retrieveBatchHistory(output.channels, since);
 		}
 	}
 }
