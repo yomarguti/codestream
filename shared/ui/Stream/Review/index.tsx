@@ -477,11 +477,10 @@ const ReviewForReview = (props: PropsWithReview) => {
 		props.renderFooter ||
 		((Footer, InputContainer) => {
 			if (props.collapsed) return null;
-			if (derivedState.replies.length === 0) return null;
 
 			return (
 				<Footer style={{ borderTop: "none", marginTop: 0 }}>
-					<MetaLabel>Activity</MetaLabel>
+					{derivedState.replies.length > 0 && <MetaLabel>Activity</MetaLabel>}
 					<RepliesToPost streamId={props.review.streamId} parentPostId={props.review.postId} />
 					{InputContainer && (
 						<InputContainer>
