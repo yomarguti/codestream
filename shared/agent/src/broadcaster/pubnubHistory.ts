@@ -107,7 +107,6 @@ export class PubnubHistory {
 			count: 25,
 			stringifiedTimeToken: true
 		});
-		this._debug("fetchMessages response", response);
 
 		// look for any channels that have 25 messages ... for these, we assume there are more
 		// messages waiting, and we fetch individually for each channel, where we can get
@@ -116,6 +115,7 @@ export class PubnubHistory {
 		const earliestTimetokenPerChannel: { [key: string]: number } = {};
 		for (const channel in response.channels) {
 			const messages = response.channels[channel];
+			this._debug(`channel ${channel} has ${messages.length} messages`);
 			this._allMessages.push(...messages);
 			if (messages.length === 25) {
 				channelsWithMoreMessages.push(channel);
@@ -133,7 +133,8 @@ export class PubnubHistory {
 
 		await Promise.all(
 			channelsWithMoreMessages.map(async channel => {
-				await this.retrieveChannelHistory(channel, earliestTimetokenPerChannel[channel] - 1);
+				this._debug(`channel ${channel} has more than 25 messages, retrieving earlier history...`);
+				await this.retrieveChannelHistory(channel, earliestTimetokenPerChannel[channel] - 1, timetoken);
 			})
 		);
 	}
@@ -141,21 +142,22 @@ export class PubnubHistory {
 	// retrieve the historical messages for an individual channel ... we can only retrieve in
 	// pages of 100 ... but if we get to the limit of 1000 messages (10 pages), we'll stop
 	// and force the client to do a session reset instead
-	private async retrieveChannelHistory(channel: string, before: number, depth: number = 0) {
+	private async retrieveChannelHistory(channel: string, before: number, after: string, depth: number = 0) {
 		if (depth === 10) {
 			throw new Error("RESET");
 		}
-		this._debug(`Calling Pubnub.history from ${before} for ${channel}`);
+		this._debug(`Calling Pubnub.history from ${after} to ${before} for ${channel}`);
 		const response: any = await (this._pubnub! as any).history({
 			channel,
 			start: before.toString(),
+			end: after,
 			stringifiedTimeToken: true
 		});
-		this._debug("history response", response);
-
+		this._debug(`Pubnub.history returned ${response.messages.length} messages`);
 		this._allMessages.push(...response.messages);
 		if (response.messages.length >= 100) {
-			await this.retrieveChannelHistory(channel, parseInt(response.startTimeToken!, 10), depth + 1);
+			this._debug("Pubnub.history returned 100 or more messages, fetching more...");
+			await this.retrieveChannelHistory(channel, parseInt(response.startTimeToken!, 10), after, depth + 1);
 		}
 	}
 
