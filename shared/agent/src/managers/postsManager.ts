@@ -915,7 +915,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			const { scm, includeSaved, includeStaged, startCommit, excludedFiles, remotes } = repoChange;
 			if (!scm || !scm.repoId || !scm.branch || !scm.commits) continue;
 
-			const removeExcluded = (diff: ParsedDiff) => diff.newFileName && !excludedFiles.includes(diff.newFileName);
+			const removeExcluded = (diff: ParsedDiff) =>
+				diff.newFileName && !excludedFiles.includes(diff.newFileName);
 			const modifiedFiles = scm.modifiedFiles.filter(f => !excludedFiles.includes(f.file));
 
 			// filter out only to those commits that were chosen in the review
@@ -991,12 +992,15 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			const leftToRightDiffs = (
 				await git.getDiffs(scm.repoPath, { includeSaved, includeStaged }, oldestCommitInReview.sha)
 			).filter(removeExcluded);
-			const rightToLatestCommit = (
+			const rightToLatestCommitDiffs = (
 				await git.getDiffs(
 					scm.repoPath,
 					{ includeSaved, includeStaged, reverse: true },
 					newestCommitInReview.sha
 				)
+			).filter(removeExcluded);
+			const latestCommitToRightDiffs = (
+				await git.getDiffs(scm.repoPath, { includeSaved, includeStaged }, newestCommitInReview.sha)
 			).filter(removeExcluded);
 
 			// WTF typescript, this is defined above
@@ -1016,7 +1020,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						rightDiffs,
 						rightReverseDiffs,
 						leftToRightDiffs,
-						rightToLatestCommit
+						rightToLatestCommitDiffs,
+						latestCommitToRightDiffs
 					}
 				});
 			}
@@ -1423,7 +1428,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					anchorFormat: "[${text}](${url})"
 				};
 		}
-	}
+	};
 
 	createProviderCard = async (
 		providerCardRequest: {
@@ -1651,7 +1656,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			Logger.error(error, `failed to create a ${attributes.issueProvider.name} card:`);
 			return undefined;
 		}
-	}
+	};
 }
 
 async function resolveCreatePostResponse(response: CreatePostResponse) {

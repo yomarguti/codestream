@@ -10,6 +10,7 @@ import { URI } from "vscode-uri";
 import { Marker, MarkerLocation, Ranges } from "../api/extensions";
 import { Container, SessionContainer } from "../container";
 import { Logger } from "../logger";
+import { calculateLocations } from "../markerLocation/calculator";
 import {
 	CreateDocumentMarkerPermalinkRequest,
 	CreateDocumentMarkerPermalinkRequestType,
@@ -37,6 +38,7 @@ import {
 	CSUser
 } from "../protocol/api.protocol";
 import { Functions, log, lsp, lspHandler, Strings } from "../system";
+import { ReviewsManager } from "./reviewsManager";
 
 const emojiMap: { [key: string]: string } = require("../../emoji/emojis.json");
 const emojiRegex = /:([-+_a-z0-9]+):/g;
@@ -217,10 +219,91 @@ export class DocumentMarkerManager {
 
 	@log()
 	@lspHandler(FetchDocumentMarkersRequestType)
-	async get({
+	async get(request: FetchDocumentMarkersRequest): Promise<FetchDocumentMarkersResponse> {
+		if (request.textDocument.uri.startsWith("codestream-diff://")) {
+			return this.getDocumentMarkersForDiff(request);
+		} else {
+			return this.getDocumentMarkersForRegularFile(request);
+		}
+	}
+
+	private async getDocumentMarkersForDiff({
 		textDocument: documentId,
 		filters: filters
-	}: FetchDocumentMarkersRequest): Promise<FetchDocumentMarkersResponse> {
+	}: FetchDocumentMarkersRequest) {
+		const {
+			codemarks,
+			files,
+			markers,
+			reviews,
+			markerLocations,
+			users
+		} = SessionContainer.instance();
+
+		const { reviewId, path, version, repoId } = ReviewsManager.parseUri(documentId.uri);
+		const stream = (await files.getByRepoId(repoId)).find(f => f.file === path);
+		if (stream == null)
+			return {
+				markers: [],
+				markersNotLocated: []
+			};
+
+		const review = await reviews.getById(reviewId);
+		const changeset = review.reviewChangesets.find(c => c.repoId === repoId);
+		if (!changeset) throw new Error(`Could not find changeset with repoId ${repoId}`);
+		const diffs = await reviews.getDiffs(reviewId, repoId);
+		const latestCommitSha = changeset.commits[0].sha;
+		const rightToLatestCommitDiff = diffs.rightToLatestCommitDiffs.find(
+			d => d.newFileName === path
+		);
+
+		const markersForDocument = await markers.getByStreamId(stream.id, true);
+		const latestCommitLocations = await markerLocations.getMarkerLocationsById(
+			stream.id,
+			latestCommitSha
+		);
+
+		const rightLocations = rightToLatestCommitDiff
+			? await calculateLocations(latestCommitLocations, rightToLatestCommitDiff)
+			: latestCommitLocations;
+
+		const documentMarkers: DocumentMarker[] = [];
+		for (const marker of markersForDocument) {
+			const location = rightLocations[marker.id];
+			if (!location) continue;
+
+			const codemark = await codemarks.getEnrichedCodemarkById(marker.codemarkId);
+			const creator = await users.getById(marker.creatorId, { avoidCachingOnFetch: true });
+			let summary = codemark.title || codemark.text || "";
+			if (summary.length !== 0) {
+				summary = (codemark.title || codemark.text).replace(
+					emojiRegex,
+					(s, code) => emojiMap[code] || s
+				);
+			}
+			documentMarkers.push({
+				...marker,
+				fileUri: documentId.uri,
+				codemark: codemark,
+				creatorName: (creator && creator.username) || "Unknown",
+				range: MarkerLocation.toRange(location),
+				location: location,
+				summary: summary,
+				summaryMarkdown: `\n\n${Strings.escapeMarkdown(summary, { quoted: true })}`,
+				type: codemark.type
+			});
+		}
+
+		return {
+			markers: documentMarkers,
+			markersNotLocated: []
+		};
+	}
+
+	private async getDocumentMarkersForRegularFile({
+		textDocument: documentId,
+		filters: filters
+	}: FetchDocumentMarkersRequest) {
 		const cc = Logger.getCorrelationContext();
 
 		const { codemarks, files, markers, markerLocations, users } = SessionContainer.instance();

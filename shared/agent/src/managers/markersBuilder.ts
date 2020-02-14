@@ -317,16 +317,30 @@ class ReviewDiffMarkersBuilder extends MarkersBuilder {
 		if (!changeset) throw new Error(`Could not find changeset with repoId ${this._repoId}`);
 
 		const diffs = await reviews.getDiffs(this._reviewId, this._repoId);
-		const toLatestCommitDiff = diffs.rightToLatestCommit.find(d => d.newFileName === this._path);
+		const toLatestCommitDiff = diffs.rightToLatestCommitDiffs.find(
+			d => d.newFileName === this._path
+		);
 		const toBaseCommitDiff = diffs.rightReverseDiffs.find(d => d.newFileName === this._path);
 
-		const latestCommitLocation = toLatestCommitDiff ? await calculateLocation(location, toLatestCommitDiff) : location;
-		const baseCommitLocation = toBaseCommitDiff ? await calculateLocation(location, toBaseCommitDiff) : location;
+		const latestCommitLocation = toLatestCommitDiff
+			? await calculateLocation(location, toLatestCommitDiff)
+			: location;
+		const baseCommitLocation = toBaseCommitDiff
+			? await calculateLocation(location, toBaseCommitDiff)
+			: location;
 
 		const latestCommitSha = changeset.commits[0].sha;
 		const referenceLocations: CSReferenceLocation[] = [
-			{commitHash: latestCommitSha, flags: { canonical: true }, location: MarkerLocation.toArray(latestCommitLocation)},
-			{commitHash: diffs.rightBaseSha, flags: { backtracked: true }, location: MarkerLocation.toArray(baseCommitLocation)}
+			{
+				commitHash: latestCommitSha,
+				flags: { canonical: true },
+				location: MarkerLocation.toArray(latestCommitLocation)
+			},
+			{
+				commitHash: diffs.rightBaseSha,
+				flags: { backtracked: true },
+				location: MarkerLocation.toArray(baseCommitLocation)
+			}
 		];
 
 		return {
