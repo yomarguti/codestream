@@ -36,7 +36,8 @@ export default class FiltersButton extends React.Component<Props, State> {
 	}
 
 	openMenu = (e: React.SyntheticEvent) => {
-		this.setState({ open: !this.state.open, target: e && e.target });
+		// @ts-ignore
+		this.setState({ open: !this.state.open, target: e && e.target.closest("button") });
 	};
 
 	noop = value => {
@@ -51,8 +52,7 @@ export default class FiltersButton extends React.Component<Props, State> {
 				{this.state.open && (
 					<Menu
 						title={title}
-						align="center"
-						valign="bottom"
+						align="dropdownLeft"
 						items={items}
 						target={this.state.target}
 						action={this.openMenu}
