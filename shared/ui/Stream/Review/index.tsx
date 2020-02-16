@@ -55,6 +55,7 @@ import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
 import { DropdownButton } from "./DropdownButton";
 import Tag from "../Tag";
 import { RepliesToPost } from "../Posts/RepliesToPost";
+import { ChangesetFileList } from "./ChangesetFileList";
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
@@ -103,29 +104,6 @@ const BaseReview = (props: BaseReviewProps) => {
 	const hasTags = props.tags && props.tags.length > 0;
 	const hasReviewers = props.reviewers != null && props.reviewers.length > 0;
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
-
-	const changedFiles = React.useMemo(() => {
-		const files: any[] = [];
-		for (let changeset of review.reviewChangesets) {
-			files.push(
-				...changeset.modifiedFiles.map(f => (
-					<ChangesetFile
-						onClick={e => {
-							e.preventDefault();
-							HostApi.instance.send(ReviewShowDiffRequestType, {
-								reviewId: review.id,
-								repoId: changeset.repoId,
-								path: f.file
-							});
-						}}
-						key={f.file}
-						{...f}
-					/>
-				))
-			);
-		}
-		return files;
-	}, [props.review]);
 
 	const renderedHeaderActions = (() => {
 		if (props.collapsed) {
@@ -289,7 +267,9 @@ const BaseReview = (props: BaseReviewProps) => {
 					{!props.collapsed && (
 						<Meta>
 							<MetaLabel>Changed Files</MetaLabel>
-							<MetaDescriptionForAssignees>{changedFiles}</MetaDescriptionForAssignees>
+							<MetaDescriptionForAssignees>
+								<ChangesetFileList review={review} />
+							</MetaDescriptionForAssignees>
 						</Meta>
 					)}
 					{/*!props.collapsed && (

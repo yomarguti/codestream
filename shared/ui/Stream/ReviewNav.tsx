@@ -23,6 +23,7 @@ import { ChangesetFile } from "./Review/ChangesetFile";
 import { confirmPopup } from "./Confirm";
 import { setUserPreference } from "./actions";
 import { ReviewChangesetFileInfo } from "@codestream/protocols/api";
+import { ChangesetFileList } from "./Review/ChangesetFileList";
 
 const Actions = styled.div`
 	padding: 0 0 0 20px;
@@ -205,31 +206,6 @@ export function ReviewNav(props: Props) {
 	const [progressCounter, setProgressCounter] = React.useState(0);
 
 	const { review } = derivedState;
-
-	const changedFiles = React.useMemo(() => {
-		if (!review) return;
-		const files: any[] = [];
-		for (let changeset of review.reviewChangesets) {
-			files.push(
-				...changeset.modifiedFiles.map(f => {
-					// FIXME -- need to check for repoId here too
-					// console.log()
-					const selected = derivedState.filePath === f.file;
-					return (
-						<ChangesetFile
-							className={selected ? "selected" : undefined}
-							onClick={async e => {
-								jumpToFile({ ...f, repoId: changeset.repoId });
-							}}
-							key={f.file}
-							{...f}
-						/>
-					);
-				})
-			);
-		}
-		return files;
-	}, [review, derivedState.filePath]);
 
 	const exit = async () => {
 		await dispatch(setCurrentReview());
@@ -530,7 +506,7 @@ export function ReviewNav(props: Props) {
 							<>
 								<SearchResult titleOnly result={review} />
 								<div style={{ height: "5px" }} />
-								{changedFiles}
+								<ChangesetFileList review={review} />
 								{derivedState.hideReviewInstructions && (
 									<div
 										style={{ marginTop: "5px", fontSize: "smaller", cursor: "pointer" }}

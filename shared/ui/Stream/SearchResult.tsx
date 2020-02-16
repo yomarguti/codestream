@@ -13,6 +13,8 @@ import { setCurrentReview, setCurrentCodemark } from "../store/context/actions";
 import { HeadshotName } from "../src/components/HeadshotName";
 import { CodemarkPlus } from "@codestream/protocols/agent";
 import { isCSReview } from "../protocols/agent/api.protocol.models";
+import { Marker } from "./Marker";
+import { ChangesetFileList } from "./Review/ChangesetFileList";
 
 const RootTR = styled.tr`
 	margin: 0;
@@ -90,6 +92,21 @@ const Title = styled.div`
 	}
 `;
 
+const Tip = styled.div`
+	max-width: 30em;
+	.code.prettyprint {
+		max-width: 30em !important;
+		overflow: auto;
+		border: 1px solid var(--base-border-color);
+		background: var(--base-background-color);
+		font-size: smaller;
+	}
+	p {
+		display: inline;
+		margin: 0;
+	}
+`;
+
 interface Props {
 	result: ReviewPlus | CodemarkPlus;
 	titleOnly?: boolean;
@@ -112,6 +129,27 @@ export default function SearchResult(props: Props) {
 		else dispatch(setCurrentCodemark(result.id));
 	};
 
+	const buildTip = () => {
+		if (isCSReview(result)) {
+			return (
+				<>
+					<ChangesetFileList review={result} />
+				</>
+			);
+		} else {
+			// @ts-ignore
+			const markers = result.markers || [];
+			return (
+				<Tip>
+					<span dangerouslySetInnerHTML={{ __html: titleHTML }} />
+					{markers.map(marker => (
+						<Marker marker={marker} />
+					))}
+				</Tip>
+			);
+		}
+	};
+
 	const type = isCSReview(result) ? "review" : result.type;
 
 	let titleHTML = markdownify(type === "comment" ? result.text.substr(0, 80) : result.title);
@@ -123,6 +161,7 @@ export default function SearchResult(props: Props) {
 	const assignees = (isCSReview(result) ? result.reviewers : result.assignees) || [];
 
 	let icon;
+	let titleTip = buildTip(); // = result.text ? <div style={{ maxWidth: "25em" }}>{result.text}</div> : undefined;
 	let createdVerb = "Opened";
 	switch (type) {
 		case "review":
@@ -137,30 +176,29 @@ export default function SearchResult(props: Props) {
 			break;
 	}
 
-	const titleTip = result.text ? <div style={{ maxWidth: "25em" }}>{result.text}</div> : undefined;
-
 	// @ts-ignore
 	const isArchived = isCSReview(result) ? false : result.pinned ? false : true;
 
 	const title = (
-		<Title>
-			<div className="title">
-				<Tooltip title={titleTip} placement="top" delay={1}>
+		<Tooltip title={titleTip} placement="top" delay={1}>
+			<Title>
+				<div className="title">
 					<span dangerouslySetInnerHTML={{ __html: titleHTML }} />
-				</Tooltip>
-				&nbsp;
-				{(result.tags || []).map(tagId => {
-					const tag = derivedState.teamTagsHash[tagId];
-					return tag ? <Tag tag={tag} /> : null;
-				})}
-			</div>
+					&nbsp;
+					{(result.tags || []).map(tagId => {
+						const tag = derivedState.teamTagsHash[tagId];
+						return tag ? <Tag tag={tag} /> : null;
+					})}
+				</div>
 
-			<div className="details">
-				{createdVerb} <Timestamp relative time={result.createdAt} /> by{" "}
-				{derivedState.usernames[result.creatorId]} {result.status && <>&middot; {result.status} </>}
-				{isArchived && <>&middot; archived </>}
-			</div>
-		</Title>
+				<div className="details">
+					{createdVerb} <Timestamp relative time={result.createdAt} /> by{" "}
+					{derivedState.usernames[result.creatorId]}{" "}
+					{result.status && <>&middot; {result.status} </>}
+					{isArchived && <>&middot; archived </>}
+				</div>
+			</Title>
+		</Tooltip>
 	);
 
 	if (props.titleOnly) return title;
