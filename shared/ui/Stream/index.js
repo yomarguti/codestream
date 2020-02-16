@@ -464,7 +464,11 @@ export class SimpleStream extends Component {
 	};
 
 	newReview = () => {
-		this.setActivePanel(WebviewPanels.ComposeReview);
+		this.setActivePanel(WebviewPanels.NewReview);
+	};
+
+	newCode = () => {
+		this.setActivePanel(WebviewPanels.NewCode);
 	};
 
 	renderPlusMenu() {
@@ -484,16 +488,24 @@ export class SimpleStream extends Component {
 				key: "issue"
 			}
 		];
-		if (this.props.apiCapabilities.lightningCodeReviews) {
+		if (this.props.apiCapabilities.workUnits) {
 			menuItems.push(
-				// { label: "-" },
+				{ label: "-" },
 				{
-					icon: <Icon name="review" />,
-					label: "Request A Code Review",
-					action: this.newReview,
-					key: "review"
+					icon: <Icon name="code" />,
+					label: "Start Work",
+					action: this.newCode,
+					key: "code"
 				}
 			);
+		}
+		if (this.props.apiCapabilities.lightningCodeReviews) {
+			menuItems.push({
+				icon: <Icon name="review" />,
+				label: "Request A Code Review",
+				action: this.newReview,
+				key: "review"
+			});
 		}
 		// { label: "-" }
 		// { label: inviteLabel, action: "invite" },
@@ -1007,7 +1019,7 @@ export class SimpleStream extends Component {
 							setMultiLocation={this.setMultiLocation}
 						/>
 					)}
-					{activePanel === WebviewPanels.ComposeReview && <ReviewForm />}
+					{activePanel === WebviewPanels.NewReview && <ReviewForm />}
 					{activePanel === "channels" && (
 						<ChannelPanel
 							activePanel={activePanel}
