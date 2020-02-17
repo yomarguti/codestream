@@ -26,7 +26,8 @@ import {
 	GetRepoScmStatusResponse,
 	GetReposScmRequest,
 	GetReposScmRequestType,
-	GetReposScmResponse
+	GetReposScmResponse,
+	RepoScmStatus
 } from "../protocol/agent.protocol";
 import { FileSystem, Iterables, log, lsp, lspHandler, Strings } from "../system";
 import { Container, SessionContainer } from "./../container";
@@ -120,36 +121,44 @@ export class ScmManager {
 		};
 	}
 
-	// @lspHandler(GetRepoScmStatusesRequestType)
-	// @log()
-	// async getRepoStatuses({
-	// }: GetRepoScmStatusesRequest): Promise<GetRepoScmStatusesResponse> {
-	// 	const cc = Logger.getCorrelationContext();
-	// 	let gitError;
-	// 	let modifiedRepos = [];
-	// 	try {
-	// 		const openRepos = await this.getRepos({});
-	// 	const { repositories = [] } = openRepos;
-	// 	modifiedRepos = await Promise.all(
-	// 		repositories.map(repo => {
-	// 			return this.getRepoStatus({
-	// 				uri: repo.folder.uri,
-	// 				startCommit: undefined,
-	// 				includeStaged: false,
-	// 				includeSaved: false
-	// 			});
-	// 		})
-	// 	);
-	// } catch (ex) {
-	// 	gitError = ex.toString();
-	// 	Logger.error(ex, cc);
-	// 	debugger;
-	// }
-	// return {
-	// 	modifiedRepos
-	// 	error: gitError
-	// 	};
-	// }
+	@lspHandler(GetRepoScmStatusesRequestType)
+	@log()
+	async getRepoStatuses({}: GetRepoScmStatusesRequest): Promise<GetRepoScmStatusesResponse> {
+		const cc = Logger.getCorrelationContext();
+		let gitError;
+		let modifiedRepos: RepoScmStatus[] = [];
+		try {
+			const openRepos = await this.getRepos({});
+			Logger.log("OPSN REPOS" + JSON.stringify(openRepos, null, 4));
+			const { repositories = [] } = openRepos;
+			// @ts-ignore
+			modifiedRepos = (
+				await Promise.all(
+					repositories.map(repo => {
+						const response = this.getRepoStatus({
+							uri: repo.folder.uri + "/foo",
+							startCommit: "local",
+							includeStaged: true,
+							includeSaved: true
+						});
+						return response;
+					})
+				)
+			)
+				.filter(Boolean)
+				.map(status => {
+					return { ...status.scm };
+				});
+		} catch (ex) {
+			gitError = ex.toString();
+			Logger.error(ex, cc);
+			debugger;
+		}
+		return {
+			scm: modifiedRepos,
+			error: gitError
+		};
+	}
 
 	@lspHandler(GetRepoScmStatusRequestType)
 	@log()
@@ -207,6 +216,14 @@ export class ScmManager {
 					if (commits && commits.length && !startCommit) {
 						startCommit = commits[commits.length - 1].sha + "^";
 					}
+
+					// if we only want to show local work, then we should
+					// start at the first pushed branch
+					if (startCommit === "local") {
+						const latestPushed = commits?.find(commit => !commit.localOnly);
+						startCommit = latestPushed?.sha;
+					}
+
 					if (commits) {
 						commits.forEach(commit => {
 							// @ts-ignore
@@ -218,6 +235,7 @@ export class ScmManager {
 						});
 					}
 					modifiedFiles = await git.getNumStat(repoPath, includeSaved, includeStaged, startCommit);
+					Logger.log("MOD FIL FROM " + startCommit + " is " + JSON.stringify(modifiedFiles));
 					if (modifiedFiles) {
 						modifiedFiles.forEach(file => {
 							totalModifiedLines += file.linesAdded + file.linesRemoved;

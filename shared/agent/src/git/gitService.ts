@@ -706,6 +706,31 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
+	async getLocalCommits(
+		repoPath: string
+	): Promise<{ sha: string; info: {}; localOnly: boolean }[] | undefined> {
+		try {
+			// https://stackoverflow.com/questions/2016901/viewing-unpushed-git-commits
+			const data = await git(
+				{ cwd: repoPath },
+				"log",
+				"@{push}..",
+				`--format='${GitLogParser.defaultFormat}`,
+				"--"
+			);
+			const commits = GitLogParser.parse(data.trim(), repoPath);
+			if (commits === undefined || commits.size === 0) return undefined;
+
+			const ret: { sha: string; info: {}; localOnly: boolean }[] = [];
+			commits.forEach((val, key) => {
+				ret.push({ sha: key, info: val, localOnly: true });
+			});
+			return ret;
+		} catch {
+			return undefined;
+		}
+	}
+
 	async getParentCommit(repoPath: string, sha: string): Promise<string | undefined> {
 		try {
 			const data = await git({ cwd: repoPath }, "log", "--pretty=%P", "-n", "1", sha);
