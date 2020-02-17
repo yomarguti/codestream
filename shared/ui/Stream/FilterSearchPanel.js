@@ -501,8 +501,13 @@ export class SimpleFilterSearchPanel extends Component {
 						if (repo) return repo.name;
 					});
 					if (!repoNames.includes(filters.repo)) return null;
+				} else {
+					const repoNames = (item.markers || []).map(marker => {
+						const repo = this.props.repos[marker.repoId];
+						if (repo) return repo.name;
+					});
+					if (!repoNames.includes(filters.repo)) return null;
 				}
-				// FIXME -- check the markers on the codemark for the repo
 			}
 			if (filters.updatedAfter && item.modifiedAt < filters.updatedAfter) return null;
 			if (filters.updatedBefore && item.modifiedAt > filters.updatedBefore) return null;
@@ -847,6 +852,9 @@ const mapStateToProps = state => {
 			if (repoId) repoArray[repoId] = createdAt;
 			if (branch) branchArray[branch] = createdAt;
 		});
+	});
+	activity.forEach(item => {
+		// FIXME add to repoArray for codemarks
 	});
 
 	let savedSearchFilters = [];
