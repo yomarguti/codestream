@@ -73,7 +73,8 @@ export interface HostDidDidReceiveRequestNotification {
 }
 
 export enum RouteControllerType {
-	Codemark = "codemark"
+	Codemark = "codemark",
+	Review = "review"
 }
 export enum RouteActionType {
 	Open = "open"

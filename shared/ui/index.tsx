@@ -52,7 +52,7 @@ import { updateDocument, removeDocument, resetDocuments } from "./store/document
 import { updateUnreads } from "./store/unreads/actions";
 import { updateConfigs } from "./store/configs/actions";
 import { setEditorContext } from "./store/editorContext/actions";
-import { blur, focus, setCurrentStream, setCurrentCodemark } from "./store/context/actions";
+import { blur, focus, setCurrentStream, setCurrentCodemark, setCurrentReview } from "./store/context/actions";
 import { URI } from "vscode-uri";
 import { moveCursorToLine } from "./Stream/CodemarkView";
 import { setMaintenanceMode } from "./store/session/actions";
@@ -368,6 +368,19 @@ function listenForEvents(store) {
 										route.query && route.query.marker ? route.query.marker : undefined;
 									store.dispatch(setCurrentCodemark(route.id, markerId));
 								}
+							}
+							break;
+						}
+					}
+				}
+				break;
+			}
+			case "review": {
+				if (route.action) {
+					switch (route.action) {
+						case "open": {
+							if (route.id) {																 								
+								store.dispatch(setCurrentReview(route.id));								 
 							}
 							break;
 						}
