@@ -129,7 +129,6 @@ export class ScmManager {
 		let modifiedRepos: RepoScmStatus[] = [];
 		try {
 			const openRepos = await this.getRepos({});
-			Logger.log("OPSN REPOS" + JSON.stringify(openRepos, null, 4));
 			const { repositories = [] } = openRepos;
 			// @ts-ignore
 			modifiedRepos = (
