@@ -44,7 +44,10 @@ export interface CreateSharedExternalPostRequest {
 	parentPostId?: string;
 	remotes?: string[];
 	entryPoint?: string;
+	// can share either a codemark
 	codemark?: CodemarkPlus;
+	// ...or a review
+	review?: ReviewPlus;
 	crossPostIssueValues?: CrossPostIssueValues;
 }
 

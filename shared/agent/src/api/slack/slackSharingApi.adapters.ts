@@ -1,6 +1,6 @@
 "use strict";
 import { ActionsBlock, KnownBlock, MessageAttachment } from "@slack/web-api";
-import { CodemarkPlus } from "protocol/agent.protocol";
+import { CodemarkPlus, ReviewPlus } from "protocol/agent.protocol";
 import { SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import {
@@ -15,7 +15,7 @@ import {
 	CSUser,
 	StreamType
 } from "../../protocol/api.protocol";
-import { Marker, toActionId, toExternalActionId, toReplyActionId, toReplyDisabledActionId } from "../extensions";
+import { Marker, toActionId, toExternalActionId, toReplyActionId, toReplyDisabledActionId, toReviewActionId, toReviewReplyActionId } from "../extensions";
 
 const defaultCreatedAt = 181886400000;
 const multiPartyNamesRegEx = /^mpdm-([^-]+)(--.*)-1$/;
@@ -105,8 +105,8 @@ export function fromSlackChannel(
 		mostRecentPostId: mostRecentId,
 		priority: channel.priority,
 		privacy: (channel.is_private == null
-		? channel.is_group
-		: channel.is_private)
+			? channel.is_group
+			: channel.is_private)
 			? "private"
 			: "public",
 		purpose: channel.purpose && channel.purpose.value,
@@ -848,6 +848,130 @@ export function toSlackPostBlocks(
 		type: "context",
 		// MUST keep this data in sync with codemarkAttachmentRegex above
 		block_id: `codestream://codemark/${codemark.id}?teamId=${codemark.teamId}`,
+		elements: [
+			{
+				type: "plain_text",
+				text: "Posted via CodeStream"
+			}
+		]
+	});
+
+	return blocks;
+}
+
+export function toSlackReviewPostBlocks(
+	review: ReviewPlus,
+	userIdsByName: Map<string, string>,
+	codeStreamUsersById: Map<string, string>,
+	repos?: { [key: string]: CSRepository } | undefined,
+	slackUserId?: string
+): Blocks {
+	const blocks: Blocks = [];
+	const modifiedFiles: string[] = [];
+	const modifiedReposAndBranches: any[] = [];
+
+	for (const changeSet of review.reviewChangesets) {
+		let repoName = "a repo";
+		if (repos) {
+			const repo = repos[changeSet.repoId];
+			if (repo) {
+				repoName = repo.name;
+			}
+		}
+		if (changeSet.modifiedFiles) {
+			for (const modifiedFile of changeSet.modifiedFiles) {
+				const added = modifiedFile.linesAdded > 0 ? ` +${modifiedFile.linesAdded}` : "";
+				const removed = modifiedFile.linesRemoved > 0 ? ` -${modifiedFile.linesRemoved}` : "";
+				modifiedFiles.push(`${modifiedFile.file}${added}${removed}`);
+			}
+		}
+
+		modifiedReposAndBranches.push(`${changeSet.modifiedFiles.length} files on \`${changeSet.branch}\` from \`${repoName}\``)
+	}
+
+	blocks.push({
+		type: "section",
+		text: {
+			type: "mrkdwn",
+			text: `*${toSlackText(review.title, userIdsByName)}* includes changes to ${modifiedReposAndBranches.join(", ")}`
+		}
+	});
+
+	if (review.text) {
+		blocks.push({
+			type: "section",
+			text: {
+				type: "mrkdwn",
+				text: toSlackText(review.text, userIdsByName)
+			}
+		});
+	}
+
+	if (review.reviewers && review.reviewers.length && codeStreamUsersById) {
+		blocks.push({
+			type: "section",
+			text: {
+				type: "mrkdwn",
+				text: `*Assignees*\n${review.reviewers
+					.map(a => {
+						let mention = codeStreamUsersById.get(a) || "";
+						if (mention) {
+							mention = `@${mention}`;
+						}
+						return mention;
+					})
+					.join(", ")}`
+			}
+		});
+	}
+
+	blocks.push({
+		type: "section",
+		text: {
+			type: "mrkdwn",
+			text: `\`\`\`${modifiedFiles.join("\n")}\`\`\``
+		}
+	});
+
+	let counter = 0;
+	let actionId = toReviewReplyActionId(counter, review, slackUserId);
+	const actions: ActionsBlock = {
+		type: "actions",
+		block_id: "review_actions",
+		elements: [
+			{
+				type: "button",
+				action_id: actionId,
+				style: "primary",
+				text: {
+					type: "plain_text",
+					text: "View Discussion & Reply"
+				}
+			}
+		]
+	};
+
+	const permalink = review.permalink;
+	if (permalink) {
+		counter++;
+		actionId = toReviewActionId(counter, "ide", review);
+		actions.elements.push({
+			type: "button",
+			action_id: actionId,
+			text: {
+				type: "plain_text",
+				text: "Open in IDE"
+			},
+			url: `${permalink}?ide=default`
+		});
+
+		blocks.push(actions);
+	}
+
+	blocks.push({
+		type: "context",
+		// MUST keep this data in sync with codemarkAttachmentRegex above
+		block_id: `codestream://review/${review.id}?teamId=${review.teamId}`,
 		elements: [
 			{
 				type: "plain_text",

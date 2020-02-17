@@ -81,7 +81,8 @@ export class MSTeamsProvider extends ThirdPartyPostProviderBase<MSTeamsProviderI
 	@log()
 	async createPost(request: CreateThirdPartyPostRequest): Promise<CreateThirdPartyPostResponse> {
 		const result = await this.session.api.triggerMsTeamsProactiveMessage({
-			codemarkId: request.codemark!.id,
+			codemarkId: request.codemark && request.codemark.id,
+			reviewId: request.review && request.review.id,
 			providerTeamId: request.providerTeamId,
 			channelId: request.channelId
 		});

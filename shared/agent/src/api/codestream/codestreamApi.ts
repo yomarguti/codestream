@@ -1090,11 +1090,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 	): Promise<TriggerMsTeamsProactiveMessageResponse> {
 		return this.post<any, any>(
 			"/msteams_conversations",
-			{
-				teamId: this.teamId,
-				channelId: request.channelId,
-				providerTeamId: request.providerTeamId,
-				codemarkId: request.codemarkId
+			{ ...request,
+			  teamId: this.teamId
 			},
 			this._token
 		);

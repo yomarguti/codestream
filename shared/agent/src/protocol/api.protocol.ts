@@ -701,7 +701,10 @@ export interface CSMsTeamsConversationResponse {
 export interface TriggerMsTeamsProactiveMessageRequest {
 	channelId: string;
 	providerTeamId: string;
-	codemarkId: string;
+	// can share either a codemark
+	codemarkId?: string;
+	// ...or a review
+	reviewId?: string;
 }
 
 export interface TriggerMsTeamsProactiveMessageResponse {}

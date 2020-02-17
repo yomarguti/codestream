@@ -10,6 +10,7 @@ import {
 	CSMe,
 	CSMSTeamsProviderInfo,
 	CSProviderInfos,
+	CSReview,
 	CSSlackProviderInfo,
 	CSTeam,
 	CSTeamProviderInfos
@@ -320,6 +321,17 @@ export interface ActionId {
 	parentPostId?: string;
 }
 
+export interface ReviewActionId {
+	id: number;
+	linkType: "web" | "ide"  | "review-reply";
+	externalProvider?: string;
+	teamId: string;
+	reviewId: string;
+	streamId?: string;
+	creatorId?: string;
+	parentPostId?: string;
+}
+
 export interface ReplyActionId {
 	id: number;
 	linkType: "web" | "ide" | "external" | "reply" | "reply-disabled";
@@ -328,6 +340,30 @@ export interface ReplyActionId {
 	cId: string;
 	// provider creator user id, a slack userId, for example
 	pcuId?: string;
+}
+
+export interface ReviewReplyActionId {
+	id: number;
+	linkType: "web" | "ide" | "review-reply" | "review-reply-disabled";
+	// reviewId
+	rId: string;
+	// provider creator user id, a slack userId, for example
+	pcuId?: string;
+}
+
+export function toReviewActionId(
+	id: number,
+	linkType: "web" | "ide" | "review-reply",
+	review: CSReview
+): string {
+	const actionId: ReviewActionId = {
+		id: id,
+		linkType: linkType,
+		teamId: review.teamId,
+		reviewId: review.id
+	};
+
+	return JSON.stringify(actionId);
 }
 
 export function toActionId(
@@ -362,6 +398,21 @@ export function toExternalActionId(
 		teamId: codemark.teamId,
 		codemarkId: codemark.id,
 		markerId: marker && marker.id
+	};
+
+	return JSON.stringify(actionId);
+}
+
+export function toReviewReplyActionId(
+	id: number,
+	review: CSReview,
+	providerCreatorUserId?: string
+): string {
+	const actionId: ReviewReplyActionId = {
+		id: id,
+		linkType: "review-reply",
+		rId: review.id,
+		pcuId: providerCreatorUserId
 	};
 
 	return JSON.stringify(actionId);

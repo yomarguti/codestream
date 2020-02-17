@@ -206,6 +206,8 @@ export interface CSReview extends CSEntity {
 	reviewChangesets: CSReviewChangeset[];
 	lastActivityAt: number;
 	followerIds?: string[];
+	// TODO eventually make this not optional
+	permalink?: string;
 }
 
 export interface CSPost extends CSEntity {
