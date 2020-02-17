@@ -1,6 +1,8 @@
 import React from "react";
 import createClassString from "classnames";
 import Tooltip, { Placement } from "./Tooltip";
+import { useDispatch } from "react-redux";
+import { setQuery, setCurrentCodemark } from "../store/context/actions";
 
 interface Props {
 	title?: string | JSX.Element | undefined;
@@ -16,16 +18,35 @@ interface Props {
 const Tag = React.forwardRef<any, Props>((props, ref) => {
 	const { tag } = props;
 
+	const color = tag.color.startsWith("#") ? "" : tag.color;
+	let label = tag.label || color;
+	if (label.match(/\s/)) label = `"${label}"`;
+
+	const dispatch = useDispatch();
+	const goSearch = query => {
+		dispatch(setCurrentCodemark());
+		dispatch(setQuery(query));
+	};
+
 	let tagDiv;
 	if (tag.color.startsWith("#"))
 		tagDiv = (
-			<div key={tag.id} className="cs-tag" style={{ background: tag.color }}>
+			<div
+				key={tag.id}
+				className="cs-tag"
+				style={{ background: tag.color }}
+				onClick={() => goSearch(`tag:${label}`)}
+			>
 				<div>&nbsp;{tag.label}&nbsp;</div>
 			</div>
 		);
 	else
 		tagDiv = (
-			<div key={tag.id} className={`cs-tag ${tag.color}-background`}>
+			<div
+				key={tag.id}
+				className={`cs-tag ${tag.color}-background`}
+				onClick={() => goSearch(`tag:${label}`)}
+			>
 				<div>&nbsp;{tag.label}&nbsp;</div>
 			</div>
 		);
