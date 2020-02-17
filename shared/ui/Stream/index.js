@@ -83,7 +83,8 @@ import {
 	setCurrentStream,
 	setNewPostEntry,
 	setCurrentReview,
-	setActiveReview
+	setActiveReview,
+	setQuery
 } from "../store/context/actions";
 import { getTeamProvider } from "../store/teams/reducer";
 import {
@@ -810,7 +811,7 @@ export class SimpleStream extends Component {
 						className={createClassString({
 							selected: activePanel === WebviewPanels.FilterSearch
 						})}
-						onClick={e => this.setActivePanel(WebviewPanels.FilterSearch)}
+						onClick={this.goSearch}
 					>
 						<Icon name="search" title="Filter &amp; Search Codemarks" placement="bottomRight" />
 					</label>
@@ -822,6 +823,10 @@ export class SimpleStream extends Component {
 			</nav>
 		);
 	}
+
+	goSearch = () => {
+		this.props.setQuery("");
+	};
 
 	// dead code
 	handleClickCreateCodemark = e => {
@@ -2516,6 +2521,7 @@ export default connect(mapStateToProps, {
 	setCurrentStream,
 	editCodemark,
 	setNewPostEntry,
+	setQuery,
 	logout,
 	switchToTeam
 })(injectIntl(SimpleStream));
