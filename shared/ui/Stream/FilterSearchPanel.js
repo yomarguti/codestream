@@ -478,19 +478,21 @@ export class SimpleFilterSearchPanel extends Component {
 				if (isReview) {
 					const branches = (item.reviewChangesets || []).map(changeset => changeset.branch);
 					if (!branches.includes(filters.branch)) return null;
+				} else {
+					const branches = (item.markers || []).map(marker => marker.branchWhenCreated);
+					if (!branches.includes(filters.branch)) return null;
 				}
-				// FIXME -- check the markers on the codemark for the branch
-				// else if (!filters.branch === item.branch)
 			}
 			if (filters.commit) {
 				if (isReview) {
 					const commits = (item.reviewChangesets || []).map(changeset => changeset.commits).flat();
-					console.log("COMMITS ARE: ", commits);
 					const match = commits.find(commit => commit && commit.sha.startsWith(filters.commit));
-					console.log("MATCH IS: ", match, " from ", filters.commit);
+					if (!match) return null;
+				} else {
+					const commits = (item.markers || []).map(marker => marker.commitHashWhenCreated);
+					const match = commits.find(commit => commit && commit.startsWith(filters.commit));
 					if (!match) return null;
 				}
-				// FIXME -- check the markers on the codemark for the commit
 			}
 			if (filters.repo) {
 				if (isReview) {
