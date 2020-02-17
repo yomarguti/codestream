@@ -251,7 +251,7 @@ const BaseReview = (props: BaseReviewProps) => {
 							<MarkdownText>
 								<MetaDescriptionForAssignees>
 									{props.repoInfo.map(r => (
-										<MetaRepoInfo>
+										<MetaRepoInfo key={r.repoName}>
 											<RepoInfo>
 												<Icon name="repo" /> {r.repoName}
 											</RepoInfo>

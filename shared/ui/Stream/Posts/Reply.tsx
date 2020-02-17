@@ -8,12 +8,16 @@ import { StyledTimestamp, MarkdownText, KebabIcon, StyledMarker } from "../Codem
 import Icon from "../Icon";
 import { getCodemark } from "@codestream/webview/store/codemarks/reducer";
 import { CodeStreamState } from "@codestream/webview/store";
-import { useSelector } from "react-redux";
-import { emptyObject } from "@codestream/webview/utils";
+import { useSelector, useDispatch } from "react-redux";
+import { Post, isPending } from "@codestream/webview/store/posts/types";
+import Menu from "../Menu";
+import { confirmPopup } from "../Confirm";
+import { deletePost } from "../actions";
+import { RepliesToPostContext } from "./RepliesToPost";
 
 export interface ReplyProps {
 	author: Partial<CSUser>;
-	post: PostPlus;
+	post: Post;
 	nestedReplies?: PostPlus[];
 	renderMenu?: (target: any, onClose: () => void) => React.ReactNode;
 	className?: string;
@@ -52,8 +56,13 @@ const Root = styled.div`
 	${KebabIcon} {
 		visibility: hidden;
 	}
+`;
 
-	&:hover ${KebabIcon} {
+const ReplyBody = styled.span`
+	display: flex;
+	flex-direction: column;
+
+	:hover ${KebabIcon} {
 		visibility: visible;
 	}
 `;
@@ -64,11 +73,8 @@ export const Reply = (props: ReplyProps) => {
 		target?: any;
 	}>({ open: false, target: undefined });
 
-	const allUsers = useSelector((state: CodeStreamState) =>
-		props.nestedReplies ? state.users : emptyObject
-	);
 	const codemark = useSelector((state: CodeStreamState) =>
-		getCodemark(state.codemarks, props.post.codemarkId)
+		isPending(props.post) ? null : getCodemark(state.codemarks, props.post.codemarkId)
 	);
 
 	const postText = codemark != null ? codemark.text : props.post.text;
@@ -95,50 +101,100 @@ export const Reply = (props: ReplyProps) => {
 
 	return (
 		<Root className={props.className}>
-			<AuthorInfo style={{ fontWeight: 700 }}>
-				<Headshot person={props.author} /> {props.author.username}
-				{emote}
-				<StyledTimestamp time={props.post.createdAt} />
-				<div style={{ marginLeft: "auto" }}>
-					{renderedMenu}
-					{props.renderMenu && (
-						<KebabIcon
-							onClick={e => {
-								e.preventDefault();
-								e.stopPropagation();
-								if (menuState.open) {
-									setMenuState({ open: false });
-								} else {
-									setMenuState({ open: true, target: e.currentTarget });
-								}
-							}}
-						>
-							<Icon name="kebab-vertical" className="clickable" />
-						</KebabIcon>
-					)}
-				</div>
-			</AuthorInfo>
-			{emote ? null : (
-				<>
-					<MarkdownText
-						style={{ marginLeft: "23px" }}
-						dangerouslySetInnerHTML={{ __html: markdownifyToHtml(postText) }}
-					/>
-					{markers}
-				</>
-			)}
-			{props.nestedReplies && props.nestedReplies.length > 0 && (
-				<>
-					{props.nestedReplies.map(r => (
-						<NestedReply author={allUsers[r.creatorId]} post={r as PostPlus} />
-					))}
-				</>
-			)}
+			<ReplyBody>
+				<AuthorInfo style={{ fontWeight: 700 }}>
+					<Headshot person={props.author} /> {props.author.username}
+					{emote}
+					<StyledTimestamp time={props.post.createdAt} />
+					<div style={{ marginLeft: "auto" }}>
+						{renderedMenu}
+						{props.renderMenu && (
+							<KebabIcon
+								onClick={e => {
+									e.preventDefault();
+									e.stopPropagation();
+									if (menuState.open) {
+										setMenuState({ open: false });
+									} else {
+										setMenuState({ open: true, target: e.currentTarget });
+									}
+								}}
+							>
+								<Icon name="kebab-vertical" className="clickable" />
+							</KebabIcon>
+						)}
+					</div>
+				</AuthorInfo>
+				{emote ? null : (
+					<>
+						<MarkdownText
+							style={{ marginLeft: "23px" }}
+							dangerouslySetInnerHTML={{ __html: markdownifyToHtml(postText) }}
+						/>
+						{markers}
+					</>
+				)}
+			</ReplyBody>
+			{props.nestedReplies &&
+				props.nestedReplies.length > 0 &&
+				props.nestedReplies.map(r => <NestedReply key={r.id} post={r} threadId={props.post.id} />)}
 		</Root>
 	);
 };
 
-const NestedReply = styled(Reply)`
+const NestedReply = (props: { post: Post; threadId: string }) => {
+	const dispatch = useDispatch();
+	const { setReplyingToPostId } = React.useContext(RepliesToPostContext);
+	const author = useSelector((state: CodeStreamState) => state.users[props.post.creatorId]);
+	const currentUserId = useSelector((state: CodeStreamState) => state.session.userId);
+
+	const menuItems = React.useMemo(() => {
+		const menuItems: any[] = [];
+
+		menuItems.push({
+			label: "Reply",
+			key: "reply",
+			action: () => setReplyingToPostId(props.threadId)
+		});
+
+		if (props.post.creatorId === currentUserId) {
+			menuItems.push({
+				label: "Delete",
+				key: "delete",
+				action: () => {
+					confirmPopup({
+						title: "Are you sure?",
+						message: "Deleting a post cannot be undone.",
+						centered: true,
+						buttons: [
+							{ label: "Go Back", className: "control-button" },
+							{
+								label: "Delete Post",
+								className: "delete",
+								wait: true,
+								action: () => {
+									dispatch(deletePost(props.post.streamId, props.post.id));
+								}
+							}
+						]
+					});
+				}
+			});
+		}
+
+		return menuItems;
+	}, [props.post]);
+
+	return (
+		<NestedReplyRoot
+			author={author}
+			post={props.post}
+			renderMenu={(target, close) => <Menu target={target} action={close} items={menuItems} />}
+		/>
+	);
+};
+
+const NestedReplyRoot = styled(Reply)`
 	padding-top: 10px;
 	padding-left: 25px;
 	padding-bottom: 0;

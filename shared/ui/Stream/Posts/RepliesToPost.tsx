@@ -28,6 +28,8 @@ const InlineMessageContainer = styled.div`
 	margin-top: -15px; // need to make up for the bottom margin from the preceding reply
 `;
 
+export const RepliesToPostContext = React.createContext({ setReplyingToPostId(postId: string) {} });
+
 export const RepliesToPost = (props: { streamId: string; parentPostId: string }) => {
 	const dispatch = useDispatch();
 	const currentUserId = useSelector((state: CodeStreamState) => state.session.userId!);
@@ -43,6 +45,11 @@ export const RepliesToPost = (props: { streamId: string; parentPostId: string })
 	const [replyingToPostId, setReplyingToPostId] = React.useState<string | null>();
 	const [newReplyText, setNewReplyText] = React.useState("");
 	const [isLoading, setIsLoading] = React.useState(false);
+
+	const contextValue = React.useMemo(
+		() => ({ setReplyingToPostId: setReplyingToPostId as any }),
+		[]
+	);
 
 	const submit = async () => {
 		// don't create empty replies
@@ -97,15 +104,12 @@ export const RepliesToPost = (props: { streamId: string; parentPostId: string })
 	};
 
 	return (
-		<>
+		<RepliesToPostContext.Provider value={contextValue}>
 			{replies.map(reply => {
-				if (reply.parentPostId !== props.parentPostId) return null;
-
 				const menuItems = getMenuItems(reply as any);
 				return (
-					<>
+					<React.Fragment key={reply.id}>
 						<Reply
-							key={reply.id}
 							author={allUsers[reply.creatorId]}
 							post={reply as any}
 							nestedReplies={nestedRepliesByParent[reply.id] as any}
@@ -150,9 +154,9 @@ export const RepliesToPost = (props: { streamId: string; parentPostId: string })
 								</div>
 							</InlineMessageContainer>
 						)}
-					</>
+					</React.Fragment>
 				);
 			})}
-		</>
+		</RepliesToPostContext.Provider>
 	);
 };
