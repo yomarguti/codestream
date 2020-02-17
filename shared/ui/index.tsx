@@ -25,7 +25,7 @@ import {
 	DidChangeApiVersionCompatibilityNotificationType,
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
-	DidChangeVersionCompatibilityNotificationType,	
+	DidChangeVersionCompatibilityNotificationType,
 	ConnectionStatus,
 	ChangeDataType,
 	VersionCompatibility,
@@ -52,7 +52,7 @@ import { updateDocument, removeDocument, resetDocuments } from "./store/document
 import { updateUnreads } from "./store/unreads/actions";
 import { updateConfigs } from "./store/configs/actions";
 import { setEditorContext } from "./store/editorContext/actions";
-import { blur, focus, setCurrentStream, setCurrentCodemark, setCurrentReview } from "./store/context/actions";
+import { blur, focus, setCurrentStream, setCurrentCodemark,	setCurrentReview, setQuery } from "./store/context/actions";
 import { URI } from "vscode-uri";
 import { moveCursorToLine } from "./Stream/CodemarkView";
 import { setMaintenanceMode } from "./store/session/actions";
@@ -129,16 +129,15 @@ function listenForEvents(store) {
 
 	api.on(DidChangeDataNotificationType, ({ type, data }) => {
 		switch (type) {
-			case ChangeDataType.Commits:				
+			case ChangeDataType.Commits:
 				store.dispatch(resetDocuments());
 				break;
 			case ChangeDataType.Documents:
-				if ((data as any).reason === 'removed') {
+				if ((data as any).reason === "removed") {
 					store.dispatch(removeDocument((data as any).document));
+				} else {
+					store.dispatch(updateDocument((data as any).document));
 				}
-				else {
-					store.dispatch(updateDocument((data as any).document));				
-				}				
 				break;
 			case ChangeDataType.Preferences:
 				store.dispatch(updatePreferences(data));
@@ -332,6 +331,10 @@ function listenForEvents(store) {
 			}
 			if (!action && paths.length > 1) {
 				action = paths[2] as RouteActionType;
+				if (!action) {
+					// some urls don't have an id (like search)
+					action = paths[1] as RouteActionType;
+				}
 			}
 		}
 
@@ -379,10 +382,27 @@ function listenForEvents(store) {
 				if (route.action) {
 					switch (route.action) {
 						case "open": {
-							if (route.id) {																 								
-								store.dispatch(setCurrentReview(route.id));								 
+							if (route.id) {
+								store.dispatch(setCurrentReview(route.id));
 							}
 							break;
+						}
+					}
+				}
+				break;
+			}
+			case "search": {
+				if (route.action) {
+					switch (route.action) {
+						case "open": {
+							if (route.query) {
+								const q = route.query["q"];
+								if (q) {
+									store.dispatch(setCurrentCodemark());
+									store.dispatch(openPanel(WebviewPanels.FilterSearch));
+									store.dispatch(setQuery(decodeURIComponent(q)));
+								}
+							}
 						}
 					}
 				}
