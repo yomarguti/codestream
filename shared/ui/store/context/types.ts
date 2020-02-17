@@ -26,7 +26,8 @@ export enum ContextActionsType {
 	SetSpatialViewPRCommentsToggle = "@context/SetSpatialViewPRCommentsToggle",
 	RepositionCodemark = "@context/RepositionCodemark",
 	SetCurrentReview = "@context/SetCurrentReview",
-	SetActiveReview = "@context/SetActiveReview"
+	SetActiveReview = "@context/SetActiveReview",
+	SetQuery = "@context/SetQuery"
 }
 
 export type PostEntryPoint = "Stream" | "Global Nav" | "Spatial View" | undefined;

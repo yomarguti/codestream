@@ -1,12 +1,14 @@
 import React from "react";
 import * as Path from "path-browserify";
-import { connect } from "react-redux";
+import { connect, useDispatch } from "react-redux";
 import { prettyPrintOne } from "code-prettify";
 import { CSMarker } from "@codestream/protocols/api";
 import { escapeHtml, safe } from "../utils";
 import Icon from "./Icon";
 import { CodeStreamState } from "../store";
 import { getById } from "../store/repos/reducer";
+import { HostApi } from "../webview-api";
+import { setQuery, setCurrentCodemark } from "../store/context/actions";
 
 interface Props {
 	marker: CSMarker;
@@ -16,6 +18,12 @@ interface Props {
 
 function Marker(props: Props) {
 	const { marker } = props;
+
+	const dispatch = useDispatch();
+	const goSearch = query => {
+		dispatch(setCurrentCodemark());
+		dispatch(setQuery(query));
+	};
 
 	const path = marker.file || "";
 	let extension = Path.extname(path).toLowerCase();
@@ -35,9 +43,14 @@ function Marker(props: Props) {
 			<div className="file-info">
 				{props.repoName && (
 					<>
-						<span className="monospace" style={{ paddingRight: "20px" }}>
-							<Icon name="repo" /> {props.repoName}
-						</span>{" "}
+						<a
+							className="monospace internal-link"
+							style={{ paddingRight: "20px" }}
+							onClick={() => goSearch(`repo:"${props.repoName}"`)}
+						>
+							<Icon name="repo" />
+							{props.repoName}
+						</a>{" "}
 					</>
 				)}
 				{marker.file && (
@@ -49,9 +62,14 @@ function Marker(props: Props) {
 				)}
 				{marker.branchWhenCreated && (
 					<>
-						<span className="monospace" style={{ paddingRight: "20px" }}>
-							<Icon name="git-branch" /> {marker.branchWhenCreated}
-						</span>{" "}
+						<a
+							className="monospace internal-link"
+							style={{ paddingRight: "20px" }}
+							onClick={() => goSearch(`branch:"${marker.branchWhenCreated}"`)}
+						>
+							<Icon name="git-branch" />
+							{marker.branchWhenCreated}
+						</a>{" "}
 					</>
 				)}
 				{marker.commitHashWhenCreated && (

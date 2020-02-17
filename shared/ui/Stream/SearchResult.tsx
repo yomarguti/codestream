@@ -99,7 +99,6 @@ const Tip = styled.div`
 		overflow: auto;
 		border: 1px solid var(--base-border-color);
 		background: var(--base-background-color);
-		font-size: smaller;
 	}
 	p {
 		display: inline;

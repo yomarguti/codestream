@@ -616,7 +616,8 @@
 		text-decoration: line-through;
 	}
 }
-.external-link {
+.external-link,
+.internal-link {
 	color: @text-color;
 	overflow: hidden;
 	white-space: nowrap;
@@ -630,6 +631,9 @@
 	.icon {
 		margin-right: 5px;
 	}
+}
+.internal-link {
+	display: inline;
 }
 .codemark-file,
 .external-url {

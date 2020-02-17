@@ -3,6 +3,7 @@ import { logError } from "../../logger";
 import { setUserPreference } from "../../Stream/actions";
 import { action } from "../common";
 import { ContextActionsType, ContextState, PostEntryPoint, Route } from "./types";
+import { WebviewPanels } from "@codestream/protocols/webview";
 
 export const reset = () => action("RESET");
 
@@ -92,6 +93,8 @@ export const setCurrentReview = (reviewId?: string) =>
 
 export const setActiveReview = (reviewId?: string) =>
 	action(ContextActionsType.SetActiveReview, { reviewId });
+
+export const setQuery = (query: string) => action(ContextActionsType.SetQuery, query);
 
 export const setShowFeedbackSmiley = (enabled: boolean) =>
 	action(ContextActionsType.SetShowFeedbackSmiley, enabled);
