@@ -235,7 +235,6 @@ export class ScmManager {
 						});
 					}
 					modifiedFiles = await git.getNumStat(repoPath, includeSaved, includeStaged, startCommit);
-					Logger.log("MOD FIL FROM " + startCommit + " is " + JSON.stringify(modifiedFiles));
 					if (modifiedFiles) {
 						modifiedFiles.forEach(file => {
 							totalModifiedLines += file.linesAdded + file.linesRemoved;
