@@ -80,6 +80,7 @@ interface ConnectedProps {
 	closePanel?: Function;
 	createPostAndReview?: Function;
 	repos: any;
+	shouldShare: boolean;
 	unsavedFiles: string[];
 }
 
@@ -362,6 +363,7 @@ class ReviewForm extends React.Component<Props, State> {
 			if (this.props.createPostAndReview) {
 				let review = {
 					title,
+					sharingAttributes: this.props.shouldShare ? this._sharingAttributes : undefined,
 					text: replaceHtml(text)!,
 					reviewers: reviewerIds,
 					authorsById,
@@ -1243,6 +1245,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 
 	return {
 		unsavedFiles: unsavedFiles,
+		shouldShare: safe(() => state.preferences[state.context.currentTeamId].shareCodemarkEnabled) || false,
 		channel,
 		teamMates,
 		teamMembers,
