@@ -18,9 +18,13 @@ import {
 	GetRangeSha1Request,
 	GetRangeSha1RequestType,
 	GetRangeSha1Response,
+	GetRepoScmStatusesRequest,
+	GetRepoScmStatusesRequestType,
+	GetRepoScmStatusesResponse,
 	GetRepoScmStatusRequest,
 	GetRepoScmStatusRequestType,
 	GetRepoScmStatusResponse,
+	GetReposScmRequest,
 	GetReposScmRequestType,
 	GetReposScmResponse
 } from "../protocol/agent.protocol";
@@ -89,7 +93,7 @@ export class ScmManager {
 
 	@lspHandler(GetReposScmRequestType)
 	@log()
-	async getRepos({}: GetRepoScmStatusRequest): Promise<GetReposScmResponse> {
+	async getRepos({}: GetReposScmRequest): Promise<GetReposScmResponse> {
 		const cc = Logger.getCorrelationContext();
 		let gitError;
 		let repositories;
@@ -115,6 +119,37 @@ export class ScmManager {
 			error: gitError
 		};
 	}
+
+	// @lspHandler(GetRepoScmStatusesRequestType)
+	// @log()
+	// async getRepoStatuses({
+	// }: GetRepoScmStatusesRequest): Promise<GetRepoScmStatusesResponse> {
+	// 	const cc = Logger.getCorrelationContext();
+	// 	let gitError;
+	// 	let modifiedRepos = [];
+	// 	try {
+	// 		const openRepos = await this.getRepos({});
+	// 	const { repositories = [] } = openRepos;
+	// 	modifiedRepos = await Promise.all(
+	// 		repositories.map(repo => {
+	// 			return this.getRepoStatus({
+	// 				uri: repo.folder.uri,
+	// 				startCommit: undefined,
+	// 				includeStaged: false,
+	// 				includeSaved: false
+	// 			});
+	// 		})
+	// 	);
+	// } catch (ex) {
+	// 	gitError = ex.toString();
+	// 	Logger.error(ex, cc);
+	// 	debugger;
+	// }
+	// return {
+	// 	modifiedRepos
+	// 	error: gitError
+	// 	};
+	// }
 
 	@lspHandler(GetRepoScmStatusRequestType)
 	@log()
@@ -352,9 +387,9 @@ export class ScmManager {
 
 		const uri = URI.parse(documentUri);
 		if (contents == null) {
-			const reviewContents = await reviews.getContents({reviewId, repoId, path});
+			const reviewContents = await reviews.getContents({ reviewId, repoId, path });
 			const versionContents = (reviewContents as any)[version] as string;
-			const document  = TextDocument.create(uri.toString(), "codestream", 0, versionContents);
+			const document = TextDocument.create(uri.toString(), "codestream", 0, versionContents);
 			contents = document.getText(range);
 		}
 

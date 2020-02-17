@@ -81,6 +81,18 @@ export const GetRepoScmStatusRequestType = new RequestType<
 	void
 >("codestream/scm/repo/status");
 
+export interface GetRepoScmStatusesRequest {}
+export interface GetRepoScmStatusesResponse {
+	scm?: RepoScmStatus[];
+	error?: string;
+}
+export const GetRepoScmStatusesRequestType = new RequestType<
+	GetRepoScmStatusesRequest,
+	GetRepoScmStatusesResponse,
+	void,
+	void
+>("codestream/scm/repo/statuses");
+
 export interface ReposScm {
 	id?: string;
 	path: string;
