@@ -278,14 +278,8 @@ export const SharingControls = React.memo(
 		const shareProviderMenuItems = React.useMemo(() => {
 			const targetItems = derivedState.shareTargets.map(target => ({
 				key: target.teamId,
-				label: (
-					<>
-						<span style={{ marginRight: "5px" }}>
-							<Icon name={target.icon} />
-						</span>
-						{target.teamName}
-					</>
-				),
+				icon: <Icon name={target.icon} />,
+				label: target.teamName,
 				action: () => setSelectedShareTarget(target)
 			}));
 			if (derivedState.slackConfig || derivedState.msTeamsConfig) {
@@ -293,14 +287,8 @@ export const SharingControls = React.memo(
 				if (derivedState.slackConfig)
 					targetItems.push({
 						key: "add-slack",
-						label: (
-							<>
-								<span style={{ marginRight: "5px" }}>
-									<Icon name="slack" />
-								</span>
-								Add Slack workspace
-							</>
-						),
+						icon: <Icon name="slack" />,
+						label: "Add Slack workspace",
 						action: (() => {
 							authenticateWithSlack();
 						}) as any
@@ -319,7 +307,7 @@ export const SharingControls = React.memo(
 						action: (() => {
 							authenticateWithMSTeams();
 						}) as any
-					});
+					} as any);
 				}
 			}
 			return targetItems;

@@ -9,7 +9,7 @@ import { ActivityPanel } from "./ActivityPanel";
 import { NotificationsPanel } from "./NotificationsPanel";
 import ChannelPanel from "./ChannelPanel";
 import { TasksPanel } from "./TasksPanel";
-import InvitePanel from "./InvitePanel";
+import { TeamPanel } from "./TeamPanel";
 import PublicChannelPanel from "./PublicChannelPanel";
 import CreateChannelPanel from "./CreateChannelPanel";
 import ScrollBox from "./ScrollBox";
@@ -654,7 +654,6 @@ export class SimpleStream extends Component {
 			<div className="unread-badge">.</div>
 		) : null;
 
-		console.log("PROPS: ", this.props.capabilities);
 		return (
 			<nav className="inline">
 				<div className="top-tab-group">
@@ -1060,7 +1059,7 @@ export class SimpleStream extends Component {
 						/>
 					)}
 					{(activePanel === WebviewPanels.People || activePanel === "invite") && (
-						<InvitePanel
+						<TeamPanel
 							activePanel={activePanel}
 							setActivePanel={this.setActivePanel}
 							isCodeStreamTeam={this.props.isCodeStreamTeam}

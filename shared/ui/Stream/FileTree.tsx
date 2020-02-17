@@ -6,7 +6,7 @@ import { useSelector, useDispatch } from "react-redux";
 import Icon from "./Icon";
 
 interface Props {
-	files: string[];
+	files: any;
 	indent?: number;
 }
 

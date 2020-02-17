@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { FormattedMessage, injectIntl } from "react-intl";
+import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
 import Icon from "./Icon";
 import Button from "./Button";
@@ -13,12 +13,48 @@ import { getTeamProvider } from "../store/teams/reducer";
 import { HostApi } from "../webview-api";
 import { WebviewPanels } from "@codestream/protocols/webview";
 import { PanelHeader } from "../src/components/PanelHeader";
+import { GetRepoScmStatusesRequestType, RepoScmStatus } from "@codestream/protocols/agent";
+import { CSUser, CSApiCapabilities } from "@codestream/protocols/api";
+import { ChangesetFile } from "./Review/ChangesetFile";
+import Tooltip from "./Tooltip";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
 );
 
-export class InvitePanel extends Component {
+interface Props extends ConnectedProps {}
+
+interface ConnectedProps {
+	isCodeStreamTeam: boolean;
+	webviewFocused: boolean;
+	teamId: string;
+	activePanel: WebviewPanels;
+	invite: Function;
+	invited: any[];
+	suggested: any[];
+	teamName: string;
+	teamPlan: any;
+	companyMemberCount: number;
+	teamProvider: any;
+	members: CSUser[];
+	repos: any;
+	apiCapabilities: CSApiCapabilities;
+}
+
+interface State {
+	loading: boolean;
+	isInviting: boolean;
+	invitingEmails: any;
+	newMemberEmail: string;
+	newMemberEmailInvalid: boolean;
+	newMemberName: string;
+	newMemberInvalid: boolean;
+	newMemberInputTouched: boolean;
+	inputTouched: boolean;
+	modifiedRepos: RepoScmStatus[];
+}
+
+class TeamPanel extends React.Component<Props, State> {
 	initialState = {
 		loading: false,
 		isInviting: false,
@@ -26,19 +62,29 @@ export class InvitePanel extends Component {
 		newMemberEmail: "",
 		newMemberName: "",
 		newMemberInvalid: false,
-		newMemberInputTouched: false
+		newMemberInputTouched: false,
+		inputTouched: false,
+		newMemberEmailInvalid: false,
+		modifiedRepos: []
 	};
 
-	state = this.initialState;
+	constructor(props: Props) {
+		super(props);
+		this.state = this.initialState;
+	}
 
 	componentDidMount() {
 		if (this.props.webviewFocused)
 			HostApi.instance.track("Page Viewed", { "Page Name": "Team Tab" });
+
+		// if (this.props.apiCapabilities["xray"])
+		this.getScmInfoSummary();
 	}
 
-	componentWillUnmount() {
-		this.disposable && this.disposable.dispose();
-	}
+	getScmInfoSummary = async () => {
+		const result = await HostApi.instance.send(GetRepoScmStatusesRequestType, {});
+		if (result.scm) this.setState({ modifiedRepos: result.scm });
+	};
 
 	onEmailChange = event => {
 		this.setState({ newMemberEmail: event.target.value });
@@ -237,23 +283,40 @@ export class InvitePanel extends Component {
 		// turn this off, as it is just a mockup exploration -Pez
 		// return null;
 
+		const { repos, apiCapabilities } = this.props;
+		const { modifiedRepos = [] } = this.state;
+
 		if (user.username === "pez") {
-			const files = [
-				["src/InlineCodemarks.tsx", 3, 4],
-				["src/KnowledgePanel.tsx", 12, 2],
-				["src/index.js", 11, 9]
-			];
 			return (
 				<>
-					<li className="status" style={{ paddingLeft: "48px" }}>
-						<Icon name="repo" /> codestream-components &nbsp; <Icon name="git-branch" />{" "}
-						feature/sharing
-					</li>
-					<FileTree files={files} indent={60} />
+					{modifiedRepos.map(repo => {
+						const { repoId = "", modifiedFiles } = repo;
+						if (modifiedFiles.length === 0) return null;
+						const repoName = repos[repoId] ? repos[repoId].name : "";
+						const added = modifiedFiles.reduce((total, f) => total + f.linesAdded, 0);
+						const removed = modifiedFiles.reduce((total, f) => total + f.linesRemoved, 0);
+						const title = modifiedFiles.map(f => <ChangesetFile key={f.file} {...f} />);
+						return (
+							<li className="status row-with-icon-actions" style={{ paddingLeft: "48px" }}>
+								<Tooltip title={title} placement="top">
+									<span>
+										<Icon name="repo" /> {repoName} &nbsp; <Icon name="git-branch" /> {repo.branch}
+										{added > 0 && <span className="added">+{added}</span>}
+										{removed > 0 && <span className="deleted">+{removed}</span>}
+									</span>
+								</Tooltip>
+							</li>
+						);
+					})}
 				</>
 			);
+			// {modifiedFiles.map(f => (
+			// 	<li style={{ paddingLeft: "80px" }}>
+			// 		<ChangesetFile onClick={e => {}} key={f.file} {...f} />
+			// 	</li>
+			// ))}
 		}
-		if (user.username === "eamodio") {
+		if (user.username === "eamodio2") {
 			const files = [
 				["client/KnowledgePanel.tsx", 0, 3],
 				["client/util.ts", 9, 22],
@@ -348,12 +411,12 @@ export class InvitePanel extends Component {
 	}
 }
 
-const mapStateToProps = ({ users, context, teams }) => {
+const mapStateToProps = ({ users, context, teams, repos, apiVersioning }) => {
 	const team = teams[context.currentTeamId];
 	const teamProvider = getTeamProvider(team);
 
 	const members = mapFilter(team.memberIds, id => {
-		const user = users[id];
+		const user = users[id as string];
 		if (!user || !user.isRegistered || user.deactivated || user.externalUserId) return;
 
 		if (!user.fullName) {
@@ -366,7 +429,7 @@ const mapStateToProps = ({ users, context, teams }) => {
 	const invited =
 		teamProvider === "codestream"
 			? mapFilter(team.memberIds, id => {
-					const user = users[id];
+					const user = users[id as string];
 					if (!user || user.isRegistered || user.deactivated || user.externalUserId) return;
 					let email = user.email;
 					if (email) user.fullName = email.replace(/@.*/, "");
@@ -377,16 +440,20 @@ const mapStateToProps = ({ users, context, teams }) => {
 	// this should be populated by something like
 	// git log --pretty=format:"%an|%aE" | sort -u
 	// and then filter out noreply.github.com (what else?)
-	const suggested = []; //[{ fullName: "Fred", email: "pez+555t@codestream.com" }];
+	const suggested = [] as any; //[{ fullName: "Fred", email: "pez+555t@codestream.com" }];
 
 	return {
 		teamId: team.id,
 		teamName: team.name,
+		repos,
 		members: _sortBy(members, m => (m.fullName || "").toLowerCase()),
 		invited: _sortBy(invited, "email"),
 		suggested: _sortBy(suggested, m => (m.fullName || "").toLowerCase()),
-		webviewFocused: context.hasFocus
+		webviewFocused: context.hasFocus,
+		apiCapabilities: apiVersioning.apiCapabilities
 	};
 };
 
-export default connect(mapStateToProps, { invite })(injectIntl(InvitePanel));
+const ConnectedTeamPanel = connect(mapStateToProps, { invite })(TeamPanel);
+
+export { ConnectedTeamPanel as TeamPanel };

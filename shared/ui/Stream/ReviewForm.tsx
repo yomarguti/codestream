@@ -1,11 +1,9 @@
 import {
-	FetchAssignableUsersRequestType,
 	GetFileScmInfoRequestType,
 	GetFileScmInfoResponse,
 	GetRepoScmStatusRequestType,
 	GetRepoScmStatusResponse,
 	GetReposScmRequestType,
-	GetReposScmResponse,
 	FileStatus,
 	AddIgnoreFilesRequestType,
 	IgnoreFilesRequestType,
@@ -14,7 +12,6 @@ import {
 	ChangeDataType
 } from "@codestream/protocols/agent";
 import {
-	CSChannelStream,
 	CSDirectStream,
 	CSReview,
 	CSStream,
@@ -29,7 +26,6 @@ import cx from "classnames";
 import {
 	getStreamForId,
 	getStreamForTeam,
-	getChannelStreamsForTeam,
 	getDirectMessageStreamsForTeam,
 	getDMName
 } from "../store/streams/reducer";
@@ -58,6 +54,8 @@ import { PostsActionsType } from "../store/posts/types";
 import { URI } from "vscode-uri";
 import { DocumentData } from "../protocols/agent/agent.protocol.notifications";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
+import { Loading } from "../Container/Loading";
+import { LoadingMessage } from "../src/components/LoadingMessage";
 
 interface Props extends ConnectedProps {
 	streamId: string;
@@ -225,7 +223,7 @@ class ReviewForm extends React.Component<Props, State> {
 			uri: uri
 		});
 		this.setState({ scmInfo }, () => {
-			this.handleRepoChange();
+			this.handleRepoChange(uri);
 			if (callback) callback();
 		});
 	}
@@ -244,7 +242,7 @@ class ReviewForm extends React.Component<Props, State> {
 						(e.data as DocumentData).reason === "saved")
 				) {
 					this.setState({ isLoadingScm: true });
-					this.handleRepoChange();
+					this.handleRepoChange(textEditorUri);
 				}
 			})
 		);
@@ -256,14 +254,14 @@ class ReviewForm extends React.Component<Props, State> {
 		this.disposables.forEach(d => d.dispose());
 	};
 
-	async handleRepoChange() {
+	async handleRepoChange(uri?) {
 		const { repos, teamMates } = this.props;
 		const { includeSaved, includeStaged, startCommit } = this.state;
 		const { scm } = this.state.scmInfo;
 		if (!scm) return;
 
 		const statusInfo = await HostApi.instance.send(GetRepoScmStatusRequestType, {
-			uri: this.state.scmInfo.uri,
+			uri: uri || this.props.textEditorUri,
 			startCommit,
 			includeStaged,
 			includeSaved
@@ -563,7 +561,7 @@ class ReviewForm extends React.Component<Props, State> {
 							<div style={{ height: "10px" }} />
 						</>
 					)}
-					{totalModifiedLines > 25 && (
+					{totalModifiedLines > 100 && (
 						<>
 							<div style={{ display: "flex", padding: "0 0 10px 2px" }}>
 								<Icon name="alert" muted />
@@ -1012,11 +1010,14 @@ class ReviewForm extends React.Component<Props, State> {
 		this.setState({ reviewersTouched: true });
 	};
 
-	setRepo = repoId => {};
+	setRepo = repo => {
+		this.setState({ isLoadingScm: true });
+		this.handleRepoChange(repo.folder.uri + "/foo");
+	};
 
 	renderReviewForm() {
 		const { editingReview, currentUser, repos } = this.props;
-		const { scmInfo, repoName, reviewers, authorsById, openRepos } = this.state;
+		const { scmInfo, repoName, reviewers, authorsById, openRepos, isLoadingScm } = this.state;
 
 		// coAuthorLabels are a mapping from teamMate ID to the # of edits represented in
 		// the autors variable (number of times you stomped on their code), and the number
@@ -1049,9 +1050,9 @@ class ReviewForm extends React.Component<Props, State> {
 			? openRepos.map(repo => {
 					const repoName = repo.id && repos[repo.id] && repos[repo.id].name;
 					return {
-						label: repoName || repo.folder,
+						label: repoName || repo.folder.uri,
 						key: repo.id,
-						action: () => this.setRepo(repo.id)
+						action: () => this.setRepo(repo)
 					};
 			  })
 			: [];
@@ -1068,7 +1069,7 @@ class ReviewForm extends React.Component<Props, State> {
 								<b>{currentUser.username}</b>
 								<span className="subhead">
 									is requesting a code review
-									{scmInfo && scmInfo.scm && <>&nbsp;in&nbsp;</>}
+									{scmInfo && scmInfo.scm && <> in </>}
 								</span>
 								{scmInfo && scmInfo.scm && (
 									<>
@@ -1103,7 +1104,7 @@ class ReviewForm extends React.Component<Props, State> {
 						{this.renderMessageInput()}
 					</div>
 					{this.renderTags()}
-					{this.state.isLoadingScm || (
+					{!isLoadingScm && (
 						<div
 							className="related"
 							style={{ padding: "0", marginBottom: 0, position: "relative" }}
@@ -1145,54 +1146,57 @@ class ReviewForm extends React.Component<Props, State> {
 							</SelectPeople>
 						</div>
 					)}
-					{this.renderChangedFiles()}
-					{this.renderGroupsAndCommits()}
-					{this.renderSharingControls()}
-					<div
-						key="buttons"
-						className="button-group"
-						style={{
-							marginLeft: "10px",
-							marginTop: "10px",
-							float: "right",
-							width: "auto",
-							marginRight: 0
-						}}
-					>
-						<Tooltip title={cancelTip} placement="bottom" delay={1}>
-							<Button
-								key="cancel"
-								style={{
-									paddingLeft: "10px",
-									paddingRight: "10px",
-									width: "auto"
-								}}
-								className="control-button cancel"
-								type="submit"
-								onClick={this.confirmCancel}
-							>
-								Cancel
-							</Button>
-						</Tooltip>
-						<Tooltip title={submitTip} placement="bottom" delay={1}>
-							<Button
-								key="submit"
-								style={{
-									paddingLeft: "10px",
-									paddingRight: "10px",
-									// fixed width to handle the isLoading case
-									width: "80px",
-									marginRight: 0
-								}}
-								className={cx("control-button", { cancel: !this.state.title })}
-								type="submit"
-								loading={this.state.isLoading}
-								onClick={this.handleClickSubmit}
-							>
-								Submit
-							</Button>
-						</Tooltip>
-					</div>
+					{!isLoadingScm && this.renderChangedFiles()}
+					{!isLoadingScm && this.renderGroupsAndCommits()}
+					{!isLoadingScm && this.renderSharingControls()}
+					{!isLoadingScm && (
+						<div
+							key="buttons"
+							className="button-group"
+							style={{
+								marginLeft: "10px",
+								marginTop: "10px",
+								float: "right",
+								width: "auto",
+								marginRight: 0
+							}}
+						>
+							<Tooltip title={cancelTip} placement="bottom" delay={1}>
+								<Button
+									key="cancel"
+									style={{
+										paddingLeft: "10px",
+										paddingRight: "10px",
+										width: "auto"
+									}}
+									className="control-button cancel"
+									type="submit"
+									onClick={this.confirmCancel}
+								>
+									Cancel
+								</Button>
+							</Tooltip>
+							<Tooltip title={submitTip} placement="bottom" delay={1}>
+								<Button
+									key="submit"
+									style={{
+										paddingLeft: "10px",
+										paddingRight: "10px",
+										// fixed width to handle the isLoading case
+										width: "80px",
+										marginRight: 0
+									}}
+									className={cx("control-button", { cancel: !this.state.title })}
+									type="submit"
+									loading={this.state.isLoading}
+									onClick={this.handleClickSubmit}
+								>
+									Submit
+								</Button>
+							</Tooltip>
+						</div>
+					)}
+					{isLoadingScm && <LoadingMessage>Loading repo info...</LoadingMessage>}
 					<div key="clear" style={{ clear: "both" }} />
 				</fieldset>
 			</form>

@@ -3,7 +3,7 @@ import { ReviewChangesetFileInfo, FileStatus } from "@codestream/protocols/api";
 import styled from "styled-components";
 
 export const ChangesetFile = styled(
-	(props: ReviewChangesetFileInfo & { className?: string; onClick: React.MouseEventHandler }) => {
+	(props: ReviewChangesetFileInfo & { className?: string; onClick?: React.MouseEventHandler }) => {
 		return (
 			<div
 				className={`${props.className} row-with-icon-actions monospace ellipsis-left-container`}
