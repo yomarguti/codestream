@@ -137,7 +137,8 @@ export class SimpleFilterSearchPanel extends Component {
 			},
 			selectedTags: {},
 			filters: {},
-			savedFilters: props.savedSearchFilters
+			savedFilters: props.savedSearchFilters,
+			q: props.query
 		};
 
 		this.sectionLabel = {
@@ -160,6 +161,10 @@ export class SimpleFilterSearchPanel extends Component {
 		// 	EventEmitter.subscribe("interaction:active-editor-changed", this.handleFileChangedEvent)
 		// );
 		if (this._searchInput) this._searchInput.focus();
+	}
+
+	componentDidUpdate(prevProps, prevState) {
+		if (this.props.query && this.props.query !== prevProps.query) this.setQ(this.props.query);
 	}
 
 	componentWillUnmount() {
@@ -299,6 +304,17 @@ export class SimpleFilterSearchPanel extends Component {
 		if (match) {
 			filters.branch = match[1];
 			text = text.replace(/\s*branch:(\S+)\s*/, " ");
+		}
+
+		match = text.match(/\bcommit:\"(.*?)\"(\s|$)/);
+		if (match) {
+			filters.commit = match[1];
+			text = text.replace(/\s*commit:\"(.*?)\"\s*/, " ");
+		}
+		match = text.match(/\bcommit:(\S+)(\s|$)/);
+		if (match) {
+			filters.commit = match[1];
+			text = text.replace(/\s*commit:(\S+)\s*/, " ");
 		}
 
 		match = text.match(/\brepo:\"(.*?)\"(\s|$)/);
@@ -465,6 +481,16 @@ export class SimpleFilterSearchPanel extends Component {
 				}
 				// FIXME -- check the markers on the codemark for the branch
 				// else if (!filters.branch === item.branch)
+			}
+			if (filters.commit) {
+				if (isReview) {
+					const commits = (item.reviewChangesets || []).map(changeset => changeset.commits).flat();
+					console.log("COMMITS ARE: ", commits);
+					const match = commits.find(commit => commit && commit.sha.startsWith(filters.commit));
+					console.log("MATCH IS: ", match, " from ", filters.commit);
+					if (!match) return null;
+				}
+				// FIXME -- check the markers on the codemark for the commit
 			}
 			if (filters.repo) {
 				if (isReview) {
@@ -846,6 +872,7 @@ const mapStateToProps = state => {
 		branchArray,
 		repoArray,
 		repos,
+		query: context.query || "",
 		// authorFiltersLabelsLower,
 		webviewFocused: context.hasFocus
 	};
