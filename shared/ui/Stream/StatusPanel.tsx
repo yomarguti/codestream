@@ -92,7 +92,7 @@ const Examples = styled.div`
 
 const EMPTY_STATUS = {
 	label: "",
-	icon: "",
+	icon: ":smiley:",
 	invisible: false,
 	expires: 0
 };
@@ -122,7 +122,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const [loading, setLoading] = useState(false);
 	const [label, setLabel] = useState(status.label || "");
 	const [invisible, setInvisible] = useState(status.invisible);
-	const [icon, setIcon] = useState(status.icon || "");
+	const [icon, setIcon] = useState(status.icon || ":smiley:");
 	const [clearAfter, setClearAfter] = useState("");
 	const [emojiMenuOpen, setEmojiMenuOpen] = useState(false);
 	const [emojiMenuTarget, setEmojiMenuTarget] = useState();
@@ -134,6 +134,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		setLoading(true);
 		const now = new Date();
 		let expires = 0;
+		console.log("CLEAR AFTER IS: ", clearAfter);
 		switch (clearAfter) {
 			case "1":
 			case "30":
@@ -146,13 +147,23 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 				break;
 			}
 			case "today": {
-				const delta = parseInt(clearAfter, 10);
+				// reset to most recent midnight...
+				now.setHours(0);
+				now.setMinutes(0);
+				now.setSeconds(0);
+				// ...then add one day
+				const delta = 24 * 60 * 60 * 1000;
 				const expiresDate = new Date(now.getTime() + delta);
 				expires = expiresDate.getTime();
 				break;
 			}
 			case "week": {
-				const delta = parseInt(clearAfter, 10);
+				// reset to most recent midnight...
+				now.setHours(0);
+				now.setMinutes(0);
+				now.setSeconds(0);
+				// ...then add seven days
+				const delta = 7 * 24 * 60 * 60 * 1000;
 				const expiresDate = new Date(now.getTime() + delta);
 				expires = expiresDate.getTime();
 				break;
@@ -164,6 +175,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 				expires = status.expires || 0;
 		}
 
+		console.log("SETTING EXPIRES TO: ", expires);
 		HostApi.instance.track("Status Set", { Value: status });
 		// @ts-ignore
 		await dispatch(setUserStatus(icon, label, invisible, expires));
@@ -246,7 +258,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 					<div id="controls">
 						<StatusInput>
 							<div className="icon-selector" onClick={handleClickEmojiButton}>
-								<span>{emojiPlain(icon || ":smiley:")}</span>
+								<span>{emojiPlain(icon)}</span>
 								{emojiMenuOpen && (
 									<EmojiPicker addEmoji={selectEmoji} target={emojiMenuTarget} autoFocus={true} />
 								)}
