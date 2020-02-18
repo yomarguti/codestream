@@ -14,6 +14,7 @@ import Menu from "../Menu";
 import { confirmPopup } from "../Confirm";
 import { deletePost } from "../actions";
 import { RepliesToPostContext } from "./RepliesToPost";
+import { getPost } from "@codestream/webview/store/posts/reducer";
 
 export interface ReplyProps {
 	author: Partial<CSUser>;
@@ -21,6 +22,7 @@ export interface ReplyProps {
 	nestedReplies?: PostPlus[];
 	renderMenu?: (target: any, onClose: () => void) => React.ReactNode;
 	className?: string;
+	showParentPreview?: boolean;
 }
 
 const AuthorInfo = styled.div`
@@ -67,6 +69,10 @@ const ReplyBody = styled.span`
 	}
 `;
 
+const ParentPreview = styled.span`
+	margin-left: 23px;
+`;
+
 export const Reply = (props: ReplyProps) => {
 	const [menuState, setMenuState] = React.useState<{
 		open: boolean;
@@ -76,6 +82,12 @@ export const Reply = (props: ReplyProps) => {
 	const codemark = useSelector((state: CodeStreamState) =>
 		isPending(props.post) ? null : getCodemark(state.codemarks, props.post.codemarkId)
 	);
+
+	const parentPost = useSelector((state: CodeStreamState) => {
+		return getPost(state.posts, props.post.streamId, props.post.parentPostId!);
+	});
+
+	const isNestedReply = props.showParentPreview && parentPost.parentPostId != null;
 
 	const postText = codemark != null ? codemark.text : props.post.text;
 
@@ -125,6 +137,11 @@ export const Reply = (props: ReplyProps) => {
 						)}
 					</div>
 				</AuthorInfo>
+				{isNestedReply && (
+					<ParentPreview>
+						Reply to <a>{parentPost.text}</a>
+					</ParentPreview>
+				)}
 				{emote ? null : (
 					<>
 						<MarkdownText
