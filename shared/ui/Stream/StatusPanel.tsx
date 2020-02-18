@@ -319,7 +319,10 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 						<div style={{ paddingLeft: "8px" }}>
 							<Checkbox name="invisible" checked={!invisible} onChange={v => setInvisible(!v)}>
 								Share what I'm working on with the team &nbsp;
-								<a href="https://help.codestream.com/writeme-about-x-ray">
+								<a
+									style={{ color: "inherit" }}
+									href="https://help.codestream.com/writeme-about-x-ray"
+								>
 									<Icon name="info" title="Click for details" />
 								</a>
 							</Checkbox>
