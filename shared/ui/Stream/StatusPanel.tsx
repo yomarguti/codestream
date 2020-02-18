@@ -264,7 +264,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								)}
 							</div>
 							{label.length > 0 && (
-								<div className="clear" onClick={() => set("", "", "today")}>
+								<div className="clear" onClick={() => set(":smiley:", "", "today")}>
 									<Icon name="x" className="clickable" />
 								</div>
 							)}
