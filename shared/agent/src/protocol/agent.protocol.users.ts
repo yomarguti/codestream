@@ -1,7 +1,7 @@
 "use strict";
 import { RequestType } from "vscode-languageserver-protocol";
-import { Unreads } from "./agent.protocol";
-import { CSMe, CSMePreferences, CSPresenceStatus, CSUser } from "./api.protocol";
+import { RepoScmStatus, Unreads } from "./agent.protocol";
+import { CSMe, CSMePreferences, CSMeStatus, CSPresenceStatus, CSUser } from "./api.protocol";
 
 export interface FetchUsersRequest {
 	userIds?: string[];
@@ -93,6 +93,36 @@ export const UpdatePreferencesRequestType = new RequestType<
 	void,
 	void
 >("codestream/user/updatePreferences");
+
+export interface UpdateStatusRequest {
+	status: CSMeStatus;
+}
+
+export interface UpdateStatusResponse {
+	user: CSUser;
+}
+
+export const UpdateStatusRequestType = new RequestType<
+	UpdateStatusRequest,
+	UpdateStatusResponse,
+	void,
+	void
+>("codestream/user/updateStatus");
+
+export interface SetModifiedReposRequest {
+	modifiedRepos: RepoScmStatus[];
+}
+
+export interface SetModifiedReposResponse {
+	user: CSUser;
+}
+
+export const SetModifiedReposRequestType = new RequestType<
+	SetModifiedReposRequest,
+	SetModifiedReposResponse,
+	void,
+	void
+>("codestream/user/setModifiedRepos");
 
 export interface GetMeRequest {}
 

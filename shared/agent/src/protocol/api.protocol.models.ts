@@ -1,7 +1,7 @@
 "use strict";
 
 import { ParsedDiff } from "diff";
-import { ThirdPartyProviders } from "./agent.protocol";
+import { RepoScmStatus, ThirdPartyProviders } from "./agent.protocol";
 
 export interface CSEntity {
 	deactivated?: boolean;
@@ -512,6 +512,8 @@ export interface CSUser extends CSEntity {
 	providerIdentities?: string[];
 	codestreamId?: string;
 	externalUserId?: string;
+	modifiedRepos?: RepoScmStatus[]; // all of the local changes on disk (i.e. not pushed)
+	status?: { label: string; icon?: string; expires?: number; invisible?: boolean };
 
 	avatar?: {
 		image?: string;
@@ -538,6 +540,13 @@ export interface CSMePreferences {
 	telemetryOptOut?: boolean;
 	notifications?: CSNotificationPreference;
 	[key: string]: any;
+}
+
+export interface CSMeStatus {
+	icon: string;
+	label: string;
+	expires: number;
+	invisible: boolean;
 }
 
 type CSMeProviderInfo = { slack?: CSSlackProviderInfo } & {

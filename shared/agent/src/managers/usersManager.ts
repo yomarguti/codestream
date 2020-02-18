@@ -15,11 +15,17 @@ import {
 	GetUserResponse,
 	InviteUserRequest,
 	InviteUserRequestType,
+	SetModifiedReposRequest,
+	SetModifiedReposRequestType,
+	SetModifiedReposResponse,
 	UpdatePreferencesRequest,
 	UpdatePreferencesRequestType,
 	UpdatePreferencesResponse,
 	UpdatePresenceRequest,
-	UpdatePresenceRequestType
+	UpdatePresenceRequestType,
+	UpdateStatusRequest,
+	UpdateStatusRequestType,
+	UpdateStatusResponse
 } from "../protocol/agent.protocol";
 import { CSUser } from "../protocol/api.protocol";
 import { lsp, lspHandler } from "../system";
@@ -79,6 +85,16 @@ export class UsersManager extends CachedEntityManagerBase<CSUser> {
 	@lspHandler(UpdatePreferencesRequestType)
 	async updatePreferences(request: UpdatePreferencesRequest): Promise<UpdatePreferencesResponse> {
 		return this.session.api.updatePreferences(request);
+	}
+
+	@lspHandler(UpdateStatusRequestType)
+	async updateStatus(request: UpdateStatusRequest): Promise<UpdateStatusResponse> {
+		return this.session.api.updateStatus(request);
+	}
+
+	@lspHandler(SetModifiedReposRequestType)
+	async setModifiedRepos(request: SetModifiedReposRequest): Promise<SetModifiedReposResponse> {
+		return this.session.api.setModifiedRepos(request);
 	}
 
 	@lspHandler(UpdatePresenceRequestType)

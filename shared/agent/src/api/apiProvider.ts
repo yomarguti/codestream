@@ -115,6 +115,8 @@ import {
 	SetCodemarkPinnedResponse,
 	SetCodemarkStatusRequest,
 	SetCodemarkStatusResponse,
+	SetModifiedReposRequest,
+	SetModifiedReposResponse,
 	SetStreamPurposeRequest,
 	SetStreamPurposeResponse,
 	ThirdPartyProviderSetTokenRequest,
@@ -131,6 +133,8 @@ import {
 	UpdatePresenceResponse,
 	UpdateReviewRequest,
 	UpdateReviewResponse,
+	UpdateStatusRequest,
+	UpdateStatusResponse,
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipResponse,
 	UpdateUserRequest,
@@ -310,6 +314,8 @@ export interface ApiProvider {
 	getMe(): Promise<GetMeResponse>;
 	getUnreads(request: GetUnreadsRequest): Promise<GetUnreadsResponse>;
 	updatePreferences(request: UpdatePreferencesRequest): Promise<UpdatePreferencesResponse>;
+	updateStatus(request: UpdateStatusRequest): Promise<UpdateStatusResponse>;
+	setModifiedRepos(request: SetModifiedReposRequest): Promise<SetModifiedReposResponse>;
 	getPreferences(): Promise<GetPreferencesResponse>;
 	updatePresence(request: UpdatePresenceRequest): Promise<UpdatePresenceResponse>;
 	getTelemetryKey(): Promise<string>;

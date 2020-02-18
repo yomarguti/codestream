@@ -45,7 +45,9 @@ export interface GetRepoScmStatusRequest {
 }
 
 export interface CoAuthors {
-	[email: string]: { stomped: number; commits: number };
+	email: string;
+	stomped: number;
+	commits: number;
 }
 
 export interface RepoScmStatus {
@@ -62,7 +64,7 @@ export interface RepoScmStatus {
 	savedFiles: string[];
 	stagedFiles: string[];
 	// authors whose code i have changed, or who have pushed to this branch
-	authors: CoAuthors;
+	authors: CoAuthors[];
 	remotes: { name: string; url: string }[];
 	// this is just the total number of lines modified so that
 	// we can throw up a warning if it's too many ("shift left")

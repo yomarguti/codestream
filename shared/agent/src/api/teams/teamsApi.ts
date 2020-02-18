@@ -87,6 +87,8 @@ import {
 	RenameStreamResponse,
 	SetCodemarkPinnedRequest,
 	SetCodemarkStatusRequest,
+	SetModifiedReposRequest,
+	SetModifiedReposResponse,
 	SetStreamPurposeRequest,
 	SetStreamPurposeResponse,
 	UnarchiveStreamRequest,
@@ -96,6 +98,7 @@ import {
 	UpdateMarkerRequest,
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
+	UpdateStatusRequest,
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipResponse,
 	UpdateUserRequest
@@ -509,6 +512,16 @@ export class MSTeamsApiProvider implements ApiProvider {
 	@log()
 	updatePreferences(request: UpdatePreferencesRequest) {
 		return this._codestream.updatePreferences(request);
+	}
+
+	@log()
+	updateStatus(request: UpdateStatusRequest) {
+		return this._codestream.updateStatus(request);
+	}
+
+	@log()
+	setModifiedRepos(request: SetModifiedReposRequest) {
+		return this._codestream.setModifiedRepos(request);
 	}
 
 	@log()

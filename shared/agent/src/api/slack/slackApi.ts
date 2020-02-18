@@ -75,6 +75,8 @@ import {
 	RenameStreamRequest,
 	SetCodemarkPinnedRequest,
 	SetCodemarkStatusRequest,
+	SetModifiedReposRequest,
+	SetModifiedReposResponse,
 	SetStreamPurposeRequest,
 	UnarchiveStreamRequest,
 	Unreads,
@@ -82,6 +84,7 @@ import {
 	UpdateMarkerRequest,
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
+	UpdateStatusRequest,
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipResponse,
 	UpdateUserRequest
@@ -232,8 +235,8 @@ export class SlackApiProvider implements ApiProvider {
 			agent: this._httpsAgent,
 			logLevel: Logger.level === TraceLevel.Debug ? LogLevel.DEBUG : LogLevel.INFO,
 			logger: {
-				setLevel() { },
-				setName() { },
+				setLevel() {},
+				setName() {},
 				debug(...msgs) {
 					Logger.debug("SLACK", ...msgs);
 				},
@@ -597,6 +600,16 @@ export class SlackApiProvider implements ApiProvider {
 	}
 
 	@log()
+	updateStatus(request: UpdateStatusRequest) {
+		return this._codestream.updateStatus(request);
+	}
+
+	@log()
+	setModifiedRepos(request: SetModifiedReposRequest) {
+		return this._codestream.setModifiedRepos(request);
+	}
+
+	@log()
 	updatePresence(request: UpdatePresenceRequest) {
 		return this._codestream.updatePresence(request);
 	}
@@ -691,7 +704,9 @@ export class SlackApiProvider implements ApiProvider {
 		return this._codestream.moveMarker(request);
 	}
 
-	triggerMsTeamsProactiveMessage(request: TriggerMsTeamsProactiveMessageRequest): Promise<TriggerMsTeamsProactiveMessageResponse> {
+	triggerMsTeamsProactiveMessage(
+		request: TriggerMsTeamsProactiveMessageRequest
+	): Promise<TriggerMsTeamsProactiveMessageResponse> {
 		throw new Error("Not supported");
 	}
 
@@ -763,7 +778,7 @@ export class SlackApiProvider implements ApiProvider {
 				// Set the fallback (notification) content for the message
 				text = `${codemark.title || ""}${
 					codemark.title && codemark.text ? `\n\n` : ""
-					}${codemark.text || ""}`;
+				}${codemark.text || ""}`;
 			}
 
 			const response = await this.slackApiCall("chat.postMessage", {
@@ -1226,7 +1241,7 @@ export class SlackApiProvider implements ApiProvider {
 				.map(
 					s =>
 						`\t${s.id} = ${s.name}${s.priority == null ? "" : `, p=${s.priority}`}${
-						s.type === StreamType.Direct ? `, closed=${s.isClosed}` : ""
+							s.type === StreamType.Direct ? `, closed=${s.isClosed}` : ""
 						}`
 				)
 				.join("\n")}\ncompleted`
@@ -1254,7 +1269,7 @@ export class SlackApiProvider implements ApiProvider {
 				Logger.log(
 					cc,
 					`Fetched page; cursor=${response.response_metadata &&
-					response.response_metadata.next_cursor}`
+						response.response_metadata.next_cursor}`
 				);
 
 				conversations.push(...data);
@@ -1317,10 +1332,10 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	async fetchCounts(): Promise<
 		| {
-			channels: { [id: string]: any };
-			groups: { [id: string]: any };
-			ims: { [id: string]: any };
-		}
+				channels: { [id: string]: any };
+				groups: { [id: string]: any };
+				ims: { [id: string]: any };
+		  }
 		| undefined
 	> {
 		// Use real-time events as a proxy for limited-slack mode (which can't use undocumented apis)
@@ -1422,7 +1437,7 @@ export class SlackApiProvider implements ApiProvider {
 					Logger.warn(
 						cc,
 						`TIMEOUT ${timeoutMs / 1000}s exceeded while fetching stream '${
-						deferred.stream.id
+							deferred.stream.id
 						}' in the background`
 					);
 
@@ -1495,7 +1510,7 @@ export class SlackApiProvider implements ApiProvider {
 				Logger.log(
 					cc,
 					`Fetched page; cursor=${response.response_metadata &&
-					response.response_metadata.next_cursor}`
+						response.response_metadata.next_cursor}`
 				);
 
 				channels.push(...data);
@@ -1507,10 +1522,10 @@ export class SlackApiProvider implements ApiProvider {
 		const streams = [];
 		let pending:
 			| {
-				action(): Promise<CSChannelStream>;
-				id: string;
-				name: string;
-			}[]
+					action(): Promise<CSChannelStream>;
+					id: string;
+					name: string;
+			  }[]
 			| undefined;
 
 		let counts;
@@ -1610,7 +1625,7 @@ export class SlackApiProvider implements ApiProvider {
 				Logger.log(
 					cc,
 					`Fetched page; cursor=${response.response_metadata &&
-					response.response_metadata.next_cursor}`
+						response.response_metadata.next_cursor}`
 				);
 
 				groups.push(...data);
@@ -1621,11 +1636,11 @@ export class SlackApiProvider implements ApiProvider {
 		const streams = [];
 		let pending:
 			| {
-				action(): Promise<CSChannelStream | CSDirectStream>;
-				grouping: number;
-				id: string;
-				priority: number;
-			}[]
+					action(): Promise<CSChannelStream | CSDirectStream>;
+					grouping: number;
+					id: string;
+					priority: number;
+			  }[]
 			| undefined;
 		let counts;
 		let s;
@@ -1743,7 +1758,7 @@ export class SlackApiProvider implements ApiProvider {
 				Logger.log(
 					cc,
 					`Fetched page; cursor=${response.response_metadata &&
-					response.response_metadata.next_cursor}`
+						response.response_metadata.next_cursor}`
 				);
 
 				ims.push(...data);
@@ -1755,10 +1770,10 @@ export class SlackApiProvider implements ApiProvider {
 		const streams = [];
 		let pending:
 			| {
-				action(): Promise<CSDirectStream>;
-				id: string;
-				priority: number;
-			}[]
+					action(): Promise<CSDirectStream>;
+					id: string;
+					priority: number;
+			  }[]
 			| undefined;
 		let counts;
 		let s;
@@ -1890,7 +1905,7 @@ export class SlackApiProvider implements ApiProvider {
 			Logger.log(
 				cc,
 				`Fetched page; cursor=${response.response_metadata &&
-				response.response_metadata.next_cursor}`
+					response.response_metadata.next_cursor}`
 			);
 
 			members.push(...data);
@@ -2243,7 +2258,7 @@ export class SlackApiProvider implements ApiProvider {
 			Logger.log(
 				cc,
 				`Fetched page; cursor=${response.response_metadata &&
-				response.response_metadata.next_cursor}`
+					response.response_metadata.next_cursor}`
 			);
 
 			members.push(...data);
@@ -2359,11 +2374,11 @@ export class SlackApiProvider implements ApiProvider {
 		args: false,
 		prefix: (context, method, request) =>
 			`${context.prefix} ${method}(${
-			request != null
-				? Logger.toLoggable(request, (key, value) =>
-					logFilterKeys.has(key) ? `<${key}>` : Logger.sanitize(key, value)
-				)
-				: ""
+				request != null
+					? Logger.toLoggable(request, (key, value) =>
+							logFilterKeys.has(key) ? `<${key}>` : Logger.sanitize(key, value)
+					  )
+					: ""
 			})`
 	})
 	protected async slackApiCall<
@@ -2420,11 +2435,11 @@ export class SlackApiProvider implements ApiProvider {
 		args: false,
 		prefix: (context, method, request) =>
 			`${context.prefix} ${method}(${
-			request != null
-				? Logger.toLoggable(request, (key, value) =>
-					logFilterKeys.has(key) ? `<${key}>` : Logger.sanitize(key, value)
-				)
-				: ""
+				request != null
+					? Logger.toLoggable(request, (key, value) =>
+							logFilterKeys.has(key) ? `<${key}>` : Logger.sanitize(key, value)
+					  )
+					: ""
 			})`
 	})
 	protected async slackApiCallPaginated<

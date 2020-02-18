@@ -83,10 +83,13 @@ import {
 	PinReplyToCodemarkRequest,
 	ReactToPostRequest,
 	RenameStreamRequest,
+	RepoScmStatus,
 	SendPasswordResetEmailRequest,
 	SendPasswordResetEmailRequestType,
 	SetCodemarkPinnedRequest,
 	SetCodemarkStatusRequest,
+	SetModifiedReposRequest,
+	SetModifiedReposResponse,
 	SetPasswordRequest,
 	SetPasswordRequestType,
 	SetStreamPurposeRequest,
@@ -99,6 +102,7 @@ import {
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
 	UpdateReviewRequest,
+	UpdateStatusRequest,
 	UpdateStreamMembershipRequest,
 	UpdateTeamTagRequestType,
 	UpdateUserRequest,
@@ -172,6 +176,7 @@ import {
 	CSMarkPostUnreadResponse,
 	CSMe,
 	CSMePreferences,
+	CSMeStatus,
 	CSMsTeamsConversationRequest,
 	CSMsTeamsConversationResponse,
 	CSPinReplyToCodemarkRequest,
@@ -740,6 +745,34 @@ export class CodeStreamApiProvider implements ApiProvider {
 			data: [update.user]
 		})) as CSMe[];
 		return { preferences: user.preferences || {} };
+	}
+
+	@log()
+	async updateStatus(request: UpdateStatusRequest) {
+		const update = await this.put<{ status: CSMeStatus }, any>(
+			"/users/me",
+			{ status: request.status },
+			this._token
+		);
+		const [user] = (await SessionContainer.instance().users.resolve({
+			type: MessageType.Users,
+			data: [update.user]
+		})) as CSMe[];
+		return { user };
+	}
+
+	@log()
+	async setModifiedRepos(request: SetModifiedReposRequest) {
+		const update = await this.put<{ modifiedRepos: RepoScmStatus[] }, any>(
+			"/users/me",
+			{ modifiedRepos: request.modifiedRepos },
+			this._token
+		);
+		const [user] = (await SessionContainer.instance().users.resolve({
+			type: MessageType.Users,
+			data: [update.user]
+		})) as CSMe[];
+		return { user };
 	}
 
 	@log()

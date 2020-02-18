@@ -148,6 +148,9 @@ export class ScmManager {
 				.map(status => {
 					return { ...status.scm };
 				});
+			modifiedRepos.forEach(repo => {
+				delete repo.commits;
+			});
 		} catch (ex) {
 			gitError = ex.toString();
 			Logger.error(ex, cc);
@@ -181,7 +184,8 @@ export class ScmManager {
 			linesRemoved: number;
 			status: FileStatus;
 		}[] = [];
-		const authors: CoAuthors = {};
+		const authorMap: any = {};
+		const authors: CoAuthors[] = [];
 		let totalModifiedLines = 0;
 
 		let commits: { sha: string; info: {}; localOnly: boolean }[] | undefined;
@@ -228,8 +232,8 @@ export class ScmManager {
 							// @ts-ignore
 							const email = commit.info.email;
 							if (email) {
-								if (!authors[email]) authors[email] = { commits: 0, stomped: 0 };
-								authors[email].commits++;
+								if (!authorMap[email]) authorMap[email] = { commits: 0, stomped: 0 };
+								authorMap[email].commits++;
 							}
 						});
 					}
@@ -290,11 +294,18 @@ export class ScmManager {
 						.filter(Boolean)
 						.map(authorList =>
 							authorList.forEach(author => {
-								if (!authors[author.email]) authors[author.email] = { stomped: 0, commits: 0 };
-								authors[author.email].stomped = 1 + authors[author.email].stomped;
+								if (!authorMap[author.email]) authorMap[author.email] = { stomped: 0, commits: 0 };
+								authorMap[author.email].stomped = 1 + authorMap[author.email].stomped;
 							})
 						);
 				}
+				Object.keys(authorMap).forEach(email => {
+					authors.push({
+						email,
+						stomped: authorMap[email].stomped,
+						commits: authorMap[email].commits
+					});
+				});
 			} catch (ex) {
 				gitError = ex.toString();
 				Logger.error(ex, cc);
