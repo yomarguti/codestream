@@ -314,6 +314,9 @@ export const HeaderActions = styled.div`
 	margin-left: auto;
 	justify-content: space-between;
 	align-items: center;
+	& > *:not(:last-child) {
+		margin: 0 5px;
+	}
 `;
 
 export const AuthorInfo = styled.div`

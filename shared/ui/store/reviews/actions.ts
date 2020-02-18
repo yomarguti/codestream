@@ -110,9 +110,9 @@ export const _deleteReview = (id: string) => action(ReviewsActionsTypes.Delete, 
 
 export const deleteReview = (id: string) => async dispatch => {
 	try {
-		void (await HostApi.instance.send(DeleteReviewRequestType, {
+		await HostApi.instance.send(DeleteReviewRequestType, {
 			id
-		}));
+		});
 		dispatch(_deleteReview(id));
 	} catch (error) {
 		logError(`failed to delete review: ${error}`, { id });

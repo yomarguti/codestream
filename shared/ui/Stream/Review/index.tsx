@@ -24,7 +24,8 @@ import {
 	MetaDescriptionForAssignees,
 	MetaAssignee,
 	MetaRow,
-	MetaDescriptionForTags
+	MetaDescriptionForTags,
+	KebabIcon
 } from "../Codemark/BaseCodemark";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { CSUser, CSReview } from "@codestream/protocols/api";
@@ -36,12 +37,10 @@ import Tooltip from "../Tooltip";
 import { capitalize, replaceHtml, emptyArray, mapFilter } from "@codestream/webview/utils";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "../..";
-import { saveReviews } from "@codestream/webview/store/reviews/actions";
-import { setActiveReview } from "@codestream/webview/store/context/actions";
+import { saveReviews, deleteReview } from "@codestream/webview/store/reviews/actions";
+import { setActiveReview, setCurrentReview } from "@codestream/webview/store/context/actions";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
-import { ChangesetFile } from "./ChangesetFile";
 import { getReview } from "@codestream/webview/store/reviews/reducer";
-import { ReviewShowDiffRequestType } from "@codestream/protocols/webview";
 import MessageInput from "../MessageInput";
 import styled from "styled-components";
 import Button from "../Button";
@@ -56,6 +55,8 @@ import { DropdownButton } from "./DropdownButton";
 import Tag from "../Tag";
 import { RepliesToPost } from "../Posts/RepliesToPost";
 import { ChangesetFileList } from "./ChangesetFileList";
+import Menu from "../Menu";
+import { confirmPopup } from "../Confirm";
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
@@ -70,6 +71,7 @@ export interface BaseReviewProps extends CardProps {
 		footer: typeof CardFooter,
 		inputContainer?: typeof ComposeWrapper
 	) => React.ReactNode;
+	renderMenu?: (target: any, onClose: () => void) => React.ReactNode;
 }
 
 const ComposeWrapper = styled.div.attrs(() => ({
@@ -99,38 +101,57 @@ const BaseReview = (props: BaseReviewProps) => {
 	const { review } = props;
 
 	const dispatch = useDispatch();
-
 	const markdownifyToHtml = useMarkdownifyToHtml();
+	const [menuState, setMenuState] = React.useState<{ open: boolean; target?: any }>({
+		open: false,
+		target: undefined
+	});
+
 	const hasTags = props.tags && props.tags.length > 0;
 	const hasReviewers = props.reviewers != null && props.reviewers.length > 0;
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
+	const renderedMenu =
+		props.renderMenu &&
+		menuState.open &&
+		props.renderMenu(menuState.target, () => setMenuState({ open: false }));
+	const kebabIcon = props.renderMenu && (
+		<KebabIcon
+			onClickCapture={e => {
+				e.preventDefault();
+				e.stopPropagation();
+				if (menuState.open) {
+					setMenuState({ open: false });
+				} else {
+					setMenuState({ open: true, target: e.currentTarget });
+				}
+			}}
+		>
+			<Icon name="kebab-vertical" className="clickable" />
+		</KebabIcon>
+	);
 
 	const renderedHeaderActions = (() => {
 		if (props.collapsed) {
 			if (props.review.status === "open")
 				return (
-					<HeaderActions>
-						<ActionButton
-							onClick={e => {
-								e.preventDefault();
-							}}
-						>
-							Review Changes
-						</ActionButton>
-					</HeaderActions>
+					<ActionButton
+						onClick={e => {
+							e.preventDefault();
+						}}
+					>
+						Review Changes
+					</ActionButton>
 				);
 			else return;
 		} else {
 			if (props.review.status !== "open")
 				return (
-					<HeaderActions>
-						<ActionButton onClick={() => dispatch(setReviewStatus(props.review.id, "open"))}>
-							Reopen
-						</ActionButton>
-					</HeaderActions>
+					<ActionButton onClick={() => dispatch(setReviewStatus(props.review.id, "open"))}>
+						Reopen
+					</ActionButton>
 				);
 			return (
-				<HeaderActions>
+				<>
 					<DropdownButton
 						items={[
 							{
@@ -168,7 +189,7 @@ const BaseReview = (props: BaseReviewProps) => {
 							}
 						]}
 					/>
-				</HeaderActions>
+				</>
 			);
 		}
 	})();
@@ -185,7 +206,11 @@ const BaseReview = (props: BaseReviewProps) => {
 						<Headshot person={props.author} /> {props.author.username}{" "}
 						<StyledTimestamp time={props.review.createdAt} />
 					</AuthorInfo>
-					{renderedHeaderActions}
+					<HeaderActions>
+						{renderedHeaderActions}
+						{renderedMenu}
+						{kebabIcon}
+					</HeaderActions>
 				</Header>
 				<Title>
 					<MarkdownText
@@ -418,6 +443,7 @@ export type ReviewProps = PropsWithId | PropsWithReview;
 const ReviewForReview = (props: PropsWithReview) => {
 	const { review, ...baseProps } = props;
 
+	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
 			currentTeamId: state.context.currentTeamId,
@@ -471,6 +497,36 @@ const ReviewForReview = (props: PropsWithReview) => {
 			);
 		});
 
+	const menuItems = React.useMemo(() => {
+		const items: any[] = [];
+
+		if (review.creatorId === derivedState.currentUser.id)
+			items.push({
+				label: "Delete",
+				action: () => {
+					confirmPopup({
+						title: "Are you sure?",
+						message: "Deleting a review cannot be undone.",
+						centered: true,
+						buttons: [
+							{ label: "Go Back", className: "control-button" },
+							{
+								label: "Delete Review",
+								className: "delete",
+								wait: true,
+								action: () => {
+									dispatch(deleteReview(review.id));
+									dispatch(setCurrentReview());
+								}
+							}
+						]
+					});
+				}
+			});
+
+		return items;
+	}, [review]);
+
 	return (
 		<BaseReview
 			{...baseProps}
@@ -482,6 +538,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 			reviewers={derivedState.reviewers}
 			currentUserId={derivedState.currentUser.id}
 			renderFooter={renderFooter}
+			renderMenu={(target, close) => <Menu target={target} action={close} items={menuItems} />}
 		/>
 	);
 };
