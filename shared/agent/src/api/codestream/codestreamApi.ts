@@ -1182,10 +1182,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	fetchReviewDiffs(request: FetchReviewDiffsRequest): Promise<FetchReviewDiffsResponse> {
-		const params: { [k: string]: any } = {
-			reviewId: request.reviewId
-		};
-
 		return this.get<CSGetReviewDiffsResponse>(`/reviews/diffs/${request.reviewId}`, this._token);
 	}
 
