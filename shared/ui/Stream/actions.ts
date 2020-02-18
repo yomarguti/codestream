@@ -30,7 +30,8 @@ import {
 	UpdateStreamMembershipRequestType,
 	CreateTeamTagRequestType,
 	UpdateTeamTagRequestType,
-	DeleteTeamTagRequestType
+	DeleteTeamTagRequestType,
+	UpdateStatusRequestType
 } from "@codestream/protocols/agent";
 import { CSPost, StreamType } from "@codestream/protocols/api";
 import { logError } from "../logger";
@@ -56,7 +57,7 @@ import * as contextActions from "../store/context/actions";
 import * as postsActions from "../store/posts/actions";
 import { updatePreferences } from "../store/preferences/actions";
 import * as streamActions from "../store/streams/actions";
-import { addUsers } from "../store/users/actions";
+import { addUsers, updateUser } from "../store/users/actions";
 import { uuid, isNotOnDisk, uriToFilePath } from "../utils";
 import { updateTeam } from "../store/teams/actions";
 import { HostApi } from "../webview-api";
@@ -491,6 +492,24 @@ export const setUserPreference = (prefPath: string[], value: any) => async dispa
 		});
 		// update with confirmed server response
 		dispatch(updatePreferences(response.preferences));
+	} catch (error) {
+		logError(`Error trying to update preferences`, { message: error.message });
+	}
+};
+
+export const setUserStatus = (
+	icon: string,
+	label: string,
+	invisible: boolean,
+	expires: number
+) => async dispatch => {
+	// create an object out of the provided path
+
+	try {
+		const response = await HostApi.instance.send(UpdateStatusRequestType, {
+			status: { icon, label, invisible, expires }
+		});
+		dispatch(updateUser(response.user));
 	} catch (error) {
 		logError(`Error trying to update preferences`, { message: error.message });
 	}

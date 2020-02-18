@@ -158,6 +158,7 @@ export default function SearchResult(props: Props) {
 	}
 
 	const assignees = (isCSReview(result) ? result.reviewers : result.assignees) || [];
+	if (result.title == "refactor") console.log("ASSIGNEES ARE: ", assignees, " for ", result);
 
 	let icon;
 	let titleTip = buildTip(); // = result.text ? <div style={{ maxWidth: "25em" }}>{result.text}</div> : undefined;

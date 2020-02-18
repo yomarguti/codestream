@@ -6,6 +6,7 @@ import createClassString from "classnames";
 import ComposeBox from "./ComposeBox";
 import PostList from "./PostList";
 import { ActivityPanel } from "./ActivityPanel";
+import { StatusPanel } from "./StatusPanel";
 import { NotificationsPanel } from "./NotificationsPanel";
 import ChannelPanel from "./ChannelPanel";
 import { TasksPanel } from "./TasksPanel";
@@ -408,6 +409,12 @@ export class SimpleStream extends Component {
 			{ label: "-" }
 			// { label: inviteLabel, action: "invite" },
 		].filter(Boolean);
+
+		// FIXME apiCapabilities
+		menuItems.push({
+			label: "Set a Status",
+			action: () => this.setActivePanel(WebviewPanels.Status)
+		});
 
 		if (apiCapabilities["follow"] && inSharingModel) {
 			menuItems.push(
@@ -1062,6 +1069,9 @@ export class SimpleStream extends Component {
 							isCodeStreamTeam={this.props.isCodeStreamTeam}
 							closePanel={this.props.closePanel}
 						/>
+					)}
+					{activePanel === WebviewPanels.Status && (
+						<StatusPanel closePanel={this.props.closePanel} />
 					)}
 					{(activePanel === WebviewPanels.People || activePanel === "invite") && (
 						<TeamPanel

@@ -274,11 +274,10 @@ class ReviewForm extends React.Component<Props, State> {
 		if (statusInfo.scm) {
 			const authors = statusInfo.scm.authors;
 			const authorsById = {};
-			Object.keys(authors)
-				.map(a => teamMates.find(p => p.email == a))
-				.forEach(person => {
-					if (person) authorsById[person.id] = authors[person.email];
-				});
+			authors.map(author => {
+				const user = teamMates.find(t => t.email == author.email);
+				if (user) authorsById[user.id] = author;
+			});
 			this.setState({ authorsById });
 
 			if (!this.state.reviewersTouched) {
@@ -287,7 +286,13 @@ class ReviewForm extends React.Component<Props, State> {
 					// based on how many times their code
 					// was stomped on, and make those
 					// "suggested reviewers"
-					.sort((a, b) => authorsById[b] - authorsById[a])
+					.sort(
+						(a, b) =>
+							authorsById[b].commits * 10 +
+							authorsById[b].stomps -
+							authorsById[a].commits * 10 +
+							authorsById[a].stomps
+					)
 					.map(id => teamMates.find(p => p.id === id))
 					.filter(Boolean)
 					.slice(0, 2);
@@ -1030,7 +1035,7 @@ class ReviewForm extends React.Component<Props, State> {
 			if (authorsById[id].stomped === 1) label.push("1 edit");
 			else if (authorsById[id].stomped > 1) label.push(authorsById[id].stomped + " edits");
 			if (authorsById[id].commits === 1) label.push("1 commit");
-			else if (authorsById[id].commits > 1) label.push(authorsById[id].stomped + " commits");
+			else if (authorsById[id].commits > 1) label.push(authorsById[id].commits + " commits");
 			coAuthorLabels[id] = label.join(", ");
 		});
 

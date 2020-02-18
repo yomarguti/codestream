@@ -28,6 +28,25 @@ export const emojify = text => {
 	return md.render(text);
 };
 
+const mdPlain = new MarkdownIt({
+	breaks: true,
+	linkify: true,
+	highlight: function(str, lang) {
+		const codeHTML = prettyPrintOne(escapeHtml(str), lang, true);
+		return `<pre class="code prettyprint" data-scrollable="true">${codeHTML}</pre>`;
+	}
+})
+	.use(markdownItSlack)
+	.use(markdownItEmoji);
+
+mdPlain.renderer.rules.emoji = function(token, idx) {
+	return token[idx].content;
+};
+
+export const emojiPlain = text => {
+	return mdPlain.renderInline(text);
+};
+
 export const markdownify = (text: string) => {
 	try {
 		const replaced = md

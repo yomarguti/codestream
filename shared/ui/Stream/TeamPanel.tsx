@@ -5,7 +5,6 @@ import Icon from "./Icon";
 import Button from "./Button";
 import Headshot from "./Headshot";
 import ScrollBox from "./ScrollBox";
-import { FileTree } from "./FileTree";
 import { invite } from "./actions";
 import { mapFilter } from "../utils";
 import { sortBy as _sortBy } from "lodash-es";
@@ -13,10 +12,16 @@ import { getTeamProvider } from "../store/teams/reducer";
 import { HostApi } from "../webview-api";
 import { WebviewPanels } from "@codestream/protocols/webview";
 import { PanelHeader } from "../src/components/PanelHeader";
-import { GetRepoScmStatusesRequestType, RepoScmStatus } from "@codestream/protocols/agent";
+import {
+	GetRepoScmStatusesRequestType,
+	RepoScmStatus,
+	SetModifiedReposRequestType
+} from "@codestream/protocols/agent";
 import { CSUser, CSApiCapabilities } from "@codestream/protocols/api";
 import { ChangesetFile } from "./Review/ChangesetFile";
 import Tooltip from "./Tooltip";
+import styled from "styled-components";
+import { UserStatus } from "../src/components/UserStatus";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -39,6 +44,7 @@ interface ConnectedProps {
 	members: CSUser[];
 	repos: any;
 	apiCapabilities: CSApiCapabilities;
+	currentUserInvisible: false;
 }
 
 interface State {
@@ -78,12 +84,20 @@ class TeamPanel extends React.Component<Props, State> {
 			HostApi.instance.track("Page Viewed", { "Page Name": "Team Tab" });
 
 		// if (this.props.apiCapabilities["xray"])
-		this.getScmInfoSummary();
+		if (this.props.currentUserInvisible) this.clearScmInfoSummary();
+		else this.getScmInfoSummary();
 	}
 
 	getScmInfoSummary = async () => {
 		const result = await HostApi.instance.send(GetRepoScmStatusesRequestType, {});
-		if (result.scm) this.setState({ modifiedRepos: result.scm });
+		if (result.scm) {
+			// this.setState({ modifiedRepos: result.scm });
+			await HostApi.instance.send(SetModifiedReposRequestType, { modifiedRepos: result.scm });
+		}
+	};
+
+	clearScmInfoSummary = async () => {
+		await HostApi.instance.send(SetModifiedReposRequestType, { modifiedRepos: [] });
 	};
 
 	onEmailChange = event => {
@@ -279,61 +293,37 @@ class TeamPanel extends React.Component<Props, State> {
 		}
 	}
 
-	renderUserStatus(user) {
-		// turn this off, as it is just a mockup exploration -Pez
-		// return null;
-
+	renderModifiedRepos(user) {
 		const { repos, apiCapabilities } = this.props;
-		const { modifiedRepos = [] } = this.state;
+		const { modifiedRepos = [] } = user;
 
-		if (user.username === "pez") {
-			return (
-				<>
-					{modifiedRepos.map(repo => {
-						const { repoId = "", modifiedFiles } = repo;
-						if (modifiedFiles.length === 0) return null;
-						const repoName = repos[repoId] ? repos[repoId].name : "";
-						const added = modifiedFiles.reduce((total, f) => total + f.linesAdded, 0);
-						const removed = modifiedFiles.reduce((total, f) => total + f.linesRemoved, 0);
-						const title = modifiedFiles.map(f => <ChangesetFile key={f.file} {...f} />);
-						return (
-							<li className="status row-with-icon-actions" style={{ paddingLeft: "48px" }}>
-								<Tooltip title={title} placement="top">
-									<span>
-										<Icon name="repo" /> {repoName} &nbsp; <Icon name="git-branch" /> {repo.branch}
-										{added > 0 && <span className="added">+{added}</span>}
-										{removed > 0 && <span className="deleted">+{removed}</span>}
-									</span>
-								</Tooltip>
-							</li>
-						);
-					})}
-				</>
-			);
-			// {modifiedFiles.map(f => (
-			// 	<li style={{ paddingLeft: "80px" }}>
-			// 		<ChangesetFile onClick={e => {}} key={f.file} {...f} />
-			// 	</li>
-			// ))}
-		}
-		if (user.username === "eamodio2") {
-			const files = [
-				["client/KnowledgePanel.tsx", 0, 3],
-				["client/util.ts", 9, 22],
-				["client/difftool.ts", 1, 0],
-				["components/index.tsx", 0, 2, true],
-				["components/login.tsx", 38, 42]
-			];
-			return (
-				<>
-					<li className="status" style={{ paddingLeft: "48px" }}>
-						<Icon name="repo" /> lsp-agent &nbsp; <Icon name="git-branch" /> feature/2fa
-					</li>
-					<FileTree files={files} indent={60} />
-				</>
-			);
-		}
-		return null;
+		if (modifiedRepos.length === 0) return null;
+		if (user.username !== "pez") return null;
+
+		console.log("USER IS: ", user);
+		return (
+			<>
+				{modifiedRepos.map(repo => {
+					const { repoId = "", modifiedFiles } = repo;
+					if (modifiedFiles.length === 0) return null;
+					const repoName = repos[repoId] ? repos[repoId].name : "";
+					const added = modifiedFiles.reduce((total, f) => total + f.linesAdded, 0);
+					const removed = modifiedFiles.reduce((total, f) => total + f.linesRemoved, 0);
+					const title = modifiedFiles.map(f => <ChangesetFile key={f.file} {...f} />);
+					return (
+						<li className="status row-with-icon-actions" style={{ paddingLeft: "48px" }}>
+							<Tooltip title={title} placement="topRight">
+								<div>
+									<Icon name="repo" /> {repoName} &nbsp; <Icon name="git-branch" /> {repo.branch}
+									{added > 0 && <span className="added">+{added}</span>}
+									{removed > 0 && <span className="deleted">-{removed}</span>}
+								</div>
+							</Tooltip>
+						</li>
+					);
+				})}
+			</>
+		);
 	}
 
 	render() {
@@ -350,17 +340,13 @@ class TeamPanel extends React.Component<Props, State> {
 					<div className="vscroll">
 						<div className="section">
 							<ul>
-								{/* FIXME -- sort these users somehow */
-								this.props.members.map(user => (
+								{this.props.members.map(user => (
 									<>
-										<li key={user.email}>
-											<div className="committer-name">
-												<Headshot person={user}></Headshot>
-												{user.fullName} (@
-												{user.username})<span className="committer-email"> {user.email}</span>
-											</div>
+										<li key={user.email} style={{ marginBottom: "5px" }}>
+											<Headshot person={user}></Headshot>
+											<b>{user.fullName}</b> <UserStatus user={user} />
 										</li>
-										{this.renderUserStatus(user)}
+										{this.renderModifiedRepos(user)}
 									</>
 								))}
 							</ul>
@@ -411,7 +397,7 @@ class TeamPanel extends React.Component<Props, State> {
 	}
 }
 
-const mapStateToProps = ({ users, context, teams, repos, apiVersioning }) => {
+const mapStateToProps = ({ users, context, teams, repos, session, apiVersioning }) => {
 	const team = teams[context.currentTeamId];
 	const teamProvider = getTeamProvider(team);
 
@@ -425,6 +411,8 @@ const mapStateToProps = ({ users, context, teams, repos, apiVersioning }) => {
 		}
 		return user;
 	});
+	const currentUser = users[session.userId];
+	const invisible = currentUser.status ? currentUser.status.invisible : false;
 
 	const invited =
 		teamProvider === "codestream"
@@ -446,6 +434,7 @@ const mapStateToProps = ({ users, context, teams, repos, apiVersioning }) => {
 		teamId: team.id,
 		teamName: team.name,
 		repos,
+		currentUserInvisible: invisible,
 		members: _sortBy(members, m => (m.fullName || "").toLowerCase()),
 		invited: _sortBy(invited, "email"),
 		suggested: _sortBy(suggested, m => (m.fullName || "").toLowerCase()),

@@ -96,6 +96,7 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 			.filter(Boolean)
 			.map(a => ({ fullName: a.displayName, email: a.email }));
 
+		console.log("EXT ASS **********************", codemark);
 		return {
 			author,
 			inSharingModel: state.featureFlags.sharing,

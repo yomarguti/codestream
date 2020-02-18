@@ -33,17 +33,18 @@ export enum WebviewPanels {
 	Activity = "activity",
 	Codemarks = "knowledge",
 	CodemarksForFile = "codemarks-for-file",
+	FilterSearch = "filter-search",
 	Invite = "invite",
-	People = "people",
-	Person = "person",
-	Tasks = "tasks",
 	Notifications = "notifications",
 	NewComment = "new-comment",
 	NewIssue = "new-issue",
 	NewReview = "new-review",
 	NewCode = "new-code",
+	People = "people",
+	Person = "person",
 	Review = "review",
-	FilterSearch = "filter-search"
+	Status = "status",
+	Tasks = "tasks"
 }
 
 export interface WebviewContext {
