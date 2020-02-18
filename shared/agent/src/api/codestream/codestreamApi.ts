@@ -106,7 +106,8 @@ import {
 	UpdateStreamMembershipRequest,
 	UpdateTeamTagRequestType,
 	UpdateUserRequest,
-	VerifyConnectivityResponse
+	VerifyConnectivityResponse,
+	DeleteReviewRequest
 } from "../../protocol/agent.protocol";
 import {
 	CSAddProviderHostRequest,
@@ -1123,9 +1124,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	): Promise<TriggerMsTeamsProactiveMessageResponse> {
 		return this.post<any, any>(
 			"/msteams_conversations",
-			{ ...request,
-			  teamId: this.teamId
-			},
+			{ ...request, teamId: this.teamId },
 			this._token
 		);
 	}
@@ -1173,6 +1172,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 			params,
 			this._token
 		);
+	}
+
+	@log()
+	async deleteReview(request: DeleteReviewRequest) {
+		await this.delete(`/reviews/${request.id}`, this._token);
+		return {};
 	}
 
 	@log()

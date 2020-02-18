@@ -15,7 +15,9 @@ import {
 	GetReviewResponse,
 	UpdateReviewRequest,
 	UpdateReviewRequestType,
-	UpdateReviewResponse
+	UpdateReviewResponse,
+	DeleteReviewRequest,
+	DeleteReviewRequestType
 } from "../protocol/agent.protocol";
 import { CSReview, CSReviewDiffs } from "../protocol/api.protocol";
 import { log, lsp, lspHandler } from "../system";
@@ -120,6 +122,11 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		});
 
 		return { review };
+	}
+
+	@lspHandler(DeleteReviewRequestType)
+	delete(request: DeleteReviewRequest) {
+		return this.session.api.deleteReview(request);
 	}
 
 	protected async loadCache() {

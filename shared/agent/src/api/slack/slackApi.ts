@@ -150,6 +150,11 @@ interface DeferredStreamRequest<TResult> {
 const meMessageRegex = /^\/me /;
 
 export class SlackApiProvider implements ApiProvider {
+	deleteReview(
+		request: import("../../protocol/agent.protocol.reviews").DeleteReviewRequest
+	): Promise<import("../../protocol/agent.protocol.reviews").DeleteReviewResponse> {
+		throw new Error("Method not implemented.");
+	}
 	updateReview(
 		request: import("../../protocol/agent.protocol.reviews").UpdateReviewRequest
 	): Promise<import("../../protocol/agent.protocol.reviews").UpdateReviewResponse> {

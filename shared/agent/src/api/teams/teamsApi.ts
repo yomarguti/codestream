@@ -151,6 +151,11 @@ import {
 import { TeamsUnreads } from "./unreads";
 
 export class MSTeamsApiProvider implements ApiProvider {
+	deleteReview(
+		request: import("../../protocol/agent.protocol.reviews").DeleteReviewRequest
+	): Promise<import("../../protocol/agent.protocol.reviews").DeleteReviewResponse> {
+		throw new Error("Method not implemented.");
+	}
 	updateReview(
 		request: import("../../protocol/agent.protocol.reviews").UpdateReviewRequest
 	): Promise<import("../../protocol/agent.protocol.reviews").UpdateReviewResponse> {

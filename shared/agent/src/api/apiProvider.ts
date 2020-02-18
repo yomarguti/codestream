@@ -139,7 +139,9 @@ import {
 	UpdateStreamMembershipResponse,
 	UpdateUserRequest,
 	UpdateUserResponse,
-	VerifyConnectivityResponse
+	VerifyConnectivityResponse,
+	DeleteReviewRequest,
+	DeleteReviewResponse
 } from "../protocol/agent.protocol";
 import {
 	CSApiCapabilities,
@@ -376,6 +378,7 @@ export interface ApiProvider {
 	fetchReviews(request: FetchReviewsRequest): Promise<FetchReviewsResponse>;
 	getReview(request: GetReviewRequest): Promise<GetReviewResponse>;
 	updateReview(request: UpdateReviewRequest): Promise<UpdateReviewResponse>;
+	deleteReview(request: DeleteReviewRequest): Promise<DeleteReviewResponse>;
 
 	fetchReviewDiffs(request: FetchReviewDiffsRequest): Promise<FetchReviewDiffsResponse>;
 
