@@ -175,7 +175,6 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 				expires = status.expires || 0;
 		}
 
-		console.log("SETTING EXPIRES TO: ", expires);
 		HostApi.instance.track("Status Set", { Value: status });
 		// @ts-ignore
 		await dispatch(setUserStatus(icon, label, invisible, expires));

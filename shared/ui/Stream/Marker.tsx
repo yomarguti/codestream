@@ -20,7 +20,9 @@ function Marker(props: Props) {
 	const { marker } = props;
 
 	const dispatch = useDispatch();
-	const goSearch = query => {
+	const goSearch = (e: React.SyntheticEvent, query: string) => {
+		e.preventDefault();
+		e.stopPropagation();
 		dispatch(setCurrentCodemark());
 		dispatch(setQuery(query));
 	};
@@ -46,7 +48,7 @@ function Marker(props: Props) {
 						<a
 							className="monospace internal-link"
 							style={{ paddingRight: "20px" }}
-							onClick={() => goSearch(`repo:"${props.repoName}"`)}
+							onClick={e => goSearch(e, `repo:"${props.repoName}"`)}
 						>
 							<Icon name="repo" />
 							{props.repoName}
@@ -65,7 +67,7 @@ function Marker(props: Props) {
 						<a
 							className="monospace internal-link"
 							style={{ paddingRight: "20px" }}
-							onClick={() => goSearch(`branch:"${marker.branchWhenCreated}"`)}
+							onClick={e => goSearch(e, `branch:"${marker.branchWhenCreated}"`)}
 						>
 							<Icon name="git-branch" />
 							{marker.branchWhenCreated}
