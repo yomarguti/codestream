@@ -53,6 +53,9 @@ const Root = styled.div`
 
 	${StyledMarker} {
 		margin-left: 25px;
+		.internal-link {
+			text-decoration: none;
+		}
 	}
 
 	${KebabIcon} {
