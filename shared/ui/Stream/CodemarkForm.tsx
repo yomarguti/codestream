@@ -75,6 +75,7 @@ import { NewCodemarkAttributes } from "../store/codemarks/actions";
 import { SharingControls, SharingAttributes } from "./SharingControls";
 import { SmartFormattedList } from "./SmartFormattedList";
 import { Modal } from "./Modal";
+import { Checkbox } from "../src/components/Checkbox";
 
 export interface ICrossPostIssueContext {
 	setSelectedAssignees(any: any): void;
@@ -172,6 +173,7 @@ interface State {
 	addingLocation?: boolean;
 	editingLocation: number;
 	liveLocation: number;
+	isChangeRequest: boolean;
 }
 
 function merge(defaults: Partial<State>, codemark: CSCodemark): State {
@@ -218,7 +220,8 @@ class CodemarkForm extends React.Component<Props, State> {
 			locationMenuOpen: "closed",
 			editingLocation: -1,
 			addingLocation: false,
-			liveLocation: -1
+			liveLocation: -1,
+			isChangeRequest: false
 		};
 
 		const state = props.editingCodemark
@@ -617,7 +620,8 @@ class CodemarkForm extends React.Component<Props, State> {
 					: undefined,
 				tags: keyFilter(selectedTags),
 				relatedCodemarkIds: keyFilter(relatedCodemarkIds),
-				parentPostId
+				parentPostId,
+				isChangeRequest: this.state.isChangeRequest
 			};
 			if (this.props.teamProvider === "codestream") {
 				await this.props.onSubmit({
@@ -891,8 +895,13 @@ class CodemarkForm extends React.Component<Props, State> {
 	renderRequireChange = () => {
 		return (
 			<div style={{ float: "left", paddingTop: "10px" }}>
-				<input type="checkbox" />
-				Change Request (require for approval)
+				<Checkbox
+					name="change-request"
+					checked={this.state.isChangeRequest}
+					onChange={value => this.setState({ isChangeRequest: value })}
+				>
+					Change Request (require for approval)
+				</Checkbox>
 			</div>
 		);
 	};

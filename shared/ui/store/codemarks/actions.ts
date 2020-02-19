@@ -52,6 +52,7 @@ export interface SharingNewCodemarkAttributes extends BaseNewCodemarkAttributes 
 	mentionedUserIds?: string[];
 	// codemarks can now be replies
 	parentPostId?: string;
+	isChangeRequest?: boolean;
 }
 
 export interface LegacyNewCodemarkAttributes extends BaseNewCodemarkAttributes {

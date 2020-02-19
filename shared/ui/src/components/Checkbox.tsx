@@ -1,13 +1,13 @@
 import { PropsWithChildren } from "react";
 import React from "react";
-import styled, { CSSProperties } from "styled-components";
+import styled from "styled-components";
 import Icon from "../../Stream/Icon";
 
 interface Props {
 	name: string;
 	checked?: boolean;
 	loading?: boolean;
-	onChange: Function;
+	onChange: (value: boolean) => void;
 }
 
 const Root = styled.div`
@@ -25,6 +25,7 @@ const Root = styled.div`
 	input,
 	label {
 		cursor: pointer;
+		margin-top: 0 !important; // this is an override of styles imposed by .standard-form
 	}
 	label:hover {
 		color: var(--text-color-highlight);
