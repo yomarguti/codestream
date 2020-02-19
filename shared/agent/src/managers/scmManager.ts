@@ -348,6 +348,7 @@ export class ScmManager {
 
 		let gitError;
 		let repoPath;
+		let repoId;
 		if (uri.scheme === "file") {
 			const { git } = SessionContainer.instance();
 
@@ -364,6 +365,9 @@ export class ScmManager {
 
 					const gitRemotes = await git.getRepoRemotes(repoPath);
 					remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
+
+					const repo = await git.getRepositoryByFilePath(uri.fsPath);
+					repoId = repo && repo.id;
 				}
 			} catch (ex) {
 				gitError = ex.toString();
@@ -379,6 +383,7 @@ export class ScmManager {
 					? {
 							file: file!,
 							repoPath: repoPath,
+							repoId,
 							revision: rev!,
 							remotes: remotes || [],
 							branch

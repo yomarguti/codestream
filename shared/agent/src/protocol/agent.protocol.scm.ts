@@ -124,6 +124,7 @@ export interface GetFileScmInfoResponse {
 	scm?: {
 		file: string;
 		repoPath: string;
+		repoId?: string;
 		revision: string;
 		remotes: { name: string; url: string }[];
 		branch?: string;
