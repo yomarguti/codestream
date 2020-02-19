@@ -28,7 +28,7 @@ import {
 	KebabIcon
 } from "../Codemark/BaseCodemark";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
-import { CSUser, CSReview } from "@codestream/protocols/api";
+import { CSUser, CSReview, CodemarkType } from "@codestream/protocols/api";
 import { CodeStreamState } from "@codestream/webview/store";
 import { useSelector, useDispatch, shallowEqual } from "react-redux";
 import { useMarkdownifyToHtml } from "../Markdowner";
@@ -57,6 +57,8 @@ import { RepliesToPost } from "../Posts/RepliesToPost";
 import { ChangesetFileList } from "./ChangesetFileList";
 import Menu from "../Menu";
 import { confirmPopup } from "../Confirm";
+import { Checkbox } from "@codestream/webview/src/components/Checkbox";
+import { createCodemark } from "@codestream/webview/store/codemarks/actions";
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
@@ -348,6 +350,7 @@ const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 const ReplyInput = (props: { parentPostId: string; streamId: string }) => {
 	const dispatch = useDispatch();
 	const [text, setText] = React.useState("");
+	const [isChangeRequest, setIsChangeRequest] = React.useState(false);
 	const [isLoading, setIsLoading] = React.useState(false);
 	const teamMates = useSelector((state: CodeStreamState) => getTeamMates(state));
 
@@ -356,19 +359,36 @@ const ReplyInput = (props: { parentPostId: string; streamId: string }) => {
 		if (text.length === 0) return;
 
 		setIsLoading(true);
-		// ignore the typescript warning that `await` isn't necessary below
-		await dispatch(
-			createPost(
-				props.streamId,
-				props.parentPostId,
-				replaceHtml(text)!,
-				null,
-				findMentionedUserIds(teamMates, text),
-				{
-					entryPoint: "Review"
-				}
-			)
-		);
+		if (isChangeRequest) {
+			// ignore the typescript warning that `await` isn't necessary below
+			await dispatch(
+				createCodemark({
+					text: replaceHtml(text)!,
+					parentPostId: props.parentPostId,
+					type: CodemarkType.Comment,
+					codeBlocks: [],
+					assignees: [],
+					relatedCodemarkIds: [],
+					accessMemberIds: [],
+					tags: []
+				})
+			);
+		} else {
+			// ignore the typescript warning that `await` isn't necessary below
+			await dispatch(
+				createPost(
+					props.streamId,
+					props.parentPostId,
+					replaceHtml(text)!,
+					null,
+					findMentionedUserIds(teamMates, text),
+					{
+						entryPoint: "Review"
+					}
+				)
+			);
+			setIsChangeRequest(false);
+		}
 		setIsLoading(false);
 		setText("");
 		// HostApi.instance.track("Replied to Review", {});
@@ -385,7 +405,11 @@ const ReplyInput = (props: { parentPostId: string; streamId: string }) => {
 				onSubmit={submit}
 			/>
 			<div style={{ display: "flex" }}>
-				<div style={{ opacity: 0.4, paddingTop: "3px" }}>Markdown is supported</div>
+				<div style={{ opacity: 0.4, paddingTop: "10px" }}>
+					<Checkbox name="change-request" checked={isChangeRequest} onChange={setIsChangeRequest}>
+						Change Request (require for approval)
+					</Checkbox>
+				</div>
 				<div style={{ textAlign: "right", flexGrow: 1 }}>
 					<Tooltip
 						content={
