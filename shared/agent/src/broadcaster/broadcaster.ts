@@ -394,7 +394,9 @@ export class Broadcaster {
 			}
 		});
 		if (channelsWithPresence.length > 0) {
-			this._debug("Broadcaster subscribing (with presence) to: " + JSON.stringify(channelsWithPresence));
+			this._debug(
+				"Broadcaster subscribing (with presence) to: " + JSON.stringify(channelsWithPresence)
+			);
 			this._broadcasterConnection!.subscribe(channelsWithPresence, { withPresence: true });
 		}
 		if (channelsWithoutPresence.length > 0) {
@@ -614,7 +616,9 @@ export class Broadcaster {
 	private async subscriptionFailure(failedChannels: string[]) {
 		const channels = failedChannels.filter(channel => !this._activeFailures.includes(channel));
 		if (channels.length === 0) {
-			this._debug("Already handling subscription failures, ignoring: " + JSON.stringify(failedChannels));
+			this._debug(
+				"Already handling subscription failures, ignoring: " + JSON.stringify(failedChannels)
+			);
 			return;
 		}
 		this._activeFailures = [...this._activeFailures, ...channels];

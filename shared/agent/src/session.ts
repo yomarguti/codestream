@@ -323,8 +323,7 @@ export class CodeStreamSession {
 		this.agent.registerHandler(UIStateRequestType, e => {
 			if (e && e.context && e.context.panelStack && e.context.panelStack[0]) {
 				this.uiState = e.context.panelStack[0];
-			}
-			else {
+			} else {
 				this.uiState = undefined;
 			}
 		});
@@ -817,7 +816,8 @@ export class CodeStreamSession {
 		this._documentEventHandler = new DocumentEventHandler(
 			this,
 			SessionContainer.instance().git,
-			SessionContainer.instance().session.agent.documents);
+			SessionContainer.instance().session.agent.documents
+		);
 
 		SessionContainer.instance().git.onRepositoryCommitHashChanged(repo => {
 			SessionContainer.instance().markerLocations.flushUncommittedLocations(repo);
@@ -970,7 +970,7 @@ export class CodeStreamSession {
 		return new SlackApiProvider(
 			this._api! as CodeStreamApiProvider,
 			user.providerInfo!.slack ||
-			(user.providerInfo![this._teamId!] && user.providerInfo![this._teamId!].slack)!,
+				(user.providerInfo![this._teamId!] && user.providerInfo![this._teamId!].slack)!,
 			user,
 			this._teamId!,
 			this._httpsAgent
@@ -1044,7 +1044,11 @@ export class CodeStreamSession {
 			props["Team Created Date"] = new Date(team.createdAt!).toISOString();
 			props["Reporting Group"] = team.reportingGroup;
 			props["Team Name"] = team.name;
-			props["Provider"] = Team.isSlack(team) ? "Slack" : Team.isMSTeams(team) ? "MSTeams" : "CodeStream";
+			props["Provider"] = Team.isSlack(team)
+				? "Slack"
+				: Team.isMSTeams(team)
+				? "MSTeams"
+				: "CodeStream";
 			if (team.memberIds != null) {
 				props["Team Size"] = team.memberIds.length;
 			}

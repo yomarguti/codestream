@@ -85,7 +85,7 @@ export class TelemetryService {
 		} else {
 			this.setConsent(!Boolean(preferences.telemetryOptOut));
 		}
-	}
+	};
 
 	alias(id: string) {
 		Logger.debug(`Telemetry alias ${this._anonymousId} with ${id}`);

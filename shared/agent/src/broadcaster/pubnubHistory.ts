@@ -133,7 +133,11 @@ export class PubnubHistory {
 		await Promise.all(
 			channelsWithMoreMessages.map(async channel => {
 				this._debug(`channel ${channel} has more than 25 messages, retrieving earlier history...`);
-				await this.retrieveChannelHistory(channel, earliestTimetokenPerChannel[channel] - 1, timetoken);
+				await this.retrieveChannelHistory(
+					channel,
+					earliestTimetokenPerChannel[channel] - 1,
+					timetoken
+				);
 			})
 		);
 	}
@@ -141,7 +145,12 @@ export class PubnubHistory {
 	// retrieve the historical messages for an individual channel ... we can only retrieve in
 	// pages of 100 ... but if we get to the limit of 1000 messages (10 pages), we'll stop
 	// and force the client to do a session reset instead
-	private async retrieveChannelHistory(channel: string, before: number, after: string, depth: number = 0) {
+	private async retrieveChannelHistory(
+		channel: string,
+		before: number,
+		after: string,
+		depth: number = 0
+	) {
 		if (depth === 10) {
 			throw new Error("RESET");
 		}
@@ -156,7 +165,12 @@ export class PubnubHistory {
 		this._allMessages.push(...response.messages);
 		if (response.messages.length >= 100) {
 			this._debug("Pubnub.history returned 100 or more messages, fetching more...");
-			await this.retrieveChannelHistory(channel, parseInt(response.startTimeToken!, 10), after, depth + 1);
+			await this.retrieveChannelHistory(
+				channel,
+				parseInt(response.startTimeToken!, 10),
+				after,
+				depth + 1
+			);
 		}
 	}
 

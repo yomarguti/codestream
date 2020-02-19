@@ -15,7 +15,15 @@ import {
 	CSUser,
 	StreamType
 } from "../../protocol/api.protocol";
-import { Marker, toActionId, toExternalActionId, toReplyActionId, toReplyDisabledActionId, toReviewActionId, toReviewReplyActionId } from "../extensions";
+import {
+	Marker,
+	toActionId,
+	toExternalActionId,
+	toReplyActionId,
+	toReplyDisabledActionId,
+	toReviewActionId,
+	toReviewReplyActionId
+} from "../extensions";
 
 const defaultCreatedAt = 181886400000;
 const multiPartyNamesRegEx = /^mpdm-([^-]+)(--.*)-1$/;
@@ -105,8 +113,8 @@ export function fromSlackChannel(
 		mostRecentPostId: mostRecentId,
 		priority: channel.priority,
 		privacy: (channel.is_private == null
-			? channel.is_group
-			: channel.is_private)
+		? channel.is_group
+		: channel.is_private)
 			? "private"
 			: "public",
 		purpose: channel.purpose && channel.purpose.value,
@@ -738,50 +746,45 @@ export function toSlackPostBlocks(
 			const features = SessionContainer.instance().session.api.features;
 			if (features && features.slack && features.slack.interactiveComponentsEnabled) {
 				actionId = toReplyActionId(counter, codemark, slackUserId);
-				actions.elements.push(
-					{
-						type: "button",
-						action_id: actionId,
-						style: "primary",
-						text: {
-							type: "plain_text",
-							text: "View Discussion & Reply"
-						}
+				actions.elements.push({
+					type: "button",
+					action_id: actionId,
+					style: "primary",
+					text: {
+						type: "plain_text",
+						text: "View Discussion & Reply"
 					}
-				);
-			}
-			else {
+				});
+			} else {
 				actionId = toReplyDisabledActionId(counter, codemark, slackUserId);
-				actions.elements.push(
-					{
-						type: "button",
-						action_id: actionId,
-						confirm: {
-							title: {
-								// can't have markdown here, so using 'and' instead of '&' because it gets encoded to &amp;
-								type: "plain_text",
-								text: "View Discussion and Reply Disabled"
-							},
-							text: {
-								type: "mrkdwn",
-								text: `Contact your admin to enable replies from Slack.`
-							},
-							confirm: {
-								type: "plain_text",
-								text: "OK"
-							},
-							deny: {
-								type: "plain_text",
-								text: "Cancel"
-							}
-						},
-						// url: "https:// ... eventually a doc url here?",
-						text: {
+				actions.elements.push({
+					type: "button",
+					action_id: actionId,
+					confirm: {
+						title: {
+							// can't have markdown here, so using 'and' instead of '&' because it gets encoded to &amp;
 							type: "plain_text",
-							text: "View Discussion & Reply"
+							text: "View Discussion and Reply Disabled"
+						},
+						text: {
+							type: "mrkdwn",
+							text: `Contact your admin to enable replies from Slack.`
+						},
+						confirm: {
+							type: "plain_text",
+							text: "OK"
+						},
+						deny: {
+							type: "plain_text",
+							text: "Cancel"
 						}
+					},
+					// url: "https:// ... eventually a doc url here?",
+					text: {
+						type: "plain_text",
+						text: "View Discussion & Reply"
 					}
-				);
+				});
 			}
 
 			actionId = toActionId(counter, "ide", codemark, marker);
@@ -886,14 +889,19 @@ export function toSlackReviewPostBlocks(
 			}
 		}
 
-		modifiedReposAndBranches.push(`${changeSet.modifiedFiles.length} files on \`${changeSet.branch}\` from \`${repoName}\``)
+		modifiedReposAndBranches.push(
+			`${changeSet.modifiedFiles.length} files on \`${changeSet.branch}\` from \`${repoName}\``
+		);
 	}
 
 	blocks.push({
 		type: "section",
 		text: {
 			type: "mrkdwn",
-			text: `*${toSlackText(review.title, userIdsByName)}* includes changes to ${modifiedReposAndBranches.join(", ")}`
+			text: `*${toSlackText(
+				review.title,
+				userIdsByName
+			)}* includes changes to ${modifiedReposAndBranches.join(", ")}`
 		}
 	});
 

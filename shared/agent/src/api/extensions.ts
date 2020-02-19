@@ -323,7 +323,7 @@ export interface ActionId {
 
 export interface ReviewActionId {
 	id: number;
-	linkType: "web" | "ide"  | "review-reply";
+	linkType: "web" | "ide" | "review-reply";
 	externalProvider?: string;
 	teamId: string;
 	reviewId: string;

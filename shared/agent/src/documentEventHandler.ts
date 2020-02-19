@@ -13,8 +13,8 @@ export class DocumentEventHandler {
 	constructor(
 		private session: CodeStreamSession,
 		private git: GitService,
-		private documentManager: DocumentManager) {
-
+		private documentManager: DocumentManager
+	) {
 		const disposables: Disposable[] = [
 			this.documentManager.onDidChangeContent(this.onDocumentDidChangeContent, this),
 			this.documentManager.onDidSave(this.onDocumentDidSave, this),
