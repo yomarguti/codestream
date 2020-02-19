@@ -46,6 +46,7 @@ export interface CSCodemark extends CSEntity {
 	// color is no longer used; now we use tags
 	color?: "blue" | "green" | "yellow" | "orange" | "red" | "purple" | "aqua" | "gray" | string;
 	tags?: string[];
+	isChangeRequest?: boolean;
 
 	// IDs of codemarks that are somehow related to this one.
 	// this should be symmetrical, implying that the related codemark
