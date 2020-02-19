@@ -741,6 +741,16 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
+	async getHeadSha(repoPath: string): Promise<string | undefined> {
+		try {
+			const data = await git({ cwd: repoPath }, "log", "--pretty=%H", "-n", "1");
+			return data.trim().split("\n")[0];
+		} catch (err) {
+			Logger.log(err.message);
+			return undefined;
+		}
+	}
+
 	async getNumStat(
 		repoPath: string,
 		includeSaved: boolean,

@@ -932,20 +932,30 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			// if we have a pushed commit on this branch, use the most recent.
 			// otherwise, use the start commit if specified by the user.
 			// otherwise, use the parent of the first commit of this branch (the fork point)
+			// if that doesn't exist, use the parent of HEAD
 			const baseSha = pushedCommit
 				? pushedCommit.sha
-				: await git.getParentCommit(scm.repoPath, scm.commits[scm.commits.length - 1].sha);
+				: scm.commits && scm.commits.length > 0
+				? await git.getParentCommit(scm.repoPath, scm.commits[scm.commits.length - 1].sha)
+				: await git.getHeadSha(scm.repoPath);
 
 			if (baseSha == null) {
 				throw new Error("Could not determine oldest pushed commit for review creation");
 			}
+
+			Logger.log("baseSha is: " + baseSha);
 
 			const oldestCommitInReview = commits[commits.length - 1];
 			const newestCommitInReview = commits[0];
 
 			let leftBaseSha: string;
 			let leftDiffs: ParsedDiff[];
-			if (oldestCommitInReview.localOnly) {
+			if (!oldestCommitInReview) {
+				// if there is no commit on this branch, base on baseSha
+				leftBaseSha = baseSha;
+				leftDiffs = [];
+			} else if (oldestCommitInReview.localOnly) {
+				// if the oldest commit exists and is local only
 				leftBaseSha = baseSha;
 				leftDiffs = (
 					await git.getDiffs(
@@ -963,7 +973,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			let rightBaseSha: string;
 			let rightDiffs: ParsedDiff[];
 			let rightReverseDiffs: ParsedDiff[];
-			if (newestCommitInReview.localOnly) {
+			if (!newestCommitInReview || newestCommitInReview.localOnly) {
 				rightBaseSha = baseSha;
 				rightDiffs = (
 					await git.getDiffs(scm.repoPath, { includeSaved, includeStaged }, baseSha)
@@ -1428,7 +1438,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					anchorFormat: "[${text}](${url})"
 				};
 		}
-	};
+	}
 
 	createProviderCard = async (
 		providerCardRequest: {
@@ -1656,7 +1666,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			Logger.error(error, `failed to create a ${attributes.issueProvider.name} card:`);
 			return undefined;
 		}
-	};
+	}
 }
 
 async function resolveCreatePostResponse(response: CreatePostResponse) {
