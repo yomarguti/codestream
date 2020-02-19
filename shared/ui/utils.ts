@@ -177,6 +177,8 @@ export const debounceToAnimationFrame = (fn: Function) => {
 		// 	console.time(label);
 		// 	resetTimer = false;
 		// }
+		// @ts-ignore
+		const context = this;
 		if (requestId) {
 			// console.debug(`debouncing ${label}`);
 			cancelAnimationFrame(requestId);
@@ -185,7 +187,7 @@ export const debounceToAnimationFrame = (fn: Function) => {
 			// resetTimer = true;
 			requestId = undefined;
 			// console.timeEnd(label);
-			fn(...args);
+			fn.apply(context, args);
 		});
 	};
 };
