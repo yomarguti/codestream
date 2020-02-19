@@ -72,6 +72,7 @@ import { NewCodemarkAttributes } from "../store/codemarks/actions";
 import styled from "styled-components";
 import { PanelHeader } from "../src/components/PanelHeader";
 import * as fs from "../utilities/fs";
+import { FileInfo } from "./FileInfo";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -1072,10 +1073,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	renderHeader() {
-		const { fileNameToFilterFor = "" } = this.props;
+		const { fileNameToFilterFor = "", scmInfo } = this.props;
+		const repoId = scmInfo && scmInfo.scm ? scmInfo.scm.repoId : "";
+		const file = scmInfo && scmInfo.scm ? scmInfo.scm.file : fileNameToFilterFor;
 		return (
 			<PanelHeader title={fs.pathBasename(fileNameToFilterFor)} position="fixed">
-				{/*<FileInfo /> */}
+				<FileInfo repoId={repoId || ""} file={file || ""} />
 			</PanelHeader>
 		);
 	}

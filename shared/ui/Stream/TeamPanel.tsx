@@ -298,7 +298,6 @@ class TeamPanel extends React.Component<Props, State> {
 		const { modifiedRepos = [] } = user;
 
 		if (modifiedRepos.length === 0) return null;
-		if (user.username !== "pez") return null;
 
 		console.log("USER IS: ", user);
 		return (
@@ -342,7 +341,7 @@ class TeamPanel extends React.Component<Props, State> {
 							<ul>
 								{this.props.members.map(user => (
 									<>
-										<li key={user.email} style={{ marginBottom: "5px" }}>
+										<li key={user.email} style={{ marginTop: "5px" }}>
 											<Headshot person={user}></Headshot>
 											<b>{user.fullName}</b> <UserStatus user={user} />
 										</li>

@@ -264,7 +264,14 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								)}
 							</div>
 							{label.length > 0 && (
-								<div className="clear" onClick={() => set(":smiley:", "", "today")}>
+								<div
+									className="clear"
+									onClick={() => {
+										set(":smiley:", "", "today");
+										const input = document.getElementById("status-input");
+										if (input) input.focus();
+									}}
+								>
 									<Icon name="x" className="clickable" />
 								</div>
 							)}
