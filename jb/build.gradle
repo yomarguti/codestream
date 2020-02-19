@@ -5,7 +5,7 @@ plugins {
 }
 
 group "com.codestream"
-version "6.1.2"
+version "6.2.0"
 
 sourceCompatibility = 1.8
 
@@ -73,7 +73,7 @@ intellij {
     // intellij.alternativeIdePath "/Users/mfarias/Library/Application Support/JetBrains/Toolbox/apps/PhpStorm/ch-0/193.4932.16/PhpStorm 2019.3 EAP.app"
     // intellij.alternativeIdePath "/Users/mfarias/Library/Application Support/JetBrains/Toolbox/apps/Rider/ch-0/192.6584.65/Rider.app"
     // intellij.alternativeIdePath "/Applications/IntelliJ IDEA.app"
-    intellij.alternativeIdePath "/Users/mfarias/Library/Application Support/JetBrains/Toolbox/apps/IDEA-U/ch-0/201.4865.12/IntelliJ IDEA 2020.1 EAP.app"
+    intellij.alternativeIdePath "/Users/mfarias/Library/Application Support/JetBrains/Toolbox/apps/IDEA-U/ch-0/201.5616.10/IntelliJ IDEA 2020.1 EAP.app"
     // intellij.alternativeIdePath "/Applications/CLion.app"
 }
 
