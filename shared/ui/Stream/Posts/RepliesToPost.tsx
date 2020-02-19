@@ -6,7 +6,7 @@ import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
 import { getTeamMates, findMentionedUserIds } from "@codestream/webview/store/users/reducer";
 import React from "react";
 import { createPost, deletePost } from "../actions";
-import { replaceHtml } from "@codestream/webview/utils";
+import { replaceHtml, mapFilter } from "@codestream/webview/utils";
 import { PostPlus } from "@codestream/protocols/agent";
 import { confirmPopup } from "../Confirm";
 import { Reply } from "./Reply";
@@ -105,13 +105,15 @@ export const RepliesToPost = (props: { streamId: string; parentPostId: string })
 
 	return (
 		<RepliesToPostContext.Provider value={contextValue}>
-			{replies.map(reply => {
+			{mapFilter(replies, reply => {
+				if (reply.parentPostId != null && nestedRepliesByParent.hasOwnProperty(reply.parentPostId))
+					return null;
 				const menuItems = getMenuItems(reply as any);
 				return (
 					<React.Fragment key={reply.id}>
 						<Reply
 							author={allUsers[reply.creatorId]}
-							post={reply as any}
+							post={reply}
 							nestedReplies={nestedRepliesByParent[reply.id] as any}
 							renderMenu={(target, close) => (
 								<Menu target={target} action={close} items={menuItems} />
