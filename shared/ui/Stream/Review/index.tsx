@@ -112,6 +112,12 @@ const RepoInfo = styled.div`
 	}
 `;
 
+const translateStatus = (status: string) => {
+	if (status === "closed") return "Approved";
+
+	return capitalize(status);
+};
+
 const BaseReview = (props: BaseReviewProps) => {
 	const { review } = props;
 
@@ -276,7 +282,7 @@ const BaseReview = (props: BaseReviewProps) => {
 					<Meta>
 						<MetaLabel>Status</MetaLabel>
 						<MetaDescription>
-							<MarkdownText text={capitalize(props.review.status)} />
+							<MarkdownText text={translateStatus(review.status)} />
 						</MetaDescription>
 					</Meta>
 					{!props.collapsed && hasChangeRequests && (
