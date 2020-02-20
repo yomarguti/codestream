@@ -181,3 +181,51 @@ export const FetchReviewDiffsRequestType = new RequestType<
 	void,
 	void
 >("codestream/review/diffs");
+
+export interface StartReviewRequest {
+	reviewId: string;
+}
+
+export interface StartReviewResponse {
+	success: boolean;
+	error?: string;
+}
+
+export const StartReviewRequestType = new RequestType<
+	StartReviewRequest,
+	StartReviewResponse,
+	void,
+	void
+>("codestream/review/start");
+
+export interface PauseReviewRequest {
+	reviewId: string;
+}
+
+export interface PauseReviewResponse {
+	success: boolean;
+	error?: string;
+}
+
+export const PauseReviewRequestType = new RequestType<
+	PauseReviewRequest,
+	PauseReviewResponse,
+	void,
+	void
+>("codestream/review/pause");
+
+export interface EndReviewRequest {
+	reviewId: string;
+}
+
+export interface EndReviewResponse {
+	success: boolean;
+	error?: string;
+}
+
+export const EndReviewRequestType = new RequestType<
+	EndReviewRequest,
+	EndReviewResponse,
+	void,
+	void
+>("codestream/review/end");

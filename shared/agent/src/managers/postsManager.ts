@@ -940,37 +940,39 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			const baseSha = pushedCommit
 				? pushedCommit.sha
 				: scm.commits && scm.commits.length > 0
-				? await git.getParentCommit(scm.repoPath, scm.commits[scm.commits.length - 1].sha)
+				? await git.getParentCommitSha(scm.repoPath, scm.commits[scm.commits.length - 1].sha)
 				: latestCommitSha;
 
 			if (baseSha == null) {
 				throw new Error("Could not determine newest pushed commit for review creation");
 			}
-
 			Logger.log("baseSha is: " + baseSha);
 
-			const oldestCommitInReview = commits[commits.length - 1];
 			const newestCommitInReview = commits[0];
-
-			let leftBaseSha: string;
+			let leftBaseSha;
+			let leftBaseAuthor;
 			let leftDiffs: ParsedDiff[];
-			if (!oldestCommitInReview) {
-				// if there is no commit on this branch, base on baseSha
+
+			const newestCommitNotInReview = scm.commits[commits.length];
+			if (newestCommitNotInReview == null) {
 				leftBaseSha = baseSha;
+				leftBaseAuthor = (await git.getCommit(scm.repoPath, baseSha))!.author;
 				leftDiffs = [];
-			} else if (oldestCommitInReview.localOnly) {
-				// if the oldest commit exists and is local only
+			} else if (newestCommitNotInReview.localOnly) {
 				leftBaseSha = baseSha;
+				leftBaseAuthor = (await git.getCommit(scm.repoPath, baseSha))!.author;
 				leftDiffs = (
 					await git.getDiffs(
 						scm.repoPath,
 						{ includeSaved: false, includeStaged: false },
 						baseSha,
-						oldestCommitInReview.sha
+						newestCommitNotInReview.sha
 					)
 				).filter(removeExcluded);
+				leftDiffs = [];
 			} else {
-				leftBaseSha = oldestCommitInReview.sha;
+				leftBaseSha = newestCommitNotInReview.sha;
+				leftBaseAuthor = (await git.getCommit(scm.repoPath, newestCommitNotInReview.sha))!.author;
 				leftDiffs = [];
 			}
 
@@ -1025,6 +1027,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					includeStaged,
 					remotes,
 					diffs: {
+						leftBaseAuthor,
 						leftBaseSha,
 						leftDiffs,
 						rightBaseSha,

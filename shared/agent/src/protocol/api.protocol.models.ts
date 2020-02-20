@@ -160,6 +160,7 @@ export interface ReviewChangesetFileInfo {
 }
 
 export interface CSReviewDiffs {
+	leftBaseAuthor: string;
 	leftBaseSha: string;
 	leftDiffs: ParsedDiff[];
 	rightBaseSha: string;

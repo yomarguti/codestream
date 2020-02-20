@@ -731,7 +731,7 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
-	async getParentCommit(repoPath: string, sha: string): Promise<string | undefined> {
+	async getParentCommitSha(repoPath: string, sha: string): Promise<string | undefined> {
 		try {
 			const data = await git({ cwd: repoPath }, "log", "--pretty=%P", "-n", "1", sha);
 			return data.trim().split("\n")[0];
