@@ -594,7 +594,7 @@ export class GitService implements IGitService, Disposable {
 				"log",
 				"-M",
 				"-n1",
-				GitLogParser.defaultFormat,
+				`--format=${GitLogParser.defaultFormat}`,
 				ref,
 				"--"
 			);
