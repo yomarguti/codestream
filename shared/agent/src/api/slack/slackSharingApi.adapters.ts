@@ -113,8 +113,8 @@ export function fromSlackChannel(
 		mostRecentPostId: mostRecentId,
 		priority: channel.priority,
 		privacy: (channel.is_private == null
-		? channel.is_group
-		: channel.is_private)
+			? channel.is_group
+			: channel.is_private)
 			? "private"
 			: "public",
 		purpose: channel.purpose && channel.purpose.value,
@@ -898,6 +898,19 @@ export function toSlackReviewPostBlocks(
 			`${changeSet.modifiedFiles.length} ${file} on \`${changeSet.branch}\` from \`${repoName}\``
 		);
 	}
+
+	const creator = codeStreamUsersById.get(review.creatorId);
+	let creatorName = "Someone ";
+	if (creator) {
+		creatorName = `${creator} `;
+	}
+	blocks.push({
+		type: "context",
+		elements: [{
+			type: "mrkdwn",
+			text: `${creatorName}is requesting a review`
+		}]
+	});
 
 	blocks.push({
 		type: "section",
