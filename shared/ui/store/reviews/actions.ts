@@ -93,7 +93,7 @@ export const createReview = (attributes: NewReviewAttributes) => async (
 						"Review Status": "New"
 					});
 				} catch (error) {
-					logError("Error sharing a review", { message: error.message });
+					logError("Error sharing a review", { message: error.toString() });
 					// TODO: communicate failure to users
 					throw { reason: "share" } as CreateReviewError;
 				}
@@ -101,7 +101,7 @@ export const createReview = (attributes: NewReviewAttributes) => async (
 			return result;
 		}
 	} catch (error) {
-		logError("Error creating a review", { message: error.message });
+		logError("Error creating a review", { message: error.toString() });
 		throw { reason: "create" } as CreateReviewError;
 	}
 };
