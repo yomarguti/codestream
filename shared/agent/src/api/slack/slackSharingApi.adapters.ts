@@ -881,16 +881,21 @@ export function toSlackReviewPostBlocks(
 				repoName = repo.name;
 			}
 		}
+
+		let file = "files";
 		if (changeSet.modifiedFiles) {
 			for (const modifiedFile of changeSet.modifiedFiles) {
 				const added = modifiedFile.linesAdded > 0 ? ` +${modifiedFile.linesAdded}` : "";
 				const removed = modifiedFile.linesRemoved > 0 ? ` -${modifiedFile.linesRemoved}` : "";
 				modifiedFiles.push(`${modifiedFile.file}${added}${removed}`);
 			}
+			if (changeSet.modifiedFiles.length === 1) {
+				file = "file";
+			}
 		}
 
 		modifiedReposAndBranches.push(
-			`${changeSet.modifiedFiles.length} files on \`${changeSet.branch}\` from \`${repoName}\``
+			`${changeSet.modifiedFiles.length} ${file} on \`${changeSet.branch}\` from \`${repoName}\``
 		);
 	}
 
