@@ -929,18 +929,22 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 			// perform a diff against the most recent pushed commit
 			const pushedCommit = scm.commits.find(commit => !commit.localOnly);
+			const latestCommitSha = await git.getHeadSha(scm.repoPath);
+			if (latestCommitSha == null) {
+				throw new Error("Could not determine HEAD of current branch for review creation");
+			}
 			// if we have a pushed commit on this branch, use the most recent.
 			// otherwise, use the start commit if specified by the user.
 			// otherwise, use the parent of the first commit of this branch (the fork point)
-			// if that doesn't exist, use the parent of HEAD
+			// if that doesn't exist, use HEAD
 			const baseSha = pushedCommit
 				? pushedCommit.sha
 				: scm.commits && scm.commits.length > 0
 				? await git.getParentCommit(scm.repoPath, scm.commits[scm.commits.length - 1].sha)
-				: await git.getHeadSha(scm.repoPath);
+				: latestCommitSha;
 
 			if (baseSha == null) {
-				throw new Error("Could not determine oldest pushed commit for review creation");
+				throw new Error("Could not determine newest pushed commit for review creation");
 			}
 
 			Logger.log("baseSha is: " + baseSha);
@@ -1026,6 +1030,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						rightBaseSha,
 						rightDiffs,
 						rightReverseDiffs,
+						latestCommitSha,
 						rightToLatestCommitDiffs,
 						latestCommitToRightDiffs
 					}
