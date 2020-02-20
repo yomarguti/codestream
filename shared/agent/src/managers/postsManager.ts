@@ -909,7 +909,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		};
 
 		const { git } = SessionContainer.instance();
-		const markerCreationDescriptors: MarkerCreationDescriptor[] = [];
 		let review: ReviewPlus | undefined;
 
 		for (const repoChange of request.attributes.repoChanges) {
@@ -1000,9 +999,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				).filter(removeExcluded);
 			}
 
-			const leftToRightDiffs = (
-				await git.getDiffs(scm.repoPath, { includeSaved, includeStaged }, oldestCommitInReview.sha)
-			).filter(removeExcluded);
 			const rightToLatestCommitDiffs = (
 				await git.getDiffs(
 					scm.repoPath,
@@ -1030,7 +1026,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						rightBaseSha,
 						rightDiffs,
 						rightReverseDiffs,
-						leftToRightDiffs,
 						rightToLatestCommitDiffs,
 						latestCommitToRightDiffs
 					}
