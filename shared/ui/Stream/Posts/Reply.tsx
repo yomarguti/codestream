@@ -142,7 +142,7 @@ export const Reply = (props: ReplyProps) => {
 				</AuthorInfo>
 				{isNestedReply && (
 					<ParentPreview>
-						Reply to <a>{parentPost.text}</a>
+						Reply to <a>{parentPost.text.substring(0, 80)}</a>
 					</ParentPreview>
 				)}
 				{emote ? null : (
