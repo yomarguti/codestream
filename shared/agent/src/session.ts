@@ -218,13 +218,13 @@ export class CodeStreamSession {
 	private uiState: string | undefined;
 	private _documentEventHandler: DocumentEventHandler | undefined;
 
-	// in certain scenarios the agent may want to use more performance-intensive
+	// HACK in certain scenarios the agent may want to use more performance-intensive
 	// operations when handling document change and saves. This is true for when
 	// a user is looking at the review screen, where we need to be able to live-update
 	// the view based on documents changing & saving, as well as git operations removing
 	// and/or squashing commits.
 	get useEnhancedDocumentChangeHandler(): boolean {
-		return this.uiState === "compose-review";
+		return this.uiState === "new-review" || this.uiState === "people";
 	}
 
 	constructor(

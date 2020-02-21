@@ -633,10 +633,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 				// If we aren't updating the current user, just continue
 				if (meIndex === -1) {
-					e.data = await SessionContainer.instance().repos.resolve(e, { onlyIfNeeded: false });
-					if (e.data == null || e.data.length === 0) return;
-
-					break;
+					e.data = await SessionContainer.instance().users.resolve(e, { onlyIfNeeded: false });
+					if (e.data != null && e.data.length !== 0) {
+						// we might be getting info from other users that we need to trigger
+						this._onDidReceiveMessage.fire(e as RTMessage);
+					}
+					return;
 				}
 
 				const me = users[meIndex] as CSMe;
@@ -644,7 +646,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 					// Remove the current user, as we will handle that seperately
 					users.splice(meIndex, 1);
 
-					e.data = await SessionContainer.instance().repos.resolve(e, { onlyIfNeeded: false });
+					e.data = await SessionContainer.instance().users.resolve(e, { onlyIfNeeded: false });
 					if (e.data != null && e.data.length !== 0) {
 						this._onDidReceiveMessage.fire(e as RTMessage);
 					}

@@ -26,8 +26,7 @@ export class DocumentEventHandler {
 	}
 
 	async onDocumentDidOpen(e: TextDocumentChangeEvent) {
-		if (!this.session.useEnhancedDocumentChangeHandler) return;
-
+		// treat the open as a change
 		this.session.agent.sendNotification(DidChangeDataNotificationType, {
 			type: ChangeDataType.Documents,
 			data: {
@@ -41,8 +40,6 @@ export class DocumentEventHandler {
 	}
 
 	async onDocumentDidClose(e: TextDocumentChangeEvent) {
-		if (!this.session.useEnhancedDocumentChangeHandler) return;
-
 		this.session.agent.sendNotification(DidChangeDataNotificationType, {
 			type: ChangeDataType.Documents,
 			data: {
@@ -56,8 +53,6 @@ export class DocumentEventHandler {
 	}
 
 	async onDocumentDidSave(e: TextDocumentChangeEvent) {
-		if (!this.session.useEnhancedDocumentChangeHandler) return;
-
 		this.session.agent.sendNotification(DidChangeDataNotificationType, {
 			type: ChangeDataType.Documents,
 			data: {
@@ -94,8 +89,6 @@ export class DocumentEventHandler {
 	}
 
 	onRepositoryCommitHashChanged(repo: GitRepository) {
-		if (!this.session.useEnhancedDocumentChangeHandler) return;
-
 		this.session.agent.sendNotification(DidChangeDataNotificationType, {
 			type: ChangeDataType.Commits,
 			data: repo
