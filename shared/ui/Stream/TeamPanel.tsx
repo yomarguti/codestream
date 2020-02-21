@@ -352,7 +352,14 @@ class TeamPanel extends React.Component<Props, State> {
 					const repoName = repos[repoId] ? repos[repoId].name : "";
 					const added = modifiedFiles.reduce((total, f) => total + f.linesAdded, 0);
 					const removed = modifiedFiles.reduce((total, f) => total + f.linesRemoved, 0);
-					const title = modifiedFiles.map(f => <ChangesetFile key={f.file} {...f} />);
+					const title = (
+						<>
+							<div className="related-label">Local Changes</div>
+							{modifiedFiles.map(f => (
+								<ChangesetFile key={f.file} {...f} />
+							))}
+						</>
+					);
 					return (
 						<li className="status row-with-icon-actions" style={{ paddingLeft: "48px" }}>
 							<Tooltip title={title} placement="topRight">
