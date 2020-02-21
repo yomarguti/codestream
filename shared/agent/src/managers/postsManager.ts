@@ -1009,11 +1009,11 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				await git.getDiffs(
 					scm.repoPath,
 					{ includeSaved, includeStaged, reverse: true },
-					newestCommitInReview.sha
+					latestCommitSha
 				)
 			).filter(removeExcluded);
 			const latestCommitToRightDiffs = (
-				await git.getDiffs(scm.repoPath, { includeSaved, includeStaged }, newestCommitInReview.sha)
+				await git.getDiffs(scm.repoPath, { includeSaved, includeStaged }, latestCommitSha)
 			).filter(removeExcluded);
 
 			// WTF typescript, this is defined above
