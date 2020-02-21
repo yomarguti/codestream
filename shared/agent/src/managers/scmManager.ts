@@ -431,6 +431,7 @@ export class ScmManager {
 
 		const gitRemotes = await repo.getRemotes();
 		const remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
+		const diffs = await reviews.getDiffs(reviewId, repoId);
 		return {
 			uri: uri.toString(),
 			range: range,
@@ -439,7 +440,7 @@ export class ScmManager {
 				file: path,
 				repoPath: repo.path,
 				repoId,
-				revision: changeset.commits[0].sha,
+				revision: diffs.latestCommitSha,
 				authors: [],
 				remotes,
 				branch: changeset.branch
