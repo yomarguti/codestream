@@ -562,7 +562,11 @@ const ReviewForReview = (props: PropsWithReview) => {
 			reviewers={derivedState.reviewers}
 			currentUserId={derivedState.currentUser.id}
 			renderFooter={renderFooter}
-			renderMenu={(target, close) => <Menu target={target} action={close} items={menuItems} />}
+			renderMenu={
+				menuItems.length > 0
+					? (target, close) => <Menu target={target} action={close} items={menuItems} />
+					: undefined
+			}
 		/>
 	);
 };
