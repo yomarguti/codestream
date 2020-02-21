@@ -117,6 +117,7 @@ interface State {
 	sharingAttributesInvalid?: boolean;
 	showAllChannels?: boolean;
 	scmInfo: GetFileScmInfoResponse;
+	repoUri?: string;
 	selectedTags?: any;
 	repoStatus: GetRepoScmStatusResponse;
 	openRepos: ReposScm[];
@@ -255,21 +256,22 @@ class ReviewForm extends React.Component<Props, State> {
 		this.disposables.forEach(d => d.dispose());
 	};
 
-	async handleRepoChange(uri?) {
+	async handleRepoChange(repoUri?) {
 		const { repos, teamMates } = this.props;
 		const { includeSaved, includeStaged, startCommit } = this.state;
 		const { scm } = this.state.scmInfo;
 		if (!scm) return;
 
+		const uri = repoUri || this.state.repoUri;
 		const statusInfo = await HostApi.instance.send(GetRepoScmStatusRequestType, {
-			uri: uri || this.props.textEditorUri,
+			uri,
 			startCommit,
 			includeStaged,
 			includeSaved
 		});
 		const repoId: string = statusInfo.scm ? statusInfo.scm.repoId || "" : "";
 		const repoName = repos[repoId] ? repos[repoId].name : "";
-		this.setState({ repoStatus: statusInfo, repoName });
+		this.setState({ repoStatus: statusInfo, repoName, repoUri: uri });
 
 		if (statusInfo.scm) {
 			const authors = statusInfo.scm.authors;
@@ -1019,6 +1021,7 @@ class ReviewForm extends React.Component<Props, State> {
 
 	setRepo = repo => {
 		this.setState({ isLoadingScm: true });
+		// FIXME -- this /foo stuff is to create a URI that gets parsed
 		this.handleRepoChange(repo.folder.uri + "/foo");
 	};
 
@@ -1250,7 +1253,8 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 
 	return {
 		unsavedFiles: unsavedFiles,
-		shouldShare: safe(() => state.preferences[state.context.currentTeamId].shareCodemarkEnabled) || false,
+		shouldShare:
+			safe(() => state.preferences[state.context.currentTeamId].shareCodemarkEnabled) || false,
 		channel,
 		teamMates,
 		teamMembers,
