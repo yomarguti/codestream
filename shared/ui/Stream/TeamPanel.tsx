@@ -13,15 +13,17 @@ import { HostApi } from "../webview-api";
 import { WebviewPanels } from "@codestream/protocols/webview";
 import { PanelHeader } from "../src/components/PanelHeader";
 import {
-	GetRepoScmStatusesRequestType,
 	RepoScmStatus,
-	SetModifiedReposRequestType
+	DidChangeDataNotificationType,
+	ChangeDataType
 } from "@codestream/protocols/agent";
 import { CSUser, CSApiCapabilities } from "@codestream/protocols/api";
 import { ChangesetFile } from "./Review/ChangesetFile";
 import Tooltip from "./Tooltip";
 import styled from "styled-components";
 import { UserStatus } from "../src/components/UserStatus";
+import { DocumentData } from "../protocols/agent/agent.protocol.notifications";
+import { updateModifiedFiles, clearModifiedFiles } from "../store/users/actions";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -45,6 +47,8 @@ interface ConnectedProps {
 	repos: any;
 	apiCapabilities: CSApiCapabilities;
 	currentUserInvisible: false;
+	updateModifiedFiles: Function;
+	clearModifiedFiles: Function;
 }
 
 interface State {
@@ -74,30 +78,70 @@ class TeamPanel extends React.Component<Props, State> {
 		modifiedRepos: []
 	};
 
+	private _pollingTimer?: any;
+	private _mounted: boolean = false;
+	private disposables: { dispose(): void }[] = [];
+
 	constructor(props: Props) {
 		super(props);
 		this.state = this.initialState;
 	}
 
 	componentDidMount() {
+		this._mounted = true;
 		if (this.props.webviewFocused)
 			HostApi.instance.track("Page Viewed", { "Page Name": "Team Tab" });
+
+		this.disposables.push(
+			HostApi.instance.on(DidChangeDataNotificationType, (e: any) => {
+				// if we have a change to scm OR a file has been saved, update
+				if (
+					e.type === ChangeDataType.Commits ||
+					(e.type === ChangeDataType.Documents &&
+						e.data &&
+						(e.data as DocumentData).reason === "saved")
+				) {
+					this.getScmInfoSummary();
+				}
+			})
+		);
 
 		// if (this.props.apiCapabilities["xray"])
 		if (this.props.currentUserInvisible) this.clearScmInfoSummary();
 		else this.getScmInfoSummary();
+
+		this.startPolling();
+	}
+
+	componentWillUnmount() {
+		this._mounted = false;
+		this.disposables.forEach(d => d.dispose());
+		this.stopPolling();
+	}
+
+	private startPolling() {
+		// poll to get any changes that might happen outside the scope of
+		// the documentManager operations
+		if (!this._mounted || this._pollingTimer !== undefined) return;
+
+		this._pollingTimer = setInterval(() => {
+			this.getScmInfoSummary();
+		}, 30000);
+	}
+
+	private stopPolling() {
+		if (this._pollingTimer === undefined) return;
+
+		clearInterval(this._pollingTimer);
+		this._pollingTimer = undefined;
 	}
 
 	getScmInfoSummary = async () => {
-		const result = await HostApi.instance.send(GetRepoScmStatusesRequestType, {});
-		if (result.scm) {
-			// this.setState({ modifiedRepos: result.scm });
-			await HostApi.instance.send(SetModifiedReposRequestType, { modifiedRepos: result.scm });
-		}
+		this.props.updateModifiedFiles();
 	};
 
 	clearScmInfoSummary = async () => {
-		await HostApi.instance.send(SetModifiedReposRequestType, { modifiedRepos: [] });
+		this.props.clearModifiedFiles();
 	};
 
 	onEmailChange = event => {
@@ -442,6 +486,10 @@ const mapStateToProps = ({ users, context, teams, repos, session, apiVersioning 
 	};
 };
 
-const ConnectedTeamPanel = connect(mapStateToProps, { invite })(TeamPanel);
+const ConnectedTeamPanel = connect(mapStateToProps, {
+	invite,
+	updateModifiedFiles,
+	clearModifiedFiles
+})(TeamPanel);
 
 export { ConnectedTeamPanel as TeamPanel };
