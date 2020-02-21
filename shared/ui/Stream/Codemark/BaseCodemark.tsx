@@ -344,7 +344,7 @@ export const Title = styled.div`
 export const MarkdownText = styled.span`
 	white-space: normal;
 	text-overflow: initial;
-	overflow-y: scroll; // A long code snippet can extend past the container and look weird
+	overflow-y: auto; // A long code snippet can extend past the container and look weird
 	p {
 		margin: 0;
 	}
