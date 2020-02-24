@@ -202,7 +202,26 @@ const BaseReview = (props: BaseReviewProps) => {
 						items={[
 							{
 								label: "Approve",
-								action: () => dispatch(setReviewStatus(props.review.id, "closed"))
+								action: () => {
+									if (hasChangeRequests && props.changeRequests!.find(r => r.status !== "closed"))
+										confirmPopup({
+											title: "Are you sure?",
+											message: "This review has open change requests.",
+											centered: true,
+											buttons: [
+												{ label: "Cancel", className: "control-button" },
+												{
+													label: "Approve Anyway",
+													className: "success",
+													wait: true,
+													action: () => {
+														dispatch(setReviewStatus(props.review.id, "closed"));
+													}
+												}
+											]
+										});
+									else dispatch(setReviewStatus(props.review.id, "closed"));
+								}
 							},
 							{
 								label: "Reject",
