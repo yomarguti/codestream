@@ -1,10 +1,13 @@
 import { createSelector } from "reselect";
-import { toMapBy } from "../../utils";
+import { toMapBy, mapFilter } from "../../utils";
 import { ActionType } from "../common";
 import * as actions from "./actions";
 import { CodemarksActionsTypes, CodemarksState } from "./types";
 import { CodemarkPlus } from "@codestream/protocols/agent";
-import { CodemarkType } from "@codestream/protocols/api";
+import { CodemarkType, CSReview } from "@codestream/protocols/api";
+import { CodeStreamState } from "..";
+import { getThreadPosts } from "../posts/reducer";
+import { isPending } from "../posts/types";
 
 type CodemarksActions = ActionType<typeof actions>;
 
@@ -100,9 +103,21 @@ export const getFileFilteredCodemarks = createSelector(
 	}
 );
 
-export const teamHasCodemarks = createSelector(
-	getCodemarks,
-	(codemarks: CodemarksState) => {
-		return Object.keys(codemarks).length > 0;
+export const teamHasCodemarks = createSelector(getCodemarks, (codemarks: CodemarksState) => {
+	return Object.keys(codemarks).length > 0;
+});
+
+export const getReviewChangeRequests = createSelector(
+	(state: CodeStreamState) => state.codemarks,
+	(state: CodeStreamState, review: CSReview) =>
+		getThreadPosts(state, review.streamId, review.postId),
+	(codemarks, posts) => {
+		return mapFilter(posts, post => {
+			if (isPending(post) || post.codemarkId == null) return;
+
+			const codemark = getCodemark(codemarks, post.codemarkId);
+			if (codemark == null || !codemark.isChangeRequest) return;
+			return codemark;
+		});
 	}
 );

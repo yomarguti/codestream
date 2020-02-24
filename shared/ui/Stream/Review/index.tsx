@@ -6,7 +6,7 @@ import {
 	getCardProps,
 	CardFooter
 } from "@codestream/webview/src/components/Card";
-import { GetReviewRequestType } from "@codestream/protocols/agent";
+import { GetReviewRequestType, CodemarkPlus } from "@codestream/protocols/agent";
 import {
 	MinimumWidthCard,
 	Header,
@@ -28,7 +28,7 @@ import {
 	KebabIcon
 } from "../Codemark/BaseCodemark";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
-import { CSUser, CSReview, CodemarkType } from "@codestream/protocols/api";
+import { CSUser, CSReview, CodemarkType, CodemarkStatus } from "@codestream/protocols/api";
 import { CodeStreamState } from "@codestream/webview/store";
 import { useSelector, useDispatch, shallowEqual } from "react-redux";
 import { useMarkdownifyToHtml } from "../Markdowner";
@@ -38,7 +38,11 @@ import { capitalize, replaceHtml, emptyArray, mapFilter } from "@codestream/webv
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "../..";
 import { saveReviews, deleteReview } from "@codestream/webview/store/reviews/actions";
-import { setActiveReview, setCurrentReview } from "@codestream/webview/store/context/actions";
+import {
+	setActiveReview,
+	setCurrentReview,
+	setCurrentCodemark
+} from "@codestream/webview/store/context/actions";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import { getReview } from "@codestream/webview/store/reviews/reducer";
 import MessageInput from "../MessageInput";
@@ -49,7 +53,7 @@ import {
 	findMentionedUserIds,
 	getTeamTagsHash
 } from "@codestream/webview/store/users/reducer";
-import { createPost, setReviewStatus } from "../actions";
+import { createPost, setReviewStatus, setCodemarkStatus } from "../actions";
 import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
 import { DropdownButton } from "./DropdownButton";
 import Tag from "../Tag";
@@ -59,6 +63,8 @@ import Menu from "../Menu";
 import { confirmPopup } from "../Confirm";
 import { Checkbox } from "@codestream/webview/src/components/Checkbox";
 import { createCodemark } from "@codestream/webview/store/codemarks/actions";
+import { getReviewChangeRequests } from "@codestream/webview/store/codemarks/reducer";
+import { Link } from "../Link";
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
@@ -69,12 +75,21 @@ export interface BaseReviewProps extends CardProps {
 	isFollowing?: boolean;
 	reviewers?: CSUser[];
 	tags?: { id: string }[];
+	changeRequests?: CodemarkPlus[];
 	renderFooter?: (
 		footer: typeof CardFooter,
 		inputContainer?: typeof ComposeWrapper
 	) => React.ReactNode;
 	renderMenu?: (target: any, onClose: () => void) => React.ReactNode;
 }
+
+const Clickable = styled(Link)`
+	text-decoration: none !important;
+	color: ${props => props.theme.colors.text};
+	:hover {
+		color: ${props => props.theme.colors.textHighlight};
+	}
+`;
 
 const ComposeWrapper = styled.div.attrs(() => ({
 	className: "compose codemark-compose"
@@ -111,6 +126,7 @@ const BaseReview = (props: BaseReviewProps) => {
 
 	const hasTags = props.tags && props.tags.length > 0;
 	const hasReviewers = props.reviewers != null && props.reviewers.length > 0;
+	const hasChangeRequests = props.changeRequests != null && props.changeRequests.length > 0;
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
 	const renderedMenu =
 		props.renderMenu &&
@@ -272,6 +288,34 @@ const BaseReview = (props: BaseReviewProps) => {
 							<MarkdownText>{capitalize(props.review.status)}</MarkdownText>
 						</MetaDescription>
 					</Meta>
+					{!props.collapsed && hasChangeRequests && (
+						<Meta>
+							<MetaLabel>Change Requests</MetaLabel>
+							<MetaDescriptionForAssignees>
+								{props.changeRequests!.map(codemark => (
+									<MetaAssignee key={codemark.id}>
+										<Checkbox
+											name={codemark.id}
+											checked={codemark.status === CodemarkStatus.Closed}
+											onChange={value => {
+												dispatch(setCodemarkStatus(codemark.id, value ? "closed" : "open"));
+											}}
+										/>
+										<Clickable
+											onClick={() => {
+												dispatch(setCurrentReview());
+												dispatch(setCurrentCodemark(codemark.id));
+											}}
+										>
+											<MarkdownText>
+												{(codemark.title || codemark.text).substring(0, 80)}
+											</MarkdownText>
+										</Clickable>
+									</MetaAssignee>
+								))}
+							</MetaDescriptionForAssignees>
+						</Meta>
+					)}
 					<Meta>
 						<MetaLabel>Repositories</MetaLabel>
 						<MetaDescription>
@@ -503,6 +547,10 @@ const ReviewForReview = (props: PropsWithReview) => {
 		return [...reviewRepos.values()];
 	}, [review, derivedState.repos]);
 
+	const changeRequests = useSelector((state: CodeStreamState) =>
+		getReviewChangeRequests(state, review)
+	);
+
 	const renderFooter =
 		props.renderFooter ||
 		((Footer, InputContainer) => {
@@ -558,6 +606,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 			review={props.review}
 			repoInfo={repoInfo}
 			tags={tags}
+			changeRequests={changeRequests}
 			isFollowing={derivedState.userIsFollowing}
 			reviewers={derivedState.reviewers}
 			currentUserId={derivedState.currentUser.id}
