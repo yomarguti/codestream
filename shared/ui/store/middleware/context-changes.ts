@@ -1,10 +1,11 @@
 /// <reference path="../../@types/window.d.ts"/>
 import { WebviewDidChangeContextNotificationType } from "../../ipc/webview.protocol";
 import { HostApi } from "../../webview-api";
-import { ContextActionsType, ContextState } from "../context/types";
+import { ContextActionsType } from "../context/types";
 import { CodeStreamState } from "..";
 import { Dispatch, MiddlewareAPI } from "redux";
-import { UIStateRequestType } from '../../protocols/agent/agent.protocol';
+import { UIStateRequestType } from "../../protocols/agent/agent.protocol";
+import { shallowEqual } from "react-redux";
 
 export const contextChangeObserver = (store: MiddlewareAPI<any, CodeStreamState>) => (
 	next: Dispatch
@@ -17,7 +18,7 @@ export const contextChangeObserver = (store: MiddlewareAPI<any, CodeStreamState>
 	const newContext = store.getState().context;
 
 	window.requestIdleCallback(() => {
-		if (notEqual(oldContext, newContext)) {
+		if (!shallowEqual(oldContext, newContext)) {
 			HostApi.instance.notify(WebviewDidChangeContextNotificationType, {
 				context: newContext
 			});
@@ -32,13 +33,3 @@ export const contextChangeObserver = (store: MiddlewareAPI<any, CodeStreamState>
 
 	return result;
 };
-
-function notEqual<K extends keyof ContextState>(
-	oldContext: ContextState,
-	newContext: ContextState,
-	blackList: K[] = []
-) {
-	return Object.entries(oldContext).some(
-		([key, value]) => !(blackList as string[]).includes(key) && value !== newContext[key]
-	);
-}
