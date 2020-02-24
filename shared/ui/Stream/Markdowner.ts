@@ -4,7 +4,7 @@ import markdownItEmoji from "markdown-it-emoji-mart";
 import { prettyPrintOne } from "code-prettify";
 import { logError } from "../logger";
 import { escapeHtml } from "../utils";
-import { useSelector } from "react-redux";
+import { useSelector, shallowEqual } from "react-redux";
 import { getUsernames } from "../store/users/reducer";
 import React from "react";
 import { CodeStreamState } from "../store";
@@ -66,15 +66,16 @@ export const markdownify = (text: string) => {
 };
 
 /*
-	The returned function will mardownify and highlight usernames.
-	This hook loads whatever data it needs from the redux store. If configuration options are necessary,
-	they can be accepted as parameters to the hook or the returned function
+	The returned function will markdownify and highlight usernames.
+	This hook loads whatever data it needs from the redux store.
+	If configuration options are necessary, either the hook can be modified to accept parameters OR
+	the returned callback can expect the parameters
 */
 export function useMarkdownifyToHtml() {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!];
 		return { currentUserName: currentUser.username, usernames: getUsernames(state) };
-	});
+	}, shallowEqual);
 
 	return React.useCallback(
 		(text: string) => {
