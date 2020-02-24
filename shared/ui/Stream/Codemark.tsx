@@ -16,10 +16,16 @@ import {
 	DocumentMarker,
 	CodemarkPlus,
 	OpenUrlRequestType,
-	Capabilities,
-	GetDocumentFromMarkerRequestType
+	Capabilities
 } from "@codestream/protocols/agent";
-import { CodemarkType, CSUser, CSMe, CSPost, CSApiCapabilities } from "@codestream/protocols/api";
+import {
+	CodemarkType,
+	CSUser,
+	CSMe,
+	CSPost,
+	CSApiCapabilities,
+	CSReview
+} from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import {
 	FollowCodemarkRequestType,
@@ -54,13 +60,13 @@ import {
 	EditorSelectRangeRequest,
 	EditorRevealRangeRequestType
 } from "@codestream/protocols/webview";
-import { setCurrentCodemark, repositionCodemark } from "../store/context/actions";
+import { setCurrentCodemark, repositionCodemark, setCurrentReview } from "../store/context/actions";
 import { RelatedCodemark } from "./RelatedCodemark";
 import { addDocumentMarker } from "../store/documentMarkers/actions";
 import { Link } from "./Link";
-import { logError } from "../logger";
 import { getDocumentFromMarker } from "./api-functions";
 import { SharingModal } from "./SharingModal";
+import { getReview } from "../store/reviews/reducer";
 
 interface State {
 	hover: boolean;
@@ -84,6 +90,7 @@ interface DispatchProps {
 	repositionCodemark: typeof repositionCodemark;
 	addDocumentMarker: typeof addDocumentMarker;
 	addCodemarks: typeof addCodemarks;
+	setCurrentReview: typeof setCurrentReview;
 }
 
 interface ConnectedProps {
@@ -106,6 +113,7 @@ interface ConnectedProps {
 	isRepositioning?: boolean;
 	apiCapabilities: CSApiCapabilities;
 	inSharingModel: boolean;
+	review?: CSReview;
 }
 
 export type DisplayType = "default" | "collapsed" | "activity";
@@ -476,11 +484,11 @@ export class Codemark extends React.Component<Props, State> {
 	};
 
 	renderStatus(codemark) {
-		const { type, status = "open" } = codemark;
+		const { isChangeRequest, type, status = "open" } = codemark;
 
 		if (this.state.isInjecting) return null;
 
-		if (type === CodemarkType.Issue) {
+		if (isChangeRequest || type === CodemarkType.Issue) {
 			if (this.props.displayType === "default") {
 				return (
 					<Tooltip title="Mark as resolved and hide discussion" placement="topRight" delay={1}>
@@ -1415,6 +1423,16 @@ export class Codemark extends React.Component<Props, State> {
 						>
 							<div className="description">
 								{/* this.renderVisibilitySelected() */}
+								{this.props.review != null && (
+									<div className="related">
+										<div className="related-label">Review</div>
+										<div className="description-body">
+											<Link onClick={() => this.props.setCurrentReview(this.props.review!.id)}>
+												{this.props.review.title}
+											</Link>
+										</div>
+									</div>
+								)}
 								{this.renderTagsAndAssigneesSelected(codemark)}
 								{description && (
 									<div className="related">
@@ -1725,7 +1743,17 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		return unknownAuthor;
 	})();
 
+	const parentPost =
+		codemark != null && codemark.parentPostId
+			? getPost(posts, codemark.streamId, codemark.parentPostId)
+			: null;
+	const review =
+		parentPost != null && parentPost.reviewId
+			? getReview(state.reviews, parentPost.reviewId)
+			: undefined;
+
 	return {
+		review,
 		inSharingModel: state.featureFlags.sharing,
 		capabilities: capabilities,
 		editorHasFocus: context.hasFocus,
@@ -1762,7 +1790,8 @@ export default connect(
 		repositionCodemark,
 		addDocumentMarker,
 		addCodemarks,
-		createPost
+		createPost,
+		setCurrentReview
 	}
 	// @ts-ignore
 )(Codemark);

@@ -85,9 +85,8 @@ export interface BaseReviewProps extends CardProps {
 
 const Clickable = styled(Link)`
 	text-decoration: none !important;
-	color: ${props => props.theme.colors.text};
 	:hover {
-		color: ${props => props.theme.colors.textHighlight};
+		text-decoration: underline !important;
 	}
 `;
 
