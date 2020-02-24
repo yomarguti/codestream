@@ -23,12 +23,12 @@ import {
 import { confirmPopup } from "../Confirm";
 import { setCurrentCodemark } from "@codestream/webview/store/context/actions";
 import { SharingModal } from "../SharingModal";
-import { BaseCodemarkProps, BaseCodemark, MarkdownText } from "./BaseCodemark";
-import { useMarkdownifyToHtml } from "../Markdowner";
+import { BaseCodemarkProps, BaseCodemark } from "./BaseCodemark";
 import Icon from "../Icon";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { logError } from "@codestream/webview/logger";
 import { mapFilter } from "@codestream/webview/utils";
+import { MarkdownText } from "../MarkdownText";
 
 const StyledRelatedCodemark = styled(RelatedCodemark)`
 	white-space: normal;
@@ -42,8 +42,6 @@ const PinnedReplies = (props: { replyIds: string[]; streamId: string }) => {
 		};
 	});
 
-	const markdownifyToHtml = useMarkdownifyToHtml();
-
 	if (posts.length === 0) return null;
 
 	return (
@@ -51,7 +49,7 @@ const PinnedReplies = (props: { replyIds: string[]; streamId: string }) => {
 			{posts.map(post => (
 				<PinnedReply key={post.id}>
 					<Icon name="star" /> <Headshot person={users[post.creatorId]} />
-					<PinnedReplyText dangerouslySetInnerHTML={{ __html: markdownifyToHtml(post.text) }} />
+					<PinnedReplyText text={post.text} />
 				</PinnedReply>
 			))}
 		</>

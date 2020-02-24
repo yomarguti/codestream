@@ -2,9 +2,8 @@ import styled from "styled-components";
 import { CSUser } from "@codestream/protocols/api";
 import { PostPlus } from "@codestream/protocols/agent";
 import React from "react";
-import { useMarkdownifyToHtml } from "../Markdowner";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
-import { StyledTimestamp, MarkdownText, KebabIcon, StyledMarker } from "../Codemark/BaseCodemark";
+import { StyledTimestamp, KebabIcon, StyledMarker } from "../Codemark/BaseCodemark";
 import Icon from "../Icon";
 import { getCodemark } from "@codestream/webview/store/codemarks/reducer";
 import { CodeStreamState } from "@codestream/webview/store";
@@ -15,6 +14,7 @@ import { confirmPopup } from "../Confirm";
 import { deletePost } from "../actions";
 import { RepliesToPostContext } from "./RepliesToPost";
 import { getPost } from "@codestream/webview/store/posts/reducer";
+import { MarkdownText } from "../MarkdownText";
 
 export interface ReplyProps {
 	author: Partial<CSUser>;
@@ -76,6 +76,10 @@ const ParentPreview = styled.span`
 	margin-left: 23px;
 `;
 
+const ReplyText = styled(MarkdownText)`
+	margin-left: 23px;
+`;
+
 export const Reply = (props: ReplyProps) => {
 	const [menuState, setMenuState] = React.useState<{
 		open: boolean;
@@ -93,8 +97,6 @@ export const Reply = (props: ReplyProps) => {
 	const isNestedReply = props.showParentPreview && parentPost.parentPostId != null;
 
 	const postText = codemark != null ? codemark.text : props.post.text;
-
-	const markdownifyToHtml = useMarkdownifyToHtml();
 
 	const renderedMenu =
 		props.renderMenu &&
@@ -147,10 +149,7 @@ export const Reply = (props: ReplyProps) => {
 				)}
 				{emote ? null : (
 					<>
-						<MarkdownText
-							style={{ marginLeft: "23px" }}
-							dangerouslySetInnerHTML={{ __html: markdownifyToHtml(postText) }}
-						/>
+						<ReplyText text={postText} />
 						{markers}
 					</>
 				)}

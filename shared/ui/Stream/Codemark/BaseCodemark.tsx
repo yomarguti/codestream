@@ -10,7 +10,6 @@ import {
 import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { CSUser, CSMarker, CodemarkType, CodemarkStatus } from "@codestream/protocols/api";
 import Timestamp from "../Timestamp";
-import { useMarkdownifyToHtml } from "../Markdowner";
 import Tag from "../Tag";
 import Icon from "../Icon";
 import { Link } from "../Link";
@@ -21,6 +20,7 @@ import React from "react";
 import styled from "styled-components";
 import Tooltip from "../Tooltip";
 import { HostApi } from "../..";
+import { MarkdownText } from "../MarkdownText";
 
 export interface BaseCodemarkProps extends CardProps {
 	codemark: CodemarkPlus;
@@ -44,7 +44,6 @@ export interface BaseCodemarkProps extends CardProps {
 }
 
 export function BaseCodemark(props: BaseCodemarkProps) {
-	const markdownifyToHtml = useMarkdownifyToHtml();
 	const [menuState, setMenuState] = React.useState<{ open: boolean; target?: any }>({
 		open: false,
 		target: undefined
@@ -128,11 +127,7 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 					</HeaderActions>
 				</Header>
 				<Title>
-					<MarkdownText
-						dangerouslySetInnerHTML={{
-							__html: markdownifyToHtml(codemark.title || codemark.text)
-						}}
-					/>
+					<MarkdownText text={codemark.title || codemark.text} />
 				</Title>
 				{!props.collapsed && (
 					<>
@@ -177,9 +172,7 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 									<MetaLabel>Description</MetaLabel>
 									<MetaDescription>
 										<Icon name="description" />
-										<MarkdownText
-											dangerouslySetInnerHTML={{ __html: markdownifyToHtml(codemark.text) }}
-										/>
+										<MarkdownText text={codemark.text} />
 									</MetaDescription>
 								</Meta>
 							)}
@@ -339,15 +332,6 @@ export const StyledTimestamp = styled(Timestamp)`
 
 export const Title = styled.div`
 	margin-bottom: 10px;
-`;
-
-export const MarkdownText = styled.span`
-	white-space: normal;
-	text-overflow: initial;
-	overflow-y: auto; // A long code snippet can extend past the container and look weird
-	p {
-		margin: 0;
-	}
 `;
 
 export const Meta = styled.div`

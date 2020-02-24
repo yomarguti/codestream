@@ -13,7 +13,6 @@ import {
 	AuthorInfo,
 	StyledTimestamp,
 	Title,
-	MarkdownText,
 	MetaSection,
 	Meta,
 	MetaLabel,
@@ -31,7 +30,6 @@ import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { CSUser, CSReview, CodemarkType, CodemarkStatus } from "@codestream/protocols/api";
 import { CodeStreamState } from "@codestream/webview/store";
 import { useSelector, useDispatch, shallowEqual } from "react-redux";
-import { useMarkdownifyToHtml } from "../Markdowner";
 import Icon from "../Icon";
 import Tooltip from "../Tooltip";
 import { capitalize, replaceHtml, emptyArray, mapFilter } from "@codestream/webview/utils";
@@ -65,6 +63,7 @@ import { Checkbox } from "@codestream/webview/src/components/Checkbox";
 import { createCodemark } from "@codestream/webview/store/codemarks/actions";
 import { getReviewChangeRequests } from "@codestream/webview/store/codemarks/reducer";
 import { Link } from "../Link";
+import { MarkdownText } from "../MarkdownText";
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
@@ -117,7 +116,6 @@ const BaseReview = (props: BaseReviewProps) => {
 	const { review } = props;
 
 	const dispatch = useDispatch();
-	const markdownifyToHtml = useMarkdownifyToHtml();
 	const [menuState, setMenuState] = React.useState<{ open: boolean; target?: any }>({
 		open: false,
 		target: undefined
@@ -230,11 +228,7 @@ const BaseReview = (props: BaseReviewProps) => {
 					</HeaderActions>
 				</Header>
 				<Title>
-					<MarkdownText
-						dangerouslySetInnerHTML={{
-							__html: markdownifyToHtml(review.title)
-						}}
-					/>
+					<MarkdownText text={review.title} />
 				</Title>
 				<MetaSection>
 					{!props.collapsed && (hasTags || hasReviewers) && (
@@ -275,16 +269,14 @@ const BaseReview = (props: BaseReviewProps) => {
 							<MetaLabel>Description</MetaLabel>
 							<MetaDescription>
 								<Icon name="description" />
-								<MarkdownText
-									dangerouslySetInnerHTML={{ __html: markdownifyToHtml(props.review.text) }}
-								/>
+								<MarkdownText text={props.review.text} />
 							</MetaDescription>
 						</Meta>
 					)}
 					<Meta>
 						<MetaLabel>Status</MetaLabel>
 						<MetaDescription>
-							<MarkdownText>{capitalize(props.review.status)}</MarkdownText>
+							<MarkdownText text={capitalize(props.review.status)} />
 						</MetaDescription>
 					</Meta>
 					{!props.collapsed && hasChangeRequests && (
@@ -306,9 +298,7 @@ const BaseReview = (props: BaseReviewProps) => {
 												dispatch(setCurrentCodemark(codemark.id));
 											}}
 										>
-											<MarkdownText>
-												{(codemark.title || codemark.text).substring(0, 80)}
-											</MarkdownText>
+											<MarkdownText text={(codemark.title || codemark.text).substring(0, 80)} />
 										</Clickable>
 									</MetaAssignee>
 								))}
@@ -318,20 +308,18 @@ const BaseReview = (props: BaseReviewProps) => {
 					<Meta>
 						<MetaLabel>Repositories</MetaLabel>
 						<MetaDescription>
-							<MarkdownText>
-								<MetaDescriptionForAssignees>
-									{props.repoInfo.map(r => (
-										<MetaRepoInfo key={r.repoName}>
-											<RepoInfo>
-												<Icon name="repo" /> {r.repoName}
-											</RepoInfo>
-											<RepoInfo>
-												<Icon name="git-branch" /> {r.branch}
-											</RepoInfo>
-										</MetaRepoInfo>
-									))}
-								</MetaDescriptionForAssignees>
-							</MarkdownText>
+							<MetaDescriptionForAssignees>
+								{props.repoInfo.map(r => (
+									<MetaRepoInfo key={r.repoName}>
+										<RepoInfo>
+											<Icon name="repo" /> {r.repoName}
+										</RepoInfo>
+										<RepoInfo>
+											<Icon name="git-branch" /> {r.branch}
+										</RepoInfo>
+									</MetaRepoInfo>
+								))}
+							</MetaDescriptionForAssignees>
 						</MetaDescription>
 					</Meta>
 					{!props.collapsed && (
