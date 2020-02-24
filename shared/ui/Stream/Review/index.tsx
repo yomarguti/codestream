@@ -283,25 +283,30 @@ const BaseReview = (props: BaseReviewProps) => {
 						<Meta>
 							<MetaLabel>Change Requests</MetaLabel>
 							<MetaDescriptionForAssignees>
-								{props.changeRequests!.map(codemark => (
-									<MetaAssignee key={codemark.id}>
-										<Checkbox
-											name={codemark.id}
-											checked={codemark.status === CodemarkStatus.Closed}
-											onChange={value => {
-												dispatch(setCodemarkStatus(codemark.id, value ? "closed" : "open"));
-											}}
-										/>
-										<Clickable
-											onClick={() => {
-												dispatch(setCurrentReview());
-												dispatch(setCurrentCodemark(codemark.id));
-											}}
-										>
-											<MarkdownText text={(codemark.title || codemark.text).substring(0, 80)} />
-										</Clickable>
-									</MetaAssignee>
-								))}
+								{props.changeRequests!.map(codemark => {
+									const text = codemark.title || codemark.text;
+									const formattedText = text.length > 80 ? `${text.substring(0, 77)}...` : text;
+
+									return (
+										<MetaAssignee key={codemark.id}>
+											<Checkbox
+												name={codemark.id}
+												checked={codemark.status === CodemarkStatus.Closed}
+												onChange={value => {
+													dispatch(setCodemarkStatus(codemark.id, value ? "closed" : "open"));
+												}}
+											/>
+											<Clickable
+												onClick={() => {
+													dispatch(setCurrentReview());
+													dispatch(setCurrentCodemark(codemark.id));
+												}}
+											>
+												<MarkdownText text={formattedText} />
+											</Clickable>
+										</MetaAssignee>
+									);
+								})}
 							</MetaDescriptionForAssignees>
 						</Meta>
 					)}
