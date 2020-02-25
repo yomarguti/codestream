@@ -52,11 +52,18 @@ import { updateDocument, removeDocument, resetDocuments } from "./store/document
 import { updateUnreads } from "./store/unreads/actions";
 import { updateConfigs } from "./store/configs/actions";
 import { setEditorContext } from "./store/editorContext/actions";
-import { blur, focus, setCurrentStream, setCurrentCodemark, setCurrentReview, setQuery } from "./store/context/actions";
+import {
+	blur,
+	focus,
+	setCurrentStream,
+	setCurrentCodemark,
+	setCurrentReview,
+	setQuery
+} from "./store/context/actions";
 import { URI } from "vscode-uri";
 import { moveCursorToLine } from "./Stream/CodemarkView";
 import { setMaintenanceMode } from "./store/session/actions";
-import { updateModifiedFiles } from "./store/users/actions";
+import { updateModifiedRepos } from "./store/users/actions";
 
 export { HostApi };
 
@@ -132,7 +139,7 @@ function listenForEvents(store) {
 		switch (type) {
 			case ChangeDataType.Commits:
 				store.dispatch(resetDocuments());
-				store.dispatch(updateModifiedFiles());
+				store.dispatch(updateModifiedRepos());
 				break;
 			case ChangeDataType.Documents:
 				if ((data as any).reason === "removed") {
@@ -141,7 +148,7 @@ function listenForEvents(store) {
 					store.dispatch(updateDocument((data as any).document));
 				}
 				if ((data as any).reason === "saved") {
-					store.dispatch(updateModifiedFiles());
+					store.dispatch(updateModifiedRepos());
 				}
 				break;
 			case ChangeDataType.Preferences:

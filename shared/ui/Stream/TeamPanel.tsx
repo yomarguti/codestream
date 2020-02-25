@@ -23,7 +23,7 @@ import Tooltip from "./Tooltip";
 import styled from "styled-components";
 import { UserStatus } from "../src/components/UserStatus";
 import { DocumentData } from "../protocols/agent/agent.protocol.notifications";
-import { updateModifiedFiles, clearModifiedFiles } from "../store/users/actions";
+import { updateModifiedRepos, clearModifiedFiles } from "../store/users/actions";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -47,7 +47,7 @@ interface ConnectedProps {
 	repos: any;
 	apiCapabilities: CSApiCapabilities;
 	currentUserInvisible: false;
-	updateModifiedFiles: Function;
+	updateModifiedRepos: Function;
 	clearModifiedFiles: Function;
 }
 
@@ -137,7 +137,7 @@ class TeamPanel extends React.Component<Props, State> {
 	}
 
 	getScmInfoSummary = async () => {
-		this.props.updateModifiedFiles();
+		this.props.updateModifiedRepos();
 	};
 
 	clearScmInfoSummary = async () => {
@@ -490,7 +490,7 @@ const mapStateToProps = ({ users, context, teams, repos, session, apiVersioning 
 
 const ConnectedTeamPanel = connect(mapStateToProps, {
 	invite,
-	updateModifiedFiles,
+	updateModifiedRepos,
 	clearModifiedFiles
 })(TeamPanel);
 

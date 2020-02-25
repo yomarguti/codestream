@@ -16,7 +16,7 @@ export const updateUser = (user: CSUser) => action(UsersActionsType.Update, user
 
 export const addUsers = (users: CSUser[]) => action(UsersActionsType.Add, users);
 
-export const updateModifiedFiles = () => async (dispatch, getState: () => CodeStreamState) => {
+export const updateModifiedRepos = () => async (dispatch, getState: () => CodeStreamState) => {
 	const { users, session, context, apiVersioning } = getState();
 
 	// this neuters
@@ -43,12 +43,12 @@ export const updateModifiedFiles = () => async (dispatch, getState: () => CodeSt
 	if (modifiedRepos[0]) modifiedRepos = {};
 
 	modifiedRepos[context.currentTeamId] = result.scm;
-	dispatch(_updateModifiedFiles(modifiedRepos));
+	dispatch(_updateModifiedRepos(modifiedRepos));
 };
 
-export const clearModifiedFiles = () => _updateModifiedFiles({});
+export const clearModifiedFiles = () => _updateModifiedRepos({});
 
-const _updateModifiedFiles = (modifiedRepos: { [teamId: string]: any[] }) => async (
+const _updateModifiedRepos = (modifiedRepos: { [teamId: string]: any[] }) => async (
 	dispatch,
 	getState: () => CodeStreamState
 ) => {
