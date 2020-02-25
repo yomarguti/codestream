@@ -17,7 +17,16 @@ import {
 	UpdateReviewRequestType,
 	UpdateReviewResponse,
 	DeleteReviewRequest,
-	DeleteReviewRequestType
+	DeleteReviewRequestType,
+	StartReviewRequestType,
+	StartReviewRequest,
+	StartReviewResponse,
+	PauseReviewRequestType,
+	PauseReviewRequest,
+	PauseReviewResponse,
+	EndReviewResponse,
+	EndReviewRequest,
+	EndReviewRequestType
 } from "../protocol/agent.protocol";
 import { CSReview, CSReviewDiffs } from "../protocol/api.protocol";
 import { log, lsp, lspHandler } from "../system";
@@ -65,17 +74,22 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	}
 
 	async getDiffs(reviewId: string, repoId: string): Promise<CSReviewDiffs> {
+		const diffsByRepo = await this.getAllDiffs(reviewId);
+		return diffsByRepo[repoId];
+	}
+
+	private async getAllDiffs(reviewId: string): Promise<{ [repoId: string]: CSReviewDiffs }> {
 		if (!this._diffs.has(reviewId)) {
 			const response = await this.session.api.fetchReviewDiffs({ reviewId });
 			this._diffs.set(reviewId, response);
 		}
 
-		const reviewDiffs = this._diffs.get(reviewId);
-		if (!reviewDiffs) {
+		const diffsByRepo = this._diffs.get(reviewId);
+		if (!diffsByRepo) {
 			throw new Error(`Cannot find diffs for review ${reviewId}`);
 		}
 
-		return reviewDiffs[repoId];
+		return diffsByRepo;
 	}
 
 	@lspHandler(GetReviewContentsRequestType)
@@ -127,6 +141,50 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	@lspHandler(DeleteReviewRequestType)
 	delete(request: DeleteReviewRequest) {
 		return this.session.api.deleteReview(request);
+	}
+
+	@lspHandler(StartReviewRequestType)
+	async startReview(request: StartReviewRequest): Promise<StartReviewResponse> {
+		const { git } = SessionContainer.instance();
+		const review = await this.getById(request.reviewId);
+		const diffsByRepo = await this.getAllDiffs(review.id);
+		for (const repoId in diffsByRepo) {
+			const repo = await git.getRepositoryById(repoId);
+			if (repo == null) {
+				return {
+					success: false,
+					error: "The git repository for this review is not currently open in the IDE"
+				};
+			}
+
+			const diffs = diffsByRepo[repoId];
+			const commit = await git.getCommit(repo.path, diffs.leftBaseSha);
+			if (commit == null) {
+				return {
+					success: false,
+					error: `The base commit for this review (${diffs.leftBaseSha}, authored by ${diffs.leftBaseAuthor})
+was not found in the local git repository. Fetch all remotes and try again.`
+				};
+			}
+		}
+
+		return {
+			success: true
+		};
+	}
+
+	@lspHandler(PauseReviewRequestType)
+	async pauseReview(request: PauseReviewRequest): Promise<PauseReviewResponse> {
+		return {
+			success: true
+		};
+	}
+
+	@lspHandler(EndReviewRequestType)
+	async endReview(request: EndReviewRequest): Promise<EndReviewResponse> {
+		return {
+			success: true
+		};
 	}
 
 	protected async loadCache() {
