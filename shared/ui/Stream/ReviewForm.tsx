@@ -1024,8 +1024,7 @@ class ReviewForm extends React.Component<Props, State> {
 
 	setRepo = repo => {
 		this.setState({ isLoadingScm: true });
-		// FIXME -- this /foo stuff is to create a URI that gets parsed
-		this.getScmInfoForURI(repo.folder.uri + "/foo");
+		this.getScmInfoForURI(repo.folder.uri);
 	};
 
 	renderReviewForm() {
