@@ -58,8 +58,6 @@ export interface ContextState extends WebviewContext {
 	route: RouteState;
 
 	chatProviderAccess: ChatProviderAccess;
-
-	query: string;
 }
 
 export type ChatProviderAccess = "strict" | "permissive";

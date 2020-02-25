@@ -151,7 +151,9 @@ export default function SearchResult(props: Props) {
 
 	const type = isCSReview(result) ? "review" : result.type;
 
-	let titleHTML = markdownify(type === "comment" ? result.text.substr(0, 80) : result.title);
+	let titleHTML = markdownify(
+		type === "comment" ? (result.text || "").substr(0, 80) : result.title
+	);
 	if (props.query) {
 		const matchQueryRegexp = new RegExp(props.query, "gi");
 		titleHTML = titleHTML.replace(matchQueryRegexp, "<u><b>$&</b></u>");

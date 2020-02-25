@@ -1,4 +1,4 @@
-import { CSReview, CSReviewChangeset } from "@codestream/protocols/api";
+import { CSReview } from "@codestream/protocols/api";
 import { action } from "../common";
 import { ReviewsActionsTypes } from "./types";
 import { HostApi } from "@codestream/webview/webview-api";
@@ -7,7 +7,9 @@ import {
 	DeleteReviewRequestType,
 	CreateThirdPartyPostRequestType,
 	CreateShareableReviewRequestType,
-	RepoScmStatus
+	RepoScmStatus,
+	GetReviewRequestType,
+	FetchReviewsRequestType
 } from "@codestream/protocols/agent";
 import { logError } from "@codestream/webview/logger";
 import { addStreams } from "../streams/actions";
@@ -131,4 +133,16 @@ export const editReview = (id: string, attributes: EditableAttributes) => async 
 	} catch (error) {
 		logError(`failed to update review: ${error}`, { id });
 	}
+};
+
+export const fetchReview = (reviewId: string) => async dispatch => {
+	const response = await HostApi.instance.send(GetReviewRequestType, { reviewId });
+
+	if (response.review) return dispatch(saveReviews([response.review]));
+};
+
+export const fetchReviews = () => async dispatch => {
+	const response = await HostApi.instance.send(FetchReviewsRequestType, {});
+
+	return dispatch(saveReviews(response.reviews));
 };

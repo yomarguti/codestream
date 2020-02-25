@@ -14,14 +14,14 @@ import { includes as _includes, sortBy as _sortBy } from "lodash-es";
 import { PanelHeader } from "../src/components/PanelHeader";
 import styled from "styled-components";
 import FiltersButton from "../src/components/FiltersButton";
-import { OpenUrlRequestType } from "@codestream/protocols/agent";
-import { getActivity } from "../store/activityFeed/reducer";
+import { OpenUrlRequestType, CodemarkPlus } from "@codestream/protocols/agent";
 import { isCSReview, CSReview, CSUser } from "../protocols/agent/api.protocol.models";
 import { Disposable } from "vscode-languageserver-protocol";
 import { CodeStreamState } from "../store";
 import { ReposState } from "../store/repos/types";
 import { AnyObject } from "../utils";
 import { setUserPreference } from "./actions";
+import { withSearchableItems } from "./SpatialView/withSearchableItems";
 
 const SearchBar = styled.div`
 	display: flex;
@@ -122,7 +122,6 @@ const sameDay = (d1, d2) => {
 };
 
 interface DispatchProps {
-	// fetchReviews: (...args: Parameters<typeof fetchReviews>) => Promise<any>;
 	setUserPreference: (...args: Parameters<typeof setUserPreference>) => Promise<any>;
 }
 
@@ -132,7 +131,6 @@ interface ConnectedProps {
 	usernameMap: { [id: string]: string };
 	currentUserId: string;
 	currentUsername: string;
-	reviews: CSReview[];
 	savedSearchFilters: FilterQuery[];
 	authorFilter: string;
 	typeFilter: string;
@@ -141,11 +139,11 @@ interface ConnectedProps {
 	repoTimestamps: Record<string, number>;
 	repos: ReposState;
 	teamTagsArray: any[];
-	query: string;
-	activity: ReturnType<typeof getActivity>;
 }
 
-interface Props extends ConnectedProps, DispatchProps {}
+interface Props extends ConnectedProps, DispatchProps {
+	items: (CSReview | CodemarkPlus)[];
+}
 
 interface FilterQuery {
 	label: string;
@@ -185,7 +183,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 	constructor(props: Props) {
 		super(props);
 		this.state = {
-			isLoading: props.reviews.length === 0,
+			isLoading: props.items.length === 0,
 			expanded: {
 				waitingForMe: true,
 				createdByMe: true,
@@ -195,7 +193,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 			},
 			filters: { text: "" },
 			savedFilters: props.savedSearchFilters,
-			q: props.query
+			q: ""
 		};
 	}
 
@@ -211,10 +209,6 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 		// );
 		// _searchInput might not be necessary if using the autoFocus prop
 		// if (this._searchInput) this._searchInput.focus();
-	}
-
-	componentDidUpdate(prevProps: Props) {
-		if (this.props.query && this.props.query !== prevProps.query) this.setQ(this.props.query);
 	}
 
 	componentWillUnmount() {
@@ -509,9 +503,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 		};
 
 		// sort by most recent first
-		// @ts-ignore
-		_sortBy(this.props.activity, a => -a.createdAt).forEach(a => {
-			const item = a.record;
+		this.props.items.forEach(item => {
 			if (item.deactivated) return null;
 			// FIXME author is text, creatorId is an id
 			const assignees = (isCSReview(item) ? item.reviewers : item.assignees) || [];
@@ -528,8 +520,9 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 			if (filters.tag && !this.hasTag(item, filters.tag)) return null;
 			// FIXME this will only work if we have issues in this query as well
 			if (filters.type === "review" && !isCSReview(item)) return null;
-			if (filters.type === "issue" && (item as any).type !== filters.type) return null;
-			if (filters.type === "comment" && (item as any).type !== filters.type) return null;
+			if (filters.type === "issue" && !isCSReview(item) && item.type !== filters.type) return null;
+			if (filters.type === "comment" && !isCSReview(item) && item.type !== filters.type)
+				return null;
 			if (filters.noTag && item.tags && item.tags.length) return null;
 			if (filters.branch) {
 				if (isCSReview(item)) {
@@ -609,6 +602,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 						break;
 				}
 			});
+			return;
 		});
 
 		const tagMenuItems = this.props.teamTagsArray.map(tag => {
@@ -887,8 +881,6 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		currentUserId: session.userId!,
 		savedSearchFilters,
 		currentUsername: users[session.userId!].username,
-		reviews,
-		activity: getActivity(state),
 		// tagFilter: context.reviewTagFilter,
 		authorFilter: "all", // FIXME
 		typeFilter: "all", // FIXME
@@ -898,13 +890,11 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		branchTimestamps,
 		repoTimestamps,
 		repos,
-		query: context.query,
 		// authorFiltersLabelsLower,
 		webviewFocused: context.hasFocus
 	};
 };
 
 export default connect(mapStateToProps, { setUserPreference })(
-	// @ts-ignore
-	SimpleFilterSearchPanel
+	withSearchableItems(SimpleFilterSearchPanel)
 );

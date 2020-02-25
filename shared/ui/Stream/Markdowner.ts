@@ -48,6 +48,9 @@ export const emojiPlain = text => {
 };
 
 export const markdownify = (text: string) => {
+	// safeguard against undefined at runtime - akonwi
+	if (text == null) return text;
+
 	try {
 		const replaced = md
 			.render(text, { references: {} })

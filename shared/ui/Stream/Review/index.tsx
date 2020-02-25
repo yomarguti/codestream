@@ -35,7 +35,7 @@ import Tooltip from "../Tooltip";
 import { capitalize, replaceHtml, emptyArray, mapFilter } from "@codestream/webview/utils";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "../..";
-import { saveReviews, deleteReview } from "@codestream/webview/store/reviews/actions";
+import { saveReviews, deleteReview, fetchReview } from "@codestream/webview/store/reviews/actions";
 import {
 	setActiveReview,
 	setCurrentReview,
@@ -64,6 +64,7 @@ import { createCodemark } from "@codestream/webview/store/codemarks/actions";
 import { getReviewChangeRequests } from "@codestream/webview/store/codemarks/reducer";
 import { Link } from "../Link";
 import { MarkdownText } from "../MarkdownText";
+import { Dispatch } from "@codestream/webview/store/common";
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
@@ -640,7 +641,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 const ReviewForId = (props: PropsWithId) => {
 	const { id, ...otherProps } = props;
 
-	const dispatch = useDispatch();
+	const dispatch = useDispatch<Dispatch>();
 	const review = useSelector((state: CodeStreamState) => {
 		return getReview(state.reviews, id);
 	});
@@ -648,18 +649,14 @@ const ReviewForId = (props: PropsWithId) => {
 
 	useDidMount(() => {
 		let isValid = true;
-		const fetchReview = async () => {
-			try {
-				const response = await HostApi.instance.send(GetReviewRequestType, { reviewId: id });
-				if (!isValid) return;
-				else dispatch(saveReviews([response.review]));
-			} catch (error) {
-				setNotFound(true);
-			}
-		};
 
 		if (review == null) {
-			fetchReview();
+			dispatch(fetchReview(id))
+				.then(result => {
+					if (!isValid) return;
+					if (result == null) setNotFound(true);
+				})
+				.catch(() => setNotFound(true));
 		}
 
 		return () => {

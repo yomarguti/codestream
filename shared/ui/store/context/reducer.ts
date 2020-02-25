@@ -34,8 +34,7 @@ const initialState: ContextState = {
 	codemarksShowResolved: false,
 	showFeedbackSmiley: true,
 	route: { name: Route.NewUser, params: {} },
-	spatialViewShowPRComments: false,
-	query: ""
+	spatialViewShowPRComments: false
 };
 
 export function reduceContext(

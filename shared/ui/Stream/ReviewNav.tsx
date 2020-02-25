@@ -8,7 +8,7 @@ import { setCurrentReview, setActiveReview } from "@codestream/webview/store/con
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "..";
 import { GetReviewRequestType } from "@codestream/protocols/agent";
-import { saveReviews } from "@codestream/webview/store/reviews/actions";
+import { fetchReview } from "@codestream/webview/store/reviews/actions";
 import { CodeStreamState } from "../store";
 import { getReview } from "../store/reviews/reducer";
 import { MinimumWidthCard } from "./Codemark/BaseCodemark";
@@ -24,6 +24,7 @@ import { confirmPopup } from "./Confirm";
 import { setUserPreference } from "./actions";
 import { ReviewChangesetFileInfo } from "@codestream/protocols/api";
 import { ChangesetFileList } from "./Review/ChangesetFileList";
+import { Dispatch } from "../store/common";
 
 const Actions = styled.div`
 	padding: 0 0 0 20px;
@@ -173,7 +174,7 @@ const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shif
 export type Props = React.PropsWithChildren<{ reviewId: string; composeOpen: boolean }>;
 
 export function ReviewNav(props: Props) {
-	const dispatch = useDispatch();
+	const dispatch = useDispatch<Dispatch>();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { scmInfo } = state.editorContext;
 		const filePath = scmInfo && scmInfo.scm ? scmInfo.scm.file : "";
@@ -219,20 +220,11 @@ export function ReviewNav(props: Props) {
 
 	useDidMount(() => {
 		let isValid = true;
-		const fetchReview = async () => {
-			try {
-				const response = await HostApi.instance.send(GetReviewRequestType, {
-					reviewId: props.reviewId
-				});
-				if (!isValid) return;
-				else dispatch(saveReviews([response.review]));
-			} catch (error) {
-				setNotFound(true);
-			}
-		};
-
 		if (review == null) {
-			fetchReview();
+			dispatch(fetchReview(props.reviewId)).then(result => {
+				if (!isValid) return;
+				if (result == null) setNotFound(true);
+			});
 		} else {
 			const currentFile = allModifiedFiles[progressCounter];
 			HostApi.instance.send(ReviewShowDiffRequestType, {
