@@ -141,7 +141,7 @@ export class ScmManager {
 				await Promise.all(
 					repositories.map(repo => {
 						const response = this.getRepoStatus({
-							uri: repo.folder.uri + "/foo",
+							uri: repo.folder.uri,
 							startCommit: "local",
 							includeStaged: true,
 							includeSaved: true
@@ -418,7 +418,12 @@ export class ScmManager {
 					}
 
 					branch = await git.getCurrentBranch(uri.fsPath);
-					rev = await git.getFileCurrentRevision(uri.fsPath);
+					try {
+						rev = await git.getFileCurrentRevision(uri.fsPath);
+					} catch (ex) {
+						// this is when we're looking up a directory not a file,
+						// getFileCurrentRevision will fail
+					}
 
 					const gitRemotes = await git.getRepoRemotes(repoPath);
 					remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];

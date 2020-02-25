@@ -558,13 +558,10 @@ export class GitService implements IGitService, Disposable {
 
 	async getRepoRoot(uri: URI, isDirectory?: boolean): Promise<string | undefined>;
 	async getRepoRoot(path: string, isDirectory?: boolean): Promise<string | undefined>;
-	async getRepoRoot(
-		uriOrPath: URI | string,
-		isDirectory: boolean = false
-	): Promise<string | undefined> {
+	async getRepoRoot(uriOrPath: URI | string): Promise<string | undefined> {
 		const filePath = typeof uriOrPath === "string" ? uriOrPath : uriOrPath.fsPath;
 		let cwd;
-		if (isDirectory) {
+		if (fs.existsSync(filePath) && fs.lstatSync(filePath).isDirectory()) {
 			cwd = filePath;
 		} else {
 			[cwd] = Strings.splitPath(filePath);
@@ -610,13 +607,10 @@ export class GitService implements IGitService, Disposable {
 
 	async getCurrentBranch(uri: URI, isDirectory?: boolean): Promise<string | undefined>;
 	async getCurrentBranch(path: string, isDirectory?: boolean): Promise<string | undefined>;
-	async getCurrentBranch(
-		uriOrPath: URI | string,
-		isDirectory: boolean = false
-	): Promise<string | undefined> {
+	async getCurrentBranch(uriOrPath: URI | string): Promise<string | undefined> {
 		const filePath = typeof uriOrPath === "string" ? uriOrPath : uriOrPath.fsPath;
 		let cwd;
-		if (isDirectory) {
+		if (fs.existsSync(filePath) && fs.lstatSync(filePath).isDirectory()) {
 			cwd = filePath;
 		} else {
 			[cwd] = Strings.splitPath(filePath);
@@ -666,7 +660,7 @@ export class GitService implements IGitService, Disposable {
 	): Promise<TrackingBranch | undefined> {
 		const filePath = typeof uriOrPath === "string" ? uriOrPath : uriOrPath.fsPath;
 		let cwd;
-		if (isDirectory) {
+		if (fs.existsSync(filePath) && fs.lstatSync(filePath).isDirectory()) {
 			cwd = filePath;
 		} else {
 			[cwd] = Strings.splitPath(filePath);
