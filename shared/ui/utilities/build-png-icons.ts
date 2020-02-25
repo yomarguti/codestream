@@ -1,3 +1,13 @@
+/*
+* Here is a sample for running the script:
+*
+* node ./build-png-icons.ts -o "path/to/results" -c "#898F9E"
+*
+* Currently, images generated from this script are saved in this repo: https://github.com/TeamCodeStream/static_content
+* All you have to do is copy + commit your images to that repo.
+* After images are pushed (to master), a publish script will auto-copy them to our bucket in the cloud
+*/
+
 const { convert } = require("convert-svg-to-png");
 const icons8 = require("../Stream/icons8-data.json");
 const octicons = require("@primer/octicons");
