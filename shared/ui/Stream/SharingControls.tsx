@@ -296,14 +296,8 @@ export const SharingControls = React.memo(
 				if (derivedState.msTeamsConfig) {
 					targetItems.push({
 						key: "add-msteams",
-						label: (
-							<>
-								<span style={{ marginRight: "5px" }}>
-									<Icon name="msteams" />
-								</span>
-								Add Teams organization
-							</>
-						),
+						icon: <Icon name="msteams" />,
+						label: "Add Teams organization",
 						action: (() => {
 							authenticateWithMSTeams();
 						}) as any

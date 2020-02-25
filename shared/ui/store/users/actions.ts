@@ -17,18 +17,22 @@ export const updateUser = (user: CSUser) => action(UsersActionsType.Update, user
 export const addUsers = (users: CSUser[]) => action(UsersActionsType.Add, users);
 
 export const updateModifiedFiles = () => async (dispatch, getState: () => CodeStreamState) => {
-	const { users, session, context } = getState();
+	const { users, session, context, apiVersioning } = getState();
+
+	// this neuters
+	if (!apiVersioning.apiCapabilities.xray) return;
+
 	const userId = session.userId;
 	if (!userId) return;
 	const currentUser = users[userId];
 	if (!currentUser) return;
-	if (userId) {
-		const invisible = currentUser.status ? currentUser.status.invisible : false;
-		if (invisible) {
-			dispatch(clearModifiedFiles());
-			return;
-		}
+
+	const invisible = currentUser.status ? currentUser.status.invisible : false;
+	if (invisible) {
+		dispatch(clearModifiedFiles());
+		return;
 	}
+
 	const result = await HostApi.instance.send(GetRepoScmStatusesRequestType, {});
 	if (!result.scm) return;
 

@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { injectIntl } from "react-intl";
 import { connect } from "react-redux";
-import createClassString from "classnames";
+import cx from "classnames";
 import ComposeBox from "./ComposeBox";
 import PostList from "./PostList";
 import { ActivityPanel } from "./ActivityPanel";
@@ -16,6 +16,7 @@ import CreateChannelPanel from "./CreateChannelPanel";
 import ScrollBox from "./ScrollBox";
 import { CodemarkForm } from "./CodemarkForm";
 import { ReviewForm } from "./ReviewForm";
+import { CodeForm } from "./CodeForm";
 import KnowledgePanel from "./KnowledgePanel";
 import FilterSearchPanel from "./FilterSearchPanel";
 import InlineCodemarks from "./InlineCodemarks";
@@ -200,13 +201,13 @@ export class SimpleStream extends Component {
 	}
 
 	handleNewCodemarkRequest(e) {
-		if (this.props.activePanel === "codemarks-for-file") return;
+		if (this.props.activePanel === WebviewPanels.CodemarksForFile) return;
 
 		// re-emit the the notification after switching to spatial view
 		this.updateEmitter.enqueue(() => {
 			HostApi.instance.emit(NewCodemarkNotificationType.method, e);
 		});
-		this.props.openPanel("codemarks-for-file");
+		this.props.openPanel(WebviewPanels.CodemarksForFile);
 	}
 
 	copy(event) {
@@ -410,11 +411,11 @@ export class SimpleStream extends Component {
 			// { label: inviteLabel, action: "invite" },
 		].filter(Boolean);
 
-		// FIXME apiCapabilities
-		menuItems.push({
-			label: "Set a Status",
-			action: () => this.setActivePanel(WebviewPanels.Status)
-		});
+		// FIXME apiCapabilities (this moved to the + menu on global nav)
+		// menuItems.push({
+		// 	label: "Set a Status",
+		// 	action: () => this.setActivePanel(WebviewPanels.Status)
+		// });
 
 		if (apiCapabilities["follow"] && inSharingModel) {
 			menuItems.push(
@@ -457,7 +458,7 @@ export class SimpleStream extends Component {
 				items={menuItems}
 				target={menuTarget}
 				action={this.menuAction}
-				align="right"
+				align="dropdownRight"
 			/>
 		) : null;
 		return menu;
@@ -482,7 +483,19 @@ export class SimpleStream extends Component {
 	renderPlusMenu() {
 		const { plusMenuOpen, menuTarget } = this.state;
 
-		const menuItems = [
+		const menuItems = [];
+		if (this.props.apiCapabilities.xray) {
+			menuItems.push(
+				{
+					icon: <Icon name="code" />,
+					label: "Start Work",
+					action: () => this.setActivePanel(WebviewPanels.Status),
+					key: "code"
+				},
+				{ label: "-" }
+			);
+		}
+		menuItems.push(
 			{
 				icon: <Icon name="comment" />,
 				label: "New Comment",
@@ -495,31 +508,28 @@ export class SimpleStream extends Component {
 				action: this.newIssue,
 				key: "issue"
 			}
-		];
-		if (this.props.apiCapabilities.workUnits) {
+		);
+		if (this.props.apiCapabilities.lightningCodeReviews) {
 			menuItems.push(
 				{ label: "-" },
 				{
-					icon: <Icon name="code" />,
-					label: "Start Work",
-					action: this.newCode,
-					key: "code"
+					icon: <Icon name="review" />,
+					label: "Request A Code Review",
+					action: this.newReview,
+					key: "review"
 				}
 			);
-		}
-		if (this.props.apiCapabilities.lightningCodeReviews) {
-			menuItems.push({
-				icon: <Icon name="review" />,
-				label: "Request A Code Review",
-				action: this.newReview,
-				key: "review"
-			});
 		}
 		// { label: "-" }
 		// { label: inviteLabel, action: "invite" },
 
 		return plusMenuOpen ? (
-			<Menu items={menuItems} target={menuTarget} action={this.plusMenuAction} align="center" />
+			<Menu
+				items={menuItems}
+				target={menuTarget}
+				action={this.plusMenuAction}
+				align="dropdownRight"
+			/>
 		) : null;
 	}
 
@@ -643,16 +653,10 @@ export class SimpleStream extends Component {
 	}
 
 	renderNavIcons() {
-		const { configs, umis, postStreamPurpose, providerInfo = {} } = this.props;
-		let { activePanel } = this.props;
-		const { searchBarOpen, q } = this.state;
-		if (searchBarOpen) activePanel = WebviewPanels.Codemarks;
-		// if (searchBarOpen && q) activePanel = WebviewPanels.Codemarks;
-		// const umis = {
-		// 	totalMentions: 0,
-		// 	totalUnread: 2
-		// };
-		const umisClass = createClassString("umis", {
+		const { activePanel, configs, umis, postStreamPurpose, providerInfo = {} } = this.props;
+		const { menuOpen, plusMenuOpen } = this.state;
+
+		const umisClass = cx("umis", {
 			mentions: umis.totalMentions > 0,
 			unread: umis.totalMentions == 0 && umis.totalUnread > 0
 		});
@@ -662,167 +666,44 @@ export class SimpleStream extends Component {
 			<div className="unread-badge">.</div>
 		) : null;
 
+		const selected = panel => activePanel === panel && !plusMenuOpen && !menuOpen;
 		return (
 			<nav className="inline">
 				<div className="top-tab-group">
-					<div
-						className="fill-tab"
-						onClick={e => this.setActivePanel(WebviewPanels.CodemarksForFile)}
-					/>
 					<label
-						className={createClassString({
-							selected: activePanel === WebviewPanels.CodemarksForFile
-						})}
+						className={cx({ selected: selected(WebviewPanels.CodemarksForFile) })}
 						onClick={e => this.setActivePanel(WebviewPanels.CodemarksForFile)}
 					>
 						<Icon name="file" title="Codemarks In Current File" placement="bottom" />
 					</label>
-					<FeatureFlag flag="sharing">
-						{isSharingModel =>
-							isSharingModel ? (
-								<label
-									className={createClassString({
-										selected: activePanel === WebviewPanels.Activity
-									})}
-									onClick={e => this.setActivePanel(WebviewPanels.Activity)}
-								>
-									<Tooltip title="Activity Feed" placement="bottom">
-										<span>
-											<Icon name="list" />
-											{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
-										</span>
-									</Tooltip>
-								</label>
-							) : (
-								(this.props.capabilities.providerSupportsRealtimeChat ||
-									this.props.capabilities.providerCanSupportRealtimeChat) && (
-									<label
-										className={createClassString({
-											selected:
-												activePanel === "channels" ||
-												activePanel === "main" ||
-												activePanel === "thread"
-										})}
-										onClick={e => this.setActivePanel("channels")}
-									>
-										<Tooltip title="Channels &amp; DMs" placement="bottom">
-											<span>
-												{this.props.isCodeStreamTeam ? (
-													<Icon name="chatroom" />
-												) : (
-													<Icon
-														className={this.props.teamProvider}
-														name={this.props.teamProvider}
-													/>
-												)}
-												{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
-											</span>
-										</Tooltip>
-									</label>
-								)
-							)
-						}
-					</FeatureFlag>
-					{/*
-						<label
-							className={createClassString({
-								selected: activePanel === WebviewPanels.Tasks
-							})}
-							onClick={e => this.setActivePanel(WebviewPanels.Tasks)}
-						>
-							<Tooltip title="Your Tasks" placement="bottom">
-								<span>
-									<Icon name="checked-checkbox" />
-									<span className={umisClass}>
-										<div className="mentions-badge">5</div>
-									</span>
-								</span>
-							</Tooltip>
-						</label>
-					{this.props.apiCapabilities.lightningCodeReviews && (
-						<label
-							className={createClassString({
-								selected: activePanel === WebviewPanels.Reviews
-							})}
-							onClick={e => this.setActivePanel(WebviewPanels.Reviews)}
-						>
-							<Icon name="code" title="Filter &amp; Search" placement="bottom" />
-						</label>
-					)}
-					*/}
-					<label onClick={this.togglePlusMenu}>
+					<label
+						className={cx({ selected: selected(WebviewPanels.Activity) })}
+						onClick={e => this.setActivePanel(WebviewPanels.Activity)}
+					>
+						<Tooltip title="Activity Feed" placement="bottom">
+							<span>
+								<Icon name="list" />
+								{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
+							</span>
+						</Tooltip>
+					</label>
+					<label onClick={this.togglePlusMenu} className={cx({ active: plusMenuOpen })}>
 						<Icon name="plus" title="Create..." placement="bottom" />
 						{this.renderPlusMenu()}
 					</label>
 					<label
-						className={createClassString({
-							selected: activePanel === WebviewPanels.People
-						})}
+						className={cx({ selected: selected(WebviewPanels.People) })}
 						onClick={e => this.setActivePanel(WebviewPanels.People)}
 					>
 						<Icon name="organization" title="Your Team" placement="bottom" />
 					</label>
-					{
-						// <label
-						// 	className={createClassString({
-						// 		selected: activePanel === WebviewPanels.Codemarks && this.state.knowledgeType === "question"
-						// 	})}
-						// 	onClick={e => this.openCodemarkMenu("question")}
-						// >
-						// 	<Tooltip title="Frequently Asked Questions" placement="bottom">
-						// 		<span>
-						// 			<Icon name="question" />
-						// 		</span>
-						// 	</Tooltip>
-						// </label>
-					}
-					{
-						// <label
-						// 	className={createClassString({
-						// 		selected: activePanel === WebviewPanels.Codemarks && this.state.knowledgeType === "issue"
-						// 	})}
-						// 	onClick={e => this.openCodemarkMenu("issue")}
-						// >
-						// 	<Tooltip title="Issues" placement="bottom">
-						// 		<span>
-						// 			<Icon name="issue" />
-						// 		</span>
-						// 	</Tooltip>
-						// </label>
-						// <label
-						// 	className={createClassString({
-						// 		selected: activePanel === WebviewPanels.Codemarks && this.state.knowledgeType === "trap"
-						// 	})}
-						// 	onClick={e => this.openCodemarkMenu("trap")}
-						// >
-						// 	<Tooltip title="Traps" placement="bottom">
-						// 		<span>
-						// 			<Icon name="trap" />
-						// 		</span>
-						// 	</Tooltip>
-						// </label>
-						// <label
-						// 	className={createClassString({
-						// 		selected: activePanel === WebviewPanels.Codemarks && this.state.knowledgeType === "bookmark"
-						// 	})}
-						// 	onClick={e => this.openCodemarkMenu("bookmark")}
-						// >
-						// 	<Tooltip title="Bookmarks" placement="bottom">
-						// 		<span>
-						// 			<Icon name="bookmark" />
-						// 		</span>
-						// 	</Tooltip>
-						// </label>
-					}
 					<label
-						className={createClassString({
-							selected: activePanel === WebviewPanels.FilterSearch
-						})}
+						className={cx({ selected: selected(WebviewPanels.FilterSearch) })}
 						onClick={this.goSearch}
 					>
-						<Icon name="search" title="Filter &amp; Search Codemarks" placement="bottomRight" />
+						<Icon name="search" title="Filter &amp; Search" placement="bottomRight" />
 					</label>
-					<label onClick={this.toggleMenu}>
+					<label onClick={this.toggleMenu} className={cx({ active: menuOpen })}>
 						<Icon name="kebab-horizontal" title="More..." placement="bottomRight" />
 						{this.renderMenu()}
 					</label>
@@ -857,7 +738,7 @@ export class SimpleStream extends Component {
 		let threadId = this.props.threadId;
 		let threadPost = this.findPostById(threadId);
 
-		const streamClass = createClassString({
+		const streamClass = cx({
 			stream: true,
 			"has-overlay":
 				(threadId || this.state.multiCompose || this.state.floatCompose) &&
@@ -866,11 +747,11 @@ export class SimpleStream extends Component {
 				this.state.floatCompose && activePanel !== WebviewPanels.CodemarksForFile,
 			"no-headshots": !configs.showHeadshots
 		});
-		const threadPostsListClass = createClassString({
+		const threadPostsListClass = cx({
 			postslist: true,
 			threadlist: true
 		});
-		const mainPanelClass = createClassString({
+		const mainPanelClass = cx({
 			panel: true,
 			"main-panel": true
 		});
@@ -888,11 +769,11 @@ export class SimpleStream extends Component {
 
 		const streamDivId = "stream-" + this.props.postStreamId;
 
-		const unreadsAboveClass = createClassString({
+		const unreadsAboveClass = cx({
 			unreads: true,
 			active: this.state.unreadsAbove
 		});
-		const unreadsBelowClass = createClassString({
+		const unreadsBelowClass = cx({
 			unreads: true,
 			// offscreen: activePanel === "main",
 			active: this.state.unreadsBelow && activePanel === "main"
@@ -927,7 +808,9 @@ export class SimpleStream extends Component {
 
 		// these panels do not have global nav
 		let renderNav =
-			!["create-channel", "create-dm", "public-channels"].includes(activePanel) &&
+			!["create-channel", "create-dm", "public-channels", WebviewPanels.Status].includes(
+				activePanel
+			) &&
 			!this.props.activeReviewId &&
 			!activePanel.startsWith("configure-provider-") &&
 			!activePanel.startsWith("configure-enterprise-");
@@ -1031,6 +914,7 @@ export class SimpleStream extends Component {
 						/>
 					)}
 					{activePanel === WebviewPanels.NewReview && <ReviewForm />}
+					{activePanel === WebviewPanels.NewCode && <CodeForm />}
 					{activePanel === "channels" && (
 						<ChannelPanel
 							activePanel={activePanel}
@@ -1150,7 +1034,7 @@ export class SimpleStream extends Component {
 										<span className="clickable" onClick={this.starChannel}>
 											<Icon
 												name="star"
-												className={createClassString("smaller", {
+												className={cx("smaller", {
 													checked: postStreamStarred
 												})}
 											/>
@@ -1343,11 +1227,14 @@ export class SimpleStream extends Component {
 	};
 
 	toggleMenu = event => {
-		this.setState({ menuOpen: !this.state.menuOpen, menuTarget: event.target });
+		this.setState({ menuOpen: !this.state.menuOpen, menuTarget: event.target.closest("label") });
 	};
 
 	togglePlusMenu = event => {
-		this.setState({ plusMenuOpen: !this.state.plusMenuOpen, menuTarget: event.target });
+		this.setState({
+			plusMenuOpen: !this.state.plusMenuOpen,
+			menuTarget: event.target.closest("label")
+		});
 	};
 
 	openCodemarkMenu = type => {

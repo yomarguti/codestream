@@ -198,15 +198,21 @@
 				display: inline-block;
 				// transform: scale(1.5);
 				vertical-align: 2px;
+				width: 16px;
 			}
 			label {
 				background: @app-background-color;
 				position: relative;
+				border: 1px solid @app-background-color;
 
 				&.selected {
 					background: @app-background-color-hover;
-					color: @text-color-highlight;
-					border-radius: 5px;
+					border: 1px solid @base-border-color;
+					// border-radius: 5px;
+				}
+				&.active {
+					background: @app-background-color-hover;
+					border: 1px solid @base-border-color;
 				}
 			}
 		}
@@ -1056,7 +1062,8 @@
 					// text-align: center;
 					position: relative;
 					padding: 10px 40px 3px 10px;
-					.icons {
+					.icons,
+					.back-icons {
 						position: absolute;
 						right: 5px;
 						top: 8px;
@@ -1069,6 +1076,17 @@
 							}
 						}
 					}
+					.back-icons {
+						right: auto;
+						left: 5px;
+					}
+				}
+				&.center-title h3 {
+					text-align: center;
+					padding: 10px 50px 3px 50px;
+				}
+				&.limit-width {
+					max-width: 400px;
 				}
 			}
 			.menu-popup-submenu {
@@ -2548,6 +2566,7 @@
 				font-weight: 500;
 			}
 			&:hover > span,
+			&.active > span,
 			&.selected > span {
 				color: @text-color-highlight;
 			}

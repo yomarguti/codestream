@@ -13,45 +13,79 @@ import { CSMe } from "@codestream/protocols/api";
 import { emojiPlain } from "./Markdowner";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import EmojiPicker from "./EmojiPicker";
+import { useDidMount } from "../utilities/hooks";
+import {
+	GetFileScmInfoRequestType,
+	GetBranchesRequestType,
+	CreateBranchRequestType
+} from "@codestream/protocols/agent";
+import Menu from "./Menu";
+import CrossPostIssueControls from "./CrossPostIssueControls";
+import { CrossPostIssueContext } from "./CodemarkForm";
+import IssueDropdown from "./CrossPostIssueControls/IssueDropdown";
+import { CSText } from "../src/components/CSText";
 const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.json");
+
+const StyledCheckbox = styled(Checkbox)`
+	color: var(--text-color-subtle);
+`;
 
 const StatusInput = styled.div`
 	position: relative;
 	margin-bottom: 20px;
-	.icon-selector {
+	.icon-selector,
+	.dropdown-button {
 		position: absolute;
 		left: 1px;
 		top: 1px;
 		border-right: 1px solid var(--base-border-color);
-		// padding: 8px 10px;
-		font-size: 20px;
+		font-size: 18px;
 		line-height: 20px;
 		display: flex;
 		width: 34px;
-		height: 34px;
+		height: calc(100% - 2px);
 		align-items: center;
 		justify-content: center;
 		cursor: pointer;
-		span {
+		x.span {
 			display: inline-block;
-			padding: 2px 0 0 2px;
+			padding: 2px 0 0 3px;
 			vertical-align: -15px;
 		}
 		&:hover {
 			background: var(--app-background-color);
+			color: var(--text-color-highlight);
+		}
+		.octicon-git-branch {
+			margin: 2px 2px -2px -2px;
 		}
 	}
 	.clear {
 		position: absolute;
-		right: 0;
+		right: 2px;
 		top: 1px;
 		padding: 8px 10px;
 	}
+	.dropdown-button {
+		left: auto;
+		right: 1px;
+		align-items: center;
+		justify-content: center;
+		border-left: 1px solid var(--base-border-color);
+		border-right: none;
+		.icon {
+			margin: 4px 0 0 -2px;
+			&.spin {
+				margin: -2px 0 0 -1px;
+			}
+		}
+	}
 	input#status-input {
-		font-size: 16px !important;
+		border: 1px solid var(--base-border-color);
+		font-size: 14px !important;
 		padding: 8px 40px 8px 42px !important;
 		&::placeholder {
-			font-size: 16px !important;
+			font-size: 14px !important;
 		}
 	}
 `;
@@ -60,7 +94,7 @@ const ButtonRow = styled.div`
 	text-align: center;
 	margin-top: 20px;
 	button {
-		width: 10em;
+		width: 18em;
 	}
 `;
 
@@ -92,7 +126,7 @@ const Examples = styled.div`
 
 const EMPTY_STATUS = {
 	label: "",
-	icon: ":smiley:",
+	icon: ":desktop_computer:",
 	invisible: false,
 	expires: 0
 };
@@ -115,26 +149,77 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		return {
 			status,
 			clearAfterLabel,
+			textEditorUri: state.editorContext.textEditorUri,
 			notificationPreference: state.preferences.notifications || "involveMe"
 		};
 	});
+
 	const { status } = derivedState;
 	const [loading, setLoading] = useState(false);
 	const [label, setLabel] = useState(status.label || "");
 	const [invisible, setInvisible] = useState(status.invisible);
-	const [icon, setIcon] = useState(status.icon || ":smiley:");
+	const [icon, setIcon] = useState(status.icon || ":desktop_computer:");
 	const [clearAfter, setClearAfter] = useState("");
 	const [emojiMenuOpen, setEmojiMenuOpen] = useState(false);
 	const [emojiMenuTarget, setEmojiMenuTarget] = useState();
+	const [moveTicket, setMoveTicket] = useState(true);
+	const [updateExternal, setUpdateExternal] = useState(true);
+	const [createPR, setCreatePR] = useState(true);
+	const [branch, setBranch] = useState("");
+	const [currentBranch, setCurrentBranch] = useState("");
+	// const [loadingBranch, setLoadingBranch] = useState(false);
+	const [branches, setBranches] = useState([] as string[]);
+	const [branchMenuItems, setBranchMenuItems] = useState([] as any[]);
+	const [externalIssue, setExternalIsssue] = useState("");
+	const [branchMenuOpen, setBranchMenuOpen] = useState(false);
+	const [branchMenuTarget, setBranchMenuTarget] = useState();
+
+	const showPRCheckbox = React.useMemo(() => {
+		return branch && branch !== currentBranch;
+	}, [branch]);
+	const showMoveIssueCheckbox = React.useMemo(() => {
+		return label && label.startsWith("http");
+	}, [label]);
+
+	const getBranches = async () => {
+		if (!derivedState.textEditorUri) return;
+		const branchInfo = await HostApi.instance.send(GetBranchesRequestType, {
+			uri: derivedState.textEditorUri
+		});
+		if (!branchInfo.scm) return;
+		const branchMenuItems = branchInfo.scm.branches.map(branch => {
+			return {
+				label: branch,
+				key: branch,
+				action: () => setBranch(branch)
+			};
+		});
+
+		// return {
+		// 	branches: branchInfo.scm.branches,
+		// 	current: branchInfo.scm.current,
+		// 	menuItems: branchMenuItems
+		// }
+		setBranches(branchInfo.scm.branches);
+		setCurrentBranch(branchInfo.scm.current);
+		setBranchMenuItems(branchMenuItems);
+	};
+
+	useDidMount(() => {
+		getBranches();
+	});
+
+	const branchInfo = React.useMemo(async () => {
+		await getBranches();
+	}, [derivedState.textEditorUri]);
 
 	const same =
-		invisible === status.invisible && label === status.label && icon === status.icon && !clearAfter;
+		invisible == status.invisible && label == status.label && icon == status.icon && !clearAfter;
 
 	const save = async () => {
 		setLoading(true);
 		const now = new Date();
 		let expires = 0;
-		console.log("CLEAR AFTER IS: ", clearAfter);
 		switch (clearAfter) {
 			case "1":
 			case "30":
@@ -176,6 +261,46 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		}
 
 		HostApi.instance.track("Status Set", { Value: status });
+
+		if (branch.length > 0 && branch !== currentBranch && derivedState.textEditorUri) {
+			const result = await HostApi.instance.send(CreateBranchRequestType, {
+				branch,
+				uri: derivedState.textEditorUri
+			});
+			// FIXME handle error
+			if (result.error) {
+				console.log("ERROR FROM CREATE BRANCH: ", result.error);
+				setLoading(false);
+				return;
+			}
+		}
+
+		if (updateExternal) {
+			// FIXME save the status to slack or Teams
+			// const response = await HostApi.instance.send(SetThirdPartyStatusRequestType, {
+			// 	providerId: props.provider.id,
+			// 	icon,
+			// 	label
+			// });
+		}
+
+		if (createPR) {
+			// FIXME create the PR
+			// const response = await HostApi.instance.send(CreatePRRequestType, {
+			// 	providerId: props.provider.id,
+			// 	label
+			// });
+		}
+
+		if (moveTicket) {
+			// FIXME move the ticket to the selected list
+			// const response = await HostApi.instance.send(MoveThirdPartyCardRequestType, {
+			// 	providerId: props.provider.id,
+			// 	destinationListId: FIXME
+			// 	card
+			// });
+		}
+
 		// @ts-ignore
 		await dispatch(setUserStatus(icon, label, invisible, expires));
 		dispatch(closePanel());
@@ -199,7 +324,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 
 	const toggleInvisible = () => {};
 
-	const clearable = same && (label.length > 0 || icon.length > 0);
+	const clearable = same && label.length > 0;
 	const saveable = !same;
 
 	const timeOptions = [
@@ -247,26 +372,46 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		}
 	};
 
+	const saveLabel =
+		!branch || branch == currentBranch
+			? "Save Status"
+			: branches.includes(branch)
+			? "Switch Branch & Save Status"
+			: "Create Branch & Save Status";
+
 	return (
-		<div className="panel configure-provider-panel">
-			<form className="standard-form vscroll">
+		<div className="full-height-panel">
+			<form className="standard-form vscroll" style={{ padding: 0 }}>
 				<div className="panel-header">
 					<CancelButton onClick={props.closePanel} />
+					What are you working on?
 				</div>
-				<fieldset className="form-body">
+				<fieldset className="form-body" style={{ padding: "10px" }}>
 					<div id="controls">
 						<StatusInput>
-							<div className="icon-selector" onClick={handleClickEmojiButton}>
-								<span>{emojiPlain(icon)}</span>
+							<div className="icon-selector">
+								<span onClick={handleClickEmojiButton}>{emojiPlain(icon)}</span>
 								{emojiMenuOpen && (
 									<EmojiPicker addEmoji={selectEmoji} target={emojiMenuTarget} autoFocus={true} />
 								)}
 							</div>
-							{label.length > 0 && (
+							{label.length == 0 ? (
+								<CrossPostIssueContext.Provider
+									value={{
+										selectedAssignees: [],
+										setValues: values => {
+											if (values && values.card) setLabel(values.card.url);
+										},
+										setSelectedAssignees: () => {}
+									}}
+								>
+									<IssueDropdown />
+								</CrossPostIssueContext.Provider>
+							) : (
 								<div
 									className="clear"
 									onClick={() => {
-										set(":smiley:", "", "today");
+										set(":desktop_computer:", "", 0);
 										const input = document.getElementById("status-input");
 										if (input) input.focus();
 									}}
@@ -282,10 +427,42 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								autoFocus={true}
 								type="text"
 								onChange={e => setTheLabel(e.target.value)}
-								placeholder="What's your status?"
+								placeholder="Enter a title, or select a Trello card"
 							/>
 						</StatusInput>
-						{label.length === 0 && (
+						<StatusInput>
+							<div className="icon-selector">
+								<Icon name="git-branch" />
+							</div>
+							<input
+								id="status-input"
+								name="branch"
+								value={branch}
+								className="input-text control"
+								type="text"
+								onChange={e => setBranch(e.target.value)}
+								placeholder="Use an existing branch, or create a new one"
+							/>
+							<div
+								className="dropdown-button"
+								onClick={e => {
+									// @ts-ignore
+									setBranchMenuTarget(e.target.closest(".dropdown-button"));
+									setBranchMenuOpen(true);
+								}}
+							>
+								<Icon name="chevron-down" />
+							</div>
+							{branchMenuOpen && (
+								<Menu
+									items={branchMenuItems}
+									align="dropdownRight"
+									target={branchMenuTarget}
+									action={() => setBranchMenuOpen(false)}
+								/>
+							)}
+						</StatusInput>
+						{false && label.length === 0 && (
 							<Examples>
 								<div onClick={() => set(":house:", "Working remotely", "today")}>
 									<span className="emoji">{emojiPlain(":house:")}</span>
@@ -307,31 +484,58 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 									Deep in thought
 									<span className="time"> &mdash; 2 hours</span>
 								</div>
-								<div onClick={() => set(":computer:", "Heads down", "240")}>
-									<span className="emoji">{emojiPlain(":computer:")}</span>
+								<div onClick={() => set(":desktop_computer:", "Heads down", "240")}>
+									<span className="emoji">{emojiPlain(":desktop_computer:")}</span>
 									Heads down
 									<span className="time"> &mdash; 4 hours</span>
 								</div>
 							</Examples>
 						)}
-						{label.length > 0 && (
-							<div style={{ padding: "0 0 20px 8px" }}>
+						{false && label.length > 0 && (
+							<div style={{ padding: "0 0 20px 6px" }}>
 								Clear after:{" "}
 								<InlineMenu items={timeOptions} onChange={setExpiresFromMenu}>
 									{clearAfter ? timeLabel(clearAfter) : derivedState.clearAfterLabel}
 								</InlineMenu>
 							</div>
 						)}
-						<div style={{ paddingLeft: "8px" }}>
-							<Checkbox name="invisible" checked={!invisible} onChange={v => setInvisible(!v)}>
-								Share what I'm working on with the team &nbsp;
+						<div style={{ paddingLeft: "6px" }}>
+							{showMoveIssueCheckbox && (
+								<StyledCheckbox
+									name="move-ticket"
+									checked={moveTicket}
+									onChange={v => setMoveTicket(v)}
+								>
+									Move this card to{" "}
+									<InlineMenu items={[{ label: "foo", key: "bar" }]}>In Progress</InlineMenu>on
+									Trello
+								</StyledCheckbox>
+							)}
+							{showPRCheckbox && (
+								<StyledCheckbox name="create-pr" checked={createPR} onChange={v => setCreatePR(v)}>
+									Create a PR on GitHub
+								</StyledCheckbox>
+							)}
+							<StyledCheckbox
+								name="update-external"
+								checked={updateExternal}
+								onChange={v => setUpdateExternal(v)}
+							>
+								Update my status on Slack
+							</StyledCheckbox>
+							<StyledCheckbox
+								name="invisible"
+								checked={!invisible}
+								onChange={v => setInvisible(!v)}
+							>
+								Share the code I'm working on with the team &nbsp;
 								<a
 									style={{ color: "inherit" }}
 									href="https://help.codestream.com/writeme-about-x-ray"
 								>
 									<Icon name="info" title="Click for details" />
 								</a>
-							</Checkbox>
+							</StyledCheckbox>
 						</div>
 						<ButtonRow>
 							{clearable && (
@@ -341,11 +545,16 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 							)}
 							{saveable && (
 								<Button onClick={save} isLoading={loading}>
-									Save Status
+									{saveLabel}
 								</Button>
 							)}
 						</ButtonRow>
 					</div>
+					<br />
+					<br />
+					<br />
+					<br />
+					<CSText muted>WRITEME some copy explaining what this is for should go here</CSText>
 				</fieldset>
 			</form>
 		</div>

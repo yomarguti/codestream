@@ -8,7 +8,9 @@ import {
 	FetchThirdPartyBoardsRequestType,
 	TrelloList,
 	TrelloBoard,
-	FetchAssignableUsersRequestType
+	FetchAssignableUsersRequestType,
+	FetchThirdPartyCardsRequestType,
+	TrelloCard
 } from "@codestream/protocols/agent";
 import { useSelector, useDispatch } from "react-redux";
 import { CodeStreamState } from "@codestream/webview/store";
@@ -20,6 +22,7 @@ import { TrelloIntegrationData } from "@codestream/webview/store/activeIntegrati
 import { setIssueProvider } from "@codestream/webview/store/context/actions";
 import { CrossPostIssueContext } from "../CodemarkForm";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
+import { disconnectProvider } from "@codestream/webview/store/providers/actions";
 
 interface Props {
 	provider: ThirdPartyProviderConfig;
@@ -255,6 +258,217 @@ export function TrelloCardControls(props: React.PropsWithChildren<Props>) {
 				{` on `}
 				{props.children}
 			</div>
+		</>
+	);
+}
+
+export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
+	const dispatch = useDispatch();
+	const data = useSelector((state: CodeStreamState) =>
+		getIntegrationData<TrelloIntegrationData>(state.activeIntegrations, props.provider.id)
+	);
+	const updateDataState = React.useCallback(
+		(data: Partial<TrelloIntegrationData>) => {
+			dispatch(updateForProvider<TrelloIntegrationData>(props.provider.id, data));
+		},
+		[props.provider.id]
+	);
+
+	const buttonRef = React.useRef<HTMLElement>(null);
+
+	useDidMount(() => {
+		if (data.boards && data.boards.length > 0) {
+			crossPostIssueContext.setValues({
+				listId: data.currentList ? data.currentList.id : data.boards[0].lists[0].id
+			});
+			return;
+		}
+
+		if (!data.isLoading) {
+			updateDataState({
+				isLoading: true
+			});
+		}
+
+		let isValid = true;
+
+		const fetchBoards = async () => {
+			const response = await HostApi.instance.send(FetchThirdPartyBoardsRequestType, {
+				providerId: props.provider.id
+			});
+
+			if (!isValid) return;
+			// make sure to persist current board/list selection if possible
+			const newCurrentBoard = data.currentBoard
+				? (response.boards.find(b => b.id === data.currentBoard!.id) as TrelloBoard)
+				: undefined;
+
+			const newCurrentList =
+				newCurrentBoard && data.currentList
+					? (newCurrentBoard.lists.find(l => l.id === data.currentList!.id) as TrelloList)
+					: undefined;
+
+			updateDataState({
+				isLoading: false,
+				boards: response.boards as TrelloBoard[],
+				currentBoard: newCurrentBoard,
+				currentList: newCurrentList
+			});
+
+			// crossPostIssueContext.setValues({
+			// listId: newCurrentList.id
+			// });
+		};
+
+		fetchBoards();
+
+		return () => {
+			isValid = false;
+		};
+	});
+
+	React.useEffect(() => {
+		void (async () => {
+			if (!data.currentList) return;
+
+			try {
+				updateDataState({ isLoading: true });
+				const response = await HostApi.instance.send(FetchThirdPartyCardsRequestType, {
+					providerId: props.provider.id,
+					listId: data.currentList.id
+				});
+
+				updateDataState({
+					isLoading: false,
+					cards: response.cards as TrelloCard[]
+				});
+			} catch (error) {
+			} finally {
+				updateDataState({ isLoading: false });
+			}
+		})();
+	}, [data.currentList]);
+
+	const [menuState, setMenuState] = React.useState<{
+		open: boolean;
+		target?: EventTarget;
+	}>({ open: false, target: undefined });
+
+	const handleClickDropdown = React.useCallback((event: React.MouseEvent) => {
+		if (data.isLoading) {
+			event.preventDefault();
+			dispatch(setIssueProvider(undefined));
+			updateDataState({ isLoading: false });
+		} else {
+			event.stopPropagation();
+			// @ts-ignore
+			const target = event.target.closest(".dropdown-button");
+			setMenuState(state => ({ open: !state.open }));
+		}
+	}, []);
+
+	const goDisconnect = () => {};
+
+	const selectBoard = React.useCallback((board?: TrelloBoard) => {
+		if (board) {
+			setMenuState({ open: true });
+			updateDataState({ currentBoard: board, currentList: undefined });
+		} else {
+			setMenuState({ open: false });
+		}
+	}, []);
+
+	const goBoards = () => updateDataState({ currentBoard: undefined, currentList: undefined });
+
+	const selectList = React.useCallback((list?: TrelloList) => {
+		if (list) {
+			setMenuState({ open: true });
+			updateDataState({ currentList: list });
+		} else {
+			setMenuState({ open: false });
+		}
+	}, []);
+
+	const goLists = () => updateDataState({ currentList: undefined });
+
+	const selectCard = React.useCallback((card?: TrelloCard) => {
+		if (card) crossPostIssueContext.setValues({ card });
+		setMenuState({ open: false });
+	}, []);
+
+	const crossPostIssueContext = React.useContext(CrossPostIssueContext);
+
+	const boardItems = (data.boards || emptyArray).map(board => ({
+		label: board.name,
+		key: board.id,
+		action: board
+	}));
+	// @ts-ignore
+	boardItems.unshift({ label: "-" });
+	boardItems.push(
+		// @ts-ignore
+		{ label: "-" },
+		{ label: "Disconnect Trello", key: "disconnect", action: goDisconnect, icon: <Icon name="x" /> }
+	);
+	const listItems = data.currentBoard
+		? data.currentBoard.lists.map(list => ({
+				label: list.name,
+				key: list.id,
+				action: list
+		  }))
+		: [];
+	const cardItems = data.cards
+		? data.cards.map(card => ({
+				label: card.name,
+				searchLabel: card.name,
+				key: card.id,
+				action: card
+		  }))
+		: [];
+	// @ts-ignore
+	cardItems.unshift({ type: "search" }, { label: "-" });
+
+	return (
+		<>
+			<span className="dropdown-button" onClick={handleClickDropdown} ref={buttonRef}>
+				{data.isLoading ? <Icon className="spin" name="sync" /> : <Icon name="chevron-down" />}
+			</span>
+			{menuState.open &&
+				(!data.currentBoard ? (
+					<Menu
+						title="Select a Trello Board"
+						align="dropdownRight"
+						target={buttonRef.current}
+						items={boardItems}
+						dontCloseOnSelect={true}
+						action={selectBoard}
+						limitWidth={true}
+					/>
+				) : !data.currentList ? (
+					<Menu
+						title={data.currentBoard && data.currentBoard.name}
+						backIcon={<Icon name="chevron-left" onClick={goBoards} />}
+						centerTitle={true}
+						align="dropdownRight"
+						target={buttonRef.current}
+						items={listItems}
+						dontCloseOnSelect={true}
+						action={selectList}
+						limitWidth={true}
+					/>
+				) : (
+					<Menu
+						title={data.currentList && data.currentList.name}
+						backIcon={<Icon name="chevron-left" onClick={goLists} />}
+						centerTitle={true}
+						align="dropdownRight"
+						target={buttonRef.current}
+						items={data.isLoading ? [] : cardItems}
+						dontCloseOnSelect={true}
+						action={selectCard}
+						limitWidth={true}
+					/>
+				))}
 		</>
 	);
 }

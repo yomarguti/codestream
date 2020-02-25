@@ -50,9 +50,9 @@ export default class Menu extends Component {
 
 	repositionIfNecessary() {
 		if (this.props && this.props.target) {
-			const align = this.props.align;
+			const align = this.props.align || "";
 			const rect = this.props.target.getBoundingClientRect();
-			var computedStyle = window.getComputedStyle(this.props.target);
+			var computedStyle = window.getComputedStyle(this._div);
 			this._div.style.top =
 				this.props.valign === "bottom" ? rect.bottom + 10 + "px" : rect.top + "px";
 
@@ -70,8 +70,9 @@ export default class Menu extends Component {
 				else this._div.style.left = left + "px";
 			} else if (align === "dropdownRight" || align === "bottomRight") {
 				this._div.style.top = rect.bottom - 1 + "px";
-				const left = rect.right - this._div.offsetWidth + parseFloat(computedStyle.paddingRight);
-				this._div.style.left = left + "px";
+				const right = window.innerWidth - rect.right - parseFloat(computedStyle.paddingRight);
+				this._div.style.left = "auto";
+				this._div.style.right = right + "px";
 			} else if (align === "dropdownLeft" || align === "botomLeft") {
 				this._div.style.top = rect.bottom - 1 + "px";
 				const left = rect.left - parseFloat(computedStyle.paddingRight);
@@ -86,9 +87,19 @@ export default class Menu extends Component {
 			// off the bottom of the screen
 			const tooFar = rect.top + this._div.offsetHeight + 35 - window.innerHeight;
 			if (tooFar > 0) {
-				const newTop = rect.top - tooFar;
-				if (newTop > 10) this._div.style.top = newTop + "px";
-				else this._div.style.top = "10px";
+				// if we're a dropdown, alter the height
+				if (align.startsWith("bottom") || align.startsWith("dropdown")) {
+					const height = window.innerHeight - rect.bottom - 30;
+
+					const ul = this._div.getElementsByTagName("ul")[0];
+					if (ul) ul.style.maxHeight = height + "px";
+				}
+				// otherwise, alter the top
+				else {
+					const newTop = rect.top - tooFar;
+					if (newTop > 10) this._div.style.top = newTop + "px";
+					else this._div.style.top = "10px";
+				}
 			}
 		}
 	}
@@ -240,18 +251,20 @@ export default class Menu extends Component {
 		const dropdown = (this.props.align || "").match(/^dropdown/);
 
 		return (
-			<div className={createClassString("menu-popup-body", { dropdown })}>
+			<div
+				className={createClassString("menu-popup-body", {
+					dropdown,
+					"center-title": this.props.centerTitle,
+					"limit-width": this.props.limitWidth
+				})}
+			>
 				{this.props.title && !parentItem && (
 					<h3>
+						{this.props.backIcon && <span className="back-icons">{this.props.backIcon}</span>}
 						{this.props.title}
 						<span className="icons">
 							{this.props.titleIcon}
-							<Icon
-								title="Close Menu"
-								placement="top"
-								onClick={e => this.props.action()}
-								name="x"
-							/>
+							<Icon onClick={e => this.props.action()} name="x" />
 						</span>
 					</h3>
 				)}
@@ -378,7 +391,9 @@ export default class Menu extends Component {
 		// support functions as item actions
 		if (typeof item.action === "function" && !item.disabled) {
 			item.action();
-			if (!this.props.dontCloseOnSelect) this.props.action(null); // invoke the action callback for entire menu so it can removed
+			// invoke the action callback for entire menu so it can removed
+			if (!this.props.dontCloseOnSelect) this.props.action(null);
+			else this.repositionIfNecessary();
 		} else this.props.action(item.disabled ? null : item.action);
 		if (this.props.focusOnSelect) this.props.focusOnSelect.focus();
 	};

@@ -10,7 +10,8 @@ import {
 	GitLabBoard,
 	SlackChannel,
 	AzureDevOpsBoard,
-	YouTrackBoard
+	YouTrackBoard,
+	TrelloCard
 } from "@codestream/protocols/agent";
 
 export interface ActiveIntegrationData {
@@ -32,6 +33,7 @@ export interface SlackIntegrationData extends ActiveIntegrationData {
 
 export interface TrelloIntegrationData extends ActiveIntegrationData {
 	boards?: TrelloBoard[];
+	cards?: TrelloCard[];
 	currentBoard?: TrelloBoard;
 	currentList?: TrelloList;
 }
