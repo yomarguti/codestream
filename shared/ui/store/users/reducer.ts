@@ -89,7 +89,7 @@ export const getUsernamesById = createSelector(getAllUsers, users => {
 });
 
 export const getUsernamesByIdLowerCase = createSelector(getAllUsers, users => {
-	const map = {};
+	const map: { [id: string]: string } = {};
 	users.forEach(user => {
 		map[user.id] = getUsername(user).toLowerCase();
 	});

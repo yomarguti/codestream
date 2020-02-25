@@ -1,25 +1,27 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import createClassString from "classnames";
-import * as actions from "./actions";
 import * as reviewSelectors from "../store/reviews/reducer";
 import * as userSelectors from "../store/users/reducer";
 import Tag from "./Tag";
 import Menu from "./Menu";
 import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
-import Filter from "./Filter";
 import SearchResult from "./SearchResult";
 import { ProTip } from "./ProTip";
-import Headshot from "./Headshot";
 import { HostApi } from "../webview-api";
-import { includes as _includes, sortBy as _sortBy, filter } from "lodash-es";
+import { includes as _includes, sortBy as _sortBy } from "lodash-es";
 import { PanelHeader } from "../src/components/PanelHeader";
 import styled from "styled-components";
 import FiltersButton from "../src/components/FiltersButton";
 import { OpenUrlRequestType } from "@codestream/protocols/agent";
 import { getActivity } from "../store/activityFeed/reducer";
-import { isCSReview } from "../protocols/agent/api.protocol.models";
+import { isCSReview, CSReview, CSUser } from "../protocols/agent/api.protocol.models";
+import { Disposable } from "vscode-languageserver-protocol";
+import { CodeStreamState } from "../store";
+import { ReposState } from "../store/repos/types";
+import { AnyObject } from "../utils";
+import { setUserPreference } from "./actions";
 
 const SearchBar = styled.div`
 	display: flex;
@@ -119,15 +121,71 @@ const sameDay = (d1, d2) => {
 	);
 };
 
-export class SimpleFilterSearchPanel extends Component {
-	disposables = [];
+interface DispatchProps {
+	// fetchReviews: (...args: Parameters<typeof fetchReviews>) => Promise<any>;
+	setUserPreference: (...args: Parameters<typeof setUserPreference>) => Promise<any>;
+}
 
-	constructor(props) {
+interface ConnectedProps {
+	noReviewsAtAll: boolean;
+	webviewFocused: boolean;
+	usernameMap: { [id: string]: string };
+	currentUserId: string;
+	currentUsername: string;
+	reviews: CSReview[];
+	savedSearchFilters: FilterQuery[];
+	authorFilter: string;
+	typeFilter: string;
+	authorsById: Record<string, CSUser>;
+	branchTimestamps: Record<string, number>;
+	repoTimestamps: Record<string, number>;
+	repos: ReposState;
+	teamTagsArray: any[];
+	query: string;
+	activity: ReturnType<typeof getActivity>;
+}
+
+interface Props extends ConnectedProps, DispatchProps {}
+
+interface FilterQuery {
+	label: string;
+	q: string;
+}
+
+interface State {
+	isLoading: boolean;
+	expanded: {
+		waitingForMe: boolean;
+		createdByMe: boolean;
+		open: boolean;
+		closed: boolean;
+		recent: boolean;
+	};
+	filters: AnyObject;
+	savedFilters: FilterQuery[];
+	q: string;
+	savingFilter?: any;
+	editingFilterIndex?: number;
+	editingFilterLabel?: string;
+	filterMenuTarget?: any;
+	filterMenuOpen?: number;
+}
+
+export class SimpleFilterSearchPanel extends Component<Props, State> {
+	readonly disposables: Disposable[] = [];
+	readonly sectionLabel = {
+		waitingForMe: "Open & Assigned to Me",
+		createdByMe: "Created By Me",
+		open: "Open",
+		closed: "Closed",
+		recent: "Recent"
+	};
+	_saveFilterInput: any;
+
+	constructor(props: Props) {
 		super(props);
-
 		this.state = {
 			isLoading: props.reviews.length === 0,
-			openPost: null,
 			expanded: {
 				waitingForMe: true,
 				createdByMe: true,
@@ -135,35 +193,27 @@ export class SimpleFilterSearchPanel extends Component {
 				closed: true,
 				recent: true
 			},
-			selectedTags: {},
-			filters: {},
+			filters: { text: "" },
 			savedFilters: props.savedSearchFilters,
 			q: props.query
-		};
-
-		this.sectionLabel = {
-			waitingForMe: "Open & Assigned to Me",
-			createdByMe: "Created By Me",
-			open: "Open",
-			closed: "Closed",
-			recent: "Recent"
 		};
 	}
 
 	componentDidMount() {
 		if (this.props.webviewFocused)
 			HostApi.instance.track("Page Viewed", { "Page Name": "Reviews" });
-		if (false && this.props.reviews.length === 0)
-			this.props.fetchReviews().then(() => {
-				this.setState({ isLoading: false });
-			});
+		// if (false && this.props.reviews.length === 0)
+		// this.props.fetchReviews().then(() => {
+		// 	this.setState({ isLoading: false });
+		// });
 		// this.disposables.push(
 		// 	EventEmitter.subscribe("interaction:active-editor-changed", this.handleFileChangedEvent)
 		// );
-		if (this._searchInput) this._searchInput.focus();
+		// _searchInput might not be necessary if using the autoFocus prop
+		// if (this._searchInput) this._searchInput.focus();
 	}
 
-	componentDidUpdate(prevProps, prevState) {
+	componentDidUpdate(prevProps: Props) {
 		if (this.props.query && this.props.query !== prevProps.query) this.setQ(this.props.query);
 	}
 
@@ -195,7 +245,7 @@ export class SimpleFilterSearchPanel extends Component {
 		return (
 			<>
 				<tr>
-					<td colspan={4}>
+					<td colSpan={4}>
 						<div
 							className={createClassString("section", "has-children", {
 								expanded: this.state.expanded[section]
@@ -237,7 +287,7 @@ export class SimpleFilterSearchPanel extends Component {
 	setQ = q => {
 		const me = this.props.currentUsername.toLowerCase();
 		let text = q;
-		const filters = {};
+		const filters: AnyObject = {};
 		let match;
 
 		if (text.match(/\b(is|status):open\b/)) {
@@ -379,7 +429,7 @@ export class SimpleFilterSearchPanel extends Component {
 
 	saveFilterSubmit = (label, q, index) => {
 		if (!q || q.length === 0) return;
-		let savedFilters = [];
+		let savedFilters: FilterQuery[] = [];
 		if (index == undefined) {
 			savedFilters = [...this.state.savedFilters, { label, q }];
 		} else {
@@ -404,7 +454,7 @@ export class SimpleFilterSearchPanel extends Component {
 	};
 
 	// this method renders a filter that is in the process of being saved
-	renderSaveFilter = index => {
+	renderSaveFilter = (index?: number) => {
 		const { savedFilters, editingFilterLabel } = this.state;
 		const value = index == undefined ? "" : savedFilters[index].label;
 		const q = index == undefined ? this.state.q : savedFilters[index].q;
@@ -418,7 +468,7 @@ export class SimpleFilterSearchPanel extends Component {
 					className="input-text control"
 					type="text"
 					onKeyPress={e => {
-						if (e.key == "Enter") this.saveFilterSubmit(event.target.value, q, index);
+						if (e.key == "Enter") this.saveFilterSubmit((e.target as any).value, q, index);
 					}}
 					onChange={e => this.setState({ editingFilterLabel: e.target.value })}
 					onBlur={e => this.saveFilterSubmit(e.target.value, q, index)}
@@ -441,8 +491,8 @@ export class SimpleFilterSearchPanel extends Component {
 			return this.renderBlankFiller();
 		}
 
-		const { currentUserId, authorArray, branchArray, repoArray, usernameMap } = this.props;
-		const { thisRepo, filters, savedFilters } = this.state;
+		const { currentUserId, branchTimestamps, repoTimestamps, usernameMap } = this.props;
+		const { filters, savedFilters } = this.state;
 
 		// const sections = ["waitingForMe", "createdByMe", "open", "recent", "closed"];
 		const sections = ["waitingForMe", "open", "recent", "closed"];
@@ -459,56 +509,63 @@ export class SimpleFilterSearchPanel extends Component {
 		};
 
 		// sort by most recent first
-		_sortBy(this.props.activity, a => -a.record.createdAt).forEach(a => {
+		// @ts-ignore
+		_sortBy(this.props.activity, a => -a.createdAt).forEach(a => {
 			const item = a.record;
-			const isReview = isCSReview(item);
 			if (item.deactivated) return null;
 			// FIXME author is text, creatorId is an id
-			const assignees = (isReview ? item.reviewers : item.assignees) || [];
+			const assignees = (isCSReview(item) ? item.reviewers : item.assignees) || [];
 			const creatorUsername = usernameMap[item.creatorId];
 			const assigneeUsernames = assignees.map(id => usernameMap[id]);
-			const impactedUsernames = Object.keys(item.authorsById || {}).map(id => usernameMap[id]);
+			const impactedUsernames =
+				isCSReview(item) && item.authorsById != null
+					? Object.keys(item.authorsById).map(id => usernameMap[id])
+					: [];
 			if (filters.author && creatorUsername !== filters.author) return null;
 			if (filters.impacts && !impactedUsernames.includes(filters.impacts)) return null;
 			if (filters.assignee && !assigneeUsernames.includes(filters.assignee)) return null;
 			if (filters.status && item.status !== filters.status) return null;
 			if (filters.tag && !this.hasTag(item, filters.tag)) return null;
 			// FIXME this will only work if we have issues in this query as well
-			if (filters.type === "review" && !isReview) return null;
-			if (filters.type === "issue" && item.type !== filters.type) return null;
-			if (filters.type === "comment" && item.type !== filters.type) return null;
+			if (filters.type === "review" && !isCSReview(item)) return null;
+			if (filters.type === "issue" && (item as any).type !== filters.type) return null;
+			if (filters.type === "comment" && (item as any).type !== filters.type) return null;
 			if (filters.noTag && item.tags && item.tags.length) return null;
 			if (filters.branch) {
-				if (isReview) {
+				if (isCSReview(item)) {
 					const branches = (item.reviewChangesets || []).map(changeset => changeset.branch);
 					if (!branches.includes(filters.branch)) return null;
 				} else {
-					const branches = (item.markers || []).map(marker => marker.branchWhenCreated);
+					const branches = ((item as any).markers || []).map(marker => marker.branchWhenCreated);
 					if (!branches.includes(filters.branch)) return null;
 				}
 			}
 			if (filters.commit) {
-				if (isReview) {
-					const commits = (item.reviewChangesets || []).map(changeset => changeset.commits).flat();
+				if (isCSReview(item)) {
+					const commits = ((item.reviewChangesets || []).map(
+						changeset => changeset.commits
+					) as any).flat(); // we might need to update typescript to get definition for Array.prototype.flat
 					const match = commits.find(commit => commit && commit.sha.startsWith(filters.commit));
 					if (!match) return null;
 				} else {
-					const commits = (item.markers || []).map(marker => marker.commitHashWhenCreated);
+					const commits = ((item as any).markers || []).map(marker => marker.commitHashWhenCreated);
 					const match = commits.find(commit => commit && commit.startsWith(filters.commit));
 					if (!match) return null;
 				}
 			}
 			if (filters.repo) {
-				if (isReview) {
+				if (isCSReview(item)) {
 					const repoNames = (item.reviewChangesets || []).map(changeset => {
 						const repo = this.props.repos[changeset.repoId];
 						if (repo) return repo.name;
+						return;
 					});
 					if (!repoNames.includes(filters.repo)) return null;
 				} else {
-					const repoNames = (item.markers || []).map(marker => {
+					const repoNames = ((item as any).markers || []).map(marker => {
 						const repo = this.props.repos[marker.repoId];
 						if (repo) return repo.name;
+						return;
 					});
 					if (!repoNames.includes(filters.repo)) return null;
 				}
@@ -577,7 +634,7 @@ export class SimpleFilterSearchPanel extends Component {
 			};
 		});
 
-		const branchMenuItems = Object.keys(branchArray)
+		const branchMenuItems = Object.keys(branchTimestamps)
 			.sort()
 			.map(branch => {
 				return {
@@ -592,7 +649,7 @@ export class SimpleFilterSearchPanel extends Component {
 				};
 			});
 
-		const repoMenuItems = Object.keys(repoArray)
+		const repoMenuItems = Object.keys(repoTimestamps)
 			.sort()
 			.map(repo => {
 				const name = this.props.repos[repo].name;
@@ -698,9 +755,9 @@ export class SimpleFilterSearchPanel extends Component {
 								value={this.state.q}
 								className="input-text control"
 								type="text"
-								ref={ref => (this._searchInput = ref)}
 								onChange={e => this.setQ(e.target.value)}
 								placeholder="Search all comments, issues and code reviews"
+								autoFocus
 							/>
 						</div>
 					</SearchBar>
@@ -778,55 +835,12 @@ export class SimpleFilterSearchPanel extends Component {
 			</div>
 		);
 	}
-
-	toggleStatus = id => {
-		this.setState({
-			statusPosts: { ...this.state.statusPosts, [id]: !this.state.statusPosts[id] }
-		});
-	};
-
-	handleClickCreateKnowledge = e => {
-		e.stopPropagation();
-		this.props.setActivePanel("main");
-		setTimeout(() => {
-			this.props.runSlashCommand("multi-compose");
-		}, 500);
-		return;
-	};
-
-	handleClickSelectItem = event => {
-		event.preventDefault();
-		var liDiv = event.target.closest("li");
-		if (!liDiv) return; // FIXME throw error
-		if (liDiv.id) {
-			this.props.setActivePanel("main");
-			this.props.setCurrentStream(liDiv.id);
-		} else if (liDiv.getAttribute("teammate")) {
-			this.props.createStream({ type: "direct", memberIds: [liDiv.getAttribute("teammate")] });
-		} else {
-			console.log("Unknown LI in handleClickSelectStream: ", event);
-		}
-	};
 }
 
-const mapStateToProps = state => {
-	const { context, session, teams, users, preferences, repos } = state;
+const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
+	const { context, session, users, preferences, repos } = state;
 
-	let fileNameToFilterFor;
-	let fileStreamIdToFilterFor;
-	if (context.activeFile && context.fileStreamId) {
-		fileNameToFilterFor = context.activeFile;
-		fileStreamIdToFilterFor = context.fileStreamId;
-	} else if (context.activeFile && !context.fileStreamId) {
-		fileNameToFilterFor = context.activeFile;
-	} else {
-		fileNameToFilterFor = context.lastActiveFile;
-		fileStreamIdToFilterFor = context.lastFileStreamId;
-	}
-
-	const activity = getActivity(state);
 	const reviews = reviewSelectors.getAllReviews(state);
-	const usernames = userSelectors.getUsernames(state);
 	const usernameMap = userSelectors.getUsernamesByIdLowerCase(state);
 
 	const teamTagsArray = userSelectors.getTeamTagsArray(state);
@@ -840,28 +854,28 @@ const mapStateToProps = state => {
 		);
 	});
 
-	let branchArray = {};
-	let commitArray = {};
-	let authorArray = {};
-	let repoArray = {};
+	let branchTimestamps: Record<string, number> = {};
+	let authorsById: Record<string, CSUser> = {};
+	let repoTimestamps: Record<string, number> = {};
 	reviews.forEach(review => {
-		const { markers, createdAt, creatorId, reviewChangesets = [] } = review;
+		const { createdAt, creatorId, reviewChangesets = [] } = review;
 		const author = userSelectors.getUserByCsId(users, creatorId);
 		if (author) {
-			author.name = author.fullName || author.username || author.email;
-			authorArray[creatorId] = author;
+			// This breaks one of the rules of redux
+			// author.name = author.fullName || author.username || author.email;
+			authorsById[creatorId] = author;
 		}
 		reviewChangesets.forEach(changeset => {
 			const { repoId, branch } = changeset;
-			if (repoId) repoArray[repoId] = createdAt;
-			if (branch) branchArray[branch] = createdAt;
+			if (repoId) repoTimestamps[repoId] = createdAt;
+			if (branch) branchTimestamps[branch] = createdAt;
 		});
 	});
-	activity.forEach(item => {
-		// FIXME add to repoArray for codemarks
-	});
+	// activity.forEach(item => {
+	// 	// FIXME add to repoArray for codemarks
+	// });
 
-	let savedSearchFilters = [];
+	let savedSearchFilters: any[] = [];
 	Object.keys(preferences.savedSearchFilters || {}).forEach(key => {
 		savedSearchFilters[parseInt(key, 10)] = preferences.savedSearchFilters[key];
 	});
@@ -869,27 +883,28 @@ const mapStateToProps = state => {
 
 	return {
 		noReviewsAtAll: !reviewSelectors.teamHasReviews(state),
-		usernames,
 		usernameMap,
-		currentUserId: session.userId,
+		currentUserId: session.userId!,
 		savedSearchFilters,
-		currentUsername: users[session.userId].username,
-		activity,
+		currentUsername: users[session.userId!].username,
 		reviews,
-		team: teams[context.currentTeamId],
-		teamMembers: userSelectors.getTeamMembers(state),
+		activity: getActivity(state),
 		// tagFilter: context.reviewTagFilter,
 		authorFilter: "all", // FIXME
+		typeFilter: "all", // FIXME
 		teamTagsArray,
 		// tagFiltersLabelsLower,
-		authorArray,
-		branchArray,
-		repoArray,
+		authorsById,
+		branchTimestamps,
+		repoTimestamps,
 		repos,
-		query: context.query || "",
+		query: context.query,
 		// authorFiltersLabelsLower,
 		webviewFocused: context.hasFocus
 	};
 };
 
-export default connect(mapStateToProps, { ...actions })(SimpleFilterSearchPanel);
+export default connect(mapStateToProps, { setUserPreference })(
+	// @ts-ignore
+	SimpleFilterSearchPanel
+);
