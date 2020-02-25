@@ -403,6 +403,7 @@ export class SimpleFilterSearchPanel extends Component {
 		this.props.setUserPreference(["savedSearchFilters"], [...savedFilters, { label: "", q: "" }]);
 	};
 
+	// this method renders a filter that is in the process of being saved
 	renderSaveFilter = index => {
 		const { savedFilters, editingFilterLabel } = this.state;
 		const value = index == undefined ? "" : savedFilters[index].label;
@@ -416,6 +417,9 @@ export class SimpleFilterSearchPanel extends Component {
 					ref={ref => (this._saveFilterInput = ref)}
 					className="input-text control"
 					type="text"
+					onKeyPress={e => {
+						if (e.key == "Enter") this.saveFilterSubmit(event.target.value, q, index);
+					}}
 					onChange={e => this.setState({ editingFilterLabel: e.target.value })}
 					onBlur={e => this.saveFilterSubmit(e.target.value, q, index)}
 				/>
