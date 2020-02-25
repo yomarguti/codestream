@@ -35,6 +35,7 @@ import {
 	CreateTeamTagRequestType,
 	DeleteCodemarkRequest,
 	DeletePostRequest,
+	DeleteReviewRequest,
 	DeleteTeamTagRequestType,
 	EditPostRequest,
 	FetchCodemarksRequest,
@@ -106,8 +107,7 @@ import {
 	UpdateStreamMembershipRequest,
 	UpdateTeamTagRequestType,
 	UpdateUserRequest,
-	VerifyConnectivityResponse,
-	DeleteReviewRequest
+	VerifyConnectivityResponse
 } from "../../protocol/agent.protocol";
 import {
 	CSAddProviderHostRequest,
@@ -766,7 +766,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	async setModifiedRepos(request: SetModifiedReposRequest) {
-		const update = await this.put<{ modifiedRepos: RepoScmStatus[] }, any>(
+		const update = await this.put<{ modifiedRepos: { [teamId: string]: RepoScmStatus[] } }, any>(
 			"/users/me",
 			{ modifiedRepos: request.modifiedRepos },
 			this._token

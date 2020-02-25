@@ -110,7 +110,7 @@ export const UpdateStatusRequestType = new RequestType<
 >("codestream/user/updateStatus");
 
 export interface SetModifiedReposRequest {
-	modifiedRepos: RepoScmStatus[];
+	modifiedRepos: { [teamId: string]: RepoScmStatus[] };
 }
 
 export interface SetModifiedReposResponse {
