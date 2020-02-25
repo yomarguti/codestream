@@ -58,7 +58,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	async get(request?: FetchReviewsRequest): Promise<FetchReviewsResponse> {
 		let reviews = await this.getAllCached();
 		if (request != null) {
-			if (request.reviewIds?.length !== 0) {
+			if (request.reviewIds?.length ?? 0 > 0) {
 				reviews = reviews.filter(r => request.reviewIds!.includes(r.id));
 			}
 		}
