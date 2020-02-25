@@ -224,7 +224,9 @@ class ReviewForm extends React.Component<Props, State> {
 		const scmInfo = await HostApi.instance.send(GetFileScmInfoRequestType, {
 			uri: uri
 		});
-		this.setState({ scmInfo }, () => {
+		const repoId: string = scmInfo.scm ? scmInfo.scm.repoId || "" : "";
+		const repoName = this.props.repos[repoId] ? this.props.repos[repoId].name : "";
+		this.setState({ scmInfo, repoName }, () => {
 			this.handleRepoChange(uri);
 			if (callback) callback();
 		});
@@ -244,7 +246,10 @@ class ReviewForm extends React.Component<Props, State> {
 						(e.data as DocumentData).reason === "saved")
 				) {
 					this.setState({ isLoadingScm: true });
-					this.handleRepoChange(textEditorUri);
+					// handle the repo change, but don't pass the textEditorUri
+					// as we don't want to switch the repo the form is pointing
+					// to in these cases
+					this.handleRepoChange();
 				}
 			})
 		);
@@ -257,7 +262,7 @@ class ReviewForm extends React.Component<Props, State> {
 	};
 
 	async handleRepoChange(repoUri?) {
-		const { repos, teamMates } = this.props;
+		const { teamMates } = this.props;
 		const { includeSaved, includeStaged, startCommit } = this.state;
 		const { scm } = this.state.scmInfo;
 		if (!scm) return;
@@ -269,9 +274,7 @@ class ReviewForm extends React.Component<Props, State> {
 			includeStaged,
 			includeSaved
 		});
-		const repoId: string = statusInfo.scm ? statusInfo.scm.repoId || "" : "";
-		const repoName = repos[repoId] ? repos[repoId].name : "";
-		this.setState({ repoStatus: statusInfo, repoName, repoUri: uri });
+		this.setState({ repoStatus: statusInfo, repoUri: uri });
 
 		if (statusInfo.scm) {
 			const authors = statusInfo.scm.authors;
@@ -1022,7 +1025,7 @@ class ReviewForm extends React.Component<Props, State> {
 	setRepo = repo => {
 		this.setState({ isLoadingScm: true });
 		// FIXME -- this /foo stuff is to create a URI that gets parsed
-		this.handleRepoChange(repo.folder.uri + "/foo");
+		this.getScmInfoForURI(repo.folder.uri + "/foo");
 	};
 
 	renderReviewForm() {
