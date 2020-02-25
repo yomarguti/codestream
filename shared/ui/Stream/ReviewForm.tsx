@@ -319,6 +319,15 @@ class ReviewForm extends React.Component<Props, State> {
 							.replace(/^(\w+)\//, "$1: ")
 				});
 			}
+
+			const { excludedFiles = {} } = this.state;
+			// default any files which are `new` to be excluded from the review
+			// but only those which haven't been explicitly set to true or false
+			statusInfo.scm.modifiedFiles.forEach(f => {
+				if (f.status === FileStatus.untracked && excludedFiles[f.file] === undefined)
+					excludedFiles[f.file] = true;
+			});
+			this.setState({ excludedFiles });
 		}
 
 		const response = await HostApi.instance.send(IgnoreFilesRequestType, {
