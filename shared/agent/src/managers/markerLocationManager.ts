@@ -375,20 +375,21 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			missingMarker.referenceLocations.sort(compareReferenceLocations);
 			let canCalculate = false;
 			for (const referenceLocation of missingMarker.referenceLocations) {
-				if (!diffsByCommitHash.has(referenceLocation.commitHash)) {
+				const referenceCommitHash = referenceLocation.commitHash;
+				if (referenceCommitHash != null && !diffsByCommitHash.has(referenceCommitHash)) {
 					const diff = await git.getDiffBetweenCommits(
-						referenceLocation.commitHash,
+						referenceCommitHash,
 						commitHash,
 						filePath,
 						fetchIfCommitNotFound
 					);
 					fetchIfCommitNotFound = false;
 					if (diff) {
-						diffsByCommitHash.set(referenceLocation.commitHash, diff);
-						if (!locationsByCommitHash.has(referenceLocation.commitHash)) {
-							locationsByCommitHash.set(referenceLocation.commitHash, {});
+						diffsByCommitHash.set(referenceCommitHash, diff);
+						if (!locationsByCommitHash.has(referenceCommitHash)) {
+							locationsByCommitHash.set(referenceCommitHash, {});
 						}
-						const locationsById = locationsByCommitHash.get(referenceLocation.commitHash)!!;
+						const locationsById = locationsByCommitHash.get(referenceCommitHash)!!;
 						locationsById[missingMarker.id] = MarkerLocation.fromArray(
 							referenceLocation.location,
 							missingMarker.id

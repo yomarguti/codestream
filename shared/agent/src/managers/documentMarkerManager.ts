@@ -231,46 +231,25 @@ export class DocumentMarkerManager {
 		textDocument: documentId,
 		filters: filters
 	}: FetchDocumentMarkersRequest) {
-		const {
-			codemarks,
-			files,
-			markers,
-			reviews,
-			markerLocations,
-			users
-		} = SessionContainer.instance();
+		const { codemarks, files, markers, reviews, users, posts } = SessionContainer.instance();
 
-		const { reviewId, path, version, repoId } = ReviewsManager.parseUri(documentId.uri);
+		const { reviewId, path, repoId } = ReviewsManager.parseUri(documentId.uri);
 		const stream = (await files.getByRepoId(repoId)).find(f => f.file === path);
-		if (stream == null)
+		if (stream == null) {
 			return {
 				markers: [],
 				markersNotLocated: []
 			};
+		}
 
 		const review = await reviews.getById(reviewId);
-		const changeset = review.reviewChangesets.find(c => c.repoId === repoId);
-		if (!changeset) throw new Error(`Could not find changeset with repoId ${repoId}`);
-		const diffs = await reviews.getDiffs(reviewId, repoId);
-		const latestCommitSha = changeset.commits[0].sha;
-		const rightToLatestCommitDiff = diffs.rightToLatestCommitDiffs.find(
-			d => d.newFileName === path
-		);
-
 		const markersForDocument = await markers.getByStreamId(stream.id, true);
-		const latestCommitLocations = await markerLocations.getMarkerLocationsById(
-			stream.id,
-			latestCommitSha
-		);
-
-		const rightLocations = rightToLatestCommitDiff
-			? await calculateLocations(latestCommitLocations, rightToLatestCommitDiff)
-			: latestCommitLocations;
-
 		const documentMarkers: DocumentMarker[] = [];
 		for (const marker of markersForDocument) {
-			const location = rightLocations[marker.id];
-			if (!location) continue;
+			const post = await posts.getById(marker.postId);
+			if (review.postId !== post.parentPostId) continue;
+			const canonicalLocation = marker.referenceLocations.find(l => l.flags.canonical);
+			if (canonicalLocation == null) continue;
 
 			const codemark = await codemarks.getEnrichedCodemarkById(marker.codemarkId);
 			const creator = await users.getById(marker.creatorId, { avoidCachingOnFetch: true });
@@ -286,8 +265,8 @@ export class DocumentMarkerManager {
 				fileUri: documentId.uri,
 				codemark: codemark,
 				creatorName: (creator && creator.username) || "Unknown",
-				range: MarkerLocation.toRange(location),
-				location: location,
+				range: MarkerLocation.toRangeFromArray(canonicalLocation.location),
+				location: MarkerLocation.fromArray(canonicalLocation.location, marker.id),
 				summary: summary,
 				summaryMarkdown: `\n\n${Strings.escapeMarkdown(summary, { quoted: true })}`,
 				type: codemark.type

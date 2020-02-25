@@ -107,9 +107,16 @@ export interface CSLocationMeta {
 export type CSLocationArray = [number, number, number, number, CSLocationMeta | undefined];
 
 export interface CSReferenceLocation {
-	commitHash: string;
+	commitHash?: string;
 	location: CSLocationArray;
-	flags: { [id: string]: boolean };
+	flags: {
+		canonical?: boolean;
+		uncommitted?: boolean;
+		backtracked?: boolean;
+		unversionedFile?: boolean;
+		baseCommit?: string;
+		diff?: ParsedDiff;
+	};
 }
 
 export interface CSMarkerLocations {
