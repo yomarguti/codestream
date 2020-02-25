@@ -516,7 +516,9 @@ export class CodeStreamSession {
 		) {
 			const oldCapabilities = SessionContainer.instance().session.apiCapabilities;
 			const newCapabilities = await this.api.getApiCapabilities();
+			const currentTeam = await SessionContainer.instance().teams.getByIdFromCache(this.teamId);
 			if (!isEqual(oldCapabilities, newCapabilities)) {
+				this.registerApiCapabilities(newCapabilities, currentTeam);
 				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: ChangeDataType.ApiCapabilities,
 					data: newCapabilities
@@ -743,9 +745,9 @@ export class CodeStreamSession {
 		this._codestreamAccessToken = token.value;
 		this._teamId = (this._options as any).teamId = token.teamId;
 		this._codestreamUserId = response.user.id;
-		this._apiCapabilities = { ...(response.capabilities || {}) };
 
 		const currentTeam = response.teams.find(t => t.id === this._teamId)!;
+		this.registerApiCapabilities(response.capabilities || {}, currentTeam);
 
 		if (response.provider === "codestream") {
 			if (
@@ -1100,6 +1102,18 @@ export class CodeStreamSession {
 				type: ChangeDataType.Providers,
 				data: this._providers
 			});
+		}
+	}
+
+	registerApiCapabilities(apiCapabilities: CSApiCapabilities, team?: CSTeam): void {
+		const teamSettings = (team && team.settings) || {};
+		const teamFeatures = teamSettings.features || {};
+		this._apiCapabilities = {};
+		for (const key in apiCapabilities) {
+			const capability = apiCapabilities[key];
+			if (!capability.restricted || teamFeatures[key]) {
+				this._apiCapabilities[key] = capability;
+			}
 		}
 	}
 

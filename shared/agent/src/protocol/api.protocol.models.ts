@@ -372,6 +372,10 @@ export interface CSTeam extends CSEntity {
 	};
 	// only used for analytics and reporting. differentiates between teams created by us employees
 	reportingGroup?: string;
+
+	settings?: {
+		[setting: string]: any;
+	};
 }
 
 export interface CSTag {
@@ -592,6 +596,7 @@ export interface CSApiCapability {
 	description?: string;
 	url?: string;
 	version?: string;
+	restricted?: boolean;
 }
 
 export interface CSApiCapabilities {
