@@ -273,7 +273,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		public readonly baseUrl: string,
 		private readonly _version: VersionInfo,
 		private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined
-	) {}
+	) { }
 
 	get teamId(): string {
 		return this._teamId!;
@@ -348,9 +348,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 		Logger.log(
 			`CodeStream user '${response.user.username}' (${
-				response.user.id
+			response.user.id
 			}) is logging into ${provider || "uknown"}${
-				response.providerAccess ? `:${response.providerAccess}` : ""
+			response.providerAccess ? `:${response.providerAccess}` : ""
 			} and belongs to ${response.teams.length} team(s)\n${response.teams
 				.map(t => `\t${t.name} (${t.id})`)
 				.join("\n")}`
@@ -835,7 +835,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		// TODO: This doesn't handle all the request params
 		return this.get<CSGetMarkersResponse>(
 			`/markers?teamId=${this.teamId}&streamId=${request.streamId}${
-				request.commitHash ? `&commitHash=${request.commitHash}` : ""
+			request.commitHash ? `&commitHash=${request.commitHash}` : ""
 			}`,
 			this._token
 		);
@@ -1836,10 +1836,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 			const context =
 				this._middleware.length > 0
 					? ({
-							url: absoluteUrl,
-							method: method,
-							request: init
-					  } as CodeStreamApiMiddlewareContext)
+						url: absoluteUrl,
+						method: method,
+						request: init
+					} as CodeStreamApiMiddlewareContext)
 					: undefined;
 
 			if (context !== undefined) {
@@ -1943,7 +1943,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		} finally {
 			Logger.log(
 				`${traceResult}${
-					init && init.body ? ` body=${CodeStreamApiProvider.sanitize(init && init.body)}` : ""
+				init && init.body ? ` body=${CodeStreamApiProvider.sanitize(init && init.body)}` : ""
 				} \u2022 ${Strings.getDurationMilliseconds(start)} ms`
 			);
 		}
@@ -1994,7 +1994,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 				if (data.info) {
 					message += `\n${data.info.name || data.info}`;
 				}
-			} catch {}
+			} catch { }
 		}
 		return new ServerError(message, data, response.status);
 	}
