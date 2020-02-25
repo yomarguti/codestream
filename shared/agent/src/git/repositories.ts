@@ -378,7 +378,7 @@ export class GitRepositories {
 
 		let rootPath;
 		try {
-			rootPath = await this._git.getRepoRoot(folderUri.fsPath, true);
+			rootPath = await this._git.getRepoRoot(folderUri.fsPath);
 		} catch {}
 		if (rootPath) {
 			Logger.log(`Repository found in '${rootPath}'`);
@@ -460,7 +460,7 @@ export class GitRepositories {
 
 			let rp;
 			try {
-				rp = await this._git.getRepoRoot(p, true);
+				rp = await this._git.getRepoRoot(p);
 			} catch {}
 			if (!rp) continue;
 

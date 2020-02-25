@@ -69,8 +69,8 @@ export interface IGitService extends Disposable {
 	getRepoRemote(repoPath: string): Promise<GitRemote | undefined>;
 	// getRepoRemote(repoUriOrPath: Uri | string): Promise<GitRemote | undefined>;
 
-	getRepoRoot(uri: URI, isDirectory?: boolean): Promise<string | undefined>;
-	getRepoRoot(path: string, isDirectory?: boolean): Promise<string | undefined>;
+	getRepoRoot(uri: URI): Promise<string | undefined>;
+	getRepoRoot(path: string): Promise<string | undefined>;
 
 	getRepositories(): Promise<Iterable<GitRepository>>;
 	getRepositoryById(id: string): Promise<GitRepository | undefined>;
@@ -556,8 +556,8 @@ export class GitService implements IGitService, Disposable {
 		return false;
 	}
 
-	async getRepoRoot(uri: URI, isDirectory?: boolean): Promise<string | undefined>;
-	async getRepoRoot(path: string, isDirectory?: boolean): Promise<string | undefined>;
+	async getRepoRoot(uri: URI): Promise<string | undefined>;
+	async getRepoRoot(path: string): Promise<string | undefined>;
 	async getRepoRoot(uriOrPath: URI | string): Promise<string | undefined> {
 		const filePath = typeof uriOrPath === "string" ? uriOrPath : uriOrPath.fsPath;
 		let cwd;
