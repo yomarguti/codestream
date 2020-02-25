@@ -19,11 +19,13 @@ interface Props {
 export const FileInfo = (props: Props) => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const teamMembers = userSelectors.getTeamMembers(state);
+		const teamId = state.context.currentTeamId;
 		let modifiedByMe = false;
 		let modifiedByOthers = false;
 		const editingThisFile = teamMembers
 			.map(user => {
-				const repo = (user.modifiedRepos || []).find(r => r.repoId === props.repoId);
+				const modifiedRepos = user.modifiedRepos ? user.modifiedRepos[teamId] || [] : [];
+				const repo = modifiedRepos.find(r => r.repoId === props.repoId);
 				if (!repo) return null;
 				const file = repo.modifiedFiles.find(f => f.file === props.file);
 				if (file) {

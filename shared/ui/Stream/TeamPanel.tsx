@@ -338,42 +338,37 @@ class TeamPanel extends React.Component<Props, State> {
 	}
 
 	renderModifiedRepos(user) {
-		const { repos, apiCapabilities } = this.props;
-		const { modifiedRepos = [] } = user;
+		const { repos, teamId } = this.props;
+		const { modifiedRepos } = user;
 
-		if (modifiedRepos.length === 0) return null;
+		if (!modifiedRepos || !modifiedRepos[teamId] || !modifiedRepos[teamId].length) return null;
 
-		console.log("USER IS: ", user);
-		return (
-			<>
-				{modifiedRepos.map(repo => {
-					const { repoId = "", modifiedFiles } = repo;
-					if (modifiedFiles.length === 0) return null;
-					const repoName = repos[repoId] ? repos[repoId].name : "";
-					const added = modifiedFiles.reduce((total, f) => total + f.linesAdded, 0);
-					const removed = modifiedFiles.reduce((total, f) => total + f.linesRemoved, 0);
-					const title = (
-						<>
-							<div className="related-label">Local Changes</div>
-							{modifiedFiles.map(f => (
-								<ChangesetFile key={f.file} {...f} />
-							))}
-						</>
-					);
-					return (
-						<li className="status row-with-icon-actions" style={{ paddingLeft: "48px" }}>
-							<Tooltip title={title} placement="topRight">
-								<div>
-									<Icon name="repo" /> {repoName} &nbsp; <Icon name="git-branch" /> {repo.branch}
-									{added > 0 && <span className="added">+{added}</span>}
-									{removed > 0 && <span className="deleted">-{removed}</span>}
-								</div>
-							</Tooltip>
-						</li>
-					);
-				})}
-			</>
-		);
+		return modifiedRepos[teamId].map(repo => {
+			const { repoId = "", modifiedFiles } = repo;
+			if (modifiedFiles.length === 0) return null;
+			const repoName = repos[repoId] ? repos[repoId].name : "";
+			const added = modifiedFiles.reduce((total, f) => total + f.linesAdded, 0);
+			const removed = modifiedFiles.reduce((total, f) => total + f.linesRemoved, 0);
+			const title = (
+				<>
+					<div className="related-label">Local Changes</div>
+					{modifiedFiles.map(f => (
+						<ChangesetFile key={f.file} {...f} />
+					))}
+				</>
+			);
+			return (
+				<li className="status row-with-icon-actions" style={{ paddingLeft: "48px" }}>
+					<Tooltip title={title} placement="topRight">
+						<div>
+							<Icon name="repo" /> {repoName} &nbsp; <Icon name="git-branch" /> {repo.branch}
+							{added > 0 && <span className="added">+{added}</span>}
+							{removed > 0 && <span className="deleted">-{removed}</span>}
+						</div>
+					</Tooltip>
+				</li>
+			);
+		});
 	}
 
 	render() {

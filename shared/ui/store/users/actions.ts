@@ -1,9 +1,12 @@
 import { CSUser } from "@codestream/protocols/api";
 import { action } from "../common";
 import { UsersActionsType } from "./types";
-import { GetRepoScmStatusesRequestType, SetModifiedReposRequestType } from '@codestream/protocols/agent';
+import {
+	GetRepoScmStatusesRequestType,
+	SetModifiedReposRequestType
+} from "@codestream/protocols/agent";
 import { CodeStreamState } from "../../store";
-import { HostApi } from '../../webview-api';
+import { HostApi } from "../../webview-api";
 
 export const reset = () => action("RESET");
 
@@ -14,10 +17,12 @@ export const updateUser = (user: CSUser) => action(UsersActionsType.Update, user
 export const addUsers = (users: CSUser[]) => action(UsersActionsType.Add, users);
 
 export const updateModifiedFiles = () => async (dispatch, getState: () => CodeStreamState) => {
-	const { users, session } = getState();
+	const { users, session, context } = getState();
 	const userId = session.userId;
+	if (!userId) return;
+	const currentUser = users[userId];
+	if (!currentUser) return;
 	if (userId) {
-		const currentUser = users[userId];
 		const invisible = currentUser.status ? currentUser.status.invisible : false;
 		if (invisible) {
 			dispatch(clearModifiedFiles());
@@ -27,14 +32,26 @@ export const updateModifiedFiles = () => async (dispatch, getState: () => CodeSt
 	const result = await HostApi.instance.send(GetRepoScmStatusesRequestType, {});
 	if (!result.scm) return;
 
-	dispatch(_updateModifiedFiles(result.scm));
-}
+	let modifiedRepos = currentUser.modifiedRepos || {};
 
-export const clearModifiedFiles = () => _updateModifiedFiles([]);
+	// this is a fix for legacy modifiedRepos data that used to be
+	// an array rather than a hash based on team Id
+	if (modifiedRepos[0]) modifiedRepos = {};
 
-const _updateModifiedFiles = (modifiedFiles: any[]) => async (dispatch, getState: () => CodeStreamState) => {
-	const response = await HostApi.instance.send(SetModifiedReposRequestType, { modifiedRepos: modifiedFiles });
+	modifiedRepos[context.currentTeamId] = result.scm;
+	dispatch(_updateModifiedFiles(modifiedRepos));
+};
+
+export const clearModifiedFiles = () => _updateModifiedFiles({});
+
+const _updateModifiedFiles = (modifiedRepos: { [teamId: string]: any[] }) => async (
+	dispatch,
+	getState: () => CodeStreamState
+) => {
+	const response = await HostApi.instance.send(SetModifiedReposRequestType, {
+		modifiedRepos
+	});
 	if (response && response.user) {
 		dispatch(updateUser(response.user));
 	}
-}
+};
