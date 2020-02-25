@@ -5,7 +5,13 @@ import { Ranges } from "../api/extensions";
 import { Logger } from "../logger";
 import {
 	CoAuthors,
+	CreateBranchRequest,
+	CreateBranchRequestType,
+	CreateBranchResponse,
 	FileStatus,
+	GetBranchesRequest,
+	GetBranchesRequestType,
+	GetBranchesResponse,
 	GetCommitScmInfoRequest,
 	GetCommitScmInfoRequestType,
 	GetCommitScmInfoResponse,
@@ -160,6 +166,57 @@ export class ScmManager {
 			scm: modifiedRepos,
 			error: gitError
 		};
+	}
+
+	@lspHandler(GetBranchesRequestType)
+	@log()
+	async getBranches({ uri: documentUri }: GetBranchesRequest): Promise<GetBranchesResponse> {
+		const cc = Logger.getCorrelationContext();
+
+		const uri = URI.parse(documentUri);
+		const { git } = SessionContainer.instance();
+		let repoPath = "";
+		let result: { branches: string[]; current: string } | undefined = undefined;
+		let gitError;
+
+		try {
+			repoPath = (await git.getRepoRoot(uri.fsPath)) || "";
+			if (repoPath !== undefined) {
+				result = await git.getBranches(repoPath);
+			}
+		} catch (ex) {
+			gitError = ex.toString();
+			Logger.error(ex, cc);
+			debugger;
+		}
+		return { scm: result || { branches: [], current: "" }, error: gitError };
+	}
+
+	@lspHandler(CreateBranchRequestType)
+	@log()
+	async createBranch({
+		uri: documentUri,
+		branch
+	}: CreateBranchRequest): Promise<CreateBranchResponse> {
+		const cc = Logger.getCorrelationContext();
+
+		const uri = URI.parse(documentUri);
+		const { git } = SessionContainer.instance();
+		let repoPath = "";
+		let result = false;
+		let gitError;
+
+		try {
+			repoPath = (await git.getRepoRoot(uri.fsPath)) || "";
+			if (repoPath !== undefined) {
+				result = await git.createBranch(repoPath, branch);
+			}
+		} catch (ex) {
+			gitError = ex.toString();
+			Logger.error(ex, cc);
+			debugger;
+		}
+		return { scm: { result }, error: gitError };
 	}
 
 	@lspHandler(GetRepoScmStatusRequestType)

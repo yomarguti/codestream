@@ -47,6 +47,15 @@ export interface TrelloList {
 	subscribed: boolean;
 }
 
+export interface TrelloCard {
+	id: string;
+	name: string;
+	desc: string;
+	url: string;
+	idList: string;
+	idOrganization: string;
+}
+
 export interface TrelloFetchListsResponse {
 	lists: TrelloList[];
 }

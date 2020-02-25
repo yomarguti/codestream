@@ -110,6 +110,29 @@ export const FetchThirdPartyBoardsRequestType = new RequestType<
 	void
 >("codestream/provider/boards");
 
+export interface ThirdPartyProviderCard {
+	id: string;
+	name: string;
+	apiIdentifier?: string;
+	[key: string]: any;
+}
+
+export interface FetchThirdPartyCardsRequest {
+	providerId: string;
+	[key: string]: any;
+}
+
+export interface FetchThirdPartyCardsResponse {
+	cards: ThirdPartyProviderCard[];
+}
+
+export const FetchThirdPartyCardsRequestType = new RequestType<
+	FetchThirdPartyCardsRequest,
+	FetchThirdPartyCardsResponse,
+	void,
+	void
+>("codestream/provider/cards");
+
 export interface CreateThirdPartyPostRequest {
 	providerId: string;
 	providerTeamId: string;

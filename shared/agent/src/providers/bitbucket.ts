@@ -15,7 +15,9 @@ import {
 	CreateThirdPartyCardRequest,
 	DocumentMarker,
 	FetchThirdPartyBoardsRequest,
-	FetchThirdPartyBoardsResponse
+	FetchThirdPartyBoardsResponse,
+	FetchThirdPartyCardsRequest,
+	FetchThirdPartyCardsResponse
 } from "../protocol/agent.protocol";
 import {
 	CodemarkType,
@@ -196,6 +198,11 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 		}
 
 		return { boards };
+	}
+
+	@log()
+	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
+		return { cards: [] };
 	}
 
 	@log()

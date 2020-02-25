@@ -24,6 +24,9 @@ import {
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsRequestType,
 	FetchThirdPartyBoardsResponse,
+	FetchThirdPartyCardsRequest,
+	FetchThirdPartyCardsRequestType,
+	FetchThirdPartyCardsResponse,
 	FetchThirdPartyChannelsRequest,
 	FetchThirdPartyChannelsRequestType,
 	FetchThirdPartyChannelsResponse
@@ -138,6 +141,25 @@ export class ThirdPartyProviderRegistry {
 		}
 
 		return issueProvider.getBoards(request);
+	}
+
+	@log()
+	@lspHandler(FetchThirdPartyCardsRequestType)
+	fetchCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
+		const provider = getProvider(request.providerId);
+		if (provider === undefined) {
+			throw new Error(`No registered provider for '${request.providerId}'`);
+		}
+		const issueProvider = provider as ThirdPartyIssueProvider;
+		if (
+			issueProvider == null ||
+			typeof issueProvider.supportsIssues !== "function" ||
+			!issueProvider.supportsIssues()
+		) {
+			throw new Error(`Provider(${provider.name}) doesn't support issues`);
+		}
+
+		return issueProvider.getCards(request);
 	}
 
 	@log()

@@ -1,10 +1,14 @@
 "use strict";
 import * as qs from "querystring";
+import { Logger } from "../logger";
 import {
 	CreateThirdPartyCardRequest,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
+	FetchThirdPartyCardsRequest,
+	FetchThirdPartyCardsResponse,
 	TrelloBoard,
+	TrelloCard,
 	TrelloCreateCardRequest,
 	TrelloCreateCardResponse,
 	TrelloMember
@@ -54,6 +58,27 @@ export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProvider
 
 		return {
 			boards: request.organizationId
+				? response.body.filter(b => b.idOrganization === request.organizationId)
+				: response.body
+		};
+	}
+
+	@log()
+	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
+		// have to force connection here because we need apiKey and accessToken to even create our request
+		await this.ensureConnected();
+
+		const response = await this.get<TrelloCard[]>(
+			`/lists/${request.listId}/cards?${qs.stringify({
+				cards: "open",
+				fields: "id,name,desc,url,idList,idOrganization",
+				key: this.apiKey,
+				token: this.accessToken
+			})}`
+		);
+
+		return {
+			cards: request.organizationId
 				? response.body.filter(b => b.idOrganization === request.organizationId)
 				: response.body
 		};

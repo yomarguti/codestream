@@ -14,6 +14,8 @@ import {
 	DocumentMarker,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
+	FetchThirdPartyCardsRequest,
+	FetchThirdPartyCardsResponse,
 	GitHubBoard,
 	GitHubCreateCardRequest,
 	GitHubCreateCardResponse,
@@ -135,6 +137,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return {
 			boards
 		};
+	}
+
+	@log()
+	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
+		return { cards: [] };
 	}
 
 	@log()

@@ -2,6 +2,40 @@
 import { Range, RequestType } from "vscode-languageserver-protocol";
 // import { GitCommit } from "./agent.protocol";
 
+export interface GetBranchesRequest {
+	uri: string;
+}
+export interface GetBranchesResponse {
+	scm?: {
+		branches: string[];
+		current: string;
+	};
+	error?: string;
+}
+export const GetBranchesRequestType = new RequestType<
+	GetBranchesRequest,
+	GetBranchesResponse,
+	void,
+	void
+>("codestream/scm/branches");
+
+export interface CreateBranchRequest {
+	uri: string;
+	branch: string;
+}
+export interface CreateBranchResponse {
+	scm?: {
+		result: boolean;
+	};
+	error?: string;
+}
+export const CreateBranchRequestType = new RequestType<
+	CreateBranchRequest,
+	CreateBranchResponse,
+	void,
+	void
+>("codestream/scm/create-branch");
+
 export interface GetCommitScmInfoRequest {
 	revision: string;
 	repoPath?: string;
