@@ -332,7 +332,7 @@ class ReviewDiffMarkersBuilder extends MarkersBuilder {
 			? await calculateLocation(location, toBaseCommitDiff)
 			: location;
 
-		const latestCommitSha = changeset.commits[0].sha;
+		const latestCommitSha = diffs.latestCommitSha;
 		const referenceLocations: CSReferenceLocation[] = [];
 
 		if (fromLatestCommitDiff != null) {
