@@ -62,7 +62,7 @@ export const GetCommitScmInfoRequestType = new RequestType<
 >("codestream/scm/commit");
 
 export enum FileStatus {
-	untracked = "U",
+	untracked = "?",
 	added = "A",
 	renamed = "R",
 	deleted = "D",

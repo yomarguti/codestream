@@ -150,7 +150,7 @@ export enum ReviewStatus {
 }
 
 export enum FileStatus {
-	untracked = "U",
+	untracked = "?",
 	added = "A",
 	renamed = "R",
 	deleted = "D",
