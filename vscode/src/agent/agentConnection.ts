@@ -979,13 +979,13 @@ export class CodeStreamAgentConnection implements Disposable {
 function started(target: CodeStreamAgentConnection, propertyName: string, descriptor: any) {
 	if (typeof descriptor.value === "function") {
 		const method = descriptor.value;
-		descriptor.value = function(this: CodeStreamAgentConnection, ...args: any[]) {
+		descriptor.value = function (this: CodeStreamAgentConnection, ...args: any[]) {
 			if (!this.started) throw new Error("CodeStream Agent has not been started");
 			return method!.apply(this, args);
 		};
 	} else if (typeof descriptor.get === "function") {
 		const get = descriptor.get;
-		descriptor.get = function(this: CodeStreamAgentConnection, ...args: any[]) {
+		descriptor.get = function (this: CodeStreamAgentConnection, ...args: any[]) {
 			if (!this.started) throw new Error("CodeStream Agent has not been started");
 			return get!.apply(this, args);
 		};
