@@ -191,28 +191,42 @@
 		nav.inline {
 			position: fixed;
 			z-index: 1;
-			top: 0;
-			right: 0;
-			// width: 100%;
+			top: 10px;
+			right: 10px;
 			.icon {
 				display: inline-block;
-				// transform: scale(1.5);
-				vertical-align: 2px;
+				// vertical-align: 2px;
 				width: 16px;
 			}
 			label {
-				background: @app-background-color;
+				user-select: none;
+				text-align: center;
+				display: inline-block;
+				cursor: pointer;
+				margin: 0 0 0 0;
 				position: relative;
-				border: 1px solid @app-background-color;
 
+				> span {
+					display: inline-block;
+					padding: 5px 6px;
+					color: @text-color-subtle;
+				}
+				&:hover > span,
+				&.active > span,
+				&.selected > span {
+					color: @text-color-highlight;
+				}
+				&.muted > span {
+					color: @text-color-subtle;
+				}
 				&.selected {
-					background: @app-background-color-hover;
-					border: 1px solid @base-border-color;
-					// border-radius: 5px;
+					border-bottom: 2px solid @text-color-highlight;
 				}
 				&.active {
-					background: @app-background-color-hover;
-					border: 1px solid @base-border-color;
+					background: var(--button-background-color);
+					color: var(--button-foreground-color);
+					z-index: 50;
+					box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 				}
 			}
 		}
@@ -2533,115 +2547,6 @@
 		}
 		.panel-header {
 			height: 20px;
-		}
-	}
-
-	.top-tab-group {
-		// font-size: bigger;
-		white-space: nowrap;
-		overflow: hidden;
-		// width: 100%;
-		display: flex;
-		padding: 10px;
-		margin-bottom: 5px;
-		// background-color: @app-background-color;
-		z-index: 5;
-		float: right;
-		label {
-			user-select: none;
-			flex-grow: 1;
-			text-align: center;
-			display: inline-block;
-			cursor: pointer;
-			margin: 0 0 0 0;
-			> span {
-				display: inline-block;
-				padding: 8px 10px;
-				padding: 5px 6px;
-				// border-bottom: 1px solid rgba(127, 127, 127, 0.5);
-				color: @text-color-subtle;
-			}
-			&.checked > span {
-				color: @text-color-highlight;
-				// border-bottom: 1px solid @text-color-highlight;
-				font-weight: 500;
-			}
-			&:hover > span,
-			&.active > span,
-			&.selected > span {
-				color: @text-color-highlight;
-			}
-			.open-menu {
-				display: inline-block;
-				transform: scale(0.75);
-			}
-			&.muted > span {
-				color: @text-color-subtle;
-			}
-			&.channel-name {
-				max-width: 50vw;
-				overflow: hidden;
-				text-overflow: ellipsis;
-			}
-		}
-		.fill-tab {
-			padding: 8px 0 0 0;
-			// border-bottom: 1px solid rgba(127, 127, 127, 0.5);
-			text-align: right;
-			flex-basis: 25%;
-			flex-grow: 100;
-		}
-		.icon.mute {
-			margin-right: 5px;
-		}
-	}
-
-	x.top-tab-group {
-		// font-size: bigger;
-		white-space: nowrap;
-		overflow: hidden;
-		// width: 100%;
-		display: flex;
-		padding: 10px;
-		margin-bottom: 5px;
-		// background-color: @app-background-color;
-		z-index: 5;
-		label {
-			user-select: none;
-			flex-grow: 1;
-			text-align: center;
-			display: inline-block;
-			cursor: pointer;
-			margin: 0 0 0 0;
-			color: @text-color-subtle;
-			> span {
-				display: inline-block;
-				padding: 8px 15px;
-			}
-			&.checked > span {
-				color: @text-color-highlight;
-				font-weight: 500;
-			}
-			&:hover > span {
-				color: @text-color-highlight;
-			}
-			.open-menu {
-				display: inline-block;
-				transform: scale(0.75);
-			}
-			&.muted > span {
-				color: @text-color-subtle;
-			}
-		}
-		.fill-tab {
-			padding: 8px 0 0 0;
-			text-align: right;
-			flex-basis: 90%;
-			flex-grow: 100;
-			display: none;
-		}
-		.icon.mute {
-			margin-right: 5px;
 		}
 	}
 	.icon.button {

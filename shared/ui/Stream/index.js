@@ -666,48 +666,46 @@ export class SimpleStream extends Component {
 			<div className="unread-badge">.</div>
 		) : null;
 
-		const selected = panel => activePanel === panel && !plusMenuOpen && !menuOpen;
+		const selected = panel => activePanel === panel; // && !plusMenuOpen && !menuOpen;
 		return (
 			<nav className="inline">
-				<div className="top-tab-group">
-					<label
-						className={cx({ selected: selected(WebviewPanels.CodemarksForFile) })}
-						onClick={e => this.setActivePanel(WebviewPanels.CodemarksForFile)}
-					>
-						<Icon name="file" title="Codemarks In Current File" placement="bottom" />
-					</label>
-					<label
-						className={cx({ selected: selected(WebviewPanels.Activity) })}
-						onClick={e => this.setActivePanel(WebviewPanels.Activity)}
-					>
-						<Tooltip title="Activity Feed" placement="bottom">
-							<span>
-								<Icon name="list" />
-								{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
-							</span>
-						</Tooltip>
-					</label>
-					<label onClick={this.togglePlusMenu} className={cx({ active: plusMenuOpen })}>
-						<Icon name="plus" title="Create..." placement="bottom" />
-						{this.renderPlusMenu()}
-					</label>
-					<label
-						className={cx({ selected: selected(WebviewPanels.People) })}
-						onClick={e => this.setActivePanel(WebviewPanels.People)}
-					>
-						<Icon name="organization" title="Your Team" placement="bottom" />
-					</label>
-					<label
-						className={cx({ selected: selected(WebviewPanels.FilterSearch) })}
-						onClick={this.goSearch}
-					>
-						<Icon name="search" title="Filter &amp; Search" placement="bottomRight" />
-					</label>
-					<label onClick={this.toggleMenu} className={cx({ active: menuOpen })}>
-						<Icon name="kebab-horizontal" title="More..." placement="bottomRight" />
-						{this.renderMenu()}
-					</label>
-				</div>
+				<label
+					className={cx({ selected: selected(WebviewPanels.CodemarksForFile) })}
+					onClick={e => this.setActivePanel(WebviewPanels.CodemarksForFile)}
+				>
+					<Icon name="file" title="Codemarks In Current File" placement="bottom" />
+				</label>
+				<label
+					className={cx({ selected: selected(WebviewPanels.Activity) })}
+					onClick={e => this.setActivePanel(WebviewPanels.Activity)}
+				>
+					<Tooltip title="Activity Feed" placement="bottom">
+						<span>
+							<Icon name="list" />
+							{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
+						</span>
+					</Tooltip>
+				</label>
+				<label onClick={this.togglePlusMenu} className={cx({ active: plusMenuOpen })}>
+					<Icon name="plus" title="Create..." placement="bottom" />
+					{this.renderPlusMenu()}
+				</label>
+				<label
+					className={cx({ selected: selected(WebviewPanels.People) })}
+					onClick={e => this.setActivePanel(WebviewPanels.People)}
+				>
+					<Icon name="organization" title="Your Team" placement="bottom" />
+				</label>
+				<label
+					className={cx({ selected: selected(WebviewPanels.FilterSearch) })}
+					onClick={this.goSearch}
+				>
+					<Icon name="search" title="Filter &amp; Search" placement="bottomRight" />
+				</label>
+				<label onClick={this.toggleMenu} className={cx({ active: menuOpen })}>
+					<Icon name="kebab-horizontal" title="More..." placement="bottomRight" />
+					{this.renderMenu()}
+				</label>
 			</nav>
 		);
 	}
