@@ -35,8 +35,8 @@ export const NotificationsPanel = props => {
 				<fieldset className="form-body">
 					<p className="explainer">
 						{derivedState.isInVscode || derivedState.isInJetbrains
-							? "Follow codemarks to receive desktop and email notifications."
-							: "Follow codemarks to receive email notifications."}
+							? "Follow codemarks and reviews to receive desktop and email notifications."
+							: "Follow codemarks and reviews to receive email notifications."}
 					</p>
 					<div id="controls">
 						<RadioGroup
@@ -45,11 +45,11 @@ export const NotificationsPanel = props => {
 							onChange={handleChange}
 							loading={loading}
 						>
-							<Radio value="all">Automatically follow all new codemarks</Radio>
+							<Radio value="all">Automatically follow all new codemarks and reviews</Radio>
 							<Radio value="involveMe">
-								Follow codemarks I have created, I have been mentioned in, or I have replied to
+								Follow codemarks and reviews I have created, I have been mentioned in, or I have replied to
 							</Radio>
-							<Radio value="off">Don't automatically follow any codemarks</Radio>
+							<Radio value="off">Don't automatically follow any codemarks or reviews</Radio>
 						</RadioGroup>
 						<p>&nbsp;</p>
 

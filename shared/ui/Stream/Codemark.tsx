@@ -1204,7 +1204,7 @@ export class Codemark extends React.Component<Props, State> {
 				}
 			});
 		}
-		if (apiCapabilities["follow"] && this.props.inSharingModel) {
+		if (apiCapabilities["follow"] && (!codemark || !codemark.reviewId)) {
 			if (codemark && (codemark.followerIds || []).indexOf(this.props.currentUser.id) !== -1) {
 				menuItems.push({ label: "Unfollow", action: "unfollow" });
 			} else {
