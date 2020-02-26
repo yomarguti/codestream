@@ -40,7 +40,7 @@ export const updateModifiedRepos = () => async (dispatch, getState: () => CodeSt
 
 	// this is a fix for legacy modifiedRepos data that used to be
 	// an array rather than a hash based on team Id
-	if (modifiedRepos[0]) modifiedRepos = {};
+	if (Array.isArray(modifiedRepos)) modifiedRepos = {};
 
 	modifiedRepos[context.currentTeamId] = result.scm;
 	dispatch(_updateModifiedRepos(modifiedRepos));
