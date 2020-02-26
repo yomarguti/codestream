@@ -849,6 +849,8 @@ export class SimpleStream extends Component {
 				{this.props.currentReviewId && !this.props.activeReviewId && (
 					<Modal onClose={() => this.props.setCurrentReview()}>
 						<Review id={this.props.currentReviewId} />
+						<br />
+						<br />
 					</Modal>
 				)}
 				{renderNav && this.renderNavIcons()}
