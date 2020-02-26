@@ -182,6 +182,22 @@ export const FetchReviewDiffsRequestType = new RequestType<
 	void
 >("codestream/review/diffs");
 
+export interface CheckReviewPreconditionsRequest {
+	reviewId: string;
+}
+
+export interface CheckReviewPreconditionsResponse {
+	success: boolean;
+	error?: string;
+}
+
+export const CheckReviewPreconditionsRequestType = new RequestType<
+	StartReviewRequest,
+	StartReviewResponse,
+	void,
+	void
+>("codestream/review/checkPreconditions");
+
 export interface StartReviewRequest {
 	reviewId: string;
 }

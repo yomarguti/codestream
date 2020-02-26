@@ -26,7 +26,10 @@ import {
 	PauseReviewResponse,
 	EndReviewResponse,
 	EndReviewRequest,
-	EndReviewRequestType
+	EndReviewRequestType,
+	CheckReviewPreconditionsRequestType,
+	CheckReviewPreconditionsRequest,
+	CheckReviewPreconditionsResponse
 } from "../protocol/agent.protocol";
 import { CSReview, CSReviewDiffs } from "../protocol/api.protocol";
 import { log, lsp, lspHandler } from "../system";
@@ -143,8 +146,10 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		return this.session.api.deleteReview(request);
 	}
 
-	@lspHandler(StartReviewRequestType)
-	async startReview(request: StartReviewRequest): Promise<StartReviewResponse> {
+	@lspHandler(CheckReviewPreconditionsRequestType)
+	async checkReviewPreconditions(
+		request: CheckReviewPreconditionsRequest
+	): Promise<CheckReviewPreconditionsResponse> {
 		const { git } = SessionContainer.instance();
 		const review = await this.getById(request.reviewId);
 		const diffsByRepo = await this.getAllDiffs(review.id);
@@ -168,6 +173,13 @@ was not found in the local git repository. Fetch all remotes and try again.`
 			}
 		}
 
+		return {
+			success: true
+		};
+	}
+
+	@lspHandler(StartReviewRequestType)
+	async startReview(request: StartReviewRequest): Promise<StartReviewResponse> {
 		return {
 			success: true
 		};
