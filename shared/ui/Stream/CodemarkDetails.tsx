@@ -146,6 +146,39 @@ export class CodemarkDetails extends React.Component<Props, State> {
 					displayType={this.props.displayType}
 				/>
 				<div className="replies">
+					{this.state.isLoadingReplies && (
+						<DelayedRender>
+							<div className="progress-container">
+								<div className="progress-bar">
+									<div className="progress-cursor" />
+								</div>
+							</div>
+						</DelayedRender>
+					)}
+					<div className="postslist threadlist" onClick={this.handleClickPost}>
+						<PostList
+							onDidInitialize={this.onRepliesLoaded}
+							ref={this.postList}
+							isActive={true}
+							hasFocus={this.props.hasFocus}
+							teammates={this.props.teammates}
+							currentUserId={this.props.currentUserId}
+							currentUserName={this.props.currentUserName}
+							editingPostId={this.state.editingPostId}
+							postAction={this.postAction}
+							streamId={this.props.codemark.streamId}
+							isThread
+							threadId={threadId}
+							teamId={this.props.teamId}
+							skipParentPost={true}
+							skipReadPosts={this.props.displayType === "activity"}
+							useCache={this.props.displayType === "activity"}
+							onCancelEdit={this.cancelEdit}
+							onDidSaveEdit={this.cancelEdit}
+							disableEdits
+							renderHeaderIfPostsExist="Activity"
+						/>
+					</div>
 					{this.props.displayType !== "activity" && (
 						<div className="compose codemark-compose">
 							<div className="related-label">
@@ -195,39 +228,6 @@ export class CodemarkDetails extends React.Component<Props, State> {
 							</div>
 						</div>
 					)}
-					{this.state.isLoadingReplies && (
-						<DelayedRender>
-							<div className="progress-container">
-								<div className="progress-bar">
-									<div className="progress-cursor" />
-								</div>
-							</div>
-						</DelayedRender>
-					)}
-					<div className="postslist threadlist" onClick={this.handleClickPost}>
-						<PostList
-							onDidInitialize={this.onRepliesLoaded}
-							ref={this.postList}
-							isActive={true}
-							hasFocus={this.props.hasFocus}
-							teammates={this.props.teammates}
-							currentUserId={this.props.currentUserId}
-							currentUserName={this.props.currentUserName}
-							editingPostId={this.state.editingPostId}
-							postAction={this.postAction}
-							streamId={this.props.codemark.streamId}
-							isThread
-							threadId={threadId}
-							teamId={this.props.teamId}
-							skipParentPost={true}
-							skipReadPosts={this.props.displayType === "activity"}
-							useCache={this.props.displayType === "activity"}
-							onCancelEdit={this.cancelEdit}
-							onDidSaveEdit={this.cancelEdit}
-							disableEdits
-							renderHeaderIfPostsExist="Activity"
-						/>
-					</div>
 				</div>
 			</div>
 		);
