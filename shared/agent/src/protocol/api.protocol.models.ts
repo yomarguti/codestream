@@ -74,6 +74,9 @@ export interface CSCodemark extends CSEntity {
 
 	// array of people following this codemark
 	followerIds?: string[];
+
+	// review this codemark is in reply to
+	reviewId?: string; 
 }
 
 export interface CSMarkerIdentifier {
