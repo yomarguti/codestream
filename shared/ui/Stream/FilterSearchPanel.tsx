@@ -15,13 +15,15 @@ import { PanelHeader } from "../src/components/PanelHeader";
 import styled from "styled-components";
 import FiltersButton from "../src/components/FiltersButton";
 import { OpenUrlRequestType, CodemarkPlus } from "@codestream/protocols/agent";
-import { isCSReview, CSReview, CSUser } from "../protocols/agent/api.protocol.models";
+import { isCSReview, CSReview } from "../protocols/agent/api.protocol.models";
 import { Disposable } from "vscode-languageserver-protocol";
 import { CodeStreamState } from "../store";
 import { ReposState } from "../store/repos/types";
 import { AnyObject } from "../utils";
 import { setUserPreference } from "./actions";
 import { withSearchableItems } from "./SpatialView/withSearchableItems";
+import { FilterQuery } from "../store/preferences/types";
+import { getSavedSearchFilters } from "../store/preferences/reducer";
 
 const SearchBar = styled.div`
 	display: flex;
@@ -134,20 +136,14 @@ interface ConnectedProps {
 	savedSearchFilters: FilterQuery[];
 	authorFilter: string;
 	typeFilter: string;
-	authorsById: Record<string, CSUser>;
-	branchTimestamps: Record<string, number>;
-	repoTimestamps: Record<string, number>;
 	repos: ReposState;
 	teamTagsArray: any[];
 }
 
 interface Props extends ConnectedProps, DispatchProps {
 	items: (CSReview | CodemarkPlus)[];
-}
-
-interface FilterQuery {
-	label: string;
-	q: string;
+	branchOptions: string[];
+	repoOptions: string[];
 }
 
 interface State {
@@ -160,7 +156,6 @@ interface State {
 		recent: boolean;
 	};
 	filters: AnyObject;
-	savedFilters: FilterQuery[];
 	q: string;
 	savingFilter?: any;
 	editingFilterIndex?: number;
@@ -192,7 +187,6 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				recent: true
 			},
 			filters: { text: "" },
-			savedFilters: props.savedSearchFilters,
 			q: ""
 		};
 	}
@@ -425,15 +419,14 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 		if (!q || q.length === 0) return;
 		let savedFilters: FilterQuery[] = [];
 		if (index == undefined) {
-			savedFilters = [...this.state.savedFilters, { label, q }];
+			savedFilters = [...this.props.savedSearchFilters, { label, q }];
 		} else {
-			savedFilters = [...this.state.savedFilters];
+			savedFilters = [...this.props.savedSearchFilters];
 			savedFilters.splice(index, 1, { label, q });
 		}
 
 		this.props.setUserPreference(["savedSearchFilters"], [...savedFilters]);
 		this.setState({
-			savedFilters,
 			savingFilter: false,
 			editingFilterIndex: undefined,
 			editingFilterLabel: ""
@@ -441,17 +434,16 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 	};
 
 	deleteSavedFilter = index => {
-		const savedFilters = [...this.state.savedFilters];
+		const savedFilters = [...this.props.savedSearchFilters];
 		savedFilters.splice(index, 1);
-		this.setState({ savedFilters });
 		this.props.setUserPreference(["savedSearchFilters"], [...savedFilters, { label: "", q: "" }]);
 	};
 
 	// this method renders a filter that is in the process of being saved
 	renderSaveFilter = (index?: number) => {
-		const { savedFilters, editingFilterLabel } = this.state;
-		const value = index == undefined ? "" : savedFilters[index].label;
-		const q = index == undefined ? this.state.q : savedFilters[index].q;
+		const { editingFilterLabel } = this.state;
+		const value = index == undefined ? "" : this.props.savedSearchFilters[index].label;
+		const q = index == undefined ? this.state.q : this.props.savedSearchFilters[index].q;
 		return (
 			<SaveFilter>
 				<input
@@ -473,7 +465,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 	};
 
 	editSavedFilter = index => {
-		const label = this.state.savedFilters[index].label;
+		const label = this.props.savedSearchFilters[index].label;
 		this.setState({ editingFilterIndex: index, editingFilterLabel: label });
 		// FIXME -- focus the damn thing
 	};
@@ -485,8 +477,8 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 			return this.renderBlankFiller();
 		}
 
-		const { currentUserId, branchTimestamps, repoTimestamps, usernameMap } = this.props;
-		const { filters, savedFilters } = this.state;
+		const { currentUserId, branchOptions, repoOptions, usernameMap } = this.props;
+		const { filters } = this.state;
 
 		// const sections = ["waitingForMe", "createdByMe", "open", "recent", "closed"];
 		const sections = ["waitingForMe", "open", "recent", "closed"];
@@ -628,36 +620,31 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 			};
 		});
 
-		const branchMenuItems = Object.keys(branchTimestamps)
-			.sort()
-			.map(branch => {
-				return {
-					label: (
-						<span className="branch-menu-selector">
-							<Icon name="git-branch" /> {branch}
-						</span>
-					),
-					searchLabel: branch,
-					key: branch,
-					action: e => this.setQ(`branch:"${branch}"`)
-				};
-			});
+		const branchMenuItems = branchOptions.map(branch => {
+			return {
+				label: (
+					<span className="branch-menu-selector">
+						<Icon name="git-branch" /> {branch}
+					</span>
+				),
+				searchLabel: branch,
+				key: branch,
+				action: e => this.setQ(`branch:"${branch}"`)
+			};
+		});
 
-		const repoMenuItems = Object.keys(repoTimestamps)
-			.sort()
-			.map(repo => {
-				const name = this.props.repos[repo].name;
-				return {
-					label: (
-						<span className="repo-menu-selector">
-							<Icon name="repo" /> {name}
-						</span>
-					),
-					searchLabel: name,
-					key: repo,
-					action: e => this.setQ(`repo:"${name}"`)
-				};
-			});
+		const repoMenuItems = repoOptions.map(name => {
+			return {
+				label: (
+					<span className="repo-menu-selector">
+						<Icon name="repo" /> {name}
+					</span>
+				),
+				searchLabel: name,
+				key: name,
+				action: e => this.setQ(`repo:"${name}"`)
+			};
+		});
 
 		// let authorMenuItems = [{ label: "Anyone", action: "all" }, { label: "-" }];
 		// authorMenuItems = authorMenuItems.concat(
@@ -755,7 +742,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 							/>
 						</div>
 					</SearchBar>
-					{savedFilters.map((filter, index) => {
+					{this.props.savedSearchFilters.map((filter, index) => {
 						if (index == this.state.editingFilterIndex) return this.renderSaveFilter(index);
 						return (
 							<SavedFilter onClick={e => this.clickFilter(e, filter.q)}>
@@ -832,69 +819,41 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 }
 
 const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
-	const { context, session, users, preferences, repos } = state;
+	const { context, session, users, repos } = state;
 
-	const reviews = reviewSelectors.getAllReviews(state);
 	const usernameMap = userSelectors.getUsernamesByIdLowerCase(state);
 
 	const teamTagsArray = userSelectors.getTeamTagsArray(state);
-	let tagFiltersLabelsLower = { all: "with any tag" };
-	teamTagsArray.map(tag => {
-		// tagFiltersLabelsLower[tag.id] = "with tag: " + (tag.label || tag.color);
-		tagFiltersLabelsLower[tag.id] = (
-			<span>
-				with tag <Tag tag={tag}></Tag>
-			</span>
-		);
-	});
 
-	let branchTimestamps: Record<string, number> = {};
-	let authorsById: Record<string, CSUser> = {};
-	let repoTimestamps: Record<string, number> = {};
-	reviews.forEach(review => {
-		const { createdAt, creatorId, reviewChangesets = [] } = review;
-		const author = userSelectors.getUserByCsId(users, creatorId);
-		if (author) {
-			// This breaks one of the rules of redux
-			// author.name = author.fullName || author.username || author.email;
-			authorsById[creatorId] = author;
-		}
-		reviewChangesets.forEach(changeset => {
-			const { repoId, branch } = changeset;
-			if (repoId) repoTimestamps[repoId] = createdAt;
-			if (branch) branchTimestamps[branch] = createdAt;
-		});
-	});
+	// reviews.forEach(review => {
+	// 	const { createdAt, creatorId, reviewChangesets = [] } = review;
+	// 	const author = userSelectors.getUserByCsId(users, creatorId);
+	// 	if (author) {
+	// 		// This breaks one of the rules of redux. In this logic should happen when we need to render name
+	// 		// author.name = author.fullName || author.username || author.email;
+	// 	}
+	// });
 	// activity.forEach(item => {
 	// 	// FIXME add to repoArray for codemarks
 	// });
-
-	let savedSearchFilters: any[] = [];
-	Object.keys(preferences.savedSearchFilters || {}).forEach(key => {
-		savedSearchFilters[parseInt(key, 10)] = preferences.savedSearchFilters[key];
-	});
-	savedSearchFilters = savedSearchFilters.filter(filter => filter.label.length > 0);
 
 	return {
 		noReviewsAtAll: !reviewSelectors.teamHasReviews(state),
 		usernameMap,
 		currentUserId: session.userId!,
-		savedSearchFilters,
+		savedSearchFilters: getSavedSearchFilters(state),
 		currentUsername: users[session.userId!].username,
 		// tagFilter: context.reviewTagFilter,
 		authorFilter: "all", // FIXME
 		typeFilter: "all", // FIXME
 		teamTagsArray,
 		// tagFiltersLabelsLower,
-		authorsById,
-		branchTimestamps,
-		repoTimestamps,
 		repos,
 		// authorFiltersLabelsLower,
 		webviewFocused: context.hasFocus
 	};
 };
 
-export default connect(mapStateToProps, { setUserPreference })(
-	withSearchableItems(SimpleFilterSearchPanel)
+export default withSearchableItems(
+	connect(mapStateToProps, { setUserPreference })(SimpleFilterSearchPanel)
 );

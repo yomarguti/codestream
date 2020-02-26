@@ -11,7 +11,7 @@ import { fetchReviews } from "@codestream/webview/store/reviews/actions";
 
 type SearchableItems = (CSReview | CodemarkPlus)[];
 
-type ProvidingProps = { items: SearchableItems };
+type ProvidingProps = { items: SearchableItems; branchOptions: string[]; repoOptions: string[] };
 
 const getSearchableCodemarks = createSelector(
 	(state: CodeStreamState) => state.codemarks,
@@ -35,6 +35,7 @@ export function withSearchableItems<ChildProps extends ProvidingProps>(
 		const dispatch = useDispatch();
 		const codemarks = useSelector(getSearchableCodemarks);
 		const reviewsState = useSelector((state: CodeStreamState) => state.reviews);
+		const reposState = useSelector((state: CodeStreamState) => state.repos);
 
 		useDidMount(() => {
 			if (Object.keys(reviewsState).length === 0) dispatch(fetchReviews());
@@ -46,6 +47,29 @@ export function withSearchableItems<ChildProps extends ProvidingProps>(
 			[codemarks, reviewsState]
 		);
 
-		return React.createElement(Child, { ...props, items });
+		const { branchOptions, repoOptions } = React.useMemo(() => {
+			const branchNames = new Set<string>();
+			const repoNames = new Set<string>();
+			for (let [, review] of Object.entries(reviewsState)) {
+				const { reviewChangesets = [] } = review;
+				reviewChangesets.forEach(changeset => {
+					const { branch, repoId } = changeset;
+					branchNames.add(branch);
+					repoNames.add(reposState[repoId].name);
+				});
+			}
+			return { branchOptions: [...branchNames].sort(), repoOptions: [...repoNames].sort() };
+		}, [reviewsState, reposState]);
+
+		const providingProps: ProvidingProps = {
+			items,
+			branchOptions,
+			repoOptions
+		};
+
+		return React.createElement(Child, {
+			...props,
+			...providingProps
+		});
 	};
 }
