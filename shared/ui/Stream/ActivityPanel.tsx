@@ -303,7 +303,7 @@ export const ActivityPanel = () => {
 						(derivedState.activity.length === 0 ? (
 							<LoadingMessage>Loading latest activity...</LoadingMessage>
 						) : (
-							<LoadingMessage theRef={targetRef}>Loading more...</LoadingMessage>
+							<LoadingMessage ref={targetRef}>Loading more...</LoadingMessage>
 						))}
 				</div>
 			</ScrollBox>

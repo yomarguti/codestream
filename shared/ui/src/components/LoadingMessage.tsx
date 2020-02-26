@@ -4,7 +4,6 @@ import Icon from "@codestream/webview/Stream/Icon";
 
 interface Props extends PropsWithChildren<{}> {
 	align?: "left" | "right" | "center";
-	theRef?: any;
 }
 
 const Root = styled.div<Props>`
@@ -17,14 +16,14 @@ const Root = styled.div<Props>`
 	}
 `;
 
-export const LoadingMessage = (props: Props) => {
+export const LoadingMessage = React.forwardRef((props: Props, ref: React.Ref<HTMLDivElement>) => {
 	return (
-		<Root align={props.align} ref={props.theRef}>
+		<Root align={props.align} ref={ref}>
 			<Icon className="spin" name="sync" />
 			{props.children}
 		</Root>
 	);
-};
+});
 
 LoadingMessage.defaultProps = {
 	align: "center"
