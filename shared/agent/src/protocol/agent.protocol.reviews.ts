@@ -192,8 +192,8 @@ export interface CheckReviewPreconditionsResponse {
 }
 
 export const CheckReviewPreconditionsRequestType = new RequestType<
-	StartReviewRequest,
-	StartReviewResponse,
+	CheckReviewPreconditionsRequest,
+	CheckReviewPreconditionsResponse,
 	void,
 	void
 >("codestream/review/checkPreconditions");
