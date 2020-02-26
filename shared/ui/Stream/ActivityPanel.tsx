@@ -35,13 +35,14 @@ import Filter from "./Filter";
 import { Review } from "./Review";
 import { saveReviews } from "../store/reviews/actions";
 import { Reply } from "./Posts/Reply";
+import { LoadingMessage } from "../src/components/LoadingMessage";
 
 // see comment in SmartFormattedList.tsx
 const FormattedPluralAlias = FormattedPlural as any;
 
 const ActivityWrapper = styled.div`
 	// tag: codemark-width
-	margin: 5px 40px 20px 20px;
+	margin: 5px 20px 20px 20px;
 	> time,
 	> .activity {
 		display: block;
@@ -57,12 +58,6 @@ const ActivityWrapper = styled.div`
 	.codemark-details {
 		margin-bottom: 5px;
 	}
-`;
-
-const LoadingMessage = styled.div`
-	width: 100%;
-	margin: 0 auto;
-	text-align: center;
 `;
 
 const EmptyMessage = styled.div`
@@ -306,13 +301,9 @@ export const ActivityPanel = () => {
 					{renderActivity()}
 					{derivedState.hasMoreActivity &&
 						(derivedState.activity.length === 0 ? (
-							<LoadingMessage>
-								<Icon className="spin" name="sync" /> Loading latest activity...
-							</LoadingMessage>
+							<LoadingMessage>Loading latest activity...</LoadingMessage>
 						) : (
-							<LoadingMessage ref={targetRef}>
-								<Icon className="spin" name="sync" /> Loading more...
-							</LoadingMessage>
+							<LoadingMessage theRef={targetRef}>Loading more...</LoadingMessage>
 						))}
 				</div>
 			</ScrollBox>

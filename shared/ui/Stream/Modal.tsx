@@ -115,7 +115,8 @@ const CancelButton = styled(function(props: { onClick: () => void }) {
 	cursor: pointer;
 	position: absolute;
 	right: 20px;
-	padding: 2px 8px 0px 8px;
+	top: 10px;
+	padding: 5px 8px 5px 8px;
 	:hover {
 		color: var(--text-color-highlight);
 		background-color: var(--base-background-color);

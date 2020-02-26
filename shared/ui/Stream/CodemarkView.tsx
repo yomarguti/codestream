@@ -88,7 +88,7 @@ export function CodemarkView() {
 
 	return (
 		<div className="codemark-view" onClick={handleClickField}>
-			<CancelButton className="cancel-icon clickable" onClick={handleClickCancel} />
+			<CancelButton placement="left" onClick={handleClickCancel} />
 			<div className="codemark-container">
 				<Codemark codemark={codemark} selected />
 			</div>
