@@ -77,6 +77,16 @@ export default class Menu extends Component {
 				this._div.style.top = rect.bottom - 1 + "px";
 				const left = rect.left - parseFloat(computedStyle.paddingRight);
 				this._div.style.left = left + "px";
+			} else if (align === "dropdownCenter" || align === "botomCenter") {
+				const targetMiddle = (rect.right + rect.left) / 2;
+				const left = targetMiddle - this._div.offsetWidth / 2 + 5;
+				// if it's too far off the right of the window
+				if (left + this._div.offsetWidth + 10 > window.innerWidth) this._div.style.right = "10px";
+				// if it's too far to the left
+				else if (left < 10) this._div.style.left = "10px";
+				// normal case: reposition centrally
+				else this._div.style.left = left + "px";
+				this._div.style.top = rect.bottom - 1 + "px";
 			} else {
 				// right
 				const left = rect.right - this._div.offsetWidth + 5;
