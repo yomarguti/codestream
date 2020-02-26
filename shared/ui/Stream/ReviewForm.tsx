@@ -294,9 +294,8 @@ class ReviewForm extends React.Component<Props, State> {
 					.sort(
 						(a, b) =>
 							authorsById[b].commits * 10 +
-							authorsById[b].stomps -
-							authorsById[a].commits * 10 +
-							authorsById[a].stomps
+							authorsById[b].stomped -
+							(authorsById[a].commits * 10 + authorsById[a].stomped)
 					)
 					.map(id => teamMates.find(p => p.id === id))
 					.filter(Boolean)

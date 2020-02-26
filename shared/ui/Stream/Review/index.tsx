@@ -1,12 +1,17 @@
-import React from "react";
+import React, { useMemo } from "react";
 import cx from "classnames";
 import {
 	CardBody,
 	CardProps,
 	getCardProps,
-	CardFooter
+	CardFooter,
+	CardBanner
 } from "@codestream/webview/src/components/Card";
-import { GetReviewRequestType, CodemarkPlus } from "@codestream/protocols/agent";
+import {
+	GetReviewRequestType,
+	CodemarkPlus,
+	CheckReviewPreconditionsRequestType
+} from "@codestream/protocols/agent";
 import {
 	MinimumWidthCard,
 	Header,
@@ -70,6 +75,8 @@ export interface BaseReviewProps extends CardProps {
 	review: CSReview;
 	author: CSUser;
 	repoInfo: { repoName: string; branch: string }[];
+	headerError?: string;
+	canStartReview?: boolean;
 	currentUserId?: string;
 	collapsed?: boolean;
 	isFollowing?: boolean;
@@ -161,7 +168,7 @@ const BaseReview = (props: BaseReviewProps) => {
 							e.preventDefault();
 						}}
 					>
-						Review Changes
+						View Details
 					</ActionButton>
 				);
 			else return;
@@ -174,31 +181,33 @@ const BaseReview = (props: BaseReviewProps) => {
 				);
 			return (
 				<>
-					<DropdownButton
-						items={[
-							{
-								label: "Review Changes",
-								action: () => startReview()
-							},
-							{
-								label: "Visual Inspection",
-								action: () => startReview()
-							},
-							{
-								label: (
-									<>
-										Create working tree &nbsp;
-										<Icon
-											name="info"
-											title="FIXME -- explain how this works"
-											placement="bottomRight"
-										/>
-									</>
-								),
-								action: () => dispatch(setReviewStatus(props.review.id, "rejected"))
-							}
-						]}
-					/>
+					{props.canStartReview && (
+						<DropdownButton
+							items={[
+								{
+									label: "Review Changes",
+									action: () => startReview()
+								},
+								{
+									label: "Visual Inspection",
+									action: () => startReview()
+								},
+								{
+									label: (
+										<>
+											Create working tree &nbsp;
+											<Icon
+												name="info"
+												title="FIXME -- explain how this works"
+												placement="bottomRight"
+											/>
+										</>
+									),
+									action: () => dispatch(setReviewStatus(props.review.id, "rejected"))
+								}
+							]}
+						/>
+					)}
 					<DropdownButton
 						items={[
 							{
@@ -241,6 +250,14 @@ const BaseReview = (props: BaseReviewProps) => {
 
 	return (
 		<MinimumWidthCard {...getCardProps(props)}>
+			{props.headerError && (
+				<CardBanner>
+					<div className="color-warning" style={{ display: "flex" }}>
+						<Icon name="alert" />
+						<div style={{ paddingLeft: "10px" }}>{props.headerError}</div>
+					</div>
+				</CardBanner>
+			)}
 			<CardBody>
 				<Header>
 					<AuthorInfo>
@@ -357,7 +374,7 @@ const BaseReview = (props: BaseReviewProps) => {
 						<Meta>
 							<MetaLabel>Changed Files</MetaLabel>
 							<MetaDescriptionForAssignees>
-								<ChangesetFileList review={review} />
+								<ChangesetFileList review={review} noOnClick={!props.canStartReview} />
 							</MetaDescriptionForAssignees>
 						</Meta>
 					)}
@@ -548,6 +565,9 @@ const ReviewForReview = (props: PropsWithReview) => {
 		};
 	}, shallowEqual);
 
+	const [canStartReview, setCanStartReview] = React.useState(false);
+	const [preconditionError, setPreconditionError] = React.useState("");
+
 	const tags = React.useMemo(
 		() => (review.tags ? mapFilter(review.tags, id => derivedState.teamTagsById[id]) : emptyArray),
 		[props.review, derivedState.teamTagsById]
@@ -568,6 +588,21 @@ const ReviewForReview = (props: PropsWithReview) => {
 	const changeRequests = useSelector((state: CodeStreamState) =>
 		getReviewChangeRequests(state, review)
 	);
+
+	React.useEffect(() => {
+		// don't check preconditions if we're looking at the collapsed version of the
+		// review (in the feed), but rather only when expanded (details view)
+		if (props.collapsed) return;
+
+		const checkPreconditions = async () => {
+			let response = await HostApi.instance.send(CheckReviewPreconditionsRequestType, {
+				reviewId: review.id
+			});
+			if (!response.success && response.error) setPreconditionError(response.error);
+			else setCanStartReview(true);
+		};
+		checkPreconditions();
+	}, [review]);
 
 	const renderFooter =
 		props.renderFooter ||
@@ -629,6 +664,8 @@ const ReviewForReview = (props: PropsWithReview) => {
 			reviewers={derivedState.reviewers}
 			currentUserId={derivedState.currentUser.id}
 			renderFooter={renderFooter}
+			headerError={preconditionError}
+			canStartReview={canStartReview}
 			renderMenu={
 				menuItems.length > 0
 					? (target, close) => <Menu target={target} action={close} items={menuItems} />

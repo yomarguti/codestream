@@ -1312,7 +1312,7 @@ export class Codemark extends React.Component<Props, State> {
 			>
 				<div className="contents">
 					{showStripedHeader && (
-						<div className="archived">
+						<div className="striped-header">
 							{// foo
 							// @ts-ignore
 							marker && marker.notLocatedReason && (

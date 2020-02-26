@@ -4,8 +4,8 @@ import { HostApi } from "../..";
 import { ReviewShowDiffRequestType } from "@codestream/protocols/webview";
 import { ChangesetFile } from "./ChangesetFile";
 
-export const ChangesetFileList = (props: { review: ReviewPlus }) => {
-	const { review } = props;
+export const ChangesetFileList = (props: { review: ReviewPlus; noOnClick?: boolean }) => {
+	const { review, noOnClick } = props;
 
 	const changedFiles = React.useMemo(() => {
 		const files: any[] = [];
@@ -14,6 +14,7 @@ export const ChangesetFileList = (props: { review: ReviewPlus }) => {
 				...changeset.modifiedFiles.map(f => (
 					<ChangesetFile
 						onClick={e => {
+							if (noOnClick) return;
 							e.preventDefault();
 							HostApi.instance.send(ReviewShowDiffRequestType, {
 								reviewId: review.id,
@@ -28,7 +29,7 @@ export const ChangesetFileList = (props: { review: ReviewPlus }) => {
 			);
 		}
 		return files;
-	}, [review]);
+	}, [review, noOnClick]);
 
 	return <>{changedFiles}</>;
 };
