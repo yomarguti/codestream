@@ -3,6 +3,8 @@ import { applyPatch } from "diff";
 import * as path from "path";
 import { MessageType } from "../api/apiProvider";
 import { SessionContainer } from "../container";
+import { git } from "../git/git";
+import { Logger } from "../logger";
 import {
 	FetchReviewsRequest,
 	FetchReviewsRequestType,
@@ -163,7 +165,13 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			}
 
 			const diffs = diffsByRepo[repoId];
-			const commit = await git.getCommit(repo.path, diffs.leftBaseSha);
+			let commit = await git.getCommit(repo.path, diffs.leftBaseSha);
+			if (commit == null) {
+				const didFetch = await git.fetchAllRemotes(repo.path);
+				if (didFetch) {
+					commit = await git.getCommit(repo.path, diffs.leftBaseSha);
+				}
+			}
 			if (commit == null) {
 				return {
 					success: false,

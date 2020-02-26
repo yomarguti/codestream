@@ -239,6 +239,20 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
+	async fetchAllRemotes(repoPath: string): Promise<boolean> {
+		try {
+			await git(
+				{ cwd: repoPath, env: { GIT_TERMINAL_PROMPT: "0" }, suppressErrors: true },
+				"fetch",
+				"--all"
+			);
+			return true;
+		} catch {
+			Logger.log("Could not fetch all remotes");
+			return false;
+		}
+	}
+
 	async getDiffBetweenCommits(
 		initialCommitHash: string,
 		finalCommitHash: string,
@@ -252,16 +266,10 @@ export class GitService implements IGitService, Disposable {
 		} catch (err) {
 			if (fetchIfCommitNotFound) {
 				Logger.log("Commit not found - fetching all remotes");
-				try {
-					await git(
-						{ cwd: dir, env: { GIT_TERMINAL_PROMPT: "0" }, suppressErrors: true },
-						"fetch",
-						"--all"
-					);
-				} catch {
-					Logger.log("Could not fetch all remotes");
+				const didFetch = await this.fetchAllRemotes(dir);
+				if (didFetch) {
+					return this.getDiffBetweenCommits(initialCommitHash, finalCommitHash, filePath, false);
 				}
-				return this.getDiffBetweenCommits(initialCommitHash, finalCommitHash, filePath, false);
 			}
 
 			Logger.error(err);
