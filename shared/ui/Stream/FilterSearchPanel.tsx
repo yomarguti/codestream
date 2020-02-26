@@ -291,7 +291,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 			text = text.replace(/\s*(is|type):issue\s*/, " ");
 		}
 		if (text.match(/\b(is|type):comment\b/)) {
-			filters.type = "issue";
+			filters.type = "comment";
 			text = text.replace(/\s*(is|type):comment\s*/, " ");
 		}
 		if (text.match(/\b(is|type):cr\b/)) {
