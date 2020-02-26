@@ -955,9 +955,16 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 			const newestCommitNotInReview = scm.commits[commits.length];
 			if (newestCommitNotInReview == null) {
-				leftBaseSha = baseSha;
-				leftBaseAuthor = (await git.getCommit(scm.repoPath, baseSha))!.author;
-				leftDiffs = [];
+				if (newestCommitInReview != null) {
+					const parent = await git.getCommit(scm.repoPath, newestCommitInReview.sha + "^");
+					leftBaseSha = parent!.ref;
+					leftBaseAuthor = parent!.author;
+					leftDiffs = [];
+				} else {
+					leftBaseSha = latestCommitSha;
+					leftBaseAuthor = (await git.getCommit(scm.repoPath, latestCommitSha))!.author;
+					leftDiffs = [];
+				}
 			} else if (newestCommitNotInReview.localOnly) {
 				leftBaseSha = baseSha;
 				leftBaseAuthor = (await git.getCommit(scm.repoPath, baseSha))!.author;
