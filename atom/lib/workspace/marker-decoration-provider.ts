@@ -207,8 +207,13 @@ export class MarkerDecorationProvider implements Disposable {
 
 		const decoration = gutter.decorateMarker(marker, { item });
 
+		const title =
+			docMarker.summary.length > 80
+				? `${docMarker.summary.substring(0, 80)}...`
+				: docMarker.summary;
+
 		const tooltip = atom.tooltips.add(img, {
-			title: `${docMarker.creatorName}: ${docMarker.summary}`,
+			title: `${docMarker.creatorName}: ${title}`,
 			placement: "right"
 		});
 
