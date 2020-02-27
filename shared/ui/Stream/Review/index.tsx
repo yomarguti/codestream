@@ -143,7 +143,9 @@ const ReviewTitle = styled.div`
 	font-size: larger;
 `;
 
-const Description = styled.div``;
+const Description = styled.div`
+	margin-bottom: 15px;
+`;
 
 const translateStatus = (status: string) => {
 	if (status === "closed") return "Approved";
@@ -193,7 +195,7 @@ const BaseReview = (props: BaseReviewProps) => {
 							e.preventDefault();
 						}}
 					>
-						View Details
+						Status: Open
 					</ActionButton>
 				);
 			else return;
@@ -342,12 +344,14 @@ const BaseReview = (props: BaseReviewProps) => {
 							)}
 						</MetaRow>
 					)}
-					<Meta>
-						<MetaLabel>Status</MetaLabel>
-						<MetaDescription>
-							<MarkdownText text={translateStatus(review.status)} />
-						</MetaDescription>
-					</Meta>
+					{false && (
+						<Meta>
+							<MetaLabel>Status</MetaLabel>
+							<MetaDescription>
+								<MarkdownText text={translateStatus(review.status)} />
+							</MetaDescription>
+						</Meta>
+					)}
 					{!props.collapsed && hasChangeRequests && (
 						<Meta>
 							<MetaLabel>Change Requests</MetaLabel>
@@ -427,8 +431,8 @@ const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 						<Icon
 							className="detail-icon"
 							title="You are following this review"
-							placement="bottomRight"
-							align={{ offset: [18, 4] }}
+							placement="bottomLeft"
+							align={{ offset: [-18, 4] }}
 							name="eye"
 						/>
 					</span>
@@ -439,14 +443,21 @@ const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 						<Tooltip
 							key={reviewer.id}
 							title={`${reviewer.username} is a reviewer`}
-							placement="bottomRight"
-							align={{ offset: [10, 4] }}
+							placement="bottom"
+							align={{ offset: [0, 4] }}
 						>
 							<span>
 								<Headshot person={reviewer} size={18} />
 							</span>
 						</Tooltip>
 					))}
+				{props.review.numReplies > 0 && (
+					<Tooltip title="Show replies" placement="bottom">
+						<span className="detail-icon">
+							<Icon name="comment" /> {props.review.numReplies}
+						</span>
+					</Tooltip>
+				)}
 			</MetaSectionCollapsed>
 		</>
 	);

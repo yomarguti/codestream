@@ -180,10 +180,7 @@ export const ActivityPanel = () => {
 					<ActivityWrapper key={record.id}>
 						<ActivityVerb time={record.createdAt}>
 							<Headshot size={24} person={person} />
-							<b>{person.username}</b> requested a code review in{" "}
-							<b>
-								<Icon name="repo" /> repo
-							</b>
+							<b>{person.username}</b> requested a review
 						</ActivityVerb>
 						<ActivityItem streamId={record.streamId} postId={record.postId}>
 							{({ className, post }) => (
@@ -452,5 +449,6 @@ const ActivityWrapper = styled.div`
 	}
 	time {
 		color: var(--text-color-subtle);
+		opacity: 0.5;
 	}
 `;
