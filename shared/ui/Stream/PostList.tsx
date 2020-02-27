@@ -266,7 +266,9 @@ export default infiniteLoadable(
 					{postsInOrder.map((post, index) => {
 						if (
 							this.props.skipParentPost &&
-							(!post.parentPostId || post.parentPostId === post.id)
+							(!post.parentPostId ||
+								post.parentPostId === post.id ||
+								post.id === this.props.threadId)
 						) {
 							return null;
 						}
