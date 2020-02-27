@@ -23,7 +23,7 @@ export const MarkdownText = styled(
 )`
 	white-space: normal;
 	text-overflow: initial;
-	overflow-y: auto; // A long code snippet can extend past the container and look weird
+	overflow-x: auto; // A long code snippet can extend past the container and look weird
 	p {
 		margin: 0;
 	}
