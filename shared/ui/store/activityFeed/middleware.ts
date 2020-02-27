@@ -24,7 +24,7 @@ export const activityFeedMiddleware = (
 				if (post.parentPostId != null) {
 					// ensure we have the parent post
 					store.dispatch(fetchPostForActivity(post.parentPostId, post.streamId));
-				} else if (post.codemark != null && !post.codemark.isChangeRequest) {
+				} else if (post.codemark != null && post.codemark.reviewId == null) {
 					store.dispatch(addNewActivity("codemark", [post.codemark]));
 				} else if (post.review != null) {
 					store.dispatch(addNewActivity("review", [post.review]));
@@ -32,6 +32,7 @@ export const activityFeedMiddleware = (
 			}
 		});
 	}
+
 	return next(action);
 };
 
