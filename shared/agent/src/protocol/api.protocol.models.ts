@@ -174,6 +174,7 @@ export interface CSReviewDiffs {
 	leftBaseAuthor: string;
 	leftBaseSha: string;
 	leftDiffs: ParsedDiff[];
+	rightBaseAuthor: string;
 	rightBaseSha: string;
 	rightDiffs: ParsedDiff[];
 	rightReverseDiffs: ParsedDiff[];

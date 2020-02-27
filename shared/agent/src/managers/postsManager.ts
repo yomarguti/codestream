@@ -984,10 +984,12 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			}
 
 			let rightBaseSha: string;
+			let rightBaseAuthor: string;
 			let rightDiffs: ParsedDiff[];
 			let rightReverseDiffs: ParsedDiff[];
 			if (!newestCommitInReview || newestCommitInReview.localOnly) {
 				rightBaseSha = baseSha;
+				rightBaseAuthor = (await git.getCommit(scm.repoPath, baseSha))!.author;
 				rightDiffs = (
 					await git.getDiffs(scm.repoPath, { includeSaved, includeStaged }, baseSha)
 				).filter(removeExcluded);
@@ -996,6 +998,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				).filter(removeExcluded);
 			} else {
 				rightBaseSha = newestCommitInReview.sha;
+				rightBaseAuthor = (await git.getCommit(scm.repoPath, newestCommitInReview.sha))!.author;
 				rightDiffs = (
 					await git.getDiffs(
 						scm.repoPath,
@@ -1037,6 +1040,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						leftBaseAuthor,
 						leftBaseSha,
 						leftDiffs,
+						rightBaseAuthor,
 						rightBaseSha,
 						rightDiffs,
 						rightReverseDiffs,

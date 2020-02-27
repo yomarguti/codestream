@@ -170,19 +170,29 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			}
 
 			const diffs = diffsByRepo[repoId];
-			let commit = await git.getCommit(repo.path, diffs.leftBaseSha);
-			if (commit == null) {
+			let leftCommit = await git.getCommit(repo.path, diffs.leftBaseSha);
+			let rightCommit = await git.getCommit(repo.path, diffs.rightBaseSha);
+			if (leftCommit == null || rightCommit == null) {
 				const didFetch = await git.fetchAllRemotes(repo.path);
 				if (didFetch) {
-					commit = await git.getCommit(repo.path, diffs.leftBaseSha);
+					leftCommit = leftCommit || (await git.getCommit(repo.path, diffs.leftBaseSha));
+					rightCommit = rightCommit || (await git.getCommit(repo.path, diffs.rightBaseSha));
 				}
 			}
-			if (commit == null) {
+
+			function missingCommitError(sha: string, author: string) {
 				return {
 					success: false,
-					error: `The base commit for this review (${diffs.leftBaseSha}, authored by ${diffs.leftBaseAuthor})
+					error: `A commit required to perform this review (${sha}, authored by ${author})
 was not found in the local git repository. Fetch all remotes and try again.`
 				};
+			}
+
+			if (leftCommit == null) {
+				return missingCommitError(diffs.leftBaseSha, diffs.leftBaseAuthor);
+			}
+			if (rightCommit == null) {
+				return missingCommitError(diffs.rightBaseSha, diffs.rightBaseAuthor);
 			}
 		}
 
