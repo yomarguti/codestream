@@ -460,7 +460,7 @@ export class WebviewController implements Disposable {
 		if (e.textEditor !== this._lastEditor) return;
 
 		const uri = e.textEditor.document.uri;
-		if (uri.scheme !== "file") return;
+		if (uri.scheme !== "file" && uri.scheme !== "codestream-diff") return;
 
 		webview.notify(HostDidChangeEditorVisibleRangesNotificationType, {
 			uri: uri.toString(),
