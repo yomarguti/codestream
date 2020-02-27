@@ -87,48 +87,57 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 				{codemark.status == "closed" && <div>This codemark is resolved.</div>}
 			</CardBanner>
 			<CardBody>
-				<Header>
-					<AuthorInfo>
-						<Headshot person={props.author} /> {props.author.username} {emote}
-						<StyledTimestamp time={codemark.createdAt} />
-					</AuthorInfo>
-					<HeaderActions>
-						{renderActions && codemark.type === CodemarkType.Issue && (
-							<ActionButton
-								onClick={e => {
-									e.preventDefault();
-									props.onChangeStatus &&
-										props.onChangeStatus(
-											codemark.status === CodemarkStatus.Open
-												? CodemarkStatus.Closed
-												: CodemarkStatus.Open
-										);
-								}}
-							>
-								{codemark.status === CodemarkStatus.Closed ? "Reopen" : "Resolve"}
-							</ActionButton>
-						)}
-						{renderedMenu}
-						{props.renderMenu && (
-							<KebabIcon
-								onClickCapture={e => {
-									e.preventDefault();
-									e.stopPropagation();
-									if (menuState.open) {
-										setMenuState({ open: false });
-									} else {
-										setMenuState({ open: true, target: e.currentTarget });
-									}
-								}}
-							>
-								<Icon name="kebab-vertical" className="clickable" />
-							</KebabIcon>
-						)}
-					</HeaderActions>
-				</Header>
-				<Title>
-					<MarkdownText text={codemark.title || codemark.text} />
-				</Title>
+				{!props.collapsed && (
+					<Header>
+						<AuthorInfo>
+							<Headshot person={props.author} /> {props.author.username} {emote}
+							<StyledTimestamp time={codemark.createdAt} />
+						</AuthorInfo>
+						<HeaderActions>
+							{renderActions && codemark.type === CodemarkType.Issue && (
+								<ActionButton
+									onClick={e => {
+										e.preventDefault();
+										props.onChangeStatus &&
+											props.onChangeStatus(
+												codemark.status === CodemarkStatus.Open
+													? CodemarkStatus.Closed
+													: CodemarkStatus.Open
+											);
+									}}
+								>
+									{codemark.status === CodemarkStatus.Closed ? "Reopen" : "Resolve"}
+								</ActionButton>
+							)}
+							{renderedMenu}
+							{props.renderMenu && (
+								<KebabIcon
+									onClickCapture={e => {
+										e.preventDefault();
+										e.stopPropagation();
+										if (menuState.open) {
+											setMenuState({ open: false });
+										} else {
+											setMenuState({ open: true, target: e.currentTarget });
+										}
+									}}
+								>
+									<Icon name="kebab-vertical" className="clickable" />
+								</KebabIcon>
+							)}
+						</HeaderActions>
+					</Header>
+				)}
+				{props.collapsed && codemark.type === "issue" ? (
+					<BigTitle>
+						<Icon name="issue" />
+						<MarkdownText text={codemark.title || codemark.text} />
+					</BigTitle>
+				) : (
+					<Title>
+						<MarkdownText text={codemark.title || codemark.text} />
+					</Title>
+				)}
 				{!props.collapsed && (
 					<>
 						<MetaSection>
@@ -332,6 +341,17 @@ export const StyledTimestamp = styled(Timestamp)`
 
 export const Title = styled.div`
 	margin-bottom: 10px;
+`;
+
+export const BigTitle = styled.div`
+	font-size: larger;
+	margin-bottom: 10px;
+	display: flex;
+	.icon {
+		display: inline-block;
+		transform: scale(1.25);
+		padding: 3px 8px 3px 3px;
+	}
 `;
 
 export const Meta = styled.div`

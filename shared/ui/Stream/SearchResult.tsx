@@ -21,13 +21,6 @@ const RootTR = styled.tr`
 	&.archived td {
 		opacity: 0.5;
 	}
-	.title {
-		cursor: pointer;
-		font-size: larger;
-	}
-	.details {
-		opacity: 0.5;
-	}
 	p {
 		display: inline;
 		margin: 0;
@@ -79,17 +72,27 @@ const RootTR = styled.tr`
 	}
 `;
 
-const Title = styled.div`
+export const HeaderRow = styled.div`
+	display: flex;
+	:nth-child(1) .icon {
+		display: inline-block;
+		transform: scale(1.25);
+		padding: 3px 8px 3px 3px;
+		height: 16px;
+	}
+`;
+
+export const Title = styled.div`
 	p {
 		display: inline;
 		margin: 0;
 	}
-	.title {
-		font-size: larger;
-	}
-	.details {
-		opacity: 0.5;
-	}
+	font-size: larger;
+	cursor: pointer;
+`;
+
+export const TitleDetails = styled.div`
+	opacity: 0.5;
 `;
 
 const Tip = styled.div`
@@ -183,23 +186,22 @@ export default function SearchResult(props: Props) {
 
 	const title = (
 		<Tooltip title={titleTip} placement="top" delay={1}>
-			<Title>
-				<div className="title">
+			<>
+				<Title>
 					<span dangerouslySetInnerHTML={{ __html: titleHTML }} />
 					&nbsp;
 					{(result.tags || []).map(tagId => {
 						const tag = derivedState.teamTagsHash[tagId];
 						return tag ? <Tag tag={tag} /> : null;
 					})}
-				</div>
-
-				<div className="details">
+				</Title>
+				<TitleDetails>
 					{createdVerb} <Timestamp relative time={result.createdAt} /> by{" "}
 					{derivedState.usernames[result.creatorId]}{" "}
 					{result.status && <>&middot; {result.status} </>}
 					{isArchived && <>&middot; archived </>}
-				</div>
-			</Title>
+				</TitleDetails>
+			</>
 		</Tooltip>
 	);
 

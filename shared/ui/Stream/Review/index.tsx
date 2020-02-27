@@ -67,6 +67,7 @@ import { Link } from "../Link";
 import { MarkdownText } from "../MarkdownText";
 import { Dispatch } from "@codestream/webview/store/common";
 import { Loading } from "@codestream/webview/Container/Loading";
+import Timestamp from "../Timestamp";
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
@@ -112,10 +113,37 @@ const MetaRepoInfo = styled.div`
 
 const RepoInfo = styled.div`
 	display: flex;
-	*:first-child {
+	.icon {
 		margin-right: 5px;
 	}
+	.icon:not(:first-child) {
+		margin-left: 20px;
+	}
 `;
+
+const ExpandedAuthor = styled.div`
+	width: 100%;
+	margin-bottom: 8px;
+	opacity: 0.5;
+`;
+
+const ReviewHeader = styled.div`
+	width: 100%;
+	margin-bottom: 8px;
+	display: flex;
+	font-size: 13px;
+	.icon.type {
+		display: inline-block;
+		transform: scale(1.25);
+		padding: 3px 8px 3px 3px;
+	}
+`;
+
+const ReviewTitle = styled.div`
+	font-size: larger;
+`;
+
+const Description = styled.div``;
 
 const translateStatus = (status: string) => {
 	if (status === "closed") return "Approved";
@@ -256,21 +284,31 @@ const BaseReview = (props: BaseReviewProps) => {
 				</CardBanner>
 			)}
 			<CardBody>
-				<Header>
-					<AuthorInfo>
-						<Headshot person={props.author} /> {props.author.username}{" "}
-						<StyledTimestamp time={props.review.createdAt} />
-					</AuthorInfo>
+				<ReviewHeader>
+					<Icon name="review" className="type" />
+					<ReviewTitle>
+						<MarkdownText text={review.title} />
+					</ReviewTitle>
 					<HeaderActions>
 						{renderedHeaderActions}
 						{renderedMenu}
 						{kebabIcon}
 					</HeaderActions>
-				</Header>
-				<Title>
-					<MarkdownText text={review.title} />
-				</Title>
+				</ReviewHeader>
+
+				{!props.collapsed && (
+					<ExpandedAuthor>
+						Opened <Timestamp relative={true} time={props.review.createdAt} /> by{" "}
+						{props.author.username}
+					</ExpandedAuthor>
+				)}
+
 				<MetaSection>
+					{props.review.text && (
+						<Description>
+							<MarkdownText text={props.review.text} />
+						</Description>
+					)}
 					{!props.collapsed && (hasTags || hasReviewers) && (
 						<MetaRow>
 							{hasTags && (
@@ -303,15 +341,6 @@ const BaseReview = (props: BaseReviewProps) => {
 								</Meta>
 							)}
 						</MetaRow>
-					)}
-					{props.review.text && (
-						<Meta>
-							<MetaLabel>Description</MetaLabel>
-							<MetaDescription>
-								<Icon name="description" />
-								<MarkdownText text={props.review.text} />
-							</MetaDescription>
-						</Meta>
 					)}
 					<Meta>
 						<MetaLabel>Status</MetaLabel>
@@ -350,23 +379,23 @@ const BaseReview = (props: BaseReviewProps) => {
 							</MetaDescriptionForAssignees>
 						</Meta>
 					)}
-					<Meta>
-						<MetaLabel>Repositories</MetaLabel>
-						<MetaDescription>
-							<MetaDescriptionForAssignees>
-								{props.repoInfo.map(r => (
-									<MetaRepoInfo key={r.repoName}>
-										<RepoInfo>
-											<Icon name="repo" /> {r.repoName}
-										</RepoInfo>
-										<RepoInfo>
-											<Icon name="git-branch" /> {r.branch}
-										</RepoInfo>
-									</MetaRepoInfo>
-								))}
-							</MetaDescriptionForAssignees>
-						</MetaDescription>
-					</Meta>
+					{!props.collapsed && (
+						<Meta>
+							<MetaLabel>Repository</MetaLabel>
+							<MetaDescription>
+								<MetaDescriptionForAssignees>
+									{props.repoInfo.map(r => (
+										<MetaRepoInfo key={r.repoName}>
+											<RepoInfo>
+												<Icon name="repo" /> {r.repoName}
+												<Icon name="git-branch" /> {r.branch}
+											</RepoInfo>
+										</MetaRepoInfo>
+									))}
+								</MetaDescriptionForAssignees>
+							</MetaDescription>
+						</Meta>
+					)}
 					{!props.collapsed && (
 						<Meta>
 							<MetaLabel>Changed Files</MetaLabel>

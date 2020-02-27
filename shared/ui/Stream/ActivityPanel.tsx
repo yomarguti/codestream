@@ -1,8 +1,7 @@
-import React from "react";
+import React, { PropsWithChildren } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
-import Headshot from "./Headshot";
 import Timestamp from "./Timestamp";
 import * as codemarkSelectors from "../store/codemarks/reducer";
 import * as userSelectors from "../store/users/reducer";
@@ -36,29 +35,11 @@ import { Review } from "./Review";
 import { saveReviews } from "../store/reviews/actions";
 import { Reply } from "./Posts/Reply";
 import { LoadingMessage } from "../src/components/LoadingMessage";
+import { Headshot } from "../src/components/Headshot";
+import { Card } from "../src/components/Card";
 
 // see comment in SmartFormattedList.tsx
 const FormattedPluralAlias = FormattedPlural as any;
-
-const ActivityWrapper = styled.div`
-	// tag: codemark-width
-	margin: 5px 20px 20px 20px;
-	> time,
-	> .activity {
-		display: block;
-		margin-bottom: 20px !important;
-		text-align: center;
-		.details {
-		}
-	}
-	.emote {
-		font-weight: normal;
-		padding-left: 4px;
-	}
-	.codemark-details {
-		margin-bottom: 5px;
-	}
-`;
 
 const EmptyMessage = styled.div`
 	height: 100%;
@@ -131,23 +112,20 @@ export const ActivityPanel = () => {
 	});
 
 	const renderActivity = () => {
-		let counter = 0;
-		const demoMode = false;
-		const dave = { username: "dave", fullName: "David Hersh" };
-		const akon = { username: "akonwi", fullName: "Akonwi Ngoh", email: "akonwi@codestream.com" };
-
 		if (derivedState.activity.length === 0 && !derivedState.hasMoreActivity) {
 			return (
 				<EmptyMessage>
 					<p>
-						The activity feed will let you know when your teammates create codemarks, or add
-						replies.
+						The activity feed will let you know when your teammates create codemarks, assign issues,
+						request reviews, or add replies.
 					</p>
 				</EmptyMessage>
 			);
 		}
 
 		return derivedState.activity.map(({ type, record }) => {
+			const person = derivedState.users[record.creatorId || ""];
+
 			if (type === "codemark") {
 				const codemark = record as CodemarkPlus;
 				if (
@@ -156,52 +134,13 @@ export const ActivityPanel = () => {
 				)
 					return null;
 
-				return [
-					demoMode && counter == 2 ? (
-						<ActivityWrapper key={counter}>
-							<div className="codemark inline">
-								<div className="contents">
-									<div className="body">
-										<div className="header" style={{ margin: 0 }}>
-											<div className="author">
-												<Headshot person={dave} />
-												dave <span className="emote">joined CodeStream</span>
-												<Timestamp time={codemark.createdAt} />
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</ActivityWrapper>
-					) : null,
-					demoMode && counter == 3 ? (
-						<ActivityWrapper key={counter}>
-							<div className="codemark inline">
-								<div className="contents">
-									<div className="body">
-										<div className="header">
-											<div className="author">
-												<Headshot person={akon} />
-												akon <span className="emote"> created </span> &nbsp;{" "}
-												<Icon name="git-branch" />
-												<span className="monospace" style={{ paddingLeft: "5px" }}>
-													feature/sharing
-												</span>
-												<Timestamp time={codemark.createdAt} />
-											</div>
-										</div>
-										<div className="right" style={{ margin: "10px 0 0 0" }}>
-											<div className="codemark-actions-button">Checkout</div>
-											<div className="codemark-actions-button">Open on GitHub</div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</ActivityWrapper>
-					) : null,
+				return (
 					<ActivityWrapper key={codemark.id}>
-						{/* <Timestamp dateOnly={true} time={codemark.createdAt} /> */}
-						{demoMode && counter == 5 && <Timestamp dateOnly={true} time={codemark.createdAt} />}
+						<ActivityVerb time={codemark.createdAt}>
+							<Headshot size={24} person={person} />
+							<b>{person.username} </b>
+							{codemark.type === "issue" ? " opened an issue " : ""}
+						</ActivityVerb>
 						<ActivityItem streamId={codemark.streamId} postId={codemark.postId}>
 							{({ className, isUnread, post }) => (
 								// @ts-ignore because typescript isn't handling the union props well
@@ -233,12 +172,19 @@ export const ActivityPanel = () => {
 							)}
 						</ActivityItem>
 					</ActivityWrapper>
-				];
+				);
 			}
 
 			if (type === "review") {
 				return (
 					<ActivityWrapper key={record.id}>
+						<ActivityVerb time={record.createdAt}>
+							<Headshot size={24} person={person} />
+							<b>{person.username}</b> requested a code review in{" "}
+							<b>
+								<Icon name="repo" /> repo
+							</b>
+						</ActivityVerb>
 						<ActivityItem streamId={record.streamId} postId={record.postId}>
 							{({ className, post }) => (
 								<Review
@@ -347,7 +293,16 @@ const ActivityItemWrapper = styled(
 		${StyledReply} { border-left: none; }
 		`
 			: ""}
+	margin-left: 30px;
 `;
+
+const ActivityVerb = (props: PropsWithChildren<{ time: number }>) => {
+	return (
+		<div className="activity-verb">
+			{props.children} <Timestamp relative={true} time={props.time} />
+		</div>
+	);
+};
 
 /*
 	For each activity, given postId + streamId, this component will look up the post
@@ -447,7 +402,7 @@ const RepliesForActivity = (props: { parentPost?: PostPlus; pinnedReplies?: stri
 
 	if (derivedState.numberOfReplies === 0) return null;
 
-	if (derivedState.unreadReplies.length === 0) return <SeeReplies>See replies</SeeReplies>;
+	if (derivedState.unreadReplies.length === 0) return null; //<SeeReplies>See replies</SeeReplies>;
 
 	const otherReplyCount = derivedState.numberOfReplies - derivedState.unreadReplies.length;
 
@@ -471,3 +426,31 @@ const RepliesForActivity = (props: { parentPost?: PostPlus; pinnedReplies?: stri
 		</>
 	);
 };
+
+const ActivityWrapper = styled.div`
+	// tag: codemark-width
+	margin: 5px 20px 30px 20px;
+	.codemark-details {
+		margin-bottom: 5px;
+	}
+	.activity-verb {
+		margin: 5px 0 10px 0;
+		${Headshot} {
+			display: inline-block;
+			margin-right: 8px;
+			margin-left: 0;
+			vertical-align: -8px;
+		}
+		b {
+			font-weight: normal;
+			color: var(--text-color-highlight);
+		}
+		color: var(--text-color-subtle);
+		.icon {
+			vertical-align: -2px;
+		}
+	}
+	time {
+		color: var(--text-color-subtle);
+	}
+`;
