@@ -111,13 +111,16 @@ export const getPostsForStream = createSelector(
 export const getThreadPosts = createSelector(
 	getPostsForStream,
 	(_, __, threadId: string) => threadId,
-	(posts, threadId) => {
+	(_, __, ___, excludePending?: boolean) => (excludePending != null ? excludePending : false),
+	(posts, threadId, excludePending) => {
 		const result: Post[] = [];
 
 		// HACK: 💩 don't keep this around
 		// if replying to a reply, we need to include nested replies in the thread
 		for (let post of posts) {
+			if (excludePending && isPending(post)) continue;
 			if (post.parentPostId === threadId) result.push(post);
+			// if this post is a reply to one of the replies already seen, include it too
 			else if (result.find(p => p.id === post.parentPostId)) result.push(post);
 		}
 

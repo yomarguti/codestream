@@ -14,6 +14,7 @@ import Menu from "../Menu";
 import MessageInput from "../MessageInput";
 import Button from "../Button";
 import { groupBy } from "lodash-es";
+import { Dispatch } from "@codestream/webview/store/common";
 
 const ComposeWrapper = styled.div.attrs(() => ({
 	className: "compose codemark-compose"
@@ -31,10 +32,10 @@ const InlineMessageContainer = styled.div`
 export const RepliesToPostContext = React.createContext({ setReplyingToPostId(postId: string) {} });
 
 export const RepliesToPost = (props: { streamId: string; parentPostId: string }) => {
-	const dispatch = useDispatch();
+	const dispatch = useDispatch<Dispatch>();
 	const currentUserId = useSelector((state: CodeStreamState) => state.session.userId!);
 	const replies = useSelector((state: CodeStreamState) =>
-		getThreadPosts(state, props.streamId, props.parentPostId)
+		getThreadPosts(state, props.streamId, props.parentPostId, true)
 	);
 	const nestedRepliesByParent = React.useMemo(() => {
 		const nestedReplies = replies.filter(r => r.parentPostId !== props.parentPostId);
@@ -56,7 +57,6 @@ export const RepliesToPost = (props: { streamId: string; parentPostId: string })
 		if (newReplyText.length === 0) return;
 
 		setIsLoading(true);
-		// ignore the typescript warning that `await` isn't necessary below
 		await dispatch(
 			createPost(
 				props.streamId,

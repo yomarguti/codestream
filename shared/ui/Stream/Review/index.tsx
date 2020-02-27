@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import cx from "classnames";
 import {
 	CardBody,
@@ -7,11 +7,7 @@ import {
 	CardFooter,
 	CardBanner
 } from "@codestream/webview/src/components/Card";
-import {
-	GetReviewRequestType,
-	CodemarkPlus,
-	CheckReviewPreconditionsRequestType
-} from "@codestream/protocols/agent";
+import { CodemarkPlus, CheckReviewPreconditionsRequestType } from "@codestream/protocols/agent";
 import {
 	MinimumWidthCard,
 	Header,
@@ -40,7 +36,7 @@ import Tooltip from "../Tooltip";
 import { capitalize, replaceHtml, emptyArray, mapFilter } from "@codestream/webview/utils";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "../..";
-import { saveReviews, deleteReview, fetchReview } from "@codestream/webview/store/reviews/actions";
+import { deleteReview, fetchReview } from "@codestream/webview/store/reviews/actions";
 import {
 	setActiveReview,
 	setCurrentReview,
@@ -427,7 +423,7 @@ const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 };
 
 const ReplyInput = (props: { parentPostId: string; streamId: string }) => {
-	const dispatch = useDispatch();
+	const dispatch = useDispatch<Dispatch>();
 	const [text, setText] = React.useState("");
 	const [isChangeRequest, setIsChangeRequest] = React.useState(false);
 	const [isLoading, setIsLoading] = React.useState(false);
@@ -439,7 +435,6 @@ const ReplyInput = (props: { parentPostId: string; streamId: string }) => {
 
 		setIsLoading(true);
 		if (isChangeRequest) {
-			// ignore the typescript warning that `await` isn't necessary below
 			await dispatch(
 				createCodemark({
 					text: replaceHtml(text)!,
@@ -453,7 +448,6 @@ const ReplyInput = (props: { parentPostId: string; streamId: string }) => {
 				})
 			);
 		} else {
-			// ignore the typescript warning that `await` isn't necessary below
 			await dispatch(
 				createPost(
 					props.streamId,
