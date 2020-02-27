@@ -3,7 +3,7 @@ import { CSUser } from "@codestream/protocols/api";
 import { PostPlus } from "@codestream/protocols/agent";
 import React from "react";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
-import { StyledTimestamp, KebabIcon, StyledMarker } from "../Codemark/BaseCodemark";
+import { StyledTimestamp, KebabIcon } from "../Codemark/BaseCodemark";
 import Icon from "../Icon";
 import { getCodemark } from "@codestream/webview/store/codemarks/reducer";
 import { CodeStreamState } from "@codestream/webview/store";
@@ -15,6 +15,7 @@ import { deletePost } from "../actions";
 import { RepliesToPostContext } from "./RepliesToPost";
 import { getPost } from "@codestream/webview/store/posts/reducer";
 import { MarkdownText } from "../MarkdownText";
+import MarkerActions from '../MarkerActions';
 
 export interface ReplyProps {
 	author: Partial<CSUser>;
@@ -51,13 +52,6 @@ const Root = styled.div`
 		font-weight: 700;
 	}
 
-	${StyledMarker} {
-		margin-left: 25px;
-		.internal-link {
-			text-decoration: none;
-		}
-	}
-
 	${KebabIcon} {
 		visibility: hidden;
 	}
@@ -78,6 +72,29 @@ const ParentPreview = styled.span`
 
 const ReplyText = styled(MarkdownText)`
 	margin-left: 23px;
+`;
+
+const ReviewMarkerActionsWrapper = styled.div`
+	margin-left: 13px;
+	.code {
+		margin: 5px 0 !important;
+	}
+	.file-info {
+		font-size: 11px;
+		display: flex;
+		flex-flow: row wrap;
+	}
+	.file-info .monospace {
+		display: block;
+		white-space: nowrap;
+	}
+	.icon {
+		vertical-align: 2px;
+	}
+
+	.internal-link {
+		text-decoration: none;
+	}
 `;
 
 export const Reply = (props: ReplyProps) => {
@@ -113,7 +130,26 @@ export const Reply = (props: ReplyProps) => {
 	const markers = (() => {
 		if (codemark == null || codemark.markers == null || codemark.markers.length === 0) return;
 
-		return codemark.markers.map(marker => <StyledMarker key={marker.id} marker={marker} />);
+		const numMarkers = codemark.markers.length;
+		// not allowing any of the capabilities (they default to off anyway)
+		const capabilities: any = {};
+		return codemark.markers.map((marker, index) => 
+			<ReviewMarkerActionsWrapper>
+				<MarkerActions
+					key={marker.id}
+					codemark={codemark} 
+					marker={marker}
+					capabilities={capabilities}
+					isAuthor={false}
+					alwaysRenderCode={true}
+					markerIndex={index}
+					numMarkers={numMarkers}
+					jumpToMarker={false}
+					selected={true}
+					disableDiffCheck={true}
+				/>
+			</ReviewMarkerActionsWrapper>
+		);
 	})();
 
 	return (

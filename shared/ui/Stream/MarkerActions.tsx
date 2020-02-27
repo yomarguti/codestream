@@ -60,6 +60,7 @@ interface InheritedProps {
 	jumpToMarker?: boolean;
 	jumpToMarkerId?: string;
 	selected: boolean;
+	disableDiffCheck?: boolean
 }
 
 type Props = InheritedProps & ConnectedProps & IntlProps;
@@ -121,6 +122,7 @@ class MarkerActions extends React.Component<Props, State> {
 	}
 
 	private startCheckingDiffs() {
+		if (this.props.disableDiffCheck) return;
 		if (!this._mounted || this._pollingTimer !== undefined) return;
 
 		this._pollingTimer = setInterval(() => {
@@ -131,6 +133,7 @@ class MarkerActions extends React.Component<Props, State> {
 	}
 
 	private stopCheckingDiffs() {
+		if (this.props.disableDiffCheck) return;
 		if (this._pollingTimer === undefined) return;
 
 		clearInterval(this._pollingTimer);

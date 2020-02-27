@@ -8,7 +8,8 @@ import Icon from "./Icon";
 import { CodeStreamState } from "../store";
 import { getById } from "../store/repos/reducer";
 import { HostApi } from "../webview-api";
-import { setQuery, setCurrentCodemark } from "../store/context/actions";
+import { setQuery, setCurrentCodemark, openPanel, setCurrentReview } from "../store/context/actions";
+import { WebviewPanels } from '@codestream/protocols/webview';
 
 interface Props {
 	marker: CSMarker;
@@ -23,7 +24,10 @@ function Marker(props: Props) {
 	const goSearch = (e: React.SyntheticEvent, query: string) => {
 		e.preventDefault();
 		e.stopPropagation();
+
 		dispatch(setCurrentCodemark());
+		dispatch(setCurrentReview());
+		dispatch(openPanel(WebviewPanels.FilterSearch));
 		dispatch(setQuery(query));
 	};
 
