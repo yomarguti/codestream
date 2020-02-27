@@ -1743,13 +1743,9 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		return unknownAuthor;
 	})();
 
-	const parentPost =
-		codemark != null && codemark.parentPostId
-			? getPost(posts, codemark.streamId, codemark.parentPostId)
-			: null;
 	const review =
-		parentPost != null && parentPost.reviewId
-			? getReview(state.reviews, parentPost.reviewId)
+		codemark != null && codemark.reviewId != null
+			? getReview(state.reviews, codemark.reviewId)
 			: undefined;
 
 	return {
