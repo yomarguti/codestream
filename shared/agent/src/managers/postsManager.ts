@@ -655,7 +655,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					reviewsManager.cacheSet(object);
 					reviews.push(object);
 				} else {
-					if (object.isChangeRequest) return;
+					if (object.reviewId != null) return;
 					codemarksManager.cacheSet(object);
 					codemarks.push({
 						...object,
