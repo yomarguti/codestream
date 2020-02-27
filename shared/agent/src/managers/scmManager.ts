@@ -236,6 +236,7 @@ export class ScmManager {
 		let stagedFiles: string[] = [];
 		let savedFiles: string[] = [];
 		let modifiedFiles: {
+			oldFile: string;
 			file: string;
 			linesAdded: number;
 			linesRemoved: number;
@@ -318,6 +319,7 @@ export class ScmManager {
 								} else {
 									if (ret[file] === FileStatus.deleted) {
 										modifiedFiles?.unshift({
+											oldFile: file,
 											file,
 											linesAdded: 0,
 											linesRemoved: 0,
@@ -325,6 +327,7 @@ export class ScmManager {
 										});
 									} else {
 										modifiedFiles?.push({
+											oldFile: file,
 											file,
 											linesAdded: 0,
 											linesRemoved: 0,

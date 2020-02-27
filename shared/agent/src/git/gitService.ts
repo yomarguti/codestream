@@ -786,7 +786,15 @@ export class GitService implements IGitService, Disposable {
 		includeSaved: boolean,
 		includeStaged: boolean,
 		ref?: string
-	): Promise<{ file: string; linesAdded: number; linesRemoved: number; status: FileStatus }[]> {
+	): Promise<
+		{
+			oldFile: string;
+			file: string;
+			linesAdded: number;
+			linesRemoved: number;
+			status: FileStatus;
+		}[]
+	> {
 		try {
 			// files changed, lines added & deleted
 			// git diff --numstat --summary
@@ -805,6 +813,7 @@ export class GitService implements IGitService, Disposable {
 			if (!data) return [];
 
 			const ret: {
+				oldFile: string;
 				file: string;
 				linesAdded: number;
 				linesRemoved: number;
@@ -814,14 +823,16 @@ export class GitService implements IGitService, Disposable {
 				.trim()
 				.split("\n")
 				.forEach(line => {
-					const lineData = line.match(/^(\d+)\s+(\d+)\s+(\S*)/);
+					const lineData = line.match(/^(\d+)\s+(\d+)\s+(.+)/);
 
 					if (lineData && lineData[3]) {
 						if (!lineData[3].endsWith("/")) {
+							const { oldFile, file } = this._getOldAndNewFileNamesFromDiffPath(lineData[3]);
 							ret.push({
 								linesAdded: parseInt(lineData[1], 10),
 								linesRemoved: parseInt(lineData[2], 10),
-								file: lineData[3],
+								oldFile,
+								file,
 								status: FileStatus.modified
 							});
 						}
@@ -830,6 +841,22 @@ export class GitService implements IGitService, Disposable {
 			return ret;
 		} catch {
 			return [];
+		}
+	}
+
+	private _getOldAndNewFileNamesFromDiffPath(diffPath: string) {
+		const match = /(.+)\{(.+)\s=>\s(.+)}/.exec(diffPath);
+		if (match == null) {
+			return {
+				oldFile: diffPath,
+				file: diffPath
+			};
+		} else {
+			const [, base, oldSuffix, newSuffix] = match;
+			return {
+				oldFile: base + oldSuffix,
+				file: base + newSuffix
+			};
 		}
 	}
 

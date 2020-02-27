@@ -103,26 +103,31 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		const review = await this.getById(request.reviewId);
 		const changeset = review.reviewChangesets.find(c => c.repoId === request.repoId);
 		if (!changeset) throw new Error(`Could not find changeset with repoId ${request.repoId}`);
+		const fileInfo = changeset.modifiedFiles.find(f => f.file === request.path);
+		if (!fileInfo) throw new Error(`Could not find changeset file information for ${request.path}`);
 
 		const diffs = await this.getDiffs(request.reviewId, request.repoId);
-		const leftDiff = diffs.leftDiffs.find(d => d.newFileName === request.path);
-		const rightDiff = diffs.rightDiffs?.find(d => d.newFileName === request.path);
+		const leftDiff = diffs.leftDiffs.find(d => d.newFileName === fileInfo.oldFile);
+		const leftBaseRelativePath = leftDiff ? leftDiff.oldFileName : fileInfo.oldFile;
+		const rightDiff = diffs.rightDiffs?.find(d => d.newFileName === fileInfo.file);
+		const rightBaseRelativePath = rightDiff ? rightDiff.oldFileName : fileInfo.file;
 
 		const repo = await git.getRepositoryById(request.repoId);
 		if (!repo) {
 			throw new Error(`Could not load repo with ID ${request.repoId}`);
 		}
 
-		const filePath = path.join(repo.path, request.path);
+		const leftBasePath = path.join(repo.path, leftBaseRelativePath);
+		const rightBasePath = path.join(repo.path, rightBaseRelativePath);
 
 		const leftBaseContents =
-			(await git.getFileContentForRevision(filePath, diffs.leftBaseSha)) || "";
+			(await git.getFileContentForRevision(leftBasePath, diffs.leftBaseSha)) || "";
 		const leftContents =
 			leftDiff !== undefined ? applyPatch(leftBaseContents, leftDiff) : leftBaseContents;
 		const rightBaseContents =
 			diffs.leftBaseSha === diffs.rightBaseSha
 				? leftBaseContents
-				: (await git.getFileContentForRevision(filePath, diffs.rightBaseSha)) || "";
+				: (await git.getFileContentForRevision(rightBasePath, diffs.rightBaseSha)) || "";
 		const rightContents =
 			rightDiff !== undefined ? applyPatch(rightBaseContents, rightDiff) : rightBaseContents;
 

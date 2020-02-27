@@ -76,7 +76,7 @@ export interface CSCodemark extends CSEntity {
 	followerIds?: string[];
 
 	// review this codemark is in reply to
-	reviewId?: string; 
+	reviewId?: string;
 }
 
 export interface CSMarkerIdentifier {
@@ -163,6 +163,7 @@ export enum FileStatus {
 }
 
 export interface ReviewChangesetFileInfo {
+	oldFile: string;
 	file: string;
 	linesAdded: number;
 	linesRemoved: number;

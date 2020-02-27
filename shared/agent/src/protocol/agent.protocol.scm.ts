@@ -90,6 +90,7 @@ export interface RepoScmStatus {
 	branch?: string;
 	commits?: { sha: string; info: {}; localOnly: boolean }[];
 	modifiedFiles: {
+		oldFile: string;
 		file: string;
 		linesAdded: number;
 		linesRemoved: number;
