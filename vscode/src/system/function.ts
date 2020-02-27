@@ -127,7 +127,7 @@ export namespace Functions {
 		let pending = false;
 
 		const debounced = _debounce(
-			(function (this: any, ...args: any[]) {
+			(function(this: any, ...args: any[]) {
 				pending = false;
 				return fn.apply(this, args);
 			} as any) as T,
@@ -135,18 +135,18 @@ export namespace Functions {
 			options
 		) as T & IDeferrable;
 
-		const tracked = (function (this: any, ...args: any[]) {
+		const tracked = (function(this: any, ...args: any[]) {
 			pending = true;
 			return debounced.apply(this, args);
 		} as any) as T & IDeferrable;
 
-		tracked.pending = function () {
+		tracked.pending = function() {
 			return pending;
 		};
-		tracked.cancel = function () {
+		tracked.cancel = function() {
 			return debounced.cancel.apply(debounced);
 		};
-		tracked.flush = function (...args: any[]) {
+		tracked.flush = function(...args: any[]) {
 			return debounced.flush.apply(debounced, args);
 		};
 
@@ -163,7 +163,7 @@ export namespace Functions {
 		let context: any;
 
 		const debounced = debounce<T>(
-			function () {
+			function() {
 				const data = merged;
 				merged = undefined;
 
@@ -179,7 +179,7 @@ export namespace Functions {
 			options
 		);
 
-		return function (this: any, current: any) {
+		return function(this: any, current: any) {
 			context = this;
 			merged = merger.apply(context, [merged, current]);
 			return debounced();

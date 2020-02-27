@@ -83,14 +83,7 @@ module.exports = {
 		"prefer-const": "warn",
 		"prefer-template": "warn",
 		"quote-props": ["warn", "as-needed"],
-		"space-before-function-paren": [
-			"warn",
-			{
-				anonymous: "always",
-				named: "never",
-				asyncArrow: "always"
-			}
-		],
+		"space-before-function-paren": "off",
 		"spaced-comment": "error",
 		"use-isnan": "error",
 		"@typescript-eslint/tslint/config": [

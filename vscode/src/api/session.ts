@@ -630,13 +630,13 @@ function createMergableDebouncedEvent<E extends MergeableEvent<SessionChangedEve
 function signedIn(target: CodeStreamSession, propertyName: string, descriptor: any) {
 	if (typeof descriptor.value === "function") {
 		const method = descriptor.value;
-		descriptor.value = function (this: CodeStreamSession, ...args: any[]) {
+		descriptor.value = function(this: CodeStreamSession, ...args: any[]) {
 			if (!this.signedIn) throw new Error("Not Logged In");
 			return method!.apply(this, args);
 		};
 	} else if (typeof descriptor.get === "function") {
 		const get = descriptor.get;
-		descriptor.get = function (this: CodeStreamSession, ...args: any[]) {
+		descriptor.get = function(this: CodeStreamSession, ...args: any[]) {
 			if (!this.signedIn) throw new Error("Not Logged In");
 			return get!.apply(this, args);
 		};
