@@ -66,6 +66,7 @@ import { getReviewChangeRequests } from "@codestream/webview/store/codemarks/red
 import { Link } from "../Link";
 import { MarkdownText } from "../MarkdownText";
 import { Dispatch } from "@codestream/webview/store/common";
+import { Loading } from "@codestream/webview/Container/Loading";
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
@@ -697,11 +698,14 @@ const ReviewForId = (props: PropsWithId) => {
 
 	if (notFound) return <MinimumWidthCard>This review was not found</MinimumWidthCard>;
 
-	return (
-		<DelayedRender>
-			{review != null && <ReviewForReview review={review} {...otherProps} />}
-		</DelayedRender>
-	);
+	if (review == null)
+		return (
+			<DelayedRender>
+				<Loading />
+			</DelayedRender>
+		);
+
+	return <ReviewForReview review={review} {...otherProps} />;
 };
 
 export const Review = (props: ReviewProps) => {
