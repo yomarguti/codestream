@@ -683,9 +683,8 @@ export const fetchThread = (streamId: string, parentPostId: string) => async dis
 			streamId,
 			postId: parentPostId
 		});
-		dispatch(postsActions.addPostsForStream(streamId, posts));
 		codemarks && dispatch(saveCodemarks(codemarks));
-		return posts;
+		return dispatch(postsActions.addPostsForStream(streamId, posts));
 	} catch (error) {
 		logError(`There was an error fetching a thread: ${error}`, { parentPostId });
 		return undefined;

@@ -24,6 +24,8 @@ export function reducePosts(state: PostsState = initialState, action: PostsActio
 		case PostsActionsType.Save:
 		case PostsActionsType.Add:
 		case PostsActionsType.Bootstrap: {
+			if (action.payload.length === 0) return state;
+
 			const nextState = {
 				pending: [...state.pending],
 				byStream: { ...state.byStream }

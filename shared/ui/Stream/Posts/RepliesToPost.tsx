@@ -5,7 +5,7 @@ import { CodeStreamState } from "@codestream/webview/store";
 import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
 import { getTeamMates, findMentionedUserIds } from "@codestream/webview/store/users/reducer";
 import React from "react";
-import { createPost, deletePost } from "../actions";
+import { createPost, deletePost, fetchThread } from "../actions";
 import { replaceHtml, mapFilter } from "@codestream/webview/utils";
 import { PostPlus } from "@codestream/protocols/agent";
 import { confirmPopup } from "../Confirm";
@@ -15,6 +15,7 @@ import MessageInput from "../MessageInput";
 import Button from "../Button";
 import { groupBy } from "lodash-es";
 import { Dispatch } from "@codestream/webview/store/common";
+import { useDidMount } from "@codestream/webview/utilities/hooks";
 
 const ComposeWrapper = styled.div.attrs(() => ({
 	className: "compose codemark-compose"
@@ -51,6 +52,10 @@ export const RepliesToPost = (props: { streamId: string; parentPostId: string })
 		() => ({ setReplyingToPostId: setReplyingToPostId as any }),
 		[]
 	);
+
+	useDidMount(() => {
+		if (replies.length === 0) dispatch(fetchThread(props.streamId, props.parentPostId));
+	});
 
 	const submit = async () => {
 		// don't create empty replies
