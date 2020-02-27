@@ -127,7 +127,13 @@ export const RepliesToPost = (props: { streamId: string; parentPostId: string })
 						{reply.id === replyingToPostId && (
 							<InlineMessageContainer>
 								<ComposeWrapper>
-									<MessageInput text={newReplyText} onChange={setNewReplyText} autoFocus />
+									<MessageInput
+										text={newReplyText}
+										onChange={setNewReplyText}
+										onSubmit={submit}
+										multiCompose
+										autoFocus
+									/>
 								</ComposeWrapper>
 								<div style={{ display: "flex", justifyContent: "flex-end" }}>
 									<Button
