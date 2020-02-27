@@ -484,7 +484,7 @@ export class SimpleStream extends Component {
 		const { plusMenuOpen, menuTarget } = this.state;
 
 		const menuItems = [];
-		if (this.props.apiCapabilities.xray) {
+		if (true || this.props.apiCapabilities.xray) {
 			menuItems.push(
 				{
 					icon: <Icon name="code" />,
