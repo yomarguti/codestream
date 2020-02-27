@@ -108,9 +108,9 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 		const diffs = await this.getDiffs(request.reviewId, request.repoId);
 		const leftDiff = diffs.leftDiffs.find(d => d.newFileName === fileInfo.oldFile);
-		const leftBaseRelativePath = leftDiff ? leftDiff.oldFileName : fileInfo.oldFile;
+		const leftBaseRelativePath = (leftDiff && leftDiff.oldFileName) || fileInfo.oldFile;
 		const rightDiff = diffs.rightDiffs?.find(d => d.newFileName === fileInfo.file);
-		const rightBaseRelativePath = rightDiff ? rightDiff.oldFileName : fileInfo.file;
+		const rightBaseRelativePath = (rightDiff && rightDiff.oldFileName) || fileInfo.file;
 
 		const repo = await git.getRepositoryById(request.repoId);
 		if (!repo) {
