@@ -106,7 +106,6 @@ class TeamPanel extends React.Component<Props, State> {
 			})
 		);
 
-		// if (this.props.apiCapabilities["xray"])
 		if (this.props.currentUserInvisible) this.clearScmInfoSummary();
 		else this.getScmInfoSummary();
 

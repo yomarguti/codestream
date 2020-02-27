@@ -47,14 +47,13 @@ const StatusInput = styled.div`
 		align-items: center;
 		justify-content: center;
 		cursor: pointer;
-		x.span {
-			display: inline-block;
-			padding: 2px 0 0 3px;
-			vertical-align: -15px;
-		}
 		&:hover {
 			background: var(--app-background-color);
 			color: var(--text-color-highlight);
+		}
+		&.selected {
+			background: var(--button-background-color);
+			color: var(--button-foreground-color);
 		}
 		.octicon-git-branch {
 			margin: 2px 2px -2px -2px;
@@ -194,6 +193,8 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 				action: () => setBranch(branch)
 			};
 		});
+		// @ts-ignore
+		branchMenuItems.unshift({ label: "-" });
 
 		// return {
 		// 	branches: branchInfo.scm.branches,
@@ -444,7 +445,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								placeholder="Use an existing branch, or create a new one"
 							/>
 							<div
-								className="dropdown-button"
+								className={`dropdown-button ${branchMenuOpen ? "selected" : ""}`}
 								onClick={e => {
 									// @ts-ignore
 									setBranchMenuTarget(e.target.closest(".dropdown-button"));
@@ -455,6 +456,8 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 							</div>
 							{branchMenuOpen && (
 								<Menu
+									title="Select a Branch"
+									noCloseIcon={true}
 									items={branchMenuItems}
 									align="dropdownRight"
 									target={branchMenuTarget}

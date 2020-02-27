@@ -107,7 +107,7 @@ export default class Menu extends Component {
 			if (tooFar > 0) {
 				// if we're a dropdown, alter the height
 				if (align.startsWith("bottom") || align.startsWith("dropdown")) {
-					const height = window.innerHeight - rect.bottom - 30;
+					const height = window.innerHeight - rect.bottom - 50;
 
 					const ul = this._div.getElementsByTagName("ul")[0];
 					if (ul) ul.style.maxHeight = height + "px";
@@ -299,7 +299,7 @@ export default class Menu extends Component {
 						{this.props.title}
 						<span className="icons">
 							{this.props.titleIcon}
-							<Icon onClick={e => this.props.action()} name="x" />
+							{!this.props.noCloseIcon && <Icon onClick={e => this.props.action()} name="x" />}
 						</span>
 					</h3>
 				)}
