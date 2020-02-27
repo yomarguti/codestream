@@ -15,7 +15,7 @@ import {
 } from "../protocol/agent.protocol";
 import { CSTrelloProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
-import { ThirdPartyIssueProviderBase } from "./provider";
+import { ApiResponse, ThirdPartyIssueProviderBase } from "./provider";
 
 @lspProvider("trello")
 export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProviderInfo> {
@@ -68,18 +68,31 @@ export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProvider
 		// have to force connection here because we need apiKey and accessToken to even create our request
 		await this.ensureConnected();
 
-		const response = await this.get<TrelloCard[]>(
-			`/lists/${request.listId}/cards?${qs.stringify({
-				cards: "open",
-				fields: "id,name,desc,url,idList,idOrganization",
-				key: this.apiKey,
-				token: this.accessToken
-			})}`
-		);
+		let response: ApiResponse<TrelloCard[]>;
+
+		if (request.assignedToMe) {
+			response = await this.get<TrelloCard[]>(
+				`/members/${this._trelloUserId}/cards?${qs.stringify({
+					cards: "open",
+					fields: "id,name,desc,url,idList,idOrganization",
+					key: this.apiKey,
+					token: this.accessToken
+				})}`
+			);
+		} else {
+			response = await this.get<TrelloCard[]>(
+				`/lists/${request.listId}/cards?${qs.stringify({
+					cards: "open",
+					fields: "id,name,desc,url,idList,idOrganization",
+					key: this.apiKey,
+					token: this.accessToken
+				})}`
+			);
+		}
 
 		return {
 			cards: request.organizationId
-				? response.body.filter(b => b.idOrganization === request.organizationId)
+				? response.body.filter(c => c.idOrganization === request.organizationId)
 				: response.body
 		};
 	}
