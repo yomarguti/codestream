@@ -69,12 +69,12 @@ export default class Menu extends Component {
 				// normal case: reposition centrally
 				else this._div.style.left = left + "px";
 			} else if (align === "dropdownRight" || align === "bottomRight") {
-				this._div.style.top = rect.bottom - 1 + "px";
+				this._div.style.top = rect.bottom + "px";
 				const right = window.innerWidth - rect.right - parseFloat(computedStyle.paddingRight);
 				this._div.style.left = "auto";
 				this._div.style.right = right + "px";
 			} else if (align === "dropdownLeft" || align === "botomLeft") {
-				this._div.style.top = rect.bottom - 1 + "px";
+				this._div.style.top = rect.bottom + "px";
 				const left = rect.left - parseFloat(computedStyle.paddingRight);
 				this._div.style.left = left + "px";
 			} else if (align === "dropdownCenter" || align === "botomCenter") {
@@ -86,7 +86,7 @@ export default class Menu extends Component {
 				else if (left < 10) this._div.style.left = "10px";
 				// normal case: reposition centrally
 				else this._div.style.left = left + "px";
-				this._div.style.top = rect.bottom - 1 + "px";
+				this._div.style.top = rect.bottom + "px";
 			} else {
 				// right
 				const left = rect.right - this._div.offsetWidth + 5;
@@ -118,15 +118,31 @@ export default class Menu extends Component {
 		if (!this._div) return;
 		const $submenu = this._div.querySelector("#active-submenu");
 		if ($submenu) {
+			const parentLI = $submenu.parentNode.parentNode;
+			const parentRect = parentLI.getBoundingClientRect();
 			const rect = $submenu.getBoundingClientRect();
+
+			// line it up optimistically....
+			$submenu.style.left = parentRect.right - 11 + "px";
+			$submenu.style.top = parentLI.offsetTop - 6 + "px";
+
+			// check to see if it's off the screen to the right
+			const tooFarRight = parentRect.right + rect.width > window.innerWidth;
+			if (tooFarRight) {
+				// if it is, first try flipping it to the left of the menu
+				// the 20px is for 10px padding times two
+				$submenu.style.left = 31 - rect.width + "px";
+				// check again to see if it's too far left now
+				if (31 - rect.width + parentRect.left < 0) {
+					// if it is, just put it on the right edge of the screen
+					$submenu.style.left = "auto";
+					$submenu.style.right = 20 + parentRect.right - window.innerWidth + "px";
+					$submenu.style.top = parentLI.offsetTop + 16 + "px";
+				}
+			}
 			const tooFarDown = rect.top + $submenu.offsetHeight + 35 - window.innerHeight;
 			if (tooFarDown > 0) {
 				$submenu.style.top = "-10px";
-			}
-			const tooFarRight = rect.right > window.innerWidth;
-			if (tooFarRight) {
-				$submenu.style.left = "auto";
-				$submenu.style.right = "10px";
 			}
 		}
 	}
@@ -258,7 +274,8 @@ export default class Menu extends Component {
 
 	renderMenu = (items, parentItem) => {
 		let itemsToRender = this.filterItems(items);
-		const dropdown = (this.props.align || "").match(/^dropdown/);
+		// submenus don't get the dropdown no-top-corners treatment
+		const dropdown = (this.props.align || "").match(/^dropdown/) && !parentItem;
 
 		return (
 			<div
