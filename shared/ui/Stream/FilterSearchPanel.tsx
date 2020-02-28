@@ -10,7 +10,7 @@ import ScrollBox from "./ScrollBox";
 import SearchResult from "./SearchResult";
 import { ProTip } from "./ProTip";
 import { HostApi } from "../webview-api";
-import { includes as _includes, sortBy as _sortBy } from "lodash-es";
+import { includes as _includes, sortBy as _sortBy, debounce } from "lodash-es";
 import { PanelHeader } from "../src/components/PanelHeader";
 import styled from "styled-components";
 import FiltersButton from "../src/components/FiltersButton";
@@ -21,9 +21,10 @@ import { CodeStreamState } from "../store";
 import { ReposState } from "../store/repos/types";
 import { AnyObject } from "../utils";
 import { setUserPreference } from "./actions";
-import { withSearchableItems } from "./SpatialView/withSearchableItems";
+import { withSearchableItems, WithSearchableItemsProps } from "./SpatialView/withSearchableItems";
 import { FilterQuery } from "../store/preferences/types";
 import { getSavedSearchFilters } from "../store/preferences/reducer";
+import { setQuery } from "../store/context/actions";
 
 const SearchBar = styled.div`
 	display: flex;
@@ -125,6 +126,7 @@ const sameDay = (d1, d2) => {
 
 interface DispatchProps {
 	setUserPreference: (...args: Parameters<typeof setUserPreference>) => Promise<any>;
+	setQuery: (...args: Parameters<typeof setQuery>) => ReturnType<typeof setQuery>;
 }
 
 interface ConnectedProps {
@@ -138,13 +140,10 @@ interface ConnectedProps {
 	typeFilter: string;
 	repos: ReposState;
 	teamTagsArray: any[];
+	query: string;
 }
 
-interface Props extends ConnectedProps, DispatchProps {
-	items: (CSReview | CodemarkPlus)[];
-	branchOptions: string[];
-	repoOptions: string[];
-}
+interface Props extends ConnectedProps, DispatchProps, WithSearchableItemsProps {}
 
 interface State {
 	isLoading: boolean;
@@ -162,6 +161,8 @@ interface State {
 	editingFilterLabel?: string;
 	filterMenuTarget?: any;
 	filterMenuOpen?: number;
+	displayItems: AnyObject;
+	totalItems: number;
 }
 
 export class SimpleFilterSearchPanel extends Component<Props, State> {
@@ -174,6 +175,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 		recent: "Recent"
 	};
 	_saveFilterInput: any;
+	readonly sections = ["waitingForMe", "open", "recent", "closed"];
 
 	constructor(props: Props) {
 		super(props);
@@ -187,13 +189,17 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				recent: true
 			},
 			filters: { text: "" },
-			q: ""
+			q: "",
+			displayItems: {},
+			totalItems: 0
 		};
 	}
 
 	componentDidMount() {
 		if (this.props.webviewFocused)
 			HostApi.instance.track("Page Viewed", { "Page Name": "Reviews" });
+
+		this.applyQuery(this.props.query);
 		// if (false && this.props.reviews.length === 0)
 		// this.props.fetchReviews().then(() => {
 		// 	this.setState({ isLoading: false });
@@ -203,6 +209,16 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 		// );
 		// _searchInput might not be necessary if using the autoFocus prop
 		// if (this._searchInput) this._searchInput.focus();
+	}
+
+	componentDidUpdate(prevProps: Props) {
+		if (this.props.query !== prevProps.query || this.props.items !== prevProps.items) {
+			console.debug("query or items changed", {
+				query: { prev: prevProps.query, current: this.props.query },
+				items: { prev: prevProps.items, current: this.props.items }
+			});
+			this.applyQuery(this.props.query);
+		}
 	}
 
 	componentWillUnmount() {
@@ -266,15 +282,12 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 
 	clickFilter = (e, q) => {
 		if (e && e.target && e.target.closest(".gear")) return;
-		else this.setQ(q);
+		else this.props.setQuery(q);
 	};
 
-	// when the query changes, parse it for different types of
-	// filters, and leave behind any non-filters as keywords
-	// to search for -- those keywords are left in the `text` variable
-	setQ = q => {
+	getFilters = (query: string) => {
 		const me = this.props.currentUsername.toLowerCase();
-		let text = q;
+		let text = query;
 		const filters: AnyObject = {};
 		let match;
 
@@ -405,84 +418,11 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 
 		filters.text = text.trim();
 
-		this.setState({ filters, q });
+		return filters;
 	};
 
-	saveFilter = () => {
-		this.setState({ savingFilter: true });
-		setTimeout(() => {
-			if (this._saveFilterInput) this._saveFilterInput.focus();
-		}, 200);
-	};
-
-	saveFilterSubmit = (label, q, index) => {
-		if (!q || q.length === 0) return;
-		let savedFilters: FilterQuery[] = [];
-		if (index == undefined) {
-			savedFilters = [...this.props.savedSearchFilters, { label, q }];
-		} else {
-			savedFilters = [...this.props.savedSearchFilters];
-			savedFilters.splice(index, 1, { label, q });
-		}
-
-		this.props.setUserPreference(["savedSearchFilters"], [...savedFilters]);
-		this.setState({
-			savingFilter: false,
-			editingFilterIndex: undefined,
-			editingFilterLabel: ""
-		});
-	};
-
-	deleteSavedFilter = index => {
-		const savedFilters = [...this.props.savedSearchFilters];
-		savedFilters.splice(index, 1);
-		this.props.setUserPreference(["savedSearchFilters"], [...savedFilters, { label: "", q: "" }]);
-	};
-
-	// this method renders a filter that is in the process of being saved
-	renderSaveFilter = (index?: number) => {
-		const { editingFilterLabel } = this.state;
-		const value = index == undefined ? "" : this.props.savedSearchFilters[index].label;
-		const q = index == undefined ? this.state.q : this.props.savedSearchFilters[index].q;
-		return (
-			<SaveFilter>
-				<input
-					value={editingFilterLabel}
-					autoFocus={true}
-					placeholder="Filter name"
-					ref={ref => (this._saveFilterInput = ref)}
-					className="input-text control"
-					type="text"
-					onKeyPress={e => {
-						if (e.key == "Enter") this.saveFilterSubmit((e.target as any).value, q, index);
-					}}
-					onChange={e => this.setState({ editingFilterLabel: e.target.value })}
-					onBlur={e => this.saveFilterSubmit(e.target.value, q, index)}
-				/>
-				<Icon name="bookmark" className="bookmark" />
-			</SaveFilter>
-		);
-	};
-
-	editSavedFilter = index => {
-		const label = this.props.savedSearchFilters[index].label;
-		this.setState({ editingFilterIndex: index, editingFilterLabel: label });
-		// FIXME -- focus the damn thing
-	};
-
-	render() {
-		// if (this.state.isLoading) return null;
-
-		if (false && this.props.noReviewsAtAll) {
-			return this.renderBlankFiller();
-		}
-
-		const { currentUserId, branchOptions, repoOptions, usernameMap } = this.props;
-		const { filters } = this.state;
-
+	applyQuery = debounce(query => {
 		// const sections = ["waitingForMe", "createdByMe", "open", "recent", "closed"];
-		const sections = ["waitingForMe", "open", "recent", "closed"];
-
 		let displayItems = {};
 		let assignedItems = {};
 		let totalItems = 0;
@@ -493,6 +433,12 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 			assignedItems[item.id] = true;
 			totalItems++;
 		};
+
+		// when the query changes, parse it for different types of
+		// filters, and leave behind any non-filters as keywords
+		// to search for -- those keywords are left in the `text` variable
+		const filters = this.getFilters(query);
+		const { usernameMap } = this.props;
 
 		// sort by most recent first
 		this.props.items.forEach(item => {
@@ -566,7 +512,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 			const status = item.status;
 			const q = filters.text;
 
-			sections.forEach(section => {
+			this.sections.forEach(section => {
 				if (assignedItems[item.id]) return;
 
 				if (
@@ -577,7 +523,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 					return;
 				switch (section) {
 					case "waitingForMe":
-						if (status === "open" && _includes(assignees || [], currentUserId))
+						if (status === "open" && _includes(assignees || [], this.props.currentUserId))
 							assignItem(item, "waitingForMe");
 						break;
 					// case "createdByMe":
@@ -596,6 +542,80 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 			});
 			return;
 		});
+
+		this.setState({ filters, displayItems, totalItems });
+	}, 500);
+
+	saveFilter = () => {
+		this.setState({ savingFilter: true });
+		setTimeout(() => {
+			if (this._saveFilterInput) this._saveFilterInput.focus();
+		}, 200);
+	};
+
+	saveFilterSubmit = (label, q, index) => {
+		if (!q || q.length === 0) return;
+		let savedFilters: FilterQuery[] = [];
+		if (index == undefined) {
+			savedFilters = [...this.props.savedSearchFilters, { label, q }];
+		} else {
+			savedFilters = [...this.props.savedSearchFilters];
+			savedFilters.splice(index, 1, { label, q });
+		}
+
+		this.props.setUserPreference(["savedSearchFilters"], [...savedFilters]);
+		this.setState({
+			savingFilter: false,
+			editingFilterIndex: undefined,
+			editingFilterLabel: ""
+		});
+	};
+
+	deleteSavedFilter = index => {
+		const savedFilters = [...this.props.savedSearchFilters];
+		savedFilters.splice(index, 1);
+		this.props.setUserPreference(["savedSearchFilters"], [...savedFilters, { label: "", q: "" }]);
+	};
+
+	// this method renders a filter that is in the process of being saved
+	renderSaveFilter = (index?: number) => {
+		const { editingFilterLabel } = this.state;
+		const value = index == undefined ? "" : this.props.savedSearchFilters[index].label;
+		const q = index == undefined ? this.props.query : this.props.savedSearchFilters[index].q;
+		return (
+			<SaveFilter>
+				<input
+					value={editingFilterLabel}
+					autoFocus={true}
+					placeholder="Filter name"
+					ref={ref => (this._saveFilterInput = ref)}
+					className="input-text control"
+					type="text"
+					onKeyPress={e => {
+						if (e.key == "Enter") this.saveFilterSubmit((e.target as any).value, q, index);
+					}}
+					onChange={e => this.setState({ editingFilterLabel: e.target.value })}
+					onBlur={e => this.saveFilterSubmit(e.target.value, q, index)}
+				/>
+				<Icon name="bookmark" className="bookmark" />
+			</SaveFilter>
+		);
+	};
+
+	editSavedFilter = index => {
+		const label = this.props.savedSearchFilters[index].label;
+		this.setState({ editingFilterIndex: index, editingFilterLabel: label });
+		// FIXME -- focus the damn thing
+	};
+
+	render() {
+		// if (this.state.isLoading) return null;
+
+		if (false && this.props.noReviewsAtAll) {
+			return this.renderBlankFiller();
+		}
+
+		const { branchOptions, repoOptions } = this.props;
 
 		const tagMenuItems = this.props.teamTagsArray.map(tag => {
 			const color = tag.color.startsWith("#") ? "" : tag.color;
@@ -616,7 +636,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				),
 				noHover: true,
 				searchLabel: tag.label || tag.color,
-				action: e => this.setQ(`tag:${label}`)
+				action: e => this.props.setQuery(`tag:${label}`)
 			};
 		});
 
@@ -629,7 +649,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				),
 				searchLabel: branch,
 				key: branch,
-				action: e => this.setQ(`branch:"${branch}"`)
+				action: e => this.props.setQuery(`branch:"${branch}"`)
 			};
 		});
 
@@ -642,7 +662,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				),
 				searchLabel: name,
 				key: name,
-				action: e => this.setQ(`repo:"${name}"`)
+				action: e => this.props.setQuery(`repo:"${name}"`)
 			};
 		});
 
@@ -665,36 +685,40 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 		// );
 
 		const filterItems = [
-			{ label: "Open Issues and Code Reviews", key: "open", action: () => this.setQ("is:open") },
+			{
+				label: "Open Issues and Code Reviews",
+				key: "open",
+				action: () => this.props.setQuery("is:open")
+			},
 			{
 				label: "Your Issues",
 				key: "issues",
-				action: () => this.setQ("is:issue author:@me")
+				action: () => this.props.setQuery("is:issue author:@me")
 			},
 			{
 				label: "Your Code Reviews",
 				key: "reviews",
-				action: () => this.setQ("is:cr author:@me ")
+				action: () => this.props.setQuery("is:cr author:@me ")
 			},
 			{
 				label: "Your Code Comments",
 				key: "comments",
-				action: () => this.setQ("is:comment author:@me ")
+				action: () => this.props.setQuery("is:comment author:@me ")
 			},
 			{
 				label: "Everything assigned to you",
 				key: "assigned",
-				action: () => this.setQ("is:open assignee:@me ")
+				action: () => this.props.setQuery("is:open assignee:@me ")
 			},
 			{
 				label: "Everything mentioning you",
 				key: "mine",
-				action: () => this.setQ("is:open mentions:@me ")
+				action: () => this.props.setQuery("is:open mentions:@me ")
 			},
 			{
 				label: "Everything impacting code you wrote",
 				key: "mycode",
-				action: () => this.setQ("impacts:@me ")
+				action: () => this.props.setQuery("impacts:@me ")
 			},
 			{ label: "By Tag", key: "tag", submenu: tagMenuItems },
 			{ label: "By Repo", key: "repo", submenu: repoMenuItems },
@@ -720,7 +744,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 						</FiltersButton>
 						<div className="search-input">
 							<Icon name="search" className="search" />
-							{this.state.q && (
+							{this.props.query && (
 								<span className="save" onClick={this.saveFilter}>
 									<Icon
 										name="bookmark"
@@ -733,10 +757,10 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 							)}
 							<input
 								name="q"
-								value={this.state.q}
+								value={this.props.query}
 								className="input-text control"
 								type="text"
-								onChange={e => this.setQ(e.target.value)}
+								onChange={e => this.props.setQuery(e.target.value)}
 								placeholder="Search all comments, issues and code reviews"
 								autoFocus
 							/>
@@ -783,16 +807,18 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				</PanelHeader>
 				<ScrollBox>
 					<div className="channel-list vscroll" style={{ paddingTop: "10px" }}>
-						{totalItems > 0 && (
+						{this.state.totalItems > 0 && (
 							<table style={{ width: "100%", borderCollapse: "collapse" }}>
 								<tbody>
-									{sections.map(section => {
-										return this.renderSection(section, displayItems[section] || []);
+									{this.sections.map(section => {
+										return this.renderSection(section, this.state.displayItems[section] || []);
 									})}
 								</tbody>
 							</table>
 						)}
-						{!totalItems && <div className="no-matches">No results match your search.</div>}
+						{!this.state.totalItems && (
+							<div className="no-matches">No results match your search.</div>
+						)}
 						<ProTip />
 					</div>
 				</ScrollBox>
@@ -838,6 +864,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 	// });
 
 	return {
+		query: context.query || "",
 		noReviewsAtAll: !reviewSelectors.teamHasReviews(state),
 		usernameMap,
 		currentUserId: session.userId!,
@@ -855,5 +882,5 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 };
 
 export default withSearchableItems(
-	connect(mapStateToProps, { setUserPreference })(SimpleFilterSearchPanel)
+	connect(mapStateToProps, { setUserPreference, setQuery })(SimpleFilterSearchPanel)
 );

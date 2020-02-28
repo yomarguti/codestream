@@ -11,7 +11,11 @@ import { fetchReviews } from "@codestream/webview/store/reviews/actions";
 
 type SearchableItems = (CSReview | CodemarkPlus)[];
 
-type ProvidingProps = { items: SearchableItems; branchOptions: string[]; repoOptions: string[] };
+export type WithSearchableItemsProps = {
+	items: SearchableItems;
+	branchOptions: string[];
+	repoOptions: string[];
+};
 
 const getSearchableCodemarks = createSelector(
 	(state: CodeStreamState) => state.codemarks,
@@ -30,7 +34,7 @@ const getSearchableCodemarks = createSelector(
 
 let hasFetchedReviews = false;
 
-export function withSearchableItems<ChildProps extends ProvidingProps>(
+export function withSearchableItems<ChildProps extends WithSearchableItemsProps>(
 	Child: React.ElementType<ChildProps>
 ) {
 	return function WithSearchableItems(props: ChildProps) {
@@ -66,7 +70,7 @@ export function withSearchableItems<ChildProps extends ProvidingProps>(
 			return { branchOptions: [...branchNames].sort(), repoOptions: [...repoNames].sort() };
 		}, [reviewsState, reposState]);
 
-		const providingProps: ProvidingProps = {
+		const providingProps: WithSearchableItemsProps = {
 			items,
 			branchOptions,
 			repoOptions
