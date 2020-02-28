@@ -1,5 +1,6 @@
 import { Disposable, TextDocumentContentProvider, Uri, workspace } from "vscode";
 import { Container } from "container";
+import { Strings } from "system";
 import { GetReviewContentsResponse } from "@codestream/protocols/agent";
 
 export class ReviewDiffContentProvider implements TextDocumentContentProvider, Disposable {
@@ -14,10 +15,10 @@ export class ReviewDiffContentProvider implements TextDocumentContentProvider, D
 	}
 
 	provideTextDocumentContent(uri: Uri): string {
-		const match = this.urlRegexp.exec(uri.toString());
-		if (match === null) return "";
+		const csReviewDiffInfo = Strings.parseCSReviewDiffUrl(uri.toString());
+		if (csReviewDiffInfo == null) return "";
 
-		const [, reviewId, repoId, version, path] = match;
+		const { reviewId, repoId, version, path } = csReviewDiffInfo;
 		const key = this.key(reviewId, repoId, path);
 
 		const contents = this._contents.get(key);

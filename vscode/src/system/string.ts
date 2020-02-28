@@ -320,4 +320,27 @@ export namespace Strings {
 
 		return false;
 	}
+
+	const csReviewDiffUrlRegex = /codestream-diff:\/\/(\w+)\/(\w+)\/(\w+)\/(.+)/;
+	export function parseCSReviewDiffUrl(
+		uri: string
+	):
+		| {
+				reviewId: string;
+				repoId: string;
+				version: string;
+				path: string;
+		  }
+		| undefined {
+		const match = csReviewDiffUrlRegex.exec(uri.toString());
+		if (match == null) return undefined;
+
+		const [, reviewId, repoId, version, path] = match;
+		return {
+			reviewId,
+			repoId,
+			version,
+			path
+		};
+	}
 }

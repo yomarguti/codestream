@@ -74,6 +74,7 @@ import {
 	workspace
 } from "vscode";
 import { NotificationType, RequestType } from "vscode-languageclient";
+import { Strings } from "system/string";
 import {
 	CodeStreamSession,
 	SessionSignedOutReason,
@@ -142,6 +143,11 @@ export class WebviewController implements Disposable {
 		if (this._lastEditor === editor) return;
 		// If the new editor is not a real editor ignore it
 		if (editor !== undefined && !Editor.isTextEditor(editor)) return;
+
+		// Ignore left side of review diffs
+		const uri = editor && editor.document.uri;
+		const csReviewDiffInfo = uri && Strings.parseCSReviewDiffUrl(uri.toString());
+		if (csReviewDiffInfo && csReviewDiffInfo.version !== "head") return;
 
 		this._lastEditor = editor;
 		this._notifyActiveEditorChangedDebounced(editor);
@@ -461,6 +467,9 @@ export class WebviewController implements Disposable {
 
 		const uri = e.textEditor.document.uri;
 		if (uri.scheme !== "file" && uri.scheme !== "codestream-diff") return;
+
+		const csRangeDiffInfo = Strings.parseCSReviewDiffUrl(uri.toString());
+		if (csRangeDiffInfo && csRangeDiffInfo.version !== "head") return;
 
 		webview.notify(HostDidChangeEditorVisibleRangesNotificationType, {
 			uri: uri.toString(),
@@ -889,8 +898,13 @@ export class WebviewController implements Disposable {
 			switch (originalUri.scheme) {
 				case "file":
 				case "untitled":
-				case "codestream-diff":
 					uri = originalUri;
+					break;
+				case "codestream-diff":
+					const csReviewDiffInfo = Strings.parseCSReviewDiffUrl(originalUri.toString());
+					if (csReviewDiffInfo && csReviewDiffInfo.version === "head") {
+						uri = originalUri;
+					}
 					break;
 				case "git":
 				case "gitlens":
