@@ -73,6 +73,14 @@ export default class Menu extends Component {
 				const right = window.innerWidth - rect.right - parseFloat(computedStyle.paddingRight);
 				this._div.style.left = "auto";
 				this._div.style.right = right + "px";
+
+				// check to see if we're too far left
+				if (right + this._div.offsetWidth > window.innerWidth) {
+					this._div.style.top = rect.bottom + "px";
+					const left = rect.left - parseFloat(computedStyle.paddingRight);
+					this._div.style.left = left + "px";
+					this._div.style.right = "auto";
+				}
 			} else if (align === "dropdownLeft" || align === "botomLeft") {
 				this._div.style.top = rect.bottom + "px";
 				const left = rect.left - parseFloat(computedStyle.paddingRight);
