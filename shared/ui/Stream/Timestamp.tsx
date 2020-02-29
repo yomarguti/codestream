@@ -1,5 +1,6 @@
 import React from "react";
 import { PropsWithChildren } from "react";
+import styled from "styled-components";
 
 export const MINUTE = 60;
 export const HOUR = MINUTE * 60;
@@ -114,21 +115,32 @@ interface Props {
 	time: number;
 }
 
+const StyledTime = styled.time`
+	color: var(--text-color-subtle);
+	font-weight: normal;
+	padding-left: 5px;
+	// details isn't used in relative timestamps
+	.details {
+		padding-left: 5px;
+		transition: opacity 0.4s;
+	}
+`;
+
 export default function Timestamp(props: PropsWithChildren<Props>) {
 	if (!props.time) return null;
 
 	if (props.relative)
-		return <time className={props.className}>{distanceOfTimeInWords(props.time)}</time>;
+		return <StyledTime className={props.className}>{distanceOfTimeInWords(props.time)}</StyledTime>;
 
 	const timeText = prettyTime(props.time);
 	const timeDetails = prettyDateDay(props.time);
 
-	if (props.dateOnly) return <time className={props.className}>{timeDetails}</time>;
+	if (props.dateOnly) return <StyledTime className={props.className}>{timeDetails}</StyledTime>;
 	else
 		return (
-			<time className={props.className}>
+			<StyledTime className={props.className}>
 				{timeText}
 				<span className="details">{timeDetails}</span>
-			</time>
+			</StyledTime>
 		);
 }
