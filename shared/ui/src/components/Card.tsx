@@ -6,6 +6,7 @@ export interface CardProps {
 	onClick?: React.MouseEventHandler;
 	hoverEffect?: boolean;
 	className?: string;
+	noCard?: boolean;
 }
 
 export const getCardProps = (props: CardProps & { [k: string]: any }): CardProps => ({
@@ -15,7 +16,16 @@ export const getCardProps = (props: CardProps & { [k: string]: any }): CardProps
 });
 
 const Root = styled.div((props: Omit<PropsWithTheme<CardProps>, "hoverEffect">) => {
-	const { theme } = props;
+	const { theme, noCard } = props;
+
+	if (noCard)
+		return `
+			cursor: ${props.onClick != undefined ? "pointer" : "default"};
+			display: flex;
+			margin: -10px;
+			border: 1px solid transparent;
+		`;
+
 	const boxShadow = isDarkTheme(theme)
 		? "0 5px 10px rgba(0, 0, 0, 0.2)"
 		: "0 2px 5px rgba(0, 0, 0, 0.08)";
@@ -23,10 +33,10 @@ const Root = styled.div((props: Omit<PropsWithTheme<CardProps>, "hoverEffect">) 
 	return `
 		cursor: ${props.onClick != undefined ? "pointer" : "default"};
 		display: flex;
-  	box-shadow: ${boxShadow};
-    background: ${theme.colors.baseBackground};
-    border: 1px solid ${theme.colors.baseBorder};
-  `;
+  		box-shadow: ${boxShadow};
+ 		background: ${theme.colors.baseBackground};
+	    border: 1px solid ${theme.colors.baseBorder};
+ 	 `;
 });
 
 export const CardBanner = styled.div`
@@ -100,8 +110,10 @@ const Content = styled.div<CardProps>`
 
 export const Card = (props: React.PropsWithChildren<CardProps>) => {
 	return (
-		<Root onClick={props.onClick} className={props.className}>
-			<Content hoverEffect={props.hoverEffect}>{props.children}</Content>
+		<Root onClick={props.onClick} noCard={props.noCard} className={props.className}>
+			<Content noCard={props.noCard} hoverEffect={props.hoverEffect}>
+				{props.children}
+			</Content>
 		</Root>
 	);
 };

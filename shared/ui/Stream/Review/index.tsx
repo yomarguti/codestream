@@ -12,7 +12,6 @@ import {
 	MinimumWidthCard,
 	Header,
 	AuthorInfo,
-	StyledTimestamp,
 	Title,
 	MetaSection,
 	Meta,
@@ -81,6 +80,7 @@ export interface BaseReviewProps extends CardProps {
 	reviewers?: CSUser[];
 	tags?: { id: string }[];
 	changeRequests?: CodemarkPlus[];
+	noActionButtons?: boolean;
 	renderFooter?: (
 		footer: typeof CardFooter,
 		inputContainer?: typeof ComposeWrapper
@@ -124,23 +124,32 @@ const RepoInfo = styled.div`
 const ExpandedAuthor = styled.div`
 	width: 100%;
 	margin-bottom: 8px;
-	opacity: 0.5;
+	color: var(--text-color-subtle);
+	// opacity: 0.5;
+	button {
+		margin: 5px 5px 5px 0;
+	}
 `;
 
 const ReviewHeader = styled.div`
 	width: 100%;
-	margin-bottom: 8px;
+	margin-bottom: 3px;
 	display: flex;
+	align-items: flex-start;
 	font-size: 13px;
 	.icon.type {
 		display: inline-block;
 		transform: scale(1.25);
 		padding: 3px 8px 3px 3px;
 	}
+	button {
+		margin-left: 10px;
+	}
 `;
 
 const ReviewTitle = styled.div`
 	font-size: larger;
+	flex-grow: 10;
 `;
 
 const Description = styled.div`
@@ -186,89 +195,81 @@ const BaseReview = (props: BaseReviewProps) => {
 		</KebabIcon>
 	);
 
+	const approve = () => {
+		if (hasChangeRequests && props.changeRequests!.find(r => r.status !== "closed"))
+			confirmPopup({
+				title: "Are you sure?",
+				message: "This review has open change requests.",
+				centered: true,
+				buttons: [
+					{ label: "Cancel", className: "control-button" },
+					{
+						label: "Approve Anyway",
+						className: "success",
+						wait: true,
+						action: () => {
+							dispatch(setReviewStatus(props.review.id, "closed"));
+						}
+					}
+				]
+			});
+		else dispatch(setReviewStatus(props.review.id, "closed"));
+	};
+
+	const reject = () => dispatch(setReviewStatus(props.review.id, "rejected"));
+
+	const reopen = () => dispatch(setReviewStatus(props.review.id, "open"));
+
 	const renderedHeaderActions = (() => {
-		if (props.collapsed) {
-			if (props.review.status === "open")
-				return (
-					<ActionButton
-						onClick={e => {
-							e.preventDefault();
-						}}
-					>
-						Status: Open
-					</ActionButton>
-				);
-			else return;
-		} else {
-			if (props.review.status !== "open")
-				return (
-					<ActionButton onClick={() => dispatch(setReviewStatus(props.review.id, "open"))}>
-						Reopen
-					</ActionButton>
-				);
+		if (props.noActionButtons) return null;
+
+		const approveItem = { label: "Approve", action: approve };
+		const rejectItem = { label: "Reject", action: reject };
+		const reopenItem = { label: "Reopen", action: reopen };
+
+		if (props.review.status === "open")
 			return (
-				<>
-					{props.canStartReview && (
-						<DropdownButton
-							items={[
-								{
-									label: "Review Changes",
-									action: () => startReview()
-								},
-								{
-									label: "Visual Inspection",
-									action: () => startReview()
-								},
-								{
-									label: (
-										<>
-											Create working tree &nbsp;
-											<Icon
-												name="info"
-												title="FIXME -- explain how this works"
-												placement="bottomRight"
-											/>
-										</>
-									),
-									action: () => dispatch(setReviewStatus(props.review.id, "rejected"))
-								}
-							]}
-						/>
-					)}
-					<DropdownButton
-						items={[
-							{
-								label: "Approve",
-								action: () => {
-									if (hasChangeRequests && props.changeRequests!.find(r => r.status !== "closed"))
-										confirmPopup({
-											title: "Are you sure?",
-											message: "This review has open change requests.",
-											centered: true,
-											buttons: [
-												{ label: "Cancel", className: "control-button" },
-												{
-													label: "Approve Anyway",
-													className: "success",
-													wait: true,
-													action: () => {
-														dispatch(setReviewStatus(props.review.id, "closed"));
-													}
-												}
-											]
-										});
-									else dispatch(setReviewStatus(props.review.id, "closed"));
-								}
-							},
-							{
-								label: "Reject",
-								action: () => dispatch(setReviewStatus(props.review.id, "rejected"))
-							}
-						]}
-					/>
-				</>
+				<DropdownButton size="compact" items={[approveItem, rejectItem]}>
+					Open
+				</DropdownButton>
 			);
-		}
+		if (props.review.status === "closed")
+			return (
+				<DropdownButton size="compact" variant="secondary" items={[reopenItem]}>
+					Approved
+				</DropdownButton>
+			);
+		if (props.review.status === "rejected")
+			return (
+				<DropdownButton size="compact" variant="secondary" items={[reopenItem]}>
+					Rejected
+				</DropdownButton>
+			);
+	})();
+
+	const renderedStartReview = (() => {
+		if (!props.canStartReview) return null;
+		if (props.noActionButtons) return null;
+
+		return (
+			<DropdownButton
+				size="compact"
+				items={[
+					{ label: "Visual Inspection", action: () => startReview() },
+					{
+						label: (
+							<>
+								Create working tree &nbsp;
+								<Icon name="info" title="FIXME -- explain how this works" placement="bottomRight" />
+							</>
+						),
+						action: () => dispatch(setReviewStatus(props.review.id, "rejected"))
+					}
+				]}
+			>
+				Start Review
+			</DropdownButton>
+		);
 	})();
 
 	const startReview = () => {
@@ -276,7 +277,7 @@ const BaseReview = (props: BaseReviewProps) => {
 	};
 
 	return (
-		<MinimumWidthCard {...getCardProps(props)}>
+		<MinimumWidthCard {...getCardProps(props)} noCard={!props.collapsed}>
 			{props.headerError && (
 				<CardBanner>
 					<div className="color-warning" style={{ display: "flex" }}>
@@ -289,21 +290,19 @@ const BaseReview = (props: BaseReviewProps) => {
 				<ReviewHeader>
 					<Icon name="review" className="type" />
 					<ReviewTitle>
+						<HeaderActions>
+							{renderedMenu}
+							{kebabIcon}
+						</HeaderActions>
 						<MarkdownText text={review.title} />
 					</ReviewTitle>
-					<HeaderActions>
-						{renderedHeaderActions}
-						{renderedMenu}
-						{kebabIcon}
-					</HeaderActions>
 				</ReviewHeader>
 
-				{!props.collapsed && (
-					<ExpandedAuthor>
-						Opened <Timestamp relative={true} time={props.review.createdAt} /> by{" "}
-						{props.author.username}
-					</ExpandedAuthor>
-				)}
+				<ExpandedAuthor>
+					{renderedHeaderActions}
+					Opened
+					<Timestamp relative time={props.review.createdAt} /> by {props.author.username}
+				</ExpandedAuthor>
 
 				<MetaSection>
 					{props.review.text && (
@@ -404,6 +403,7 @@ const BaseReview = (props: BaseReviewProps) => {
 						<Meta>
 							<MetaLabel>Changed Files</MetaLabel>
 							<MetaDescriptionForAssignees>
+								{renderedStartReview}
 								<ChangesetFileList review={review} noOnClick={!props.canStartReview} />
 							</MetaDescriptionForAssignees>
 						</Meta>
@@ -561,7 +561,7 @@ const ReplyInput = (props: { parentPostId: string; streamId: string }) => {
 
 type FromBaseReviewProps = Pick<
 	BaseReviewProps,
-	"collapsed" | "hoverEffect" | "onClick" | "className" | "renderFooter"
+	"collapsed" | "hoverEffect" | "onClick" | "className" | "renderFooter" | "noActionButtons"
 >;
 
 interface PropsWithId extends FromBaseReviewProps {

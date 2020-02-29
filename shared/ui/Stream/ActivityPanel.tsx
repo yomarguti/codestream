@@ -176,6 +176,11 @@ export const ActivityPanel = () => {
 			}
 
 			if (type === "review") {
+				if (
+					derivedState.codemarkTypeFilter != "all" &&
+					"review" !== derivedState.codemarkTypeFilter
+				)
+					return null;
 				return (
 					<ActivityWrapper key={record.id}>
 						<ActivityVerb time={record.createdAt}>
@@ -296,7 +301,7 @@ const ActivityItemWrapper = styled(
 const ActivityVerb = (props: PropsWithChildren<{ time: number }>) => {
 	return (
 		<div className="activity-verb">
-			{props.children} <Timestamp relative={true} time={props.time} />
+			{props.children} <Timestamp relative time={props.time} />
 		</div>
 	);
 };
@@ -414,7 +419,7 @@ const RepliesForActivity = (props: { parentPost?: PostPlus; pinnedReplies?: stri
 					codemarkId={props.parentPost!.codemarkId}
 				/>
 			))}
-			{otherReplyCount > 0 && (
+			{false && otherReplyCount > 0 && (
 				<SeeReplies>
 					See {otherReplyCount} earlier{" "}
 					<FormattedPluralAlias value={otherReplyCount} one="reply" other="replies" />
@@ -446,9 +451,8 @@ const ActivityWrapper = styled.div`
 		.icon {
 			vertical-align: -2px;
 		}
-	}
-	time {
-		color: var(--text-color-subtle);
-		opacity: 0.5;
+		time {
+			opacity: 0.5;
+		}
 	}
 `;

@@ -25,6 +25,8 @@ import { setUserPreference } from "./actions";
 import { ReviewChangesetFileInfo } from "@codestream/protocols/api";
 import { ChangesetFileList } from "./Review/ChangesetFileList";
 import { Dispatch } from "../store/common";
+import { Review } from "./Review";
+import ScrollBox from "./ScrollBox";
 
 const Actions = styled.div`
 	padding: 0 0 0 20px;
@@ -373,8 +375,9 @@ export function ReviewNav(props: Props) {
 		}
 	};
 
-	const toggleInstructions = () =>
+	const toggleInstructions = () => {
 		dispatch(setUserPreference(["hideReviewInstructions"], !derivedState.hideReviewInstructions));
+	};
 
 	const renderedInstructions = React.useMemo(() => {
 		return (
@@ -422,7 +425,7 @@ export function ReviewNav(props: Props) {
 				</StyledBoxedContent>
 			</VerticallyCenter>
 		);
-	}, []);
+	}, [derivedState.hideReviewInstructions]);
 
 	const jumpToFile = async (fileRecord, nextIndex?: number) => {
 		if (!review) return;
@@ -470,47 +473,29 @@ export function ReviewNav(props: Props) {
 
 	return (
 		<>
-			<PanelHeader title={title} position="fixed" className="active-review">
-				{false && (
-					<FileList>
-						{fileIndex > 0 ? (
-							<span>
-								Reviewing change #5 of 17 in{" "}
-								<InlineMenu items={fileMenu}>
-									file #{fileIndex} of {allModifiedFiles.length}
-								</InlineMenu>
-							</span>
-						) : (
-							<span>
-								This file is not one of the{" "}
-								<InlineMenu items={fileMenu}>{allModifiedFiles.length} modified</InlineMenu> in this
-								review.
-							</span>
-						)}
-					</FileList>
-				)}
-			</PanelHeader>
+			<PanelHeader title={title} position="fixed" className="active-review"></PanelHeader>
 			<Nav>
 				<div className={hoverButton == "info" ? "btn-group pulse" : "btn-group"}>
 					<Tooltip
 						placement="bottom"
 						title={
-							<>
-								<SearchResult titleOnly result={review} />
-								<div style={{ height: "5px" }} />
-								<ChangesetFileList review={review} />
-								{derivedState.hideReviewInstructions && (
-									<div
-										style={{ marginTop: "5px", fontSize: "smaller", cursor: "pointer" }}
-										onClick={toggleInstructions}
-									>
-										Show Instructions
-									</div>
-								)}
-							</>
+							"Show/Hide Review Details"
+							// <>
+							// 	<SearchResult titleOnly result={review} />
+							// 	<div style={{ height: "5px" }} />
+							// 	<ChangesetFileList review={review} />
+							// 	{derivedState.hideReviewInstructions && (
+							// 		<div
+							// 			style={{ marginTop: "5px", fontSize: "smaller", cursor: "pointer" }}
+							// 			onClick={toggleInstructions}
+							// 		>
+							// 			Show Instructions
+							// 		</div>
+							// 	)}
+							// </>
 						}
 					>
-						<Button variant="secondary" onClick={showReview}>
+						<Button variant="secondary" onClick={toggleInstructions}>
 							<Icon name="i" />
 						</Button>
 					</Tooltip>
@@ -553,7 +538,28 @@ export function ReviewNav(props: Props) {
 				</div>
 				{statusButtons()}
 			</Nav>
-			{derivedState.hideReviewInstructions || props.composeOpen ? null : renderedInstructions}
+			{props.composeOpen ? null : derivedState.hideReviewInstructions ? (
+				<div
+					style={{
+						position: "absolute",
+						top: "0",
+						left: "0",
+						height: "100vh",
+						margin: "50px 0 0 0",
+						overflow: "auto",
+						zIndex: 1
+					}}
+				>
+					<ScrollBox>
+						<div className="vscroll" style={{ padding: "20px 40px 100px 40px" }}>
+							<Review noActionButtons review={review} />
+						</div>
+					</ScrollBox>
+				</div>
+			) : (
+				renderedInstructions
+			)}
+
 			<Actions>
 				{/*				<div className="review-title">{review && <SearchResult titleOnly result={review} />}</div> */}
 			</Actions>

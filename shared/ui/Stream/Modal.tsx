@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import styled from "styled-components";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import Tooltip from "./Tooltip";
+import ScrollBox from "./ScrollBox";
 import Icon from "./Icon";
 
 const noopElement = document.createElement("span");
@@ -31,12 +32,12 @@ const ModalWrapper = styled.div`
 	z-index: 3000;
 	left: 0;
 	background-color: var(--app-background-color);
-	padding: 20px 0;
+	padding: 0;
 	overflow: auto;
 
-	& > div {
+	div.children {
 		height: 100%;
-		padding: 25px 20px;
+		padding: 20px;
 
 		&.vcenter {
 			height: inherit;
@@ -62,7 +63,7 @@ export const ModalContext = React.createContext<ModalContextType>({
 });
 
 export interface ModalProps {
-	onClose: () => void;
+	onClose?: () => void;
 	verticallyCenter?: boolean;
 }
 
@@ -72,7 +73,7 @@ export function Modal(props: PropsWithChildren<ModalProps>) {
 
 	React.useEffect(() => {
 		const subscription = VsCodeKeystrokeDispatcher.on("keydown", event => {
-			if (event.key === "Escape") {
+			if (event.key === "Escape" && props.onClose) {
 				event.stopPropagation();
 				props.onClose();
 			}
@@ -86,8 +87,14 @@ export function Modal(props: PropsWithChildren<ModalProps>) {
 	return createPortal(
 		<ModalContext.Provider value={context}>
 			<ModalWrapper>
-				<CancelButton onClick={props.onClose} />
-				<div className={props.verticallyCenter ? "vcenter" : ""}>{props.children}</div>
+				{props.onClose && <CancelButton onClick={props.onClose} />}
+				<ScrollBox>
+					<div className="vscroll">
+						<div className={props.verticallyCenter ? "vcenter children" : "children"}>
+							{props.children}
+						</div>
+					</div>
+				</ScrollBox>
 			</ModalWrapper>
 		</ModalContext.Provider>,
 		modalRoot
@@ -114,9 +121,10 @@ const CancelButton = styled(function(props: { onClick: () => void }) {
 })`
 	cursor: pointer;
 	position: absolute;
-	right: 20px;
+	right: 7px;
 	top: 10px;
 	padding: 5px 8px 5px 8px;
+	z-index: 30;
 	:hover {
 		color: var(--text-color-highlight);
 		background-color: var(--base-background-color);

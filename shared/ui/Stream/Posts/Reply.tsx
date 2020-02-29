@@ -3,8 +3,9 @@ import { CSUser } from "@codestream/protocols/api";
 import { PostPlus } from "@codestream/protocols/agent";
 import React from "react";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
-import { StyledTimestamp, KebabIcon } from "../Codemark/BaseCodemark";
+import { KebabIcon } from "../Codemark/BaseCodemark";
 import Icon from "../Icon";
+import Timestamp from "../Timestamp";
 import { getCodemark } from "@codestream/webview/store/codemarks/reducer";
 import { CodeStreamState } from "@codestream/webview/store";
 import { useSelector, useDispatch } from "react-redux";
@@ -15,7 +16,7 @@ import { deletePost } from "../actions";
 import { RepliesToPostContext } from "./RepliesToPost";
 import { getPost } from "@codestream/webview/store/posts/reducer";
 import { MarkdownText } from "../MarkdownText";
-import MarkerActions from '../MarkerActions';
+import MarkerActions from "../MarkerActions";
 
 export interface ReplyProps {
 	author: Partial<CSUser>;
@@ -40,6 +41,7 @@ const AuthorInfo = styled.div`
 
 const Root = styled.div`
 	padding-bottom: 10px;
+	padding-top: 10px;
 	display: flex;
 	flex-direction: column;
 	// not sure if there is a better way to deal with this,
@@ -133,11 +135,11 @@ export const Reply = (props: ReplyProps) => {
 		const numMarkers = codemark.markers.length;
 		// not allowing any of the capabilities (they default to off anyway)
 		const capabilities: any = {};
-		return codemark.markers.map((marker, index) => 
+		return codemark.markers.map((marker, index) => (
 			<ReviewMarkerActionsWrapper>
 				<MarkerActions
 					key={marker.id}
-					codemark={codemark} 
+					codemark={codemark}
 					marker={marker}
 					capabilities={capabilities}
 					isAuthor={false}
@@ -149,7 +151,7 @@ export const Reply = (props: ReplyProps) => {
 					disableDiffCheck={true}
 				/>
 			</ReviewMarkerActionsWrapper>
-		);
+		));
 	})();
 
 	return (
@@ -158,7 +160,7 @@ export const Reply = (props: ReplyProps) => {
 				<AuthorInfo style={{ fontWeight: 700 }}>
 					<Headshot person={props.author} /> {props.author.username}
 					{emote}
-					<StyledTimestamp time={props.post.createdAt} />
+					<Timestamp relative time={props.post.createdAt} />
 					<div style={{ marginLeft: "auto" }}>
 						{renderedMenu}
 						{props.renderMenu && (

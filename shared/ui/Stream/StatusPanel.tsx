@@ -383,7 +383,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		<div className="full-height-panel">
 			<form className="standard-form vscroll" style={{ padding: 0 }}>
 				<div className="panel-header">
-					<CancelButton onClick={props.closePanel} />
+					<CancelButton onClick={props.closePanel} placement="left" />
 					What are you working on?
 				</div>
 				<fieldset className="form-body" style={{ padding: "10px" }}>

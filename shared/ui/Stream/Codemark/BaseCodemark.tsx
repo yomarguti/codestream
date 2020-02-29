@@ -80,65 +80,73 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 	};
 	const emote = renderEmote();
 
+	let { collapsed } = props;
+	collapsed = false;
+
+	const menu = (
+		<HeaderActions>
+			{renderActions && codemark.type === CodemarkType.Issue && (
+				<ActionButton
+					onClick={e => {
+						e.preventDefault();
+						props.onChangeStatus &&
+							props.onChangeStatus(
+								codemark.status === CodemarkStatus.Open
+									? CodemarkStatus.Closed
+									: CodemarkStatus.Open
+							);
+					}}
+				>
+					{codemark.status === CodemarkStatus.Closed ? "Reopen" : "Resolve"}
+				</ActionButton>
+			)}
+			{renderedMenu}
+			{props.renderMenu && (
+				<KebabIcon
+					onClickCapture={e => {
+						e.preventDefault();
+						e.stopPropagation();
+						if (menuState.open) {
+							setMenuState({ open: false });
+						} else {
+							setMenuState({ open: true, target: e.currentTarget });
+						}
+					}}
+				>
+					<Icon name="kebab-vertical" className="clickable" />
+				</KebabIcon>
+			)}
+		</HeaderActions>
+	);
+
 	return (
-		<MinimumWidthCard {...getCardProps(props)}>
+		<Card {...getCardProps(props)}>
 			<CardBanner>
 				{!codemark.pinned && <div>This codemark is archived.</div>}
 				{codemark.status == "closed" && <div>This codemark is resolved.</div>}
 			</CardBanner>
 			<CardBody>
-				{!props.collapsed && (
+				{false && (
 					<Header>
 						<AuthorInfo>
 							<Headshot person={props.author} /> {props.author.username} {emote}
-							<StyledTimestamp time={codemark.createdAt} />
+							<Timestamp relative time={codemark.createdAt} />
 						</AuthorInfo>
-						<HeaderActions>
-							{renderActions && codemark.type === CodemarkType.Issue && (
-								<ActionButton
-									onClick={e => {
-										e.preventDefault();
-										props.onChangeStatus &&
-											props.onChangeStatus(
-												codemark.status === CodemarkStatus.Open
-													? CodemarkStatus.Closed
-													: CodemarkStatus.Open
-											);
-									}}
-								>
-									{codemark.status === CodemarkStatus.Closed ? "Reopen" : "Resolve"}
-								</ActionButton>
-							)}
-							{renderedMenu}
-							{props.renderMenu && (
-								<KebabIcon
-									onClickCapture={e => {
-										e.preventDefault();
-										e.stopPropagation();
-										if (menuState.open) {
-											setMenuState({ open: false });
-										} else {
-											setMenuState({ open: true, target: e.currentTarget });
-										}
-									}}
-								>
-									<Icon name="kebab-vertical" className="clickable" />
-								</KebabIcon>
-							)}
-						</HeaderActions>
 					</Header>
 				)}
-				{props.collapsed && codemark.type === "issue" ? (
+				{collapsed && codemark.type === "issue" ? (
 					<BigTitle>
+						{menu}
 						<Icon name="issue" />
 						<MarkdownText text={codemark.title || codemark.text} />
 					</BigTitle>
 				) : (
 					<Title>
+						{menu}
 						<MarkdownText text={codemark.title || codemark.text} />
 					</Title>
 				)}
-				{!props.collapsed && (
+				{!collapsed && (
 					<>
 						<MetaSection>
 							{(hasTags || hasAssignees) && (
@@ -213,7 +221,7 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 						{renderedMarkers}
 					</>
 				)}
-				{props.collapsed && (
+				{collapsed && (
 					<>
 						{props.pinnedReplies && (
 							<div style={{ marginBottom: "10px" }}>
@@ -295,7 +303,7 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 				)}
 			</CardBody>
 			{renderedFooter}
-		</MinimumWidthCard>
+		</Card>
 	);
 }
 
@@ -312,10 +320,7 @@ export const Header = styled.div`
 `;
 
 export const HeaderActions = styled.div`
-	display: flex;
-	margin-left: auto;
-	justify-content: space-between;
-	align-items: center;
+	float: right;
 	& > *:not(:last-child) {
 		margin: 0 5px;
 	}
@@ -329,16 +334,6 @@ export const AuthorInfo = styled.div`
 	}
 `;
 
-export const StyledTimestamp = styled(Timestamp)`
-	opacity: 0.4;
-	font-size: 11px;
-	padding-left: 5px;
-	.details {
-		padding-left: 5px;
-		transition: opacity 0.4s;
-	}
-`;
-
 export const Title = styled.div`
 	margin-bottom: 10px;
 `;
@@ -347,6 +342,7 @@ export const BigTitle = styled.div`
 	font-size: larger;
 	margin-bottom: 10px;
 	display: flex;
+	width: 100%;
 	.icon {
 		display: inline-block;
 		transform: scale(1.25);
@@ -480,6 +476,9 @@ export const StyledMarker = styled(Marker)`
 	}
 	.icon {
 		vertical-align: 2px;
+	}
+	a {
+		text-decoration: none;
 	}
 `;
 

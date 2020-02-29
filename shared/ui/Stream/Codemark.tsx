@@ -1368,7 +1368,7 @@ export class Codemark extends React.Component<Props, State> {
 									<div className="author">
 										<Headshot person={author} />
 										{author.username}
-										<Timestamp time={codemark.createdAt} />
+										<Timestamp relative time={codemark.createdAt} />
 									</div>
 									<div className="right">
 										<span onClick={this.handleMenuClick}>
@@ -1501,7 +1501,7 @@ export class Codemark extends React.Component<Props, State> {
 								</span>
 								{author.username} commented on {pullOrMergeRequestText} request{" "}
 								{marker.externalContent!.subhead}
-								<Timestamp time={marker.createdAt} />
+								<Timestamp relative time={marker.createdAt} />
 							</div>
 							{/* <div className="right">
 								<span onClick={this.handleMenuClick}>

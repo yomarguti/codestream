@@ -13,7 +13,7 @@ export interface DropdownButtonProps extends ButtonProps {
 	items: { label: any; action: () => void }[];
 }
 
-export function DropdownButton(props: DropdownButtonProps) {
+export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProps>) {
 	const buttonRef = React.useRef<HTMLElement>(null);
 	const [menuIsOpen, toggleMenu] = React.useReducer((open: boolean) => !open, false);
 	const [selectedItem, setSelectedItem] = React.useState(props.items[0]);
@@ -31,18 +31,24 @@ export function DropdownButton(props: DropdownButtonProps) {
 
 	return (
 		<Root>
-			<StyledButton {...getButtonProps(props)} onClick={selectedItem.action}>
-				{selectedItem.label}
-			</StyledButton>
-			<StyledButton ref={buttonRef} onClick={toggleMenu}>
+			<Button
+				{...getButtonProps(props)}
+				onClick={e => {
+					e.preventDefault();
+					e.stopPropagation();
+					toggleMenu(true);
+				}}
+				ref={buttonRef}
+			>
+				{props.children}
 				<Icon name="chevron-down" />
-			</StyledButton>
+			</Button>
 			{menuIsOpen && buttonRef.current && (
 				<Menu
 					align="dropdownRight"
 					action={maybeToggleMenu}
 					target={buttonRef.current}
-					items={items}
+					items={props.items}
 					focusOnSelect={buttonRef.current}
 				/>
 			)}
@@ -52,12 +58,8 @@ export function DropdownButton(props: DropdownButtonProps) {
 
 const Root = styled.div`
 	display: inline;
-	button + button {
-		border-left: 1px solid transparent !important;
-	}
-	// two dropdowns in a row
-	& + & {
-		padding-left: 10px;
+	.octicon-chevron-down {
+		margin-left: 10px;
 	}
 `;
 

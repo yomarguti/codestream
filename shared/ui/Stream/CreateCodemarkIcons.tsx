@@ -38,7 +38,7 @@ interface Props {
 }
 
 const mapStateToProps = (state: CodeStreamState) => {
-	const { context, editorContext, teams, configs, documentMarkers } = state;
+	const { context, editorContext } = state;
 
 	const textEditorVisibleRanges = getVisibleRanges(editorContext);
 	const numVisibleRanges = textEditorVisibleRanges.length;
@@ -185,7 +185,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 			<div
 				onMouseEnter={() => onMouseEnterHoverIcon(lineNum0)}
 				onMouseLeave={() => onMouseLeaveHoverIcon(lineNum0)}
-				className={cx("hover-plus", { hover, open })}
+				className={cx("hover-plus", { hover, open, narrow: derivedState.activeReviewId })}
 				key={lineNum0}
 				style={{ top }}
 			>
