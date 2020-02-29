@@ -9,7 +9,7 @@ const getFontSize = (size?: ButtonSize) => {
 		case "large":
 			return "font-size: 1.15em !important;";
 		case "compact":
-			return "font-size: 12px !important;";
+			return "font-size: var(--font-size) !important;";
 		case "default":
 		default:
 			return "font-size: var(--font-size) !important;";
@@ -21,10 +21,22 @@ const getPadding = (size?: ButtonSize) => {
 		case "large":
 			return "padding: 1px 15px;";
 		case "compact":
-			return "padding: 1px 10px;";
+			return "padding: 1px 8px;";
 		case "default":
 		default:
 			return "padding: 1px 10px;";
+	}
+};
+
+const getLineHeight = (size?: ButtonSize) => {
+	switch (size) {
+		case "large":
+			return "line-height: 2em;";
+		case "compact":
+			return "line-height: 1.75em;";
+		case "default":
+		default:
+			return "line-height: 2em;";
 	}
 };
 
@@ -98,6 +110,7 @@ export const ButtonRoot = styled.button<ButtonProps>(props => {
 
 	${getFontSize(props.size)}
 	${getPadding(props.size)}
+	${getLineHeight(props.size)}
 	border-radius: 0;
 	border: 1px solid transparent !important;
 	outline: none !important;
