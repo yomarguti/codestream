@@ -61,16 +61,6 @@ const AuthorInfo = styled.div`
 	}
 `;
 
-const StyledTimestamp = styled(Timestamp)`
-	opacity: 0.4;
-	font-size: 11px;
-	padding-left: 5px;
-	.details {
-		padding-left: 5px;
-		transition: opacity 0.4s;
-	}
-`;
-
 const CardTitle = styled.div`
 	margin-bottom: 10px;
 `;
@@ -179,7 +169,7 @@ export function SharingModal(props: SharingModalProps) {
 							<CardHeader>
 								<AuthorInfo>
 									<Headshot person={author} /> {author.username}{" "}
-									<StyledTimestamp time={props.codemark.createdAt} />
+									<Timestamp relative time={props.codemark.createdAt} />
 								</AuthorInfo>
 							</CardHeader>
 							<CardTitle>
