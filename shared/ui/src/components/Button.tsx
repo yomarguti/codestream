@@ -9,7 +9,7 @@ const getFontSize = (size?: ButtonSize) => {
 		case "large":
 			return "font-size: 1.15em !important;";
 		case "compact":
-			return "font-size: 11px !important;";
+			return "font-size: 12px !important;";
 		case "default":
 		default:
 			return "font-size: var(--font-size) !important;";
@@ -21,7 +21,7 @@ const getPadding = (size?: ButtonSize) => {
 		case "large":
 			return "padding: 1px 15px;";
 		case "compact":
-			return "padding: 1px 5px;";
+			return "padding: 1px 10px;";
 		case "default":
 		default:
 			return "padding: 1px 10px;";
@@ -51,8 +51,9 @@ const getColors = (variant = "primary") => {
 		}
 		case "success": {
 			return `
-				background-color: #17ca65;
-				color: white;
+			background-color: #17ca65;
+			background-color: #24A100;
+			color: white;
 				:hover {
 					opacity: 0.85;
 				}
