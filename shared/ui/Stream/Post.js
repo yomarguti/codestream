@@ -358,7 +358,14 @@ class Post extends React.Component {
 			>
 				{showAssigneeHeadshots && this.renderAssigneeHeadshots()}
 				{showIcons && this.renderIcons()}
-				{menuOpen && <Menu items={menuItems} target={menuTarget} action={this.handleSelectMenu} />}
+				{menuOpen && (
+					<Menu
+						items={menuItems}
+						target={menuTarget}
+						action={this.handleSelectMenu}
+						align="bottomRight"
+					/>
+				)}
 				{authorMenuOpen && (
 					<Menu
 						items={authorMenuItems}
@@ -380,7 +387,7 @@ class Post extends React.Component {
 					{post.error ? (
 						<RetrySpinner callback={this.resubmit} cancel={this.cancel} />
 					) : (
-						<Timestamp time={post.createdAt} />
+						<Timestamp relative time={post.createdAt} />
 					)}
 					{codemark && codemark.color && <div className={`label-indicator ${color}-background`} />}
 				</div>
