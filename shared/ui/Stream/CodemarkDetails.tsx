@@ -183,18 +183,20 @@ export class CodemarkDetails extends React.Component<Props, State> {
 						<div className="compose codemark-compose">
 							<div className="related-label">
 								Add Reply
-								<div className="add-location">
-									<Tooltip
-										placement="topRight"
-										title="Codemarks can refer to one or more blocks of code, even across files."
-										delay={1}
-									>
-										<span onClick={e => {}}>
-											<Icon name="plus" />
-											add range
-										</span>
-									</Tooltip>
-								</div>
+								{false && (
+									<div className="add-location">
+										<Tooltip
+											placement="topRight"
+											title="Codemarks can refer to one or more blocks of code, even across files."
+											delay={1}
+										>
+											<span onClick={e => {}}>
+												<Icon name="plus" />
+												add range
+											</span>
+										</Tooltip>
+									</div>
+								)}
 							</div>
 
 							<MessageInput

@@ -89,7 +89,7 @@ const Nav = styled.div`
 			}
 		}
 	}
-	@media only screen and (max-width: 500px) {
+	@media only screen and (max-width: 550px) {
 		.btn-group {
 			button {
 				.narrow-icon {
