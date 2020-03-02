@@ -135,7 +135,7 @@ export default function SearchResult(props: Props) {
 		if (isCSReview(result)) {
 			return (
 				<>
-					<ChangesetFileList review={result} />
+					<ChangesetFileList noOnClick review={result} />
 				</>
 			);
 		} else {

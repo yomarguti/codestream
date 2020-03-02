@@ -7,6 +7,7 @@ interface Props {
 	onClick?: React.MouseEventHandler;
 	selected?: boolean;
 	noHover?: boolean;
+	icon?: any;
 }
 
 export const ChangesetFile = styled((props: ReviewChangesetFileInfo & Props) => {
@@ -14,9 +15,12 @@ export const ChangesetFile = styled((props: ReviewChangesetFileInfo & Props) => 
 		<div
 			className={`${props.className} ${props.selected ? "selected" : ""} ${
 				props.noHover ? "no-hover" : ""
+			} ${
+				props.icon ? "with-file-icon" : ""
 			} row-with-icon-actions monospace ellipsis-left-container`}
 			onClick={props.onClick}
 		>
+			{props.icon}
 			<span className="file-info ellipsis-left">
 				<bdi dir="ltr">{props.file}</bdi>
 			</span>

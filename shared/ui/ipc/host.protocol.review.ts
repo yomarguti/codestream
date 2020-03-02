@@ -1,5 +1,6 @@
 import { RequestType } from "vscode-jsonrpc";
 import { IpcRoutes } from "./webview.protocol";
+import { ReviewChangesetFileInfo } from "@codestream/protocols/api";
 
 export interface ReviewShowDiffRequest {
 	reviewId: string;
