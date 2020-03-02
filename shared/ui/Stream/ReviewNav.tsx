@@ -250,14 +250,15 @@ export function ReviewNav(props: Props) {
 				if (!isValid) return;
 				if (result == null) setNotFound(true);
 			});
-		} else {
-			const currentFile = allModifiedFiles[progressCounter];
-			HostApi.instance.send(ReviewShowDiffRequestType, {
-				repoId: currentFile.repoId,
-				reviewId: review.id,
-				path: currentFile.file
-			});
 		}
+		// else {
+		// 	const currentFile = allModifiedFiles[progressCounter];
+		// 	HostApi.instance.send(ReviewShowDiffRequestType, {
+		// 		repoId: currentFile.repoId,
+		// 		reviewId: review.id,
+		// 		path: currentFile.file
+		// 	});
+		// }
 
 		return () => {
 			isValid = false;

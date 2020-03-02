@@ -219,16 +219,19 @@ const BaseReview = (props: BaseReviewProps) => {
 
 	const reopen = () => dispatch(setReviewStatus(props.review.id, "open"));
 
+	const startReview = () => dispatch(setCurrentReview(props.review.id));
+
 	const renderedHeaderActions = (() => {
 		if (!props.collapsed) return null;
 
 		const approveItem = { label: "Approve", action: approve };
+		const reviewItem = { label: "Review Changes", action: startReview };
 		const rejectItem = { label: "Reject", action: reject };
 		const reopenItem = { label: "Reopen", action: reopen };
 
 		if (props.review.status === "open")
 			return (
-				<DropdownButton size="compact" items={[approveItem, rejectItem]}>
+				<DropdownButton size="compact" items={[reviewItem, approveItem, rejectItem]}>
 					Open
 				</DropdownButton>
 			);
@@ -270,10 +273,6 @@ const BaseReview = (props: BaseReviewProps) => {
 			</DropdownButton>
 		);
 	})();
-
-	const startReview = () => {
-		dispatch(setActiveReview(review.id));
-	};
 
 	return (
 		<MinimumWidthCard {...getCardProps(props)} noCard={!props.collapsed}>
