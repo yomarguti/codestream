@@ -108,7 +108,7 @@ interface Props {
 	numHidden: number;
 	isInVscode: boolean;
 	webviewFocused: boolean;
-	activeReviewId?: string;
+	currentReviewId?: string;
 
 	setEditorContext: (
 		...args: Parameters<typeof setEditorContext>
@@ -537,9 +537,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	renderNoCodemarks = () => {
-		const { textEditorUri, activeReviewId } = this.props;
+		const { textEditorUri, currentReviewId } = this.props;
 
-		if (this.state.newCodemarkAttributes || activeReviewId) return null;
+		if (this.state.newCodemarkAttributes || currentReviewId) return null;
 
 		if (textEditorUri === undefined) {
 			return (
@@ -662,9 +662,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			textEditorLineCount,
 			lastVisibleLine,
 			documentMarkers,
-			metrics
+			metrics,
+			currentReviewId
 		} = this.props;
 		const { numLinesVisible } = this.state;
+
+		if (currentReviewId) return null;
 
 		const numVisibleRanges = textEditorVisibleRanges.length;
 
@@ -1133,13 +1136,13 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	render() {
-		const { activeReviewId } = this.props;
+		const { currentReviewId } = this.props;
 
 		const composeOpen = this.state.newCodemarkAttributes ? true : false;
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
-				{activeReviewId ? (
-					<ReviewNav reviewId={activeReviewId} composeOpen={composeOpen} />
+				{currentReviewId ? (
+					<ReviewNav reviewId={currentReviewId} composeOpen={composeOpen} />
 				) : (
 					this.renderHeader()
 				)}
@@ -1149,7 +1152,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					<PRInfoModal onClose={() => this.setState({ showPRInfoModal: false })} />
 				)}
 				{this.state.isLoading ? null : this.renderCodemarks()}
-				{this.renderViewSelectors()}
+				{!currentReviewId && this.renderViewSelectors()}
 			</div>
 		);
 	}
@@ -1334,7 +1337,7 @@ const mapStateToProps = (state: CodeStreamState) => {
 		showFeedbackSmiley: context.showFeedbackSmiley,
 		hasPRProvider,
 		currentStreamId: context.currentStreamId,
-		activeReviewId: context.activeReviewId,
+		currentReviewId: context.currentReviewId,
 		team: teams[context.currentTeamId],
 		viewInline: context.codemarksFileViewStyle === "inline",
 		viewHeadshots: configs.showHeadshots,

@@ -732,6 +732,7 @@ export class SimpleStream extends Component {
 		const { searchBarOpen, q } = this.state;
 		// if (searchBarOpen && q) activePanel = WebviewPanels.Codemarks;
 		if (searchBarOpen) activePanel = WebviewPanels.Codemarks;
+		if (this.props.currentReviewId) activePanel = WebviewPanels.CodemarksForFile;
 
 		let threadId = this.props.threadId;
 		let threadPost = this.findPostById(threadId);
@@ -810,6 +811,7 @@ export class SimpleStream extends Component {
 				activePanel
 			) &&
 			!this.props.activeReviewId &&
+			!this.props.currentReviewId &&
 			!activePanel.startsWith("configure-provider-") &&
 			!activePanel.startsWith("configure-enterprise-");
 
@@ -844,7 +846,7 @@ export class SimpleStream extends Component {
 						{this.props.currentCodemarkId && <CodemarkView />}
 					</>
 				)}
-				{this.props.currentReviewId && !this.props.activeReviewId && (
+				{false && this.props.currentReviewId && !this.props.activeReviewId && (
 					<Modal onClose={() => this.props.setCurrentReview()}>
 						<Review id={this.props.currentReviewId} />
 						<br />
@@ -856,7 +858,7 @@ export class SimpleStream extends Component {
 					activePanel !== WebviewPanels.CodemarksForFile &&
 					this.renderComposeBox(placeholderText, channelName)}
 				<div className={contentClass}>
-					{(activePanel === WebviewPanels.CodemarksForFile || this.props.activeReviewId) && (
+					{activePanel === WebviewPanels.CodemarksForFile && (
 						<InlineCodemarks
 							activePanel={activePanel}
 							setActivePanel={this.setActivePanel}

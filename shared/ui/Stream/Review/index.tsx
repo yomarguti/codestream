@@ -80,7 +80,6 @@ export interface BaseReviewProps extends CardProps {
 	reviewers?: CSUser[];
 	tags?: { id: string }[];
 	changeRequests?: CodemarkPlus[];
-	noActionButtons?: boolean;
 	renderFooter?: (
 		footer: typeof CardFooter,
 		inputContainer?: typeof ComposeWrapper
@@ -221,7 +220,7 @@ const BaseReview = (props: BaseReviewProps) => {
 	const reopen = () => dispatch(setReviewStatus(props.review.id, "open"));
 
 	const renderedHeaderActions = (() => {
-		if (props.noActionButtons) return null;
+		if (!props.collapsed) return null;
 
 		const approveItem = { label: "Approve", action: approve };
 		const rejectItem = { label: "Reject", action: reject };
@@ -249,7 +248,7 @@ const BaseReview = (props: BaseReviewProps) => {
 
 	const renderedStartReview = (() => {
 		if (!props.canStartReview) return null;
-		if (props.noActionButtons) return null;
+		// if (props.noActionButtons) return null;
 
 		return (
 			<DropdownButton
@@ -561,7 +560,7 @@ const ReplyInput = (props: { parentPostId: string; streamId: string }) => {
 
 type FromBaseReviewProps = Pick<
 	BaseReviewProps,
-	"collapsed" | "hoverEffect" | "onClick" | "className" | "renderFooter" | "noActionButtons"
+	"collapsed" | "hoverEffect" | "onClick" | "className" | "renderFooter"
 >;
 
 interface PropsWithId extends FromBaseReviewProps {

@@ -157,11 +157,11 @@ const StyledBoxedContent = styled(BoxedContent)`
 	}
 `;
 
-const ComposeArea = styled.div`
-	width: 50px;
+export const ComposeArea = styled.div`
+	width: 35px;
 	height: 100%;
 	position: fixed;
-	left: -51px;
+	left: -36px;
 	top: 0;
 	transition: left 0.1s;
 	background: var(--base-background-color);
@@ -212,11 +212,11 @@ export function ReviewNav(props: Props) {
 
 	const exit = async () => {
 		await dispatch(setCurrentReview());
-		await dispatch(setActiveReview());
+		// await dispatch(setActiveReview());
 	};
 
 	const showReview = async () => {
-		await dispatch(setActiveReview());
+		// await dispatch(setActiveReview());
 		await dispatch(setCurrentReview(review && review.id));
 	};
 
@@ -324,8 +324,8 @@ export function ReviewNav(props: Props) {
 							placement="bottomRight"
 						>
 							<Button variant="secondary" onClick={exit}>
-								<Icon className="narrow-icon" name="pause" />
-								<span className="wide-text">Pause</span>
+								<Icon className="narrow-icon" name="x" />
+								<span className="wide-text">Exit</span>
 							</Button>
 						</Tooltip>
 					</div>
@@ -384,22 +384,27 @@ export function ReviewNav(props: Props) {
 			<VerticallyCenter>
 				<StyledBoxedContent title="Review Instructions" onClose={toggleInstructions}>
 					<InstructionList>
+						{false && (
+							<InstructionItem>
+								<u
+									onMouseEnter={() => setHoverButton("info")}
+									onMouseLeave={() => setHoverButton("")}
+								>
+									View details
+								</u>{" "}
+								of the review
+								<Subtext>Including which files have changed</Subtext>
+							</InstructionItem>
+						)}
 						<InstructionItem>
 							<u
-								onMouseEnter={() => setHoverButton("info")}
+								onMouseEnter={() => setHoverButton("files")}
 								onMouseLeave={() => setHoverButton("")}
 							>
-								View details
-							</u>{" "}
-							of the review
-							<Subtext>Including which files have changed</Subtext>
-						</InstructionItem>
-						<InstructionItem>
-							<u onMouseEnter={() => setHoverButton("nav")} onMouseLeave={() => setHoverButton("")}>
 								Step through
 							</u>{" "}
 							the changes of the review
-							<Subtext>Or jump between files using the details button</Subtext>
+							<Subtext>By clicking on file names in any order</Subtext>
 						</InstructionItem>
 						<InstructionItem>
 							<u
@@ -422,6 +427,7 @@ export function ReviewNav(props: Props) {
 							<Subtext>Or pause to come back to it later</Subtext>
 						</InstructionItem>
 					</InstructionList>
+					<Button>Got it</Button>
 				</StyledBoxedContent>
 			</VerticallyCenter>
 		);
@@ -473,91 +479,112 @@ export function ReviewNav(props: Props) {
 
 	return (
 		<>
-			<PanelHeader title={title} position="fixed" className="active-review"></PanelHeader>
+			{false && (
+				<PanelHeader title={title} position="fixed" className="active-review"></PanelHeader>
+			)}
 			<Nav>
-				<div className={hoverButton == "info" ? "btn-group pulse" : "btn-group"}>
-					<Tooltip
-						placement="bottom"
-						title={
-							"Show/Hide Review Details"
-							// <>
-							// 	<SearchResult titleOnly result={review} />
-							// 	<div style={{ height: "5px" }} />
-							// 	<ChangesetFileList review={review} />
-							// 	{derivedState.hideReviewInstructions && (
-							// 		<div
-							// 			style={{ marginTop: "5px", fontSize: "smaller", cursor: "pointer" }}
-							// 			onClick={toggleInstructions}
-							// 		>
-							// 			Show Instructions
-							// 		</div>
-							// 	)}
-							// </>
-						}
-					>
-						<Button variant="secondary" onClick={toggleInstructions}>
-							<Icon name="i" />
-						</Button>
-					</Tooltip>
-				</div>
-				<div className={hoverButton == "nav" ? "btn-group pulse" : "btn-group"}>
-					<Tooltip
-						title={
-							<>
-								Next Change{" "}
-								<span className="binding">
-									<span className="keybinding extra-pad">{modifier}</span>
-									<span className="keybinding">&darr;</span>
-								</span>
-							</>
-						}
-						placement="bottom"
-					>
-						<Button onClick={jumpToNext}>
-							<span className="wide-text">{nextCount} </span>
-							<Icon name="arrow-down" />
-						</Button>
-					</Tooltip>
-					<Tooltip
-						title={
-							<>
-								Previous Change{" "}
-								<span className="binding">
-									<span className="keybinding extra-pad">{modifier}</span>
-									<span className="keybinding">&uarr;</span>
-								</span>
-							</>
-						}
-						placement="bottom"
-					>
-						<Button onClick={jumpToPrev}>
-							<span className="wide-text">{prevCount} </span>
-							<Icon name="arrow-up" />
-						</Button>
-					</Tooltip>
-				</div>
+				{false && (
+					<div className={hoverButton == "info" ? "btn-group pulse" : "btn-group"}>
+						<Tooltip
+							placement="bottom"
+							title={
+								"Show/Hide Review Details"
+								// <>
+								// 	<SearchResult titleOnly result={review} />
+								// 	<div style={{ height: "5px" }} />
+								// 	<ChangesetFileList review={review} />
+								// 	{derivedState.hideReviewInstructions && (
+								// 		<div
+								// 			style={{ marginTop: "5px", fontSize: "smaller", cursor: "pointer" }}
+								// 			onClick={toggleInstructions}
+								// 		>
+								// 			Show Instructions
+								// 		</div>
+								// 	)}
+								// </>
+							}
+						>
+							<Button variant="secondary" onClick={toggleInstructions}>
+								<Icon name="i" />
+							</Button>
+						</Tooltip>
+					</div>
+				)}
+				{false && (
+					<div className={hoverButton == "nav" ? "btn-group pulse" : "btn-group"}>
+						<Tooltip
+							title={
+								<>
+									Next Change{" "}
+									<span className="binding">
+										<span className="keybinding extra-pad">{modifier}</span>
+										<span className="keybinding">&darr;</span>
+									</span>
+								</>
+							}
+							placement="bottom"
+						>
+							<Button onClick={jumpToNext}>
+								<span className="wide-text">{nextCount} </span>
+								<Icon name="arrow-down" />
+							</Button>
+						</Tooltip>
+						<Tooltip
+							title={
+								<>
+									Previous Change{" "}
+									<span className="binding">
+										<span className="keybinding extra-pad">{modifier}</span>
+										<span className="keybinding">&uarr;</span>
+									</span>
+								</>
+							}
+							placement="bottom"
+						>
+							<Button onClick={jumpToPrev}>
+								<span className="wide-text">{prevCount} </span>
+								<Icon name="arrow-up" />
+							</Button>
+						</Tooltip>
+					</div>
+				)}
 				{statusButtons()}
 			</Nav>
-			{props.composeOpen ? null : derivedState.hideReviewInstructions ? (
+			{props.composeOpen ? null : (
 				<div
 					style={{
 						position: "absolute",
 						top: "0",
 						left: "0",
 						height: "100vh",
-						margin: "50px 0 0 0",
+						width: "100%",
+						margin: "0 0 0 0",
 						overflow: "auto",
 						zIndex: 1
 					}}
 				>
+					{!derivedState.hideReviewInstructions && renderedInstructions}
 					<ScrollBox>
-						<div className="vscroll" style={{ padding: "20px 40px 100px 40px" }}>
-							<Review noActionButtons review={review} />
+						<div
+							className="vscroll"
+							style={{
+								padding: "15px 20px 60px 40px",
+								width: "100%",
+								opacity: derivedState.hideReviewInstructions ? 1 : 0.35
+							}}
+						>
+							<Review review={review} />
+							{derivedState.hideReviewInstructions && (
+								<div
+									style={{ marginTop: "5px", fontSize: "smaller", cursor: "pointer" }}
+									onClick={toggleInstructions}
+								>
+									Show Instructions
+								</div>
+							)}
 						</div>
 					</ScrollBox>
 				</div>
-			) : (
-				renderedInstructions
 			)}
 
 			<Actions>

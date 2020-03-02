@@ -10,12 +10,12 @@ export const ChangesetFileList = (props: { review: ReviewPlus; noOnClick?: boole
 	const { review, noOnClick } = props;
 	const derivedState = useSelector((state: CodeStreamState) => {
 		if (
-			state.context.activeReviewId &&
+			state.context.currentReviewId &&
 			state.editorContext.scmInfo &&
 			state.editorContext.scmInfo.uri &&
 			state.editorContext.scmInfo.uri.startsWith("codestream-diff://")
 		) {
-			return { matchFile: state.editorContext.activeFile };
+			return { matchFile: state.editorContext.scmInfo.uri };
 		} else return { matchFile: "" };
 	});
 

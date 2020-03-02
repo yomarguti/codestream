@@ -59,7 +59,7 @@ const mapStateToProps = (state: CodeStreamState) => {
 		firstVisibleLine,
 		lastVisibleLine,
 		textEditorVisibleRanges,
-		activeReviewId: context.activeReviewId,
+		currentReviewId: context.currentReviewId,
 		textEditorSelection: getCurrentSelection(editorContext)
 	};
 };
@@ -185,7 +185,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 			<div
 				onMouseEnter={() => onMouseEnterHoverIcon(lineNum0)}
 				onMouseLeave={() => onMouseLeaveHoverIcon(lineNum0)}
-				className={cx("hover-plus", { hover, open, narrow: derivedState.activeReviewId })}
+				className={cx("hover-plus", { hover, open, narrow: derivedState.currentReviewId })}
 				key={lineNum0}
 				style={{ top }}
 			>
@@ -200,7 +200,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 							align={{ offset: [-3, 10] }}
 							delay={1}
 						/>
-						{!derivedState.activeReviewId && (
+						{!derivedState.currentReviewId && (
 							<Icon
 								onClick={e => handleClickPlus(e, CodemarkType.Issue, lineNum0)}
 								name="issue"
@@ -211,7 +211,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 								delay={1}
 							/>
 						)}
-						{!derivedState.activeReviewId && (
+						{!derivedState.currentReviewId && (
 							<Icon
 								onClick={e => handleClickPlus(e, CodemarkType.Link, lineNum0)}
 								name="link"
