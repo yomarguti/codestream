@@ -168,6 +168,7 @@ export interface ReviewChangesetFileInfo {
 	linesAdded: number;
 	linesRemoved: number;
 	status: FileStatus;
+	reviewStatus?: { [reviewerId: string]: "visited" | "current" };
 }
 
 export interface CSReviewDiffs {
