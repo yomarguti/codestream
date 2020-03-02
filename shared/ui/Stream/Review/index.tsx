@@ -120,7 +120,7 @@ const RepoInfo = styled.div`
 	}
 `;
 
-const ExpandedAuthor = styled.div`
+export const ExpandedAuthor = styled.div`
 	width: 100%;
 	margin-bottom: 8px;
 	color: var(--text-color-subtle);
@@ -151,7 +151,7 @@ const ReviewTitle = styled.div`
 	flex-grow: 10;
 `;
 
-const Description = styled.div`
+export const Description = styled.div`
 	margin-bottom: 15px;
 `;
 
@@ -290,6 +290,7 @@ const BaseReview = (props: BaseReviewProps) => {
 					<Icon name="review" className="type" />
 					<ReviewTitle>
 						<HeaderActions>
+							{renderedHeaderActions}
 							{renderedMenu}
 							{kebabIcon}
 						</HeaderActions>
@@ -297,11 +298,12 @@ const BaseReview = (props: BaseReviewProps) => {
 					</ReviewTitle>
 				</ReviewHeader>
 
-				<ExpandedAuthor>
-					{renderedHeaderActions}
-					Opened
-					<Timestamp relative time={props.review.createdAt} /> by {props.author.username}
-				</ExpandedAuthor>
+				{!props.collapsed && (
+					<ExpandedAuthor>
+						Opened
+						<Timestamp relative time={props.review.createdAt} /> by {props.author.username}
+					</ExpandedAuthor>
+				)}
 
 				<MetaSection>
 					{props.review.text && (
@@ -399,10 +401,9 @@ const BaseReview = (props: BaseReviewProps) => {
 						</Meta>
 					)}
 					{!props.collapsed && (
-						<Meta>
+						<Meta id="changed-files">
 							<MetaLabel>Changed Files</MetaLabel>
 							<MetaDescriptionForAssignees>
-								{renderedStartReview}
 								<ChangesetFileList review={review} noOnClick={!props.canStartReview} />
 							</MetaDescriptionForAssignees>
 						</Meta>

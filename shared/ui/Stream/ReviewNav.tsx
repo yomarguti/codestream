@@ -11,7 +11,7 @@ import { GetReviewRequestType } from "@codestream/protocols/agent";
 import { fetchReview } from "@codestream/webview/store/reviews/actions";
 import { CodeStreamState } from "../store";
 import { getReview } from "../store/reviews/reducer";
-import { MinimumWidthCard } from "./Codemark/BaseCodemark";
+import { MinimumWidthCard, Meta } from "./Codemark/BaseCodemark";
 import SearchResult from "./SearchResult";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { setReviewStatus } from "./actions";
@@ -25,8 +25,9 @@ import { setUserPreference } from "./actions";
 import { ReviewChangesetFileInfo } from "@codestream/protocols/api";
 import { ChangesetFileList } from "./Review/ChangesetFileList";
 import { Dispatch } from "../store/common";
-import { Review } from "./Review";
+import { Review, ExpandedAuthor, Description } from "./Review";
 import ScrollBox from "./ScrollBox";
+import { Dialog } from "../src/components/Dialog";
 
 const Actions = styled.div`
 	padding: 0 0 0 20px;
@@ -127,15 +128,17 @@ const VerticallyCenter = styled.div`
 `;
 
 const InstructionList = styled.ol`
-	padding-inline-start: 35px;
+	padding-inline-start: 15px;
 	// font-size: larger;
 `;
 const InstructionItem = styled.li`
 	margin: 0 0 20px 0;
+	cursor: pointer;
 	u {
-		cursor: pointer;
 	}
-	// color: var(--text-color-highlight);
+	&:hover {
+		color: var(--text-color-highlight);
+	}
 `;
 
 const Subtext = styled.div`
@@ -144,16 +147,13 @@ const Subtext = styled.div`
 	color: var(--text-color-subtle);
 `;
 
-const StyledBoxedContent = styled(BoxedContent)`
+const StyledBoxedContent = styled(Dialog)`
 	max-width: 30em;
 	margin: 0 auto;
-	padding: 5px 0 0 0;
-	h2 {
-		font-size: 16px;
-		font-weight: normal;
-	}
-	> span.title {
-		top: -17px;
+	button {
+		display: block;
+		margin: 0 auto;
+		width: 6em;
 	}
 `;
 
@@ -168,6 +168,21 @@ export const ComposeArea = styled.div`
 	border-right: 1px solid var(--base-border-color);
 	&.pulse {
 		left: 0;
+	}
+`;
+
+export const StyledReview = styled.div`
+	&.muted {
+		${Meta},
+		${Description} {
+			opacity: 0.35;
+		}
+	}
+	#changed-files {
+		transition: opacity 0.2s;
+	}
+	&.pulse #changed-files {
+		opacity: 1;
 	}
 `;
 
@@ -382,52 +397,40 @@ export function ReviewNav(props: Props) {
 	const renderedInstructions = React.useMemo(() => {
 		return (
 			<VerticallyCenter>
-				<StyledBoxedContent title="Review Instructions" onClose={toggleInstructions}>
+				<StyledBoxedContent title="Review Instructions">
 					<InstructionList>
 						{false && (
-							<InstructionItem>
-								<u
-									onMouseEnter={() => setHoverButton("info")}
-									onMouseLeave={() => setHoverButton("")}
-								>
-									View details
-								</u>{" "}
-								of the review
+							<InstructionItem
+								onMouseEnter={() => setHoverButton("info")}
+								onMouseLeave={() => setHoverButton("")}
+							>
+								<u>View details</u> of the review
 								<Subtext>Including which files have changed</Subtext>
 							</InstructionItem>
 						)}
-						<InstructionItem>
-							<u
-								onMouseEnter={() => setHoverButton("files")}
-								onMouseLeave={() => setHoverButton("")}
-							>
-								Step through
-							</u>{" "}
-							the changes of the review
+						<InstructionItem
+							onMouseEnter={() => setHoverButton("files")}
+							onMouseLeave={() => setHoverButton("")}
+						>
+							<u>Step through</u> the changes of the review
 							<Subtext>By clicking on file names in any order</Subtext>
 						</InstructionItem>
-						<InstructionItem>
-							<u
-								onMouseEnter={() => setHoverButton("comment")}
-								onMouseLeave={() => setHoverButton("")}
-							>
-								Comment on changes
-							</u>{" "}
-							in the left margin
+						<InstructionItem
+							onMouseEnter={() => setHoverButton("comment")}
+							onMouseLeave={() => setHoverButton("")}
+						>
+							<u>Comment on changes</u> in the left margin
 							<Subtext>You can also comment on related code as part of the review</Subtext>
 						</InstructionItem>
-						<InstructionItem>
-							<u
-								onMouseEnter={() => setHoverButton("actions")}
-								onMouseLeave={() => setHoverButton("")}
-							>
-								Approve or reject
-							</u>{" "}
-							the review when finished
+						<InstructionItem
+							onMouseEnter={() => setHoverButton("actions")}
+							onMouseLeave={() => setHoverButton("")}
+						>
+							<u>Approve or reject</u> the review when finished
 							<Subtext>Or pause to come back to it later</Subtext>
 						</InstructionItem>
 					</InstructionList>
-					<Button>Got it</Button>
+					<Button onClick={toggleInstructions}>Got it</Button>
 				</StyledBoxedContent>
 			</VerticallyCenter>
 		);
@@ -569,11 +572,17 @@ export function ReviewNav(props: Props) {
 							className="vscroll"
 							style={{
 								padding: "15px 20px 60px 40px",
-								width: "100%",
-								opacity: derivedState.hideReviewInstructions ? 1 : 0.35
+								width: "100%"
 							}}
 						>
-							<Review review={review} />
+							<StyledReview
+								className={
+									(derivedState.hideReviewInstructions ? "" : "muted ") +
+									(hoverButton == "files" ? "pulse" : "")
+								}
+							>
+								<Review review={review} />
+							</StyledReview>
 							{derivedState.hideReviewInstructions && (
 								<div
 									style={{ marginTop: "5px", fontSize: "smaller", cursor: "pointer" }}
