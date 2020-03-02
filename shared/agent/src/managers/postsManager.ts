@@ -949,14 +949,15 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			Logger.log("baseSha is: " + baseSha);
 
 			const newestCommitInReview = commits[0];
+			const oldestCommitInReview = commits[commits.length - 1];
 			let leftBaseSha;
 			let leftBaseAuthor;
 			let leftDiffs: ParsedDiff[];
 
 			const newestCommitNotInReview = scm.commits[commits.length];
 			if (newestCommitNotInReview == null) {
-				if (newestCommitInReview != null) {
-					const parent = await git.getCommit(scm.repoPath, newestCommitInReview.sha + "^");
+				if (oldestCommitInReview != null) {
+					const parent = await git.getCommit(scm.repoPath, oldestCommitInReview.sha + "^");
 					leftBaseSha = parent!.ref;
 					leftBaseAuthor = parent!.author;
 					leftDiffs = [];
