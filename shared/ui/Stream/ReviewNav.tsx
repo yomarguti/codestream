@@ -90,7 +90,20 @@ const Nav = styled.div`
 			}
 		}
 	}
-	@media only screen and (max-width: 550px) {
+`;
+const Root = styled.div`
+	.scroll-container {
+		margin: 50px 0 0 0;
+		position: absolute;
+		top: 0;
+		left: 0;
+		height: 100vh;
+		width: 100%;
+		overflow: auto;
+		zindex: 1;
+	}
+
+	@media only screen and (max-width: 300px) {
 		.btn-group {
 			button {
 				.narrow-icon {
@@ -103,13 +116,8 @@ const Nav = styled.div`
 				line-height: 1em;
 			}
 		}
-	}
-	@media only screen and (max-width: 350px) {
-		.btn-group {
-			margin-left: 5px;
-			button {
-				margin-left: 5px;
-			}
+		.scroll-container {
+			margin: 45px 0 0 0;
 		}
 	}
 `;
@@ -481,7 +489,7 @@ export function ReviewNav(props: Props) {
 	) || <>&nbsp;</>;
 
 	return (
-		<>
+		<Root>
 			{false && (
 				<PanelHeader title={title} position="fixed" className="active-review"></PanelHeader>
 			)}
@@ -554,24 +562,13 @@ export function ReviewNav(props: Props) {
 				{statusButtons()}
 			</Nav>
 			{props.composeOpen ? null : (
-				<div
-					style={{
-						position: "absolute",
-						top: "0",
-						left: "0",
-						height: "100vh",
-						width: "100%",
-						margin: "0 0 0 0",
-						overflow: "auto",
-						zIndex: 1
-					}}
-				>
+				<div className="scroll-container">
 					{!derivedState.hideReviewInstructions && renderedInstructions}
 					<ScrollBox>
 						<div
 							className="vscroll"
 							style={{
-								padding: "15px 20px 60px 40px",
+								padding: "10px 0 60px 40px",
 								width: "100%"
 							}}
 						>
@@ -600,6 +597,6 @@ export function ReviewNav(props: Props) {
 				{/*				<div className="review-title">{review && <SearchResult titleOnly result={review} />}</div> */}
 			</Actions>
 			<ComposeArea className={hoverButton == "comment" ? "pulse" : ""} />
-		</>
+		</Root>
 	);
 }

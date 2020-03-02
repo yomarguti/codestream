@@ -6,13 +6,14 @@ interface Props {
 	className?: string;
 	onClick?: React.MouseEventHandler;
 	selected?: boolean;
+	noHover?: boolean;
 }
 
 export const ChangesetFile = styled((props: ReviewChangesetFileInfo & Props) => {
 	return (
 		<div
-			className={`${props.className} ${
-				props.selected ? "selected" : ""
+			className={`${props.className} ${props.selected ? "selected" : ""} ${
+				props.noHover ? "no-hover" : ""
 			} row-with-icon-actions monospace ellipsis-left-container`}
 			onClick={props.onClick}
 		>

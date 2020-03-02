@@ -27,6 +27,7 @@ export const ChangesetFileList = (props: { review: ReviewPlus; noOnClick?: boole
 					return (
 						<ChangesetFile
 							selected={(derivedState.matchFile || "").endsWith(f.file)}
+							noHover={noOnClick}
 							onClick={e => {
 								if (noOnClick) return;
 								e.preventDefault();

@@ -216,7 +216,9 @@
 }
 
 .row-with-icon-actions {
-	cursor: pointer;
+	&:not(.no-hover) {
+		cursor: pointer;
+	}
 	&.ellipsis-left-container {
 		height: 1.4em;
 		// overflow-x: hidden;
@@ -255,7 +257,7 @@
 	&.muted {
 		opacity: 0.5;
 	}
-	&:hover {
+	&:hover:not(.no-hover) {
 		color: @text-color-highlight;
 		background-color: @app-background-color-hover;
 		.icon.action {
