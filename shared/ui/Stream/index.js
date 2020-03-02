@@ -810,7 +810,6 @@ export class SimpleStream extends Component {
 			!["create-channel", "create-dm", "public-channels", WebviewPanels.Status].includes(
 				activePanel
 			) &&
-			!this.props.activeReviewId &&
 			!this.props.currentReviewId &&
 			!activePanel.startsWith("configure-provider-") &&
 			!activePanel.startsWith("configure-enterprise-");
@@ -2332,7 +2331,6 @@ const mapStateToProps = state => {
 		currentCodemarkId: context.currentCodemarkId,
 		currentMarkerId: context.currentMarkerId,
 		currentReviewId: context.currentReviewId,
-		activeReviewId: context.activeReviewId,
 		capabilities: capabilities,
 		pluginVersion,
 		channelStreams,

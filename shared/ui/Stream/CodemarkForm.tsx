@@ -131,7 +131,7 @@ interface ConnectedProps {
 	apiCapabilities: CSApiCapabilities;
 	shouldShare: boolean;
 	currentTeamId: string;
-	activeReviewId?: string;
+	currentReviewId?: string;
 }
 
 interface State {
@@ -597,10 +597,10 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		let parentPostId: string | undefined = undefined;
 		// all codemarks created while in a review are attached to that review
-		if (this.props.activeReviewId) {
+		if (this.props.currentReviewId) {
 			try {
 				const response = await HostApi.instance.send(GetReviewRequestType, {
-					reviewId: this.props.activeReviewId
+					reviewId: this.props.currentReviewId
 				});
 				parentPostId = response.review.postId;
 			} catch (error) {
@@ -685,7 +685,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			!this.props.isEditing &&
 			this.props.shouldShare &&
 			!this._sharingAttributes &&
-			!this.props.activeReviewId
+			!this.props.currentReviewId
 		) {
 			invalid = true;
 			validationState.sharingAttributesInvalid = true;
@@ -908,7 +908,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	renderSharingControls = () => {
 		if (this.props.isEditing) return null;
-		if (this.props.activeReviewId) return null;
+		if (this.props.currentReviewId) return null;
 
 		const { codeBlocks } = this.state;
 		// we only look at the first code range here because we're using it to default
@@ -1576,13 +1576,13 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	render() {
 		const { codeBlocks } = this.state;
-		const { editingCodemark, activeReviewId } = this.props;
+		const { editingCodemark, currentReviewId } = this.props;
 
 		const commentType = editingCodemark ? editingCodemark.type : this.state.type || "comment";
 
 		// if you are conducting a review, and somehow are able to try to
 		// create an issue or a permalink, stop the user from doing that
-		if (commentType !== "comment" && activeReviewId) {
+		if (commentType !== "comment" && currentReviewId) {
 			return (
 				<Modal onClose={this.cancelCompose} verticallyCenter>
 					<div style={{ width: "20em", fontSize: "larger", margin: "0 auto" }}>
@@ -1810,7 +1810,7 @@ class CodemarkForm extends React.Component<Props, State> {
 					{commentType !== "link" && this.props.teamProvider === "codestream"
 						? this.renderSharingControls()
 						: this.renderCrossPostMessage(commentType)}
-					{this.props.activeReviewId && this.renderRequireChange()}
+					{this.props.currentReviewId && this.renderRequireChange()}
 					{true && (
 						<div
 							key="buttons"
@@ -1945,7 +1945,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		teamTagsArray,
 		codemarkState: codemarks,
 		apiCapabilities: apiVersioning.apiCapabilities,
-		activeReviewId: context.activeReviewId
+		currentReviewId: context.currentReviewId
 	};
 };
 
