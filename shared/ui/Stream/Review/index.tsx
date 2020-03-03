@@ -67,6 +67,7 @@ import { MarkdownText } from "../MarkdownText";
 import { Dispatch } from "@codestream/webview/store/common";
 import { Loading } from "@codestream/webview/Container/Loading";
 import Timestamp from "../Timestamp";
+import { TourTip } from "@codestream/webview/src/components/TourTip";
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
@@ -85,6 +86,7 @@ export interface BaseReviewProps extends CardProps {
 		inputContainer?: typeof ComposeWrapper
 	) => React.ReactNode;
 	renderMenu?: (target: any, onClose: () => void) => React.ReactNode;
+	filesTip?: any;
 }
 
 const Clickable = styled(Link)`
@@ -130,7 +132,7 @@ export const ExpandedAuthor = styled.div`
 	}
 `;
 
-const ReviewHeader = styled.div`
+export const ReviewHeader = styled.div`
 	width: 100%;
 	margin-bottom: 3px;
 	display: flex;
@@ -400,12 +402,14 @@ const BaseReview = (props: BaseReviewProps) => {
 						</Meta>
 					)}
 					{!props.collapsed && (
-						<Meta id="changed-files">
-							<MetaLabel>Changed Files</MetaLabel>
-							<MetaDescriptionForAssignees>
-								<ChangesetFileList review={review} noOnClick={!props.canStartReview} />
-							</MetaDescriptionForAssignees>
-						</Meta>
+						<TourTip title={props.filesTip} placement="top">
+							<Meta id="changed-files">
+								<MetaLabel>Changed Files</MetaLabel>
+								<MetaDescriptionForAssignees>
+									<ChangesetFileList review={review} noOnClick={!props.canStartReview} />
+								</MetaDescriptionForAssignees>
+							</Meta>
+						</TourTip>
 					)}
 					{/*!props.collapsed && (
 						<Meta>
@@ -560,7 +564,7 @@ const ReplyInput = (props: { parentPostId: string; streamId: string }) => {
 
 type FromBaseReviewProps = Pick<
 	BaseReviewProps,
-	"collapsed" | "hoverEffect" | "onClick" | "className" | "renderFooter"
+	"collapsed" | "hoverEffect" | "onClick" | "className" | "renderFooter" | "filesTip"
 >;
 
 interface PropsWithId extends FromBaseReviewProps {

@@ -25,9 +25,12 @@ import { setUserPreference } from "./actions";
 import { ReviewChangesetFileInfo } from "@codestream/protocols/api";
 import { ChangesetFileList } from "./Review/ChangesetFileList";
 import { Dispatch } from "../store/common";
-import { Review, ExpandedAuthor, Description } from "./Review";
+import { Review, ExpandedAuthor, Description, ReviewHeader } from "./Review";
 import ScrollBox from "./ScrollBox";
 import { Dialog } from "../src/components/Dialog";
+import { TourTip } from "../src/components/TourTip";
+import { Modal } from "./Modal";
+import { MarkdownText } from "./MarkdownText";
 
 const Actions = styled.div`
 	padding: 0 0 0 20px;
@@ -62,7 +65,10 @@ const Nav = styled.div`
 	position: fixed;
 	top: 10px;
 	right: 10px;
-	z-index: 126;
+	z-index: 50;
+	&.pulse {
+		opacity: 1 !important;
+	}
 	.btn-group {
 		display: inline-block;
 		margin-left: 10px;
@@ -70,15 +76,6 @@ const Nav = styled.div`
 		transform-origin: 50% 0%;
 		&:last-child {
 			transform-origin: 100% 0%;
-		}
-		&.pulse {
-			transform: scale(1.5);
-			background: var(--app-background-color);
-			button {
-				// box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-				box-shadow: 0 5px 30px rgba(0, 0, 0, 0.8);
-				// box-shadow: 0 0 10px rgba(255, 255, 0, 1);
-			}
 		}
 		button {
 			margin-left: 10px;
@@ -91,7 +88,34 @@ const Nav = styled.div`
 		}
 	}
 `;
+const ClearModal = styled.div`
+	position: absolute;
+	z-index: 51;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+`;
 const Root = styled.div`
+background: (--panel-tool-background-color);
+	&.tour-on {
+		${Nav},
+		${Meta},
+		${Description},
+		${ExpandedAuthor},
+		${ReviewHeader} {
+			opacity: 0.25;
+		}
+	}
+	#changed-files {
+		transition: opacity 0.2s;
+	}
+	.pulse #changed-files {
+		opacity: 1;
+		box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+		background: var(--app-background-color-hover);
+	}
+
 	.scroll-container {
 		margin: 50px 0 0 0;
 		position: absolute;
@@ -179,19 +203,35 @@ export const ComposeArea = styled.div`
 	}
 `;
 
-export const StyledReview = styled.div`
-	&.muted {
-		${Meta},
-		${Description} {
-			opacity: 0.35;
-		}
+export const StyledReview = styled.div``;
+
+const Tip = styled.div`
+	button {
+		margin-top: 10px;
+		float: right;
 	}
-	#changed-files {
-		transition: opacity 0.2s;
+	b {
+		display: block;
+		clear: both;
 	}
-	&.pulse #changed-files {
-		opacity: 1;
-	}
+`;
+
+const Step = styled.div`
+	float: left;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 20px;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	margin: 0 10px 10px 0;
+	font-weight: bold;
+
+	background: var(--button-background-color);
+	color: var(--button-foreground-color);
+	// background: var(--text-color-highlight);
+	// color: var(--base-background-color);
 `;
 
 const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
@@ -228,7 +268,9 @@ export function ReviewNav(props: Props) {
 		return modifiedFiles;
 	}, [derivedState.review]);
 	const [notFound, setNotFound] = React.useState(false);
-	const [hoverButton, setHoverButton] = React.useState("");
+	const [hoverButton, setHoverButton] = React.useState(
+		derivedState.hideReviewInstructions ? "" : "files"
+	);
 	const [progressCounter, setProgressCounter] = React.useState(0);
 
 	const { review } = derivedState;
@@ -296,7 +338,7 @@ export function ReviewNav(props: Props) {
 	};
 
 	const statusButtons = () => {
-		if (!review) return;
+		if (!review) return null;
 		switch (review.status) {
 			case "open":
 				return (
@@ -395,8 +437,9 @@ export function ReviewNav(props: Props) {
 					</div>
 				);
 			default:
-				return;
+				return null;
 		}
+		return null;
 	};
 
 	const toggleInstructions = () => {
@@ -484,87 +527,62 @@ export function ReviewNav(props: Props) {
 		return { label: f.file, key: f.file, action: () => jumpToFile(f, 0) };
 	});
 
+	const tourDone = () => {
+		setHoverButton("");
+		toggleInstructions();
+	};
+
 	// let title = fs.pathBasename(derivedState.filePath || "");
 	let title = fs.pathBasename(
 		derivedState.filePath || derivedState.editorContext.activeFile || ""
 	) || <>&nbsp;</>;
 
+	const filesTip =
+		hoverButton === "files" ? (
+			<Tip>
+				<Step>1</Step> Step through the changes of the review
+				<Subtext>By clicking on filenames in any order</Subtext>
+				<Button onClick={() => setHoverButton("comment")}>Next</Button>
+				<b></b>
+			</Tip>
+		) : (
+			undefined
+		);
+
+	const commentTip =
+		hoverButton === "comment" ? (
+			<Tip>
+				<Step>2</Step>Comment on changes in the left margin
+				<Subtext>You can also comment on related code as part of the review</Subtext>
+				<Button onClick={() => setHoverButton("actions")}>Next ></Button>
+				<b></b>
+			</Tip>
+		) : (
+			undefined
+		);
+
+	const actionsTip =
+		hoverButton === "actions" ? (
+			<Tip>
+				<Step>3</Step>Approve or reject the review when finished
+				<Subtext>Or pause to come back to it later</Subtext>
+				<Button onClick={tourDone}>Done</Button>
+				<b></b>
+			</Tip>
+		) : (
+			undefined
+		);
+
 	return (
-		<Root>
-			{false && (
-				<PanelHeader title={title} position="fixed" className="active-review"></PanelHeader>
-			)}
-			<Nav>
-				{false && (
-					<div className={hoverButton == "info" ? "btn-group pulse" : "btn-group"}>
-						<Tooltip
-							placement="bottom"
-							title={
-								"Show/Hide Review Details"
-								// <>
-								// 	<SearchResult titleOnly result={review} />
-								// 	<div style={{ height: "5px" }} />
-								// 	<ChangesetFileList review={review} />
-								// 	{derivedState.hideReviewInstructions && (
-								// 		<div
-								// 			style={{ marginTop: "5px", fontSize: "smaller", cursor: "pointer" }}
-								// 			onClick={toggleInstructions}
-								// 		>
-								// 			Show Instructions
-								// 		</div>
-								// 	)}
-								// </>
-							}
-						>
-							<Button variant="secondary" onClick={toggleInstructions}>
-								<Icon name="i" />
-							</Button>
-						</Tooltip>
-					</div>
-				)}
-				{false && (
-					<div className={hoverButton == "nav" ? "btn-group pulse" : "btn-group"}>
-						<Tooltip
-							title={
-								<>
-									Next Change{" "}
-									<span className="binding">
-										<span className="keybinding extra-pad">{modifier}</span>
-										<span className="keybinding">&darr;</span>
-									</span>
-								</>
-							}
-							placement="bottom"
-						>
-							<Button onClick={jumpToNext}>
-								<span className="wide-text">{nextCount} </span>
-								<Icon name="arrow-down" />
-							</Button>
-						</Tooltip>
-						<Tooltip
-							title={
-								<>
-									Previous Change{" "}
-									<span className="binding">
-										<span className="keybinding extra-pad">{modifier}</span>
-										<span className="keybinding">&uarr;</span>
-									</span>
-								</>
-							}
-							placement="bottom"
-						>
-							<Button onClick={jumpToPrev}>
-								<span className="wide-text">{prevCount} </span>
-								<Icon name="arrow-up" />
-							</Button>
-						</Tooltip>
-					</div>
-				)}
-				{statusButtons()}
+		<Root className={derivedState.hideReviewInstructions ? "" : "tour-on"}>
+			{!derivedState.hideReviewInstructions && <ClearModal />}
+			<Nav className={hoverButton == "actions" ? "pulse" : ""}>
+				<TourTip title={actionsTip} placement="bottomRight">
+					{statusButtons()}
+				</TourTip>
 			</Nav>
 			{props.composeOpen ? null : (
 				<div className="scroll-container">
-					{!derivedState.hideReviewInstructions && renderedInstructions}
 					<ScrollBox>
 						<div
 							className="vscroll"
@@ -573,18 +591,17 @@ export function ReviewNav(props: Props) {
 								width: "100%"
 							}}
 						>
-							<StyledReview
-								className={
-									(derivedState.hideReviewInstructions ? "" : "muted ") +
-									(hoverButton == "files" ? "pulse" : "")
-								}
-							>
-								<Review review={review} />
+							<StyledReview className={hoverButton == "files" ? "pulse" : ""}>
+								<Review review={review} filesTip={filesTip} />
 							</StyledReview>
+
 							{derivedState.hideReviewInstructions && (
 								<div
 									style={{ marginTop: "5px", fontSize: "smaller", cursor: "pointer" }}
-									onClick={toggleInstructions}
+									onClick={() => {
+										setHoverButton("files");
+										toggleInstructions();
+									}}
 								>
 									Show Instructions
 								</div>
@@ -597,7 +614,9 @@ export function ReviewNav(props: Props) {
 			<Actions>
 				{/*				<div className="review-title">{review && <SearchResult titleOnly result={review} />}</div> */}
 			</Actions>
-			<ComposeArea className={hoverButton == "comment" ? "pulse" : ""} />
+			<TourTip title={commentTip} placement="right">
+				<ComposeArea className={hoverButton == "comment" ? "pulse" : ""} />
+			</TourTip>
 		</Root>
 	);
 }

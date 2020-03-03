@@ -11,6 +11,9 @@ interface Props {
 	align?: any;
 	delay?: number;
 	overlayStyle?: AnyObject;
+	defaultVisible?: boolean;
+	trigger?: RCT.Trigger[];
+	transitionName?: string;
 }
 
 export type Placement = RCT.Placement;
@@ -32,7 +35,9 @@ export default function Tooltip(props: Props) {
 					placement={props.placement}
 					align={props.align}
 					overlay={content}
-					trigger={["hover", "click"]}
+					transitionName={props.transitionName}
+					defaultVisible={props.defaultVisible}
+					trigger={props.trigger || ["hover", "click"]}
 					overlayStyle={{ opacity: 1, zIndex, ...overlayStyle }}
 					mouseEnterDelay={props.delay || 0}
 				>
