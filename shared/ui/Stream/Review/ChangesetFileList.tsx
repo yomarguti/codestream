@@ -33,12 +33,12 @@ export const ChangesetFileList = (props: { review: ReviewPlus; noOnClick?: boole
 				...changeset.modifiedFiles.map(f => {
 					const selected = (derivedState.matchFile || "").endsWith(f.file);
 					const visited = f.reviewStatus && f.reviewStatus[derivedState.userId] === "visited";
-					const icon = selected ? "arrow-right" : visited ? "ok" : "circle";
+					const icon = noOnClick ? null : selected ? "arrow-right" : visited ? "ok" : "circle";
 					return (
 						<ChangesetFile
 							selected={selected}
 							noHover={noOnClick}
-							icon={<Icon name={icon} className="file-icon" />}
+							icon={icon && <Icon name={icon} className="file-icon" />}
 							onClick={async e => {
 								if (noOnClick) return;
 								e.preventDefault();

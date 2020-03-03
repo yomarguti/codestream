@@ -382,8 +382,7 @@ export function ReviewNav(props: Props) {
 								<>
 									Pause Review{" "}
 									<span className="binding">
-										<span className="keybinding extra-pad">{modifier}</span>
-										<span className="keybinding">z</span>
+										<span className="keybinding">ESC</span>
 									</span>
 								</>
 							}
@@ -400,38 +399,26 @@ export function ReviewNav(props: Props) {
 			case "rejected":
 				return (
 					<div className={hoverButton == "actions" ? "btn-group pulse" : "btn-group"}>
-						<Tooltip
-							title={
-								<>
-									Exit Review{" "}
-									<span className="binding">
-										<span className="keybinding extra-pad">{modifier}</span>
-										<span className="keybinding">z</span>
-									</span>
-								</>
-							}
-							placement="bottom"
-						>
-							<Button variant="secondary" onClick={exit}>
-								<Icon className="narrow-icon" name="x" />
-								<span className="wide-text">Exit</span>
+						<Tooltip title="Reopen Review" placement="bottomRight">
+							<Button variant="secondary" onClick={reopen}>
+								<Icon className="narrow-icon" name="reopen" />
+								<span className="wide-text">Reopen</span>
 							</Button>
 						</Tooltip>
 						<Tooltip
 							title={
 								<>
-									Reopen Review{" "}
+									Exit Review{" "}
 									<span className="binding">
-										<span className="keybinding extra-pad">{modifier}</span>
-										<span className="keybinding">&darr;</span>
+										<span className="keybinding">ESC</span>
 									</span>
 								</>
 							}
 							placement="bottomRight"
 						>
-							<Button variant="secondary" onClick={reopen}>
-								<Icon className="narrow-icon" name="reopen" />
-								<span className="wide-text">o</span>
+							<Button variant="secondary" onClick={exit}>
+								<Icon className="narrow-icon" name="x" />
+								<span className="wide-text">Exit</span>
 							</Button>
 						</Tooltip>
 					</div>
