@@ -156,6 +156,7 @@ export class Commands implements Disposable {
 	@command("showReviewDiff", { showErrorMessage: "Unable to display review diff" })
 	async showReviewDiff(args: ShowReviewDiffCommandArgs): Promise<boolean> {
 		await Container.diffContents.loadContents(args.reviewId, args.repoId, args.path);
+		const { review } = await Container.agent.reviews.get(args.reviewId);
 
 		// FYI, see showMarkerDiff() above
 		let column = Container.webview.viewColumn as number | undefined;
@@ -170,7 +171,7 @@ export class Commands implements Disposable {
 			BuiltInCommands.Diff,
 			Uri.parse(`codestream-diff://${args.reviewId}/${args.repoId}/base/${args.path}`),
 			Uri.parse(`codestream-diff://${args.reviewId}/${args.repoId}/head/${args.path}`),
-			`${args.path} @ CodeStream Review #${args.reviewId}`,
+			`${args.path} @ ${review.title}`,
 			{ preserveFocus: false, preview: true, viewColumn: column || ViewColumn.Beside }
 		);
 

@@ -82,7 +82,8 @@ import {
 	UpdatePreferencesRequestType,
 	UpdatePresenceRequestType,
 	UpdateStreamMembershipRequestType,
-	UpdateStreamMembershipResponse
+	UpdateStreamMembershipResponse,
+	GetReviewRequestType
 } from "@codestream/protocols/agent";
 import {
 	ChannelServiceType,
@@ -533,6 +534,12 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 	private readonly _reviews = new (class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
+
+		get(reviewId: string) {
+			return this._connection.sendRequest(GetReviewRequestType, {
+				reviewId
+			});
+		}
 
 		getContents(reviewId: string, repoId: string, path: string) {
 			return this._connection.sendRequest(GetReviewContentsRequestType, {
