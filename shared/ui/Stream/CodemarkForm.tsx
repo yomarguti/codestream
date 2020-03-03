@@ -1586,8 +1586,8 @@ class CodemarkForm extends React.Component<Props, State> {
 			return (
 				<Modal onClose={this.cancelCompose} verticallyCenter>
 					<div style={{ width: "20em", fontSize: "larger", margin: "0 auto" }}>
-						Sorry, you can't add an issue while doing a review. Please create a comment with a
-						"required change" instead.
+						Sorry, you can't add an issue while doing a review. Mark your a comment as a
+						"change request" instead.
 						<div className="button-group one-button">
 							<Button className="control-button" onClick={this.cancelCompose}>
 								OK
