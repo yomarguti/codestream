@@ -488,6 +488,7 @@ const ReplyInput = (props: { parentPostId: string; streamId: string }) => {
 					assignees: [],
 					relatedCodemarkIds: [],
 					accessMemberIds: [],
+					isChangeRequest: true,
 					tags: []
 				})
 			);
