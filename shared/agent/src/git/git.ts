@@ -38,7 +38,8 @@ export async function git(
 		// Adds GCM environment variables to avoid any possible credential issues -- from https://github.com/Microsoft/vscode/issues/26573#issuecomment-338686581
 		// Shouldn't *really* be needed but better safe than sorry
 		env: {
-			...(options.env || process.env),
+			...process.env,
+			...options.env,
 			GCM_INTERACTIVE: "NEVER",
 			GCM_PRESERVE_CREDS: "TRUE",
 			LC_ALL: "C"
