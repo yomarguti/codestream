@@ -94,8 +94,6 @@ export const setCurrentReview = (reviewId?: string) =>
 export const setActiveReview = (reviewId?: string) =>
 	action(ContextActionsType.SetActiveReview, { reviewId });
 
-export const openSearch = () => openPanel(WebviewPanels.FilterSearch);
-
 export const setShowFeedbackSmiley = (enabled: boolean) =>
 	action(ContextActionsType.SetShowFeedbackSmiley, enabled);
 

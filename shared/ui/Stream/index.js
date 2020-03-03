@@ -84,8 +84,7 @@ import {
 	setCurrentStream,
 	setNewPostEntry,
 	setCurrentReview,
-	setActiveReview,
-	openSearch
+	setActiveReview
 } from "../store/context/actions";
 import { getTeamProvider } from "../store/teams/reducer";
 import {
@@ -710,7 +709,7 @@ export class SimpleStream extends Component {
 	}
 
 	goSearch = () => {
-		this.props.openSearch();
+		this.props.openPanel(WebviewPanels.FilterSearch);
 	};
 
 	// dead code
@@ -2418,7 +2417,6 @@ export default connect(mapStateToProps, {
 	setCurrentStream,
 	editCodemark,
 	setNewPostEntry,
-	openSearch,
 	logout,
 	switchToTeam
 })(injectIntl(SimpleStream));
