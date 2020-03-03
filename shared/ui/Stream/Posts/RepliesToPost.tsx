@@ -54,7 +54,7 @@ export const RepliesToPost = (props: { streamId: string; parentPostId: string })
 	);
 
 	useDidMount(() => {
-		if (replies.length === 0) dispatch(fetchThread(props.streamId, props.parentPostId));
+		dispatch(fetchThread(props.streamId, props.parentPostId));
 	});
 
 	const submit = async () => {
