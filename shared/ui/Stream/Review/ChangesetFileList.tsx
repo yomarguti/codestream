@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { ReviewPlus } from "@codestream/protocols/agent";
 import { HostApi } from "../..";
 import { ReviewShowDiffRequestType } from "@codestream/protocols/webview";
@@ -24,6 +24,8 @@ export const ChangesetFileList = (props: { review: ReviewPlus; noOnClick?: boole
 		} else return { matchFile: "", userId };
 	});
 
+	const [visited, setVisited] = useState({});
+
 	const changedFiles = React.useMemo(() => {
 		const files: any[] = [];
 		for (let changeset of review.reviewChangesets) {
@@ -31,16 +33,18 @@ export const ChangesetFileList = (props: { review: ReviewPlus; noOnClick?: boole
 				...changeset.modifiedFiles.map(f => {
 					const selected = (derivedState.matchFile || "").endsWith(f.file);
 					const visited = f.reviewStatus && f.reviewStatus[derivedState.userId] === "visited";
-					const icon = selected ? "arrow-right" : visited ? "heart" : "heart";
+					const icon = selected ? "arrow-right" : visited ? "ok" : "circle";
 					return (
 						<ChangesetFile
 							selected={selected}
 							noHover={noOnClick}
 							icon={<Icon name={icon} className="file-icon" />}
-							onClick={e => {
+							onClick={async e => {
 								if (noOnClick) return;
 								e.preventDefault();
-								dispatch(showDiff(review.id, changeset.repoId, f.file));
+								await dispatch(showDiff(review.id, changeset.repoId, f.file));
+								if (!f.reviewStatus) f.reviewStatus = {};
+								if (f.reviewStatus) f.reviewStatus[derivedState.userId] = "visited";
 							}}
 							key={f.file}
 							{...f}

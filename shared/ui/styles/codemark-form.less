@@ -221,12 +221,12 @@
 		cursor: pointer;
 	}
 	&.with-file-icon {
-		padding-left: 16px;
+		padding-left: 20px;
 	}
 	.icon.file-icon {
 		position: absolute !important;
 		left: 0;
-		top: -1px;
+		top: -2px;
 		opacity: 0.6;
 	}
 	&.ellipsis-left-container {
@@ -239,9 +239,12 @@
 		color: var(--text-color-highlight);
 		font-weight: bold;
 		position: relative;
-		text-shadow: 0 1px 2px rgba(0, 0, 0, 1);
+		background: var(--app-background-color-hover);
 		.icon.file-icon {
 			opacity: 1;
+			left: 3px;
+			display: inline-block;
+			transform: scale(1.25);
 		}
 	}
 	&.selected::before {
