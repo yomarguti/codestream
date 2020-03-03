@@ -756,7 +756,7 @@ type ReviewStatus = "closed" | "open" | "rejected";
 const describeStatusChange = (action: ReviewStatus) => {
 	switch (action) {
 		case "open":
-			return "re-opened";
+			return "reopened";
 		case "closed":
 			return "approved";
 		default:
