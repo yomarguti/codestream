@@ -26,8 +26,7 @@ export enum ContextActionsType {
 	SetSpatialViewPRCommentsToggle = "@context/SetSpatialViewPRCommentsToggle",
 	RepositionCodemark = "@context/RepositionCodemark",
 	SetCurrentReview = "@context/SetCurrentReview",
-	SetActiveReview = "@context/SetActiveReview",
-	SetQuery = "@context/SetQuery"
+	SetActiveReview = "@context/SetActiveReview"
 }
 
 export type PostEntryPoint = "Stream" | "Global Nav" | "Spatial View" | undefined;
@@ -58,8 +57,6 @@ export interface ContextState extends WebviewContext {
 	route: RouteState;
 
 	chatProviderAccess: ChatProviderAccess;
-
-	query?: string;
 }
 
 export type ChatProviderAccess = "strict" | "permissive";

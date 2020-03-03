@@ -8,14 +8,15 @@ import { createSelector } from "reselect";
 import { mapFilter } from "@codestream/webview/utils";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { fetchReviews } from "@codestream/webview/store/reviews/actions";
+import { SearchContext, SearchContextType } from "../SearchContextProvider";
 
 type SearchableItems = (CSReview | CodemarkPlus)[];
 
-export type WithSearchableItemsProps = {
+export interface WithSearchableItemsProps extends SearchContextType {
 	items: SearchableItems;
 	branchOptions: string[];
 	repoOptions: string[];
-};
+}
 
 const getSearchableCodemarks = createSelector(
 	(state: CodeStreamState) => state.codemarks,
@@ -42,6 +43,7 @@ export function withSearchableItems<ChildProps extends WithSearchableItemsProps>
 		const codemarks = useSelector(getSearchableCodemarks);
 		const reviewsState = useSelector((state: CodeStreamState) => state.reviews);
 		const reposState = useSelector((state: CodeStreamState) => state.repos);
+		const searchContext = React.useContext(SearchContext);
 
 		useDidMount(() => {
 			if (!hasFetchedReviews) {
@@ -73,7 +75,8 @@ export function withSearchableItems<ChildProps extends WithSearchableItemsProps>
 		const providingProps: WithSearchableItemsProps = {
 			items,
 			branchOptions,
-			repoOptions
+			repoOptions,
+			...searchContext
 		};
 
 		return React.createElement(Child, {

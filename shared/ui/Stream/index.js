@@ -26,7 +26,6 @@ import ChannelMenu from "./ChannelMenu";
 import Icon from "./Icon";
 import Menu from "./Menu";
 import CancelButton from "./CancelButton";
-import { FeatureFlag } from "./FeatureFlag";
 import Tooltip from "./Tooltip";
 import OfflineBanner from "./OfflineBanner";
 import ConfigureAzureDevOpsPanel from "./ConfigureAzureDevOpsPanel";
@@ -86,7 +85,7 @@ import {
 	setNewPostEntry,
 	setCurrentReview,
 	setActiveReview,
-	setQuery
+	openSearch
 } from "../store/context/actions";
 import { getTeamProvider } from "../store/teams/reducer";
 import {
@@ -711,7 +710,7 @@ export class SimpleStream extends Component {
 	}
 
 	goSearch = () => {
-		this.props.setQuery("");
+		this.props.openSearch();
 	};
 
 	// dead code
@@ -827,6 +826,7 @@ export class SimpleStream extends Component {
 			activePanel.startsWith("configure-enterprise-")
 				? activePanel.split("-")
 				: null;
+
 		return (
 			<div id="stream-root" className={streamClass}>
 				<ModalRoot />
@@ -2418,7 +2418,7 @@ export default connect(mapStateToProps, {
 	setCurrentStream,
 	editCodemark,
 	setNewPostEntry,
-	setQuery,
+	openSearch,
 	logout,
 	switchToTeam
 })(injectIntl(SimpleStream));

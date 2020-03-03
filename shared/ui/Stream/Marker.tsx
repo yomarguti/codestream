@@ -7,9 +7,8 @@ import { escapeHtml, safe } from "../utils";
 import Icon from "./Icon";
 import { CodeStreamState } from "../store";
 import { getById } from "../store/repos/reducer";
-import { HostApi } from "../webview-api";
-import { setQuery, setCurrentCodemark, openPanel, setCurrentReview } from "../store/context/actions";
-import { WebviewPanels } from '@codestream/protocols/webview';
+import { setCurrentCodemark, setCurrentReview } from "../store/context/actions";
+import { SearchContext } from "./SearchContextProvider";
 
 interface Props {
 	marker: CSMarker;
@@ -21,14 +20,14 @@ function Marker(props: Props) {
 	const { marker } = props;
 
 	const dispatch = useDispatch();
+	const searchContext = React.useContext(SearchContext);
 	const goSearch = (e: React.SyntheticEvent, query: string) => {
 		e.preventDefault();
 		e.stopPropagation();
 
 		dispatch(setCurrentCodemark());
 		dispatch(setCurrentReview());
-		dispatch(openPanel(WebviewPanels.FilterSearch));
-		dispatch(setQuery(query));
+		searchContext.goToSearch(query);
 	};
 
 	const path = marker.file || "";

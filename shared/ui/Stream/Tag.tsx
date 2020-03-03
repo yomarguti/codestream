@@ -1,8 +1,8 @@
 import React from "react";
-import createClassString from "classnames";
 import Tooltip, { Placement } from "./Tooltip";
 import { useDispatch } from "react-redux";
-import { setQuery, setCurrentCodemark } from "../store/context/actions";
+import { setCurrentCodemark } from "../store/context/actions";
+import { SearchContext } from "./SearchContextProvider";
 
 interface Props {
 	title?: string | JSX.Element | undefined;
@@ -23,9 +23,10 @@ const Tag = React.forwardRef<any, Props>((props, ref) => {
 	if (label.match(/\s/)) label = `"${label}"`;
 
 	const dispatch = useDispatch();
+	const searchContext = React.useContext(SearchContext);
 	const goSearch = query => {
 		dispatch(setCurrentCodemark());
-		dispatch(setQuery(query));
+		searchContext.goToSearch(query);
 	};
 
 	let tagDiv;

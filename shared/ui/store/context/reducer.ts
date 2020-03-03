@@ -132,13 +132,6 @@ export function reduceContext(
 			return { ...state, route: action.payload };
 		}
 
-		case ContextActionsType.SetQuery:
-			return {
-				...state,
-				query: action.payload,
-				panelStack: [WebviewPanels.FilterSearch, ...state.panelStack].slice(0, 10)
-			};
-
 		case SessionActionType.Set: {
 			// started a real session so next time the starting route should be login
 			if (action.payload.userId) {

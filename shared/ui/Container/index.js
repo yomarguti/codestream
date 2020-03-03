@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React from "react";
 import PropTypes from "prop-types";
 import { IntlProvider } from "react-intl";
 import { connect, Provider } from "react-redux";
@@ -7,10 +7,10 @@ import { UnauthenticatedRoutes } from "../Authentication";
 import { logError } from "../logger";
 import { HostApi } from "../webview-api";
 import { ReloadWebviewRequestType, RestartRequestType } from "../ipc/webview.protocol";
-import { SetPasswordRequestType } from "@codestream/protocols/agent";
 import { Loading } from "./Loading";
 import RoadBlock from "../Stream/RoadBlock";
 import Dismissable from "../Stream/Dismissable";
+import { SearchContextProvider } from "../Stream/SearchContextProvider";
 import { upgradeRecommendedDismissed } from "../store/versioning/actions";
 import { VersioningActionsType } from "../store/versioning/types";
 import { apiUpgradeRecommendedDismissed } from "../store/apiVersioning/actions";
@@ -18,8 +18,6 @@ import { ApiVersioningActionsType } from "../store/apiVersioning/types";
 import { errorDismissed } from "@codestream/webview/store/connectivity/actions";
 import { ThemeProvider } from "styled-components";
 import { darkTheme, createTheme } from "../src/themes";
-
-const isPasswordValid = password => password.length >= 6;
 
 const mapStateToProps = state => ({
 	bootstrapped: state.bootstrapped,
@@ -283,7 +281,9 @@ export default class Container extends React.Component {
 		return (
 			<IntlProvider locale={i18n.locale} messages={i18n.messages}>
 				<Provider store={store}>
-					<ThemeProvider theme={this.state.theme}>{content}</ThemeProvider>
+					<ThemeProvider theme={this.state.theme}>
+						<SearchContextProvider>{content}</SearchContextProvider>
+					</ThemeProvider>
 				</Provider>
 			</IntlProvider>
 		);

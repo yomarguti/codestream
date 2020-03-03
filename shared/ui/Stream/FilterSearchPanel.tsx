@@ -3,7 +3,6 @@ import { connect } from "react-redux";
 import createClassString from "classnames";
 import * as reviewSelectors from "../store/reviews/reducer";
 import * as userSelectors from "../store/users/reducer";
-import Tag from "./Tag";
 import Menu from "./Menu";
 import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
@@ -14,8 +13,8 @@ import { includes as _includes, sortBy as _sortBy, debounce } from "lodash-es";
 import { PanelHeader } from "../src/components/PanelHeader";
 import styled from "styled-components";
 import FiltersButton from "../src/components/FiltersButton";
-import { OpenUrlRequestType, CodemarkPlus } from "@codestream/protocols/agent";
-import { isCSReview, CSReview } from "../protocols/agent/api.protocol.models";
+import { OpenUrlRequestType } from "@codestream/protocols/agent";
+import { isCSReview } from "../protocols/agent/api.protocol.models";
 import { Disposable } from "vscode-languageserver-protocol";
 import { CodeStreamState } from "../store";
 import { ReposState } from "../store/repos/types";
@@ -24,7 +23,6 @@ import { setUserPreference } from "./actions";
 import { withSearchableItems, WithSearchableItemsProps } from "./SpatialView/withSearchableItems";
 import { FilterQuery } from "../store/preferences/types";
 import { getSavedSearchFilters } from "../store/preferences/reducer";
-import { setQuery } from "../store/context/actions";
 
 const SearchBar = styled.div`
 	display: flex;
@@ -126,7 +124,6 @@ const sameDay = (d1, d2) => {
 
 interface DispatchProps {
 	setUserPreference: (...args: Parameters<typeof setUserPreference>) => Promise<any>;
-	setQuery: (...args: Parameters<typeof setQuery>) => ReturnType<typeof setQuery>;
 }
 
 interface ConnectedProps {
@@ -140,7 +137,6 @@ interface ConnectedProps {
 	typeFilter: string;
 	repos: ReposState;
 	teamTagsArray: any[];
-	query: string;
 }
 
 interface Props extends ConnectedProps, DispatchProps, WithSearchableItemsProps {}
@@ -155,7 +151,6 @@ interface State {
 		recent: boolean;
 	};
 	filters: AnyObject;
-	q: string;
 	savingFilter?: any;
 	editingFilterIndex?: number;
 	editingFilterLabel?: string;
@@ -189,7 +184,6 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				recent: true
 			},
 			filters: { text: "" },
-			q: "",
 			displayItems: {},
 			totalItems: 0
 		};
@@ -213,10 +207,6 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 
 	componentDidUpdate(prevProps: Props) {
 		if (this.props.query !== prevProps.query || this.props.items !== prevProps.items) {
-			console.debug("query or items changed", {
-				query: { prev: prevProps.query, current: this.props.query },
-				items: { prev: prevProps.items, current: this.props.items }
-			});
 			this.applyQuery(this.props.query);
 		}
 	}
@@ -864,7 +854,6 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 	// });
 
 	return {
-		query: context.query || "",
 		noReviewsAtAll: !reviewSelectors.teamHasReviews(state),
 		usernameMap,
 		currentUserId: session.userId!,
@@ -882,5 +871,5 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 };
 
 export default withSearchableItems(
-	connect(mapStateToProps, { setUserPreference, setQuery })(SimpleFilterSearchPanel)
+	connect(mapStateToProps, { setUserPreference })(SimpleFilterSearchPanel)
 );
