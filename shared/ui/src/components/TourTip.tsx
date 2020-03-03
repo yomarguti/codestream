@@ -12,14 +12,6 @@ export interface Props {
 }
 
 export function TourTip(props: React.PropsWithChildren<Props>) {
-	const buttonRef = React.useRef<HTMLElement>(null);
-	const [menuIsOpen, toggleMenu] = React.useReducer((open: boolean) => !open, false);
-
-	const maybeToggleMenu = action => {
-		if (action !== "noop") toggleMenu(action);
-	};
-
-	//if (!props.title) return props.children || null;
 	const title = props.title ? <div style={{ fontSize: "larger" }}>{props.title}</div> : null;
 
 	return (

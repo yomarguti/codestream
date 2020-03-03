@@ -11,7 +11,7 @@ import { GetReviewRequestType } from "@codestream/protocols/agent";
 import { fetchReview } from "@codestream/webview/store/reviews/actions";
 import { CodeStreamState } from "../store";
 import { getReview } from "../store/reviews/reducer";
-import { MinimumWidthCard, Meta } from "./Codemark/BaseCodemark";
+import { MinimumWidthCard, Meta, HeaderActions } from "./Codemark/BaseCodemark";
 import SearchResult from "./SearchResult";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { setReviewStatus } from "./actions";
@@ -97,7 +97,15 @@ const ClearModal = styled.div`
 	left: 0;
 `;
 const Root = styled.div`
-background: (--panel-tool-background-color);
+	${ReviewHeader} {
+		.icon.type {
+			display: none;
+		}
+		${HeaderActions} {
+			margin-top: 3px;
+		}
+	}
+	background: (--panel-tool-background-color);
 	&.tour-on {
 		${Nav},
 		${Meta},
@@ -529,7 +537,7 @@ export function ReviewNav(props: Props) {
 			<Tip>
 				<Step>1</Step> Step through the changes of the review
 				<Subtext>By clicking on filenames in any order</Subtext>
-				<Button onClick={() => setHoverButton("comment")}>Next</Button>
+				<Button onClick={() => setHoverButton("comment")}>Next ></Button>
 				<b></b>
 			</Tip>
 		) : (

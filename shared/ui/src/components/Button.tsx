@@ -9,7 +9,7 @@ const getFontSize = (size?: ButtonSize) => {
 		case "large":
 			return "font-size: 1.15em !important;";
 		case "compact":
-			return "font-size: var(--font-size) !important;";
+			return "font-size: 12px !important;";
 		case "default":
 		default:
 			return "font-size: var(--font-size) !important;";
@@ -33,7 +33,7 @@ const getLineHeight = (size?: ButtonSize) => {
 		case "large":
 			return "line-height: 2em;";
 		case "compact":
-			return "line-height: 1.75em;";
+			return "line-height: 1.6em;";
 		case "default":
 		default:
 			return "line-height: 2em;";
