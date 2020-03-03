@@ -21,6 +21,9 @@ import styled from "styled-components";
 import Tooltip from "../Tooltip";
 import { HostApi } from "../..";
 import { MarkdownText } from "../MarkdownText";
+import { DropdownButton } from "../Review/DropdownButton";
+import { useDispatch } from "react-redux";
+import { setCodemarkStatus } from "../actions";
 
 export interface BaseCodemarkProps extends CardProps {
 	codemark: CodemarkPlus;
@@ -48,6 +51,8 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 		open: false,
 		target: undefined
 	});
+
+	const dispatch = useDispatch();
 
 	const { codemark } = props;
 
@@ -81,24 +86,27 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 	const emote = renderEmote();
 
 	let { collapsed } = props;
-	collapsed = false;
+	// collapsed = false;
+
+	const resolve = () => dispatch(setCodemarkStatus(codemark.id, CodemarkStatus.Closed));
+
+	const reopen = () => dispatch(setCodemarkStatus(codemark.id, CodemarkStatus.Open));
+
+	const resolveItem = { label: "Resolve", action: resolve };
+	const reopenItem = { label: "Reopen", action: reopen };
 
 	const menu = (
 		<HeaderActions>
-			{renderActions && codemark.type === CodemarkType.Issue && (
-				<ActionButton
-					onClick={e => {
-						e.preventDefault();
-						props.onChangeStatus &&
-							props.onChangeStatus(
-								codemark.status === CodemarkStatus.Open
-									? CodemarkStatus.Closed
-									: CodemarkStatus.Open
-							);
-					}}
-				>
-					{codemark.status === CodemarkStatus.Closed ? "Reopen" : "Resolve"}
-				</ActionButton>
+			{renderActions &&
+			codemark.type === CodemarkType.Issue &&
+			codemark.status === CodemarkStatus.Closed ? (
+				<DropdownButton size="compact" variant="secondary" items={[reopenItem]}>
+					Resolved
+				</DropdownButton>
+			) : (
+				<DropdownButton size="compact" items={[resolveItem]}>
+					Open
+				</DropdownButton>
 			)}
 			{renderedMenu}
 			{props.renderMenu && (
@@ -129,17 +137,19 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 				{false && (
 					<Header>
 						<AuthorInfo>
-							<Headshot person={props.author} /> {props.author.username} {emote}
+							<Headshot person={props.author} /> <b>{props.author.username}</b> {emote}
 							<Timestamp relative time={codemark.createdAt} />
 						</AuthorInfo>
 					</Header>
 				)}
-				{collapsed && codemark.type === "issue" ? (
-					<BigTitle>
+				{collapsed && codemark.type === CodemarkType.Issue ? (
+					<Header>
+						<BigTitle>
+							<Icon name="issue" />
+							<MarkdownText text={codemark.title || codemark.text} />
+						</BigTitle>
 						{menu}
-						<Icon name="issue" />
-						<MarkdownText text={codemark.title || codemark.text} />
-					</BigTitle>
+					</Header>
 				) : (
 					<Title>
 						{menu}
@@ -166,7 +176,7 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 											<MetaLabel>Assignees</MetaLabel>
 											<MetaDescriptionForAssignees>
 												{props.assignees!.map(assignee => (
-													<MetaAssignee key={assignee.fullName || assignee.email}>
+													<MetaAssignee key={assignee.username || assignee.email}>
 														<Headshot person={assignee as any} size={18} />
 														<span
 															className={cx({
@@ -175,7 +185,7 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 																	assignee.email === props.currentUserEmail
 															})}
 														>
-															{assignee.fullName || assignee.email}
+															{assignee.username || assignee.email}
 														</span>
 													</MetaAssignee>
 												))}
@@ -316,7 +326,6 @@ export const Header = styled.div`
 	margin-bottom: 8px;
 	display: flex;
 	font-size: 13px;
-	font-weight: 700;
 `;
 
 export const HeaderActions = styled.div`

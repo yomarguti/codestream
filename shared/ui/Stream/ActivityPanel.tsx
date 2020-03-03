@@ -157,7 +157,7 @@ export const ActivityPanel = () => {
 										});
 										dispatch(setCurrentCodemark(codemark.id));
 									}}
-									renderActions={false}
+									renderActions={true}
 									renderFooter={Footer => (
 										<Footer
 											style={{ borderTop: "none", paddingLeft: 0, paddingRight: 0, marginTop: 0 }}
