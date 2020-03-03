@@ -20,7 +20,7 @@ import { CodeStreamState } from "../store";
 import { ReposState } from "../store/repos/types";
 import { AnyObject } from "../utils";
 import { setUserPreference } from "./actions";
-import { withSearchableItems, WithSearchableItemsProps } from "./SpatialView/withSearchableItems";
+import { withSearchableItems, WithSearchableItemsProps } from "./withSearchableItems";
 import { FilterQuery } from "../store/preferences/types";
 import { getSavedSearchFilters } from "../store/preferences/reducer";
 

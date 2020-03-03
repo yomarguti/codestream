@@ -8,7 +8,7 @@ import { createSelector } from "reselect";
 import { mapFilter } from "@codestream/webview/utils";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { fetchReviews } from "@codestream/webview/store/reviews/actions";
-import { SearchContext, SearchContextType } from "../SearchContextProvider";
+import { SearchContext, SearchContextType } from "./SearchContextProvider";
 
 type SearchableItems = (CSReview | CodemarkPlus)[];
 
