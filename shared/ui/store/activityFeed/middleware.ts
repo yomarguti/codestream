@@ -54,6 +54,9 @@ const fetchPostForActivity = (postId: string, streamId: string) => async (
 		}
 	}
 
+	if (post.parentPostId != null)
+		return dispatch(fetchPostForActivity(post.parentPostId, post.streamId));
+
 	if (post.codemark) dispatch(addNewActivity("codemark", [post.codemark]));
 	if (post.review) dispatch(addNewActivity("review", [post.review]));
 };
