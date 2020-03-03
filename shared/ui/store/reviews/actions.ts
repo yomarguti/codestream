@@ -122,18 +122,27 @@ export const deleteReview = (id: string) => async dispatch => {
 	}
 };
 
-type EditableAttributes = Partial<Pick<CSReview, "tags" | "text" | "title" | "reviewers">>;
+interface AdvancedEditableReviewAttributes {
+	// array of userIds to add
+	$push: { reviewers: string[]}
+	// array of userIds to remove
+	$pull: { reviewers: string[]}
+}
+
+export type EditableAttributes = Partial<Pick<CSReview, "tags" | "text" | "title" | "reviewers" > & AdvancedEditableReviewAttributes>;
 
 export const editReview = (id: string, attributes: EditableAttributes) => async dispatch => {
+	let response;
 	try {
-		const response = await HostApi.instance.send(UpdateReviewRequestType, {
+		response = await HostApi.instance.send(UpdateReviewRequestType, {
 			id,
 			...attributes
 		});
-		dispatch(updateReviews([response.review]));
+		dispatch(updateReviews([response.review]));		
 	} catch (error) {
 		logError(`failed to update review: ${error}`, { id });
 	}
+	return response;
 };
 
 export const fetchReview = (reviewId: string) => async dispatch => {

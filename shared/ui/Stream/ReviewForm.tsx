@@ -52,15 +52,17 @@ import { EditorRevealRangeRequestType } from "../ipc/host.protocol.editor";
 import { Range } from "vscode-languageserver-types";
 import { PostsActionsType } from "../store/posts/types";
 import { URI } from "vscode-uri";
+import { logError } from "../logger";
 import { DocumentData } from "../protocols/agent/agent.protocol.notifications";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { Loading } from "../Container/Loading";
 import { LoadingMessage } from "../src/components/LoadingMessage";
+import { editReview, EditableAttributes } from "../store/reviews/actions";
 
 interface Props extends ConnectedProps {
-	streamId: string;
 	editingReview?: CSReview;
 	isEditing?: boolean;
+	onClose?: Function;
 }
 
 interface ConnectedProps {
@@ -79,6 +81,7 @@ interface ConnectedProps {
 	textEditorUri?: string;
 	closePanel?: Function;
 	createPostAndReview?: Function;
+	editReview?: Function;
 	repos: any;
 	shouldShare: boolean;
 	unsavedFiles: string[];
@@ -190,7 +193,11 @@ class ReviewForm extends React.Component<Props, State> {
 			  } as State);
 
 		let assignees: any;
-		if (props.isEditing) {
+		if (props.isEditing && props.editingReview) {			
+			assignees = props.editingReview.reviewers.map(a => state.assignableUsers.find((au: any) => au.value === a))
+			state.reviewers = props.editingReview.reviewers
+					.map(id => props.teamMembers.find(p => p.id === id))
+					.filter(Boolean) as CSUser[];		
 		} else if (state.assignees === undefined) {
 			assignees = undefined;
 		} else if (Array.isArray(state.assignees)) {
@@ -233,7 +240,9 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	componentDidMount() {
-		const { textEditorUri } = this.props;
+		const { isEditing, textEditorUri } = this.props;
+		if (isEditing) return;
+
 		if (textEditorUri) this.getScmInfoForURI(textEditorUri);
 
 		this.disposables.push(
@@ -377,7 +386,46 @@ class ReviewForm extends React.Component<Props, State> {
 		const reviewerIds = (this.state.reviewers as any[]).map(r => r.id);
 
 		try {
-			if (this.props.createPostAndReview) {
+			if (this.props.isEditing && this.props.editReview && this.props.editingReview) {
+				const originalReviewers = this.props.editingReview.reviewers;
+				const attributes: EditableAttributes = {
+					title: title,
+					text: text
+				};
+				// we need to build up an added and/or removed
+				// array of reviewIds to send to the api
+				if (!(reviewerIds.length === originalReviewers.length && reviewerIds.sort().every(function(value, index) { return value === originalReviewers.sort()[index]}))) {
+					const added: string[] = [];
+					const removed: string[] = [];
+					for (const r of this.props.editingReview.reviewers) {
+						if (!reviewerIds.find(_ => _ === r)) {
+							removed.push(r);
+						}
+					}
+					for (const r of reviewerIds) {
+						if (!this.props.editingReview.reviewers.find(_ => _ === r)) {
+							added.push(r);
+						}
+					}
+					if (added.length) {
+						attributes.$push = { reviewers : added };
+					}
+					if (removed.length) {
+						attributes.$pull = { reviewers : removed };
+					}
+				}
+
+				const editResult = await this.props.editReview(this.props.editingReview.id, attributes);
+				if (editResult && editResult.review) {			
+					if (this.props.onClose) {
+						this.props.onClose();
+					}
+					if (this.props.closePanel) {
+						this.props.closePanel();
+					}
+				}
+			}
+			else if (this.props.createPostAndReview) {
 				let review = {
 					title,
 					sharingAttributes: this.props.shouldShare ? this._sharingAttributes : undefined,
@@ -402,8 +450,9 @@ class ReviewForm extends React.Component<Props, State> {
 					this.props.closePanel();
 			}
 		} catch (error) {
-			console.log("ERROR FROM CREATE POST: ", error);
-			// FIXME handle the error
+			logError(error, {				
+				isEditing: this.props.isEditing
+			});
 			this.setState({ isLoading: false });
 		} finally {
 			this.setState({ isLoading: false });
@@ -567,10 +616,10 @@ class ReviewForm extends React.Component<Props, State> {
 			<div className="full-height-codemark-form">
 				<span className="plane-container">
 					<div className="codemark-form-container">{this.renderReviewForm()}</div>
-					{this.renderExcludedFiles()}
-					<div style={{ height: "20px" }}></div>
-					{this.state.reviewers.length > 0 && (
+					{this.renderExcludedFiles()}					
+					{!this.props.isEditing && this.state.reviewers.length > 0 && (
 						<>
+							<div style={{ height: "20px" }}></div>
 							<CSText muted>
 								<SmartFormattedList
 									value={this.state.reviewers.map(m => m.fullName || m.username)}
@@ -580,7 +629,7 @@ class ReviewForm extends React.Component<Props, State> {
 							<div style={{ height: "10px" }} />
 						</>
 					)}
-					{totalModifiedLines > 100 && (
+					{!this.props.isEditing && totalModifiedLines > 100 && (
 						<>
 							<div style={{ display: "flex", padding: "0 0 10px 2px" }}>
 								<Icon name="alert" muted />
@@ -597,11 +646,13 @@ class ReviewForm extends React.Component<Props, State> {
 							</div>
 						</>
 					)}
-					<CSText muted>
-						CodeStream's lightweight code reviews let you request a review on the current state of
-						your repo, without the friction of save, branch, commit, push, create PR, email, pull,
-						web, email, web. Comments on your review are saved with the code even once merged in.
-					</CSText>
+					{!this.props.isEditing && (				 
+						<CSText muted>
+							CodeStream's lightweight code reviews let you request a review on the current state of
+							your repo, without the friction of save, branch, commit, push, create PR, email, pull,
+							web, email, web. Comments on your review are saved with the code even once merged in.
+						</CSText>
+					)}
 				</span>
 			</div>
 		);
@@ -619,9 +670,12 @@ class ReviewForm extends React.Component<Props, State> {
 				buttons: [
 					{ label: "Go Back", className: "control-button" },
 					{
-						label: "Discard Review",
+						label: this.props.isEditing ? "Discard Edits" : "Discard Review",
 						wait: true,
-						action: this.props.closePanel,
+						action: () => {
+							this.props.onClose && this.props.onClose();
+							this.props.closePanel && this.props.closePanel();
+						},
 						className: "delete"
 					}
 				]
@@ -1035,7 +1089,7 @@ class ReviewForm extends React.Component<Props, State> {
 	};
 
 	renderReviewForm() {
-		const { editingReview, currentUser, repos } = this.props;
+		const { isEditing, editingReview, currentUser, repos } = this.props;
 		const { scmInfo, repoName, reviewers, authorsById, openRepos, isLoadingScm } = this.state;
 
 		// coAuthorLabels are a mapping from teamMate ID to the # of edits represented in
@@ -1055,13 +1109,13 @@ class ReviewForm extends React.Component<Props, State> {
 
 		const submitTip = (
 			<span>
-				Submit Review<span className="keybinding extra-pad">{modifier} ENTER</span>
+			{isEditing ? "Edit Review":  "Submit Review"}<span className="keybinding extra-pad">{modifier} ENTER</span>
 			</span>
 		);
 
 		const cancelTip = (
 			<span>
-				Discard Review<span className="keybinding extra-pad">ESC</span>
+				{isEditing ? "Cancel Edit":  "Discard Review"}<span className="keybinding extra-pad">ESC</span>
 			</span>
 		);
 
@@ -1087,7 +1141,7 @@ class ReviewForm extends React.Component<Props, State> {
 							<div style={{ marginTop: "-1px" }}>
 								<b>{currentUser.username}</b>
 								<span className="subhead">
-									is requesting a code review
+									is {isEditing ? "editing" : "requesting"} a code review
 									{scmInfo && scmInfo.scm && <> in </>}
 								</span>
 								{scmInfo && scmInfo.scm && (
@@ -1123,7 +1177,7 @@ class ReviewForm extends React.Component<Props, State> {
 						{this.renderMessageInput()}
 					</div>
 					{this.renderTags()}
-					{!isLoadingScm && (
+					{!isLoadingScm && !isEditing && (
 						<div
 							className="related"
 							style={{ padding: "0", marginBottom: 0, position: "relative" }}
@@ -1165,9 +1219,44 @@ class ReviewForm extends React.Component<Props, State> {
 							</SelectPeople>
 						</div>
 					)}
-					{!isLoadingScm && this.renderChangedFiles()}
-					{!isLoadingScm && this.renderGroupsAndCommits()}
-					{!isLoadingScm && this.renderSharingControls()}
+					{!isLoadingScm && isEditing && (
+						<div
+							className="related"
+							style={{ padding: "0", marginBottom: 0, position: "relative" }}
+						>
+							<div className="related-label">
+								{reviewers.length > 0 && !this.state.reviewersTouched}Reviewers
+							</div>
+							{reviewers.map(person => {
+								const menu = (
+									<HeadshotMenu
+										person={person}
+										menuItems={[
+											{
+												label: "Remove from Review",
+												action: () => this.removeReviewer(person)
+											}
+										]}
+									/>
+								);								
+								return menu;
+							})}
+							<SelectPeople
+								title="Select Reviewers"
+								value={reviewers}
+								onChange={this.toggleReviewer}
+								multiSelect={true}
+								labelExtras={coAuthorLabels}
+							>
+								<span className="icon-button">
+									<Icon name="plus" title="Specify who you want to review your code" />
+								</span>
+							</SelectPeople>
+						</div>
+					)}
+					{!isEditing && !isLoadingScm && this.renderChangedFiles()}
+					{!isEditing && !isLoadingScm && this.renderGroupsAndCommits()}
+					{!isEditing && !isLoadingScm && this.renderSharingControls()}
 					{!isLoadingScm && (
 						<div
 							key="buttons"
@@ -1279,8 +1368,10 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 	};
 };
 
-const ConnectedReviewForm = connect(mapStateToProps, { closePanel, createPostAndReview })(
-	ReviewForm
-);
+const ConnectedReviewForm = connect(mapStateToProps, { 
+	closePanel, 
+	createPostAndReview, 
+	editReview 
+})(ReviewForm);
 
 export { ConnectedReviewForm as ReviewForm };

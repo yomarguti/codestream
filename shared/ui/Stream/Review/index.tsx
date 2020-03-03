@@ -64,9 +64,10 @@ import { createCodemark } from "@codestream/webview/store/codemarks/actions";
 import { getReviewChangeRequests } from "@codestream/webview/store/codemarks/reducer";
 import { Link } from "../Link";
 import { MarkdownText } from "../MarkdownText";
+import { ReviewForm } from "../ReviewForm";
+import Timestamp from "../Timestamp";
 import { Dispatch } from "@codestream/webview/store/common";
 import { Loading } from "@codestream/webview/Container/Loading";
-import Timestamp from "../Timestamp";
 import { TourTip } from "@codestream/webview/src/components/TourTip";
 
 export interface BaseReviewProps extends CardProps {
@@ -606,6 +607,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 
 	const [canStartReview, setCanStartReview] = React.useState(false);
 	const [preconditionError, setPreconditionError] = React.useState("");
+	const [isEditing, setIsEditing] = React.useState(false);
 
 	const tags = React.useMemo(
 		() => (review.tags ? mapFilter(review.tags, id => derivedState.teamTagsById[id]) : emptyArray),
@@ -665,53 +667,68 @@ const ReviewForReview = (props: PropsWithReview) => {
 		const items: any[] = [];
 
 		if (review.creatorId === derivedState.currentUser.id)
-			items.push({
-				label: "Delete",
-				action: () => {
-					confirmPopup({
-						title: "Are you sure?",
-						message: "Deleting a review cannot be undone.",
-						centered: true,
-						buttons: [
-							{ label: "Go Back", className: "control-button" },
-							{
-								label: "Delete Review",
-								className: "delete",
-								wait: true,
-								action: () => {
-									dispatch(deleteReview(review.id));
-									dispatch(setCurrentReview());
+			items.push(
+				{ label: "Edit", key: "edit", action: () => setIsEditing(true) },
+				{
+					label: "Delete",
+					action: () => {
+						confirmPopup({
+							title: "Are you sure?",
+							message: "Deleting a review cannot be undone.",
+							centered: true,
+							buttons: [
+								{ label: "Go Back", className: "control-button" },
+								{
+									label: "Delete Review",
+									className: "delete",
+									wait: true,
+									action: () => {
+										dispatch(deleteReview(review.id));
+										dispatch(setCurrentReview());
+									}
 								}
-							}
-						]
-					});
+							]
+						});
+					}
 				}
-			});
+			);
 
 		return items;
 	}, [review]);
 
-	return (
-		<BaseReview
-			{...baseProps}
-			author={derivedState.author}
-			review={props.review}
-			repoInfo={repoInfo}
-			tags={tags}
-			changeRequests={changeRequests}
-			isFollowing={derivedState.userIsFollowing}
-			reviewers={derivedState.reviewers}
-			currentUserId={derivedState.currentUser.id}
-			renderFooter={renderFooter}
-			headerError={preconditionError}
-			canStartReview={canStartReview}
-			renderMenu={
-				menuItems.length > 0
-					? (target, close) => <Menu target={target} action={close} items={menuItems} />
-					: undefined
-			}
-		/>
-	);
+	if (isEditing) {
+		return (
+			<ReviewForm
+				isEditing={isEditing}
+				onClose={() => {
+					setIsEditing(false);
+				}}
+				editingReview={props.review}
+			/>
+		);
+	} else {
+		return (
+			<BaseReview
+				{...baseProps}
+				author={derivedState.author}
+				review={props.review}
+				repoInfo={repoInfo}
+				tags={tags}
+				changeRequests={changeRequests}
+				isFollowing={derivedState.userIsFollowing}
+				reviewers={derivedState.reviewers}
+				currentUserId={derivedState.currentUser.id}
+				renderFooter={renderFooter}
+				headerError={preconditionError}
+				canStartReview={canStartReview}
+				renderMenu={
+					menuItems.length > 0
+						? (target, close) => <Menu target={target} action={close} items={menuItems} />
+						: undefined
+				}
+			/>
+		);
+	}
 };
 
 const ReviewForId = (props: PropsWithId) => {
