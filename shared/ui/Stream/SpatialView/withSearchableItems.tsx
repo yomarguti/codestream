@@ -28,6 +28,8 @@ const getSearchableCodemarks = createSelector(
 	}
 );
 
+let hasFetchedReviews = false;
+
 export function withSearchableItems<ChildProps extends ProvidingProps>(
 	Child: React.ElementType<ChildProps>
 ) {
@@ -38,7 +40,10 @@ export function withSearchableItems<ChildProps extends ProvidingProps>(
 		const reposState = useSelector((state: CodeStreamState) => state.repos);
 
 		useDidMount(() => {
-			if (Object.keys(reviewsState).length === 0) dispatch(fetchReviews());
+			if (!hasFetchedReviews) {
+				dispatch(fetchReviews());
+				hasFetchedReviews = true;
+			}
 		});
 
 		const items = React.useMemo(
