@@ -23,10 +23,13 @@ export interface CodemarkPlus extends CSCodemark {
 	markers?: CSMarker[];
 }
 
+// interfaces here are for the webview -> agent API
+
 export interface CreateCodemarkRequest extends Omit<CSCreateCodemarkRequest, "teamId"> {
 	markers?: CreateMarkerRequest[];
 }
 
+// A description of what's required to create markers in the webview -> agent API
 export interface CreateMarkerRequest {
 	code: string;
 	repoId?: string;
@@ -55,6 +58,10 @@ export const CreateCodemarkRequestType = new RequestType<
 	void,
 	void
 >("codestream/codemarks/create");
+
+// ShareableCodemark interfaces were created for the sharing model,
+// New interfaces were created so there wouldn't be impact to the legacy code since sharing model was behind a feature flag
+// and because codemarks could be private or public to the team the api, the api is different to the legacy methods
 
 export interface ShareableCodemarkAttributes extends Omit<CreateCodemarkRequest, "markers"> {
 	codeBlocks: GetRangeScmInfoResponse[];
