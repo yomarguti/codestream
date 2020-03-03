@@ -207,7 +207,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 
 	componentDidUpdate(prevProps: Props) {
 		if (this.props.query !== prevProps.query || this.props.items !== prevProps.items) {
-			this.applyQuery(this.props.query);
+			this.debouncedApplyQuery(this.props.query);
 		}
 	}
 
@@ -411,7 +411,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 		return filters;
 	};
 
-	applyQuery = debounce(query => {
+	applyQuery = query => {
 		// const sections = ["waitingForMe", "createdByMe", "open", "recent", "closed"];
 		let displayItems = {};
 		let assignedItems = {};
@@ -534,7 +534,9 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 		});
 
 		this.setState({ filters, displayItems, totalItems });
-	}, 500);
+	};
+
+	debouncedApplyQuery = debounce(this.applyQuery);
 
 	saveFilter = () => {
 		this.setState({ savingFilter: true });
