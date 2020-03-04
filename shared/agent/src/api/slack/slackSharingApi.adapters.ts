@@ -798,17 +798,25 @@ export function toSlackPostBlocks(
 				url: `${codemark.permalink}?ide=default&marker=${marker.id}`
 			});
 
-			if (url !== undefined) {
-				actionId = toExternalActionId(counter, "code", url.name, codemark, marker);
-				actions.elements.push({
-					type: "button",
-					action_id: actionId,
-					text: {
-						type: "plain_text",
-						text: `Open on ${url.displayName}`
-					},
-					url: url.url
-				});
+			if (url !== undefined && url.url) {
+				if (url.url.length >= 3000) {
+					// 3000 is the max length that slack will allow
+					Logger.log(`ignoring [Open in ${url.displayName}] button, url too long ${url.url.length} value=${url.url}`);
+				}
+				else {
+					actionId = toExternalActionId(counter, "code", url.name, codemark, marker);
+					actions.elements.push({
+						type: "button",
+						action_id: actionId,
+						text: {
+							type: "plain_text",
+							text: `Open on ${url.displayName}`
+						},
+						// users can have spaces in the paths to their source code...
+						// slack does not like them so they must be escaped
+						url: encodeURI(url.url)
+					});
+				}
 			}
 
 			blocks.push(actions);
