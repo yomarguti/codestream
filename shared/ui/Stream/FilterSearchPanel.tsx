@@ -541,7 +541,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 		this.setState({ filters, displayItems, totalItems });
 	};
 
-	debouncedApplyQuery = debounce(this.applyQuery);
+	debouncedApplyQuery = debounce(this.applyQuery, 250);
 
 	saveFilter = () => {
 		this.setState({ savingFilter: true });
