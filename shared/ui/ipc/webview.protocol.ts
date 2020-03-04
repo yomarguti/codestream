@@ -23,6 +23,15 @@ export const ShowCodemarkNotificationType = new NotificationType<ShowCodemarkNot
 );
 
 // TODO: This should be a request to the webview -- not a notification
+export interface ShowReviewNotification {
+	reviewId: string;
+	sourceUri?: string;
+}
+export const ShowReviewNotificationType = new NotificationType<ShowReviewNotification, void>(
+	`${IpcRoutes.Webview}/review/show`
+);
+
+// TODO: This should be a request to the webview -- not a notification
 export interface ShowStreamNotification {
 	streamId: string;
 	threadId?: string;

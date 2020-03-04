@@ -14,6 +14,7 @@ import {
 	RouteControllerType,
 	RouteActionType,
 	ShowCodemarkNotificationType,
+	ShowReviewNotificationType,
 	ShowStreamNotificationType,
 	WebviewDidInitializeNotificationType,
 	WebviewPanels
@@ -38,9 +39,12 @@ import { CSApiCapabilities, CodemarkType } from "@codestream/protocols/api";
 import translations from "./translations/en";
 import { apiUpgradeRecommended, apiUpgradeRequired } from "./store/apiVersioning/actions";
 import { getCodemark } from "./store/codemarks/reducer";
+import { getReview } from "./store/reviews/reducer";
 import { fetchCodemarks, openPanel } from "./Stream/actions";
+import { fetchReviews } from "./store/reviews/actions";
 import { ContextState } from "./store/context/types";
 import { CodemarksState } from "./store/codemarks/types";
+import { ReviewsState } from "./store/reviews/types";
 import { EditorContextState } from "./store/editorContext/types";
 import { updateProviders } from "./store/providers/actions";
 import { apiCapabilitiesUpdated } from "./store/apiVersioning/actions";
@@ -290,6 +294,28 @@ function listenForEvents(store) {
 		if (codemark == null) return;
 
 		store.dispatch(setCurrentCodemark(codemark.id));
+	});
+
+	api.on(ShowReviewNotificationType, async e => {
+		let {
+			reviews,
+			context,
+			editorContext
+		}: {
+			reviews: ReviewsState;
+			context: ContextState;
+			editorContext: EditorContextState;
+		} = store.getState();
+
+		if (Object.keys(reviews).length === 0) {
+			await store.dispatch(fetchReviews());
+			reviews = store.getState().reviews;
+		}
+
+		const review = getReview(reviews, e.reviewId);
+		if (review == null) return;
+
+		store.dispatch(setCurrentReview(review.id));
 	});
 
 	api.on(HostDidReceiveRequestNotificationType, async e => {
