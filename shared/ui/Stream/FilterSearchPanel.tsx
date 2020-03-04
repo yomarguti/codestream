@@ -681,27 +681,24 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 		// 		})
 		// );
 
-		const filterItems = [] as any[];
-		if (this.props.apiCapabilities.lightningCodeReviews) {
-			filterItems.push({
+		const filterItems = [
+			{
 				label: "Open Issues and Code Reviews",
 				key: "open",
-				action: () => this.props.setQuery("is:open")
-			});
-		}
-		filterItems.push({
-			label: "Your Issues",
-			key: "issues",
-			action: () => this.props.setQuery("is:issue author:@me")
-		});
-		if (this.props.apiCapabilities.lightningCodeReviews) {
-			filterItems.push({
+				action: () => this.props.setQuery("is:open"),
+				lightningOnly: true
+			},
+			{
+				label: "Your Issues",
+				key: "issues",
+				action: () => this.props.setQuery("is:issue author:@me")
+			},
+			{
 				label: "Your Code Reviews",
 				key: "reviews",
-				action: () => this.props.setQuery("is:cr author:@me ")
-			});
-		}
-		filterItems.push(
+				action: () => this.props.setQuery("is:cr author:@me "),
+				lightningOnly: true
+			},
 			{
 				label: "Your Code Comments",
 				key: "comments",
@@ -720,17 +717,12 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 			{
 				label: "Everything impacting code you wrote",
 				key: "mycode",
-				action: () => this.props.setQuery("impacts:@me ")
+				action: () => this.props.setQuery("impacts:@me "),
+				lightningOnly: true
 			},
-			{ label: "By Tag", key: "tag", submenu: tagMenuItems }
-		);
-		if (this.props.apiCapabilities.lightningCodeReviews) {
-			filterItems.push(
-				{ label: "By Repo", key: "repo", submenu: repoMenuItems },
-				{ label: "By Branch", key: "branch", submenu: branchMenuItems }
-			);
-		}
-		filterItems.push(
+			{ label: "By Tag", key: "tag", submenu: tagMenuItems },
+			{ label: "By Repo", key: "repo", submenu: repoMenuItems, lightningOnly: true },
+			{ label: "By Branch", key: "branch", submenu: branchMenuItems, lightningOnly: true },
 			{ label: "-" },
 			{
 				label: "View advanced search syntax",
@@ -740,7 +732,8 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 						url: "https://github.com/TeamCodeStream/CodeStream/wiki/Filter-and-Search"
 					})
 			}
-		);
+		].filter(item => this.props.apiCapabilities.lightningCodeReviews || !item.lightningOnly);
+
 		// console.log("FILTERS: ", filters);
 		return (
 			<div className="panel full-height reviews-panel">
