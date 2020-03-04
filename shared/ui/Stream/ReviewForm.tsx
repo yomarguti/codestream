@@ -58,6 +58,7 @@ import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { Loading } from "../Container/Loading";
 import { LoadingMessage } from "../src/components/LoadingMessage";
 import { editReview, EditableAttributes } from "../store/reviews/actions";
+import { Modal } from "./Modal";
 
 interface Props extends ConnectedProps {
 	editingReview?: CSReview;
@@ -632,6 +633,23 @@ class ReviewForm extends React.Component<Props, State> {
 	render() {
 		const { repoStatus } = this.state;
 		const totalModifiedLines = repoStatus && repoStatus.scm ? repoStatus.scm.totalModifiedLines : 0;
+
+		if (!this.props.apiCapabilities.lightningCodeReviews) {
+			return (
+				<Modal
+					verticallyCenter={true}
+					onClose={() => this.props.closePanel && this.props.closePanel()}
+				>
+					<p>
+						This functionality is available on a limited basis to beta customers.
+						<br />
+						<br />
+						Contact <a href="mailto:sales@codestream.com">sales@codestream.com</a> to schedule a
+						demo.
+					</p>
+				</Modal>
+			);
+		}
 
 		return (
 			<div className="full-height-codemark-form">
