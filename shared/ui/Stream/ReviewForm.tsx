@@ -443,9 +443,6 @@ class ReviewForm extends React.Component<Props, State> {
 					if (this.props.onClose) {
 						this.props.onClose();
 					}
-					if (this.props.closePanel) {
-						this.props.closePanel();
-					}
 				}
 			} else if (this.props.createPostAndReview) {
 				let review = {
@@ -712,8 +709,11 @@ class ReviewForm extends React.Component<Props, State> {
 						label: this.props.isEditing ? "Discard Edits" : "Discard Review",
 						wait: true,
 						action: () => {
+							const isEditing = this.props.isEditing;
 							this.props.onClose && this.props.onClose();
-							this.props.closePanel && this.props.closePanel();
+							if (!isEditing) {
+								this.props.closePanel && this.props.closePanel();
+							}
 						},
 						className: "delete"
 					}
