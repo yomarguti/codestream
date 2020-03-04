@@ -521,7 +521,11 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 					// if (item.creatorId === currentUserId) assignItem(item, "createdByMe");
 					// break;
 					case "open":
-						if (status === "open") assignItem(item, "open");
+						if (
+							status === "open" ||
+							(!isCSReview(item) && item.type == "issue" && status !== "closed")
+						)
+							assignItem(item, "open");
 						break;
 					case "closed":
 						if (status === "closed") assignItem(item, "closed");
