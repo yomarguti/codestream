@@ -24,7 +24,8 @@ import {
 	MetaAssignee,
 	MetaRow,
 	MetaDescriptionForTags,
-	KebabIcon
+	KebabIcon,
+	BigTitle
 } from "../Codemark/BaseCodemark";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { CSUser, CSReview, CodemarkType, CodemarkStatus } from "@codestream/protocols/api";
@@ -125,28 +126,8 @@ const RepoInfo = styled.div`
 
 export const ExpandedAuthor = styled.div`
 	width: 100%;
-	margin-bottom: 8px;
+	margin: -8px 0 8px 0;
 	color: var(--text-color-subtle);
-	// opacity: 0.5;
-	button {
-		margin: 5px 5px 5px 0;
-	}
-`;
-
-export const ReviewHeader = styled.div`
-	width: 100%;
-	margin-bottom: 3px;
-	display: flex;
-	align-items: flex-start;
-	font-size: 13px;
-	.icon.type {
-		display: inline-block;
-		transform: scale(1.25);
-		padding: 3px 8px 3px 3px;
-	}
-	button {
-		margin-left: 10px;
-	}
 `;
 
 const ReviewTitle = styled.div`
@@ -288,17 +269,17 @@ const BaseReview = (props: BaseReviewProps) => {
 				</CardBanner>
 			)}
 			<CardBody>
-				<ReviewHeader>
+				<Header>
 					<Icon name="review" className="type" />
-					<ReviewTitle>
+					<BigTitle>
 						<HeaderActions>
 							{renderedHeaderActions}
 							{renderedMenu}
 							{kebabIcon}
 						</HeaderActions>
 						<MarkdownText text={review.title} />
-					</ReviewTitle>
-				</ReviewHeader>
+					</BigTitle>
+				</Header>
 
 				{!props.collapsed && (
 					<ExpandedAuthor>

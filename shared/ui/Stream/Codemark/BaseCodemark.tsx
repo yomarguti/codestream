@@ -98,16 +98,16 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 	const menu = (
 		<HeaderActions>
 			{renderActions &&
-			codemark.type === CodemarkType.Issue &&
-			codemark.status === CodemarkStatus.Closed ? (
-				<DropdownButton size="compact" variant="secondary" items={[reopenItem]}>
-					Resolved
-				</DropdownButton>
-			) : (
-				<DropdownButton size="compact" items={[resolveItem]}>
-					Open
-				</DropdownButton>
-			)}
+				codemark.type === CodemarkType.Issue &&
+				(codemark.status === CodemarkStatus.Closed ? (
+					<DropdownButton size="compact" variant="secondary" items={[reopenItem]}>
+						Resolved
+					</DropdownButton>
+				) : (
+					<DropdownButton size="compact" items={[resolveItem]}>
+						Open
+					</DropdownButton>
+				))}
 			{renderedMenu}
 			{props.renderMenu && (
 				<KebabIcon
@@ -144,11 +144,11 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 				)}
 				{collapsed && codemark.type === CodemarkType.Issue ? (
 					<Header>
+						<Icon name="issue" className="type" />
 						<BigTitle>
-							<Icon name="issue" />
+							{menu}
 							<MarkdownText text={codemark.title || codemark.text} />
 						</BigTitle>
-						{menu}
 					</Header>
 				) : (
 					<Title>
@@ -323,9 +323,18 @@ export const MinimumWidthCard = styled(Card)`
 
 export const Header = styled.div`
 	width: 100%;
-	margin-bottom: 8px;
+	margin-bottom: 10px;
 	display: flex;
+	align-items: flex-start;
 	font-size: 13px;
+	.icon.type {
+		display: inline-block;
+		transform: scale(1.25);
+		padding: 3px 8px 3px 3px;
+	}
+	button {
+		margin-left: 10px;
+	}
 `;
 
 export const HeaderActions = styled.div`
@@ -349,14 +358,7 @@ export const Title = styled.div`
 
 export const BigTitle = styled.div`
 	font-size: larger;
-	margin-bottom: 10px;
-	display: flex;
-	width: 100%;
-	.icon {
-		display: inline-block;
-		transform: scale(1.25);
-		padding: 3px 8px 3px 3px;
-	}
+	flex-grow: 10;
 `;
 
 export const Meta = styled.div`
@@ -508,6 +510,8 @@ export const KebabIcon = styled.span`
 	.icon {
 		opacity: 0.5;
 		margin-left: 2px;
+		// to align vertically with the DropdownButton
+		vertical-align: -2px;
 		padding: 0 5px;
 	}
 `;

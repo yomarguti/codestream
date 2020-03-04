@@ -11,7 +11,7 @@ import { GetReviewRequestType } from "@codestream/protocols/agent";
 import { fetchReview } from "@codestream/webview/store/reviews/actions";
 import { CodeStreamState } from "../store";
 import { getReview } from "../store/reviews/reducer";
-import { MinimumWidthCard, Meta, HeaderActions } from "./Codemark/BaseCodemark";
+import { MinimumWidthCard, Meta, HeaderActions, Header } from "./Codemark/BaseCodemark";
 import SearchResult from "./SearchResult";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { setReviewStatus } from "./actions";
@@ -25,7 +25,7 @@ import { setUserPreference } from "./actions";
 import { ReviewChangesetFileInfo } from "@codestream/protocols/api";
 import { ChangesetFileList } from "./Review/ChangesetFileList";
 import { Dispatch } from "../store/common";
-import { Review, ExpandedAuthor, Description, ReviewHeader } from "./Review";
+import { Review, ExpandedAuthor, Description } from "./Review";
 import ScrollBox from "./ScrollBox";
 import { Dialog } from "../src/components/Dialog";
 import { TourTip } from "../src/components/TourTip";
@@ -97,7 +97,7 @@ const ClearModal = styled.div`
 	left: 0;
 `;
 const Root = styled.div`
-	${ReviewHeader} {
+	${Header} {
 		.icon.type {
 			display: none;
 		}
@@ -111,7 +111,7 @@ const Root = styled.div`
 		${Meta},
 		${Description},
 		${ExpandedAuthor},
-		${ReviewHeader} {
+		${Header} {
 			opacity: 0.25;
 		}
 	}
