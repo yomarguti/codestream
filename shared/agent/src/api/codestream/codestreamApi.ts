@@ -56,6 +56,8 @@ import {
 	FetchUsersRequest,
 	FollowCodemarkRequest,
 	FollowCodemarkResponse,
+	FollowReviewRequest,
+	FollowReviewResponse,
 	GetCodemarkRequest,
 	GetCompanyRequest,
 	GetCompanyResponse,
@@ -582,7 +584,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 				break;
 			case MessageType.Reviews: {
-				e.data = await SessionContainer.instance().repos.resolve(e, { onlyIfNeeded: false });
+				e.data = await SessionContainer.instance().reviews.resolve(e, { onlyIfNeeded: false });
 				if (e.data == null || e.data.length === 0) return;
 				break;
 			}
@@ -926,6 +928,16 @@ export class CodeStreamApiProvider implements ApiProvider {
 		const pathType = request.value ? "follow" : "unfollow";
 		return this.put<FollowCodemarkRequest, FollowCodemarkResponse>(
 			`/codemarks/${pathType}/${request.codemarkId}`,
+			request,
+			this._token
+		);
+	}
+
+	@log()
+	followReview(request: FollowReviewRequest) {
+		const pathType = request.value ? "follow" : "unfollow";
+		return this.put<FollowReviewRequest, FollowReviewResponse>(
+			`/reviews/${pathType}/${request.id}`,
 			request,
 			this._token
 		);

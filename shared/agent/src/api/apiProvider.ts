@@ -32,6 +32,8 @@ import {
 	DeleteCodemarkResponse,
 	DeletePostRequest,
 	DeletePostResponse,
+	DeleteReviewRequest,
+	DeleteReviewResponse,
 	EditPostRequest,
 	EditPostResponse,
 	FetchCodemarksRequest,
@@ -64,6 +66,8 @@ import {
 	FetchUsersResponse,
 	FollowCodemarkRequest,
 	FollowCodemarkResponse,
+	FollowReviewRequest,
+	FollowReviewResponse,
 	GetCodemarkRequest,
 	GetCodemarkResponse,
 	GetCompanyRequest,
@@ -139,9 +143,7 @@ import {
 	UpdateStreamMembershipResponse,
 	UpdateUserRequest,
 	UpdateUserResponse,
-	VerifyConnectivityResponse,
-	DeleteReviewRequest,
-	DeleteReviewResponse
+	VerifyConnectivityResponse
 } from "../protocol/agent.protocol";
 import {
 	CSApiCapabilities,
@@ -335,6 +337,7 @@ export interface ApiProvider {
 	setCodemarkStatus(request: SetCodemarkStatusRequest): Promise<SetCodemarkStatusResponse>;
 	updateCodemark(request: UpdateCodemarkRequest): Promise<UpdateCodemarkResponse>;
 	followCodemark(request: FollowCodemarkRequest): Promise<FollowCodemarkResponse>;
+	followReview(request: FollowReviewRequest): Promise<FollowReviewResponse>;
 
 	createCodemarkPermalink(
 		request: CreateCodemarkPermalinkRequest

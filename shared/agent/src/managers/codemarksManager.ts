@@ -21,6 +21,9 @@ import {
 	FollowCodemarkRequest,
 	FollowCodemarkRequestType,
 	FollowCodemarkResponse,
+	FollowReviewRequest,
+	FollowReviewRequestType,
+	FollowReviewResponse,
 	GetCodemarkSha1Request,
 	GetCodemarkSha1RequestType,
 	GetCodemarkSha1Response,
@@ -255,6 +258,11 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 	@lspHandler(FollowCodemarkRequestType)
 	followCodemark(request: FollowCodemarkRequest): Promise<FollowCodemarkResponse> {
 		return this.session.api.followCodemark(request);
+	}
+
+	@lspHandler(FollowReviewRequestType)
+	followReview(request: FollowReviewRequest): Promise<FollowReviewResponse> {
+		return this.session.api.followReview(request);
 	}
 
 	@lspHandler(SetCodemarkStatusRequestType)

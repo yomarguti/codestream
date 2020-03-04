@@ -50,7 +50,7 @@ import {
 	FetchUsersRequest,
 	FetchUsersResponse,
 	FollowCodemarkRequest,
-	FollowCodemarkResponse,
+	FollowReviewRequest,
 	GetCodemarkRequest,
 	GetCompanyRequest,
 	GetCompanyResponse,
@@ -572,6 +572,11 @@ export class MSTeamsApiProvider implements ApiProvider {
 	@log()
 	followCodemark(request: FollowCodemarkRequest) {
 		return this._codestream.followCodemark(request);
+	}
+
+	@log()
+	followReview(request: FollowReviewRequest) {
+		return this._codestream.followReview(request);
 	}
 
 	@log()
