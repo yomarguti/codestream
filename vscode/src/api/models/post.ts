@@ -29,6 +29,10 @@ export class Post extends CodeStreamItem<PostPlus> {
 		return this.entity.codemark;
 	}
 
+	get review() {
+		return this.entity.review;
+	}
+
 	get hasCode() {
 		return (
 			this.entity.codemark && this.entity.codemark.markers && this.entity.codemark.markers.length

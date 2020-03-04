@@ -2,7 +2,7 @@
 import { Disposable, MessageItem, window } from "vscode";
 import { Post, PostsChangedEvent } from "../api/session";
 import { Container } from "../container";
-import { CodemarkPlus } from "../protocols/agent/agent.protocol";
+import { CodemarkPlus, ReviewPlus } from "../protocols/agent/agent.protocol";
 import { vslsUrlRegex } from "./liveShareController";
 
 export class NotificationsController implements Disposable {
@@ -27,15 +27,21 @@ export class NotificationsController implements Disposable {
 			if (!post.isNew() || post.senderId === user.id) {
 				continue;
 			}
-
-			let codemark;
+			let codemark; let review;
 			const parentPost = await post.parentPost();
 			if (parentPost) {
 				codemark = parentPost.codemark;
+				review = parentPost.review;
+				if (!codemark && !review) {
+					const grandparentPost = await parentPost.parentPost();
+					if (grandparentPost) {
+						review = grandparentPost.review;
+					}
+				}
 			} else {
 				codemark = post.codemark;
+				review = post.review;
 			}
-			if (!codemark) continue;
 
 			const mentioned = post.mentioned(user.id);
 			// If we are muted and not mentioned, skip it
@@ -44,14 +50,15 @@ export class NotificationsController implements Disposable {
 			const isPostStreamVisible =
 				streamVisible && !(activeStream === undefined || activeStream.streamId !== post.streamId);
 
-			const isUserFollowing = (codemark.followerIds || []).includes(user.id);
+			const followerIds = codemark ? codemark.followerIds : review!.followerIds;
+			const isUserFollowing = (followerIds || []).includes(user.id);
 			if (isUserFollowing && (!isPostStreamVisible || mentioned)) {
-				this.showNotification(post, codemark, mentioned);
+				this.showNotification(post, codemark, review, mentioned);
 			}
 		}
 	}
 
-	async showNotification(post: Post, codemark: CodemarkPlus, mentioned: boolean) {
+	async showNotification(post: Post, codemark?: CodemarkPlus, review?: ReviewPlus, mentioned?: boolean) {
 		const sender = await post.sender();
 
 		const text = post.text;
@@ -84,7 +91,11 @@ export class NotificationsController implements Disposable {
 			...actions
 		);
 		if (result === actions[0]) {
-			Container.webview.openCodemark(codemark.id);
+			if (codemark) {
+				Container.webview.openCodemark(codemark.id);
+			} else if (review) {
+				Container.webview.openReview(review.id);
+			}
 		}
 	}
 }

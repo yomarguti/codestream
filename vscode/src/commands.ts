@@ -51,6 +51,12 @@ export interface OpenCodemarkCommandArgs {
 	sourceUri?: Uri;
 }
 
+export interface OpenReviewCommandArgs {
+	reviewId: string;
+	onlyWhenVisible?: boolean;
+	sourceUri?: Uri;
+}
+
 export interface OpenStreamCommandArgs {
 	streamThread: StreamThread;
 }
@@ -299,6 +305,16 @@ export class Commands implements Disposable {
 
 		const { codemarkId: _codemarkId, ...options } = args;
 		return Container.webview.openCodemark(args.codemarkId, options);
+	}
+
+	@command("openReview", { showErrorMessage: "Unable to open review" })
+	async openReview(args: OpenReviewCommandArgs): Promise<void> {
+		if (args === undefined) return;
+
+		Container.agent.telemetry.track("Review Clicked", { "Review Location": "Source File" });
+
+		const { reviewId: _reviewId, ...options } = args;
+		return Container.webview.openReview(args.reviewId, options);
 	}
 
 	@command("openStream", { showErrorMessage: "Unable to open stream" })

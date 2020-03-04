@@ -50,6 +50,7 @@ import {
 	ReviewShowDiffRequestType,
 	ShellPromptFolderRequestType,
 	ShowCodemarkNotificationType,
+	ShowReviewNotificationType,
 	UpdateConfigurationRequestType,
 	WebviewContext,
 	WebviewDidChangeContextNotificationType,
@@ -293,6 +294,24 @@ export class WebviewController implements Disposable {
 		// TODO: Change this to be a request vs a notification
 		this._webview!.notify(ShowCodemarkNotificationType, {
 			codemarkId: codemarkId,
+			sourceUri: options.sourceUri && options.sourceUri.toString()
+		});
+	}
+
+	@log()
+	async openReview(
+		reviewId: string,
+		options: { onlyWhenVisible?: boolean; sourceUri?: Uri } = {}
+	): Promise<void> {
+		if (!this.visible) {
+			if (options.onlyWhenVisible) return;
+
+			await this.show();
+		}
+
+		// TODO: Change this to be a request vs a notification
+		this._webview!.notify(ShowReviewNotificationType, {
+			reviewId: reviewId,
 			sourceUri: options.sourceUri && options.sourceUri.toString()
 		});
 	}
