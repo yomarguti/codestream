@@ -316,7 +316,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 			filters.assignee = match[1] === "me" ? me : match[1].toLowerCase();
 			text = text.replace(/\s*assignee:@\S+/, " ");
 		}
-		match = text.match(/\breviewer:@(\S+)[\s|$]/);
+		match = text.match(/\breviewer:@(\S+)(\s|$)/);
 		if (match) {
 			filters.assignee = match[1] === "me" ? me : match[1].toLowerCase();
 			text = text.replace(/\s*reviewer:@\S+/, " ");
