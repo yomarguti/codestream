@@ -14,7 +14,7 @@ import { PanelHeader } from "../src/components/PanelHeader";
 import styled from "styled-components";
 import FiltersButton from "../src/components/FiltersButton";
 import { OpenUrlRequestType } from "@codestream/protocols/agent";
-import { isCSReview } from "../protocols/agent/api.protocol.models";
+import { isCSReview, CSApiCapabilities } from "../protocols/agent/api.protocol.models";
 import { Disposable } from "vscode-languageserver-protocol";
 import { CodeStreamState } from "../store";
 import { ReposState } from "../store/repos/types";
@@ -137,6 +137,7 @@ interface ConnectedProps {
 	typeFilter: string;
 	repos: ReposState;
 	teamTagsArray: any[];
+	apiCapabilities: CSApiCapabilities;
 }
 
 interface Props extends ConnectedProps, DispatchProps, WithSearchableItemsProps {}
@@ -676,22 +677,27 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 		// 		})
 		// );
 
-		const filterItems = [
-			{
+		const filterItems = [] as any[];
+		if (this.props.apiCapabilities.lightningCodeReviews) {
+			filterItems.push({
 				label: "Open Issues and Code Reviews",
 				key: "open",
 				action: () => this.props.setQuery("is:open")
-			},
-			{
-				label: "Your Issues",
-				key: "issues",
-				action: () => this.props.setQuery("is:issue author:@me")
-			},
-			{
+			});
+		}
+		filterItems.push({
+			label: "Your Issues",
+			key: "issues",
+			action: () => this.props.setQuery("is:issue author:@me")
+		});
+		if (this.props.apiCapabilities.lightningCodeReviews) {
+			filterItems.push({
 				label: "Your Code Reviews",
 				key: "reviews",
 				action: () => this.props.setQuery("is:cr author:@me ")
-			},
+			});
+		}
+		filterItems.push(
 			{
 				label: "Your Code Comments",
 				key: "comments",
@@ -712,9 +718,15 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				key: "mycode",
 				action: () => this.props.setQuery("impacts:@me ")
 			},
-			{ label: "By Tag", key: "tag", submenu: tagMenuItems },
-			{ label: "By Repo", key: "repo", submenu: repoMenuItems },
-			{ label: "By Branch", key: "branch", submenu: branchMenuItems },
+			{ label: "By Tag", key: "tag", submenu: tagMenuItems }
+		);
+		if (this.props.apiCapabilities.lightningCodeReviews) {
+			filterItems.push(
+				{ label: "By Repo", key: "repo", submenu: repoMenuItems },
+				{ label: "By Branch", key: "branch", submenu: branchMenuItems }
+			);
+		}
+		filterItems.push(
 			{ label: "-" },
 			{
 				label: "View advanced search syntax",
@@ -724,7 +736,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 						url: "https://help.codestream.com/FIXME-URL-IN-ReviewsPanel.js"
 					})
 			}
-		];
+		);
 		// console.log("FILTERS: ", filters);
 		return (
 			<div className="panel full-height reviews-panel">
@@ -837,7 +849,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 }
 
 const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
-	const { context, session, users, repos } = state;
+	const { context, session, users, repos, apiVersioning } = state;
 
 	const usernameMap = userSelectors.getUsernamesByIdLowerCase(state);
 
@@ -868,7 +880,8 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		// tagFiltersLabelsLower,
 		repos,
 		// authorFiltersLabelsLower,
-		webviewFocused: context.hasFocus
+		webviewFocused: context.hasFocus,
+		apiCapabilities: apiVersioning.apiCapabilities
 	};
 };
 
