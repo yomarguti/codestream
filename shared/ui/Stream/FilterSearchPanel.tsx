@@ -737,7 +737,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				key: "view",
 				action: () =>
 					HostApi.instance.send(OpenUrlRequestType, {
-						url: "https://help.codestream.com/FIXME-URL-IN-ReviewsPanel.js"
+						url: "https://github.com/TeamCodeStream/CodeStream/wiki/Filter-and-Search"
 					})
 			}
 		);
