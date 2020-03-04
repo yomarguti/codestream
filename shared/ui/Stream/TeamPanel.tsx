@@ -49,6 +49,7 @@ interface ConnectedProps {
 	currentUserInvisible: false;
 	updateModifiedRepos: Function;
 	clearModifiedFiles: Function;
+	currentUserEmail: string;
 }
 
 interface State {
@@ -337,23 +338,32 @@ class TeamPanel extends React.Component<Props, State> {
 	}
 
 	renderModifiedRepos(user) {
-		const { repos, teamId } = this.props;
+		const { repos, teamId, currentUserEmail } = this.props;
 		const { modifiedRepos } = user;
 
 		if (!modifiedRepos || !modifiedRepos[teamId] || !modifiedRepos[teamId].length) return null;
 
 		return modifiedRepos[teamId].map(repo => {
-			const { repoId = "", modifiedFiles } = repo;
+			const { repoId = "", authors, modifiedFiles } = repo;
 			if (modifiedFiles.length === 0) return null;
 			const repoName = repos[repoId] ? repos[repoId].name : "";
 			const added = modifiedFiles.reduce((total, f) => total + f.linesAdded, 0);
 			const removed = modifiedFiles.reduce((total, f) => total + f.linesRemoved, 0);
+			const stomp =
+				user.email === currentUserEmail
+					? null
+					: (authors || []).find(a => a.email === currentUserEmail && a.stomped > 0);
 			const title = (
 				<>
 					<div className="related-label">Local Changes</div>
 					{modifiedFiles.map(f => (
-						<ChangesetFile key={f.file} {...f} />
+						<ChangesetFile noHover={true} key={f.file} {...f} />
 					))}
+					{stomp && (
+						<div style={{ paddingTop: "10px" }}>
+							Includes {stomp.stomped} change{stomp.stomped > 1 ? "s" : ""} to code you wrote
+						</div>
+					)}
 				</>
 			);
 			return (
@@ -363,6 +373,7 @@ class TeamPanel extends React.Component<Props, State> {
 							<Icon name="repo" /> {repoName} &nbsp; <Icon name="git-branch" /> {repo.branch}
 							{added > 0 && <span className="added">+{added}</span>}
 							{removed > 0 && <span className="deleted">-{removed}</span>}
+							{stomp && <span className="stomped">@{stomp.stomped}</span>}
 						</div>
 					</Tooltip>
 				</li>
@@ -479,6 +490,7 @@ const mapStateToProps = ({ users, context, teams, repos, session, apiVersioning 
 		teamName: team.name,
 		repos,
 		currentUserInvisible: invisible,
+		currentUserEmail: currentUser.email,
 		members: _sortBy(members, m => (m.fullName || "").toLowerCase()),
 		invited: _sortBy(invited, "email"),
 		suggested: _sortBy(suggested, m => (m.fullName || "").toLowerCase()),
