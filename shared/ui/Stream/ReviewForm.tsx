@@ -17,7 +17,6 @@ import {
 	CSStream,
 	CSUser,
 	StreamType,
-	CSApiCapabilities,
 	CSMe
 } from "@codestream/protocols/api";
 import React, { ReactElement } from "react";
@@ -59,6 +58,7 @@ import { Loading } from "../Container/Loading";
 import { LoadingMessage } from "../src/components/LoadingMessage";
 import { editReview, EditableAttributes } from "../store/reviews/actions";
 import { Modal } from "./Modal";
+import { FeatureFlag } from "./FeatureFlag";
 
 interface Props extends ConnectedProps {
 	editingReview?: CSReview;
@@ -78,7 +78,6 @@ interface ConnectedProps {
 	selectedStreams: {};
 	showChannels: string;
 	teamTagsArray: any;
-	apiCapabilities: CSApiCapabilities;
 	textEditorUri?: string;
 	closePanel?: Function;
 	createPostAndReview?: Function;
@@ -635,64 +634,72 @@ class ReviewForm extends React.Component<Props, State> {
 		const { repoStatus } = this.state;
 		const totalModifiedLines = repoStatus && repoStatus.scm ? repoStatus.scm.totalModifiedLines : 0;
 
-		if (!this.props.apiCapabilities.lightningCodeReviews) {
-			return (
-				<Modal
-					verticallyCenter={true}
-					onClose={() => this.props.closePanel && this.props.closePanel()}
-				>
-					<p>
-						This functionality is available on a limited basis to beta customers.
-						<br />
-						<br />
-						Contact <a href="mailto:sales@codestream.com">sales@codestream.com</a> to schedule a
-						demo.
-					</p>
-				</Modal>
-			);
-		}
-
 		return (
-			<div className="full-height-codemark-form">
-				<span className="plane-container">
-					<div className="codemark-form-container">{this.renderReviewForm()}</div>
-					{this.renderExcludedFiles()}
-					{!this.props.isEditing && this.state.reviewers.length > 0 && (
-						<>
-							<div style={{ height: "20px" }}></div>
-							<CSText muted>
-								<SmartFormattedList value={this.state.reviewers.map(m => m.email)} /> will be
-								notified via email
-							</CSText>
-							<div style={{ height: "10px" }} />
-						</>
-					)}
-					{!this.props.isEditing && totalModifiedLines > 100 && (
-						<>
-							<div style={{ display: "flex", padding: "0 0 10px 2px" }}>
-								<Icon name="alert" muted />
-								<span style={{ paddingLeft: "10px" }}>
-									<CSText as="span" muted>
-										There are {totalModifiedLines.toLocaleString()} total modified lines in this
-										review, which is a lot to digest. Increase your development velocity with{" "}
-										<a href="https://www.codestream.com/blog/reviewing-the-code-review-part-i">
-											shift left code reviews
-										</a>
-										.
+			<FeatureFlag flag="lightningCodeReviews">
+				{isOn => {
+					if (!isOn) {
+						return (
+							<Modal
+								verticallyCenter={true}
+								onClose={() => this.props.closePanel && this.props.closePanel()}
+							>
+								<p>
+									This functionality is available on a limited basis to beta customers.
+									<br />
+									<br />
+									Contact <a href="mailto:sales@codestream.com">sales@codestream.com</a> to schedule
+									a demo.
+								</p>
+							</Modal>
+						);
+					}
+
+					return (
+						<div className="full-height-codemark-form">
+							<span className="plane-container">
+								<div className="codemark-form-container">{this.renderReviewForm()}</div>
+								{this.renderExcludedFiles()}
+								{!this.props.isEditing && this.state.reviewers.length > 0 && (
+									<>
+										<div style={{ height: "20px" }}></div>
+										<CSText muted>
+											<SmartFormattedList value={this.state.reviewers.map(m => m.email)} /> will be
+											notified via email
+										</CSText>
+										<div style={{ height: "10px" }} />
+									</>
+								)}
+								{!this.props.isEditing && totalModifiedLines > 100 && (
+									<>
+										<div style={{ display: "flex", padding: "0 0 10px 2px" }}>
+											<Icon name="alert" muted />
+											<span style={{ paddingLeft: "10px" }}>
+												<CSText as="span" muted>
+													There are {totalModifiedLines.toLocaleString()} total modified lines in
+													this review, which is a lot to digest. Increase your development velocity
+													with{" "}
+													<a href="https://www.codestream.com/blog/reviewing-the-code-review-part-i">
+														shift left code reviews
+													</a>
+													.
+												</CSText>
+											</span>
+										</div>
+									</>
+								)}
+								{!this.props.isEditing && (
+									<CSText muted>
+										CodeStream's lightweight code reviews let you request a review on the current
+										state of your repo, without the friction of save, branch, commit, push, create
+										PR, email, pull, web, email, web. Comments on your review are saved with the
+										code even once merged in.
 									</CSText>
-								</span>
-							</div>
-						</>
-					)}
-					{!this.props.isEditing && (
-						<CSText muted>
-							CodeStream's lightweight code reviews let you request a review on the current state of
-							your repo, without the friction of save, branch, commit, push, create PR, email, pull,
-							web, email, web. Comments on your review are saved with the code even once merged in.
-						</CSText>
-					)}
-				</span>
-			</div>
+								)}
+							</span>
+						</div>
+					);
+				}}
+			</FeatureFlag>
 		);
 	}
 
@@ -1379,16 +1386,7 @@ class ReviewForm extends React.Component<Props, State> {
 const EMPTY_OBJECT = {};
 
 const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
-	const {
-		context,
-		editorContext,
-		users,
-		session,
-		preferences,
-		repos,
-		apiVersioning,
-		documents
-	} = state;
+	const { context, editorContext, users, session, preferences, repos, documents } = state;
 	const user = users[session.userId!] as CSMe;
 	const channel = context.currentStreamId
 		? getStreamForId(state.streams, context.currentTeamId, context.currentStreamId) ||
@@ -1427,8 +1425,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		showChannels: context.channelFilter,
 		textEditorUri: editorContext.textEditorUri,
 		teamTagsArray,
-		repos,
-		apiCapabilities: apiVersioning.apiCapabilities
+		repos
 	};
 };
 

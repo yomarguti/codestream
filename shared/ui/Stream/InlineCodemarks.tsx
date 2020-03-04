@@ -73,7 +73,7 @@ import styled from "styled-components";
 import { PanelHeader } from "../src/components/PanelHeader";
 import * as fs from "../utilities/fs";
 import { FileInfo } from "./FileInfo";
-import { apiCapabilitiesUpdated } from "../store/apiVersioning/actions";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -110,7 +110,7 @@ interface Props {
 	isInVscode: boolean;
 	webviewFocused: boolean;
 	currentReviewId?: string;
-	apiCapabilities: CSApiCapabilities;
+	lightningCodeReviewsEnabled: boolean;
 
 	setEditorContext: (
 		...args: Parameters<typeof setEditorContext>
@@ -637,7 +637,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						<div className="keybindings">
 							<div className="function-row">{ComposeTitles.comment}</div>
 							<div className="function-row">{ComposeTitles.issue}</div>
-							{this.props.apiCapabilities.lightningCodeReviews && (
+							{this.props.lightningCodeReviewsEnabled && (
 								<div className="function-row">{ComposeTitles.review}</div>
 							)}
 							<div className="function-row">{ComposeTitles.link}</div>
@@ -1316,7 +1316,7 @@ const EMPTY_ARRAY = [];
 const EMPTY_OBJECT = {};
 
 const mapStateToProps = (state: CodeStreamState) => {
-	const { context, editorContext, teams, configs, documentMarkers, ide, apiVersioning } = state;
+	const { context, editorContext, teams, configs, documentMarkers, ide } = state;
 
 	const docMarkers = documentMarkers[editorContext.textEditorUri || ""] || EMPTY_ARRAY;
 	const numHidden = docMarkers.filter(
@@ -1363,7 +1363,7 @@ const mapStateToProps = (state: CodeStreamState) => {
 		numHidden,
 		isInVscode: ide.name === "VSC",
 		webviewFocused: context.hasFocus,
-		apiCapabilities: apiVersioning.apiCapabilities
+		lightningCodeReviewsEnabled: isFeatureEnabled(state, "lightningCodeReviews")
 	};
 };
 

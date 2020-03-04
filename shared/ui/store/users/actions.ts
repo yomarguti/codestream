@@ -7,6 +7,7 @@ import {
 } from "@codestream/protocols/agent";
 import { CodeStreamState } from "../../store";
 import { HostApi } from "../../webview-api";
+import { isFeatureEnabled } from "../apiVersioning/reducer";
 
 export const reset = () => action("RESET");
 
@@ -17,10 +18,11 @@ export const updateUser = (user: CSUser) => action(UsersActionsType.Update, user
 export const addUsers = (users: CSUser[]) => action(UsersActionsType.Add, users);
 
 export const updateModifiedRepos = () => async (dispatch, getState: () => CodeStreamState) => {
-	const { users, session, context, apiVersioning } = getState();
+	const state = getState();
+	const { users, session, context } = state;
 
 	// this neuters
-	if (!apiVersioning.apiCapabilities.xray) return;
+	if (!isFeatureEnabled(state, "xray")) return;
 
 	const userId = session.userId;
 	if (!userId) return;

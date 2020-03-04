@@ -47,6 +47,7 @@ import { getSlashCommands } from "./SlashCommands";
 import { confirmPopup } from "./Confirm";
 import { ModalRoot, Modal } from "./Modal";
 import { getPostsForStream, getPost } from "../store/posts/reducer";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import {
 	isConnected as isConnectedToProvider,
 	getConnectedSharingTargets
@@ -406,11 +407,6 @@ export class SimpleStream extends Component {
 
 	renderMenu() {
 		const { menuOpen, menuTarget } = this.state;
-		// const inviteLabel = this.props.isCodeStreamTeam
-		// 	? "Invite People"
-		// 	: "Invite People to CodeStream";
-
-		const { apiCapabilities, inSharingModel } = this.props;
 
 		const menuItems = [
 			this.buildTeamMenuItem(),
@@ -424,15 +420,13 @@ export class SimpleStream extends Component {
 		// 	action: () => this.setActivePanel(WebviewPanels.Status)
 		// });
 
-		if (apiCapabilities["follow"] && inSharingModel) {
-			menuItems.push(
-				{
-					label: "Notifications...",
-					action: () => this.setActivePanel(WebviewPanels.Notifications)
-				},
-				{ label: "-" }
-			);
-		}
+		menuItems.push(
+			{
+				label: "Notifications...",
+				action: () => this.setActivePanel(WebviewPanels.Notifications)
+			},
+			{ label: "-" }
+		);
 
 		const providerMenuItems = this.addProvidersToMenu();
 		if (providerMenuItems.length > 0) {
@@ -491,7 +485,7 @@ export class SimpleStream extends Component {
 		const { plusMenuOpen, menuTarget } = this.state;
 
 		const menuItems = [];
-		if (this.props.apiCapabilities.xray) {
+		if (this.props.xrayEnabled) {
 			menuItems.push(
 				{
 					icon: <Icon name="code" />,
@@ -519,7 +513,7 @@ export class SimpleStream extends Component {
 				key: "issue"
 			}
 		);
-		if (this.props.apiCapabilities.lightningCodeReviews) {
+		if (this.props.lightningCodeReviewsEnabled) {
 			menuItems.push(
 				{ label: "-" },
 				{
@@ -2282,13 +2276,11 @@ const sum = (total, num) => total + Math.round(num);
  **/
 const mapStateToProps = state => {
 	const {
-		apiVersioning,
 		capabilities,
 		configs,
 		connectivity,
 		context,
 		pluginVersion,
-		posts,
 		preferences,
 		providers,
 		services,
@@ -2338,8 +2330,8 @@ const mapStateToProps = state => {
 	}));
 
 	return {
-		inSharingModel: state.featureFlags.sharing,
-		apiCapabilities: apiVersioning.apiCapabilities,
+		lightningCodeReviewsEnabled: isFeatureEnabled(state, "lightningCodeReviews"),
+		xrayEnabled: isFeatureEnabled(state, "xray"),
 		currentCodemarkId: context.currentCodemarkId,
 		currentMarkerId: context.currentMarkerId,
 		currentReviewId: context.currentReviewId,

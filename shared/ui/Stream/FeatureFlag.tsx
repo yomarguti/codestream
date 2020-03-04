@@ -1,13 +1,12 @@
 import { CodeStreamState } from "../store";
 import { useSelector } from "react-redux";
-import { FlaggedFeature } from "../store/featureFlags/types";
+import React from "react";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 
 type RenderFunction = (flagEnabled: boolean) => React.ReactNode;
 
-export function FeatureFlag(props: { flag: FlaggedFeature; children: RenderFunction }) {
-	const flagEnabled = useSelector((state: CodeStreamState) =>
-		Boolean(state.featureFlags[props.flag])
-	);
+export function FeatureFlag(props: { flag: string; children: RenderFunction }) {
+	const flagEnabled = useSelector((state: CodeStreamState) => isFeatureEnabled(state, props.flag));
 
-	return props.children(flagEnabled);
+	return <>{props.children(flagEnabled)}</>;
 }

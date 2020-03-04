@@ -1,6 +1,7 @@
 import { ActionType } from "../common";
 import { ApiVersioningActionsType, ApiVersioningState } from "./types";
 import * as actions from "./actions";
+import { CodeStreamState } from "..";
 
 const initialState: ApiVersioningState = {
 	type: ApiVersioningActionsType.ApiOk,
@@ -15,16 +16,20 @@ export function reduceApiVersioning(state = initialState, action: ApiVersioningA
 		case ApiVersioningActionsType.ApiUpgradeRequired:
 			return { ...state, type: ApiVersioningActionsType.ApiUpgradeRequired };
 		case ApiVersioningActionsType.ApiUpgradeRecommended:
-			return { 
+			return {
 				...state,
 				type: ApiVersioningActionsType.ApiUpgradeRecommended,
-				missingCapabilities: {...action.payload}
+				missingCapabilities: { ...action.payload }
 			};
 		case ApiVersioningActionsType.ApiOk:
 			return { ...state, type: ApiVersioningActionsType.ApiOk };
 		case ApiVersioningActionsType.UpdateApiCapabilities:
-			return { ...state, apiCapabilities: {...action.payload} };
+			return { ...state, apiCapabilities: { ...action.payload } };
 		default:
 			return state;
 	}
 }
+
+export const isFeatureEnabled = (state: CodeStreamState, flag: string) => {
+	return state.apiVersioning.apiCapabilities[flag] != null;
+};

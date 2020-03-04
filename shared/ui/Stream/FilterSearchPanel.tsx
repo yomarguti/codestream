@@ -14,7 +14,7 @@ import { PanelHeader } from "../src/components/PanelHeader";
 import styled from "styled-components";
 import FiltersButton from "../src/components/FiltersButton";
 import { OpenUrlRequestType } from "@codestream/protocols/agent";
-import { isCSReview, CSApiCapabilities } from "../protocols/agent/api.protocol.models";
+import { isCSReview } from "../protocols/agent/api.protocol.models";
 import { Disposable } from "vscode-languageserver-protocol";
 import { CodeStreamState } from "../store";
 import { ReposState } from "../store/repos/types";
@@ -23,6 +23,7 @@ import { setUserPreference } from "./actions";
 import { withSearchableItems, WithSearchableItemsProps } from "./withSearchableItems";
 import { FilterQuery } from "../store/preferences/types";
 import { getSavedSearchFilters } from "../store/preferences/reducer";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 
 const SearchBar = styled.div`
 	display: flex;
@@ -137,7 +138,7 @@ interface ConnectedProps {
 	typeFilter: string;
 	repos: ReposState;
 	teamTagsArray: any[];
-	apiCapabilities: CSApiCapabilities;
+	lightningCodeReviewsEnabled: boolean;
 }
 
 interface Props extends ConnectedProps, DispatchProps, WithSearchableItemsProps {}
@@ -742,7 +743,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 						url: "https://github.com/TeamCodeStream/CodeStream/wiki/Filter-and-Search"
 					})
 			}
-		].filter(item => this.props.apiCapabilities.lightningCodeReviews || !item.lightningOnly);
+		].filter(item => this.props.lightningCodeReviewsEnabled || !item.lightningOnly);
 
 		// console.log("FILTERS: ", filters);
 		return (
@@ -863,7 +864,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 }
 
 const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
-	const { context, session, users, repos, apiVersioning } = state;
+	const { context, session, users, repos } = state;
 
 	const usernameMap = userSelectors.getUsernamesByIdLowerCase(state);
 
@@ -895,7 +896,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		repos,
 		// authorFiltersLabelsLower,
 		webviewFocused: context.hasFocus,
-		apiCapabilities: apiVersioning.apiCapabilities
+		lightningCodeReviewsEnabled: isFeatureEnabled(state, "lightningCodeReviews")
 	};
 };
 

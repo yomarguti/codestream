@@ -76,6 +76,7 @@ import { SharingControls, SharingAttributes } from "./SharingControls";
 import { SmartFormattedList } from "./SmartFormattedList";
 import { Modal } from "./Modal";
 import { Checkbox } from "../src/components/Checkbox";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 
 export interface ICrossPostIssueContext {
 	setSelectedAssignees(any: any): void;
@@ -128,7 +129,7 @@ interface ConnectedProps {
 	teamProvider: "codestream" | "slack" | "msteams" | string;
 	teamTagsArray: any;
 	codemarkState: CodemarksState;
-	apiCapabilities: CSApiCapabilities;
+	multipleMarkersEnabled: boolean;
 	shouldShare: boolean;
 	currentTeamId: string;
 	currentReviewId?: string;
@@ -1316,7 +1317,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	renderAddLocation() {
 		if (
-			!this.props.apiCapabilities.multipleMarkers ||
+			!this.props.multipleMarkersEnabled ||
 			this.props.isEditing ||
 			this.props.commentType === "link"
 		)
@@ -1675,7 +1676,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		);
 
 		const locationItems: any[] = [];
-		if (this.props.apiCapabilities.multipleMarkers && this.props.commentType !== "link")
+		if (this.props.multipleMarkersEnabled && this.props.commentType !== "link")
 			locationItems.push({ label: "Add Range", action: () => this.addLocation() });
 		// { label: "Change Location", action: () => this.editLocation(0) }
 
@@ -1952,7 +1953,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		textEditorSelection: getCurrentSelection(editorContext),
 		teamTagsArray,
 		codemarkState: codemarks,
-		apiCapabilities: apiVersioning.apiCapabilities,
+		multipleMarkersEnabled: isFeatureEnabled(state, "multipleMarkers"),
 		currentReviewId: context.currentReviewId
 	};
 };

@@ -96,12 +96,10 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 
 		return {
 			author,
-			inSharingModel: state.featureFlags.sharing,
 			isMine: author.id === state.session.userId!,
 			tags: codemark.tags ? mapFilter(codemark.tags, id => teamTagsById[id]) : [], // TODO: when a tag is not invalid, figure out a way to do an update to clean up the model
 			assignees: [...csAssignees, ...externalAssignees],
 			currentUserEmail: state.users[state.session.userId!].email,
-			followingEnabled: state.apiVersioning.apiCapabilities.follow != undefined,
 			userIsFollowingCodemark: (codemark.followerIds || []).includes(state.session.userId!)
 		};
 	}, shallowEqual);
@@ -124,6 +122,11 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 
 		let items: any[] = [
 			{
+				label: "Share",
+				key: "share",
+				action: toggleShareModal
+			},
+			{
 				label: "Copy link",
 				key: "copy-permalink",
 				action: () => {
@@ -131,6 +134,22 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 						permalinkRef.current.select();
 						document.execCommand("copy");
 					}
+				}
+			},
+			{
+				label: derivedState.userIsFollowingCodemark ? "Unfollow" : "Follow",
+				key: "toggle-follow",
+				action: () => {
+					const value = !derivedState.userIsFollowingCodemark;
+					const changeType = value ? "Followed" : "Unfollowed";
+					HostApi.instance.send(FollowCodemarkRequestType, {
+						codemarkId: codemark.id,
+						value
+					});
+					HostApi.instance.track("Notification Change", {
+						Change: `Codemark ${changeType}`,
+						"Source of Change": "Codemark menu"
+					});
 				}
 			},
 			{
@@ -172,36 +191,6 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 					}
 				}
 			);
-		}
-		if (derivedState.followingEnabled) {
-			const [first, ...rest] = items;
-			items = [
-				first,
-				{
-					label: derivedState.userIsFollowingCodemark ? "Unfollow" : "Follow",
-					key: "toggle-follow",
-					action: () => {
-						const value = !derivedState.userIsFollowingCodemark;
-						const changeType = value ? "Followed" : "Unfollowed";
-						HostApi.instance.send(FollowCodemarkRequestType, {
-							codemarkId: codemark.id,
-							value
-						});
-						HostApi.instance.track("Notification Change", {
-							Change: `Codemark ${changeType}`,
-							"Source of Change": "Codemark menu"
-						});
-					}
-				},
-				...rest
-			];
-		}
-		if (derivedState.inSharingModel) {
-			items.unshift({
-				label: "Share",
-				key: "share",
-				action: toggleShareModal
-			});
 		}
 		if (codemark.markers && codemark.markers.length > 1) {
 			// const submenu = codemark.markers.map((m, index) => {

@@ -69,6 +69,7 @@ import { getDocumentFromMarker } from "./api-functions";
 import { SharingModal } from "./SharingModal";
 import { getReview } from "../store/reviews/reducer";
 import { DropdownButton } from "./Review/DropdownButton";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 
 interface State {
 	hover: boolean;
@@ -113,9 +114,8 @@ interface ConnectedProps {
 	jumpToMarkerId?: string;
 	currentMarkerId?: string;
 	isRepositioning?: boolean;
-	apiCapabilities: CSApiCapabilities;
-	inSharingModel: boolean;
 	review?: CSReview;
+	moveMarkersEnabled: boolean;
 }
 
 export type DisplayType = "default" | "collapsed" | "activity";
@@ -1184,8 +1184,7 @@ export class Codemark extends React.Component<Props, State> {
 			author,
 			marker,
 			isRepositioning,
-			repositionCodemark,
-			apiCapabilities
+			repositionCodemark
 		} = this.props;
 		const { menuOpen, menuTarget, isInjecting } = this.state;
 
@@ -1202,21 +1201,19 @@ export class Codemark extends React.Component<Props, State> {
 		const mine = author.id === this.props.currentUser.id;
 
 		let menuItems: any[] = [
-			// { label: "Add Reaction", action: "react" },
-			// { label: "Get Permalink", action: "get-permalink" },
-			// { label: "-" }
-		];
-
-		if (this.props.inSharingModel) {
-			menuItems.push({
+			{
 				label: "Share",
 				key: "share",
 				action: () => {
 					this.setState({ shareModalOpen: true });
 				}
-			});
-		}
-		if (apiCapabilities["follow"] && (!codemark || !codemark.reviewId)) {
+			}
+			// { label: "Add Reaction", action: "react" },
+			// { label: "Get Permalink", action: "get-permalink" },
+			// { label: "-" }
+		];
+
+		if (!codemark || !codemark.reviewId) {
 			if (codemark && (codemark.followerIds || []).indexOf(this.props.currentUser.id) !== -1) {
 				menuItems.push({ label: "Unfollow", action: "unfollow" });
 			} else {
@@ -1254,7 +1251,7 @@ export class Codemark extends React.Component<Props, State> {
 			});
 		}
 
-		if (apiCapabilities.moveMarkers2 && repositionCodemark) {
+		if (this.props.moveMarkersEnabled && repositionCodemark) {
 			if (renderExpandedBody && codemark.markers && codemark.markers.length > 1) {
 				const submenu = codemark.markers.map((m, index) => {
 					let label = "Code Location #" + (index + 1);
@@ -1330,7 +1327,7 @@ export class Codemark extends React.Component<Props, State> {
 							marker && marker.notLocatedReason && (
 								<>
 									Position lost for this codemark
-									{apiCapabilities.moveMarkers2 && (
+									{this.props.moveMarkersEnabled && (
 										<Tooltip
 											title="Connect this codemark to a block of code in this file or another"
 											placement="topRight"
@@ -1762,7 +1759,6 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 
 	return {
 		review,
-		inSharingModel: state.featureFlags.sharing,
 		capabilities: capabilities,
 		editorHasFocus: context.hasFocus,
 		jumpToMarkerId: context.currentMarkerId,
@@ -1780,7 +1776,7 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		entirelyDeleted,
 		textEditorUri: editorContext.textEditorUri || "",
 		isRepositioning: context.isRepositioning,
-		apiCapabilities: apiVersioning.apiCapabilities
+		moveMarkersEnabled: isFeatureEnabled(state, "moveMarkers2")
 	};
 };
 

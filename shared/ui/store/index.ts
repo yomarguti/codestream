@@ -50,8 +50,6 @@ import { ActiveIntegrationsState } from "./activeIntegrations/types";
 import { reduceActiveIntegrations } from "./activeIntegrations/reducer";
 import { reduceActivityFeed } from "./activityFeed/reducer";
 import { ActivityFeedState } from "./activityFeed/types";
-import { reduceFeatureFlags } from "./featureFlags/reducer";
-import { FeatureFlagsState } from "./featureFlags/types";
 import { reduceCompanies } from "./companies/reducer";
 import { CompaniesState } from "./companies/types";
 import { reduceDocuments } from "./documents/reducer";
@@ -76,7 +74,6 @@ const reducer = combineReducers({
 	documents: reduceDocuments,
 	documentMarkers: reduceDocumentMarkers,
 	editorContext: reduceEditorContext,
-	featureFlags: reduceFeatureFlags,
 	ide: reduceIde,
 	pluginVersion,
 	posts: reducePosts,
@@ -121,10 +118,9 @@ export interface CodeStreamState {
 	companies: CompaniesState;
 	connectivity: ConnectivityState;
 	context: ContextState;
-	documents: DocumentsState,
+	documents: DocumentsState;
 	documentMarkers: DocumentMarkersState;
 	editorContext: EditorContextState;
-	featureFlags: FeatureFlagsState;
 	ide: IdeState;
 	pluginVersion: string;
 	posts: PostsState;

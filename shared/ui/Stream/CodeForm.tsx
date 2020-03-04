@@ -65,7 +65,6 @@ interface ConnectedProps {
 	selectedStreams: {};
 	showChannels: string;
 	teamTagsArray: any;
-	apiCapabilities: CSApiCapabilities;
 	textEditorUri?: string;
 	closePanel?: Function;
 	createPostAndCode?: Function;
@@ -579,7 +578,7 @@ class CodeForm extends React.Component<Props, State> {
 const EMPTY_OBJECT = {};
 
 const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
-	const { context, editorContext, users, session, preferences, repos, apiVersioning } = state;
+	const { context, editorContext, users, session, preferences, repos } = state;
 	const user = users[session.userId!] as CSMe;
 	const channel = context.currentStreamId
 		? getStreamForId(state.streams, context.currentTeamId, context.currentStreamId) ||
@@ -587,7 +586,6 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		: getStreamForTeam(state.streams, context.currentTeamId);
 
 	const teamMates = getTeamMates(state);
-	const teamMembers = getTeamMembers(state);
 	const teamTagsArray = getTeamTagsArray(state);
 
 	const directMessageStreams: CSDirectStream[] = (
@@ -608,8 +606,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		showChannels: context.channelFilter,
 		textEditorUri: editorContext.textEditorUri,
 		teamTagsArray,
-		repos,
-		apiCapabilities: apiVersioning.apiCapabilities
+		repos
 	};
 };
 
