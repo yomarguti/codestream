@@ -152,13 +152,18 @@ export default function SearchResult(props: Props) {
 		}
 	};
 
+	// https://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
+	function escapeRegExp(string) {
+		return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
+	}
+
 	const type = isCSReview(result) ? "review" : result.type;
 
 	let titleHTML = markdownify(
 		type === "comment" ? (result.text || "").substr(0, 80) : result.title
 	);
 	if (props.query) {
-		const matchQueryRegexp = new RegExp(props.query, "gi");
+		const matchQueryRegexp = new RegExp(escapeRegExp(props.query), "gi");
 		titleHTML = titleHTML.replace(matchQueryRegexp, "<u><b>$&</b></u>");
 	}
 
