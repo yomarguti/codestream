@@ -1243,7 +1243,11 @@ class ReviewForm extends React.Component<Props, State> {
 								labelExtras={coAuthorLabels}
 							>
 								<span className="icon-button">
-									<Icon name="plus" title="Specify who you want to review your code" />
+									<Icon
+										name="plus"
+										title="Specify who you want to review your code"
+										placement="bottom"
+									/>
 								</span>
 							</SelectPeople>
 						</div>

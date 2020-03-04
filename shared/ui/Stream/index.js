@@ -66,6 +66,7 @@ import {
 	LiveShareInviteToSessionRequestType,
 	LiveShareStartSessionRequestType,
 	NewCodemarkNotificationType,
+	NewReviewNotificationType,
 	EditorSelectRangeRequestType,
 	WebviewPanels
 } from "../ipc/webview.protocol";
@@ -125,6 +126,9 @@ export class SimpleStream extends Component {
 		this.setUmiInfo();
 		this.disposables.push(
 			HostApi.instance.on(NewCodemarkNotificationType, this.handleNewCodemarkRequest, this)
+		);
+		this.disposables.push(
+			HostApi.instance.on(NewReviewNotificationType, this.handleNewReviewRequest, this)
 		);
 
 		// this listener pays attention to when the input field resizes,
@@ -206,6 +210,10 @@ export class SimpleStream extends Component {
 			HostApi.instance.emit(NewCodemarkNotificationType.method, e);
 		});
 		this.props.openPanel(WebviewPanels.CodemarksForFile);
+	}
+
+	handleNewReviewRequest(e) {
+		this.props.openPanel(WebviewPanels.NewReview);
 	}
 
 	copy(event) {
