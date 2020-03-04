@@ -176,6 +176,11 @@
                 "category": "CodeStream"
             },
             {
+                "command": "codestream.newReview",
+                "title": "Request a Code Review",
+                "category": "CodeStream"
+            },
+            {
                 "command": "codestream.newPermalink",
                 "title": "Get Permalink",
                 "category": "CodeStream"
@@ -284,6 +289,24 @@
                 },
                 "key": "ctrl+shift+/ ctrl+shift+i",
                 "mac": "ctrl+/ ctrl+i",
+                "when": "codestream:status == signedIn"
+            },
+            {
+                "command": "codestream.newReview",
+                "args": {
+                    "source": "Shortcut"
+                },
+                "key": "ctrl+shift+/ r",
+                "mac": "ctrl+/ r",
+                "when": "codestream:status == signedIn"
+            },
+            {
+                "command": "codestream.newReview",
+                "args": {
+                    "source": "Shortcut"
+                },
+                "key": "ctrl+shift+/ ctrl+shift+r",
+                "mac": "ctrl+/ ctrl+r",
                 "when": "codestream:status == signedIn"
             },
             {
@@ -419,6 +442,10 @@
                 },
                 {
                     "command": "codestream.newIssue",
+                    "when": "codestream:status == signedIn"
+                },
+                {
+                    "command": "codestream.newReview",
                     "when": "codestream:status == signedIn"
                 },
                 {

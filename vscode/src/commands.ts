@@ -41,6 +41,10 @@ export interface NewCodemarkCommandArgs {
 	source?: string;
 }
 
+export interface NewReviewCommandArgs {
+	source?: string;
+}
+
 export interface OpenCodemarkCommandArgs {
 	codemarkId: string;
 	onlyWhenVisible?: boolean;
@@ -183,9 +187,14 @@ export class Commands implements Disposable {
 		return this.newCodemarkRequest(CodemarkType.Comment, args);
 	}
 
-	@command("newIssue", { showErrorMessage: "Unable to add issue" })
+	@command("newIssue", { showErrorMessage: "Unable to create issue" })
 	newIssue(args?: NewCodemarkCommandArgs) {
 		return this.newCodemarkRequest(CodemarkType.Issue, args);
+	}
+
+	@command("newReview", { showErrorMessage: "Unable to request a review" })
+	newReview(args?: NewReviewCommandArgs) {
+		return this.newReviewRequest(args);
 	}
 
 	@command("newBookmark", { showErrorMessage: "Unable to add bookmark" })
@@ -340,6 +349,13 @@ export class Commands implements Disposable {
 		// if (editor === undefined) return;
 
 		await Container.webview.newCodemarkRequest(type, editor, args.source || "Context Menu");
+	}
+
+	private async newReviewRequest(args: NewCodemarkCommandArgs = {}) {
+		const editor = window.activeTextEditor;
+		// if (editor === undefined) return;
+
+		await Container.webview.newReviewRequest(editor, args.source || "Context Menu");
 	}
 
 	private async openWorkingFileForMarkerCore(marker: CSMarkerIdentifier) {

@@ -94,7 +94,7 @@ type PromiseType<T> = T extends Promise<infer U> ? U : T;
 // 	} = { timed: true }
 // ) {
 
-export function log<T, F extends (this: T, ...args: any[]) => any>(
+export function log<T, F extends(this: T, ...args: any[]) => any>(
 	options: {
 		args?: false | { [arg: number]: (arg: any) => string | false };
 		condition?(...args: Parameters<F>): boolean;

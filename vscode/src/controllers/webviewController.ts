@@ -44,6 +44,7 @@ import {
 	LiveShareStartSessionRequestType,
 	LogoutRequestType,
 	NewCodemarkNotificationType,
+	NewReviewNotificationType,
 	ReloadWebviewRequestType,
 	RestartRequestType,
 	ReviewShowDiffRequestType,
@@ -253,6 +254,27 @@ export class WebviewController implements Disposable {
 			uri: editor.document.uri.toString(),
 			range: Editor.toSerializableRange(editor.selection),
 			type: type,
+			source: source
+		});
+	}
+
+	@log()
+	async newReviewRequest(
+		editor: TextEditor | undefined = this._lastEditor,
+		source: string
+	): Promise<void> {
+		if (!editor) return;
+
+		if (this.visible) {
+			await this._webview!.show();
+		} else {
+			await this.show();
+		}
+
+		// TODO: Change this to be a request vs a notification
+		this._webview!.notify(NewReviewNotificationType, {
+			uri: editor.document.uri.toString(),
+			range: Editor.toSerializableRange(editor.selection),
 			source: source
 		});
 	}
