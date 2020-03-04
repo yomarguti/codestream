@@ -21,6 +21,14 @@ import { ReviewShowDiffRequestType } from "@codestream/protocols/webview";
 
 export const reset = () => action("RESET");
 
+export const _bootstrapReviews = (reviews: CSReview[]) =>
+	action(ReviewsActionsTypes.Bootstrap, reviews);
+
+export const bootstrapReviews = () => async dispatch => {
+	const { reviews } = await HostApi.instance.send(FetchReviewsRequestType, {});
+	dispatch(_bootstrapReviews(reviews));
+};
+
 export const addReviews = (reviews: CSReview[]) => action(ReviewsActionsTypes.AddReviews, reviews);
 
 export const saveReviews = (reviews: CSReview[]) =>
@@ -124,12 +132,14 @@ export const deleteReview = (id: string) => async dispatch => {
 
 interface AdvancedEditableReviewAttributes {
 	// array of userIds to add
-	$push: { reviewers: string[]}
+	$push: { reviewers: string[] };
 	// array of userIds to remove
-	$pull: { reviewers: string[]}
+	$pull: { reviewers: string[] };
 }
 
-export type EditableAttributes = Partial<Pick<CSReview, "tags" | "text" | "title" | "reviewers" > & AdvancedEditableReviewAttributes>;
+export type EditableAttributes = Partial<
+	Pick<CSReview, "tags" | "text" | "title" | "reviewers"> & AdvancedEditableReviewAttributes
+>;
 
 export const editReview = (id: string, attributes: EditableAttributes) => async dispatch => {
 	let response;
@@ -138,7 +148,7 @@ export const editReview = (id: string, attributes: EditableAttributes) => async 
 			id,
 			...attributes
 		});
-		dispatch(updateReviews([response.review]));		
+		dispatch(updateReviews([response.review]));
 	} catch (error) {
 		logError(`failed to update review: ${error}`, { id });
 	}
@@ -149,12 +159,6 @@ export const fetchReview = (reviewId: string) => async dispatch => {
 	const response = await HostApi.instance.send(GetReviewRequestType, { reviewId });
 
 	if (response.review) return dispatch(saveReviews([response.review]));
-};
-
-export const fetchReviews = () => async dispatch => {
-	const response = await HostApi.instance.send(FetchReviewsRequestType, {});
-
-	return dispatch(saveReviews(response.reviews));
 };
 
 export const showDiff = (reviewId: string, repoId: string, path: string) => async dispatch => {

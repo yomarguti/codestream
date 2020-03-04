@@ -7,7 +7,7 @@ import { orderBy } from "lodash-es";
 import { createSelector } from "reselect";
 import { mapFilter } from "@codestream/webview/utils";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
-import { fetchReviews } from "@codestream/webview/store/reviews/actions";
+import { bootstrapReviews } from "@codestream/webview/store/reviews/actions";
 import { SearchContext, SearchContextType } from "./SearchContextProvider";
 
 type SearchableItems = (CSReview | CodemarkPlus)[];
@@ -33,8 +33,6 @@ const getSearchableCodemarks = createSelector(
 	}
 );
 
-let hasFetchedReviews = false;
-
 export function withSearchableItems<ChildProps extends WithSearchableItemsProps>(
 	Child: React.ElementType<ChildProps>
 ) {
@@ -46,22 +44,21 @@ export function withSearchableItems<ChildProps extends WithSearchableItemsProps>
 		const searchContext = React.useContext(SearchContext);
 
 		useDidMount(() => {
-			if (!hasFetchedReviews) {
-				dispatch(fetchReviews());
-				hasFetchedReviews = true;
+			if (!reviewsState.bootstrapped) {
+				dispatch(bootstrapReviews());
 			}
 		});
 
 		const items = React.useMemo(
 			// sort by most recent first
-			() => orderBy([...codemarks, ...Object.values(reviewsState)], "createdAt", "desc"),
+			() => orderBy([...codemarks, ...Object.values(reviewsState.reviews)], "createdAt", "desc"),
 			[codemarks, reviewsState]
 		);
 
 		const { branchOptions, repoOptions } = React.useMemo(() => {
 			const branchNames = new Set<string>();
 			const repoNames = new Set<string>();
-			for (let [, review] of Object.entries(reviewsState)) {
+			for (let [, review] of Object.entries(reviewsState.reviews)) {
 				const { reviewChangesets = [] } = review;
 				reviewChangesets.forEach(changeset => {
 					const { branch, repoId } = changeset;

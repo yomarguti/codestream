@@ -41,7 +41,6 @@ import { apiUpgradeRecommended, apiUpgradeRequired } from "./store/apiVersioning
 import { getCodemark } from "./store/codemarks/reducer";
 import { getReview } from "./store/reviews/reducer";
 import { fetchCodemarks, openPanel } from "./Stream/actions";
-import { fetchReviews } from "./store/reviews/actions";
 import { ContextState } from "./store/context/types";
 import { CodemarksState } from "./store/codemarks/types";
 import { ReviewsState } from "./store/reviews/types";
@@ -297,25 +296,7 @@ function listenForEvents(store) {
 	});
 
 	api.on(ShowReviewNotificationType, async e => {
-		let {
-			reviews,
-			context,
-			editorContext
-		}: {
-			reviews: ReviewsState;
-			context: ContextState;
-			editorContext: EditorContextState;
-		} = store.getState();
-
-		if (Object.keys(reviews).length === 0) {
-			await store.dispatch(fetchReviews());
-			reviews = store.getState().reviews;
-		}
-
-		const review = getReview(reviews, e.reviewId);
-		if (review == null) return;
-
-		store.dispatch(setCurrentReview(review.id));
+		store.dispatch(setCurrentReview(e.reviewId));
 	});
 
 	api.on(HostDidReceiveRequestNotificationType, async e => {

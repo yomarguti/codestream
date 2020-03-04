@@ -7,6 +7,7 @@ import * as actions from "./actions";
 import { ActionType } from "../common";
 import { uniq } from "lodash-es";
 import { ReviewsState } from "../reviews/types";
+import { getReview } from "../reviews/reducer";
 
 type ActivityFeedAction = ActionType<typeof actions>;
 
@@ -41,7 +42,7 @@ export const getActivity = createSelector(
 	// (state: CodeStreamState) => state.posts,
 	(
 		codemarks: CodemarksState,
-		reviews: ReviewsState,
+		reviewsState: ReviewsState,
 		activityFeed: ActivityFeedActivity[]
 		// posts: PostsState
 	) => {
@@ -56,7 +57,7 @@ export const getActivity = createSelector(
 						record: codemark
 					};
 				case "review":
-					const review = reviews[id];
+					const review = getReview(reviewsState, id);
 					if (review == null || review.deactivated) return;
 					return {
 						type: model,

@@ -6,6 +6,10 @@ export enum ReviewsActionsTypes {
 	SaveReviews = "@reviews/SaveReviews",
 	UpdateReviews = "@reviews/UpdateReviews",
 	Delete = "@reviews/Delete",
+	Bootstrap = "@reviews/Bootstrap"
 }
 
-export type ReviewsState = Index<CSReview>;
+export type ReviewsState = {
+	bootstrapped: boolean;
+	reviews: Index<CSReview>;
+};

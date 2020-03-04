@@ -1,6 +1,6 @@
 import { createSelector } from "reselect";
 import { toMapBy } from "../../utils";
-import { ActionType } from "../common";
+import { ActionType, Index } from "../common";
 import * as actions from "./actions";
 import { ReviewsActionsTypes, ReviewsState } from "./types";
 import { CSReview } from "@codestream/protocols/api";
@@ -8,27 +8,37 @@ import { CodeStreamState } from "..";
 
 type ReviewsActions = ActionType<typeof actions>;
 
-export function reduceReviews(state = {}, action: ReviewsActions) {
+const initialState: ReviewsState = { bootstrapped: false, reviews: {} };
+
+export function reduceReviews(state = initialState, action: ReviewsActions): ReviewsState {
 	switch (action.type) {
+		case ReviewsActionsTypes.Bootstrap:
+			return {
+				bootstrapped: true,
+				reviews: { ...state.reviews, ...toMapBy("id", action.payload) }
+			};
 		case ReviewsActionsTypes.AddReviews:
 		case ReviewsActionsTypes.UpdateReviews:
 		case ReviewsActionsTypes.SaveReviews: {
-			return { ...state, ...toMapBy("id", action.payload) };
+			return {
+				bootstrapped: state.bootstrapped,
+				reviews: { ...state.reviews, ...toMapBy("id", action.payload) }
+			};
 		}
 		case ReviewsActionsTypes.Delete: {
-			const nextState = { ...state };
-			delete nextState[action.payload];
-			return nextState;
+			const nextReviews = { ...state.reviews };
+			delete nextReviews[action.payload];
+			return { bootstrapped: state.bootstrapped, reviews: nextReviews };
 		}
 		case "RESET":
-			return {};
+			return initialState;
 		default:
 			return state;
 	}
 }
 
 export function getReview(state: ReviewsState, id: string): CSReview | undefined {
-	return state[id];
+	return state.reviews[id];
 }
 
 export function getByStatus(state: CodeStreamState, status?: string): CSReview[] {
@@ -37,12 +47,12 @@ export function getByStatus(state: CodeStreamState, status?: string): CSReview[]
 	return getAllReviews(state).filter(review => review.status === status);
 }
 
-const getReviews = (state: CodeStreamState) => state.reviews;
+const getReviews = (state: CodeStreamState) => state.reviews.reviews;
 
-export const getAllReviews = createSelector(getReviews, (reviews: ReviewsState) =>
+export const getAllReviews = createSelector(getReviews, (reviews: Index<CSReview>) =>
 	Object.values(reviews)
 );
 
-export const teamHasReviews = createSelector(getReviews, (reviews: ReviewsState) => {
+export const teamHasReviews = createSelector(getReviews, (reviews: Index<CSReview>) => {
 	return Object.keys(reviews).length > 0;
 });
