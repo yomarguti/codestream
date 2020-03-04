@@ -474,7 +474,7 @@ export function ReviewNav(props: Props) {
 							onMouseLeave={() => setHoverButton("")}
 						>
 							<u>Approve or reject</u> the review when finished
-							<Subtext>Or pause to come back to it later</Subtext>
+							<Subtext>Or exit to come back to it later</Subtext>
 						</InstructionItem>
 					</InstructionList>
 					<Button onClick={toggleInstructions}>Got it</Button>
