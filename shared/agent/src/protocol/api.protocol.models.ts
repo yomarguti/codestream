@@ -598,6 +598,7 @@ export interface CSApiCapability {
 	url?: string;
 	version?: string;
 	restricted?: boolean;
+	supportedIdes?: string[];
 }
 
 export interface CSApiCapabilities {

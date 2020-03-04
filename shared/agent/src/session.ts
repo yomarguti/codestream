@@ -1111,7 +1111,10 @@ export class CodeStreamSession {
 		this._apiCapabilities = {};
 		for (const key in apiCapabilities) {
 			const capability = apiCapabilities[key];
-			if (!capability.restricted || teamFeatures[key]) {
+			if (
+				(!capability.restricted || teamFeatures[key]) &&
+				(!capability.supportedIdes || capability.supportedIdes.includes(this.versionInfo.ide.name))
+			) {
 				this._apiCapabilities[key] = capability;
 			}
 		}
