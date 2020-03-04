@@ -101,6 +101,7 @@ interface State {
 	notify: boolean;
 	isLoading: boolean;
 	isLoadingScm: boolean;
+	scmError: boolean;
 	crossPostMessage: boolean;
 	assignableUsers: { value: any; label: string }[];
 	channelMenuOpen: boolean;
@@ -188,16 +189,19 @@ class ReviewForm extends React.Component<Props, State> {
 			: ({
 					isLoading: false,
 					isLoadingScm: false,
+					scmError: false,
 					notify: false,
 					...defaultState
 			  } as State);
 
 		let assignees: any;
-		if (props.isEditing && props.editingReview) {			
-			assignees = props.editingReview.reviewers.map(a => state.assignableUsers.find((au: any) => au.value === a))
+		if (props.isEditing && props.editingReview) {
+			assignees = props.editingReview.reviewers.map(a =>
+				state.assignableUsers.find((au: any) => au.value === a)
+			);
 			state.reviewers = props.editingReview.reviewers
-					.map(id => props.teamMembers.find(p => p.id === id))
-					.filter(Boolean) as CSUser[];		
+				.map(id => props.teamMembers.find(p => p.id === id))
+				.filter(Boolean) as CSUser[];
 		} else if (state.assignees === undefined) {
 			assignees = undefined;
 		} else if (Array.isArray(state.assignees)) {
@@ -231,12 +235,16 @@ class ReviewForm extends React.Component<Props, State> {
 		const scmInfo = await HostApi.instance.send(GetFileScmInfoRequestType, {
 			uri: uri
 		});
-		const repoId: string = scmInfo.scm ? scmInfo.scm.repoId || "" : "";
-		const repoName = this.props.repos[repoId] ? this.props.repos[repoId].name : "";
-		this.setState({ scmInfo, repoName }, () => {
-			this.handleRepoChange(uri);
-			if (callback) callback();
-		});
+		if (scmInfo.scm) {
+			const repoId: string = scmInfo.scm.repoId || "";
+			const repoName = this.props.repos[repoId] ? this.props.repos[repoId].name : "";
+			this.setState({ scmInfo, repoName }, () => {
+				this.handleRepoChange(uri);
+				if (callback) callback();
+			});
+		} else {
+			this.setState({ isLoadingScm: false, scmError: true });
+		}
 	}
 
 	componentDidMount() {
@@ -254,11 +262,16 @@ class ReviewForm extends React.Component<Props, State> {
 						e.data &&
 						(e.data as DocumentData).reason === "saved")
 				) {
-					this.setState({ isLoadingScm: true });
-					// handle the repo change, but don't pass the textEditorUri
-					// as we don't want to switch the repo the form is pointing
-					// to in these cases
-					this.handleRepoChange();
+					if (!this.state.scmError) {
+						// if there is an error getting git info,
+						// don't bother attempting since it's an error
+
+						this.setState({ isLoadingScm: true });
+						// handle the repo change, but don't pass the textEditorUri
+						// as we don't want to switch the repo the form is pointing
+						// to in these cases
+						this.handleRepoChange();
+					}
 				}
 			})
 		);
@@ -273,8 +286,6 @@ class ReviewForm extends React.Component<Props, State> {
 	async handleRepoChange(repoUri?) {
 		const { teamMates } = this.props;
 		const { includeSaved, includeStaged, startCommit } = this.state;
-		const { scm } = this.state.scmInfo;
-		if (!scm) return;
 
 		const uri = repoUri || this.state.repoUri;
 		const statusInfo = await HostApi.instance.send(GetRepoScmStatusRequestType, {
@@ -285,6 +296,7 @@ class ReviewForm extends React.Component<Props, State> {
 		});
 		this.setState({ repoStatus: statusInfo, repoUri: uri });
 
+		console.log("REPO INFO IS: ", statusInfo);
 		if (statusInfo.scm) {
 			const authors = statusInfo.scm.authors;
 			const authorsById = {};
@@ -335,17 +347,20 @@ class ReviewForm extends React.Component<Props, State> {
 				if (f.status === FileStatus.untracked && excludedFiles[f.file] === undefined)
 					this.setState(state => ({ excludedFiles: { ...state.excludedFiles, [f.file]: true } }));
 			});
-		}
 
-		const response = await HostApi.instance.send(IgnoreFilesRequestType, {
-			repoPath: scm.repoPath
-		});
-		if (response && response.paths) {
-			const ignoredFiles = {};
-			response.paths.forEach(path => (ignoredFiles[path] = true));
-			this.setState({ ignoredFiles });
+			const response = await HostApi.instance.send(IgnoreFilesRequestType, {
+				repoPath: statusInfo.scm.repoPath
+			});
+			if (response && response.paths) {
+				const ignoredFiles = {};
+				response.paths.forEach(path => (ignoredFiles[path] = true));
+				this.setState({ ignoredFiles });
+			}
+		} else {
+			this.setState({ isLoadingScm: false, scmError: true });
+			return;
 		}
-		this.setState({ isLoadingScm: false });
+		this.setState({ isLoadingScm: false, scmError: false });
 	}
 
 	async addIgnoreFile(filename: string) {
@@ -394,7 +409,14 @@ class ReviewForm extends React.Component<Props, State> {
 				};
 				// we need to build up an added and/or removed
 				// array of reviewIds to send to the api
-				if (!(reviewerIds.length === originalReviewers.length && reviewerIds.sort().every(function(value, index) { return value === originalReviewers.sort()[index]}))) {
+				if (
+					!(
+						reviewerIds.length === originalReviewers.length &&
+						reviewerIds.sort().every(function(value, index) {
+							return value === originalReviewers.sort()[index];
+						})
+					)
+				) {
 					const added: string[] = [];
 					const removed: string[] = [];
 					for (const r of this.props.editingReview.reviewers) {
@@ -408,15 +430,15 @@ class ReviewForm extends React.Component<Props, State> {
 						}
 					}
 					if (added.length) {
-						attributes.$push = { reviewers : added };
+						attributes.$push = { reviewers: added };
 					}
 					if (removed.length) {
-						attributes.$pull = { reviewers : removed };
+						attributes.$pull = { reviewers: removed };
 					}
 				}
 
 				const editResult = await this.props.editReview(this.props.editingReview.id, attributes);
-				if (editResult && editResult.review) {			
+				if (editResult && editResult.review) {
 					if (this.props.onClose) {
 						this.props.onClose();
 					}
@@ -424,8 +446,7 @@ class ReviewForm extends React.Component<Props, State> {
 						this.props.closePanel();
 					}
 				}
-			}
-			else if (this.props.createPostAndReview) {
+			} else if (this.props.createPostAndReview) {
 				let review = {
 					title,
 					sharingAttributes: this.props.shouldShare ? this._sharingAttributes : undefined,
@@ -450,7 +471,7 @@ class ReviewForm extends React.Component<Props, State> {
 					this.props.closePanel();
 			}
 		} catch (error) {
-			logError(error, {				
+			logError(error, {
 				isEditing: this.props.isEditing
 			});
 			this.setState({ isLoading: false });
@@ -616,7 +637,7 @@ class ReviewForm extends React.Component<Props, State> {
 			<div className="full-height-codemark-form">
 				<span className="plane-container">
 					<div className="codemark-form-container">{this.renderReviewForm()}</div>
-					{this.renderExcludedFiles()}					
+					{this.renderExcludedFiles()}
 					{!this.props.isEditing && this.state.reviewers.length > 0 && (
 						<>
 							<div style={{ height: "20px" }}></div>
@@ -646,7 +667,7 @@ class ReviewForm extends React.Component<Props, State> {
 							</div>
 						</>
 					)}
-					{!this.props.isEditing && (				 
+					{!this.props.isEditing && (
 						<CSText muted>
 							CodeStream's lightweight code reviews let you request a review on the current state of
 							your repo, without the friction of save, branch, commit, push, create PR, email, pull,
@@ -1084,13 +1105,21 @@ class ReviewForm extends React.Component<Props, State> {
 	};
 
 	setRepo = repo => {
-		this.setState({ isLoadingScm: true });
+		this.setState({ isLoadingScm: true, scmError: false });
 		this.getScmInfoForURI(repo.folder.uri);
 	};
 
 	renderReviewForm() {
 		const { isEditing, editingReview, currentUser, repos } = this.props;
-		const { scmInfo, repoName, reviewers, authorsById, openRepos, isLoadingScm } = this.state;
+		const {
+			scmInfo,
+			repoName,
+			reviewers,
+			authorsById,
+			openRepos,
+			isLoadingScm,
+			scmError
+		} = this.state;
 
 		// coAuthorLabels are a mapping from teamMate ID to the # of edits represented in
 		// the autors variable (number of times you stomped on their code), and the number
@@ -1109,13 +1138,15 @@ class ReviewForm extends React.Component<Props, State> {
 
 		const submitTip = (
 			<span>
-			{isEditing ? "Edit Review":  "Submit Review"}<span className="keybinding extra-pad">{modifier} ENTER</span>
+				{isEditing ? "Edit Review" : "Submit Review"}
+				<span className="keybinding extra-pad">{modifier} ENTER</span>
 			</span>
 		);
 
 		const cancelTip = (
 			<span>
-				{isEditing ? "Cancel Edit":  "Discard Review"}<span className="keybinding extra-pad">ESC</span>
+				{isEditing ? "Cancel Edit" : "Discard Review"}
+				<span className="keybinding extra-pad">ESC</span>
 			</span>
 		);
 
@@ -1142,19 +1173,17 @@ class ReviewForm extends React.Component<Props, State> {
 								<b>{currentUser.username}</b>
 								<span className="subhead">
 									is {isEditing ? "editing" : "requesting"} a code review
-									{scmInfo && scmInfo.scm && <> in </>}
+									{repoMenu.length > 0 && <> in </>}
 								</span>
-								{scmInfo && scmInfo.scm && (
+								{repoMenu.length > 0 && (
+									<InlineMenu items={repoMenu}>{repoName || "select a repo"}</InlineMenu>
+								)}
+								{scmInfo && scmInfo.scm && scmInfo.scm.branch && (
 									<>
-										<InlineMenu items={repoMenu}>{repoName}</InlineMenu>
-										{scmInfo.scm.branch && (
-											<>
-												<span className="subhead">on branch&nbsp;</span>
-												<span className="channel-label" style={{ display: "inline-block" }}>
-													{scmInfo.scm.branch}
-												</span>
-											</>
-										)}
+										<span className="subhead">on branch&nbsp;</span>
+										<span className="channel-label" style={{ display: "inline-block" }}>
+											{scmInfo.scm.branch}
+										</span>
 									</>
 								)}
 							</div>
@@ -1177,7 +1206,7 @@ class ReviewForm extends React.Component<Props, State> {
 						{this.renderMessageInput()}
 					</div>
 					{this.renderTags()}
-					{!isLoadingScm && !isEditing && (
+					{!isLoadingScm && !isEditing && !scmError && (
 						<div
 							className="related"
 							style={{ padding: "0", marginBottom: 0, position: "relative" }}
@@ -1219,7 +1248,7 @@ class ReviewForm extends React.Component<Props, State> {
 							</SelectPeople>
 						</div>
 					)}
-					{!isLoadingScm && isEditing && (
+					{!isLoadingScm && isEditing && !scmError && (
 						<div
 							className="related"
 							style={{ padding: "0", marginBottom: 0, position: "relative" }}
@@ -1238,7 +1267,7 @@ class ReviewForm extends React.Component<Props, State> {
 											}
 										]}
 									/>
-								);								
+								);
 								return menu;
 							})}
 							<SelectPeople
@@ -1254,9 +1283,9 @@ class ReviewForm extends React.Component<Props, State> {
 							</SelectPeople>
 						</div>
 					)}
-					{!isEditing && !isLoadingScm && this.renderChangedFiles()}
-					{!isEditing && !isLoadingScm && this.renderGroupsAndCommits()}
-					{!isEditing && !isLoadingScm && this.renderSharingControls()}
+					{!isEditing && !isLoadingScm && !scmError && this.renderChangedFiles()}
+					{!isEditing && !isLoadingScm && !scmError && this.renderGroupsAndCommits()}
+					{!isEditing && !isLoadingScm && !scmError && this.renderSharingControls()}
 					{!isLoadingScm && (
 						<div
 							key="buttons"
@@ -1284,27 +1313,38 @@ class ReviewForm extends React.Component<Props, State> {
 									Cancel
 								</Button>
 							</Tooltip>
-							<Tooltip title={submitTip} placement="bottom" delay={1}>
-								<Button
-									key="submit"
-									style={{
-										paddingLeft: "10px",
-										paddingRight: "10px",
-										// fixed width to handle the isLoading case
-										width: "80px",
-										marginRight: 0
-									}}
-									className={cx("control-button", { cancel: !this.state.title })}
-									type="submit"
-									loading={this.state.isLoading}
-									onClick={this.handleClickSubmit}
-								>
-									Submit
-								</Button>
-							</Tooltip>
+							{!scmError && (
+								<Tooltip title={submitTip} placement="bottom" delay={1}>
+									<Button
+										key="submit"
+										style={{
+											paddingLeft: "10px",
+											paddingRight: "10px",
+											// fixed width to handle the isLoading case
+											width: "80px",
+											marginRight: 0
+										}}
+										className={cx("control-button", { cancel: !this.state.title })}
+										type="submit"
+										loading={this.state.isLoading}
+										onClick={this.handleClickSubmit}
+									>
+										Submit
+									</Button>
+								</Tooltip>
+							)}
 						</div>
 					)}
 					{isLoadingScm && <LoadingMessage>Loading repo info...</LoadingMessage>}
+					{this.state.scmError && (
+						<div className="color-warning" style={{ display: "flex", padding: "10px 0" }}>
+							<Icon name="alert" />
+							<div style={{ paddingLeft: "10px" }}>
+								Error loading git info.
+								{repoMenu.length > 0 && <> Select a repo above.</>}
+							</div>
+						</div>
+					)}
 					<div key="clear" style={{ clear: "both" }} />
 				</fieldset>
 			</form>
@@ -1368,10 +1408,10 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 	};
 };
 
-const ConnectedReviewForm = connect(mapStateToProps, { 
-	closePanel, 
-	createPostAndReview, 
-	editReview 
+const ConnectedReviewForm = connect(mapStateToProps, {
+	closePanel,
+	createPostAndReview,
+	editReview
 })(ReviewForm);
 
 export { ConnectedReviewForm as ReviewForm };
