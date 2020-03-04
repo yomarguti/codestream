@@ -16,6 +16,7 @@ import {
 	CSMarkerLocations,
 	CSReferenceLocation,
 	CSRepository,
+	CSReview,
 	CSStream
 } from "./api.protocol";
 
