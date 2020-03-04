@@ -816,8 +816,15 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				<ScrollBox>
 					<div className="channel-list vscroll" style={{ paddingTop: "10px" }}>
 						{this.state.totalItems > 0 && (
-							<table style={{ width: "100%", borderCollapse: "collapse" }}>
+							<table style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse" }}>
 								<tbody>
+									{/* the first row sets the width of the columns with table-layout: fixed */}
+									<tr style={{ height: "1px" }}>
+										<td style={{ width: "40px", padding: "0" }}></td>
+										<td style={{ width: "75%", padding: "0" }}></td>
+										<td style={{ width: "25%", padding: "0" }}></td>
+										<td style={{ width: "40px", padding: "0" }}></td>
+									</tr>
 									{this.sections.map(section => {
 										return this.renderSection(section, this.state.displayItems[section] || []);
 									})}

@@ -49,14 +49,11 @@ export function HeadshotName(props: HeadshotNameProps) {
 	const person = props.person || derivedState.users[props.id || ""];
 	if (!person) return null;
 	return (
-		<>
-			<Root className={props.className} onClick={props.onClick}>
-				<HeadshotWrapper>
-					<Headshot person={person} size={props.size || 20} className={props.className} />
-				</HeadshotWrapper>
-				<span className="headshot-name">{person.username}</span>
-			</Root>
-			&nbsp;
-		</>
+		<Root className={props.className} onClick={props.onClick}>
+			<HeadshotWrapper>
+				<Headshot person={person} size={props.size || 20} className={props.className} />
+			</HeadshotWrapper>
+			<span className="headshot-name">{person.username}</span>
+		</Root>
 	);
 }
