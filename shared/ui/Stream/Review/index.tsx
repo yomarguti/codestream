@@ -7,7 +7,11 @@ import {
 	CardFooter,
 	CardBanner
 } from "@codestream/webview/src/components/Card";
-import { CodemarkPlus, CheckReviewPreconditionsRequestType } from "@codestream/protocols/agent";
+import { 
+	CodemarkPlus,
+	CheckReviewPreconditionsRequestType,
+	FollowReviewRequestType
+} from "@codestream/protocols/agent";
 import {
 	MinimumWidthCard,
 	Header,
@@ -231,6 +235,7 @@ const BaseReview = (props: BaseReviewProps) => {
 					Rejected
 				</DropdownButton>
 			);
+		return null;
 	})();
 
 	const renderedStartReview = (() => {
@@ -753,4 +758,16 @@ const ReviewForId = (props: PropsWithId) => {
 export const Review = (props: ReviewProps) => {
 	if (isPropsWithId(props)) return <ReviewForId {...props} />;
 	return <ReviewForReview {...props} />;
+};
+
+const FollowReview = (reviewId: string, unfollow: boolean) => {
+	HostApi.instance.send(FollowReviewRequestType, {
+		id: reviewId,
+		value: !unfollow
+	});
+	const change = unfollow ? "Unfollowed" : "Followed";
+	HostApi.instance.track("Notification Change", {
+		Change: `Review ${change}`,
+		"Source of Change": "Review menu"
+	});
 };
