@@ -57,17 +57,17 @@ export class PubnubConnection implements BroadcasterConnection {
 	private _pubnub: Pubnub | undefined;
 	private _listener: Pubnub.ListenerParameters | undefined;
 	private _statusTimeout: NodeJS.Timer | undefined;
-	private _debug: (msg: string, info?: any) => void = () => {};
+	private _logger: (msg: string, info?: any) => void = () => {};
 	private _messageCallback: MessageCallback | undefined;
 	private _statusCallback: StatusCallback | undefined;
 	private _subscriptionMap: SubscriptionMap = {};
 
 	// initialize PubnubConnection and optionally subscribe to channels
 	async initialize(options: PubnubInitializer): Promise<Disposable> {
-		this._debug(`Pubnub Connection initializing...`);
 		if (options.debug) {
-			this._debug = options.debug;
+			this._logger = options.debug;
 		}
+		this._debug(`Connection initializing...`);
 
 		this._userId = options.userId;
 		this._pubnub = new Pubnub({
@@ -115,6 +115,7 @@ export class PubnubConnection implements BroadcasterConnection {
 			});
 		}
 		if (unsubscribedChannels.length > 0) {
+			this._debug(`Subscribing to ${JSON.stringify(unsubscribedChannels)}, withPresence=${options.withPresence}`);
 			this._pubnub!.subscribe({
 				channels: unsubscribedChannels,
 				withPresence: options.withPresence
@@ -146,7 +147,7 @@ export class PubnubConnection implements BroadcasterConnection {
 	// when a message is received from Pubnub...
 	private onMessage(event: Pubnub.MessageEvent) {
 		const receivedAt = this.timetokenToTimeStamp(event.timetoken);
-		this._debug(`Pubnub message received on ${event.channel} at ${receivedAt}`);
+		this._debug(`Message received on ${event.channel} at ${receivedAt}`);
 		const messageEvent: MessageEvent = {
 			receivedAt,
 			message: event.message
@@ -158,7 +159,7 @@ export class PubnubConnection implements BroadcasterConnection {
 
 	// respond to a Pubnub status event
 	private onStatus(status: Pubnub.StatusEvent | any) {
-		this._debug("Pubnub status received: " + JSON.stringify(status));
+		this._debug("Status received: " + JSON.stringify(status));
 		if ((status as any).error && status.operation === Pubnub.OPERATIONS.PNUnsubscribeOperation) {
 			// ignore any errors associated with unsubscribing
 			return;
@@ -287,5 +288,9 @@ export class PubnubConnection implements BroadcasterConnection {
 	// convert from Pubnub time token to unix timestamp
 	private timetokenToTimeStamp(timetoken: string): number {
 		return Math.floor(parseInt(timetoken, 10) / 10000);
+	}
+
+	_debug(msg: string, info?: any) {
+		this._logger(`PUBNUB: ${msg}`, info);
 	}
 }

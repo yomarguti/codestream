@@ -197,7 +197,7 @@ export class BroadcasterEvents implements Disposable {
 	}
 
 	private debug(msg: string, info?: any) {
-		if (arguments.length === 1) {
+		if (info === undefined) {
 			Logger.logWithDebugParams(`BROADCASTER: ${msg}`);
 		} else {
 			Logger.logWithDebugParams(`BROADCASTER: ${msg}`, info);

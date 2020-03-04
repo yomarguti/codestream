@@ -150,10 +150,10 @@ export class Broadcaster {
 
 	// initialize BroadcasterConnection
 	async initialize(options: BroadcasterInitializer): Promise<Disposable> {
-		this._debug(`Broadcaster initializing...`);
 		if (options.debug) {
 			this._debug = options.debug;
 		}
+		this._debug(`Broadcaster initializing...`);
 
 		if (options.socketCluster) {
 			const socketClusterConnection = new SocketClusterConnection();

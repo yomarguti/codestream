@@ -38,91 +38,104 @@ interface SubscriptionMap {
 export class SocketClusterConnection implements BroadcasterConnection {
 	private _subscriptions: SubscriptionMap = {};
 	private _socket: AGClientSocket | undefined;
-	private _debug: (msg: string, info?: any) => void = () => {};
+	private _logger: (msg: string, info?: any) => void = () => {};
 	private _messageCallback: MessageCallback | undefined;
 	private _statusCallback: StatusCallback | undefined;
 	private _connectionTimer: NodeJS.Timer | undefined;
 	private _connectionPending: boolean = false;
+	private _connected: boolean = false;
+	private _options: SocketClusterInitializer | undefined;
 
 	// initialize SocketCluster connection
-	initialize(options: SocketClusterInitializer): Promise<Disposable> {
+	async initialize(options: SocketClusterInitializer): Promise<Disposable> {
+		this._options = options;
 		if (options.debug) {
-			this._debug = options.debug;
+			this._logger = options.debug;
 		}
-		this._debug("SocketCluster Connection initializing...");
+		this._debug("Connection initializing...");
 
 		this._messageCallback = options.onMessage;
 		this._statusCallback = options.onStatus;
 
+		this._debug(`Connecting to ${this._options!.host}:${this._options.port}`);
+		this._socket = create({
+			hostname: this._options!.host,
+			port: parseInt(this._options!.port, 10),
+			secure: true,
+			autoReconnect: true
+		});
+
+		this._confirmConnection();
+		return ({
+			dispose: this.disconnect.bind(this)
+		});
+	}
+
+	// confirm the connection to the SocketCluster server is good
+	_confirmConnection(): void {
+		if (this._connectionTimer) {
+			this._debug("Not confirming connection because we already have a connection timer");
+			return;
+		}
 		this._connectionPending = true;
-		return new Promise((resolve, reject) => {
-			this._connectionTimer = setTimeout(() => {
-				this._debug("SocketCluster connection timed out");
-				this._connectionPending = false;
-				reject("timed out");
-			}, 10000);
+		this._connected = false;
+		this._debug("Confirming connection...");
+		this._connectionTimer = setTimeout(() => {
+			this._debug("Connection timed out");
+			this._connectionPending = false;
+			delete this._connectionTimer;
+			setTimeout(this._confirmConnection.bind(this), 0);
+		}, 5000);
+
+		(async () => {
+			this._debug("Authorizing the connection...");
 			try {
-				this._debug("Creating SocketCluster connection...");
-				this._socket = create({
-					hostname: options.host,
-					port: parseInt(options.port, 10),
-					secure: true,
-					autoReconnect: true
-					// rejectUnauthorized: false
-				});
-			} catch (ex) {
-				this._connectionPending = false;
-				reject(ex);
+				await this._confirmAuth();
 			}
-
-			(async () => {
-
-				this._debug("Emitting authorization request to SocketCluster...");
-				try {
-					await this._socket!.invoke("auth", {
-						token: options.authKey,
-						uid: options.userId
-					});
-				}
-				catch (error) {
-					const message = error instanceof Error ? error.message : JSON.stringify(error);
-					reject(`Auth error: ${message}`);
-				}
-				this._debug("SocketCluster authorized the connection");
+			catch (error) {
+				const message = error instanceof Error ? error.message : JSON.stringify(error);
+				this._debug(`Unable to authorize connection: ${message}`);
 				if (this._connectionTimer) {
 					clearTimeout(this._connectionTimer);
+					delete this._connectionTimer;
 				}
-				this._connectionPending = false;
+				this._debug("Trying again in 1000 ms...");
+				setTimeout(this._confirmConnection.bind(this), 1000);
+				return;
+			}
+			this._debug(`Connection was authorized, socket ${this._socket!.id}`);
+			if (this._connectionTimer) {
+				clearTimeout(this._connectionTimer);
+				delete this._connectionTimer;
+			}
+			this._connectionPending = false;
+			this._connected = true;
 
-				(async () => {
-					for await (
-						const { channel } of this._socket!.listener("subscribe")
-					) {
-						this._handleSubscribe(channel);
-					}
-				})();
-
-				(async () => {
-					for await (const {error} of this._socket!.listener("error")) {
-						this._debug("SOCKET ERROR: ", JSON.stringify(error));
-						if (this._connectionPending) {
-							reject(error);
-						}
-						else {
-							this.netHiccup();
-						}
-					}
-				})();
-
-				resolve({
-					dispose: this.disconnect.bind(this)
-				});
+			(async () => {
+				for await (
+					const { channel } of this._socket!.listener("subscribe")
+				) {
+					this._handleSubscribe(channel);
+				}
 			})();
-		});
+
+			(async () => {
+				for await (const { error } of this._socket!.listener("error")) {
+					this._debug(`SOCKET ERROR, socket ${this._socket!.id}: ${JSON.stringify(error)}`);
+					if (this._connectionPending) {
+						const message = error instanceof Error ? error.message : JSON.stringify(error);
+						this._debug(`Received error during connection: ${message}`);
+					} else {
+						this.netHiccup();
+					}
+				}
+			})();
+		})();
 	}
 
 	disconnect(): void {
 		if (this._socket) {
+			this._debug(`Disconnecting socket ${this._socket.id}`);
 			this.unsubscribeAll();
 			this._socket!.killAllListeners();
 			this._socket.disconnect();
@@ -140,7 +153,7 @@ export class SocketClusterConnection implements BroadcasterConnection {
 	}
 
 	subscribe(channels: string[], options: BroadcasterConnectionOptions = {}) {
-		this._debug("SocketCluster request to subscribe:", channels);
+		this._debug("Request to subscribe:", channels);
 		const unsubscribedChannels: string[] = [];
 		const subscribedChannels: string[] = [];
 		for (const channel of channels) {
@@ -156,14 +169,14 @@ export class SocketClusterConnection implements BroadcasterConnection {
 			}
 		}
 		if (subscribedChannels.length > 0 && this._statusCallback) {
-			this._debug("SocketCluster already subscribed to ", subscribedChannels);
+			this._debug("Already subscribed to ", subscribedChannels);
 			this._statusCallback({
 				status: BroadcasterStatusType.Connected,
 				channels: subscribedChannels
 			});
 		}
 		if (unsubscribedChannels.length > 0) {
-			this._debug("SocketCluster not yet subscribed, will subscribe now to", unsubscribedChannels);
+			this._debug("Not yet subscribed, will subscribe now to", unsubscribedChannels);
 			for (const channel of unsubscribedChannels) {
 				this._subscribeToChannel(channel);
 			}
@@ -171,24 +184,74 @@ export class SocketClusterConnection implements BroadcasterConnection {
 	}
 
 	async confirmSubscriptions(channels: string[]): Promise<string[]> {
-		const troubleChannels = [];
-		for (const channel of channels) {
-			const subscription = this._subscriptions[channel];
-			if (!subscription) {
-				troubleChannels.push(channel);
+		let gotError = false;
+		let subscriptions: string[] = [];
+		try {
+			this._debug("Confirming subscription to: " + JSON.stringify(channels));
+			subscriptions = this._socket!.subscriptions();
+			if (subscriptions.length === 0) {
+				throw new Error("no subscriptions could be confirmed");
 			}
+		} catch (error) {
+			let message = error instanceof Error ? error.message : JSON.stringify(error);
+			this._debug("Error confirming subscriptions: " + message);
+			try {
+				await this._confirmConnection();
+			}
+			catch (ex) {
+				message = ex instanceof Error ? ex.message : JSON.stringify(ex);
+				this._debug("Error confirming connection: " + message);
+			}
+			gotError = true;
+		}
+		let troubleChannels: string[] = [];
+		if (gotError) {
+			troubleChannels = channels;
+		} else {
+			troubleChannels = channels.filter(channel => !subscriptions.includes(channel));
 		}
 		return troubleChannels;
 	}
 
+	async _confirmAuth() {
+		this._debug("Emitting authorization request...");
+		try {
+			if (!this._socket || !this._options) {
+				throw new Error("no socket or options");
+			}
+			await this._socket!.invoke("auth", {
+				token: this._options.authKey,
+				uid: this._options.userId
+			});
+		}
+		catch (error) {
+			const message = error instanceof Error ? error.message : JSON.stringify(error);
+			throw new Error(`Auth error: ${message}`);
+		}
+		this._debug("Authorization confirmed");
+	}
+
 	fetchHistory(options: BroadcasterHistoryInput): Promise<BroadcasterHistoryOutput> {
-		return new SocketClusterHistory().fetchHistory({
-			socket: this._socket!,
-			...options
-		});
+		try {
+			return new SocketClusterHistory().fetchHistory({
+				socket: this._socket!,
+				...options
+			});
+		}
+		catch (error) {
+			this._debug("Error fetching history, will confirm good connection");
+			this._confirmConnection();
+			throw error;
+		}
 	}
 
 	_subscribeToChannel(channel: string) {
+
+		if (this._socket!.isSubscribed(channel)) {
+			this._debug(`We are already subscribed to ${channel}`);
+			this._handleSubscribe(channel);
+			return;
+		}
 
 		(async () => {
 			try {
@@ -199,7 +262,7 @@ export class SocketClusterConnection implements BroadcasterConnection {
 				}
 			}
 			catch (error) {
-				this._debug("SocketCluster failed to subscribe to", channel);
+				this._debug("Failed to subscribe to", channel);
 				this._handleSubscribeFail(error, channel);
 			}
 		})();
@@ -208,7 +271,7 @@ export class SocketClusterConnection implements BroadcasterConnection {
 	// handle a message coming in on any channel
 	_handleMessage(message: any) {
 		const receivedAt = Date.now();
-		this._debug("SocketCluster message received at", receivedAt);
+		this._debug("Message received at", receivedAt);
 		const messageEvent: MessageEvent = {
 			receivedAt,
 			message
@@ -219,6 +282,12 @@ export class SocketClusterConnection implements BroadcasterConnection {
 	}
 
 	_handleSubscribe(channel: string) {
+		if (!this._connected) {
+			this._debug(`Ignoring subscription event for ${channel}, connection is still pending`);
+			// ignore any subscribe events while our connection is not confirmed,
+			// not sure why these would happen during reconnect when auth is failing
+			return;
+		}
 		if (this._statusCallback) {
 			this._statusCallback({
 				status: BroadcasterStatusType.Connected,
@@ -255,5 +324,9 @@ export class SocketClusterConnection implements BroadcasterConnection {
 		for (const channel in this._subscriptions) {
 			this._unsubscribeChannel(channel);
 		}
+	}
+
+	_debug(msg: string, info?: any) {
+		this._logger(`SOCKETCLUSTER: ${msg}`, info);
 	}
 }

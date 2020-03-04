@@ -89,7 +89,7 @@ export class SocketClusterHistory {
 			await this.retrieveBatchHistory(channels, since);
 		} catch (error) {
 			// if we reached a "RESET" condition, break out and inform the client, we'll proceed no further
-			if (error === "RESET") {
+			if (error instanceof Error && error.message === "RESET") {
 				return false;
 			} else {
 				throw error;
@@ -113,7 +113,7 @@ export class SocketClusterHistory {
 		}
 		catch (error) {
 			const message = error instanceof Error ? error.message : JSON.stringify(error);
-			throw `history fetch error: ${message}`;
+			throw new Error(`history fetch error: ${message}`);
 		}
 
 		await this.handleHistory(response as SocketClusterHistoryAPIOutput);
@@ -127,7 +127,7 @@ export class SocketClusterHistory {
 		if (output.messages.length >= 100) {
 			this._numRequests++;
 			if (this._numRequests === 10) {
-				throw "RESET";
+				throw new Error("RESET");
 			}
 			const since = output.messages[output.messages.length - 1].timestamp;
 			await this.retrieveBatchHistory(output.channels, since);
