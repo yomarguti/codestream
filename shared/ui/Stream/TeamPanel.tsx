@@ -24,6 +24,7 @@ import styled from "styled-components";
 import { UserStatus } from "../src/components/UserStatus";
 import { DocumentData } from "../protocols/agent/agent.protocol.notifications";
 import { updateModifiedRepos, clearModifiedFiles } from "../store/users/actions";
+import { CSText } from "../src/components/CSText";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -399,7 +400,11 @@ class TeamPanel extends React.Component<Props, State> {
 									<>
 										<li key={user.email} style={{ marginTop: "5px" }}>
 											<Headshot person={user}></Headshot>
-											<b>{user.fullName}</b> <UserStatus user={user} />
+											<b>{user.fullName}</b>{" "}
+											<CSText as="span" muted>
+												@{user.username}
+											</CSText>{" "}
+											<UserStatus user={user} />
 										</li>
 										{this.renderModifiedRepos(user)}
 									</>
