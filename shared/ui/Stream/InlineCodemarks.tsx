@@ -43,7 +43,7 @@ import {
 	ScmError,
 	getFileScmError
 } from "../store/editorContext/reducer";
-import { CSTeam, CodemarkType } from "@codestream/protocols/api";
+import { CSTeam, CodemarkType, CSApiCapabilities } from "@codestream/protocols/api";
 import {
 	setCodemarksFileViewStyle,
 	setCodemarksShowArchived,
@@ -73,6 +73,7 @@ import styled from "styled-components";
 import { PanelHeader } from "../src/components/PanelHeader";
 import * as fs from "../utilities/fs";
 import { FileInfo } from "./FileInfo";
+import { apiCapabilitiesUpdated } from "../store/apiVersioning/actions";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -109,6 +110,7 @@ interface Props {
 	isInVscode: boolean;
 	webviewFocused: boolean;
 	currentReviewId?: string;
+	apiCapabilities: CSApiCapabilities;
 
 	setEditorContext: (
 		...args: Parameters<typeof setEditorContext>
@@ -635,6 +637,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						<div className="keybindings">
 							<div className="function-row">{ComposeTitles.comment}</div>
 							<div className="function-row">{ComposeTitles.issue}</div>
+							{this.props.apiCapabilities.lightningCodeReviews && (
+								<div className="function-row">{ComposeTitles.review}</div>
+							)}
 							<div className="function-row">{ComposeTitles.link}</div>
 							<div className="function-row">{ComposeTitles.privatePermalink}</div>
 							<div className="function-row">{ComposeTitles.toggleCodeStreamPanel}</div>
@@ -1311,7 +1316,7 @@ const EMPTY_ARRAY = [];
 const EMPTY_OBJECT = {};
 
 const mapStateToProps = (state: CodeStreamState) => {
-	const { context, editorContext, teams, configs, documentMarkers, ide } = state;
+	const { context, editorContext, teams, configs, documentMarkers, ide, apiVersioning } = state;
 
 	const docMarkers = documentMarkers[editorContext.textEditorUri || ""] || EMPTY_ARRAY;
 	const numHidden = docMarkers.filter(
@@ -1357,7 +1362,8 @@ const mapStateToProps = (state: CodeStreamState) => {
 		numLinesVisible: getVisibleLineCount(textEditorVisibleRanges),
 		numHidden,
 		isInVscode: ide.name === "VSC",
-		webviewFocused: context.hasFocus
+		webviewFocused: context.hasFocus,
+		apiCapabilities: apiVersioning.apiCapabilities
 	};
 };
 

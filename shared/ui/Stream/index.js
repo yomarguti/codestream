@@ -95,6 +95,7 @@ import {
 	sortBy as _sortBy
 } from "lodash-es";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
+import { ComposeKeybindings } from "./ComposeTitles";
 
 const EMAIL_MATCH_REGEX = new RegExp(
 	"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*",
@@ -496,6 +497,7 @@ export class SimpleStream extends Component {
 					icon: <Icon name="code" />,
 					label: "Start Work",
 					action: () => this.setActivePanel(WebviewPanels.Status),
+					shortcut: ComposeKeybindings.work,
 					key: "code"
 				},
 				{ label: "-" }
@@ -506,12 +508,14 @@ export class SimpleStream extends Component {
 				icon: <Icon name="comment" />,
 				label: "New Comment",
 				action: this.newComment,
+				shortcut: ComposeKeybindings.comment,
 				key: "comment"
 			},
 			{
 				icon: <Icon name="issue" />,
 				label: "New Issue",
 				action: this.newIssue,
+				shortcut: ComposeKeybindings.issue,
 				key: "issue"
 			}
 		);
@@ -522,6 +526,7 @@ export class SimpleStream extends Component {
 					icon: <Icon name="review" />,
 					label: "Request A Code Review",
 					action: this.newReview,
+					shortcut: ComposeKeybindings.review,
 					key: "review"
 				}
 			);
