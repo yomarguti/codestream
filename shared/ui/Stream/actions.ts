@@ -735,15 +735,34 @@ export const fetchCodemarks = () => async dispatch => {
 	}
 };
 
-export const setCodemarkStatus = (
-	codemarkId: string,
-	status: "closed" | "open"
-) => async dispatch => {
+type IssueStatus = "closed" | "open";
+
+const describeIssueStatusChange = (action: IssueStatus) => {
+	switch (action) {
+		case "open":
+			return "reopened";
+		case "closed":
+			return "resolved";
+		default:
+			return action;
+	}
+};
+
+export const setCodemarkStatus = (codemarkId: string, status: IssueStatus) => async dispatch => {
 	try {
 		const response = await HostApi.instance.send(UpdateCodemarkRequestType, {
 			codemarkId,
 			status
 		});
+
+		await dispatch(
+			createPost(
+				response.codemark.streamId,
+				response.codemark.postId,
+				`/me ${describeIssueStatusChange(status)} this issue`
+			)
+		);
+
 		return dispatch(updateCodemarks([response.codemark]));
 	} catch (error) {
 		logError(`failed to change codemark status: ${error}`, { codemarkId });
