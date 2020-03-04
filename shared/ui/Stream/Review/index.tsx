@@ -652,7 +652,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 	const menuItems = React.useMemo(() => {
 		const items: any[] = [];
 
-		if (review.creatorId === derivedState.currentUser.id)
+		if (review.creatorId === derivedState.currentUser.id) {
 			items.push(
 				{ label: "Edit", key: "edit", action: () => setIsEditing(true) },
 				{
@@ -678,7 +678,25 @@ const ReviewForReview = (props: PropsWithReview) => {
 					}
 				}
 			);
+		}
 
+		items.push({
+			label: derivedState.userIsFollowing ? "Unfollow" : "Follow",
+			key: "toggle-follow",
+			action: () => {
+				const value = !derivedState.userIsFollowing;
+				const changeType = value ? "Followed" : "Unfollowed";
+				HostApi.instance.send(FollowReviewRequestType, {
+					id: review.id,
+					value
+				});
+				HostApi.instance.track("Notification Change", {
+					Change: `Review ${changeType}`,
+					"Source of Change": "Review menu"
+				});
+			}
+		});
+		
 		return items;
 	}, [review]);
 
@@ -760,14 +778,3 @@ export const Review = (props: ReviewProps) => {
 	return <ReviewForReview {...props} />;
 };
 
-const FollowReview = (reviewId: string, unfollow: boolean) => {
-	HostApi.instance.send(FollowReviewRequestType, {
-		id: reviewId,
-		value: !unfollow
-	});
-	const change = unfollow ? "Unfollowed" : "Followed";
-	HostApi.instance.track("Notification Change", {
-		Change: `Review ${change}`,
-		"Source of Change": "Review menu"
-	});
-};
