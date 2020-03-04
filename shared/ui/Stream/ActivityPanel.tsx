@@ -70,6 +70,7 @@ export const ActivityPanel = () => {
 			codemarkTypeFilter: state.context.codemarkTypeFilter,
 			umis: state.umis,
 			webviewFocused: state.context.hasFocus
+			// apiCapabilities: state.apiVersioning.apiCapabilities
 		};
 	});
 
@@ -213,25 +214,31 @@ export const ActivityPanel = () => {
 		});
 	};
 
-	const showActivityLabels = {
-		all: "all activity",
-		[CodemarkType.Comment]: "comments",
-		[CodemarkType.Review]: "code reviews",
-		[CodemarkType.Issue]: "issues"
-	};
+	// const showActivityLabels = {
+	// 	all: "all activity",
+	// 	[CodemarkType.Comment]: "comments",
+	// 	[CodemarkType.Review]: "code reviews",
+	// 	[CodemarkType.Issue]: "issues"
+	// };
 
-	const menuItems = [
-		{ label: "All Activity", action: "all" },
-		{ label: "-" },
-		{ label: "Comments", icon: <Icon name="comment" />, action: CodemarkType.Comment },
-		{ label: "Issues", icon: <Icon name="issue" />, action: CodemarkType.Issue },
-		{ label: "Code Reviews", icon: <Icon name="review" />, action: CodemarkType.Review }
-	];
+	// const menuItems = [
+	// 	{ label: "All Activity", action: "all" },
+	// 	{ label: "-" },
+	// 	{ label: "Comments", icon: <Icon name="comment" />, action: CodemarkType.Comment },
+	// 	{ label: "Issues", icon: <Icon name="issue" />, action: CodemarkType.Issue }
+	// ];
+	// if (derivedState.apiCapabilities.lightningCodeReviews) {
+	// 	menuItems.push({
+	// 		label: "Code Reviews",
+	// 		icon: <Icon name="review" />,
+	// 		action: CodemarkType.Review
+	// 	});
+	// }
 
 	return (
 		<div className="panel full-height activity-panel">
 			<PanelHeader title="Activity">
-				{
+				{/* removed as per https://teamcodestream.slack.com/archives/C7E3ED0TT/p1583288202118300
 					<div className="filters">
 						Show{" "}
 						<Filter
@@ -242,7 +249,7 @@ export const ActivityPanel = () => {
 							items={menuItems}
 						/>
 					</div>
-				}
+				*/}
 			</PanelHeader>
 			<ScrollBox>
 				<div ref={rootRef} className="channel-list vscroll">
