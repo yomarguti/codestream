@@ -24,7 +24,8 @@ import {
 	CSMe,
 	CSPost,
 	CSApiCapabilities,
-	CSReview
+	CSReview,
+	CodemarkStatus
 } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import {
@@ -67,6 +68,7 @@ import { Link } from "./Link";
 import { getDocumentFromMarker } from "./api-functions";
 import { SharingModal } from "./SharingModal";
 import { getReview } from "../store/reviews/reducer";
+import { DropdownButton } from "./Review/DropdownButton";
 
 interface State {
 	hover: boolean;
@@ -460,6 +462,10 @@ export class Codemark extends React.Component<Props, State> {
 
 	handleClickStatusToggle = (event: React.SyntheticEvent): any => {
 		event.stopPropagation();
+		this.toggleStatus();
+	};
+
+	toggleStatus = () => {
 		const { codemark } = this.props;
 		if (codemark!.status === "closed") this.openIssue();
 		else this.closeIssue();
@@ -468,13 +474,13 @@ export class Codemark extends React.Component<Props, State> {
 	closeIssue = () => {
 		const { codemark, setCodemarkStatus } = this.props;
 		setCodemarkStatus(codemark!.id, "closed");
-		this.submitReply("/me closed this issue");
+		// this.submitReply("/me closed this issue");
 	};
 
 	openIssue = () => {
 		const { codemark, setCodemarkStatus } = this.props;
 		setCodemarkStatus(codemark!.id, "open");
-		this.submitReply("/me reopened this issue");
+		// this.submitReply("/me reopened this issue");
 	};
 
 	submitReply = text => {
@@ -488,18 +494,24 @@ export class Codemark extends React.Component<Props, State> {
 
 		if (this.state.isInjecting) return null;
 
+		const resolveItem = { label: "Resolve", action: this.toggleStatus };
+		const reopenItem = { label: "Reopen", action: this.toggleStatus };
+
 		if (isChangeRequest || type === CodemarkType.Issue) {
 			if (this.props.displayType === "default") {
-				return (
-					<Tooltip title="Mark as resolved and hide discussion" placement="topRight" delay={1}>
-						<div
-							className={cx("resolve-button", { checked: status === "closed" })}
-							onClick={this.handleClickStatusToggle}
-						>
-							{status === "open" ? "Resolve" : "Reopen"}
-						</div>
-					</Tooltip>
-				);
+				if (codemark.status === CodemarkStatus.Closed) {
+					return (
+						<DropdownButton size="compact" variant="secondary" items={[reopenItem]}>
+							Resolved
+						</DropdownButton>
+					);
+				} else {
+					return (
+						<DropdownButton size="compact" items={[resolveItem]}>
+							Open
+						</DropdownButton>
+					);
+				}
 			} else {
 				return (
 					<div className="align-far-left">
