@@ -1145,7 +1145,7 @@
 				.shortcut {
 					float: right;
 					padding-left: 10px;
-					opacity: 0.5;
+					// opacity: 0.5;
 				}
 				.checkmark {
 					display: inline-block;
@@ -1165,6 +1165,9 @@
 				background: var(--button-background-color);
 				.shortcut {
 					opacity: 1;
+					.keybinding {
+						color: var(--text-color-highlight);
+					}
 				}
 			}
 			li.menu-item.hover > span.label,
@@ -2771,16 +2774,16 @@
 	}
 	.keybinding {
 		display: inline-block;
-		color: @app-background-color;
-		background-color: @text-color;
+		background-color: rgba(128, 128, 128, 0.17);
+		color: var(--text-color);
 		font-weight: normal;
-		font-size: smaller;
 		padding: 1px 3px;
-		margin-left: 5px;
+		margin: -1px 0 -1px 5px;
 		border-radius: 3px;
-		vertical-align: 1px;
+		border-bottom: 1px solid rgba(68, 68, 68, 0.6);
+		// vertical-align: 1px;
 		text-align: center;
-		min-width: 1.5em;
+		min-width: 1.75em;
 		user-select: none;
 		&.extra-pad {
 			padding: 1px 5px;
