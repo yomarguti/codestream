@@ -24,7 +24,10 @@ const tips = [
 	<span>Created four days ago: created:{fourDaysAgoFormatted}</span>,
 	<span>Created before yesterday: created:&lt;yesterday</span>,
 	<span>
-		Flag tech debt with tagged codemarks. <a href="">See how.</a>
+		Flag tech debt with tagged codemarks.{" "}
+		<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Creating-a-Codemark#tags">
+			See how.
+		</a>
 	</span>,
 	<span>Use permalinks to share pointers to code on other platforms such as JIRA.</span>,
 	<span>CodeStream's comments can include multiple ranges, even across repos.</span>,
