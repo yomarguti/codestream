@@ -28,6 +28,10 @@ export interface CodemarkPlus extends CSCodemark {
 
 export interface CreateCodemarkRequest extends Omit<CSCreateCodemarkRequest, "teamId"> {
 	markers?: CreateMarkerRequest[];
+	// codemarks can be part of a review
+	reviewId?: string;
+	// if part of a review, it can be a change request
+	isChangeRequest?: boolean;
 }
 
 // A description of what's required to create markers in the webview -> agent API

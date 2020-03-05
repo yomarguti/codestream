@@ -486,6 +486,10 @@ function trackPostCreation(
 							Tags: (request.codemark.tags || []).length,
 							Markers: markers.length
 						};
+						if (request.codemark.reviewId) {
+							codemarkProperties["Code Review"] = true;
+							codemarkProperties["Change Request"] = request.codemark.isChangeRequest;
+						}
 						if (textDocuments && textDocuments.length) {
 							for (const textDocument of textDocuments) {
 								const firstError = await getGitError(textDocument);
@@ -500,6 +504,34 @@ function trackPostCreation(
 					}
 				})
 				.catch(ex => Logger.error(ex));
+		} catch (ex) {
+			Logger.error(ex);
+		}
+	});
+}
+
+function trackReviewPostCreation(
+	review: ReviewPlus
+) {
+	process.nextTick(() => {
+		try {
+			const telemetry = Container.instance().telemetry;
+			const reviewProperties: {
+				[key: string]: any;
+			} = {
+				"Review ID": review.id,
+				Reviewers: review.reviewers.length,
+				Files: review.reviewChangesets.map(_ => _.modifiedFiles.length).reduce((acc, x) => acc + x),
+				"Pushed Commits": review.reviewChangesets.map(_ => _.commits.filter(c => !c.localOnly).length).reduce((acc, x) => acc + x),
+				"Local Commits": review.reviewChangesets.map(_ => _.commits.filter(c => c.localOnly).length).reduce((acc, x) => acc + x),
+				"Staged Changes": review.reviewChangesets.some(_ => _.includeStaged),
+				"Saved Changes": review.reviewChangesets.some(_ => _.includeSaved)
+			};
+
+			telemetry.track({
+				eventName: "Review Created",
+				properties: reviewProperties
+			});
 		} catch (ex) {
 			Logger.error(ex);
 		}
@@ -1123,17 +1155,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 		review = response.review!;
 
-		// FIXME
-		// trackPostCreation(
-		// 	{
-		// 		streamId: stream.id,
-		// 		review,
-		// 		title: request.attributes.title!,
-		// 		entryPoint: request.entryPoint
-		// 	},
-		// 	request.textDocuments,
-		// 	review.id
-		// );
+		trackReviewPostCreation(review);
 		await resolveCreatePostResponse(response!);
 		return {
 			stream,
