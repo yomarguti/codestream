@@ -98,7 +98,18 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		await createPost(codemark.streamId, threadId, replaceHtml(replyText)!, null, mentionedUserIds, {
 			entryPoint: "Codemark"
 		});
-		HostApi.instance.track("Replied to Codemark", { "Codemark ID": codemark.id });
+		let properties: {
+			[key: string]: any;
+		} = {};
+		if (codemark.reviewId) {
+			properties["Parent ID"] = codemark.reviewId;
+			properties["Parent Type"] = "Code Review";
+		} else {
+			properties["Parent ID"] = codemark.id;
+			properties["Parent Type"] = "Codemark";
+		}
+		properties["Change Request"] = codemark.isChangeRequest;
+		HostApi.instance.track("Reply Created", properties);
 	};
 
 	handleOnChange = (text: string, formatCode: boolean) => {

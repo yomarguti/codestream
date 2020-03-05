@@ -446,7 +446,7 @@ const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 	);
 };
 
-const ReplyInput = (props: { parentPostId: string; streamId: string }) => {
+const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: string }) => {
 	const dispatch = useDispatch<Dispatch>();
 	const [text, setText] = React.useState("");
 	const [isChangeRequest, setIsChangeRequest] = React.useState(false);
@@ -489,7 +489,16 @@ const ReplyInput = (props: { parentPostId: string; streamId: string }) => {
 		}
 		setIsLoading(false);
 		setText("");
-		// HostApi.instance.track("Replied to Review", {});
+
+		const properties: {
+			[key: string]: any;
+		} = {};
+		if (props.reviewId) {
+			properties["Parent ID"] = props.reviewId;
+			properties["Parent Type"] = "Code Review";
+			properties["Change Request"] = isChangeRequest;
+			HostApi.instance.track("Reply Created", properties);
+		}
 	};
 
 	return (
@@ -609,6 +618,13 @@ const ReviewForReview = (props: PropsWithReview) => {
 		getReviewChangeRequests(state, review)
 	);
 
+	const webviewFocused = useSelector((state: CodeStreamState) => state.context.hasFocus);	
+	useDidMount(() => {
+		if (!props.collapsed && webviewFocused) {
+			HostApi.instance.track("Page Viewed", { "Page Name": "Review Details" });		
+		}
+	});
+
 	React.useEffect(() => {
 		// don't check preconditions if we're looking at the collapsed version of the
 		// review (in the feed), but rather only when expanded (details view)
@@ -635,7 +651,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 					<RepliesToPost streamId={props.review.streamId} parentPostId={props.review.postId} />
 					{InputContainer && (
 						<InputContainer>
-							<ReplyInput parentPostId={review.postId} streamId={review.streamId} />
+							<ReplyInput reviewId={review.id} parentPostId={review.postId} streamId={review.streamId} />
 						</InputContainer>
 					)}
 				</Footer>
