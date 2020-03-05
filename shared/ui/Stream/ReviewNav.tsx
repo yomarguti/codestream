@@ -316,7 +316,7 @@ export function ReviewNav(props: Props) {
 	});
 
 	const approve = () => {
-		dispatch(setReviewStatus(review!.id, "closed"));
+		dispatch(setReviewStatus(review!.id, "approved"));
 		showReview();
 	};
 
@@ -404,6 +404,7 @@ export function ReviewNav(props: Props) {
 					</div>
 				);
 			case "closed":
+			case "approved":
 			case "rejected":
 				return (
 					<div className={hoverButton == "actions" ? "btn-group pulse" : "btn-group"}>

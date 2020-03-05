@@ -199,12 +199,12 @@ const BaseReview = (props: BaseReviewProps) => {
 						className: "success",
 						wait: true,
 						action: () => {
-							dispatch(setReviewStatus(props.review.id, "closed"));
+							dispatch(setReviewStatus(props.review.id, "approved"));
 						}
 					}
 				]
 			});
-		else dispatch(setReviewStatus(props.review.id, "closed"));
+		else dispatch(setReviewStatus(props.review.id, "approved"));
 	};
 
 	const reject = () => dispatch(setReviewStatus(props.review.id, "rejected"));
@@ -227,7 +227,7 @@ const BaseReview = (props: BaseReviewProps) => {
 					Open
 				</DropdownButton>
 			);
-		if (props.review.status === "closed")
+		if (props.review.status === "closed" || props.review.status === "approved")
 			return (
 				<DropdownButton size="compact" variant="secondary" items={[reopenItem]}>
 					Approved

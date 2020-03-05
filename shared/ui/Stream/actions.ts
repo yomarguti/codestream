@@ -770,14 +770,18 @@ export const setCodemarkStatus = (codemarkId: string, status: IssueStatus) => as
 	}
 };
 
-type ReviewStatus = "closed" | "open" | "rejected";
+type ReviewStatus = "approved" | "open" | "rejected" | "pending";
 
 const describeStatusChange = (action: ReviewStatus) => {
 	switch (action) {
 		case "open":
 			return "reopened";
-		case "closed":
+		case "approved":
 			return "approved";
+		case "pending":
+			return "requested changes in";
+		case "rejected":
+			return "rejected";
 		default:
 			return action;
 	}

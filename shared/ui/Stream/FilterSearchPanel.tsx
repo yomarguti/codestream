@@ -290,6 +290,10 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 			filters.status = "closed";
 			text = text.replace(/\s*(is|status):closed\s*/, " ");
 		}
+		if (text.match(/\b(is|status):approved\b/)) {
+			filters.status = "approved";
+			text = text.replace(/\s*(is|status):approved\s*/, " ");
+		}
 		if (text.match(/\b(is|type):issue\b/)) {
 			filters.type = "issue";
 			text = text.replace(/\s*(is|type):issue\s*/, " ");
