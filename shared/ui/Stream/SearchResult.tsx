@@ -133,11 +133,7 @@ export default function SearchResult(props: Props) {
 
 	const buildTip = () => {
 		if (isCSReview(result)) {
-			return (
-				<>
-					<ChangesetFileList noOnClick review={result} />
-				</>
-			);
+			return <ChangesetFileList noOnClick showRepoLabels review={result} />;
 		} else {
 			// @ts-ignore
 			const markers = result.markers || [];
