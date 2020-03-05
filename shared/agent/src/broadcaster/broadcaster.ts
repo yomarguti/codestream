@@ -363,6 +363,7 @@ export class Broadcaster {
 			// this says we need to notify the client when we get fully connected
 			this._needConnectedMessage = true;
 		}
+		this._subscriptionsPending = true;
 		this._debug("Channels were added, ensuring subscription to all channels...");
 		this.subscribeAll();
 	}
@@ -425,7 +426,6 @@ export class Broadcaster {
 					withPresence: channel.withPresence || false
 				};
 				numAdded++;
-				this._subscriptionsPending = true;
 			}
 		}
 		return numAdded;
@@ -531,6 +531,10 @@ export class Broadcaster {
 	// and if so, go into a waiting mode, otherwise confirm our subscriptions are still
 	// in good standing
 	private async netHiccup() {
+		if (this._subscriptionsPending) {
+			this._debug("Ignoring network hiccup because subscriptions are already pending");
+			return;
+		}
 		this._subscriptionsPending = true;
 		if (this._testMode) {
 			this.emitStatus(BroadcasterStatusType.NetworkProblem);
