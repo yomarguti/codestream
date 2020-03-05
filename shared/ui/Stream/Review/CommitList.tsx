@@ -15,10 +15,26 @@ import { markdownify } from "../Markdowner";
 export const CommitList = (props: { review: ReviewPlus }) => {
 	const { review } = props;
 
-	const changedFiles = React.useMemo(() => {
-		const files: any[] = [];
+	const changesetLines = React.useMemo(() => {
+		const lines: any[] = [];
 		for (let changeset of review.reviewChangesets) {
-			files.push(
+			if (changeset.includeSaved || changeset.includeStaged) {
+				lines.push(
+					<div
+						className={`row-with-icon-actions no-hover`}
+						style={{ display: "flex", alignItems: "center" }}
+						key={"saved-staged"}
+					>
+						<label className="ellipsis-right-container no-margin">
+							<Icon name="save" />
+							<span style={{ paddingLeft: "5px" }}>
+								This review contains uncommitted local changes
+							</span>
+						</label>
+					</div>
+				);
+			}
+			lines.push(
 				...changeset.commits.map(commit => {
 					// const selected = (derivedState.matchFile || "").endsWith(f.file);
 					// const visited = f.reviewStatus && f.reviewStatus[derivedState.userId] === "visited";
@@ -45,7 +61,7 @@ export const CommitList = (props: { review: ReviewPlus }) => {
 								className="message"
 								style={{ textAlign: "right", flexGrow: 10, whiteSpace: "nowrap" }}
 							>
-								{commit.sha.substr(0, 8)}
+								<span className="monospace">{commit.sha.substr(0, 8)}</span>
 							</span>
 							<span />
 						</div>
@@ -53,8 +69,8 @@ export const CommitList = (props: { review: ReviewPlus }) => {
 				})
 			);
 		}
-		return files;
+		return lines;
 	}, [review]);
 
-	return <>{changedFiles}</>;
+	return <>{changesetLines}</>;
 };

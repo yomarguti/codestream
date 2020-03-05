@@ -166,9 +166,6 @@ const BaseReview = (props: BaseReviewProps) => {
 	const hasTags = props.tags && props.tags.length > 0;
 	const hasReviewers = props.reviewers != null && props.reviewers.length > 0;
 	const hasChangeRequests = props.changeRequests != null && props.changeRequests.length > 0;
-	const hasCommits =
-		review.reviewChangesets &&
-		review.reviewChangesets.find(changeset => changeset.commits && changeset.commits.length > 0);
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
 	const renderedMenu =
 		props.renderMenu &&
@@ -395,7 +392,7 @@ const BaseReview = (props: BaseReviewProps) => {
 							</Meta>
 						</TourTip>
 					)}
-					{!props.collapsed && hasCommits && (
+					{!props.collapsed && (
 						<Meta>
 							<MetaLabel>Commits</MetaLabel>
 							<MetaDescriptionForAssignees>

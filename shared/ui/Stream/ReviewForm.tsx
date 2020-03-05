@@ -445,6 +445,10 @@ class ReviewForm extends React.Component<Props, State> {
 					}
 				}
 			} else if (this.props.createPostAndReview) {
+				const { scm } = repoStatus;
+				const hasSavedFiles = scm ? scm.savedFiles.length > 0 : false;
+				const hasStagedFiles = scm ? scm.stagedFiles.length > 0 : false;
+
 				let review = {
 					title,
 					sharingAttributes: this.props.shouldShare ? this._sharingAttributes : undefined,
@@ -459,8 +463,8 @@ class ReviewForm extends React.Component<Props, State> {
 							startCommit,
 							excludeCommit,
 							excludedFiles: keyFilter(excludedFiles),
-							includeSaved,
-							includeStaged
+							includeSaved: hasSavedFiles,
+							includeStaged: hasStagedFiles
 						}
 					]
 				} as any;
