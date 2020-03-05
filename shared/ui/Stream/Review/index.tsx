@@ -71,6 +71,7 @@ import { Dispatch } from "@codestream/webview/store/common";
 import { Loading } from "@codestream/webview/Container/Loading";
 import { TourTip } from "@codestream/webview/src/components/TourTip";
 import { SearchContext } from "../SearchContextProvider";
+import { CommitList } from "./CommitList";
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
@@ -165,6 +166,9 @@ const BaseReview = (props: BaseReviewProps) => {
 	const hasTags = props.tags && props.tags.length > 0;
 	const hasReviewers = props.reviewers != null && props.reviewers.length > 0;
 	const hasChangeRequests = props.changeRequests != null && props.changeRequests.length > 0;
+	const hasCommits =
+		review.reviewChangesets &&
+		review.reviewChangesets.find(changeset => changeset.commits && changeset.commits.length > 0);
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
 	const renderedMenu =
 		props.renderMenu &&
@@ -391,12 +395,14 @@ const BaseReview = (props: BaseReviewProps) => {
 							</Meta>
 						</TourTip>
 					)}
-					{/*!props.collapsed && (
+					{!props.collapsed && hasCommits && (
 						<Meta>
 							<MetaLabel>Commits</MetaLabel>
-							<MetaDescription>{commits}</MetaDescription>
+							<MetaDescriptionForAssignees>
+								<CommitList review={review} />
+							</MetaDescriptionForAssignees>
 						</Meta>
-					)*/}
+					)}
 				</MetaSection>
 				{props.collapsed && renderMetaSectionCollapsed(props)}
 			</CardBody>
