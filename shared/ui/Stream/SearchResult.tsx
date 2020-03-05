@@ -190,8 +190,8 @@ export default function SearchResult(props: Props) {
 	const isArchived = isCSReview(result) ? false : result.pinned ? false : true;
 
 	const title = (
-		<Tooltip title={titleTip} placement="top" delay={1}>
-			<>
+		<>
+			<Tooltip title={titleTip} placement="top" delay={1}>
 				<Title>
 					<span dangerouslySetInnerHTML={{ __html: titleHTML }} />
 					&nbsp;
@@ -200,14 +200,13 @@ export default function SearchResult(props: Props) {
 						return tag ? <Tag tag={tag} /> : null;
 					})}
 				</Title>
-				<TitleDetails>
-					{createdVerb} <Timestamp relative time={result.createdAt} /> by{" "}
-					{derivedState.usernames[result.creatorId]}{" "}
-					{result.status && <>&middot; {result.status} </>}
-					{isArchived && <>&middot; archived </>}
-				</TitleDetails>
-			</>
-		</Tooltip>
+			</Tooltip>
+			<TitleDetails>
+				{createdVerb} <Timestamp relative time={result.createdAt} /> by{" "}
+				{derivedState.usernames[result.creatorId]} {result.status && <>&middot; {result.status} </>}
+				{isArchived && <>&middot; archived </>}
+			</TitleDetails>
+		</>
 	);
 
 	if (props.titleOnly) return title;
