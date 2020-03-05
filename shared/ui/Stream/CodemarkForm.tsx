@@ -350,6 +350,14 @@ class CodemarkForm extends React.Component<Props, State> {
 			// this.setState({ addingLocation: false });
 		}
 
+		// if you switch files while the compose form is open, make
+		// it clear that you are not commenting in the new file by
+		// switching to multi-location mode, which shows the codeblock
+		// and exactly what you're commenting on
+		if (prevProps.textEditorUri !== textEditorUri) {
+			this.addLocation();
+		}
+
 		const prevProviderHost = prevProps.issueProvider ? prevProps.issueProvider.host : undefined;
 		const providerHost = this.props.issueProvider ? this.props.issueProvider.host : undefined;
 		if (prevProviderHost !== providerHost) {
@@ -1586,8 +1594,8 @@ class CodemarkForm extends React.Component<Props, State> {
 			return (
 				<Modal onClose={this.cancelCompose} verticallyCenter>
 					<div style={{ width: "20em", fontSize: "larger", margin: "0 auto" }}>
-						Sorry, you can't add an issue while doing a review. Mark your a comment as a
-						"change request" instead.
+						Sorry, you can't add an issue while doing a review. Mark your a comment as a "change
+						request" instead.
 						<div className="button-group one-button">
 							<Button className="control-button" onClick={this.cancelCompose}>
 								OK
