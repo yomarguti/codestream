@@ -27,7 +27,8 @@ export class NotificationsController implements Disposable {
 			if (!post.isNew() || post.senderId === user.id) {
 				continue;
 			}
-			let codemark; let review;
+			let codemark;
+			let review;
 			const parentPost = await post.parentPost();
 			if (parentPost) {
 				codemark = parentPost.codemark;
@@ -58,10 +59,15 @@ export class NotificationsController implements Disposable {
 		}
 	}
 
-	async showNotification(post: Post, codemark?: CodemarkPlus, review?: ReviewPlus, mentioned?: boolean) {
+	async showNotification(
+		post: Post,
+		codemark?: CodemarkPlus,
+		review?: ReviewPlus,
+		mentioned?: boolean
+	) {
 		const sender = await post.sender();
 
-		const text = post.text;
+		const text = post.text.replace(/^\/me /, "");
 		if (mentioned && sender !== undefined) {
 			const match = vslsUrlRegex.exec(text);
 			if (match != null) {
