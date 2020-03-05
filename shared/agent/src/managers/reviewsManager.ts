@@ -181,7 +181,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			}
 
 			function missingCommitError(sha: string, author: string) {
-				const shortSha = sha.substr(0, 7);
+				const shortSha = sha.substr(0, 8);
 				return {
 					success: false,
 					error: `A commit required to perform this review (${shortSha}, authored by ${author})
