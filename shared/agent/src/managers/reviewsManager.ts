@@ -6,6 +6,14 @@ import { SessionContainer } from "../container";
 import { git } from "../git/git";
 import { Logger } from "../logger";
 import {
+	CheckReviewPreconditionsRequest,
+	CheckReviewPreconditionsRequestType,
+	CheckReviewPreconditionsResponse,
+	DeleteReviewRequest,
+	DeleteReviewRequestType,
+	EndReviewRequest,
+	EndReviewRequestType,
+	EndReviewResponse,
 	FetchReviewsRequest,
 	FetchReviewsRequestType,
 	FetchReviewsResponse,
@@ -15,23 +23,15 @@ import {
 	GetReviewRequest,
 	GetReviewRequestType,
 	GetReviewResponse,
+	PauseReviewRequest,
+	PauseReviewRequestType,
+	PauseReviewResponse,
+	StartReviewRequest,
+	StartReviewRequestType,
+	StartReviewResponse,
 	UpdateReviewRequest,
 	UpdateReviewRequestType,
-	UpdateReviewResponse,
-	DeleteReviewRequest,
-	DeleteReviewRequestType,
-	StartReviewRequestType,
-	StartReviewRequest,
-	StartReviewResponse,
-	PauseReviewRequestType,
-	PauseReviewRequest,
-	PauseReviewResponse,
-	EndReviewResponse,
-	EndReviewRequest,
-	EndReviewRequestType,
-	CheckReviewPreconditionsRequestType,
-	CheckReviewPreconditionsRequest,
-	CheckReviewPreconditionsResponse
+	UpdateReviewResponse
 } from "../protocol/agent.protocol";
 import { CSReview, CSReviewDiffs } from "../protocol/api.protocol";
 import { log, lsp, lspHandler } from "../system";
@@ -181,9 +181,10 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			}
 
 			function missingCommitError(sha: string, author: string) {
+				const shortSha = sha.substr(0, 7);
 				return {
 					success: false,
-					error: `A commit required to perform this review (${sha}, authored by ${author})
+					error: `A commit required to perform this review (${shortSha}, authored by ${author})
 was not found in the local git repository. Fetch all remotes and try again.`
 				};
 			}
