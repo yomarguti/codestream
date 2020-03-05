@@ -222,7 +222,7 @@ export class GitService implements IGitService, Disposable {
 	async getDefaultBranch(repoPath: string, remote: string): Promise<string | undefined> {
 		try {
 			const data = await git(
-				{ cwd: repoPath, env: { GIT_TERMINAL_PROMPT: "0" }, suppressErrors: true },
+				{ cwd: repoPath, env: { GIT_TERMINAL_PROMPT: "0" }, throwRawExceptions: true },
 				"remote",
 				"show",
 				remote
@@ -242,7 +242,7 @@ export class GitService implements IGitService, Disposable {
 	async fetchAllRemotes(repoPath: string): Promise<boolean> {
 		try {
 			await git(
-				{ cwd: repoPath, env: { GIT_TERMINAL_PROMPT: "0" }, suppressErrors: true },
+				{ cwd: repoPath, env: { GIT_TERMINAL_PROMPT: "0" }, throwRawExceptions: true },
 				"fetch",
 				"--all"
 			);
@@ -722,13 +722,25 @@ export class GitService implements IGitService, Disposable {
 			const commits = GitLogParser.parse(data2.trim(), repoPath);
 			if (commits === undefined || commits.size === 0) return undefined;
 
-			// https://stackoverflow.com/questions/2016901/viewing-unpushed-git-commits
-			const data3 = await git({ cwd: repoPath }, "log", "@{push}..", "--format=%H", "--");
-			const localCommits = data3.trim().split("\n");
+			let localCommits: string[] | undefined = undefined;
+			try {
+				// https://stackoverflow.com/questions/2016901/viewing-unpushed-git-commits
+				const data3 = await git(
+					{ cwd: repoPath, throwRawExceptions: true },
+					"log",
+					"@{push}..",
+					"--format=%H",
+					"--"
+				);
+				localCommits = data3.trim().split("\n");
+			} catch (ex) {
+				// Chances are this branch has no remote tracking branch, so we'll consider all commits as localOnly
+				Logger.log(`Unable to identify pushed commits. Reason: ${ex.message}`);
+			}
 
 			const ret: { sha: string; info: {}; localOnly: boolean }[] = [];
 			commits.forEach((val, key) => {
-				ret.push({ sha: key, info: val, localOnly: localCommits.includes(key) });
+				ret.push({ sha: key, info: val, localOnly: !localCommits || localCommits.includes(key) });
 			});
 			return ret;
 		} catch {

@@ -70,7 +70,7 @@ export async function git(
 	try {
 		data = await promise;
 	} catch (ex) {
-		if (options.suppressErrors) throw ex;
+		if (options.throwRawExceptions) throw ex;
 
 		const msg = ex && ex.toString();
 		if (msg) {
