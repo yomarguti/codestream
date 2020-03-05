@@ -7,7 +7,7 @@ import {
 	CardFooter,
 	CardBanner
 } from "@codestream/webview/src/components/Card";
-import { 
+import {
 	CodemarkPlus,
 	CheckReviewPreconditionsRequestType,
 	FollowReviewRequestType
@@ -41,11 +41,7 @@ import { capitalize, replaceHtml, emptyArray, mapFilter } from "@codestream/webv
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "../..";
 import { deleteReview, fetchReview } from "@codestream/webview/store/reviews/actions";
-import {
-	setActiveReview,
-	setCurrentReview,
-	setCurrentCodemark
-} from "@codestream/webview/store/context/actions";
+import { setCurrentReview, setCurrentCodemark } from "@codestream/webview/store/context/actions";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import { getReview } from "@codestream/webview/store/reviews/reducer";
 import MessageInput from "../MessageInput";
@@ -74,6 +70,7 @@ import Timestamp from "../Timestamp";
 import { Dispatch } from "@codestream/webview/store/common";
 import { Loading } from "@codestream/webview/Container/Loading";
 import { TourTip } from "@codestream/webview/src/components/TourTip";
+import { SearchContext } from "../SearchContextProvider";
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
@@ -123,8 +120,15 @@ const RepoInfo = styled.div`
 	.icon {
 		margin-right: 5px;
 	}
-	.icon:not(:first-child) {
-		margin-left: 20px;
+	span:not(:first-child) {
+		padding-left: 20px;
+	}
+	span {
+		display: inline-block;
+		cursor: pointer;
+		&:hover {
+			color: var(--text-color-info);
+		}
 	}
 `;
 
@@ -238,30 +242,15 @@ const BaseReview = (props: BaseReviewProps) => {
 		return null;
 	})();
 
-	const renderedStartReview = (() => {
-		if (!props.canStartReview) return null;
-		// if (props.noActionButtons) return null;
+	const searchContext = React.useContext(SearchContext);
+	const goSearch = (e: React.SyntheticEvent, query: string) => {
+		e.preventDefault();
+		e.stopPropagation();
 
-		return (
-			<DropdownButton
-				size="compact"
-				items={[
-					{ label: "Visual Inspection", action: () => startReview() },
-					{
-						label: (
-							<>
-								Create working tree &nbsp;
-								<Icon name="info" title="FIXME -- explain how this works" placement="bottomRight" />
-							</>
-						),
-						action: () => dispatch(setReviewStatus(props.review.id, "rejected"))
-					}
-				]}
-			>
-				Start Review
-			</DropdownButton>
-		);
-	})();
+		dispatch(setCurrentCodemark());
+		dispatch(setCurrentReview());
+		searchContext.goToSearch(query);
+	};
 
 	return (
 		<MinimumWidthCard {...getCardProps(props)} noCard={!props.collapsed}>
@@ -379,8 +368,12 @@ const BaseReview = (props: BaseReviewProps) => {
 									{props.repoInfo.map(r => (
 										<MetaRepoInfo key={r.repoName}>
 											<RepoInfo>
-												<Icon name="repo" /> {r.repoName}
-												<Icon name="git-branch" /> {r.branch}
+												<span onClick={e => goSearch(e, `repo:"${r.repoName}"`)}>
+													<Icon name="repo" /> {r.repoName}
+												</span>
+												<span onClick={e => goSearch(e, `branch:"${r.branch}"`)}>
+													<Icon name="git-branch" /> {r.branch}
+												</span>
 											</RepoInfo>
 										</MetaRepoInfo>
 									))}
@@ -696,7 +689,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 				});
 			}
 		});
-		
+
 		return items;
 	}, [review]);
 
@@ -777,4 +770,3 @@ export const Review = (props: ReviewProps) => {
 	if (isPropsWithId(props)) return <ReviewForId {...props} />;
 	return <ReviewForReview {...props} />;
 };
-

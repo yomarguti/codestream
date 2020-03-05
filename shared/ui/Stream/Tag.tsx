@@ -1,7 +1,7 @@
 import React from "react";
 import Tooltip, { Placement } from "./Tooltip";
 import { useDispatch } from "react-redux";
-import { setCurrentCodemark } from "../store/context/actions";
+import { setCurrentCodemark, setCurrentReview } from "../store/context/actions";
 import { SearchContext } from "./SearchContextProvider";
 
 interface Props {
@@ -26,6 +26,7 @@ const Tag = React.forwardRef<any, Props>((props, ref) => {
 	const searchContext = React.useContext(SearchContext);
 	const goSearch = query => {
 		dispatch(setCurrentCodemark());
+		dispatch(setCurrentReview());
 		searchContext.goToSearch(query);
 	};
 

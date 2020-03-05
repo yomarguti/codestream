@@ -434,27 +434,33 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 		// sort by most recent first
 		this.props.items.forEach(item => {
 			if (item.deactivated) return null;
+			const isReview = isCSReview(item);
+
+			// @ts-ignore
+			const itemType = isReview ? "review" : item.type;
 			// FIXME author is text, creatorId is an id
-			const assignees = (isCSReview(item) ? item.reviewers : item.assignees) || [];
+			// @ts-ignore
+			const assignees = (isReview ? item.reviewers : item.assignees) || [];
 			const creatorUsername = usernameMap[item.creatorId];
 			const assigneeUsernames = assignees.map(id => usernameMap[id]);
-			const impactedUsernames =
-				isCSReview(item) && item.authorsById != null
-					? Object.keys(item.authorsById).map(id => usernameMap[id])
-					: [];
+			let impactedUsernames = [] as any;
+			// @ts-ignore
+			if (isReview && item.authorsById != null) {
+				// @ts-ignore
+				impactedUsernames = Object.keys(item.authorsById).map(id => usernameMap[id]);
+			}
 			if (filters.author && creatorUsername !== filters.author) return null;
 			if (filters.impacts && !impactedUsernames.includes(filters.impacts)) return null;
 			if (filters.assignee && !assigneeUsernames.includes(filters.assignee)) return null;
 			if (filters.status && item.status !== filters.status) return null;
 			if (filters.tag && !this.hasTag(item, filters.tag)) return null;
-			// FIXME this will only work if we have issues in this query as well
-			if (filters.type === "review" && !isCSReview(item)) return null;
-			if (filters.type === "issue" && !isCSReview(item) && item.type !== filters.type) return null;
-			if (filters.type === "comment" && !isCSReview(item) && item.type !== filters.type)
-				return null;
+			if (filters.type === "review" && itemType !== filters.type) return null;
+			if (filters.type === "issue" && itemType !== filters.type) return null;
+			if (filters.type === "comment" && itemType !== filters.type) return null;
 			if (filters.noTag && item.tags && item.tags.length) return null;
 			if (filters.branch) {
-				if (isCSReview(item)) {
+				if (isReview) {
+					// @ts-ignore
 					const branches = (item.reviewChangesets || []).map(changeset => changeset.branch);
 					if (!branches.includes(filters.branch)) return null;
 				} else {
@@ -463,7 +469,8 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				}
 			}
 			if (filters.commit) {
-				if (isCSReview(item)) {
+				if (isReview) {
+					// @ts-ignore
 					const commits = ((item.reviewChangesets || []).map(
 						changeset => changeset.commits
 					) as any).flat(); // we might need to update typescript to get definition for Array.prototype.flat
@@ -476,7 +483,8 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				}
 			}
 			if (filters.repo) {
-				if (isCSReview(item)) {
+				if (isReview) {
+					// @ts-ignore
 					const repoNames = (item.reviewChangesets || []).map(changeset => {
 						const repo = this.props.repos[changeset.repoId];
 						if (repo) return repo.name;
@@ -521,10 +529,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 					// if (item.creatorId === currentUserId) assignItem(item, "createdByMe");
 					// break;
 					case "open":
-						if (
-							status === "open" ||
-							(!isCSReview(item) && item.type == "issue" && status !== "closed")
-						)
+						if (status === "open" || (itemType == "issue" && status !== "closed"))
 							assignItem(item, "open");
 						break;
 					case "closed":
@@ -537,6 +542,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 			});
 			return;
 		});
+		// @ts-ignore-end
 
 		this.setState({ filters, displayItems, totalItems });
 	};
