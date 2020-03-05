@@ -886,7 +886,7 @@ export class WebviewController implements Disposable {
 		if (this._lastEditor !== undefined) {
 			editorContext = {
 				activeFile: workspace.asRelativePath(this._lastEditor.document.uri),
-				metrics: Editor.getMetrics(),
+				metrics: Editor.getMetrics(this._lastEditor.document.uri),
 				textEditorUri: this._lastEditor.document.uri.toString(),
 				textEditorVisibleRanges: Editor.toSerializableRange(this._lastEditor.visibleRanges),
 				textEditorSelections: Editor.toEditorSelections(this._lastEditor.selections),
@@ -967,7 +967,7 @@ export class WebviewController implements Disposable {
 					uri: this._lastEditorUrl,
 					fileName: workspace.asRelativePath(uri),
 					languageId: e.document.languageId,
-					metrics: Editor.getMetrics(),
+					metrics: Editor.getMetrics(uri),
 					selections: Editor.toEditorSelections(e.selections),
 					visibleRanges: Editor.toSerializableRange(e.visibleRanges),
 					lineCount: e.document.lineCount

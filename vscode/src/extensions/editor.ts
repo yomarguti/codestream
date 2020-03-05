@@ -108,7 +108,7 @@ export namespace Editor {
 		return undefined;
 	}
 
-	export function getMetrics(): EditorMetrics {
+	export function getMetrics(activeFile: Uri): EditorMetrics {
 		const metrics: EditorMetrics = {};
 
 		const lineHeight = configuration.getAny<number | undefined>("editor.lineHeight");
@@ -118,7 +118,11 @@ export namespace Editor {
 		metrics.fontSize = fontSize;
 
 		const breadcrumbs = configuration.getAny<boolean>("breadcrumbs.enabled", undefined, false);
-		if (breadcrumbs) {
+		// if you are doing a codestream diff then you can add a comment in the
+		// right pane, but VS Code does not show a breadcrumb, so we don't want to
+		// add 22px in that scenario. but if breadcrumbs are on and you aren't doing
+		// a CS diff, then the margins are approx. 22px high
+		if (breadcrumbs && !activeFile.scheme.startsWith("codestream-diff")) {
 			metrics.margins = { top: 22 };
 		}
 
