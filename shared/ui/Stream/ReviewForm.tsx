@@ -657,10 +657,8 @@ class ReviewForm extends React.Component<Props, State> {
 						<>
 							<div style={{ height: "20px" }}></div>
 							<CSText muted>
-								<SmartFormattedList
-									value={this.state.reviewers.map(m => m.fullName || m.username)}
-								/>{" "}
-								will be notified via email
+								<SmartFormattedList value={this.state.reviewers.map(m => m.email)} /> will be
+								notified via email
 							</CSText>
 							<div style={{ height: "10px" }} />
 						</>
