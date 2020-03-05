@@ -43,7 +43,7 @@ import {
 	ScmError,
 	getFileScmError
 } from "../store/editorContext/reducer";
-import { CSTeam, CodemarkType, CSApiCapabilities } from "@codestream/protocols/api";
+import { CSTeam, CodemarkType } from "@codestream/protocols/api";
 import {
 	setCodemarksFileViewStyle,
 	setCodemarksShowArchived,
@@ -66,9 +66,8 @@ import { PRInfoModal } from "./SpatialView/PRInfoModal";
 import { isConnected } from "../store/providers/reducer";
 import { confirmPopup } from "./Confirm";
 import ComposeTitles from "./ComposeTitles";
-import { PostsActionsType } from "../store/posts/types";
 import { Switch } from "../src/components/controls/Switch";
-import { NewCodemarkAttributes } from "../store/codemarks/actions";
+import { NewCodemarkAttributes, isCreateCodemarkError } from "../store/codemarks/actions";
 import styled from "styled-components";
 import { PanelHeader } from "../src/components/PanelHeader";
 import * as fs from "../utilities/fs";
@@ -153,6 +152,7 @@ interface State {
 	problem: ScmError | undefined;
 	newCodemarkAttributes: { type: CodemarkType; viewingInline: boolean } | undefined;
 	multiLocationCodemarkForm: boolean;
+	codemarkFormError?: string;
 }
 
 const NEW_CODEMARK_ATTRIBUTES_TO_RESTORE = "spatial-view:restore-codemark-form";
@@ -873,6 +873,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				positionAtLocation={true}
 				multiLocation={this.state.multiLocationCodemarkForm}
 				setMultiLocation={this.setMultiLocation}
+				error={this.state.codemarkFormError}
 			/>
 			// </ContainerAtEditorSelection>
 		);
@@ -883,7 +884,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	closeCodemarkForm = () => {
-		this.setState({ newCodemarkAttributes: undefined, multiLocationCodemarkForm: false });
+		this.setState({
+			newCodemarkAttributes: undefined,
+			multiLocationCodemarkForm: false,
+			codemarkFormError: undefined
+		});
 		this.clearSelection();
 
 		const { newCodemarkAttributes } = this.state;
@@ -926,9 +931,20 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		store: PropTypes.object
 	};
 
+	/**
+	 * 	We want the form to be replaced with the newly created codemark seamlessly,
+	 * 	without a flash of blank space. To achieve this, the code that controls the display of the form,
+	 * 	needs to wait until the corresponding document marker is available because the spatial view doesn't
+	 * 	actually render codemark objects. So when the document marker arrives via pubnub,
+	 * 	the form needs to withold it from getting into the redux store, and then update the store for
+	 * 	this specific document marker and the state of whether the form is displayed, within the same React update phase,
+	 * 	in order to give the impression that the form has become the newly created codemark.
+	 *
+	 * 	Intercepting the redux update is done via the injected middleware
+	 */
 	submitCodemark = async (attributes: NewCodemarkAttributes) => {
 		let docMarker: DocumentMarker | undefined;
-		const removeTransformer = middlewareInjector.inject(
+		const injectedMiddleware = middlewareInjector.inject(
 			DocumentMarkersActionsType.SaveForFile,
 			(payload: { uri: string; markers: DocumentMarker[] }) => {
 				return {
@@ -953,24 +969,36 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				};
 			}
 		);
-		const { type: createResult } = await this.props.createPostAndCodemark(
-			attributes,
-			this.currentPostEntryPoint || "Spatial View"
-		);
-		this.currentPostEntryPoint = undefined;
-		await this.props.fetchDocumentMarkers(this.props.textEditorUri!);
 
-		removeTransformer();
+		try {
+			await this.props.createPostAndCodemark(
+				attributes,
+				this.currentPostEntryPoint || "Spatial View"
+			);
+			this.currentPostEntryPoint = undefined;
+			await this.props.fetchDocumentMarkers(this.props.textEditorUri!);
 
-		if (docMarker) {
-			batch(() => {
-				this._updateEmitter.enqueue(() => {
-					if (createResult !== PostsActionsType.FailPendingPost) this.closeCodemarkForm();
+			if (docMarker) {
+				batch(() => {
+					// wait until the next update, ideally because the new document marker is about to be rendered, and close the form
+					this._updateEmitter.enqueue(() => {
+						this.closeCodemarkForm();
+					});
+					this.props.addDocumentMarker(this.props.textEditorUri!, docMarker);
 				});
-				this.props.addDocumentMarker(this.props.textEditorUri!, docMarker);
-			});
-		} else {
-			if (createResult !== PostsActionsType.FailPendingPost) this.closeCodemarkForm();
+			} else {
+				this.closeCodemarkForm();
+			}
+		} catch (error) {
+			if (isCreateCodemarkError(error)) {
+				const message =
+					error.reason === "share"
+						? "There was an error sharing the codemark. Please try sharing it from the codemark's menu."
+						: "There was an error creating the codemark.";
+				this.setState({ codemarkFormError: message });
+			} else this.setState({ codemarkFormError: error.toString() });
+		} finally {
+			injectedMiddleware.dispose();
 		}
 	};
 

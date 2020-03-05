@@ -109,6 +109,7 @@ interface Props extends ConnectedProps {
 	multiLocation?: boolean;
 	setMultiLocation?: Function;
 	noCodeLocation?: boolean;
+	error?: string;
 }
 
 interface ConnectedProps {
@@ -652,6 +653,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		const { codeBlocks } = this.state;
 		const { text, title, assignees, crossPostIssueValues, type } = this.state;
 
+		if (this.props.error != null && this.props.error !== "") return true;
 		if (type === CodemarkType.Link) return false;
 		// FIXME
 		const codeBlock = codeBlocks[0];
@@ -1685,6 +1687,8 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (this.state.codeBlocks.length == 1)
 			locationItems.push({ label: "Remove Location", action: () => this.deleteLocation(0) });
 
+		const hasError = this.props.error != null && this.props.error !== "";
+
 		return [
 			<form
 				id="code-comment-form"
@@ -1692,6 +1696,11 @@ class CodemarkForm extends React.Component<Props, State> {
 				key="two"
 			>
 				<fieldset className="form-body">
+					{hasError && (
+						<div className="error-message" style={{ marginTop: 10 }}>
+							{this.props.error}
+						</div>
+					)}
 					<div id="controls" className="control-group" key="controls1">
 						<div key="headshot" className="headline">
 							<Headshot person={currentUser} />
@@ -1861,6 +1870,7 @@ class CodemarkForm extends React.Component<Props, State> {
 									type="submit"
 									loading={this.state.isLoading}
 									onClick={this.state.linkURI ? this.copyPermalink : this.handleClickSubmit}
+									disabled={hasError}
 								>
 									{commentType === "link"
 										? this.state.copied

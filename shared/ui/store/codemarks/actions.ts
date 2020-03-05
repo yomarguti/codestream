@@ -71,6 +71,10 @@ export interface CreateCodemarkError {
 	reason: "share" | "create";
 }
 
+export function isCreateCodemarkError(object: any): object is CreateCodemarkError {
+	return "reason" in object;
+}
+
 export const createCodemark = (attributes: SharingNewCodemarkAttributes) => async (
 	dispatch,
 	getState: () => CodeStreamState
@@ -110,15 +114,17 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 						"Codemark Status": "New"
 					});
 				} catch (error) {
-					logError("Error sharing a codemark in the sharing model", { message: error.toString() });
-					// TODO: communicate failure to users
+					logError("Error sharing a codemark", { message: error.toString() });
 					throw { reason: "share" } as CreateCodemarkError;
 				}
 			}
 			return result;
 		}
 	} catch (error) {
-		logError("Error creating a codemark in the sharing model", { message: error.toString() });
+		// if this is a sharing error just throw out of this function
+		if (isCreateCodemarkError(error)) throw error;
+
+		logError("Error creating a codemark", { message: error.toString() });
 		throw { reason: "create" } as CreateCodemarkError;
 	}
 };

@@ -3,6 +3,10 @@ import { Range } from "vscode-languageserver-types";
 import { MaxRangeValue } from "./ipc/webview.protocol";
 import { URI } from "vscode-uri";
 
+export interface Disposable {
+	dispose(): void;
+}
+
 export const emptyObject = {};
 export const emptyArray = [];
 export function noop() {}

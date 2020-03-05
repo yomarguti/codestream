@@ -291,24 +291,31 @@ export const createPost = (
 	}
 
 	const filteredPosts: any = [];
-	const removeMiddleware = middlewareInjector.inject(PostsActionsType.Add, (payload: CSPost[]) => {
-		return payload.filter(post => {
-			// third party post objects don't have a version property
-			if (post.version == undefined) {
-				if (post.creatorId === session.userId && post.streamId === streamId) {
-					filteredPosts.push(post);
-					return false;
+	const injectedMiddleware = middlewareInjector.inject(
+		PostsActionsType.Add,
+		(payload: CSPost[]) => {
+			return payload.filter(post => {
+				// third party post objects don't have a version property
+				if (post.version == undefined) {
+					if (post.creatorId === session.userId && post.streamId === streamId) {
+						filteredPosts.push(post);
+						return false;
+					}
+				} else {
+					if (
+						post.version <= 1 &&
+						post.creatorId === session.userId &&
+						post.streamId === streamId
+					) {
+						filteredPosts.push(post);
+						return false;
+					}
 				}
-			} else {
-				if (post.version <= 1 && post.creatorId === session.userId && post.streamId === streamId) {
-					filteredPosts.push(post);
-					return false;
-				}
-			}
 
-			return true;
-		});
-	});
+				return true;
+			});
+		}
+	);
 
 	try {
 		let responsePromise: Promise<CreatePostResponse>;
@@ -371,7 +378,7 @@ export const createPost = (
 		}
 		return dispatch(postsActions.failPendingPost(pendingId));
 	} finally {
-		removeMiddleware();
+		injectedMiddleware.dispose();
 		// just to be sure no posts get missed
 		if (filteredPosts.length > 0) dispatch(postsActions.savePosts(filteredPosts));
 	}
