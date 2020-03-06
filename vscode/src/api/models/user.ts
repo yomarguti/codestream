@@ -36,7 +36,7 @@ export class User extends CodeStreamItem<CSUser> {
 		if (preferences === undefined) return true;
 
 		return (
-			preferences.notificationDelivery === undefined ||
+			!preferences.notificationDelivery ||
 			preferences.notificationDelivery === CSNotificationDeliveryPreference.All ||
 			preferences.notificationDelivery === CSNotificationDeliveryPreference.ToastOnly
 		);
