@@ -64,7 +64,9 @@ import {
 	WebviewDidInitializeNotificationType,
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage,
-	WebviewPanels
+	WebviewPanels,
+	OpenUrlRequestType,
+	OpenUrlRequest
 } from "@codestream/protocols/webview";
 import { CompositeDisposable, Disposable, Emitter, Point, Range, TextEditor } from "atom";
 import { Convert } from "atom-languageclient";
@@ -598,6 +600,10 @@ export class CodestreamView {
 				}
 
 				return { params: response as InsertTextResponse };
+			}
+			case OpenUrlRequestType.method: {
+				shell.openExternal((message.params as OpenUrlRequest).url);
+				return {} as any;
 			}
 			default: {
 				if (Debug.isDebugging()) {
