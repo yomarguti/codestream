@@ -22,6 +22,8 @@ export class NotificationsController implements Disposable {
 		const { user } = Container.session;
 		const { activeStreamThread: activeStream, visible: streamVisible } = Container.webview;
 
+		if (!user.wantsToastNotifications()) return;
+
 		for (const post of e.items()) {
 			// Don't show notifications for deleted, edited (if edited it isn't the first time its been seen), has replies (same as edited), has reactions, or was posted by the current user
 			if (!post.isNew() || post.senderId === user.id) {
@@ -67,6 +69,8 @@ export class NotificationsController implements Disposable {
 	) {
 		const sender = await post.sender();
 
+		const emote = post.text.startsWith("/me ");
+		const colon = emote ? "" : ":";
 		const text = post.text.replace(/^\/me /, "");
 		if (mentioned && sender !== undefined) {
 			const match = vslsUrlRegex.exec(text);
@@ -93,7 +97,7 @@ export class NotificationsController implements Disposable {
 		const actions: MessageItem[] = [{ title: "Open" }];
 
 		const result = await window.showInformationMessage(
-			`${sender !== undefined ? sender.name : "Someone"}: ${text}`,
+			`${sender !== undefined ? sender.name : "Someone"}${colon} ${text}`,
 			...actions
 		);
 		if (result === actions[0]) {

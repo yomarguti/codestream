@@ -1,5 +1,5 @@
 "use strict";
-import { CSMe, CSUser } from "@codestream/protocols/api";
+import { CSMe, CSUser, CSNotificationDeliveryPreference } from "@codestream/protocols/api";
 import { CodeStreamSession } from "../session";
 import { CodeStreamItem } from "./item";
 
@@ -28,5 +28,17 @@ export class User extends CodeStreamItem<CSUser> {
 		if (mutedStreams === undefined) return false;
 
 		return mutedStreams[streamId] === true;
+	}
+
+	// default is true
+	wantsToastNotifications() {
+		const preferences = (this.entity as CSMe).preferences;
+		if (preferences === undefined) return true;
+
+		return (
+			preferences.notificationDelivery == undefined ||
+			preferences.notificationDelivery == CSNotificationDeliveryPreference.All ||
+			preferences.notificationDelivery == CSNotificationDeliveryPreference.ToastOnly
+		);
 	}
 }
