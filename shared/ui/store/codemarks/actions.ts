@@ -54,6 +54,7 @@ export interface SharingNewCodemarkAttributes extends BaseNewCodemarkAttributes 
 	// codemarks can now be replies
 	parentPostId?: string;
 	isChangeRequest?: boolean;
+	isPseudoCodemark?: boolean;
 }
 
 export interface LegacyNewCodemarkAttributes extends BaseNewCodemarkAttributes {
@@ -89,7 +90,8 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 			textDocuments: attributes.textDocuments,
 			entryPoint: attributes.entryPoint,
 			mentionedUserIds: attributes.mentionedUserIds,
-			parentPostId: attributes.parentPostId
+			parentPostId: attributes.parentPostId,
+			isPseudoCodemark: attributes.isPseudoCodemark
 		});
 		if (response) {
 			const result = dispatch(addCodemarks([response.codemark]));

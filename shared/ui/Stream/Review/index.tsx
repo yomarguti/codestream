@@ -472,7 +472,8 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 					relatedCodemarkIds: [],
 					accessMemberIds: [],
 					isChangeRequest: true,
-					tags: []
+					tags: [],
+					isPseudoCodemark: true
 				})
 			);
 		} else {
@@ -492,16 +493,6 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 		}
 		setIsLoading(false);
 		setText("");
-
-		const properties: {
-			[key: string]: any;
-		} = {};
-		if (props.reviewId) {
-			properties["Parent ID"] = props.reviewId;
-			properties["Parent Type"] = "Code Review";
-			properties["Change Request"] = isChangeRequest;
-			HostApi.instance.track("Reply Created", properties);
-		}
 	};
 
 	return (
