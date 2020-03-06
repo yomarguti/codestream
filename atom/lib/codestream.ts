@@ -4,7 +4,6 @@ import {
 	GetDocumentFromKeyBindingRequestType
 } from "@codestream/protocols/agent";
 import { CodemarkType } from "@codestream/protocols/api";
-import { doTimes } from "@teamcodestream/js-utils";
 import { CompositeDisposable, Disposable } from "atom";
 import { Convert } from "atom-languageclient";
 import { FileLogger, LOG_DIR } from "logger";
@@ -211,7 +210,7 @@ class CodestreamPackage {
 				}
 			})
 		);
-		doTimes(9, i => {
+		for (let i = 0; i < 9; i++) {
 			const count = i + 1;
 			this.subscriptions.add(
 				atom.commands.add("atom-workspace", `codestream:go-to-codemark-${count}`, async () => {
@@ -249,7 +248,7 @@ class CodestreamPackage {
 					}
 				})
 			);
-		});
+		}
 	}
 
 	async consumeStatusBar(statusBar: StatusBar) {
