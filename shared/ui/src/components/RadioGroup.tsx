@@ -56,13 +56,13 @@ export function Radio(props: PropsWithChildren<RadioProps>) {
 						type="radio"
 						name={name}
 						value={props.value}
-						id={props.value}
+						id={name + ":" + props.value}
 						checked={props.value === selectedValue}
 						onChange={e => onChange(props.value)}
 					/>
 				)}
 			</div>
-			<label htmlFor={props.value}>{props.children}</label>
+			<label htmlFor={name + ":" + props.value}>{props.children}</label>
 		</RadioDiv>
 	);
 }
