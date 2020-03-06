@@ -370,3 +370,53 @@ export function uriToFilePath(uri: URI | string) {
 	}
 	return uri.fsPath;
 }
+
+interface ArrayDiffResults {
+	added?: string[] | undefined;
+	removed?: string[] | undefined;
+}
+/**
+ * Compares two string arrays and returns additions and removals
+ * @param  {string[]|undefined} the originalArray
+ * @param  {string[]} the newArray
+ * @returns ArrayDiffResults
+ */
+export function arrayDiff(originalArray: string[] | undefined, newArray: string[]): ArrayDiffResults {
+	let results: ArrayDiffResults = {};
+	if ((!originalArray || !originalArray.length) && newArray.length) {
+		// didn't have an original, now we do have items
+		results.added = newArray;
+	}
+	if (originalArray && originalArray.length && (!newArray || !newArray.length)) {
+		// had original array, now we don't have any items
+		results.removed = originalArray;
+	}
+	else if (originalArray && newArray && 
+		!(originalArray.length === newArray.length &&
+			newArray.sort().every(function (value, index) {
+				return value === originalArray.sort()[index];
+			})
+		)
+	) {
+		// had array before, had array after, and they're not the same
+		const added: string[] = [];
+		const removed: string[] = [];
+		for (const r of originalArray) {
+			if (!newArray.find(_ => _ === r)) {
+				removed.push(r);
+			}
+		}
+		for (const r of newArray) {
+			if (!originalArray.find(_ => _ === r)) {
+				added.push(r);
+			}
+		}
+		if (added.length) {
+			results.added = added;
+		}
+		if (removed.length) {
+			results.removed = removed;
+		}
+	}
+	return results;
+}

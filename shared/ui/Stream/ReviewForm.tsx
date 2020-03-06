@@ -28,7 +28,7 @@ import {
 	getDirectMessageStreamsForTeam,
 	getDMName
 } from "../store/streams/reducer";
-import { mapFilter, toMapBy, replaceHtml, keyFilter, safe } from "../utils";
+import { mapFilter, toMapBy, replaceHtml, keyFilter, safe, arrayDiff } from "../utils";
 import { HostApi } from "../webview-api";
 import Button from "./Button";
 import Tag from "./Tag";
@@ -387,7 +387,7 @@ class ReviewForm extends React.Component<Props, State> {
 				label: user.username
 			};
 		});
-	}
+	};
 
 	handleClickSubmit = async (event?: React.SyntheticEvent) => {
 		event && event.preventDefault();
@@ -398,42 +398,35 @@ class ReviewForm extends React.Component<Props, State> {
 		const { title, text, selectedChannelId, selectedTags, repoStatus, authorsById } = this.state;
 		const { startCommit, excludeCommit, excludedFiles, includeSaved, includeStaged } = this.state;
 
-		const reviewerIds = (this.state.reviewers as any[]).map(r => r.id);
+		const reviewerIds = (this.state.reviewers as any[]).map(r => r.id);		
 
 		try {
 			if (this.props.isEditing && this.props.editReview && this.props.editingReview) {
-				const originalReviewers = this.props.editingReview.reviewers;
+				const originalReviewers = this.props.editingReview.reviewers;				
 				const attributes: EditableAttributes = {
 					title: title,
 					text: text
 				};
-				// we need to build up an added and/or removed
-				// array of reviewIds to send to the api
-				if (
-					!(
-						reviewerIds.length === originalReviewers.length &&
-						reviewerIds.sort().every(function(value, index) {
-							return value === originalReviewers.sort()[index];
-						})
-					)
-				) {
-					const added: string[] = [];
-					const removed: string[] = [];
-					for (const r of this.props.editingReview.reviewers) {
-						if (!reviewerIds.find(_ => _ === r)) {
-							removed.push(r);
-						}
+				const reviewerOperations = arrayDiff(originalReviewers, reviewerIds);
+				if (reviewerOperations) {
+					if (reviewerOperations.added && reviewerOperations.added.length) {
+						attributes.$push = attributes.$push || {};
+						attributes.$push.reviewers = reviewerOperations.added;
 					}
-					for (const r of reviewerIds) {
-						if (!this.props.editingReview.reviewers.find(_ => _ === r)) {
-							added.push(r);
-						}
+					if (reviewerOperations.removed && reviewerOperations.removed.length) {						
+						attributes.$pull = attributes.$pull || {};
+						attributes.$pull.reviewers = reviewerOperations.removed;
 					}
-					if (added.length) {
-						attributes.$push = { reviewers: added };
+				}
+				const tagOperations = arrayDiff(this.props.editingReview.tags, keyFilter(selectedTags));
+				if (tagOperations) {
+					if (tagOperations.added && tagOperations.added.length) {
+						attributes.$push = attributes.$push || {};
+						attributes.$push.tags = tagOperations.added;
 					}
-					if (removed.length) {
-						attributes.$pull = { reviewers: removed };
+					if (tagOperations.removed && tagOperations.removed.length) {						
+						attributes.$pull = attributes.$pull || {};
+						attributes.$pull.tags = tagOperations.removed;
 					}
 				}
 

@@ -131,10 +131,10 @@ export const deleteReview = (id: string) => async dispatch => {
 };
 
 interface AdvancedEditableReviewAttributes {
-	// array of userIds to add
-	$push: { reviewers: string[] };
-	// array of userIds to remove
-	$pull: { reviewers: string[] };
+	// array of userIds / tags to add
+	$push: { reviewers?: string[], tags?: string[] }
+	// array of userIds / tags to remove
+	$pull: { reviewers?: string[], tags?: string[] }
 }
 
 export type EditableAttributes = Partial<
