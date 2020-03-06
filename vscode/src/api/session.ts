@@ -16,7 +16,8 @@ import {
 	ChannelServiceType,
 	CSChannelStream,
 	CSDirectStream,
-	LoginResult
+	LoginResult,
+	CSMe
 } from "@codestream/protocols/api";
 import { ConfigurationTarget, Disposable, Event, EventEmitter, Uri } from "vscode";
 import { WorkspaceState } from "../common";
@@ -201,6 +202,12 @@ export class CodeStreamSession implements Disposable {
 			case ChangeDataType.Teams:
 				this._state!.updateTeams();
 				break;
+			case ChangeDataType.Users:
+				const user = e.data.find(u => u.id === this.userId) as CSMe;
+				if (user != null) {
+					this._state!.updateUser(user);
+				}
+				break;
 			case ChangeDataType.Unreads:
 				this.fireDidChangeUnreads(new UnreadsChangedEvent(this, e));
 				break;
@@ -333,19 +340,17 @@ export class CodeStreamSession implements Disposable {
 			return stream;
 		}
 
-		const s = (
-			await Container.agent.streams.createChannel(
-				creationOptions.name!,
-				creationOptions.membership,
-				creationOptions.privacy,
-				creationOptions.purpose,
-				{
-					serviceType: type,
-					serviceKey: key,
-					serviceInfo: creationOptions.serviceInfo
-				}
-			)
-		).stream;
+		const s = (await Container.agent.streams.createChannel(
+			creationOptions.name!,
+			creationOptions.membership,
+			creationOptions.privacy,
+			creationOptions.purpose,
+			{
+				serviceType: type,
+				serviceKey: key,
+				serviceInfo: creationOptions.serviceInfo
+			}
+		)).stream;
 		if (s === undefined) throw new Error("Unable to create stream");
 
 		return new ChannelStream(this, s);
@@ -375,14 +380,12 @@ export class CodeStreamSession implements Disposable {
 			return stream;
 		}
 
-		const s = (
-			await Container.agent.streams.createChannel(
-				name,
-				creationOptions.membership,
-				creationOptions.privacy,
-				creationOptions.purpose
-			)
-		).stream;
+		const s = (await Container.agent.streams.createChannel(
+			name,
+			creationOptions.membership,
+			creationOptions.privacy,
+			creationOptions.purpose
+		)).stream;
 		if (s === undefined) throw new Error("Unable to create stream");
 
 		return new ChannelStream(this, s);
