@@ -555,10 +555,18 @@ export enum CSNotificationPreference {
 	Off = "off"
 }
 
+export enum CSNotificationDeliveryPreference {
+	All = "all",
+	EmailOnly = "emailOnly",
+	ToastOnly = "toastOnly",
+	Off = "off"
+}
+
 export interface CSMePreferences {
 	telemetryConsent?: boolean; // legacy
 	telemetryOptOut?: boolean;
 	notifications?: CSNotificationPreference;
+	notificationDelivery?: CSNotificationDeliveryPreference;
 	[key: string]: any;
 }
 
