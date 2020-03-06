@@ -81,6 +81,7 @@ export interface CreateShareableCodemarkRequest {
 	mentionedUserIds?: string[];
 	// codemarks can now be replies
 	parentPostId?: string;
+	isPseudoCodemark?: boolean;
 }
 
 export interface CreateShareableCodemarkResponse {

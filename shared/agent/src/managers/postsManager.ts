@@ -14,7 +14,7 @@ import {
 	CodemarkPlus,
 	CreateCodemarkRequest,
 	CreatePostRequest,
-	CreatePostRequestType,
+	CreatePostRequestType, 
 	CreatePostResponse,
 	CreatePostWithMarkerRequest,
 	CreatePostWithMarkerRequestType,
@@ -474,7 +474,17 @@ function trackPostCreation(
 						}
 					}
 
-					if (request.codemark) {
+					if (request.codemark && request.codemark.reviewId && request.isPseudoCodemark) {
+						// this is a pseudo codemark, aka a reply to a review marked as "Change Request"
+						const properties = {
+							"Parent ID": request.codemark.reviewId,
+							"Parent Type": "Review",
+							"Change Request": !!request.codemark.isChangeRequest
+						};
+						telemetry.track({ eventName: "Reply Created", properties: properties });
+					}
+					else if (request.codemark) {
+						// this is a standard codemark -- note its event name includes "created" rather than "reply"
 						const { markers = [] } = request.codemark;
 						const codemarkProperties: {
 							[key: string]: any;
@@ -502,6 +512,46 @@ function trackPostCreation(
 						}
 						telemetry.track({ eventName: "Codemark Created", properties: codemarkProperties });
 					}
+					else if (request.parentPostId) {
+						const parentPost = await SessionContainer.instance().posts.getById(request.parentPostId);
+						if (parentPost) {
+							if (parentPost.parentPostId) {
+								const grandParentPost = await SessionContainer.instance().posts.getById(parentPost.parentPostId);
+								if (parentPost.codemarkId && grandParentPost && grandParentPost.reviewId) {
+									// reply to a codemark in a review
+									const postProperties = {
+										"Parent ID": parentPost.codemarkId,
+										"Parent Type": "Review.Codemark"
+									};
+									telemetry.track({ eventName: "Reply Created", properties: postProperties });
+								} else if (grandParentPost && grandParentPost.reviewId) {
+									// reply to a reply in a review
+									const postProperties = {
+										"Parent ID": grandParentPost.reviewId,
+										"Parent Type": "Review.Reply"
+									};
+									telemetry.track({ eventName: "Reply Created", properties: postProperties });
+								}
+							}
+							else if (parentPost.reviewId) {
+								// reply to a review
+								const postProperties = {
+									"Parent ID": parentPost.reviewId,
+									"Parent Type": "Review"
+								};
+								telemetry.track({ eventName: "Reply Created", properties: postProperties });
+							}
+							else if (parentPost.codemarkId) {
+								// reply to a standard codemark
+								const postProperties = {
+									"Parent ID": parentPost.codemarkId,
+									"Parent Type": "Codemark"
+								};
+								telemetry.track({ eventName: "Reply Created", properties: postProperties });
+							}
+						}
+					}
+
 				})
 				.catch(ex => Logger.error(ex));
 		} catch (ex) {
@@ -760,7 +810,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		if (post.reviewId) {
 			try {
 				review = await SessionContainer.instance().reviews.getById(post.reviewId);
-			} catch (error) {}
+			} catch (error) { }
 		}
 
 		return { ...post, codemark: codemark, hasMarkers: hasMarkers, review };
@@ -915,7 +965,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				streamId: stream.id,
 				codemark: codemark,
 				text: request.attributes.text!,
-				entryPoint: request.entryPoint
+				entryPoint: request.entryPoint,
+				isPseudoCodemark: request.isPseudoCodemark
 			},
 			request.textDocuments,
 			codemark.id
@@ -956,9 +1007,9 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			// filter out only to those commits that were chosen in the review
 			const commits = startCommit
 				? scm.commits.slice(
-						0,
-						scm.commits.findIndex(commit => commit.sha === startCommit)
-				  )
+					0,
+					scm.commits.findIndex(commit => commit.sha === startCommit)
+				)
 				: scm.commits;
 
 			// perform a diff against the most recent pushed commit
@@ -974,8 +1025,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			const baseSha = pushedCommit
 				? pushedCommit.sha
 				: scm.commits && scm.commits.length > 0
-				? await git.getParentCommitSha(scm.repoPath, scm.commits[scm.commits.length - 1].sha)
-				: latestCommitSha;
+					? await git.getParentCommitSha(scm.repoPath, scm.commits[scm.commits.length - 1].sha)
+					: latestCommitSha;
 
 			if (baseSha == null) {
 				throw new Error("Could not determine newest pushed commit for review creation");

@@ -61,6 +61,11 @@ export interface CreatePostRequest {
 	entryPoint?: string;
 	crossPostIssueValues?: CrossPostIssueValues;
 	dontSendEmail?: boolean;
+	// Marked true when what looks to be a standard reply is marked as "Change Request".
+	// In this case, under the hood, we create a markerless codemark, but in reality,
+	// the user just sees a reply. This is used for telemetry to differentiate
+	// a real codemark from a review reply marked as "Change Request"
+	isPseudoCodemark?: boolean;
 }
 
 export interface CrossPostIssueValues {
