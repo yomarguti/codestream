@@ -6,6 +6,7 @@ import { createSelector } from "reselect";
 import { range } from "@codestream/webview/utils";
 import { EditorMetrics, EditorScrollMode } from "@codestream/protocols/webview";
 import { GetFileScmInfoResponse, GetRangeScmInfoResponse } from "@codestream/protocols/agent";
+import { CodeStreamState } from "..";
 
 type EditorContextActions = ActionType<typeof actions>;
 
@@ -71,52 +72,47 @@ export const getCurrentSelection = createSelector(
 export const getVisibleRanges = (state: EditorContextState) =>
 	state.textEditorVisibleRanges || emptyArray;
 
-// alias for mapVisibleRangeToLine0
-// this is kind of abusing createSelector because we aren't
-// using it for state and props like literally every example
-// online, but rather customizing it to use 3 different passed args
-export const getLine0ForEditorLine = createSelector(
-	(visibleRanges?: Range[]) => visibleRanges || emptyArray,
-	(_: any, editorLine: number) => editorLine,
-	(_: any, foo: any, repositionToFit?: boolean) => repositionToFit,
-	(textEditorVisibleRanges: Range[], editorLine: number, repositionToFit?: boolean) => {
-		// start at 20 lines above the first visible range
-		const linesAboveViewport = 20;
+export const getLine0ForEditorLine = (
+	textEditorVisibleRanges: Range[],
+	editorLine: number,
+	repositionToFit?: boolean
+) => {
+	// start at 20 lines above the first visible range
+	const linesAboveViewport = 20;
 
-		// since we're starting at minus-20 lines, our line counter should start at -20
-		let lineCounter = -linesAboveViewport;
+	// since we're starting at minus-20 lines, our line counter should start at -20
+	let lineCounter = -linesAboveViewport;
 
-		let toLineNum0 = -1; // indicates we didn't find it
-		if (textEditorVisibleRanges != null) {
-			textEditorVisibleRanges.forEach((lineRange, rangeIndex) => {
-				// if this is the first range, start 20 lines above.
-				const startLine =
-					rangeIndex === 0 ? lineRange.start.line - linesAboveViewport : lineRange.start.line;
-				range(startLine, lineRange.end.line + 1).forEach(thisLine => {
-					if (thisLine === editorLine) toLineNum0 = lineCounter;
-					lineCounter++;
-				});
+	let toLineNum0 = -1; // indicates we didn't find it
+	if (textEditorVisibleRanges != null) {
+		textEditorVisibleRanges.forEach((lineRange, rangeIndex) => {
+			// if this is the first range, start 20 lines above.
+			const startLine =
+				rangeIndex === 0 ? lineRange.start.line - linesAboveViewport : lineRange.start.line;
+			range(startLine, lineRange.end.line + 1).forEach(thisLine => {
+				if (thisLine === editorLine) toLineNum0 = lineCounter;
+				lineCounter++;
 			});
-		}
-
-		// didn't find it -- guess where we think it is and return as appropriate
-		if (repositionToFit && toLineNum0 < 0) {
-			// above
-			if (editorLine < textEditorVisibleRanges[0].start.line) {
-				toLineNum0 = 0;
-			}
-			// below
-			else if (editorLine > textEditorVisibleRanges[textEditorVisibleRanges.length - 1].end.line) {
-				toLineNum0 = lineCounter;
-			}
-			// must be folded out, return half the height
-			else {
-				toLineNum0 = lineCounter / 2;
-			}
-		}
-		return toLineNum0;
+		});
 	}
-);
+
+	// didn't find it -- guess where we think it is and return as appropriate
+	if (repositionToFit && toLineNum0 < 0) {
+		// above
+		if (editorLine < textEditorVisibleRanges[0].start.line) {
+			toLineNum0 = 0;
+		}
+		// below
+		else if (editorLine > textEditorVisibleRanges[textEditorVisibleRanges.length - 1].end.line) {
+			toLineNum0 = lineCounter;
+		}
+		// must be folded out, return half the height
+		else {
+			toLineNum0 = lineCounter / 2;
+		}
+	}
+	return toLineNum0;
+};
 
 export const getVisibleLineCount = createSelector(
 	(visibleRanges?: Range[]) => visibleRanges || emptyArray,

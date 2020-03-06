@@ -11,6 +11,7 @@ import {
 } from "../store/editorContext/reducer";
 import { setNewPostEntry } from "../store/context/actions";
 
+// This is dead code. There are no code paths that actually render this component today
 class ComposeBox extends React.Component {
 	state = {
 		crossPostMessage: true,
@@ -246,7 +247,9 @@ class ComposeBox extends React.Component {
 }
 
 const mapStateToProps = state => {
-	return { textEditorVisibleRanges: getVisibleRanges(state.editorContext) };
+	return {
+		textEditorVisibleRanges: getVisibleRanges(state.editorContext)
+	};
 };
 
 const ConnectedComposeBox = connect(mapStateToProps, { setNewPostEntry })(ComposeBox);

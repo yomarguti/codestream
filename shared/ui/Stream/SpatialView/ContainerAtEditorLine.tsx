@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, shallowEqual } from "react-redux";
 import {
 	getVisibleRanges,
 	getVisibleLineCount,
@@ -20,12 +20,13 @@ export default function ContainerAtEditorLine(props: {
 		const lineHeight = state.editorContext.metrics
 			? state.editorContext.metrics.lineHeight
 			: undefined;
+
 		return {
 			logicalVisibleLineCount: getVisibleLineCount(visibleRanges),
 			line0: getLine0ForEditorLine(visibleRanges, props.lineNumber, props.repositionToFit),
 			lineHeight
 		};
-	});
+	}, shallowEqual);
 
 	const [visibleLineCount, setVisibleLineCount] = React.useState(logicalVisibleLineCount);
 

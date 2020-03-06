@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { connect, useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import cx from "classnames";
 import Icon from "./Icon";
 import { HostApi } from "../webview-api";
@@ -68,7 +68,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 	const dispatch = useDispatch();
 	const [highlightedLine, setHighlightedLine] = useState();
 
-	const derivedState = useSelector(mapStateToProps);
+	const derivedState = useSelector(mapStateToProps, shallowEqual);
 
 	useDidMount(() => {
 		const disposable = HostApi.instance.on(NewCodemarkNotificationType, e => {
