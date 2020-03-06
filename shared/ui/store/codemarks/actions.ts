@@ -16,6 +16,7 @@ import { TextDocumentIdentifier } from "vscode-languageserver-types";
 import { getConnectedProviders } from "../providers/reducer";
 import { CodeStreamState } from "..";
 import { capitalize } from "@codestream/webview/utils";
+import { isObject } from "lodash-es";
 
 export const reset = () => action("RESET");
 
@@ -72,7 +73,7 @@ export interface CreateCodemarkError {
 }
 
 export function isCreateCodemarkError(object: any): object is CreateCodemarkError {
-	return "reason" in object;
+	return isObject(object) && "reason" in object;
 }
 
 export const createCodemark = (attributes: SharingNewCodemarkAttributes) => async (
@@ -121,7 +122,7 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 			return result;
 		}
 	} catch (error) {
-		// if this is a sharing error just throw out of this function
+		// if this is a sharing error just throw it
 		if (isCreateCodemarkError(error)) throw error;
 
 		logError("Error creating a codemark", { message: error.toString() });

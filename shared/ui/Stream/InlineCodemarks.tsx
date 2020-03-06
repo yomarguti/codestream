@@ -971,11 +971,25 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		);
 
 		try {
-			await this.props.createPostAndCodemark(
-				attributes,
-				this.currentPostEntryPoint || "Spatial View"
-			);
-			this.currentPostEntryPoint = undefined;
+			// attempt to create the codemark
+			try {
+				await this.props.createPostAndCodemark(
+					attributes,
+					this.currentPostEntryPoint || "Spatial View"
+				);
+			} catch (error) {
+				// if the error was specific to the sharing step, just continue
+				// https://trello.com/c/ZoSRHGVi/3171-bug-submitting-a-codemark-while-in-review-mode-stays-on-the-codemark-compose-form#comment-5e6199467d3fb86590a942ac
+				if (!isCreateCodemarkError(error) || error.reason === "create") {
+					const message = `There was an error creating the codemark.${
+						!isCreateCodemarkError(error) ? ` (${error.toString()})` : ""
+					}`;
+					this.setState({ codemarkFormError: message });
+					return;
+				}
+			}
+
+			// now get the new document markers
 			await this.props.fetchDocumentMarkers(this.props.textEditorUri!);
 
 			if (docMarker) {
@@ -989,15 +1003,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			} else {
 				this.closeCodemarkForm();
 			}
-		} catch (error) {
-			if (isCreateCodemarkError(error)) {
-				const message =
-					error.reason === "share"
-						? "There was an error sharing the codemark. Please try sharing it from the codemark's menu."
-						: "There was an error creating the codemark.";
-				this.setState({ codemarkFormError: message });
-			} else this.setState({ codemarkFormError: error.toString() });
 		} finally {
+			// cleanup that must happen regardless of what occurs above
+			this.currentPostEntryPoint = undefined;
 			injectedMiddleware.dispose();
 		}
 	};
