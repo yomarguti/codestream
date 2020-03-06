@@ -26,7 +26,7 @@ class ComposeBox extends React.Component {
 			? state.selectionCursor
 			: props.codeBlock.range.start.line;
 
-		const line0 = getLine0ForEditorLine(textEditorVisibleRanges, startLine);
+		const line0 = getLine0ForEditorLine(textEditorVisibleRanges, startLine, true);
 		if (line0 >= 0) {
 			let top = (window.innerHeight * line0) / getVisibleLineCount(textEditorVisibleRanges);
 			if (state.adjustedPosition) {
@@ -249,10 +249,7 @@ const mapStateToProps = state => {
 	return { textEditorVisibleRanges: getVisibleRanges(state.editorContext) };
 };
 
-const ConnectedComposeBox = connect(
-	mapStateToProps,
-	{ setNewPostEntry }
-)(ComposeBox);
+const ConnectedComposeBox = connect(mapStateToProps, { setNewPostEntry })(ComposeBox);
 
 export default React.forwardRef((props, ref) => (
 	<ConnectedComposeBox {...props} forwardedRef={ref} />

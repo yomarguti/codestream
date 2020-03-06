@@ -22,7 +22,7 @@ export default function ContainerAtEditorLine(props: {
 			: undefined;
 		return {
 			logicalVisibleLineCount: getVisibleLineCount(visibleRanges),
-			line0: getLine0ForEditorLine(visibleRanges, props.lineNumber),
+			line0: getLine0ForEditorLine(visibleRanges, props.lineNumber, props.repositionToFit),
 			lineHeight
 		};
 	});
@@ -53,7 +53,7 @@ export default function ContainerAtEditorLine(props: {
 	const getAdjustedPosition = React.useCallback((currentPosition: number, rootBottom: number) => {
 		const domBodyDimensions = document.body.getBoundingClientRect();
 		if (rootBottom >= domBodyDimensions.bottom - 15) {
-			const newPosition = currentPosition - (rootBottom - domBodyDimensions.bottom + 120);
+			const newPosition = currentPosition - (rootBottom - domBodyDimensions.bottom + 30);
 			if (newPosition !== currentPosition) {
 				return newPosition;
 			}
@@ -105,6 +105,7 @@ export default function ContainerAtEditorLine(props: {
 		}
 	}, [rootDimensions.height, rootDimensions.bottom, position, adjustedPosition, logicalPosition]);
 
+	console.log("ARE E REPOSITIONING? ", props.repositionToFit);
 	return (
 		<span
 			ref={rootRef}

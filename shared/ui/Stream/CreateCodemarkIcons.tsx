@@ -232,7 +232,8 @@ export const CreateCodemarkIcons = (props: Props) => {
 
 	const iconsOnLine0 = getLine0ForEditorLine(
 		derivedState.textEditorVisibleRanges,
-		props.openIconsOnLine
+		props.openIconsOnLine,
+		false
 	);
 	// console.log("IOL IS: ", iconsOnLine0, " FROM: ", this.state.openIconsOnLine);
 
