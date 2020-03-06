@@ -148,8 +148,8 @@ export default class Menu extends Component {
 					$submenu.style.top = parentLI.offsetTop + 16 + "px";
 				}
 			}
-			const tooFarDown = rect.top + $submenu.offsetHeight + 35 - window.innerHeight;
-			if (tooFarDown > 0) {
+			const bottomOfSubmenu = parentLI.offsetTop + $submenu.offsetHeight + 35;
+			if (bottomOfSubmenu > window.innerHeight) {
 				$submenu.style.top = "-10px";
 			}
 		}
