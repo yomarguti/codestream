@@ -266,11 +266,16 @@
 		margin-top: 0 !important;
 		display: inline-block;
 	}
-	&.monospace {
+	&.monospace,
+	.file-info {
 		font-size: 12px;
 	}
 	&.muted {
 		opacity: 0.5;
+	}
+	// align the X vertically centered
+	.actions {
+		margin-top: -1px;
 	}
 	&:hover:not(.no-hover) {
 		color: @text-color-highlight;
