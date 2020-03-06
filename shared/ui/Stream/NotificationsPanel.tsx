@@ -5,6 +5,7 @@ import { CodeStreamState } from "../store";
 import { RadioGroup, Radio } from "../src/components/RadioGroup";
 import { setUserPreference } from "./actions";
 import { HostApi } from "../webview-api";
+import { CSNotificationDeliveryPreference } from "@codestream/protocols/api";
 
 export const NotificationsPanel = props => {
 	const dispatch = useDispatch();
@@ -71,10 +72,10 @@ export const NotificationsPanel = props => {
 									onChange={handleChangeDelivery}
 									loading={loadingDelivery}
 								>
-									<Radio value="both">Email &amp; Desktop</Radio>
-									<Radio value="email">Email only</Radio>
-									<Radio value="toast">Desktop only</Radio>
-									<Radio value="none">None</Radio>
+									<Radio value={CSNotificationDeliveryPreference.All}>Email &amp; Desktop</Radio>
+									<Radio value={CSNotificationDeliveryPreference.EmailOnly}>Email only</Radio>
+									<Radio value={CSNotificationDeliveryPreference.ToastOnly}>Desktop only</Radio>
+									<Radio value={CSNotificationDeliveryPreference.Off}>None</Radio>
 								</RadioGroup>
 							</div>
 						)}
