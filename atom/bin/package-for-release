@@ -2,7 +2,7 @@
 
 #desc# 'package' up a production build
 
-echo "==== copy files into develop branch of public repo ===="
+echo "==== copying files into master branch of public repo at ../atom-client ===="
 cd ..
 git clone --depth 1 https://github.com/teamcodestream/atom-client
 cd atom-client
@@ -19,6 +19,6 @@ echo "==== clean up package.json ===="
 ../atom-codestream/bin/clean-metadata.js package.json $1
 
 echo "==== uninstall current package ===="
-apm-nightly uninstall codestream
+apm uninstall codestream
 echo "==== link package for validation ===="
-apm-nightly link
+apm link
