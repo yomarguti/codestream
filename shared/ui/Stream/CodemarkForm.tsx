@@ -1281,7 +1281,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 			let range: any = codeBlock.range;
 			if (editingCodemark) {
-				if (editingCodemark.markers) {
+				if (editingCodemark.markers && editingCodemark.markers.length > 0) {
 					const marker = editingCodemark.markers[0];
 					if (marker.locationWhenCreated) {
 						// TODO: location is likely invalid
