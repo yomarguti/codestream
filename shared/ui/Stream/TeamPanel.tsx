@@ -368,9 +368,12 @@ class TeamPanel extends React.Component<Props, State> {
 				</>
 			);
 			return (
-				<li className="status row-with-icon-actions" style={{ paddingLeft: "48px" }}>
+				<li
+					className="status row-with-icon-actions"
+					style={{ overflow: "hidden", whiteSpace: "nowrap", paddingLeft: "48px" }}
+				>
 					<Tooltip title={title} placement="topRight">
-						<div>
+						<div style={{ overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
 							<Icon name="repo" /> {repoName} &nbsp; <Icon name="git-branch" /> {repo.branch}
 							{added > 0 && <span className="added">+{added}</span>}
 							{removed > 0 && <span className="deleted">-{removed}</span>}
