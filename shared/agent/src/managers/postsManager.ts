@@ -510,9 +510,7 @@ function trackPostCreation(
 	});
 }
 
-function trackReviewPostCreation(
-	review: ReviewPlus
-) {
+function trackReviewPostCreation(review: ReviewPlus) {
 	process.nextTick(() => {
 		try {
 			const telemetry = Container.instance().telemetry;
@@ -522,8 +520,12 @@ function trackReviewPostCreation(
 				"Review ID": review.id,
 				Reviewers: review.reviewers.length,
 				Files: review.reviewChangesets.map(_ => _.modifiedFiles.length).reduce((acc, x) => acc + x),
-				"Pushed Commits": review.reviewChangesets.map(_ => _.commits.filter(c => !c.localOnly).length).reduce((acc, x) => acc + x),
-				"Local Commits": review.reviewChangesets.map(_ => _.commits.filter(c => c.localOnly).length).reduce((acc, x) => acc + x),
+				"Pushed Commits": review.reviewChangesets
+					.map(_ => _.commits.filter(c => !c.localOnly).length)
+					.reduce((acc, x) => acc + x),
+				"Local Commits": review.reviewChangesets
+					.map(_ => _.commits.filter(c => c.localOnly).length)
+					.reduce((acc, x) => acc + x),
 				"Staged Changes": review.reviewChangesets.some(_ => _.includeStaged),
 				"Saved Changes": review.reviewChangesets.some(_ => _.includeSaved)
 			};
@@ -1476,7 +1478,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					anchorFormat: "[${text}](${url})"
 				};
 		}
-	};
+	}
 
 	createProviderCard = async (
 		providerCardRequest: {
@@ -1704,7 +1706,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			Logger.error(error, `failed to create a ${attributes.issueProvider.name} card:`);
 			return undefined;
 		}
-	};
+	}
 }
 
 async function resolveCreatePostResponse(response: CreatePostResponse) {
