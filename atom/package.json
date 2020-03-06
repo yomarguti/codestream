@@ -25,6 +25,9 @@
 		"method": "handleURI",
 		"deferActivation": false
 	},
+	"package-deps": [
+		"split-diff"
+	],
 	"providedServices": {
 		"codestream-info": {
 			"description": "Provides environment config info",
@@ -127,9 +130,6 @@
 		"webview:build": "webpack --config-name webview --env.development",
 		"webview:watch": "webpack --watch --config-name webview --env.development"
 	},
-	"package-deps": [
-		"split-diff"
-	],
 	"dependencies": {
 		"@teamcodestream/js-utils": "0.2.0",
 		"atom-languageclient": "0.9.9",
