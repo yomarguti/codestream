@@ -21,7 +21,7 @@ const getPadding = (size?: ButtonSize) => {
 		case "large":
 			return "padding: 1px 15px;";
 		case "compact":
-			return "padding: 1px 8px;";
+			return "padding: 1px 5px;";
 		case "default":
 		default:
 			return "padding: 1px 10px;";

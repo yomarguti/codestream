@@ -137,10 +137,13 @@ export const ActivityPanel = () => {
 
 				return (
 					<ActivityWrapper key={codemark.id}>
-						<ActivityVerb time={codemark.createdAt}>
+						<ActivityVerb>
 							<Headshot size={24} person={person} />
-							<b>{person.username} </b>
-							{codemark.type === "issue" ? " opened an issue " : ""}
+							<div>
+								<b>{person.username}</b>
+								<span className="verb">{codemark.type === "issue" ? " opened an issue " : ""}</span>
+								<Timestamp relative time={codemark.createdAt} />
+							</div>
 						</ActivityVerb>
 						<ActivityItem streamId={codemark.streamId} postId={codemark.postId}>
 							{({ className, isUnread, post }) => (
@@ -184,9 +187,13 @@ export const ActivityPanel = () => {
 					return null;
 				return (
 					<ActivityWrapper key={record.id}>
-						<ActivityVerb time={record.createdAt}>
+						<ActivityVerb>
 							<Headshot size={24} person={person} />
-							<b>{person.username}</b> requested a review
+							<div>
+								<b>{person.username}</b>
+								<span className="verb"> requested a review </span>
+								<Timestamp relative time={record.createdAt} />
+							</div>
 						</ActivityVerb>
 						<ActivityItem streamId={record.streamId} postId={record.postId}>
 							{({ className, post }) => (
@@ -305,13 +312,33 @@ const ActivityItemWrapper = styled(
 	margin-left: 30px;
 `;
 
-const ActivityVerb = (props: PropsWithChildren<{ time: number }>) => {
-	return (
-		<div className="activity-verb">
-			{props.children} <Timestamp relative time={props.time} />
-		</div>
-	);
-};
+const ActivityVerb = styled.div`
+	display: flex;
+	align-items: center;
+	margin: 5px 0 5px 0;
+	${Headshot} {
+		flex-shrink: 0;
+		display: inline-block;
+		margin-right: 8px;
+		margin-left: 0;
+	}
+	b {
+		font-weight: normal;
+		color: var(--text-color-highlight);
+	}
+	color: var(--text-color-subtle);
+	.icon {
+		vertical-align: -2px;
+	}
+	.verb {
+		margin-right: 5px;
+	}
+	time {
+		padding: 0;
+		white-space: nowrap;
+		opacity: 0.5;
+	}
+`;
 
 /*
 	For each activity, given postId + streamId, this component will look up the post
@@ -443,23 +470,5 @@ const ActivityWrapper = styled.div`
 		margin-bottom: 5px;
 	}
 	.activity-verb {
-		margin: 5px 0 10px 0;
-		${Headshot} {
-			display: inline-block;
-			margin-right: 8px;
-			margin-left: 0;
-			vertical-align: -8px;
-		}
-		b {
-			font-weight: normal;
-			color: var(--text-color-highlight);
-		}
-		color: var(--text-color-subtle);
-		.icon {
-			vertical-align: -2px;
-		}
-		time {
-			opacity: 0.5;
-		}
 	}
 `;
