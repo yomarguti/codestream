@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ReviewPlus } from "@codestream/protocols/agent";
 import { HostApi } from "../..";
-import { ReviewShowDiffRequestType } from "@codestream/protocols/webview";
+import { localStore } from "../../utilities/storage";
 import { ChangesetFile } from "./ChangesetFile";
 import { useSelector, useDispatch } from "react-redux";
 import { CodeStreamState } from "@codestream/webview/store";
@@ -10,6 +10,8 @@ import { Dispatch } from "../../store/common";
 import Icon from "../Icon";
 import { safe } from "@codestream/webview/utils";
 import { getById } from "@codestream/webview/store/repos/reducer";
+
+const VISITED_REVIEW_FILES = "review:changeset-file-list";
 
 export const ChangesetFileList = (props: {
 	review: ReviewPlus;
@@ -31,6 +33,8 @@ export const ChangesetFileList = (props: {
 		return { matchFile, userId, repos: state.repos };
 	});
 
+	const visitedFiles = localStore.get(VISITED_REVIEW_FILES) || {};
+
 	const changedFiles = React.useMemo(() => {
 		const files: any[] = [];
 		for (let changeset of review.reviewChangesets) {
@@ -46,8 +50,9 @@ export const ChangesetFileList = (props: {
 			}
 			files.push(
 				...changeset.modifiedFiles.map(f => {
+					const visitedKey = [review.id, changeset.repoId, f.file].join(":");
 					const selected = (derivedState.matchFile || "").endsWith(f.file);
-					const visited = f.reviewStatus && f.reviewStatus[derivedState.userId] === "visited";
+					const visited = visitedFiles[visitedKey] === "visited";
 					const icon = noOnClick ? null : selected ? "arrow-right" : visited ? "ok" : "circle";
 					return (
 						<ChangesetFile
@@ -58,8 +63,8 @@ export const ChangesetFileList = (props: {
 								if (noOnClick) return;
 								e.preventDefault();
 								await dispatch(showDiff(review.id, changeset.repoId, f.file));
-								if (!f.reviewStatus) f.reviewStatus = {};
-								if (f.reviewStatus) f.reviewStatus[derivedState.userId] = "visited";
+								visitedFiles[visitedKey] = "visited";
+								localStore.set(VISITED_REVIEW_FILES, visitedFiles);
 							}}
 							key={f.file}
 							{...f}
