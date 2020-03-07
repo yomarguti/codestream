@@ -221,7 +221,7 @@ class Login extends React.Component<Props, State> {
 										loading={this.state.loading}
 									>
 										<Icon name="codestream" />
-										<div className="copy">Sign In to CodeStream</div>
+										<div className="copy">Sign In</div>
 										<Icon name="chevron-right" />
 									</Button>
 								</div>
