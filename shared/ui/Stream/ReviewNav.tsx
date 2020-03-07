@@ -468,7 +468,9 @@ export function ReviewNav(props: Props) {
 							onMouseLeave={() => setHoverButton("")}
 						>
 							<u>Comment on changes</u> in the left margin
-							<Subtext>You can also comment on related code as part of the review</Subtext>
+							<Subtext>
+								You can also comment on related code in other files as part of the review
+							</Subtext>
 						</InstructionItem>
 						<InstructionItem
 							onMouseEnter={() => setHoverButton("actions")}

@@ -12,6 +12,7 @@ import { safe } from "@codestream/webview/utils";
 import { getById } from "@codestream/webview/store/repos/reducer";
 
 const VISITED_REVIEW_FILES = "review:changeset-file-list";
+const NOW = new Date().getTime(); // a rough timestamp so we know when the file was visited
 
 export const ChangesetFileList = (props: {
 	review: ReviewPlus;
@@ -48,11 +49,12 @@ export const ChangesetFileList = (props: {
 					);
 				}
 			}
+			if (!visitedFiles[review.id]) visitedFiles[review.id] = {};
 			files.push(
 				...changeset.modifiedFiles.map(f => {
-					const visitedKey = [review.id, changeset.repoId, f.file].join(":");
+					const visitedKey = [changeset.repoId, f.file].join(":");
 					const selected = (derivedState.matchFile || "").endsWith(f.file);
-					const visited = visitedFiles[visitedKey] === "visited";
+					const visited = visitedFiles[review.id][visitedKey];
 					const icon = noOnClick ? null : selected ? "arrow-right" : visited ? "ok" : "circle";
 					return (
 						<ChangesetFile
@@ -63,7 +65,7 @@ export const ChangesetFileList = (props: {
 								if (noOnClick) return;
 								e.preventDefault();
 								await dispatch(showDiff(review.id, changeset.repoId, f.file));
-								visitedFiles[visitedKey] = "visited";
+								visitedFiles[review.id][visitedKey] = NOW;
 								localStore.set(VISITED_REVIEW_FILES, visitedFiles);
 							}}
 							key={f.file}
