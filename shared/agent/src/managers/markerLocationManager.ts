@@ -1,5 +1,5 @@
 "use strict";
-import { ParsedDiff, structuredPatch } from "diff";
+import { ParsedDiff, applyPatch, structuredPatch } from "diff";
 import * as eol from "eol";
 import * as path from "path";
 import { TextDocumentIdentifier } from "vscode-languageserver";
@@ -44,6 +44,10 @@ interface UncommittedLocation {
 
 interface UncommittedLocationsById {
 	[id: string]: UncommittedLocation;
+}
+
+interface ReferenceLocationsById {
+	[id: string]: CSReferenceLocation;
 }
 
 interface GetLocationsResult {
@@ -167,11 +171,13 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 
 		const {
 			committedLocations,
-			uncommittedLocations
+			uncommittedLocations,
+			futureReferences
 		} = await MarkerLocationManager.classifyLocations(
 			repoRoot,
 			markers,
-			currentCommitLocations.locations
+			currentCommitLocations.locations,
+			currentCommitHash!
 		);
 
 		const doc = documents.get(documentUri);
@@ -188,12 +194,13 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			return result;
 		}
 
+		const currentCommitText = await git.getFileContentForRevision(filePath, currentCommitHash!);
+		if (currentCommitText === undefined) {
+			throw new Error(`Could not retrieve contents for ${filePath}@${currentCommitHash}`);
+		}
+
 		if (Object.keys(committedLocations).length) {
 			Logger.log(`MARKERS: calculating current location for committed locations`);
-			const currentCommitText = await git.getFileContentForRevision(filePath, currentCommitHash!);
-			if (currentCommitText === undefined) {
-				throw new Error(`Could not retrieve contents for ${filePath}@${currentCommitHash}`);
-			}
 			const diff = structuredPatch(
 				filePath,
 				filePath,
@@ -240,6 +247,39 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			}
 		}
 
+		if (Object.keys(futureReferences).length) {
+			Logger.log(`MARKERS: calculating current location for future references`);
+			for (const id in futureReferences) {
+				const referenceLocation = futureReferences[id];
+				const referenceText =
+					referenceLocation.flags.diff != undefined
+						? applyPatch(currentCommitText, referenceLocation.flags.diff)
+						: currentCommitText;
+
+				const diff = structuredPatch(
+					filePath,
+					filePath,
+					stripEof(eol.auto(referenceText)),
+					stripEof(eol.auto(currentBufferText)),
+					"",
+					""
+				);
+
+				const currLoc =
+					(await calculateLocation(
+						MarkerLocation.fromArray(referenceLocation.location, id),
+						diff
+					)) || {};
+				result.locations[id] = currLoc;
+
+				const refLoc = MarkerLocation.fromArray(referenceLocation.location, id) || {};
+
+				Logger.log(
+					`MARKERS: ${id} [${refLoc.lineStart}, ${refLoc.colStart}, ${refLoc.lineEnd}, ${refLoc.colEnd}] => [${currLoc.lineStart}, ${currLoc.colStart}, ${currLoc.lineEnd}, ${currLoc.colEnd}]`
+				);
+			}
+		}
+
 		for (const marker of markers) {
 			const location = result.locations[marker.id];
 			if (
@@ -271,22 +311,33 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 	private static async classifyLocations(
 		repoPath: string,
 		markers: CSMarker[],
-		committedLocations: MarkerLocationsById
+		committedLocations: MarkerLocationsById,
+		fileCurrentCommit: string
 	): Promise<{
 		committedLocations: MarkerLocationsById;
 		uncommittedLocations: UncommittedLocationsById;
+		futureReferences: ReferenceLocationsById;
 	}> {
 		const result = {
 			committedLocations: {} as MarkerLocationsById,
-			uncommittedLocations: {} as UncommittedLocationsById
+			uncommittedLocations: {} as UncommittedLocationsById,
+			futureReferences: {} as ReferenceLocationsById
 		};
 		Logger.log(`MARKERS: retrieving uncommitted locations from local cache`);
 		const cache = await getCache(repoPath);
 		const cachedUncommittedLocations = cache.getCollection("uncommittedLocations");
-		for (const { id } of markers) {
+		for (const { id, referenceLocations } of markers) {
+			const canonicalLocation = referenceLocations.sort(compareReferenceLocations)[0];
 			const committedLocation = committedLocations[id];
 			const uncommittedLocation = cachedUncommittedLocations.get(id);
-			if (uncommittedLocation) {
+
+			if (
+				!canonicalLocation.commitHash &&
+				canonicalLocation.flags.baseCommit === fileCurrentCommit
+			) {
+				Logger.log(`MARKERS: ${id}: future reference`);
+				result.futureReferences[id] = canonicalLocation;
+			} else if (uncommittedLocation) {
 				Logger.log(`MARKERS: ${id}: uncommitted`);
 				result.uncommittedLocations[id] = uncommittedLocation;
 			} else if (committedLocation) {
@@ -376,7 +427,47 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			let canCalculate = false;
 			for (const referenceLocation of missingMarker.referenceLocations) {
 				const referenceCommitHash = referenceLocation.commitHash;
-				if (referenceCommitHash != null && !diffsByCommitHash.has(referenceCommitHash)) {
+				if (referenceCommitHash == null) {
+					const { baseCommit, diff: diffToCanonicalContents } = referenceLocation.flags;
+					if (baseCommit && diffToCanonicalContents) {
+						const baseContents = await git.getFileContentForRevision(filePath, baseCommit);
+						if (!baseContents) continue;
+						const canonicalContents = applyPatch(baseContents, diffToCanonicalContents);
+						const commitContents = await git.getFileContentForRevision(filePath, commitHash);
+						if (!commitContents) continue;
+
+						const diff = structuredPatch(
+							filePath,
+							filePath,
+							stripEof(eol.auto(canonicalContents)),
+							stripEof(eol.auto(commitContents)),
+							"",
+							""
+						);
+
+						const calculatedLocation = await calculateLocation(
+							MarkerLocation.fromArray(referenceLocation.location, missingMarker.id),
+							diff
+						);
+
+						if (referenceLocation.flags.canonical) {
+							Logger.log(
+								`MARKERS: saving location calculated from canonical reference for missing marker ${missingMarker.id}`
+							);
+							await session.api.createMarkerLocation({
+								streamId: fileStreamId,
+								commitHash,
+								locations: MarkerLocation.toArraysById({
+									[missingMarker.id]: calculatedLocation
+								})
+							});
+						}
+
+						currentCommitLocations[missingMarker.id] = calculatedLocation;
+
+						break;
+					}
+				} else if (referenceCommitHash != null && !diffsByCommitHash.has(referenceCommitHash)) {
 					const diff = await git.getDiffBetweenCommits(
 						referenceCommitHash,
 						commitHash,
