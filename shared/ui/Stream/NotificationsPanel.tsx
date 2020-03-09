@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import CancelButton from "./CancelButton";
 import { CodeStreamState } from "../store";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { RadioGroup, Radio } from "../src/components/RadioGroup";
 import { setUserPreference } from "./actions";
 import { HostApi } from "../webview-api";
@@ -11,10 +12,12 @@ export const NotificationsPanel = props => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const hasDesktopNotifications = state.ide.name === "VSC" || state.ide.name === "JETBRAINS";
+		const notificationDeliverySupported = isFeatureEnabled(state, "notificationDeliveryPreference");
 		return {
 			notificationPreference: state.preferences.notifications || "involveMe",
 			notificationDeliveryPreference: state.preferences.notificationDelivery || "both",
-			hasDesktopNotifications
+			hasDesktopNotifications,
+			notificationDeliverySupported
 		};
 	});
 	const [loading, setLoading] = useState(false);
@@ -63,7 +66,7 @@ export const NotificationsPanel = props => {
 							</Radio>
 							<Radio value="off">Don't automatically follow any codemarks or reviews</Radio>
 						</RadioGroup>
-						{derivedState.hasDesktopNotifications && (
+						{derivedState.hasDesktopNotifications && derivedState.notificationDeliverySupported && (
 							<div style={{ marginTop: "20px" }}>
 								<p className="explainer">Deliver notifications via:</p>
 								<RadioGroup
