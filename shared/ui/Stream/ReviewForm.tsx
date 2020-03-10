@@ -59,6 +59,7 @@ import { LoadingMessage } from "../src/components/LoadingMessage";
 import { editReview, EditableAttributes } from "../store/reviews/actions";
 import { Modal } from "./Modal";
 import { FeatureFlag } from "./FeatureFlag";
+import Timestamp from "./Timestamp";
 
 interface Props extends ConnectedProps {
 	editingReview?: CSReview;
@@ -387,7 +388,7 @@ class ReviewForm extends React.Component<Props, State> {
 				label: user.username
 			};
 		});
-	};
+	}
 
 	handleClickSubmit = async (event?: React.SyntheticEvent) => {
 		event && event.preventDefault();
@@ -398,11 +399,11 @@ class ReviewForm extends React.Component<Props, State> {
 		const { title, text, selectedChannelId, selectedTags, repoStatus, authorsById } = this.state;
 		const { startCommit, excludeCommit, excludedFiles, includeSaved, includeStaged } = this.state;
 
-		const reviewerIds = (this.state.reviewers as any[]).map(r => r.id);		
+		const reviewerIds = (this.state.reviewers as any[]).map(r => r.id);
 
 		try {
 			if (this.props.isEditing && this.props.editReview && this.props.editingReview) {
-				const originalReviewers = this.props.editingReview.reviewers;				
+				const originalReviewers = this.props.editingReview.reviewers;
 				const attributes: EditableAttributes = {
 					title: title,
 					text: text
@@ -413,7 +414,7 @@ class ReviewForm extends React.Component<Props, State> {
 						attributes.$push = attributes.$push || {};
 						attributes.$push.reviewers = reviewerOperations.added;
 					}
-					if (reviewerOperations.removed && reviewerOperations.removed.length) {						
+					if (reviewerOperations.removed && reviewerOperations.removed.length) {
 						attributes.$pull = attributes.$pull || {};
 						attributes.$pull.reviewers = reviewerOperations.removed;
 					}
@@ -424,7 +425,7 @@ class ReviewForm extends React.Component<Props, State> {
 						attributes.$push = attributes.$push || {};
 						attributes.$push.tags = tagOperations.added;
 					}
-					if (tagOperations.removed && tagOperations.removed.length) {						
+					if (tagOperations.removed && tagOperations.removed.length) {
 						attributes.$pull = attributes.$pull || {};
 						attributes.$pull.tags = tagOperations.removed;
 					}
@@ -861,32 +862,35 @@ class ReviewForm extends React.Component<Props, State> {
 		headshot: ReactElement,
 		title: string,
 		message: string | ReactElement,
-		onClick
+		onClick,
+		tooltip?: string | ReactElement
 	) {
 		return (
-			<div
-				className={`row-with-icon-actions ${onOff ? "" : "muted"}`}
-				style={{ display: "flex", alignItems: "center" }}
-				key={id}
-				onClick={onClick}
-			>
-				<input type="checkbox" checked={onOff} style={{ flexShrink: 0 }} />
-				<label className="ellipsis-right-container no-margin">
-					{/* headshot */}
-					<span
-						dangerouslySetInnerHTML={{
-							__html: markdownify(title)
-						}}
-					/>
-				</label>
-				<span
-					className="message"
-					style={{ textAlign: "right", flexGrow: 10, whiteSpace: "nowrap" }}
+			<Tooltip title={tooltip || ""} placement="top" delay={1}>
+				<div
+					className={`row-with-icon-actions ${onOff ? "" : "muted"}`}
+					style={{ display: "flex", alignItems: "center" }}
+					key={id}
+					onClick={onClick}
 				>
-					{message}
-				</span>
-				<span />
-			</div>
+					<input type="checkbox" checked={onOff} style={{ flexShrink: 0 }} />
+					<label className="ellipsis-right-container no-margin">
+						{/* headshot */}
+						<span
+							dangerouslySetInnerHTML={{
+								__html: markdownify(title)
+							}}
+						/>
+					</label>
+					<span
+						className="message"
+						style={{ textAlign: "right", flexGrow: 10, whiteSpace: "nowrap" }}
+					>
+						{message}
+					</span>
+					<span />
+				</div>
+			</Tooltip>
 		);
 	}
 
@@ -998,15 +1002,24 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	renderCommitList(commits, excludeCommit) {
+		console.log(commits);
 		return commits.map(commit =>
 			this.renderChange(
 				commit.sha,
 				!excludeCommit[commit.sha],
-				this.authorHeadshot(commit),
+				<></>,
 				// @ts-ignore
 				commit.info.shortMessage,
 				<span className="monospace">{commit.sha.substr(0, 8)}</span>,
-				e => this.setChangeStart(e, commit.sha)
+				e => this.setChangeStart(e, commit.sha),
+				<div style={{ maxWidth: "65vw" }}>
+					{this.authorHeadshot(commit)}
+					{commit.info && <b>{commit.info.author}</b>}
+					{commit.info && commit.info.authorDate && (
+						<Timestamp relative={true} time={new Date(commit.info.authorDate).getTime()} />
+					)}
+					<div style={{ paddingTop: "10px" }}>{commit.info.shortMessage}</div>
+				</div>
 			)
 		);
 	}
