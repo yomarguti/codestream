@@ -857,17 +857,26 @@ export class GitService implements IGitService, Disposable {
 	}
 
 	private _getOldAndNewFileNamesFromDiffPath(diffPath: string) {
-		const match = /(.+)\{(.+)\s=>\s(.+)}/.exec(diffPath);
-		if (match == null) {
+		const matchInSubdir = /(.*)\{(.+)\s=>\s(.+)}/.exec(diffPath);
+		const matchAtRoot = /(.+)\s=>\s(.+)/.exec(diffPath);
+
+		if (matchInSubdir) {
+			const [, base, oldSuffix, newSuffix] = matchInSubdir;
+			const baseOrEmpty = base || "";
+			return {
+				oldFile: baseOrEmpty + oldSuffix,
+				file: baseOrEmpty + newSuffix
+			};
+		} else if (matchAtRoot) {
+			const [, oldFile, file] = matchAtRoot;
+			return {
+				oldFile,
+				file
+			};
+		} else {
 			return {
 				oldFile: diffPath,
 				file: diffPath
-			};
-		} else {
-			const [, base, oldSuffix, newSuffix] = match;
-			return {
-				oldFile: base + oldSuffix,
-				file: base + newSuffix
 			};
 		}
 	}
