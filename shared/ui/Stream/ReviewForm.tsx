@@ -869,7 +869,7 @@ class ReviewForm extends React.Component<Props, State> {
 			<Tooltip title={tooltip || ""} placement="top" delay={1}>
 				<div
 					className={`row-with-icon-actions ${onOff ? "" : "muted"}`}
-					style={{ display: "flex", alignItems: "center" }}
+					style={{ display: "flex", alignItems: "center", cursor: "pointer" }}
 					key={id}
 					onClick={onClick}
 				>
@@ -898,14 +898,16 @@ class ReviewForm extends React.Component<Props, State> {
 	// and provide a tooltip listing the files
 	fileListLabel = (files: string[]) => {
 		const fileLabel = files.length === 1 ? "file" : "files";
-		const tip = files.map(file => <div>{file}</div>);
+		return `${files.length} ${fileLabel}`;
+	};
 
+	fileListTip = (files: string[]) => {
 		return (
-			<Tooltip title={tip}>
-				<span>
-					{files.length} {fileLabel}
-				</span>
-			</Tooltip>
+			<>
+				{files.map(file => (
+					<div>{file}</div>
+				))}
+			</>
 		);
 	};
 
@@ -947,7 +949,9 @@ class ReviewForm extends React.Component<Props, State> {
 
 		return (
 			<div className="related">
-				<div className="related-label">Changes to Include In Review</div>
+				{(numSavedFiles > 0 || numStagedFiles > 0) && (
+					<div className="related-label">Changes to Include In Review</div>
+				)}
 				{unsavedFilesInThisRepo.length > 0 && (
 					<div style={{ display: "flex", padding: "0 0 2px 2px" }}>
 						<Icon name="alert" muted />
@@ -964,7 +968,8 @@ class ReviewForm extends React.Component<Props, State> {
 						<Headshot person={this.props.currentUser} size={20} display="inline-block" />,
 						"Saved Changes (Working Tree)",
 						this.fileListLabel(scm.savedFiles),
-						() => this.toggleSaved()
+						() => this.toggleSaved(),
+						this.fileListTip(scm.savedFiles)
 					)}
 				{numStagedFiles > 0 &&
 					this.renderChange(
@@ -973,27 +978,24 @@ class ReviewForm extends React.Component<Props, State> {
 						<Headshot person={this.props.currentUser} size={20} display="inline-block" />,
 						"Staged Changes (Index)",
 						this.fileListLabel(scm.stagedFiles),
-						() => this.toggleStaged()
+						() => this.toggleStaged(),
+						this.fileListTip(scm.stagedFiles)
 					)}
 				{localCommits.length > 0 && (
 					<>
-						{(numSavedFiles > 0 || numStagedFiles > 0) && (
-							<div className="related-label">
-								<br />
-								Local Commits
-							</div>
-						)}
+						<div className="related-label">
+							<br />
+							Local Commits
+						</div>
 						{this.renderCommitList(localCommits, excludeCommit)}
 					</>
 				)}
 				{remoteCommits.length > 0 && (
 					<>
-						{(numSavedFiles > 0 || numStagedFiles > 0 || localCommits.length > 0) && (
-							<div className="related-label">
-								<br />
-								Pushed Commits
-							</div>
-						)}
+						<div className="related-label">
+							<br />
+							Pushed Commits
+						</div>
 						{this.renderCommitList(remoteCommits, excludeCommit)}
 					</>
 				)}
