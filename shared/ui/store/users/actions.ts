@@ -35,7 +35,9 @@ export const updateModifiedRepos = () => async (dispatch, getState: () => CodeSt
 		return;
 	}
 
-	const result = await HostApi.instance.send(GetRepoScmStatusesRequestType, {});
+	const result = await HostApi.instance.send(GetRepoScmStatusesRequestType, {
+		currentUserEmail: currentUser.email
+	});
 	if (!result.scm) return;
 
 	let modifiedRepos = currentUser.modifiedRepos || {};

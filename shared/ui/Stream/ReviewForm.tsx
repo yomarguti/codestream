@@ -137,6 +137,7 @@ interface State {
 	ignoredFiles: {
 		[file: string]: boolean;
 	};
+	commitListLength: number;
 }
 
 function merge(defaults: Partial<State>, review: CSReview): State {
@@ -182,7 +183,8 @@ class ReviewForm extends React.Component<Props, State> {
 			includeStaged: true,
 			excludeCommit: {},
 			startCommit: "",
-			unsavedFiles: props.unsavedFiles
+			unsavedFiles: props.unsavedFiles,
+			commitListLength: 10
 		};
 
 		const state = props.editingReview
@@ -285,7 +287,7 @@ class ReviewForm extends React.Component<Props, State> {
 	};
 
 	async handleRepoChange(repoUri?) {
-		const { teamMates } = this.props;
+		const { teamMates, currentUser } = this.props;
 		const { includeSaved, includeStaged, startCommit } = this.state;
 
 		const uri = repoUri || this.state.repoUri;
@@ -293,9 +295,13 @@ class ReviewForm extends React.Component<Props, State> {
 			uri,
 			startCommit,
 			includeStaged,
-			includeSaved
+			includeSaved,
+			currentUserEmail: currentUser.email
 		});
 		this.setState({ repoStatus: statusInfo, repoUri: uri });
+		if (!startCommit && statusInfo.scm && statusInfo.scm.startCommit) {
+			this.setChangeStart(statusInfo.scm.startCommit);
+		}
 
 		console.log("REPO INFO IS: ", statusInfo);
 		if (statusInfo.scm) {
@@ -792,18 +798,21 @@ class ReviewForm extends React.Component<Props, State> {
 		return null;
 	};
 
-	changeScmState = settings => {
-		this.setState({ ...settings }, () => this.handleRepoChange());
+	changeScmState = (settings, callback?) => {
+		this.setState({ ...settings }, callback);
 	};
 
-	setChangeStart = (event: React.SyntheticEvent, sha: string) => {
+	handleClickChangeStart = (event: React.SyntheticEvent, sha: string) => {
+		const target = event.target as HTMLElement;
+		if (target.tagName === "A") return;
+		this.setChangeStart(sha, () => this.handleRepoChange());
+	};
+
+	setChangeStart = (sha: string, callback?) => {
 		const { scm } = this.state.repoStatus;
 		if (!scm) return;
 		const { commits } = scm;
 		if (!commits) return;
-
-		const target = event.target as HTMLElement;
-		if (target.tagName === "A") return;
 
 		// are we turning it on, or turning it off? checkbox=true means we're including
 		const exclude = !this.state.excludeCommit[sha];
@@ -837,7 +846,7 @@ class ReviewForm extends React.Component<Props, State> {
 			}
 		});
 
-		this.changeScmState({ startCommit, excludeCommit });
+		this.changeScmState({ startCommit, excludeCommit }, callback);
 	};
 
 	toggleSaved = () => {
@@ -869,12 +878,12 @@ class ReviewForm extends React.Component<Props, State> {
 			<Tooltip title={tooltip || ""} placement="top" delay={1}>
 				<div
 					className={`row-with-icon-actions ${onOff ? "" : "muted"}`}
-					style={{ display: "flex", alignItems: "center", cursor: "pointer" }}
+					style={{ display: "flex", alignItems: "center" }}
 					key={id}
 					onClick={onClick}
 				>
 					<input type="checkbox" checked={onOff} style={{ flexShrink: 0 }} />
-					<label className="ellipsis-right-container no-margin">
+					<label className="ellipsis-right-container no-margin" style={{ cursor: "pointer" }}>
 						{/* headshot */}
 						<span
 							dangerouslySetInnerHTML={{
@@ -1004,25 +1013,39 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	renderCommitList(commits, excludeCommit) {
-		console.log(commits);
-		return commits.map(commit =>
-			this.renderChange(
-				commit.sha,
-				!excludeCommit[commit.sha],
-				<></>,
-				// @ts-ignore
-				commit.info.shortMessage,
-				<span className="monospace">{commit.sha.substr(0, 8)}</span>,
-				e => this.setChangeStart(e, commit.sha),
-				<div style={{ maxWidth: "65vw" }}>
-					{this.authorHeadshot(commit)}
-					{commit.info && <b>{commit.info.author}</b>}
-					{commit.info && commit.info.authorDate && (
-						<Timestamp relative={true} time={new Date(commit.info.authorDate).getTime()} />
-					)}
-					<div style={{ paddingTop: "10px" }}>{commit.info.shortMessage}</div>
-				</div>
-			)
+		const { commitListLength } = this.state;
+		const commitList = commits.slice(0, commitListLength);
+		const howManyMore = commits.length - commitList.length;
+		return (
+			<>
+				{commitList.map(commit =>
+					this.renderChange(
+						commit.sha,
+						!excludeCommit[commit.sha],
+						<></>,
+						// @ts-ignore
+						commit.info.shortMessage,
+						<span className="monospace">{commit.sha.substr(0, 8)}</span>,
+						e => this.handleClickChangeStart(e, commit.sha),
+						<div style={{ maxWidth: "65vw" }}>
+							{this.authorHeadshot(commit)}
+							{commit.info && <b>{commit.info.author}</b>}
+							{commit.info && commit.info.authorDate && (
+								<Timestamp relative={true} time={new Date(commit.info.authorDate).getTime()} />
+							)}
+							<div style={{ paddingTop: "10px" }}>{commit.info.shortMessage}</div>
+						</div>
+					)
+				)}
+				{howManyMore > 0 && (
+					<div
+						style={{ marginTop: "5px", cursor: "pointer" }}
+						onClick={e => this.setState({ commitListLength: this.state.commitListLength + 10 })}
+					>
+						Show 10 More
+					</div>
+				)}
+			</>
 		);
 	}
 
