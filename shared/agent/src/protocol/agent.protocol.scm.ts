@@ -76,6 +76,7 @@ export interface GetRepoScmStatusRequest {
 	startCommit?: string;
 	includeSaved: boolean;
 	includeStaged: boolean;
+	currentUserEmail: string;
 }
 
 export interface CoAuthors {
@@ -98,6 +99,7 @@ export interface RepoScmStatus {
 	}[];
 	savedFiles: string[];
 	stagedFiles: string[];
+	startCommit: string;
 	// authors whose code i have changed, or who have pushed to this branch
 	authors: CoAuthors[];
 	remotes: { name: string; url: string }[];
@@ -118,7 +120,9 @@ export const GetRepoScmStatusRequestType = new RequestType<
 	void
 >("codestream/scm/repo/status");
 
-export interface GetRepoScmStatusesRequest {}
+export interface GetRepoScmStatusesRequest {
+	currentUserEmail: string;
+}
 export interface GetRepoScmStatusesResponse {
 	scm?: RepoScmStatus[];
 	error?: string;

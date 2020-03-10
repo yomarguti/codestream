@@ -811,14 +811,14 @@ export class GitService implements IGitService, Disposable {
 			// files changed, lines added & deleted
 			// git diff --numstat --summary
 			// https://stackoverflow.com/questions/1587846/how-do-i-show-the-changes-which-have-been-staged
-
+			// also see https://files.slack.com/files-pri/T7DDT1L5R-FV0CM6LD6/image.png
 			let data: string | undefined;
 			try {
 				const options = ["diff"];
 				if (includeStaged && !includeSaved) options.push("--staged");
 				options.push("--numstat");
 				if (ref && ref.length) options.push(ref);
-				if (includeStaged && includeSaved) options.push("HEAD");
+				if (!includeStaged && !ref) options.push("HEAD");
 				options.push("--");
 				data = await git({ cwd: repoPath }, ...options);
 			} catch {}

@@ -129,7 +129,9 @@ export class ScmManager {
 
 	@lspHandler(GetRepoScmStatusesRequestType)
 	@log()
-	async getRepoStatuses({}: GetRepoScmStatusesRequest): Promise<GetRepoScmStatusesResponse> {
+	async getRepoStatuses({
+		currentUserEmail
+	}: GetRepoScmStatusesRequest): Promise<GetRepoScmStatusesResponse> {
 		const cc = Logger.getCorrelationContext();
 		let gitError;
 		let modifiedRepos: RepoScmStatus[] = [];
@@ -144,7 +146,8 @@ export class ScmManager {
 							uri: repo.folder.uri,
 							startCommit: "local",
 							includeStaged: true,
-							includeSaved: true
+							includeSaved: true,
+							currentUserEmail
 						});
 						return response;
 					})
@@ -225,7 +228,8 @@ export class ScmManager {
 		uri: documentUri,
 		includeStaged,
 		includeSaved,
-		startCommit
+		startCommit,
+		currentUserEmail
 	}: GetRepoScmStatusRequest): Promise<GetRepoScmStatusResponse> {
 		const cc = Logger.getCorrelationContext();
 
@@ -246,7 +250,7 @@ export class ScmManager {
 		const authors: CoAuthors[] = [];
 		let totalModifiedLines = 0;
 
-		let commits: { sha: string; info: {}; localOnly: boolean }[] | undefined;
+		let commits: { sha: string; info: any; localOnly: boolean }[] | undefined;
 		let gitError;
 		let repoPath = "";
 		let repoId;
@@ -272,10 +276,15 @@ export class ScmManager {
 					remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
 
 					// if we don't have a starting point to diff against,
-					// assume that we want to diff against the parent of
+					// assume that we want to diff against either the first
+					// commit that isn't mine, or failing that, the parent of
 					// the oldest ref, which should be the fork point of this branch
 					if (commits && commits.length && !startCommit) {
-						startCommit = commits[commits.length - 1].sha + "^";
+						const notMine = commits.find(
+							commit => commit.info && commit.info.email !== currentUserEmail
+						);
+						if (notMine) startCommit = notMine.sha;
+						else startCommit = commits[commits.length - 1].sha + "^";
 					}
 
 					// if we only want to show local work, then we should
@@ -384,6 +393,7 @@ export class ScmManager {
 							modifiedFiles: modifiedFiles || [],
 							savedFiles,
 							stagedFiles,
+							startCommit: startCommit || "",
 							authors,
 							commits: [...(commits || [])],
 							remotes: remotes || [],
