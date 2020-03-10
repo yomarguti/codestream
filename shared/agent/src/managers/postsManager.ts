@@ -560,7 +560,7 @@ function trackPostCreation(
 	});
 }
 
-function trackReviewPostCreation(review: ReviewPlus) {
+function trackReviewPostCreation(review: ReviewPlus, totalExcludedFilesCount: number) {
 	process.nextTick(() => {
 		try {
 			const telemetry = Container.instance().telemetry;
@@ -577,7 +577,8 @@ function trackReviewPostCreation(review: ReviewPlus) {
 					.map(_ => _.commits.filter(c => c.localOnly).length)
 					.reduce((acc, x) => acc + x),
 				"Staged Changes": review.reviewChangesets.some(_ => _.includeStaged),
-				"Saved Changes": review.reviewChangesets.some(_ => _.includeSaved)
+				"Saved Changes": review.reviewChangesets.some(_ => _.includeSaved),
+				"Excluded Files": totalExcludedFilesCount
 			};
 
 			telemetry.track({
@@ -995,6 +996,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 		const { git } = SessionContainer.instance();
 		let review: ReviewPlus | undefined;
+		let totalExcludedFilesCount = 0;
 
 		for (const repoChange of request.attributes.repoChanges) {
 			const { scm, includeSaved, includeStaged, startCommit, excludedFiles, remotes } = repoChange;
@@ -1003,7 +1005,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			const removeExcluded = (diff: ParsedDiff) =>
 				diff.newFileName && !excludedFiles.includes(diff.newFileName);
 			const modifiedFiles = scm.modifiedFiles.filter(f => !excludedFiles.includes(f.file));
-
+			totalExcludedFilesCount += excludedFiles.length;
 			// filter out only to those commits that were chosen in the review
 			const commits = startCommit
 				? scm.commits.slice(
@@ -1208,7 +1210,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 		review = response.review!;
 
-		trackReviewPostCreation(review);
+		trackReviewPostCreation(review, totalExcludedFilesCount);
 		await resolveCreatePostResponse(response!);
 		return {
 			stream,
