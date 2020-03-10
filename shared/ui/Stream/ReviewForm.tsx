@@ -301,9 +301,16 @@ class ReviewForm extends React.Component<Props, State> {
 		this.setState({ repoStatus: statusInfo, repoUri: uri });
 		if (!startCommit && statusInfo.scm && statusInfo.scm.startCommit) {
 			this.setChangeStart(statusInfo.scm.startCommit);
+
+			if (statusInfo.scm.commits) {
+				const commitListLength = statusInfo.scm.commits.findIndex(
+					// @ts-ignore
+					commit => commit.info.email !== currentUser.email
+				);
+				if (commitListLength >= 0) this.setState({ commitListLength });
+			}
 		}
 
-		console.log("REPO INFO IS: ", statusInfo);
 		if (statusInfo.scm) {
 			const authors = statusInfo.scm.authors;
 			const authorsById = {};
@@ -820,7 +827,7 @@ class ReviewForm extends React.Component<Props, State> {
 		const excludeCommit: { [sha: string]: boolean } = {};
 		let newValue = false;
 		let startCommit = "";
-		commits.forEach(commit => {
+		commits.forEach((commit, index) => {
 			// turning it on
 			if (exclude) {
 				if (commit.sha === sha) {
@@ -841,7 +848,8 @@ class ReviewForm extends React.Component<Props, State> {
 					// all others after this will be excluded
 					newValue = true;
 					// start commit is the parent of this one
-					startCommit = commit.sha + "^";
+					if (commits[index + 1]) startCommit = commits[index + 1].sha;
+					else startCommit = commit.sha + "^";
 				}
 			}
 		});
@@ -1042,7 +1050,7 @@ class ReviewForm extends React.Component<Props, State> {
 						style={{ marginTop: "5px", cursor: "pointer" }}
 						onClick={e => this.setState({ commitListLength: this.state.commitListLength + 10 })}
 					>
-						Show 10 More
+						Show More
 					</div>
 				)}
 			</>
@@ -1099,6 +1107,10 @@ class ReviewForm extends React.Component<Props, State> {
 		);
 	}
 
+	nothingToReview() {
+		return <div className="no-matches">No changes found or selected on this branch.</div>;
+	}
+
 	renderChangedFiles() {
 		const { repoStatus } = this.state;
 
@@ -1108,7 +1120,7 @@ class ReviewForm extends React.Component<Props, State> {
 			if (scm) {
 				const { modifiedFiles } = scm;
 				const modified = modifiedFiles.filter(f => !this.excluded(f.file));
-				if (modified.length === 0) return null;
+				if (modified.length === 0) return this.nothingToReview();
 				changedFiles = <>{modified.map(file => this.renderFile(file))}</>;
 			}
 		}
