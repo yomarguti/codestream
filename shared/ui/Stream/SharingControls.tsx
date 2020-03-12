@@ -397,7 +397,10 @@ export const SharingControls = React.memo(
 				</Root>
 			);
 
-		if (!derivedState.isConnectedToSlack && !derivedState.isConnectedToMSTeams)
+		if (
+			!derivedState.selectedShareTarget ||
+			(!derivedState.isConnectedToSlack && !derivedState.isConnectedToMSTeams)
+		)
 			return (
 				<Root>
 					Share on{" "}
