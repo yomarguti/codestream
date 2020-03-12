@@ -102,6 +102,7 @@ interface State {
 	notify: boolean;
 	isLoading: boolean;
 	isLoadingScm: boolean;
+	reviewCreationError: string;
 	scmError: boolean;
 	crossPostMessage: boolean;
 	assignableUsers: { value: any; label: string }[];
@@ -482,7 +483,7 @@ class ReviewForm extends React.Component<Props, State> {
 			logError(error, {
 				isEditing: this.props.isEditing
 			});
-			this.setState({ isLoading: false });
+			this.setState({ reviewCreationError: error.message, isLoading: false });
 		} finally {
 			this.setState({ isLoading: false });
 		}
@@ -1416,6 +1417,14 @@ class ReviewForm extends React.Component<Props, State> {
 							<div style={{ paddingLeft: "10px" }}>
 								Error loading git info.
 								{repoMenu.length > 0 && <> Select a repo above.</>}
+							</div>
+						</div>
+					)}
+					{this.state.reviewCreationError && (
+						<div className="color-warning" style={{ display: "flex", padding: "10px 0" }}>
+							<Icon name="alert" />
+							<div style={{ paddingLeft: "10px" }}>
+								{this.state.reviewCreationError}
 							</div>
 						</div>
 					)}

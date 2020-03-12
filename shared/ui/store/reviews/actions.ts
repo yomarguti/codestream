@@ -66,6 +66,7 @@ export interface NewReviewAttributes {
 
 export interface CreateReviewError {
 	reason: "share" | "create";
+	message?: string;
 }
 
 export const createReview = (attributes: NewReviewAttributes) => async (
@@ -113,7 +114,7 @@ export const createReview = (attributes: NewReviewAttributes) => async (
 		}
 	} catch (error) {
 		logError("Error creating a review", { message: error.toString() });
-		throw { reason: "create" } as CreateReviewError;
+		throw { reason: "create", message: error.toString() } as CreateReviewError;
 	}
 };
 
@@ -132,9 +133,9 @@ export const deleteReview = (id: string) => async dispatch => {
 
 interface AdvancedEditableReviewAttributes {
 	// array of userIds / tags to add
-	$push: { reviewers?: string[], tags?: string[] }
+	$push: { reviewers?: string[]; tags?: string[] };
 	// array of userIds / tags to remove
-	$pull: { reviewers?: string[], tags?: string[] }
+	$pull: { reviewers?: string[]; tags?: string[] };
 }
 
 export type EditableAttributes = Partial<
