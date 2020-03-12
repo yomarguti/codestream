@@ -33,7 +33,7 @@ import {
 	UpdateReviewRequestType,
 	UpdateReviewResponse
 } from "../protocol/agent.protocol";
-import { CSReview, CSReviewDiffs } from "../protocol/api.protocol";
+import { CSReview, CSReviewDiffs, FileStatus } from "../protocol/api.protocol";
 import { log, lsp, lspHandler } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 
@@ -121,11 +121,15 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		const rightBasePath = path.join(repo.path, rightBaseRelativePath);
 
 		const leftBaseContents =
-			(await git.getFileContentForRevision(leftBasePath, diffs.leftBaseSha)) || "";
+			fileInfo.status === FileStatus.added
+				? ""
+				: (await git.getFileContentForRevision(leftBasePath, diffs.leftBaseSha)) || "";
 		const leftContents =
 			leftDiff !== undefined ? applyPatch(leftBaseContents, leftDiff) : leftBaseContents;
 		const rightBaseContents =
-			diffs.leftBaseSha === diffs.rightBaseSha
+			fileInfo.status === FileStatus.added
+				? ""
+				: diffs.leftBaseSha === diffs.rightBaseSha
 				? leftBaseContents
 				: (await git.getFileContentForRevision(rightBasePath, diffs.rightBaseSha)) || "";
 		const rightContents =
