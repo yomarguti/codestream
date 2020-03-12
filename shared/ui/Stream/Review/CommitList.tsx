@@ -45,11 +45,11 @@ export const CommitList = (props: { review: ReviewPlus }) => {
 							style={{ display: "flex", alignItems: "center" }}
 							key={commit.sha}
 						>
-							<label className="ellipsis-right-container no-margin">
-								<Icon name="git-commit" />
+							<label className="ellipsis-right-container no-margin" style={{ paddingLeft: "1px" }}>
+								<Icon name="git-commit-vertical" />
 								{commit.info && (
 									<span
-										style={{ paddingLeft: "5px" }}
+										style={{ paddingLeft: "4px" }}
 										dangerouslySetInnerHTML={{
 											// @ts-ignore
 											__html: markdownify(commit.info.shortMessage)

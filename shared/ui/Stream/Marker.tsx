@@ -79,7 +79,8 @@ function Marker(props: Props) {
 				)}
 				{marker.commitHashWhenCreated && (
 					<span className="monospace">
-						<Icon name="git-commit" /> {marker.commitHashWhenCreated.substring(0, 7)}
+						<Icon name="git-commit-vertical" />
+						{marker.commitHashWhenCreated.substring(0, 7)}
 					</span>
 				)}
 			</div>
