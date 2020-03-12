@@ -3,6 +3,7 @@ import { CodeStreamApiProvider } from "api/codestream/codestreamApi";
 import { ParsedDiff } from "diff";
 import * as fs from "fs";
 import { groupBy, last, orderBy } from "lodash-es";
+import sizeof from "object-sizeof";
 import { TextDocumentIdentifier } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
@@ -14,7 +15,7 @@ import {
 	CodemarkPlus,
 	CreateCodemarkRequest,
 	CreatePostRequest,
-	CreatePostRequestType, 
+	CreatePostRequestType,
 	CreatePostResponse,
 	CreatePostWithMarkerRequest,
 	CreatePostWithMarkerRequestType,
@@ -482,8 +483,7 @@ function trackPostCreation(
 							"Change Request": !!request.codemark.isChangeRequest
 						};
 						telemetry.track({ eventName: "Reply Created", properties: properties });
-					}
-					else if (request.codemark) {
+					} else if (request.codemark) {
 						// this is a standard codemark -- note its event name includes "created" rather than "reply"
 						const { markers = [] } = request.codemark;
 						const codemarkProperties: {
@@ -511,12 +511,15 @@ function trackPostCreation(
 							}
 						}
 						telemetry.track({ eventName: "Codemark Created", properties: codemarkProperties });
-					}
-					else if (request.parentPostId) {
-						const parentPost = await SessionContainer.instance().posts.getById(request.parentPostId);
+					} else if (request.parentPostId) {
+						const parentPost = await SessionContainer.instance().posts.getById(
+							request.parentPostId
+						);
 						if (parentPost) {
 							if (parentPost.parentPostId) {
-								const grandParentPost = await SessionContainer.instance().posts.getById(parentPost.parentPostId);
+								const grandParentPost = await SessionContainer.instance().posts.getById(
+									parentPost.parentPostId
+								);
 								if (parentPost.codemarkId && grandParentPost && grandParentPost.reviewId) {
 									// reply to a codemark in a review
 									const postProperties = {
@@ -532,16 +535,14 @@ function trackPostCreation(
 									};
 									telemetry.track({ eventName: "Reply Created", properties: postProperties });
 								}
-							}
-							else if (parentPost.reviewId) {
+							} else if (parentPost.reviewId) {
 								// reply to a review
 								const postProperties = {
 									"Parent ID": parentPost.reviewId,
 									"Parent Type": "Review"
 								};
 								telemetry.track({ eventName: "Reply Created", properties: postProperties });
-							}
-							else if (parentPost.codemarkId) {
+							} else if (parentPost.codemarkId) {
 								// reply to a standard codemark
 								const postProperties = {
 									"Parent ID": parentPost.codemarkId,
@@ -551,7 +552,6 @@ function trackPostCreation(
 							}
 						}
 					}
-
 				})
 				.catch(ex => Logger.error(ex));
 		} catch (ex) {
@@ -811,7 +811,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		if (post.reviewId) {
 			try {
 				review = await SessionContainer.instance().reviews.getById(post.reviewId);
-			} catch (error) { }
+			} catch (error) {}
 		}
 
 		return { ...post, codemark: codemark, hasMarkers: hasMarkers, review };
@@ -1009,9 +1009,9 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			// filter out only to those commits that were chosen in the review
 			const commits = startCommit
 				? scm.commits.slice(
-					0,
-					scm.commits.findIndex(commit => commit.sha === startCommit)
-				)
+						0,
+						scm.commits.findIndex(commit => commit.sha === startCommit)
+				  )
 				: scm.commits;
 
 			// perform a diff against the most recent pushed commit
@@ -1027,8 +1027,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			const baseSha = pushedCommit
 				? pushedCommit.sha
 				: scm.commits && scm.commits.length > 0
-					? await git.getParentCommitSha(scm.repoPath, scm.commits[scm.commits.length - 1].sha)
-					: latestCommitSha;
+				? await git.getParentCommitSha(scm.repoPath, scm.commits[scm.commits.length - 1].sha)
+				: latestCommitSha;
 
 			if (baseSha == null) {
 				throw new Error("Could not determine newest pushed commit for review creation");
@@ -1175,6 +1175,10 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					}
 				}
 			}*/
+		}
+
+		if (sizeof(reviewRequest.reviewChangesets) > 2 * 1024 * 1024) {
+			throw new Error("Cannot create review. Payload exceeds 2MB");
 		}
 
 		// FIXME -- not sure if this is the right way to do this
@@ -1531,7 +1535,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					anchorFormat: "[${text}](${url})"
 				};
 		}
-	}
+	};
 
 	createProviderCard = async (
 		providerCardRequest: {
@@ -1759,7 +1763,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			Logger.error(error, `failed to create a ${attributes.issueProvider.name} card:`);
 			return undefined;
 		}
-	}
+	};
 }
 
 async function resolveCreatePostResponse(response: CreatePostResponse) {
