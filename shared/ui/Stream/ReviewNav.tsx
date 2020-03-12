@@ -517,7 +517,17 @@ export function ReviewNav(props: Props) {
 	const nextCount = allModifiedFiles.length - progressCounter;
 	const prevCount = progressCounter;
 
-	if (notFound || !review) return <MinimumWidthCard>This review was not found</MinimumWidthCard>;
+	if (notFound || !review)
+		return (
+			<Modal verticallyCenter={true} onClose={exit}>
+				<MinimumWidthCard>
+					This review was not found
+					<br />
+					<br />
+					<Button onClick={exit}>Exit</Button>
+				</MinimumWidthCard>
+			</Modal>
+		);
 	if (derivedState.currentCodemarkId) return null;
 
 	const fileIndex = allModifiedFiles.findIndex(f => f.file === derivedState.filePath) + 1;
