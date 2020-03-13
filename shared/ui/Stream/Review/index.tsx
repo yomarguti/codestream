@@ -403,12 +403,14 @@ const BaseReview = (props: BaseReviewProps) => {
 					)}
 				</MetaSection>
 				{props.collapsed && renderMetaSectionCollapsed(props)}
-				{props.permalinkRef && props.review && <textarea
-					key="permalink-offscreen"
-					ref={props.permalinkRef}
-					value={props.review.permalink}
-					style={{ position: "absolute", left: "-9999px" }}
-				/>}
+				{props.permalinkRef && props.review && (
+					<textarea
+						key="permalink-offscreen"
+						ref={props.permalinkRef}
+						value={props.review.permalink}
+						style={{ position: "absolute", left: "-9999px" }}
+					/>
+				)}
 			</CardBody>
 			{renderedFooter}
 		</MinimumWidthCard>
@@ -653,7 +655,11 @@ const ReviewForReview = (props: PropsWithReview) => {
 					<RepliesToPost streamId={props.review.streamId} parentPostId={props.review.postId} />
 					{InputContainer && (
 						<InputContainer>
-							<ReplyInput reviewId={review.id} parentPostId={review.postId} streamId={review.streamId} />
+							<ReplyInput
+								reviewId={review.id}
+								parentPostId={review.postId}
+								streamId={review.streamId}
+							/>
 						</InputContainer>
 					)}
 				</Footer>
