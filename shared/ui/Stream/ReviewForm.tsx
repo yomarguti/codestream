@@ -242,7 +242,7 @@ class ReviewForm extends React.Component<Props, State> {
 		if (scmInfo.scm) {
 			const repoId: string = scmInfo.scm.repoId || "";
 			const repoName = this.props.repos[repoId] ? this.props.repos[repoId].name : "";
-			this.setState({ scmInfo, repoName }, () => {
+			this.setState({ scmInfo, repoName, startCommit: "" }, () => {
 				this.handleRepoChange(uri);
 				if (callback) callback();
 			});
@@ -1423,9 +1423,7 @@ class ReviewForm extends React.Component<Props, State> {
 					{this.state.reviewCreationError && (
 						<div className="color-warning" style={{ display: "flex", padding: "10px 0" }}>
 							<Icon name="alert" />
-							<div style={{ paddingLeft: "10px" }}>
-								{this.state.reviewCreationError}
-							</div>
+							<div style={{ paddingLeft: "10px" }}>{this.state.reviewCreationError}</div>
 						</div>
 					)}
 					<div key="clear" style={{ clear: "both" }} />
