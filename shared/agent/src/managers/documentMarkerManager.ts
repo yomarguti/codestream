@@ -246,6 +246,7 @@ export class DocumentMarkerManager {
 		const markersForDocument = await markers.getByStreamId(stream.id, true);
 		const documentMarkers: DocumentMarker[] = [];
 		for (const marker of markersForDocument) {
+			if (!marker.postId) continue; // permalinks
 			const post = await posts.getById(marker.postId);
 			if (review.postId !== post.parentPostId) continue;
 			const canonicalLocation = marker.referenceLocations.find(l => l.flags.canonical);
