@@ -358,6 +358,7 @@ export const Title = styled.div`
 
 export const BigTitle = styled.div`
 	font-size: larger;
+	color: var(--text-color-highlight);
 	flex-grow: 10;
 `;
 
