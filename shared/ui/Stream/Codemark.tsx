@@ -1434,7 +1434,7 @@ export class Codemark extends React.Component<Props, State> {
 								{/* this.renderVisibilitySelected() */}
 								{this.props.review != null && (
 									<div className="related">
-										<div className="related-label">Review</div>
+										<div className="related-label">Code Review</div>
 										<div className="description-body">
 											<Link
 												onClick={() => {
