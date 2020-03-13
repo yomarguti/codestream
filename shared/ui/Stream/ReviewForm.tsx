@@ -60,6 +60,7 @@ import { editReview, EditableAttributes } from "../store/reviews/actions";
 import { Modal } from "./Modal";
 import { FeatureFlag } from "./FeatureFlag";
 import Timestamp from "./Timestamp";
+import { DidChangeWorkspaceFoldersNotification } from "vscode-languageserver-protocol";
 
 interface Props extends ConnectedProps {
 	editingReview?: CSReview;
@@ -806,8 +807,8 @@ class ReviewForm extends React.Component<Props, State> {
 		return null;
 	};
 
-	changeScmState = (settings, callback?) => {
-		this.setState({ ...settings }, callback);
+	changeScmState = settings => {
+		this.setState({ ...settings }, () => this.handleRepoChange());
 	};
 
 	handleClickChangeStart = (event: React.SyntheticEvent, sha: string) => {
@@ -855,7 +856,7 @@ class ReviewForm extends React.Component<Props, State> {
 			}
 		});
 
-		this.changeScmState({ startCommit, excludeCommit }, callback);
+		this.setState({ startCommit, excludeCommit }, callback);
 	};
 
 	toggleSaved = () => {
@@ -937,7 +938,7 @@ class ReviewForm extends React.Component<Props, State> {
 	};
 
 	renderGroupsAndCommits() {
-		const { repoStatus, includeSaved, includeStaged, excludeCommit, openRepos } = this.state;
+		const { repoStatus, includeSaved, includeStaged, excludeCommit, commitListLength } = this.state;
 		if (!repoStatus) return null;
 		const { scm } = repoStatus;
 		if (!scm) return null;
@@ -962,8 +963,11 @@ class ReviewForm extends React.Component<Props, State> {
 		const numSavedFiles = scm.savedFiles.length;
 		const numStagedFiles = scm.stagedFiles.length;
 
-		const localCommits = commits.filter(commit => commit.localOnly);
-		const remoteCommits = commits.filter(commit => !commit.localOnly);
+		const commitList = commits.slice(0, commitListLength);
+		const howManyMore = commits.length - commitList.length;
+
+		const localCommits = commitList.filter(commit => commit.localOnly);
+		const remoteCommits = commitList.filter(commit => !commit.localOnly);
 
 		return (
 			<div className="related">
@@ -1017,35 +1021,6 @@ class ReviewForm extends React.Component<Props, State> {
 						{this.renderCommitList(remoteCommits, excludeCommit)}
 					</>
 				)}
-			</div>
-		);
-	}
-
-	renderCommitList(commits, excludeCommit) {
-		const { commitListLength } = this.state;
-		const commitList = commits.slice(0, commitListLength);
-		const howManyMore = commits.length - commitList.length;
-		return (
-			<>
-				{commitList.map(commit =>
-					this.renderChange(
-						commit.sha,
-						!excludeCommit[commit.sha],
-						<></>,
-						// @ts-ignore
-						commit.info.shortMessage,
-						<span className="monospace">{commit.sha.substr(0, 8)}</span>,
-						e => this.handleClickChangeStart(e, commit.sha),
-						<div style={{ maxWidth: "65vw" }}>
-							{this.authorHeadshot(commit)}
-							{commit.info && <b>{commit.info.author}</b>}
-							{commit.info && commit.info.authorDate && (
-								<Timestamp relative={true} time={new Date(commit.info.authorDate).getTime()} />
-							)}
-							<div style={{ paddingTop: "10px" }}>{commit.info.shortMessage}</div>
-						</div>
-					)
-				)}
 				{howManyMore > 0 && (
 					<div
 						style={{ marginTop: "5px", cursor: "pointer" }}
@@ -1054,7 +1029,29 @@ class ReviewForm extends React.Component<Props, State> {
 						Show More
 					</div>
 				)}
-			</>
+			</div>
+		);
+	}
+
+	renderCommitList(commits, excludeCommit) {
+		return commits.map(commit =>
+			this.renderChange(
+				commit.sha,
+				!excludeCommit[commit.sha],
+				<></>,
+				// @ts-ignore
+				commit.info.shortMessage,
+				<span className="monospace">{commit.sha.substr(0, 8)}</span>,
+				e => this.handleClickChangeStart(e, commit.sha),
+				<div style={{ maxWidth: "65vw" }}>
+					{this.authorHeadshot(commit)}
+					{commit.info && <b>{commit.info.author}</b>}
+					{commit.info && commit.info.authorDate && (
+						<Timestamp relative={true} time={new Date(commit.info.authorDate).getTime()} />
+					)}
+					<div style={{ paddingTop: "10px" }}>{commit.info.shortMessage}</div>
+				</div>
+			)
 		);
 	}
 
