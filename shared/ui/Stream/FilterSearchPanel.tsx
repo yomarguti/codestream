@@ -443,6 +443,8 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 
 			// @ts-ignore
 			const itemType = isReview ? "review" : item.type;
+			// FIXME issues have blank status by default, which we interpret as open
+			const itemStatus = itemType === "issue" ? item.status || "open" : item.status;
 			// FIXME author is text, creatorId is an id
 			// @ts-ignore
 			const assignees = (isReview ? item.reviewers : item.assignees) || [];
@@ -457,7 +459,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 			if (filters.author && creatorUsername !== filters.author) return null;
 			if (filters.impacts && !impactedUsernames.includes(filters.impacts)) return null;
 			if (filters.assignee && !assigneeUsernames.includes(filters.assignee)) return null;
-			if (filters.status && item.status !== filters.status) return null;
+			if (filters.status && itemStatus !== filters.status) return null;
 			if (filters.tag && !this.hasTag(item, filters.tag)) return null;
 			if (filters.type === "review" && itemType !== filters.type) return null;
 			if (filters.type === "issue" && itemType !== filters.type) return null;
@@ -513,7 +515,6 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 			if (filters.createdOn && !sameDay(new Date(item.createdAt), filters.createdOn)) return null;
 
 			const title = item.title;
-			const status = item.status;
 			const q = filters.text;
 
 			this.sections.forEach(section => {
@@ -527,18 +528,17 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 					return;
 				switch (section) {
 					case "waitingForMe":
-						if (status === "open" && _includes(assignees || [], this.props.currentUserId))
+						if (itemStatus === "open" && _includes(assignees || [], this.props.currentUserId))
 							assignItem(item, "waitingForMe");
 						break;
 					// case "createdByMe":
 					// if (item.creatorId === currentUserId) assignItem(item, "createdByMe");
 					// break;
 					case "open":
-						if (status === "open" || (itemType == "issue" && status !== "closed"))
-							assignItem(item, "open");
+						if (itemStatus === "open") assignItem(item, "open");
 						break;
 					case "closed":
-						if (status === "closed") assignItem(item, "closed");
+						if (itemStatus === "closed") assignItem(item, "closed");
 						break;
 					default:
 						assignItem(item, "recent");
