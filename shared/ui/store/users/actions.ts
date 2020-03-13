@@ -3,7 +3,8 @@ import { action } from "../common";
 import { UsersActionsType } from "./types";
 import {
 	GetRepoScmStatusesRequestType,
-	SetModifiedReposRequestType
+	SetModifiedReposRequestType,
+	RepoScmStatus
 } from "@codestream/protocols/agent";
 import { CodeStreamState } from "../../store";
 import { HostApi } from "../../webview-api";
@@ -31,7 +32,7 @@ export const updateModifiedRepos = () => async (dispatch, getState: () => CodeSt
 
 	const invisible = currentUser.status ? currentUser.status.invisible : false;
 	if (invisible) {
-		dispatch(clearModifiedFiles());
+		dispatch(clearModifiedFiles(context.currentTeamId));
 		return;
 	}
 
@@ -40,24 +41,18 @@ export const updateModifiedRepos = () => async (dispatch, getState: () => CodeSt
 	});
 	if (!result.scm) return;
 
-	let modifiedRepos = currentUser.modifiedRepos || {};
-
-	// this is a fix for legacy modifiedRepos data that used to be
-	// an array rather than a hash based on team Id
-	if (Array.isArray(modifiedRepos)) modifiedRepos = {};
-
-	modifiedRepos[context.currentTeamId] = result.scm;
-	dispatch(_updateModifiedRepos(modifiedRepos));
+	dispatch(_updateModifiedRepos(result.scm, context.currentTeamId));
 };
 
-export const clearModifiedFiles = () => _updateModifiedRepos({});
+export const clearModifiedFiles = teamId => _updateModifiedRepos([], teamId);
 
-const _updateModifiedRepos = (modifiedRepos: { [teamId: string]: any[] }) => async (
+const _updateModifiedRepos = (modifiedRepos: RepoScmStatus[], teamId: string) => async (
 	dispatch,
 	getState: () => CodeStreamState
 ) => {
 	const response = await HostApi.instance.send(SetModifiedReposRequestType, {
-		modifiedRepos
+		modifiedRepos,
+		teamId
 	});
 	if (response && response.user) {
 		dispatch(updateUser(response.user));
