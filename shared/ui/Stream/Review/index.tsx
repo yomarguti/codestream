@@ -76,6 +76,7 @@ import { CommitList } from "./CommitList";
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
 	author: CSUser;
+	permalinkRef: React.RefObject<HTMLTextAreaElement>;
 	repoInfo: { repoName: string; branch: string }[];
 	headerError?: string;
 	canStartReview?: boolean;
@@ -402,6 +403,12 @@ const BaseReview = (props: BaseReviewProps) => {
 					)}
 				</MetaSection>
 				{props.collapsed && renderMetaSectionCollapsed(props)}
+				{props.permalinkRef && props.review && <textarea
+					key="permalink-offscreen"
+					ref={props.permalinkRef}
+					value={props.review.permalink}
+					style={{ position: "absolute", left: "-9999px" }}
+				/>}
 			</CardBody>
 			{renderedFooter}
 		</MinimumWidthCard>
@@ -587,6 +594,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 		};
 	}, shallowEqual);
 
+	const permalinkRef = React.useRef<HTMLTextAreaElement>(null);
 	const [canStartReview, setCanStartReview] = React.useState(false);
 	const [preconditionError, setPreconditionError] = React.useState("");
 	const [isEditing, setIsEditing] = React.useState(false);
@@ -612,10 +620,10 @@ const ReviewForReview = (props: PropsWithReview) => {
 		getReviewChangeRequests(state, review)
 	);
 
-	const webviewFocused = useSelector((state: CodeStreamState) => state.context.hasFocus);	
+	const webviewFocused = useSelector((state: CodeStreamState) => state.context.hasFocus);
 	useDidMount(() => {
 		if (!props.collapsed && webviewFocused) {
-			HostApi.instance.track("Page Viewed", { "Page Name": "Review Details" });		
+			HostApi.instance.track("Page Viewed", { "Page Name": "Review Details" });
 		}
 	});
 
@@ -653,7 +661,34 @@ const ReviewForReview = (props: PropsWithReview) => {
 		});
 
 	const menuItems = React.useMemo(() => {
-		const items: any[] = [];
+		const items: any[] = [
+			{
+				label: "Copy link",
+				key: "copy-permalink",
+				action: () => {
+					if (permalinkRef.current) {
+						permalinkRef.current.select();
+						document.execCommand("copy");
+					}
+				}
+			},
+			{
+				label: derivedState.userIsFollowing ? "Unfollow" : "Follow",
+				key: "toggle-follow",
+				action: () => {
+					const value = !derivedState.userIsFollowing;
+					const changeType = value ? "Followed" : "Unfollowed";
+					HostApi.instance.send(FollowReviewRequestType, {
+						id: review.id,
+						value
+					});
+					HostApi.instance.track("Notification Change", {
+						Change: `Review ${changeType}`,
+						"Source of Change": "Review menu"
+					});
+				}
+			}
+		];
 
 		if (review.creatorId === derivedState.currentUser.id) {
 			items.push(
@@ -683,26 +718,8 @@ const ReviewForReview = (props: PropsWithReview) => {
 			);
 		}
 
-		items.push({
-			label: derivedState.userIsFollowing ? "Unfollow" : "Follow",
-			key: "toggle-follow",
-			action: () => {
-				const value = !derivedState.userIsFollowing;
-				const changeType = value ? "Followed" : "Unfollowed";
-				HostApi.instance.send(FollowReviewRequestType, {
-					id: review.id,
-					value
-				});
-				HostApi.instance.track("Notification Change", {
-					Change: `Review ${changeType}`,
-					"Source of Change": "Review menu"
-				});
-			}
-		});
-
 		return items;
 	}, [review]);
-
 	if (isEditing) {
 		return (
 			<ReviewForm
@@ -719,6 +736,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 				{...baseProps}
 				author={derivedState.author}
 				review={props.review}
+				permalinkRef={permalinkRef}
 				repoInfo={repoInfo}
 				tags={tags}
 				changeRequests={changeRequests}
