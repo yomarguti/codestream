@@ -54,13 +54,11 @@ import { URI } from "vscode-uri";
 import { logError } from "../logger";
 import { DocumentData } from "../protocols/agent/agent.protocol.notifications";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
-import { Loading } from "../Container/Loading";
 import { LoadingMessage } from "../src/components/LoadingMessage";
 import { editReview, EditableAttributes } from "../store/reviews/actions";
 import { Modal } from "./Modal";
 import { FeatureFlag } from "./FeatureFlag";
 import Timestamp from "./Timestamp";
-import { DidChangeWorkspaceFoldersNotification } from "vscode-languageserver-protocol";
 
 interface Props extends ConnectedProps {
 	editingReview?: CSReview;
@@ -892,7 +890,7 @@ class ReviewForm extends React.Component<Props, State> {
 					key={id}
 					onClick={onClick}
 				>
-					<input type="checkbox" checked={onOff} style={{ flexShrink: 0 }} />
+					<input type="checkbox" checked={onOff} style={{ flexShrink: 0, pointerEvents: "none" }} />
 					<label className="ellipsis-right-container no-margin" style={{ cursor: "pointer" }}>
 						{/* headshot */}
 						<span
