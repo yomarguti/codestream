@@ -146,6 +146,11 @@
                 "category": "CodeStream"
             },
             {
+                "command": "codestream.closeReviewDiff",
+                "title": "Close Review Diff",
+                "category": "CodeStream"
+            },
+            {
                 "command": "codestream.goOffline",
                 "title": "Go Offline",
                 "category": "CodeStream"

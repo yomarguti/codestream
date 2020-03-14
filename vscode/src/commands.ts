@@ -32,6 +32,8 @@ export interface ShowReviewDiffCommandArgs {
 	path: string;
 }
 
+export interface CloseReviewDiffCommandArgs {}
+
 export interface GotoCodemarkCommandArgs {
 	source?: string;
 	index: number;
@@ -184,6 +186,22 @@ export class Commands implements Disposable {
 			`${args.path} @ ${review.title}`,
 			{ preserveFocus: false, preview: true, viewColumn: column || ViewColumn.Beside }
 		);
+
+		return true;
+	}
+
+	@command("closeReviewDiff", { showErrorMessage: "Unable to close review diff" })
+	async closeReviewDiff(_args: CloseReviewDiffCommandArgs): Promise<boolean> {
+		for (const e of window.visibleTextEditors) {
+			const uri = Uri.parse(e.document.uri.toString(false));
+
+			if (uri.scheme === "codestream-diff") {
+				// FIXME -- this is where we should close the tab, but vscode
+				// doesn't provide the right API call yet to do that
+				// await e.show(e.viewColumn);
+				// await commands.executeCommand("workbench.action.closeActiveEditor");
+			}
+		}
 
 		return true;
 	}
