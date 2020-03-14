@@ -17,7 +17,10 @@ import { getConnectedProviders } from "../providers/reducer";
 import { CodeStreamState } from "..";
 import { capitalize } from "@codestream/webview/utils";
 import { addPosts } from "../posts/actions";
-import { ReviewShowDiffRequestType } from "@codestream/protocols/webview";
+import {
+	ReviewCloseDiffRequestType,
+	ReviewShowDiffRequestType
+} from "@codestream/protocols/webview";
 
 export const reset = () => action("RESET");
 
@@ -164,6 +167,11 @@ export const fetchReview = (reviewId: string) => async dispatch => {
 
 export const showDiff = (reviewId: string, repoId: string, path: string) => async dispatch => {
 	const response = HostApi.instance.send(ReviewShowDiffRequestType, { reviewId, repoId, path });
+	// if (response.success)
+	// return dispatch()
+};
+export const closeDiff = () => async dispatch => {
+	const response = HostApi.instance.send(ReviewCloseDiffRequestType, {});
 	// if (response.success)
 	// return dispatch()
 };

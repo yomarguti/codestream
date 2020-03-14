@@ -17,6 +17,17 @@ export const ReviewShowDiffRequestType = new RequestType<
 	void
 >(`${IpcRoutes.Host}/review/showDiff`);
 
+export interface ReviewCloseDiffRequest {}
+
+export interface ReviewCloseDiffResponse {}
+
+export const ReviewCloseDiffRequestType = new RequestType<
+	ReviewCloseDiffRequest,
+	ReviewCloseDiffResponse,
+	void,
+	void
+>(`${IpcRoutes.Host}/review/closeDiff`);
+
 export interface TraverseDiffsRequest {
 	direction: "next" | "previous";
 }
