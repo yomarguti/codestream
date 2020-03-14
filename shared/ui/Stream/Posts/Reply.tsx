@@ -161,7 +161,7 @@ export const Reply = (props: ReplyProps) => {
 					<Headshot person={props.author} /> {props.author.username}
 					{emote}
 					{codemark && codemark.isChangeRequest && (
-						<span className="emote">requetsed a change</span>
+						<span className="emote">requested a change</span>
 					)}
 					<Timestamp relative time={props.post.createdAt} />
 					<div style={{ marginLeft: "auto" }}>
