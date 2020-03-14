@@ -1,0 +1,35 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../codestream-lsp-agent"
+		},
+		{
+			"path": "../codestream-components"
+		},
+		{
+			"path": "../gore"
+		}
+	],
+	"launch": {
+		"configurations": [],
+		"compounds": [
+			{
+				"name": "Launch CodeStream & Attach to Agent",
+				"configurations": ["Launch CodeStream", "Attach to Agent"]
+			}
+		]
+	},
+	"settings": {
+		"codestream.serverUrl": "https://pd-api.codestream.us",
+		"codestream.team": "PD Dogfooding2",
+		"editor.insertSpaces": false,
+		"prettier.requireConfig": true,
+		"prettier.tslintIntegration": true,
+		"search.exclude": {
+			"**/dist": true
+		}
+	}
+}
