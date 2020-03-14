@@ -160,6 +160,9 @@ export const Reply = (props: ReplyProps) => {
 				<AuthorInfo style={{ fontWeight: 700 }}>
 					<Headshot person={props.author} /> {props.author.username}
 					{emote}
+					{codemark && codemark.isChangeRequest && (
+						<span className="emote">requetsed a change</span>
+					)}
 					<Timestamp relative time={props.post.createdAt} />
 					<div style={{ marginLeft: "auto" }}>
 						{renderedMenu}
