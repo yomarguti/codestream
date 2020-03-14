@@ -1,15 +1,6 @@
 import React, { useState } from "react";
 import { ReviewPlus } from "@codestream/protocols/agent";
-import { HostApi } from "../..";
-import { ReviewShowDiffRequestType } from "@codestream/protocols/webview";
-import { ChangesetFile } from "./ChangesetFile";
-import { useSelector, useDispatch } from "react-redux";
-import { CodeStreamState } from "@codestream/webview/store";
-import { showDiff } from "@codestream/webview/store/reviews/actions";
-import { Dispatch } from "../../store/common";
 import Icon from "../Icon";
-import { safe } from "@codestream/webview/utils";
-import { getById } from "@codestream/webview/store/repos/reducer";
 import { markdownify } from "../Markdowner";
 
 export const CommitList = (props: { review: ReviewPlus }) => {
