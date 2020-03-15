@@ -15,15 +15,12 @@ import {
 import {
 	MinimumWidthCard,
 	Header,
-	AuthorInfo,
-	Title,
 	MetaSection,
 	Meta,
 	MetaLabel,
 	MetaDescription,
 	MetaSectionCollapsed,
 	HeaderActions,
-	ActionButton,
 	MetaDescriptionForAssignees,
 	MetaAssignee,
 	MetaRow,
@@ -95,10 +92,8 @@ export interface BaseReviewProps extends CardProps {
 }
 
 const Clickable = styled(Link)`
-	text-decoration: none !important;
-	:hover {
-		text-decoration: underline !important;
-	}
+	display: inline-block;
+	padding-top: 2px;
 `;
 
 const ComposeWrapper = styled.div.attrs(() => ({
@@ -388,7 +383,11 @@ const BaseReview = (props: BaseReviewProps) => {
 							<Meta id="changed-files">
 								<MetaLabel>Changed Files</MetaLabel>
 								<MetaDescriptionForAssignees>
-									<ChangesetFileList review={review} noOnClick={!props.canStartReview} />
+									<ChangesetFileList
+										review={review}
+										loading={props.headerError ? false : !props.canStartReview}
+										noOnClick={!props.canStartReview}
+									/>
 								</MetaDescriptionForAssignees>
 							</Meta>
 						</TourTip>

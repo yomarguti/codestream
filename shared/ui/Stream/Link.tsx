@@ -2,6 +2,7 @@ import { OpenUrlRequestType } from "@codestream/protocols/agent";
 import React from "react";
 import { connect } from "react-redux";
 import { HostApi } from "../webview-api";
+import styled from "styled-components";
 
 interface Props {
 	useHref?: boolean;
@@ -11,7 +12,7 @@ interface Props {
 	className?: string;
 }
 
-function Link(props: Props) {
+const Link = styled(function(props: Props) {
 	let href;
 	if (props.useHref) {
 		href = props.href;
@@ -27,7 +28,14 @@ function Link(props: Props) {
 		};
 
 	return <a {...{ href, onClickCapture: onClick, className: props.className }}>{props.children}</a>;
-}
+})`
+	text-decoration: none !important;
+	color: var(--text-color);
+	:hover {
+		color: var(--text-color-info);
+		text-decoration: none !important;
+	}
+`;
 
 const mapStateToProps = (state, props: Props) => ({
 	useHref: props.href && state.capabilities.openLink

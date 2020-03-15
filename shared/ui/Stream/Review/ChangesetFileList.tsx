@@ -16,10 +16,11 @@ const NOW = new Date().getTime(); // a rough timestamp so we know when the file 
 
 export const ChangesetFileList = (props: {
 	review: ReviewPlus;
+	loading?: boolean;
 	noOnClick?: boolean;
 	showRepoLabels?: boolean;
 }) => {
-	const { review, noOnClick } = props;
+	const { review, noOnClick, loading } = props;
 	const dispatch = useDispatch<Dispatch>();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const userId = state.session.userId || "";
@@ -55,12 +56,25 @@ export const ChangesetFileList = (props: {
 					const visitedKey = [changeset.repoId, f.file].join(":");
 					const selected = (derivedState.matchFile || "").endsWith(f.file);
 					const visited = visitedFiles[review.id][visitedKey];
-					const icon = noOnClick ? null : selected ? "arrow-right" : visited ? "ok" : "circle";
+
+					let icon;
+					// if we're loading, show a spinner
+					if (loading) icon = "sync";
+					// noOnClick means no icon indicators and no click handler
+					else if (noOnClick) icon = null;
+					// this file is currently selected, and visible in diff view
+					else if (selected) icon = "arrow-right";
+					// this file has been visitied during the review
+					else if (visited) icon = "ok";
+					// not yet visited, but part of the review
+					else icon = "circle";
+
+					const iconClass = loading ? "file-icon spin" : "file-icon";
 					return (
 						<ChangesetFile
 							selected={selected}
 							noHover={noOnClick}
-							icon={icon && <Icon name={icon} className="file-icon" />}
+							icon={icon && <Icon name={icon} className={iconClass} />}
 							onClick={async e => {
 								if (noOnClick) return;
 								e.preventDefault();
@@ -76,7 +90,7 @@ export const ChangesetFileList = (props: {
 			);
 		}
 		return files;
-	}, [review, noOnClick, derivedState.matchFile]);
+	}, [review, loading, noOnClick, derivedState.matchFile]);
 
 	return <>{changedFiles}</>;
 };

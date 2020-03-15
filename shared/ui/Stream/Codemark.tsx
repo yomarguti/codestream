@@ -1442,7 +1442,7 @@ export class Codemark extends React.Component<Props, State> {
 													this.props.setCurrentReview(this.props.review!.id);
 												}}
 											>
-												{this.props.review.title}
+												<Icon name="review" /> {this.props.review.title}
 											</Link>
 										</div>
 									</div>
