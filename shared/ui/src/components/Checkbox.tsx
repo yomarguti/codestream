@@ -8,12 +8,13 @@ interface Props {
 	className?: string;
 	checked?: boolean;
 	loading?: boolean;
+	noMargin?: boolean;
 	onChange: (value: boolean) => void;
 }
 
-const Root = styled.div`
+const Root = styled.div<{ noMargin?: boolean }>`
 	display: flex;
-	margin-bottom: 5px;
+	margin-bottom: ${props => (props.noMargin ? "0" : "5px")};
 	align-items: center;
 	> div {
 		text-align: center;
@@ -37,10 +38,10 @@ const Root = styled.div`
 `;
 
 export function Checkbox(props: PropsWithChildren<Props>) {
-	const { name, checked, onChange, loading, className } = props;
+	const { name, checked, onChange, loading, className, noMargin } = props;
 
 	return (
-		<Root className={className}>
+		<Root className={className} noMargin={noMargin}>
 			<div>
 				{loading ? (
 					<Icon className="spin" name="sync" />

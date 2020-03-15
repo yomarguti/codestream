@@ -144,6 +144,17 @@ export const Description = styled.div`
 	margin-bottom: 15px;
 `;
 
+const MetaCheckboxWithHoverIcon = styled.div`
+	display: flex;
+	.icon {
+		margin: 3px 0 0 8px;
+		display: none !important;
+	}
+	&:hover .icon {
+		display: inline-block !important;
+	}
+`;
+
 const translateStatus = (status: string) => {
 	if (status === "closed") return "Approved";
 
@@ -335,23 +346,26 @@ const BaseReview = (props: BaseReviewProps) => {
 									const formattedText = text.length > 80 ? `${text.substring(0, 77)}...` : text;
 
 									return (
-										<MetaAssignee key={codemark.id}>
+										<MetaCheckboxWithHoverIcon key={codemark.id}>
 											<Checkbox
+												noMargin
 												name={codemark.id}
 												checked={codemark.status === CodemarkStatus.Closed}
 												onChange={value => {
 													dispatch(setCodemarkStatus(codemark.id, value ? "closed" : "open"));
 												}}
-											/>
-											<Clickable
-												onClick={() => {
-													dispatch(setCurrentReview());
-													dispatch(setCurrentCodemark(codemark.id));
-												}}
 											>
 												<MarkdownText text={formattedText} />
-											</Clickable>
-										</MetaAssignee>
+											</Checkbox>
+											<Icon
+												name="link-external"
+												className="clickable"
+												onClick={() => {
+													// dispatch(setCurrentReview());
+													dispatch(setCurrentCodemark(codemark.id));
+												}}
+											/>
+										</MetaCheckboxWithHoverIcon>
 									);
 								})}
 							</MetaDescriptionForAssignees>
