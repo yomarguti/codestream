@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import cx from "classnames";
 import { CSUser } from "@codestream/protocols/api";
 import { PostPlus } from "@codestream/protocols/agent";
 import React from "react";
@@ -12,11 +13,17 @@ import { useSelector, useDispatch } from "react-redux";
 import { Post, isPending } from "@codestream/webview/store/posts/types";
 import Menu from "../Menu";
 import { confirmPopup } from "../Confirm";
-import { deletePost } from "../actions";
+import { deletePost, editPost } from "../actions";
 import { RepliesToPostContext } from "./RepliesToPost";
 import { getPost } from "@codestream/webview/store/posts/reducer";
 import { MarkdownText } from "../MarkdownText";
 import MarkerActions from "../MarkerActions";
+import MessageInput from "../MessageInput";
+import Button from "../Button";
+import { Dispatch } from "@codestream/webview/store/common";
+import { replaceHtml } from "@codestream/webview/utils";
+import { findMentionedUserIds, getTeamMembers } from "@codestream/webview/store/users/reducer";
+import { editCodemark } from "@codestream/webview/store/codemarks/actions";
 
 export interface ReplyProps {
 	author: Partial<CSUser>;
@@ -25,6 +32,7 @@ export interface ReplyProps {
 	renderMenu?: (target: any, onClose: () => void) => React.ReactNode;
 	className?: string;
 	showParentPreview?: boolean;
+	isEditing?: boolean;
 }
 
 const AuthorInfo = styled.div`
@@ -99,11 +107,49 @@ const ReviewMarkerActionsWrapper = styled.div`
 	}
 `;
 
+const ComposeWrapper = styled.div.attrs(() => ({
+	className: "compose codemark-compose"
+}))`
+	&&& {
+		padding: 0 !important;
+	}
+`;
+
 export const Reply = (props: ReplyProps) => {
+	const dispatch = useDispatch<Dispatch>();
+	const { setEditingPostId } = React.useContext(RepliesToPostContext);
 	const [menuState, setMenuState] = React.useState<{
 		open: boolean;
 		target?: any;
 	}>({ open: false, target: undefined });
+
+	const [newReplyText, setNewReplyText] = React.useState("");
+	const [isLoading, setIsLoading] = React.useState(false);
+	const teamMembers = useSelector((state: CodeStreamState) => getTeamMembers(state));
+
+	const submit = async () => {
+		// don't create empty replies
+		if (newReplyText.length === 0) return;
+
+		const { post } = props;
+		setIsLoading(true);
+
+		if (codemark) {
+			await dispatch(editCodemark(codemark.id, { text: replaceHtml(newReplyText)! }));
+		} else {
+			await dispatch(
+				editPost(
+					post.streamId,
+					post.id,
+					replaceHtml(newReplyText)!,
+					findMentionedUserIds(teamMembers, newReplyText)
+				)
+			);
+		}
+		setIsLoading(false);
+		setNewReplyText("");
+		setEditingPostId("");
+	};
 
 	const codemark = useSelector((state: CodeStreamState) =>
 		isPending(props.post) ? null : getCodemark(state.codemarks, props.post.codemarkId)
@@ -188,7 +234,50 @@ export const Reply = (props: ReplyProps) => {
 						Reply to <a>{parentPost.text.substring(0, 80)}</a>
 					</ParentPreview>
 				)}
-				{emote ? null : (
+				{props.isEditing && (
+					<>
+						<ComposeWrapper>
+							<MessageInput
+								text={postText}
+								onChange={setNewReplyText}
+								onSubmit={submit}
+								multiCompose
+								autoFocus
+							/>
+						</ComposeWrapper>
+						<div style={{ display: "flex", justifyContent: "flex-end" }}>
+							<Button
+								className="control-button cancel"
+								style={{
+									// fixed width to handle the isLoading case
+									width: "80px",
+									margin: "10px 10px"
+								}}
+								onClick={() => {
+									setEditingPostId("");
+									setNewReplyText("");
+								}}
+							>
+								Cancel
+							</Button>
+							<Button
+								style={{
+									// fixed width to handle the isLoading case
+									width: "80px",
+									margin: "10px 0"
+								}}
+								className={cx("control-button", { cancel: newReplyText.length === 0 })}
+								type="submit"
+								disabled={newReplyText.length === 0}
+								onClick={submit}
+								loading={isLoading}
+							>
+								Submit
+							</Button>
+						</div>
+					</>
+				)}
+				{emote || props.isEditing ? null : (
 					<>
 						<ReplyText text={postText} />
 						{markers}
@@ -208,6 +297,8 @@ const NestedReply = (props: { post: Post; threadId: string }) => {
 	const author = useSelector((state: CodeStreamState) => state.users[props.post.creatorId]);
 	const currentUserId = useSelector((state: CodeStreamState) => state.session.userId);
 
+	const editReply = () => {};
+
 	const menuItems = React.useMemo(() => {
 		const menuItems: any[] = [];
 
@@ -218,6 +309,7 @@ const NestedReply = (props: { post: Post; threadId: string }) => {
 		});
 
 		if (props.post.creatorId === currentUserId) {
+			// menuItems.push({ label: "Edit", key: "edit", action: editReply });
 			menuItems.push({
 				label: "Delete",
 				key: "delete",

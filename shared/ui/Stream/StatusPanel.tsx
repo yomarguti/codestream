@@ -160,7 +160,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const [icon, setIcon] = useState(status.icon || ":desktop_computer:");
 	const [clearAfter, setClearAfter] = useState("");
 	const [emojiMenuOpen, setEmojiMenuOpen] = useState(false);
-	const [emojiMenuTarget, setEmojiMenuTarget] = useState();
+	const [emojiMenuTarget, setEmojiMenuTarget] = useState(null as any);
 	const [moveTicket, setMoveTicket] = useState(true);
 	const [updateExternal, setUpdateExternal] = useState(true);
 	const [createPR, setCreatePR] = useState(true);

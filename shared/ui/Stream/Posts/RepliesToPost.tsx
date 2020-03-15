@@ -30,7 +30,10 @@ const InlineMessageContainer = styled.div`
 	margin-top: -15px; // need to make up for the bottom margin from the preceding reply
 `;
 
-export const RepliesToPostContext = React.createContext({ setReplyingToPostId(postId: string) {} });
+export const RepliesToPostContext = React.createContext({
+	setReplyingToPostId(postId: string) {},
+	setEditingPostId(postId: string) {}
+});
 
 export const RepliesToPost = (props: { streamId: string; parentPostId: string }) => {
 	const dispatch = useDispatch<Dispatch>();
@@ -45,11 +48,15 @@ export const RepliesToPost = (props: { streamId: string; parentPostId: string })
 	const allUsers = useSelector((state: CodeStreamState) => state.users);
 	const teamMates = useSelector((state: CodeStreamState) => getTeamMates(state));
 	const [replyingToPostId, setReplyingToPostId] = React.useState<string | null>();
+	const [editingPostId, setEditingPostId] = React.useState<string | null>();
 	const [newReplyText, setNewReplyText] = React.useState("");
 	const [isLoading, setIsLoading] = React.useState(false);
 
 	const contextValue = React.useMemo(
-		() => ({ setReplyingToPostId: setReplyingToPostId as any }),
+		() => ({
+			setReplyingToPostId: setReplyingToPostId as any,
+			setEditingPostId: setEditingPostId as any
+		}),
 		[]
 	);
 
@@ -81,6 +88,7 @@ export const RepliesToPost = (props: { streamId: string; parentPostId: string })
 
 		menuItems.push({ label: "Reply", key: "reply", action: () => setReplyingToPostId(reply.id) });
 		if (reply.creatorId === currentUserId) {
+			menuItems.push({ label: "Edit", key: "edit", action: () => setEditingPostId(reply.id) });
 			menuItems.push({
 				label: "Delete",
 				key: "delete",
@@ -119,6 +127,7 @@ export const RepliesToPost = (props: { streamId: string; parentPostId: string })
 						<Reply
 							author={allUsers[reply.creatorId]}
 							post={reply}
+							isEditing={reply.id === editingPostId}
 							nestedReplies={nestedRepliesByParent[reply.id] as any}
 							renderMenu={(target, close) => (
 								<Menu target={target} action={close} items={menuItems} />
