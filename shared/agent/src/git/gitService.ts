@@ -198,12 +198,22 @@ export class GitService implements IGitService, Disposable {
 		uriOrPath: URI | string,
 		ref: string
 	): Promise<string | undefined> {
-		const [dir, filename] = Strings.splitPath(
-			typeof uriOrPath === "string" ? uriOrPath : uriOrPath.fsPath
-		);
+		const fsPath = typeof uriOrPath === "string" ? uriOrPath : uriOrPath.fsPath;
+		const repo = await this.getRepositoryByFilePath(fsPath);
+		if (!repo) return undefined;
+
+		let fileRelativePath = Strings.normalizePath(path.relative(repo.path, fsPath));
+		if (fileRelativePath[0] === "/") {
+			fileRelativePath = fileRelativePath.substr(1);
+		}
 
 		try {
-			const data = await git({ cwd: dir, encoding: "utf8" }, "show", `${ref}:./${filename}`, "--");
+			const data = await git(
+				{ cwd: repo.path, encoding: "utf8" },
+				"show",
+				`${ref}:./${fileRelativePath}`,
+				"--"
+			);
 			return data;
 		} catch (ex) {
 			const msg = ex && ex.toString();
