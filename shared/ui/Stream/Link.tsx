@@ -12,7 +12,7 @@ interface Props {
 	className?: string;
 }
 
-const Link = styled(function(props: Props) {
+function Link(props: Props) {
 	let href;
 	if (props.useHref) {
 		href = props.href;
@@ -28,14 +28,7 @@ const Link = styled(function(props: Props) {
 		};
 
 	return <a {...{ href, onClickCapture: onClick, className: props.className }}>{props.children}</a>;
-})`
-	text-decoration: none !important;
-	color: var(--text-color);
-	:hover {
-		color: var(--text-color-info);
-		text-decoration: none !important;
-	}
-`;
+}
 
 const mapStateToProps = (state, props: Props) => ({
 	useHref: props.href && state.capabilities.openLink
