@@ -310,6 +310,9 @@ const ActivityItemWrapper = styled(
 		`
 			: ""}
 	margin-left: 30px;
+	@media only screen and (max-width: 350px) {
+		margin-left: 0;
+	}
 `;
 
 const ActivityVerb = styled.div`
@@ -465,7 +468,7 @@ const RepliesForActivity = (props: { parentPost?: PostPlus; pinnedReplies?: stri
 
 const ActivityWrapper = styled.div`
 	// tag: codemark-width
-	margin: 5px 20px 30px 20px;
+	margin: 5px 10px 30px 20px;
 	.codemark-details {
 		margin-bottom: 5px;
 	}

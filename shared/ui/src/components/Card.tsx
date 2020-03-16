@@ -33,9 +33,9 @@ const Root = styled.div((props: Omit<PropsWithTheme<CardProps>, "hoverEffect">) 
 	return `
 		cursor: ${props.onClick != undefined ? "pointer" : "default"};
 		display: flex;
-  		box-shadow: ${boxShadow};
- 		background: ${theme.colors.baseBackground};
-	    border: 1px solid ${theme.colors.baseBorder};
+		box-shadow: ${boxShadow};
+		background: ${theme.colors.baseBackground};
+		border: 1px solid ${theme.colors.baseBorder};
  	 `;
 });
 
