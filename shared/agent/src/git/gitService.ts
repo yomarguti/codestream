@@ -805,6 +805,8 @@ export class GitService implements IGitService, Disposable {
 			linesAdded: number;
 			linesRemoved: number;
 			status: FileStatus;
+			statusX: FileStatus;
+			statusY: FileStatus;
 		}[]
 	> {
 		try {
@@ -830,6 +832,8 @@ export class GitService implements IGitService, Disposable {
 				linesAdded: number;
 				linesRemoved: number;
 				status: FileStatus;
+				statusX: FileStatus;
+				statusY: FileStatus;
 			}[] = [];
 			data
 				.trim()
@@ -845,7 +849,9 @@ export class GitService implements IGitService, Disposable {
 								linesRemoved: parseInt(lineData[2], 10),
 								oldFile,
 								file,
-								status: FileStatus.modified
+								status: FileStatus.modified,
+								statusX: FileStatus.modified,
+								statusY: FileStatus.modified
 							});
 						}
 					}
@@ -904,7 +910,16 @@ export class GitService implements IGitService, Disposable {
 	async getStatus(
 		repoPath: string,
 		includeSaved: boolean
-	): Promise<{ [file: string]: FileStatus } | undefined> {
+	): Promise<
+		| {
+				[file: string]: {
+					statusX?: FileStatus;
+					statusY?: FileStatus;
+					status: FileStatus;
+				};
+		  }
+		| undefined
+	> {
 		try {
 			let data: string | undefined;
 			try {
@@ -913,23 +928,38 @@ export class GitService implements IGitService, Disposable {
 			} catch {}
 			if (!data) return undefined;
 
-			const ret: { [file: string]: FileStatus } = {};
+			const ret: {
+				[file: string]: {
+					statusX?: FileStatus;
+					statusY?: FileStatus;
+					status: FileStatus;
+				};
+			} = {};
 			// FIXME support deleted files
 			data.split("\n").forEach(line => {
 				const lineData = line.match(/(.)(.)\s+(.*)/);
 				if (lineData && lineData[3]) {
-					let file = lineData[3];
+					let [, statusXChar, statusYChar, file] = lineData;
+					const statusX = this.getStatusByChar(statusXChar);
+					const statusY = this.getStatusByChar(statusYChar);
+					let status;
 					const rename = file.match(/ -> (.*)/);
 					if (rename) file = rename[1];
-					if (lineData[1] === "?" && includeSaved) {
-						ret[file] = FileStatus.untracked;
+					if (statusXChar === "?" && includeSaved) {
+						status = FileStatus.untracked;
 					} else {
-						let status = this.getStatusByChar(lineData[1]);
-						if (status) ret[file] = status;
+						if (statusX) status = statusX;
 						if (includeSaved) {
-							status = this.getStatusByChar(lineData[2]);
-							if (status) ret[file] = status;
+							if (statusY) status = statusY;
 						}
+					}
+
+					if (status) {
+						ret[file] = {
+							statusX,
+							statusY,
+							status
+						};
 					}
 				}
 			});

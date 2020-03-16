@@ -121,13 +121,13 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		const rightBasePath = path.join(repo.path, rightBaseRelativePath);
 
 		const leftBaseContents =
-			fileInfo.status === FileStatus.added
+			fileInfo.statusX === FileStatus.added
 				? ""
 				: (await git.getFileContentForRevision(leftBasePath, diffs.leftBaseSha)) || "";
 		const leftContents =
 			leftDiff !== undefined ? applyPatch(leftBaseContents, leftDiff) : leftBaseContents;
 		const rightBaseContents =
-			fileInfo.status === FileStatus.added
+			fileInfo.statusX === FileStatus.added
 				? ""
 				: diffs.leftBaseSha === diffs.rightBaseSha
 				? leftBaseContents

@@ -245,6 +245,8 @@ export class ScmManager {
 			linesAdded: number;
 			linesRemoved: number;
 			status: FileStatus;
+			statusX?: FileStatus;
+			statusY?: FileStatus;
 		}[] = [];
 		const authorMap: any = {};
 		const authors: CoAuthors[] = [];
@@ -319,20 +321,20 @@ export class ScmManager {
 						stagedFiles = ret2.map(line => line.file);
 					}
 					if (includeSaved || includeStaged) {
-						const ret = await git.getStatus(repoPath, includeSaved);
-						if (ret) {
-							Object.keys(ret).forEach(file => {
+						const statusByFile = await git.getStatus(repoPath, includeSaved);
+						if (statusByFile) {
+							Object.keys(statusByFile).forEach(file => {
 								const found = modifiedFiles?.find(line => line.file === file);
 								if (found) {
-									found.status = ret[file];
+									Object.assign(found, statusByFile[file]);
 								} else {
-									if (ret[file] === FileStatus.deleted) {
+									if (statusByFile[file].status === FileStatus.deleted) {
 										modifiedFiles?.unshift({
 											oldFile: file,
 											file,
 											linesAdded: 0,
 											linesRemoved: 0,
-											status: ret[file]
+											...statusByFile[file]
 										});
 									} else {
 										modifiedFiles?.push({
@@ -340,7 +342,7 @@ export class ScmManager {
 											file,
 											linesAdded: 0,
 											linesRemoved: 0,
-											status: ret[file]
+											...statusByFile[file]
 										});
 									}
 								}

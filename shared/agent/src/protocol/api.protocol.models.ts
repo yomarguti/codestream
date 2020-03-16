@@ -168,6 +168,8 @@ export interface ReviewChangesetFileInfo {
 	linesAdded: number;
 	linesRemoved: number;
 	status: FileStatus;
+	statusX?: FileStatus;
+	statusY?: FileStatus;
 	reviewStatus?: { [reviewerId: string]: "visited" | "current" };
 }
 
