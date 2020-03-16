@@ -102,6 +102,9 @@ const ComposeWrapper = styled.div.attrs(() => ({
 	&&& {
 		padding: 0 !important;
 	}
+	.message-input#input-div {
+		max-width: none !important;
+	}
 `;
 
 const MetaRepoInfo = styled.div`
@@ -535,7 +538,7 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 				</div>
 				<div style={{ textAlign: "right", flexGrow: 1 }}>
 					<Tooltip
-						content={
+						title={
 							<span>
 								Submit Reply
 								<span className="keybinding extra-pad">
@@ -543,7 +546,7 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 								</span>
 							</span>
 						}
-						placement="bottom"
+						placement="bottomRight"
 						delay={1}
 					>
 						<Button
