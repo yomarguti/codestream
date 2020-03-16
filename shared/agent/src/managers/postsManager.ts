@@ -924,7 +924,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			Logger.log(`createSharingCodemarkPost: will save uncommitted locations`);
 			MarkerLocationManager.saveUncommittedLocations(
 				markers,
-				markerCreationDescriptors.map(descriptor => descriptor.backtrackedLocation)
+				markerCreationDescriptors.map(descriptor => descriptor.uncommittedBacktrackedLocation)
 			).then(() => {
 				Logger.log("Uncommitted locations saved to local cache");
 			});
@@ -1413,7 +1413,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				Logger.log(`createPostWithMarker: will save uncommitted locations`);
 				MarkerLocationManager.saveUncommittedLocations(
 					markers,
-					markerCreationDescriptors.map(descriptor => descriptor.backtrackedLocation)
+					markerCreationDescriptors.map(descriptor => descriptor.uncommittedBacktrackedLocation)
 				).then(() => {
 					Logger.log("Uncommitted locations saved to local cache");
 				});

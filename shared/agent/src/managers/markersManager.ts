@@ -130,7 +130,7 @@ export class MarkersManager extends EntityManagerBase<CSMarker> {
 
 		MarkerLocationManager.saveUncommittedLocations(
 			[response.marker],
-			[descriptor.backtrackedLocation]
+			[descriptor.uncommittedBacktrackedLocation]
 		).then(() => {
 			Logger.log("Uncommitted locations saved to local cache");
 		});

@@ -23,7 +23,7 @@ import { ManagerBase } from "./baseManager";
 import { IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { Id } from "./entityManager";
-import { BacktrackedLocation } from "./markersBuilder";
+import { UncommittedBacktrackedLocation } from "./markersBuilder";
 
 export interface Markerish {
 	id: string;
@@ -756,7 +756,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 
 	static async saveUncommittedLocations(
 		markers: CSMarker[],
-		backtrackedLocations: (BacktrackedLocation | undefined)[]
+		backtrackedLocations: (UncommittedBacktrackedLocation | undefined)[]
 	) {
 		let index = 0;
 		for await (const marker of markers) {

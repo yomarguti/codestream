@@ -64,7 +64,7 @@ export abstract class MarkersBuilder {
 		Logger.log(`prepareMarkerCreationDescriptor: preparation complete`);
 		return {
 			marker,
-			backtrackedLocation
+			uncommittedBacktrackedLocation: backtrackedLocation
 		};
 	}
 
@@ -73,7 +73,7 @@ export abstract class MarkersBuilder {
 		location: CSMarkerLocation
 	): Promise<{
 		referenceLocations: CSReferenceLocation[];
-		backtrackedLocation?: BacktrackedLocation;
+		backtrackedLocation?: UncommittedBacktrackedLocation;
 		fileCurrentCommitSha?: string;
 	}>;
 
@@ -163,7 +163,14 @@ class DefaultMarkersBuilder extends MarkersBuilder {
 		super(documentId);
 	}
 
-	protected async getLocationInfo(source: CodeBlockSource | undefined, location: CSMarkerLocation) {
+	protected async getLocationInfo(
+		source: CodeBlockSource | undefined,
+		location: CSMarkerLocation
+	): Promise<{
+		referenceLocations: CSReferenceLocation[];
+		backtrackedLocation?: UncommittedBacktrackedLocation;
+		fileCurrentCommitSha?: string;
+	}> {
 		if (source == null) return this.getLocationInfoWithoutSource();
 		if (source.revision == null) return this.getLocationInfoWithoutRevision(source.repoPath);
 		return this.getLocationInfoCore(source.repoPath, source.revision, location);
@@ -200,7 +207,11 @@ class DefaultMarkersBuilder extends MarkersBuilder {
 		repoPath: string,
 		fileCurrentCommitSha: string,
 		location: CSMarkerLocation
-	) {
+	): Promise<{
+		referenceLocations: CSReferenceLocation[];
+		backtrackedLocation?: UncommittedBacktrackedLocation;
+		fileCurrentCommitSha?: string;
+	}> {
 		Logger.log(`prepareMarkerCreationDescriptor: source revision ${fileCurrentCommitSha}`);
 
 		const { git } = SessionContainer.instance();
@@ -255,7 +266,7 @@ class DefaultMarkersBuilder extends MarkersBuilder {
 		});
 
 		const meta = locationAtCurrentCommit.meta || {};
-		const canonical = !meta.startWasDeleted || !meta.endWasDeleted;
+		const canonical = !meta.startWasDeleted && !meta.endWasDeleted;
 		const referenceLocation = {
 			commitHash: fileCurrentCommitSha,
 			location: MarkerLocation.toArray(locationAtCurrentCommit),
@@ -270,9 +281,19 @@ class DefaultMarkersBuilder extends MarkersBuilder {
 			`prepareMarkerCreationDescriptor: ${referenceLocations.length} reference locations calculated`
 		);
 
+		let backtrackedLocation: UncommittedBacktrackedLocation | undefined;
+		if (!canonical) {
+			backtrackedLocation = {
+				atCurrentCommit: locationAtCurrentCommit,
+				atDocument: location,
+				fileContents,
+				filePath
+			};
+		}
+
 		return {
 			referenceLocations,
-			backtrackedLocations,
+			backtrackedLocation,
 			fileCurrentCommitSha
 		};
 	}
@@ -309,7 +330,14 @@ class ReviewDiffMarkersBuilder extends MarkersBuilder {
 		this._path = path;
 	}
 
-	protected async getLocationInfo(source: CodeBlockSource | undefined, location: CSMarkerLocation) {
+	protected async getLocationInfo(
+		source: CodeBlockSource | undefined,
+		location: CSMarkerLocation
+	): Promise<{
+		referenceLocations: CSReferenceLocation[];
+		backtrackedLocation?: UncommittedBacktrackedLocation;
+		fileCurrentCommitSha?: string;
+	}> {
 		const { reviews } = SessionContainer.instance();
 		const review = await reviews.getById(this._reviewId);
 
@@ -366,7 +394,7 @@ class ReviewDiffMarkersBuilder extends MarkersBuilder {
 	}
 }
 
-export interface BacktrackedLocation {
+export interface UncommittedBacktrackedLocation {
 	atDocument: CSMarkerLocation;
 	atCurrentCommit: CSMarkerLocation;
 	fileContents: string;
@@ -375,7 +403,7 @@ export interface BacktrackedLocation {
 
 export interface MarkerCreationDescriptor {
 	marker: CreateMarkerRequest;
-	backtrackedLocation: BacktrackedLocation | undefined;
+	uncommittedBacktrackedLocation: UncommittedBacktrackedLocation | undefined;
 }
 
 interface RepoIdentifier {
