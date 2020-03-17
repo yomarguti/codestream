@@ -1415,13 +1415,13 @@ class ReviewForm extends React.Component<Props, State> {
 							</div>
 						</div>
 					)}
+					<div key="clear" style={{ clear: "both" }} />
 					{this.state.reviewCreationError && (
 						<div className="color-warning" style={{ display: "flex", padding: "10px 0" }}>
 							<Icon name="alert" />
 							<div style={{ paddingLeft: "10px" }}>{this.state.reviewCreationError}</div>
 						</div>
 					)}
-					<div key="clear" style={{ clear: "both" }} />
 				</fieldset>
 			</form>
 		];
