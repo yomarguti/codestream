@@ -1,5 +1,29 @@
 # Change Log
 
+## [6.3.1] - 2020-3-17
+
+### Added
+
+- Added "Copy link" option to code review ellipses menu
+- Added a reply icon on hover over any reply in a code review's thread
+
+### Changed
+
+- Change requests in a code review's thread are now identified with a new activity line (e.g., Dave requested a change)
+- When opening a code review, there are now spinners to the left of the files until we are sure you can click on those files
+
+### Fixed
+
+- Fixes an issue with the "Open & Assigned to Me" filter not including issue codemarks
+- Fixes an issue where the option to edit a reply to a code review was missing
+- Fixes an error when creating a codemark in code review for a file that had permalinks
+- Fixes an issue with diffs on new/added files in a code review
+- Fixes an issue where diff was not displayed for files in directories that do not exist in current working tree
+- Fixes an issue where code review creation fails silently if diffs are too large
+- Fixes UI issues on the form to request a code review
+- Fixes an issue with incorrect commits being included in a review after switching repos
+- Fixes an issue where you'd get roadblocked when using "Open in IDE" with a review not associated with your active IDE window
+
 ## [6.3.0] - 2020-3-10
 
 ### Added
