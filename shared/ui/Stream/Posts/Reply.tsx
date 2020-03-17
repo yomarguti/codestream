@@ -225,6 +225,7 @@ export const Reply = (props: ReplyProps) => {
 					<Timestamp relative time={props.post.createdAt} />
 					<div style={{ marginLeft: "auto" }}>
 						<Icon
+							title="Reply"
 							name="reply"
 							className="reply clickable"
 							onClick={() => setReplyingToPostId(props.threadId || props.post.id)}
