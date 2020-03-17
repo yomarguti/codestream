@@ -33,6 +33,7 @@ export interface ReplyProps {
 	className?: string;
 	showParentPreview?: boolean;
 	editingPostId?: string;
+	threadId?: string; // only set for nested replies
 }
 
 const AuthorInfo = styled.div`
@@ -62,8 +63,12 @@ const Root = styled.div`
 		font-weight: 700;
 	}
 
-	${KebabIcon} {
+	${KebabIcon}, .icon.reply {
 		visibility: hidden;
+	}
+	.icon.reply {
+		margin-right: 10px;
+		vertical-align: -2px;
 	}
 `;
 
@@ -71,8 +76,14 @@ const ReplyBody = styled.span`
 	display: flex;
 	flex-direction: column;
 
-	:hover ${KebabIcon} {
+	:hover ${KebabIcon}, :hover .icon.reply {
 		visibility: visible;
+	}
+	:hover .icon.reply {
+		opacity: 0.6;
+	}
+	:hover .icon.reply:hover {
+		opacity: 1;
 	}
 `;
 
@@ -117,7 +128,7 @@ const ComposeWrapper = styled.div.attrs(() => ({
 
 export const Reply = (props: ReplyProps) => {
 	const dispatch = useDispatch<Dispatch>();
-	const { setEditingPostId } = React.useContext(RepliesToPostContext);
+	const { setEditingPostId, setReplyingToPostId } = React.useContext(RepliesToPostContext);
 	const [menuState, setMenuState] = React.useState<{
 		open: boolean;
 		target?: any;
@@ -213,6 +224,11 @@ export const Reply = (props: ReplyProps) => {
 					)}
 					<Timestamp relative time={props.post.createdAt} />
 					<div style={{ marginLeft: "auto" }}>
+						<Icon
+							name="reply"
+							className="reply clickable"
+							onClick={() => setReplyingToPostId(props.threadId || props.post.id)}
+						/>
 						{renderedMenu}
 						{props.renderMenu && (
 							<KebabIcon
@@ -349,6 +365,7 @@ const NestedReply = (props: { post: Post; threadId: string; editingPostId?: stri
 			author={author}
 			post={props.post}
 			editingPostId={props.editingPostId}
+			threadId={props.threadId}
 			renderMenu={(target, close) => <Menu target={target} action={close} items={menuItems} />}
 		/>
 	);
