@@ -48,7 +48,7 @@ export const RepliesToPost = (props: { streamId: string; parentPostId: string })
 	const allUsers = useSelector((state: CodeStreamState) => state.users);
 	const teamMates = useSelector((state: CodeStreamState) => getTeamMates(state));
 	const [replyingToPostId, setReplyingToPostId] = React.useState<string | null>();
-	const [editingPostId, setEditingPostId] = React.useState<string | null>();
+	const [editingPostId, setEditingPostId] = React.useState<string | undefined>();
 	const [newReplyText, setNewReplyText] = React.useState("");
 	const [isLoading, setIsLoading] = React.useState(false);
 
@@ -127,7 +127,7 @@ export const RepliesToPost = (props: { streamId: string; parentPostId: string })
 						<Reply
 							author={allUsers[reply.creatorId]}
 							post={reply}
-							isEditing={reply.id === editingPostId}
+							editingPostId={editingPostId}
 							nestedReplies={nestedRepliesByParent[reply.id] as any}
 							renderMenu={(target, close) => (
 								<Menu target={target} action={close} items={menuItems} />

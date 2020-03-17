@@ -32,7 +32,7 @@ export interface ReplyProps {
 	renderMenu?: (target: any, onClose: () => void) => React.ReactNode;
 	className?: string;
 	showParentPreview?: boolean;
-	isEditing?: boolean;
+	editingPostId?: string;
 }
 
 const AuthorInfo = styled.div`
@@ -200,6 +200,8 @@ export const Reply = (props: ReplyProps) => {
 		));
 	})();
 
+	const isEditing = props.editingPostId === props.post.id;
+
 	return (
 		<Root className={props.className}>
 			<ReplyBody>
@@ -234,7 +236,7 @@ export const Reply = (props: ReplyProps) => {
 						Reply to <a>{parentPost.text.substring(0, 80)}</a>
 					</ParentPreview>
 				)}
-				{props.isEditing && (
+				{isEditing && (
 					<>
 						<ComposeWrapper>
 							<MessageInput
@@ -277,7 +279,7 @@ export const Reply = (props: ReplyProps) => {
 						</div>
 					</>
 				)}
-				{emote || props.isEditing ? null : (
+				{emote || isEditing ? null : (
 					<>
 						<ReplyText text={postText} />
 						{markers}
@@ -286,18 +288,23 @@ export const Reply = (props: ReplyProps) => {
 			</ReplyBody>
 			{props.nestedReplies &&
 				props.nestedReplies.length > 0 &&
-				props.nestedReplies.map(r => <NestedReply key={r.id} post={r} threadId={props.post.id} />)}
+				props.nestedReplies.map(r => (
+					<NestedReply
+						editingPostId={props.editingPostId}
+						key={r.id}
+						post={r}
+						threadId={props.post.id}
+					/>
+				))}
 		</Root>
 	);
 };
 
-const NestedReply = (props: { post: Post; threadId: string }) => {
+const NestedReply = (props: { post: Post; threadId: string; editingPostId?: string }) => {
 	const dispatch = useDispatch();
-	const { setReplyingToPostId } = React.useContext(RepliesToPostContext);
+	const { setReplyingToPostId, setEditingPostId } = React.useContext(RepliesToPostContext);
 	const author = useSelector((state: CodeStreamState) => state.users[props.post.creatorId]);
 	const currentUserId = useSelector((state: CodeStreamState) => state.session.userId);
-
-	const editReply = () => {};
 
 	const menuItems = React.useMemo(() => {
 		const menuItems: any[] = [];
@@ -309,7 +316,7 @@ const NestedReply = (props: { post: Post; threadId: string }) => {
 		});
 
 		if (props.post.creatorId === currentUserId) {
-			// menuItems.push({ label: "Edit", key: "edit", action: editReply });
+			menuItems.push({ label: "Edit", key: "edit", action: () => setEditingPostId(props.post.id) });
 			menuItems.push({
 				label: "Delete",
 				key: "delete",
@@ -341,6 +348,7 @@ const NestedReply = (props: { post: Post; threadId: string }) => {
 		<NestedReplyRoot
 			author={author}
 			post={props.post}
+			editingPostId={props.editingPostId}
 			renderMenu={(target, close) => <Menu target={target} action={close} items={menuItems} />}
 		/>
 	);
