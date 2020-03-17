@@ -1384,7 +1384,7 @@ class ReviewForm extends React.Component<Props, State> {
 								</Button>
 							</Tooltip>
 							{!scmError && (
-								<Tooltip title={submitTip} placement="bottom" delay={1}>
+								<Tooltip title={submitTip} placement="bottomRight" delay={1}>
 									<Button
 										key="submit"
 										style={{
