@@ -1025,6 +1025,9 @@ export class SlackSharingApiProvider {
 			return response as TResponse;
 		} catch (ex) {
 			Logger.error(ex, cc, ex.data != null ? JSON.stringify(ex.data) : undefined);
+			if (ex.data && ex.data.response_metadata && ex.data.response_metadata.messages  && ex.data.response_metadata.messages.length) {
+				ex.message = `${ex.message}. ${ex.data.response_metadata.messages.join(",")}`;
+			}
 			throw ex;
 		}
 	}
