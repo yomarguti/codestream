@@ -67,8 +67,10 @@ export class UsersManager extends CachedEntityManagerBase<CSUser> {
 		}
 
 		const users = (await this.get()).users;
-		return users.filter(u =>
-			emails.includes(options.ignoreCase ? u.email.toLocaleUpperCase() : u.email)
+		return users.filter(
+			u =>
+				u.email != null &&
+				emails.includes(options.ignoreCase ? u.email.toLocaleUpperCase() : u.email)
 		);
 	}
 
