@@ -1,8 +1,3 @@
-<p align="center">
-  <br />
-  <a title="Learn more about CodeStream" href="https://codestream.com?utm_source=vscmarket&utm_medium=banner&utm_campaign=codestream"><img src="https://alt-images.codestream.com/codestream_logo_vscmarketplace.png" alt="CodeStream Logo" /></a>
-</p>
-
 # CodeStream
 
 The World's Best Code Discussion Tool. Take the pain out of code reviews, resolve issues faster, and dramatically improve code quality by increasing communication between the developers on your team.
@@ -77,3 +72,8 @@ Codestream is free to try for 30 days for teams of all sizes. CodeStream is free
 # Help & Feedback
 
 Check out our [wiki](https://github.com/TeamCodeStream/CodeStream/wiki) for more information on getting started with CodeStream. Please follow [@teamcodestream](http://twitter.com/teamcodestream) for product updates and to share feedback and questions. You can also email us at support@codestream.com.
+
+<p align="center">
+  <br />
+  <a title="Learn more about CodeStream" href="https://codestream.com?utm_source=vscmarket&utm_medium=banner&utm_campaign=codestream"><img src="https://alt-images.codestream.com/codestream_logo_vscmarketplace.png" alt="CodeStream Logo" /></a>
+</p>
