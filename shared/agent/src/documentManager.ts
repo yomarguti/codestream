@@ -108,6 +108,24 @@ export class DocumentManager implements Disposable {
 			return doc;
 		}
 
+		match = unescapedRegex.exec(encodedSpacesUri);
+		if (match != null) {
+			const upperCaseDrive = encodedSpacesUri.replace(unescapedRegex, function(
+				_,
+				start: string,
+				drive: string,
+				end: string
+			) {
+				return `${start}${drive.toUpperCase()}:${end}`;
+			});
+			doc = this._documents.get(upperCaseDrive);
+			if (doc !== undefined) {
+				this._normalizedUriLookup.set(uri, doc.uri);
+			}
+
+			return doc;
+		}
+
 		match = escapedRegex.exec(uri);
 		if (match != null) {
 			let unescapedUri = uri.replace(escapedRegex, function(
