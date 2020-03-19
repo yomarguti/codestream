@@ -126,6 +126,7 @@ export const ActivityPanel = () => {
 
 		return derivedState.activity.map(({ type, record }) => {
 			const person = derivedState.users[record.creatorId || ""];
+			if (!person) return null;
 
 			if (type === "codemark") {
 				const codemark = record as CodemarkPlus;
