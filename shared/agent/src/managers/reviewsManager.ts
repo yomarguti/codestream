@@ -98,6 +98,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	}
 
 	@lspHandler(GetReviewContentsRequestType)
+	@log()
 	async getContents(request: GetReviewContentsRequest): Promise<GetReviewContentsResponse> {
 		const { git } = SessionContainer.instance();
 		const review = await this.getById(request.reviewId);
