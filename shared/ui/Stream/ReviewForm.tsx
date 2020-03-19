@@ -451,7 +451,10 @@ class ReviewForm extends React.Component<Props, State> {
 					}
 				}
 			} else if (this.props.createPostAndReview) {
-				const { scm } = repoStatus;
+				let scm;
+				if (repoStatus) {
+					scm = repoStatus.scm;
+				}				
 				const hasSavedFiles = scm ? scm.savedFiles.length > 0 : false;
 				const hasStagedFiles = scm ? scm.stagedFiles.length > 0 : false;
 
@@ -465,7 +468,7 @@ class ReviewForm extends React.Component<Props, State> {
 					status: "open",
 					repoChanges: [
 						{
-							scm: repoStatus.scm,
+							scm: scm,
 							startCommit,
 							excludeCommit,
 							excludedFiles: keyFilter(excludedFiles),
@@ -1107,18 +1110,26 @@ class ReviewForm extends React.Component<Props, State> {
 		return <div className="no-matches">No changes found or selected on this branch.</div>;
 	}
 
+	noScm() {
+		return <div className="no-matches">No repo or changes found.</div>;
+	}
+
 	renderChangedFiles() {
 		const { repoStatus } = this.state;
+		let scm;
 
 		let changedFiles = <></>;
 		if (repoStatus) {
-			const { scm } = repoStatus;
+			scm = repoStatus.scm;
 			if (scm) {
 				const { modifiedFiles } = scm;
 				const modified = modifiedFiles.filter(f => !this.excluded(f.file));
 				if (modified.length === 0) return this.nothingToReview();
 				changedFiles = <>{modified.map(file => this.renderFile(file))}</>;
 			}
+		}
+		if (!scm) {
+			return this.noScm();
 		}
 
 		return [
