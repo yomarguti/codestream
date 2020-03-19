@@ -69,6 +69,7 @@ import { Loading } from "@codestream/webview/Container/Loading";
 import { TourTip } from "@codestream/webview/src/components/TourTip";
 import { SearchContext } from "../SearchContextProvider";
 import { CommitList } from "./CommitList";
+import { SharingModal } from '../SharingModal';
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
@@ -616,6 +617,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 	const [canStartReview, setCanStartReview] = React.useState(false);
 	const [preconditionError, setPreconditionError] = React.useState("");
 	const [isEditing, setIsEditing] = React.useState(false);
+	const [shareModalOpen, setShareModalOpen] = React.useState(false);
 
 	const tags = React.useMemo(
 		() => (review.tags ? mapFilter(review.tags, id => derivedState.teamTagsById[id]) : emptyArray),
@@ -685,6 +687,11 @@ const ReviewForReview = (props: PropsWithReview) => {
 	const menuItems = React.useMemo(() => {
 		const items: any[] = [
 			{
+				label: "Share",
+				key: "share",
+				action: () => setShareModalOpen(true)
+			},
+			{
 				label: "Copy link",
 				key: "copy-permalink",
 				action: () => {
@@ -742,6 +749,14 @@ const ReviewForReview = (props: PropsWithReview) => {
 
 		return items;
 	}, [review]);
+
+	if (shareModalOpen)
+			return (
+				<SharingModal
+					review={props.review!}
+					onClose={() => setShareModalOpen(false)}
+				/>
+			);
 	if (isEditing) {
 		return (
 			<ReviewForm

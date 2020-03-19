@@ -6,7 +6,11 @@ import { SharingControls, SharingAttributes } from "./SharingControls";
 import styled from "styled-components";
 import { Spacer } from "./SpatialView/PRInfoModal";
 import { Button } from "../src/components/Button";
-import { CodemarkPlus, CreateThirdPartyPostRequestType } from "@codestream/protocols/agent";
+import {
+	CodemarkPlus,
+	CreateThirdPartyPostRequestType,
+	ReviewPlus
+} from "@codestream/protocols/agent";
 import { HostApi } from "..";
 import { useSelector, useStore } from "react-redux";
 import { CodeStreamState } from "../store";
@@ -86,15 +90,25 @@ const ErrorMessage = styled.p`
 type FormStateType = "not-ready" | "ready" | "submitted" | "failure" | "success";
 
 interface SharingModalProps extends ModalProps {
-	codemark: CodemarkPlus;
+	codemark?: CodemarkPlus;
+	review?: ReviewPlus;
 }
 
 export function SharingModal(props: SharingModalProps) {
+	const shareTarget: {
+		creatorId: string;
+		text: string;
+		title: string;
+		createdAt: number;
+	} = props.codemark ||
+		props.review || { creatorId: "", text: "", title: "", createdAt: 0 };
+	const shareTargetType = props.codemark ? "Codemark" : props.review ? "Review" : "";
+
 	const { author, mentionedUserIds } = useSelector((state: CodeStreamState) => ({
-		author: state.users[props.codemark.creatorId],
+		author: state.users[shareTarget.creatorId],
 		mentionedUserIds: uniq([
-			...findMentionedUserIds(getTeamMembers(state), props.codemark.text || ""),
-			...findMentionedUserIds(getTeamMembers(state), props.codemark.title || "")
+			...findMentionedUserIds(getTeamMembers(state), shareTarget.text || ""),
+			...findMentionedUserIds(getTeamMembers(state), shareTarget.title || "")
 		])
 	}));
 
@@ -124,25 +138,27 @@ export function SharingModal(props: SharingModalProps) {
 
 	const handleClickShare: React.MouseEventHandler = async e => {
 		e.preventDefault();
-
 		setState({ name: "submitted" });
 		try {
 			await HostApi.instance.send(CreateThirdPartyPostRequestType, {
 				providerId: valuesRef.current!.providerId,
 				channelId: valuesRef.current!.channelId,
 				providerTeamId: valuesRef.current!.providerTeamId,
-				text: props.codemark.text,
+				text: shareTarget.text,
 				codemark: props.codemark,
+				review: props.review,
 				mentionedUserIds
 			});
-			HostApi.instance.track("Shared Codemark", {
+			HostApi.instance.track(`Shared ${shareTargetType}`, {
 				Destination: getProviderName(valuesRef.current!.providerId),
-				"Codemark Status": "Existing"
+				[`${shareTargetType} Status`]: "Existing"
 			});
 			setState({ name: "success" });
 		} catch (error) {
 			setState({ name: "failure", message: error.message });
-			logError("Failed to share an existing codemark", { message: error.message });
+			logError(`Failed to share an existing ${shareTargetType.toLowerCase()}`, {
+				message: error.message
+			});
 		}
 	};
 
@@ -154,13 +170,15 @@ export function SharingModal(props: SharingModalProps) {
 				<StyledBox title="Share">
 					{state.name === "success" && (
 						<>
-							<SuccessMessage>Codemark shared successfully!</SuccessMessage>
+							<SuccessMessage>{shareTargetType} shared successfully!</SuccessMessage>
 							<Spacer />
 						</>
 					)}
 					{state.name === "failure" && (
 						<>
-							<ErrorMessage>There was an error sharing the codemark. {state.message}</ErrorMessage>
+							<ErrorMessage>
+								There was an error sharing the {shareTargetType}. {state.message}
+							</ErrorMessage>
 							<Spacer />
 						</>
 					)}
@@ -169,13 +187,13 @@ export function SharingModal(props: SharingModalProps) {
 							<CardHeader>
 								<AuthorInfo>
 									<Headshot person={author} /> {author.username}{" "}
-									<Timestamp relative time={props.codemark.createdAt} />
+									<Timestamp relative time={shareTarget.createdAt} />
 								</AuthorInfo>
 							</CardHeader>
 							<CardTitle>
 								<LinkifiedText
 									dangerouslySetInnerHTML={{
-										__html: markdownifyToHtml(props.codemark.title || props.codemark.text)
+										__html: markdownifyToHtml(shareTarget.title || shareTarget.text)
 									}}
 								/>
 							</CardTitle>
