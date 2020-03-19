@@ -77,6 +77,8 @@ import { SmartFormattedList } from "./SmartFormattedList";
 import { Modal } from "./Modal";
 import { Checkbox } from "../src/components/Checkbox";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { FormattedMessage } from "react-intl";
+import { Link } from "./Link";
 
 export interface ICrossPostIssueContext {
 	setSelectedAssignees(any: any): void;
@@ -141,6 +143,7 @@ interface State {
 	formatCode: boolean;
 	type: string;
 	codeBlocks: GetRangeScmInfoResponse[];
+	scmError: string;
 	assignees: { value: any; label: string }[] | { value: any; label: string };
 	assigneesRequired: boolean;
 	assigneesDisabled: boolean;
@@ -223,7 +226,8 @@ class CodemarkForm extends React.Component<Props, State> {
 			editingLocation: -1,
 			addingLocation: false,
 			liveLocation: -1,
-			isChangeRequest: false
+			isChangeRequest: false,
+			scmError: ""
 		};
 
 		const state = props.editingCodemark
@@ -385,10 +389,14 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (this.state.liveLocation >= 0) newCodeBlocks[this.state.liveLocation] = scmInfo;
 		else newCodeBlocks.push(scmInfo);
 
-		this.setState({ codeBlocks: newCodeBlocks, addingLocation: false }, () => {
-			this.handleScmChange();
-			if (callback) callback();
-		});
+		if (scmInfo.error) {
+			this.setState({ scmError: scmInfo.error });
+		} else {
+			this.setState({ codeBlocks: newCodeBlocks, addingLocation: false }, () => {
+				this.handleScmChange();
+				if (callback) callback();
+			});
+		}
 	}
 
 	getAssignableCSUsers() {
@@ -1586,7 +1594,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 
 	render() {
-		const { codeBlocks } = this.state;
+		const { codeBlocks, scmError } = this.state;
 		const { editingCodemark, currentReviewId } = this.props;
 
 		const commentType = editingCodemark ? editingCodemark.type : this.state.type || "comment";
@@ -1602,6 +1610,25 @@ class CodemarkForm extends React.Component<Props, State> {
 						<div className="button-group one-button">
 							<Button className="control-button" onClick={this.cancelCompose}>
 								OK
+							</Button>
+						</div>
+					</div>
+				</Modal>
+			);
+		}
+		if (scmError) {
+			return (
+				<Modal onClose={this.cancelCompose} verticallyCenter>
+					<div style={{ width: "20em", fontSize: "larger", margin: "0 auto" }}>
+						Sorry, we encountered a git error: {scmError}
+						<br />
+						<br />
+						<FormattedMessage id="contactSupport" defaultMessage="contact support">
+							{text => <Link href="https://help.codestream.com">{text}</Link>}
+						</FormattedMessage>
+						<div className="button-group one-button">
+							<Button className="control-button" onClick={this.cancelCompose}>
+								Close
 							</Button>
 						</div>
 					</div>
