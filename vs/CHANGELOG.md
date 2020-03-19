@@ -1,6 +1,14 @@
 # Change Log
 
+## [6.3.2] - 2020-3-19
+
+### Fixed
+
+- Fixes an issue with codemarks getting created without a code block when the file path included Cyrillic characters
+- Fixes an issue with codemarks getting created without a code block when the team contained replies from Slack users that weren't a member of the team
+
 ## [6.3.1] - 2020-3-17
+
 ### Fixed
 
 - Fixes an issue with the "Open & Assigned to Me" filter not including issue codemarks
