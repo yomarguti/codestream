@@ -1,0 +1,53 @@
+#!/bin/bash
+
+#desc# interactive atom release script
+
+cd $ATOM_TOP || exit 1
+
+# checkout master for all repos, ensure it's up to date
+
+# verify / fetch current release
+#    atom-client/package.json
+#    atom marketplace api
+priorRelease=`grep '"version"' $ATOM_SANDBOX/atom-client/package.json|cut -f4 -d\"`
+
+# Make sure version in atom-codestream is next for release
+thisRelease=`grep '"version"' package.json|cut -f4 -d\"`
+
+echo "
+	priorRelease = $priorRelease
+	thisRelease =  $thisRelease
+"
+
+echo -n "Go (y/N)? "; read ans
+[ "$ans" != "y" ] && echo "never mind" && exit
+
+echo npm run bundle
+npm run bundle || exit 1
+
+echo npm run pack $priorRelease
+npm run pack $priorRelease || exit 1
+
+echo "cd $ATOM_SANDBOX/atom-client && git commit -am \"Releasing CodeStream $thisRelease\" && git push origin master"
+(cd $ATOM_SANDBOX/atom-client && git commit -am "Releasing CodeStream $thisRelease" && git push origin master) || exit 1
+
+echo apm install --production teamcodestream/atom-client
+apm install --production teamcodestream/atom-client || exit 1
+
+echo "Santity check..."
+open /Applications/Atom.app
+
+echo "apm publish $thisRelease"
+(cd $ATOM_SANDBOX/atom-client && apm publish $thisRelease) || exit 1
+
+echo "git push origin master (atom-codestream)"
+git push origin master || exit 1
+
+tag="atom-$thisRelease"
+for p in atom-codestream codestream-lsp-agent codestream-components
+do
+	(
+		echo "cd $ATOM_SANDBOX/$p && git tag $tag && git push origin $tag"
+		cd $ATOM_SANDBOX/$p && git tag $tag && git push origin $tag || exit 1
+	)
+done
