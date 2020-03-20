@@ -27,9 +27,9 @@
 		"codestream.team": "PD Dogfooding2",
 		"editor.insertSpaces": false,
 		"prettier.requireConfig": true,
-		"prettier.tslintIntegration": true,
 		"search.exclude": {
 			"**/dist": true
-		}
+		},
+		"codestream.email": "pez@codestream.com"
 	}
 }

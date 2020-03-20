@@ -32,6 +32,14 @@ export interface ShowReviewDiffCommandArgs {
 	path: string;
 }
 
+export interface ShowReviewLocalDiffCommandArgs {
+	repoId: string;
+	path: string;
+	includeSaved: boolean;
+	includeStaged: boolean;
+	baseSha: string;
+}
+
 export interface CloseReviewDiffCommandArgs {}
 
 export interface GotoCodemarkCommandArgs {
@@ -181,9 +189,40 @@ export class Commands implements Disposable {
 
 		await commands.executeCommand(
 			BuiltInCommands.Diff,
-			Uri.parse(`codestream-diff://${args.reviewId}/${args.repoId}/base/${args.path}`),
-			Uri.parse(`codestream-diff://${args.reviewId}/${args.repoId}/head/${args.path}`),
+			Uri.parse(`codestream-diff://${args.reviewId}/${args.repoId}/left/${args.path}`),
+			Uri.parse(`codestream-diff://${args.reviewId}/${args.repoId}/right/${args.path}`),
 			`${args.path} @ ${review.title}`,
+			{ preserveFocus: false, preview: true, viewColumn: column || ViewColumn.Beside }
+		);
+
+		return true;
+	}
+
+	@command("showReviewLocalDiff", { showErrorMessage: "Unable to display review local diff" })
+	async showReviewLocalDiff(args: ShowReviewLocalDiffCommandArgs): Promise<boolean> {
+		// FYI, see showMarkerDiff() above
+		let column = Container.webview.viewColumn as number | undefined;
+		if (column !== undefined) {
+			column--;
+			if (column <= 0) {
+				column = undefined;
+			}
+		}
+
+		const rightVersion = args.includeSaved ? "saved" : args.includeStaged ? "staged" : "head";
+
+		await Container.diffContents.loadContentsLocal(
+			args.repoId,
+			args.path,
+			args.baseSha,
+			rightVersion
+		);
+
+		await commands.executeCommand(
+			BuiltInCommands.Diff,
+			Uri.parse(`codestream-diff://local/${args.repoId}/left/${args.path}`),
+			Uri.parse(`codestream-diff://local/${args.repoId}/right/${args.path}`),
+			`${args.path} review changes`,
 			{ preserveFocus: false, preview: true, viewColumn: column || ViewColumn.Beside }
 		);
 

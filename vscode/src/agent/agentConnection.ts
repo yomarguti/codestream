@@ -83,7 +83,8 @@ import {
 	UpdatePresenceRequestType,
 	UpdateStreamMembershipRequestType,
 	UpdateStreamMembershipResponse,
-	GetReviewRequestType
+	GetReviewRequestType,
+	GetReviewContentsLocalRequestType
 } from "@codestream/protocols/agent";
 import {
 	ChannelServiceType,
@@ -546,6 +547,14 @@ export class CodeStreamAgentConnection implements Disposable {
 				reviewId,
 				repoId,
 				path
+			});
+		}
+		getContentsLocal(repoId: string, path: string, baseSha: string, rightVersion: string) {
+			return this._connection.sendRequest(GetReviewContentsLocalRequestType, {
+				repoId,
+				path,
+				baseSha,
+				rightVersion
 			});
 		}
 	})(this);

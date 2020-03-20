@@ -41,6 +41,23 @@ export class ReviewDiffContentProvider implements TextDocumentContentProvider, D
 		return contents;
 	}
 
+	async loadContentsLocal(repoId: string, path: string, baseSha: string, rightVersion: string) {
+		const key = this.key("local", repoId, path);
+		// const cached = this._contents.get(key);
+
+		// if (cached !== undefined) return cached;
+
+		const contents = await Container.agent.reviews.getContentsLocal(
+			repoId,
+			path,
+			baseSha,
+			rightVersion
+		);
+		this._contents.set(key, contents);
+
+		return contents;
+	}
+
 	private key(reviewId: string, repoId: string, path: string) {
 		return `${reviewId}|${repoId}|${path}`;
 	}

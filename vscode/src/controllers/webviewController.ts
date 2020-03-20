@@ -49,6 +49,7 @@ import {
 	RestartRequestType,
 	ReviewCloseDiffRequestType,
 	ReviewShowDiffRequestType,
+	ReviewShowLocalDiffRequestType,
 	ShellPromptFolderRequestType,
 	ShowCodemarkNotificationType,
 	ShowReviewNotificationType,
@@ -807,6 +808,14 @@ export class WebviewController implements Disposable {
 			case ReviewShowDiffRequestType.method: {
 				webview.onIpcRequest(ReviewShowDiffRequestType, e, async (_type, params) => {
 					void (await Container.commands.showReviewDiff(params));
+					return emptyObj;
+				});
+
+				break;
+			}
+			case ReviewShowLocalDiffRequestType.method: {
+				webview.onIpcRequest(ReviewShowLocalDiffRequestType, e, async (_type, params) => {
+					void (await Container.commands.showReviewLocalDiff(params));
 					return emptyObj;
 				});
 
