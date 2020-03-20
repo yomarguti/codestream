@@ -1058,12 +1058,10 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	showLocalDiff(path) {
-		console.log("Calling it?");
 		const { repoStatus, includeSaved, includeStaged, startCommit } = this.state;
 		if (!repoStatus) return;
 		const repoId = repoStatus.scm ? repoStatus.scm.repoId : "";
 		if (!repoId) return;
-		console.log("Calling it!");
 		HostApi.instance.send(ReviewShowLocalDiffRequestType, {
 			path,
 			repoId,
