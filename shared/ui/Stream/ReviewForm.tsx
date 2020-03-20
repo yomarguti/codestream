@@ -770,11 +770,11 @@ class ReviewForm extends React.Component<Props, State> {
 			confirmPopup({
 				title: "Exclude Files",
 				message: (
-					<>
+					<div style={{ wordBreak: "break-word", fontSize: "12px" }}>
 						<span className="monospace highlight bold">{file}</span>{" "}
 						<span className="subtle">has been added to the CodeStream ignore file </span>
 						<span className="monospace highlight bold">{ignoreFile}</span>
-					</>
+					</div>
 				),
 				centered: true,
 				buttons: [
@@ -1162,12 +1162,12 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	renderExcludedFiles() {
-		const { repoStatus } = this.state;
+		const { repoStatus, excludedFiles, ignoredFiles } = this.state;
 		if (!repoStatus) return null;
 		const { scm } = repoStatus;
 		if (!scm) return null;
 		const { modifiedFiles } = scm;
-		const excluded = modifiedFiles.filter(f => this.state.excludedFiles[f.file]);
+		const excluded = modifiedFiles.filter(f => excludedFiles[f.file] && !ignoredFiles[f.file]);
 		if (excluded.length === 0) return null;
 
 		return [
