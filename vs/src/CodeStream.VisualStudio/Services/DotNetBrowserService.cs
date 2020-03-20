@@ -206,7 +206,7 @@ namespace CodeStream.VisualStudio.Services {
 			browser.Preferences.TransparentBackground = true;
 			browser.Preferences.UnifiedTextcheckerEnabled = false;
 			browser.Preferences.WebAudioEnabled = false;
-
+			browser.ZoomEnabled = true;
 			browser.DialogHandler = this;
 			browser.LoadHandler = this;
 			browser.Context.NetworkService.ResourceHandler = this;
@@ -718,6 +718,20 @@ namespace CodeStream.VisualStudio.Services {
 
 		CloseStatus DialogHandler.OnSelectCertificate(CertificatesDialogParams parameters) {
 			return CloseStatus.CANCEL;
+		}
+
+		public void SetZoom(double zoomPercentage) {			
+			if (_browserView == null || _browserView.Browser == null) return;
+
+			try {
+				// https://dotnetbrowser.support.teamdev.com/support/solutions/articles/9000139467-zoom-level
+				var zoomLevel = Math.Log(zoomPercentage / 100) / Math.Log(1.2);
+				_browserView.Browser.ZoomLevel = zoomLevel;
+				Log.Verbose($"{nameof(SetZoom)} {nameof(zoomPercentage)}={zoomPercentage}");
+			}
+			catch (Exception ex) {
+				Log.Error(ex, $"{nameof(SetZoom)} {nameof(zoomPercentage)}={zoomPercentage}");
+			}
 		}
 
 		#endregion

@@ -220,11 +220,12 @@ namespace CodeStream.VisualStudio.UI {
 
 							if (textViews.Count == 0) {
 								TextBufferTable.Remove(buffer);
-
+								
 								wpfTextView.LayoutChanged -= OnTextViewLayoutChanged;
 								wpfTextView.Caret.PositionChanged -= Caret_PositionChanged;
 								wpfTextView.GotAggregateFocus -= TextView_GotAggregateFocus;
 								wpfTextView.Selection.SelectionChanged += Selection_SelectionChanged;
+								wpfTextView.ZoomLevelChanged -= OnZoomLevelChanged;
 
 								wpfTextView.Properties.RemovePropertySafe(PropertyNames.TextViewFilePath);
 								wpfTextView.Properties.RemovePropertySafe(PropertyNames.TextViewState);
@@ -288,22 +289,32 @@ namespace CodeStream.VisualStudio.UI {
 								.OnSessionReady();
 
 							// keep this at the end -- we want this to be the first handler
-							wpfTextView.LayoutChanged += OnTextViewLayoutChanged;
+							wpfTextView.LayoutChanged += OnTextViewLayoutChanged;							
 							wpfTextView.Caret.PositionChanged += Caret_PositionChanged;
 							wpfTextView.GotAggregateFocus += TextView_GotAggregateFocus;
 							wpfTextView.Selection.SelectionChanged += Selection_SelectionChanged;
+							wpfTextView.ZoomLevelChanged += OnZoomLevelChanged;
 
 							state.Initialized = true;
 
 							ChangeActiveEditor(wpfTextView);
 						}
 					}
+					SetZoomLevel(wpfTextView.ZoomLevel);
 				}
 				// ReSharper restore InvertIf
 			}
 			catch (Exception ex) {
 				Log.Error(ex, $"{nameof(OnSessionReady)}");
 			}
+		}
+
+		private void SetZoomLevel(double zoomLevel) {
+			CodeStreamService?.BrowserService?.SetZoom(zoomLevel);
+		}
+
+		private void OnZoomLevelChanged(object sender, ZoomLevelChangedEventArgs e) {			
+			SetZoomLevel(e.NewZoomLevel);
 		}
 
 		private void ResetActiveEditor() {
@@ -328,6 +339,7 @@ namespace CodeStream.VisualStudio.UI {
 					if (Uri.TryCreate(filePath, UriKind.RelativeOrAbsolute, out Uri result)) {
 						if (activeTextEditor.Uri.EqualsIgnoreCase(result)) {
 							_ = CodeStreamService.ChangeActiveEditorAsync(new Uri(filePath), activeTextEditor);
+							SetZoomLevel(wpfTextView.ZoomLevel);
 						}
 					}
 				}

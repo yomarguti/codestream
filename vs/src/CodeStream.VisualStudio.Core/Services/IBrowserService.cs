@@ -49,5 +49,6 @@ namespace CodeStream.VisualStudio.Core.Services {
 		void EnqueueNotification(INotificationType message);
 		T GetItem<T>(string name);
 		void SetIsReloading();
+		void SetZoom(double zoomPercentage);
 	}
 }
