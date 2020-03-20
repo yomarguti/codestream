@@ -1,6 +1,5 @@
 import { RequestType } from "vscode-jsonrpc";
 import { IpcRoutes } from "./webview.protocol";
-import { ReviewChangesetFileInfo } from "@codestream/protocols/api";
 
 export interface ReviewShowDiffRequest {
 	reviewId: string;
@@ -16,6 +15,23 @@ export const ReviewShowDiffRequestType = new RequestType<
 	void,
 	void
 >(`${IpcRoutes.Host}/review/showDiff`);
+
+export interface ReviewShowLocalDiffRequest {
+	repoId: string;
+	path: string;
+	includeSaved: boolean;
+	includeStaged: boolean;
+	baseSha: string;
+}
+
+export interface ReviewShowLocalDiffResponse {}
+
+export const ReviewShowLocalDiffRequestType = new RequestType<
+	ReviewShowLocalDiffRequest,
+	ReviewShowLocalDiffResponse,
+	void,
+	void
+>(`${IpcRoutes.Host}/review/showLocalDiff`);
 
 export interface ReviewCloseDiffRequest {}
 

@@ -170,6 +170,7 @@ export const showDiff = (reviewId: string, repoId: string, path: string) => asyn
 	// if (response.success)
 	// return dispatch()
 };
+
 export const closeDiff = () => async dispatch => {
 	const response = HostApi.instance.send(ReviewCloseDiffRequestType, {});
 	// if (response.success)

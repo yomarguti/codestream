@@ -59,6 +59,7 @@ import { editReview, EditableAttributes } from "../store/reviews/actions";
 import { Modal } from "./Modal";
 import { FeatureFlag } from "./FeatureFlag";
 import Timestamp from "./Timestamp";
+import { ReviewShowLocalDiffRequestType } from "@codestream/protocols/webview";
 
 interface Props extends ConnectedProps {
 	editingReview?: CSReview;
@@ -454,7 +455,7 @@ class ReviewForm extends React.Component<Props, State> {
 				let scm;
 				if (repoStatus) {
 					scm = repoStatus.scm;
-				}				
+				}
 				const hasSavedFiles = scm ? scm.savedFiles.length > 0 : false;
 				const hasStagedFiles = scm ? scm.stagedFiles.length > 0 : false;
 
@@ -1056,6 +1057,22 @@ class ReviewForm extends React.Component<Props, State> {
 		);
 	}
 
+	showLocalDiff(path) {
+		console.log("Calling it?");
+		const { repoStatus, includeSaved, includeStaged, startCommit } = this.state;
+		if (!repoStatus) return;
+		const repoId = repoStatus.scm ? repoStatus.scm.repoId : "";
+		if (!repoId) return;
+		console.log("Calling it!");
+		HostApi.instance.send(ReviewShowLocalDiffRequestType, {
+			path,
+			repoId,
+			includeSaved,
+			includeStaged,
+			baseSha: startCommit
+		});
+	}
+
 	renderFile(fileObject) {
 		const { file, linesAdded, linesRemoved, status } = fileObject;
 		// https://davidwalsh.name/rtl-punctuation
@@ -1064,7 +1081,10 @@ class ReviewForm extends React.Component<Props, State> {
 		// the punctuation would be messed up (such as filenames
 		// beginning with a period)
 		return (
-			<div className="row-with-icon-actions monospace ellipsis-left-container">
+			<div
+				className="row-with-icon-actions monospace ellipsis-left-container"
+				onClick={() => this.showLocalDiff(file)}
+			>
 				<span className="file-info ellipsis-left">
 					<bdi dir="ltr">{file}</bdi>
 				</span>

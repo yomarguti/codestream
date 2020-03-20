@@ -5,6 +5,10 @@ import octicons from "@primer/octicons";
 import Tooltip, { Placement } from "./Tooltip";
 
 interface Props {
+	// this name can come from one of two sources; either
+	// the keys in icons8-data.json (which are our custom
+	// icons and we add to that file from time to time),
+	// or the included "Ocitcons" from GitHub https://octicons.github.com/
 	name: string;
 	className?: string;
 	title?: React.ReactNode;
