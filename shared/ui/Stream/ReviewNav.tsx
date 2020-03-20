@@ -263,56 +263,18 @@ export function ReviewNav(props: Props) {
 			case "open":
 				return (
 					<div className={hoverButton == "actions" ? "btn-group pulse" : "btn-group"}>
-						<Tooltip
-							title={
-								<>
-									Approve Review{" "}
-									<span className="binding">
-										<span className="keybinding extra-pad">{modifier}</span>
-										<span className="keybinding">a</span>
-									</span>
-								</>
-							}
-							placement="bottom"
-						>
-							<Button variant="success" onClick={approve}>
-								<Icon className="narrow-icon" name="thumbsup" />
-								<span className="wide-text">Approve</span>
-							</Button>
-						</Tooltip>
-						<Tooltip
-							title={
-								<>
-									Reject Review{" "}
-									<span className="binding">
-										<span className="keybinding extra-pad">{modifier}</span>
-										<span className="keybinding">x</span>
-									</span>
-								</>
-							}
-							placement="bottom"
-						>
-							<Button variant="destructive" onClick={reject}>
-								<Icon className="narrow-icon" name="thumbsdown" />
-								<span className="wide-text">Reject</span>
-							</Button>
-						</Tooltip>
-						<Tooltip
-							title={
-								<>
-									Pause Review{" "}
-									<span className="binding">
-										<span className="keybinding">ESC</span>
-									</span>
-								</>
-							}
-							placement="bottomRight"
-						>
-							<Button variant="secondary" onClick={exit}>
-								<Icon className="narrow-icon" name="x" />
-								<span className="wide-text">Exit</span>
-							</Button>
-						</Tooltip>
+						<Button variant="success" onClick={approve}>
+							<Icon className="narrow-icon" name="thumbsup" />
+							<span className="wide-text">Approve</span>
+						</Button>
+						<Button variant="destructive" onClick={reject}>
+							<Icon className="narrow-icon" name="thumbsdown" />
+							<span className="wide-text">Reject</span>
+						</Button>
+						<Button variant="secondary" onClick={exit}>
+							<Icon className="narrow-icon" name="x" />
+							<span className="wide-text">Exit</span>
+						</Button>
 					</div>
 				);
 			case "closed":
