@@ -12,6 +12,10 @@ interface Props {
 	onChange: (value: boolean) => void;
 }
 
+interface foo {
+	bar: boolean;
+}
+
 const Root = styled.div<{ noMargin?: boolean }>`
 	display: flex;
 	margin-bottom: ${props => (props.noMargin ? "0" : "5px")};
