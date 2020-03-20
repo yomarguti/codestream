@@ -29,7 +29,6 @@
 		"prettier.requireConfig": true,
 		"search.exclude": {
 			"**/dist": true
-		},
-		"codestream.email": "pez@codestream.com"
+		}
 	}
 }
