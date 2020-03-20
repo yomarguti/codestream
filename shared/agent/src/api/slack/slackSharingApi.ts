@@ -48,7 +48,8 @@ import {
 	fromSlackUser,
 	toSlackPostBlocks,
 	toSlackPostText,
-	toSlackReviewPostBlocks
+	toSlackReviewPostBlocks,
+	UserMaps
 } from "./slackSharingApi.adapters";
 
 interface DeferredStreamRequest<TResult> {
@@ -78,11 +79,7 @@ export class SlackSharingApiProvider {
 	private readonly _slackToken: string;
 	private readonly _slackUserId: string;
 
-	// TODO: Convert to index on UserManager?
-	private _usernamesById: Map<string, string> | undefined;
-	// TODO: Convert to index on UserManager?
-	private _userIdsByName: Map<string, string> | undefined;
-	private _codeStreamUsersById: Map<string, string> | undefined;
+	private _userMaps: UserMaps | undefined;
 
 	readonly capabilities: Capabilities = {
 		channelMute: false,
@@ -170,66 +167,57 @@ export class SlackSharingApiProvider {
 		return this._slackUserId;
 	}
 
-	async ensureUsernamesById(): Promise<Map<string, string>> {
-		if (this._usernamesById === undefined) {
-			void (await this.ensureUserMaps());
-		}
-		return this._usernamesById!;
-	}
 
-	private async ensureUserIdsByName(): Promise<Map<string, string>> {
-		if (this._userIdsByName === undefined) {
-			void (await this.ensureUserMaps());
-		}
+	private async ensureUserMaps(): Promise<UserMaps> {
+		if (this._userMaps === undefined) {
+			const slackUsers = (await this.fetchUsers()).users;
 
-		return this._userIdsByName!;
-	}
+			const userMaps = {
+				slackUsernamesById : new Map(),
+				slackUserIdsByUsername: new Map(),
+				slackUserIdsByEmail: new Map(),
+				codeStreamUsersByUsername : new Map(),
+				codeStreamUsersByUserId: new Map()
+			};
 
-	private async ensureCodeStreamUsersById(): Promise<Map<string, string>> {
-		if (this._codeStreamUsersById === undefined) {
-			void (await this.ensureUserMaps());
-		}
+			for (const user of slackUsers) {
+				if (user.username) {
+					userMaps.slackUsernamesById.set(user.id, user.username);
+					userMaps.slackUserIdsByUsername.set(user.username.toLowerCase(), user.id);
+				}
+				// exclude users without emails or are these weird cs-.*@unknown.com ones
+				if (!user.email) continue;
 
-		return this._codeStreamUsersById!;
-	}
+				const email = user.email.toLowerCase();
+				if (email.indexOf("cs-") === 0 && email.endsWith("@unknown.com")) continue;
 
-	private async ensureUserMaps(): Promise<void> {
-		if (
-			this._usernamesById === undefined ||
-			this._userIdsByName === undefined ||
-			this._codeStreamUsersById === undefined
-		) {
-			const users = (await this.fetchUsers()).users;
-
-			this._usernamesById = new Map();
-			this._userIdsByName = new Map();
-
-			for (const user of users) {
-				this._usernamesById.set(user.id, user.username);
-				this._userIdsByName.set(user.username, user.id);
+				userMaps.slackUserIdsByEmail.set(email, user.id);
 			}
 
-			this._codeStreamUsersById = new Map();
 			const codeStreamUsers = (await SessionContainer.instance().users.get()).users;
 			for (const user of codeStreamUsers) {
-				this._codeStreamUsersById.set(user.id, user.username);
+				userMaps.codeStreamUsersByUserId.set(user.id, user);
+				// username must exist for CS users, right?
+				if (user.username) {
+					userMaps.codeStreamUsersByUsername.set(user.username.toLowerCase(), user);
+				}
 			}
+			this._userMaps = userMaps;
 		}
+		return this._userMaps;
 	}
 
 	@log()
 	async createExternalPost(request: CreateSharedExternalPostRequest): Promise<CreatePostResponse> {
 		let createdPostId;
 		try {
-			const usernamesById = await this.ensureUsernamesById();
-			const userIdsByName = await this.ensureUserIdsByName();
-			const codeStreamUsersById = await this.ensureCodeStreamUsersById();
+			const userMaps = await this.ensureUserMaps();
 			const channelId = request.channelId;
 			let text = request.text;
 			const meMessage = meMessageRegex.test(text);
 
 			if (text) {
-				text = toSlackPostText(text, userIdsByName, request.mentionedUserIds);
+				text = toSlackPostText(text, userMaps, request.mentionedUserIds);
 			}
 
 			if (meMessage) {
@@ -291,8 +279,7 @@ export class SlackSharingApiProvider {
 				blocks = toSlackPostBlocks(
 					codemark,
 					request.remotes,
-					userIdsByName,
-					codeStreamUsersById,
+					userMaps,
 					repoHash,
 					this._slackUserId
 				);
@@ -300,13 +287,12 @@ export class SlackSharingApiProvider {
 				// Set the fallback (notification) content for the message
 				text = `${codemark.title || ""}${
 					codemark.title && codemark.text ? `\n\n` : ""
-				}${codemark.text || ""}`;
+					}${codemark.text || ""}`;
 			} else if (request.review != null) {
 				const review = request.review;
 				blocks = toSlackReviewPostBlocks(
 					review,
-					userIdsByName,
-					codeStreamUsersById,
+					userMaps,
 					repoHash,
 					this._slackUserId
 				);
@@ -327,7 +313,7 @@ export class SlackSharingApiProvider {
 			const { ok, error, message } = response as WebAPICallResult & { message?: any; ts?: any };
 			if (!ok) throw new Error(error);
 
-			const post = await fromSlackPost(message, channelId, usernamesById, this._codestreamTeamId);
+			const post = await fromSlackPost(message, channelId, userMaps.slackUsernamesById, this._codestreamTeamId);
 			const { postId } = fromSlackPostId(post.id, post.streamId);
 			createdPostId = postId;
 
@@ -352,7 +338,7 @@ export class SlackSharingApiProvider {
 				.map(
 					s =>
 						`\t${s.id} = ${s.name}${s.priority == null ? "" : `, p=${s.priority}`}${
-							s.type === StreamType.Direct ? `, closed=${s.isClosed}` : ""
+						s.type === StreamType.Direct ? `, closed=${s.isClosed}` : ""
 						}`
 				)
 				.join("\n")}\ncompleted`
@@ -380,7 +366,7 @@ export class SlackSharingApiProvider {
 				Logger.log(
 					cc,
 					`Fetched page; cursor=${response.response_metadata &&
-						response.response_metadata.next_cursor}`
+					response.response_metadata.next_cursor}`
 				);
 
 				conversations.push(...data);
@@ -388,7 +374,7 @@ export class SlackSharingApiProvider {
 
 			Logger.log(cc, `Fetched pages \u2022 ${Strings.getDurationMilliseconds(start)} ms`);
 
-			const usernamesById = await this.ensureUsernamesById();
+			const userMaps = await this.ensureUserMaps();
 
 			const pendingRequestsQueue: DeferredStreamRequest<CSChannelStream | CSDirectStream>[] = [];
 
@@ -402,13 +388,13 @@ export class SlackSharingApiProvider {
 				this.fetchGroups(
 					// Filter out shared channels for now, until we can convert to the conversation apis
 					conversations.filter(c => c.is_group && !c.is_shared),
-					usernamesById,
+					userMaps.slackUsernamesById,
 					undefined,
 					pendingRequestsQueue
 				),
 				this.fetchIMs(
 					conversations.filter(c => c.is_im),
-					usernamesById,
+					userMaps.slackUsernamesById,
 					undefined,
 					pendingRequestsQueue
 				)
@@ -463,7 +449,7 @@ export class SlackSharingApiProvider {
 					Logger.warn(
 						cc,
 						`TIMEOUT ${timeoutMs / 1000}s exceeded while fetching stream '${
-							deferred.stream.id
+						deferred.stream.id
 						}' in the background`
 					);
 
@@ -536,7 +522,7 @@ export class SlackSharingApiProvider {
 				Logger.log(
 					cc,
 					`Fetched page; cursor=${response.response_metadata &&
-						response.response_metadata.next_cursor}`
+					response.response_metadata.next_cursor}`
 				);
 
 				channels.push(...data);
@@ -548,10 +534,10 @@ export class SlackSharingApiProvider {
 		const streams = [];
 		let pending:
 			| {
-					action(): Promise<CSChannelStream>;
-					id: string;
-					name: string;
-			  }[]
+				action(): Promise<CSChannelStream>;
+				id: string;
+				name: string;
+			}[]
 			| undefined;
 
 		let counts;
@@ -647,7 +633,7 @@ export class SlackSharingApiProvider {
 				Logger.log(
 					cc,
 					`Fetched page; cursor=${response.response_metadata &&
-						response.response_metadata.next_cursor}`
+					response.response_metadata.next_cursor}`
 				);
 
 				groups.push(...data);
@@ -658,11 +644,11 @@ export class SlackSharingApiProvider {
 		const streams = [];
 		let pending:
 			| {
-					action(): Promise<CSChannelStream | CSDirectStream>;
-					grouping: number;
-					id: string;
-					priority: number;
-			  }[]
+				action(): Promise<CSChannelStream | CSDirectStream>;
+				grouping: number;
+				id: string;
+				priority: number;
+			}[]
 			| undefined;
 		let counts;
 		let s;
@@ -780,7 +766,7 @@ export class SlackSharingApiProvider {
 				Logger.log(
 					cc,
 					`Fetched page; cursor=${response.response_metadata &&
-						response.response_metadata.next_cursor}`
+					response.response_metadata.next_cursor}`
 				);
 
 				ims.push(...data);
@@ -792,10 +778,10 @@ export class SlackSharingApiProvider {
 		const streams = [];
 		let pending:
 			| {
-					action(): Promise<CSDirectStream>;
-					id: string;
-					priority: number;
-			  }[]
+				action(): Promise<CSDirectStream>;
+				id: string;
+				priority: number;
+			}[]
 			| undefined;
 		let counts;
 		let s;
@@ -952,7 +938,7 @@ export class SlackSharingApiProvider {
 			Logger.log(
 				cc,
 				`Fetched page; cursor=${response.response_metadata &&
-					response.response_metadata.next_cursor}`
+				response.response_metadata.next_cursor}`
 			);
 
 			members.push(...data);
@@ -972,11 +958,11 @@ export class SlackSharingApiProvider {
 		args: false,
 		prefix: (context, method, request) =>
 			`${context.prefix} ${method}(${
-				request != null
-					? Logger.toLoggable(request, (key, value) =>
-							logFilterKeys.has(key) ? `<${key}>` : Logger.sanitize(key, value)
-					  )
-					: ""
+			request != null
+				? Logger.toLoggable(request, (key, value) =>
+					logFilterKeys.has(key) ? `<${key}>` : Logger.sanitize(key, value)
+				)
+				: ""
 			})`
 	})
 	protected async slackApiCall<
@@ -1025,7 +1011,7 @@ export class SlackSharingApiProvider {
 			return response as TResponse;
 		} catch (ex) {
 			Logger.error(ex, cc, ex.data != null ? JSON.stringify(ex.data) : undefined);
-			if (ex.data && ex.data.response_metadata && ex.data.response_metadata.messages  && ex.data.response_metadata.messages.length) {
+			if (ex.data && ex.data.response_metadata && ex.data.response_metadata.messages && ex.data.response_metadata.messages.length) {
 				ex.message = `${ex.message}. ${ex.data.response_metadata.messages.join(",")}`;
 			}
 			throw ex;
@@ -1036,11 +1022,11 @@ export class SlackSharingApiProvider {
 		args: false,
 		prefix: (context, method, request) =>
 			`${context.prefix} ${method}(${
-				request != null
-					? Logger.toLoggable(request, (key, value) =>
-							logFilterKeys.has(key) ? `<${key}>` : Logger.sanitize(key, value)
-					  )
-					: ""
+			request != null
+				? Logger.toLoggable(request, (key, value) =>
+					logFilterKeys.has(key) ? `<${key}>` : Logger.sanitize(key, value)
+				)
+				: ""
 			})`
 	})
 	protected async slackApiCallPaginated<
@@ -1058,7 +1044,7 @@ export class SlackSharingApiProvider {
 		}
 	}
 
-	async dispose() {}
+	async dispose() { }
 }
 
 const logFilterKeys = new Set(["text", "attachments"]);

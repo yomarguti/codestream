@@ -43,6 +43,14 @@ const slackLinkRegex = /\<((?:https?:\/\/|mailto:).*?)(?:\|(.*?))?\>/g;
 
 type Blocks = KnownBlock[];
 
+export interface UserMaps {
+	slackUsernamesById: Map<string, string>;
+	slackUserIdsByUsername: Map<string, string>;
+	slackUserIdsByEmail: Map<string, string>;
+	codeStreamUsersByUserId: Map<string, CSUser>;
+	codeStreamUsersByUsername: Map<string, CSUser>;
+}
+
 export function fromSlackChannelIdToType(
 	streamId: string
 ): "channel" | "group" | "direct" | undefined {
@@ -559,11 +567,23 @@ export function toSlackPostId(postId: string, streamId: string) {
 	return `${streamId}|${postId}`;
 }
 
+export function toAssigneeText(codeStreamIds: string[], userMaps: UserMaps): string {
+	return codeStreamIds.map(id => {
+		const codeStreamUser = userMaps.codeStreamUsersByUserId.get(id);
+		if (codeStreamUser && codeStreamUser.email) {
+			const slackUserId = userMaps.slackUserIdsByEmail.get(codeStreamUser.email.toLowerCase());
+			if (slackUserId) {
+				return `<@${slackUserId}>`;
+			}
+		}
+		return codeStreamUser ? codeStreamUser.fullName || codeStreamUser.username : "";
+	}).join(", ");
+}
+
 export function toSlackPostBlocks(
 	codemark: CodemarkPlus,
 	remotes: string[] | undefined,
-	userIdsByName: Map<string, string>,
-	codeStreamUsersById: Map<string, string>,
+	userMaps: UserMaps,
 	repos: { [key: string]: CSRepository } | undefined,
 	slackUserId: string
 ): Blocks {
@@ -576,7 +596,7 @@ export function toSlackPostBlocks(
 				type: "section",
 				text: {
 					type: "mrkdwn",
-					text: toSlackText(codemark.text, userIdsByName)
+					text: toSlackText(codemark.text, userMaps)
 				}
 			});
 
@@ -588,7 +608,7 @@ export function toSlackPostBlocks(
 				text: {
 					type: "mrkdwn",
 					// Bookmarks use the title rather than text
-					text: toSlackText(codemark.title, userIdsByName)
+					text: toSlackText(codemark.title, userMaps)
 				}
 			});
 
@@ -598,11 +618,11 @@ export function toSlackPostBlocks(
 		case CodemarkType.Question: {
 			let text;
 			if (codemark.title) {
-				text = `*${toSlackText(codemark.title, userIdsByName)}*`;
+				text = `*${toSlackText(codemark.title, userMaps)}*`;
 			}
 
 			if (codemark.text) {
-				text = `${text ? `${text}\n` : ""}${toSlackText(codemark.text, userIdsByName)}`;
+				text = `${text ? `${text}\n` : ""}${toSlackText(codemark.text, userMaps)}`;
 			}
 
 			if (text) {
@@ -619,16 +639,17 @@ export function toSlackPostBlocks(
 		}
 	}
 
-	if (codemark.assignees !== undefined && codemark.assignees.length !== 0 && codeStreamUsersById) {
-		blocks.push({
-			type: "section",
-			text: {
-				type: "mrkdwn",
-				text: `*Assignees*\n${codemark.assignees
-					.map(a => codeStreamUsersById.get(a) || "")
-					.join(", ")}`
-			}
-		});
+	if (codemark.assignees !== undefined && codemark.assignees.length !== 0) {
+		const assigneeText = toAssigneeText(codemark.assignees, userMaps);
+		if (assigneeText) {
+			blocks.push({
+				type: "section",
+				text: {
+					type: "mrkdwn",
+					text: `*Assignees*\n${assigneeText}`
+				}
+			});
+		}
 	}
 
 	if (
@@ -872,8 +893,7 @@ export function toSlackPostBlocks(
 
 export function toSlackReviewPostBlocks(
 	review: ReviewPlus,
-	userIdsByName: Map<string, string>,
-	codeStreamUsersById: Map<string, string>,
+	userMaps: UserMaps,
 	repos?: { [key: string]: CSRepository } | undefined,
 	slackUserId?: string
 ): Blocks {
@@ -907,10 +927,10 @@ export function toSlackReviewPostBlocks(
 		);
 	}
 
-	const creator = codeStreamUsersById.get(review.creatorId);
+	const creator = userMaps.codeStreamUsersByUserId.get(review.creatorId);
 	let creatorName = "Someone ";
-	if (creator) {
-		creatorName = `${creator} `;
+	if (creator && creator.username) {
+		creatorName = `${creator.username} `;
 	}
 	blocks.push({
 		type: "context",
@@ -926,7 +946,7 @@ export function toSlackReviewPostBlocks(
 			type: "mrkdwn",
 			text: `*${toSlackText(
 				review.title,
-				userIdsByName
+				userMaps
 			)}* includes changes to ${modifiedReposAndBranches.join(", ")}`
 		}
 	});
@@ -936,27 +956,22 @@ export function toSlackReviewPostBlocks(
 			type: "section",
 			text: {
 				type: "mrkdwn",
-				text: toSlackText(review.text, userIdsByName)
+				text: toSlackText(review.text, userMaps)
 			}
 		});
 	}
 
-	if (review.reviewers && review.reviewers.length && codeStreamUsersById) {
-		blocks.push({
-			type: "section",
-			text: {
-				type: "mrkdwn",
-				text: `*Assignees*\n${review.reviewers
-					.map(a => {
-						let mention = codeStreamUsersById.get(a) || "";
-						if (mention) {
-							mention = `@${mention}`;
-						}
-						return mention;
-					})
-					.join(", ")}`
-			}
-		});
+	if (review.reviewers && review.reviewers.length) {
+		const assigneeText = toAssigneeText(review.reviewers, userMaps);
+		if (assigneeText) {
+			blocks.push({
+				type: "section",
+				text: {
+					type: "mrkdwn",
+					text: `*Assignees*\n${assigneeText}`
+				}
+			});
+		}
 	}
 
 	blocks.push({
@@ -1019,12 +1034,12 @@ export function toSlackReviewPostBlocks(
 
 export function toSlackPostText(
 	text: string,
-	userIdsByName: Map<string, string>,
+	userMaps: UserMaps,
 	mentionedUserIds: string[] | undefined
 ) {
 	if (text == null || text.length === 0) return text;
 
-	text = toSlackText(text, userIdsByName, mentionedUserIds || []);
+	text = toSlackText(text, userMaps, mentionedUserIds || []);
 	if (text.startsWith("/me ")) {
 		text = text.substring(4);
 	}
@@ -1042,7 +1057,7 @@ export function toSlackTeam(team: CSTeam, usernamesById: Map<string, string>) {
 
 export function toSlackText(
 	text: string,
-	userIdsByName: Map<string, string>,
+	userMaps: UserMaps,
 	mentionedUserIds?: string[]
 ) {
 	if (text == null || text.length === 0) return text;
@@ -1063,12 +1078,31 @@ export function toSlackText(
 			}
 
 			if (mentionedUserIds === undefined || mentionedUserIds.length !== 0) {
-				const userId = userIdsByName.get(mentionName);
-				if (
-					userId !== undefined &&
-					(mentionedUserIds === undefined || mentionedUserIds.includes(userId))
-				) {
-					return `${prefix}<@${userId}>`;
+				const normalizedMentionName = mentionName.toLowerCase();
+				// try to lookup this @foo username in the CS map
+				const csUser = userMaps.codeStreamUsersByUsername.get(normalizedMentionName);
+				if (csUser) {
+					const userId = csUser.id;
+					if (
+						userId !== undefined &&
+						(mentionedUserIds === undefined || mentionedUserIds.includes(userId))
+					) {
+						// it should not be possible to mention users wo/an email, but guard it
+						// just in case
+						if (csUser.email) {
+							// now that we have a CS user
+							const slackUserId = userMaps.slackUserIdsByEmail.get(csUser.email.toLowerCase());
+							if (slackUserId) {
+								return `${prefix}<@${slackUserId}>`;
+							}
+						}
+					}
+				}
+				else {
+					const slackUserId = userMaps.slackUserIdsByUsername.get(normalizedMentionName);
+					if (slackUserId) {
+						return `${prefix}<@${slackUserId}>`;
+					}
 				}
 			}
 
