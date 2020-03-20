@@ -159,9 +159,16 @@ export interface GetReviewContentsRequest {
 	path: string;
 }
 
+export interface GetReviewContentsLocalRequest {
+	repoId: string;
+	path: string;
+	baseSha: string;
+	rightVersion: string;
+}
+
 export interface GetReviewContentsResponse {
-	base: string;
-	head: string;
+	left: string;
+	right: string;
 }
 
 export const GetReviewContentsRequestType = new RequestType<
@@ -170,6 +177,13 @@ export const GetReviewContentsRequestType = new RequestType<
 	void,
 	void
 >("codestream/review/contents");
+
+export const GetReviewContentsLocalRequestType = new RequestType<
+	GetReviewContentsLocalRequest,
+	GetReviewContentsResponse,
+	void,
+	void
+>("codestream/review/contentsLocal");
 
 export interface FetchReviewDiffsRequest extends CSGetReviewDiffsRequest {}
 

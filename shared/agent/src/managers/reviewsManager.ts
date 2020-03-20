@@ -17,6 +17,8 @@ import {
 	FetchReviewsRequest,
 	FetchReviewsRequestType,
 	FetchReviewsResponse,
+	GetReviewContentsLocalRequest,
+	GetReviewContentsLocalRequestType,
 	GetReviewContentsRequest,
 	GetReviewContentsRequestType,
 	GetReviewContentsResponse,
@@ -35,6 +37,7 @@ import {
 } from "../protocol/agent.protocol";
 import { CSReview, CSReviewDiffs, FileStatus } from "../protocol/api.protocol";
 import { log, lsp, lspHandler } from "../system";
+import { xfs } from "../xfs";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 
 const uriRegexp = /codestream-diff:\/\/(\w+)\/(\w+)\/(\w+)\/(.+)/;
@@ -97,10 +100,54 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		return diffsByRepo;
 	}
 
+	@lspHandler(GetReviewContentsLocalRequestType)
+	@log()
+	async getContentsLocal(
+		request: GetReviewContentsLocalRequest
+	): Promise<GetReviewContentsResponse> {
+		const { git } = SessionContainer.instance();
+
+		const repo = await git.getRepositoryById(request.repoId);
+		if (!repo) {
+			throw new Error(`Could not load repo with ID ${request.repoId}`);
+		}
+
+		const leftBasePath = path.join(repo.path, request.path);
+		// const rightBasePath = path.join(repo.path, rightBaseRelativePath);
+
+		const leftContents =
+			// fileInfo.statusX === FileStatus.added
+			// ? ""
+			// :
+			(await git.getFileContentForRevision(leftBasePath, request.baseSha)) || "";
+
+		let rightContents: string | undefined = "";
+		switch (request.rightVersion) {
+			case "head":
+				const revision = await git.getFileCurrentRevision(leftBasePath);
+				if (revision) {
+					rightContents = await git.getFileContentForRevision(leftBasePath, revision);
+				}
+				break;
+			case "staged":
+				rightContents = await git.getFileContentForRevision(leftBasePath, "HEAD");
+				break;
+			case "saved":
+				rightContents = await xfs.readText(leftBasePath);
+				break;
+		}
+
+		return {
+			left: leftContents,
+			right: rightContents || ""
+		};
+	}
+
 	@lspHandler(GetReviewContentsRequestType)
 	@log()
 	async getContents(request: GetReviewContentsRequest): Promise<GetReviewContentsResponse> {
 		const { git } = SessionContainer.instance();
+
 		const review = await this.getById(request.reviewId);
 		const changeset = review.reviewChangesets.find(c => c.repoId === request.repoId);
 		if (!changeset) throw new Error(`Could not find changeset with repoId ${request.repoId}`);
@@ -137,8 +184,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			rightDiff !== undefined ? applyPatch(rightBaseContents, rightDiff) : rightBaseContents;
 
 		return {
-			base: leftContents,
-			head: rightContents
+			left: leftContents,
+			right: rightContents
 		};
 	}
 
