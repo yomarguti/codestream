@@ -128,6 +128,11 @@ export class MessageInput extends React.Component<Props, State> {
 				VsCodeKeystrokeDispatcher.on("keydown", event => {
 					if (event.key === "Escape" && event.target.id !== "input-div") {
 						this.handleKeyDown(event);
+					} else if (event.key === "Enter" && event.metaKey && this.props.multiCompose) {
+						// command-enter should submit for multiCompose
+						event.preventDefault();
+						const { onSubmit } = this.props;
+						onSubmit && onSubmit();
 					}
 				})
 			);

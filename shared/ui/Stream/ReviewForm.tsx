@@ -597,10 +597,6 @@ class ReviewForm extends React.Component<Props, State> {
 		);
 	};
 
-	handleKeyPress = (event: React.KeyboardEvent) => {
-		if (event.key == "Enter") return this.switchChannel(event);
-	};
-
 	handleChange = text => {
 		// track newPostText as the user types
 		this.setState({ text });
@@ -634,6 +630,7 @@ class ReviewForm extends React.Component<Props, State> {
 				shouldShowRelatableCodemark={codemark =>
 					this.props.editingReview ? codemark.id !== this.props.editingReview.id : true
 				}
+				onDismiss={this.confirmCancel}
 				onSubmit={this.handleClickSubmit}
 				selectedTags={this.state.selectedTags}
 				__onDidRender={__onDidRender}
