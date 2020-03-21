@@ -38,9 +38,10 @@ export interface ReplyProps {
 
 const AuthorInfo = styled.div`
 	display: flex;
-	align-items: center;
+	align-items: top;
 	${Headshot} {
 		margin-right: 7px;
+		flex-shrink: 0;
 	}
 	.emote {
 		font-weight: normal;
@@ -67,6 +68,7 @@ const Root = styled.div`
 		visibility: hidden;
 	}
 	.icon.reply {
+		margin-left: 5px;
 		margin-right: 10px;
 		vertical-align: -2px;
 	}
@@ -217,13 +219,16 @@ export const Reply = (props: ReplyProps) => {
 		<Root className={props.className}>
 			<ReplyBody>
 				<AuthorInfo style={{ fontWeight: 700 }}>
-					<Headshot person={props.author} /> {props.author.username}
-					{emote}
-					{codemark && codemark.isChangeRequest && (
-						<span className="emote">requested a change</span>
-					)}
-					<Timestamp relative time={props.post.createdAt} />
-					<div style={{ marginLeft: "auto" }}>
+					<Headshot person={props.author} />{" "}
+					<span>
+						{props.author.username}
+						{emote}
+						{codemark && codemark.isChangeRequest && (
+							<span className="emote">requested a change</span>
+						)}
+						<Timestamp relative time={props.post.createdAt} />
+					</span>
+					<div style={{ marginLeft: "auto", whiteSpace: "nowrap" }}>
 						<Icon
 							title="Reply"
 							name="reply"
