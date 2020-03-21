@@ -1437,12 +1437,14 @@ export class Codemark extends React.Component<Props, State> {
 										<div className="related-label">Code Review</div>
 										<div className="description-body">
 											<Link
+												className="external-link"
 												onClick={() => {
 													this.props.setCurrentCodemark();
 													this.props.setCurrentReview(this.props.review!.id);
 												}}
 											>
-												<Icon name="review" /> {this.props.review.title}
+												<Icon name="review" />
+												{this.props.review.title}
 											</Link>
 										</div>
 									</div>
