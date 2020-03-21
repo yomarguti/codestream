@@ -91,6 +91,10 @@ const ReplyBody = styled.span`
 
 const ParentPreview = styled.span`
 	margin-left: 23px;
+	height: 1.4em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: pre;
 `;
 
 const ReplyText = styled(MarkdownText)`
