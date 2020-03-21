@@ -91,7 +91,7 @@ const Root = styled.div`
 		position: absolute;
 		top: 0;
 		left: 0;
-		height: 100vh;
+		height: calc(100vh - 45px);
 		width: 100%;
 		overflow: auto;
 		zindex: 1;
@@ -112,6 +112,7 @@ const Root = styled.div`
 		}
 		.scroll-container {
 			margin: 45px 0 0 0;
+			height: calc(100vh - 40px);
 		}
 	}
 `;
@@ -379,7 +380,7 @@ export function ReviewNav(props: Props) {
 				</TourTip>
 			</Nav>
 			{props.composeOpen ? null : (
-				<div className="scroll-container">
+				<div className="scroll-container" style={{ overflow: "hidden" }}>
 					<ScrollBox>
 						<div
 							className="vscroll"
