@@ -506,8 +506,11 @@ class ReviewForm extends React.Component<Props, State> {
 									>
 										<Checkbox
 											name="skipPostCreationModal"
-											onChange={value => {
-												this.props.setUserPreference(["skipPostCreationModal"], value);
+											onChange={() => {
+												this.props.setUserPreference(
+													["skipPostCreationModal"],
+													!this.props.skipPostCreationModal
+												);
 											}}
 										>
 											Don't show this again
@@ -1523,6 +1526,8 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		});
 	}
 
+	const skipPostCreationModal = preferences ? preferences.skipPostCreationModal : false;
+
 	return {
 		unsavedFiles: unsavedFiles,
 		shouldShare:
@@ -1533,7 +1538,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		directMessageStreams: directMessageStreams,
 		providerInfo: (user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT,
 		currentUser: user,
-		skipPostCreationModal: user.preferences ? user.preferences.skipPostCreationModal : false,
+		skipPostCreationModal,
 		selectedStreams: preferences.selectedStreams || EMPTY_OBJECT,
 		showChannels: context.channelFilter,
 		textEditorUri: editorContext.textEditorUri,

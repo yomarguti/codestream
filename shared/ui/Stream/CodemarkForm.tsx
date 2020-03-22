@@ -130,6 +130,7 @@ interface ConnectedProps {
 		[service: string]: {};
 	};
 	currentUser: CSUser;
+	skipPostCreationModal: boolean;
 	selectedStreams: {};
 	showChannels: string;
 	textEditorUri?: string;
@@ -664,6 +665,8 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 
 	showConfirmationForMarkerlessCodemarks = type => {
+		if (this.props.skipPostCreationModal) return;
+
 		confirmPopup({
 			title: `${type === CodemarkType.Issue ? "Issue" : "Comment"} Submitted`,
 			closeOnClickA: true,
@@ -683,8 +686,11 @@ class CodemarkForm extends React.Component<Props, State> {
 					>
 						<Checkbox
 							name="skipPostCreationModal"
-							onChange={value => {
-								this.props.setUserPreference(["skipPostCreationModal"], value);
+							onChange={() => {
+								this.props.setUserPreference(
+									["skipPostCreationModal"],
+									!this.props.skipPostCreationModal
+								);
 							}}
 						>
 							Don't show this again
@@ -2016,6 +2022,8 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		name: getDMName(stream, toMapBy("id", teamMates), session.userId)
 	}));
 
+	const skipPostCreationModal = preferences ? preferences.skipPostCreationModal : false;
+
 	return {
 		channel,
 		teamMates,
@@ -2029,6 +2037,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		providerInfo: (user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT,
 		teamProvider: getCurrentTeamProvider(state),
 		currentUser: user,
+		skipPostCreationModal,
 		selectedStreams: preferences.selectedStreams || EMPTY_OBJECT,
 		showChannels: context.channelFilter,
 		textEditorUri: editorContext.textEditorUri,
