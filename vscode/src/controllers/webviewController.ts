@@ -151,7 +151,7 @@ export class WebviewController implements Disposable {
 		// Ignore left side of review diffs
 		const uri = editor && editor.document.uri;
 		const csReviewDiffInfo = uri && Strings.parseCSReviewDiffUrl(uri.toString());
-		if (csReviewDiffInfo && csReviewDiffInfo.version !== "head") return;
+		if (csReviewDiffInfo && csReviewDiffInfo.version !== "right") return;
 
 		this._lastEditor = editor;
 		this._notifyActiveEditorChangedDebounced(editor);
@@ -512,7 +512,7 @@ export class WebviewController implements Disposable {
 		if (uri.scheme !== "file" && uri.scheme !== "codestream-diff") return;
 
 		const csRangeDiffInfo = Strings.parseCSReviewDiffUrl(uri.toString());
-		if (csRangeDiffInfo && csRangeDiffInfo.version !== "head") return;
+		if (csRangeDiffInfo && csRangeDiffInfo.version !== "right") return;
 
 		webview.notify(HostDidChangeEditorVisibleRangesNotificationType, {
 			uri: uri.toString(),
@@ -961,7 +961,7 @@ export class WebviewController implements Disposable {
 					break;
 				case "codestream-diff":
 					const csReviewDiffInfo = Strings.parseCSReviewDiffUrl(originalUri.toString());
-					if (csReviewDiffInfo && csReviewDiffInfo.version === "head") {
+					if (csReviewDiffInfo && csReviewDiffInfo.version === "right") {
 						uri = originalUri;
 					}
 					break;
