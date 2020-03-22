@@ -59,11 +59,20 @@ export default class Confirm extends Component {
 		}
 	}
 
+	handleClick = event => {
+		const { closeOnClickA } = this.props;
+		if (closeOnClickA && event && event.target.tagName === "A") {
+			this.closePopup();
+		}
+	};
+
 	renderMessage() {
 		const { message } = this.props;
 		if (message) {
 			return (
-				<div className="confirm-message">{typeof message === "function" ? message() : message}</div>
+				<div className="confirm-message" onClick={this.handleClick}>
+					{typeof message === "function" ? message() : message}
+				</div>
 			);
 		}
 	}

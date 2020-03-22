@@ -40,7 +40,7 @@ import HeadshotMenu from "@codestream/webview/src/components/HeadshotMenu";
 import { SelectPeople } from "@codestream/webview/src/components/SelectPeople";
 import { getTeamMembers, getTeamTagsArray, getTeamMates } from "../store/users/reducer";
 import MessageInput from "./MessageInput";
-import { closePanel, createPostAndReview } from "./actions";
+import { openPanel, closePanel, createPostAndReview, setUserPreference } from "./actions";
 import { CodeStreamState } from "../store";
 import { CSText } from "../src/components/CSText";
 import { SharingControls, SharingAttributes } from "./SharingControls";
@@ -59,12 +59,16 @@ import { editReview, EditableAttributes } from "../store/reviews/actions";
 import { Modal } from "./Modal";
 import { FeatureFlag } from "./FeatureFlag";
 import Timestamp from "./Timestamp";
-import { ReviewShowLocalDiffRequestType } from "@codestream/protocols/webview";
+import { ReviewShowLocalDiffRequestType, WebviewPanels } from "@codestream/protocols/webview";
+import { Checkbox } from "../src/components/Checkbox";
 
 interface Props extends ConnectedProps {
 	editingReview?: CSReview;
 	isEditing?: boolean;
 	onClose?: Function;
+	openPanel: Function;
+	closePanel: Function;
+	setUserPreference: Function;
 }
 
 interface ConnectedProps {
@@ -76,11 +80,11 @@ interface ConnectedProps {
 		[service: string]: {};
 	};
 	currentUser: CSUser;
+	skipPostCreationModal: boolean;
 	selectedStreams: {};
 	showChannels: string;
 	teamTagsArray: any;
 	textEditorUri?: string;
-	closePanel?: Function;
 	createPostAndReview?: Function;
 	editReview?: Function;
 	repos: any;
@@ -479,8 +483,48 @@ class ReviewForm extends React.Component<Props, State> {
 					]
 				} as any;
 				const { type: createResult } = await this.props.createPostAndReview(review);
-				if (createResult !== PostsActionsType.FailPendingPost && this.props.closePanel)
-					this.props.closePanel();
+				if (createResult !== PostsActionsType.FailPendingPost) {
+					if (this.props.skipPostCreationModal) {
+						this.props.closePanel();
+					} else {
+						confirmPopup({
+							title: "Review Submitted",
+							closeOnClickA: true,
+							message: (
+								<div>
+									You can see the review in your{" "}
+									<a onClick={() => this.props.openPanel(WebviewPanels.Activity)}>activity feed</a>.
+									<br />
+									<br />
+									<div
+										style={{
+											textAlign: "left",
+											fontSize: "12px",
+											display: "inline-block",
+											margin: "0 auto"
+										}}
+									>
+										<Checkbox
+											name="skipPostCreationModal"
+											onChange={value => {
+												this.props.setUserPreference(["skipPostCreationModal"], value);
+											}}
+										>
+											Don't show this again
+										</Checkbox>
+									</div>
+								</div>
+							),
+							centered: true,
+							buttons: [
+								{
+									label: "OK",
+									action: () => this.props.closePanel()
+								}
+							]
+						});
+					}
+				}
 			}
 		} catch (error) {
 			logError(error, {
@@ -647,10 +691,7 @@ class ReviewForm extends React.Component<Props, State> {
 				{isOn => {
 					if (!isOn) {
 						return (
-							<Modal
-								verticallyCenter={true}
-								onClose={() => this.props.closePanel && this.props.closePanel()}
-							>
+							<Modal verticallyCenter={true} onClose={() => this.props.closePanel()}>
 								<p>
 									This functionality is available on a limited basis to beta customers.
 									<br />
@@ -667,41 +708,41 @@ class ReviewForm extends React.Component<Props, State> {
 							<span className="plane-container">
 								<div className="codemark-form-container">{this.renderReviewForm()}</div>
 								{this.renderExcludedFiles()}
+								<div style={{ height: "5px" }}></div>
 								{!this.props.isEditing && this.state.reviewers.length > 0 && (
 									<>
-										<div style={{ height: "20px" }}></div>
+										<div style={{ height: "10px" }}></div>
 										<CSText muted>
 											<SmartFormattedList value={this.state.reviewers.map(m => m.email)} /> will be
 											notified via email
 										</CSText>
-										<div style={{ height: "10px" }} />
 									</>
 								)}
 								{!this.props.isEditing && totalModifiedLines > 100 && (
-									<>
-										<div style={{ display: "flex", padding: "0 0 10px 2px" }}>
-											<Icon name="alert" muted />
-											<span style={{ paddingLeft: "10px" }}>
-												<CSText as="span" muted>
-													There are {totalModifiedLines.toLocaleString()} total modified lines in
-													this review, which is a lot to digest. Increase your development velocity
-													with{" "}
-													<a href="https://www.codestream.com/blog/reviewing-the-code-review-part-i">
-														shift left code reviews
-													</a>
-													.
-												</CSText>
-											</span>
-										</div>
-									</>
+									<div style={{ display: "flex", padding: "10px 0 0 2px" }}>
+										<Icon name="alert" muted />
+										<span style={{ paddingLeft: "10px" }}>
+											<CSText as="span" muted>
+												There are {totalModifiedLines.toLocaleString()} total modified lines in this
+												review, which is a lot to digest. Increase your development velocity with{" "}
+												<a href="https://www.codestream.com/blog/reviewing-the-code-review-part-i">
+													shift left code reviews
+												</a>
+												.
+											</CSText>
+										</span>
+									</div>
 								)}
 								{!this.props.isEditing && (
-									<CSText muted>
-										CodeStream's lightweight code reviews let you request a review on the current
-										state of your repo, without the friction of save, branch, commit, push, create
-										PR, email, pull, web, email, web. Comments on your review are saved with the
-										code even once merged in.
-									</CSText>
+									<>
+										<div style={{ height: "10px" }}></div>
+										<CSText muted>
+											CodeStream's lightweight code reviews let you request a review on the current
+											state of your repo, without the friction of save, branch, commit, push, create
+											PR, email, pull, web, email, web. Comments on your review are saved with the
+											code even once merged in.
+										</CSText>
+									</>
 								)}
 							</span>
 						</div>
@@ -729,14 +770,14 @@ class ReviewForm extends React.Component<Props, State> {
 							const isEditing = this.props.isEditing;
 							this.props.onClose && this.props.onClose();
 							if (!isEditing) {
-								this.props.closePanel && this.props.closePanel();
+								this.props.closePanel();
 							}
 						},
 						className: "delete"
 					}
 				]
 			});
-		} else if (this.props.closePanel) {
+		} else {
 			this.props.closePanel();
 		}
 	};
@@ -1492,6 +1533,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		directMessageStreams: directMessageStreams,
 		providerInfo: (user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT,
 		currentUser: user,
+		skipPostCreationModal: user.preferences ? user.preferences.skipPostCreationModal : false,
 		selectedStreams: preferences.selectedStreams || EMPTY_OBJECT,
 		showChannels: context.channelFilter,
 		textEditorUri: editorContext.textEditorUri,
@@ -1501,9 +1543,11 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 };
 
 const ConnectedReviewForm = connect(mapStateToProps, {
+	openPanel,
 	closePanel,
 	createPostAndReview,
-	editReview
+	editReview,
+	setUserPreference
 })(ReviewForm);
 
 export { ConnectedReviewForm as ReviewForm };
