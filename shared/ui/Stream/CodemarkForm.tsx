@@ -54,7 +54,8 @@ import { sortBy as _sortBy, sortBy } from "lodash-es";
 import {
 	EditorSelectRangeRequestType,
 	EditorSelection,
-	EditorHighlightRangeRequestType
+	EditorHighlightRangeRequestType,
+	WebviewPanels
 } from "@codestream/protocols/webview";
 import { getCurrentSelection } from "../store/editorContext/reducer";
 import Headshot from "./Headshot";
@@ -79,6 +80,8 @@ import { Checkbox } from "../src/components/Checkbox";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { FormattedMessage } from "react-intl";
 import { Link } from "./Link";
+import { confirmPopup } from "./Confirm";
+import { openPanel, setUserPreference } from "./actions";
 
 export interface ICrossPostIssueContext {
 	setSelectedAssignees(any: any): void;
@@ -112,6 +115,8 @@ interface Props extends ConnectedProps {
 	setMultiLocation?: Function;
 	noCodeLocation?: boolean;
 	error?: string;
+	openPanel: Function;
+	setUserPreference: Function;
 }
 
 interface ConnectedProps {
@@ -647,6 +652,7 @@ class CodemarkForm extends React.Component<Props, State> {
 					sharingAttributes: this.props.shouldShare ? this._sharingAttributes : undefined,
 					accessMemberIds: this.state.privacyMembers.map(m => m.value)
 				});
+				if (codeBlocks.length == 0) this.showConfirmationForMarkerlessCodemarks(type);
 			} else {
 				await this.props.onSubmit({ ...baseAttributes, streamId: selectedChannelId! }, event);
 				(this.props as any).dispatch(setCurrentStream(selectedChannelId));
@@ -655,6 +661,45 @@ class CodemarkForm extends React.Component<Props, State> {
 		} finally {
 			this.setState({ isLoading: false });
 		}
+	};
+
+	showConfirmationForMarkerlessCodemarks = type => {
+		confirmPopup({
+			title: `${type === CodemarkType.Issue ? "Issue" : "Comment"} Submitted`,
+			closeOnClickA: true,
+			message: (
+				<>
+					You can see the {type === CodemarkType.Issue ? "issue" : "comment"} in your{" "}
+					<a onClick={() => this.props.openPanel(WebviewPanels.Activity)}>activity feed</a>.
+					<br />
+					<br />
+					<div
+						style={{
+							textAlign: "left",
+							fontSize: "12px",
+							display: "inline-block",
+							margin: "0 auto"
+						}}
+					>
+						<Checkbox
+							name="skipPostCreationModal"
+							onChange={value => {
+								this.props.setUserPreference(["skipPostCreationModal"], value);
+							}}
+						>
+							Don't show this again
+						</Checkbox>
+					</div>
+				</>
+			),
+			centered: true,
+			buttons: [
+				{
+					label: "OK",
+					action: () => {}
+				}
+			]
+		});
 	};
 
 	isFormInvalid = () => {
@@ -1995,6 +2040,9 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 	};
 };
 
-const ConnectedCodemarkForm = connect(mapStateToProps)(CodemarkForm);
+const ConnectedCodemarkForm = connect(mapStateToProps, {
+	openPanel,
+	setUserPreference
+})(CodemarkForm);
 
 export { ConnectedCodemarkForm as CodemarkForm };
