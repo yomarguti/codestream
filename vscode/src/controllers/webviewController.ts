@@ -373,8 +373,6 @@ export class WebviewController implements Disposable {
 				// Keep this at the end otherwise the above subscriptions can fire while disposing
 				this._webview
 			);
-
-			Container.agent.telemetry.track("Webview Opened");
 		}
 	}
 
@@ -851,9 +849,6 @@ export class WebviewController implements Disposable {
 
 	private closeWebview(reason?: "user") {
 		try {
-			if (reason === "user") {
-				Container.agent.telemetry.track("Webview Closed");
-			}
 			this.updateState(reason === "user");
 		} finally {
 			if (this._disposableWebview !== undefined) {
