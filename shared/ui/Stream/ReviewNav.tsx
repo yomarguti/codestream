@@ -15,13 +15,12 @@ import { ReviewCloseDiffRequestType } from "../ipc/host.protocol.review";
 import Icon from "./Icon";
 import { confirmPopup } from "./Confirm";
 import { setUserPreference } from "./actions";
-import { ReviewChangesetFileInfo } from "@codestream/protocols/api";
 import { Dispatch } from "../store/common";
 import { Review, ExpandedAuthor, Description } from "./Review";
 import ScrollBox from "./ScrollBox";
-import { Dialog } from "../src/components/Dialog";
 import { TourTip } from "../src/components/TourTip";
 import { Modal } from "./Modal";
+import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 
 const Nav = styled.div`
 	position: fixed;
@@ -184,7 +183,8 @@ export function ReviewNav(props: Props) {
 			editorContext: state.editorContext,
 			filePath,
 			hideReviewInstructions: state.preferences.hideReviewInstructions,
-			currentCodemarkId: state.context.currentCodemarkId
+			currentCodemarkId: state.context.currentCodemarkId,
+			isInVscode: state.ide.name === "VSC"
 		};
 	}, shallowEqual);
 
@@ -222,8 +222,14 @@ export function ReviewNav(props: Props) {
 		// 		path: currentFile.file
 		// 	});
 		// }
+		const disposable = derivedState.isInVscode
+			? VsCodeKeystrokeDispatcher.on("keydown", event => {
+					if (event.key === "Escape" && event.target.id !== "input-div") exit();
+			  })
+			: undefined;
 
 		return () => {
+			disposable && disposable.dispose();
 			isValid = false;
 		};
 	});
@@ -272,10 +278,22 @@ export function ReviewNav(props: Props) {
 							<Icon className="narrow-icon" name="thumbsdown" />
 							<span className="wide-text">Reject</span>
 						</Button>
-						<Button variant="secondary" onClick={exit}>
-							<Icon className="narrow-icon" name="x" />
-							<span className="wide-text">Exit</span>
-						</Button>
+						<Tooltip
+							title={
+								<>
+									Exit Review{" "}
+									<span className="binding">
+										<span className="keybinding">ESC</span>
+									</span>
+								</>
+							}
+							placement="bottomRight"
+						>
+							<Button variant="secondary" onClick={exit}>
+								<Icon className="narrow-icon" name="x" />
+								<span className="wide-text">Exit</span>
+							</Button>
+						</Tooltip>
 					</div>
 				);
 			case "closed":
