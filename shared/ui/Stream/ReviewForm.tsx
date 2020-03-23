@@ -430,7 +430,7 @@ class ReviewForm extends React.Component<Props, State> {
 				const originalReviewers = this.props.editingReview.reviewers;
 				const attributes: EditableAttributes = {
 					title: title,
-					text: text
+					text: replaceHtml(text || "")!
 				};
 				const reviewerOperations = arrayDiff(originalReviewers, reviewerIds);
 				if (reviewerOperations) {
