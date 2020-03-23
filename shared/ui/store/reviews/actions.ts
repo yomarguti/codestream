@@ -9,18 +9,22 @@ import {
 	CreateShareableReviewRequestType,
 	RepoScmStatus,
 	GetReviewRequestType,
-	FetchReviewsRequestType
+	FetchReviewsRequestType,
+	UpdateReviewResponse
 } from "@codestream/protocols/agent";
 import { logError } from "@codestream/webview/logger";
 import { addStreams } from "../streams/actions";
 import { getConnectedProviders } from "../providers/reducer";
 import { CodeStreamState } from "..";
-import { capitalize } from "@codestream/webview/utils";
+import { capitalize, mapFilter } from "@codestream/webview/utils";
 import { addPosts } from "../posts/actions";
 import {
 	ReviewCloseDiffRequestType,
 	ReviewShowDiffRequestType
 } from "@codestream/protocols/webview";
+import { createPost } from '@codestream/webview/Stream/actions';
+import { getTeamMembers } from '../users/reducer';
+import { phraseList } from '@codestream/webview/utilities/strings';
 
 export const reset = () => action("RESET");
 
@@ -145,14 +149,33 @@ export type EditableAttributes = Partial<
 	Pick<CSReview, "tags" | "text" | "title" | "reviewers"> & AdvancedEditableReviewAttributes
 >;
 
-export const editReview = (id: string, attributes: EditableAttributes) => async dispatch => {
-	let response;
+export const editReview = (id: string, attributes: EditableAttributes) => async (dispatch, getState: () => CodeStreamState) => {
+	let response: UpdateReviewResponse | undefined;
 	try {
 		response = await HostApi.instance.send(UpdateReviewRequestType, {
 			id,
 			...attributes
 		});
 		dispatch(updateReviews([response.review]));
+
+		if (attributes.$push != null && attributes.$push.reviewers != null && 
+			attributes.$push.reviewers.length) {
+			// if we have additional ids we're adding via $push, map them here
+			const filteredUsers = mapFilter(getTeamMembers(getState()), teamMember => {
+				const user = attributes.$push!.reviewers!.find(_ => _ === teamMember.id);
+				return user ? teamMember : undefined;
+			}).filter(Boolean);
+			
+			if (filteredUsers.length) {
+				dispatch(createPost(
+					response.review.streamId,
+					response.review.postId,
+					`/me added ${phraseList(filteredUsers.map(u => `@${u.username}` ))} to this review`,
+					null,
+					filteredUsers.map(u => u.id)
+				))
+			}
+		}
 	} catch (error) {
 		logError(`failed to update review: ${error}`, { id });
 	}

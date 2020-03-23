@@ -47,17 +47,18 @@ export const emojiPlain = text => {
 	return mdPlain.renderInline(text);
 };
 
-export const markdownify = (text: string) => {
+export const markdownify = (text: string, options?: { excludeParagraphWrap: boolean }) => {
 	// safeguard against undefined at runtime - akonwi
 	if (text == null) return text;
 
 	try {
-		const replaced = md
-			.render(text, { references: {} })
-			.replace(/blockquote>\n/g, "blockquote>")
-			.replace(/<br>\n/g, "\n")
-			.replace(/<\/p>\n$/, "</p>")
-			.replace(/<\/p>\n/g, "</p><br/>");
+		const replaced = options && options.excludeParagraphWrap
+			? md.renderInline(text, { references: {} })
+			: md.render(text, { references: {} })
+				.replace(/blockquote>\n/g, "blockquote>")
+				.replace(/<br>\n/g, "\n")
+				.replace(/<\/p>\n$/, "</p>")
+				.replace(/<\/p>\n/g, "</p><br/>");
 		// console.log(replaced);
 		if (text.trim().match(/^(:[\w_+]+:|\s)+$/))
 			return "<span class='only-emoji'>" + replaced + "</span>";
@@ -81,13 +82,14 @@ export function useMarkdownifyToHtml() {
 	}, shallowEqual);
 
 	return React.useCallback(
-		(text: string) => {
+		(text: string,
+			options?: { excludeParagraphWrap: boolean }) => {
 			let html: string;
 			if (text == null || text === "") {
 				html = "";
 			} else {
 				const me = derivedState.currentUserName;
-				html = markdownify(text).replace(/@(\w+)/g, (match, name) => {
+				html = markdownify(text, options).replace(/@(\w+)/g, (match, name) => {
 					if (
 						derivedState.usernames.some(
 							n => name.localeCompare(n, undefined, { sensitivity: "accent" }) === 0
@@ -95,7 +97,7 @@ export function useMarkdownifyToHtml() {
 					) {
 						return `<span class="at-mention${
 							me.localeCompare(name, undefined, { sensitivity: "accent" }) === 0 ? " me" : ""
-						}">${match}</span>`;
+							}">${match}</span>`;
 					}
 
 					return match;

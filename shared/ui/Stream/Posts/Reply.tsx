@@ -17,6 +17,7 @@ import { deletePost, editPost } from "../actions";
 import { RepliesToPostContext } from "./RepliesToPost";
 import { getPost } from "@codestream/webview/store/posts/reducer";
 import { MarkdownText } from "../MarkdownText";
+import { useMarkdownifyToHtml } from "../Markdowner";
 import MarkerActions from "../MarkerActions";
 import MessageInput from "../MessageInput";
 import Button from "../Button";
@@ -187,7 +188,9 @@ export const Reply = (props: ReplyProps) => {
 
 	const renderEmote = () => {
 		let matches = (props.post.text || "").match(/^\/me\s+(.*)/);
-		if (matches) return <span className="emote">{matches[1]}</span>;
+		if (matches) {
+			return <MarkdownText text={matches[1]} className="emote" excludeParagraphWrap={true}></MarkdownText>;
+		}
 		else return null;
 	};
 	const emote = renderEmote();

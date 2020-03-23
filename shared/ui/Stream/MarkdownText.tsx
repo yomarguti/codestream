@@ -7,6 +7,7 @@ export const MarkdownText = styled(
 		text: string;
 		as?: "string" | React.ElementType | React.Component;
 		className?: string;
+		excludeParagraphWrap?: boolean;
 	}) => {
 		const markdownifyToHtml = useMarkdownifyToHtml();
 
@@ -15,7 +16,11 @@ export const MarkdownText = styled(
 			props.as || ("span" as any),
 			{
 				className: props.className,
-				dangerouslySetInnerHTML: { __html: markdownifyToHtml(props.text) }
+				dangerouslySetInnerHTML: {
+					__html: markdownifyToHtml(props.text, {
+						excludeParagraphWrap: !!props.excludeParagraphWrap
+					})
+				}
 			},
 			null
 		);
