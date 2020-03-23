@@ -61,6 +61,8 @@ import { FeatureFlag } from "./FeatureFlag";
 import Timestamp from "./Timestamp";
 import { ReviewShowLocalDiffRequestType, WebviewPanels } from "@codestream/protocols/webview";
 import { Checkbox } from "../src/components/Checkbox";
+import { getAllByCommit } from "../store/reviews/reducer";
+import { setCurrentReview } from "@codestream/webview/store/context/actions";
 
 interface Props extends ConnectedProps {
 	editingReview?: CSReview;
@@ -69,6 +71,7 @@ interface Props extends ConnectedProps {
 	openPanel: Function;
 	closePanel: Function;
 	setUserPreference: Function;
+	setCurrentReview: Function;
 }
 
 interface ConnectedProps {
@@ -90,6 +93,9 @@ interface ConnectedProps {
 	repos: any;
 	shouldShare: boolean;
 	unsavedFiles: string[];
+	reviewsByCommit: {
+		[commit: string]: CSReview;
+	};
 }
 
 interface State {
@@ -755,7 +761,7 @@ class ReviewForm extends React.Component<Props, State> {
 		);
 	}
 
-	confirmCancel = () => {
+	confirmCancel = (callback?) => {
 		const { titleTouched, text, reviewersTouched } = this.state;
 
 		// if the user has made any changes in the form, confirm before closing
@@ -774,6 +780,7 @@ class ReviewForm extends React.Component<Props, State> {
 							this.props.onClose && this.props.onClose();
 							if (!isEditing) {
 								this.props.closePanel();
+								if (callback) callback();
 							}
 						},
 						className: "delete"
@@ -782,6 +789,7 @@ class ReviewForm extends React.Component<Props, State> {
 			});
 		} else {
 			this.props.closePanel();
+			if (callback) callback();
 		}
 	};
 
@@ -928,7 +936,7 @@ class ReviewForm extends React.Component<Props, State> {
 		tooltip?: string | ReactElement
 	) {
 		return (
-			<Tooltip title={tooltip || ""} placement="top" delay={1}>
+			<Tooltip title={tooltip || ""} placement="top" delay={1} align={{ offset: [0, 5] }}>
 				<div
 					className={`row-with-icon-actions ${onOff ? "" : "muted"}`}
 					style={{ display: "flex", alignItems: "center" }}
@@ -1077,6 +1085,7 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	renderCommitList(commits, excludeCommit) {
+		const { reviewsByCommit } = this.props;
 		return commits.map(commit =>
 			this.renderChange(
 				commit.sha,
@@ -1093,6 +1102,22 @@ class ReviewForm extends React.Component<Props, State> {
 						<Timestamp relative={true} time={new Date(commit.info.authorDate).getTime()} />
 					)}
 					<div style={{ paddingTop: "10px" }}>{commit.info.shortMessage}</div>
+					{reviewsByCommit[commit.sha] && (
+						<div style={{ paddingTop: "10px" }}>
+							<div className="related-label">Included in Review</div>
+							<div
+								className="internal-link"
+								onClick={() =>
+									this.confirmCancel(() =>
+										this.props.setCurrentReview(reviewsByCommit[commit.sha].id)
+									)
+								}
+							>
+								<Icon name="review" />
+								{reviewsByCommit[commit.sha].title}
+							</div>
+						</div>
+					)}
 				</div>
 			)
 		);
@@ -1528,8 +1553,10 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 
 	const skipPostCreationModal = preferences ? preferences.skipPostCreationModal : false;
 
+	const reviewsByCommit = getAllByCommit(state) || {};
 	return {
 		unsavedFiles: unsavedFiles,
+		reviewsByCommit,
 		shouldShare:
 			safe(() => state.preferences[state.context.currentTeamId].shareCodemarkEnabled) || false,
 		channel,
@@ -1552,7 +1579,8 @@ const ConnectedReviewForm = connect(mapStateToProps, {
 	closePanel,
 	createPostAndReview,
 	editReview,
-	setUserPreference
+	setUserPreference,
+	setCurrentReview
 })(ReviewForm);
 
 export { ConnectedReviewForm as ReviewForm };

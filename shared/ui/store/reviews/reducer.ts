@@ -56,3 +56,19 @@ export const getAllReviews = createSelector(getReviews, (reviews: Index<CSReview
 export const teamHasReviews = createSelector(getReviews, (reviews: Index<CSReview>) => {
 	return Object.keys(reviews).length > 0;
 });
+
+// a mapping from commit IDs to the reviews that contain that commit ID
+// e.g.
+// {
+//     a19f5b3584443acde93bbd7855e5f113d4af2e23: [review object which contains that commit],
+//     41f0abfcf7f5d6d21e810889cab82c6809cf567f: [review object...]
+// }
+export function getAllByCommit(state: CodeStreamState): { [commit: string]: CSReview } {
+	let ret = {};
+	getAllReviews(state).forEach(review => {
+		review.reviewChangesets.forEach(changeset => {
+			changeset.commits.forEach(commit => (ret[commit.sha] = review));
+		});
+	});
+	return ret;
+}
