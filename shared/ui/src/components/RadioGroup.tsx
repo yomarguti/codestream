@@ -40,6 +40,37 @@ const RadioDiv = styled.div`
 	label:hover {
 		color: var(--text-color-highlight);
 	}
+	.icon.spin {
+		display: inline-block;
+		margin: 0 5px 0 2px;
+		vertical-align: 2px;
+	}
+	input[type="radio"] {
+		-webkit-appearance: none;
+		background: rgba(127, 127, 127, 0.4);
+
+		// padding: 8px;
+		width: 16px;
+		height: 16px;
+		display: inline-block;
+		position: relative;
+		border-radius: 10px;
+		margin: 0 5px 0 0;
+		cursor: pointer;
+		&:checked {
+			background: var(--text-color-info-muted);
+		}
+		&:checked:after {
+			content: "";
+			position: absolute;
+			top: 6px;
+			left: 6px;
+			width: 4px;
+			height: 4px;
+			border-radius: 2px;
+			background: white;
+		}
+	}
 `;
 
 export function Radio(props: PropsWithChildren<RadioProps>) {
