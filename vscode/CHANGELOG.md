@@ -1,5 +1,21 @@
 # Change Log
 
+## [6.3.3] - 2020-3-24
+
+### Added
+
+- Mentions on CodeStream now flow through to Slack if there's a match on email address or username
+- Adds the ability to view diffs for changed files while requesting a code review
+- Adds the ability to share an existing code review to Slack or MS Teams
+- When editing a code review and adding new reviewers, they are now notified via a mention
+- Esc key now exits you from the code review request form, and from an in-progress code review
+
+### Fixed
+
+- Fixes an issue with the Compare and Apply buttons not appearing right away when there's a diff
+- Fixes an issue with html being added to a code review description after editing it
+- Fixes an issue with a user submitting a code review with no repos open in the IDE
+
 ## [6.3.2] - 2020-3-19
 
 ### Fixed
