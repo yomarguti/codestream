@@ -24,13 +24,6 @@ namespace CodeStream.VisualStudio.Commands {
 
 				var toolWindowProvider = Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
 				var result = toolWindowProvider?.ToggleToolWindowVisibility(Guids.WebViewToolWindowGuid);
-
-				if (result.HasValue) {
-					var codeStreamAgentService = (Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<ICodeStreamAgentService>();
-					codeStreamAgentService?.TrackAsync(result.Value
-						? TelemetryEventNames.WebviewOpened
-						: TelemetryEventNames.WebviewClosed);
-				}
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(WebViewToggleCommand));
