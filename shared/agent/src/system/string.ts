@@ -1,5 +1,6 @@
 "use strict";
 import { createHash, HexBase64Latin1Encoding } from "crypto";
+import * as eol from "eol";
 import * as path from "path";
 import { isWindows } from "../git/shell";
 
@@ -349,5 +350,28 @@ export namespace Strings {
 		}
 
 		return false;
+	}
+
+	export function normalizeFileContents(contents: string) {
+		if (!contents) return contents;
+		// if there is a BOM at the beginning, strip it
+		if (contents.charCodeAt(0) === 65279) {
+			contents = contents.substring(1);
+		}
+		return stripEof(eol.auto(contents));
+	}
+
+	function stripEof(x: any) {
+		const lf = typeof x === "string" ? "\n" : "\n".charCodeAt(0);
+		const cr = typeof x === "string" ? "\r" : "\r".charCodeAt(0);
+
+		if (x[x.length - 1] === lf) {
+			x = x.slice(0, x.length - 1);
+		}
+
+		if (x[x.length - 1] === cr) {
+			x = x.slice(0, x.length - 1);
+		}
+		return x;
 	}
 }

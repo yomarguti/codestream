@@ -1,6 +1,5 @@
 "use strict";
-import { ParsedDiff, applyPatch, structuredPatch } from "diff";
-import * as eol from "eol";
+import { applyPatch, ParsedDiff, structuredPatch } from "diff";
 import * as path from "path";
 import { TextDocumentIdentifier } from "vscode-languageserver";
 import { URI } from "vscode-uri";
@@ -18,13 +17,13 @@ import {
 	CSMarkerLocations,
 	CSReferenceLocation
 } from "../protocol/api.protocol";
+import { Strings } from "../system/string";
 import { xfs } from "../xfs";
 import { ManagerBase } from "./baseManager";
 import { IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { Id } from "./entityManager";
 import { UncommittedBacktrackedLocation } from "./markersBuilder";
-
 export interface Markerish {
 	id: string;
 	referenceLocations: CSReferenceLocation[];
@@ -60,21 +59,6 @@ function newGetLocationsResult(): GetLocationsResult {
 		locations: {},
 		missingLocations: {}
 	};
-}
-
-function stripEof(x: any) {
-	const lf = typeof x === "string" ? "\n" : "\n".charCodeAt(0);
-	const cr = typeof x === "string" ? "\r" : "\r".charCodeAt(0);
-
-	if (x[x.length - 1] === lf) {
-		x = x.slice(0, x.length - 1);
-	}
-
-	if (x[x.length - 1] === cr) {
-		x = x.slice(0, x.length - 1);
-	}
-
-	return x;
 }
 
 function compareReferenceLocations(a: CSReferenceLocation, b: CSReferenceLocation): number {
@@ -204,8 +188,8 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			const diff = structuredPatch(
 				filePath,
 				filePath,
-				stripEof(eol.auto(currentCommitText)),
-				stripEof(eol.auto(currentBufferText)),
+				Strings.normalizeFileContents(currentCommitText),
+				Strings.normalizeFileContents(currentBufferText),
 				"",
 				""
 			);
@@ -231,8 +215,8 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 				const diff = structuredPatch(
 					filePath,
 					filePath,
-					stripEof(eol.auto(uncommittedBufferText)),
-					stripEof(eol.auto(currentBufferText)),
+					Strings.normalizeFileContents(uncommittedBufferText),
+					Strings.normalizeFileContents(currentBufferText),
 					"",
 					""
 				);
@@ -259,8 +243,8 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 				const diff = structuredPatch(
 					filePath,
 					filePath,
-					stripEof(eol.auto(referenceText)),
-					stripEof(eol.auto(currentBufferText)),
+					Strings.normalizeFileContents(referenceText),
+					Strings.normalizeFileContents(currentBufferText),
 					"",
 					""
 				);
@@ -375,8 +359,8 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		const diff = structuredPatch(
 			filePath,
 			filePath,
-			stripEof(eol.auto(text)),
-			stripEof(eol.auto(currentCommitText)),
+			Strings.normalizeFileContents(text),
+			Strings.normalizeFileContents(currentCommitText),
 			"",
 			""
 		);
@@ -439,8 +423,8 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 						const diff = structuredPatch(
 							filePath,
 							filePath,
-							stripEof(eol.auto(canonicalContents)),
-							stripEof(eol.auto(commitContents)),
+							Strings.normalizeFileContents(canonicalContents),
+							Strings.normalizeFileContents(commitContents),
 							"",
 							""
 						);
@@ -595,8 +579,8 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			const diff = structuredPatch(
 				relPath,
 				relPath,
-				stripEof(eol.auto(originalContents)),
-				stripEof(eol.auto(commitContents)),
+				Strings.normalizeFileContents(originalContents),
+				Strings.normalizeFileContents(commitContents),
 				"",
 				""
 			);
@@ -740,8 +724,8 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		const diff = structuredPatch(
 			filePath,
 			filePath,
-			stripEof(eol.auto(currentCommitText)),
-			stripEof(eol.auto(currentBufferText)),
+			Strings.normalizeFileContents(currentCommitText),
+			Strings.normalizeFileContents(currentBufferText),
 			"",
 			""
 		);

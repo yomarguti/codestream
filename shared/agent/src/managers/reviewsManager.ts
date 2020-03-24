@@ -36,7 +36,7 @@ import {
 	UpdateReviewResponse
 } from "../protocol/agent.protocol";
 import { CSReview, CSReviewDiffs, FileStatus } from "../protocol/api.protocol";
-import { log, lsp, lspHandler } from "../system";
+import { log, lsp, lspHandler, Strings } from "../system";
 import { xfs } from "../xfs";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 
@@ -172,16 +172,18 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			fileInfo.statusX === FileStatus.added
 				? ""
 				: (await git.getFileContentForRevision(leftBasePath, diffs.leftBaseSha)) || "";
+		const normalizedLeftBaseContents = Strings.normalizeFileContents(leftBaseContents);
 		const leftContents =
-			leftDiff !== undefined ? applyPatch(leftBaseContents, leftDiff) : leftBaseContents;
+			leftDiff !== undefined ? applyPatch(normalizedLeftBaseContents, leftDiff) : normalizedLeftBaseContents;
 		const rightBaseContents =
 			fileInfo.statusX === FileStatus.added
 				? ""
 				: diffs.leftBaseSha === diffs.rightBaseSha
 				? leftBaseContents
 				: (await git.getFileContentForRevision(rightBasePath, diffs.rightBaseSha)) || "";
+		const normalizedRightBaseContents = Strings.normalizeFileContents(rightBaseContents);
 		const rightContents =
-			rightDiff !== undefined ? applyPatch(rightBaseContents, rightDiff) : rightBaseContents;
+			rightDiff !== undefined ? applyPatch(normalizedRightBaseContents, rightDiff) : normalizedRightBaseContents;
 
 		return {
 			left: leftContents,
