@@ -125,11 +125,14 @@ class MarkerActions extends React.Component<Props, State> {
 		if (this.props.disableDiffCheck) return;
 		if (!this._mounted || this._pollingTimer !== undefined) return;
 
-		this._pollingTimer = setInterval(() => {
-			if (this.props.editorHasFocus) {
-				this.checkDiffs(false);
-			}
-		}, 1000);
+		// kick off an initial check diff, then start the polling
+		this.checkDiffs(false).then(() => {
+			this._pollingTimer = setInterval(() => {
+				if (this.props.editorHasFocus) {
+					this.checkDiffs(false);
+				}
+			}, 1000);
+		});
 	}
 
 	private stopCheckingDiffs() {
@@ -191,7 +194,7 @@ class MarkerActions extends React.Component<Props, State> {
 		}, 50);
 	}
 
-	async checkDiffs(jump) {
+	async checkDiffs(jump: boolean) {
 		const { codemark, marker, jumpToMarker } = this.props;
 		if (codemark == null || marker == null) return;
 
