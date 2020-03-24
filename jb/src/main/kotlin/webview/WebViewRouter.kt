@@ -4,6 +4,7 @@ import com.codestream.agentService
 import com.codestream.authenticationService
 import com.codestream.editorService
 import com.codestream.gson
+import com.codestream.reviewService
 import com.codestream.settingsService
 import com.codestream.webViewService
 import com.github.salomonbrys.kotson.fromJson
@@ -33,6 +34,7 @@ import protocols.webview.EditorScrollToRequest
 import protocols.webview.MarkerApplyRequest
 import protocols.webview.MarkerCompareRequest
 import protocols.webview.MarkerInsertTextRequest
+import protocols.webview.ReviewShowDiffRequest
 import protocols.webview.ShellPromptFolderResponse
 import protocols.webview.UpdateConfigurationRequest
 import java.util.concurrent.CompletableFuture
@@ -98,6 +100,7 @@ class WebViewRouter(val project: Project) {
             "host/editor/range/select" -> editorRangeSelect(message)
             "host/editor/scrollTo" -> editorScrollTo(message)
             "host/shell/prompt/folder" -> shellPromptFolder(message)
+            "host/review/showDiff" -> reviewShowDiff(message)
             else -> logger.warn("Unhandled host message ${message.method}")
         }
         if (message.id != null) {
@@ -190,6 +193,13 @@ class WebViewRouter(val project: Project) {
         }
         val file = fileFuture.await()
         return ShellPromptFolderResponse(file?.path, file != null)
+    }
+
+    private suspend fun reviewShowDiff(message: WebViewMessage) {
+        val request = gson.fromJson<ReviewShowDiffRequest>(message.params!!)
+        val reviewService = project.reviewService ?: return
+
+        reviewService.showDiff(request.reviewId, request.repoId, request.path)
     }
 
     private fun parse(json: String): WebViewMessage {

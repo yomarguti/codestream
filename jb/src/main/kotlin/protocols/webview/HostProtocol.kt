@@ -104,6 +104,12 @@ class EditorScrollToRequest(
     val atTop: Boolean
 )
 
+class ReviewShowDiffRequest(
+    val reviewId: String,
+    val repoId: String,
+    val path: String
+)
+
 class ShellPromptFolderResponse(
     val path: String?,
     val success: Boolean

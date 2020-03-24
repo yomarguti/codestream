@@ -19,6 +19,10 @@ import com.intellij.openapi.wm.ex.ToolWindowManagerListener
 import com.intellij.util.ui.UIUtil
 import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
+import java.io.IOException
+import java.net.URL
+import java.net.URLConnection
+import java.net.URLStreamHandler
 import javax.swing.JLabel
 import kotlin.properties.Delegates
 
@@ -39,11 +43,30 @@ class CodeStreamComponent(val project: Project) : Disposable {
 
     init {
         logger.info("Initializing CodeStream")
+        initUrlHandler()
         initEditorFactoryListener()
         initMessageBusSubscriptions()
         ApplicationManager.getApplication().invokeLater {
             initWindowFocusListener()
             initUnreadsListener()
+        }
+    }
+
+    private fun initUrlHandler() {
+        // CS review diffs use codestream-diff schema. This registration
+        // is necessary otherwise URL constructor will throw an exception.
+        URL.setURLStreamHandlerFactory { protocol ->
+            if ("codestream-diff" == protocol) object : URLStreamHandler() {
+                @Throws(IOException::class)
+                override fun openConnection(url: URL?): URLConnection? {
+                    return object : URLConnection(url) {
+                        @Throws(IOException::class)
+                        override fun connect() {
+                            println("Connected!")
+                        }
+                    }
+                }
+            } else null
         }
     }
 

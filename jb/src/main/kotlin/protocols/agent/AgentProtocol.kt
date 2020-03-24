@@ -135,6 +135,17 @@ enum class PermalinkPrivacy(val value: String) {
     PRIVATE("private")
 }
 
+class GetReviewContentsParams(
+    val reviewId: String,
+    val repoId: String,
+    val path: String
+)
+
+class GetReviewContentsResult(
+    val left: String,
+    val right: String
+)
+
 class TextDocumentFromKeyParams(val key: Int)
 
 class TextDocumentFromKeyResult(
@@ -178,6 +189,11 @@ class Post(
         }
 }
 
+class Review(
+    val id: String,
+    val title: String
+)
+
 class Stream(
     val id: String,
     val type: StreamType,
@@ -205,6 +221,8 @@ class GetPostParams(
     val streamId: String,
     val postId: String
 )
+
+class GetReviewParams(val reviewId: String)
 
 class Marker(
     val id: String,

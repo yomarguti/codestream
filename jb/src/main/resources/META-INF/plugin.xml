@@ -21,11 +21,14 @@
         <projectService serviceImplementation="com.codestream.session.SessionService"/>
         <projectService serviceImplementation="com.codestream.webview.WebViewService"/>
         <projectService serviceImplementation="com.codestream.editor.EditorService"/>
+        <projectService serviceImplementation="com.codestream.review.ReviewService"/>
 
         <applicationConfigurable groupId="tools" displayName="CodeStream" id="preferences.CodeStreamConfigurable"
                                  instance="com.codestream.settings.CodeStreamConfigurable"/>
 
         <errorHandler implementation="com.codestream.error.ErrorHandler"/>
+
+        <diff.DiffExtension implementation="com.codestream.review.ReviewDiffExtension"/>
 
         <intentionAction>
             <className>com.codestream.actions.AddComment</className>
@@ -178,5 +181,5 @@
     </actions>
 
     <depends>com.intellij.modules.platform</depends>
-    <idea-version since-build="182.2757.3"/>
+    <idea-version since-build="192.2840"/>
 </idea-plugin>

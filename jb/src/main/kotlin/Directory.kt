@@ -3,6 +3,7 @@ package com.codestream
 import com.codestream.agent.AgentService
 import com.codestream.authentication.AuthenticationService
 import com.codestream.editor.EditorService
+import com.codestream.review.ReviewService
 import com.codestream.session.SessionService
 import com.codestream.settings.SettingsService
 import com.codestream.webview.WebViewService
@@ -31,6 +32,9 @@ val Project.settingsService: SettingsService?
 
 val Project.webViewService: WebViewService?
     get() = getServiceIfNotDisposed(WebViewService::class.java)
+
+val Project.reviewService: ReviewService?
+    get() = getServiceIfNotDisposed(ReviewService::class.java)
 
 fun <T : Any> Project.getServiceIfNotDisposed(serviceClass: Class<T>): T? =
     if (!isDisposed) ServiceManager.getService(this, serviceClass)

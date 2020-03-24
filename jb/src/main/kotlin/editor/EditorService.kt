@@ -14,6 +14,7 @@ import com.codestream.extensions.textDocumentIdentifier
 import com.codestream.extensions.uri
 import com.codestream.extensions.visibleRanges
 import com.codestream.protocols.webview.EditorNotifications
+import com.codestream.review.ReviewDiffFileSystem
 import com.codestream.sessionService
 import com.codestream.settings.ApplicationSettingsService
 import com.codestream.settingsService
@@ -467,12 +468,18 @@ class EditorService(val project: Project) {
         return future.await()
     }
 
-    suspend fun select(uri: String, selection: EditorSelection, preserveFocus: Boolean): Boolean {
+    suspend fun select(uriString: String, selection: EditorSelection, preserveFocus: Boolean): Boolean {
         val future = CompletableDeferred<Boolean>()
         ApplicationManager.getApplication().invokeLater {
             var editor = FileEditorManager.getInstance(project).selectedTextEditor
-            if (editor?.document?.uri != uri || !editor.isRangeVisible(selection)) {
-                val virtualFile = LocalFileSystem.getInstance().findFileByIoFile(File(URI(uri)))
+            if (editor?.document?.uri != uriString || !editor.isRangeVisible(selection)) {
+                val uri = URI(uriString)
+                val virtualFile = if (uri.scheme == ReviewDiffFileSystem.protocol) {
+                    FileEditorManager.getInstance(project).openFiles.find { it.uri == uriString }
+                } else {
+                    LocalFileSystem.getInstance().findFileByIoFile(File(uri))
+                }
+
                 if (virtualFile == null) {
                     future.complete(false)
                     return@invokeLater
