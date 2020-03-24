@@ -22,6 +22,7 @@ export interface SocketClusterInitializer {
 	port: string; // port of the socketcluster server
 	authKey: string; // unique token provided in the login response
 	userId: string; // ID of the current user
+	strictSSL: boolean; // whether to enforce strict SSL (no self-signed certs)
 	debug?(msg: string, info?: any): void; // for debug messages
 	onMessage: MessageCallback;
 	onStatus: StatusCallback;
@@ -62,7 +63,8 @@ export class SocketClusterConnection implements BroadcasterConnection {
 			hostname: this._options!.host,
 			port: parseInt(this._options!.port, 10),
 			secure: true,
-			autoReconnect: true
+			autoReconnect: true,
+			wsOptions: { rejectUnauthorized: this._options!.strictSSL }
 		});
 
 		this._confirmConnection();

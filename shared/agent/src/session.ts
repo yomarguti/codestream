@@ -295,7 +295,12 @@ export class CodeStreamSession {
 			});
 		}
 
-		this._api = new CodeStreamApiProvider(_options.serverUrl, this.versionInfo, this._httpsAgent);
+		this._api = new CodeStreamApiProvider(
+			_options.serverUrl,
+			this.versionInfo,
+			this._httpsAgent,
+			!_options.disableStrictSSL
+		);
 
 		this._api.useMiddleware({
 			get name() {

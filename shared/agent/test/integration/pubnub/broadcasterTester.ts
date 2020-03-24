@@ -75,7 +75,8 @@ export abstract class BroadcasterTester {
 				},
 				ide: { name: "", version: "" }
 			},
-			undefined
+			undefined,
+			false
 		);
 		this._apiSimulator = new CodeStreamApiSimulator(this._apiRequester);
 		this._api.grantBroadcasterChannelAccess = this._apiSimulator.grant.bind(this._apiSimulator);
@@ -132,6 +133,7 @@ export abstract class BroadcasterTester {
 			authKey: this._broadcasterToken || this._userData!.broadcasterToken,
 			accessToken: this._userData!.accessToken,
 			userId: this._userData!.user._id,
+			strictSSL: false,
 			testMode: true
 		});
 	}

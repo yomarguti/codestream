@@ -58,6 +58,7 @@ export interface BroadcasterEventsInitializer {
 		host: string;
 		port: string;
 	};
+	strictSSL: boolean;
 	httpsAgent?: HttpsAgent | HttpsProxyAgent;
 }
 
@@ -85,6 +86,7 @@ export class BroadcasterEvents implements Disposable {
 			socketCluster: this._options.socketCluster,
 			authKey: this._options.broadcasterToken,
 			userId: this._options.api.userId,
+			strictSSL: this._options.strictSSL,
 			debug: this.debug.bind(this),
 			httpsAgent: this._options.httpsAgent
 		});

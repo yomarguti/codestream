@@ -274,7 +274,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 	constructor(
 		public readonly baseUrl: string,
 		private readonly _version: VersionInfo,
-		private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined
+		private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined,
+		private readonly _strictSSL: boolean
 	) {}
 
 	get teamId(): string {
@@ -525,6 +526,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			broadcasterToken: this._broadcasterToken!,
 			api: this,
 			httpsAgent: this._httpsAgent,
+			strictSSL: this._strictSSL,
 			socketCluster: this._socketCluster
 		});
 		this._events.onDidReceiveMessage(this.onPubnubMessageReceived, this);

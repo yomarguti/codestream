@@ -47,6 +47,7 @@ export interface BroadcasterInitializer {
 	accessToken: string; // access token for api requests
 	authKey: string; // unique broadcaster token provided in the login response
 	userId: string; // ID of the current user
+	strictSSL: boolean; // whether to enforce strict SSL (no self-signed certs)
 	lastMessageReceivedAt?: number; // should persist across sessions, interruptions in service will retrieve messages since this time
 	testMode?: boolean; // whether we emit test-mode statuses, not normally used in production
 	debug?(msg: string, info?: any): void; // for debug messages
@@ -162,6 +163,7 @@ export class Broadcaster {
 				port: options.socketCluster.port,
 				authKey: options.authKey,
 				userId: options.userId,
+				strictSSL: options.strictSSL,
 				onMessage: this.onMessage.bind(this),
 				onStatus: this.onStatus.bind(this),
 				debug: this._debug
