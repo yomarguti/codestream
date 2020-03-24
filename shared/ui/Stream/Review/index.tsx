@@ -69,7 +69,7 @@ import { Loading } from "@codestream/webview/Container/Loading";
 import { TourTip } from "@codestream/webview/src/components/TourTip";
 import { SearchContext } from "../SearchContextProvider";
 import { CommitList } from "./CommitList";
-import { SharingModal } from '../SharingModal';
+import { SharingModal } from "../SharingModal";
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
@@ -656,8 +656,14 @@ const ReviewForReview = (props: PropsWithReview) => {
 			let response = await HostApi.instance.send(CheckReviewPreconditionsRequestType, {
 				reviewId: review.id
 			});
-			if (!response.success && response.error) setPreconditionError(response.error);
-			else setCanStartReview(true);
+			if (!response.success && response.error) {
+				setPreconditionError(response.error);
+				setCanStartReview(false);
+			} else {
+				// need to clear the precondition error
+				setPreconditionError("");
+				setCanStartReview(true);
+			}
 		};
 		checkPreconditions();
 	}, [review]);
@@ -751,12 +757,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 	}, [review]);
 
 	if (shareModalOpen)
-			return (
-				<SharingModal
-					review={props.review!}
-					onClose={() => setShareModalOpen(false)}
-				/>
-			);
+		return <SharingModal review={props.review!} onClose={() => setShareModalOpen(false)} />;
 	if (isEditing) {
 		return (
 			<ReviewForm
