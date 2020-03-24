@@ -60,7 +60,7 @@ interface InheritedProps {
 	jumpToMarker?: boolean;
 	jumpToMarkerId?: string;
 	selected: boolean;
-	disableDiffCheck?: boolean
+	disableDiffCheck?: boolean;
 }
 
 type Props = InheritedProps & ConnectedProps & IntlProps;
@@ -515,12 +515,12 @@ class MarkerActions extends React.Component<Props, State> {
 	};
 
 	renderCodeblock(marker) {
-		const { scrollingCodeBlock, expandCodeBlock } = this.state;
+		const { scrollingCodeBlock, expandCodeBlock, warning } = this.state;
 		if (marker === undefined) return;
 
 		return (
 			<div
-				className="related"
+				className={`related${warning ? "" : " clickable-marker"}`}
 				style={{
 					padding: "0",
 					marginBottom: 0,
@@ -536,14 +536,15 @@ class MarkerActions extends React.Component<Props, State> {
 					e.preventDefault();
 					this._toggleCodeHighlight(false);
 				}}
+				onClick={e => !warning && this.handleClickJump(e)}
 			>
 				<Marker marker={marker} />
-				{this.state.warning && (
+				{warning && (
 					<div className="repo-warning">
 						<Icon name="alert" /> {this.getWarningMessage()}
 					</div>
 				)}
-				{!this.state.warning && (
+				{!warning && (
 					<div className="code-buttons">
 						{scrollingCodeBlock && (
 							<Icon
