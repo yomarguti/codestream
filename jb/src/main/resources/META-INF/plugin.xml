@@ -85,6 +85,14 @@
                 <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="P"
                                    replace-all="true"/>
             </action>
+            <action id="CodeStream.CreateReview" class="com.codestream.actions.CreateReview" text="Create _Review"
+                    description="Create review" >
+                <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH" second-keystroke="R"/>
+                <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="R"
+                                   replace-all="true"/>
+                <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="R"
+                                   replace-all="true"/>
+            </action>
 
             <action id="CodeStream.ToggleView" class="com.codestream.actions.ToggleView" text="Toggle CodeStream">
                 <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH"

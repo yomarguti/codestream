@@ -54,6 +54,16 @@ object CodemarkNotifications {
     }
 }
 
+object ReviewNotifications {
+    class New(
+        val uri: String?,
+        val range: Range,
+        val source: String?
+    ) : WebViewNotification {
+        override fun getMethod() = "webview/review/new"
+    }
+}
+
 object StreamNotifications {
     class Show(
         val streamId: String,
