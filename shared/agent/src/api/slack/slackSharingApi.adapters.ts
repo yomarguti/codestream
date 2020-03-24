@@ -947,7 +947,7 @@ export function toSlackReviewPostBlocks(
 			text: `*${toSlackText(
 				review.title,
 				userMaps
-			)}* includes changes to ${modifiedReposAndBranches.join(", ")}`
+			)}* includes changes to ${modifiedReposAndBranches && modifiedReposAndBranches.length ? modifiedReposAndBranches.join(", ") : "no repos or branches"}`
 		}
 	});
 
@@ -973,14 +973,15 @@ export function toSlackReviewPostBlocks(
 			});
 		}
 	}
-
-	blocks.push({
-		type: "section",
-		text: {
-			type: "mrkdwn",
-			text: `\`\`\`${modifiedFiles.join("\n")}\`\`\``
-		}
-	});
+	if (modifiedFiles && modifiedFiles.length) {
+		blocks.push({
+			type: "section",
+			text: {
+				type: "mrkdwn",
+				text: `\`\`\`${modifiedFiles.join("\n")}\`\`\``
+			}
+		});
+	}
 
 	let counter = 0;
 	let actionId = toReviewReplyActionId(counter, review, slackUserId);
