@@ -211,6 +211,9 @@ export class CodeStreamSession implements Disposable {
 			case ChangeDataType.Unreads:
 				this.fireDidChangeUnreads(new UnreadsChangedEvent(this, e));
 				break;
+			case ChangeDataType.Preferences:
+				this._state!.updatePreferences(e.data);
+				break;
 		}
 	}
 

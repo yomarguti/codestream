@@ -1,5 +1,5 @@
 "use strict";
-import { CSLoginResponse, CSMe } from "@codestream/protocols/api";
+import { CSLoginResponse, CSMe, CSMePreferences } from "@codestream/protocols/api";
 import { Container } from "../container";
 import { Team } from "./models/team";
 import { User } from "./models/user";
@@ -52,6 +52,11 @@ export class SessionState {
 
 	updateUser(user: CSMe) {
 		this._data.user = user;
+		this._user = undefined;
+	}
+
+	updatePreferences(preferences: CSMePreferences) {
+		this._data.user.preferences = preferences;
 		this._user = undefined;
 	}
 }
