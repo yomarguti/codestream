@@ -167,6 +167,7 @@ class Codemark(
 class TextDocument(val uri: String)
 
 class Post(
+    val id: String,
     val version: Int?,
     val streamId: String,
     val creatorId: String?,
@@ -177,7 +178,8 @@ class Post(
     val numReplies: Int,
     val reactions: JsonElement?,
     val parentPostId: String?,
-    val codemark: Codemark?
+    val codemark: Codemark?,
+    val review: Review?
 ) {
     val isNew: Boolean
         get() {
@@ -191,7 +193,8 @@ class Post(
 
 class Review(
     val id: String,
-    val title: String
+    val title: String,
+    val followerIds: List<String>?
 )
 
 class Stream(
