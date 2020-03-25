@@ -52,6 +52,10 @@ class NotificationComponent(val project: Project) {
             val settings = project.settingsService ?: return
             val userLoggedIn = session.userLoggedIn ?: return
 
+            if (!userLoggedIn.user.wantsToastNotifications()) {
+                return
+            }
+
             if (!post.isNew || post.creatorId == userLoggedIn.userId) {
                 return
             }

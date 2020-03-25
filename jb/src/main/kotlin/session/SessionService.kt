@@ -4,6 +4,7 @@ import com.codestream.agent.DidChangeUnreadsNotification
 import com.codestream.agentService
 import com.codestream.error.ErrorHandler
 import com.intellij.openapi.project.Project
+import protocols.agent.CSPreferences
 import protocols.agent.CSUser
 import protocols.agent.Post
 import protocols.agent.Stream
@@ -81,6 +82,10 @@ class SessionService(val project: Project) {
 
     fun didChangePosts(posts: List<Post>) {
         postsObservers.forEach { it(posts) }
+    }
+
+    fun didChangePreferences(preferences: CSPreferences) {
+        _userLoggedIn?.user?.preferences = preferences
     }
 }
 

@@ -66,11 +66,26 @@ class CSUser(
     val id: String,
     val username: String,
     val email: String,
-    val preferences: CSPreferences?
-)
+    var preferences: CSPreferences?
+) {
+    fun wantsToastNotifications(): Boolean = when (preferences?.notificationDelivery) {
+        null -> true
+        NotificationDeliveryPreference.All.value -> true
+        NotificationDeliveryPreference.ToastOnly.value -> true
+        else -> false
+    }
+}
+
+enum class NotificationDeliveryPreference(val value: String) {
+    All("all"),
+    EmailOnly("emailOnly"),
+    ToastOnly("toastOnly"),
+    Off("off")
+}
 
 class CSPreferences(
-    val mutedStreams: Map<String, Boolean>?
+    val mutedStreams: Map<String, Boolean>?,
+    val notificationDelivery: String?
 )
 
 class CSTeam(
