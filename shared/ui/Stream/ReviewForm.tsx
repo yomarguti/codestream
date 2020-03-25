@@ -1272,6 +1272,14 @@ class ReviewForm extends React.Component<Props, State> {
 		this.getScmInfoForURI(repo.folder.uri);
 	};
 
+	handleKeyDown = (event: React.KeyboardEvent) => {
+		if (event.key === "Enter" && event.metaKey) {
+			// command-enter should submit
+			event.preventDefault();
+			this.handleClickSubmit(event);
+		}
+	};
+
 	renderReviewForm() {
 		const { isEditing, editingReview, currentUser, repos } = this.props;
 		const {
@@ -1363,6 +1371,7 @@ class ReviewForm extends React.Component<Props, State> {
 								onChange={e => this.setState({ title: e.target.value, titleTouched: true })}
 								placeholder="Title"
 								ref={ref => (this._titleInput = ref)}
+								onKeyDown={this.handleKeyDown}
 							/>
 						</div>
 						{this.renderTextHelp()}
