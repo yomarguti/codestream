@@ -318,7 +318,9 @@ class ReviewForm extends React.Component<Props, State> {
 					// @ts-ignore
 					commit => commit.info.email !== currentUser.email
 				);
-				if (commitListLength >= 0) this.setState({ commitListLength });
+				// show at least 5 commits, but if the 6th+ commit isn't mine,
+				// hide it behind a "show more" button
+				if (commitListLength >= 5) this.setState({ commitListLength });
 			}
 		}
 
