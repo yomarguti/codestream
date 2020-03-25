@@ -350,11 +350,6 @@ export const Signup = (props: Props) => {
 					</FormattedMessage>
 				</small>
 			</div>
-			<div className="footer">
-				<p>
-					Don't have an account? <a onClick={onClickGithubSignup}>Sign Up</a>
-				</p>
-			</div>
 			<div id="controls">
 				<div className="footer">
 					<Link onClick={onClickGoBack}>
