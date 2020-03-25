@@ -289,19 +289,19 @@ export namespace User {
 	) {
 		if (me.providerInfo == null) return undefined;
 
-		const provider = me.providerInfo[teamId];
-		if (provider == null) return;
-
-		const namedProvider = provider[name];
+		const userProviderInfo = me.providerInfo[name];
+		const teamProviderInfo = me.providerInfo[teamId] && me.providerInfo[teamId][name];
+		const namedProvider = userProviderInfo || teamProviderInfo;
 		if (!namedProvider) return;
+		const typedProvider = namedProvider as any as T;
 
 		if (!host) {
-			return namedProvider as T;
+			return typedProvider;
 		}
 
 		const starredHost = host.replace(/\./g, "*");
-		if (namedProvider.hosts && namedProvider.hosts[starredHost]) {
-			return namedProvider.hosts[starredHost] as T;
+		if (typedProvider.hosts && typedProvider.hosts[starredHost]) {
+			return typedProvider.hosts[starredHost] as T;
 		}
 
 		return undefined;

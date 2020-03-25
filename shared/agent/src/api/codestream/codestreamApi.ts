@@ -378,13 +378,17 @@ export class CodeStreamApiProvider implements ApiProvider {
 			this._token = response.accessToken;
 			throw {
 				error: LoginResult.NotOnTeam,
-				extra: { token: response.accessToken }
+				extra: { token: response.accessToken, email: response.user.email }
 			} as LoginFailResponse;
 		}
 
 		let pickedTeamReason;
 		let team: CSTeam | undefined;
-		let teams = response.teams;
+		const teams = response.teams;
+
+		/*
+		NOTE - slack/msteams login, where the user is assigned to a team by the server, is deprecated
+			github login is treated like a normal login, but without providing password
 
 		// If we are a slack/msteams team or have no overrides, then use the response teamId directly
 		if (
@@ -402,6 +406,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 				teams = response.teams.filter(t => Team.isProvider(t, provider));
 			}
 		}
+		*/
 
 		if (team == null) {
 			// If there is only 1 team, use it regardless of config
