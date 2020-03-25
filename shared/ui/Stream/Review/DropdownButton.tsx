@@ -59,7 +59,8 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 const Root = styled.div`
 	display: inline;
 	.octicon-chevron-down {
-		margin-left: 10px;
+		margin-left: 5px;
+		transform: scale(0.8);
 	}
 `;
 
