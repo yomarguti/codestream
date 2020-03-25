@@ -8,12 +8,20 @@ import {
 	DisconnectThirdPartyProviderRequestType,
 	TelemetryRequestType
 } from "@codestream/protocols/agent";
+import { CSMe } from "@codestream/protocols/api";
 import { logError } from "../../logger";
 import { setIssueProvider } from "../context/actions";
 import { deleteForProvider } from "../activeIntegrations/actions";
 import { CodeStreamState } from "..";
 
 export const reset = () => action("RESET");
+
+export const getUserProviderInfo = (user: CSMe, provider: string, teamId: string) => {
+	const providerInfo = user.providerInfo || {};
+	const userProviderInfo = providerInfo[provider];
+	const teamProviderInfo = providerInfo[teamId] && providerInfo[teamId][provider];
+	return userProviderInfo || teamProviderInfo;
+};
 
 export const updateProviders = (data: ProvidersState) => action(ProvidersActionsType.Update, data);
 
@@ -26,7 +34,7 @@ export const connectProvider = (providerId: string, connectionLocation: ViewLoca
 	if (!provider) return;
 	const user = users[session.userId];
 	const { name, id, isEnterprise } = provider;
-	let providerInfo = ((user.providerInfo || {})[context.currentTeamId] || {})[name];
+	let providerInfo = getUserProviderInfo(user, name, context.currentTeamId);
 	if (providerInfo && isEnterprise) {
 		providerInfo = (providerInfo.hosts || {})[id];
 	}

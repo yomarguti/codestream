@@ -39,7 +39,7 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 			});
 
 			if (status === LoginResult.Success) {
-				HostApi.instance.track("Join Path Selected", { "Path Type": "CodeStream" });
+				HostApi.instance.track("Invitation Code Submitted");
 				props.dispatch(goToSignup({ ...info, inviteCode: code, type: SignupType.JoinTeam }));
 			} else {
 				setIsLoading(false);

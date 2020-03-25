@@ -1,5 +1,6 @@
 import { ActionType } from "../common";
 import * as actions from "./actions";
+import { getUserProviderInfo } from "./actions";
 import { ProvidersState, ProvidersActionsType } from "./types";
 import { CodeStreamState } from "..";
 import { CSMe, CSProviderInfos } from "@codestream/protocols/api";
@@ -39,18 +40,18 @@ export const isConnected = (state: CodeStreamState, option: ProviderPropertyOpti
 	const currentUser = state.users[state.session.userId!] as CSMe;
 	const { currentTeamId } = state.context;
 
-	// ensure there's provider info for the team
-	if (currentUser.providerInfo == undefined || currentUser.providerInfo[currentTeamId] == undefined)
+	// ensure there's provider info for the user
+	if (currentUser.providerInfo == undefined)
 		return false;
 
 	if (isNameOption(option)) {
 		const providerName = option.name;
+		const info = getUserProviderInfo(currentUser, providerName, currentTeamId);
 		switch (providerName) {
 			case "jiraserver":
 			case "github_enterprise":
 			case "gitlab_enterprise": {
 				// enterprise/on-prem providers need the `hosts` validated
-				const info = currentUser.providerInfo[currentTeamId][providerName];
 				return (
 					info != undefined &&
 					info.hosts != undefined &&
@@ -61,7 +62,6 @@ export const isConnected = (state: CodeStreamState, option: ProviderPropertyOpti
 			}
 			default: {
 				// is there an accessToken for the provider?
-				const info = currentUser.providerInfo[currentTeamId][providerName];
 				if (info == undefined) return false;
 				if (info.accessToken != undefined) return true;
 
@@ -75,7 +75,7 @@ export const isConnected = (state: CodeStreamState, option: ProviderPropertyOpti
 		}
 	} else {
 		const providerConfig = state.providers[option.id];
-		const infoForProvider = currentUser.providerInfo![currentTeamId][providerConfig.name];
+		const infoForProvider = getUserProviderInfo(currentUser, providerConfig.name, currentTeamId);
 		if (infoForProvider == undefined) return false;
 
 		if (!providerConfig.isEnterprise) {
@@ -117,11 +117,12 @@ export const getConnectedSharingTargets = (state: CodeStreamState) => {
 
 	if (currentUser.providerInfo == undefined) return [];
 
-	const providerInfo = currentUser.providerInfo[state.context.currentTeamId];
+	const slackProviderInfo = getUserProviderInfo(currentUser, "slack", state.context.currentTeamId);
+	const msteamsProviderInfo = getUserProviderInfo(currentUser, "msteams", state.context.currentTeamId);
 
 	let teams: ThirdPartyTeam[] = [];
 
-	const slackInfos = safe(() => providerInfo!.slack!.multiple);
+	const slackInfos = safe(() => slackProviderInfo!.multiple);
 	if (slackInfos)
 		teams = teams.concat(Object.entries(slackInfos).map(([teamId, info]) => ({
 			icon: PROVIDER_MAPPINGS.slack.icon!,
@@ -130,7 +131,7 @@ export const getConnectedSharingTargets = (state: CodeStreamState) => {
 			teamName: info.data!.team_name
 		})));
 
-	const msTeamInfos = safe(() => providerInfo!.msteams!.multiple);
+	const msTeamInfos = safe(() => msteamsProviderInfo!.multiple);
 	if (msTeamInfos) {
 		const entries = Object.entries(msTeamInfos);
 		const len = entries.length;

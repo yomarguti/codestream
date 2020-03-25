@@ -14,7 +14,7 @@ import { TextInput } from "./TextInput";
 import { LoginResult } from "@codestream/protocols/api";
 import { RegisterUserRequestType } from "@codestream/protocols/agent";
 import { HostApi } from "../webview-api";
-import { completeSignup, SignupType } from "./actions";
+import { completeSignup, startSSOSignin, SignupType } from "./actions";
 import { logError } from "../logger";
 import { useDispatch } from "react-redux";
 
@@ -178,6 +178,18 @@ export const Signup = (props: Props) => {
 		[props.type]
 	);
 
+	const onClickGithubSignup = useCallback(
+		(event: React.SyntheticEvent) => {
+			event.preventDefault();
+			HostApi.instance.track("Provider Auth Selected", {
+				Provider: "GitHub"
+			});
+			const info = props.inviteCode ? { type: SignupType.JoinTeam, inviteCode: props.inviteCode } : undefined;
+			return dispatch(startSSOSignin("github", info));
+		},
+		[props.type]
+	);
+
 	return (
 		<div className="onboarding-page">
 			<form className="standard-form" onSubmit={onSubmit}>
@@ -308,20 +320,41 @@ export const Signup = (props: Props) => {
 							</Button>
 						</div>
 					</div>
-					<div style={{ textAlign: "center" }}>
-						<small className="fine-print">
-							<FormattedMessage id="signUp.legal.start" />{" "}
-							<FormattedMessage id="signUp.legal.terms">
-								{text => <Link href="https://codestream.com/terms">{text}</Link>}
-							</FormattedMessage>{" "}
-							<FormattedMessage id="and" />{" "}
-							<FormattedMessage id="signUp.legal.privacyPolicy">
-								{text => <Link href="https://codestream.com/privacy">{text}</Link>}
-							</FormattedMessage>
-						</small>
+				</fieldset>
+			</form>
+			<form className="standard-form">
+				<fieldset className="form-body">
+					<div id="controls">
+						<div className="outline-box">
+							<Button
+								className="row-button no-top-margin"
+								onClick={onClickGithubSignup}
+							>
+								<Icon name="mark-github" />
+								<div className="copy">Sign Up with GitHub</div>
+								<Icon name="chevron-right" />
+							</Button>
+						</div>
 					</div>
 				</fieldset>
 			</form>
+			<div style={{ textAlign: "center" }}>
+				<small className="fine-print">
+					<FormattedMessage id="signUp.legal.start" />{" "}
+					<FormattedMessage id="signUp.legal.terms">
+						{text => <Link href="https://codestream.com/terms">{text}</Link>}
+					</FormattedMessage>{" "}
+					<FormattedMessage id="and" />{" "}
+					<FormattedMessage id="signUp.legal.privacyPolicy">
+						{text => <Link href="https://codestream.com/privacy">{text}</Link>}
+					</FormattedMessage>
+				</small>
+			</div>
+			<div className="footer">
+				<p>
+					Don't have an account? <a onClick={onClickGithubSignup}>Sign Up</a>
+				</p>
+			</div>
 			<div id="controls">
 				<div className="footer">
 					<Link onClick={onClickGoBack}>

@@ -161,6 +161,11 @@ class Login extends React.Component<Props, State> {
 		this.props.goToNewUserEntry();
 	};
 
+	handleClickGithubSignup = event => {
+		event.preventDefault();
+		this.props.startSSOSignin("github");
+	};
+
 	onClickForgotPassword = (event: React.SyntheticEvent) => {
 		event.preventDefault();
 		this.props.goToForgotPassword({ email: this.state.email });
@@ -221,7 +226,7 @@ class Login extends React.Component<Props, State> {
 										loading={this.state.loading}
 									>
 										<Icon name="codestream" />
-										<div className="copy">Sign In</div>
+										<div className="copy">Sign In with CodeStream</div>
 										<Icon name="chevron-right" />
 									</Button>
 								</div>
@@ -232,6 +237,16 @@ class Login extends React.Component<Props, State> {
 						<fieldset className="form-body">
 							{/* this.renderAccountMessage() */}
 							<div id="controls">
+								<div className="outline-box">
+									<Button
+										className="row-button no-top-margin"
+										onClick={this.handleClickGithubSignup}
+									>
+										<Icon name="mark-github" />
+										<div className="copy">Sign In with GitHub</div>
+										<Icon name="chevron-right" />
+									</Button>
+								</div>
 								<div className="footer">
 									<p>
 										Don't have an account? <a onClick={this.handleClickSignup}>Sign Up</a>

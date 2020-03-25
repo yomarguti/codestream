@@ -2378,7 +2378,7 @@ const mapStateToProps = state => {
 		),
 		team: team,
 		teamProvider: teamProvider,
-		isCodeStreamTeam: teamProvider === "codestream",
+		isCodeStreamTeam: true, /*teamProvider === "codestream",*/ // this should always be true now, even for SSO sign-in
 		channelMembers,
 		services,
 		isInVscode: state.ide.name === "VSC",

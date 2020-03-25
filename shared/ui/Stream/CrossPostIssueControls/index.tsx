@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
-import { connectProvider } from "../../store/providers/actions";
+import { connectProvider, getUserProviderInfo } from "../../store/providers/actions";
 import { openPanel, setIssueProvider } from "../../store/context/actions";
 import Icon from "../Icon";
 import Menu from "../Menu";
@@ -342,19 +342,13 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		if (!provider) return undefined;
 		const display = provider ? PROVIDER_MAPPINGS[provider.name] : undefined;
 		if (!display) return undefined;
-		if (
-			!this.props.currentUser.providerInfo ||
-			!this.props.currentUser.providerInfo[this.props.currentTeamId] ||
-			!this.props.currentUser.providerInfo[this.props.currentTeamId][provider.name]
-		) {
-			return;
-		}
-		let providerInfo = this.props.currentUser.providerInfo[this.props.currentTeamId][provider.name];
+		let providerInfo = getUserProviderInfo(this.props.currentUser, provider.name, this.props.currentTeamId);
+		if (!providerInfo) return;
 		if (provider.isEnterprise) {
 			if (!providerInfo!.hosts) return undefined;
-			providerInfo = providerInfo!.hosts![provider.id];
+			providerInfo = providerInfo!.hosts[provider.id];
 		}
-		if (!providerInfo || !providerInfo.accessToken) return undefined;
+		if (!providerInfo.accessToken) return undefined;
 		return { provider, display };
 	}
 
@@ -362,12 +356,13 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		const provider = this.props.providers ? this.props.providers[providerId] : undefined;
 		const { currentUser } = this.props;
 		if (!provider || currentUser.providerInfo == undefined) return false;
-		let providerInfo = currentUser.providerInfo[this.props.currentTeamId][provider.name];
+		let providerInfo = getUserProviderInfo(currentUser, provider.name, this.props.currentTeamId);
+		if (!providerInfo) return false;
 		if (provider.isEnterprise) {
-			if (!providerInfo!.hosts) return false;
-			providerInfo = providerInfo!.hosts![provider.id];
+			if (!providerInfo.hosts) return false;
+			providerInfo = providerInfo.hosts[provider.id];
 		}
-		return providerInfo && !!providerInfo.accessToken ? true : false;
+		return !!providerInfo.accessToken;
 	}
 }
 

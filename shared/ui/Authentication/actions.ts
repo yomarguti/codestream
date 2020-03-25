@@ -16,7 +16,7 @@ import {
 	goToTeamCreation,
 	goToSSOAuth,
 	setContext,
-	SupportedChatProvider,
+	SupportedSSOProvider,
 	goToSignup,
 	goToLogin,
 	goToSetPassword
@@ -37,10 +37,11 @@ export enum SignupType {
 
 export interface ValidateSignupInfo {
 	type: SignupType;
+	inviteCode?: string;
 }
 
 export const startSSOSignin = (
-	provider: SupportedChatProvider,
+	provider: SupportedSSOProvider,
 	info?: ValidateSignupInfo,
 	access?: ChatProviderAccess
 ) => async (dispatch, getState: () => CodeStreamState) => {
@@ -49,12 +50,24 @@ export const startSSOSignin = (
 		access = context.chatProviderAccess;
 	}
 
-	const queryString = access === "strict" ? "access=strict&" : "";
+	const query: { [key: string]: string } = {
+		noSignup: "1"
+	}
+	if (session.otc) {
+		query.signupToken = session.otc;
+	}
+	if (access === "strict") {
+		query.access = "string";
+	}
+	if (info && info.inviteCode) {
+		query.inviteCode = info.inviteCode;
+	}
+	const queryString = Object.keys(query).map(key => `${key}=${query[key]}`).join("&");
 
 	try {
 		await HostApi.instance.send(OpenUrlRequestType, {
 			url: encodeURI(
-				`${configs.serverUrl}/web/provider-auth/${provider}?noSignup=1&${queryString}signupToken=${session.otc}`
+				`${configs.serverUrl}/web/provider-auth/${provider}?${queryString}`
 			)
 		});
 		return dispatch(goToSSOAuth(provider, { ...(info || emptyObject), mode: access }));
@@ -181,6 +194,13 @@ export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo
 				return dispatch(goToLogin());
 			case LoginResult.AlreadySignedIn:
 				return dispatch(bootstrap());
+			case LoginResult.NotOnTeam:
+				return dispatch(
+					goToTeamCreation({
+						email: response.extra && response.extra.email,
+						token: response.extra && response.extra.token
+					})
+				);
 			case LoginResult.ProviderConnectFailed:
 			// @ts-ignore - reset the otc and cascade to the default case
 			case LoginResult.ExpiredToken:

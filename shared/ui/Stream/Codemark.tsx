@@ -1779,7 +1779,7 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		currentUser: users[session.userId!] as CSMe,
 		author: author as CSUser,
 		codemarkKeybindings: preferences.codemarkKeybindings || emptyObject,
-		isCodeStreamTeam: teamProvider === "codestream",
+		isCodeStreamTeam: true, /*teamProvider === "codestream",*/ // this should always be true now, even for SSO sign-in
 		teammates: getTeamMembers(state),
 		usernames: getUsernames(state),
 		teamTagsHash,

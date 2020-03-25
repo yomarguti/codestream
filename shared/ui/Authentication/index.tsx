@@ -5,6 +5,7 @@ import { Login } from "./Login";
 import { NewUserEntry } from "./NewUserEntry";
 import { SlackAuth } from "./SlackAuth";
 import { MSTeamsAuth } from "./MSTeamsAuth";
+import { GitHubAuth } from "./GitHubAuth";
 import { Signup } from "./Signup";
 import { JoinTeam } from "./JoinTeam";
 import { EmailConfirmation } from "./EmailConfirmation";
@@ -26,6 +27,8 @@ export const UnauthenticatedRoutes = () => {
 			return <MSTeamsAdminApprovalInfo {...props.params} />;
 		case Route.MSTeamsAuth:
 			return <MSTeamsAuth {...props.params} />;
+		case Route.GitHubAuth:
+			return <GitHubAuth {...props.params} />;
 		case Route.Signup:
 			return <Signup {...props.params} />;
 		case Route.Login:

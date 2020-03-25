@@ -112,14 +112,18 @@ export const goToForgotPassword = (params = {}) =>
 export const goToMSTeamsAdminApprovalInfo = (params = {}) =>
 	action(ContextActionsType.SetRoute, { name: Route.MSTeamsAdminApprovalInfo, params });
 
-export type SupportedChatProvider = "slack" | "msteams";
+export type SupportedSSOProvider = "slack" | "msteams" | "github";
 
-export const goToSSOAuth = (provider: SupportedChatProvider, params = {}) => {
+export const goToSSOAuth = (provider: SupportedSSOProvider, params = {}) => {
 	switch (provider) {
+		/*
 		case "slack":
 			return action(ContextActionsType.SetRoute, { name: Route.SlackAuth, params });
 		case "msteams":
 			return action(ContextActionsType.SetRoute, { name: Route.MSTeamsAuth, params });
+		*/
+		case "github":
+			return action(ContextActionsType.SetRoute, { name: Route.GitHubAuth, params });
 		default:
 			throw Error("An invalid auth provider was specified");
 	}

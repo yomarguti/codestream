@@ -67,6 +67,7 @@ export enum Route {
 	Login = "login",
 	SlackAuth = "slackAuth",
 	MSTeamsAuth = "msTeamsAuth",
+	GitHubAuth = "githubAuth",
 	JoinTeam = "joinTeam",
 	EmailConfirmation = "emailConfirmation",
 	TeamCreation = "teamCreation",

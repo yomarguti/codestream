@@ -101,7 +101,7 @@ const bootstrapEssentials = (data: BootstrapInHostResponse) => dispatch => {
 };
 
 export const reAuthForFullChatProvider = (
-	provider: contextActions.SupportedChatProvider,
+	provider: contextActions.SupportedSSOProvider,
 	info?: ValidateSignupInfo
 ) => async dispatch => {
 	await HostApi.instance.send(LogoutRequestType, {
