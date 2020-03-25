@@ -9,7 +9,7 @@ import com.intellij.openapi.wm.ToolWindowManager;
 public class ToolWindowManagerWorkaround {
 
     public static ToolWindowManager getInstance(Project project) {
-        return ToolWindowManager.getInstance(project);
+        return project.isDisposed() ? null : ToolWindowManager.getInstance(project);
     }
 
 }
