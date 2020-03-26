@@ -94,6 +94,7 @@ export const CompareMarkerRequestType = new RequestType<
 export interface InsertTextRequest {
 	text: string;
 	marker: CSMarker;
+	indentAfterInsert?: boolean;
 }
 
 export interface InsertTextResponse {}

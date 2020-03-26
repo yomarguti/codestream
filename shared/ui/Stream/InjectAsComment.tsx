@@ -66,10 +66,10 @@ export const InjectAsComment = (connect(mapStateToProps, { fetchThread }) as any
 				eventName: "InjectAsComment",
 				properties: { "Author?": false }
 			});
-			// HostApi.instance.send(ApplyMarkerRequestType, { marker: props.codemark.markers![0] });
 			HostApi.instance.send(InsertTextRequestType, {
 				marker: props.marker || props.codemark.markers![0],
-				text: codemarkAsCommentString()
+				text: codemarkAsCommentString(),
+				indentAfterInsert: false // set this to true once vscode fixes their bug
 			});
 			props.cancel();
 			if (archive) props.setPinned(false);
