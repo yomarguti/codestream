@@ -322,6 +322,11 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 			filters.assignee = match[1] === "me" ? me : match[1].toLowerCase();
 			text = text.replace(/\s*assignee:@\S+/, " ");
 		}
+		match = text.match(/\bmentions:@(\S+)(\s|$)/);
+		if (match) {
+			filters.mentions = match[1] === "me" ? me : match[1].toLowerCase();
+			text = text.replace(/\s*mentions:@\S+/, " ");
+		}
 		match = text.match(/\breviewer:@(\S+)(\s|$)/);
 		if (match) {
 			filters.assignee = match[1] === "me" ? me : match[1].toLowerCase();
@@ -517,15 +522,25 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 			const title = item.title;
 			const q = filters.text;
 
+			if (
+				q &&
+				!(item.text || "").toLocaleLowerCase().includes(q) &&
+				!(title || "").toLocaleLowerCase().includes(q)
+			)
+				return;
+
+			if (filters.mentions) {
+				const match = "@" + filters.mentions;
+				if (
+					!(item.text || "").toLocaleLowerCase().includes(match) &&
+					!(title || "").toLocaleLowerCase().includes(match)
+				)
+					return;
+			}
+
 			this.sections.forEach(section => {
 				if (assignedItems[item.id]) return;
 
-				if (
-					q &&
-					!(item.text || "").toLocaleLowerCase().includes(q) &&
-					!(title || "").toLocaleLowerCase().includes(q)
-				)
-					return;
 				switch (section) {
 					case "waitingForMe":
 						if (itemStatus === "open" && _includes(assignees || [], this.props.currentUserId))
@@ -718,12 +733,12 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 			{
 				label: "Everything assigned to you",
 				key: "assigned",
-				action: () => this.props.setQuery("is:open assignee:@me ")
+				action: () => this.props.setQuery("assignee:@me ")
 			},
 			{
 				label: "Everything mentioning you",
 				key: "mine",
-				action: () => this.props.setQuery("is:open mentions:@me ")
+				action: () => this.props.setQuery("mentions:@me ")
 			},
 			{
 				label: "Everything impacting code you wrote",
