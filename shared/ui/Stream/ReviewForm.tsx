@@ -791,7 +791,7 @@ class ReviewForm extends React.Component<Props, State> {
 			});
 		} else {
 			this.props.closePanel();
-			if (callback) callback();
+			if (typeof callback === "function") callback();
 		}
 	};
 
