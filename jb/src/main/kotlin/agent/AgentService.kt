@@ -35,6 +35,7 @@ import protocols.agent.CreatePermalinkParams
 import protocols.agent.CreatePermalinkResult
 import protocols.agent.DocumentMarkersParams
 import protocols.agent.DocumentMarkersResult
+import protocols.agent.GetLocalReviewContentsParams
 import protocols.agent.GetPostParams
 import protocols.agent.GetReviewContentsParams
 import protocols.agent.GetReviewContentsResult
@@ -318,9 +319,16 @@ class AgentService(private val project: Project) : Disposable {
         return gson.fromJson(json.get("review"))
     }
 
-    suspend fun getRevieweContents(params: GetReviewContentsParams): GetReviewContentsResult {
+    suspend fun getReviewContents(params: GetReviewContentsParams): GetReviewContentsResult {
         val json = remoteEndpoint
             .request("codestream/review/contents", params)
+            .await() as JsonObject
+        return gson.fromJson(json)
+    }
+
+    suspend fun getLocalReviewContents(params: GetLocalReviewContentsParams): GetReviewContentsResult {
+        val json = remoteEndpoint
+            .request("codestream/review/contentsLocal", params)
             .await() as JsonObject
         return gson.fromJson(json)
     }

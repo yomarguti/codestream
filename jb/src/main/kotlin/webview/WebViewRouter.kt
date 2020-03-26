@@ -35,6 +35,7 @@ import protocols.webview.MarkerApplyRequest
 import protocols.webview.MarkerCompareRequest
 import protocols.webview.MarkerInsertTextRequest
 import protocols.webview.ReviewShowDiffRequest
+import protocols.webview.ReviewShowLocalDiffRequest
 import protocols.webview.ShellPromptFolderResponse
 import protocols.webview.UpdateConfigurationRequest
 import java.util.concurrent.CompletableFuture
@@ -101,6 +102,7 @@ class WebViewRouter(val project: Project) {
             "host/editor/scrollTo" -> editorScrollTo(message)
             "host/shell/prompt/folder" -> shellPromptFolder(message)
             "host/review/showDiff" -> reviewShowDiff(message)
+            "host/review/showLocalDiff" -> reviewShowLocalDiff(message)
             else -> logger.warn("Unhandled host message ${message.method}")
         }
         if (message.id != null) {
@@ -200,6 +202,13 @@ class WebViewRouter(val project: Project) {
         val reviewService = project.reviewService ?: return
 
         reviewService.showDiff(request.reviewId, request.repoId, request.path)
+    }
+
+    private suspend fun reviewShowLocalDiff(message: WebViewMessage) {
+        val request = gson.fromJson<ReviewShowLocalDiffRequest>(message.params!!)
+        val reviewService = project.reviewService ?: return
+
+        reviewService.showLocalDiff(request.repoId, request.path, request.includeSaved, request.includeStaged, request.baseSha)
     }
 
     private fun parse(json: String): WebViewMessage {

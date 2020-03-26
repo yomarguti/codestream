@@ -8,7 +8,9 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.KeyWithDefaultValue
 import com.intellij.openapi.vfs.VirtualFile
+import protocols.agent.GetLocalReviewContentsParams
 import protocols.agent.GetReviewContentsParams
+import protocols.agent.GetReviewContentsResult
 
 enum class ReviewDiffSide(val path: String) {
     LEFT("left"),
@@ -25,10 +27,35 @@ class ReviewService(private val project: Project) {
         val agent = project.agentService ?: return
 
         val review = agent.getReview(reviewId)
-        val contents = agent.getRevieweContents(GetReviewContentsParams(reviewId, repoId, path))
+        val title = review.title
+        val contents = agent.getReviewContents(GetReviewContentsParams(reviewId, repoId, path))
+
+        showDiffContent(reviewId, repoId, path, contents, title)
+    }
+
+    suspend fun showLocalDiff(repoId: String, path: String, includeSaved: Boolean, includeStaged: Boolean, baseSha: String) {
+        val agent = project.agentService ?: return
+
+        val rightVersion = when {
+            includeSaved -> "saved"
+            includeStaged -> "staged"
+            else -> "head"
+        }
+        val contents = agent.getLocalReviewContents(GetLocalReviewContentsParams(repoId, path, baseSha, rightVersion))
+        showDiffContent("local", repoId, path, contents, "New Review")
+    }
+
+    private fun showDiffContent(
+        reviewId: String,
+        repoId: String,
+        path: String,
+        contents: GetReviewContentsResult,
+        title: String
+    ) {
         val leftContent = createReviewDiffContent(project, reviewId, repoId, ReviewDiffSide.LEFT, path, contents.left)
-        val rightContent = createReviewDiffContent(project, reviewId, repoId, ReviewDiffSide.RIGHT, path, contents.right)
-        val diffRequest = SimpleDiffRequest(review.title, leftContent, rightContent, path, path)
+        val rightContent =
+            createReviewDiffContent(project, reviewId, repoId, ReviewDiffSide.RIGHT, path, contents.right)
+        val diffRequest = SimpleDiffRequest(title, leftContent, rightContent, path, path)
         diffRequest.putUserData(REVIEW_DIFF_REQUEST, true)
         val file = SimpleDiffVirtualFile(diffRequest)
         ApplicationManager.getApplication().invokeLater {
@@ -38,4 +65,5 @@ class ReviewService(private val project: Project) {
             manager.openFile(file, true)
         }
     }
+
 }

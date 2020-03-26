@@ -110,6 +110,14 @@ class ReviewShowDiffRequest(
     val path: String
 )
 
+class ReviewShowLocalDiffRequest(
+    val repoId: String,
+    val path: String,
+    val includeSaved: Boolean,
+    val includeStaged: Boolean,
+    val baseSha: String
+)
+
 class ShellPromptFolderResponse(
     val path: String?,
     val success: Boolean
