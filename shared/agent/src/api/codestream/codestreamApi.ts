@@ -1,6 +1,7 @@
 "use strict";
 
 import AbortController from "abort-controller";
+import { Agent as HttpAgent } from "http";
 import { Agent as HttpsAgent } from "https";
 import HttpsProxyAgent from "https-proxy-agent";
 import { isEqual } from "lodash-es";
@@ -274,7 +275,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	constructor(
 		public readonly baseUrl: string,
 		private readonly _version: VersionInfo,
-		private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined,
+		private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent | HttpAgent | undefined,
 		private readonly _strictSSL: boolean
 	) {}
 
@@ -520,12 +521,17 @@ export class CodeStreamApiProvider implements ApiProvider {
 			});
 		}
 
+		// we only need httpsAgent for PubNub, in which case it should always be https
+		const httpsAgent =
+			this._httpsAgent instanceof HttpsAgent || this._httpsAgent instanceof HttpsProxyAgent
+				? this._httpsAgent
+				: undefined;
 		this._events = new BroadcasterEvents({
 			accessToken: this._token!,
 			pubnubSubscribeKey: this._pubnubSubscribeKey,
 			broadcasterToken: this._broadcasterToken!,
 			api: this,
-			httpsAgent: this._httpsAgent,
+			httpsAgent,
 			strictSSL: this._strictSSL,
 			socketCluster: this._socketCluster
 		});

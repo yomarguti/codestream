@@ -20,6 +20,7 @@ import { SocketClusterHistory } from "./socketClusterHistory";
 export interface SocketClusterInitializer {
 	host: string; // host of the socketcluster server
 	port: string; // port of the socketcluster server
+	secure?: boolean; // whether the socketcluster connection uses ssl
 	authKey: string; // unique token provided in the login response
 	userId: string; // ID of the current user
 	strictSSL: boolean; // whether to enforce strict SSL (no self-signed certs)
@@ -59,18 +60,21 @@ export class SocketClusterConnection implements BroadcasterConnection {
 		this._statusCallback = options.onStatus;
 
 		this._debug(`Connecting to ${this._options!.host}:${this._options.port}`);
+		if (!this._options.secure) {
+			this._debug("Connection will not be secure");
+		}
 		this._socket = create({
 			hostname: this._options!.host,
 			port: parseInt(this._options!.port, 10),
-			secure: true,
+			secure: this._options.secure,
 			autoReconnect: true,
 			wsOptions: { rejectUnauthorized: this._options!.strictSSL }
 		});
 
 		this._confirmConnection();
-		return ({
+		return {
 			dispose: this.disconnect.bind(this)
-		});
+		};
 	}
 
 	// confirm the connection to the SocketCluster server is good
@@ -93,8 +97,7 @@ export class SocketClusterConnection implements BroadcasterConnection {
 			this._debug("Authorizing the connection...");
 			try {
 				await this._confirmAuth();
-			}
-			catch (error) {
+			} catch (error) {
 				const message = error instanceof Error ? error.message : JSON.stringify(error);
 				this._debug(`Unable to authorize connection: ${message}`);
 				if (this._connectionTimer) {
@@ -114,9 +117,7 @@ export class SocketClusterConnection implements BroadcasterConnection {
 			this._connected = true;
 
 			(async () => {
-				for await (
-					const { channel } of this._socket!.listener("subscribe")
-				) {
+				for await (const { channel } of this._socket!.listener("subscribe")) {
 					this._handleSubscribe(channel);
 				}
 			})();
@@ -199,8 +200,7 @@ export class SocketClusterConnection implements BroadcasterConnection {
 			this._debug("Error confirming subscriptions: " + message);
 			try {
 				await this._confirmConnection();
-			}
-			catch (ex) {
+			} catch (ex) {
 				message = ex instanceof Error ? ex.message : JSON.stringify(ex);
 				this._debug("Error confirming connection: " + message);
 			}
@@ -225,8 +225,7 @@ export class SocketClusterConnection implements BroadcasterConnection {
 				token: this._options.authKey,
 				uid: this._options.userId
 			});
-		}
-		catch (error) {
+		} catch (error) {
 			const message = error instanceof Error ? error.message : JSON.stringify(error);
 			throw new Error(`Auth error: ${message}`);
 		}
@@ -239,8 +238,7 @@ export class SocketClusterConnection implements BroadcasterConnection {
 				socket: this._socket!,
 				...options
 			});
-		}
-		catch (error) {
+		} catch (error) {
 			this._debug("Error fetching history, will confirm good connection");
 			this._confirmConnection();
 			throw error;
@@ -248,7 +246,6 @@ export class SocketClusterConnection implements BroadcasterConnection {
 	}
 
 	_subscribeToChannel(channel: string) {
-
 		if (this._socket!.isSubscribed(channel)) {
 			this._debug(`We are already subscribed to ${channel}`);
 			this._handleSubscribe(channel);
@@ -257,13 +254,10 @@ export class SocketClusterConnection implements BroadcasterConnection {
 
 		(async () => {
 			try {
-				for await (
-					const data of this._socket!.subscribe(channel)
-				) {
+				for await (const data of this._socket!.subscribe(channel)) {
 					this._handleMessage(data);
 				}
-			}
-			catch (error) {
+			} catch (error) {
 				this._debug("Failed to subscribe to", channel);
 				this._handleSubscribeFail(error, channel);
 			}

@@ -55,6 +55,7 @@ export interface BroadcasterInitializer {
 	socketCluster?: {
 		host: string;
 		port: string;
+		secure?: boolean;
 	};
 }
 
@@ -161,6 +162,7 @@ export class Broadcaster {
 			await socketClusterConnection.initialize({
 				host: options.socketCluster.host,
 				port: options.socketCluster.port,
+				secure: options.socketCluster.secure,
 				authKey: options.authKey,
 				userId: options.userId,
 				strictSSL: options.strictSSL,

@@ -1,4 +1,5 @@
 "use strict";
+import { Agent as HttpAgent } from "http";
 import { Agent as HttpsAgent } from "https";
 import HttpsProxyAgent from "https-proxy-agent";
 import { isEqual } from "lodash-es";
@@ -213,6 +214,7 @@ export class CodeStreamSession {
 	}
 
 	private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined;
+	private readonly _httpAgent: HttpAgent | undefined; // used if api server is http
 	private readonly _readyPromise: Promise<void>;
 	// in-memory store of what UI the user is current looking at
 	private uiState: string | undefined;
@@ -295,10 +297,16 @@ export class CodeStreamSession {
 			});
 		}
 
+		// if our api server is http (on-prem installation), create a separate http agent
+		const protocol = url.parse(_options.serverUrl).protocol;
+		if (protocol === "http:") {
+			this._httpAgent = new HttpAgent();
+		}
+
 		this._api = new CodeStreamApiProvider(
 			_options.serverUrl,
 			this.versionInfo,
-			this._httpsAgent,
+			this._httpAgent || this._httpsAgent,
 			!_options.disableStrictSSL
 		);
 
