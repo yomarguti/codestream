@@ -873,7 +873,7 @@ export class Codemark extends React.Component<Props, State> {
 		if (parseInt(index, 10) > 0) {
 			const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
 			return (
-				<div style={{ float: "right", marginRight: "5px", opacity: 0.6 }}>
+				<div style={{ float: "right", marginRight: "10px", opacity: 0.6 }}>
 					<span className="keybinding extra-pad">{modifier}</span>
 					<span className="keybinding extra-pad">{index}</span>
 				</div>
@@ -1379,12 +1379,12 @@ export class Codemark extends React.Component<Props, State> {
 										{author.username}
 										<Timestamp relative time={codemark.createdAt} />
 									</div>
-									<div className="right">
+									<div className="right" style={{ alignItems: "center" }}>
 										<span onClick={this.handleMenuClick}>
 											<Icon name="kebab-vertical" className="kebab-vertical clickable" />
 										</span>
-										{this.renderKeybinding(codemark)}
 										{this.renderStatus(codemark)}
+										{this.renderKeybinding(codemark)}
 										{menuOpen && (
 											<Menu items={menuItems} target={menuTarget} action={this.handleSelectMenu} />
 										)}
