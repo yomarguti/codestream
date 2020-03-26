@@ -730,6 +730,9 @@ export class Codemark extends React.Component<Props, State> {
 	};
 
 	deleteCodemark = () => {
+		const { codemark } = this.props;
+		if (!codemark) return;
+		const type = codemark.type === "issue" ? "Issue" : "Comment";
 		confirmPopup({
 			title: "Are you sure?",
 			message: "Deleting a codemark cannot be undone.",
@@ -737,7 +740,7 @@ export class Codemark extends React.Component<Props, State> {
 			buttons: [
 				{ label: "Go Back", className: "control-button" },
 				{
-					label: "Delete Comment",
+					label: "Delete " + type,
 					className: "delete",
 					wait: true,
 					action: () => {

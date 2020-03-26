@@ -165,6 +165,7 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 		];
 
 		if (derivedState.isMine) {
+			const type = codemark.type === "issue" ? "Issue" : "Comment";
 			items.push(
 				{ label: "Edit", key: "edit", action: () => setIsEditing(true) },
 				{
@@ -178,7 +179,7 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 							buttons: [
 								{ label: "Go Back", className: "control-button" },
 								{
-									label: "Delete Comment",
+									label: "Delete " + type,
 									className: "delete",
 									wait: true,
 									action: () => {
