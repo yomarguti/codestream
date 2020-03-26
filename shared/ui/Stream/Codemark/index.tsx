@@ -178,7 +178,7 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 							buttons: [
 								{ label: "Go Back", className: "control-button" },
 								{
-									label: "Delete Codemark",
+									label: "Delete Comment",
 									className: "delete",
 									wait: true,
 									action: () => {

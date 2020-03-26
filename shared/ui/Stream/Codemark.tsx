@@ -737,7 +737,7 @@ export class Codemark extends React.Component<Props, State> {
 			buttons: [
 				{ label: "Go Back", className: "control-button" },
 				{
-					label: "Delete Codemark",
+					label: "Delete Comment",
 					className: "delete",
 					wait: true,
 					action: () => {
