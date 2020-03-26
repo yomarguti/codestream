@@ -95,8 +95,14 @@ class NotificationComponent(val project: Project) {
                 session.getUser(post.creatorId)?.username ?: "Someone"
             else "Someone"
 
+        val text = if (post.text.startsWith("/me ")) {
+            post.text.replaceFirst("/me", sender)
+        } else {
+            post.text
+        }
+
         val notification = notificationGroup.createNotification(
-            null, sender, post.text, NotificationType.INFORMATION
+            null, sender, text, NotificationType.INFORMATION
         )
         notification.addAction(NotificationAction.createSimple("Open") {
             project.codeStream?.show {
