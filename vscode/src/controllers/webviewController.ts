@@ -694,7 +694,7 @@ export class WebviewController implements Disposable {
 			}
 			case InsertTextRequestType.method: {
 				webview.onIpcRequest(InsertTextRequestType, e, async (_type, params) => {
-					void (await Container.commands.insertText({ marker: params.marker, text: params.text }));
+					void (await Container.commands.insertText({ ...params }));
 					return emptyObj;
 				});
 

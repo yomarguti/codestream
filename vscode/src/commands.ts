@@ -16,6 +16,7 @@ const command = createCommandDecorator(commandRegistry);
 export interface InsertTextCommandArgs {
 	text: string;
 	marker: CSMarkerIdentifier;
+	indentAfterInsert?: boolean;
 }
 
 export interface ApplyMarkerCommandArgs {
@@ -103,9 +104,17 @@ export class Commands implements Disposable {
 		if (resp === undefined) return false;
 
 		const line = resp.range.start.line;
-		return editor.edit(builder => {
+		await editor.edit(builder => {
 			builder.replace(new Range(line, 0, line, 0), args.text);
 		});
+		if (args.indentAfterInsert) {
+			await Editor.selectRange(editor.document.uri, new Range(line, 0, line + 10, 0), undefined, {
+				preserveFocus: false
+			});
+			await commands.executeCommand(BuiltInCommands.IndentSelection);
+			await commands.executeCommand(BuiltInCommands.FormatSelection);
+		}
+		return true;
 	}
 
 	@command("applyMarker", { showErrorMessage: "Unable to open comment" })
