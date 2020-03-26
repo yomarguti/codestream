@@ -907,6 +907,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		if (newCodemarkAttributes && newCodemarkAttributes.type === "link")
 			return this.closeCodemarkForm();
 
+		const type =
+			newCodemarkAttributes && newCodemarkAttributes.type === "issue" ? "Issue" : "Comment";
 		confirmPopup({
 			title: "Are you sure?",
 			message: "Changes you made will not be saved.",
@@ -914,7 +916,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			buttons: [
 				{ label: "Go Back", className: "control-button" },
 				{
-					label: "Discard Codemark",
+					label: "Discard " + type,
 					wait: true,
 					action: this.closeCodemarkForm,
 					className: "delete"
