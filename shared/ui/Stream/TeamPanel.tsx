@@ -362,7 +362,11 @@ class TeamPanel extends React.Component<Props, State> {
 					))}
 					{stomp && (
 						<div style={{ paddingTop: "10px" }}>
-							Includes {stomp.stomped} change{stomp.stomped > 1 ? "s" : ""} to code you wrote
+							<span className="stomped" style={{ paddingLeft: 0 }}>
+								@{stomp.stomped}
+							</span>{" "}
+							= Includes {stomp.stomped} change
+							{stomp.stomped > 1 ? "s" : ""} to code you wrote
 						</div>
 					)}
 				</>
