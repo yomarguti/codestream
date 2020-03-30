@@ -18,11 +18,13 @@ interface Props {
 	delay?: number;
 	clickable?: boolean;
 	muted?: boolean;
+	loading?: boolean;
 	onClick?(event: React.SyntheticEvent): any;
 }
 
 const Icon = React.forwardRef<any, Props>((props, ref) => {
-	const icon = Icons8[props.name] || octicons[props.name];
+	const name = props.loading ? "sync" : props.name;
+	const icon = Icons8[name] || octicons[name];
 	// const icon = octicons[props.name]; why is this commented out?
 	// if we can't find the icon, throw an error
 	if (!icon) throw new Error(`No icon found for '${props.name}'`);
@@ -30,6 +32,7 @@ const Icon = React.forwardRef<any, Props>((props, ref) => {
 	const iconImage = (
 		<span
 			className={createClassString("icon", props.className, {
+				spin: props.loading,
 				clickable: props.clickable,
 				muted: props.muted
 			})}
