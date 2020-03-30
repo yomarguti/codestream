@@ -269,6 +269,16 @@ export class Commands implements Disposable {
 		return this.newReviewRequest(args);
 	}
 
+	@command("showNextChangedFile", { showErrorMessage: "Unable to show next changed file" })
+	showNextChangedFile() {
+		return this.showNextChangedFileRequest();
+	}
+
+	@command("showPreviousChangedFile", { showErrorMessage: "Unable to show previous changed file" })
+	showPreviousChangedFile() {
+		return this.showPreviousChangedFileRequest();
+	}
+
 	@command("newBookmark", { showErrorMessage: "Unable to add bookmark" })
 	newBookmark(args?: NewCodemarkCommandArgs) {
 		return this.newCodemarkRequest(CodemarkType.Bookmark, args);
@@ -438,6 +448,14 @@ export class Commands implements Disposable {
 		// if (editor === undefined) return;
 
 		await Container.webview.newReviewRequest(editor, args.source || "Context Menu");
+	}
+
+	private async showNextChangedFileRequest() {
+		await Container.webview.showNextChangedFile();
+	}
+
+	private async showPreviousChangedFileRequest() {
+		await Container.webview.showPreviousChangedFile();
 	}
 
 	private async openWorkingFileForMarkerCore(marker: CSMarkerIdentifier) {

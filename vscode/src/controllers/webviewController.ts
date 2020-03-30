@@ -52,6 +52,10 @@ import {
 	ReviewShowLocalDiffRequestType,
 	ShellPromptFolderRequestType,
 	ShowCodemarkNotificationType,
+	ShowNextChangedFileNotificationType,
+	ShowPreviousChangedFileNotificationType,
+	ShowNextChangedFileRequestType,
+	ShowPreviousChangedFileRequestType,
 	ShowReviewNotificationType,
 	UpdateConfigurationRequestType,
 	WebviewContext,
@@ -280,6 +284,16 @@ export class WebviewController implements Disposable {
 			range: Editor.toSerializableRange(editor.selection),
 			source: source
 		});
+	}
+
+	@log()
+	async showNextChangedFile(): Promise<void> {
+		this._webview!.notify(ShowNextChangedFileNotificationType, {});
+	}
+
+	@log()
+	async showPreviousChangedFile(): Promise<void> {
+		this._webview!.notify(ShowPreviousChangedFileNotificationType, {});
 	}
 
 	@log()
@@ -834,6 +848,24 @@ export class WebviewController implements Disposable {
 							? BuiltInCommands.GoToNextDiff
 							: BuiltInCommands.GoToPreviousDiff;
 					await commands.executeCommand(command);
+
+					return emptyObj;
+				});
+
+				break;
+			}
+			case ShowPreviousChangedFileRequestType.method: {
+				webview.onIpcRequest(ShowPreviousChangedFileRequestType, e, async (_type, _params) => {
+					await commands.executeCommand(BuiltInCommands.GoToPreviousChangedFile);
+
+					return emptyObj;
+				});
+
+				break;
+			}
+			case ShowNextChangedFileRequestType.method: {
+				webview.onIpcRequest(ShowNextChangedFileRequestType, e, async (_type, _params) => {
+					await commands.executeCommand(BuiltInCommands.GoToNextChangedFile);
 
 					return emptyObj;
 				});

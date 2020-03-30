@@ -14,6 +14,8 @@ export enum BuiltInCommands {
 	ExecuteCodeLensProvider = "vscode.executeCodeLensProvider",
 	GoToNextDiff = "workbench.action.compareEditor.nextChange",
 	GoToPreviousDiff = "workbench.action.compareEditor.previousChange",
+	GoToNextChangedFile = "codestream.showNextChangedFile",
+	GoToPreviousChangedFile = "codestream.showPreviousChangedFile",
 	IndentSelection = "editor.action.reindentselectedlines",
 	FormatSelection = "editor.action.formatSelection",
 	NextEditor = "workbench.action.nextEditor",

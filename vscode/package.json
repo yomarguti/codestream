@@ -146,6 +146,16 @@
                 "category": "CodeStream"
             },
             {
+                "command": "codestream.showNextChangedFile",
+                "title": "Show Next Changed File",
+                "category": "CodeStream"
+            },
+            {
+                "command": "codestream.showPreviousChangedFile",
+                "title": "Show Previous Changed File",
+                "category": "CodeStream"
+            },
+            {
                 "command": "codestream.closeReviewDiff",
                 "title": "Close Review Diff",
                 "category": "CodeStream"
@@ -315,6 +325,24 @@
                 "when": "codestream:status == signedIn"
             },
             {
+                "command": "codestream.showNextChangedFile",
+                "args": {
+                    "source": "Shortcut"
+                },
+                "key": "alt+f6",
+                "mac": "alt+f6",
+                "when": "codestream:status == signedIn"
+            },
+            {
+                "command": "codestream.showPreviousChangedFile",
+                "args": {
+                    "source": "Shortcut"
+                },
+                "key": "alt+shift+f6",
+                "mac": "alt+shift+f6",
+                "when": "codestream:status == signedIn"
+            },
+            {
                 "command": "codestream.newPermalink",
                 "args": {
                     "source": "Shortcut"
@@ -451,6 +479,14 @@
                 },
                 {
                     "command": "codestream.newReview",
+                    "when": "codestream:status == signedIn"
+                },
+                {
+                    "command": "codestream.showPreviousChangedFile",
+                    "when": "codestream:status == signedIn"
+                },
+                {
+                    "command": "codestream.showNextChangedFile",
                     "when": "codestream:status == signedIn"
                 },
                 {
