@@ -3,9 +3,12 @@ import React, { PropsWithChildren } from "react";
 import { CSUser } from "@codestream/protocols/api";
 import { emojiPlain } from "../../Stream/Markdowner";
 import Tooltip from "../../Stream/Tooltip";
+import { MarkdownText } from "@codestream/webview/Stream/MarkdownText";
 
 const Root = styled.span`
 	padding-left: 10px;
+	display: flex;
+	align-items: top;
 	.label {
 		color: var(--text-color-subtle);
 	}
@@ -48,10 +51,12 @@ export function UserStatus(props: { user: CSUser }) {
 		);
 
 	return (
-		<Tooltip title={tip} placement="top">
-			<Root>
+		<Tooltip title={tip} placement="bottom">
+			<Root className="user-status">
 				<span className="emoji">{emojiPlain(status.icon)}</span>
-				<span className="label">{status.label}</span>
+				<span className="label">
+					<MarkdownText text={status.label} excludeParagraphWrap={true}></MarkdownText>
+				</span>
 			</Root>
 		</Tooltip>
 	);

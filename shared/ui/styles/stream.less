@@ -1487,6 +1487,11 @@
 				color: @text-color-info;
 			}
 		}
+		.invite-panel {
+			.user-status {
+				padding-left: 43px;
+			}
+		}
 		.standard-form {
 			.header {
 				padding: 2px 20px !important;
@@ -2794,6 +2799,24 @@
 		cursor: pointer;
 		transition: transform 0.1s;
 		display: inline-block;
+		&.no {
+			opacity: 0.5;
+			position: relative;
+			&:before {
+				content: "";
+				display: block;
+				position: absolute;
+				left: 0;
+				top: 8px;
+				width: 14px;
+				height: 2px;
+				background: var(--text-color);
+				transform: rotate(-45deg);
+			}
+			&:hover:before {
+				background: @text-color-info;
+			}
+		}
 		&:hover,
 		&.hover {
 			opacity: 1;
@@ -2802,6 +2825,9 @@
 		}
 		&.nogrow:hover {
 			transform: scale(1);
+		}
+		&.info {
+			color: @text-color-info !important;
 		}
 	}
 	// .switch.public-private

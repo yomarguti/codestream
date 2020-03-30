@@ -12,19 +12,21 @@ import { getTeamProvider } from "../store/teams/reducer";
 import { HostApi } from "../webview-api";
 import { WebviewPanels } from "@codestream/protocols/webview";
 import { PanelHeader } from "../src/components/PanelHeader";
+import { setUserStatus } from "./actions";
 import {
 	RepoScmStatus,
 	DidChangeDataNotificationType,
 	ChangeDataType
 } from "@codestream/protocols/agent";
-import { CSUser, CSApiCapabilities } from "@codestream/protocols/api";
+import { CSUser } from "@codestream/protocols/api";
 import { ChangesetFile } from "./Review/ChangesetFile";
 import Tooltip from "./Tooltip";
-import styled from "styled-components";
 import { UserStatus } from "../src/components/UserStatus";
 import { DocumentData } from "../protocols/agent/agent.protocol.notifications";
 import { updateModifiedRepos, clearModifiedFiles } from "../store/users/actions";
 import { CSText } from "../src/components/CSText";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import cx from "classnames";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -46,11 +48,13 @@ interface ConnectedProps {
 	teamProvider: any;
 	members: CSUser[];
 	repos: any;
-	apiCapabilities: CSApiCapabilities;
 	currentUserInvisible: false;
 	updateModifiedRepos: Function;
 	clearModifiedFiles: Function;
 	currentUserEmail: string;
+	currentUserId: string;
+	xrayEnabled: boolean;
+	setUserStatus: Function;
 }
 
 interface State {
@@ -64,6 +68,7 @@ interface State {
 	newMemberInputTouched: boolean;
 	inputTouched: boolean;
 	modifiedRepos: RepoScmStatus[];
+	loadingStatus: boolean;
 }
 
 class TeamPanel extends React.Component<Props, State> {
@@ -77,7 +82,8 @@ class TeamPanel extends React.Component<Props, State> {
 		newMemberInputTouched: false,
 		inputTouched: false,
 		newMemberEmailInvalid: false,
-		modifiedRepos: []
+		modifiedRepos: [],
+		loadingStatus: false
 	};
 
 	private _pollingTimer?: any;
@@ -138,7 +144,7 @@ class TeamPanel extends React.Component<Props, State> {
 	}
 
 	getScmInfoSummary = async () => {
-		this.props.updateModifiedRepos();
+		await this.props.updateModifiedRepos();
 	};
 
 	clearScmInfoSummary = async () => {
@@ -389,8 +395,17 @@ class TeamPanel extends React.Component<Props, State> {
 		});
 	}
 
+	toggleInvisible = async () => {
+		const { setUserStatus, currentUserInvisible } = this.props;
+		this.setState({ loadingStatus: true });
+		await setUserStatus("", "", !currentUserInvisible, 0);
+		await this.getScmInfoSummary();
+		this.setState({ loadingStatus: false });
+	};
+
 	render() {
-		const { invitingEmails } = this.state;
+		const { xrayEnabled, currentUserId, currentUserInvisible } = this.props;
+		const { invitingEmails, loadingStatus } = this.state;
 		const inactive =
 			this.props.activePanel !== WebviewPanels.Invite &&
 			this.props.activePanel !== WebviewPanels.People;
@@ -409,10 +424,28 @@ class TeamPanel extends React.Component<Props, State> {
 											<Headshot person={user}></Headshot>
 											<b>{user.fullName}</b>{" "}
 											<CSText as="span" muted>
-												@{user.username}
-											</CSText>{" "}
-											<UserStatus user={user} />
+												@{user.username}{" "}
+											</CSText>
+											&nbsp;
+											{xrayEnabled && user.id === currentUserId && (
+												<Icon
+													name="broadcast"
+													className={cx("clickable spinnable nogrow", {
+														no: currentUserInvisible && !loadingStatus,
+														info: !currentUserInvisible
+													})}
+													onClick={this.toggleInvisible}
+													placement="bottom"
+													loading={loadingStatus}
+													title={
+														currentUserInvisible
+															? "Not sharing local changes with the team"
+															: "Sharing local changes with the team"
+													}
+												/>
+											)}
 										</li>
+										{/*<UserStatus user={user} />*/}
 										{this.renderModifiedRepos(user)}
 									</>
 								))}
@@ -464,11 +497,12 @@ class TeamPanel extends React.Component<Props, State> {
 	}
 }
 
-const mapStateToProps = ({ users, context, teams, repos, session, apiVersioning }) => {
+const mapStateToProps = state => {
+	const { users, context, teams, repos, session } = state;
 	const team = teams[context.currentTeamId];
 	const teamProvider = getTeamProvider(team);
 
-	const members = mapFilter(team.memberIds, id => {
+	const teammates = mapFilter(team.memberIds, id => {
 		const user = users[id as string];
 		if (!user || !user.isRegistered || user.deactivated || user.externalUserId) return;
 
@@ -476,6 +510,10 @@ const mapStateToProps = ({ users, context, teams, repos, session, apiVersioning 
 			let email = user.email;
 			if (email) user.fullName = email.replace(/@.*/, "");
 		}
+
+		// filter out the current user, as we'll render them first
+		if (id === session.userId) return;
+
 		return user;
 	});
 	const currentUser = users[session.userId];
@@ -501,20 +539,22 @@ const mapStateToProps = ({ users, context, teams, repos, session, apiVersioning 
 		teamId: team.id,
 		teamName: team.name,
 		repos,
+		currentUserId: currentUser.id,
 		currentUserInvisible: invisible,
 		currentUserEmail: currentUser.email,
-		members: _sortBy(members, m => (m.fullName || "").toLowerCase()),
+		members: [currentUser, ..._sortBy(teammates, m => (m.fullName || "").toLowerCase())],
 		invited: _sortBy(invited, "email"),
 		suggested: _sortBy(suggested, m => (m.fullName || "").toLowerCase()),
 		webviewFocused: context.hasFocus,
-		apiCapabilities: apiVersioning.apiCapabilities
+		xrayEnabled: isFeatureEnabled(state, "xray")
 	};
 };
 
 const ConnectedTeamPanel = connect(mapStateToProps, {
 	invite,
 	updateModifiedRepos,
-	clearModifiedFiles
+	clearModifiedFiles,
+	setUserStatus
 })(TeamPanel);
 
 export { ConnectedTeamPanel as TeamPanel };
