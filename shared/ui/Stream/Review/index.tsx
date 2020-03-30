@@ -70,6 +70,10 @@ import { TourTip } from "@codestream/webview/src/components/TourTip";
 import { SearchContext } from "../SearchContextProvider";
 import { CommitList } from "./CommitList";
 import { SharingModal } from "../SharingModal";
+import {
+	ShowPreviousChangedFileRequestType,
+	ShowNextChangedFileRequestType
+} from "@codestream/protocols/webview";
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
@@ -156,6 +160,12 @@ const MetaCheckboxWithHoverIcon = styled.div`
 	}
 	&:hover .icon {
 		display: inline-block !important;
+	}
+`;
+
+const MetaIcons = styled.span`
+	.icon {
+		margin-left: 10px;
 	}
 `;
 
@@ -263,6 +273,12 @@ const BaseReview = (props: BaseReviewProps) => {
 		dispatch(setCurrentReview());
 		searchContext.goToSearch(query);
 	};
+
+	const prevFile = () => HostApi.instance.send(ShowPreviousChangedFileRequestType, {});
+
+	const nextFile = () => HostApi.instance.send(ShowNextChangedFileRequestType, {});
+
+	const modifier = "⌥";
 
 	return (
 		<MinimumWidthCard {...getCardProps(props)} noCard={!props.collapsed}>
@@ -399,7 +415,35 @@ const BaseReview = (props: BaseReviewProps) => {
 					{!props.collapsed && (
 						<TourTip title={props.filesTip} placement="top">
 							<Meta id="changed-files">
-								<MetaLabel>Changed Files</MetaLabel>
+								<MetaLabel>
+									Changed Files
+									<MetaIcons>
+										<Icon
+											onClick={nextFile}
+											name="arrow-down"
+											className="clickable"
+											placement="top"
+											delay={1}
+											title={
+												<span>
+													Next File <span className="keybinding">{modifier} F6</span>
+												</span>
+											}
+										/>
+										<Icon
+											onClick={prevFile}
+											name="arrow-up"
+											className="clickable"
+											placement="top"
+											delay={1}
+											title={
+												<span>
+													Previous File <span className="keybinding">⇧ {modifier} F6</span>
+												</span>
+											}
+										/>
+									</MetaIcons>
+								</MetaLabel>
 								<MetaDescriptionForAssignees>
 									<ChangesetFileList
 										review={review}

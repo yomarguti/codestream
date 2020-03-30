@@ -62,3 +62,17 @@ export interface NewReviewNotification {
 export const NewReviewNotificationType = new NotificationType<NewReviewNotification, void>(
 	`${IpcRoutes.Webview}/review/new`
 );
+
+export interface ShowNextChangedFileNotification {}
+
+export const ShowNextChangedFileNotificationType = new NotificationType<
+	ShowNextChangedFileNotification,
+	void
+>(`${IpcRoutes.Webview}/showChangedFile/next`);
+
+export interface ShowPreviousChangedFileNotification {}
+
+export const ShowPreviousChangedFileNotificationType = new NotificationType<
+	ShowPreviousChangedFileNotification,
+	void
+>(`${IpcRoutes.Webview}/showChangedFile/previous`);

@@ -37,6 +37,7 @@ export interface ReviewCloseDiffRequest {}
 
 export interface ReviewCloseDiffResponse {}
 
+// this doesn't work yet due to limitations in vscode window handling
 export const ReviewCloseDiffRequestType = new RequestType<
 	ReviewCloseDiffRequest,
 	ReviewCloseDiffResponse,
@@ -56,3 +57,21 @@ export const TraverseDiffsRequestType = new RequestType<
 	void,
 	void
 >(`${IpcRoutes.Host}/review/diffs/traverse`);
+
+export interface ShowPreviousChangedFileRequest {}
+export interface ShowNextChangedFileRequest {}
+export interface ShowChangedFileResponse {}
+
+export const ShowPreviousChangedFileRequestType = new RequestType<
+	ShowPreviousChangedFileRequest,
+	ShowChangedFileResponse,
+	void,
+	void
+>(`${IpcRoutes.Host}/review/changedFiles/previous`);
+
+export const ShowNextChangedFileRequestType = new RequestType<
+	ShowNextChangedFileRequest,
+	ShowChangedFileResponse,
+	void,
+	void
+>(`${IpcRoutes.Host}/review/changedFiles/next`);
