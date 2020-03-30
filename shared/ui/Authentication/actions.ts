@@ -32,7 +32,8 @@ import { setSession, setMaintenanceMode } from "../store/session/actions";
 
 export enum SignupType {
 	JoinTeam = "joinTeam",
-	CreateTeam = "createTeam"
+	CreateTeam = "createTeam",
+	Login = "login"
 }
 
 export interface ValidateSignupInfo {
@@ -50,8 +51,9 @@ export const startSSOSignin = (
 		access = context.chatProviderAccess;
 	}
 
-	const query: { [key: string]: string } = {
-		noSignup: "1"
+	const query: { [key: string]: string } = {};
+	if (info && info.type === SignupType.Login) {
+		query.noSignup = "1";
 	}
 	if (session.otc) {
 		query.signupToken = session.otc;
@@ -62,13 +64,13 @@ export const startSSOSignin = (
 	if (info && info.inviteCode) {
 		query.inviteCode = info.inviteCode;
 	}
-	const queryString = Object.keys(query).map(key => `${key}=${query[key]}`).join("&");
+	const queryString = Object.keys(query)
+		.map(key => `${key}=${query[key]}`)
+		.join("&");
 
 	try {
 		await HostApi.instance.send(OpenUrlRequestType, {
-			url: encodeURI(
-				`${configs.serverUrl}/web/provider-auth/${provider}?${queryString}`
-			)
+			url: encodeURI(`${configs.serverUrl}/web/provider-auth/${provider}?${queryString}`)
 		});
 		return dispatch(goToSSOAuth(provider, { ...(info || emptyObject), mode: access }));
 	} catch (error) {

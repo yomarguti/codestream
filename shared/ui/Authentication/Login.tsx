@@ -3,7 +3,7 @@ import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
 import Icon from "../Stream/Icon";
 import Button from "../Stream/Button";
-import { authenticate, startSSOSignin } from "./actions";
+import { authenticate, SignupType, startSSOSignin } from "./actions";
 import { CodeStreamState } from "../store";
 import { goToNewUserEntry, goToForgotPassword } from "../store/context/actions";
 
@@ -161,9 +161,9 @@ class Login extends React.Component<Props, State> {
 		this.props.goToNewUserEntry();
 	};
 
-	handleClickGithubSignup = event => {
+	handleClickGithubLogin = event => {
 		event.preventDefault();
-		this.props.startSSOSignin("github");
+		this.props.startSSOSignin("github", { type: SignupType.Login });
 	};
 
 	onClickForgotPassword = (event: React.SyntheticEvent) => {
@@ -240,7 +240,7 @@ class Login extends React.Component<Props, State> {
 								<div className="outline-box">
 									<Button
 										className="row-button no-top-margin"
-										onClick={this.handleClickGithubSignup}
+										onClick={this.handleClickGithubLogin}
 									>
 										<Icon name="mark-github" />
 										<div className="copy">Sign In with GitHub</div>
