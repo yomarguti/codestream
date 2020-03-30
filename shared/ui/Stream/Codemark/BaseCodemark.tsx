@@ -425,7 +425,8 @@ export const MetaRow = styled.div`
 export const MetaLabel = styled.div`
 	text-transform: uppercase;
 	font-weight: 800;
-	opacity: 0.5;
+	opacity: 0.7;
+	color: var(--text-color-subtle);
 	font-size: 11px;
 	margin-bottom: 3px;
 `;
