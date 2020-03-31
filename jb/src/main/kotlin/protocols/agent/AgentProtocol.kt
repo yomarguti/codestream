@@ -1,5 +1,6 @@
 package protocols.agent
 
+import com.codestream.RECORD_REQUESTS
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
@@ -18,7 +19,7 @@ class InitializationOptions(
     val serverUrl: String,
     val disableStrictSSL: Boolean,
     val traceLevel: String,
-    val recordRequests: Boolean = false
+    val recordRequests: Boolean = RECORD_REQUESTS
 )
 
 class LoginWithTokenParams(
