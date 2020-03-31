@@ -134,7 +134,7 @@ class TeamPanel extends React.Component<Props, State> {
 
 		this._pollingTimer = setInterval(() => {
 			this.getScmInfoSummary();
-		}, 30000);
+		}, 3000);
 	}
 
 	private stopPolling() {
@@ -349,7 +349,6 @@ class TeamPanel extends React.Component<Props, State> {
 		const { repos, teamId, currentUserEmail } = this.props;
 		const { modifiedRepos, modifiedReposModifiedAt } = user;
 
-		console.log("YEAH", user);
 		if (!modifiedRepos || !modifiedRepos[teamId] || !modifiedRepos[teamId].length) return null;
 
 		return modifiedRepos[teamId].map(repo => {

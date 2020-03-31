@@ -21,6 +21,7 @@ export const addUsers = (users: CSUser[]) => action(UsersActionsType.Add, users)
 export const updateModifiedRepos = () => async (dispatch, getState: () => CodeStreamState) => {
 	const state = getState();
 	const { users, session, context } = state;
+	const teamId = context.currentTeamId;
 
 	// this neuters
 	if (!isFeatureEnabled(state, "xray")) return;
@@ -41,7 +42,14 @@ export const updateModifiedRepos = () => async (dispatch, getState: () => CodeSt
 	});
 	if (!result.scm) return;
 
-	dispatch(_updateModifiedRepos(result.scm, context.currentTeamId));
+	if (currentUser.modifiedRepos && currentUser.modifiedRepos[teamId]) {
+		// don't bother the API server if the value hasn't changed
+		if (JSON.stringify(result.scm) === JSON.stringify(currentUser.modifiedRepos[teamId])) {
+			return;
+		}
+	}
+
+	dispatch(_updateModifiedRepos(result.scm, teamId));
 };
 
 export const clearModifiedFiles = teamId => _updateModifiedRepos([], teamId);
