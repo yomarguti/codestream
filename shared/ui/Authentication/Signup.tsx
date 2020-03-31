@@ -17,6 +17,7 @@ import { HostApi } from "../webview-api";
 import { completeSignup, startSSOSignin, SignupType } from "./actions";
 import { logError } from "../logger";
 import { useDispatch } from "react-redux";
+import { CSText } from "../src/components/CSText";
 
 const isPasswordValid = (password: string) => password.length >= 6;
 export const isEmailValid = (email: string) => {
@@ -184,7 +185,9 @@ export const Signup = (props: Props) => {
 			HostApi.instance.track("Provider Auth Selected", {
 				Provider: "GitHub"
 			});
-			const info = props.inviteCode ? { type: SignupType.JoinTeam, inviteCode: props.inviteCode } : undefined;
+			const info = props.inviteCode
+				? { type: SignupType.JoinTeam, inviteCode: props.inviteCode }
+				: undefined;
 			return dispatch(startSSOSignin("github", info));
 		},
 		[props.type]
@@ -326,14 +329,16 @@ export const Signup = (props: Props) => {
 				<fieldset className="form-body">
 					<div id="controls">
 						<div className="outline-box">
-							<Button
-								className="row-button no-top-margin"
-								onClick={onClickGithubSignup}
-							>
+							<Button className="row-button no-top-margin" onClick={onClickGithubSignup}>
 								<Icon name="mark-github" />
 								<div className="copy">Sign Up with GitHub</div>
 								<Icon name="chevron-right" />
 							</Button>
+							<div style={{ height: "15px" }} />
+							<CSText muted as="span">
+								If you use GitLab, BitBucket, or a self-managed git server, sign up with CodeStream
+								above.
+							</CSText>
 						</div>
 					</div>
 				</fieldset>
