@@ -174,7 +174,7 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 									{hasAssignees && (
 										<Meta>
 											<MetaLabel>Assignees</MetaLabel>
-											<MetaDescriptionForAssignees>
+											<MetaDescriptionForTags>
 												{props.assignees!.map(assignee => (
 													<MetaAssignee key={assignee.username || assignee.email}>
 														<Headshot person={assignee as any} size={18} />
@@ -189,7 +189,7 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 														</span>
 													</MetaAssignee>
 												))}
-											</MetaDescriptionForAssignees>
+											</MetaDescriptionForTags>
 										</Meta>
 									)}
 								</MetaRow>

@@ -25,6 +25,7 @@ export interface HeadshotProps {
 		color?: number;
 	};
 	size?: number;
+	hardRightBorder?: boolean;
 	display?: string;
 	onClick?: React.MouseEventHandler;
 	className?: string;
@@ -32,6 +33,7 @@ export interface HeadshotProps {
 
 interface DimensionProps {
 	size: number;
+	hardRightBorder?: boolean;
 }
 
 const Root = styled.div<DimensionProps & { display?: string }>`
@@ -64,15 +66,16 @@ const Image = styled.img<DimensionProps>`
 	position: absolute;
 	width: ${props => props.size}px;
 	height: ${props => props.size}px;
-	border-radius: 3px;
+	border-radius: ${props => (props.hardRightBorder ? "3px 0 0 3px" : "3px")};
 	z-index: 2;
 `;
 
-const StyledGravatar = styled(Gravatar)`
+const StyledGravatar = styled(Gravatar)<DimensionProps>`
 	display: flex;
 	position: absolute;
 	z-index: 2;
 	border-radius: 3px;
+	border-radius: ${props => (props.hardRightBorder ? "3px 0 0 3px" : "3px")};
 `;
 
 export const Headshot = styled((props: HeadshotProps) => {
@@ -98,14 +101,20 @@ export const Headshot = styled((props: HeadshotProps) => {
 
 		return (
 			<Root size={size} display={display} onClick={props.onClick}>
-				<Image size={size} src={uri} />
+				<Image size={size} hardRightBorder={props.hardRightBorder} src={uri} />
 			</Root>
 		);
 	}
 
 	return (
 		<Root size={size} display={display} className={props.className} onClick={props.onClick}>
-			<StyledGravatar size={size} default="blank" protocol="https://" email={person.email} />
+			<StyledGravatar
+				size={size}
+				hardRightBorder={props.hardRightBorder}
+				default="blank"
+				protocol="https://"
+				email={person.email}
+			/>
 			<Initials size={size} color={Colors[person.color || 1]}>
 				{initials}
 			</Initials>

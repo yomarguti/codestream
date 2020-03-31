@@ -1,10 +1,9 @@
 import React from "react";
 import styled from "styled-components";
 import { Headshot } from "./Headshot";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { CodeStreamState } from "@codestream/webview/store";
-import { getActivity } from "@codestream/webview/store/activityFeed/reducer";
-import * as userSelectors from "../../store/users/reducer";
+import cx from "classnames";
 
 // this displays a headshot and the username after it
 
@@ -15,11 +14,13 @@ export interface HeadshotNameProps {
 		fullName?: string;
 		username?: string;
 		color?: number;
+		id?: string;
 	};
 	id?: string;
 	size?: number;
 	onClick?: React.MouseEventHandler;
 	className?: string;
+	highlightMe?: boolean;
 }
 
 interface ClickProps {
@@ -36,7 +37,7 @@ const Root = styled.div<ClickProps>`
 	}
 `;
 
-const HeadshotWrapper = styled.span`
+export const HeadshotWrapper = styled.span`
 	display: inline-block;
 	padding-right: 5px;
 	vertical-align: -5px;
@@ -44,16 +45,22 @@ const HeadshotWrapper = styled.span`
 
 export function HeadshotName(props: HeadshotNameProps) {
 	const derivedState = useSelector((state: CodeStreamState) => {
-		return { users: state.users };
+		return { users: state.users, currentUserId: state.session.userId };
 	});
 	const person = props.person || derivedState.users[props.id || ""];
 	if (!person) return null;
+	const me = props.highlightMe && person.id === derivedState.currentUserId;
 	return (
 		<Root className={props.className} onClick={props.onClick}>
 			<HeadshotWrapper>
-				<Headshot person={person} size={props.size || 20} className={props.className} />
+				<Headshot
+					person={person}
+					size={props.size || 20}
+					className={props.className}
+					hardRightBorder={me}
+				/>
 			</HeadshotWrapper>
-			<span className="headshot-name">{person.username}</span>
+			<span className={cx("headshot-name", { "at-mention me": me })}>{person.username}</span>
 		</Root>
 	);
 }

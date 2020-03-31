@@ -74,6 +74,7 @@ import {
 	ShowPreviousChangedFileRequestType,
 	ShowNextChangedFileRequestType
 } from "@codestream/protocols/webview";
+import { HeadshotName } from "@codestream/webview/src/components/HeadshotName";
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
@@ -331,20 +332,11 @@ const BaseReview = (props: BaseReviewProps) => {
 							{hasReviewers && (
 								<Meta>
 									<MetaLabel>Reviewers</MetaLabel>
-									<MetaDescriptionForAssignees>
+									<MetaDescriptionForTags>
 										{props.reviewers!.map(reviewer => (
-											<MetaAssignee key={reviewer.id}>
-												<Headshot person={reviewer as any} size={18} />
-												<span
-													className={cx({
-														"at-mention me": reviewer.id === props.currentUserId
-													})}
-												>
-													{reviewer.username}
-												</span>
-											</MetaAssignee>
+											<HeadshotName person={reviewer} highlightMe />
 										))}
-									</MetaDescriptionForAssignees>
+									</MetaDescriptionForTags>
 								</Meta>
 							)}
 						</MetaRow>
