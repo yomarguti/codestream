@@ -2,7 +2,7 @@
     "name": "codestream",
     "displayName": "CodeStream",
     "description": "Discuss code easily. Streamline Code Reviews. Improve code quality. Works w/ Slack, Teams, Jira, Trello, git, and more.",
-    "version": "6.5.0",
+    "version": "6.5.1",
     "author": "CodeStream",
     "publisher": "CodeStream",
     "license": "UNLICENSED",
