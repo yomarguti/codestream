@@ -1,0 +1,150 @@
+{
+  "url": "/streams?teamId=5bbd06ba2aae56770cbcbf47",
+  "response": {
+    "streams": [
+      {
+        "version": 659,
+        "deactivated": false,
+        "createdAt": 1539114682475,
+        "modifiedAt": 1581649779528,
+        "_id": "5bbd06ba2aae56770cbcbf49",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "type": "channel",
+        "name": "general",
+        "isTeamStream": true,
+        "privacy": "public",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "sortId": "5e460f733563c63e56bd8634",
+        "mostRecentPostId": "5e460f733563c63e56bd8634",
+        "mostRecentPostCreatedAt": 1581649779517,
+        "numMarkers": 228,
+        "purpose": "lots of purpose",
+        "id": "5bbd06ba2aae56770cbcbf49"
+      },
+      {
+        "version": 9,
+        "deactivated": false,
+        "createdAt": 1540298665521,
+        "modifiedAt": 1570824151133,
+        "_id": "5bcf17a9d4321c0d4897c70d",
+        "type": "channel",
+        "name": "private1",
+        "memberIds": [
+          "5bbd06952aae56770cbcbf45",
+          "5bbe2a6333d00a39e1a4dd21"
+        ],
+        "isTeamStream": false,
+        "privacy": "private",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "sortId": "5da0dfd75c5c265f987e71d0",
+        "mostRecentPostId": "5da0dfd75c5c265f987e71d0",
+        "mostRecentPostCreatedAt": 1570824151127,
+        "numMarkers": 1,
+        "id": "5bcf17a9d4321c0d4897c70d"
+      },
+      {
+        "version": 8,
+        "deactivated": false,
+        "createdAt": 1540323391639,
+        "modifiedAt": 1563830578617,
+        "_id": "5bcf783fd4321c0d4897c73b",
+        "type": "channel",
+        "name": "private5",
+        "memberIds": [
+          "5bbd06952aae56770cbcbf45",
+          "5bbe2a6333d00a39e1a4dd21"
+        ],
+        "isTeamStream": false,
+        "privacy": "private",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "sortId": "5d362932b85e1a4595d5d55c",
+        "mostRecentPostId": "5d362932b85e1a4595d5d55c",
+        "mostRecentPostCreatedAt": 1563830578615,
+        "numMarkers": 2,
+        "id": "5bcf783fd4321c0d4897c73b"
+      },
+      {
+        "version": 6,
+        "deactivated": false,
+        "createdAt": 1540323463466,
+        "modifiedAt": 1557325699681,
+        "_id": "5bcf7887d4321c0d4897c73e",
+        "type": "channel",
+        "name": "private6",
+        "memberIds": [
+          "5bbd06952aae56770cbcbf45",
+          "5bbe2a6333d00a39e1a4dd21"
+        ],
+        "isTeamStream": false,
+        "privacy": "private",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "sortId": "5cd2e78398b55c350978304a",
+        "mostRecentPostId": "5cd2e78398b55c350978304a",
+        "mostRecentPostCreatedAt": 1557325699680,
+        "id": "5bcf7887d4321c0d4897c73e"
+      },
+      {
+        "version": 153,
+        "deactivated": false,
+        "createdAt": 1540321726819,
+        "modifiedAt": 1557259957257,
+        "_id": "5bcf71bed4321c0d4897c720",
+        "type": "direct",
+        "memberIds": [
+          "5bbd06952aae56770cbcbf45",
+          "5bbe2a6333d00a39e1a4dd21"
+        ],
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "privacy": "private",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "sortId": "5cd1e6b598b55c3509782f70",
+        "mostRecentPostId": "5cd1e6b598b55c3509782f70",
+        "mostRecentPostCreatedAt": 1557259957255,
+        "id": "5bcf71bed4321c0d4897c720"
+      },
+      {
+        "version": 6,
+        "deactivated": false,
+        "createdAt": 1539977528197,
+        "modifiedAt": 1539977528197,
+        "_id": "5bca3138f5c10132ce0b0844",
+        "type": "direct",
+        "memberIds": [
+          "5bbd06952aae56770cbcbf45"
+        ],
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "privacy": "private",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "sortId": "5be5b63b4be93925fc92b2e7",
+        "mostRecentPostId": "5be5b63b4be93925fc92b2e7",
+        "mostRecentPostCreatedAt": 1541781051887,
+        "numMarkers": 3,
+        "id": "5bca3138f5c10132ce0b0844"
+      },
+      {
+        "version": 5,
+        "deactivated": false,
+        "createdAt": 1540324347474,
+        "modifiedAt": 1540324374235,
+        "_id": "5bcf7bfbd4321c0d4897c745",
+        "type": "channel",
+        "name": "public2",
+        "memberIds": [
+          "5bbd06952aae56770cbcbf45",
+          "5bbe2a6333d00a39e1a4dd21"
+        ],
+        "isTeamStream": false,
+        "privacy": "public",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "sortId": "5bcf7c16d4321c0d4897c748",
+        "mostRecentPostId": "5bcf7c16d4321c0d4897c748",
+        "mostRecentPostCreatedAt": 1540324374411,
+        "id": "5bcf7bfbd4321c0d4897c745"
+      }
+    ]
+  }
+}

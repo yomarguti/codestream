@@ -1,0 +1,7 @@
+{
+  "method": "codestream/verifyConnectivity",
+  "request": null,
+  "response": {
+    "ok": true
+  }
+}

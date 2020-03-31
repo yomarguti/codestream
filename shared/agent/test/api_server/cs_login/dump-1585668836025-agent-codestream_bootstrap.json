@@ -1,0 +1,1838 @@
+{
+  "method": "codestream/bootstrap",
+  "request": {},
+  "response": {
+    "companies": [
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1532536443954,
+        "modifiedAt": 1580761656464,
+        "_id": "5b58a67befb4c720ffe15a7b",
+        "name": "codestream.com",
+        "creatorId": "5b58a606efb4c720ffe15a78",
+        "teamIds": [
+          "5b58a67befb4c720ffe15a7a",
+          "5e388238e95b967dc1cedaf6"
+        ],
+        "id": "5b58a67befb4c720ffe15a7b"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1539114682473,
+        "modifiedAt": 1539114682473,
+        "_id": "5bbd06ba2aae56770cbcbf48",
+        "name": "codestream.com",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "teamIds": [
+          "5bbd06ba2aae56770cbcbf47"
+        ],
+        "id": "5bbd06ba2aae56770cbcbf48"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1576868804508,
+        "modifiedAt": 1576868804508,
+        "_id": "5dfd1bc4d3d59050f7712bb0",
+        "name": "Dave299a Inc.",
+        "teamIds": [
+          "5dfd1bc4d3d59050f7712baf"
+        ],
+        "creatorId": "5dfd1baecfbdd550957d9eef",
+        "id": "5dfd1bc4d3d59050f7712bb0"
+      }
+    ],
+    "preferences": {
+      "showChannels": "all",
+      "notifications": "involveMe",
+      "hideReviewInstructions": true
+    },
+    "repos": [
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1539116328198,
+        "modifiedAt": 1539116328198,
+        "_id": "5bbd0d282aae56770cbcbf52",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/marcelofarias/atom",
+            "normalizedUrl": "github.com/marcelofarias/atom",
+            "companyIdentifier": "github.com/marcelofarias"
+          },
+          {
+            "url": "github.com/teamcodestream/atom",
+            "normalizedUrl": "github.com/teamcodestream/atom",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "atom",
+        "id": "5bbd0d282aae56770cbcbf52"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1540571136813,
+        "modifiedAt": 1540571136813,
+        "_id": "5bd340000d99e654fdb1160f",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/marcelofarias/testrepo",
+            "normalizedUrl": "github.com/marcelofarias/testrepo",
+            "companyIdentifier": "github.com/marcelofarias"
+          },
+          {
+            "url": "github.com/teamcodestream/testrepo",
+            "normalizedUrl": "github.com/teamcodestream/testrepo",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "testrepo",
+        "id": "5bd340000d99e654fdb1160f"
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "createdAt": 1540573891017,
+        "modifiedAt": 1572379347271,
+        "_id": "5bd34ac30d99e654fdb11618",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/codestream-lsp-agent",
+            "normalizedUrl": "github.com/teamcodestream/codestream-lsp-agent",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "codestream-lsp-agent",
+        "knownCommitHashes": [
+          "9e309889aca97a45d500644129a8b0ff7987b4ea"
+        ],
+        "id": "5bd34ac30d99e654fdb11618"
+      },
+      {
+        "version": 3,
+        "deactivated": false,
+        "createdAt": 1546626169350,
+        "modifiedAt": 1573322567525,
+        "_id": "5c2fa479bf3c0f5a976eb784",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/plugin-commons",
+            "normalizedUrl": "github.com/teamcodestream/plugin-commons",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "plugin-commons",
+        "knownCommitHashes": [
+          "82904d5a09db52822ab4c934c65a48e89ad9bfc6",
+          "6a77def49f176098efcaa2493a8c5a8ab05230a8"
+        ],
+        "id": "5c2fa479bf3c0f5a976eb784"
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "createdAt": 1547142907640,
+        "modifiedAt": 1573831255345,
+        "_id": "5c3786fbfc3c614c7071607f",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "gitlab.com/marcelo.farias/test-project",
+            "normalizedUrl": "gitlab.com/marcelo.farias/test-project",
+            "companyIdentifier": "gitlab.com/marcelo.farias"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "test-project",
+        "knownCommitHashes": [
+          "da5355020e9e047f7803c1715f9841c95012ded5"
+        ],
+        "id": "5c3786fbfc3c614c7071607f"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1547681179187,
+        "modifiedAt": 1547681179187,
+        "_id": "5c3fbd9b11a7db5d199f5e57",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "bitbucket.org/marcelofarias/bitbucket-repo",
+            "normalizedUrl": "bitbucket.org/marcelofarias/bitbucket-repo",
+            "companyIdentifier": "bitbucket.org/marcelofarias"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "bitbucket-repo",
+        "id": "5c3fbd9b11a7db5d199f5e57"
+      },
+      {
+        "version": 4,
+        "deactivated": false,
+        "createdAt": 1548282663236,
+        "modifiedAt": 1581649779520,
+        "_id": "5c48eb27554e64504f1b25c8",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/codestream-components",
+            "normalizedUrl": "github.com/teamcodestream/codestream-components",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "codestream-components",
+        "knownCommitHashes": [
+          "71f4641bcd6fca2077dfe0f18c232d60dd853297",
+          "cca5c4f6667140f55ee574e1f2b3bb8a6c35d9fc",
+          "9dead5ccac241b2888814d95d88808b38ec193b2"
+        ],
+        "id": "5c48eb27554e64504f1b25c8"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1554856956389,
+        "modifiedAt": 1554856956389,
+        "_id": "5cad3bfc573a51521e0e1f3d",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/vscode-codestream",
+            "normalizedUrl": "github.com/teamcodestream/vscode-codestream",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbe2a6333d00a39e1a4dd21",
+        "name": "vscode-codestream",
+        "id": "5cad3bfc573a51521e0e1f3d"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1554932931401,
+        "modifiedAt": 1554932931401,
+        "_id": "5cae64c3573a51521e0e2003",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/planteater/hello-ny",
+            "normalizedUrl": "github.com/planteater/hello-ny",
+            "companyIdentifier": "github.com/planteater"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "hello-ny",
+        "id": "5cae64c3573a51521e0e2003"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1555080859853,
+        "modifiedAt": 1555080859853,
+        "_id": "5cb0a69b1f43823096beae5d",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/vs-codestream",
+            "normalizedUrl": "github.com/teamcodestream/vs-codestream",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "vs-codestream",
+        "id": "5cb0a69b1f43823096beae5d"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1555530960272,
+        "modifiedAt": 1555530960272,
+        "_id": "5cb784d0ba9bb10ae60d6c08",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/marcelofarias/jxbrowser-test",
+            "normalizedUrl": "github.com/marcelofarias/jxbrowser-test",
+            "companyIdentifier": "github.com/marcelofarias"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "jxbrowser-test",
+        "id": "5cb784d0ba9bb10ae60d6c08"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1558528230964,
+        "modifiedAt": 1558528230965,
+        "_id": "5ce540e65abfd559ef58f67f",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "39.108.40.223/invoice/invoice",
+            "normalizedUrl": "39.108.40.223/invoice/invoice",
+            "companyIdentifier": "40.223"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "invoice",
+        "id": "5ce540e65abfd559ef58f67f"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1558707372844,
+        "modifiedAt": 1558707372844,
+        "_id": "5ce7fcaca44684170ec2251e",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/misc",
+            "normalizedUrl": "github.com/teamcodestream/misc",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "misc",
+        "id": "5ce7fcaca44684170ec2251e"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1560464098823,
+        "modifiedAt": 1560464098823,
+        "_id": "5d02cae24f7bbe549b58aa8b",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/marcelofarias/foo",
+            "normalizedUrl": "github.com/marcelofarias/foo",
+            "companyIdentifier": "github.com/marcelofarias"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "foo",
+        "id": "5d02cae24f7bbe549b58aa8b"
+      },
+      {
+        "version": 6,
+        "deactivated": false,
+        "createdAt": 1562019971306,
+        "modifiedAt": 1581000546816,
+        "_id": "5d1a8883ff3a1f5eaa709263",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/gore",
+            "normalizedUrl": "github.com/teamcodestream/gore",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "gore",
+        "knownCommitHashes": [
+          "e1595d76728e61dfc9cc28f11f0247f7b5f8068b",
+          "65cd09141a2e36a139047f4329dc293053b036f1",
+          "dbb73a2e44c88636e1b242112b38be40dd9259d8",
+          "55151611cc05d479ad58a6e36dc1f37ed64ac6f0",
+          "9b3af762f16f2522e3fb19ca100a5898d5b84e30"
+        ],
+        "id": "5d1a8883ff3a1f5eaa709263"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1563501954230,
+        "modifiedAt": 1563501954230,
+        "_id": "5d312582b85e1a4595d5d46a",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/chupacabra",
+            "normalizedUrl": "github.com/teamcodestream/chupacabra",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "chupacabra",
+        "id": "5d312582b85e1a4595d5d46a"
+      },
+      {
+        "version": 3,
+        "deactivated": false,
+        "createdAt": 1568203364497,
+        "modifiedAt": 1578327474023,
+        "_id": "5d78e2647e7d7705dc6b2162",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/jetbrains-codestream",
+            "normalizedUrl": "github.com/teamcodestream/jetbrains-codestream",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "jetbrains-codestream",
+        "knownCommitHashes": [
+          "dc66cc544ea279f0bdcd6b42aee963f9d9989556",
+          "9d7c358b85cd37e89896a7857ca1232296b0d42e"
+        ],
+        "id": "5d78e2647e7d7705dc6b2162"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1570049617412,
+        "modifiedAt": 1570049617412,
+        "_id": "5d950e518e8bf5441bfa2fca",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/classlibrary1",
+            "normalizedUrl": "github.com/teamcodestream/classlibrary1",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "classlibrary1",
+        "id": "5d950e518e8bf5441bfa2fca"
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "createdAt": 1579552866616,
+        "modifiedAt": 1579555447860,
+        "_id": "5e2610621ac9807e703be522",
+        "remotes": [
+          {
+            "url": "github.com/gtache/intellij-lsp",
+            "normalizedUrl": "github.com/gtache/intellij-lsp",
+            "companyIdentifier": "github.com/gtache"
+          }
+        ],
+        "knownCommitHashes": [
+          "bff1fd68ca1fbb2f699a8a65d13412a9c0787f58",
+          "d2e18fc24b4184d2d80368455a6326f075b8e6e5",
+          "94a377603b3c15f4c1568f6d11e796099250d4af",
+          "870c053eca1af00eb201500cb652cbf801e3b3c4",
+          "33454a18125333db84e4f538a89913df1d57b060",
+          "c13bd854b17445f00c5100d3015c6d9b790e5170",
+          "78eda98c5c2c04934cc5d3aab345857c3c33c337",
+          "1ecfca69427bfda002772fa7ba4d00e3a0db3039",
+          "3dabec61ae3026060311a9f382cf07e9f1f6e00b",
+          "a0b1ab59f14df22815ae9f0c4713437a0925c28a",
+          "bff1fd68ca1fbb2f699a8a65d13412a9c0787f58",
+          "ae2ac2a9afe086b4e7493343a58a76b70fa31b0f"
+        ],
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "intellij-lsp",
+        "id": "5e2610621ac9807e703be522"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1585176208987,
+        "modifiedAt": 1585176208987,
+        "_id": "5e7bde90f9e71a672308af6a",
+        "remotes": [
+          {
+            "url": "github.com/planteater/hello-dc",
+            "normalizedUrl": "github.com/planteater/hello-dc",
+            "companyIdentifier": "github.com/planteater"
+          }
+        ],
+        "knownCommitHashes": [
+          "4d6c5cac41b42af4519fe94d095d06f7c84051e0",
+          "c945c20c59ef3686bd4b68bb3785e1168baa61cc",
+          "a4094b8962b7473a0c99d2fd856cb3891cc064f3",
+          "a2a06e180690bfbe8d7ecec923da6d8173416950",
+          "c0e0d9c2b0919c95ff7c49ab1beab30268ad8974",
+          "edc946313174a740592adb575307b1c06febbd20",
+          "dafe2400397ae6b5adfc5eeb570da8e7e87a3975",
+          "4d6c5cac41b42af4519fe94d095d06f7c84051e0"
+        ],
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "hello-dc",
+        "id": "5e7bde90f9e71a672308af6a"
+      }
+    ],
+    "streams": [
+      {
+        "version": 659,
+        "deactivated": false,
+        "createdAt": 1539114682475,
+        "modifiedAt": 1581649779528,
+        "_id": "5bbd06ba2aae56770cbcbf49",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "type": "channel",
+        "name": "general",
+        "isTeamStream": true,
+        "privacy": "public",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "sortId": "5e460f733563c63e56bd8634",
+        "mostRecentPostId": "5e460f733563c63e56bd8634",
+        "mostRecentPostCreatedAt": 1581649779517,
+        "numMarkers": 228,
+        "purpose": "lots of purpose",
+        "id": "5bbd06ba2aae56770cbcbf49"
+      },
+      {
+        "version": 9,
+        "deactivated": false,
+        "createdAt": 1540298665521,
+        "modifiedAt": 1570824151133,
+        "_id": "5bcf17a9d4321c0d4897c70d",
+        "type": "channel",
+        "name": "private1",
+        "memberIds": [
+          "5bbd06952aae56770cbcbf45",
+          "5bbe2a6333d00a39e1a4dd21"
+        ],
+        "isTeamStream": false,
+        "privacy": "private",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "sortId": "5da0dfd75c5c265f987e71d0",
+        "mostRecentPostId": "5da0dfd75c5c265f987e71d0",
+        "mostRecentPostCreatedAt": 1570824151127,
+        "numMarkers": 1,
+        "id": "5bcf17a9d4321c0d4897c70d"
+      },
+      {
+        "version": 8,
+        "deactivated": false,
+        "createdAt": 1540323391639,
+        "modifiedAt": 1563830578617,
+        "_id": "5bcf783fd4321c0d4897c73b",
+        "type": "channel",
+        "name": "private5",
+        "memberIds": [
+          "5bbd06952aae56770cbcbf45",
+          "5bbe2a6333d00a39e1a4dd21"
+        ],
+        "isTeamStream": false,
+        "privacy": "private",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "sortId": "5d362932b85e1a4595d5d55c",
+        "mostRecentPostId": "5d362932b85e1a4595d5d55c",
+        "mostRecentPostCreatedAt": 1563830578615,
+        "numMarkers": 2,
+        "id": "5bcf783fd4321c0d4897c73b"
+      },
+      {
+        "version": 6,
+        "deactivated": false,
+        "createdAt": 1540323463466,
+        "modifiedAt": 1557325699681,
+        "_id": "5bcf7887d4321c0d4897c73e",
+        "type": "channel",
+        "name": "private6",
+        "memberIds": [
+          "5bbd06952aae56770cbcbf45",
+          "5bbe2a6333d00a39e1a4dd21"
+        ],
+        "isTeamStream": false,
+        "privacy": "private",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "sortId": "5cd2e78398b55c350978304a",
+        "mostRecentPostId": "5cd2e78398b55c350978304a",
+        "mostRecentPostCreatedAt": 1557325699680,
+        "id": "5bcf7887d4321c0d4897c73e"
+      },
+      {
+        "version": 153,
+        "deactivated": false,
+        "createdAt": 1540321726819,
+        "modifiedAt": 1557259957257,
+        "_id": "5bcf71bed4321c0d4897c720",
+        "type": "direct",
+        "memberIds": [
+          "5bbd06952aae56770cbcbf45",
+          "5bbe2a6333d00a39e1a4dd21"
+        ],
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "privacy": "private",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "sortId": "5cd1e6b598b55c3509782f70",
+        "mostRecentPostId": "5cd1e6b598b55c3509782f70",
+        "mostRecentPostCreatedAt": 1557259957255,
+        "id": "5bcf71bed4321c0d4897c720"
+      },
+      {
+        "version": 6,
+        "deactivated": false,
+        "createdAt": 1539977528197,
+        "modifiedAt": 1539977528197,
+        "_id": "5bca3138f5c10132ce0b0844",
+        "type": "direct",
+        "memberIds": [
+          "5bbd06952aae56770cbcbf45"
+        ],
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "privacy": "private",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "sortId": "5be5b63b4be93925fc92b2e7",
+        "mostRecentPostId": "5be5b63b4be93925fc92b2e7",
+        "mostRecentPostCreatedAt": 1541781051887,
+        "numMarkers": 3,
+        "id": "5bca3138f5c10132ce0b0844"
+      },
+      {
+        "version": 5,
+        "deactivated": false,
+        "createdAt": 1540324347474,
+        "modifiedAt": 1540324374235,
+        "_id": "5bcf7bfbd4321c0d4897c745",
+        "type": "channel",
+        "name": "public2",
+        "memberIds": [
+          "5bbd06952aae56770cbcbf45",
+          "5bbe2a6333d00a39e1a4dd21"
+        ],
+        "isTeamStream": false,
+        "privacy": "public",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "sortId": "5bcf7c16d4321c0d4897c748",
+        "mostRecentPostId": "5bcf7c16d4321c0d4897c748",
+        "mostRecentPostCreatedAt": 1540324374411,
+        "id": "5bcf7bfbd4321c0d4897c745"
+      }
+    ],
+    "teams": [
+      {
+        "version": 5,
+        "deactivated": false,
+        "createdAt": 1539114682475,
+        "modifiedAt": 1560524654327,
+        "_id": "5bbd06ba2aae56770cbcbf47",
+        "name": "Chupacabra",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "memberIds": [
+          "5bbd06952aae56770cbcbf45",
+          "5bbe2a6333d00a39e1a4dd21",
+          "5bbe2abd33d00a39e1a4dd26",
+          "5cc233c62599b4552306dedb",
+          "5cc2347d2599b4552306dedc",
+          "5d03b76e1252752289c3c118"
+        ],
+        "adminIds": [
+          "5bbd06952aae56770cbcbf45"
+        ],
+        "primaryReferral": "external",
+        "companyId": "5bbd06ba2aae56770cbcbf48",
+        "tags": {
+          "_blue": {
+            "color": "blue",
+            "sortOrder": 1000
+          },
+          "_green": {
+            "color": "green",
+            "sortOrder": 2000
+          },
+          "_yellow": {
+            "color": "yellow",
+            "sortOrder": 3000
+          },
+          "_orange": {
+            "color": "orange",
+            "sortOrder": 4000
+          },
+          "_red": {
+            "color": "red",
+            "sortOrder": 5000
+          },
+          "_purple": {
+            "color": "purple",
+            "sortOrder": 6000
+          },
+          "_aqua": {
+            "color": "aqua",
+            "sortOrder": 7000
+          },
+          "_gray": {
+            "color": "gray",
+            "sortOrder": 8000
+          }
+        },
+        "id": "5bbd06ba2aae56770cbcbf47",
+        "providerHosts": {
+          "app*asana*com": {
+            "id": "app*asana*com",
+            "name": "asana",
+            "isEnterprise": false,
+            "host": "app.asana.com",
+            "apiHost": "app.asana.com",
+            "hasIssues": true
+          },
+          "app*vssps*visualstudio*com": {
+            "id": "app*vssps*visualstudio*com",
+            "name": "azuredevops",
+            "isEnterprise": false,
+            "needsConfigure": true,
+            "host": "app.vssps.visualstudio.com",
+            "apiHost": "dev.azure.com",
+            "hasIssues": true
+          },
+          "bitbucket*org": {
+            "id": "bitbucket*org",
+            "name": "bitbucket",
+            "isEnterprise": false,
+            "host": "bitbucket.org",
+            "apiHost": "api.bitbucket.org/2.0",
+            "hasIssues": true
+          },
+          "github*com": {
+            "id": "github*com",
+            "name": "github",
+            "isEnterprise": false,
+            "host": "github.com",
+            "apiHost": "api.github.com",
+            "hasIssues": true
+          },
+          "github/enterprise": {
+            "id": "github/enterprise",
+            "name": "github_enterprise",
+            "isEnterprise": false,
+            "forEnterprise": true,
+            "host": "github/enterprise",
+            "hasIssues": true
+          },
+          "gitlab*com": {
+            "id": "gitlab*com",
+            "name": "gitlab",
+            "isEnterprise": false,
+            "host": "gitlab.com",
+            "apiHost": "gitlab.com/api/v4",
+            "hasIssues": true
+          },
+          "gitlab/enterprise": {
+            "id": "gitlab/enterprise",
+            "name": "gitlab_enterprise",
+            "isEnterprise": false,
+            "forEnterprise": true,
+            "host": "gitlab/enterprise",
+            "apiHost": "gitlab.com/api/v4",
+            "hasIssues": true
+          },
+          "auth*atlassian*com": {
+            "id": "auth*atlassian*com",
+            "name": "jira",
+            "isEnterprise": false,
+            "host": "auth.atlassian.com",
+            "apiHost": "api.atlassian.com",
+            "hasIssues": true
+          },
+          "jiraserver/enterprise": {
+            "id": "jiraserver/enterprise",
+            "name": "jiraserver",
+            "isEnterprise": false,
+            "forEnterprise": true,
+            "needsConfigure": true,
+            "host": "jiraserver/enterprise",
+            "hasIssues": true
+          },
+          "login*microsoftonline*com": {
+            "id": "login*microsoftonline*com",
+            "name": "msteams",
+            "isEnterprise": false,
+            "host": "login.microsoftonline.com",
+            "apiHost": "graph.microsoft.com/v1.0",
+            "hasSharing": true
+          },
+          "slack*com": {
+            "id": "slack*com",
+            "name": "slack",
+            "isEnterprise": false,
+            "host": "slack.com",
+            "apiHost": "slack.com/api",
+            "hasSharing": true
+          },
+          "trello*com": {
+            "id": "trello*com",
+            "name": "trello",
+            "isEnterprise": false,
+            "host": "trello.com",
+            "apiHost": "api.trello.com/1",
+            "hasIssues": true
+          },
+          "youtrack*com": {
+            "id": "youtrack*com",
+            "name": "youtrack",
+            "isEnterprise": false,
+            "needsConfigure": true,
+            "host": "youtrack.com",
+            "hasIssues": true
+          }
+        },
+        "companyMemberCount": 6
+      },
+      {
+        "version": 22,
+        "deactivated": false,
+        "createdAt": 1576868804508,
+        "modifiedAt": 1585162499909,
+        "_id": "5dfd1bc4d3d59050f7712baf",
+        "name": "PD Testing2",
+        "creatorId": "5dfd1baecfbdd550957d9eef",
+        "memberIds": [
+          "5dfd1baecfbdd550957d9eef",
+          "5b58a606efb4c720ffe15a78",
+          "5b6ca95ca51ac46638670186",
+          "5bbcded32aae56770cbcbf33",
+          "5bb56a296c347e4bc63c2ab0",
+          "5a664fb301cc4c2b8a6b79e8",
+          "5c0599af6f6e2b29beae5919",
+          "5ddeb2f9ab37e237246c427f",
+          "5bb619e76c347e4bc63c2ad6",
+          "5e0e51e7d6068976aa638084",
+          "5e0fa820651fd60aa5fa7d79",
+          "5dfbe3d22dea6d0e8f776ef8",
+          "5bbcfb942aae56770cbcbf39",
+          "5bbbbc594c969a30b1bc551b",
+          "5e77d6d289322d6c20bc1054",
+          "5e77d731c0a4046c2f80f969",
+          "5bbd06952aae56770cbcbf45"
+        ],
+        "adminIds": [
+          "5dfd1baecfbdd550957d9eef"
+        ],
+        "tags": {
+          "_blue": {
+            "color": "blue",
+            "label": "this has a label",
+            "sortOrder": 1000
+          },
+          "_green": {
+            "color": "green",
+            "sortOrder": 2000
+          },
+          "_yellow": {
+            "color": "yellow",
+            "sortOrder": 3000
+          },
+          "_orange": {
+            "color": "orange",
+            "sortOrder": 4000
+          },
+          "_red": {
+            "color": "red",
+            "sortOrder": 5000
+          },
+          "_purple": {
+            "color": "purple",
+            "sortOrder": 6000
+          },
+          "_aqua": {
+            "color": "aqua",
+            "sortOrder": 7000
+          },
+          "_gray": {
+            "color": "gray",
+            "sortOrder": 8000
+          }
+        },
+        "primaryReferral": "external",
+        "companyId": "5dfd1bc4d3d59050f7712bb0",
+        "settings": {
+          "sharingModelEnabled": true,
+          "features": {
+            "lightningCodeReviews": 1,
+            "xray": 1
+          }
+        },
+        "providerBotInfo": {
+          "msteams": {
+            "adae9692-58a3-40a5-b4ce-8f9a263d025f": {
+              "data": {
+                "connected": true
+              }
+            }
+          }
+        },
+        "id": "5dfd1bc4d3d59050f7712baf",
+        "providerHosts": {
+          "app*asana*com": {
+            "id": "app*asana*com",
+            "name": "asana",
+            "isEnterprise": false,
+            "host": "app.asana.com",
+            "apiHost": "app.asana.com",
+            "hasIssues": true
+          },
+          "app*vssps*visualstudio*com": {
+            "id": "app*vssps*visualstudio*com",
+            "name": "azuredevops",
+            "isEnterprise": false,
+            "needsConfigure": true,
+            "host": "app.vssps.visualstudio.com",
+            "apiHost": "dev.azure.com",
+            "hasIssues": true
+          },
+          "bitbucket*org": {
+            "id": "bitbucket*org",
+            "name": "bitbucket",
+            "isEnterprise": false,
+            "host": "bitbucket.org",
+            "apiHost": "api.bitbucket.org/2.0",
+            "hasIssues": true
+          },
+          "github*com": {
+            "id": "github*com",
+            "name": "github",
+            "isEnterprise": false,
+            "host": "github.com",
+            "apiHost": "api.github.com",
+            "hasIssues": true
+          },
+          "github/enterprise": {
+            "id": "github/enterprise",
+            "name": "github_enterprise",
+            "isEnterprise": false,
+            "forEnterprise": true,
+            "host": "github/enterprise",
+            "hasIssues": true
+          },
+          "gitlab*com": {
+            "id": "gitlab*com",
+            "name": "gitlab",
+            "isEnterprise": false,
+            "host": "gitlab.com",
+            "apiHost": "gitlab.com/api/v4",
+            "hasIssues": true
+          },
+          "gitlab/enterprise": {
+            "id": "gitlab/enterprise",
+            "name": "gitlab_enterprise",
+            "isEnterprise": false,
+            "forEnterprise": true,
+            "host": "gitlab/enterprise",
+            "apiHost": "gitlab.com/api/v4",
+            "hasIssues": true
+          },
+          "auth*atlassian*com": {
+            "id": "auth*atlassian*com",
+            "name": "jira",
+            "isEnterprise": false,
+            "host": "auth.atlassian.com",
+            "apiHost": "api.atlassian.com",
+            "hasIssues": true
+          },
+          "jiraserver/enterprise": {
+            "id": "jiraserver/enterprise",
+            "name": "jiraserver",
+            "isEnterprise": false,
+            "forEnterprise": true,
+            "needsConfigure": true,
+            "host": "jiraserver/enterprise",
+            "hasIssues": true
+          },
+          "login*microsoftonline*com": {
+            "id": "login*microsoftonline*com",
+            "name": "msteams",
+            "isEnterprise": false,
+            "host": "login.microsoftonline.com",
+            "apiHost": "graph.microsoft.com/v1.0",
+            "hasSharing": true
+          },
+          "slack*com": {
+            "id": "slack*com",
+            "name": "slack",
+            "isEnterprise": false,
+            "host": "slack.com",
+            "apiHost": "slack.com/api",
+            "hasSharing": true
+          },
+          "trello*com": {
+            "id": "trello*com",
+            "name": "trello",
+            "isEnterprise": false,
+            "host": "trello.com",
+            "apiHost": "api.trello.com/1",
+            "hasIssues": true
+          },
+          "youtrack*com": {
+            "id": "youtrack*com",
+            "name": "youtrack",
+            "isEnterprise": false,
+            "needsConfigure": true,
+            "host": "youtrack.com",
+            "hasIssues": true
+          },
+          "https://testingforpdtesting2*com": {
+            "id": "https://testingforpdtesting2*com",
+            "name": "github_enterprise",
+            "isEnterprise": true,
+            "host": "https://testingforpdtesting2.com",
+            "hasIssues": true
+          }
+        },
+        "companyMemberCount": 14
+      },
+      {
+        "version": 15,
+        "deactivated": false,
+        "createdAt": 1580761656463,
+        "modifiedAt": 1581717635649,
+        "_id": "5e388238e95b967dc1cedaf6",
+        "companyId": "5b58a67befb4c720ffe15a7b",
+        "name": "Acme2",
+        "creatorId": "5b58a606efb4c720ffe15a78",
+        "memberIds": [
+          "5b58a606efb4c720ffe15a78",
+          "5b58dde6efb4c720ffe15a83",
+          "5bb619e76c347e4bc63c2ad6",
+          "5c0599af6f6e2b29beae5919",
+          "5bb56a296c347e4bc63c2ab0",
+          "5bbd06952aae56770cbcbf45",
+          "5e46f7a347501766ce6c2fab"
+        ],
+        "adminIds": [
+          "5b58a606efb4c720ffe15a78"
+        ],
+        "tags": {
+          "_blue": {
+            "color": "blue",
+            "sortOrder": 1000
+          },
+          "_green": {
+            "color": "green",
+            "label": "onboarding",
+            "sortOrder": 2000
+          },
+          "_yellow": {
+            "color": "yellow",
+            "sortOrder": 3000
+          },
+          "_orange": {
+            "color": "orange",
+            "sortOrder": 4000
+          },
+          "_red": {
+            "color": "red",
+            "sortOrder": 5000
+          },
+          "_purple": {
+            "color": "purple",
+            "label": "debt",
+            "sortOrder": 6000
+          },
+          "_aqua": {
+            "color": "aqua",
+            "sortOrder": 7000
+          },
+          "_gray": {
+            "color": "gray",
+            "sortOrder": 8000
+          }
+        },
+        "primaryReferral": "internal",
+        "providerBotInfo": {
+          "msteams": {
+            "adae9692-58a3-40a5-b4ce-8f9a263d025f": {
+              "data": {
+                "connected": true
+              }
+            }
+          }
+        },
+        "id": "5e388238e95b967dc1cedaf6",
+        "providerHosts": {
+          "app*asana*com": {
+            "id": "app*asana*com",
+            "name": "asana",
+            "isEnterprise": false,
+            "host": "app.asana.com",
+            "apiHost": "app.asana.com",
+            "hasIssues": true
+          },
+          "app*vssps*visualstudio*com": {
+            "id": "app*vssps*visualstudio*com",
+            "name": "azuredevops",
+            "isEnterprise": false,
+            "needsConfigure": true,
+            "host": "app.vssps.visualstudio.com",
+            "apiHost": "dev.azure.com",
+            "hasIssues": true
+          },
+          "bitbucket*org": {
+            "id": "bitbucket*org",
+            "name": "bitbucket",
+            "isEnterprise": false,
+            "host": "bitbucket.org",
+            "apiHost": "api.bitbucket.org/2.0",
+            "hasIssues": true
+          },
+          "github*com": {
+            "id": "github*com",
+            "name": "github",
+            "isEnterprise": false,
+            "host": "github.com",
+            "apiHost": "api.github.com",
+            "hasIssues": true
+          },
+          "github/enterprise": {
+            "id": "github/enterprise",
+            "name": "github_enterprise",
+            "isEnterprise": false,
+            "forEnterprise": true,
+            "host": "github/enterprise",
+            "hasIssues": true
+          },
+          "gitlab*com": {
+            "id": "gitlab*com",
+            "name": "gitlab",
+            "isEnterprise": false,
+            "host": "gitlab.com",
+            "apiHost": "gitlab.com/api/v4",
+            "hasIssues": true
+          },
+          "gitlab/enterprise": {
+            "id": "gitlab/enterprise",
+            "name": "gitlab_enterprise",
+            "isEnterprise": false,
+            "forEnterprise": true,
+            "host": "gitlab/enterprise",
+            "apiHost": "gitlab.com/api/v4",
+            "hasIssues": true
+          },
+          "auth*atlassian*com": {
+            "id": "auth*atlassian*com",
+            "name": "jira",
+            "isEnterprise": false,
+            "host": "auth.atlassian.com",
+            "apiHost": "api.atlassian.com",
+            "hasIssues": true
+          },
+          "jiraserver/enterprise": {
+            "id": "jiraserver/enterprise",
+            "name": "jiraserver",
+            "isEnterprise": false,
+            "forEnterprise": true,
+            "needsConfigure": true,
+            "host": "jiraserver/enterprise",
+            "hasIssues": true
+          },
+          "login*microsoftonline*com": {
+            "id": "login*microsoftonline*com",
+            "name": "msteams",
+            "isEnterprise": false,
+            "host": "login.microsoftonline.com",
+            "apiHost": "graph.microsoft.com/v1.0",
+            "hasSharing": true
+          },
+          "slack*com": {
+            "id": "slack*com",
+            "name": "slack",
+            "isEnterprise": false,
+            "host": "slack.com",
+            "apiHost": "slack.com/api",
+            "hasSharing": true
+          },
+          "trello*com": {
+            "id": "trello*com",
+            "name": "trello",
+            "isEnterprise": false,
+            "host": "trello.com",
+            "apiHost": "api.trello.com/1",
+            "hasIssues": true
+          },
+          "youtrack*com": {
+            "id": "youtrack*com",
+            "name": "youtrack",
+            "isEnterprise": false,
+            "needsConfigure": true,
+            "host": "youtrack.com",
+            "hasIssues": true
+          }
+        },
+        "companyMemberCount": 15
+      }
+    ],
+    "unreads": {
+      "lastReads": {
+        "5e388238e95b967dc1cedaf7": 35,
+        "5dfd1bc4d3d59050f7712bb1": 202
+      },
+      "mentions": {},
+      "unreads": {},
+      "totalMentions": 0,
+      "totalUnreads": 0
+    },
+    "users": [
+      {
+        "version": 862,
+        "deactivated": false,
+        "phoneNumber": "",
+        "iWorkOn": "",
+        "providerIdentities": [],
+        "createdAt": 1539114645018,
+        "modifiedAt": 1585178282005,
+        "_id": "5bbd06952aae56770cbcbf45",
+        "email": "marcelo+1@codestream.com",
+        "username": "marcelo1",
+        "timeZone": "America/New_York",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "isRegistered": true,
+        "registeredAt": 1539114675002,
+        "joinMethod": "Created Team",
+        "primaryReferral": "external",
+        "originTeamId": "5bbd06ba2aae56770cbcbf47",
+        "companyIds": [
+          "5bbd06ba2aae56770cbcbf48",
+          "5b58a67befb4c720ffe15a7b",
+          "5dfd1bc4d3d59050f7712bb0"
+        ],
+        "teamIds": [
+          "5bbd06ba2aae56770cbcbf47",
+          "5e388238e95b967dc1cedaf6",
+          "5dfd1bc4d3d59050f7712baf"
+        ],
+        "lastLogin": 1585668832980,
+        "lastOrigin": "JetBrains",
+        "modifiedRepos": {
+          "5dfd1bc4d3d59050f7712baf": [
+            {
+              "authors": [
+                {
+                  "commits": 282,
+                  "email": "pez@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 22,
+                  "email": "brian@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 5,
+                  "email": "marcelo@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 8,
+                  "email": "colin@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 81,
+                  "email": "akonwi@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 1,
+                  "email": "dave@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 1,
+                  "email": "ppezaris@users.noreply.github.com",
+                  "stomped": 0
+                }
+              ],
+              "branch": "develop",
+              "modifiedFiles": [],
+              "remotes": [
+                {
+                  "name": "origin",
+                  "url": "github.com/teamcodestream/codestream-components"
+                }
+              ],
+              "repoId": "5dfd3036d3d59050f7712bbc",
+              "repoPath": "/Users/mfarias/Code/codestream-components",
+              "savedFiles": [],
+              "stagedFiles": [],
+              "startCommit": "f4bd23e6c5935cc0b6a0de984b27540b85bc2855",
+              "totalModifiedLines": 0
+            },
+            {
+              "authors": [
+                {
+                  "commits": 7,
+                  "email": "brian@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 1,
+                  "email": "colin@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 3,
+                  "email": "pez@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 10,
+                  "email": "marcelo@codestream.com",
+                  "stomped": 0
+                }
+              ],
+              "branch": "develop",
+              "modifiedFiles": [
+                {
+                  "file": ".idea/.gitignore",
+                  "linesAdded": 0,
+                  "linesRemoved": 0,
+                  "oldFile": ".idea/.gitignore",
+                  "status": "?",
+                  "statusX": "?",
+                  "statusY": "?"
+                },
+                {
+                  "file": ".idea/codeStyles/",
+                  "linesAdded": 0,
+                  "linesRemoved": 0,
+                  "oldFile": ".idea/codeStyles/",
+                  "status": "?",
+                  "statusX": "?",
+                  "statusY": "?"
+                },
+                {
+                  "file": ".idea/codestream.xml",
+                  "linesAdded": 0,
+                  "linesRemoved": 0,
+                  "oldFile": ".idea/codestream.xml",
+                  "status": "?",
+                  "statusX": "?",
+                  "statusY": "?"
+                },
+                {
+                  "file": ".idea/inspectionProfiles/",
+                  "linesAdded": 0,
+                  "linesRemoved": 0,
+                  "oldFile": ".idea/inspectionProfiles/",
+                  "status": "?",
+                  "statusX": "?",
+                  "statusY": "?"
+                },
+                {
+                  "file": ".idea/misc.xml",
+                  "linesAdded": 0,
+                  "linesRemoved": 0,
+                  "oldFile": ".idea/misc.xml",
+                  "status": "?",
+                  "statusX": "?",
+                  "statusY": "?"
+                },
+                {
+                  "file": ".idea/modules.xml",
+                  "linesAdded": 0,
+                  "linesRemoved": 0,
+                  "oldFile": ".idea/modules.xml",
+                  "status": "?",
+                  "statusX": "?",
+                  "statusY": "?"
+                },
+                {
+                  "file": ".idea/vcs.xml",
+                  "linesAdded": 0,
+                  "linesRemoved": 0,
+                  "oldFile": ".idea/vcs.xml",
+                  "status": "?",
+                  "statusX": "?",
+                  "statusY": "?"
+                }
+              ],
+              "remotes": [
+                {
+                  "name": "origin",
+                  "url": "github.com/teamcodestream/codestream-lsp-agent"
+                }
+              ],
+              "repoId": "5dfd3036d3d59050f7712bbb",
+              "repoPath": "/Users/mfarias/Code/codestream-lsp-agent",
+              "savedFiles": [],
+              "stagedFiles": [],
+              "startCommit": "da12eb2abfc3863d3a5eda10e859348a8b315214",
+              "totalModifiedLines": 0
+            },
+            {
+              "authors": [
+                {
+                  "commits": 4,
+                  "email": "brian@codestream.com",
+                  "stomped": 2
+                },
+                {
+                  "commits": 4,
+                  "email": "ops@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 7,
+                  "email": "dave@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 11,
+                  "email": "pez@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 1,
+                  "email": "eric@codestream.com",
+                  "stomped": 4
+                },
+                {
+                  "commits": 1,
+                  "email": "colin@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 8,
+                  "email": "marcelo@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 5,
+                  "email": "akonwi@codestream.com",
+                  "stomped": 0
+                }
+              ],
+              "branch": "develop",
+              "modifiedFiles": [
+                {
+                  "file": "pd.code-workspace",
+                  "linesAdded": 2,
+                  "linesRemoved": 1,
+                  "oldFile": "pd.code-workspace",
+                  "status": "M",
+                  "statusY": "M"
+                },
+                {
+                  "file": "prod.code-workspace",
+                  "linesAdded": 6,
+                  "linesRemoved": 0,
+                  "oldFile": "prod.code-workspace",
+                  "status": "M",
+                  "statusY": "M"
+                },
+                {
+                  "file": "src/config.ts",
+                  "linesAdded": 1,
+                  "linesRemoved": 0,
+                  "oldFile": "src/config.ts",
+                  "status": "M",
+                  "statusY": "M"
+                },
+                {
+                  "file": "src/extension.ts",
+                  "linesAdded": 1,
+                  "linesRemoved": 0,
+                  "oldFile": "src/extension.ts",
+                  "status": "M",
+                  "statusY": "M"
+                },
+                {
+                  "file": "src/system/decorators/log.ts",
+                  "linesAdded": 1,
+                  "linesRemoved": 1,
+                  "oldFile": "src/system/decorators/log.ts",
+                  "status": "M",
+                  "statusY": "M"
+                },
+                {
+                  "file": "prod copy.code-workspace",
+                  "linesAdded": 0,
+                  "linesRemoved": 0,
+                  "oldFile": "prod copy.code-workspace",
+                  "status": "?",
+                  "statusX": "?",
+                  "statusY": "?"
+                }
+              ],
+              "remotes": [
+                {
+                  "name": "origin",
+                  "url": "github.com/teamcodestream/vscode-codestream"
+                }
+              ],
+              "repoId": "5dfd1bc6cfbdd550957d9ef1",
+              "repoPath": "/Users/mfarias/Code/vscode-codestream",
+              "savedFiles": [
+                "pd.code-workspace",
+                "prod.code-workspace",
+                "src/config.ts",
+                "src/extension.ts",
+                "src/system/decorators/log.ts"
+              ],
+              "stagedFiles": [],
+              "startCommit": "2d9966f13936744833e42d070cd64d3584bcadff",
+              "totalModifiedLines": 13
+            }
+          ]
+        },
+        "modifiedReposModifiedAt": {
+          "5dfd1bc4d3d59050f7712baf": 1585178282005
+        },
+        "id": "5bbd06952aae56770cbcbf45",
+        "lastReads": {
+          "5e388238e95b967dc1cedaf7": 35,
+          "5dfd1bc4d3d59050f7712bb1": 202
+        },
+        "preferences": {
+          "showChannels": "all",
+          "notifications": "involveMe",
+          "hideReviewInstructions": true
+        },
+        "totalPosts": 430,
+        "lastPostCreatedAt": 1585178027168,
+        "providerInfo": {
+          "5bbd06ba2aae56770cbcbf47": {
+            "asana": {
+              "accessToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdXRob3JpemF0aW9uIjo5NjkyMzkwNTE5NTY3NzgsInNjb3BlIjoiZGVmYXVsdCIsImlhdCI6MTU2MjE2Nzg1MCwiZXhwIjoxNTYyMTcxNDUwfQ.UElEv1wmRcJyXM2IPHmsls2kchOCoOj86K8L5kmal5k",
+              "refreshToken": "0/a99887c3331992413f906e74bcadd31c",
+              "expiresAt": 1562171445622,
+              "data": {
+                "token_type": "bearer",
+                "expires_in": 3600,
+                "id": 967418831030806,
+                "gid": "967418831030806",
+                "name": "Marcelo Bukowski de Farias",
+                "email": "marcelo@codestream.com"
+              }
+            },
+            "trello": {
+              "accessToken": "295d6fd8f8a5a768a601876f3979be999dc0e875a9ced3e9937c0ee47c0f6960",
+              "apiKey": "15b499a5b08872a4fe5ad7274c782d8a",
+              "data": {
+                "apiKey": "15b499a5b08872a4fe5ad7274c782d8a",
+                "token": "295d6fd8f8a5a768a601876f3979be999dc0e875a9ced3e9937c0ee47c0f6960"
+              }
+            },
+            "gitlab": {
+              "accessToken": "3be38728c92005ec7e605f0070fabd2a6ff8e540c8d80dcd80fab2bb5002f47d",
+              "refreshToken": "0b73560c6681486237980d892d791333d7fe615dde0e0728f929b88bad4c3fd1",
+              "data": {
+                "token_type": "bearer",
+                "scope": "api",
+                "created_at": 1547228814
+              }
+            },
+            "github": {
+              "accessToken": "acb5e576d30c863886422b914e5e87eb4bac4f64",
+              "data": {
+                "token_type": "bearer",
+                "scope": "read:user,repo"
+              }
+            }
+          },
+          "5e388238e95b967dc1cedaf6": {
+            "msteams": {
+              "multiple": {
+                "adae9692-58a3-40a5-b4ce-8f9a263d025f": {
+                  "accessToken": "MSTEAMS",
+                  "extra": {
+                    "connected": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "firstSessionStartedAt": 0
+      },
+      {
+        "version": 449,
+        "deactivated": false,
+        "phoneNumber": "",
+        "iWorkOn": "",
+        "providerIdentities": [],
+        "createdAt": 1539189347481,
+        "modifiedAt": 1578334796932,
+        "_id": "5bbe2a6333d00a39e1a4dd21",
+        "email": "marcelo+2@codestream.com",
+        "username": "marcelo2",
+        "timeZone": "America/New_York",
+        "creatorId": "5bbe2a6333d00a39e1a4dd21",
+        "isRegistered": true,
+        "registeredAt": 1539189378705,
+        "joinMethod": "Created Team",
+        "primaryReferral": "external",
+        "originTeamId": "5bbe2a9233d00a39e1a4dd23",
+        "companyIds": [
+          "5bbe2a9233d00a39e1a4dd24",
+          "5bbd06ba2aae56770cbcbf48"
+        ],
+        "teamIds": [
+          "5bbe2a9233d00a39e1a4dd23",
+          "5bbd06ba2aae56770cbcbf47"
+        ],
+        "lastLogin": 1585176264152,
+        "lastOrigin": "JetBrains",
+        "id": "5bbe2a6333d00a39e1a4dd21"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "phoneNumber": "",
+        "iWorkOn": "",
+        "providerIdentities": [],
+        "createdAt": 1539189437951,
+        "modifiedAt": 1556230198591,
+        "_id": "5bbe2abd33d00a39e1a4dd26",
+        "email": "marcelo+3@codestream.com",
+        "fullName": "Marcelo3",
+        "username": "marcelo3",
+        "creatorId": "5bbe2a6333d00a39e1a4dd21",
+        "teamIds": [
+          "5bbe2a9233d00a39e1a4dd23",
+          "5bbd06ba2aae56770cbcbf47"
+        ],
+        "companyIds": [
+          "5bbe2a9233d00a39e1a4dd24",
+          "5bbd06ba2aae56770cbcbf48"
+        ],
+        "timeZone": "America/New_York",
+        "isRegistered": true,
+        "registeredAt": 1539189468722,
+        "joinMethod": "Added to Team",
+        "primaryReferral": "internal",
+        "originTeamId": "5bbe2a9233d00a39e1a4dd23",
+        "lastLogin": 1539200087890,
+        "id": "5bbe2abd33d00a39e1a4dd26"
+      },
+      {
+        "version": 3,
+        "deactivated": false,
+        "phoneNumber": "",
+        "iWorkOn": "",
+        "providerIdentities": [],
+        "createdAt": 1556231110817,
+        "modifiedAt": 1559338177359,
+        "_id": "5cc233c62599b4552306dedb",
+        "email": "marcelo+15@codestream.com",
+        "username": "marcelo15",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "teamIds": [
+          "5bbd06ba2aae56770cbcbf47"
+        ],
+        "companyIds": [
+          "5bbd06ba2aae56770cbcbf48"
+        ],
+        "fullName": "Marcelo 15",
+        "isRegistered": true,
+        "registeredAt": 1559338177359,
+        "joinMethod": "Added to Team",
+        "primaryReferral": "internal",
+        "originTeamId": "5bbd06ba2aae56770cbcbf47",
+        "lastLogin": 1559338177362,
+        "lastOrigin": "JetBrains",
+        "id": "5cc233c62599b4552306dedb"
+      },
+      {
+        "version": 15,
+        "deactivated": false,
+        "phoneNumber": "",
+        "iWorkOn": "",
+        "providerIdentities": [],
+        "createdAt": 1556231293474,
+        "modifiedAt": 1556231797571,
+        "_id": "5cc2347d2599b4552306dedc",
+        "email": "marcelo+20@codestream.com",
+        "username": "marcelo20",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "teamIds": [
+          "5bbd06ba2aae56770cbcbf47"
+        ],
+        "companyIds": [
+          "5bbd06ba2aae56770cbcbf48"
+        ],
+        "timeZone": "America/New_York",
+        "isRegistered": true,
+        "registeredAt": 1556231582610,
+        "joinMethod": "Added to Team",
+        "primaryReferral": "internal",
+        "originTeamId": "5bbd06ba2aae56770cbcbf47",
+        "lastLogin": 1556232045491,
+        "lastOrigin": "JetBrains",
+        "id": "5cc2347d2599b4552306dedc"
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "phoneNumber": "",
+        "iWorkOn": "",
+        "providerIdentities": [],
+        "createdAt": 1560524654323,
+        "modifiedAt": 1560525485814,
+        "_id": "5d03b76e1252752289c3c118",
+        "email": "marcelo+codestream@codestream.com",
+        "fullName": "CodeStream",
+        "username": "CodeStream2",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "teamIds": [
+          "5bbd06ba2aae56770cbcbf47"
+        ],
+        "companyIds": [
+          "5bbd06ba2aae56770cbcbf48"
+        ],
+        "isRegistered": true,
+        "registeredAt": 1560525485814,
+        "joinMethod": "Added to Team",
+        "primaryReferral": "internal",
+        "originTeamId": "5bbd06ba2aae56770cbcbf47",
+        "lastLogin": 1561393474355,
+        "lastOrigin": "JetBrains",
+        "id": "5d03b76e1252752289c3c118"
+      }
+    ],
+    "providers": {
+      "app*asana*com": {
+        "id": "app*asana*com",
+        "name": "asana",
+        "isEnterprise": false,
+        "host": "app.asana.com",
+        "apiHost": "app.asana.com",
+        "hasIssues": true
+      },
+      "app*vssps*visualstudio*com": {
+        "id": "app*vssps*visualstudio*com",
+        "name": "azuredevops",
+        "isEnterprise": false,
+        "needsConfigure": true,
+        "host": "app.vssps.visualstudio.com",
+        "apiHost": "dev.azure.com",
+        "hasIssues": true
+      },
+      "bitbucket*org": {
+        "id": "bitbucket*org",
+        "name": "bitbucket",
+        "isEnterprise": false,
+        "host": "bitbucket.org",
+        "apiHost": "api.bitbucket.org/2.0",
+        "hasIssues": true
+      },
+      "github*com": {
+        "id": "github*com",
+        "name": "github",
+        "isEnterprise": false,
+        "host": "github.com",
+        "apiHost": "api.github.com",
+        "hasIssues": true
+      },
+      "github/enterprise": {
+        "id": "github/enterprise",
+        "name": "github_enterprise",
+        "isEnterprise": false,
+        "forEnterprise": true,
+        "host": "github/enterprise",
+        "hasIssues": true
+      },
+      "gitlab*com": {
+        "id": "gitlab*com",
+        "name": "gitlab",
+        "isEnterprise": false,
+        "host": "gitlab.com",
+        "apiHost": "gitlab.com/api/v4",
+        "hasIssues": true
+      },
+      "gitlab/enterprise": {
+        "id": "gitlab/enterprise",
+        "name": "gitlab_enterprise",
+        "isEnterprise": false,
+        "forEnterprise": true,
+        "host": "gitlab/enterprise",
+        "apiHost": "gitlab.com/api/v4",
+        "hasIssues": true
+      },
+      "auth*atlassian*com": {
+        "id": "auth*atlassian*com",
+        "name": "jira",
+        "isEnterprise": false,
+        "host": "auth.atlassian.com",
+        "apiHost": "api.atlassian.com",
+        "hasIssues": true
+      },
+      "jiraserver/enterprise": {
+        "id": "jiraserver/enterprise",
+        "name": "jiraserver",
+        "isEnterprise": false,
+        "forEnterprise": true,
+        "needsConfigure": true,
+        "host": "jiraserver/enterprise",
+        "hasIssues": true
+      },
+      "login*microsoftonline*com": {
+        "id": "login*microsoftonline*com",
+        "name": "msteams",
+        "isEnterprise": false,
+        "host": "login.microsoftonline.com",
+        "apiHost": "graph.microsoft.com/v1.0",
+        "hasSharing": true
+      },
+      "slack*com": {
+        "id": "slack*com",
+        "name": "slack",
+        "isEnterprise": false,
+        "host": "slack.com",
+        "apiHost": "slack.com/api",
+        "hasSharing": true
+      },
+      "trello*com": {
+        "id": "trello*com",
+        "name": "trello",
+        "isEnterprise": false,
+        "host": "trello.com",
+        "apiHost": "api.trello.com/1",
+        "hasIssues": true
+      },
+      "youtrack*com": {
+        "id": "youtrack*com",
+        "name": "youtrack",
+        "isEnterprise": false,
+        "needsConfigure": true,
+        "host": "youtrack.com",
+        "hasIssues": true
+      }
+    },
+    "apiCapabilities": {
+      "sample": {
+        "description": "SAMPLE",
+        "version": "1.0.0"
+      },
+      "multipleMarkers": {
+        "description": "Ability to have multiple code blocks per codemark",
+        "version": "1.21.20"
+      },
+      "moveMarkers": {
+        "description": "Ability to change the location of code blocks pointed to by codemarks",
+        "version": "1.21.20"
+      },
+      "moveMarkers2": {
+        "description": "Ability to change the location of code blocks pointed to by codemarks, with essential API server fix",
+        "version": "1.21.23"
+      },
+      "repoCommitMatching": {
+        "description": "Supports the /repos/match/:teamId call, which allows matches to be found for repos by remotes and known commit hashes",
+        "version": "1.21.24"
+      },
+      "follow": {
+        "description": "Ability to follow or unfollow a codemark",
+        "version": "1.21.27"
+      },
+      "notificationDeliveryPreference": {
+        "description": "Support for displaying the email/desktop delivery notification preference",
+        "version": "1.21.33"
+      }
+    }
+  }
+}

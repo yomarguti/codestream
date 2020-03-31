@@ -1,0 +1,17 @@
+{
+  "extension": {
+    "version": "6.4.1",
+    "build": "SNAPSHOT",
+    "versionFormatted": "6.4.1"
+  },
+  "ide": {
+    "name": "JetBrains",
+    "version": "2020.1 Beta"
+  },
+  "isDebugging": true,
+  "proxySupport": "on",
+  "serverUrl": "https://pd-api.codestream.us",
+  "disableStrictSSL": false,
+  "traceLevel": "verbose",
+  "recordRequests": true
+}

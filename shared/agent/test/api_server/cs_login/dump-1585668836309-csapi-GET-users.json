@@ -1,0 +1,459 @@
+{
+  "url": "/users?teamId=5bbd06ba2aae56770cbcbf47",
+  "response": {
+    "users": [
+      {
+        "version": 862,
+        "deactivated": false,
+        "phoneNumber": "",
+        "iWorkOn": "",
+        "providerIdentities": [],
+        "createdAt": 1539114645018,
+        "modifiedAt": 1585178282005,
+        "_id": "5bbd06952aae56770cbcbf45",
+        "email": "marcelo+1@codestream.com",
+        "username": "marcelo1",
+        "timeZone": "America/New_York",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "isRegistered": true,
+        "registeredAt": 1539114675002,
+        "joinMethod": "Created Team",
+        "primaryReferral": "external",
+        "originTeamId": "5bbd06ba2aae56770cbcbf47",
+        "companyIds": [
+          "5bbd06ba2aae56770cbcbf48",
+          "5b58a67befb4c720ffe15a7b",
+          "5dfd1bc4d3d59050f7712bb0"
+        ],
+        "teamIds": [
+          "5bbd06ba2aae56770cbcbf47",
+          "5e388238e95b967dc1cedaf6",
+          "5dfd1bc4d3d59050f7712baf"
+        ],
+        "lastLogin": 1585668832980,
+        "lastOrigin": "JetBrains",
+        "modifiedRepos": {
+          "5dfd1bc4d3d59050f7712baf": [
+            {
+              "authors": [
+                {
+                  "commits": 282,
+                  "email": "pez@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 22,
+                  "email": "brian@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 5,
+                  "email": "marcelo@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 8,
+                  "email": "colin@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 81,
+                  "email": "akonwi@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 1,
+                  "email": "dave@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 1,
+                  "email": "ppezaris@users.noreply.github.com",
+                  "stomped": 0
+                }
+              ],
+              "branch": "develop",
+              "modifiedFiles": [],
+              "remotes": [
+                {
+                  "name": "origin",
+                  "url": "github.com/teamcodestream/codestream-components"
+                }
+              ],
+              "repoId": "5dfd3036d3d59050f7712bbc",
+              "repoPath": "/Users/mfarias/Code/codestream-components",
+              "savedFiles": [],
+              "stagedFiles": [],
+              "startCommit": "f4bd23e6c5935cc0b6a0de984b27540b85bc2855",
+              "totalModifiedLines": 0
+            },
+            {
+              "authors": [
+                {
+                  "commits": 7,
+                  "email": "brian@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 1,
+                  "email": "colin@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 3,
+                  "email": "pez@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 10,
+                  "email": "marcelo@codestream.com",
+                  "stomped": 0
+                }
+              ],
+              "branch": "develop",
+              "modifiedFiles": [
+                {
+                  "file": ".idea/.gitignore",
+                  "linesAdded": 0,
+                  "linesRemoved": 0,
+                  "oldFile": ".idea/.gitignore",
+                  "status": "?",
+                  "statusX": "?",
+                  "statusY": "?"
+                },
+                {
+                  "file": ".idea/codeStyles/",
+                  "linesAdded": 0,
+                  "linesRemoved": 0,
+                  "oldFile": ".idea/codeStyles/",
+                  "status": "?",
+                  "statusX": "?",
+                  "statusY": "?"
+                },
+                {
+                  "file": ".idea/codestream.xml",
+                  "linesAdded": 0,
+                  "linesRemoved": 0,
+                  "oldFile": ".idea/codestream.xml",
+                  "status": "?",
+                  "statusX": "?",
+                  "statusY": "?"
+                },
+                {
+                  "file": ".idea/inspectionProfiles/",
+                  "linesAdded": 0,
+                  "linesRemoved": 0,
+                  "oldFile": ".idea/inspectionProfiles/",
+                  "status": "?",
+                  "statusX": "?",
+                  "statusY": "?"
+                },
+                {
+                  "file": ".idea/misc.xml",
+                  "linesAdded": 0,
+                  "linesRemoved": 0,
+                  "oldFile": ".idea/misc.xml",
+                  "status": "?",
+                  "statusX": "?",
+                  "statusY": "?"
+                },
+                {
+                  "file": ".idea/modules.xml",
+                  "linesAdded": 0,
+                  "linesRemoved": 0,
+                  "oldFile": ".idea/modules.xml",
+                  "status": "?",
+                  "statusX": "?",
+                  "statusY": "?"
+                },
+                {
+                  "file": ".idea/vcs.xml",
+                  "linesAdded": 0,
+                  "linesRemoved": 0,
+                  "oldFile": ".idea/vcs.xml",
+                  "status": "?",
+                  "statusX": "?",
+                  "statusY": "?"
+                }
+              ],
+              "remotes": [
+                {
+                  "name": "origin",
+                  "url": "github.com/teamcodestream/codestream-lsp-agent"
+                }
+              ],
+              "repoId": "5dfd3036d3d59050f7712bbb",
+              "repoPath": "/Users/mfarias/Code/codestream-lsp-agent",
+              "savedFiles": [],
+              "stagedFiles": [],
+              "startCommit": "da12eb2abfc3863d3a5eda10e859348a8b315214",
+              "totalModifiedLines": 0
+            },
+            {
+              "authors": [
+                {
+                  "commits": 4,
+                  "email": "brian@codestream.com",
+                  "stomped": 2
+                },
+                {
+                  "commits": 4,
+                  "email": "ops@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 7,
+                  "email": "dave@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 11,
+                  "email": "pez@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 1,
+                  "email": "eric@codestream.com",
+                  "stomped": 4
+                },
+                {
+                  "commits": 1,
+                  "email": "colin@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 8,
+                  "email": "marcelo@codestream.com",
+                  "stomped": 0
+                },
+                {
+                  "commits": 5,
+                  "email": "akonwi@codestream.com",
+                  "stomped": 0
+                }
+              ],
+              "branch": "develop",
+              "modifiedFiles": [
+                {
+                  "file": "pd.code-workspace",
+                  "linesAdded": 2,
+                  "linesRemoved": 1,
+                  "oldFile": "pd.code-workspace",
+                  "status": "M",
+                  "statusY": "M"
+                },
+                {
+                  "file": "prod.code-workspace",
+                  "linesAdded": 6,
+                  "linesRemoved": 0,
+                  "oldFile": "prod.code-workspace",
+                  "status": "M",
+                  "statusY": "M"
+                },
+                {
+                  "file": "src/config.ts",
+                  "linesAdded": 1,
+                  "linesRemoved": 0,
+                  "oldFile": "src/config.ts",
+                  "status": "M",
+                  "statusY": "M"
+                },
+                {
+                  "file": "src/extension.ts",
+                  "linesAdded": 1,
+                  "linesRemoved": 0,
+                  "oldFile": "src/extension.ts",
+                  "status": "M",
+                  "statusY": "M"
+                },
+                {
+                  "file": "src/system/decorators/log.ts",
+                  "linesAdded": 1,
+                  "linesRemoved": 1,
+                  "oldFile": "src/system/decorators/log.ts",
+                  "status": "M",
+                  "statusY": "M"
+                },
+                {
+                  "file": "prod copy.code-workspace",
+                  "linesAdded": 0,
+                  "linesRemoved": 0,
+                  "oldFile": "prod copy.code-workspace",
+                  "status": "?",
+                  "statusX": "?",
+                  "statusY": "?"
+                }
+              ],
+              "remotes": [
+                {
+                  "name": "origin",
+                  "url": "github.com/teamcodestream/vscode-codestream"
+                }
+              ],
+              "repoId": "5dfd1bc6cfbdd550957d9ef1",
+              "repoPath": "/Users/mfarias/Code/vscode-codestream",
+              "savedFiles": [
+                "pd.code-workspace",
+                "prod.code-workspace",
+                "src/config.ts",
+                "src/extension.ts",
+                "src/system/decorators/log.ts"
+              ],
+              "stagedFiles": [],
+              "startCommit": "2d9966f13936744833e42d070cd64d3584bcadff",
+              "totalModifiedLines": 13
+            }
+          ]
+        },
+        "modifiedReposModifiedAt": {
+          "5dfd1bc4d3d59050f7712baf": 1585178282005
+        },
+        "id": "5bbd06952aae56770cbcbf45"
+      },
+      {
+        "version": 449,
+        "deactivated": false,
+        "phoneNumber": "",
+        "iWorkOn": "",
+        "providerIdentities": [],
+        "createdAt": 1539189347481,
+        "modifiedAt": 1578334796932,
+        "_id": "5bbe2a6333d00a39e1a4dd21",
+        "email": "marcelo+2@codestream.com",
+        "username": "marcelo2",
+        "timeZone": "America/New_York",
+        "creatorId": "5bbe2a6333d00a39e1a4dd21",
+        "isRegistered": true,
+        "registeredAt": 1539189378705,
+        "joinMethod": "Created Team",
+        "primaryReferral": "external",
+        "originTeamId": "5bbe2a9233d00a39e1a4dd23",
+        "companyIds": [
+          "5bbe2a9233d00a39e1a4dd24",
+          "5bbd06ba2aae56770cbcbf48"
+        ],
+        "teamIds": [
+          "5bbe2a9233d00a39e1a4dd23",
+          "5bbd06ba2aae56770cbcbf47"
+        ],
+        "lastLogin": 1585176264152,
+        "lastOrigin": "JetBrains",
+        "id": "5bbe2a6333d00a39e1a4dd21"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "phoneNumber": "",
+        "iWorkOn": "",
+        "providerIdentities": [],
+        "createdAt": 1539189437951,
+        "modifiedAt": 1556230198591,
+        "_id": "5bbe2abd33d00a39e1a4dd26",
+        "email": "marcelo+3@codestream.com",
+        "fullName": "Marcelo3",
+        "username": "marcelo3",
+        "creatorId": "5bbe2a6333d00a39e1a4dd21",
+        "teamIds": [
+          "5bbe2a9233d00a39e1a4dd23",
+          "5bbd06ba2aae56770cbcbf47"
+        ],
+        "companyIds": [
+          "5bbe2a9233d00a39e1a4dd24",
+          "5bbd06ba2aae56770cbcbf48"
+        ],
+        "timeZone": "America/New_York",
+        "isRegistered": true,
+        "registeredAt": 1539189468722,
+        "joinMethod": "Added to Team",
+        "primaryReferral": "internal",
+        "originTeamId": "5bbe2a9233d00a39e1a4dd23",
+        "lastLogin": 1539200087890,
+        "id": "5bbe2abd33d00a39e1a4dd26"
+      },
+      {
+        "version": 3,
+        "deactivated": false,
+        "phoneNumber": "",
+        "iWorkOn": "",
+        "providerIdentities": [],
+        "createdAt": 1556231110817,
+        "modifiedAt": 1559338177359,
+        "_id": "5cc233c62599b4552306dedb",
+        "email": "marcelo+15@codestream.com",
+        "username": "marcelo15",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "teamIds": [
+          "5bbd06ba2aae56770cbcbf47"
+        ],
+        "companyIds": [
+          "5bbd06ba2aae56770cbcbf48"
+        ],
+        "fullName": "Marcelo 15",
+        "isRegistered": true,
+        "registeredAt": 1559338177359,
+        "joinMethod": "Added to Team",
+        "primaryReferral": "internal",
+        "originTeamId": "5bbd06ba2aae56770cbcbf47",
+        "lastLogin": 1559338177362,
+        "lastOrigin": "JetBrains",
+        "id": "5cc233c62599b4552306dedb"
+      },
+      {
+        "version": 15,
+        "deactivated": false,
+        "phoneNumber": "",
+        "iWorkOn": "",
+        "providerIdentities": [],
+        "createdAt": 1556231293474,
+        "modifiedAt": 1556231797571,
+        "_id": "5cc2347d2599b4552306dedc",
+        "email": "marcelo+20@codestream.com",
+        "username": "marcelo20",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "teamIds": [
+          "5bbd06ba2aae56770cbcbf47"
+        ],
+        "companyIds": [
+          "5bbd06ba2aae56770cbcbf48"
+        ],
+        "timeZone": "America/New_York",
+        "isRegistered": true,
+        "registeredAt": 1556231582610,
+        "joinMethod": "Added to Team",
+        "primaryReferral": "internal",
+        "originTeamId": "5bbd06ba2aae56770cbcbf47",
+        "lastLogin": 1556232045491,
+        "lastOrigin": "JetBrains",
+        "id": "5cc2347d2599b4552306dedc"
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "phoneNumber": "",
+        "iWorkOn": "",
+        "providerIdentities": [],
+        "createdAt": 1560524654323,
+        "modifiedAt": 1560525485814,
+        "_id": "5d03b76e1252752289c3c118",
+        "email": "marcelo+codestream@codestream.com",
+        "fullName": "CodeStream",
+        "username": "CodeStream2",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "teamIds": [
+          "5bbd06ba2aae56770cbcbf47"
+        ],
+        "companyIds": [
+          "5bbd06ba2aae56770cbcbf48"
+        ],
+        "isRegistered": true,
+        "registeredAt": 1560525485814,
+        "joinMethod": "Added to Team",
+        "primaryReferral": "internal",
+        "originTeamId": "5bbd06ba2aae56770cbcbf47",
+        "lastLogin": 1561393474355,
+        "lastOrigin": "JetBrains",
+        "id": "5d03b76e1252752289c3c118"
+      }
+    ]
+  }
+}

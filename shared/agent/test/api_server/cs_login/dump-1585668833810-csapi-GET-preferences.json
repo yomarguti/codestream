@@ -1,0 +1,10 @@
+{
+  "url": "/preferences",
+  "response": {
+    "preferences": {
+      "showChannels": "all",
+      "notifications": "involveMe",
+      "hideReviewInstructions": true
+    }
+  }
+}
