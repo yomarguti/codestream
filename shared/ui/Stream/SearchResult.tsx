@@ -198,8 +198,9 @@ export default function SearchResult(props: Props) {
 				</Title>
 			</Tooltip>
 			<TitleDetails>
-				{createdVerb} <Timestamp relative time={result.createdAt} /> by{" "}
-				{derivedState.usernames[result.creatorId]} {result.status && <>&middot; {result.status} </>}
+				{createdVerb}
+				<Timestamp relative time={result.createdAt} /> by {derivedState.usernames[result.creatorId]}{" "}
+				{result.status && <>&middot; {result.status} </>}
 				{isArchived && <>&middot; archived </>}
 			</TitleDetails>
 		</>
