@@ -137,6 +137,9 @@ export const GetRepoScmStatusesRequestType = new RequestType<
 export interface ReposScm {
 	id?: string;
 	path: string;
+	/*
+		This is the folder of the workspace
+	*/
 	folder: { uri: string; name: string };
 	root?: boolean;
 }

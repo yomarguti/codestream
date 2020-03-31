@@ -143,7 +143,7 @@ export class ScmManager {
 				await Promise.all(
 					repositories.map(repo => {
 						const response = this.getRepoStatus({
-							uri: repo.folder.uri,
+							uri: Strings.pathToFileURL(repo.path),
 							startCommit: "local",
 							includeStaged: true,
 							includeSaved: true,
