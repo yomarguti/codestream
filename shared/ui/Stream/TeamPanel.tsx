@@ -134,7 +134,7 @@ class TeamPanel extends React.Component<Props, State> {
 
 		this._pollingTimer = setInterval(() => {
 			this.getScmInfoSummary();
-		}, 3000);
+		}, 30000); // five minutes
 	}
 
 	private stopPolling() {
