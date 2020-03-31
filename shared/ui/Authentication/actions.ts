@@ -212,7 +212,7 @@ export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo
 		}
 	}
 
-	if (signupInfo) {
+	if (signupInfo && signupInfo.type !== SignupType.Login) {
 		HostApi.instance.track("Signup Completed", {
 			"Signup Type": signupInfo.type === SignupType.CreateTeam ? "Organic" : "Viral"
 		});
