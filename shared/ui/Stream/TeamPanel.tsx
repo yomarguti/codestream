@@ -27,6 +27,7 @@ import { updateModifiedRepos, clearModifiedFiles } from "../store/users/actions"
 import { CSText } from "../src/components/CSText";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import cx from "classnames";
+import Timestamp from "./Timestamp";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -346,8 +347,9 @@ class TeamPanel extends React.Component<Props, State> {
 
 	renderModifiedRepos(user) {
 		const { repos, teamId, currentUserEmail } = this.props;
-		const { modifiedRepos } = user;
+		const { modifiedRepos, modifiedReposModifiedAt } = user;
 
+		console.log("YEAH", user);
 		if (!modifiedRepos || !modifiedRepos[teamId] || !modifiedRepos[teamId].length) return null;
 
 		return modifiedRepos[teamId].map(repo => {
@@ -367,12 +369,18 @@ class TeamPanel extends React.Component<Props, State> {
 						<ChangesetFile noHover={true} key={f.file} {...f} />
 					))}
 					{stomp && (
-						<div style={{ paddingTop: "10px" }}>
+						<div style={{ paddingTop: "5px" }}>
 							<span className="stomped" style={{ paddingLeft: 0 }}>
 								@{stomp.stomped}
 							</span>{" "}
 							= includes {stomp.stomped} change
 							{stomp.stomped > 1 ? "s" : ""} to code you wrote
+						</div>
+					)}
+					{modifiedReposModifiedAt && (
+						<div style={{ paddingTop: "5px", color: "var(--text-color-subtle)" }}>
+							Updated
+							<Timestamp relative time={modifiedReposModifiedAt[teamId]} />
 						</div>
 					)}
 				</>
