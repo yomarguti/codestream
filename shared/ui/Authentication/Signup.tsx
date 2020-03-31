@@ -326,7 +326,7 @@ export const Signup = (props: Props) => {
 				</fieldset>
 			</form>
 			<form className="standard-form">
-				<fieldset className="form-body">
+				<fieldset className="form-body" style={{ paddingTop: 0 }}>
 					<div id="controls">
 						<div className="outline-box">
 							<Button className="row-button no-top-margin" onClick={onClickGithubSignup}>
