@@ -1,5 +1,12 @@
 # Change Log
 
+## [6.5.0] - 2020-3-31
+
+### Added
+
+- Adds the ability to sign into CodeStream with GitHub
+- Adds the ability to navigate through files in a code review with either the mouse or a keyboard shortcut
+
 ## [6.4.0] - 2020-3-27
 
 ### Added
