@@ -549,21 +549,22 @@ export class SimpleStream extends Component {
 			);
 		}
 		if (this.props.lightningCodeReviewsEnabled) {
-			if (menuItems && menuItems[menuItems.length - 1]
-				&& menuItems[menuItems.length - 1].label !== "-"){
+			if (
+				menuItems &&
+				menuItems[menuItems.length - 1] &&
+				menuItems[menuItems.length - 1].label !== "-"
+			) {
 				menuItems.push({
 					label: "-"
-				})
+				});
 			}
-			menuItems.push(
-				{
-					icon: <Icon name="review" />,
-					label: "Request A Code Review",
-					action: this.newReview,
-					shortcut: ComposeKeybindings.review,
-					key: "review"
-				}
-			);
+			menuItems.push({
+				icon: <Icon name="review" />,
+				label: "Request A Code Review",
+				action: this.newReview,
+				shortcut: ComposeKeybindings.review,
+				key: "review"
+			});
 		}
 		// { label: "-" }
 		// { label: inviteLabel, action: "invite" },
@@ -1304,25 +1305,37 @@ export class SimpleStream extends Component {
 	};
 
 	cancelAccount = () => {
-		confirmPopup({
-			title: "Are you sure?",
-			message: "Deleting your account cannot be undone.",
-			centered: true,
-			buttons: [
-				{ label: "Go Back", className: "control-button" },
-				{
-					label: "Cancel Account",
-					className: "delete",
-					wait: true,
-					action: async () => {
-						await HostApi.instance.send(DeleteUserRequestType, {
-							userId: this.props.currentUserId
-						});
-						this.props.logout();
+		const { team, currentUserId } = this.props;
+		const { adminIds } = team;
+
+		if (adminIds && adminIds.length == 1 && adminIds.includes(currentUserId)) {
+			confirmPopup({
+				title: "Not Possible",
+				message: "As the only admin on your team, you may not delete your account.",
+				centered: true,
+				buttons: [{ label: "Go Back", className: "control-button" }]
+			});
+		} else {
+			confirmPopup({
+				title: "Are you sure?",
+				message: "Deleting your account cannot be undone.",
+				centered: true,
+				buttons: [
+					{ label: "Go Back", className: "control-button" },
+					{
+						label: "Cancel Account",
+						className: "delete",
+						wait: true,
+						action: async () => {
+							await HostApi.instance.send(DeleteUserRequestType, {
+								userId: this.props.currentUserId
+							});
+							this.props.logout();
+						}
 					}
-				}
-			]
-		});
+				]
+			});
+		}
 	};
 
 	toggleMenu = event => {
