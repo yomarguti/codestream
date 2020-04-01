@@ -185,15 +185,23 @@ export default class Menu extends Component {
 		}
 	}
 
-	calculateKey(item, parentItem) {
-		const itemKey = item.key || item.action;
-		return parentItem ? `${parentItem.key || parentItem.action}/${itemKey}` : itemKey;
+	calculateKey(item, parentItem, grandParentItem) {
+		let key = item.key || item.action;
+		if (parentItem) {
+			const parentKey = parentItem.key || parentItem.action;
+			key = parentKey + "/" + key;
+		}
+		if (grandParentItem) {
+			const grandParentKey = grandParentItem.key || grandParentItem.action;
+			key = grandParentKey + "/" + key;
+		}
+		return key;
 	}
 
-	renderItem = (item, parentItem, index) => {
+	renderItem = (item, parentItem, grandParentItem, index) => {
 		if (item.label === "-") return <hr key={this.count++} />;
 		if (item.fragment) return item.fragment;
-		const key = this.calculateKey(item, parentItem);
+		const key = this.calculateKey(item, parentItem, grandParentItem);
 		let selected = key === this.state.selected || (this.state.selected + "").startsWith(key + "/");
 		if (item.type === "search") {
 			selected = false;
@@ -222,7 +230,7 @@ export default class Menu extends Component {
 				{item.submenu && (
 					<span className="submenu">
 						<Icon name="triangle-right" className="triangle-right" />
-						{selected && this.renderSubmenu(item)}
+						{selected && this.renderSubmenu(item, parentItem)}
 					</span>
 				)}
 				{item.type === "search" && (
@@ -244,11 +252,11 @@ export default class Menu extends Component {
 		if (this.props.onChangeSearch) this.props.onChangeSearch(e.target.value);
 	};
 
-	renderSubmenu = item => {
+	renderSubmenu = (parentItem, grandParentItem) => {
 		const leftClass = this.props.align === "center" ? " left" : "";
 		return (
 			<div id="active-submenu" className={`menu-popup-submenu${leftClass}`}>
-				{this.renderMenu(item.submenu, item)}
+				{this.renderMenu(parentItem.submenu, parentItem, grandParentItem)}
 			</div>
 		);
 	};
@@ -282,10 +290,10 @@ export default class Menu extends Component {
 		return filteredItems;
 	};
 
-	renderMenu = (items, parentItem) => {
+	renderMenu = (items, parentItem, grandParentItem) => {
 		let itemsToRender = this.filterItems(items);
 		// submenus don't get the dropdown no-top-corners treatment
-		const dropdown = (this.props.align || "").match(/^dropdown/) && !parentItem;
+		const dropdown = (this.props.align || "").match(/^dropdown/) && !parentItem && !grandParentItem;
 
 		return (
 			<div
@@ -295,7 +303,7 @@ export default class Menu extends Component {
 					"limit-width": this.props.limitWidth
 				})}
 			>
-				{this.props.title && !parentItem && (
+				{this.props.title && !parentItem && !grandParentItem && (
 					<h3>
 						{this.props.backIcon && <span className="back-icons">{this.props.backIcon}</span>}
 						{this.props.title}
@@ -306,7 +314,9 @@ export default class Menu extends Component {
 					</h3>
 				)}
 				<ul className="compact">
-					{itemsToRender.map((item, index) => this.renderItem(item, parentItem, index))}
+					{itemsToRender.map((item, index) =>
+						this.renderItem(item, parentItem, grandParentItem, index)
+					)}
 				</ul>
 				<button
 					className="focus-button"
