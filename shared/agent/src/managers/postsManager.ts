@@ -1006,13 +1006,13 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				diff.newFileName && !excludedFiles.includes(diff.newFileName);
 			const modifiedFiles = scm.modifiedFiles.filter(f => !excludedFiles.includes(f.file));
 			totalExcludedFilesCount += excludedFiles.length;
+
 			// filter out only to those commits that were chosen in the review
-			const commits = startCommit
-				? scm.commits.slice(
-						0,
-						scm.commits.findIndex(commit => commit.sha === startCommit)
-				  )
-				: scm.commits;
+			// see if the startCommit is in the list, if it is then filter out
+			// otherwise the startCommit is probably the parent of the oldest commit
+			// so that means just take the whole commit list
+			const startIndex = scm.commits.findIndex(commit => commit.sha === startCommit);
+			const commits = startIndex >= 0 ? scm.commits.slice(0, startIndex) : scm.commits;
 
 			// perform a diff against the most recent pushed commit
 			const pushedCommit = scm.commits.find(commit => !commit.localOnly);
@@ -1535,7 +1535,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					anchorFormat: "[${text}](${url})"
 				};
 		}
-	};
+	}
 
 	createProviderCard = async (
 		providerCardRequest: {
@@ -1763,7 +1763,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			Logger.error(error, `failed to create a ${attributes.issueProvider.name} card:`);
 			return undefined;
 		}
-	};
+	}
 }
 
 async function resolveCreatePostResponse(response: CreatePostResponse) {

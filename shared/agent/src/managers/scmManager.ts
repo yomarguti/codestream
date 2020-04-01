@@ -285,8 +285,14 @@ export class ScmManager {
 						const notMine = commits.find(
 							commit => commit.info && commit.info.email !== currentUserEmail
 						);
-						if (notMine) startCommit = notMine.sha;
-						else startCommit = commits[commits.length - 1].sha + "^";
+						if (notMine) {
+							startCommit = notMine.sha;
+						} else {
+							const oldestSha = commits[commits.length - 1].sha;
+							const parentSha = await git.getParentCommitSha(repoPath, oldestSha);
+							if (parentSha) startCommit = parentSha;
+							else startCommit = oldestSha + "^";
+						}
 					}
 
 					// if we only want to show local work, then we should
