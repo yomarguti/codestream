@@ -519,6 +519,7 @@ export interface CSCreateReviewRequest {
 		startCommit: string;
 		excludeCommit: string;
 		excludedFiles: string[];
+		newFiles: string[];
 		includeSaved: boolean;
 		includeStaged: boolean;
 		remotes: { name: string; url: string }[];

@@ -1,5 +1,5 @@
 "use strict";
-import { ParsedDiff, parsePatch } from "diff";
+import { createPatch, ParsedDiff, parsePatch, structuredPatch } from "diff";
 import * as fs from "fs";
 import * as path from "path";
 import { Disposable, Event } from "vscode-languageserver";
@@ -8,6 +8,7 @@ import { Logger } from "../logger";
 import { FileStatus } from "../protocol/api.protocol.models";
 import { CodeStreamSession } from "../session";
 import { Iterables, log, Strings } from "../system";
+import { xfs } from "../xfs";
 import { git, GitErrors, GitWarnings } from "./git";
 import { GitAuthor, GitCommit, GitRemote, GitRepository } from "./models/models";
 import { GitAuthorParser } from "./parsers/authorParser";
@@ -336,13 +337,43 @@ export class GitService implements IGitService, Disposable {
 			data = await git({ cwd: repoPath }, ...options);
 		} catch (err) {
 			Logger.warn(
-				`Error getting diff from ${repoPath}:${includeSaved}:${includeStaged}:${ref1}:${ref2}}`
+				`Error getting diff from ${repoPath}:${includeSaved}:${includeStaged}:${ref1}:${ref2}`
 			);
 			throw err;
 		}
 
 		const patches = parsePatch(data);
 		return patches;
+	}
+
+	// this isn't technically a git operation, but we leave it here since it's
+	// pretending to be one
+	async getNewDiff(
+		repoPath: string,
+		file: string,
+		opts?: { reverse?: boolean }
+	): Promise<ParsedDiff> {
+		let data: ParsedDiff | undefined;
+		try {
+			let contents = await xfs.readText(path.join(repoPath, file));
+			if (contents == null) {
+				Logger.warn(`Error reading file in getNewDiff: ${repoPath}:${file}`);
+				contents = "";
+			}
+			contents = Strings.normalizeFileContents(contents);
+			// we would like to use structuredPatch here but it doesn't seem to work
+			// no idea why! but this works. https://github.com/kpdecker/jsdiff/issues/157
+			const patch =
+				opts && opts.reverse
+					? createPatch(file, contents, "", "", "")
+					: createPatch(file, "", contents, "", "");
+			data = parsePatch(patch)[0];
+		} catch (err) {
+			Logger.warn(`Error getting new file diff from ${repoPath}:${file}`);
+			throw err;
+		}
+
+		return data;
 	}
 
 	async getFileForRevision(uri: URI, ref: string): Promise<string | undefined>;
@@ -965,11 +996,14 @@ export class GitService implements IGitService, Disposable {
 					}
 
 					if (status) {
-						ret[file] = {
-							statusX,
-							statusY,
-							status
-						};
+						// skip untracked directories
+						if (status !== FileStatus.untracked || !file.match(/\/$/)) {
+							ret[file] = {
+								statusX,
+								statusY,
+								status
+							};
+						}
 					}
 				}
 			});

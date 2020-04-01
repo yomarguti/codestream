@@ -999,7 +999,15 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		let totalExcludedFilesCount = 0;
 
 		for (const repoChange of request.attributes.repoChanges) {
-			const { scm, includeSaved, includeStaged, startCommit, excludedFiles, remotes } = repoChange;
+			const {
+				scm,
+				includeSaved,
+				includeStaged,
+				startCommit,
+				excludedFiles,
+				newFiles,
+				remotes
+			} = repoChange;
 			if (!scm || !scm.repoId || !scm.branch || !scm.commits) continue;
 
 			const removeExcluded = (diff: ParsedDiff) =>
@@ -1075,6 +1083,26 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			let rightBaseAuthor: string;
 			let rightDiffs: ParsedDiff[];
 			let rightReverseDiffs: ParsedDiff[];
+
+			const newFileDiffs: ParsedDiff[] = [];
+			const newFileReverseDiffs: ParsedDiff[] = [];
+			if (newFiles) {
+				await Promise.all(
+					newFiles.map(async file => {
+						let result: ParsedDiff | undefined;
+						let resultReverse: ParsedDiff | undefined;
+						try {
+							result = await git.getNewDiff(scm.repoPath, file);
+							resultReverse = await git.getNewDiff(scm.repoPath, file, { reverse: true });
+						} catch {}
+						if (result && resultReverse) {
+							newFileDiffs.push(result);
+							newFileReverseDiffs.push(resultReverse);
+						}
+					})
+				);
+			}
+
 			if (!newestCommitInReview || newestCommitInReview.localOnly) {
 				rightBaseSha = baseSha;
 				rightBaseAuthor = (await git.getCommit(scm.repoPath, baseSha))!.author;
@@ -1102,6 +1130,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					)
 				).filter(removeExcluded);
 			}
+			rightDiffs.push(...newFileDiffs);
+			rightReverseDiffs.push(...newFileReverseDiffs);
 
 			const rightToLatestCommitDiffs = (
 				await git.getDiffs(
@@ -1110,9 +1140,12 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					latestCommitSha
 				)
 			).filter(removeExcluded);
+			rightToLatestCommitDiffs.push(...newFileReverseDiffs);
+
 			const latestCommitToRightDiffs = (
 				await git.getDiffs(scm.repoPath, { includeSaved, includeStaged }, latestCommitSha)
 			).filter(removeExcluded);
+			latestCommitToRightDiffs.push(...newFileDiffs);
 
 			// WTF typescript, this is defined above
 			if (reviewRequest.reviewChangesets && baseSha) {
@@ -1133,7 +1166,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						rightDiffs,
 						rightReverseDiffs,
 						latestCommitSha,
-						rightToLatestCommitDiffs,
+						rightToLatestCommitDiffs, // for backtracking
 						latestCommitToRightDiffs
 					}
 				});

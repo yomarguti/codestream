@@ -352,7 +352,7 @@ export namespace Strings {
 		return false;
 	}
 
-	export function normalizeFileContents(contents: string) {
+	export function normalizeFileContents(contents: string): string {
 		if (!contents) return contents;
 		// if there is a BOM at the beginning, strip it
 		if (contents.charCodeAt(0) === 65279) {

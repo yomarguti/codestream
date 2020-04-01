@@ -168,22 +168,26 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		const leftBasePath = path.join(repo.path, leftBaseRelativePath);
 		const rightBasePath = path.join(repo.path, rightBaseRelativePath);
 
-		const leftBaseContents =
-			fileInfo.statusX === FileStatus.added
-				? ""
-				: (await git.getFileContentForRevision(leftBasePath, diffs.leftBaseSha)) || "";
+		const isNewFile =
+			fileInfo.statusX === FileStatus.added || fileInfo.statusX === FileStatus.untracked;
+		const leftBaseContents = isNewFile
+			? ""
+			: (await git.getFileContentForRevision(leftBasePath, diffs.leftBaseSha)) || "";
 		const normalizedLeftBaseContents = Strings.normalizeFileContents(leftBaseContents);
 		const leftContents =
-			leftDiff !== undefined ? applyPatch(normalizedLeftBaseContents, leftDiff) : normalizedLeftBaseContents;
-		const rightBaseContents =
-			fileInfo.statusX === FileStatus.added
-				? ""
-				: diffs.leftBaseSha === diffs.rightBaseSha
-				? leftBaseContents
-				: (await git.getFileContentForRevision(rightBasePath, diffs.rightBaseSha)) || "";
+			leftDiff !== undefined
+				? applyPatch(normalizedLeftBaseContents, leftDiff)
+				: normalizedLeftBaseContents;
+		const rightBaseContents = isNewFile
+			? ""
+			: diffs.leftBaseSha === diffs.rightBaseSha
+			? leftBaseContents
+			: (await git.getFileContentForRevision(rightBasePath, diffs.rightBaseSha)) || "";
 		const normalizedRightBaseContents = Strings.normalizeFileContents(rightBaseContents);
 		const rightContents =
-			rightDiff !== undefined ? applyPatch(normalizedRightBaseContents, rightDiff) : normalizedRightBaseContents;
+			rightDiff !== undefined
+				? applyPatch(normalizedRightBaseContents, rightDiff)
+				: normalizedRightBaseContents;
 
 		return {
 			left: leftContents,
