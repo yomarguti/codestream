@@ -43,7 +43,7 @@ const Title = styled.div`
 
 interface Props {
 	position?: "static" | "fixed";
-	title?: string;
+	title?: string | JSX.Element;
 	className?: string;
 }
 

@@ -19,6 +19,7 @@ import {
 	ChangeDataType,
 	UpdateTeamTagRequestType,
 	KickUserRequestType,
+	UpdateTeamRequestType,
 	UpdateTeamAdminRequestType
 } from "@codestream/protocols/agent";
 import { CSUser } from "@codestream/protocols/api";
@@ -109,6 +110,8 @@ interface State {
 	inputTouched: boolean;
 	modifiedRepos: RepoScmStatus[];
 	loadingStatus: boolean;
+	changingTeamName: boolean;
+	newTeamName: string;
 }
 
 class TeamPanel extends React.Component<Props, State> {
@@ -123,7 +126,9 @@ class TeamPanel extends React.Component<Props, State> {
 		inputTouched: false,
 		newMemberEmailInvalid: false,
 		modifiedRepos: [],
-		loadingStatus: false
+		loadingStatus: false,
+		changingTeamName: false,
+		newTeamName: ""
 	};
 
 	private _pollingTimer?: any;
@@ -506,6 +511,29 @@ class TeamPanel extends React.Component<Props, State> {
 		this.setState({ loadingStatus: false });
 	};
 
+	changeTeamName = () =>
+		this.setState({ changingTeamName: true, newTeamName: this.props.teamName });
+
+	saveTeamName = async () => {
+		await HostApi.instance.send(UpdateTeamRequestType, {
+			teamId: this.props.teamId,
+			name: this.state.newTeamName
+		});
+
+		this.setState({ changingTeamName: false });
+	};
+
+	deleteTeam = () => {
+		console.log("DELETING THE TEAM");
+		confirmPopup({
+			title: "Delete Team",
+			message:
+				"Team deletion is handled by customer service. Please send an email to support@codestream.com.",
+			centered: true,
+			buttons: [{ label: "OK", className: "control-button" }]
+		});
+	};
+
 	render() {
 		const { xrayEnabled, currentUserId, currentUserInvisible } = this.props;
 		const { invitingEmails, loadingStatus } = this.state;
@@ -514,9 +542,38 @@ class TeamPanel extends React.Component<Props, State> {
 			this.props.activePanel !== WebviewPanels.People;
 
 		const suggested = this.props.suggested.filter(u => !invitingEmails[u.email]);
+		const title = this.state.changingTeamName ? (
+			<input
+				className="input-text control"
+				type="text"
+				name="team-name"
+				autoFocus
+				value={this.state.newTeamName}
+				onChange={e => this.setState({ newTeamName: e.target.value })}
+				onBlur={this.saveTeamName}
+				onKeyPress={e => {
+					if (e.key == "Enter") this.saveTeamName();
+				}}
+			></input>
+		) : this.props.isCurrentUserAdmin ? (
+			<>
+				<DropdownButton
+					variant="text"
+					items={[
+						{ label: "Change Team Name", action: this.changeTeamName },
+						{ label: "-", action: () => {} },
+						{ label: "Delete Team", action: this.deleteTeam }
+					]}
+				>
+					{this.props.teamName}
+				</DropdownButton>
+			</>
+		) : (
+			this.props.teamName
+		);
 		return (
 			<div className="panel full-height team-panel">
-				<PanelHeader title={this.props.teamName} />
+				<PanelHeader title={title} />
 				<ScrollBox>
 					<div className="vscroll">
 						<div className="section">
@@ -594,6 +651,8 @@ class TeamPanel extends React.Component<Props, State> {
 								</UL>
 							</div>
 						)}
+						<br />
+						<br />
 					</div>
 				</ScrollBox>
 			</div>

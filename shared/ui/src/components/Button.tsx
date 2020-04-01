@@ -4,7 +4,8 @@ import Icon from "@codestream/webview/Stream/Icon";
 
 type ButtonSize = "default" | "large" | "compact";
 
-const getFontSize = (size?: ButtonSize) => {
+const getFontSize = (size?: ButtonSize, variant?: ButtonVariant) => {
+	if (variant == "text") return "font-size: inherit !important";
 	switch (size) {
 		case "large":
 			return "font-size: 1.15em !important;";
@@ -119,7 +120,7 @@ export const ButtonRoot = styled.button<ButtonProps>(props => {
 	z-index: 0;
 	text-shadow: none;
 
-	${getFontSize(props.size)}
+	${getFontSize(props.size, props.variant)}
 	${getPadding(props.size, props.variant)}
 	${getLineHeight(props.size, props.variant)}
 	border-radius: 0;
