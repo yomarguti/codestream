@@ -20,7 +20,7 @@ import { SocketClusterHistory } from "./socketClusterHistory";
 export interface SocketClusterInitializer {
 	host: string; // host of the socketcluster server
 	port: string; // port of the socketcluster server
-	secure?: boolean; // whether the socketcluster connection uses ssl
+	ignoreHttps?: boolean; // whether the socketcluster connection uses ssl
 	authKey: string; // unique token provided in the login response
 	userId: string; // ID of the current user
 	strictSSL: boolean; // whether to enforce strict SSL (no self-signed certs)
@@ -60,13 +60,13 @@ export class SocketClusterConnection implements BroadcasterConnection {
 		this._statusCallback = options.onStatus;
 
 		this._debug(`Connecting to ${this._options!.host}:${this._options.port}`);
-		if (!this._options.secure) {
+		if (this._options.ignoreHttps) {
 			this._debug("Connection will not be secure");
 		}
 		this._socket = create({
 			hostname: this._options!.host,
 			port: parseInt(this._options!.port, 10),
-			secure: this._options.secure,
+			secure: !this._options.ignoreHttps,
 			autoReconnect: true,
 			wsOptions: { rejectUnauthorized: this._options!.strictSSL }
 		});

@@ -258,7 +258,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private readonly _middleware: CodeStreamApiMiddleware[] = [];
 	private _pubnubSubscribeKey: string | undefined;
 	private _broadcasterToken: string | undefined;
-	private _socketCluster: { host: string; port: string } | undefined;
+	private _socketCluster: { host: string; port: string, ignoreHttps?: boolean } | undefined;
 	private _subscribedMessageTypes: Set<MessageType> | undefined;
 	private _teamId: string | undefined;
 	private _team: CSTeam | undefined;

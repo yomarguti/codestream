@@ -57,6 +57,7 @@ export interface BroadcasterEventsInitializer {
 	socketCluster?: {
 		host: string;
 		port: string;
+		ignoreHttps?: boolean;
 	};
 	strictSSL: boolean;
 	httpsAgent?: HttpsAgent | HttpsProxyAgent;
