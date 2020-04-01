@@ -258,7 +258,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private readonly _middleware: CodeStreamApiMiddleware[] = [];
 	private _pubnubSubscribeKey: string | undefined;
 	private _broadcasterToken: string | undefined;
-	private _socketCluster: { host: string; port: string, ignoreHttps?: boolean } | undefined;
+	private _socketCluster: { host: string; port: string; ignoreHttps?: boolean } | undefined;
 	private _subscribedMessageTypes: Set<MessageType> | undefined;
 	private _teamId: string | undefined;
 	private _team: CSTeam | undefined;
@@ -823,10 +823,29 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	async fetchFileStreams(request: FetchFileStreamsRequest) {
-		return this.get<CSGetStreamsResponse<CSFileStream>>(
+		return this.getStreams<CSGetStreamsResponse<CSFileStream>>(
 			`/streams?teamId=${this.teamId}&repoId=${request.repoId}`,
 			this._token
 		);
+	}
+
+	private async getStreams<R extends CSGetStreamsResponse<CSStream>>(
+		url: string,
+		token?: string
+	): Promise<R> {
+		let more: boolean | undefined = true;
+		let lt: string | undefined;
+		const response = { streams: [] as CSStream[] };
+
+		while (more) {
+			const pagination = lt ? `&lt=${lt}` : "";
+			const page = await this.get<R>(`${url}${pagination}`, token);
+			response.streams.push(...page.streams);
+			more = page.more;
+			lt = page.streams.length ? page.streams[page.streams.length - 1].sortId : undefined;
+		}
+
+		return response as R;
 	}
 
 	@log()
@@ -1247,13 +1266,13 @@ export class CodeStreamApiProvider implements ApiProvider {
 			request.types.length === 0 ||
 			(request.types.includes(StreamType.Channel) && request.types.includes(StreamType.Direct))
 		) {
-			return this.get<CSGetStreamsResponse<CSChannelStream | CSDirectStream>>(
+			return this.getStreams<CSGetStreamsResponse<CSChannelStream | CSDirectStream>>(
 				`/streams?teamId=${this.teamId}`,
 				this._token
 			);
 		}
 
-		return this.get<CSGetStreamsResponse<CSChannelStream | CSDirectStream>>(
+		return this.getStreams<CSGetStreamsResponse<CSChannelStream | CSDirectStream>>(
 			`/streams?teamId=${this.teamId}&type=${request.types[0]}`,
 			this._token
 		);
@@ -1261,7 +1280,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	fetchUnreadStreams(request: FetchUnreadStreamsRequest) {
-		return this.get<CSGetStreamsResponse<CSChannelStream | CSDirectStream>>(
+		return this.getStreams<CSGetStreamsResponse<CSChannelStream | CSDirectStream>>(
 			`/streams?teamId=${this.teamId}&unread`,
 			this._token
 		);

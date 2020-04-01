@@ -348,6 +348,7 @@ export interface CSGetStreamResponse<T extends CSStream> {
 }
 
 export interface CSGetStreamsResponse<T extends CSStream> {
+	more: boolean | undefined;
 	streams: T[];
 }
 
