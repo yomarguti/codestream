@@ -84,3 +84,19 @@ export const UpdateTeamAdminRequestType = new RequestType<
 	void,
 	void
 >("codestream/team/admin/update");
+
+export interface UpdateTeamRequest {
+	teamId: string;
+	name?: string;
+}
+
+export interface UpdateTeamResponse {
+	team: CSTeam;
+}
+
+export const UpdateTeamRequestType = new RequestType<
+	UpdateTeamRequest,
+	UpdateTeamResponse,
+	void,
+	void
+>("codestream/team/update");
