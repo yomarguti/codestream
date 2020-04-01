@@ -164,3 +164,14 @@ export const editCodemark = (
 		logError(`failed to update codemark: ${error}`, { codemarkId });
 	}
 };
+
+export const canCreateCodemark = (textEditorUri: string | undefined) => {
+	// you can create markerless codemarks / codemarks not attached to files
+	if (!textEditorUri) return true;
+	// currently only support file:// or the "right" side
+	// of codemark-diff:// uris
+	if (textEditorUri.startsWith("file://")) return true;;
+	const regex = /codestream-diff:\/\/(\w+)\/(\w+)\/right\/(.+)/;
+	const match = regex.exec(textEditorUri);
+	return match && match.length;
+}

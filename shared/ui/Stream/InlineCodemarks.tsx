@@ -67,7 +67,7 @@ import { isConnected } from "../store/providers/reducer";
 import { confirmPopup } from "./Confirm";
 import ComposeTitles from "./ComposeTitles";
 import { Switch } from "../src/components/controls/Switch";
-import { NewCodemarkAttributes, isCreateCodemarkError } from "../store/codemarks/actions";
+import { NewCodemarkAttributes, isCreateCodemarkError, canCreateCodemark } from "../store/codemarks/actions";
 import styled from "styled-components";
 import { PanelHeader } from "../src/components/PanelHeader";
 import * as fs from "../utilities/fs";
@@ -524,6 +524,10 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	renderHoverIcons = () => {
+		// only show hover icons for files that can create codemarks
+		if (!canCreateCodemark(this.props.textEditorUri)) {
+			return undefined;
+		}
 		return (
 			<CreateCodemarkIcons
 				openIconsOnLine={this.state.openIconsOnLine}

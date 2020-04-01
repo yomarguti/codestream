@@ -34,7 +34,7 @@ import ConfigureJiraServerPanel from "./ConfigureJiraServerPanel";
 import ConfigureEnterprisePanel from "./ConfigureEnterprisePanel";
 import { PrePRProviderInfoModal } from "./PrePRProviderInfoModal";
 import * as actions from "./actions";
-import { editCodemark } from "../store/codemarks/actions";
+import { canCreateCodemark, editCodemark } from "../store/codemarks/actions";
 import {
 	ComponentUpdateEmitter,
 	safe,
@@ -206,6 +206,7 @@ export class SimpleStream extends Component {
 
 	handleNewCodemarkRequest(e) {
 		if (this.props.activePanel === WebviewPanels.CodemarksForFile) return;
+		if (!canCreateCodemark(e.uri)) return;
 
 		// re-emit the the notification after switching to spatial view
 		this.updateEmitter.enqueue(() => {
@@ -483,6 +484,7 @@ export class SimpleStream extends Component {
 
 	renderPlusMenu() {
 		const { plusMenuOpen, menuTarget } = this.state;
+		const { textEditorUri } = this.props;
 
 		const menuItems = [];
 		if (this.props.xrayEnabled) {
@@ -497,25 +499,33 @@ export class SimpleStream extends Component {
 				{ label: "-" }
 			);
 		}
-		menuItems.push(
-			{
-				icon: <Icon name="comment" />,
-				label: "New Comment",
-				action: this.newComment,
-				shortcut: ComposeKeybindings.comment,
-				key: "comment"
-			},
-			{
-				icon: <Icon name="issue" />,
-				label: "New Issue",
-				action: this.newIssue,
-				shortcut: ComposeKeybindings.issue,
-				key: "issue"
-			}
-		);
-		if (this.props.lightningCodeReviewsEnabled) {
+
+		if (canCreateCodemark(textEditorUri)) {
 			menuItems.push(
-				{ label: "-" },
+				{
+					icon: <Icon name="comment" />,
+					label: "New Comment",
+					action: this.newComment,
+					shortcut: ComposeKeybindings.comment,
+					key: "comment"
+				},
+				{
+					icon: <Icon name="issue" />,
+					label: "New Issue",
+					action: this.newIssue,
+					shortcut: ComposeKeybindings.issue,
+					key: "issue"
+				}
+			);
+		}
+		if (this.props.lightningCodeReviewsEnabled) {
+			if (menuItems && menuItems[menuItems.length - 1]
+				&& menuItems[menuItems.length - 1].label !== "-"){
+				menuItems.push({
+					label: "-"
+				})
+			}
+			menuItems.push(
 				{
 					icon: <Icon name="review" />,
 					label: "Request A Code Review",
@@ -2382,6 +2392,7 @@ const mapStateToProps = state => {
 		channelMembers,
 		services,
 		isInVscode: state.ide.name === "VSC",
+		textEditorUri: state.editorContext && state.editorContext.textEditorUri,
 		posts: streamPosts.map(post => {
 			let user = users[post.creatorId];
 			if (!user) {
