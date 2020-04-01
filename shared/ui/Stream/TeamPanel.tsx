@@ -524,7 +524,6 @@ class TeamPanel extends React.Component<Props, State> {
 	};
 
 	deleteTeam = () => {
-		console.log("DELETING THE TEAM");
 		confirmPopup({
 			title: "Delete Team",
 			message:
