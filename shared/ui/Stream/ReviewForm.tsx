@@ -743,7 +743,7 @@ class ReviewForm extends React.Component<Props, State> {
 										</CSText>
 									</>
 								)}
-								{!this.props.isEditing && totalModifiedLines > 100 && (
+								{!this.props.isEditing && totalModifiedLines > 200 && (
 									<div style={{ display: "flex", padding: "10px 0 0 2px" }}>
 										<Icon name="alert" muted />
 										<span style={{ paddingLeft: "10px" }}>
