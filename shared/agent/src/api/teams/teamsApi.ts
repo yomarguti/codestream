@@ -31,6 +31,7 @@ import {
 	DeleteCodemarkRequest,
 	DeletePostRequest,
 	DeletePostResponse,
+	DeleteUserRequest,
 	EditPostRequest,
 	EditPostResponse,
 	FetchCodemarksRequest,
@@ -69,6 +70,7 @@ import {
 	InviteUserRequest,
 	JoinStreamRequest,
 	JoinStreamResponse,
+	KickUserRequest,
 	LeaveStreamRequest,
 	LeaveStreamResponse,
 	MarkPostUnreadRequest,
@@ -1188,6 +1190,16 @@ export class MSTeamsApiProvider implements ApiProvider {
 	@log()
 	updateUser(request: UpdateUserRequest) {
 		return this._codestream.updateUser(request);
+	}
+
+	@log()
+	deleteUser(request: DeleteUserRequest) {
+		return this._codestream.deleteUser(request);
+	}
+
+	@log()
+	kickUser(request: KickUserRequest) {
+		return this._codestream.kickUser(request);
 	}
 
 	@log()

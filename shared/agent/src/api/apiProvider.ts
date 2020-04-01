@@ -34,6 +34,8 @@ import {
 	DeletePostResponse,
 	DeleteReviewRequest,
 	DeleteReviewResponse,
+	DeleteUserRequest,
+	DeleteUserResponse,
 	EditPostRequest,
 	EditPostResponse,
 	FetchCodemarksRequest,
@@ -96,6 +98,8 @@ import {
 	InviteUserResponse,
 	JoinStreamRequest,
 	JoinStreamResponse,
+	KickUserRequest,
+	KickUserResponse,
 	LeaveStreamRequest,
 	LeaveStreamResponse,
 	MarkPostUnreadRequest,
@@ -414,7 +418,9 @@ export interface ApiProvider {
 	fetchUsers(request: FetchUsersRequest): Promise<FetchUsersResponse>;
 	getUser(request: GetUserRequest): Promise<GetUserResponse>;
 	inviteUser(request: InviteUserRequest): Promise<InviteUserResponse>;
+	deleteUser(request: DeleteUserRequest): Promise<DeleteUserResponse>;
 	updateUser(request: UpdateUserRequest): Promise<UpdateUserResponse>;
+	kickUser(request: KickUserRequest): Promise<KickUserResponse>;
 
 	connectThirdPartyProvider(request: {
 		providerId: string;

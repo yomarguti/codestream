@@ -38,6 +38,8 @@ import {
 	DeletePostRequest,
 	DeleteReviewRequest,
 	DeleteTeamTagRequestType,
+	DeleteUserRequest,
+	DeleteUserResponse,
 	EditPostRequest,
 	FetchCodemarksRequest,
 	FetchCompaniesRequest,
@@ -75,6 +77,8 @@ import {
 	GetUserRequest,
 	InviteUserRequest,
 	JoinStreamRequest,
+	KickUserRequest,
+	KickUserResponse,
 	LeaveStreamRequest,
 	LoginFailResponse,
 	MarkPostUnreadRequest,
@@ -108,6 +112,8 @@ import {
 	UpdateReviewRequest,
 	UpdateStatusRequest,
 	UpdateStreamMembershipRequest,
+	UpdateTeamAdminRequest,
+	UpdateTeamAdminRequestType,
 	UpdateTeamTagRequestType,
 	UpdateUserRequest,
 	VerifyConnectivityResponse
@@ -1481,6 +1487,18 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 	}
 
+	@lspHandler(UpdateTeamAdminRequestType)
+	async updateTeamAdmin(request: UpdateTeamAdminRequest) {
+		await this.put(
+			`/teams/${request.teamId}`,
+			{
+				$push: request.add == null ? undefined : { adminIds: request.add },
+				$pull: request.remove == null ? undefined : { adminIds: request.remove }
+			},
+			this._token
+		);
+	}
+
 	convertUserIdToCodeStreamUserId(id: string): string {
 		return id;
 	}
@@ -1517,6 +1535,22 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return this.post<CSInviteUserRequest, CSInviteUserResponse>(
 			"/users",
 			{ ...request, teamId: this.teamId },
+			this._token
+		);
+	}
+
+	@log()
+	deleteUser(request: DeleteUserRequest) {
+		return this.delete<DeleteUserResponse>(`/users/${request.userId}`, this._token);
+	}
+
+	@log()
+	kickUser(request: KickUserRequest) {
+		return this.put<any, KickUserResponse>(
+			`/teams/${request.teamId}`,
+			{
+				$addToSet: { removedMemberIds: [request.userId] }
+			},
 			this._token
 		);
 	}

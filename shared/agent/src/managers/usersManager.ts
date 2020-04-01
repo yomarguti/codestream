@@ -1,5 +1,7 @@
 "use strict";
 import {
+	DeleteUserRequest,
+	DeleteUserRequestType,
 	FetchUsersRequest,
 	FetchUsersRequestType,
 	FetchUsersResponse,
@@ -15,6 +17,8 @@ import {
 	GetUserResponse,
 	InviteUserRequest,
 	InviteUserRequestType,
+	KickUserRequest,
+	KickUserRequestType,
 	SetModifiedReposRequest,
 	SetModifiedReposRequestType,
 	SetModifiedReposResponse,
@@ -25,7 +29,9 @@ import {
 	UpdatePresenceRequestType,
 	UpdateStatusRequest,
 	UpdateStatusRequestType,
-	UpdateStatusResponse
+	UpdateStatusResponse,
+	UpdateUserRequest,
+	UpdateUserRequestType
 } from "../protocol/agent.protocol";
 import { CSUser } from "../protocol/api.protocol";
 import { lsp, lspHandler } from "../system";
@@ -82,6 +88,21 @@ export class UsersManager extends CachedEntityManagerBase<CSUser> {
 	@lspHandler(InviteUserRequestType)
 	inviteUser(request: InviteUserRequest) {
 		return this.session.api.inviteUser(request);
+	}
+
+	@lspHandler(DeleteUserRequestType)
+	deleteUser(request: DeleteUserRequest) {
+		return this.session.api.deleteUser(request);
+	}
+
+	@lspHandler(KickUserRequestType)
+	kickUser(request: KickUserRequest) {
+		return this.session.api.kickUser(request);
+	}
+
+	@lspHandler(UpdateUserRequestType)
+	updateUser(request: UpdateUserRequest) {
+		return this.session.api.updateUser(request);
 	}
 
 	@lspHandler(UpdatePreferencesRequestType)

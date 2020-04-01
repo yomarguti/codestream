@@ -50,6 +50,7 @@ export interface UpdateUserRequest {
 	username?: string;
 	fullName?: string;
 	timeZone?: string;
+	email?: string;
 }
 
 export interface UpdateUserResponse {
@@ -62,6 +63,34 @@ export const UpdateUserRequestType = new RequestType<
 	void,
 	void
 >("codestream/user/update");
+
+export interface DeleteUserRequest {
+	userId: string;
+}
+
+export interface DeleteUserResponse {
+	user: CSUser;
+}
+
+export const DeleteUserRequestType = new RequestType<
+	DeleteUserRequest,
+	DeleteUserResponse,
+	void,
+	void
+>("codestream/user/delete");
+
+export interface KickUserRequest {
+	teamId: string;
+	userId: string;
+}
+
+export interface KickUserResponse {
+	user: CSUser;
+}
+
+export const KickUserRequestType = new RequestType<KickUserRequest, KickUserResponse, void, void>(
+	"codestream/user/kick"
+);
 
 export interface UpdatePresenceRequest {
 	sessionId: string;

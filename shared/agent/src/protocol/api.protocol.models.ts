@@ -356,6 +356,7 @@ export interface CSCompany extends CSEntity {
 export interface CSTeam extends CSEntity {
 	companyId: string;
 	memberIds: string[];
+	removedMemberIds?: string[];
 	name: string;
 	primaryReferral: "internal" | "external";
 	integrations?: { [key: string]: { enabled: boolean } };

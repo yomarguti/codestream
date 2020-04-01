@@ -33,6 +33,7 @@ import {
 	CreateRepoRequest,
 	DeleteCodemarkRequest,
 	DeletePostRequest,
+	DeleteUserRequest,
 	EditPostRequest,
 	FetchCodemarksRequest,
 	FetchCompaniesRequest,
@@ -63,6 +64,7 @@ import {
 	GetUserRequest,
 	InviteUserRequest,
 	JoinStreamRequest,
+	KickUserRequest,
 	LeaveStreamRequest,
 	MarkPostUnreadRequest,
 	MarkStreamReadRequest,
@@ -2331,6 +2333,16 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	updateUser(request: UpdateUserRequest) {
 		return this._codestream.updateUser(request);
+	}
+
+	@log()
+	deleteUser(request: DeleteUserRequest) {
+		return this._codestream.deleteUser(request);
+	}
+
+	@log()
+	kickUser(request: KickUserRequest) {
+		return this._codestream.kickUser(request);
 	}
 
 	@log()
