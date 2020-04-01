@@ -28,7 +28,15 @@ import {
 	getDirectMessageStreamsForTeam,
 	getDMName
 } from "../store/streams/reducer";
-import { mapFilter, toMapBy, replaceHtml, keyFilter, safe, arrayDiff } from "../utils";
+import {
+	mapFilter,
+	toMapBy,
+	replaceHtml,
+	keyFilter,
+	keyFilterFalse,
+	safe,
+	arrayDiff
+} from "../utils";
 import { HostApi } from "../webview-api";
 import Button from "./Button";
 import Tag from "./Tag";
@@ -485,6 +493,12 @@ class ReviewForm extends React.Component<Props, State> {
 							startCommit,
 							excludeCommit,
 							excludedFiles: keyFilter(excludedFiles),
+							// new files will originally have excludedFiles[file] = true
+							// and when they get added to the review they will be
+							// excludedFiles[file] = false
+							// therefore we can use the keys whose values are false
+							// as the list of files that have been added
+							newFiles: keyFilterFalse(excludedFiles),
 							includeSaved: hasSavedFiles,
 							includeStaged: hasStagedFiles
 						}
@@ -1169,7 +1183,7 @@ class ReviewForm extends React.Component<Props, State> {
 					<span className="actions">
 						<Icon
 							name="plus"
-							title="Add back to review"
+							title="Add to review"
 							placement="bottom"
 							className="clickable action"
 							onClick={e => this.exclude(e, file)}

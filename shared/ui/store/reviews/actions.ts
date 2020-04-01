@@ -22,9 +22,9 @@ import {
 	ReviewCloseDiffRequestType,
 	ReviewShowDiffRequestType
 } from "@codestream/protocols/webview";
-import { createPost } from '@codestream/webview/Stream/actions';
-import { getTeamMembers } from '../users/reducer';
-import { phraseList } from '@codestream/webview/utilities/strings';
+import { createPost } from "@codestream/webview/Stream/actions";
+import { getTeamMembers } from "../users/reducer";
+import { phraseList } from "@codestream/webview/utilities/strings";
 
 export const reset = () => action("RESET");
 
@@ -57,6 +57,10 @@ export interface NewReviewAttributes {
 		startCommit: string;
 		excludeCommit: string;
 		excludedFiles: string[];
+		// we have to pass these separately because
+		// git diff isn't smart enough to be able to
+		// show diffs for untracked files
+		newFiles: string[];
 		includeSaved: boolean;
 		includeStaged: boolean;
 		remotes: { name: string; url: string }[];
@@ -149,7 +153,10 @@ export type EditableAttributes = Partial<
 	Pick<CSReview, "tags" | "text" | "title" | "reviewers"> & AdvancedEditableReviewAttributes
 >;
 
-export const editReview = (id: string, attributes: EditableAttributes) => async (dispatch, getState: () => CodeStreamState) => {
+export const editReview = (id: string, attributes: EditableAttributes) => async (
+	dispatch,
+	getState: () => CodeStreamState
+) => {
 	let response: UpdateReviewResponse | undefined;
 	try {
 		response = await HostApi.instance.send(UpdateReviewRequestType, {
@@ -158,22 +165,27 @@ export const editReview = (id: string, attributes: EditableAttributes) => async 
 		});
 		dispatch(updateReviews([response.review]));
 
-		if (attributes.$push != null && attributes.$push.reviewers != null && 
-			attributes.$push.reviewers.length) {
+		if (
+			attributes.$push != null &&
+			attributes.$push.reviewers != null &&
+			attributes.$push.reviewers.length
+		) {
 			// if we have additional ids we're adding via $push, map them here
 			const filteredUsers = mapFilter(getTeamMembers(getState()), teamMember => {
 				const user = attributes.$push!.reviewers!.find(_ => _ === teamMember.id);
 				return user ? teamMember : undefined;
 			}).filter(Boolean);
-			
+
 			if (filteredUsers.length) {
-				dispatch(createPost(
-					response.review.streamId,
-					response.review.postId,
-					`/me added ${phraseList(filteredUsers.map(u => `@${u.username}` ))} to this review`,
-					null,
-					filteredUsers.map(u => u.id)
-				))
+				dispatch(
+					createPost(
+						response.review.streamId,
+						response.review.postId,
+						`/me added ${phraseList(filteredUsers.map(u => `@${u.username}`))} to this review`,
+						null,
+						filteredUsers.map(u => u.id)
+					)
+				);
 			}
 		}
 	} catch (error) {

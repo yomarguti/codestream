@@ -152,6 +152,14 @@ export function keyFilter<A>(hash: A[]): string[] {
 	});
 	return result;
 }
+/* just like keyFilter only returns all the keys for whome the values are false */
+export function keyFilterFalse<A>(hash: A[]): string[] {
+	const result: string[] = [];
+	Object.keys(hash).map(a => {
+		if (!hash[a]) result.push(a);
+	});
+	return result;
+}
 
 export const findLast = <T>(array: T[], fn: (item: T) => boolean): any | undefined => {
 	for (let i = array.length - 1; i >= 0; i--) {
@@ -381,7 +389,10 @@ interface ArrayDiffResults {
  * @param  {string[]} the newArray
  * @returns ArrayDiffResults
  */
-export function arrayDiff(originalArray: string[] | undefined, newArray: string[]): ArrayDiffResults {
+export function arrayDiff(
+	originalArray: string[] | undefined,
+	newArray: string[]
+): ArrayDiffResults {
 	let results: ArrayDiffResults = {};
 	if ((!originalArray || !originalArray.length) && newArray.length) {
 		// didn't have an original, now we do have items
@@ -390,10 +401,12 @@ export function arrayDiff(originalArray: string[] | undefined, newArray: string[
 	if (originalArray && originalArray.length && (!newArray || !newArray.length)) {
 		// had original array, now we don't have any items
 		results.removed = originalArray;
-	}
-	else if (originalArray && newArray && 
-		!(originalArray.length === newArray.length &&
-			newArray.sort().every(function (value, index) {
+	} else if (
+		originalArray &&
+		newArray &&
+		!(
+			originalArray.length === newArray.length &&
+			newArray.sort().every(function(value, index) {
 				return value === originalArray.sort()[index];
 			})
 		)
