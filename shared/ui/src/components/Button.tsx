@@ -16,7 +16,8 @@ const getFontSize = (size?: ButtonSize) => {
 	}
 };
 
-const getPadding = (size?: ButtonSize) => {
+const getPadding = (size?: ButtonSize, variant?: ButtonVariant) => {
+	if (variant == "text") return "padding: 0;";
 	switch (size) {
 		case "large":
 			return "padding: 1px 15px;";
@@ -28,7 +29,8 @@ const getPadding = (size?: ButtonSize) => {
 	}
 };
 
-const getLineHeight = (size?: ButtonSize) => {
+const getLineHeight = (size?: ButtonSize, variant?: ButtonVariant) => {
+	if (variant == "text") return "line-height: inherit;";
 	switch (size) {
 		case "large":
 			return "line-height: 2em;";
@@ -42,6 +44,15 @@ const getLineHeight = (size?: ButtonSize) => {
 
 const getColors = (variant = "primary") => {
 	switch (variant) {
+		case "text": {
+			return `
+			background-color: inherit;
+			color: var(--text-color);
+				:hover {
+					color: var(--text-color-highlight);
+				}
+			`;
+		}
 		case "secondary": {
 			return `
 				background-color: rgba(255, 255, 255, 0.07);
@@ -101,7 +112,7 @@ export const ButtonRoot = styled.button<ButtonProps>(props => {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center ${props.isLoading ? "!important" : ""};
-	line-height: 2em;
+	line-height: ${props.variant == "text" ? "2em" : "inherit"};
 	user-select: none;
 	-webkit-user-select: none;
 	// white-space: nowrap;
@@ -109,8 +120,8 @@ export const ButtonRoot = styled.button<ButtonProps>(props => {
 	text-shadow: none;
 
 	${getFontSize(props.size)}
-	${getPadding(props.size)}
-	${getLineHeight(props.size)}
+	${getPadding(props.size, props.variant)}
+	${getLineHeight(props.size, props.variant)}
 	border-radius: 0;
 	border: 1px solid transparent !important;
 	outline: none !important;
@@ -132,7 +143,7 @@ const ButtonAppend = styled.div`
 	margin-left: 10px;
 `;
 
-type ButtonVariant = "primary" | "secondary" | "destructive" | "success" | "warning";
+type ButtonVariant = "primary" | "secondary" | "destructive" | "success" | "warning" | "text";
 
 export interface ButtonProps extends PropsWithChildren<{}> {
 	variant?: ButtonVariant;

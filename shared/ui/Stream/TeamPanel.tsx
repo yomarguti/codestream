@@ -7,7 +7,7 @@ import Headshot from "./Headshot";
 import ScrollBox from "./ScrollBox";
 import { invite } from "./actions";
 import { mapFilter } from "../utils";
-import { sortBy as _sortBy } from "lodash-es";
+import { difference as _difference, sortBy as _sortBy } from "lodash-es";
 import { getTeamProvider } from "../store/teams/reducer";
 import { HostApi } from "../webview-api";
 import { WebviewPanels } from "@codestream/protocols/webview";
@@ -16,7 +16,10 @@ import { setUserStatus } from "./actions";
 import {
 	RepoScmStatus,
 	DidChangeDataNotificationType,
-	ChangeDataType
+	ChangeDataType,
+	UpdateTeamTagRequestType,
+	KickUserRequestType,
+	UpdateTeamAdminRequestType
 } from "@codestream/protocols/agent";
 import { CSUser } from "@codestream/protocols/api";
 import { ChangesetFile } from "./Review/ChangesetFile";
@@ -28,11 +31,45 @@ import { CSText } from "../src/components/CSText";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import cx from "classnames";
 import Timestamp from "./Timestamp";
+import { DropdownButton } from "./Review/DropdownButton";
+import { confirmPopup } from "./Confirm";
+import styled from "styled-components";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
 );
 
+const UL = styled.ul`
+	margin: 0;
+	padding: 0;
+	li:hover,
+	li.active {
+		opacity: 1;
+		color: var(--text-color-highlight);
+		background: var(--app-background-color-hover);
+	}
+	li {
+		position: relative;
+		font-weight: 100;
+		padding: 3px 20px 2px 20px;
+		cursor: pointer;
+		list-style: none;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		.icon:not(.chevron-down) {
+			top: 2px !important;
+			margin-right: 5px;
+		}
+	}
+	li:hover {
+		span.align-right {
+			display: inline-block;
+		}
+	}
+	li.muted {
+		opacity: 0.5;
+	}
+`;
 interface Props extends ConnectedProps {}
 
 interface ConnectedProps {
@@ -56,6 +93,8 @@ interface ConnectedProps {
 	currentUserId: string;
 	xrayEnabled: boolean;
 	setUserStatus: Function;
+	isCurrentUserAdmin: boolean;
+	adminIds: string[];
 }
 
 interface State {
@@ -272,17 +311,11 @@ class TeamPanel extends React.Component<Props, State> {
 			return this.renderInviteDisabled();
 		}
 
-		if (!this.props.isCodeStreamTeam) return this.renderThirdParyInvite(this.props.teamProvider);
+		// if there aren't very many people on the team, we can safely
+		// auto-focus the invitation input. but when there are a lot,
+		// auto-focus would cause scrolling which is undesireable.
+		const autoFocus = this.props.companyMemberCount < 5;
 
-		if (false) {
-			return (
-				<div style={{ padding: "0 0 20px 15px" }}>
-					<Button className="standard" onClick={e => this.setState({ isInviting: true })}>
-						Invite Teammates
-					</Button>
-				</div>
-			);
-		}
 		return (
 			<fieldset
 				className="form-body"
@@ -300,7 +333,7 @@ class TeamPanel extends React.Component<Props, State> {
 								onChange={this.onEmailChange}
 								onBlur={this.onEmailBlur}
 								placeholder="Email..."
-								autoFocus
+								autoFocus={autoFocus}
 							/>
 							{this.renderEmailHelp()}
 						</div>
@@ -324,16 +357,16 @@ class TeamPanel extends React.Component<Props, State> {
 		switch (invitingEmails[user.email]) {
 			case 1:
 				return (
-					<span className="reinvite">
+					<span className="float-right">
 						<Icon className="spin" name="sync" />
 					</span>
 				);
 			case 2:
-				return <span className="reinvite">email sent</span>;
+				return <span className="float-right">email sent</span>;
 			default:
 				return (
 					<a
-						className="reinvite"
+						className="float-right"
 						onClick={event => {
 							event.preventDefault();
 							this.onClickReinvite(user);
@@ -343,6 +376,69 @@ class TeamPanel extends React.Component<Props, State> {
 					</a>
 				);
 		}
+	}
+
+	revoke(user: CSUser) {
+		const { teamId } = this.props;
+		HostApi.instance.send(UpdateTeamAdminRequestType, { teamId, remove: user.id });
+	}
+	promote(user: CSUser) {
+		const { teamId } = this.props;
+		HostApi.instance.send(UpdateTeamAdminRequestType, { teamId, add: user.id });
+	}
+	kick(user: CSUser) {
+		const { teamId } = this.props;
+		confirmPopup({
+			title: "Are you sure?",
+			message: "",
+			centered: true,
+			buttons: [
+				{ label: "Go Back", className: "control-button" },
+				{
+					label: "Remove User",
+					className: "delete",
+					wait: true,
+					action: () => {
+						HostApi.instance.send(KickUserRequestType, { teamId, userId: user.id });
+					}
+				}
+			]
+		});
+	}
+
+	renderAdminUser(user: CSUser) {
+		const { isCurrentUserAdmin, adminIds } = this.props;
+
+		const revokeAdmin = { label: "Revoke Admin", action: () => this.revoke(user) };
+		const promoteAdmin = { label: "Make Admin", action: () => this.promote(user) };
+		// const changeUsername = { label: "Change Username", action: () => this.username(user) };
+		// const changeEmail = { label: "Change Email", action: () => this.email(user) };
+		const kickUser = { label: "Remove from Team", action: () => this.kick(user) };
+		// const leaveTeam = { label: "Leave this Team", action: () => this.leave(user) };
+
+		const isUserAdmin = adminIds.includes(user.id);
+		if (isCurrentUserAdmin && user.id !== this.props.currentUserId) {
+			if (isUserAdmin) {
+				return (
+					<span className="float-right">
+						<DropdownButton variant="text" items={[revokeAdmin]}>
+							Admin
+						</DropdownButton>
+					</span>
+				);
+			} else {
+				return (
+					<span className="float-right">
+						<DropdownButton variant="text" items={[promoteAdmin, kickUser]}>
+							Member
+						</DropdownButton>
+					</span>
+				);
+			}
+		} else {
+			if (isUserAdmin) return <span className="float-right">Admin</span>;
+		}
+		return null;
 	}
 
 	renderModifiedRepos(user) {
@@ -376,7 +472,7 @@ class TeamPanel extends React.Component<Props, State> {
 							{stomp.stomped > 1 ? "s" : ""} to code you wrote
 						</div>
 					)}
-					{modifiedReposModifiedAt && (
+					{modifiedReposModifiedAt && modifiedReposModifiedAt[teamId] && (
 						<div style={{ paddingTop: "5px", color: "var(--text-color-subtle)" }}>
 							Updated
 							<Timestamp relative time={modifiedReposModifiedAt[teamId]} />
@@ -389,7 +485,7 @@ class TeamPanel extends React.Component<Props, State> {
 					className="status row-with-icon-actions"
 					style={{ overflow: "hidden", whiteSpace: "nowrap", paddingLeft: "48px" }}
 				>
-					<Tooltip title={title} placement="topRight">
+					<Tooltip title={title} placement="bottomRight" delay={1}>
 						<div style={{ overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
 							<Icon name="repo" /> {repoName} &nbsp; <Icon name="git-branch" /> {repo.branch}
 							{added > 0 && <span className="added">+{added}</span>}
@@ -419,15 +515,16 @@ class TeamPanel extends React.Component<Props, State> {
 
 		const suggested = this.props.suggested.filter(u => !invitingEmails[u.email]);
 		return (
-			<div className="panel full-height invite-panel">
+			<div className="panel full-height team-panel">
 				<PanelHeader title={this.props.teamName} />
 				<ScrollBox>
 					<div className="vscroll">
 						<div className="section">
-							<ul>
+							<UL>
 								{this.props.members.map(user => (
 									<>
 										<li key={user.email} style={{ marginTop: "5px" }}>
+											{this.renderAdminUser(user)}
 											<Headshot person={user}></Headshot>
 											<b>{user.fullName}</b>{" "}
 											<CSText as="span" muted>
@@ -456,7 +553,7 @@ class TeamPanel extends React.Component<Props, State> {
 										{this.renderModifiedRepos(user)}
 									</>
 								))}
-							</ul>
+							</UL>
 						</div>
 						<div className="section">
 							<PanelHeader title="Invite a Teammate">
@@ -468,7 +565,7 @@ class TeamPanel extends React.Component<Props, State> {
 						{this.props.invited.length > 0 && (
 							<div className="section">
 								<PanelHeader title="Outstanding Invitations" />
-								<ul>
+								<UL>
 									{this.props.invited.map(user => (
 										<li key={user.email}>
 											<div className="committer-email">
@@ -477,7 +574,7 @@ class TeamPanel extends React.Component<Props, State> {
 											</div>
 										</li>
 									))}
-								</ul>
+								</UL>
 							</div>
 						)}
 						{suggested.length > 0 && (
@@ -485,7 +582,7 @@ class TeamPanel extends React.Component<Props, State> {
 								<PanelHeader title="Suggested Invitations">
 									<i style={{ opacity: 0.5 }}>From git history</i>
 								</PanelHeader>
-								<ul>
+								<UL>
 									{suggested.map(user => (
 										<li key={user.email}>
 											<div className="committer-email">
@@ -494,7 +591,7 @@ class TeamPanel extends React.Component<Props, State> {
 											</div>
 										</li>
 									))}
-								</ul>
+								</UL>
 							</div>
 						)}
 					</div>
@@ -509,7 +606,8 @@ const mapStateToProps = state => {
 	const team = teams[context.currentTeamId];
 	const teamProvider = getTeamProvider(team);
 
-	const teammates = mapFilter(team.memberIds, id => {
+	const memberIds = _difference(team.memberIds, team.removedMemberIds || []);
+	const teammates = mapFilter(memberIds, id => {
 		const user = users[id as string];
 		if (!user || !user.isRegistered || user.deactivated || user.externalUserId) return;
 
@@ -526,9 +624,12 @@ const mapStateToProps = state => {
 	const currentUser = users[session.userId];
 	const invisible = currentUser.status ? currentUser.status.invisible : false;
 
+	const adminIds = team.adminIds;
+	const isCurrentUserAdmin = adminIds.includes(session.userId);
+
 	const invited =
 		teamProvider === "codestream"
-			? mapFilter(team.memberIds, id => {
+			? mapFilter(memberIds, id => {
 					const user = users[id as string];
 					if (!user || user.isRegistered || user.deactivated || user.externalUserId) return;
 					let email = user.email;
@@ -545,6 +646,8 @@ const mapStateToProps = state => {
 	return {
 		teamId: team.id,
 		teamName: team.name,
+		adminIds,
+		isCurrentUserAdmin,
 		repos,
 		currentUserId: currentUser.id,
 		currentUserInvisible: invisible,

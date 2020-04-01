@@ -5,7 +5,7 @@ import { ActionType } from "../common";
 import * as actions from "./actions";
 import { UsersState, UsersActionsType } from "./types";
 import { CodeStreamState } from "..";
-import { isString } from "lodash-es";
+import { difference, isString } from "lodash-es";
 import { getStreamForId } from "../streams/reducer";
 
 type UsersActions = ActionType<typeof actions>;
@@ -47,7 +47,8 @@ const getUsers = state => state.users;
 const getCurrentTeam = (state: CodeStreamState) => state.teams[state.context.currentTeamId];
 
 export const getTeamMembers = createSelector(getCurrentTeam, getUsers, (team, users) => {
-	return mapFilter(team.memberIds, (id: string) => {
+	const memberIds = difference(team.memberIds, team.removedMemberIds || []);
+	return mapFilter(memberIds, (id: string) => {
 		const user: CSUser = users[id];
 		return user && !user.deactivated && !user.externalUserId ? user : undefined;
 	}).sort((a, b) => a.username.localeCompare(b.username));

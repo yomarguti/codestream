@@ -3,7 +3,7 @@ import { injectIntl } from "react-intl";
 import { connect } from "react-redux";
 import { invite } from "./actions";
 import { mapFilter } from "../utils";
-import { sortBy as _sortBy } from "lodash-es";
+import { difference as _difference, sortBy as _sortBy } from "lodash-es";
 
 export class PeoplePanel extends Component {
 	initialState = {};
@@ -63,7 +63,8 @@ export class PeoplePanel extends Component {
 
 const mapStateToProps = ({ users, context, teams }) => {
 	const team = teams[context.currentTeamId];
-	const members = mapFilter(team.memberIds, id => {
+	const memberIds = _difference(team.memberIds, team.removedMemberIds || []);
+	const members = mapFilter(memberIds, id => {
 		const user = users[id];
 		if (!user || !user.isRegistered || user.deactivated || user.externalUserId) return;
 		if (!user.fullName) {
@@ -72,7 +73,7 @@ const mapStateToProps = ({ users, context, teams }) => {
 		}
 		return user;
 	});
-	const invited = mapFilter(team.memberIds, id => {
+	const invited = mapFilter(memberIds, id => {
 		const user = users[id];
 		if (!user || user.isRegistered || user.deactivated || user.externalUserId) return;
 		let email = user.email;
@@ -88,9 +89,6 @@ const mapStateToProps = ({ users, context, teams }) => {
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{
-		invite
-	}
-)(injectIntl(PeoplePanel));
+export default connect(mapStateToProps, {
+	invite
+})(injectIntl(PeoplePanel));

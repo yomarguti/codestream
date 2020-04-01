@@ -41,7 +41,7 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 				ref={buttonRef}
 			>
 				{props.children}
-				<Icon name="chevron-down" />
+				<Icon name="chevron-down" className="chevron-down" />
 			</Button>
 			{menuIsOpen && buttonRef.current && (
 				<Menu
@@ -72,5 +72,6 @@ const StyledButton = styled(Button)`
 		color: var(--button-foreground-color) !important;
 		background: var(--button-background-color) !important;
 		border: 1px solid var(--button-background-color) !important;
+		display: inline-block;
 	}
 `;

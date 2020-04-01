@@ -26,7 +26,8 @@ export const isEmailValid = (email: string) => {
 	);
 	return email !== "" && emailRegex.test(email);
 };
-const isUsernameValid = (username: string) => new RegExp("^[-a-zA-Z0-9_.]{1,21}$").test(username);
+export const isUsernameValid = (username: string) =>
+	new RegExp("^[-a-zA-Z0-9_.]{1,21}$").test(username);
 
 const isNotEmpty = s => s.length > 0;
 

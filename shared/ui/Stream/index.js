@@ -8,6 +8,10 @@ import PostList from "./PostList";
 import { ActivityPanel } from "./ActivityPanel";
 import { StatusPanel } from "./StatusPanel";
 import { NotificationsPanel } from "./NotificationsPanel";
+import { ChangeEmailPanel } from "./ChangeEmailPanel";
+import { ChangeUsernamePanel } from "./ChangeUsernamePanel";
+import { ChangePasswordPanel } from "./ChangePasswordPanel";
+import { ChangeFullNamePanel } from "./ChangeFullNamePanel";
 import ChannelPanel from "./ChannelPanel";
 import { TasksPanel } from "./TasksPanel";
 import { TeamPanel } from "./TeamPanel";
@@ -75,7 +79,8 @@ import {
 	OpenUrlRequestType,
 	SetCodemarkPinnedRequestType,
 	TelemetryRequestType,
-	GetRangeScmInfoRequestType
+	GetRangeScmInfoRequestType,
+	DeleteUserRequestType
 } from "@codestream/protocols/agent";
 import { getFileScmError } from "../store/editorContext/reducer";
 import { logout, switchToTeam } from "../store/session/actions";
@@ -421,6 +426,34 @@ export class SimpleStream extends Component {
 		// 	action: () => this.setActivePanel(WebviewPanels.Status)
 		// });
 
+		const youText = (
+			<span style={{ fontSize: "smaller" }}>
+				Signed in as @{this.props.currentUserName}
+				{this.props.currentUserEmail && <div>{this.props.currentUserEmail}</div>}
+			</span>
+		);
+
+		menuItems.push({
+			label: "Account",
+			action: "account",
+			submenu: [
+				{ label: youText, action: "", noHover: true, disabled: true },
+				{ label: "-" },
+				{ label: "Change Email", action: "email" },
+				{ label: "Change Username", action: "username" },
+				{ label: "Change Full Name", action: "full-name" },
+				// { label: "Change Password", action: "password" },
+				{ label: "-" },
+				{ label: "Sign Out", action: "signout" },
+				{ label: "-" },
+				{
+					label: "Other Actions",
+					action: "other",
+					submenu: [{ label: "Cancel Account", action: "cancel" }]
+				}
+			]
+		});
+
 		menuItems.push(
 			{
 				label: "Notifications...",
@@ -441,14 +474,11 @@ export class SimpleStream extends Component {
 			{ label: "-" }
 		);
 
-		menuItems.push({ label: "Sign Out", action: "signout" });
+		// menuItems.push({ label: "Sign Out", action: "signout" });
 
-		menuItems.push({ label: "-" });
+		// menuItems.push({ label: "-" });
 		const text = (
 			<span style={{ fontSize: "smaller" }}>
-				You are signed in as {this.props.currentUserName}
-				{this.props.currentUserEmail && <span> ({this.props.currentUserEmail})</span>}
-				<br />
 				This is CodeStream version {this.props.pluginVersion}
 			</span>
 		);
@@ -822,9 +852,16 @@ export class SimpleStream extends Component {
 
 		// these panels do not have global nav
 		let renderNav =
-			!["create-channel", "create-dm", "public-channels", WebviewPanels.Status].includes(
-				activePanel
-			) &&
+			![
+				"create-channel",
+				"create-dm",
+				"public-channels",
+				WebviewPanels.Status,
+				WebviewPanels.ChangePassword,
+				WebviewPanels.ChangeEmail,
+				WebviewPanels.ChangeUsername,
+				WebviewPanels.ChangeFullName
+			].includes(activePanel) &&
 			!this.props.currentReviewId &&
 			!activePanel.startsWith("configure-provider-") &&
 			!activePanel.startsWith("configure-enterprise-");
@@ -932,6 +969,18 @@ export class SimpleStream extends Component {
 					)}
 					{activePanel === WebviewPanels.NewReview && <ReviewForm />}
 					{activePanel === WebviewPanels.NewCode && <CodeForm />}
+					{activePanel === WebviewPanels.ChangeEmail && (
+						<ChangeEmailPanel closePanel={this.props.closePanel} />
+					)}
+					{activePanel === WebviewPanels.ChangeUsername && (
+						<ChangeUsernamePanel closePanel={this.props.closePanel} />
+					)}
+					{activePanel === WebviewPanels.ChangeFullName && (
+						<ChangeFullNamePanel closePanel={this.props.closePanel} />
+					)}
+					{activePanel === WebviewPanels.ChangePassword && (
+						<ChangePasswordPanel closePanel={this.props.closePanel} />
+					)}
 					{activePanel === "channels" && (
 						<ChannelPanel
 							activePanel={activePanel}
@@ -1236,11 +1285,44 @@ export class SimpleStream extends Component {
 				return this.handleClickHelpLink();
 			case "feedback":
 				return this.handleClickFeedbackLink();
+			case "email":
+				return this.setActivePanel(WebviewPanels.ChangeEmail);
+			case "username":
+				return this.setActivePanel(WebviewPanels.ChangeUsername);
+			case "full-name":
+				return this.setActivePanel(WebviewPanels.ChangeFullName);
+			// not implemented -- nobody needs it according to Dave
+			// case "password":
+			// return this.setActivePanel(WebviewPanels.ChangePassword);
+			case "cancel":
+				return this.cancelAccount();
 			case "signout":
 				return this.props.logout();
 			default:
 				return;
 		}
+	};
+
+	cancelAccount = () => {
+		confirmPopup({
+			title: "Are you sure?",
+			message: "Deleting your account cannot be undone.",
+			centered: true,
+			buttons: [
+				{ label: "Go Back", className: "control-button" },
+				{
+					label: "Cancel Account",
+					className: "delete",
+					wait: true,
+					action: async () => {
+						await HostApi.instance.send(DeleteUserRequestType, {
+							userId: this.props.currentUserId
+						});
+						this.props.logout();
+					}
+				}
+			]
+		});
 	};
 
 	toggleMenu = event => {
@@ -2388,7 +2470,7 @@ const mapStateToProps = state => {
 		),
 		team: team,
 		teamProvider: teamProvider,
-		isCodeStreamTeam: true, /*teamProvider === "codestream",*/ // this should always be true now, even for SSO sign-in
+		isCodeStreamTeam: true /*teamProvider === "codestream",*/, // this should always be true now, even for SSO sign-in
 		channelMembers,
 		services,
 		isInVscode: state.ide.name === "VSC",

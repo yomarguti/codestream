@@ -126,13 +126,15 @@ export default class Menu extends Component {
 		if (!this._div) return;
 		const $submenu = this._div.querySelector("#active-submenu");
 		if ($submenu) {
-			const parentLI = $submenu.parentNode.parentNode;
+			const parentLI = $submenu.closest("li");
+			const parentUL = $submenu.closest("ul");
 			const parentRect = parentLI.getBoundingClientRect();
 			const rect = $submenu.getBoundingClientRect();
 
 			// line it up optimistically....
 			$submenu.style.left = parentRect.right - 11 + "px";
-			$submenu.style.top = parentLI.offsetTop - 6 + "px";
+			const submenuTop = parentLI.offsetTop - parentUL.scrollTop - 6;
+			$submenu.style.top = submenuTop + "px";
 
 			// check to see if it's off the screen to the right
 			const tooFarRight = parentRect.right + rect.width > window.innerWidth;
@@ -141,14 +143,14 @@ export default class Menu extends Component {
 				// the 20px is for 10px padding times two
 				$submenu.style.left = 31 - rect.width + "px";
 				// check again to see if it's too far left now
-				if (31 - rect.width + parentRect.left < 0) {
+				if (19 - rect.width + parentRect.left < 0) {
 					// if it is, just put it on the right edge of the screen
 					$submenu.style.left = "auto";
 					$submenu.style.right = 20 + parentRect.right - window.innerWidth + "px";
 					$submenu.style.top = parentLI.offsetTop + 16 + "px";
 				}
 			}
-			const bottomOfSubmenu = parentLI.offsetTop + $submenu.offsetHeight + 35;
+			const bottomOfSubmenu = submenuTop + $submenu.offsetHeight + 40;
 			if (bottomOfSubmenu > window.innerHeight) {
 				$submenu.style.top = "-10px";
 			}

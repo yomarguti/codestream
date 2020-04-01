@@ -26,7 +26,7 @@ import ScrollBox from "./ScrollBox";
 import Filter from "./Filter";
 import { safe } from "../utils";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
-import { sortBy as _sortBy } from "lodash-es";
+import { difference as _difference, sortBy as _sortBy } from "lodash-es";
 import { ContextState } from "../store/context/types";
 import { reAuthForFullChatProvider } from "../store/actions";
 import { HostApi } from "../webview-api";
@@ -817,7 +817,8 @@ const mapStateToProps = state => {
 
 	const team = teams[context.currentTeamId];
 
-	const teamMembers = team.memberIds.map(id => users[id]).filter(Boolean);
+	const memberIds = _difference(team.memberIds, team.removedMemberIds || []);
+	const teamMembers = memberIds.map(id => users[id]).filter(Boolean);
 	// .filter(user => user && user.isRegistered);
 
 	const channelStreams = getChannelStreamsForTeam(state, context.currentTeamId);
@@ -831,7 +832,7 @@ const mapStateToProps = state => {
 			if (
 				stream.isClosed ||
 				(stream.memberIds != null &&
-					stream.memberIds.some(id => users[id] != null && users[id].deactivated))
+					stream.memberIds.some(id => teamMember[id] != null && teamMembers[id].deactivated))
 			) {
 				return;
 			}

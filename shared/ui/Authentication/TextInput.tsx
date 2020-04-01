@@ -12,6 +12,7 @@ interface TextInputProps extends Pick<React.HTMLAttributes<HTMLInputElement>, "o
 	validate?(value: string): boolean;
 	placeholder?: string;
 	nativeProps?: AnyObject;
+	autoFocus?: boolean;
 }
 
 export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(function(
@@ -53,6 +54,7 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(func
 			onBlur={onBlur}
 			placeholder={props.placeholder}
 			onPaste={props.onPaste}
+			autoFocus={props.autoFocus}
 			{...props.nativeProps}
 		/>
 	);
