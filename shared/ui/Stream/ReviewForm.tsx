@@ -33,7 +33,7 @@ import {
 	toMapBy,
 	replaceHtml,
 	keyFilter,
-	keyFilterFalse,
+	keyFilterFalsey,
 	safe,
 	arrayDiff
 } from "../utils";
@@ -498,7 +498,7 @@ class ReviewForm extends React.Component<Props, State> {
 							// excludedFiles[file] = false
 							// therefore we can use the keys whose values are false
 							// as the list of files that have been added
-							newFiles: keyFilterFalse(excludedFiles),
+							newFiles: keyFilterFalsey(excludedFiles),
 							includeSaved: hasSavedFiles,
 							includeStaged: hasStagedFiles
 						}

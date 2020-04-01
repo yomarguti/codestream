@@ -152,8 +152,8 @@ export function keyFilter<A>(hash: A[]): string[] {
 	});
 	return result;
 }
-/* just like keyFilter only returns all the keys for whome the values are false */
-export function keyFilterFalse<A>(hash: A[]): string[] {
+/* just like keyFilter only returns all the keys for whome the values are falsey */
+export function keyFilterFalsey<A>(hash: A[]): string[] {
 	const result: string[] = [];
 	Object.keys(hash).map(a => {
 		if (!hash[a]) result.push(a);
