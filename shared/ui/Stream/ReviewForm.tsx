@@ -909,6 +909,10 @@ class ReviewForm extends React.Component<Props, State> {
 			}
 		});
 
+		// if the start commit isn't in the commit list, set it to
+		// the passed-in value, which might be the parent of the first commit
+		if (!startCommit) startCommit = sha;
+
 		this.setState({ startCommit, excludeCommit }, callback);
 	};
 
