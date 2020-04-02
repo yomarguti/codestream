@@ -21,7 +21,8 @@ import {
 	KickUserRequestType,
 	UpdateTeamRequestType,
 	UpdateTeamSettingsRequestType,
-	UpdateTeamAdminRequestType
+	UpdateTeamAdminRequestType,
+	OpenUrlRequestType
 } from "@codestream/protocols/agent";
 import { CSUser } from "@codestream/protocols/api";
 import { ChangesetFile } from "./Review/ChangesetFile";
@@ -599,6 +600,15 @@ class TeamPanel extends React.Component<Props, State> {
 									label: "User Selectable",
 									checked: !xraySetting || xraySetting === "user",
 									action: () => this.changeXray("user")
+								},
+								{ label: "-", action: () => {} },
+								{
+									label: "What is X-Ray?",
+									action: () => {
+										HostApi.instance.send(OpenUrlRequestType, {
+											url: "https://help.codestream.com/writeme-about-x-ray"
+										});
+									}
 								}
 							]
 						},

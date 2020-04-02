@@ -488,7 +488,8 @@ const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 				{props.tags && props.tags.map(tag => <Tag tag={tag} key={tag.id} />)}
 				{props.reviewers != null &&
 					props.reviewers.map(reviewer => {
-						console.log("REVIEWR IS: ", reviewer, " FROM ", props.reviewers);
+						// this should never happen, but yet sometimes it does
+						if (!reviewer) return null;
 						return (
 							<Tooltip
 								key={reviewer.id}
@@ -635,8 +636,6 @@ const ReviewForReview = (props: PropsWithReview) => {
 
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
-		console.log("GETTING REVIEWERS: ", props.review.reviewers);
-		console.log("GETTING REVIEWERS FROM: ", state.users);
 		return {
 			currentTeamId: state.context.currentTeamId,
 			currentUser: state.users[state.session.userId!],
