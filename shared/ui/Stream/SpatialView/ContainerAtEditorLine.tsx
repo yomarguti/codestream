@@ -106,7 +106,6 @@ export default function ContainerAtEditorLine(props: {
 		}
 	}, [rootDimensions.height, rootDimensions.bottom, position, adjustedPosition, logicalPosition]);
 
-	console.log("ARE E REPOSITIONING? ", props.repositionToFit);
 	return (
 		<span
 			ref={rootRef}
