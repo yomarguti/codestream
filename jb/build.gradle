@@ -86,6 +86,8 @@ runIde {
 //    jvmArgs '-Dsun.java2d.uiScale.enabled=false'
 //    jvmArgs '-Dkotlinx.coroutines.debug=on'
 //    jvmArgs '-Dcom.codestream.recordRequests=true'
+    jvmArgs '-Xmx2048m'
+    jvmArgs '-Xms128m'
 }
 
 import org.gradle.internal.os.OperatingSystem
