@@ -54,7 +54,7 @@ const UL = styled.ul`
 	}
 	li {
 		position: relative;
-		font-weight: 100;
+		font-weight: normal;
 		padding: 3px 20px 2px 20px;
 		cursor: pointer;
 		list-style: none;
@@ -641,24 +641,23 @@ class TeamPanel extends React.Component<Props, State> {
 												@{user.username}{" "}
 											</CSText>
 											&nbsp;
-											{!xraySetting ||
-												(xraySetting === "user" && user.id === currentUserId && (
-													<Icon
-														name="broadcast"
-														className={cx("clickable spinnable nogrow", {
-															no: currentUserInvisible && !loadingStatus,
-															info: !currentUserInvisible
-														})}
-														onClick={this.toggleInvisible}
-														placement="bottom"
-														loading={loadingStatus}
-														title={
-															currentUserInvisible
-																? "Not sharing local changes with the team"
-																: "Sharing local changes with the team"
-														}
-													/>
-												))}
+											{(!xraySetting || xraySetting === "user") && user.id === currentUserId && (
+												<Icon
+													name="broadcast"
+													className={cx("clickable spinnable nogrow", {
+														no: currentUserInvisible && !loadingStatus,
+														info: !currentUserInvisible
+													})}
+													onClick={this.toggleInvisible}
+													placement="bottom"
+													loading={loadingStatus}
+													title={
+														currentUserInvisible
+															? "Not sharing local changes with the team"
+															: "Sharing local changes with the team"
+													}
+												/>
+											)}
 										</li>
 										{/*<UserStatus user={user} />*/}
 										{this.renderModifiedRepos(user)}
