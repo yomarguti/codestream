@@ -100,3 +100,19 @@ export const UpdateTeamRequestType = new RequestType<
 	void,
 	void
 >("codestream/team/update");
+
+export interface UpdateTeamSettingsRequest {
+	teamId: string;
+	settings: { [key: string]: string };
+}
+
+export interface UpdateTeamSettingsResponse {
+	team: CSTeam;
+}
+
+export const UpdateTeamSettingsRequestType = new RequestType<
+	UpdateTeamSettingsRequest,
+	UpdateTeamSettingsResponse,
+	void,
+	void
+>("codestream/team/settings/update");

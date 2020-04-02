@@ -116,6 +116,8 @@ import {
 	UpdateTeamAdminRequestType,
 	UpdateTeamRequest,
 	UpdateTeamRequestType,
+	UpdateTeamSettingsRequest,
+	UpdateTeamSettingsRequestType,
 	UpdateTeamTagRequestType,
 	UpdateUserRequest,
 	VerifyConnectivityResponse
@@ -1522,6 +1524,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@lspHandler(UpdateTeamRequestType)
 	async updateTeam(request: UpdateTeamRequest) {
 		await this.put(`/teams/${request.teamId}`, { ...request }, this._token);
+	}
+
+	@lspHandler(UpdateTeamSettingsRequestType)
+	async updateTeamSettings(request: UpdateTeamSettingsRequest) {
+		await this.put(`/team-settings/${request.teamId}`, { ...request.settings }, this._token);
 	}
 
 	convertUserIdToCodeStreamUserId(id: string): string {
