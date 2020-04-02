@@ -1201,7 +1201,7 @@ export class Codemark extends React.Component<Props, State> {
 
 		const type = codemark && codemark.type;
 
-		const mine = author.id === this.props.currentUser.id;
+		const mine = author && author.id === this.props.currentUser.id;
 
 		let menuItems: any[] = [
 			{
