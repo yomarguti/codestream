@@ -119,6 +119,7 @@ export class WebviewController implements Disposable {
 	private _versionCompatibility: VersionCompatibility | undefined;
 	private _apiVersionCompatibility: ApiVersionCompatibility | undefined;
 	private _missingCapabilities: CSApiCapabilities | undefined;
+	private _resuscitations: number = 0;
 
 	private readonly _notifyActiveEditorChangedDebounced: (e: TextEditor | undefined) => void;
 
@@ -610,6 +611,18 @@ export class WebviewController implements Disposable {
 
 				break;
 			}
+			case WebviewRequiresResuscitationNotificationType.method: {
+				if (this._resuscitations <= 9) {
+					Logger.warn(`resuscitating, attempt: ${this._resuscitations + 1}`);
+					this._resuscitations++;
+					this.closeWebview();
+					this.show();
+				}
+				else {
+					Logger.error(new Error("no longer resuscitating"));
+				}
+				break;
+			}
 			default: {
 				debugger;
 				throw new Error(`Unhandled webview notification: ${e.method}`);
@@ -886,7 +899,7 @@ export class WebviewController implements Disposable {
 			if (this._disposableWebview !== undefined) {
 				try {
 					this._disposableWebview.dispose();
-				} catch {}
+				} catch { }
 				this._disposableWebview = undefined;
 			}
 			this._webview = undefined;
@@ -917,8 +930,8 @@ export class WebviewController implements Disposable {
 			context: this._context
 				? { ...this._context, currentTeamId: currentTeamId }
 				: {
-						currentTeamId: currentTeamId
-				  },
+					currentTeamId: currentTeamId
+				},
 			version: Container.versionFormatted,
 			versionCompatibility: this._versionCompatibility,
 			apiVersionCompatibility: this._apiVersionCompatibility,
@@ -964,12 +977,43 @@ export class WebviewController implements Disposable {
 			content = doc.getText();
 		}
 
+		// super HACK ahead...
+		// there's a bug in vscode where its vscode-resource file scheme is not always present.
+		// this HACK listens for a `window` property that is set inside one of the
+		// codestream external js scripts. when that script loads, the variable will be present.
 		this._html = content.replace(
 			/{{root}}/g,
 			Uri.file(Container.context.asAbsolutePath("."))
 				.with({ scheme: "vscode-resource" })
 				.toString()
-		);
+		).replace("</body>", `<script>(function() {
+			var i = 0;
+			var interval = setInterval(function() {
+				if (window.codestreamInitialized) {
+					console.log("heartbeat:success", i);
+					clearInterval(interval);
+				}
+				else if (i >= 20) {
+					console.error("heartbeat:failed at", i);
+					try {
+						const vscode = acquireVsCodeApi();
+						vscode.postMessage({method: "host/requiresResuscitation"});
+					}
+					catch (err) {
+						console.log(err);
+					}
+					finally {
+						clearInterval(interval);
+						i = 0;
+					}
+				}
+				else {
+					i++;
+				}
+			}, 10);
+		})()
+	</script></body>`);
+
 		return this._html;
 	}
 
@@ -1055,6 +1099,16 @@ export class WebviewController implements Disposable {
 			} else {
 				Container.markerDecorations.resume();
 			}
-		} catch {}
+		} catch { }
 	}
 }
+
+interface WebviewRequiresResuscitationNotification { }
+/**
+ * only for VSC, used to handle a workaround for the webview not loading
+ * because of an issue with vscode-resource://.
+ */
+const WebviewRequiresResuscitationNotificationType = new NotificationType<
+	WebviewRequiresResuscitationNotification,
+	void
+>(`${IpcRoutes.Host}/requiresResuscitation`);

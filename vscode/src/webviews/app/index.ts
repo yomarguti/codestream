@@ -12,6 +12,9 @@ function getLocalStorage() {
 	const state = api.getState() || { localStorage: {} };
 	return state.localStorage;
 }
+Object.defineProperty(window, "codestreamInitialized", {
+	value: true
+});
 
 // LocalStorage polyfill
 Object.defineProperty(window, "localStorage", {
