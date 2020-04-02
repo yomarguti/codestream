@@ -17,7 +17,7 @@ class VisibleAreaListenerImpl(val project: Project) : VisibleAreaListener {
 
     override fun visibleAreaChanged(e: VisibleAreaEvent) {
         val editorService = project.editorService ?: return
-        if (editorService.isScrollingFromWebView || e.editor != editorService.activeEditor) return
+        if (e.editor != editorService.activeEditor) return
 
         val visibleRanges = e.editor.visibleRanges
         if (visibleRanges.hasEqualLines(lastVisibleRanges)) return

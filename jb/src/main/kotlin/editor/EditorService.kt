@@ -509,8 +509,6 @@ class EditorService(val project: Project) {
         return future.await()
     }
 
-    var isScrollingFromWebView = false
-
     fun scroll(uri: String, position: Position, atTop: Boolean) = ApplicationManager.getApplication().invokeLater {
         var editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return@invokeLater
         if (editor.document.uri != sanitizeURI(uri)) {
@@ -520,11 +518,6 @@ class EditorService(val project: Project) {
         val logicalPosition = LogicalPosition(position.line, position.character)
         val point = editor.logicalPositionToXY(logicalPosition)
 
-        isScrollingFromWebView = true
-        editor.scrollingModel.runActionOnScrollingFinished {
-            isScrollingFromWebView = false
-        }
-        // logger.info("Scrolling to ${position.line} - atTop: $atTop")
         editor.scrollingModel.scrollVertically(point.y)
     }
 
