@@ -487,18 +487,21 @@ const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 				)}
 				{props.tags && props.tags.map(tag => <Tag tag={tag} key={tag.id} />)}
 				{props.reviewers != null &&
-					props.reviewers.map(reviewer => (
-						<Tooltip
-							key={reviewer.id}
-							title={`${reviewer.username} is a reviewer`}
-							placement="bottom"
-							align={{ offset: [0, 4] }}
-						>
-							<span>
-								<Headshot person={reviewer} size={18} />
-							</span>
-						</Tooltip>
-					))}
+					props.reviewers.map(reviewer => {
+						console.log("REVIEWR IS: ", reviewer, " FROM ", props.reviewers);
+						return (
+							<Tooltip
+								key={reviewer.id}
+								title={`${reviewer.username} is a reviewer`}
+								placement="bottom"
+								align={{ offset: [0, 4] }}
+							>
+								<span>
+									<Headshot person={reviewer} size={18} />
+								</span>
+							</Tooltip>
+						);
+					})}
 				{props.review.numReplies > 0 && (
 					<Tooltip title="Show replies" placement="bottom">
 						<span className="detail-icon">
@@ -632,6 +635,8 @@ const ReviewForReview = (props: PropsWithReview) => {
 
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
+		console.log("GETTING REVIEWERS: ", props.review.reviewers);
+		console.log("GETTING REVIEWERS FROM: ", state.users);
 		return {
 			currentTeamId: state.context.currentTeamId,
 			currentUser: state.users[state.session.userId!],

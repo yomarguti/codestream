@@ -20,18 +20,21 @@ export const addUsers = (users: CSUser[]) => action(UsersActionsType.Add, users)
 
 export const updateModifiedRepos = () => async (dispatch, getState: () => CodeStreamState) => {
 	const state = getState();
-	const { users, session, context } = state;
+	const { users, session, context, teams } = state;
 	const teamId = context.currentTeamId;
-
-	// this neuters
-	if (!isFeatureEnabled(state, "xray")) return;
 
 	const userId = session.userId;
 	if (!userId) return;
 	const currentUser = users[userId];
 	if (!currentUser) return;
 
-	const invisible = currentUser.status ? currentUser.status.invisible : false;
+	const team = teams[teamId];
+
+	let invisible = currentUser.status ? currentUser.status.invisible : false;
+
+	// if the team admin has turned on xray for everyone always, you can't turn it off
+	if (team && team.settings && team.settings.xray === "on") invisible = false;
+
 	if (invisible) {
 		dispatch(clearModifiedFiles(context.currentTeamId));
 		return;

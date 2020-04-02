@@ -20,6 +20,7 @@ import {
 	UpdateTeamTagRequestType,
 	KickUserRequestType,
 	UpdateTeamRequestType,
+	UpdateTeamSettingsRequestType,
 	UpdateTeamAdminRequestType
 } from "@codestream/protocols/agent";
 import { CSUser } from "@codestream/protocols/api";
@@ -35,6 +36,7 @@ import Timestamp from "./Timestamp";
 import { DropdownButton } from "./Review/DropdownButton";
 import { confirmPopup } from "./Confirm";
 import styled from "styled-components";
+import { getCodeCollisions } from "../store/users/reducer";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -92,10 +94,12 @@ interface ConnectedProps {
 	clearModifiedFiles: Function;
 	currentUserEmail: string;
 	currentUserId: string;
+	xraySetting: string;
 	xrayEnabled: boolean;
 	setUserStatus: Function;
 	isCurrentUserAdmin: boolean;
 	adminIds: string[];
+	collisions: any;
 }
 
 interface State {
@@ -447,9 +451,10 @@ class TeamPanel extends React.Component<Props, State> {
 	}
 
 	renderModifiedRepos(user) {
-		const { repos, teamId, currentUserEmail } = this.props;
+		const { repos, teamId, currentUserEmail, collisions, xrayEnabled } = this.props;
 		const { modifiedRepos, modifiedReposModifiedAt } = user;
 
+		if (!xrayEnabled) return null;
 		if (!modifiedRepos || !modifiedRepos[teamId] || !modifiedRepos[teamId].length) return null;
 
 		return modifiedRepos[teamId].map(repo => {
@@ -465,9 +470,12 @@ class TeamPanel extends React.Component<Props, State> {
 			const title = (
 				<>
 					<div className="related-label">Local Changes</div>
-					{modifiedFiles.map(f => (
-						<ChangesetFile noHover={true} key={f.file} {...f} />
-					))}
+					{modifiedFiles.map(f => {
+						const className = collisions.userRepoFiles[user.id + ":" + repo.repoId + ":" + f.file]
+							? "file-has-conflict"
+							: "";
+						return <ChangesetFile className={className} noHover={true} key={f.file} {...f} />;
+					})}
 					{stomp && (
 						<div style={{ paddingTop: "5px" }}>
 							<span className="stomped" style={{ paddingLeft: 0 }}>
@@ -475,6 +483,11 @@ class TeamPanel extends React.Component<Props, State> {
 							</span>{" "}
 							= includes {stomp.stomped} change
 							{stomp.stomped > 1 ? "s" : ""} to code you wrote
+						</div>
+					)}
+					{collisions.userRepos[user.id + ":" + repo.repoId] && (
+						<div style={{ paddingTop: "5px" }}>
+							<Icon name="alert" className="conflict" /> = possible merge conflict
 						</div>
 					)}
 					{modifiedReposModifiedAt && modifiedReposModifiedAt[teamId] && (
@@ -496,6 +509,9 @@ class TeamPanel extends React.Component<Props, State> {
 							{added > 0 && <span className="added">+{added}</span>}
 							{removed > 0 && <span className="deleted">-{removed}</span>}
 							{stomp && <span className="stomped">@{stomp.stomped}</span>}
+							{collisions.userRepos[user.id + ":" + repo.repoId] && (
+								<Icon name="alert" className="conflict" />
+							)}
 						</div>
 					</Tooltip>
 				</li>
@@ -533,8 +549,15 @@ class TeamPanel extends React.Component<Props, State> {
 		});
 	};
 
+	changeXray = async value => {
+		await HostApi.instance.send(UpdateTeamSettingsRequestType, {
+			teamId: this.props.teamId,
+			settings: { xray: value }
+		});
+	};
+
 	render() {
-		const { xrayEnabled, currentUserId, currentUserInvisible } = this.props;
+		const { xrayEnabled, currentUserId, currentUserInvisible, xraySetting } = this.props;
 		const { invitingEmails, loadingStatus } = this.state;
 		const inactive =
 			this.props.activePanel !== WebviewPanels.Invite &&
@@ -559,6 +582,27 @@ class TeamPanel extends React.Component<Props, State> {
 				<DropdownButton
 					variant="text"
 					items={[
+						{
+							label: "X-Ray Settings",
+							submenu: [
+								{
+									label: "Always On",
+									checked: xraySetting === "on",
+									action: () => this.changeXray("on")
+								},
+								{
+									label: "Always Off",
+									checked: xraySetting === "off",
+									action: () => this.changeXray("off")
+								},
+								{
+									label: "User Selectable",
+									checked: !xraySetting || xraySetting === "user",
+									action: () => this.changeXray("user")
+								}
+							]
+						},
+						{ label: "-", action: () => {} },
 						{ label: "Change Team Name", action: this.changeTeamName },
 						{ label: "-", action: () => {} },
 						{ label: "Delete Team", action: this.deleteTeam }
@@ -587,23 +631,24 @@ class TeamPanel extends React.Component<Props, State> {
 												@{user.username}{" "}
 											</CSText>
 											&nbsp;
-											{xrayEnabled && user.id === currentUserId && (
-												<Icon
-													name="broadcast"
-													className={cx("clickable spinnable nogrow", {
-														no: currentUserInvisible && !loadingStatus,
-														info: !currentUserInvisible
-													})}
-													onClick={this.toggleInvisible}
-													placement="bottom"
-													loading={loadingStatus}
-													title={
-														currentUserInvisible
-															? "Not sharing local changes with the team"
-															: "Sharing local changes with the team"
-													}
-												/>
-											)}
+											{!xraySetting ||
+												(xraySetting === "user" && user.id === currentUserId && (
+													<Icon
+														name="broadcast"
+														className={cx("clickable spinnable nogrow", {
+															no: currentUserInvisible && !loadingStatus,
+															info: !currentUserInvisible
+														})}
+														onClick={this.toggleInvisible}
+														placement="bottom"
+														loading={loadingStatus}
+														title={
+															currentUserInvisible
+																? "Not sharing local changes with the team"
+																: "Sharing local changes with the team"
+														}
+													/>
+												))}
 										</li>
 										{/*<UserStatus user={user} />*/}
 										{this.renderModifiedRepos(user)}
@@ -696,6 +741,10 @@ const mapStateToProps = state => {
 			  })
 			: [];
 
+	const xraySetting = team.settings ? team.settings.xray : "";
+	const xrayEnabled = xraySetting !== "off";
+	const collisions = getCodeCollisions(state);
+
 	// this should be populated by something like
 	// git log --pretty=format:"%an|%aE" | sort -u
 	// and then filter out noreply.github.com (what else?)
@@ -704,9 +753,11 @@ const mapStateToProps = state => {
 	return {
 		teamId: team.id,
 		teamName: team.name,
+		xraySetting,
 		adminIds,
 		isCurrentUserAdmin,
 		repos,
+		collisions,
 		currentUserId: currentUser.id,
 		currentUserInvisible: invisible,
 		currentUserEmail: currentUser.email,
@@ -714,7 +765,7 @@ const mapStateToProps = state => {
 		invited: _sortBy(invited, "email"),
 		suggested: _sortBy(suggested, m => (m.fullName || "").toLowerCase()),
 		webviewFocused: context.hasFocus,
-		xrayEnabled: isFeatureEnabled(state, "xray")
+		xrayEnabled
 	};
 };
 

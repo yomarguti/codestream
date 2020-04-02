@@ -46,6 +46,8 @@ const getUsers = state => state.users;
 
 const getCurrentTeam = (state: CodeStreamState) => state.teams[state.context.currentTeamId];
 
+const getCurrentUser = (state: CodeStreamState) => state.users[state.session.userId || ""];
+
 export const getTeamMembers = createSelector(getCurrentTeam, getUsers, (team, users) => {
 	const memberIds = difference(team.memberIds, team.removedMemberIds || []);
 	return mapFilter(memberIds, (id: string) => {
@@ -143,5 +145,51 @@ export const getStreamMembers = createSelector(
 			if (user && user.isRegistered) return user;
 			return;
 		});
+	}
+);
+
+export const getCodeCollisions = createSelector(
+	getCurrentTeam,
+	getCurrentUser,
+	getAllUsers,
+	(team, currentUser, users) => {
+		// create a collision map of the global warning state,
+		// the user collisions, the userRepo collisions, and the file collisions
+		const collisions = {
+			nav: false,
+			users: {},
+			userRepos: {},
+			userRepoFiles: {}
+		};
+
+		// display nothing if the team has turned xray off
+		if (team.settings && team.settings.xray === "off") return collisions;
+
+		const teamId = team.id;
+		// get my modified files
+		const myModified = {};
+		const modifiedRepos = currentUser.modifiedRepos ? currentUser.modifiedRepos[teamId] || [] : [];
+		modifiedRepos.forEach(repo => {
+			repo.modifiedFiles.forEach(fileRecord => {
+				myModified[repo.repoId + ":" + fileRecord.file] = true;
+			});
+		});
+
+		users.forEach(user => {
+			if (user.id == currentUser.id) return;
+			const modifiedRepos = user.modifiedRepos ? user.modifiedRepos[teamId] || [] : [];
+			modifiedRepos.forEach(repo => {
+				repo.modifiedFiles.forEach(fileRecord => {
+					// we have a collision
+					if (myModified[repo.repoId + ":" + fileRecord.file]) {
+						collisions.nav = true;
+						collisions.users[user.id] = true;
+						collisions.userRepos[user.id + ":" + repo.repoId] = true;
+						collisions.userRepoFiles[user.id + ":" + repo.repoId + ":" + fileRecord.file] = true;
+					}
+				});
+			});
+		});
+		return collisions;
 	}
 );

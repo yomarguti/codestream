@@ -64,7 +64,7 @@ import {
 	getDMName
 } from "../store/streams/reducer";
 import { getCodemark } from "../store/codemarks/reducer";
-import { getTeamMembers } from "../store/users/reducer";
+import { getTeamMembers, getCodeCollisions } from "../store/users/reducer";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { HostApi } from "../webview-api";
 import {
@@ -517,7 +517,7 @@ export class SimpleStream extends Component {
 		const { textEditorUri } = this.props;
 
 		const menuItems = [];
-		if (this.props.xrayEnabled) {
+		if (this.props.kickstartEnabled) {
 			menuItems.push(
 				{
 					icon: <Icon name="code" />,
@@ -740,7 +740,12 @@ export class SimpleStream extends Component {
 					className={cx({ selected: selected(WebviewPanels.People) })}
 					onClick={e => this.setActivePanel(WebviewPanels.People)}
 				>
-					<Icon name="organization" title="Your Team" placement="bottom" />
+					<Tooltip title="Your Team" placement="bottom">
+						<span>
+							<Icon name="organization" placement="bottom" />
+							{this.props.collisions.nav && <Icon name="alert" className="nav-conflict" />}
+						</span>
+					</Tooltip>
 				</label>
 				<label
 					className={cx({ selected: selected(WebviewPanels.FilterSearch) })}
@@ -2436,7 +2441,8 @@ const mapStateToProps = state => {
 
 	return {
 		lightningCodeReviewsEnabled: isFeatureEnabled(state, "lightningCodeReviews"),
-		xrayEnabled: isFeatureEnabled(state, "xray"),
+		kickstartEnabled: isFeatureEnabled(state, "kickstart"),
+		collisions: getCodeCollisions(state),
 		currentCodemarkId: context.currentCodemarkId,
 		currentMarkerId: context.currentMarkerId,
 		currentReviewId: context.currentReviewId,
