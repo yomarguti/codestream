@@ -160,7 +160,7 @@ export class Feedback extends React.Component<Props, State> {
 					title="Tweet us your feedback"
 					placement="topRight"
 					delay={1}
-					name="happy"
+					name="smiley"
 					className="clickable happy-icon"
 					onClick={this.toggleDialog}
 				/>
