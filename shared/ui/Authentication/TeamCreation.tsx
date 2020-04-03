@@ -16,7 +16,7 @@ interface ConnectedProps {
 	token: string;
 	email: string;
 	loggedIn?: boolean;
-	wasSSO?: boolean;
+	provider?: string;
 }
 
 export const TeamCreation = (connect() as any)((props: ConnectedProps & DispatchProp) => {
@@ -44,7 +44,7 @@ export const TeamCreation = (connect() as any)((props: ConnectedProps & Dispatch
 				props.dispatch(
 					completeSignup(props.email, props.token, team.id, {
 						createdTeam: true,
-						wasSSO: props.wasSSO
+						provider: props.provider
 					})
 				);
 			} catch (error) {

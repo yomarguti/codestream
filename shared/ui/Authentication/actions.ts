@@ -40,6 +40,10 @@ export interface ValidateSignupInfo {
 	inviteCode?: string;
 }
 
+const ProviderNames = {
+	github: "GitHub"
+};
+
 export const startSSOSignin = (
 	provider: SupportedSSOProvider,
 	info?: ValidateSignupInfo,
@@ -147,7 +151,7 @@ export const completeSignup = (
 	email: string,
 	token: string,
 	teamId: string,
-	extra: { createdTeam: boolean; wasSSO?: boolean }
+	extra: { createdTeam: boolean; provider?: string }
 ) => async (dispatch, getState: () => CodeStreamState) => {
 	const response = await HostApi.instance.send(TokenLoginRequestType, {
 		token: {
@@ -156,7 +160,7 @@ export const completeSignup = (
 			url: getState().configs.serverUrl
 		},
 		teamId,
-		alias: extra.wasSSO ? true : false
+		alias: extra.provider ? true : false
 	});
 
 	if (isLoginFailResponse(response)) {
@@ -164,8 +168,12 @@ export const completeSignup = (
 		throw response.error;
 	}
 
+	const providerName = extra.provider
+		? ProviderNames[extra.provider.toLowerCase()] || extra.provider
+		: "CodeStream";
 	HostApi.instance.track("Signup Completed", {
-		"Signup Type": extra.createdTeam ? "Organic" : "Viral"
+		"Signup Type": extra.createdTeam ? "Organic" : "Viral",
+		"Auth Provider": providerName
 	});
 
 	dispatch(onLogin(response));
@@ -204,7 +212,7 @@ export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo
 					goToTeamCreation({
 						email: response.extra && response.extra.email,
 						token: response.extra && response.extra.token,
-						wasSSO: true
+						provider
 					})
 				);
 			case LoginResult.ProviderConnectFailed:
@@ -217,8 +225,16 @@ export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo
 	}
 
 	if (signupInfo) {
+		HostApi.instance.track("Account Created", {
+			email: response.loginResponse.user.email
+		});
+
+		const providerName = provider
+			? ProviderNames[provider.toLowerCase()] || provider
+			: "CodeStream";
 		HostApi.instance.track("Signup Completed", {
-			"Signup Type": signupInfo.type === SignupType.CreateTeam ? "Organic" : "Viral"
+			"Signup Type": signupInfo.type === SignupType.CreateTeam ? "Organic" : "Viral",
+			"Auth Provider": providerName
 		});
 	} else {
 		HostApi.instance.track("Signed In", { "Auth Type": provider });
