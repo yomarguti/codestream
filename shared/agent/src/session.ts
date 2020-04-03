@@ -805,7 +805,7 @@ export class CodeStreamSession {
 		});
 
 		// be sure to alias first if necessary
-		if ((options as OtcLoginRequest).alias) {
+		if ((options as OtcLoginRequest).alias || (options as TokenLoginRequest).alias) {
 			Container.instance().telemetry.alias(this._codestreamUserId);
 		}
 		// Initialize tracking
