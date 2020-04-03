@@ -449,7 +449,7 @@ export class SimpleStream extends Component {
 				{
 					label: "Other Actions",
 					action: "other",
-					submenu: [{ label: "Cancel Account", action: "cancel" }]
+					submenu: [{ label: "Cancel My User Account", action: "cancel" }]
 				}
 			]
 		});
@@ -1323,7 +1323,7 @@ export class SimpleStream extends Component {
 		} else {
 			confirmPopup({
 				title: "Are you sure?",
-				message: "Deleting your account cannot be undone.",
+				message: "Deleting your user account cannot be undone.",
 				centered: true,
 				buttons: [
 					{ label: "Go Back", className: "control-button" },
