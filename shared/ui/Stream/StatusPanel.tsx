@@ -534,7 +534,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								Share the code I'm working on with the team &nbsp;
 								<a
 									style={{ color: "inherit" }}
-									href="https://github.com/TeamCodeStream/CodeStream/wiki/Team-LiveView"
+									href="https://github.com/TeamCodeStream/CodeStream/wiki/Team-Live-View"
 								>
 									<Icon name="info" title="Click for details" />
 								</a>
