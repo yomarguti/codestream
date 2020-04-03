@@ -534,7 +534,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								Share the code I'm working on with the team &nbsp;
 								<a
 									style={{ color: "inherit" }}
-									href="https://help.codestream.com/writeme-about-x-ray"
+									href="https://github.com/TeamCodeStream/CodeStream/wiki/Team-LiveView"
 								>
 									<Icon name="info" title="Click for details" />
 								</a>

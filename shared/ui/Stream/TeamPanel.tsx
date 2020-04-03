@@ -584,7 +584,7 @@ class TeamPanel extends React.Component<Props, State> {
 					variant="text"
 					items={[
 						{
-							label: "X-Ray Settings",
+							label: "Live View Settings",
 							submenu: [
 								{
 									label: "Always On",
@@ -603,10 +603,10 @@ class TeamPanel extends React.Component<Props, State> {
 								},
 								{ label: "-", action: () => {} },
 								{
-									label: "What is X-Ray?",
+									label: "What is Live View?",
 									action: () => {
 										HostApi.instance.send(OpenUrlRequestType, {
-											url: "https://help.codestream.com/writeme-about-x-ray"
+											url: "https://github.com/TeamCodeStream/CodeStream/wiki/Team-LiveView"
 										});
 									}
 								}
