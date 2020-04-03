@@ -109,7 +109,7 @@ export class StatusBarController implements Disposable {
 				this._statusBarItem.color = undefined;
 				break;
 			case SessionStatus.SignedOut:
-				this._statusBarItem.text = ` $(comment-discussion) ${env}Sign in... `;
+				this._statusBarItem.text = ` $(comment-discussion) ${env}CodeStream `;
 				this._statusBarItem.command = "codestream.signIn";
 				this._statusBarItem.tooltip = "Sign in to CodeStream...";
 				this._statusBarItem.color = undefined;
