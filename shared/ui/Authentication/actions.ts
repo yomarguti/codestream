@@ -32,8 +32,7 @@ import { setSession, setMaintenanceMode } from "../store/session/actions";
 
 export enum SignupType {
 	JoinTeam = "joinTeam",
-	CreateTeam = "createTeam",
-	Login = "login"
+	CreateTeam = "createTeam"
 }
 
 export interface ValidateSignupInfo {
@@ -52,7 +51,7 @@ export const startSSOSignin = (
 	}
 
 	const query: { [key: string]: string } = {};
-	if (info && info.type === SignupType.Login) {
+	if (!info) {
 		query.noSignup = "1";
 	}
 	if (session.otc) {
@@ -148,7 +147,7 @@ export const completeSignup = (
 	email: string,
 	token: string,
 	teamId: string,
-	extra: { createdTeam: boolean }
+	extra: { createdTeam: boolean; wasSSO?: boolean }
 ) => async (dispatch, getState: () => CodeStreamState) => {
 	const response = await HostApi.instance.send(TokenLoginRequestType, {
 		token: {
@@ -156,7 +155,8 @@ export const completeSignup = (
 			email,
 			url: getState().configs.serverUrl
 		},
-		teamId
+		teamId,
+		alias: extra.wasSSO ? true : false
 	});
 
 	if (isLoginFailResponse(response)) {
@@ -197,10 +197,14 @@ export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo
 			case LoginResult.AlreadySignedIn:
 				return dispatch(bootstrap());
 			case LoginResult.NotOnTeam:
+				HostApi.instance.track("Account Created", {
+					email: response.extra.email
+				});
 				return dispatch(
 					goToTeamCreation({
 						email: response.extra && response.extra.email,
-						token: response.extra && response.extra.token
+						token: response.extra && response.extra.token,
+						wasSSO: true
 					})
 				);
 			case LoginResult.ProviderConnectFailed:
@@ -212,7 +216,7 @@ export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo
 		}
 	}
 
-	if (signupInfo && signupInfo.type !== SignupType.Login) {
+	if (signupInfo) {
 		HostApi.instance.track("Signup Completed", {
 			"Signup Type": signupInfo.type === SignupType.CreateTeam ? "Organic" : "Viral"
 		});

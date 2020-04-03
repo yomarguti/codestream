@@ -16,6 +16,7 @@ interface ConnectedProps {
 	token: string;
 	email: string;
 	loggedIn?: boolean;
+	wasSSO?: boolean;
 }
 
 export const TeamCreation = (connect() as any)((props: ConnectedProps & DispatchProp) => {
@@ -40,7 +41,12 @@ export const TeamCreation = (connect() as any)((props: ConnectedProps & Dispatch
 			try {
 				const { team } = await HostApi.instance.send(CreateTeamRequestType, { name: teamName });
 				HostApi.instance.track("Team Created");
-				props.dispatch(completeSignup(props.email, props.token, team.id, { createdTeam: true }));
+				props.dispatch(
+					completeSignup(props.email, props.token, team.id, {
+						createdTeam: true,
+						wasSSO: props.wasSSO
+					})
+				);
 			} catch (error) {
 				// TODO: communicate error
 				props.dispatch(goToLogin());

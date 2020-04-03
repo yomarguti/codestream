@@ -163,7 +163,7 @@ class Login extends React.Component<Props, State> {
 
 	handleClickGithubLogin = event => {
 		event.preventDefault();
-		this.props.startSSOSignin("github", { type: SignupType.Login });
+		this.props.startSSOSignin("github");
 	};
 
 	onClickForgotPassword = (event: React.SyntheticEvent) => {

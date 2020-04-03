@@ -188,7 +188,7 @@ export const Signup = (props: Props) => {
 			});
 			const info = props.inviteCode
 				? { type: SignupType.JoinTeam, inviteCode: props.inviteCode }
-				: undefined;
+				: { type: SignupType.CreateTeam };
 			return dispatch(startSSOSignin("github", info));
 		},
 		[props.type]
