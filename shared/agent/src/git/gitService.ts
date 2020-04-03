@@ -1065,6 +1065,11 @@ export class GitService implements IGitService, Disposable {
 	}
 
 	getRepositoryByFilePath(filePath: string): Promise<GitRepository | undefined> {
+		try {
+			filePath = this._normalizePath(fs.realpathSync(filePath));
+		} catch (err) {
+			Logger.warn(`Cannot obtain normalized canonical value of ${filePath}: ${err.toString()}`);
+		}
 		return this._repositories.getByFilePath(filePath);
 	}
 
