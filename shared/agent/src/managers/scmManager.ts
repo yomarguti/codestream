@@ -138,10 +138,14 @@ export class ScmManager {
 		try {
 			const openRepos = await this.getRepos({});
 			const { repositories = [] } = openRepos;
+			// below, only return repos that we know about (aka have repoIds)
 			// @ts-ignore
 			modifiedRepos = (
 				await Promise.all(
-					repositories.map(repo => {
+					repositories
+					.filter(r => r.id)
+					.map(repo => {
+						// TODO make a flavor of getRepoStatus that takes a repo
 						const response = this.getRepoStatus({
 							uri: Strings.pathToFileURL(repo.path),
 							startCommit: "local",
@@ -154,6 +158,7 @@ export class ScmManager {
 				)
 			)
 				.filter(Boolean)
+				.filter(r => r.scm && r.scm?.repoId)
 				.map(status => {
 					return { ...status.scm };
 				});
@@ -257,6 +262,7 @@ export class ScmManager {
 		let repoPath = "";
 		let repoId;
 		let remotes: { name: string; url: string }[] | undefined;
+		// this could be a file OR a folder (VSC reports workspace folder paths as file:// uris)
 		if (uri.scheme === "file") {
 			const { git } = SessionContainer.instance();
 

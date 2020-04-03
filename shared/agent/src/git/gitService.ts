@@ -471,7 +471,7 @@ export class GitService implements IGitService, Disposable {
 				"master",
 				"--"
 			);
-		} catch {}
+		} catch { }
 
 		if (!data) {
 			try {
@@ -483,7 +483,7 @@ export class GitService implements IGitService, Disposable {
 					"HEAD",
 					"--"
 				);
-			} catch {}
+			} catch { }
 		}
 
 		if (!data) return [];
@@ -499,11 +499,11 @@ export class GitService implements IGitService, Disposable {
 		let data;
 		try {
 			data = await git({ cwd: repoPath }, "rev-list", "--date-order", "master", "--");
-		} catch {}
+		} catch { }
 		if (!data) {
 			try {
 				data = await git({ cwd: repoPath }, "rev-list", "--date-order", "HEAD", "--");
-			} catch {}
+			} catch { }
 		}
 
 		if (!data) return [];
@@ -519,7 +519,7 @@ export class GitService implements IGitService, Disposable {
 		let data: string | undefined;
 		try {
 			data = await git({ cwd: repoPath }, "branch", "--");
-		} catch {}
+		} catch { }
 		if (!data) return [];
 
 		const branches = data.trim().split("\n");
@@ -533,7 +533,7 @@ export class GitService implements IGitService, Disposable {
 				let result: string | undefined;
 				try {
 					result = await git({ cwd: repoPath }, "merge-base", "--fork-point", branch, "--");
-				} catch {}
+				} catch { }
 				if (result) {
 					commits.push(result.split("\n")[0]);
 				}
@@ -745,7 +745,7 @@ export class GitService implements IGitService, Disposable {
 			let data: string | undefined;
 			try {
 				data = await git({ cwd: repoPath }, "branch", "--");
-			} catch {}
+			} catch { }
 			if (!data) return;
 			const otherBranches = data
 				.trim()
@@ -868,7 +868,7 @@ export class GitService implements IGitService, Disposable {
 				if (!includeStaged && !ref) options.push("HEAD");
 				options.push("--");
 				data = await git({ cwd: repoPath }, ...options);
-			} catch {}
+			} catch { }
 			if (!data) return [];
 
 			const ret: {
@@ -957,12 +957,12 @@ export class GitService implements IGitService, Disposable {
 		includeSaved: boolean
 	): Promise<
 		| {
-				[file: string]: {
-					statusX?: FileStatus;
-					statusY?: FileStatus;
-					status: FileStatus;
-				};
-		  }
+			[file: string]: {
+				statusX?: FileStatus;
+				statusY?: FileStatus;
+				status: FileStatus;
+			};
+		}
 		| undefined
 	> {
 		try {
@@ -970,7 +970,7 @@ export class GitService implements IGitService, Disposable {
 			try {
 				const options = ["status", "-v", "--porcelain"];
 				data = await git({ cwd: repoPath }, ...options);
-			} catch {}
+			} catch { }
 			if (!data) return undefined;
 
 			const ret: {
@@ -1034,7 +1034,7 @@ export class GitService implements IGitService, Disposable {
 				options.push("--");
 				options.push(file);
 				data = await git({ cwd: repoPath }, ...options);
-			} catch {}
+			} catch { }
 			if (!data) return [];
 			const patch = parsePatch(data)[0];
 			try {
@@ -1048,7 +1048,7 @@ export class GitService implements IGitService, Disposable {
 				options.push("--");
 				options.push(file);
 				data = await git({ cwd: repoPath }, ...options);
-			} catch {}
+			} catch { }
 			if (!data) return [];
 			return GitAuthorParser.parse(data);
 		} catch {
@@ -1064,13 +1064,31 @@ export class GitService implements IGitService, Disposable {
 		return this._repositories.getById(id);
 	}
 
-	getRepositoryByFilePath(filePath: string): Promise<GitRepository | undefined> {
+	/**
+	 * Returns a possible GitRepository on a file OR folder. If that file has not been seen before,
+	 * a traversal up its path will occur looking for the root repo. If it is a folder, it will attempt to lookup _that_
+	 * folder
+	 * @param fileOrFolderPath path to a file or folder
+	 */
+	async getRepositoryByFilePath(fileOrFolderPath: string): Promise<GitRepository | undefined> {
 		try {
-			filePath = this._normalizePath(fs.realpathSync(filePath));
+			fileOrFolderPath = this._normalizePath(fs.realpathSync(fileOrFolderPath));
 		} catch (err) {
-			Logger.warn(`Cannot obtain normalized canonical value of ${filePath}: ${err.toString()}`);
+			Logger.warn(`Cannot obtain normalized canonical value of ${fileOrFolderPath}: ${err.toString()}`);
 		}
-		return this._repositories.getByFilePath(filePath);
+
+		let repo;
+		if (fs.existsSync(fileOrFolderPath) && fs.lstatSync(fileOrFolderPath).isDirectory()) {
+			const normalizedFsPath = Strings.normalizePath(fileOrFolderPath);
+			const allRepos = await this.getRepositories();
+			repo = Array.from(allRepos).find(r => r.path === normalizedFsPath);
+		} else {
+			// do NOT allow folders to call this, any folder not already tracked
+			// will traverse _up_ looking for additional git repos
+			repo = await this._repositories.getByFilePath(fileOrFolderPath);
+		}
+
+		return repo;
 	}
 
 	async isValidReference(repoUri: URI, ref: string): Promise<boolean>;

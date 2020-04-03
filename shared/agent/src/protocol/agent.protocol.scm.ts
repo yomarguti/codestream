@@ -72,6 +72,9 @@ export enum FileStatus {
 }
 
 export interface GetRepoScmStatusRequest {
+	/**
+	 * This can be a file or a folder uri, with a `file` scheme
+	 */
 	uri: string;
 	startCommit?: string;
 	includeSaved: boolean;

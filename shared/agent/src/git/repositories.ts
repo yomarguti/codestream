@@ -199,25 +199,34 @@ export class GitRepositories {
 		}
 
 		for (const f of e.removed) {
+			// these workspace folders are using file:// schemes
 			const uri = URI.parse(f.uri);
 			if (uri.scheme !== "file") continue;
 
 			const fsPath = uri.fsPath;
-			const filteredTree = this._repositoryTree.findSuperstr(fsPath);
+			let repoPath: string | undefined;
+			try {
+				// paths (strings) are normally using a GitRepository.path property
+				// which has gone through git.getRepoRoot which has normalized the path to use
+				// forward slashes
+				repoPath = Strings.normalizePath(fsPath);
+			} catch {}
+			if (!repoPath) continue;
+
+			const filteredTree = this._repositoryTree.findSuperstr(repoPath);
 			const reposToDelete =
 				filteredTree !== undefined
 					? [
-							// Since the filtered tree will have keys that are relative to the fsPath, normalize to the full path
 							...Iterables.map<[GitRepository, string], [GitRepository, string]>(
 								filteredTree.entries(),
-								([r, k]) => [r, path.join(fsPath, k)]
+								([r, k]) => [r, r.path]
 							)
 					  ]
 					: [];
 
-			const repo = this._repositoryTree.get(fsPath);
+			const repo = this._repositoryTree.get(repoPath);
 			if (repo !== undefined) {
-				reposToDelete.push([repo, fsPath]);
+				reposToDelete.push([repo, repoPath]);
 			}
 
 			for (const [, k] of reposToDelete) {
