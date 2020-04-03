@@ -339,14 +339,14 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		location: CSMarkerLocation,
 		revision: string
 	): Promise<CSMarkerLocation> {
+		Logger.log(`Backtracking location ${MarkerLocation.toArray(location)} to ${revision}`);
 		const { git } = SessionContainer.instance();
 		const documentUri = documentId.uri;
 		const filePath = URI.parse(documentUri).fsPath;
 
 		if (!revision) {
-			// TODO marcelo - must signal
+			Logger.warn("No revision specified for backtracking");
 			return location;
-			// return deletedLocation(location);
 		}
 
 		const currentCommitText = await git.getFileContentForRevision(filePath, revision);
