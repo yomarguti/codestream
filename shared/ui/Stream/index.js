@@ -439,7 +439,7 @@ export class SimpleStream extends Component {
 			submenu: [
 				{ label: youText, action: "", noHover: true, disabled: true },
 				{ label: "-" },
-				{ label: "Change Email", action: "email" },
+				// { label: "Change Email", action: "email" },
 				{ label: "Change Username", action: "username" },
 				{ label: "Change Full Name", action: "full-name" },
 				// { label: "Change Password", action: "password" },
