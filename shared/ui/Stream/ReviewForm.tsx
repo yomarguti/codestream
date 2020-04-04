@@ -9,7 +9,8 @@ import {
 	IgnoreFilesRequestType,
 	ReposScm,
 	DidChangeDataNotificationType,
-	ChangeDataType
+	ChangeDataType,
+	GetUserEmailRequestType
 } from "@codestream/protocols/agent";
 import {
 	CSDirectStream,
@@ -71,6 +72,7 @@ import { ReviewShowLocalDiffRequestType, WebviewPanels } from "@codestream/proto
 import { Checkbox } from "../src/components/Checkbox";
 import { getAllByCommit } from "../store/reviews/reducer";
 import { setCurrentReview } from "@codestream/webview/store/context/actions";
+import styled from "styled-components";
 
 interface Props extends ConnectedProps {
 	editingReview?: CSReview;
@@ -157,7 +159,16 @@ interface State {
 		[file: string]: boolean;
 	};
 	commitListLength: number;
+	currentUserScmEmail: string | undefined;
 }
+
+const EmailWarning = styled.div`
+	display: flex;
+	padding: 10px 0 30px 2px;
+	b {
+		color: var(--text-color-highlight);
+	}
+`;
 
 function merge(defaults: Partial<State>, review: CSReview): State {
 	return Object.entries(defaults).reduce((object, entry) => {
@@ -269,10 +280,16 @@ class ReviewForm extends React.Component<Props, State> {
 		}
 	}
 
+	private async getUserEmail() {
+		const response = await HostApi.instance.send(GetUserEmailRequestType, {});
+		this.setState({ currentUserScmEmail: response.email });
+	}
+
 	componentDidMount() {
 		const { isEditing, textEditorUri } = this.props;
 		if (isEditing) return;
 
+		this.getUserEmail();
 		if (textEditorUri) this.getScmInfoForURI(textEditorUri);
 
 		this.disposables.push(
@@ -707,9 +724,12 @@ class ReviewForm extends React.Component<Props, State> {
 		);
 	};
 
+	goSetEmail = () => this.props.openPanel(WebviewPanels.ChangeEmail);
+
 	render() {
-		const { repoStatus } = this.state;
+		const { repoStatus, currentUserScmEmail } = this.state;
 		const totalModifiedLines = repoStatus && repoStatus.scm ? repoStatus.scm.totalModifiedLines : 0;
+		const { currentUser } = this.props;
 
 		return (
 			<FeatureFlag flag="lightningCodeReviews">
@@ -731,6 +751,20 @@ class ReviewForm extends React.Component<Props, State> {
 					return (
 						<div className="full-height-codemark-form">
 							<span className="plane-container">
+								{currentUserScmEmail && currentUserScmEmail !== currentUser.email && (
+									<EmailWarning>
+										<Icon name="alert" className="conflict" />
+										<span style={{ paddingLeft: "10px" }}>
+											<CSText as="span">
+												Your CodeStream and git commit emails don't match (
+												<b>{currentUser.email}</b> vs. <b>{currentUserScmEmail}</b>), which impairs
+												CodeStream's ability to identify which commits are yours. Please{" "}
+												<a onClick={this.goSetEmail}>update your email address</a> so that they
+												match.
+											</CSText>
+										</span>
+									</EmailWarning>
+								)}
 								<div className="codemark-form-container">{this.renderReviewForm()}</div>
 								{this.renderExcludedFiles()}
 								<div style={{ height: "5px" }}></div>

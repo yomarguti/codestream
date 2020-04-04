@@ -14,7 +14,9 @@ import cx from "classnames";
 import { Link } from "./Link";
 import { TextInput } from "../Authentication/TextInput";
 import { isEmailValid } from "../Authentication/Signup";
-import { RegisterUserRequestType } from "@codestream/protocols/agent";
+import { RegisterUserRequestType, GetUserEmailRequestType } from "@codestream/protocols/agent";
+import { CSText } from "../src/components/CSText";
+import { useDidMount } from "../utilities/hooks";
 
 const Root = styled.div`
 	#controls {
@@ -42,6 +44,15 @@ export const ChangeEmailPanel = props => {
 	const [digits, setValues] = useState(initialValues);
 	const [error, setError] = useState();
 	const [emailSent, setEmailSent] = useState(false);
+	const [scmEmail, setScmEmail] = useState("");
+
+	useDidMount(() => {
+		const getUserEmail = async () => {
+			const response = await HostApi.instance.send(GetUserEmailRequestType, {});
+			setScmEmail(response.email || "");
+		};
+		getUserEmail();
+	});
 
 	const onValidityChanged = useCallback((field: string, validity: boolean) => {
 		switch (field) {
@@ -123,6 +134,18 @@ export const ChangeEmailPanel = props => {
 						</div>
 					)}
 					<div className="control-group">
+						{scmEmail && scmEmail !== derivedState.currentEmail && (
+							<div style={{ fontSize: "smaller" }}>
+								<CSText as="span">
+									Your CodeStream and git commit emails don't match (
+									<b>{derivedState.currentEmail}</b> vs. <b>{scmEmail}</b>), which impairs
+									CodeStream's ability to identify which commits are yours. Please either update
+									your gitconfig or set your CodeStream email to match.
+									<br />
+									<br />
+								</CSText>
+							</div>
+						)}
 						<label>Email</label>
 						<TextInput
 							name="Email"
