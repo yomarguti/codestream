@@ -124,37 +124,65 @@ export default class Menu extends Component {
 
 	repositionSubmenuIfNecessary() {
 		if (!this._div) return;
-		const $submenu = this._div.querySelector("#active-submenu");
-		if ($submenu) {
-			const parentLI = $submenu.closest("li");
-			const parentUL = $submenu.closest("ul");
-			const parentRect = parentLI.getBoundingClientRect();
-			const rect = $submenu.getBoundingClientRect();
+		const $submenus = this._div.querySelectorAll("#active-submenu");
+		$submenus.forEach(($submenu, index) => {
+			if ($submenu) {
+				const parentLI = $submenu.closest("li");
+				const parentUL = $submenu.closest("ul");
+				const parentRect = parentLI.getBoundingClientRect();
+				const rect = $submenu.getBoundingClientRect();
 
-			// line it up optimistically....
-			$submenu.style.left = parentRect.right - 11 + "px";
-			const submenuTop = parentLI.offsetTop - parentUL.scrollTop - 6;
-			$submenu.style.top = submenuTop + "px";
+				const submenuTop = parentLI.offsetTop - parentUL.scrollTop - 6;
+				$submenu.style.top = submenuTop + "px";
 
-			// check to see if it's off the screen to the right
-			const tooFarRight = parentRect.right + rect.width > window.innerWidth;
-			if (tooFarRight) {
-				// if it is, first try flipping it to the left of the menu
-				// the 20px is for 10px padding times two
-				$submenu.style.left = 31 - rect.width + "px";
-				// check again to see if it's too far left now
-				if (19 - rect.width + parentRect.left < 0) {
-					// if it is, just put it on the right edge of the screen
-					$submenu.style.left = "auto";
-					$submenu.style.right = 20 + parentRect.right - window.innerWidth + "px";
-					$submenu.style.top = parentLI.offsetTop + 16 + "px";
+				if (index === 0) {
+					// the first submenu is relative to the viewport
+					let parentRectRightEdge = parentRect.right;
+					// line it up optimistically....
+					$submenu.style.left = parentRectRightEdge - 11 + "px";
+
+					// check to see if it's off the screen to the right
+					const tooFarRight = parentRectRightEdge + rect.width > window.innerWidth;
+					if (tooFarRight) {
+						// if it is, first try flipping it to the left of the menu
+						// the 20px is for 10px padding times two
+						$submenu.style.left = 31 - rect.width + "px";
+						// check again to see if it's too far left now
+						if (19 - rect.width + parentRect.left < 0) {
+							// if it is, just put it on the right edge of the screen
+							$submenu.style.left = "auto";
+							$submenu.style.right = 20 + parentRectRightEdge - window.innerWidth + "px";
+							$submenu.style.top = parentLI.offsetTop + 16 + "px";
+						}
+					}
+				} else {
+					// sub-submenus are relative to the submenu parent
+					const parentRectRightEdge = parentRect.width + 20;
+
+					// line it up optimistically....
+					$submenu.style.left = parentRectRightEdge - 11 + "px";
+
+					// check to see if it's off the screen to the right
+					const tooFarRight = parentRect.right + rect.width > window.innerWidth;
+					if (tooFarRight) {
+						// if it is, first try flipping it to the left of the menu
+						// the 20px is for 10px padding times two
+						$submenu.style.left = 31 - rect.width + "px";
+						// check again to see if it's too far left now
+						if (19 - rect.width + parentRect.left < 0) {
+							// if it is, just put it on the right edge of the screen
+							$submenu.style.left = "auto";
+							$submenu.style.right = 20 + parentRectRightEdge - window.innerWidth + "px";
+							$submenu.style.top = parentLI.offsetTop + 16 + "px";
+						}
+					}
+				}
+				const bottomOfSubmenu = submenuTop + $submenu.offsetHeight + 40;
+				if (bottomOfSubmenu > window.innerHeight) {
+					$submenu.style.top = "-10px";
 				}
 			}
-			const bottomOfSubmenu = submenuTop + $submenu.offsetHeight + 40;
-			if (bottomOfSubmenu > window.innerHeight) {
-				$submenu.style.top = "-10px";
-			}
-		}
+		});
 	}
 
 	componentWillUnmount() {
