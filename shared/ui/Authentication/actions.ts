@@ -159,8 +159,7 @@ export const completeSignup = (
 			email,
 			url: getState().configs.serverUrl
 		},
-		teamId,
-		alias: extra.provider ? true : false
+		teamId
 	});
 
 	if (isLoginFailResponse(response)) {
@@ -205,9 +204,11 @@ export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo
 			case LoginResult.AlreadySignedIn:
 				return dispatch(bootstrap());
 			case LoginResult.NotOnTeam:
-				HostApi.instance.track("Account Created", {
-					email: response.extra.email
-				});
+				HostApi.instance.track(
+					"Account Created",
+					{ email: response.extra.email },
+					{ alias: response.extra.userId }
+				);
 				return dispatch(
 					goToTeamCreation({
 						email: response.extra && response.extra.email,
