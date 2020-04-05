@@ -10,7 +10,7 @@ import {
 	ReposScm,
 	DidChangeDataNotificationType,
 	ChangeDataType,
-	GetUserEmailRequestType
+	GetUserInfoRequestType
 } from "@codestream/protocols/agent";
 import {
 	CSDirectStream,
@@ -280,8 +280,8 @@ class ReviewForm extends React.Component<Props, State> {
 		}
 	}
 
-	private async getUserEmail() {
-		const response = await HostApi.instance.send(GetUserEmailRequestType, {});
+	private async getUserInfo() {
+		const response = await HostApi.instance.send(GetUserInfoRequestType, {});
 		this.setState({ currentUserScmEmail: response.email });
 	}
 
@@ -289,7 +289,7 @@ class ReviewForm extends React.Component<Props, State> {
 		const { isEditing, textEditorUri } = this.props;
 		if (isEditing) return;
 
-		this.getUserEmail();
+		this.getUserInfo();
 		if (textEditorUri) this.getScmInfoForURI(textEditorUri);
 
 		this.disposables.push(

@@ -14,7 +14,7 @@ import cx from "classnames";
 import { Link } from "./Link";
 import { TextInput } from "../Authentication/TextInput";
 import { isEmailValid } from "../Authentication/Signup";
-import { RegisterUserRequestType, GetUserEmailRequestType } from "@codestream/protocols/agent";
+import { RegisterUserRequestType, GetUserInfoRequestType } from "@codestream/protocols/agent";
 import { CSText } from "../src/components/CSText";
 import { useDidMount } from "../utilities/hooks";
 
@@ -47,11 +47,11 @@ export const ChangeEmailPanel = props => {
 	const [scmEmail, setScmEmail] = useState("");
 
 	useDidMount(() => {
-		const getUserEmail = async () => {
-			const response = await HostApi.instance.send(GetUserEmailRequestType, {});
+		const getUserInfo = async () => {
+			const response = await HostApi.instance.send(GetUserInfoRequestType, {});
 			setScmEmail(response.email || "");
 		};
-		getUserEmail();
+		getUserInfo();
 	});
 
 	const onValidityChanged = useCallback((field: string, validity: boolean) => {
