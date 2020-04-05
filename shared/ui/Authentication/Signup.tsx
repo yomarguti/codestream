@@ -12,12 +12,13 @@ import {
 } from "../store/context/actions";
 import { TextInput } from "./TextInput";
 import { LoginResult } from "@codestream/protocols/api";
-import { RegisterUserRequestType } from "@codestream/protocols/agent";
+import { RegisterUserRequestType, GetUserInfoRequestType } from "@codestream/protocols/agent";
 import { HostApi } from "../webview-api";
 import { completeSignup, startSSOSignin, SignupType } from "./actions";
 import { logError } from "../logger";
 import { useDispatch } from "react-redux";
 import { CSText } from "../src/components/CSText";
+import { useDidMount } from "../utilities/hooks";
 
 const isPasswordValid = (password: string) => password.length >= 6;
 export const isEmailValid = (email: string) => {
@@ -43,6 +44,7 @@ export const Signup = (props: Props) => {
 	const dispatch = useDispatch();
 	const [email, setEmail] = useState(props.email || "");
 	const [emailValidity, setEmailValidity] = useState(true);
+	const [scmEmail, setScmEmail] = useState("");
 	const [username, setUsername] = useState("");
 	const [usernameValidity, setUsernameValidity] = useState(true);
 	const [password, setPassword] = useState("");
@@ -54,8 +56,24 @@ export const Signup = (props: Props) => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [unexpectedError, setUnexpectedError] = useState(false);
 	const [inviteConflict, setInviteConflict] = useState(false);
+	const [bootstrapped, setBootstrapped] = useState(true);
 
 	const wasInvited = props.inviteCode !== undefined;
+
+	const getUserInfo = async () => {
+		const response = await HostApi.instance.send(GetUserInfoRequestType, {});
+		// only set this if it exists, in case there is no git configured email
+		// and the user was invited, in which case we'll use props.email
+		if (response.email) setEmail(response.email);
+		setScmEmail(response.email); // to track if they used our git-based suggestion
+		setFullName(response.name);
+		setUsername(response.username);
+		setBootstrapped(true);
+	};
+
+	useDidMount(() => {
+		getUserInfo();
+	});
 
 	const onValidityChanged = useCallback((field: string, validity: boolean) => {
 		switch (field) {
@@ -117,6 +135,7 @@ export const Signup = (props: Props) => {
 			const sendTelemetry = () => {
 				HostApi.instance.track("Account Created", {
 					email: email,
+					"Git Email Match?": email === scmEmail,
 					"Changed Invite Email?": wasInvited ? email !== props.email : undefined
 				});
 			};
@@ -194,6 +213,8 @@ export const Signup = (props: Props) => {
 		[props.type]
 	);
 
+	if (!bootstrapped) return <div>HI</div>;
+
 	return (
 		<div className="onboarding-page">
 			<form className="standard-form" onSubmit={onSubmit}>
@@ -240,6 +261,7 @@ export const Signup = (props: Props) => {
 									onChange={setEmail}
 									onValidityChanged={onValidityChanged}
 									validate={isEmailValid}
+									autoFocus
 									required
 								/>
 								{!emailValidity && (
