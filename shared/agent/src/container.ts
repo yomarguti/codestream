@@ -19,6 +19,7 @@ import { ScmManager } from "./managers/scmManager";
 import { StreamsManager } from "./managers/streamsManager";
 import { TeamsManager } from "./managers/teamsManager";
 import { TelemetryManager } from "./managers/telemetryManager";
+import { UnauthenticatedScmManager } from "./managers/unauthenticatedScmManager";
 import { UrlManager } from "./managers/urlManager";
 import { UsersManager } from "./managers/usersManager";
 import { ThirdPartyProviderRegistry } from "./providers/registry";
@@ -135,10 +136,16 @@ class ServiceContainer {
 	// TODO: [EA] I think we should try to rework this to avoid the need of the session here
 	constructor(public readonly agent: CodeStreamAgent, session: CodeStreamSession) {
 		this._documents = agent.documents;
+		this._unauthenticatedScm = new UnauthenticatedScmManager();
 
 		this._errorReporter = new ErrorReporter(session);
 		this._telemetry = new TelemetryManager(session);
 		this._urls = new UrlManager();
+	}
+
+	private readonly _unauthenticatedScm: UnauthenticatedScmManager;
+	get unauthenticatedScm() {
+		return this._unauthenticatedScm;
 	}
 
 	private readonly _errorReporter: ErrorReporter;

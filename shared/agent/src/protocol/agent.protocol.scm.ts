@@ -225,3 +225,16 @@ export const GetRangeSha1RequestType = new RequestType<
 	void,
 	void
 >("codestream/scm/range/sha1");
+
+export interface GetUserInfoRequest {}
+export interface GetUserInfoResponse {
+	email: string;
+	name: string;
+	username: string;
+}
+export const GetUserInfoRequestType = new RequestType<
+	GetUserInfoRequest,
+	GetUserInfoResponse,
+	void,
+	void
+>("codestream/scm/user/info");
