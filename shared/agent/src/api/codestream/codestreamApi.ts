@@ -388,7 +388,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			this._token = response.accessToken;
 			throw {
 				error: LoginResult.NotOnTeam,
-				extra: { token: response.accessToken, email: response.user.email }
+				extra: { token: response.accessToken, email: response.user.email, userId: response.user.id }
 			} as LoginFailResponse;
 		}
 
