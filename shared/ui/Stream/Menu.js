@@ -266,6 +266,7 @@ export default class Menu extends Component {
 						className="input-text control"
 						style={{ width: "100%" }}
 						type="text"
+						ref={ref => (this._searchInput = ref)}
 						placeholder={item.placeholder}
 						onChange={this.changeSearch}
 					/>
@@ -275,9 +276,12 @@ export default class Menu extends Component {
 	};
 
 	changeSearch = e => {
-		this.setState({ q: e.target.value });
+		this.changeSearchValue(e.target.value);
+	};
 
-		if (this.props.onChangeSearch) this.props.onChangeSearch(e.target.value);
+	changeSearchValue = q => {
+		this.setState({ q });
+		if (this.props.onChangeSearch) this.props.onChangeSearch(q);
 	};
 
 	renderSubmenu = (parentItem, grandParentItem) => {
@@ -463,6 +467,14 @@ export default class Menu extends Component {
 	handleClickItem = async (event, item) => {
 		event.stopPropagation();
 		if (item.type === "search") return;
+
+		// when you select an item, clear out the search field
+		if (this._searchInput) {
+			this._searchInput.value = "";
+			this.changeSearchValue("");
+			this._searchInput.focus();
+		}
+
 		// support functions as item actions
 		if (typeof item.action === "function" && !item.disabled) {
 			item.action();
