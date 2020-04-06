@@ -22,7 +22,8 @@ import {
 	UpdateTeamRequestType,
 	UpdateTeamSettingsRequestType,
 	UpdateTeamAdminRequestType,
-	OpenUrlRequestType
+	OpenUrlRequestType,
+	GetLatestCommittersRequestType
 } from "@codestream/protocols/agent";
 import { CSUser } from "@codestream/protocols/api";
 import { ChangesetFile } from "./Review/ChangesetFile";
@@ -83,7 +84,6 @@ interface ConnectedProps {
 	activePanel: WebviewPanels;
 	invite: Function;
 	invited: any[];
-	suggested: any[];
 	teamName: string;
 	teamPlan: any;
 	companyMemberCount: number;
@@ -101,6 +101,7 @@ interface ConnectedProps {
 	isCurrentUserAdmin: boolean;
 	adminIds: string[];
 	collisions: any;
+	dontSuggestInvitees: any;
 }
 
 interface State {
@@ -117,6 +118,7 @@ interface State {
 	loadingStatus: boolean;
 	changingTeamName: boolean;
 	newTeamName: string;
+	suggested: any[];
 }
 
 class TeamPanel extends React.Component<Props, State> {
@@ -133,7 +135,8 @@ class TeamPanel extends React.Component<Props, State> {
 		modifiedRepos: [],
 		loadingStatus: false,
 		changingTeamName: false,
-		newTeamName: ""
+		newTeamName: "",
+		suggested: []
 	};
 
 	private _pollingTimer?: any;
@@ -164,6 +167,8 @@ class TeamPanel extends React.Component<Props, State> {
 			})
 		);
 
+		this.getSuggestedInvitees();
+
 		if (this.props.currentUserInvisible) this.clearScmInfoSummary();
 		else this.getScmInfoSummary();
 
@@ -175,6 +180,25 @@ class TeamPanel extends React.Component<Props, State> {
 		this.disposables.forEach(d => d.dispose());
 		this.stopPolling();
 	}
+
+	getSuggestedInvitees = async () => {
+		// for now, suggested invitees are only available to admins
+		if (!this.props.isCurrentUserAdmin) return;
+
+		const result = await HostApi.instance.send(GetLatestCommittersRequestType, {});
+		const committers = result ? result.scm : undefined;
+		if (!committers) return;
+
+		const { members, invited, dontSuggestInvitees } = this.props;
+		const suggested: any[] = [];
+		Object.keys(committers).forEach(email => {
+			if (members.find(user => user.email === email)) return;
+			if (invited.find(user => user.email === email)) return;
+			if (dontSuggestInvitees[email.replace(".", "*")]) return;
+			suggested.push({ email, fullName: committers[email] || email });
+		});
+		this.setState({ suggested });
+	};
 
 	private startPolling() {
 		// poll to get any changes that might happen outside the scope of
@@ -235,18 +259,20 @@ class TeamPanel extends React.Component<Props, State> {
 	};
 
 	onClickReinvite = user => {
-		const { email } = user;
+		const { email, fullName } = user;
 		this.setState({ invitingEmails: { ...this.state.invitingEmails, [email]: 1 } });
-		this.props.invite({ email: user.email, teamId: this.props.teamId }).then(() => {
-			// TODO: show notification
-			// atom.notifications.addInfo(
-			// 	this.props.intl.formatMessage({
-			// 		id: "invitation.emailSent",
-			// 		defaultMessage: `Invitation sent to ${user.email}!`
-			// 	})
-			// );
-			this.setState({ invitingEmails: { ...this.state.invitingEmails, [email]: 2 } });
-		});
+		this.props
+			.invite({ email: user.email, fullName: user.fullName, teamId: this.props.teamId })
+			.then(() => {
+				// TODO: show notification
+				// atom.notifications.addInfo(
+				// 	this.props.intl.formatMessage({
+				// 		id: "invitation.emailSent",
+				// 		defaultMessage: `Invitation sent to ${user.email}!`
+				// 	})
+				// );
+				this.setState({ invitingEmails: { ...this.state.invitingEmails, [email]: 2 } });
+			});
 	};
 
 	componentDidUpdate(prevProps, prevState) {
@@ -557,14 +583,24 @@ class TeamPanel extends React.Component<Props, State> {
 		});
 	};
 
+	removeSuggestion = async user => {
+		await HostApi.instance.send(UpdateTeamSettingsRequestType, {
+			teamId: this.props.teamId,
+			// we need to replace . with * to allow for the creation of deeply-nested
+			// team settings, since that's how they're stored in mongo
+			settings: { dontSuggestInvitees: { [user.email.replace(".", "*")]: true } }
+		});
+		this.getSuggestedInvitees();
+	};
+
 	render() {
-		const { xrayEnabled, currentUserId, currentUserInvisible, xraySetting } = this.props;
+		const { currentUserId, currentUserInvisible, xraySetting } = this.props;
 		const { invitingEmails, loadingStatus } = this.state;
 		const inactive =
 			this.props.activePanel !== WebviewPanels.Invite &&
 			this.props.activePanel !== WebviewPanels.People;
 
-		const suggested = this.props.suggested.filter(u => !invitingEmails[u.email]);
+		const suggested = this.state.suggested.filter(u => !invitingEmails[u.email]);
 		const title = this.state.changingTeamName ? (
 			<input
 				className="input-text control"
@@ -689,14 +725,28 @@ class TeamPanel extends React.Component<Props, State> {
 						)}
 						{suggested.length > 0 && (
 							<div className="section">
-								<PanelHeader title="Suggested Invitations">
-									<i style={{ opacity: 0.5 }}>From git history</i>
-								</PanelHeader>
+								<PanelHeader
+									title={
+										<span>
+											Suggested Invitations{" "}
+											<i style={{ opacity: 0.5, fontSize: "smaller" }}> from your git history</i>
+										</span>
+									}
+								></PanelHeader>
 								<UL>
 									{suggested.map(user => (
 										<li key={user.email}>
 											<div className="committer-email">
-												{user.fullName} {user.email}
+												{user.fullName}{" "}
+												<CSText as="span" muted>
+													{user.email}
+												</CSText>
+												<a onClick={e => this.removeSuggestion(user)} className="float-right">
+													remove
+												</a>
+												<span className="float-right" style={{ padding: "0 5px" }}>
+													&middot;
+												</span>
 												{this.renderEmailUser(user, "invite")}
 											</div>
 										</li>
@@ -754,17 +804,14 @@ const mapStateToProps = state => {
 	const xrayEnabled = xraySetting !== "off";
 	const collisions = getCodeCollisions(state);
 
-	// this should be populated by something like
-	// git log --pretty=format:"%an|%aE" | sort -u
-	// and then filter out noreply.github.com (what else?)
-	const suggested = [] as any; //[{ fullName: "Fred", email: "pez+555t@codestream.com" }];
-
+	const dontSuggestInvitees = team.settings ? team.settings.dontSuggestInvitees || {} : {};
 	return {
 		teamId: team.id,
 		teamName: team.name,
 		xraySetting,
 		adminIds,
 		isCurrentUserAdmin,
+		dontSuggestInvitees,
 		repos,
 		collisions,
 		currentUserId: currentUser.id,
@@ -772,7 +819,6 @@ const mapStateToProps = state => {
 		currentUserEmail: currentUser.email,
 		members: [currentUser, ..._sortBy(teammates, m => (m.fullName || "").toLowerCase())],
 		invited: _sortBy(invited, "email"),
-		suggested: _sortBy(suggested, m => (m.fullName || "").toLowerCase()),
 		webviewFocused: context.hasFocus,
 		xrayEnabled
 	};
