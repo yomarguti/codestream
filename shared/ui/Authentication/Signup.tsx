@@ -19,6 +19,7 @@ import { logError } from "../logger";
 import { useDispatch } from "react-redux";
 import { CSText } from "../src/components/CSText";
 import { useDidMount } from "../utilities/hooks";
+import { Loading } from "../Container/Loading";
 
 const isPasswordValid = (password: string) => password.length >= 6;
 export const isEmailValid = (email: string) => {
@@ -213,7 +214,7 @@ export const Signup = (props: Props) => {
 		[props.type]
 	);
 
-	if (!bootstrapped) return <div>HI</div>;
+	if (!bootstrapped) return <Loading />;
 
 	return (
 		<div className="onboarding-page">
