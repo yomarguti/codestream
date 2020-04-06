@@ -83,6 +83,8 @@ export interface IGitService extends Disposable {
 	resolveRef(uri: URI, ref: string): Promise<string | undefined>;
 	resolveRef(path: string, ref: string): Promise<string | undefined>;
 	//   resolveRef(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
+
+	getCommittersForRepo(repoPath: string, since: number): Promise<{ [email: string]: string }>;
 }
 
 export class GitService implements IGitService, Disposable {
@@ -471,7 +473,7 @@ export class GitService implements IGitService, Disposable {
 				"master",
 				"--"
 			);
-		} catch { }
+		} catch {}
 
 		if (!data) {
 			try {
@@ -483,7 +485,7 @@ export class GitService implements IGitService, Disposable {
 					"HEAD",
 					"--"
 				);
-			} catch { }
+			} catch {}
 		}
 
 		if (!data) return [];
@@ -499,11 +501,11 @@ export class GitService implements IGitService, Disposable {
 		let data;
 		try {
 			data = await git({ cwd: repoPath }, "rev-list", "--date-order", "master", "--");
-		} catch { }
+		} catch {}
 		if (!data) {
 			try {
 				data = await git({ cwd: repoPath }, "rev-list", "--date-order", "HEAD", "--");
-			} catch { }
+			} catch {}
 		}
 
 		if (!data) return [];
@@ -519,7 +521,7 @@ export class GitService implements IGitService, Disposable {
 		let data: string | undefined;
 		try {
 			data = await git({ cwd: repoPath }, "branch", "--");
-		} catch { }
+		} catch {}
 		if (!data) return [];
 
 		const branches = data.trim().split("\n");
@@ -533,7 +535,7 @@ export class GitService implements IGitService, Disposable {
 				let result: string | undefined;
 				try {
 					result = await git({ cwd: repoPath }, "merge-base", "--fork-point", branch, "--");
-				} catch { }
+				} catch {}
 				if (result) {
 					commits.push(result.split("\n")[0]);
 				}
@@ -745,7 +747,7 @@ export class GitService implements IGitService, Disposable {
 			let data: string | undefined;
 			try {
 				data = await git({ cwd: repoPath }, "branch", "--");
-			} catch { }
+			} catch {}
 			if (!data) return;
 			const otherBranches = data
 				.trim()
@@ -868,7 +870,7 @@ export class GitService implements IGitService, Disposable {
 				if (!includeStaged && !ref) options.push("HEAD");
 				options.push("--");
 				data = await git({ cwd: repoPath }, ...options);
-			} catch { }
+			} catch {}
 			if (!data) return [];
 
 			const ret: {
@@ -957,12 +959,12 @@ export class GitService implements IGitService, Disposable {
 		includeSaved: boolean
 	): Promise<
 		| {
-			[file: string]: {
-				statusX?: FileStatus;
-				statusY?: FileStatus;
-				status: FileStatus;
-			};
-		}
+				[file: string]: {
+					statusX?: FileStatus;
+					statusY?: FileStatus;
+					status: FileStatus;
+				};
+		  }
 		| undefined
 	> {
 		try {
@@ -970,7 +972,7 @@ export class GitService implements IGitService, Disposable {
 			try {
 				const options = ["status", "-v", "--porcelain"];
 				data = await git({ cwd: repoPath }, ...options);
-			} catch { }
+			} catch {}
 			if (!data) return undefined;
 
 			const ret: {
@@ -1034,7 +1036,7 @@ export class GitService implements IGitService, Disposable {
 				options.push("--");
 				options.push(file);
 				data = await git({ cwd: repoPath }, ...options);
-			} catch { }
+			} catch {}
 			if (!data) return [];
 			const patch = parsePatch(data)[0];
 			try {
@@ -1048,7 +1050,7 @@ export class GitService implements IGitService, Disposable {
 				options.push("--");
 				options.push(file);
 				data = await git({ cwd: repoPath }, ...options);
-			} catch { }
+			} catch {}
 			if (!data) return [];
 			return GitAuthorParser.parse(data);
 		} catch {
@@ -1074,7 +1076,9 @@ export class GitService implements IGitService, Disposable {
 		try {
 			fileOrFolderPath = this._normalizePath(fs.realpathSync(fileOrFolderPath));
 		} catch (err) {
-			Logger.warn(`Cannot obtain normalized canonical value of ${fileOrFolderPath}: ${err.toString()}`);
+			Logger.warn(
+				`Cannot obtain normalized canonical value of ${fileOrFolderPath}: ${err.toString()}`
+			);
 		}
 
 		let repo;
@@ -1127,6 +1131,30 @@ export class GitService implements IGitService, Disposable {
 				: commitHistory;
 		const branchPoints = await this.getRepoBranchForkCommits(filePath);
 		return [...firstLastCommits, ...branchPoints];
+	}
+
+	async getCommittersForRepo(
+		repoPath: string,
+		since: number
+	): Promise<{ [email: string]: string }> {
+		let data;
+		const result: { [email: string]: string } = {};
+		try {
+			// this should be populated by something like
+			// git log --pretty=format:"%an|%aE" | sort -u
+			// and then filter out noreply.github.com (what else?)
+			const timeAgo = new Date().getTime() / 1000 - since;
+			data = (await git({ cwd: repoPath }, "log", "--pretty=format:%an|%aE", `--since=${timeAgo}`))
+				.split("\n")
+				.map(line => line.trim())
+				.filter(line => !line.match(/noreply/))
+				.forEach(line => {
+					const [name, email] = line.split("|");
+					result[email.trim()] = name.trim();
+				});
+		} catch {}
+
+		return result;
 	}
 
 	async setKnownRepository(repos: { repoId: string; path: string }[]) {

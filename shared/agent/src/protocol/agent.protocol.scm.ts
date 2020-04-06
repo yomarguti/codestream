@@ -1,5 +1,6 @@
 "use strict";
 import { Range, RequestType } from "vscode-languageserver-protocol";
+import { SendPasswordResetEmailRequest } from "./agent.protocol.auth";
 // import { GitCommit } from "./agent.protocol";
 
 export interface GetBranchesRequest {
@@ -238,3 +239,17 @@ export const GetUserInfoRequestType = new RequestType<
 	void,
 	void
 >("codestream/scm/user/info");
+
+export interface GetLatestCommittersRequest {}
+export interface GetLatestCommittersResponse {
+	scm?: {
+		[email: string]: string;
+	};
+	error?: string;
+}
+export const GetLatestCommittersRequestType = new RequestType<
+	GetLatestCommittersRequest,
+	GetLatestCommittersResponse,
+	void,
+	void
+>("codestream/scm/latestCommitters");

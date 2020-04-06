@@ -103,7 +103,7 @@ export const UpdateTeamRequestType = new RequestType<
 
 export interface UpdateTeamSettingsRequest {
 	teamId: string;
-	settings: { [key: string]: string };
+	settings: { [key: string]: any };
 }
 
 export interface UpdateTeamSettingsResponse {

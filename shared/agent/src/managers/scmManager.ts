@@ -18,6 +18,9 @@ import {
 	GetFileScmInfoRequest,
 	GetFileScmInfoRequestType,
 	GetFileScmInfoResponse,
+	GetLatestCommittersRequest,
+	GetLatestCommittersRequestType,
+	GetLatestCommittersResponse,
 	GetRangeScmInfoRequest,
 	GetRangeScmInfoRequestType,
 	GetRangeScmInfoResponse,
@@ -143,18 +146,18 @@ export class ScmManager {
 			modifiedRepos = (
 				await Promise.all(
 					repositories
-					.filter(r => r.id)
-					.map(repo => {
-						// TODO make a flavor of getRepoStatus that takes a repo
-						const response = this.getRepoStatus({
-							uri: Strings.pathToFileURL(repo.path),
-							startCommit: "local",
-							includeStaged: true,
-							includeSaved: true,
-							currentUserEmail
-						});
-						return response;
-					})
+						.filter(r => r.id)
+						.map(repo => {
+							// TODO make a flavor of getRepoStatus that takes a repo
+							const response = this.getRepoStatus({
+								uri: Strings.pathToFileURL(repo.path),
+								startCommit: "local",
+								includeStaged: true,
+								includeSaved: true,
+								currentUserEmail
+							});
+							return response;
+						})
 				)
 			)
 				.filter(Boolean)
@@ -663,5 +666,36 @@ export class ScmManager {
 		// Normalize to /n line endings
 		const content = document.getText(range).replace(/\r\n/g, "\n");
 		return { sha1: Strings.sha1(content) };
+	}
+
+	@lspHandler(GetLatestCommittersRequestType)
+	async getLatestCommittersAllRepos(): Promise<GetLatestCommittersResponse> {
+		const cc = Logger.getCorrelationContext();
+		const committers: { [email: string]: string } = {};
+		const { git } = SessionContainer.instance();
+		const since = 60 * 60 * 24 * 60; // two months
+		let gitError;
+		try {
+			const openRepos = await this.getRepos({});
+			const { repositories = [] } = openRepos;
+			(
+				await Promise.all(
+					repositories.filter(r => r.id).map(repo => git.getCommittersForRepo(repo.path, since))
+				)
+			).map(result => {
+				Object.keys(result).forEach(key => {
+					committers[key] = result[key];
+				});
+			});
+		} catch (ex) {
+			gitError = ex.toString();
+			Logger.error(ex, cc);
+			debugger;
+		}
+
+		return {
+			scm: committers,
+			error: gitError
+		};
 	}
 }
