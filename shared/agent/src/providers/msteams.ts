@@ -32,7 +32,7 @@ export class MSTeamsProvider extends ThirdPartyPostProviderBase<MSTeamsProviderI
 	private _multiProviderInfo: MSTeamsProviderInfo | undefined;
 
 	async onConnecting() {
-		await openUrl("https://github.com/TeamCodeStream/CodeStream/wiki/Microsoft-Teams-Integration");
+		await openUrl("https://teams.microsoft.com/l/app/7cf49ab7-8b65-4407-b494-f02b525eef2b");
 	}
 	protected async onConnected(providerInfo: MSTeamsProviderInfo) {
 		this._multiProviderInfo = providerInfo;
