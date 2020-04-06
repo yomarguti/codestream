@@ -119,7 +119,7 @@ export class WebviewController implements Disposable {
 	private _versionCompatibility: VersionCompatibility | undefined;
 	private _apiVersionCompatibility: ApiVersionCompatibility | undefined;
 	private _missingCapabilities: CSApiCapabilities | undefined;
-	private _resuscitations: number = 0;
+	private _resuscitations: number = 1;
 
 	private readonly _notifyActiveEditorChangedDebounced: (e: TextEditor | undefined) => void;
 
@@ -954,6 +954,16 @@ export class WebviewController implements Disposable {
 		return editorContext;
 	}
 
+	private resuscitationBackoff(html: string) {
+		if (this._resuscitations > 1) {
+			// this begins as 1... update the variable in the js that is multiplied by
+			// the timeout... it will now wait 1000 * this._resuscitations before trying to reload
+			 html = html.replace(/\/\*<delay>\*\/(\d+)\/\*<\/delay>\*\//,  () =>
+			`/*<delay>*/${Math.floor(this._resuscitations)}/*</delay>*/`);
+		}
+		return html;
+	}
+
 	private _html: string | undefined;
 	private async getHtml(): Promise<string> {
 		let content;
@@ -969,8 +979,9 @@ export class WebviewController implements Disposable {
 				});
 			});
 		} else {
-			if (this._html !== undefined) return this._html;
-
+			if (this._html !== undefined) {
+				return this.resuscitationBackoff(this._html);
+			}
 			const doc = await workspace.openTextDocument(
 				Container.context.asAbsolutePath("webview.html")
 			);
@@ -987,34 +998,38 @@ export class WebviewController implements Disposable {
 				.with({ scheme: "vscode-resource" })
 				.toString()
 		).replace("</body>", `<script>(function() {
-			var i = 0;
-			var interval = setInterval(function() {
-				if (window.codestreamInitialized) {
-					console.log("heartbeat:success", i);
-					clearInterval(interval);
-				}
-				else if (i >= 20) {
-					console.error("heartbeat:failed at", i);
-					try {
-						const vscode = acquireVsCodeApi();
-						vscode.postMessage({method: "host/requiresResuscitation"});
-					}
-					catch (err) {
-						console.log(err);
-					}
-					finally {
+			var i = 1;
+			var delay = /*<delay>*/1/*</delay>*/;
+			var retry = delay * 1000;
+			setTimeout(function() {
+				var interval = setInterval(function() {
+					if (window.codestreamInitialized) {
+						console.log("heartbeat:success", i);
 						clearInterval(interval);
-						i = 0;
 					}
-				}
-				else {
-					i++;
-				}
-			}, 10);
+					else if (i >= 20) {
+						console.error("heartbeat:failed after " +delay+ " attempts, with delay "+retry+"ms");
+						try {
+							const vscode = acquireVsCodeApi();
+							vscode.postMessage({method: "host/requiresResuscitation"});
+						}
+						catch (err) {
+							console.log(err);
+						}
+						finally {
+							clearInterval(interval);
+							i = 0;
+						}
+					}
+					else {
+						i++;
+					}
+				}, 10);
+			}, retry);
 		})()
 	</script></body>`);
 
-		return this._html;
+		return this.resuscitationBackoff(this._html);
 	}
 
 	private notifyActiveEditorChanged(e: TextEditor | undefined) {
