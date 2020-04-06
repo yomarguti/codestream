@@ -45,10 +45,11 @@ export default class Menu extends Component {
 			if (inputs[0]) inputs[0].focus();
 			else this.el.getElementsByClassName("focus-button")[0].focus();
 		}
-		this.repositionIfNecessary();
+		this.repositionIfNecessary("MOUNT");
 	}
 
-	repositionIfNecessary() {
+	repositionIfNecessary(loc) {
+		console.log("REPOSITIONING!!!!!!!!!", loc);
 		if (this.props && this.props.target) {
 			const align = this.props.align || "";
 			const rect = this.props.target.getBoundingClientRect();
@@ -202,7 +203,8 @@ export default class Menu extends Component {
 			this.props.action();
 			return null;
 		}
-		if (this.props.items.length !== prevProps.items.length) this.repositionIfNecessary();
+		if (this.props.items.length !== prevProps.items.length && !this.repositionMinimally)
+			this.repositionIfNecessary("UPDATE");
 		if (this.state.selected !== prevState.selected) this.repositionSubmenuIfNecessary();
 
 		if (this.state.q !== prevState.q) {
@@ -478,9 +480,12 @@ export default class Menu extends Component {
 		// support functions as item actions
 		if (typeof item.action === "function" && !item.disabled) {
 			item.action();
-			// invoke the action callback for entire menu so it can removed
-			if (!this.props.dontCloseOnSelect) this.props.action(null);
-			else this.repositionIfNecessary();
+			if (this.props.dontCloseOnSelect) {
+				if (!this.props.repositionMinimally) this.repositionIfNecessary(item);
+			} else {
+				// invoke the action callback for entire menu so it can removed
+				this.props.action(null);
+			}
 		} else this.props.action(item.disabled ? null : item.action);
 		if (this.props.focusOnSelect) this.props.focusOnSelect.focus();
 	};

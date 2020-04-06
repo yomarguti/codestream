@@ -64,10 +64,6 @@ class SelectPeople extends React.Component<Props, State> {
 		this.setState({ open: !this.state.open, target: e && e.target });
 	};
 
-	noop = value => {
-		if (!value) this.setState({ open: false });
-	};
-
 	render() {
 		const {
 			value,
@@ -93,7 +89,6 @@ class SelectPeople extends React.Component<Props, State> {
 			items.unshift({ label: "-" });
 			items.unshift({ type: "search", placeholder: "Search...", action: "search" });
 		}
-		const action = multiSelect ? this.noop : this.openMenu;
 		return (
 			<>
 				<span onClick={this.openMenu}>{children}</span>
@@ -105,7 +100,8 @@ class SelectPeople extends React.Component<Props, State> {
 						items={items}
 						target={this.state.target}
 						action={this.openMenu}
-						dontCloseOnSelect={true}
+						dontCloseOnSelect
+						repositionMinimally
 					/>
 				)}
 			</>
