@@ -183,8 +183,7 @@ export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo
 	getState: () => CodeStreamState
 ) => {
 	const response = await HostApi.instance.send(OtcLoginRequestType, {
-		code: getState().session.otc!,
-		alias: signupInfo !== undefined
+		code: getState().session.otc!
 	});
 
 	if (isLoginFailResponse(response)) {
@@ -226,9 +225,15 @@ export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo
 	}
 
 	if (signupInfo) {
-		HostApi.instance.track("Account Created", {
-			email: response.loginResponse.user.email
-		});
+		HostApi.instance.track(
+			"Account Created",
+			{
+				email: response.loginResponse.user.email
+			},
+			{
+				alias: response.loginResponse.user.id
+			}
+		);
 
 		const providerName = provider
 			? ProviderNames[provider.toLowerCase()] || provider
