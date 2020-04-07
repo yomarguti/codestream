@@ -36,6 +36,8 @@ export default {
 	"confirmation.header": "You're almost there!",
 	"confirmation.instructions":
 		"Please check your email. We've sent you a 6-digit code to confirm your email address.",
+	"confirmation.instructionsLinkEmail":
+		"Please check your email and click the link to confirm your email address. Your email address will be updated once it is confirmed.",
 	"confirmation.didNotReceive": "Didn't receive it? Check your spam folder, or have us",
 	"confirmation.sendAnother": "send another email",
 	"confirmation.incorrectEmail": "{email} not correct?",
