@@ -558,7 +558,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						<h3>No file open.</h3>
 						<p>
 							Open a source file to to start discussing code with your teammates!{" "}
-							<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks">
+							<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Code-Discussion-with-Codemarks">
 								View guide.
 							</a>
 						</p>
@@ -636,7 +636,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					<div className="no-codemarks">
 						Discuss code with your team by selecting a range and clicking an icon, or by using a
 						shortcut below (
-						<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Building-a-Knowledge-Base-with-Codemarks">
+						<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Code-Discussion-with-Codemarks">
 							show me how
 						</a>
 						).
