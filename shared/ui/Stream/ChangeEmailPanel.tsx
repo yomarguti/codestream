@@ -188,7 +188,7 @@ export const ChangeEmailPanel = props => {
 				</div>
 				<fieldset className="form-body" style={{ width: "18em" }}>
 					<div className="outline-box">
-						{pendingChange || true ? renderConfirmEmail() : renderChangeEmail()}
+						{pendingChange ? renderConfirmEmail() : renderChangeEmail()}
 					</div>
 				</fieldset>
 			</form>
