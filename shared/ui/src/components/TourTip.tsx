@@ -21,7 +21,6 @@ export function TourTip(props: React.PropsWithChildren<Props>) {
 			align={props.align}
 			transitionName="zoom"
 			title={title}
-			delay={1.0}
 			trigger={[]}
 		>
 			{props.children}
