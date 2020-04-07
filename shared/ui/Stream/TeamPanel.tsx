@@ -139,6 +139,19 @@ class TeamPanel extends React.Component<Props, State> {
 		suggested: []
 	};
 
+	postInviteResetState = {
+		loadingStatus: false,
+		changingTeamName: false,
+		loading: false,
+		isInviting: false,
+		newMemberEmail: "",
+		newMemberName: "",
+		newMemberInvalid: false,
+		newMemberInputTouched: false,
+		inputTouched: false,
+		newMemberEmailInvalid: false
+	};
+
 	private _pollingTimer?: any;
 	private _mounted: boolean = false;
 	private disposables: { dispose(): void }[] = [];
@@ -254,7 +267,7 @@ class TeamPanel extends React.Component<Props, State> {
 		this.props
 			.invite({ email: newMemberEmail, fullName: newMemberName, teamId: this.props.teamId })
 			.then(() => {
-				this.setState(this.initialState);
+				this.setState(this.postInviteResetState);
 			});
 	};
 
