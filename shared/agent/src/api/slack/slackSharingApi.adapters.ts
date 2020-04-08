@@ -41,6 +41,10 @@ const slackMentionsRegex = /\<[@!](\w+)(?:\|(\w+))?\>/g;
 const slackLinkRegex = /\<((?:https?:\/\/|mailto:).*?)(?:\|(.*?))?\>/g;
 // const slackSlashCommandRegex = /^\/(\w+)(?:\b(?!@|[\(\{\[\<\-])|$)/;
 
+// use a slight buffer for the max which is 3000
+const slackBlockTextMax = 2990;
+// slackBlockTextMax minus 6 backticks
+const slackBlockTextCodeMax = slackBlockTextMax - 6;
 type Blocks = KnownBlock[];
 
 export interface UserMaps {
@@ -580,6 +584,16 @@ export function toAssigneeText(codeStreamIds: string[], userMaps: UserMaps): str
 	}).join(", ");
 }
 
+function blockTruncated(): KnownBlock {
+	return {
+		type: "context",
+		elements: [{
+			type: "mrkdwn",
+			text: "This was partially truncated. Open in IDE to view it in full."
+		}]
+	};
+}
+
 export function toSlackPostBlocks(
 	codemark: CodemarkPlus,
 	remotes: string[] | undefined,
@@ -589,26 +603,29 @@ export function toSlackPostBlocks(
 ): Blocks {
 	const blocks: Blocks = [];
 
+	let slackText;
 	switch (codemark.type) {
 		case CodemarkType.Comment:
 		case CodemarkType.Trap: {
+			slackText = toSlackTextSafe(codemark.text, userMaps);
 			blocks.push({
 				type: "section",
 				text: {
 					type: "mrkdwn",
-					text: toSlackText(codemark.text, userMaps)
+					text: slackText.text
 				}
 			});
 
 			break;
 		}
 		case CodemarkType.Bookmark: {
+			// Bookmarks use the title rather than text
+			slackText = toSlackTextSafe(codemark.title, userMaps);
 			blocks.push({
 				type: "section",
 				text: {
 					type: "mrkdwn",
-					// Bookmarks use the title rather than text
-					text: toSlackText(codemark.title, userMaps)
+					text: slackText.text
 				}
 			});
 
@@ -617,12 +634,19 @@ export function toSlackPostBlocks(
 		case CodemarkType.Issue:
 		case CodemarkType.Question: {
 			let text;
+			let textLength = 0;
 			if (codemark.title) {
+				// we will truncate based on this length below
 				text = `*${toSlackText(codemark.title, userMaps)}*`;
+				textLength = text.length;
 			}
 
 			if (codemark.text) {
-				text = `${text ? `${text}\n` : ""}${toSlackText(codemark.text, userMaps)}`;
+				// +1 for newline, subtract the length of the existing text, if any
+				slackText = toSlackTextSafe(codemark.text, userMaps, undefined, text ?
+					slackBlockTextMax - (textLength > 0 ? textLength + 1 : 0) :
+					slackBlockTextMax);
+				text = `${text ? `${text}\n` : ""}${slackText.text}`;
 			}
 
 			if (text) {
@@ -637,6 +661,10 @@ export function toSlackPostBlocks(
 
 			break;
 		}
+	}
+
+	if (slackText && slackText.wasTruncated) {
+		blocks.push(blockTruncated());
 	}
 
 	if (codemark.assignees !== undefined && codemark.assignees.length !== 0) {
@@ -744,19 +772,38 @@ export function toSlackPostBlocks(
 			let codeText = "";
 			if (marker.code) {
 				if (/\S+/.test(marker.code)) {
-					codeText = `\`\`\`${marker.code}\`\`\``;
+					codeText = marker.code;
 				}
 			} else {
 				codeText = "";
 			}
 
-			blocks.push({
-				type: "section",
-				text: {
-					type: "mrkdwn",
-					text: `${filename}\n${codeText}`
+			if (codeText) {
+				// +1 is for the newline
+				const filenameLength = filename ? filename.length + 1 : 0;
+				// +6 is for the backticks
+				const contentLength = codeText.length + 6 + filenameLength;
+				const isTruncated = contentLength > slackBlockTextCodeMax;
+				blocks.push({
+					type: "section",
+					text: {
+						type: "mrkdwn",
+						text: `${filename}\n\`\`\`${codeText.substring(0, slackBlockTextCodeMax - filenameLength - 6)}\`\`\``
+					}
+				});
+				if (isTruncated) {
+					blocks.push(blockTruncated());
 				}
-			});
+			}
+			else {
+				blocks.push({
+					type: "section",
+					text: {
+						type: "mrkdwn",
+						text: `${filename}\n`
+					}
+				});
+			}
 			let actionId;
 			const actions: ActionsBlock = {
 				type: "actions",
@@ -820,7 +867,7 @@ export function toSlackPostBlocks(
 			});
 
 			if (url !== undefined && url.url) {
-				if (url.url.length >= 3000) {
+				if (url.url.length >= slackBlockTextMax) {
 					// 3000 is the max length that slack will allow
 					Logger.log(`ignoring [Open in ${url.displayName}] button, url too long ${url.url.length} value=${url.url}`);
 				}
@@ -1056,12 +1103,23 @@ export function toSlackTeam(team: CSTeam, usernamesById: Map<string, string>) {
 	// });
 }
 
-export function toSlackText(
+/**
+ * Makes a block of text ready for slack, including truncating it to <=3000 chars
+ * @param text
+ * @param userMaps
+ * @param mentionedUserIds
+ * @param maxLength
+ */
+export function toSlackTextSafe(
 	text: string,
 	userMaps: UserMaps,
-	mentionedUserIds?: string[]
-) {
-	if (text == null || text.length === 0) return text;
+	mentionedUserIds?: string[],
+	maxLength: number = slackBlockTextMax
+): {
+	text: string,
+	wasTruncated?: boolean
+} {
+	if (text == null || text.length === 0) return { text: text };
 
 	text = text
 		.replace("&", "&amp;")
@@ -1110,6 +1168,18 @@ export function toSlackText(
 			return match;
 		});
 	}
+	let wasTruncated = false;
+	if (text.length > maxLength) {
+		text = text.substring(0, slackBlockTextMax - 3) + "...";
+		wasTruncated = true;
+	}
+	return { text: text, wasTruncated: wasTruncated };
+}
 
-	return text;
+export function toSlackText(
+	text: string,
+	userMaps: UserMaps,
+	mentionedUserIds?: string[]
+) {
+	return toSlackTextSafe(text, userMaps, mentionedUserIds).text;
 }
