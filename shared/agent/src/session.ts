@@ -772,7 +772,9 @@ export class CodeStreamSession {
 			}
 		}
 
-		this._providers = currentTeam.providerHosts || {};
+		// note that there are no integrations if the api host is using http (as opposed to https),
+		// because OAuth won't work when calling back to http
+		this._providers = this._httpAgent ? {} : currentTeam.providerHosts || {};
 		registerProviders(this._providers, this);
 
 		const cc = Logger.getCorrelationContext();
