@@ -278,8 +278,9 @@ const BaseReview = (props: BaseReviewProps) => {
 	const prevFile = () => HostApi.instance.send(ShowPreviousChangedFileRequestType, {});
 
 	const nextFile = () => HostApi.instance.send(ShowNextChangedFileRequestType, {});
-
-	const modifier = "⌥";
+	const isMacintosh = navigator.appVersion.includes("Macintosh");
+	const nextFileKeyboardShortcut = () => isMacintosh ? `⌥ F6` : "Alt-F6";
+	const previousFileKeyboardShortcut = () => isMacintosh ? `⇧ ⌥ F6` : "Shift-Alt-F6";
 
 	return (
 		<MinimumWidthCard {...getCardProps(props)} noCard={!props.collapsed}>
@@ -418,7 +419,7 @@ const BaseReview = (props: BaseReviewProps) => {
 											delay={1}
 											title={
 												<span>
-													Next File <span className="keybinding">{modifier} F6</span>
+													Next File <span className="keybinding">{nextFileKeyboardShortcut()}</span>
 												</span>
 											}
 										/>
@@ -430,7 +431,7 @@ const BaseReview = (props: BaseReviewProps) => {
 											delay={1}
 											title={
 												<span>
-													Previous File <span className="keybinding">⇧ {modifier} F6</span>
+													Previous File <span className="keybinding">{previousFileKeyboardShortcut()}</span>
 												</span>
 											}
 										/>
