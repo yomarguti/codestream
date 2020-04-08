@@ -77,6 +77,7 @@ import { PanelHeader } from "../src/components/PanelHeader";
 import * as fs from "../utilities/fs";
 import { FileInfo } from "./FileInfo";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { GettingStarted } from "./GettingStarted";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -631,30 +632,31 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				</div>
 			);
 
-			return (
-				<div key="no-codemarks" className="no-codemarks-container">
-					<div className="no-codemarks">
-						Discuss code with your team by selecting a range and clicking an icon, or by using a
-						shortcut below (
-						<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Code-Discussion-with-Codemarks">
-							show me how
-						</a>
-						).
-						<br />
-						<br />
-						<div className="keybindings">
-							<div className="function-row">{ComposeTitles.comment}</div>
-							<div className="function-row">{ComposeTitles.issue}</div>
-							{this.props.lightningCodeReviewsEnabled && (
-								<div className="function-row">{ComposeTitles.review}</div>
-							)}
-							<div className="function-row">{ComposeTitles.link}</div>
-							<div className="function-row">{ComposeTitles.privatePermalink}</div>
-							<div className="function-row">{ComposeTitles.toggleCodeStreamPanel}</div>
-						</div>
-					</div>
-				</div>
-			);
+			return <GettingStarted />;
+			// return (
+			// 	<div key="no-codemarks" className="no-codemarks-container">
+			// 		<div className="no-codemarks">
+			// 			Discuss code with your team by selecting a range and clicking an icon, or by using a
+			// 			shortcut below (
+			// 			<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Code-Discussion-with-Codemarks">
+			// 				show me how
+			// 			</a>
+			// 			).
+			// 			<br />
+			// 			<br />
+			// 			<div className="keybindings">
+			// 				<div className="function-row">{ComposeTitles.comment}</div>
+			// 				<div className="function-row">{ComposeTitles.issue}</div>
+			// 				{this.props.lightningCodeReviewsEnabled && (
+			// 					<div className="function-row">{ComposeTitles.review}</div>
+			// 				)}
+			// 				<div className="function-row">{ComposeTitles.link}</div>
+			// 				<div className="function-row">{ComposeTitles.privatePermalink}</div>
+			// 				<div className="function-row">{ComposeTitles.toggleCodeStreamPanel}</div>
+			// 			</div>
+			// 		</div>
+			// 	</div>
+			// );
 		}
 	};
 
@@ -1154,7 +1156,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					</ViewSelectorControl>
 				)}
 				<Tooltip title="Show/hide pull request comments" placement="top" delay={1}>
-					<ViewSelectorControl onClick={this.togglePRComments}>
+					<ViewSelectorControl onClick={this.togglePRComments} id="pr-toggle">
 						<span>PRs</span>{" "}
 						<Switch size="small" on={this.props.showPRComments} onChange={this.togglePRComments} />
 					</ViewSelectorControl>
@@ -1442,6 +1444,16 @@ const ViewSelectorControl = styled.span`
 	display: inline-flex;
 	align-items: center;
 	justify-content: space-evenly;
+
+	transition: transform 0.1s;
+
+	&.pulse {
+		transform: scale(1.5);
+		background: var(--button-background-color);
+		opacity: 1;
+		box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+		z-index: 3;
+	}
 `;
 
 const ViewSelectors = styled.div`
