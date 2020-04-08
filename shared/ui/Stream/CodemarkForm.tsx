@@ -113,7 +113,7 @@ interface Props extends ConnectedProps {
 	positionAtLocation?: boolean;
 	multiLocation?: boolean;
 	setMultiLocation?: Function;
-	noCodeLocation?: boolean;
+	dontAutoSelectLine?: boolean;
 	error?: string;
 	openPanel: Function;
 	setUserPreference: Function;
@@ -296,7 +296,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	}
 
 	componentDidMount() {
-		const { multiLocation, noCodeLocation } = this.props;
+		const { multiLocation, dontAutoSelectLine } = this.props;
 		const { codeBlocks } = this.state;
 
 		if (codeBlocks.length === 1) {
@@ -304,19 +304,21 @@ class CodemarkForm extends React.Component<Props, State> {
 				this.selectRangeInEditor(codeBlocks[0].uri, forceAsLine(codeBlocks[0].range));
 			}
 			this.handleScmChange();
-		} else if (noCodeLocation) {
-			this.focus();
 		} else {
 			const { textEditorSelection, textEditorUri } = this.props;
 			if (textEditorSelection && textEditorUri) {
 				// In case there isn't already a range selection by user, change the selection to be the line the cursor is on
 				const isEmpty = isRangeEmpty(textEditorSelection);
-				const range = isEmpty ? forceAsLine(textEditorSelection) : textEditorSelection;
-				if (isEmpty) this.selectRangeInEditor(textEditorUri, range);
-				this.getScmInfoForSelection(textEditorUri, range, () => {
-					if (multiLocation) this.setState({ addingLocation: true, liveLocation: 1 });
-					else this.focus();
-				});
+				if (isEmpty && dontAutoSelectLine) {
+					this.focus();
+				} else {
+					const range = isEmpty ? forceAsLine(textEditorSelection) : textEditorSelection;
+					if (isEmpty) this.selectRangeInEditor(textEditorUri, range);
+					this.getScmInfoForSelection(textEditorUri, range, () => {
+						if (multiLocation) this.setState({ addingLocation: true, liveLocation: 1 });
+						else this.focus();
+					});
+				}
 			}
 		}
 		// if (!multiLocation) this.focus();
