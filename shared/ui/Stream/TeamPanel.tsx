@@ -269,9 +269,14 @@ class TeamPanel extends React.Component<Props, State> {
 			.then(() => {
 				this.setState(this.postInviteResetState);
 			});
+		HostApi.instance.track("Teammate Invited", {
+			"Invitee Email Address": newMemberEmail,
+			"Invitee Name": newMemberName,
+			"Invitation Method": "Manual"
+		});
 	};
 
-	onClickReinvite = user => {
+	onClickReinvite = (user, type) => {
 		const { email, fullName } = user;
 		this.setState({ invitingEmails: { ...this.state.invitingEmails, [email]: 1 } });
 		this.props
@@ -286,6 +291,11 @@ class TeamPanel extends React.Component<Props, State> {
 				// );
 				this.setState({ invitingEmails: { ...this.state.invitingEmails, [email]: 2 } });
 			});
+		HostApi.instance.track("Teammate Invited", {
+			"Invitee Email Address": user.email,
+			"Invitee Name": user.fullName,
+			"Invitation Method": type === "invite" ? "Reinvite" : "Suggested"
+		});
 	};
 
 	componentDidUpdate(prevProps, prevState) {
@@ -418,7 +428,7 @@ class TeamPanel extends React.Component<Props, State> {
 						className="float-right"
 						onClick={event => {
 							event.preventDefault();
-							this.onClickReinvite(user);
+							this.onClickReinvite(user, linkText);
 						}}
 					>
 						{linkText}
@@ -702,8 +712,8 @@ class TeamPanel extends React.Component<Props, State> {
 													loading={loadingStatus}
 													title={
 														currentUserInvisible
-															? "Not sharing local changes with the team"
-															: "Sharing local changes with the team"
+															? "Live View: off (not sharing local changes with teammates)"
+															: "Live View: on (sharing local changes with teammates)"
 													}
 												/>
 											)}
