@@ -97,10 +97,10 @@ export const Headshot = styled((props: HeadshotProps) => {
 	const display = props.display || "block";
 
 	if (person.avatar) {
-		const uri = size > 48 ? person.avatar.image : person.avatar.image48;
+		const uri = size > 48 ? person.avatar.image : person.avatar.image48 || person.avatar.image;
 
 		return (
-			<Root size={size} display={display} onClick={props.onClick}>
+			<Root size={size} display={display} className={props.className} onClick={props.onClick}>
 				<Image size={size} hardRightBorder={props.hardRightBorder} src={uri} />
 			</Root>
 		);
