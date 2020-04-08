@@ -211,6 +211,7 @@
 					display: inline-block;
 					padding: 5px 6px;
 					color: @text-color-subtle;
+					transition: transform 0.1s;
 				}
 				&:hover > span,
 				&.active > span,
@@ -228,6 +229,16 @@
 					color: var(--button-foreground-color);
 					z-index: 50;
 					box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+				}
+				&.pulse {
+					> span {
+						transform: scale(1.5);
+						background: var(--button-background-color);
+						box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+						color: var(--button-foreground-color);
+						opacity: 1;
+						z-index: 3;
+					}
 				}
 			}
 		}
