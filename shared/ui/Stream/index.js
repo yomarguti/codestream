@@ -12,6 +12,7 @@ import { ChangeEmailPanel } from "./ChangeEmailPanel";
 import { ChangeUsernamePanel } from "./ChangeUsernamePanel";
 import { ChangePasswordPanel } from "./ChangePasswordPanel";
 import { ChangeFullNamePanel } from "./ChangeFullNamePanel";
+import { ChangeAvatarPanel } from "./ChangeAvatarPanel";
 import ChannelPanel from "./ChannelPanel";
 import { TasksPanel } from "./TasksPanel";
 import { TeamPanel } from "./TeamPanel";
@@ -102,6 +103,7 @@ import {
 } from "lodash-es";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { ComposeKeybindings } from "./ComposeTitles";
+import { PRInfoModal } from "./SpatialView/PRInfoModal";
 
 const EMAIL_MATCH_REGEX = new RegExp(
 	"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*",
@@ -439,6 +441,7 @@ export class SimpleStream extends Component {
 			submenu: [
 				{ label: youText, action: "", noHover: true, disabled: true },
 				{ label: "-" },
+				{ label: "Profile Photo", action: "avatar" },
 				{ label: "Change Email", action: "email" },
 				{ label: "Change Username", action: "username" },
 				{ label: "Change Full Name", action: "full-name" },
@@ -733,16 +736,18 @@ export class SimpleStream extends Component {
 
 		const selected = panel => activePanel === panel; // && !plusMenuOpen && !menuOpen;
 		return (
-			<nav className="inline">
+			<nav className="inline" id="global-nav">
 				<label
 					className={cx({ selected: selected(WebviewPanels.CodemarksForFile) })}
 					onClick={e => this.setActivePanel(WebviewPanels.CodemarksForFile)}
+					id="global-nav-file-label"
 				>
 					<Icon name="file" title="Codemarks In Current File" placement="bottom" />
 				</label>
 				<label
 					className={cx({ selected: selected(WebviewPanels.Activity) })}
 					onClick={e => this.setActivePanel(WebviewPanels.Activity)}
+					id="global-nav-activity-label"
 				>
 					<Tooltip title="Activity Feed" placement="bottom">
 						<span>
@@ -751,13 +756,18 @@ export class SimpleStream extends Component {
 						</span>
 					</Tooltip>
 				</label>
-				<label onClick={this.togglePlusMenu} className={cx({ active: plusMenuOpen })}>
+				<label
+					onClick={this.togglePlusMenu}
+					className={cx({ active: plusMenuOpen })}
+					id="global-nav-plus-label"
+				>
 					<Icon name="plus" title="Create..." placement="bottom" />
 					{this.renderPlusMenu()}
 				</label>
 				<label
 					className={cx({ selected: selected(WebviewPanels.People) })}
 					onClick={e => this.setActivePanel(WebviewPanels.People)}
+					id="global-nav-team-label"
 				>
 					<Tooltip title="Your Team" placement="bottom">
 						<span>
@@ -769,10 +779,15 @@ export class SimpleStream extends Component {
 				<label
 					className={cx({ selected: selected(WebviewPanels.FilterSearch) })}
 					onClick={this.goSearch}
+					id="global-nav-search-label"
 				>
 					<Icon name="search" title="Filter &amp; Search" placement="bottomRight" />
 				</label>
-				<label onClick={this.toggleMenu} className={cx({ active: menuOpen })}>
+				<label
+					onClick={this.toggleMenu}
+					className={cx({ active: menuOpen })}
+					id="global-nav-more-label"
+				>
 					<Icon name="kebab-horizontal" title="More..." placement="bottomRight" />
 					{this.renderMenu()}
 				</label>
@@ -803,6 +818,7 @@ export class SimpleStream extends Component {
 		// if (searchBarOpen && q) activePanel = WebviewPanels.Codemarks;
 		if (searchBarOpen) activePanel = WebviewPanels.Codemarks;
 		if (this.props.currentReviewId) activePanel = WebviewPanels.CodemarksForFile;
+		if (!activePanel) activePanel = WebviewPanels.CodemarksForFile;
 
 		let threadId = this.props.threadId;
 		let threadPost = this.findPostById(threadId);
@@ -884,6 +900,7 @@ export class SimpleStream extends Component {
 				WebviewPanels.Status,
 				WebviewPanels.ChangePassword,
 				WebviewPanels.ChangeEmail,
+				WebviewPanels.ChangeAvatar,
 				WebviewPanels.ChangeUsername,
 				WebviewPanels.ChangeFullName
 			].includes(activePanel) &&
@@ -966,6 +983,7 @@ export class SimpleStream extends Component {
 					)}
 					{activePanel === WebviewPanels.FilterSearch && <FilterSearchPanel />}
 					{activePanel === WebviewPanels.Activity && <ActivityPanel />}
+					{activePanel === WebviewPanels.PRInfo && <PRInfoModal onClose={this.props.closePanel} />}
 					{activePanel === WebviewPanels.NewComment && (
 						<CodemarkForm
 							commentType="comment"
@@ -975,7 +993,7 @@ export class SimpleStream extends Component {
 							collapsed={false}
 							positionAtLocation={false}
 							multiLocation={true}
-							noCodeLocation={true}
+							dontAutoSelectLine={true}
 							setMultiLocation={this.setMultiLocation}
 						/>
 					)}
@@ -988,7 +1006,7 @@ export class SimpleStream extends Component {
 							collapsed={false}
 							positionAtLocation={false}
 							multiLocation={true}
-							noCodeLocation={true}
+							dontAutoSelectLine={true}
 							setMultiLocation={this.setMultiLocation}
 						/>
 					)}
@@ -996,6 +1014,9 @@ export class SimpleStream extends Component {
 					{activePanel === WebviewPanels.NewCode && <CodeForm />}
 					{activePanel === WebviewPanels.ChangeEmail && (
 						<ChangeEmailPanel closePanel={this.props.closePanel} />
+					)}
+					{activePanel === WebviewPanels.ChangeAvatar && (
+						<ChangeAvatarPanel closePanel={this.props.closePanel} />
 					)}
 					{activePanel === WebviewPanels.ChangeUsername && (
 						<ChangeUsernamePanel closePanel={this.props.closePanel} />
@@ -1312,6 +1333,8 @@ export class SimpleStream extends Component {
 				return this.handleClickFeedbackLink();
 			case "email":
 				return this.setActivePanel(WebviewPanels.ChangeEmail);
+			case "avatar":
+				return this.setActivePanel(WebviewPanels.ChangeAvatar);
 			case "username":
 				return this.setActivePanel(WebviewPanels.ChangeUsername);
 			case "full-name":
