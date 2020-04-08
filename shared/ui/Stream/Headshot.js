@@ -22,7 +22,8 @@ export default class Headshot extends Component {
 		}
 
 		if (person.avatar) {
-			const uri = this.props.size > 48 ? person.avatar.image : person.avatar.image48;
+			const uri =
+				this.props.size > 48 ? person.avatar.image : person.avatar.image48 || person.avatar.image;
 
 			return (
 				<div className="headshot" onClick={this.props.onClick}>
