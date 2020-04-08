@@ -119,7 +119,7 @@ task buildDependencies {}
 buildDependencies.dependsOn buildDeps, copyAgent
 
 task buildDependenciesMac {}
-buildDependencies.dependsOn buildDepsMac, copyAgent
+buildDependenciesMac.dependsOn buildDepsMac, copyAgent
 
 buildPlugin.dependsOn buildDependencies
 
