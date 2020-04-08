@@ -692,10 +692,29 @@ export class SimpleStream extends Component {
 					});
 			}
 		}
-		menuItems.sort((a, b) => {
-			return a.displayName.localeCompare(b.displayName);
+		if (menuItems.length === 0) {
+			return [
+				{
+					key: "#enable-integrations",
+					label: "Enable integrations",
+					action: this.showEnableIntegrations
+				}
+			];
+		} else {
+			menuItems.sort((a, b) => {
+				return a.displayName.localeCompare(b.displayName);
+			});
+			return menuItems;
+		}
+	}
+
+	showEnableIntegrations() {
+		confirmPopup({
+			message:
+				"CodeStream integrations require a secure connection to your CodeStream server. Please contact your on-prem CodeStream administrator.",
+			centered: true,
+			buttons: [{ label: "OK", className: "control-button" }]
 		});
-		return menuItems;
 	}
 
 	renderNavIcons() {

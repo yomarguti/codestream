@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from "react";
 import cx from "classnames";
+import { CodeStreamState } from "../store";
 import { FormattedMessage } from "react-intl";
 import Icon from "../Stream/Icon";
 import Button from "../Stream/Button";
@@ -16,10 +17,11 @@ import { RegisterUserRequestType, GetUserInfoRequestType } from "@codestream/pro
 import { HostApi } from "../webview-api";
 import { completeSignup, startSSOSignin, SignupType } from "./actions";
 import { logError } from "../logger";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { CSText } from "../src/components/CSText";
 import { useDidMount } from "../utilities/hooks";
 import { Loading } from "../Container/Loading";
+import { supportsIntegrations } from "../store/configs/actions";
 
 const isPasswordValid = (password: string) => password.length >= 6;
 export const isEmailValid = (email: string) => {
@@ -43,6 +45,11 @@ interface Props {
 
 export const Signup = (props: Props) => {
 	const dispatch = useDispatch();
+	const derivedState = useSelector((state: CodeStreamState) => {
+		return {
+			supportsIntegrations: supportsIntegrations(state.configs)
+		};
+	});
 	const [email, setEmail] = useState(props.email || "");
 	const [emailValidity, setEmailValidity] = useState(true);
 	const [scmEmail, setScmEmail] = useState("");
@@ -349,24 +356,26 @@ export const Signup = (props: Props) => {
 					</div>
 				</fieldset>
 			</form>
-			<form className="standard-form">
-				<fieldset className="form-body" style={{ paddingTop: 0 }}>
-					<div id="controls">
-						<div className="outline-box">
-							<Button className="row-button no-top-margin" onClick={onClickGithubSignup}>
-								<Icon name="mark-github" />
-								<div className="copy">Sign Up with GitHub</div>
-								<Icon name="chevron-right" />
-							</Button>
-							<div style={{ height: "15px" }} />
-							<CSText muted as="span">
-								If you use GitLab, BitBucket, or a self-managed git server, sign up with CodeStream
-								above.
-							</CSText>
+			{derivedState.supportsIntegrations && (
+				<form className="standard-form">
+					<fieldset className="form-body" style={{ paddingTop: 0 }}>
+						<div id="controls">
+							<div className="outline-box">
+								<Button className="row-button no-top-margin" onClick={onClickGithubSignup}>
+									<Icon name="mark-github" />
+									<div className="copy">Sign Up with GitHub</div>
+									<Icon name="chevron-right" />
+								</Button>
+								<div style={{ height: "15px" }} />
+								<CSText muted as="span">
+									If you use GitLab, BitBucket, or a self-managed git server, sign up with
+									CodeStream above.
+								</CSText>
+							</div>
 						</div>
-					</div>
-				</fieldset>
-			</form>
+					</fieldset>
+				</form>
+			)}
 			<div style={{ textAlign: "center" }}>
 				<small className="fine-print">
 					<FormattedMessage id="signUp.legal.start" />{" "}

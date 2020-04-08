@@ -6,6 +6,7 @@ import Button from "../Stream/Button";
 import { authenticate, SignupType, startSSOSignin } from "./actions";
 import { CodeStreamState } from "../store";
 import { goToNewUserEntry, goToForgotPassword } from "../store/context/actions";
+import { supportsIntegrations } from "../store/configs/actions";
 
 const isPasswordInvalid = password => password.length === 0;
 const isEmailInvalid = email => {
@@ -17,6 +18,7 @@ const isEmailInvalid = email => {
 
 interface ConnectedProps {
 	initialEmail?: string;
+	supportsIntegrations?: boolean;
 }
 
 interface DispatchProps {
@@ -237,16 +239,18 @@ class Login extends React.Component<Props, State> {
 						<fieldset className="form-body">
 							{/* this.renderAccountMessage() */}
 							<div id="controls">
-								<div className="outline-box">
-									<Button
-										className="row-button no-top-margin"
-										onClick={this.handleClickGithubLogin}
-									>
-										<Icon name="mark-github" />
-										<div className="copy">Sign In with GitHub</div>
-										<Icon name="chevron-right" />
-									</Button>
-								</div>
+								{this.props.supportsIntegrations && (
+									<div className="outline-box">
+										<Button
+											className="row-button no-top-margin"
+											onClick={this.handleClickGithubLogin}
+										>
+											<Icon name="mark-github" />
+											<div className="copy">Sign In with GitHub</div>
+											<Icon name="chevron-right" />
+										</Button>
+									</div>
+								)}
 								<div className="footer">
 									<p>
 										Don't have an account? <a onClick={this.handleClickSignup}>Sign Up</a>
@@ -263,7 +267,8 @@ class Login extends React.Component<Props, State> {
 
 const ConnectedLogin = connect<ConnectedProps, any, any, CodeStreamState>(
 	(state, props) => ({
-		initialEmail: props.email !== undefined ? props.email : state.configs.email
+		initialEmail: props.email !== undefined ? props.email : state.configs.email,
+		supportsIntegrations: supportsIntegrations(state.configs)
 	}),
 	{ authenticate, goToNewUserEntry, startSSOSignin, goToForgotPassword }
 )(Login);
