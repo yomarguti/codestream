@@ -236,7 +236,7 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 		};
 
 		if (data.assignees && data.assignees.length > 0) {
-			body.fields.assignee = { name: data.assignees[0].name };
+			body.fields.assignee = { accountId : data.assignees[0].accountId  };
 		}
 		const response = await this.post<typeof body, CreateJiraIssueResponse>(
 			"/rest/api/2/issue",

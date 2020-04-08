@@ -23,7 +23,7 @@ export interface CreateJiraCardRequest {
 	description: string;
 	project: string;
 	issueType: string;
-	assignees: [{ name: string }];
+	assignees: [{ accountId?: string, name?: string }];
 }
 
 export interface CreateJiraCardResponse {
