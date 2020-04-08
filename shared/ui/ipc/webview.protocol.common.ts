@@ -48,7 +48,10 @@ export enum WebviewPanels {
 	ChangeUsername = "change-username",
 	ChangeEmail = "change-email",
 	ChangePassword = "change-password",
-	ChangeFullName = "change-full-name"
+	ChangeFullName = "change-full-name",
+	ChangeAvatar = "change-avatar",
+	PRInfo = "pr-info",
+	Integrations = "integrations"
 }
 
 export interface WebviewContext {
