@@ -51,6 +51,10 @@ export interface UpdateUserRequest {
 	fullName?: string;
 	timeZone?: string;
 	email?: string;
+	avatar?: {
+		image?: string;
+		image48?: string;
+	};
 }
 
 export interface UpdateUserResponse {
