@@ -1,10 +1,8 @@
 import React from "react";
 import styled from "styled-components";
-import Icon from "./Icon";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { CodeStreamState } from "../store";
 import { Dispatch } from "../store/common";
-import { setUserPreference } from "./actions";
 import Tooltip from "./Tooltip";
 import { ComposeArea } from "./ReviewNav";
 import { CSMe } from "@codestream/protocols/api";
@@ -125,7 +123,7 @@ const HR = styled.div`
 	margin: 10px 0;
 `;
 
-const STEPS = [
+export const STEPS = [
 	{
 		id: "createCodemark",
 		title: "Comment on code",
@@ -144,7 +142,7 @@ const STEPS = [
 		pulse: "global-nav-more-label",
 		video: "",
 		panel: WebviewPanels.ChangeAvatar,
-		isComplete: user => user.avatar && user.avatar.image
+		isComplete: user => user.avatar
 	},
 	{
 		id: "viewPRs",
@@ -205,7 +203,7 @@ export function GettingStarted(props: GettingStartedProps) {
 		const todo = [] as any;
 		const completed = [] as any;
 		STEPS.forEach(step => {
-			if (gettingStartedPreferences[step.id] || step.isComplete(currentUser, state)) {
+			if (step.isComplete(currentUser, state)) {
 				completed.push(step);
 			} else {
 				todo.push(step);
@@ -217,13 +215,6 @@ export function GettingStarted(props: GettingStartedProps) {
 			gettingStartedPreferences
 		};
 	}, shallowEqual);
-
-	const skipStep = step => {
-		const id = step.id;
-		const value = !derivedState.gettingStartedPreferences[id];
-		dispatch(setUserPreference(["gettingStarted", id], value));
-		unPulse(step.pulse);
-	};
 
 	const pulse = id => {
 		const element = document.getElementById(id);
@@ -272,7 +263,6 @@ export function GettingStarted(props: GettingStartedProps) {
 								<YouTubeImg src="https://i.imgur.com/9IKqpzf.png" />
 							</a>
 						</Tooltip>
-						<Icon name="x" className="clickable" onClick={e => skipStep(step)} />
 					</Step>
 				);
 			})}
@@ -296,7 +286,6 @@ export function GettingStarted(props: GettingStartedProps) {
 								<YouTubeImg src="https://i.imgur.com/9IKqpzf.png" />
 							</a>
 						</Tooltip>
-						<Icon name="plus" className="clickable" onClick={e => skipStep(step)} />
 					</Step>
 				);
 			})}

@@ -134,6 +134,7 @@ export const ComposeArea = styled.div`
 	background: var(--button-background-color);
 	&.pulse {
 		left: 0;
+		z-index: 5;
 	}
 `;
 

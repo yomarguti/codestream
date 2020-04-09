@@ -3031,3 +3031,21 @@ li,
 .highlight {
 	color: @text-color-highlight;
 }
+// https://keithclark.co.uk/articles/single-element-pure-css-pie-charts/
+.pie {
+	/* Basic layout */
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	vertical-align: -3px;
+	border: 1px solid var(--text-color);
+
+	/* fixes a minor clipping issue in Chrome */
+	background-origin: border-box;
+	background-image: conic-gradient(
+		var(--button-background-color) 72deg,
+		transparent 72deg,
+		transparent 0
+	);
+}

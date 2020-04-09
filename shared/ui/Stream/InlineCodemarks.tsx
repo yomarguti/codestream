@@ -25,7 +25,8 @@ import {
 	EditorMetrics,
 	EditorScrollToNotificationType,
 	EditorScrollMode,
-	NewCodemarkNotificationType
+	NewCodemarkNotificationType,
+	WebviewPanels
 } from "../ipc/webview.protocol";
 import {
 	DocumentMarker,
@@ -115,6 +116,7 @@ interface Props {
 	webviewFocused: boolean;
 	currentReviewId?: string;
 	lightningCodeReviewsEnabled: boolean;
+	activePanel: WebviewPanels;
 
 	setEditorContext: (
 		...args: Parameters<typeof setEditorContext>
@@ -632,31 +634,30 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				</div>
 			);
 
-			return <GettingStarted />;
-			// return (
-			// 	<div key="no-codemarks" className="no-codemarks-container">
-			// 		<div className="no-codemarks">
-			// 			Discuss code with your team by selecting a range and clicking an icon, or by using a
-			// 			shortcut below (
-			// 			<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Code-Discussion-with-Codemarks">
-			// 				show me how
-			// 			</a>
-			// 			).
-			// 			<br />
-			// 			<br />
-			// 			<div className="keybindings">
-			// 				<div className="function-row">{ComposeTitles.comment}</div>
-			// 				<div className="function-row">{ComposeTitles.issue}</div>
-			// 				{this.props.lightningCodeReviewsEnabled && (
-			// 					<div className="function-row">{ComposeTitles.review}</div>
-			// 				)}
-			// 				<div className="function-row">{ComposeTitles.link}</div>
-			// 				<div className="function-row">{ComposeTitles.privatePermalink}</div>
-			// 				<div className="function-row">{ComposeTitles.toggleCodeStreamPanel}</div>
-			// 			</div>
-			// 		</div>
-			// 	</div>
-			// );
+			return (
+				<div key="no-codemarks" className="no-codemarks-container">
+					<div className="no-codemarks">
+						Discuss code with your team by selecting a range and clicking an icon, or by using a
+						shortcut below (
+						<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Code-Discussion-with-Codemarks">
+							show me how
+						</a>
+						).
+						<br />
+						<br />
+						<div className="keybindings">
+							<div className="function-row">{ComposeTitles.comment}</div>
+							<div className="function-row">{ComposeTitles.issue}</div>
+							{this.props.lightningCodeReviewsEnabled && (
+								<div className="function-row">{ComposeTitles.review}</div>
+							)}
+							<div className="function-row">{ComposeTitles.link}</div>
+							<div className="function-row">{ComposeTitles.privatePermalink}</div>
+							<div className="function-row">{ComposeTitles.toggleCodeStreamPanel}</div>
+						</div>
+					</div>
+				</div>
+			);
 		}
 	};
 
@@ -884,6 +885,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				multiLocation={this.state.multiLocationCodemarkForm}
 				setMultiLocation={this.setMultiLocation}
 				error={this.state.codemarkFormError}
+				activePanel={this.props.activePanel}
 			/>
 			// </ContainerAtEditorSelection>
 		);
@@ -1189,14 +1191,15 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	render() {
-		const { currentReviewId } = this.props;
+		const { currentReviewId, activePanel } = this.props;
 
 		const composeOpen = this.state.newCodemarkAttributes ? true : false;
+		const onGettingStarted = activePanel === WebviewPanels.GettingStarted;
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
 				{currentReviewId ? (
 					<ReviewNav reviewId={currentReviewId} composeOpen={composeOpen} />
-				) : (
+				) : onGettingStarted ? null : (
 					this.renderHeader()
 				)}
 				{this.renderHoverIcons()}
@@ -1204,7 +1207,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				{this.state.showPRInfoModal && (
 					<PRInfoModal onClose={() => this.setState({ showPRInfoModal: false })} />
 				)}
-				{this.state.isLoading ? null : this.renderCodemarks()}
+				{onGettingStarted && !composeOpen && <GettingStarted />}
+				{this.state.isLoading || onGettingStarted ? null : this.renderCodemarks()}
 				{!currentReviewId && this.renderViewSelectors()}
 			</div>
 		);

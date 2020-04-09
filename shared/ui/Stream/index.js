@@ -105,6 +105,8 @@ import {
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { ComposeKeybindings } from "./ComposeTitles";
 import { PRInfoModal } from "./SpatialView/PRInfoModal";
+import { STEPS } from "./GettingStarted";
+import { isConnected } from "../store/providers/reducer";
 
 const EMAIL_MATCH_REGEX = new RegExp(
 	"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*",
@@ -736,6 +738,20 @@ export class SimpleStream extends Component {
 		const selected = panel => activePanel === panel; // && !plusMenuOpen && !menuOpen;
 		return (
 			<nav className="inline" id="global-nav">
+				{this.props.remainingSteps > 0 && (
+					<label
+						className={cx({ selected: selected(WebviewPanels.GettingStarted) })}
+						onClick={e => this.setActivePanel(WebviewPanels.GettingStarted)}
+						id="global-nav-getting-started-label"
+					>
+						<Tooltip title="Getting Started" placement="bottom">
+							<span>
+								<Icon name="dashboard" />
+								<div className="mentions-badge">{this.props.remainingSteps}</div>
+							</span>
+						</Tooltip>
+					</label>
+				)}
 				<label
 					className={cx({ selected: selected(WebviewPanels.CodemarksForFile) })}
 					onClick={e => this.setActivePanel(WebviewPanels.CodemarksForFile)}
@@ -816,6 +832,7 @@ export class SimpleStream extends Component {
 		const { searchBarOpen, q } = this.state;
 		// if (searchBarOpen && q) activePanel = WebviewPanels.Codemarks;
 		if (searchBarOpen) activePanel = WebviewPanels.Codemarks;
+		// if we're conducting a review, we need the compose functionality of spatial view
 		if (this.props.currentReviewId) activePanel = WebviewPanels.CodemarksForFile;
 		if (!activePanel) activePanel = WebviewPanels.CodemarksForFile;
 
@@ -948,10 +965,11 @@ export class SimpleStream extends Component {
 				)}
 				{renderNav && this.renderNavIcons()}
 				{this.state.floatCompose &&
-					activePanel !== WebviewPanels.CodemarksForFile &&
+					!onInlineCodemarks &&
 					this.renderComposeBox(placeholderText, channelName)}
 				<div className={contentClass}>
-					{activePanel === WebviewPanels.CodemarksForFile && (
+					{(activePanel === WebviewPanels.CodemarksForFile ||
+						activePanel === WebviewPanels.GettingStarted) && (
 						<InlineCodemarks
 							activePanel={activePanel}
 							setActivePanel={this.setActivePanel}
@@ -2483,7 +2501,10 @@ const mapStateToProps = state => {
 		name: getDMName(stream, teamMembersById, session.userId)
 	}));
 
+	const remainingSteps = STEPS.filter(step => !step.isComplete(user, state)).length;
+
 	return {
+		remainingSteps,
 		lightningCodeReviewsEnabled: isFeatureEnabled(state, "lightningCodeReviews"),
 		kickstartEnabled: isFeatureEnabled(state, "kickstart"),
 		collisions: getCodeCollisions(state),

@@ -117,6 +117,7 @@ interface Props extends ConnectedProps {
 	error?: string;
 	openPanel: Function;
 	setUserPreference: Function;
+	activePanel?: WebviewPanels;
 }
 
 interface ConnectedProps {
@@ -655,7 +656,8 @@ class CodemarkForm extends React.Component<Props, State> {
 					sharingAttributes: this.props.shouldShare ? this._sharingAttributes : undefined,
 					accessMemberIds: this.state.privacyMembers.map(m => m.value)
 				});
-				if (codeBlocks.length == 0) this.showConfirmationForMarkerlessCodemarks(type);
+				if (codeBlocks.length == 0 || this.props.activePanel === WebviewPanels.GettingStarted)
+					this.showConfirmationForMarkerlessCodemarks(type);
 			} else {
 				await this.props.onSubmit({ ...baseAttributes, streamId: selectedChannelId! }, event);
 				(this.props as any).dispatch(setCurrentStream(selectedChannelId));
