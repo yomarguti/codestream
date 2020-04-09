@@ -124,7 +124,7 @@ export const ChangeEmailPanel = props => {
 					<div className="control-group">
 						<label>Email</label>
 						<TextInput
-							name="Email"
+							name="email"
 							value={email}
 							autoFocus
 							onChange={setEmail}
