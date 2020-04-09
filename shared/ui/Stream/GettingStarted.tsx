@@ -159,7 +159,7 @@ const STEPS = [
 		// subtext: "on your work-in-progress, or request a formal code review.",
 		title: "Request a Code Review",
 		subtext: "to get feedback on your work-in-progress, or final code review.",
-		done: "Created a Code Review",
+		done: "Requested a Code Review",
 		pulse: "global-nav-plus-label",
 		video: "https://www.youtube.com/watch?v=2AyqT4z5Omc",
 		panel: WebviewPanels.NewReview,
@@ -182,7 +182,7 @@ const STEPS = [
 		done: "Added integrations",
 		pulse: "global-nav-more-label",
 		video: "",
-		panel: WebviewPanels.People, // FIXME
+		panel: WebviewPanels.Integrations,
 		isComplete: user => {
 			const { providerInfo = {} } = user;
 			return Object.keys(providerInfo).length > 0;
@@ -233,9 +233,9 @@ export function GettingStarted(props: GettingStartedProps) {
 
 	const handleClick = (e, step) => {
 		// if they clicked on the youtube video link, don't open the panel
-		if (e && e.target && e.target.tagName === "IMG") return;
+		if (e && e.target && e.target.closest("a")) return;
 		// if they clicked
-		if (e && e.target && e.target.tagName === "IMG") return;
+		if (e && e.target && e.target.closest(".icon")) return;
 		if (step.panel) dispatch(openPanel(step.panel));
 	};
 
