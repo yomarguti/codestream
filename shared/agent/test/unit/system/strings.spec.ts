@@ -9,10 +9,12 @@ describe("strings.ts", () => {
 			const unique = uniq([
 				"c:/foo/bar",
 				"c:/foo/bar/",
-				"C:/foo/bar",
+				// this can only be run on windows
+				// "C:/foo/bar",
 				"c:\\foo\\bar",
-				"c:\\foo\\bar\\",
-				"C:\\foo\\bar\\"
+				"c:\\foo\\bar\\"
+				// this can only be run on windows
+				// "C:\\foo\\bar\\"
 			].map(_ => Strings.normalizePath(_)));
 			expect(unique.length).to.eq(1);
 			expect(unique[0]).to.equal("c:/foo/bar");
