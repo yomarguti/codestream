@@ -1449,6 +1449,7 @@ const ViewSelectorControl = styled.span`
 
 	&.pulse {
 		transform: scale(1.5);
+		color: var(--buton-foreground-color);
 		background: var(--button-background-color);
 		opacity: 1;
 		box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
