@@ -13,6 +13,7 @@ import { ChangeUsernamePanel } from "./ChangeUsernamePanel";
 import { ChangePasswordPanel } from "./ChangePasswordPanel";
 import { ChangeFullNamePanel } from "./ChangeFullNamePanel";
 import { ChangeAvatarPanel } from "./ChangeAvatarPanel";
+import { IntegrationsPanel } from "./IntegrationsPanel";
 import ChannelPanel from "./ChannelPanel";
 import { TasksPanel } from "./TasksPanel";
 import { TeamPanel } from "./TeamPanel";
@@ -457,21 +458,19 @@ export class SimpleStream extends Component {
 			]
 		});
 
-		menuItems.push(
-			{
-				label: "Notifications...",
-				action: () => this.setActivePanel(WebviewPanels.Notifications)
-			},
-			{ label: "-" }
-		);
+		menuItems.push({
+			label: "Notifications",
+			action: () => this.setActivePanel(WebviewPanels.Notifications)
+		});
 
-		const providerMenuItems = this.addProvidersToMenu();
-		if (providerMenuItems.length > 0) {
-			// menuItems.push({ label: "Integrations", key: "integrations", submenu: providerMenuItems });
-			menuItems.push(...providerMenuItems);
-			menuItems.push({ label: "-" });
-		}
+		// const providerMenuItems = this.addProvidersToMenu();
+		// if (providerMenuItems.length > 0) {
+		// 	// menuItems.push({ label: "Integrations", key: "integrations", submenu: providerMenuItems });
+		// 	menuItems.push(...providerMenuItems);
+		// 	menuItems.push({ label: "-" });
+		// }
 		menuItems.push(
+			{ label: "Integrations", action: "integrations" },
 			{ label: "Feedback", action: "feedback" },
 			{ label: "Help", action: "help" },
 			{ label: "-" }
@@ -1012,6 +1011,7 @@ export class SimpleStream extends Component {
 					)}
 					{activePanel === WebviewPanels.NewReview && <ReviewForm />}
 					{activePanel === WebviewPanels.NewCode && <CodeForm />}
+					{activePanel === WebviewPanels.Integrations && <IntegrationsPanel />}
 					{activePanel === WebviewPanels.ChangeEmail && (
 						<ChangeEmailPanel closePanel={this.props.closePanel} />
 					)}
@@ -1331,6 +1331,8 @@ export class SimpleStream extends Component {
 				return this.handleClickHelpLink();
 			case "feedback":
 				return this.handleClickFeedbackLink();
+			case "integrations":
+				return this.setActivePanel(WebviewPanels.Integrations);
 			case "email":
 				return this.setActivePanel(WebviewPanels.ChangeEmail);
 			case "avatar":
