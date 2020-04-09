@@ -7,7 +7,7 @@ import { Button } from "../src/components/Button";
 import styled from "styled-components";
 import { ButtonRow } from "./ChangeUsernamePanel";
 import { UpdateUserRequestType } from "../protocols/agent/agent.protocol.users";
-import { logError } from "../logger";
+import { logError, logWarning } from "../logger";
 import { FormattedMessage } from "react-intl";
 import { CSMe } from "@codestream/protocols/api";
 import { Link } from "./Link";
@@ -57,6 +57,7 @@ export const ChangeEmailPanel = props => {
 				setEmailValidity(validity);
 				break;
 			default: {
+				logWarning(`${field} not handled`);
 			}
 		}
 	}, []);

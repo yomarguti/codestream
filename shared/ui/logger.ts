@@ -11,3 +11,7 @@ export function logError(error: string | Error, extra?: object) {
 		extra
 	});
 }
+
+export function logWarning(...items: any[]) {
+	console.warn(...items);
+}
