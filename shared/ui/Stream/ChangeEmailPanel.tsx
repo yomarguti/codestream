@@ -97,6 +97,18 @@ export const ChangeEmailPanel = props => {
 				<h3>Change Email</h3>
 				<div id="controls">
 					<div className="small-spacer" />
+					{scmEmail && scmEmail !== derivedState.currentEmail && (
+						<div style={{ fontSize: "smaller" }}>
+							<CSText as="span">
+								Your CodeStream and git commit emails don't match (
+								<b>{derivedState.currentEmail}</b> vs. <b>{scmEmail}</b>), which impairs
+								CodeStream's ability to identify which commits are yours. Please either update your
+								gitconfig or set your CodeStream email to match.
+								<br />
+								<br />
+							</CSText>
+						</div>
+					)}
 					{unexpectedError && (
 						<div className="error-message form-error">
 							<FormattedMessage
@@ -110,18 +122,6 @@ export const ChangeEmailPanel = props => {
 						</div>
 					)}
 					<div className="control-group">
-						{scmEmail && scmEmail !== derivedState.currentEmail && (
-							<div style={{ fontSize: "smaller" }}>
-								<CSText as="span">
-									Your CodeStream and git commit emails don't match (
-									<b>{derivedState.currentEmail}</b> vs. <b>{scmEmail}</b>), which impairs
-									CodeStream's ability to identify which commits are yours. Please either update
-									your gitconfig or set your CodeStream email to match.
-									<br />
-									<br />
-								</CSText>
-							</div>
-						)}
 						<label>Email</label>
 						<TextInput
 							name="Email"
@@ -137,9 +137,7 @@ export const ChangeEmailPanel = props => {
 							</small>
 						)}
 						<ButtonRow>
-							<Button onClick={onSubmit} isLoading={loading}>
-								Save Email
-							</Button>
+							<Button isLoading={loading}>Save Email</Button>
 						</ButtonRow>
 					</div>
 				</div>
@@ -178,7 +176,7 @@ export const ChangeEmailPanel = props => {
 
 	return (
 		<Root className="full-height-panel onboarding-page" style={{ padding: 0 }}>
-			<form className="standard-form vscroll">
+			<form className="standard-form vscroll" onSubmit={onSubmit}>
 				<div className="panel-header">
 					<CancelButton onClick={props.closePanel} />
 				</div>
