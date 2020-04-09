@@ -30,7 +30,7 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 	};
 
 	return (
-		<Root>
+		<Root className={props.className}>
 			<Button
 				{...getButtonProps(props)}
 				onClick={e => {
