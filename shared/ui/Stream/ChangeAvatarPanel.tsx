@@ -10,12 +10,8 @@ import { UpdateUserRequestType } from "../protocols/agent/agent.protocol.users";
 import { logError } from "../logger";
 import { FormattedMessage } from "react-intl";
 import { CSMe } from "@codestream/protocols/api";
-import cx from "classnames";
 import { Link } from "./Link";
 import { TextInput } from "../Authentication/TextInput";
-import { RegisterUserRequestType, GetUserInfoRequestType } from "@codestream/protocols/agent";
-import { CSText } from "../src/components/CSText";
-import { useDidMount } from "../utilities/hooks";
 
 const Root = styled.div`
 	#controls {
@@ -48,19 +44,22 @@ export const ChangeAvatarPanel = props => {
 		}
 	}, []);
 
-	const onSubmit = async (event: React.SyntheticEvent) => {
+	const onSubmit = async (event: React.SyntheticEvent, clear?: boolean) => {
 		setUnexpectedError(false);
 		event.preventDefault();
-		onValidityChanged("avatar", isValidImage(avatar));
-		if (!avatarValidity) return;
+		if (!clear) {
+			onValidityChanged("avatar", isValidImage(avatar));
+			if (!avatarValidity) return;
+		}
 
 		setLoading(true);
+		const image = clear ? "" : avatar;
 		try {
-			await HostApi.instance.send(UpdateUserRequestType, { avatar: { image: avatar } });
+			await HostApi.instance.send(UpdateUserRequestType, { avatar: { image } });
 			HostApi.instance.track("Avatar Change Request", {});
 			props.closePanel();
 		} catch (error) {
-			logError(`Unexpected error during change avatar: ${error}`, { avatar });
+			logError(`Unexpected error during change avatar: ${error}`, { image });
 			setUnexpectedError(true);
 		}
 		// @ts-ignore
@@ -110,6 +109,18 @@ export const ChangeAvatarPanel = props => {
 								<ButtonRow>
 									<Button onClick={onSubmit} isLoading={loading}>
 										Save Profile Photo
+									</Button>
+								</ButtonRow>
+								<div
+									style={{
+										margin: "20px -20px 0 -20px",
+										height: "1px",
+										background: "var(--base-border-color)"
+									}}
+								></div>
+								<ButtonRow>
+									<Button onClick={e => onSubmit(e, true)} isLoading={loading} variant="secondary">
+										Use Gravatar
 									</Button>
 								</ButtonRow>
 							</div>
