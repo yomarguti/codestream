@@ -765,6 +765,8 @@ class CodemarkForm extends React.Component<Props, State> {
 			validationState.sharingAttributesInvalid = true;
 		}
 
+		if (invalid) console.log("invalid form: ", validationState);
+
 		this.setState(validationState as State);
 		return invalid;
 	};
@@ -786,6 +788,14 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		if (textInvalid) {
 			return <small className="error-message">Required</small>;
+		} else return null;
+	};
+
+	renderSharingHelp = () => {
+		const { sharingAttributesInvalid } = this.state;
+
+		if (sharingAttributesInvalid) {
+			return <small className="error-message">Select channel, or deselect sharing</small>;
 		} else return null;
 	};
 
@@ -991,6 +1001,8 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		return (
 			<div className="checkbox-row" style={{ float: "left" }}>
+				{this.renderSharingHelp()}
+
 				{this.state.sharingDisabled ? (
 					<CSText muted>
 						<SmartFormattedList value={this.state.privacyMembers.map(m => m.label)} /> will be

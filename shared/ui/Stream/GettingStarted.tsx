@@ -156,7 +156,7 @@ export const STEPS = [
 			["github", "bitbucket", "gitlab"].some(name => isConnected(state, { name }))
 	},
 	{
-		id: "createCodeReview",
+		id: "createReview",
 		// title: "Ask for feedback",
 		// subtext: "on your work-in-progress, or request a formal code review.",
 		title: "Request a Code Review",
@@ -165,7 +165,10 @@ export const STEPS = [
 		pulse: "global-nav-plus-label",
 		video: "https://www.youtube.com/watch?v=2AyqT4z5Omc",
 		panel: WebviewPanels.NewReview,
-		isComplete: user => user.numCodeReviews > 0
+		isComplete: user => {
+			console.log(user);
+			return user.totalReviews > 0;
+		}
 	},
 	{
 		id: "invite",
@@ -231,6 +234,7 @@ export function GettingStarted(props: GettingStartedProps) {
 		if (e && e.target && e.target.closest("a")) return;
 		// if they clicked
 		if (e && e.target && e.target.closest(".icon")) return;
+		unPulse(step.pulse);
 		if (step.panel) dispatch(openPanel(step.panel));
 	};
 
