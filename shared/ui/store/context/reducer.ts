@@ -20,7 +20,7 @@ const initialState: ContextState = {
 	isRepositioning: false,
 	issueProvider: undefined,
 	threadId: undefined,
-	panelStack: [WebviewPanels.CodemarksForFile], // default view is the "in this file" view
+	panelStack: [WebviewPanels.GettingStarted], // default view is the "in this file" view
 	hasFocus: true, // we assume we start with the focus when codestream initializes
 	channelFilter: "all",
 	channelsMuteAll: false,
