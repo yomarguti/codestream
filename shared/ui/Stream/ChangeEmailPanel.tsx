@@ -17,6 +17,7 @@ import { RegisterUserRequestType, GetUserInfoRequestType } from "@codestream/pro
 import { CSText } from "../src/components/CSText";
 import { useDidMount } from "../utilities/hooks";
 import { errorDismissed } from "../store/connectivity/actions";
+import { nth } from "lodash-es";
 
 const Root = styled.div`
 	#controls {
@@ -76,8 +77,7 @@ export const ChangeEmailPanel = props => {
 			// props.closePanel();
 		} catch (error) {
 			logError(`Unexpected error during change email: ${error}`, { email });
-			if (error.includes("USRC-1025")) setUnexpectedError("This email is already taken.");
-			else setUnexpectedError(error);
+			setUnexpectedError(error);
 		}
 		// @ts-ignore
 		setLoading(false);
@@ -92,6 +92,25 @@ export const ChangeEmailPanel = props => {
 		},
 		[email]
 	);
+
+	const renderError = () => {
+		return (
+			<div className="error-message form-error" style={{ textAlign: "left" }}>
+				{unexpectedError.includes("USRC-1025") && <>This email is already taken.</>}
+				{!unexpectedError.includes("USRC-1025") && (
+					<>
+						<FormattedMessage
+							id="error.unexpected"
+							defaultMessage="Something went wrong! Please try again, or "
+						/>
+						<FormattedMessage id="contactSupport" defaultMessage="contact support">
+							{text => <Link href="https://help.codestream.com">{text}</Link>}
+						</FormattedMessage>
+					</>
+				)}
+			</div>
+		);
+	};
 
 	const renderChangeEmail = () => {
 		return (
@@ -112,18 +131,7 @@ export const ChangeEmailPanel = props => {
 							</CSText>
 						</div>
 					)}
-					{unexpectedError && (
-						<div className="error-message form-error" style={{ textAlign: "left" }}>
-							<FormattedMessage
-								id="error.unexpected"
-								defaultMessage="Something went wrong! Please try again, or "
-							/>
-							<FormattedMessage id="contactSupport" defaultMessage="contact support">
-								{text => <Link href="https://help.codestream.com">{text}</Link>}
-							</FormattedMessage>
-							.<p>{unexpectedError}</p>
-						</div>
-					)}
+					{unexpectedError && renderError()}
 					<div className="control-group">
 						<label>Email</label>
 						<TextInput
