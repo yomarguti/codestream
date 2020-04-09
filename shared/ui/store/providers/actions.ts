@@ -56,7 +56,7 @@ export const connectProvider = (providerId: string, connectionLocation: ViewLoca
 	}
 };
 
-export type ViewLocation = "Global Nav" | "Compose Modal" | "PR Toggle";
+export type ViewLocation = "Global Nav" | "Compose Modal" | "PR Toggle" | "Integrations Panel";
 
 export const sendIssueProviderConnected = (
 	providerId: string,
