@@ -68,7 +68,7 @@ const StepNumberDone = styled(StepNumber)`
 	background: rgba(127, 127, 127, 0.2);
 `;
 const StepText = styled.div`
-	margin-right: 20px;
+	margin-right: 10px;
 `;
 
 const StepTitle = styled.span`
@@ -104,13 +104,17 @@ const Root = styled.div`
 	max-height: 100%;
 	overflow: auto;
 	padding: 30px 20px;
-	padding: 50px;
+	padding: 40px;
 	z-index: 0;
 	color: var(--text-color-subtle);
 	font-size: var(--font-size);
 	b,
 	h2 {
 		color: var(--text-color-highlight);
+	}
+
+	@media only screen and (max-width: 350px) {
+		padding: 20px;
 	}
 `;
 
