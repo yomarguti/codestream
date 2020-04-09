@@ -294,7 +294,7 @@ class TeamPanel extends React.Component<Props, State> {
 		HostApi.instance.track("Teammate Invited", {
 			"Invitee Email Address": user.email,
 			"Invitee Name": user.fullName,
-			"Invitation Method": type === "invite" ? "Reinvite" : "Suggested"
+			"Invitation Method": type === "reinvite" ? "Reinvite" : "Suggested"
 		});
 	};
 
