@@ -16,6 +16,7 @@ import { isEmailValid } from "../Authentication/Signup";
 import { RegisterUserRequestType, GetUserInfoRequestType } from "@codestream/protocols/agent";
 import { CSText } from "../src/components/CSText";
 import { useDidMount } from "../utilities/hooks";
+import { errorDismissed } from "../store/connectivity/actions";
 
 const Root = styled.div`
 	#controls {
@@ -36,7 +37,7 @@ export const ChangeEmailPanel = props => {
 	const [loading, setLoading] = useState(false);
 	const [email, setEmail] = useState(derivedState.currentEmail);
 	const [emailValidity, setEmailValidity] = useState(true);
-	const [unexpectedError, setUnexpectedError] = useState(false);
+	const [unexpectedError, setUnexpectedError] = useState("");
 	const [formInvalid, setFormInvalid] = useState(false);
 	const [pendingChange, setPendingChange] = useState(false);
 	const [emailSent, setEmailSent] = useState(false);
@@ -61,7 +62,7 @@ export const ChangeEmailPanel = props => {
 	}, []);
 
 	const onSubmit = async (event: React.SyntheticEvent) => {
-		setUnexpectedError(false);
+		setUnexpectedError("");
 		event.preventDefault();
 		onValidityChanged("email", isEmailValid(email));
 		if (!emailValidity) return;
@@ -74,7 +75,8 @@ export const ChangeEmailPanel = props => {
 			// props.closePanel();
 		} catch (error) {
 			logError(`Unexpected error during change email: ${error}`, { email });
-			setUnexpectedError(true);
+			if (error.includes("USRC-1025")) setUnexpectedError("This email is already taken.");
+			else setUnexpectedError(error);
 		}
 		// @ts-ignore
 		setLoading(false);
@@ -110,7 +112,7 @@ export const ChangeEmailPanel = props => {
 						</div>
 					)}
 					{unexpectedError && (
-						<div className="error-message form-error">
+						<div className="error-message form-error" style={{ textAlign: "left" }}>
 							<FormattedMessage
 								id="error.unexpected"
 								defaultMessage="Something went wrong! Please try again, or "
@@ -118,7 +120,7 @@ export const ChangeEmailPanel = props => {
 							<FormattedMessage id="contactSupport" defaultMessage="contact support">
 								{text => <Link href="https://help.codestream.com">{text}</Link>}
 							</FormattedMessage>
-							.
+							.<p>{unexpectedError}</p>
 						</div>
 					)}
 					<div className="control-group">
