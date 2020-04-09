@@ -125,8 +125,8 @@ export function fromSlackChannel(
 		mostRecentPostId: mostRecentId,
 		priority: channel.priority,
 		privacy: (channel.is_private == null
-			? channel.is_group
-			: channel.is_private)
+		? channel.is_group
+		: channel.is_private)
 			? "private"
 			: "public",
 		purpose: channel.purpose && channel.purpose.value,
@@ -563,6 +563,8 @@ export function fromSlackUser(user: any, teamId: string): CSUser {
 		timeZone: user.tz,
 		// TODO: ???
 		totalPosts: 0,
+		totalReviews: 0,
+		numUsersInvited: 0,
 		username: user.profile.display_name || user.name
 	};
 }
@@ -572,25 +574,29 @@ export function toSlackPostId(postId: string, streamId: string) {
 }
 
 export function toAssigneeText(codeStreamIds: string[], userMaps: UserMaps): string {
-	return codeStreamIds.map(id => {
-		const codeStreamUser = userMaps.codeStreamUsersByUserId.get(id);
-		if (codeStreamUser && codeStreamUser.email) {
-			const slackUserId = userMaps.slackUserIdsByEmail.get(codeStreamUser.email.toLowerCase());
-			if (slackUserId) {
-				return `<@${slackUserId}>`;
+	return codeStreamIds
+		.map(id => {
+			const codeStreamUser = userMaps.codeStreamUsersByUserId.get(id);
+			if (codeStreamUser && codeStreamUser.email) {
+				const slackUserId = userMaps.slackUserIdsByEmail.get(codeStreamUser.email.toLowerCase());
+				if (slackUserId) {
+					return `<@${slackUserId}>`;
+				}
 			}
-		}
-		return codeStreamUser ? codeStreamUser.fullName || codeStreamUser.username : "";
-	}).join(", ");
+			return codeStreamUser ? codeStreamUser.fullName || codeStreamUser.username : "";
+		})
+		.join(", ");
 }
 
 function blockTruncated(): KnownBlock {
 	return {
 		type: "context",
-		elements: [{
-			type: "mrkdwn",
-			text: "This was partially truncated. Open in IDE to view it in full."
-		}]
+		elements: [
+			{
+				type: "mrkdwn",
+				text: "This was partially truncated. Open in IDE to view it in full."
+			}
+		]
 	};
 }
 
@@ -643,9 +649,12 @@ export function toSlackPostBlocks(
 
 			if (codemark.text) {
 				// +1 for newline, subtract the length of the existing text, if any
-				slackText = toSlackTextSafe(codemark.text, userMaps, undefined, text ?
-					slackBlockTextMax - (textLength > 0 ? textLength + 1 : 0) :
-					slackBlockTextMax);
+				slackText = toSlackTextSafe(
+					codemark.text,
+					userMaps,
+					undefined,
+					text ? slackBlockTextMax - (textLength > 0 ? textLength + 1 : 0) : slackBlockTextMax
+				);
 				text = `${text ? `${text}\n` : ""}${slackText.text}`;
 			}
 
@@ -788,14 +797,16 @@ export function toSlackPostBlocks(
 					type: "section",
 					text: {
 						type: "mrkdwn",
-						text: `${filename}\n\`\`\`${codeText.substring(0, slackBlockTextCodeMax - filenameLength - 6)}\`\`\``
+						text: `${filename}\n\`\`\`${codeText.substring(
+							0,
+							slackBlockTextCodeMax - filenameLength - 6
+						)}\`\`\``
 					}
 				});
 				if (isTruncated) {
 					blocks.push(blockTruncated());
 				}
-			}
-			else {
+			} else {
 				blocks.push({
 					type: "section",
 					text: {
@@ -869,9 +880,10 @@ export function toSlackPostBlocks(
 			if (url !== undefined && url.url) {
 				if (url.url.length >= slackBlockTextMax) {
 					// 3000 is the max length that slack will allow
-					Logger.log(`ignoring [Open in ${url.displayName}] button, url too long ${url.url.length} value=${url.url}`);
-				}
-				else {
+					Logger.log(
+						`ignoring [Open in ${url.displayName}] button, url too long ${url.url.length} value=${url.url}`
+					);
+				} else {
 					actionId = toExternalActionId(counter, "code", url.name, codemark, marker);
 					actions.elements.push({
 						type: "button",
@@ -981,20 +993,23 @@ export function toSlackReviewPostBlocks(
 	}
 	blocks.push({
 		type: "context",
-		elements: [{
-			type: "mrkdwn",
-			text: `${creatorName}is requesting a review`
-		}]
+		elements: [
+			{
+				type: "mrkdwn",
+				text: `${creatorName}is requesting a review`
+			}
+		]
 	});
 
 	blocks.push({
 		type: "section",
 		text: {
 			type: "mrkdwn",
-			text: `*${toSlackText(
-				review.title,
-				userMaps
-			)}* includes changes to ${modifiedReposAndBranches && modifiedReposAndBranches.length ? modifiedReposAndBranches.join(", ") : "no repos or branches"}`
+			text: `*${toSlackText(review.title, userMaps)}* includes changes to ${
+				modifiedReposAndBranches && modifiedReposAndBranches.length
+					? modifiedReposAndBranches.join(", ")
+					: "no repos or branches"
+			}`
 		}
 	});
 
@@ -1116,8 +1131,8 @@ export function toSlackTextSafe(
 	mentionedUserIds?: string[],
 	maxLength: number = slackBlockTextMax
 ): {
-	text: string,
-	wasTruncated?: boolean
+	text: string;
+	wasTruncated?: boolean;
 } {
 	if (text == null || text.length === 0) return { text: text };
 
@@ -1156,8 +1171,7 @@ export function toSlackTextSafe(
 							}
 						}
 					}
-				}
-				else {
+				} else {
 					const slackUserId = userMaps.slackUserIdsByUsername.get(normalizedMentionName);
 					if (slackUserId) {
 						return `${prefix}<@${slackUserId}>`;
@@ -1176,10 +1190,6 @@ export function toSlackTextSafe(
 	return { text: text, wasTruncated: wasTruncated };
 }
 
-export function toSlackText(
-	text: string,
-	userMaps: UserMaps,
-	mentionedUserIds?: string[]
-) {
+export function toSlackText(text: string, userMaps: UserMaps, mentionedUserIds?: string[]) {
 	return toSlackTextSafe(text, userMaps, mentionedUserIds).text;
 }

@@ -633,6 +633,8 @@ export function fromTeamsUser(
 		timeZone: "",
 		// TODO: ???
 		totalPosts: 0,
+		totalReviews: 0,
+		numUsersInvited: 0,
 		username: user.displayName.replace(/ /g, "_")
 	};
 }

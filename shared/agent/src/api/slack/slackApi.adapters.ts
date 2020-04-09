@@ -512,6 +512,8 @@ export function fromSlackUser(user: any, teamId: string, codestreamUsers: CSUser
 		timeZone: user.tz,
 		// TODO: ???
 		totalPosts: 0,
+		totalReviews: 0,
+		numUsersInvited: 0,
 		username: user.profile.display_name || user.name
 	};
 }

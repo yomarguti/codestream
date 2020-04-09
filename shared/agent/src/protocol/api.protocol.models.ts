@@ -530,6 +530,8 @@ export interface CSUser extends CSEntity {
 	teamIds: string[];
 	timeZone: string;
 	totalPosts: number;
+	totalReviews: number;
+	numUsersInvited: number;
 	username: string;
 	providerIdentities?: string[];
 	codestreamId?: string;
