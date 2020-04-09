@@ -49,7 +49,6 @@ export default class Menu extends Component {
 	}
 
 	repositionIfNecessary(loc) {
-		console.log("REPOSITIONING!!!!!!!!!", loc);
 		if (this.props && this.props.target) {
 			const align = this.props.align || "";
 			const rect = this.props.target.getBoundingClientRect();
