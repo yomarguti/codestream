@@ -10,7 +10,6 @@ import { UpdateUserRequestType } from "../protocols/agent/agent.protocol.users";
 import { logError } from "../logger";
 import { FormattedMessage } from "react-intl";
 import { CSMe } from "@codestream/protocols/api";
-import cx from "classnames";
 import { Link } from "./Link";
 import { TextInput } from "../Authentication/TextInput";
 import { isEmailValid } from "../Authentication/Signup";
@@ -26,7 +25,6 @@ const Root = styled.div`
 
 const defaultArrayLength = 6;
 const array = new Array(defaultArrayLength);
-const initialValues: string[] = [...array].fill("");
 
 export const ChangeEmailPanel = props => {
 	const dispatch = useDispatch();
@@ -41,8 +39,6 @@ export const ChangeEmailPanel = props => {
 	const [unexpectedError, setUnexpectedError] = useState(false);
 	const [formInvalid, setFormInvalid] = useState(false);
 	const [pendingChange, setPendingChange] = useState(false);
-	const [digits, setValues] = useState(initialValues);
-	const [error, setError] = useState();
 	const [emailSent, setEmailSent] = useState(false);
 	const [scmEmail, setScmEmail] = useState("");
 
@@ -88,7 +84,7 @@ export const ChangeEmailPanel = props => {
 		async (event: React.MouseEvent) => {
 			event.preventDefault();
 			setEmailSent(false);
-			await HostApi.instance.send(RegisterUserRequestType, { email, username: "", password: "" });
+			await HostApi.instance.send(UpdateUserRequestType, { email });
 			setEmailSent(true);
 		},
 		[email]
