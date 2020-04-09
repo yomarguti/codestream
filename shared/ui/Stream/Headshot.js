@@ -25,11 +25,12 @@ export default class Headshot extends Component {
 			const uri =
 				this.props.size > 48 ? person.avatar.image : person.avatar.image48 || person.avatar.image;
 
-			return (
-				<div className="headshot" onClick={this.props.onClick}>
-					<img className="headshot-image" src={uri} />
-				</div>
-			);
+			if (uri)
+				return (
+					<div className="headshot" onClick={this.props.onClick}>
+						<img className="headshot-image" src={uri} />
+					</div>
+				);
 		}
 
 		const classNameInitials = `headshot-initials color-${person.color || 1}`;

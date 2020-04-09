@@ -23,7 +23,7 @@ const Root = styled.div`
 	}
 `;
 
-const isNotEmpty = s => s.length > 0;
+const isValidImage = s => s.length === 0 || s.toLocaleLowerCase().startsWith("http");
 
 export const ChangeAvatarPanel = props => {
 	const dispatch = useDispatch();
@@ -49,7 +49,7 @@ export const ChangeAvatarPanel = props => {
 	const onSubmit = async (event: React.SyntheticEvent) => {
 		setUnexpectedError(false);
 		event.preventDefault();
-		onValidityChanged("avatar", isNotEmpty(avatar));
+		onValidityChanged("avatar", isValidImage(avatar));
 		if (!avatarValidity) return;
 
 		setLoading(true);
@@ -74,6 +74,12 @@ export const ChangeAvatarPanel = props => {
 				<fieldset className="form-body" style={{ width: "18em" }}>
 					<div className="outline-box">
 						<h3>Set Profile Photo</h3>
+						<p>
+							CodeStream can automatically grab your profile photo from{" "}
+							<a href="https://gravatar.com">gravatar.com</a>.
+						</p>
+						<p>Alternatively set it here by using an existing image.</p>
+
 						<div id="controls">
 							<div className="small-spacer" />
 							{unexpectedError && (
@@ -96,9 +102,9 @@ export const ChangeAvatarPanel = props => {
 									autoFocus
 									onChange={setAvatar}
 									onValidityChanged={onValidityChanged}
-									validate={isNotEmpty}
+									validate={isValidImage}
 								/>
-								{!avatarValidity && <small className="explainer error-message">Required</small>}
+								{!avatarValidity && <small className="explainer error-message">Blank or URL</small>}
 								<ButtonRow>
 									<Button onClick={onSubmit} isLoading={loading}>
 										Save Profile Photo
