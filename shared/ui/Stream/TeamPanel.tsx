@@ -441,12 +441,13 @@ class TeamPanel extends React.Component<Props, State> {
 		const { teamId } = this.props;
 		HostApi.instance.send(UpdateTeamAdminRequestType, { teamId, remove: user.id });
 	}
+
 	promote(user: CSUser) {
 		const { teamId } = this.props;
 		HostApi.instance.send(UpdateTeamAdminRequestType, { teamId, add: user.id });
 	}
-	kick(user: CSUser) {
-		const { teamId } = this.props;
+
+	confirmKick(user: CSUser) {
 		confirmPopup({
 			title: "Are you sure?",
 			message: "",
@@ -457,23 +458,23 @@ class TeamPanel extends React.Component<Props, State> {
 					label: "Remove User",
 					className: "delete",
 					wait: true,
-					action: () => {
-						HostApi.instance.send(KickUserRequestType, { teamId, userId: user.id });
-					}
+					action: () => this.kick(user)
 				}
 			]
 		});
 	}
+
+	kick = (user: CSUser) => {
+		const { teamId } = this.props;
+		HostApi.instance.send(KickUserRequestType, { teamId, userId: user.id });
+	};
 
 	renderAdminUser(user: CSUser) {
 		const { isCurrentUserAdmin, adminIds } = this.props;
 
 		const revokeAdmin = { label: "Revoke Admin", action: () => this.revoke(user) };
 		const promoteAdmin = { label: "Make Admin", action: () => this.promote(user) };
-		// const changeUsername = { label: "Change Username", action: () => this.username(user) };
-		// const changeEmail = { label: "Change Email", action: () => this.email(user) };
-		const kickUser = { label: "Remove from Team", action: () => this.kick(user) };
-		// const leaveTeam = { label: "Leave this Team", action: () => this.leave(user) };
+		const kickUser = { label: "Remove from Team", action: () => this.confirmKick(user) };
 
 		const isUserAdmin = adminIds.includes(user.id);
 		if (isCurrentUserAdmin && user.id !== this.props.currentUserId) {
@@ -739,6 +740,12 @@ class TeamPanel extends React.Component<Props, State> {
 										<li key={user.email}>
 											<div className="committer-email">
 												{user.email}
+												<a onClick={e => this.kick(user)} className="float-right">
+													remove
+												</a>
+												<span className="float-right" style={{ padding: "0 5px" }}>
+													&middot;
+												</span>
 												{this.renderEmailUser(user)}
 											</div>
 										</li>
