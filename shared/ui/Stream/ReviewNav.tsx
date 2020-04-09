@@ -129,8 +129,9 @@ export const ComposeArea = styled.div`
 	left: -36px;
 	top: 0;
 	transition: left 0.1s;
-	background: var(--base-background-color);
-	border-right: 1px solid var(--base-border-color);
+	// background: var(--base-background-color);
+	// border-right: 1px solid var(--base-border-color);
+	background: var(--button-background-color);
 	&.pulse {
 		left: 0;
 	}
