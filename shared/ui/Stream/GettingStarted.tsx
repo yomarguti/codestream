@@ -167,10 +167,7 @@ export const STEPS = [
 		pulse: "global-nav-plus-label",
 		video: "https://www.youtube.com/watch?v=2AyqT4z5Omc",
 		panel: WebviewPanels.NewReview,
-		isComplete: user => {
-			console.log(user);
-			return user.totalReviews > 0;
-		}
+		isComplete: user => user.totalReviews > 0
 	},
 	{
 		id: "invite",

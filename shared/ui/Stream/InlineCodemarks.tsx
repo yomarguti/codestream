@@ -1149,12 +1149,14 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			<ViewSelectors>
 				{viewInline && numAbove > 0 && (
 					<ViewSelectorControl onClick={this.showAbove}>
-						<span>{numAbove}</span> <Icon name="arrow-up" />
+						<span className="nospace">{numAbove}</span>
+						<Icon name="arrow-up" />
 					</ViewSelectorControl>
 				)}
 				{viewInline && numBelow > 0 && (
 					<ViewSelectorControl onClick={this.showBelow}>
-						<span>{numBelow}</span> <Icon name="arrow-down" />
+						<span className="nospace">{numBelow}</span>
+						<Icon name="arrow-down" />
 					</ViewSelectorControl>
 				)}
 				<Tooltip title="Show/hide pull request comments" placement="top" delay={1}>
@@ -1441,7 +1443,7 @@ const ViewSelectorControl = styled.span`
 		color: var(--text-color-highlight);
 	}
 
-	span:first-child {
+	span:first-child:not(.nospace) {
 		margin-right: 5px;
 	}
 

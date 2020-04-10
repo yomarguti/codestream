@@ -399,6 +399,9 @@ export const MetaSectionCollapsed = styled.div`
 		.icon {
 			color: var(--text-color);
 		}
+		.octicon-comment {
+			margin-top: 1px;
+		}
 	}
 
 	.cs-tag {
