@@ -132,7 +132,7 @@ export const STEPS = [
 		subtext: "in the left margin, or select code in your editor and hit the plus button.",
 		done: "Commented on code",
 		pulse: "compose-gutter",
-		video: "",
+		video: "https://youtu.be/RPaIIZgaFK8",
 		panel: WebviewPanels.NewComment,
 		isComplete: user => user.totalPosts > 0
 	},
@@ -142,7 +142,7 @@ export const STEPS = [
 		subtext: "so your teammates know who’s who.",
 		done: "Added profile photo",
 		pulse: "global-nav-more-label",
-		video: "",
+		video: "https://youtu.be/-HBWfm9P96k",
 		panel: WebviewPanels.ChangeAvatar,
 		isComplete: user => user.avatar
 	},
@@ -185,7 +185,7 @@ export const STEPS = [
 		subtext: "with your code host, issue tracker, and messaging service.",
 		done: "Added integrations",
 		pulse: "global-nav-more-label",
-		video: "",
+		video: "https://youtu.be/vPChygnwMAw",
 		panel: WebviewPanels.Integrations,
 		isComplete: user => {
 			const { providerInfo = {} } = user;
