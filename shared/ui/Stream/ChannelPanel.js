@@ -409,7 +409,7 @@ export class SimpleChannelPanel extends Component {
 			return stream.name === "slackbot" ? (
 				<Icon className="heart" name="heart" />
 			) : safe(() => stream.memberIds.length > 2) ? (
-				<Icon className="organization" name="organization" />
+				<Icon className="organization" name="team" />
 			) : (
 				<Icon className="person" name="person" />
 			);
@@ -572,7 +572,7 @@ export class SimpleChannelPanel extends Component {
 			if (stream.name === "slackbot") {
 				icon = <Icon className="heart active" name="heart" />;
 			} else if (stream.memberIds == null || stream.memberIds.length > 2) {
-				icon = <Icon className="organization" name="organization" />;
+				icon = <Icon className="organization" name="team" />;
 			} else {
 				const presence = this.props.streamPresence[stream.id];
 				if (presence) {

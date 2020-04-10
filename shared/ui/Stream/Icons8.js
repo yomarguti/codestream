@@ -49,8 +49,8 @@ for (const [key, icon] of Object.entries(data)) {
 	// Set all the default options
 	icon.options = {
 		version: "1.1",
-		width: icon.width,
-		height: icon.height,
+		width: icon.width || 16,
+		height: icon.height || 16,
 		class: "octicon octicon-" + key,
 		"aria-hidden": "true"
 	};

@@ -363,7 +363,7 @@ export class SimpleStream extends Component {
 	channelIcon() {
 		return this.props.postStreamType === "direct" ? (
 			this.props.postStreamMemberIds.length > 2 ? (
-				<Icon name="organization" className="organization" />
+				<Icon name="team" className="team" />
 			) : (
 				<Icon name="person" />
 			)
@@ -766,7 +766,7 @@ export class SimpleStream extends Component {
 				>
 					<Tooltip title="Activity Feed" placement="bottom">
 						<span>
-							<Icon name="list" />
+							<Icon name="activity" />
 							{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
 						</span>
 					</Tooltip>
@@ -786,7 +786,7 @@ export class SimpleStream extends Component {
 				>
 					<Tooltip title="Your Team" placement="bottom">
 						<span>
-							<Icon name="organization" placement="bottom" />
+							<Icon name="team" placement="bottom" />
 							{this.props.collisions.nav && <Icon name="alert" className="nav-conflict" />}
 						</span>
 					</Tooltip>
@@ -886,7 +886,7 @@ export class SimpleStream extends Component {
 		const channelIcon =
 			this.props.postStreamType === "direct" ? (
 				this.props.postStreamMemberIds.length > 2 ? (
-					<Icon name="organization" className="organization" />
+					<Icon name="team" className="organization" />
 				) : (
 					<Icon name="person" />
 				)
