@@ -2504,7 +2504,9 @@ const mapStateToProps = state => {
 		name: getDMName(stream, teamMembersById, session.userId)
 	}));
 
-	const remainingSteps = STEPS.filter(step => !step.isComplete(user, state)).length;
+	let remainingSteps = preferences.skipGettingStarted
+		? 0
+		: STEPS.filter(step => !step.isComplete(user, state)).length;
 
 	return {
 		remainingSteps,

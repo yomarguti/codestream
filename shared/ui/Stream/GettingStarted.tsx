@@ -9,6 +9,8 @@ import { CSMe } from "@codestream/protocols/api";
 import { openPanel } from "../store/context/actions";
 import { WebviewPanels } from "@codestream/protocols/webview";
 import { isConnected } from "../store/providers/reducer";
+import { setUserPreference } from "./actions";
+import { Button } from "../src/components/Button";
 
 const Step = styled.div`
 	position: relative;
@@ -101,7 +103,7 @@ const Root = styled.div`
 	width: 100%;
 	max-height: 100%;
 	overflow: auto;
-	padding: 30px 20px;
+	// padding: 30px 20px;
 	padding: 40px;
 	z-index: 0;
 	color: var(--text-color-subtle);
@@ -112,7 +114,7 @@ const Root = styled.div`
 	}
 
 	@media only screen and (max-width: 350px) {
-		padding: 20px;
+		padding: 40px 20px;
 	}
 `;
 
@@ -200,22 +202,10 @@ interface GettingStartedProps {}
 export function GettingStarted(props: GettingStartedProps) {
 	const dispatch = useDispatch<Dispatch>();
 	const derivedState = useSelector((state: CodeStreamState) => {
-		const currentUser = state.users[state.session.userId!] as CSMe;
-		const preferences = state.preferences || {};
-		const gettingStartedPreferences = preferences.gettingStarted || {};
-		const todo = [] as any;
-		const completed = [] as any;
-		STEPS.forEach(step => {
-			if (step.isComplete(currentUser, state)) {
-				completed.push(step);
-			} else {
-				todo.push(step);
-			}
-		});
+		const user = state.users[state.session.userId!] as CSMe;
 		return {
-			todo,
-			completed,
-			gettingStartedPreferences
+			todo: STEPS.filter(step => !step.isComplete(user, state)),
+			completed: STEPS.filter(step => step.isComplete(user, state))
 		};
 	}, shallowEqual);
 
@@ -293,6 +283,15 @@ export function GettingStarted(props: GettingStartedProps) {
 					</Step>
 				);
 			})}
+			<HR />
+			<div style={{ height: "10px" }}></div>
+			<Button
+				variant="secondary"
+				size="compact"
+				onClick={() => dispatch(setUserPreference(["skipGettingStarted"], true))}
+			>
+				Mark all as done
+			</Button>
 		</Root>
 	);
 }

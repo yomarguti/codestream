@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import CancelButton from "./CancelButton";
 import { CodeStreamState } from "../store";
 import { HostApi } from "../webview-api";
@@ -13,11 +13,9 @@ import { CSMe } from "@codestream/protocols/api";
 import { Link } from "./Link";
 import { TextInput } from "../Authentication/TextInput";
 import { isEmailValid } from "../Authentication/Signup";
-import { RegisterUserRequestType, GetUserInfoRequestType } from "@codestream/protocols/agent";
+import { GetUserInfoRequestType } from "@codestream/protocols/agent";
 import { CSText } from "../src/components/CSText";
 import { useDidMount } from "../utilities/hooks";
-import { errorDismissed } from "../store/connectivity/actions";
-import { nth } from "lodash-es";
 
 const Root = styled.div`
 	#controls {
@@ -25,21 +23,15 @@ const Root = styled.div`
 	}
 `;
 
-const defaultArrayLength = 6;
-const array = new Array(defaultArrayLength);
-
 export const ChangeEmailPanel = props => {
-	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		return { currentEmail: currentUser.email };
 	});
-	const inputs = useRef(array);
 	const [loading, setLoading] = useState(false);
 	const [email, setEmail] = useState(derivedState.currentEmail);
 	const [emailValidity, setEmailValidity] = useState(true);
 	const [unexpectedError, setUnexpectedError] = useState("");
-	const [formInvalid, setFormInvalid] = useState(false);
 	const [pendingChange, setPendingChange] = useState(false);
 	const [emailSent, setEmailSent] = useState(false);
 	const [scmEmail, setScmEmail] = useState("");
@@ -156,15 +148,9 @@ export const ChangeEmailPanel = props => {
 		);
 	};
 
-	const nativeProps = {
-		min: 0,
-		maxLength: "1"
-	};
-
 	const renderConfirmEmail = () => {
 		return (
 			<>
-				{" "}
 				<h3>Confirm Email</h3>
 				<FormattedMessage id="confirmation.instructionsLinkEmail" tagName="p" />
 				<FormattedMessage id="confirmation.didNotReceive">
