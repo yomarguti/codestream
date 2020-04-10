@@ -238,7 +238,7 @@ export function GettingStarted(props: GettingStartedProps) {
 	return (
 		<Root>
 			<ComposeArea id="compose-gutter" />
-			<h2>Welcome to CodeStream</h2>
+			<h2>Getting Started</h2>
 			<b>Let’s get you set up.</b> Follow the steps below to start coding more efficiently with your
 			team.
 			<Status>
