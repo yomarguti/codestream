@@ -11,6 +11,8 @@ import { WebviewPanels } from "@codestream/protocols/webview";
 import { isConnected } from "../store/providers/reducer";
 import { setUserPreference } from "./actions";
 import { Button } from "../src/components/Button";
+import { HostApi } from "../webview-api";
+import { OpenUrlRequestType } from "@codestream/protocols/agent";
 
 const Step = styled.div`
 	position: relative;
@@ -123,6 +125,14 @@ const HR = styled.div`
 	height: 1px;
 	border-bottom: 1px solid var(--base-border-color);
 	margin: 10px 0;
+`;
+
+const SpreadButtons = styled.div`
+	margin: 20px 0;
+	display: flex;
+	button:nth-child(2) {
+		margin-left: auto;
+	}
 `;
 
 export const STEPS = [
@@ -281,14 +291,26 @@ export function GettingStarted(props: GettingStartedProps) {
 				);
 			})}
 			<HR />
-			<div style={{ height: "10px" }}></div>
-			<Button
-				variant="secondary"
-				size="compact"
-				onClick={() => dispatch(setUserPreference(["skipGettingStarted"], true))}
-			>
-				Mark all as done
-			</Button>
+			<SpreadButtons>
+				<Button
+					variant="secondary"
+					size="compact"
+					onClick={() => dispatch(setUserPreference(["skipGettingStarted"], true))}
+				>
+					Mark all as done
+				</Button>
+				<Button
+					variant="secondary"
+					size="compact"
+					onClick={() =>
+						HostApi.instance.send(OpenUrlRequestType, {
+							url: "https://www.codestream.com/video-library"
+						})
+					}
+				>
+					Video library
+				</Button>
+			</SpreadButtons>
 		</Root>
 	);
 }
