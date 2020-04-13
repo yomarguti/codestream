@@ -166,7 +166,7 @@ const MetaCheckboxWithHoverIcon = styled.div`
 
 const MetaIcons = styled.span`
 	.icon {
-		margin-left: 10px;
+		margin-left: 5px;
 	}
 `;
 
@@ -279,8 +279,8 @@ const BaseReview = (props: BaseReviewProps) => {
 
 	const nextFile = () => HostApi.instance.send(ShowNextChangedFileRequestType, {});
 	const isMacintosh = navigator.appVersion.includes("Macintosh");
-	const nextFileKeyboardShortcut = () => isMacintosh ? `⌥ F6` : "Alt-F6";
-	const previousFileKeyboardShortcut = () => isMacintosh ? `⇧ ⌥ F6` : "Shift-Alt-F6";
+	const nextFileKeyboardShortcut = () => (isMacintosh ? `⌥ F6` : "Alt-F6");
+	const previousFileKeyboardShortcut = () => (isMacintosh ? `⇧ ⌥ F6` : "Shift-Alt-F6");
 
 	return (
 		<MinimumWidthCard {...getCardProps(props)} noCard={!props.collapsed}>
@@ -410,32 +410,36 @@ const BaseReview = (props: BaseReviewProps) => {
 							<Meta id="changed-files">
 								<MetaLabel>
 									Changed Files
-									<MetaIcons>
-										<Icon
-											onClick={nextFile}
-											name="arrow-down"
-											className="clickable"
-											placement="top"
-											delay={1}
-											title={
-												<span>
-													Next File <span className="keybinding">{nextFileKeyboardShortcut()}</span>
-												</span>
-											}
-										/>
-										<Icon
-											onClick={prevFile}
-											name="arrow-up"
-											className="clickable"
-											placement="top"
-											delay={1}
-											title={
-												<span>
-													Previous File <span className="keybinding">{previousFileKeyboardShortcut()}</span>
-												</span>
-											}
-										/>
-									</MetaIcons>
+									{props.canStartReview && (
+										<MetaIcons>
+											<Icon
+												onClick={nextFile}
+												name="arrow-down"
+												className="clickable"
+												placement="top"
+												delay={1}
+												title={
+													<span>
+														Next File{" "}
+														<span className="keybinding">{nextFileKeyboardShortcut()}</span>
+													</span>
+												}
+											/>
+											<Icon
+												onClick={prevFile}
+												name="arrow-up"
+												className="clickable"
+												placement="top"
+												delay={1}
+												title={
+													<span>
+														Previous File{" "}
+														<span className="keybinding">{previousFileKeyboardShortcut()}</span>
+													</span>
+												}
+											/>
+										</MetaIcons>
+									)}
 								</MetaLabel>
 								<MetaDescriptionForAssignees>
 									<ChangesetFileList
