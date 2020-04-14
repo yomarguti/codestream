@@ -17,6 +17,9 @@ import {
 	FetchReviewsRequest,
 	FetchReviewsRequestType,
 	FetchReviewsResponse,
+	GetAllReviewContentsRequest,
+	GetAllReviewContentsRequestType,
+	GetAllReviewContentsResponse,
 	GetReviewContentsLocalRequest,
 	GetReviewContentsLocalRequestType,
 	GetReviewContentsRequest,
@@ -28,6 +31,8 @@ import {
 	PauseReviewRequest,
 	PauseReviewRequestType,
 	PauseReviewResponse,
+	ReviewFileContents,
+	ReviewRepoContents,
 	StartReviewRequest,
 	StartReviewRequestType,
 	StartReviewResponse,
@@ -141,6 +146,36 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			left: leftContents,
 			right: rightContents || ""
 		};
+	}
+
+	@lspHandler(GetAllReviewContentsRequestType)
+	@log()
+	async getAllContents(
+		request: GetAllReviewContentsRequest
+	): Promise<GetAllReviewContentsResponse> {
+		const review = await this.getById(request.reviewId);
+		const repos: ReviewRepoContents[] = [];
+		for (const changeset of review.reviewChangesets) {
+			const files: ReviewFileContents[] = [];
+			for (const file of changeset.modifiedFiles) {
+				const contents = await this.getContents({
+					reviewId: review.id,
+					repoId: changeset.repoId,
+					path: file.file
+				});
+				files.push({
+					path: file.file,
+					left: contents.left,
+					right: contents.right
+				});
+			}
+
+			repos.push({
+				repoId: changeset.repoId,
+				files
+			});
+		}
+		return { repos };
 	}
 
 	@lspHandler(GetReviewContentsRequestType)

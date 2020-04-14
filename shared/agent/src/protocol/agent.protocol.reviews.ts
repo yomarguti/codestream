@@ -185,6 +185,32 @@ export const GetReviewContentsLocalRequestType = new RequestType<
 	void
 >("codestream/review/contentsLocal");
 
+export interface GetAllReviewContentsRequest {
+	reviewId: string;
+}
+
+export interface ReviewFileContents {
+	path: string;
+	left: string;
+	right: string;
+}
+
+export interface ReviewRepoContents {
+	repoId: string;
+	files: ReviewFileContents[];
+}
+
+export interface GetAllReviewContentsResponse {
+	repos: ReviewRepoContents[];
+}
+
+export const GetAllReviewContentsRequestType = new RequestType<
+	GetAllReviewContentsRequest,
+	GetAllReviewContentsResponse,
+	void,
+	void
+>("codestream/review/allContents");
+
 export interface FetchReviewDiffsRequest extends CSGetReviewDiffsRequest {}
 
 export interface FetchReviewDiffsResponse extends CSGetReviewDiffsResponse {}
