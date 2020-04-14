@@ -172,7 +172,8 @@ class DefaultMarkersBuilder extends MarkersBuilder {
 		fileCurrentCommitSha?: string;
 	}> {
 		if (source == null) return this.getLocationInfoWithoutSource();
-		if (source.revision == null) return this.getLocationInfoWithoutRevision(source.repoPath);
+		if (source.revision == null)
+			return this.getLocationInfoWithoutRevision(source.repoPath, location);
 		return this.getLocationInfoCore(source.repoPath, source.revision, location);
 	}
 
@@ -182,7 +183,7 @@ class DefaultMarkersBuilder extends MarkersBuilder {
 		};
 	}
 
-	private async getLocationInfoWithoutRevision(repoPath: string) {
+	private async getLocationInfoWithoutRevision(repoPath: string, location: CSMarkerLocation) {
 		Logger.log(`prepareMarkerCreationDescriptor: no source revision - file has no commits`);
 		const { git } = SessionContainer.instance();
 
@@ -199,6 +200,11 @@ class DefaultMarkersBuilder extends MarkersBuilder {
 					}
 				}
 			],
+			backtrackedLocation: {
+				atDocument: location,
+				fileContents: await this.getFileContents(),
+				filePath: this._documentUri.fsPath
+			},
 			fileCurrentCommitSha: repoHead
 		};
 	}
@@ -396,7 +402,7 @@ class ReviewDiffMarkersBuilder extends MarkersBuilder {
 
 export interface UncommittedBacktrackedLocation {
 	atDocument: CSMarkerLocation;
-	atCurrentCommit: CSMarkerLocation;
+	atCurrentCommit?: CSMarkerLocation;
 	fileContents: string;
 	filePath: string;
 }

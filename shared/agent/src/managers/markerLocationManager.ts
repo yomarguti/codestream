@@ -161,7 +161,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			repoRoot,
 			markers,
 			currentCommitLocations.locations,
-			currentCommitHash!
+			currentCommitHash
 		);
 
 		const doc = documents.get(documentUri);
@@ -178,13 +178,14 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			return result;
 		}
 
-		const currentCommitText = await git.getFileContentForRevision(filePath, currentCommitHash!);
-		if (currentCommitText === undefined) {
-			throw new Error(`Could not retrieve contents for ${filePath}@${currentCommitHash}`);
-		}
+		const currentCommitText =
+			currentCommitHash && (await git.getFileContentForRevision(filePath, currentCommitHash));
 
 		if (Object.keys(committedLocations).length) {
 			Logger.log(`MARKERS: calculating current location for committed locations`);
+			if (currentCommitText === undefined) {
+				throw new Error(`Could not retrieve contents for ${filePath}@${currentCommitHash}`);
+			}
 			const diff = structuredPatch(
 				filePath,
 				filePath,
@@ -233,6 +234,9 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 
 		if (Object.keys(futureReferences).length) {
 			Logger.log(`MARKERS: calculating current location for future references`);
+			if (currentCommitText === undefined) {
+				throw new Error(`Could not retrieve contents for ${filePath}@${currentCommitHash}`);
+			}
 			for (const id in futureReferences) {
 				const referenceLocation = futureReferences[id];
 				const referenceText =
@@ -296,7 +300,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		repoPath: string,
 		markers: CSMarker[],
 		committedLocations: MarkerLocationsById,
-		fileCurrentCommit: string
+		fileCurrentCommit: string | undefined
 	): Promise<{
 		committedLocations: MarkerLocationsById;
 		uncommittedLocations: UncommittedLocationsById;
@@ -316,6 +320,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			const uncommittedLocation = cachedUncommittedLocations.get(id);
 
 			if (
+				canonicalLocation &&
 				!canonicalLocation.commitHash &&
 				canonicalLocation.flags.baseCommit === fileCurrentCommit
 			) {
@@ -753,8 +758,11 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 				const filePath = backtrackedLocation.filePath;
 				const fileContents = backtrackedLocation.fileContents;
 
-				const meta = atCurrentCommit.meta;
-				if (meta && (meta.startWasDeleted || meta.endWasDeleted)) {
+				if (
+					!atCurrentCommit ||
+					atCurrentCommit.meta?.startWasDeleted ||
+					atCurrentCommit.meta?.endWasDeleted
+				) {
 					const uncommittedLocation = {
 						...atDocument!,
 						id: marker.id
