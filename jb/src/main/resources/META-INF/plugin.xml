@@ -189,5 +189,5 @@
     </actions>
 
     <depends>com.intellij.modules.platform</depends>
-    <idea-version since-build="192.2840"/>
+    <idea-version since-build="192.4488"/>
 </idea-plugin>

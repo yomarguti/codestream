@@ -151,6 +151,25 @@ enum class PermalinkPrivacy(val value: String) {
     PRIVATE("private")
 }
 
+class GetAllReviewContentsParams(
+    val reviewId: String
+)
+
+class ReviewFileContents(
+    val path: String,
+    val left: String,
+    val right: String
+)
+
+class ReviewRepoContents(
+    val repoId: String,
+    val files: List<ReviewFileContents>
+)
+
+class GetAllReviewContentsResult(
+    val repos: List<ReviewRepoContents>
+)
+
 class GetReviewContentsParams(
     val reviewId: String,
     val repoId: String,
