@@ -16,6 +16,7 @@ export interface ThirdPartyProviderConfig {
 	hasSharing?: boolean;
 	needsConfigure?: boolean;
 	oauthData?: { [key: string]: any };
+	scopes?: string[];
 }
 
 export interface ThirdPartyDisconnect {
