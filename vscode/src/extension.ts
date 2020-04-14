@@ -83,7 +83,12 @@ export async function activate(context: ExtensionContext) {
 	context.subscriptions.push(Container.session.onDidChangeSessionStatus(onSessionStatusChanged));
 	context.subscriptions.push(new ProtocolHandler());
 
-	showStartupMessage(context, extensionVersion);
+	const previousVersion = context.globalState.get<string>(GlobalState.Version);
+	showStartupUpgradeMessage(context, extensionVersion, previousVersion);
+	if (previousVersion === undefined) {
+		// show CS on initial install
+		await Container.webview.show();
+	}
 
 	context.globalState.update(GlobalState.Version, extensionVersion);
 
@@ -124,8 +129,9 @@ export async function gitPath(): Promise<string> {
 // Add any versions here that we want to skip for blog posts
 const skipVersions = [Versions.from(1, 2)];
 
-async function showStartupMessage(context: ExtensionContext, version: string) {
-	const previousVersion = context.globalState.get<string>(GlobalState.Version);
+async function showStartupUpgradeMessage(context: ExtensionContext, version: string, previousVersion: string | undefined) {
+	// if this is the first install, there is no previous message... don't show
+	if (!previousVersion) return;
 
 	if (previousVersion !== version) {
 		Logger.log(
