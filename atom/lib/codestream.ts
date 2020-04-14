@@ -280,7 +280,7 @@ class CodestreamPackage {
 				case SessionStatus.SigningIn:
 					return `Signing in...${environmentLabel}`.replace(":", "");
 				default:
-					return `${environmentLabel} Sign in`.trim();
+					return `${environmentLabel} CodeStream`.trim();
 			}
 		};
 
