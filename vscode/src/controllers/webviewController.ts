@@ -102,7 +102,7 @@ import { BuiltInCommands } from "../constants";
 const emptyObj = {};
 
 export interface WebviewState {
-	hidden: boolean;
+	hidden: boolean | undefined;
 	teams: {
 		[teamId: string]: {
 			context?: WebviewContext;
@@ -195,7 +195,7 @@ export class WebviewController implements Disposable {
 				const state = Container.context.workspaceState.get<WebviewState>(
 					WorkspaceState.webviewState,
 					{
-						hidden: false,
+						hidden: undefined,
 						teams: {}
 					}
 				);
@@ -203,7 +203,9 @@ export class WebviewController implements Disposable {
 				const teamState = state.teams[this.session.team.id];
 				this._context = teamState && teamState.context;
 
-				if (!state.hidden) {
+				// only show if the state is explicitly set to false
+				// (ignore if it's undefined)
+				if (state.hidden === false) {
 					this.show();
 				}
 
