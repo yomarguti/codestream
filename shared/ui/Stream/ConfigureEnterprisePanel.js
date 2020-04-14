@@ -12,18 +12,21 @@ export class ConfigureEnterprisePanel extends Component {
 	initialState = {
 		baseUrl: "",
 		baseUrlTouched: false,
-		appClientId: "",
-		appClientIdTouched: false,
-		appClientSecret: "",
-		appClientSecretTouched: false,
+		token: "",
+		tokenTouched: false,
 		formTouched: false
 	};
 
 	state = this.initialState;
-	wantProviderId = "";
 
 	focusInput() {
-		document.getElementById("configure-provider-initial-input").focus();
+		const { providerId } = this.props;
+		const { isEnterprise } = this.props.providers[providerId] || {};
+		if (isEnterprise) {
+			document.getElementById("configure-provider-access-token").focus();
+		} else {
+			document.getElementById("configure-provider-initial-input").focus();
+		}
 	}
 
 	componentDidMount() {
@@ -37,28 +40,25 @@ export class ConfigureEnterprisePanel extends Component {
 		this.focusInput();
 	}
 
-	componentDidUpdate() {
-		if (this.wantProviderId && this.props.providers[this.wantProviderId]) {
-			this.props.connectProvider(this.wantProviderId, this.props.originLocation);
-			this.props.closePanel();
-		}
-	}
+	componentDidUpdate() {}
 
 	onSubmit = async e => {
 		e.preventDefault();
 		if (this.isFormInvalid()) return;
 		const { providerId } = this.props;
-		const { baseUrl, appClientId, appClientSecret } = this.state;
-		let url = baseUrl.trim().toLowerCase();
+		const { baseUrl, token } = this.state;
+		const provider = this.props.providers[providerId];
+		const { host, isEnterprise } = provider;
+		let url = isEnterprise ? host : baseUrl.trim().toLowerCase();
 		url = url.match(/^http/) ? url : `https://${url}`;
 		url = url.replace(/\/*$/g, "");
-		const newProviderId = await this.props.addEnterpriseProvider(providerId, url, {
-			appClientId,
-			appClientSecret
+
+		// configuring an enterprise host is as good as connecting, since we are letting the user
+		// set the access token
+		await this.props.addEnterpriseProvider(providerId, url, {
+			token
 		});
-		if (newProviderId) {
-			this.wantProviderId = newProviderId;
-		}
+		this.props.closePanel();
 	};
 
 	renderError = () => {};
@@ -74,40 +74,29 @@ export class ConfigureEnterprisePanel extends Component {
 		}
 	};
 
-	onBlurAppClientId = () => {
-		this.setState({ appClientIdTouched: true });
+	onBlurToken = () => {
+		this.setState({ tokenTouched: true });
 	};
 
-	renderAppClientIdHelp = () => {
-		const { appClientId, appClientIdTouched, formTouched } = this.state;
-		if (appClientIdTouched || formTouched)
-			if (appClientId.length === 0) return <small className="error-message">Required</small>;
-	};
-
-	onBlurAppClientSecret = () => {
-		this.setState({ appClientSecretTouched: true });
-	};
-
-	renderAppClientSecretHelp = () => {
-		const { appClientSecret, appClientSecretTouched, formTouched } = this.state;
-		if (appClientSecretTouched || formTouched)
-			if (appClientSecret.length === 0) return <small className="error-message">Required</small>;
+	renderTokenHelp = () => {
+		const { token, tokenTouched, formTouched } = this.state;
+		if (tokenTouched || formTouched) {
+			if (token.length === 0) return <small className="error-message">Required</small>;
+		}
 	};
 
 	tabIndex = () => {};
 
 	isFormInvalid = () => {
-		return (
-			this.state.baseUrl.length === 0 ||
-			this.state.appClientId.length === 0 ||
-			this.state.appClientSecret.length === 0
-		);
+		const { providerId } = this.props;
+		const { isEnterprise } = this.props.providers[providerId] || {};
+		return (!isEnterprise && this.state.baseUrl.length === 0) || this.state.token.length === 0;
 	};
 
 	render() {
 		const { providerId } = this.props;
 		const inactive = false;
-		const { name } = this.props.providers[providerId] || {};
+		const { name, isEnterprise, scopes } = this.props.providers[providerId] || {};
 		const providerName = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].displayName : "";
 		const providerShortName = PROVIDER_MAPPINGS[name]
 			? PROVIDER_MAPPINGS[name].shortDisplayName || providerName
@@ -131,65 +120,56 @@ export class ConfigureEnterprisePanel extends Component {
 						{this.renderError()}
 						<div id="controls">
 							<div id="configure-enterprise-controls" className="control-group">
+								{!isEnterprise && (
+									<div>
+										<label>
+											<strong>{providerShortName} Base URL</strong>
+										</label>
+										<label>
+											Please provide the Base URL used by your team to access {providerShortName}.
+										</label>
+										<input
+											className="native-key-bindings input-text control"
+											type="text"
+											name="baseUrl"
+											tabIndex={this.tabIndex()}
+											value={this.state.baseUrl}
+											onChange={e => this.setState({ baseUrl: e.target.value })}
+											onBlur={this.onBlurBaseUrl}
+											required={this.state.baseUrlTouched || this.state.formTouched}
+											placeholder={placeholder}
+											required={true}
+											id="configure-provider-initial-input"
+										/>
+										{this.renderBaseUrlHelp()}
+										<br />
+										<br />
+									</div>
+								)}
 								<label>
-									<strong>{providerShortName} Base URL</strong>
+									<strong>{providerShortName} Permanent Access Token</strong>
 								</label>
 								<label>
-									Please provide the Base URL used by your team to access {providerShortName}.
-								</label>
-								<input
-									className="native-key-bindings input-text control"
-									type="text"
-									name="baseUrl"
-									tabIndex={this.tabIndex()}
-									value={this.state.baseUrl}
-									onChange={e => this.setState({ baseUrl: e.target.value })}
-									onBlur={this.onBlurBaseUrl}
-									required={this.state.baseUrlTouched || this.state.formTouched}
-									placeholder={placeholder}
-									required={true}
-									id="configure-provider-initial-input"
-								/>
-								{this.renderBaseUrlHelp()}
-							</div>
-							<br />
-							{helpUrl && (
-								<label>
-									Contact your {providerShortName} admin to get the client ID and secret required
-									below, and send them a link to <a href={helpUrl}>these instructions</a>.
-								</label>
-							)}
-							<div id="app-clientid-controls" className="control-group">
-								<label>
-									<strong>Client ID</strong>
-								</label>
-								<input
-									className="native-key-bindings input-text control"
-									type="text"
-									name="appClientId"
-									tabIndex={this.tabIndex()}
-									value={this.state.appClientId}
-									onChange={e => this.setState({ appClientId: e.target.value })}
-									onBlur={this.onBlurAppClientId}
-									required={this.state.appClientIdTouched || this.state.formTouched}
-								/>
-								{this.renderAppClientIdHelp()}
-							</div>
-							<div id="app-clientsecret-controls" className="control-group">
-								<label>
-									<strong>Client Secret</strong>
+									Please provide a <a href={helpUrl}>permanent access token</a> we can use to access
+									your {providerShortName} projects and issues.
+									{scopes && scopes.length && (
+										<span>
+											&nbsp;Your PAT should have the following scopes: <b>{scopes.join(", ")}</b>.
+										</span>
+									)}
 								</label>
 								<input
-									className="native-key-bindings input-text control"
+									className="input-text control"
 									type="text"
-									name="appClientSecret"
+									name="token"
 									tabIndex={this.tabIndex()}
-									value={this.state.appClientSecret}
-									onChange={e => this.setState({ appClientSecret: e.target.value })}
-									onBlur={this.onBlurAppClientSecret}
-									required={this.state.appClientSecretTouched || this.state.formTouched}
+									value={this.state.token}
+									onChange={e => this.setState({ token: e.target.value })}
+									onBlur={this.onBlurToken}
+									required={this.state.tokenTouched || this.state.formTouched}
+									id="configure-provider-access-token"
 								/>
-								{this.renderAppClientSecretHelp()}
+								{this.renderTokenHelp()}
 							</div>
 							<div className="button-group">
 								<Button

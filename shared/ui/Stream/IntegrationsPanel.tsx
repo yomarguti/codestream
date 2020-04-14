@@ -168,7 +168,7 @@ export const IntegrationsPanel = () => {
 				// bring up the custom popup for configuring it
 				action = () =>
 					dispatch(openPanel(`configure-provider-${name}-${providerId}-Integrations Panel`));
-			} else if (forEnterprise) {
+			} else if (forEnterprise || isEnterprise) {
 				// otherwise if it's for an enterprise provider, configure for enterprise
 				action = () => {
 					dispatch(openPanel(`configure-enterprise-${name}-${providerId}-Integrations Panel`));
