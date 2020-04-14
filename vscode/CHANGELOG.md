@@ -1,5 +1,14 @@
 # Change Log
 
+## [7.0.2] - 2020-4-14
+
+### Fixed
+
+- Fixes an issue with codemarks not appearing in the Current File view for uncommitted files
+- Fixes an issue with the CodeStream pane not opening by default after initial installation
+- Fixes an issue with the CodeStream pane opening when it had previously been closed when opening VSC from the command line
+- Fixes an issue with the "What's New" popup appearing for new CodeStream installations
+
 ## [7.0.1] - 2020-4-10
 
 ### Added
