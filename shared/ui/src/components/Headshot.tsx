@@ -53,7 +53,7 @@ const Initials = styled.div<DimensionProps & { color: string }>`
 	align-items: center;
 	position: absolute;
 	left: 0;
-	border-radius: 3px;
+	border-radius: ${props => (props.hardRightBorder ? "3px 0 0 3px" : "3px")};
 	font-size: ${props => props.size * 0.65}px;
 	font-weight: normal;
 	text-transform: capitalize;
@@ -116,7 +116,11 @@ export const Headshot = styled((props: HeadshotProps) => {
 				protocol="https://"
 				email={person.email}
 			/>
-			<Initials size={size} color={Colors[person.color || 1]}>
+			<Initials
+				size={size}
+				color={Colors[person.color || 1]}
+				hardRightBorder={props.hardRightBorder}
+			>
 				{initials}
 			</Initials>
 		</Root>
