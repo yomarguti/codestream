@@ -624,6 +624,7 @@ class TeamPanel extends React.Component<Props, State> {
 			this.props.activePanel !== WebviewPanels.Invite &&
 			this.props.activePanel !== WebviewPanels.People;
 
+		console.log("INVITED ARE: ", this.props.invited);
 		const suggested = this.state.suggested.filter(u => !invitingEmails[u.email]);
 		const title = this.state.changingTeamName ? (
 			<input
@@ -736,20 +737,44 @@ class TeamPanel extends React.Component<Props, State> {
 							<div className="section">
 								<PanelHeader title="Outstanding Invitations" />
 								<UL>
-									{this.props.invited.map(user => (
-										<li key={user.email}>
-											<div className="committer-email">
-												{user.email}
-												<a onClick={e => this.kick(user)} className="float-right">
-													remove
-												</a>
-												<span className="float-right" style={{ padding: "0 5px" }}>
-													&middot;
-												</span>
-												{this.renderEmailUser(user)}
+									{this.props.invited.map(user => {
+										const body = encodeURIComponent(
+											`1. Download and install CodeStream for <a href="https://marketplace.visualstudio.com/items?itemName=CodeStream.codestream"&gt;VS Code&lt;/a&gt;, <a href="https://marketplace.visualstudio.com/items?itemName=CodeStream.codestream-vs">Visual Studio</a>, <a href="https://plugins.jetbrains.com/plugin/12206-codestream">JetBrains</a> or <a href="https://atom.io/packages/codestream">Atom</a>.\n\n2. Click “Find your team" and paste in your invitation code: <b>${user.inviteCode}</b>\n\n`
+										);
+										const subject = "Invitation to CodeStream";
+										const title = user.inviteCode ? (
+											<div>
+												Sometimes emails from CodeStream are blocked.
+												<div style={{ height: "10px" }}></div>
+												<a href={`mailto:${user.email}?Subject=${subject}&body=${body}`}>
+													Click Here
+												</a>{" "}
+												to email an invitation from you.
+												<div style={{ height: "10px" }}></div>
+												Invite code for {user.email}:
+												<br />
+												{user.inviteCode}
 											</div>
-										</li>
-									))}
+										) : (
+											undefined
+										);
+										return (
+											<li key={user.email}>
+												<div className="committer-email">
+													{user.email}
+													<a onClick={e => this.kick(user)} className="float-right">
+														remove
+													</a>
+													<span className="float-right" style={{ padding: "0 5px" }}>
+														&middot;
+													</span>
+													<Tooltip title={title} placement="topRight" align={{ offset: [35, -5] }}>
+														{this.renderEmailUser(user)}
+													</Tooltip>
+												</div>
+											</li>
+										);
+									})}
 								</UL>
 							</div>
 						)}
