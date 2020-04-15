@@ -499,6 +499,9 @@ const BaseReview = (props: BaseReviewProps) => {
 												<MarkdownText text={formattedText} />
 											</Checkbox>
 											<Icon
+												title="Show request details"
+												placement="bottom"
+												delay={1}
 												name="link-external"
 												className="clickable"
 												onClick={() => {
