@@ -66,6 +66,7 @@ import { URI } from "vscode-uri";
 import { moveCursorToLine } from "./Stream/CodemarkView";
 import { setMaintenanceMode } from "./store/session/actions";
 import { updateModifiedRepos } from "./store/users/actions";
+import { logWarning } from './logger';
 
 export { HostApi };
 
@@ -340,6 +341,17 @@ function listenForEvents(store) {
 							}
 							break;
 						}
+					}
+				}
+				break;
+			}
+			case "navigate" : {
+				if (route.action) {
+					if (Object.values(WebviewPanels).includes(route.action as any)) {
+						store.dispatch(openPanel(route.action));
+					}
+					else {
+						logWarning(`Cannot navigate to route.action=${route.action}`);
 					}
 				}
 				break;

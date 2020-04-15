@@ -75,6 +75,7 @@ export interface HostDidDidReceiveRequestNotification {
 export enum RouteControllerType {
 	Codemark = "codemark",
 	Review = "review",
+	Navigate = "navigate",
 	Search = "search"
 }
 export enum RouteActionType {
