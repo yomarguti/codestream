@@ -1957,7 +1957,7 @@ class CodemarkForm extends React.Component<Props, State> {
 										paddingLeft: "10px",
 										paddingRight: "10px",
 										// fixed width to handle the isLoading case
-										width: "80px",
+										width: this.props.currentReviewId ? "auto" : "80px",
 										marginRight: 0
 									}}
 									className="control-button"
@@ -1972,6 +1972,10 @@ class CodemarkForm extends React.Component<Props, State> {
 											: this.state.linkURI
 											? "Copy Link"
 											: "Create Link"
+										: this.state.isChangeRequest
+										? "Add Comment & Require Change"
+										: this.props.currentReviewId
+										? "Add Review Comment"
 										: "Submit"}
 								</Button>
 							</Tooltip>
