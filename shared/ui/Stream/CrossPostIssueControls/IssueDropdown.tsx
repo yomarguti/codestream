@@ -274,7 +274,10 @@ class IssueDropdown extends React.Component<Props, State> {
 		) {
 			const { name, id } = providerInfo.provider;
 			this.props.openPanel(`configure-provider-${name}-${id}-Compose Modal`);
-		} else if (providerInfo.provider.forEnterprise) {
+		} else if (
+			providerInfo.provider.forEnterprise &&
+			!this.providerIsConnected(providerInfo.provider.id)
+		) {
 			const { name, id } = providerInfo.provider;
 			/* if (name === "github_enterprise") {
 				this.setState({
@@ -322,7 +325,11 @@ class IssueDropdown extends React.Component<Props, State> {
 		if (!provider) return undefined;
 		const display = provider ? PROVIDER_MAPPINGS[provider.name] : undefined;
 		if (!display) return undefined;
-		let providerInfo = getUserProviderInfo(this.props.currentUser, provider.name, this.props.currentTeamId);
+		let providerInfo = getUserProviderInfo(
+			this.props.currentUser,
+			provider.name,
+			this.props.currentTeamId
+		);
 		if (!providerInfo) return undefined;
 		if (provider.isEnterprise) {
 			if (!providerInfo.hosts) return undefined;
@@ -337,11 +344,12 @@ class IssueDropdown extends React.Component<Props, State> {
 		const { currentUser } = this.props;
 		if (!provider || currentUser.providerInfo == undefined) return false;
 		let providerInfo = currentUser.providerInfo[this.props.currentTeamId][provider.name];
-		if (provider.isEnterprise) {
-			if (!providerInfo!.hosts) return false;
-			providerInfo = providerInfo!.hosts![provider.id];
-		}
-		return providerInfo && !!providerInfo.accessToken ? true : false;
+		if (!providerInfo) return false;
+		if (providerInfo.accessToken) return true;
+		if (!provider.isEnterprise) return false;
+		if (!providerInfo!.hosts) return false;
+		providerInfo = providerInfo!.hosts![provider.id];
+		return providerInfo && !!providerInfo.accessToken;
 	}
 }
 

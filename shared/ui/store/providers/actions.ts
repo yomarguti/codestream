@@ -6,6 +6,7 @@ import {
 	ConfigureThirdPartyProviderRequestType,
 	AddEnterpriseProviderRequestType,
 	DisconnectThirdPartyProviderRequestType,
+	RemoveEnterpriseProviderRequestType,
 	TelemetryRequestType
 } from "@codestream/protocols/agent";
 import { CSMe } from "@codestream/protocols/api";
@@ -129,6 +130,19 @@ export const addEnterpriseProvider = (
 	} catch (error) {
 		logError(`Failed to add enterprise provider for ${provider.name}: ${error}`);
 		return "";
+	}
+};
+
+export const removeEnterpriseProvider = (providerId: string) => async (dispatch, getState) => {
+	const { providers } = getState();
+	const provider = providers[providerId];
+	if (!provider) return;
+	try {
+		await HostApi.instance.send(RemoveEnterpriseProviderRequestType, {
+			providerId
+		});
+	} catch (error) {
+		logError(`Failed to remove enterprise provider for ${providerId}: ${error}`);
 	}
 };
 

@@ -181,11 +181,9 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 					</AzureDevOpsCardControls>
 				);
 			}
-				case "slack": {
+			case "slack": {
 				return (
-					<SlackCardControls provider={providerInfo.provider}>
-						{providerOptions}
-					</SlackCardControls>
+					<SlackCardControls provider={providerInfo.provider}>{providerOptions}</SlackCardControls>
 				);
 			}
 
@@ -294,7 +292,10 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		) {
 			const { name, id } = providerInfo.provider;
 			this.props.openPanel(`configure-provider-${name}-${id}-Compose Modal`);
-		} else if (providerInfo.provider.forEnterprise) {
+		} else if (
+			providerInfo.provider.forEnterprise &&
+			!this.providerIsConnected(providerInfo.provider.id)
+		) {
 			const { name, id } = providerInfo.provider;
 			/* if (name === "github_enterprise") {
 				this.setState({
@@ -342,7 +343,11 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		if (!provider) return undefined;
 		const display = provider ? PROVIDER_MAPPINGS[provider.name] : undefined;
 		if (!display) return undefined;
-		let providerInfo = getUserProviderInfo(this.props.currentUser, provider.name, this.props.currentTeamId);
+		let providerInfo = getUserProviderInfo(
+			this.props.currentUser,
+			provider.name,
+			this.props.currentTeamId
+		);
 		if (!providerInfo) return;
 		if (provider.isEnterprise) {
 			if (!providerInfo!.hosts) return undefined;
@@ -358,11 +363,11 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 		if (!provider || currentUser.providerInfo == undefined) return false;
 		let providerInfo = getUserProviderInfo(currentUser, provider.name, this.props.currentTeamId);
 		if (!providerInfo) return false;
-		if (provider.isEnterprise) {
-			if (!providerInfo.hosts) return false;
-			providerInfo = providerInfo.hosts[provider.id];
-		}
-		return !!providerInfo.accessToken;
+		if (providerInfo.accessToken) return true;
+		if (!provider.isEnterprise) return false;
+		if (!providerInfo.hosts) return false;
+		providerInfo = providerInfo.hosts[provider.id];
+		return providerInfo && !!providerInfo.accessToken;
 	}
 }
 
@@ -381,10 +386,12 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{ connectProvider, setIssueProvider, openPanel, updateForProvider }
-)(CrossPostIssueControls);
+export default connect(mapStateToProps, {
+	connectProvider,
+	setIssueProvider,
+	openPanel,
+	updateForProvider
+})(CrossPostIssueControls);
 
 // {false && (
 // 	<Select

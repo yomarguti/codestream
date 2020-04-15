@@ -81,7 +81,11 @@ export {
 	setCodemarkTagFilter,
 	setChannelFilter
 };
-export { connectProvider, disconnectProvider } from "../store/providers/actions";
+export {
+	connectProvider,
+	disconnectProvider,
+	removeEnterpriseProvider
+} from "../store/providers/actions";
 
 export const markStreamRead = (streamId: string, postId?: string) => () => {
 	HostApi.instance

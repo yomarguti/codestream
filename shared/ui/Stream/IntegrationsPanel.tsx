@@ -9,7 +9,13 @@ import { HostApi } from "../webview-api";
 import { PanelHeader } from "../src/components/PanelHeader";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { isConnected, getConnectedSharingTargets } from "../store/providers/reducer";
-import { openPanel, disconnectProvider, connectProvider, closePanel } from "./actions";
+import {
+	openPanel,
+	disconnectProvider,
+	connectProvider,
+	closePanel,
+	removeEnterpriseProvider
+} from "./actions";
 import Icon from "./Icon";
 import { Button } from "../src/components/Button";
 import { DropdownButton } from "./Review/DropdownButton";
@@ -65,7 +71,10 @@ const IntegrationButtons = styled.div`
 export const IntegrationsPanel = () => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
-		const { providers } = state;
+		const { providers, teams, context, session, users } = state;
+		const team = teams[context.currentTeamId];
+		const user = users[session.userId!];
+		const currentUserIsAdmin = (team.adminIds || []).includes(user.id);
 
 		const connectedProviders = Object.keys(providers).filter(id => isConnected(state, { id }));
 		const codeHostProviders = Object.keys(providers)
@@ -89,7 +98,10 @@ export const IntegrationsPanel = () => {
 			issueProviders,
 			messagingProviders,
 			connectedProviders,
-			sharingTargets
+			sharingTargets,
+			currentTeam: team,
+			currentUser: user,
+			currentUserIsAdmin
 		};
 	});
 
@@ -104,10 +116,10 @@ export const IntegrationsPanel = () => {
 	};
 
 	const renderConnectedProviders = providerIds => {
-		const { providers, connectedProviders } = derivedState;
+		const { providers } = derivedState;
 		return providerIds.map(providerId => {
 			const provider = providers[providerId];
-			const { name, isEnterprise, host, needsConfigure, forEnterprise } = provider;
+			const { name, isEnterprise, host } = provider;
 			const display = PROVIDER_MAPPINGS[name];
 			if (!display) return null;
 
@@ -141,6 +153,12 @@ export const IntegrationsPanel = () => {
 					action: () => dispatch(disconnectProvider(providerId, "Integrations Panel"))
 				}
 			];
+			if (isEnterprise && derivedState.currentUserIsAdmin) {
+				items.push({
+					label: "Remove host",
+					action: () => dispatch(removeEnterpriseProvider(providerId))
+				});
+			}
 			return (
 				<ProviderDropdown key={providerId} items={items}>
 					{display.icon && <Icon name={display.icon} />}
@@ -151,7 +169,7 @@ export const IntegrationsPanel = () => {
 	};
 
 	const renderProviders = providerIds => {
-		const { providers, connectedProviders } = derivedState;
+		const { providers } = derivedState;
 		return providerIds.map(providerId => {
 			const provider = providers[providerId];
 			const { name, isEnterprise, host, needsConfigure, forEnterprise } = provider;
@@ -168,7 +186,7 @@ export const IntegrationsPanel = () => {
 				// bring up the custom popup for configuring it
 				action = () =>
 					dispatch(openPanel(`configure-provider-${name}-${providerId}-Integrations Panel`));
-			} else if (forEnterprise || isEnterprise) {
+			} else if ((forEnterprise || isEnterprise) && name !== "jiraserver") {
 				// otherwise if it's for an enterprise provider, configure for enterprise
 				action = () => {
 					dispatch(openPanel(`configure-enterprise-${name}-${providerId}-Integrations Panel`));
@@ -184,12 +202,32 @@ export const IntegrationsPanel = () => {
 						});
 				} else action = () => dispatch(connectProvider(providerId, "Integrations Panel"));
 			}
-			return (
-				<Provider key={providerId} onClick={action}>
-					{display.icon && <Icon name={display.icon} />}
-					{displayName}
-				</Provider>
-			);
+
+			if (isEnterprise && derivedState.currentUserIsAdmin) {
+				const items = [
+					{
+						label: "Connect",
+						action
+					},
+					{
+						label: "Remove host",
+						action: () => dispatch(removeEnterpriseProvider(providerId))
+					}
+				];
+				return (
+					<ProviderDropdown key={providerId} items={items}>
+						{display.icon && <Icon name={display.icon} />}
+						{displayName}
+					</ProviderDropdown>
+				);
+			} else {
+				return (
+					<Provider key={providerId} onClick={action}>
+						{display.icon && <Icon name={display.icon} />}
+						{displayName}
+					</Provider>
+				);
+			}
 		});
 	};
 

@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { injectIntl } from "react-intl";
 import { connect } from "react-redux";
 import { closePanel } from "./actions";
-import { addEnterpriseProvider, connectProvider } from "../store/providers/actions";
+import { configureProvider, connectProvider } from "../store/providers/actions";
 import CancelButton from "./CancelButton";
 import Button from "./Button";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
@@ -20,13 +20,7 @@ export class ConfigureEnterprisePanel extends Component {
 	state = this.initialState;
 
 	focusInput() {
-		const { providerId } = this.props;
-		const { isEnterprise } = this.props.providers[providerId] || {};
-		if (isEnterprise) {
-			document.getElementById("configure-provider-access-token").focus();
-		} else {
-			document.getElementById("configure-provider-initial-input").focus();
-		}
+		document.getElementById("configure-provider-initial-input").focus();
 	}
 
 	componentDidMount() {
@@ -47,17 +41,10 @@ export class ConfigureEnterprisePanel extends Component {
 		if (this.isFormInvalid()) return;
 		const { providerId } = this.props;
 		const { baseUrl, token } = this.state;
-		const provider = this.props.providers[providerId];
-		const { host, isEnterprise } = provider;
-		let url = isEnterprise ? host : baseUrl.trim().toLowerCase();
-		url = url.match(/^http/) ? url : `https://${url}`;
-		url = url.replace(/\/*$/g, "");
 
-		// configuring an enterprise host is as good as connecting, since we are letting the user
+		// configuring is as good as connecting, since we are letting the user
 		// set the access token
-		await this.props.addEnterpriseProvider(providerId, url, {
-			token
-		});
+		this.props.configureProvider(providerId, { baseUrl, token });
 		this.props.closePanel();
 	};
 
@@ -88,15 +75,13 @@ export class ConfigureEnterprisePanel extends Component {
 	tabIndex = () => {};
 
 	isFormInvalid = () => {
-		const { providerId } = this.props;
-		const { isEnterprise } = this.props.providers[providerId] || {};
-		return (!isEnterprise && this.state.baseUrl.length === 0) || this.state.token.length === 0;
+		return this.state.baseUrl.length === 0 || this.state.token.length === 0;
 	};
 
 	render() {
 		const { providerId } = this.props;
 		const inactive = false;
-		const { name, isEnterprise, scopes } = this.props.providers[providerId] || {};
+		const { name, scopes } = this.props.providers[providerId] || {};
 		const providerName = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].displayName : "";
 		const providerShortName = PROVIDER_MAPPINGS[name]
 			? PROVIDER_MAPPINGS[name].shortDisplayName || providerName
@@ -120,32 +105,30 @@ export class ConfigureEnterprisePanel extends Component {
 						{this.renderError()}
 						<div id="controls">
 							<div id="configure-enterprise-controls" className="control-group">
-								{!isEnterprise && (
-									<div>
-										<label>
-											<strong>{providerShortName} Base URL</strong>
-										</label>
-										<label>
-											Please provide the Base URL used by your team to access {providerShortName}.
-										</label>
-										<input
-											className="native-key-bindings input-text control"
-											type="text"
-											name="baseUrl"
-											tabIndex={this.tabIndex()}
-											value={this.state.baseUrl}
-											onChange={e => this.setState({ baseUrl: e.target.value })}
-											onBlur={this.onBlurBaseUrl}
-											required={this.state.baseUrlTouched || this.state.formTouched}
-											placeholder={placeholder}
-											required={true}
-											id="configure-provider-initial-input"
-										/>
-										{this.renderBaseUrlHelp()}
-										<br />
-										<br />
-									</div>
-								)}
+								<div>
+									<label>
+										<strong>{providerShortName} Base URL</strong>
+									</label>
+									<label>
+										Please provide the Base URL used by your team to access {providerShortName}.
+									</label>
+									<input
+										className="native-key-bindings input-text control"
+										type="text"
+										name="baseUrl"
+										tabIndex={this.tabIndex()}
+										value={this.state.baseUrl}
+										onChange={e => this.setState({ baseUrl: e.target.value })}
+										onBlur={this.onBlurBaseUrl}
+										required={this.state.baseUrlTouched || this.state.formTouched}
+										placeholder={placeholder}
+										required={true}
+										id="configure-provider-initial-input"
+									/>
+									{this.renderBaseUrlHelp()}
+									<br />
+									<br />
+								</div>
 							</div>
 							<div key="token" id="configure-enterprise-controls-token" className="control-group">
 								<label>
@@ -205,6 +188,6 @@ const mapStateToProps = ({ providers, ide }) => {
 	return { providers, isInVscode: ide.name === "VSC" };
 };
 
-export default connect(mapStateToProps, { closePanel, addEnterpriseProvider, connectProvider })(
+export default connect(mapStateToProps, { closePanel, configureProvider, connectProvider })(
 	injectIntl(ConfigureEnterprisePanel)
 );

@@ -25,7 +25,7 @@ export function reduceProviders(state = initialState, action: ProviderActions) {
 		case "RESET":
 			return initialState;
 		case ProvidersActionsType.Update:
-			return { ...state, ...action.payload };
+			return { ...action.payload };
 		default:
 			return state;
 	}
@@ -41,8 +41,7 @@ export const isConnected = (state: CodeStreamState, option: ProviderPropertyOpti
 	const { currentTeamId } = state.context;
 
 	// ensure there's provider info for the user
-	if (currentUser.providerInfo == undefined)
-		return false;
+	if (currentUser.providerInfo == undefined) return false;
 
 	if (isNameOption(option)) {
 		const providerName = option.name;
@@ -118,31 +117,39 @@ export const getConnectedSharingTargets = (state: CodeStreamState) => {
 	if (currentUser.providerInfo == undefined) return [];
 
 	const slackProviderInfo = getUserProviderInfo(currentUser, "slack", state.context.currentTeamId);
-	const msteamsProviderInfo = getUserProviderInfo(currentUser, "msteams", state.context.currentTeamId);
+	const msteamsProviderInfo = getUserProviderInfo(
+		currentUser,
+		"msteams",
+		state.context.currentTeamId
+	);
 
 	let teams: ThirdPartyTeam[] = [];
 
 	const slackInfos = safe(() => slackProviderInfo!.multiple);
 	if (slackInfos)
-		teams = teams.concat(Object.entries(slackInfos).map(([teamId, info]) => ({
-			icon: PROVIDER_MAPPINGS.slack.icon!,
-			providerId: getProviderConfig(state, "slack")!.id,
-			teamId,
-			teamName: info.data!.team_name
-		})));
+		teams = teams.concat(
+			Object.entries(slackInfos).map(([teamId, info]) => ({
+				icon: PROVIDER_MAPPINGS.slack.icon!,
+				providerId: getProviderConfig(state, "slack")!.id,
+				teamId,
+				teamName: info.data!.team_name
+			}))
+		);
 
 	const msTeamInfos = safe(() => msteamsProviderInfo!.multiple);
 	if (msTeamInfos) {
 		const entries = Object.entries(msTeamInfos);
 		const len = entries.length;
-		teams = teams.concat(entries.map(([teamId], index) => {
-			return {
-				icon: PROVIDER_MAPPINGS.msteams.icon!,
-				providerId: getProviderConfig(state, "msteams")!.id,
-				teamId,
-				teamName: len === 1 ? 'MS Teams Org' : `MS Teams Org ${(index + 1)}`
-			}
-		}));
+		teams = teams.concat(
+			entries.map(([teamId], index) => {
+				return {
+					icon: PROVIDER_MAPPINGS.msteams.icon!,
+					providerId: getProviderConfig(state, "msteams")!.id,
+					teamId,
+					teamName: len === 1 ? "MS Teams Org" : `MS Teams Org ${index + 1}`
+				};
+			})
+		);
 	}
 	return teams;
 };
