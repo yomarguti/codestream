@@ -529,7 +529,7 @@ export class MessageInput extends React.Component<Props, State> {
 		if (currentPopup) {
 			if (event.key == "Escape") {
 				this.hidePopup();
-			} else if (event.key == "Enter" && !event.shiftKey) {
+			} else if ((event.key == "Enter" || event.which === 13) && !event.shiftKey) {
 				event.preventDefault();
 				this.handleSelectAtMention();
 			}
@@ -621,7 +621,7 @@ export class MessageInput extends React.Component<Props, State> {
 		} else {
 			if (event.key == "Escape" && multiCompose && this.props.onDismiss) {
 				this.props.onDismiss();
-			} else if (event.key === "Enter" && event.metaKey && multiCompose) {
+			} else if ((event.key === "Enter" || event.which === 13) && event.metaKey && multiCompose) {
 				// command-enter should submit for multiCompose
 				event.preventDefault();
 				const { onSubmit } = this.props;

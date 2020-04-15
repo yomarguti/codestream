@@ -455,7 +455,7 @@ export default class Menu extends Component {
 			event.preventDefault();
 			if (this.props.focusOnSelect) this.props.focusOnSelect.focus();
 		}
-		if (event.key === "Enter") {
+		if (event.key === "Enter" || event.which === 13) {
 			event.preventDefault();
 			this.handleMenuKeyPress(event, "enter");
 		}
