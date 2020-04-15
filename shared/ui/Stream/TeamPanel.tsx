@@ -750,7 +750,7 @@ class TeamPanel extends React.Component<Props, State> {
 												</a>{" "}
 												to email an invitation from you.
 												<div style={{ height: "10px" }}></div>
-												Invite code for {user.email}:
+												Or share the invite code for {user.email}:
 												<br />
 												{user.inviteCode}
 											</div>
