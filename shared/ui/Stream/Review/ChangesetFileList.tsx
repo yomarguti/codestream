@@ -116,7 +116,7 @@ export const ChangesetFileList = (props: {
 					const visited = visitedFilesInReview[visitedKey];
 					if (selected && !visited) {
 						visitedFilesInReview[visitedKey] = NOW;
-						visitedFilesInReview._latest = Object.keys(visitedFilesInReview).indexOf(visitedKey);
+						visitedFilesInReview._latest = index;
 						localStore.set(VISITED_REVIEW_FILES, visitedFiles);
 					}
 
