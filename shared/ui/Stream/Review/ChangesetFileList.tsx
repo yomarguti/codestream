@@ -108,12 +108,17 @@ export const ChangesetFileList = (props: {
 					);
 				}
 			}
-			if (!visitedFiles[review.id]) visitedFiles[review.id] = {};
+			const visitedFilesInReview = visitedFiles[review.id] || (visitedFiles[review.id] = {});
 			files.push(
 				...changeset.modifiedFiles.map(f => {
 					const visitedKey = [changeset.repoId, f.file].join(":");
 					const selected = (derivedState.matchFile || "").endsWith(f.file);
-					const visited = visitedFiles[review.id][visitedKey];
+					const visited = visitedFilesInReview[visitedKey];
+					if (selected && !visited) {
+						visitedFilesInReview[visitedKey] = NOW;
+						visitedFilesInReview._latest = Object.keys(visitedFilesInReview).indexOf(visitedKey);
+						localStore.set(VISITED_REVIEW_FILES, visitedFiles);
+					}
 
 					let icon;
 					// if we're loading, show a spinner
