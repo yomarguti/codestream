@@ -1975,7 +1975,7 @@ class CodemarkForm extends React.Component<Props, State> {
 										: this.state.isChangeRequest
 										? "Add Comment & Request Change"
 										: this.props.currentReviewId
-										? "Add Review Comment"
+										? "Add Comment to Review"
 										: "Submit"}
 								</Button>
 							</Tooltip>

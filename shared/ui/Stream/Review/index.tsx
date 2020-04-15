@@ -719,7 +719,7 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 						<Button
 							style={{
 								// fixed width to handle the isLoading case
-								width: isChangeRequest ? "120px" : "80px",
+								width: "100px",
 								margin: "10px 0",
 								float: "right"
 							}}
@@ -729,7 +729,7 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 							onClick={submit}
 							loading={isLoading}
 						>
-							{isChangeRequest ? "Request Change" : "Comment"}
+							{isChangeRequest ? "Request Change" : "Add Comment"}
 						</Button>
 					</Tooltip>
 				</div>
