@@ -220,10 +220,14 @@ export const BaseReviewHeader = (props: BaseReviewHeaderProps) => {
 	const renderedHeaderActions = (() => {
 		if (!props.collapsed) return null;
 
-		const approveItem = { label: "Approve", action: approve };
-		const reviewItem = { label: "Review Changes", action: startReview };
-		const rejectItem = { label: "Reject", action: reject };
-		const reopenItem = { label: "Reopen", action: reopen };
+		const approveItem = { icon: <Icon name="thumbsup" />, label: "Approve", action: approve };
+		const reviewItem = {
+			icon: <Icon name="review" />,
+			label: "Review Changes",
+			action: startReview
+		};
+		const rejectItem = { icon: <Icon name="thumbsdown" />, label: "Reject", action: reject };
+		const reopenItem = { icon: <Icon name="reopen" />, label: "Reopen", action: reopen };
 
 		if (props.review.status === "open")
 			return (
