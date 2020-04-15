@@ -365,7 +365,7 @@ export function ReviewNav(props: Props) {
 								</Button>
 							</Tooltip>
 						)}
-						<Tooltip title="Requre Changes" placement="bottom">
+						<Tooltip title="Require Changes" placement="bottom">
 							<Button variant="destructive" onClick={reject}>
 								<Icon className="narrow-icon" name="thumbsdown" />
 								<span className="wide-text">Reject</span>
