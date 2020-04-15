@@ -59,7 +59,11 @@ class ReviewService(private val project: Project) {
                 }
             } }
 
-            diffChain = SimpleDiffRequestChain(diffRequests)
+            diffChain = SimpleDiffRequestChain(diffRequests).also { chain ->
+                chain.index = diffRequests.indexOfFirst { request ->
+                    request.getUserData(REPO_ID) == repoId && request.getUserData(PATH) == path
+                }
+            }
             diffChains[reviewId] = diffChain
 
             val registryValue = Registry.get("show.diff.as.editor.tab")
