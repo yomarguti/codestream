@@ -398,6 +398,7 @@ const BaseReview = (props: BaseReviewProps) => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
+			isInVscode: state.ide.name === "VSC",
 			author: state.users[props.review.creatorId]
 		};
 	}, shallowEqual);
@@ -546,7 +547,7 @@ const BaseReview = (props: BaseReviewProps) => {
 							<Meta id="changed-files">
 								<MetaLabel>
 									Changed Files
-									{props.canStartReview && numFiles > 1 && (
+									{props.canStartReview && derivedState.isInVscode && numFiles > 1 && (
 										<MetaIcons>
 											<Icon
 												onClick={nextFile}
