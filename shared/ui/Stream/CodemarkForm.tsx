@@ -1973,7 +1973,7 @@ class CodemarkForm extends React.Component<Props, State> {
 											? "Copy Link"
 											: "Create Link"
 										: this.state.isChangeRequest
-										? "Add Comment & Require Change"
+										? "Add Comment & Request Change"
 										: this.props.currentReviewId
 										? "Add Review Comment"
 										: "Submit"}
