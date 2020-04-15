@@ -738,7 +738,7 @@ class TeamPanel extends React.Component<Props, State> {
 								<UL>
 									{this.props.invited.map(user => {
 										const body = encodeURIComponent(
-											`1. Download and install CodeStream for <a href="https://marketplace.visualstudio.com/items?itemName=CodeStream.codestream"&gt;VS Code&lt;/a&gt;, <a href="https://marketplace.visualstudio.com/items?itemName=CodeStream.codestream-vs">Visual Studio</a>, <a href="https://plugins.jetbrains.com/plugin/12206-codestream">JetBrains</a> or <a href="https://atom.io/packages/codestream">Atom</a>.\n\n2. Click “Find your team" and paste in your invitation code: <b>${user.inviteCode}</b>\n\n`
+											`1. Download and install CodeStream for <a href="https://marketplace.visualstudio.com/items?itemName=CodeStream.codestream">VS Code</a>, <a href="https://marketplace.visualstudio.com/items?itemName=CodeStream.codestream-vs">Visual Studio</a>, <a href="https://plugins.jetbrains.com/plugin/12206-codestream">JetBrains</a> or <a href="https://atom.io/packages/codestream">Atom</a>.\n\n2. Click “Find your team" and paste in your invitation code: <b>${user.inviteCode}</b>\n\n`
 										);
 										const subject = "Invitation to CodeStream";
 										const title = user.inviteCode ? (
