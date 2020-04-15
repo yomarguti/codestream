@@ -188,6 +188,9 @@ const BaseReview = (props: BaseReviewProps) => {
 	const hasTags = props.tags && props.tags.length > 0;
 	const hasReviewers = props.reviewers != null && props.reviewers.length > 0;
 	const hasChangeRequests = props.changeRequests != null && props.changeRequests.length > 0;
+	const numFiles = review.reviewChangesets
+		.map(r => r.modifiedFiles.length)
+		.reduce((a, b) => a + b, 0);
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
 	const renderedMenu =
 		props.renderMenu &&
@@ -278,6 +281,7 @@ const BaseReview = (props: BaseReviewProps) => {
 	const prevFile = () => HostApi.instance.send(ShowPreviousChangedFileRequestType, {});
 
 	const nextFile = () => HostApi.instance.send(ShowNextChangedFileRequestType, {});
+
 	const isMacintosh = navigator.appVersion.includes("Macintosh");
 	const nextFileKeyboardShortcut = () => (isMacintosh ? `⌥ F6` : "Alt-F6");
 	const previousFileKeyboardShortcut = () => (isMacintosh ? `⇧ ⌥ F6` : "Shift-Alt-F6");
@@ -410,7 +414,7 @@ const BaseReview = (props: BaseReviewProps) => {
 							<Meta id="changed-files">
 								<MetaLabel>
 									Changed Files
-									{props.canStartReview && (
+									{props.canStartReview && numFiles > 1 && (
 										<MetaIcons>
 											<Icon
 												onClick={nextFile}
