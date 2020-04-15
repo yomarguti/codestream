@@ -131,10 +131,6 @@ const RepoInfo = styled.div`
 	}
 	span {
 		display: inline-block;
-		cursor: pointer;
-		&:hover {
-			color: var(--text-color-info);
-		}
 	}
 `;
 
@@ -312,15 +308,17 @@ const BaseReview = (props: BaseReviewProps) => {
 				{!props.collapsed && (
 					<ExpandedAuthor>
 						Opened
-						<Timestamp relative time={props.review.createdAt} /> by {props.author.username}
+						<Timestamp relative time={props.review.createdAt} /> by{" "}
+						<HeadshotName person={props.author} highlightMe />
 					</ExpandedAuthor>
 				)}
 
 				<MetaSection>
 					{props.review.text && (
-						<Description>
+						<Meta>
+							<MetaLabel>Description</MetaLabel>
 							<MarkdownText text={props.review.text} />
-						</Description>
+						</Meta>
 					)}
 					{!props.collapsed && (hasTags || hasReviewers) && (
 						<MetaRow>
@@ -396,11 +394,13 @@ const BaseReview = (props: BaseReviewProps) => {
 									{props.repoInfo.map(r => (
 										<MetaRepoInfo key={r.repoName}>
 											<RepoInfo>
-												<span onClick={e => goSearch(e, `repo:"${r.repoName}"`)}>
-													<Icon name="repo" /> {r.repoName}
+												<span>
+													<Icon name="repo" />
+													{r.repoName}
 												</span>
-												<span onClick={e => goSearch(e, `branch:"${r.branch}"`)}>
-													<Icon name="git-branch" /> {r.branch}
+												<span>
+													<Icon name="git-branch" />
+													{r.branch}
 												</span>
 											</RepoInfo>
 										</MetaRepoInfo>
