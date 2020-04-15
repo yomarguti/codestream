@@ -690,11 +690,10 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 
 	return (
 		<>
-			<MetaLabel>Add Reply</MetaLabel>
 			<MessageInput
 				multiCompose
 				text={text}
-				placeholder="Reply..."
+				placeholder="Add Comment..."
 				onChange={setText}
 				onSubmit={submit}
 			/>
@@ -708,7 +707,7 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 					<Tooltip
 						title={
 							<span>
-								Submit Reply
+								Submit Comment
 								<span className="keybinding extra-pad">
 									{navigator.appVersion.includes("Macintosh") ? "⌘" : "Alt"} ENTER
 								</span>
@@ -720,7 +719,7 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 						<Button
 							style={{
 								// fixed width to handle the isLoading case
-								width: "80px",
+								width: isChangeRequest ? "120px" : "80px",
 								margin: "10px 0",
 								float: "right"
 							}}
@@ -730,7 +729,7 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 							onClick={submit}
 							loading={isLoading}
 						>
-							Submit
+							{isChangeRequest ? "Request Change" : "Comment"}
 						</Button>
 					</Tooltip>
 				</div>
