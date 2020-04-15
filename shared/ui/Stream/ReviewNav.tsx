@@ -96,7 +96,8 @@ const Root = styled.div`
 		zindex: 1;
 	}
 
-	@media only screen and (max-width: 300px) {
+	// prefer icons to text
+	@media only screen and (max-width: 30000px) {
 		.btn-group {
 			button {
 				.narrow-icon {
@@ -266,20 +267,34 @@ export function ReviewNav(props: Props) {
 		dispatch(setReviewStatus(review!.id, "open"));
 	};
 
+	const amend = () => {
+		// not implemented yet
+	};
+
 	const statusButtons = () => {
 		if (!review) return null;
 		switch (review.status) {
 			case "open":
 				return (
 					<div className={hoverButton == "actions" ? "btn-group pulse" : "btn-group"}>
-						<Button variant="success" onClick={approve}>
-							<Icon className="narrow-icon" name="thumbsup" />
-							<span className="wide-text">Approve</span>
-						</Button>
-						<Button variant="destructive" onClick={reject}>
-							<Icon className="narrow-icon" name="thumbsdown" />
-							<span className="wide-text">Reject</span>
-						</Button>
+						{/*<Tooltip title="Amend Review (add code)" placement="bottom">
+							<Button onClick={amend}>
+								<Icon className="narrow-icon" name="plus" />
+								<span className="wide-text">Amend</span>
+							</Button>
+						</Tooltip> */}
+						<Tooltip title="Approve Review" placement="bottom">
+							<Button variant="success" onClick={approve}>
+								<Icon className="narrow-icon" name="thumbsup" />
+								<span className="wide-text">Approve</span>
+							</Button>
+						</Tooltip>
+						<Tooltip title="Requre Changes" placement="bottom">
+							<Button variant="destructive" onClick={reject}>
+								<Icon className="narrow-icon" name="thumbsdown" />
+								<span className="wide-text">Reject</span>
+							</Button>
+						</Tooltip>
 						<Tooltip
 							title={
 								<>
