@@ -350,7 +350,7 @@ export function ReviewNav(props: Props) {
 								}
 								placement="bottom"
 							>
-								<Button variant="secondary" onClick={approve}>
+								<Button variant="primary" onClick={approve}>
 									<div
 										style={{
 											display: "block",
