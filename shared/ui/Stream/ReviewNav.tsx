@@ -9,23 +9,48 @@ import { HostApi } from "..";
 import { fetchReview } from "@codestream/webview/store/reviews/actions";
 import { CodeStreamState } from "../store";
 import { getReview } from "../store/reviews/reducer";
-import { MinimumWidthCard, Meta, HeaderActions, Header } from "./Codemark/BaseCodemark";
+import { MinimumWidthCard, Meta, BigTitle, Header } from "./Codemark/BaseCodemark";
 import { setReviewStatus } from "./actions";
 import { ReviewCloseDiffRequestType } from "../ipc/host.protocol.review";
 import Icon from "./Icon";
 import { confirmPopup } from "./Confirm";
 import { setUserPreference } from "./actions";
 import { Dispatch } from "../store/common";
-import { Review, ExpandedAuthor, Description } from "./Review";
+import { Review, BaseReviewMenu, BaseReviewHeader, ExpandedAuthor, Description } from "./Review";
 import ScrollBox from "./ScrollBox";
 import { TourTip } from "../src/components/TourTip";
 import { Modal } from "./Modal";
 import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
+import { getReviewChangeRequests } from "../store/codemarks/reducer";
+import { ReviewForm } from "./ReviewForm";
+import { logWarning } from "../logger";
+
+const NavHeader = styled.div`
+	display: flex;
+	align-items: center;
+	padding: 10px 10px 10px 15px;
+	height: 45px;
+	justify-content: center;
+	${Header} {
+		margin-bottom: 0;
+	}
+	${BigTitle} {
+		font-size: 16px;
+		@media only screen and (max-width: 430px) {
+			font-size: 14px;
+		}
+		@media only screen and (max-width: 350px) {
+			font-size: 13px;
+		}
+		@media only screen and (max-width: 270px) {
+			font-size: 12px;
+		}
+	}
+`;
 
 const Nav = styled.div`
-	position: fixed;
-	top: 10px;
-	right: 10px;
+	white-space: nowrap;
+	margin-left: auto;
 	z-index: 50;
 	&.pulse {
 		opacity: 1 !important;
@@ -58,14 +83,6 @@ const ClearModal = styled.div`
 	left: 0;
 `;
 const Root = styled.div`
-	${Header} {
-		.icon.type {
-			display: none;
-		}
-		${HeaderActions} {
-			margin-top: 3px;
-		}
-	}
 	background: (--panel-tool-background-color);
 	&.tour-on {
 		${Nav},
@@ -181,8 +198,13 @@ export function ReviewNav(props: Props) {
 		const filePath = scmInfo && scmInfo.scm ? scmInfo.scm.file : "";
 		const review = getReview(state.reviews, props.reviewId);
 
+		const changeRequests = useSelector((state: CodeStreamState) =>
+			review ? getReviewChangeRequests(state, review) : []
+		);
+
 		return {
 			review,
+			changeRequests,
 			editorContext: state.editorContext,
 			filePath,
 			hideReviewInstructions: state.preferences.hideReviewInstructions,
@@ -191,6 +213,7 @@ export function ReviewNav(props: Props) {
 		};
 	}, shallowEqual);
 
+	const [isEditing, setIsEditing] = React.useState(false);
 	const [notFound, setNotFound] = React.useState(false);
 	const [hoverButton, setHoverButton] = React.useState(
 		derivedState.hideReviewInstructions ? "" : "files"
@@ -238,8 +261,31 @@ export function ReviewNav(props: Props) {
 	});
 
 	const approve = () => {
-		dispatch(setReviewStatus(review!.id, "approved"));
-		showReview();
+		const numOpenChangeRequests = derivedState.changeRequests.filter(r => r.status !== "closed")
+			.length;
+
+		if (numOpenChangeRequests > 0) {
+			confirmPopup({
+				title: "Are you sure?",
+				message: "This review has open change requests.",
+				centered: true,
+				buttons: [
+					{ label: "Cancel", className: "control-button" },
+					{
+						label: "Approve Anyway",
+						className: "success",
+						wait: true,
+						action: () => {
+							dispatch(setReviewStatus(review!.id, "approved"));
+							showReview();
+						}
+					}
+				]
+			});
+		} else {
+			dispatch(setReviewStatus(review!.id, "approved"));
+			showReview();
+		}
 	};
 
 	const reject = () => {
@@ -273,6 +319,8 @@ export function ReviewNav(props: Props) {
 
 	const statusButtons = () => {
 		if (!review) return null;
+		const numOpenChangeRequests = derivedState.changeRequests.filter(r => r.status !== "closed")
+			.length;
 		switch (review.status) {
 			case "open":
 				return (
@@ -283,16 +331,49 @@ export function ReviewNav(props: Props) {
 								<span className="wide-text">Amend</span>
 							</Button>
 						</Tooltip> */}
-						<Tooltip title="Approve Review" placement="bottom">
-							<Button variant="success" onClick={approve}>
-								<Icon className="narrow-icon" name="thumbsup" />
-								<span className="wide-text">Approve</span>
-							</Button>
-						</Tooltip>
+						{numOpenChangeRequests === 0 && (
+							<Tooltip title="Approve Review" placement="bottom">
+								<Button variant="success" onClick={approve}>
+									<Icon className="narrow-icon" name="thumbsup" />
+								</Button>
+							</Tooltip>
+						)}
+						{numOpenChangeRequests > 0 && (
+							<Tooltip
+								title={
+									<>
+										{numOpenChangeRequests} Pending Change Request
+										{numOpenChangeRequests > 1 ? "s" : ""}
+										<br />
+										Click to force-approve
+									</>
+								}
+								placement="bottom"
+							>
+								<Button variant="secondary" onClick={approve}>
+									<div
+										style={{
+											display: "block",
+											height: "16px",
+											minWidth: "16px",
+											lineHeight: "16px",
+											textAlign: "center"
+										}}
+									>
+										{numOpenChangeRequests}
+									</div>
+								</Button>
+							</Tooltip>
+						)}
 						<Tooltip title="Requre Changes" placement="bottom">
 							<Button variant="destructive" onClick={reject}>
 								<Icon className="narrow-icon" name="thumbsdown" />
 								<span className="wide-text">Reject</span>
+							</Button>
+						</Tooltip>
+						<Tooltip title="More actions" placement="bottom">
+							<Button variant="secondary">
+								<BaseReviewMenu review={review} setIsEditing={setIsEditing} globalNav />
 							</Button>
 						</Tooltip>
 						<Tooltip
@@ -370,6 +451,18 @@ export function ReviewNav(props: Props) {
 		toggleInstructions();
 	};
 
+	const titleTip =
+		hoverButton === "files" ? (
+			<Tip>
+				<Step>1</Step> Step through the changes of the review
+				<Subtext>By clicking on filenames in any order</Subtext>
+				<Button onClick={() => setHoverButton("comment")}>Next ></Button>
+				<b></b>
+			</Tip>
+		) : (
+			undefined
+		);
+
 	const filesTip =
 		hoverButton === "files" ? (
 			<Tip>
@@ -406,14 +499,29 @@ export function ReviewNav(props: Props) {
 			undefined
 		);
 
+	if (isEditing) {
+		return (
+			<ReviewForm
+				isEditing={isEditing}
+				onClose={() => {
+					setIsEditing(false);
+				}}
+				editingReview={review}
+			/>
+		);
+	}
+
 	return (
 		<Root className={derivedState.hideReviewInstructions ? "" : "tour-on"}>
 			{!derivedState.hideReviewInstructions && <ClearModal />}
-			<Nav className={hoverButton == "actions" ? "pulse" : ""}>
-				<TourTip title={actionsTip} placement="bottomRight">
-					{statusButtons()}
-				</TourTip>
-			</Nav>
+			<NavHeader>
+				<BaseReviewHeader review={review} collapsed={false} globalNav />
+				<Nav className={hoverButton == "actions" ? "pulse" : ""}>
+					<TourTip title={actionsTip} placement="bottomRight">
+						{statusButtons()}
+					</TourTip>
+				</Nav>
+			</NavHeader>
 			{props.composeOpen ? null : (
 				<div className="scroll-container" style={{ overflow: "hidden" }}>
 					<ScrollBox>

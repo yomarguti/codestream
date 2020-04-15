@@ -60,7 +60,7 @@ import { EditorRevealRangeRequestType } from "../ipc/host.protocol.editor";
 import { Range } from "vscode-languageserver-types";
 import { PostsActionsType } from "../store/posts/types";
 import { URI } from "vscode-uri";
-import { logError } from "../logger";
+import { logError, logWarning } from "../logger";
 import { DocumentData } from "../protocols/agent/agent.protocol.notifications";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { LoadingMessage } from "../src/components/LoadingMessage";
@@ -814,6 +814,15 @@ class ReviewForm extends React.Component<Props, State> {
 	confirmCancel = (callback?) => {
 		const { titleTouched, text, reviewersTouched } = this.state;
 
+		const finish = () => {
+			const isEditing = this.props.isEditing;
+			this.props.onClose && this.props.onClose();
+			if (!isEditing) {
+				this.props.closePanel();
+				if (callback) callback();
+			}
+		};
+
 		// if the user has made any changes in the form, confirm before closing
 		if (titleTouched || text.length || reviewersTouched) {
 			confirmPopup({
@@ -825,21 +834,13 @@ class ReviewForm extends React.Component<Props, State> {
 					{
 						label: this.props.isEditing ? "Discard Edits" : "Discard Review",
 						wait: true,
-						action: () => {
-							const isEditing = this.props.isEditing;
-							this.props.onClose && this.props.onClose();
-							if (!isEditing) {
-								this.props.closePanel();
-								if (callback) callback();
-							}
-						},
+						action: () => finish(),
 						className: "delete"
 					}
 				]
 			});
 		} else {
-			this.props.closePanel();
-			if (typeof callback === "function") callback();
+			finish();
 		}
 	};
 

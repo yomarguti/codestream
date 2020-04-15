@@ -5,6 +5,7 @@ import * as actions from "./actions";
 import { ReviewsActionsTypes, ReviewsState } from "./types";
 import { CSReview } from "@codestream/protocols/api";
 import { CodeStreamState } from "..";
+import { logWarning } from "@codestream/webview/logger";
 
 type ReviewsActions = ActionType<typeof actions>;
 
@@ -66,7 +67,8 @@ export const teamHasReviews = createSelector(getReviews, (reviews: Index<CSRevie
 export function getAllByCommit(state: CodeStreamState): { [commit: string]: CSReview } {
 	let ret = {};
 	getAllReviews(state).forEach(review => {
-		review.reviewChangesets.forEach(changeset => {
+		if (!review.reviewChangesets) logWarning("No changesets for: ", review);
+		(review.reviewChangesets || []).forEach(changeset => {
 			changeset.commits.forEach(commit => (ret[commit.sha] = review));
 		});
 	});

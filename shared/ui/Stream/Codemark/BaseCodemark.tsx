@@ -339,9 +339,9 @@ export const Header = styled.div`
 
 export const HeaderActions = styled.div`
 	float: right;
-	& > *:not(:last-child) {
-		margin: 0 5px;
-	}
+	// & > *:not(:last-child) {
+	// 	margin: 0 5px;
+	// }
 `;
 
 export const AuthorInfo = styled.div`
@@ -513,9 +513,9 @@ export const ActionButton = styled.div`
 `;
 
 export const KebabIcon = styled.span`
-	.icon {
+	.icon.clickable {
 		opacity: 0.5;
-		margin-left: 2px;
+		margin-left: 7px;
 		// to align vertically with the DropdownButton
 		vertical-align: -2px;
 		padding: 0 5px;

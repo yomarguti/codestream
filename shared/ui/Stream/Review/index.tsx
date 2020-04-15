@@ -78,8 +78,6 @@ import { HeadshotName } from "@codestream/webview/src/components/HeadshotName";
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
-	author: CSUser;
-	permalinkRef: React.RefObject<HTMLTextAreaElement>;
 	repoInfo: { repoName: string; branch: string }[];
 	headerError?: string;
 	canStartReview?: boolean;
@@ -93,8 +91,25 @@ export interface BaseReviewProps extends CardProps {
 		footer: typeof CardFooter,
 		inputContainer?: typeof ComposeWrapper
 	) => React.ReactNode;
-	renderMenu?: (target: any, onClose: () => void) => React.ReactNode;
 	filesTip?: any;
+	setIsEditing?: Function;
+}
+
+export interface BaseReviewHeaderProps {
+	review: CSReview;
+	collapsed?: boolean;
+	isFollowing?: boolean;
+	reviewers?: CSUser[];
+	tags?: { id: string }[];
+	changeRequests?: CodemarkPlus[];
+	setIsEditing?: Function;
+	globalNav?: boolean;
+}
+
+export interface BaseReviewMenuProps {
+	review: CSReview;
+	setIsEditing?: Function;
+	globalNav?: boolean;
 }
 
 const Clickable = styled(Link)`
@@ -136,7 +151,6 @@ const RepoInfo = styled.div`
 
 export const ExpandedAuthor = styled.div`
 	width: 100%;
-	margin: -8px 0 8px 0;
 	color: var(--text-color-subtle);
 `;
 
@@ -172,44 +186,12 @@ const translateStatus = (status: string) => {
 	return capitalize(status);
 };
 
-const BaseReview = (props: BaseReviewProps) => {
+export const BaseReviewHeader = (props: BaseReviewHeaderProps) => {
 	const { review } = props;
-
 	const dispatch = useDispatch();
-	const [menuState, setMenuState] = React.useState<{ open: boolean; target?: any }>({
-		open: false,
-		target: undefined
-	});
-
-	const hasTags = props.tags && props.tags.length > 0;
-	const hasReviewers = props.reviewers != null && props.reviewers.length > 0;
-	const hasChangeRequests = props.changeRequests != null && props.changeRequests.length > 0;
-	const numFiles = review.reviewChangesets
-		.map(r => r.modifiedFiles.length)
-		.reduce((a, b) => a + b, 0);
-	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
-	const renderedMenu =
-		props.renderMenu &&
-		menuState.open &&
-		props.renderMenu(menuState.target, () => setMenuState({ open: false }));
-	const kebabIcon = props.renderMenu && (
-		<KebabIcon
-			onClickCapture={e => {
-				e.preventDefault();
-				e.stopPropagation();
-				if (menuState.open) {
-					setMenuState({ open: false });
-				} else {
-					setMenuState({ open: true, target: e.currentTarget });
-				}
-			}}
-		>
-			<Icon name="kebab-vertical" className="clickable" />
-		</KebabIcon>
-	);
 
 	const approve = () => {
-		if (hasChangeRequests && props.changeRequests!.find(r => r.status !== "closed"))
+		if (props.changeRequests && props.changeRequests!.find(r => r.status !== "closed"))
 			confirmPopup({
 				title: "Are you sure?",
 				message: "This review has open change requests.",
@@ -264,15 +246,164 @@ const BaseReview = (props: BaseReviewProps) => {
 		return null;
 	})();
 
-	const searchContext = React.useContext(SearchContext);
-	const goSearch = (e: React.SyntheticEvent, query: string) => {
-		e.preventDefault();
-		e.stopPropagation();
+	return (
+		<Header>
+			<Icon name="review" className="type" />
+			<BigTitle>
+				<HeaderActions>
+					{renderedHeaderActions}
+					{!props.globalNav && <BaseReviewMenu review={review} setIsEditing={props.setIsEditing} />}
+				</HeaderActions>
+				<MarkdownText text={review.title} />
+			</BigTitle>
+		</Header>
+	);
+};
 
-		dispatch(setCurrentCodemark());
-		dispatch(setCurrentReview());
-		searchContext.goToSearch(query);
-	};
+export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
+	const { review, globalNav } = props;
+
+	const dispatch = useDispatch();
+	const derivedState = useSelector((state: CodeStreamState) => {
+		return {
+			currentUser: state.users[state.session.userId!],
+			author: state.users[props.review.creatorId],
+			userIsFollowing: (props.review.followerIds || []).includes(state.session.userId!)
+		};
+	}, shallowEqual);
+	const [shareModalOpen, setShareModalOpen] = React.useState(false);
+	const [menuState, setMenuState] = React.useState<{ open: boolean; target?: any }>({
+		open: false,
+		target: undefined
+	});
+
+	const permalinkRef = React.useRef<HTMLTextAreaElement>(null);
+
+	const menuItems = React.useMemo(() => {
+		const items: any[] = [
+			{
+				label: "Share",
+				key: "share",
+				action: () => setShareModalOpen(true)
+			},
+			{
+				label: "Copy link",
+				key: "copy-permalink",
+				action: () => {
+					if (permalinkRef && permalinkRef.current) {
+						permalinkRef.current.select();
+						document.execCommand("copy");
+					}
+				}
+			},
+			{
+				label: derivedState.userIsFollowing ? "Unfollow" : "Follow",
+				key: "toggle-follow",
+				action: () => {
+					const value = !derivedState.userIsFollowing;
+					const changeType = value ? "Followed" : "Unfollowed";
+					HostApi.instance.send(FollowReviewRequestType, {
+						id: review.id,
+						value
+					});
+					HostApi.instance.track("Notification Change", {
+						Change: `Review ${changeType}`,
+						"Source of Change": "Review menu"
+					});
+				}
+			}
+		];
+
+		if (review.creatorId === derivedState.currentUser.id && props.setIsEditing) {
+			items.push(
+				{
+					label: "Edit",
+					key: "edit",
+					action: () => props.setIsEditing && props.setIsEditing(true)
+				},
+				{
+					label: "Delete",
+					action: () => {
+						confirmPopup({
+							title: "Are you sure?",
+							message: "Deleting a review cannot be undone.",
+							centered: true,
+							buttons: [
+								{ label: "Go Back", className: "control-button" },
+								{
+									label: "Delete Review",
+									className: "delete",
+									wait: true,
+									action: () => {
+										dispatch(deleteReview(review.id));
+										dispatch(setCurrentReview());
+									}
+								}
+							]
+						});
+					}
+				}
+			);
+		}
+
+		return items;
+	}, [review]);
+
+	if (shareModalOpen)
+		return <SharingModal review={props.review!} onClose={() => setShareModalOpen(false)} />;
+
+	return (
+		<>
+			<KebabIcon
+				onClickCapture={e => {
+					e.preventDefault();
+					e.stopPropagation();
+					if (menuState.open) {
+						setMenuState({ open: false });
+					} else {
+						setMenuState({
+							open: true,
+							target: globalNav ? e.currentTarget.closest("button") : e.currentTarget
+						});
+					}
+				}}
+			>
+				{globalNav && <Icon name="kebab-horizontal" />}
+				{!globalNav && <Icon name="kebab-vertical" className="clickable" />}
+			</KebabIcon>
+			<textarea
+				key="permalink-offscreen"
+				ref={permalinkRef}
+				value={review.permalink}
+				style={{ position: "absolute", left: "-9999px" }}
+			/>
+			{menuState.open && (
+				<Menu
+					target={menuState.target}
+					action={() => setMenuState({ open: false })}
+					items={menuItems}
+				/>
+			)}
+		</>
+	);
+};
+
+const BaseReview = (props: BaseReviewProps) => {
+	const { review } = props;
+
+	const dispatch = useDispatch();
+	const derivedState = useSelector((state: CodeStreamState) => {
+		return {
+			author: state.users[props.review.creatorId]
+		};
+	}, shallowEqual);
+	const hasTags = props.tags && props.tags.length > 0;
+	const hasReviewers = props.reviewers != null && props.reviewers.length > 0;
+	const hasChangeRequests = props.changeRequests != null && props.changeRequests.length > 0;
+	const numFiles = review.reviewChangesets
+		.map(r => r.modifiedFiles.length)
+		.reduce((a, b) => a + b, 0);
+	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
 
 	const prevFile = () => HostApi.instance.send(ShowPreviousChangedFileRequestType, {});
 
@@ -293,23 +424,18 @@ const BaseReview = (props: BaseReviewProps) => {
 				</CardBanner>
 			)}
 			<CardBody>
-				<Header>
-					<Icon name="review" className="type" />
-					<BigTitle>
-						<HeaderActions>
-							{renderedHeaderActions}
-							{renderedMenu}
-							{kebabIcon}
-						</HeaderActions>
-						<MarkdownText text={review.title} />
-					</BigTitle>
-				</Header>
-
+				{props.collapsed && (
+					<BaseReviewHeader
+						review={review}
+						collapsed={props.collapsed}
+						setIsEditing={props.setIsEditing}
+					/>
+				)}
 				{!props.collapsed && (
 					<ExpandedAuthor>
 						Opened
 						<Timestamp relative time={props.review.createdAt} /> by{" "}
-						<HeadshotName person={props.author} highlightMe />
+						<HeadshotName person={derivedState.author} highlightMe />
 					</ExpandedAuthor>
 				)}
 
@@ -465,14 +591,6 @@ const BaseReview = (props: BaseReviewProps) => {
 					)}
 				</MetaSection>
 				{props.collapsed && renderMetaSectionCollapsed(props)}
-				{props.permalinkRef && props.review && (
-					<textarea
-						key="permalink-offscreen"
-						ref={props.permalinkRef}
-						value={props.review.permalink}
-						style={{ position: "absolute", left: "-9999px" }}
-					/>
-				)}
 			</CardBody>
 			{renderedFooter}
 		</MinimumWidthCard>
@@ -662,7 +780,6 @@ const ReviewForReview = (props: PropsWithReview) => {
 		};
 	}, shallowEqual);
 
-	const permalinkRef = React.useRef<HTMLTextAreaElement>(null);
 	const [canStartReview, setCanStartReview] = React.useState(false);
 	const [preconditionError, setPreconditionError] = React.useState("");
 	const [isEditing, setIsEditing] = React.useState(false);
@@ -739,72 +856,6 @@ const ReviewForReview = (props: PropsWithReview) => {
 			);
 		});
 
-	const menuItems = React.useMemo(() => {
-		const items: any[] = [
-			{
-				label: "Share",
-				key: "share",
-				action: () => setShareModalOpen(true)
-			},
-			{
-				label: "Copy link",
-				key: "copy-permalink",
-				action: () => {
-					if (permalinkRef.current) {
-						permalinkRef.current.select();
-						document.execCommand("copy");
-					}
-				}
-			},
-			{
-				label: derivedState.userIsFollowing ? "Unfollow" : "Follow",
-				key: "toggle-follow",
-				action: () => {
-					const value = !derivedState.userIsFollowing;
-					const changeType = value ? "Followed" : "Unfollowed";
-					HostApi.instance.send(FollowReviewRequestType, {
-						id: review.id,
-						value
-					});
-					HostApi.instance.track("Notification Change", {
-						Change: `Review ${changeType}`,
-						"Source of Change": "Review menu"
-					});
-				}
-			}
-		];
-
-		if (review.creatorId === derivedState.currentUser.id) {
-			items.push(
-				{ label: "Edit", key: "edit", action: () => setIsEditing(true) },
-				{
-					label: "Delete",
-					action: () => {
-						confirmPopup({
-							title: "Are you sure?",
-							message: "Deleting a review cannot be undone.",
-							centered: true,
-							buttons: [
-								{ label: "Go Back", className: "control-button" },
-								{
-									label: "Delete Review",
-									className: "delete",
-									wait: true,
-									action: () => {
-										dispatch(deleteReview(review.id));
-										dispatch(setCurrentReview());
-									}
-								}
-							]
-						});
-					}
-				}
-			);
-		}
-
-		return items;
-	}, [review]);
-
 	if (shareModalOpen)
 		return <SharingModal review={props.review!} onClose={() => setShareModalOpen(false)} />;
 	if (isEditing) {
@@ -821,9 +872,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 		return (
 			<BaseReview
 				{...baseProps}
-				author={derivedState.author}
 				review={props.review}
-				permalinkRef={permalinkRef}
 				repoInfo={repoInfo}
 				tags={tags}
 				changeRequests={changeRequests}
@@ -831,13 +880,9 @@ const ReviewForReview = (props: PropsWithReview) => {
 				reviewers={derivedState.reviewers}
 				currentUserId={derivedState.currentUser.id}
 				renderFooter={renderFooter}
+				setIsEditing={setIsEditing}
 				headerError={preconditionError}
 				canStartReview={canStartReview}
-				renderMenu={
-					menuItems.length > 0
-						? (target, close) => <Menu target={target} action={close} items={menuItems} />
-						: undefined
-				}
 			/>
 		);
 	}
