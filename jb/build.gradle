@@ -59,7 +59,7 @@ patchPluginXml {
 intellij {
     type "IC"
     // the version parameter dictates which jars will be used at compilation time
-    version "2019.2" // earliest version we support
+    version "2019.2.2" // earliest version we support
     //  version "201.5616-EAP-CANDIDATE-SNAPSHOT"
     // version "2019.2.3"
     // version "2019.3"
