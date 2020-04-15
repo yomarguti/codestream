@@ -146,6 +146,8 @@ export class ConfigureEnterprisePanel extends Component {
 										<br />
 									</div>
 								)}
+							</div>
+							<div key="token" id="configure-enterprise-controls-token" className="control-group">
 								<label>
 									<strong>{providerShortName} Permanent Access Token</strong>
 								</label>
