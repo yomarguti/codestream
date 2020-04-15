@@ -9,7 +9,7 @@ import com.intellij.diff.tools.util.side.TwosideTextDiffViewer
 
 class ReviewDiffExtension : DiffExtension() {
     override fun onViewerCreated(viewer: FrameDiffTool.DiffViewer, context: DiffContext, request: DiffRequest) {
-        if (request.getUserData(REVIEW_DIFF_REQUEST) != true) {
+        if (request.getUserData(REVIEW_DIFF) != true) {
             return
         }
         val editor = viewer as? TwosideTextDiffViewer

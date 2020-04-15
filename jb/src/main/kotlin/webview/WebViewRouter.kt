@@ -103,6 +103,9 @@ class WebViewRouter(val project: Project) {
             "host/shell/prompt/folder" -> shellPromptFolder(message)
             "host/review/showDiff" -> reviewShowDiff(message)
             "host/review/showLocalDiff" -> reviewShowLocalDiff(message)
+            "host/review/closeDiff" -> reviewClose(message)
+            "host/review/changedFiles/next" -> reviewNextFile(message)
+            "host/review/changedFiles/previous" -> reviewPreviousFile(message)
             else -> logger.warn("Unhandled host message ${message.method}")
         }
         if (message.id != null) {
@@ -209,6 +212,21 @@ class WebViewRouter(val project: Project) {
         val reviewService = project.reviewService ?: return
 
         reviewService.showLocalDiff(request.repoId, request.path, request.includeSaved, request.includeStaged, request.baseSha)
+    }
+
+    private fun reviewClose(message: WebViewMessage) {
+        val reviewService = project.reviewService ?: return
+        reviewService.closeDiff()
+    }
+    
+    private fun reviewNextFile(message: WebViewMessage) {
+        val reviewService = project.reviewService ?: return
+        reviewService.nextDiff()
+    }
+
+    private fun reviewPreviousFile(message: WebViewMessage) {
+        val reviewService = project.reviewService ?: return
+        reviewService.previousDiff()
     }
 
     private fun parse(json: String): WebViewMessage {
