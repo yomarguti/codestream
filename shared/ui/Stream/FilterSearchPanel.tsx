@@ -39,7 +39,7 @@ const SearchBar = styled.div`
 			// make space for the search icon
 			padding-left: 32px !important;
 			// the bookmark icon is narrower so requires less space
-			padding-right: 25px !important;
+			padding-right: 45px !important;
 			height: 100%;
 			border: 1px solid var(--base-border-color);
 			border-left: none;
@@ -54,6 +54,15 @@ const SearchBar = styled.div`
 		.save {
 			position: absolute;
 			right: 6px;
+			top: 6px;
+			opacity: 0.5;
+			&:hover {
+				opacity: 1;
+			}
+		}
+		.clear {
+			position: absolute;
+			right: 28px;
 			top: 6px;
 			opacity: 0.5;
 			&:hover {
@@ -171,6 +180,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 		closed: "Closed",
 		recent: "Recent"
 	};
+	_searchInput: any;
 	_saveFilterInput: any;
 	readonly sections = ["waitingForMe", "open", "recent", "closed"];
 
@@ -569,6 +579,13 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 
 	debouncedApplyQuery = debounce(this.applyQuery, 250);
 
+	clearFilter = () => {
+		this.props.setQuery("");
+		setTimeout(() => {
+			if (this._searchInput) this._searchInput.focus();
+		}, 200);
+	};
+
 	saveFilter = () => {
 		this.setState({ savingFilter: true });
 		setTimeout(() => {
@@ -772,23 +789,35 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 						<div className="search-input">
 							<Icon name="search" className="search" />
 							{this.props.query && (
-								<span className="save" onClick={this.saveFilter}>
-									<Icon
-										name="bookmark"
-										className="clickable"
-										title="Save custom filter"
-										placement="bottomRight"
-										align={{ offset: [15, 5] }}
-									/>
-								</span>
+								<>
+									<span className="save" onClick={this.saveFilter}>
+										<Icon
+											name="bookmark"
+											className="clickable"
+											title="Save custom filter"
+											placement="bottomRight"
+											align={{ offset: [15, 5] }}
+										/>
+									</span>
+									<span className="clear" onClick={this.clearFilter}>
+										<Icon
+											name="x"
+											className="clickable"
+											title="Clear filter"
+											placement="bottomRight"
+											align={{ offset: [15, 5] }}
+										/>
+									</span>
+								</>
 							)}
 							<input
 								name="q"
+								ref={ref => (this._searchInput = ref)}
 								value={this.props.query}
 								className="input-text control"
 								type="text"
 								onChange={e => this.props.setQuery(e.target.value)}
-								placeholder="Search all comments, issues and code reviews"
+								placeholder="Search comments, issues and code reviews"
 								autoFocus
 							/>
 						</div>
