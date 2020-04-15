@@ -419,14 +419,6 @@ const BaseReview = (props: BaseReviewProps) => {
 
 	return (
 		<MinimumWidthCard {...getCardProps(props)} noCard={!props.collapsed}>
-			{props.headerError && (
-				<CardBanner>
-					<div className="color-warning" style={{ display: "flex" }}>
-						<Icon name="alert" />
-						<div style={{ paddingLeft: "10px" }}>{props.headerError}</div>
-					</div>
-				</CardBanner>
-			)}
 			<CardBody>
 				{props.collapsed && (
 					<BaseReviewHeader
@@ -441,6 +433,13 @@ const BaseReview = (props: BaseReviewProps) => {
 						<Timestamp relative time={props.review.createdAt} /> by{" "}
 						<HeadshotName person={derivedState.author} highlightMe />
 					</ExpandedAuthor>
+				)}
+
+				{props.headerError && (
+					<div className="color-warning" style={{ display: "flex", padding: "10px 0" }}>
+						<Icon name="alert" />
+						<div style={{ paddingLeft: "10px" }}>{props.headerError}</div>
+					</div>
 				)}
 
 				<MetaSection>
