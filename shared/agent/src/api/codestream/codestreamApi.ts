@@ -14,6 +14,7 @@ import { Team, User } from "../../api/extensions";
 import { Container, SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import { isDirective, resolve } from "../../managers/operations";
+import { ChangeDataType, DidChangeDataNotificationType } from "../../protocol/agent.protocol";
 import {
 	AccessToken,
 	AddEnterpriseProviderHostRequest,
@@ -1677,11 +1678,24 @@ export class CodeStreamApiProvider implements ApiProvider {
 				data: request.data
 			};
 
-			void (await this.put<ThirdPartyProviderSetTokenRequestData, {}>(
+			const response = await this.put<ThirdPartyProviderSetTokenRequestData, { user: any }>(
 				`/provider-set-token/${providerConfig.name}`,
 				params,
 				this._token
-			));
+			);
+
+			// the webview needs to know about the change to the user object with the new provider access token
+			// before it can proceed to display the provider as selected in the issues selector for codemarks,
+			// so we need to force the data to resolve and send a notification directly from here before returning
+			// REALLY don't know how else to do this
+			const users = await SessionContainer.instance().users.resolve({
+				type: MessageType.Users,
+				data: [response.user]
+			}) as CSUser[];
+			Container.instance().agent.sendNotification(DidChangeDataNotificationType, {
+				type: ChangeDataType.Users,
+				data: users
+			});
 		} catch (ex) {
 			Logger.error(ex, cc);
 			throw ex;
