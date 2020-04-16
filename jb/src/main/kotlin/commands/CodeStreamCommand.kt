@@ -1,5 +1,7 @@
 package com.codestream.commands
 
+import com.codestream.CodeStreamComponent
+import com.codestream.codeStream
 import com.codestream.extensions.projectPaths
 import com.codestream.gson
 import com.codestream.protocols.webview.HostNotifications
@@ -23,7 +25,9 @@ import java.nio.charset.Charset
 class CodeStreamCommand : JBProtocolCommand("codestream") {
     private val logger = Logger.getInstance(CodeStreamCommand::class.java)
 
-    override fun perform(target: String?, parameters: MutableMap<String, String>) =
+    override fun perform(target: String?, parameters: MutableMap<String, String>) {
+        WindowFocusWorkaround.bringToFront()
+
         ApplicationManager.getApplication().invokeLater {
             logger.info("Handling $target $parameters")
 
@@ -73,16 +77,17 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
                         var posted = false
                         override fun projectOpened(project: Project) {
                             if (!posted) {
-                                project.handleUrlWhenReady(target, parameters)
+                                project.handleUrlWhenReady(project, target, parameters)
                                 posted = true
                             }
                         }
                     })
             } else {
                 project.ensureOpened()
-                project.handleUrlWhenReady(target, parameters)
+                project.handleUrlWhenReady(project, target, parameters)
             }
         }
+    }
 
     private fun findOpenProject(repoMapping: RepoMapping, filePath: String): Project? {
         logger.info("Checking open projects")
@@ -127,6 +132,7 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
     }
 
     private fun Project.handleUrlWhenReady(
+        project: Project,
         target: String?,
         parameters: MutableMap<String, String>
     ) {
@@ -138,19 +144,20 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
         val url = "codestream://codestream/$target?" +
             parameters.map { entry -> entry.key + "=" + entry.value }.joinToString("&")
         logger.info("Will open $url in project $basePath")
-
-        webViewService?.onDidInitialize {
-            if (sessionService?.userLoggedIn != null) {
-                logger.info("User already logged in - opening $url in project $basePath")
-                webViewService?.postNotification(HostNotifications.DidReceiveRequest(url), true)
-            } else {
-                var posted = false
-                logger.info("Awaiting login")
-                sessionService?.onUserLoggedInChanged {
-                    if (it != null && !posted) {
-                        logger.info("User logged in - opening $url in project $basePath")
-                        webViewService?.postNotification(HostNotifications.DidReceiveRequest(url), true)
-                        posted = true
+        project.codeStream?.show{
+            webViewService?.onDidInitialize {
+                if (sessionService?.userLoggedIn != null) {
+                    logger.info("User already logged in - opening $url in project $basePath")
+                    webViewService?.postNotification(HostNotifications.DidReceiveRequest(url), true)
+                } else {
+                    var posted = false
+                    logger.info("Awaiting login")
+                    sessionService?.onUserLoggedInChanged {
+                        if (it != null && !posted) {
+                            logger.info("User logged in - opening $url in project $basePath")
+                            webViewService?.postNotification(HostNotifications.DidReceiveRequest(url), true)
+                            posted = true
+                        }
                     }
                 }
             }
