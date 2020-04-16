@@ -29,7 +29,9 @@ import {
 	FetchThirdPartyCardsResponse,
 	FetchThirdPartyChannelsRequest,
 	FetchThirdPartyChannelsRequestType,
-	FetchThirdPartyChannelsResponse
+	FetchThirdPartyChannelsResponse,
+	RemoveEnterpriseProviderRequest,
+	RemoveEnterpriseProviderRequestType
 } from "../protocol/agent.protocol";
 import { CodeStreamSession } from "../session";
 import { getProvider, getRegisteredProviders, log, lsp, lspHandler } from "../system";
@@ -91,6 +93,16 @@ export class ThirdPartyProviderRegistry {
 			throw new Error(`No registered provider for '${request.providerId}'`);
 		}
 		return await provider.addEnterpriseHost(request);
+	}
+
+	@log()
+	@lspHandler(RemoveEnterpriseProviderRequestType)
+	async removeEnterpriseProvider(request: RemoveEnterpriseProviderRequest): Promise<void> {
+		const provider = getProvider(request.providerId);
+		if (provider === undefined) {
+			throw new Error(`No registered provider for '${request.providerId}'`);
+		}
+		await provider.removeEnterpriseHost(request);
 	}
 
 	@log()

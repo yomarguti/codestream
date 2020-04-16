@@ -357,6 +357,7 @@ export interface CSTeam extends CSEntity {
 	companyId: string;
 	memberIds: string[];
 	removedMemberIds?: string[];
+	adminIds?: string[];
 	name: string;
 	primaryReferral: "internal" | "external";
 	integrations?: { [key: string]: { enabled: boolean } };
@@ -410,12 +411,18 @@ export interface CSGitHubProviderInfo {
 	accessToken: string;
 	userId: string;
 	hosts: { [host: string]: CSGitHubProviderInfo };
+	data?: {
+		baseUrl?: string;
+	};
 }
 
 export interface CSGitLabProviderInfo {
 	accessToken: string;
 	userId: string;
 	hosts: { [host: string]: CSGitLabProviderInfo };
+	data?: {
+		baseUrl?: string;
+	};
 }
 
 export interface CSJiraProviderInfo {

@@ -22,6 +22,7 @@ import {
 	FetchThirdPartyCardsResponse,
 	FetchThirdPartyChannelsRequest,
 	FetchThirdPartyChannelsResponse,
+	RemoveEnterpriseProviderRequest,
 	ThirdPartyDisconnect,
 	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
@@ -96,6 +97,7 @@ export interface ThirdPartyProvider {
 	configure(data: { [key: string]: any }): Promise<void>;
 	disconnect(request: ThirdPartyDisconnect): Promise<void>;
 	addEnterpriseHost(request: AddEnterpriseProviderRequest): Promise<AddEnterpriseProviderResponse>;
+	removeEnterpriseHost(request: RemoveEnterpriseProviderRequest): Promise<void>;
 	getConfig(): ThirdPartyProviderConfig;
 	isConnected(me: CSMe): boolean;
 }
@@ -163,6 +165,14 @@ export abstract class ThirdPartyProviderBase<
 			teamId: this.session.teamId,
 			host: request.host,
 			data: request.data
+		});
+	}
+
+	async removeEnterpriseHost(request: RemoveEnterpriseProviderRequest): Promise<void> {
+		await this.session.api.removeEnterpriseProviderHost({
+			provider: this.providerConfig.name,
+			providerId: request.providerId,
+			teamId: this.session.teamId
 		});
 	}
 

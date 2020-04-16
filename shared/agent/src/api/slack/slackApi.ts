@@ -74,6 +74,7 @@ import {
 	OpenStreamRequest,
 	PinReplyToCodemarkRequest,
 	ReactToPostRequest,
+	RemoveEnterpriseProviderHostRequest,
 	RenameStreamRequest,
 	SetCodemarkPinnedRequest,
 	SetCodemarkStatusRequest,
@@ -2367,6 +2368,11 @@ export class SlackApiProvider implements ApiProvider {
 	@log()
 	addEnterpriseProviderHost(request: AddEnterpriseProviderHostRequest) {
 		return this._codestream.addEnterpriseProviderHost(request);
+	}
+
+	@log()
+	removeEnterpriseProviderHost(request: RemoveEnterpriseProviderHostRequest) {
+		return this._codestream.removeEnterpriseProviderHost(request);
 	}
 
 	@log()

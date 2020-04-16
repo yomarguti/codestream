@@ -117,6 +117,7 @@ import {
 	PinReplyToCodemarkResponse,
 	ReactToPostRequest,
 	ReactToPostResponse,
+	RemoveEnterpriseProviderHostRequest,
 	RenameStreamRequest,
 	RenameStreamResponse,
 	SetCodemarkPinnedRequest,
@@ -439,6 +440,7 @@ export interface ApiProvider {
 	addEnterpriseProviderHost(
 		request: AddEnterpriseProviderHostRequest
 	): Promise<AddEnterpriseProviderHostResponse>;
+	removeEnterpriseProviderHost(request: RemoveEnterpriseProviderHostRequest): Promise<void>;
 	refreshThirdPartyProvider(request: {
 		providerId: string;
 		refreshToken: string;

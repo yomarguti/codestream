@@ -85,6 +85,7 @@ import {
 	PinReplyToCodemarkRequest,
 	ReactToPostRequest,
 	ReactToPostResponse,
+	RemoveEnterpriseProviderHostRequest,
 	RenameStreamRequest,
 	RenameStreamResponse,
 	SetCodemarkPinnedRequest,
@@ -1229,6 +1230,11 @@ export class MSTeamsApiProvider implements ApiProvider {
 	@log()
 	addEnterpriseProviderHost(request: AddEnterpriseProviderHostRequest) {
 		return this._codestream.addEnterpriseProviderHost(request);
+	}
+
+	@log()
+	removeEnterpriseProviderHost(request: RemoveEnterpriseProviderHostRequest) {
+		return this._codestream.removeEnterpriseProviderHost(request);
 	}
 
 	@log()

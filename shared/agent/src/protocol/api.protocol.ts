@@ -671,6 +671,14 @@ export interface CSAddProviderHostResponse {
 	providerId: string;
 }
 
+export interface CSRemoveProviderHostRequest {
+	host: string;
+}
+
+export interface CSRemoveProviderHostResponse {
+	team: any;
+}
+
 export interface CSTeamTagRequest {
 	team: CSTeam;
 	tag: CSTag;

@@ -90,6 +90,7 @@ import {
 	OpenStreamRequest,
 	PinReplyToCodemarkRequest,
 	ReactToPostRequest,
+	RemoveEnterpriseProviderHostRequest,
 	RenameStreamRequest,
 	SendPasswordResetEmailRequest,
 	SendPasswordResetEmailRequestType,
@@ -199,6 +200,8 @@ import {
 	CSRefreshableProviderInfos,
 	CSRegisterRequest,
 	CSRegisterResponse,
+	CSRemoveProviderHostRequest,
+	CSRemoveProviderHostResponse,
 	CSSetCodemarkPinnedRequest,
 	CSSetCodemarkPinnedResponse,
 	CSSetPasswordRequest,
@@ -1838,6 +1841,28 @@ export class CodeStreamApiProvider implements ApiProvider {
 			});
 			SessionContainer.instance().session.updateProviders();
 			return { providerId: response.providerId };
+		} catch (ex) {
+			Logger.error(ex, cc);
+			throw ex;
+		}
+	}
+
+	@log()
+	async removeEnterpriseProviderHost(request: RemoveEnterpriseProviderHostRequest): Promise<void> {
+		const cc = Logger.getCorrelationContext();
+		try {
+			const response = await this.delete<CSRemoveProviderHostResponse>(
+				`/provider-host/${request.provider}/${request.teamId}/${encodeURIComponent(
+					request.providerId
+				)}`,
+				this._token
+			);
+
+			await SessionContainer.instance().teams.resolve({
+				type: MessageType.Teams,
+				data: [response.team]
+			});
+			SessionContainer.instance().session.updateProviders();
 		} catch (ex) {
 			Logger.error(ex, cc);
 			throw ex;

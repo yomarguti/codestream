@@ -71,6 +71,17 @@ export const AddEnterpriseProviderRequestType = new RequestType<
 	void
 >("codestream/provider/add");
 
+export interface RemoveEnterpriseProviderRequest {
+	providerId: string;
+}
+
+export const RemoveEnterpriseProviderRequestType = new RequestType<
+	RemoveEnterpriseProviderRequest,
+	void,
+	void,
+	void
+>("codestream/provider/remove");
+
 export interface DisconnectThirdPartyProviderRequest {
 	providerId: string;
 	providerTeamId?: string;
@@ -245,4 +256,16 @@ export interface AddEnterpriseProviderHostRequest {
 
 export interface AddEnterpriseProviderHostResponse {
 	providerId: string;
+}
+
+export interface RemoveEnterpriseProviderHostRequest {
+	provider: string;
+	providerId: string;
+	teamId: string;
+}
+
+export interface EnterpriseConfigurationData {
+	host?: string;
+	baseUrl: string;
+	token: string;
 }
