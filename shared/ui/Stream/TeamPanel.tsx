@@ -332,7 +332,7 @@ class TeamPanel extends React.Component<Props, State> {
 				Invite your teammates to give CodeStream a try by sharing this URL with them:
 				<br />
 				<br />
-				<b>https://www.codestream.com/{provider}-invite</b>
+				https://www.codestream.com/{provider}-invite
 				<br />
 				<br />
 			</div>
