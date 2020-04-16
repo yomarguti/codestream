@@ -44,7 +44,7 @@ export class ConfigureEnterprisePanel extends Component {
 
 		// configuring is as good as connecting, since we are letting the user
 		// set the access token
-		this.props.configureProvider(providerId, { baseUrl, token });
+		this.props.configureProvider(providerId, { baseUrl, token }, true, this.props.originLocation);
 		this.props.closePanel();
 	};
 
@@ -132,10 +132,10 @@ export class ConfigureEnterprisePanel extends Component {
 							</div>
 							<div key="token" id="configure-enterprise-controls-token" className="control-group">
 								<label>
-									<strong>{providerShortName} Permanent Access Token</strong>
+									<strong>{providerShortName} Personal Access Token</strong>
 								</label>
 								<label>
-									Please provide a <a href={helpUrl}>permanent access token</a> we can use to access
+									Please provide a <a href={helpUrl}>personal access token</a> we can use to access
 									your {providerShortName} projects and issues.
 									{scopes && scopes.length && (
 										<span>

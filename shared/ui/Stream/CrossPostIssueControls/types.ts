@@ -17,7 +17,7 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		icon: "mark-github",
 		urlPlaceholder: "https://git.myorg.com",
 		helpUrl:
-			"https://github.com/TeamCodeStream/CodeStream/wiki/Configuring-the-GitHub-Enterprise-Integration"
+			"https://help.github.com/en/enterprise/2.15/user/articles/creating-a-personal-access-token-for-the-command-line"
 	},
 	gitlab: { displayName: "GitLab", icon: "gitlab" },
 	gitlab_enterprise: {
@@ -25,8 +25,7 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		shortDisplayName: "GitLab",
 		icon: "gitlab",
 		urlPlaceholder: "https://gitlab.myorg.com",
-		helpUrl:
-			"https://github.com/TeamCodeStream/CodeStream/wiki/Configuring-the-GitLab-Self-Managed-Integration"
+		helpUrl: "https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html"
 	},
 	jira: { displayName: "Jira", icon: "jira" },
 	jiraserver: {
@@ -48,4 +47,3 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 	slack: { displayName: "Slack", icon: "slack", groupName: "Workspace" },
 	msteams: { displayName: "Microsoft Teams", icon: "msteams", groupName: "Organization" }
 };
-

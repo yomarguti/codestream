@@ -349,11 +349,11 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			this.props.currentTeamId
 		);
 		if (!providerInfo) return;
-		if (provider.isEnterprise) {
-			if (!providerInfo!.hosts) return undefined;
-			providerInfo = providerInfo!.hosts[provider.id];
-		}
-		if (!providerInfo.accessToken) return undefined;
+		if (providerInfo.accessToken) return { provider, display };
+		if (!provider.isEnterprise) return undefined;
+		if (!providerInfo!.hosts) return undefined;
+		providerInfo = providerInfo!.hosts[provider.id];
+		if (!providerInfo) return undefined;
 		return { provider, display };
 	}
 
@@ -376,7 +376,6 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 	const currentIssueProviderConfig = context.issueProvider
 		? providers[context.issueProvider]
 		: undefined;
-
 	return {
 		currentUser: users[session.userId!] as CSMe,
 		currentTeamId: context.currentTeamId,
