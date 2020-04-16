@@ -332,7 +332,7 @@ class TeamPanel extends React.Component<Props, State> {
 				Invite your teammates to give CodeStream a try by sharing this URL with them:
 				<br />
 				<br />
-				https://www.codestream.com/{provider}-invite
+				<b>https://www.codestream.com/{provider}-invite</b>
 				<br />
 				<br />
 			</div>
@@ -738,7 +738,7 @@ class TeamPanel extends React.Component<Props, State> {
 								<UL>
 									{this.props.invited.map(user => {
 										const body = encodeURIComponent(
-											`1. Download and install CodeStream: https://www.codestream.com/roadmap\n\n2. Click “Find your team" and paste in your invitation code: <b>${user.inviteCode}</b>\n\n`
+											`1. Download and install CodeStream: https://www.codestream.com/roadmap\n\n2. Click “Find your team" and paste in your invitation code: ${user.inviteCode}\n\n`
 										);
 										const subject = "Invitation to CodeStream";
 										const title = user.inviteCode ? (
