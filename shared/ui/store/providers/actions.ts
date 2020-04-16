@@ -138,7 +138,7 @@ export const removeEnterpriseProvider = (providerId: string) => async (dispatch,
 	const provider = providers[providerId];
 	if (!provider) return;
 	try {
-		await HostApi.instance.send(RemoveEnterpriseProviderRequestType, {
+		HostApi.instance.send(RemoveEnterpriseProviderRequestType, {
 			providerId
 		});
 	} catch (error) {
