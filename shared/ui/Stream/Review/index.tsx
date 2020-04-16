@@ -547,7 +547,7 @@ const BaseReview = (props: BaseReviewProps) => {
 							<Meta id="changed-files">
 								<MetaLabel>
 									Changed Files
-									{props.canStartReview && derivedState.isInVscode && numFiles > 1 && (
+									{props.canStartReview && numFiles > 1 && (
 										<MetaIcons>
 											<Icon
 												onClick={nextFile}
@@ -556,10 +556,12 @@ const BaseReview = (props: BaseReviewProps) => {
 												placement="top"
 												delay={1}
 												title={
-													<span>
-														Next File{" "}
-														<span className="keybinding">{nextFileKeyboardShortcut()}</span>
-													</span>
+													derivedState.isInVscode && (
+														<span>
+															Next File{" "}
+															<span className="keybinding">{nextFileKeyboardShortcut()}</span>
+														</span>
+													)
 												}
 											/>
 											<Icon
@@ -569,10 +571,12 @@ const BaseReview = (props: BaseReviewProps) => {
 												placement="top"
 												delay={1}
 												title={
-													<span>
-														Previous File{" "}
-														<span className="keybinding">{previousFileKeyboardShortcut()}</span>
-													</span>
+													derivedState.isInVscode && (
+														<span>
+															Previous File{" "}
+															<span className="keybinding">{previousFileKeyboardShortcut()}</span>
+														</span>
+													)
 												}
 											/>
 										</MetaIcons>
