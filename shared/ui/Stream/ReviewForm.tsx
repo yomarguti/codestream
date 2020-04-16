@@ -811,7 +811,7 @@ class ReviewForm extends React.Component<Props, State> {
 		);
 	}
 
-	confirmCancel = (callback?) => {
+	confirmCancel = (callbackOrEventArgs?: Function | Object) => {
 		const { titleTouched, text, reviewersTouched } = this.state;
 
 		const finish = () => {
@@ -819,7 +819,7 @@ class ReviewForm extends React.Component<Props, State> {
 			this.props.onClose && this.props.onClose();
 			if (!isEditing) {
 				this.props.closePanel();
-				if (callback) callback();
+				if (typeof callbackOrEventArgs === "function") callbackOrEventArgs();
 			}
 		};
 
