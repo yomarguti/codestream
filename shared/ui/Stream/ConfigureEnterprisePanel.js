@@ -42,9 +42,18 @@ export class ConfigureEnterprisePanel extends Component {
 		const { providerId } = this.props;
 		const { baseUrl, token } = this.state;
 
+		let url = baseUrl.trim().toLowerCase();
+		url = url.match(/^http/) ? url : `https://${url}`;
+		url = url.replace(/\/*$/g, "");
+
 		// configuring is as good as connecting, since we are letting the user
 		// set the access token
-		this.props.configureProvider(providerId, { baseUrl, token }, true, this.props.originLocation);
+		this.props.configureProvider(
+			providerId,
+			{ baseUrl: url, token },
+			true,
+			this.props.originLocation
+		);
 		this.props.closePanel();
 	};
 
