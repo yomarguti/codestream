@@ -344,6 +344,7 @@ class EditorService(val project: Project) {
                     EditorMetrics(
                         colorsScheme.editorFontSize,
                         lineHeight,
+                        scrollingModel.visibleArea.height,
                         margins
                     ),
                     selections,
@@ -374,6 +375,7 @@ class EditorService(val project: Project) {
                     EditorMetrics(
                         editor.colorsScheme.editorFontSize,
                         editor.lineHeight,
+                        editor.scrollingModel.visibleArea.height,
                         editor.margins
                     )
                 )
@@ -391,7 +393,7 @@ class EditorService(val project: Project) {
     }
 
     fun toggleRangeHighlight(range: Range?, highlight: Boolean) = ApplicationManager.getApplication().invokeLater {
-        val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return@invokeLater
+        val editor = activeEditor ?: return@invokeLater
         val highlighters = rangeHighlighters[editor]
 
         if (highlighters == null) {

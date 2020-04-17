@@ -14,6 +14,7 @@ class EditorMargins(
 class EditorMetrics(
     val fontSize: Int,
     val lineHeight: Int,
+    val editorHeight: Int,
     val margins: EditorMargins?
 )
 
