@@ -255,7 +255,9 @@ export const CreateCodemarkIcons = (props: Props) => {
 	// console.log("lineHeightProps", props.lineHeight);
 
 	const lineHeight = props.lineHeight || codeHeight / numLinesVisible;
-	const paddingTop = (metrics && metrics.margins && metrics.margins.top) || 0;
+	const paddingTop = (metrics && metrics.margins && metrics.margins.top)
+		|| (metrics && metrics.editorHeight && (window.innerHeight - metrics.editorHeight))
+		|| 0;
 
 	if (iconsOnLine0 >= 0) {
 		// const top = (codeHeight * iconsOnLine0) / (numLinesVisible + 1);
