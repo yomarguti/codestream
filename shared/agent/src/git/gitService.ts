@@ -1,5 +1,5 @@
 "use strict";
-import { createPatch, ParsedDiff, parsePatch, structuredPatch } from "diff";
+import { createPatch, ParsedDiff, parsePatch } from "diff";
 import * as fs from "fs";
 import * as path from "path";
 import { Disposable, Event } from "vscode-languageserver";
@@ -10,7 +10,7 @@ import { CodeStreamSession } from "../session";
 import { Iterables, log, Strings } from "../system";
 import { xfs } from "../xfs";
 import { git, GitErrors, GitWarnings } from "./git";
-import { GitAuthor, GitCommit, GitRemote, GitRepository } from "./models/models";
+import { GitAuthor, GitCommit, GitNumStat, GitRemote, GitRepository } from "./models/models";
 import { GitAuthorParser } from "./parsers/authorParser";
 import { GitBlameRevisionParser, RevisionEntry } from "./parsers/blameRevisionParser";
 import { GitLogParser } from "./parsers/logParser";
@@ -840,73 +840,77 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
+	/**
+	 * Statistics for changes in repo from `startCommit`
+	 */
 	async getNumStat(
 		repoPath: string,
+		startCommit: string = "HEAD",
 		includeSaved: boolean,
-		includeStaged: boolean,
-		ref?: string
-	): Promise<
-		{
-			oldFile: string;
-			file: string;
-			linesAdded: number;
-			linesRemoved: number;
-			status: FileStatus;
-			statusX: FileStatus;
-			statusY: FileStatus;
-		}[]
-	> {
+		includeStaged: boolean
+	): Promise<GitNumStat[]> {
+		if (!startCommit || !startCommit.length) return [];
+		const options = [startCommit];
+		if (!includeSaved && !includeStaged) {
+			options.push("HEAD");
+		} else if (!includeSaved) {
+			options.push("--staged");
+		}
+		return this.getNumStatCore(repoPath, ...options);
+	}
+
+	/**
+	 * Statistics for staged changes in repo
+	 */
+	getNumStatStaged(repoPath: string): Promise<GitNumStat[]> {
+		return this.getNumStatCore(repoPath, "--staged");
+	}
+
+	/**
+	 * Statistic for saved (staged and unstaged) changes in repo
+	 */
+	getNumStatSaved(repoPath: string): Promise<GitNumStat[]> {
+		return this.getNumStatCore(repoPath, "HEAD");
+	}
+
+	private async getNumStatCore(repoPath: string, ...options: string[]): Promise<GitNumStat[]> {
 		try {
 			// files changed, lines added & deleted
 			// git diff --numstat --summary
 			// https://stackoverflow.com/questions/1587846/how-do-i-show-the-changes-which-have-been-staged
 			// also see https://files.slack.com/files-pri/T7DDT1L5R-FV0CM6LD6/image.png
-			let data: string | undefined;
-			try {
-				const options = ["diff"];
-				if (includeStaged && !includeSaved) options.push("--staged");
-				options.push("--numstat");
-				if (ref && ref.length) options.push(ref);
-				if (!includeStaged && !ref) options.push("HEAD");
-				options.push("--");
-				data = await git({ cwd: repoPath }, ...options);
-			} catch {}
-			if (!data) return [];
-
-			const ret: {
-				oldFile: string;
-				file: string;
-				linesAdded: number;
-				linesRemoved: number;
-				status: FileStatus;
-				statusX: FileStatus;
-				statusY: FileStatus;
-			}[] = [];
-			data
-				.trim()
-				.split("\n")
-				.forEach(line => {
-					const lineData = line.match(/^(\d+)\s+(\d+)\s+(.+)/);
-
-					if (lineData && lineData[3]) {
-						if (!lineData[3].endsWith("/")) {
-							const { oldFile, file } = this._getOldAndNewFileNamesFromDiffPath(lineData[3]);
-							ret.push({
-								linesAdded: parseInt(lineData[1], 10),
-								linesRemoved: parseInt(lineData[2], 10),
-								oldFile,
-								file,
-								status: FileStatus.modified,
-								statusX: FileStatus.modified,
-								statusY: FileStatus.modified
-							});
-						}
-					}
-				});
-			return ret;
-		} catch {
+			const data = await git({ cwd: repoPath }, "diff", "--numstat", ...options, "--");
+			return this.parseNumStat(data);
+		} catch (err) {
+			Logger.warn(`Error getting numstat (${options}): ${err.message}`);
 			return [];
 		}
+	}
+
+	private parseNumStat(data: string = ""): GitNumStat[] {
+		const ret: GitNumStat[] = [];
+		data
+			.trim()
+			.split("\n")
+			.forEach(line => {
+				const lineData = line.match(/^(\d+)\s+(\d+)\s+(.+)/);
+
+				if (lineData && lineData[3]) {
+					if (!lineData[3].endsWith("/")) {
+						const { oldFile, file } = this._getOldAndNewFileNamesFromDiffPath(lineData[3]);
+						ret.push({
+							linesAdded: parseInt(lineData[1], 10),
+							linesRemoved: parseInt(lineData[2], 10),
+							oldFile,
+							file,
+							status: FileStatus.modified,
+							statusX: FileStatus.modified,
+							statusY: FileStatus.modified
+						});
+					}
+				}
+			});
+		return ret;
 	}
 
 	private _getOldAndNewFileNamesFromDiffPath(diffPath: string) {

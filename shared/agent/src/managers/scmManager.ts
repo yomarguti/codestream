@@ -321,17 +321,17 @@ export class ScmManager {
 							}
 						});
 					}
-					modifiedFiles = await git.getNumStat(repoPath, includeSaved, includeStaged, startCommit);
+					modifiedFiles = await git.getNumStat(repoPath, startCommit, includeSaved, includeStaged);
 					if (modifiedFiles) {
 						modifiedFiles.forEach(file => {
 							totalModifiedLines += file.linesAdded + file.linesRemoved;
 						});
 					}
-					const ret1 = await git.getNumStat(repoPath, true, false);
+					const ret1 = await git.getNumStatSaved(repoPath);
 					if (ret1) {
 						savedFiles = ret1.map(line => line.file);
 					}
-					const ret2 = await git.getNumStat(repoPath, false, true);
+					const ret2 = await git.getNumStatStaged(repoPath);
 					if (ret2) {
 						stagedFiles = ret2.map(line => line.file);
 					}
