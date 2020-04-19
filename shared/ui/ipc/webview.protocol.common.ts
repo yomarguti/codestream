@@ -19,7 +19,6 @@ export enum EditorScrollMode {
 export interface EditorMetrics {
 	fontSize?: number;
 	lineHeight?: number;
-	editorHeight?: number;
 	margins?: EditorMargins;
 	scrollMode?: EditorScrollMode;
 	scrollRatio?: number;
