@@ -1,5 +1,7 @@
 package com.codestream.extensions
 
+import com.codestream.protocols.webview.EditorMargins
+import com.codestream.protocols.webview.EditorSelection
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.markup.TextAttributes
@@ -11,8 +13,6 @@ import com.intellij.ui.tabs.impl.JBTabsImpl
 import com.intellij.util.DocumentUtil
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
-import protocols.webview.EditorMargins
-import protocols.webview.EditorSelection
 import java.awt.Container
 import java.awt.Font
 import java.awt.Point

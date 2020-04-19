@@ -1,4 +1,4 @@
-package com.codestream.models
+package com.codestream.protocols
 
 import com.google.gson.annotations.SerializedName
 

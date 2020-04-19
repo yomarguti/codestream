@@ -1,5 +1,7 @@
 package com.codestream.error
 
+import com.codestream.protocols.agent.Ide
+import com.codestream.protocols.agent.UserLoggedIn
 import com.codestream.system.platform
 import com.intellij.diagnostic.LogMessage
 import com.intellij.openapi.diagnostic.ErrorReportSubmitter
@@ -10,8 +12,6 @@ import io.sentry.Sentry
 import io.sentry.connection.EventSendCallback
 import io.sentry.event.Event
 import io.sentry.event.UserBuilder
-import protocols.agent.Ide
-import protocols.agent.UserLoggedIn
 import java.awt.Component
 
 class ErrorHandler : ErrorReportSubmitter() {

@@ -3,7 +3,7 @@ package com.codestream.actions
 import com.codestream.codeStream
 import com.codestream.extensions.selectionOrCurrentLine
 import com.codestream.extensions.uri
-import com.codestream.models.CodemarkType
+import com.codestream.protocols.CodemarkType
 import com.codestream.protocols.webview.CodemarkNotifications
 import com.codestream.webViewService
 import com.intellij.codeInsight.intention.IntentionAction

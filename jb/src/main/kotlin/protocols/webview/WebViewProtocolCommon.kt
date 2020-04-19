@@ -1,4 +1,4 @@
-package protocols.webview
+package com.codestream.protocols.webview
 
 import com.google.gson.JsonElement
 import org.eclipse.lsp4j.Position

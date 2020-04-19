@@ -4,6 +4,20 @@ import com.codestream.agentService
 import com.codestream.authenticationService
 import com.codestream.editorService
 import com.codestream.gson
+import com.codestream.protocols.webview.ActiveEditorContextResponse
+import com.codestream.protocols.webview.EditorRangeHighlightRequest
+import com.codestream.protocols.webview.EditorRangeRevealRequest
+import com.codestream.protocols.webview.EditorRangeRevealResponse
+import com.codestream.protocols.webview.EditorRangeSelectRequest
+import com.codestream.protocols.webview.EditorRangeSelectResponse
+import com.codestream.protocols.webview.EditorScrollToRequest
+import com.codestream.protocols.webview.MarkerApplyRequest
+import com.codestream.protocols.webview.MarkerCompareRequest
+import com.codestream.protocols.webview.MarkerInsertTextRequest
+import com.codestream.protocols.webview.ReviewShowDiffRequest
+import com.codestream.protocols.webview.ReviewShowLocalDiffRequest
+import com.codestream.protocols.webview.ShellPromptFolderResponse
+import com.codestream.protocols.webview.UpdateConfigurationRequest
 import com.codestream.reviewService
 import com.codestream.settingsService
 import com.codestream.webViewService
@@ -24,20 +38,6 @@ import com.teamdev.jxbrowser.js.JsAccessible
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
-import protocols.webview.ActiveEditorContextResponse
-import protocols.webview.EditorRangeHighlightRequest
-import protocols.webview.EditorRangeRevealRequest
-import protocols.webview.EditorRangeRevealResponse
-import protocols.webview.EditorRangeSelectRequest
-import protocols.webview.EditorRangeSelectResponse
-import protocols.webview.EditorScrollToRequest
-import protocols.webview.MarkerApplyRequest
-import protocols.webview.MarkerCompareRequest
-import protocols.webview.MarkerInsertTextRequest
-import protocols.webview.ReviewShowDiffRequest
-import protocols.webview.ReviewShowLocalDiffRequest
-import protocols.webview.ShellPromptFolderResponse
-import protocols.webview.UpdateConfigurationRequest
 import java.util.concurrent.CompletableFuture
 
 class WebViewRouter(val project: Project) {

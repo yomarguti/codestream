@@ -1,6 +1,6 @@
 package com.codestream.editor
 
-import protocols.agent.Codemark
+import com.codestream.protocols.agent.Codemark
 import java.awt.Color
 
 val aqua = Color(0x5ABFDC)

@@ -2,12 +2,12 @@ package com.codestream.actions
 
 import com.codestream.agentService
 import com.codestream.editorService
+import com.codestream.protocols.agent.TextDocumentFromKeyParams
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
-import protocols.agent.TextDocumentFromKeyParams
 
 abstract class Bookmark(val key: Int) : AnAction() {
 

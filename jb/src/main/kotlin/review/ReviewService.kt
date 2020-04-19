@@ -1,6 +1,9 @@
 package com.codestream.review
 
 import com.codestream.agentService
+import com.codestream.protocols.agent.GetAllReviewContentsParams
+import com.codestream.protocols.agent.GetLocalReviewContentsParams
+import com.codestream.protocols.agent.GetReviewContentsResult
 import com.intellij.diff.DiffDialogHints
 import com.intellij.diff.DiffManagerEx
 import com.intellij.diff.chains.DiffRequestChain
@@ -16,9 +19,6 @@ import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.KeyWithDefaultValue
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.vfs.VirtualFile
-import protocols.agent.GetAllReviewContentsParams
-import protocols.agent.GetLocalReviewContentsParams
-import protocols.agent.GetReviewContentsResult
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 

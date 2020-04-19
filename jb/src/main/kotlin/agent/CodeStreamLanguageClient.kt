@@ -6,6 +6,7 @@ import com.codestream.codeStream
 import com.codestream.editorService
 import com.codestream.extensions.workspaceFolders
 import com.codestream.gson
+import com.codestream.protocols.agent.LoginResult
 import com.codestream.sessionService
 import com.codestream.webViewService
 import com.github.salomonbrys.kotson.fromJson
@@ -30,7 +31,6 @@ import org.eclipse.lsp4j.UnregistrationParams
 import org.eclipse.lsp4j.WorkspaceFolder
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification
 import org.eclipse.lsp4j.services.LanguageClient
-import protocols.agent.LoginResult
 import java.util.concurrent.CompletableFuture
 
 class CodeStreamLanguageClient(private val project: Project) : LanguageClient {

@@ -3,6 +3,8 @@ package com.codestream.actions
 import com.codestream.agentService
 import com.codestream.extensions.selectionOrCurrentLine
 import com.codestream.extensions.uri
+import com.codestream.protocols.agent.CreatePermalinkParams
+import com.codestream.protocols.agent.PermalinkPrivacy
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationType
 import com.intellij.notification.Notifications
@@ -12,8 +14,6 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.ide.CopyPasteManager
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import protocols.agent.CreatePermalinkParams
-import protocols.agent.PermalinkPrivacy
 import java.awt.datatransfer.StringSelection
 
 private val PERMALINK_COPIED = Notification(

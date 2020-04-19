@@ -1,4 +1,4 @@
-package protocols.agent
+package com.codestream.protocols.agent
 
 import com.codestream.RECORD_REQUESTS
 import com.google.gson.JsonElement

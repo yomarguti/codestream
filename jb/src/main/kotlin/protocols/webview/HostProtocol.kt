@@ -1,12 +1,12 @@
-package protocols.webview
+package com.codestream.protocols.webview
 
 import com.codestream.agent.ApiVersionCompatibility
+import com.codestream.protocols.agent.Marker
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
-import protocols.agent.Marker
 
 class BootstrapResponse(
     val session: UserSession,

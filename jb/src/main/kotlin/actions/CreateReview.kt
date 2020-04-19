@@ -3,8 +3,6 @@ package com.codestream.actions
 import com.codestream.codeStream
 import com.codestream.extensions.selectionOrCurrentLine
 import com.codestream.extensions.uri
-import com.codestream.models.CodemarkType
-import com.codestream.protocols.webview.CodemarkNotifications
 import com.codestream.protocols.webview.ReviewNotifications
 import com.codestream.webViewService
 import com.intellij.codeInsight.intention.IntentionAction
@@ -14,8 +12,6 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.IconLoader
-import com.intellij.openapi.util.Iconable
 import com.intellij.psi.PsiFile
 import java.awt.event.KeyEvent
 

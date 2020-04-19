@@ -1,9 +1,7 @@
 package com.codestream.protocols.webview
 
-import com.codestream.models.CodemarkType
+import com.codestream.protocols.CodemarkType
 import org.eclipse.lsp4j.Range
-import protocols.webview.EditorInformation
-import protocols.webview.EditorSelection
 
 interface WebViewNotification {
     fun getMethod(): String

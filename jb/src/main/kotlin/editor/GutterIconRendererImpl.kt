@@ -3,6 +3,7 @@ package com.codestream.editor
 import com.codestream.codeStream
 import com.codestream.extensions.ifNullOrBlank
 import com.codestream.extensions.uri
+import com.codestream.protocols.agent.DocumentMarker
 import com.codestream.protocols.webview.CodemarkNotifications
 import com.codestream.webViewService
 import com.intellij.openapi.actionSystem.AnAction
@@ -10,7 +11,6 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.markup.GutterIconRenderer
 import com.intellij.openapi.util.IconLoader
-import protocols.agent.DocumentMarker
 import javax.swing.Icon
 
 class GutterIconRendererImpl(val editor: Editor, val marker: DocumentMarker) : GutterIconRenderer() {

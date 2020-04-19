@@ -1,8 +1,8 @@
 package com.codestream.extensions
 
+import com.codestream.protocols.webview.EditorSelection
 import com.intellij.openapi.editor.event.SelectionEvent
 import org.eclipse.lsp4j.Range
-import protocols.webview.EditorSelection
 
 val SelectionEvent.editorSelections: List<EditorSelection>
     get() = newRanges.map {

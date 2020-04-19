@@ -3,12 +3,12 @@ package com.codestream.session
 import com.codestream.agent.DidChangeUnreadsNotification
 import com.codestream.agentService
 import com.codestream.error.ErrorHandler
+import com.codestream.protocols.agent.CSPreferences
+import com.codestream.protocols.agent.CSUser
+import com.codestream.protocols.agent.Post
+import com.codestream.protocols.agent.Stream
+import com.codestream.protocols.agent.UserLoggedIn
 import com.intellij.openapi.project.Project
-import protocols.agent.CSPreferences
-import protocols.agent.CSUser
-import protocols.agent.Post
-import protocols.agent.Stream
-import protocols.agent.UserLoggedIn
 import kotlin.properties.Delegates
 
 typealias UserLoggedInObserver = (UserLoggedIn?) -> Unit

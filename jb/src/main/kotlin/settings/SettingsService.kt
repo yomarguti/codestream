@@ -2,6 +2,7 @@ package com.codestream.settings
 
 import com.codestream.codeStream
 import com.codestream.gson
+import com.codestream.protocols.webview.WebViewContext
 import com.codestream.sessionService
 import com.github.salomonbrys.kotson.fromJson
 import com.github.salomonbrys.kotson.jsonObject
@@ -13,7 +14,6 @@ import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.project.Project
-import protocols.webview.WebViewContext
 import kotlin.properties.Delegates
 
 const val INLINE_CODEMARKS = "viewCodemarksInline"

@@ -6,7 +6,13 @@ import com.codestream.agentService
 import com.codestream.codeStream
 import com.codestream.extensions.merge
 import com.codestream.gson
+import com.codestream.protocols.agent.LoginResult
+import com.codestream.protocols.agent.LoginWithTokenParams
+import com.codestream.protocols.webview.BootstrapResponse
+import com.codestream.protocols.webview.Capabilities
 import com.codestream.protocols.webview.DidChangeApiVersionCompatibility
+import com.codestream.protocols.webview.Ide
+import com.codestream.protocols.webview.UserSession
 import com.codestream.sessionService
 import com.codestream.settings.ApplicationSettingsService
 import com.codestream.settingsService
@@ -21,12 +27,6 @@ import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.future.await
-import protocols.agent.LoginResult
-import protocols.agent.LoginWithTokenParams
-import protocols.webview.BootstrapResponse
-import protocols.webview.Capabilities
-import protocols.webview.Ide
-import protocols.webview.UserSession
 
 class AuthenticationService(val project: Project) {
 

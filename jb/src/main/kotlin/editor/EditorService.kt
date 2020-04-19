@@ -13,7 +13,16 @@ import com.codestream.extensions.selections
 import com.codestream.extensions.textDocumentIdentifier
 import com.codestream.extensions.uri
 import com.codestream.extensions.visibleRanges
+import com.codestream.protocols.agent.DocumentMarker
+import com.codestream.protocols.agent.DocumentMarkersParams
+import com.codestream.protocols.agent.Marker
+import com.codestream.protocols.agent.TextDocument
+import com.codestream.protocols.webview.EditorContext
+import com.codestream.protocols.webview.EditorInformation
+import com.codestream.protocols.webview.EditorMetrics
 import com.codestream.protocols.webview.EditorNotifications
+import com.codestream.protocols.webview.EditorSelection
+import com.codestream.protocols.webview.WebViewContext
 import com.codestream.review.ReviewDiffFileSystem
 import com.codestream.sessionService
 import com.codestream.settings.ApplicationSettingsService
@@ -56,15 +65,6 @@ import org.eclipse.lsp4j.TextDocumentContentChangeEvent
 import org.eclipse.lsp4j.TextDocumentItem
 import org.eclipse.lsp4j.TextDocumentSyncKind
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier
-import protocols.agent.DocumentMarker
-import protocols.agent.DocumentMarkersParams
-import protocols.agent.Marker
-import protocols.agent.TextDocument
-import protocols.webview.EditorContext
-import protocols.webview.EditorInformation
-import protocols.webview.EditorMetrics
-import protocols.webview.EditorSelection
-import protocols.webview.WebViewContext
 import java.io.File
 import java.net.URI
 

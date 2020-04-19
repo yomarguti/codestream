@@ -1,6 +1,11 @@
 package com.codestream.settings
 
 import com.codestream.DEBUG
+import com.codestream.protocols.agent.Extension
+import com.codestream.protocols.agent.Ide
+import com.codestream.protocols.agent.ProxySettings
+import com.codestream.protocols.agent.TraceLevel
+import com.codestream.protocols.webview.Configs
 import com.intellij.credentialStore.CredentialAttributes
 import com.intellij.credentialStore.generateServiceName
 import com.intellij.ide.plugins.PluginManager
@@ -11,11 +16,6 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.util.io.encodeUrlQueryParameter
 import com.intellij.util.net.HttpConfigurable
-import protocols.agent.Extension
-import protocols.agent.Ide
-import protocols.agent.ProxySettings
-import protocols.agent.TraceLevel
-import protocols.webview.Configs
 
 const val API_PD = "https://pd-api.codestream.us"
 const val API_QA = "https://qa-api.codestream.us"

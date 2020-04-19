@@ -3,6 +3,9 @@ package com.codestream.notification
 import com.codestream.CODESTREAM_TOOL_WINDOW_ID
 import com.codestream.agentService
 import com.codestream.codeStream
+import com.codestream.protocols.agent.Codemark
+import com.codestream.protocols.agent.Post
+import com.codestream.protocols.agent.Review
 import com.codestream.protocols.webview.CodemarkNotifications
 import com.codestream.protocols.webview.ReviewNotifications
 import com.codestream.sessionService
@@ -17,9 +20,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import protocols.agent.Codemark
-import protocols.agent.Post
-import protocols.agent.Review
 
 const val CODESTREAM_NOTIFICATION_GROUP_ID = "CodeStream"
 private val icon = IconLoader.getIcon("/images/codestream-unread.svg")
