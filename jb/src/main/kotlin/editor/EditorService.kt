@@ -344,7 +344,6 @@ class EditorService(val project: Project) {
                     EditorMetrics(
                         colorsScheme.editorFontSize,
                         lineHeight,
-                        scrollingModel.visibleArea.height,
                         margins
                     ),
                     selections,
@@ -375,7 +374,6 @@ class EditorService(val project: Project) {
                     EditorMetrics(
                         editor.colorsScheme.editorFontSize,
                         editor.lineHeight,
-                        editor.scrollingModel.visibleArea.height,
                         editor.margins
                     )
                 )

@@ -1,16 +1,20 @@
 package com.codestream.extensions
 
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.fileEditor.impl.EditorWindowHolder
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.ui.ColorUtil
+import com.intellij.ui.tabs.impl.JBTabsImpl
 import com.intellij.util.DocumentUtil
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
 import protocols.webview.EditorMargins
 import protocols.webview.EditorSelection
+import java.awt.Container
 import java.awt.Font
 import java.awt.Point
 
@@ -36,11 +40,31 @@ fun Editor.getOffset(position: Position): Int {
     if (offset > docLength) {
         println("Offset greater than text length : $offset > $docLength")
     }
-    return Math.min(Math.max(offset, 0), docLength)
+    return offset.coerceIn(0, docLength)
 }
 
 val Editor.margins: EditorMargins
-    get() = EditorMargins(0, 0, 0, 0)
+    get() {
+        var withTabHeaders = this.component as Container?
+        while (withTabHeaders != null && withTabHeaders !is JBTabsImpl) {
+            withTabHeaders = withTabHeaders.parent
+        }
+
+        var withBreadcrumbs = this.component as Container?
+        while (withBreadcrumbs != null && withBreadcrumbs !is EditorWindowHolder) {
+            withBreadcrumbs = withBreadcrumbs.parent
+        }
+
+        val height = this.component.height
+        val heightWithBreadcrumbs = withBreadcrumbs?.height ?: height
+        val heightWithTabHeaders = withTabHeaders?.height ?: height
+        val tabRowHeight = ((withTabHeaders as? JBTabsImpl)?.myInfo2Label?.values?.first()?.height ?: 27) + 1
+
+        val bottom = (heightWithBreadcrumbs - height).coerceAtLeast(0)
+        val top = (heightWithTabHeaders - heightWithBreadcrumbs - tabRowHeight).coerceAtLeast(0)
+
+        return EditorMargins(top, 0, bottom, 0)
+    }
 
 val Editor.selections: List<EditorSelection>
     get() {
@@ -122,6 +146,7 @@ val Editor.visibleRanges: List<Range>
                 range.start = document.lspPosition(nextExpandedOffset)
                 range.end = fullRange.end
             } else {
+                ranges += Range(range.start, range.start)
                 range.start = document.lspPosition(nextExpandedOffset)
             }
         }
