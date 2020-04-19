@@ -1,6 +1,5 @@
 package com.codestream.extensions
 
-import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.markup.TextAttributes
