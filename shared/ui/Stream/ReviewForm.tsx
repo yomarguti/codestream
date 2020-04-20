@@ -23,12 +23,7 @@ import {
 import React, { ReactElement } from "react";
 import { connect } from "react-redux";
 import cx from "classnames";
-import {
-	getStreamForId,
-	getStreamForTeam,
-	getDirectMessageStreamsForTeam,
-	getDMName
-} from "../store/streams/reducer";
+import { getStreamForId, getStreamForTeam } from "../store/streams/reducer";
 import {
 	mapFilter,
 	toMapBy,
@@ -87,7 +82,6 @@ interface Props extends ConnectedProps {
 interface ConnectedProps {
 	teamMates: CSUser[];
 	teamMembers: CSUser[];
-	directMessageStreams: CSDirectStream[];
 	channel: CSStream;
 	providerInfo: {
 		[service: string]: {};
@@ -865,8 +859,8 @@ class ReviewForm extends React.Component<Props, State> {
 		const ignoreFile = scm.repoPath + "/.codestreamignore";
 		const success = this.addIgnoreFile(file);
 		if (success) {
-			this.exclude(event, file);
 			this.setState({ ignoredFiles: { ...this.state.ignoredFiles, [file]: true } });
+			this.setState({ excludedFiles: { ...this.state.excludedFiles, [file]: true } });
 			confirmPopup({
 				title: "Exclude Files",
 				message: (
@@ -991,14 +985,18 @@ class ReviewForm extends React.Component<Props, State> {
 		tooltip?: string | ReactElement
 	) {
 		return (
-			<Tooltip title={tooltip || ""} placement="top" delay={1} align={{ offset: [0, 5] }}>
+			<Tooltip key={id} title={tooltip || ""} placement="top" delay={1} align={{ offset: [0, 5] }}>
 				<div
 					className={`row-with-icon-actions ${onOff ? "" : "muted"}`}
 					style={{ display: "flex", alignItems: "center" }}
-					key={id}
 					onClick={onClick}
 				>
-					<input type="checkbox" checked={onOff} style={{ flexShrink: 0, pointerEvents: "none" }} />
+					<input
+						type="checkbox"
+						checked={onOff}
+						readOnly
+						style={{ flexShrink: 0, pointerEvents: "none" }}
+					/>
 					<label className="ellipsis-right-container no-margin" style={{ cursor: "pointer" }}>
 						{/* headshot */}
 						<span
@@ -1008,6 +1006,7 @@ class ReviewForm extends React.Component<Props, State> {
 						/>
 					</label>
 					<span
+						key="message"
 						className="message"
 						style={{ textAlign: "right", flexGrow: 10, whiteSpace: "nowrap" }}
 					>
@@ -1030,7 +1029,7 @@ class ReviewForm extends React.Component<Props, State> {
 		return (
 			<>
 				{files.map(file => (
-					<div>{file}</div>
+					<div key={file}>{file}</div>
 				))}
 			</>
 		);
@@ -1201,6 +1200,7 @@ class ReviewForm extends React.Component<Props, State> {
 		// beginning with a period)
 		return (
 			<div
+				key={file}
 				className="row-with-icon-actions monospace ellipsis-left-container"
 				onClick={() => this.showLocalDiff(file)}
 			>
@@ -1271,7 +1271,7 @@ class ReviewForm extends React.Component<Props, State> {
 			return this.noScm();
 		}
 
-		return [
+		return (
 			<div className="related" style={{ padding: "0", marginBottom: 0, position: "relative" }}>
 				<div className="related-label">
 					Changed Files&nbsp;&nbsp;
@@ -1279,7 +1279,7 @@ class ReviewForm extends React.Component<Props, State> {
 				</div>
 				{changedFiles}
 			</div>
-		];
+		);
 	}
 
 	renderExcludedFiles() {
@@ -1291,12 +1291,12 @@ class ReviewForm extends React.Component<Props, State> {
 		const excluded = modifiedFiles.filter(f => excludedFiles[f.file] && !ignoredFiles[f.file]);
 		if (excluded.length === 0) return null;
 
-		return [
+		return (
 			<div className="related" style={{ padding: "0", marginBottom: 0, position: "relative" }}>
 				<div className="related-label">Excluded from this Review</div>
 				{excluded.map(file => this.renderFile(file))}
 			</div>
-		];
+		);
 	}
 
 	setFrom = (commit: string) => {};
@@ -1385,12 +1385,12 @@ class ReviewForm extends React.Component<Props, State> {
 			  })
 			: [];
 
-		return [
+		return (
 			<form className="standard-form review-form" key="form">
 				<fieldset className="form-body">
 					<div id="controls" className="control-group" key="controls1">
 						<div key="headshot" className="headline-flex">
-							<div style={{ paddingRight: "7px" }}>
+							<div key="padded" style={{ paddingRight: "7px" }}>
 								<Headshot person={currentUser} />
 							</div>
 							<div style={{ marginTop: "-1px" }}>
@@ -1488,6 +1488,7 @@ class ReviewForm extends React.Component<Props, State> {
 							{reviewers.map(person => {
 								const menu = (
 									<HeadshotMenu
+										key={person.email}
 										person={person}
 										menuItems={[
 											{
@@ -1583,7 +1584,7 @@ class ReviewForm extends React.Component<Props, State> {
 					)}
 				</fieldset>
 			</form>
-		];
+		);
 	}
 }
 
@@ -1600,13 +1601,6 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 	const teamMates = getTeamMates(state);
 	const teamMembers = getTeamMembers(state);
 	const teamTagsArray = getTeamTagsArray(state);
-
-	const directMessageStreams: CSDirectStream[] = (
-		getDirectMessageStreamsForTeam(state.streams, context.currentTeamId) || []
-	).map(stream => ({
-		...(stream as CSDirectStream),
-		name: getDMName(stream, toMapBy("id", teamMates), session.userId)
-	}));
 
 	let unsavedFiles: string[] = [];
 	if (documents) {
@@ -1626,7 +1620,6 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		channel,
 		teamMates,
 		teamMembers,
-		directMessageStreams: directMessageStreams,
 		providerInfo: (user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT,
 		currentUser: user,
 		skipPostCreationModal,
