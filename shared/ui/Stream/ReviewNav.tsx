@@ -405,6 +405,11 @@ export function ReviewNav(props: Props) {
 								<span className="wide-text">Reopen</span>
 							</Button>
 						</Tooltip>
+						<Tooltip title="More actions" placement="bottom">
+							<Button variant="secondary">
+								<BaseReviewMenu review={review} setIsEditing={setIsEditing} globalNav />
+							</Button>
+						</Tooltip>
 						<Tooltip
 							title={
 								<>
