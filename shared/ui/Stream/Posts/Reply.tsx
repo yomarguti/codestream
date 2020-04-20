@@ -4,7 +4,7 @@ import { CSUser } from "@codestream/protocols/api";
 import { PostPlus } from "@codestream/protocols/agent";
 import React from "react";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
-import { KebabIcon } from "../Codemark/BaseCodemark";
+import { KebabIcon, MetaDescriptionForTags } from "../Codemark/BaseCodemark";
 import Icon from "../Icon";
 import Timestamp from "../Timestamp";
 import { getCodemark } from "@codestream/webview/store/codemarks/reducer";
@@ -23,8 +23,13 @@ import MessageInput from "../MessageInput";
 import Button from "../Button";
 import { Dispatch } from "@codestream/webview/store/common";
 import { replaceHtml } from "@codestream/webview/utils";
-import { findMentionedUserIds, getTeamMembers } from "@codestream/webview/store/users/reducer";
+import {
+	findMentionedUserIds,
+	getTeamMembers,
+	getTeamTagsHash
+} from "@codestream/webview/store/users/reducer";
 import { editCodemark } from "@codestream/webview/store/codemarks/actions";
+import Tag from "../Tag";
 
 export interface ReplyProps {
 	author: Partial<CSUser>;
@@ -98,8 +103,13 @@ const ParentPreview = styled.span`
 	white-space: pre;
 `;
 
-const ReplyText = styled(MarkdownText)`
+const Content = styled.div`
 	margin-left: 23px;
+	display: flex;
+	flex-direction: column;
+	> *:not(:last-child) {
+		margin-bottom: 10px;
+	}
 `;
 
 const ReviewMarkerActionsWrapper = styled.div`
@@ -144,6 +154,7 @@ export const Reply = (props: ReplyProps) => {
 	const [newReplyText, setNewReplyText] = React.useState("");
 	const [isLoading, setIsLoading] = React.useState(false);
 	const teamMembers = useSelector((state: CodeStreamState) => getTeamMembers(state));
+	const teamTagsById = useSelector((state: CodeStreamState) => getTeamTagsHash(state));
 
 	const submit = async () => {
 		// don't create empty replies
@@ -172,6 +183,8 @@ export const Reply = (props: ReplyProps) => {
 	const codemark = useSelector((state: CodeStreamState) =>
 		isPending(props.post) ? null : getCodemark(state.codemarks, props.post.codemarkId)
 	);
+
+	const hasTags = codemark && codemark.tags && codemark.tags.length > 0;
 
 	const parentPost = useSelector((state: CodeStreamState) => {
 		return getPost(state.posts, props.post.streamId, props.post.parentPostId!);
@@ -315,7 +328,19 @@ export const Reply = (props: ReplyProps) => {
 				)}
 				{emote || isEditing ? null : (
 					<>
-						<ReplyText text={postText} />
+						<Content>
+							<MarkdownText text={postText} />
+							{hasTags && (
+								<MetaDescriptionForTags>
+									{codemark!.tags!.map((tagId: string) => {
+										const tag = teamTagsById[tagId];
+
+										if (tag == undefined) return;
+										return <Tag key={tagId} tag={tag} />;
+									})}
+								</MetaDescriptionForTags>
+							)}
+						</Content>
 						{markers}
 					</>
 				)}
