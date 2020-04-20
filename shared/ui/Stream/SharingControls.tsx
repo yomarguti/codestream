@@ -7,7 +7,8 @@ import { Button } from "../src/components/Button";
 import { HostApi } from "../webview-api";
 import {
 	FetchThirdPartyChannelsRequestType,
-	CreateThirdPartyPostRequest
+	CreateThirdPartyPostRequest,
+	ThirdPartyChannel
 } from "@codestream/protocols/agent";
 import { CodeStreamState } from "../store";
 import { useSelector, useDispatch } from "react-redux";
@@ -161,7 +162,7 @@ export const SharingControls = React.memo(
 		}>({ isAuthenticating: false, label: "" });
 		const [isFetchingData, setIsFetchingData] = React.useState<boolean>(false);
 		const [editingChannels, setEditingChannels] = React.useState<boolean>(false);
-		const [currentChannel, setCurrentChannel] = React.useState();
+		const [currentChannel, setCurrentChannel] = React.useState<ThirdPartyChannel | undefined>(undefined);
 
 		const selectedShareTargetTeamId = safe(() => derivedState.selectedShareTarget.teamId) as
 			| string
@@ -272,7 +273,11 @@ export const SharingControls = React.memo(
 			} else props.onChangeValues(undefined);
 		}, [
 			derivedState.selectedShareTarget && derivedState.selectedShareTarget.teamId,
-			selectedChannel && selectedChannel.id
+			selectedChannel && selectedChannel.id,
+			// hack[?] for asserting this hook runs after the data has changed.
+			// for some reason selectedChannel updating is not making this hook
+			// re-run
+			isFetchingData
 		]);
 
 		const shareProviderMenuItems = React.useMemo(() => {
