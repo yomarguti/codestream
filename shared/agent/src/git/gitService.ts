@@ -849,7 +849,9 @@ export class GitService implements IGitService, Disposable {
 		includeSaved: boolean,
 		includeStaged: boolean
 	): Promise<GitNumStat[]> {
-		if (!startCommit || !startCommit.length) return [];
+		if (!startCommit || !startCommit.length) {
+			startCommit = "HEAD";
+		}
 		const options = [startCommit];
 		if (!includeSaved && !includeStaged) {
 			options.push("HEAD");
