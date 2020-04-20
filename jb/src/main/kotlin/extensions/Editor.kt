@@ -2,6 +2,7 @@ package com.codestream.extensions
 
 import com.codestream.protocols.webview.EditorMargins
 import com.codestream.protocols.webview.EditorSelection
+import com.codestream.review.ReviewDiffVirtualFile
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.markup.TextAttributes
@@ -59,8 +60,15 @@ val Editor.margins: EditorMargins
         val heightWithTabHeaders = withTabHeaders?.height ?: height
         val tabRowHeight = ((withTabHeaders as? JBTabsImpl)?.myInfo2Label?.values?.first()?.height ?: 27) + 1
 
-        val bottom = (heightWithBreadcrumbs - height).coerceAtLeast(0)
-        val top = (heightWithTabHeaders - heightWithBreadcrumbs - tabRowHeight).coerceAtLeast(0)
+        var bottom: Int
+        var top: Int
+        if (this.document.file is ReviewDiffVirtualFile) {
+            top = (heightWithTabHeaders - tabRowHeight - height).coerceAtLeast(0)
+            bottom = 0
+        } else {
+            top = (heightWithTabHeaders - heightWithBreadcrumbs - tabRowHeight).coerceAtLeast(0)
+            bottom = (heightWithBreadcrumbs - height).coerceAtLeast(0)
+        }
 
         return EditorMargins(top, 0, bottom, 0)
     }
