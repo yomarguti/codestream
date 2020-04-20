@@ -46,15 +46,18 @@ for (const [key, icon] of Object.entries(data)) {
 	// Set the symbol for easy access
 	icon.symbol = key;
 
+	const width = icon.width || 16;
+	const height = icon.height || 16;
+
 	// Set all the default options
 	icon.options = {
 		version: "1.1",
-		width: icon.width || 16,
-		height: icon.height || 16,
+		width,
+		height,
 		class: "octicon octicon-" + key,
 		"aria-hidden": "true"
 	};
-	icon.options.viewBox = icon.viewBox || "0 0 " + icon.width + " " + icon.height;
+	icon.options.viewBox = icon.viewBox || "0 0 " + width + " " + height;
 
 	// Function to return an SVG object
 	icon.toSVG = function(options) {
