@@ -43,6 +43,9 @@ const Root = styled.div<DimensionProps & { display?: string }>`
 	display: ${props => props.display};
 	vertical-align: ${props => (props.display === "inline-block" ? "-5px" : "0")};
 	margin-right: ${props => (props.display === "inline-block" ? "5px" : "0")};
+	img {
+		border-radius: ${props => (props.hardRightBorder ? "3px 0 0 3px" : "3px")};
+	}
 `;
 
 const Initials = styled.div<DimensionProps & { color: string }>`
@@ -66,7 +69,6 @@ const Image = styled.img<DimensionProps>`
 	position: absolute;
 	width: ${props => props.size}px;
 	height: ${props => props.size}px;
-	border-radius: ${props => (props.hardRightBorder ? "3px 0 0 3px" : "3px")};
 	z-index: 2;
 `;
 
@@ -75,7 +77,6 @@ const StyledGravatar = styled(Gravatar)<DimensionProps>`
 	position: absolute;
 	z-index: 2;
 	border-radius: 3px;
-	border-radius: ${props => (props.hardRightBorder ? "3px 0 0 3px" : "3px")};
 `;
 
 export const Headshot = styled((props: HeadshotProps) => {
@@ -101,26 +102,28 @@ export const Headshot = styled((props: HeadshotProps) => {
 
 		if (uri)
 			return (
-				<Root size={size} display={display} className={props.className} onClick={props.onClick}>
-					<Image size={size} hardRightBorder={props.hardRightBorder} src={uri} />
+				<Root
+					size={size}
+					display={display}
+					hardRightBorder={props.hardRightBorder}
+					className={props.className}
+					onClick={props.onClick}
+				>
+					<Image size={size} src={uri} />
 				</Root>
 			);
 	}
 
 	return (
-		<Root size={size} display={display} className={props.className} onClick={props.onClick}>
-			<StyledGravatar
-				size={size}
-				hardRightBorder={props.hardRightBorder}
-				default="blank"
-				protocol="https://"
-				email={person.email}
-			/>
-			<Initials
-				size={size}
-				color={Colors[person.color || 1]}
-				hardRightBorder={props.hardRightBorder}
-			>
+		<Root
+			size={size}
+			display={display}
+			hardRightBorder={props.hardRightBorder}
+			className={props.className}
+			onClick={props.onClick}
+		>
+			<StyledGravatar size={size} default="blank" protocol="https://" email={person.email} />
+			<Initials size={size} color={Colors[person.color || 1]}>
 				{initials}
 			</Initials>
 		</Root>
