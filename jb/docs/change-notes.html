@@ -5,13 +5,20 @@
     <li>Adds the ability to send invitation codes on your own in case CodeStream invitation emails are being blocked by your organization</li>
     <li>Adds a way to clear the search box on the Filter & Search tab</li>
     <li>Adds the ability to remove a previously connected Jira Server host</li>
+    <li>Adds support for native navigation through changes and files in a code review</li>
 </ul>
 <h5>Changed</h5>
 <ul>
     <li>General UI improvements to code reviews, including a warning about open change requests, clearer button copy, etc.</li>
+    <li>Diff is automatically closed when exiting a code review</li>
 </ul>
 <h5>Fixed</h5>
 <ul>
+    <li>Addresses <a href="https://github.com/TeamCodeStream/CodeStream/issues/171">#171</a> - Have to press tab to complete a mention, but UI says press enter</li>
+    <li>Addresses <a href="https://github.com/TeamCodeStream/CodeStream/issues/167">#167</a> - Compose icons off when you don't have "show tabs in one row" checked</li>
+    <li>Fixes an issue with compose icons being off by a few rows in code reviews</li>
+    <li>Fixes an issue with "Open in IDE" on a Mac not bringing the IDE into focus</li>
+    <li>Fixes an issue with lines in the editor not being highlighted when you hover up and down in the gutter of the CodeStream pane in a code review</li>
     <li>Fixes an issue where the Submit button on the codemark form was not responsive</li>
     <li>Fixes an issue where new files are still listed in "modified files" even if saved and staged changes are not selected</li>
     <li>Fixes an issue where canceling a review results in the re-rendering of the review form</li>
