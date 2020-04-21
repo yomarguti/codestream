@@ -1,7 +1,6 @@
 "use strict";
 import { MessageType } from "../api/apiProvider";
 import { MarkerLocation } from "../api/extensions";
-import { SlackApiProvider } from "../api/slack/slackApi";
 import { Container, SessionContainer } from "../container";
 import { Logger } from "../logger";
 import {
@@ -70,7 +69,7 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 
 	@lspHandler(FetchCodemarksRequestType)
 	async get(request: FetchCodemarksRequest): Promise<FetchCodemarksResponse> {
-		const codemarks = this.filterLegacyCodemarks(await this.getAllCached());
+		const codemarks = await this.getAllCached();
 
 		const enrichedCodemarks = [];
 		for (const codemark of codemarks) {
@@ -160,7 +159,7 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 	}
 
 	async getIdByPostId(postId: string): Promise<string | undefined> {
-		const codemark = this.filterLegacyCodemarks(await this.getAllCached()).find(
+		const codemark = (await this.getAllCached()).find(
 			c => c.postId === postId
 		);
 		return codemark && codemark.id;
@@ -291,29 +290,6 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		}
 
 		this.cache.reset(response.codemarks);
-	}
-
-	// slack only: filter out legacy codemarks with no text that were created by other users
-	// and update the current user's legacy codemarks with the text from the slack post if possible
-	private filterLegacyCodemarks(codemarks: CSCodemark[]): CSCodemark[] {
-		if (!(this.session.api instanceof SlackApiProvider)) return codemarks;
-
-		const result: CSCodemark[] = [];
-		const legacyCodemarks: CSCodemark[] = [];
-
-		for (const codemark of codemarks) {
-			if (!codemark.type && !codemark.text) {
-				if (codemark.creatorId === this.session.codestreamUserId) {
-					legacyCodemarks.push(codemark);
-					result.push(codemark);
-				}
-			} else {
-				result.push(codemark);
-			}
-		}
-		this.migrate(legacyCodemarks);
-
-		return result;
 	}
 
 	private migrate(codemarks: CSCodemark[]) {

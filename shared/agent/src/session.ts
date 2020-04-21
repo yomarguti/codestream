@@ -30,8 +30,6 @@ import {
 	VersionCompatibilityChangedEvent,
 	VersionMiddlewareManager
 } from "./api/middleware/versionMiddleware";
-import { SlackApiProvider } from "./api/slack/slackApi";
-import { MSTeamsApiProvider } from "./api/teams/teamsApi";
 import { Container, SessionContainer } from "./container";
 import { DocumentEventHandler } from "./documentEventHandler";
 import { setGitPath } from "./git/git";
@@ -937,27 +935,6 @@ export class CodeStreamSession {
 			});
 			throw AgentError.wrap(error, `Get invite info failed:\n${error.message}`);
 		}
-	}
-
-	protected newMSTeamsApiProvider(user: CSMe) {
-		return new MSTeamsApiProvider(
-			this._api! as CodeStreamApiProvider,
-			(user.providerInfo![this._teamId!] && user.providerInfo![this._teamId!].msteams)!,
-			user,
-			this._teamId!,
-			this._httpsAgent
-		);
-	}
-
-	protected newSlackApiProvider(user: CSMe) {
-		return new SlackApiProvider(
-			this._api! as CodeStreamApiProvider,
-			user.providerInfo!.slack ||
-				(user.providerInfo![this._teamId!] && user.providerInfo![this._teamId!].slack)!,
-			user,
-			this._teamId!,
-			this._httpsAgent
-		);
 	}
 
 	@log()

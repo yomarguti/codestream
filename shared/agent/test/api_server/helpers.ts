@@ -1,7 +1,6 @@
 import { Connection, Emitter, Event } from "vscode-languageserver";
 import { CodeStreamAgent } from "../../src/agent";
 import { CodeStreamApiProvider } from "../../src/api/codestream/codestreamApi";
-import { SlackApiProvider } from "../../src/api/slack/slackApi";
 import { AgentOptions } from "../../src/protocol/agent.protocol";
 import { CodeStreamSession } from "../../src/session";
 import { xfs } from "../../src/xfs";
@@ -9,24 +8,6 @@ import { xfs } from "../../src/xfs";
 export class TestSlackWebClient {
 	on() {}
 	users = {};
-}
-
-export class TestSlackEvents {
-	onDidReceiveMessage() {}
-	connect() {}
-	dispose() {}
-}
-
-export class TestSlackApiProvider extends SlackApiProvider {
-	protected newWebClient() {
-		return new TestSlackWebClient() as any;
-	}
-
-	protected newSlackEvents() {
-		return new TestSlackEvents() as any;
-	}
-
-	protected async processPendingStreamsQueue(queue: any) {}
 }
 
 export class TestSession extends CodeStreamSession {
@@ -41,28 +22,6 @@ export class TestSession extends CodeStreamSession {
 	}
 
 	private slackApiCall: any;
-
-	protected newSlackApiProvider(response: any) {
-		// @ts-ignore
-		const api = this._api! as CodeStreamApiProvider;
-		// @ts-ignore
-		const teamId = this._teamId!;
-		// @ts-ignore
-		const proxyAgent = this._proxyAgent;
-
-		const provider = new TestSlackApiProvider(
-			api,
-			response.user.providerInfo.slack,
-			response.user,
-			teamId,
-			proxyAgent
-		);
-
-		// @ts-ignore
-		provider.slackApiCall = this.slackApiCall;
-
-		return provider;
-	}
 }
 
 export class TestAgent {
