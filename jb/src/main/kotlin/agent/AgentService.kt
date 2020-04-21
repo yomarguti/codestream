@@ -168,8 +168,7 @@ class AgentService(private val project: Project) : Disposable {
                 "--inspect=$debugPort",
                 agentJs.absolutePath,
                 "--stdio"
-                // "--log=${agentLog.absolutePath}"
-            ).createProcess()
+            ).withEnvironment("NODE_OPTIONS", "").createProcess()
         } else {
             val perms = setOf(
                 PosixFilePermission.OWNER_READ,
@@ -193,7 +192,7 @@ class AgentService(private val project: Project) : Disposable {
             GeneralCommandLine(
                 agentDestFile.absolutePath,
                 "--stdio"
-            ).createProcess()
+            ).withEnvironment("NODE_OPTIONS", "").createProcess()
         }
 
         captureErrorStream(process)
