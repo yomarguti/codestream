@@ -698,12 +698,12 @@ class TeamPanel extends React.Component<Props, State> {
 								{
 									label: "Any Reviewer Can Approve",
 									checked: reviewApproval === "anyone",
-									action: () => this.changeReviewApproval("on")
+									action: () => this.changeReviewApproval("anyone")
 								},
 								{
 									label: "All Reviewers Must Approve",
 									checked: reviewApproval === "all",
-									action: () => this.changeReviewApproval("off")
+									action: () => this.changeReviewApproval("all")
 								},
 								{
 									label: "User Selectable Per Review",
