@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React from "react";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
 import Icon from "./Icon";
@@ -17,7 +17,6 @@ import {
 	RepoScmStatus,
 	DidChangeDataNotificationType,
 	ChangeDataType,
-	UpdateTeamTagRequestType,
 	KickUserRequestType,
 	UpdateTeamRequestType,
 	UpdateTeamSettingsRequestType,
@@ -28,11 +27,9 @@ import {
 import { CSUser } from "@codestream/protocols/api";
 import { ChangesetFile } from "./Review/ChangesetFile";
 import Tooltip from "./Tooltip";
-import { UserStatus } from "../src/components/UserStatus";
 import { DocumentData } from "../protocols/agent/agent.protocol.notifications";
 import { updateModifiedRepos, clearModifiedFiles } from "../store/users/actions";
 import { CSText } from "../src/components/CSText";
-import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import cx from "classnames";
 import Timestamp from "./Timestamp";
 import { DropdownButton } from "./Review/DropdownButton";
@@ -97,6 +94,7 @@ interface ConnectedProps {
 	currentUserId: string;
 	xraySetting: string;
 	xrayEnabled: boolean;
+	reviewApproval: string;
 	setUserStatus: Function;
 	isCurrentUserAdmin: boolean;
 	adminIds: string[];
@@ -607,6 +605,13 @@ class TeamPanel extends React.Component<Props, State> {
 		});
 	};
 
+	changeReviewApproval = async value => {
+		await HostApi.instance.send(UpdateTeamSettingsRequestType, {
+			teamId: this.props.teamId,
+			settings: { reviewApproval: value }
+		});
+	};
+
 	removeSuggestion = async user => {
 		await HostApi.instance.send(UpdateTeamSettingsRequestType, {
 			teamId: this.props.teamId,
@@ -618,7 +623,7 @@ class TeamPanel extends React.Component<Props, State> {
 	};
 
 	render() {
-		const { currentUserId, currentUserInvisible, xraySetting } = this.props;
+		const { currentUserId, currentUserInvisible, xraySetting, reviewApproval } = this.props;
 		const { invitingEmails, loadingStatus } = this.state;
 		const inactive =
 			this.props.activePanel !== WebviewPanels.Invite &&
@@ -645,6 +650,7 @@ class TeamPanel extends React.Component<Props, State> {
 					items={[
 						{
 							label: "Live View Settings",
+							key: "live-view-settings",
 							submenu: [
 								{
 									label: "Always On",
@@ -664,6 +670,49 @@ class TeamPanel extends React.Component<Props, State> {
 								{ label: "-", action: () => {} },
 								{
 									label: "What is Live View?",
+									action: () => {
+										HostApi.instance.send(OpenUrlRequestType, {
+											url: "https://github.com/TeamCodeStream/CodeStream/wiki/Team-Live-View"
+										});
+									}
+								}
+							]
+						},
+						{ label: "-", action: () => {} },
+						{
+							label: "Code Review Approval Settings",
+							key: "review-settings",
+							submenu: [
+								{
+									label: (
+										<span style={{ fontSize: "smaller" }}>
+											Controls Code Review approval when
+											<br />
+											multiple reviewers are assigned.
+										</span>
+									),
+									noHover: true,
+									disabled: true
+								},
+								{ label: "-" },
+								{
+									label: "Any Reviewer Can Approve",
+									checked: reviewApproval === "anyone",
+									action: () => this.changeReviewApproval("on")
+								},
+								{
+									label: "All Reviewers Must Approve",
+									checked: reviewApproval === "all",
+									action: () => this.changeReviewApproval("off")
+								},
+								{
+									label: "User Selectable Per Review",
+									checked: !reviewApproval || reviewApproval === "user",
+									action: () => this.changeReviewApproval("user")
+								},
+								{ label: "-", action: () => {} },
+								{
+									label: "Help on Approval Settings",
 									action: () => {
 										HostApi.instance.send(OpenUrlRequestType, {
 											url: "https://github.com/TeamCodeStream/CodeStream/wiki/Team-Live-View"
@@ -858,11 +907,14 @@ const mapStateToProps = state => {
 	const xrayEnabled = xraySetting !== "off";
 	const collisions = getCodeCollisions(state);
 
+	const reviewApproval = team.settings ? team.settings.reviewApproval : "";
+
 	const dontSuggestInvitees = team.settings ? team.settings.dontSuggestInvitees || {} : {};
 	return {
 		teamId: team.id,
 		teamName: team.name,
 		xraySetting,
+		reviewApproval,
 		adminIds,
 		isCurrentUserAdmin,
 		dontSuggestInvitees,

@@ -10,7 +10,7 @@ import { mapFilter } from "@codestream/webview/utils";
 // The api for consumers could probably be better, but it's only used in the review component for now
 
 export interface DropdownButtonProps extends ButtonProps {
-	items: { label: any; action?: () => void; submenu?: any[] }[];
+	items: { label: any; key?: string; action?: () => void; submenu?: any[] }[];
 }
 
 export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProps>) {
