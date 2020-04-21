@@ -15,7 +15,7 @@
         "url": "https://github.com/TeamCodeStream/codestream-lsp-agent"
     },
     "engines": {
-        "node": ">=10.2.0"
+        "node": ">=12.16.2"
     },
     "main": "./dist/agent",
     "scripts": {
@@ -26,9 +26,9 @@
         "clean:ci": "git clean -xdf",
         "lint": "tslint --project tsconfig.json",
         "pkg": "npm run pkg-vs & npm run pkg-jetbrains",
-        "pkg-jetbrains": "pkg dist/agent.js --targets node10-linux-x64,node10-macos-x64,node10-win-x86,node10-win-x64 --options max_old_space_size=1024 --out-path dist/",
-        "pkg-jetbrains-mac": "pkg dist/agent.js --targets node10-macos-x64 --options max_old_space_size=1024 --out-path dist/",
-        "pkg-vs": "pkg dist/agent-pkg.js --targets node10-win-x86 --options max_old_space_size=1024 --output dist/agent-pkg-win-x86.exe",
+        "pkg-jetbrains": "pkg dist/agent.js --targets node13-linux-x64,node13-macos-x64,node13-win-x86,node13-win-x64 --options max_old_space_size=1024 --out-path dist/",
+        "pkg-jetbrains-mac": "pkg dist/agent.js --targets node13-macos-x64 --options max_old_space_size=1024 --output dist/agent-macos-x64",
+        "pkg-vs": "pkg dist/agent-pkg.js --targets node13-win-x86 --options max_old_space_size=1024 --output dist/agent-pkg-win-x86.exe",
         "pretty": "prettier --config .prettierrc --write \"./src/**/*.ts\" ./package.json ./.prettierrc",
         "rebuild": "npm run clean && npm install --no-save && npm run build",
         "update:emoji": "pushd emoji && node ./shortcodeToEmoji.js && popd",
@@ -97,7 +97,7 @@
         "https-proxy-agent": "3.0.1",
         "mocha": "6.2.0",
         "mocha-teamcity-reporter": "3.0.0",
-        "pkg": "4.3.8",
+        "pkg": "4.4.7",
         "prettier": "1.19.1",
         "prettier-tslint": "0.4.2",
         "randomstring": "1.1.5",
