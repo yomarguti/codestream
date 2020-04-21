@@ -11,6 +11,8 @@ interface Props {
 }
 
 export const ChangesetFile = styled((props: ReviewChangesetFileInfo & Props) => {
+	const { status } = props;
+
 	return (
 		<div
 			className={`${props.className} ${props.selected ? "selected" : ""} ${
