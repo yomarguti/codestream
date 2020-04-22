@@ -1,7 +1,7 @@
-import React, { useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Button from "../Stream/Button";
 import { CodeStreamState } from "../store";
-import { connect, useDispatch, useSelector } from "react-redux";
+import { connect, useSelector } from "react-redux";
 import { goToNewUserEntry, goToSignup } from "../store/context/actions";
 import { Link } from "../Stream/Link";
 import { TextInput } from "./TextInput";
@@ -43,18 +43,16 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 		}
 	};
 
-	useSelector((state: CodeStreamState) => {
-		// on-prem invite codes have the server url baked in, so when we first examine an invite code,
-		// we send it down to the extension to set the server url before we can proceed
-		// here we wait for a change to serverUrl, and hope that it matches what we sent, if so,
-		// we can proceed with checking the invite code against the server and going to the signup page
-		if (waitingForServerUrl && state.configs.serverUrl === waitingForServerUrl) {
+	const serverUrl = useSelector((state: CodeStreamState) => state.configs.serverUrl);
+
+	useEffect(() => {
+		if (waitingForServerUrl && serverUrl === waitingForServerUrl) {
 			setWaitingForServerUrl("");
 			if (waitingForServerUrlTimeout) clearTimeout(waitingForServerUrlTimeout);
 			setWaitingForServerUrlTimeout(undefined);
 			checkInviteInfo(inviteCode);
 		}
-	});
+	}, [waitingForServerUrl, serverUrl, inviteCode, waitingForServerUrlTimeout]);
 
 	const onChange = useCallback(code => {
 		setError(undefined);
@@ -68,7 +66,7 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 			if (code === "") return;
 			setIsLoading(true);
 
-			if (code.startsWith("O")) {
+			if (code.startsWith("$01$")) {
 				// this is an "on-prem" invite code, with the server url baked in,
 				// decode it and set our server settings
 				return setServerUrlSettingsFromInviteCode(code);
@@ -80,7 +78,7 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 	);
 
 	const setServerUrlSettingsFromInviteCode = async (code: string) => {
-		const encoded = code.substring(1);
+		const encoded = code.substring(4);
 		let decoded: string, disableStrictSSL: boolean, serverUrl: string;
 		try {
 			decoded = atob(encoded);
