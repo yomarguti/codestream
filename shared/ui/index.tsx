@@ -27,6 +27,7 @@ import {
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
+	DidChangeServerUrlNotificationType,
 	ConnectionStatus,
 	ChangeDataType,
 	VersionCompatibility,
@@ -66,7 +67,7 @@ import { URI } from "vscode-uri";
 import { moveCursorToLine } from "./Stream/CodemarkView";
 import { setMaintenanceMode } from "./store/session/actions";
 import { updateModifiedRepos } from "./store/users/actions";
-import { logWarning } from './logger';
+import { logWarning } from "./logger";
 
 export { HostApi };
 
@@ -169,6 +170,11 @@ function listenForEvents(store) {
 			default:
 				store.dispatch({ type: `ADD_${type.toUpperCase()}`, payload: data });
 		}
+	});
+
+	api.on(DidChangeServerUrlNotificationType, params => {
+		console.warn("GOT A SERVER URL UPDATE: " + params.serverUrl);
+		store.dispatch(updateConfigs({ serverUrl: params.serverUrl }));
 	});
 
 	api.on(HostDidChangeConfigNotificationType, configs => store.dispatch(updateConfigs(configs)));
@@ -345,12 +351,11 @@ function listenForEvents(store) {
 				}
 				break;
 			}
-			case "navigate" : {
+			case "navigate": {
 				if (route.action) {
 					if (Object.values(WebviewPanels).includes(route.action as any)) {
 						store.dispatch(openPanel(route.action));
-					}
-					else {
+					} else {
 						logWarning(`Cannot navigate to route.action=${route.action}`);
 					}
 				}

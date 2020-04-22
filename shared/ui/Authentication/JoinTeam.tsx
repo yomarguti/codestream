@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from "react";
 import Button from "../Stream/Button";
-import { connect } from "react-redux";
+import { CodeStreamState } from "../store";
+import { connect, useDispatch, useSelector } from "react-redux";
 import { goToNewUserEntry, goToSignup } from "../store/context/actions";
 import { Link } from "../Stream/Link";
 import { TextInput } from "./TextInput";
@@ -10,6 +11,7 @@ import { GetInviteInfoRequestType } from "@codestream/protocols/agent";
 import { LoginResult } from "@codestream/protocols/api";
 import { FormattedMessage } from "react-intl";
 import { SignupType } from "./actions";
+import { UpdateServerUrlRequestType } from "../ipc/host.protocol";
 
 const errorToMessageId = {
 	[LoginResult.InvalidToken]: "confirmation.invalid",
@@ -21,6 +23,38 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 	const [inviteCode, setInviteCode] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<LoginResult | undefined>(undefined);
+	const [waitingForServerUrl, setWaitingForServerUrl] = useState("");
+	const [waitingForServerUrlTimeout, setWaitingForServerUrlTimeout] = useState<
+		NodeJS.Timeout | undefined
+	>(undefined);
+
+	// called when we have an invite code, and for on-prem, when we know the server url has been set
+	const checkInviteInfo = async code => {
+		const { status, info } = await HostApi.instance.send(GetInviteInfoRequestType, {
+			code
+		});
+
+		if (status === LoginResult.Success) {
+			HostApi.instance.track("Invitation Code Submitted");
+			props.dispatch(goToSignup({ ...info, inviteCode: code, type: SignupType.JoinTeam }));
+		} else {
+			setIsLoading(false);
+			setError(status);
+		}
+	};
+
+	useSelector((state: CodeStreamState) => {
+		// on-prem invite codes have the server url baked in, so when we first examine an invite code,
+		// we send it down to the extension to set the server url before we can proceed
+		// here we wait for a change to serverUrl, and hope that it matches what we sent, if so,
+		// we can proceed with checking the invite code against the server and going to the signup page
+		if (waitingForServerUrl && state.configs.serverUrl === waitingForServerUrl) {
+			setWaitingForServerUrl("");
+			if (waitingForServerUrlTimeout) clearTimeout(waitingForServerUrlTimeout);
+			setWaitingForServerUrlTimeout(undefined);
+			checkInviteInfo(inviteCode);
+		}
+	});
 
 	const onChange = useCallback(code => {
 		setError(undefined);
@@ -34,20 +68,50 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 			if (code === "") return;
 			setIsLoading(true);
 
-			const { status, info } = await HostApi.instance.send(GetInviteInfoRequestType, {
-				code
-			});
-
-			if (status === LoginResult.Success) {
-				HostApi.instance.track("Invitation Code Submitted");
-				props.dispatch(goToSignup({ ...info, inviteCode: code, type: SignupType.JoinTeam }));
+			if (code.startsWith("O")) {
+				// this is an "on-prem" invite code, with the server url baked in,
+				// decode it and set our server settings
+				return setServerUrlSettingsFromInviteCode(code);
 			} else {
-				setIsLoading(false);
-				setError(status);
+				return checkInviteInfo(code);
 			}
 		},
 		[inviteCode]
 	);
+
+	const setServerUrlSettingsFromInviteCode = async (code: string) => {
+		const encoded = code.substring(1);
+		let decoded: string, disableStrictSSL: boolean, serverUrl: string;
+		try {
+			decoded = atob(encoded);
+			disableStrictSSL = decoded.charAt(8) === "1" ? true : false;
+			serverUrl = decoded.substring(9);
+		} catch (error) {
+			setIsLoading(false);
+			setError(LoginResult.InvalidToken);
+			return;
+		}
+
+		if (serverUrl) {
+			// we need to wait until the server url change has propagated through the layers
+			// before we can proceed with checking it against the api server ... that should
+			// happen pretty quickly, so set a 1-second timer to get it
+			setWaitingForServerUrl(serverUrl);
+			const timeout = setTimeout(() => {
+				setIsLoading(false);
+				setWaitingForServerUrlTimeout(undefined);
+				setError(LoginResult.Timeout);
+			}, 1000);
+			setWaitingForServerUrlTimeout(timeout);
+			HostApi.instance.send(UpdateServerUrlRequestType, {
+				serverUrl,
+				disableStrictSSL
+			});
+		} else {
+			setIsLoading(false);
+			setError(LoginResult.InvalidToken);
+		}
+	};
 
 	return (
 		<div className="onboarding-page">

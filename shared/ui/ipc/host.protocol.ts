@@ -146,3 +146,17 @@ export const ShellPromptFolderRequestType = new RequestType<
 	void,
 	void
 >(`${IpcRoutes.Host}/shell/prompt/folder`);
+
+export interface UpdateServerUrlRequest {
+	serverUrl: string;
+	disableStrictSSL?: boolean;
+}
+
+export interface UpdateServerUrlResponse {}
+
+export const UpdateServerUrlRequestType = new RequestType<
+	UpdateServerUrlRequest,
+	UpdateServerUrlResponse,
+	void,
+	void
+>(`${IpcRoutes.Host}/server-url`);
