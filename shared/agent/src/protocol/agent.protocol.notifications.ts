@@ -259,3 +259,12 @@ export const DidEncounterMaintenanceModeNotificationType = new NotificationType<
 	DidEncounterMaintenanceModeNotification,
 	void
 >("codestream/didEncounterMaintenanceMode");
+
+export interface DidChangeServerUrlNotification {
+	serverUrl: string;
+}
+
+export const DidChangeServerUrlNotificationType = new NotificationType<
+	DidChangeServerUrlNotification,
+	void
+>("codestream/didChangeServerUrl");

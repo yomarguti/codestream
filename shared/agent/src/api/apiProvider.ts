@@ -308,6 +308,7 @@ export interface ApiProvider {
 	readonly userId: string;
 	readonly capabilities: Capabilities;
 	readonly features: CSApiFeatures | undefined;
+	readonly runTimeEnvironment: string | undefined;
 
 	providerType: ProviderType;
 
@@ -449,6 +450,7 @@ export interface ApiProvider {
 	}): Promise<CSMe>;
 
 	verifyConnectivity(): Promise<VerifyConnectivityResponse>;
+	setServerUrl(url: string): void;
 }
 
 export interface CodeStreamApiMiddlewareContext {

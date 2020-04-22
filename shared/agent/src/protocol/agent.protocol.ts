@@ -222,3 +222,12 @@ export interface UIStateRequest {
 export const UIStateRequestType = new RequestType<UIStateRequest, void, void, void>(
 	"codestream/ui/state"
 );
+
+export interface SetServerUrlRequest {
+	serverUrl: string;
+	disableStrictSSL?: boolean;
+}
+
+export const SetServerUrlRequestType = new RequestType<SetServerUrlRequest, void, void, void>(
+	"codestream/set-server"
+);

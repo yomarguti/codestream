@@ -1,4 +1,5 @@
 "use strict";
+
 import { Agent as HttpAgent } from "http";
 import { Agent as HttpsAgent } from "https";
 import HttpsProxyAgent from "https-proxy-agent";
@@ -47,6 +48,7 @@ import {
 	DidChangeApiVersionCompatibilityNotificationType,
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
+	DidChangeServerUrlNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
 	DidEncounterMaintenanceModeNotificationType,
 	DidFailLoginNotificationType,
@@ -68,6 +70,8 @@ import {
 	RegisterUserRequestType,
 	ReportingMessageType,
 	RestartRequiredNotificationType,
+	SetServerUrlRequest,
+	SetServerUrlRequestType,
 	ThirdPartyProviders,
 	TokenLoginRequest,
 	TokenLoginRequestType,
@@ -256,7 +260,6 @@ export class CodeStreamSession {
 				Logger.log(
 					`Proxy support is in override with url=${redactedUrl}, strictSSL=${_options.proxy.strictSSL}`
 				);
-
 				this._httpsAgent = new HttpsProxyAgent({
 					...url.parse(_options.proxy.url),
 					rejectUnauthorized: _options.proxy.strictSSL
@@ -352,6 +355,7 @@ export class CodeStreamSession {
 		this.agent.registerHandler(ApiRequestType, (e, cancellationToken: CancellationToken) =>
 			this.api.fetch(e.url, e.init, e.token)
 		);
+		this.agent.registerHandler(SetServerUrlRequestType, e => this.setServerUrl(e));
 		this.agent.registerHandler(
 			BootstrapRequestType,
 			async (e, cancellationToken: CancellationToken) => {
@@ -393,6 +397,16 @@ export class CodeStreamSession {
 		this.agent.registerHandler(FetchMarkerLocationsRequestType, r =>
 			this.api.fetchMarkerLocations(r)
 		);
+	}
+
+	setServerUrl(options: SetServerUrlRequest) {
+		this._options.serverUrl = options.serverUrl;
+		this._options.disableStrictSSL = options.disableStrictSSL;
+		this._environment = this.getEnvironment(this._options.serverUrl);
+		this._api?.setServerUrl(this._options.serverUrl);
+		this.agent.sendNotification(DidChangeServerUrlNotificationType, {
+			serverUrl: options.serverUrl
+		});
 	}
 
 	private _didEncounterMaintenanceMode() {
@@ -561,6 +575,10 @@ export class CodeStreamSession {
 	private _environment: CodeStreamEnvironment | string = CodeStreamEnvironment.Unknown;
 	get environment() {
 		return this._environment;
+	}
+
+	get disableStrictSSL() {
+		return this._options.disableStrictSSL;
 	}
 
 	private _status: SessionStatus = SessionStatus.SignedOut;

@@ -57,7 +57,8 @@ export enum LoginResult {
 	SignupRequired = "SIGNUP_REQUIRED",
 	SignInRequired = "SIGNIN_REQUIRED",
 	MaintenanceMode = "MAINTENANCE_MODE",
-	MustSetPassword = "MUST_SET_PASSWORD"
+	MustSetPassword = "MUST_SET_PASSWORD",
+	Timeout = "TIMEOUT"
 }
 
 export interface CSCompleteSignupRequest {
@@ -88,6 +89,7 @@ export interface CSLoginResponse {
 	teamId?: string;
 	capabilities?: CSApiCapabilities;
 	features?: CSApiFeatures;
+	runTimeEnvironment?: string;
 }
 
 export interface CSRegisterRequest {

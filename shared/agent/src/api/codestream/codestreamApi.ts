@@ -23,6 +23,7 @@ import {
 	ArchiveStreamRequest,
 	Capabilities,
 	CloseStreamRequest,
+	CodeStreamEnvironment,
 	CreateChannelStreamRequest,
 	CreateCodemarkPermalinkRequest,
 	CreateCodemarkRequest,
@@ -274,6 +275,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private _userId: string | undefined;
 	private _preferences: CodeStreamPreferences | undefined;
 	private _features: CSApiFeatures | undefined;
+	private _runTimeEnvironment: string | undefined;
 
 	readonly capabilities: Capabilities = {
 		channelMute: true,
@@ -285,7 +287,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	};
 
 	constructor(
-		public readonly baseUrl: string,
+		public baseUrl: string,
 		private readonly _version: VersionInfo,
 		private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent | HttpAgent | undefined,
 		private readonly _strictSSL: boolean
@@ -305,6 +307,14 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	get features() {
 		return this._features;
+	}
+
+	get runTimeEnvironment() {
+		return this._runTimeEnvironment;
+	}
+
+	setServerUrl(serverUrl: string) {
+		this.baseUrl = serverUrl;
 	}
 
 	useMiddleware(middleware: CodeStreamApiMiddleware) {
@@ -489,6 +499,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		this._user = response.user;
 		this._userId = response.user.id;
 		this._features = response.features;
+		this._runTimeEnvironment = response.runTimeEnvironment;
 
 		const token: AccessToken = {
 			email: response.user.email,
@@ -1566,9 +1577,21 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	inviteUser(request: InviteUserRequest) {
+		const postUserRequest = { ...request, teamId: this.teamId };
+		const session = SessionContainer.instance().session;
+
+		// for on-prem, base the server url (and strict flag) into the invite code,
+		// so invited users have it set automatically
+		if (this.runTimeEnvironment === "onprem") {
+			postUserRequest.inviteInfo = {
+				serverUrl: this.baseUrl,
+				disableStrictSSL: session.disableStrictSSL ? true : false
+			};
+		}
+
 		return this.post<CSInviteUserRequest, CSInviteUserResponse>(
 			"/users",
-			{ ...request, teamId: this.teamId },
+			postUserRequest,
 			this._token
 		);
 	}
@@ -1688,10 +1711,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 			// before it can proceed to display the provider as selected in the issues selector for codemarks,
 			// so we need to force the data to resolve and send a notification directly from here before returning
 			// REALLY don't know how else to do this
-			const users = await SessionContainer.instance().users.resolve({
+			const users = (await SessionContainer.instance().users.resolve({
 				type: MessageType.Users,
 				data: [response.user]
-			}) as CSUser[];
+			})) as CSUser[];
 			Container.instance().agent.sendNotification(DidChangeDataNotificationType, {
 				type: ChangeDataType.Users,
 				data: users
