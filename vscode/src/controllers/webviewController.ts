@@ -805,9 +805,7 @@ export class WebviewController implements Disposable {
 			case UpdateServerUrlRequestType.method: {
 				webview.onIpcRequest(UpdateServerUrlRequestType, e, async (_type, params) => {
 					await configuration.update("serverUrl", params.serverUrl, ConfigurationTarget.Global);
-					await configuration.update("serverUrl", params.serverUrl, ConfigurationTarget.Workspace);
 					await configuration.update("disableStrictSSL", params.disableStrictSSL, ConfigurationTarget.Global);
-					await configuration.update("disableStrictSSL", params.disableStrictSSL, ConfigurationTarget.Workspace);
 					Container.setServerUrl(params.serverUrl, params.disableStrictSSL ? true : false);
 					return emptyObj;
 				});
