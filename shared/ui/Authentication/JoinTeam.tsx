@@ -24,9 +24,7 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<LoginResult | undefined>(undefined);
 	const [waitingForServerUrl, setWaitingForServerUrl] = useState("");
-	const [waitingForServerUrlTimeout, setWaitingForServerUrlTimeout] = useState<
-		NodeJS.Timeout | undefined
-	>(undefined);
+	const [waitingForServerUrlTimeout, setWaitingForServerUrlTimeout] = useState<any>(undefined);
 
 	// called when we have an invite code, and for on-prem, when we know the server url has been set
 	const checkInviteInfo = async code => {
