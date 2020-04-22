@@ -123,7 +123,11 @@ export const Headshot = styled((props: HeadshotProps) => {
 			onClick={props.onClick}
 		>
 			<StyledGravatar size={size} default="blank" protocol="https://" email={person.email} />
-			<Initials size={size} color={Colors[person.color || 1]}>
+			<Initials
+				hardRightBorder={props.hardRightBorder}
+				size={size}
+				color={Colors[person.color || 1]}
+			>
 				{initials}
 			</Initials>
 		</Root>
