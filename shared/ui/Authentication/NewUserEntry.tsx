@@ -43,26 +43,22 @@ export const NewUserEntry = (connect(mapStateToProps) as any)((props: Props) => 
 		<div className="onboarding-page">
 			<form className="standard-form">
 				<fieldset className="form-body">
-					<div className="outline-box">
-						<h2>Start with a team</h2>
-						<p>
-							In CodeStream, everything happens in a team. A team is where you can discuss, review,
-							and share code with your coworkers.
-						</p>
+					<div className="outline-box2">
+						<h2>Try CodeStream, for free</h2>
 						<div id="controls">
-							<Button className="row-button" onClick={onClickJoinTeam}>
-								<Icon name="search" className="extra-pad" />
-								<div className="copy">
-									Find your team
-									<div className="small">Join or sign in to an existing team</div>
-								</div>
-								<Icon name="chevron-right" />
-							</Button>
 							<Button className="row-button" onClick={onClickCreateTeam}>
 								<Icon name="plus" className="extra-pad" />
 								<div className="copy">
 									Create a team
 									<div className="small">Get your dev team on CodeStream</div>
+								</div>
+								<Icon name="chevron-right" />
+							</Button>
+							<Button className="row-button" onClick={onClickJoinTeam}>
+								<Icon name="team" className="extra-pad" />
+								<div className="copy">
+									Join an existing team
+									<div className="small">Enter an invite code to get started</div>
 								</div>
 								<Icon name="chevron-right" />
 							</Button>
