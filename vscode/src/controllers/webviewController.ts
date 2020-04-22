@@ -11,6 +11,8 @@ import {
 	DidChangeDataNotificationType,
 	DidChangeDocumentMarkersNotification,
 	DidChangeDocumentMarkersNotificationType,
+	DidChangeServerUrlNotification,
+	DidChangeServerUrlNotificationType,
 	DidChangeVersionCompatibilityNotification,
 	DidChangeVersionCompatibilityNotificationType,
 	DidEncounterMaintenanceModeNotificationType,
@@ -58,6 +60,7 @@ import {
 	ShowPreviousChangedFileRequestType,
 	ShowReviewNotificationType,
 	UpdateConfigurationRequestType,
+	UpdateServerUrlRequestType,
 	WebviewContext,
 	WebviewDidChangeContextNotificationType,
 	WebviewDidInitializeNotificationType,
@@ -449,6 +452,11 @@ export class WebviewController implements Disposable {
 	}
 
 	@log()
+	async onServerUrlChanged(e: DidChangeServerUrlNotification) {
+		this._webview!.notify(DidChangeServerUrlNotificationType, e);
+	}
+
+	@log()
 	toggle() {
 		return this.visible ? this.hide() : this.show();
 	}
@@ -568,10 +576,8 @@ export class WebviewController implements Disposable {
 				case IpcRoutes.Host:
 					if (isIpcRequestMessage(e)) {
 						this.onWebviewRequest(webview, e);
-
 						return;
 					}
-
 					this.onWebviewNotification(webview, e);
 			}
 		} catch (ex) {
@@ -791,6 +797,18 @@ export class WebviewController implements Disposable {
 			case UpdateConfigurationRequestType.method: {
 				webview.onIpcRequest(UpdateConfigurationRequestType, e, async (_type, params) => {
 					await configuration.update(params.name, params.value, ConfigurationTarget.Global);
+					return emptyObj;
+				});
+
+				break;
+			}
+			case UpdateServerUrlRequestType.method: {
+				webview.onIpcRequest(UpdateServerUrlRequestType, e, async (_type, params) => {
+					await configuration.update("serverUrl", params.serverUrl, ConfigurationTarget.Global);
+					await configuration.update("serverUrl", params.serverUrl, ConfigurationTarget.Workspace);
+					await configuration.update("disableStrictSSL", params.disableStrictSSL, ConfigurationTarget.Global);
+					await configuration.update("disableStrictSSL", params.disableStrictSSL, ConfigurationTarget.Workspace);
+					Container.setServerUrl(params.serverUrl, params.disableStrictSSL ? true : false);
 					return emptyObj;
 				});
 

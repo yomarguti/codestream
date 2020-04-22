@@ -15,6 +15,7 @@ import { CodemarkCodeLensProvider } from "./providers/markerCodeLensProvider";
 import { CodemarkDecorationProvider } from "./providers/markerDecorationProvider";
 import { CodemarkPatchContentProvider } from "./providers/patchContentProvider";
 import { SelectionDecorationProvider } from "./providers/selectionDecorationProvider";
+import { SetServerUrlRequestType} from "./protocols/agent/agent.protocol";
 // import { WebviewSidebarActivator } from "./views/webviewSidebarActivator";
 
 export class Container {
@@ -51,6 +52,11 @@ export class Container {
 		context.subscriptions.push(configuration.onWillChange(this.onConfigurationChanging, this));
 
 		await this._agent.start();
+	}
+
+	static setServerUrl(serverUrl: string, disableStrictSSL: boolean) {
+		this._session.setServerUrl(serverUrl);
+		this._agent.sendRequest(SetServerUrlRequestType, { serverUrl, disableStrictSSL });
 	}
 
 	private static onConfigurationChanging(e: ConfigurationWillChangeEvent) {

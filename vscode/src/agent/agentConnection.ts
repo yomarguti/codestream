@@ -19,6 +19,8 @@ import {
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotification,
 	DidChangeDataNotificationType,
+	DidChangeServerUrlNotification,
+	DidChangeServerUrlNotificationType,
 	DidChangeDocumentMarkersNotification,
 	DidChangeDocumentMarkersNotificationType,
 	DidChangeVersionCompatibilityNotification,
@@ -860,6 +862,11 @@ export class CodeStreamAgentConnection implements Disposable {
 		await Container.webview.onApiVersionChanged(e);
 	}
 
+	@log()
+	private async onServerUrlChanged(e: DidChangeServerUrlNotification) {
+		await Container.webview.onServerUrlChanged(e);
+	}
+
 	@started
 	async sendNotification<NT extends NotificationType<any, any>>(
 		type: NT,
@@ -981,6 +988,7 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._client.onNotification(DidEncounterMaintenanceModeNotificationType, e =>
 			this._onDidEncounterMaintenanceMode.fire(e)
 		);
+		this._client.onNotification(DidChangeServerUrlNotificationType, this.onServerUrlChanged.bind(this));
 
 		this._onDidStart.fire();
 		return this._client.initializeResult! as AgentInitializeResult;

@@ -232,7 +232,7 @@ export class CodeStreamSession implements Disposable {
 	get serverUrl(): string {
 		return this._serverUrl;
 	}
-	private setServerUrl(url: string) {
+	setServerUrl(url: string) {
 		this._serverUrl = url;
 		this._environment = CodeStreamEnvironment.Unknown;
 
