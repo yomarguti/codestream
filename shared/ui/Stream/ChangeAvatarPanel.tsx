@@ -12,6 +12,7 @@ import { FormattedMessage } from "react-intl";
 import { CSMe } from "@codestream/protocols/api";
 import { Link } from "./Link";
 import { TextInput } from "../Authentication/TextInput";
+import { Headshot } from "../src/components/Headshot";
 
 const Root = styled.div`
 	#controls {
@@ -27,7 +28,7 @@ export const ChangeAvatarPanel = props => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
-		return { currentAvatar: currentUser.avatar ? currentUser.avatar.image : "" };
+		return { currentUser, currentAvatar: currentUser.avatar ? currentUser.avatar.image : "" };
 	});
 	const [loading, setLoading] = useState(false);
 	const [avatar, setAvatar] = useState(derivedState.currentAvatar || "");
@@ -76,13 +77,15 @@ export const ChangeAvatarPanel = props => {
 					<div className="outline-box">
 						<h3>Set Profile Photo</h3>
 						<p>
-							CodeStream can automatically grab your profile photo from{" "}
+							<div style={{ float: "right", paddingLeft: "10px" }}>
+								<Headshot size={50} display="inline-block" person={derivedState.currentUser} />
+							</div>
+							CodeStream can grab your profile photo from{" "}
 							<a href="https://gravatar.com">gravatar.com</a>.
 						</p>
-						<p>Alternatively set it here by using an existing image.</p>
+						<p>Or, set it here by using an existing image.</p>
 
 						<div id="controls">
-							<div className="small-spacer" />
 							{unexpectedError && (
 								<div className="error-message form-error">
 									<FormattedMessage
