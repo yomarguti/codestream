@@ -173,7 +173,6 @@ function listenForEvents(store) {
 	});
 
 	api.on(DidChangeServerUrlNotificationType, params => {
-		console.warn("GOT A SERVER URL UPDATE: " + params.serverUrl);
 		store.dispatch(updateConfigs({ serverUrl: params.serverUrl }));
 	});
 
