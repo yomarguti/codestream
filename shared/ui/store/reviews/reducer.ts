@@ -58,6 +58,10 @@ export const teamHasReviews = createSelector(getReviews, (reviews: Index<CSRevie
 	return Object.keys(reviews).length > 0;
 });
 
+export const teamReviewCount = createSelector(getReviews, (reviews: Index<CSReview>) => {
+	return Object.keys(reviews).length;
+});
+
 // a mapping from commit IDs to the reviews that contain that commit ID
 // e.g.
 // {

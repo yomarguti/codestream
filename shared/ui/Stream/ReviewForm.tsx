@@ -18,7 +18,9 @@ import {
 	CSStream,
 	CSUser,
 	StreamType,
-	CSMe
+	CSMe,
+	CSReviewApprovalSetting,
+	CSReviewAssignmentSetting
 } from "@codestream/protocols/api";
 import React, { ReactElement } from "react";
 import { connect } from "react-redux";
@@ -65,9 +67,11 @@ import { FeatureFlag } from "./FeatureFlag";
 import Timestamp from "./Timestamp";
 import { ReviewShowLocalDiffRequestType, WebviewPanels } from "@codestream/protocols/webview";
 import { Checkbox } from "../src/components/Checkbox";
-import { getAllByCommit } from "../store/reviews/reducer";
+import { getAllByCommit, teamReviewCount } from "../store/reviews/reducer";
 import { setCurrentReview } from "@codestream/webview/store/context/actions";
 import styled from "styled-components";
+import { DropdownButton } from "./Review/DropdownButton";
+import { getTeamSetting } from "../store/teams/reducer";
 
 interface Props extends ConnectedProps {
 	editingReview?: CSReview;
@@ -88,8 +92,6 @@ interface ConnectedProps {
 	};
 	currentUser: CSUser;
 	skipPostCreationModal: boolean;
-	selectedStreams: {};
-	showChannels: string;
 	teamTagsArray: any;
 	textEditorUri?: string;
 	createPostAndReview?: Function;
@@ -100,6 +102,10 @@ interface ConnectedProps {
 	reviewsByCommit: {
 		[commit: string]: CSReview;
 	};
+	teamReviewCount: number;
+	// these next two are team settings
+	reviewApproval: CSReviewApprovalSetting;
+	reviewAssignment: CSReviewAssignmentSetting;
 }
 
 interface State {
@@ -154,6 +160,9 @@ interface State {
 	};
 	commitListLength: number;
 	currentUserScmEmail: string | undefined;
+	// this is the review setting
+	allReviewersMustApprove: boolean;
+	mountedTimestamp: number;
 }
 
 const EmailWarning = styled.div`
@@ -208,7 +217,8 @@ class ReviewForm extends React.Component<Props, State> {
 			excludeCommit: {},
 			startCommit: "",
 			unsavedFiles: props.unsavedFiles,
-			commitListLength: 10
+			commitListLength: 10,
+			allReviewersMustApprove: false
 		};
 
 		const state = props.editingReview
@@ -283,6 +293,8 @@ class ReviewForm extends React.Component<Props, State> {
 		const { isEditing, textEditorUri } = this.props;
 		if (isEditing) return;
 
+		this.setState({ mountedTimestamp: new Date().getTime() });
+
 		this.getUserInfo();
 		if (textEditorUri) this.getScmInfoForURI(textEditorUri);
 
@@ -353,8 +365,8 @@ class ReviewForm extends React.Component<Props, State> {
 			this.setState({ authorsById });
 
 			if (!this.state.reviewersTouched) {
-				const reviewers = Object.keys(authorsById)
-					// get the top 2 most impacted authors
+				let reviewers = Object.keys(authorsById)
+					// get the top most impacted authors
 					// based on how many times their code
 					// was stomped on, and make those
 					// "suggested reviewers"
@@ -365,8 +377,34 @@ class ReviewForm extends React.Component<Props, State> {
 							(authorsById[a].commits * 10 + authorsById[a].stomped)
 					)
 					.map(id => teamMates.find(p => p.id === id))
-					.filter(Boolean)
-					.slice(0, 2);
+					.filter(Boolean);
+
+				switch (this.props.reviewAssignment) {
+					case CSReviewAssignmentSetting.Authorship1:
+						reviewers = reviewers.slice(0, 1);
+						break;
+					case CSReviewAssignmentSetting.Authorship2:
+						reviewers = reviewers.slice(0, 2);
+						break;
+					case CSReviewAssignmentSetting.Authorship3:
+						reviewers = reviewers.slice(0, 3);
+						break;
+					case CSReviewAssignmentSetting.Random: {
+						// the pseudo-random number is based on the time
+						// this review form was mounted, and selects a random
+						// teammate from the array
+						const pseudoRandom = this.state.mountedTimestamp % teamMates.length;
+						reviewers = [teamMates[pseudoRandom]];
+						break;
+					}
+					case CSReviewAssignmentSetting.RoundRobin:
+						const index = this.props.teamReviewCount % teamMates.length;
+						reviewers = [teamMates[index]];
+						break;
+					default:
+						reviewers = [];
+				}
+
 				// @ts-ignore
 				this.setState({ reviewers });
 			}
@@ -441,8 +479,8 @@ class ReviewForm extends React.Component<Props, State> {
 		if (this.isFormInvalid()) return;
 		this.setState({ isLoading: true });
 
-		const { title, text, selectedChannelId, selectedTags, repoStatus, authorsById } = this.state;
-		const { startCommit, excludeCommit, excludedFiles, includeSaved, includeStaged } = this.state;
+		const { title, text, selectedTags, repoStatus, authorsById } = this.state;
+		const { startCommit, excludeCommit, excludedFiles, allReviewersMustApprove } = this.state;
 
 		const reviewerIds = (this.state.reviewers as any[]).map(r => r.id);
 
@@ -495,6 +533,7 @@ class ReviewForm extends React.Component<Props, State> {
 					sharingAttributes: this.props.shouldShare ? this._sharingAttributes : undefined,
 					text: replaceHtml(text)!,
 					reviewers: reviewerIds,
+					allReviewersMustApprove: allReviewersMustApprove || this.props.reviewApproval === "all",
 					authorsById,
 					tags: keyFilter(selectedTags),
 					status: "open",
@@ -1333,8 +1372,41 @@ class ReviewForm extends React.Component<Props, State> {
 		}
 	};
 
+	setAllReviewersMustApprove = value => {
+		this.setState({ allReviewersMustApprove: value });
+	};
+
+	renderMultiReviewSetting = () => {
+		const { reviewApproval } = this.props;
+
+		switch (reviewApproval) {
+			case "user": {
+				const dropdownItems = [
+					{ label: "Anyone Can Approve", action: () => this.setAllReviewersMustApprove(false) },
+					{ label: "Everyone Must Approve", action: () => this.setAllReviewersMustApprove(true) }
+				];
+				const { allReviewersMustApprove } = this.state;
+				return (
+					<span>
+						&ndash;{" "}
+						<DropdownButton variant="text" items={dropdownItems}>
+							{allReviewersMustApprove ? "everyone must approve" : "anyone can approve"}
+						</DropdownButton>
+					</span>
+				);
+			}
+			case "anyone":
+				return <span>&ndash; anyone can approve</span>;
+			case "all":
+				return <span>&ndash; everyone must approve</span>;
+			default:
+				logError("Unknown reviewApproval value: " + reviewApproval);
+				return null;
+		}
+	};
+
 	renderReviewForm() {
-		const { isEditing, editingReview, currentUser, repos } = this.props;
+		const { isEditing, currentUser, repos } = this.props;
 		const {
 			scmInfo,
 			repoName,
@@ -1437,7 +1509,8 @@ class ReviewForm extends React.Component<Props, State> {
 							style={{ padding: "0", marginBottom: 0, position: "relative" }}
 						>
 							<div className="related-label">
-								{reviewers.length > 0 && !this.state.reviewersTouched && "Suggested "}Reviewers
+								{reviewers.length > 0 && !this.state.reviewersTouched && "Suggested "}Reviewers{" "}
+								{reviewers.length > 1 && this.renderMultiReviewSetting()}
 							</div>
 							{reviewers.map(person => {
 								const menu = (
@@ -1591,7 +1664,7 @@ class ReviewForm extends React.Component<Props, State> {
 const EMPTY_OBJECT = {};
 
 const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
-	const { context, editorContext, users, session, preferences, repos, documents } = state;
+	const { context, editorContext, users, teams, session, preferences, repos, documents } = state;
 	const user = users[session.userId!] as CSMe;
 	const channel = context.currentStreamId
 		? getStreamForId(state.streams, context.currentTeamId, context.currentStreamId) ||
@@ -1609,22 +1682,25 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		});
 	}
 
+	const team = teams[context.currentTeamId];
+
 	const skipPostCreationModal = preferences ? preferences.skipPostCreationModal : false;
 
 	const reviewsByCommit = getAllByCommit(state) || {};
 	return {
 		unsavedFiles: unsavedFiles,
 		reviewsByCommit,
+		teamReviewCount: teamReviewCount(state),
 		shouldShare:
 			safe(() => state.preferences[state.context.currentTeamId].shareCodemarkEnabled) || false,
 		channel,
 		teamMates,
 		teamMembers,
+		reviewApproval: getTeamSetting(team, "reviewApproval"),
+		reviewAssignment: getTeamSetting(team, "reviewAssignment"),
 		providerInfo: (user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT,
 		currentUser: user,
 		skipPostCreationModal,
-		selectedStreams: preferences.selectedStreams || EMPTY_OBJECT,
-		showChannels: context.channelFilter,
 		textEditorUri: editorContext.textEditorUri,
 		teamTagsArray,
 		repos

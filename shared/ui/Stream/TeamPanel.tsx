@@ -36,6 +36,7 @@ import { DropdownButton } from "./Review/DropdownButton";
 import { confirmPopup } from "./Confirm";
 import styled from "styled-components";
 import { getCodeCollisions } from "../store/users/reducer";
+import { openPanel } from "../store/context/actions";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -94,8 +95,9 @@ interface ConnectedProps {
 	currentUserId: string;
 	xraySetting: string;
 	xrayEnabled: boolean;
-	reviewApproval: string;
+	reviewApproval: "user" | "anyone" | "all";
 	setUserStatus: Function;
+	openPanel: Function;
 	isCurrentUserAdmin: boolean;
 	adminIds: string[];
 	collisions: any;
@@ -678,48 +680,48 @@ class TeamPanel extends React.Component<Props, State> {
 								}
 							]
 						},
-						{ label: "-", action: () => {} },
 						{
-							label: "Code Review Approval Settings",
+							label: "Code Review Settings...",
 							key: "review-settings",
-							submenu: [
-								{
-									label: (
-										<span style={{ fontSize: "smaller" }}>
-											Controls Code Review approval when
-											<br />
-											multiple reviewers are assigned.
-										</span>
-									),
-									noHover: true,
-									disabled: true
-								},
-								{ label: "-" },
-								{
-									label: "Any Reviewer Can Approve",
-									checked: reviewApproval === "anyone",
-									action: () => this.changeReviewApproval("anyone")
-								},
-								{
-									label: "All Reviewers Must Approve",
-									checked: reviewApproval === "all",
-									action: () => this.changeReviewApproval("all")
-								},
-								{
-									label: "User Selectable Per Review",
-									checked: !reviewApproval || reviewApproval === "user",
-									action: () => this.changeReviewApproval("user")
-								},
-								{ label: "-", action: () => {} },
-								{
-									label: "Help on Approval Settings",
-									action: () => {
-										HostApi.instance.send(OpenUrlRequestType, {
-											url: "https://github.com/TeamCodeStream/CodeStream/wiki/Team-Live-View"
-										});
-									}
-								}
-							]
+							action: () => this.props.openPanel(WebviewPanels.ReviewSettings)
+							// submenu: [
+							// 	{
+							// 		label: (
+							// 			<span style={{ fontSize: "smaller" }}>
+							// 				Controls Code Review approval when
+							// 				<br />
+							// 				multiple reviewers are assigned.
+							// 			</span>
+							// 		),
+							// 		noHover: true,
+							// 		disabled: true
+							// 	},
+							// 	{ label: "-" },
+							// 	{
+							// 		label: "Any Reviewer Can Approve",
+							// 		checked: reviewApproval === "anyone",
+							// 		action: () => this.changeReviewApproval("anyone")
+							// 	},
+							// 	{
+							// 		label: "All Reviewers Must Approve",
+							// 		checked: reviewApproval === "all",
+							// 		action: () => this.changeReviewApproval("all")
+							// 	},
+							// 	{
+							// 		label: "User Selectable Per Review",
+							// 		checked: !reviewApproval || reviewApproval === "user",
+							// 		action: () => this.changeReviewApproval("user")
+							// 	},
+							// 	{ label: "-", action: () => {} },
+							// 	{
+							// 		label: "Help on Approval Settings",
+							// 		action: () => {
+							// 			HostApi.instance.send(OpenUrlRequestType, {
+							// 				url: "https://github.com/TeamCodeStream/CodeStream/wiki/Team-Live-View"
+							// 			});
+							// 		}
+							// 	}
+							// ]
 						},
 						{ label: "-", action: () => {} },
 						{ label: "Change Team Name", action: this.changeTeamName },
@@ -907,7 +909,7 @@ const mapStateToProps = state => {
 	const xrayEnabled = xraySetting !== "off";
 	const collisions = getCodeCollisions(state);
 
-	const reviewApproval = team.settings ? team.settings.reviewApproval : "";
+	const reviewApproval = team.settings ? team.settings.reviewApproval : "user";
 
 	const dontSuggestInvitees = team.settings ? team.settings.dontSuggestInvitees || {} : {};
 	return {
@@ -934,7 +936,8 @@ const ConnectedTeamPanel = connect(mapStateToProps, {
 	invite,
 	updateModifiedRepos,
 	clearModifiedFiles,
-	setUserStatus
+	setUserStatus,
+	openPanel
 })(TeamPanel);
 
 export { ConnectedTeamPanel as TeamPanel };

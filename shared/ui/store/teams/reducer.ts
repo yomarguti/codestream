@@ -1,4 +1,8 @@
-import { CSTeam } from "@codestream/protocols/api";
+import {
+	CSTeam,
+	CSReviewApprovalSetting,
+	CSReviewAssignmentSetting
+} from "@codestream/protocols/api";
 import { toMapBy } from "../../utils";
 import { ActionType } from "../common";
 import * as actions from "./actions";
@@ -39,4 +43,14 @@ export function getTeamProvider(team: CSTeam): "codestream" | "slack" | "msteams
 	}
 
 	return Object.keys(team.providerInfo)[0];
+}
+
+// return a team setting if it's set, otherwise return the default value
+export function getTeamSetting(team: CSTeam, setting: string) {
+	const { settings = {} } = team;
+	const DEFAULTS = {
+		reviewApproval: CSReviewApprovalSetting.User,
+		reviewAssignment: CSReviewAssignmentSetting.Authorship2
+	};
+	return settings[setting] != undefined ? settings[setting] : DEFAULTS[setting];
 }

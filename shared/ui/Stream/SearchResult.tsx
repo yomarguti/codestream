@@ -185,6 +185,17 @@ export default function SearchResult(props: Props) {
 	// @ts-ignore
 	const isArchived = isCSReview(result) ? false : result.pinned ? false : true;
 
+	let status = result.status;
+	if (
+		isCSReview(result) &&
+		status === "open" &&
+		result.allReviewersMustApprove &&
+		result.reviewers.length > 1
+	) {
+		const approvals = result.approvedBy ? result.approvedBy.length : 0;
+		status += ` (${approvals}/${result.reviewers.length})`;
+	}
+
 	const title = (
 		<>
 			<Tooltip title={titleTip} placement="top" delay={1}>

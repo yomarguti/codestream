@@ -48,6 +48,7 @@ export interface NewReviewAttributes {
 	title: string;
 	text: string;
 	reviewers: string[];
+	allReviewersMustApprove?: boolean;
 	authorsById: { [authorId: string]: { stomped: number; commits: number } };
 	tags: string[];
 

@@ -14,6 +14,7 @@ import { ChangePasswordPanel } from "./ChangePasswordPanel";
 import { ChangeFullNamePanel } from "./ChangeFullNamePanel";
 import { ChangeAvatarPanel } from "./ChangeAvatarPanel";
 import { IntegrationsPanel } from "./IntegrationsPanel";
+import { ReviewSettingsPanel } from "./ReviewSettingsPanel";
 import ChannelPanel from "./ChannelPanel";
 import { TasksPanel } from "./TasksPanel";
 import { TeamPanel } from "./TeamPanel";
@@ -1033,6 +1034,7 @@ export class SimpleStream extends Component {
 					{activePanel === WebviewPanels.NewReview && <ReviewForm />}
 					{activePanel === WebviewPanels.NewCode && <CodeForm />}
 					{activePanel === WebviewPanels.Integrations && <IntegrationsPanel />}
+					{activePanel === WebviewPanels.ReviewSettings && <ReviewSettingsPanel />}
 					{activePanel === WebviewPanels.ChangeEmail && (
 						<ChangeEmailPanel closePanel={this.props.closePanel} />
 					)}
@@ -1082,10 +1084,7 @@ export class SimpleStream extends Component {
 						/>
 					)}
 					{activePanel === WebviewPanels.Notifications && (
-						<NotificationsPanel
-							isCodeStreamTeam={this.props.isCodeStreamTeam}
-							closePanel={this.props.closePanel}
-						/>
+						<NotificationsPanel closePanel={this.props.closePanel} />
 					)}
 					{activePanel === WebviewPanels.Status && (
 						<StatusPanel closePanel={this.props.closePanel} />

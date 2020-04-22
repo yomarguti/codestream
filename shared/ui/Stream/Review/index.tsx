@@ -218,7 +218,8 @@ export const BaseReviewHeader = (props: BaseReviewHeaderProps) => {
 	const startReview = () => dispatch(setCurrentReview(props.review.id));
 
 	const renderedHeaderActions = (() => {
-		if (!props.collapsed) return null;
+		const { collapsed, review } = props;
+		if (!collapsed) return null;
 
 		const approveItem = { icon: <Icon name="thumbsup" />, label: "Approve", action: approve };
 		const reviewItem = {
@@ -229,19 +230,25 @@ export const BaseReviewHeader = (props: BaseReviewHeaderProps) => {
 		const rejectItem = { icon: <Icon name="thumbsdown" />, label: "Reject", action: reject };
 		const reopenItem = { icon: <Icon name="reopen" />, label: "Reopen", action: reopen };
 
-		if (props.review.status === "open")
+		if (review.status === "open") {
+			let label = "Open";
+			if (review.allReviewersMustApprove && review.reviewers.length > 1) {
+				const approvals = review.approvedBy ? review.approvedBy.length : 0;
+				label += ` (${approvals}/${review.reviewers.length})`;
+			}
 			return (
 				<DropdownButton size="compact" items={[reviewItem, approveItem, rejectItem]}>
-					Open
+					{label}
 				</DropdownButton>
 			);
-		if (props.review.status === "closed" || props.review.status === "approved")
+		}
+		if (review.status === "closed" || review.status === "approved")
 			return (
 				<DropdownButton size="compact" variant="secondary" items={[reopenItem]}>
 					Approved
 				</DropdownButton>
 			);
-		if (props.review.status === "rejected")
+		if (review.status === "rejected")
 			return (
 				<DropdownButton size="compact" variant="secondary" items={[reopenItem]}>
 					Rejected
