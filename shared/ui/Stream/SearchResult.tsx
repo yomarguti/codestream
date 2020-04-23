@@ -192,7 +192,7 @@ export default function SearchResult(props: Props) {
 		result.allReviewersMustApprove &&
 		result.reviewers.length > 1
 	) {
-		const approvals = result.approvedBy ? result.approvedBy.length : 0;
+		const approvals = Object.keys(result.approvedBy || {}).length;
 		status += ` (${approvals}/${result.reviewers.length})`;
 	}
 
@@ -211,7 +211,7 @@ export default function SearchResult(props: Props) {
 			<TitleDetails>
 				{createdVerb}
 				<Timestamp relative time={result.createdAt} /> by {derivedState.usernames[result.creatorId]}{" "}
-				{result.status && <>&middot; {result.status} </>}
+				{status && <>&middot; {status} </>}
 				{isArchived && <>&middot; archived </>}
 			</TitleDetails>
 		</>
