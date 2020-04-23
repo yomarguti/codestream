@@ -8,7 +8,7 @@ import { WorkspaceState } from "./common";
 import { BuiltInCommands } from "./constants";
 import { Container } from "./container";
 import { Logger } from "./logger";
-import { Command, createCommandDecorator } from "./system";
+import { Command, createCommandDecorator, Strings } from "./system";
 
 const commandRegistry: Command[] = [];
 const command = createCommandDecorator(commandRegistry);
@@ -200,7 +200,7 @@ export class Commands implements Disposable {
 			BuiltInCommands.Diff,
 			Uri.parse(`codestream-diff://${args.reviewId}/${args.repoId}/left/${args.path}`),
 			Uri.parse(`codestream-diff://${args.reviewId}/${args.repoId}/right/${args.path}`),
-			`${args.path} @ ${review.title}`,
+			`${paths.basename(args.path)} @ ${Strings.truncate(review.title, 25)}`,
 			{ preserveFocus: false, preview: true, viewColumn: column || ViewColumn.Beside }
 		);
 
@@ -231,7 +231,7 @@ export class Commands implements Disposable {
 			BuiltInCommands.Diff,
 			Uri.parse(`codestream-diff://local/${args.repoId}/left/${args.path}`),
 			Uri.parse(`codestream-diff://local/${args.repoId}/right/${args.path}`),
-			`${args.path} review changes`,
+			`${paths.basename(args.path)} review changes`,
 			{ preserveFocus: false, preview: true, viewColumn: column || ViewColumn.Beside }
 		);
 
