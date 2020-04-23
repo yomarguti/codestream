@@ -4,6 +4,7 @@ import { Headshot } from "./Headshot";
 import { useSelector } from "react-redux";
 import { CodeStreamState } from "@codestream/webview/store";
 import cx from "classnames";
+import Icon from "@codestream/webview/Stream/Icon";
 
 // this displays a headshot and the username after it
 
@@ -21,6 +22,7 @@ export interface HeadshotNameProps {
 	onClick?: React.MouseEventHandler;
 	className?: string;
 	highlightMe?: boolean;
+	addThumbsUp?: boolean;
 }
 
 interface ClickProps {
@@ -58,6 +60,7 @@ export function HeadshotName(props: HeadshotNameProps) {
 					size={props.size || 20}
 					className={props.className}
 					hardRightBorder={me}
+					addThumbsUp={props.addThumbsUp}
 				/>
 			</HeadshotWrapper>
 			<span className={cx("headshot-name", { "at-mention me": me })}>{person.username}</span>

@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import Gravatar from "react-gravatar";
+import Icon from "@codestream/webview/Stream/Icon";
 
 const Colors = {
 	[0]: "#666",
@@ -29,6 +30,7 @@ export interface HeadshotProps {
 	display?: string;
 	onClick?: React.MouseEventHandler;
 	className?: string;
+	addThumbsUp?: boolean;
 }
 
 interface DimensionProps {
@@ -79,6 +81,22 @@ const StyledGravatar = styled(Gravatar)<DimensionProps>`
 	border-radius: 3px;
 `;
 
+export const ThumbsUp = styled.div`
+	position: absolute;
+	right: -10px;
+	bottom: -10px;
+	width: 24px;
+	height: 24px;
+	padding: 4px;
+	border-radius: 12px;
+	background-color: #24a100;
+	transform: scale(0.6);
+	z-index: 5;
+	.icon {
+		color: white;
+	}
+`;
+
 export const Headshot = styled((props: HeadshotProps) => {
 	const person = props.person;
 	if (!person) return null;
@@ -110,6 +128,11 @@ export const Headshot = styled((props: HeadshotProps) => {
 					onClick={props.onClick}
 				>
 					<Image size={size} src={uri} />
+					{props.addThumbsUp && (
+						<ThumbsUp>
+							<Icon name="thumbsup" />
+						</ThumbsUp>
+					)}
 				</Root>
 			);
 	}
@@ -130,6 +153,11 @@ export const Headshot = styled((props: HeadshotProps) => {
 			>
 				{initials}
 			</Initials>
+			{props.addThumbsUp && (
+				<ThumbsUp>
+					<Icon name="thumbsup" />
+				</ThumbsUp>
+			)}
 		</Root>
 	);
 })``;
