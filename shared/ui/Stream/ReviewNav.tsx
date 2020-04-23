@@ -199,6 +199,9 @@ export function ReviewNav(props: Props) {
 			review ? getReviewChangeRequests(state, review) : []
 		);
 
+		const currentuserId = state.session.userId || "";
+		const approvedBy = (review && review.approvedBy) || {};
+
 		return {
 			review,
 			changeRequests,
@@ -206,7 +209,8 @@ export function ReviewNav(props: Props) {
 			filePath,
 			hideReviewInstructions: state.preferences.hideReviewInstructions,
 			currentCodemarkId: state.context.currentCodemarkId,
-			isInVscode: state.ide.name === "VSC"
+			isInVscode: state.ide.name === "VSC",
+			approvedByMe: approvedBy[currentuserId] ? true : false
 		};
 	}, shallowEqual);
 
@@ -316,6 +320,7 @@ export function ReviewNav(props: Props) {
 
 	const statusButtons = () => {
 		if (!review) return null;
+		const { approvedByMe } = derivedState;
 		const numOpenChangeRequests = derivedState.changeRequests.filter(r => r.status !== "closed")
 			.length;
 		switch (review.status) {
@@ -328,7 +333,23 @@ export function ReviewNav(props: Props) {
 								<span className="wide-text">Amend</span>
 							</Button>
 						</Tooltip> */}
-						{numOpenChangeRequests === 0 && (
+						{numOpenChangeRequests === 0 && approvedByMe && (
+							<Tooltip
+								title={
+									<div>
+										You have approved this review.
+										<br />
+										Click to withdraw approval.
+									</div>
+								}
+								placement="bottom"
+							>
+								<Button variant="secondary" onClick={reopen}>
+									<Icon className="narrow-icon" name="diff-removed" />
+								</Button>
+							</Tooltip>
+						)}
+						{numOpenChangeRequests === 0 && !approvedByMe && (
 							<Tooltip title="Approve Review" placement="bottom">
 								<Button variant="success" onClick={approve}>
 									<Icon className="narrow-icon" name="thumbsup" />
@@ -391,7 +412,7 @@ export function ReviewNav(props: Props) {
 						</Tooltip>
 					</div>
 				);
-			case "closed":
+			// case "closed":
 			case "approved":
 			case "rejected":
 				return (

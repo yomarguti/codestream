@@ -380,7 +380,7 @@ export const MetaSection = styled.div`
 `;
 
 export const MetaSectionCollapsed = styled.div`
-	padding: 2px 1px;
+	padding: 5px 1px;
 	display: flex;
 	flex-flow: row wrap;
 	align-items: center;

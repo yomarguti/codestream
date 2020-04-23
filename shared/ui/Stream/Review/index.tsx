@@ -191,6 +191,12 @@ export const BaseReviewHeader = (props: PropsWithChildren<BaseReviewHeaderProps>
 	const { review } = props;
 	const dispatch = useDispatch();
 
+	const derivedState = useSelector((state: CodeStreamState) => {
+		return {
+			currentUserId: state.session.userId!
+		};
+	}, shallowEqual);
+
 	const approve = () => {
 		if (props.changeRequests && props.changeRequests!.find(r => r.status !== "closed"))
 			confirmPopup({
@@ -221,8 +227,14 @@ export const BaseReviewHeader = (props: PropsWithChildren<BaseReviewHeaderProps>
 	const renderedHeaderActions = (() => {
 		const { collapsed, review } = props;
 		if (!collapsed) return null;
+		const { approvedBy = {} } = review;
 
 		const approveItem = { icon: <Icon name="thumbsup" />, label: "Approve", action: approve };
+		const unapproveItem = {
+			icon: <Icon name="diff-removed" />,
+			label: "Withdraw Approval",
+			action: reopen
+		};
 		const reviewItem = {
 			icon: <Icon name="review" />,
 			label: "Review Changes",
@@ -237,13 +249,14 @@ export const BaseReviewHeader = (props: PropsWithChildren<BaseReviewHeaderProps>
 				const approvals = Object.keys(review.approvedBy || {}).length;
 				label += ` (${approvals}/${review.reviewers.length})`;
 			}
+			const approval = approvedBy[derivedState.currentUserId] ? unapproveItem : approveItem;
 			return (
-				<DropdownButton size="compact" items={[reviewItem, approveItem, rejectItem]}>
+				<DropdownButton size="compact" items={[reviewItem, approval, rejectItem]}>
 					{label}
 				</DropdownButton>
 			);
 		}
-		if (review.status === "closed" || review.status === "approved")
+		if (review.status === "approved")
 			return (
 				<DropdownButton size="compact" variant="secondary" items={[reopenItem]}>
 					Approved
@@ -634,6 +647,10 @@ const BaseReview = (props: BaseReviewProps) => {
 };
 
 const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
+	const { approvedBy = {} } = props.review;
+	console.warn(props.isFollowing, props.tags, props.reviewers, props.review.numReplies);
+	if (!props.isFollowing && !props.tags && !props.reviewers && props.review.numReplies == 0)
+		return null;
 	return (
 		<>
 			<MetaSectionCollapsed>
@@ -653,15 +670,18 @@ const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 					props.reviewers.map(reviewer => {
 						// this should never happen, but yet sometimes it does
 						if (!reviewer) return null;
+						const addThumbsUp = approvedBy[reviewer.id] ? true : false;
 						return (
 							<Tooltip
 								key={reviewer.id}
-								title={`${reviewer.username} is a reviewer`}
+								title={`${reviewer.username} ${
+									addThumbsUp ? "approved this review" : "is a reviewer"
+								}`}
 								placement="bottom"
 								align={{ offset: [0, 4] }}
 							>
 								<span>
-									<Headshot person={reviewer} size={18} />
+									<Headshot person={reviewer} size={18} addThumbsUp={addThumbsUp} />
 								</span>
 							</Tooltip>
 						);
