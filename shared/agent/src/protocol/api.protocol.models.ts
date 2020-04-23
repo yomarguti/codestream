@@ -204,10 +204,22 @@ export function isCSReview(object: any): object is CSReview {
 	return maybeReview.reviewers != null && maybeReview.reviewChangesets != null;
 }
 
+export interface CSReviewApprovals {
+	[userId: string]: { approvedAt: number };
+}
+
 export interface CSReview extends CSEntity {
 	title: string;
 	text: string;
 	reviewers: string[];
+
+	// in the case where there are multiple reviewers, if this is
+	// true, then all of the reviewers must approve the review.
+	// defaults to false
+	allReviewersMustApprove?: boolean;
+	// an array of people who have approved the review
+	approvedBy?: CSReviewApprovals;
+
 	// authorsById is whose code is impacted by this set of changes across
 	// all of the changesets. stomped is the # of lines of the author's
 	// code that have been changed, and commits is the # of commits in the
@@ -572,6 +584,21 @@ export enum CSNotificationDeliveryPreference {
 	EmailOnly = "emailOnly",
 	ToastOnly = "toastOnly",
 	Off = "off"
+}
+
+export enum CSReviewApprovalSetting {
+	User = "user",
+	Anyone = "anyone",
+	All = "all"
+}
+
+export enum CSReviewAssignmentSetting {
+	None = "none",
+	Authorship1 = "authorship1",
+	Authorship2 = "authorship2",
+	Authorship3 = "authorship3",
+	RoundRobin = "roundRobin",
+	Random = "random"
 }
 
 export interface CSMePreferences {
