@@ -881,15 +881,36 @@ export class GitService implements IGitService, Disposable {
 			// git diff --numstat --summary
 			// https://stackoverflow.com/questions/1587846/how-do-i-show-the-changes-which-have-been-staged
 			// also see https://files.slack.com/files-pri/T7DDT1L5R-FV0CM6LD6/image.png
-			const data = await git({ cwd: repoPath }, "diff", "--numstat", ...options, "--");
-			return this.parseNumStat(data);
+			const deletedOnly = await git(
+				{ cwd: repoPath },
+				"diff",
+				"--numstat",
+				"--diff-filter=D",
+				...options,
+				"--"
+			);
+			const allButDeleted = await git(
+				{ cwd: repoPath },
+				"diff",
+				"--numstat",
+				"--diff-filter=d",
+				...options,
+				"--"
+			);
+			return [
+				...this.parseNumStat(allButDeleted),
+				...this.parseNumStat(deletedOnly, FileStatus.deleted)
+			];
 		} catch (err) {
 			Logger.warn(`Error getting numstat (${options}): ${err.message}`);
 			return [];
 		}
 	}
 
-	private parseNumStat(data: string = ""): GitNumStat[] {
+	private parseNumStat(
+		data: string = "",
+		presumedStatus: FileStatus = FileStatus.modified
+	): GitNumStat[] {
 		const ret: GitNumStat[] = [];
 		data
 			.trim()
@@ -905,9 +926,9 @@ export class GitService implements IGitService, Disposable {
 							linesRemoved: parseInt(lineData[2], 10),
 							oldFile,
 							file,
-							status: FileStatus.modified,
-							statusX: FileStatus.modified,
-							statusY: FileStatus.modified
+							status: presumedStatus,
+							statusX: presumedStatus,
+							statusY: presumedStatus
 						});
 					}
 				}
