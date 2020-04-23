@@ -318,7 +318,7 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 }
 
 export const MinimumWidthCard = styled(Card)`
-	min-width: 100px;
+	min-width: 60px;
 `;
 
 export const Header = styled.div`

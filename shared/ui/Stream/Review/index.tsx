@@ -151,6 +151,7 @@ const RepoInfo = styled.div`
 export const ExpandedAuthor = styled.div`
 	width: 100%;
 	color: var(--text-color-subtle);
+	white-space: normal;
 `;
 
 const ReviewTitle = styled.div`
@@ -455,7 +456,10 @@ const BaseReview = (props: BaseReviewProps) => {
 				)}
 
 				{props.headerError && (
-					<div className="color-warning" style={{ display: "flex", padding: "10px 0" }}>
+					<div
+						className="color-warning"
+						style={{ display: "flex", padding: "10px 0", whiteSpace: "normal" }}
+					>
 						<Icon name="alert" />
 						<div style={{ paddingLeft: "10px" }}>{props.headerError}</div>
 					</div>
@@ -730,7 +734,7 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 				onSubmit={submit}
 			/>
 			<div style={{ display: "flex" }}>
-				<div style={{ opacity: 0.4, paddingTop: "10px" }}>
+				<div style={{ opacity: 0.7, paddingTop: "10px" }}>
 					<Checkbox name="change-request" checked={isChangeRequest} onChange={setIsChangeRequest}>
 						Change Request (require for approval)
 					</Checkbox>
