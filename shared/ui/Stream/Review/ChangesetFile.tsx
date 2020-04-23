@@ -26,11 +26,11 @@ export const ChangesetFile = styled((props: ReviewChangesetFileInfo & Props) => 
 			</span>
 			{props.linesAdded > 0 && <span className="added">+{props.linesAdded} </span>}
 			{props.linesRemoved > 0 && <span className="deleted">-{props.linesRemoved}</span>}
-			{status === FileStatus.untracked && <span className="added">new </span>}
-			{status === FileStatus.added && <span className="added">added </span>}
-			{status === FileStatus.copied && <span className="added">copied </span>}
-			{status === FileStatus.unmerged && <span className="deleted">conflict </span>}
-			{status === FileStatus.deleted && <span className="deleted">deleted </span>}
+			{props.status === FileStatus.untracked && <span className="added">new </span>}
+			{props.status === FileStatus.added && <span className="added">added </span>}
+			{props.status === FileStatus.copied && <span className="added">copied </span>}
+			{props.status === FileStatus.unmerged && <span className="deleted">conflict </span>}
+			{props.status === FileStatus.deleted && <span className="deleted">deleted </span>}
 		</div>
 	);
 })`
