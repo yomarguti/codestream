@@ -190,9 +190,13 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		if (!fileInfo) throw new Error(`Could not find changeset file information for ${request.path}`);
 
 		const diffs = await this.getDiffs(request.reviewId, request.repoId);
-		const leftDiff = diffs.leftDiffs.find(d => d.newFileName === fileInfo.oldFile);
+		const leftDiff = diffs.leftDiffs.find(
+			d => d.newFileName === fileInfo.oldFile || d.oldFileName === fileInfo.oldFile
+		);
 		const leftBaseRelativePath = (leftDiff && leftDiff.oldFileName) || fileInfo.oldFile;
-		const rightDiff = diffs.rightDiffs?.find(d => d.newFileName === fileInfo.file);
+		const rightDiff = diffs.rightDiffs?.find(
+			d => d.newFileName === fileInfo.file || d.oldFileName === fileInfo.file
+		);
 		const rightBaseRelativePath = (rightDiff && rightDiff.oldFileName) || fileInfo.file;
 
 		const repo = await git.getRepositoryById(request.repoId);
