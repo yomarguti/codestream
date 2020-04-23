@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 import { injectIntl } from "react-intl";
 import { connect } from "react-redux";
 import cx from "classnames";
-import ComposeBox from "./ComposeBox";
 import PostList from "./PostList";
 import { ActivityPanel } from "./ActivityPanel";
 import { StatusPanel } from "./StatusPanel";
@@ -15,21 +14,15 @@ import { ChangeFullNamePanel } from "./ChangeFullNamePanel";
 import { ChangeAvatarPanel } from "./ChangeAvatarPanel";
 import { IntegrationsPanel } from "./IntegrationsPanel";
 import { ReviewSettingsPanel } from "./ReviewSettingsPanel";
-import ChannelPanel from "./ChannelPanel";
 import { TasksPanel } from "./TasksPanel";
 import { TeamPanel } from "./TeamPanel";
-import PublicChannelPanel from "./PublicChannelPanel";
-import CreateChannelPanel from "./CreateChannelPanel";
 import ScrollBox from "./ScrollBox";
 import { CodemarkForm } from "./CodemarkForm";
 import { ReviewForm } from "./ReviewForm";
-import { CodeForm } from "./CodeForm";
 import KnowledgePanel from "./KnowledgePanel";
 import FilterSearchPanel from "./FilterSearchPanel";
 import InlineCodemarks from "./InlineCodemarks";
-import CreateDMPanel from "./CreateDMPanel";
 import { CreateTeamPage } from "./CreateTeamPage";
-import ChannelMenu from "./ChannelMenu";
 import Icon from "./Icon";
 import Menu from "./Menu";
 import CancelButton from "./CancelButton";
@@ -233,7 +226,7 @@ export class SimpleStream extends Component {
 	copy(event) {
 		let selectedText = window.getSelection().toString();
 		atom.clipboard.write(selectedText);
-		event.abortKeyBinding();
+		event.abortKeyBinding && event.abortKeyBinding();
 	}
 
 	checkMarkStreamRead = postId => {
@@ -343,20 +336,20 @@ export class SimpleStream extends Component {
 			rest.length === 1
 				? `${first} and ${rest[0]}`
 				: rest.reduce(
-						(result, string, index, array) =>
-							index === array.length - 1 ? `${result}, and ${string}` : `${result}, ${string}`,
-						first
-				  );
+					(result, string, index, array) =>
+						index === array.length - 1 ? `${result}, and ${string}` : `${result}, ${string}`,
+					first
+				);
 
 		return (
 			<label key="info">
 				{this.props.postStream.type === "direct" ? (
 					<span>This is the beginning of your direct message with {localizedMembers}.</span>
 				) : (
-					<span>
-						This is the beginning of the <b>{nameElement}</b> channel.
-					</span>
-				)}
+						<span>
+							This is the beginning of the <b>{nameElement}</b> channel.
+						</span>
+					)}
 			</label>
 		);
 	};
@@ -366,13 +359,13 @@ export class SimpleStream extends Component {
 			this.props.postStreamMemberIds.length > 2 ? (
 				<Icon name="team" className="team" />
 			) : (
-				<Icon name="person" />
-			)
+					<Icon name="person" />
+				)
 		) : this.props.isPrivate ? (
 			<Icon name="lock" />
 		) : (
-			<span>#</span>
-		);
+					<span>#</span>
+				);
 	}
 
 	buildTeamMenuItem() {
@@ -513,10 +506,6 @@ export class SimpleStream extends Component {
 		this.setActivePanel(WebviewPanels.NewReview);
 	};
 
-	newCode = () => {
-		this.setActivePanel(WebviewPanels.NewCode);
-	};
-
 	renderPlusMenu() {
 		const { plusMenuOpen, menuTarget } = this.state;
 		const { textEditorUri } = this.props;
@@ -594,8 +583,8 @@ export class SimpleStream extends Component {
 				const displayHost = host.startsWith("http://")
 					? host.split("http://")[1]
 					: host.startsWith("https://")
-					? host.split("https://")[1]
-					: host;
+						? host.split("https://")[1]
+						: host;
 				const displayName = isEnterprise
 					? `${display.displayName} - ${displayHost}`
 					: display.displayName;
@@ -627,8 +616,8 @@ export class SimpleStream extends Component {
 								}
 							});
 						} else */ this.setActivePanel(
-							`configure-enterprise-${name}-${providerId}-Global Nav`
-						);
+						`configure-enterprise-${name}-${providerId}-Global Nav`
+					);
 					};
 				} else {
 					// otherwise it's just a simple oauth redirect
@@ -835,7 +824,8 @@ export class SimpleStream extends Component {
 		if (searchBarOpen) activePanel = WebviewPanels.Codemarks;
 		// if we're conducting a review, we need the compose functionality of spatial view
 		if (this.props.currentReviewId) activePanel = WebviewPanels.CodemarksForFile;
-		if (!activePanel) activePanel = WebviewPanels.CodemarksForFile;
+		if (!activePanel || !Object.values(WebviewPanels).includes(activePanel))
+			activePanel = WebviewPanels.CodemarksForFile;
 		// if there is nothing left to copmlete, go to spatial view
 		if (activePanel === WebviewPanels.GettingStarted && this.props.remainingSteps === 0)
 			activePanel = WebviewPanels.CodemarksForFile;
@@ -889,13 +879,13 @@ export class SimpleStream extends Component {
 				this.props.postStreamMemberIds.length > 2 ? (
 					<Icon name="team" className="organization" />
 				) : (
-					<Icon name="person" />
-				)
+						<Icon name="person" />
+					)
 			) : this.props.isPrivate ? (
 				<Icon name="lock" />
 			) : (
-				<span>#</span>
-			);
+						<span>#</span>
+					);
 		const menuActive = this.props.postStreamId && this.state.openMenu === this.props.postStreamId;
 
 		// 	<span className="open-menu">
@@ -938,7 +928,7 @@ export class SimpleStream extends Component {
 				: "content vscroll inline";
 		const configureProviderInfo =
 			activePanel.startsWith("configure-provider-") ||
-			activePanel.startsWith("configure-enterprise-")
+				activePanel.startsWith("configure-enterprise-")
 				? activePanel.split("-")
 				: null;
 
@@ -968,28 +958,25 @@ export class SimpleStream extends Component {
 					</Modal>
 				)}
 				{renderNav && this.renderNavIcons()}
-				{this.state.floatCompose &&
-					!onInlineCodemarks &&
-					this.renderComposeBox(placeholderText, channelName)}
 				<div className={contentClass}>
 					{(activePanel === WebviewPanels.CodemarksForFile ||
 						activePanel === WebviewPanels.GettingStarted) && (
-						<InlineCodemarks
-							activePanel={activePanel}
-							setActivePanel={this.setActivePanel}
-							currentUserId={this.props.currentUserId}
-							currentUserName={this.props.currentUserName}
-							postAction={this.postAction}
-							searchBarOpen={this.state.searchBarOpen}
-							multiCompose={this.state.multiCompose}
-							typeFilter="all"
-							textEditorUri={textEditorUri}
-							textEditorVisibleRanges={textEditorVisibleRanges}
-							selection={this.state.selection}
-							focusInput={this.focusInput}
-							scrollDiv={this._contentScrollDiv}
-						/>
-					)}
+							<InlineCodemarks
+								activePanel={activePanel}
+								setActivePanel={this.setActivePanel}
+								currentUserId={this.props.currentUserId}
+								currentUserName={this.props.currentUserName}
+								postAction={this.postAction}
+								searchBarOpen={this.state.searchBarOpen}
+								multiCompose={this.state.multiCompose}
+								typeFilter="all"
+								textEditorUri={textEditorUri}
+								textEditorVisibleRanges={textEditorVisibleRanges}
+								selection={this.state.selection}
+								focusInput={this.focusInput}
+								scrollDiv={this._contentScrollDiv}
+							/>
+						)}
 					{activePanel === WebviewPanels.Codemarks && (
 						<KnowledgePanel
 							activePanel={activePanel}
@@ -1032,7 +1019,6 @@ export class SimpleStream extends Component {
 						/>
 					)}
 					{activePanel === WebviewPanels.NewReview && <ReviewForm />}
-					{activePanel === WebviewPanels.NewCode && <CodeForm />}
 					{activePanel === WebviewPanels.Integrations && <IntegrationsPanel />}
 					{activePanel === WebviewPanels.ReviewSettings && <ReviewSettingsPanel />}
 					{activePanel === WebviewPanels.ChangeEmail && (
@@ -1050,6 +1036,9 @@ export class SimpleStream extends Component {
 					{activePanel === WebviewPanels.ChangePassword && (
 						<ChangePasswordPanel closePanel={this.props.closePanel} />
 					)}
+					{/* this is dead code, leaving so we know how to cleanup
+					the various props/methods they used */}
+					{/*
 					{activePanel === "channels" && (
 						<ChannelPanel
 							activePanel={activePanel}
@@ -1083,6 +1072,7 @@ export class SimpleStream extends Component {
 							isSlackTeam={this.props.teamProvider === "slack"}
 						/>
 					)}
+					*/}
 					{activePanel === WebviewPanels.Notifications && (
 						<NotificationsPanel closePanel={this.props.closePanel} />
 					)}
@@ -1149,8 +1139,10 @@ export class SimpleStream extends Component {
 											<Icon name="gear" className="show-settings clickable" />
 										</span>
 									</Tooltip>
+									{/* dead code, leaving so we know how to cleanup
+					the various props/methods they used */}
 									{menuActive && (
-										<ChannelMenu
+										{/*<ChannelMenu
 											stream={this.props.postStream}
 											target={this.state.menuTarget}
 											umiCount={0}
@@ -1158,7 +1150,7 @@ export class SimpleStream extends Component {
 											setActivePanel={this.setActivePanel}
 											runSlashCommand={this.runSlashCommand}
 											closeMenu={this.closeMenu}
-										/>
+										/>*/}
 									)}
 								</span>
 								<div className="stream-header-buttons">
@@ -1244,10 +1236,6 @@ export class SimpleStream extends Component {
 									</ScrollBox>
 								</div>
 							</div>
-							{!threadId &&
-								activePanel === "main" &&
-								!this.state.floatCompose &&
-								this.renderComposeBox(placeholderText, channelName)}
 						</div>
 					)}
 					{threadId && !this.props.currentCodemarkId && !onInlineCodemarks && (
@@ -1288,48 +1276,47 @@ export class SimpleStream extends Component {
 									</ScrollBox>
 								</div>
 							</div>
-							{!this.state.floatCompose && this.renderComposeBox(placeholderText, channelName)}
 						</div>
 					)}
 				</div>
 			</div>
 		);
 	}
-
-	renderComposeBox = (placeholderText, channelName) => {
-		return (
-			<ComposeBox
-				placeholder={placeholderText}
-				channelName={channelName}
-				teammates={this.props.teammates}
-				slashCommands={this.props.slashCommands}
-				channelStreams={this.props.channelStreams}
-				directMessageStreams={this.props.directMessageStreams}
-				streamId={this.props.postStreamId}
-				services={this.props.services}
-				currentUserId={this.props.currentUserId}
-				ensureStreamIsActive={this.ensureStreamIsActive}
-				ref={this._compose}
-				disabled={this.props.isOffline}
-				onSubmitPost={this.submitPlainPost}
-				onSubmitCodemark={this.submitCodemark}
-				onSubmit={this.submitPost}
-				onEmptyUpArrow={this.editLastPost}
-				findMentionedUserIds={this.findMentionedUserIds}
-				isDirectMessage={this.props.postStreamType === "direct"}
-				teamProvider={this.props.teamProvider}
-				multiCompose={this.state.multiCompose}
-				floatCompose={this.state.floatCompose}
-				setMultiCompose={this.setMultiCompose}
-				quotePost={this.state.quotePost}
-				inThread={Boolean(this.props.threadId)}
-				providerInfo={this.props.providerInfo}
-				fetchIssueBoards={this.props.fetchIssueBoards}
-				createTrelloCard={this.props.createTrelloCard}
-				{...this.state.composeBoxProps}
-			/>
-		);
-	};
+	// dead code, leaving so we know how to cleanup
+	// renderComposeBox = (placeholderText, channelName) => {
+	// 	return (
+	// 		<ComposeBox
+	// 			placeholder={placeholderText}
+	// 			channelName={channelName}
+	// 			teammates={this.props.teammates}
+	// 			slashCommands={this.props.slashCommands}
+	// 			channelStreams={this.props.channelStreams}
+	// 			directMessageStreams={this.props.directMessageStreams}
+	// 			streamId={this.props.postStreamId}
+	// 			services={this.props.services}
+	// 			currentUserId={this.props.currentUserId}
+	// 			ensureStreamIsActive={this.ensureStreamIsActive}
+	// 			ref={this._compose}
+	// 			disabled={this.props.isOffline}
+	// 			onSubmitPost={this.submitPlainPost}
+	// 			onSubmitCodemark={this.submitCodemark}
+	// 			onSubmit={this.submitPost}
+	// 			onEmptyUpArrow={this.editLastPost}
+	// 			findMentionedUserIds={this.findMentionedUserIds}
+	// 			isDirectMessage={this.props.postStreamType === "direct"}
+	// 			teamProvider={this.props.teamProvider}
+	// 			multiCompose={this.state.multiCompose}
+	// 			floatCompose={this.state.floatCompose}
+	// 			setMultiCompose={this.setMultiCompose}
+	// 			quotePost={this.state.quotePost}
+	// 			inThread={Boolean(this.props.threadId)}
+	// 			providerInfo={this.props.providerInfo}
+	// 			fetchIssueBoards={this.props.fetchIssueBoards}
+	// 			createTrelloCard={this.props.createTrelloCard}
+	// 			{...this.state.composeBoxProps}
+	// 		/>
+	// 	);
+	// };
 
 	plusMenuAction = arg => {
 		this.setState({ plusMenuOpen: false });
@@ -1434,6 +1421,7 @@ export class SimpleStream extends Component {
 		return this.notImplementedYet();
 	};
 
+	// dead code
 	handleClickSearch = e => {
 		if (e) e.stopPropagation();
 
@@ -1547,6 +1535,7 @@ export class SimpleStream extends Component {
 		}
 	};
 
+	// dead code
 	showChannels = _event => {
 		this.setActivePanel("channels");
 	};
@@ -1571,7 +1560,8 @@ export class SimpleStream extends Component {
 		this._postslist && this._postslist.scrollToBottom();
 	};
 
-	// dismiss the thread stream and return to the main stream
+	// dead code
+	// // dismiss the thread stream and return to the main stream
 	handleDismissThread = () => {
 		this.props.setCurrentStream(this.props.postStreamId);
 		// this.setActivePanel("main");
@@ -2484,8 +2474,8 @@ const mapStateToProps = state => {
 	const channelMembers = postStream.isTeamStream
 		? teamMembers
 		: postStream.memberIds
-		? postStream.memberIds.map(id => users[id])
-		: [];
+			? postStream.memberIds.map(id => users[id])
+			: [];
 
 	const teamMembersById = toMapBy("id", teamMembers);
 
