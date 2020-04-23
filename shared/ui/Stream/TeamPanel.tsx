@@ -607,13 +607,6 @@ class TeamPanel extends React.Component<Props, State> {
 		});
 	};
 
-	changeReviewApproval = async value => {
-		await HostApi.instance.send(UpdateTeamSettingsRequestType, {
-			teamId: this.props.teamId,
-			settings: { reviewApproval: value }
-		});
-	};
-
 	removeSuggestion = async user => {
 		await HostApi.instance.send(UpdateTeamSettingsRequestType, {
 			teamId: this.props.teamId,
@@ -684,44 +677,6 @@ class TeamPanel extends React.Component<Props, State> {
 							label: "Code Review Settings...",
 							key: "review-settings",
 							action: () => this.props.openPanel(WebviewPanels.ReviewSettings)
-							// submenu: [
-							// 	{
-							// 		label: (
-							// 			<span style={{ fontSize: "smaller" }}>
-							// 				Controls Code Review approval when
-							// 				<br />
-							// 				multiple reviewers are assigned.
-							// 			</span>
-							// 		),
-							// 		noHover: true,
-							// 		disabled: true
-							// 	},
-							// 	{ label: "-" },
-							// 	{
-							// 		label: "Any Reviewer Can Approve",
-							// 		checked: reviewApproval === "anyone",
-							// 		action: () => this.changeReviewApproval("anyone")
-							// 	},
-							// 	{
-							// 		label: "All Reviewers Must Approve",
-							// 		checked: reviewApproval === "all",
-							// 		action: () => this.changeReviewApproval("all")
-							// 	},
-							// 	{
-							// 		label: "User Selectable Per Review",
-							// 		checked: !reviewApproval || reviewApproval === "user",
-							// 		action: () => this.changeReviewApproval("user")
-							// 	},
-							// 	{ label: "-", action: () => {} },
-							// 	{
-							// 		label: "Help on Approval Settings",
-							// 		action: () => {
-							// 			HostApi.instance.send(OpenUrlRequestType, {
-							// 				url: "https://github.com/TeamCodeStream/CodeStream/wiki/Team-Live-View"
-							// 			});
-							// 		}
-							// 	}
-							// ]
 						},
 						{ label: "-", action: () => {} },
 						{ label: "Change Team Name", action: this.changeTeamName },
