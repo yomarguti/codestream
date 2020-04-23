@@ -644,6 +644,12 @@ class TeamPanel extends React.Component<Props, State> {
 					variant="text"
 					items={[
 						{
+							label: <span style={{ fontSize: "smaller" }}>This menu is admin-only</span>,
+							noHover: true,
+							disabled: true
+						},
+						{ label: "-" },
+						{
 							label: "Live View Settings",
 							key: "live-view-settings",
 							submenu: [
