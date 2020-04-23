@@ -1,4 +1,4 @@
-import React from "react";
+import React, { PropsWithChildren } from "react";
 import cx from "classnames";
 import {
 	CardBody,
@@ -103,7 +103,6 @@ export interface BaseReviewHeaderProps {
 	tags?: { id: string }[];
 	changeRequests?: CodemarkPlus[];
 	setIsEditing?: Function;
-	globalNav?: boolean;
 }
 
 export interface BaseReviewMenuProps {
@@ -186,7 +185,8 @@ const translateStatus = (status: string) => {
 	return capitalize(status);
 };
 
-export const BaseReviewHeader = (props: BaseReviewHeaderProps) => {
+// if child props are passed in, we assume they are the action buttons/menu for the header
+export const BaseReviewHeader = (props: PropsWithChildren<BaseReviewHeaderProps>) => {
 	const { review } = props;
 	const dispatch = useDispatch();
 
@@ -232,8 +232,8 @@ export const BaseReviewHeader = (props: BaseReviewHeaderProps) => {
 
 		if (review.status === "open") {
 			let label = "Open";
-			if (review.allReviewersMustApprove && review.reviewers.length > 1) {
-				const approvals = review.approvedBy ? review.approvedBy.length : 0;
+			if (review.allReviewersMustApprove && review.reviewers && review.reviewers.length > 1) {
+				const approvals = Object.keys(review.approvedBy || {}).length;
 				label += ` (${approvals}/${review.reviewers.length})`;
 			}
 			return (
@@ -262,8 +262,12 @@ export const BaseReviewHeader = (props: BaseReviewHeaderProps) => {
 			<Icon name="review" className="type" />
 			<BigTitle>
 				<HeaderActions>
-					{renderedHeaderActions}
-					{!props.globalNav && <BaseReviewMenu review={review} setIsEditing={props.setIsEditing} />}
+					{props.children || (
+						<>
+							{renderedHeaderActions}
+							<BaseReviewMenu review={review} setIsEditing={props.setIsEditing} />
+						</>
+					)}
 				</HeaderActions>
 				<MarkdownText text={review.title} />
 			</BigTitle>
@@ -411,6 +415,13 @@ const BaseReview = (props: BaseReviewProps) => {
 	}, shallowEqual);
 	const hasTags = props.tags && props.tags.length > 0;
 	const hasReviewers = props.reviewers != null && props.reviewers.length > 0;
+	const approvalLabel =
+		props.reviewers != null && props.reviewers.length > 1
+			? review.allReviewersMustApprove
+				? " - Everyone Must Approve"
+				: " - Anyone Can Approve"
+			: "";
+	const { approvedBy = {} } = review;
 	const hasChangeRequests = props.changeRequests != null && props.changeRequests.length > 0;
 	const numFiles = review.reviewChangesets
 		.map(r => r.modifiedFiles.length)
@@ -471,11 +482,14 @@ const BaseReview = (props: BaseReviewProps) => {
 							)}
 							{hasReviewers && (
 								<Meta>
-									<MetaLabel>Reviewers</MetaLabel>
+									<MetaLabel>Reviewers{approvalLabel}</MetaLabel>
 									<MetaDescriptionForTags>
-										{props.reviewers!.map(reviewer => (
-											<HeadshotName person={reviewer} highlightMe />
-										))}
+										{props.reviewers!.map(reviewer => {
+											const addThumbsUp = approvedBy[reviewer.id] ? true : false;
+											return (
+												<HeadshotName person={reviewer} highlightMe addThumbsUp={addThumbsUp} />
+											);
+										})}
 									</MetaDescriptionForTags>
 								</Meta>
 							)}

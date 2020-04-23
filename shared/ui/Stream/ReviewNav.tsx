@@ -26,11 +26,13 @@ import { ReviewForm } from "./ReviewForm";
 import { logWarning } from "../logger";
 
 const NavHeader = styled.div`
+	flex-grow: 0;
+	flex-shrink: 0;
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	padding: 10px 10px 10px 15px;
-	height: 45px;
 	justify-content: center;
+	width: 100%;
 	${Header} {
 		margin-bottom: 0;
 	}
@@ -83,6 +85,9 @@ const ClearModal = styled.div`
 	left: 0;
 `;
 const Root = styled.div`
+	max-height: 100%;
+	display: flex;
+	flex-direction: column;
 	background: (--panel-tool-background-color);
 	&.tour-on {
 		${Nav},
@@ -103,11 +108,7 @@ const Root = styled.div`
 	}
 
 	.scroll-container {
-		margin: 50px 0 0 0;
-		position: absolute;
-		top: 0;
-		left: 0;
-		height: calc(100vh - 45px);
+		flex-grow: 1;
 		width: 100%;
 		overflow: auto;
 		zindex: 1;
@@ -126,10 +127,6 @@ const Root = styled.div`
 				padding: 3px 5px;
 				line-height: 1em;
 			}
-		}
-		.scroll-container {
-			margin: 45px 0 0 0;
-			height: calc(100vh - 40px);
 		}
 	}
 `;
@@ -520,12 +517,13 @@ export function ReviewNav(props: Props) {
 		<Root className={derivedState.hideReviewInstructions ? "" : "tour-on"}>
 			{!derivedState.hideReviewInstructions && <ClearModal />}
 			<NavHeader>
-				<BaseReviewHeader review={review} collapsed={false} globalNav />
-				<Nav className={hoverButton == "actions" ? "pulse" : ""}>
-					<TourTip title={actionsTip} placement="bottomRight">
-						{statusButtons()}
-					</TourTip>
-				</Nav>
+				<BaseReviewHeader review={review} collapsed={false}>
+					<Nav className={hoverButton == "actions" ? "pulse" : ""}>
+						<TourTip title={actionsTip} placement="bottomRight">
+							{statusButtons()}
+						</TourTip>
+					</Nav>
+				</BaseReviewHeader>
 			</NavHeader>
 			{props.composeOpen ? null : (
 				<div className="scroll-container" style={{ overflow: "hidden" }}>
