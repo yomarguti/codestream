@@ -208,6 +208,8 @@ export interface CSReviewApprovals {
 	[userId: string]: { approvedAt: number };
 }
 
+export type CSReviewStatus = "approved" | "open" | "rejected" | "pending";
+
 export interface CSReview extends CSEntity {
 	title: string;
 	text: string;
@@ -229,7 +231,7 @@ export interface CSReview extends CSEntity {
 	streamId: string;
 	postId: string;
 	fileStreamIds: string[];
-	status: string;
+	status: CSReviewStatus;
 	numReplies: number;
 	tags?: string[];
 	reviewChangesets: CSReviewChangeset[];

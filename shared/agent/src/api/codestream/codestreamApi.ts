@@ -1240,6 +1240,26 @@ export class CodeStreamApiProvider implements ApiProvider {
 	updateReview(request: UpdateReviewRequest) {
 		const { id, ...params } = request;
 
+		// check to see if we're setting the status of the review,
+		// and if so, use the specialized API calls
+		if (params.status) {
+			const routeMap = {
+				approved: "/approve",
+				rejected: "/reject",
+				open: "/reopen"
+			} as any;
+			const route = routeMap[params.status];
+			if (route) {
+				return this.put<CSUpdateReviewRequest, CSUpdateReviewResponse>(
+					`/reviews${route}/${id}`,
+					{},
+					this._token
+				);
+			} else {
+				Logger.warn("Unknown route for status: ", params);
+			}
+		}
+
 		return this.put<CSUpdateReviewRequest, CSUpdateReviewResponse>(
 			`/reviews/${id}`,
 			params,

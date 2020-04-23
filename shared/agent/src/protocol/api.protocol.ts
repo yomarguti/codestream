@@ -25,7 +25,8 @@ import {
 	CSTeam,
 	CSUser,
 	ProviderType,
-	StreamType
+	StreamType,
+	CSReviewStatus
 } from "./api.protocol.models";
 
 export * from "./api.protocol.models";
@@ -572,7 +573,7 @@ export interface CSGetReviewsResponse {
 }
 
 export interface CSUpdateReviewRequest {
-	status?: string;
+	status?: CSReviewStatus;
 	title?: string;
 	text?: string;
 }
