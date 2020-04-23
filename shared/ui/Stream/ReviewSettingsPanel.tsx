@@ -100,7 +100,7 @@ export const ReviewSettingsPanel = props => {
 							</RadioGroup>
 							<p className="explainer" style={{ paddingLeft: "28px" }}>
 								Suggests reviewers based on the number of affected (changed) lines of code of which
-								they authored.
+								they authored. Also takes into account commits pushed to the branch.
 							</p>
 
 							<p>&nbsp;</p>
