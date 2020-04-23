@@ -45,12 +45,13 @@ export function getTeamProvider(team: CSTeam): "codestream" | "slack" | "msteams
 	return Object.keys(team.providerInfo)[0];
 }
 
+const TEAM_SETTING_DEFAULTS = {
+	reviewApproval: CSReviewApprovalSetting.User,
+	reviewAssignment: CSReviewAssignmentSetting.Authorship2
+};
+
 // return a team setting if it's set, otherwise return the default value
 export function getTeamSetting(team: CSTeam, setting: string) {
 	const { settings = {} } = team;
-	const DEFAULTS = {
-		reviewApproval: CSReviewApprovalSetting.User,
-		reviewAssignment: CSReviewAssignmentSetting.Authorship2
-	};
-	return settings[setting] != undefined ? settings[setting] : DEFAULTS[setting];
+	return settings[setting] != undefined ? settings[setting] : TEAM_SETTING_DEFAULTS[setting];
 }
