@@ -208,7 +208,8 @@ export interface CSReviewApprovals {
 	[userId: string]: { approvedAt: number };
 }
 
-export type CSReviewStatus = "approved" | "open" | "rejected" | "pending";
+// pending isn't used (yet?) so commenting it out
+export type CSReviewStatus = "approved" | "open" | "rejected"; // | "pending";
 
 export interface CSReview extends CSEntity {
 	title: string;

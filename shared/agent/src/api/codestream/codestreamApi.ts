@@ -1247,7 +1247,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		// check to see if we're setting the status of the review,
 		// and if so, use the specialized API calls
 		if (params.status) {
-			const routeMap = {
+			const routeMap: { [key: string]: string } = {
 				approved: "/approve",
 				rejected: "/reject",
 				open: "/reopen"
