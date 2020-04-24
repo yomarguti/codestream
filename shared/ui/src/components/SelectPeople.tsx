@@ -82,6 +82,7 @@ class SelectPeople extends React.Component<Props, State> {
 				searchLabel: person.username,
 				checked: selected,
 				value: person.username,
+				key: person.id,
 				action: () => onChange(person)
 			};
 		}) as any;
