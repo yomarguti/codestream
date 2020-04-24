@@ -364,9 +364,6 @@ class TeamPanel extends React.Component<Props, State> {
 			this.props.teamPlan === "FREEPLAN" &&
 			(this.props.companyMemberCount || 0) >= 5
 		) {
-			HostApi.instance.track("Paywall Hit", {
-				"Pay Wall": "Team Size"
-			});
 			return this.renderInviteDisabled();
 		}
 
