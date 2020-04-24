@@ -2,18 +2,12 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import CancelButton from "./CancelButton";
 import { CodeStreamState } from "../store";
-import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { RadioGroup, Radio } from "../src/components/RadioGroup";
-import { setUserPreference, closePanel } from "./actions";
+import { closePanel } from "./actions";
 import { HostApi } from "../webview-api";
-import {
-	CSNotificationDeliveryPreference,
-	CSReviewApprovalSetting,
-	CSReviewAssignmentSetting
-} from "@codestream/protocols/api";
+import { CSReviewApprovalSetting, CSReviewAssignmentSetting } from "@codestream/protocols/api";
 import { UpdateTeamSettingsRequestType } from "@codestream/protocols/agent";
 import { getTeamSetting } from "../store/teams/reducer";
-import { PanelHeader } from "../src/components/PanelHeader";
 import ScrollBox from "./ScrollBox";
 
 export const ReviewSettingsPanel = props => {
@@ -38,6 +32,7 @@ export const ReviewSettingsPanel = props => {
 			settings: { reviewApproval: value }
 		});
 		// give it 100 miliseconds to update react state
+		// otherwise it flashes for a second on the old radio button
 		setTimeout(() => setLoadingApproval(""), 100);
 	};
 

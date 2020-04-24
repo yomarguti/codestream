@@ -37,6 +37,7 @@ import { confirmPopup } from "./Confirm";
 import styled from "styled-components";
 import { getCodeCollisions } from "../store/users/reducer";
 import { openPanel } from "../store/context/actions";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -102,6 +103,7 @@ interface ConnectedProps {
 	adminIds: string[];
 	collisions: any;
 	dontSuggestInvitees: any;
+	multipleReviewersApprove: boolean;
 }
 
 interface State {
@@ -679,7 +681,8 @@ class TeamPanel extends React.Component<Props, State> {
 						{
 							label: "Code Review Settings...",
 							key: "review-settings",
-							action: () => this.props.openPanel(WebviewPanels.ReviewSettings)
+							action: () => this.props.openPanel(WebviewPanels.ReviewSettings),
+							disabled: !this.props.multipleReviewersApprove
 						},
 						{ label: "-", action: () => {} },
 						{ label: "Change Team Name", action: this.changeTeamName },
@@ -870,6 +873,8 @@ const mapStateToProps = state => {
 	const reviewApproval = team.settings ? team.settings.reviewApproval : "user";
 
 	const dontSuggestInvitees = team.settings ? team.settings.dontSuggestInvitees || {} : {};
+	const multipleReviewersApprove = isFeatureEnabled(state, "multipleReviewersApprove");
+
 	return {
 		teamId: team.id,
 		teamName: team.name,
@@ -886,7 +891,8 @@ const mapStateToProps = state => {
 		members: [currentUser, ..._sortBy(teammates, m => (m.fullName || "").toLowerCase())],
 		invited: _sortBy(invited, "email"),
 		webviewFocused: context.hasFocus,
-		xrayEnabled
+		xrayEnabled,
+		multipleReviewersApprove
 	};
 };
 

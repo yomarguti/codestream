@@ -1207,7 +1207,10 @@
 			li.menu-item.disabled {
 				color: @text-color-subtle;
 			}
-			li.menu-item.disabled.hover {
+			li.menu-item.disabled.hover,
+			li.menu-item.disabled.hover > span.label,
+			li.menu-item.disabled.hover > .icon,
+			li.menu-item.disabled.hover .triangle-right {
 				background: @base-background-color;
 				color: @text-color-subtle;
 			}
