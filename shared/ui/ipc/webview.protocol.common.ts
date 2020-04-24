@@ -29,6 +29,7 @@ export interface EditorSelection extends Range {
 	cursor: Position;
 }
 
+/* NOTE: there can be dynamic panel names that begin with configure-provider- or configure-enterprise- */
 export enum WebviewPanels {
 	Activity = "activity",
 	Codemarks = "knowledge",

@@ -824,8 +824,11 @@ export class SimpleStream extends Component {
 		if (searchBarOpen) activePanel = WebviewPanels.Codemarks;
 		// if we're conducting a review, we need the compose functionality of spatial view
 		if (this.props.currentReviewId) activePanel = WebviewPanels.CodemarksForFile;
-		if (!activePanel || !Object.values(WebviewPanels).includes(activePanel))
+		if (!activePanel || 
+			(!Object.values(WebviewPanels).includes(activePanel) && 
+			!activePanel.match(/^configure\-(provider|enterprise)-/))) {
 			activePanel = WebviewPanels.CodemarksForFile;
+		}
 		// if there is nothing left to copmlete, go to spatial view
 		if (activePanel === WebviewPanels.GettingStarted && this.props.remainingSteps === 0)
 			activePanel = WebviewPanels.CodemarksForFile;
