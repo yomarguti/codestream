@@ -101,7 +101,7 @@ export const ReviewSettingsPanel = props => {
 							<p>&nbsp;</p>
 
 							<p>
-								<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Guide-to-CodeStream-Code-Review-Assignment">
+								<a href="https://docs.codestream.com/userguide/features/managing-the-team/#code-review-assignment--approval">
 									Learn more about Code Review Assignment
 								</a>
 							</p>
