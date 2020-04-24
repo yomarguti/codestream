@@ -1244,9 +1244,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 	updateReview(request: UpdateReviewRequest) {
 		const { id, ...params } = request;
 
+		const capabilities = SessionContainer.instance().session.apiCapabilities;
+
 		// check to see if we're setting the status of the review,
 		// and if so, use the specialized API calls
-		if (params.status) {
+		if (capabilities && capabilities.multipleReviewersApprove && params.status) {
 			const routeMap: { [key: string]: string } = {
 				approved: "/approve",
 				rejected: "/reject",
