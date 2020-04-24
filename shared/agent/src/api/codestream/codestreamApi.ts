@@ -513,11 +513,15 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return { ...response, token: token };
 	}
 
-	register(request: CSRegisterRequest) {
-		return this.post<CSRegisterRequest, CSRegisterResponse | CSLoginResponse>(
+	async register(request: CSRegisterRequest) {
+		const response = await this.post<CSRegisterRequest, CSRegisterResponse | CSLoginResponse>(
 			"/no-auth/register",
 			request
 		);
+		if ((response as CSLoginResponse).accessToken) {
+			this._token = (response as CSLoginResponse).accessToken;
+		}
+		return response;
 	}
 
 	async confirmRegistration(request: CSConfirmRegistrationRequest): Promise<CSLoginResponse> {
