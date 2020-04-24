@@ -33,7 +33,7 @@ import {
 	DeleteTeamTagRequestType,
 	UpdateStatusRequestType
 } from "@codestream/protocols/agent";
-import { CSPost, StreamType } from "@codestream/protocols/api";
+import { CSPost, StreamType, CSReviewStatus } from "@codestream/protocols/api";
 import { logError } from "../logger";
 import {
 	saveCodemarks,
@@ -781,16 +781,14 @@ export const setCodemarkStatus = (codemarkId: string, status: IssueStatus) => as
 	}
 };
 
-type ReviewStatus = "approved" | "open" | "rejected" | "pending";
-
-const describeStatusChange = (action: ReviewStatus) => {
+const describeStatusChange = (action: CSReviewStatus) => {
 	switch (action) {
 		case "open":
 			return "reopened";
 		case "approved":
 			return "approved";
-		case "pending":
-			return "requested changes in";
+		// case "pending":
+		// return "requested changes in";
 		case "rejected":
 			return "rejected";
 		default:
@@ -798,7 +796,7 @@ const describeStatusChange = (action: ReviewStatus) => {
 	}
 };
 
-export const setReviewStatus = (reviewId: string, status: ReviewStatus) => async dispatch => {
+export const setReviewStatus = (reviewId: string, status: CSReviewStatus) => async dispatch => {
 	try {
 		const response = await HostApi.instance.send(UpdateReviewRequestType, {
 			id: reviewId,
