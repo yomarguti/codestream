@@ -63,8 +63,19 @@ export const ChangeEmailPanel = props => {
 
 		setLoading(true);
 		try {
-			await HostApi.instance.send(UpdateUserRequestType, { email });
+			const response = await HostApi.instance.send(UpdateUserRequestType, { email });
 			HostApi.instance.track("Email Change Request", {});
+			if (
+				response.user &&
+				(response.user as any).$set &&
+				(response.user as any).$set.email === email
+			) {
+				// this means the email was changed, rather than a confirmation email issued, which means
+				// we are in an on-prem environment where email confirmation is not required ... in this
+				// case we can skip the confirmation panel
+				props.closePanel();
+				return;
+			}
 			setPendingChange(true);
 			// props.closePanel();
 		} catch (error) {
