@@ -48,7 +48,7 @@ const PinnedReplies = (props: { replyIds: string[]; streamId: string }) => {
 		<>
 			{posts.map(post => (
 				<PinnedReply key={post.id}>
-					<Icon name="star" /> <Headshot person={users[post.creatorId]} />
+					<Icon name="star" />
 					<PinnedReplyText text={post.text} />
 				</PinnedReply>
 			))}
@@ -60,10 +60,6 @@ const PinnedReply = styled.div`
 	display: flex;
 	> * {
 		margin-right: 5px;
-	}
-	// don't show headshots on pinned reply, since we have the star
-	${Headshot} {
-		display: none;
 	}
 `;
 
