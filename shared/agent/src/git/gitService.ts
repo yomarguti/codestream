@@ -624,7 +624,46 @@ export class GitService implements IGitService, Disposable {
 
 		try {
 			const data = (await git({ cwd: cwd }, "rev-parse", "--show-toplevel")).trim();
-			return data === "" ? undefined : this._normalizePath(data);
+			const repoRoot = data === "" ? undefined : this._normalizePath(data);
+
+			if (repoRoot === undefined) {
+				return undefined;
+			}
+
+			try {
+				cwd = this._normalizePath(cwd);
+				let relative = path.relative(repoRoot, cwd);
+				let isParentOrSelf =
+					!relative || (!relative.startsWith("..") && !path.isAbsolute(relative));
+				if (isParentOrSelf) {
+					Logger.log(`getRepoRoot: ${repoRoot} is parent of ${cwd} or itself - returning`);
+					return repoRoot;
+				}
+
+				Logger.log(
+					`getRepoRoot: ${repoRoot} is neither parent of ${cwd} nor itself - finding symlink`
+				);
+				const realCwd = this._normalizePath(fs.realpathSync(cwd));
+				Logger.log(`getRepoRoot: ${cwd} -> ${realCwd}`);
+				relative = path.relative(repoRoot, realCwd);
+				isParentOrSelf = !relative || (!relative.startsWith("..") && !path.isAbsolute(relative));
+				if (!isParentOrSelf) {
+					Logger.log(
+						`getRepoRoot: ${repoRoot} is neither parent of ${realCwd} nor itself - returning`
+					);
+					return repoRoot;
+				}
+
+				const symlinkRepoRoot = this._normalizePath(path.resolve(cwd, relative));
+				Logger.log(
+					`getRepoRoot: found symlink repo root ${symlinkRepoRoot} -> ${repoRoot} - returning`
+				);
+
+				return symlinkRepoRoot;
+			} catch (ex) {
+				Logger.warn(ex);
+				return repoRoot;
+			}
 		} catch (ex) {
 			// If we can't find the git executable, rethrow
 			if (/spawn (.*)? ENOENT/.test(ex.message)) {
@@ -1100,14 +1139,6 @@ export class GitService implements IGitService, Disposable {
 	 * @param fileOrFolderPath path to a file or folder
 	 */
 	async getRepositoryByFilePath(fileOrFolderPath: string): Promise<GitRepository | undefined> {
-		try {
-			fileOrFolderPath = this._normalizePath(fs.realpathSync(fileOrFolderPath));
-		} catch (err) {
-			Logger.warn(
-				`Cannot obtain normalized canonical value of ${fileOrFolderPath}: ${err.toString()}`
-			);
-		}
-
 		let repo;
 		if (fs.existsSync(fileOrFolderPath) && fs.lstatSync(fileOrFolderPath).isDirectory()) {
 			const normalizedFsPath = Strings.normalizePath(fileOrFolderPath);
