@@ -61,6 +61,10 @@ const PinnedReply = styled.div`
 	> * {
 		margin-right: 5px;
 	}
+	// don't show headshots on pinned reply, since we have the star
+	${Headshot} {
+		display: none;
+	}
 `;
 
 const PinnedReplyText = styled(MarkdownText)`
