@@ -48,7 +48,7 @@ const Root = styled.div<DimensionProps & { display?: string }>`
 	img {
 		border-radius: ${props => (props.hardRightBorder ? "3px 0 0 3px" : "3px")};
 	}
-	&.thumbs-up {
+	&.make-room-for-thumbs-up {
 		width: ${props => props.size + 7}px;
 		padding-right: 10px;
 	}
@@ -119,7 +119,9 @@ export const Headshot = styled((props: HeadshotProps) => {
 	const size = props.size || 16;
 	const display = props.display || "block";
 
-	const className = (props.className || "") + (props.addThumbsUp ? " thumbs-up" : "");
+	const className =
+		(props.className || "") +
+		(props.addThumbsUp && !props.hardRightBorder ? " make-room-for-thumbs-up" : "");
 	if (person.avatar) {
 		const uri = size > 48 ? person.avatar.image : person.avatar.image48 || person.avatar.image;
 
