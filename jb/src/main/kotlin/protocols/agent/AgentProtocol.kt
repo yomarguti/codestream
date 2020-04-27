@@ -196,6 +196,13 @@ class TextDocumentFromKeyResult(
     val marker: JsonObject
 )
 
+class SetServerUrlParams(
+    val serverUrl: String,
+    val disableStrictSSL: Boolean = false
+)
+
+class SetServerUrlResult
+
 class Codemark(
     val id: String,
     val color: String?,

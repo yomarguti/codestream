@@ -22,6 +22,8 @@ import com.codestream.protocols.agent.Ide
 import com.codestream.protocols.agent.InitializationOptions
 import com.codestream.protocols.agent.Post
 import com.codestream.protocols.agent.Review
+import com.codestream.protocols.agent.SetServerUrlParams
+import com.codestream.protocols.agent.SetServerUrlResult
 import com.codestream.protocols.agent.Stream
 import com.codestream.settings.ApplicationSettingsService
 import com.codestream.system.Platform
@@ -337,6 +339,13 @@ class AgentService(private val project: Project) : Disposable {
     suspend fun getLocalReviewContents(params: GetLocalReviewContentsParams): GetReviewContentsResult {
         val json = remoteEndpoint
             .request("codestream/review/contentsLocal", params)
+            .await() as JsonObject
+        return gson.fromJson(json)
+    }
+
+    suspend fun setServerUrl(params: SetServerUrlParams): SetServerUrlResult {
+        val json = remoteEndpoint
+            .request("codestream/set-server", params)
             .await() as JsonObject
         return gson.fromJson(json)
     }

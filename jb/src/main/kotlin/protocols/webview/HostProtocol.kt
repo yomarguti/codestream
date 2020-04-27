@@ -136,4 +136,7 @@ class MarkerInsertTextRequest(
     val text: String
 )
 
-
+class UpdateServerUrlRequest(
+    val serverUrl: String,
+    val disableStrictSSL: Boolean = false
+)

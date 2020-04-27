@@ -4,6 +4,7 @@ import com.codestream.agentService
 import com.codestream.authenticationService
 import com.codestream.editorService
 import com.codestream.gson
+import com.codestream.protocols.agent.SetServerUrlParams
 import com.codestream.protocols.webview.ActiveEditorContextResponse
 import com.codestream.protocols.webview.EditorRangeHighlightRequest
 import com.codestream.protocols.webview.EditorRangeRevealRequest
@@ -18,7 +19,9 @@ import com.codestream.protocols.webview.ReviewShowDiffRequest
 import com.codestream.protocols.webview.ReviewShowLocalDiffRequest
 import com.codestream.protocols.webview.ShellPromptFolderResponse
 import com.codestream.protocols.webview.UpdateConfigurationRequest
+import com.codestream.protocols.webview.UpdateServerUrlRequest
 import com.codestream.reviewService
+import com.codestream.settings.ApplicationSettingsService
 import com.codestream.settingsService
 import com.codestream.webViewService
 import com.github.salomonbrys.kotson.fromJson
@@ -29,6 +32,7 @@ import com.github.salomonbrys.kotson.string
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.fileChooser.FileChooser
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
@@ -106,6 +110,7 @@ class WebViewRouter(val project: Project) {
             "host/review/closeDiff" -> reviewClose(message)
             "host/review/changedFiles/next" -> reviewNextFile(message)
             "host/review/changedFiles/previous" -> reviewPreviousFile(message)
+            "host/server-url"-> updateServerUrl(message)
             else -> logger.warn("Unhandled host message ${message.method}")
         }
         if (message.id != null) {
@@ -227,6 +232,14 @@ class WebViewRouter(val project: Project) {
     private fun reviewPreviousFile(message: WebViewMessage) {
         val reviewService = project.reviewService ?: return
         reviewService.previousDiff()
+    }
+
+    private suspend fun updateServerUrl(message: WebViewMessage) {
+        val request = gson.fromJson<UpdateServerUrlRequest>(message.params!!)
+        val settings = ServiceManager.getService(ApplicationSettingsService::class.java)
+        settings.serverUrl = request.serverUrl
+        settings.disableStrictSSL = request.disableStrictSSL
+        project.agentService?.setServerUrl(SetServerUrlParams(request.serverUrl, request.disableStrictSSL))
     }
 
     private fun parse(json: String): WebViewMessage {

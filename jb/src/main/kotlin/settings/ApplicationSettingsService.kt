@@ -65,8 +65,12 @@ class ApplicationSettingsService : PersistentStateComponent<ApplicationSettingsS
     val team get() = state.team
     val autoHideMarkers get() = state.autoHideMarkers
     val showMarkers get() = state.showMarkers
-    val serverUrl get() = state.serverUrl
-    val disableStrictSSL get() = state.disableStrictSSL
+    var serverUrl
+        get() = state.serverUrl
+        set(value) { state.serverUrl = value }
+    var disableStrictSSL
+        get() = state.disableStrictSSL
+        set(value) { state.disableStrictSSL = value }
     val email get() = state.email
     val showFeedbackSmiley get() = state.showFeedbackSmiley
     val autoSignIn get() = state.autoSignIn

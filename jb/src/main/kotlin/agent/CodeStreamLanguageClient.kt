@@ -91,6 +91,11 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
         }
     }
 
+    @JsonNotification("codestream/didChangeServerUrl")
+    fun didChangeServerUrl(json: JsonElement) {
+        project.webViewService?.postNotification("codestream/didChangeServerUrl", json, true)
+    }
+
     @JsonNotification("codestream/didLogin")
     fun didLogin(json: JsonElement) {
         val notification = gson.fromJson<DidLoginNotification>(json)
