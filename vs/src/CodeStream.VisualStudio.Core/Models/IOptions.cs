@@ -24,5 +24,6 @@ namespace CodeStream.VisualStudio.Core.Models {
 		void LoadSettingsFromStorage();
 
 		TraceLevel TraceLevel { get; set; }
+		bool PauseNotifyPropertyChanged { get; set; }
 	}
 }

@@ -386,5 +386,9 @@ namespace CodeStream.VisualStudio.Services {
 
 			_disposed = true;
 		}
+
+		public Task SetServerUrlAsync(string serverUrl, bool? disableStrictSSL) {
+			return SendCoreAsync<JToken>("codestream/set-server", new SetServerUrlRequest(serverUrl, disableStrictSSL));
+		}
 	}
 }

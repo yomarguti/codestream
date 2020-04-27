@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
-using CodeStream.VisualStudio.UI.Settings;
 
 namespace CodeStream.VisualStudio.UnitTests.Stubs
 {
@@ -29,7 +28,8 @@ namespace CodeStream.VisualStudio.UnitTests.Stubs
 		}
 
 		public TraceLevel TraceLevel { get; set; }
-        public bool AutoSignIn { get; set; }
+		public bool PauseNotifyPropertyChanged { get; set; }
+		public bool AutoSignIn { get; set; }
         public bool AutoHideMarkers { get; set; }
         public bool ShowMarkerGlyphs { get; set; }
         public bool ProxyStrictSsl { get; set; }

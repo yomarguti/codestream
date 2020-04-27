@@ -49,9 +49,7 @@ namespace CodeStream.VisualStudio.Services {
 				throw;
 			}
 		}
-	}
-
-	 
+	}	 
 
 	public class SettingsManager : ISettingsManager, IOptions {
 		// once we don't support VS 2017, we'll be able to use something like...
@@ -216,6 +214,16 @@ namespace CodeStream.VisualStudio.Services {
 
 		public TraceLevel GetExtensionTraceLevel() {
 			return TraceLevel;
+		}
+
+		///<inheritdoc/>
+		public void PauseNotifications() {
+			DialogPage.PauseNotifyPropertyChanged = true;
+		}
+
+		///<inheritdoc/>
+		public void ResumeNotifications() {
+			DialogPage.PauseNotifyPropertyChanged = false;
 		}
 	}
 }

@@ -404,6 +404,25 @@ namespace CodeStream.VisualStudio {
 											}
 											break;
 										}
+									case UpdateServerUrlRequestType.MethodName: {
+											await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+											using (var scope = _browserService.CreateScope(message)) {
+												try {
+													var @params = message.Params.ToObject<UpdateServerUrlRequest>();
+													using (var settingsScope = SettingsScope.Create(_settingsManager, true)) {
+														settingsScope.SettingsManager.ServerUrl = @params.ServerUrl;
+														settingsScope.SettingsManager.DisableStrictSSL = @params.DisableStrictSSL ?? false;
+													}
+
+													await _codeStreamAgent.SetServerUrlAsync(@params.ServerUrl, @params.DisableStrictSSL);
+												}
+												catch (Exception ex) {
+													Log.Error(ex, nameof(UpdateServerUrlRequestType));
+												}
+												scope.FulfillRequest(new UpdateServerUrlResponse().ToJToken());
+											}
+											break;
+										}
 									case LiveShareStartSessionRequestType.MethodName:
 									case LiveShareInviteToSessionRequestType.MethodName:
 									case LiveShareJoinSessionRequestType.MethodName: {

@@ -7,6 +7,15 @@ namespace CodeStream.VisualStudio.Core.Process {
 	public class NodeDummy { }
 	public static class Node {
 		private static readonly ILogger Log = LogManager.ForContext<NodeDummy>();
+
+		/// <summary>
+		/// Method that ensures that the Node version meets the lowest required version
+		/// </summary>
+		/// <param name="nodeExe"></param>
+		/// <param name="major"></param>
+		/// <param name="minor"></param>
+		/// <param name="build"></param>
+		/// <returns></returns>
 		public static bool EnsureVersion(string nodeExe, int major = 10, int minor = 15, int build = 3) {
 			var sb = new StringBuilder();
 			System.Diagnostics.Process process = null;

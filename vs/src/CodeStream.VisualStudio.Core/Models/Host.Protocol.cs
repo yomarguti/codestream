@@ -52,4 +52,16 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public const string MethodName = "host/configuration/update";
 		public override string Method => MethodName;
 	}
+
+	public class UpdateServerUrlRequest {
+		public string ServerUrl { get; set; }
+		public bool? DisableStrictSSL { get; set; }
+	}
+
+	public class UpdateServerUrlResponse { }
+
+	public class UpdateServerUrlRequestType: RequestType<UpdateServerUrlRequest> {
+		public const string MethodName = "host/server-url";
+		public override string Method => MethodName;
+	}
 }

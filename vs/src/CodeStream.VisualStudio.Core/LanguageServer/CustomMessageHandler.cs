@@ -261,7 +261,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 		/// <returns></returns>
 		[JsonRpcMethod(DidEncounterMaintenanceModeNotificationType.MethodName)]
 		public async System.Threading.Tasks.Task MaintenanceModeAsync(JToken e) {
-			using (Log.CriticalOperation($"{nameof(RestartRequiredAsync)} Method={DidEncounterMaintenanceModeNotificationType.MethodName}", Serilog.Events.LogEventLevel.Debug)) {
+			using (Log.CriticalOperation($"{nameof(MaintenanceModeAsync)} Method={DidEncounterMaintenanceModeNotificationType.MethodName}", Serilog.Events.LogEventLevel.Debug)) {
 				try {
 					// log the user out, passing the agent payload data, we'll need it
 					// later when passing along to the webview
@@ -269,6 +269,20 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 				}
 				catch (Exception ex) {
 					Log.Error(ex, $"Problem with {nameof(MaintenanceModeAsync)}");
+				}
+			}
+
+			await System.Threading.Tasks.Task.CompletedTask;
+		}
+
+		[JsonRpcMethod(DidChangeServerUrlNotificationType.MethodName)]
+		public async System.Threading.Tasks.Task DidChangeServerUrl(JToken e) {
+			using (Log.CriticalOperation($"{nameof(DidChangeServerUrl)} Method={DidChangeServerUrlNotificationType.MethodName}", Serilog.Events.LogEventLevel.Debug)) {
+				try {
+					_browserService.EnqueueNotification(new DidChangeServerUrlNotificationType(e));
+				}
+				catch (Exception ex) {
+					Log.Error(ex, $"Problem with {nameof(DidChangeServerUrl)}");
 				}
 			}
 

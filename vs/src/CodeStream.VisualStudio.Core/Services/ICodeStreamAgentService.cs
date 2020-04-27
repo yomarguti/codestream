@@ -29,5 +29,6 @@ namespace CodeStream.VisualStudio.Core.Services {
 		Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(Uri uri, bool excludeArchived, CancellationToken? cancellationToken = null);
 		Task<FetchStreamsResponse> FetchStreamsAsync(FetchStreamsRequest request);
 		Task TrackAsync(string key, TelemetryProperties properties = null);
+		Task SetServerUrlAsync(string serverUrl, bool? disableStrictSSL);
 	}
 }

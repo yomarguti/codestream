@@ -16,5 +16,14 @@ namespace CodeStream.VisualStudio.Core.Services {
 
 		TraceLevel GetAgentTraceLevel();
 		TraceLevel GetExtensionTraceLevel();
+		/// <summary>
+		/// Stop the propertyChanged notifications from happening
+		/// </summary>
+		void PauseNotifications();
+
+		/// <summary>
+		/// Resume the propertyChanged notifications
+		/// </summary>
+		void ResumeNotifications();
 	}
 }

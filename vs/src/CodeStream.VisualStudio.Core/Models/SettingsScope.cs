@@ -3,10 +3,12 @@ using CodeStream.VisualStudio.Core.Services;
 
 namespace CodeStream.VisualStudio.Core.Models {
 	public class SettingsScope : IDisposable {
-		public ISettingsManager SettingsManager { get; private set; }
+		public ISettingsManager SettingsManager { get; }
 
-		private SettingsScope(ISettingsManager settingsManager) {
+		private readonly bool _pauseNotifyPropertyChanged;
+		private SettingsScope(ISettingsManager settingsManager, bool pauseNotifyPropertyChanged) {
 			SettingsManager = settingsManager;
+			_pauseNotifyPropertyChanged = pauseNotifyPropertyChanged;
 		}
 
 		private bool _disposed;
@@ -19,14 +21,26 @@ namespace CodeStream.VisualStudio.Core.Models {
 			if (_disposed) return;
 
 			if (disposing) {
-				SettingsManager?.SaveSettingsToStorage();
+				try {
+					// attempt to save the settings to storage
+					SettingsManager?.SaveSettingsToStorage();
+				}
+				finally {
+					// if we're paused, attempt to un-pause
+					if (_pauseNotifyPropertyChanged) {
+						SettingsManager?.ResumeNotifications();
+					}
+				}
 			}
 
 			_disposed = true;
 		}
 
-		public static SettingsScope Create(ISettingsManager settingsManager) {
-			return new SettingsScope(settingsManager);
+		public static SettingsScope Create(ISettingsManager settingsManager, bool pauseNotifyPropertyChanged = false) {
+			if (pauseNotifyPropertyChanged) {
+				settingsManager.PauseNotifications();
+			}
+			return new SettingsScope(settingsManager, pauseNotifyPropertyChanged);
 		}
 	}
 }

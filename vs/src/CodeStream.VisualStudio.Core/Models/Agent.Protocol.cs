@@ -110,4 +110,21 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public static string MethodName = "codestream/bootstrap";
 		public override string Method => MethodName;
 	}
+
+	public class SetServerUrlRequest {
+		public SetServerUrlRequest(string serverUrl, bool? disableStrictSSL) {
+			ServerUrl = serverUrl;
+			DisableStrictSSL = disableStrictSSL;
+		}
+
+		public string ServerUrl { get; }
+		public bool? DisableStrictSSL { get; }
+	}
+
+	public class SetServerUrlResponse {	}
+
+	public class SetServerUrlRequestType : RequestType<SetServerUrlResponse> {
+		public static string MethodName = "codestream/set-server";
+		public override string Method => MethodName;
+	}
 }

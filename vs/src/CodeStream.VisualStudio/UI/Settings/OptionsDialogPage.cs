@@ -38,7 +38,11 @@ namespace CodeStream.VisualStudio.UI.Settings {
 		[Browsable(false)]
 		public Proxy Proxy { get; private set; }
 
+		public bool PauseNotifyPropertyChanged { get; set; }
+
 		private void NotifyPropertyChanged([CallerMemberName] string propertyName = "") {
+			if (PauseNotifyPropertyChanged) return;
+
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 		}
 

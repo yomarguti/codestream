@@ -179,4 +179,23 @@ namespace CodeStream.VisualStudio.Core.Models {
 			return CustomNotificationPayload.Create(Method, _token);
 		}
 	}
+
+	public class DidChangeServerUrlNotification {
+		public string ServerUrl { get; set; }
+	}
+
+	public class DidChangeServerUrlNotificationType : NotificationType<DidChangeServerUrlNotification> {
+		public const string MethodName = "codestream/didChangeServerUrl";
+		public override string Method => MethodName;
+
+		private readonly JToken _token;
+
+		public DidChangeServerUrlNotificationType(JToken token) {
+			_token = token;
+		}
+
+		public override string AsJson() {
+			return CustomNotificationPayload.Create(Method, _token);
+		}
+	}
 }
