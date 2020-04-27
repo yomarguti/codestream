@@ -261,6 +261,7 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 					codemark.relatedCodemarkIds &&
 					codemark.relatedCodemarkIds.map(id => <StyledRelatedCodemark key={id} id={id} />)
 				}
+				menuItems={menuItems}
 				renderMenu={(target, onClose) => {
 					return (
 						<>

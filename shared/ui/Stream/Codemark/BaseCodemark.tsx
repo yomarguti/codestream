@@ -39,6 +39,8 @@ export interface BaseCodemarkProps extends CardProps {
 	onChangeStatus?(status: CodemarkStatus): void;
 	// A menu icon is only displayed if this function returns non-nil
 	renderMenu?: (target: any, onClose: () => void) => React.ReactNode;
+	// if we want to pass the items rather than a render function
+	menuItems?: any[];
 	// A value of false will hide markers completely. The function can return it's own rendering or null
 	renderMarkers?: boolean | ((markers: CSMarker[]) => React.ReactNode);
 	// The <CardFooter/> is provided to allow overriding the container style and it must be the returned child
@@ -54,7 +56,7 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 
 	const dispatch = useDispatch();
 
-	const { codemark } = props;
+	const { codemark, menuItems = [] } = props;
 
 	const hasTags = props.tags && props.tags.length > 0;
 	const hasAssignees = props.assignees && props.assignees.length > 0;
@@ -95,21 +97,25 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 	const resolveItem = { label: "Resolve", action: resolve };
 	const reopenItem = { label: "Reopen", action: reopen };
 
+	const renderIssueDropdownAndMenu = renderActions && codemark.type === CodemarkType.Issue;
 	const menu = (
 		<HeaderActions>
-			{renderActions &&
-				codemark.type === CodemarkType.Issue &&
+			{renderIssueDropdownAndMenu &&
 				(codemark.status === CodemarkStatus.Closed ? (
-					<DropdownButton size="compact" variant="secondary" items={[reopenItem]}>
+					<DropdownButton
+						size="compact"
+						variant="secondary"
+						items={[reopenItem, { label: "-" }, ...menuItems]}
+					>
 						Resolved
 					</DropdownButton>
 				) : (
-					<DropdownButton size="compact" items={[resolveItem]}>
+					<DropdownButton size="compact" items={[resolveItem, { label: "-" }, ...menuItems]}>
 						Open
 					</DropdownButton>
 				))}
-			{renderedMenu}
-			{props.renderMenu && (
+			{!renderIssueDropdownAndMenu && renderedMenu}
+			{!renderIssueDropdownAndMenu && props.renderMenu && (
 				<KebabIcon
 					onClickCapture={e => {
 						e.preventDefault();
