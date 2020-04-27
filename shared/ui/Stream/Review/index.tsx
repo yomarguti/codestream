@@ -30,7 +30,13 @@ import {
 	MetaSectionCollapsedHeadshotArea
 } from "../Codemark/BaseCodemark";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
-import { CSUser, CSReview, CodemarkType, CodemarkStatus } from "@codestream/protocols/api";
+import {
+	CSUser,
+	CSReview,
+	CSReviewStatus,
+	CodemarkType,
+	CodemarkStatus
+} from "@codestream/protocols/api";
 import { CodeStreamState } from "@codestream/webview/store";
 import { useSelector, useDispatch, shallowEqual } from "react-redux";
 import Icon from "../Icon";
@@ -386,7 +392,11 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 
 	if (collapsed) {
 		return (
-			<DropdownButton size="compact" items={menuItems}>
+			<DropdownButton
+				size="compact"
+				variant={review.status === "open" ? "primary" : "secondary"}
+				items={menuItems}
+			>
 				{derivedState.statusLabel}
 			</DropdownButton>
 		);
