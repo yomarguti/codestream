@@ -425,12 +425,6 @@ export const MetaSectionCollapsed = styled.div`
 		margin-bottom: 0px;
 	}
 
-	${Headshot} {
-		cursor: pointer;
-		&:hover {
-			box-shadow: 0 0 2px white, 0 0 2px white, 0 0 2px white, 0 0 2px white, 0 0 2px white;
-		}
-	}
 	${MetaSectionCollapsedHeadshotArea} {
 		margin-left: auto;
 	}
