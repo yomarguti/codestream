@@ -16,6 +16,7 @@ import { UpdateServerUrlRequestType } from "../ipc/host.protocol";
 const errorToMessageId = {
 	[LoginResult.InvalidToken]: "confirmation.invalid",
 	[LoginResult.ExpiredToken]: "confirmation.expired",
+	[LoginResult.Timeout]: "unexpectedError",	
 	[LoginResult.Unknown]: "unexpectedError"
 };
 
@@ -97,7 +98,7 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 				setIsLoading(false);
 				setWaitingForServerUrlTimeout(undefined);
 				setError(LoginResult.Timeout);
-			}, 1000);
+			}, 5000);
 			setWaitingForServerUrlTimeout(timeout);
 			HostApi.instance.send(UpdateServerUrlRequestType, {
 				serverUrl,
@@ -109,6 +110,7 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 		}
 	};
 
+	const errorId = error && (errorToMessageId[error] || errorToMessageId.UNKNOWN);
 	return (
 		<div className="onboarding-page">
 			<form className="standard-form" onSubmit={onClickJoin}>
@@ -127,7 +129,7 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 										{error && (
 											<small className="explainer error-message ">
 												<FormattedMessage
-													id={errorToMessageId[error]}
+													id={errorId}
 													defaultMessage="There is an error with that code"
 												/>
 											</small>
