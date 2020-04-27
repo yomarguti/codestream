@@ -333,7 +333,7 @@ export function ReviewNav(props: Props) {
 								<span className="wide-text">Amend</span>
 							</Button>
 						</Tooltip> */}
-						{numOpenChangeRequests === 0 && approvedByMe && (
+						{approvedByMe && (
 							<Tooltip
 								title={
 									<div>
@@ -356,7 +356,7 @@ export function ReviewNav(props: Props) {
 								</Button>
 							</Tooltip>
 						)}
-						{numOpenChangeRequests > 0 && (
+						{numOpenChangeRequests > 0 && !approvedByMe && (
 							<Tooltip
 								title={
 									<>
