@@ -91,7 +91,7 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 		}
 
 		this._urlAddon = `/ex/jira/${response.body[0].id}`;
-		this.domain = response.body[0].name;
+		this.domain = response.body[0].name.replace(/ /g, "");
 
 		Logger.debug(`Jira: api url for ${this.domain} is ${this._urlAddon}`);
 	}
