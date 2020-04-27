@@ -65,21 +65,13 @@ class SelectPeople extends React.Component<Props, State> {
 	};
 
 	render() {
-		const {
-			value,
-			title,
-			children,
-			teamMembers,
-			onChange,
-			multiSelect,
-			labelExtras = {}
-		} = this.props;
+		const { value, title, children, teamMembers, onChange, labelExtras = {} } = this.props;
 		const items = teamMembers.map(person => {
 			const selected = value.find(p => p.id === person.id) ? true : false;
 			const label = person.fullName ? `${person.fullName} (@${person.username})` : person.username;
 			return {
 				label: label + (labelExtras[person.id] ? " - " + labelExtras[person.id] : ""),
-				searchLabel: person.username,
+				searchLabel: label,
 				checked: selected,
 				value: person.username,
 				key: person.id,
