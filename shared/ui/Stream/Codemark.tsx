@@ -489,7 +489,7 @@ export class Codemark extends React.Component<Props, State> {
 		action("submit-post", null, { forceStreamId: codemark!.streamId, forceThreadId, text });
 	};
 
-	renderStatus(codemark) {
+	renderStatus(codemark, menuItems = [] as any[]) {
 		const { isChangeRequest, type, status = "open" } = codemark;
 
 		if (this.state.isInjecting) return null;
@@ -500,14 +500,16 @@ export class Codemark extends React.Component<Props, State> {
 		if (isChangeRequest || type === CodemarkType.Issue) {
 			if (this.props.displayType === "default") {
 				if (codemark.status === CodemarkStatus.Closed) {
+					menuItems.unshift(reopenItem, { label: "-" });
 					return (
-						<DropdownButton size="compact" variant="secondary" items={[reopenItem]}>
+						<DropdownButton size="compact" variant="secondary" items={menuItems}>
 							Resolved
 						</DropdownButton>
 					);
 				} else {
+					menuItems.unshift(resolveItem, { label: "-" });
 					return (
-						<DropdownButton size="compact" items={[resolveItem]}>
+						<DropdownButton size="compact" items={menuItems}>
 							Open
 						</DropdownButton>
 					);
@@ -1383,10 +1385,12 @@ export class Codemark extends React.Component<Props, State> {
 										<Timestamp relative time={codemark.createdAt} />
 									</div>
 									<div className="right" style={{ alignItems: "center" }}>
-										<span onClick={this.handleMenuClick}>
-											<Icon name="kebab-vertical" className="kebab-vertical clickable" />
-										</span>
-										{this.renderStatus(codemark)}
+										{type === CodemarkType.Issue || (
+											<span onClick={this.handleMenuClick}>
+												<Icon name="kebab-vertical" className="kebab-vertical clickable" />
+											</span>
+										)}
+										{this.renderStatus(codemark, menuItems)}
 										{this.renderKeybinding(codemark)}
 										{menuOpen && (
 											<Menu items={menuItems} target={menuTarget} action={this.handleSelectMenu} />
@@ -1779,7 +1783,7 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		currentUser: users[session.userId!] as CSMe,
 		author: author as CSUser,
 		codemarkKeybindings: preferences.codemarkKeybindings || emptyObject,
-		isCodeStreamTeam: true, /*teamProvider === "codestream",*/ // this should always be true now, even for SSO sign-in
+		isCodeStreamTeam: true /*teamProvider === "codestream",*/, // this should always be true now, even for SSO sign-in
 		teammates: getTeamMembers(state),
 		usernames: getUsernames(state),
 		teamTagsHash,
