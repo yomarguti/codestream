@@ -23,7 +23,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 			exe = Path.GetDirectoryName(assembly.Location) + @"\dist\agent.exe";
 			arguments = $@"--stdio --nolazy --log={logPath}";
 #endif
-			return ProcessFactory.Create(exe, arguments);
+			return ProcessFactory.Create(exe, arguments, false);
 		}
 	}
 }
