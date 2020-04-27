@@ -176,7 +176,7 @@ export const createPostAndCodemark = (
 							React.createElement(
 								"a",
 								{
-									href: "https://github.com/TeamCodeStream/CodeStream/wiki/Git-Issues"
+									href: "https://docs.codestream.com/userguide/faq/git-issues/"
 								},
 								"Learn more"
 							)

@@ -95,7 +95,7 @@ const Root = connect(mapStateToProps)(props => {
 				</p>
 				<p>
 					If you are behind a network proxy,{" "}
-					<a href="https://github.com/TeamCodeStream/CodeStream/wiki/CodeStream-proxy-support">
+					<a href="https://docs.codestream.com/userguide/faq/proxy-support">
 						turn on CodeStream's proxy support
 					</a>
 					.

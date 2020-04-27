@@ -335,7 +335,7 @@ class MarkerActions extends React.Component<Props, State> {
 				return (
 					<span>
 						{message}{" "}
-						<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Git-Issues">{learnMore}</a>
+						<a href="https://docs.codestream.com/userguide/faq/git-issues/">{learnMore}</a>
 					</span>
 				);
 			}

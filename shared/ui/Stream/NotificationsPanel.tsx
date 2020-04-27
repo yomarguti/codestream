@@ -85,7 +85,7 @@ export const NotificationsPanel = props => {
 						<p>&nbsp;</p>
 
 						<p>
-							<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Guide-to-CodeStream-Notifications">
+							<a href="https://docs.codestream.com/userguide/features/notifications/">
 								Learn more about CodeStream Notifications
 							</a>
 						</p>

@@ -73,7 +73,7 @@ export const ChatProviderSelection = () => {
 						</div>
 					</div>
 					<div style={{ textAlign: "center" }}>
-						<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Creating-a-Team">
+						<a href="https://docs.codestream.com/userguide/gettingStarted/create-a-team/">
 							Help me decide
 						</a>
 					</div>

@@ -772,7 +772,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				key: "view",
 				action: () =>
 					HostApi.instance.send(OpenUrlRequestType, {
-						url: "https://github.com/TeamCodeStream/CodeStream/wiki/Filter-and-Search"
+						url: "https://docs.codestream.com/userguide/features/filter-and-search/"
 					})
 			}
 		].filter(item => this.props.lightningCodeReviewsEnabled || !item.lightningOnly);
@@ -896,7 +896,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 					<div>
 						<p>
 							Code Reviews are the building blocks of your team’s process.{" "}
-							<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Code-Review">
+							<a href="https://docs.codestream.com/userguide/gettingStarted/code-review/">
 								Learn more about how to use code review.
 							</a>
 						</p>

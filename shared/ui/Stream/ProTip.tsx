@@ -25,7 +25,7 @@ const tips = [
 	<span>Created before yesterday: created:&lt;yesterday</span>,
 	<span>
 		Flag tech debt with tagged codemarks.{" "}
-		<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Creating-a-Codemark#tags">
+		<a href="https://docs.codestream.com/userguide/features/creating-codemarks/#tags">
 			See how.
 		</a>
 	</span>,

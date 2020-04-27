@@ -426,7 +426,7 @@ export class SimpleReviewsPanel extends Component {
 					<div>
 						<p>
 							Code Reviews are the building blocks of your team’s process.{" "}
-							<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Code-Review">
+							<a href="https://docs.codestream.com/userguide/gettingStarted/code-review/">
 								Learn more about how to use code review.
 							</a>
 						</p>

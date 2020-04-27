@@ -151,7 +151,7 @@ export class ConfigureJiraServerPanel extends Component {
 							<label>
 								Contact your {providerName} admin to get the consumer key and private key required
 								below, and send them a link to{" "}
-								<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Configuring-the-Jira-Server-Integration">
+								<a href="https://docs.codestream.com/userguide/faq/jira-server-integration">
 									these instructions
 								</a>
 								.

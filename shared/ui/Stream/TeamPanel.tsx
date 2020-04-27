@@ -672,7 +672,7 @@ class TeamPanel extends React.Component<Props, State> {
 									label: "What is Live View?",
 									action: () => {
 										HostApi.instance.send(OpenUrlRequestType, {
-											url: "https://github.com/TeamCodeStream/CodeStream/wiki/Team-Live-View"
+											url: "https://docs.codestream.com/userguide/features/team-live-view/"
 										});
 									}
 								}

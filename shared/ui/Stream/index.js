@@ -2311,7 +2311,7 @@ export class SimpleStream extends Component {
 					message: () => (
 						<span>
 							{warning.message + " "}
-							<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Git-Issues">Learn more</a>
+							<a href="https://docs.codestream.com/userguide/faq/git-issues/">Learn more</a>
 						</span>
 					),
 					centered: true,
@@ -2403,7 +2403,7 @@ export class SimpleStream extends Component {
 					message: () => (
 						<span>
 							{warning.message + " "}
-							<a href="https://github.com/TeamCodeStream/CodeStream/wiki/Git-Issues">Learn more</a>
+							<a href="https://docs.codestream.com/userguide/faq/git-issues/">Learn more</a>
 						</span>
 					),
 					centered: true,
