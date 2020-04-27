@@ -20,12 +20,9 @@ export function reduceDocuments(state = initialState, action: DocumentAction) {
 			};
 		}	
 		case DocumentActionsType.Remove: {
-			const document = { ...(state[action.payload.uri] || {}) };
-			delete document[action.payload.uri];
-			return {
-				...state,
-				[action.payload.uri]: document 
-			};
+			const nextState = { ...state };
+			delete nextState[action.payload.uri];
+			return nextState;
 		}	
 	 	case "RESET_DOCUMENTS":
 		case "RESET": {
