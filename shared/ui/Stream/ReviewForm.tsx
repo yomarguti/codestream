@@ -163,6 +163,7 @@ interface State {
 	// this is the review setting
 	allReviewersMustApprove: boolean;
 	mountedTimestamp: number;
+	currentFile?: string;
 }
 
 const EmailWarning = styled.div`
@@ -218,7 +219,8 @@ class ReviewForm extends React.Component<Props, State> {
 			startCommit: "",
 			unsavedFiles: props.unsavedFiles,
 			commitListLength: 10,
-			allReviewersMustApprove: false
+			allReviewersMustApprove: false,
+			currentFile: ""
 		};
 
 		const state = props.editingReview
@@ -340,7 +342,7 @@ class ReviewForm extends React.Component<Props, State> {
 			includeSaved,
 			currentUserEmail: currentUser.email
 		});
-		this.setState({ repoStatus: statusInfo, repoUri: uri });
+		this.setState({ repoStatus: statusInfo, repoUri: uri, currentFile: "" });
 		if (!startCommit && statusInfo.scm && statusInfo.scm.startCommit) {
 			this.setChangeStart(statusInfo.scm.startCommit);
 
@@ -1221,6 +1223,7 @@ class ReviewForm extends React.Component<Props, State> {
 		if (!repoStatus) return;
 		const repoId = repoStatus.scm ? repoStatus.scm.repoId : "";
 		if (!repoId) return;
+
 		HostApi.instance.send(ReviewShowLocalDiffRequestType, {
 			path,
 			repoId,
@@ -1228,19 +1231,26 @@ class ReviewForm extends React.Component<Props, State> {
 			includeStaged,
 			baseSha: startCommit
 		});
+		this.setState({
+			currentFile: path
+		});
 	}
 
-	renderFile(fileObject) {
+	renderFile(fileObject, currentFile) {
 		const { file, linesAdded, linesRemoved, status } = fileObject;
 		// https://davidwalsh.name/rtl-punctuation
 		// ellipsis-left has direction: rtl so that the ellipsis
 		// go on the left side, but without the <bdi> component
 		// the punctuation would be messed up (such as filenames
 		// beginning with a period)
+		let className = "row-with-icon-actions monospace ellipsis-left-container";
+		if (file === currentFile) {
+			className += " selected-simple";
+		}
 		return (
 			<div
 				key={file}
-				className="row-with-icon-actions monospace ellipsis-left-container"
+				className={className}
 				onClick={() => this.showLocalDiff(file)}
 			>
 				<span className="file-info ellipsis-left">
@@ -1293,7 +1303,7 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	renderChangedFiles() {
-		const { repoStatus } = this.state;
+		const { repoStatus, currentFile } = this.state;
 		let scm;
 
 		let changedFiles = <></>;
@@ -1303,7 +1313,7 @@ class ReviewForm extends React.Component<Props, State> {
 				const { modifiedFiles } = scm;
 				const modified = modifiedFiles.filter(f => !this.excluded(f.file));
 				if (modified.length === 0) return this.nothingToReview();
-				changedFiles = <>{modified.map(file => this.renderFile(file))}</>;
+				changedFiles = <>{modified.map(file => this.renderFile(file, currentFile))}</>;
 			}
 		}
 		if (!scm) {
@@ -1322,7 +1332,7 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	renderExcludedFiles() {
-		const { repoStatus, excludedFiles, ignoredFiles } = this.state;
+		const { repoStatus, excludedFiles, ignoredFiles, currentFile } = this.state;
 		if (!repoStatus) return null;
 		const { scm } = repoStatus;
 		if (!scm) return null;
@@ -1333,7 +1343,7 @@ class ReviewForm extends React.Component<Props, State> {
 		return (
 			<div className="related" style={{ padding: "0", marginBottom: 0, position: "relative" }}>
 				<div className="related-label">Excluded from this Review</div>
-				{excluded.map(file => this.renderFile(file))}
+				{excluded.map(file => this.renderFile(file, currentFile))}
 			</div>
 		);
 	}
