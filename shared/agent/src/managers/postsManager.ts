@@ -947,12 +947,11 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 			if (cardResponse != undefined) {
 				const { assignees, issueProvider } = request.attributes.crossPostIssueValues;
-				const url = (cardResponse.url || "").replace(/ /g, ""); // https://trello.com/c/8DtJKAcw
 				const r = await this.session.api.updateCodemark({
 					codemarkId: codemark.id,
 					externalProvider: issueProvider.name,
 					externalProviderHost: issueProvider.host,
-					externalProviderUrl: url,
+					externalProviderUrl: cardResponse.url,
 					externalAssignees:
 						assignees &&
 						assignees.map((a: any) => ({ displayName: a.displayName, email: a.email })),
@@ -1320,7 +1319,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				request.crossPostIssueValues
 			);
 			if (cardResponse) {
-				externalProviderUrl = (cardResponse.url || "").replace(/ /g, ""); // https://trello.com/c/8DtJKAcw
+				externalProviderUrl = cardResponse.url;
 				externalProvider = request.crossPostIssueValues.issueProvider.name;
 				externalProviderHost = request.crossPostIssueValues.issueProvider.host;
 				externalAssignees = request.crossPostIssueValues.assignees;
