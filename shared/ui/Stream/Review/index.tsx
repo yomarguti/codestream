@@ -26,7 +26,8 @@ import {
 	MetaRow,
 	MetaDescriptionForTags,
 	KebabIcon,
-	BigTitle
+	BigTitle,
+	MetaSectionCollapsedHeadshotArea
 } from "../Codemark/BaseCodemark";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { CSUser, CSReview, CodemarkType, CodemarkStatus } from "@codestream/protocols/api";
@@ -108,7 +109,8 @@ export interface BaseReviewHeaderProps {
 export interface BaseReviewMenuProps {
 	review: CSReview;
 	setIsEditing?: Function;
-	globalNav?: boolean;
+	changeRequests?: CodemarkPlus[];
+	collapsed?: boolean;
 }
 
 const Clickable = styled(Link)`
@@ -188,14 +190,67 @@ const translateStatus = (status: string) => {
 
 // if child props are passed in, we assume they are the action buttons/menu for the header
 export const BaseReviewHeader = (props: PropsWithChildren<BaseReviewHeaderProps>) => {
-	const { review } = props;
-	const dispatch = useDispatch();
+	const { review, collapsed, changeRequests } = props;
 
+	return (
+		<Header>
+			<Icon name="review" className="type" />
+			<BigTitle>
+				<HeaderActions>
+					{props.children || (
+						<BaseReviewMenu
+							review={review}
+							collapsed={collapsed}
+							changeRequests={changeRequests}
+							setIsEditing={props.setIsEditing}
+						/>
+					)}
+				</HeaderActions>
+				<MarkdownText text={review.title} />
+			</BigTitle>
+		</Header>
+	);
+};
+
+export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
+	const { review, collapsed } = props;
+
+	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
+		let statusLabel = "";
+		switch (review.status) {
+			case "open":
+				{
+					statusLabel = "Open";
+					if (review.allReviewersMustApprove && review.reviewers && review.reviewers.length > 1) {
+						const approvals = Object.keys(review.approvedBy || {}).length;
+						statusLabel += ` (${approvals}/${review.reviewers.length})`;
+					}
+				}
+				break;
+			case "approved":
+				statusLabel = "Approved";
+				break;
+			case "rejected":
+				statusLabel = "Rejected";
+				break;
+		}
+
 		return {
-			currentUserId: state.session.userId!
+			currentUserId: state.session.userId!,
+			currentUser: state.users[state.session.userId!],
+			author: state.users[props.review.creatorId],
+			userIsFollowing: (props.review.followerIds || []).includes(state.session.userId!),
+			statusLabel
 		};
 	}, shallowEqual);
+	const [shareModalOpen, setShareModalOpen] = React.useState(false);
+	const [menuState, setMenuState] = React.useState<{ open: boolean; target?: any }>({
+		open: false,
+		target: undefined
+	});
+
+	const permalinkRef = React.useRef<HTMLTextAreaElement>(null);
 
 	const approve = () => {
 		if (props.changeRequests && props.changeRequests!.find(r => r.status !== "closed"))
@@ -224,89 +279,19 @@ export const BaseReviewHeader = (props: PropsWithChildren<BaseReviewHeaderProps>
 
 	const startReview = () => dispatch(setCurrentReview(props.review.id));
 
-	const renderedHeaderActions = (() => {
-		const { collapsed, review } = props;
-		if (!collapsed) return null;
-		const { approvedBy = {} } = review;
-
-		const approveItem = { icon: <Icon name="thumbsup" />, label: "Approve", action: approve };
-		const unapproveItem = {
-			icon: <Icon name="diff-removed" />,
-			label: "Withdraw Approval",
-			action: reopen
-		};
-		const reviewItem = {
-			icon: <Icon name="review" />,
-			label: "Review Changes",
-			action: startReview
-		};
-		const rejectItem = { icon: <Icon name="thumbsdown" />, label: "Reject", action: reject };
-		const reopenItem = { icon: <Icon name="reopen" />, label: "Reopen", action: reopen };
-
-		if (review.status === "open") {
-			let label = "Open";
-			if (review.allReviewersMustApprove && review.reviewers && review.reviewers.length > 1) {
-				const approvals = Object.keys(review.approvedBy || {}).length;
-				label += ` (${approvals}/${review.reviewers.length})`;
-			}
-			const approval = approvedBy[derivedState.currentUserId] ? unapproveItem : approveItem;
-			return (
-				<DropdownButton size="compact" items={[reviewItem, approval, rejectItem]}>
-					{label}
-				</DropdownButton>
-			);
-		}
-		if (review.status === "approved")
-			return (
-				<DropdownButton size="compact" variant="secondary" items={[reopenItem]}>
-					Approved
-				</DropdownButton>
-			);
-		if (review.status === "rejected")
-			return (
-				<DropdownButton size="compact" variant="secondary" items={[reopenItem]}>
-					Rejected
-				</DropdownButton>
-			);
-		return null;
-	})();
-
-	return (
-		<Header>
-			<Icon name="review" className="type" />
-			<BigTitle>
-				<HeaderActions>
-					{props.children || (
-						<>
-							{renderedHeaderActions}
-							<BaseReviewMenu review={review} setIsEditing={props.setIsEditing} />
-						</>
-					)}
-				</HeaderActions>
-				<MarkdownText text={review.title} />
-			</BigTitle>
-		</Header>
-	);
-};
-
-export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
-	const { review, globalNav } = props;
-
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
-		return {
-			currentUser: state.users[state.session.userId!],
-			author: state.users[props.review.creatorId],
-			userIsFollowing: (props.review.followerIds || []).includes(state.session.userId!)
-		};
-	}, shallowEqual);
-	const [shareModalOpen, setShareModalOpen] = React.useState(false);
-	const [menuState, setMenuState] = React.useState<{ open: boolean; target?: any }>({
-		open: false,
-		target: undefined
-	});
-
-	const permalinkRef = React.useRef<HTMLTextAreaElement>(null);
+	const approveItem = { icon: <Icon name="thumbsup" />, label: "Approve", action: approve };
+	const unapproveItem = {
+		icon: <Icon name="diff-removed" />,
+		label: "Withdraw Approval",
+		action: reopen
+	};
+	const reviewItem = {
+		icon: <Icon name="review" />,
+		label: "Review Changes",
+		action: startReview
+	};
+	const rejectItem = { icon: <Icon name="thumbsdown" />, label: "Reject", action: reject };
+	const reopenItem = { icon: <Icon name="reopen" />, label: "Reopen", action: reopen };
 
 	const menuItems = React.useMemo(() => {
 		const items: any[] = [
@@ -375,11 +360,37 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 			);
 		}
 
+		if (props.collapsed) {
+			items.unshift({ label: "-" });
+			switch (review.status) {
+				case "open": {
+					const { approvedBy = {} } = review;
+					const approval = approvedBy[derivedState.currentUserId] ? unapproveItem : approveItem;
+					items.unshift(reviewItem, approval, rejectItem);
+					break;
+				}
+				case "approved":
+					items.unshift(reopenItem);
+					break;
+				case "rejected":
+					items.unshift(reopenItem);
+					break;
+			}
+		}
+
 		return items;
-	}, [review]);
+	}, [review, collapsed]);
 
 	if (shareModalOpen)
 		return <SharingModal review={props.review!} onClose={() => setShareModalOpen(false)} />;
+
+	if (collapsed) {
+		return (
+			<DropdownButton size="compact" items={menuItems}>
+				{derivedState.statusLabel}
+			</DropdownButton>
+		);
+	}
 
 	return (
 		<>
@@ -392,13 +403,12 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 					} else {
 						setMenuState({
 							open: true,
-							target: globalNav ? e.currentTarget.closest("button") : e.currentTarget
+							target: e.currentTarget.closest("button")
 						});
 					}
 				}}
 			>
-				{globalNav && <Icon name="kebab-horizontal" />}
-				{!globalNav && <Icon name="kebab-vertical" className="clickable" />}
+				<Icon name="kebab-horizontal" />
 			</KebabIcon>
 			<textarea
 				key="permalink-offscreen"
@@ -411,6 +421,7 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 					target={menuState.target}
 					action={() => setMenuState({ open: false })}
 					items={menuItems}
+					align="dropdownRight"
 				/>
 			)}
 		</>
@@ -666,32 +677,45 @@ const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 					</span>
 				)}
 				{props.tags && props.tags.map(tag => <Tag tag={tag} key={tag.id} />)}
-				{props.reviewers != null &&
-					props.reviewers.map(reviewer => {
-						// this should never happen, but yet sometimes it does
-						if (!reviewer) return null;
-						const addThumbsUp = approvedBy[reviewer.id] ? true : false;
-						return (
-							<Tooltip
-								key={reviewer.id}
-								title={`${reviewer.username} ${
-									addThumbsUp ? "approved this review" : "is a reviewer"
-								}`}
-								placement="bottom"
-								align={{ offset: [0, 4] }}
-							>
-								<span>
-									<Headshot person={reviewer} size={18} addThumbsUp={addThumbsUp} />
-								</span>
-							</Tooltip>
-						);
-					})}
 				{props.review.numReplies > 0 && (
 					<Tooltip title="Show replies" placement="bottom">
 						<span className="detail-icon">
 							<Icon name="comment" /> {props.review.numReplies}
 						</span>
 					</Tooltip>
+				)}
+				{props.reviewers != null && (
+					<MetaSectionCollapsedHeadshotArea>
+						{props.reviewers.map(reviewer => {
+							// this should never happen, but yet sometimes it does
+							if (!reviewer) return null;
+							const addThumbsUp = approvedBy[reviewer.id] ? true : false;
+							const isMe = reviewer.id === props.currentUserId;
+							return (
+								<Tooltip
+									key={reviewer.id}
+									title={`${reviewer.username} ${
+										addThumbsUp ? "approved this review" : "is a reviewer"
+									}`}
+									placement="bottomRight"
+									align={{ offset: [10, 4] }}
+								>
+									<span>
+										{isMe && (
+											<HeadshotName
+												className="no-padding"
+												person={reviewer}
+												size={20}
+												highlightMe
+												addThumbsUp={addThumbsUp}
+											/>
+										)}
+										{!isMe && <Headshot person={reviewer} size={20} addThumbsUp={addThumbsUp} />}
+									</span>
+								</Tooltip>
+							);
+						})}
+					</MetaSectionCollapsedHeadshotArea>
 				)}
 			</MetaSectionCollapsed>
 		</>

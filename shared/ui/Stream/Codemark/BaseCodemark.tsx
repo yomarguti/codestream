@@ -251,19 +251,6 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 								</span>
 							)}
 							{hasTags && props.tags!.map(tag => <Tag tag={tag} key={tag.id} />)}
-							{hasAssignees &&
-								props.assignees!.map((assignee, i) => (
-									<Tooltip
-										key={i}
-										title={`Assigned to ${assignee.fullName || assignee.username}`}
-										placement="bottomRight"
-										align={{ offset: [17, 4] }}
-									>
-										<span>
-											<Headshot person={assignee as any} size={18} />
-										</span>
-									</Tooltip>
-								))}
 							{props.providerDisplay && props.providerDisplay.icon && (
 								<span
 									className="detail-icon"
@@ -307,6 +294,25 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 										<Icon name="comment" /> {codemark.numReplies}
 									</span>
 								</Tooltip>
+							)}
+							{hasAssignees && (
+								<MetaSectionCollapsedHeadshotArea>
+									{props.assignees!.map((assignee, i) => {
+										const isMe = assignee.email === props.currentUserEmail;
+										return (
+											<Tooltip
+												key={i}
+												title={`Assigned to ${assignee.fullName || assignee.username}`}
+												placement="bottomRight"
+												align={{ offset: [17, 4] }}
+											>
+												<span>
+													<Headshot person={assignee as any} size={20} />
+												</span>
+											</Tooltip>
+										);
+									})}
+								</MetaSectionCollapsedHeadshotArea>
 							)}
 						</MetaSectionCollapsed>
 					</>
@@ -379,13 +385,23 @@ export const MetaSection = styled.div`
 	}
 `;
 
+export const MetaSectionCollapsedHeadshotArea = styled.div`
+	display: flex;
+	> span {
+		margin-right: 10px;
+	}
+	> span:last-child {
+		margin-right: 0;
+	}
+`;
+
 export const MetaSectionCollapsed = styled.div`
 	padding: 5px 1px;
 	display: flex;
 	flex-flow: row wrap;
 	align-items: center;
 	color: var(--text-color);
-	> * {
+	> span {
 		margin-right: 10px;
 	}
 
@@ -414,6 +430,9 @@ export const MetaSectionCollapsed = styled.div`
 		&:hover {
 			box-shadow: 0 0 2px white, 0 0 2px white, 0 0 2px white, 0 0 2px white, 0 0 2px white;
 		}
+	}
+	${MetaSectionCollapsedHeadshotArea} {
+		margin-left: auto;
 	}
 `;
 

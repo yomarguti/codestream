@@ -37,6 +37,9 @@ const Root = styled.div<ClickProps>`
 	&:hover {
 		color: ${props => props.theme.colors.textHighlight};
 	}
+	&.no-padding {
+		padding: 0;
+	}
 `;
 
 export const HeadshotWrapper = styled.span`

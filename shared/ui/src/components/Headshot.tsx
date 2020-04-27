@@ -48,6 +48,10 @@ const Root = styled.div<DimensionProps & { display?: string }>`
 	img {
 		border-radius: ${props => (props.hardRightBorder ? "3px 0 0 3px" : "3px")};
 	}
+	&.thumbs-up {
+		width: ${props => props.size + 7}px;
+		padding-right: 10px;
+	}
 `;
 
 const Initials = styled.div<DimensionProps & { color: string }>`
@@ -83,7 +87,7 @@ const StyledGravatar = styled(Gravatar)<DimensionProps>`
 
 export const ThumbsUp = styled.div`
 	position: absolute;
-	right: -10px;
+	right: -7px;
 	bottom: -10px;
 	width: 24px;
 	height: 24px;
@@ -115,6 +119,7 @@ export const Headshot = styled((props: HeadshotProps) => {
 	const size = props.size || 16;
 	const display = props.display || "block";
 
+	const className = (props.className || "") + (props.addThumbsUp ? " thumbs-up" : "");
 	if (person.avatar) {
 		const uri = size > 48 ? person.avatar.image : person.avatar.image48 || person.avatar.image;
 
@@ -124,7 +129,7 @@ export const Headshot = styled((props: HeadshotProps) => {
 					size={size}
 					display={display}
 					hardRightBorder={props.hardRightBorder}
-					className={props.className}
+					className={className}
 					onClick={props.onClick}
 				>
 					<Image size={size} src={uri} />
@@ -142,7 +147,7 @@ export const Headshot = styled((props: HeadshotProps) => {
 			size={size}
 			display={display}
 			hardRightBorder={props.hardRightBorder}
-			className={props.className}
+			className={className}
 			onClick={props.onClick}
 		>
 			<StyledGravatar size={size} default="blank" protocol="https://" email={person.email} />

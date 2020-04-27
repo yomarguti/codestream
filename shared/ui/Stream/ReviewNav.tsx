@@ -391,7 +391,7 @@ export function ReviewNav(props: Props) {
 						</Tooltip>
 						<Tooltip title="More actions" placement="bottom">
 							<Button variant="secondary">
-								<BaseReviewMenu review={review} setIsEditing={setIsEditing} globalNav />
+								<BaseReviewMenu review={review} setIsEditing={setIsEditing} />
 							</Button>
 						</Tooltip>
 						<Tooltip
@@ -425,7 +425,7 @@ export function ReviewNav(props: Props) {
 						</Tooltip>
 						<Tooltip title="More actions" placement="bottom">
 							<Button variant="secondary">
-								<BaseReviewMenu review={review} setIsEditing={setIsEditing} globalNav />
+								<BaseReviewMenu review={review} setIsEditing={setIsEditing} />
 							</Button>
 						</Tooltip>
 						<Tooltip

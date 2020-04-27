@@ -82,7 +82,7 @@ export const CardBody = styled.div`
 const Content = styled.div<CardProps>`
 	width: 100%;
 	height: 100%;
-	padding: 10px;
+	padding: 10px 10px 5px 10px;
 	position: relative;
 	display: flex;
 	flex-direction: column;
