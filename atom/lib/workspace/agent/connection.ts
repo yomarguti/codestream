@@ -10,6 +10,8 @@ import {
 	DidChangeDataNotificationType,
 	DidChangeDocumentMarkersNotification,
 	DidChangeDocumentMarkersNotificationType,
+	DidChangeServerUrlNotification,
+	DidChangeServerUrlNotificationType,
 	DidChangeVersionCompatibilityNotification,
 	DidChangeVersionCompatibilityNotificationType,
 	DidEncounterMaintenanceModeNotification,
@@ -88,6 +90,7 @@ export class AgentConnection implements Disposable {
 	private _didChangeApiVersionCompatibility = new Echo<
 		DidChangeApiVersionCompatibilityNotification
 	>();
+	private _didChangeServerUrl = new Echo<DidChangeServerUrlNotification>();
 	private _didEncounterMaintenanceMode = new Echo<DidEncounterMaintenanceModeNotification>();
 	private _restartNeededEmitter = new Echo();
 	private _initialized = false;
@@ -159,6 +162,12 @@ export class AgentConnection implements Disposable {
 		cb: (event: DidChangeApiVersionCompatibilityNotification) => void
 	) {
 		return this._didChangeApiVersionCompatibility.add(cb);
+	}
+
+	onDidChangeServerUrl(
+		cb: (event: DidChangeServerUrlNotification) => void
+	) {
+		return this._didChangeServerUrl.add(cb);
 	}
 
 	onDidEncounterMaintenanceMode(cb: (event: DidEncounterMaintenanceModeNotification) => void) {
@@ -378,6 +387,11 @@ export class AgentConnection implements Disposable {
 				notification as DidChangeApiVersionCompatibilityNotification
 			)
 		);
+		connection.onCustom(DidChangeServerUrlNotificationType.method, notification => {
+			this._didChangeServerUrl.push(
+				notification as DidChangeServerUrlNotification
+			);
+		});
 		connection.onCustom(DidEncounterMaintenanceModeNotificationType.method, notification =>
 			this._didEncounterMaintenanceMode.push(
 				notification as DidEncounterMaintenanceModeNotification

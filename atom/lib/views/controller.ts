@@ -1,6 +1,7 @@
 import { CompositeDisposable, Disposable, Dock, WorkspaceCenter, WorkspaceItem } from "atom";
 import {
 	DidChangeApiVersionCompatibilityNotificationType,
+	DidChangeServerUrlNotificationType,
 	DidChangeVersionCompatibilityNotification
 } from "protocols/agent/agent.protocol.notifications";
 import { WorkspaceSession } from "workspace/workspace-session";
@@ -71,6 +72,11 @@ export class ViewController implements Disposable {
 					if (this.mainView) {
 						await this.mainView.show();
 						this.mainView.sendNotification(DidChangeApiVersionCompatibilityNotificationType, e);
+					}
+				}),
+				Container.session.agent.onDidChangeServerUrl(async e => {
+					if (this.mainView) {
+						this.mainView.sendNotification(DidChangeServerUrlNotificationType, e);
 					}
 				})
 			);
