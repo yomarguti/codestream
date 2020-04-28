@@ -1430,7 +1430,7 @@ class ReviewForm extends React.Component<Props, State> {
 	renderReviewForm() {
 		const { isEditing, currentUser, repos } = this.props;
 		const {
-			scmInfo,
+			repoStatus,
 			repoName,
 			reviewers,
 			authorsById,
@@ -1496,11 +1496,11 @@ class ReviewForm extends React.Component<Props, State> {
 								{repoMenu.length > 0 && (
 									<InlineMenu items={repoMenu}>{repoName || "select a repo"}</InlineMenu>
 								)}
-								{scmInfo && scmInfo.scm && scmInfo.scm.branch && (
+								{repoStatus && repoStatus.scm && repoStatus.scm.branch && (
 									<>
 										<span className="subhead">on branch&nbsp;</span>
 										<span className="channel-label" style={{ display: "inline-block" }}>
-											{scmInfo.scm.branch}
+											{repoStatus.scm.branch}
 										</span>
 									</>
 								)}
