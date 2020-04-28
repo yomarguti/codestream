@@ -149,10 +149,17 @@ export interface DocumentsChangedNotification {
 	data: DocumentData;
 }
 
+export interface CommitsChangedData {
+	repo: {
+		id: string | undefined
+		path: string
+		normalizedPath: string
+	};
+}
+
 export interface CommitsChangedNotification {
 	type: ChangeDataType.Commits;
-	// at this point it doesn't really matter what the payload is -- it's unused
-	data: any;
+	data: CommitsChangedData;
 }
 
 export type DidChangeDataNotification =

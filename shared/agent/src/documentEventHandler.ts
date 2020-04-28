@@ -12,15 +12,13 @@ export class DocumentEventHandler {
 
 	constructor(
 		private session: CodeStreamSession,
-		private git: GitService,
 		private documentManager: DocumentManager
 	) {
 		const disposables: Disposable[] = [
 			this.documentManager.onDidChangeContent(this.onDocumentDidChangeContent, this),
 			this.documentManager.onDidSave(this.onDocumentDidSave, this),
 			this.documentManager.onDidClose(this.onDocumentDidClose, this),
-			this.documentManager.onDidOpen(this.onDocumentDidOpen, this),
-			this.git.onRepositoryCommitHashChanged(this.onRepositoryCommitHashChanged, this)
+			this.documentManager.onDidOpen(this.onDocumentDidOpen, this)
 		];
 		this._disposable = Disposables.from(...disposables);
 	}
@@ -85,13 +83,6 @@ export class DocumentEventHandler {
 					uri: e.document.uri
 				}
 			}
-		});
-	}
-
-	onRepositoryCommitHashChanged(repo: GitRepository) {
-		this.session.agent.sendNotification(DidChangeDataNotificationType, {
-			type: ChangeDataType.Commits,
-			data: repo
 		});
 	}
 

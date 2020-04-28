@@ -1,6 +1,8 @@
 "use strict";
+import * as chokidar from "chokidar"
 import * as fs from "fs";
 import * as path from "path";
+import { CommitsChangedData } from "protocol/agent.protocol";
 import {
 	Disposable,
 	Emitter,
@@ -28,6 +30,11 @@ export class GitRepositories {
 	private _onCommitHashChanged = new Emitter<GitRepository>();
 	get onCommitHashChanged(): Event<GitRepository> {
 		return this._onCommitHashChanged.event;
+	}
+
+	private _onGitChanged = new Emitter<CommitsChangedData>();
+	get onGitChanged(): Event<CommitsChangedData> {
+		return this._onGitChanged.event;
 	}
 
 	private _disposable: Disposable | undefined;
@@ -319,8 +326,38 @@ export class GitRepositories {
 
 		const repos = this._repositoryTree.values();
 		for (const repo of repos) {
-			const logFile = path.join(repo.path, ".git", "logs", "HEAD");
 			try {
+				// thanks gitlens!
+				// https://github.com/eamodio/vscode-gitlens/blob/master/src/git/models/repository.ts#L133
+				// also added FETCH_HEAD as converting from shallow to full clone creates that.
+				const paths = [
+					".git/config",
+					".git/index",
+					".git/HEAD",
+					".git/FETCH_HEAD",
+					".git/refs/stash",
+					".git/refs/heads/**",
+					".git/refs/remotes/**",
+					".git/refs/tags/**",
+					".gitignore"
+				].map(_ => path.join(repo.path, _));
+				const watcher = chokidar.watch(paths);
+				watcher.on("all", (/*eventName: string, path: string, stats: fs.Stats | undefined*/) => {
+					this._onGitChanged.fire({
+						repo: {
+							id: repo.id,
+							normalizedPath: repo.normalizedPath,
+							path: repo.path
+						}
+					} as CommitsChangedData);
+				});
+				this._monitors.push(watcher);
+			}
+			catch (err) {
+				Logger.error(err);
+			}
+			try {
+				const logFile = path.join(repo.path, ".git", "logs", "HEAD");
 				const watcher = fs.watch(logFile, () => {
 					this._onCommitHashChanged.fire(repo);
 				});

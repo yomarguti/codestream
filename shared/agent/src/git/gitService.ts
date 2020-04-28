@@ -2,6 +2,7 @@
 import { createPatch, ParsedDiff, parsePatch } from "diff";
 import * as fs from "fs";
 import * as path from "path";
+import { CommitsChangedData } from "protocol/agent.protocol";
 import { Disposable, Event } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 import { Logger } from "../logger";
@@ -101,6 +102,13 @@ export class GitService implements IGitService, Disposable {
 
 	get onRepositoryCommitHashChanged(): Event<GitRepository> {
 		return this._repositories.onCommitHashChanged;
+	}
+
+	/**
+	 * Fires anytime there's a change to the underlying git repository
+	 */
+	get onRepositoryChanged(): Event<CommitsChangedData> {
+		return this._repositories.onGitChanged;
 	}
 
 	async getFileAuthors(uri: URI, options?: BlameOptions): Promise<GitAuthor[]>;

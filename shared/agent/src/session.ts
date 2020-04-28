@@ -814,12 +814,18 @@ export class CodeStreamSession {
 
 		this._documentEventHandler = new DocumentEventHandler(
 			this,
-			SessionContainer.instance().git,
 			SessionContainer.instance().session.agent.documents
 		);
 
 		SessionContainer.instance().git.onRepositoryCommitHashChanged(repo => {
 			SessionContainer.instance().markerLocations.flushUncommittedLocations(repo);
+		});
+
+		SessionContainer.instance().git.onRepositoryChanged(repo => {
+			SessionContainer.instance().session.agent.sendNotification(DidChangeDataNotificationType, {
+				type: ChangeDataType.Commits,
+				data: repo
+			});
 		});
 
 		// be sure to alias first if necessary
