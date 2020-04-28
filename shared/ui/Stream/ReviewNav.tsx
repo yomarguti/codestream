@@ -199,7 +199,7 @@ export function ReviewNav(props: Props) {
 			review ? getReviewChangeRequests(state, review) : []
 		);
 
-		const currentUserId = state.session.userId || "";
+		const currentuserId = state.session.userId || "";
 		const approvedBy = (review && review.approvedBy) || {};
 
 		return {
@@ -210,13 +210,11 @@ export function ReviewNav(props: Props) {
 			hideReviewInstructions: state.preferences.hideReviewInstructions,
 			currentCodemarkId: state.context.currentCodemarkId,
 			isInVscode: state.ide.name === "VSC",
-			approvedByMe: approvedBy[currentUserId] ? true : false,
-			isMine: currentUserId === (review ? review.creatorId : "")
+			approvedByMe: approvedBy[currentuserId] ? true : false
 		};
 	}, shallowEqual);
 
 	const [isEditing, setIsEditing] = React.useState(false);
-	const [isAmending, setIsAmending] = React.useState(false);
 	const [notFound, setNotFound] = React.useState(false);
 	const [hoverButton, setHoverButton] = React.useState(
 		derivedState.hideReviewInstructions ? "" : "files"
@@ -317,27 +315,24 @@ export function ReviewNav(props: Props) {
 	};
 
 	const amend = () => {
-		setIsEditing(true);
-		setIsAmending(true);
+		// not implemented yet
 	};
 
 	const statusButtons = () => {
 		if (!review) return null;
-		const { approvedByMe, isMine } = derivedState;
+		const { approvedByMe } = derivedState;
 		const numOpenChangeRequests = derivedState.changeRequests.filter(r => r.status !== "closed")
 			.length;
 		switch (review.status) {
 			case "open":
 				return (
 					<div className={hoverButton == "actions" ? "btn-group pulse" : "btn-group"}>
-						{isMine && (
-							<Tooltip title="Amend Review (add code)" placement="bottom">
-								<Button onClick={amend}>
-									<Icon className="narrow-icon" name="plus" />
-									<span className="wide-text">Amend</span>
-								</Button>
-							</Tooltip>
-						)}
+						{/*<Tooltip title="Amend Review (add code)" placement="bottom">
+							<Button onClick={amend}>
+								<Icon className="narrow-icon" name="plus" />
+								<span className="wide-text">Amend</span>
+							</Button>
+						</Tooltip> */}
 						{approvedByMe && (
 							<Tooltip
 								title={
@@ -396,11 +391,7 @@ export function ReviewNav(props: Props) {
 						</Tooltip>
 						<Tooltip title="More actions" placement="bottom">
 							<Button variant="secondary">
-								<BaseReviewMenu
-									review={review}
-									setIsEditing={setIsEditing}
-									setIsAmending={setIsAmending}
-								/>
+								<BaseReviewMenu review={review} setIsEditing={setIsEditing} />
 							</Button>
 						</Tooltip>
 						<Tooltip
@@ -434,11 +425,7 @@ export function ReviewNav(props: Props) {
 						</Tooltip>
 						<Tooltip title="More actions" placement="bottom">
 							<Button variant="secondary">
-								<BaseReviewMenu
-									review={review}
-									setIsEditing={setIsEditing}
-									setIsAmending={setIsAmending}
-								/>
+								<BaseReviewMenu review={review} setIsEditing={setIsEditing} />
 							</Button>
 						</Tooltip>
 						<Tooltip
@@ -539,10 +526,8 @@ export function ReviewNav(props: Props) {
 		return (
 			<ReviewForm
 				isEditing={isEditing}
-				isAmending={isAmending}
 				onClose={() => {
 					setIsEditing(false);
-					setIsAmending(false);
 				}}
 				editingReview={review}
 			/>
@@ -553,12 +538,7 @@ export function ReviewNav(props: Props) {
 		<Root className={derivedState.hideReviewInstructions ? "" : "tour-on"}>
 			{!derivedState.hideReviewInstructions && <ClearModal />}
 			<NavHeader>
-				<BaseReviewHeader
-					review={review}
-					collapsed={false}
-					setIsEditing={setIsEditing}
-					setIsAmending={setIsAmending}
-				>
+				<BaseReviewHeader review={review} collapsed={false}>
 					<Nav className={hoverButton == "actions" ? "pulse" : ""}>
 						<TourTip title={actionsTip} placement="bottomRight">
 							{statusButtons()}
