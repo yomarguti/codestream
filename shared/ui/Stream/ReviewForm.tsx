@@ -424,10 +424,10 @@ class ReviewForm extends React.Component<Props, State> {
 				this.setState({ reviewers });
 			}
 
-			// if there is no title set, default it to a capitalized version
-			// of the branch name, with "feature/foo-bar" changed to
-			// "feature: foo bar"
-			if (statusInfo.scm.branch && !this.state.title) {
+			// if there is no title set OR there is one and a user hasn't touched it
+			// default it to a capitalized version of the branch name, 
+			// with "feature/foo-bar" changed to "feature: foo bar"
+			if (statusInfo.scm.branch && (!this.state.title || !this.state.titleTouched)) {
 				const { branch } = statusInfo.scm;
 				this.setState({
 					title:
