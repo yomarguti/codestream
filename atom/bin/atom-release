@@ -61,10 +61,9 @@ done
 
 echo "Bumping patch version on develop..."
 git checkout develop || exit 1
-# bump version patch in package.js ??????????
 dt-sb-version-tool --bump-version patch || exit 1
 nextVersion=`dt-sb-version-tool --report-version`
-[ -z "$nextVersion" -o "$nextVersion" == "$thisRelease" ] && echo "Was the version was updated properly?" && exit 1
+[ -z "$nextVersion" -o "$nextVersion" == "$thisRelease" ] && echo "Uh oh!! Was the version updated properly?" && exit 1
 git commit -am "Auto-bump of version to $nextVersion following marketplace release" || exit 1
 git push origin develop || exit 1
 
