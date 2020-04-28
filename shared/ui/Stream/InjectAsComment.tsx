@@ -12,6 +12,7 @@ import { TelemetryRequestType } from "@codestream/protocols/agent";
 import { InsertTextRequestType } from "@codestream/protocols/webview";
 import { getPostsForStream } from "../store/posts/reducer";
 import { fetchThread } from "./actions";
+import CancelButton from './CancelButton';
 
 const noop = () => Promise.resolve();
 
@@ -236,19 +237,10 @@ export const InjectAsComment = (connect(mapStateToProps, { fetchThread }) as any
 							marginRight: 0
 						}}
 					>
-						<Button
-							key="cancel"
-							style={{
-								paddingLeft: "10px",
-								paddingRight: "10px",
-								width: "auto"
-							}}
-							className="control-button cancel"
-							type="submit"
+						<CancelButton 							
 							onClick={props.cancel}
-						>
-							Cancel
-						</Button>
+ 							mode="button"
+						/>						 
 						<Button
 							key="submit"
 							style={{

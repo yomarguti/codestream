@@ -5,7 +5,6 @@ import { closePanel } from "./actions";
 import { addEnterpriseProvider, connectProvider } from "../store/providers/actions";
 import CancelButton from "./CancelButton";
 import Button from "./Button";
-import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 
 export class ConfigureJiraServerPanel extends Component {
@@ -27,13 +26,6 @@ export class ConfigureJiraServerPanel extends Component {
 	}
 
 	componentDidMount() {
-		if (this.props.isInVscode) {
-			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
-				if (event.key === "Escape") {
-					this.props.closePanel();
-				}
-			});
-		}
 		this.focusInput();
 	}
 

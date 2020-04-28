@@ -9,6 +9,7 @@ import { HostApi } from "../webview-api";
 import { OpenUrlRequestType } from "@codestream/protocols/agent";
 import { setShowFeedbackSmiley } from "../store/context/actions";
 import { CodeStreamState } from "../store";
+import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
 
 interface State {
 	emotion: "happy" | "sad";
@@ -43,6 +44,7 @@ export class Feedback extends React.Component<Props, State> {
 	}
 
 	openDialog() {
+		KeystrokeDispatcher.levelUp();
 		const modalRoot = document.getElementById("modal-root");
 		if (modalRoot) {
 			modalRoot.appendChild(this.el);
@@ -59,6 +61,7 @@ export class Feedback extends React.Component<Props, State> {
 	}
 
 	closeDialog() {
+		KeystrokeDispatcher.levelDown();
 		const modalRoot = document.getElementById("modal-root");
 		if (modalRoot) {
 			modalRoot.classList.remove("active");

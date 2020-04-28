@@ -6,7 +6,6 @@ import { configureProvider } from "../store/providers/actions";
 import { setIssueProvider } from "../store/context/actions";
 import CancelButton from "./CancelButton";
 import Button from "./Button";
-import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 
 export class ConfigureYouTrackPanel extends Component {
@@ -25,13 +24,6 @@ export class ConfigureYouTrackPanel extends Component {
 	}
 
 	componentDidMount() {
-		if (this.props.isInVscode) {
-			this.disposable = VsCodeKeystrokeDispatcher.on("keydown", event => {
-				if (event.key === "Escape") {
-					this.props.closePanel();
-				}
-			});
-		}
 		this.focusInput();
 	}
 

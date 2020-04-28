@@ -1,10 +1,11 @@
 import React, { PropsWithChildren } from "react";
 import { createPortal } from "react-dom";
 import styled from "styled-components";
-import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
+import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
 import Tooltip from "./Tooltip";
 import ScrollBox from "./ScrollBox";
 import Icon from "./Icon";
+import { useDidMount } from '../utilities/hooks';
 
 const noopElement = document.createElement("span");
 
@@ -63,26 +64,31 @@ export const ModalContext = React.createContext<ModalContextType>({
 });
 
 export interface ModalProps {
-	onClose?: () => void;
+	onClose?: (e: any) => void;
 	verticallyCenter?: boolean;
 }
 
 export function Modal(props: PropsWithChildren<ModalProps>) {
 	const modalRoot = useModalRoot();
 	const [context] = React.useState<ModalContextType>(() => ({ zIndex: 3000 }));
+	const disposables: { dispose(): void }[] = [];
 
-	React.useEffect(() => {
-		const subscription = VsCodeKeystrokeDispatcher.on("keydown", event => {
-			if (event.key === "Escape" && props.onClose) {
-				event.stopPropagation();
-				props.onClose();
-			}
-		});
+	useDidMount(() => {		
+		if (props.onClose) {
+			disposables.push(
+				KeystrokeDispatcher.withLevel(),
+				KeystrokeDispatcher.onKeyDown("Escape", (event: KeyboardEvent) => {
+				if (props.onClose) {				
+					event.stopPropagation();
+					props.onClose(event);
+				}
+			}, { source: "Modal.tsx", level: -1 }));
+		}
 
 		return () => {
-			subscription.dispose();
+			disposables && disposables.forEach(_ => _.dispose());
 		};
-	}, [props.onClose]);
+	});
 
 	return createPortal(
 		<ModalContext.Provider value={context}>
@@ -101,7 +107,7 @@ export function Modal(props: PropsWithChildren<ModalProps>) {
 	);
 }
 
-const CancelButton = styled(function(props: { onClick: () => void }) {
+const CancelButton = styled(function(props: { onClick: (e: any) => void }) {
 	// have to pass overlayStyle to bump z-index within #modal-root
 	return (
 		<Tooltip

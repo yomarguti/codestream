@@ -5,8 +5,15 @@ import * as actions from "./actions";
 import { safe, shortUuid } from "../utils";
 import { connect } from "react-redux";
 import { ModalContext } from "./Modal";
+import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
+import { logWarning } from "../logger";
 
+/**
+ * Modal emoji picker that attaches to #modal-root
+ */
 export class SimpleEmojiPicker extends Component {
+	disposables = [];
+
 	constructor(props) {
 		super(props);
 		this.el = document.createElement("div");
@@ -52,7 +59,6 @@ export class SimpleEmojiPicker extends Component {
 		};
 		if (this.props && this.props.target) {
 			const rect = this.props.target.getBoundingClientRect();
-			console.log(rect);
 			this._div.style.top = rect.top - this._div.offsetHeight + "px";
 
 			if (this.props.align === "left") {
@@ -69,12 +75,29 @@ export class SimpleEmojiPicker extends Component {
 			const tooFar = rect.top - this._div.offsetHeight;
 			if (tooFar < 50) this._div.style.top = "50px";
 		}
+
+		KeystrokeDispatcher.levelUp();
+		this.disposables.push(
+			KeystrokeDispatcher.onKeyDown("Escape", event => {
+				this.closePicker();
+				this.props.addEmoji("");
+			}, { source: "EmojiPicker.js", level: -1 }),
+		);
 	}
 
 	componentWillUnmount() {
-		const modalRoot = document.getElementById("modal-root");
-		this.closePicker();
-		modalRoot.removeChild(this.el);
+		try {
+			const modalRoot = document.getElementById("modal-root");
+			this.closePicker();
+			modalRoot.removeChild(this.el);
+		}
+		catch (err) {
+			logWarning(err);
+		}
+		finally {
+			KeystrokeDispatcher.levelDown();
+			this.disposables.forEach(d => d.dispose());
+		}
 	}
 
 	closePicker() {

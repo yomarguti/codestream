@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "styled-components";
+import CancelButton from "./CancelButton";
 import Tooltip from "./Tooltip";
 import { Button } from "../src/components/Button";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
@@ -20,10 +21,9 @@ import { Review, BaseReviewMenu, BaseReviewHeader, ExpandedAuthor, Description }
 import ScrollBox from "./ScrollBox";
 import { TourTip } from "../src/components/TourTip";
 import { Modal } from "./Modal";
-import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
+import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
 import { getReviewChangeRequests } from "../store/codemarks/reducer";
 import { ReviewForm } from "./ReviewForm";
-import { logWarning } from "../logger";
 
 const NavHeader = styled.div`
 	flex-grow: 0;
@@ -241,19 +241,17 @@ export function ReviewNav(props: Props) {
 				if (result == null) setNotFound(true);
 			});
 		}
-		// else {
-		// 	const currentFile = allModifiedFiles[progressCounter];
-		// 	HostApi.instance.send(ReviewShowDiffRequestType, {
-		// 		repoId: currentFile.repoId,
-		// 		reviewId: review.id,
-		// 		path: currentFile.file
-		// 	});
-		// }
-		const disposable = derivedState.isInVscode
-			? VsCodeKeystrokeDispatcher.on("keydown", event => {
-					if (event.key === "Escape" && event.target.id !== "input-div") exit();
-			  })
-			: undefined;
+		// Kind of a HACK leaving this here, BUT...
+		// since <CancelButton /> uses the OLD version of Button.js
+		// and not Button.tsx (below), there's no way to keep the style.
+		// if Buttons can be consolidated, this could go away
+		const disposable = KeystrokeDispatcher.onKeyDown(
+			"Escape",
+			event => {
+				if (event.key === "Escape" && event.target.id !== "input-div") exit();
+			},
+			{ source: "ReviewNav.tsx", level: -1 }
+		);
 
 		return () => {
 			disposable && disposable.dispose();

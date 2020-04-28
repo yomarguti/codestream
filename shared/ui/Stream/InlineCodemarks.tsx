@@ -879,7 +879,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				commentType={this.state.newCodemarkAttributes.type}
 				streamId={this.props.currentStreamId!}
 				onSubmit={this.submitCodemark}
-				onClickClose={this.closeCodemarkFormWithConfirmation}
+				onClickClose={this.closeCodemarkForm}
 				collapsed={false}
 				positionAtLocation={true}
 				multiLocation={this.state.multiLocationCodemarkForm}
@@ -895,7 +895,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		this.setState({ multiLocationCodemarkForm: value });
 	};
 
-	closeCodemarkForm = () => {
+	closeCodemarkForm = (e?: Event) => {
 		this.setState({
 			newCodemarkAttributes: undefined,
 			multiLocationCodemarkForm: false,
@@ -910,31 +910,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				this.props.setCodemarksFileViewStyle("list");
 			});
 		} else this.setState({ newCodemarkAttributes: undefined });
-	};
-
-	closeCodemarkFormWithConfirmation = (skipConfirmation?) => {
-		const { newCodemarkAttributes } = this.state;
-		if (skipConfirmation) return this.closeCodemarkForm();
-
-		if (newCodemarkAttributes && newCodemarkAttributes.type === "link")
-			return this.closeCodemarkForm();
-
-		const type =
-			newCodemarkAttributes && newCodemarkAttributes.type === "issue" ? "Issue" : "Comment";
-		confirmPopup({
-			title: "Are you sure?",
-			message: "Changes you made will not be saved.",
-			centered: true,
-			buttons: [
-				{ label: "Go Back", className: "control-button" },
-				{
-					label: "Discard " + type,
-					wait: true,
-					action: this.closeCodemarkForm,
-					className: "delete"
-				}
-			]
-		});
 	};
 
 	setNewCodemarkAttributes = attributes => {

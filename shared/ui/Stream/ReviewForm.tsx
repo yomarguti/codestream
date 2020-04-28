@@ -72,6 +72,7 @@ import { setCurrentReview } from "@codestream/webview/store/context/actions";
 import styled from "styled-components";
 import { DropdownButton } from "./Review/DropdownButton";
 import { getTeamSetting } from "../store/teams/reducer";
+import CancelButton from './CancelButton';
 
 interface Props extends ConnectedProps {
 	editingReview?: CSReview;
@@ -751,7 +752,6 @@ class ReviewForm extends React.Component<Props, State> {
 				shouldShowRelatableCodemark={codemark =>
 					this.props.editingReview ? codemark.id !== this.props.editingReview.id : true
 				}
-				onDismiss={this.confirmCancel}
 				onSubmit={this.handleClickSubmit}
 				selectedTags={this.state.selectedTags}
 				__onDidRender={__onDidRender}
@@ -1611,21 +1611,11 @@ class ReviewForm extends React.Component<Props, State> {
 								marginRight: 0
 							}}
 						>
-							<Tooltip title={cancelTip} placement="bottom" delay={1}>
-								<Button
-									key="cancel"
-									style={{
-										paddingLeft: "10px",
-										paddingRight: "10px",
-										width: "auto"
-									}}
-									className="control-button cancel"
-									type="submit"
-									onClick={this.confirmCancel}
-								>
-									Cancel
-								</Button>
-							</Tooltip>
+						<CancelButton
+ 							toolTip={cancelTip}
+						 	onClick={this.confirmCancel}
+ 							mode="button"
+						 />
 							{!scmError && (
 								<Tooltip title={submitTip} placement="bottomRight" delay={1}>
 									<Button

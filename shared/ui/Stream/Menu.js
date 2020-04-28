@@ -5,8 +5,15 @@ import Icon from "./Icon";
 import { filter as _filter } from "lodash-es";
 import { ModalContext } from "./Modal";
 import { shortUuid } from "../utils";
+import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
+import { logWarning } from "../logger";
 
+/**
+ * Modal menu that attaches to #modal-root
+ */
 export default class Menu extends Component {
+	disposables = [];
+
 	constructor(props) {
 		super(props);
 		this.state = { selected: props.selected || "" };
@@ -19,6 +26,8 @@ export default class Menu extends Component {
 		const modalRoot = document.getElementById("modal-root");
 		modalRoot.appendChild(this.el);
 		modalRoot.classList.add("active");
+		KeystrokeDispatcher.levelUp();
+
 		modalRoot.onclick = event => {
 			if (event.target.id === "modal-root") {
 				this.setState({ closed: true });
@@ -46,6 +55,15 @@ export default class Menu extends Component {
 			else this.el.getElementsByClassName("focus-button")[0].focus();
 		}
 		this.repositionIfNecessary("MOUNT");
+
+		this.disposables.push(
+			KeystrokeDispatcher.onKeyDown("Escape", event => {
+				// invoke the action callback for entire menu so it can removed
+				this.props.action(null);
+				event.stopPropagation();
+				if (this.props.focusOnSelect) this.props.focusOnSelect.focus();
+			}, { source: "Menu.js", level: -1 }),
+		);
 	}
 
 	repositionIfNecessary(loc) {
@@ -186,9 +204,18 @@ export default class Menu extends Component {
 	}
 
 	componentWillUnmount() {
-		const modalRoot = document.getElementById("modal-root");
-		this.closeMenu();
-		modalRoot.removeChild(this.el);
+		try {
+			const modalRoot = document.getElementById("modal-root");
+			this.closeMenu();
+			modalRoot.removeChild(this.el);
+		}
+		catch (err) {
+			logWarning(err);
+		}
+		finally {
+			KeystrokeDispatcher.levelDown();
+			this.disposables.forEach(d => d.dispose());
+		}
 	}
 
 	closeMenu() {
@@ -397,47 +424,43 @@ export default class Menu extends Component {
 	handleMenuKeyPress = (event, eventType) => {
 		const { selected } = this.state;
 		event.preventDefault();
-		if (eventType == "escape") {
-			this.closeMenu();
-		} else {
-			let newIndex = 0;
-			const filteredItems = this.filterItems(this.props.items, true);
-			const selectedIndex = this.findIndex(selected, filteredItems);
-			if (eventType == "down") {
-				if (selectedIndex < filteredItems.length - 1) {
-					newIndex = selectedIndex + 1;
-				} else {
-					newIndex = 0;
-				}
-			} else if (eventType == "up") {
-				if (selectedIndex == 0) {
-					newIndex = filteredItems.length - 1;
-				} else {
-					newIndex = selectedIndex - 1;
-				}
-			} else if (eventType == "tab") {
-				// this.handleSelectAtMention();
-			} else if (eventType === "enter") {
-				const item = filteredItems[selectedIndex];
-				this.handleClickItem(event, item);
+		let newIndex = 0;
+		const filteredItems = this.filterItems(this.props.items, true);
+		const selectedIndex = this.findIndex(selected, filteredItems);
+		if (eventType == "down") {
+			if (selectedIndex < filteredItems.length - 1) {
+				newIndex = selectedIndex + 1;
+			} else {
+				newIndex = 0;
 			}
-			const selectedItem = filteredItems[newIndex];
-			const key = this.calculateKey(selectedItem);
-
-			this.setState({ selected: key });
-
-			// while we manually scroll the viewport, we do not want
-			// the mouseEnter events to fire, which would select
-			// the "wrong" menu item. So we set a value and a timer
-			// to clear it.
-			this.programaticScrolling++;
-			document
-				.getElementById("li-item-" + key)
-				.scrollIntoView({ behavior: "smooth", block: "nearest" });
-			setTimeout(() => {
-				this.programaticScrolling--;
-			}, 750);
+		} else if (eventType == "up") {
+			if (selectedIndex == 0) {
+				newIndex = filteredItems.length - 1;
+			} else {
+				newIndex = selectedIndex - 1;
+			}
+		} else if (eventType == "tab") {
+			// this.handleSelectAtMention();
+		} else if (eventType === "enter") {
+			const item = filteredItems[selectedIndex];
+			this.handleClickItem(event, item);
 		}
+		const selectedItem = filteredItems[newIndex];
+		const key = this.calculateKey(selectedItem);
+
+		this.setState({ selected: key });
+
+		// while we manually scroll the viewport, we do not want
+		// the mouseEnter events to fire, which would select
+		// the "wrong" menu item. So we set a value and a timer
+		// to clear it.
+		this.programaticScrolling++;
+		document
+			.getElementById("li-item-" + key)
+			.scrollIntoView({ behavior: "smooth", block: "nearest" });
+		setTimeout(() => {
+			this.programaticScrolling--;
+		}, 750);
 	};
 
 	handleKeyDown = event => {
@@ -450,11 +473,6 @@ export default class Menu extends Component {
 			this.handleMenuKeyPress(event, "down");
 		}
 		if (event.key === "Tab") this.handleMenuKeyPress(event, "tab");
-		if (event.key === "Escape") {
-			this.props.action(null); // invoke the action callback for entire menu so it can removed
-			event.preventDefault();
-			if (this.props.focusOnSelect) this.props.focusOnSelect.focus();
-		}
 		if (event.key === "Enter" || event.which === 13) {
 			event.preventDefault();
 			this.handleMenuKeyPress(event, "enter");

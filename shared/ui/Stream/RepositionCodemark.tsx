@@ -16,6 +16,7 @@ import { CSMarker } from "@codestream/protocols/api";
 import { URI } from "vscode-uri";
 import { useDidMount } from "../utilities/hooks";
 import { areRangesEqual, isRangeEmpty } from "../utils";
+import CancelButton from './CancelButton';
 
 interface Props {
 	codemark: CodemarkPlus;
@@ -186,19 +187,10 @@ export const RepositionCodemark = (props: Props) => {
 								marginRight: 0
 							}}
 						>
-							<Button
-								key="cancel"
-								style={{
-									paddingLeft: "10px",
-									paddingRight: "10px",
-									width: "auto"
-								}}
-								className="control-button cancel"
-								type="submit"
-								onClick={cancel}
-							>
-								Cancel
-							</Button>
+						<CancelButton 							
+							onClick={cancel}
+ 							mode="button"
+						/>							 
 							<Button
 								key="submit"
 								style={{

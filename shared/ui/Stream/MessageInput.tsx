@@ -6,7 +6,7 @@ import * as codemarkSelectors from "../store/codemarks/reducer";
 import * as actions from "./actions";
 const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.json");
 import { CSChannelStream, CSPost, CSUser, CSTeam, CSTag } from "@codestream/protocols/api";
-import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
+import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
 import {
 	createRange,
 	getCurrentCursorPosition,
@@ -121,15 +121,14 @@ export class MessageInput extends React.Component<Props, State> {
 				const text = e.clipboardData!.getData("text/plain");
 				document.execCommand("insertHTML", false, text.replace(/\n/g, "<br>"));
 			});
-		}
-
-		if (this.props.isInVscode) {
 			this.disposables.push(
-				VsCodeKeystrokeDispatcher.on("keydown", event => {
-					if (event.key === "Escape" && event.target.id !== "input-div") {
-						this.handleKeyDown(event);
-					}
-				})
+				KeystrokeDispatcher.onKeyDown("Escape", event => {
+						if (event.key === "Escape" && event.target.id !== "input-div") {
+							this.handleKeyDown(event);							
+						}						
+					},
+					{ source: "MessageInput.tsx", level: -1 }
+				)
 			);
 		}
 
@@ -190,18 +189,22 @@ export class MessageInput extends React.Component<Props, State> {
 
 	hidePopup() {
 		this.setState({ currentPopup: undefined, insertPrefix: "" });
+		KeystrokeDispatcher.levelDown();
 	}
 
 	hideEmojiPicker = () => {
 		this.setState({ emojiOpen: false });
+		KeystrokeDispatcher.levelDown();
 	};
 
 	hideCodemarkPicker = () => {
 		this.setState({ codemarkOpen: false });
+		KeystrokeDispatcher.levelDown();
 	};
 
 	hideTagsPicker = () => {
 		this.setState({ tagsOpen: false, q: "" });
+		KeystrokeDispatcher.levelDown();
 	};
 
 	addEmoji = (emoji: typeof emojiData[string]) => {
@@ -247,7 +250,7 @@ export class MessageInput extends React.Component<Props, State> {
 			identifier?: string;
 			description?: string;
 		}[] = [];
-
+		KeystrokeDispatcher.levelUp();
 		// filter out yourself
 
 		const normalizedPrefix = prefix ? prefix.toLowerCase() : prefix;
@@ -601,22 +604,22 @@ export class MessageInput extends React.Component<Props, State> {
 			if (event.key === "Tab") this.handleAtMentionKeyPress(event, "tab");
 			if (event.key === "Escape") {
 				this.hidePopup();
-				event.preventDefault();
+				event.stopPropagation();
 			}
 		} else if (this.state.emojiOpen) {
 			if (event.key === "Escape") {
 				this.hideEmojiPicker();
-				event.preventDefault();
+				event.stopPropagation();
 			}
 		} else if (this.state.codemarkOpen) {
 			if (event.key === "Escape") {
 				this.hideCodemarkPicker();
-				event.preventDefault();
+				event.stopPropagation();
 			}
 		} else if (this.state.tagsOpen) {
 			if (event.key === "Escape") {
 				this.hideTagsPicker();
-				event.preventDefault();
+				event.stopPropagation();
 			}
 		} else {
 			if (event.key == "Escape" && multiCompose && this.props.onDismiss) {

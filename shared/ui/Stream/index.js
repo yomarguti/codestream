@@ -61,7 +61,6 @@ import {
 } from "../store/streams/reducer";
 import { getCodemark } from "../store/codemarks/reducer";
 import { getTeamMembers, getCodeCollisions } from "../store/users/reducer";
-import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { HostApi } from "../webview-api";
 import {
 	LiveShareInviteToSessionRequestType,
@@ -147,27 +146,28 @@ export class SimpleStream extends Component {
 		// polyfill for ResizeObserver which won't be triggered automatically
 		this.handleResizeCompose();
 
-		if (this.props.isInVscode) {
-			this.disposables.push(
-				VsCodeKeystrokeDispatcher.on("keydown", event => {
-					if (event.key === "Escape") {
-						if (this.state.floatCompose) return this.setMultiCompose(false);
-						if (event.target.id.includes("input-div-")) {
-							this.handleEscape(event);
-						} else if (this.state.searchBarOpen) {
-							this.handleClickSearch(event);
-						} else if (this.props.threadId) {
-							this.handleDismissThread();
-						}
-					}
-					if (event.key === "Enter" && !event.shiftKey && event.target.id.includes("input-div-")) {
-						// save post edit
-						const postId = event.target.id.split("-").pop();
-						return this.editPost(postId);
-					}
-				})
-			);
-		}
+		// dead code
+		// if (this.props.isInVscode) {
+		// 	this.disposables.push(
+		// 		VsCodeKeystrokeDispatcher.on("keydown", event => {
+		// 			if (event.key === "Escape") {
+		// 				if (this.state.floatCompose) return this.setMultiCompose(false);
+		// 				if (event.target.id.includes("input-div-")) {
+		// 					this.handleEscape(event);
+		// 				} else if (this.state.searchBarOpen) {
+		// 					this.handleClickSearch(event);
+		// 				} else if (this.props.threadId) {
+		// 					this.handleDismissThread();
+		// 				}
+		// 			}
+		// 			if (event.key === "Enter" && !event.shiftKey && event.target.id.includes("input-div-")) {
+		// 				// save post edit
+		// 				const postId = event.target.id.split("-").pop();
+		// 				return this.editPost(postId);
+		// 			}
+		// 		})
+		// 	);
+		// }
 
 		this.startPollingReplies(false);
 	}

@@ -82,6 +82,7 @@ import { FormattedMessage } from "react-intl";
 import { Link } from "./Link";
 import { confirmPopup } from "./Confirm";
 import { openPanel, setUserPreference } from "./actions";
+import CancelButton from "./CancelButton";
 
 export interface ICrossPostIssueContext {
 	setSelectedAssignees(any: any): void;
@@ -100,7 +101,7 @@ interface Props extends ConnectedProps {
 	streamId: string;
 	collapseForm?: Function;
 	onSubmit: (attributes: NewCodemarkAttributes, event?: React.SyntheticEvent) => any;
-	onClickClose(skipConfirmation?: boolean): any;
+	onClickClose(e?: Event): any;
 	openCodemarkForm?(type: string): any;
 	slackInfo?: {};
 	codeBlock?: GetRangeScmInfoResponse;
@@ -1655,9 +1656,8 @@ class CodemarkForm extends React.Component<Props, State> {
 		};
 	}
 
-	cancelCompose = () => {
-		// skip confirmation
-		if (this.props.onClickClose) this.props.onClickClose(true);
+	cancelCompose = (e: Event) => {		
+		this.props.onClickClose && this.props.onClickClose(e);
 	};
 
 	render() {
@@ -1728,6 +1728,30 @@ class CodemarkForm extends React.Component<Props, State> {
 			}
 		} else {
 			return this.renderCodemarkForm();
+		}
+	}
+
+	cancelCodemarkCompose = (e: Event) =>  {
+		const { text, type } = this.state;
+		if (!this.props.onClickClose) return;
+		// if there is codemark text, confirm the user actually wants to cancel
+		if (text && (type === "comment" || type === "issue")) {			
+			confirmPopup({
+				title: "Are you sure?",
+				message: "Changes you made will not be saved.",
+				centered: true,
+				buttons: [
+					{ label: "Go Back", className: "control-button" },
+					{
+						label: `Discard ${type === "issue" ? "Issue" : "Comment"}` ,
+						wait: true,
+						action: this.props.onClickClose,
+						className: "delete"
+					}
+				]
+			});
+		} else {
+			this.props.onClickClose(e);
 		}
 	}
 
@@ -1935,21 +1959,12 @@ class CodemarkForm extends React.Component<Props, State> {
 								marginRight: 0
 							}}
 						>
-							<Tooltip title={cancelTip} placement="bottom" delay={1}>
-								<Button
-									key="cancel"
-									style={{
-										paddingLeft: "10px",
-										paddingRight: "10px",
-										width: "auto"
-									}}
-									className="control-button cancel"
-									type="submit"
-									onClick={() => this.props.onClickClose()}
-								>
-									{this.state.copied ? "Close" : "Cancel"}
-								</Button>
-							</Tooltip>
+							<CancelButton
+								toolTip={cancelTip}
+								onClick={this.cancelCodemarkCompose}
+								title={this.state.copied ? "Close" : "Cancel"}
+								mode="button"
+							/>
 							<Tooltip title={submitTip} placement="bottom" delay={1}>
 								<Button
 									key="submit"

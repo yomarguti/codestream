@@ -7,7 +7,6 @@ import Codemark from "./Codemark";
 import CancelButton from "./CancelButton";
 import { DelayedRender } from "../Container/DelayedRender";
 import { setCurrentCodemark } from "../store/context/actions";
-import VsCodeKeystrokeDispatcher from "../utilities/vscode-keystroke-dispatcher";
 import { HostApi } from "../webview-api";
 import { EditorSelectRangeRequestType } from "@codestream/protocols/webview";
 import { useDidMount } from "../utilities/hooks";
@@ -51,20 +50,9 @@ export function CodemarkView() {
 			dispatch(setCurrentCodemark());
 		}
 
-		const subscription = VsCodeKeystrokeDispatcher.on("keydown", event => {
-			if (event.key === "Escape") {
-				event.stopPropagation();
-				dispatch(setCurrentCodemark());
-			}
-		});
-
-		return () => {
-			subscription.dispose();
-		};
 	});
 
-	const handleClickCancel = React.useCallback(event => {
-		event.preventDefault();
+	const handleClickCancel = React.useCallback(event => {		
 		dispatch(setCurrentCodemark());
 	}, []);
 
