@@ -518,7 +518,7 @@ class TeamPanel extends React.Component<Props, State> {
 					? null
 					: (authors || []).find(a => a.email === currentUserEmail && a.stomped > 0);
 			const title = (
-				<>
+				<div style={{ maxWidth: "60vw" }}>
 					<div className="related-label">Local Changes</div>
 					{modifiedFiles.map(f => {
 						const className = collisions.userRepoFiles[user.id + ":" + repo.repoId + ":" + f.file]
@@ -546,7 +546,7 @@ class TeamPanel extends React.Component<Props, State> {
 							<Timestamp relative time={modifiedReposModifiedAt[teamId]} />
 						</div>
 					)}
-				</>
+				</div>
 			);
 			return (
 				<li
