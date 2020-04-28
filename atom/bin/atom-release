@@ -2,6 +2,8 @@
 
 #desc# interactive atom release script
 
+[ -z "$ATOM_TOP" ] && echo "atom sandbox not loaded" && exit 1
+
 cd $ATOM_TOP || exit 1
 
 # checkout master for all repos, ensure it's up to date
@@ -53,10 +55,7 @@ tag="atom-$thisRelease"
 echo "Applying tag $tag to all repos..."
 for p in atom-codestream codestream-lsp-agent codestream-components
 do
-	(
-		echo "cd $ATOM_SANDBOX/$p && git tag $tag && git push origin $tag"
-		cd $ATOM_SANDBOX/$p && git tag $tag && git push origin $tag || exit 1
-	)
+	(echo "cd $ATOM_SANDBOX/$p && git tag $tag && git push origin $tag" && cd $ATOM_SANDBOX/$p && git tag $tag && git push origin $tag) || exit 1
 done
 
 echo "Bumping patch version on develop..."
