@@ -59,13 +59,13 @@ do
 	)
 done
 
-echo "
-*** Don't forget to bump the version for atom-codestream on develop ***
-"
-# git checkout develop || exit 1
+echo "Bumping patch version on develop..."
+git checkout develop || exit 1
 # bump version patch in package.js ??????????
-# git commit -am "Auto-bump of version to XXXX following marketplace release"
-# git push origin master || exit 1
+dt-sb-version-tool --bump-version patch || exit 1
+nextVersion=`dt-sb-version-tool --report-version`
+[ -z "$nextVersion" -o "$nextVersion" == "$thisRelease" ] && echo "Was the version was updated properly?" && exit 1
+git commit -am "Auto-bump of version to $nextVersion following marketplace release" || exit 1
+git push origin develop || exit 1
 
 exit 0
-
