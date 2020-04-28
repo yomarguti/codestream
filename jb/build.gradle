@@ -5,7 +5,7 @@ plugins {
 }
 
 group "com.codestream"
-version "7.1.2"
+version "7.2.0"
 
 sourceCompatibility = 1.8
 
