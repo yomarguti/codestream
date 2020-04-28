@@ -7,17 +7,20 @@ import { RadioGroup, Radio } from "../src/components/RadioGroup";
 import { setUserPreference } from "./actions";
 import { HostApi } from "../webview-api";
 import { CSNotificationDeliveryPreference } from "@codestream/protocols/api";
+import Icon from "./Icon";
 
 export const NotificationsPanel = props => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const hasDesktopNotifications = state.ide.name === "VSC" || state.ide.name === "JETBRAINS";
 		const notificationDeliverySupported = isFeatureEnabled(state, "notificationDeliveryPreference");
+		const emailSupported = isFeatureEnabled(state, "emailSupport");
 		return {
 			notificationPreference: state.preferences.notifications || "involveMe",
 			notificationDeliveryPreference: state.preferences.notificationDelivery || "both",
 			hasDesktopNotifications,
-			notificationDeliverySupported
+			notificationDeliverySupported,
+			emailSupported
 		};
 	});
 	const [loading, setLoading] = useState(false);
@@ -47,6 +50,17 @@ export const NotificationsPanel = props => {
 					<span className="panel-title">Notification Settings</span>
 				</div>
 				<fieldset className="form-body">
+					{!derivedState.emailSupported && (
+						<p
+							className="color-warning"
+							style={{ display: "flex", padding: "10px 0", whiteSpace: "normal" }}
+						>
+							<Icon name="alert" />
+							<div style={{ paddingLeft: "10px" }}>
+								Ask your admin to set up outbound email for your on-prem instance of CodeStream.
+							</div>
+						</p>
+					)}
 					<p className="explainer">
 						{derivedState.hasDesktopNotifications
 							? "Follow codemarks and reviews to receive desktop and email notifications."
@@ -58,6 +72,7 @@ export const NotificationsPanel = props => {
 							selectedValue={derivedState.notificationPreference}
 							onChange={handleChange}
 							loading={loading}
+							disabled={!derivedState.emailSupported}
 						>
 							<Radio value="all">Automatically follow all new codemarks and reviews</Radio>
 							<Radio value="involveMe">
@@ -74,6 +89,7 @@ export const NotificationsPanel = props => {
 									selectedValue={derivedState.notificationDeliveryPreference}
 									onChange={handleChangeDelivery}
 									loading={loadingDelivery}
+									disabled={!derivedState.emailSupported}
 								>
 									<Radio value={CSNotificationDeliveryPreference.All}>Email &amp; Desktop</Radio>
 									<Radio value={CSNotificationDeliveryPreference.EmailOnly}>Email only</Radio>
