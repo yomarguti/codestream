@@ -7,6 +7,7 @@ export interface IRadioGroupContext {
 	name: string;
 	selectedValue: string;
 	loading: boolean;
+	disabled?: boolean;
 	onChange: Function;
 }
 
@@ -14,12 +15,15 @@ export const RadioGroupContext = React.createContext<IRadioGroupContext>({
 	name: "",
 	selectedValue: "",
 	loading: false,
+	disabled: false,
 	onChange: () => {}
 });
 
 interface RadioProps {
 	value: string;
 	children: React.ReactNode;
+	disabled?: boolean;
+	className?: string;
 }
 
 const RadioDiv = styled.div`
@@ -33,17 +37,25 @@ const RadioDiv = styled.div`
 	label {
 		flex: 100 1;
 	}
-	input,
-	label {
-		cursor: pointer;
+	&.disabled {
+		opacity: 0.5;
 	}
-	label:hover {
-		color: var(--text-color-highlight);
+	&:not(.disabled) {
+		input,
+		label {
+			cursor: pointer;
+		}
+		label:hover {
+			color: var(--text-color-highlight);
+		}
 	}
 	.icon.spin {
 		display: inline-block;
 		margin: 0 5px 0 2px;
 		vertical-align: 2px;
+	}
+	&:not(.disabled) input[type="radio"] {
+		cursor: pointer;
 	}
 	input[type="radio"] {
 		-webkit-appearance: none;
@@ -56,7 +68,6 @@ const RadioDiv = styled.div`
 		position: relative;
 		border-radius: 10px;
 		margin: 0 5px 0 0;
-		cursor: pointer;
 		&:checked {
 			background: var(--text-color-info-muted);
 		}
@@ -74,19 +85,23 @@ const RadioDiv = styled.div`
 `;
 
 export function Radio(props: PropsWithChildren<RadioProps>) {
-	const { name, selectedValue, onChange, loading } = React.useContext(RadioGroupContext);
+	const { name, selectedValue, onChange, loading, disabled } = React.useContext(RadioGroupContext);
 
+	const isDisabled = disabled || props.disabled;
+	const className = (props.className || "") + (isDisabled ? " disabled" : "");
 	const showSpinner = loading && props.value === selectedValue;
 	return (
-		<RadioDiv>
+		<RadioDiv className={className}>
 			<div>
 				{showSpinner ? (
 					<Icon className="spin" name="sync" />
 				) : (
 					<input
 						type="radio"
+						className={disabled ? "disabled" : ""}
 						name={name}
 						value={props.value}
+						disabled={isDisabled}
 						id={name + ":" + props.value}
 						checked={props.value === selectedValue}
 						onChange={e => onChange(props.value)}
@@ -98,13 +113,18 @@ export function Radio(props: PropsWithChildren<RadioProps>) {
 	);
 }
 
+// you can disable the entire radio group, or an individual Radio item
 interface RadioGroupProps {
 	name: string;
 	selectedValue: string;
 	loading: boolean;
 	children: React.ReactNode;
 	onChange: Function;
+	disabled?: boolean;
+	className?: string;
 }
+
+const Root = styled.div``;
 
 export function RadioGroup(props: PropsWithChildren<RadioGroupProps>) {
 	const context = React.useContext(RadioGroupContext);
@@ -112,5 +132,7 @@ export function RadioGroup(props: PropsWithChildren<RadioGroupProps>) {
 	context.selectedValue = props.selectedValue;
 	context.onChange = props.onChange;
 	context.loading = props.loading;
-	return <div className="control-group radio">{props.children}</div>;
+	context.disabled = props.disabled || false;
+	const className = `control-group radio ${props.className || ""}`;
+	return <Root className={className}>{props.children}</Root>;
 }
