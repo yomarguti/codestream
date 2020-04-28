@@ -1098,7 +1098,8 @@
 				border-radius: 5px;
 				border: 1px solid @base-border-color;
 				// background: @app-background-color-hover;
-				background: @base-border-color;
+				// background: @base-border-color;
+				background: var(--panel-tool-background-color);
 				&.dropdown {
 					border-top-left-radius: 0;
 					border-top-right-radius: 0;
@@ -1155,7 +1156,7 @@
 				border: none;
 				// border-top: 1px solid @base-border-color;
 				// border-top: 1px solid @app-background-color-hover;
-				border-top: 1px solid rgba(127, 127, 127, 0.15);
+				border-top: 1px solid rgba(127, 127, 127, 0.2);
 			}
 			ul {
 				// border-top: 1px solid @base-border-color;
@@ -2987,6 +2988,12 @@
 .highlight {
 	color: var(--text-color-highlight);
 }
+.background-highlight {
+	background-color: @background-color-highlight-light;
+	.vscode-dark& {
+		background-color: @background-color-highlight-dark;
+	}
+}
 .bold {
 	font-weight: bold;
 }
@@ -3039,9 +3046,6 @@ li,
 }
 .info-text {
 	color: @text-color-info;
-}
-.highlight {
-	color: @text-color-highlight;
 }
 // https://keithclark.co.uk/articles/single-element-pure-css-pie-charts/
 .pie {
