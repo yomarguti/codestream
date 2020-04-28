@@ -353,7 +353,7 @@ export default class Menu extends Component {
 				</ul>
 				<button
 					className="focus-button"
-					style={{ position: "absolute", left: "-1000px" }}
+					style={{ position: "absolute", left: "-10000px" }}
 					onKeyDown={this.handleKeyDown}
 				></button>
 			</div>
