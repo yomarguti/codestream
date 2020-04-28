@@ -9,6 +9,7 @@ import {
 	GetDocumentFromMarkerRequestType,
 	ReportingMessageType,
 	ReportMessageRequestType,
+	SetServerUrlRequestType,
 	TraceLevel
 } from "@codestream/protocols/agent";
 import { CodemarkType } from "@codestream/protocols/api";
@@ -57,6 +58,7 @@ import {
 	UpdateConfigurationRequest,
 	UpdateConfigurationRequestType,
 	UpdateConfigurationResponse,
+	UpdateServerUrlRequestType,
 	WebviewContext,
 	WebviewDidChangeContextNotificationType,
 	WebviewDidInitializeNotificationType,
@@ -489,6 +491,13 @@ export class CodestreamView {
 				}
 				this.sendNotification(HostDidChangeConfigNotificationType, { [name]: value });
 				return { params: {} as UpdateConfigurationResponse };
+			}
+			case UpdateServerUrlRequestType.method: {
+				const { serverUrl, disableStrictSSL } = message.params;
+				await Container.configs.set("serverUrl", serverUrl);
+				await Container.configs.set("disableStrictSSL", disableStrictSSL);
+				await this.session.agent.sendRequest(SetServerUrlRequestType.method, { serverUrl, disableStrictSSL });
+				return { params: {} };
 			}
 			case EditorHighlightRangeRequestType.method: {
 				const { uri, highlight, range } = message.params;
