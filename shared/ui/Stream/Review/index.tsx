@@ -119,7 +119,8 @@ export interface BaseReviewProps extends CardProps {
 		inputContainer?: typeof ComposeWrapper
 	) => React.ReactNode;
 	filesTip?: any;
-	setIsEditing?: Function;
+	setIsEditing: Function;
+	setIsAmending: Function;
 	onRequiresCheckPreconditions?: Function;
 }
 
@@ -130,12 +131,14 @@ export interface BaseReviewHeaderProps {
 	reviewers?: CSUser[];
 	tags?: { id: string }[];
 	changeRequests?: CodemarkPlus[];
-	setIsEditing?: Function;
+	setIsEditing: Function;
+	setIsAmending: Function;
 }
 
 export interface BaseReviewMenuProps {
 	review: CSReview;
-	setIsEditing?: Function;
+	setIsEditing: Function;
+	setIsAmending: Function;
 	changeRequests?: CodemarkPlus[];
 	collapsed?: boolean;
 }
@@ -230,6 +233,7 @@ export const BaseReviewHeader = (props: PropsWithChildren<BaseReviewHeaderProps>
 							collapsed={collapsed}
 							changeRequests={changeRequests}
 							setIsEditing={props.setIsEditing}
+							setIsAmending={props.setIsAmending}
 						/>
 					)}
 				</HeaderActions>
@@ -240,7 +244,7 @@ export const BaseReviewHeader = (props: PropsWithChildren<BaseReviewHeaderProps>
 };
 
 export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
-	const { review, collapsed } = props;
+	const { review, collapsed, setIsAmending } = props;
 
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
@@ -314,7 +318,7 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 	};
 	const reviewItem = {
 		icon: <Icon name="review" />,
-		label: "Review Changes",
+		label: "View Changes",
 		action: startReview
 	};
 	const rejectItem = { icon: <Icon name="thumbsdown" />, label: "Reject", action: reject };
@@ -355,12 +359,12 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 			}
 		];
 
-		if (review.creatorId === derivedState.currentUser.id && props.setIsEditing) {
+		if (review.creatorId === derivedState.currentUser.id) {
 			items.push(
 				{
 					label: "Edit",
 					key: "edit",
-					action: () => props.setIsEditing && props.setIsEditing(true)
+					action: () => props.setIsEditing(true)
 				},
 				{
 					label: "Delete",
@@ -391,9 +395,20 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 			items.unshift({ label: "-" });
 			switch (review.status) {
 				case "open": {
-					const { approvedBy = {} } = review;
+					const { approvedBy = {}, creatorId } = review;
 					const approval = approvedBy[derivedState.currentUserId] ? unapproveItem : approveItem;
 					items.unshift(reviewItem, approval, rejectItem);
+					if (derivedState.currentUserId === creatorId) {
+						items.unshift({
+							label: "Amend Review (add code)",
+							key: "amend",
+							icon: <Icon name="plus" />,
+							action: () => {
+								props.setIsAmending(true);
+								props.setIsEditing(true);
+							}
+						});
+					}
 					break;
 				}
 				case "approved":
@@ -522,6 +537,7 @@ const BaseReview = (props: BaseReviewProps) => {
 						review={review}
 						collapsed={props.collapsed}
 						setIsEditing={props.setIsEditing}
+						setIsAmending={props.setIsAmending}
 					/>
 				)}
 				{!props.collapsed && (
@@ -932,6 +948,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 		type: ""
 	});
 	const [isEditing, setIsEditing] = React.useState(false);
+	const [isAmending, setIsAmending] = React.useState(false);
 	const [shareModalOpen, setShareModalOpen] = React.useState(false);
 
 	const tags = React.useMemo(
@@ -1040,6 +1057,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 				isEditing={isEditing}
 				onClose={() => {
 					setIsEditing(false);
+					setIsAmending(false);
 				}}
 				editingReview={props.review}
 			/>
@@ -1058,6 +1076,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 				currentUserId={derivedState.currentUser.id}
 				renderFooter={renderFooter}
 				setIsEditing={setIsEditing}
+				setIsAmending={setIsAmending}
 				headerError={preconditionError}
 				canStartReview={canStartReview}
 				onRequiresCheckPreconditions={() => checkPreconditions()}
