@@ -8,9 +8,12 @@ import {
 	CardBanner
 } from "@codestream/webview/src/components/Card";
 import {
-	CodemarkPlus,
+	ChangeDataType,
 	CheckReviewPreconditionsRequestType,
-	FollowReviewRequestType
+	CodemarkPlus,
+	FollowReviewRequestType,
+	DidChangeDataNotification,
+	DidChangeDataNotificationType,
 } from "@codestream/protocols/agent";
 import {
 	MinimumWidthCard,
@@ -849,7 +852,7 @@ export type ReviewProps = PropsWithId | PropsWithReview;
 
 const ReviewForReview = (props: PropsWithReview) => {
 	const { review, ...baseProps } = props;
-
+	let disposableDidChangeDataNotification: { dispose(): void };
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
@@ -879,7 +882,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 		[props.review, derivedState.teamTagsById]
 	);
 
-	const repoInfo = React.useMemo(() => {
+	const repoInfoById = React.useMemo(() => {
 		const reviewRepos = new Map<string, any>();
 
 		for (let changeset of review.reviewChangesets) {
@@ -888,8 +891,12 @@ const ReviewForReview = (props: PropsWithReview) => {
 				reviewRepos.set(changeset.repoId, { repoName: repo.name, branch: changeset.branch });
 		}
 
-		return [...reviewRepos.values()];
+		return reviewRepos;
 	}, [review, derivedState.repos]);
+
+	const repoInfo = React.useMemo(() => {		
+		return [...repoInfoById.values()];
+	}, [repoInfoById]);
 
 	const changeRequests = useSelector((state: CodeStreamState) =>
 		getReviewChangeRequests(state, review)
@@ -900,26 +907,46 @@ const ReviewForReview = (props: PropsWithReview) => {
 		if (!props.collapsed && webviewFocused) {
 			HostApi.instance.track("Page Viewed", { "Page Name": "Review Details" });
 		}
+		return () => {
+			// cleanup this disposable on unmount. it may or may not have been set.
+			disposableDidChangeDataNotification && disposableDidChangeDataNotification.dispose();
+		}
 	});
+
+	const checkPreconditions = async () => {
+		let response = await HostApi.instance.send(CheckReviewPreconditionsRequestType, {
+			reviewId: review.id
+		});
+
+		if (disposableDidChangeDataNotification) {
+			// dispose of this if it already exists, we will create another if response is !success
+			disposableDidChangeDataNotification.dispose();
+		}
+		if (!response.success && response.error) {
+			setPreconditionError(response.error);
+			setCanStartReview(false);
+
+			disposableDidChangeDataNotification = HostApi.instance.on(DidChangeDataNotificationType, async (e: DidChangeDataNotification) => {				
+				if (e.type === ChangeDataType.Commits && !canStartReview) {		
+					// repo is a GitRepository-like	object		
+					const data = e.data as { repo: { id: string } };
+					if (data && data.repo.id && repoInfoById && repoInfoById.has(data.repo.id)) {
+						await checkPreconditions();
+					}
+				}
+			})
+		} else {
+			// need to clear the precondition error
+			setPreconditionError("");
+			setCanStartReview(true);
+		}	
+	};
 
 	React.useEffect(() => {
 		// don't check preconditions if we're looking at the collapsed version of the
 		// review (in the feed), but rather only when expanded (details view)
 		if (props.collapsed) return;
 
-		const checkPreconditions = async () => {
-			let response = await HostApi.instance.send(CheckReviewPreconditionsRequestType, {
-				reviewId: review.id
-			});
-			if (!response.success && response.error) {
-				setPreconditionError(response.error);
-				setCanStartReview(false);
-			} else {
-				// need to clear the precondition error
-				setPreconditionError("");
-				setCanStartReview(true);
-			}
-		};
 		checkPreconditions();
 	}, [review]);
 
