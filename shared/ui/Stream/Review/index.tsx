@@ -713,14 +713,16 @@ const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 									placement="bottomRight"
 									align={{ offset: [10, 4] }}
 								>
-									<HeadshotName
-										className="no-padding"
-										person={reviewer}
-										size={20}
-										highlightMe
-										addThumbsUp={addThumbsUp}
-										noName={!isMe}
-									/>
+									<span>
+										<HeadshotName
+											className="no-padding"
+											person={reviewer}
+											size={20}
+											highlightMe
+											addThumbsUp={addThumbsUp}
+											noName={!isMe}
+										/>
+									</span>
 								</Tooltip>
 							);
 						})}
