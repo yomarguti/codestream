@@ -153,7 +153,20 @@ export default function SearchResult(props: Props) {
 		return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
 	}
 
-	const type = isCSReview(result) ? "review" : result.type;
+	let review: ReviewPlus | undefined = undefined;
+	let type: string;
+	let isArchived: boolean;
+	let assignees: string[];
+	if (isCSReview(result)) {
+		review = result;
+		type = "review";
+		isArchived = false;
+		assignees = review.reviewers || [];
+	} else {
+		type = result.type;
+		isArchived = result.pinned ? false : true;
+		assignees = result.assignees || [];
+	}
 
 	let titleHTML = markdownify(
 		type === "comment" ? (result.text || "").substr(0, 80) : result.title
@@ -163,7 +176,6 @@ export default function SearchResult(props: Props) {
 		titleHTML = titleHTML.replace(matchQueryRegexp, "<u><b>$&</b></u>");
 	}
 
-	const assignees = (isCSReview(result) ? result.reviewers : result.assignees) || [];
 	if (result.title == "refactor") console.log("ASSIGNEES ARE: ", assignees, " for ", result);
 
 	let icon;
@@ -182,18 +194,15 @@ export default function SearchResult(props: Props) {
 			break;
 	}
 
-	// @ts-ignore
-	const isArchived = isCSReview(result) ? false : result.pinned ? false : true;
-
 	let status = result.status;
 	if (
-		isCSReview(result) &&
+		review &&
 		status === "open" &&
-		result.allReviewersMustApprove &&
-		result.reviewers.length > 1
+		review.allReviewersMustApprove &&
+		review.reviewers.length > 1
 	) {
-		const approvals = Object.keys(result.approvedBy || {}).length;
-		status += ` (${approvals}/${result.reviewers.length})`;
+		const approvals = Object.keys(review.approvedBy || {}).length;
+		status += ` (${approvals}/${review.reviewers.length})`;
 	}
 
 	const title = (
@@ -227,7 +236,10 @@ export default function SearchResult(props: Props) {
 			<td>{title}</td>
 			<td>
 				{assignees.map(id => (
-					<HeadshotName id={id} />
+					<HeadshotName
+						id={id}
+						addThumbsUp={!!(review && review.approvedBy && review.approvedBy[id])}
+					/>
 				))}
 			</td>
 			<td>
