@@ -150,6 +150,8 @@ export interface DocumentsChangedNotification {
 }
 
 export interface CommitsChangedData {
+	type: string;
+	path: string;
 	repo: {
 		id: string | undefined
 		path: string

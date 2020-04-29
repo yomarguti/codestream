@@ -342,8 +342,11 @@ export class GitRepositories {
 					".gitignore"
 				].map(_ => path.join(repo.path, _));
 				const watcher = chokidar.watch(paths);
-				watcher.on("all", (/*eventName: string, path: string, stats: fs.Stats | undefined*/) => {
+				watcher.on("all", (eventName: string, path: string/*, stats: fs.Stats | undefined*/) => {
+					Logger.debug(`git watch changed: ${eventName}:${path}`);
 					this._onGitChanged.fire({
+						type: eventName,
+						path: path,
 						repo: {
 							id: repo.id,
 							normalizedPath: repo.normalizedPath,

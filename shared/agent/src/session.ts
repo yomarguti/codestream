@@ -821,10 +821,10 @@ export class CodeStreamSession {
 			SessionContainer.instance().markerLocations.flushUncommittedLocations(repo);
 		});
 
-		SessionContainer.instance().git.onRepositoryChanged(repo => {
+		SessionContainer.instance().git.onRepositoryChanged(data => {
 			SessionContainer.instance().session.agent.sendNotification(DidChangeDataNotificationType, {
 				type: ChangeDataType.Commits,
-				data: repo
+				data: data
 			});
 		});
 
