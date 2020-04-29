@@ -28,7 +28,7 @@ fun createReviewDiffContent(project: Project, reviewId: String, repoId: String, 
 
     val document = ReadAction.compute<Document, RuntimeException> {
         val file = ReviewDiffVirtualFile.create(reviewId, repoId, side, path, correctedText)
-        file.isWritable = !true
+        file.isWritable = false
         OutsidersPsiFileSupport.markFile(file, fullPath)
         val document = FileDocumentManager.getInstance().getDocument(file) ?: return@compute null
         PsiDocumentManager.getInstance(project).getPsiFile(document)

@@ -63,6 +63,7 @@
             <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="EditorPopupMenu2"/>
             <action id="CodeStream.AddComment" class="com.codestream.actions.AddComment" text="Add _Comment"
                     description="Add comment" icon="/images/marker-comment.svg">
+                <add-to-group group-id="Diff.EditorPopupMenu"/>
                 <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH" second-keystroke="C"/>
                 <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="C"
                                    replace-all="true"/>

@@ -1,6 +1,7 @@
 package com.codestream.actions
 
 import com.codestream.codeStream
+import com.codestream.editorService
 import com.codestream.extensions.selectionOrCurrentLine
 import com.codestream.extensions.uri
 import com.codestream.protocols.CodemarkType
@@ -11,7 +12,6 @@ import com.intellij.codeInsight.intention.LowPriorityAction
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.util.Iconable
@@ -20,7 +20,7 @@ import java.awt.event.KeyEvent
 
 abstract class NewCodemark(val type: CodemarkType) : AnAction(), IntentionAction, LowPriorityAction, Iconable {
     private fun execute(project: Project, source: String) {
-        FileEditorManager.getInstance(project).selectedTextEditor?.run {
+        project.editorService?.activeEditor?.run {
             project.codeStream?.show {
                 project.webViewService?.postNotification(
                     CodemarkNotifications.New(
