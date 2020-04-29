@@ -15,6 +15,7 @@ import { CodemarkPlus } from "@codestream/protocols/agent";
 import { isCSReview } from "../protocols/agent/api.protocol.models";
 import { Marker } from "./Marker";
 import { ChangesetFileList } from "./Review/ChangesetFileList";
+import Headshot from "./Headshot";
 
 const RootTR = styled.tr`
 	margin: 0;
@@ -121,6 +122,7 @@ export default function SearchResult(props: Props) {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
+			currentUserId: state.session.userId!,
 			teamTagsHash: userSelectors.getTeamTagsHash(state),
 			usernames: userSelectors.getUsernamesById(state)
 		};
@@ -167,6 +169,8 @@ export default function SearchResult(props: Props) {
 		isArchived = result.pinned ? false : true;
 		assignees = result.assignees || [];
 	}
+	// put yourself at the front
+	assignees.unshift(...assignees.splice(assignees.indexOf(derivedState.currentUserId), 1));
 
 	let titleHTML = markdownify(
 		type === "comment" ? (result.text || "").substr(0, 80) : result.title
@@ -235,12 +239,13 @@ export default function SearchResult(props: Props) {
 			</td>
 			<td>{title}</td>
 			<td>
-				{assignees.map(id => (
-					<HeadshotName
-						id={id}
-						addThumbsUp={!!(review && review.approvedBy && review.approvedBy[id])}
-					/>
-				))}
+				{assignees.map(id => {
+					const isMe = id === derivedState.currentUserId;
+					const addThumbsUp = !!(review && review.approvedBy && review.approvedBy[id]);
+					return (
+						<HeadshotName id={id} size={20} highlightMe addThumbsUp={addThumbsUp} noName={!isMe} />
+					);
+				})}
 			</td>
 			<td>
 				{result.numReplies > 0 && (

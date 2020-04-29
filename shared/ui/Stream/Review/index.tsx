@@ -13,7 +13,7 @@ import {
 	CodemarkPlus,
 	FollowReviewRequestType,
 	DidChangeDataNotification,
-	DidChangeDataNotificationType,
+	DidChangeDataNotificationType
 } from "@codestream/protocols/agent";
 import {
 	MinimumWidthCard,
@@ -713,18 +713,14 @@ const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 									placement="bottomRight"
 									align={{ offset: [10, 4] }}
 								>
-									<span>
-										{isMe && (
-											<HeadshotName
-												className="no-padding"
-												person={reviewer}
-												size={20}
-												highlightMe
-												addThumbsUp={addThumbsUp}
-											/>
-										)}
-										{!isMe && <Headshot person={reviewer} size={20} addThumbsUp={addThumbsUp} />}
-									</span>
+									<HeadshotName
+										className="no-padding"
+										person={reviewer}
+										size={20}
+										highlightMe
+										addThumbsUp={addThumbsUp}
+										noName={!isMe}
+									/>
 								</Tooltip>
 							);
 						})}
@@ -894,7 +890,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 		return reviewRepos;
 	}, [review, derivedState.repos]);
 
-	const repoInfo = React.useMemo(() => {		
+	const repoInfo = React.useMemo(() => {
 		return [...repoInfoById.values()];
 	}, [repoInfoById]);
 
@@ -910,7 +906,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 		return () => {
 			// cleanup this disposable on unmount. it may or may not have been set.
 			disposableDidChangeDataNotification && disposableDidChangeDataNotification.dispose();
-		}
+		};
 	});
 
 	const checkPreconditions = async () => {
@@ -926,20 +922,23 @@ const ReviewForReview = (props: PropsWithReview) => {
 			setPreconditionError(response.error);
 			setCanStartReview(false);
 
-			disposableDidChangeDataNotification = HostApi.instance.on(DidChangeDataNotificationType, async (e: DidChangeDataNotification) => {				
-				if (e.type === ChangeDataType.Commits && !canStartReview) {		
-					// repo is a GitRepository-like	object		
-					const data = e.data as { repo: { id: string } };
-					if (data && data.repo.id && repoInfoById && repoInfoById.has(data.repo.id)) {
-						await checkPreconditions();
+			disposableDidChangeDataNotification = HostApi.instance.on(
+				DidChangeDataNotificationType,
+				async (e: DidChangeDataNotification) => {
+					if (e.type === ChangeDataType.Commits && !canStartReview) {
+						// repo is a GitRepository-like	object
+						const data = e.data as { repo: { id: string } };
+						if (data && data.repo.id && repoInfoById && repoInfoById.has(data.repo.id)) {
+							await checkPreconditions();
+						}
 					}
 				}
-			})
+			);
 		} else {
 			// need to clear the precondition error
 			setPreconditionError("");
 			setCanStartReview(true);
-		}	
+		}
 	};
 
 	React.useEffect(() => {

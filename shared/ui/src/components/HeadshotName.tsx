@@ -23,11 +23,21 @@ export interface HeadshotNameProps {
 	className?: string;
 	highlightMe?: boolean;
 	addThumbsUp?: boolean;
+	noName?: boolean;
 }
 
 interface ClickProps {
 	hasOnClick?: boolean;
 }
+
+export const HeadshotWrapper = styled.span`
+	display: inline-block;
+	padding-right: 5px;
+	vertical-align: -5px;
+	&.no-padding {
+		padding: 0;
+	}
+`;
 
 const Root = styled.div<ClickProps>`
 	display: inline-block;
@@ -42,12 +52,6 @@ const Root = styled.div<ClickProps>`
 	}
 `;
 
-export const HeadshotWrapper = styled.span`
-	display: inline-block;
-	padding-right: 5px;
-	vertical-align: -5px;
-`;
-
 export function HeadshotName(props: HeadshotNameProps) {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return { users: state.users, currentUserId: state.session.userId };
@@ -57,7 +61,7 @@ export function HeadshotName(props: HeadshotNameProps) {
 	const me = props.highlightMe && person.id === derivedState.currentUserId;
 	return (
 		<Root className={props.className} onClick={props.onClick}>
-			<HeadshotWrapper>
+			<HeadshotWrapper className={props.noName ? "no-padding" : ""}>
 				<Headshot
 					person={person}
 					size={props.size || 20}
@@ -66,7 +70,9 @@ export function HeadshotName(props: HeadshotNameProps) {
 					addThumbsUp={props.addThumbsUp}
 				/>
 			</HeadshotWrapper>
-			<span className={cx("headshot-name", { "at-mention me": me })}>{person.username}</span>
+			{!props.noName && (
+				<span className={cx("headshot-name", { "at-mention me": me })}>{person.username}</span>
+			)}
 		</Root>
 	);
 }
