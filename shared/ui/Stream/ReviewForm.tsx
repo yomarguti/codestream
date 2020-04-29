@@ -13,7 +13,6 @@ import {
 	GetUserInfoRequestType
 } from "@codestream/protocols/agent";
 import {
-	CSDirectStream,
 	CSReview,
 	CSStream,
 	CSUser,
@@ -41,7 +40,7 @@ import Button from "./Button";
 import Tag from "./Tag";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
-import { sortBy as _sortBy, sortBy } from "lodash-es";
+import { sortBy as _sortBy } from "lodash-es";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
 import HeadshotMenu from "@codestream/webview/src/components/HeadshotMenu";
 import { SelectPeople } from "@codestream/webview/src/components/SelectPeople";
@@ -73,11 +72,15 @@ import { setCurrentReview } from "@codestream/webview/store/context/actions";
 import styled from "styled-components";
 import { DropdownButton } from "./Review/DropdownButton";
 import { getTeamSetting } from "../store/teams/reducer";
+import { ChangesetFileList } from "./Review/ChangesetFileList";
+import { Meta, MetaLabel, MetaDescriptionForAssignees } from "./Codemark/BaseCodemark";
+import { CommitList } from "./Review/CommitList";
 import CancelButton from "./CancelButton";
 
 interface Props extends ConnectedProps {
 	editingReview?: CSReview;
 	isEditing?: boolean;
+	isAmending?: boolean;
 	onClose?: Function;
 	openPanel: Function;
 	closePanel: Function;
@@ -156,6 +159,7 @@ interface State {
 	includeStaged: boolean;
 	excludeCommit: { [sha: string]: boolean };
 	startCommit: string;
+	prevEndCommit: string;
 	unsavedFiles: string[];
 	ignoredFiles: {
 		[file: string]: boolean;
@@ -186,7 +190,8 @@ function merge(defaults: Partial<State>, review: CSReview): State {
 
 class ReviewForm extends React.Component<Props, State> {
 	static defaultProps = {
-		isEditing: false
+		isEditing: false,
+		isAmending: false
 	};
 	_titleInput: HTMLElement | null = null;
 	insertTextAtCursor?: Function;
@@ -219,6 +224,7 @@ class ReviewForm extends React.Component<Props, State> {
 			includeStaged: true,
 			excludeCommit: {},
 			startCommit: "",
+			prevEndCommit: "",
 			unsavedFiles: props.unsavedFiles,
 			commitListLength: 10,
 			allReviewersMustApprove: false,
@@ -294,19 +300,47 @@ class ReviewForm extends React.Component<Props, State> {
 		}
 	}
 
+	private async getScmInfoForRepo() {
+		this.setState({ isLoadingScm: true });
+		const { editingReview } = this.props;
+
+		const openRepos = await HostApi.instance.send(GetReposScmRequestType, {});
+		if (editingReview && openRepos && openRepos.repositories) {
+			const { reviewChangesets } = editingReview;
+			const lastChangeset = reviewChangesets[reviewChangesets.length - 1];
+			// FIXME -- when we have multi-repo reviews this needs to update
+			const repoId = lastChangeset.repoId;
+			const repo = openRepos.repositories.find(r => r.id === repoId);
+			if (repo) {
+				const repoName = repo.folder.name;
+				const repoUri = repo.folder.uri;
+				const commits = lastChangeset.commits || [];
+				// the start commit of this checkpoint is the last commit
+				const startCommit = commits.length > 0 ? commits[commits.length - 1].sha : "";
+				console.warn("START COMMIT IS: ", startCommit, " FROM ", commits);
+				this.setState({ repoName, startCommit, prevEndCommit: startCommit }, () => {
+					this.handleRepoChange(repoUri);
+				});
+			}
+		} else {
+			this.setState({ isLoadingScm: false, scmError: true });
+		}
+	}
+
 	private async getUserInfo() {
 		const response = await HostApi.instance.send(GetUserInfoRequestType, {});
 		this.setState({ currentUserScmEmail: response.email });
 	}
 
 	componentDidMount() {
-		const { isEditing, textEditorUri } = this.props;
-		if (isEditing) return;
+		const { isEditing, isAmending, textEditorUri } = this.props;
+		if (isEditing && !isAmending) return;
 
 		this.setState({ mountedTimestamp: new Date().getTime() });
 
 		this.getUserInfo();
-		if (textEditorUri) this.getScmInfoForURI(textEditorUri);
+		if (isAmending) this.getScmInfoForRepo();
+		else if (textEditorUri) this.getScmInfoForURI(textEditorUri);
 
 		this.focus();
 	}
@@ -317,8 +351,8 @@ class ReviewForm extends React.Component<Props, State> {
 	};
 
 	async handleRepoChange(repoUri?) {
-		const { teamMates, currentUser } = this.props;
-		const { includeSaved, includeStaged, startCommit } = this.state;
+		const { teamMates, currentUser, isEditing } = this.props;
+		const { includeSaved, includeStaged, startCommit, prevEndCommit } = this.state;
 
 		const uri = repoUri || this.state.repoUri;
 		const statusInfo = await HostApi.instance.send(GetRepoScmStatusRequestType, {
@@ -380,6 +414,9 @@ class ReviewForm extends React.Component<Props, State> {
 				if (commitListLength >= 5) this.setState({ commitListLength });
 			}
 		}
+		if (prevEndCommit) {
+			this.setChangeStart(prevEndCommit);
+		}
 
 		if (statusInfo.scm) {
 			const authors = statusInfo.scm.authors;
@@ -390,7 +427,7 @@ class ReviewForm extends React.Component<Props, State> {
 			});
 			this.setState({ authorsById });
 
-			if (!this.state.reviewersTouched) {
+			if (!isEditing && !this.state.reviewersTouched) {
 				let reviewers = Object.keys(authorsById)
 					// get the top most impacted authors
 					// based on how many times their code
@@ -1114,7 +1151,7 @@ class ReviewForm extends React.Component<Props, State> {
 		if (!scm) return null;
 		const { commits = [] } = scm;
 
-		const { unsavedFiles } = this.props;
+		const { unsavedFiles, isAmending } = this.props;
 		let unsavedFilesInThisRepo: string[] = [];
 
 		if (scm.repoPath) {
@@ -1141,7 +1178,9 @@ class ReviewForm extends React.Component<Props, State> {
 		return (
 			<div className="related">
 				{(numSavedFiles > 0 || numStagedFiles > 0) && (
-					<div className="related-label">Changes to Include In Review</div>
+					<div className="related-label">
+						Changes to {isAmending ? "Add To" : "Include In"} Review
+					</div>
 				)}
 				{unsavedFilesInThisRepo.length > 0 && (
 					<div style={{ display: "flex", padding: "0 0 2px 2px" }}>
@@ -1342,7 +1381,9 @@ class ReviewForm extends React.Component<Props, State> {
 		return (
 			<div className="related" style={{ padding: "0", marginBottom: 0, position: "relative" }}>
 				<div className="related-label">
-					Changed Files&nbsp;&nbsp;
+					Changed Files
+					{this.props.isAmending && " - Since Last Checkpoint"}
+					&nbsp;&nbsp;
 					{this.state.isLoadingScm && <Icon className="spin" name="sync" />}
 				</div>
 				{changedFiles}
@@ -1434,8 +1475,33 @@ class ReviewForm extends React.Component<Props, State> {
 		}
 	};
 
+	renderPreviousCheckpoints = () => {
+		if (!this.props.editingReview) return null;
+		return (
+			<div className="related">
+				<div className="related-label">Checkpoint 1</div>
+				<div
+					className="background-highlight"
+					style={{
+						padding: "10px",
+						border: "1px solid var(--base-border-color)"
+					}}
+				>
+					<ChangesetFileList review={this.props.editingReview} noOnClick />
+					<div style={{ height: "10px" }} />
+					<Meta>
+						<MetaLabel>Commits</MetaLabel>
+						<MetaDescriptionForAssignees>
+							<CommitList review={this.props.editingReview} />
+						</MetaDescriptionForAssignees>
+					</Meta>
+				</div>
+			</div>
+		);
+	};
+
 	renderReviewForm() {
-		const { isEditing, currentUser, repos } = this.props;
+		const { isEditing, isAmending, currentUser, repos } = this.props;
 		const {
 			repoStatus,
 			repoName,
@@ -1463,7 +1529,7 @@ class ReviewForm extends React.Component<Props, State> {
 
 		const submitTip = (
 			<span>
-				{isEditing ? "Edit Review" : "Submit Review"}
+				{isAmending ? "Amend Review" : isEditing ? "Edit Review" : "Submit Review"}
 				<span className="keybinding extra-pad">{modifier} ENTER</span>
 			</span>
 		);
@@ -1475,16 +1541,19 @@ class ReviewForm extends React.Component<Props, State> {
 			</span>
 		);
 
-		const repoMenu = openRepos
-			? openRepos.map(repo => {
-					const repoName = repo.id && repos[repo.id] && repos[repo.id].name;
-					return {
-						label: repoName || repo.folder.uri,
-						key: repo.id,
-						action: () => this.setRepo(repo)
-					};
-			  })
-			: [];
+		const repoMenuItems =
+			openRepos && !isAmending
+				? openRepos.map(repo => {
+						const repoName = repo.id && repos[repo.id] && repos[repo.id].name;
+						return {
+							label: repoName || repo.folder.uri,
+							key: repo.id,
+							action: () => this.setRepo(repo)
+						};
+				  })
+				: [];
+
+		const showChanges = (!isEditing || isAmending) && !isLoadingScm && !scmError;
 
 		return (
 			<form className="standard-form review-form" key="form">
@@ -1497,16 +1566,17 @@ class ReviewForm extends React.Component<Props, State> {
 							<div style={{ marginTop: "-1px" }}>
 								<b>{currentUser.username}</b>
 								<span className="subhead">
-									is {isEditing ? "editing" : "requesting"} a code review
-									{repoMenu.length > 0 && <> in </>}
+									is {isAmending ? "amending" : isEditing ? "editing" : "requesting"} a code review
+									{(repoMenuItems.length > 0 || isAmending) && <> in </>}
 								</span>
-								{repoMenu.length > 0 && (
-									<InlineMenu items={repoMenu}>{repoName || "select a repo"}</InlineMenu>
+								{repoMenuItems.length > 0 && (
+									<InlineMenu items={repoMenuItems}>{repoName || "select a repo"}</InlineMenu>
 								)}
+								{isAmending && <span className="highlight">{repoName}</span>}
 								{repoStatus && repoStatus.scm && repoStatus.scm.branch && (
 									<>
 										<span className="subhead">on branch&nbsp;</span>
-										<span className="channel-label" style={{ display: "inline-block" }}>
+										<span className="highlight">
 											{repoStatus.scm.branch}
 										</span>
 									</>
@@ -1579,7 +1649,7 @@ class ReviewForm extends React.Component<Props, State> {
 							</SelectPeople>
 						</div>
 					)}
-					{!isLoadingScm && isEditing && !scmError && (
+					{isEditing && !scmError && (
 						<div
 							className="related"
 							style={{ padding: "0", marginBottom: 0, position: "relative" }}
@@ -1615,8 +1685,9 @@ class ReviewForm extends React.Component<Props, State> {
 							</SelectPeople>
 						</div>
 					)}
-					{!isEditing && !isLoadingScm && !scmError && this.renderChangedFiles()}
-					{!isEditing && !isLoadingScm && !scmError && this.renderGroupsAndCommits()}
+					{isAmending && this.renderPreviousCheckpoints()}
+					{showChanges && this.renderChangedFiles()}
+					{showChanges && this.renderGroupsAndCommits()}
 					{!isEditing && !isLoadingScm && !scmError && this.renderSharingControls()}
 					{!isLoadingScm && (
 						<div
@@ -1647,7 +1718,7 @@ class ReviewForm extends React.Component<Props, State> {
 										loading={this.state.isLoading}
 										onClick={this.handleClickSubmit}
 									>
-										Submit
+										{isAmending ? "Amend" : "Submit"}
 									</Button>
 								</Tooltip>
 							)}
@@ -1659,7 +1730,7 @@ class ReviewForm extends React.Component<Props, State> {
 							<Icon name="alert" />
 							<div style={{ paddingLeft: "10px" }}>
 								Error loading git info.
-								{repoMenu.length > 0 && <> Select a repo above.</>}
+								{repoMenuItems.length > 0 && <> Select a repo above.</>}
 							</div>
 						</div>
 					)}
