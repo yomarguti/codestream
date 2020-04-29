@@ -85,11 +85,29 @@ import {
 	ShowNextChangedFileRequestType
 } from "@codestream/protocols/webview";
 import { HeadshotName } from "@codestream/webview/src/components/HeadshotName";
+import { LocateRepoButton } from "../LocateRepoButton";
+
+interface RepoMetadata {
+	repoName: string;
+	branch: string;
+}
+
+interface SimpleError {
+	/**
+	 * Error message from the server
+	 */
+	message: string;
+	/**
+	 * Typed error message (to switch off of, etc.)
+	 */
+	type?: string;
+}
 
 export interface BaseReviewProps extends CardProps {
 	review: CSReview;
-	repoInfo: { repoName: string; branch: string }[];
-	headerError?: string;
+	repoInfo: RepoMetadata[];
+	repoInfoById: Map<string, RepoMetadata>;
+	headerError?: SimpleError;
 	canStartReview?: boolean;
 	currentUserId?: string;
 	collapsed?: boolean;
@@ -103,6 +121,7 @@ export interface BaseReviewProps extends CardProps {
 	) => React.ReactNode;
 	filesTip?: any;
 	setIsEditing?: Function;
+	onRequiresCheckPreconditions?: Function;
 }
 
 export interface BaseReviewHeaderProps {
@@ -474,6 +493,22 @@ const BaseReview = (props: BaseReviewProps) => {
 	const nextFileKeyboardShortcut = () => (isMacintosh ? `⌥ F6` : "Alt-F6");
 	const previousFileKeyboardShortcut = () => (isMacintosh ? `⇧ ⌥ F6` : "Shift-Alt-F6");
 
+	let singleRepo: (RepoMetadata & { id: string }) | undefined = undefined;
+	let canLocateRepo = false;
+	if (
+		props.headerError &&
+		props.headerError.type === "REPO_NOT_FOUND" &&
+		props.repoInfoById &&
+		props.repoInfoById.size == 1
+	) {
+		// currently we can only locate repo if there's 1 repo in the review.
+		canLocateRepo = true;
+		singleRepo = {
+			id: props.repoInfoById.keys().next().value,
+			...props.repoInfoById.values().next().value
+		};
+	}
+
 	return (
 		<MinimumWidthCard {...getCardProps(props)} noCard={!props.collapsed}>
 			<CardBody>
@@ -492,13 +527,28 @@ const BaseReview = (props: BaseReviewProps) => {
 					</ExpandedAuthor>
 				)}
 
-				{props.headerError && (
+				{props.headerError && props.headerError.message && (
 					<div
 						className="color-warning"
 						style={{ display: "flex", padding: "10px 0", whiteSpace: "normal" }}
 					>
 						<Icon name="alert" />
-						<div style={{ paddingLeft: "10px" }}>{props.headerError}</div>
+						<div style={{ paddingLeft: "10px" }}>{props.headerError.message}</div>
+						{canLocateRepo && singleRepo && (
+							<LocateRepoButton
+								repoId={singleRepo.id}
+								repoName={singleRepo.repoName}
+								callback={success => {
+									if (
+										success &&
+										props.onRequiresCheckPreconditions &&
+										typeof props.onRequiresCheckPreconditions === "function"
+									) {
+										props.onRequiresCheckPreconditions(success);
+									}
+								}}
+							></LocateRepoButton>
+						)}
 					</div>
 				)}
 
@@ -871,7 +921,10 @@ const ReviewForReview = (props: PropsWithReview) => {
 	}, shallowEqual);
 
 	const [canStartReview, setCanStartReview] = React.useState(false);
-	const [preconditionError, setPreconditionError] = React.useState("");
+	const [preconditionError, setPreconditionError] = React.useState<SimpleError>({
+		message: "",
+		type: ""
+	});
 	const [isEditing, setIsEditing] = React.useState(false);
 	const [shareModalOpen, setShareModalOpen] = React.useState(false);
 
@@ -938,7 +991,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 			);
 		} else {
 			// need to clear the precondition error
-			setPreconditionError("");
+			setPreconditionError({ message: "", type: "" });
 			setCanStartReview(true);
 		}
 	};
@@ -991,6 +1044,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 				{...baseProps}
 				review={props.review}
 				repoInfo={repoInfo}
+				repoInfoById={repoInfoById}
 				tags={tags}
 				changeRequests={changeRequests}
 				isFollowing={derivedState.userIsFollowing}
@@ -1000,6 +1054,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 				setIsEditing={setIsEditing}
 				headerError={preconditionError}
 				canStartReview={canStartReview}
+				onRequiresCheckPreconditions={() => checkPreconditions()}
 			/>
 		);
 	}
