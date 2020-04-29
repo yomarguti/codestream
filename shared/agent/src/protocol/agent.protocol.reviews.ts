@@ -228,7 +228,10 @@ export interface CheckReviewPreconditionsRequest {
 
 export interface CheckReviewPreconditionsResponse {
 	success: boolean;
-	error?: string;
+	error?: {
+		message: string;
+		type: "REPO_NOT_FOUND" | "COMMIT_NOT_FOUND" | "UNKNOWN" | string;
+	};
 }
 
 export const CheckReviewPreconditionsRequestType = new RequestType<

@@ -220,8 +220,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		const rightBaseContents = isNewFile
 			? ""
 			: diffs.leftBaseSha === diffs.rightBaseSha
-			? leftBaseContents
-			: (await git.getFileContentForRevision(rightBasePath, diffs.rightBaseSha)) || "";
+				? leftBaseContents
+				: (await git.getFileContentForRevision(rightBasePath, diffs.rightBaseSha)) || "";
 		const normalizedRightBaseContents = Strings.normalizeFileContents(rightBaseContents);
 		const rightContents =
 			rightDiff !== undefined
@@ -254,26 +254,35 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	async checkReviewPreconditions(
 		request: CheckReviewPreconditionsRequest
 	): Promise<CheckReviewPreconditionsResponse> {
-		const { git } = SessionContainer.instance();
+		const { git, repositoryMappings } = SessionContainer.instance();
 		const review = await this.getById(request.reviewId);
 		const diffsByRepo = await this.getAllDiffs(review.id);
 		for (const repoId in diffsByRepo) {
 			const repo = await git.getRepositoryById(repoId);
-			if (repo == null) {
+			let repoPath;
+			if (repo === undefined) {
+				repoPath = await repositoryMappings.getByRepoId(repoId);
+			} else {
+				repoPath = repo.path;
+			}
+			if (repoPath == null) {
 				return {
 					success: false,
-					error: "The git repository for this review is not currently open in the IDE"
+					error: {
+						message: "The git repository for this review is not currently open in the IDE",
+						type: "REPO_NOT_FOUND"
+					}
 				};
 			}
 
 			const diffs = diffsByRepo[repoId];
-			let leftCommit = await git.getCommit(repo.path, diffs.leftBaseSha);
-			let rightCommit = await git.getCommit(repo.path, diffs.rightBaseSha);
+			let leftCommit = await git.getCommit(repoPath, diffs.leftBaseSha);
+			let rightCommit = await git.getCommit(repoPath, diffs.rightBaseSha);
 			if (leftCommit == null || rightCommit == null) {
-				const didFetch = await git.fetchAllRemotes(repo.path);
+				const didFetch = await git.fetchAllRemotes(repoPath);
 				if (didFetch) {
-					leftCommit = leftCommit || (await git.getCommit(repo.path, diffs.leftBaseSha));
-					rightCommit = rightCommit || (await git.getCommit(repo.path, diffs.rightBaseSha));
+					leftCommit = leftCommit || (await git.getCommit(repoPath, diffs.leftBaseSha));
+					rightCommit = rightCommit || (await git.getCommit(repoPath, diffs.rightBaseSha));
 				}
 			}
 
@@ -281,8 +290,10 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				const shortSha = sha.substr(0, 8);
 				return {
 					success: false,
-					error: `A commit required to perform this review (${shortSha}, authored by ${author})
-was not found in the local git repository. Fetch all remotes and try again.`
+					error: {
+						message: `A commit required to perform this review (${shortSha}, authored by ${author}) was not found in the local git repository. Fetch all remotes and try again.`,
+						type: "COMMIT_NOT_FOUND"
+					}
 				};
 			}
 
