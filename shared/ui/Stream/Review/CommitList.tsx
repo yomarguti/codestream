@@ -3,12 +3,14 @@ import { ReviewPlus } from "@codestream/protocols/agent";
 import Icon from "../Icon";
 import { markdownify } from "../Markdowner";
 
-export const CommitList = (props: { review: ReviewPlus }) => {
+export const CommitList = (props: { review: ReviewPlus; changesetIndex?: number }) => {
 	const { review } = props;
 
 	const changesetLines = React.useMemo(() => {
 		const lines: any[] = [];
+		let index = 0;
 		for (let changeset of review.reviewChangesets) {
+			if (props.changesetIndex && index !== props.changesetIndex) return;
 			if (changeset.includeSaved || changeset.includeStaged) {
 				lines.push(
 					<div
@@ -59,6 +61,7 @@ export const CommitList = (props: { review: ReviewPlus }) => {
 					);
 				})
 			);
+			index++;
 		}
 		return lines;
 	}, [review]);

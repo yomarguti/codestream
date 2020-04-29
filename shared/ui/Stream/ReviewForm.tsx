@@ -159,6 +159,7 @@ interface State {
 	includeStaged: boolean;
 	excludeCommit: { [sha: string]: boolean };
 	startCommit: string;
+	// if set, a SHA that represents a "hard start" to the review changeset
 	prevEndCommit: string;
 	unsavedFiles: string[];
 	ignoredFiles: {
@@ -170,6 +171,7 @@ interface State {
 	allReviewersMustApprove: boolean;
 	mountedTimestamp: number;
 	currentFile?: string;
+	editingReviewBranch?: string;
 }
 
 const EmailWarning = styled.div`
@@ -317,10 +319,17 @@ class ReviewForm extends React.Component<Props, State> {
 				const commits = lastChangeset.commits || [];
 				// the start commit of this checkpoint is the last commit
 				const startCommit = commits.length > 0 ? commits[commits.length - 1].sha : "";
-				console.warn("START COMMIT IS: ", startCommit, " FROM ", commits);
-				this.setState({ repoName, startCommit, prevEndCommit: startCommit }, () => {
-					this.handleRepoChange(repoUri);
-				});
+				this.setState(
+					{
+						repoName,
+						startCommit,
+						prevEndCommit: startCommit,
+						editingReviewBranch: lastChangeset.branch
+					},
+					() => {
+						this.handleRepoChange(repoUri);
+					}
+				);
 			}
 		} else {
 			this.setState({ isLoadingScm: false, scmError: true });
@@ -351,7 +360,7 @@ class ReviewForm extends React.Component<Props, State> {
 	};
 
 	async handleRepoChange(repoUri?) {
-		const { teamMates, currentUser, isEditing } = this.props;
+		const { teamMates, currentUser, isEditing, isAmending } = this.props;
 		const { includeSaved, includeStaged, startCommit, prevEndCommit } = this.state;
 
 		const uri = repoUri || this.state.repoUri;
@@ -360,7 +369,8 @@ class ReviewForm extends React.Component<Props, State> {
 			startCommit,
 			includeStaged,
 			includeSaved,
-			currentUserEmail: currentUser.email
+			currentUserEmail: currentUser.email,
+			prevEndCommit
 		});
 
 		this._disposableDidChangeDataNotification &&
@@ -414,9 +424,10 @@ class ReviewForm extends React.Component<Props, State> {
 				if (commitListLength >= 5) this.setState({ commitListLength });
 			}
 		}
-		if (prevEndCommit) {
-			this.setChangeStart(prevEndCommit);
-		}
+		// if (isAmending && statusInfo.scm && statusInfo.scm.branch !== this.state.editingReviewBranch) {
+		// 	this.setState({ isLoadingScm: false, scmError: true });
+		// 	return;
+		// }
 
 		if (statusInfo.scm) {
 			const authors = statusInfo.scm.authors;
@@ -1476,28 +1487,33 @@ class ReviewForm extends React.Component<Props, State> {
 	};
 
 	renderPreviousCheckpoints = () => {
-		if (!this.props.editingReview) return null;
-		return (
-			<div className="related">
-				<div className="related-label">Checkpoint 1</div>
-				<div
-					className="background-highlight"
-					style={{
-						padding: "10px",
-						border: "1px solid var(--base-border-color)"
-					}}
-				>
-					<ChangesetFileList review={this.props.editingReview} noOnClick />
-					<div style={{ height: "10px" }} />
-					<Meta>
-						<MetaLabel>Commits</MetaLabel>
-						<MetaDescriptionForAssignees>
-							<CommitList review={this.props.editingReview} />
-						</MetaDescriptionForAssignees>
-					</Meta>
+		const { editingReview } = this.props;
+		if (!editingReview) return null;
+
+		return editingReview.reviewChangesets.map((changeset, index) => {
+			const checkpoint = 1 + (changeset.checkpoint || 0);
+			return (
+				<div className="related">
+					<div className="related-label">Checkpoint {checkpoint}</div>
+					<div
+						className="background-highlight"
+						style={{
+							padding: "10px",
+							border: "1px solid var(--base-border-color)"
+						}}
+					>
+						<ChangesetFileList changesetIndex={index} review={editingReview} noOnClick />
+						<div style={{ height: "10px" }} />
+						<Meta>
+							<MetaLabel>Commits</MetaLabel>
+							<MetaDescriptionForAssignees>
+								<CommitList changesetIndex={index} review={editingReview} />
+							</MetaDescriptionForAssignees>
+						</Meta>
+					</div>
 				</div>
-			</div>
-		);
+			);
+		});
 	};
 
 	renderReviewForm() {
@@ -1579,6 +1595,12 @@ class ReviewForm extends React.Component<Props, State> {
 										<span className="highlight">
 											{repoStatus.scm.branch}
 										</span>
+									</>
+								)}
+								{isAmending && (
+									<>
+										<span className="subhead">on branch&nbsp;</span>
+										<span className="highlight">{this.state.editingReviewBranch}</span>
 									</>
 								)}
 							</div>

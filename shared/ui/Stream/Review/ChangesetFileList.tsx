@@ -26,6 +26,7 @@ export const ChangesetFileList = (props: {
 	loading?: boolean;
 	noOnClick?: boolean;
 	showRepoLabels?: boolean;
+	changesetIndex?: number;
 }) => {
 	const { review, noOnClick, loading } = props;
 	const dispatch = useDispatch<Dispatch>();
@@ -98,6 +99,7 @@ export const ChangesetFileList = (props: {
 		const files: any[] = [];
 		let index = 0;
 		for (let changeset of review.reviewChangesets) {
+			if (props.changesetIndex && index !== props.changesetIndex) return;
 			if (props.showRepoLabels) {
 				const repoName = safe(() => getById(derivedState.repos, changeset.repoId).name) || "";
 				if (repoName) {
