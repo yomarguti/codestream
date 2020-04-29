@@ -1035,7 +1035,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			const baseSha = pushedCommit
 				? pushedCommit.sha
 				: scm.commits && scm.commits.length > 0
-				? await git.getParentCommitSha(scm.repoPath, scm.commits[scm.commits.length - 1].sha)
+				? (await git.getParentCommitShas(scm.repoPath, scm.commits[scm.commits.length - 1].sha))[0]
 				: latestCommitSha;
 
 			if (baseSha == null) {
@@ -1568,7 +1568,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					anchorFormat: "[${text}](${url})"
 				};
 		}
-	}
+	};
 
 	createProviderCard = async (
 		providerCardRequest: {
@@ -1796,7 +1796,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			Logger.error(error, `failed to create a ${attributes.issueProvider.name} card:`);
 			return undefined;
 		}
-	}
+	};
 }
 
 async function resolveCreatePostResponse(response: CreatePostResponse) {

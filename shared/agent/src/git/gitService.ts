@@ -859,13 +859,15 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
-	async getParentCommitSha(repoPath: string, sha: string): Promise<string | undefined> {
+	async getParentCommitShas(repoPath: string, sha: string): Promise<string[]> {
 		try {
 			const data = await git({ cwd: repoPath }, "log", "--pretty=%P", "-n", "1", sha);
-			return data.trim().split("\n")[0];
+			const allShas = data.trim().split("\n")[0] || "";
+			// commits can have multiple parents
+			return allShas.trim().split(/\s/);
 		} catch (err) {
 			Logger.log(err.message);
-			return undefined;
+			return [];
 		}
 	}
 

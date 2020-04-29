@@ -298,7 +298,7 @@ export class ScmManager {
 							startCommit = notMine.sha;
 						} else {
 							const oldestSha = commits[commits.length - 1].sha;
-							const parentSha = await git.getParentCommitSha(repoPath, oldestSha);
+							const parentSha = (await git.getParentCommitShas(repoPath, oldestSha))[0];
 							if (parentSha) startCommit = parentSha;
 							else startCommit = oldestSha + "^";
 						}
