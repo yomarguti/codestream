@@ -192,7 +192,7 @@ class ReviewForm extends React.Component<Props, State> {
 	focusOnMessageInput?: Function;
 	permalinkRef = React.createRef<HTMLTextAreaElement>();
 	private _sharingAttributes?: SharingAttributes;
-	private disposables: { dispose(): void }[] = [];
+	private _disposableDidChangeDataNotification: { dispose(): void } | undefined = undefined;
 
 	constructor(props: Props) {
 		super(props);
@@ -301,46 +301,11 @@ class ReviewForm extends React.Component<Props, State> {
 		this.getUserInfo();
 		if (textEditorUri) this.getScmInfoForURI(textEditorUri);
 
-		this.disposables.push(
-			HostApi.instance.on(DidChangeDataNotificationType, (e: any) => {
-				// if we have a change to scm OR a file has been saved, update
-				let update = false;
-				if (
-					e.type === ChangeDataType.Documents &&
-					e.data &&
-					(e.data as DocumentData).reason === "saved"
-				) {
-					update = true;
-				}				
-				else if (
-					e.type === ChangeDataType.Commits &&
-					e.data.repo &&
-					this.state.repoStatus &&
-					this.state.repoStatus.scm &&
-					this.state.repoStatus.scm.repoId === e.data.repo.id
-				) {
-					// listen only for changes related to the repo we are looking at
-					update = true;
-				}
-				
-				if (update && !this.state.scmError) {
-					// if there is an error getting git info,
-					// don't bother attempting since it's an error
-
-					this.setState({ isLoadingScm: true });
-					// handle the repo change, but don't pass the textEditorUri
-					// as we don't want to switch the repo the form is pointing
-					// to in these cases
-					this.handleRepoChange();
-				}
-			})
-		);
-
 		this.focus();
 	}
 
 	componentWillUnmount = () => {
-		this.disposables.forEach(d => d.dispose());
+		this._disposableDidChangeDataNotification && this._disposableDidChangeDataNotification.dispose();
 	};
 
 	async handleRepoChange(repoUri?) {
@@ -355,6 +320,43 @@ class ReviewForm extends React.Component<Props, State> {
 			includeSaved,
 			currentUserEmail: currentUser.email
 		});
+		
+		this._disposableDidChangeDataNotification && this._disposableDidChangeDataNotification.dispose();
+		this._disposableDidChangeDataNotification = HostApi.instance.on(
+			DidChangeDataNotificationType,
+			(e: any) => {
+				// if we have a change to scm OR a file has been saved, update
+				let update = false;
+				if (
+					e.type === ChangeDataType.Documents &&
+					e.data &&
+					(e.data as DocumentData).reason === "saved"
+				) {
+					update = true;
+				} else if (
+					e.type === ChangeDataType.Commits &&
+					e.data.repo &&
+					this.state.repoStatus &&
+					this.state.repoStatus.scm &&
+					this.state.repoStatus.scm.repoId === e.data.repo.id
+				) {
+					// listen only for changes related to the repo we are looking at
+					update = true;
+				}
+
+				if (update && !this.state.scmError) {
+					// if there is an error getting git info,
+					// don't bother attempting since it's an error
+
+					this.setState({ isLoadingScm: true });
+					// handle the repo change, but don't pass the textEditorUri
+					// as we don't want to switch the repo the form is pointing
+					// to in these cases
+					this.handleRepoChange();
+				}
+			}
+		);
+
 		this.setState({ repoStatus: statusInfo, repoUri: uri, currentFile: "" });
 		if (!startCommit && statusInfo.scm && statusInfo.scm.startCommit) {
 			this.setChangeStart(statusInfo.scm.startCommit);
@@ -425,7 +427,7 @@ class ReviewForm extends React.Component<Props, State> {
 			}
 
 			// if there is no title set OR there is one and a user hasn't touched it
-			// default it to a capitalized version of the branch name, 
+			// default it to a capitalized version of the branch name,
 			// with "feature/foo-bar" changed to "feature: foo bar"
 			if (statusInfo.scm.branch && (!this.state.title || !this.state.titleTouched)) {
 				const { branch } = statusInfo.scm;
@@ -1260,11 +1262,7 @@ class ReviewForm extends React.Component<Props, State> {
 			className += " selected-simple";
 		}
 		return (
-			<div
-				key={file}
-				className={className}
-				onClick={() => this.showLocalDiff(file)}
-			>
+			<div key={file} className={className} onClick={() => this.showLocalDiff(file)}>
 				<span className="file-info ellipsis-left">
 					<bdi dir="ltr">{file}</bdi>
 				</span>
@@ -1623,11 +1621,7 @@ class ReviewForm extends React.Component<Props, State> {
 								marginRight: 0
 							}}
 						>
-						<CancelButton
- 							toolTip={cancelTip}
-						 	onClick={this.confirmCancel}
- 							mode="button"
-						 />
+							<CancelButton toolTip={cancelTip} onClick={this.confirmCancel} mode="button" />
 							{!scmError && (
 								<Tooltip title={submitTip} placement="bottomRight" delay={1}>
 									<Button

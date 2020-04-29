@@ -143,7 +143,10 @@ function listenForEvents(store) {
 		switch (type) {
 			case ChangeDataType.Commits:
 				store.dispatch(resetDocuments());
-				store.dispatch(updateModifiedRepos());
+				if (data && (data as any).type === "change") {
+					// need to be careful as updateModifiedRepos triggers git actions
+					store.dispatch(updateModifiedRepos());
+				}
 				break;
 			case ChangeDataType.Documents:
 				if ((data as any).reason === "removed") {
