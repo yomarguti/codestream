@@ -109,6 +109,9 @@ module.exports = function(env, argv) {
 			// a warning from webpack's agent watch - Colin
 			// bufferutil: "bufferutil",
 			// "utf-8-validate": "utf-8-validate"
+
+			// https://github.com/yan-foto/electron-reload/issues/71
+			fsevents: "require('fsevents')"
 		},
 		module: {
 			rules: [
