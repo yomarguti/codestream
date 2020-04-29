@@ -63,7 +63,10 @@ export function withSearchableItems<ChildProps extends WithSearchableItemsProps>
 				reviewChangesets.forEach(changeset => {
 					const { branch, repoId } = changeset;
 					branchNames.add(branch);
-					repoNames.add(reposState[repoId].name);
+					const repo = reposState[repoId];
+					if (repo) {
+						repoNames.add(repo.name);
+					}
 				});
 			}
 			return { branchOptions: [...branchNames].sort(), repoOptions: [...repoNames].sort() };
