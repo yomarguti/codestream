@@ -315,6 +315,7 @@ export function ReviewNav(props: Props) {
 	};
 
 	const amend = () => {
+		if (review!.status !== "open") reopen();
 		setIsEditing(true);
 		setIsAmending(true);
 	};
@@ -424,6 +425,14 @@ export function ReviewNav(props: Props) {
 			case "rejected":
 				return (
 					<div className={hoverButton == "actions" ? "btn-group pulse" : "btn-group"}>
+						{isMine && (
+							<Tooltip title="Reopen & Amend Review (add code)" placement="bottom">
+								<Button onClick={amend}>
+									<Icon className="narrow-icon" name="plus" />
+									<span className="wide-text">Amend</span>
+								</Button>
+							</Tooltip>
+						)}
 						<Tooltip title="Reopen Review" placement="bottomRight">
 							<Button variant="secondary" onClick={reopen}>
 								<Icon className="narrow-icon" name="reopen" />

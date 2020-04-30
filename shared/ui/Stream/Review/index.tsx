@@ -323,6 +323,16 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 	};
 	const rejectItem = { icon: <Icon name="thumbsdown" />, label: "Reject", action: reject };
 	const reopenItem = { icon: <Icon name="reopen" />, label: "Reopen", action: reopen };
+	const amendItem = {
+		label: "Amend Review (add code)",
+		key: "amend",
+		icon: <Icon name="plus" />,
+		action: () => {
+			if (props.review.status !== "open") reopen();
+			props.setIsAmending(true);
+			props.setIsEditing(true);
+		}
+	};
 
 	const menuItems = React.useMemo(() => {
 		const items: any[] = [
@@ -393,22 +403,11 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 
 		if (props.collapsed) {
 			items.unshift({ label: "-" });
+			const { approvedBy = {}, creatorId } = review;
 			switch (review.status) {
 				case "open": {
-					const { approvedBy = {}, creatorId } = review;
 					const approval = approvedBy[derivedState.currentUserId] ? unapproveItem : approveItem;
 					items.unshift(reviewItem, approval, rejectItem);
-					if (derivedState.currentUserId === creatorId) {
-						items.unshift({
-							label: "Amend Review (add code)",
-							key: "amend",
-							icon: <Icon name="plus" />,
-							action: () => {
-								props.setIsAmending(true);
-								props.setIsEditing(true);
-							}
-						});
-					}
 					break;
 				}
 				case "approved":
@@ -417,6 +416,9 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 				case "rejected":
 					items.unshift(reopenItem);
 					break;
+			}
+			if (derivedState.currentUserId === creatorId) {
+				items.unshift(amendItem);
 			}
 		}
 
