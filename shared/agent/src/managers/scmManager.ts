@@ -18,7 +18,6 @@ import {
 	GetFileScmInfoRequest,
 	GetFileScmInfoRequestType,
 	GetFileScmInfoResponse,
-	GetLatestCommittersRequest,
 	GetLatestCommittersRequestType,
 	GetLatestCommittersResponse,
 	GetRangeScmInfoRequest,
@@ -237,6 +236,7 @@ export class ScmManager {
 		includeStaged,
 		includeSaved,
 		startCommit,
+		prevEndCommit,
 		currentUserEmail
 	}: GetRepoScmStatusRequest): Promise<GetRepoScmStatusResponse> {
 		const cc = Logger.getCorrelationContext();
@@ -278,7 +278,7 @@ export class ScmManager {
 					}
 
 					branch = await git.getCurrentBranch(uri.fsPath);
-					if (branch) commits = await git.getCommitsOnBranch(repoPath, branch);
+					if (branch) commits = await git.getCommitsOnBranch(repoPath, branch, prevEndCommit);
 
 					const repo = await git.getRepositoryByFilePath(repoPath);
 					repoId = repo && repo.id;
