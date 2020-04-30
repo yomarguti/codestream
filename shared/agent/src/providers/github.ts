@@ -27,6 +27,7 @@ import {
 	getOpenedRepos,
 	getRemotePaths,
 	PullRequestComment,
+	REFRESH_TIMEOUT,
 	ThirdPartyIssueProviderBase,
 	ThirdPartyProviderSupportsIssues,
 	ThirdPartyProviderSupportsPullRequests
@@ -396,7 +397,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					? this._getCommentsForPathCore(filePath, relativePath, remotePath, repo.path)
 					: Promise.resolve([]);
 			this._commentsByRepoAndPath.set(cacheKey, {
-				expiresAt: new Date().setMinutes(new Date().getMinutes() + 30),
+				expiresAt: new Date().setMinutes(new Date().getMinutes() + REFRESH_TIMEOUT),
 				comments: commentsPromise
 			});
 
@@ -424,7 +425,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		} else {
 			const prsPromise = this._getPullRequests(remotePaths);
 			this._prsByRepo.set(repoPath, {
-				expiresAt: new Date().setMinutes(new Date().getMinutes() + 30),
+				expiresAt: new Date().setMinutes(new Date().getMinutes() + REFRESH_TIMEOUT),
 				prs: prsPromise
 			});
 

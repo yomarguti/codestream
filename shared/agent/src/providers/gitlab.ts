@@ -26,7 +26,12 @@ import {
 	CSReferenceLocation
 } from "../protocol/api.protocol";
 import { log, lspProvider, Strings } from "../system";
-import { getRemotePaths, PullRequestComment, ThirdPartyIssueProviderBase } from "./provider";
+import {
+	getRemotePath,
+	PullRequestComment,
+	REFRESH_TIMEOUT,
+	ThirdPartyIssueProviderBase
+} from "./provider";
 
 interface GitLabProject {
 	path_with_namespace: any;
@@ -368,7 +373,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					? this._getCommentsForPathCore(filePath, relativePath, remotePaths)
 					: Promise.resolve([]);
 			this._commentsByRepoAndPath.set(cacheKey, {
-				expiresAt: new Date().setMinutes(new Date().getMinutes() + 30),
+				expiresAt: new Date().setMinutes(new Date().getMinutes() + REFRESH_TIMEOUT),
 				comments: commentsPromise
 			});
 

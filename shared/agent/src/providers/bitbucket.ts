@@ -31,6 +31,7 @@ import {
 	getOpenedRepos,
 	getRemotePaths,
 	PullRequestComment,
+	REFRESH_TIMEOUT,
 	ThirdPartyIssueProviderBase,
 	ThirdPartyProviderSupportsIssues,
 	ThirdPartyProviderSupportsPullRequests
@@ -432,7 +433,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 					? this._getCommentsForPathCore(filePath, relativePath, remotePath)
 					: Promise.resolve([]);
 			this._commentsByRepoAndPath.set(cacheKey, {
-				expiresAt: new Date().setMinutes(new Date().getMinutes() + 30),
+				expiresAt: new Date().setMinutes(new Date().getMinutes() + REFRESH_TIMEOUT),
 				comments: commentsPromise
 			});
 

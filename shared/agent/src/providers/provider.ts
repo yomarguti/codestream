@@ -117,6 +117,9 @@ export interface ApiResponse<T> {
 	response: Response;
 }
 
+// timeout for providers in minutes
+export const REFRESH_TIMEOUT = 30;
+
 interface RefreshableProviderInfo {
 	expiresAt: number;
 	refreshToken: string;
