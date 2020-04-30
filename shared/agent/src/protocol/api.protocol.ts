@@ -1,4 +1,5 @@
 "use strict";
+import { CreateReviewChangesetsRequest } from "./agent.protocol.reviews";
 import { RepoScmStatus } from "./agent.protocol.scm";
 import {
 	ChannelServiceType,
@@ -20,13 +21,13 @@ import {
 	CSReview,
 	CSReviewChangeset,
 	CSReviewDiffs,
+	CSReviewStatus,
 	CSStream,
 	CSTag,
 	CSTeam,
 	CSUser,
 	ProviderType,
-	StreamType,
-	CSReviewStatus
+	StreamType
 } from "./api.protocol.models";
 
 export * from "./api.protocol.models";
@@ -516,10 +517,10 @@ export interface CSCreateReviewRequest {
 	parentPostId?: string;
 	status?: string;
 	reviewers?: string[];
-	authorsById: { [authorId: string]: { stomped: number; commits: number } };
+	authorsById?: { [authorId: string]: { stomped: number; commits: number } };
 	tags?: string[];
 
-	repoChanges: {
+	repoChanges?: {
 		scm: RepoScmStatus;
 		startCommit: string;
 		excludeCommit: string;
@@ -527,7 +528,6 @@ export interface CSCreateReviewRequest {
 		newFiles: string[];
 		includeSaved: boolean;
 		includeStaged: boolean;
-		remotes: { name: string; url: string }[];
 	}[];
 
 	markers?: CSCreateMarkerRequest[];
@@ -574,9 +574,26 @@ export interface CSGetReviewsResponse {
 }
 
 export interface CSUpdateReviewRequest {
+	// edit the status, title or text
 	status?: CSReviewStatus;
 	title?: string;
 	text?: string;
+
+	// amend the review with an additional checkpoint
+	// this is the data coming from the webivew....
+	repoChanges?: {
+		scm: RepoScmStatus;
+		startCommit: string;
+		excludeCommit: string;
+		excludedFiles: string[];
+		newFiles: string[];
+		includeSaved: boolean;
+		includeStaged: boolean;
+		checkpoint: number;
+	}[];
+	// ... and this is the data that the API server expects,
+	// after getting massaged by postsManager
+	reviewChangesets?: CreateReviewChangesetsRequest[];
 }
 
 export interface CSUpdateReviewResponse {

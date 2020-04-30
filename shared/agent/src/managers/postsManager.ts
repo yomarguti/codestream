@@ -987,7 +987,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	// this is what the webview will call to create reviews in the sharing model
 	@lspHandler(CreateShareableReviewRequestType)
 	async createSharingReviewPost(
-		request: CreateShareableReviewRequest
+		request: CreateShareableReviewRequest,
+		shortCircuitAndReturnReviewChangesets?: boolean
 	): Promise<CreateShareableReviewResponse> {
 		const reviewRequest: CreateReviewRequest = {
 			...request.attributes,
@@ -999,16 +1000,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		let review: ReviewPlus | undefined;
 		let totalExcludedFilesCount = 0;
 
-		for (const repoChange of request.attributes.repoChanges) {
-			const {
-				scm,
-				includeSaved,
-				includeStaged,
-				startCommit,
-				excludedFiles,
-				newFiles,
-				remotes
-			} = repoChange;
+		for (const repoChange of request.attributes.repoChanges!) {
+			const { scm, includeSaved, includeStaged, startCommit, excludedFiles, newFiles } = repoChange;
 			if (!scm || !scm.repoId || !scm.branch || !scm.commits) continue;
 
 			const removeExcluded = (diff: ParsedDiff) =>
@@ -1156,7 +1149,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					modifiedFiles,
 					includeSaved,
 					includeStaged,
-					remotes,
+					checkpoint: 0,
 					diffs: {
 						leftBaseAuthor,
 						leftBaseSha,
@@ -1212,6 +1205,11 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 		if (sizeof(reviewRequest.reviewChangesets) > 2 * 1024 * 1024) {
 			throw new Error("Cannot create review. Payload exceeds 2MB");
+		}
+
+		// FIXME -- this is hot garbage
+		if (shortCircuitAndReturnReviewChangesets) {
+			return reviewRequest.reviewChangesets as any;
 		}
 
 		// FIXME -- not sure if this is the right way to do this

@@ -78,6 +78,10 @@ export interface GetRepoScmStatusRequest {
 	 */
 	uri: string;
 	startCommit?: string;
+	/**
+	 * If set, the hard-start to a commit list: don't return commits before this
+	 */
+	prevEndCommit?: string;
 	includeSaved: boolean;
 	includeStaged: boolean;
 	currentUserEmail: string;

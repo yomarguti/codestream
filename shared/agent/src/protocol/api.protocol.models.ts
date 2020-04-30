@@ -193,8 +193,8 @@ export interface CSReviewChangesetBase {
 	modifiedFiles: ReviewChangesetFileInfo[];
 	includeSaved: boolean;
 	includeStaged: boolean;
-	remotes: { name: string; url: string }[];
 	diffId: string;
+	checkpoint: number;
 }
 
 export interface CSReviewChangeset extends CSEntity, CSReviewChangesetBase {}

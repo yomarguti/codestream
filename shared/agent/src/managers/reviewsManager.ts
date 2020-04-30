@@ -238,6 +238,27 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 	@lspHandler(UpdateReviewRequestType)
 	async update(request: UpdateReviewRequest): Promise<UpdateReviewResponse> {
+		if (request.repoChanges) {
+			const { posts } = SessionContainer.instance();
+
+			// FIXME -- this is hot garbage
+			const { reviewChangesets, ...rest } = request;
+			try {
+				const r = await posts.createSharingReviewPost(
+					{
+						attributes: { ...rest }
+					},
+					true
+				);
+				// @ts-ignore
+				request.reviewChangesets = r;
+				delete request.repoChanges;
+				// END FIXME -- this is hot garbage
+			} catch (e) {
+				Logger.warn("Error in reviewsManager.update: ", e);
+			}
+		}
+
 		const updateResponse = await this.session.api.updateReview(request);
 		const [review] = await this.resolve({
 			type: MessageType.Reviews,
