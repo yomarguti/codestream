@@ -565,6 +565,7 @@ class ReviewForm extends React.Component<Props, State> {
 					title: title,
 					text: replaceHtml(text || "")!
 				};
+				let repoChanges;
 				const reviewerOperations = arrayDiff(originalReviewers, reviewerIds);
 				if (reviewerOperations) {
 					if (reviewerOperations.added && reviewerOperations.added.length) {
@@ -588,20 +589,38 @@ class ReviewForm extends React.Component<Props, State> {
 					}
 				}
 
-				const editResult = await this.props.editReview(this.props.editingReview.id, attributes);
+				if (this.props.isAmending) {
+					const { scm } = repoStatus;
+					repoChanges = [
+						{
+							scm,
+							startCommit,
+							excludeCommit,
+							excludedFiles: keyFilter(excludedFiles),
+							// new files will originally have excludedFiles[file] = true
+							// and when they get added to the review they will be
+							// excludedFiles[file] = false
+							// therefore we can use the keys whose values are false
+							// as the list of files that have been added
+							newFiles: keyFilterFalsey(excludedFiles),
+							includeSaved: scm!.savedFiles.length > 0,
+							includeStaged: scm!.stagedFiles.length > 0
+						}
+					];
+				}
+
+				const editResult = await this.props.editReview(
+					this.props.editingReview.id,
+					attributes,
+					repoChanges
+				);
 				if (editResult && editResult.review) {
 					if (this.props.onClose) {
 						this.props.onClose();
 					}
 				}
 			} else if (this.props.createPostAndReview) {
-				let scm;
-				if (repoStatus) {
-					scm = repoStatus.scm;
-				}
-				const hasSavedFiles = scm ? scm.savedFiles.length > 0 : false;
-				const hasStagedFiles = scm ? scm.stagedFiles.length > 0 : false;
-
+				const { scm } = repoStatus;
 				let review = {
 					title,
 					sharingAttributes: this.props.shouldShare ? this._sharingAttributes : undefined,
@@ -613,7 +632,7 @@ class ReviewForm extends React.Component<Props, State> {
 					status: "open",
 					repoChanges: [
 						{
-							scm: scm,
+							scm,
 							startCommit,
 							excludeCommit,
 							excludedFiles: keyFilter(excludedFiles),

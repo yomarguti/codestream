@@ -154,41 +154,49 @@ export type EditableAttributes = Partial<
 	Pick<CSReview, "tags" | "text" | "title" | "reviewers"> & AdvancedEditableReviewAttributes
 >;
 
-export const editReview = (id: string, attributes: EditableAttributes) => async (
+export const emoteChanges = (attributes: EditableAttributes, streamId, postId) => async (
 	dispatch,
 	getState: () => CodeStreamState
 ) => {
+	if (
+		attributes.$push != null &&
+		attributes.$push.reviewers != null &&
+		attributes.$push.reviewers.length
+	) {
+		// if we have additional ids we're adding via $push, map them here
+		const filteredUsers = mapFilter(getTeamMembers(getState()), teamMember => {
+			const user = attributes.$push!.reviewers!.find(_ => _ === teamMember.id);
+			return user ? teamMember : undefined;
+		}).filter(Boolean);
+
+		if (filteredUsers.length) {
+			dispatch(
+				createPost(
+					streamId,
+					postId,
+					`/me added ${phraseList(filteredUsers.map(u => `@${u.username}`))} to this review`,
+					null,
+					filteredUsers.map(u => u.id)
+				)
+			);
+		}
+	}
+};
+
+export const editReview = (
+	id: string,
+	attributes: EditableAttributes,
+	repoChanges?
+) => async dispatch => {
 	let response: UpdateReviewResponse | undefined;
 	try {
 		response = await HostApi.instance.send(UpdateReviewRequestType, {
 			id,
-			...attributes
+			...attributes,
+			repoChanges
 		});
 		dispatch(updateReviews([response.review]));
-
-		if (
-			attributes.$push != null &&
-			attributes.$push.reviewers != null &&
-			attributes.$push.reviewers.length
-		) {
-			// if we have additional ids we're adding via $push, map them here
-			const filteredUsers = mapFilter(getTeamMembers(getState()), teamMember => {
-				const user = attributes.$push!.reviewers!.find(_ => _ === teamMember.id);
-				return user ? teamMember : undefined;
-			}).filter(Boolean);
-
-			if (filteredUsers.length) {
-				dispatch(
-					createPost(
-						response.review.streamId,
-						response.review.postId,
-						`/me added ${phraseList(filteredUsers.map(u => `@${u.username}`))} to this review`,
-						null,
-						filteredUsers.map(u => u.id)
-					)
-				);
-			}
-		}
+		dispatch(emoteChanges(attributes, response.review.streamId, response.review.postId));
 	} catch (error) {
 		logError(`failed to update review: ${error}`, { id });
 	}
