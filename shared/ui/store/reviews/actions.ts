@@ -151,7 +151,8 @@ interface AdvancedEditableReviewAttributes {
 }
 
 export type EditableAttributes = Partial<
-	Pick<CSReview, "tags" | "text" | "title" | "reviewers"> & AdvancedEditableReviewAttributes
+	Pick<CSReview, "tags" | "text" | "title" | "reviewers" | "allReviewersMustApprove"> &
+		AdvancedEditableReviewAttributes
 >;
 
 export const editReview = (id: string, attributes: EditableAttributes, repoChanges?) => async (

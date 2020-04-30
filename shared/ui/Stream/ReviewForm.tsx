@@ -563,7 +563,8 @@ class ReviewForm extends React.Component<Props, State> {
 				const originalReviewers = this.props.editingReview.reviewers;
 				const attributes: EditableAttributes = {
 					title: title,
-					text: replaceHtml(text || "")!
+					text: replaceHtml(text || "")!,
+					allReviewersMustApprove
 				};
 				let repoChanges;
 				const reviewerOperations = arrayDiff(originalReviewers, reviewerIds);
@@ -1696,7 +1697,7 @@ class ReviewForm extends React.Component<Props, State> {
 							style={{ padding: "0", marginBottom: 0, position: "relative" }}
 						>
 							<div className="related-label">
-								{reviewers.length > 0 && !this.state.reviewersTouched}Reviewers
+								Reviewers {reviewers.length > 1 && this.renderMultiReviewSetting()}
 							</div>
 							{reviewers.map(person => {
 								const menu = (
