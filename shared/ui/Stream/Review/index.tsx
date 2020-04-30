@@ -752,6 +752,7 @@ const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 	return (
 		<>
 			<MetaSectionCollapsed>
+				{props.tags && props.tags.map(tag => <Tag tag={tag} key={tag.id} />)}
 				{props.isFollowing && (
 					<span>
 						<Icon
@@ -763,7 +764,6 @@ const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 						/>
 					</span>
 				)}
-				{props.tags && props.tags.map(tag => <Tag tag={tag} key={tag.id} />)}
 				{props.review.numReplies > 0 && (
 					<Tooltip title="Show replies" placement="bottom">
 						<span className="detail-icon">

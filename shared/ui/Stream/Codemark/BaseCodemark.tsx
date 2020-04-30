@@ -246,6 +246,7 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 							</div>
 						)}
 						<MetaSectionCollapsed>
+							{hasTags && props.tags!.map(tag => <Tag tag={tag} key={tag.id} />)}
 							{props.isFollowing && (
 								<span>
 									<Icon
@@ -257,7 +258,6 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 									/>
 								</span>
 							)}
-							{hasTags && props.tags!.map(tag => <Tag tag={tag} key={tag.id} />)}
 							{props.providerDisplay && props.providerDisplay.icon && (
 								<span
 									className="detail-icon"
@@ -430,6 +430,9 @@ export const MetaSectionCollapsed = styled.div`
 	.cs-tag {
 		cursor: pointer;
 		margin-bottom: 0px;
+		&:last-of-type {
+			margin-right: ;
+		}
 	}
 
 	${MetaSectionCollapsedHeadshotArea} {
