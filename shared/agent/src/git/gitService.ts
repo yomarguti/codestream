@@ -287,7 +287,15 @@ export class GitService implements IGitService, Disposable {
 		const [dir, filename] = Strings.splitPath(filePath);
 		let data;
 		try {
-			data = await git({ cwd: dir }, "diff", initialCommitHash, finalCommitHash, "--", filename);
+			data = await git(
+				{ cwd: dir },
+				"diff",
+				"--no-ext-diff",
+				initialCommitHash,
+				finalCommitHash,
+				"--",
+				filename
+			);
 		} catch (err) {
 			if (fetchIfCommitNotFound) {
 				Logger.log("Commit not found - fetching all remotes");
@@ -315,7 +323,7 @@ export class GitService implements IGitService, Disposable {
 		const [dir, filename] = Strings.splitPath(filePath);
 		let data;
 		try {
-			data = await git({ cwd: dir }, "diff", "HEAD", "--", filename);
+			data = await git({ cwd: dir }, "diff", "--no-ext-diff", "HEAD", "--", filename);
 		} catch (err) {
 			Logger.warn(`Error getting diff from HEAD to working directory for ${filename}`);
 			throw err;
@@ -341,7 +349,7 @@ export class GitService implements IGitService, Disposable {
 		let data: string | undefined;
 		const { includeSaved, includeStaged, reverse } = opts;
 		try {
-			const options = ["diff", "--no-prefix"];
+			const options = ["diff", "--no-ext-diff", "--no-prefix"];
 			if (reverse === true) options.push("-R");
 			if (includeStaged && !includeSaved) options.push("--staged");
 			if (ref1 && ref1.length) options.push(ref1);
@@ -933,6 +941,7 @@ export class GitService implements IGitService, Disposable {
 			const deletedOnly = await git(
 				{ cwd: repoPath },
 				"diff",
+				"--no-ext-diff",
 				"--numstat",
 				"--diff-filter=D",
 				...options,
@@ -941,6 +950,7 @@ export class GitService implements IGitService, Disposable {
 			const allButDeleted = await git(
 				{ cwd: repoPath },
 				"diff",
+				"--no-ext-diff",
 				"--numstat",
 				"--diff-filter=d",
 				...options,
@@ -1105,7 +1115,7 @@ export class GitService implements IGitService, Disposable {
 		try {
 			let data: string | undefined;
 			try {
-				const options = ["diff"];
+				const options = ["diff", "--no-ext-diff"];
 				if (includeStaged && !includeSaved) options.push("--staged");
 				if (ref && ref.length) options.push(ref);
 				if (!includeStaged) options.push("HEAD");
