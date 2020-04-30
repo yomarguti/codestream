@@ -578,6 +578,7 @@ export interface CSUpdateReviewRequest {
 	status?: CSReviewStatus;
 	title?: string;
 	text?: string;
+	allReviewersMustApprove?: boolean;
 
 	// amend the review with an additional checkpoint
 	// this is the data coming from the webivew....
