@@ -55,6 +55,9 @@ export interface CreateShareableReviewRequest {
 	textDocuments?: TextDocumentIdentifier[];
 	entryPoint?: string;
 	mentionedUserIds?: string[];
+
+	// FIXME temporary hot garbage
+	shortCircuitAndReturnReviewChangesets?: boolean;
 }
 
 export interface CreateShareableReviewResponse {

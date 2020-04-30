@@ -244,12 +244,10 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			// FIXME -- this is hot garbage
 			const { reviewChangesets, ...rest } = request;
 			try {
-				const r = await posts.createSharingReviewPost(
-					{
-						attributes: { ...rest }
-					},
-					true
-				);
+				const r = await posts.createSharingReviewPost({
+					attributes: { ...rest },
+					shortCircuitAndReturnReviewChangesets: true
+				});
 				// @ts-ignore
 				request.reviewChangesets = r;
 				delete request.repoChanges;

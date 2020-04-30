@@ -987,8 +987,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	// this is what the webview will call to create reviews in the sharing model
 	@lspHandler(CreateShareableReviewRequestType)
 	async createSharingReviewPost(
-		request: CreateShareableReviewRequest,
-		shortCircuitAndReturnReviewChangesets?: boolean
+		request: CreateShareableReviewRequest
 	): Promise<CreateShareableReviewResponse> {
 		const reviewRequest: CreateReviewRequest = {
 			...request.attributes,
@@ -1208,7 +1207,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		}
 
 		// FIXME -- this is hot garbage
-		if (shortCircuitAndReturnReviewChangesets) {
+		if (request.shortCircuitAndReturnReviewChangesets) {
 			return reviewRequest.reviewChangesets as any;
 		}
 
