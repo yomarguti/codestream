@@ -798,7 +798,8 @@ export class GitService implements IGitService, Disposable {
 
 	async getCommitsOnBranch(
 		repoPath: string,
-		branch: string
+		branch: string,
+		prevEndCommit?: string
 	): Promise<{ sha: string; info: {}; localOnly: boolean }[] | undefined> {
 		try {
 			// commits for a specific branch
@@ -861,10 +862,16 @@ export class GitService implements IGitService, Disposable {
 				Logger.log(`Unable to identify pushed commits. Reason: ${ex.message}`);
 			}
 
-			const ret: { sha: string; info: {}; localOnly: boolean }[] = [];
+			let ret: { sha: string; info: {}; localOnly: boolean }[] = [];
 			commits.forEach((val, key) => {
 				ret.push({ sha: key, info: val, localOnly: !localCommits || localCommits.includes(key) });
 			});
+
+			if (prevEndCommit) {
+				const index = ret.findIndex(commit => commit.sha === prevEndCommit);
+				if (index) ret = ret.slice(0, index);
+			}
+
 			return ret;
 		} catch {
 			return undefined;
