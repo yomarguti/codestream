@@ -64,4 +64,13 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public const string MethodName = "host/server-url";
 		public override string Method => MethodName;
 	}
+
+	public class OpenUrlRequest {
+		public string Url { get; set; }
+	}
+
+	public class OpenUrlRequestType : RequestType<OpenUrlRequest> {
+		public const string MethodName = "host/url/open";
+		public override string Method => MethodName;
+	}
 }

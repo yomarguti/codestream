@@ -456,6 +456,14 @@ namespace CodeStream.VisualStudio {
 											}
 											break;
 										}
+									case OpenUrlRequestType.MethodName: {
+											var @params = message.Params.ToObject<OpenUrlRequest>();
+											if (@params != null) {
+												_ideService.Navigate(@params.Url);
+											}
+
+											break;
+									}
 									default: {
 											Log.Warning($"Unhandled Target={target} Method={message.Method}");
 											break;
