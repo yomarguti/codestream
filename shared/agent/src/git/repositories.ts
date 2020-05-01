@@ -329,12 +329,11 @@ export class GitRepositories {
 			try {
 				// thanks gitlens!
 				// https://github.com/eamodio/vscode-gitlens/blob/master/src/git/models/repository.ts#L133
-				// also added FETCH_HEAD as converting from shallow to full clone creates that.
+				// FETCH_HEAD can also be modified with other git commands, creating an infinite loop, watch out!
 				const paths = [
 					".git/config",
 					".git/index",
 					".git/HEAD",
-					".git/FETCH_HEAD",
 					".git/refs/stash",
 					".git/refs/heads/**",
 					".git/refs/remotes/**",
