@@ -1109,12 +1109,11 @@ class ReviewForm extends React.Component<Props, State> {
 
 		if (scm.repoPath) {
 			for (let path of unsavedFiles) {
-				let uri = URI.parse(path);
-				let uriPath = uri.path;
-				if (uriPath[0] === "/") {
-					uriPath = uriPath.substring(1);
-				}
-				if (uriPath.indexOf(scm.repoPath) === 0) {
+				const uri = URI.parse(path);
+				const uriPath = uri.path;
+				const index = uriPath.indexOf(scm.repoPath)
+				if (index === 0 || index === 1) {
+					// windows leads with a / before the drive letter
 					unsavedFilesInThisRepo.push(uriPath);
 				}
 			}
