@@ -15,6 +15,7 @@ import com.codestream.protocols.webview.EditorScrollToRequest
 import com.codestream.protocols.webview.MarkerApplyRequest
 import com.codestream.protocols.webview.MarkerCompareRequest
 import com.codestream.protocols.webview.MarkerInsertTextRequest
+import com.codestream.protocols.webview.OpenUrlRequest
 import com.codestream.protocols.webview.ReviewShowDiffRequest
 import com.codestream.protocols.webview.ReviewShowLocalDiffRequest
 import com.codestream.protocols.webview.ShellPromptFolderResponse
@@ -31,6 +32,7 @@ import com.github.salomonbrys.kotson.nullString
 import com.github.salomonbrys.kotson.string
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
+import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
@@ -110,7 +112,8 @@ class WebViewRouter(val project: Project) {
             "host/review/closeDiff" -> reviewClose(message)
             "host/review/changedFiles/next" -> reviewNextFile(message)
             "host/review/changedFiles/previous" -> reviewPreviousFile(message)
-            "host/server-url"-> updateServerUrl(message)
+            "host/server-url" -> updateServerUrl(message)
+            "host/url/open" -> openUrl(message)
             else -> logger.warn("Unhandled host message ${message.method}")
         }
         if (message.id != null) {
@@ -240,6 +243,11 @@ class WebViewRouter(val project: Project) {
         settings.serverUrl = request.serverUrl
         settings.disableStrictSSL = request.disableStrictSSL
         project.agentService?.setServerUrl(SetServerUrlParams(request.serverUrl, request.disableStrictSSL))
+    }
+
+    private fun openUrl(message: WebViewMessage) {
+        val request = gson.fromJson<OpenUrlRequest>(message.params!!)
+        BrowserUtil.browse(request.url)
     }
 
     private fun parse(json: String): WebViewMessage {
