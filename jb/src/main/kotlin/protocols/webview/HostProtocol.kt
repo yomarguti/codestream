@@ -140,3 +140,7 @@ class UpdateServerUrlRequest(
     val serverUrl: String,
     val disableStrictSSL: Boolean = false
 )
+
+class OpenUrlRequest(
+    val url: String
+)
