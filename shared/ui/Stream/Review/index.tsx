@@ -752,7 +752,14 @@ const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 	return (
 		<>
 			<MetaSectionCollapsed>
-				{props.tags && props.tags.map(tag => <Tag tag={tag} key={tag.id} />)}
+				{props.tags && (
+					<>
+						{props.tags!.map(tag => (
+							<Tag tag={tag} key={tag.id} />
+						))}
+						<div style={{ width: "5px" }} />
+					</>
+				)}
 				{props.isFollowing && (
 					<span>
 						<Icon
