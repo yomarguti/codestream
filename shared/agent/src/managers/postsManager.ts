@@ -964,7 +964,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		trackPostCreation(
 			{
 				streamId: stream.id,
-				codemark: codemark,
+				codemark: { ...codemark, markers },
 				text: request.attributes.text!,
 				entryPoint: request.entryPoint,
 				isPseudoCodemark: request.isPseudoCodemark
