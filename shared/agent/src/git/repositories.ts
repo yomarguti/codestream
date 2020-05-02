@@ -53,6 +53,10 @@ export class GitRepositories {
 		this._disposable && this._disposable.dispose();
 	}
 
+	async ensureSearchComplete() {
+		await this._searchPromise;
+	}
+
 	async find(predicate: (repo: GitRepository) => boolean) {
 		const tree = await this.getRepositoryTree();
 		return Iterables.find(tree.values(), predicate);

@@ -1213,11 +1213,16 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	async matchRepos(request: MatchReposRequest) {
-		return this.put<MatchReposRequest, MatchReposResponse>(
+		const response = await this.put<MatchReposRequest, MatchReposResponse>(
 			`/repos/match/${this.teamId}`,
 			request,
 			this._token
 		);
+		await SessionContainer.instance().repos.resolve({
+			type: MessageType.Repositories,
+			data: [response.repos]
+		});
+		return response;
 	}
 
 	@log()

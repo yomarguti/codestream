@@ -795,7 +795,13 @@ export class CodeStreamSession {
 
 		const cc = Logger.getCorrelationContext();
 
+		// after initializing, wait for the initial search of git repositories to complete,
+		// otherwise newly matched repos might be returned to the webview before the bootstrap
+		// request can be processed, resulting in bad repo data known by the webview
+		// see https://trello.com/c/1IjQLhzh - Colin
 		SessionContainer.initialize(this);
+		await SessionContainer.instance().git.ensureSearchComplete();
+
 		// re-register to acknowledge lsp handlers from newly instantiated classes
 		registerDecoratedHandlers(this.agent);
 

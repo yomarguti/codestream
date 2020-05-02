@@ -134,6 +134,7 @@ export class Broadcaster {
 	private _debug: (msg: string, info?: any) => void = () => {};
 	private _activeFailures: string[] = [];
 	private _messagesReceived: { [key: string]: number } = {};
+	private _initializationStartedAt: number = 0;
 
 	// call to receive status updates
 	get onDidStatusChange(): Event<BroadcasterStatus> {
@@ -152,6 +153,7 @@ export class Broadcaster {
 
 	// initialize BroadcasterConnection
 	async initialize(options: BroadcasterInitializer): Promise<Disposable> {
+		this._initializationStartedAt = Date.now();
 		if (options.debug) {
 			this._debug = options.debug;
 		}
@@ -479,11 +481,18 @@ export class Broadcaster {
 			since = this._lastMessageReceivedAt - THRESHOLD_BUFFER;
 			this._debug(`Last message was recevied at ${this._lastMessageReceivedAt}`);
 		} else {
+			// on a fresh session, since initialization may take some time (especially if there are connection issues),
+			// we want to make sure we get messages received in that time, in fact we'll be generous and pick up
+			// any messages issued since ten seconds before initialization
+			since = this._initializationStartedAt - 10000;
+			this._debug(`No messages have been received yet, looks like fresh session, retrieve history since ${since}`);
+			/*
 			// assume a fresh session, with no catch up necessary
 			this._debug("No messages have been received yet, assume fresh session");
 			this._lastMessageReceivedAt = Date.now();
 			this.subscribed();
 			return;
+			*/
 		}
 
 		if (Date.now() - since > THRESHOLD_FOR_CATCHUP) {

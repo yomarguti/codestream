@@ -100,6 +100,10 @@ export class GitService implements IGitService, Disposable {
 		this._disposable && this._disposable.dispose();
 	}
 
+	ensureSearchComplete() {
+		return this._repositories.ensureSearchComplete();
+	}
+
 	get onRepositoryCommitHashChanged(): Event<GitRepository> {
 		return this._repositories.onCommitHashChanged;
 	}
