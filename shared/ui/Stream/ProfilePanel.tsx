@@ -15,16 +15,12 @@ import { Headshot } from "../src/components/Headshot";
 import { MetaLabel } from "./Codemark/BaseCodemark";
 import { WebviewPanels } from "../ipc/webview.protocol.common";
 import Timestamp from "./Timestamp";
+import Tooltip from "./Tooltip";
+import { getCodeCollisions } from "../store/users/reducer";
+import { ChangesetFile } from "./Review/ChangesetFile";
+import { UL } from "./TeamPanel";
 
 const Root = styled.div`
-	padding: 20px;
-	h1 {
-		margin: -5px 0 0 0;
-		.icon {
-			margin-left: 10px;
-			vertical-align: baseline;
-		}
-	}
 	.edit-headshot {
 		position: relative;
 		cursor: pointer;
@@ -47,7 +43,11 @@ const Root = styled.div`
 	.edit-headshot,
 	.headshot-wrap {
 		float: right;
-		margin: 0 0 10px 10px;
+		margin: 20px 0 10px 10px;
+		@media only screen and (max-width: 430px) {
+			float: none;
+			margin: 20px 0 10px 0;
+		}
 	}
 `;
 const Value = styled.span`
@@ -87,13 +87,22 @@ const RowIcon = ({ name, title, onClick }) => {
 export const ProfilePanel = () => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
-		const { session, users, context } = state;
+		const { session, users, teams, context } = state;
 		const person = users[context.profileUserId!];
+		const me = users[session.userId!];
+		const team = teams[context.currentTeamId];
+		const xraySetting = team.settings ? team.settings.xray : "";
+		const xrayEnabled = xraySetting !== "off";
 
 		return {
 			person,
 			isMe: person ? person.id === session.userId : false,
-			webviewFocused: state.context.hasFocus
+			webviewFocused: state.context.hasFocus,
+			repos: state.repos,
+			teamId: state.context.currentTeamId,
+			currentUserEmail: me.email,
+			collisions: getCodeCollisions(state),
+			xrayEnabled
 		};
 	});
 
@@ -131,12 +140,89 @@ export const ProfilePanel = () => {
 
 	const emailRef = React.useRef<HTMLTextAreaElement>(null);
 
+	const renderModifiedRepos = () => {
+		const { repos, teamId, currentUserEmail, collisions, xrayEnabled } = derivedState;
+		const { modifiedRepos, modifiedReposModifiedAt } = person;
+
+		if (!xrayEnabled) return null;
+		if (!modifiedRepos || !modifiedRepos[teamId] || !modifiedRepos[teamId].length) return null;
+
+		const modified = modifiedRepos[teamId]
+			.map(repo => {
+				const { repoId = "", authors, modifiedFiles } = repo;
+				if (modifiedFiles.length === 0) return null;
+				const repoName = repos[repoId] ? repos[repoId].name : "";
+				const added = modifiedFiles.reduce((total, f) => total + f.linesAdded, 0);
+				const removed = modifiedFiles.reduce((total, f) => total + f.linesRemoved, 0);
+				const stomp =
+					person.email === currentUserEmail
+						? null
+						: (authors || []).find(a => a.email === currentUserEmail && a.stomped > 0);
+				return (
+					<li
+						className="status row-with-icon-actions"
+						style={{ overflow: "hidden", whiteSpace: "nowrap", paddingLeft: "0" }}
+					>
+						<div style={{ overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
+							<Icon name="repo" /> {repoName} &nbsp; <Icon name="git-branch" /> {repo.branch}
+						</div>
+						<div style={{ padding: "5px 0 10px 25px" }}>
+							{modifiedFiles.map(f => {
+								const className = collisions.userRepoFiles[
+									person.id + ":" + repo.repoId + ":" + f.file
+								]
+									? "file-has-conflict"
+									: "";
+								return <ChangesetFile className={className} noHover={true} key={f.file} {...f} />;
+							})}
+						</div>
+						{stomp && (
+							<div style={{ paddingTop: "5px" }}>
+								<span className="stomped" style={{ paddingLeft: 0 }}>
+									@{stomp.stomped}
+								</span>{" "}
+								= includes {stomp.stomped} change
+								{stomp.stomped > 1 ? "s" : ""} to code you wrote
+							</div>
+						)}
+						{collisions.userRepos[person.id + ":" + repo.repoId] && (
+							<div style={{ paddingTop: "5px" }}>
+								<Icon name="alert" className="conflict" /> = possible merge conflict
+							</div>
+						)}
+					</li>
+				);
+			})
+			.filter(Boolean);
+
+		if (modified.length > 0) {
+			return (
+				<>
+					<MetaLabel>Local Modifications</MetaLabel>
+					<UL>{modified}</UL>
+					{modifiedReposModifiedAt && modifiedReposModifiedAt[teamId] && (
+						<div style={{ color: "var(--text-color-subtle)" }}>
+							Updated
+							<Timestamp relative time={modifiedReposModifiedAt[teamId]} />
+						</div>
+					)}
+				</>
+			);
+		} else return null;
+	};
+
+	const title = (
+		<Row style={{ margin: 0 }}>
+			<Value>{person.fullName}</Value>
+			{isMe && <RowIcon name="pencil" title="Edit Name" onClick={editFullName} />}
+		</Row>
+	);
 	return (
-		<div className="panel full-height">
-			<PanelHeader title={<>&nbsp;</>}></PanelHeader>
-			<ScrollBox>
-				<div className="channel-list vscroll">
-					<Root>
+		<Root>
+			<div className="panel full-height">
+				<PanelHeader title={title}></PanelHeader>
+				<ScrollBox>
+					<div className="channel-list vscroll" style={{ padding: "0 20px 20px 20px" }}>
 						<div
 							className={isMe ? "edit-headshot" : "headshot-wrap"}
 							onClick={isMe ? editAvatar : noop}
@@ -144,12 +230,6 @@ export const ProfilePanel = () => {
 							<Headshot person={person} size={128} />
 							{isMe && <RowIcon name="pencil" title="Edit Profile Photo" onClick={editAvatar} />}
 						</div>
-						<Row style={{ marginBottom: "10px" }}>
-							<h1>
-								{person.fullName}
-								{isMe && <RowIcon name="pencil" title="Edit Name" onClick={editFullName} />}
-							</h1>
-						</Row>
 						<Row>
 							<MetaLabel>Username</MetaLabel>
 							<Value>@{person.username}</Value>
@@ -206,9 +286,10 @@ export const ProfilePanel = () => {
 								<Value></Value>
 							</Row>
 						)}
-					</Root>
-				</div>
-			</ScrollBox>
-		</div>
+						{renderModifiedRepos()}
+					</div>
+				</ScrollBox>
+			</div>
+		</Root>
 	);
 };

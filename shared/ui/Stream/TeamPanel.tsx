@@ -43,7 +43,7 @@ const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
 );
 
-const UL = styled.ul`
+export const UL = styled.ul`
 	margin: 0;
 	padding: 0;
 	li:hover,

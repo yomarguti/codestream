@@ -30,6 +30,7 @@ import {
 } from "@codestream/webview/store/users/reducer";
 import { editCodemark } from "@codestream/webview/store/codemarks/actions";
 import Tag from "../Tag";
+import { ProfileLink } from "@codestream/webview/src/components/ProfileLink";
 
 export interface ReplyProps {
 	author: Partial<CSUser>;
@@ -244,7 +245,9 @@ export const Reply = (props: ReplyProps) => {
 		<Root className={props.className}>
 			<ReplyBody>
 				<AuthorInfo style={{ fontWeight: 700 }}>
-					<Headshot person={props.author} />{" "}
+					<ProfileLink id={props.author.id || ""}>
+						<Headshot person={props.author} />{" "}
+					</ProfileLink>
 					<span>
 						{props.author.username}
 						{emote}
