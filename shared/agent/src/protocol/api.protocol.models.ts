@@ -562,6 +562,7 @@ export interface CSUser extends CSEntity {
 	externalUserId?: string;
 	// all of the local changes on disk (i.e. not pushed)
 	modifiedRepos?: { [teamId: string]: RepoScmStatus[] };
+	modifiedReposModifiedAt?: number;
 	status?: { label: string; icon?: string; expires?: number; invisible?: boolean };
 
 	avatar?: {
