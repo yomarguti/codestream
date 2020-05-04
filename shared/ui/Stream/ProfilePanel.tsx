@@ -19,10 +19,10 @@ import Timestamp from "./Timestamp";
 const Root = styled.div`
 	padding: 20px;
 	h1 {
-		margin-bottom: 0;
+		margin: -5px 0 0 0;
 		.icon {
 			margin-left: 10px;
-			vertical-align: -8px;
+			vertical-align: baseline;
 		}
 	}
 	.edit-headshot {
@@ -43,6 +43,11 @@ const Root = styled.div`
 		&:hover .icon {
 			visibility: visible;
 		}
+	}
+	.edit-headshot,
+	.headshot-wrap {
+		float: right;
+		margin: 0 0 10px 10px;
 	}
 `;
 const Value = styled.span`
@@ -116,8 +121,15 @@ export const ProfilePanel = () => {
 	const editFullName = () => dispatch(openPanel(WebviewPanels.ChangeFullName));
 	const editPhoneNumber = () => dispatch(openPanel(WebviewPanels.ChangePhoneNumber));
 	const editWorksOn = () => dispatch(openPanel(WebviewPanels.ChangeWorksOn));
-	const copyEmail = () => {};
+	const copyEmail = () => {
+		if (emailRef && emailRef.current) {
+			emailRef.current.select();
+			document.execCommand("copy");
+		}
+	};
 	const noop = () => {};
+
+	const emailRef = React.useRef<HTMLTextAreaElement>(null);
 
 	return (
 		<div className="panel full-height">
@@ -132,7 +144,7 @@ export const ProfilePanel = () => {
 							<Headshot person={person} size={128} />
 							{isMe && <RowIcon name="pencil" title="Edit Profile Photo" onClick={editAvatar} />}
 						</div>
-						<Row>
+						<Row style={{ marginBottom: "10px" }}>
 							<h1>
 								{person.fullName}
 								{isMe && <RowIcon name="pencil" title="Edit Name" onClick={editFullName} />}
@@ -149,6 +161,11 @@ export const ProfilePanel = () => {
 								<a href={`mailto:${person.email}`}>{person.email}</a>
 							</Value>
 							<RowIcon name="copy" title="Copy Email" onClick={copyEmail} />
+							<textarea
+								ref={emailRef}
+								value={person.email}
+								style={{ position: "absolute", left: "-9999px" }}
+							/>
 							{isMe && <RowIcon name="pencil" title="Edit Email" onClick={editEmail} />}
 						</Row>
 						<Row>

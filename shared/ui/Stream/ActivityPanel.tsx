@@ -37,6 +37,7 @@ import { Reply } from "./Posts/Reply";
 import { LoadingMessage } from "../src/components/LoadingMessage";
 import { Headshot } from "../src/components/Headshot";
 import { Card } from "../src/components/Card";
+import { ProfileLink } from "../src/components/ProfileLink";
 
 // see comment in SmartFormattedList.tsx
 const FormattedPluralAlias = FormattedPlural as any;
@@ -139,7 +140,9 @@ export const ActivityPanel = () => {
 				return (
 					<ActivityWrapper key={codemark.id}>
 						<ActivityVerb>
-							<Headshot size={24} person={person} />
+							<ProfileLink id={person.id}>
+								<Headshot size={24} person={person} />
+							</ProfileLink>
 							<div>
 								<b>{person.username}</b>
 								<span className="verb">{codemark.type === "issue" ? " opened an issue " : ""}</span>
@@ -189,7 +192,9 @@ export const ActivityPanel = () => {
 				return (
 					<ActivityWrapper key={record.id}>
 						<ActivityVerb>
-							<Headshot size={24} person={person} />
+							<ProfileLink id={person.id}>
+								<Headshot size={24} person={person} />
+							</ProfileLink>
 							<div>
 								<b>{person.username}</b>
 								<span className="verb"> requested a review </span>

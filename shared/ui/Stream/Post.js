@@ -36,6 +36,7 @@ import { EditorSelectRangeRequestType } from "../ipc/webview.protocol";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { HostApi } from "../webview-api";
 import { includes as _includes } from "lodash-es";
+import { ProfileLink } from "../src/components/ProfileLink";
 
 class Post extends React.Component {
 	state = {
@@ -376,12 +377,9 @@ class Post extends React.Component {
 				)}
 
 				<div className="author" ref={ref => (this._authorDiv = ref)}>
-					<Headshot
-						size={headshotSize}
-						person={author}
-						mine={mine}
-						onClick={this.handleHeadshotClick}
-					/>
+					<ProfileLink id={author.id}>
+						<Headshot size={headshotSize} person={author} mine={mine} />
+					</ProfileLink>
 					{author.username}
 					{this.renderEmote(post)}
 					{post.error ? (
