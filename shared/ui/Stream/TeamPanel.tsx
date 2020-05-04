@@ -5,14 +5,13 @@ import Icon from "./Icon";
 import Button from "./Button";
 import Headshot from "./Headshot";
 import ScrollBox from "./ScrollBox";
-import { invite } from "./actions";
+import { invite, setUserStatus } from "./actions";
 import { mapFilter } from "../utils";
 import { difference as _difference, sortBy as _sortBy } from "lodash-es";
 import { getTeamProvider } from "../store/teams/reducer";
 import { HostApi } from "../webview-api";
 import { WebviewPanels } from "@codestream/protocols/webview";
 import { PanelHeader } from "../src/components/PanelHeader";
-import { setUserStatus } from "./actions";
 import {
 	RepoScmStatus,
 	DidChangeDataNotificationType,
@@ -38,6 +37,7 @@ import styled from "styled-components";
 import { getCodeCollisions } from "../store/users/reducer";
 import { openPanel } from "../store/context/actions";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { ProfileLink } from "../src/components/ProfileLink";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -56,7 +56,7 @@ const UL = styled.ul`
 		position: relative;
 		font-weight: normal;
 		padding: 3px 20px 2px 20px;
-		cursor: pointer;
+		// cursor: pointer;
 		list-style: none;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -707,11 +707,13 @@ class TeamPanel extends React.Component<Props, State> {
 									<>
 										<li key={user.email} style={{ marginTop: "5px" }}>
 											{this.renderAdminUser(user)}
-											<Headshot person={user}></Headshot>
-											<b>{user.fullName}</b>{" "}
-											<CSText as="span" muted>
-												@{user.username}{" "}
-											</CSText>
+											<ProfileLink id={user.id}>
+												<Headshot person={user} />
+												<b>{user.fullName}</b>{" "}
+												<CSText as="span" muted>
+													@{user.username}{" "}
+												</CSText>
+											</ProfileLink>
 											&nbsp;
 											{(!xraySetting || xraySetting === "user") && user.id === currentUserId && (
 												<Icon

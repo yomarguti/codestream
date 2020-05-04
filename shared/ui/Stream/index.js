@@ -11,8 +11,11 @@ import { ChangeEmailPanel } from "./ChangeEmailPanel";
 import { ChangeUsernamePanel } from "./ChangeUsernamePanel";
 import { ChangePasswordPanel } from "./ChangePasswordPanel";
 import { ChangeFullNamePanel } from "./ChangeFullNamePanel";
+import { ChangeWorksOnPanel } from "./ChangeWorksOnPanel";
+import { ChangePhoneNumberPanel } from "./ChangePhoneNumberPanel";
 import { ChangeAvatarPanel } from "./ChangeAvatarPanel";
 import { IntegrationsPanel } from "./IntegrationsPanel";
+import { ProfilePanel } from "./ProfilePanel";
 import { ReviewSettingsPanel } from "./ReviewSettingsPanel";
 import { TasksPanel } from "./TasksPanel";
 import { TeamPanel } from "./TeamPanel";
@@ -82,12 +85,7 @@ import { logout, switchToTeam } from "../store/session/actions";
 import { CodemarkView } from "./CodemarkView";
 import { Review } from "./Review";
 
-import {
-	setCurrentStream,
-	setNewPostEntry,
-	setCurrentReview,
-	setActiveReview
-} from "../store/context/actions";
+import { setCurrentStream, setNewPostEntry, setCurrentReview } from "../store/context/actions";
 import { getTeamProvider } from "../store/teams/reducer";
 import {
 	filter as _filter,
@@ -336,20 +334,20 @@ export class SimpleStream extends Component {
 			rest.length === 1
 				? `${first} and ${rest[0]}`
 				: rest.reduce(
-					(result, string, index, array) =>
-						index === array.length - 1 ? `${result}, and ${string}` : `${result}, ${string}`,
-					first
-				);
+						(result, string, index, array) =>
+							index === array.length - 1 ? `${result}, and ${string}` : `${result}, ${string}`,
+						first
+				  );
 
 		return (
 			<label key="info">
 				{this.props.postStream.type === "direct" ? (
 					<span>This is the beginning of your direct message with {localizedMembers}.</span>
 				) : (
-						<span>
-							This is the beginning of the <b>{nameElement}</b> channel.
-						</span>
-					)}
+					<span>
+						This is the beginning of the <b>{nameElement}</b> channel.
+					</span>
+				)}
 			</label>
 		);
 	};
@@ -359,13 +357,13 @@ export class SimpleStream extends Component {
 			this.props.postStreamMemberIds.length > 2 ? (
 				<Icon name="team" className="team" />
 			) : (
-					<Icon name="person" />
-				)
+				<Icon name="person" />
+			)
 		) : this.props.isPrivate ? (
 			<Icon name="lock" />
 		) : (
-					<span>#</span>
-				);
+			<span>#</span>
+		);
 	}
 
 	buildTeamMenuItem() {
@@ -583,8 +581,8 @@ export class SimpleStream extends Component {
 				const displayHost = host.startsWith("http://")
 					? host.split("http://")[1]
 					: host.startsWith("https://")
-						? host.split("https://")[1]
-						: host;
+					? host.split("https://")[1]
+					: host;
 				const displayName = isEnterprise
 					? `${display.displayName} - ${displayHost}`
 					: display.displayName;
@@ -616,8 +614,8 @@ export class SimpleStream extends Component {
 								}
 							});
 						} else */ this.setActivePanel(
-						`configure-enterprise-${name}-${providerId}-Global Nav`
-					);
+							`configure-enterprise-${name}-${providerId}-Global Nav`
+						);
 					};
 				} else {
 					// otherwise it's just a simple oauth redirect
@@ -824,9 +822,11 @@ export class SimpleStream extends Component {
 		if (searchBarOpen) activePanel = WebviewPanels.Codemarks;
 		// if we're conducting a review, we need the compose functionality of spatial view
 		if (this.props.currentReviewId) activePanel = WebviewPanels.CodemarksForFile;
-		if (!activePanel || 
-			(!Object.values(WebviewPanels).includes(activePanel) && 
-			!activePanel.match(/^configure\-(provider|enterprise)-/))) {
+		if (
+			!activePanel ||
+			(!Object.values(WebviewPanels).includes(activePanel) &&
+				!activePanel.match(/^configure\-(provider|enterprise)-/))
+		) {
 			activePanel = WebviewPanels.CodemarksForFile;
 		}
 		// if there is nothing left to copmlete, go to spatial view
@@ -882,13 +882,13 @@ export class SimpleStream extends Component {
 				this.props.postStreamMemberIds.length > 2 ? (
 					<Icon name="team" className="organization" />
 				) : (
-						<Icon name="person" />
-					)
+					<Icon name="person" />
+				)
 			) : this.props.isPrivate ? (
 				<Icon name="lock" />
 			) : (
-						<span>#</span>
-					);
+				<span>#</span>
+			);
 		const menuActive = this.props.postStreamId && this.state.openMenu === this.props.postStreamId;
 
 		// 	<span className="open-menu">
@@ -915,7 +915,9 @@ export class SimpleStream extends Component {
 				WebviewPanels.ChangeEmail,
 				WebviewPanels.ChangeAvatar,
 				WebviewPanels.ChangeUsername,
-				WebviewPanels.ChangeFullName
+				WebviewPanels.ChangeFullName,
+				WebviewPanels.ChangeWorksOn,
+				WebviewPanels.ChangePhoneNumber
 			].includes(activePanel) &&
 			!this.props.currentReviewId &&
 			!activePanel.startsWith("configure-provider-") &&
@@ -931,7 +933,7 @@ export class SimpleStream extends Component {
 				: "content vscroll inline";
 		const configureProviderInfo =
 			activePanel.startsWith("configure-provider-") ||
-				activePanel.startsWith("configure-enterprise-")
+			activePanel.startsWith("configure-enterprise-")
 				? activePanel.split("-")
 				: null;
 
@@ -953,33 +955,26 @@ export class SimpleStream extends Component {
 						{this.props.currentCodemarkId && <CodemarkView />}
 					</>
 				)}
-				{false && this.props.currentReviewId && !this.props.activeReviewId && (
-					<Modal onClose={() => this.props.setCurrentReview()}>
-						<Review id={this.props.currentReviewId} />
-						<br />
-						<br />
-					</Modal>
-				)}
 				{renderNav && this.renderNavIcons()}
 				<div className={contentClass}>
 					{(activePanel === WebviewPanels.CodemarksForFile ||
 						activePanel === WebviewPanels.GettingStarted) && (
-							<InlineCodemarks
-								activePanel={activePanel}
-								setActivePanel={this.setActivePanel}
-								currentUserId={this.props.currentUserId}
-								currentUserName={this.props.currentUserName}
-								postAction={this.postAction}
-								searchBarOpen={this.state.searchBarOpen}
-								multiCompose={this.state.multiCompose}
-								typeFilter="all"
-								textEditorUri={textEditorUri}
-								textEditorVisibleRanges={textEditorVisibleRanges}
-								selection={this.state.selection}
-								focusInput={this.focusInput}
-								scrollDiv={this._contentScrollDiv}
-							/>
-						)}
+						<InlineCodemarks
+							activePanel={activePanel}
+							setActivePanel={this.setActivePanel}
+							currentUserId={this.props.currentUserId}
+							currentUserName={this.props.currentUserName}
+							postAction={this.postAction}
+							searchBarOpen={this.state.searchBarOpen}
+							multiCompose={this.state.multiCompose}
+							typeFilter="all"
+							textEditorUri={textEditorUri}
+							textEditorVisibleRanges={textEditorVisibleRanges}
+							selection={this.state.selection}
+							focusInput={this.focusInput}
+							scrollDiv={this._contentScrollDiv}
+						/>
+					)}
 					{activePanel === WebviewPanels.Codemarks && (
 						<KnowledgePanel
 							activePanel={activePanel}
@@ -1024,6 +1019,7 @@ export class SimpleStream extends Component {
 					{activePanel === WebviewPanels.NewReview && <ReviewForm />}
 					{activePanel === WebviewPanels.Integrations && <IntegrationsPanel />}
 					{activePanel === WebviewPanels.ReviewSettings && <ReviewSettingsPanel />}
+					{activePanel === WebviewPanels.Profile && <ProfilePanel />}
 					{activePanel === WebviewPanels.ChangeEmail && (
 						<ChangeEmailPanel closePanel={this.props.closePanel} />
 					)}
@@ -1035,6 +1031,12 @@ export class SimpleStream extends Component {
 					)}
 					{activePanel === WebviewPanels.ChangeFullName && (
 						<ChangeFullNamePanel closePanel={this.props.closePanel} />
+					)}
+					{activePanel === WebviewPanels.ChangeWorksOn && (
+						<ChangeWorksOnPanel closePanel={this.props.closePanel} />
+					)}
+					{activePanel === WebviewPanels.ChangePhoneNumber && (
+						<ChangePhoneNumberPanel closePanel={this.props.closePanel} />
 					)}
 					{activePanel === WebviewPanels.ChangePassword && (
 						<ChangePasswordPanel closePanel={this.props.closePanel} />
@@ -1144,8 +1146,9 @@ export class SimpleStream extends Component {
 									</Tooltip>
 									{/* dead code, leaving so we know how to cleanup
 					the various props/methods they used */}
-									{menuActive && (
-										{/*<ChannelMenu
+									{menuActive &&
+										{
+											/*<ChannelMenu
 											stream={this.props.postStream}
 											target={this.state.menuTarget}
 											umiCount={0}
@@ -1153,8 +1156,8 @@ export class SimpleStream extends Component {
 											setActivePanel={this.setActivePanel}
 											runSlashCommand={this.runSlashCommand}
 											closeMenu={this.closeMenu}
-										/>*/}
-									)}
+										/>*/
+										}}
 								</span>
 								<div className="stream-header-buttons">
 									<Tooltip title="Star this channel" placement="bottomLeft">
@@ -2477,8 +2480,8 @@ const mapStateToProps = state => {
 	const channelMembers = postStream.isTeamStream
 		? teamMembers
 		: postStream.memberIds
-			? postStream.memberIds.map(id => users[id])
-			: [];
+		? postStream.memberIds.map(id => users[id])
+		: [];
 
 	const teamMembersById = toMapBy("id", teamMembers);
 

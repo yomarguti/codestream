@@ -97,16 +97,10 @@ export function reduceContext(
 			return { ...state, codemarksShowResolved: action.payload };
 
 		case ContextActionsType.SetCurrentReview:
-			return { ...state, activeReviewId: undefined, currentReviewId: action.payload.reviewId };
+			return { ...state, currentReviewId: action.payload.reviewId };
 
-		case ContextActionsType.SetActiveReview:
-			// if we have a review ID, switch to Inline view, otherwise
-			// pop the last view off the stack (but add CodemarksForFile to the end
-			// to make sure we don't end up with an empty stack)
-			const panelStack = action.payload.reviewId
-				? [WebviewPanels.CodemarksForFile, ...state.panelStack].slice(0, 10)
-				: [...state.panelStack, WebviewPanels.CodemarksForFile].slice(1, 10);
-			return { ...state, panelStack, activeReviewId: action.payload.reviewId };
+		case ContextActionsType.SetProfileUser:
+			return { ...state, profileUserId: action.payload };
 
 		case ContextActionsType.SetSpatialViewPRCommentsToggle:
 			return { ...state, spatialViewShowPRComments: action.payload };

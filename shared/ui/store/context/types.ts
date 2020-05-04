@@ -2,6 +2,7 @@ import { WebviewContext, WebviewPanels } from "@codestream/protocols/webview";
 import { AnyObject } from "@codestream/webview/utils";
 
 export enum ContextActionsType {
+	SetProfileUser = "@context/SetProfileUser",
 	SetCodemarkFileFilter = "@context/SetCodemarkFileFilter",
 	SetCodemarkTypeFilter = "@context/SetCodemarkTypeFilter",
 	SetCodemarkTagFilter = "@context/SetCodemarkTagFilter",
@@ -25,8 +26,7 @@ export enum ContextActionsType {
 	SetCurrentCodemark = "@context/SetCurrentCodemark",
 	SetSpatialViewPRCommentsToggle = "@context/SetSpatialViewPRCommentsToggle",
 	RepositionCodemark = "@context/RepositionCodemark",
-	SetCurrentReview = "@context/SetCurrentReview",
-	SetActiveReview = "@context/SetActiveReview"
+	SetCurrentReview = "@context/SetCurrentReview"
 }
 
 export type PostEntryPoint = "Stream" | "Global Nav" | "Spatial View" | undefined;

@@ -39,9 +39,9 @@ export enum WebviewPanels {
 	Notifications = "notifications",
 	NewComment = "new-comment",
 	NewIssue = "new-issue",
-	NewReview = "new-review",	
+	NewReview = "new-review",
 	People = "people",
-	Person = "person",
+	Profile = "profile",
 	Review = "review",
 	Status = "status",
 	Tasks = "tasks",
@@ -49,6 +49,8 @@ export enum WebviewPanels {
 	ChangeEmail = "change-email",
 	ChangePassword = "change-password",
 	ChangeFullName = "change-full-name",
+	ChangePhoneNumber = "change-phone-number",
+	ChangeWorksOn = "change-works-on",
 	ChangeAvatar = "change-avatar",
 	PRInfo = "pr-info",
 	Integrations = "integrations",
@@ -62,7 +64,7 @@ export interface WebviewContext {
 	threadId?: string;
 	currentCodemarkId?: string;
 	currentReviewId?: string;
-	activeReviewId?: string;
+	profileUserId?: string;
 	currentMarkerId?: string;
 	isRepositioning?: boolean;
 	hasFocus: boolean;
