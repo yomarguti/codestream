@@ -190,7 +190,9 @@ export interface GetAllReviewContentsRequest {
 }
 
 export interface ReviewFileContents {
-	path: string;
+	leftPath: string;
+	rightPath: string;
+	path: string; // FIXME remove when all IDEs move to leftPath and rightPath
 	left: string;
 	right: string;
 }

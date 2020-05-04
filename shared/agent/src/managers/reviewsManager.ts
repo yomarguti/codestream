@@ -164,6 +164,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 					path: file.file
 				});
 				files.push({
+					leftPath: file.oldFile,
+					rightPath: file.file,
 					path: file.file,
 					left: contents.left,
 					right: contents.right
@@ -220,8 +222,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		const rightBaseContents = isNewFile
 			? ""
 			: diffs.leftBaseSha === diffs.rightBaseSha
-				? leftBaseContents
-				: (await git.getFileContentForRevision(rightBasePath, diffs.rightBaseSha)) || "";
+			? leftBaseContents
+			: (await git.getFileContentForRevision(rightBasePath, diffs.rightBaseSha)) || "";
 		const normalizedRightBaseContents = Strings.normalizeFileContents(rightBaseContents);
 		const rightContents =
 			rightDiff !== undefined
