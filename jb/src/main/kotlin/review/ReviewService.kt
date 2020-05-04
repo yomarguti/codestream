@@ -59,7 +59,7 @@ class ReviewService(private val project: Project) {
                         review.id,
                         repo.repoId,
                         ReviewDiffSide.LEFT,
-                        file.path,
+                        file.leftPath,
                         file.left
                     )
                     val rightContent = createReviewDiffContent(
@@ -67,10 +67,10 @@ class ReviewService(private val project: Project) {
                         review.id,
                         repo.repoId,
                         ReviewDiffSide.RIGHT,
-                        file.path,
+                        file.rightPath,
                         file.right
                     )
-                    SimpleDiffRequest(title, leftContent, rightContent, file.path, file.path).also {
+                    SimpleDiffRequest(title, leftContent, rightContent, file.leftPath, file.rightPath).also {
                         it.putUserData(REPO_ID, repo.repoId)
                         it.putUserData(PATH, file.path)
                         it.putUserData(REVIEW_DIFF, true)

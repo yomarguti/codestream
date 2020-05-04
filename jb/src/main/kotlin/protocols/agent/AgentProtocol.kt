@@ -156,6 +156,8 @@ class GetAllReviewContentsParams(
 )
 
 class ReviewFileContents(
+    val leftPath: String,
+    val rightPath: String,
     val path: String,
     val left: String,
     val right: String
@@ -184,6 +186,8 @@ class GetLocalReviewContentsParams(
 )
 
 class GetReviewContentsResult(
+    val leftPath: String,
+    val rightPath: String,
     val left: String,
     val right: String
 )
