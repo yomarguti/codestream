@@ -36,7 +36,7 @@ export interface InviteUserRequest {
 	inviteInfo?: {
 		serverUrl: string;
 		disableStrictSSL: boolean;
-	}
+	};
 }
 
 export interface InviteUserResponse {
@@ -55,6 +55,8 @@ export interface UpdateUserRequest {
 	fullName?: string;
 	timeZone?: string;
 	email?: string;
+	iWorkOn?: string;
+	phoneNumber?: string;
 	avatar?: {
 		image?: string;
 		image48?: string;

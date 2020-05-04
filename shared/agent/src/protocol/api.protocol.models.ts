@@ -542,6 +542,8 @@ export interface CSUser extends CSEntity {
 	firstName: string;
 	fullName: string;
 	isRegistered: boolean;
+	lastLogin?: number;
+	phoneNumber?: string;
 	iWorkOn?: string;
 	lastName: string;
 	lastPostCreatedAt: number;
