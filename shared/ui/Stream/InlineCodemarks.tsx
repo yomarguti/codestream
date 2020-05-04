@@ -637,8 +637,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			return (
 				<div key="no-codemarks" className="no-codemarks-container">
 					<div className="no-codemarks">
-						Discuss code with your team by selecting a range and clicking an icon, or by using a
-						shortcut below (
+						Discuss code by selecting a range and clicking an icon, or use a shortcut below (
 						<a href="https://docs.codestream.com/userguide/gettingStarted/code-discussion-with-codemarks/">
 							show me how
 						</a>

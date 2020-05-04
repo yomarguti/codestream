@@ -42,7 +42,9 @@ const ComposeTitles = {
 				<span className="keybinding extra-pad">{modifier}</span>
 				<span className="keybinding">r</span>
 			</span>
-			<span className="function">Request a Code Review</span>{" "}
+			<span className="function">
+				Request a Code Review <sup style={{ color: "var(--text-color-highlight)" }}>NEW</sup>
+			</span>{" "}
 		</span>
 	),
 	about: (
