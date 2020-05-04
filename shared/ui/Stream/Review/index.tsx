@@ -420,6 +420,12 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 				items={menuItems}
 			>
 				{derivedState.statusLabel}
+				<textarea
+					key="permalink-offscreen"
+					ref={permalinkRef}
+					value={review.permalink}
+					style={{ position: "absolute", left: "-9999px" }}
+				/>
 			</DropdownButton>
 		);
 	}
