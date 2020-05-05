@@ -170,7 +170,7 @@ export class CodeStreamSession implements Disposable {
 				this.logout();
 			}),
 			Container.agent.onOpenUrl(async (params: OpenUrlRequest) => {
-				await openUrl(params.url);				
+				await openUrl(params.url);
 			})
 		);
 
