@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Threading;
 using CodeStream.VisualStudio.Core.Events;
-using CodeStream.VisualStudio.Core.Services;
 using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -12,11 +11,11 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 	public class DotNetBrowserServiceTests {
 		[TestMethod]
 		public void DotNetBrowserServiceTest() {
-			var codeStreamAgentServiceMock = new Mock<ICodeStreamAgentServiceFactory>();
+			var serviceProviderMock = new Mock<IServiceProvider>();
 			var eventAggregator = new EventAggregator();
 
 			var browserService = new DotNetBrowserServiceStub(
-				codeStreamAgentServiceMock.Object,
+				serviceProviderMock.Object,
 				eventAggregator				
 			);
 
@@ -58,11 +57,11 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 
 		[TestMethod()]
 		public void DotNetBrowserServiceNormalThenQueuedTest() {
-			var codeStreamAgentServiceMock = new Mock<ICodeStreamAgentServiceFactory>();
+			var serviceProviderMock = new Mock<IServiceProvider>();
 			var eventAggregator = new EventAggregator();
 
 			var browserService = new DotNetBrowserServiceStub(
-				codeStreamAgentServiceMock.Object,
+				serviceProviderMock.Object,
 				eventAggregator
 			);
 
@@ -92,11 +91,11 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 
 		[TestMethod()]
 		public void DotNetBrowserServiceNormalTest() {
-			var codeStreamAgentServiceMock = new Mock<ICodeStreamAgentServiceFactory>();
+			var serviceProviderMock = new Mock<IServiceProvider>();
 			var eventAggregator = new EventAggregator();
 
 			var browserService = new DotNetBrowserServiceStub(
-				codeStreamAgentServiceMock.Object,
+				serviceProviderMock.Object,
 				eventAggregator
 			);
 
@@ -122,11 +121,11 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 
 		[TestMethod()]
 		public void DotNetBrowserServiceReloadTest() {
-			var codeStreamAgentServiceMock = new Mock<ICodeStreamAgentServiceFactory>();
+			var serviceProviderMock = new Mock<IServiceProvider>();
 			var eventAggregator = new EventAggregator();
 
 			var browserService = new DotNetBrowserServiceStub(
-				codeStreamAgentServiceMock.Object,
+				serviceProviderMock.Object,
 				eventAggregator
 			);
 
@@ -146,9 +145,9 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 		public List<string> Items { get; }
 
 		public DotNetBrowserServiceStub(
-			ICodeStreamAgentServiceFactory agentService,
+			IServiceProvider serviceProvider,
 			IEventAggregator eventAggregator
-			) : base(agentService,eventAggregator) {
+			) : base(serviceProvider, eventAggregator) {
 			
 			Items = new List<string>();
 		}
