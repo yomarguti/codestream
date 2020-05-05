@@ -280,7 +280,7 @@ export class ScmManager {
 					branch = await git.getCurrentBranch(uri.fsPath);
 					if (branch) commits = await git.getCommitsOnBranch(repoPath, branch);
 
-					const repo = await git.getRepositoryByFilePath(uri.fsPath);
+					const repo = await git.getRepositoryByFilePath(repoPath);
 					repoId = repo && repo.id;
 
 					const gitRemotes = await git.getRepoRemotes(repoPath);
