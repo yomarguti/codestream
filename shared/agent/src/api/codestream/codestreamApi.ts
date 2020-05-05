@@ -14,7 +14,7 @@ import { Team, User } from "../../api/extensions";
 import { Container, SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import { isDirective, resolve } from "../../managers/operations";
-import { ChangeDataType, DidChangeDataNotificationType } from "../../protocol/agent.protocol";
+import { ChangeDataType, DidChangeDataNotificationType, OpenUrlRequestType } from "../../protocol/agent.protocol";
 import {
 	AccessToken,
 	AddEnterpriseProviderHostRequest,
@@ -233,7 +233,6 @@ import {
 } from "../../protocol/api.protocol";
 import { VersionInfo } from "../../session";
 import { Functions, getProvider, log, lsp, lspHandler, Objects, Strings } from "../../system";
-import { openUrl } from "../../system/openUrl";
 import {
 	ApiProvider,
 	ApiProviderLoginResponse,
@@ -1705,7 +1704,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 			const query = Object.keys(params)
 				.map(param => `${param}=${encodeURIComponent(params[param])}`)
 				.join("&");
-			await openUrl(`${this.baseUrl}/no-auth/provider-auth/${providerConfig.name}?${query}`);
+			void (SessionContainer.instance().session.agent.sendRequest(OpenUrlRequestType, {
+				url: `${this.baseUrl}/no-auth/provider-auth/${providerConfig.name}?${query}`
+			}));
+			// this response is never used.
 			return response;
 		} catch (ex) {
 			Logger.error(ex, cc);

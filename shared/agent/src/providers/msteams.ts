@@ -1,15 +1,16 @@
 "use strict";
 import { sortBy } from "lodash-es";
+import { SessionContainer } from "../container";
 import {
 	CreateThirdPartyPostRequest,
 	CreateThirdPartyPostResponse,
 	FetchThirdPartyChannelsRequest,
 	FetchThirdPartyChannelsResponse,
+	OpenUrlRequestType,
 	ThirdPartyDisconnect
 } from "../protocol/agent.protocol";
 import { MSTeamsProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
-import { openUrl } from "../system/openUrl";
 import { ThirdPartyPostProviderBase } from "./provider";
 
 @lspProvider("msteams")
@@ -32,7 +33,9 @@ export class MSTeamsProvider extends ThirdPartyPostProviderBase<MSTeamsProviderI
 	private _multiProviderInfo: MSTeamsProviderInfo | undefined;
 
 	async onConnecting() {
-		await openUrl("https://teams.microsoft.com/l/app/7cf49ab7-8b65-4407-b494-f02b525eef2b");
+		void (SessionContainer.instance().session.agent.sendRequest(OpenUrlRequestType, {
+			url: "https://teams.microsoft.com/l/app/7cf49ab7-8b65-4407-b494-f02b525eef2b"
+		}));
 	}
 	protected async onConnected(providerInfo: MSTeamsProviderInfo) {
 		this._multiProviderInfo = providerInfo;
