@@ -45,6 +45,7 @@ interface ConnectedProps {
 	editorHasFocus: boolean;
 	jumpToMarker?: boolean;
 	jumpToMarkerId?: string;
+	currentReviewId?: string;
 }
 
 type IntlProps = WrappedComponentProps<"intl">;
@@ -486,6 +487,13 @@ class MarkerActions extends React.Component<Props, State> {
 	private _toggleCodeHighlight = (highlight: boolean) => {
 		if (!this.props.selected) return;
 
+		// if we're looking at a review, don't try to highlight the code.
+		// the logica about state.textDocumentUri assumes a traditional
+		// codemark which has been clicked on, so too much breaks from a UI
+		// perspective, for little gain.
+		// https://trello.com/c/Q0aNjRVh/3717-prevent-vsc-from-switching-to-file-when-its-not-open-in-a-separate-pane
+		if (this.props.currentReviewId) return;
+
 		if (!highlight && this._highlightDisposable) {
 			this._highlightDisposable.dispose();
 			this._highlightDisposable = undefined;
@@ -591,7 +599,8 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps) => {
 		textEditorUri: editorContext.textEditorUri || "",
 		firstVisibleLine,
 		lastVisibleLine,
-		editorHasFocus: context.hasFocus
+		editorHasFocus: context.hasFocus,
+		currentReviewId: state.context.currentReviewId
 	};
 };
 
