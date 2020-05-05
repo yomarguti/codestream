@@ -25,6 +25,15 @@ const highlightDecorationType = window.createTextEditorDecorationType({
 	backgroundColor: "rgba(127, 127, 127, 0.4)"
 });
 
+declare global {
+	// Workaround for https://stackoverflow.com/questions/56248618/how-to-check-if-an-object-is-a-readonly-array-in-typescript
+	// https://github.com/microsoft/TypeScript/issues/17002
+    interface ArrayConstructor {
+        // eslint-disable-next-line @typescript-eslint/array-type
+        isArray(arg: ReadonlyArray<any> | any): arg is ReadonlyArray<any>;
+    }
+}
+
 export namespace Editor {
 	export function findEditor(uri: Uri, lastActive?: TextEditor): TextEditor | undefined {
 		const normalizedUri = uri.toString(false);
@@ -232,7 +241,8 @@ export namespace Editor {
 		}
 	}
 
-	export function toEditorSelections(selections: Selection[]): EditorSelection[] {
+	// eslint-disable-next-line @typescript-eslint/array-type
+	export function toEditorSelections(selections: ReadonlyArray<Selection>): EditorSelection[] {
 		return selections.map(s => ({ cursor: s.active, start: s.start, end: s.end }));
 	}
 
@@ -270,9 +280,11 @@ export namespace Editor {
 	}
 
 	export function toSerializableRange(range: Range, reverse?: boolean): LspRange;
-	export function toSerializableRange(ranges: Range[], reverse?: boolean): LspRange[];
+	// eslint-disable-next-line @typescript-eslint/array-type
+	export function toSerializableRange(ranges: ReadonlyArray<Range>, reverse?: boolean): LspRange[];
 	export function toSerializableRange(
-		ranges: Range | Range[],
+		// eslint-disable-next-line @typescript-eslint/array-type
+		ranges: Range | ReadonlyArray<Range>,
 		reverse?: boolean
 	): LspRange | LspRange[] {
 		if (!Array.isArray(ranges)) {
