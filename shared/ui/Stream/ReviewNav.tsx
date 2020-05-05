@@ -545,7 +545,7 @@ export function ReviewNav(props: Props) {
 				</BaseReviewHeader>
 			</NavHeader>
 			{props.composeOpen ? null : (
-				<div className="scroll-container" style={{ overflow: "hidden" }}>
+				<div className="scroll-container">
 					<ScrollBox>
 						<div
 							className="vscroll"
