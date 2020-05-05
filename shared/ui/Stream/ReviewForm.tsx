@@ -573,7 +573,7 @@ class ReviewForm extends React.Component<Props, State> {
 						}
 					]
 				} as any;
-				console.warn("REVIEW: ", review);
+
 				const { type: createResult } = await this.props.createPostAndReview(review);
 				if (createResult !== PostsActionsType.FailPendingPost) {
 					if (this.props.skipPostCreationModal) {
