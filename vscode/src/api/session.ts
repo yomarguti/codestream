@@ -8,6 +8,7 @@ import {
 	DidChangeDocumentMarkersNotification,
 	isLoginFailResponse,
 	LoginSuccessResponse,
+	OpenUrlRequest,
 	PasswordLoginRequestType,
 	TokenLoginRequestType,
 	Unreads
@@ -20,6 +21,7 @@ import {
 	CSMe
 } from "@codestream/protocols/api";
 import { ConfigurationTarget, Disposable, Event, EventEmitter, Uri } from "vscode";
+import { openUrl } from "urlHandler";
 import { WorkspaceState } from "../common";
 import { configuration } from "../configuration";
 import { Container } from "../container";
@@ -166,6 +168,9 @@ export class CodeStreamSession implements Disposable {
 			}),
 			Container.agent.onDidEncounterMaintenanceMode(() => {
 				this.logout();
+			}),
+			Container.agent.onOpenUrl(async (params: OpenUrlRequest) => {
+				await openUrl(params.url);				
 			})
 		);
 

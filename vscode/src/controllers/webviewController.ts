@@ -47,6 +47,7 @@ import {
 	LogoutRequestType,
 	NewCodemarkNotificationType,
 	NewReviewNotificationType,
+	OpenUrlRequestType,
 	ReloadWebviewRequestType,
 	RestartRequestType,
 	ReviewCloseDiffRequestType,
@@ -86,6 +87,7 @@ import {
 } from "vscode";
 import { NotificationType, RequestType } from "vscode-languageclient";
 import { Strings } from "system/string";
+import { openUrl } from "urlHandler";
 import {
 	CodeStreamSession,
 	SessionSignedOutReason,
@@ -879,7 +881,6 @@ export class WebviewController implements Disposable {
 							? BuiltInCommands.GoToNextDiff
 							: BuiltInCommands.GoToPreviousDiff;
 					await commands.executeCommand(command);
-
 					return emptyObj;
 				});
 
@@ -888,7 +889,6 @@ export class WebviewController implements Disposable {
 			case ShowPreviousChangedFileRequestType.method: {
 				webview.onIpcRequest(ShowPreviousChangedFileRequestType, e, async (_type, _params) => {
 					await commands.executeCommand(BuiltInCommands.GoToPreviousChangedFile);
-
 					return emptyObj;
 				});
 
@@ -897,10 +897,15 @@ export class WebviewController implements Disposable {
 			case ShowNextChangedFileRequestType.method: {
 				webview.onIpcRequest(ShowNextChangedFileRequestType, e, async (_type, _params) => {
 					await commands.executeCommand(BuiltInCommands.GoToNextChangedFile);
-
 					return emptyObj;
 				});
 
+				break;
+			}
+			case OpenUrlRequestType.method: {
+				webview.onIpcRequest(OpenUrlRequestType, e, async (_type, _params) => {
+					await openUrl(_params.url);
+				});
 				break;
 			}
 			default: {
