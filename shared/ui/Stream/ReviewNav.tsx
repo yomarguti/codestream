@@ -550,7 +550,7 @@ export function ReviewNav(props: Props) {
 						<div
 							className="vscroll"
 							style={{
-								padding: "0 10px 60px 40px",
+								padding: "0 20px 60px 40px",
 								width: "100%"
 							}}
 						>
