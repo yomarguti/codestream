@@ -73,8 +73,8 @@ import {
 	EditorSelectRangeRequestType,
 	WebviewPanels
 } from "../ipc/webview.protocol";
+import { OpenUrlRequestType } from "../ipc/host.protocol";
 import {
-	OpenUrlRequestType,
 	SetCodemarkPinnedRequestType,
 	TelemetryRequestType,
 	GetRangeScmInfoRequestType,

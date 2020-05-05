@@ -13,7 +13,7 @@ import { includes as _includes, sortBy as _sortBy, debounce } from "lodash-es";
 import { PanelHeader } from "../src/components/PanelHeader";
 import styled from "styled-components";
 import FiltersButton from "../src/components/FiltersButton";
-import { OpenUrlRequestType } from "@codestream/protocols/agent";
+import { OpenUrlRequestType } from "../ipc/host.protocol";
 import { isCSReview } from "../protocols/agent/api.protocol.models";
 import { Disposable } from "vscode-languageserver-protocol";
 import { CodeStreamState } from "../store";

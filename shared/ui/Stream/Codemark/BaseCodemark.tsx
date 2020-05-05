@@ -14,7 +14,7 @@ import Tag from "../Tag";
 import Icon from "../Icon";
 import { Link } from "../Link";
 import { Marker } from "../Marker";
-import { CodemarkPlus, OpenUrlRequestType } from "@codestream/protocols/agent";
+import { CodemarkPlus } from "@codestream/protocols/agent";
 import { PROVIDER_MAPPINGS } from "../CrossPostIssueControls/types";
 import React from "react";
 import styled from "styled-components";
@@ -24,6 +24,7 @@ import { MarkdownText } from "../MarkdownText";
 import { DropdownButton } from "../Review/DropdownButton";
 import { useDispatch } from "react-redux";
 import { setCodemarkStatus } from "../actions";
+import { OpenUrlRequestType } from "@codestream/protocols/webview";
 
 export interface BaseCodemarkProps extends CardProps {
 	codemark: CodemarkPlus;

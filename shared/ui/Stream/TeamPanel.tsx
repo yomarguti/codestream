@@ -8,6 +8,7 @@ import ScrollBox from "./ScrollBox";
 import { invite, setUserStatus } from "./actions";
 import { mapFilter } from "../utils";
 import { difference as _difference, sortBy as _sortBy } from "lodash-es";
+import { OpenUrlRequestType } from "../ipc/host.protocol";
 import { getTeamProvider } from "../store/teams/reducer";
 import { HostApi } from "../webview-api";
 import { WebviewPanels } from "@codestream/protocols/webview";
@@ -20,7 +21,6 @@ import {
 	UpdateTeamRequestType,
 	UpdateTeamSettingsRequestType,
 	UpdateTeamAdminRequestType,
-	OpenUrlRequestType,
 	GetLatestCommittersRequestType
 } from "@codestream/protocols/agent";
 import { CSUser } from "@codestream/protocols/api";

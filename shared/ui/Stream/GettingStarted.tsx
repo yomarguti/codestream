@@ -12,7 +12,7 @@ import { isConnected } from "../store/providers/reducer";
 import { setUserPreference } from "./actions";
 import { Button } from "../src/components/Button";
 import { HostApi } from "../webview-api";
-import { OpenUrlRequestType } from "@codestream/protocols/agent";
+import { OpenUrlRequestType } from "../ipc/host.protocol";
 
 const Step = styled.div`
 	position: relative;

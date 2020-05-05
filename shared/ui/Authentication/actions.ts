@@ -5,7 +5,6 @@ import {
 	LoginSuccessResponse,
 	BootstrapRequestType,
 	TokenLoginRequestType,
-	OpenUrlRequestType,
 	OtcLoginRequestType,
 	TokenLoginRequest
 } from "@codestream/protocols/agent";
@@ -22,7 +21,7 @@ import {
 	goToSetPassword
 } from "../store/context/actions";
 import { GetActiveEditorContextRequestType } from "../ipc/host.protocol.editor";
-import { BootstrapInHostRequestType } from "../ipc/host.protocol";
+import { BootstrapInHostRequestType, OpenUrlRequestType } from "../ipc/host.protocol";
 import { bootstrap } from "../store/actions";
 import { logError } from "../logger";
 import { ChatProviderAccess } from "../store/context/types";

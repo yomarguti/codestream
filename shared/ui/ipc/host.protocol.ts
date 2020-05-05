@@ -160,3 +160,11 @@ export const UpdateServerUrlRequestType = new RequestType<
 	void,
 	void
 >(`${IpcRoutes.Host}/server-url`);
+
+export interface OpenUrlRequest {
+	url: string;
+}
+
+export const OpenUrlRequestType = new RequestType<OpenUrlRequest, void, void, void>(
+	`${IpcRoutes.Host}/url/open`
+);

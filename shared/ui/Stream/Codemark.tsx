@@ -12,18 +12,12 @@ import { RepositionCodemark } from "./RepositionCodemark";
 import { markdownify } from "./Markdowner";
 import Timestamp from "./Timestamp";
 import CodemarkDetails from "./CodemarkDetails";
-import {
-	DocumentMarker,
-	CodemarkPlus,
-	OpenUrlRequestType,
-	Capabilities
-} from "@codestream/protocols/agent";
+import { DocumentMarker, CodemarkPlus, Capabilities } from "@codestream/protocols/agent";
 import {
 	CodemarkType,
 	CSUser,
 	CSMe,
 	CSPost,
-	CSApiCapabilities,
 	CSReview,
 	CodemarkStatus
 } from "@codestream/protocols/api";
@@ -59,7 +53,8 @@ import {
 	EditorHighlightRangeRequest,
 	EditorSelectRangeRequestType,
 	EditorSelectRangeRequest,
-	EditorRevealRangeRequestType
+	EditorRevealRangeRequestType,
+	OpenUrlRequestType
 } from "@codestream/protocols/webview";
 import { setCurrentCodemark, repositionCodemark, setCurrentReview } from "../store/context/actions";
 import { RelatedCodemark } from "./RelatedCodemark";

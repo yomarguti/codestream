@@ -1,4 +1,4 @@
-import { OpenUrlRequestType } from "@codestream/protocols/agent";
+import { OpenUrlRequestType } from "../ipc/host.protocol";
 import React from "react";
 import { connect } from "react-redux";
 import { HostApi } from "../webview-api";

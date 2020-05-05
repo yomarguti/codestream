@@ -6,7 +6,7 @@ import Icon from "./Icon";
 import Button from "./Button";
 import CancelButton from "./CancelButton";
 import { HostApi } from "../webview-api";
-import { OpenUrlRequestType } from "@codestream/protocols/agent";
+import { OpenUrlRequestType } from "../ipc/host.protocol";
 import { setShowFeedbackSmiley } from "../store/context/actions";
 import { CodeStreamState } from "../store";
 import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
