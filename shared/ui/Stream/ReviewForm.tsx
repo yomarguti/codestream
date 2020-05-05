@@ -305,7 +305,8 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	componentWillUnmount = () => {
-		this._disposableDidChangeDataNotification && this._disposableDidChangeDataNotification.dispose();
+		this._disposableDidChangeDataNotification &&
+			this._disposableDidChangeDataNotification.dispose();
 	};
 
 	async handleRepoChange(repoUri?) {
@@ -320,8 +321,9 @@ class ReviewForm extends React.Component<Props, State> {
 			includeSaved,
 			currentUserEmail: currentUser.email
 		});
-		
-		this._disposableDidChangeDataNotification && this._disposableDidChangeDataNotification.dispose();
+
+		this._disposableDidChangeDataNotification &&
+			this._disposableDidChangeDataNotification.dispose();
 		this._disposableDidChangeDataNotification = HostApi.instance.on(
 			DidChangeDataNotificationType,
 			(e: any) => {
@@ -566,11 +568,12 @@ class ReviewForm extends React.Component<Props, State> {
 							// therefore we can use the keys whose values are false
 							// as the list of files that have been added
 							newFiles: keyFilterFalsey(excludedFiles),
-							includeSaved: hasSavedFiles,
-							includeStaged: hasStagedFiles
+							includeSaved: hasSavedFiles && this.state.includeSaved,
+							includeStaged: hasStagedFiles && this.state.includeStaged
 						}
 					]
 				} as any;
+				console.warn("REVIEW: ", review);
 				const { type: createResult } = await this.props.createPostAndReview(review);
 				if (createResult !== PostsActionsType.FailPendingPost) {
 					if (this.props.skipPostCreationModal) {
@@ -1111,7 +1114,7 @@ class ReviewForm extends React.Component<Props, State> {
 			for (let path of unsavedFiles) {
 				const uri = URI.parse(path);
 				const uriPath = uri.path;
-				const index = uriPath.indexOf(scm.repoPath)
+				const index = uriPath.indexOf(scm.repoPath);
 				if (index === 0 || index === 1) {
 					// windows leads with a / before the drive letter
 					unsavedFilesInThisRepo.push(uriPath);
