@@ -10,10 +10,12 @@ import com.codestream.protocols.agent.LoginResult
 import com.codestream.sessionService
 import com.codestream.webViewService
 import com.github.salomonbrys.kotson.fromJson
+import com.github.salomonbrys.kotson.get
 import com.github.salomonbrys.kotson.jsonObject
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
+import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
@@ -30,6 +32,7 @@ import org.eclipse.lsp4j.TextDocumentIdentifier
 import org.eclipse.lsp4j.UnregistrationParams
 import org.eclipse.lsp4j.WorkspaceFolder
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification
+import org.eclipse.lsp4j.jsonrpc.services.JsonRequest
 import org.eclipse.lsp4j.services.LanguageClient
 import java.util.concurrent.CompletableFuture
 
@@ -117,6 +120,13 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
         project.agentService?.restart()
     }
 
+	@JsonRequest("codestream/url/open")
+    fun openUrl(json: JsonElement): CompletableFuture<Boolean?> {
+		val request = gson.fromJson<OpenUrlRequest>(json[0])
+        BrowserUtil.browse(request.url)
+        return CompletableFuture.completedFuture(true)
+    }
+
     override fun workspaceFolders(): CompletableFuture<MutableList<WorkspaceFolder>> {
         return CompletableFuture.completedFuture(project.workspaceFolders.toMutableList())
     }
@@ -185,6 +195,8 @@ class DidChangeApiVersionCompatibilityNotification(
     val compatibility: ApiVersionCompatibility,
     val missingCapabilities: JsonObject = jsonObject()
 )
+
+class OpenUrlRequest(val url: String)
 
 enum class ApiVersionCompatibility {
     @SerializedName("apiCompatible")
