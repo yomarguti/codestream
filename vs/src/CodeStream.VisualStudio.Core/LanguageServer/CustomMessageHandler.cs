@@ -51,6 +51,30 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 		}
 
 		/// <summary>
+		/// React to the agent requesting that a url be opened
+		/// </summary>
+		/// <param name="e"></param>
+		/// <param name="someOtherPropThatNeedsToBeHereForRequests">Request needs 2 props</param>
+		/// <returns></returns>
+		[JsonRpcMethod(AgentOpenUrlRequestType.MethodName)]
+		public async System.Threading.Tasks.Task OnOpenUrlAsync(JToken e, JToken someOtherPropThatNeedsToBeHereForRequests) {
+			using (Log.CriticalOperation(
+				$"{nameof(OnOpenUrlAsync)} Method={OpenUrlRequestType.MethodName}",
+				Serilog.Events.LogEventLevel.Information)) {
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try {
+					var url = e.ToObject<AgentOpenUrlRequest>().Url;
+					var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+					Assumes.Present(componentModel);
+					componentModel.GetService<IIdeService>().Navigate(url);
+				}
+				catch (Exception ex) {
+					Log.Error(ex, nameof(AgentOpenUrlRequestType));
+				}
+			}
+		}
+
+		/// <summary>
 		/// Agent message stating we received data change
 		/// </summary>
 		/// <param name="e"></param>

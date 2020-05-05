@@ -127,4 +127,15 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public static string MethodName = "codestream/set-server";
 		public override string Method => MethodName;
 	}
+
+	public class AgentOpenUrlRequest {
+		public string Url { get; set; }
+	}
+
+	public class AgentOpenUrlResponse { }
+
+	public class AgentOpenUrlRequestType : RequestType<AgentOpenUrlResponse> {
+		public const string MethodName = "codestream/url/open";
+		public override string Method => MethodName;
+	}
 }

@@ -26,6 +26,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Microsoft;
+using Microsoft.VisualStudio.ComponentModelHost;
 using static CodeStream.VisualStudio.Core.Extensions.FileSystemExtensions;
 using Application = CodeStream.VisualStudio.Core.Application;
 
@@ -91,16 +93,16 @@ namespace CodeStream.VisualStudio.Services {
 		public BrowserType BrowserType => BrowserType.HEAVYWEIGHT;
 		public int QueueCount => _messageQueue.Count;
 
-		private readonly ICodeStreamAgentServiceFactory _codeStreamAgentServiceFactory;
+		private readonly IServiceProvider _serviceProvider;
 		private readonly IEventAggregator _eventAggregator;
 		private readonly List<IDisposable> _disposables;
 		private IDisposable _disposable;
 
 		[ImportingConstructor]
 		public DotNetBrowserService(
-				ICodeStreamAgentServiceFactory codeStreamAgentServiceFactory,
+			[Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider,
 				IEventAggregator eventAggregator) {
-			_codeStreamAgentServiceFactory = codeStreamAgentServiceFactory;
+			_serviceProvider = serviceProvider;
 			_eventAggregator = eventAggregator;
 
 			try {
@@ -679,7 +681,9 @@ namespace CodeStream.VisualStudio.Services {
 
 			if (parameters.ResourceType == ResourceType.MAIN_FRAME) {
 				try {
-					_ = _codeStreamAgentServiceFactory.Create().SendAsync<JToken>("codestream/url/open", new { url = parameters.URL });
+					var componentModel = _serviceProvider?.GetService(typeof(SComponentModel)) as IComponentModel;
+					Assumes.Present(componentModel);
+					componentModel.GetService<IIdeService>().Navigate(parameters.URL);
 				}
 				catch (Exception ex) {
 					Log.Error(ex, "CanLoadResource");
