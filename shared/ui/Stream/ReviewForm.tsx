@@ -643,8 +643,8 @@ class ReviewForm extends React.Component<Props, State> {
 							// therefore we can use the keys whose values are false
 							// as the list of files that have been added
 							newFiles: keyFilterFalsey(excludedFiles),
-							includeSaved: hasSavedFiles && this.state.includeSaved,
-							includeStaged: hasStagedFiles && this.state.includeStaged
+							includeSaved: scm!.savedFiles.length > 0,
+							includeStaged: scm!.stagedFiles.length > 0
 						}
 					]
 				} as any;
