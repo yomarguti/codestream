@@ -2,6 +2,8 @@
 
 #desc# interactive atom release script
 
+[ -z "$ATOM_TOP" ] && echo "atom sandbox not loaded" && exit 1
+
 cd $ATOM_TOP || exit 1
 
 # checkout master for all repos, ensure it's up to date
@@ -53,19 +55,15 @@ tag="atom-$thisRelease"
 echo "Applying tag $tag to all repos..."
 for p in atom-codestream codestream-lsp-agent codestream-components
 do
-	(
-		echo "cd $ATOM_SANDBOX/$p && git tag $tag && git push origin $tag"
-		cd $ATOM_SANDBOX/$p && git tag $tag && git push origin $tag || exit 1
-	)
+	(echo "cd $ATOM_SANDBOX/$p && git tag $tag && git push origin $tag" && cd $ATOM_SANDBOX/$p && git tag $tag && git push origin $tag) || exit 1
 done
 
-echo "
-*** Don't forget to bump the version for atom-codestream on develop ***
-"
-# git checkout develop || exit 1
-# bump version patch in package.js ??????????
-# git commit -am "Auto-bump of version to XXXX following marketplace release"
-# git push origin master || exit 1
+echo "Bumping patch version on develop..."
+git checkout develop || exit 1
+dt-sb-version-tool --bump-version patch || exit 1
+nextVersion=`dt-sb-version-tool --report-version`
+[ -z "$nextVersion" -o "$nextVersion" == "$thisRelease" ] && echo "Uh oh!! Was the version updated properly?" && exit 1
+git commit -am "Auto-bump of version to $nextVersion following marketplace release" || exit 1
+git push origin develop || exit 1
 
 exit 0
-

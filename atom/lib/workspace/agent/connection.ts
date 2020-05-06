@@ -22,7 +22,9 @@ import {
 	DidStartLoginNotificationType,
 	RestartRequiredNotificationType,
 	TelemetryRequest,
-	TelemetryRequestType
+	TelemetryRequestType,
+	OpenUrlRequestType,
+	OpenUrlRequest
 } from "@codestream/protocols/agent";
 import { CompositeDisposable, Disposable } from "atom";
 import { Convert, LanguageClientConnection } from "atom-languageclient";
@@ -46,6 +48,7 @@ import {
 	WorkspaceFoldersChangeEvent
 } from "vscode-languageserver-protocol";
 import { Container } from "workspace/container";
+import { shell } from "electron";
 import { LSP_CLIENT_CAPABILITIES } from "./lsp-client-capabilities";
 
 /*
@@ -193,7 +196,6 @@ export class AgentConnection implements Disposable {
 		this._didChangeConnectionStatusEvent.dispose();
 		this._didStartLoginEvent.dispose();
 		this._didFailLoginEvent.dispose();
-		this._didLoginEvent.dispose();
 	}
 
 	async start() {
@@ -312,6 +314,10 @@ export class AgentConnection implements Disposable {
 				.getDirectories()
 				.map(dir => ({ uri: Convert.pathToUri(dir.getPath()), name: dir.getBaseName() }))
 		);
+
+		rpc.onRequest(OpenUrlRequestType.method, (params: OpenUrlRequest) => {
+			shell.openExternal(params.url);
+		});
 
 		this._subscriptions.add(
 			atom.workspace.observeTextEditors(editor => {
