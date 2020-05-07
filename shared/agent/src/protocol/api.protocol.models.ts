@@ -520,6 +520,11 @@ export interface CSAzureDevOpsProviderInfo {
 	hosts: { [host: string]: CSAzureDevOpsProviderInfo };
 }
 
+export interface CSOktaProviderInfo {
+	accessToken: string;
+	hosts: { [host: string]: CSAzureDevOpsProviderInfo };
+};
+
 export type CSProviderInfos =
 	| CSAsanaProviderInfo
 	| CSBitbucketProviderInfo
@@ -531,7 +536,8 @@ export type CSProviderInfos =
 	| CSSlackProviderInfo
 	| CSTrelloProviderInfo
 	| CSYouTrackProviderInfo
-	| CSAzureDevOpsProviderInfo;
+	| CSAzureDevOpsProviderInfo
+	| CSOktaProviderInfo;
 
 type Filter<T, U> = T extends U ? T : never;
 export type CSRefreshableProviderInfos = Filter<CSProviderInfos, { refreshToken: string }>;
@@ -633,6 +639,7 @@ type CSMeProviderInfo = { slack?: CSSlackProviderInfo } & {
 		trello?: CSTrelloProviderInfo;
 		youtrack?: CSYouTrackProviderInfo;
 		azuredevops?: CSAzureDevOpsProviderInfo;
+		okta?: CSOktaProviderInfo;
 		[key: string]: CSProviderInfos | undefined;
 	};
 };

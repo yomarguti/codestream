@@ -32,6 +32,7 @@ export * from "./agent.protocol.slack";
 export * from "./agent.protocol.trello";
 export * from "./agent.protocol.youtrack";
 export * from "./agent.protocol.azuredevops";
+export * from "./agent.protocol.okta";
 
 export interface Document {
 	uri: string;

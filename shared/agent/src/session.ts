@@ -124,7 +124,8 @@ export const loginApiErrorMappings: { [k: string]: LoginResult } = {
 	"PRVD-1002": LoginResult.MultipleWorkspaces,
 	"PRVD-1005": LoginResult.SignupRequired,
 	"PRVD-1006": LoginResult.SignInRequired,
-	"USRC-1020": LoginResult.InviteConflict
+	"USRC-1020": LoginResult.InviteConflict,
+	"AUTH-1006": LoginResult.TokenNotFound
 };
 
 export enum SessionStatus {

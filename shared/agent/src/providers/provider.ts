@@ -43,7 +43,8 @@ export const providerNamesById = new Map<string, string>([
 	["youtrack", "YouTrack"],
 	["azuredevops", "Azure DevOps"],
 	["slack", "Slack"],
-	["msteams", "Microsoft Teams"]
+	["msteams", "Microsoft Teams"],
+	["okta", "Okta"]
 ]);
 
 export interface ThirdPartyProviderSupportsIssues {

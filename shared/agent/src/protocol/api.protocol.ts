@@ -46,6 +46,7 @@ export enum LoginResult {
 	InvalidCredentials = "INVALID_CREDENTIALS",
 	InvalidToken = "TOKEN_INVALID",
 	ExpiredToken = "TOKEN_EXPIRED",
+	TokenNotFound = "TOKEN_NOT_FOUND",
 	NotConfirmed = "NOT_CONFIRMED",
 	NotOnTeam = "USER_NOT_ON_TEAM",
 	Unknown = "UNKNOWN",

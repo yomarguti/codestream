@@ -14,6 +14,7 @@ export interface ThirdPartyProviderConfig {
 	forEnterprise?: boolean;
 	hasIssues?: boolean;
 	hasSharing?: boolean;
+	supportsAuth?: boolean;
 	needsConfigure?: boolean;
 	oauthData?: { [key: string]: any };
 	scopes?: string[];

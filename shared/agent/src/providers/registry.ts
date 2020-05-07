@@ -51,6 +51,7 @@ export * from "./youtrack";
 export * from "./azuredevops";
 export * from "./slack";
 export * from "./msteams";
+export * from "./okta";
 
 @lsp
 export class ThirdPartyProviderRegistry {
