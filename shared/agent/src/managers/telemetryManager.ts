@@ -42,10 +42,10 @@ export class TelemetryManager {
 	track(request: TelemetryRequest) {
 		const cc = Logger.getCorrelationContext();
 		try {
-			void this._telemetry.track(request.eventName, request.properties);
 			if (request.options && request.options.alias) {
 				this.alias(request.options.alias);
 			}
+			void this._telemetry.track(request.eventName, request.properties);
 		} catch (ex) {
 			Logger.error(ex, cc);
 		}
