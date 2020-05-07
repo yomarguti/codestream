@@ -37,6 +37,7 @@ export enum SignupType {
 export interface ValidateSignupInfo {
 	type: SignupType;
 	inviteCode?: string;
+	orgId?: string;
 }
 
 const ProviderNames = {
@@ -65,6 +66,9 @@ export const startSSOSignin = (
 	}
 	if (info && info.inviteCode) {
 		query.inviteCode = info.inviteCode;
+	}
+	if (info && info.orgId) {
+		query.orgId = info.orgId;
 	}
 	const queryString = Object.keys(query)
 		.map(key => `${key}=${query[key]}`)
@@ -190,6 +194,7 @@ export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo
 			dispatch(setMaintenanceMode(false));
 		}
 
+		console.warn("LOGIN FAIL ERROR IS:", response.error);
 		switch (response.error) {
 			case LoginResult.MaintenanceMode:
 				return dispatch(setMaintenanceMode(true));

@@ -109,21 +109,17 @@ export const goToNewUserEntry = (params = {}) =>
 export const goToForgotPassword = (params = {}) =>
 	action(ContextActionsType.SetRoute, { name: Route.ForgotPassword, params });
 
-export const goToMSTeamsAdminApprovalInfo = (params = {}) =>
-	action(ContextActionsType.SetRoute, { name: Route.MSTeamsAdminApprovalInfo, params });
+export type SupportedSSOProvider = "github" | "okta";
 
-export type SupportedSSOProvider = "slack" | "msteams" | "github";
-
-export const goToSSOAuth = (provider: SupportedSSOProvider, params = {}) => {
+export const goToSSOAuth = (
+	provider: SupportedSSOProvider,
+	params: { [key: string]: any } = {}
+) => {
+	params.provider = provider;
 	switch (provider) {
-		/*
-		case "slack":
-			return action(ContextActionsType.SetRoute, { name: Route.SlackAuth, params });
-		case "msteams":
-			return action(ContextActionsType.SetRoute, { name: Route.MSTeamsAuth, params });
-		*/
 		case "github":
-			return action(ContextActionsType.SetRoute, { name: Route.GitHubAuth, params });
+		case "okta":
+			return action(ContextActionsType.SetRoute, { name: Route.ProviderAuth, params });
 		default:
 			throw Error("An invalid auth provider was specified");
 	}
@@ -149,3 +145,6 @@ export const goToTeamCreation = (params = {}) =>
 
 export const goToSetPassword = params =>
 	action(ContextActionsType.SetRoute, { name: Route.MustSetPassword, params });
+
+export const goToOktaConfig = params =>
+	action(ContextActionsType.SetRoute, { name: Route.OktaConfig, params });

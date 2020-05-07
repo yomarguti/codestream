@@ -98,5 +98,6 @@ export default {
 	"createChannel.name.required": "Required",
 	"setPassword.setPassword": "Set Password",
 	"setPassword.help": "6+ characters",
-	"createTeam.name.label": "Team Name"
+	"createTeam.name.label": "Team Name",
+	"oktaConfig.submitButton": "Set Organization Name"
 };

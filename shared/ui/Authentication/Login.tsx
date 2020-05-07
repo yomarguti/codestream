@@ -3,9 +3,9 @@ import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
 import Icon from "../Stream/Icon";
 import Button from "../Stream/Button";
-import { authenticate, SignupType, startSSOSignin } from "./actions";
+import { authenticate, startSSOSignin } from "./actions";
 import { CodeStreamState } from "../store";
-import { goToNewUserEntry, goToForgotPassword } from "../store/context/actions";
+import { goToNewUserEntry, goToForgotPassword, goToOktaConfig } from "../store/context/actions";
 import { supportsIntegrations } from "../store/configs/actions";
 
 const isPasswordInvalid = password => password.length === 0;
@@ -30,6 +30,7 @@ interface DispatchProps {
 		...args: Parameters<typeof startSSOSignin>
 	) => ReturnType<ReturnType<typeof startSSOSignin>>;
 	goToForgotPassword: typeof goToForgotPassword;
+	goToOktaConfig: typeof goToOktaConfig;
 }
 
 interface Props extends ConnectedProps, DispatchProps {}
@@ -168,6 +169,11 @@ class Login extends React.Component<Props, State> {
 		this.props.startSSOSignin("github");
 	};
 
+	handleClickOktaLogin = event => {
+		event.preventDefault();
+		this.props.goToOktaConfig({});
+	};
+
 	onClickForgotPassword = (event: React.SyntheticEvent) => {
 		event.preventDefault();
 		this.props.goToForgotPassword({ email: this.state.email });
@@ -249,6 +255,14 @@ class Login extends React.Component<Props, State> {
 											<div className="copy">Sign In with GitHub</div>
 											<Icon name="chevron-right" />
 										</Button>
+										<Button
+											className="row-button no-top-margin"
+											onClick={this.handleClickOktaLogin}
+										>
+											<Icon name="okta" />
+											<div className="copy">Sign In with Okta</div>
+											<Icon name="chevron-right" />
+										</Button>
 									</div>
 								)}
 								<div className="footer">
@@ -270,7 +284,7 @@ const ConnectedLogin = connect<ConnectedProps, any, any, CodeStreamState>(
 		initialEmail: props.email !== undefined ? props.email : state.configs.email,
 		supportsIntegrations: supportsIntegrations(state.configs)
 	}),
-	{ authenticate, goToNewUserEntry, startSSOSignin, goToForgotPassword }
+	{ authenticate, goToNewUserEntry, startSSOSignin, goToForgotPassword, goToOktaConfig }
 )(Login);
 
 export { ConnectedLogin as Login };

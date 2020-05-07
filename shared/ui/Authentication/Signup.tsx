@@ -9,7 +9,8 @@ import {
 	goToJoinTeam,
 	goToNewUserEntry,
 	goToEmailConfirmation,
-	goToTeamCreation
+	goToTeamCreation,
+	goToOktaConfig
 } from "../store/context/actions";
 import { TextInput } from "./TextInput";
 import { LoginResult } from "@codestream/protocols/api";
@@ -46,6 +47,7 @@ interface Props {
 export const Signup = (props: Props) => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
+		console.warn("API CAPS ARE:", state.apiVersioning.apiCapabilities);
 		return {
 			supportsIntegrations: supportsIntegrations(state.configs)
 		};
@@ -221,6 +223,13 @@ export const Signup = (props: Props) => {
 		[props.type]
 	);
 
+	const onClickOktaSignup = useCallback(
+		(event: React.SyntheticEvent) => {
+			return dispatch(goToOktaConfig({ fromSignup: true, inviteCode: props.inviteCode }));
+		},
+		[props.type]
+	);
+
 	if (!bootstrapped) return <Loading />;
 
 	return (
@@ -364,6 +373,11 @@ export const Signup = (props: Props) => {
 								<Button className="row-button no-top-margin" onClick={onClickGithubSignup}>
 									<Icon name="mark-github" />
 									<div className="copy">Sign Up with GitHub</div>
+									<Icon name="chevron-right" />
+								</Button>
+								<Button className="row-button no-top-margin" onClick={onClickOktaSignup}>
+									<Icon name="okta" />
+									<div className="copy">Sign Up with Okta</div>
 									<Icon name="chevron-right" />
 								</Button>
 								<div style={{ height: "15px" }} />

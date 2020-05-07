@@ -65,15 +65,13 @@ export enum Route {
 	NewUser = "newUserEntry",
 	Signup = "signup",
 	Login = "login",
-	SlackAuth = "slackAuth",
-	MSTeamsAuth = "msTeamsAuth",
-	GitHubAuth = "githubAuth",
+	ProviderAuth = "providerAuth",
 	JoinTeam = "joinTeam",
 	EmailConfirmation = "emailConfirmation",
 	TeamCreation = "teamCreation",
 	ForgotPassword = "forgotPassword",
-	MSTeamsAdminApprovalInfo = "MSTeamsAdminApprovalInfo",
-	MustSetPassword = "MustSetPassword"
+	MustSetPassword = "MustSetPassword",
+	OktaConfig = "oktaConfig"
 }
 
 export interface RouteState {
