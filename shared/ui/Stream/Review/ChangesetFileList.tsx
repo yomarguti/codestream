@@ -44,7 +44,7 @@ export const ChangesetFileList = (props: {
 		let indexToChangesetMap = {};
 		let indexToFileMap = {};
 		for (let changeset of review.reviewChangesets) {
-			changeset.modifiedFiles.forEach(f => {
+			(changeset.modifiedFiles || []).forEach(f => {
 				indexToChangesetMap[index] = changeset;
 				indexToFileMap[index] = f;
 				index++;

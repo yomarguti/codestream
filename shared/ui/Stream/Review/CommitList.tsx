@@ -16,7 +16,7 @@ export const CommitList = (props: { review: ReviewPlus; changesetIndex?: number 
 					<div
 						className={`row-with-icon-actions no-hover`}
 						style={{ display: "flex", alignItems: "center" }}
-						key={"saved-staged"}
+						key={`saved-staged-${index}`}
 					>
 						<label className="ellipsis-right-container no-margin">
 							<Icon name="save" />

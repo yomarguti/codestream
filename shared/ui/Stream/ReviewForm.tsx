@@ -10,7 +10,8 @@ import {
 	ReposScm,
 	DidChangeDataNotificationType,
 	ChangeDataType,
-	GetUserInfoRequestType
+	GetUserInfoRequestType,
+	UpdateReviewResponse
 } from "@codestream/protocols/agent";
 import {
 	CSReview,
@@ -100,7 +101,7 @@ interface ConnectedProps {
 	teamTagsArray: any;
 	textEditorUri?: string;
 	createPostAndReview?: Function;
-	editReview?: Function;
+	editReview?: (id: string, attributes: EditableAttributes) => UpdateReviewResponse | undefined;
 	repos: any;
 	shouldShare: boolean;
 	unsavedFiles: string[];
@@ -594,6 +595,7 @@ class ReviewForm extends React.Component<Props, State> {
 					const { scm } = repoStatus;
 					repoChanges = [
 						{
+							repoId: scm!.repoId,
 							scm,
 							startCommit,
 							excludeCommit,
@@ -608,12 +610,14 @@ class ReviewForm extends React.Component<Props, State> {
 							includeStaged: scm!.stagedFiles.length > 0
 						}
 					];
+					attributes.$addToSet = {
+						reviewChangesets: repoChanges
+					}
 				}
 
 				const editResult = await this.props.editReview(
 					this.props.editingReview.id,
-					attributes,
-					repoChanges
+					attributes
 				);
 				if (editResult && editResult.review) {
 					if (this.props.onClose) {
