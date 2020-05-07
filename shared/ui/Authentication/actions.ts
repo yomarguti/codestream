@@ -34,8 +34,9 @@ export enum SignupType {
 	CreateTeam = "createTeam"
 }
 
-export interface ValidateSignupInfo {
-	type: SignupType;
+export interface SSOAuthInfo {
+	fromSignup?: boolean;
+	type?: SignupType;
 	inviteCode?: string;
 	orgId?: string;
 }
@@ -46,7 +47,7 @@ const ProviderNames = {
 
 export const startSSOSignin = (
 	provider: SupportedSSOProvider,
-	info?: ValidateSignupInfo,
+	info?: SSOAuthInfo,
 	access?: ChatProviderAccess
 ) => async (dispatch, getState: () => CodeStreamState) => {
 	const { context, configs, session } = getState();
@@ -55,7 +56,7 @@ export const startSSOSignin = (
 	}
 
 	const query: { [key: string]: string } = {};
-	if (!info) {
+	if (!info || !info.fromSignup) {
 		query.noSignup = "1";
 	}
 	if (session.otc) {
@@ -181,7 +182,7 @@ export const completeSignup = (
 	dispatch(onLogin(response));
 };
 
-export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo) => async (
+export const validateSignup = (provider: string, authInfo?: SSOAuthInfo) => async (
 	dispatch,
 	getState: () => CodeStreamState
 ) => {
@@ -227,7 +228,7 @@ export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo
 		}
 	}
 
-	if (signupInfo) {
+	if (authInfo && authInfo.fromSignup) {
 		HostApi.instance.track(
 			"Account Created",
 			{
@@ -242,7 +243,7 @@ export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo
 			? ProviderNames[provider.toLowerCase()] || provider
 			: "CodeStream";
 		HostApi.instance.track("Signup Completed", {
-			"Signup Type": signupInfo.type === SignupType.CreateTeam ? "Organic" : "Viral",
+			"Signup Type": authInfo.type === SignupType.CreateTeam ? "Organic" : "Viral",
 			"Auth Provider": providerName
 		});
 	} else {

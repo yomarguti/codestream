@@ -7,7 +7,7 @@ import { goToLogin, goToSignup } from "../store/context/actions";
 import { DispatchProp } from "../store/common";
 import { HostApi } from "../webview-api";
 import { FormattedMessage } from "react-intl";
-import { startSSOSignin, SignupType } from "./actions";
+import { startSSOSignin, SignupType, SSOAuthInfo } from "./actions";
 
 const isOrgValid = (org: string) => org.length > 0;
 
@@ -40,12 +40,19 @@ export const OktaConfig = (connect() as any)((props: ConnectedProps & DispatchPr
 		if (orgName !== "" && orgValidity) {
 			setIsLoading(true);
 			try {
-				HostApi.instance.track("Provider Auth Selected", {
-					Provider: "Okta"
-				});
-				const info = props.inviteCode
-					? { type: SignupType.JoinTeam, orgId: orgName, inviteCode: props.inviteCode }
-					: { type: SignupType.CreateTeam, orgId: orgName };
+				if (props.fromSignup) {
+					HostApi.instance.track("Provider Auth Selected", {
+						Provider: "Okta"
+					});
+				}
+				const info: SSOAuthInfo = props.fromSignup ? { fromSignup: true } : {};
+				info.orgId = orgName;
+				if (props.inviteCode) {
+					info.type = SignupType.JoinTeam;
+					info.inviteCode = props.inviteCode;
+				} else {
+					info.type = SignupType.CreateTeam;
+				}
 				props.dispatch(startSSOSignin("okta", info));
 			} catch (error) {
 				// TODO: communicate error

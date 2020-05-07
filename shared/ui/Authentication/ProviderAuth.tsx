@@ -16,6 +16,7 @@ interface Props extends DispatchProp {
 	inviteCode?: string;
 	provider: SupportedSSOProvider;
 	orgId?: string;
+	fromSignup?: boolean;
 }
 
 export const ProviderAuth = (connect(undefined) as any)((props: Props) => {
@@ -39,7 +40,12 @@ export const ProviderAuth = (connect(undefined) as any)((props: Props) => {
 			startSSOSignin(
 				props.provider,
 				props.type !== undefined
-					? { type: props.type, inviteCode: props.inviteCode, orgId: props.orgId }
+					? {
+							type: props.type,
+							inviteCode: props.inviteCode,
+							orgId: props.orgId,
+							fromSignup: props.fromSignup
+					  }
 					: undefined
 			)
 		);
@@ -51,7 +57,7 @@ export const ProviderAuth = (connect(undefined) as any)((props: Props) => {
 			await props.dispatch(
 				validateSignup(
 					capitalize(props.provider),
-					props.type !== undefined ? { type: props.type } : undefined
+					props.type !== undefined ? { type: props.type, fromSignup: props.fromSignup } : undefined
 				)
 			);
 		} catch (error) {

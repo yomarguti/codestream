@@ -30,7 +30,6 @@ import {
 	GetActiveEditorContextRequestType
 } from "@codestream/protocols/webview";
 import { BootstrapActionType } from "./bootstrapped/types";
-import { ValidateSignupInfo, startSSOSignin } from "../Authentication/actions";
 import { uuid } from "../utils";
 import { upgradeRequired } from "../store/versioning/actions";
 import {
@@ -98,17 +97,4 @@ const bootstrapEssentials = (data: BootstrapInHostResponse) => dispatch => {
 	}
 
 	dispatch(apiCapabilitiesUpdated(data.apiCapabilities || {}));
-};
-
-export const reAuthForFullChatProvider = (
-	provider: contextActions.SupportedSSOProvider,
-	info?: ValidateSignupInfo
-) => async dispatch => {
-	await HostApi.instance.send(LogoutRequestType, {
-		reason: LogoutReason.ReAuthenticating
-	});
-
-	dispatch(reset());
-
-	dispatch(startSSOSignin(provider, info, "permissive"));
 };
