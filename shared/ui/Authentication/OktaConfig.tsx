@@ -28,7 +28,6 @@ export const OktaConfig = (connect() as any)((props: ConnectedProps & DispatchPr
 
 	const onCancel = useCallback((event: React.SyntheticEvent) => {
 		event.preventDefault();
-		console.warn("CANCELLED!");
 		if (props.fromSignup) {
 			props.dispatch(goToSignup());
 		} else {
@@ -37,7 +36,6 @@ export const OktaConfig = (connect() as any)((props: ConnectedProps & DispatchPr
 	}, []);
 
 	const onSubmit = async (event: React.FormEvent) => {
-		console.warn("SUBMITTING!");
 		event.preventDefault();
 		if (orgName !== "" && orgValidity) {
 			setIsLoading(true);
@@ -48,10 +46,8 @@ export const OktaConfig = (connect() as any)((props: ConnectedProps & DispatchPr
 				const info = props.inviteCode
 					? { type: SignupType.JoinTeam, orgId: orgName, inviteCode: props.inviteCode }
 					: { type: SignupType.CreateTeam, orgId: orgName };
-				console.warn("STARTING SSO SIGNIN", info);
 				props.dispatch(startSSOSignin("okta", info));
 			} catch (error) {
-				console.warn("ERROR", error);
 				// TODO: communicate error
 				if (props.fromSignup) {
 					props.dispatch(goToSignup());

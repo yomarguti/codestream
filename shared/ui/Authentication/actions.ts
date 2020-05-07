@@ -194,7 +194,6 @@ export const validateSignup = (provider: string, signupInfo?: ValidateSignupInfo
 			dispatch(setMaintenanceMode(false));
 		}
 
-		console.warn("LOGIN FAIL ERROR IS:", response.error);
 		switch (response.error) {
 			case LoginResult.MaintenanceMode:
 				return dispatch(setMaintenanceMode(true));

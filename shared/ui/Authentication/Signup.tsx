@@ -47,7 +47,6 @@ interface Props {
 export const Signup = (props: Props) => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
-		console.warn("API CAPS ARE:", state.apiVersioning.apiCapabilities);
 		return {
 			supportsIntegrations: supportsIntegrations(state.configs)
 		};

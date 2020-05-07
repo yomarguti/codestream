@@ -26,7 +26,6 @@ export const ProviderAuth = (connect(undefined) as any)((props: Props) => {
 	}, [isWaiting]);
 
 	const waitFor = inMillis(30, "sec");
-	console.warn("WAITING FOR " + waitFor);
 	useTimeout(stopWaiting, waitFor);
 
 	const onClickGoToSignup = (event: React.SyntheticEvent) => {
@@ -36,7 +35,6 @@ export const ProviderAuth = (connect(undefined) as any)((props: Props) => {
 
 	const onClickTryAgain = (event: React.SyntheticEvent) => {
 		event.preventDefault();
-		console.warn("TRY AGAIN CLICKED", props);
 		props.dispatch(
 			startSSOSignin(
 				props.provider,
@@ -57,11 +55,8 @@ export const ProviderAuth = (connect(undefined) as any)((props: Props) => {
 				)
 			);
 		} catch (error) {
-			console.warn("CAUGHT ERROR VALIDATING SIGNUP:", error);
 			if (error !== LoginResult.TokenNotFound) {
 				setIsWaiting(false);
-			} else {
-				console.warn("STILL WAITING...");
 			}
 		}
 	}, [props.type]);
