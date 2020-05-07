@@ -31,6 +31,7 @@ export interface ShowReviewDiffCommandArgs {
 	reviewId: string;
 	repoId: string;
 	path: string;
+	checkpoint?: number;
 }
 
 export interface ShowReviewLocalDiffCommandArgs {
@@ -184,7 +185,7 @@ export class Commands implements Disposable {
 
 	@command("showReviewDiff", { showErrorMessage: "Unable to display review diff" })
 	async showReviewDiff(args: ShowReviewDiffCommandArgs): Promise<boolean> {
-		await Container.diffContents.loadContents(args.reviewId, args.repoId, args.path);
+		await Container.diffContents.loadContents(args.reviewId, args.repoId, args.path, args.checkpoint);
 		const { review } = await Container.agent.reviews.get(args.reviewId);
 
 		// FYI, see showMarkerDiff() above

@@ -29,13 +29,14 @@ export class ReviewDiffContentProvider implements TextDocumentContentProvider, D
 		return (contents as any)[version] as string;
 	}
 
-	async loadContents(reviewId: string, repoId: string, path: string) {
+	async loadContents(reviewId: string, repoId: string, path: string, checkpoint: number = 0) {
+		// TODO does checkpoint need to be here?
 		const key = this.key(reviewId, repoId, path);
 		const cached = this._contents.get(key);
 
 		if (cached !== undefined) return cached;
 
-		const contents = await Container.agent.reviews.getContents(reviewId, repoId, path);
+		const contents = await Container.agent.reviews.getContents(reviewId, repoId, path, checkpoint);
 		this._contents.set(key, contents);
 
 		return contents;
