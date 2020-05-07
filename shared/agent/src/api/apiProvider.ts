@@ -54,6 +54,8 @@ import {
 	FetchPostsResponse,
 	FetchReposRequest,
 	FetchReposResponse,
+	FetchReviewCheckpointDiffsRequest,
+	FetchReviewCheckpointDiffsResponse,
 	FetchReviewDiffsRequest,
 	FetchReviewDiffsResponse,
 	FetchReviewsRequest,
@@ -390,6 +392,7 @@ export interface ApiProvider {
 	deleteReview(request: DeleteReviewRequest): Promise<DeleteReviewResponse>;
 
 	fetchReviewDiffs(request: FetchReviewDiffsRequest): Promise<FetchReviewDiffsResponse>;
+	fetchReviewCheckpointDiffs(request: FetchReviewCheckpointDiffsRequest): Promise<FetchReviewCheckpointDiffsResponse>;
 
 	createChannelStream(request: CreateChannelStreamRequest): Promise<CreateChannelStreamResponse>;
 	createDirectStream(request: CreateDirectStreamRequest): Promise<CreateDirectStreamResponse>;

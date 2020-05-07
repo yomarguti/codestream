@@ -511,7 +511,8 @@ export class ScmManager {
 
 		const uri = URI.parse(documentUri);
 		if (contents == null) {
-			const reviewContents = await reviews.getContents({ reviewId, repoId, path });
+			// TODO what happens with checkpoint here?
+			const reviewContents = await reviews.getContents({ reviewId, repoId, path, checkpoint: 0 });
 			const versionContents = (reviewContents as any)[version] as string;
 			const document = TextDocument.create(uri.toString(), "codestream", 0, versionContents);
 			contents = document.getText(range);
@@ -524,6 +525,8 @@ export class ScmManager {
 		const gitRemotes = await repo.getRemotes();
 		const remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
 		const diffs = await reviews.getDiffs(reviewId, repoId);
+		// TODO what happens with checkpoint here?
+		const checkpointDiff = diffs.find(_ => _.checkpoint === 0)!;
 		return {
 			uri: uri.toString(),
 			range: range,
@@ -532,7 +535,7 @@ export class ScmManager {
 				file: path,
 				repoPath: repo.path,
 				repoId,
-				revision: diffs.latestCommitSha,
+				revision: checkpointDiff.diff.latestCommitSha,
 				authors: [],
 				remotes,
 				branch: changeset.branch

@@ -580,18 +580,20 @@ export interface CSUpdateReviewRequest {
 	text?: string;
 	allReviewersMustApprove?: boolean;
 
+	// FIXME TODO - Type
+	$addToSet?: any;
 	// amend the review with an additional checkpoint
 	// this is the data coming from the webivew....
-	repoChanges?: {
-		scm: RepoScmStatus;
-		startCommit: string;
-		excludeCommit: string;
-		excludedFiles: string[];
-		newFiles: string[];
-		includeSaved: boolean;
-		includeStaged: boolean;
-		checkpoint: number;
-	}[];
+	// repoChanges?: {
+	// 	scm: RepoScmStatus;
+	// 	startCommit: string;
+	// 	excludeCommit: string;
+	// 	excludedFiles: string[];
+	// 	newFiles: string[];
+	// 	includeSaved: boolean;
+	// 	includeStaged: boolean;
+	// 	checkpoint: number;
+	// }[];
 	// ... and this is the data that the API server expects,
 	// after getting massaged by postsManager
 	reviewChangesets?: CreateReviewChangesetsRequest[];
@@ -617,6 +619,12 @@ export interface CSGetReviewDiffsRequest {
 export interface CSGetReviewDiffsResponse {
 	[repoId: string]: CSReviewDiffs;
 }
+
+export interface CSGetReviewCheckpointDiffsResponse extends Array<{
+	repoId: string;
+	checkpoint: any; // TODO type
+	diffs: any; // TODO type
+}> { }
 
 export interface CSAddReferenceLocationRequest {
 	commitHash: string;

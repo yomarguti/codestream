@@ -51,6 +51,8 @@ import {
 	FetchMarkersRequest,
 	FetchPostRepliesRequest,
 	FetchPostsRequest,
+	FetchReviewCheckpointDiffsRequest,
+	FetchReviewCheckpointDiffsResponse,
 	FetchReviewDiffsRequest,
 	FetchReviewDiffsResponse,
 	FetchReviewsRequest,
@@ -170,6 +172,7 @@ import {
 	CSGetPostsResponse,
 	CSGetRepoResponse,
 	CSGetReposResponse,
+	CSGetReviewCheckpointDiffsResponse,
 	CSGetReviewDiffsResponse,
 	CSGetReviewResponse,
 	CSGetReviewsRequest,
@@ -1286,6 +1289,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@log()
 	fetchReviewDiffs(request: FetchReviewDiffsRequest): Promise<FetchReviewDiffsResponse> {
 		return this.get<CSGetReviewDiffsResponse>(`/reviews/diffs/${request.reviewId}`, this._token);
+	}
+
+	@log()
+	fetchReviewCheckpointDiffs(request: FetchReviewCheckpointDiffsRequest): Promise<FetchReviewCheckpointDiffsResponse> {
+		return this.get<CSGetReviewCheckpointDiffsResponse>(`/reviews/checkpoint-diffs/${request.reviewId}`, this._token);
 	}
 
 	@log()

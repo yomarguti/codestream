@@ -351,13 +351,15 @@ class ReviewDiffMarkersBuilder extends MarkersBuilder {
 		if (!changeset) throw new Error(`Could not find changeset with repoId ${this._repoId}`);
 
 		const diffs = await reviews.getDiffs(this._reviewId, this._repoId);
-		const fromLatestCommitDiff = diffs.latestCommitToRightDiffs.find(
+		// TODO not sure what this is supposed to check?? use a checkpoint arg?
+		const diffCheckpoint = diffs.find(_ => _.checkpoint === 0)!;
+		const fromLatestCommitDiff = diffCheckpoint.diff.latestCommitToRightDiffs.find(
 			d => d.newFileName === this._path
 		);
-		const toLatestCommitDiff = diffs.rightToLatestCommitDiffs.find(
+		const toLatestCommitDiff = diffCheckpoint.diff.rightToLatestCommitDiffs.find(
 			d => d.newFileName === this._path
 		);
-		const toBaseCommitDiff = diffs.rightReverseDiffs.find(d => d.newFileName === this._path);
+		const toBaseCommitDiff = diffCheckpoint.diff.rightReverseDiffs.find(d => d.newFileName === this._path);
 
 		const latestCommitLocation = toLatestCommitDiff
 			? await calculateLocation(location, toLatestCommitDiff)
@@ -366,7 +368,7 @@ class ReviewDiffMarkersBuilder extends MarkersBuilder {
 			? await calculateLocation(location, toBaseCommitDiff)
 			: location;
 
-		const latestCommitSha = diffs.latestCommitSha;
+		const latestCommitSha = diffCheckpoint.diff.latestCommitSha;
 		const referenceLocations: CSReferenceLocation[] = [];
 
 		if (fromLatestCommitDiff != null) {
@@ -388,7 +390,7 @@ class ReviewDiffMarkersBuilder extends MarkersBuilder {
 			location: MarkerLocation.toArray(latestCommitLocation)
 		});
 		referenceLocations.push({
-			commitHash: diffs.rightBaseSha,
+			commitHash: diffCheckpoint.diff.rightBaseSha,
 			flags: { backtracked: true },
 			location: MarkerLocation.toArray(baseCommitLocation)
 		});

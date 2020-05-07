@@ -49,7 +49,7 @@ const uriRegexp = /codestream-diff:\/\/(\w+)\/(\w+)\/(\w+)\/(.+)/;
 
 @lsp
 export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
-	private readonly _diffs = new Map<string, { [repoId: string]: CSReviewDiffs }>();
+	private readonly _diffs = new Map<string, { [repoId: string]: { checkpoint: any, diff: CSReviewDiffs }[] }>();
 
 	static parseUri(
 		uri: string
@@ -86,15 +86,32 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		return { review };
 	}
 
-	async getDiffs(reviewId: string, repoId: string): Promise<CSReviewDiffs> {
+	async getDiffs(reviewId: string, repoId: string): Promise<{ checkpoint: any, diff: CSReviewDiffs }[]> {
 		const diffsByRepo = await this.getAllDiffs(reviewId);
 		return diffsByRepo[repoId];
 	}
 
-	private async getAllDiffs(reviewId: string): Promise<{ [repoId: string]: CSReviewDiffs }> {
+	private async getAllDiffs(reviewId: string): Promise<{ [repoId: string]: { checkpoint: any, diff: CSReviewDiffs }[] }> {
 		if (!this._diffs.has(reviewId)) {
-			const response = await this.session.api.fetchReviewDiffs({ reviewId });
-			this._diffs.set(reviewId, response);
+			// will need the old API here for old clients??????
+			const response = await this.session.api.fetchReviewCheckpointDiffs({ reviewId });
+			if (response && response.length) {
+				const result: { [repoId: string]: { checkpoint: any, diff: CSReviewDiffs }[] } = {};
+				const checkpoints: any = {};
+				for (const r of response) {
+					if (!result[r.repoId]) {
+						result[r.repoId] = [];
+					}
+					if (!checkpoints[r.repoId]) {
+						checkpoints[r.repoId] = 0;
+					}
+					else {
+						checkpoints[r.repoId] = checkpoints[r.repoId] + 1;
+					}
+					result[r.repoId].push({ checkpoint: checkpoints[r.repoId], diff: r.diffs });
+				}
+				this._diffs.set(reviewId, result);
+			}
 		}
 
 		const diffsByRepo = this._diffs.get(reviewId);
@@ -161,7 +178,9 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				const contents = await this.getContents({
 					reviewId: review.id,
 					repoId: changeset.repoId,
-					path: file.file
+					path: file.file,
+					// what goes here??
+					checkpoint: 0
 				});
 				files.push({
 					leftPath: file.oldFile,
@@ -191,12 +210,16 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		const fileInfo = changeset.modifiedFiles.find(f => f.file === request.path);
 		if (!fileInfo) throw new Error(`Could not find changeset file information for ${request.path}`);
 
+		// TODO this?
 		const diffs = await this.getDiffs(request.reviewId, request.repoId);
-		const leftDiff = diffs.leftDiffs.find(
+		// TODO this?
+		const checkpointDiff = diffs.find(_ => _.checkpoint === request.checkpoint)!;
+		const diff = checkpointDiff.diff;
+		const leftDiff = diff.leftDiffs.find(
 			d => d.newFileName === fileInfo.oldFile || d.oldFileName === fileInfo.oldFile
 		);
 		const leftBaseRelativePath = (leftDiff && leftDiff.oldFileName) || fileInfo.oldFile;
-		const rightDiff = diffs.rightDiffs?.find(
+		const rightDiff = diff.rightDiffs?.find(
 			d => d.newFileName === fileInfo.file || d.oldFileName === fileInfo.file
 		);
 		const rightBaseRelativePath = (rightDiff && rightDiff.oldFileName) || fileInfo.file;
@@ -213,7 +236,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			fileInfo.statusX === FileStatus.added || fileInfo.statusX === FileStatus.untracked;
 		const leftBaseContents = isNewFile
 			? ""
-			: (await git.getFileContentForRevision(leftBasePath, diffs.leftBaseSha)) || "";
+			: (await git.getFileContentForRevision(leftBasePath, diff.leftBaseSha)) || "";
 		const normalizedLeftBaseContents = Strings.normalizeFileContents(leftBaseContents);
 		const leftContents =
 			leftDiff !== undefined
@@ -221,9 +244,9 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				: normalizedLeftBaseContents;
 		const rightBaseContents = isNewFile
 			? ""
-			: diffs.leftBaseSha === diffs.rightBaseSha
-			? leftBaseContents
-			: (await git.getFileContentForRevision(rightBasePath, diffs.rightBaseSha)) || "";
+			: diff.leftBaseSha === diff.rightBaseSha
+				? leftBaseContents
+				: (await git.getFileContentForRevision(rightBasePath, diff.rightBaseSha)) || "";
 		const normalizedRightBaseContents = Strings.normalizeFileContents(rightBaseContents);
 		const rightContents =
 			rightDiff !== undefined
@@ -238,19 +261,25 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 	@lspHandler(UpdateReviewRequestType)
 	async update(request: UpdateReviewRequest): Promise<UpdateReviewResponse> {
-		if (request.repoChanges) {
+		if (request.$addToSet && request.$addToSet.reviewChangesets) {
 			const { posts } = SessionContainer.instance();
 
 			// FIXME -- this is hot garbage
+			// FIXMEEEEEE -- even hotter garbage below...
 			const { reviewChangesets, ...rest } = request;
 			try {
 				const r = await posts.createSharingReviewPost({
-					attributes: { ...rest },
+					attributes: { ...rest, repoChanges: request.$addToSet.reviewChangesets  },
 					shortCircuitAndReturnReviewChangesets: true
 				});
+				const x = this._diffs.get(request.id)![request.$addToSet.reviewChangesets[0].repoId].length - 1;
+				this._diffs.delete(request.id);
+
+				(r as any)[0].checkpoint = x + 1;
+				request.$addToSet.reviewChangesets = r;
 				// @ts-ignore
-				request.reviewChangesets = r;
-				delete request.repoChanges;
+				// request.reviewChangesets = r;
+				// delete request.repoChanges;
 				// END FIXME -- this is hot garbage
 			} catch (e) {
 				Logger.warn("Error in reviewsManager.update: ", e);
@@ -297,32 +326,34 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			}
 
 			const diffs = diffsByRepo[repoId];
-			let leftCommit = await git.getCommit(repoPath, diffs.leftBaseSha);
-			let rightCommit = await git.getCommit(repoPath, diffs.rightBaseSha);
-			if (leftCommit == null || rightCommit == null) {
-				const didFetch = await git.fetchAllRemotes(repoPath);
-				if (didFetch) {
-					leftCommit = leftCommit || (await git.getCommit(repoPath, diffs.leftBaseSha));
-					rightCommit = rightCommit || (await git.getCommit(repoPath, diffs.rightBaseSha));
-				}
-			}
-
-			function missingCommitError(sha: string, author: string) {
-				const shortSha = sha.substr(0, 8);
-				return {
-					success: false,
-					error: {
-						message: `A commit required to perform this review (${shortSha}, authored by ${author}) was not found in the local git repository. Fetch all remotes and try again.`,
-						type: "COMMIT_NOT_FOUND"
+			for (const d of diffs) {
+				let leftCommit = await git.getCommit(repoPath, d.diff.leftBaseSha);
+				let rightCommit = await git.getCommit(repoPath, d.diff.rightBaseSha);
+				if (leftCommit == null || rightCommit == null) {
+					const didFetch = await git.fetchAllRemotes(repoPath);
+					if (didFetch) {
+						leftCommit = leftCommit || (await git.getCommit(repoPath, d.diff.leftBaseSha));
+						rightCommit = rightCommit || (await git.getCommit(repoPath, d.diff.rightBaseSha));
 					}
-				};
-			}
+				}
 
-			if (leftCommit == null) {
-				return missingCommitError(diffs.leftBaseSha, diffs.leftBaseAuthor);
-			}
-			if (rightCommit == null) {
-				return missingCommitError(diffs.rightBaseSha, diffs.rightBaseAuthor);
+				function missingCommitError(sha: string, author: string) {
+					const shortSha = sha.substr(0, 8);
+					return {
+						success: false,
+						error: {
+							message: `A commit required to perform this review (${shortSha}, authored by ${author}) was not found in the local git repository. Fetch all remotes and try again.`,
+							type: "COMMIT_NOT_FOUND"
+						}
+					};
+				}
+
+				if (leftCommit == null) {
+					return missingCommitError(d.diff.leftBaseSha, d.diff.leftBaseAuthor);
+				}
+				if (rightCommit == null) {
+					return missingCommitError(d.diff.rightBaseSha, d.diff.rightBaseAuthor);
+				}
 			}
 		}
 

@@ -17,11 +17,11 @@ import {
 	CSUpdateReviewRequest,
 	CSUpdateReviewResponse
 } from "./api.protocol";
-import { CSReviewDiffs } from "./api.protocol.models";
+import { CSReviewChangeset, CSReviewDiffs } from "./api.protocol.models";
 
-export interface ReviewPlus extends CSReview {}
+export interface ReviewPlus extends CSReview { }
 
-export interface CreateDiffsRequest extends CSReviewDiffs {}
+export interface CreateDiffsRequest extends CSReviewDiffs { }
 export interface CreateReviewChangesetsRequest
 	extends Omit<CSReviewChangesetBase, "reviewId" | "repoId" | "diffId"> {
 	repoId: string;
@@ -160,6 +160,7 @@ export interface GetReviewContentsRequest {
 	reviewId: string;
 	repoId: string;
 	path: string;
+	checkpoint?: number;
 }
 
 export interface GetReviewContentsLocalRequest {
@@ -226,6 +227,22 @@ export const FetchReviewDiffsRequestType = new RequestType<
 	void,
 	void
 >("codestream/review/diffs");
+
+export interface FetchReviewCheckpointDiffsRequest extends CSGetReviewDiffsRequest { }
+
+export interface FetchReviewCheckpointDiffsResponse extends Array<{
+	repoId: string;
+	checkpoint?: number;
+	// TODO type
+	diffs: any;
+}> { }
+
+export const FetchReviewCheckpointDiffsRequestType = new RequestType<
+	FetchReviewCheckpointDiffsRequest,
+	FetchReviewCheckpointDiffsResponse,
+	void,
+	void
+>("codestream/review/checkpoint-diffs");
 
 export interface CheckReviewPreconditionsRequest {
 	reviewId: string;
