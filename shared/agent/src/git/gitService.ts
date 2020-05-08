@@ -825,8 +825,23 @@ export class GitService implements IGitService, Disposable {
 				"--"
 			);
 
-			const commits = GitLogParser.parse(data2.trim(), repoPath);
-			if (commits === undefined || commits.size === 0) return undefined;
+			let commits = GitLogParser.parse(data2.trim(), repoPath);
+			if (commits === undefined || commits.size === 0) {
+				// if we didn't find unique commits on the branch we resort to git log
+				const data3 = await git(
+					{ cwd: repoPath },
+					"log",
+					branch,
+					"--first-parent",
+					"-n100",
+					`--format='${GitLogParser.defaultFormat}`,
+					"--"
+				);
+				commits = GitLogParser.parse(data3.trim(), repoPath);
+				if (commits === undefined || commits.size === 0) {
+					return undefined;
+				}
+			}
 
 			let localCommits: string[] | undefined = undefined;
 			try {
