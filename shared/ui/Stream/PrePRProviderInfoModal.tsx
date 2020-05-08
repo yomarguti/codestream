@@ -60,7 +60,7 @@ export const PrePRProviderInfoModal = (props: PrePRProviderInfoModalProps) => {
 						</strong>
 					</CSText>
 					<CSText>
-						Display comments on merged-in pull requests right along side the code blocks they refer
+						Display comments on pull requests right along side the code blocks they refer
 						to. {props.helpText ? `(${props.helpText})` : null}
 					</CSText>
 					<Spacer />

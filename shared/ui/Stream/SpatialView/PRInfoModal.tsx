@@ -79,7 +79,7 @@ export const PRInfoModal = (props: { onClose: () => void }) => {
 			<VerticallyCentered>
 				<BoxedContent title="Pull Requests">
 					<CSText>
-						Display merged-in pull request code comments right alongside the code blocks they refer
+						Display pull request code comments right alongside the code blocks they refer
 						to.
 					</CSText>
 					<CSText>Select the service you use for pull requests below to get started.</CSText>
