@@ -79,6 +79,7 @@ import * as fs from "../utilities/fs";
 import { FileInfo } from "./FileInfo";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { GettingStarted } from "./GettingStarted";
+import { supportsIntegrations } from "../store/configs/actions";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -117,6 +118,7 @@ interface Props {
 	currentReviewId?: string;
 	lightningCodeReviewsEnabled: boolean;
 	activePanel: WebviewPanels;
+	supportsIntegrations: boolean;
 
 	setEditorContext: (
 		...args: Parameters<typeof setEditorContext>
@@ -1133,12 +1135,18 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						<Icon name="arrow-down" />
 					</ViewSelectorControl>
 				)}
-				<Tooltip title="Show/hide pull request comments" placement="top" delay={1}>
-					<ViewSelectorControl onClick={this.togglePRComments} id="pr-toggle">
-						<span>PRs</span>{" "}
-						<Switch size="small" on={this.props.showPRComments} onChange={this.togglePRComments} />
-					</ViewSelectorControl>
-				</Tooltip>
+				{this.props.supportsIntegrations && (
+					<Tooltip title="Show/hide pull request comments" placement="top" delay={1}>
+						<ViewSelectorControl onClick={this.togglePRComments} id="pr-toggle">
+							<span>PRs</span>{" "}
+							<Switch
+								size="small"
+								on={this.props.showPRComments}
+								onChange={this.togglePRComments}
+							/>
+						</ViewSelectorControl>
+					</Tooltip>
+				)}
 				{numHidden > 0 && (
 					<Tooltip title="Show/hide archived codemarks" placement="top" delay={1}>
 						<ViewSelectorControl onClick={this.toggleShowHidden}>
@@ -1390,7 +1398,8 @@ const mapStateToProps = (state: CodeStreamState) => {
 		numHidden,
 		isInVscode: ide.name === "VSC",
 		webviewFocused: context.hasFocus,
-		lightningCodeReviewsEnabled: isFeatureEnabled(state, "lightningCodeReviews")
+		lightningCodeReviewsEnabled: isFeatureEnabled(state, "lightningCodeReviews"),
+		supportsIntegrations: supportsIntegrations(configs)
 	};
 };
 
