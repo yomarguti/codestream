@@ -74,7 +74,13 @@ export interface CrossPostIssueValues {
 	externalProviderUrl?: string;
 	assignees?: ThirdPartyProviderUser[];
 	codeDelimiterStyle?: CodeDelimiterStyles;
-	issueProvider: { name: string; id: string; host: string };
+	issueProvider: {
+		/**
+		 * name is a lower-cased unique "key" that identifies a specific provider.
+		 * It will be something like "msteams" rather than "Microsoft Teams"
+		 */
+		name: string;
+		id: string; host: string };
 	[key: string]: any;
 }
 

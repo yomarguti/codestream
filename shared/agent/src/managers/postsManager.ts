@@ -70,6 +70,7 @@ import {
 	ProviderType,
 	StreamType
 } from "../protocol/api.protocol";
+import { providerNamesById } from "../providers/provider";
 import { Arrays, debug, log, lsp, lspHandler } from "../system";
 import { Strings } from "../system/string";
 import { BaseIndex, IndexParams, IndexType } from "./cache";
@@ -1617,17 +1618,9 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				description += `${linefeed}${linefeed}${start}${linefeed}${marker.code}${linefeed}${end}${linefeed}${linefeed}`;
 
 				if (providerCardRequest.codemark.permalink) {
-					let link = Strings.interpolate(delimiters.anchorFormat, {
-						text: "Open on Web",
-						url: `${providerCardRequest.codemark.permalink}?marker=${marker.id}`
-					});
-					if (link) {
-						links.push(link);
-					}
-
-					link = Strings.interpolate(delimiters.anchorFormat, {
+					const link = Strings.interpolate(delimiters.anchorFormat, {
 						text: "Open in IDE",
-						url: `${providerCardRequest.codemark.permalink}?marker=${marker.id}&ide=default`
+						url: `${providerCardRequest.codemark.permalink}?marker=${marker.id}&ide=default&src=${encodeURIComponent(providerNamesById.get(attributes.issueProvider.name) || "")}`
 					});
 					if (link) {
 						links.push(link);
