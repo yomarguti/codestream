@@ -214,7 +214,7 @@ export class WorkspaceSession {
 			capabilities: this.capabilities,
 			configs: Container.configs.getForWebview(this.lastUsedEmail),
 			version: getPluginVersion(),
-			ide: { name: "Atom" }
+			ide: { name: "Atom", detail: `Atom (${atom.getReleaseChannel()})` }
 		};
 	}
 

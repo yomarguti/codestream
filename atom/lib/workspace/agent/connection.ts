@@ -244,7 +244,8 @@ export class AgentConnection implements Disposable {
 			},
 			ide: {
 				name: "Atom",
-				version: atom.getVersion()
+				version: atom.getVersion(),
+				detail: `Atom (${atom.getReleaseChannel()})`
 			},
 			disableStrictSSL: Container.configs.get("disableStrictSSL"),
 			isDebugging: atom.inDevMode(),
