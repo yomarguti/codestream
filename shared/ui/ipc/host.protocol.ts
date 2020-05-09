@@ -29,6 +29,7 @@ export interface BootstrapInHostResponse {
 	env?: CodeStreamEnvironment | string;
 	ide?: {
 		name: string | undefined;
+		detail: string | undefined;
 	};
 	session: SessionState;
 	versionCompatibility?: VersionCompatibility | undefined;
