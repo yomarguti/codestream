@@ -5,6 +5,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
 import com.intellij.openapi.application.ApplicationInfo
+import com.intellij.openapi.application.ApplicationNamesInfo
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.TextDocumentIdentifier
 
@@ -113,6 +114,7 @@ class Extension(val versionFormatted: String) {
 class Ide {
     val name = "JetBrains"
     val version: String = ApplicationInfo.getInstance().fullVersion
+    var detail: String = ApplicationNamesInfo.getInstance().fullProductNameWithEdition
 }
 
 enum class TraceLevel(val value: String) {

@@ -34,6 +34,7 @@ class ErrorHandler : ErrorReportSubmitter() {
                 Sentry.getContext().addTag("platform", platform.name)
                 Sentry.getContext().addTag("ide", ide.name)
                 Sentry.getContext().addTag("ideVersion", ide.version)
+                Sentry.getContext().addTag("ideDetail", ide.detail)
                 Sentry.getContext().addTag("source", "extension")
 
                 Sentry.getStoredClient().addEventSendCallback(object : EventSendCallback {

@@ -40,7 +40,8 @@ class Configs(
 )
 
 class Ide(
-    val name: String
+    val name: String,
+    val detail: String
 )
 
 class Services {

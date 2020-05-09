@@ -48,7 +48,7 @@ class AuthenticationService(val project: Project) {
             appSettings.webViewConfigs,
             settings.getWebViewContextJson(),
             appSettings.extensionInfo.versionFormatted,
-            Ide(appSettings.ideInfo.name),
+            Ide(appSettings.ideInfo.name, appSettings.ideInfo.detail),
             apiVersionCompatibility,
             missingCapabilities
         )
