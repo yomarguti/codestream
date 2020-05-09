@@ -73,7 +73,7 @@ export abstract class BroadcasterTester {
 					version: "",
 					versionFormatted: ""
 				},
-				ide: { name: "", version: "" }
+				ide: { name: "", version: "", detail: "" }
 			},
 			undefined,
 			false

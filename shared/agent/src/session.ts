@@ -153,6 +153,7 @@ export interface VersionInfo {
 	ide: {
 		name: string;
 		version: string;
+		detail: string;
 	};
 }
 
@@ -1026,6 +1027,7 @@ export class CodeStreamSession {
 			"Join Method": user.joinMethod,
 			"Plugin Version": this.versionInfo.extension.versionFormatted,
 			Endpoint: this.versionInfo.ide.name,
+			"Endpoint Detail": this.versionInfo.ide.detail,
 			"IDE Version": this.versionInfo.ide.version,
 			Deployment: this.environment === CodeStreamEnvironment.Unknown ? "OnPrem" : "Cloud"
 		};
@@ -1035,11 +1037,6 @@ export class CodeStreamSession {
 			props["Team Created Date"] = new Date(team.createdAt!).toISOString();
 			props["Reporting Group"] = team.reportingGroup;
 			props["Team Name"] = team.name;
-			props["Provider"] = Team.isSlack(team)
-				? "Slack"
-				: Team.isMSTeams(team)
-				? "MSTeams"
-				: "CodeStream";
 			if (team.memberIds != null) {
 				props["Team Size"] = team.memberIds.length;
 			}

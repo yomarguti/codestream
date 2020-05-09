@@ -2010,6 +2010,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 					}
 
 					init.headers.append("X-CS-Plugin-IDE", this._version.ide.name);
+					init.headers.append("X-CS-Plugin-IDE-Detail", this._version.ide.detail);
 					init.headers.append(
 						"X-CS-Plugin-Version",
 						`${this._version.extension.version}+${this._version.extension.build}`

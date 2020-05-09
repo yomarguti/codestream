@@ -39,7 +39,7 @@ export class TelemetryService {
 
 		session.ready().then(() => this.initialize());
 
-		const props = { ...opts, Endpoint: session.versionInfo.ide.name };
+		const props = { ...opts, Endpoint: session.versionInfo.ide.name, "Endpoint Detail": session.versionInfo.ide.detail };
 		this._superProps = props;
 		this._hasOptedOut = hasOptedOut;
 		this._anonymousId = uuid();

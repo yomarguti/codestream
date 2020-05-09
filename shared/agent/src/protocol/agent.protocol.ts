@@ -97,6 +97,7 @@ export interface BaseAgentOptions {
 	ide: {
 		name: string;
 		version: string;
+		detail: string;
 	};
 	isDebugging: boolean;
 	proxy?: {
