@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using CodeStream.VisualStudio.Core.Annotations;
 using CodeStream.VisualStudio.Core.Extensions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -337,10 +338,16 @@ namespace CodeStream.VisualStudio.Core.Models {
 	}
 
 	public class Ide {
+		[NotNull]
 		[JsonProperty("name")]
 		public string Name { get; set; }
+
 		[JsonProperty("version")]
 		public string Version { get; set; }
+
+		[NotNull]
+		[JsonProperty("detail")]
+		public string Detail { get; set; }
 	}
 
 	public class Proxy {
