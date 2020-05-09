@@ -40,11 +40,13 @@ export async function activate(context: ExtensionContext) {
 		info = { buildNumber: "", assetEnvironment: "dev" };
 	}
 
+	const edition = env.appName;
+	const editionFormat = `${edition.indexOf(" Insiders") > -1 ? " (Insiders)": ""}`;
 	const formattedVersion = `${extensionVersion}${info.buildNumber ? `-${info.buildNumber}` : ""}${
 		info.assetEnvironment && info.assetEnvironment !== "prod" ? ` (${info.assetEnvironment})` : ""
 	}`;
 	Logger.log(
-		`CodeStream v${formattedVersion} in VS Code (v${vscodeVersion}) starting${
+		`CodeStream${editionFormat} v${formattedVersion} in VS Code (v${vscodeVersion}) starting${
 			Logger.isDebugging ? " in debug mode" : ""
 		}...`
 	);
@@ -72,7 +74,9 @@ export async function activate(context: ExtensionContext) {
 		gitPath: git,
 		ide: {
 			name: "VS Code",
-			version: vscodeVersion
+			version: vscodeVersion,
+			// Visual Studio Code or Visual Studio Code - Insiders
+			detail: edition
 		},
 		isDebugging: Logger.isDebugging,
 		serverUrl: cfg.serverUrl,
@@ -93,7 +97,7 @@ export async function activate(context: ExtensionContext) {
 	context.globalState.update(GlobalState.Version, extensionVersion);
 
 	Logger.log(
-		`CodeStream v${formattedVersion} started \u2022 ${Strings.getDurationMilliseconds(start)} ms`
+		`CodeStream${editionFormat} v${formattedVersion} started \u2022 ${Strings.getDurationMilliseconds(start)} ms`
 	);
 }
 

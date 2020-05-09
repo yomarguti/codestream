@@ -83,7 +83,8 @@ import {
 	Uri,
 	ViewColumn,
 	window,
-	workspace
+	workspace,
+	env
 } from "vscode";
 import { NotificationType, RequestType } from "vscode-languageclient";
 import { Strings } from "system/string";
@@ -948,7 +949,8 @@ export class WebviewController implements Disposable {
 			},
 			env: this.session.environment,
 			ide: {
-				name: "VSC"
+				name: "VSC",
+				detail: env.appName
 			},
 			context: this._context
 				? { ...this._context, currentTeamId: currentTeamId }
