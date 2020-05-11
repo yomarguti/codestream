@@ -713,6 +713,11 @@ export class SimpleStream extends Component {
 		const { activePanel, configs, umis, postStreamPurpose, providerInfo = {} } = this.props;
 		const { menuOpen, plusMenuOpen } = this.state;
 
+		// this would be nice, but unfortunately scm is only loaded on spatial view so we can't
+		// rely on it here
+		// const { repoId, file } = this.props.currentScm || {};
+		const hasFileConflict = false; // this.props.collisions.repoFiles[repoId + ":" + file];
+
 		const umisClass = cx("umis", {
 			mentions: umis.totalMentions > 0,
 			unread: umis.totalMentions == 0 && umis.totalUnread > 0
@@ -745,7 +750,12 @@ export class SimpleStream extends Component {
 					onClick={e => this.setActivePanel(WebviewPanels.CodemarksForFile)}
 					id="global-nav-file-label"
 				>
-					<Icon name="file" title="Codemarks In Current File" placement="bottom" />
+					<Tooltip title="Codemarks In Current File" placement="bottom">
+						<span>
+							<Icon name="file" />
+							{hasFileConflict && <Icon name="alert" className="nav-conflict" />}
+						</span>
+					</Tooltip>
 				</label>
 				<label
 					className={cx({ selected: selected(WebviewPanels.Activity) })}
@@ -774,7 +784,7 @@ export class SimpleStream extends Component {
 				>
 					<Tooltip title="Your Team" placement="bottom">
 						<span>
-							<Icon name="team" placement="bottom" />
+							<Icon name="team" />
 							{this.props.collisions.nav && <Icon name="alert" className="nav-conflict" />}
 						</span>
 					</Tooltip>
@@ -2503,6 +2513,10 @@ const mapStateToProps = state => {
 		? 0
 		: STEPS.filter(step => !step.isComplete(user, state)).length;
 
+	// this would be nice, but unfortunately scm is only loaded on spatial view so we can't
+	// rely on it here
+	// const { scmInfo } = state.editorContext;
+
 	return {
 		remainingSteps,
 		lightningCodeReviewsEnabled: isFeatureEnabled(state, "lightningCodeReviews"),
@@ -2540,7 +2554,9 @@ const mapStateToProps = state => {
 		isPrivate: postStream.privacy === "private",
 		teamId: context.currentTeamId,
 		teamName: team.name || "",
-		repoId: context.currentRepoId,
+		// this would be nice, but unfortunately scm is only loaded on spatial view so we can't
+		// rely on it here
+		// currentScm: scmInfo && scmInfo.scm,
 		hasFocus: context.hasFocus,
 		currentUserId: user.id,
 		currentUserName: user.username,
