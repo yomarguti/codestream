@@ -159,7 +159,8 @@ export const getCodeCollisions = createSelector(
 			nav: false,
 			users: {},
 			userRepos: {},
-			userRepoFiles: {}
+			userRepoFiles: {},
+			repoFiles: {}
 		};
 
 		// display nothing if the team has turned xray off
@@ -186,6 +187,7 @@ export const getCodeCollisions = createSelector(
 						collisions.users[user.id] = true;
 						collisions.userRepos[user.id + ":" + repo.repoId] = true;
 						collisions.userRepoFiles[user.id + ":" + repo.repoId + ":" + fileRecord.file] = true;
+						collisions.repoFiles[repo.repoId + ":" + fileRecord.file] = true;
 					}
 				});
 			});
