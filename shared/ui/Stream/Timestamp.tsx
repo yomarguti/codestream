@@ -119,6 +119,9 @@ const StyledTime = styled.time`
 	color: var(--text-color-subtle);
 	font-weight: normal;
 	padding-left: 5px;
+	&.no-padding {
+		padding-left: 0;
+	}
 	// details isn't used in relative timestamps
 	.details {
 		padding-left: 5px;
