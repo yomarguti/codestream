@@ -192,7 +192,7 @@
             },
             {
                 "command": "codestream.newReview",
-                "title": "Request a Code Review",
+                "title": "Create Review",
                 "category": "CodeStream"
             },
             {
@@ -549,6 +549,11 @@
                     "command": "codestream.newPermalink",
                     "when": "codestream:status == signedIn",
                     "group": "9_zcodestream@4"
+				},
+				{
+                    "command": "codestream.newReview",
+                    "when": "codestream:status == signedIn",
+                    "group": "9_zcodestream@6"
                 }
             ]
         }
