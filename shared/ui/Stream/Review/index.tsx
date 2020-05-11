@@ -77,7 +77,6 @@ import Timestamp from "../Timestamp";
 import { Dispatch } from "@codestream/webview/store/common";
 import { Loading } from "@codestream/webview/Container/Loading";
 import { TourTip } from "@codestream/webview/src/components/TourTip";
-import { SearchContext } from "../SearchContextProvider";
 import { CommitList } from "./CommitList";
 import { SharingModal } from "../SharingModal";
 import {
@@ -728,7 +727,6 @@ const BaseReview = (props: BaseReviewProps) => {
 
 const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 	const { approvedBy = {} } = props.review;
-	console.warn(props.isFollowing, props.tags, props.reviewers, props.review.numReplies);
 	if (!props.isFollowing && !props.tags && !props.reviewers && props.review.numReplies == 0)
 		return null;
 	return (
