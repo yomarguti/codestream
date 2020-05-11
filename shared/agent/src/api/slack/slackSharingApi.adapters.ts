@@ -15,7 +15,7 @@ import {
 	CSUser,
 	StreamType
 } from "../../protocol/api.protocol";
-import { providerNamesById } from "../../providers/provider";
+import { providerDisplayNamesByNameKey } from "../../providers/provider";
 import {
 	Marker,
 	toActionId,
@@ -875,7 +875,7 @@ export function toSlackPostBlocks(
 					type: "plain_text",
 					text: "Open in IDE"
 				},
-				url: `${codemark.permalink}?ide=default&src=${encodeURIComponent(providerNamesById.get("slack") || "")}&marker=${marker.id}`
+				url: `${codemark.permalink}?ide=default&src=${encodeURIComponent(providerDisplayNamesByNameKey.get("slack") || "")}&marker=${marker.id}`
 			});
 
 			if (url !== undefined && url.url) {
@@ -930,7 +930,7 @@ export function toSlackPostBlocks(
 				type: "plain_text",
 				text: "Open in IDE"
 			},
-			url: `${codemark.permalink}?ide=default&src=${encodeURIComponent(providerNamesById.get("slack") || "")}`
+			url: `${codemark.permalink}?ide=default&src=${encodeURIComponent(providerDisplayNamesByNameKey.get("slack") || "")}`
 		});
 
 		blocks.push(actions);
@@ -1075,7 +1075,7 @@ export function toSlackReviewPostBlocks(
 				type: "plain_text",
 				text: "Open in IDE"
 			},
-			url: `${permalink}?ide=default&src=${encodeURIComponent(providerNamesById.get("slack") || "")}`
+			url: `${permalink}?ide=default&src=${encodeURIComponent(providerDisplayNamesByNameKey.get("slack") || "")}`
 		});
 
 		blocks.push(actions);

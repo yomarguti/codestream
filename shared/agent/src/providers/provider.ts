@@ -30,7 +30,7 @@ import { CSMe, CSProviderInfos } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
 import { Functions, Strings } from "../system";
 
-export const providerNamesById = new Map<string, string>([
+export const providerDisplayNamesByNameKey = new Map<string, string>([
 	["asana", "Asana"],
 	["bitbucket", "Bitbucket"],
 	["github", "GitHub"],
