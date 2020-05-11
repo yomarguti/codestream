@@ -70,7 +70,8 @@ export const ActivityPanel = () => {
 			hasMoreActivity: state.activityFeed.hasMore,
 			codemarkTypeFilter: state.context.codemarkTypeFilter,
 			umis: state.umis,
-			webviewFocused: state.context.hasFocus
+			webviewFocused: state.context.hasFocus,
+			repos: state.repos
 			// apiCapabilities: state.apiVersioning.apiCapabilities
 		};
 	});
@@ -189,6 +190,17 @@ export const ActivityPanel = () => {
 					"review" !== derivedState.codemarkTypeFilter
 				)
 					return null;
+
+				// @ts-ignore
+				const repoName = record.reviewChangesets
+					.map(changeset =>
+						derivedState.repos[changeset.repoId]
+							? derivedState.repos[changeset.repoId].name
+							: undefined
+					)
+					.filter(Boolean)
+					.join(", ");
+
 				return (
 					<ActivityWrapper key={record.id}>
 						<ActivityVerb>
@@ -196,9 +208,9 @@ export const ActivityPanel = () => {
 								<Headshot size={24} person={person} />
 							</ProfileLink>
 							<div>
-								<b>{person.username}</b>
-								<span className="verb"> requested a review </span>
-								<Timestamp relative time={record.createdAt} />
+								<b>{person.username}</b>{" "}
+								<span className="verb">requested a review {repoName && <>in {repoName}</>}</span>{" "}
+								<Timestamp relative time={record.createdAt} className="no-padding" />
 							</div>
 						</ActivityVerb>
 						<ActivityItem streamId={record.streamId} postId={record.postId}>
