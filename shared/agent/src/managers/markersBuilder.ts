@@ -172,8 +172,9 @@ class DefaultMarkersBuilder extends MarkersBuilder {
 		fileCurrentCommitSha?: string;
 	}> {
 		if (source == null) return this.getLocationInfoWithoutSource();
-		if (source.revision == null)
+		if (source.revision == null) {
 			return this.getLocationInfoWithoutRevision(source.repoPath, location);
+		}
 		return this.getLocationInfoCore(source.repoPath, source.revision, location);
 	}
 
@@ -322,6 +323,7 @@ class DefaultMarkersBuilder extends MarkersBuilder {
 
 class ReviewDiffMarkersBuilder extends MarkersBuilder {
 	private _reviewId: string;
+	private _checkpoint: number | "all";
 	private _repoId: string;
 	private _version: string;
 	private _path: string;
@@ -329,8 +331,9 @@ class ReviewDiffMarkersBuilder extends MarkersBuilder {
 	constructor(documentId: TextDocumentIdentifier) {
 		super(documentId);
 
-		const { reviewId, repoId, version, path } = ReviewsManager.parseUri(documentId.uri);
+		const { reviewId, checkpoint, repoId, version, path } = ReviewsManager.parseUri(documentId.uri);
 		this._reviewId = reviewId;
+		this._checkpoint = checkpoint;
 		this._repoId = repoId;
 		this._version = version;
 		this._path = path;
@@ -359,7 +362,9 @@ class ReviewDiffMarkersBuilder extends MarkersBuilder {
 		const toLatestCommitDiff = diffCheckpoint.diff.rightToLatestCommitDiffs.find(
 			d => d.newFileName === this._path
 		);
-		const toBaseCommitDiff = diffCheckpoint.diff.rightReverseDiffs.find(d => d.newFileName === this._path);
+		const toBaseCommitDiff = diffCheckpoint.diff.rightReverseDiffs.find(
+			d => d.newFileName === this._path
+		);
 
 		const latestCommitLocation = toLatestCommitDiff
 			? await calculateLocation(location, toLatestCommitDiff)

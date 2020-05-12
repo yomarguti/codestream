@@ -56,14 +56,21 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 	static parseUri(
 		uri: string
-	): { reviewId: string; repoId: string; version: string; path: string } {
+	): {
+		reviewId: string;
+		checkpoint: number | "all";
+		repoId: string;
+		version: string;
+		path: string;
+	} {
 		const match = uriRegexp.exec(uri);
 		if (match == null) throw new Error(`URI ${uri} doesn't match codestream-diff format`);
 
-		const [, reviewId, repoId, version, path] = match;
+		const [, reviewId, checkpoint, repoId, version, path] = match;
 
 		return {
 			reviewId,
+			checkpoint: checkpoint === "all" ? "all" : parseInt(checkpoint, 10),
 			repoId,
 			version,
 			path
@@ -106,6 +113,9 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			if (response && response.length) {
 				const result: { [repoId: string]: { checkpoint: any; diff: CSReviewDiffs }[] } = {};
 				const checkpoints: any = {};
+
+				// FIXME -- don't need to re-calculate checkpoint here, and might want
+				// to change retur structure
 				for (const r of response) {
 					if (!result[r.repoId]) {
 						result[r.repoId] = [];
