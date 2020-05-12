@@ -65,6 +65,7 @@ export interface NewReviewAttributes {
 		includeSaved: boolean;
 		includeStaged: boolean;
 		remotes: { name: string; url: string }[];
+		checkpoint: number;
 	}[];
 
 	accessMemberIds: string[];

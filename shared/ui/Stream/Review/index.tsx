@@ -119,6 +119,7 @@ export interface BaseReviewProps extends CardProps {
 		inputContainer?: typeof ComposeWrapper
 	) => React.ReactNode;
 	filesTip?: any;
+	isAmending?: boolean;
 	setIsEditing: Function;
 	setIsAmending: Function;
 	onRequiresCheckPreconditions?: Function;
@@ -329,8 +330,7 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 		icon: <Icon name="plus" />,
 		action: () => {
 			if (props.review.status !== "open") reopen();
-			props.setIsAmending(true);
-			props.setIsEditing(true);
+			setIsAmending(true);
 		}
 	};
 
@@ -492,6 +492,7 @@ const BaseReview = (props: BaseReviewProps) => {
 			author: state.users[props.review.creatorId]
 		};
 	}, shallowEqual);
+	const [checkpoint, setCheckpoint] = React.useState<number | "all">("all");
 	const hasTags = props.tags && props.tags.length > 0;
 	const hasReviewers = props.reviewers != null && props.reviewers.length > 0;
 	const approvalLabel =
@@ -530,6 +531,19 @@ const BaseReview = (props: BaseReviewProps) => {
 			...props.repoInfoById.values().next().value
 		};
 	}
+
+	const numCheckpoints =
+		Math.max.apply(
+			Math,
+			review.reviewChangesets.map(_ => _.checkpoint)
+		) + 1;
+
+	const dropdownItems: any = [{ label: "All" }, { label: "-" }];
+	for (var i = 0; i < numCheckpoints; i++) {
+		const label = i === 0 ? "Initial Review" : `Update #${i}`;
+		dropdownItems.push({ label, action: () => setCheckpoint(i) });
+	}
+	const dropdownLabel = "all";
 
 	return (
 		<MinimumWidthCard {...getCardProps(props)} noCard={!props.collapsed}>
@@ -682,6 +696,15 @@ const BaseReview = (props: BaseReviewProps) => {
 							<Meta id="changed-files">
 								<MetaLabel>
 									Changed Files
+									{numCheckpoints > 1 && (
+										<span>
+											{" "}
+											&ndash;{" "}
+											<DropdownButton variant="text" items={dropdownItems}>
+												{dropdownLabel}
+											</DropdownButton>
+										</span>
+									)}
 									{props.canStartReview && numFiles > 1 && (
 										<MetaIcons>
 											<Icon
@@ -733,7 +756,7 @@ const BaseReview = (props: BaseReviewProps) => {
 						<Meta>
 							<MetaLabel>Commits</MetaLabel>
 							<MetaDescriptionForAssignees>
-								<CommitList review={review} />
+								<CommitList review={review} checkpoint="all" />
 							</MetaDescriptionForAssignees>
 						</Meta>
 					)}
@@ -912,7 +935,7 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 
 type FromBaseReviewProps = Pick<
 	BaseReviewProps,
-	"collapsed" | "hoverEffect" | "onClick" | "className" | "renderFooter" | "filesTip"
+	"collapsed" | "hoverEffect" | "onClick" | "className" | "renderFooter" | "filesTip" | "isAmending"
 >;
 
 interface PropsWithId extends FromBaseReviewProps {
@@ -1045,12 +1068,22 @@ const ReviewForReview = (props: PropsWithReview) => {
 				<Footer style={{ borderTop: "none", marginTop: 0 }}>
 					{derivedState.replies.length > 0 && <MetaLabel>Activity</MetaLabel>}
 					<RepliesToPost streamId={props.review.streamId} parentPostId={props.review.postId} />
-					{InputContainer && (
+					{InputContainer && !props.isAmending && (
 						<InputContainer>
 							<ReplyInput
 								reviewId={review.id}
 								parentPostId={review.postId}
 								streamId={review.streamId}
+							/>
+						</InputContainer>
+					)}
+					{InputContainer && props.isAmending && (
+						<InputContainer>
+							<ReviewForm
+								isEditing
+								isAmending
+								editingReview={review}
+								onClose={() => setIsAmending(false)}
 							/>
 						</InputContainer>
 					)}
@@ -1060,10 +1093,11 @@ const ReviewForReview = (props: PropsWithReview) => {
 
 	if (shareModalOpen)
 		return <SharingModal review={props.review!} onClose={() => setShareModalOpen(false)} />;
-	if (isEditing) {
+	if (isEditing && !isAmending) {
 		return (
 			<ReviewForm
 				isEditing={isEditing}
+				isAmending={isAmending}
 				onClose={() => {
 					setIsEditing(false);
 					setIsAmending(false);

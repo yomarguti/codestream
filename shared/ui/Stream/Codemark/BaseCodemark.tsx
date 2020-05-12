@@ -462,6 +462,11 @@ export const MetaLabel = styled.div`
 	color: var(--text-color-subtle);
 	font-size: 11px;
 	margin-bottom: 3px;
+	button {
+		text-transform: uppercase;
+		font-weight: 800;
+		color: var(--text-color-subtle);
+	}
 `;
 
 export const MetaDescription = styled.div`

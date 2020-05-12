@@ -316,7 +316,6 @@ export function ReviewNav(props: Props) {
 
 	const amend = () => {
 		if (review!.status !== "open") reopen();
-		setIsEditing(true);
 		setIsAmending(true);
 	};
 
@@ -543,17 +542,7 @@ export function ReviewNav(props: Props) {
 		);
 
 	if (isEditing) {
-		return (
-			<ReviewForm
-				isEditing={isEditing}
-				isAmending={isAmending}
-				onClose={() => {
-					setIsEditing(false);
-					setIsAmending(false);
-				}}
-				editingReview={review}
-			/>
-		);
+		return <ReviewForm isEditing editingReview={review} onClose={() => setIsEditing(false)} />;
 	}
 
 	return (
@@ -584,7 +573,7 @@ export function ReviewNav(props: Props) {
 							}}
 						>
 							<StyledReview className={hoverButton == "files" ? "pulse" : ""}>
-								<Review review={review} filesTip={filesTip} />
+								<Review review={review} isAmending={isAmending} filesTip={filesTip} />
 							</StyledReview>
 
 							{derivedState.hideReviewInstructions && (

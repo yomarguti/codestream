@@ -26,9 +26,9 @@ export const ChangesetFileList = (props: {
 	loading?: boolean;
 	noOnClick?: boolean;
 	showRepoLabels?: boolean;
-	changesetIndex?: number;
+	checkpoint?: number;
 }) => {
-	const { review, noOnClick, loading } = props;
+	const { review, noOnClick, loading, checkpoint } = props;
 	const dispatch = useDispatch<Dispatch>();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const userId = state.session.userId || "";
@@ -99,7 +99,7 @@ export const ChangesetFileList = (props: {
 		const files: any[] = [];
 		let index = 0;
 		for (let changeset of review.reviewChangesets) {
-			if (props.changesetIndex && index !== props.changesetIndex) return;
+			if (checkpoint && changeset.checkpoint !== checkpoint) continue;
 			if (props.showRepoLabels) {
 				const repoName = safe(() => getById(derivedState.repos, changeset.repoId).name) || "";
 				if (repoName) {
@@ -155,7 +155,7 @@ export const ChangesetFileList = (props: {
 			);
 		}
 		return files;
-	}, [review, loading, noOnClick, derivedState.matchFile, latest]);
+	}, [review, loading, noOnClick, derivedState.matchFile, latest, checkpoint]);
 
 	return <>{changedFiles}</>;
 };

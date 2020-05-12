@@ -74,9 +74,16 @@ import styled from "styled-components";
 import { DropdownButton } from "./Review/DropdownButton";
 import { getTeamSetting } from "../store/teams/reducer";
 import { ChangesetFileList } from "./Review/ChangesetFileList";
-import { Meta, MetaLabel, MetaDescriptionForAssignees } from "./Codemark/BaseCodemark";
+import {
+	Meta,
+	MetaLabel,
+	MetaDescriptionForAssignees,
+	Header,
+	BigTitle
+} from "./Codemark/BaseCodemark";
 import { CommitList } from "./Review/CommitList";
 import CancelButton from "./CancelButton";
+import { MarkdownText } from "./MarkdownText";
 
 interface Props extends ConnectedProps {
 	editingReview?: CSReview;
@@ -487,7 +494,7 @@ class ReviewForm extends React.Component<Props, State> {
 			// if there is no title set OR there is one and a user hasn't touched it
 			// default it to a capitalized version of the branch name,
 			// with "feature/foo-bar" changed to "feature: foo bar"
-			if (statusInfo.scm.branch && (!this.state.title || !this.state.titleTouched)) {
+			if (!isEditing && statusInfo.scm.branch && (!this.state.title || !this.state.titleTouched)) {
 				const { branch } = statusInfo.scm;
 				this.setState({
 					title:
@@ -560,8 +567,9 @@ class ReviewForm extends React.Component<Props, State> {
 		const reviewerIds = (this.state.reviewers as any[]).map(r => r.id);
 
 		try {
-			if (this.props.isEditing && this.props.editReview && this.props.editingReview) {
-				const originalReviewers = this.props.editingReview.reviewers;
+			const { editingReview } = this.props;
+			if (this.props.isEditing && this.props.editReview && editingReview) {
+				const originalReviewers = editingReview.reviewers;
 				const attributes: EditableAttributes = {
 					title: title,
 					text: replaceHtml(text || "")!,
@@ -579,7 +587,7 @@ class ReviewForm extends React.Component<Props, State> {
 						attributes.$pull.reviewers = reviewerOperations.removed;
 					}
 				}
-				const tagOperations = arrayDiff(this.props.editingReview.tags, keyFilter(selectedTags));
+				const tagOperations = arrayDiff(editingReview.tags, keyFilter(selectedTags));
 				if (tagOperations) {
 					if (tagOperations.added && tagOperations.added.length) {
 						attributes.$push = attributes.$push || {};
@@ -590,6 +598,13 @@ class ReviewForm extends React.Component<Props, State> {
 						attributes.$pull.tags = tagOperations.removed;
 					}
 				}
+
+				// get the max checkpoint of the review, and add one
+				const checkpoint =
+					Math.max.apply(
+						Math,
+						editingReview.reviewChangesets.map(_ => _.checkpoint)
+					) + 1;
 
 				if (this.props.isAmending) {
 					const { scm } = repoStatus;
@@ -607,18 +622,16 @@ class ReviewForm extends React.Component<Props, State> {
 							// as the list of files that have been added
 							newFiles: keyFilterFalsey(excludedFiles),
 							includeSaved: scm!.savedFiles.length > 0,
-							includeStaged: scm!.stagedFiles.length > 0
+							includeStaged: scm!.stagedFiles.length > 0,
+							checkpoint
 						}
 					];
 					attributes.$addToSet = {
 						reviewChangesets: repoChanges
-					}
+					};
 				}
 
-				const editResult = await this.props.editReview(
-					this.props.editingReview.id,
-					attributes
-				);
+				const editResult = await this.props.editReview(editingReview.id, attributes);
 				if (editResult && editResult.review) {
 					if (this.props.onClose) {
 						this.props.onClose();
@@ -648,7 +661,8 @@ class ReviewForm extends React.Component<Props, State> {
 							// as the list of files that have been added
 							newFiles: keyFilterFalsey(excludedFiles),
 							includeSaved: scm!.savedFiles.length > 0,
-							includeStaged: scm!.stagedFiles.length > 0
+							includeStaged: scm!.stagedFiles.length > 0,
+							checkpoint: 0
 						}
 					]
 				} as any;
@@ -829,20 +843,23 @@ class ReviewForm extends React.Component<Props, State> {
 
 	renderMessageInput = () => {
 		const { text } = this.state;
+		const { isAmending } = this.props;
 
 		const __onDidRender = ({ insertTextAtCursor, focus }) => {
 			this.insertTextAtCursor = insertTextAtCursor;
 			this.focusOnMessageInput = focus;
+			if (isAmending) focus();
 		};
 
+		const placeholder = isAmending ? "Describe Changes (optional)" : "Description (Optional)";
 		return (
 			<MessageInput
 				teamProvider={"codestream"}
 				isDirectMessage={this.props.channel.type === StreamType.Direct}
 				text={text}
-				placeholder="Description (Optional)"
+				placeholder={placeholder}
 				multiCompose
-				withTags
+				withTags={!isAmending}
 				onChange={this.handleChange}
 				toggleTag={this.handleToggleTag}
 				shouldShowRelatableCodemark={codemark =>
@@ -860,7 +877,7 @@ class ReviewForm extends React.Component<Props, State> {
 	render() {
 		const { repoStatus, currentUserScmEmail } = this.state;
 		const totalModifiedLines = repoStatus && repoStatus.scm ? repoStatus.scm.totalModifiedLines : 0;
-		const { currentUser } = this.props;
+		const { currentUser, isAmending } = this.props;
 
 		return (
 			<FeatureFlag flag="lightningCodeReviews">
@@ -880,8 +897,8 @@ class ReviewForm extends React.Component<Props, State> {
 					}
 
 					return (
-						<div className="full-height-codemark-form">
-							<span className="plane-container">
+						<div className={cx({ "full-height-codemark-form": !isAmending })}>
+							<span className={cx({ "plane-container": !isAmending })}>
 								{currentUserScmEmail && currentUserScmEmail !== currentUser.email && (
 									<EmailWarning>
 										<Icon name="alert" className="conflict" />
@@ -1417,7 +1434,7 @@ class ReviewForm extends React.Component<Props, State> {
 			<div className="related" style={{ padding: "0", marginBottom: 0, position: "relative" }}>
 				<div className="related-label">
 					Changed Files
-					{this.props.isAmending && " - Since Last Checkpoint"}
+					{this.props.isAmending && " - Since Last Update"}
 					&nbsp;&nbsp;
 					{this.state.isLoadingScm && <Icon className="spin" name="sync" />}
 				</div>
@@ -1514,24 +1531,27 @@ class ReviewForm extends React.Component<Props, State> {
 		const { editingReview } = this.props;
 		if (!editingReview) return null;
 
+		console.warn("ER", editingReview);
 		return editingReview.reviewChangesets.map((changeset, index) => {
-			const checkpoint = 1 + (changeset.checkpoint || 0);
+			const { checkpoint = 0 } = changeset;
 			return (
-				<div className="related">
-					<div className="related-label">Checkpoint {checkpoint}</div>
+				<div style={{ margin: "10px 0 20px 0" }}>
+					<Icon name="flag" />
+					Checkpoint {1 + checkpoint}
 					<div
 						className="background-highlight"
 						style={{
 							padding: "10px",
-							border: "1px solid var(--base-border-color)"
+							border: "1px solid var(--base-border-color)",
+							marginTop: "3px"
 						}}
 					>
-						<ChangesetFileList changesetIndex={index} review={editingReview} noOnClick />
+						<ChangesetFileList checkpoint={checkpoint} review={editingReview} noOnClick />
 						<div style={{ height: "10px" }} />
 						<Meta>
 							<MetaLabel>Commits</MetaLabel>
 							<MetaDescriptionForAssignees>
-								<CommitList changesetIndex={index} review={editingReview} />
+								<CommitList checkpoint={checkpoint} review={editingReview} />
 							</MetaDescriptionForAssignees>
 						</Meta>
 					</div>
@@ -1593,61 +1613,85 @@ class ReviewForm extends React.Component<Props, State> {
 				  })
 				: [];
 
-		const showChanges = (!isEditing || isAmending) && !isLoadingScm && !scmError;
+		let branchError: JSX.Element | null = null;
+		if (
+			this.props.isAmending &&
+			repoStatus &&
+			repoStatus.scm &&
+			repoStatus.scm.branch &&
+			repoStatus.scm.branch !== this.state.editingReviewBranch
+		) {
+			branchError = (
+				<>
+					This review was created on branch {this.state.editingReviewBranch} which does not match
+					your current branch {repoStatus.scm.branch}. These two values must match to amend this
+					review.
+				</>
+			);
+		}
+
+		const showChanges = (!isEditing || isAmending) && !isLoadingScm && !scmError && !branchError;
 
 		return (
 			<form className="standard-form review-form" key="form">
 				<fieldset className="form-body">
-					<div id="controls" className="control-group" key="controls1">
-						<div key="headshot" className="headline-flex">
-							<div key="padded" style={{ paddingRight: "7px" }}>
-								<Headshot person={currentUser} />
+					{!isAmending && (
+						<div id="controls" className="control-group" key="controls1">
+							<div key="headshot" className="headline-flex">
+								<div key="padded" style={{ paddingRight: "7px" }}>
+									<Headshot person={currentUser} />
+								</div>
+								<div style={{ marginTop: "-1px" }}>
+									<b>{currentUser.username}</b>
+									<span className="subhead">
+										is {isEditing ? "editing" : "requesting"} a code review
+										{repoMenuItems.length > 0 && <> in </>}
+									</span>
+									{repoMenuItems.length > 0 && (
+										<InlineMenu items={repoMenuItems}>{repoName || "select a repo"}</InlineMenu>
+									)}
+									{repoStatus && repoStatus.scm && repoStatus.scm.branch && (
+										<>
+											<span className="subhead">on branch&nbsp;</span>
+											<span className="highlight">{repoStatus.scm.branch}</span>
+										</>
+									)}
+								</div>
 							</div>
-							<div style={{ marginTop: "-1px" }}>
-								<b>{currentUser.username}</b>
-								<span className="subhead">
-									is {isAmending ? "amending" : isEditing ? "editing" : "requesting"} a code review
-									{(repoMenuItems.length > 0 || isAmending) && <> in </>}
-								</span>
-								{repoMenuItems.length > 0 && (
-									<InlineMenu items={repoMenuItems}>{repoName || "select a repo"}</InlineMenu>
-								)}
-								{isAmending && <span className="highlight">{repoName}</span>}
-								{repoStatus && repoStatus.scm && repoStatus.scm.branch && (
-									<>
-										<span className="subhead">on branch&nbsp;</span>
-										<span className="highlight">
-											{repoStatus.scm.branch}
-										</span>
-									</>
-								)}
-								{isAmending && (
-									<>
-										<span className="subhead">on branch&nbsp;</span>
-										<span className="highlight">{this.state.editingReviewBranch}</span>
-									</>
-								)}
+							<div key="title" className="control-group">
+								{this.renderTitleHelp()}
+								<input
+									key="title-text"
+									type="text"
+									name="title"
+									className="input-text control"
+									tabIndex={0}
+									value={this.state.title}
+									onChange={e => this.setState({ title: e.target.value, titleTouched: true })}
+									placeholder="Title"
+									ref={ref => (this._titleInput = ref)}
+									onKeyDown={this.handleKeyDown}
+								/>
 							</div>
+							{this.renderTextHelp()}
+							{this.renderMessageInput()}
 						</div>
-						<div key="title" className="control-group">
-							{this.renderTitleHelp()}
-							<input
-								key="title-text"
-								type="text"
-								name="title"
-								className="input-text control"
-								tabIndex={0}
-								value={this.state.title}
-								onChange={e => this.setState({ title: e.target.value, titleTouched: true })}
-								placeholder="Title"
-								ref={ref => (this._titleInput = ref)}
-								onKeyDown={this.handleKeyDown}
-							/>
-						</div>
-						{this.renderTextHelp()}
-						{this.renderMessageInput()}
-					</div>
-					{this.renderTags()}
+					)}
+					{!isAmending && this.renderTags()}
+					{isAmending && (
+						<>
+							<div key="headshot" className="headline-flex">
+								<div key="padded" style={{ paddingRight: "7px" }}>
+									<Headshot person={currentUser} />
+								</div>
+								<div style={{ marginTop: "-1px" }}>
+									<b>{currentUser.username}</b>
+									<span className="subhead">is amending the code review</span>
+								</div>
+							</div>
+							{this.renderMessageInput()}
+						</>
+					)}
 					{!isLoadingScm && !isEditing && !scmError && (
 						<div
 							className="related"
@@ -1695,7 +1739,7 @@ class ReviewForm extends React.Component<Props, State> {
 							</SelectPeople>
 						</div>
 					)}
-					{isEditing && !scmError && (
+					{isEditing && !scmError && !isAmending && (
 						<div
 							className="related"
 							style={{ padding: "0", marginBottom: 0, position: "relative" }}
@@ -1731,7 +1775,7 @@ class ReviewForm extends React.Component<Props, State> {
 							</SelectPeople>
 						</div>
 					)}
-					{isAmending && this.renderPreviousCheckpoints()}
+					{isAmending && false && this.renderPreviousCheckpoints()}
 					{showChanges && this.renderChangedFiles()}
 					{showChanges && this.renderGroupsAndCommits()}
 					{!isEditing && !isLoadingScm && !scmError && this.renderSharingControls()}
@@ -1748,7 +1792,7 @@ class ReviewForm extends React.Component<Props, State> {
 							}}
 						>
 							<CancelButton toolTip={cancelTip} onClick={this.confirmCancel} mode="button" />
-							{!scmError && (
+							{!scmError && !branchError && (
 								<Tooltip title={submitTip} placement="bottomRight" delay={1}>
 									<Button
 										key="submit"
@@ -1778,6 +1822,12 @@ class ReviewForm extends React.Component<Props, State> {
 								Error loading git info.
 								{repoMenuItems.length > 0 && <> Select a repo above.</>}
 							</div>
+						</div>
+					)}
+					{branchError && (
+						<div className="color-warning" style={{ display: "flex", padding: "10px 0" }}>
+							<Icon name="alert" />
+							<div style={{ paddingLeft: "10px" }}>{branchError}</div>
 						</div>
 					)}
 					<div key="clear" style={{ clear: "both" }} />
