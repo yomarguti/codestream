@@ -6,7 +6,6 @@ import { GetReviewContentsResponse } from "@codestream/protocols/agent";
 export class ReviewDiffContentProvider implements TextDocumentContentProvider, Disposable {
 	private readonly _disposable: Disposable;
 	private readonly _contents = new Map<string, GetReviewContentsResponse>();
-	private readonly urlRegexp = /codestream-diff:\/\/(\w+)\/(\w+)\/(\w+)\/(.+)/;
 
 	constructor() {
 		this._disposable = Disposable.from(
@@ -18,8 +17,8 @@ export class ReviewDiffContentProvider implements TextDocumentContentProvider, D
 		const csReviewDiffInfo = Strings.parseCSReviewDiffUrl(uri.toString());
 		if (csReviewDiffInfo == null) return "";
 
-		const { reviewId, repoId, version, path } = csReviewDiffInfo;
-		const key = this.key(reviewId, repoId, path);
+		const { reviewId, checkpoint, repoId, version, path } = csReviewDiffInfo;
+		const key = this.key(reviewId, checkpoint, repoId, path);
 
 		const contents = this._contents.get(key);
 		if (contents === undefined) {
@@ -29,21 +28,20 @@ export class ReviewDiffContentProvider implements TextDocumentContentProvider, D
 		return (contents as any)[version] as string;
 	}
 
-	async loadContents(reviewId: string, repoId: string, path: string, checkpoint: number = 0) {
-		// TODO does checkpoint need to be here?
-		const key = this.key(reviewId, repoId, path);
+	async loadContents(reviewId: string, checkpoint: number | "all", repoId: string, path: string) {
+		const key = this.key(reviewId, checkpoint, repoId, path);
 		const cached = this._contents.get(key);
 
 		if (cached !== undefined) return cached;
 
-		const contents = await Container.agent.reviews.getContents(reviewId, repoId, path, checkpoint);
+		const contents = await Container.agent.reviews.getContents(reviewId, checkpoint, repoId, path);
 		this._contents.set(key, contents);
 
 		return contents;
 	}
 
 	async loadContentsLocal(repoId: string, path: string, baseSha: string, rightVersion: string) {
-		const key = this.key("local", repoId, path);
+		const key = this.key("local", "all", repoId, path);
 		// const cached = this._contents.get(key);
 
 		// if (cached !== undefined) return cached;
@@ -59,8 +57,8 @@ export class ReviewDiffContentProvider implements TextDocumentContentProvider, D
 		return contents;
 	}
 
-	private key(reviewId: string, repoId: string, path: string) {
-		return `${reviewId}|${repoId}|${path}`;
+	private key(reviewId: string, checkpoint: number | "all", repoId: string, path: string) {
+		return `${reviewId}|${checkpoint}|${repoId}|${path}`;
 	}
 
 	dispose() {

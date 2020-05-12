@@ -551,14 +551,15 @@ export class CodeStreamAgentConnection implements Disposable {
 			});
 		}
 
-		getContents(reviewId: string, repoId: string, path: string, checkpoint: number) {
+		getContents(reviewId: string, checkpoint: number | "all", repoId: string, path: string) {
 			return this._connection.sendRequest(GetReviewContentsRequestType, {
 				reviewId,
+				checkpoint,
 				repoId,
-				path,
-				checkpoint
+				path
 			});
 		}
+
 		getContentsLocal(repoId: string, path: string, baseSha: string, rightVersion: string) {
 			return this._connection.sendRequest(GetReviewContentsLocalRequestType, {
 				repoId,
@@ -996,7 +997,10 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._client.onNotification(DidEncounterMaintenanceModeNotificationType, e =>
 			this._onDidEncounterMaintenanceMode.fire(e)
 		);
-		this._client.onNotification(DidChangeServerUrlNotificationType, this.onServerUrlChanged.bind(this));
+		this._client.onNotification(
+			DidChangeServerUrlNotificationType,
+			this.onServerUrlChanged.bind(this)
+		);
 		this._client.onRequest(OpenUrlRequestType, e => this._onOpenUrl.fire(e));
 		this._onDidStart.fire();
 		return this._client.initializeResult! as AgentInitializeResult;

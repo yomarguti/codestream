@@ -29,9 +29,9 @@ export interface ShowMarkerDiffCommandArgs {
 
 export interface ShowReviewDiffCommandArgs {
 	reviewId: string;
+	checkpoint: number | "all";
 	repoId: string;
 	path: string;
-	checkpoint?: number;
 }
 
 export interface ShowReviewLocalDiffCommandArgs {
@@ -185,7 +185,12 @@ export class Commands implements Disposable {
 
 	@command("showReviewDiff", { showErrorMessage: "Unable to display review diff" })
 	async showReviewDiff(args: ShowReviewDiffCommandArgs): Promise<boolean> {
-		await Container.diffContents.loadContents(args.reviewId, args.repoId, args.path, args.checkpoint);
+		await Container.diffContents.loadContents(
+			args.reviewId,
+			args.checkpoint,
+			args.repoId,
+			args.path
+		);
 		const { review } = await Container.agent.reviews.get(args.reviewId);
 
 		// FYI, see showMarkerDiff() above
@@ -199,8 +204,12 @@ export class Commands implements Disposable {
 
 		await commands.executeCommand(
 			BuiltInCommands.Diff,
-			Uri.parse(`codestream-diff://${args.reviewId}/${args.repoId}/left/${args.path}`),
-			Uri.parse(`codestream-diff://${args.reviewId}/${args.repoId}/right/${args.path}`),
+			Uri.parse(
+				`codestream-diff://${args.reviewId}/${args.checkpoint}/${args.repoId}/left/${args.path}`
+			),
+			Uri.parse(
+				`codestream-diff://${args.reviewId}/${args.checkpoint}/${args.repoId}/right/${args.path}`
+			),
 			`${paths.basename(args.path)} @ ${Strings.truncate(review.title, 25)}`,
 			{ preserveFocus: false, preview: true, viewColumn: column || ViewColumn.Beside }
 		);
@@ -230,8 +239,8 @@ export class Commands implements Disposable {
 
 		await commands.executeCommand(
 			BuiltInCommands.Diff,
-			Uri.parse(`codestream-diff://local/${args.repoId}/left/${args.path}`),
-			Uri.parse(`codestream-diff://local/${args.repoId}/right/${args.path}`),
+			Uri.parse(`codestream-diff://local/${args.repoId}/all/left/${args.path}`),
+			Uri.parse(`codestream-diff://local/${args.repoId}/all/right/${args.path}`),
 			`${paths.basename(args.path)} review changes`,
 			{ preserveFocus: false, preview: true, viewColumn: column || ViewColumn.Beside }
 		);

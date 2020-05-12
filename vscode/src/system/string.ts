@@ -321,12 +321,13 @@ export namespace Strings {
 		return false;
 	}
 
-	const csReviewDiffUrlRegex = /codestream-diff:\/\/(\w+)\/(\w+)\/(\w+)\/(.+)/;
+	const csReviewDiffUrlRegex = /codestream-diff:\/\/(\w+)\/(\w+)\/(\w+)\/(\w+)\/(.+)/;
 	export function parseCSReviewDiffUrl(
 		uri: string
 	):
 		| {
 				reviewId: string;
+				checkpoint: number | "all";
 				repoId: string;
 				version: string;
 				path: string;
@@ -335,9 +336,10 @@ export namespace Strings {
 		const match = csReviewDiffUrlRegex.exec(uri.toString());
 		if (match == null) return undefined;
 
-		const [, reviewId, repoId, version, path] = match;
+		const [, reviewId, checkpoint, repoId, version, path] = match;
 		return {
 			reviewId,
+			checkpoint: checkpoint === "all" ? "all" : parseInt(checkpoint, 10),
 			repoId,
 			version,
 			path
