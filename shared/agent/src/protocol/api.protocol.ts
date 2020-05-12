@@ -528,6 +528,7 @@ export interface CSCreateReviewRequest {
 		newFiles: string[];
 		includeSaved: boolean;
 		includeStaged: boolean;
+		checkpoint: number;
 	}[];
 
 	markers?: CSCreateMarkerRequest[];
@@ -620,11 +621,12 @@ export interface CSGetReviewDiffsResponse {
 	[repoId: string]: CSReviewDiffs;
 }
 
-export interface CSGetReviewCheckpointDiffsResponse extends Array<{
-	repoId: string;
-	checkpoint: any; // TODO type
-	diffs: any; // TODO type
-}> { }
+export interface CSGetReviewCheckpointDiffsResponse
+	extends Array<{
+		repoId: string;
+		checkpoint: any; // TODO type
+		diffs: any; // TODO type
+	}> {}
 
 export interface CSAddReferenceLocationRequest {
 	commitHash: string;

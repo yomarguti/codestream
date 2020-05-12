@@ -49,7 +49,10 @@ const uriRegexp = /codestream-diff:\/\/(\w+)\/(\w+)\/(\w+)\/(.+)/;
 
 @lsp
 export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
-	private readonly _diffs = new Map<string, { [repoId: string]: { checkpoint: any, diff: CSReviewDiffs }[] }>();
+	private readonly _diffs = new Map<
+		string,
+		{ [repoId: string]: { checkpoint: any; diff: CSReviewDiffs }[] }
+	>();
 
 	static parseUri(
 		uri: string
@@ -86,17 +89,22 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		return { review };
 	}
 
-	async getDiffs(reviewId: string, repoId: string): Promise<{ checkpoint: any, diff: CSReviewDiffs }[]> {
+	async getDiffs(
+		reviewId: string,
+		repoId: string
+	): Promise<{ checkpoint: any; diff: CSReviewDiffs }[]> {
 		const diffsByRepo = await this.getAllDiffs(reviewId);
 		return diffsByRepo[repoId];
 	}
 
-	private async getAllDiffs(reviewId: string): Promise<{ [repoId: string]: { checkpoint: any, diff: CSReviewDiffs }[] }> {
+	private async getAllDiffs(
+		reviewId: string
+	): Promise<{ [repoId: string]: { checkpoint: any; diff: CSReviewDiffs }[] }> {
 		if (!this._diffs.has(reviewId)) {
 			// will need the old API here for old clients??????
 			const response = await this.session.api.fetchReviewCheckpointDiffs({ reviewId });
 			if (response && response.length) {
-				const result: { [repoId: string]: { checkpoint: any, diff: CSReviewDiffs }[] } = {};
+				const result: { [repoId: string]: { checkpoint: any; diff: CSReviewDiffs }[] } = {};
 				const checkpoints: any = {};
 				for (const r of response) {
 					if (!result[r.repoId]) {
@@ -104,8 +112,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 					}
 					if (!checkpoints[r.repoId]) {
 						checkpoints[r.repoId] = 0;
-					}
-					else {
+					} else {
 						checkpoints[r.repoId] = checkpoints[r.repoId] + 1;
 					}
 					result[r.repoId].push({ checkpoint: checkpoints[r.repoId], diff: r.diffs });
@@ -245,8 +252,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		const rightBaseContents = isNewFile
 			? ""
 			: diff.leftBaseSha === diff.rightBaseSha
-				? leftBaseContents
-				: (await git.getFileContentForRevision(rightBasePath, diff.rightBaseSha)) || "";
+			? leftBaseContents
+			: (await git.getFileContentForRevision(rightBasePath, diff.rightBaseSha)) || "";
 		const normalizedRightBaseContents = Strings.normalizeFileContents(rightBaseContents);
 		const rightContents =
 			rightDiff !== undefined
@@ -269,13 +276,11 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			const { reviewChangesets, ...rest } = request;
 			try {
 				const r = await posts.createSharingReviewPost({
-					attributes: { ...rest, repoChanges: request.$addToSet.reviewChangesets  },
+					attributes: { ...rest, repoChanges: request.$addToSet.reviewChangesets },
 					shortCircuitAndReturnReviewChangesets: true
 				});
-				const x = this._diffs.get(request.id)![request.$addToSet.reviewChangesets[0].repoId].length - 1;
 				this._diffs.delete(request.id);
 
-				(r as any)[0].checkpoint = x + 1;
 				request.$addToSet.reviewChangesets = r;
 				// @ts-ignore
 				// request.reviewChangesets = r;
