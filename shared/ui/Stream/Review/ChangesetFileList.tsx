@@ -26,7 +26,7 @@ export const ChangesetFileList = (props: {
 	loading?: boolean;
 	noOnClick?: boolean;
 	showRepoLabels?: boolean;
-	checkpoint?: number;
+	checkpoint: number | "all";
 }) => {
 	const { review, noOnClick, loading, checkpoint } = props;
 	const dispatch = useDispatch<Dispatch>();
@@ -76,30 +76,32 @@ export const ChangesetFileList = (props: {
 		const f = derivedState.indexToFileMap[index];
 		const changeset = derivedState.indexToChangesetMap[index];
 		const visitedKey = [changeset.repoId, f.file].join(":");
-		await dispatch(showDiff(review.id, changeset.repoId, f.file));
-		visitedFiles[review.id][visitedKey] = NOW;
-		visitedFiles[review.id]._latest = index;
+		await dispatch(showDiff(review.id, checkpoint, changeset.repoId, f.file));
+		visitedFiles[review.id + ":" + checkpoint][visitedKey] = NOW;
+		visitedFiles[review.id + ":" + checkpoint]._latest = index;
 		localStore.set(VISITED_REVIEW_FILES, visitedFiles);
 	};
 
 	const nextFile = () => {
-		if (!visitedFiles[review.id]) goFile(0);
-		else if (visitedFiles[review.id]._latest == null) goFile(0);
-		else goFile(visitedFiles[review.id]._latest + 1);
+		if (!visitedFiles[review.id + ":" + checkpoint]) goFile(0);
+		else if (visitedFiles[review.id + ":" + checkpoint]._latest == null) goFile(0);
+		else goFile(visitedFiles[review.id + ":" + checkpoint]._latest + 1);
 	};
 
 	const prevFile = () => {
-		if (!visitedFiles[review.id]) goFile(-1);
-		else if (visitedFiles[review.id]._latest == null) goFile(-1);
-		else goFile(visitedFiles[review.id]._latest - 1);
+		if (!visitedFiles[review.id + ":" + checkpoint]) goFile(-1);
+		else if (visitedFiles[review.id + ":" + checkpoint]._latest == null) goFile(-1);
+		else goFile(visitedFiles[review.id + ":" + checkpoint]._latest - 1);
 	};
 
-	const latest = visitedFiles[review.id] ? visitedFiles[review.id]._latest : 0;
+	const latest = visitedFiles[review.id + ":" + checkpoint]
+		? visitedFiles[review.id + ":" + checkpoint]._latest
+		: 0;
 	const changedFiles = React.useMemo(() => {
 		const files: any[] = [];
 		let index = 0;
 		for (let changeset of review.reviewChangesets) {
-			if (checkpoint && changeset.checkpoint !== checkpoint) continue;
+			if (checkpoint !== "all" && changeset.checkpoint !== checkpoint) continue;
 			if (props.showRepoLabels) {
 				const repoName = safe(() => getById(derivedState.repos, changeset.repoId).name) || "";
 				if (repoName) {
@@ -110,7 +112,9 @@ export const ChangesetFileList = (props: {
 					);
 				}
 			}
-			const visitedFilesInReview = visitedFiles[review.id] || (visitedFiles[review.id] = {});
+			const visitedFilesInReview =
+				visitedFiles[review.id + ":" + checkpoint] ||
+				(visitedFiles[review.id + ":" + checkpoint] = {});
 			files.push(
 				...changeset.modifiedFiles.map(f => {
 					const visitedKey = [changeset.repoId, f.file].join(":");
@@ -147,7 +151,7 @@ export const ChangesetFileList = (props: {
 								e.preventDefault();
 								goFile(i);
 							}}
-							key={f.file}
+							key={changeset.checkpoint + ":" + f.file}
 							{...f}
 						/>
 					);

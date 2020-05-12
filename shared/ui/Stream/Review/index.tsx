@@ -208,6 +208,7 @@ const MetaCheckboxWithHoverIcon = styled.div`
 `;
 
 const MetaIcons = styled.span`
+	margin-left: 5px;
 	.icon {
 		margin-left: 5px;
 	}
@@ -538,12 +539,21 @@ const BaseReview = (props: BaseReviewProps) => {
 			review.reviewChangesets.map(_ => _.checkpoint)
 		) + 1;
 
-	const dropdownItems: any = [{ label: "All" }, { label: "-" }];
+	const dropdownItems: any = [
+		{ label: "All Changed Files", action: () => setCheckpoint("all") },
+		{ label: "-" }
+	];
 	for (var i = 0; i < numCheckpoints; i++) {
 		const label = i === 0 ? "Initial Review" : `Update #${i}`;
-		dropdownItems.push({ label, action: () => setCheckpoint(i) });
+		const set = i;
+		dropdownItems.push({ label, action: () => setCheckpoint(set) });
 	}
-	const dropdownLabel = "all";
+	const dropdownLabel =
+		checkpoint === "all"
+			? "All Changed Files"
+			: checkpoint === 0
+			? "Initial Review"
+			: `Update #${checkpoint}`;
 
 	return (
 		<MinimumWidthCard {...getCardProps(props)} noCard={!props.collapsed}>
@@ -695,16 +705,12 @@ const BaseReview = (props: BaseReviewProps) => {
 						<TourTip title={props.filesTip} placement="top">
 							<Meta id="changed-files">
 								<MetaLabel>
-									Changed Files
 									{numCheckpoints > 1 && (
-										<span>
-											{" "}
-											&ndash;{" "}
-											<DropdownButton variant="text" items={dropdownItems}>
-												{dropdownLabel}
-											</DropdownButton>
-										</span>
+										<DropdownButton variant="text" items={dropdownItems}>
+											{dropdownLabel}
+										</DropdownButton>
 									)}
+									{numCheckpoints <= 1 && <span>Changed Files</span>}
 									{props.canStartReview && numFiles > 1 && (
 										<MetaIcons>
 											<Icon
@@ -743,9 +749,8 @@ const BaseReview = (props: BaseReviewProps) => {
 								<MetaDescriptionForAssignees>
 									<ChangesetFileList
 										review={review}
-										loading={
-											props.headerError && props.headerError.message ? false : !props.canStartReview
-										}
+										checkpoint={checkpoint}
+										loading={props.headerError ? false : !props.canStartReview}
 										noOnClick={!props.canStartReview}
 									/>
 								</MetaDescriptionForAssignees>
@@ -756,7 +761,7 @@ const BaseReview = (props: BaseReviewProps) => {
 						<Meta>
 							<MetaLabel>Commits</MetaLabel>
 							<MetaDescriptionForAssignees>
-								<CommitList review={review} checkpoint="all" />
+								<CommitList review={review} checkpoint={checkpoint} />
 							</MetaDescriptionForAssignees>
 						</Meta>
 					)}

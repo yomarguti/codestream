@@ -10,7 +10,7 @@ export const CommitList = (props: { review: ReviewPlus; checkpoint: number | "al
 		const lines: any[] = [];
 		let index = 0;
 		for (let changeset of review.reviewChangesets) {
-			if (checkpoint != "all" && changeset.checkpoint !== checkpoint) continue;
+			if (checkpoint !== "all" && changeset.checkpoint !== checkpoint) continue;
 			if (changeset.includeSaved || changeset.includeStaged) {
 				lines.push(
 					<div

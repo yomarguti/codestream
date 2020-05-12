@@ -204,8 +204,18 @@ export const fetchReview = (reviewId: string) => async dispatch => {
 	if (response.review) return dispatch(saveReviews([response.review]));
 };
 
-export const showDiff = (reviewId: string, repoId: string, path: string) => async dispatch => {
-	const response = HostApi.instance.send(ReviewShowDiffRequestType, { reviewId, repoId, path });
+export const showDiff = (
+	reviewId: string,
+	checkpoint: number | "all",
+	repoId: string,
+	path: string
+) => async dispatch => {
+	const response = HostApi.instance.send(ReviewShowDiffRequestType, {
+		reviewId,
+		checkpoint,
+		repoId,
+		path
+	});
 	// if (response.success)
 	// return dispatch()
 };
