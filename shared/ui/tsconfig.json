@@ -28,6 +28,6 @@
 		"sourceMap": true,
 		"strict": true,
 		"target": "es2017",
-		"types": ["styled-components"]
+		"types": ["styled-components", "jest"]
 	}
 }
