@@ -356,6 +356,8 @@ function listenForEvents(store) {
 			case "navigate": {
 				if (route.action) {
 					if (Object.values(WebviewPanels).includes(route.action as any)) {
+						store.dispatch(setCurrentReview(""));
+						store.dispatch(setCurrentCodemark(""));
 						store.dispatch(openPanel(route.action));
 					} else {
 						logWarning(`Cannot navigate to route.action=${route.action}`);
