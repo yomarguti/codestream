@@ -123,7 +123,12 @@ export class MessageInput extends React.Component<Props, State> {
 		if (this._contentEditable) {
 			this._contentEditable.htmlEl.addEventListener("paste", function(e) {
 				e.preventDefault();
-				const text = e.clipboardData!.getData("text/plain");
+				let text = e.clipboardData!.getData("text/plain");
+				// if we think this might be code, we should treat it as code
+				// if it's multiple lines and all of them start with whitespace
+				// then add the code fence markdown
+				const lines = text.split("\n").length;
+				if (lines > 1 && !text.match(/^\S/gm)) text = "```" + text + "```";
 				document.execCommand("insertText", false, text);
 				// const text = e.clipboardData!.getData("text/plain");
 				// document.execCommand("insertHTML", false, text.replace(/\n/g, "<br>"));
