@@ -783,7 +783,7 @@ class TeamPanel extends React.Component<Props, State> {
 													{user.inviteCode}
 												</div>
 											) : (
-												<div>{user.inviteCode}</div>
+												undefined
 											)
 										) : (
 											undefined
