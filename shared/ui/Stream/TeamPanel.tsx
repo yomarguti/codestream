@@ -38,6 +38,7 @@ import { getCodeCollisions } from "../store/users/reducer";
 import { openPanel } from "../store/context/actions";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { ProfileLink } from "../src/components/ProfileLink";
+import copy from "copy-to-clipboard";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -104,6 +105,7 @@ interface ConnectedProps {
 	collisions: any;
 	dontSuggestInvitees: any;
 	multipleReviewersApprove: boolean;
+	emailSupported: boolean;
 }
 
 interface State {
@@ -374,6 +376,11 @@ class TeamPanel extends React.Component<Props, State> {
 		// auto-focus would cause scrolling which is undesireable.
 		const autoFocus = this.props.companyMemberCount < 5;
 
+		const inviteButtonId = this.props.emailSupported
+			? "teamMemberSelection.invite"
+			: "teamMemberSelection.getInviteCode";
+		const inviteButtonWidth = this.props.emailSupported ? "60px" : "120px";
+
 		return (
 			<fieldset
 				className="form-body"
@@ -396,13 +403,13 @@ class TeamPanel extends React.Component<Props, State> {
 							{this.renderEmailHelp()}
 						</div>
 						<Button
-							style={{ width: "60px", margin: "0 0 6px 10px" }}
+							style={{ width: inviteButtonWidth, margin: "0 0 6px 10px" }}
 							id="add-button"
 							className="control-button"
 							type="submit"
 							loading={this.state.loading}
 						>
-							<FormattedMessage id="teamMemberSelection.invite" defaultMessage="Invite" />
+							<FormattedMessage id={inviteButtonId} defaultMessage="Invite" />
 						</Button>
 					</div>
 				</div>
@@ -749,6 +756,12 @@ class TeamPanel extends React.Component<Props, State> {
 						{this.props.invited.length > 0 && (
 							<div className="section">
 								<PanelHeader title="Outstanding Invitations" />
+								{!this.props.emailSupported && (
+									<div className="color-warning" style={{ padding: "0 20px 10px 20px" }}>
+										NOTE: Outgoing email is currently not configured. To invite a teammate, click
+										"email" or copy the invite code.
+									</div>
+								)}
 								<UL>
 									{this.props.invited.map(user => {
 										const body = encodeURIComponent(
@@ -756,18 +769,22 @@ class TeamPanel extends React.Component<Props, State> {
 										);
 										const subject = "Invitation to CodeStream";
 										const title = user.inviteCode ? (
-											<div>
-												Sometimes emails from CodeStream are blocked.
-												<div style={{ height: "10px" }}></div>
-												<a href={`mailto:${user.email}?Subject=${subject}&body=${body}`}>
-													Click Here
-												</a>{" "}
-												to email an invitation from you.
-												<div style={{ height: "10px" }}></div>
-												Or share the invite code for {user.email}:
-												<br />
-												{user.inviteCode}
-											</div>
+											this.props.emailSupported ? (
+												<div>
+													Sometimes emails from CodeStream are blocked.
+													<div style={{ height: "10px" }}></div>
+													<a href={`mailto:${user.email}?Subject=${subject}&body=${body}`}>
+														Click Here
+													</a>{" "}
+													to email an invitation from you.
+													<div style={{ height: "10px" }}></div>
+													Or share the invite code for {user.email}:
+													<br />
+													{user.inviteCode}
+												</div>
+											) : (
+												<div>{user.inviteCode}</div>
+											)
 										) : (
 											undefined
 										);
@@ -775,16 +792,50 @@ class TeamPanel extends React.Component<Props, State> {
 											<li key={user.email}>
 												<div className="committer-email">
 													{user.email}
-													<a onClick={e => this.kick(user)} className="float-right">
-														remove
-													</a>
-													<span className="float-right" style={{ padding: "0 5px" }}>
-														&middot;
-													</span>
-													<Tooltip title={title} placement="topRight" align={{ offset: [35, -5] }}>
-														{this.renderEmailUser(user)}
-													</Tooltip>
+													{this.props.isCurrentUserAdmin && (
+														<div className="float-right">
+															<a onClick={e => this.kick(user)} className="float-right">
+																remove
+															</a>
+															<span className="float-right" style={{ padding: "0 5px" }}>
+																&middot;
+															</span>
+														</div>
+													)}
+													{!this.props.emailSupported && (
+														<div className="float-right">
+															<a onClick={e => copy(user.inviteCode)} className="float-right">
+																copy code
+															</a>
+															<span className="float-right" style={{ padding: "0 5px" }}>
+																&middot;
+															</span>
+														</div>
+													)}
+													{this.props.emailSupported ? (
+														<Tooltip
+															title={title}
+															placement="topRight"
+															align={{ offset: [35, -5] }}
+														>
+															{this.renderEmailUser(user)}
+														</Tooltip>
+													) : (
+														<a
+															className="float-right"
+															href={`mailto:${user.email}?Subject=${subject}&body=${body}`}
+														>
+															email
+														</a>
+													)}
 												</div>
+												{!this.props.emailSupported && (
+													<div>
+														<CSText as="span" muted>
+															{user.inviteCode}
+														</CSText>
+													</div>
+												)}
 											</li>
 										);
 									})}
@@ -876,6 +927,7 @@ const mapStateToProps = state => {
 
 	const dontSuggestInvitees = team.settings ? team.settings.dontSuggestInvitees || {} : {};
 	const multipleReviewersApprove = isFeatureEnabled(state, "multipleReviewersApprove");
+	const emailSupported = isFeatureEnabled(state, "emailSupport");
 
 	return {
 		teamId: team.id,
@@ -894,7 +946,8 @@ const mapStateToProps = state => {
 		invited: _sortBy(invited, "email"),
 		webviewFocused: context.hasFocus,
 		xrayEnabled,
-		multipleReviewersApprove
+		multipleReviewersApprove,
+		emailSupported
 	};
 };
 

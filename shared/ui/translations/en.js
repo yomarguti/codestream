@@ -94,6 +94,7 @@ export default {
 	"teamMemberSelection.addThem": "Add them!",
 	"teamMemberSelection.add": "ADD",
 	"teamMemberSelection.invite": "Invite",
+	"teamMemberSelection.getInviteCode": "Get invite code",
 	"createChannel.name.invalid": "Looks invalid?",
 	"createChannel.name.required": "Required",
 	"setPassword.setPassword": "Set Password",
