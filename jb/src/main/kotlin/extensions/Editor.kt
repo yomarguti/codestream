@@ -23,6 +23,7 @@ val Editor.displayPath: String?
 
 fun Editor.getOffset(position: Position): Int {
     val line = position.line
+    if (document.lineCount == 0) return 0
     if (line >= document.lineCount) {
         return document.getLineEndOffset(document.lineCount - 1)
     }
@@ -124,9 +125,12 @@ val Editor.visibleRanges: List<Range>
         )
         val endLogicalPos = xyToLogicalPosition(viewportEndPoint)
 
+        // getOffset will coerce it within document length
+        val endLspPos = document.lspPosition(getOffset(Position(endLogicalPos.line, endLogicalPos.column)))
+
         val fullRange = Range(
             startLspPos,
-            Position(endLogicalPos.line, endLogicalPos.column)
+            endLspPos
         )
 
         val ranges = mutableListOf<Range>()
