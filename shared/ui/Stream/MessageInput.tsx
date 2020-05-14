@@ -123,10 +123,10 @@ export class MessageInput extends React.Component<Props, State> {
 		if (this._contentEditable) {
 			this._contentEditable.htmlEl.addEventListener("paste", function(e) {
 				e.preventDefault();
-				// const text = e.clipboardData!.getData("text/plain");
-				// document.execCommand("insertText", false, text);
 				const text = e.clipboardData!.getData("text/plain");
-				document.execCommand("insertHTML", false, text.replace(/\n/g, "<br>"));
+				document.execCommand("insertText", false, text);
+				// const text = e.clipboardData!.getData("text/plain");
+				// document.execCommand("insertHTML", false, text.replace(/\n/g, "<br>"));
 			});
 			this.disposables.push(
 				KeystrokeDispatcher.onKeyDown(
