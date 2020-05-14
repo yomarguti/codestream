@@ -259,7 +259,7 @@ export const Reply = (props: ReplyProps) => {
 						{codemark && codemark.isChangeRequest && (
 							<span className="emote">requested a change</span>
 						)}
-						<Timestamp relative time={props.post.createdAt} />
+						<Timestamp relative time={props.post.createdAt} edited={props.post.hasBeenEdited} />
 					</span>
 					<div style={{ marginLeft: "auto", whiteSpace: "nowrap" }}>
 						<Icon

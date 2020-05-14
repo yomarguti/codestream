@@ -113,6 +113,7 @@ interface Props {
 	dateOnly?: boolean;
 	className?: string;
 	time: number;
+	edited?: boolean;
 }
 
 const StyledTime = styled.time`
@@ -132,18 +133,32 @@ const StyledTime = styled.time`
 export default function Timestamp(props: PropsWithChildren<Props>) {
 	if (!props.time) return null;
 
+	const edited = props.edited ? " (edited)" : "";
+
 	if (props.relative)
-		return <StyledTime className={props.className}>{distanceOfTimeInWords(props.time)}</StyledTime>;
+		return (
+			<StyledTime className={props.className}>
+				{distanceOfTimeInWords(props.time)}
+				{edited}
+			</StyledTime>
+		);
 
 	const timeText = prettyTime(props.time);
 	const timeDetails = prettyDateDay(props.time);
 
-	if (props.dateOnly) return <StyledTime className={props.className}>{timeDetails}</StyledTime>;
+	if (props.dateOnly)
+		return (
+			<StyledTime className={props.className}>
+				{timeDetails}
+				{edited}
+			</StyledTime>
+		);
 	else
 		return (
 			<StyledTime className={props.className}>
 				{timeText}
 				<span className="details">{timeDetails}</span>
+				{edited}
 			</StyledTime>
 		);
 }

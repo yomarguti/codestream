@@ -385,7 +385,7 @@ class Post extends React.Component {
 					{post.error ? (
 						<RetrySpinner callback={this.resubmit} cancel={this.cancel} />
 					) : (
-						<Timestamp relative time={post.createdAt} />
+						<Timestamp relative time={post.createdAt} edited={post.hasBeenEdited} />
 					)}
 					{codemark && codemark.color && <div className={`label-indicator ${color}-background`} />}
 				</div>
@@ -412,7 +412,6 @@ class Post extends React.Component {
 						{this.props.collapsed && !title && this.renderTypeIcon(post)}
 						{isPinnedReply && <Icon className="pinned-reply-star" name="star" />}
 						{this.renderText(post)}
-						{!this.props.editing && post.hasBeenEdited && <span className="edited">(edited)</span>}
 						{this.renderAssignees(post)}
 						{this.renderStatus()}
 						{this.renderExternalLink()}
@@ -750,7 +749,7 @@ class Post extends React.Component {
 			event.preventDefault();
 			const { post, id, teamMembers } = this.props;
 
-			const text = replaceHtml(this._contentEditable.htmlEl.innerText);
+			const text = replaceHtml(this._contentEditable.htmlEl.innerHTML);
 			await this.props.editPost(
 				post.streamId,
 				id,
@@ -777,20 +776,10 @@ class Post extends React.Component {
 					id={id}
 					rows="1"
 					tabIndex="-1"
-					html={post.text}
+					html={escapeHtml(post.text)}
 					ref={ref => (this._contentEditable = ref)}
 				/>
 				<div className="button-group">
-					<Button
-						id="save-button"
-						className="control-button"
-						tabIndex="2"
-						type="submit"
-						loading={this.props.loading}
-						onClick={this.onSaveEdit}
-					>
-						Save
-					</Button>
 					<Button
 						id="cancel-button"
 						className="control-button cancel"
@@ -800,6 +789,16 @@ class Post extends React.Component {
 						loading={this.props.loading}
 					>
 						Cancel
+					</Button>
+					<Button
+						id="save-button"
+						className="control-button"
+						tabIndex="2"
+						type="submit"
+						loading={this.props.loading}
+						onClick={this.onSaveEdit}
+					>
+						Save
 					</Button>
 				</div>
 			</div>

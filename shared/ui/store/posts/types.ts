@@ -6,6 +6,7 @@ export interface PendingPost
 	pending: true;
 	codemark: {};
 	error?: boolean;
+	hasBeenEdited?: boolean;
 }
 
 export type Post = PendingPost | PostPlus;
