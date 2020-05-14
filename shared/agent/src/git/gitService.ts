@@ -124,7 +124,8 @@ export class GitService implements IGitService, Disposable {
 		} catch (error) {
 			if (options.retryWithTrimmedEndOnFailure && this._isRangeOutOfBoundsError(error.message)) {
 				const actualLength = this._getFileLengthFromOutOfBoundsError(error.message);
-				if (actualLength) {
+				if (actualLength === 0) return [];
+				if (actualLength !== undefined) {
 					const maxLine = actualLength - 1;
 					return this.getFileAuthors(uriOrPath as any, {
 						...options,
@@ -151,7 +152,8 @@ export class GitService implements IGitService, Disposable {
 			const { message } = error;
 			if (options.retryWithTrimmedEndOnFailure && this._isRangeOutOfBoundsError(message)) {
 				const actualLength = this._getFileLengthFromOutOfBoundsError(message);
-				if (actualLength) {
+				if (actualLength === 0) return [];
+				if (actualLength !== undefined) {
 					const maxLine = actualLength - 1;
 					return this.getBlameRevisions(uriOrPath as any, {
 						...options,
