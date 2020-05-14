@@ -29,7 +29,7 @@ import { Arrays, log, lspProvider, Strings } from "../system";
 import {
 	ApiResponse,
 	getOpenedRepos,
-	getRemotePath,
+	getRemotePaths,
 	PullRequestComment,
 	ThirdPartyIssueProviderBase,
 	ThirdPartyProviderSupportsIssues,
@@ -421,7 +421,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 				return await cachedComments.comments;
 			}
 
-			const remotePath = await getRemotePath(
+			const remotePath = await getRemotePaths(
 				repo,
 				this.getIsMatchingRemotePredicate(),
 				this._knownRepos
@@ -448,21 +448,27 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 	private async _getCommentsForPathCore(
 		filePath: string,
 		relativePath: string,
-		remotePath: string
+		remotePaths: string[]
 	) {
-		const pullRequestsResponse = await this.get<GetPullRequestsResponse>(
-			`/repositories/${remotePath}/pullrequests?${qs.stringify({ q: "comment_count>0" })}`
-		);
+		const comments = [];
 
-		const comments = (
-			await Promise.all(
-				pullRequestsResponse.body.values.map(pr => this._getPullRequestComments(pr, relativePath))
-			)
-		).reduce((group, current) => group.concat(current), []);
+		for (const remotePath of remotePaths) {
+			const pullRequestsResponse = await this.get<GetPullRequestsResponse>(
+				`/repositories/${remotePath}/pullrequests?${qs.stringify({ q: "comment_count>0" })}`
+			);
+
+			const prComments = (
+				await Promise.all(
+					pullRequestsResponse.body.values.map(pr => this._getPullRequestComments(pr, relativePath))
+				)
+			).reduce((group, current) => group.concat(current), []);
+
+			comments.push(...prComments);
+		}
 
 		// If we have any comments, fire a notification
 		if (comments.length !== 0) {
-			SessionContainer.instance().documentMarkers.fireDidChangeDocumentMarkers(
+			void SessionContainer.instance().documentMarkers.fireDidChangeDocumentMarkers(
 				URI.file(filePath).toString(),
 				"codemarks"
 			);

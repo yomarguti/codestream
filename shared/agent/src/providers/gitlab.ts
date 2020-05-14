@@ -26,7 +26,7 @@ import {
 	CSReferenceLocation
 } from "../protocol/api.protocol";
 import { log, lspProvider, Strings } from "../system";
-import { getRemotePath, PullRequestComment, ThirdPartyIssueProviderBase } from "./provider";
+import { getRemotePaths, PullRequestComment, ThirdPartyIssueProviderBase } from "./provider";
 
 interface GitLabProject {
 	path_with_namespace: any;
@@ -357,15 +357,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				return await cachedComments.comments;
 			}
 
-			const remotePath = await getRemotePath(
+			const remotePaths = await getRemotePaths(
 				repo,
 				this.getIsMatchingRemotePredicate(),
 				this._projectsByRemotePath
 			);
 
 			const commentsPromise: Promise<PullRequestComment[]> =
-				remotePath != null
-					? this._getCommentsForPathCore(filePath, relativePath, remotePath)
+				remotePaths != null
+					? this._getCommentsForPathCore(filePath, relativePath, remotePaths)
 					: Promise.resolve([]);
 			this._commentsByRepoAndPath.set(cacheKey, {
 				expiresAt: new Date().setMinutes(new Date().getMinutes() + 30),
@@ -384,17 +384,23 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	private async _getCommentsForPathCore(
 		filePath: string,
 		relativePath: string,
-		remotePath: string
+		remotePaths: string[]
 	): Promise<PullRequestComment[]> {
-		const prs = await this._getPullRequests(remotePath);
+		const comments = [];
 
-		const comments = (
-			await Promise.all(prs.map(pr => this._getPullRequestComments(remotePath, pr, relativePath)))
-		).reduce((group, current) => group.concat(current), []);
+		for (const remotePath of remotePaths) {
+			const prs = await this._getPullRequests(remotePath);
+
+			const prComments = (
+				await Promise.all(prs.map(pr => this._getPullRequestComments(remotePath, pr, relativePath)))
+			).reduce((group, current) => group.concat(current), []);
+
+			comments.push(...prComments);
+		}
 
 		// If we have any comments, fire a notification
 		if (comments.length !== 0) {
-			SessionContainer.instance().documentMarkers.fireDidChangeDocumentMarkers(
+			void SessionContainer.instance().documentMarkers.fireDidChangeDocumentMarkers(
 				URI.file(filePath).toString(),
 				"codemarks"
 			);

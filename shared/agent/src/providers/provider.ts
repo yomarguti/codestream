@@ -599,27 +599,26 @@ export async function getOpenedRepos<R>(
 	return openRepos;
 }
 
-export async function getRemotePath<R extends { path: string }>(
+export async function getRemotePaths<R extends { path: string }>(
 	repo: GitRepository | undefined,
 	predicate: (remote: GitRemote) => boolean,
 	remoteRepos: Map<string, R>
-): Promise<string | undefined> {
+): Promise<string[] | undefined> {
 	try {
 		if (repo === undefined) return undefined;
 
-		const remotes = await repo.getRemotes();
+		const remotesPromise = repo.getRemotes();
 
-		let remotePath;
+		const remotePaths = [];
 		for (const [path, remoteRepo] of remoteRepos.entries()) {
 			if (remoteRepo.path === repo.path) {
-				remotePath = path;
+				remotePaths.push(path);
 			}
 		}
+		if (remotePaths.length) return remotePaths;
 
-		if (remotePath) return remotePath;
-
-		const remote = remotes.find(predicate);
-		return remote && remote.path;
+		const remotes = await remotesPromise;
+		return remotes.filter(predicate).map(r => r.path);
 	} catch (ex) {
 		return undefined;
 	}

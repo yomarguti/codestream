@@ -25,7 +25,7 @@ import { CodemarkType, CSGitHubProviderInfo, CSReferenceLocation } from "../prot
 import { Arrays, Functions, log, lspProvider, Strings } from "../system";
 import {
 	getOpenedRepos,
-	getRemotePath,
+	getRemotePaths,
 	PullRequestComment,
 	ThirdPartyIssueProviderBase,
 	ThirdPartyProviderSupportsIssues,
@@ -385,7 +385,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				return await cachedComments.comments;
 			}
 
-			const remotePath = await getRemotePath(
+			const remotePath = await getRemotePaths(
 				repo,
 				this.getIsMatchingRemotePredicate(),
 				this._knownRepos
@@ -412,7 +412,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	private async _getCommentsForPathCore(
 		filePath: string,
 		relativePath: string,
-		remotePath: string,
+		remotePaths: string[],
 		repoPath: string
 	): Promise<PullRequestComment[]> {
 		let prs: GitHubPullRequest[];
@@ -422,9 +422,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		if (cachedPRs !== undefined && cachedPRs.expiresAt > new Date().getTime()) {
 			prs = await cachedPRs.prs;
 		} else {
-			const [owner, repo] = remotePath.split("/");
-
-			const prsPromise = this._getPullRequests(owner, repo);
+			const prsPromise = this._getPullRequests(remotePaths);
 			this._prsByRepo.set(repoPath, {
 				expiresAt: new Date().setMinutes(new Date().getMinutes() + 30),
 				prs: prsPromise
@@ -513,19 +511,22 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return comments;
 	}
 
-	private async _getPullRequests(owner: string, repo: string) {
+	private async _getPullRequests(remotePaths: string[]) {
 		const prs = [];
 
-		try {
-			let response;
-			do {
-				response = await this.prQuery(owner, repo, response && response.pageInfo.endCursor);
-				if (response === undefined) break;
+		for (const remotePath of remotePaths) {
+			try {
+				const [owner, repo] = remotePath.split("/");
+				let response;
+				do {
+					response = await this.prQuery(owner, repo, response && response.pageInfo.endCursor);
+					if (response === undefined) break;
 
-				prs.push(...response.nodes);
-			} while (response.pageInfo.hasNextPage);
-		} catch (ex) {
-			Logger.error(ex);
+					prs.push(...response.nodes);
+				} while (response.pageInfo.hasNextPage);
+			} catch (ex) {
+				Logger.error(ex);
+			}
 		}
 
 		return prs;
