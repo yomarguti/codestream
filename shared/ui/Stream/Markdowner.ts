@@ -52,14 +52,17 @@ export const markdownify = (text: string, options?: { excludeParagraphWrap: bool
 	if (text == null) return text;
 
 	try {
-		const replaced = options && options.excludeParagraphWrap
-			? md.renderInline(text, { references: {} })
-			: md.render(text, { references: {} })
-				.replace(/blockquote>\n/g, "blockquote>")
-				.replace(/<br>\n/g, "\n")
-				.replace(/<\/p>\n$/, "</p>")
-				.replace(/<\/p>\n/g, "</p><br/>");
-		// console.log(replaced);
+		const replaced =
+			options && options.excludeParagraphWrap
+				? md.renderInline(text, { references: {} })
+				: md
+						.render(text, { references: {} })
+						.replace(/blockquote>\n/g, "blockquote>")
+						.replace(/<br>\n/g, "\n")
+						.replace(/<\/p>\n$/, "</p>")
+						.replace(/<\/p>\n/g, "</p><br/>")
+						.replace(/<br\/><\/blockquote>/g, "</blockquote>");
+
 		if (text.trim().match(/^(:[\w_+]+:|\s)+$/))
 			return "<span class='only-emoji'>" + replaced + "</span>";
 		else return replaced;
@@ -82,8 +85,7 @@ export function useMarkdownifyToHtml() {
 	}, shallowEqual);
 
 	return React.useCallback(
-		(text: string,
-			options?: { excludeParagraphWrap: boolean }) => {
+		(text: string, options?: { excludeParagraphWrap: boolean }) => {
 			let html: string;
 			if (text == null || text === "") {
 				html = "";
@@ -97,7 +99,7 @@ export function useMarkdownifyToHtml() {
 					) {
 						return `<span class="at-mention${
 							me.localeCompare(name, undefined, { sensitivity: "accent" }) === 0 ? " me" : ""
-							}">${match}</span>`;
+						}">${match}</span>`;
 					}
 
 					return match;

@@ -11,7 +11,9 @@ import {
 	createRange,
 	getCurrentCursorPosition,
 	debounceAndCollectToAnimationFrame,
-	emptyArray
+	emptyArray,
+	replaceHtml,
+	escapeHtml
 } from "../utils";
 import { AtMentionsPopup } from "./AtMentionsPopup";
 import EmojiPicker from "./EmojiPicker";
@@ -25,6 +27,7 @@ import { getTeamMates, getTeamTagsArray } from "../store/users/reducer";
 import { getChannelStreamsForTeam } from "../store/streams/reducer";
 import { ServicesState } from "../store/services/types";
 import { getSlashCommands } from "./SlashCommands";
+import { MarkdownText } from "./MarkdownText";
 
 type PopupType = "at-mentions" | "slash-commands" | "channels" | "emojis";
 
@@ -53,6 +56,7 @@ interface State {
 	codemarkMenuStart?: number;
 	formatCode: boolean;
 	insertPrefix: string;
+	isPreviewing: boolean;
 }
 
 interface ConnectedProps {
@@ -105,7 +109,8 @@ export class MessageInput extends React.Component<Props, State> {
 			customColor: "",
 			codemarkMenuStart: 0,
 			formatCode: false,
-			insertPrefix: ""
+			insertPrefix: "",
+			isPreviewing: false
 		};
 	}
 
@@ -118,8 +123,10 @@ export class MessageInput extends React.Component<Props, State> {
 		if (this._contentEditable) {
 			this._contentEditable.htmlEl.addEventListener("paste", function(e) {
 				e.preventDefault();
+				// const text = e.clipboardData!.getData("text/plain");
+				// document.execCommand("insertText", false, text);
 				const text = e.clipboardData!.getData("text/plain");
-				document.execCommand("insertText", false, text);
+				document.execCommand("insertHTML", false, text.replace(/\n/g, "<br>"));
 			});
 			this.disposables.push(
 				KeystrokeDispatcher.onKeyDown(
@@ -302,7 +309,6 @@ export class MessageInput extends React.Component<Props, State> {
 			});
 		} else if (type === "emojis") {
 			if (normalizedPrefix && normalizedPrefix.length > 1) {
-				debugger;
 				Object.keys(emojiData).map(emojiId => {
 					if (emojiId.indexOf(normalizedPrefix) === 0) {
 						itemsToShow.push({ id: emojiId, identifier: emojiData[emojiId] + " " + emojiId });
@@ -998,6 +1004,11 @@ export class MessageInput extends React.Component<Props, State> {
 		);
 	};
 
+	handleClickPreview = () => {
+		this.setState({ isPreviewing: !this.state.isPreviewing });
+		this.focus();
+	};
+
 	handleClickAtMentions = () => {
 		if (this.state.currentPopup) {
 			this.focus(() => {
@@ -1028,6 +1039,7 @@ export class MessageInput extends React.Component<Props, State> {
 	};
 
 	render() {
+		const { isPreviewing, formatCode } = this.state;
 		const { placeholder, text, __onDidRender } = this.props;
 
 		__onDidRender &&
@@ -1054,11 +1066,21 @@ export class MessageInput extends React.Component<Props, State> {
 						// />
 					}
 					<Icon
+						key="preview"
+						name="markdown"
+						title="Preview"
+						placement="top"
+						align={{ offset: [5, 0] }}
+						delay={1}
+						className={cx("preview", { hover: isPreviewing })}
+						onClick={this.handleClickPreview}
+					/>
+					<Icon
 						key="mention"
 						name="mention"
 						title="Mention a teammate"
-						placement="top"
-						align={{ offset: [5, 0] }}
+						placement="topRight"
+						align={{ offset: [18, 0] }}
 						delay={1}
 						className={cx("mention", { hover: this.state.currentPopup === "at-mentions" })}
 						onClick={this.handleClickAtMentions}
@@ -1067,8 +1089,8 @@ export class MessageInput extends React.Component<Props, State> {
 						key="smiley"
 						name="smiley"
 						title="Add an emoji"
-						placement="top"
-						align={{ offset: [5, 0] }}
+						placement="topRight"
+						align={{ offset: [9, 0] }}
 						delay={1}
 						className={cx("smiley", {
 							hover: this.state.emojiOpen
@@ -1109,6 +1131,11 @@ export class MessageInput extends React.Component<Props, State> {
 					)}
 					{this.buildTagMenu()}
 				</div>
+				{isPreviewing && (
+					<div className={cx("message-input preview", { "format-code": formatCode })}>
+						<MarkdownText text={replaceHtml(this._contentEditable!.htmlEl.innerHTML) || ""} />
+					</div>
+				)}
 				<AtMentionsPopup
 					on={this.state.currentPopup}
 					items={this.state.popupItems || emptyArray}
@@ -1119,7 +1146,8 @@ export class MessageInput extends React.Component<Props, State> {
 				>
 					<ContentEditable
 						className={cx("message-input", btoa(unescape(encodeURIComponent(placeholder || ""))), {
-							"format-code": this.state.formatCode
+							"format-code": formatCode,
+							hide: isPreviewing
 						})}
 						id="input-div"
 						onChange={this.handleChange}

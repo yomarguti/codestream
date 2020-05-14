@@ -359,17 +359,24 @@ const htmlEscapeCharMap = {
 	"'": "&#039;"
 };
 
+// used to go from in-database user-input, to a contenteditable div
 export function escapeHtml(text: string) {
-	return text.replace(/[&<>"']/g, function(c) {
-		return htmlEscapeCharMap[c];
-	});
+	return text.replace(/[&<>"']/g, c => htmlEscapeCharMap[c]).replace(/\n/g, "<br/>");
 }
 
+// used to take the contents of a contenteditable div, and save it
+// more like the plaintext that the user entered
 export function replaceHtml(text: string) {
+	// console.warn("INPUT: ", text);
 	const domParser = new DOMParser();
-	const replaceRegex = /<br>|<div>/g;
-	return domParser.parseFromString(text.replace(replaceRegex, "\n"), "text/html").documentElement
-		.textContent;
+	// contentEditable renders a blank line as "<div><br></div>""
+	// and a line with only "foo" as "<div>foo</div>"
+	// both of those things result in newlines, so we convert them to \n
+	const replaceRegex = /<div><br\/?><\/div>|<br\/?>|<div>/g;
+	const result = domParser.parseFromString(text.replace(replaceRegex, "\n"), "text/html")
+		.documentElement.textContent;
+	// console.warn("OUTPUT: ", result);
+	return result;
 }
 
 export function uriToFilePath(uri: URI | string) {

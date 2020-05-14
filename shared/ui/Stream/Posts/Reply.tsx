@@ -22,7 +22,7 @@ import MarkerActions from "../MarkerActions";
 import MessageInput from "../MessageInput";
 import Button from "../Button";
 import { Dispatch } from "@codestream/webview/store/common";
-import { replaceHtml } from "@codestream/webview/utils";
+import { replaceHtml, escapeHtml } from "@codestream/webview/utils";
 import {
 	findMentionedUserIds,
 	getTeamMembers,
@@ -152,7 +152,6 @@ export const Reply = (props: ReplyProps) => {
 		target?: any;
 	}>({ open: false, target: undefined });
 
-	const [newReplyText, setNewReplyText] = React.useState("");
 	const [isLoading, setIsLoading] = React.useState(false);
 	const teamMembers = useSelector((state: CodeStreamState) => getTeamMembers(state));
 	const teamTagsById = useSelector((state: CodeStreamState) => getTeamTagsHash(state));
@@ -176,8 +175,12 @@ export const Reply = (props: ReplyProps) => {
 				)
 			);
 		}
+		reset();
 		setIsLoading(false);
-		setNewReplyText("");
+	};
+
+	const reset = () => {
+		setNewReplyText(escapedPostText);
 		setEditingPostId("");
 	};
 
@@ -194,6 +197,8 @@ export const Reply = (props: ReplyProps) => {
 	const isNestedReply = props.showParentPreview && parentPost.parentPostId != null;
 
 	const postText = codemark != null ? codemark.text : props.post.text;
+	const escapedPostText = escapeHtml(postText);
+	const [newReplyText, setNewReplyText] = React.useState(escapedPostText);
 
 	const renderedMenu =
 		props.renderMenu &&
@@ -290,7 +295,7 @@ export const Reply = (props: ReplyProps) => {
 					<>
 						<ComposeWrapper>
 							<MessageInput
-								text={postText}
+								text={escapedPostText}
 								onChange={setNewReplyText}
 								onSubmit={submit}
 								multiCompose
@@ -305,10 +310,7 @@ export const Reply = (props: ReplyProps) => {
 									width: "80px",
 									margin: "10px 10px"
 								}}
-								onClick={() => {
-									setEditingPostId("");
-									setNewReplyText("");
-								}}
+								onClick={reset}
 							>
 								Cancel
 							</Button>

@@ -31,7 +31,11 @@ export const MarkdownText = styled(
 	p {
 		margin: 0;
 	}
-	.code {
+	.code,
+	code {
+		max-width: 100%;
 		overflow-x: auto; // A long code snippet can extend past the container and look weird
 	}
+	white-space: pre-wrap;
+	word-wrap: break-word;
 `;

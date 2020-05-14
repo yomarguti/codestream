@@ -286,6 +286,12 @@ class CodemarkForm extends React.Component<Props, State> {
 				relatedCodemarkIds
 			};
 		}
+		if (props.isEditing && props.editingCodemark) {
+			this.state = {
+				...this.state,
+				text: escapeHtml(this.state.text)
+			};
+		}
 	}
 
 	static getDerivedStateFromProps(props: Props, state: State) {
@@ -1459,7 +1465,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			<MessageInput
 				teamProvider={this.props.teamProvider}
 				isDirectMessage={this.props.channel.type === StreamType.Direct}
-				text={text.replace(/\n/g, "<br/>")}
+				text={text}
 				placeholder={placeholder}
 				multiCompose
 				onChange={this.handleChange}
@@ -1656,7 +1662,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		};
 	}
 
-	cancelCompose = (e: Event) => {		
+	cancelCompose = (e: Event) => {
 		this.props.onClickClose && this.props.onClickClose(e);
 	};
 
@@ -1731,11 +1737,11 @@ class CodemarkForm extends React.Component<Props, State> {
 		}
 	}
 
-	cancelCodemarkCompose = (e: Event) =>  {
+	cancelCodemarkCompose = (e: Event) => {
 		const { text, type } = this.state;
 		if (!this.props.onClickClose) return;
 		// if there is codemark text, confirm the user actually wants to cancel
-		if (text && (type === "comment" || type === "issue")) {			
+		if (text && (type === "comment" || type === "issue")) {
 			confirmPopup({
 				title: "Are you sure?",
 				message: "Changes you made will not be saved.",
@@ -1743,7 +1749,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				buttons: [
 					{ label: "Go Back", className: "control-button" },
 					{
-						label: `Discard ${type === "issue" ? "Issue" : "Comment"}` ,
+						label: `Discard ${type === "issue" ? "Issue" : "Comment"}`,
 						wait: true,
 						action: this.props.onClickClose,
 						className: "delete"
@@ -1753,7 +1759,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		} else {
 			this.props.onClickClose(e);
 		}
-	}
+	};
 
 	renderCodemarkForm() {
 		const { editingCodemark, currentUser } = this.props;

@@ -33,7 +33,8 @@ import {
 	keyFilter,
 	keyFilterFalsey,
 	safe,
-	arrayDiff
+	arrayDiff,
+	escapeHtml
 } from "../utils";
 import { HostApi } from "../webview-api";
 import Button from "./Button";
@@ -262,6 +263,12 @@ class ReviewForm extends React.Component<Props, State> {
 			this.state = {
 				...this.state,
 				selectedTags
+			};
+		}
+		if (props.isEditing && props.editingReview) {
+			this.state = {
+				...this.state,
+				text: escapeHtml(this.state.text)
 			};
 		}
 	}
@@ -760,7 +767,7 @@ class ReviewForm extends React.Component<Props, State> {
 			<MessageInput
 				teamProvider={"codestream"}
 				isDirectMessage={this.props.channel.type === StreamType.Direct}
-				text={text.replace(/\n/g, "<br/>")}
+				text={text}
 				placeholder="Description (Optional)"
 				multiCompose
 				withTags
