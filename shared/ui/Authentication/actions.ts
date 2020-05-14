@@ -38,7 +38,7 @@ export interface SSOAuthInfo {
 	fromSignup?: boolean;
 	type?: SignupType;
 	inviteCode?: string;
-	orgId?: string;
+	hostUrl?: string;
 }
 
 const ProviderNames = {
@@ -68,8 +68,8 @@ export const startSSOSignin = (
 	if (info && info.inviteCode) {
 		query.inviteCode = info.inviteCode;
 	}
-	if (info && info.orgId) {
-		query.orgId = info.orgId;
+	if (info && info.hostUrl) {
+		query.hostUrl = info.hostUrl;
 	}
 	const queryString = Object.keys(query)
 		.map(key => `${key}=${query[key]}`)

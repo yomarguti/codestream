@@ -9,7 +9,7 @@ import { HostApi } from "../webview-api";
 import { FormattedMessage } from "react-intl";
 import { startSSOSignin, SignupType, SSOAuthInfo } from "./actions";
 
-const isOrgValid = (org: string) => org.length > 0;
+const isHostUrlValid = (hostUrl: string) => hostUrl.length > 0;
 
 interface ConnectedProps {
 	fromSignup?: boolean;
@@ -17,12 +17,12 @@ interface ConnectedProps {
 }
 
 export const OktaConfig = (connect() as any)((props: ConnectedProps & DispatchProp) => {
-	const [orgName, setOrgName] = useState("");
-	const [orgValidity, setOrgValidity] = useState(true);
+	const [hostUrl, setHostUrl] = useState("");
+	const [hostUrlValidity, setHostUrlValidity] = useState(true);
 	const [isLoading, setIsLoading] = useState(false);
 
 	const onValidityChanged = useCallback(
-		(_: string, validity: boolean) => setOrgValidity(validity),
+		(_: string, validity: boolean) => setHostUrlValidity(validity),
 		[]
 	);
 
@@ -37,7 +37,7 @@ export const OktaConfig = (connect() as any)((props: ConnectedProps & DispatchPr
 
 	const onSubmit = async (event: React.FormEvent) => {
 		event.preventDefault();
-		if (orgName !== "" && orgValidity) {
+		if (hostUrl !== "" && hostUrlValidity) {
 			setIsLoading(true);
 			try {
 				if (props.fromSignup) {
@@ -46,7 +46,7 @@ export const OktaConfig = (connect() as any)((props: ConnectedProps & DispatchPr
 					});
 				}
 				const info: SSOAuthInfo = props.fromSignup ? { fromSignup: true } : {};
-				info.orgId = orgName;
+				info.hostUrl = hostUrl;
 				if (props.inviteCode) {
 					info.type = SignupType.JoinTeam;
 					info.inviteCode = props.inviteCode;
@@ -70,24 +70,21 @@ export const OktaConfig = (connect() as any)((props: ConnectedProps & DispatchPr
 			<form className="standard-form" onSubmit={onSubmit}>
 				<fieldset className="form-body">
 					<div className="outline-box">
-						<h3>Organization</h3>
-						<p>
-							Enter the name of your Okta organization. For example, if you access Okta at https://
-							<strong>myorg</strong>.okta.com, you would supply "<strong>myorg</strong>" here.
-						</p>
+						<h3>Host URL</h3>
+						<p>Enter the URL you use to access your Okta account.</p>
 						<div id="controls">
 							<div className="control-group">
 								<div style={{ height: "20px" }} />
 								<TextInput
 									name="team"
-									placeholder="myorg"
-									value={orgName}
-									onChange={setOrgName}
-									validate={isOrgValid}
+									placeholder="https://myorg.okta.com"
+									value={hostUrl}
+									onChange={setHostUrl}
+									validate={isHostUrlValid}
 									onValidityChanged={onValidityChanged}
 									required
 								/>
-								{!orgValidity && <small className="explainer error-message">Required</small>}
+								{!hostUrlValidity && <small className="explainer error-message">Required</small>}
 							</div>
 							<div className="button-group">
 								<Button className="control-button" type="submit" loading={isLoading}>

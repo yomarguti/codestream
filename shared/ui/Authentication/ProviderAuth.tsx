@@ -15,7 +15,7 @@ interface Props extends DispatchProp {
 	type?: SignupType;
 	inviteCode?: string;
 	provider: SupportedSSOProvider;
-	orgId?: string;
+	hostUrl?: string;
 	fromSignup?: boolean;
 }
 
@@ -43,7 +43,7 @@ export const ProviderAuth = (connect(undefined) as any)((props: Props) => {
 					? {
 							type: props.type,
 							inviteCode: props.inviteCode,
-							orgId: props.orgId,
+							hostUrl: props.hostUrl,
 							fromSignup: props.fromSignup
 					  }
 					: undefined
