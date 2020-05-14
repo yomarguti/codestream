@@ -359,13 +359,19 @@ const htmlEscapeCharMap = {
 	"'": "&#039;"
 };
 
-// used to go from in-database user-input, to a contenteditable div
+/**
+ * used to go from in-database user-input, to a contenteditable div
+ * @param  {string} text
+ */
 export function escapeHtml(text: string) {
 	return text.replace(/[&<>"']/g, c => htmlEscapeCharMap[c]).replace(/\n/g, "<br/>");
 }
 
-// used to take the contents of a contenteditable div, and save it
-// more like the plaintext that the user entered
+/**
+* used to take the contents of a contenteditable div, and save it
+* more like the plaintext that the user entered
+* @param  {string} text
+*/
 export function replaceHtml(text: string) {
 	// console.warn("INPUT: ", text);
 	const domParser = new DOMParser();
