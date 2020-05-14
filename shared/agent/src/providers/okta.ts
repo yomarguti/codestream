@@ -27,7 +27,7 @@ export class OktaProvider extends ThirdPartyPostProviderBase<CSOktaProviderInfo>
 		await this.session.api.setThirdPartyProviderInfo({
 			providerId: this.providerConfig.id,
 			data: {
-				orgId: request.orgId
+				hostUrl: request.hostUrl
 			}
 		});
 	}
