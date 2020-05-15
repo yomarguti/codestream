@@ -255,14 +255,16 @@ class Login extends React.Component<Props, State> {
 											<div className="copy">Sign In with GitHub</div>
 											<Icon name="chevron-right" />
 										</Button>
-										<Button
-											className="row-button no-top-margin"
-											onClick={this.handleClickOktaLogin}
-										>
-											<Icon name="okta" />
-											<div className="copy">Sign In with Okta</div>
-											<Icon name="chevron-right" />
-										</Button>
+										{false && (
+											<Button
+												className="row-button no-top-margin"
+												onClick={this.handleClickOktaLogin}
+											>
+												<Icon name="okta" />
+												<div className="copy">Sign In with Okta</div>
+												<Icon name="chevron-right" />
+											</Button>
+										)}
 									</div>
 								)}
 								<div className="footer">

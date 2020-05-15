@@ -374,15 +374,17 @@ export const Signup = (props: Props) => {
 									<div className="copy">Sign Up with GitHub</div>
 									<Icon name="chevron-right" />
 								</Button>
-								<Button className="row-button no-top-margin" onClick={onClickOktaSignup}>
-									<Icon name="okta" />
-									<div className="copy">Sign Up with Okta</div>
-									<Icon name="chevron-right" />
-								</Button>
+								{false && (
+									<Button className="row-button no-top-margin" onClick={onClickOktaSignup}>
+										<Icon name="okta" />
+										<div className="copy">Sign Up with Okta</div>
+										<Icon name="chevron-right" />
+									</Button>
+								)}
 								<div style={{ height: "15px" }} />
 								<CSText muted as="span">
 									If you use GitLab, BitBucket, or a self-managed git server, sign up with
-									CodeStream or Okta above.
+									CodeStream above.
 								</CSText>
 							</div>
 						</div>
