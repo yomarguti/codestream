@@ -1,5 +1,24 @@
 # Change Log
 
+## [7.2.1] - 2020-5-15
+
+### Added
+
+- Command palette, editor context menu, and codelens action menu all now include a Create Review option
+
+### Changed
+
+- Requesting a code code review now shows earlier commits if no unique commits can be found on the branch
+- Team tab now provides invite codes for on-prem installations running without outbound email
+- PR toggle on the Current File tab is suppressed for on-prem installations not using https
+
+### Fixed
+
+- Addresses [#187](https://github.com/TeamCodeStream/CodeStream/issues/187) &mdash; Git error with empty file
+- Addresses [#158](https://github.com/TeamCodeStream/CodeStream/issues/187) &mdash; Can't paste HTML tags
+- Fixes an issue where editing a reply removed any formatting
+- Fixes an issue where pasted HTML would get rendered in a reply
+
 ## [7.2.1] - 2020-5-6
 
 ### Added
