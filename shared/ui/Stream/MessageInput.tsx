@@ -559,9 +559,11 @@ export class MessageInput extends React.Component<Props, State> {
 			(event.ctrlKey || event.metaKey || !multiCompose)
 		) {
 			event.preventDefault();
+			this.setState({ isPreviewing: false });
 			const { onSubmit } = this.props;
 			onSubmit && onSubmit();
 		} else if (event.key == "Escape" && multiCompose && this.props.onDismiss) {
+			this.setState({ isPreviewing: false });
 			this.props.onDismiss();
 		}
 	};
@@ -636,6 +638,7 @@ export class MessageInput extends React.Component<Props, State> {
 			} else if ((event.key === "Enter" || event.which === 13) && event.metaKey && multiCompose) {
 				// command-enter should submit for multiCompose
 				event.preventDefault();
+				this.setState({ isPreviewing: false });
 				const { onSubmit } = this.props;
 				onSubmit && onSubmit();
 			}
@@ -1069,7 +1072,14 @@ export class MessageInput extends React.Component<Props, State> {
 					<Icon
 						key="preview"
 						name="markdown"
-						title="Preview"
+						title={
+							<div style={{ textAlign: "center" }}>
+								Click to Preview
+								<div style={{ paddingTop: "5px" }}>
+									<a href="https://www.markdownguide.org/cheat-sheet/">Markdown help</a>
+								</div>
+							</div>
+						}
 						placement="top"
 						align={{ offset: [5, 0] }}
 						delay={1}
