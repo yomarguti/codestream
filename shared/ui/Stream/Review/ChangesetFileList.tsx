@@ -43,12 +43,20 @@ export const ChangesetFileList = (props: {
 		let index = 0;
 		let indexToChangesetMap = {};
 		let indexToFileMap = {};
-		for (let changeset of review.reviewChangesets) {
-			(changeset.modifiedFiles || []).forEach(f => {
-				indexToChangesetMap[index] = changeset;
-				indexToFileMap[index] = f;
-				index++;
-			});
+
+		let changeset;
+		let modifiedFiles;
+		if (checkpoint !== undefined) {
+			changeset = review.reviewChangesets[review.reviewChangesets.length - 1];
+			modifiedFiles = changeset ? changeset.modifiedFilesInCheckpoint : [];
+		} else {
+			changeset = review.reviewChangesets.find(rc => rc.checkpoint === checkpoint);
+			modifiedFiles = changeset ? changeset.modifiedFiles : [];
+		}
+		for (const modifiedFile of modifiedFiles) {
+			indexToChangesetMap[index] = changeset;
+			indexToFileMap[index] = modifiedFile;
+			index++;
 		}
 
 		return {
@@ -100,64 +108,68 @@ export const ChangesetFileList = (props: {
 	const changedFiles = React.useMemo(() => {
 		const files: any[] = [];
 		let index = 0;
-		for (let changeset of review.reviewChangesets) {
-			if (checkpoint !== undefined && changeset.checkpoint !== checkpoint) continue;
-			if (props.showRepoLabels) {
-				const repoName = safe(() => getById(derivedState.repos, changeset.repoId).name) || "";
-				if (repoName) {
-					files.push(
-						<div style={{ marginBottom: "5px" }}>
-							<Icon name="repo" /> {repoName} &nbsp; <Icon name="git-branch" /> {changeset.branch}
-						</div>
-					);
-				}
+		const changeset = checkpoint !== undefined
+			? review.reviewChangesets.find(rc => rc.checkpoint === checkpoint)
+			: review.reviewChangesets[review.reviewChangesets.length - 1];
+		const modifiedFiles = checkpoint !== undefined
+			? changeset!.modifiedFilesInCheckpoint
+			: changeset!.modifiedFiles
+
+		if (props.showRepoLabels) {
+			const repoName = safe(() => getById(derivedState.repos, changeset!.repoId).name) || "";
+			if (repoName) {
+				files.push(
+					<div style={{ marginBottom: "5px" }}>
+						<Icon name="repo" /> {repoName} &nbsp; <Icon name="git-branch" /> {changeset!.branch}
+					</div>
+				);
 			}
-			const visitedFilesInReview =
-				visitedFiles[review.id + ":" + checkpoint] ||
-				(visitedFiles[review.id + ":" + checkpoint] = {});
-			files.push(
-				...changeset.modifiedFiles.map(f => {
-					const visitedKey = [changeset.repoId, f.file].join(":");
-					const selected = (derivedState.matchFile || "").endsWith(f.file);
-					const visited = visitedFilesInReview[visitedKey];
-					if (selected && !visited) {
-						visitedFilesInReview[visitedKey] = NOW;
-						visitedFilesInReview._latest = index;
-						localStore.set(VISITED_REVIEW_FILES, visitedFiles);
-					}
-
-					let icon;
-					// if we're loading, show a spinner
-					if (loading) icon = "sync";
-					// noOnClick means no icon indicators and no click handler
-					else if (noOnClick) icon = null;
-					// this file is currently selected, and visible in diff view
-					else if (selected) icon = "arrow-right";
-					// this file has been visitied during the review
-					else if (visited) icon = "ok";
-					// not yet visited, but part of the review
-					else icon = "circle";
-
-					const iconClass = loading ? "file-icon spin" : "file-icon";
-					// i is a temp variable to create the correct scope binding
-					const i = index++;
-					return (
-						<ChangesetFile
-							selected={selected}
-							noHover={noOnClick}
-							icon={icon && <Icon name={icon} className={iconClass} />}
-							onClick={async e => {
-								if (noOnClick) return;
-								e.preventDefault();
-								goFile(i);
-							}}
-							key={changeset.checkpoint + ":" + f.file}
-							{...f}
-						/>
-					);
-				})
-			);
 		}
+		const visitedFilesInReview =
+			visitedFiles[review.id + ":" + checkpoint] ||
+			(visitedFiles[review.id + ":" + checkpoint] = {});
+		files.push(
+			...modifiedFiles.map(f => {
+				const visitedKey = [changeset!.repoId, f.file].join(":");
+				const selected = (derivedState.matchFile || "").endsWith(f.file);
+				const visited = visitedFilesInReview[visitedKey];
+				if (selected && !visited) {
+					visitedFilesInReview[visitedKey] = NOW;
+					visitedFilesInReview._latest = index;
+					localStore.set(VISITED_REVIEW_FILES, visitedFiles);
+				}
+
+				let icon;
+				// if we're loading, show a spinner
+				if (loading) icon = "sync";
+				// noOnClick means no icon indicators and no click handler
+				else if (noOnClick) icon = null;
+				// this file is currently selected, and visible in diff view
+				else if (selected) icon = "arrow-right";
+				// this file has been visitied during the review
+				else if (visited) icon = "ok";
+				// not yet visited, but part of the review
+				else icon = "circle";
+
+				const iconClass = loading ? "file-icon spin" : "file-icon";
+				// i is a temp variable to create the correct scope binding
+				const i = index++;
+				return (
+					<ChangesetFile
+						selected={selected}
+						noHover={noOnClick}
+						icon={icon && <Icon name={icon} className={iconClass} />}
+						onClick={async e => {
+							if (noOnClick) return;
+							e.preventDefault();
+							goFile(i);
+						}}
+						key={changeset!.checkpoint + ":" + f.file}
+						{...f}
+					/>
+				);
+			})
+		);
 		return files;
 	}, [review, loading, noOnClick, derivedState.matchFile, latest, checkpoint]);
 
