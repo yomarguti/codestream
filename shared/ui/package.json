@@ -7,6 +7,8 @@
 	"scripts": {
 		"clean:ci": "git clean -xdf",
 		"test": "jest --verbose",
+		"test-watch": "node --inspect ./node_modules/jest/bin/jest.js --runInBand --verbose --watch",
+		"test-debug": "node --inspect ./node_modules/jest/bin/jest.js --runInBand --verbose",
 		"sb": "start-storybook -p 6006",
 		"build-storybook": "build-storybook"
 	},

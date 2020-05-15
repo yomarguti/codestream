@@ -62,7 +62,7 @@ export const markdownify = (text: string, options?: { excludeParagraphWrap: bool
 						.replace(/<\/p>\n$/, "</p>")
 						.replace(/<\/p>\n/g, "</p><br/>")
 						.replace(/<br\/><\/blockquote>/g, "</blockquote>");
-
+		// console.log('markdownify input/output', text, replaced);
 		if (text.trim().match(/^(:[\w_+]+:|\s)+$/))
 			return "<span class='only-emoji'>" + replaced + "</span>";
 		else return replaced;
@@ -105,7 +105,7 @@ export function useMarkdownifyToHtml() {
 					return match;
 				});
 			}
-
+			// console.log('useMarkdownifyToHtml input/output', text, html);
 			return html;
 		},
 		[derivedState.usernames]

@@ -13,7 +13,7 @@ import {
 	debounceAndCollectToAnimationFrame,
 	emptyArray,
 	replaceHtml,
-	escapeHtml
+	asPastedText
 } from "../utils";
 import { AtMentionsPopup } from "./AtMentionsPopup";
 import EmojiPicker from "./EmojiPicker";
@@ -124,13 +124,7 @@ export class MessageInput extends React.Component<Props, State> {
 			this._contentEditable.htmlEl.addEventListener("paste", function(e) {
 				e.preventDefault();
 				let text = e.clipboardData!.getData("text/plain");
-				// if we think this might be code, we should treat it as code
-				// if it's multiple lines and all of them start with whitespace
-				// then add the code fence markdown. this regexp matches
-				// any non-whitespace character at the beginning of a line.
-				// if it doesn't match, then every line must start w/whitespace
-				const lines = text.split("\n").length;
-				if (lines > 1 && !text.match(/^\S/m)) text = "```" + text + "```";
+				text = asPastedText(text);
 				document.execCommand("insertText", false, text);
 				// const text = e.clipboardData!.getData("text/plain");
 				// document.execCommand("insertHTML", false, text.replace(/\n/g, "<br>"));

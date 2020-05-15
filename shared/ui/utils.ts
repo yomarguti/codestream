@@ -364,25 +364,55 @@ const htmlEscapeCharMap = {
  * @param  {string} text
  */
 export function escapeHtml(text: string) {
-	return text.replace(/[&<>"']/g, c => htmlEscapeCharMap[c]).replace(/\n/g, "<br/>");
+	const result = text.replace(/[&<>"']/g, c => htmlEscapeCharMap[c]).replace(/\n/g, "<br/>");
+	// console.log("escapeHtml input/output", text, result);
+	return result;
 }
 
+// https://stackoverflow.com/questions/18552336/prevent-contenteditable-adding-div-on-enter-chrome
+// https://stackoverflow.com/questions/6023307/dealing-with-line-breaks-on-contenteditable-div
+// https://stackoverflow.com/questions/22677931/react-js-onchange-event-for-contenteditable
+// interesting implementation: https://gist.github.com/nathansmith/86b5d4b23ed968a92fd4
 /**
-* used to take the contents of a contenteditable div, and save it
-* more like the plaintext that the user entered
-* @param  {string} text
-*/
-export function replaceHtml(text: string) {
-	// console.warn("INPUT: ", text);
+ * used to take the contents of a contenteditable div, and save it
+ * more like the plaintext that the user entered. In many cases
+ * this is called before saving to the server
+ * @param  {string} text
+ */
+export function replaceHtml(text: string) {	
 	const domParser = new DOMParser();
 	// contentEditable renders a blank line as "<div><br></div>""
 	// and a line with only "foo" as "<div>foo</div>"
 	// both of those things result in newlines, so we convert them to \n
-	const replaceRegex = /<div><br\/?><\/div>|<br\/?>|<div>/g;
-	const result = domParser.parseFromString(text.replace(replaceRegex, "\n"), "text/html")
-		.documentElement.textContent;
-	// console.warn("OUTPUT: ", result);
-	return result;
+	const reconstructedText = text
+		.split("<div>")
+		.map(_ => _.replace(/<\/div>/, "").replace(/<br\/?>/g, "\n"))
+		.join("\n");
+
+	const parsed = domParser.parseFromString(reconstructedText, "text/html").documentElement
+		.textContent;
+	// console.log('replaceHtml input/output', text, result);
+	return parsed;
+}
+
+/**
+ * handles text from clipboard
+ * @param  {string} text
+ */
+export function asPastedText(text: string) {
+	if (text == null) return text;
+	// if we think this might be code, we should treat it as code
+	// if it's multiple lines and all of them start with whitespace
+	// then add the code fence markdown. this regexp matches
+	// any non-whitespace character at the beginning of a line.
+	// if it doesn't match, then every line must start w/whitespace
+	// the second regex ensures there is at least 1 non-whitespace character
+	// (don't want to fence seemingly empty text)
+	const lines = text.split("\n").length;
+	if (lines > 1 && !text.match(/^\S/m) && text.match(/(.|\s)*\S(.|\s)*/)) text = "```" + text + "```";
+
+	// console.log("asPastedText result=", text);
+	return text;
 }
 
 export function uriToFilePath(uri: URI | string) {
