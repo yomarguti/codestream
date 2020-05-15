@@ -44,13 +44,13 @@ class ReviewService(private val project: Project) {
             .also { it.isAccessible = true }
     private var diffChain: DiffRequestChain? = null
 
-    suspend fun showDiff(reviewId: String, repoId: String, path: String) {
+    suspend fun showDiff(reviewId: String, repoId: String, checkpoint: Integer?, path: String) {
         val agent = project.agentService ?: return
 
         if (reviewDiffEditor == null || diffChain == null) {
             val review = agent.getReview(reviewId)
             val title = review.title
-            val contents = agent.getAllReviewContents(GetAllReviewContentsParams(reviewId))
+            val contents = agent.getAllReviewContents(GetAllReviewContentsParams(reviewId, checkpoint))
 
             val diffRequests = contents.repos.flatMap { repo ->
                 repo.files.map { file ->

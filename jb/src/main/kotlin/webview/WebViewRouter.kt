@@ -212,7 +212,7 @@ class WebViewRouter(val project: Project) {
         val request = gson.fromJson<ReviewShowDiffRequest>(message.params!!)
         val reviewService = project.reviewService ?: return
 
-        reviewService.showDiff(request.reviewId, request.repoId, request.path)
+        reviewService.showDiff(request.reviewId, request.repoId, request.checkpoint, request.path)
     }
 
     private suspend fun reviewShowLocalDiff(message: WebViewMessage) {
