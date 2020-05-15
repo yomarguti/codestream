@@ -518,16 +518,18 @@ export class ScmManager {
 						}
 					}
 
-					const numStat: GitNumStat = {
-						oldFile: latestCommitToRightDiff.newFileName!,
-						file: numStatFromNewestCommitShaInOrBeforeReview.file,
-						linesAdded,
-						linesRemoved,
-						status: FileStatus.modified,
-						statusX: FileStatus.modified,
-						statusY: FileStatus.modified
-					};
-					modifiedFiles.push(numStat);
+					if (linesAdded || linesRemoved) {
+						const numStat: GitNumStat = {
+							oldFile: latestCommitToRightDiff.newFileName!,
+							file: numStatFromNewestCommitShaInOrBeforeReview.file,
+							linesAdded,
+							linesRemoved,
+							status: FileStatus.modified,
+							statusX: FileStatus.modified,
+							statusY: FileStatus.modified
+						};
+						modifiedFiles.push(numStat);
+					}
 				} else {
 					// in the last checkpoint where it was included, file had no unpushed changes
 					// TODO cache it

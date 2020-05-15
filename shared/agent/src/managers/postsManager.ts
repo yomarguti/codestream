@@ -1130,13 +1130,20 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			const statusFromBeginningOfReview = await scmManager.getRepoStatus({
 				includeSaved,
 				includeStaged,
-				uri: scm.repoPath,
+				uri: "file://" + scm.repoPath,
 				currentUserEmail: "", // FIXME
 				startCommit
 			});
-			// FIXME - we also need to add here all modifiedFiles from the previous checkpoint that are
-			//  not included in statusFromBeginningOfReview.scm!.modifiedFiles
-			modifiedFiles = statusFromBeginningOfReview.scm!.modifiedFiles;
+			modifiedFiles = statusFromBeginningOfReview.scm!.modifiedFiles.filter(
+				mf => !excludedFiles.includes(mf.file)
+			);
+			for (const previousChangeset of review.reviewChangesets.reverse()) {
+				for (const modifiedFileInPreviousChangeset of previousChangeset.modifiedFiles) {
+					if (!modifiedFiles.find(mf => mf.file === modifiedFileInPreviousChangeset.file)) {
+						modifiedFiles.push(modifiedFileInPreviousChangeset);
+					}
+				}
+			}
 		} else {
 			modifiedFiles = modifiedFilesInCheckpoint;
 		}

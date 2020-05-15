@@ -335,7 +335,9 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		if (request.$addToSet && request.$addToSet.reviewChangesets) {
 			const { posts } = SessionContainer.instance();
 			const repoChanges = request.$addToSet.reviewChangesets as CSRepoChange[];
-			const reviewChangesets = await Promise.all(repoChanges.map(rc => posts.buildChangeset(rc)));
+			const reviewChangesets = await Promise.all(
+				repoChanges.map(rc => posts.buildChangeset(rc, request.id))
+			);
 			this._diffs.delete(request.id);
 			request.$addToSet.reviewChangesets = reviewChangesets;
 		}
