@@ -11,11 +11,22 @@ import { SignupType } from "./actions";
 
 interface ConnectedProps {
 	pluginVersion: string;
+	whichServer: string;
 }
 
 interface Props extends ConnectedProps, DispatchProp {}
 
-const mapStateToProps = (state: CodeStreamState) => ({ pluginVersion: state.pluginVersion });
+const mapStateToProps = (state: CodeStreamState) => {
+	let whichServer = state.configs.serverUrl;
+	const serverMatch = whichServer.match(/^https:\/\/(.*?)-?api\.codestream\.(us|com)\/?$/);
+	if (serverMatch) {
+		whichServer = "CodeStream's cloud service";
+		if (serverMatch[1]) {
+			whichServer += ` (${serverMatch[1].toUpperCase()})`;
+		}
+	}
+	return { pluginVersion: state.pluginVersion, whichServer };
+};
 
 export const NewUserEntry = (connect(mapStateToProps) as any)((props: Props) => {
 	const onClickCreateTeam = (event: React.SyntheticEvent) => {
@@ -72,8 +83,10 @@ export const NewUserEntry = (connect(mapStateToProps) as any)((props: Props) => 
 								</p>
 							</div>
 							<div>
-								<p style={{ opacity: 0.5, fontSize: ".9em" }}>
+								<p style={{ opacity: 0.5, fontSize: ".9em", textAlign: "center" }}>
 									CodeStream Version {props.pluginVersion}
+									<br />
+									Connected to {props.whichServer}
 								</p>
 							</div>
 						</div>
