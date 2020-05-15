@@ -26,7 +26,7 @@ export const ChangesetFileList = (props: {
 	loading?: boolean;
 	noOnClick?: boolean;
 	showRepoLabels?: boolean;
-	checkpoint: number | "all";
+	checkpoint?: number;
 }) => {
 	const { review, noOnClick, loading, checkpoint } = props;
 	const dispatch = useDispatch<Dispatch>();
@@ -101,7 +101,7 @@ export const ChangesetFileList = (props: {
 		const files: any[] = [];
 		let index = 0;
 		for (let changeset of review.reviewChangesets) {
-			if (checkpoint !== "all" && changeset.checkpoint !== checkpoint) continue;
+			if (checkpoint !== undefined && changeset.checkpoint !== checkpoint) continue;
 			if (props.showRepoLabels) {
 				const repoName = safe(() => getById(derivedState.repos, changeset.repoId).name) || "";
 				if (repoName) {

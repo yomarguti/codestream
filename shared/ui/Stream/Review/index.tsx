@@ -493,7 +493,7 @@ const BaseReview = (props: BaseReviewProps) => {
 			author: state.users[props.review.creatorId]
 		};
 	}, shallowEqual);
-	const [checkpoint, setCheckpoint] = React.useState<number | "all">("all");
+	const [checkpoint, setCheckpoint] = React.useState<number | undefined>(undefined);
 	const hasTags = props.tags && props.tags.length > 0;
 	const hasReviewers = props.reviewers != null && props.reviewers.length > 0;
 	const approvalLabel =
@@ -540,7 +540,7 @@ const BaseReview = (props: BaseReviewProps) => {
 		) + 1;
 
 	const dropdownItems: any = [
-		{ label: "All Changed Files", action: () => setCheckpoint("all") },
+		{ label: "All Changed Files", action: () => setCheckpoint(undefined) },
 		{ label: "-" }
 	];
 	for (var i = 0; i < numCheckpoints; i++) {
@@ -549,7 +549,7 @@ const BaseReview = (props: BaseReviewProps) => {
 		dropdownItems.push({ label, action: () => setCheckpoint(set) });
 	}
 	const dropdownLabel =
-		checkpoint === "all"
+		checkpoint === undefined
 			? "All Changed Files"
 			: checkpoint === 0
 			? "Initial Review"

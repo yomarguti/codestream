@@ -3,14 +3,14 @@ import { ReviewPlus } from "@codestream/protocols/agent";
 import Icon from "../Icon";
 import { markdownify } from "../Markdowner";
 
-export const CommitList = (props: { review: ReviewPlus; checkpoint: number | "all" }) => {
+export const CommitList = (props: { review: ReviewPlus; checkpoint: number | undefined }) => {
 	const { review, checkpoint } = props;
 
 	const changesetLines = React.useMemo(() => {
 		const lines: any[] = [];
 		let index = 0;
 		for (let changeset of review.reviewChangesets) {
-			if (checkpoint !== "all" && changeset.checkpoint !== checkpoint) continue;
+			if (checkpoint !== undefined && changeset.checkpoint !== checkpoint) continue;
 			if (changeset.includeSaved || changeset.includeStaged) {
 				lines.push(
 					<div

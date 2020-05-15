@@ -368,7 +368,7 @@ class ReviewForm extends React.Component<Props, State> {
 	};
 
 	async handleRepoChange(repoUri?) {
-		const { teamMates, currentUser, isEditing, isAmending } = this.props;
+		const { teamMates, currentUser, isEditing, isAmending, editingReview } = this.props;
 		const { includeSaved, includeStaged, startCommit, prevEndCommit } = this.state;
 
 		const uri = repoUri || this.state.repoUri;
@@ -378,7 +378,8 @@ class ReviewForm extends React.Component<Props, State> {
 			includeStaged,
 			includeSaved,
 			currentUserEmail: currentUser.email,
-			prevEndCommit
+			prevEndCommit,
+			reviewId: editingReview && editingReview.id
 		});
 
 		this._disposableDidChangeDataNotification &&

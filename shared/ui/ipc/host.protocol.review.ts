@@ -3,7 +3,7 @@ import { IpcRoutes } from "./webview.protocol";
 
 export interface ReviewShowDiffRequest {
 	reviewId: string;
-	checkpoint: number | "all";
+	checkpoint: number | undefined;
 	repoId: string;
 	path: string;
 }

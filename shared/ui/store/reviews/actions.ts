@@ -206,7 +206,7 @@ export const fetchReview = (reviewId: string) => async dispatch => {
 
 export const showDiff = (
 	reviewId: string,
-	checkpoint: number | "all",
+	checkpoint: number | undefined,
 	repoId: string,
 	path: string
 ) => async dispatch => {
