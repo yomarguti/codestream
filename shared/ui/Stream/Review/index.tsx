@@ -702,7 +702,9 @@ const BaseReview = (props: BaseReviewProps) => {
 								<MetaDescriptionForAssignees>
 									<ChangesetFileList
 										review={review}
-										loading={props.headerError ? false : !props.canStartReview}
+										loading={
+											props.headerError && props.headerError.message ? false : !props.canStartReview
+										}
 										noOnClick={!props.canStartReview}
 									/>
 								</MetaDescriptionForAssignees>

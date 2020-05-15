@@ -31,6 +31,7 @@ import {
 import { editCodemark } from "@codestream/webview/store/codemarks/actions";
 import Tag from "../Tag";
 import { ProfileLink } from "@codestream/webview/src/components/ProfileLink";
+import { AddReactionIcon, Reactions } from "../Reactions";
 
 export interface ReplyProps {
 	author: Partial<CSUser>;
@@ -41,6 +42,7 @@ export interface ReplyProps {
 	showParentPreview?: boolean;
 	editingPostId?: string;
 	threadId?: string; // only set for nested replies
+	lastNestedReply?: boolean;
 }
 
 const AuthorInfo = styled.div`
@@ -61,6 +63,7 @@ const Root = styled.div`
 	padding-top: 10px;
 	display: flex;
 	flex-direction: column;
+	position: relative;
 	// not sure if there is a better way to deal with this,
 	// but if the headshot is taller than the copy (i.e. in
 	// a zero-height post such as an emote) we end up with
@@ -70,8 +73,7 @@ const Root = styled.div`
 	${AuthorInfo} {
 		font-weight: 700;
 	}
-
-	${KebabIcon}, .icon.reply {
+	${KebabIcon}, .icon.reply, ${AddReactionIcon} {
 		visibility: hidden;
 	}
 	.icon.reply {
@@ -79,20 +81,65 @@ const Root = styled.div`
 		margin-right: 10px;
 		vertical-align: -2px;
 	}
+	${AddReactionIcon} {
+		vertical-align: -2px;
+		margin-left: 5px;
+		margin-right: 5px;
+	}
+	.bar-left-not-last-child {
+		width: 2px;
+		height: 100%;
+		position: absolute;
+		top: 0px;
+		left: 9px;
+		background: var(--text-color);
+		opacity: 0.25;
+	}
+	.bar-left-last-child {
+		width: 2px;
+		height: 27px;
+		position: absolute;
+		top: 0px;
+		left: 9px;
+		background: var(--text-color);
+		opacity: 0.25;
+	}
+	.bar-left-connector {
+		width: 19px;
+		height: 2px;
+		position: absolute;
+		top: 25px;
+		left: 11px;
+		background: var(--text-color);
+		opacity: 0.25;
+	}
 `;
 
 const ReplyBody = styled.span`
 	display: flex;
 	flex-direction: column;
+	position: relative;
 
-	:hover ${KebabIcon}, :hover .icon.reply {
+	:hover ${KebabIcon}, :hover .icon.reply,
+	:hover ${AddReactionIcon} {
 		visibility: visible;
 	}
-	:hover .icon.reply {
+	:hover .icon.reply,
+	:hover ${AddReactionIcon} {
 		opacity: 0.6;
 	}
-	:hover .icon.reply:hover {
+	:hover .icon.reply:hover,
+	:hover ${AddReactionIcon}:hover {
 		opacity: 1;
+	}
+	.bar-left-parent {
+		width: 2px;
+		height: calc(100% - 20px);
+		position: absolute;
+		top: 20px;
+		left: 9px;
+		background: var(--text-color);
+		opacity: 0.25;
 	}
 `;
 
@@ -105,7 +152,7 @@ const ParentPreview = styled.span`
 `;
 
 const Content = styled.div`
-	margin-left: 23px;
+	margin-left: 27px;
 	display: flex;
 	flex-direction: column;
 	> *:not(:last-child) {
@@ -141,6 +188,7 @@ const ComposeWrapper = styled.div.attrs(() => ({
 }))`
 	&&& {
 		padding: 0 !important;
+		padding-left: 25px !important;
 	}
 `;
 
@@ -195,6 +243,8 @@ export const Reply = (props: ReplyProps) => {
 	});
 
 	const isNestedReply = props.showParentPreview && parentPost.parentPostId != null;
+	const numNestedReplies = props.nestedReplies ? props.nestedReplies.length : 0;
+	const hasNestedReplies = numNestedReplies > 0;
 
 	const postText = codemark != null ? codemark.text : props.post.text;
 	const escapedPostText = escapeHtml(postText);
@@ -248,10 +298,14 @@ export const Reply = (props: ReplyProps) => {
 
 	return (
 		<Root className={props.className}>
+			{props.threadId && !props.lastNestedReply && <div className="bar-left-not-last-child" />}
+			{props.threadId && props.lastNestedReply && <div className="bar-left-last-child" />}
+			{props.threadId && <div className="bar-left-connector" />}
 			<ReplyBody>
+				{hasNestedReplies && <div className="bar-left-parent" />}
 				<AuthorInfo style={{ fontWeight: 700 }}>
 					<ProfileLink id={props.author.id || ""}>
-						<Headshot person={props.author} />{" "}
+						<Headshot size={20} person={props.author} />{" "}
 					</ProfileLink>
 					<span>
 						{props.author.username}
@@ -265,9 +319,11 @@ export const Reply = (props: ReplyProps) => {
 						<Icon
 							title="Reply"
 							name="reply"
+							placement="top"
 							className="reply clickable"
 							onClick={() => setReplyingToPostId(props.threadId || props.post.id)}
 						/>
+						{!isPending(props.post) && <AddReactionIcon post={props.post} />}
 						{renderedMenu}
 						{props.renderMenu && (
 							<KebabIcon
@@ -349,22 +405,29 @@ export const Reply = (props: ReplyProps) => {
 						{markers}
 					</>
 				)}
+				{!isPending(props.post) && <Reactions post={props.post} />}
 			</ReplyBody>
 			{props.nestedReplies &&
 				props.nestedReplies.length > 0 &&
-				props.nestedReplies.map(r => (
+				props.nestedReplies.map((r, index) => (
 					<NestedReply
 						editingPostId={props.editingPostId}
 						key={r.id}
 						post={r}
 						threadId={props.post.id}
+						lastNestedReply={index === numNestedReplies - 1}
 					/>
 				))}
 		</Root>
 	);
 };
 
-const NestedReply = (props: { post: Post; threadId: string; editingPostId?: string }) => {
+const NestedReply = (props: {
+	post: Post;
+	threadId: string;
+	editingPostId?: string;
+	lastNestedReply?: boolean;
+}) => {
 	const dispatch = useDispatch();
 	const { setReplyingToPostId, setEditingPostId } = React.useContext(RepliesToPostContext);
 	const author = useSelector((state: CodeStreamState) => state.users[props.post.creatorId]);
@@ -414,13 +477,14 @@ const NestedReply = (props: { post: Post; threadId: string; editingPostId?: stri
 			post={props.post}
 			editingPostId={props.editingPostId}
 			threadId={props.threadId}
+			lastNestedReply={props.lastNestedReply}
 			renderMenu={(target, close) => <Menu target={target} action={close} items={menuItems} />}
 		/>
 	);
 };
 
 const NestedReplyRoot = styled(Reply)`
-	padding-top: 10px;
+	padding-top: 15px;
 	padding-left: 25px;
 	padding-bottom: 0;
 `;

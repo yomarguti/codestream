@@ -207,7 +207,6 @@ export class CodemarkDetails extends React.Component<Props, State> {
 								multiCompose={true}
 							/>
 							<div style={{ display: "flex" }}>
-								<div style={{ opacity: 0.4, paddingTop: "3px" }}>Markdown is supported</div>
 								<div style={{ textAlign: "right", flexGrow: 1 }}>
 									<Tooltip title={submitTip} placement="bottom" delay={1}>
 										<Button

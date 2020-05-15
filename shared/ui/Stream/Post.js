@@ -37,6 +37,8 @@ import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { HostApi } from "../webview-api";
 import { includes as _includes } from "lodash-es";
 import { ProfileLink } from "../src/components/ProfileLink";
+import EmojiPicker from "./EmojiPicker";
+import { AddReactionIcon, Reactions } from "./Reactions";
 
 class Post extends React.Component {
 	state = {
@@ -264,10 +266,7 @@ class Post extends React.Component {
 					: "Start a Thread";
 			menuItems.push({ label: threadLabel, action: "make-thread" });
 		}
-		// menuItems.push({ label: "Add Reaction", action: "add-reaction" });
 
-		// menuItems.push({ label: "Quote", action: "quote" });
-		// { label: "Add Reaction", action: "add-reaction" },
 		let isPinnedReply = false;
 		if (parentPostCodemark) {
 			if ((parentPostCodemark.pinnedReplies || []).includes(post.id)) {
@@ -420,7 +419,8 @@ class Post extends React.Component {
 					{/*!this.props.showDetails &&*/ codeBlock}
 					{this.renderAttachments(post)}
 				</div>
-				{this.renderReactions(post)}
+				<Reactions post={post} />
+				{/*this.renderReactions(post)*/}
 				{/*this.renderReplyCount(post)*/}
 			</div>
 		);
@@ -663,36 +663,13 @@ class Post extends React.Component {
 
 	renderIcons = () => {
 		if (this.props.collapsed) return null;
-		// return (
-		// 	<div className="align-right">
-		// 		<Tooltip title="View Details" placement="above">
-		// 			<Icon name="chevron-right" className="chevron-right" onClick={this.goToThread} />
-		// 		</Tooltip>
-		// 	</div>
-		// );
-		else
-			return (
-				<div className="align-right">
-					{/*getFeatures().inline && (
-						<Tooltip title="Pin as Annotation" placement="bottomRight">
-							<span>
-								<Icon name="pin" className="pin" onClick={this.handleStarClick} />
-							</span>
-						</Tooltip>
-					)*/}
-					{/*
-					<Tooltip title="Add Reaction" placement="bottomRight">
-						<span>
-							<Icon name="smiley" className="smiley" onClick={this.handleReactionClick} />
-						</span>
-					</Tooltip>
-					{this.state.emojiOpen && (
-						<EmojiPicker addEmoji={this.addReaction} target={this.state.emojiTarget} />
-					)}
-					*/}
-					<Icon name="kebab-vertical" className="gear clickable" onClick={this.handleMenuClick} />
-				</div>
-			);
+
+		return (
+			<div className="align-right">
+				<AddReactionIcon post={this.props.post} />
+				<Icon name="kebab-vertical" className="gear clickable" onClick={this.handleMenuClick} />
+			</div>
+		);
 	};
 
 	renderEmote = post => {
@@ -803,31 +780,6 @@ class Post extends React.Component {
 				</div>
 			</div>
 		);
-	};
-
-	addReaction = emoji => {
-		this.setState({ emojiOpen: false });
-		if (!emoji || !emoji.id) return;
-
-		this.toggleReaction(emoji.id);
-	};
-
-	postHasReactionFromUser = emojiId => {
-		const { post, currentUserId } = this.props;
-		return (
-			post.reactions && post.reactions[emojiId] && _includes(post.reactions[emojiId], currentUserId)
-		);
-	};
-
-	toggleReaction = (emojiId, event) => {
-		let { post } = this.props;
-
-		if (event) event.stopPropagation();
-
-		if (!emojiId) return;
-
-		const value = this.postHasReactionFromUser(emojiId) ? false : true;
-		this.props.reactToPost(post, emojiId, value);
 	};
 
 	renderReactions = post => {

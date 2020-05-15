@@ -26,7 +26,7 @@ const ComposeWrapper = styled.div.attrs(() => ({
 `;
 
 const InlineMessageContainer = styled.div`
-	padding: 0 25px !important;
+	padding: 10px 25px 0 50px !important;
 	margin-top: -15px; // need to make up for the bottom margin from the preceding reply
 `;
 

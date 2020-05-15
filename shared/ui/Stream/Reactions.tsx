@@ -83,7 +83,7 @@ export const AddReactionIcon = styled((props: { post: PostPlus; className?: stri
 		<span className={props.className}>
 			<Tooltip title="Add Reaction" placement="topRight">
 				<span>
-					<Icon name="smiley" className="smiley" onClick={handleReactionClick} />
+					<Icon name="smiley" className="smiley clickable" onClick={handleReactionClick} />
 				</span>
 			</Tooltip>
 			{emojiTarget && <EmojiPicker addEmoji={emoji => react(emoji.id)} target={emojiTarget} />}
@@ -142,7 +142,7 @@ export const Reactions = styled((props: { post: PostPlus; className?: string }) 
 			{atLeastOneReaction && (
 				<Tooltip title="Add Reaction" key="add" placement="top">
 					<Reaction className="add-reaction" onClick={handleReactionClick}>
-						<Icon name="smiley" className="add-reaction-icon" onClick={handleReactionClick} />
+						<Icon name="smiley" onClick={handleReactionClick} />
 					</Reaction>
 				</Tooltip>
 			)}
@@ -150,7 +150,7 @@ export const Reactions = styled((props: { post: PostPlus; className?: string }) 
 		</div>
 	);
 })`
-	padding: 5px 0 0 20px;
+	padding: 5px 0 0 25px;
 	&:hover {
 		.add-reaction {
 			opacity: 1;
