@@ -1,7 +1,9 @@
+import { createPatch, parsePatch, applyPatch } from "diff";
 import * as paths from "path";
 import { TextDocument } from "vscode-languageserver-types";
 import { URI } from "vscode-uri";
 import { Ranges } from "../api/extensions";
+import { GitNumStat } from "../git/models/numstat";
 import { Logger } from "../logger";
 import {
 	CoAuthors,
@@ -38,6 +40,7 @@ import {
 	RepoScmStatus
 } from "../protocol/agent.protocol";
 import { FileSystem, Iterables, log, lsp, lspHandler, Strings } from "../system";
+import { xfs } from "../xfs";
 import { Container, SessionContainer } from "./../container";
 import { ReviewsManager } from "./reviewsManager";
 
@@ -231,15 +234,20 @@ export class ScmManager {
 
 	@lspHandler(GetRepoScmStatusRequestType)
 	@log()
-	async getRepoStatus({
-		uri: documentUri,
-		includeStaged,
-		includeSaved,
-		startCommit,
-		prevEndCommit,
-		currentUserEmail
-	}: GetRepoScmStatusRequest): Promise<GetRepoScmStatusResponse> {
+	async getRepoStatus(request: GetRepoScmStatusRequest): Promise<GetRepoScmStatusResponse> {
 		const cc = Logger.getCorrelationContext();
+		let {
+			uri: documentUri,
+			includeStaged,
+			includeSaved,
+			startCommit,
+			reviewId,
+			currentUserEmail
+		} = request;
+
+		if (reviewId) {
+			return this.getAmendedRepoStatus(request);
+		}
 
 		const uri = URI.parse(documentUri);
 
@@ -278,7 +286,7 @@ export class ScmManager {
 					}
 
 					branch = await git.getCurrentBranch(uri.fsPath);
-					if (branch) commits = await git.getCommitsOnBranch(repoPath, branch, prevEndCommit);
+					if (branch) commits = await git.getCommitsOnBranch(repoPath, branch);
 
 					const repo = await git.getRepositoryByFilePath(repoPath);
 					repoId = repo && repo.id;
@@ -418,6 +426,239 @@ export class ScmManager {
 					  }
 					: undefined,
 			error: gitError
+		};
+	}
+
+	@log()
+	async getAmendedRepoStatus({
+		uri: documentUri,
+		includeStaged,
+		includeSaved,
+		reviewId
+	}: GetRepoScmStatusRequest): Promise<GetRepoScmStatusResponse> {
+		const cc = Logger.getCorrelationContext();
+		const { git, reviews } = SessionContainer.instance();
+
+		const review = await reviews.getById(reviewId!);
+		const uri = URI.parse(documentUri);
+		const repoPath = (await git.getRepoRoot(uri.fsPath)) || "";
+		const repo = await git.getRepositoryByFilePath(repoPath);
+		if (!repo || !repo.id) throw new Error(`Cannot determine repo at ${repoPath}`);
+		const branch = await git.getCurrentBranch(repoPath);
+		if (!branch) throw new Error(`Cannot determine current branch at ${repoPath}`);
+		const gitRemotes = await git.getRepoRemotes(repoPath);
+		const remotes = gitRemotes.map(r => ({ name: r.name, url: r.normalizedUrl }));
+
+		const diffs = await reviews.getDiffs(review.id, repo.id);
+
+		const changesets = review.reviewChangesets
+			.filter(cs => cs.repoId === repo!.id)
+			.sort((a, b) => b.checkpoint - a.checkpoint);
+
+		const modifiedFiles: GitNumStat[] = [];
+		const newestCommitInACheckpoint = changesets.reverse().find(c => c.commits && c.commits.length)
+			?.commits[0];
+		const newestCommitShaInOrBeforeReview =
+			newestCommitInACheckpoint?.sha || diffs.find(d => d.checkpoint === 0)?.diff.latestCommitSha;
+		if (!newestCommitShaInOrBeforeReview) {
+			throw new Error("Cannot determine newest commit in or before review");
+		}
+		const commits = await git.getCommitsOnBranch(repoPath, branch, newestCommitShaInOrBeforeReview);
+
+		const numStatsFromNewestCommitShaInOrBeforeReview = await git.getNumStat(
+			repoPath,
+			newestCommitShaInOrBeforeReview,
+			includeSaved,
+			includeStaged
+		);
+		for (const numStatFromNewestCommitShaInOrBeforeReview of numStatsFromNewestCommitShaInOrBeforeReview) {
+			const lastChangesetContainingFile = changesets
+				.reverse()
+				.find(c =>
+					c.modifiedFiles.find(mf => mf.file === numStatFromNewestCommitShaInOrBeforeReview.oldFile)
+				);
+			if (lastChangesetContainingFile) {
+				// file was included in at least one checkpoint
+				const diff = diffs.find(d => d.checkpoint === lastChangesetContainingFile.checkpoint)!.diff;
+				const latestCommitToRightDiff = diff.latestCommitToRightDiffs.find(
+					d => d.newFileName === numStatFromNewestCommitShaInOrBeforeReview.oldFile
+				);
+				if (latestCommitToRightDiff) {
+					// in the last checkpoint where it was included, file had uncommitted changes
+					const previousCheckpointLatestCommitContents = await git.getFileContentForRevision(
+						paths.join(repoPath, latestCommitToRightDiff.oldFileName!),
+						diff.latestCommitSha
+					);
+					const previousCheckpointRightContents = applyPatch(
+						Strings.normalizeFileContents(previousCheckpointLatestCommitContents || ""),
+						latestCommitToRightDiff
+					);
+					const filePath = paths.join(repoPath, numStatFromNewestCommitShaInOrBeforeReview.file);
+					const currentContents = includeSaved
+						? await xfs.readText(filePath)
+						: includeStaged
+						? // https://stackoverflow.com/questions/5153199/git-show-content-of-file-as-it-will-look-like-after-committing
+						  await git.getFileContentForRevision(filePath, "")
+						: await git.getFileContentForRevision(filePath, "HEAD");
+					const patch = createPatch(
+						numStatFromNewestCommitShaInOrBeforeReview.file,
+						Strings.normalizeFileContents(previousCheckpointRightContents),
+						Strings.normalizeFileContents(currentContents || ""),
+						"",
+						""
+					);
+					const sp = parsePatch(patch)[0];
+					let linesAdded = 0;
+					let linesRemoved = 0;
+					for (const hunk of sp.hunks) {
+						for (const line of hunk.lines) {
+							const operation = line.charAt(0);
+							if (operation === "+") linesAdded++;
+							if (operation === "-") linesRemoved++;
+						}
+					}
+
+					const numStat: GitNumStat = {
+						oldFile: latestCommitToRightDiff.newFileName!,
+						file: numStatFromNewestCommitShaInOrBeforeReview.file,
+						linesAdded,
+						linesRemoved,
+						status: FileStatus.modified,
+						statusX: FileStatus.modified,
+						statusY: FileStatus.modified
+					};
+					modifiedFiles.push(numStat);
+				} else {
+					// in the last checkpoint where it was included, file had no unpushed changes
+					// TODO cache it
+					const numStatsFromRightBaseSha = await git.getNumStat(
+						repoPath,
+						diff.rightBaseSha,
+						includeSaved,
+						includeStaged
+					);
+					const numStatFromRightBaseSha = numStatsFromRightBaseSha.find(
+						ns => ns.file === numStatFromNewestCommitShaInOrBeforeReview.file
+					);
+					modifiedFiles.push(numStatFromRightBaseSha!);
+				}
+			} else {
+				const changesetCheckpoint0 = changesets[0];
+				const diffCheckpoint0 = diffs.find(d => d.checkpoint === 0)!.diff;
+				const firstCommitShaInReview =
+					changesetCheckpoint0.commits[changesetCheckpoint0.commits.length - 1]?.sha;
+				const newestCommitShaBeforeFirstCheckpoint = firstCommitShaInReview
+					? firstCommitShaInReview + "^"
+					: diffCheckpoint0.latestCommitSha;
+				const numStatsFromNewestCommitShaBeforeFirstCheckpoint = await git.getNumStat(
+					repoPath,
+					newestCommitShaBeforeFirstCheckpoint,
+					includeSaved,
+					includeStaged
+				);
+				const numStatFromNewestCommitShaBeforeFirstCheckpoint = numStatsFromNewestCommitShaBeforeFirstCheckpoint.find(
+					ns => ns.file === numStatFromNewestCommitShaInOrBeforeReview.file
+				);
+				modifiedFiles.push(numStatFromNewestCommitShaBeforeFirstCheckpoint!);
+			}
+		}
+
+		const statusByFile = (await git.getStatus(repoPath, includeSaved)) || {};
+		for (const file of Object.keys(statusByFile)) {
+			const status = statusByFile[file];
+
+			// TODO handle previously included deletions
+			// TODO handle previously included untracked files that were deleted
+			if (status.status !== FileStatus.untracked) {
+				continue;
+			}
+
+			const lastChangesetContainingFile = changesets
+				.reverse()
+				.find(c => c.modifiedFiles.find(mf => mf.file === file));
+			if (lastChangesetContainingFile) {
+				// File  was included in a previous checkpoint, so we need to compute differences rather than listing it as new
+				const diff = diffs.find(d => d.checkpoint === lastChangesetContainingFile.checkpoint)!.diff;
+				const latestCommitToRightDiff = diff.latestCommitToRightDiffs.find(
+					d => d.newFileName === file
+				);
+				const previousCheckpointRightContents = applyPatch("", latestCommitToRightDiff!);
+
+				const filePath = paths.join(repoPath, file);
+				const currentContents = includeSaved
+					? await xfs.readText(filePath)
+					: includeStaged
+					? // https://stackoverflow.com/questions/5153199/git-show-content-of-file-as-it-will-look-like-after-committing
+					  await git.getFileContentForRevision(filePath, "")
+					: await git.getFileContentForRevision(filePath, "HEAD");
+				const patch = createPatch(
+					file,
+					Strings.normalizeFileContents(previousCheckpointRightContents),
+					Strings.normalizeFileContents(currentContents || ""),
+					"",
+					""
+				);
+				const sp = parsePatch(patch)[0];
+				let linesAdded = 0;
+				let linesRemoved = 0;
+				for (const hunk of sp.hunks) {
+					for (const line of hunk.lines) {
+						const operation = line.charAt(0);
+						if (operation === "+") linesAdded++;
+						if (operation === "-") linesRemoved++;
+					}
+				}
+
+				const numStat: GitNumStat = {
+					oldFile: file,
+					file: file,
+					linesAdded,
+					linesRemoved,
+					status: FileStatus.modified,
+					statusX: FileStatus.modified,
+					statusY: FileStatus.modified
+				};
+				modifiedFiles.push(numStat);
+			} else {
+				if (statusByFile[file].status === FileStatus.deleted) {
+					modifiedFiles.unshift({
+						oldFile: file,
+						file,
+						linesAdded: 0,
+						linesRemoved: 0,
+						...statusByFile[file]
+					} as GitNumStat);
+				} else {
+					modifiedFiles.push({
+						oldFile: file,
+						file,
+						linesAdded: 0,
+						linesRemoved: 0,
+						...statusByFile[file]
+					} as GitNumStat);
+				}
+			}
+		}
+
+		const savedFiles = (await git.getNumStatSaved(repoPath)).map(ns => ns.file);
+		const stagedFiles = (await git.getNumStatStaged(repoPath)).map(ns => ns.file);
+
+		return {
+			uri: uri.toString(),
+			scm: {
+				repoId: repo.id,
+				repoPath,
+				branch,
+				modifiedFiles,
+				savedFiles,
+				stagedFiles,
+				startCommit: newestCommitShaInOrBeforeReview,
+				authors: [],
+				commits,
+				remotes,
+				totalModifiedLines: 666 // FIXME
+			},
+			error: undefined
 		};
 	}
 

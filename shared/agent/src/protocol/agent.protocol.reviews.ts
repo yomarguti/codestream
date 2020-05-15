@@ -10,6 +10,7 @@ import {
 	CSGetReviewsResponse,
 	CSMarker,
 	CSMarkerLocations,
+	CSRepoChange,
 	CSRepository,
 	CSReview,
 	CSReviewChangesetBase,
@@ -55,9 +56,6 @@ export interface CreateShareableReviewRequest {
 	textDocuments?: TextDocumentIdentifier[];
 	entryPoint?: string;
 	mentionedUserIds?: string[];
-
-	// FIXME temporary hot garbage
-	shortCircuitAndReturnReviewChangesets?: boolean;
 }
 
 export interface CreateShareableReviewResponse {
@@ -133,6 +131,7 @@ export const SetReviewStatusRequestType = new RequestType<
 
 export interface UpdateReviewRequest extends CSUpdateReviewRequest {
 	id: string;
+	repoChanges?: CSRepoChange[];
 }
 
 export interface UpdateReviewResponse extends CSUpdateReviewResponse {}
@@ -160,7 +159,7 @@ export interface GetReviewContentsRequest {
 	reviewId: string;
 	repoId: string;
 	path: string;
-	checkpoint?: number | "all";
+	checkpoint?: number;
 }
 
 export interface GetReviewContentsLocalRequest {
@@ -191,6 +190,7 @@ export const GetReviewContentsLocalRequestType = new RequestType<
 
 export interface GetAllReviewContentsRequest {
 	reviewId: string;
+	checkpoint?: number;
 }
 
 export interface ReviewFileContents {

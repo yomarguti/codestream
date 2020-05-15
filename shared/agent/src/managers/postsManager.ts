@@ -55,6 +55,7 @@ import {
 	ReactToPostRequestType,
 	ReactToPostResponse,
 	ReportingMessageType,
+	RepoScmStatus,
 	ReviewPlus
 } from "../protocol/agent.protocol";
 import {
@@ -64,10 +65,12 @@ import {
 	CSDirectStream,
 	CSMarker,
 	CSPost,
+	CSRepoChange,
 	CSReview,
 	CSStream,
 	isCSReview,
 	ProviderType,
+	ReviewChangesetFileInfo,
 	StreamType
 } from "../protocol/api.protocol";
 import { providerDisplayNamesByNameKey } from "../providers/provider";
@@ -995,181 +998,16 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			reviewChangesets: []
 		};
 
-		const { git } = SessionContainer.instance();
 		let review: ReviewPlus | undefined;
 		let totalExcludedFilesCount = 0;
 
 		for (const repoChange of request.attributes.repoChanges!) {
-			const {
-				scm,
-				includeSaved,
-				includeStaged,
-				startCommit,
-				excludedFiles,
-				newFiles,
-				checkpoint
-			} = repoChange;
-			if (!scm || !scm.repoId || !scm.branch || !scm.commits) continue;
-
-			const removeExcluded = (diff: ParsedDiff) =>
-				diff.newFileName && !excludedFiles.includes(diff.newFileName);
-			const modifiedFiles = scm.modifiedFiles.filter(f => !excludedFiles.includes(f.file));
-			totalExcludedFilesCount += excludedFiles.length;
-
-			// filter out only to those commits that were chosen in the review
-			// see if the startCommit is in the list, if it is then filter out
-			// otherwise the startCommit is probably the parent of the oldest commit
-			// so that means just take the whole commit list
-			const startIndex = scm.commits.findIndex(commit => commit.sha === startCommit);
-			const commits = startIndex >= 0 ? scm.commits.slice(0, startIndex) : scm.commits;
-
-			// perform a diff against the most recent pushed commit
-			const pushedCommit = scm.commits.find(commit => !commit.localOnly);
-			const latestCommitSha = await git.getHeadSha(scm.repoPath);
-			if (latestCommitSha == null) {
-				throw new Error("Could not determine HEAD of current branch for review creation");
-			}
-			// if we have a pushed commit on this branch, use the most recent.
-			// otherwise, use the start commit if specified by the user.
-			// otherwise, use the parent of the first commit of this branch (the fork point)
-			// if that doesn't exist, use HEAD
-			const baseSha = pushedCommit
-				? pushedCommit.sha
-				: scm.commits && scm.commits.length > 0
-				? (await git.getParentCommitShas(scm.repoPath, scm.commits[scm.commits.length - 1].sha))[0]
-				: latestCommitSha;
-
-			if (baseSha == null) {
-				throw new Error("Could not determine newest pushed commit for review creation");
-			}
-			Logger.log("baseSha is: " + baseSha);
-
-			const newestCommitInReview = commits[0];
-			const oldestCommitInReview = commits[commits.length - 1];
-			let leftBaseSha;
-			let leftBaseAuthor;
-			let leftDiffs: ParsedDiff[];
-
-			const newestCommitNotInReview = scm.commits[commits.length];
-			if (newestCommitNotInReview == null) {
-				if (oldestCommitInReview != null) {
-					const parent = await git.getCommit(scm.repoPath, oldestCommitInReview.sha + "^");
-					leftBaseSha = parent!.ref;
-					leftBaseAuthor = parent!.author;
-					leftDiffs = [];
-				} else {
-					leftBaseSha = latestCommitSha;
-					leftBaseAuthor = (await git.getCommit(scm.repoPath, latestCommitSha))!.author;
-					leftDiffs = [];
-				}
-			} else if (newestCommitNotInReview.localOnly) {
-				leftBaseSha = baseSha;
-				leftBaseAuthor = (await git.getCommit(scm.repoPath, baseSha))!.author;
-				leftDiffs = (
-					await git.getDiffs(
-						scm.repoPath,
-						{ includeSaved: false, includeStaged: false },
-						baseSha,
-						newestCommitNotInReview.sha
-					)
-				).filter(removeExcluded);
-			} else {
-				leftBaseSha = newestCommitNotInReview.sha;
-				leftBaseAuthor = (await git.getCommit(scm.repoPath, newestCommitNotInReview.sha))!.author;
-				leftDiffs = [];
-			}
-
-			let rightBaseSha: string;
-			let rightBaseAuthor: string;
-			let rightDiffs: ParsedDiff[];
-			let rightReverseDiffs: ParsedDiff[];
-
-			const newFileDiffs: ParsedDiff[] = [];
-			const newFileReverseDiffs: ParsedDiff[] = [];
-			if (newFiles) {
-				await Promise.all(
-					newFiles.map(async file => {
-						let result: ParsedDiff | undefined;
-						let resultReverse: ParsedDiff | undefined;
-						try {
-							result = await git.getNewDiff(scm.repoPath, file);
-							resultReverse = await git.getNewDiff(scm.repoPath, file, { reverse: true });
-						} catch {}
-						if (result && resultReverse) {
-							newFileDiffs.push(result);
-							newFileReverseDiffs.push(resultReverse);
-						}
-					})
-				);
-			}
-
-			if (!newestCommitInReview || newestCommitInReview.localOnly) {
-				rightBaseSha = baseSha;
-				rightBaseAuthor = (await git.getCommit(scm.repoPath, baseSha))!.author;
-				rightDiffs = (
-					await git.getDiffs(scm.repoPath, { includeSaved, includeStaged }, baseSha)
-				).filter(removeExcluded);
-				rightReverseDiffs = (
-					await git.getDiffs(scm.repoPath, { includeSaved, includeStaged, reverse: true }, baseSha)
-				).filter(removeExcluded);
-			} else {
-				rightBaseSha = newestCommitInReview.sha;
-				rightBaseAuthor = (await git.getCommit(scm.repoPath, newestCommitInReview.sha))!.author;
-				rightDiffs = (
-					await git.getDiffs(
-						scm.repoPath,
-						{ includeSaved, includeStaged },
-						newestCommitInReview.sha
-					)
-				).filter(removeExcluded);
-				rightReverseDiffs = (
-					await git.getDiffs(
-						scm.repoPath,
-						{ includeSaved, includeStaged, reverse: true },
-						newestCommitInReview.sha
-					)
-				).filter(removeExcluded);
-			}
-			rightDiffs.push(...newFileDiffs);
-			rightReverseDiffs.push(...newFileReverseDiffs);
-
-			const rightToLatestCommitDiffs = (
-				await git.getDiffs(
-					scm.repoPath,
-					{ includeSaved, includeStaged, reverse: true },
-					latestCommitSha
-				)
-			).filter(removeExcluded);
-			rightToLatestCommitDiffs.push(...newFileReverseDiffs);
-
-			const latestCommitToRightDiffs = (
-				await git.getDiffs(scm.repoPath, { includeSaved, includeStaged }, latestCommitSha)
-			).filter(removeExcluded);
-			latestCommitToRightDiffs.push(...newFileDiffs);
+			totalExcludedFilesCount += repoChange.excludedFiles.length;
+			const changeset = await this.buildChangeset(repoChange);
 
 			// WTF typescript, this is defined above
-			if (reviewRequest.reviewChangesets && baseSha) {
-				reviewRequest.reviewChangesets.push({
-					repoId: scm.repoId,
-					branch: scm.branch,
-					commits,
-					modifiedFiles,
-					includeSaved,
-					includeStaged,
-					checkpoint,
-					diffs: {
-						leftBaseAuthor,
-						leftBaseSha,
-						leftDiffs,
-						rightBaseAuthor,
-						rightBaseSha,
-						rightDiffs,
-						rightReverseDiffs,
-						latestCommitSha,
-						rightToLatestCommitDiffs, // for backtracking
-						latestCommitToRightDiffs
-					}
-				});
+			if (reviewRequest.reviewChangesets && changeset) {
+				reviewRequest.reviewChangesets.push(changeset);
 			}
 			/*for (const patch of localDiffs) {
 				const file = patch.newFileName;
@@ -1214,11 +1052,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			throw new Error("Cannot create review. Payload exceeds 2MB");
 		}
 
-		// FIXME -- this is hot garbage
-		if (request.shortCircuitAndReturnReviewChangesets) {
-			return reviewRequest.reviewChangesets as any;
-		}
-
 		// FIXME -- not sure if this is the right way to do this
 		delete reviewRequest.repoChanges;
 
@@ -1258,6 +1091,205 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			stream,
 			post: await this.enrichPost(response!.post),
 			review
+		};
+	}
+
+	async buildChangeset(repoChange: CSRepoChange, amendingReviewId?: string) {
+		const { scm, includeSaved, includeStaged, excludedFiles, newFiles } = repoChange;
+		if (!scm || !scm.repoId || !scm.branch || !scm.commits) return undefined;
+		const { git, reviews, scm: scmManager } = SessionContainer.instance();
+
+		let checkpoint = 0;
+		const removeExcluded = (diff: ParsedDiff) =>
+			diff.newFileName && !excludedFiles.includes(diff.newFileName);
+
+		const modifiedFilesInCheckpoint = scm.modifiedFiles.filter(
+			f => !excludedFiles.includes(f.file)
+		);
+		let modifiedFiles;
+		let startCommit = repoChange.startCommit;
+		if (amendingReviewId) {
+			const review = await reviews.getById(amendingReviewId);
+			const changeset0 = review.reviewChangesets.find(
+				rc => rc.repoId === scm.repoId && rc.checkpoint === 0
+			);
+			if (!changeset0)
+				throw new Error(
+					`Could not find first changeset for review ${amendingReviewId}, repo ${scm.repoId}`
+				);
+
+			const lastChangeset = review.reviewChangesets.find(rc => rc.repoId === scm.repoId);
+			checkpoint = lastChangeset!.checkpoint + 1;
+			const firstCommitInReview = changeset0.commits[changeset0.commits.length - 1];
+			const diffs = await reviews.getDiffs(amendingReviewId, scm.repoId);
+			const firstDiff = diffs.find(d => d.checkpoint === 0);
+			startCommit = firstCommitInReview
+				? (await git.getParentCommitShas(scm.repoPath, firstCommitInReview.sha))[0]
+				: firstDiff!.diff.latestCommitSha;
+
+			const statusFromBeginningOfReview = await scmManager.getRepoStatus({
+				includeSaved,
+				includeStaged,
+				uri: scm.repoPath,
+				currentUserEmail: "", // FIXME
+				startCommit
+			});
+			// FIXME - we also need to add here all modifiedFiles from the previous checkpoint that are
+			//  not included in statusFromBeginningOfReview.scm!.modifiedFiles
+			modifiedFiles = statusFromBeginningOfReview.scm!.modifiedFiles;
+		} else {
+			modifiedFiles = modifiedFilesInCheckpoint;
+		}
+
+		// filter out only to those commits that were chosen in the review
+		// see if the startCommit is in the list, if it is then filter out
+		// otherwise the startCommit is probably the parent of the oldest commit
+		// so that means just take the whole commit list
+		const startIndex = scm.commits.findIndex(commit => commit.sha === startCommit);
+		const commits = startIndex >= 0 ? scm.commits.slice(0, startIndex) : scm.commits;
+
+		// perform a diff against the most recent pushed commit
+		const pushedCommit = scm.commits.find(commit => !commit.localOnly);
+		const latestCommitSha = await git.getHeadSha(scm.repoPath);
+		if (latestCommitSha == null) {
+			throw new Error("Could not determine HEAD of current branch for review creation");
+		}
+		// if we have a pushed commit on this branch, use the most recent.
+		// otherwise, use the start commit if specified by the user.
+		// otherwise, use the parent of the first commit of this branch (the fork point)
+		// if that doesn't exist, use HEAD
+		const baseSha = pushedCommit
+			? pushedCommit.sha
+			: scm.commits && scm.commits.length > 0
+			? (await git.getParentCommitShas(scm.repoPath, scm.commits[scm.commits.length - 1].sha))[0]
+			: latestCommitSha;
+
+		if (baseSha == null) {
+			throw new Error("Could not determine newest pushed commit for review creation");
+		}
+		Logger.log("baseSha is: " + baseSha);
+
+		const newestCommitInReview = commits[0];
+		const oldestCommitInReview = commits[commits.length - 1];
+		let leftBaseSha;
+		let leftBaseAuthor;
+		let leftDiffs: ParsedDiff[];
+
+		const newestCommitNotInReview = scm.commits[commits.length];
+		if (newestCommitNotInReview == null) {
+			if (oldestCommitInReview != null) {
+				const parent = await git.getCommit(scm.repoPath, oldestCommitInReview.sha + "^");
+				leftBaseSha = parent!.ref;
+				leftBaseAuthor = parent!.author;
+				leftDiffs = [];
+			} else {
+				leftBaseSha = latestCommitSha;
+				leftBaseAuthor = (await git.getCommit(scm.repoPath, latestCommitSha))!.author;
+				leftDiffs = [];
+			}
+		} else if (newestCommitNotInReview.localOnly) {
+			leftBaseSha = baseSha;
+			leftBaseAuthor = (await git.getCommit(scm.repoPath, baseSha))!.author;
+			leftDiffs = (
+				await git.getDiffs(
+					scm.repoPath,
+					{ includeSaved: false, includeStaged: false },
+					baseSha,
+					newestCommitNotInReview.sha
+				)
+			).filter(removeExcluded);
+			leftDiffs = [];
+		} else {
+			leftBaseSha = newestCommitNotInReview.sha;
+			leftBaseAuthor = (await git.getCommit(scm.repoPath, newestCommitNotInReview.sha))!.author;
+			leftDiffs = [];
+		}
+
+		let rightBaseSha: string;
+		let rightBaseAuthor: string;
+		let rightDiffs: ParsedDiff[];
+		let rightReverseDiffs: ParsedDiff[];
+
+		const newFileDiffs: ParsedDiff[] = [];
+		const newFileReverseDiffs: ParsedDiff[] = [];
+		if (newFiles) {
+			await Promise.all(
+				newFiles.map(async file => {
+					let result: ParsedDiff | undefined;
+					let resultReverse: ParsedDiff | undefined;
+					try {
+						result = await git.getNewDiff(scm.repoPath, file);
+						resultReverse = await git.getNewDiff(scm.repoPath, file, { reverse: true });
+					} catch {}
+					if (result && resultReverse) {
+						newFileDiffs.push(result);
+						newFileReverseDiffs.push(resultReverse);
+					}
+				})
+			);
+		}
+
+		if (!newestCommitInReview || newestCommitInReview.localOnly) {
+			rightBaseSha = baseSha;
+			rightBaseAuthor = (await git.getCommit(scm.repoPath, baseSha))!.author;
+			rightDiffs = (
+				await git.getDiffs(scm.repoPath, { includeSaved, includeStaged }, baseSha)
+			).filter(removeExcluded);
+			rightReverseDiffs = (
+				await git.getDiffs(scm.repoPath, { includeSaved, includeStaged, reverse: true }, baseSha)
+			).filter(removeExcluded);
+		} else {
+			rightBaseSha = newestCommitInReview.sha;
+			rightBaseAuthor = (await git.getCommit(scm.repoPath, newestCommitInReview.sha))!.author;
+			rightDiffs = (
+				await git.getDiffs(scm.repoPath, { includeSaved, includeStaged }, newestCommitInReview.sha)
+			).filter(removeExcluded);
+			rightReverseDiffs = (
+				await git.getDiffs(
+					scm.repoPath,
+					{ includeSaved, includeStaged, reverse: true },
+					newestCommitInReview.sha
+				)
+			).filter(removeExcluded);
+		}
+		rightDiffs.push(...newFileDiffs);
+		rightReverseDiffs.push(...newFileReverseDiffs);
+
+		const rightToLatestCommitDiffs = (
+			await git.getDiffs(
+				scm.repoPath,
+				{ includeSaved, includeStaged, reverse: true },
+				latestCommitSha
+			)
+		).filter(removeExcluded);
+		rightToLatestCommitDiffs.push(...newFileReverseDiffs);
+
+		const latestCommitToRightDiffs = (
+			await git.getDiffs(scm.repoPath, { includeSaved, includeStaged }, latestCommitSha)
+		).filter(removeExcluded);
+		latestCommitToRightDiffs.push(...newFileDiffs);
+
+		return {
+			repoId: scm.repoId,
+			branch: scm.branch,
+			commits,
+			modifiedFiles,
+			modifiedFilesInCheckpoint,
+			includeSaved,
+			includeStaged,
+			checkpoint,
+			diffs: {
+				leftBaseAuthor,
+				leftBaseSha,
+				leftDiffs,
+				rightBaseAuthor,
+				rightBaseSha,
+				rightDiffs,
+				rightReverseDiffs,
+				latestCommitSha,
+				rightToLatestCommitDiffs, // for backtracking
+				latestCommitToRightDiffs
+			}
 		};
 	}
 
@@ -1573,7 +1605,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					anchorFormat: "[${text}](${url})"
 				};
 		}
-	}
+	};
 
 	createProviderCard = async (
 		providerCardRequest: {
@@ -1793,7 +1825,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			Logger.error(error, `failed to create a ${attributes.issueProvider.name} card:`);
 			return undefined;
 		}
-	}
+	};
 }
 
 async function resolveCreatePostResponse(response: CreatePostResponse) {

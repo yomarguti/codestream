@@ -40,7 +40,13 @@ import {
 	UpdateReviewRequestType,
 	UpdateReviewResponse
 } from "../protocol/agent.protocol";
-import { CSReview, CSReviewDiffs, FileStatus } from "../protocol/api.protocol";
+import {
+	CSRepoChange,
+	CSReview,
+	CSReviewChangeset,
+	CSReviewDiffs,
+	FileStatus
+} from "../protocol/api.protocol";
 import { log, lsp, lspHandler, Strings } from "../system";
 import { xfs } from "../xfs";
 import { CachedEntityManagerBase, Id } from "./entityManager";
@@ -187,17 +193,27 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	async getAllContents(
 		request: GetAllReviewContentsRequest
 	): Promise<GetAllReviewContentsResponse> {
-		const review = await this.getById(request.reviewId);
+		const { reviewId, checkpoint } = request;
+		const review = await this.getById(reviewId);
 		const repos: ReviewRepoContents[] = [];
+
+		const changesetByRepo = new Map<string, CSReviewChangeset>();
 		for (const changeset of review.reviewChangesets) {
+			if (checkpoint === undefined || checkpoint === changeset.checkpoint) {
+				changesetByRepo.set(changeset.repoId, changeset);
+			}
+		}
+
+		for (const changeset of Array.from(changesetByRepo.values())) {
 			const files: ReviewFileContents[] = [];
-			for (const file of changeset.modifiedFiles) {
+			const modifiedFiles =
+				checkpoint !== undefined ? changeset.modifiedFilesInCheckpoint : changeset.modifiedFiles;
+			for (const file of modifiedFiles) {
 				const contents = await this.getContents({
 					reviewId: review.id,
 					repoId: changeset.repoId,
-					path: file.file,
-					// what goes here??
-					checkpoint: 0
+					checkpoint,
+					path: file.file
 				});
 				files.push({
 					leftPath: file.oldFile,
@@ -219,18 +235,56 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	@lspHandler(GetReviewContentsRequestType)
 	@log()
 	async getContents(request: GetReviewContentsRequest): Promise<GetReviewContentsResponse> {
+		const { reviewId, repoId, checkpoint, path } = request;
+		if (checkpoint === undefined) {
+			const { git } = SessionContainer.instance();
+			const review = await this.getById(request.reviewId);
+			const latestChangesetContainingFile = review.reviewChangesets
+				.reverse()
+				.find(
+					c =>
+						c.repoId === request.repoId &&
+						c.modifiedFilesInCheckpoint.find(mf => mf.file === request.path)
+				);
+			return this.getContentsForCheckpoint(
+				reviewId,
+				repoId,
+				latestChangesetContainingFile!.checkpoint,
+				path
+			);
+		} else if (checkpoint === 0) {
+			return this.getContentsForCheckpoint(reviewId, repoId, 0, path);
+		} else {
+			const atPriorCheckpoint = (
+				await this.getContentsForCheckpoint(reviewId, repoId, checkpoint - 1, path)
+			).right;
+			const atRequestedCheckpoint = (
+				await this.getContentsForCheckpoint(reviewId, repoId, checkpoint, path)
+			).right;
+			return {
+				left: atPriorCheckpoint,
+				right: atRequestedCheckpoint
+			};
+		}
+	}
+
+	async getContentsForCheckpoint(
+		reviewId: string,
+		repoId: string,
+		checkpoint: number,
+		filePath: string
+	): Promise<GetReviewContentsResponse> {
 		const { git } = SessionContainer.instance();
+		const review = await this.getById(reviewId);
+		const changeset = review.reviewChangesets.find(
+			c => c.repoId === repoId && c.checkpoint === checkpoint
+		);
+		if (!changeset) throw new Error(`Could not find changeset with repoId ${repoId}`);
+		const fileInfo = changeset.modifiedFiles.find(f => f.file === filePath);
+		if (!fileInfo) throw new Error(`Could not find changeset file information for ${filePath}`);
 
-		const review = await this.getById(request.reviewId);
-		const changeset = review.reviewChangesets.find(c => c.repoId === request.repoId);
-		if (!changeset) throw new Error(`Could not find changeset with repoId ${request.repoId}`);
-		const fileInfo = changeset.modifiedFiles.find(f => f.file === request.path);
-		if (!fileInfo) throw new Error(`Could not find changeset file information for ${request.path}`);
-
-		// TODO this?
-		const diffs = await this.getDiffs(request.reviewId, request.repoId);
-		// TODO this?
-		const checkpointDiff = diffs.find(_ => _.checkpoint === request.checkpoint)!;
+		const diffs = await this.getDiffs(reviewId, repoId);
+		const checkpointDiff = diffs.find(d => d.checkpoint === changeset.checkpoint)!;
 		const diff = checkpointDiff.diff;
 		const leftDiff = diff.leftDiffs.find(
 			d => d.newFileName === fileInfo.oldFile || d.oldFileName === fileInfo.oldFile
@@ -241,9 +295,9 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		);
 		const rightBaseRelativePath = (rightDiff && rightDiff.oldFileName) || fileInfo.file;
 
-		const repo = await git.getRepositoryById(request.repoId);
+		const repo = await git.getRepositoryById(repoId);
 		if (!repo) {
-			throw new Error(`Could not load repo with ID ${request.repoId}`);
+			throw new Error(`Could not load repo with ID ${repoId}`);
 		}
 
 		const leftBasePath = path.join(repo.path, leftBaseRelativePath);
@@ -280,25 +334,10 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	async update(request: UpdateReviewRequest): Promise<UpdateReviewResponse> {
 		if (request.$addToSet && request.$addToSet.reviewChangesets) {
 			const { posts } = SessionContainer.instance();
-
-			// FIXME -- this is hot garbage
-			// FIXMEEEEEE -- even hotter garbage below...
-			const { reviewChangesets, ...rest } = request;
-			try {
-				const r = await posts.createSharingReviewPost({
-					attributes: { ...rest, repoChanges: request.$addToSet.reviewChangesets },
-					shortCircuitAndReturnReviewChangesets: true
-				});
-				this._diffs.delete(request.id);
-
-				request.$addToSet.reviewChangesets = r;
-				// @ts-ignore
-				// request.reviewChangesets = r;
-				// delete request.repoChanges;
-				// END FIXME -- this is hot garbage
-			} catch (e) {
-				Logger.warn("Error in reviewsManager.update: ", e);
-			}
+			const repoChanges = request.$addToSet.reviewChangesets as CSRepoChange[];
+			const reviewChangesets = await Promise.all(repoChanges.map(rc => posts.buildChangeset(rc)));
+			this._diffs.delete(request.id);
+			request.$addToSet.reviewChangesets = reviewChangesets;
 		}
 
 		const updateResponse = await this.session.api.updateReview(request);

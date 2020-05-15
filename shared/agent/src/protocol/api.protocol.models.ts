@@ -191,6 +191,7 @@ export interface CSReviewChangesetBase {
 	branch: string;
 	commits: { sha: string; info: {}; localOnly: boolean }[];
 	modifiedFiles: ReviewChangesetFileInfo[];
+	modifiedFilesInCheckpoint: ReviewChangesetFileInfo[];
 	includeSaved: boolean;
 	includeStaged: boolean;
 	diffId: string;

@@ -508,6 +508,17 @@ export interface CSDeleteCodemarkRequest {
 }
 export interface CSDeleteCodemarkResponse {}
 
+export interface CSRepoChange {
+	scm: RepoScmStatus;
+	startCommit: string;
+	excludeCommit: string;
+	excludedFiles: string[];
+	newFiles: string[];
+	includeSaved: boolean;
+	includeStaged: boolean;
+	checkpoint: number;
+}
+
 export interface CSCreateReviewRequest {
 	teamId: string;
 	title?: string;
@@ -520,16 +531,7 @@ export interface CSCreateReviewRequest {
 	authorsById?: { [authorId: string]: { stomped: number; commits: number } };
 	tags?: string[];
 
-	repoChanges?: {
-		scm: RepoScmStatus;
-		startCommit: string;
-		excludeCommit: string;
-		excludedFiles: string[];
-		newFiles: string[];
-		includeSaved: boolean;
-		includeStaged: boolean;
-		checkpoint: number;
-	}[];
+	repoChanges?: CSRepoChange[];
 
 	markers?: CSCreateMarkerRequest[];
 	remotes?: string[];
@@ -538,8 +540,6 @@ export interface CSCreateReviewRequest {
 	externalProviderUrl?: string;
 	externalProviderHost?: string;
 	remoteCodeUrl?: { name: string; url: string };
-	// commented out
-	// another commetn
 	// threadUrl?: string;
 }
 
