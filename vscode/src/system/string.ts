@@ -1,6 +1,7 @@
 "use strict";
 import { createHash, HexBase64Latin1Encoding } from "crypto";
 import * as path from "path";
+import { CSReviewCheckpoint } from "@codestream/protocols/api";
 
 export namespace Strings {
 	export const enum CharCode {
@@ -327,7 +328,7 @@ export namespace Strings {
 	):
 		| {
 				reviewId: string;
-				checkpoint: number | "all";
+				checkpoint: CSReviewCheckpoint;
 				repoId: string;
 				version: string;
 				path: string;
@@ -339,7 +340,7 @@ export namespace Strings {
 		const [, reviewId, checkpoint, repoId, version, path] = match;
 		return {
 			reviewId,
-			checkpoint: checkpoint === "all" ? "all" : parseInt(checkpoint, 10),
+			checkpoint: checkpoint === undefined ? undefined : parseInt(checkpoint, 10),
 			repoId,
 			version,
 			path

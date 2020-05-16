@@ -96,7 +96,8 @@ import {
 	CSMarkerIdentifier,
 	CSMePreferences,
 	CSPresenceStatus,
-	StreamType
+	StreamType,
+	CSReviewCheckpoint
 } from "@codestream/protocols/api";
 import {
 	Event,
@@ -551,7 +552,7 @@ export class CodeStreamAgentConnection implements Disposable {
 			});
 		}
 
-		getContents(reviewId: string, checkpoint: number | "all", repoId: string, path: string) {
+		getContents(reviewId: string, checkpoint: CSReviewCheckpoint, repoId: string, path: string) {
 			return this._connection.sendRequest(GetReviewContentsRequestType, {
 				reviewId,
 				checkpoint,

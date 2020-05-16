@@ -2,6 +2,7 @@ import { Disposable, TextDocumentContentProvider, Uri, workspace } from "vscode"
 import { Container } from "container";
 import { Strings } from "system";
 import { GetReviewContentsResponse } from "@codestream/protocols/agent";
+import { CSReviewCheckpoint } from "@codestream/protocols/api";
 
 export class ReviewDiffContentProvider implements TextDocumentContentProvider, Disposable {
 	private readonly _disposable: Disposable;
@@ -28,7 +29,7 @@ export class ReviewDiffContentProvider implements TextDocumentContentProvider, D
 		return (contents as any)[version] as string;
 	}
 
-	async loadContents(reviewId: string, checkpoint: number | "all", repoId: string, path: string) {
+	async loadContents(reviewId: string, checkpoint: CSReviewCheckpoint, repoId: string, path: string) {
 		const key = this.key(reviewId, checkpoint, repoId, path);
 		const cached = this._contents.get(key);
 
@@ -41,7 +42,7 @@ export class ReviewDiffContentProvider implements TextDocumentContentProvider, D
 	}
 
 	async loadContentsLocal(repoId: string, path: string, baseSha: string, rightVersion: string) {
-		const key = this.key("local", "all", repoId, path);
+		const key = this.key("local", undefined, repoId, path);
 		// const cached = this._contents.get(key);
 
 		// if (cached !== undefined) return cached;
@@ -57,7 +58,7 @@ export class ReviewDiffContentProvider implements TextDocumentContentProvider, D
 		return contents;
 	}
 
-	private key(reviewId: string, checkpoint: number | "all", repoId: string, path: string) {
+	private key(reviewId: string, checkpoint: CSReviewCheckpoint, repoId: string, path: string) {
 		return `${reviewId}|${checkpoint}|${repoId}|${path}`;
 	}
 

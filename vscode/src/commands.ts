@@ -1,5 +1,5 @@
 import * as paths from "path";
-import { CodemarkType, CSMarkerIdentifier } from "@codestream/protocols/api";
+import { CodemarkType, CSMarkerIdentifier, CSReviewCheckpoint } from "@codestream/protocols/api";
 import { Editor } from "extensions/editor";
 import { commands, Disposable, env, Range, Uri, ViewColumn, window, workspace } from "vscode";
 import { SessionSignedOutReason, StreamThread } from "./api/session";
@@ -29,7 +29,7 @@ export interface ShowMarkerDiffCommandArgs {
 
 export interface ShowReviewDiffCommandArgs {
 	reviewId: string;
-	checkpoint: number | "all";
+	checkpoint: CSReviewCheckpoint;
 	repoId: string;
 	path: string;
 }
