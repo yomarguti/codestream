@@ -20,7 +20,8 @@ import { capitalize, mapFilter } from "@codestream/webview/utils";
 import { addPosts } from "../posts/actions";
 import {
 	ReviewCloseDiffRequestType,
-	ReviewShowDiffRequestType
+	ReviewShowDiffRequestType,
+	ReviewCheckpoint
 } from "@codestream/protocols/webview";
 import { createPost } from "@codestream/webview/Stream/actions";
 import { getTeamMembers } from "../users/reducer";
@@ -65,7 +66,7 @@ export interface NewReviewAttributes {
 		includeSaved: boolean;
 		includeStaged: boolean;
 		remotes: { name: string; url: string }[];
-		checkpoint: number;
+		checkpoint: ReviewCheckpoint;
 	}[];
 
 	accessMemberIds: string[];
@@ -206,7 +207,7 @@ export const fetchReview = (reviewId: string) => async dispatch => {
 
 export const showDiff = (
 	reviewId: string,
-	checkpoint: number | undefined,
+	checkpoint: ReviewCheckpoint,
 	repoId: string,
 	path: string
 ) => async dispatch => {

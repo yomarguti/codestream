@@ -1,9 +1,11 @@
 import { RequestType } from "vscode-jsonrpc";
 import { IpcRoutes } from "./webview.protocol";
 
+export type ReviewCheckpoint = number | undefined;
+
 export interface ReviewShowDiffRequest {
 	reviewId: string;
-	checkpoint: number | undefined;
+	checkpoint: ReviewCheckpoint;
 	repoId: string;
 	path: string;
 }

@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { ReviewPlus } from "@codestream/protocols/agent";
 import Icon from "../Icon";
 import { markdownify } from "../Markdowner";
+import { ReviewCheckpoint } from '@codestream/protocols/webview';
 
-export const CommitList = (props: { review: ReviewPlus; checkpoint: number | undefined }) => {
+export const CommitList = (props: { review: ReviewPlus; checkpoint: ReviewCheckpoint }) => {
 	const { review, checkpoint } = props;
 
 	const changesetLines = React.useMemo(() => {

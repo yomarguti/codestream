@@ -600,11 +600,12 @@ class ReviewForm extends React.Component<Props, State> {
 					}
 				}
 
+				//TODO de-dupe this
 				// get the max checkpoint of the review, and add one
 				const checkpoint =
 					Math.max.apply(
 						Math,
-						editingReview.reviewChangesets.map(_ => _.checkpoint)
+						editingReview.reviewChangesets.map(_ => _.checkpoint === undefined ? 0 : _.checkpoint)
 					) + 1;
 
 				if (this.props.isAmending) {

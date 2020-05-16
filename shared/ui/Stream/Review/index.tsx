@@ -533,10 +533,11 @@ const BaseReview = (props: BaseReviewProps) => {
 		};
 	}
 
+	// TODO de-dupe this
 	const numCheckpoints =
 		Math.max.apply(
 			Math,
-			review.reviewChangesets.map(_ => _.checkpoint)
+			review.reviewChangesets.map(_ => (_.checkpoint === undefined ? 0 : _.checkpoint))
 		) + 1;
 
 	const dropdownItems: any = [
