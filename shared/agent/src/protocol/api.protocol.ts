@@ -508,6 +508,8 @@ export interface CSDeleteCodemarkRequest {
 }
 export interface CSDeleteCodemarkResponse {}
 
+export type CSReviewCheckpoint = number | undefined;
+
 export interface CSRepoChange {
 	scm: RepoScmStatus;
 	startCommit: string;
@@ -516,7 +518,7 @@ export interface CSRepoChange {
 	newFiles: string[];
 	includeSaved: boolean;
 	includeStaged: boolean;
-	checkpoint: number;
+	checkpoint: CSReviewCheckpoint;
 }
 
 export interface CSCreateReviewRequest {
@@ -624,8 +626,8 @@ export interface CSGetReviewDiffsResponse {
 export interface CSGetReviewCheckpointDiffsResponse
 	extends Array<{
 		repoId: string;
-		checkpoint: any; // TODO type
-		diffs: any; // TODO type
+		checkpoint: CSReviewCheckpoint;
+		diffs: CSReviewDiffs;
 	}> {}
 
 export interface CSAddReferenceLocationRequest {

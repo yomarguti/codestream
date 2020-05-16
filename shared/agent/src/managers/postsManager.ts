@@ -1113,13 +1113,14 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			const changeset0 = review.reviewChangesets.find(
 				rc => rc.repoId === scm.repoId && rc.checkpoint === 0
 			);
-			if (!changeset0)
+			if (!changeset0) {
 				throw new Error(
 					`Could not find first changeset for review ${amendingReviewId}, repo ${scm.repoId}`
 				);
+			}
 
 			const lastChangeset = review.reviewChangesets.find(rc => rc.repoId === scm.repoId);
-			checkpoint = lastChangeset!.checkpoint + 1;
+			checkpoint = (lastChangeset!.checkpoint || 0) + 1;
 			const firstCommitInReview = changeset0.commits[changeset0.commits.length - 1];
 			const diffs = await reviews.getDiffs(amendingReviewId, scm.repoId);
 			const firstDiff = diffs.find(d => d.checkpoint === 0);

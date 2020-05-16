@@ -2,6 +2,7 @@
 
 import { ParsedDiff } from "diff";
 import { RepoScmStatus, ThirdPartyProviders } from "./agent.protocol";
+import { CSReviewCheckpoint } from "./api.protocol";
 
 export interface CSEntity {
 	deactivated?: boolean;
@@ -195,7 +196,7 @@ export interface CSReviewChangesetBase {
 	includeSaved: boolean;
 	includeStaged: boolean;
 	diffId: string;
-	checkpoint: number;
+	checkpoint: CSReviewCheckpoint;
 }
 
 export interface CSReviewChangeset extends CSEntity, CSReviewChangesetBase {}

@@ -1,4 +1,4 @@
-import { createPatch, parsePatch, applyPatch } from "diff";
+import { applyPatch, createPatch, parsePatch } from "diff";
 import * as paths from "path";
 import { TextDocument } from "vscode-languageserver-types";
 import { URI } from "vscode-uri";
@@ -453,7 +453,9 @@ export class ScmManager {
 
 		const changesets = review.reviewChangesets
 			.filter(cs => cs.repoId === repo!.id)
-			.sort((a, b) => b.checkpoint - a.checkpoint);
+			.sort((a, b) => {
+				return (b.checkpoint || 0) - (a.checkpoint || 0);
+			});
 
 		const modifiedFiles: GitNumStat[] = [];
 		const newestCommitInACheckpoint = changesets.reverse().find(c => c.commits && c.commits.length)

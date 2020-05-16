@@ -9,6 +9,7 @@ import { Logger } from "../logger";
 import { calculateLocation } from "../markerLocation/calculator";
 import { CreateMarkerRequest } from "../protocol/agent.protocol.codemarks";
 import { CodeBlockSource } from "../protocol/agent.protocol.posts";
+import { CSReviewCheckpoint } from "../protocol/api.protocol";
 import { CSMarkerLocation, CSReferenceLocation } from "../protocol/api.protocol.models";
 import { xfs } from "../xfs";
 import { ReviewsManager } from "./reviewsManager";
@@ -323,7 +324,7 @@ class DefaultMarkersBuilder extends MarkersBuilder {
 
 class ReviewDiffMarkersBuilder extends MarkersBuilder {
 	private _reviewId: string;
-	private _checkpoint: number | "all";
+	private _checkpoint: CSReviewCheckpoint;
 	private _repoId: string;
 	private _version: string;
 	private _path: string;

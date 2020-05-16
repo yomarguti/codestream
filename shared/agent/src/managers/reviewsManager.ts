@@ -45,9 +45,11 @@ import {
 	CSReview,
 	CSReviewChangeset,
 	CSReviewDiffs,
-	FileStatus
+	FileStatus,
+	CSReviewCheckpoint
 } from "../protocol/api.protocol";
 import { log, lsp, lspHandler, Strings } from "../system";
+import { gate } from "../system/decorators/gate";
 import { xfs } from "../xfs";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 
@@ -57,14 +59,14 @@ const uriRegexp = /codestream-diff:\/\/(\w+)\/(\w+)\/(\w+)\/(.+)/;
 export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	private readonly _diffs = new Map<
 		string,
-		{ [repoId: string]: { checkpoint: any; diff: CSReviewDiffs }[] }
+		{ [repoId: string]: { checkpoint: CSReviewCheckpoint; diff: CSReviewDiffs }[] }
 	>();
 
 	static parseUri(
 		uri: string
 	): {
 		reviewId: string;
-		checkpoint: number | "all";
+		checkpoint: CSReviewCheckpoint;
 		repoId: string;
 		version: string;
 		path: string;
@@ -76,7 +78,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 		return {
 			reviewId,
-			checkpoint: checkpoint === "all" ? "all" : parseInt(checkpoint, 10),
+			checkpoint: checkpoint === undefined ? undefined : parseInt(checkpoint, 10),
 			repoId,
 			version,
 			path
@@ -105,33 +107,29 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	async getDiffs(
 		reviewId: string,
 		repoId: string
-	): Promise<{ checkpoint: any; diff: CSReviewDiffs }[]> {
+	): Promise<{ checkpoint: CSReviewCheckpoint; diff: CSReviewDiffs }[]> {
 		const diffsByRepo = await this.getAllDiffs(reviewId);
 		return diffsByRepo[repoId];
 	}
 
+	@gate()
 	private async getAllDiffs(
 		reviewId: string
-	): Promise<{ [repoId: string]: { checkpoint: any; diff: CSReviewDiffs }[] }> {
+	): Promise<{ [repoId: string]: { checkpoint: CSReviewCheckpoint; diff: CSReviewDiffs }[] }> {
 		if (!this._diffs.has(reviewId)) {
-			// will need the old API here for old clients??????
-			const response = await this.session.api.fetchReviewCheckpointDiffs({ reviewId });
-			if (response && response.length) {
-				const result: { [repoId: string]: { checkpoint: any; diff: CSReviewDiffs }[] } = {};
-				const checkpoints: any = {};
-
-				// FIXME -- don't need to re-calculate checkpoint here, and might want
-				// to change retur structure
-				for (const r of response) {
-					if (!result[r.repoId]) {
-						result[r.repoId] = [];
+			const responses = await this.session.api.fetchReviewCheckpointDiffs({ reviewId });
+			if (responses && responses.length) {
+				const result: { [repoId: string]: { checkpoint: CSReviewCheckpoint; diff: CSReviewDiffs }[] } = {};
+				if (responses.length === 1 && responses[0].checkpoint === undefined) {
+					const response = responses[0];
+					result[response.repoId].push({ checkpoint: 0, diff: response.diffs });
+				} else {
+					for (const response of responses) {
+						if (!result[response.repoId]) {
+							result[response.repoId] = [];
+						}
+						result[response.repoId].push({ checkpoint: response.checkpoint, diff: response.diffs });
 					}
-					if (!checkpoints[r.repoId]) {
-						checkpoints[r.repoId] = 0;
-					} else {
-						checkpoints[r.repoId] = checkpoints[r.repoId] + 1;
-					}
-					result[r.repoId].push({ checkpoint: checkpoints[r.repoId], diff: r.diffs });
 				}
 				this._diffs.set(reviewId, result);
 			}
@@ -271,7 +269,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	async getContentsForCheckpoint(
 		reviewId: string,
 		repoId: string,
-		checkpoint: number,
+		checkpoint: CSReviewCheckpoint,
 		filePath: string
 	): Promise<GetReviewContentsResponse> {
 		const { git } = SessionContainer.instance();

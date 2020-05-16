@@ -14,6 +14,7 @@ import {
 	CSRepository,
 	CSReview,
 	CSReviewChangesetBase,
+	CSReviewCheckpoint,
 	CSStream,
 	CSUpdateReviewRequest,
 	CSUpdateReviewResponse
@@ -159,7 +160,7 @@ export interface GetReviewContentsRequest {
 	reviewId: string;
 	repoId: string;
 	path: string;
-	checkpoint?: number;
+	checkpoint: CSReviewCheckpoint;
 }
 
 export interface GetReviewContentsLocalRequest {
@@ -190,7 +191,7 @@ export const GetReviewContentsLocalRequestType = new RequestType<
 
 export interface GetAllReviewContentsRequest {
 	reviewId: string;
-	checkpoint?: number;
+	checkpoint: CSReviewCheckpoint;
 }
 
 export interface ReviewFileContents {
@@ -233,9 +234,8 @@ export interface FetchReviewCheckpointDiffsRequest extends CSGetReviewDiffsReque
 export interface FetchReviewCheckpointDiffsResponse
 	extends Array<{
 		repoId: string;
-		checkpoint?: number;
-		// TODO type
-		diffs: any;
+		checkpoint: CSReviewCheckpoint;
+		diffs: CSReviewDiffs;
 	}> {}
 
 export const FetchReviewCheckpointDiffsRequestType = new RequestType<
