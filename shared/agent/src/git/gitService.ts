@@ -869,7 +869,7 @@ export class GitService implements IGitService, Disposable {
 
 			if (prevEndCommit) {
 				const index = ret.findIndex(commit => commit.sha === prevEndCommit);
-				if (index) ret = ret.slice(0, index);
+				if (index > -1) ret = ret.slice(0, index);
 			}
 
 			return ret;
