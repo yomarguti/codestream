@@ -13,6 +13,7 @@
 
 ### Fixed
 
+- Addresses [#192](https://github.com/TeamCodeStream/CodeStream/issues/192) &mdash; Adopt VS Code's 'asWebviewUri' API
 - Fixes several performance issues associated with the git watcher
 
 ## [7.2.2] - 2020-5-15
