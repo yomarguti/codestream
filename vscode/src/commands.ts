@@ -202,14 +202,13 @@ export class Commands implements Disposable {
 			}
 		}
 
-		const checkpoint = args.checkpoint !== undefined ? args.checkpoint : "all";
 		await commands.executeCommand(
 			BuiltInCommands.Diff,
 			Uri.parse(
-				`codestream-diff://${args.reviewId}/${checkpoint}/${args.repoId}/left/${args.path}`
+				`codestream-diff://${args.reviewId}/${args.checkpoint}/${args.repoId}/left/${args.path}`
 			),
 			Uri.parse(
-				`codestream-diff://${args.reviewId}/${checkpoint}/${args.repoId}/right/${args.path}`
+				`codestream-diff://${args.reviewId}/${args.checkpoint}/${args.repoId}/right/${args.path}`
 			),
 			`${paths.basename(args.path)} @ ${Strings.truncate(review.title, 25)}`,
 			{ preserveFocus: false, preview: true, viewColumn: column || ViewColumn.Beside }
@@ -240,8 +239,8 @@ export class Commands implements Disposable {
 
 		await commands.executeCommand(
 			BuiltInCommands.Diff,
-			Uri.parse(`codestream-diff://local/${args.repoId}/all/left/${args.path}`),
-			Uri.parse(`codestream-diff://local/${args.repoId}/all/right/${args.path}`),
+			Uri.parse(`codestream-diff://local/${args.repoId}/undefined/left/${args.path}`),
+			Uri.parse(`codestream-diff://local/${args.repoId}/undefined/right/${args.path}`),
 			`${paths.basename(args.path)} review changes`,
 			{ preserveFocus: false, preview: true, viewColumn: column || ViewColumn.Beside }
 		);
