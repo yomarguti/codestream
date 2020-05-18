@@ -2,7 +2,6 @@
 import { createHash, HexBase64Latin1Encoding } from "crypto";
 import * as path from "path";
 import { CSReviewCheckpoint } from "@codestream/protocols/api";
-import { Logger } from "logger";
 
 export namespace Strings {
 	export const enum CharCode {
