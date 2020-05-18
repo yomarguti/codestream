@@ -1,6 +1,7 @@
 "use strict";
 import { Range, RequestType } from "vscode-languageserver-protocol";
 import { SendPasswordResetEmailRequest } from "./agent.protocol.auth";
+import { ModifiedFile } from './api.protocol';
 // import { GitCommit } from "./agent.protocol";
 
 export interface GetBranchesRequest {
@@ -62,16 +63,6 @@ export const GetCommitScmInfoRequestType = new RequestType<
 	void
 >("codestream/scm/commit");
 
-export enum FileStatus {
-	untracked = "?",
-	added = "A",
-	renamed = "R",
-	deleted = "D",
-	copied = "C",
-	unmerged = "U",
-	modified = "M"
-}
-
 export interface GetRepoScmStatusRequest {
 	/**
 	 * This can be a file or a folder uri, with a `file` scheme
@@ -99,13 +90,7 @@ export interface RepoScmStatus {
 	repoId?: string;
 	branch?: string;
 	commits?: { sha: string; info: {}; localOnly: boolean }[];
-	modifiedFiles: {
-		oldFile: string;
-		file: string;
-		linesAdded: number;
-		linesRemoved: number;
-		status: FileStatus;
-	}[];
+	modifiedFiles: ModifiedFile[];
 	savedFiles: string[];
 	stagedFiles: string[];
 	startCommit: string;

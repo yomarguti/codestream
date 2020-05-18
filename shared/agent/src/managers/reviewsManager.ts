@@ -2,7 +2,7 @@
 import { applyPatch } from "diff";
 import * as path from "path";
 import { MessageType } from "../api/apiProvider";
-import { SessionContainer } from "../container";
+import { Container, SessionContainer } from "../container";
 import { git } from "../git/git";
 import { Logger } from "../logger";
 import {
@@ -46,6 +46,7 @@ import {
 	CSReviewChangeset,
 	CSReviewCheckpoint,
 	CSReviewDiffs,
+	CSTransformedReviewChangeset,
 	FileStatus
 } from "../protocol/api.protocol";
 import { log, lsp, lspHandler, Strings } from "../system";
@@ -332,14 +333,17 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 	@lspHandler(UpdateReviewRequestType)
 	async update(request: UpdateReviewRequest): Promise<UpdateReviewResponse> {
-		if (request.$addToSet && request.$addToSet.reviewChangesets) {
+		let isAmending = false;
+		let reviewChangesets: CSTransformedReviewChangeset[] = [];
+		if (request.repoChanges && request.repoChanges.length) {
+			isAmending = true;
 			const { posts } = SessionContainer.instance();
-			const repoChanges = request.$addToSet.reviewChangesets as CSRepoChange[];
-			const reviewChangesets = await Promise.all(
-				repoChanges.map(rc => posts.buildChangeset(rc, request.id))
-			);
+			reviewChangesets = (await Promise.all(request.repoChanges.map(rc => posts.buildChangeset(rc, request.id)).filter(_ => _ !== undefined))) as CSTransformedReviewChangeset[];
+			request.$addToSet = {
+				reviewChangesets: reviewChangesets
+			};
 			this._diffs.delete(request.id);
-			request.$addToSet.reviewChangesets = reviewChangesets;
+			delete request.repoChanges;
 		}
 
 		const updateResponse = await this.session.api.updateReview(request);
@@ -347,6 +351,10 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			type: MessageType.Reviews,
 			data: [updateResponse.review]
 		});
+
+		if (isAmending && reviewChangesets.length) {
+			this.trackReviewCheckpointCreation(request.id, reviewChangesets);
+		}
 
 		return { review };
 	}
@@ -437,6 +445,43 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		return {
 			success: true
 		};
+	}
+
+	private trackReviewCheckpointCreation(
+		reviewId: string,
+		reviewChangesets: CSTransformedReviewChangeset[]
+	) {
+		process.nextTick(() => {
+			try {
+				const telemetry = Container.instance().telemetry;
+				const totalCheckpoints =
+					reviewChangesets.map(_ => _!.checkpoint || 0).sort((a, b) => (b || 0) - (a || 0))[0] + 1;
+				const reviewProperties: {
+					[key: string]: any;
+				} = {
+					"Review ID": reviewId,
+					"Checkpoint Total": totalCheckpoints,
+					"Files Added": reviewChangesets
+						.map(_ => _.modifiedFiles.length)
+						.reduce((acc, x) => acc + x),
+					"Pushed Commits Added": reviewChangesets
+						.map(_ => _.commits.filter(c => !c.localOnly).length)
+						.reduce((acc, x) => acc + x),
+					"Local Commits Added": reviewChangesets
+						.map(_ => _.commits.filter(c => c.localOnly).length)
+						.reduce((acc, x) => acc + x),
+					"Staged Changes Added": reviewChangesets.some(_ => _.includeStaged),
+					"Saved Changes Added": reviewChangesets.some(_ => _.includeSaved)
+				};
+
+				telemetry.track({
+					eventName: "Checkpoint Added",
+					properties: reviewProperties
+				});
+			} catch (ex) {
+				Logger.error(ex);
+			}
+		});
 	}
 
 	protected async loadCache() {

@@ -55,7 +55,6 @@ import {
 	ReactToPostRequestType,
 	ReactToPostResponse,
 	ReportingMessageType,
-	RepoScmStatus,
 	ReviewPlus
 } from "../protocol/agent.protocol";
 import {
@@ -68,9 +67,9 @@ import {
 	CSRepoChange,
 	CSReview,
 	CSStream,
+	CSTransformedReviewChangeset,
 	isCSReview,
 	ProviderType,
-	ReviewChangesetFileInfo,
 	StreamType
 } from "../protocol/api.protocol";
 import { providerDisplayNamesByNameKey } from "../providers/provider";
@@ -572,6 +571,7 @@ function trackReviewPostCreation(review: ReviewPlus, totalExcludedFilesCount: nu
 				[key: string]: any;
 			} = {
 				"Review ID": review.id,
+				Approvals: review.allReviewersMustApprove === true ? "Everyone" : "Anyone",
 				Reviewers: review.reviewers.length,
 				Files: review.reviewChangesets.map(_ => _.modifiedFiles.length).reduce((acc, x) => acc + x),
 				"Pushed Commits": review.reviewChangesets
@@ -1094,7 +1094,10 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		};
 	}
 
-	async buildChangeset(repoChange: CSRepoChange, amendingReviewId?: string) {
+	async buildChangeset(
+		repoChange: CSRepoChange,
+		amendingReviewId?: string
+	): Promise<CSTransformedReviewChangeset | undefined> {
 		const { scm, includeSaved, includeStaged, excludedFiles, newFiles } = repoChange;
 		if (!scm || !scm.repoId || !scm.branch || !scm.commits) return undefined;
 		const { git, reviews, scm: scmManager } = SessionContainer.instance();
@@ -1613,7 +1616,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					anchorFormat: "[${text}](${url})"
 				};
 		}
-	};
+	}
 
 	createProviderCard = async (
 		providerCardRequest: {
@@ -1664,7 +1667,11 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				if (providerCardRequest.codemark.permalink) {
 					const link = Strings.interpolate(delimiters.anchorFormat, {
 						text: "Open in IDE",
-						url: `${providerCardRequest.codemark.permalink}?marker=${marker.id}&ide=default&src=${encodeURIComponent(providerDisplayNamesByNameKey.get(attributes.issueProvider.name) || "")}`
+						url: `${providerCardRequest.codemark.permalink}?marker=${
+							marker.id
+						}&ide=default&src=${encodeURIComponent(
+							providerDisplayNamesByNameKey.get(attributes.issueProvider.name) || ""
+						)}`
 					});
 					if (link) {
 						links.push(link);
@@ -1833,7 +1840,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			Logger.error(error, `failed to create a ${attributes.issueProvider.name} card:`);
 			return undefined;
 		}
-	};
+	}
 }
 
 async function resolveCreatePostResponse(response: CreatePostResponse) {

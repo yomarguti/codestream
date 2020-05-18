@@ -27,6 +27,7 @@ import {
 	CSTeam,
 	CSUser,
 	ProviderType,
+	ReviewChangesetFileInfo,
 	StreamType
 } from "./api.protocol.models";
 
@@ -576,6 +577,36 @@ export interface CSGetReviewsResponse {
 	markers?: CSMarker[];
 }
 
+export enum FileStatus {
+	untracked = "?",
+	added = "A",
+	renamed = "R",
+	deleted = "D",
+	copied = "C",
+	unmerged = "U",
+	modified = "M"
+}
+
+export interface ModifiedFile {
+	oldFile: string;
+	file: string;
+	linesAdded: number;
+	linesRemoved: number;
+	status: FileStatus;
+}
+
+export interface CSTransformedReviewChangeset {
+	repoId: string;
+	branch: string;
+	commits: { sha: string; info: {}; localOnly: boolean }[];
+	modifiedFiles: ModifiedFile[];
+	modifiedFilesInCheckpoint: ReviewChangesetFileInfo[];
+	includeSaved: boolean;
+	includeStaged: boolean;
+	checkpoint: CSReviewCheckpoint;
+	diffs: CSReviewDiffs;
+}
+
 export interface CSUpdateReviewRequest {
 	// edit the status, title or text
 	status?: CSReviewStatus;
@@ -583,23 +614,13 @@ export interface CSUpdateReviewRequest {
 	text?: string;
 	allReviewersMustApprove?: boolean;
 
-	// FIXME TODO - Type
-	$addToSet?: any;
-	// amend the review with an additional checkpoint
-	// this is the data coming from the webivew....
-	// repoChanges?: {
-	// 	scm: RepoScmStatus;
-	// 	startCommit: string;
-	// 	excludeCommit: string;
-	// 	excludedFiles: string[];
-	// 	newFiles: string[];
-	// 	includeSaved: boolean;
-	// 	includeStaged: boolean;
-	// 	checkpoint: number;
-	// }[];
-	// ... and this is the data that the API server expects,
-	// after getting massaged by postsManager
-	reviewChangesets?: CreateReviewChangesetsRequest[];
+	$addToSet?: {
+		/**
+		 * This is the transformed version of `repoChanges`
+		 * that is sent to the server
+		 */
+		reviewChangesets?: CSTransformedReviewChangeset[];
+	};
 }
 
 export interface CSUpdateReviewResponse {

@@ -10,7 +10,6 @@ import {
 	CreateBranchRequest,
 	CreateBranchRequestType,
 	CreateBranchResponse,
-	FileStatus,
 	GetBranchesRequest,
 	GetBranchesRequestType,
 	GetBranchesResponse,
@@ -39,6 +38,7 @@ import {
 	GetReposScmResponse,
 	RepoScmStatus
 } from "../protocol/agent.protocol";
+import { FileStatus } from "../protocol/api.protocol.models";
 import { FileSystem, Iterables, log, lsp, lspHandler, Strings } from "../system";
 import { xfs } from "../xfs";
 import { Container, SessionContainer } from "./../container";

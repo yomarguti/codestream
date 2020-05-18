@@ -1,6 +1,6 @@
 "use strict";
 import { RequestType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
-import { CreateMarkerRequest, PostPlus, ThirdPartyProviderUser } from "./agent.protocol";
+import { CreateMarkerRequest, PostPlus } from "./agent.protocol";
 import {
 	CSChannelStream,
 	CSCreateReviewRequest,
@@ -19,7 +19,7 @@ import {
 	CSUpdateReviewRequest,
 	CSUpdateReviewResponse
 } from "./api.protocol";
-import { CSReviewChangeset, CSReviewDiffs } from "./api.protocol.models";
+import { CSReviewChangeset, CSReviewDiffs, ReviewChangesetFileInfo, CSReviewStatus } from "./api.protocol.models";
 
 export interface ReviewPlus extends CSReview {}
 
@@ -132,6 +132,12 @@ export const SetReviewStatusRequestType = new RequestType<
 
 export interface UpdateReviewRequest extends CSUpdateReviewRequest {
 	id: string;
+	/**
+	 * This property is set from the client, then transformed into
+	 * `$addToSet.reviewChangesets`
+	 *
+	 * @serverIgnore this property can be deleted before it is sent to the server
+	 */
 	repoChanges?: CSRepoChange[];
 }
 
