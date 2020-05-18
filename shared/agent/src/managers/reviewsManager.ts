@@ -44,9 +44,9 @@ import {
 	CSRepoChange,
 	CSReview,
 	CSReviewChangeset,
+	CSReviewCheckpoint,
 	CSReviewDiffs,
-	FileStatus,
-	CSReviewCheckpoint
+	FileStatus
 } from "../protocol/api.protocol";
 import { log, lsp, lspHandler, Strings } from "../system";
 import { gate } from "../system/decorators/gate";
@@ -78,7 +78,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 		return {
 			reviewId,
-			checkpoint: checkpoint === undefined ? undefined : parseInt(checkpoint, 10),
+			checkpoint: checkpoint === "undefined" ? undefined : parseInt(checkpoint, 10),
 			repoId,
 			version,
 			path
@@ -119,7 +119,9 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		if (!this._diffs.has(reviewId)) {
 			const responses = await this.session.api.fetchReviewCheckpointDiffs({ reviewId });
 			if (responses && responses.length) {
-				const result: { [repoId: string]: { checkpoint: CSReviewCheckpoint; diff: CSReviewDiffs }[] } = {};
+				const result: {
+					[repoId: string]: { checkpoint: CSReviewCheckpoint; diff: CSReviewDiffs }[];
+				} = {};
 				if (responses.length === 1 && responses[0].checkpoint === undefined) {
 					const response = responses[0];
 					result[response.repoId].push({ checkpoint: 0, diff: response.diffs });
