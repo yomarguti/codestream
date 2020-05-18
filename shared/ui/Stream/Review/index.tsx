@@ -121,7 +121,7 @@ export interface BaseReviewProps extends CardProps {
 	filesTip?: any;
 	isAmending?: boolean;
 	setIsEditing: Function;
-	setIsAmending: Function;
+	setIsAmending?: Function;
 	onRequiresCheckPreconditions?: Function;
 }
 
@@ -133,13 +133,13 @@ export interface BaseReviewHeaderProps {
 	tags?: { id: string }[];
 	changeRequests?: CodemarkPlus[];
 	setIsEditing: Function;
-	setIsAmending: Function;
+	setIsAmending?: Function;
 }
 
 export interface BaseReviewMenuProps {
 	review: CSReview;
 	setIsEditing: Function;
-	setIsAmending: Function;
+	setIsAmending?: Function;
 	changeRequests?: CodemarkPlus[];
 	collapsed?: boolean;
 }
@@ -196,7 +196,7 @@ export const Description = styled.div`
 	margin-bottom: 15px;
 `;
 
-const MetaCheckboxWithHoverIcon = styled.div`
+export const MetaCheckboxWithHoverIcon = styled.div`
 	display: flex;
 	.icon {
 		margin: 3px 0 0 8px;
@@ -331,7 +331,7 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 		icon: <Icon name="plus" />,
 		action: () => {
 			if (props.review.status !== "open") reopen();
-			setIsAmending(true);
+			setIsAmending && setIsAmending(true);
 		}
 	};
 
@@ -556,6 +556,21 @@ const BaseReview = (props: BaseReviewProps) => {
 			? "Initial Review"
 			: `Update #${checkpoint}`;
 
+	const renderCommitList = () => {
+		const groups = [] as any;
+		for (var i = 0; i < numCheckpoints; i++) {
+			groups.push(
+				<Meta>
+					<MetaLabel>Commits in {i === 0 ? "Initial Review" : `Update #${i}`}</MetaLabel>
+					<MetaDescriptionForAssignees>
+						<CommitList review={review} checkpoint={i} />
+					</MetaDescriptionForAssignees>
+				</Meta>
+			);
+		}
+		return groups;
+	};
+
 	return (
 		<MinimumWidthCard {...getCardProps(props)} noCard={!props.collapsed}>
 			<CardBody>
@@ -758,14 +773,17 @@ const BaseReview = (props: BaseReviewProps) => {
 							</Meta>
 						</TourTip>
 					)}
-					{!props.collapsed && (
+					{!props.collapsed && checkpoint !== undefined && (
 						<Meta>
-							<MetaLabel>Commits</MetaLabel>
+							<MetaLabel>
+								Commits in {checkpoint === 0 ? "Initial Review" : `Update #${checkpoint}`}
+							</MetaLabel>
 							<MetaDescriptionForAssignees>
 								<CommitList review={review} checkpoint={checkpoint} />
 							</MetaDescriptionForAssignees>
 						</Meta>
 					)}
+					{!props.collapsed && checkpoint === undefined && renderCommitList()}
 				</MetaSection>
 				{props.collapsed && renderMetaSectionCollapsed(props)}
 			</CardBody>
@@ -941,7 +959,14 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 
 type FromBaseReviewProps = Pick<
 	BaseReviewProps,
-	"collapsed" | "hoverEffect" | "onClick" | "className" | "renderFooter" | "filesTip" | "isAmending"
+	| "collapsed"
+	| "hoverEffect"
+	| "onClick"
+	| "className"
+	| "renderFooter"
+	| "filesTip"
+	| "isAmending"
+	| "setIsAmending"
 >;
 
 interface PropsWithId extends FromBaseReviewProps {
@@ -986,7 +1011,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 		type: ""
 	});
 	const [isEditing, setIsEditing] = React.useState(false);
-	const [isAmending, setIsAmending] = React.useState(false);
+	// const [isAmending, setIsAmending] = React.useState(false);
 	const [shareModalOpen, setShareModalOpen] = React.useState(false);
 
 	const tags = React.useMemo(
@@ -1089,7 +1114,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 								isEditing
 								isAmending
 								editingReview={review}
-								onClose={() => setIsAmending(false)}
+								onClose={() => props.setIsAmending && props.setIsAmending(false)}
 							/>
 						</InputContainer>
 					)}
@@ -1099,15 +1124,11 @@ const ReviewForReview = (props: PropsWithReview) => {
 
 	if (shareModalOpen)
 		return <SharingModal review={props.review!} onClose={() => setShareModalOpen(false)} />;
-	if (isEditing && !isAmending) {
+	if (isEditing && !props.isAmending) {
 		return (
 			<ReviewForm
 				isEditing={isEditing}
-				isAmending={isAmending}
-				onClose={() => {
-					setIsEditing(false);
-					setIsAmending(false);
-				}}
+				onClose={() => setIsEditing(false)}
 				editingReview={props.review}
 			/>
 		);
@@ -1125,7 +1146,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 				currentUserId={derivedState.currentUser.id}
 				renderFooter={renderFooter}
 				setIsEditing={setIsEditing}
-				setIsAmending={setIsAmending}
+				setIsAmending={props.setIsAmending}
 				headerError={preconditionError}
 				canStartReview={canStartReview}
 				onRequiresCheckPreconditions={() => checkPreconditions()}

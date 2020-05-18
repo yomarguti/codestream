@@ -198,6 +198,8 @@ export const ActivityPanel = () => {
 							? derivedState.repos[changeset.repoId].name
 							: undefined
 					)
+					// remove duplictes
+					.filter((val, index, arr) => arr.indexOf(val) === index)
 					.filter(Boolean)
 					.join(", ");
 

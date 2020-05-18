@@ -573,7 +573,12 @@ export function ReviewNav(props: Props) {
 							}}
 						>
 							<StyledReview className={hoverButton == "files" ? "pulse" : ""}>
-								<Review review={review} isAmending={isAmending} filesTip={filesTip} />
+								<Review
+									review={review}
+									isAmending={isAmending}
+									setIsAmending={setIsAmending}
+									filesTip={filesTip}
+								/>
 							</StyledReview>
 
 							{derivedState.hideReviewInstructions && (

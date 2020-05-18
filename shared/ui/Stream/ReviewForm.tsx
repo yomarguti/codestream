@@ -11,7 +11,8 @@ import {
 	DidChangeDataNotificationType,
 	ChangeDataType,
 	GetUserInfoRequestType,
-	UpdateReviewResponse
+	UpdateReviewResponse,
+	CodemarkPlus
 } from "@codestream/protocols/agent";
 import {
 	CSReview,
@@ -20,7 +21,8 @@ import {
 	StreamType,
 	CSMe,
 	CSReviewApprovalSetting,
-	CSReviewAssignmentSetting
+	CSReviewAssignmentSetting,
+	CodemarkStatus
 } from "@codestream/protocols/api";
 import React, { ReactElement } from "react";
 import { connect } from "react-redux";
@@ -84,6 +86,8 @@ import {
 import { CommitList } from "./Review/CommitList";
 import CancelButton from "./CancelButton";
 import { MarkdownText } from "./MarkdownText";
+import { getReviewChangeRequests } from "../store/codemarks/reducer";
+import { MetaCheckboxWithHoverIcon } from "./Review";
 
 interface Props extends ConnectedProps {
 	editingReview?: CSReview;
@@ -119,6 +123,7 @@ interface ConnectedProps {
 	// these next two are team settings
 	reviewApproval: CSReviewApprovalSetting;
 	reviewAssignment: CSReviewAssignmentSetting;
+	changeRequests?: CodemarkPlus[];
 }
 
 interface State {
@@ -180,6 +185,7 @@ interface State {
 	mountedTimestamp: number;
 	currentFile?: string;
 	editingReviewBranch?: string;
+	addressesIssues: {};
 }
 
 const EmailWarning = styled.div`
@@ -238,7 +244,8 @@ class ReviewForm extends React.Component<Props, State> {
 			unsavedFiles: props.unsavedFiles,
 			commitListLength: 10,
 			allReviewersMustApprove: false,
-			currentFile: ""
+			currentFile: "",
+			addressesIssues: {}
 		};
 
 		const state = props.editingReview
@@ -605,7 +612,7 @@ class ReviewForm extends React.Component<Props, State> {
 				const checkpoint =
 					Math.max.apply(
 						Math,
-						editingReview.reviewChangesets.map(_ => _.checkpoint === undefined ? 0 : _.checkpoint)
+						editingReview.reviewChangesets.map(_ => (_.checkpoint === undefined ? 0 : _.checkpoint))
 					) + 1;
 
 				if (this.props.isAmending) {
@@ -841,6 +848,45 @@ class ReviewForm extends React.Component<Props, State> {
 		let selectedTags = this.state.selectedTags;
 		selectedTags[tagId] = !selectedTags[tagId];
 		this.setState({ selectedTags });
+	};
+
+	renderAddressesIssues = () => {
+		// find the open issues
+		const openIssues = this.props.changeRequests!.filter(
+			codemark => codemark.status !== CodemarkStatus.Closed
+		);
+		// if there are none open, this update can't address anything!
+		if (openIssues.length == 0) return null;
+
+		return (
+			<div className="related">
+				<div className="related-label">This Update Addresses</div>
+				<MetaDescriptionForAssignees>
+					{openIssues.map(codemark => {
+						if (codemark.status === CodemarkStatus.Closed) return null;
+						const text = codemark.title || codemark.text;
+						const formattedText = text.length > 80 ? `${text.substring(0, 77)}...` : text;
+
+						return (
+							<MetaCheckboxWithHoverIcon key={codemark.id}>
+								<Checkbox
+									noMargin
+									name={`addresses-${codemark.id}`}
+									checked={this.state.addressesIssues[codemark.id]}
+									onChange={value => {
+										this.setState({
+											addressesIssues: { ...this.state.addressesIssues, [codemark.id]: value }
+										});
+									}}
+								>
+									<MarkdownText text={formattedText} />
+								</Checkbox>
+							</MetaCheckboxWithHoverIcon>
+						);
+					})}
+				</MetaDescriptionForAssignees>
+			</div>
+		);
 	};
 
 	renderMessageInput = () => {
@@ -1533,7 +1579,7 @@ class ReviewForm extends React.Component<Props, State> {
 		const { editingReview } = this.props;
 		if (!editingReview) return null;
 
-		console.warn("ER", editingReview);
+		// console.warn("ER", editingReview);
 		return editingReview.reviewChangesets.map((changeset, index) => {
 			const { checkpoint = 0 } = changeset;
 			return (
@@ -1692,6 +1738,7 @@ class ReviewForm extends React.Component<Props, State> {
 								</div>
 							</div>
 							{this.renderMessageInput()}
+							{this.renderAddressesIssues()}
 						</>
 					)}
 					{!isLoadingScm && !isEditing && !scmError && (
@@ -1847,7 +1894,7 @@ class ReviewForm extends React.Component<Props, State> {
 
 const EMPTY_OBJECT = {};
 
-const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
+const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 	const { context, editorContext, users, teams, session, preferences, repos, documents } = state;
 	const user = users[session.userId!] as CSMe;
 	const channel = context.currentStreamId
@@ -1871,6 +1918,9 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 	const skipPostCreationModal = preferences ? preferences.skipPostCreationModal : false;
 
 	const reviewsByCommit = getAllByCommit(state) || {};
+
+	const changeRequests = props.editingReview && getReviewChangeRequests(state, props.editingReview);
+
 	return {
 		unsavedFiles: unsavedFiles,
 		reviewsByCommit,
@@ -1887,7 +1937,8 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		skipPostCreationModal,
 		textEditorUri: editorContext.textEditorUri,
 		teamTagsArray,
-		repos
+		repos,
+		changeRequests
 	};
 };
 
