@@ -246,9 +246,9 @@ export class CodeStreamSession {
 		);
 
 		this._environment = this.getEnvironment(this._options.serverUrl);
-		// if (this._environment === CodeStreamEnvironment.Production) {
-		// 	_options.disableStrictSSL = false;
-		// }
+		if (this._environment === CodeStreamEnvironment.Production) {
+			_options.disableStrictSSL = false;
+		}
 
 		Container.initialize(agent, this);
 
