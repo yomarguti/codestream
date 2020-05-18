@@ -759,7 +759,11 @@ const describeIssueStatusChange = (action: IssueStatus) => {
 	}
 };
 
-export const setCodemarkStatus = (codemarkId: string, status: IssueStatus) => async dispatch => {
+export const setCodemarkStatus = (
+	codemarkId: string,
+	status: IssueStatus,
+	extraText?: string
+) => async dispatch => {
 	try {
 		const response = await HostApi.instance.send(UpdateCodemarkRequestType, {
 			codemarkId,
@@ -770,7 +774,7 @@ export const setCodemarkStatus = (codemarkId: string, status: IssueStatus) => as
 			createPost(
 				response.codemark.streamId,
 				response.codemark.postId,
-				`/me ${describeIssueStatusChange(status)} this issue`
+				`/me ${describeIssueStatusChange(status)} this issue ${extraText}`
 			)
 		);
 

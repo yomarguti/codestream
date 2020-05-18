@@ -136,8 +136,9 @@ export const ChangesetFileList = (props: {
 			files.push(
 				...modifiedFiles.map(f => {
 					const visitedKey = [changeset!.repoId, f.file].join(":");
-					const cp = checkpoint !== undefined ? checkpoint : "all";
-					const uri = `codestream-diff://${review.id}/${cp}/${changeset!.repoId}/right/${f.file}`;
+					const uri = `codestream-diff://${review.id}/${checkpoint}/${changeset!.repoId}/right/${
+						f.file
+					}`;
 					const selected = (derivedState.matchFile || "") == uri;
 					const visited = visitedFilesInReview[visitedKey];
 					if (selected && !visited) {
