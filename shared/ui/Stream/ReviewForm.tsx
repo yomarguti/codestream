@@ -3,8 +3,7 @@ import {
 	GetFileScmInfoResponse,
 	GetRepoScmStatusRequestType,
 	GetRepoScmStatusResponse,
-	GetReposScmRequestType,
-	FileStatus,
+	GetReposScmRequestType,	
 	AddIgnoreFilesRequestType,
 	IgnoreFilesRequestType,
 	ReposScm,
@@ -22,7 +21,8 @@ import {
 	CSMe,
 	CSReviewApprovalSetting,
 	CSReviewAssignmentSetting,
-	CodemarkStatus
+	CodemarkStatus,
+	FileStatus
 } from "@codestream/protocols/api";
 import React, { ReactElement } from "react";
 import { connect } from "react-redux";
@@ -635,9 +635,7 @@ class ReviewForm extends React.Component<Props, State> {
 							checkpoint
 						}
 					];
-					attributes.$addToSet = {
-						reviewChangesets: repoChanges
-					};
+					attributes.repoChanges = repoChanges;
 				}
 
 				const editResult = await this.props.editReview(editingReview.id, attributes);

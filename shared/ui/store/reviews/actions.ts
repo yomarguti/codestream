@@ -1,4 +1,4 @@
-import { CSReview, CSReviewChangeset } from "@codestream/protocols/api";
+import { CSReview, CSReviewChangeset, CSRepoChange } from "@codestream/protocols/api";
 import { action } from "../common";
 import { ReviewsActionsTypes } from "./types";
 import { HostApi } from "@codestream/webview/webview-api";
@@ -145,8 +145,11 @@ export const deleteReview = (id: string) => async dispatch => {
 	}
 };
 
+/**
+ * "Advanced" properties that can come from the client (webview)
+ */
 interface AdvancedEditableReviewAttributes {
-	$addToSet: { reviewChangesets?: CSReviewChangeset[] };
+	repoChanges?: CSRepoChange[];
 	// array of userIds / tags to add
 	$push: { reviewers?: string[]; tags?: string[] };
 	// array of userIds / tags to remove
@@ -155,7 +158,7 @@ interface AdvancedEditableReviewAttributes {
 
 export type EditableAttributes = Partial<
 	Pick<CSReview, "tags" | "text" | "title" | "reviewers" | "allReviewersMustApprove"> &
-		AdvancedEditableReviewAttributes
+		AdvancedEditableReviewAttributes		
 >;
 
 export const editReview = (id: string, attributes: EditableAttributes) => async (
