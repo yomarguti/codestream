@@ -1,5 +1,20 @@
 # Change Log
 
+## [7.2.3] - 2020-5-18
+
+### Added
+
+- Adds the ability to react to posts with emoji
+- Adds the display of the server URL to the bottom of the initial page in the extension, for the benefit of on-prem installations
+
+### Changed
+
+- Improved display of nested replies in a code review's thread
+
+### Fixed
+
+- Fixes several performance issues associated with the git watcher
+
 ## [7.2.2] - 2020-5-15
 
 ### Added
