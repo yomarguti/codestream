@@ -628,8 +628,7 @@ export class WebviewController implements Disposable {
 					this._resuscitations++;
 					this.closeWebview();
 					this.show();
-				}
-				else {
+				} else {
 					Logger.error(new Error("no longer resuscitating"));
 				}
 				break;
@@ -808,7 +807,11 @@ export class WebviewController implements Disposable {
 			case UpdateServerUrlRequestType.method: {
 				webview.onIpcRequest(UpdateServerUrlRequestType, e, async (_type, params) => {
 					await configuration.update("serverUrl", params.serverUrl, ConfigurationTarget.Global);
-					await configuration.update("disableStrictSSL", params.disableStrictSSL, ConfigurationTarget.Global);
+					await configuration.update(
+						"disableStrictSSL",
+						params.disableStrictSSL,
+						ConfigurationTarget.Global
+					);
 					Container.setServerUrl(params.serverUrl, params.disableStrictSSL ? true : false);
 					return emptyObj;
 				});
@@ -923,7 +926,7 @@ export class WebviewController implements Disposable {
 			if (this._disposableWebview !== undefined) {
 				try {
 					this._disposableWebview.dispose();
-				} catch { }
+				} catch {}
 				this._disposableWebview = undefined;
 			}
 			this._webview = undefined;
@@ -955,8 +958,8 @@ export class WebviewController implements Disposable {
 			context: this._context
 				? { ...this._context, currentTeamId: currentTeamId }
 				: {
-					currentTeamId: currentTeamId
-				},
+						currentTeamId: currentTeamId
+				  },
 			version: Container.versionFormatted,
 			versionCompatibility: this._versionCompatibility,
 			apiVersionCompatibility: this._apiVersionCompatibility,
@@ -983,8 +986,10 @@ export class WebviewController implements Disposable {
 		if (this._resuscitations > 1) {
 			// this begins as 1... update the variable in the js that is multiplied by
 			// the timeout... it will now wait 1000 * this._resuscitations before trying to reload
-			 html = html.replace(/\/\*<delay>\*\/(\d+)\/\*<\/delay>\*\//,  () =>
-			`/*<delay>*/${Math.floor(this._resuscitations)}/*</delay>*/`);
+			html = html.replace(
+				/\/\*<delay>\*\/(\d+)\/\*<\/delay>\*\//,
+				() => `/*<delay>*/${Math.floor(this._resuscitations)}/*</delay>*/`
+			);
 		}
 		return html;
 	}
@@ -1018,11 +1023,8 @@ export class WebviewController implements Disposable {
 		// this HACK listens for a `window` property that is set inside one of the
 		// codestream external js scripts. when that script loads, the variable will be present.
 		this._html = content.replace(
-			/{{root}}/g,
-			Uri.file(Container.context.asAbsolutePath("."))
-				.with({ scheme: "vscode-resource" })
-				.toString()
-		).replace("</body>", `<script>(function() {
+			"</body>",
+			`<script>(function() {
 			var i = 1;
 			var delay = /*<delay>*/1/*</delay>*/;
 			var retry = delay * 1000;
@@ -1052,7 +1054,8 @@ export class WebviewController implements Disposable {
 				}, 10);
 			}, retry);
 		})()
-	</script></body>`);
+	</script></body>`
+		);
 
 		return this.resuscitationBackoff(this._html);
 	}
@@ -1139,11 +1142,11 @@ export class WebviewController implements Disposable {
 			} else {
 				Container.markerDecorations.resume();
 			}
-		} catch { }
+		} catch {}
 	}
 }
 
-interface WebviewRequiresResuscitationNotification { }
+interface WebviewRequiresResuscitationNotification {}
 /**
  * only for VSC, used to handle a workaround for the webview not loading
  * because of an issue with vscode-resource://.

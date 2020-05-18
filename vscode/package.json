@@ -15,7 +15,7 @@
         "url": "https://github.com/TeamCodeStream/CodeStream"
     },
     "engines": {
-        "vscode": "^1.36.0"
+        "vscode": "^1.38.0"
     },
     "main": "./dist/extension",
     "icon": "assets/images/codestream.png",
@@ -549,8 +549,8 @@
                     "command": "codestream.newPermalink",
                     "when": "codestream:status == signedIn",
                     "group": "9_zcodestream@4"
-				},
-				{
+                },
+                {
                     "command": "codestream.newReview",
                     "when": "codestream:status == signedIn",
                     "group": "9_zcodestream@6"
@@ -613,7 +613,7 @@
         "@types/node": "10.11.7",
         "@types/node-fetch": "2.5.0",
         "@types/uuid": "3.4.5",
-        "@types/vscode": "1.36.0",
+        "@types/vscode": "1.38.0",
         "@typescript-eslint/eslint-plugin": "2.18.0",
         "@typescript-eslint/eslint-plugin-tslint": "2.18.0",
         "@typescript-eslint/parser": "2.18.0",

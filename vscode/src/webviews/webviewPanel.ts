@@ -1,4 +1,5 @@
 "use strict";
+import * as path from "path";
 import {
 	HostDidChangeFocusNotificationType,
 	isIpcRequestMessage,
@@ -93,8 +94,11 @@ export class CodeStreamWebviewPanel implements Disposable {
 			this._panel.onDidChangeViewState(this.onPanelViewStateChanged, this),
 			window.onDidChangeWindowState(this.onWindowStateChanged, this)
 		);
-
-		this._panel.webview.html = _html;
+		this._panel.webview.html = this._html = this._html.replace(/"\{\{root\}\}(.+?)"/g, (_, group1) => {
+			const partialPath = Uri.file(path.join(Container.context.extensionPath, group1));
+			const fullPath = this._panel.webview.asWebviewUri(partialPath).toString();
+			return `"${fullPath}"`;
+		});
 	}
 
 	dispose() {
