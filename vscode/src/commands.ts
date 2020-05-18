@@ -239,8 +239,8 @@ export class Commands implements Disposable {
 
 		await commands.executeCommand(
 			BuiltInCommands.Diff,
-			Uri.parse(`codestream-diff://local/${args.repoId}/undefined/left/${args.path}`),
-			Uri.parse(`codestream-diff://local/${args.repoId}/undefined/right/${args.path}`),
+			Uri.parse(`codestream-diff://local/undefined/${args.repoId}/left/${args.path}`),
+			Uri.parse(`codestream-diff://local/undefined/${args.repoId}/right/${args.path}`),
 			`${paths.basename(args.path)} review changes`,
 			{ preserveFocus: false, preview: true, viewColumn: column || ViewColumn.Beside }
 		);
