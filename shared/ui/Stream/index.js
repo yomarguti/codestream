@@ -731,7 +731,8 @@ export class SimpleStream extends Component {
 		const selected = panel => activePanel === panel; // && !plusMenuOpen && !menuOpen;
 		return (
 			<nav className="inline" id="global-nav">
-				{false && this.props.remainingSteps > 0 && (
+				{/* turn this off for GettingStarted experiment */}
+				{this.props.remainingSteps > 0 && (
 					<label
 						className={cx({ selected: selected(WebviewPanels.GettingStarted) })}
 						onClick={e => this.setActivePanel(WebviewPanels.GettingStarted)}
