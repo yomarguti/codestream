@@ -1,5 +1,5 @@
 "use strict";
-import * as chokidar from "chokidar"
+import * as chokidar from "chokidar";
 import * as fs from "fs";
 import * as path from "path";
 import { CommitsChangedData } from "protocol/agent.protocol";
@@ -321,15 +321,38 @@ export class GitRepositories {
 		}
 	}
 
-	private _monitors: fs.FSWatcher[] = [];
+	/**
+	 * File watchers, could be an fs.FSWatcher or chokidar.FSWatcher
+	 */
+	private _monitors: { dispose(): Promise<void> }[] = [];
+	/**
+	 * Creates file/directory watchers for the git repos in this workspace
+	 */
 	private async monitorRepos() {
 		for (const monitor of this._monitors) {
-			monitor.close();
+			await monitor.dispose();
 		}
 		this._monitors = [];
 
 		const repos = this._repositoryTree.values();
 		for (const repo of repos) {
+			// try watching .git/logs/HEAD first as it's more important that
+			// the others paths below
+			try {
+				const logFile = path.join(repo.path, ".git", "logs", "HEAD");
+				const watcher = fs.watch(logFile, () => {
+					this._onCommitHashChanged.fire(repo);
+				});
+				this._monitors.push({
+					dispose() {
+						watcher.close();
+						return Promise.resolve();
+					}
+				});
+			} catch (err) {
+				Logger.error(err);
+			}
+
 			try {
 				// thanks gitlens!
 				// https://github.com/eamodio/vscode-gitlens/blob/master/src/git/models/repository.ts#L133
@@ -341,11 +364,17 @@ export class GitRepositories {
 					".git/refs/stash",
 					".git/refs/heads/**",
 					".git/refs/remotes/**",
-					".git/refs/tags/**",
+					// there's the possibility for way too many tags for the watcher to be useful
+					// ".git/refs/tags/**",
 					".gitignore"
 				].map(_ => path.join(repo.path, _));
-				const watcher = chokidar.watch(paths);
-				watcher.on("all", (eventName: string, path: string/*, stats: fs.Stats | undefined*/) => {
+				const watcher = chokidar.watch(paths, {
+					// don't allow chokidar watcher to fire changes on initialization
+					// (fires lots of `add` and `addDir` events that we do not need
+					// as they can cause extensions to overload their ipc message queues)
+					ignoreInitial: true
+				});
+				watcher.on("all", (eventName: string, path: string /*, stats: fs.Stats | undefined*/) => {
 					Logger.debug(`git watch changed: ${eventName}:${path}`);
 					this._onGitChanged.fire({
 						type: eventName,
@@ -357,17 +386,11 @@ export class GitRepositories {
 						}
 					} as CommitsChangedData);
 				});
-				this._monitors.push(watcher);
-			}
-			catch (err) {
-				Logger.error(err);
-			}
-			try {
-				const logFile = path.join(repo.path, ".git", "logs", "HEAD");
-				const watcher = fs.watch(logFile, () => {
-					this._onCommitHashChanged.fire(repo);
+				this._monitors.push({
+					dispose() {
+						return watcher.close();
+					}
 				});
-				this._monitors.push(watcher);
 			} catch (err) {
 				Logger.error(err);
 			}
