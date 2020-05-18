@@ -27,7 +27,7 @@ import {
 } from "../protocol/api.protocol";
 import { log, lspProvider, Strings } from "../system";
 import {
-	getRemotePath,
+	getRemotePaths,
 	PullRequestComment,
 	REFRESH_TIMEOUT,
 	ThirdPartyIssueProviderBase
