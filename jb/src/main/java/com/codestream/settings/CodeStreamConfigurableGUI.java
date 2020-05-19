@@ -23,42 +23,6 @@ public class CodeStreamConfigurableGUI {
     private JComboBox proxySupport;
     private JCheckBox proxyStrictSSL;
 
-    public CodeStreamConfigurableGUI() {
-        proxySupport.addItemListener(event -> {
-            if (event.getStateChange() == ItemEvent.SELECTED) {
-                proxyStrictSSL.setEnabled(event.getItem().equals(ProxySupport.ON));
-            }
-        });
-
-        serverUrl.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                validateServerUrl(serverUrl.getText());
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                validateServerUrl(serverUrl.getText());
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                validateServerUrl(serverUrl.getText());
-            }
-        });
-
-        validateServerUrl(serverUrl.getText());
-    }
-
-    private void validateServerUrl(String text) {
-        if (text.equals(API_PROD)) {
-            disableStrictSSL.setSelected(false);
-            disableStrictSSL.setEnabled(false);
-        } else {
-            disableStrictSSL.setEnabled(true);
-        }
-    }
-
     public JPanel getRootPanel() {
         return rootPanel;
     }
