@@ -246,10 +246,6 @@ export class CodeStreamSession {
 		);
 
 		this._environment = this.getEnvironment(this._options.serverUrl);
-		if (this._environment === CodeStreamEnvironment.Production) {
-			_options.disableStrictSSL = false;
-		}
-
 		Container.initialize(agent, this);
 
 		const redactProxyPasswdRegex = /(http:\/\/.*:)(.*)(@.*)/gi;
@@ -284,7 +280,7 @@ export class CodeStreamSession {
 				if (proxyUri) {
 					this._httpsAgent = new HttpsProxyAgent({
 						...proxyUri,
-						rejectUnauthorized: strictSSL
+						rejectUnauthorized: this.rejectUnauthorized
 					} as any);
 				}
 			} else {
@@ -296,7 +292,7 @@ export class CodeStreamSession {
 
 		if (!this._httpsAgent) {
 			this._httpsAgent = new HttpsAgent({
-				rejectUnauthorized: _options.disableStrictSSL != null ? !_options.disableStrictSSL : false
+				rejectUnauthorized: this.rejectUnauthorized
 			});
 		}
 
@@ -310,7 +306,7 @@ export class CodeStreamSession {
 			_options.serverUrl,
 			this.versionInfo,
 			this._httpAgent || this._httpsAgent,
-			!_options.disableStrictSSL
+			this.rejectUnauthorized
 		);
 
 		this._api.useMiddleware({
@@ -579,8 +575,12 @@ export class CodeStreamSession {
 		return this._environment;
 	}
 
-	get disableStrictSSL() {
-		return this._options.disableStrictSSL;
+	get disableStrictSSL(): boolean {
+		return this._options.disableStrictSSL != null ? this._options.disableStrictSSL : false;
+	}
+
+	get rejectUnauthorized(): boolean {
+		return !this.disableStrictSSL;
 	}
 
 	private _status: SessionStatus = SessionStatus.SignedOut;
