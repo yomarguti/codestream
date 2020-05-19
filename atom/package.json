@@ -1,7 +1,7 @@
 {
 	"name": "codestream",
 	"main": "./dist/codestream",
-	"version": "7.2.2",
+	"version": "7.2.3",
 	"description": "Discuss code easily. Streamline Code Reviews. Improve code quality. Works w/ Slack, Teams, Jira, Trello, git, and more.",
 	"keywords": [
 		"chat",
@@ -112,7 +112,7 @@
 		"disableStrictSSL": {
 			"type": "boolean",
 			"default": false,
-			"description": "Allow self-signed certificates to be used in network requests (On-Prem)"
+			"description": "Allow self-signed certificates to be used in network requests"
 		}
 	},
 	"scripts": {
