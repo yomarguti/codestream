@@ -49,7 +49,13 @@ import HeadshotMenu from "@codestream/webview/src/components/HeadshotMenu";
 import { SelectPeople } from "@codestream/webview/src/components/SelectPeople";
 import { getTeamMembers, getTeamTagsArray, getTeamMates } from "../store/users/reducer";
 import MessageInput from "./MessageInput";
-import { openPanel, closePanel, createPostAndReview, setUserPreference } from "./actions";
+import {
+	openPanel,
+	closePanel,
+	createPostAndReview,
+	setUserPreference,
+	setCodemarkStatus
+} from "./actions";
 import { CodeStreamState } from "../store";
 import { CSText } from "../src/components/CSText";
 import { SharingControls, SharingAttributes } from "./SharingControls";
@@ -98,6 +104,7 @@ interface Props extends ConnectedProps {
 	closePanel: Function;
 	setUserPreference: Function;
 	setCurrentReview: Function;
+	setCodemarkStatus: Function;
 }
 
 interface ConnectedProps {
@@ -112,7 +119,11 @@ interface ConnectedProps {
 	teamTagsArray: any;
 	textEditorUri?: string;
 	createPostAndReview?: Function;
-	editReview?: (id: string, attributes: EditableAttributes) => UpdateReviewResponse | undefined;
+	editReview?: (
+		id: string,
+		attributes: EditableAttributes,
+		replyText?: string
+	) => UpdateReviewResponse | undefined;
 	repos: any;
 	shouldShare: boolean;
 	unsavedFiles: string[];
@@ -130,6 +141,8 @@ interface State {
 	title: string;
 	titleTouched: boolean;
 	text: string;
+	// for amending
+	replyText: string;
 	assignees: { value: any; label: string }[] | { value: any; label: string };
 	assigneesRequired: boolean;
 	assigneesDisabled: boolean;
@@ -185,7 +198,7 @@ interface State {
 	mountedTimestamp: number;
 	currentFile?: string;
 	editingReviewBranch?: string;
-	addressesIssues: {};
+	addressesIssues: { [codemarkId: string]: boolean };
 }
 
 const EmailWarning = styled.div`
@@ -222,6 +235,7 @@ class ReviewForm extends React.Component<Props, State> {
 			title: "",
 			titleTouched: false,
 			text: "",
+			replyText: "",
 			assignees: [],
 			assigneesDisabled: false,
 			assigneesRequired: false,
@@ -616,6 +630,9 @@ class ReviewForm extends React.Component<Props, State> {
 					) + 1;
 
 				if (this.props.isAmending) {
+					// if we're amending, don't edit the text of the review,
+					// but pass in an arg so that a reply can be created
+					delete attributes.text;
 					const { scm } = repoStatus;
 					repoChanges = [
 						{
@@ -638,8 +655,13 @@ class ReviewForm extends React.Component<Props, State> {
 					attributes.repoChanges = repoChanges;
 				}
 
-				const editResult = await this.props.editReview(editingReview.id, attributes);
+				const replyText = this.props.isAmending ? text : undefined;
+				const editResult = await this.props.editReview(editingReview.id, attributes, replyText);
 				if (editResult && editResult.review) {
+					keyFilter(this.state.addressesIssues as any).forEach(id => {
+						this.props.setCodemarkStatus(id, "closed", `in update #${checkpoint + 1}`);
+					});
+
 					if (this.props.onClose) {
 						this.props.onClose();
 					}
@@ -837,8 +859,11 @@ class ReviewForm extends React.Component<Props, State> {
 	};
 
 	handleChange = text => {
-		// track newPostText as the user types
 		this.setState({ text });
+	};
+
+	handleChangeReply = replyText => {
+		this.setState({ replyText });
 	};
 
 	handleToggleTag = tagId => {
@@ -850,7 +875,7 @@ class ReviewForm extends React.Component<Props, State> {
 
 	renderAddressesIssues = () => {
 		// find the open issues
-		const openIssues = this.props.changeRequests!.filter(
+		const openIssues = (this.props.changeRequests || []).filter(
 			codemark => codemark.status !== CodemarkStatus.Closed
 		);
 		// if there are none open, this update can't address anything!
@@ -888,7 +913,7 @@ class ReviewForm extends React.Component<Props, State> {
 	};
 
 	renderMessageInput = () => {
-		const { text } = this.state;
+		const { text, replyText } = this.state;
 		const { isAmending } = this.props;
 
 		const __onDidRender = ({ insertTextAtCursor, focus }) => {
@@ -898,15 +923,16 @@ class ReviewForm extends React.Component<Props, State> {
 		};
 
 		const placeholder = isAmending ? "Describe Changes (optional)" : "Description (Optional)";
+		const onChange = isAmending ? this.handleChange : this.handleChangeReply;
 		return (
 			<MessageInput
 				teamProvider={"codestream"}
 				isDirectMessage={this.props.channel.type === StreamType.Direct}
-				text={text}
+				text={isAmending ? replyText : text}
 				placeholder={placeholder}
 				multiCompose
 				withTags={!isAmending}
-				onChange={this.handleChange}
+				onChange={onChange}
 				toggleTag={this.handleToggleTag}
 				shouldShowRelatableCodemark={codemark =>
 					this.props.editingReview ? codemark.id !== this.props.editingReview.id : true
@@ -1946,7 +1972,8 @@ const ConnectedReviewForm = connect(mapStateToProps, {
 	createPostAndReview,
 	editReview,
 	setUserPreference,
-	setCurrentReview
+	setCurrentReview,
+	setCodemarkStatus
 })(ReviewForm);
 
 export { ConnectedReviewForm as ReviewForm };

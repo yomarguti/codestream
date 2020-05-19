@@ -774,7 +774,7 @@ export const setCodemarkStatus = (
 			createPost(
 				response.codemark.streamId,
 				response.codemark.postId,
-				`/me ${describeIssueStatusChange(status)} this issue ${extraText}`
+				`/me ${describeIssueStatusChange(status)} this issue ${extraText || ""}`
 			)
 		);
 

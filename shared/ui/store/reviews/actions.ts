@@ -161,10 +161,11 @@ export type EditableAttributes = Partial<
 		AdvancedEditableReviewAttributes		
 >;
 
-export const editReview = (id: string, attributes: EditableAttributes) => async (
-	dispatch,
-	getState: () => CodeStreamState
-) => {
+export const editReview = (
+	id: string,
+	attributes: EditableAttributes,
+	replyText?: string
+) => async (dispatch, getState: () => CodeStreamState) => {
 	let response: UpdateReviewResponse | undefined;
 	try {
 		response = await HostApi.instance.send(UpdateReviewRequestType, {
@@ -195,6 +196,22 @@ export const editReview = (id: string, attributes: EditableAttributes) => async 
 					)
 				);
 			}
+		}
+
+		if (attributes.$addToSet && attributes.$addToSet.reviewChangesets) {
+			// FIXME multiple-repo
+			const checkpoint = attributes.$addToSet.reviewChangesets[0].checkpoint;
+			dispatch(
+				createPost(
+					response.review.streamId,
+					response.review.postId,
+					`/me added update #${checkpoint} to this review`
+				)
+			);
+		}
+
+		if (replyText) {
+			dispatch(createPost(response.review.streamId, response.review.postId, replyText));
 		}
 	} catch (error) {
 		logError(`failed to update review: ${error}`, { id });
