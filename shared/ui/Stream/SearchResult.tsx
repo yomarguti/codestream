@@ -169,6 +169,8 @@ export default function SearchResult(props: Props) {
 		isArchived = result.pinned ? false : true;
 		assignees = result.assignees || [];
 	}
+	// be sure to make a copy of the array so we don't update the redux store itself
+	assignees = [...assignees];
 	// put yourself at the front
 	assignees.unshift(...assignees.splice(assignees.indexOf(derivedState.currentUserId), 1));
 
@@ -179,8 +181,6 @@ export default function SearchResult(props: Props) {
 		const matchQueryRegexp = new RegExp(escapeRegExp(props.query), "gi");
 		titleHTML = titleHTML.replace(matchQueryRegexp, "<u><b>$&</b></u>");
 	}
-
-	if (result.title == "refactor") console.log("ASSIGNEES ARE: ", assignees, " for ", result);
 
 	let icon;
 	let titleTip = buildTip(); // = result.text ? <div style={{ maxWidth: "25em" }}>{result.text}</div> : undefined;
