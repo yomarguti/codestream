@@ -150,7 +150,7 @@ namespace CodeStream.VisualStudio.UI.Settings {
 
 		[Category("Connectivity")]
 		[DisplayName("Disable Strict SSL")]
-		[Description("Allow self-signed certificates to be used in network requests (On-Prem)")]
+		[Description("Allow self-signed certificates to be used in network requests")]
 		public bool DisableStrictSSL {
 			get => _disableStrictSsl;
 			set {
