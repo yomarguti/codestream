@@ -461,7 +461,8 @@ export class ScmManager {
 		const newestCommitInACheckpoint = changesets.reverse().find(c => c.commits && c.commits.length)
 			?.commits[0];
 		const newestCommitShaInOrBeforeReview =
-			newestCommitInACheckpoint?.sha || diffs.find(d => d.checkpoint === 0)?.diff.latestCommitSha;
+			newestCommitInACheckpoint?.sha ||
+			diffs.find(d => (d.checkpoint || 0) === 0)?.diff.latestCommitSha;
 		if (!newestCommitShaInOrBeforeReview) {
 			throw new Error("Cannot determine newest commit in or before review");
 		}

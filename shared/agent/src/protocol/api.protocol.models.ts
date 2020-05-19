@@ -256,6 +256,7 @@ export interface CSPost extends CSEntity {
 	origin?: "email" | "slack" | "msteams";
 	reactions?: { [key: string]: string[] };
 	codemarkId?: string;
+	reviewCheckpoint?: number;
 	reviewId?: string;
 	files?: [
 		{
@@ -525,7 +526,7 @@ export interface CSAzureDevOpsProviderInfo {
 export interface CSOktaProviderInfo {
 	accessToken: string;
 	hosts: { [host: string]: CSAzureDevOpsProviderInfo };
-};
+}
 
 export type CSProviderInfos =
 	| CSAsanaProviderInfo

@@ -66,6 +66,7 @@ export interface CreatePostRequest {
 	// the user just sees a reply. This is used for telemetry to differentiate
 	// a real codemark from a review reply marked as "Change Request"
 	isPseudoCodemark?: boolean;
+	reviewCheckpoint?: number;
 }
 
 export interface CrossPostIssueValues {
@@ -80,7 +81,9 @@ export interface CrossPostIssueValues {
 		 * It will be something like "msteams" rather than "Microsoft Teams"
 		 */
 		name: string;
-		id: string; host: string };
+		id: string;
+		host: string;
+	};
 	[key: string]: any;
 }
 
@@ -128,6 +131,7 @@ export interface CreatePostWithMarkerRequest {
 	tags?: string[];
 	relatedCodemarkIds?: string[];
 	crossPostIssueValues?: CrossPostIssueValues;
+	reviewCheckpoint?: number;
 }
 
 export const CreatePostWithMarkerRequestType = new RequestType<
