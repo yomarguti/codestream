@@ -1,5 +1,16 @@
 # Change Log
 
+## [7.2.4] - 2020-5-19
+
+### Changed
+
+- Expose strictSSL requirement setting for Cloud installations
+
+### Fixed
+
+- Fixes an issue where reviews of uncommitted changes in branches containing unpushed commits include the changes from those commits
+- Fixes an issue with flashing headshots on the Search tab when the editor is scrolled
+
 ## [7.2.3] - 2020-5-18
 
 ### Added
