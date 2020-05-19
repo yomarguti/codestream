@@ -492,6 +492,15 @@ export class Codemark extends React.Component<Props, State> {
 		const resolveItem = { label: "Resolve", action: this.toggleStatus };
 		const reopenItem = { label: "Reopen", action: this.toggleStatus };
 
+		const permalinkTextarea = (
+			<textarea
+				key="permalink-offscreen"
+				ref={this.permalinkRef}
+				value={codemark.permalink}
+				style={{ position: "absolute", left: "-9999px" }}
+			/>
+		);
+
 		if (isChangeRequest || type === CodemarkType.Issue) {
 			if (this.props.displayType === "default") {
 				if (codemark.status === CodemarkStatus.Closed) {
@@ -499,6 +508,7 @@ export class Codemark extends React.Component<Props, State> {
 					return (
 						<DropdownButton size="compact" variant="secondary" items={menuItems}>
 							Resolved
+							{permalinkTextarea}
 						</DropdownButton>
 					);
 				} else {
@@ -506,6 +516,7 @@ export class Codemark extends React.Component<Props, State> {
 					return (
 						<DropdownButton size="compact" items={menuItems}>
 							Open
+							{permalinkTextarea}
 						</DropdownButton>
 					);
 				}
@@ -699,14 +710,6 @@ export class Codemark extends React.Component<Props, State> {
 		if (!action) return;
 
 		switch (action) {
-			case "toggle-pinned": {
-				this.setPinned(!this.props.codemark!.pinned);
-				break;
-			}
-			case "copy-permalink": {
-				this.copyPermalink();
-				break;
-			}
 			case "edit-post": {
 				// TODO: ideally should also open the <CodemarkView/> but that's more complicated
 				// if (!this.props.selected) this.props.setCurrentCodemark(this.props.codemark.id);
@@ -1204,9 +1207,7 @@ export class Codemark extends React.Component<Props, State> {
 			{
 				label: "Share",
 				key: "share",
-				action: () => {
-					this.setState({ shareModalOpen: true });
-				}
+				action: () => this.setState({ shareModalOpen: true })
 			}
 			// { label: "Add Reaction", action: "react" },
 			// { label: "Get Permalink", action: "get-permalink" },
@@ -1215,23 +1216,29 @@ export class Codemark extends React.Component<Props, State> {
 
 		if (!codemark || !codemark.reviewId) {
 			if (codemark && (codemark.followerIds || []).indexOf(this.props.currentUser.id) !== -1) {
-				menuItems.push({ label: "Unfollow", action: "unfollow" });
+				menuItems.push({ label: "Unfollow", action: this.unfollowCodemark });
 			} else {
-				menuItems.push({ label: "Follow", action: "follow" });
+				menuItems.push({ label: "Follow", action: this.followCodemark });
 			}
 		}
 
-		menuItems.push({ label: "Copy link", action: "copy-permalink" });
+		menuItems.push({ label: "Copy link", action: this.copyPermalink });
 
 		if (codemark.pinned) {
-			menuItems.push({ label: "Archive", action: "toggle-pinned" });
+			menuItems.push({
+				label: "Archive",
+				action: () => this.setPinned(!this.props.codemark!.pinned)
+			});
 		} else {
-			menuItems.push({ label: "Unarchive", action: "toggle-pinned" });
+			menuItems.push({
+				label: "Unarchive",
+				action: () => this.setPinned(!this.props.codemark!.pinned)
+			});
 		}
 
 		if (mine) {
 			menuItems.push(
-				{ label: "Edit", action: "edit-post" },
+				{ label: "Edit", action: () => this.setState({ isEditing: true }) },
 				{ label: "Delete", action: this.deleteCodemark }
 			);
 		}
@@ -1380,7 +1387,7 @@ export class Codemark extends React.Component<Props, State> {
 										<Timestamp relative time={codemark.createdAt} />
 									</div>
 									<div className="right" style={{ alignItems: "center" }}>
-										{type === CodemarkType.Issue || (
+										{type !== CodemarkType.Issue && (
 											<span onClick={this.handleMenuClick}>
 												<Icon name="kebab-vertical" className="kebab-vertical clickable" />
 											</span>
