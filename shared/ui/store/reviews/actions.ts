@@ -200,18 +200,26 @@ export const editReview = (
 
 		if (attributes.$addToSet && attributes.$addToSet.reviewChangesets) {
 			// FIXME multiple-repo
-			const checkpoint = attributes.$addToSet.reviewChangesets[0].checkpoint;
+			const checkpoint = attributes.$addToSet.reviewChangesets[0].checkpoint || 0;
 			dispatch(
 				createPost(
 					response.review.streamId,
 					response.review.postId,
-					`/me added update #${checkpoint} to this review`
+					`/me added update #${checkpoint + 1} to this review`
 				)
 			);
-		}
-
-		if (replyText) {
-			dispatch(createPost(response.review.streamId, response.review.postId, replyText));
+			if (replyText) {
+				dispatch(
+					createPost(
+						response.review.streamId,
+						response.review.postId,
+						replyText,
+						undefined,
+						undefined,
+						{ checkpoint }
+					)
+				);
+			}
 		}
 	} catch (error) {
 		logError(`failed to update review: ${error}`, { id });

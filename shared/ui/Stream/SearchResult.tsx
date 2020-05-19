@@ -171,8 +171,10 @@ export default function SearchResult(props: Props) {
 	}
 	// be sure to make a copy of the array so we don't update the redux store itself
 	assignees = [...assignees];
+
 	// put yourself at the front
-	assignees.unshift(...assignees.splice(assignees.indexOf(derivedState.currentUserId), 1));
+	const myPosition = assignees.indexOf(derivedState.currentUserId);
+	if (myPosition > -1) assignees.unshift(assignees.splice(myPosition, 1)[0]);
 
 	let titleHTML = markdownify(
 		type === "comment" ? (result.text || "").substr(0, 80) : result.title

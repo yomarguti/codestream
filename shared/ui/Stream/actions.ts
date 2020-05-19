@@ -337,6 +337,7 @@ export const createPost = (
 				parentPostId,
 				tags: codemark.tags,
 				relatedCodemarkIds: codemark.relatedCodemarkIds,
+				reviewCheckpoint: extra.reviewCheckpoint,
 				crossPostIssueValues: extra.crossPostIssueValues
 					? {
 							...extra.crossPostIssueValues,
@@ -352,7 +353,8 @@ export const createPost = (
 				text,
 				parentPostId,
 				mentionedUserIds: mentions,
-				entryPoint: extra.entryPoint
+				entryPoint: extra.entryPoint,
+				reviewCheckpoint: extra.reviewCheckpoint
 			});
 		}
 		const response = await responsePromise;
