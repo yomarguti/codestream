@@ -164,9 +164,6 @@ export default function SearchResult(props: Props) {
 		type = "review";
 		isArchived = false;
 		assignees = review.reviewers || [];
-		// if ((result.title || "").match(/TEST ONE/)) console.warn("REVIEWERS: ", review.reviewers);
-		// if ((result.title || "").match(/TEST ONE/)) console.warn("ASSIGNEES: ", assignees);
-		// if ((result.title || "").match(/TEST ONE/)) console.warn("ID: ", review.id);
 	} else {
 		type = result.type;
 		isArchived = result.pinned ? false : true;
@@ -184,8 +181,6 @@ export default function SearchResult(props: Props) {
 		const matchQueryRegexp = new RegExp(escapeRegExp(props.query), "gi");
 		titleHTML = titleHTML.replace(matchQueryRegexp, "<u><b>$&</b></u>");
 	}
-
-	// if (result.title == "refactor") console.log("ASSIGNEES ARE: ", assignees, " for ", result);
 
 	let icon;
 	let titleTip = buildTip(); // = result.text ? <div style={{ maxWidth: "25em" }}>{result.text}</div> : undefined;
