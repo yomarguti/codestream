@@ -483,14 +483,30 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			}
 		});
 	}
+	/**
+	 * Sets any undefined checkpoint properties to 0.
+	 * Used with legacy reviews.
+	 * @param  {CSReview} review
+	 */
+	private polyfillCheckpoints(review: CSReview) {
+		if (review && review.reviewChangesets && review.reviewChangesets.length) {
+			for (const rc of review.reviewChangesets) {
+				if (rc.checkpoint === undefined) {
+					rc.checkpoint = 0;
+				}
+			}
+		}
+	}
 
 	protected async loadCache() {
 		const response = await this.session.api.fetchReviews({});
+		response.reviews.forEach(this.polyfillCheckpoints);
 		this.cache.reset(response.reviews);
 	}
 
 	protected async fetchById(reviewId: Id): Promise<CSReview> {
 		const response = await this.session.api.getReview({ reviewId });
+		this.polyfillCheckpoints(response.review);
 		return response.review;
 	}
 
