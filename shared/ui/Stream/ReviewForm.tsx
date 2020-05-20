@@ -1406,6 +1406,7 @@ class ReviewForm extends React.Component<Props, State> {
 
 	showLocalDiff(path) {
 		const { repoStatus, includeSaved, includeStaged, startCommit } = this.state;
+		const { editingReview } = this.props;
 		if (!repoStatus) return;
 		const repoId = repoStatus.scm ? repoStatus.scm.repoId : "";
 		if (!repoId) return;
@@ -1415,6 +1416,7 @@ class ReviewForm extends React.Component<Props, State> {
 			repoId,
 			includeSaved,
 			includeStaged,
+			editingReviewId: editingReview && editingReview.id,
 			baseSha: startCommit
 		});
 		this.setState({

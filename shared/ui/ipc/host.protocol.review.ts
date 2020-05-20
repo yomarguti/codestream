@@ -24,6 +24,7 @@ export interface ReviewShowLocalDiffRequest {
 	path: string;
 	includeSaved: boolean;
 	includeStaged: boolean;
+	editingReviewId?: string;
 	baseSha: string;
 }
 
