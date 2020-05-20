@@ -797,7 +797,7 @@ class ReviewForm extends React.Component<Props, State> {
 						return (
 							<Modal verticallyCenter={true} onClose={() => this.props.closePanel()}>
 								<p>
-									This functionality is available on a limited basis to beta customers.
+									This functionality is currently only available for VS Code and JetBrains.
 									<br />
 									<br />
 									Contact <a href="mailto:sales@codestream.com">sales@codestream.com</a> to schedule
