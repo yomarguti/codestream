@@ -158,7 +158,7 @@ interface AdvancedEditableReviewAttributes {
 
 export type EditableAttributes = Partial<
 	Pick<CSReview, "tags" | "text" | "title" | "reviewers" | "allReviewersMustApprove"> &
-		AdvancedEditableReviewAttributes		
+		AdvancedEditableReviewAttributes
 >;
 
 export const editReview = (
@@ -198,28 +198,20 @@ export const editReview = (
 			}
 		}
 
-		if (attributes.$addToSet && attributes.$addToSet.reviewChangesets) {
+		if (attributes.repoChanges) {
 			// FIXME multiple-repo
-			const checkpoint = attributes.$addToSet.reviewChangesets[0].checkpoint || 0;
+			const checkpoint = attributes.repoChanges[0].checkpoint || 0;
+
 			dispatch(
 				createPost(
 					response.review.streamId,
 					response.review.postId,
-					`/me added update #${checkpoint + 1} to this review`
+					replyText || "",
+					undefined,
+					undefined,
+					{ reviewCheckpoint: checkpoint }
 				)
 			);
-			if (replyText) {
-				dispatch(
-					createPost(
-						response.review.streamId,
-						response.review.postId,
-						replyText,
-						undefined,
-						undefined,
-						{ checkpoint }
-					)
-				);
-			}
 		}
 	} catch (error) {
 		logError(`failed to update review: ${error}`, { id });

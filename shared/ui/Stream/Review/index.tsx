@@ -561,7 +561,9 @@ const BaseReview = (props: BaseReviewProps) => {
 		for (var i = 0; i < numCheckpoints; i++) {
 			groups.push(
 				<Meta>
-					<MetaLabel>Commits in {i === 0 ? "Initial Review" : `Update #${i}`}</MetaLabel>
+					<MetaLabel id={"commits-update-" + i}>
+						Commits in {i === 0 ? "Initial Review" : `Update #${i}`}
+					</MetaLabel>
 					<MetaDescriptionForAssignees>
 						<CommitList review={review} checkpoint={i} />
 					</MetaDescriptionForAssignees>

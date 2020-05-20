@@ -295,6 +295,7 @@ export const Reply = (props: ReplyProps) => {
 	})();
 
 	const isEditing = props.editingPostId === props.post.id;
+	const checkpoint = props.post.reviewCheckpoint;
 
 	return (
 		<Root className={props.className}>
@@ -310,6 +311,20 @@ export const Reply = (props: ReplyProps) => {
 					<span>
 						{props.author.username}
 						{emote}
+						{checkpoint && (
+							<span className="emote">
+								added{" "}
+								<a
+									onClick={() => {
+										const element = document.getElementById("commits-update-" + checkpoint);
+										if (element) element.scrollIntoView({ behavior: "smooth" });
+									}}
+								>
+									update #{checkpoint}
+								</a>{" "}
+								to this review
+							</span>
+						)}
 						{codemark && codemark.isChangeRequest && (
 							<span className="emote">requested a change</span>
 						)}

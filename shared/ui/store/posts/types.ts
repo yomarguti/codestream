@@ -2,7 +2,10 @@ import { Index } from "../common";
 import { PostPlus } from "@codestream/protocols/agent";
 
 export interface PendingPost
-	extends Pick<PostPlus, "id" | "text" | "streamId" | "parentPostId" | "creatorId" | "createdAt"> {
+	extends Pick<
+		PostPlus,
+		"id" | "text" | "streamId" | "parentPostId" | "creatorId" | "createdAt" | "reviewCheckpoint"
+	> {
 	pending: true;
 	codemark: {};
 	error?: boolean;

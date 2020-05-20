@@ -3,7 +3,7 @@ import {
 	GetFileScmInfoResponse,
 	GetRepoScmStatusRequestType,
 	GetRepoScmStatusResponse,
-	GetReposScmRequestType,	
+	GetReposScmRequestType,
 	AddIgnoreFilesRequestType,
 	IgnoreFilesRequestType,
 	ReposScm,
@@ -659,7 +659,7 @@ class ReviewForm extends React.Component<Props, State> {
 				const editResult = await this.props.editReview(editingReview.id, attributes, replyText);
 				if (editResult && editResult.review) {
 					keyFilter(this.state.addressesIssues as any).forEach(id => {
-						this.props.setCodemarkStatus(id, "closed", `in update #${checkpoint + 1}`);
+						this.props.setCodemarkStatus(id, "closed", `in update #${checkpoint}`);
 					});
 
 					if (this.props.onClose) {
