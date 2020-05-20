@@ -117,6 +117,7 @@ class ReviewShowLocalDiffRequest(
     val path: String,
     val includeSaved: Boolean,
     val includeStaged: Boolean,
+    val editingReviewId: String?,
     val baseSha: String
 )
 

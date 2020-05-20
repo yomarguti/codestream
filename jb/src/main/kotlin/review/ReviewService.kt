@@ -112,6 +112,7 @@ class ReviewService(private val project: Project) {
         path: String,
         includeSaved: Boolean,
         includeStaged: Boolean,
+        editingReviewId: String?,
         baseSha: String
     ) {
         val agent = project.agentService ?: return
@@ -121,7 +122,7 @@ class ReviewService(private val project: Project) {
             includeStaged -> "staged"
             else -> "head"
         }
-        val contents = agent.getLocalReviewContents(GetLocalReviewContentsParams(repoId, path, baseSha, rightVersion))
+        val contents = agent.getLocalReviewContents(GetLocalReviewContentsParams(repoId, path, editingReviewId, baseSha, rightVersion))
         showDiffContent("local", repoId, path, contents, "New Review")
     }
 
