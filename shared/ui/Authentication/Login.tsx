@@ -19,6 +19,7 @@ const isEmailInvalid = email => {
 interface ConnectedProps {
 	initialEmail?: string;
 	supportsIntegrations?: boolean;
+	oktaEnabled?: boolean;
 }
 
 interface DispatchProps {
@@ -255,7 +256,7 @@ class Login extends React.Component<Props, State> {
 											<div className="copy">Sign In with GitHub</div>
 											<Icon name="chevron-right" />
 										</Button>
-										{false && (
+										{this.props.oktaEnabled && (
 											<Button
 												className="row-button no-top-margin"
 												onClick={this.handleClickOktaLogin}
@@ -282,10 +283,16 @@ class Login extends React.Component<Props, State> {
 }
 
 const ConnectedLogin = connect<ConnectedProps, any, any, CodeStreamState>(
-	(state, props) => ({
-		initialEmail: props.email !== undefined ? props.email : state.configs.email,
-		supportsIntegrations: supportsIntegrations(state.configs)
-	}),
+	(state, props) => {
+		const { serverUrl } = state.configs;
+		const match = serverUrl.match(/^https?:\/\/(.+)\.codestream\.(us|com)/);
+		const oktaEnabled = !match || match[1] === "oppr" || match[1] === "opbeta";
+		return {
+			initialEmail: props.email !== undefined ? props.email : state.configs.email,
+			supportsIntegrations: supportsIntegrations(state.configs),
+			oktaEnabled
+		};
+	},
 	{ authenticate, goToNewUserEntry, startSSOSignin, goToForgotPassword, goToOktaConfig }
 )(Login);
 

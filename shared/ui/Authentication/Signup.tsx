@@ -47,8 +47,12 @@ interface Props {
 export const Signup = (props: Props) => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
+		const { serverUrl } = state.configs;
+		const match = serverUrl.match(/^https?:\/\/(.+)\.codestream\.(us|com)/);
+		const oktaEnabled = !match || match[1] === "oppr" || match[1] === "opbeta";
 		return {
-			supportsIntegrations: supportsIntegrations(state.configs)
+			supportsIntegrations: supportsIntegrations(state.configs),
+			oktaEnabled
 		};
 	});
 	const [email, setEmail] = useState(props.email || "");
@@ -374,7 +378,7 @@ export const Signup = (props: Props) => {
 									<div className="copy">Sign Up with GitHub</div>
 									<Icon name="chevron-right" />
 								</Button>
-								{false && (
+								{derivedState.oktaEnabled && (
 									<Button className="row-button no-top-margin" onClick={onClickOktaSignup}>
 										<Icon name="okta" />
 										<div className="copy">Sign Up with Okta</div>
@@ -384,7 +388,7 @@ export const Signup = (props: Props) => {
 								<div style={{ height: "15px" }} />
 								<CSText muted as="span">
 									If you use GitLab, BitBucket, or a self-managed git server, sign up with
-									CodeStream above.
+									CodeStream {derivedState.oktaEnabled ? "or Okta " : ""}above.
 								</CSText>
 							</div>
 						</div>
