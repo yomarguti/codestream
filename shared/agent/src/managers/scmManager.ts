@@ -613,16 +613,18 @@ export class ScmManager {
 					}
 				}
 
-				const numStat: GitNumStat = {
-					oldFile: file,
-					file: file,
-					linesAdded,
-					linesRemoved,
-					status: FileStatus.modified,
-					statusX: FileStatus.modified,
-					statusY: FileStatus.modified
-				};
-				modifiedFiles.push(numStat);
+				if (linesAdded || linesRemoved) {
+					const numStat: GitNumStat = {
+						oldFile: file,
+						file: file,
+						linesAdded,
+						linesRemoved,
+						status: FileStatus.modified,
+						statusX: FileStatus.modified,
+						statusY: FileStatus.modified
+					};
+					modifiedFiles.push(numStat);
+				}
 			} else {
 				if (statusByFile[file].status === FileStatus.deleted) {
 					modifiedFiles.unshift({
