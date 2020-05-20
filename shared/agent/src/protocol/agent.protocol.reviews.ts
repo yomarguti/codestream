@@ -177,7 +177,7 @@ export interface GetReviewContentsRequest {
 export interface GetReviewContentsLocalRequest {
 	repoId: string;
 	path: string;
-	editingReviewId: string | undefined;
+	editingReviewId?: string;
 	baseSha: string;
 	rightVersion: string;
 }
