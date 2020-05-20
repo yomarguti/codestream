@@ -1113,18 +1113,21 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		let startCommit = repoChange.startCommit;
 		if (amendingReviewId) {
 			const review = await reviews.getById(amendingReviewId);
-			const changeset0 = review.reviewChangesets.find(
+			const firstChangesetForThisRepo = review.reviewChangesets.find(
 				rc => rc.repoId === scm.repoId && rc.checkpoint === 0
 			);
-			if (!changeset0) {
+
+			if (!firstChangesetForThisRepo) {
+				// FIXME support amending a review including changes from a repo not previously included in this review
 				throw new Error(
 					`Could not find first changeset for review ${amendingReviewId}, repo ${scm.repoId}`
 				);
 			}
 
-			const lastChangeset = review.reviewChangesets.find(rc => rc.repoId === scm.repoId);
-			checkpoint = (lastChangeset!.checkpoint || 0) + 1;
-			const firstCommitInReview = changeset0.commits[changeset0.commits.length - 1];
+			const lastChangesetForAnyRepo = review.reviewChangesets[review.reviewChangesets.length - 1];
+			checkpoint = (lastChangesetForAnyRepo!.checkpoint || 0) + 1;
+			const firstCommitInReview =
+				firstChangesetForThisRepo.commits[firstChangesetForThisRepo.commits.length - 1];
 			const diffs = await reviews.getDiffs(amendingReviewId, scm.repoId);
 			const firstDiff = diffs.find(d => d.checkpoint === 0);
 			startCommit = firstCommitInReview
@@ -1615,7 +1618,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					anchorFormat: "[${text}](${url})"
 				};
 		}
-	}
+	};
 
 	createProviderCard = async (
 		providerCardRequest: {
@@ -1839,7 +1842,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			Logger.error(error, `failed to create a ${attributes.issueProvider.name} card:`);
 			return undefined;
 		}
-	}
+	};
 }
 
 async function resolveCreatePostResponse(response: CreatePostResponse) {
