@@ -545,7 +545,9 @@ export class ScmManager {
 					const numStatFromRightBaseSha = numStatsFromRightBaseSha.find(
 						ns => ns.file === numStatFromNewestCommitShaInOrBeforeReview.file
 					);
-					modifiedFiles.push(numStatFromRightBaseSha!);
+					// FIXME Marcelo -- without this check i was getting NULLs back
+					if (numStatFromRightBaseSha) modifiedFiles.push(numStatFromRightBaseSha!);
+					else Logger.warn("Unable to get numStatsFromRightBaseSha: ", diff.rightBaseSha);
 				}
 			} else {
 				const changesetCheckpoint0 = changesets[0];
