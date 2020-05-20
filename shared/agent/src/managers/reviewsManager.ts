@@ -493,7 +493,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		});
 	}
 	/**
-	 * Sets any undefined checkpoint properties to 0.
+	 * Sets any undefined checkpoint properties to 0 and copy modifiedFiles to modifiedFilesInCheckpoint.
 	 * Used with legacy reviews.
 	 * @param  {CSReview} review
 	 */
@@ -502,6 +502,9 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			for (const rc of review.reviewChangesets) {
 				if (rc.checkpoint === undefined) {
 					rc.checkpoint = 0;
+				}
+				if (rc.modifiedFilesInCheckpoint === undefined) {
+					rc.modifiedFilesInCheckpoint = rc.modifiedFiles;
 				}
 			}
 		}
