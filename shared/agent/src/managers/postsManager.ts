@@ -1209,7 +1209,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					newestCommitNotInReview.sha
 				)
 			).filter(removeExcluded);
-			leftDiffs = [];
 		} else {
 			leftBaseSha = newestCommitNotInReview.sha;
 			leftBaseAuthor = (await git.getCommit(scm.repoPath, newestCommitNotInReview.sha))!.author;
