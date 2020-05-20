@@ -19,7 +19,12 @@ import {
 	CSUpdateReviewRequest,
 	CSUpdateReviewResponse
 } from "./api.protocol";
-import { CSReviewChangeset, CSReviewDiffs, ReviewChangesetFileInfo, CSReviewStatus } from "./api.protocol.models";
+import {
+	CSReviewChangeset,
+	CSReviewDiffs,
+	ReviewChangesetFileInfo,
+	CSReviewStatus
+} from "./api.protocol.models";
 
 export interface ReviewPlus extends CSReview {}
 
@@ -172,6 +177,7 @@ export interface GetReviewContentsRequest {
 export interface GetReviewContentsLocalRequest {
 	repoId: string;
 	path: string;
+	editingReviewId: string | undefined;
 	baseSha: string;
 	rightVersion: string;
 }

@@ -158,6 +158,10 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			throw new Error(`Could not load repo with ID ${request.repoId}`);
 		}
 
+		if (request.editingReviewId) {
+			// FIXME this should be the diff relative to the previous checkpoint
+		}
+
 		const leftBasePath = path.join(repo.path, request.path);
 		// const rightBasePath = path.join(repo.path, rightBaseRelativePath);
 
@@ -241,6 +245,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			const { git } = SessionContainer.instance();
 			const review = await this.getById(request.reviewId);
 			const latestChangesetContainingFile = review.reviewChangesets
+				.slice()
 				.reverse()
 				.find(
 					c =>
@@ -338,7 +343,11 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		if (request.repoChanges && request.repoChanges.length) {
 			isAmending = true;
 			const { posts } = SessionContainer.instance();
-			reviewChangesets = (await Promise.all(request.repoChanges.map(rc => posts.buildChangeset(rc, request.id)).filter(_ => _ !== undefined))) as CSTransformedReviewChangeset[];
+			reviewChangesets = (await Promise.all(
+				request.repoChanges
+					.map(rc => posts.buildChangeset(rc, request.id))
+					.filter(_ => _ !== undefined)
+			)) as CSTransformedReviewChangeset[];
 			request.$addToSet = {
 				reviewChangesets: reviewChangesets
 			};

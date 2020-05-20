@@ -68,6 +68,7 @@ import {
 	CSReview,
 	CSStream,
 	CSTransformedReviewChangeset,
+	FileStatus,
 	isCSReview,
 	ProviderType,
 	StreamType
@@ -1144,8 +1145,16 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			modifiedFiles = statusFromBeginningOfReview.scm!.modifiedFiles.filter(
 				mf => !excludedFiles.includes(mf.file)
 			);
-			for (const previousChangeset of review.reviewChangesets.reverse()) {
+			for (const previousChangeset of review.reviewChangesets.slice().reverse()) {
 				for (const modifiedFileInPreviousChangeset of previousChangeset.modifiedFiles) {
+					// FIXME that might be a problem for files that were added/committed
+					//  after being included as untracked in a previous changeset
+					if (
+						modifiedFileInPreviousChangeset.status === FileStatus.untracked &&
+						!newFiles.find(f => f === modifiedFileInPreviousChangeset.file)
+					) {
+						newFiles.push(modifiedFileInPreviousChangeset.file);
+					}
 					if (!modifiedFiles.find(mf => mf.file === modifiedFileInPreviousChangeset.file)) {
 						modifiedFiles.push(modifiedFileInPreviousChangeset);
 					}
@@ -1618,7 +1627,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					anchorFormat: "[${text}](${url})"
 				};
 		}
-	}
+	};
 
 	createProviderCard = async (
 		providerCardRequest: {
@@ -1842,7 +1851,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			Logger.error(error, `failed to create a ${attributes.issueProvider.name} card:`);
 			return undefined;
 		}
-	}
+	};
 }
 
 async function resolveCreatePostResponse(response: CreatePostResponse) {

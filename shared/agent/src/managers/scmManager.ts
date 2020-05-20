@@ -458,8 +458,10 @@ export class ScmManager {
 			});
 
 		const modifiedFiles: GitNumStat[] = [];
-		const newestCommitInACheckpoint = changesets.reverse().find(c => c.commits && c.commits.length)
-			?.commits[0];
+		const newestCommitInACheckpoint = changesets
+			.slice()
+			.reverse()
+			.find(c => c.commits && c.commits.length)?.commits[0];
 		const newestCommitShaInOrBeforeReview =
 			newestCommitInACheckpoint?.sha ||
 			diffs.find(d => (d.checkpoint || 0) === 0)?.diff.latestCommitSha;
@@ -476,6 +478,7 @@ export class ScmManager {
 		);
 		for (const numStatFromNewestCommitShaInOrBeforeReview of numStatsFromNewestCommitShaInOrBeforeReview) {
 			const lastChangesetContainingFile = changesets
+				.slice()
 				.reverse()
 				.find(c =>
 					c.modifiedFiles.find(mf => mf.file === numStatFromNewestCommitShaInOrBeforeReview.oldFile)
@@ -581,6 +584,7 @@ export class ScmManager {
 			}
 
 			const lastChangesetContainingFile = changesets
+				.slice()
 				.reverse()
 				.find(c => c.modifiedFiles.find(mf => mf.file === file));
 			if (lastChangesetContainingFile) {
