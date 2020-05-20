@@ -583,7 +583,13 @@ export function ReviewNav(props: Props) {
 
 							{derivedState.hideReviewInstructions && (
 								<div
-									style={{ marginTop: "5px", fontSize: "smaller", cursor: "pointer" }}
+									style={{
+										marginTop: "50px",
+										textAlign: "right",
+										fontSize: "smaller",
+										cursor: "pointer",
+										opacity: 0.5
+									}}
 									onClick={() => {
 										setHoverButton("files");
 										toggleInstructions();
