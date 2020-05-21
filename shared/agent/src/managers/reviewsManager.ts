@@ -151,25 +151,28 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	async getContentsLocal(
 		request: GetReviewContentsLocalRequest
 	): Promise<GetReviewContentsResponse> {
-		const { git } = SessionContainer.instance();
+		const { git, reviews } = SessionContainer.instance();
 
 		const repo = await git.getRepositoryById(request.repoId);
 		if (!repo) {
 			throw new Error(`Could not load repo with ID ${request.repoId}`);
 		}
 
-		if (request.editingReviewId) {
-			// FIXME this should be the diff relative to the previous checkpoint
-		}
-
 		const leftBasePath = path.join(repo.path, request.path);
-		// const rightBasePath = path.join(repo.path, rightBaseRelativePath);
-
-		const leftContents =
-			// fileInfo.statusX === FileStatus.added
-			// ? ""
-			// :
-			(await git.getFileContentForRevision(leftBasePath, request.baseSha)) || "";
+		let leftContents;
+		if (request.editingReviewId) {
+			const latestContentsInReview = await reviews.getContents({
+				repoId: request.repoId,
+				path: request.path,
+				reviewId: request.editingReviewId,
+				checkpoint: undefined
+			});
+			leftContents = latestContentsInReview.right;
+		}
+		if (leftContents === undefined) {
+			// either we're not amending a review, or the file was not included in any previous checkpoint
+			leftContents = (await git.getFileContentForRevision(leftBasePath, request.baseSha)) || "";
+		}
 
 		let rightContents: string | undefined = "";
 		switch (request.rightVersion) {
@@ -224,8 +227,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 					leftPath: file.oldFile,
 					rightPath: file.file,
 					path: file.file,
-					left: contents.left,
-					right: contents.right
+					left: contents.left || "",
+					right: contents.right || ""
 				});
 			}
 
@@ -252,10 +255,15 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 						c.repoId === request.repoId &&
 						c.modifiedFilesInCheckpoint.find(mf => mf.file === request.path)
 				);
+
+			if (!latestChangesetContainingFile) {
+				return { fileNotIncludedInReview: true };
+			}
+
 			return this.getContentsForCheckpoint(
 				reviewId,
 				repoId,
-				latestChangesetContainingFile!.checkpoint,
+				latestChangesetContainingFile.checkpoint,
 				path
 			);
 		} else if (checkpoint === 0) {
