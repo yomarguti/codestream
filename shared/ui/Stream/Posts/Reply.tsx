@@ -317,7 +317,11 @@ export const Reply = (props: ReplyProps) => {
 								<a
 									onClick={() => {
 										const element = document.getElementById("commits-update-" + checkpoint);
-										if (element) element.scrollIntoView({ behavior: "smooth" });
+										if (element) {
+											element.scrollIntoView({ behavior: "smooth" });
+											element.classList.add("highlight-pulse");
+											setTimeout(() => element.classList.remove("highlight-pulse"), 1500);
+										}
 									}}
 								>
 									update #{checkpoint}

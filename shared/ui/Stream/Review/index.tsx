@@ -560,10 +560,8 @@ const BaseReview = (props: BaseReviewProps) => {
 		const groups = [] as any;
 		for (var i = 0; i < numCheckpoints; i++) {
 			groups.push(
-				<Meta>
-					<MetaLabel id={"commits-update-" + i}>
-						Commits in {i === 0 ? "Initial Review" : `Update #${i}`}
-					</MetaLabel>
+				<Meta id={"commits-update-" + i}>
+					<MetaLabel>Commits in {i === 0 ? "Initial Review" : `Update #${i}`}</MetaLabel>
 					<MetaDescriptionForAssignees>
 						<CommitList review={review} checkpoint={i} />
 					</MetaDescriptionForAssignees>
@@ -776,7 +774,7 @@ const BaseReview = (props: BaseReviewProps) => {
 						</TourTip>
 					)}
 					{!props.collapsed && checkpoint !== undefined && (
-						<Meta>
+						<Meta id={"commits-update-" + checkpoint}>
 							<MetaLabel>
 								Commits in {checkpoint === 0 ? "Initial Review" : `Update #${checkpoint}`}
 							</MetaLabel>

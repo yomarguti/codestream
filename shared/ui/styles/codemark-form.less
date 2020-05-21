@@ -218,6 +218,21 @@
 	}
 }
 
+@keyframes highlight-fade {
+	50% {
+		color: @text-color-highlight;
+		background: rgba(127, 127, 127, 0.25);
+	}
+	100% {
+		color: @text-color;
+		background: transparent;
+	}
+}
+
+.highlight-pulse {
+	animation: highlight-fade 1.25s ease 1;
+}
+
 .row-with-icon-actions {
 	position: relative;
 	&:not(.no-hover) {
