@@ -24,6 +24,7 @@ import { withSearchableItems, WithSearchableItemsProps } from "./withSearchableI
 import { FilterQuery } from "../store/preferences/types";
 import { getSavedSearchFilters } from "../store/preferences/reducer";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { Button } from "../src/components/Button";
 
 const SearchBar = styled.div`
 	display: flex;
@@ -124,6 +125,12 @@ const SavedFilter = styled.div`
 	}
 `;
 
+const HasMore = styled.div`
+	padding: 10px 20px;
+	margin: 0 auto;
+	text-align: center;
+`;
+
 const sameDay = (d1, d2) => {
 	return (
 		d1.getFullYear() === d2.getFullYear() &&
@@ -131,6 +138,8 @@ const sameDay = (d1, d2) => {
 		d1.getDate() === d2.getDate()
 	);
 };
+
+const RESULTS_PAGE_SIZE = 50;
 
 interface DispatchProps {
 	setUserPreference: (...args: Parameters<typeof setUserPreference>) => Promise<any>;
@@ -169,6 +178,7 @@ interface State {
 	filterMenuOpen?: number;
 	displayItems: AnyObject;
 	totalItems: number;
+	resultsPage: number;
 }
 
 export class SimpleFilterSearchPanel extends Component<Props, State> {
@@ -197,7 +207,8 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 			},
 			filters: { text: "" },
 			displayItems: {},
-			totalItems: 0
+			totalItems: 0,
+			resultsPage: 1
 		};
 	}
 
@@ -234,19 +245,20 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 		});
 	};
 
-	renderResultsForSection = results => {
-		const { typeFilter } = this.props;
-		if (results.length === 0)
-			return <div className="no-matches">No {typeFilter}s in this file.</div>;
-		else {
-			return results.map(a => <SearchResult result={a} query={this.state.filters.text} />);
-		}
+	nextPage = () => {
+		this.setState({ resultsPage: this.state.resultsPage + 1 });
 	};
 
 	renderSection = (section, results) => {
 		if (results.length === 0) return null;
 
 		const sectionLabel = this.sectionLabel[section];
+		let displayResults = results;
+		let hasMore = false;
+		if (section === "recent") {
+			displayResults = results.slice(0, this.state.resultsPage * RESULTS_PAGE_SIZE);
+			hasMore = results.length > this.state.resultsPage * RESULTS_PAGE_SIZE;
+		}
 
 		return (
 			<>
@@ -266,7 +278,22 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 						</div>
 					</td>
 				</tr>
-				{this.state.expanded[section] && this.renderResultsForSection(results)}
+				{this.state.expanded[section] && (
+					<>
+						{displayResults.map(r => (
+							<SearchResult result={r} query={this.state.filters.text} />
+						))}
+						{hasMore && (
+							<tr>
+								<td colSpan={4}>
+									<HasMore>
+										<Button onClick={this.nextPage}>Show Earlier Results</Button>
+									</HasMore>
+								</td>
+							</tr>
+						)}
+					</>
+				)}
 			</>
 		);
 	};
