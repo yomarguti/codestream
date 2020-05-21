@@ -561,10 +561,11 @@ export class CodeStreamAgentConnection implements Disposable {
 			});
 		}
 
-		getContentsLocal(repoId: string, path: string, baseSha: string, rightVersion: string) {
+		getContentsLocal(repoId: string, path: string, editingReviewId: string | undefined, baseSha: string, rightVersion: string) {
 			return this._connection.sendRequest(GetReviewContentsLocalRequestType, {
 				repoId,
 				path,
+				editingReviewId,
 				baseSha,
 				rightVersion
 			});

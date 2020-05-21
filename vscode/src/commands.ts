@@ -37,6 +37,7 @@ export interface ShowReviewDiffCommandArgs {
 export interface ShowReviewLocalDiffCommandArgs {
 	repoId: string;
 	path: string;
+	editingReviewId?: string | undefined;
 	includeSaved: boolean;
 	includeStaged: boolean;
 	baseSha: string;
@@ -233,6 +234,7 @@ export class Commands implements Disposable {
 		await Container.diffContents.loadContentsLocal(
 			args.repoId,
 			args.path,
+			args.editingReviewId,
 			args.baseSha,
 			rightVersion
 		);

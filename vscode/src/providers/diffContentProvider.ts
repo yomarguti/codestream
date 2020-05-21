@@ -46,7 +46,7 @@ export class ReviewDiffContentProvider implements TextDocumentContentProvider, D
 		return contents;
 	}
 
-	async loadContentsLocal(repoId: string, path: string, baseSha: string, rightVersion: string) {
+	async loadContentsLocal(repoId: string, path: string, editingReviewId: string | undefined, baseSha: string, rightVersion: string) {
 		const key = this.key("local", undefined, repoId, path);
 		// const cached = this._contents.get(key);
 
@@ -55,6 +55,7 @@ export class ReviewDiffContentProvider implements TextDocumentContentProvider, D
 		const contents = await Container.agent.reviews.getContentsLocal(
 			repoId,
 			path,
+			editingReviewId,
 			baseSha,
 			rightVersion
 		);
