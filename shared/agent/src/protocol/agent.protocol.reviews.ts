@@ -183,10 +183,10 @@ export interface GetReviewContentsLocalRequest {
 }
 
 export interface GetReviewContentsResponse {
-	left?: string | undefined;
-	right?: string | undefined;
-	fileNotIncludedInReview?: boolean | undefined;
-	error?: string | undefined;
+	left?: string;
+	right?: string;
+	fileNotIncludedInReview?: boolean;
+	error?: string;
 }
 
 export const GetReviewContentsRequestType = new RequestType<
