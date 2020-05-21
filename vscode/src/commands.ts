@@ -37,7 +37,7 @@ export interface ShowReviewDiffCommandArgs {
 export interface ShowReviewLocalDiffCommandArgs {
 	repoId: string;
 	path: string;
-	editingReviewId?: string | undefined;
+	editingReviewId?: string;
 	includeSaved: boolean;
 	includeStaged: boolean;
 	baseSha: string;
