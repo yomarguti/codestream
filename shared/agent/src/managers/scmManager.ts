@@ -452,7 +452,7 @@ export class ScmManager {
 		const diffs = await reviews.getDiffs(review.id, repo.id);
 
 		const changesets = review.reviewChangesets
-			.filter(cs => cs.repoId === repo!.id)
+			.filter(cs => cs.repoId === repo.id)
 			.sort((a, b) => {
 				return (b.checkpoint || 0) - (a.checkpoint || 0);
 			});
@@ -498,13 +498,19 @@ export class ScmManager {
 				.slice()
 				.reverse()
 				.find(c =>
-					c.modifiedFiles.find(mf => mf.file === numStatFromNewestCommitShaInOrBeforeReview.oldFile)
+					c.modifiedFiles.find(
+						mf =>
+							mf.file === numStatFromNewestCommitShaInOrBeforeReview.oldFile ||
+							mf.file === numStatFromNewestCommitShaInOrBeforeReview.file
+					)
 				);
 			if (lastChangesetContainingFile) {
 				// file was included in at least one checkpoint
 				const diff = diffs.find(d => d.checkpoint === lastChangesetContainingFile.checkpoint)!.diff;
 				const latestCommitToRightDiff = diff.latestCommitToRightDiffs.find(
-					d => d.newFileName === numStatFromNewestCommitShaInOrBeforeReview.oldFile
+					d =>
+						d.newFileName === numStatFromNewestCommitShaInOrBeforeReview.oldFile ||
+						d.newFileName === numStatFromNewestCommitShaInOrBeforeReview.file
 				);
 				if (latestCommitToRightDiff) {
 					// in the last checkpoint where it was included, file had uncommitted changes
@@ -554,20 +560,18 @@ export class ScmManager {
 						modifiedFiles.push(numStat);
 					}
 				} else {
-					// in the last checkpoint where it was included, file had no unpushed changes
+					// in the last checkpoint where it was included, file had no uncommitted changes
 					// TODO cache it
-					const numStatsFromRightBaseSha = await git.getNumStat(
+					const numStatsFromLatestCommit = await git.getNumStat(
 						repoPath,
-						diff.rightBaseSha,
+						diff.latestCommitSha,
 						includeSaved,
 						includeStaged
 					);
-					const numStatFromRightBaseSha = numStatsFromRightBaseSha.find(
+					const numStatFromLatestCommit = numStatsFromLatestCommit.find(
 						ns => ns.file === numStatFromNewestCommitShaInOrBeforeReview.file
 					);
-					// FIXME Marcelo -- without this check i was getting NULLs back
-					if (numStatFromRightBaseSha) modifiedFiles.push(numStatFromRightBaseSha!);
-					else Logger.warn("Unable to get numStatsFromRightBaseSha: ", diff.rightBaseSha);
+					if (numStatFromLatestCommit) modifiedFiles.push(numStatFromLatestCommit);
 				}
 			} else {
 				const changesetCheckpoint0 = changesets[0];
