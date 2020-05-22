@@ -406,8 +406,7 @@ class ReviewForm extends React.Component<Props, State> {
 				prevEndCommit,
 				reviewId: editingReview && editingReview.id
 			});
-		}
-		catch (e) {
+		} catch (e) {
 			logError(e);
 			this.setState({ isLoadingScm: false, scmError: true });
 			return;
@@ -598,8 +597,18 @@ class ReviewForm extends React.Component<Props, State> {
 		if (this.isFormInvalid()) return;
 		this.setState({ isLoading: true });
 
-		const { title, text, selectedTags, repoStatus, authorsById } = this.state;
-		const { startCommit, excludeCommit, excludedFiles, allReviewersMustApprove } = this.state;
+		const {
+			title,
+			text,
+			replyText,
+			selectedTags,
+			repoStatus,
+			authorsById,
+			startCommit,
+			excludeCommit,
+			excludedFiles,
+			allReviewersMustApprove
+		} = this.state;
 
 		const reviewerIds = (this.state.reviewers as any[]).map(r => r.id);
 
@@ -670,8 +679,11 @@ class ReviewForm extends React.Component<Props, State> {
 					attributes.repoChanges = repoChanges;
 				}
 
-				const replyText = this.props.isAmending ? text : undefined;
-				const editResult = await this.props.editReview(editingReview.id, attributes, replyText);
+				const editResult = await this.props.editReview(
+					editingReview.id,
+					attributes,
+					this.props.isAmending ? replyText : undefined
+				);
 				if (editResult && editResult.review) {
 					keyFilter(this.state.addressesIssues as any).forEach(id => {
 						this.props.setCodemarkStatus(id, "closed", `in update #${checkpoint}`);
@@ -938,7 +950,7 @@ class ReviewForm extends React.Component<Props, State> {
 		};
 
 		const placeholder = isAmending ? "Describe Changes (optional)" : "Description (Optional)";
-		const onChange = isAmending ? this.handleChange : this.handleChangeReply;
+		const onChange = isAmending ? this.handleChangeReply : this.handleChange;
 		return (
 			<MessageInput
 				teamProvider={"codestream"}
