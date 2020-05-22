@@ -221,7 +221,7 @@ export const Signup = (props: Props) => {
 			const info = props.inviteCode
 				? { type: SignupType.JoinTeam, inviteCode: props.inviteCode }
 				: { type: SignupType.CreateTeam };
-			return dispatch(startSSOSignin("github", info));
+			return dispatch(startSSOSignin("github", {...info, fromSignup: true}));
 		},
 		[props.type]
 	);
