@@ -1,3 +1,4 @@
+import { CSReviewChangeset } from "@codestream/protocols/api";
 import React, { useState } from "react";
 import { ReviewPlus } from "@codestream/protocols/agent";
 import { HostApi } from "../..";
@@ -48,7 +49,11 @@ export const ChangesetFileList = (props: {
 		if (checkpoint !== undefined) {
 			changesets = review.reviewChangesets.filter(rc => rc.checkpoint === checkpoint);
 		} else {
-			changesets = [review.reviewChangesets[review.reviewChangesets.length - 1]];
+			const latestChangesetByRepo = new Map<string, CSReviewChangeset>()
+			for (const changeset of review.reviewChangesets) {
+				latestChangesetByRepo.set(changeset.repoId, changeset);
+			}
+			changesets = Array.from(latestChangesetByRepo.values());
 		}
 
 		for (let changeset of changesets) {
