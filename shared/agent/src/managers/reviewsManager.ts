@@ -245,27 +245,38 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	async getContents(request: GetReviewContentsRequest): Promise<GetReviewContentsResponse> {
 		const { reviewId, repoId, checkpoint, path } = request;
 		if (checkpoint === undefined) {
-			const { git } = SessionContainer.instance();
 			const review = await this.getById(request.reviewId);
+
+			const containsFile = (c: CSReviewChangeset) =>
+				c.repoId === request.repoId &&
+				c.modifiedFilesInCheckpoint.find(mf => mf.file === request.path);
+			const firstChangesetContainingFile = review.reviewChangesets.slice().find(containsFile);
 			const latestChangesetContainingFile = review.reviewChangesets
 				.slice()
 				.reverse()
-				.find(
-					c =>
-						c.repoId === request.repoId &&
-						c.modifiedFilesInCheckpoint.find(mf => mf.file === request.path)
-				);
+				.find(containsFile);
 
-			if (!latestChangesetContainingFile) {
+			if (!firstChangesetContainingFile || !latestChangesetContainingFile) {
 				return { fileNotIncludedInReview: true };
 			}
 
-			return this.getContentsForCheckpoint(
+			const firstContents = await this.getContentsForCheckpoint(
+				reviewId,
+				repoId,
+				firstChangesetContainingFile.checkpoint,
+				path
+			);
+			const latestContents = await this.getContentsForCheckpoint(
 				reviewId,
 				repoId,
 				latestChangesetContainingFile.checkpoint,
 				path
 			);
+
+			return {
+				left: firstContents.left,
+				right: latestContents.right
+			};
 		} else if (checkpoint === 0) {
 			return this.getContentsForCheckpoint(reviewId, repoId, 0, path);
 		} else {
