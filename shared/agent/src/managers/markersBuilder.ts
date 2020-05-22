@@ -351,12 +351,20 @@ class ReviewDiffMarkersBuilder extends MarkersBuilder {
 		const { reviews } = SessionContainer.instance();
 		const review = await reviews.getById(this._reviewId);
 
-		const changeset = review.reviewChangesets.find(c => c.repoId === this._repoId);
+		const changeset =
+			this._checkpoint !== undefined
+				? review.reviewChangesets.find(
+						c => c.repoId === this._repoId && c.checkpoint === this._checkpoint
+				  )
+				: review.reviewChangesets
+						.slice()
+						.reverse()
+						.find(c => c.repoId === this._repoId);
+
 		if (!changeset) throw new Error(`Could not find changeset with repoId ${this._repoId}`);
 
 		const diffs = await reviews.getDiffs(this._reviewId, this._repoId);
-		// TODO not sure what this is supposed to check?? use a checkpoint arg?
-		const diffCheckpoint = diffs.find(_ => _.checkpoint === 0)!;
+		const diffCheckpoint = diffs.find(_ => _.checkpoint === changeset.checkpoint)!;
 		const fromLatestCommitDiff = diffCheckpoint.diff.latestCommitToRightDiffs.find(
 			d => d.newFileName === this._path
 		);

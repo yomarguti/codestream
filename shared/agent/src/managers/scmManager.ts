@@ -470,12 +470,19 @@ export class ScmManager {
 		}
 		const commits = await git.getCommitsOnBranch(repoPath, branch, newestCommitShaInOrBeforeReview);
 
-		const isCommitOnBranch = await git.isCommitOnBranch(repoPath, branch, newestCommitShaInOrBeforeReview);
+		const isCommitOnBranch = await git.isCommitOnBranch(
+			repoPath,
+			branch,
+			newestCommitShaInOrBeforeReview
+		);
 		if (!isCommitOnBranch) {
 			// this could happen if this commit was rebased away
 			return {
 				uri: uri.toString(),
-				error: `Commit ${newestCommitShaInOrBeforeReview.substr(0, 8)} was not found in branch ${branch}`
+				error: `Commit ${newestCommitShaInOrBeforeReview.substr(
+					0,
+					8
+				)} was not found in branch ${branch}`
 			};
 		}
 
@@ -769,28 +776,33 @@ export class ScmManager {
 		const { git, reviews } = SessionContainer.instance();
 		range = Ranges.ensureStartBeforeEnd(range);
 
-		const { reviewId, repoId, version, path } = ReviewsManager.parseUri(documentUri);
+		const { reviewId, checkpoint, repoId, version, path } = ReviewsManager.parseUri(documentUri);
 		const repo = await git.getRepositoryById(repoId);
 		if (repo == null) throw new Error(`Could not find repo with ID ${repoId}`);
 
 		const uri = URI.parse(documentUri);
 		if (contents == null) {
-			// TODO what happens with checkpoint here?
-			const reviewContents = await reviews.getContents({ reviewId, repoId, path, checkpoint: 0 });
+			const reviewContents = await reviews.getContents({ reviewId, repoId, path, checkpoint });
 			const versionContents = (reviewContents as any)[version] as string;
 			const document = TextDocument.create(uri.toString(), "codestream", 0, versionContents);
 			contents = document.getText(range);
 		}
 
 		const review = await reviews.getById(reviewId);
-		const changeset = review.reviewChangesets.find(c => c.repoId === repoId);
+		const changeset =
+			checkpoint !== undefined
+				? review.reviewChangesets.find(c => c.repoId === repoId && c.checkpoint === checkpoint)
+				: review.reviewChangesets
+						.slice()
+						.reverse()
+						.find(c => c.repoId === repoId);
+
 		if (!changeset) throw new Error(`Could not find changeset with repoId ${repoId}`);
 
 		const gitRemotes = await repo.getRemotes();
 		const remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
 		const diffs = await reviews.getDiffs(reviewId, repoId);
-		// TODO what happens with checkpoint here?
-		const checkpointDiff = diffs.find(_ => _.checkpoint === 0)!;
+		const checkpointDiff = diffs.find(_ => _.checkpoint === changeset.checkpoint)!;
 		return {
 			uri: uri.toString(),
 			range: range,
