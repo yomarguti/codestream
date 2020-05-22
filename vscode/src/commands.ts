@@ -202,7 +202,10 @@ export class Commands implements Disposable {
 				column = undefined;
 			}
 		}
-
+		let update = "";
+		if (args.checkpoint && args.checkpoint > 0) {
+			update = ` (Update #${args.checkpoint})`;
+		}
 		await commands.executeCommand(
 			BuiltInCommands.Diff,
 			Uri.parse(
@@ -211,7 +214,7 @@ export class Commands implements Disposable {
 			Uri.parse(
 				`codestream-diff://${args.reviewId}/${args.checkpoint}/${args.repoId}/right/${args.path}`
 			),
-			`${paths.basename(args.path)} @ ${Strings.truncate(review.title, 25)}`,
+			`${paths.basename(args.path)} @ ${Strings.truncate(review.title, 25)}${update}`,
 			{ preserveFocus: false, preview: true, viewColumn: column || ViewColumn.Beside }
 		);
 
