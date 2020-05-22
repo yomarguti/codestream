@@ -155,6 +155,7 @@ interface State {
 	isLoadingScm: boolean;
 	reviewCreationError: string;
 	scmError: boolean;
+	scmErrorMessage?: string;
 	crossPostMessage: boolean;
 	assignableUsers: { value: any; label: string }[];
 	channelMenuOpen: boolean;
@@ -268,6 +269,7 @@ class ReviewForm extends React.Component<Props, State> {
 					isLoading: false,
 					isLoadingScm: false,
 					scmError: false,
+					scmErrorMessage: "",
 					notify: false,
 					...defaultState
 			  } as State);
@@ -393,15 +395,28 @@ class ReviewForm extends React.Component<Props, State> {
 		const { includeSaved, includeStaged, startCommit, prevEndCommit } = this.state;
 
 		const uri = repoUri || this.state.repoUri;
-		const statusInfo = await HostApi.instance.send(GetRepoScmStatusRequestType, {
-			uri,
-			startCommit,
-			includeStaged,
-			includeSaved,
-			currentUserEmail: currentUser.email,
-			prevEndCommit,
-			reviewId: editingReview && editingReview.id
-		});
+		let statusInfo: GetRepoScmStatusResponse;
+		try {
+			statusInfo = await HostApi.instance.send(GetRepoScmStatusRequestType, {
+				uri,
+				startCommit,
+				includeStaged,
+				includeSaved,
+				currentUserEmail: currentUser.email,
+				prevEndCommit,
+				reviewId: editingReview && editingReview.id
+			});
+		}
+		catch (e) {
+			logError(e);
+			this.setState({ isLoadingScm: false, scmError: true });
+			return;
+		}
+
+		if (statusInfo.error) {
+			this.setState({ isLoadingScm: false, scmError: true, scmErrorMessage: statusInfo.error });
+			return;
+		}
 
 		this._disposableDidChangeDataNotification &&
 			this._disposableDidChangeDataNotification.dispose();
@@ -548,7 +563,7 @@ class ReviewForm extends React.Component<Props, State> {
 			this.setState({ isLoadingScm: false, scmError: true });
 			return;
 		}
-		this.setState({ isLoadingScm: false, scmError: false });
+		this.setState({ isLoadingScm: false, scmError: false, scmErrorMessage: "" });
 	}
 
 	async addIgnoreFile(filename: string) {
@@ -1556,7 +1571,7 @@ class ReviewForm extends React.Component<Props, State> {
 	};
 
 	setRepo = repo => {
-		this.setState({ isLoadingScm: true, scmError: false });
+		this.setState({ isLoadingScm: true, scmError: false, scmErrorMessage: "" });
 		this.getScmInfoForURI(repo.folder.uri);
 	};
 
@@ -1643,7 +1658,8 @@ class ReviewForm extends React.Component<Props, State> {
 			authorsById,
 			openRepos,
 			isLoadingScm,
-			scmError
+			scmError,
+			scmErrorMessage
 		} = this.state;
 
 		// coAuthorLabels are a mapping from teamMate ID to the # of edits represented in
@@ -1894,7 +1910,7 @@ class ReviewForm extends React.Component<Props, State> {
 						<div className="color-warning" style={{ display: "flex", padding: "10px 0" }}>
 							<Icon name="alert" />
 							<div style={{ paddingLeft: "10px" }}>
-								Error loading git info.
+								{scmErrorMessage || "Error loading git info."}
 								{repoMenuItems.length > 0 && <> Select a repo above.</>}
 							</div>
 						</div>
