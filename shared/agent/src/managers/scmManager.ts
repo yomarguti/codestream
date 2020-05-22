@@ -677,6 +677,11 @@ export class ScmManager {
 		const savedFiles = (await git.getNumStatSaved(repoPath)).map(ns => ns.file);
 		const stagedFiles = (await git.getNumStatStaged(repoPath)).map(ns => ns.file);
 
+		let totalModifiedLines = 0;
+		for (const modifiedFile of modifiedFiles) {
+			totalModifiedLines = totalModifiedLines + modifiedFile.linesAdded + modifiedFile.linesRemoved;
+		}
+
 		return {
 			uri: uri.toString(),
 			scm: {
@@ -690,7 +695,7 @@ export class ScmManager {
 				authors: [],
 				commits,
 				remotes,
-				totalModifiedLines: 666 // FIXME
+				totalModifiedLines
 			},
 			error: undefined
 		};
