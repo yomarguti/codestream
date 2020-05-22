@@ -14,6 +14,7 @@ import { git, GitErrors, GitWarnings } from "./git";
 import { GitAuthor, GitCommit, GitNumStat, GitRemote, GitRepository } from "./models/models";
 import { GitAuthorParser } from "./parsers/authorParser";
 import { GitBlameRevisionParser, RevisionEntry } from "./parsers/blameRevisionParser";
+import { GitBranchParser } from "./parsers/branchParser";
 import { GitLogParser } from "./parsers/logParser";
 import { GitRemoteParser } from "./parsers/remoteParser";
 import { GitRepositories } from "./repositories";
@@ -1226,6 +1227,27 @@ export class GitService implements IGitService, Disposable {
 			return data.trim();
 		} catch {
 			return undefined;
+		}
+	}
+
+	/**
+	 * Returns true if the sha exists on the specificed branch on the specified repo
+	 *
+	 * @param  {string} repoPath
+	 * @param  {string} branchName
+	 * @param  {string} sha
+	 * @returns Promise
+	 */
+	async isCommitOnBranch(repoPath: string, branchName: string, sha: string): Promise<boolean | undefined> {
+		try {
+			const data = await git({ cwd: repoPath }, "branch", "--contains", sha);
+			const branches = GitBranchParser.parse(data);
+			return branches && branches.length
+				? branches.some(_ => _.name === branchName)
+				: false;
+		} catch (ex) {
+			Logger.debug(ex.message);
+			return false;
 		}
 	}
 

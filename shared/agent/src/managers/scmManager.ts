@@ -470,12 +470,22 @@ export class ScmManager {
 		}
 		const commits = await git.getCommitsOnBranch(repoPath, branch, newestCommitShaInOrBeforeReview);
 
+		const isCommitOnBranch = await git.isCommitOnBranch(repoPath, branch, newestCommitShaInOrBeforeReview);
+		if (!isCommitOnBranch) {
+			// this could happen if this commit was rebased away
+			return {
+				uri: uri.toString(),
+				error: `Commit ${newestCommitShaInOrBeforeReview.substr(0, 8)} was not found in branch ${branch}`
+			};
+		}
+
 		const numStatsFromNewestCommitShaInOrBeforeReview = await git.getNumStat(
 			repoPath,
 			newestCommitShaInOrBeforeReview,
 			includeSaved,
 			includeStaged
 		);
+
 		for (const numStatFromNewestCommitShaInOrBeforeReview of numStatsFromNewestCommitShaInOrBeforeReview) {
 			const lastChangesetContainingFile = changesets
 				.slice()
