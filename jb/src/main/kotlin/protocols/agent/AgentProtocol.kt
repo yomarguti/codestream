@@ -155,7 +155,7 @@ enum class PermalinkPrivacy(val value: String) {
 
 class GetAllReviewContentsParams(
     val reviewId: String,
-    val checkpoint: Integer?
+    val checkpoint: Int?
 )
 
 class ReviewFileContents(

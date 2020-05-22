@@ -13,8 +13,7 @@ class ReviewDiffVirtualFile : LightVirtualFile {
     }
 
     companion object {
-        fun create(reviewId: String, repoId: String, side: ReviewDiffSide, path: String, content: String) : ReviewDiffVirtualFile {
-            val fullPath = "$reviewId/$repoId/${side.path}/$path"
+        fun create(fullPath: String, side: ReviewDiffSide, path: String, content: String): ReviewDiffVirtualFile {
             return ReviewDiffVirtualFile(fullPath, side, path, content)
         }
     }

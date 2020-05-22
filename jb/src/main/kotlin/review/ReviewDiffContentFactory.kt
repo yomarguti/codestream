@@ -19,12 +19,14 @@ import com.intellij.psi.PsiDocumentManager
 fun createReviewDiffContent(
     project: Project,
     reviewId: String,
+    checkpoint: Int?,
     repoId: String,
     side: ReviewDiffSide,
     path: String,
     text: String
 ): DocumentContent {
-    val fullPath = "$reviewId/$repoId/${side.path}/$path"
+    val checkpointStr = checkpoint?.toString() ?: "undefined"
+    val fullPath = "$reviewId/$checkpointStr/$repoId/${side.path}/$path"
     val filePath = RemoteFilePath(fullPath, false)
 
     val fileType = when (filePath.fileType) {
@@ -36,7 +38,7 @@ fun createReviewDiffContent(
 
     // Borrowed from com.intellij.diff.DiffContentFactoryImpl
     val document = ReadAction.compute<Document, RuntimeException> {
-        val file = ReviewDiffVirtualFile.create(reviewId, repoId, side, path, correctedText)
+        val file = ReviewDiffVirtualFile.create(fullPath, side, path, correctedText)
         file.isWritable = false
         OutsidersPsiFileSupport.markFile(file, fullPath)
         val document = FileDocumentManager.getInstance().getDocument(file) ?: return@compute null

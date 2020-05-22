@@ -108,7 +108,7 @@ class EditorScrollToRequest(
 class ReviewShowDiffRequest(
     val reviewId: String,
     val repoId: String,
-    val checkpoint: Integer?,
+    val checkpoint: Int?,
     val path: String
 )
 

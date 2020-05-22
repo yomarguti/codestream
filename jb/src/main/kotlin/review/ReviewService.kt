@@ -44,7 +44,7 @@ class ReviewService(private val project: Project) {
             .also { it.isAccessible = true }
     private var diffChain: DiffRequestChain? = null
 
-    suspend fun showDiff(reviewId: String, repoId: String, checkpoint: Integer?, path: String) {
+    suspend fun showDiff(reviewId: String, repoId: String, checkpoint: Int?, path: String) {
         val agent = project.agentService ?: return
 
         if (reviewDiffEditor == null || diffChain == null) {
@@ -57,6 +57,7 @@ class ReviewService(private val project: Project) {
                     val leftContent = createReviewDiffContent(
                         project,
                         review.id,
+                        checkpoint,
                         repo.repoId,
                         ReviewDiffSide.LEFT,
                         file.leftPath,
@@ -65,6 +66,7 @@ class ReviewService(private val project: Project) {
                     val rightContent = createReviewDiffContent(
                         project,
                         review.id,
+                        checkpoint,
                         repo.repoId,
                         ReviewDiffSide.RIGHT,
                         file.rightPath,
@@ -122,20 +124,30 @@ class ReviewService(private val project: Project) {
             includeStaged -> "staged"
             else -> "head"
         }
-        val contents = agent.getLocalReviewContents(GetLocalReviewContentsParams(repoId, path, editingReviewId, baseSha, rightVersion))
-        showDiffContent("local", repoId, path, contents, "New Review")
+        val contents = agent.getLocalReviewContents(
+            GetLocalReviewContentsParams(
+                repoId,
+                path,
+                editingReviewId,
+                baseSha,
+                rightVersion
+            )
+        )
+        showDiffContent("local", null, repoId, path, contents, "New Review")
     }
 
     private fun showDiffContent(
         reviewId: String,
+        checkpoint: Int?,
         repoId: String,
         path: String,
         contents: GetReviewContentsResult,
         title: String
     ) {
-        val leftContent = createReviewDiffContent(project, reviewId, repoId, ReviewDiffSide.LEFT, path, contents.left)
+        val leftContent =
+            createReviewDiffContent(project, reviewId, checkpoint, repoId, ReviewDiffSide.LEFT, path, contents.left)
         val rightContent =
-            createReviewDiffContent(project, reviewId, repoId, ReviewDiffSide.RIGHT, path, contents.right)
+            createReviewDiffContent(project, reviewId, checkpoint, repoId, ReviewDiffSide.RIGHT, path, contents.right)
         val diffRequest = SimpleDiffRequest(title, leftContent, rightContent, path, path)
         diffRequest.putUserData(REVIEW_DIFF, true)
         val file = SimpleDiffVirtualFile(diffRequest)
