@@ -94,6 +94,8 @@ import CancelButton from "./CancelButton";
 import { MarkdownText } from "./MarkdownText";
 import { getReviewChangeRequests } from "../store/codemarks/reducer";
 import { MetaCheckboxWithHoverIcon } from "./Review";
+// https://github.com/kaelzhang/node-ignore
+import ignore from "ignore";
 
 interface Props extends ConnectedProps {
 	editingReview?: CSReview;
@@ -189,9 +191,6 @@ interface State {
 	// if set, a SHA that represents a "hard start" to the review changeset
 	prevEndCommit: string;
 	unsavedFiles: string[];
-	ignoredFiles: {
-		[file: string]: boolean;
-	};
 	commitListLength: number;
 	currentUserScmEmail: string | undefined;
 	// this is the review setting
@@ -229,6 +228,7 @@ class ReviewForm extends React.Component<Props, State> {
 	permalinkRef = React.createRef<HTMLTextAreaElement>();
 	private _sharingAttributes?: SharingAttributes;
 	private _disposableDidChangeDataNotification: { dispose(): void } | undefined = undefined;
+	private ignoredFiles = ignore();
 
 	constructor(props: Props) {
 		super(props);
@@ -250,7 +250,6 @@ class ReviewForm extends React.Component<Props, State> {
 			selectedTags: {},
 			repoName: "",
 			excludedFiles: {},
-			ignoredFiles: {},
 			includeSaved: true,
 			includeStaged: true,
 			excludeCommit: {},
@@ -554,9 +553,8 @@ class ReviewForm extends React.Component<Props, State> {
 				repoPath: statusInfo.scm.repoPath
 			});
 			if (response && response.paths) {
-				const ignoredFiles = {};
-				response.paths.forEach(path => (ignoredFiles[path] = true));
-				this.setState({ ignoredFiles });
+				this.ignoredFiles = ignore(); // make a new one
+				this.ignoredFiles.add(response.paths); // add the rules
 			}
 		} else {
 			this.setState({ isLoadingScm: false, scmError: true });
@@ -1097,9 +1095,7 @@ class ReviewForm extends React.Component<Props, State> {
 		this.setState({ excludedFiles: { ...excludedFiles, [file]: !excludedFiles[file] } });
 	};
 
-	excluded = (file: string) => {
-		return this.state.excludedFiles[file] || this.state.ignoredFiles[file];
-	};
+	excluded = (file: string) => this.state.excludedFiles[file] || this.ignoredFiles.ignores(file);
 
 	excludeFuture = (event: React.SyntheticEvent, file: string) => {
 		const { repoStatus } = this.state;
@@ -1112,7 +1108,7 @@ class ReviewForm extends React.Component<Props, State> {
 		const ignoreFile = scm.repoPath + "/.codestreamignore";
 		const success = this.addIgnoreFile(file);
 		if (success) {
-			this.setState({ ignoredFiles: { ...this.state.ignoredFiles, [file]: true } });
+			this.ignoredFiles.add(file);
 			this.setState({ excludedFiles: { ...this.state.excludedFiles, [file]: true } });
 			confirmPopup({
 				title: "Exclude Files",
@@ -1545,12 +1541,14 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	renderExcludedFiles() {
-		const { repoStatus, excludedFiles, ignoredFiles, currentFile } = this.state;
+		const { repoStatus, excludedFiles, currentFile } = this.state;
 		if (!repoStatus) return null;
 		const { scm } = repoStatus;
 		if (!scm) return null;
 		const { modifiedFiles } = scm;
-		const excluded = modifiedFiles.filter(f => excludedFiles[f.file] && !ignoredFiles[f.file]);
+		const excluded = modifiedFiles.filter(
+			f => excludedFiles[f.file] && !this.ignoredFiles.ignores(f.file)
+		);
 		if (excluded.length === 0) return null;
 
 		return (
