@@ -11,7 +11,8 @@ import {
 	ChangeDataType,
 	GetUserInfoRequestType,
 	UpdateReviewResponse,
-	CodemarkPlus
+	CodemarkPlus,
+	TelemetryRequestType
 } from "@codestream/protocols/agent";
 import {
 	CSReview,
@@ -324,8 +325,7 @@ class ReviewForm extends React.Component<Props, State> {
 			const repoId: string = scmInfo.scm.repoId || "";
 			const repoName = this.props.repos[repoId] ? this.props.repos[repoId].name : "";
 			this.setState({ scmInfo, repoName, startCommit: "" }, () => {
-				this.handleRepoChange(uri);
-				if (callback) callback();
+				this.handleRepoChange(uri, callback);
 			});
 		} else {
 			this.setState({ isLoadingScm: false, scmError: true });
@@ -379,7 +379,25 @@ class ReviewForm extends React.Component<Props, State> {
 
 		this.getUserInfo();
 		if (isAmending) this.getScmInfoForRepo();
-		else if (textEditorUri) this.getScmInfoForURI(textEditorUri);
+		else if (textEditorUri) {
+			this.getScmInfoForURI(textEditorUri, () => {
+				HostApi.instance.send(TelemetryRequestType, {
+					eventName: "Review Form Opened",
+					properties: {
+						"Repo Open": this.state.openRepos && this.state.openRepos.length > 0,
+						"Suggested Reviewers": this.state.reviewers && this.state.reviewers.length > 0
+					}
+				});
+			});
+		} else {
+			HostApi.instance.send(TelemetryRequestType, {
+				eventName: "Review Form Opened",
+				properties: {
+					"Repo Open": false,
+					"Suggested Reviewers": false
+				}
+			});
+		}
 
 		this.focus();
 	}
@@ -389,178 +407,188 @@ class ReviewForm extends React.Component<Props, State> {
 			this._disposableDidChangeDataNotification.dispose();
 	};
 
-	async handleRepoChange(repoUri?) {
-		const { teamMates, currentUser, isEditing, isAmending, editingReview } = this.props;
-		const { includeSaved, includeStaged, startCommit, prevEndCommit } = this.state;
-
-		const uri = repoUri || this.state.repoUri;
-		let statusInfo: GetRepoScmStatusResponse;
+	async handleRepoChange(repoUri?, callback?) {
 		try {
-			statusInfo = await HostApi.instance.send(GetRepoScmStatusRequestType, {
-				uri,
-				startCommit,
-				includeStaged,
-				includeSaved,
-				currentUserEmail: currentUser.email,
-				prevEndCommit,
-				reviewId: editingReview && editingReview.id
-			});
+			const { teamMates, currentUser, isEditing, isAmending, editingReview } = this.props;
+			const { includeSaved, includeStaged, startCommit, prevEndCommit } = this.state;
+
+			const uri = repoUri || this.state.repoUri;
+			let statusInfo: GetRepoScmStatusResponse;
+			try {
+				statusInfo = await HostApi.instance.send(GetRepoScmStatusRequestType, {
+					uri,
+					startCommit,
+					includeStaged,
+					includeSaved,
+					currentUserEmail: currentUser.email,
+					prevEndCommit,
+					reviewId: editingReview && editingReview.id
+				});
+			} catch (e) {
+				logError(e);
+				this.setState({ isLoadingScm: false, scmError: true });
+				return;
+			}
+
+			if (statusInfo.error) {
+				this.setState({ isLoadingScm: false, scmError: true, scmErrorMessage: statusInfo.error });
+				return;
+			}
+
+			this._disposableDidChangeDataNotification &&
+				this._disposableDidChangeDataNotification.dispose();
+			this._disposableDidChangeDataNotification = HostApi.instance.on(
+				DidChangeDataNotificationType,
+				(e: any) => {
+					// if we have a change to scm OR a file has been saved, update
+					let update = false;
+					if (
+						e.type === ChangeDataType.Documents &&
+						e.data &&
+						(e.data as DocumentData).reason === "saved"
+					) {
+						update = true;
+					} else if (
+						e.type === ChangeDataType.Commits &&
+						e.data.repo &&
+						this.state.repoStatus &&
+						this.state.repoStatus.scm &&
+						this.state.repoStatus.scm.repoId === e.data.repo.id
+					) {
+						// listen only for changes related to the repo we are looking at
+						update = true;
+					}
+
+					if (update && !this.state.scmError) {
+						// if there is an error getting git info,
+						// don't bother attempting since it's an error
+
+						this.setState({ isLoadingScm: true });
+						// handle the repo change, but don't pass the textEditorUri
+						// as we don't want to switch the repo the form is pointing
+						// to in these cases
+						this.handleRepoChange();
+					}
+				}
+			);
+
+			this.setState({ repoStatus: statusInfo, repoUri: uri, currentFile: "" });
+			if (!startCommit && statusInfo.scm && statusInfo.scm.startCommit) {
+				this.setChangeStart(statusInfo.scm.startCommit);
+
+				if (statusInfo.scm.commits) {
+					const commitListLength = statusInfo.scm.commits.findIndex(
+						// @ts-ignore
+						commit => commit.info.email !== currentUser.email
+					);
+					// show at least 5 commits, but if the 6th+ commit isn't mine,
+					// hide it behind a "show more" button
+					if (commitListLength >= 5) this.setState({ commitListLength });
+				}
+			}
+			// if (isAmending && statusInfo.scm && statusInfo.scm.branch !== this.state.editingReviewBranch) {
+			// 	this.setState({ isLoadingScm: false, scmError: true });
+			// 	return;
+			// }
+
+			if (statusInfo.scm) {
+				const authors = statusInfo.scm.authors;
+				const authorsById = {};
+				authors.map(author => {
+					const user = teamMates.find(t => t.email == author.email);
+					if (user) authorsById[user.id] = author;
+				});
+				this.setState({ authorsById });
+
+				if (!isEditing && !this.state.reviewersTouched) {
+					let reviewers = Object.keys(authorsById)
+						// get the top most impacted authors
+						// based on how many times their code
+						// was stomped on, and make those
+						// "suggested reviewers"
+						.sort(
+							(a, b) =>
+								authorsById[b].commits * 10 +
+								authorsById[b].stomped -
+								(authorsById[a].commits * 10 + authorsById[a].stomped)
+						)
+						.map(id => teamMates.find(p => p.id === id))
+						.filter(Boolean);
+
+					switch (this.props.reviewAssignment) {
+						case CSReviewAssignmentSetting.Authorship1:
+							reviewers = reviewers.slice(0, 1);
+							break;
+						case CSReviewAssignmentSetting.Authorship2:
+							reviewers = reviewers.slice(0, 2);
+							break;
+						case CSReviewAssignmentSetting.Authorship3:
+							reviewers = reviewers.slice(0, 3);
+							break;
+						case CSReviewAssignmentSetting.Random: {
+							// the pseudo-random number is based on the time
+							// this review form was mounted, and selects a random
+							// teammate from the array
+							const pseudoRandom = this.state.mountedTimestamp % teamMates.length;
+							reviewers = [teamMates[pseudoRandom]];
+							break;
+						}
+						case CSReviewAssignmentSetting.RoundRobin:
+							const index = this.props.teamReviewCount % teamMates.length;
+							reviewers = [teamMates[index]];
+							break;
+						default:
+							reviewers = [];
+					}
+
+					// @ts-ignore
+					this.setState({ reviewers });
+				}
+
+				// if there is no title set OR there is one and a user hasn't touched it
+				// default it to a capitalized version of the branch name,
+				// with "feature/foo-bar" changed to "feature: foo bar"
+				if (
+					!isEditing &&
+					statusInfo.scm.branch &&
+					(!this.state.title || !this.state.titleTouched)
+				) {
+					const { branch } = statusInfo.scm;
+					this.setState({
+						title:
+							branch.charAt(0).toUpperCase() +
+							branch
+								.slice(1)
+								.replace("-", " ")
+								.replace(/^(\w+)\//, "$1: ")
+					});
+				}
+
+				const { excludedFiles } = this.state;
+				// default any files which are `new` to be excluded from the review
+				// but only those which haven't been explicitly set to true or false
+				statusInfo.scm.modifiedFiles.forEach(f => {
+					if (f.status === FileStatus.untracked && excludedFiles[f.file] === undefined)
+						this.setState(state => ({ excludedFiles: { ...state.excludedFiles, [f.file]: true } }));
+				});
+
+				const response = await HostApi.instance.send(IgnoreFilesRequestType, {
+					repoPath: statusInfo.scm.repoPath
+				});
+				if (response && response.paths) {
+					this.ignoredFiles = ignore(); // make a new one
+					this.ignoredFiles.add(response.paths); // add the rules
+				}
+			} else {
+				this.setState({ isLoadingScm: false, scmError: true });
+				return;
+			}
+			this.setState({ isLoadingScm: false, scmError: false, scmErrorMessage: "" });
 		} catch (e) {
 			logError(e);
-			this.setState({ isLoadingScm: false, scmError: true });
-			return;
+		} finally {
+			if (callback) callback();
 		}
-
-		if (statusInfo.error) {
-			this.setState({ isLoadingScm: false, scmError: true, scmErrorMessage: statusInfo.error });
-			return;
-		}
-
-		this._disposableDidChangeDataNotification &&
-			this._disposableDidChangeDataNotification.dispose();
-		this._disposableDidChangeDataNotification = HostApi.instance.on(
-			DidChangeDataNotificationType,
-			(e: any) => {
-				// if we have a change to scm OR a file has been saved, update
-				let update = false;
-				if (
-					e.type === ChangeDataType.Documents &&
-					e.data &&
-					(e.data as DocumentData).reason === "saved"
-				) {
-					update = true;
-				} else if (
-					e.type === ChangeDataType.Commits &&
-					e.data.repo &&
-					this.state.repoStatus &&
-					this.state.repoStatus.scm &&
-					this.state.repoStatus.scm.repoId === e.data.repo.id
-				) {
-					// listen only for changes related to the repo we are looking at
-					update = true;
-				}
-
-				if (update && !this.state.scmError) {
-					// if there is an error getting git info,
-					// don't bother attempting since it's an error
-
-					this.setState({ isLoadingScm: true });
-					// handle the repo change, but don't pass the textEditorUri
-					// as we don't want to switch the repo the form is pointing
-					// to in these cases
-					this.handleRepoChange();
-				}
-			}
-		);
-
-		this.setState({ repoStatus: statusInfo, repoUri: uri, currentFile: "" });
-		if (!startCommit && statusInfo.scm && statusInfo.scm.startCommit) {
-			this.setChangeStart(statusInfo.scm.startCommit);
-
-			if (statusInfo.scm.commits) {
-				const commitListLength = statusInfo.scm.commits.findIndex(
-					// @ts-ignore
-					commit => commit.info.email !== currentUser.email
-				);
-				// show at least 5 commits, but if the 6th+ commit isn't mine,
-				// hide it behind a "show more" button
-				if (commitListLength >= 5) this.setState({ commitListLength });
-			}
-		}
-		// if (isAmending && statusInfo.scm && statusInfo.scm.branch !== this.state.editingReviewBranch) {
-		// 	this.setState({ isLoadingScm: false, scmError: true });
-		// 	return;
-		// }
-
-		if (statusInfo.scm) {
-			const authors = statusInfo.scm.authors;
-			const authorsById = {};
-			authors.map(author => {
-				const user = teamMates.find(t => t.email == author.email);
-				if (user) authorsById[user.id] = author;
-			});
-			this.setState({ authorsById });
-
-			if (!isEditing && !this.state.reviewersTouched) {
-				let reviewers = Object.keys(authorsById)
-					// get the top most impacted authors
-					// based on how many times their code
-					// was stomped on, and make those
-					// "suggested reviewers"
-					.sort(
-						(a, b) =>
-							authorsById[b].commits * 10 +
-							authorsById[b].stomped -
-							(authorsById[a].commits * 10 + authorsById[a].stomped)
-					)
-					.map(id => teamMates.find(p => p.id === id))
-					.filter(Boolean);
-
-				switch (this.props.reviewAssignment) {
-					case CSReviewAssignmentSetting.Authorship1:
-						reviewers = reviewers.slice(0, 1);
-						break;
-					case CSReviewAssignmentSetting.Authorship2:
-						reviewers = reviewers.slice(0, 2);
-						break;
-					case CSReviewAssignmentSetting.Authorship3:
-						reviewers = reviewers.slice(0, 3);
-						break;
-					case CSReviewAssignmentSetting.Random: {
-						// the pseudo-random number is based on the time
-						// this review form was mounted, and selects a random
-						// teammate from the array
-						const pseudoRandom = this.state.mountedTimestamp % teamMates.length;
-						reviewers = [teamMates[pseudoRandom]];
-						break;
-					}
-					case CSReviewAssignmentSetting.RoundRobin:
-						const index = this.props.teamReviewCount % teamMates.length;
-						reviewers = [teamMates[index]];
-						break;
-					default:
-						reviewers = [];
-				}
-
-				// @ts-ignore
-				this.setState({ reviewers });
-			}
-
-			// if there is no title set OR there is one and a user hasn't touched it
-			// default it to a capitalized version of the branch name,
-			// with "feature/foo-bar" changed to "feature: foo bar"
-			if (!isEditing && statusInfo.scm.branch && (!this.state.title || !this.state.titleTouched)) {
-				const { branch } = statusInfo.scm;
-				this.setState({
-					title:
-						branch.charAt(0).toUpperCase() +
-						branch
-							.slice(1)
-							.replace("-", " ")
-							.replace(/^(\w+)\//, "$1: ")
-				});
-			}
-
-			const { excludedFiles } = this.state;
-			// default any files which are `new` to be excluded from the review
-			// but only those which haven't been explicitly set to true or false
-			statusInfo.scm.modifiedFiles.forEach(f => {
-				if (f.status === FileStatus.untracked && excludedFiles[f.file] === undefined)
-					this.setState(state => ({ excludedFiles: { ...state.excludedFiles, [f.file]: true } }));
-			});
-
-			const response = await HostApi.instance.send(IgnoreFilesRequestType, {
-				repoPath: statusInfo.scm.repoPath
-			});
-			if (response && response.paths) {
-				this.ignoredFiles = ignore(); // make a new one
-				this.ignoredFiles.add(response.paths); // add the rules
-			}
-		} else {
-			this.setState({ isLoadingScm: false, scmError: true });
-			return;
-		}
-		this.setState({ isLoadingScm: false, scmError: false, scmErrorMessage: "" });
 	}
 
 	async addIgnoreFile(filename: string) {
