@@ -482,8 +482,9 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		process.nextTick(() => {
 			try {
 				const telemetry = Container.instance().telemetry;
+				// get the highest number checkpoint by sorting by checkpoint descending
 				const totalCheckpoints =
-					reviewChangesets.map(_ => _!.checkpoint || 0).sort((a, b) => (b || 0) - (a || 0))[0] + 1;
+					reviewChangesets.map(_ => _!.checkpoint || 0).sort((a, b) => (b || 0) - (a || 0))[0];
 				const reviewProperties: {
 					[key: string]: any;
 				} = {
