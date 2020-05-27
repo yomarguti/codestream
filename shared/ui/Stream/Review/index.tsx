@@ -1181,7 +1181,13 @@ const ReviewForId = (props: PropsWithId) => {
 		};
 	});
 
-	if (notFound) return <MinimumWidthCard>This review was not found</MinimumWidthCard>;
+	if (notFound)
+		return (
+			<MinimumWidthCard>
+				This review was not found. Perhaps it was deleted by the author, or you don't have
+				permission to view it.
+			</MinimumWidthCard>
+		);
 
 	if (review == null)
 		return (
