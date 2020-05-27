@@ -479,7 +479,8 @@ export function ReviewNav(props: Props) {
 		return (
 			<Modal verticallyCenter={true} onClose={exit}>
 				<MinimumWidthCard>
-					This review was not found
+					This review was not found. Perhaps it was deleted by the author, or you don't have
+					permission to view it.
 					<br />
 					<br />
 					<Button onClick={exit}>Exit</Button>
