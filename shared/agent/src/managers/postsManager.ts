@@ -1138,7 +1138,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			const statusFromBeginningOfReview = await scmManager.getRepoStatus({
 				includeSaved,
 				includeStaged,
-				uri: "file://" + scm.repoPath,
+				uri: URI.file(scm.repoPath).toString(),
 				currentUserEmail: "", // FIXME
 				startCommit
 			});
