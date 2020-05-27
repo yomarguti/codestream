@@ -626,7 +626,9 @@ class ReviewForm extends React.Component<Props, State> {
 			startCommit,
 			excludeCommit,
 			excludedFiles,
-			allReviewersMustApprove
+			allReviewersMustApprove,
+			includeSaved,
+			includeStaged
 		} = this.state;
 
 		const reviewerIds = (this.state.reviewers as any[]).map(r => r.id);
@@ -690,8 +692,8 @@ class ReviewForm extends React.Component<Props, State> {
 							// therefore we can use the keys whose values are false
 							// as the list of files that have been added
 							newFiles: keyFilterFalsey(excludedFiles),
-							includeSaved: scm!.savedFiles.length > 0,
-							includeStaged: scm!.stagedFiles.length > 0,
+							includeSaved: includeSaved && scm!.savedFiles.length > 0,
+							includeStaged: includeStaged && scm!.stagedFiles.length > 0,
 							checkpoint
 						}
 					];
@@ -735,8 +737,8 @@ class ReviewForm extends React.Component<Props, State> {
 							// therefore we can use the keys whose values are false
 							// as the list of files that have been added
 							newFiles: keyFilterFalsey(excludedFiles),
-							includeSaved: scm!.savedFiles.length > 0,
-							includeStaged: scm!.stagedFiles.length > 0,
+							includeSaved: includeSaved && scm!.savedFiles.length > 0,
+							includeStaged: includeStaged && scm!.stagedFiles.length > 0,
 							checkpoint: 0
 						}
 					]
@@ -1458,8 +1460,8 @@ class ReviewForm extends React.Component<Props, State> {
 		HostApi.instance.send(ReviewShowLocalDiffRequestType, {
 			path,
 			repoId,
-			includeSaved,
-			includeStaged,
+			includeSaved: includeSaved && repoStatus.scm!.savedFiles.length > 0,
+			includeStaged: includeStaged && repoStatus.scm!.stagedFiles.length > 0,
 			editingReviewId: editingReview && editingReview.id,
 			baseSha: startCommit
 		});
