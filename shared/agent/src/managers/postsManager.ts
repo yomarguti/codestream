@@ -1286,9 +1286,12 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		).filter(removeExcluded);
 		rightToLatestCommitDiffs.push(...newFileReverseDiffs);
 
-		const latestCommitToRightDiffs = (
-			await git.getDiffs(scm.repoPath, { includeSaved, includeStaged }, latestCommitSha)
-		).filter(removeExcluded);
+		const latestCommitToRightDiffs =
+			includeSaved || includeStaged
+				? (
+						await git.getDiffs(scm.repoPath, { includeSaved, includeStaged }, latestCommitSha)
+				  ).filter(removeExcluded)
+				: [];
 		latestCommitToRightDiffs.push(...newFileDiffs);
 
 		return {
