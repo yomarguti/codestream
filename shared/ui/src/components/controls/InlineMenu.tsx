@@ -63,7 +63,16 @@ export function InlineMenu(props: InlineMenuProps) {
 					focusOnSelect={buttonRef.current}
 				/>
 			)}
-			<TextButton ref={buttonRef} onClick={toggleMenu} tabIndex={0} onKeyPress={handleKeyPress}>
+			<TextButton
+				ref={buttonRef}
+				onClickCapture={e => {
+					e.preventDefault();
+					e.stopPropagation();
+					toggleMenu(isOpen);
+				}}
+				tabIndex={0}
+				onKeyPress={handleKeyPress}
+			>
 				{props.children}
 				<Icon name="chevron-down" />
 			</TextButton>

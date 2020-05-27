@@ -31,7 +31,8 @@ import {
 	CreateTeamTagRequestType,
 	UpdateTeamTagRequestType,
 	DeleteTeamTagRequestType,
-	UpdateStatusRequestType
+	UpdateStatusRequestType,
+	UpdateInvisibleRequestType
 } from "@codestream/protocols/agent";
 import { CSPost, StreamType, CSReviewStatus } from "@codestream/protocols/api";
 import { logError } from "../logger";
@@ -505,21 +506,23 @@ export const setUserPreference = (prefPath: string[], value: any) => async dispa
 	}
 };
 
-export const setUserStatus = (
-	icon: string,
-	label: string,
-	invisible: boolean,
-	expires: number
-) => async dispatch => {
-	// create an object out of the provided path
-
+export const setUserStatus = (icon: string, label: string, expires: number) => async dispatch => {
 	try {
 		const response = await HostApi.instance.send(UpdateStatusRequestType, {
-			status: { icon, label, invisible, expires }
+			status: { icon, label, expires }
 		});
 		dispatch(updateUser(response.user));
 	} catch (error) {
-		logError(`Error trying to update preferences`, { message: error.message });
+		logError(`Error trying to update status`, { message: error.message });
+	}
+};
+
+export const setUserInvisible = (invisible: boolean) => async dispatch => {
+	try {
+		const response = await HostApi.instance.send(UpdateInvisibleRequestType, { invisible });
+		dispatch(updateUser(response.user));
+	} catch (error) {
+		logError(`Error trying to update invisible`, { message: error.message });
 	}
 };
 

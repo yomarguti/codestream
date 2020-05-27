@@ -126,7 +126,6 @@ const Examples = styled.div`
 const EMPTY_STATUS = {
 	label: "",
 	icon: ":desktop_computer:",
-	invisible: false,
 	expires: 0
 };
 
@@ -144,10 +143,8 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		const now = new Date().getTime();
 		if (status.expires && status.expires < now) status = EMPTY_STATUS;
 
-		const clearAfterLabel = status.expires == 0 ? "" : formatTheDate(status.expires);
 		return {
 			status,
-			clearAfterLabel,
 			textEditorUri: state.editorContext.textEditorUri,
 			notificationPreference: state.preferences.notifications || "involveMe"
 		};
@@ -156,27 +153,23 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const { status } = derivedState;
 	const [loading, setLoading] = useState(false);
 	const [label, setLabel] = useState(status.label || "");
-	const [invisible, setInvisible] = useState(status.invisible);
 	const [icon, setIcon] = useState(status.icon || ":desktop_computer:");
-	const [clearAfter, setClearAfter] = useState("");
 	const [emojiMenuOpen, setEmojiMenuOpen] = useState(false);
 	const [emojiMenuTarget, setEmojiMenuTarget] = useState(null as any);
-	const [moveTicket, setMoveTicket] = useState(true);
-	const [updateExternal, setUpdateExternal] = useState(true);
-	const [createPR, setCreatePR] = useState(true);
+	const [moveIssue, setMoveIssue] = useState(true);
+	const [createBranch, setCreateBranch] = useState(true);
 	const [branch, setBranch] = useState("");
 	const [currentBranch, setCurrentBranch] = useState("");
 	// const [loadingBranch, setLoadingBranch] = useState(false);
 	const [branches, setBranches] = useState([] as string[]);
 	const [branchMenuItems, setBranchMenuItems] = useState([] as any[]);
-	const [externalIssue, setExternalIsssue] = useState("");
 	const [branchMenuOpen, setBranchMenuOpen] = useState(false);
 	const [branchMenuTarget, setBranchMenuTarget] = useState();
 
-	const showPRCheckbox = React.useMemo(() => {
-		return branch && branch !== currentBranch;
-	}, [branch]);
 	const showMoveIssueCheckbox = React.useMemo(() => {
+		return label && label.startsWith("http");
+	}, [label]);
+	const showCreateBranchCheckbox = React.useMemo(() => {
 		return label && label.startsWith("http");
 	}, [label]);
 
@@ -214,52 +207,10 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		await getBranches();
 	}, [derivedState.textEditorUri]);
 
-	const same =
-		invisible == status.invisible && label == status.label && icon == status.icon && !clearAfter;
+	const same = label == status.label && icon == status.icon;
 
 	const save = async () => {
 		setLoading(true);
-		const now = new Date();
-		let expires = 0;
-		switch (clearAfter) {
-			case "1":
-			case "30":
-			case "60":
-			case "120":
-			case "240": {
-				const delta = parseInt(clearAfter, 10) * 60 * 1000;
-				const expiresDate = new Date(now.getTime() + delta);
-				expires = expiresDate.getTime();
-				break;
-			}
-			case "today": {
-				// reset to most recent midnight...
-				now.setHours(0);
-				now.setMinutes(0);
-				now.setSeconds(0);
-				// ...then add one day
-				const delta = 24 * 60 * 60 * 1000;
-				const expiresDate = new Date(now.getTime() + delta);
-				expires = expiresDate.getTime();
-				break;
-			}
-			case "week": {
-				// reset to most recent midnight...
-				now.setHours(0);
-				now.setMinutes(0);
-				now.setSeconds(0);
-				// ...then add seven days
-				const delta = 7 * 24 * 60 * 60 * 1000;
-				const expiresDate = new Date(now.getTime() + delta);
-				expires = expiresDate.getTime();
-				break;
-			}
-			case "never":
-				expires = 0;
-				break;
-			default:
-				expires = status.expires || 0;
-		}
 
 		HostApi.instance.track("Status Set", { Value: status });
 
@@ -276,25 +227,8 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			}
 		}
 
-		if (updateExternal) {
-			// FIXME save the status to slack or Teams
-			// const response = await HostApi.instance.send(SetThirdPartyStatusRequestType, {
-			// 	providerId: props.provider.id,
-			// 	icon,
-			// 	label
-			// });
-		}
-
-		if (createPR) {
-			// FIXME create the PR
-			// const response = await HostApi.instance.send(CreatePRRequestType, {
-			// 	providerId: props.provider.id,
-			// 	label
-			// });
-		}
-
-		if (moveTicket) {
-			// FIXME move the ticket to the selected list
+		if (moveIssue) {
+			// FIXME move the issue to the selected list
 			// const response = await HostApi.instance.send(MoveThirdPartyCardRequestType, {
 			// 	providerId: props.provider.id,
 			// 	destinationListId: FIXME
@@ -303,7 +237,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		}
 
 		// @ts-ignore
-		await dispatch(setUserStatus(icon, label, invisible, expires));
+		await dispatch(setUserStatus(icon, label, expires));
 		dispatch(closePanel());
 		setLoading(false);
 	};
@@ -312,7 +246,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		setLoading(true);
 		HostApi.instance.track("Status Cleared", { Value: status });
 		// @ts-ignore
-		await dispatch(setUserStatus("", "", invisible, 0));
+		await dispatch(setUserStatus("", "", 0));
 		dispatch(closePanel());
 		setLoading(false);
 	};
@@ -320,10 +254,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const set = (icon, label, clearAfter) => {
 		setIcon(icon);
 		setLabel(label);
-		setClearAfter(clearAfter);
 	};
-
-	const toggleInvisible = () => {};
 
 	const clearable = same && label.length > 0;
 	const saveable = !same;
@@ -351,15 +282,6 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		}
 	};
 
-	const setExpiresFromMenu = value => {
-		setClearAfter(value);
-	};
-
-	const setTheLabel = value => {
-		if (!clearAfter) setClearAfter("60");
-		setLabel(value);
-	};
-
 	const handleClickEmojiButton = (event: React.SyntheticEvent) => {
 		event.persist();
 		setEmojiMenuTarget(event.target);
@@ -384,8 +306,8 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		<div className="full-height-panel">
 			<form className="standard-form vscroll" style={{ padding: 0 }}>
 				<div className="panel-header">
-					<CancelButton onClick={props.closePanel} placement="left" />
 					What are you working on?
+					<CancelButton onClick={props.closePanel} placement="left" />
 				</div>
 				<fieldset className="form-body" style={{ padding: "10px" }}>
 					<div id="controls">
@@ -427,44 +349,69 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								className="input-text control"
 								autoFocus={true}
 								type="text"
-								onChange={e => setTheLabel(e.target.value)}
-								placeholder="Enter a title, or select a Trello card"
+								onChange={e => setLabel(e.target.value)}
+								placeholder="Enter status, paste URL, or select issue"
 							/>
 						</StatusInput>
-						<StatusInput>
-							<div className="icon-selector">
-								<Icon name="git-branch" />
-							</div>
-							<input
-								id="status-input"
-								name="branch"
-								value={branch}
-								className="input-text control"
-								type="text"
-								onChange={e => setBranch(e.target.value)}
-								placeholder="Use an existing branch, or create a new one"
-							/>
-							<div
-								className={`dropdown-button ${branchMenuOpen ? "selected" : ""}`}
-								onClick={e => {
-									// @ts-ignore
-									setBranchMenuTarget(e.target.closest(".dropdown-button"));
-									setBranchMenuOpen(true);
-								}}
-							>
-								<Icon name="chevron-down" />
-							</div>
-							{branchMenuOpen && (
-								<Menu
-									title="Select a Branch"
-									noCloseIcon={true}
-									items={branchMenuItems}
-									align="dropdownRight"
-									target={branchMenuTarget}
-									action={() => setBranchMenuOpen(false)}
-								/>
+						<div style={{ paddingLeft: "6px" }}>
+							{showMoveIssueCheckbox && (
+								<StyledCheckbox
+									name="move-issue"
+									checked={moveIssue}
+									onChange={v => setMoveIssue(v)}
+								>
+									Move this card to{" "}
+									<InlineMenu items={[{ label: "foo", key: "bar" }]}>In Progress</InlineMenu>on
+									Trello
+								</StyledCheckbox>
 							)}
-						</StatusInput>
+							{showCreateBranchCheckbox && (
+								<StyledCheckbox
+									name="create-branch"
+									checked={createBranch}
+									onChange={v => setCreateBranch(v)}
+								>
+									{true ? "Create a" : "Switch to"} branch{" "}
+									<InlineMenu items={branchMenuItems}>Foo</InlineMenu>
+									it
+								</StyledCheckbox>
+							)}
+						</div>
+						{false && (
+							<StatusInput>
+								<div className="icon-selector">
+									<Icon name="git-branch" />
+								</div>
+								<input
+									id="status-input"
+									name="branch"
+									value={branch}
+									className="input-text control"
+									type="text"
+									onChange={e => setBranch(e.target.value)}
+								/>
+								<div
+									className={`dropdown-button ${branchMenuOpen ? "selected" : ""}`}
+									onClick={e => {
+										// @ts-ignore
+										setBranchMenuTarget(e.target.closest(".dropdown-button"));
+										setBranchMenuOpen(true);
+									}}
+								>
+									<Icon name="chevron-down" />
+								</div>
+								{branchMenuOpen && (
+									<Menu
+										title="Select a Branch"
+										noCloseIcon={true}
+										items={branchMenuItems}
+										align="dropdownRight"
+										target={branchMenuTarget}
+										action={() => setBranchMenuOpen(false)}
+									/>
+								)}
+							</StatusInput>
+						)}
 						{false && label.length === 0 && (
 							<Examples>
 								<div onClick={() => set(":house:", "Working remotely", "today")}>
@@ -494,52 +441,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								</div>
 							</Examples>
 						)}
-						{false && label.length > 0 && (
-							<div style={{ padding: "0 0 20px 6px" }}>
-								Clear after:{" "}
-								<InlineMenu items={timeOptions} onChange={setExpiresFromMenu}>
-									{clearAfter ? timeLabel(clearAfter) : derivedState.clearAfterLabel}
-								</InlineMenu>
-							</div>
-						)}
-						<div style={{ paddingLeft: "6px" }}>
-							{showMoveIssueCheckbox && (
-								<StyledCheckbox
-									name="move-ticket"
-									checked={moveTicket}
-									onChange={v => setMoveTicket(v)}
-								>
-									Move this card to{" "}
-									<InlineMenu items={[{ label: "foo", key: "bar" }]}>In Progress</InlineMenu>on
-									Trello
-								</StyledCheckbox>
-							)}
-							{showPRCheckbox && (
-								<StyledCheckbox name="create-pr" checked={createPR} onChange={v => setCreatePR(v)}>
-									Create a PR on GitHub
-								</StyledCheckbox>
-							)}
-							<StyledCheckbox
-								name="update-external"
-								checked={updateExternal}
-								onChange={v => setUpdateExternal(v)}
-							>
-								Update my status on Slack
-							</StyledCheckbox>
-							<StyledCheckbox
-								name="invisible"
-								checked={!invisible}
-								onChange={v => setInvisible(!v)}
-							>
-								Share the code I'm working on with the team &nbsp;
-								<a
-									style={{ color: "inherit" }}
-									href="https://docs.codestream.com/userguide/features/team-live-view/"
-								>
-									<Icon name="info" title="Click for details" />
-								</a>
-							</StyledCheckbox>
-						</div>
+						<div style={{ height: "10px" }}></div>
 						<ButtonRow>
 							{clearable && (
 								<Button onClick={clear} isLoading={loading}>

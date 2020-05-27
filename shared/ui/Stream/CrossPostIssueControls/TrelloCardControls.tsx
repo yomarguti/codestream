@@ -349,10 +349,12 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 		})();
 	}, [data.currentList]);
 
+	const [mode, setMode] = React.useState("mine");
+
 	// reload "cards assigned to me"
 	React.useEffect(() => {
 		void (async () => {
-			if (data.mode !== "mine") return;
+			if (mode !== "mine") return;
 
 			try {
 				updateDataState({ isLoading: true });
@@ -370,7 +372,7 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 				updateDataState({ isLoading: false });
 			}
 		})();
-	}, [data.mode]);
+	}, [mode]);
 
 	const [menuState, setMenuState] = React.useState<{
 		open: boolean;
@@ -390,38 +392,14 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 		}
 	}, []);
 
-	const goDisconnect = () => {};
-
-	const selectBoard = React.useCallback((board?: TrelloBoard) => {
-		if (board) {
-			setMenuState({ open: true });
-			updateDataState({ currentBoard: board, currentList: undefined });
-		} else {
-			setMenuState({ open: false });
-		}
-	}, []);
-
-	const goBoards = () => updateDataState({ currentBoard: undefined, currentList: undefined });
-
-	const selectList = React.useCallback((list?: TrelloList) => {
-		if (list) {
-			setMenuState({ open: true });
-			updateDataState({ currentList: list });
-		} else {
-			setMenuState({ open: false });
-		}
-	}, []);
-
-	const goLists = () => updateDataState({ currentList: undefined });
-
 	const selectCard = React.useCallback((card?: TrelloCard) => {
 		if (card) crossPostIssueContext.setValues({ card });
 		setMenuState({ open: false });
 	}, []);
 
-	const goBrowse = () => updateDataState({ mode: "browse" });
-	const goMine = () => updateDataState({ mode: "mine" });
-	const goSettings = () => updateDataState({ mode: "settings" });
+	const goMine = () => setMode("mine");
+	const goSettings = () => setMode("settings");
+	const goDisconnect = () => {};
 	const noop = () => setMenuState({ open: false });
 
 	const crossPostIssueContext = React.useContext(CrossPostIssueContext);
@@ -429,36 +407,10 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 	const settingsItems = [
 		{ label: "-" },
 		{ label: "Cards Assigned to Me", key: "mine", action: goMine },
-		{ label: "Browse by Board & List", key: "browse", action: goBrowse },
 		{ label: "-" },
 		{ label: "Disconnect Trello", key: "disconnect", action: goDisconnect, icon: <Icon name="x" /> }
 	];
 
-	const boardItems = (data.boards || emptyArray).map(board => ({
-		label: board.name,
-		key: board.id,
-		action: board
-	}));
-	// @ts-ignore
-	boardItems.unshift({ label: "-" });
-	// @ts-ignore
-	boardItems.unshift({ label: "My Cards (across all boards)", key: "mine", action: goMine });
-	// @ts-ignore
-	boardItems.unshift({ label: "-" });
-
-	const listItems = data.currentBoard
-		? data.currentBoard.lists.map(list => ({
-				label: list.name,
-				key: list.id,
-				action: list
-		  }))
-		: [];
-	// @ts-ignore
-	listItems.unshift({ label: "-" });
-	// @ts-ignore
-	listItems.unshift({ label: "My Cards (on this board)", key: "mine", action: goMine });
-	// @ts-ignore
-	listItems.unshift({ label: "-" });
 	const cardItems = data.cards
 		? data.cards.map(card => ({
 				label: card.name,
@@ -468,11 +420,7 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 		  }))
 		: [];
 	// @ts-ignore
-	cardItems.unshift({ label: "-" });
-	// @ts-ignore
-	cardItems.unshift({ label: "My Cards (on this list)", key: "mine", action: goMine });
-	// @ts-ignore
-	cardItems.unshift({ type: "search" }, { label: "-" });
+	cardItems.unshift({ label: "-" }, { type: "search" });
 
 	return (
 		<>
@@ -484,10 +432,12 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 				{data.isLoading ? <Icon className="spin" name="sync" /> : <Icon name="chevron-down" />}
 			</span>
 			{menuState.open &&
-				(data.mode === "settings" ? (
+				(mode === "settings" ? (
 					<Menu
 						title="Settings"
+						centerTitle={true}
 						noCloseIcon={true}
+						backIcon={<Icon name="chevron-left" onClick={goMine} />}
 						align="dropdownRight"
 						target={buttonRef.current}
 						items={settingsItems}
@@ -495,56 +445,16 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 						action={noop}
 						limitWidth={true}
 					/>
-				) : data.mode === "mine" ? (
-					cardItems.length > 2 && (
-						<Menu
-							title="All cards assigned to me"
-							noCloseIcon={true}
-							titleIcon={<Icon name="gear" onClick={goSettings} />}
-							align="dropdownRight"
-							target={buttonRef.current}
-							items={cardItems}
-							dontCloseOnSelect={true}
-							action={selectBoard}
-							limitWidth={true}
-						/>
-					)
-				) : !data.currentBoard ? (
-					<Menu
-						title="Select a Trello Board"
-						noCloseIcon={true}
-						titleIcon={<Icon name="gear" onClick={goSettings} />}
-						align="dropdownRight"
-						target={buttonRef.current}
-						items={boardItems}
-						dontCloseOnSelect={true}
-						action={selectBoard}
-						limitWidth={true}
-					/>
-				) : !data.currentList ? (
-					<Menu
-						title={data.currentBoard && data.currentBoard.name}
-						centerTitle={true}
-						noCloseIcon={true}
-						backIcon={<Icon name="chevron-left" onClick={goBoards} />}
-						titleIcon={<Icon name="gear" onClick={goSettings} />}
-						align="dropdownRight"
-						target={buttonRef.current}
-						items={listItems}
-						dontCloseOnSelect={true}
-						action={selectList}
-						limitWidth={true}
-					/>
 				) : (
 					<Menu
-						title={data.currentList && data.currentList.name}
+						title="My Trello Cards"
 						centerTitle={true}
 						noCloseIcon={true}
-						backIcon={<Icon name="chevron-left" onClick={goLists} />}
+						backIcon={<Icon name="chevron-left" onClick={() => setMenuState({ open: false })} />}
 						titleIcon={<Icon name="gear" onClick={goSettings} />}
 						align="dropdownRight"
 						target={buttonRef.current}
-						items={data.isLoading ? [] : cardItems}
+						items={cardItems}
 						dontCloseOnSelect={true}
 						action={selectCard}
 						limitWidth={true}

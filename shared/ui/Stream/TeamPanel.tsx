@@ -5,7 +5,7 @@ import Icon from "./Icon";
 import Button from "./Button";
 import Headshot from "./Headshot";
 import ScrollBox from "./ScrollBox";
-import { invite, setUserStatus } from "./actions";
+import { invite, setUserInvisible } from "./actions";
 import { mapFilter, keyFilter } from "../utils";
 import { difference as _difference, sortBy as _sortBy } from "lodash-es";
 import { OpenUrlRequestType } from "../ipc/host.protocol";
@@ -39,7 +39,7 @@ import { openPanel } from "../store/context/actions";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { ProfileLink } from "../src/components/ProfileLink";
 import copy from "copy-to-clipboard";
-import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
+import { UserStatus } from "../src/components/UserStatus";import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import { SelectPeople } from "../src/components/SelectPeople";
 import { HeadshotName } from "../src/components/HeadshotName";
 
@@ -119,7 +119,7 @@ interface ConnectedProps {
 	xraySetting: string;
 	xrayEnabled: boolean;
 	reviewApproval: "user" | "anyone" | "all";
-	setUserStatus: Function;
+	setUserInvisible: Function;
 	openPanel: Function;
 	isCurrentUserAdmin: boolean;
 	adminIds: string[];
@@ -603,9 +603,9 @@ class TeamPanel extends React.Component<Props, State> {
 	}
 
 	toggleInvisible = async () => {
-		const { setUserStatus, currentUserInvisible } = this.props;
+		const { setUserInvisible, currentUserInvisible } = this.props;
 		this.setState({ loadingStatus: true });
-		await setUserStatus("", "", !currentUserInvisible, 0);
+		await setUserInvisible(!currentUserInvisible);
 		await this.getScmInfoSummary();
 		this.setState({ loadingStatus: false });
 	};
@@ -793,7 +793,7 @@ class TeamPanel extends React.Component<Props, State> {
 												/>
 											)}
 										</li>
-										{/*<UserStatus user={user} />*/}
+										<UserStatus user={user} />
 										{this.renderModifiedRepos(user)}
 									</>
 								))}
@@ -1113,7 +1113,7 @@ const ConnectedTeamPanel = connect(mapStateToProps, {
 	invite,
 	updateModifiedRepos,
 	clearModifiedFiles,
-	setUserStatus,
+	setUserInvisible,
 	openPanel
 })(TeamPanel);
 
