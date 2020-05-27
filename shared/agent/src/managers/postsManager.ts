@@ -564,7 +564,7 @@ function trackPostCreation(
 	});
 }
 
-function trackReviewPostCreation(review: ReviewPlus, totalExcludedFilesCount: number) {
+function trackReviewPostCreation(review: ReviewPlus, totalExcludedFilesCount: number, reviewChangesetsSizeInBytes: number) {
 	process.nextTick(() => {
 		try {
 			const telemetry = Container.instance().telemetry;
@@ -583,7 +583,8 @@ function trackReviewPostCreation(review: ReviewPlus, totalExcludedFilesCount: nu
 					.reduce((acc, x) => acc + x),
 				"Staged Changes": review.reviewChangesets.some(_ => _.includeStaged),
 				"Saved Changes": review.reviewChangesets.some(_ => _.includeSaved),
-				"Excluded Files": totalExcludedFilesCount
+				"Excluded Files": totalExcludedFilesCount,
+				"Payload Size": reviewChangesetsSizeInBytes > 0 ? parseFloat((reviewChangesetsSizeInBytes / 1048576).toFixed(4)) : 0
 			};
 
 			telemetry.track({
@@ -1049,7 +1050,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			}*/
 		}
 
-		if (sizeof(reviewRequest.reviewChangesets) > 2 * 1024 * 1024) {
+		const reviewChangesetsSizeInBytes = sizeof(reviewRequest.reviewChangesets);
+		if (reviewChangesetsSizeInBytes > 2 * 1024 * 1024) {
 			throw new Error("Cannot create review. Payload exceeds 2MB");
 		}
 
@@ -1086,7 +1088,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 		review = response.review!;
 
-		trackReviewPostCreation(review, totalExcludedFilesCount);
+		trackReviewPostCreation(review, totalExcludedFilesCount, reviewChangesetsSizeInBytes);
 		await resolveCreatePostResponse(response!);
 		return {
 			stream,
