@@ -361,7 +361,9 @@ export class GitService implements IGitService, Disposable {
 			if (includeStaged && !includeSaved) options.push("--staged");
 			if (ref1 && ref1.length) options.push(ref1);
 			if (ref2 && ref2.length) options.push(ref2);
-			if (!includeStaged && !ref1) options.push("HEAD");
+			if ((!includeStaged && !ref1) || (!includeSaved && !includeStaged && !ref2)) {
+				options.push("HEAD");
+			}
 			options.push("--");
 			data = await git({ cwd: repoPath }, ...options);
 		} catch (err) {
@@ -1238,13 +1240,15 @@ export class GitService implements IGitService, Disposable {
 	 * @param  {string} sha
 	 * @returns Promise
 	 */
-	async isCommitOnBranch(repoPath: string, branchName: string, sha: string): Promise<boolean | undefined> {
+	async isCommitOnBranch(
+		repoPath: string,
+		branchName: string,
+		sha: string
+	): Promise<boolean | undefined> {
 		try {
 			const data = await git({ cwd: repoPath }, "branch", "--contains", sha);
 			const branches = GitBranchParser.parse(data);
-			return branches && branches.length
-				? branches.some(_ => _.name === branchName)
-				: false;
+			return branches && branches.length ? branches.some(_ => _.name === branchName) : false;
 		} catch (ex) {
 			Logger.debug(ex.message);
 			return false;
