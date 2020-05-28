@@ -1134,12 +1134,17 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			const firstCommitInReview =
 				firstChangesetForThisRepo.commits[firstChangesetForThisRepo.commits.length - 1];
 			const diffs = await reviews.getDiffs(amendingReviewId, scm.repoId);
-			const firstDiff = diffs.find(d => d.checkpoint === 0);
-			leftBaseShaForFirstChangesetInThisRepo = firstDiff!.diff.leftBaseSha;
-			rightBaseShaForFirstChangesetInThisRepo = firstDiff!.diff.leftBaseSha;
+			const firstDiff = diffs[0];
+			if (!firstDiff) {
+				throw new Error(
+					`Cannot find first initial diff for review ${amendingReviewId}, repo ${scm.repoId}`
+				);
+			}
+			leftBaseShaForFirstChangesetInThisRepo = firstDiff.diff.leftBaseSha;
+			rightBaseShaForFirstChangesetInThisRepo = firstDiff.diff.leftBaseSha;
 			startCommit = firstCommitInReview
 				? (await git.getParentCommitShas(scm.repoPath, firstCommitInReview.sha))[0]
-				: firstDiff!.diff.latestCommitSha;
+				: firstDiff.diff.latestCommitSha;
 
 			const statusFromBeginningOfReview = await scmManager.getRepoStatus({
 				includeSaved,
