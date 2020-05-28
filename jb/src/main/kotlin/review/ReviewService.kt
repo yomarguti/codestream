@@ -43,11 +43,14 @@ class ReviewService(private val project: Project) {
         CacheDiffRequestChainProcessor::class.java.getDeclaredMethod("goToNextChange", Boolean::class.java)
             .also { it.isAccessible = true }
     private var diffChain: DiffRequestChain? = null
+    private var currentKey: String? = null
 
     suspend fun showDiff(reviewId: String, repoId: String, checkpoint: Int?, path: String) {
         val agent = project.agentService ?: return
+        val key = "$reviewId|$repoId|$checkpoint"
 
-        if (reviewDiffEditor == null || diffChain == null) {
+        if (reviewDiffEditor == null || diffChain == null || key != currentKey) {
+            closeDiff()
             val review = agent.getReview(reviewId)
             val title = review.title
             val contents = agent.getAllReviewContents(GetAllReviewContentsParams(reviewId, checkpoint))
@@ -80,6 +83,7 @@ class ReviewService(private val project: Project) {
                 }
             }
 
+            currentKey = key
             diffChain = SimpleDiffRequestChain(diffRequests).also { chain ->
                 chain.putUserData(REVIEW_DIFF, true)
                 chain.index = diffRequests.indexOfFirst { request ->
