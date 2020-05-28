@@ -459,11 +459,7 @@ export class ScmManager {
 
 		const diffs = await reviews.getDiffs(review.id, repo.id);
 
-		const changesets = review.reviewChangesets
-			.filter(cs => cs.repoId === repo.id)
-			.sort((a, b) => {
-				return (b.checkpoint || 0) - (a.checkpoint || 0);
-			});
+		const changesets = review.reviewChangesets.filter(cs => cs.repoId === repo.id);
 
 		const modifiedFiles: GitNumStat[] = [];
 		const newestCommitInACheckpoint = changesets
