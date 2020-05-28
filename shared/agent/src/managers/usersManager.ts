@@ -23,6 +23,9 @@ import {
 	SetModifiedReposRequest,
 	SetModifiedReposRequestType,
 	SetModifiedReposResponse,
+	UpdateInvisibleRequest,
+	UpdateInvisibleRequestType,
+	UpdateInvisibleResponse,
 	UpdatePreferencesRequest,
 	UpdatePreferencesRequestType,
 	UpdatePreferencesResponse,
@@ -128,6 +131,11 @@ export class UsersManager extends CachedEntityManagerBase<CSUser> {
 	@lspHandler(UpdateStatusRequestType)
 	async updateStatus(request: UpdateStatusRequest): Promise<UpdateStatusResponse> {
 		return this.session.api.updateStatus(request);
+	}
+
+	@lspHandler(UpdateInvisibleRequestType)
+	async updateInvisible(request: UpdateInvisibleRequest): Promise<UpdateStatusResponse> {
+		return this.session.api.updateInvisible(request);
 	}
 
 	@lspHandler(SetModifiedReposRequestType)

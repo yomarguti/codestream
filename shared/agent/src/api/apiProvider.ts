@@ -136,6 +136,8 @@ import {
 	Unreads,
 	UpdateCodemarkRequest,
 	UpdateCodemarkResponse,
+	UpdateInvisibleRequest,
+	UpdateInvisibleResponse,
 	UpdateMarkerRequest,
 	UpdateMarkerResponse,
 	UpdatePreferencesRequest,
@@ -326,6 +328,7 @@ export interface ApiProvider {
 	getMe(): Promise<GetMeResponse>;
 	getUnreads(request: GetUnreadsRequest): Promise<GetUnreadsResponse>;
 	updatePreferences(request: UpdatePreferencesRequest): Promise<UpdatePreferencesResponse>;
+	updateInvisible(request: UpdateInvisibleRequest): Promise<UpdateInvisibleResponse>;
 	updateStatus(request: UpdateStatusRequest): Promise<UpdateStatusResponse>;
 	setModifiedRepos(request: SetModifiedReposRequest): Promise<SetModifiedReposResponse>;
 	getPreferences(): Promise<GetPreferencesResponse>;

@@ -148,6 +148,21 @@ export const UpdateStatusRequestType = new RequestType<
 	void
 >("codestream/user/updateStatus");
 
+export interface UpdateInvisibleRequest {
+	invisible: boolean;
+}
+
+export interface UpdateInvisibleResponse {
+	user: CSUser;
+}
+
+export const UpdateInvisibleRequestType = new RequestType<
+	UpdateInvisibleRequest,
+	UpdateInvisibleResponse,
+	void,
+	void
+>("codestream/user/updateInvisible");
+
 export interface SetModifiedReposRequest {
 	modifiedRepos: RepoScmStatus[];
 	teamId: string;

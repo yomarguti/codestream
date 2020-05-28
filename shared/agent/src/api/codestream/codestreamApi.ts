@@ -18,7 +18,8 @@ import {
 	ChangeDataType,
 	DidChangeDataNotificationType,
 	OpenUrlRequestType,
-	ReportingMessageType
+	ReportingMessageType,
+	UpdateInvisibleRequest
 } from "../../protocol/agent.protocol";
 import {
 	AccessToken,
@@ -808,6 +809,20 @@ export class CodeStreamApiProvider implements ApiProvider {
 		const update = await this.put<{ status: CSMeStatus }, any>(
 			"/users/me",
 			{ status: request.status },
+			this._token
+		);
+		const [user] = (await SessionContainer.instance().users.resolve({
+			type: MessageType.Users,
+			data: [update.user]
+		})) as CSMe[];
+		return { user };
+	}
+
+	@log()
+	async updateInvisible(request: UpdateInvisibleRequest) {
+		const update = await this.put<{ status: { invisible: boolean } }, any>(
+			"/users/me",
+			{ status: { invisible: request.invisible } },
 			this._token
 		);
 		const [user] = (await SessionContainer.instance().users.resolve({

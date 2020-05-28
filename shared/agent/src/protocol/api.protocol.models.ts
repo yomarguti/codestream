@@ -629,7 +629,7 @@ export interface CSMeStatus {
 	icon: string;
 	label: string;
 	expires: number;
-	invisible: boolean;
+	invisible?: boolean;
 }
 
 type CSMeProviderInfo = { slack?: CSSlackProviderInfo } & {
