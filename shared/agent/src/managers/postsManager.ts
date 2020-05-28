@@ -1099,6 +1099,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		repoChange: CSRepoChange,
 		amendingReviewId?: string
 	): Promise<CSTransformedReviewChangeset | undefined> {
+		// FIXME the logic for amendments became significantly different, so it should be a separate method
+		//  or a builder class similar to MarkersBuilder
 		const { scm, includeSaved, includeStaged, excludedFiles, newFiles } = repoChange;
 		if (!scm || !scm.repoId || !scm.branch || !scm.commits) return undefined;
 		const { git, reviews, scm: scmManager } = SessionContainer.instance();
@@ -1112,6 +1114,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		);
 		let modifiedFiles;
 		let startCommit = repoChange.startCommit;
+		let leftBaseShaForFirstChangesetInThisRepo: string | undefined = undefined;
+		let rightBaseShaForFirstChangesetInThisRepo: string | undefined = undefined;
 		if (amendingReviewId) {
 			const review = await reviews.getById(amendingReviewId);
 			const firstChangesetForThisRepo = review.reviewChangesets.find(
@@ -1131,6 +1135,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				firstChangesetForThisRepo.commits[firstChangesetForThisRepo.commits.length - 1];
 			const diffs = await reviews.getDiffs(amendingReviewId, scm.repoId);
 			const firstDiff = diffs.find(d => d.checkpoint === 0);
+			leftBaseShaForFirstChangesetInThisRepo = firstDiff!.diff.leftBaseSha;
+			rightBaseShaForFirstChangesetInThisRepo = firstDiff!.diff.leftBaseSha;
 			startCommit = firstCommitInReview
 				? (await git.getParentCommitShas(scm.repoPath, firstCommitInReview.sha))[0]
 				: firstDiff!.diff.latestCommitSha;
@@ -1199,7 +1205,22 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		let leftDiffs: ParsedDiff[];
 
 		const newestCommitNotInReview = scm.commits[commits.length];
-		if (newestCommitNotInReview == null) {
+		if (leftBaseShaForFirstChangesetInThisRepo != null) {
+			// It means we're amending. There are 2 optimizations that need to be done:
+			// 1 - if there's a newer pushed commit, then we could find a newer leftBaseSha
+			// 2 - we only need to include left contents the first time a file is included in a review
+			leftBaseSha = leftBaseShaForFirstChangesetInThisRepo;
+			leftBaseAuthor = (await git.getCommit(scm.repoPath, leftBaseShaForFirstChangesetInThisRepo))!
+				.author;
+			leftDiffs = (
+				await git.getDiffs(
+					scm.repoPath,
+					{ includeSaved: false, includeStaged: false },
+					leftBaseShaForFirstChangesetInThisRepo,
+					baseSha // this will be the parent of the first commit in this checkpoint
+				)
+			).filter(removeExcluded);
+		} else if (newestCommitNotInReview == null) {
 			if (oldestCommitInReview != null) {
 				const parent = await git.getCommit(scm.repoPath, oldestCommitInReview.sha + "^");
 				leftBaseSha = parent!.ref;
@@ -1227,11 +1248,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			leftDiffs = [];
 		}
 
-		let rightBaseSha: string;
-		let rightBaseAuthor: string;
-		let rightDiffs: ParsedDiff[];
-		let rightReverseDiffs: ParsedDiff[];
-
 		const newFileDiffs: ParsedDiff[] = [];
 		const newFileReverseDiffs: ParsedDiff[] = [];
 		if (newFiles) {
@@ -1251,7 +1267,34 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			);
 		}
 
-		if (!newestCommitInReview || newestCommitInReview.localOnly) {
+		let rightBaseSha: string;
+		let rightBaseAuthor: string;
+		let rightDiffs: ParsedDiff[];
+		let rightReverseDiffs: ParsedDiff[];
+
+		if (rightBaseShaForFirstChangesetInThisRepo != null) {
+			// It means we're amending. There is 1 optimization that need to be done:
+			// 1 - if there's a newer pushed commit, then we could find a newer rightBaseSha
+			rightBaseSha = rightBaseShaForFirstChangesetInThisRepo;
+			rightBaseAuthor = (await git.getCommit(
+				scm.repoPath,
+				rightBaseShaForFirstChangesetInThisRepo
+			))!.author;
+			rightDiffs = (
+				await git.getDiffs(
+					scm.repoPath,
+					{ includeSaved, includeStaged },
+					rightBaseShaForFirstChangesetInThisRepo
+				)
+			).filter(removeExcluded);
+			rightReverseDiffs = (
+				await git.getDiffs(
+					scm.repoPath,
+					{ includeSaved, includeStaged, reverse: true },
+					rightBaseShaForFirstChangesetInThisRepo
+				)
+			).filter(removeExcluded);
+		} else if (!newestCommitInReview || newestCommitInReview.localOnly) {
 			rightBaseSha = baseSha;
 			rightBaseAuthor = (await git.getCommit(scm.repoPath, baseSha))!.author;
 			rightDiffs = (
