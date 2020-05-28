@@ -42,6 +42,7 @@ import { FileStatus } from "../protocol/api.protocol.models";
 import { FileSystem, Iterables, log, lsp, lspHandler, Strings } from "../system";
 import { xfs } from "../xfs";
 import { Container, SessionContainer } from "./../container";
+import { IgnoreFilesHelper } from "./ignoreFilesManager";
 import { ReviewsManager } from "./reviewsManager";
 
 @lsp
@@ -330,7 +331,11 @@ export class ScmManager {
 						});
 					}
 					modifiedFiles = await git.getNumStat(repoPath, startCommit, includeSaved, includeStaged);
+					const ignoreFileHelper = await new IgnoreFilesHelper(repoPath).initialize();
+
 					if (modifiedFiles) {
+						modifiedFiles = ignoreFileHelper.filterIgnoredFiles(modifiedFiles, _ => _.file);
+
 						modifiedFiles.forEach(file => {
 							totalModifiedLines += file.linesAdded + file.linesRemoved;
 						});
@@ -344,32 +349,35 @@ export class ScmManager {
 						stagedFiles = ret2.map(line => line.file);
 					}
 					if (includeSaved || includeStaged) {
-						const statusByFile = await git.getStatus(repoPath, includeSaved);
+						let statusByFile = await git.getStatus(repoPath, includeSaved);
 						if (statusByFile) {
-							Object.keys(statusByFile).forEach(file => {
-								const found = modifiedFiles?.find(line => line.file === file);
-								if (found) {
-									Object.assign(found, statusByFile[file]);
-								} else {
-									if (statusByFile[file].status === FileStatus.deleted) {
-										modifiedFiles?.unshift({
-											oldFile: file,
-											file,
-											linesAdded: 0,
-											linesRemoved: 0,
-											...statusByFile[file]
-										});
+							statusByFile = ignoreFileHelper.filterIgnoredFilesByHash(statusByFile);
+							if (statusByFile != null) {
+								Object.keys(statusByFile).forEach(file => {
+									const found = modifiedFiles?.find(line => line.file === file);
+									if (found) {
+										Object.assign(found, statusByFile![file]);
 									} else {
-										modifiedFiles?.push({
-											oldFile: file,
-											file,
-											linesAdded: 0,
-											linesRemoved: 0,
-											...statusByFile[file]
-										});
+										if (statusByFile![file].status === FileStatus.deleted) {
+											modifiedFiles?.unshift({
+												oldFile: file,
+												file,
+												linesAdded: 0,
+												linesRemoved: 0,
+												...statusByFile![file]
+											});
+										} else {
+											modifiedFiles?.push({
+												oldFile: file,
+												file,
+												linesAdded: 0,
+												linesRemoved: 0,
+												...statusByFile![file]
+											});
+										}
 									}
-								}
-							});
+								});
+							}
 						}
 					}
 					(
@@ -486,13 +494,20 @@ export class ScmManager {
 			};
 		}
 
-		const numStatsFromNewestCommitShaInOrBeforeReview = await git.getNumStat(
+		let numStatsFromNewestCommitShaInOrBeforeReview = await git.getNumStat(
 			repoPath,
 			newestCommitShaInOrBeforeReview,
 			includeSaved,
 			includeStaged
 		);
 
+		const ignoreFileHelper = await new IgnoreFilesHelper(repoPath).initialize();
+		if (numStatsFromNewestCommitShaInOrBeforeReview) {
+			numStatsFromNewestCommitShaInOrBeforeReview = ignoreFileHelper.filterIgnoredFiles(
+				numStatsFromNewestCommitShaInOrBeforeReview,
+				_ => _.file
+			);
+		}
 		for (const numStatFromNewestCommitShaInOrBeforeReview of numStatsFromNewestCommitShaInOrBeforeReview) {
 			const lastChangesetContainingFile = changesets
 				.slice()
@@ -594,10 +609,10 @@ export class ScmManager {
 			}
 		}
 
-		const statusByFile = (await git.getStatus(repoPath, includeSaved)) || {};
+		let statusByFile = (await git.getStatus(repoPath, includeSaved)) || {};
+		statusByFile = ignoreFileHelper.filterIgnoredFilesByHash(statusByFile);
 		for (const file of Object.keys(statusByFile)) {
 			const status = statusByFile[file];
-
 			// TODO handle previously included deletions
 			// TODO handle previously included untracked files that were deleted
 			if (status.status !== FileStatus.untracked) {

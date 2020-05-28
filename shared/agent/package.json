@@ -55,7 +55,7 @@
         "diff-match-patch": "^1.0.4",
         "eol": "0.9.1",
         "graphql-request": "1.8.2",
-        "ignore": "^3.3.10",
+        "ignore": "3.3.10",
         "lodash-es": "4.17.15",
         "node-fetch": "2.6.0",
         "oauth": "0.9.15",
