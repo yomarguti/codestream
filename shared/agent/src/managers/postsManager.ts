@@ -584,7 +584,8 @@ function trackReviewPostCreation(review: ReviewPlus, totalExcludedFilesCount: nu
 				"Staged Changes": review.reviewChangesets.some(_ => _.includeStaged),
 				"Saved Changes": review.reviewChangesets.some(_ => _.includeSaved),
 				"Excluded Files": totalExcludedFilesCount,
-				"Payload Size": reviewChangesetsSizeInBytes > 0 ? parseFloat((reviewChangesetsSizeInBytes / 1048576).toFixed(4)) : 0
+				// rounds to 4 places
+				"Payload Size": reviewChangesetsSizeInBytes > 0 ? Math.round((reviewChangesetsSizeInBytes / 1048576) * 10000) / 10000 : 0
 			};
 
 			telemetry.track({
