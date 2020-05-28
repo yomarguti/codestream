@@ -234,13 +234,10 @@ export class DocumentMarkerManager {
 		const { codemarks, files, markers, reviews, users, posts } = SessionContainer.instance();
 
 		const { reviewId, path, repoId } = ReviewsManager.parseUri(documentId.uri);
+		if (reviewId === "local") return emptyResponse;
+
 		const stream = (await files.getByRepoId(repoId)).find(f => f.file === path);
-		if (stream == null) {
-			return {
-				markers: [],
-				markersNotLocated: []
-			};
-		}
+		if (stream == null) return emptyResponse;
 
 		const review = await reviews.getById(reviewId);
 		const markersForDocument = await markers.getByStreamId(stream.id, true);
