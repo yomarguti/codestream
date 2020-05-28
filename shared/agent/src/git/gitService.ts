@@ -957,10 +957,12 @@ export class GitService implements IGitService, Disposable {
 	}
 
 	/**
-	 * Statistic for saved (staged and unstaged) changes in repo
+	 * Statistic for saved (exclusively saved, i.e. unstaged or not staged) changes in repo.
+	 * Note that in normal circumstances, a file will be either in the saved or the staged
+	 * category, but not both
 	 */
 	getNumStatSaved(repoPath: string): Promise<GitNumStat[]> {
-		return this.getNumStatCore(repoPath, "HEAD");
+		return this.getNumStatCore(repoPath);
 	}
 
 	private async getNumStatCore(repoPath: string, ...options: string[]): Promise<GitNumStat[]> {
