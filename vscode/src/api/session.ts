@@ -219,6 +219,9 @@ export class CodeStreamSession implements Disposable {
 			case ChangeDataType.Preferences:
 				this._state!.updatePreferences(e.data);
 				break;
+			case ChangeDataType.Reviews:
+				Container.diffContents.clearLocalContents(e.data.map(_ => _.id));
+				break;
 		}
 	}
 

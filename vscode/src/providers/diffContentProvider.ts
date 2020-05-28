@@ -94,7 +94,9 @@ export class ReviewDiffContentProvider implements TextDocumentContentProvider, D
 		}
 
 		const fileInfo = this.getFileInfo(textDocument);
-		if (fileInfo == null || !fileInfo.relativeFilePath || !fileInfo.workspaceFolderUriString) return;
+		if (fileInfo == null || !fileInfo.relativeFilePath || !fileInfo.workspaceFolderUriString) {
+			return;
+		}
 
 		// it's impossible to map textDocument to "path" without knowing
 		// which repo they belong to... get it and cache it here.
@@ -148,7 +150,11 @@ export class ReviewDiffContentProvider implements TextDocumentContentProvider, D
 
 		// remove from diff content cache
 		const fileInfo = this.getFileInfo(textDocument);
-		if (fileInfo != null && fileInfo.relativeFilePath != null && fileInfo.workspaceFolderUriString != null) {
+		if (
+			fileInfo != null &&
+			fileInfo.relativeFilePath != null &&
+			fileInfo.workspaceFolderUriString != null
+		) {
 			for (const key of this._contents.keys()) {
 				const cachedValue = this._contents.get(key);
 				const repoId = this._textDocumentUriToRepoId.get(fileInfo.workspaceFolderUriString);
@@ -184,6 +190,18 @@ export class ReviewDiffContentProvider implements TextDocumentContentProvider, D
 		return (cacheValue.contents as any)[version] as string;
 	}
 
+	clearLocalContents(reviewIds: string[]) {
+		for (const reviewId of reviewIds) {
+			for (const key of this._contents.keys()) {
+				const cachedValue = this._contents.get(key);
+				if (cachedValue && cachedValue.args && cachedValue.args.reviewId === reviewId) {
+					this._contents.delete(key);
+					break;
+				}
+			}
+		}
+	}
+
 	async loadContents(
 		reviewId: string,
 		checkpoint: CSReviewCheckpoint,
@@ -193,7 +211,7 @@ export class ReviewDiffContentProvider implements TextDocumentContentProvider, D
 		const key = this.key(reviewId, checkpoint, repoId, path);
 		const cached = this._contents.get(key);
 
-		if (cached !== undefined) return cached;
+		if (cached !== undefined && cached.contents !== undefined) return cached.contents;
 
 		const contents = await Container.agent.reviews.getContents(reviewId, checkpoint, repoId, path);
 		this._contents.set(key, {
@@ -217,9 +235,10 @@ export class ReviewDiffContentProvider implements TextDocumentContentProvider, D
 		rightVersion: string
 	) {
 		const key = this.key("local", undefined, repoId, path);
+		// TODO this might be able to be resurrected
 		// const cached = this._contents.get(key);
 
-		// if (cached !== undefined) return cached;
+		// if (cached !== undefined && cached.contents !== undefined) return cached.contents;
 
 		const contents = await Container.agent.reviews.getContentsLocal(
 			repoId,
