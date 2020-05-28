@@ -280,15 +280,35 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		} else if (checkpoint === 0) {
 			return this.getContentsForCheckpoint(reviewId, repoId, 0, path);
 		} else {
-			const atPriorCheckpoint = (
-				await this.getContentsForCheckpoint(reviewId, repoId, checkpoint - 1, path)
-			).right;
-			const atRequestedCheckpoint = (
-				await this.getContentsForCheckpoint(reviewId, repoId, checkpoint, path)
-			).right;
+			const review = await this.getById(request.reviewId);
+			const containsFilePriorCheckpoint = (c: CSReviewChangeset) =>
+				c.repoId === request.repoId &&
+				(c.checkpoint || 0) < checkpoint &&
+				c.modifiedFilesInCheckpoint.find(mf => mf.file === request.path);
+			const previousChangesetContainingFile = review.reviewChangesets
+				.slice()
+				.reverse()
+				.find(containsFilePriorCheckpoint);
+
+			const previousContents =
+				previousChangesetContainingFile &&
+				(
+					await this.getContentsForCheckpoint(
+						reviewId,
+						repoId,
+						previousChangesetContainingFile.checkpoint,
+						path
+					)
+				).right;
+			const atRequestedCheckpoint = await this.getContentsForCheckpoint(
+				reviewId,
+				repoId,
+				checkpoint,
+				path
+			);
 			return {
-				left: atPriorCheckpoint,
-				right: atRequestedCheckpoint
+				left: previousContents || atRequestedCheckpoint.left,
+				right: atRequestedCheckpoint.right
 			};
 		}
 	}
