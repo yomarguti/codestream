@@ -16,6 +16,8 @@ export interface InlineMenuProps {
 	onChange?: (item: MenuItem) => void;
 	title?: string;
 	titleIcon?: any;
+	noCloseIcon?: boolean;
+	className?: string;
 }
 
 const TextButton = styled.span`
@@ -58,6 +60,7 @@ export function InlineMenu(props: InlineMenuProps) {
 					action={maybeToggleMenu}
 					title={props.title}
 					titleIcon={props.titleIcon}
+					noCloseIcon={props.noCloseIcon}
 					target={buttonRef.current}
 					items={props.items}
 					focusOnSelect={buttonRef.current}
@@ -72,6 +75,7 @@ export function InlineMenu(props: InlineMenuProps) {
 				}}
 				tabIndex={0}
 				onKeyPress={handleKeyPress}
+				className={props.className}
 			>
 				{props.children}
 				<Icon name="chevron-down" />

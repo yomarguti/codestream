@@ -393,7 +393,12 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 	}, []);
 
 	const selectCard = React.useCallback((card?: TrelloCard) => {
-		if (card) crossPostIssueContext.setValues({ card });
+		if (card) {
+			const match = card.url.match(/\/c\/(.*?)\//);
+			const id = match ? match[1] : "unknown";
+			const branch = `feature/${id}`;
+			crossPostIssueContext.setValues({ url: card.url, branch });
+		}
 		setMenuState({ open: false });
 	}, []);
 

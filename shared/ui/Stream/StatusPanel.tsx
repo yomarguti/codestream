@@ -14,13 +14,8 @@ import { emojiPlain } from "./Markdowner";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import EmojiPicker from "./EmojiPicker";
 import { useDidMount } from "../utilities/hooks";
-import {
-	GetFileScmInfoRequestType,
-	GetBranchesRequestType,
-	CreateBranchRequestType
-} from "@codestream/protocols/agent";
+import { GetBranchesRequestType, CreateBranchRequestType } from "@codestream/protocols/agent";
 import Menu from "./Menu";
-import CrossPostIssueControls from "./CrossPostIssueControls";
 import { CrossPostIssueContext } from "./CodemarkForm";
 import IssueDropdown from "./CrossPostIssueControls/IssueDropdown";
 import { CSText } from "../src/components/CSText";
@@ -123,15 +118,14 @@ const Examples = styled.div`
 	}
 `;
 
+const MonoMenu = styled(InlineMenu)`
+	font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
+`;
+
 const EMPTY_STATUS = {
 	label: "",
 	icon: ":desktop_computer:",
 	expires: 0
-};
-
-const formatTheDate = time => {
-	const date = new Date(time);
-	return date.toLocaleString();
 };
 
 export const StatusPanel = (props: { closePanel: Function }) => {
@@ -159,10 +153,10 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const [moveIssue, setMoveIssue] = useState(true);
 	const [createBranch, setCreateBranch] = useState(true);
 	const [branch, setBranch] = useState("");
+	const [cardBranch, setCardBranch] = useState("");
 	const [currentBranch, setCurrentBranch] = useState("");
 	// const [loadingBranch, setLoadingBranch] = useState(false);
 	const [branches, setBranches] = useState([] as string[]);
-	const [branchMenuItems, setBranchMenuItems] = useState([] as any[]);
 	const [branchMenuOpen, setBranchMenuOpen] = useState(false);
 	const [branchMenuTarget, setBranchMenuTarget] = useState();
 
@@ -179,16 +173,6 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			uri: derivedState.textEditorUri
 		});
 		if (!branchInfo.scm) return;
-		const branchMenuItems = branchInfo.scm.branches.map(branch => {
-			return {
-				label: branch,
-				key: branch,
-				action: () => setBranch(branch)
-			};
-		});
-		// @ts-ignore
-		branchMenuItems.unshift({ label: "-" });
-
 		// return {
 		// 	branches: branchInfo.scm.branches,
 		// 	current: branchInfo.scm.current,
@@ -196,7 +180,6 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		// }
 		setBranches(branchInfo.scm.branches);
 		setCurrentBranch(branchInfo.scm.current);
-		setBranchMenuItems(branchMenuItems);
 	};
 
 	useDidMount(() => {
@@ -256,31 +239,8 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		setLabel(label);
 	};
 
-	const clearable = same && label.length > 0;
+	const clearable = same && label && label.length > 0;
 	const saveable = !same;
-
-	const timeOptions = [
-		{ label: "Don't clear", key: "never", action: "never" },
-		{ label: "1 minute", key: "1", action: "1" },
-		{ label: "30 minutes", key: "30", action: "30" },
-		{ label: "1 hour", key: "60", action: "60" },
-		{ label: "2 hours", key: "120", action: "120" },
-		{ label: "4 hours", key: "240", action: "240" },
-		{ label: "Today", key: "today", action: "today" },
-		{ label: "This week", key: "week", action: "week" }
-	];
-	const timeLabels = {};
-	timeOptions.forEach(option => {
-		timeLabels[option.key] = option.label;
-	});
-
-	const timeLabel = (clearAfter: string | undefined) => {
-		if (clearAfter) {
-			return timeLabels[clearAfter];
-		} else {
-			return null;
-		}
-	};
 
 	const handleClickEmojiButton = (event: React.SyntheticEvent) => {
 		event.persist();
@@ -295,6 +255,8 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		}
 	};
 
+	const goSettings = () => {};
+
 	const saveLabel =
 		!branch || branch == currentBranch
 			? "Save Status"
@@ -302,9 +264,30 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			? "Switch Branch & Save Status"
 			: "Create Branch & Save Status";
 
+	const useBranchLabel =
+		branch == currentBranch
+			? "Use branch"
+			: branches.includes(branch)
+			? "Switch to branch"
+			: "Create branch";
+
+	const makeMenuItem = (branch: string) => {
+		return {
+			label: branch,
+			key: branch,
+			action: () => setBranch(branch)
+		};
+	};
+
+	const branchMenuItems = branches.map(branch => makeMenuItem(branch));
+	if (cardBranch) {
+		// @ts-ignore
+		branchMenuItems.unshift(makeMenuItem(cardBranch), { label: "-" });
+	}
+
 	return (
 		<div className="full-height-panel">
-			<form className="standard-form vscroll" style={{ padding: 0 }}>
+			<form className="standard-form vscroll" style={{ padding: "0 10px" }}>
 				<div className="panel-header">
 					What are you working on?
 					<CancelButton onClick={props.closePanel} placement="left" />
@@ -318,12 +301,14 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 									<EmojiPicker addEmoji={selectEmoji} target={emojiMenuTarget} autoFocus={true} />
 								)}
 							</div>
-							{label.length == 0 ? (
+							{!label ? (
 								<CrossPostIssueContext.Provider
 									value={{
 										selectedAssignees: [],
 										setValues: values => {
-											if (values && values.card) setLabel(values.card.url);
+											setLabel(values.url);
+											setCardBranch(values.branch);
+											setBranch(values.branch);
 										},
 										setSelectedAssignees: () => {}
 									}}
@@ -361,8 +346,8 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 									onChange={v => setMoveIssue(v)}
 								>
 									Move this card to{" "}
-									<InlineMenu items={[{ label: "foo", key: "bar" }]}>In Progress</InlineMenu>on
-									Trello
+									<InlineMenu items={[{ label: "foo", key: "bar" }]}>In Progress</InlineMenu>
+									on Trello
 								</StyledCheckbox>
 							)}
 							{showCreateBranchCheckbox && (
@@ -371,9 +356,15 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 									checked={createBranch}
 									onChange={v => setCreateBranch(v)}
 								>
-									{true ? "Create a" : "Switch to"} branch{" "}
-									<InlineMenu items={branchMenuItems}>Foo</InlineMenu>
-									it
+									{useBranchLabel}{" "}
+									<MonoMenu
+										title="Branch"
+										titleIcon={<Icon name="gear" onClick={goSettings} />}
+										noCloseIcon={true}
+										items={branchMenuItems}
+									>
+										{branch}
+									</MonoMenu>
 								</StyledCheckbox>
 							)}
 						</div>
@@ -441,7 +432,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								</div>
 							</Examples>
 						)}
-						<div style={{ height: "10px" }}></div>
+						<div style={{ height: "5px" }}></div>
 						<ButtonRow>
 							{clearable && (
 								<Button onClick={clear} isLoading={loading}>
