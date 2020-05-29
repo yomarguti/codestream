@@ -325,7 +325,9 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			c => c.repoId === repoId && c.checkpoint === checkpoint
 		);
 		if (!changeset) throw new Error(`Could not find changeset with repoId ${repoId}`);
-		const fileInfo = changeset.modifiedFiles.find(f => f.file === filePath);
+		const fileInfo =
+			changeset.modifiedFilesInCheckpoint.find(f => f.file === filePath) ||
+			changeset.modifiedFiles.find(f => f.file === filePath);
 		if (!fileInfo) throw new Error(`Could not find changeset file information for ${filePath}`);
 
 		const diffs = await this.getDiffs(reviewId, repoId);
