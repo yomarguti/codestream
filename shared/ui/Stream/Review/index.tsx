@@ -438,6 +438,7 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 			>
 				{derivedState.statusLabel}
 				<textarea
+					readOnly
 					key="permalink-offscreen"
 					ref={permalinkRef}
 					value={review.permalink}
@@ -466,6 +467,7 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 				<Icon name="kebab-horizontal" />
 			</KebabIcon>
 			<textarea
+				readOnly
 				key="permalink-offscreen"
 				ref={permalinkRef}
 				value={review.permalink}
@@ -547,7 +549,7 @@ const BaseReview = (props: BaseReviewProps) => {
 	for (var i = 0; i < numCheckpoints; i++) {
 		const label = i === 0 ? "Initial Review" : `Update #${i}`;
 		const set = i;
-		dropdownItems.push({ label, action: () => setCheckpoint(set) });
+		dropdownItems.push({ label, key: "checkpoint-" + set, action: () => setCheckpoint(set) });
 	}
 	const dropdownLabel =
 		checkpoint === undefined
@@ -560,7 +562,7 @@ const BaseReview = (props: BaseReviewProps) => {
 		const groups = [] as any;
 		for (var i = 0; i < numCheckpoints; i++) {
 			groups.push(
-				<Meta id={"commits-update-" + i}>
+				<Meta id={"commits-update-" + i} key={"commits-update-" + i}>
 					<MetaLabel>Commits in {i === 0 ? "Initial Review" : `Update #${i}`}</MetaLabel>
 					<MetaDescriptionForAssignees>
 						<CommitList review={review} checkpoint={i} />
@@ -648,14 +650,6 @@ const BaseReview = (props: BaseReviewProps) => {
 								</Meta>
 							)}
 						</MetaRow>
-					)}
-					{false && (
-						<Meta>
-							<MetaLabel>Status</MetaLabel>
-							<MetaDescription>
-								<MarkdownText text={translateStatus(review.status)} />
-							</MetaDescription>
-						</Meta>
 					)}
 					{!props.collapsed && hasChangeRequests && (
 						<Meta>
