@@ -14,7 +14,11 @@ import { Team, User } from "../../api/extensions";
 import { Container, SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import { isDirective, resolve } from "../../managers/operations";
-import { ChangeDataType, DidChangeDataNotificationType, OpenUrlRequestType } from "../../protocol/agent.protocol";
+import {
+	ChangeDataType,
+	DidChangeDataNotificationType,
+	OpenUrlRequestType
+} from "../../protocol/agent.protocol";
 import {
 	AccessToken,
 	AddEnterpriseProviderHostRequest,
@@ -1292,8 +1296,13 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	fetchReviewCheckpointDiffs(request: FetchReviewCheckpointDiffsRequest): Promise<FetchReviewCheckpointDiffsResponse> {
-		return this.get<CSGetReviewCheckpointDiffsResponse>(`/reviews/checkpoint-diffs/${request.reviewId}`, this._token);
+	fetchReviewCheckpointDiffs(
+		request: FetchReviewCheckpointDiffsRequest
+	): Promise<FetchReviewCheckpointDiffsResponse> {
+		return this.get<CSGetReviewCheckpointDiffsResponse>(
+			`/reviews/checkpoint-diffs/${request.reviewId}`,
+			this._token
+		);
 	}
 
 	@log()
@@ -1712,9 +1721,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 			const query = Object.keys(params)
 				.map(param => `${param}=${encodeURIComponent(params[param])}`)
 				.join("&");
-			void (SessionContainer.instance().session.agent.sendRequest(OpenUrlRequestType, {
+			void SessionContainer.instance().session.agent.sendRequest(OpenUrlRequestType, {
 				url: `${this.baseUrl}/no-auth/provider-auth/${providerConfig.name}?${query}`
-			}));
+			});
 			// this response is never used.
 			return response;
 		} catch (ex) {

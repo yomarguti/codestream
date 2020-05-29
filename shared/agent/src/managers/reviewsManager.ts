@@ -58,11 +58,6 @@ const uriRegexp = /codestream-diff:\/\/(\w+)\/(\w+)\/(\w+)\/(\w+)\/(.+)/;
 
 @lsp
 export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
-	private readonly _diffs = new Map<
-		string,
-		{ [repoId: string]: { checkpoint: CSReviewCheckpoint; diff: CSReviewDiffs }[] }
-	>();
-
 	static parseUri(
 		uri: string
 	): {
@@ -114,31 +109,33 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	}
 
 	@gate()
-	private async getAllDiffs(
+	async getAllDiffs(
 		reviewId: string
 	): Promise<{ [repoId: string]: { checkpoint: CSReviewCheckpoint; diff: CSReviewDiffs }[] }> {
-		if (!this._diffs.has(reviewId)) {
-			const responses = await this.session.api.fetchReviewCheckpointDiffs({ reviewId });
-			if (responses && responses.length) {
-				const result: {
-					[repoId: string]: { checkpoint: CSReviewCheckpoint; diff: CSReviewDiffs }[];
-				} = {};
-				if (responses.length === 1 && responses[0].checkpoint === undefined) {
-					const response = responses[0];
-					result[response.repoId].push({ checkpoint: 0, diff: response.diffs });
-				} else {
-					for (const response of responses) {
-						if (!result[response.repoId]) {
-							result[response.repoId] = [];
-						}
-						result[response.repoId].push({ checkpoint: response.checkpoint, diff: response.diffs });
+		const diffs = new Map<
+			string,
+			{ [repoId: string]: { checkpoint: CSReviewCheckpoint; diff: CSReviewDiffs }[] }
+		>();
+		const responses = await this.session.api.fetchReviewCheckpointDiffs({ reviewId });
+		if (responses && responses.length) {
+			const result: {
+				[repoId: string]: { checkpoint: CSReviewCheckpoint; diff: CSReviewDiffs }[];
+			} = {};
+			if (responses.length === 1 && responses[0].checkpoint === undefined) {
+				const response = responses[0];
+				result[response.repoId].push({ checkpoint: 0, diff: response.diffs });
+			} else {
+				for (const response of responses) {
+					if (!result[response.repoId]) {
+						result[response.repoId] = [];
 					}
+					result[response.repoId].push({ checkpoint: response.checkpoint, diff: response.diffs });
 				}
-				this._diffs.set(reviewId, result);
 			}
+			diffs.set(reviewId, result);
 		}
 
-		const diffsByRepo = this._diffs.get(reviewId);
+		const diffsByRepo = diffs.get(reviewId);
 		if (!diffsByRepo) {
 			throw new Error(`Cannot find diffs for review ${reviewId}`);
 		}
@@ -392,7 +389,6 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			request.$addToSet = {
 				reviewChangesets: reviewChangesets
 			};
-			this._diffs.delete(request.id);
 			delete request.repoChanges;
 		}
 
