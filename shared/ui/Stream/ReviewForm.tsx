@@ -1451,16 +1451,20 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	showLocalDiff(path) {
-		const { repoStatus, includeSaved, includeStaged, startCommit } = this.state;
+		const { repoStatus, includeSaved, includeStaged, excludedFiles, startCommit } = this.state;
 		const { editingReview } = this.props;
 		if (!repoStatus) return;
 		const repoId = repoStatus.scm ? repoStatus.scm.repoId : "";
 		if (!repoId) return;
 
+		// if it's not excluded, but they key exists, that means the user manually added it to the review
+		// and we need to pass that fact along to showlocaldiff
+		const addedFileManually = path in excludedFiles;
+
 		HostApi.instance.send(ReviewShowLocalDiffRequestType, {
 			path,
 			repoId,
-			includeSaved: includeSaved && repoStatus.scm!.savedFiles.length > 0,
+			includeSaved: addedFileManually || (includeSaved && repoStatus.scm!.savedFiles.length > 0),
 			includeStaged: includeStaged && repoStatus.scm!.stagedFiles.length > 0,
 			editingReviewId: editingReview && editingReview.id,
 			baseSha: startCommit
