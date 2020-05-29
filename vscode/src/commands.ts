@@ -193,19 +193,11 @@ export class Commands implements Disposable {
 			args.path
 		);
 		const { review } = await Container.agent.reviews.get(args.reviewId);
-
-		// FYI, see showMarkerDiff() above
-		let column = Container.webview.viewColumn as number | undefined;
-		if (column !== undefined) {
-			column--;
-			if (column <= 0) {
-				column = undefined;
-			}
-		}
 		let update = "";
 		if (args.checkpoint && args.checkpoint > 0) {
 			update = ` (Update #${args.checkpoint})`;
 		}
+		const viewColumn = await this.getViewColumn();
 		await commands.executeCommand(
 			BuiltInCommands.Diff,
 			Uri.parse(
@@ -215,7 +207,7 @@ export class Commands implements Disposable {
 				`codestream-diff://${args.reviewId}/${args.checkpoint}/${args.repoId}/right/${args.path}`
 			),
 			`${paths.basename(args.path)} @ ${Strings.truncate(review.title, 25)}${update}`,
-			{ preserveFocus: false, preview: true, viewColumn: column || ViewColumn.Beside }
+			{ preserveFocus: false, preview: true, viewColumn: viewColumn }
 		);
 
 		return true;
@@ -223,15 +215,6 @@ export class Commands implements Disposable {
 
 	@command("showReviewLocalDiff", { showErrorMessage: "Unable to display review local diff" })
 	async showReviewLocalDiff(args: ShowReviewLocalDiffCommandArgs): Promise<boolean> {
-		// FYI, see showMarkerDiff() above
-		let column = Container.webview.viewColumn as number | undefined;
-		if (column !== undefined) {
-			column--;
-			if (column <= 0) {
-				column = undefined;
-			}
-		}
-
 		const rightVersion = args.includeSaved ? "saved" : args.includeStaged ? "staged" : "head";
 
 		await Container.diffContents.loadContentsLocal(
@@ -242,12 +225,13 @@ export class Commands implements Disposable {
 			rightVersion
 		);
 
+		const viewColumn = await this.getViewColumn();
 		await commands.executeCommand(
 			BuiltInCommands.Diff,
 			Uri.parse(`codestream-diff://local/undefined/${args.repoId}/left/${args.path}`),
 			Uri.parse(`codestream-diff://local/undefined/${args.repoId}/right/${args.path}`),
 			`${paths.basename(args.path)} review changes`,
-			{ preserveFocus: false, preview: true, viewColumn: column || ViewColumn.Beside }
+			{ preserveFocus: false, preview: true, viewColumn: viewColumn }
 		);
 
 		return true;
@@ -506,5 +490,34 @@ export class Commands implements Disposable {
 			preview: false,
 			viewColumn: column || ViewColumn.Beside
 		});
+	}
+
+	private async getViewColumn(): Promise<number> {
+		// <HACK>>
+		// sometimes the webview misrepresents what
+		// its viewColumn value is (it returns a number high than it should)
+		// try to force an editor to be active so we can get a valid
+		// webview.viewColumn later
+		try {
+			const editor = window.activeTextEditor;
+			if (editor === undefined) {
+				void (await commands.executeCommand(BuiltInCommands.NextEditor));
+				await Container.webview.show();
+			}
+		} catch {}
+		// </HACK>
+
+		// FYI, see showMarkerDiff() above
+		// Try to designate the diff view in the column to the left the webview
+		// FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
+		let column = Container.webview.viewColumn as number | undefined;
+
+		if (column !== undefined) {
+			column--;
+			if (column <= 0) {
+				column = undefined;
+			}
+		}
+		return column || ViewColumn.Beside;
 	}
 }
