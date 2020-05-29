@@ -564,7 +564,11 @@ function trackPostCreation(
 	});
 }
 
-function trackReviewPostCreation(review: ReviewPlus, totalExcludedFilesCount: number, reviewChangesetsSizeInBytes: number) {
+function trackReviewPostCreation(
+	review: ReviewPlus,
+	totalExcludedFilesCount: number,
+	reviewChangesetsSizeInBytes: number
+) {
 	process.nextTick(() => {
 		try {
 			const telemetry = Container.instance().telemetry;
@@ -585,7 +589,10 @@ function trackReviewPostCreation(review: ReviewPlus, totalExcludedFilesCount: nu
 				"Saved Changes": review.reviewChangesets.some(_ => _.includeSaved),
 				"Excluded Files": totalExcludedFilesCount,
 				// rounds to 4 places
-				"Payload Size": reviewChangesetsSizeInBytes > 0 ? Math.round((reviewChangesetsSizeInBytes / 1048576) * 10000) / 10000 : 0
+				"Payload Size":
+					reviewChangesetsSizeInBytes > 0
+						? Math.round((reviewChangesetsSizeInBytes / 1048576) * 10000) / 10000
+						: 0
 			};
 
 			telemetry.track({
@@ -1159,17 +1166,28 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			modifiedFiles = statusFromBeginningOfReview.scm!.modifiedFiles.filter(
 				mf => !excludedFiles.includes(mf.file)
 			);
+
+			const deletedFiles: string[] = modifiedFilesInCheckpoint
+				.filter(mf => mf.status === FileStatus.deleted)
+				.map(mf => mf.oldFile);
 			for (const previousChangeset of review.reviewChangesets.slice().reverse()) {
+				deletedFiles.push(
+					...previousChangeset.modifiedFilesInCheckpoint
+						.filter(mf => mf.status === FileStatus.deleted)
+						.map(mf => mf.oldFile)
+				);
+
 				for (const modifiedFileInPreviousChangeset of previousChangeset.modifiedFiles) {
+					const file = modifiedFileInPreviousChangeset.file;
 					// FIXME that might be a problem for files that were added/committed
 					//  after being included as untracked in a previous changeset
 					if (
 						modifiedFileInPreviousChangeset.status === FileStatus.untracked &&
-						!newFiles.find(f => f === modifiedFileInPreviousChangeset.file)
+						!newFiles.find(f => f === file)
 					) {
-						newFiles.push(modifiedFileInPreviousChangeset.file);
+						newFiles.push(file);
 					}
-					if (!modifiedFiles.find(mf => mf.file === modifiedFileInPreviousChangeset.file)) {
+					if (!deletedFiles.some(f => f === file) && !modifiedFiles.find(mf => mf.file === file)) {
 						modifiedFiles.push(modifiedFileInPreviousChangeset);
 					}
 				}
