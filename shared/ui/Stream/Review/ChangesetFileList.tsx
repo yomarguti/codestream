@@ -1,5 +1,5 @@
 import { CSReviewChangeset } from "@codestream/protocols/api";
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { ReviewPlus } from "@codestream/protocols/agent";
 import { HostApi } from "../..";
 import { localStore } from "../../utilities/storage";
@@ -49,7 +49,7 @@ export const ChangesetFileList = (props: {
 		if (checkpoint !== undefined) {
 			changesets = review.reviewChangesets.filter(rc => rc.checkpoint === checkpoint);
 		} else {
-			const latestChangesetByRepo = new Map<string, CSReviewChangeset>()
+			const latestChangesetByRepo = new Map<string, CSReviewChangeset>();
 			for (const changeset of review.reviewChangesets) {
 				latestChangesetByRepo.set(changeset.repoId, changeset);
 			}
@@ -82,14 +82,14 @@ export const ChangesetFileList = (props: {
 		};
 	});
 
-	useDidMount(() => {
+	useEffect(() => {
 		const disposables = [
 			HostApi.instance.on(ShowNextChangedFileNotificationType, nextFile),
 			HostApi.instance.on(ShowPreviousChangedFileNotificationType, prevFile)
 		];
 
 		return () => disposables.forEach(disposable => disposable.dispose());
-	});
+	}, [checkpoint]);
 
 	const goFile = async index => {
 		if (index < 0) index = derivedState.numFiles - 1;
