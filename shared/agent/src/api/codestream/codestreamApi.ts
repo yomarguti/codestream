@@ -17,7 +17,8 @@ import { isDirective, resolve } from "../../managers/operations";
 import {
 	ChangeDataType,
 	DidChangeDataNotificationType,
-	OpenUrlRequestType
+	OpenUrlRequestType,
+	ReportingMessageType
 } from "../../protocol/agent.protocol";
 import {
 	AccessToken,
@@ -2210,6 +2211,19 @@ export class CodeStreamApiProvider implements ApiProvider {
 				}
 			} catch {}
 		}
+
+		Container.instance().errorReporter.reportMessage({
+			source: "agent",
+			type: ReportingMessageType.Error,
+			message: `[Server Error]: ${message}`,
+			extra: {
+				data,
+				responseStatus: response.status,
+				requestId: response.headers.get("x-request-id"),
+				requestUrl: response.url
+			}
+		});
+
 		return new ServerError(message, data, response.status);
 	}
 
