@@ -8,6 +8,7 @@ import { goToLogin, goToJoinTeam, goToSignup } from "../store/context/actions";
 import { DispatchProp } from "../store/common";
 import { HostApi } from "../webview-api";
 import { SignupType } from "./actions";
+import { JoinTeam } from "./JoinTeam";
 
 interface ConnectedProps {
 	pluginVersion: string;
@@ -65,14 +66,7 @@ export const NewUserEntry = (connect(mapStateToProps) as any)((props: Props) => 
 								</div>
 								<Icon name="chevron-right" />
 							</Button>
-							<Button className="row-button" onClick={onClickJoinTeam}>
-								<Icon name="team" className="extra-pad" />
-								<div className="copy">
-									Join an existing team
-									<div className="small">Enter an invite code to get started</div>
-								</div>
-								<Icon name="chevron-right" />
-							</Button>
+							<JoinTeam />
 						</div>
 					</div>
 					<div id="controls">

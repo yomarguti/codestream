@@ -16,7 +16,7 @@ import { UpdateServerUrlRequestType } from "../ipc/host.protocol";
 const errorToMessageId = {
 	[LoginResult.InvalidToken]: "confirmation.invalid",
 	[LoginResult.ExpiredToken]: "confirmation.expired",
-	[LoginResult.Timeout]: "unexpectedError",	
+	[LoginResult.Timeout]: "unexpectedError",
 	[LoginResult.Unknown]: "unexpectedError"
 };
 
@@ -112,56 +112,42 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 
 	const errorId = error && (errorToMessageId[error] || errorToMessageId.UNKNOWN);
 	return (
-		<div className="onboarding-page">
-			<form className="standard-form" onSubmit={onClickJoin}>
-				<fieldset className="form-body">
-					<div className="outline-box">
-						<h3>Were you invited to CodeStream?</h3>
-						<div id="controls">
-							<div className="control-group">
-								<div className="two-col" style={{ display: "flex", marginTop: "15px" }}>
-									<div style={{ width: "100%" }}>
-										<TextInput
-											value={inviteCode}
-											onChange={onChange}
-											placeholder="Enter invitation code"
-										/>
-										{error && (
-											<small className="explainer error-message ">
-												<FormattedMessage
-													id={errorId}
-													defaultMessage="There is an error with that code"
-												/>
-											</small>
-										)}
-									</div>
-									<Button
-										className="control-button"
-										type="button"
-										onClick={onClickJoin}
-										loading={isLoading}
-										style={{ width: "10em", marginLeft: "20px" }}
-									>
-										<b style={{ fontSize: "15px" }}>Join</b>
-									</Button>
+		<form className="standard-form" style={{ padding: "40px 0 0 0" }} onSubmit={onClickJoin}>
+			<fieldset className="form-body" style={{ padding: 0 }}>
+				<div className="outline-box">
+					<h3>Were you invited?</h3>
+					<div id="controls">
+						<div className="control-group">
+							<div className="two-col" style={{ display: "flex", marginTop: "15px" }}>
+								<div style={{ width: "100%" }}>
+									<TextInput
+										value={inviteCode}
+										onChange={onChange}
+										placeholder="Enter invitation code"
+									/>
+									{error && (
+										<small className="explainer error-message ">
+											<FormattedMessage
+												id={errorId}
+												defaultMessage="There is an error with that code"
+											/>
+										</small>
+									)}
 								</div>
+								<Button
+									className="control-button"
+									type="button"
+									onClick={onClickJoin}
+									loading={isLoading}
+									style={{ width: "10em", marginLeft: "20px" }}
+								>
+									<b style={{ fontSize: "15px" }}>Join</b>
+								</Button>
 							</div>
 						</div>
 					</div>
-					<div id="controls">
-						<div className="footer">
-							<Link
-								onClick={e => {
-									e.preventDefault();
-									props.dispatch(goToNewUserEntry());
-								}}
-							>
-								<p>{"< Back"}</p>
-							</Link>
-						</div>
-					</div>
-				</fieldset>
-			</form>
-		</div>
+				</div>
+			</fieldset>
+		</form>
 	);
 });
