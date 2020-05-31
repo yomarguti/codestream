@@ -137,16 +137,6 @@ const SpreadButtons = styled.div`
 
 export const STEPS = [
 	{
-		id: "createCodemark",
-		title: "Comment on code",
-		subtext: "in the left margin, or select code in your editor and hit the plus button.",
-		done: "Commented on code",
-		pulse: "compose-gutter",
-		video: "https://youtu.be/RPaIIZgaFK8",
-		panel: WebviewPanels.NewComment,
-		isComplete: user => user.totalPosts > 0
-	},
-	{
 		id: "addPhoto",
 		title: "Add a profile photo",
 		subtext: "so your teammates know who’s who.",
@@ -155,17 +145,6 @@ export const STEPS = [
 		video: "https://youtu.be/-HBWfm9P96k",
 		panel: WebviewPanels.ChangeAvatar,
 		isComplete: user => user.avatar
-	},
-	{
-		id: "viewPRs",
-		title: "View comments from PRs,",
-		subtext: "including merged PRs and your current branch.",
-		done: "Connected to PR provider",
-		pulse: "pr-toggle",
-		video: "https://youtu.be/sM607iVWM3w",
-		panel: WebviewPanels.PRInfo,
-		isComplete: (_, state) =>
-			["github", "bitbucket", "gitlab"].some(name => isConnected(state, { name }))
 	},
 	{
 		id: "createReview",
@@ -180,6 +159,16 @@ export const STEPS = [
 		isComplete: user => user.totalReviews > 0
 	},
 	{
+		id: "createCodemark",
+		title: "Comment on code",
+		subtext: "in the left margin, or select code in your editor and hit the plus button.",
+		done: "Commented on code",
+		pulse: "compose-gutter",
+		video: "https://youtu.be/RPaIIZgaFK8",
+		panel: WebviewPanels.NewComment,
+		isComplete: user => user.totalPosts > 0
+	},
+	{
 		id: "invite",
 		title: "Invite your teammates",
 		subtext: "and see what they are working on in real-time.",
@@ -188,6 +177,17 @@ export const STEPS = [
 		video: "https://www.youtube.com/watch?v=h5KI3svlq-0",
 		panel: WebviewPanels.People,
 		isComplete: user => user.numUsersInvited > 0
+	},
+	{
+		id: "viewPRs",
+		title: "View comments from PRs,",
+		subtext: "including merged PRs and your current branch.",
+		done: "Connected to PR provider",
+		pulse: "pr-toggle",
+		video: "https://youtu.be/sM607iVWM3w",
+		panel: WebviewPanels.PRInfo,
+		isComplete: (_, state) =>
+			["github", "bitbucket", "gitlab"].some(name => isConnected(state, { name }))
 	},
 	{
 		id: "setUpIntegrations",
@@ -259,7 +259,12 @@ export function GettingStarted(props: GettingStartedProps) {
 						<StepText>
 							<StepTitle>{step.title}</StepTitle>&nbsp;<StepSubtext>{step.subtext}</StepSubtext>
 						</StepText>
-						<Tooltip title="Watch the how-to video" placement="bottomRight" delay={1}>
+						<Tooltip
+							title="Watch the how-to video"
+							placement="bottomRight"
+							delay={1}
+							align={{ offset: [13, 0] }}
+						>
 							<a href={step.video}>
 								<YouTubeImg src="https://i.imgur.com/9IKqpzf.png" />
 							</a>

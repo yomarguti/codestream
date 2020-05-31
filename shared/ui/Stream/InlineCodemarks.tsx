@@ -80,6 +80,7 @@ import { FileInfo } from "./FileInfo";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { GettingStarted } from "./GettingStarted";
 import { supportsIntegrations } from "../store/configs/actions";
+import { Keybindings } from "./Keybindings";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -636,29 +637,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				</div>
 			);
 
-			return (
-				<div key="no-codemarks" className="no-codemarks-container">
-					<div className="no-codemarks">
-						Discuss code by selecting a range and clicking an icon, or use a shortcut below (
-						<a href="https://docs.codestream.com/userguide/gettingStarted/code-discussion-with-codemarks/">
-							show me how
-						</a>
-						).
-						<br />
-						<br />
-						<div className="keybindings">
-							<div className="function-row">{ComposeTitles.comment}</div>
-							<div className="function-row">{ComposeTitles.issue}</div>
-							{this.props.lightningCodeReviewsEnabled && (
-								<div className="function-row">{ComposeTitles.review}</div>
-							)}
-							<div className="function-row">{ComposeTitles.link}</div>
-							<div className="function-row">{ComposeTitles.privatePermalink}</div>
-							<div className="function-row">{ComposeTitles.toggleCodeStreamPanel}</div>
-						</div>
-					</div>
-				</div>
-			);
+			return <Keybindings />;
 		}
 	};
 

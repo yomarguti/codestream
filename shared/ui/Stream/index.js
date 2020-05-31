@@ -463,6 +463,15 @@ export class SimpleStream extends Component {
 		// 	menuItems.push(...providerMenuItems);
 		// 	menuItems.push({ label: "-" });
 		// }
+
+		// Feedback:
+		// - Email support
+		// - Tweet your feedback
+		//
+		// help:
+		// - Documentation
+		// - Video Library
+		// - Report an Issue
 		menuItems.push(
 			{ label: "Integrations", action: "integrations" },
 			{ label: "Feedback", action: "feedback" },
@@ -522,7 +531,18 @@ export class SimpleStream extends Component {
 			);
 		}
 
+		if (this.props.lightningCodeReviewsEnabled) {
+			menuItems.push({
+				icon: <Icon name="review" />,
+				label: "Request A Code Review",
+				action: this.newReview,
+				shortcut: ComposeKeybindings.review,
+				key: "review"
+			});
+		}
+
 		if (canCreateCodemark(textEditorUri)) {
+			if (menuItems.length > 0) menuItems.push({ label: "-" });
 			menuItems.push(
 				{
 					icon: <Icon name="comment" />,
@@ -539,24 +559,6 @@ export class SimpleStream extends Component {
 					key: "issue"
 				}
 			);
-		}
-		if (this.props.lightningCodeReviewsEnabled) {
-			if (
-				menuItems &&
-				menuItems[menuItems.length - 1] &&
-				menuItems[menuItems.length - 1].label !== "-"
-			) {
-				menuItems.push({
-					label: "-"
-				});
-			}
-			menuItems.push({
-				icon: <Icon name="review" />,
-				label: "Request A Code Review",
-				action: this.newReview,
-				shortcut: ComposeKeybindings.review,
-				key: "review"
-			});
 		}
 		// { label: "-" }
 		// { label: inviteLabel, action: "invite" },
