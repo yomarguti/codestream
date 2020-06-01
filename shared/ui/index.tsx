@@ -68,6 +68,7 @@ import { moveCursorToLine } from "./Stream/CodemarkView";
 import { setMaintenanceMode } from "./store/session/actions";
 import { updateModifiedRepos } from "./store/users/actions";
 import { logWarning } from "./logger";
+import { fetchReview } from './store/reviews/actions';
 
 export { HostApi };
 
@@ -345,6 +346,11 @@ function listenForEvents(store) {
 					switch (route.action) {
 						case "open": {
 							if (route.id) {
+								const { reviews } = store.getState();
+								const review = getReview(reviews, route.id);
+								if (!review) {
+									await store.dispatch(fetchReview(route.id));
+								}
 								store.dispatch(setCurrentReview(route.id));
 							}
 							break;
