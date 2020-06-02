@@ -222,7 +222,7 @@ export const ProfilePanel = () => {
 		<Root>
 			<div className="panel full-height">
 				<PanelHeader title={title}>
-					<CancelButton onClick={() => dispatch(closePanel())} />
+					<CancelButton title="Close" onClick={() => dispatch(closePanel())} />
 				</PanelHeader>
 				<ScrollBox>
 					<div className="channel-list vscroll" style={{ padding: "0 20px 20px 20px" }}>
