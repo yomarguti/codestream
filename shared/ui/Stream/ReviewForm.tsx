@@ -1606,7 +1606,7 @@ class ReviewForm extends React.Component<Props, State> {
 
 	setFrom = (commit: string) => {};
 
-	toggleReviewer = person => this.toggleReviewer(person.email);
+	toggleReviewer = person => this.toggleReviewerEmail(person.email);
 
 	toggleReviewerEmail = email => {
 		const { reviewerEmails } = this.state;
