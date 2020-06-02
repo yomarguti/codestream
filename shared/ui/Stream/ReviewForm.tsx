@@ -1139,7 +1139,7 @@ class ReviewForm extends React.Component<Props, State> {
 
 	excluded = (file: string) => this.state.excludedFiles[file] || this.ignoredFiles.ignores(file);
 
-	excludeFuture = (event: React.SyntheticEvent, file: string) => {
+	excludeFuture = async (event: React.SyntheticEvent, file: string) => {
 		const { repoStatus } = this.state;
 		if (!repoStatus) return null;
 		const { scm } = repoStatus;
@@ -1148,7 +1148,7 @@ class ReviewForm extends React.Component<Props, State> {
 		event.stopPropagation();
 
 		const ignoreFile = scm.repoPath + "/.codestreamignore";
-		const success = this.addIgnoreFile(file);
+		const success = await this.addIgnoreFile(file);
 		if (success) {
 			this.ignoredFiles.add(file);
 			this.setState({ excludedFiles: { ...this.state.excludedFiles, [file]: true } });
