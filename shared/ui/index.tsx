@@ -306,6 +306,11 @@ function listenForEvents(store) {
 	});
 
 	api.on(ShowReviewNotificationType, async e => {
+		const { reviews } = store.getState();
+		const review = getReview(reviews, e.reviewId);
+		if (!review) {
+			await store.dispatch(fetchReview(e.reviewId));
+		}
 		store.dispatch(setCurrentReview(e.reviewId));
 	});
 
