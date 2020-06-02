@@ -50,7 +50,8 @@ import {
 	setCodemarksShowArchived,
 	setCurrentCodemark,
 	setSpatialViewPRCommentsToggle,
-	repositionCodemark
+	repositionCodemark,
+	setComposeCodemarkActive
 } from "../store/context/actions";
 import { sortBy as _sortBy } from "lodash-es";
 import { setEditorContext, changeSelection } from "../store/editorContext/actions";
@@ -131,6 +132,7 @@ interface Props {
 	setCodemarksFileViewStyle: (
 		...args: Parameters<typeof setCodemarksFileViewStyle>
 	) => ReturnType<typeof setCodemarksFileViewStyle>;
+	setComposeCodemarkActive: Function;
 	setCodemarksShowArchived: (
 		...args: Parameters<typeof setCodemarksShowArchived>
 	) => ReturnType<typeof setCodemarksShowArchived>;
@@ -145,14 +147,12 @@ interface Props {
 	addDocumentMarker: Function;
 	changeSelection: Function;
 	setSpatialViewPRCommentsToggle: Function;
+	composeCodemarkActive: CodemarkType | undefined;
 }
 
 interface State {
 	showPRInfoModal: boolean;
-	lastSelectedLine: number;
-	clickedPlus: boolean;
 	isLoading: boolean;
-	openIconsOnLine: number;
 	query: string | undefined;
 	highlightedLine?: number;
 	rippledLine?: number;
@@ -160,7 +160,7 @@ interface State {
 	numBelow: number;
 	numLinesVisible: number;
 	problem: ScmError | undefined;
-	newCodemarkAttributes: { type: CodemarkType; viewingInline: boolean } | undefined;
+	// newCodemarkAttributes: { type: CodemarkType; viewingInline: boolean } | undefined;
 	multiLocationCodemarkForm: boolean;
 	codemarkFormError?: string;
 }
@@ -185,12 +185,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 		this.state = {
 			showPRInfoModal: false,
-			newCodemarkAttributes: localStore.get(NEW_CODEMARK_ATTRIBUTES_TO_RESTORE),
+			// newCodemarkAttributes: localStore.get(NEW_CODEMARK_ATTRIBUTES_TO_RESTORE),
 			isLoading: props.documentMarkers.length === 0,
-			lastSelectedLine: 0,
-			clickedPlus: false,
 			query: undefined,
-			openIconsOnLine: -1,
 			numAbove: 0,
 			numBelow: 0,
 			numLinesVisible: props.numLinesVisible,
@@ -199,49 +196,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		};
 
 		this.docMarkersByStartLine = {};
-	}
-
-	static getDerivedStateFromProps(props: Props, state: State) {
-		let { textEditorSelection } = props;
-
-		// only set this if it changes by more than 1. we expect it to vary by 1 as
-		// the topmost and bottommost line are revealed and the window is not an integer
-		// number of lines high.
-		if (Math.abs(props.numLinesVisible - Number(state.numLinesVisible)) > 1) {
-			return {
-				numLinesVisible: props.numLinesVisible
-			};
-		}
-
-		if (!textEditorSelection) {
-			return { openIconsOnLine: 0, lastSelectedLine: 0 };
-		}
-
-		if (
-			textEditorSelection.start.line !== textEditorSelection.end.line ||
-			textEditorSelection.start.character !== textEditorSelection.end.character
-		) {
-			if (state.clickedPlus) {
-				return {
-					openIconsOnLine: -1,
-					clickedPlus: false,
-					lastSelectedLine: textEditorSelection.cursor.line
-				};
-			}
-			if (textEditorSelection.cursor.line !== state.lastSelectedLine) {
-				let line = textEditorSelection.cursor.line;
-
-				// if the cursor is on character 0, use the line above
-				// as it looks better aesthetically
-				if (textEditorSelection.cursor.character === 0) line--;
-
-				return { openIconsOnLine: line, lastSelectedLine: line };
-			}
-		} else {
-			return { openIconsOnLine: -1, lastSelectedLine: -1 };
-		}
-
-		return null;
 	}
 
 	componentDidMount() {
@@ -313,11 +267,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	componentWillUnmount() {
 		this._mounted = false;
-		if (this.state.newCodemarkAttributes != undefined) {
-			localStore.set(NEW_CODEMARK_ATTRIBUTES_TO_RESTORE, this.state.newCodemarkAttributes);
-		} else {
-			localStore.delete(NEW_CODEMARK_ATTRIBUTES_TO_RESTORE);
-		}
+		// if (this.state.newCodemarkAttributes != undefined) {
+		// 	localStore.set(NEW_CODEMARK_ATTRIBUTES_TO_RESTORE, this.state.newCodemarkAttributes);
+		// } else {
+		// 	localStore.delete(NEW_CODEMARK_ATTRIBUTES_TO_RESTORE);
+		// }
 		this.disposables.forEach(d => d.dispose());
 	}
 
@@ -432,14 +386,14 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	};
 
 	async onFileChanged(isInitialRender = false) {
-		const { textEditorUri, setEditorContext } = this.props;
+		const { textEditorUri, setEditorContext, composeCodemarkActive } = this.props;
 
 		if (
 			textEditorUri === undefined &&
-			this.state.newCodemarkAttributes &&
+			composeCodemarkActive &&
 			!this.state.multiLocationCodemarkForm
 		) {
-			this.setState({ newCodemarkAttributes: undefined });
+			this.props.setComposeCodemarkActive(undefined);
 		}
 
 		if (textEditorUri === undefined || isNotOnDisk(textEditorUri)) {
@@ -528,34 +482,10 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		);
 	};
 
-	codeHeight = () => {
-		const $field = document.getElementById("inline-codemarks-field") as HTMLDivElement;
-		return $field ? $field.offsetHeight : 100;
-	};
-
-	renderHoverIcons = () => {
-		// only show hover icons for files that can create codemarks
-		if (!canCreateCodemark(this.props.textEditorUri)) {
-			return undefined;
-		}
-		return (
-			<CreateCodemarkIcons
-				openIconsOnLine={this.state.openIconsOnLine}
-				codeHeight={this.codeHeight()}
-				numLinesVisible={this.state.numLinesVisible}
-				lineHeight={this.props.metrics.lineHeight!}
-				composeBoxActive={this.state.newCodemarkAttributes ? true : false}
-				setNewCodemarkAttributes={this.setNewCodemarkAttributes}
-				switchToInlineView={this.switchToInlineView}
-				metrics={this.props.metrics}
-			/>
-		);
-	};
-
 	renderNoCodemarks = () => {
-		const { textEditorUri, currentReviewId } = this.props;
+		const { textEditorUri, currentReviewId, composeCodemarkActive } = this.props;
 
-		if (this.state.newCodemarkAttributes || currentReviewId) return null;
+		if (composeCodemarkActive || currentReviewId) return null;
 
 		if (textEditorUri === undefined) {
 			return (
@@ -637,7 +567,17 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				</div>
 			);
 
-			return <Keybindings />;
+			return (
+				<Keybindings>
+					Discuss code by selecting a range and clicking an icon, or use a shortcut below (
+					<a href="https://docs.codestream.com/userguide/gettingStarted/code-discussion-with-codemarks/">
+						show me how
+					</a>
+					).
+					<br />
+					<br />
+				</Keybindings>
+			);
 		}
 	};
 
@@ -721,7 +661,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				</div>
 			);
 		}
-		return viewInline
+		return viewInline || this.props.composeCodemarkActive
 			? this.renderInline(paddingTop, fontSize, height)
 			: this.renderList(paddingTop, fontSize, height);
 	}
@@ -851,12 +791,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	renderCodemarkForm() {
-		if (this.state.newCodemarkAttributes == undefined) return null;
+		if (this.props.composeCodemarkActive == undefined) return null;
 
 		return (
 			// <ContainerAtEditorSelection>
 			<CodemarkForm
-				commentType={this.state.newCodemarkAttributes.type}
+				commentType={this.props.composeCodemarkActive}
 				streamId={this.props.currentStreamId!}
 				onSubmit={this.submitCodemark}
 				onClickClose={this.closeCodemarkForm}
@@ -865,7 +805,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				multiLocation={this.state.multiLocationCodemarkForm}
 				setMultiLocation={this.setMultiLocation}
 				error={this.state.codemarkFormError}
-				activePanel={this.props.activePanel}
 			/>
 			// </ContainerAtEditorSelection>
 		);
@@ -877,23 +816,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	closeCodemarkForm = (e?: Event) => {
 		this.setState({
-			newCodemarkAttributes: undefined,
 			multiLocationCodemarkForm: false,
 			codemarkFormError: undefined
 		});
 		this.clearSelection();
 
-		const { newCodemarkAttributes } = this.state;
-		if (newCodemarkAttributes && !newCodemarkAttributes.viewingInline) {
-			batch(() => {
-				this.setState({ newCodemarkAttributes: undefined });
-				this.props.setCodemarksFileViewStyle("list");
-			});
-		} else this.setState({ newCodemarkAttributes: undefined });
-	};
-
-	setNewCodemarkAttributes = attributes => {
-		this.setState({ newCodemarkAttributes: attributes, clickedPlus: true });
+		this.props.setComposeCodemarkActive(undefined);
 	};
 
 	static contextTypes = {
@@ -1154,9 +1082,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	render() {
-		const { currentReviewId, activePanel } = this.props;
+		const { currentReviewId, activePanel, composeCodemarkActive } = this.props;
 
-		const composeOpen = this.state.newCodemarkAttributes ? true : false;
+		const composeOpen = composeCodemarkActive ? true : false;
 		const onGettingStarted = activePanel === WebviewPanels.GettingStarted;
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
@@ -1165,7 +1093,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				) : onGettingStarted ? null : (
 					this.renderHeader()
 				)}
-				{this.renderHoverIcons()}
+				<CreateCodemarkIcons />
 				{this.renderCodemarkForm()}
 				{this.state.showPRInfoModal && (
 					<PRInfoModal onClose={() => this.setState({ showPRInfoModal: false })} />
@@ -1186,8 +1114,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			);
 			const range = Range.create(position, position);
 			this.props.changeSelection(this.props.textEditorUri!, { ...range, cursor: range.end });
-			// just short-circuits the round-trip to the editor
-			this.setState({ openIconsOnLine: -1 });
 		}
 	};
 
@@ -1196,7 +1122,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		// so no need to deselect it, plus we don't want the side-effect
 		// of clearSelection() which removes the highlight of what code
 		// you are commenting on
-		if (this.state.newCodemarkAttributes) return;
+		if (this.props.composeCodemarkActive) return;
 
 		if (event && event.target) {
 			const id = (event.target as any).id;
@@ -1295,20 +1221,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			});
 	};
 
-	switchToInlineView = async () => {
-		this.props.setCodemarksFileViewStyle("inline");
-		try {
-			await new Promise((resolve, reject) => {
-				this._updateEmitter.enqueue(() => {
-					if (this.props.viewInline) resolve();
-					else reject();
-				});
-			});
-		} catch (error) {
-			return;
-		}
-	};
-
 	mapLine0ToVisibleRange = fromLineNum0 => {
 		const { textEditorVisibleRanges } = this.props;
 
@@ -1378,13 +1290,15 @@ const mapStateToProps = (state: CodeStreamState) => {
 		isInVscode: ide.name === "VSC",
 		webviewFocused: context.hasFocus,
 		lightningCodeReviewsEnabled: isFeatureEnabled(state, "lightningCodeReviews"),
-		supportsIntegrations: supportsIntegrations(configs)
+		supportsIntegrations: supportsIntegrations(configs),
+		composeCodemarkActive: context.composeCodemarkActive
 	};
 };
 
 export default connect(mapStateToProps, {
 	fetchDocumentMarkers,
 	setCodemarksFileViewStyle,
+	setComposeCodemarkActive,
 	setCodemarksShowArchived,
 	setCurrentCodemark,
 	repositionCodemark,

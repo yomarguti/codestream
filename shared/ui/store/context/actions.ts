@@ -4,6 +4,7 @@ import { setUserPreference } from "../../Stream/actions";
 import { action } from "../common";
 import { ContextActionsType, ContextState, PostEntryPoint, Route } from "./types";
 import { WebviewPanels } from "@codestream/protocols/webview";
+import { CodemarkType } from "@codestream/protocols/api";
 
 export const reset = () => action("RESET");
 
@@ -67,6 +68,9 @@ export const setCodemarksShowResolved = (enabled: boolean) =>
 
 export const setCurrentCodemark = (codemarkId?: string, markerId?: string) =>
 	action(ContextActionsType.SetCurrentCodemark, { codemarkId, markerId });
+
+export const setComposeCodemarkActive = (type: CodemarkType | undefined) =>
+	action(ContextActionsType.SetComposeCodemarkActive, { type });
 
 export const repositionCodemark = (codemarkId?: string, markerId?: string, value?: boolean) =>
 	action(ContextActionsType.RepositionCodemark, { codemarkId, markerId, value });

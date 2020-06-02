@@ -1,18 +1,14 @@
-import React from "react";
+import React, { PropsWithChildren } from "react";
 import ComposeTitles from "./ComposeTitles";
 import { FeatureFlag } from "./FeatureFlag";
 
-export const Keybindings = () => {
+interface Props {}
+
+export const Keybindings = (props: PropsWithChildren<Props>) => {
 	return (
 		<div key="no-codemarks" className="no-codemarks-container">
 			<div className="no-codemarks">
-				Discuss code by selecting a range and clicking an icon, or use a shortcut below (
-				<a href="https://docs.codestream.com/userguide/gettingStarted/code-discussion-with-codemarks/">
-					show me how
-				</a>
-				).
-				<br />
-				<br />
+				{props.children}
 				<div className="keybindings">
 					<FeatureFlag flag="lightningCodeReviews">
 						{isOn => isOn && <div className="function-row">{ComposeTitles.review}</div>}

@@ -141,14 +141,6 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 				{codemark.status == "closed" && <div>This codemark is resolved.</div>}
 			</CardBanner>
 			<CardBody>
-				{false && (
-					<Header>
-						<AuthorInfo>
-							<Headshot person={props.author} /> <b>{props.author.username}</b> {emote}
-							<Timestamp relative time={codemark.createdAt} />
-						</AuthorInfo>
-					</Header>
-				)}
 				{collapsed && codemark.type === CodemarkType.Issue ? (
 					<Header>
 						<Icon name="issue" className="type" />

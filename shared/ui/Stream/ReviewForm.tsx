@@ -143,9 +143,9 @@ interface State {
 	assigneesRequired: boolean;
 	assigneesDisabled: boolean;
 	singleAssignee: boolean;
-	reviewers: CSUser[];
+	reviewerEmails: string[]; // email address
 	reviewersTouched: boolean;
-	authorsById: { [authorId: string]: { stomped: number; commits: number } };
+	authorsBlameData: { [authorEmail: string]: { stomped: number; commits: number } };
 	notify: boolean;
 	isLoading: boolean;
 	isLoadingScm: boolean;
@@ -239,9 +239,9 @@ class ReviewForm extends React.Component<Props, State> {
 			selectedChannelName: (props.channel as any).name,
 			selectedChannelId: props.channel.id,
 			assignableUsers: this.getAssignableCSUsers(),
-			reviewers: [],
+			reviewerEmails: [],
 			reviewersTouched: false,
-			authorsById: {},
+			authorsBlameData: {},
 			selectedTags: {},
 			repoName: "",
 			excludedFiles: {},
@@ -273,9 +273,11 @@ class ReviewForm extends React.Component<Props, State> {
 			assignees = props.editingReview.reviewers.map(a =>
 				state.assignableUsers.find((au: any) => au.value === a)
 			);
-			state.reviewers = props.editingReview.reviewers
+			// @ts-ignore
+			state.reviewerEmails = props.editingReview.reviewers
 				.map(id => props.teamMembers.find(p => p.id === id))
-				.filter(Boolean) as CSUser[];
+				.map(p => p && p.email)
+				.filter(Boolean);
 		} else if (state.assignees === undefined) {
 			assignees = undefined;
 		} else if (Array.isArray(state.assignees)) {
@@ -379,7 +381,7 @@ class ReviewForm extends React.Component<Props, State> {
 					eventName: "Review Form Opened",
 					properties: {
 						"Repo Open": this.state.openRepos && this.state.openRepos.length > 0,
-						"Suggested Reviewers": this.state.reviewers && this.state.reviewers.length > 0
+						"Suggested Reviewers": this.state.reviewerEmails && this.state.reviewerEmails.length > 0
 					}
 				});
 			});
@@ -491,57 +493,53 @@ class ReviewForm extends React.Component<Props, State> {
 			// }
 
 			if (statusInfo.scm) {
-				const authors = statusInfo.scm.authors;
-				const authorsById = {};
-				authors.map(author => {
-					const user = teamMates.find(t => t.email == author.email);
-					if (user) authorsById[user.id] = author;
+				const authorsBlameData = {};
+				statusInfo.scm.authors.map(author => {
+					authorsBlameData[author.email] = author;
 				});
-				this.setState({ authorsById });
+				this.setState({ authorsBlameData });
 
 				if (!isEditing && !this.state.reviewersTouched) {
-					let reviewers = Object.keys(authorsById)
-						// get the top most impacted authors
-						// based on how many times their code
-						// was stomped on, and make those
-						// "suggested reviewers"
+					let reviewerEmails = Object.keys(authorsBlameData)
+						// get the top most impacted authors based on how many times their code
+						// was stomped on, and make those the suggested reviewers, depending
+						// on the team setting. we weigh 1 commits on the branch 10x as much as
+						// 1 line of codes stomped on
 						.sort(
 							(a, b) =>
-								authorsById[b].commits * 10 +
-								authorsById[b].stomped -
-								(authorsById[a].commits * 10 + authorsById[a].stomped)
+								authorsBlameData[b].commits * 10 +
+								authorsBlameData[b].stomped -
+								(authorsBlameData[a].commits * 10 + authorsBlameData[a].stomped)
 						)
-						.map(id => teamMates.find(p => p.id === id))
 						.filter(Boolean);
 
 					switch (this.props.reviewAssignment) {
 						case CSReviewAssignmentSetting.Authorship1:
-							reviewers = reviewers.slice(0, 1);
+							reviewerEmails = reviewerEmails.slice(0, 1);
 							break;
 						case CSReviewAssignmentSetting.Authorship2:
-							reviewers = reviewers.slice(0, 2);
+							reviewerEmails = reviewerEmails.slice(0, 2);
 							break;
 						case CSReviewAssignmentSetting.Authorship3:
-							reviewers = reviewers.slice(0, 3);
+							reviewerEmails = reviewerEmails.slice(0, 3);
 							break;
 						case CSReviewAssignmentSetting.Random: {
 							// the pseudo-random number is based on the time
 							// this review form was mounted, and selects a random
 							// teammate from the array
 							const pseudoRandom = this.state.mountedTimestamp % teamMates.length;
-							reviewers = [teamMates[pseudoRandom]];
+							reviewerEmails = [teamMates[pseudoRandom].email];
 							break;
 						}
 						case CSReviewAssignmentSetting.RoundRobin:
 							const index = this.props.teamReviewCount % teamMates.length;
-							reviewers = [teamMates[index]];
+							reviewerEmails = [teamMates[index].email];
 							break;
 						default:
-							reviewers = [];
+							reviewerEmails = [];
 					}
 
-					// @ts-ignore
-					this.setState({ reviewers });
+					this.setState({ reviewerEmails });
 				}
 
 				// if there is no title set OR there is one and a user hasn't touched it
@@ -628,16 +626,24 @@ class ReviewForm extends React.Component<Props, State> {
 			replyText,
 			selectedTags,
 			repoStatus,
-			authorsById,
 			startCommit,
 			excludeCommit,
 			excludedFiles,
 			allReviewersMustApprove,
 			includeSaved,
-			includeStaged
+			includeStaged,
+			reviewerEmails
 		} = this.state;
 
-		const reviewerIds = (this.state.reviewers as any[]).map(r => r.id);
+		// FIXME first, process the email-only reviewers
+
+		const reviewerIds = this.state.reviewerEmails
+			.map(email => {
+				const person = this.props.teamMembers.find(p => p.email === email);
+				if (person) return person.id;
+				else return;
+			})
+			.filter(Boolean);
 
 		try {
 			const { editingReview } = this.props;
@@ -649,6 +655,7 @@ class ReviewForm extends React.Component<Props, State> {
 					allReviewersMustApprove
 				};
 				let repoChanges;
+				// @ts-ignore
 				const reviewerOperations = arrayDiff(originalReviewers, reviewerIds);
 				if (reviewerOperations) {
 					if (reviewerOperations.added && reviewerOperations.added.length) {
@@ -722,6 +729,11 @@ class ReviewForm extends React.Component<Props, State> {
 				}
 			} else if (this.props.createPostAndReview) {
 				const { scm } = repoStatus;
+				const authorsById = {};
+				reviewerEmails.forEach(email => {
+					const person = this.props.teamMembers.find(t => t.email === email);
+					if (person) authorsById[person.id] = this.state.authorsBlameData[person.email];
+				});
 				let review = {
 					title,
 					sharingAttributes: this.props.shouldShare ? this._sharingAttributes : undefined,
@@ -808,7 +820,7 @@ class ReviewForm extends React.Component<Props, State> {
 	};
 
 	isFormInvalid = () => {
-		const { text, title, reviewers } = this.state;
+		const { text, title } = this.state;
 
 		const validationState: Partial<State> = {
 			titleInvalid: false,
@@ -1042,12 +1054,12 @@ class ReviewForm extends React.Component<Props, State> {
 								<div className="codemark-form-container">{this.renderReviewForm()}</div>
 								{this.renderExcludedFiles()}
 								<div style={{ height: "5px" }}></div>
-								{!this.props.isEditing && this.state.reviewers.length > 0 && (
+								{!this.props.isEditing && this.state.reviewerEmails.length > 0 && (
 									<>
 										<div style={{ height: "10px" }}></div>
 										<CSText muted>
-											<SmartFormattedList value={this.state.reviewers.map(m => m.email)} /> will be
-											notified via email
+											<SmartFormattedList value={this.state.reviewerEmails} /> will be notified via
+											email
 										</CSText>
 									</>
 								)}
@@ -1101,7 +1113,7 @@ class ReviewForm extends React.Component<Props, State> {
 		if (titleTouched || text.length || reviewersTouched) {
 			confirmPopup({
 				title: "Are you sure?",
-				message: "Changes you made will not be saved.",
+				message: "Changes will not be saved.",
 				centered: true,
 				buttons: [
 					{ label: "Go Back", className: "control-button" },
@@ -1594,21 +1606,23 @@ class ReviewForm extends React.Component<Props, State> {
 
 	setFrom = (commit: string) => {};
 
-	toggleReviewer = person => {
-		const { reviewers } = this.state;
+	toggleReviewer = person => this.toggleReviewer(person.email);
 
-		if (reviewers.find(p => p.id === person.id)) {
-			this.setState({ reviewers: [...reviewers.filter(p => p.id !== person.id)] });
+	toggleReviewerEmail = email => {
+		const { reviewerEmails } = this.state;
+
+		if (reviewerEmails.includes(email)) {
+			this.setState({ reviewerEmails: [...reviewerEmails.filter(e => e !== email)] });
 		} else {
-			this.setState({ reviewers: [...reviewers, person].filter(Boolean) });
+			this.setState({ reviewerEmails: [...reviewerEmails, email].filter(Boolean) });
 		}
 
 		this.setState({ reviewersTouched: true });
 	};
 
-	removeReviewer = person => {
-		const { reviewers } = this.state;
-		this.setState({ reviewers: [...reviewers.filter(p => p.id !== person.id)] });
+	removeReviewer = email => {
+		const { reviewerEmails } = this.state;
+		this.setState({ reviewerEmails: [...reviewerEmails.filter(e => e !== email)] });
 
 		this.setState({ reviewersTouched: true });
 	};
@@ -1692,13 +1706,23 @@ class ReviewForm extends React.Component<Props, State> {
 		});
 	};
 
+	makePerson(email) {
+		const person = this.props.teamMembers.find(p => p.email === email);
+		if (person) return person;
+		return {
+			email,
+			username: email.replace(/@.*/, "")
+		};
+	}
+
 	renderReviewForm() {
 		const { isEditing, isAmending, currentUser, repos } = this.props;
 		const {
 			repoStatus,
 			repoName,
-			reviewers,
-			authorsById,
+			reviewerEmails,
+			// authorsById,
+			authorsBlameData,
 			openRepos,
 			isLoadingScm,
 			scmError,
@@ -1709,13 +1733,16 @@ class ReviewForm extends React.Component<Props, State> {
 		// the autors variable (number of times you stomped on their code), and the number
 		// of commits they pushed to this branch
 		const coAuthorLabels = {};
-		Object.keys(authorsById).map(id => {
+		// Object.keys(authorsById).map(id => {
+		reviewerEmails.map(email => {
+			const data = authorsBlameData[email];
+			if (!data) return;
 			const label: string[] = [];
-			if (authorsById[id].stomped === 1) label.push("1 edit");
-			else if (authorsById[id].stomped > 1) label.push(authorsById[id].stomped + " edits");
-			if (authorsById[id].commits === 1) label.push("1 commit");
-			else if (authorsById[id].commits > 1) label.push(authorsById[id].commits + " commits");
-			coAuthorLabels[id] = label.join(", ");
+			if (data.stomped === 1) label.push("1 edit");
+			else if (data.stomped > 1) label.push(data.stomped + " edits");
+			if (data.commits === 1) label.push("1 commit");
+			else if (data.commits > 1) label.push(data.commits + " commits");
+			coAuthorLabels[email] = label.join(", ");
 		});
 
 		const modifier = navigator.appVersion.includes("Macintosh") ? "⌘" : "Alt";
@@ -1762,6 +1789,18 @@ class ReviewForm extends React.Component<Props, State> {
 				</>
 			);
 		}
+
+		const unregisteredAuthorItems = [] as any;
+		Object.keys(authorsBlameData).forEach(email => {
+			if (this.props.teamMembers.find(p => p.email === email)) return;
+			unregisteredAuthorItems.push({
+				label: email,
+				searchLabel: email,
+				checked: this.state.reviewerEmails.includes(email),
+				key: email,
+				action: () => this.toggleReviewerEmail(email)
+			});
+		});
 
 		const showChanges = (!isEditing || isAmending) && !isLoadingScm && !scmError && !branchError;
 
@@ -1832,25 +1871,24 @@ class ReviewForm extends React.Component<Props, State> {
 							style={{ padding: "0", marginBottom: 0, position: "relative" }}
 						>
 							<div className="related-label">
-								{reviewers.length > 0 && !this.state.reviewersTouched && "Suggested "}Reviewers{" "}
-								{reviewers.length > 1 && this.renderMultiReviewSetting()}
+								Reviewers {reviewerEmails.length > 1 && this.renderMultiReviewSetting()}
 							</div>
-							{reviewers.map(person => {
+							{reviewerEmails.map(email => {
 								const menu = (
 									<HeadshotMenu
-										person={person}
+										person={this.makePerson(email)}
 										menuItems={[
 											{
 												label: "Remove from Review",
-												action: () => this.removeReviewer(person)
+												action: () => this.removeReviewer(email)
 											}
 										]}
 									/>
 								);
 								// # of times you stomped on their code
-								if (coAuthorLabels[person.id]) {
+								if (coAuthorLabels[email]) {
 									return (
-										<Tooltip placement="bottom" title={coAuthorLabels[person.id]}>
+										<Tooltip placement="bottom" title={coAuthorLabels[email]}>
 											<span>{menu}</span>
 										</Tooltip>
 									);
@@ -1858,10 +1896,11 @@ class ReviewForm extends React.Component<Props, State> {
 							})}
 							<SelectPeople
 								title="Select Reviewers"
-								value={reviewers}
+								value={reviewerEmails}
 								onChange={this.toggleReviewer}
 								multiSelect={true}
 								labelExtras={coAuthorLabels}
+								extraItems={unregisteredAuthorItems}
 							>
 								<span className="icon-button">
 									<Icon
@@ -1879,17 +1918,17 @@ class ReviewForm extends React.Component<Props, State> {
 							style={{ padding: "0", marginBottom: 0, position: "relative" }}
 						>
 							<div className="related-label">
-								Reviewers {reviewers.length > 1 && this.renderMultiReviewSetting()}
+								Reviewers {reviewerEmails.length > 1 && this.renderMultiReviewSetting()}
 							</div>
-							{reviewers.map(person => {
+							{reviewerEmails.map(email => {
 								const menu = (
 									<HeadshotMenu
-										key={person.email}
-										person={person}
+										key={email}
+										person={this.makePerson(email)}
 										menuItems={[
 											{
 												label: "Remove from Review",
-												action: () => this.removeReviewer(person)
+												action: () => this.removeReviewer(email)
 											}
 										]}
 									/>
@@ -1898,10 +1937,11 @@ class ReviewForm extends React.Component<Props, State> {
 							})}
 							<SelectPeople
 								title="Select Reviewers"
-								value={reviewers}
+								value={reviewerEmails}
 								onChange={this.toggleReviewer}
 								multiSelect={true}
 								labelExtras={coAuthorLabels}
+								extraItems={unregisteredAuthorItems}
 							>
 								<span className="icon-button">
 									<Icon name="plus" title="Specify who you want to review your code" />

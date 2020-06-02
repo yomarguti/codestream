@@ -65,6 +65,7 @@ import { SharingModal } from "./SharingModal";
 import { getReview } from "../store/reviews/reducer";
 import { DropdownButton } from "./Review/DropdownButton";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { HeadshotName } from "../src/components/HeadshotName";
 
 interface State {
 	hover: boolean;
@@ -735,7 +736,7 @@ export class Codemark extends React.Component<Props, State> {
 		const type = codemark.type === "issue" ? "Issue" : "Comment";
 		confirmPopup({
 			title: "Are you sure?",
-			message: "Deleting a codemark cannot be undone.",
+			message: "Deleting cannot be undone.",
 			centered: true,
 			buttons: [
 				{ label: "Go Back", className: "control-button" },
@@ -1310,6 +1311,28 @@ export class Codemark extends React.Component<Props, State> {
 				/>
 			);
 		}
+
+		// if it's archived or we've lost the position, and it's just
+		// an emoji, then return
+		if (showStripedHeader && type == CodemarkType.Reaction) return null;
+
+		const isReaction = codemark.text.trim().match(/^(:[\w_+]+:|\s)+$/);
+
+		// if (false && isReaction && !renderExpandedBody) {
+		// 	return (
+		// 		<div
+		// 			onMouseEnter={this.handleMouseEnterCodemark}
+		// 			onMouseLeave={this.handleMouseLeaveCodemark}
+		// 			style={{ display: "flex", alignItems: "center" }}
+		// 		>
+		// 			<div>{this.renderTextLinkified(codemark.title || codemark.text)}</div>
+		// 			<div className="author" style={{ paddingLeft: "10px" }}>
+		// 				<b>{author.username}</b>
+		// 				<Timestamp relative time={codemark.createdAt} />
+		// 			</div>
+		// 		</div>
+		// 	);
+		// }
 
 		return (
 			<div

@@ -472,6 +472,7 @@ export class SimpleStream extends Component {
 		// - Documentation
 		// - Video Library
 		// - Report an Issue
+		// - Keybindings
 		menuItems.push(
 			{ label: "Integrations", action: "integrations" },
 			{ label: "Feedback", action: "feedback" },
@@ -835,6 +836,7 @@ export class SimpleStream extends Component {
 		if (searchBarOpen) activePanel = WebviewPanels.Codemarks;
 		// if we're conducting a review, we need the compose functionality of spatial view
 		if (this.props.currentReviewId) activePanel = WebviewPanels.CodemarksForFile;
+		if (this.props.composeCodemarkActive) activePanel = WebviewPanels.CodemarksForFile;
 		if (
 			!activePanel ||
 			(!Object.values(WebviewPanels).includes(activePanel) &&
@@ -930,7 +932,8 @@ export class SimpleStream extends Component {
 				WebviewPanels.ChangeUsername,
 				WebviewPanels.ChangeFullName,
 				WebviewPanels.ChangeWorksOn,
-				WebviewPanels.ChangePhoneNumber
+				WebviewPanels.ChangePhoneNumber,
+				WebviewPanels.Profile
 			].includes(activePanel) &&
 			!this.props.currentReviewId &&
 			!activePanel.startsWith("configure-provider-") &&
@@ -2578,6 +2581,7 @@ const mapStateToProps = state => {
 		services,
 		isInVscode: state.ide.name === "VSC",
 		textEditorUri: state.editorContext && state.editorContext.textEditorUri,
+		composeCodemarkActive: context.composeCodemarkActive,
 		posts: streamPosts.map(post => {
 			let user = users[post.creatorId];
 			if (!user) {

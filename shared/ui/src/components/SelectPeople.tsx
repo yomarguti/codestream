@@ -9,32 +9,22 @@ import { getTeamMembers } from "@codestream/webview/store/users/reducer";
 import { connect } from "react-redux";
 import Icon from "@codestream/webview/Stream/Icon";
 
+const ClickTarget = styled.span`
+	cursor: pointer;
+	.octicon-chevron-down {
+		display: inline-block;
+		transform: scale(0.8);
+		margin-left: 2px;
+	}
+	&:hover {
+		color: var(--text-color-highlight);
+	}
+`;
+
 export interface HeadshotMenuProps {
 	size?: number;
 	className?: string;
 }
-
-interface ClickProps {
-	hasOnClick?: boolean;
-}
-
-const Root = styled.div<ClickProps>`
-	display: inline-block;
-	padding: 0 10px 5px 0;
-	white-space: nowrap;
-	cursor: ${props => (props.onClick ? "pointer" : "auto")};
-	&:hover {
-		color: ${props => props.theme.colors.textHighlight};
-	}
-`;
-
-const Title = styled.span`
-	display: flex;
-	flex-direction: row;
-	& > :nth-child(2) {
-		padding: 0 0 0 10px;
-	}
-`;
 
 interface State {
 	open: boolean;
@@ -43,11 +33,13 @@ interface State {
 
 export interface Props extends ConnectedProps {
 	title?: string;
-	value: CSUser[];
+	// value is either an array of email addresses, or CSUser objects
+	value: (string | CSUser)[];
 	onChange: Function;
 	children?: React.ReactNode;
 	multiSelect?: boolean;
 	labelExtras?: { [id: string]: string };
+	extraItems?: any[];
 }
 
 interface ConnectedProps {
@@ -67,12 +59,19 @@ class SelectPeople extends React.Component<Props, State> {
 	render() {
 		const { value, title, children, teamMembers, onChange, labelExtras = {} } = this.props;
 		const items = teamMembers.map(person => {
-			const selected = value.find(p => p.id === person.id) ? true : false;
-			const label = person.fullName ? `${person.fullName} (@${person.username})` : person.username;
+			const selected = value.find(v => {
+				if (typeof v === "string") return v === person.email;
+				else return v.id === person.id;
+			})
+				? true
+				: false;
+			const label = person.fullName
+				? `${person.fullName} (@${person.username})`
+				: `${person.username} (${person.email})`;
 			return {
 				label: label + (labelExtras[person.id] ? " - " + labelExtras[person.id] : ""),
 				searchLabel: label,
-				checked: selected,
+				checked: this.props.multiSelect ? selected : undefined,
 				value: person.username,
 				key: person.id,
 				action: () => onChange(person)
@@ -82,9 +81,10 @@ class SelectPeople extends React.Component<Props, State> {
 			items.unshift({ label: "-" });
 			items.unshift({ type: "search", placeholder: "Search...", action: "search" });
 		}
+		if (this.props.extraItems) items.push(...this.props.extraItems);
 		return (
 			<>
-				<span onClick={this.openMenu}>{children}</span>
+				<ClickTarget onClick={this.openMenu}>{children}</ClickTarget>
 				{this.state.open && (
 					<Menu
 						title={title}
@@ -93,7 +93,7 @@ class SelectPeople extends React.Component<Props, State> {
 						items={items}
 						target={this.state.target}
 						action={this.openMenu}
-						dontCloseOnSelect
+						dontCloseOnSelect={this.props.multiSelect}
 						repositionMinimally
 					/>
 				)}

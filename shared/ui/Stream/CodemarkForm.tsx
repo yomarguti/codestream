@@ -8,7 +8,8 @@ import {
 	ThirdPartyProviderBoard,
 	ThirdPartyProviderConfig,
 	CrossPostIssueValues,
-	GetReviewRequestType
+	GetReviewRequestType,
+	BlameAuthor
 } from "@codestream/protocols/agent";
 import {
 	CodemarkType,
@@ -18,7 +19,6 @@ import {
 	CSStream,
 	CSUser,
 	StreamType,
-	CSApiCapabilities,
 	CSMe
 } from "@codestream/protocols/api";
 import cx from "classnames";
@@ -118,7 +118,6 @@ interface Props extends ConnectedProps {
 	error?: string;
 	openPanel: Function;
 	setUserPreference: Function;
-	activePanel?: WebviewPanels;
 }
 
 interface ConnectedProps {
@@ -144,6 +143,9 @@ interface ConnectedProps {
 	shouldShare: boolean;
 	currentTeamId: string;
 	currentReviewId?: string;
+	isCurrentUserAdmin?: boolean;
+	blameMap?: { [email: string]: string };
+	activePanel?: WebviewPanels;
 }
 
 interface State {
@@ -187,6 +189,8 @@ interface State {
 	editingLocation: number;
 	liveLocation: number;
 	isChangeRequest: boolean;
+	unregisteredAuthors: BlameAuthor[];
+	emailAuthors: { [email: string]: boolean };
 }
 
 function merge(defaults: Partial<State>, codemark: CSCodemark): State {
@@ -235,7 +239,9 @@ class CodemarkForm extends React.Component<Props, State> {
 			addingLocation: false,
 			liveLocation: -1,
 			isChangeRequest: false,
-			scmError: ""
+			scmError: "",
+			unregisteredAuthors: [],
+			emailAuthors: {}
 		};
 
 		const state = props.editingCodemark
@@ -461,6 +467,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	handleScmChange = () => {
 		const { codeBlocks } = this.state;
+		const { blameMap = {} } = this.props;
 
 		this.setState({ codeBlockInvalid: false });
 
@@ -471,14 +478,43 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		if (!codeBlock) return;
 
-		let mentions: Record<"id" | "username", string>[] = [];
+		let unregisteredAuthors: BlameAuthor[] = [];
+		let emailAuthors: { [email: string]: boolean } = {};
+		let mentionAuthors: BlameAuthor[] = [];
 		if (codeBlock.scm && codeBlock.scm.authors) {
-			mentions = codeBlock.scm.authors.filter(author => author.id !== this.props.currentUser.id);
+			codeBlock.scm.authors.forEach(author => {
+				// don't mention yourself
+				if (author.id && author.id === this.props.currentUser.id) return;
+
+				// see if this email address' code has been assigned to someone else
+				// @ts-ignore
+				const mappedId = blameMap[author.email.replace(".", "*")];
+				const mappedPerson = mappedId && this.props.teamMembers.find(t => t.id === mappedId);
+
+				// found a mapped person, so mention them
+				if (mappedPerson) {
+					mentionAuthors.push({
+						email: mappedPerson.email,
+						id: mappedPerson.id,
+						username: mappedPerson.username
+					});
+				} else if (author.id) {
+					// if it's a registered teammate, mention them
+					mentionAuthors.push(author);
+				} else {
+					// else offer to send the person an email
+					unregisteredAuthors.push(author);
+					// @ts-ignore
+					emailAuthors[author.email] = true;
+				}
+			});
 		}
 
-		if (mentions.length > 0) {
+		this.setState({ unregisteredAuthors, emailAuthors });
+
+		if (mentionAuthors.length > 0) {
 			// TODO handle users with no username
-			const usernames: string[] = mentions.map(u => `@${u.username}`);
+			const usernames: string[] = mentionAuthors.map(u => `@${u.username}`);
 			// if there's text in the compose area, return without
 			// adding the suggestion
 			if (this.state.text.length > 0) return;
@@ -663,8 +699,12 @@ class CodemarkForm extends React.Component<Props, State> {
 					sharingAttributes: this.props.shouldShare ? this._sharingAttributes : undefined,
 					accessMemberIds: this.state.privacyMembers.map(m => m.value)
 				});
-				if (codeBlocks.length == 0 || this.props.activePanel === WebviewPanels.GettingStarted)
-					this.showConfirmationForMarkerlessCodemarks(type);
+				// if you're making a markerless codemark it won't appear on spatial view, the form
+				// will just kind of disappear.  similarly, if you prior panel was *not* spatial view
+				// the form will just disappear. in these cases, we want to show the user where the
+				// codemark ends up -- the actiivty feed and spatial view
+				if (codeBlocks.length == 0 || this.props.activePanel !== WebviewPanels.CodemarksForFile)
+					this.showConfirmationForCodemarkLocation(type, codeBlocks.length);
 			} else {
 				await this.props.onSubmit({ ...baseAttributes, streamId: selectedChannelId! }, event);
 				(this.props as any).dispatch(setCurrentStream(selectedChannelId));
@@ -675,39 +715,52 @@ class CodemarkForm extends React.Component<Props, State> {
 		}
 	};
 
-	showConfirmationForMarkerlessCodemarks = type => {
+	showConfirmationForCodemarkLocation = (type, numCodeblocks: number) => {
 		if (this.props.skipPostCreationModal) return;
 
 		confirmPopup({
 			title: `${type === CodemarkType.Issue ? "Issue" : "Comment"} Submitted`,
 			closeOnClickA: true,
 			message: (
-				<>
+				<div style={{ textAlign: "left" }}>
 					You can see the {type === CodemarkType.Issue ? "issue" : "comment"} in your{" "}
-					<a onClick={() => this.props.openPanel(WebviewPanels.Activity)}>activity feed</a>.
+					<a onClick={() => this.props.openPanel(WebviewPanels.Activity)}>activity feed</a>
+					{numCodeblocks > 0 && (
+						<>
+							{" "}
+							and next to the code on{" "}
+							<a onClick={() => this.props.openPanel(WebviewPanels.CodemarksForFile)}>
+								codemarks in current file
+							</a>
+						</>
+					)}
+					.
 					<br />
 					<br />
-					<div
-						style={{
-							textAlign: "left",
-							fontSize: "12px",
-							display: "inline-block",
-							margin: "0 auto"
-						}}
-					>
-						<Checkbox
-							name="skipPostCreationModal"
-							onChange={() => {
-								this.props.setUserPreference(
-									["skipPostCreationModal"],
-									!this.props.skipPostCreationModal
-								);
+					<div style={{ textAlign: "center", margin: 0, padding: 0 }}>
+						<div
+							style={{
+								textAlign: "left",
+								fontSize: "12px",
+								display: "inline-block",
+								margin: "0 auto",
+								padding: 0
 							}}
 						>
-							Don't show this again
-						</Checkbox>
+							<Checkbox
+								name="skipPostCreationModal"
+								onChange={() => {
+									this.props.setUserPreference(
+										["skipPostCreationModal"],
+										!this.props.skipPostCreationModal
+									);
+								}}
+							>
+								Don't show this again
+							</Checkbox>
+						</div>
 					</div>
-				</>
+				</div>
 			),
 			centered: true,
 			buttons: [
@@ -1737,14 +1790,28 @@ class CodemarkForm extends React.Component<Props, State> {
 		}
 	}
 
-	cancelCodemarkCompose = (e: Event) => {
+	renderNotificationMessage = () => {
+		// @ts-ignore
+		const emails = keyFilter(this.state.emailAuthors);
+		if (emails.length === 0) return null;
+		return (
+			<>
+				<div style={{ height: "10px" }}></div>
+				<CSText muted>
+					<SmartFormattedList value={emails} /> will be notified via email
+				</CSText>
+			</>
+		);
+	};
+
+	cancelCodemarkCompose = (e?) => {
 		const { text, type } = this.state;
 		if (!this.props.onClickClose) return;
 		// if there is codemark text, confirm the user actually wants to cancel
 		if (text && (type === "comment" || type === "issue")) {
 			confirmPopup({
 				title: "Are you sure?",
-				message: "Changes you made will not be saved.",
+				message: "Changes will not be saved.",
 				centered: true,
 				buttons: [
 					{ label: "Go Back", className: "control-button" },
@@ -1759,6 +1826,58 @@ class CodemarkForm extends React.Component<Props, State> {
 		} else {
 			this.props.onClickClose(e);
 		}
+	};
+
+	toggleEmail = (email: string) => {
+		const { emailAuthors } = this.state;
+
+		this.setState({ emailAuthors: { ...emailAuthors, [email]: !emailAuthors[email] } });
+	};
+
+	renderEmailAuthors = () => {
+		const { unregisteredAuthors, emailAuthors } = this.state;
+		const { isCurrentUserAdmin } = this.props;
+
+		if (unregisteredAuthors.length === 0) return null;
+
+		return (
+			<div className="checkbox-row">
+				{unregisteredAuthors.map(author => {
+					return (
+						<Checkbox
+							name={"email-" + author.email}
+							checked={emailAuthors[author.email]}
+							onChange={() => this.toggleEmail(author.email)}
+						>
+							Send to {author.username || author.email}&nbsp;&nbsp;
+							<Icon
+								name="info"
+								title={
+									<>
+										Retrieved from git blame.
+										{isCurrentUserAdmin && (
+											<a
+												style={{ display: "block", margin: "10px 0 0 0" }}
+												onClick={e => {
+													this.cancelCodemarkCompose(e);
+													this.props.openPanel(WebviewPanels.People);
+												}}
+											>
+												Configure Blame Map
+											</a>
+										)}
+									</>
+								}
+								placement="top"
+								delay={1}
+								align={{ offset: [0, 5] }}
+							/>
+						</Checkbox>
+					);
+				})}
+			</div>
+		);
+		return;
 	};
 
 	renderCodemarkForm() {
@@ -1949,6 +2068,7 @@ class CodemarkForm extends React.Component<Props, State> {
 					{this.renderTags()}
 					{this.renderCodeBlocks()}
 					{this.props.multiLocation && <div style={{ height: "10px" }} />}
+					{this.renderEmailAuthors()}
 					{commentType !== "link" && this.props.teamProvider === "codestream"
 						? this.renderSharingControls()
 						: this.renderCrossPostMessage(commentType)}
@@ -2038,11 +2158,11 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		context,
 		editorContext,
 		users,
+		teams,
 		session,
 		preferences,
 		providers,
-		codemarks,
-		apiVersioning
+		codemarks
 	} = state;
 	const user = users[session.userId!] as CSMe;
 	const channel = context.currentStreamId
@@ -2065,11 +2185,19 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 
 	const skipPostCreationModal = preferences ? preferences.skipPostCreationModal : false;
 
+	const team = teams[context.currentTeamId];
+	const adminIds = team.adminIds || [];
+	const isCurrentUserAdmin = adminIds.includes(session.userId || "");
+	const blameMap = team.settings ? team.settings.blameMap : {};
+
 	return {
 		channel,
 		teamMates,
 		teamMembers,
 		currentTeamId: state.context.currentTeamId,
+		blameMap: blameMap || {},
+		isCurrentUserAdmin,
+		activePanel: context.panelStack[0] as WebviewPanels,
 		shouldShare:
 			safe(() => state.preferences[state.context.currentTeamId].shareCodemarkEnabled) || false,
 		channelStreams: channelStreams,

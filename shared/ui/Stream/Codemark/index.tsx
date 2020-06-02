@@ -174,7 +174,7 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 					action: () => {
 						confirmPopup({
 							title: "Are you sure?",
-							message: "Deleting a codemark cannot be undone.",
+							message: "Deleting cannot be undone.",
 							centered: true,
 							buttons: [
 								{ label: "Go Back", className: "control-button" },

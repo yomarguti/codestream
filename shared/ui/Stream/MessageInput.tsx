@@ -1086,16 +1086,18 @@ export class MessageInput extends React.Component<Props, State> {
 						className={cx("preview", { hover: isPreviewing })}
 						onClick={this.handleClickPreview}
 					/>
-					<Icon
-						key="mention"
-						name="mention"
-						title="Mention a teammate"
-						placement="topRight"
-						align={{ offset: [18, 0] }}
-						delay={1}
-						className={cx("mention", { hover: this.state.currentPopup === "at-mentions" })}
-						onClick={this.handleClickAtMentions}
-					/>
+					{this.props.teammates.length > 1 && (
+						<Icon
+							key="mention"
+							name="mention"
+							title="Mention a teammate"
+							placement="topRight"
+							align={{ offset: [18, 0] }}
+							delay={1}
+							className={cx("mention", { hover: this.state.currentPopup === "at-mentions" })}
+							onClick={this.handleClickAtMentions}
+						/>
+					)}
 					<Icon
 						key="smiley"
 						name="smiley"

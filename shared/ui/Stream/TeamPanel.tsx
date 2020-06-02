@@ -6,7 +6,7 @@ import Button from "./Button";
 import Headshot from "./Headshot";
 import ScrollBox from "./ScrollBox";
 import { invite, setUserStatus } from "./actions";
-import { mapFilter } from "../utils";
+import { mapFilter, keyFilter } from "../utils";
 import { difference as _difference, sortBy as _sortBy } from "lodash-es";
 import { OpenUrlRequestType } from "../ipc/host.protocol";
 import { getTeamProvider } from "../store/teams/reducer";
@@ -39,6 +39,9 @@ import { openPanel } from "../store/context/actions";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { ProfileLink } from "../src/components/ProfileLink";
 import copy from "copy-to-clipboard";
+import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
+import { SelectPeople } from "../src/components/SelectPeople";
+import { HeadshotName } from "../src/components/HeadshotName";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -75,6 +78,24 @@ export const UL = styled.ul`
 		opacity: 0.5;
 	}
 `;
+
+const HR = styled.div`
+	width: 100%;
+	height: 1px;
+	border-bottom: 1px solid var(--base-border-color);
+	margin: 20px 0 0 0;
+`;
+
+const MapRow = styled.div`
+	display: flex;
+	margin: 0px 10px;
+	> div {
+		width: calc(50% - 10px);
+		flex-grow: 1;
+		padding: 3px 10px;
+	}
+`;
+
 interface Props extends ConnectedProps {}
 
 interface ConnectedProps {
@@ -106,6 +127,7 @@ interface ConnectedProps {
 	dontSuggestInvitees: any;
 	multipleReviewersApprove: boolean;
 	emailSupported: boolean;
+	blameMap: { [email: string]: string };
 }
 
 interface State {
@@ -123,6 +145,8 @@ interface State {
 	changingTeamName: boolean;
 	newTeamName: string;
 	suggested: any[];
+	blameMapEmail: string;
+	addingBlameMap: boolean;
 }
 
 class TeamPanel extends React.Component<Props, State> {
@@ -140,7 +164,9 @@ class TeamPanel extends React.Component<Props, State> {
 		loadingStatus: false,
 		changingTeamName: false,
 		newTeamName: "",
-		suggested: []
+		suggested: [],
+		blameMapEmail: "",
+		addingBlameMap: false
 	};
 
 	postInviteResetState = {
@@ -623,14 +649,41 @@ class TeamPanel extends React.Component<Props, State> {
 		this.getSuggestedInvitees();
 	};
 
+	onBlameMapEmailChange = event => {
+		this.setState({ blameMapEmail: event.target.value });
+	};
+
+	onBlameMapEmailBlur = () => {
+		if (!this.state.blameMapEmail) {
+			this.setState({ addingBlameMap: false });
+		}
+	};
+
+	onBlameMapUserChange = (email: string, person?: CSUser) => {
+		if (person) this.addBlameMap(email, person.id);
+		else this.addBlameMap(email, "");
+	};
+
+	addBlameMap = async (author: string, assigneeId: string) => {
+		await HostApi.instance.send(UpdateTeamSettingsRequestType, {
+			teamId: this.props.teamId,
+			// we need to replace . with * to allow for the creation of deeply-nested
+			// team settings, since that's how they're stored in mongo
+			settings: { blameMap: { [author.replace(".", "*")]: assigneeId } }
+		});
+		this.setState({ blameMapEmail: "", addingBlameMap: false });
+	};
+
 	render() {
-		const { currentUserId, currentUserInvisible, xraySetting, reviewApproval } = this.props;
-		const { invitingEmails, loadingStatus } = this.state;
+		const { currentUserId, currentUserInvisible, xraySetting, blameMap } = this.props;
+		const { invitingEmails, loadingStatus, addingBlameMap } = this.state;
 		const inactive =
 			this.props.activePanel !== WebviewPanels.Invite &&
 			this.props.activePanel !== WebviewPanels.People;
 
 		const suggested = this.state.suggested.filter(u => !invitingEmails[u.email]);
+		// @ts-ignore
+		const mappedBlame = keyFilter(blameMap);
 		const title = this.state.changingTeamName ? (
 			<input
 				className="input-text control"
@@ -705,6 +758,7 @@ class TeamPanel extends React.Component<Props, State> {
 		);
 		return (
 			<div className="panel full-height team-panel">
+				<CreateCodemarkIcons />
 				<PanelHeader title={title} />
 				<ScrollBox>
 					<div className="vscroll">
@@ -755,6 +809,7 @@ class TeamPanel extends React.Component<Props, State> {
 						</div>
 						{this.props.invited.length > 0 && (
 							<div className="section">
+								<HR />
 								<PanelHeader title="Outstanding Invitations" />
 								{!this.props.emailSupported && (
 									<div className="color-warning" style={{ padding: "0 20px 10px 20px" }}>
@@ -844,10 +899,11 @@ class TeamPanel extends React.Component<Props, State> {
 						)}
 						{suggested.length > 0 && (
 							<div className="section">
+								<HR />
 								<PanelHeader
 									title={
 										<span>
-											Suggested Invitations{" "}
+											Suggested Teammates{" "}
 											<i style={{ opacity: 0.5, fontSize: "smaller" }}> from your git history</i>
 										</span>
 									}
@@ -871,6 +927,107 @@ class TeamPanel extends React.Component<Props, State> {
 										</li>
 									))}
 								</UL>
+							</div>
+						)}
+						{(suggested.length > 0 || mappedBlame.length > 0) && (
+							<div className="section">
+								<HR />
+								<PanelHeader
+									title={
+										<span>
+											Blame Map{" "}
+											<i style={{ opacity: 0.5, fontSize: "smaller" }}>
+												{" "}
+												reassign code responsibility
+											</i>
+										</span>
+									}
+								></PanelHeader>
+								<MapRow>
+									<div>
+										<b>Code Authored By</b>
+									</div>
+									<div>
+										<b>Now Handled By</b>
+									</div>
+								</MapRow>
+								{mappedBlame.map(email => (
+									<MapRow>
+										<div>{email.replace("*", ".")}</div>
+										<div>
+											<SelectPeople
+												title="Handled By"
+												multiSelect={false}
+												value={[]}
+												extraItems={[
+													{ label: "-" },
+													{
+														icon: <Icon name="trash" />,
+														label: "Delete Mapping",
+														key: "remove",
+														action: () => this.onBlameMapUserChange(email)
+													}
+												]}
+												onChange={person => this.onBlameMapUserChange(email, person)}
+											>
+												<HeadshotName
+													id={blameMap[email]}
+													onClick={() => {} /* noop onclick to get cursor pointer */}
+												/>
+												<Icon name="chevron-down" />
+											</SelectPeople>
+										</div>
+									</MapRow>
+								))}
+								{mappedBlame.length === 0 && !addingBlameMap && (
+									<MapRow>
+										<div>
+											<i style={{ opacity: 0.5 }}>example@acme.com</i>
+										</div>
+										<div>
+											<i style={{ opacity: 0.5 }}>newhire@acme.com</i>
+										</div>
+									</MapRow>
+								)}
+
+								{this.props.isCurrentUserAdmin && !addingBlameMap && (
+									<MapRow>
+										<div>
+											<a onClick={() => this.setState({ addingBlameMap: true })}>Add mapping</a>
+										</div>
+									</MapRow>
+								)}
+								{addingBlameMap && (
+									<MapRow>
+										<div>
+											<input
+												style={{ width: "100%" }}
+												className="input-text"
+												id="blame-map-email"
+												type="text"
+												value={this.state.blameMapEmail}
+												onChange={this.onBlameMapEmailChange}
+												onBlur={this.onBlameMapEmailBlur}
+												placeholder="Email..."
+												autoFocus={true}
+											/>
+										</div>
+										<div>
+											{EMAIL_REGEX.test(this.state.blameMapEmail) && (
+												<SelectPeople
+													title="Handled By"
+													multiSelect={false}
+													value={[]}
+													onChange={person =>
+														this.onBlameMapUserChange(this.state.blameMapEmail, person)
+													}
+												>
+													Select Person <Icon name="chevron-down" />
+												</SelectPeople>
+											)}
+										</div>
+									</MapRow>
+								)}
 							</div>
 						)}
 						<br />
@@ -924,6 +1081,7 @@ const mapStateToProps = state => {
 	const collisions = getCodeCollisions(state);
 
 	const reviewApproval = team.settings ? team.settings.reviewApproval : "user";
+	const blameMap = team.settings ? team.settings.blameMap : {};
 
 	const dontSuggestInvitees = team.settings ? team.settings.dontSuggestInvitees || {} : {};
 	const multipleReviewersApprove = isFeatureEnabled(state, "multipleReviewersApprove");
@@ -934,6 +1092,7 @@ const mapStateToProps = state => {
 		teamName: team.name,
 		xraySetting,
 		reviewApproval,
+		blameMap: blameMap || {},
 		adminIds,
 		isCurrentUserAdmin,
 		dontSuggestInvitees,

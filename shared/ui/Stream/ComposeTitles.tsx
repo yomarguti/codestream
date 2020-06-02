@@ -70,6 +70,11 @@ const ComposeTitles = {
 			</span>
 			<span className="function">Copy Private Permalink</span>
 		</span>
+	),
+	react: (
+		<span className="compose-title">
+			<span className="function">Add Reaction</span>
+		</span>
 	)
 };
 

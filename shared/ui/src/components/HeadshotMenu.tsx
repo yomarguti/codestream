@@ -45,9 +45,9 @@ export default class HeadshotMenu extends React.Component<Props, State> {
 			<Title>
 				<Headshot person={person} size={40} />
 				<span>
-					{person.username}
+					{person.fullName || person.username}
 					<br />
-					{person.fullName}
+					{person.email}
 				</span>
 			</Title>
 		);

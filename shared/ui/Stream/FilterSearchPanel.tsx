@@ -25,6 +25,7 @@ import { FilterQuery } from "../store/preferences/types";
 import { getSavedSearchFilters } from "../store/preferences/reducer";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { Button } from "../src/components/Button";
+import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 
 const SearchBar = styled.div`
 	display: flex;
@@ -807,6 +808,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 		// console.log("FILTERS: ", filters);
 		return (
 			<div className="panel full-height reviews-panel">
+				<CreateCodemarkIcons />
 				<PanelHeader title="Filter &amp; Search">
 					<SearchBar className="search-bar">
 						<FiltersButton items={filterItems}>

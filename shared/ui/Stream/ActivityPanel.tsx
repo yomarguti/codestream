@@ -38,6 +38,8 @@ import { LoadingMessage } from "../src/components/LoadingMessage";
 import { Headshot } from "../src/components/Headshot";
 import { Card } from "../src/components/Card";
 import { ProfileLink } from "../src/components/ProfileLink";
+import { Keybindings } from "./Keybindings";
+import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 
 // see comment in SmartFormattedList.tsx
 const FormattedPluralAlias = FormattedPlural as any;
@@ -117,12 +119,12 @@ export const ActivityPanel = () => {
 	const renderActivity = () => {
 		if (derivedState.activity.length === 0 && !derivedState.hasMoreActivity) {
 			return (
-				<EmptyMessage>
-					<p>
-						The activity feed will let you know when your teammates create codemarks, assign issues,
-						request reviews, or add replies.
-					</p>
-				</EmptyMessage>
+				<Keybindings>
+					The activity feed will let you know when your teammates create codemarks, assign issues,
+					request reviews, or add replies.
+					<br />
+					<br />
+				</Keybindings>
 			);
 		}
 
@@ -264,6 +266,7 @@ export const ActivityPanel = () => {
 
 	return (
 		<div className="panel full-height activity-panel">
+			<CreateCodemarkIcons />
 			<PanelHeader title="Activity">
 				{/* removed as per https://teamcodestream.slack.com/archives/C7E3ED0TT/p1583288202118300
 					<div className="filters">

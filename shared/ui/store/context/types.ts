@@ -1,5 +1,6 @@
 import { WebviewContext, WebviewPanels } from "@codestream/protocols/webview";
 import { AnyObject } from "@codestream/webview/utils";
+import { CodemarkType } from "@codestream/protocols/api";
 
 export enum ContextActionsType {
 	SetProfileUser = "@context/SetProfileUser",
@@ -24,6 +25,7 @@ export enum ContextActionsType {
 	SetRoute = "@context/SetRoute",
 	SetChatProviderAccess = "@context/SetChatProviderAccess",
 	SetCurrentCodemark = "@context/SetCurrentCodemark",
+	SetComposeCodemarkActive = "@context/SetComposeCodemarkActive",
 	SetSpatialViewPRCommentsToggle = "@context/SetSpatialViewPRCommentsToggle",
 	RepositionCodemark = "@context/RepositionCodemark",
 	SetCurrentReview = "@context/SetCurrentReview"
@@ -57,6 +59,8 @@ export interface ContextState extends WebviewContext {
 	route: RouteState;
 
 	chatProviderAccess: ChatProviderAccess;
+
+	composeCodemarkActive: CodemarkType | undefined;
 }
 
 export type ChatProviderAccess = "strict" | "permissive";

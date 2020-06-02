@@ -15,7 +15,6 @@ import { CodemarkPlus } from "@codestream/protocols/agent";
 import { isCSReview } from "../protocols/agent/api.protocol.models";
 import { Marker } from "./Marker";
 import { ChangesetFileList } from "./Review/ChangesetFileList";
-import Headshot from "./Headshot";
 
 const RootTR = styled.tr`
 	margin: 0;

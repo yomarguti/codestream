@@ -9,64 +9,87 @@ import {
 	EditorHighlightRangeRequestType,
 	MaxRangeValue,
 	EditorSelection,
-	NewCodemarkNotificationType,
-	EditorMetrics
+	NewCodemarkNotificationType
 } from "../ipc/webview.protocol";
 import { range } from "../utils";
 import { CodemarkType } from "@codestream/protocols/api";
-import { setCurrentCodemark } from "../store/context/actions";
+import { setCurrentCodemark, setComposeCodemarkActive } from "../store/context/actions";
 import {
 	getCurrentSelection,
 	getVisibleRanges,
-	getLine0ForEditorLine
+	getLine0ForEditorLine,
+	getVisibleLineCount
 } from "../store/editorContext/reducer";
 import { setEditorContext, changeSelection } from "../store/editorContext/actions";
 import { CodeStreamState } from "../store";
 import ComposeTitles from "./ComposeTitles";
+import { canCreateCodemark } from "../store/codemarks/actions";
 
-interface Props {
-	openIconsOnLine: number;
-	codeHeight: number;
-	numLinesVisible: number;
-	lineHeight?: number;
-	metrics: EditorMetrics;
-
-	// FIXME -- these should not be passed as props
-	composeBoxActive: boolean;
-	setNewCodemarkAttributes: Function;
-	switchToInlineView: Function;
-}
-
-const mapStateToProps = (state: CodeStreamState) => {
-	const { context, editorContext } = state;
-
-	const textEditorVisibleRanges = getVisibleRanges(editorContext);
-	const numVisibleRanges = textEditorVisibleRanges.length;
-
-	let lastVisibleLine = 1;
-	let firstVisibleLine = 1;
-	if (numVisibleRanges > 0) {
-		const lastVisibleRange = textEditorVisibleRanges[numVisibleRanges - 1];
-		lastVisibleLine = lastVisibleRange!.end.line;
-		firstVisibleLine = textEditorVisibleRanges[0].start.line;
-	}
-
-	return {
-		viewInline: context.codemarksFileViewStyle === "inline",
-		textEditorUri: editorContext.textEditorUri,
-		textEditorLineCount: editorContext.textEditorLineCount || 0,
-		textEditorSelections: editorContext.textEditorSelections,
-		firstVisibleLine,
-		lastVisibleLine,
-		textEditorVisibleRanges,
-		currentReviewId: context.currentReviewId,
-		textEditorSelection: getCurrentSelection(editorContext)
-	};
-};
+interface Props {}
 
 export const CreateCodemarkIcons = (props: Props) => {
 	const dispatch = useDispatch();
 	const [highlightedLine, setHighlightedLine] = useState();
+	const [numLinesVisible, setNumLinesVisible] = useState(0);
+
+	const mapStateToProps = (state: CodeStreamState) => {
+		const { context, editorContext } = state;
+
+		const textEditorVisibleRanges = getVisibleRanges(editorContext);
+		const numVisibleRanges = textEditorVisibleRanges.length;
+
+		let lastVisibleLine = 1;
+		let firstVisibleLine = 1;
+		if (numVisibleRanges > 0 && textEditorVisibleRanges && textEditorVisibleRanges[0]) {
+			const lastVisibleRange = textEditorVisibleRanges[numVisibleRanges - 1];
+			lastVisibleLine = lastVisibleRange!.end.line;
+			firstVisibleLine = textEditorVisibleRanges[0].start.line;
+		}
+
+		const textEditorSelection = getCurrentSelection(editorContext);
+
+		// only set this if it changes by more than 1. we expect it to vary by 1 as
+		// the topmost and bottommost line are revealed and the window is not an integer
+		// number of lines high.
+		const visibleLines = getVisibleLineCount(textEditorVisibleRanges);
+		if (Math.abs(visibleLines - numLinesVisible) > 1) {
+			setNumLinesVisible(visibleLines);
+		}
+
+		let openIconsOnLine = -1;
+
+		// if there is a selection....
+		if (
+			textEditorSelection &&
+			(textEditorSelection.start.line !== textEditorSelection.end.line ||
+				textEditorSelection.start.character !== textEditorSelection.end.character)
+		) {
+			let line = textEditorSelection.cursor.line;
+
+			// if the cursor is on character 0, use the line above
+			// as it looks better aesthetically
+			if (textEditorSelection.cursor.character === 0) line--;
+
+			openIconsOnLine = line;
+		} else {
+			openIconsOnLine = -1;
+		}
+
+		return {
+			// viewInline: context.codemarksFileViewStyle === "inline",
+			textEditorUri: editorContext.textEditorUri,
+			textEditorLineCount: editorContext.textEditorLineCount || 0,
+			textEditorSelections: editorContext.textEditorSelections,
+			firstVisibleLine,
+			lastVisibleLine,
+			textEditorVisibleRanges,
+			currentReviewId: context.currentReviewId,
+			textEditorSelection: getCurrentSelection(editorContext),
+			metrics: editorContext.metrics || {},
+			openIconsOnLine,
+			composeCodemarkActive: context.composeCodemarkActive
+		};
+	};
 
 	const derivedState = useSelector(mapStateToProps, shallowEqual);
 
@@ -99,7 +122,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 
 		const mappedLineNum = mapLine0ToVisibleRange(line0);
 		if (
-			mappedLineNum === props.openIconsOnLine &&
+			mappedLineNum === derivedState.openIconsOnLine &&
 			textEditorSelection &&
 			(textEditorSelection.start.line !== textEditorSelection.end.line ||
 				textEditorSelection.start.character !== textEditorSelection.end.character)
@@ -124,11 +147,6 @@ export const CreateCodemarkIcons = (props: Props) => {
 	) => {
 		if (event) event.preventDefault();
 
-		const viewingInline = derivedState.viewInline;
-		if (!viewingInline) {
-			props.switchToInlineView();
-		}
-
 		const { textEditorSelection } = derivedState;
 
 		const mappedLineNum = mapLine0ToVisibleRange(lineNum0);
@@ -136,7 +154,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 		if (shouldChangeSelection) {
 			let range: Range | undefined;
 			if (
-				mappedLineNum === props.openIconsOnLine &&
+				mappedLineNum === derivedState.openIconsOnLine &&
 				textEditorSelection &&
 				// if these aren't equal, we have an active selection
 				(textEditorSelection.start.line !== textEditorSelection.end.line ||
@@ -157,8 +175,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 			handleUnhighlightLine(lineNum0);
 		}
 
-		props.setNewCodemarkAttributes({ type, viewingInline });
-
+		dispatch(setComposeCodemarkActive(type));
 		dispatch(setCurrentCodemark());
 	};
 	const mapLine0ToVisibleRange = fromLineNum0 => {
@@ -211,6 +228,17 @@ export const CreateCodemarkIcons = (props: Props) => {
 								delay={1}
 							/>
 						)}
+						{false && (
+							<Icon
+								onClick={e => handleClickPlus(e, CodemarkType.Reaction, lineNum0)}
+								name="thumbsup"
+								key="thumbsup"
+								title={ComposeTitles.react}
+								placement="bottomLeft"
+								align={{ offset: [3, 10] }}
+								delay={1}
+							/>
+						)}
 						{!derivedState.currentReviewId && (
 							<Icon
 								onClick={e => handleClickPlus(e, CodemarkType.Link, lineNum0)}
@@ -228,13 +256,19 @@ export const CreateCodemarkIcons = (props: Props) => {
 		);
 	};
 
-	const { codeHeight, numLinesVisible, metrics } = props;
+	const { metrics = {} } = derivedState;
 
 	const iconsOnLine0 = getLine0ForEditorLine(
-		derivedState.textEditorVisibleRanges,
-		props.openIconsOnLine,
+		derivedState.textEditorVisibleRanges || [],
+		derivedState.openIconsOnLine,
 		false
 	);
+
+	const codeHeight = () => {
+		const $field = document.getElementById("app") as HTMLDivElement;
+		return $field ? $field.offsetHeight : 100;
+	};
+
 	// console.log("IOL IS: ", iconsOnLine0, " FROM: ", this.state.openIconsOnLine);
 
 	// if the compose box is active, don't render the
@@ -244,7 +278,8 @@ export const CreateCodemarkIcons = (props: Props) => {
 	// the UX is just too weird/messy keeping those
 	// buttons active. see google docs for comparison,
 	// who hide the (+) when you have a compose box
-	if (props.composeBoxActive) return null;
+	if (derivedState.composeCodemarkActive) return null;
+	if (!canCreateCodemark(derivedState.textEditorUri)) return null;
 
 	// console.log("**********************************************");
 	// console.log("WINDOW HEIGHT: ", window.innerHeight);
@@ -254,8 +289,8 @@ export const CreateCodemarkIcons = (props: Props) => {
 	// console.log("lineHeightApprox: ", codeHeight / (numLinesVisible + 1));
 	// console.log("lineHeightProps", props.lineHeight);
 
-	const lineHeight = props.lineHeight || codeHeight / numLinesVisible;
-	const paddingTop = (metrics && metrics.margins && metrics.margins.top) || 0;
+	const lineHeight = metrics.lineHeight || codeHeight() / numLinesVisible;
+	const paddingTop = (metrics.margins && metrics.margins.top) || 0;
 
 	if (iconsOnLine0 >= 0) {
 		// const top = (codeHeight * iconsOnLine0) / (numLinesVisible + 1);

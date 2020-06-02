@@ -38,7 +38,8 @@ const initialState: ContextState = {
 	codemarksShowResolved: false,
 	showFeedbackSmiley: true,
 	route: { name: Route.NewUser, params: {} },
-	spatialViewShowPRComments: false
+	spatialViewShowPRComments: false,
+	composeCodemarkActive: undefined
 };
 
 export function reduceContext(
@@ -58,6 +59,12 @@ export function reduceContext(
 				currentCodemarkId: action.payload.codemarkId,
 				currentMarkerId: action.payload.markerId,
 				isRepositioning: false
+			};
+		case ContextActionsType.SetComposeCodemarkActive:
+			const { type } = action.payload;
+			return {
+				...state,
+				composeCodemarkActive: type
 			};
 		case ContextActionsType.RepositionCodemark:
 			return {
