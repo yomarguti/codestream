@@ -192,7 +192,7 @@
             },
             {
                 "command": "codestream.newReview",
-                "title": "Create Review",
+                "title": "Request a Code Review",
                 "category": "CodeStream"
             },
             {
