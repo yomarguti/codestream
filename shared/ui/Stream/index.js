@@ -207,17 +207,22 @@ export class SimpleStream extends Component {
 	}
 
 	handleNewCodemarkRequest(e) {
-		if (this.props.activePanel === WebviewPanels.CodemarksForFile) return;
-		if (!canCreateCodemark(e.uri)) return;
+		if (e.uri) {
+			if (this.props.activePanel === WebviewPanels.CodemarksForFile) return;
+			if (!canCreateCodemark(e.uri)) return;
 
-		// re-emit the the notification after switching to spatial view
-		this.updateEmitter.enqueue(() => {
-			HostApi.instance.emit(NewCodemarkNotificationType.method, e);
-		});
-		this.props.openPanel(WebviewPanels.CodemarksForFile);
+			// re-emit the notification after switching to spatial view
+			this.updateEmitter.enqueue(() => {
+				HostApi.instance.emit(NewCodemarkNotificationType.method, e);
+			});
+			this.props.openPanel(WebviewPanels.CodemarksForFile);
+		} else {
+			this.props.openPanel(e.type === "issue" ? WebviewPanels.NewIssue : WebviewPanels.NewComment);
+		}
 	}
 
 	handleNewReviewRequest(e) {
+		this.props.setCurrentReview("");
 		this.props.openPanel(WebviewPanels.NewReview);
 	}
 

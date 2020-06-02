@@ -13,7 +13,9 @@ import {
 	NewCodemarkNotificationType,
 	HostDidChangeEditorSelectionNotification,
 	HostDidChangeEditorVisibleRangesNotification,
-	NewCodemarkNotification
+	NewCodemarkNotification,
+	NewReviewNotificationType,
+	NewReviewNotification
 } from "./ipc/webview.protocol";
 import { shortUuid, AnyObject } from "./utils";
 import { TelemetryRequestType } from "@codestream/protocols/agent";
@@ -56,7 +58,14 @@ const normalizeNotificationsMap = new Map<
 	[
 		NewCodemarkNotificationType,
 		listener => (e: NewCodemarkNotification) => {
-			e.uri = URI.parse(e.uri).toString();
+			e.uri = e.uri ? URI.parse(e.uri).toString() : undefined;
+			return listener(e);
+		}
+	],
+	[
+		NewReviewNotificationType,
+		listener => (e: NewReviewNotification) => {
+			e.uri = e.uri ? URI.parse(e.uri).toString() : undefined;
 			return listener(e);
 		}
 	]

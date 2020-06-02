@@ -43,8 +43,8 @@ export const ShowStreamNotificationType = new NotificationType<ShowStreamNotific
 
 // TODO: This should be a request to the webview -- not a notification
 export interface NewCodemarkNotification {
-	uri: string;
-	range: Range;
+	uri?: string;
+	range?: Range;
 	type: CodemarkType;
 	source?: string;
 }
@@ -54,8 +54,8 @@ export const NewCodemarkNotificationType = new NotificationType<NewCodemarkNotif
 );
 
 export interface NewReviewNotification {
-	uri: string;
-	range: Range;
+	uri?: string;
+	range?: Range;
 	source?: string;
 }
 

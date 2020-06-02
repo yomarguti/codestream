@@ -308,23 +308,36 @@ class ReviewForm extends React.Component<Props, State> {
 		}
 	}
 
-	private async getScmInfoForURI(uri: string, callback?: Function) {
+	private async getScmInfoForURI(uri?: string, callback?: Function) {
 		this.setState({ isLoadingScm: true });
 
 		const openRepos = await HostApi.instance.send(GetReposScmRequestType, {});
-		if (openRepos && openRepos.repositories) this.setState({ openRepos: openRepos.repositories });
+		if (openRepos && openRepos.repositories) {
+			this.setState({ openRepos: openRepos.repositories });
+			if (!uri && openRepos.repositories.length) {
+				// use the uri of the first repo found
+				// if there isn't a file's uri
+				uri = openRepos.repositories[0].folder.uri;
+			}
+		}
 
-		const scmInfo = await HostApi.instance.send(GetFileScmInfoRequestType, {
-			uri: uri
-		});
-		if (scmInfo.scm) {
-			const repoId: string = scmInfo.scm.repoId || "";
-			const repoName = this.props.repos[repoId] ? this.props.repos[repoId].name : "";
-			this.setState({ scmInfo, repoName, startCommit: "" }, () => {
-				this.handleRepoChange(uri, callback);
+		if (uri) {
+			const scmInfo = await HostApi.instance.send(GetFileScmInfoRequestType, {
+				uri: uri
 			});
+			if (scmInfo.scm) {
+				const repoId: string = scmInfo.scm.repoId || "";
+				const repoName = this.props.repos[repoId] ? this.props.repos[repoId].name : "";
+				this.setState({ scmInfo, repoName, startCommit: "" }, () => {
+					this.handleRepoChange(uri, callback);
+				});
+			} else {
+				this.setState({ isLoadingScm: false, scmError: true });
+				if (callback && typeof callback === "function") callback();
+			}
 		} else {
 			this.setState({ isLoadingScm: false, scmError: true });
+			if (callback && typeof callback === "function") callback();
 		}
 	}
 
@@ -375,7 +388,7 @@ class ReviewForm extends React.Component<Props, State> {
 
 		this.getUserInfo();
 		if (isAmending) this.getScmInfoForRepo();
-		else if (textEditorUri) {
+		else {
 			this.getScmInfoForURI(textEditorUri, () => {
 				HostApi.instance.send(TelemetryRequestType, {
 					eventName: "Review Form Opened",
@@ -384,14 +397,6 @@ class ReviewForm extends React.Component<Props, State> {
 						"Suggested Reviewers": this.state.reviewerEmails && this.state.reviewerEmails.length > 0
 					}
 				});
-			});
-		} else {
-			HostApi.instance.send(TelemetryRequestType, {
-				eventName: "Review Form Opened",
-				properties: {
-					"Repo Open": false,
-					"Suggested Reviewers": false
-				}
 			});
 		}
 
