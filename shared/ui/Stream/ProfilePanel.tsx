@@ -7,7 +7,7 @@ import { CodeStreamState } from "../store";
 import { useDidMount } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import { PanelHeader } from "../src/components/PanelHeader";
-import { openPanel } from "./actions";
+import { openPanel, closePanel } from "./actions";
 import Icon from "./Icon";
 import { Button } from "../src/components/Button";
 import { DropdownButton } from "./Review/DropdownButton";
@@ -19,6 +19,7 @@ import Tooltip from "./Tooltip";
 import { getCodeCollisions } from "../store/users/reducer";
 import { ChangesetFile } from "./Review/ChangesetFile";
 import { UL } from "./TeamPanel";
+import CancelButton from "./CancelButton";
 
 const Root = styled.div`
 	.edit-headshot {
@@ -220,7 +221,9 @@ export const ProfilePanel = () => {
 	return (
 		<Root>
 			<div className="panel full-height">
-				<PanelHeader title={title}></PanelHeader>
+				<PanelHeader title={title}>
+					<CancelButton onClick={() => dispatch(closePanel())} />
+				</PanelHeader>
 				<ScrollBox>
 					<div className="channel-list vscroll" style={{ padding: "0 20px 20px 20px" }}>
 						<div
