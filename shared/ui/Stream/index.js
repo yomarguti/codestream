@@ -534,7 +534,7 @@ export class SimpleStream extends Component {
 		if (this.props.lightningCodeReviewsEnabled) {
 			menuItems.push({
 				icon: <Icon name="review" />,
-				label: "Request A Code Review",
+				label: "Request a Code Review",
 				action: this.newReview,
 				shortcut: ComposeKeybindings.review,
 				key: "review"
@@ -546,14 +546,14 @@ export class SimpleStream extends Component {
 			menuItems.push(
 				{
 					icon: <Icon name="comment" />,
-					label: "New Comment",
+					label: "Add Comment",
 					action: this.newComment,
 					shortcut: ComposeKeybindings.comment,
 					key: "comment"
 				},
 				{
 					icon: <Icon name="issue" />,
-					label: "New Issue",
+					label: "Create Issue",
 					action: this.newIssue,
 					shortcut: ComposeKeybindings.issue,
 					key: "issue"
