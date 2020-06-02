@@ -1,7 +1,7 @@
 "use strict";
 import { Range, RequestType } from "vscode-languageserver-protocol";
 import { SendPasswordResetEmailRequest } from "./agent.protocol.auth";
-import { ModifiedFile } from './api.protocol';
+import { ModifiedFile } from "./api.protocol";
 // import { GitCommit } from "./agent.protocol";
 
 export interface GetBranchesRequest {
@@ -181,6 +181,11 @@ export interface GetRangeScmInfoRequest {
 	contents?: string;
 	skipBlame?: boolean;
 }
+export interface BlameAuthor {
+	email: string;
+	id?: string;
+	username?: string;
+}
 export interface GetRangeScmInfoResponse {
 	uri: string;
 	range: Range;
@@ -190,7 +195,12 @@ export interface GetRangeScmInfoResponse {
 		repoPath: string;
 		repoId?: string;
 		revision: string;
-		authors: { id: string; username: string }[];
+		/**
+		 * authors come from git blame. we enrich the list with IDs
+		 * and usernames if the git blame email addresses match members
+		 * of your team.
+		 */
+		authors: BlameAuthor[];
 		remotes: { name: string; url: string }[];
 		branch?: string;
 	};

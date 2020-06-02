@@ -6,6 +6,7 @@ import { Ranges } from "../api/extensions";
 import { GitNumStat } from "../git/models/numstat";
 import { Logger } from "../logger";
 import {
+	BlameAuthor,
 	CoAuthors,
 	CreateBranchRequest,
 	CreateBranchRequestType,
@@ -851,7 +852,7 @@ export class ScmManager {
 		range = Ranges.ensureStartBeforeEnd(range);
 		const uri = URI.parse(documentUri);
 
-		let authors: { id: string; username: string }[] | undefined;
+		let authors: BlameAuthor[] | undefined;
 		let branch: string | undefined;
 		let file: string | undefined;
 		let remotes: { name: string; url: string }[] | undefined;
@@ -915,8 +916,9 @@ export class ScmManager {
 						});
 						const authorEmails = gitAuthors.map(a => a.email);
 
-						const users = await SessionContainer.instance().users.getByEmails(authorEmails);
-						authors = [...Iterables.map(users, u => ({ id: u.id, username: u.username }))];
+						// const users = await SessionContainer.instance().users.getByEmails(authorEmails);
+						// authors = [...Iterables.map(users, u => ({ id: u.id, username: u.username }))];
+						authors = await SessionContainer.instance().users.enrichEmailList(authorEmails);
 					}
 				}
 			} catch (ex) {

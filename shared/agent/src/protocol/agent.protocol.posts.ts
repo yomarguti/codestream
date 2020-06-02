@@ -1,6 +1,6 @@
 "use strict";
 import { Range, RequestType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
-import { CodeDelimiterStyles } from "./agent.protocol";
+import { BlameAuthor, CodeDelimiterStyles } from "./agent.protocol";
 import {
 	CodemarkPlus,
 	CreateCodemarkRequest,
@@ -107,7 +107,7 @@ export interface CodeBlockSource {
 	file: string;
 	repoPath: string;
 	revision: string;
-	authors: { id: string; username: string }[];
+	authors: BlameAuthor[];
 	remotes: { name: string; url: string }[];
 	branch?: string;
 }

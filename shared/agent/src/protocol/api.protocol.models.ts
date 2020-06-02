@@ -26,7 +26,8 @@ export enum CodemarkType {
 	Question = "question",
 	Trap = "trap",
 	Link = "link",
-	Review = "review"
+	Review = "review",
+	Reaction = "reaction"
 }
 
 export enum CodemarkStatus {

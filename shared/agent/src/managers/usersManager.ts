@@ -1,5 +1,6 @@
 "use strict";
 import {
+	BlameAuthor,
 	DeleteUserRequest,
 	DeleteUserRequestType,
 	FetchUsersRequest,
@@ -78,6 +79,20 @@ export class UsersManager extends CachedEntityManagerBase<CSUser> {
 				u.email != null &&
 				emails.includes(options.ignoreCase ? u.email.toLocaleUpperCase() : u.email)
 		);
+	}
+
+	async enrichEmailList(emails: string[]): Promise<BlameAuthor[]> {
+		emails = emails.map(email => email.toLocaleLowerCase());
+
+		const users = (await this.get()).users;
+
+		const ret: BlameAuthor[] = [];
+		emails.forEach((email: string) => {
+			const user = users.find(u => u.email.toLocaleLowerCase() === email);
+			if (user) ret.unshift({ id: user.id, email: user.email, username: user.username });
+			else ret.push({ email });
+		});
+		return ret;
 	}
 
 	protected async fetchById(userId: Id): Promise<CSUser> {
