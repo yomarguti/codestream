@@ -78,9 +78,12 @@ export const NewUserEntry = (connect(mapStateToProps) as any)((props: Props) => 
 							</div>
 							<div>
 								<p style={{ opacity: 0.5, fontSize: ".9em", textAlign: "center" }}>
-									CodeStream Version {props.pluginVersion}
+									Connected to {props.whichServer}.{" "}
+									<a href="https://docs.codestream.com/userguide/faq/on-prem/">
+										Looking for on-prem?
+									</a>
 									<br />
-									Connected to {props.whichServer}
+									CodeStream Version {props.pluginVersion}
 								</p>
 							</div>
 						</div>
