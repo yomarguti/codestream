@@ -57,6 +57,11 @@ export interface CreatePostRequest {
 	mentionedUserIds?: string[];
 	/** users added via blame-mention, to send invite and email notification to */
 	addedUsers?: string[];
+	/** for added users via on-prem, also pass along inviteInfo */
+	inviteInfo?: {
+		serverUrl: string;
+		disableStrictSSL: boolean;
+	};
 	parentPostId?: string;
 	codemark?: CreateCodemarkRequest;
 	review?: CreateReviewRequest;

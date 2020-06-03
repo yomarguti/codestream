@@ -1051,6 +1051,16 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	createPost(request: CreatePostRequest) {
+		// for on-prem, base the server url (and strict flag) into the invite code,
+		// so invited users have it set automatically
+		const session = SessionContainer.instance().session;
+		if (this.runTimeEnvironment === "onprem") {
+			request.inviteInfo = {
+				serverUrl: this.baseUrl,
+				disableStrictSSL: session.disableStrictSSL ? true : false
+			};
+		}
+
 		return this.post<CSCreatePostRequest, CSCreatePostResponse>(
 			`/posts`,
 			{ ...request, teamId: this.teamId },
