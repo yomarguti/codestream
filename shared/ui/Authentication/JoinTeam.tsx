@@ -34,7 +34,9 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 		});
 
 		if (status === LoginResult.Success) {
-			HostApi.instance.track("Invitation Code Submitted");
+			HostApi.instance.track("Reg Path Selected", {
+				"Reg Path": "Join Team"
+			});
 			props.dispatch(goToSignup({ ...info, inviteCode: code, type: SignupType.JoinTeam }));
 		} else {
 			setIsLoading(false);
@@ -112,7 +114,7 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 
 	const errorId = error && (errorToMessageId[error] || errorToMessageId.UNKNOWN);
 	return (
-		<form className="standard-form" style={{ padding: "40px 0 0 0" }} onSubmit={onClickJoin}>
+		<form className="standard-form" style={{ padding: "20px 0 0 0" }} onSubmit={onClickJoin}>
 			<fieldset className="form-body" style={{ padding: 0 }}>
 				<div className="outline-box">
 					<h3>Were you invited?</h3>

@@ -1086,7 +1086,7 @@ export class MessageInput extends React.Component<Props, State> {
 						className={cx("preview", { hover: isPreviewing })}
 						onClick={this.handleClickPreview}
 					/>
-					{this.props.teammates.length > 1 && (
+					{this.props.teammates.length > 0 && (
 						<Icon
 							key="mention"
 							name="mention"

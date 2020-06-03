@@ -202,7 +202,9 @@ export const Signup = (props: Props) => {
 			event.preventDefault();
 			switch (props.type) {
 				case SignupType.JoinTeam: {
-					return dispatch(goToJoinTeam());
+					// simplified the first panel to include joining a team
+					// return dispatch(goToJoinTeam());
+					return dispatch(goToNewUserEntry());
 				}
 				case SignupType.CreateTeam:
 				default:
@@ -221,7 +223,7 @@ export const Signup = (props: Props) => {
 			const info = props.inviteCode
 				? { type: SignupType.JoinTeam, inviteCode: props.inviteCode }
 				: { type: SignupType.CreateTeam };
-			return dispatch(startSSOSignin("github", {...info, fromSignup: true}));
+			return dispatch(startSSOSignin("github", { ...info, fromSignup: true }));
 		},
 		[props.type]
 	);
