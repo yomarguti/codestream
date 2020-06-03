@@ -49,5 +49,5 @@ class CreateReview : AnAction(), IntentionAction, LowPriorityAction {
 
     override fun isAvailable(project: Project, editor: Editor?, file: PsiFile?) = true
 
-    override fun getText() = "Create review"
+    override fun getText() = "Request a code review"
 }

@@ -42,6 +42,10 @@
             <className>com.codestream.actions.GetPermalink</className>
             <category>Other</category>
         </intentionAction>
+        <intentionAction>
+            <className>com.codestream.actions.CreateReview</className>
+            <category>Other</category>
+        </intentionAction>
 
         <jbProtocolCommand implementation="com.codestream.commands.CodeStreamCommand"/>
     </extensions>
@@ -86,8 +90,8 @@
                 <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="P"
                                    replace-all="true"/>
             </action>
-            <action id="CodeStream.CreateReview" class="com.codestream.actions.CreateReview" text="Create _Review"
-                    description="Create review" >
+            <action id="CodeStream.CreateReview" class="com.codestream.actions.CreateReview" text="Request a Code _Review"
+                    description="Request a code review" >
                 <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH" second-keystroke="R"/>
                 <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="R"
                                    replace-all="true"/>
