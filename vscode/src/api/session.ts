@@ -47,7 +47,8 @@ import {
 	SessionChangedEventType,
 	SessionStatusChangedEvent,
 	TextDocumentMarkersChangedEvent,
-	UnreadsChangedEvent
+	UnreadsChangedEvent,
+	ReviewsChangedEvent
 } from "./sessionEvents";
 import { SessionState } from "./sessionState";
 import { TokenManager } from "./tokenManager";
@@ -107,6 +108,12 @@ export class CodeStreamSession implements Disposable {
 		return this._onDidChangePosts.event;
 	}
 	private fireDidChangePosts = createMergableDebouncedEvent(this._onDidChangePosts);
+
+	private _onDidChangeReviews = new EventEmitter<ReviewsChangedEvent>();
+	get onDidChangeReviews(): Event<ReviewsChangedEvent> {
+		return this._onDidChangeReviews.event;
+	}
+	private fireDidChangeReviews = createMergableDebouncedEvent(this._onDidChangeReviews);
 
 	private _onDidChangeSessionStatus = new EventEmitter<SessionStatusChangedEvent>();
 	get onDidChangeSessionStatus(): Event<SessionStatusChangedEvent> {
@@ -219,9 +226,11 @@ export class CodeStreamSession implements Disposable {
 			case ChangeDataType.Preferences:
 				this._state!.updatePreferences(e.data);
 				break;
-			case ChangeDataType.Reviews:
+			case ChangeDataType.Reviews: {
+				this.fireDidChangeReviews(new ReviewsChangedEvent(this, e));
 				Container.diffContents.clearLocalContents(e.data.map(_ => _.id));
 				break;
+			}
 		}
 	}
 
@@ -351,17 +360,19 @@ export class CodeStreamSession implements Disposable {
 			return stream;
 		}
 
-		const s = (await Container.agent.streams.createChannel(
-			creationOptions.name!,
-			creationOptions.membership,
-			creationOptions.privacy,
-			creationOptions.purpose,
-			{
-				serviceType: type,
-				serviceKey: key,
-				serviceInfo: creationOptions.serviceInfo
-			}
-		)).stream;
+		const s = (
+			await Container.agent.streams.createChannel(
+				creationOptions.name!,
+				creationOptions.membership,
+				creationOptions.privacy,
+				creationOptions.purpose,
+				{
+					serviceType: type,
+					serviceKey: key,
+					serviceInfo: creationOptions.serviceInfo
+				}
+			)
+		).stream;
 		if (s === undefined) throw new Error("Unable to create stream");
 
 		return new ChannelStream(this, s);
@@ -391,12 +402,14 @@ export class CodeStreamSession implements Disposable {
 			return stream;
 		}
 
-		const s = (await Container.agent.streams.createChannel(
-			name,
-			creationOptions.membership,
-			creationOptions.privacy,
-			creationOptions.purpose
-		)).stream;
+		const s = (
+			await Container.agent.streams.createChannel(
+				name,
+				creationOptions.membership,
+				creationOptions.privacy,
+				creationOptions.purpose
+			)
+		).stream;
 		if (s === undefined) throw new Error("Unable to create stream");
 
 		return new ChannelStream(this, s);

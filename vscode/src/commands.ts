@@ -435,18 +435,41 @@ export class Commands implements Disposable {
 		}
 	}
 
-	private async newCodemarkRequest(type: CodemarkType, args: NewCodemarkCommandArgs = {}) {
-		const editor = window.activeTextEditor;
-		// if (editor === undefined) return;
+	@command("scmNewReview", { showErrorMessage: "Unable to request a review" })
+	async scmNewReview() {
+		try {
+			return this.newReviewRequest({ source: "VSC SCM" });
+		} catch (ex) {
+			Logger.error(ex);
+		}
+	}
 
-		await Container.webview.newCodemarkRequest(type, editor, args.source || "Context Menu");
+	@command("scmNewComment", { showErrorMessage: "Unable to add comment" })
+	async scmNewComment() {
+		try {
+			const editor = window.activeTextEditor;
+			await Container.webview.newCodemarkRequest(CodemarkType.Comment, editor && editor.selection && !editor.selection.isEmpty ? editor : undefined, "VSC SCM", true);
+		} catch (ex) {
+			Logger.error(ex);
+		}
+	}
+
+	@command("scmNewIssue", { showErrorMessage: "Unable to create issue" })
+	async scmNewIssue() {
+		try {
+			const editor = window.activeTextEditor;
+			await Container.webview.newCodemarkRequest(CodemarkType.Issue, editor && editor.selection && !editor.selection.isEmpty ? editor : undefined, "VSC SCM", true);
+		} catch (ex) {
+			Logger.error(ex);
+		}
+	}
+
+	private async newCodemarkRequest(type: CodemarkType, args: NewCodemarkCommandArgs = {}) {
+		await Container.webview.newCodemarkRequest(type, window.activeTextEditor, args.source || "Context Menu");
 	}
 
 	private async newReviewRequest(args: NewCodemarkCommandArgs = {}) {
-		const editor = window.activeTextEditor;
-		// if (editor === undefined) return;
-
-		await Container.webview.newReviewRequest(editor, args.source || "Context Menu");
+		await Container.webview.newReviewRequest(window.activeTextEditor, args.source || "Context Menu");
 	}
 
 	private async showNextChangedFileRequest() {

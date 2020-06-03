@@ -255,20 +255,21 @@ export class WebviewController implements Disposable {
 	async newCodemarkRequest(
 		type: CodemarkType,
 		editor: TextEditor | undefined = this._lastEditor,
-		source: string
+		source: string,
+		ignoreLastEditor?: boolean
 	): Promise<void> {
-		if (!editor) return;
-
 		if (this.visible) {
 			await this._webview!.show();
 		} else {
 			await this.show();
 		}
-
+		if (ignoreLastEditor) {
+			editor = undefined;
+		}
 		// TODO: Change this to be a request vs a notification
 		this._webview!.notify(NewCodemarkNotificationType, {
-			uri: editor.document.uri.toString(),
-			range: Editor.toSerializableRange(editor.selection),
+			uri: editor ? editor.document.uri.toString() : undefined,
+			range: editor ? Editor.toSerializableRange(editor.selection) : undefined,
 			type: type,
 			source: source
 		});
@@ -279,8 +280,6 @@ export class WebviewController implements Disposable {
 		editor: TextEditor | undefined = this._lastEditor,
 		source: string
 	): Promise<void> {
-		if (!editor) return;
-
 		if (this.visible) {
 			await this._webview!.show();
 		} else {
@@ -289,8 +288,8 @@ export class WebviewController implements Disposable {
 
 		// TODO: Change this to be a request vs a notification
 		this._webview!.notify(NewReviewNotificationType, {
-			uri: editor.document.uri.toString(),
-			range: Editor.toSerializableRange(editor.selection),
+			uri: editor ? editor.document.uri.toString() : undefined,
+			range: editor ? Editor.toSerializableRange(editor.selection) : undefined,
 			source: source
 		});
 	}

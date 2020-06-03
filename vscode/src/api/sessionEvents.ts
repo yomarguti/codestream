@@ -3,7 +3,8 @@ import {
 	DidChangeDataNotification,
 	PostsChangedNotification,
 	Unreads,
-	UnreadsChangedNotification
+	UnreadsChangedNotification,
+	ReviewsChangedNotification
 } from "@codestream/protocols/agent";
 import { Uri } from "vscode";
 import { memoize } from "../system";
@@ -29,7 +30,8 @@ export enum SessionChangedEventType {
 	StreamsMembership = "streamsMembership",
 	Teams = "teams",
 	Unreads = "unreads",
-	Users = "users"
+	Users = "users",
+	Reviews = "reviews"
 }
 
 export interface SessionChangedEvent {
@@ -69,6 +71,19 @@ export class PostsChangedEvent extends SessionChangedEventBase<PostsChangedNotif
 	}
 
 	merge(e: PostsChangedEvent) {
+		this._event.data.push(...e._event.data);
+	}
+}
+
+export class ReviewsChangedEvent extends SessionChangedEventBase<ReviewsChangedNotification>
+	implements MergeableEvent<ReviewsChangedEvent> {
+	readonly type = SessionChangedEventType.Reviews;
+
+	get count() {
+		return this._event.data.length;
+	}
+
+	merge(e: ReviewsChangedEvent) {
 		this._event.data.push(...e._event.data);
 	}
 }

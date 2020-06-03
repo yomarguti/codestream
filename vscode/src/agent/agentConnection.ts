@@ -88,7 +88,8 @@ import {
 	GetReviewRequestType,
 	GetReviewContentsLocalRequestType,
 	OpenUrlRequest,
-	OpenUrlRequestType
+	OpenUrlRequestType,
+	FetchReviewsRequestType
 } from "@codestream/protocols/agent";
 import {
 	ChannelServiceType,
@@ -550,6 +551,10 @@ export class CodeStreamAgentConnection implements Disposable {
 			return this._connection.sendRequest(GetReviewRequestType, {
 				reviewId
 			});
+		}
+
+		fetch() {
+			return this._connection.sendRequest(FetchReviewsRequestType, {});
 		}
 
 		getContents(reviewId: string, checkpoint: CSReviewCheckpoint, repoId: string, path: string) {

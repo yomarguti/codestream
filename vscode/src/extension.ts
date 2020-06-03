@@ -10,6 +10,7 @@ import {
 	window,
 	workspace
 } from "vscode";
+import { ScmTreeDataProvider } from "views/scmTreeDataProvider";
 import { GitExtension } from "./@types/git";
 import { SessionStatusChangedEvent } from "./api/session";
 import { ContextKeys, GlobalState, setContext } from "./common";
@@ -41,7 +42,7 @@ export async function activate(context: ExtensionContext) {
 	}
 
 	const edition = env.appName;
-	const editionFormat = `${edition.indexOf(" Insiders") > -1 ? " (Insiders)": ""}`;
+	const editionFormat = `${edition.indexOf(" Insiders") > -1 ? " (Insiders)" : ""}`;
 	const formattedVersion = `${extensionVersion}${info.buildNumber ? `-${info.buildNumber}` : ""}${
 		info.assetEnvironment && info.assetEnvironment !== "prod" ? ` (${info.assetEnvironment})` : ""
 	}`;
@@ -84,6 +85,11 @@ export async function activate(context: ExtensionContext) {
 		traceLevel: Logger.level
 	});
 
+	const scmTreeDataProvider = new ScmTreeDataProvider();
+	window.registerTreeDataProvider("scmTreeDataProvider", scmTreeDataProvider);
+
+	context.subscriptions.push(scmTreeDataProvider);
+
 	context.subscriptions.push(Container.session.onDidChangeSessionStatus(onSessionStatusChanged));
 	context.subscriptions.push(new ProtocolHandler());
 
@@ -97,7 +103,9 @@ export async function activate(context: ExtensionContext) {
 	context.globalState.update(GlobalState.Version, extensionVersion);
 
 	Logger.log(
-		`CodeStream${editionFormat} v${formattedVersion} started \u2022 ${Strings.getDurationMilliseconds(start)} ms`
+		`CodeStream${editionFormat} v${formattedVersion} started \u2022 ${Strings.getDurationMilliseconds(
+			start
+		)} ms`
 	);
 }
 
@@ -133,7 +141,11 @@ export async function gitPath(): Promise<string> {
 // Add any versions here that we want to skip for blog posts
 const skipVersions = [Versions.from(1, 2)];
 
-async function showStartupUpgradeMessage(context: ExtensionContext, version: string, previousVersion: string | undefined) {
+async function showStartupUpgradeMessage(
+	context: ExtensionContext,
+	version: string,
+	previousVersion: string | undefined
+) {
 	// if this is the first install, there is no previous message... don't show
 	if (!previousVersion) return;
 
