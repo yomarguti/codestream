@@ -90,6 +90,7 @@ import { getReviewChangeRequests } from "../store/codemarks/reducer";
 import { MetaCheckboxWithHoverIcon } from "./Review";
 // https://github.com/kaelzhang/node-ignore
 import ignore from "ignore";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 
 interface Props extends ConnectedProps {
 	editingReview?: CSReview;
@@ -131,6 +132,7 @@ interface ConnectedProps {
 	reviewApproval: CSReviewApprovalSetting;
 	reviewAssignment: CSReviewAssignmentSetting;
 	changeRequests?: CodemarkPlus[];
+	inviteUsersOnTheFly: boolean;
 }
 
 interface State {
@@ -415,7 +417,7 @@ class ReviewForm extends React.Component<Props, State> {
 
 	async handleRepoChange(repoUri?, callback?) {
 		try {
-			const { teamMates, currentUser, isEditing, isAmending, editingReview } = this.props;
+			const { teamMates, currentUser, isEditing, inviteUsersOnTheFly, editingReview } = this.props;
 			const { includeSaved, includeStaged, startCommit, prevEndCommit } = this.state;
 
 			const uri = repoUri || this.state.repoUri;
@@ -506,6 +508,9 @@ class ReviewForm extends React.Component<Props, State> {
 
 				if (!isEditing && !this.state.reviewersTouched) {
 					let reviewerEmails = Object.keys(authorsBlameData)
+						// if email isn't supported, and we can't find the teammate, filter it out
+						// because we can't email based on the blame data
+						.filter(email => inviteUsersOnTheFly || teamMates.find(t => t.email === email))
 						// get the top most impacted authors based on how many times their code
 						// was stomped on, and make those the suggested reviewers, depending
 						// on the team setting. we weigh 1 commits on the branch 10x as much as
@@ -1797,16 +1802,18 @@ class ReviewForm extends React.Component<Props, State> {
 		}
 
 		const unregisteredAuthorItems = [] as any;
-		Object.keys(authorsBlameData).forEach(email => {
-			if (this.props.teamMembers.find(p => p.email === email)) return;
-			unregisteredAuthorItems.push({
-				label: email,
-				searchLabel: email,
-				checked: this.state.reviewerEmails.includes(email),
-				key: email,
-				action: () => this.toggleReviewerEmail(email)
+		if (this.props.inviteUsersOnTheFly) {
+			Object.keys(authorsBlameData).forEach(email => {
+				if (this.props.teamMembers.find(p => p.email === email)) return;
+				unregisteredAuthorItems.push({
+					label: email,
+					searchLabel: email,
+					checked: this.state.reviewerEmails.includes(email),
+					key: email,
+					action: () => this.toggleReviewerEmail(email)
+				});
 			});
-		});
+		}
 
 		const showChanges = (!isEditing || isAmending) && !isLoadingScm && !scmError && !branchError;
 
@@ -2051,6 +2058,8 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 	const reviewsByCommit = getAllByCommit(state) || {};
 
 	const changeRequests = props.editingReview && getReviewChangeRequests(state, props.editingReview);
+	const inviteUsersOnTheFly =
+		isFeatureEnabled(state, "emailSupport") && isFeatureEnabled(state, "inviteUsersOnTheFly");
 
 	return {
 		unsavedFiles: unsavedFiles,
@@ -2069,7 +2078,8 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		textEditorUri: editorContext.textEditorUri,
 		teamTagsArray,
 		repos,
-		changeRequests
+		changeRequests,
+		inviteUsersOnTheFly
 	};
 };
 

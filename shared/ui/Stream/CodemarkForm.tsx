@@ -146,6 +146,7 @@ interface ConnectedProps {
 	isCurrentUserAdmin?: boolean;
 	blameMap?: { [email: string]: string };
 	activePanel?: WebviewPanels;
+	inviteUsersOnTheFly: boolean;
 }
 
 interface State {
@@ -467,7 +468,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	handleScmChange = () => {
 		const { codeBlocks } = this.state;
-		const { blameMap = {} } = this.props;
+		const { blameMap = {}, inviteUsersOnTheFly } = this.props;
 
 		this.setState({ codeBlockInvalid: false });
 
@@ -501,7 +502,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				} else if (author.id) {
 					// if it's a registered teammate, mention them
 					mentionAuthors.push(author);
-				} else {
+				} else if (inviteUsersOnTheFly) {
 					// else offer to send the person an email
 					unregisteredAuthors.push(author);
 					// @ts-ignore
@@ -2190,6 +2191,8 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 	const adminIds = team.adminIds || [];
 	const isCurrentUserAdmin = adminIds.includes(session.userId || "");
 	const blameMap = team.settings ? team.settings.blameMap : {};
+	const inviteUsersOnTheFly =
+		isFeatureEnabled(state, "emailSupport") && isFeatureEnabled(state, "inviteUsersOnTheFly");
 
 	return {
 		channel,
@@ -2215,7 +2218,8 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		teamTagsArray,
 		codemarkState: codemarks,
 		multipleMarkersEnabled: isFeatureEnabled(state, "multipleMarkers"),
-		currentReviewId: context.currentReviewId
+		currentReviewId: context.currentReviewId,
+		inviteUsersOnTheFly
 	};
 };
 
