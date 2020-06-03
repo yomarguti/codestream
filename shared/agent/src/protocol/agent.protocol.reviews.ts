@@ -62,6 +62,7 @@ export interface CreateShareableReviewRequest {
 	textDocuments?: TextDocumentIdentifier[];
 	entryPoint?: string;
 	mentionedUserIds?: string[];
+	addedUsers?: string[];
 }
 
 export interface CreateShareableReviewResponse {

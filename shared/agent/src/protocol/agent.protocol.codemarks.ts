@@ -79,6 +79,7 @@ export interface CreateShareableCodemarkRequest {
 	textDocuments?: TextDocumentIdentifier[];
 	entryPoint?: string;
 	mentionedUserIds?: string[];
+	addedUsers?: string[];
 	// codemarks can now be replies
 	parentPostId?: string;
 	isPseudoCodemark?: boolean;

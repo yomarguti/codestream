@@ -930,7 +930,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			streamId: stream.id,
 			parentPostId: request.parentPostId,
 			dontSendEmail: !!request.attributes.crossPostIssueValues,
-			mentionedUserIds: request.mentionedUserIds
+			mentionedUserIds: request.mentionedUserIds,
+			addedUsers: request.addedUsers
 		});
 
 		const { markers } = response!;
@@ -1091,7 +1092,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			text: reviewRequest.title!,
 			streamId: stream.id,
 			dontSendEmail: false,
-			mentionedUserIds: request.mentionedUserIds
+			mentionedUserIds: request.mentionedUserIds,
+			addedUsers: request.addedUsers
 		});
 
 		review = response.review!;

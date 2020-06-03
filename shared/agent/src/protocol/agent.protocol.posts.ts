@@ -55,6 +55,8 @@ export interface CreatePostRequest {
 	streamId: string;
 	text: string;
 	mentionedUserIds?: string[];
+	/** users added via blame-mention, to send invite and email notification to */
+	addedUsers?: string[];
 	parentPostId?: string;
 	codemark?: CreateCodemarkRequest;
 	review?: CreateReviewRequest;
