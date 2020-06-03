@@ -637,13 +637,13 @@ class ReviewForm extends React.Component<Props, State> {
 
 		// FIXME first, process the email-only reviewers
 
-		const reviewerIds = this.state.reviewerEmails
-			.map(email => {
-				const person = this.props.teamMembers.find(p => p.email === email);
-				if (person) return person.id;
-				else return;
-			})
-			.filter(Boolean);
+		const addedUsers: string[] = [];
+		const reviewerIds: string[] = [];
+		reviewerEmails.forEach(email => {
+			const person = this.props.teamMembers.find(p => p.email === email);
+			if (person) reviewerIds.push(person.id);
+			else addedUsers.push(email);
+		});
 
 		try {
 			const { editingReview } = this.props;
@@ -739,6 +739,7 @@ class ReviewForm extends React.Component<Props, State> {
 					sharingAttributes: this.props.shouldShare ? this._sharingAttributes : undefined,
 					text: replaceHtml(text)!,
 					reviewers: reviewerIds,
+					addedUsers,
 					allReviewersMustApprove: allReviewersMustApprove || this.props.reviewApproval === "all",
 					authorsById,
 					tags: keyFilter(selectedTags),

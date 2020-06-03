@@ -691,7 +691,8 @@ class CodemarkForm extends React.Component<Props, State> {
 				tags: keyFilter(selectedTags),
 				relatedCodemarkIds: keyFilter(relatedCodemarkIds),
 				parentPostId,
-				isChangeRequest: this.state.isChangeRequest
+				isChangeRequest: this.state.isChangeRequest,
+				addedUsers: keyFilter(this.state.emailAuthors)
 			};
 			if (this.props.teamProvider === "codestream") {
 				await this.props.onSubmit({

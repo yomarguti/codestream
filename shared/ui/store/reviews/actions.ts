@@ -76,6 +76,7 @@ export interface NewReviewAttributes {
 		channelId: string;
 	};
 	mentionedUserIds?: string[];
+	addedUsers?: string[];
 }
 
 export interface CreateReviewError {
@@ -93,7 +94,8 @@ export const createReview = (attributes: NewReviewAttributes) => async (
 		const response = await HostApi.instance.send(CreateShareableReviewRequestType, {
 			attributes: rest,
 			memberIds: accessMemberIds,
-			mentionedUserIds: attributes.mentionedUserIds
+			mentionedUserIds: attributes.mentionedUserIds,
+			addedUsers: attributes.addedUsers
 		});
 		if (response) {
 			const result = dispatch(addReviews([response.review]));

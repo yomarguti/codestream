@@ -145,7 +145,7 @@ export function mapFilter<A, B>(array: A[], fn: (item: A) => B | undefined | nul
   will return
   ["a", "c"]
 */
-export function keyFilter<A>(hash: A[]): string[] {
+export function keyFilter<A>(hash: A): string[] {
 	const result: string[] = [];
 	Object.keys(hash).map(a => {
 		if (hash[a]) result.push(a);
@@ -153,7 +153,7 @@ export function keyFilter<A>(hash: A[]): string[] {
 	return result;
 }
 /* just like keyFilter only returns all the keys for whome the values are falsey */
-export function keyFilterFalsey<A>(hash: A[]): string[] {
+export function keyFilterFalsey<A>(hash: A): string[] {
 	const result: string[] = [];
 	Object.keys(hash).map(a => {
 		if (!hash[a]) result.push(a);
@@ -379,7 +379,7 @@ export function escapeHtml(text: string) {
  * this is called before saving to the server
  * @param  {string} text
  */
-export function replaceHtml(text: string) {	
+export function replaceHtml(text: string) {
 	const domParser = new DOMParser();
 	// contentEditable renders a blank line as "<div><br></div>""
 	// and a line with only "foo" as "<div>foo</div>"
@@ -409,7 +409,8 @@ export function asPastedText(text: string) {
 	// the second regex ensures there is at least 1 non-whitespace character
 	// (don't want to fence seemingly empty text)
 	const lines = text.split("\n").length;
-	if (lines > 1 && !text.match(/^\S/m) && text.match(/(.|\s)*\S(.|\s)*/)) text = "```" + text + "```";
+	if (lines > 1 && !text.match(/^\S/m) && text.match(/(.|\s)*\S(.|\s)*/))
+		text = "```" + text + "```";
 
 	// console.log("asPastedText result=", text);
 	return text;

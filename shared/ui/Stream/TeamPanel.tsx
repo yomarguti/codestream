@@ -682,7 +682,6 @@ class TeamPanel extends React.Component<Props, State> {
 			this.props.activePanel !== WebviewPanels.People;
 
 		const suggested = this.state.suggested.filter(u => !invitingEmails[u.email]);
-		// @ts-ignore
 		const mappedBlame = keyFilter(blameMap);
 		const title = this.state.changingTeamName ? (
 			<input

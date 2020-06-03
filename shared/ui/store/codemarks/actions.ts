@@ -51,7 +51,9 @@ export interface SharingNewCodemarkAttributes extends BaseNewCodemarkAttributes 
 	textDocuments?: TextDocumentIdentifier[];
 	entryPoint?: string;
 	mentionedUserIds?: string[];
-	// codemarks can now be replies
+	/** email addresses of users to notify and add to the team */
+	addedUsers?: string[];
+	/** codemarks can now be replies */
 	parentPostId?: string;
 	isChangeRequest?: boolean;
 	isPseudoCodemark?: boolean;
