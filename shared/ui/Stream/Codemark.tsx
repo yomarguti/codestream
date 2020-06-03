@@ -1314,9 +1314,9 @@ export class Codemark extends React.Component<Props, State> {
 
 		// if it's archived or we've lost the position, and it's just
 		// an emoji, then return
-		if (showStripedHeader && type == CodemarkType.Reaction) return null;
+		// if (showStripedHeader && type == CodemarkType.Reaction) return null;
 
-		const isReaction = codemark.text.trim().match(/^(:[\w_+]+:|\s)+$/);
+		// const isReaction = codemark.text.trim().match(/^(:[\w_+]+:|\s)+$/);
 
 		// if (false && isReaction && !renderExpandedBody) {
 		// 	return (
