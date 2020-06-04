@@ -207,6 +207,10 @@ export class SimpleStream extends Component {
 	}
 
 	handleNewCodemarkRequest(e) {
+		if (e.source) {
+			// this can come externally (from an IDE)
+			this.props.setNewPostEntry(e.source);
+		}
 		if (e.uri) {
 			if (this.props.activePanel === WebviewPanels.CodemarksForFile) return;
 			if (!canCreateCodemark(e.uri)) return;
@@ -2244,8 +2248,16 @@ export class SimpleStream extends Component {
 	};
 
 	submitNoCodeCodemark = async attributes => {
-		const retVal = await this.props.createPostAndCodemark(attributes, "Global Nav");
-		this.props.closePanel();
+		let retVal;
+		try {
+			const state = this.context.store.getState();
+			const newPostEntryPoint = state && state.context ? state.context.newPostEntryPoint : undefined;
+			retVal = await this.props.createPostAndCodemark(attributes, newPostEntryPoint || "Global Nav");
+			this.props.closePanel();
+		}
+		finally {
+			this.props.setNewPostEntry(undefined);
+		}	
 		return retVal;
 	};
 
