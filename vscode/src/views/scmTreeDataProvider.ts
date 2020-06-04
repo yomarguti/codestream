@@ -1,6 +1,10 @@
 import * as vscode from "vscode";
 import { Disposable } from "vscode";
 import { CSReview } from "@codestream/protocols/api";
+import {
+	DidChangeConnectionStatusNotification,
+	ConnectionStatus
+} from "@codestream/protocols/agent";
 import { Container } from "../container";
 import { SessionStatus, SessionStatusChangedEvent } from "../api/session";
 import { Strings } from "../system";
@@ -39,8 +43,11 @@ interface ReviewTreeNode {
 }
 
 export class ScmTreeDataProvider implements vscode.TreeDataProvider<ReviewTreeNode> {
-	private _onDidChangeTreeData: vscode.EventEmitter<ReviewTreeNode | undefined> = new vscode.EventEmitter<ReviewTreeNode | undefined>();
-	readonly onDidChangeTreeData: vscode.Event<ReviewTreeNode | undefined> = this._onDidChangeTreeData.event;
+	private _onDidChangeTreeData: vscode.EventEmitter<
+		ReviewTreeNode | undefined
+	> = new vscode.EventEmitter<ReviewTreeNode | undefined>();
+	readonly onDidChangeTreeData: vscode.Event<ReviewTreeNode | undefined> = this._onDidChangeTreeData
+		.event;
 
 	_disposable: any;
 	status: SessionStatus | undefined = undefined;
@@ -49,8 +56,15 @@ export class ScmTreeDataProvider implements vscode.TreeDataProvider<ReviewTreeNo
 		this._disposable = Disposable.from(
 			Container.session.onDidChangeReviews(this.onDidChangeReviews, this),
 			Container.session.onDidChangeSessionStatus(this.onDidChangeSessionStatus, this),
+			Container.agent.onDidChangeConnectionStatus(this.onDidChangeConnectionStatus, this),
 			this._onDidChangeTreeData
 		);
+	}
+
+	private async onDidChangeConnectionStatus(e: DidChangeConnectionStatusNotification) {
+		if (e.status === ConnectionStatus.Reconnected) {
+			this.refresh();
+		}
 	}
 
 	private async onDidChangeReviews() {
@@ -184,7 +198,9 @@ export class ScmTreeDataProvider implements vscode.TreeDataProvider<ReviewTreeNo
 				}
 				// can't use "X ago" since this panel only updates on review changes
 				const createdAtDate = new Date(_.createdAt);
-				let toolTip = `${_.title}\nOpened ${createdAtDate.toLocaleDateString()} ${createdAtDate.toLocaleTimeString()}`;
+				let toolTip = `${
+					_.title
+				}\nOpened ${createdAtDate.toLocaleDateString()} ${createdAtDate.toLocaleTimeString()}`;
 				if (_.text) {
 					toolTip += `\n\n${_.text}`;
 				}
@@ -213,13 +229,17 @@ export class ScmTreeDataProvider implements vscode.TreeDataProvider<ReviewTreeNo
 	}
 
 	private filterMyReviews(reviews: CSReview[], userId: string) {
-		return reviews.filter(_ => !_.deactivated && _.status === "open" && _.creatorId === userId);
+		return reviews
+			.filter(_ => !_.deactivated && _.status === "open" && _.creatorId === userId)
+			.sort((a, b) => b.createdAt - a.createdAt);
 	}
 
 	private filterAssignedToMeReviews(reviews: CSReview[], userId: string) {
-		return reviews.filter(
-			_ => !_.deactivated && _.status === "open" && _.reviewers && _.reviewers.includes(userId)
-		);
+		return reviews
+			.filter(
+				_ => !_.deactivated && _.status === "open" && _.reviewers && _.reviewers.includes(userId)
+			)
+			.sort((a, b) => b.createdAt - a.createdAt);
 	}
 
 	dispose() {
