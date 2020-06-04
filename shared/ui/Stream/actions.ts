@@ -246,19 +246,14 @@ export const createPostAndCodemark = (
 	}
 };
 
-export const createPostAndReview = (attributes: NewReviewAttributes) => async (
+export const createPostAndReview = (attributes: NewReviewAttributes, entryPoint?: PostEntryPoint) => async (
 	dispatch,
 	getState: () => CodeStreamState
 ) => {
-	const { repoChanges } = attributes;
-	let changeSets: any = [];
-	let markers: any = [];
-	let warning;
-	let remotes: string[] = [];
-
 	return dispatch(
 		createReview({
 			...attributes,
+			entryPoint: entryPoint,
 			mentionedUserIds: findMentionedUserIds(
 				getTeamMembers(getState()),
 				attributes.text || ""

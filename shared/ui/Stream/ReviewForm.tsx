@@ -77,7 +77,7 @@ import Timestamp from "./Timestamp";
 import { ReviewShowLocalDiffRequestType, WebviewPanels } from "@codestream/protocols/webview";
 import { Checkbox } from "../src/components/Checkbox";
 import { getAllByCommit, teamReviewCount } from "../store/reviews/reducer";
-import { setCurrentReview } from "@codestream/webview/store/context/actions";
+import { setCurrentReview, setNewPostEntry } from "@codestream/webview/store/context/actions";
 import styled from "styled-components";
 import { DropdownButton } from "./Review/DropdownButton";
 import { getTeamSetting } from "../store/teams/reducer";
@@ -102,6 +102,7 @@ interface Props extends ConnectedProps {
 	setUserPreference: Function;
 	setCurrentReview: Function;
 	setCodemarkStatus: Function;
+	setNewPostEntry: Function;
 }
 
 interface ConnectedProps {
@@ -133,6 +134,7 @@ interface ConnectedProps {
 	reviewAssignment: CSReviewAssignmentSetting;
 	changeRequests?: CodemarkPlus[];
 	inviteUsersOnTheFly: boolean;
+	newPostEntryPoint?: string;
 }
 
 interface State {
@@ -773,7 +775,7 @@ class ReviewForm extends React.Component<Props, State> {
 					]
 				} as any;
 
-				const { type: createResult } = await this.props.createPostAndReview(review);
+				const { type: createResult } = await this.props.createPostAndReview(review, this.props.newPostEntryPoint || "Global Nav");
 				if (createResult !== PostsActionsType.FailPendingPost) {
 					if (this.props.skipPostCreationModal) {
 						this.props.closePanel();
@@ -827,6 +829,7 @@ class ReviewForm extends React.Component<Props, State> {
 			this.setState({ reviewCreationError: error.message, isLoading: false });
 		} finally {
 			this.setState({ isLoading: false });
+			this.props.setNewPostEntry(undefined);
 		}
 	};
 
@@ -2079,7 +2082,8 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		teamTagsArray,
 		repos,
 		changeRequests,
-		inviteUsersOnTheFly
+		inviteUsersOnTheFly,
+		newPostEntryPoint: context.newPostEntryPoint
 	};
 };
 
@@ -2090,7 +2094,8 @@ const ConnectedReviewForm = connect(mapStateToProps, {
 	editReview,
 	setUserPreference,
 	setCurrentReview,
-	setCodemarkStatus
+	setCodemarkStatus,
+	setNewPostEntry
 })(ReviewForm);
 
 export { ConnectedReviewForm as ReviewForm };

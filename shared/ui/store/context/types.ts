@@ -31,7 +31,7 @@ export enum ContextActionsType {
 	SetCurrentReview = "@context/SetCurrentReview"
 }
 
-export type PostEntryPoint = "Stream" | "Global Nav" | "Spatial View" | undefined;
+export type PostEntryPoint = "Stream" | "Global Nav" | "Spatial View" | "VSC SCM" | undefined;
 
 export interface ContextState extends WebviewContext {
 	channelFilter: string;

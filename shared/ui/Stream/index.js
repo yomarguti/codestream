@@ -226,6 +226,10 @@ export class SimpleStream extends Component {
 	}
 
 	handleNewReviewRequest(e) {
+		if (e.source) {
+			// this can come externally (from an IDE)
+			this.props.setNewPostEntry(e.source);
+		}
 		this.props.setCurrentReview("");
 		this.props.openPanel(WebviewPanels.NewReview);
 	}
