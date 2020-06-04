@@ -13,20 +13,30 @@ import { JoinTeam } from "./JoinTeam";
 interface ConnectedProps {
 	pluginVersion: string;
 	whichServer: string;
+	onPrem: boolean;
 }
 
 interface Props extends ConnectedProps, DispatchProp {}
 
 const mapStateToProps = (state: CodeStreamState) => {
 	let whichServer = state.configs.serverUrl;
-	const serverMatch = whichServer.match(/^https:\/\/(.*?)-?api\.codestream\.(us|com)\/?$/);
-	if (serverMatch) {
+	const serverMatch = whichServer.match(/^https:\/\/(.*?)\.codestream\.(us|com)(:[0-9]+)?\/?$/);
+	let onPrem = true;
+	if (serverMatch && serverMatch[1] !== "oppr" && serverMatch[1] !== "opbeta") {
+		onPrem = false;
 		whichServer = "CodeStream's cloud service";
 		if (serverMatch[1]) {
-			whichServer += ` (${serverMatch[1].toUpperCase()})`;
+			if (serverMatch[1] === "localhost") {
+				whichServer += ` (local)`;
+			} else {
+				const parts = serverMatch[1].split("-");
+				if (parts[0] !== "api") {
+					whichServer += ` (${parts[0].toUpperCase()})`;
+				}
+			}
 		}
 	}
-	return { pluginVersion: state.pluginVersion, whichServer };
+	return { pluginVersion: state.pluginVersion, whichServer, onPrem };
 };
 
 export const NewUserEntry = (connect(mapStateToProps) as any)((props: Props) => {
@@ -78,12 +88,14 @@ export const NewUserEntry = (connect(mapStateToProps) as any)((props: Props) => 
 							</div>
 							<div>
 								<p style={{ opacity: 0.5, fontSize: ".9em", textAlign: "center" }}>
-									CodeStream Version {props.pluginVersion}
+									Connected to {props.whichServer}.{" "}
+									{!props.onPrem && (
+										<a href="https://docs.codestream.com/userguide/faq/on-prem/">
+											Looking for on-prem?
+										</a>
+									)}
 									<br />
-									Connected to {props.whichServer}.<br />
-									<a href="https://docs.codestream.com/userguide/faq/on-prem/">
-										Looking for on-prem?
-									</a>
+									CodeStream Version {props.pluginVersion}
 								</p>
 							</div>
 						</div>
