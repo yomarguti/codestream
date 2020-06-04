@@ -567,7 +567,8 @@ function trackPostCreation(
 function trackReviewPostCreation(
 	review: ReviewPlus,
 	totalExcludedFilesCount: number,
-	reviewChangesetsSizeInBytes: number
+	reviewChangesetsSizeInBytes: number,
+	entryPoint?: string
 ) {
 	process.nextTick(() => {
 		try {
@@ -576,6 +577,7 @@ function trackReviewPostCreation(
 				[key: string]: any;
 			} = {
 				"Review ID": review.id,
+				"Entry Point": entryPoint,
 				Approvals: review.allReviewersMustApprove === true ? "Everyone" : "Anyone",
 				Reviewers: review.reviewers.length,
 				Files: review.reviewChangesets.map(_ => _.modifiedFiles.length).reduce((acc, x) => acc + x),
@@ -1098,7 +1100,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 		review = response.review!;
 
-		trackReviewPostCreation(review, totalExcludedFilesCount, reviewChangesetsSizeInBytes);
+		trackReviewPostCreation(review, totalExcludedFilesCount, reviewChangesetsSizeInBytes, request.entryPoint);
 		await resolveCreatePostResponse(response!);
 		return {
 			stream,
