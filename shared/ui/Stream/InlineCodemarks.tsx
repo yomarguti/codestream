@@ -82,6 +82,7 @@ import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { GettingStarted } from "./GettingStarted";
 import { supportsIntegrations } from "../store/configs/actions";
 import { Keybindings } from "./Keybindings";
+import { setNewPostEntry } from "../store/context/actions";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -148,6 +149,8 @@ interface Props {
 	changeSelection: Function;
 	setSpatialViewPRCommentsToggle: Function;
 	composeCodemarkActive: CodemarkType | undefined;
+	newPostEntryPoint?: string;
+	setNewPostEntry: Function;
 }
 
 interface State {
@@ -871,9 +874,21 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		try {
 			// attempt to create the codemark
 			try {
+				let { newPostEntryPoint } = this.props;				 
+				if (newPostEntryPoint === WebviewPanels.CodemarksForFile) {
+					// use the previous name instead of the panel name
+					newPostEntryPoint = "Spatial View";
+				} else if (newPostEntryPoint) {
+					// convert to Title Case
+					newPostEntryPoint = newPostEntryPoint
+						.split("-")
+						.map(word => word.charAt(0).toUpperCase() + word.slice(1))
+						.join(" ");
+				}
+
 				retVal = await this.props.createPostAndCodemark(
 					attributes,
-					this.currentPostEntryPoint || "Spatial View"
+					this.currentPostEntryPoint || newPostEntryPoint || "Spatial View"
 				);
 			} catch (error) {
 				// if the error was specific to the sharing step, just continue
@@ -904,6 +919,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		} finally {
 			// cleanup that must happen regardless of what occurs above
 			this.currentPostEntryPoint = undefined;
+			this.props.setNewPostEntry(undefined);
 			injectedMiddleware.dispose();
 		}
 		return retVal;
@@ -1293,7 +1309,8 @@ const mapStateToProps = (state: CodeStreamState) => {
 		webviewFocused: context.hasFocus,
 		lightningCodeReviewsEnabled: isFeatureEnabled(state, "lightningCodeReviews"),
 		supportsIntegrations: supportsIntegrations(configs),
-		composeCodemarkActive: context.composeCodemarkActive
+		composeCodemarkActive: context.composeCodemarkActive,
+		newPostEntryPoint: context.newPostEntryPoint
 	};
 };
 
@@ -1308,7 +1325,8 @@ export default connect(mapStateToProps, {
 	createPostAndCodemark,
 	addDocumentMarker,
 	changeSelection,
-	setSpatialViewPRCommentsToggle
+	setSpatialViewPRCommentsToggle,
+	setNewPostEntry
 })(SimpleInlineCodemarks);
 
 const ViewSelectorControl = styled.span`

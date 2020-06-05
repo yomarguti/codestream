@@ -31,7 +31,10 @@ export enum ContextActionsType {
 	SetCurrentReview = "@context/SetCurrentReview"
 }
 
-export type PostEntryPoint = "Stream" | "Global Nav" | "Spatial View" | "VSC SCM" | undefined;
+/**
+ * This can also be any Titled Cased panel name
+ */
+export type PostEntryPoint = "Stream" | "Global Nav" | "Spatial View" | "VSC SCM" | string | undefined;
 
 export interface ContextState extends WebviewContext {
 	channelFilter: string;

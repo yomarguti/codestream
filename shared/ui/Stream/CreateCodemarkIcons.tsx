@@ -13,7 +13,7 @@ import {
 } from "../ipc/webview.protocol";
 import { range } from "../utils";
 import { CodemarkType } from "@codestream/protocols/api";
-import { setCurrentCodemark, setComposeCodemarkActive } from "../store/context/actions";
+import { setCurrentCodemark, setComposeCodemarkActive, setNewPostEntry } from "../store/context/actions";
 import {
 	getCurrentSelection,
 	getVisibleRanges,
@@ -87,7 +87,8 @@ export const CreateCodemarkIcons = (props: Props) => {
 			textEditorSelection: getCurrentSelection(editorContext),
 			metrics: editorContext.metrics || {},
 			openIconsOnLine,
-			composeCodemarkActive: context.composeCodemarkActive
+			composeCodemarkActive: context.composeCodemarkActive,
+			activePanel: context.panelStack && context.panelStack.length ? context.panelStack[0] : undefined
 		};
 	};
 
@@ -97,7 +98,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 		const disposable = HostApi.instance.on(NewCodemarkNotificationType, e => {
 			// this can fire if there's no file open yet we're on the CodemarkForFile panel
 			if (!e.uri) return;
-			handleClickPlus(undefined, e.type, undefined as any, false);
+			handleClickPlus(undefined, e.type, undefined as any, e.source, false);
 		});
 		return () => disposable.dispose();
 	});
@@ -145,6 +146,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 		event: React.SyntheticEvent | undefined,
 		type: CodemarkType,
 		lineNum0: number,
+		postEntry: string | undefined = undefined,
 		shouldChangeSelection = true
 	) => {
 		if (event) event.preventDefault();
@@ -178,6 +180,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 		}
 
 		dispatch(setComposeCodemarkActive(type));
+		dispatch(setNewPostEntry(postEntry || derivedState.activePanel))
 		dispatch(setCurrentCodemark());
 	};
 	const mapLine0ToVisibleRange = fromLineNum0 => {
