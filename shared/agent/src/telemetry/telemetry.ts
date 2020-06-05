@@ -95,7 +95,7 @@ export class TelemetryService {
 		}
 
 		// HACK ALERT - there is a race condition situation with mixpanel where the alias can take some time, and
-		// until this happens, events which come in are not properly linked to the correct distinct ID ... 
+		// until this happens, events which come in are not properly linked to the correct distinct ID ...
 		// read about it here: https://help.mixpanel.com/hc/en-us/articles/115004497803-Identity-Management-Best-Practices#serverside-aliasing
 		// to get around this BS, we'll queue any tracking events until we can be reasonably sure the alias has gone
 		// through, we'll say 2 seconds ... then we'll flush the queue

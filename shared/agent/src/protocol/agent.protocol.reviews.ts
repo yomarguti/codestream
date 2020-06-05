@@ -22,8 +22,8 @@ import {
 import {
 	CSReviewChangeset,
 	CSReviewDiffs,
-	ReviewChangesetFileInfo,
-	CSReviewStatus
+	CSReviewStatus,
+	ReviewChangesetFileInfo
 } from "./api.protocol.models";
 
 export interface ReviewPlus extends CSReview {}

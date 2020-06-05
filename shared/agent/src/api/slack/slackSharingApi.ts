@@ -167,7 +167,6 @@ export class SlackSharingApiProvider {
 		return this._slackUserId;
 	}
 
-
 	private async ensureUserMaps(): Promise<UserMaps> {
 		if (this._userMaps === undefined) {
 			const slackUsers = (await this.fetchUsers()).users;
