@@ -39,7 +39,8 @@ data class ApplicationSettingsServiceState(
     var showMarkers: Boolean = true,
     var autoHideMarkers: Boolean = false,
     var proxySupport: ProxySupport = ProxySupport.ON,
-    var proxyStrictSSL: Boolean = true
+    var proxyStrictSSL: Boolean = true,
+    var firstRun: Boolean = true
 )
 
 @State(name = "CodeStream", storages = [Storage("codestream.xml")])
@@ -74,6 +75,9 @@ class ApplicationSettingsService : PersistentStateComponent<ApplicationSettingsS
     val email get() = state.email
     val showFeedbackSmiley get() = state.showFeedbackSmiley
     val autoSignIn get() = state.autoSignIn
+    var firstRun
+        get() = state.firstRun
+        set(value) { state.firstRun = value }
 
     val environmentDisplayPrefix
         get() = when (state.serverUrl) {
