@@ -668,6 +668,7 @@ const BaseReview = (props: BaseReviewProps) => {
 												onChange={value => {
 													dispatch(setCodemarkStatus(codemark.id, value ? "closed" : "open"));
 												}}
+												onClickLabel={() => dispatch(setCurrentCodemark(codemark.id))}
 											>
 												<MarkdownText text={formattedText} />
 											</Checkbox>
@@ -677,10 +678,7 @@ const BaseReview = (props: BaseReviewProps) => {
 												delay={1}
 												name="link-external"
 												className="clickable"
-												onClick={() => {
-													// dispatch(setCurrentReview());
-													dispatch(setCurrentCodemark(codemark.id));
-												}}
+												onClick={() => dispatch(setCurrentCodemark(codemark.id))}
 											/>
 										</MetaCheckboxWithHoverIcon>
 									);

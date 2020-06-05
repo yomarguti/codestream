@@ -9,6 +9,7 @@ interface Props {
 	checked?: boolean;
 	loading?: boolean;
 	noMargin?: boolean;
+	onClickLabel?: React.MouseEventHandler;
 	onChange: (value: boolean) => void;
 }
 
@@ -42,8 +43,10 @@ const Root = styled.div<{ noMargin?: boolean }>`
 `;
 
 export function Checkbox(props: PropsWithChildren<Props>) {
-	const { name, checked, onChange, loading, className, noMargin } = props;
+	const { name, checked, onChange, onClickLabel, loading, className, noMargin } = props;
 
+	const id = `checkbox-${name}`;
+	const htmlFor = onClickLabel ? "" : id;
 	return (
 		<Root className={className} noMargin={noMargin}>
 			<div>
@@ -51,7 +54,7 @@ export function Checkbox(props: PropsWithChildren<Props>) {
 					<Icon className="spin" name="sync" />
 				) : (
 					<input
-						id={`checkbox-${name}`}
+						id={id}
 						type="checkbox"
 						name={name}
 						checked={checked}
@@ -59,7 +62,9 @@ export function Checkbox(props: PropsWithChildren<Props>) {
 					/>
 				)}
 			</div>
-			<label htmlFor={`checkbox-${name}`}>{props.children}</label>
+			<label htmlFor={htmlFor} onClick={onClickLabel}>
+				{props.children}
+			</label>
 		</Root>
 	);
 }
