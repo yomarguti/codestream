@@ -2244,8 +2244,9 @@ export class SimpleStream extends Component {
 	};
 
 	submitNoCodeCodemark = async attributes => {
-		const { type } = await this.props.createPostAndCodemark(attributes, "Global Nav");
+		const retVal = await this.props.createPostAndCodemark(attributes, "Global Nav");
 		this.props.closePanel();
+		return retVal;
 	};
 
 	submitCodemark = async (attributes, crossPostIssueValues, scmInfo) => {

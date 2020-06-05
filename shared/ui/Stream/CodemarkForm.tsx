@@ -696,7 +696,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				addedUsers: keyFilter(this.state.emailAuthors)
 			};
 			if (this.props.teamProvider === "codestream") {
-				await this.props.onSubmit({
+				const retVal = await this.props.onSubmit({
 					...baseAttributes,
 					sharingAttributes: this.props.shouldShare ? this._sharingAttributes : undefined,
 					accessMemberIds: this.state.privacyMembers.map(m => m.value)
@@ -705,7 +705,11 @@ class CodemarkForm extends React.Component<Props, State> {
 				// will just kind of disappear.  similarly, if you prior panel was *not* spatial view
 				// the form will just disappear. in these cases, we want to show the user where the
 				// codemark ends up -- the actiivty feed and spatial view
-				if (codeBlocks.length == 0 || this.props.activePanel !== WebviewPanels.CodemarksForFile)
+				if (
+					retVal &&
+					((codeBlocks.length == 0 && this.props.activePanel !== WebviewPanels.Activity) ||
+						this.props.activePanel !== WebviewPanels.CodemarksForFile)
+				)
 					this.showConfirmationForCodemarkLocation(type, codeBlocks.length);
 			} else {
 				await this.props.onSubmit({ ...baseAttributes, streamId: selectedChannelId! }, event);
