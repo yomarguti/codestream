@@ -498,7 +498,8 @@ function trackPostCreation(
 							"Linked Service": request.codemark.externalProvider,
 							"Entry Point": request.entryPoint,
 							Tags: (request.codemark.tags || []).length,
-							Markers: markers.length
+							Markers: markers.length,
+							"Invitee Mentions": request.addedUsers ? request.addedUsers.length : 0
 						};
 						if (request.codemark.reviewId) {
 							codemarkProperties["Code Review"] = true;
@@ -568,7 +569,8 @@ function trackReviewPostCreation(
 	review: ReviewPlus,
 	totalExcludedFilesCount: number,
 	reviewChangesetsSizeInBytes: number,
-	entryPoint?: string
+	entryPoint?: string,
+	addedUsers?: string[]
 ) {
 	process.nextTick(() => {
 		try {
@@ -594,7 +596,8 @@ function trackReviewPostCreation(
 				"Payload Size":
 					reviewChangesetsSizeInBytes > 0
 						? Math.round((reviewChangesetsSizeInBytes / 1048576) * 10000) / 10000
-						: 0
+						: 0,
+				"Invitee Reviewers": addedUsers ? addedUsers.length : 0
 			};
 
 			telemetry.track({
@@ -984,7 +987,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				codemark: { ...codemark, markers },
 				text: request.attributes.text!,
 				entryPoint: request.entryPoint,
-				isPseudoCodemark: request.isPseudoCodemark
+				isPseudoCodemark: request.isPseudoCodemark,
+				addedUsers: request.addedUsers
 			},
 			request.textDocuments,
 			codemark.id
@@ -1100,7 +1104,10 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 		review = response.review!;
 
-		trackReviewPostCreation(review, totalExcludedFilesCount, reviewChangesetsSizeInBytes, request.entryPoint);
+		trackReviewPostCreation(review, totalExcludedFilesCount,
+			reviewChangesetsSizeInBytes,
+			request.entryPoint,
+			request.addedUsers);
 		await resolveCreatePostResponse(response!);
 		return {
 			stream,
