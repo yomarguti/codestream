@@ -42,7 +42,8 @@ import {
 	getVisibleLineCount,
 	getVisibleRanges,
 	ScmError,
-	getFileScmError
+	getFileScmError,
+	mapFileScmErrorForTelemetry
 } from "../store/editorContext/reducer";
 import { CSTeam, CodemarkType } from "@codestream/protocols/api";
 import {
@@ -237,7 +238,10 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			})
 		);
 
-		this.onFileChanged(true);
+		this.onFileChanged(true, (error: string) => {
+			if (!error) return;
+			HostApi.instance.track("Spatial Error State", { "Error State": error });
+		});
 
 		this.scrollTo(this.props.metrics.lineHeight!);
 	}
@@ -388,7 +392,10 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		}
 	};
 
-	async onFileChanged(isInitialRender = false) {
+	async onFileChanged(
+		isInitialRender = false,
+		initialRenderErrorCallback: ((error: string) => void) | undefined = undefined
+	) {
 		const { textEditorUri, setEditorContext, composeCodemarkActive } = this.props;
 
 		if (
@@ -399,9 +406,28 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			this.props.setComposeCodemarkActive(undefined);
 		}
 
-		if (textEditorUri === undefined || isNotOnDisk(textEditorUri)) {
+		if (textEditorUri === undefined) {
 			if (isInitialRender) {
 				this.setState({ isLoading: false });
+				if (
+					initialRenderErrorCallback !== undefined &&
+					typeof initialRenderErrorCallback === "function"
+				) {
+					initialRenderErrorCallback("InvalidUri");
+				}
+			}
+			return;
+		}
+
+		if (isNotOnDisk(textEditorUri)) {
+			if (isInitialRender) {
+				this.setState({ isLoading: false });
+				if (
+					initialRenderErrorCallback !== undefined &&
+					typeof initialRenderErrorCallback === "function"
+				) {
+					initialRenderErrorCallback("FileNotSaved");
+				}
 			}
 			return;
 		}
@@ -410,15 +436,23 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		if (!scmInfo) {
 			this.setState({ isLoading: true });
 			scmInfo = await HostApi.instance.send(GetFileScmInfoRequestType, {
-				uri: textEditorUri!
+				uri: textEditorUri
 			});
 			setEditorContext({ scmInfo });
 		}
 
-		this.setState({ problem: getFileScmError(scmInfo) });
+		const scmError = getFileScmError(scmInfo);
+		this.setState({ problem: scmError });
 
 		await this.props.fetchDocumentMarkers(textEditorUri);
 		this.setState(state => (state.isLoading ? { isLoading: false } : null));
+		if (
+			isInitialRender &&
+			scmError &&
+			initialRenderErrorCallback !== undefined &&
+			typeof initialRenderErrorCallback === "function"
+		)
+			initialRenderErrorCallback(mapFileScmErrorForTelemetry(scmError));
 	}
 
 	compareStart(range1?: Range[], range2?: Range[]) {
@@ -874,7 +908,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		try {
 			// attempt to create the codemark
 			try {
-				let { newPostEntryPoint } = this.props;				 
+				let { newPostEntryPoint } = this.props;
 				if (newPostEntryPoint === WebviewPanels.CodemarksForFile) {
 					// use the previous name instead of the panel name
 					newPostEntryPoint = "Spatial View";

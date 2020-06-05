@@ -144,3 +144,10 @@ export const getFileScmError = (scmInfo: GetFileScmInfoResponse | GetRangeScmInf
 
 	return undefined;
 };
+
+export const mapFileScmErrorForTelemetry = (error: string) => {
+	if (error === ScmError.NoRepo) return "RepoNotManaged";
+	if (error === ScmError.NoGit) return "GitNotFound";
+	if (error === ScmError.NoRemotes) return "NoRemotes";
+	return "Unknown";
+}
