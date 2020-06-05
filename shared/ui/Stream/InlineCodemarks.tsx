@@ -409,10 +409,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		if (textEditorUri === undefined) {
 			if (isInitialRender) {
 				this.setState({ isLoading: false });
-				if (
-					initialRenderErrorCallback !== undefined &&
-					typeof initialRenderErrorCallback === "function"
-				) {
+				if (initialRenderErrorCallback !== undefined) {
 					initialRenderErrorCallback("InvalidUri");
 				}
 			}
@@ -422,10 +419,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		if (isNotOnDisk(textEditorUri)) {
 			if (isInitialRender) {
 				this.setState({ isLoading: false });
-				if (
-					initialRenderErrorCallback !== undefined &&
-					typeof initialRenderErrorCallback === "function"
-				) {
+				if (initialRenderErrorCallback !== undefined) {
 					initialRenderErrorCallback("FileNotSaved");
 				}
 			}
@@ -446,12 +440,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 		await this.props.fetchDocumentMarkers(textEditorUri);
 		this.setState(state => (state.isLoading ? { isLoading: false } : null));
-		if (
-			isInitialRender &&
-			scmError &&
-			initialRenderErrorCallback !== undefined &&
-			typeof initialRenderErrorCallback === "function"
-		)
+		if (isInitialRender && scmError && initialRenderErrorCallback !== undefined)
 			initialRenderErrorCallback(mapFileScmErrorForTelemetry(scmError));
 	}
 
