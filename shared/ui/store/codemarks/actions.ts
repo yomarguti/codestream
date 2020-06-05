@@ -92,6 +92,7 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 			textDocuments: attributes.textDocuments,
 			entryPoint: attributes.entryPoint,
 			mentionedUserIds: attributes.mentionedUserIds,
+			addedUsers: attributes.addedUsers,
 			parentPostId: attributes.parentPostId,
 			isPseudoCodemark: attributes.isPseudoCodemark
 		});
