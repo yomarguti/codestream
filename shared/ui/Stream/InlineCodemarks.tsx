@@ -867,10 +867,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			}
 		);
 
+		let retVal;
 		try {
 			// attempt to create the codemark
 			try {
-				await this.props.createPostAndCodemark(
+				retVal = await this.props.createPostAndCodemark(
 					attributes,
 					this.currentPostEntryPoint || "Spatial View"
 				);
@@ -905,6 +906,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			this.currentPostEntryPoint = undefined;
 			injectedMiddleware.dispose();
 		}
+		return retVal;
 	};
 
 	private _clearWheelingStateTimeout?: any;
