@@ -266,6 +266,11 @@ export class WebviewController implements Disposable {
 		if (ignoreLastEditor) {
 			editor = undefined;
 		}
+
+		if (!this._webview) {
+			// it's possible that the webview is closing...
+			return;
+		}
 		// TODO: Change this to be a request vs a notification
 		this._webview!.notify(NewCodemarkNotificationType, {
 			uri: editor ? editor.document.uri.toString() : undefined,
@@ -284,6 +289,11 @@ export class WebviewController implements Disposable {
 			await this._webview!.show();
 		} else {
 			await this.show();
+		}
+
+		if (!this._webview) {
+			// it's possible that the webview is closing...
+			return;
 		}
 
 		// TODO: Change this to be a request vs a notification
@@ -315,6 +325,11 @@ export class WebviewController implements Disposable {
 			await this.show();
 		}
 
+		if (!this._webview) {
+			// it's possible that the webview is closing...
+			return;
+		}
+
 		// TODO: Change this to be a request vs a notification
 		this._webview!.notify(ShowCodemarkNotificationType, {
 			codemarkId: codemarkId,
@@ -331,6 +346,11 @@ export class WebviewController implements Disposable {
 			if (options.onlyWhenVisible) return;
 
 			await this.show();
+		}
+
+		if (!this._webview) {
+			// it's possible that the webview is closing...
+			return;
 		}
 
 		// TODO: Change this to be a request vs a notification
