@@ -103,10 +103,10 @@ export const ComposeKeybindings = {
 			<span className="keybinding">r</span>
 		</span>
 	),
-	work: (
+	branch: (
 		<span className="binding">
 			<span className="keybinding extra-pad">{modifier}</span>
-			<span className="keybinding">w</span>
+			<span className="keybinding">b</span>
 		</span>
 	),
 	toggleCodeStreamPanel: (

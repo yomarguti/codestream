@@ -80,7 +80,6 @@ import { PanelHeader } from "../src/components/PanelHeader";
 import * as fs from "../utilities/fs";
 import { FileInfo } from "./FileInfo";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
-import { GettingStarted } from "./GettingStarted";
 import { supportsIntegrations } from "../store/configs/actions";
 import { Keybindings } from "./Keybindings";
 import { setNewPostEntry } from "../store/context/actions";
@@ -1129,12 +1128,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const { currentReviewId, activePanel, composeCodemarkActive } = this.props;
 
 		const composeOpen = composeCodemarkActive ? true : false;
-		const onGettingStarted = activePanel === WebviewPanels.GettingStarted;
 		return (
 			<div ref={this.root} className={cx("panel inline-panel full-height")}>
 				{currentReviewId ? (
 					<ReviewNav reviewId={currentReviewId} composeOpen={composeOpen} />
-				) : onGettingStarted ? null : (
+				) : (
 					this.renderHeader()
 				)}
 				<CreateCodemarkIcons />
@@ -1142,8 +1140,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				{this.state.showPRInfoModal && (
 					<PRInfoModal onClose={() => this.setState({ showPRInfoModal: false })} />
 				)}
-				{onGettingStarted && !composeOpen && <GettingStarted />}
-				{this.state.isLoading || onGettingStarted ? null : this.renderCodemarks()}
+				{this.state.isLoading ? null : this.renderCodemarks()}
 				{!currentReviewId && this.renderViewSelectors()}
 			</div>
 		);

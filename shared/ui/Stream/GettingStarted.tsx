@@ -13,6 +13,11 @@ import { setUserPreference } from "./actions";
 import { Button } from "../src/components/Button";
 import { HostApi } from "../webview-api";
 import { OpenUrlRequestType } from "../ipc/host.protocol";
+import { Tab, Tabs, Content } from "../src/components/Tabs";
+import { Flow } from "./Flow";
+import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
+import { PanelHeader } from "../src/components/PanelHeader";
+import ScrollBox from "./ScrollBox";
 
 const Step = styled.div`
 	position: relative;
@@ -78,7 +83,7 @@ const StepTitle = styled.span`
 	color: var(--text-color-highlight);
 `;
 
-const YouTubeImg = styled.img`
+export const YouTubeImg = styled.img`
 	height: 22px;
 	cursor: pointer;
 	opacity: 0.8;
@@ -101,22 +106,19 @@ const StatusCount = styled.span`
 `;
 
 const Root = styled.div`
-	position: fixed;
-	width: 100%;
-	max-height: 100%;
-	overflow: auto;
-	// padding: 30px 20px;
-	padding: 40px;
+	padding: 0 40px;
 	z-index: 0;
 	color: var(--text-color-subtle);
 	font-size: var(--font-size);
-	b,
-	h2 {
+	b {
 		color: var(--text-color-highlight);
 	}
 
+	@media only screen and (max-width: 450px) {
+		padding: 0 30px;
+	}
 	@media only screen and (max-width: 350px) {
-		padding: 40px 20px;
+		padding: 0 20px;
 	}
 `;
 
@@ -235,87 +237,118 @@ export function GettingStarted(props: GettingStartedProps) {
 		if (step.panel) dispatch(openPanel(step.panel));
 	};
 
+	const [active, setActive] = React.useState("0");
+
+	const handleClickTab = e => {
+		const index = e.target.id;
+		if (index !== active) {
+			setActive(index);
+		}
+	};
+
 	return (
-		<Root>
-			<ComposeArea id="compose-gutter" />
-			<h2>Getting Started</h2>
-			<b>Let’s get you set up.</b> Follow the steps below to start coding more efficiently with your
-			team.
-			<Status>
-				<StatusCount>
-					{derivedState.completed.length} of {STEPS.length}
-				</StatusCount>{" "}
-				complete
-			</Status>
-			{derivedState.todo.map((step, index) => {
-				return (
-					<Step
-						key={step.id}
-						onMouseEnter={() => pulse(step.pulse)}
-						onMouseLeave={() => unPulse(step.pulse)}
-						onClick={e => handleClick(e, step)}
-					>
-						<StepNumber>{index + 1}</StepNumber>
-						<StepText>
-							<StepTitle>{step.title}</StepTitle>&nbsp;<StepSubtext>{step.subtext}</StepSubtext>
-						</StepText>
-						<Tooltip
-							title="Watch the how-to video"
-							placement="bottomRight"
-							delay={1}
-							align={{ offset: [13, 0] }}
-						>
-							<a href={step.video}>
-								<YouTubeImg src="https://i.imgur.com/9IKqpzf.png" />
-							</a>
-						</Tooltip>
-					</Step>
-				);
-			})}
-			{derivedState.completed.length > 0 && <HR />}
-			{derivedState.completed.map(step => {
-				return (
-					<Step
-						key={step.id}
-						onMouseEnter={() => pulse(step.pulse)}
-						onMouseLeave={() => unPulse(step.pulse)}
-						onClick={e => handleClick(e, step)}
-					>
-						<StepNumberDone>
-							<b>{"\u2714"}</b>
-						</StepNumberDone>
-						<StepText>
-							<StepTitle>{step.done}</StepTitle>
-						</StepText>
-						<Tooltip title="Watch the how-to video" placement="bottomRight" delay={1}>
-							<a href={step.video}>
-								<YouTubeImg src="https://i.imgur.com/9IKqpzf.png" />
-							</a>
-						</Tooltip>
-					</Step>
-				);
-			})}
-			<HR />
-			<SpreadButtons>
-				<Button
-					variant="secondary"
-					size="compact"
-					onClick={() => dispatch(setUserPreference(["skipGettingStarted"], true))}
-				>
-					Mark all as done
-				</Button>
-				<Button
-					variant="secondary"
-					size="compact"
-					onClick={() =>
-						HostApi.instance.send(OpenUrlRequestType, {
-							url: "https://www.codestream.com/video-library"
-						})
-					}
-				>
-					Video library
-				</Button>
-			</SpreadButtons>
-		</Root>
+		<div className="panel full-height getting-started-panel">
+			{active === "0" && <CreateCodemarkIcons />}
+			<PanelHeader title={<>&nbsp;</>} />
+			<ScrollBox>
+				<div className="vscroll">
+					<Root>
+						<ComposeArea id="compose-gutter" />
+						<Tabs>
+							<Tab onClick={handleClickTab} active={active === "0"} id="0">
+								Getting Started
+							</Tab>
+
+							<Tab onClick={handleClickTab} active={active === "1"} id="1">
+								CodeStream Flow
+							</Tab>
+						</Tabs>
+						<Content active={active === "0"}>
+							<b>Let’s get you set up.</b> Follow the steps below to start coding more efficiently
+							with your team.
+							<Status>
+								<StatusCount>
+									{derivedState.completed.length} of {STEPS.length}
+								</StatusCount>{" "}
+								complete
+							</Status>
+							{derivedState.todo.map((step, index) => {
+								return (
+									<Step
+										key={step.id}
+										onMouseEnter={() => pulse(step.pulse)}
+										onMouseLeave={() => unPulse(step.pulse)}
+										onClick={e => handleClick(e, step)}
+									>
+										<StepNumber>{index + 1}</StepNumber>
+										<StepText>
+											<StepTitle>{step.title}</StepTitle>&nbsp;
+											<StepSubtext>{step.subtext}</StepSubtext>
+										</StepText>
+										<Tooltip
+											title="Watch the how-to video"
+											placement="bottomRight"
+											delay={1}
+											align={{ offset: [13, 0] }}
+										>
+											<a href={step.video}>
+												<YouTubeImg src="https://i.imgur.com/9IKqpzf.png" />
+											</a>
+										</Tooltip>
+									</Step>
+								);
+							})}
+							{derivedState.completed.length > 0 && <HR />}
+							{derivedState.completed.map(step => {
+								return (
+									<Step
+										key={step.id}
+										onMouseEnter={() => pulse(step.pulse)}
+										onMouseLeave={() => unPulse(step.pulse)}
+										onClick={e => handleClick(e, step)}
+									>
+										<StepNumberDone>
+											<b>{"\u2714"}</b>
+										</StepNumberDone>
+										<StepText>
+											<StepTitle>{step.done}</StepTitle>
+										</StepText>
+										<Tooltip title="Watch the how-to video" placement="bottomRight" delay={1}>
+											<a href={step.video}>
+												<YouTubeImg src="https://i.imgur.com/9IKqpzf.png" />
+											</a>
+										</Tooltip>
+									</Step>
+								);
+							})}
+							<HR />
+							<SpreadButtons>
+								<Button
+									variant="secondary"
+									size="compact"
+									onClick={() => dispatch(setUserPreference(["skipGettingStarted"], true))}
+								>
+									Mark all as done
+								</Button>
+								<Button
+									variant="secondary"
+									size="compact"
+									onClick={() =>
+										HostApi.instance.send(OpenUrlRequestType, {
+											url: "https://www.codestream.com/video-library"
+										})
+									}
+								>
+									Video library
+								</Button>
+							</SpreadButtons>
+						</Content>
+						<Content active={active === "1"}>
+							<Flow />
+						</Content>
+					</Root>
+				</div>
+			</ScrollBox>
+		</div>
 	);
 }

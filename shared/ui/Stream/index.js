@@ -17,6 +17,7 @@ import { ChangeAvatarPanel } from "./ChangeAvatarPanel";
 import { IntegrationsPanel } from "./IntegrationsPanel";
 import { ProfilePanel } from "./ProfilePanel";
 import { ReviewSettingsPanel } from "./ReviewSettingsPanel";
+import { GettingStarted } from "./GettingStarted";
 import { TasksPanel } from "./TasksPanel";
 import { TeamPanel } from "./TeamPanel";
 import ScrollBox from "./ScrollBox";
@@ -486,6 +487,7 @@ export class SimpleStream extends Component {
 		// - Video Library
 		// - Report an Issue
 		// - Keybindings
+		// - FAQ
 		menuItems.push(
 			{ label: "Integrations", action: "integrations" },
 			{ label: "Feedback", action: "feedback" },
@@ -532,31 +534,20 @@ export class SimpleStream extends Component {
 		const { textEditorUri } = this.props;
 
 		const menuItems = [];
-		if (this.props.kickstartEnabled) {
+		if (true || this.props.kickstartEnabled) {
 			menuItems.push(
 				{
-					icon: <Icon name="code" />,
-					label: "Start Work",
+					icon: <Icon name="git-branch" />,
+					label: "Create a Branch",
 					action: () => this.setActivePanel(WebviewPanels.Status),
-					shortcut: ComposeKeybindings.work,
+					shortcut: ComposeKeybindings.branch,
 					key: "code"
 				},
 				{ label: "-" }
 			);
 		}
 
-		if (this.props.lightningCodeReviewsEnabled) {
-			menuItems.push({
-				icon: <Icon name="review" />,
-				label: "Request a Code Review",
-				action: this.newReview,
-				shortcut: ComposeKeybindings.review,
-				key: "review"
-			});
-		}
-
 		if (canCreateCodemark(textEditorUri)) {
-			if (menuItems.length > 0) menuItems.push({ label: "-" });
 			menuItems.push(
 				{
 					icon: <Icon name="comment" />,
@@ -574,8 +565,17 @@ export class SimpleStream extends Component {
 				}
 			);
 		}
-		// { label: "-" }
-		// { label: inviteLabel, action: "invite" },
+
+		if (this.props.lightningCodeReviewsEnabled) {
+			if (menuItems.length > 0) menuItems.push({ label: "-" });
+			menuItems.push({
+				icon: <Icon name="review" />,
+				label: "Request a Code Review",
+				action: this.newReview,
+				shortcut: ComposeKeybindings.review,
+				key: "review"
+			});
+		}
 
 		return plusMenuOpen ? (
 			<Menu
@@ -991,8 +991,7 @@ export class SimpleStream extends Component {
 				)}
 				{renderNav && this.renderNavIcons()}
 				<div className={contentClass}>
-					{(activePanel === WebviewPanels.CodemarksForFile ||
-						activePanel === WebviewPanels.GettingStarted) && (
+					{activePanel === WebviewPanels.CodemarksForFile && (
 						<InlineCodemarks
 							activePanel={activePanel}
 							setActivePanel={this.setActivePanel}
@@ -1112,6 +1111,7 @@ export class SimpleStream extends Component {
 						/>
 					)}
 					*/}
+					{activePanel === WebviewPanels.GettingStarted && <GettingStarted />}
 					{activePanel === WebviewPanels.Notifications && (
 						<NotificationsPanel closePanel={this.props.closePanel} />
 					)}
@@ -2260,13 +2260,16 @@ export class SimpleStream extends Component {
 		let retVal;
 		try {
 			const state = this.context.store.getState();
-			const newPostEntryPoint = state && state.context ? state.context.newPostEntryPoint : undefined;
-			retVal = await this.props.createPostAndCodemark(attributes, newPostEntryPoint || "Global Nav");
+			const newPostEntryPoint =
+				state && state.context ? state.context.newPostEntryPoint : undefined;
+			retVal = await this.props.createPostAndCodemark(
+				attributes,
+				newPostEntryPoint || "Global Nav"
+			);
 			this.props.closePanel();
-		}
-		finally {
+		} finally {
 			this.props.setNewPostEntry(undefined);
-		}	
+		}
 		return retVal;
 	};
 
