@@ -335,7 +335,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								autoFocus={true}
 								type="text"
 								onChange={e => setLabel(e.target.value)}
-								placeholder="Enter status, paste URL, or select issue"
+								placeholder="Enter description, paste URL, or select issue"
 							/>
 						</StatusInput>
 						<div style={{ paddingLeft: "6px" }}>

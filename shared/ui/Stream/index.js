@@ -538,7 +538,7 @@ export class SimpleStream extends Component {
 			menuItems.push(
 				{
 					icon: <Icon name="git-branch" />,
-					label: "Create a Branch",
+					label: "Create Branch",
 					action: () => this.setActivePanel(WebviewPanels.Status),
 					shortcut: ComposeKeybindings.branch,
 					key: "code"

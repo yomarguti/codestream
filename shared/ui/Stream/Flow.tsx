@@ -407,7 +407,9 @@ export const Flow = () => {
 					<Content active={active === 1}>
 						<h2>Start Writing Code</h2>
 						Once your branch has been created, it's time to start making changes. Whenever you add,
-						edit, or delete a file, you can share those changes with your teammates to get feedback.
+						edit, or delete a file, you can share those changes with your teammates to get feedback
+						while you work. This early feedback is critical to make sure you are on the right track,
+						ensuring that final code review will be smooth.
 						<br />
 						<br />
 						When you have questions about existing code, asking is as easy as selecting the code and
