@@ -108,6 +108,7 @@ interface Props extends ConnectedProps {
 interface ConnectedProps {
 	teamMates: CSUser[];
 	teamMembers: CSUser[];
+	removedMemberIds: string[];
 	channel: CSStream;
 	providerInfo: {
 		[service: string]: {};
@@ -513,6 +514,12 @@ class ReviewForm extends React.Component<Props, State> {
 						// if email isn't supported, and we can't find the teammate, filter it out
 						// because we can't email based on the blame data
 						.filter(email => inviteUsersOnTheFly || teamMates.find(t => t.email === email))
+						// remove members we've explicitly removed from the team
+						.filter(
+							email =>
+								!authorsBlameData[email].id ||
+								!this.props.removedMemberIds.includes(authorsBlameData[email].id)
+						)
 						// get the top most impacted authors based on how many times their code
 						// was stomped on, and make those the suggested reviewers, depending
 						// on the team setting. we weigh 1 commits on the branch 10x as much as
@@ -775,7 +782,10 @@ class ReviewForm extends React.Component<Props, State> {
 					]
 				} as any;
 
-				const { type: createResult } = await this.props.createPostAndReview(review, this.props.newPostEntryPoint || "Global Nav");
+				const { type: createResult } = await this.props.createPostAndReview(
+					review,
+					this.props.newPostEntryPoint || "Global Nav"
+				);
 				if (createResult !== PostsActionsType.FailPendingPost) {
 					if (this.props.skipPostCreationModal) {
 						this.props.closePanel();
@@ -2055,6 +2065,7 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 	}
 
 	const team = teams[context.currentTeamId];
+	const removedMemberIds = team.removedMemberIds || [];
 
 	const skipPostCreationModal = preferences ? preferences.skipPostCreationModal : false;
 
@@ -2073,6 +2084,7 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		channel,
 		teamMates,
 		teamMembers,
+		removedMemberIds,
 		reviewApproval: getTeamSetting(team, "reviewApproval"),
 		reviewAssignment: getTeamSetting(team, "reviewAssignment"),
 		providerInfo: (user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT,

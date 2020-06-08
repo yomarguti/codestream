@@ -123,6 +123,7 @@ interface Props extends ConnectedProps {
 interface ConnectedProps {
 	teamMates: CSUser[];
 	teamMembers: CSUser[];
+	removedMemberIds: string[];
 	channelStreams: CSChannelStream[];
 	directMessageStreams: CSDirectStream[];
 	channel: CSStream;
@@ -468,7 +469,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	handleScmChange = () => {
 		const { codeBlocks } = this.state;
-		const { blameMap = {}, inviteUsersOnTheFly } = this.props;
+		const { blameMap = {}, inviteUsersOnTheFly, removedMemberIds } = this.props;
 
 		this.setState({ codeBlockInvalid: false });
 
@@ -500,8 +501,8 @@ class CodemarkForm extends React.Component<Props, State> {
 						username: mappedPerson.username
 					});
 				} else if (author.id) {
-					// if it's a registered teammate, mention them
-					mentionAuthors.push(author);
+					// if it's a registered teammate who has not been explicitly removed from the team, mention them
+					if (!removedMemberIds.includes(author.id)) mentionAuthors.push(author);
 				} else if (inviteUsersOnTheFly) {
 					// else offer to send the person an email
 					unregisteredAuthors.push(author);
@@ -2193,6 +2194,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 
 	const team = teams[context.currentTeamId];
 	const adminIds = team.adminIds || [];
+	const removedMemberIds = team.removedMemberIds || [];
 	const isCurrentUserAdmin = adminIds.includes(session.userId || "");
 	const blameMap = team.settings ? team.settings.blameMap : {};
 	const inviteUsersOnTheFly =
@@ -2202,6 +2204,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		channel,
 		teamMates,
 		teamMembers,
+		removedMemberIds,
 		currentTeamId: state.context.currentTeamId,
 		blameMap: blameMap || {},
 		isCurrentUserAdmin,
