@@ -238,19 +238,21 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			})
 		);
 
-		this.onFileChanged(true, (error: string) => {
-			if (!error) return;
-			HostApi.instance.track("Spatial Error State", { "Error State": error });
-		});
+		this.onFileChanged(true, this.onFileChangedError);
 
 		this.scrollTo(this.props.metrics.lineHeight!);
+	}
+
+	onFileChangedError(error: string) {
+		if (!error) return;
+		HostApi.instance.track("Spatial Error State", { "Error State": error });
 	}
 
 	componentDidUpdate(prevProps: Props) {
 		this._updateEmitter.emit();
 		const { textEditorUri } = this.props;
 		if (String(textEditorUri).length > 0 && prevProps.textEditorUri !== textEditorUri) {
-			this.onFileChanged();
+			this.onFileChanged(false, this.onFileChangedError);
 		}
 
 		const didStartLineChange = this.compareStart(
@@ -394,7 +396,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	async onFileChanged(
 		isInitialRender = false,
-		initialRenderErrorCallback: ((error: string) => void) | undefined = undefined
+		renderErrorCallback: ((error: string) => void) | undefined = undefined
 	) {
 		const { textEditorUri, setEditorContext, composeCodemarkActive } = this.props;
 
@@ -409,9 +411,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		if (textEditorUri === undefined) {
 			if (isInitialRender) {
 				this.setState({ isLoading: false });
-				if (initialRenderErrorCallback !== undefined) {
-					initialRenderErrorCallback("InvalidUri");
-				}
+			}
+			if (renderErrorCallback !== undefined) {
+				renderErrorCallback("InvalidUri");
 			}
 			return;
 		}
@@ -419,9 +421,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		if (isNotOnDisk(textEditorUri)) {
 			if (isInitialRender) {
 				this.setState({ isLoading: false });
-				if (initialRenderErrorCallback !== undefined) {
-					initialRenderErrorCallback("FileNotSaved");
-				}
+			}
+			if (renderErrorCallback !== undefined) {
+				renderErrorCallback("FileNotSaved");
 			}
 			return;
 		}
@@ -440,8 +442,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 		await this.props.fetchDocumentMarkers(textEditorUri);
 		this.setState(state => (state.isLoading ? { isLoading: false } : null));
-		if (isInitialRender && scmError && initialRenderErrorCallback !== undefined)
-			initialRenderErrorCallback(mapFileScmErrorForTelemetry(scmError));
+		if (scmError && renderErrorCallback !== undefined) {
+			renderErrorCallback(mapFileScmErrorForTelemetry(scmError));
+		}
 	}
 
 	compareStart(range1?: Range[], range2?: Range[]) {
