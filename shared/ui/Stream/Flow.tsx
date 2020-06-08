@@ -57,6 +57,7 @@ const GitTimeline = styled.div`
 		border-top: 7px solid transparent;
 		border-left: 15px solid #999;
 		border-bottom: 7px solid transparent;
+		transition: transform ease-out 0.2s;
 	}
 `;
 
@@ -148,20 +149,21 @@ const Action = styled.div`
 	.icon {
 		display: inline-block;
 		transform: scale(1.5);
+		color: #999;
 	}
 	transition: transform ease-out 0.2s;
 	&.active {
 		z-index: 3;
 		background: var(--button-background-color);
 		color: var(--button-foreground-color);
+		.icon {
+			color: var(--button-foreground-color);
+		}
 		&:before {
 			// background: #999;
 			background: var(--button-background-color);
 		}
-		.vscode-dark & {
-			box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
-		}
-		box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+		box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
 		transform: scale(1.5);
 	}
 `;
@@ -170,7 +172,7 @@ const GitBranch = styled(Action)`
 	top: 10px;
 	left: 52px;
 	.icon {
-		margin-left: 3px;
+		margin-left: 1px;
 	}
 `;
 
@@ -178,7 +180,7 @@ const GitMerge = styled(Action)`
 	top: 10px;
 	right: 52px;
 	.icon {
-		margin-left: 3px;
+		margin-left: 1px;
 	}
 `;
 
@@ -312,8 +314,8 @@ const VideoLink = styled.a`
 	}
 `;
 
-export const Flow = () => {
-	const [active, setActive] = React.useState(0);
+export const Flow = (props: { active?: number }) => {
+	const [active, setActive] = React.useState(props.active || 0);
 	const [rotate, setRotate] = React.useState(false);
 	const rootRef = React.useRef(null);
 	const rootDimensions = useRect(rootRef, []);
@@ -407,9 +409,7 @@ export const Flow = () => {
 					<Content active={active === 1}>
 						<h2>Start Writing Code</h2>
 						Once your branch has been created, it's time to start making changes. Whenever you add,
-						edit, or delete a file, you can share those changes with your teammates to get feedback
-						while you work. This early feedback is critical to make sure you are on the right track,
-						ensuring that final code review will be smooth.
+						edit, or delete a file, you can share those changes with your teammates to get feedback.
 						<br />
 						<br />
 						When you have questions about existing code, asking is as easy as selecting the code and
@@ -472,7 +472,7 @@ export const Flow = () => {
 						Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
 						mollit anim id est laborum.
 						<h3>Exclusive</h3>
-						Reviewers are based on a variety of ...
+						<Icon name="checked-checkbox" /> Reviewers are based on a variety of ...
 						<VideoLink href={"step.video"}>
 							<img src="https://i.imgur.com/9IKqpzf.png" />
 							<span>How are reviewers assigned?</span>
@@ -487,8 +487,8 @@ export const Flow = () => {
 						Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
 						mollit anim id est laborum.
 						<h3>Exclusive</h3>
-						CodeStream works with the on-prem and cloud-based versions of GitHub, GitLab, and
-						BitBucket.
+						<Icon name="mark-github" /> CodeStream works with the on-prem and cloud-based versions
+						of GitHub, GitLab, and BitBucket.
 						<VideoLink href={"step.video"}>
 							<img src="https://i.imgur.com/9IKqpzf.png" />
 							<span>How do I connect to my source host provider?</span>

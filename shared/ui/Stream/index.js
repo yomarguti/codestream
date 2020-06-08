@@ -534,16 +534,16 @@ export class SimpleStream extends Component {
 		const { textEditorUri } = this.props;
 
 		const menuItems = [];
-		if (true || this.props.kickstartEnabled) {
+		if (this.props.flowEnabled) {
 			menuItems.push(
 				{
 					icon: <Icon name="git-branch" />,
 					label: "Create Branch",
 					action: () => this.setActivePanel(WebviewPanels.Status),
 					shortcut: ComposeKeybindings.branch,
-					key: "code"
-				},
-				{ label: "-" }
+					key: "branch"
+				}
+				// { label: "-" }
 			);
 		}
 
@@ -567,7 +567,7 @@ export class SimpleStream extends Component {
 		}
 
 		if (this.props.lightningCodeReviewsEnabled) {
-			if (menuItems.length > 0) menuItems.push({ label: "-" });
+			// if (menuItems.length > 0) menuItems.push({ label: "-" });
 			menuItems.push({
 				icon: <Icon name="review" />,
 				label: "Request a Code Review",
@@ -575,6 +575,19 @@ export class SimpleStream extends Component {
 				shortcut: ComposeKeybindings.review,
 				key: "review"
 			});
+		}
+
+		if (this.props.flowEnabled) {
+			menuItems.push(
+				// { label: "-" },
+				{
+					icon: <Icon name="git-merge" />,
+					label: "Create PR",
+					action: () => this.setActivePanel(WebviewPanels.Status),
+					shortcut: ComposeKeybindings.pr,
+					key: "merge"
+				}
+			);
 		}
 
 		return plusMenuOpen ? (
@@ -2556,7 +2569,7 @@ const mapStateToProps = state => {
 	return {
 		remainingSteps,
 		lightningCodeReviewsEnabled: isFeatureEnabled(state, "lightningCodeReviews"),
-		kickstartEnabled: true || isFeatureEnabled(state, "kickstart"),
+		flowEnabled: true || isFeatureEnabled(state, "flow"),
 		collisions: getCodeCollisions(state),
 		currentCodemarkId: context.currentCodemarkId,
 		currentMarkerId: context.currentMarkerId,

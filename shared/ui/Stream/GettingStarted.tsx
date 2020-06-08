@@ -183,7 +183,7 @@ export const STEPS = [
 	{
 		id: "viewPRs",
 		title: "View comments from PRs,",
-		subtext: "including merged PRs and your current branch.",
+		subtext: "including merged PRs, and your current branch.",
 		done: "Connected to PR provider",
 		pulse: "pr-toggle",
 		video: "https://youtu.be/sM607iVWM3w",

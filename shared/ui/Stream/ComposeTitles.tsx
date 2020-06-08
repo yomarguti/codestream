@@ -109,6 +109,12 @@ export const ComposeKeybindings = {
 			<span className="keybinding">b</span>
 		</span>
 	),
+	pr: (
+		<span className="binding">
+			<span className="keybinding extra-pad">{modifier}</span>
+			<span className="keybinding">m</span>
+		</span>
+	),
 	toggleCodeStreamPanel: (
 		<span className="binding">
 			<span className="keybinding extra-pad">{modifier}</span>

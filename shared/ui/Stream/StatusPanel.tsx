@@ -19,6 +19,7 @@ import Menu from "./Menu";
 import { CrossPostIssueContext } from "./CodemarkForm";
 import IssueDropdown from "./CrossPostIssueControls/IssueDropdown";
 import { CSText } from "../src/components/CSText";
+import { ConfigureBranchNames } from "./ConfigureBranchNames";
 const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.json");
 
 const StyledCheckbox = styled(Checkbox)`
@@ -153,19 +154,30 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const [moveIssue, setMoveIssue] = useState(true);
 	const [createBranch, setCreateBranch] = useState(true);
 	const [branch, setBranch] = useState("");
-	const [cardBranch, setCardBranch] = useState("");
+	const [newBranch, setNewBranch] = useState("");
 	const [currentBranch, setCurrentBranch] = useState("");
-	// const [loadingBranch, setLoadingBranch] = useState(false);
+	const [editingBranch, setEditingBranch] = useState(false);
 	const [branches, setBranches] = useState([] as string[]);
-	const [branchMenuOpen, setBranchMenuOpen] = useState(false);
-	const [branchMenuTarget, setBranchMenuTarget] = useState();
+	const [branchTouched, setBranchTouched] = useState(false);
+	const [configureBranchNames, setConfigureBranchNames] = useState(false);
 
 	const showMoveIssueCheckbox = React.useMemo(() => {
 		return label && label.startsWith("http");
 	}, [label]);
 	const showCreateBranchCheckbox = React.useMemo(() => {
-		return label && label.startsWith("http");
+		return label; // && label.startsWith("http");
 	}, [label]);
+
+	const setTheLabel = (value: string, newBranch?: string) => {
+		setLabel(value);
+
+		if (newBranch) {
+			setNewBranch(newBranch);
+			if (!branchTouched) setBranch(newBranch);
+		}
+	};
+
+	const makeBranchName = value => "feature/" + value.replace(/[\s\W]+/g, "-").toLowerCase();
 
 	const getBranches = async () => {
 		if (!derivedState.textEditorUri) return;
@@ -234,7 +246,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		setLoading(false);
 	};
 
-	const set = (icon, label, clearAfter) => {
+	const set = (icon, label) => {
 		setIcon(icon);
 		setLabel(label);
 	};
@@ -271,23 +283,54 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			? "Switch to branch"
 			: "Create branch";
 
-	const makeMenuItem = (branch: string) => {
+	const makeMenuItem = (branch: string, isNew?: boolean) => {
+		const iconName = isNew ? "plus" : branch == currentBranch ? "arrow-right" : "blank";
 		return {
 			label: branch,
 			key: branch,
+			icon: <Icon name={iconName} />,
 			action: () => setBranch(branch)
 		};
 	};
 
-	const branchMenuItems = branches.map(branch => makeMenuItem(branch));
-	if (cardBranch) {
-		// @ts-ignore
-		branchMenuItems.unshift(makeMenuItem(cardBranch), { label: "-" });
+	const branchMenuItems = branches.map(branch => makeMenuItem(branch, false)) as any;
+	if (newBranch) {
+		branchMenuItems.unshift(
+			{
+				label: (
+					<span>
+						Create{" "}
+						<span className="monospace highlight">
+							<b>{newBranch}</b>
+						</span>
+					</span>
+				),
+				key: newBranch,
+				icon: <Icon name="plus" />,
+				action: () => setBranch(newBranch)
+			},
+			{
+				label: "Edit Branch Name",
+				key: "edit",
+				icon: <Icon name="pencil" />,
+				action: () => setEditingBranch(true)
+			},
+			{
+				label: "Configure Branch Naming",
+				key: "configure",
+				icon: <Icon name="gear" />,
+				action: () => setConfigureBranchNames(true)
+			},
+			{ label: "-" }
+		);
 	}
+
+	if (configureBranchNames)
+		return <ConfigureBranchNames onClose={() => setConfigureBranchNames(false)} />;
 
 	return (
 		<div className="full-height-panel">
-			<form className="standard-form vscroll" style={{ padding: "0 10px" }}>
+			<form className="standard-form vscroll" style={{ padding: "10px" }}>
 				<div className="panel-header">
 					What are you working on?
 					<CancelButton onClick={props.closePanel} placement="left" />
@@ -305,11 +348,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								<CrossPostIssueContext.Provider
 									value={{
 										selectedAssignees: [],
-										setValues: values => {
-											setLabel(values.url);
-											setCardBranch(values.branch);
-											setBranch(values.branch);
-										},
+										setValues: values => setTheLabel(values.url, values.branch),
 										setSelectedAssignees: () => {}
 									}}
 								>
@@ -319,7 +358,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								<div
 									className="clear"
 									onClick={() => {
-										set(":desktop_computer:", "", 0);
+										set(":desktop_computer:", "");
 										const input = document.getElementById("status-input");
 										if (input) input.focus();
 									}}
@@ -334,7 +373,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								className="input-text control"
 								autoFocus={true}
 								type="text"
-								onChange={e => setLabel(e.target.value)}
+								onChange={e => setTheLabel(e.target.value, makeBranchName(e.target.value))}
 								placeholder="Enter description, paste URL, or select issue"
 							/>
 						</StatusInput>
@@ -357,81 +396,33 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 									onChange={v => setCreateBranch(v)}
 								>
 									{useBranchLabel}{" "}
-									<MonoMenu
-										title="Branch"
-										titleIcon={<Icon name="gear" onClick={goSettings} />}
-										noCloseIcon={true}
-										items={branchMenuItems}
-									>
-										{branch}
-									</MonoMenu>
+									{editingBranch ? (
+										<input
+											id="branch-input"
+											name="branch"
+											value={branch}
+											className="input-text control"
+											autoFocus={true}
+											type="text"
+											onChange={e => {
+												setBranch(e.target.value);
+												setBranchTouched(true);
+											}}
+											placeholder="Enter branch name"
+											onBlur={() => setEditingBranch(false)}
+											onKeyPress={e => {
+												if (e.key == "Enter") setEditingBranch(false);
+											}}
+											style={{ width: "200px" }}
+										/>
+									) : (
+										<MonoMenu title="Branch" items={branchMenuItems}>
+											{branch}
+										</MonoMenu>
+									)}
 								</StyledCheckbox>
 							)}
 						</div>
-						{false && (
-							<StatusInput>
-								<div className="icon-selector">
-									<Icon name="git-branch" />
-								</div>
-								<input
-									id="status-input"
-									name="branch"
-									value={branch}
-									className="input-text control"
-									type="text"
-									onChange={e => setBranch(e.target.value)}
-								/>
-								<div
-									className={`dropdown-button ${branchMenuOpen ? "selected" : ""}`}
-									onClick={e => {
-										// @ts-ignore
-										setBranchMenuTarget(e.target.closest(".dropdown-button"));
-										setBranchMenuOpen(true);
-									}}
-								>
-									<Icon name="chevron-down" />
-								</div>
-								{branchMenuOpen && (
-									<Menu
-										title="Select a Branch"
-										noCloseIcon={true}
-										items={branchMenuItems}
-										align="dropdownRight"
-										target={branchMenuTarget}
-										action={() => setBranchMenuOpen(false)}
-									/>
-								)}
-							</StatusInput>
-						)}
-						{false && label.length === 0 && (
-							<Examples>
-								<div onClick={() => set(":house:", "Working remotely", "today")}>
-									<span className="emoji">{emojiPlain(":house:")}</span>
-									Working remotely
-									<span className="time"> &mdash; Today</span>
-								</div>
-								<div onClick={() => set(":bus:", "Commuting", "30")}>
-									<span className="emoji">{emojiPlain(":bus:")}</span>
-									Commuting
-									<span className="time"> &mdash; 30 minutes</span>
-								</div>
-								<div onClick={() => set(":calendar:", "In a meeting", "60")}>
-									<span className="emoji">{emojiPlain(":calendar:")}</span>
-									In a meeting
-									<span className="time"> &mdash; 1 hour</span>
-								</div>
-								<div onClick={() => set(":brain:", "Deep in thought", "120")}>
-									<span className="emoji">{emojiPlain(":brain:")}</span>
-									Deep in thought
-									<span className="time"> &mdash; 2 hours</span>
-								</div>
-								<div onClick={() => set(":desktop_computer:", "Heads down", "240")}>
-									<span className="emoji">{emojiPlain(":desktop_computer:")}</span>
-									Heads down
-									<span className="time"> &mdash; 4 hours</span>
-								</div>
-							</Examples>
-						)}
 						<div style={{ height: "5px" }}></div>
 						<ButtonRow>
 							{clearable && (
@@ -446,13 +437,38 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 							)}
 						</ButtonRow>
 					</div>
-					<br />
-					<br />
-					<br />
-					<br />
-					<CSText muted>WRITEME some copy explaining what this is for should go here</CSText>
 				</fieldset>
 			</form>
 		</div>
 	);
 };
+
+// {false && label.length === 0 && (
+// 	<Examples>
+// 		<div onClick={() => set(":house:", "Working remotely", "today")}>
+// 			<span className="emoji">{emojiPlain(":house:")}</span>
+// 			Working remotely
+// 			<span className="time"> &mdash; Today</span>
+// 		</div>
+// 		<div onClick={() => set(":bus:", "Commuting", "30")}>
+// 			<span className="emoji">{emojiPlain(":bus:")}</span>
+// 			Commuting
+// 			<span className="time"> &mdash; 30 minutes</span>
+// 		</div>
+// 		<div onClick={() => set(":calendar:", "In a meeting", "60")}>
+// 			<span className="emoji">{emojiPlain(":calendar:")}</span>
+// 			In a meeting
+// 			<span className="time"> &mdash; 1 hour</span>
+// 		</div>
+// 		<div onClick={() => set(":brain:", "Deep in thought", "120")}>
+// 			<span className="emoji">{emojiPlain(":brain:")}</span>
+// 			Deep in thought
+// 			<span className="time"> &mdash; 2 hours</span>
+// 		</div>
+// 		<div onClick={() => set(":desktop_computer:", "Heads down", "240")}>
+// 			<span className="emoji">{emojiPlain(":desktop_computer:")}</span>
+// 			Heads down
+// 			<span className="time"> &mdash; 4 hours</span>
+// 		</div>
+// 	</Examples>
+// )}
