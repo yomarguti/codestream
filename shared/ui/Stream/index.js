@@ -847,17 +847,22 @@ export class SimpleStream extends Component {
 		const { searchBarOpen, q } = this.state;
 		// if (searchBarOpen && q) activePanel = WebviewPanels.Codemarks;
 		if (searchBarOpen) activePanel = WebviewPanels.Codemarks;
+		const isConfigurationPanel = activePanel && activePanel.match(/^configure\-(provider|enterprise)-/);
 		// if we're conducting a review, we need the compose functionality of spatial view
 		if (this.props.currentReviewId) activePanel = WebviewPanels.CodemarksForFile;
-		if (this.props.composeCodemarkActive) activePanel = WebviewPanels.CodemarksForFile;
+		if (!isConfigurationPanel && this.props.composeCodemarkActive) {
+			// don't override the activePanel if user is trying to configure a provider
+			// from the codemark (issue) form
+			activePanel = WebviewPanels.CodemarksForFile;
+		}
 		if (
 			!activePanel ||
 			(!Object.values(WebviewPanels).includes(activePanel) &&
-				!activePanel.match(/^configure\-(provider|enterprise)-/))
+				!isConfigurationPanel)
 		) {
 			activePanel = WebviewPanels.CodemarksForFile;
 		}
-		// if there is nothing left to copmlete, go to spatial view
+		// if there is nothing left to complete, go to spatial view
 		if (activePanel === WebviewPanels.GettingStarted && this.props.remainingSteps === 0)
 			activePanel = WebviewPanels.CodemarksForFile;
 
