@@ -136,6 +136,7 @@ interface ConnectedProps {
 	changeRequests?: CodemarkPlus[];
 	inviteUsersOnTheFly: boolean;
 	newPostEntryPoint?: string;
+	blameMap?: { [email: string]: string };
 }
 
 interface State {
@@ -420,7 +421,14 @@ class ReviewForm extends React.Component<Props, State> {
 
 	async handleRepoChange(repoUri?, callback?) {
 		try {
-			const { teamMates, currentUser, isEditing, inviteUsersOnTheFly, editingReview } = this.props;
+			const {
+				teamMates,
+				currentUser,
+				isEditing,
+				inviteUsersOnTheFly,
+				blameMap = {},
+				editingReview
+			} = this.props;
 			const { includeSaved, includeStaged, startCommit, prevEndCommit } = this.state;
 
 			const uri = repoUri || this.state.repoUri;
@@ -505,7 +513,13 @@ class ReviewForm extends React.Component<Props, State> {
 			if (statusInfo.scm) {
 				const authorsBlameData = {};
 				statusInfo.scm.authors.map(author => {
-					authorsBlameData[author.email] = author;
+					const mappedId = blameMap[author.email.replace(".", "*")];
+					const mappedPerson = mappedId && this.props.teamMembers.find(t => t.id === mappedId);
+					if (mappedPerson) {
+						authorsBlameData[mappedPerson.email] = author;
+					} else {
+						authorsBlameData[author.email] = author;
+					}
 				});
 				this.setState({ authorsBlameData });
 
@@ -1904,6 +1918,7 @@ class ReviewForm extends React.Component<Props, State> {
 									<HeadshotMenu
 										person={this.makePerson(email)}
 										menuItems={[
+											{ label: "-" },
 											{
 												label: "Remove from Review",
 												action: () => this.removeReviewer(email)
@@ -2066,6 +2081,7 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 
 	const team = teams[context.currentTeamId];
 	const removedMemberIds = team.removedMemberIds || [];
+	const blameMap = team.settings ? team.settings.blameMap : {};
 
 	const skipPostCreationModal = preferences ? preferences.skipPostCreationModal : false;
 
@@ -2095,7 +2111,8 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		repos,
 		changeRequests,
 		inviteUsersOnTheFly,
-		newPostEntryPoint: context.newPostEntryPoint
+		newPostEntryPoint: context.newPostEntryPoint,
+		blameMap
 	};
 };
 
