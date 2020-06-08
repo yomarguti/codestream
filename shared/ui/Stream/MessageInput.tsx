@@ -23,7 +23,7 @@ import Icon from "./Icon";
 import { confirmPopup } from "./Confirm";
 import { CodemarkPlus } from "@codestream/protocols/agent";
 import { CodeStreamState } from "../store";
-import { getTeamMates, getTeamTagsArray } from "../store/users/reducer";
+import { getTeamTagsArray, getTeamMembers } from "../store/users/reducer";
 import { getChannelStreamsForTeam } from "../store/streams/reducer";
 import { ServicesState } from "../store/services/types";
 import { getSlashCommands } from "./SlashCommands";
@@ -261,21 +261,21 @@ export class MessageInput extends React.Component<Props, State> {
 			description?: string;
 		}[] = [];
 		KeystrokeDispatcher.levelUp();
-		// filter out yourself
 
 		const normalizedPrefix = prefix ? prefix.toLowerCase() : prefix;
 
 		if (type === "at-mentions") {
-			const teammates = this.props.teammates.filter(({ id }) => id !== this.props.currentUserId);
+			const { teammates } = this.props; //.teammates.filter(({ id }) => id !== this.props.currentUserId);
 
 			Object.values(teammates).forEach(person => {
 				const toMatch = `${person.fullName}*${person.username}`.toLowerCase();
 				if (toMatch.indexOf(normalizedPrefix) !== -1) {
+					const you = person.id === this.props.currentUserId ? " (you)" : "";
 					itemsToShow.push({
 						id: person.id,
 						headshot: person,
 						identifier: person.username || person.email,
-						description: person.fullName
+						description: (person.fullName || person.email) + you
 					});
 				}
 			});
@@ -1185,7 +1185,7 @@ const mapStateToProps = (
 	return {
 		currentTeam,
 		currentUserId: state.session.userId!,
-		teammates: getTeamMates(state),
+		teammates: getTeamMembers(state),
 		codemarks: codemarkSelectors.getTypeFilteredCodemarks(state) || [],
 		isInVscode: state.ide.name === "VSC",
 		teamTags: Boolean(props.withTags) ? getTeamTagsArray(state) : emptyArray,
