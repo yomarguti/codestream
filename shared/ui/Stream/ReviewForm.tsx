@@ -528,6 +528,8 @@ class ReviewForm extends React.Component<Props, State> {
 						// if email isn't supported, and we can't find the teammate, filter it out
 						// because we can't email based on the blame data
 						.filter(email => inviteUsersOnTheFly || teamMates.find(t => t.email === email))
+						// remove yourself
+						.filter(email => email !== currentUser.email)
 						// remove members we've explicitly removed from the team
 						.filter(
 							email =>
