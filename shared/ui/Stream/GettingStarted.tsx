@@ -18,6 +18,7 @@ import { Flow } from "./Flow";
 import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import { PanelHeader } from "../src/components/PanelHeader";
 import ScrollBox from "./ScrollBox";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 
 const Step = styled.div`
 	position: relative;
@@ -110,7 +111,8 @@ const Root = styled.div`
 	z-index: 0;
 	color: var(--text-color-subtle);
 	font-size: var(--font-size);
-	b {
+	b,
+	h2 {
 		color: var(--text-color-highlight);
 	}
 
@@ -214,7 +216,8 @@ export function GettingStarted(props: GettingStartedProps) {
 		const user = state.users[state.session.userId!] as CSMe;
 		return {
 			todo: STEPS.filter(step => !step.isComplete(user, state)),
-			completed: STEPS.filter(step => step.isComplete(user, state))
+			completed: STEPS.filter(step => step.isComplete(user, state)),
+			flowEnabled: isFeatureEnabled(state, "flow")
 		};
 	}, shallowEqual);
 
@@ -254,15 +257,20 @@ export function GettingStarted(props: GettingStartedProps) {
 				<div className="vscroll">
 					<Root>
 						<ComposeArea id="compose-gutter" />
-						<Tabs>
-							<Tab onClick={handleClickTab} active={active === "0"} id="0">
-								Getting Started
-							</Tab>
+						{derivedState.flowEnabled ? (
+							<Tabs>
+								<Tab onClick={handleClickTab} active={active === "0"} id="0">
+									Getting Started
+								</Tab>
 
-							<Tab onClick={handleClickTab} active={active === "1"} id="1">
-								CodeStream Flow
-							</Tab>
-						</Tabs>
+								<Tab onClick={handleClickTab} active={active === "1"} id="1">
+									CodeStream Flow
+								</Tab>
+							</Tabs>
+						) : (
+							<h2>Getting Started</h2>
+						)}
+
 						<Content active={active === "0"}>
 							<b>Let’s get you set up.</b> Follow the steps below to start coding more efficiently
 							with your team.

@@ -877,7 +877,7 @@ export class SimpleStream extends Component {
 		}
 		// if there is nothing left to complete, go to spatial view
 		if (activePanel === WebviewPanels.GettingStarted && this.props.remainingSteps === 0)
-			activePanel = WebviewPanels.CodemarksForFile;
+			activePanel = WebviewPanels.Activity;
 
 		let threadId = this.props.threadId;
 		let threadPost = this.findPostById(threadId);
@@ -2569,7 +2569,7 @@ const mapStateToProps = state => {
 	return {
 		remainingSteps,
 		lightningCodeReviewsEnabled: isFeatureEnabled(state, "lightningCodeReviews"),
-		flowEnabled: true || isFeatureEnabled(state, "flow"),
+		flowEnabled: isFeatureEnabled(state, "flow"),
 		collisions: getCodeCollisions(state),
 		currentCodemarkId: context.currentCodemarkId,
 		currentMarkerId: context.currentMarkerId,

@@ -6,7 +6,7 @@ import Icon from "../../Stream/Icon";
 export interface IRadioGroupContext {
 	name: string;
 	selectedValue: string;
-	loading: boolean;
+	loading?: boolean;
 	disabled?: boolean;
 	onChange: Function;
 }
@@ -117,7 +117,7 @@ export function Radio(props: PropsWithChildren<RadioProps>) {
 interface RadioGroupProps {
 	name: string;
 	selectedValue: string;
-	loading: boolean;
+	loading?: boolean;
 	children: React.ReactNode;
 	onChange: Function;
 	disabled?: boolean;

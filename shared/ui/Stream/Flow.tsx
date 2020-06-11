@@ -3,6 +3,8 @@ import { Carousel, Content } from "../src/components/Carousel";
 import styled from "styled-components";
 import Icon from "./Icon";
 import { useRect } from "../utilities/hooks";
+import { RadioGroup, Radio } from "../src/components/RadioGroup";
+import { Tab, Tabs } from "../src/components/Tabs";
 import { ComposeKeybindings } from "./ComposeTitles";
 
 const Root = styled.div`
@@ -152,16 +154,23 @@ const Action = styled.div`
 		color: #999;
 	}
 	transition: transform ease-out 0.2s;
-	&.active {
+	&.active,
+	&:hover {
 		z-index: 3;
 		background: var(--button-background-color);
 		color: var(--button-foreground-color);
+
+		background: #999;
+		color: var(--base-border-color);
+
 		.icon {
 			color: var(--button-foreground-color);
+
+			color: var(--base-border-color);
 		}
 		&:before {
-			// background: #999;
-			background: var(--button-background-color);
+			background: #999;
+			// background: var(--button-background-color);
 		}
 		box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
 		transform: scale(1.5);
@@ -315,15 +324,22 @@ const VideoLink = styled.a`
 `;
 
 export const Flow = (props: { active?: number }) => {
+	const [flow, setFlow] = React.useState("standard");
 	const [active, setActive] = React.useState(props.active || 0);
 	const [rotate, setRotate] = React.useState(false);
 	const rootRef = React.useRef(null);
 	const rootDimensions = useRect(rootRef, []);
 	const scale = Math.min(rootDimensions.width / 600, 1);
 
-	const click = index => {
+	const changeFlow = type => {};
+	const clickAction = index => {
 		setActive(index);
 		if (index === 3) setRotate(!rotate);
+	};
+
+	const clickFlow = e => {
+		setFlow(e.target.id);
+		setActive(0);
 	};
 
 	return (
@@ -333,6 +349,20 @@ export const Flow = (props: { active?: number }) => {
 				projects where code is reviewed and merged regularly. This guide explains how CodeStream can
 				make every step of the process easier for you and your team.
 			</p>
+			<Tabs>
+				<Tab onClick={clickFlow} active={flow === "adhoc"} id="adhoc">
+					Ad-hoc
+				</Tab>
+				<Tab onClick={clickFlow} active={flow === "simplified"} id="simplified">
+					Simplified
+				</Tab>
+				<Tab onClick={clickFlow} active={flow === "standard"} id="standard">
+					Standard
+				</Tab>
+				<Tab onClick={clickFlow} active={flow === "rigorous"} id="rigorous">
+					Rigorous
+				</Tab>
+			</Tabs>
 			<div
 				style={{
 					transform: `scale(${scale})`,
@@ -348,35 +378,35 @@ export const Flow = (props: { active?: number }) => {
 						<BranchLineDown />
 						<BranchCurve />
 						<BranchLineAcross />
-						<GitBranch className={active === 0 ? "active" : ""} onClick={() => click(0)}>
+						<GitBranch className={active === 0 ? "active" : ""} onClick={() => clickAction(0)}>
 							<Icon name="git-branch" />
 						</GitBranch>
-						<Edit className={active === 1 ? "active" : ""} onClick={() => click(1)}>
+						<Edit className={active === 1 ? "active" : ""} onClick={() => clickAction(1)}>
 							<Icon name="pencil" />
 						</Edit>
-						<Review className={active === 2 ? "active" : ""} onClick={() => click(2)}>
+						<Review className={active === 2 ? "active" : ""} onClick={() => clickAction(2)}>
 							<Icon name="review" />
 						</Review>
 						<DiscussionCircle>
 							<DiscussionAnimate className={rotate ? "rotate" : ""}>
-								<Comment className={active === 3 ? "active" : ""} onClick={() => click(3)}>
+								<Comment className={active === 3 ? "active" : ""} onClick={() => clickAction(3)}>
 									<Icon name="comment" />
 								</Comment>
-								<Issue className={active === 3 ? "active" : ""} onClick={() => click(3)}>
+								<Issue className={active === 3 ? "active" : ""} onClick={() => clickAction(3)}>
 									<Icon name="issue" />
 								</Issue>
-								<Amend className={active === 3 ? "active" : ""} onClick={() => click(3)}>
+								<Amend className={active === 3 ? "active" : ""} onClick={() => clickAction(3)}>
 									<Icon name="plus" />
 								</Amend>
-								<Commit className={active === 3 ? "active" : ""} onClick={() => click(3)}>
+								<Commit className={active === 3 ? "active" : ""} onClick={() => clickAction(3)}>
 									<Icon name="checked-checkbox" />
 								</Commit>
 							</DiscussionAnimate>
 						</DiscussionCircle>
-						<Approve className={active === 4 ? "active" : ""} onClick={() => click(4)}>
+						<Approve className={active === 4 ? "active" : ""} onClick={() => clickAction(4)}>
 							<Icon name="thumbsup" />
 						</Approve>
-						<GitMerge className={active === 5 ? "active" : ""} onClick={() => click(5)}>
+						<GitMerge className={active === 5 ? "active" : ""} onClick={() => clickAction(5)}>
 							<Icon name="git-merge" />
 						</GitMerge>
 						<MergeLineAcross />
@@ -386,7 +416,7 @@ export const Flow = (props: { active?: number }) => {
 				</Diagram>
 			</div>
 			<div style={{ marginTop: `${scale * 180}px`, textAlign: "center" }}>
-				<Carousel active={active} lastContent={6} onChange={value => click(value)}>
+				<Carousel active={active} lastContent={6} onChange={value => clickAction(value)}>
 					<Content active={active === 0}>
 						<h2>Create a Branch</h2>
 						When you're working on a team, you're going to have a bunch of different features or

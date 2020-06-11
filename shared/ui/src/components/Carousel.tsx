@@ -71,8 +71,9 @@ export const Carousel = styled((props: PropsWithChildren<CarouselProps>) => {
 		width: 40px;
 		height: 40px;
 		background: rgba(127, 127, 127, 0.25);
+		background: var(--button-background-color);
 		&:hover:not(.dim) {
-			background: var(--button-background-color);
+			background: var(--button-background-color-hover);
 		}
 		color: var(--button-foreground-color);
 		border-radius: 20px;
@@ -84,6 +85,7 @@ export const Carousel = styled((props: PropsWithChildren<CarouselProps>) => {
 		&.dim {
 			cursor: auto;
 			opacity: 0.25;
+			background: rgba(127, 127, 127, 0.25);
 		}
 		user-select: none;
 		z-index: 2;
