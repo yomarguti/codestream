@@ -22,10 +22,17 @@ class BrowserEngineService : Disposable {
         val dir = createTempDir()
         logger.info("JxBrowser work dir: $dir")
 
+        val licenseKey = try {
+            javaClass.getResource("/jxbrowser.license").readText().trim()
+        } catch (e: Exception) {
+            logger.error(e)
+            ""
+        }
+
         // System.setProperty("jxbrowser.ipc.external", "true")
         val optionsBuilder = EngineOptions
             .newBuilder(RenderingMode.OFF_SCREEN)
-            .licenseKey("***REMOVED***")
+            .licenseKey(licenseKey)
             .userDataDir(Paths.get(dir.toURI()))
             .disableGpu()
             // .disableWebSecurity()
