@@ -70,11 +70,12 @@ export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProvider
 
 		let response: ApiResponse<TrelloCard[]>;
 
+		// FIXME -- sort by dateLastActivity
 		if (request.assignedToMe) {
 			response = await this.get<TrelloCard[]>(
 				`/members/${this._trelloUserId}/cards?${qs.stringify({
 					cards: "open",
-					fields: "id,name,desc,url,idList,idOrganization",
+					fields: "id,name,desc,url,idList,idOrganization,dateLastActivity,shortLink,idShort",
 					key: this.apiKey,
 					token: this.accessToken
 				})}`
@@ -83,7 +84,7 @@ export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProvider
 			response = await this.get<TrelloCard[]>(
 				`/lists/${request.listId}/cards?${qs.stringify({
 					cards: "open",
-					fields: "id,name,desc,url,idList,idOrganization",
+					fields: "id,name,desc,url,idList,idOrganization,dateLastActivity,shortLink,idShort",
 					key: this.apiKey,
 					token: this.accessToken
 				})}`
