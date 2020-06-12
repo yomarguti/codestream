@@ -1,0 +1,90 @@
+{
+  "url": "channels.info",
+  "request": {
+    "channel": "C7QGZCLNA"
+  },
+  "response": {
+    "ok": true,
+    "channel": {
+      "id": "C7QGZCLNA",
+      "name": "marketing_social",
+      "is_channel": true,
+      "created": 1508935389,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "creator": "U7EV7SB71",
+      "name_normalized": "marketing_social",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_member": true,
+      "is_private": false,
+      "is_mpim": false,
+      "last_read": "1545331954.010500",
+      "latest": {
+        "client_msg_id": "abf011f9-df23-46e1-a879-f81d0e240b4d",
+        "type": "message",
+        "text": "it's currently being edited",
+        "user": "U7FNCE5NX",
+        "ts": "1545331954.010500"
+      },
+      "unread_count": 0,
+      "unread_count_display": 0,
+      "members": [
+        "U7CS9PYJU",
+        "U7CT4071N",
+        "U7DJW0ZQU",
+        "U7EPCTGCU",
+        "U7EV7SB71",
+        "U7FNCE5NX",
+        "U7GK5RY3H",
+        "U7H4N1A6B",
+        "U7YNDN2VD",
+        "U8E97A1B5",
+        "U9QPXSR3M",
+        "U9ZBV29M4",
+        "UEC3ZJ58U"
+      ],
+      "topic": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "purpose": {
+        "value": "To internally suggest content for our teamcodestream social channels",
+        "creator": "U7EV7SB71",
+        "last_set": 1508935389
+      },
+      "previous_names": [
+        "twitterfodder"
+      ]
+    },
+    "scopes": [
+      "read",
+      "client",
+      "identify",
+      "post",
+      "channels:history",
+      "groups:history",
+      "im:history",
+      "mpim:history",
+      "channels:read",
+      "groups:read",
+      "im:read",
+      "mpim:read",
+      "users:read",
+      "users:read.email",
+      "dnd:read",
+      "users.profile:read",
+      "channels:write",
+      "chat:write:user",
+      "groups:write",
+      "im:write",
+      "mpim:write",
+      "reactions:write"
+    ],
+    "acceptedScopes": [
+      "channels:read"
+    ]
+  }
+}

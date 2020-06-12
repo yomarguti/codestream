@@ -1,0 +1,555 @@
+{
+  "url": "/teams?mine",
+  "response": {
+    "teams": [
+      {
+        "version": 5,
+        "deactivated": false,
+        "createdAt": 1539114682475,
+        "modifiedAt": 1560524654327,
+        "_id": "5bbd06ba2aae56770cbcbf47",
+        "name": "Chupacabra",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "memberIds": [
+          "5bbd06952aae56770cbcbf45",
+          "5bbe2a6333d00a39e1a4dd21",
+          "5bbe2abd33d00a39e1a4dd26",
+          "5cc233c62599b4552306dedb",
+          "5cc2347d2599b4552306dedc",
+          "5d03b76e1252752289c3c118"
+        ],
+        "adminIds": [
+          "5bbd06952aae56770cbcbf45"
+        ],
+        "primaryReferral": "external",
+        "companyId": "5bbd06ba2aae56770cbcbf48",
+        "tags": {
+          "_blue": {
+            "color": "blue",
+            "sortOrder": 1000
+          },
+          "_green": {
+            "color": "green",
+            "sortOrder": 2000
+          },
+          "_yellow": {
+            "color": "yellow",
+            "sortOrder": 3000
+          },
+          "_orange": {
+            "color": "orange",
+            "sortOrder": 4000
+          },
+          "_red": {
+            "color": "red",
+            "sortOrder": 5000
+          },
+          "_purple": {
+            "color": "purple",
+            "sortOrder": 6000
+          },
+          "_aqua": {
+            "color": "aqua",
+            "sortOrder": 7000
+          },
+          "_gray": {
+            "color": "gray",
+            "sortOrder": 8000
+          }
+        },
+        "id": "5bbd06ba2aae56770cbcbf47",
+        "providerHosts": {
+          "app*asana*com": {
+            "id": "app*asana*com",
+            "name": "asana",
+            "isEnterprise": false,
+            "host": "app.asana.com",
+            "apiHost": "app.asana.com",
+            "hasIssues": true
+          },
+          "app*vssps*visualstudio*com": {
+            "id": "app*vssps*visualstudio*com",
+            "name": "azuredevops",
+            "isEnterprise": false,
+            "needsConfigure": true,
+            "host": "app.vssps.visualstudio.com",
+            "apiHost": "dev.azure.com",
+            "hasIssues": true
+          },
+          "bitbucket*org": {
+            "id": "bitbucket*org",
+            "name": "bitbucket",
+            "isEnterprise": false,
+            "host": "bitbucket.org",
+            "apiHost": "api.bitbucket.org/2.0",
+            "hasIssues": true
+          },
+          "github*com": {
+            "id": "github*com",
+            "name": "github",
+            "isEnterprise": false,
+            "host": "github.com",
+            "apiHost": "api.github.com",
+            "hasIssues": true
+          },
+          "github/enterprise": {
+            "id": "github/enterprise",
+            "name": "github_enterprise",
+            "isEnterprise": false,
+            "forEnterprise": true,
+            "host": "github/enterprise",
+            "hasIssues": true
+          },
+          "gitlab*com": {
+            "id": "gitlab*com",
+            "name": "gitlab",
+            "isEnterprise": false,
+            "host": "gitlab.com",
+            "apiHost": "gitlab.com/api/v4",
+            "hasIssues": true
+          },
+          "gitlab/enterprise": {
+            "id": "gitlab/enterprise",
+            "name": "gitlab_enterprise",
+            "isEnterprise": false,
+            "forEnterprise": true,
+            "host": "gitlab/enterprise",
+            "apiHost": "gitlab.com/api/v4",
+            "hasIssues": true
+          },
+          "auth*atlassian*com": {
+            "id": "auth*atlassian*com",
+            "name": "jira",
+            "isEnterprise": false,
+            "host": "auth.atlassian.com",
+            "apiHost": "api.atlassian.com",
+            "hasIssues": true
+          },
+          "jiraserver/enterprise": {
+            "id": "jiraserver/enterprise",
+            "name": "jiraserver",
+            "isEnterprise": false,
+            "forEnterprise": true,
+            "needsConfigure": true,
+            "host": "jiraserver/enterprise",
+            "hasIssues": true
+          },
+          "login*microsoftonline*com": {
+            "id": "login*microsoftonline*com",
+            "name": "msteams",
+            "isEnterprise": false,
+            "host": "login.microsoftonline.com",
+            "apiHost": "graph.microsoft.com/v1.0",
+            "hasSharing": true
+          },
+          "slack*com": {
+            "id": "slack*com",
+            "name": "slack",
+            "isEnterprise": false,
+            "host": "slack.com",
+            "apiHost": "slack.com/api",
+            "hasSharing": true
+          },
+          "trello*com": {
+            "id": "trello*com",
+            "name": "trello",
+            "isEnterprise": false,
+            "host": "trello.com",
+            "apiHost": "api.trello.com/1",
+            "hasIssues": true
+          },
+          "youtrack*com": {
+            "id": "youtrack*com",
+            "name": "youtrack",
+            "isEnterprise": false,
+            "needsConfigure": true,
+            "host": "youtrack.com",
+            "hasIssues": true
+          }
+        },
+        "companyMemberCount": 6
+      },
+      {
+        "version": 22,
+        "deactivated": false,
+        "createdAt": 1576868804508,
+        "modifiedAt": 1585162499909,
+        "_id": "5dfd1bc4d3d59050f7712baf",
+        "name": "PD Testing2",
+        "creatorId": "5dfd1baecfbdd550957d9eef",
+        "memberIds": [
+          "5dfd1baecfbdd550957d9eef",
+          "5b58a606efb4c720ffe15a78",
+          "5b6ca95ca51ac46638670186",
+          "5bbcded32aae56770cbcbf33",
+          "5bb56a296c347e4bc63c2ab0",
+          "5a664fb301cc4c2b8a6b79e8",
+          "5c0599af6f6e2b29beae5919",
+          "5ddeb2f9ab37e237246c427f",
+          "5bb619e76c347e4bc63c2ad6",
+          "5e0e51e7d6068976aa638084",
+          "5e0fa820651fd60aa5fa7d79",
+          "5dfbe3d22dea6d0e8f776ef8",
+          "5bbcfb942aae56770cbcbf39",
+          "5bbbbc594c969a30b1bc551b",
+          "5e77d6d289322d6c20bc1054",
+          "5e77d731c0a4046c2f80f969",
+          "5bbd06952aae56770cbcbf45"
+        ],
+        "adminIds": [
+          "5dfd1baecfbdd550957d9eef"
+        ],
+        "tags": {
+          "_blue": {
+            "color": "blue",
+            "label": "this has a label",
+            "sortOrder": 1000
+          },
+          "_green": {
+            "color": "green",
+            "sortOrder": 2000
+          },
+          "_yellow": {
+            "color": "yellow",
+            "sortOrder": 3000
+          },
+          "_orange": {
+            "color": "orange",
+            "sortOrder": 4000
+          },
+          "_red": {
+            "color": "red",
+            "sortOrder": 5000
+          },
+          "_purple": {
+            "color": "purple",
+            "sortOrder": 6000
+          },
+          "_aqua": {
+            "color": "aqua",
+            "sortOrder": 7000
+          },
+          "_gray": {
+            "color": "gray",
+            "sortOrder": 8000
+          }
+        },
+        "primaryReferral": "external",
+        "companyId": "5dfd1bc4d3d59050f7712bb0",
+        "settings": {
+          "sharingModelEnabled": true,
+          "features": {
+            "lightningCodeReviews": 1,
+            "xray": 1
+          }
+        },
+        "providerBotInfo": {
+          "msteams": {
+            "adae9692-58a3-40a5-b4ce-8f9a263d025f": {
+              "data": {
+                "connected": true
+              }
+            }
+          }
+        },
+        "id": "5dfd1bc4d3d59050f7712baf",
+        "providerHosts": {
+          "app*asana*com": {
+            "id": "app*asana*com",
+            "name": "asana",
+            "isEnterprise": false,
+            "host": "app.asana.com",
+            "apiHost": "app.asana.com",
+            "hasIssues": true
+          },
+          "app*vssps*visualstudio*com": {
+            "id": "app*vssps*visualstudio*com",
+            "name": "azuredevops",
+            "isEnterprise": false,
+            "needsConfigure": true,
+            "host": "app.vssps.visualstudio.com",
+            "apiHost": "dev.azure.com",
+            "hasIssues": true
+          },
+          "bitbucket*org": {
+            "id": "bitbucket*org",
+            "name": "bitbucket",
+            "isEnterprise": false,
+            "host": "bitbucket.org",
+            "apiHost": "api.bitbucket.org/2.0",
+            "hasIssues": true
+          },
+          "github*com": {
+            "id": "github*com",
+            "name": "github",
+            "isEnterprise": false,
+            "host": "github.com",
+            "apiHost": "api.github.com",
+            "hasIssues": true
+          },
+          "github/enterprise": {
+            "id": "github/enterprise",
+            "name": "github_enterprise",
+            "isEnterprise": false,
+            "forEnterprise": true,
+            "host": "github/enterprise",
+            "hasIssues": true
+          },
+          "gitlab*com": {
+            "id": "gitlab*com",
+            "name": "gitlab",
+            "isEnterprise": false,
+            "host": "gitlab.com",
+            "apiHost": "gitlab.com/api/v4",
+            "hasIssues": true
+          },
+          "gitlab/enterprise": {
+            "id": "gitlab/enterprise",
+            "name": "gitlab_enterprise",
+            "isEnterprise": false,
+            "forEnterprise": true,
+            "host": "gitlab/enterprise",
+            "apiHost": "gitlab.com/api/v4",
+            "hasIssues": true
+          },
+          "auth*atlassian*com": {
+            "id": "auth*atlassian*com",
+            "name": "jira",
+            "isEnterprise": false,
+            "host": "auth.atlassian.com",
+            "apiHost": "api.atlassian.com",
+            "hasIssues": true
+          },
+          "jiraserver/enterprise": {
+            "id": "jiraserver/enterprise",
+            "name": "jiraserver",
+            "isEnterprise": false,
+            "forEnterprise": true,
+            "needsConfigure": true,
+            "host": "jiraserver/enterprise",
+            "hasIssues": true
+          },
+          "login*microsoftonline*com": {
+            "id": "login*microsoftonline*com",
+            "name": "msteams",
+            "isEnterprise": false,
+            "host": "login.microsoftonline.com",
+            "apiHost": "graph.microsoft.com/v1.0",
+            "hasSharing": true
+          },
+          "slack*com": {
+            "id": "slack*com",
+            "name": "slack",
+            "isEnterprise": false,
+            "host": "slack.com",
+            "apiHost": "slack.com/api",
+            "hasSharing": true
+          },
+          "trello*com": {
+            "id": "trello*com",
+            "name": "trello",
+            "isEnterprise": false,
+            "host": "trello.com",
+            "apiHost": "api.trello.com/1",
+            "hasIssues": true
+          },
+          "youtrack*com": {
+            "id": "youtrack*com",
+            "name": "youtrack",
+            "isEnterprise": false,
+            "needsConfigure": true,
+            "host": "youtrack.com",
+            "hasIssues": true
+          },
+          "https://testingforpdtesting2*com": {
+            "id": "https://testingforpdtesting2*com",
+            "name": "github_enterprise",
+            "isEnterprise": true,
+            "host": "https://testingforpdtesting2.com",
+            "hasIssues": true
+          }
+        },
+        "companyMemberCount": 14
+      },
+      {
+        "version": 15,
+        "deactivated": false,
+        "createdAt": 1580761656463,
+        "modifiedAt": 1581717635649,
+        "_id": "5e388238e95b967dc1cedaf6",
+        "companyId": "5b58a67befb4c720ffe15a7b",
+        "name": "Acme2",
+        "creatorId": "5b58a606efb4c720ffe15a78",
+        "memberIds": [
+          "5b58a606efb4c720ffe15a78",
+          "5b58dde6efb4c720ffe15a83",
+          "5bb619e76c347e4bc63c2ad6",
+          "5c0599af6f6e2b29beae5919",
+          "5bb56a296c347e4bc63c2ab0",
+          "5bbd06952aae56770cbcbf45",
+          "5e46f7a347501766ce6c2fab"
+        ],
+        "adminIds": [
+          "5b58a606efb4c720ffe15a78"
+        ],
+        "tags": {
+          "_blue": {
+            "color": "blue",
+            "sortOrder": 1000
+          },
+          "_green": {
+            "color": "green",
+            "label": "onboarding",
+            "sortOrder": 2000
+          },
+          "_yellow": {
+            "color": "yellow",
+            "sortOrder": 3000
+          },
+          "_orange": {
+            "color": "orange",
+            "sortOrder": 4000
+          },
+          "_red": {
+            "color": "red",
+            "sortOrder": 5000
+          },
+          "_purple": {
+            "color": "purple",
+            "label": "debt",
+            "sortOrder": 6000
+          },
+          "_aqua": {
+            "color": "aqua",
+            "sortOrder": 7000
+          },
+          "_gray": {
+            "color": "gray",
+            "sortOrder": 8000
+          }
+        },
+        "primaryReferral": "internal",
+        "providerBotInfo": {
+          "msteams": {
+            "adae9692-58a3-40a5-b4ce-8f9a263d025f": {
+              "data": {
+                "connected": true
+              }
+            }
+          }
+        },
+        "id": "5e388238e95b967dc1cedaf6",
+        "providerHosts": {
+          "app*asana*com": {
+            "id": "app*asana*com",
+            "name": "asana",
+            "isEnterprise": false,
+            "host": "app.asana.com",
+            "apiHost": "app.asana.com",
+            "hasIssues": true
+          },
+          "app*vssps*visualstudio*com": {
+            "id": "app*vssps*visualstudio*com",
+            "name": "azuredevops",
+            "isEnterprise": false,
+            "needsConfigure": true,
+            "host": "app.vssps.visualstudio.com",
+            "apiHost": "dev.azure.com",
+            "hasIssues": true
+          },
+          "bitbucket*org": {
+            "id": "bitbucket*org",
+            "name": "bitbucket",
+            "isEnterprise": false,
+            "host": "bitbucket.org",
+            "apiHost": "api.bitbucket.org/2.0",
+            "hasIssues": true
+          },
+          "github*com": {
+            "id": "github*com",
+            "name": "github",
+            "isEnterprise": false,
+            "host": "github.com",
+            "apiHost": "api.github.com",
+            "hasIssues": true
+          },
+          "github/enterprise": {
+            "id": "github/enterprise",
+            "name": "github_enterprise",
+            "isEnterprise": false,
+            "forEnterprise": true,
+            "host": "github/enterprise",
+            "hasIssues": true
+          },
+          "gitlab*com": {
+            "id": "gitlab*com",
+            "name": "gitlab",
+            "isEnterprise": false,
+            "host": "gitlab.com",
+            "apiHost": "gitlab.com/api/v4",
+            "hasIssues": true
+          },
+          "gitlab/enterprise": {
+            "id": "gitlab/enterprise",
+            "name": "gitlab_enterprise",
+            "isEnterprise": false,
+            "forEnterprise": true,
+            "host": "gitlab/enterprise",
+            "apiHost": "gitlab.com/api/v4",
+            "hasIssues": true
+          },
+          "auth*atlassian*com": {
+            "id": "auth*atlassian*com",
+            "name": "jira",
+            "isEnterprise": false,
+            "host": "auth.atlassian.com",
+            "apiHost": "api.atlassian.com",
+            "hasIssues": true
+          },
+          "jiraserver/enterprise": {
+            "id": "jiraserver/enterprise",
+            "name": "jiraserver",
+            "isEnterprise": false,
+            "forEnterprise": true,
+            "needsConfigure": true,
+            "host": "jiraserver/enterprise",
+            "hasIssues": true
+          },
+          "login*microsoftonline*com": {
+            "id": "login*microsoftonline*com",
+            "name": "msteams",
+            "isEnterprise": false,
+            "host": "login.microsoftonline.com",
+            "apiHost": "graph.microsoft.com/v1.0",
+            "hasSharing": true
+          },
+          "slack*com": {
+            "id": "slack*com",
+            "name": "slack",
+            "isEnterprise": false,
+            "host": "slack.com",
+            "apiHost": "slack.com/api",
+            "hasSharing": true
+          },
+          "trello*com": {
+            "id": "trello*com",
+            "name": "trello",
+            "isEnterprise": false,
+            "host": "trello.com",
+            "apiHost": "api.trello.com/1",
+            "hasIssues": true
+          },
+          "youtrack*com": {
+            "id": "youtrack*com",
+            "name": "youtrack",
+            "isEnterprise": false,
+            "needsConfigure": true,
+            "host": "youtrack.com",
+            "hasIssues": true
+          }
+        },
+        "companyMemberCount": 15
+      }
+    ]
+  }
+}

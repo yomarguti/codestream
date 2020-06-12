@@ -1,0 +1,26 @@
+{
+  "url": "/teams?mine",
+  "response": {
+    "teams": [
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1539114682475,
+        "modifiedAt": 1539114682475,
+        "_id": "5bbd06ba2aae56770cbcbf47",
+        "name": "Chupacabra",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "memberIds": [
+          "5bbd06952aae56770cbcbf45",
+          "5bbe2a6333d00a39e1a4dd21"
+        ],
+        "adminIds": [
+          "5bbd06952aae56770cbcbf45"
+        ],
+        "primaryReferral": "external",
+        "companyId": "5bbd06ba2aae56770cbcbf48",
+        "id": "5bbd06ba2aae56770cbcbf47"
+      }
+    ]
+  }
+}

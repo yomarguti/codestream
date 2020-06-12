@@ -1,0 +1,86 @@
+{
+  "url": "channels.info",
+  "request": {
+    "channel": "C8YFZ1K7G"
+  },
+  "response": {
+    "ok": true,
+    "channel": {
+      "id": "C8YFZ1K7G",
+      "name": "history",
+      "is_channel": true,
+      "created": 1516772247,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "creator": "U7CS9PYJU",
+      "name_normalized": "history",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_member": true,
+      "is_private": false,
+      "is_mpim": false,
+      "last_read": "1545149221.001600",
+      "latest": {
+        "client_msg_id": "0A9062E1-4DBC-4056-BE04-CC31E277D72C",
+        "type": "message",
+        "text": "Nice!",
+        "user": "U7EPCTGCU",
+        "ts": "1545149221.001600"
+      },
+      "unread_count": 0,
+      "unread_count_display": 0,
+      "members": [
+        "U7CS9PYJU",
+        "U7CT4071N",
+        "U7DJW0ZQU",
+        "U7EPCTGCU",
+        "U7EV7SB71",
+        "U7FNCE5NX",
+        "U7H4N1A6B",
+        "U7YNDN2VD",
+        "U8E97A1B5",
+        "U9QPXSR3M",
+        "U9ZBV29M4"
+      ],
+      "topic": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "purpose": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "previous_names": []
+    },
+    "scopes": [
+      "read",
+      "client",
+      "identify",
+      "post",
+      "channels:history",
+      "groups:history",
+      "im:history",
+      "mpim:history",
+      "channels:read",
+      "groups:read",
+      "im:read",
+      "mpim:read",
+      "users:read",
+      "users:read.email",
+      "dnd:read",
+      "users.profile:read",
+      "channels:write",
+      "chat:write:user",
+      "groups:write",
+      "im:write",
+      "mpim:write",
+      "reactions:write"
+    ],
+    "acceptedScopes": [
+      "channels:read"
+    ]
+  }
+}

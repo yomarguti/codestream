@@ -1,0 +1,22 @@
+{
+  "method": "codestream/scm/file/info",
+  "request": {
+    "uri": "file:///Users/mfarias/Code/hello-dc/README.md"
+  },
+  "response": {
+    "uri": "file:///Users/mfarias/Code/hello-dc/README.md",
+    "scm": {
+      "file": "README.md",
+      "repoPath": "/Users/mfarias/Code/hello-dc",
+      "repoId": "5e7bde90f9e71a672308af6a",
+      "revision": "c0e0d9c2b0919c95ff7c49ab1beab30268ad8974",
+      "remotes": [
+        {
+          "name": "origin",
+          "url": "github.com/planteater/hello-dc"
+        }
+      ],
+      "branch": "master"
+    }
+  }
+}

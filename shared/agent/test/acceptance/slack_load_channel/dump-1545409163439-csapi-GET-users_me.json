@@ -1,0 +1,70 @@
+{
+  "url": "/users/me",
+  "response": {
+    "user": {
+      "version": 92,
+      "deactivated": false,
+      "phoneNumber": "",
+      "iWorkOn": "",
+      "providerIdentities": [
+        "slack::U7H4N1A6B"
+      ],
+      "createdAt": 1538615849591,
+      "modifiedAt": 1541624668002,
+      "_id": "5bb56a296c347e4bc63c2ab0",
+      "email": "marcelo@codestream.com",
+      "username": "marcelo",
+      "timeZone": "America/New_York",
+      "creatorId": "5bb56a296c347e4bc63c2ab0",
+      "isRegistered": true,
+      "registeredAt": 1539020051997,
+      "joinMethod": "Created Team",
+      "primaryReferral": "external",
+      "originTeamId": "5bbb9527ce36105aede3d176",
+      "companyIds": [
+        "5bbb9527ce36105aede3d177",
+        "5bb51100585ada29401ee9c6",
+        "5bfdd197e8a06548106a10e8"
+      ],
+      "teamIds": [
+        "5bbb9527ce36105aede3d176",
+        "5bb51100585ada29401ee9c5",
+        "5bfdd197e8a06548106a10e7"
+      ],
+      "lastLogin": 1545409162440,
+      "id": "5bb56a296c347e4bc63c2ab0",
+      "lastReads": {
+        "5bfdd197e8a06548106a10e9": 4
+      },
+      "preferences": {
+        "telemetryConsent": true,
+        "emojiPicker-last": "stuffed_flatbread",
+        "emojiPicker-frequently": {
+          "+1": 9,
+          "bridge_at_night": 1,
+          "grinning": 8,
+          "heart_eyes": 6,
+          "joy": 2,
+          "kissing_heart": 7,
+          "laughing": 5,
+          "scream": 1,
+          "stuck_out_tongue_winking_eye": 4,
+          "sweat_smile": 3,
+          "stuffed_flatbread": 1
+        },
+        "markerFileFilter": "all",
+        "markerTypeFilter": "all",
+        "showChannels": "all"
+      },
+      "totalPosts": 168,
+      "lastPostCreatedAt": 1539049363704,
+      "providerInfo": {
+        "slack": {
+          "userId": "U7H4N1A6B",
+          "teamId": "T7DDT1L5R",
+          "accessToken": "xoxp-251469054195-255158044215-452121319443-10f9492e5ca1ecc88df6e2adb0d6eb05"
+        }
+      }
+    }
+  }
+}

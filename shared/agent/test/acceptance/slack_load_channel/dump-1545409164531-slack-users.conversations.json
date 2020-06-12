@@ -1,0 +1,1538 @@
+{
+  "url": "users.conversations",
+  "request": {
+    "exclude_archived": true,
+    "types": "public_channel,private_channel,mpim,im"
+  },
+  "response": {
+    "ok": true,
+    "channels": [
+      {
+        "id": "C7CS9Q4AU",
+        "name": "random",
+        "is_channel": true,
+        "is_group": false,
+        "is_im": false,
+        "created": 1507148032,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "random",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7CS9PYJU",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": false,
+        "is_mpim": false,
+        "topic": {
+          "value": "Non-work banter and water cooler conversation",
+          "creator": "U7CS9PYJU",
+          "last_set": 1507148032
+        },
+        "purpose": {
+          "value": "A place for non-work-related flimflam, faffing, hodge-podge or jibber-jabber you'd prefer to keep out of more focused work-related channels.",
+          "creator": "U7CS9PYJU",
+          "last_set": 1507148032
+        },
+        "previous_names": []
+      },
+      {
+        "id": "C7D0T5KGR",
+        "name": "general",
+        "is_channel": true,
+        "is_group": false,
+        "is_im": false,
+        "created": 1507148032,
+        "is_archived": false,
+        "is_general": true,
+        "unlinked": 0,
+        "name_normalized": "general",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7CS9PYJU",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": false,
+        "is_mpim": false,
+        "topic": {
+          "value": "GOALS:\n1. build conference booth prep\n2. live share + codestream demo\n3. sign up 500 companies at build",
+          "creator": "U7CS9PYJU",
+          "last_set": 1523983530
+        },
+        "purpose": {
+          "value": "This channel is for workspace-wide communication and announcements. All members are in this channel.",
+          "creator": "U7CS9PYJU",
+          "last_set": 1507148032
+        },
+        "previous_names": []
+      },
+      {
+        "id": "C7DLA4LEM",
+        "name": "marketing",
+        "is_channel": true,
+        "is_group": false,
+        "is_im": false,
+        "created": 1507236920,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "marketing",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7DJW0ZQU",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": false,
+        "is_mpim": false,
+        "topic": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "purpose": {
+          "value": "CodeStream marketing related discussion",
+          "creator": "U7DJW0ZQU",
+          "last_set": 1507236920
+        },
+        "previous_names": []
+      },
+      {
+        "id": "C7DM92RTN",
+        "name": "development",
+        "is_channel": true,
+        "is_group": false,
+        "is_im": false,
+        "created": 1507164877,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "development",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7DJW0ZQU",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": false,
+        "is_mpim": false,
+        "topic": {
+          "value": "Standup: <https://zoom.us/j/6418744494>",
+          "creator": "U9QPXSR3M",
+          "last_set": 1542132032
+        },
+        "purpose": {
+          "value": "Technical discussion about CodeStream",
+          "creator": "U7CS9PYJU",
+          "last_set": 1543283319
+        },
+        "previous_names": []
+      },
+      {
+        "id": "C7E3ED0TT",
+        "name": "product",
+        "is_channel": true,
+        "is_group": false,
+        "is_im": false,
+        "created": 1507305762,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "product",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7CS9PYJU",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": false,
+        "is_mpim": false,
+        "topic": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "purpose": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "previous_names": []
+      },
+      {
+        "id": "C7QGZCLNA",
+        "name": "marketing_social",
+        "is_channel": true,
+        "is_group": false,
+        "is_im": false,
+        "created": 1508935389,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "marketing_social",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7EV7SB71",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": false,
+        "is_mpim": false,
+        "topic": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "purpose": {
+          "value": "To internally suggest content for our teamcodestream social channels",
+          "creator": "U7EV7SB71",
+          "last_set": 1508935389
+        },
+        "previous_names": [
+          "twitterfodder"
+        ]
+      },
+      {
+        "id": "C8D31E0PN",
+        "name": "sales_crm_hubspot",
+        "is_channel": true,
+        "is_group": false,
+        "is_im": false,
+        "created": 1513027607,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "sales_crm_hubspot",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7EV7SB71",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": false,
+        "is_mpim": false,
+        "topic": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "purpose": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "previous_names": []
+      },
+      {
+        "id": "C8YFZ1K7G",
+        "name": "history",
+        "is_channel": true,
+        "is_group": false,
+        "is_im": false,
+        "created": 1516772247,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "history",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7CS9PYJU",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": false,
+        "is_mpim": false,
+        "topic": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "purpose": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "previous_names": []
+      },
+      {
+        "id": "C9FJGJJLB",
+        "name": "upvote",
+        "is_channel": true,
+        "is_group": false,
+        "is_im": false,
+        "created": 1519754211,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "upvote",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7LJRCHK9",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": false,
+        "is_mpim": false,
+        "topic": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "purpose": {
+          "value": "Channel for team tasks",
+          "creator": "U7LJRCHK9",
+          "last_set": 1519754212
+        },
+        "previous_names": []
+      },
+      {
+        "id": "C9R238WQP",
+        "name": "notify_alerts",
+        "is_channel": true,
+        "is_group": false,
+        "is_im": false,
+        "created": 1521053502,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "notify_alerts",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7EV7SB71",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": false,
+        "is_mpim": false,
+        "topic": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "purpose": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "previous_names": []
+      },
+      {
+        "id": "C9XRVN9JL",
+        "name": "githuboncodestream",
+        "is_channel": true,
+        "is_group": false,
+        "is_im": false,
+        "created": 1522359301,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "githuboncodestream",
+        "is_shared": true,
+        "parent_conversation": null,
+        "creator": "U7YNDN2VD",
+        "is_ext_shared": true,
+        "is_org_shared": false,
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": true,
+        "is_mpim": false,
+        "topic": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "purpose": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        }
+      },
+      {
+        "id": "CB4DB25PG",
+        "name": "contentfodder",
+        "is_channel": true,
+        "is_group": false,
+        "is_im": false,
+        "created": 1528384901,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "contentfodder",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7EPCTGCU",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": false,
+        "is_mpim": false,
+        "topic": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "purpose": {
+          "value": "Collect ideas from the dev team for content marketing",
+          "creator": "U7EPCTGCU",
+          "last_set": 1528384902
+        },
+        "previous_names": []
+      },
+      {
+        "id": "CDKK80L0Y",
+        "name": "agent",
+        "is_channel": true,
+        "is_group": false,
+        "is_im": false,
+        "created": 1540302705,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "agent",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7H4N1A6B",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": false,
+        "is_mpim": false,
+        "topic": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "purpose": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "previous_names": []
+      },
+      {
+        "id": "CEM1NLATT",
+        "name": "test-marcelo",
+        "is_channel": true,
+        "is_group": false,
+        "is_im": false,
+        "created": 1544132003,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "test-marcelo",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7H4N1A6B",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": false,
+        "is_mpim": false,
+        "topic": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "purpose": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "previous_names": []
+      },
+      {
+        "id": "CENV45Y1L",
+        "name": "ci-vscode",
+        "is_channel": true,
+        "is_group": false,
+        "is_im": false,
+        "created": 1544127569,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "ci-vscode",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U9QPXSR3M",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": false,
+        "is_mpim": false,
+        "topic": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "purpose": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "previous_names": []
+      },
+      {
+        "id": "CENV60J86",
+        "name": "ci-services",
+        "is_channel": true,
+        "is_group": false,
+        "is_im": false,
+        "created": 1544127682,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "ci-services",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U9QPXSR3M",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": false,
+        "is_mpim": false,
+        "topic": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "purpose": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "previous_names": []
+      },
+      {
+        "id": "G7GD691PC",
+        "name": "mpdm-pez--akonwi--marcelo-1",
+        "is_channel": false,
+        "is_group": true,
+        "is_im": false,
+        "created": 1507689722,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "mpdm-pez--akonwi--marcelo-1",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7CS9PYJU",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": true,
+        "is_mpim": true,
+        "last_read": "1510336113.000248",
+        "is_open": false,
+        "topic": {
+          "value": "Group messaging",
+          "creator": "U7CS9PYJU",
+          "last_set": 1507689722
+        },
+        "purpose": {
+          "value": "Group messaging with: @pez @akonwi @marcelo",
+          "creator": "U7CS9PYJU",
+          "last_set": 1507689722
+        },
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "G8HJXRA5P",
+        "name": "mpdm-luis--akonwi--marcelo-1",
+        "is_channel": false,
+        "is_group": true,
+        "is_im": false,
+        "created": 1513879687,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "mpdm-luis--akonwi--marcelo-1",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7LJRCHK9",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": true,
+        "is_mpim": true,
+        "last_read": "1513881043.000278",
+        "is_open": false,
+        "topic": {
+          "value": "Group messaging",
+          "creator": "U7LJRCHK9",
+          "last_set": 1513879687
+        },
+        "purpose": {
+          "value": "Group messaging with: @luis @akonwi @marcelo",
+          "creator": "U7LJRCHK9",
+          "last_set": 1513879687
+        },
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "G8X52UWUR",
+        "name": "techrecruiting",
+        "is_channel": false,
+        "is_group": true,
+        "is_im": false,
+        "created": 1516779764,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "techrecruiting",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7CS9PYJU",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": true,
+        "is_mpim": false,
+        "last_read": "1523470712.000786",
+        "is_open": true,
+        "topic": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "purpose": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "G94NVL96E",
+        "name": "mpdm-colin--akonwi--marcelo-1",
+        "is_channel": false,
+        "is_group": true,
+        "is_im": false,
+        "created": 1517937718,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "mpdm-colin--akonwi--marcelo-1",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7CT4071N",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": true,
+        "is_mpim": true,
+        "last_read": "1517937778.000249",
+        "is_open": false,
+        "topic": {
+          "value": "Group messaging",
+          "creator": "U7CT4071N",
+          "last_set": 1517937718
+        },
+        "purpose": {
+          "value": "Group messaging with: @colin @akonwi @marcelo",
+          "creator": "U7CT4071N",
+          "last_set": 1517937718
+        },
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "G96PSEX43",
+        "name": "mpdm-marcelo--pez--colin-1",
+        "is_channel": false,
+        "is_group": true,
+        "is_im": false,
+        "created": 1518203545,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "mpdm-marcelo--pez--colin-1",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7H4N1A6B",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": true,
+        "is_mpim": true,
+        "last_read": "1518211497.000000",
+        "is_open": false,
+        "topic": {
+          "value": "Group messaging",
+          "creator": "U7H4N1A6B",
+          "last_set": 1518203545
+        },
+        "purpose": {
+          "value": "Group messaging with: @marcelo @pez @colin",
+          "creator": "U7H4N1A6B",
+          "last_set": 1518203545
+        },
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "G9GQARX5M",
+        "name": "mpdm-luis--colin--marcelo-1",
+        "is_channel": false,
+        "is_group": true,
+        "is_im": false,
+        "created": 1519758301,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "mpdm-luis--colin--marcelo-1",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7LJRCHK9",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": true,
+        "is_mpim": true,
+        "last_read": "1519758792.000364",
+        "is_open": false,
+        "topic": {
+          "value": "Group messaging",
+          "creator": "U7LJRCHK9",
+          "last_set": 1519758301
+        },
+        "purpose": {
+          "value": "Group messaging with: @luis @colin @marcelo",
+          "creator": "U7LJRCHK9",
+          "last_set": 1519758301
+        },
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "G9XT08P4Z",
+        "name": "mpdm-dave--colin--marcelo-1",
+        "is_channel": false,
+        "is_group": true,
+        "is_im": false,
+        "created": 1522349254,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "mpdm-dave--colin--marcelo-1",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7YNDN2VD",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": true,
+        "is_mpim": true,
+        "last_read": "1522440939.000377",
+        "is_open": false,
+        "topic": {
+          "value": "Group messaging",
+          "creator": "U7YNDN2VD",
+          "last_set": 1522349254
+        },
+        "purpose": {
+          "value": "Group messaging with: @dave @colin @marcelo",
+          "creator": "U7YNDN2VD",
+          "last_set": 1522349254
+        },
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "GA4JGDK41",
+        "name": "devrecruiting",
+        "is_channel": false,
+        "is_group": true,
+        "is_im": false,
+        "created": 1523470178,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "devrecruiting",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7CS9PYJU",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": true,
+        "is_mpim": false,
+        "last_read": "1525464375.000184",
+        "is_open": true,
+        "topic": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "purpose": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "GA66WK2BA",
+        "name": "mpdm-claudio--eric--colin--akonwi--marcelo-1",
+        "is_channel": false,
+        "is_group": true,
+        "is_im": false,
+        "created": 1523722360,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "mpdm-claudio--eric--colin--akonwi--marcelo-1",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7EPCTGCU",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": true,
+        "is_mpim": true,
+        "last_read": "1523727419.000048",
+        "is_open": false,
+        "topic": {
+          "value": "Group messaging",
+          "creator": "U7EPCTGCU",
+          "last_set": 1523722360
+        },
+        "purpose": {
+          "value": "Group messaging with: @claudio @eric @colin @akonwi @marcelo",
+          "creator": "U7EPCTGCU",
+          "last_set": 1523722360
+        },
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "GA9UT73UH",
+        "name": "goals",
+        "is_channel": false,
+        "is_group": true,
+        "is_im": false,
+        "created": 1524239699,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "goals",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7EPCTGCU",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": true,
+        "is_mpim": false,
+        "last_read": "1524240097.000091",
+        "is_open": true,
+        "topic": {
+          "value": "",
+          "creator": "",
+          "last_set": 0
+        },
+        "purpose": {
+          "value": "Share high level goals and supporting initiatives",
+          "creator": "U7EPCTGCU",
+          "last_set": 1524239699
+        },
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "GAVL73H0V",
+        "name": "mpdm-eric--colin--marcelo--seb-1",
+        "is_channel": false,
+        "is_group": true,
+        "is_im": false,
+        "created": 1527165428,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "mpdm-eric--colin--marcelo--seb-1",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U9QPXSR3M",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": true,
+        "is_mpim": true,
+        "last_read": "1527165441.000620",
+        "is_open": false,
+        "topic": {
+          "value": "Group messaging",
+          "creator": "U9QPXSR3M",
+          "last_set": 1527165428
+        },
+        "purpose": {
+          "value": "Group messaging with: @eric @colin @marcelo @seb",
+          "creator": "U9QPXSR3M",
+          "last_set": 1527165428
+        },
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "GBQU8NM17",
+        "name": "mpdm-eric--akonwi--marcelo-1",
+        "is_channel": false,
+        "is_group": true,
+        "is_im": false,
+        "created": 1531771534,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "mpdm-eric--akonwi--marcelo-1",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U9QPXSR3M",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": true,
+        "is_mpim": true,
+        "last_read": "1531779787.000103",
+        "is_open": false,
+        "topic": {
+          "value": "Group messaging",
+          "creator": "U9QPXSR3M",
+          "last_set": 1531771534
+        },
+        "purpose": {
+          "value": "Group messaging with: @eric @akonwi @marcelo",
+          "creator": "U9QPXSR3M",
+          "last_set": 1531771534
+        },
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "GBTG2MZK5",
+        "name": "mpdm-michael--akonwi--marcelo-1",
+        "is_channel": false,
+        "is_group": true,
+        "is_im": false,
+        "created": 1532024169,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "mpdm-michael--akonwi--marcelo-1",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7EV7SB71",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": true,
+        "is_mpim": true,
+        "last_read": "1532024994.000201",
+        "is_open": false,
+        "topic": {
+          "value": "Group messaging",
+          "creator": "U7EV7SB71",
+          "last_set": 1532024169
+        },
+        "purpose": {
+          "value": "Group messaging with: @michael @akonwi @marcelo",
+          "creator": "U7EV7SB71",
+          "last_set": 1532024169
+        },
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "GC8GW49S8",
+        "name": "mpdm-pez--eric--marcelo-1",
+        "is_channel": false,
+        "is_group": true,
+        "is_im": false,
+        "created": 1534304550,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "mpdm-pez--eric--marcelo-1",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7CS9PYJU",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": true,
+        "is_mpim": true,
+        "last_read": "1534351796.000100",
+        "is_open": false,
+        "topic": {
+          "value": "Group messaging",
+          "creator": "U7CS9PYJU",
+          "last_set": 1534304550
+        },
+        "purpose": {
+          "value": "Group messaging with: @pez @eric @marcelo",
+          "creator": "U7CS9PYJU",
+          "last_set": 1534304550
+        },
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "GDEJ22HQ8",
+        "name": "mpdm-dave--akonwi--marcelo-1",
+        "is_channel": false,
+        "is_group": true,
+        "is_im": false,
+        "created": 1539700577,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "mpdm-dave--akonwi--marcelo-1",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7YNDN2VD",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": true,
+        "is_mpim": true,
+        "last_read": "1543247328.002500",
+        "is_open": true,
+        "topic": {
+          "value": "Group messaging",
+          "creator": "U7YNDN2VD",
+          "last_set": 1539700577
+        },
+        "purpose": {
+          "value": "Group messaging with: @dave @akonwi @marcelo",
+          "creator": "U7YNDN2VD",
+          "last_set": 1539700577
+        },
+        "priority": 0.020387738455116
+      },
+      {
+        "id": "GDG2Z9RFY",
+        "name": "mpdm-dave--michael--marcelo-1",
+        "is_channel": false,
+        "is_group": true,
+        "is_im": false,
+        "created": 1539633933,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "name_normalized": "mpdm-dave--michael--marcelo-1",
+        "is_shared": false,
+        "parent_conversation": null,
+        "creator": "U7YNDN2VD",
+        "is_ext_shared": false,
+        "is_org_shared": false,
+        "shared_team_ids": [
+          "T7DDT1L5R"
+        ],
+        "pending_shared": [],
+        "is_pending_ext_shared": false,
+        "is_private": true,
+        "is_mpim": true,
+        "last_read": "0000000000.000000",
+        "is_open": false,
+        "topic": {
+          "value": "Group messaging",
+          "creator": "U7YNDN2VD",
+          "last_set": 1539633933
+        },
+        "purpose": {
+          "value": "Group messaging with: @dave @michael @marcelo",
+          "creator": "U7YNDN2VD",
+          "last_set": 1539633933
+        },
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "DERJ48TSM",
+        "created": 1544634125,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "UESCB7V37",
+        "is_user_deleted": false,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "DEM52JEFJ",
+        "created": 1544158522,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "UEM52JA4Q",
+        "is_user_deleted": false,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "DEC3ZJP9A",
+        "created": 1543257545,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "UEC3ZJ58U",
+        "is_user_deleted": false,
+        "priority": 0.034246409353445
+      },
+      {
+        "id": "DDDUN7DCN",
+        "created": 1539300560,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "UDCCVLSMS",
+        "is_user_deleted": false,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "DCJ4ZDUNM",
+        "created": 1535679379,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "UCL2G3VPG",
+        "is_user_deleted": false,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "DATB1N1CK",
+        "created": 1526918234,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "UAUATCSCE",
+        "is_user_deleted": false,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "DAR09U2M8",
+        "created": 1526490313,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "UAQ97BS6L",
+        "is_user_deleted": false,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "DAQ74ST7D",
+        "created": 1526411719,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "UAPJZAAJU",
+        "is_user_deleted": true,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "DAG6G4E4D",
+        "created": 1525121117,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "UAG2FAS10",
+        "is_user_deleted": true,
+        "priority": 0.021468288580261
+      },
+      {
+        "id": "DA9G56ET1",
+        "created": 1523993906,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "UA8BQ6EUB",
+        "is_user_deleted": true,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "D9ZJ95WKZ",
+        "created": 1522356104,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U9ZBV29M4",
+        "is_user_deleted": false,
+        "priority": 0.047181802289268
+      },
+      {
+        "id": "D9YH9TTQS",
+        "created": 1522360296,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U9YH9TJV8",
+        "is_user_deleted": true,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "D9V7HFGLB",
+        "created": 1521835012,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U9VDW9BHT",
+        "is_user_deleted": true,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "D9QRZ89RS",
+        "created": 1521163909,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U9QPXSR3M",
+        "is_user_deleted": false,
+        "priority": 0.066257166963576
+      },
+      {
+        "id": "D9Q1G2GN4",
+        "created": 1521138501,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U9QLRMKDY",
+        "is_user_deleted": false,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "D9N4T6R4G",
+        "created": 1520907974,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U9NP82DUL",
+        "is_user_deleted": false,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "D9GKVKD3P",
+        "created": 1519851801,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U9GDE1WLT",
+        "is_user_deleted": true,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "D9750CJCU",
+        "created": 1518278507,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U9792MEGM",
+        "is_user_deleted": false,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "D93MZAAQZ",
+        "created": 1517869785,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U93JZASCQ",
+        "is_user_deleted": false,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "D8ZUJ1V3J",
+        "created": 1517272467,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U90FAMCN7",
+        "is_user_deleted": false,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "D8RLY6LP7",
+        "created": 1515696391,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U8R19794H",
+        "is_user_deleted": false,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "D8QS5TDJQ",
+        "created": 1515604592,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U8Q7AH4N4",
+        "is_user_deleted": false,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "D8DRM48BB",
+        "created": 1513201191,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U8E97A1B5",
+        "is_user_deleted": true,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "D8897FETH",
+        "created": 1511973858,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U878A495J",
+        "is_user_deleted": false,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "D7X4SF32M",
+        "created": 1510240227,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U7YNDN2VD",
+        "is_user_deleted": false,
+        "priority": 0.049097434262555
+      },
+      {
+        "id": "D7UJTT0KZ",
+        "created": 1509569096,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U7TGBBENN",
+        "is_user_deleted": false,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "D7TDHGKH8",
+        "created": 1509560233,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U7TF0TDKN",
+        "is_user_deleted": false,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "D7KSYRXSR",
+        "created": 1508270119,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U7KQF2ZE0",
+        "is_user_deleted": false,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "D7KG7HV6E",
+        "created": 1508249948,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U7LJRCHK9",
+        "is_user_deleted": true,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "D7GU4PQDU",
+        "created": 1507645256,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U7CT4071N",
+        "is_user_deleted": false,
+        "priority": 0.04069728195763
+      },
+      {
+        "id": "D7GU4PPK8",
+        "created": 1507645256,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U7CS9PYJU",
+        "is_user_deleted": false,
+        "priority": 0.031513069439366
+      },
+      {
+        "id": "D7G66TH6H",
+        "created": 1507645256,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U7H4N1A6B",
+        "is_user_deleted": false,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "D7G3QKH52",
+        "created": 1507645257,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U7EV7SB71",
+        "is_user_deleted": false,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "D7G3QKENQ",
+        "created": 1507645257,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U7EPCTGCU",
+        "is_user_deleted": false,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "D7G3QKCAY",
+        "created": 1507645256,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U7DJW0ZQU",
+        "is_user_deleted": false,
+        "priority": 0.02406051487852
+      },
+      {
+        "id": "D7FVA5TLK",
+        "created": 1507645256,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "USLACKBOT",
+        "is_user_deleted": false,
+        "priority": 0
+      },
+      {
+        "id": "D7FJY8W0G",
+        "created": 1507665561,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U7H59LZ8E",
+        "is_user_deleted": false,
+        "priority": 0.016437170575451
+      },
+      {
+        "id": "D7FCD9J4Q",
+        "created": 1507645257,
+        "is_im": true,
+        "is_org_shared": false,
+        "user": "U7FNCE5NX",
+        "is_user_deleted": false,
+        "priority": 0.037265023542322
+      }
+    ],
+    "response_metadata": {
+      "next_cursor": ""
+    },
+    "scopes": [
+      "read",
+      "client",
+      "identify",
+      "post",
+      "channels:history",
+      "groups:history",
+      "im:history",
+      "mpim:history",
+      "channels:read",
+      "groups:read",
+      "im:read",
+      "mpim:read",
+      "users:read",
+      "users:read.email",
+      "dnd:read",
+      "users.profile:read",
+      "channels:write",
+      "chat:write:user",
+      "groups:write",
+      "im:write",
+      "mpim:write",
+      "reactions:write"
+    ],
+    "acceptedScopes": [
+      "channels:read",
+      "groups:read",
+      "mpim:read",
+      "im:read",
+      "read"
+    ]
+  }
+}

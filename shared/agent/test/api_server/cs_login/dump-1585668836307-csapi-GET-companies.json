@@ -1,0 +1,47 @@
+{
+  "url": "/companies?mine=true",
+  "response": {
+    "companies": [
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1532536443954,
+        "modifiedAt": 1580761656464,
+        "_id": "5b58a67befb4c720ffe15a7b",
+        "name": "codestream.com",
+        "creatorId": "5b58a606efb4c720ffe15a78",
+        "teamIds": [
+          "5b58a67befb4c720ffe15a7a",
+          "5e388238e95b967dc1cedaf6"
+        ],
+        "id": "5b58a67befb4c720ffe15a7b"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1539114682473,
+        "modifiedAt": 1539114682473,
+        "_id": "5bbd06ba2aae56770cbcbf48",
+        "name": "codestream.com",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "teamIds": [
+          "5bbd06ba2aae56770cbcbf47"
+        ],
+        "id": "5bbd06ba2aae56770cbcbf48"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1576868804508,
+        "modifiedAt": 1576868804508,
+        "_id": "5dfd1bc4d3d59050f7712bb0",
+        "name": "Dave299a Inc.",
+        "teamIds": [
+          "5dfd1bc4d3d59050f7712baf"
+        ],
+        "creatorId": "5dfd1baecfbdd550957d9eef",
+        "id": "5dfd1bc4d3d59050f7712bb0"
+      }
+    ]
+  }
+}

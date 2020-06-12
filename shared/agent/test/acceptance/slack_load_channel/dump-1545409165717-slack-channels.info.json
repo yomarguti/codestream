@@ -1,0 +1,144 @@
+{
+  "url": "channels.info",
+  "request": {
+    "channel": "C7D0T5KGR"
+  },
+  "response": {
+    "ok": true,
+    "channel": {
+      "id": "C7D0T5KGR",
+      "name": "general",
+      "is_channel": true,
+      "created": 1507148032,
+      "is_archived": false,
+      "is_general": true,
+      "unlinked": 0,
+      "creator": "U7CS9PYJU",
+      "name_normalized": "general",
+      "is_read_only": false,
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_member": true,
+      "is_private": false,
+      "is_mpim": false,
+      "last_read": "1545368433.000100",
+      "latest": {
+        "type": "message",
+        "text": "",
+        "files": [
+          {
+            "id": "FEZJ2MZFU",
+            "created": 1545368433,
+            "timestamp": 1545368412,
+            "name": "Chartio: Daily Dashboard to Slack for December 21, 2018",
+            "title": "Chartio: Daily Dashboard to Slack for December 21, 2018",
+            "mimetype": "text/html",
+            "filetype": "email",
+            "pretty_type": "Email",
+            "user": "USLACKBOT",
+            "editable": true,
+            "size": 1647718,
+            "mode": "email",
+            "is_external": false,
+            "external_type": "",
+            "is_public": true,
+            "public_url_shared": false,
+            "display_as_bot": true,
+            "username": "email",
+            "url_private": "https://files.slack.com/files-pri/T7DDT1L5R-FEZJ2MZFU/chartio__daily_dashboard_to_slack_for_december_21__2018",
+            "url_private_download": "https://files.slack.com/files-pri/T7DDT1L5R-FEZJ2MZFU/download/chartio__daily_dashboard_to_slack_for_december_21__2018",
+            "permalink": "https://teamcodestream.slack.com/files/USLACKBOT/FEZJ2MZFU/chartio__daily_dashboard_to_slack_for_december_21__2018",
+            "permalink_public": "https://slack-files.com/T7DDT1L5R-FEZJ2MZFU-d87cdaeef9",
+            "subject": "Chartio: Daily Dashboard to Slack for December 21, 2018",
+            "to": [
+              {
+                "address": "",
+                "name": "email",
+                "original": "email <>"
+              }
+            ],
+            "from": [
+              {
+                "address": "reports@chartio.com",
+                "name": "Chartio Reporting",
+                "original": "\"Chartio Reporting\" <reports@chartio.com>"
+              }
+            ],
+            "cc": [],
+            "attachments": [],
+            "plain_text": "This is a scheduled report for the CodeStream - Internal Use Only dashboard.\r\n\r\nDownload the report here (links accessible up to 60 days):\r\n\r\n- PDF: https://chartio.com/codestream/codestream-p-internal-use-only/report/d304c10b48824c64bc0d766f4fe58458.pdf\r\n\r\n\r\nTo edit your email preferences for this dashboard, visit your report settings\r\nat https://chartio.com/codestream/codestream-p-internal-use-only/settings/reports/.\r\n\r\n- The Chartio Team",
+            "preview": "<div>\r\n    <div>\r\n      <a href=\"https://slack-redir.net/link?url=http%3A%2F%2Fchartio.com\"><img src=\"https://slack-imgs.com/?url=https%3A%2F%2Fchartio.com%2Flogo%2Flogo.png\"></a>\r\n      Dashboard Report\r\n    </div>\r\n    <div>\r\n      <div>\r\n        CodeStream - Internal Use Only\r\n        <a href=\"https://slack-redir.net/link?url=https%3A%2F%2Fchartio.com%2Fcodestream%2Fcodestream-p-internal-use-only%2F%3F\">Live Dashboard</a>\r\n        December 21, 2018<br><br></div>\r\n\r\n      \r\n          \r\n              <a href=\"https://slack-redir.net/link?url=https%3A%2F%2Fchartio.com%2Fcodestream%2Fcodestream-p-internal-use-only%2Freport%2Fd304c10b48824c64bc0d766f4fe58458.pdf\">Download PDF</a><br><br><em>Download links accessible up to 60 days</em><br><br><img src=\"https://slack-imgs.com/?url=https%3A%2F%2Fslack-files.com%2Ffiles-email%2FT7DDT1L5R-FEZJ2MZFU-4aa0e4e5ac-4c4756da%2Fcodestream-p-internal-use-only_2018-12-21.png\" alt=\"CodeStream - Internal Use Only\"><br><br>\r\n      \r\n      This is a scheduled report for the <a href=\"https://slack-redir.net/link?url=https%3A%2F%2Fchartio.com%2Fcodestream%2Fcodestream-p-internal-use-only%2F%3F\">CodeStream - Internal Use Only</a> dashboard. To edit your email preferences for this dashboard, visit your <a href=\"https://slack-redir.net/link?url=https%3A%2F%2Fchartio.com%2Fcodestream%2Fcodestream-p-internal-use-only%2Fsettings%2Freports%2F\">report settings</a>.<br><br><a href=\"https://slack-redir.net/link?url=https%3A%2F%2Fchartio.com%2Fcodestream%2Fcodestream-p-internal-use-only%2Freport%2Fd304c10b48824c64bc0d766f4fe58458.pdf\">Download PDF</a><br><br><em>Download links accessible up to 60 days</em><br><br>\r\n\r\n      If the download link(s) above don't work, copy and paste one of the links below into your browser:\r\n      \r\n      <br>https://chartio.com/codestream/codestream-p-internal-use-only/report/d304c10b48824c64bc0d766f4fe58458.pdf\r\n      \r\n      <br><br></div>\r\n    <div>\r\n        Chartio - Modern Business Intelligence for your whole company<br><br></div>\r\n  </div>\r\n  ",
+            "preview_plain_text": "This is a scheduled report for the CodeStream - Internal Use Only dashboard.\r\n\r\nDownload the report here (links accessible up to 60 days):\r\n\r\n- PDF: https://chartio.com/codestream/codestream-p-interna",
+            "has_more": false,
+            "sent_to_self": false,
+            "bot_id": "B9H2B8QDN",
+            "is_starred": false
+          }
+        ],
+        "upload": true,
+        "user": "USLACKBOT",
+        "display_as_bot": true,
+        "bot_id": "B9H2B8QDN",
+        "ts": "1545368433.000100"
+      },
+      "unread_count": 0,
+      "unread_count_display": 0,
+      "members": [
+        "U7CS9PYJU",
+        "U7CT4071N",
+        "U7DJW0ZQU",
+        "U7EPCTGCU",
+        "U7EV7SB71",
+        "U7FNCE5NX",
+        "U7GK5RY3H",
+        "U7H4N1A6B",
+        "U7YNDN2VD",
+        "U8E97A1B5",
+        "U9QPXSR3M",
+        "U9ZBV29M4",
+        "UAQ97BS6L",
+        "UAUATCSCE",
+        "UDCCVLSMS",
+        "UEC3ZJ58U"
+      ],
+      "topic": {
+        "value": "GOALS:\n1. build conference booth prep\n2. live share + codestream demo\n3. sign up 500 companies at build",
+        "creator": "U7CS9PYJU",
+        "last_set": 1523983530
+      },
+      "purpose": {
+        "value": "This channel is for workspace-wide communication and announcements. All members are in this channel.",
+        "creator": "U7CS9PYJU",
+        "last_set": 1507148032
+      },
+      "previous_names": []
+    },
+    "scopes": [
+      "read",
+      "client",
+      "identify",
+      "post",
+      "channels:history",
+      "groups:history",
+      "im:history",
+      "mpim:history",
+      "channels:read",
+      "groups:read",
+      "im:read",
+      "mpim:read",
+      "users:read",
+      "users:read.email",
+      "dnd:read",
+      "users.profile:read",
+      "channels:write",
+      "chat:write:user",
+      "groups:write",
+      "im:write",
+      "mpim:write",
+      "reactions:write"
+    ],
+    "acceptedScopes": [
+      "channels:read"
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+{
+	"editor.insertSpaces": false,
+	"prettier.requireConfig": true,
+	"search.exclude": {
+		"**/dist": true
+	}
+}

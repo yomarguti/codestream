@@ -1,0 +1,112 @@
+{
+  "url": "channels.info",
+  "request": {
+    "channel": "CENV60J86"
+  },
+  "response": {
+    "ok": true,
+    "channel": {
+      "id": "CENV60J86",
+      "name": "ci-services",
+      "is_channel": true,
+      "created": 1544127682,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "creator": "U9QPXSR3M",
+      "name_normalized": "ci-services",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_member": true,
+      "is_private": false,
+      "is_mpim": false,
+      "last_read": "1544202136.003800",
+      "latest": {
+        "type": "message",
+        "subtype": "bot_message",
+        "text": "<http://tc.codestream.us/viewLog.html?buildTypeId=StaticContent_DeploymentToS3&amp;buildId=3489|Succeeded - static_content / Deploy to S3 #2>",
+        "ts": "1545285272.029700",
+        "username": "rosiebud",
+        "icons": {
+          "image_48": "https://s3-us-west-2.amazonaws.com/slack-files2/bot_icons/2017-11-01/264914556512_48.png"
+        },
+        "bot_id": "B7UJTSW0P",
+        "attachments": [
+          {
+            "fallback": "Deploy to S3",
+            "id": 1,
+            "color": "2eb886",
+            "fields": [
+              {
+                "title": "Deploy to S3",
+                "value": "Agent: Linux--tca1.codestream.us--t2-xlarge\nElapsed: 3s",
+                "short": false
+              },
+              {
+                "title": "Commits",
+                "value": "94004d607a :: jimmyjayp :: Updated the readme.\n\n",
+                "short": false
+              },
+              {
+                "title": "Changes By",
+                "value": "jimmyjayp",
+                "short": false
+              }
+            ]
+          }
+        ]
+      },
+      "unread_count": 258,
+      "unread_count_display": 258,
+      "members": [
+        "U7CS9PYJU",
+        "U7CT4071N",
+        "U7DJW0ZQU",
+        "U7FNCE5NX",
+        "U7H4N1A6B",
+        "U7YNDN2VD",
+        "U9QPXSR3M",
+        "UAUATCSCE",
+        "UEC3ZJ58U"
+      ],
+      "topic": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "purpose": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "previous_names": []
+    },
+    "scopes": [
+      "read",
+      "client",
+      "identify",
+      "post",
+      "channels:history",
+      "groups:history",
+      "im:history",
+      "mpim:history",
+      "channels:read",
+      "groups:read",
+      "im:read",
+      "mpim:read",
+      "users:read",
+      "users:read.email",
+      "dnd:read",
+      "users.profile:read",
+      "channels:write",
+      "chat:write:user",
+      "groups:write",
+      "im:write",
+      "mpim:write",
+      "reactions:write"
+    ],
+    "acceptedScopes": [
+      "channels:read"
+    ]
+  }
+}

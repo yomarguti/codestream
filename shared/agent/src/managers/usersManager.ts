@@ -1,0 +1,168 @@
+"use strict";
+import {
+	BlameAuthor,
+	DeleteUserRequest,
+	DeleteUserRequestType,
+	FetchUsersRequest,
+	FetchUsersRequestType,
+	FetchUsersResponse,
+	GetMeRequestType,
+	GetMeResponse,
+	GetPreferencesRequestType,
+	GetPreferencesResponse,
+	GetUnreadsRequest,
+	GetUnreadsRequestType,
+	GetUnreadsResponse,
+	GetUserRequest,
+	GetUserRequestType,
+	GetUserResponse,
+	InviteUserRequest,
+	InviteUserRequestType,
+	KickUserRequest,
+	KickUserRequestType,
+	SetModifiedReposRequest,
+	SetModifiedReposRequestType,
+	SetModifiedReposResponse,
+	UpdatePreferencesRequest,
+	UpdatePreferencesRequestType,
+	UpdatePreferencesResponse,
+	UpdatePresenceRequest,
+	UpdatePresenceRequestType,
+	UpdateStatusRequest,
+	UpdateStatusRequestType,
+	UpdateStatusResponse,
+	UpdateUserRequest,
+	UpdateUserRequestType
+} from "../protocol/agent.protocol";
+import { CSUser } from "../protocol/api.protocol";
+import { lsp, lspHandler } from "../system";
+import { CachedEntityManagerBase, Id } from "./entityManager";
+
+@lsp
+export class UsersManager extends CachedEntityManagerBase<CSUser> {
+	@lspHandler(FetchUsersRequestType)
+	async get(request?: FetchUsersRequest): Promise<FetchUsersResponse> {
+		let users = await this.getAllCached();
+		if (request != null) {
+			if (request.userIds != null && request.userIds.length !== 0) {
+				users = users.filter(u => request.userIds!.includes(u.id));
+			}
+		}
+
+		return { users: users };
+	}
+
+	protected async loadCache() {
+		const response = await this.session.api.fetchUsers({});
+		this.cache.reset(response.users);
+	}
+
+	getById(id: Id, options?: { avoidCachingOnFetch?: boolean }): Promise<CSUser> {
+		return super.getById(this.session.api.convertUserIdToCodeStreamUserId(id), options);
+	}
+
+	getByIdFromCache(id: Id): Promise<CSUser | undefined> {
+		return super.getByIdFromCache(this.session.api.convertUserIdToCodeStreamUserId(id));
+	}
+
+	async getByEmails(
+		emails: string[],
+		options: { ignoreCase?: boolean } = { ignoreCase: true }
+	): Promise<CSUser[]> {
+		if (options.ignoreCase) {
+			emails = emails.map(email => email.toLocaleUpperCase());
+		}
+
+		const users = (await this.get()).users;
+		return users.filter(
+			u =>
+				u.email != null &&
+				emails.includes(options.ignoreCase ? u.email.toLocaleUpperCase() : u.email)
+		);
+	}
+
+	async enrichEmailList(emails: string[]): Promise<BlameAuthor[]> {
+		emails = emails.map(email => email.toLocaleLowerCase());
+
+		const users = (await this.get()).users;
+
+		const ret: BlameAuthor[] = [];
+		emails.forEach((email: string) => {
+			const user = users.find(u => u.email.toLocaleLowerCase() === email);
+			if (user) ret.unshift({ id: user.id, email: user.email, username: user.username });
+			else ret.push({ email });
+		});
+		return ret;
+	}
+
+	protected async fetchById(userId: Id): Promise<CSUser> {
+		const response = await this.session.api.getUser({ userId: userId });
+		return response.user;
+	}
+
+	@lspHandler(InviteUserRequestType)
+	inviteUser(request: InviteUserRequest) {
+		return this.session.api.inviteUser(request);
+	}
+
+	@lspHandler(DeleteUserRequestType)
+	deleteUser(request: DeleteUserRequest) {
+		return this.session.api.deleteUser(request);
+	}
+
+	@lspHandler(KickUserRequestType)
+	kickUser(request: KickUserRequest) {
+		return this.session.api.kickUser(request);
+	}
+
+	@lspHandler(UpdateUserRequestType)
+	updateUser(request: UpdateUserRequest) {
+		return this.session.api.updateUser(request);
+	}
+
+	@lspHandler(UpdatePreferencesRequestType)
+	async updatePreferences(request: UpdatePreferencesRequest): Promise<UpdatePreferencesResponse> {
+		return this.session.api.updatePreferences(request);
+	}
+
+	@lspHandler(UpdateStatusRequestType)
+	async updateStatus(request: UpdateStatusRequest): Promise<UpdateStatusResponse> {
+		return this.session.api.updateStatus(request);
+	}
+
+	@lspHandler(SetModifiedReposRequestType)
+	async setModifiedRepos(request: SetModifiedReposRequest): Promise<SetModifiedReposResponse> {
+		return this.session.api.setModifiedRepos(request);
+	}
+
+	@lspHandler(UpdatePresenceRequestType)
+	updatePresence(request: UpdatePresenceRequest) {
+		return this.session.api.updatePresence(request);
+	}
+
+	@lspHandler(GetMeRequestType)
+	async getMe(): Promise<GetMeResponse> {
+		const me = (await this.session.api.getMe()).user;
+		return { user: me };
+	}
+
+	@lspHandler(GetUnreadsRequestType)
+	getUnreads(request: GetUnreadsRequest): Promise<GetUnreadsResponse> {
+		return this.session.api.getUnreads(request);
+	}
+
+	@lspHandler(GetUserRequestType)
+	protected async getUser(request: GetUserRequest): Promise<GetUserResponse> {
+		const user = await this.getById(request.userId);
+		return { user: user };
+	}
+
+	@lspHandler(GetPreferencesRequestType)
+	async getPreferences(): Promise<GetPreferencesResponse> {
+		return this.session.api.getPreferences();
+	}
+
+	protected getEntityName(): string {
+		return "User";
+	}
+}

@@ -1,0 +1,112 @@
+{
+  "url": "groups.info",
+  "request": {
+    "channel": "GA9UT73UH"
+  },
+  "response": {
+    "ok": true,
+    "group": {
+      "id": "GA9UT73UH",
+      "name": "goals",
+      "is_group": true,
+      "created": 1524239699,
+      "creator": "U7EPCTGCU",
+      "is_archived": false,
+      "name_normalized": "goals",
+      "is_mpim": false,
+      "is_open": true,
+      "last_read": "1524240097.000091",
+      "latest": {
+        "type": "message",
+        "text": "",
+        "files": [
+          {
+            "id": "FA9UWKFGR",
+            "created": 1524239976,
+            "timestamp": 1524240090,
+            "name": "Short_term_VS_Code_goals",
+            "title": "Short term VS Code goals",
+            "mimetype": "text/plain",
+            "filetype": "space",
+            "pretty_type": "Post",
+            "user": "U7EPCTGCU",
+            "editable": true,
+            "size": 261,
+            "mode": "space",
+            "is_external": false,
+            "external_type": "",
+            "is_public": false,
+            "public_url_shared": false,
+            "display_as_bot": false,
+            "username": "",
+            "url_private": "https://files.slack.com/files-pri/T7DDT1L5R-FA9UWKFGR/Short_term_VS_Code_goals",
+            "url_private_download": "https://files.slack.com/files-pri/T7DDT1L5R-FA9UWKFGR/download/Short_term_VS_Code_goals",
+            "permalink": "https://teamcodestream.slack.com/files/U7EPCTGCU/FA9UWKFGR/Short_term_VS_Code_goals",
+            "permalink_public": "https://slack-files.com/T7DDT1L5R-FA9UWKFGR-60bb4d6224",
+            "preview": "<document><p></p><ul><li>Attend Build conference May 7-9</li><li>Demo CodeStream on stage w/Microsoft</li><li>500 companies signed up to add to VS Code funnel</li></ul></document>",
+            "updated": 1524240090,
+            "editor": "U7EPCTGCU",
+            "last_editor": "U7EPCTGCU",
+            "state": "locked",
+            "is_starred": false
+          }
+        ],
+        "upload": false,
+        "user": "U7EPCTGCU",
+        "display_as_bot": false,
+        "ts": "1524240097.000091"
+      },
+      "unread_count": 0,
+      "unread_count_display": 0,
+      "members": [
+        "U7CS9PYJU",
+        "U7CT4071N",
+        "U7DJW0ZQU",
+        "U7EPCTGCU",
+        "U7EV7SB71",
+        "U7FNCE5NX",
+        "U7H4N1A6B",
+        "U7YNDN2VD",
+        "U8E97A1B5",
+        "U9QPXSR3M"
+      ],
+      "topic": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "purpose": {
+        "value": "Share high level goals and supporting initiatives",
+        "creator": "U7EPCTGCU",
+        "last_set": 1524239699
+      }
+    },
+    "scopes": [
+      "read",
+      "client",
+      "identify",
+      "post",
+      "channels:history",
+      "groups:history",
+      "im:history",
+      "mpim:history",
+      "channels:read",
+      "groups:read",
+      "im:read",
+      "mpim:read",
+      "users:read",
+      "users:read.email",
+      "dnd:read",
+      "users.profile:read",
+      "channels:write",
+      "chat:write:user",
+      "groups:write",
+      "im:write",
+      "mpim:write",
+      "reactions:write"
+    ],
+    "acceptedScopes": [
+      "groups:read"
+    ]
+  }
+}

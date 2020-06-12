@@ -1,0 +1,86 @@
+{
+  "url": "channels.info",
+  "request": {
+    "channel": "CB4DB25PG"
+  },
+  "response": {
+    "ok": true,
+    "channel": {
+      "id": "CB4DB25PG",
+      "name": "contentfodder",
+      "is_channel": true,
+      "created": 1528384901,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "creator": "U7EPCTGCU",
+      "name_normalized": "contentfodder",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_member": true,
+      "is_private": false,
+      "is_mpim": false,
+      "last_read": "1544017164.000300",
+      "latest": {
+        "user": "UEC3ZJ58U",
+        "type": "message",
+        "subtype": "channel_join",
+        "ts": "1544017164.000300",
+        "text": "<@UEC3ZJ58U> has joined the channel"
+      },
+      "unread_count": 0,
+      "unread_count_display": 0,
+      "members": [
+        "U7CS9PYJU",
+        "U7CT4071N",
+        "U7DJW0ZQU",
+        "U7EPCTGCU",
+        "U7EV7SB71",
+        "U7FNCE5NX",
+        "U7H4N1A6B",
+        "U7YNDN2VD",
+        "U9QPXSR3M",
+        "U9ZBV29M4",
+        "UEC3ZJ58U"
+      ],
+      "topic": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "purpose": {
+        "value": "Collect ideas from the dev team for content marketing",
+        "creator": "U7EPCTGCU",
+        "last_set": 1528384902
+      },
+      "previous_names": []
+    },
+    "scopes": [
+      "read",
+      "client",
+      "identify",
+      "post",
+      "channels:history",
+      "groups:history",
+      "im:history",
+      "mpim:history",
+      "channels:read",
+      "groups:read",
+      "im:read",
+      "mpim:read",
+      "users:read",
+      "users:read.email",
+      "dnd:read",
+      "users.profile:read",
+      "channels:write",
+      "chat:write:user",
+      "groups:write",
+      "im:write",
+      "mpim:write",
+      "reactions:write"
+    ],
+    "acceptedScopes": [
+      "channels:read"
+    ]
+  }
+}

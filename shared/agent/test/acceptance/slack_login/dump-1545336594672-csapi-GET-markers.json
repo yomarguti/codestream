@@ -1,0 +1,123 @@
+{
+  "url": "/markers?teamId=5bb51100585ada29401ee9c5&streamId=5c05ab736f6e2b29beae5942",
+  "response": {
+    "markers": [
+      {
+        "version": 2,
+        "deactivated": false,
+        "createdAt": 1543875944650,
+        "modifiedAt": 1543875945059,
+        "_id": "5c05ad686f6e2b29beae5945",
+        "code": "typeString",
+        "file": "src/providers/markerDecorationProvider.ts",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "providerType": "slack",
+        "postStreamId": "DEC5YTGHZ",
+        "commitHashWhenCreated": "c5e9ffca8daaf96dcb6558fb1a1139d618f24928",
+        "locationWhenCreated": [
+          323,
+          1,
+          323,
+          1,
+          {
+            "contentChanged": true,
+            "startWasDeleted": true,
+            "endWasDeleted": true,
+            "entirelyDeleted": true
+          }
+        ],
+        "creatorId": "5c0599af6f6e2b29beae5919",
+        "codemarkId": "5c05ad686f6e2b29beae5944",
+        "repoId": "5bbd2460c129b10c668b9fc9",
+        "repo": "github.com/teamcodestream/vscode-codestream",
+        "fileStreamId": "5c05ab736f6e2b29beae5942",
+        "postId": "DEC5YTGHZ|1543875944.000800",
+        "id": "5c05ad686f6e2b29beae5945"
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "createdAt": 1543875443251,
+        "modifiedAt": 1543875443584,
+        "_id": "5c05ab736f6e2b29beae5941",
+        "code": "const entity = (m as any).entity;",
+        "file": "src/providers/markerDecorationProvider.ts",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "providerType": "slack",
+        "postStreamId": "DECEUEU1K",
+        "commitHashWhenCreated": "c5e9ffca8daaf96dcb6558fb1a1139d618f24928",
+        "locationWhenCreated": [
+          323,
+          1,
+          323,
+          1,
+          {
+            "contentChanged": true,
+            "startWasDeleted": true,
+            "endWasDeleted": true,
+            "entirelyDeleted": true
+          }
+        ],
+        "creatorId": "5c0599af6f6e2b29beae5919",
+        "codemarkId": "5c05ab736f6e2b29beae5940",
+        "repoId": "5bbd2460c129b10c668b9fc9",
+        "repo": "github.com/teamcodestream/vscode-codestream",
+        "fileStreamId": "5c05ab736f6e2b29beae5942",
+        "postId": "DECEUEU1K|1543875443.008300",
+        "id": "5c05ab736f6e2b29beae5941"
+      }
+    ],
+    "codemarks": [
+      {
+        "version": 2,
+        "deactivated": false,
+        "streamId": "DECEUEU1K",
+        "postId": "DECEUEU1K|1543875443.008300",
+        "numReplies": 0,
+        "pinned": true,
+        "createdAt": 1543875443252,
+        "modifiedAt": 1543875443585,
+        "_id": "5c05ab736f6e2b29beae5940",
+        "title": "",
+        "text": "1) that's naughty -- is entity supposed to be on the marker? 2) is there a way to know if a marker came from a Slack team vs a Codestream team?\nI'm working on https://trello.com/c/VpiV6PNH",
+        "type": "comment",
+        "color": "blue",
+        "providerType": "slack",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "creatorId": "5c0599af6f6e2b29beae5919",
+        "markerIds": [
+          "5c05ab736f6e2b29beae5941"
+        ],
+        "fileStreamIds": [
+          "5c05ab736f6e2b29beae5942"
+        ],
+        "id": "5c05ab736f6e2b29beae5940"
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "streamId": "DEC5YTGHZ",
+        "postId": "DEC5YTGHZ|1543875944.000800",
+        "numReplies": 0,
+        "pinned": true,
+        "createdAt": 1543875944651,
+        "modifiedAt": 1543875945060,
+        "_id": "5c05ad686f6e2b29beae5944",
+        "title": "",
+        "text": "1) ok2) bye",
+        "type": "comment",
+        "color": "blue",
+        "providerType": "slack",
+        "teamId": "5bb51100585ada29401ee9c5",
+        "creatorId": "5c0599af6f6e2b29beae5919",
+        "markerIds": [
+          "5c05ad686f6e2b29beae5945"
+        ],
+        "fileStreamIds": [
+          "5c05ab736f6e2b29beae5942"
+        ],
+        "id": "5c05ad686f6e2b29beae5944"
+      }
+    ]
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "url": "channels.info",
+  "request": {
+    "channel": "C7DM92RTN"
+  },
+  "response": {
+    "ok": true,
+    "channel": {
+      "id": "C7DM92RTN",
+      "name": "development",
+      "is_channel": true,
+      "created": 1507164877,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "creator": "U7DJW0ZQU",
+      "name_normalized": "development",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_member": true,
+      "is_private": false,
+      "is_mpim": false,
+      "last_read": "1545331952.597700",
+      "latest": {
+        "client_msg_id": "ff364091-65a1-4397-8829-d9702e7e977a",
+        "type": "message",
+        "text": "bummer -- didn't realize they have separate licenses for each language",
+        "user": "UEC3ZJ58U",
+        "ts": "1545331952.597700"
+      },
+      "unread_count": 0,
+      "unread_count_display": 0,
+      "members": [
+        "U7CS9PYJU",
+        "U7CT4071N",
+        "U7DJW0ZQU",
+        "U7EV7SB71",
+        "U7FNCE5NX",
+        "U7GK5RY3H",
+        "U7H4N1A6B",
+        "U7TF0TDKN",
+        "U7YNDN2VD",
+        "U93JZASCQ",
+        "U9QPXSR3M",
+        "UAUATCSCE",
+        "UEC3ZJ58U"
+      ],
+      "topic": {
+        "value": "Standup: <https://zoom.us/j/6418744494>",
+        "creator": "U9QPXSR3M",
+        "last_set": 1542132032
+      },
+      "purpose": {
+        "value": "Technical discussion about CodeStream",
+        "creator": "U7CS9PYJU",
+        "last_set": 1543283319
+      },
+      "previous_names": []
+    },
+    "scopes": [
+      "read",
+      "client",
+      "identify",
+      "post",
+      "channels:history",
+      "groups:history",
+      "im:history",
+      "mpim:history",
+      "channels:read",
+      "groups:read",
+      "im:read",
+      "mpim:read",
+      "users:read",
+      "users:read.email",
+      "dnd:read",
+      "users.profile:read",
+      "channels:write",
+      "chat:write:user",
+      "groups:write",
+      "im:write",
+      "mpim:write",
+      "reactions:write"
+    ],
+    "acceptedScopes": [
+      "channels:read"
+    ]
+  }
+}

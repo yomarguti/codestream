@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+
+# desc# Standard interface to CodeStream's TeamCity build process for the LSP Agent
+
+import os
+import sys
+
+sys.path.append(os.environ['DT_TOP'] + "/lib")
+import sysUtils as su
+import buildUtils
+
+# 1. add filename extensions for all assets created (tgz, vsix, ...)
+assetExtensionList = []
+
+# 2. choose the build type (npm, intellijPlugin, unknown)
+buildType = buildUtils.buildType.npm
+
+args = buildUtils.parseStandardBuildArgs()
+buildOptions = {
+	'verbose': args.verbose,
+	'assetExtensionList': assetExtensionList
+}
+
+if args.verbose:
+	print("buildstep running with", args.action)
+
+build = buildUtils.build(buildType, **buildOptions)
+if not build:
+	su.printErr("could not get a build object")
+	exit(1)
+
+# 3. Make sure the default actions apply, if not make changes as necessary
+if args.action == 'prep':
+	# set TC variables
+	build.prep()
+elif args.action == 'build':
+	# Build the assets
+	print("there is nothing to build")
+	# build.build()
+elif args.action == 'citest':
+	# run the continuous integration test suite
+	if not su.someValueOrNone(os.environ, 'LSPAGENT_API_ORIGIN'):
+		os.environ['LSPAGENT_API_ORIGIN'] = f"https://localhost.codestream.us:{os.environ['TCBUILD_API_SERVER_PORT']}"
+	print("Running tests against API service at", os.environ['LSPAGENT_API_ORIGIN'])
+	# build.citest()
+	build.execCmd("npm run test-unit-ci")
+	# build.execCmd("npm run test-acceptance-ci")
+	# build.execCmd("npm run test-integration-ci")
+elif args.action == 'pack':
+	# create the asset info file (if need be) and package the assets
+	print("nothing to pack")
+	# build.pack()
+elif args.action == 'publish':
+	# publish the assets for distribution / deployments
+	print("nothing to publish")
+	# build.publish()
+elif args.action == 'tag':
+	# update version info in the git repo and apply tags
+	print("nothing to tag")
+	# build.tag()
+elif args.action == 'release':
+	# release assets to the general public
+	# build.release()
+	print("nothing to release")
+elif args.action == 'update':
+	# update / promote an existing asset to create a new one
+	# build.update()
+	print("nothing to update")
+elif args.action == 'docker':
+	# create docker containers
+	build.docker()
+else:
+	su.printErr("invalid build args")
+	exit(1)
+
+exit(0)

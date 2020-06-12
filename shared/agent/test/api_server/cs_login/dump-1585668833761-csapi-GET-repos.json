@@ -1,0 +1,427 @@
+{
+  "url": "/repos?teamId=5bbd06ba2aae56770cbcbf47",
+  "response": {
+    "repos": [
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1539116328198,
+        "modifiedAt": 1539116328198,
+        "_id": "5bbd0d282aae56770cbcbf52",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/marcelofarias/atom",
+            "normalizedUrl": "github.com/marcelofarias/atom",
+            "companyIdentifier": "github.com/marcelofarias"
+          },
+          {
+            "url": "github.com/teamcodestream/atom",
+            "normalizedUrl": "github.com/teamcodestream/atom",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "atom",
+        "id": "5bbd0d282aae56770cbcbf52"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1540571136813,
+        "modifiedAt": 1540571136813,
+        "_id": "5bd340000d99e654fdb1160f",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/marcelofarias/testrepo",
+            "normalizedUrl": "github.com/marcelofarias/testrepo",
+            "companyIdentifier": "github.com/marcelofarias"
+          },
+          {
+            "url": "github.com/teamcodestream/testrepo",
+            "normalizedUrl": "github.com/teamcodestream/testrepo",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "testrepo",
+        "id": "5bd340000d99e654fdb1160f"
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "createdAt": 1540573891017,
+        "modifiedAt": 1572379347271,
+        "_id": "5bd34ac30d99e654fdb11618",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/codestream-lsp-agent",
+            "normalizedUrl": "github.com/teamcodestream/codestream-lsp-agent",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "codestream-lsp-agent",
+        "knownCommitHashes": [
+          "9e309889aca97a45d500644129a8b0ff7987b4ea"
+        ],
+        "id": "5bd34ac30d99e654fdb11618"
+      },
+      {
+        "version": 3,
+        "deactivated": false,
+        "createdAt": 1546626169350,
+        "modifiedAt": 1573322567525,
+        "_id": "5c2fa479bf3c0f5a976eb784",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/plugin-commons",
+            "normalizedUrl": "github.com/teamcodestream/plugin-commons",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "plugin-commons",
+        "knownCommitHashes": [
+          "82904d5a09db52822ab4c934c65a48e89ad9bfc6",
+          "6a77def49f176098efcaa2493a8c5a8ab05230a8"
+        ],
+        "id": "5c2fa479bf3c0f5a976eb784"
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "createdAt": 1547142907640,
+        "modifiedAt": 1573831255345,
+        "_id": "5c3786fbfc3c614c7071607f",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "gitlab.com/marcelo.farias/test-project",
+            "normalizedUrl": "gitlab.com/marcelo.farias/test-project",
+            "companyIdentifier": "gitlab.com/marcelo.farias"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "test-project",
+        "knownCommitHashes": [
+          "da5355020e9e047f7803c1715f9841c95012ded5"
+        ],
+        "id": "5c3786fbfc3c614c7071607f"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1547681179187,
+        "modifiedAt": 1547681179187,
+        "_id": "5c3fbd9b11a7db5d199f5e57",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "bitbucket.org/marcelofarias/bitbucket-repo",
+            "normalizedUrl": "bitbucket.org/marcelofarias/bitbucket-repo",
+            "companyIdentifier": "bitbucket.org/marcelofarias"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "bitbucket-repo",
+        "id": "5c3fbd9b11a7db5d199f5e57"
+      },
+      {
+        "version": 4,
+        "deactivated": false,
+        "createdAt": 1548282663236,
+        "modifiedAt": 1581649779520,
+        "_id": "5c48eb27554e64504f1b25c8",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/codestream-components",
+            "normalizedUrl": "github.com/teamcodestream/codestream-components",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "codestream-components",
+        "knownCommitHashes": [
+          "71f4641bcd6fca2077dfe0f18c232d60dd853297",
+          "cca5c4f6667140f55ee574e1f2b3bb8a6c35d9fc",
+          "9dead5ccac241b2888814d95d88808b38ec193b2"
+        ],
+        "id": "5c48eb27554e64504f1b25c8"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1554856956389,
+        "modifiedAt": 1554856956389,
+        "_id": "5cad3bfc573a51521e0e1f3d",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/vscode-codestream",
+            "normalizedUrl": "github.com/teamcodestream/vscode-codestream",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbe2a6333d00a39e1a4dd21",
+        "name": "vscode-codestream",
+        "id": "5cad3bfc573a51521e0e1f3d"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1554932931401,
+        "modifiedAt": 1554932931401,
+        "_id": "5cae64c3573a51521e0e2003",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/planteater/hello-ny",
+            "normalizedUrl": "github.com/planteater/hello-ny",
+            "companyIdentifier": "github.com/planteater"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "hello-ny",
+        "id": "5cae64c3573a51521e0e2003"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1555080859853,
+        "modifiedAt": 1555080859853,
+        "_id": "5cb0a69b1f43823096beae5d",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/vs-codestream",
+            "normalizedUrl": "github.com/teamcodestream/vs-codestream",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "vs-codestream",
+        "id": "5cb0a69b1f43823096beae5d"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1555530960272,
+        "modifiedAt": 1555530960272,
+        "_id": "5cb784d0ba9bb10ae60d6c08",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/marcelofarias/jxbrowser-test",
+            "normalizedUrl": "github.com/marcelofarias/jxbrowser-test",
+            "companyIdentifier": "github.com/marcelofarias"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "jxbrowser-test",
+        "id": "5cb784d0ba9bb10ae60d6c08"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1558528230964,
+        "modifiedAt": 1558528230965,
+        "_id": "5ce540e65abfd559ef58f67f",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "39.108.40.223/invoice/invoice",
+            "normalizedUrl": "39.108.40.223/invoice/invoice",
+            "companyIdentifier": "40.223"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "invoice",
+        "id": "5ce540e65abfd559ef58f67f"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1558707372844,
+        "modifiedAt": 1558707372844,
+        "_id": "5ce7fcaca44684170ec2251e",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/misc",
+            "normalizedUrl": "github.com/teamcodestream/misc",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "misc",
+        "id": "5ce7fcaca44684170ec2251e"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1560464098823,
+        "modifiedAt": 1560464098823,
+        "_id": "5d02cae24f7bbe549b58aa8b",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/marcelofarias/foo",
+            "normalizedUrl": "github.com/marcelofarias/foo",
+            "companyIdentifier": "github.com/marcelofarias"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "foo",
+        "id": "5d02cae24f7bbe549b58aa8b"
+      },
+      {
+        "version": 6,
+        "deactivated": false,
+        "createdAt": 1562019971306,
+        "modifiedAt": 1581000546816,
+        "_id": "5d1a8883ff3a1f5eaa709263",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/gore",
+            "normalizedUrl": "github.com/teamcodestream/gore",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "gore",
+        "knownCommitHashes": [
+          "e1595d76728e61dfc9cc28f11f0247f7b5f8068b",
+          "65cd09141a2e36a139047f4329dc293053b036f1",
+          "dbb73a2e44c88636e1b242112b38be40dd9259d8",
+          "55151611cc05d479ad58a6e36dc1f37ed64ac6f0",
+          "9b3af762f16f2522e3fb19ca100a5898d5b84e30"
+        ],
+        "id": "5d1a8883ff3a1f5eaa709263"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1563501954230,
+        "modifiedAt": 1563501954230,
+        "_id": "5d312582b85e1a4595d5d46a",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/chupacabra",
+            "normalizedUrl": "github.com/teamcodestream/chupacabra",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "chupacabra",
+        "id": "5d312582b85e1a4595d5d46a"
+      },
+      {
+        "version": 3,
+        "deactivated": false,
+        "createdAt": 1568203364497,
+        "modifiedAt": 1578327474023,
+        "_id": "5d78e2647e7d7705dc6b2162",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/jetbrains-codestream",
+            "normalizedUrl": "github.com/teamcodestream/jetbrains-codestream",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "jetbrains-codestream",
+        "knownCommitHashes": [
+          "dc66cc544ea279f0bdcd6b42aee963f9d9989556",
+          "9d7c358b85cd37e89896a7857ca1232296b0d42e"
+        ],
+        "id": "5d78e2647e7d7705dc6b2162"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1570049617412,
+        "modifiedAt": 1570049617412,
+        "_id": "5d950e518e8bf5441bfa2fca",
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "remotes": [
+          {
+            "url": "github.com/teamcodestream/classlibrary1",
+            "normalizedUrl": "github.com/teamcodestream/classlibrary1",
+            "companyIdentifier": "github.com/teamcodestream"
+          }
+        ],
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "classlibrary1",
+        "id": "5d950e518e8bf5441bfa2fca"
+      },
+      {
+        "version": 2,
+        "deactivated": false,
+        "createdAt": 1579552866616,
+        "modifiedAt": 1579555447860,
+        "_id": "5e2610621ac9807e703be522",
+        "remotes": [
+          {
+            "url": "github.com/gtache/intellij-lsp",
+            "normalizedUrl": "github.com/gtache/intellij-lsp",
+            "companyIdentifier": "github.com/gtache"
+          }
+        ],
+        "knownCommitHashes": [
+          "bff1fd68ca1fbb2f699a8a65d13412a9c0787f58",
+          "d2e18fc24b4184d2d80368455a6326f075b8e6e5",
+          "94a377603b3c15f4c1568f6d11e796099250d4af",
+          "870c053eca1af00eb201500cb652cbf801e3b3c4",
+          "33454a18125333db84e4f538a89913df1d57b060",
+          "c13bd854b17445f00c5100d3015c6d9b790e5170",
+          "78eda98c5c2c04934cc5d3aab345857c3c33c337",
+          "1ecfca69427bfda002772fa7ba4d00e3a0db3039",
+          "3dabec61ae3026060311a9f382cf07e9f1f6e00b",
+          "a0b1ab59f14df22815ae9f0c4713437a0925c28a",
+          "bff1fd68ca1fbb2f699a8a65d13412a9c0787f58",
+          "ae2ac2a9afe086b4e7493343a58a76b70fa31b0f"
+        ],
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "intellij-lsp",
+        "id": "5e2610621ac9807e703be522"
+      },
+      {
+        "version": 1,
+        "deactivated": false,
+        "createdAt": 1585176208987,
+        "modifiedAt": 1585176208987,
+        "_id": "5e7bde90f9e71a672308af6a",
+        "remotes": [
+          {
+            "url": "github.com/planteater/hello-dc",
+            "normalizedUrl": "github.com/planteater/hello-dc",
+            "companyIdentifier": "github.com/planteater"
+          }
+        ],
+        "knownCommitHashes": [
+          "4d6c5cac41b42af4519fe94d095d06f7c84051e0",
+          "c945c20c59ef3686bd4b68bb3785e1168baa61cc",
+          "a4094b8962b7473a0c99d2fd856cb3891cc064f3",
+          "a2a06e180690bfbe8d7ecec923da6d8173416950",
+          "c0e0d9c2b0919c95ff7c49ab1beab30268ad8974",
+          "edc946313174a740592adb575307b1c06febbd20",
+          "dafe2400397ae6b5adfc5eeb570da8e7e87a3975",
+          "4d6c5cac41b42af4519fe94d095d06f7c84051e0"
+        ],
+        "teamId": "5bbd06ba2aae56770cbcbf47",
+        "creatorId": "5bbd06952aae56770cbcbf45",
+        "name": "hello-dc",
+        "id": "5e7bde90f9e71a672308af6a"
+      }
+    ]
+  }
+}

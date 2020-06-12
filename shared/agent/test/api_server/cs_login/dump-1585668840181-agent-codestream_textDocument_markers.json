@@ -1,0 +1,12 @@
+{
+  "method": "codestream/textDocument/markers",
+  "request": {
+    "textDocument": {
+      "uri": "file:///Users/mfarias/Code/hello-dc/README.md"
+    }
+  },
+  "response": {
+    "markers": [],
+    "markersNotLocated": []
+  }
+}

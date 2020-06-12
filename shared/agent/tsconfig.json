@@ -1,0 +1,23 @@
+{
+	"compilerOptions": {
+		"baseUrl": "src",
+		"esModuleInterop": true,
+		"experimentalDecorators": true,
+		"forceConsistentCasingInFileNames": true,
+		"lib": ["es2017", "es2018.asynciterable"],
+		"module": "esnext",
+		"moduleResolution": "node",
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitReturns": true,
+		"noUnusedLocals": false,
+		"outDir": "dist",
+		"paths": {
+			"https-proxy-agent": ["@types/https-proxy-agent"],
+			"opn": ["@types/opn"]
+		},
+		"sourceMap": true,
+		"strict": true,
+		"target": "es2017"
+	},
+	"exclude": ["node_modules"]
+}

@@ -1,0 +1,140 @@
+{
+  "url": "channels.info",
+  "request": {
+    "channel": "CDKK80L0Y"
+  },
+  "response": {
+    "ok": true,
+    "channel": {
+      "id": "CDKK80L0Y",
+      "name": "agent",
+      "is_channel": true,
+      "created": 1540302705,
+      "is_archived": false,
+      "is_general": false,
+      "unlinked": 0,
+      "creator": "U7H4N1A6B",
+      "name_normalized": "agent",
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_member": true,
+      "is_private": false,
+      "is_mpim": false,
+      "last_read": "1544218066.010800",
+      "latest": {
+        "type": "message",
+        "subtype": "thread_broadcast",
+        "text": "The code now properly checks if `markerLocations` is defined. It can be undefined when the repo has no remotes.",
+        "bot_id": "BDANVM1HN",
+        "ts": "1544218066.010800",
+        "thread_ts": "1544198704.001200",
+        "root": {
+          "bot_id": "BDBBZ6ZB5",
+          "type": "message",
+          "text": "",
+          "user": "U7FNCE5NX",
+          "ts": "1544198704.001200",
+          "attachments": [
+            {
+              "callback_id": "codestream://codemark/5c0a9a30fc1b7a7d90a7df5a?teamId=5bbe4963acc6981860b78f03",
+              "fallback": "@marcelo, @Eric Based on the second snippet of the logs [in this comment](<https://github.com/TeamCodeStream/CodeStream/issues/20#issuecomment-445227992>), thers is now an error around this line because markerLocations is undefined.\nI'm unsure why the first error about fetching a non-existent stream is happening\n\n*src/api/slack/slackApi.adapters.ts (Lines 645-646)*\n```\t\t\tconst location = markerLocations![0].locations[marker.id];\n```",
+              "text": "@marcelo, @Eric Based on the second snippet of the logs [in this comment](<https://github.com/TeamCodeStream/CodeStream/issues/20#issuecomment-445227992>), thers is now an error around this line because markerLocations is undefined.\nI'm unsure why the first error about fetching a non-existent stream is happening",
+              "footer": "Posted via CodeStream",
+              "id": 1,
+              "ts": 1544198704,
+              "color": "3578ba",
+              "fields": [
+                {
+                  "title": "",
+                  "value": "<https://github.com/teamcodestream/codestream-lsp-agent/blob/9d22e91fcd3e0380c10f6e4a5213d3f36f90f685/src/api/slack/slackApi.adapters.ts#L645-L646|*src/api/slack/slackApi.adapters.ts (Lines 645-646)*>\n```\t\t\tconst location = markerLocations![0].locations[marker.id];\n```",
+                  "short": false
+                }
+              ],
+              "mrkdwn_in": [
+                "fields",
+                "pretext",
+                "text"
+              ]
+            }
+          ],
+          "thread_ts": "1544198704.001200",
+          "reply_count": 2,
+          "reply_users_count": 1,
+          "latest_reply": "1544218066.010800",
+          "reply_users": [
+            "U7H4N1A6B"
+          ],
+          "replies": [
+            {
+              "user": "U7H4N1A6B",
+              "ts": "1544199592.001800"
+            },
+            {
+              "user": "U7H4N1A6B",
+              "ts": "1544218066.010800"
+            }
+          ],
+          "subscribed": true,
+          "last_read": "1544218066.010800"
+        },
+        "reactions": [
+          {
+            "name": "+1",
+            "users": [
+              "U7FNCE5NX"
+            ],
+            "count": 1
+          }
+        ]
+      },
+      "unread_count": 0,
+      "unread_count_display": 0,
+      "members": [
+        "U7CT4071N",
+        "U7FNCE5NX",
+        "U7H4N1A6B",
+        "U7YNDN2VD",
+        "U9QPXSR3M",
+        "UEC3ZJ58U"
+      ],
+      "topic": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "purpose": {
+        "value": "",
+        "creator": "",
+        "last_set": 0
+      },
+      "previous_names": []
+    },
+    "scopes": [
+      "read",
+      "client",
+      "identify",
+      "post",
+      "channels:history",
+      "groups:history",
+      "im:history",
+      "mpim:history",
+      "channels:read",
+      "groups:read",
+      "im:read",
+      "mpim:read",
+      "users:read",
+      "users:read.email",
+      "dnd:read",
+      "users.profile:read",
+      "channels:write",
+      "chat:write:user",
+      "groups:write",
+      "im:write",
+      "mpim:write",
+      "reactions:write"
+    ],
+    "acceptedScopes": [
+      "channels:read"
+    ]
+  }
+}

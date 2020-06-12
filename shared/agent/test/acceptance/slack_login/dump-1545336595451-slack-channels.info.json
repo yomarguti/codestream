@@ -1,0 +1,92 @@
+{
+  "url": "channels.info",
+  "request": {
+    "channel": "C7D0T5KGR"
+  },
+  "response": {
+    "ok": true,
+    "channel": {
+      "id": "C7D0T5KGR",
+      "name": "general",
+      "is_channel": true,
+      "created": 1507148032,
+      "is_archived": false,
+      "is_general": true,
+      "unlinked": 0,
+      "creator": "U7CS9PYJU",
+      "name_normalized": "general",
+      "is_read_only": false,
+      "is_shared": false,
+      "is_org_shared": false,
+      "is_member": true,
+      "is_private": false,
+      "is_mpim": false,
+      "last_read": "1545333026.071200",
+      "latest": {
+        "client_msg_id": "5424906e-998d-4ce4-bb2b-858e04c1d784",
+        "type": "message",
+        "text": "but that doesn't mean a whole lot to us",
+        "user": "U9QPXSR3M",
+        "ts": "1545333026.071200"
+      },
+      "unread_count": 0,
+      "unread_count_display": 0,
+      "members": [
+        "U7CS9PYJU",
+        "U7CT4071N",
+        "U7DJW0ZQU",
+        "U7EPCTGCU",
+        "U7EV7SB71",
+        "U7FNCE5NX",
+        "U7GK5RY3H",
+        "U7H4N1A6B",
+        "U7YNDN2VD",
+        "U8E97A1B5",
+        "U9QPXSR3M",
+        "U9ZBV29M4",
+        "UAQ97BS6L",
+        "UAUATCSCE",
+        "UDCCVLSMS",
+        "UEC3ZJ58U"
+      ],
+      "topic": {
+        "value": "GOALS:\n1. build conference booth prep\n2. live share + codestream demo\n3. sign up 500 companies at build",
+        "creator": "U7CS9PYJU",
+        "last_set": 1523983530
+      },
+      "purpose": {
+        "value": "This channel is for workspace-wide communication and announcements. All members are in this channel.",
+        "creator": "U7CS9PYJU",
+        "last_set": 1507148032
+      },
+      "previous_names": []
+    },
+    "scopes": [
+      "read",
+      "client",
+      "identify",
+      "post",
+      "channels:history",
+      "groups:history",
+      "im:history",
+      "mpim:history",
+      "channels:read",
+      "groups:read",
+      "im:read",
+      "mpim:read",
+      "users:read",
+      "users:read.email",
+      "dnd:read",
+      "users.profile:read",
+      "channels:write",
+      "chat:write:user",
+      "groups:write",
+      "im:write",
+      "mpim:write",
+      "reactions:write"
+    ],
+    "acceptedScopes": [
+      "channels:read"
+    ]
+  }
+}

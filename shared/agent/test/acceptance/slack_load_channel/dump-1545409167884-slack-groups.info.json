@@ -1,0 +1,72 @@
+{
+  "url": "groups.info",
+  "request": {
+    "channel": "GDEJ22HQ8"
+  },
+  "response": {
+    "ok": true,
+    "group": {
+      "id": "GDEJ22HQ8",
+      "name": "mpdm-dave--akonwi--marcelo-1",
+      "is_group": true,
+      "created": 1539700577,
+      "creator": "U7YNDN2VD",
+      "is_archived": false,
+      "name_normalized": "mpdm-dave--akonwi--marcelo-1",
+      "is_mpim": true,
+      "is_open": true,
+      "last_read": "1543247328.002500",
+      "latest": {
+        "client_msg_id": "35546ae4-14ac-4259-871e-a84da3553043",
+        "type": "message",
+        "text": "is that a jedi mind trick",
+        "user": "U7FNCE5NX",
+        "ts": "1543247328.002500"
+      },
+      "unread_count": 0,
+      "unread_count_display": 0,
+      "members": [
+        "U7YNDN2VD",
+        "U7H4N1A6B",
+        "U7FNCE5NX"
+      ],
+      "topic": {
+        "value": "Group messaging",
+        "creator": "U7YNDN2VD",
+        "last_set": 1539700577
+      },
+      "purpose": {
+        "value": "Group messaging with: @dave @akonwi @marcelo",
+        "creator": "U7YNDN2VD",
+        "last_set": 1539700577
+      }
+    },
+    "scopes": [
+      "read",
+      "client",
+      "identify",
+      "post",
+      "channels:history",
+      "groups:history",
+      "im:history",
+      "mpim:history",
+      "channels:read",
+      "groups:read",
+      "im:read",
+      "mpim:read",
+      "users:read",
+      "users:read.email",
+      "dnd:read",
+      "users.profile:read",
+      "channels:write",
+      "chat:write:user",
+      "groups:write",
+      "im:write",
+      "mpim:write",
+      "reactions:write"
+    ],
+    "acceptedScopes": [
+      "groups:read"
+    ]
+  }
+}

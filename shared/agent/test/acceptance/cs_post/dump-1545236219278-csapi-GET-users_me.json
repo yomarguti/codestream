@@ -1,0 +1,61 @@
+{
+  "url": "/users/me",
+  "response": {
+    "user": {
+      "version": 213,
+      "deactivated": false,
+      "phoneNumber": "",
+      "iWorkOn": "",
+      "providerIdentities": [],
+      "createdAt": 1539114645018,
+      "modifiedAt": 1539114675002,
+      "_id": "5bbd06952aae56770cbcbf45",
+      "email": "marcelo+1@codestream.com",
+      "username": "marcelo1",
+      "timeZone": "America/New_York",
+      "creatorId": "5bbd06952aae56770cbcbf45",
+      "isRegistered": true,
+      "registeredAt": 1539114675002,
+      "joinMethod": "Created Team",
+      "primaryReferral": "external",
+      "originTeamId": "5bbd06ba2aae56770cbcbf47",
+      "companyIds": [
+        "5bbd06ba2aae56770cbcbf48"
+      ],
+      "teamIds": [
+        "5bbd06ba2aae56770cbcbf47"
+      ],
+      "lastLogin": 1545236184916,
+      "id": "5bbd06952aae56770cbcbf45",
+      "lastReads": {},
+      "preferences": {
+        "telemetryConsent": true,
+        "emojiPicker-last": "sunglasses",
+        "emojiPicker-frequently": {
+          "+1": 9,
+          "grinning": 8,
+          "heart_eyes": 6,
+          "joy": 2,
+          "kissing_heart": 7,
+          "laughing": 5,
+          "open_mouth": 1,
+          "scream": 1,
+          "stuck_out_tongue_winking_eye": 4,
+          "sweat_smile": 3,
+          "sunglasses": 1
+        },
+        "mutedStreams": {
+          "5bca3138f5c10132ce0b0844": false,
+          "5bcf17a9d4321c0d4897c70d": false,
+          "5bcf71bed4321c0d4897c720": false,
+          "5bcf783fd4321c0d4897c73b": false,
+          "5bcf7887d4321c0d4897c73e": false,
+          "5bcf7bfbd4321c0d4897c745": false
+        },
+        "showChannels": "all"
+      },
+      "totalPosts": 135,
+      "lastPostCreatedAt": 1545236219048
+    }
+  }
+}
