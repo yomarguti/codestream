@@ -1,0 +1,35 @@
+{
+	"compilerOptions": {
+		"baseUrl": ".",
+		"esModuleInterop": true,
+		"experimentalDecorators": true,
+		"forceConsistentCasingInFileNames": true,
+		"allowJs": true,
+		"allowSyntheticDefaultImports": true,
+		"lib": ["es2017", "dom", "dom.iterable"],
+		"module": "esnext",
+		"moduleResolution": "node",
+		"noFallthroughCasesInSwitch": true,
+		"noEmit": true,
+		"noImplicitReturns": false,
+		"noImplicitAny": false,
+		"noUnusedLocals": false,
+		"outDir": "../dist",
+		"paths": {
+			"@codestream/protocols/agent": ["../../codestream-components/protocols/agent/agent.protocol"],
+			"@codestream/protocols/api": ["../../codestream-components/protocols/agent/api.protocol"],
+			"@codestream/protocols/webview": ["../../codestream-components/ipc/webview.protocol"],
+			"@codestream/webview/*": ["../../codestream-components/*"],
+			"react": ["../../codestream-components/node_modules/react"],
+			"react-dom": ["../../codestream-components/node_modules/react-dom"],
+			"vscode-jsonrpc": ["../../codestream-components/vscode-jsonrpc.shim.ts"]
+		},
+		"rootDir": ".",
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": true,
+		"target": "esnext",
+		"jsx": "react"
+	},
+	"exclude": ["node_modules"]
+}

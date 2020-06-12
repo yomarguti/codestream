@@ -1,0 +1,24 @@
+#!/bin/bash
+
+#desc# 'package' up a production build
+
+echo "==== copying files into master branch of public repo at ../atom-client ===="
+cd ..
+git clone --depth 1 https://github.com/teamcodestream/atom-client
+cd atom-client
+rm -rf *
+cp -rf ../atom-codestream/dist .
+cp -rf ../atom-codestream/styles .
+cp -rf ../atom-codestream/keymaps .
+cp -rf ../atom-codestream/menus .
+cp ../atom-codestream/package.json .
+cp ../atom-codestream/README.md .
+cp ../atom-codestream/CHANGELOG.md .
+
+echo "==== clean up package.json ===="
+../atom-codestream/bin/clean-metadata.js package.json $1
+
+echo "==== uninstall current package ===="
+apm uninstall codestream
+echo "==== link package for validation ===="
+apm link

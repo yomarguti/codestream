@@ -1,0 +1,69 @@
+#!/bin/bash
+
+#desc# interactive atom release script
+
+[ -z "$ATOM_TOP" ] && echo "atom sandbox not loaded" && exit 1
+
+cd $ATOM_TOP || exit 1
+
+# checkout master for all repos, ensure it's up to date
+
+# verify / fetch current release
+#    atom-client/package.json
+#    atom marketplace (https://www.atom.io/api/packages/codestream)
+marketRelease=`get-json-property -j https://www.atom.io/api/packages/codestream -p releases.latest`
+[ -z "$marketRelease" ] && echo "Could not get release from atom marketplace. Aborting" && exit 1
+if [ -f $ATOM_SANDBOX/atom-client/package.json ]; then
+	priorClientRelease=`grep '"version"' $ATOM_SANDBOX/atom-client/package.json|cut -f4 -d\"`
+	[ "$priorClientRelease" != "$marketRelease" ] && echo "marketRelease=$marketRelease, priorClientRelease=$priorClientRelease - aborting" && exit 1
+fi
+# Make sure version in atom-codestream is next for release
+thisRelease=`grep '"version"' package.json|cut -f4 -d\"`
+
+echo "
+	priorRelease = $marketRelease
+	thisRelease =  $thisRelease
+"
+
+echo -n "Go (y/N)? "; read ans
+[ "$ans" != "y" ] && echo "never mind" && exit
+
+echo npm run bundle
+npm run bundle || exit 1
+
+echo npm run pack $marketRelease
+npm run pack $marketRelease || exit 1
+
+echo "cd $ATOM_SANDBOX/atom-client && git commit -am \"Releasing CodeStream $thisRelease\" && git push origin master"
+(cd $ATOM_SANDBOX/atom-client && git commit -am "Releasing CodeStream $thisRelease" && git push origin master) || exit 1
+
+if [ -d /Applications/Atom.app ]; then
+	echo apm install --production teamcodestream/atom-client
+	apm install --production teamcodestream/atom-client || exit 1
+	echo "Santity check..."
+	open /Applications/Atom.app
+	echo -n "Press ENTER to continue" && read
+fi
+
+echo "apm publish $thisRelease"
+(cd $ATOM_SANDBOX/atom-client && apm publish $thisRelease) || exit 1
+
+echo "git push origin master (atom-codestream)"
+git push origin master || exit 1
+
+tag="atom-$thisRelease"
+echo "Applying tag $tag to all repos..."
+for p in atom-codestream codestream-lsp-agent codestream-components
+do
+	(echo "cd $ATOM_SANDBOX/$p && git tag $tag && git push origin $tag" && cd $ATOM_SANDBOX/$p && git tag $tag && git push origin $tag) || exit 1
+done
+
+echo "Bumping patch version on develop..."
+git checkout develop || exit 1
+dt-sb-version-tool --bump-version patch || exit 1
+nextVersion=`dt-sb-version-tool --report-version`
+[ -z "$nextVersion" -o "$nextVersion" == "$thisRelease" ] && echo "Uh oh!! Was the version updated properly?" && exit 1
+git commit -am "Auto-bump of version to $nextVersion following marketplace release" || exit 1
+git push origin develop || exit 1
+
+exit 0
