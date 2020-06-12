@@ -16,13 +16,13 @@
 		"noUnusedLocals": false,
 		"outDir": "../dist",
 		"paths": {
-			"@codestream/protocols/agent": ["../../codestream-components/protocols/agent/agent.protocol"],
-			"@codestream/protocols/api": ["../../codestream-components/protocols/agent/api.protocol"],
-			"@codestream/protocols/webview": ["../../codestream-components/ipc/webview.protocol"],
-			"@codestream/webview/*": ["../../codestream-components/*"],
-			"react": ["../../codestream-components/node_modules/react"],
-			"react-dom": ["../../codestream-components/node_modules/react-dom"],
-			"vscode-jsonrpc": ["../../codestream-components/vscode-jsonrpc.shim.ts"]
+			"@codestream/protocols/agent": ["../../shared/ui/protocols/agent/agent.protocol"],
+			"@codestream/protocols/api": ["../../shared/ui/protocols/agent/api.protocol"],
+			"@codestream/protocols/webview": ["../../shared/ui/ipc/webview.protocol"],
+			"@codestream/webview/*": ["../../shared/ui/*"],
+			"react": ["../../shared/ui/node_modules/react"],
+			"react-dom": ["../../shared/ui/node_modules/react-dom"],
+			"vscode-jsonrpc": ["../../shared/ui/vscode-jsonrpc.shim.ts"]
 		},
 		"rootDir": ".",
 		"skipLibCheck": true,

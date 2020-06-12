@@ -26,25 +26,25 @@ module.exports = function(env, argv) {
 
 	console.log("Ensuring extension symlink to the agent protocol folder...");
 	createFolderSymlinkSync(
-		path.resolve(__dirname, "../codestream-lsp-agent/src/protocol"),
+		path.resolve(__dirname, "../shared/agent/src/protocol"),
 		path.resolve(protocolPath, "agent"),
 		env
 	);
 
 	console.log("Ensuring extension symlink to the webview protocol folder...");
 	createFolderSymlinkSync(
-		path.resolve(__dirname, "../codestream-components/ipc"),
+		path.resolve(__dirname, "../shared/ui/ipc"),
 		path.resolve(protocolPath, "webview"),
 		env
 	);
 
 	console.log("Ensuring webview symlink to the agent protocol folder...");
-	const protocolPathForWebview = path.resolve(__dirname, "../codestream-components/protocols");
+	const protocolPathForWebview = path.resolve(__dirname, "../shared/ui/protocols");
 	if (!fs.existsSync(protocolPathForWebview)) {
 		fs.mkdirSync(protocolPathForWebview);
 	}
 	createFolderSymlinkSync(
-		path.resolve(__dirname, "../codestream-lsp-agent/src/protocol"),
+		path.resolve(__dirname, "../shared/agent/src/protocol"),
 		path.resolve(protocolPathForWebview, "agent"),
 		env
 	);
@@ -63,7 +63,7 @@ function getExtensionConfig(env) {
 					copy: [
 						{
 							// TODO: Use environment variable if exists
-							source: path.resolve(__dirname, "../codestream-lsp-agent/dist"),
+							source: path.resolve(__dirname, "../shared/agent/dist"),
 							destination: "dist/agent"
 						},
 						// {
@@ -71,7 +71,7 @@ function getExtensionConfig(env) {
 						// 	destination: "dist/",
 						// },
 						{
-							source: path.resolve(__dirname, "../codestream-components/assets/icons"),
+							source: path.resolve(__dirname, "../shared/ui/assets/icons"),
 							destination: "dist/icons"
 						}
 					]
@@ -169,25 +169,25 @@ function getWebviewConfig(env) {
 							destination: "dist/webview/styles/"
 						},
 						{
-							source: path.resolve(__dirname, "../codestream-components/styles/*"),
+							source: path.resolve(__dirname, "../shared/ui/styles/*"),
 							destination: "dist/webview/styles/"
 						},
 						{
 							source: path.resolve(
 								__dirname,
-								"../codestream-components/node_modules/rc-tooltip/assets/bootstrap.css"
+								"../shared/ui/node_modules/rc-tooltip/assets/bootstrap.css"
 							),
 							destination: "dist/webview/node_modules/rc-tooltip/assets/bootstrap.css"
 						},
 						{
 							source: path.resolve(
 								__dirname,
-								"../codestream-components/node_modules/emoji-mart/css/emoji-mart.css"
+								"../shared/ui/node_modules/emoji-mart/css/emoji-mart.css"
 							),
 							destination: "dist/webview/node_modules/emoji-mart/css/emoji-mart.css"
 						},
 						{
-							source: path.resolve(__dirname, "../codestream-components/assets/icons"),
+							source: path.resolve(__dirname, "../shared/ui/assets/icons"),
 							destination: "dist/icons"
 						}
 					]

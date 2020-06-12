@@ -35,16 +35,16 @@
         "slack"
     ],
     "contributes": {
-		"views": {
-            	"scm": [
-				{
-					"id": "scmTreeDataProvider",
+        "views": {
+            "scm": [
+                {
+                    "id": "scmTreeDataProvider",
                     "name": "CodeStream"
                 }
             ]
-		},
-		"viewsWelcome": [             
-			{
+        },
+        "viewsWelcome": [
+            {
                 "view": "scmTreeDataProvider",
                 "contents": "[Toggle CodeStream](command:codestream.toggle)",
                 "when": "codestream:status == signedOut"
@@ -53,12 +53,12 @@
                 "view": "scmTreeDataProvider",
                 "contents": "[Request a Code Review](command:codestream.newReview)",
                 "when": "codestream:status == signedIn"
-			},
-			 {
-				 "view": "scmTreeDataProvider",
-				 "contents": "Request a code review to get feedback on your work-in-progress, or final code review.",
-				 "when": "codestream:status == signedIn"
-			 }
+            },
+            {
+                "view": "scmTreeDataProvider",
+                "contents": "Request a code review to get feedback on your work-in-progress, or final code review.",
+                "when": "codestream:status == signedIn"
+            }
         ],
         "configuration": {
             "type": "object",
@@ -274,24 +274,24 @@
                 "command": "codestream.gotoCodemark9",
                 "title": "Jump to Codemark #9",
                 "category": "CodeStream"
-			},
-			{
+            },
+            {
                 "command": "codestream.scmNewReview",
                 "title": "Request a Code Review",
                 "icon": {
                     "light": "assets/images/light/review.svg",
                     "dark": "assets/images/dark/review.svg"
                 }
-			},
-			{
+            },
+            {
                 "command": "codestream.scmNewComment",
                 "title": "New Comment",
                 "icon": {
                     "light": "assets/images/light/comment.svg",
                     "dark": "assets/images/dark/comment.svg"
                 }
-			},
-			{
+            },
+            {
                 "command": "codestream.scmNewIssue",
                 "title": "New Issue",
                 "icon": {
@@ -604,24 +604,24 @@
                     "when": "codestream:status == signedIn",
                     "group": "9_zcodestream@6"
                 }
-			],
-			"view/title": [
+            ],
+            "view/title": [
                 {
                     "command": "codestream.scmNewReview",
                     "when": "view == scmTreeDataProvider && codestream:status == signedIn",
                     "group": "navigation"
-				},
-				{
+                },
+                {
                     "command": "codestream.scmNewComment",
                     "when": "view == scmTreeDataProvider && codestream:status == signedIn",
                     "group": "navigation"
-				},
-				{
+                },
+                {
                     "command": "codestream.scmNewIssue",
                     "when": "view == scmTreeDataProvider && codestream:status == signedIn",
                     "group": "navigation"
                 }
-      ]
+            ]
         }
     },
     "activationEvents": [
@@ -641,18 +641,18 @@
         "rebuild": "npm run clean && npm install --no-save && npm run agent:rebuild && npm run build",
         "test": "npm run agent:test",
         "watch": "webpack --watch --env.development --info-verbosity verbose",
-        "agent:build": "pushd \"../codestream-lsp-agent\" && npm run build && popd",
-        "agent:bundle": "pushd \"../codestream-lsp-agent\" && npm run bundle && popd",
-        "agent:bundle:ci": "pushd \"../codestream-lsp-agent\" && npm run bundle:ci && popd",
-        "agent:clean:ci": "pushd \"../codestream-lsp-agent\" && npm run clean:ci && popd",
-        "agent:rebuild": "pushd \"../codestream-lsp-agent\" && npm run rebuild && popd",
-        "agent:test": "pushd \"../codestream-lsp-agent\" && npm run test && popd",
-        "agent:watch": "pushd \"../codestream-lsp-agent\" && npm run watch && popd",
+        "agent:build": "pushd \"../shared/agent\" && npm run build && popd",
+        "agent:bundle": "pushd \"../shared/agent\" && npm run bundle && popd",
+        "agent:bundle:ci": "pushd \"../shared/agent\" && npm run bundle:ci && popd",
+        "agent:clean:ci": "pushd \"../shared/agent\" && npm run clean:ci && popd",
+        "agent:rebuild": "pushd \"../shared/agent\" && npm run rebuild && popd",
+        "agent:test": "pushd \"../shared/agent\" && npm run test && popd",
+        "agent:watch": "pushd \"../shared/agent\" && npm run watch && popd",
         "webview:analyze": "webpack --env.analyzeBundleWebview",
         "webview:build": "webpack --config-name webview --env.development",
-        "webview:clean:ci": "pushd \"../codestream-components\" && npm run clean:ci && popd",
+        "webview:clean:ci": "pushd \"../shared/ui\" && npm run clean:ci && popd",
         "webview:watch": "webpack --watch --config-name webview --env.development --info-verbosity verbose",
-        "preinstall": "pushd \"../codestream-components\" && npm install --no-save && popd"
+        "preinstall": "pushd \"../shared/ui\" && npm install --no-save && popd"
     },
     "dependencies": {
         "core-js": "2.6.9",

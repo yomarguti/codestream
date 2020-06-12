@@ -19,19 +19,19 @@ module.exports = function(env, argv) {
 				{
 					source: "dist/agent.*",
 					// TODO: Use environment variable if exists
-					destination: path.resolve(__dirname, "../vscode-codestream/dist/")
+					destination: path.resolve(__dirname, "../../vscode/dist/")
 				},
 				{
 					source: "dist/agent.*",
 					// TODO: Use environment variable if exists
-					destination: path.resolve(__dirname, "../atom-codestream/dist/")
+					destination: path.resolve(__dirname, "../../atom/dist/")
 				},
 				{
 					source: "dist/agent-pkg.js",
 					// TODO: Use environment variable if exists
 					destination: path.resolve(
 						__dirname,
-						"../vs-codestream/src/CodeStream.VisualStudio/dist/agent.js"
+						"../../vs/src/CodeStream.VisualStudio/dist/agent.js"
 					)
 				},
 				{
@@ -39,7 +39,7 @@ module.exports = function(env, argv) {
 					// TODO: Use environment variable if exists
 					destination: path.resolve(
 						__dirname,
-						"../vs-codestream/src/CodeStream.VisualStudio/dist/agent-pkg.js.map"
+						"../../vs/src/CodeStream.VisualStudio/dist/agent-pkg.js.map"
 					)
 				},
 				{
@@ -47,7 +47,7 @@ module.exports = function(env, argv) {
 					// TODO: Use environment variable if exists
 					destination: path.resolve(
 						__dirname,
-						"../jetbrains-codestream/src/main/resources/agent/agent-pkg.js"
+						"../../jetbrains/src/main/resources/agent/agent-pkg.js"
 					)
 				},
 				{
@@ -55,7 +55,7 @@ module.exports = function(env, argv) {
 					// TODO: Use environment variable if exists
 					destination: path.resolve(
 						__dirname,
-						"../jetbrains-codestream/src/main/resources/agent/agent-pkg.js.map"
+						"../../jetbrains/src/main/resources/agent/agent-pkg.js.map"
 					)
 				}
 			]

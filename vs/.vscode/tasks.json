@@ -27,7 +27,7 @@
 				{
 					"base": "$tslint-webpack-watch",
 					"applyTo": "closedDocuments",
-					"fileLocation": ["relative", "${workspaceFolder}/../codestream-lsp-agent/"]
+					"fileLocation": ["relative", "${workspaceFolder}/../shared/agent/"]
 				}
 			],
 			"presentation": {

@@ -24,31 +24,33 @@ module.exports = function(env, argv) {
 
 	console.log("Ensuring extension symlink to the agent protocol folder...");
 	createFolderSymlinkSync(
-		path.resolve(__dirname, "../codestream-lsp-agent/src/protocol"),
+		path.resolve(__dirname, "../shared/agent/src/protocol"),
 		path.resolve(protocolPath, "agent"),
 		env
 	);
 
 	console.log("Ensuring extension symlink to the webview protocol folder...");
 	createFolderSymlinkSync(
-		path.resolve(__dirname, "../codestream-components/ipc"),
+		path.resolve(__dirname, "../shared/ui/ipc"),
 		path.resolve(protocolPath, "webview"),
 		env
 	);
 
-	protocolPath = path.resolve(__dirname, "../codestream-components/protocols");
+	protocolPath = path.resolve(__dirname, "../shared/ui/protocols");
 	if (!fs.existsSync(protocolPath)) {
 		fs.mkdirSync(protocolPath);
 	}
 
 	console.log("Ensuring webview symlink to the agent protocol folder...");
 	createFolderSymlinkSync(
-		path.resolve(__dirname, "../codestream-lsp-agent/src/protocol"),
+		path.resolve(__dirname, "../shared/agent/src/protocol"),
 		path.resolve(protocolPath, "agent"),
 		env
 	);
 
 	const context = path.resolve(__dirname, "src/CodeStream.VisualStudio/UI/WebViews");
+	console.log(`__dirname=${__dirname}`)
+	console.log(`context=${context}`)
 
 	const plugins = [
 		new CleanPlugin(["src/CodeStream.VisualStudio/dist/webview"]),
@@ -171,20 +173,20 @@ module.exports = function(env, argv) {
 			alias: {
 				"@codestream/protocols/agent": path.resolve(
 					__dirname,
-					"../codestream-components/protocols/agent/agent.protocol.ts"
+					"../shared/ui/protocols/agent/agent.protocol.ts"
 				),
 				"@codestream/protocols/api": path.resolve(
 					__dirname,
-					"../codestream-components/protocols/agent/api.protocol.ts"
+					"../shared/ui/protocols/agent/api.protocol.ts"
 				),
 				"@codestream/protocols/webview": path.resolve(
 					__dirname,
-					"../codestream-components/ipc/webview.protocol.ts"
-				),
-				"@codestream/webview": path.resolve(__dirname, "../codestream-components/"),
-				react: path.resolve(__dirname, "../codestream-components/node_modules/react"),
-				"react-dom": path.resolve(__dirname, "../codestream-components/node_modules/react-dom"),
-				"vscode-jsonrpc": path.resolve(__dirname, "../codestream-components/vscode-jsonrpc.shim.ts")
+					"../shared/ui/ipc/webview.protocol.ts"
+				),			
+				"@codestream/webview": path.resolve(__dirname, "../shared/ui/"),				
+				react: path.resolve(__dirname, "../shared/ui/node_modules/react"),
+				"react-dom": path.resolve(__dirname, "../shared/ui/node_modules/react-dom"),
+				"vscode-jsonrpc": path.resolve(__dirname, "../shared/ui/vscode-jsonrpc.shim.ts")
 			},
 			// Treats symlinks as real files -- using their "current" path
 			symlinks: false
