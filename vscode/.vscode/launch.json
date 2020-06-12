@@ -1,0 +1,69 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Launch CodeStream",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": ["--extensionDevelopmentPath=${workspaceFolder}"],
+			"env": {
+				"VSCODE_DEBUGGING_EXTENSION": "codestream",
+				"CODESTREAM_AGENT_BREAK_ON_START": "false"
+			},
+			"cwd": "${workspaceFolder}",
+			"outFiles": ["${workspaceFolder}/dist/**/*.js"],
+			"skipFiles": ["<node_internals>/**", "**/node_modules/**", "**/resources/app/out/vs/**"],
+			"smartStep": true,
+			"sourceMaps": true
+		},
+		{
+			"name": "Launch CodeStream (Agent Break)",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": ["--extensionDevelopmentPath=${workspaceFolder}"],
+			"env": {
+				"VSCODE_DEBUGGING_EXTENSION": "codestream",
+				"CODESTREAM_AGENT_BREAK_ON_START": "true"
+			},
+			"cwd": "${workspaceFolder}",
+			"outFiles": ["${workspaceFolder}/dist/**/*.js"],
+			"skipFiles": ["<node_internals>/**", "**/node_modules/**", "**/resources/app/out/vs/**"],
+			"smartStep": true,
+			"sourceMaps": true
+		},
+		{
+			"name": "Rebuild & Launch CodeStream",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": ["--extensionDevelopmentPath=${workspaceFolder}"],
+			"env": {
+				"VSCODE_DEBUGGING_EXTENSION": "codestream"
+			},
+			"cwd": "${workspaceFolder}",
+			"outFiles": ["${workspaceFolder}/dist/**/*.js"],
+			"skipFiles": ["<node_internals>/**", "**/node_modules/**", "**/resources/app/out/vs/**"],
+			"smartStep": true,
+			"sourceMaps": true,
+			"preLaunchTask": "npm: rebuild"
+		},
+		{
+			"name": "Watch & Launch CodeStream",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": ["--extensionDevelopmentPath=${workspaceFolder}"],
+			"env": {
+				"VSCODE_DEBUGGING_EXTENSION": "codestream"
+			},
+			"cwd": "${workspaceFolder}",
+			"outFiles": ["${workspaceFolder}/dist/**/*.js"],
+			"skipFiles": ["<node_internals>/**", "**/node_modules/**", "**/resources/app/out/vs/**"],
+			"smartStep": true,
+			"sourceMaps": true,
+			"preLaunchTask": "watch"
+		}
+	]
+}
