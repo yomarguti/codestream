@@ -1,0 +1,5 @@
+SB_TYPE=jetbrains
+SB_PREFIX=JB
+GIT_ORIGIN=git@github.com:teamcodestream/jetbrains-codestream
+SB_PROJECT_PATH=jetbrains-codestream
+#SB_DEPS=a:b:c

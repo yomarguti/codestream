@@ -1,0 +1,17 @@
+license.jar
+src/main/resources/jxbrowser.license
+.idea/dictionaries
+.idea/libraries
+.idea/shelf
+.idea/workspace.xml
+.idea/codestream.xml
+src/main/resources/webview
+src/main/resources/agent
+src/protocols/
+build
+out
+node_modules
+*.class
+temp.json
+.gradle
+.DS_Store
