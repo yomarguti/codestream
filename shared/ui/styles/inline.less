@@ -1,0 +1,312 @@
+.spatial-list .codemark-container {
+	margin-bottom: 20px;
+	// tag: codemark-width
+	padding: 0 20px 0 20px;
+}
+
+.knowledge-panel .codemark-container {
+	margin-top: 20px;
+	margin-bottom: 20px;
+}
+
+.card {
+	box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+	background-color: @base-background-color;
+	border: 1px solid @base-border-color;
+
+	.vscode-light & {
+		box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+	}
+}
+
+.plane-container {
+	position: absolute;
+	width: 100%;
+	transition: transform 20ms, margin-top 20ms;
+	will-change: transform;
+	// tag: codemark-width
+	padding: 0 20px 0 20px;
+	z-index: 2; // one above the <nav> element, one below .hover-plus
+
+	// since we use padding to place the codemark inside this div,
+	// when you click to the left or right of the codemark, we want
+	// those clicks to go through to the element below -- on the left
+	// that means the hover-plus icons, and on the right that might
+	// mean an archived codemark or the ... of the global nav
+	// by setting pointer-events to none, these clicks fall through
+	// the plane-container div to the one below... but...
+	pointer-events: none;
+	// ... we want clicks to divs inside this div to still work, so
+	// we reset pointer-events to initial for any direct descendent
+	> * {
+		pointer-events: initial;
+	}
+
+	.animate & {
+		transition: transform 200ms, margin-top 200ms;
+	}
+
+	&.cs-selected {
+		// these !important declarations are necessary to over-ride
+		// the inline styles of when we position NON-selected codemarks
+		padding-top: 30px !important;
+		padding-bottom: 30px !important;
+		margin-top: 0 !important;
+		transform: translateY(0) !important;
+		z-index: 35;
+		max-height: 100vh;
+		min-height: 100vh;
+		overflow-y: auto;
+	}
+	&.cs-at-selection,
+	&.cs-has-form {
+		z-index: 35;
+	}
+}
+
+.codemark-container {
+	position: relative;
+	display: flex;
+	min-width: 200px;
+
+	.spatial-list & {
+		min-width: 290px;
+	}
+
+	.animate & {
+		transition: transform 0.2s;
+	}
+
+	.cs-hidden & {
+		background-color: var(--base-background-color);
+		// when a codemark gets marked hidden, we transition it off-screen in 200ms
+		transition: transform 200ms, margin-top 200ms;
+		// position: absolute;
+		// z-index: 0;
+
+		// &,
+		// * {
+		// 	max-height: 100px;
+		// }
+	}
+}
+
+.codemark-form-container {
+	.card;
+	padding-bottom: 10px;
+	min-width: 200px;
+	z-index: 35;
+}
+
+.view-selectors {
+	position: fixed;
+	bottom: 0px;
+	right: 0;
+	padding-right: 40px;
+	z-index: 45;
+	background: @app-background-color;
+	width: 100%;
+	padding-top: 3px;
+	padding-bottom: 5px;
+	border-top: 1px solid @base-border-color;
+	text-align: right;
+	.count {
+		cursor: pointer;
+		opacity: 0.75;
+		padding: 5px 2%;
+		white-space: nowrap;
+		&:hover {
+			opacity: 1;
+			color: @text-color-highlight;
+		}
+		.switch {
+			transform: scale(0.75);
+			vertical-align: -4px;
+		}
+	}
+}
+
+@keyframes slideIn2 {
+	0% {
+		transform: translate(-40px, 0);
+		box-shadow: none;
+	}
+	100% {
+		transform: translate(0, 0);
+		box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+	}
+}
+@keyframes slideIn3 {
+	0% {
+		transform: translate(-80px, 0);
+		box-shadow: none;
+	}
+	100% {
+		transform: translate(0, 0);
+		box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+	}
+}
+@keyframes slideIn4 {
+	0% {
+		transform: translate(-120px, 0);
+		box-shadow: none;
+	}
+	100% {
+		transform: translate(0, 0);
+		box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+	}
+}
+@keyframes slideIn5 {
+	0% {
+		transform: translate(-160px, 0);
+		box-shadow: none;
+	}
+	100% {
+		transform: translate(0, 0);
+		box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+	}
+}
+.hover-plus {
+	position: fixed;
+	margin-left: 5px;
+	// margin-top: 5px;
+	opacity: 0;
+	color: @text-color-subtle;
+	// scroll-snap-align: start;
+	height: 25px;
+	white-space: nowrap;
+	z-index: 1; // needs to be below .plane-container
+	overflow: visible;
+	// width: 120px; reduced to 50px to account for getting started panel
+	width: 30px;
+	&.narrow {
+		width: 40px;
+	}
+	&:hover:not(.disabled),
+	&.open {
+		width: 120px;
+		opacity: 1;
+		z-index: 15;
+		&.narrow {
+			width: 40px;
+		}
+	}
+	&.disabled {
+		cursor: none;
+	}
+	> span {
+		display: inline-block;
+		width: 35px;
+		height: 35px;
+		background: @app-background-color;
+		border-radius: 50%;
+		top: -1px;
+		left: -1px;
+		z-index: -1;
+		margin-right: 5px;
+		.vscode-dark & {
+			box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+		}
+		box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+		margin-top: -5px;
+	}
+	&.open:not(:hover) > span {
+		&:nth-of-type(2),
+		&:nth-of-type(3),
+		&:nth-of-type(4),
+		&:nth-of-type(5) {
+			// put this line and the animation lines back in
+			// in order to have the two-stage, hover-then-slide
+			// animation to expose bug and permalink
+			// display: none;
+		}
+	}
+	> span:nth-of-type(2) {
+		// animation: slideIn2 0.2s ease-in-out 0.2s 1 both;
+	}
+	> span:nth-of-type(3) {
+		// animation: slideIn3 0.2s ease-in-out 0.2s 1 both;
+	}
+	> span:nth-of-type(4) {
+		// animation: slideIn4 0.2s ease-in-out 0.2s 1 both;
+	}
+	> span:nth-of-type(5) {
+		// animation: slideIn5 0.2s ease-in-out 0.2s 1 both;
+	}
+	> span:nth-of-type(1) .icon {
+		z-index: 5;
+	}
+	> span:nth-of-type(2) .icon {
+		z-index: 4;
+	}
+	> span:nth-of-type(3) .icon {
+		z-index: 3;
+	}
+	> span:nth-of-type(4) .icon {
+		z-index: 2;
+	}
+	> span:nth-of-type(5) .icon {
+		z-index: 1;
+	}
+	.icon {
+		width: 35px;
+		height: 35px;
+		text-align: center;
+		padding-top: 8px;
+		border-radius: 50%;
+		border: 1px solid @base-border-color;
+		background: @base-background-color;
+		cursor: pointer;
+		display: inline-block;
+		transition: transform 0.1s;
+		&:hover {
+			color: @text-color-info;
+			// reduced to 1.1 to avoid issue where the larger icon
+			// overlapped the line below which made it difficult to
+			// select from line-to-line-to-line going down
+			transform: scale(1.1);
+			// border-color: @text-color-info;
+			// z-index: 16;
+			&:before {
+				position: absolute;
+				top: -1px;
+				left: -1px;
+				content: "";
+				width: 35px;
+				height: 35px;
+				border-radius: 50%;
+				background: rgba(127, 127, 127, 0.05);
+			}
+		}
+		position: relative;
+	}
+	&.open .icon {
+		opacity: 1;
+		// color: @text-color-info;
+		// transform: scale(1.4);
+	}
+}
+.has-overlay .hover-plus {
+	display: none;
+}
+.folded-code-indicator {
+	width: 100%;
+	position: absolute;
+	border-bottom: 1px dashed @base-border-color;
+}
+.compose.codemark-compose {
+	// border-top: 1px solid @base-border-color !important;
+	box-sizing: border-box;
+	background: none !important;
+	// z-index: 50;
+	// padding: 30px 30px 30px 30px;
+	width: 100% !important;
+	padding: 0 10px !important;
+	margin: 10px 0 0 0 !important;
+	.message-input {
+		max-width: calc(~"100vw - 62px") !important;
+		// background: @app-background-color;
+		outline: 1px solid @base-border-color !important;
+		background: rgba(0, 0, 0, 0.1) !important;
+	}
+}

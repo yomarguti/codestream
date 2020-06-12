@@ -1,0 +1,33 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"allowSyntheticDefaultImports": true,
+		"baseUrl": ".",
+		"esModuleInterop": true,
+		"experimentalDecorators": true,
+		"forceConsistentCasingInFileNames": true,
+		"jsx": "react",
+		"lib": ["es2017", "dom", "dom.iterable"],
+		"module": "esnext",
+		"moduleResolution": "node",
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitAny": false,
+		"noImplicitReturns": true,
+		"noUnusedLocals": false,
+		"outDir": "dist",
+		"paths": {
+			"@codestream/protocols/agent": ["protocols/agent/agent.protocol.ts"],
+			"@codestream/protocols/api": ["protocols/agent/api.protocol.ts"],
+			"@codestream/protocols/webview": ["ipc/webview.protocol.ts"],
+			"@codestream/webview/*": ["./*"],
+			"vscode-jsonrpc": ["./vscode-jsonrpc.shim.ts"]
+		},
+		"preserveSymlinks": true,
+		"rootDir": ".",
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": true,
+		"target": "es2017",
+		"types": ["styled-components", "jest"]
+	}
+}

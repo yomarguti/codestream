@@ -1,0 +1,787 @@
+.editing-codemark-container {
+	.card;
+	padding-bottom: 10px;
+	width: 100%;
+}
+.btn-locate-repo {
+	margin-left: 4px;
+	padding: 1px 4px !important;
+	line-height: initial !important;
+
+	& > .spin,
+	& > .icon svg {
+		height: 12px;
+	}
+}
+
+.codemark {
+	padding-left: 10px;
+	// transition: top 0.1s;
+	&.injecting {
+		width: 100% !important;
+		.header {
+			display: none;
+		}
+		.info-wrapper {
+			display: none;
+		}
+		.contents {
+			width: 100% !important;
+		}
+		.contents > .body {
+			overflow-x: hidden !important;
+			width: 100% !important;
+		}
+	}
+	&.collapsed {
+		height: 25px;
+		width: 100%;
+		padding-top: 5px;
+		padding-bottom: 5px;
+		padding-left: 38px;
+		overflow: hidden;
+		.contents > .body {
+			background: none;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			p {
+				display: inline;
+			}
+			.type-icon {
+				padding-right: 5px;
+			}
+			.file-name {
+				padding-left: 10px;
+				opacity: 0.25;
+			}
+			pre.prettyprint,
+			blockquote {
+				display: none;
+			}
+			code {
+				display: inline;
+			}
+		}
+		.align-far-left {
+			margin-left: -22px;
+			display: inline-block;
+			float: left;
+		}
+		.status-button {
+			// float: right;
+			display: inline-block;
+			// border: 2px solid green;
+			border-radius: 3px;
+			width: 14px;
+			height: 14px;
+			text-align: center;
+			border: 2px solid @text-color;
+			opacity: 1;
+			margin-top: 2px;
+			.check {
+				opacity: 1;
+				transform: scale(0.01);
+				transition: transform 0.3s;
+				display: inline-block;
+				top: -2px !important;
+				color: @text-color !important;
+				visibility: hidden;
+			}
+			&.checked {
+				.check {
+					visibility: visible;
+				}
+				background-color: @text-color;
+				border: none;
+				vertical-align: 2px !important;
+				.check {
+					// opacity: 0.6;
+					transform: scale(1);
+					transform: scale(0.85);
+					color: @app-background-color !important;
+				}
+			}
+		}
+		.show-on-hover {
+			padding: 5px 0 0 0;
+			x-color: @text-color-subtle;
+			opacity: 0;
+			transition: opacity 0.4s;
+			.details {
+				padding-left: 8px;
+			}
+		}
+		&:hover .show-on-hover {
+			opacity: 0.6;
+		}
+		.angle-arrow {
+			width: 16px;
+			height: 16px;
+			position: relative;
+			display: inline-block;
+			margin-right: 8px;
+			margin-left: 3px;
+			&::before {
+				content: "";
+				position: absolute;
+				display: block;
+				top: 0;
+				left: 8px;
+				width: 2px;
+				height: 8px;
+				background: @text-color;
+			}
+			&::after {
+				content: "";
+				position: absolute;
+				display: block;
+				top: 8px;
+				left: 8px;
+				width: 8px;
+				height: 2px;
+				background: @text-color;
+			}
+		}
+		.clickable:hover {
+			color: @text-color-highlight;
+		}
+		.username {
+			font-weight: bold;
+		}
+	}
+	&:hover {
+		color: @text-color-highlight;
+		background: rgba(127, 127, 127, 0.4);
+	}
+	&.inline {
+		position: relative;
+		padding: 0 !important;
+		z-index: 1;
+		border: 1px solid @base-border-color;
+		background: @base-background-color;
+		// background: @app-background-color;
+		height: auto;
+		// box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+		.card;
+		flex: auto;
+		width: 100%;
+		// overflow: hidden;
+
+		.assignees {
+			// float: right;
+		}
+		.status-button {
+			display: none;
+		}
+
+		&.type-bookmark:not(.selected) .header {
+			margin-bottom: 0 !important;
+		}
+		.contents {
+			width: 100%;
+		}
+		.contents > .body {
+			display: flex;
+			flex-direction: column;
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-left: 49px !important;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+			overflow-x: hidden;
+			.type-icon {
+				margin-left: -23px;
+			}
+		}
+		.description {
+			padding: 0 10px 0 10px;
+			p {
+				margin: 0;
+			}
+		}
+		&.selected .contents,
+		&:hover .contents {
+			// &.selected .contents {
+			color: @text-color-highlight;
+			background: rgba(127, 127, 127, 0.05);
+		}
+
+		&:not(.selected) {
+			cursor: pointer;
+		}
+
+		&.selected {
+			// transform: scale(1.05);
+			// transform: translate(-20px, 0);
+			z-index: 2;
+			// box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+		}
+		&.cs-hidden {
+			// transform: none;
+
+			.contents {
+				// visibility: hidden;
+			}
+			&.unpinned {
+				background: repeating-linear-gradient(
+					-45deg,
+					transparent,
+					transparent 5px,
+					@app-background-color 5px,
+					@app-background-color 10px
+				) !important;
+			}
+		}
+		.postslist {
+			// max-height: 200px;
+			// overflow: auto;
+		}
+		.date-separator {
+			display: none;
+		}
+		.contents > .body {
+			white-space: normal;
+			text-overflow: initial;
+			overflow-x: auto;
+			padding: 10px 10px 10px 10px !important;
+			.code.prettyprint {
+				margin: 0;
+			}
+		}
+		.contents > .body > .title > p {
+			margin: 0;
+			white-space: pre-wrap;
+		}
+		.codemark-details {
+			margin-top: -10px;
+		}
+		.right {
+			float: right;
+			display: flex;
+			flex-direction: row-reverse;
+			margin-right: 0;
+			.kebab-vertical {
+				padding: 3px 5px;
+				margin-left: 5px;
+			}
+		}
+		.contents > .body,
+		.codemark-details {
+			.post {
+				padding: 10px;
+				min-height: 36px;
+				.body {
+					padding: 0 0 0 23px;
+				}
+
+				&.reply .author {
+					cursor: unset;
+				}
+				&:hover {
+					.align-right {
+						visibility: visible;
+					}
+				}
+				.align-right {
+					visibility: hidden;
+				}
+				.gear {
+					margin-left: 10px;
+				}
+			}
+
+			.header {
+				margin-bottom: 8px;
+			}
+			.author {
+				display: inline;
+				cursor: pointer;
+				font-size: 13px;
+				font-weight: 700;
+				// padding-bottom: 5px;
+			}
+			.headshot {
+				display: inline-block;
+				position: relative;
+				width: 16px;
+				height: 16px;
+				margin-right: 7px;
+				vertical-align: -4px;
+				left: 0;
+			}
+			.headshot-image {
+				position: absolute;
+				width: 16px;
+				height: 16px;
+				border-radius: 3px;
+				z-index: 2;
+				left: 0;
+			}
+			.headshot-gravatar {
+				position: absolute;
+				width: 16px;
+				height: 16px;
+				border-radius: 3px;
+				z-index: 2;
+				left: 0;
+				overflow: hidden;
+			}
+			.headshot-initials {
+				position: absolute;
+				width: 16px;
+				height: 16px;
+				border-radius: 3px;
+				text-align: center;
+				font-size: 10px;
+				font-weight: normal;
+				text-transform: capitalize;
+				padding-top: 0px;
+				z-index: 1;
+				color: @app-background-color;
+				left: 0;
+			}
+			.headshot-system {
+				position: absolute;
+				width: 16px;
+				height: 16px;
+				border-radius: 3px;
+				z-index: 2;
+				left: 0;
+			}
+		}
+		.kebab-vertical {
+			opacity: 0.5;
+			margin-left: 2px;
+			padding: 0 5px;
+		}
+	}
+	.replies {
+		// margin-top: 1px;
+	}
+	.post-details {
+		padding: 5px 10px 10px 10px;
+	}
+	.code {
+		margin: 5px 0 !important;
+	}
+	a {
+		text-decoration: none;
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+	.info-wrapper {
+		opacity: 0.5;
+		position: absolute;
+		right: 5px;
+		bottom: 5px;
+	}
+	&.type-bookmark:not(.selected) {
+		.contents > .body {
+			padding-left: 28px !important;
+			.author,
+			.kebab-vertical-x {
+				display: none;
+			}
+			.type-icon {
+				margin-left: -23px;
+			}
+			p {
+				margin: 0;
+				display: inline;
+				padding-left: 5px;
+			}
+		}
+	}
+	.pinned-replies {
+		margin-top: 10px;
+	}
+	.pinned-reply {
+		// padding: 10px 10px 3px 10px;
+		// margin: 10px -10px 0 -10px;
+		// width: calc(100% + 30px);
+		// border-top: 1px solid @base-border-color;
+		margin: 0 0 5px 0;
+		.pinned-reply-body {
+			opacity: 0.5;
+			// see COMPUTATION below
+			padding-left: 49px;
+			margin-top: -18px;
+		}
+		.title p {
+			margin: 0;
+		}
+	}
+	&.type-bookmark:not(.selected) {
+		.pinned-reply {
+			margin-left: -24px; // COMPUTATION = 49-28
+		}
+	}
+	.post + .post {
+		// border-top: 1px solid @base-border-color;
+		border: none;
+	}
+	.detail-icons {
+		margin-top: 10px;
+		color: @text-color;
+		.detail-icon {
+			opacity: 0.4;
+			padding-right: 10px;
+			cursor: pointer;
+			user-select: none;
+			&:hover {
+				opacity: 1;
+			}
+			.icon {
+				color: @text-color;
+			}
+			.octicon-comment {
+				margin-top: 1px;
+			}
+		}
+		.tag {
+			// margin-top: 2px;
+			cursor: pointer;
+			margin-bottom: 0;
+			&:last-of-type {
+				margin-right: 10px;
+			}
+			&:hover {
+				box-shadow: 0 0 2px white, 0 0 2px white, 0 0 2px white, 0 0 2px white, 0 0 2px white;
+			}
+		}
+		// commented out since there's no real reason for hover state, as there's no click action
+		// .headshot {
+		// 	cursor: pointer;
+		// 	border-radius: 3px;
+		// 	&:hover {
+		// 		box-shadow: 0 0 2px white, 0 0 2px white, 0 0 2px white, 0 0 2px white, 0 0 2px white;
+		// 	}
+		// }
+		.assignees {
+			padding-right: 5px;
+		}
+	}
+}
+.related-row {
+	display: flex;
+	.related {
+		flex-grow: 1;
+		margin-bottom: 0;
+	}
+	// this should match the margin-bottom of .related
+	margin-bottom: 20px;
+}
+.related {
+	margin: 20px 0;
+}
+.related.clickable-marker pre.code {
+	cursor: pointer;
+	&:hover {
+		background: @app-background-color-hover;
+	}
+}
+.file-info {
+	font-size: 11px;
+	.monospace {
+		white-space: nowrap;
+	}
+	.icon {
+		vertical-align: 2px;
+	}
+}
+&.live {
+	// color: @text-color-info;
+	.code.prettyprint {
+		border: 1px solid @text-focus-border-color;
+	}
+}
+.related-label,
+.posts-header {
+	text-transform: uppercase;
+	font-weight: 800;
+	opacity: 0.7;
+	color: var(--text-color-subtle);
+	font-size: 11px;
+	margin-bottom: 3px;
+	// this is to show a text-variant DropdownButton
+	// within a related-label
+	button {
+		font-weight: 800;
+		font-size: 11px;
+		text-transform: uppercase;
+		color: var(--text-color-subtle);
+		// color: var(--text-color-highlight);
+	}
+}
+.posts-header {
+	margin: 10px 0 -7px 10px;
+}
+.icon.pinned-reply-star {
+	opacity: 0.6;
+	margin: 0 6px 0 2px;
+}
+.no-codemarks-container {
+	position: fixed;
+	width: 100%;
+	top: 50%;
+	transform: translateY(-50%);
+	z-index: 0;
+}
+.no-codemarks {
+	max-width: 30em;
+	margin: 0 auto;
+	color: @text-color-subtle;
+	// text-align: center;
+	font-size: 13px;
+	padding: 0 20px;
+	.keybindings {
+		background-color: @base-background-color;
+		padding: 10px;
+		margin: 10px auto;
+		// box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+		.card;
+		.function-row {
+			padding: 5px 0;
+		}
+	}
+	a {
+		white-space: nowrap;
+	}
+}
+
+.compose-title {
+	.binding {
+		float: right;
+		white-space: nowrap;
+	}
+}
+.codemark-faq {
+	width: 70vw;
+	color: @text-color-subtle;
+	padding: 10px 10px 0 10px; // 0 on the bottom because the li has a margin-bottom of 10
+	a {
+		text-decoration: none;
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+	b {
+		color: @text-color;
+	}
+	li {
+		margin-bottom: 10px;
+	}
+}
+
+// currently only used in CodemarkDetails
+.progress-container {
+	width: 100%;
+	display: flex;
+	overflow: hidden;
+	margin-top: -2px;
+
+	.progress-bar {
+		background-color: transparent;
+		height: 2px;
+		width: 100%;
+	}
+
+	.progress-cursor {
+		width: 45%;
+		height: inherit;
+		background-image: linear-gradient(
+			to right,
+			transparent 10%,
+			var(--text-color-info) 75%,
+			transparent 90%
+		);
+		animation: 1.75s ease-in-out infinite move-cursor;
+	}
+}
+
+@keyframes move-cursor {
+	from {
+		transform: translateX(-100%);
+	}
+	to {
+		transform: translateX(200%);
+	}
+}
+.related-codemark {
+	margin: 0 0 5px 0;
+	cursor: pointer;
+	&:hover {
+		color: var(--text-color-info);
+	}
+	&.resolved {
+		text-decoration: line-through;
+	}
+}
+.external-link,
+.internal-link {
+	color: @text-color;
+	overflow: hidden;
+	white-space: nowrap;
+	display: block;
+	text-overflow: ellipsis;
+	cursor: pointer;
+
+	&:hover {
+		color: @text-color-info;
+		text-decoration: none !important;
+	}
+	.icon {
+		margin-right: 5px;
+	}
+}
+.internal-link {
+	display: inline;
+}
+.codemark-file,
+.external-url {
+	padding-left: 5px;
+	opacity: 0.5;
+}
+.menu-selected {
+	color: @text-color-info;
+	font-weight: bold;
+}
+
+.codemark-view {
+	z-index: 51;
+	position: absolute;
+	// tag: codemark-width
+	padding: 45px 20px 30px 20px;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	overflow: auto;
+
+	// this is the X cancel button
+	.align-right-button {
+		position: absolute !important;
+		right: 20px;
+		top: 10px;
+		.icon {
+			display: block !important;
+			padding: 5px 8px 5px 8px !important;
+			cursor: pointer;
+			&:hover {
+				color: var(--text-color-highlight);
+				background-color: var(--base-background-color);
+			}
+		}
+	}
+}
+
+form#inject-form,
+form#reposition-form {
+	padding: 0 !important;
+	button {
+		padding-left: 10px;
+		padding-right: 10px;
+	}
+}
+#inject-form,
+#reposition-form {
+	.form-body {
+		padding: 0;
+		min-width: 0;
+		max-width: 100%;
+		width: 100%;
+		overflow: hidden;
+	}
+	.control-group {
+		margin-bottom: 0 !important;
+		max-width: 100%;
+	}
+	h4 {
+		padding: 0;
+		margin: 0;
+	}
+	.switch {
+		margin: 0 5px 5px 0;
+		vertical-align: -8px;
+	}
+	pre {
+		margin-top: 0;
+		margin-bottom: 0;
+		max-width: 100%;
+		overflow: auto;
+		padding: 10px !important;
+	}
+	max-width: 100%;
+}
+#switches div {
+	cursor: pointer;
+}
+.has-diff {
+	position: absolute;
+	right: 15px;
+	bottom: 5px;
+	.icon {
+		color: @text-color-warning;
+	}
+}
+.button-spread {
+	display: flex;
+	padding: 0 10px 5px 10px;
+	> div {
+		flex-grow: 1;
+	}
+}
+.resolve-button,
+.codemark-actions-button {
+	border: 1px solid @base-border-color;
+	padding: 2px 10px;
+	// float: right;
+	margin: -3px 5px 0 5px;
+	cursor: pointer;
+	color: @text-color;
+	&:hover {
+		color: var(--button-foreground-color);
+		background: var(--button-background-color);
+		border: 1px solid var(--button-background-color);
+	}
+}
+.codemark-actions-button {
+	margin: 0 0 5px 10px;
+	float: right;
+}
+.reposition-dialog {
+	position: absolute;
+	top: 10%;
+	z-index: 65;
+	border: 1px solid @base-border-color;
+	background: @base-background-color;
+	box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+	padding: 10px;
+	width: auto;
+	left: 0;
+	right: 0;
+	// top: 50%;
+	// transform: translateY(-50%);
+}
+#reposition-blanket {
+	z-index: 60;
+	background: rgba(0, 0, 0, 0.25);
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+}
+.striped-header {
+	padding: 10px;
+	background: repeating-linear-gradient(
+		-45deg,
+		transparent,
+		transparent 5px,
+		@app-background-color 5px,
+		@app-background-color 10px
+	);
+	border-bottom: 1px solid @base-border-color;
+}
