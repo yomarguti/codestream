@@ -1,16 +1,10 @@
 {
 	"folders": [
 		{
-			"path": "."
+			"path": ".."
 		},
 		{
-			"path": "../codestream-lsp-agent"
-		},
-		{
-			"path": "../codestream-components"
-		},
-		{
-			"path": "../gore"
+			"path": "../../gore"
 		}
 	],
 	"launch": {

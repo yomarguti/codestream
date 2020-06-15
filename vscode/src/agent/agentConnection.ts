@@ -212,7 +212,7 @@ export class CodeStreamAgentConnection implements Disposable {
 				transport: TransportKind.ipc
 			},
 			debug: {
-				module: context.asAbsolutePath("../codestream-lsp-agent/dist/agent.js"),
+				module: context.asAbsolutePath("../shared/agent/dist/agent.js"),
 				transport: TransportKind.ipc,
 				options: {
 					execArgv: ["--nolazy", breakOnStart ? "--inspect-brk=6009" : "--inspect=6009"]
@@ -566,7 +566,13 @@ export class CodeStreamAgentConnection implements Disposable {
 			});
 		}
 
-		getContentsLocal(repoId: string, path: string, editingReviewId: string | undefined, baseSha: string, rightVersion: string) {
+		getContentsLocal(
+			repoId: string,
+			path: string,
+			editingReviewId: string | undefined,
+			baseSha: string,
+			rightVersion: string
+		) {
 			return this._connection.sendRequest(GetReviewContentsLocalRequestType, {
 				repoId,
 				path,
