@@ -47,7 +47,7 @@ module.exports = function(env, argv) {
 					// TODO: Use environment variable if exists
 					destination: path.resolve(
 						__dirname,
-						"../../jetbrains/src/main/resources/agent/agent-pkg.js"
+						"../../jb/src/main/resources/agent/agent-pkg.js"
 					)
 				},
 				{
@@ -55,7 +55,7 @@ module.exports = function(env, argv) {
 					// TODO: Use environment variable if exists
 					destination: path.resolve(
 						__dirname,
-						"../../jetbrains/src/main/resources/agent/agent-pkg.js.map"
+						"../../jb/src/main/resources/agent/agent-pkg.js.map"
 					)
 				}
 			]
