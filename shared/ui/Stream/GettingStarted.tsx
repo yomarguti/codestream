@@ -217,7 +217,7 @@ export function GettingStarted(props: GettingStartedProps) {
 		return {
 			todo: STEPS.filter(step => !step.isComplete(user, state)),
 			completed: STEPS.filter(step => step.isComplete(user, state)),
-			flowEnabled: isFeatureEnabled(state, "flow")
+			flowEnabled: true //isFeatureEnabled(state, "flow")
 		};
 	}, shallowEqual);
 

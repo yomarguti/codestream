@@ -12,7 +12,7 @@ interface CarouselProps {
 }
 
 interface ContentProps {
-	active: boolean;
+	active?: boolean;
 	children: React.ReactNode;
 	className?: string;
 }
@@ -95,5 +95,5 @@ export const Carousel = styled((props: PropsWithChildren<CarouselProps>) => {
 export const Content = styled((props: PropsWithChildren<ContentProps>) => {
 	return <div className={props.className}>{props.children}</div>;
 })`
-	${props => (props.active ? "" : "display:none")}
+	// ${props => (props.active ? "" : "display:none")}
 `;

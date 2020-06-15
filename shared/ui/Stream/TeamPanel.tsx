@@ -928,7 +928,7 @@ class TeamPanel extends React.Component<Props, State> {
 								</UL>
 							</div>
 						)}
-						{(suggested.length > 0 || mappedBlame.length > 0) && (
+						{(this.props.isCurrentUserAdmin || mappedBlame.length > 0) && (
 							<div className="section">
 								<HR />
 								<PanelHeader

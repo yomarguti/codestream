@@ -858,8 +858,6 @@ export class SimpleStream extends Component {
 		const { configs, umis, postStreamPurpose, providerInfo = {} } = this.props;
 		let { activePanel } = this.props;
 		const { searchBarOpen, q } = this.state;
-		// if (searchBarOpen && q) activePanel = WebviewPanels.Codemarks;
-		if (searchBarOpen) activePanel = WebviewPanels.Codemarks;
 		const isConfigurationPanel = activePanel && activePanel.match(/^configure\-(provider|enterprise)-/);
 		// if we're conducting a review, we need the compose functionality of spatial view
 		if (this.props.currentReviewId) activePanel = WebviewPanels.CodemarksForFile;
@@ -873,7 +871,7 @@ export class SimpleStream extends Component {
 			(!Object.values(WebviewPanels).includes(activePanel) &&
 				!isConfigurationPanel)
 		) {
-			activePanel = WebviewPanels.CodemarksForFile;
+			activePanel = WebviewPanels.Activity;
 		}
 		// if there is nothing left to complete, go to spatial view
 		if (activePanel === WebviewPanels.GettingStarted && this.props.remainingSteps === 0)
@@ -1019,18 +1017,6 @@ export class SimpleStream extends Component {
 							selection={this.state.selection}
 							focusInput={this.focusInput}
 							scrollDiv={this._contentScrollDiv}
-						/>
-					)}
-					{activePanel === WebviewPanels.Codemarks && (
-						<KnowledgePanel
-							activePanel={activePanel}
-							setActivePanel={this.setActivePanel}
-							currentUserId={this.props.currentUserId}
-							currentUserName={this.props.currentUserName}
-							postAction={this.postAction}
-							searchBarOpen={this.state.searchBarOpen}
-							setMultiCompose={this.setMultiCompose}
-							typeFilter={this.state.knowledgeType}
 						/>
 					)}
 					{activePanel === WebviewPanels.FilterSearch && <FilterSearchPanel />}
@@ -2569,7 +2555,7 @@ const mapStateToProps = state => {
 	return {
 		remainingSteps,
 		lightningCodeReviewsEnabled: isFeatureEnabled(state, "lightningCodeReviews"),
-		flowEnabled: isFeatureEnabled(state, "flow"),
+		flowEnabled: true || isFeatureEnabled(state, "flow"),
 		collisions: getCodeCollisions(state),
 		currentCodemarkId: context.currentCodemarkId,
 		currentMarkerId: context.currentMarkerId,
