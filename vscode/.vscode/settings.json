@@ -1,0 +1,9 @@
+{
+	"editor.insertSpaces": false,
+	"prettier.requireConfig": true,
+	"search.exclude": {
+		"**/dist": true
+	},
+	"eslint.alwaysShowStatus": true,
+	"eslint.codeActionsOnSave.mode": "problems"
+}
