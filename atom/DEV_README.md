@@ -1,11 +1,9 @@
 ## To get started
 
-1. clone the repo and make sure it's a sibling to the `codestream-lsp-agent` and `codestream-components` repos
-2. Build [codestream-components](https://github.com/TeamCodeStream/codestream-components/blob/develop/README.md)
-3. Build [codestream-lsp-agent](https://github.com/TeamCodeStream/codestream-lsp-agent/blob/develop/README.md)
-4. `cd` into the repo
-5. run `apm link --dev`, which tells atom to use this directory as the package source for atom windows running in dev mode.
-6. open atom in dev mode (`atom --dev path/to/project`) to debug the extension
+1. clone the repo
+2. `cd` into `atom`
+3. run `apm link --dev`, which tells atom to use this directory as the package source for atom windows running in dev mode.
+4. open atom in dev mode (`atom --dev path/to/project`) to debug the extension
 
 ## For development
 

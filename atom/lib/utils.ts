@@ -49,7 +49,7 @@ export const getDevPath = () => {
 };
 
 export const getAgentSource = () =>
-	path.resolve(getDevPath(), "../codestream-lsp-agent/dist/agent.js");
+	path.resolve(getDevPath(), "../shared/agent/dist/agent.js");
 
 export namespace Debug {
 	export function setDebugging(value: boolean) {

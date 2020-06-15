@@ -3,16 +3,16 @@
 #desc# package up a build
 
 echo "==== building agent ===="
-cd ../codestream-lsp-agent
+cd ../shared/agent
 npm run bundle
 
 echo "==== updating webview dependencies ===="
-cd ../codestream-components
+cd ../shared/ui
 rm -rf node_modules
 npm install --no-save
 
 echo "==== updating package dependencies ===="
-cd ../atom-codestream
+cd ../atom
 rm -rf node_modules
 npm install --no-save
 
