@@ -318,7 +318,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const goSettings = () => {};
 
 	const saveLabel =
-		!branch || branch == currentBranch
+		!branch || branch == currentBranch || !createBranch
 			? "Save Status"
 			: branches.includes(branch)
 			? "Switch Branch & Save Status"
