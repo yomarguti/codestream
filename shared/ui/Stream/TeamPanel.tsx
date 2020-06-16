@@ -39,7 +39,8 @@ import { openPanel } from "../store/context/actions";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { ProfileLink } from "../src/components/ProfileLink";
 import copy from "copy-to-clipboard";
-import { UserStatus } from "../src/components/UserStatus";import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
+import { UserStatus } from "../src/components/UserStatus";
+import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import { SelectPeople } from "../src/components/SelectPeople";
 import { HeadshotName } from "../src/components/HeadshotName";
 
@@ -237,7 +238,7 @@ class TeamPanel extends React.Component<Props, State> {
 		Object.keys(committers).forEach(email => {
 			if (members.find(user => user.email === email)) return;
 			if (invited.find(user => user.email === email)) return;
-			if (dontSuggestInvitees[email.replace(".", "*")]) return;
+			if (dontSuggestInvitees[email.replace(/\./g, "*")]) return;
 			suggested.push({ email, fullName: committers[email] || email });
 		});
 		this.setState({ suggested });
@@ -644,7 +645,7 @@ class TeamPanel extends React.Component<Props, State> {
 			teamId: this.props.teamId,
 			// we need to replace . with * to allow for the creation of deeply-nested
 			// team settings, since that's how they're stored in mongo
-			settings: { dontSuggestInvitees: { [user.email.replace(".", "*")]: true } }
+			settings: { dontSuggestInvitees: { [user.email.replace(/\./g, "*")]: true } }
 		});
 		this.getSuggestedInvitees();
 	};
@@ -669,7 +670,7 @@ class TeamPanel extends React.Component<Props, State> {
 			teamId: this.props.teamId,
 			// we need to replace . with * to allow for the creation of deeply-nested
 			// team settings, since that's how they're stored in mongo
-			settings: { blameMap: { [author.replace(".", "*")]: assigneeId } }
+			settings: { blameMap: { [author.replace(/\./g, "*")]: assigneeId } }
 		});
 		this.setState({ blameMapEmail: "", addingBlameMap: false });
 	};
@@ -681,6 +682,7 @@ class TeamPanel extends React.Component<Props, State> {
 			this.props.activePanel !== WebviewPanels.Invite &&
 			this.props.activePanel !== WebviewPanels.People;
 
+		console.warn("***************** BLAME MAP: ", blameMap);
 		const suggested = this.state.suggested.filter(u => !invitingEmails[u.email]);
 		const mappedBlame = keyFilter(blameMap);
 		const title = this.state.changingTeamName ? (
@@ -952,7 +954,7 @@ class TeamPanel extends React.Component<Props, State> {
 								</MapRow>
 								{mappedBlame.map(email => (
 									<MapRow>
-										<div>{email.replace("*", ".")}</div>
+										<div>{email.replace(/\*/g, ".")}</div>
 										<div>
 											<SelectPeople
 												title="Handled By"
