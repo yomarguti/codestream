@@ -54,6 +54,10 @@ const StatusInput = styled.div`
 		.octicon-git-branch {
 			margin: 2px 2px -2px -2px;
 		}
+		.selected-emoji {
+			display: inline-block;
+			padding-left: 4px;
+		}
 	}
 	.clear {
 		position: absolute;
@@ -121,6 +125,7 @@ const Examples = styled.div`
 
 const MonoMenu = styled(InlineMenu)`
 	font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
+	white-space: normal;
 `;
 
 const EMPTY_STATUS = {
@@ -137,11 +142,18 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			currentUser.status && "label" in currentUser.status ? currentUser.status : EMPTY_STATUS;
 		const now = new Date().getTime();
 		if (status.expires && status.expires < now) status = EMPTY_STATUS;
+		const teamId = state.context.currentTeamId;
+		const team = state.teams[teamId];
+		const settings = team.settings || {};
 
 		return {
 			status,
+			teamName: team.name,
+			currentUserName: state.users[state.session.userId!].username,
 			textEditorUri: state.editorContext.textEditorUri,
-			notificationPreference: state.preferences.notifications || "involveMe"
+			branchMaxLength: settings.branchMaxLength || 40,
+			branchTicketTemplate: settings.branchTicketTemplate || "feature/ticket-{id}",
+			branchDescriptionTemplate: settings.branchDescriptionTemplate || "feature/{description}"
 		};
 	});
 
@@ -177,7 +189,36 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		}
 	};
 
-	const makeBranchName = value => "feature/" + value.replace(/[\s\W]+/g, "-").toLowerCase();
+	const replaceDescriptionTokens = (template, description) => {
+		const now = new Date();
+		const date = now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
+		return template
+			.replace(/\{id\}/g, "")
+			.replace(/\{username\}/g, derivedState.currentUserName)
+			.replace(/\{team\}/g, derivedState.teamName)
+			.replace(/\{date\}/g, date)
+			.replace(/\{description\}/g, description)
+			.replace(/[\s]+/g, "-")
+			.toLowerCase()
+			.substr(0, derivedState.branchMaxLength);
+	};
+
+	const replaceTicketTokens = (template, id, description) => {
+		const now = new Date();
+		const date = now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
+		return template
+			.replace(/\{id\}/g, id)
+			.replace(/\{username\}/g, derivedState.currentUserName)
+			.replace(/\{team\}/g, derivedState.teamName)
+			.replace(/\{date\}/g, date)
+			.replace(/\{description\}/g, description)
+			.replace(/[\s]+/g, "-")
+			.toLowerCase()
+			.substr(0, derivedState.branchMaxLength);
+	};
+
+	const makeBranchName = value =>
+		replaceDescriptionTokens(derivedState.branchDescriptionTemplate, value);
 
 	const getBranches = async () => {
 		if (!derivedState.textEditorUri) return;
@@ -209,16 +250,20 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 
 		HostApi.instance.track("Status Set", { Value: status });
 
-		if (branch.length > 0 && branch !== currentBranch && derivedState.textEditorUri) {
-			const result = await HostApi.instance.send(CreateBranchRequestType, {
-				branch,
-				uri: derivedState.textEditorUri
-			});
-			// FIXME handle error
-			if (result.error) {
-				console.log("ERROR FROM CREATE BRANCH: ", result.error);
-				setLoading(false);
-				return;
+		if (createBranch && branch.length > 0 && derivedState.textEditorUri) {
+			if (branch === currentBranch) {
+				// FIXME -- switch to the branch
+			} else {
+				const result = await HostApi.instance.send(CreateBranchRequestType, {
+					branch,
+					uri: derivedState.textEditorUri
+				});
+				// FIXME handle error
+				if (result.error) {
+					console.log("ERROR FROM CREATE BRANCH: ", result.error);
+					setLoading(false);
+					return;
+				}
 			}
 		}
 
@@ -284,9 +329,17 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			: "Create branch";
 
 	const makeMenuItem = (branch: string, isNew?: boolean) => {
-		const iconName = isNew ? "plus" : branch == currentBranch ? "arrow-right" : "blank";
+		const iconName = branch == currentBranch ? "arrow-right" : "blank";
 		return {
-			label: branch,
+			label: (
+				<span>
+					{branch == currentBranch ? "Use " : "Switch to "}
+					<span className="monospace highlight">
+						<b>{branch}</b>
+					</span>
+					{branch == currentBranch && <> (current)</>}
+				</span>
+			),
 			key: branch,
 			icon: <Icon name={iconName} />,
 			action: () => setBranch(branch)
@@ -296,19 +349,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const branchMenuItems = branches.map(branch => makeMenuItem(branch, false)) as any;
 	if (newBranch) {
 		branchMenuItems.unshift(
-			{
-				label: (
-					<span>
-						Create{" "}
-						<span className="monospace highlight">
-							<b>{newBranch}</b>
-						</span>
-					</span>
-				),
-				key: newBranch,
-				icon: <Icon name="plus" />,
-				action: () => setBranch(newBranch)
-			},
+			{ label: "-" },
 			{
 				label: "Edit Branch Name",
 				key: "edit",
@@ -321,7 +362,20 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 				icon: <Icon name="gear" />,
 				action: () => setConfigureBranchNames(true)
 			},
-			{ label: "-" }
+			{ label: "-" },
+			{
+				label: (
+					<span>
+						Create{" "}
+						<span className="monospace highlight">
+							<b>{newBranch}</b>
+						</span>
+					</span>
+				),
+				key: newBranch,
+				icon: <Icon name="plus" />,
+				action: () => setBranch(newBranch)
+			}
 		);
 	}
 
@@ -339,7 +393,9 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 					<div id="controls">
 						<StatusInput>
 							<div className="icon-selector">
-								<span onClick={handleClickEmojiButton}>{emojiPlain(icon)}</span>
+								<span className="selected-emoji" onClick={handleClickEmojiButton}>
+									{emojiPlain(icon)}
+								</span>
 								{emojiMenuOpen && (
 									<EmojiPicker addEmoji={selectEmoji} target={emojiMenuTarget} autoFocus={true} />
 								)}
@@ -348,7 +404,15 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								<CrossPostIssueContext.Provider
 									value={{
 										selectedAssignees: [],
-										setValues: values => setTheLabel(values.url, values.branch),
+										setValues: values =>
+											setTheLabel(
+												values.url,
+												replaceTicketTokens(
+													derivedState.branchTicketTemplate,
+													values.id,
+													values.description
+												)
+											),
 										setSelectedAssignees: () => {}
 									}}
 								>
@@ -374,21 +438,10 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								autoFocus={true}
 								type="text"
 								onChange={e => setTheLabel(e.target.value, makeBranchName(e.target.value))}
-								placeholder="Enter description, paste URL, or select issue"
+								placeholder="Enter description or select issue"
 							/>
 						</StatusInput>
 						<div style={{ paddingLeft: "6px" }}>
-							{showMoveIssueCheckbox && (
-								<StyledCheckbox
-									name="move-issue"
-									checked={moveIssue}
-									onChange={v => setMoveIssue(v)}
-								>
-									Move this card to{" "}
-									<InlineMenu items={[{ label: "foo", key: "bar" }]}>In Progress</InlineMenu>
-									on Trello
-								</StyledCheckbox>
-							)}
 							{showCreateBranchCheckbox && (
 								<StyledCheckbox
 									name="create-branch"
@@ -420,6 +473,17 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 											{branch}
 										</MonoMenu>
 									)}
+								</StyledCheckbox>
+							)}
+							{showMoveIssueCheckbox && (
+								<StyledCheckbox
+									name="move-issue"
+									checked={moveIssue}
+									onChange={v => setMoveIssue(v)}
+								>
+									Move this card to{" "}
+									<InlineMenu items={[{ label: "foo", key: "bar" }]}>In Progress</InlineMenu>
+									on Trello
 								</StyledCheckbox>
 							)}
 						</div>

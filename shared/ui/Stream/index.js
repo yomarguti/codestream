@@ -531,23 +531,24 @@ export class SimpleStream extends Component {
 
 	renderPlusMenu() {
 		const { plusMenuOpen, menuTarget } = this.state;
-		const { textEditorUri } = this.props;
+
+		if (!plusMenuOpen) return null;
 
 		const menuItems = [];
 		if (this.props.flowEnabled) {
 			menuItems.push(
 				{
-					icon: <Icon name="git-branch" />,
-					label: "Create Branch",
+					icon: <Icon name="ticket" />,
+					label: "Start Work",
 					action: () => this.setActivePanel(WebviewPanels.Status),
 					shortcut: ComposeKeybindings.branch,
-					key: "branch"
+					key: "work"
 				}
 				// { label: "-" }
 			);
 		}
 
-		if (canCreateCodemark(textEditorUri)) {
+		if (canCreateCodemark(this.props.textEditorUri)) {
 			menuItems.push(
 				{
 					icon: <Icon name="comment" />,
@@ -577,27 +578,27 @@ export class SimpleStream extends Component {
 			});
 		}
 
-		if (this.props.flowEnabled) {
-			menuItems.push(
-				// { label: "-" },
-				{
-					icon: <Icon name="git-merge" />,
-					label: "Create PR",
-					action: () => this.setActivePanel(WebviewPanels.Status),
-					shortcut: ComposeKeybindings.pr,
-					key: "merge"
-				}
-			);
-		}
+		// if (this.props.flowEnabled) {
+		// 	menuItems.push(
+		// 		// { label: "-" },
+		// 		{
+		// 			icon: <Icon name="pull-request" />,
+		// 			label: "Create PR",
+		// 			action: () => this.setActivePanel(WebviewPanels.Status),
+		// 			shortcut: ComposeKeybindings.pr,
+		// 			key: "merge"
+		// 		}
+		// 	);
+		// }
 
-		return plusMenuOpen ? (
+		return (
 			<Menu
 				items={menuItems}
 				target={menuTarget}
 				action={this.plusMenuAction}
 				align="dropdownRight"
 			/>
-		) : null;
+		);
 	}
 
 	addProvidersToMenu() {
@@ -858,7 +859,8 @@ export class SimpleStream extends Component {
 		const { configs, umis, postStreamPurpose, providerInfo = {} } = this.props;
 		let { activePanel } = this.props;
 		const { searchBarOpen, q } = this.state;
-		const isConfigurationPanel = activePanel && activePanel.match(/^configure\-(provider|enterprise)-/);
+		const isConfigurationPanel =
+			activePanel && activePanel.match(/^configure\-(provider|enterprise)-/);
 		// if we're conducting a review, we need the compose functionality of spatial view
 		if (this.props.currentReviewId) activePanel = WebviewPanels.CodemarksForFile;
 		if (!isConfigurationPanel && this.props.composeCodemarkActive) {
@@ -868,8 +870,7 @@ export class SimpleStream extends Component {
 		}
 		if (
 			!activePanel ||
-			(!Object.values(WebviewPanels).includes(activePanel) &&
-				!isConfigurationPanel)
+			(!Object.values(WebviewPanels).includes(activePanel) && !isConfigurationPanel)
 		) {
 			activePanel = WebviewPanels.Activity;
 		}

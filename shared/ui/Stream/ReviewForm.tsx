@@ -12,7 +12,8 @@ import {
 	GetUserInfoRequestType,
 	UpdateReviewResponse,
 	CodemarkPlus,
-	TelemetryRequestType
+	TelemetryRequestType,
+	UpdateTeamSettingsRequestType
 } from "@codestream/protocols/agent";
 import {
 	CSReview,
@@ -106,6 +107,7 @@ interface Props extends ConnectedProps {
 }
 
 interface ConnectedProps {
+	teamId: string;
 	teamMates: CSUser[];
 	teamMembers: CSUser[];
 	removedMemberIds: string[];
@@ -155,6 +157,7 @@ interface State {
 	notify: boolean;
 	isLoading: boolean;
 	isLoadingScm: boolean;
+	isReloadingScm: boolean;
 	reviewCreationError: string;
 	scmError: boolean;
 	scmErrorMessage?: string;
@@ -268,6 +271,7 @@ class ReviewForm extends React.Component<Props, State> {
 			: ({
 					isLoading: false,
 					isLoadingScm: false,
+					isReloadingScm: false,
 					scmError: false,
 					scmErrorMessage: "",
 					notify: false,
@@ -317,15 +321,17 @@ class ReviewForm extends React.Component<Props, State> {
 	private async getScmInfoForURI(uri?: string, callback?: Function) {
 		this.setState({ isLoadingScm: true });
 
+		let firstRepoUri: string = "";
 		const openRepos = await HostApi.instance.send(GetReposScmRequestType, {});
 		if (openRepos && openRepos.repositories) {
 			this.setState({ openRepos: openRepos.repositories });
 			if (!uri && openRepos.repositories.length) {
 				// use the uri of the first repo found
 				// if there isn't a file's uri
-				uri = openRepos.repositories[0].folder.uri;
+				uri = firstRepoUri = openRepos.repositories[0].folder.uri;
 			}
 		}
+		console.warn("********************************URI", uri);
 
 		if (uri) {
 			const scmInfo = await HostApi.instance.send(GetFileScmInfoRequestType, {
@@ -338,6 +344,11 @@ class ReviewForm extends React.Component<Props, State> {
 					this.handleRepoChange(uri, callback);
 				});
 			} else {
+				// if the URI we just updated to doesn't match a repo, for
+				// example if the user initiates a code review from a diff
+				// buffer, then try again but with the first URI from openRepos
+				if (uri !== firstRepoUri) return this.getScmInfoForURI(firstRepoUri, callback);
+
 				this.setState({ isLoadingScm: false, scmError: true });
 				if (callback && typeof callback === "function") callback();
 			}
@@ -420,6 +431,7 @@ class ReviewForm extends React.Component<Props, State> {
 	};
 
 	async handleRepoChange(repoUri?, callback?) {
+		this.setState({ isReloadingScm: true });
 		try {
 			const {
 				teamMates,
@@ -445,12 +457,17 @@ class ReviewForm extends React.Component<Props, State> {
 				});
 			} catch (e) {
 				logError(e);
-				this.setState({ isLoadingScm: false, scmError: true });
+				this.setState({ isLoadingScm: false, isReloadingScm: false, scmError: true });
 				return;
 			}
 
 			if (statusInfo.error) {
-				this.setState({ isLoadingScm: false, scmError: true, scmErrorMessage: statusInfo.error });
+				this.setState({
+					isLoadingScm: false,
+					isReloadingScm: false,
+					scmError: true,
+					scmErrorMessage: statusInfo.error
+				});
 				return;
 			}
 
@@ -482,7 +499,7 @@ class ReviewForm extends React.Component<Props, State> {
 						// if there is an error getting git info,
 						// don't bother attempting since it's an error
 
-						this.setState({ isLoadingScm: true });
+						this.setState({ isReloadingScm: true });
 						// handle the repo change, but don't pass the textEditorUri
 						// as we don't want to switch the repo the form is pointing
 						// to in these cases
@@ -612,10 +629,15 @@ class ReviewForm extends React.Component<Props, State> {
 					this.ignoredFiles.add(response.paths); // add the rules
 				}
 			} else {
-				this.setState({ isLoadingScm: false, scmError: true });
+				this.setState({ isLoadingScm: false, isReloadingScm: false, scmError: true });
 				return;
 			}
-			this.setState({ isLoadingScm: false, scmError: false, scmErrorMessage: "" });
+			this.setState({
+				isLoadingScm: false,
+				isReloadingScm: false,
+				scmError: false,
+				scmErrorMessage: ""
+			});
 		} catch (e) {
 			logError(e);
 		} finally {
@@ -652,6 +674,7 @@ class ReviewForm extends React.Component<Props, State> {
 	handleClickSubmit = async (event?: React.SyntheticEvent) => {
 		event && event.preventDefault();
 		if (this.state.isLoading) return;
+		if (this.state.isLoadingScm) return;
 		if (this.isFormInvalid()) return;
 		this.setState({ isLoading: true });
 
@@ -1052,10 +1075,21 @@ class ReviewForm extends React.Component<Props, State> {
 
 	goSetEmail = () => this.props.openPanel(WebviewPanels.ChangeEmail);
 
+	addBlameMap = async (author: string, assigneeId: string) => {
+		await HostApi.instance.send(UpdateTeamSettingsRequestType, {
+			teamId: this.props.teamId,
+			// we need to replace . with * to allow for the creation of deeply-nested
+			// team settings, since that's how they're stored in mongo
+			settings: { blameMap: { [author.replace(".", "*")]: assigneeId } }
+		});
+	};
+
 	render() {
 		const { repoStatus, currentUserScmEmail } = this.state;
 		const totalModifiedLines = repoStatus && repoStatus.scm ? repoStatus.scm.totalModifiedLines : 0;
-		const { currentUser, isAmending } = this.props;
+		const { currentUser, isAmending, blameMap = {} } = this.props;
+
+		const mappedMe = blameMap[(currentUserScmEmail || "").replace(".", "*")];
 
 		return (
 			<FeatureFlag flag="lightningCodeReviews">
@@ -1077,7 +1111,7 @@ class ReviewForm extends React.Component<Props, State> {
 					return (
 						<div className={cx({ "full-height-codemark-form": !isAmending })}>
 							<span className={cx({ "plane-container": !isAmending })}>
-								{currentUserScmEmail && currentUserScmEmail !== currentUser.email && (
+								{currentUserScmEmail && currentUserScmEmail !== currentUser.email && !mappedMe && (
 									<EmailWarning>
 										<Icon name="alert" className="conflict" />
 										<span style={{ paddingLeft: "10px" }}>
@@ -1086,7 +1120,11 @@ class ReviewForm extends React.Component<Props, State> {
 												<b>{currentUser.email}</b> vs. <b>{currentUserScmEmail}</b>), which impairs
 												CodeStream's ability to identify which commits are yours. Please{" "}
 												<a onClick={this.goSetEmail}>update your email address</a> so that they
-												match.
+												match, or{" "}
+												<a onClick={() => this.addBlameMap(currentUserScmEmail, currentUser.id)}>
+													claim code written by {currentUserScmEmail} as yours
+												</a>
+												.
 											</CSText>
 										</span>
 									</EmailWarning>
@@ -1413,7 +1451,7 @@ class ReviewForm extends React.Component<Props, State> {
 				{unsavedFilesInThisRepo.length > 0 && (
 					<div style={{ display: "flex", padding: "0 0 2px 2px" }}>
 						<Icon name="alert" muted />
-						<span style={{ paddingLeft: "10px" }}>
+						<span style={{ paddingLeft: "5px" }}>
 							You have unsaved changes. If you want to include any of those changes in this review,
 							save them first.
 						</span>
@@ -1595,7 +1633,7 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	renderChangedFiles() {
-		const { repoStatus, currentFile } = this.state;
+		const { repoStatus, currentFile, isLoadingScm, isReloadingScm } = this.state;
 		let scm;
 
 		let changedFiles = <></>;
@@ -1618,7 +1656,9 @@ class ReviewForm extends React.Component<Props, State> {
 					Changed Files
 					{this.props.isAmending && " - Since Last Update"}
 					&nbsp;&nbsp;
-					{this.state.isLoadingScm && <Icon className="spin" name="sync" />}
+					{(isLoadingScm || isReloadingScm) && (
+						<Icon style={{ margin: "-2px 0" }} className="spin" name="sync" />
+					)}
 				</div>
 				{changedFiles}
 			</div>
@@ -1861,7 +1901,10 @@ class ReviewForm extends React.Component<Props, State> {
 										is {isEditing ? "editing" : "requesting"} a code review
 										{repoMenuItems.length > 0 && <> in </>}
 									</span>
-									{repoMenuItems.length > 0 && (
+									{repoMenuItems.length === 1 && repoName && (
+										<span className="highlight">{repoName}</span>
+									)}
+									{repoMenuItems.length > 1 && (
 										<InlineMenu items={repoMenuItems}>{repoName || "select a repo"}</InlineMenu>
 									)}
 									{repoStatus && repoStatus.scm && repoStatus.scm.branch && (
@@ -2100,6 +2143,7 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		shouldShare:
 			safe(() => state.preferences[state.context.currentTeamId].shareCodemarkEnabled) || false,
 		channel,
+		teamId: team.id,
 		teamMates,
 		teamMembers,
 		removedMemberIds,

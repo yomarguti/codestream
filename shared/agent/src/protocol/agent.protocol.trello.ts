@@ -54,6 +54,7 @@ export interface TrelloCard {
 	url: string;
 	idList: string;
 	idOrganization: string;
+	shortLink?: string;
 }
 
 export interface TrelloFetchListsResponse {

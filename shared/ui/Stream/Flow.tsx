@@ -17,6 +17,10 @@ const Root = styled.div`
 
 	h3 {
 		margin: 30px 0 5px 0;
+		.icon {
+			margin-right: 5px;
+			vertical-align: -2px;
+		}
 	}
 	${Carousel} {
 		display: inline-block;
@@ -410,7 +414,7 @@ const VideoLink = styled.a`
 
 const CreateBranch = (
 	<Content>
-		<h2>Grab a Ticket &amp; Create a Branch</h2>
+		<h2>Start Work: Grab a Ticket &amp; Create a Branch</h2>
 		When you're working on a team, you're going to have a bunch of different features or ideas in
 		progress at any given time – some of which are ready to go, and others which are not. Branching
 		exists to help you manage this workflow.
@@ -420,19 +424,20 @@ const CreateBranch = (
 		new ideas. Changes you make on a branch don't affect the master branch, so you're free to
 		experiment and commit changes, safe in the knowledge that your branch won't be merged until it's
 		ready to be reviewed by someone you're collaborating with.
-		<h3>Exclusive</h3>
-		<Icon name="trello" /> CodeStream makes it easy to connect your tickets to your branches
-		(Kickstart)
+		<h3>Show Me How</h3>
+		[] Menu Item
+		<br />
+		[] Keybinding
 		<VideoLink href={"step.video"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
-			<span>How do I create a branch?</span>
+			<span>How-to: Grab a Ticket &amp; Create a Branch</span>
 		</VideoLink>
 	</Content>
 );
 
 const StartWritingCode = (
 	<Content>
-		<h2>Start Writing Code</h2>
+		<h2>Begin Writing Code</h2>
 		Once your branch has been created, it's time to start making changes. Whenever you add, edit, or
 		delete a file, you can share those changes with your teammates to get feedback.
 		<br />
@@ -590,7 +595,7 @@ const CommitAndPush = (
 
 const GrabATicket = (
 	<Content>
-		<h2>Grab a Ticket</h2>
+		<h2>Start Work: Grab a Ticket</h2>
 		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
 		labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
 		laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
@@ -721,7 +726,7 @@ export const Flow = (props: { active?: number }) => {
 			<p>
 				CodeStream Flow is an ultra-lightweight, discussion-based workflow that supports teams and
 				projects where code is reviewed and merged regularly. This guide explains how CodeStream can
-				make every step of the process easier for you and your team. Pick your flow:
+				make every step of the process easier for you and your team.
 			</p>
 			<Tabs>
 				<Tab onClick={clickFlow} active={flow === "adhoc"} id="adhoc">

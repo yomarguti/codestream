@@ -57,12 +57,16 @@ export default class Menu extends Component {
 		this.repositionIfNecessary("MOUNT");
 
 		this.disposables.push(
-			KeystrokeDispatcher.onKeyDown("Escape", event => {
-				// invoke the action callback for entire menu so it can removed
-				this.props.action(null);
-				event.stopPropagation();
-				if (this.props.focusOnSelect) this.props.focusOnSelect.focus();
-			}, { source: "Menu.js", level: -1 }),
+			KeystrokeDispatcher.onKeyDown(
+				"Escape",
+				event => {
+					// invoke the action callback for entire menu so it can removed
+					this.props.action(null);
+					event.stopPropagation();
+					if (this.props.focusOnSelect) this.props.focusOnSelect.focus();
+				},
+				{ source: "Menu.js", level: -1 }
+			)
 		);
 	}
 
@@ -143,8 +147,10 @@ export default class Menu extends Component {
 	repositionSubmenuIfNecessary() {
 		if (!this._div) return;
 		const $submenus = this._div.querySelectorAll("#active-submenu");
+		console.warn("GOT SUBS: ", $submenus);
 		$submenus.forEach(($submenu, index) => {
 			if ($submenu) {
+				console.warn("IN THE LOOP DOING: ", $submenu, " INDEX: ", index);
 				const parentLI = $submenu.closest("li");
 				const parentUL = $submenu.closest("ul");
 				const parentRect = parentLI.getBoundingClientRect();
@@ -155,12 +161,12 @@ export default class Menu extends Component {
 
 				if (index === 0) {
 					// the first submenu is relative to the viewport
-					let parentRectRightEdge = parentRect.right;
+					let parentRectRightEdge = parentRect.width + 20;
 					// line it up optimistically....
 					$submenu.style.left = parentRectRightEdge - 11 + "px";
 
 					// check to see if it's off the screen to the right
-					const tooFarRight = parentRectRightEdge + rect.width > window.innerWidth;
+					const tooFarRight = parentRect.right + rect.width > window.innerWidth;
 					if (tooFarRight) {
 						// if it is, first try flipping it to the left of the menu
 						// the 20px is for 10px padding times two
@@ -208,11 +214,9 @@ export default class Menu extends Component {
 			const modalRoot = document.getElementById("modal-root");
 			this.closeMenu();
 			modalRoot.removeChild(this.el);
-		}
-		catch (err) {
+		} catch (err) {
 			logWarning(err);
-		}
-		finally {
+		} finally {
 			KeystrokeDispatcher.levelDown();
 			this.disposables.forEach(d => d.dispose());
 		}

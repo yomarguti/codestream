@@ -396,13 +396,19 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 		if (card) {
 			const match = card.url.match(/\/c\/(.*?)\//);
 			const id = match ? match[1] : "unknown";
-			const branch = `feature/${id}`;
-			crossPostIssueContext.setValues({ url: card.url, branch });
+			const branch = `feature/trello-${id}`;
+			crossPostIssueContext.setValues({
+				url: card.url,
+				branch,
+				id: card.shortLink,
+				description: card.name
+			});
 		}
 		setMenuState({ open: false });
 	}, []);
 
 	const goMine = () => setMode("mine");
+	const goBoard = () => setMode("board");
 	const goSettings = () => setMode("settings");
 	const goDisconnect = () => {};
 	const noop = () => setMenuState({ open: false });
@@ -411,7 +417,15 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 
 	const settingsItems = [
 		{ label: "-" },
-		{ label: "Cards Assigned to Me", key: "mine", action: goMine },
+		{
+			label: "Assignment",
+			key: "mine",
+			submenu: [
+				{ label: "Cards Assigned to Me", key: "mine", checked: true },
+				{ label: "All Cards", key: "all", checked: false }
+			]
+		},
+		{ label: "Filter by Board or List", key: "board", action: goBoard },
 		{ label: "-" },
 		{ label: "Disconnect Trello", key: "disconnect", action: goDisconnect, icon: <Icon name="x" /> }
 	];
