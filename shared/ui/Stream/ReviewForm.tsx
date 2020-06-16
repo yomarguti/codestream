@@ -92,6 +92,7 @@ import { MetaCheckboxWithHoverIcon } from "./Review";
 // https://github.com/kaelzhang/node-ignore
 import ignore from "ignore";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { HeadshotName } from "../src/components/HeadshotName";
 
 interface Props extends ConnectedProps {
 	editingReview?: CSReview;
@@ -139,6 +140,7 @@ interface ConnectedProps {
 	inviteUsersOnTheFly: boolean;
 	newPostEntryPoint?: string;
 	blameMap?: { [email: string]: string };
+	isCurrentUserAdmin: boolean;
 }
 
 interface State {
@@ -530,7 +532,7 @@ class ReviewForm extends React.Component<Props, State> {
 			if (statusInfo.scm) {
 				const authorsBlameData = {};
 				statusInfo.scm.authors.map(author => {
-					const mappedId = blameMap[author.email.replace(".", "*")];
+					const mappedId = blameMap[author.email.replace(/\./g, "*")];
 					const mappedPerson = mappedId && this.props.teamMembers.find(t => t.id === mappedId);
 					if (mappedPerson) {
 						authorsBlameData[mappedPerson.email] = author;
@@ -1080,8 +1082,10 @@ class ReviewForm extends React.Component<Props, State> {
 			teamId: this.props.teamId,
 			// we need to replace . with * to allow for the creation of deeply-nested
 			// team settings, since that's how they're stored in mongo
-			settings: { blameMap: { [author.replace(".", "*")]: assigneeId } }
+			settings: { blameMap: { [author.replace(/\./g, "*")]: assigneeId } }
 		});
+		// FIXME
+		setTimeout(() => this.handleRepoChange(), 2000);
 	};
 
 	render() {
@@ -1089,7 +1093,7 @@ class ReviewForm extends React.Component<Props, State> {
 		const totalModifiedLines = repoStatus && repoStatus.scm ? repoStatus.scm.totalModifiedLines : 0;
 		const { currentUser, isAmending, blameMap = {} } = this.props;
 
-		const mappedMe = blameMap[(currentUserScmEmail || "").replace(".", "*")];
+		const mappedMe = blameMap[(currentUserScmEmail || "").replace(/\./g, "*")];
 
 		return (
 			<FeatureFlag flag="lightningCodeReviews">
@@ -1786,12 +1790,13 @@ class ReviewForm extends React.Component<Props, State> {
 		});
 	};
 
-	makePerson(email) {
+	makePerson(email: string) {
 		const person = this.props.teamMembers.find(p => p.email === email);
 		if (person) return person;
 		return {
 			email,
-			username: email.replace(/@.*/, "")
+			username: email.replace(/@.*/, ""),
+			isRegistered: false
 		};
 	}
 
@@ -1959,18 +1964,34 @@ class ReviewForm extends React.Component<Props, State> {
 								Reviewers {reviewerEmails.length > 1 && this.renderMultiReviewSetting()}
 							</div>
 							{reviewerEmails.map(email => {
-								const menu = (
-									<HeadshotMenu
-										person={this.makePerson(email)}
-										menuItems={[
-											{ label: "-" },
-											{
-												label: "Remove from Review",
-												action: () => this.removeReviewer(email)
-											}
-										]}
-									/>
-								);
+								const person = this.makePerson(email);
+								console.warn("PERSON IS ******************", person);
+								const menuItems = [
+									{ label: "-" },
+									{
+										label: "Remove from Review",
+										action: () => this.removeReviewer(email)
+									}
+								] as any;
+								if (!person.isRegistered && this.props.isCurrentUserAdmin) {
+									menuItems.push({
+										label: (
+											<span>
+												Assign all code from <span className="highlight">{email}</span> to{" "}
+											</span>
+										),
+										submenu: this.props.teamMembers
+											.filter(member => member.isRegistered)
+											.map(member => {
+												return {
+													label: <HeadshotName person={member} />,
+													key: member.id,
+													action: () => this.addBlameMap(email, member.id)
+												};
+											})
+									});
+								}
+								const menu = <HeadshotMenu person={person} menuItems={menuItems} />;
 								// # of times you stomped on their code
 								if (coAuthorLabels[email]) {
 									return (
@@ -2136,6 +2157,9 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 	const inviteUsersOnTheFly =
 		isFeatureEnabled(state, "emailSupport") && isFeatureEnabled(state, "inviteUsersOnTheFly");
 
+	const adminIds = team.adminIds || [];
+	const isCurrentUserAdmin = adminIds.includes(session.userId!);
+
 	return {
 		unsavedFiles: unsavedFiles,
 		reviewsByCommit,
@@ -2158,7 +2182,8 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		changeRequests,
 		inviteUsersOnTheFly,
 		newPostEntryPoint: context.newPostEntryPoint,
-		blameMap
+		blameMap,
+		isCurrentUserAdmin
 	};
 };
 
