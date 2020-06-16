@@ -392,8 +392,7 @@ const Key = styled.span`
 	white-space: nowrap;
 `;
 
-const VideoLink = styled.a`
-	display: block;
+export const VideoLink = styled.a`
 	margin-top: 30px;
 	display: flex;
 	align-items: center;

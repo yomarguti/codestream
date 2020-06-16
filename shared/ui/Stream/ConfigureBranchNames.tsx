@@ -112,7 +112,8 @@ export const ConfigureBranchNames = (props: { onClose: Function }) => {
 						</div>
 						<div style={{ height: "20px" }} />
 						<ButtonRow>
-							<Button onClick={save}>Save</Button>
+							<Button onClick={save}>Save Branch Templates</Button>
+							<p>This is a team setting.</p>
 						</ButtonRow>
 					</fieldset>
 				</form>

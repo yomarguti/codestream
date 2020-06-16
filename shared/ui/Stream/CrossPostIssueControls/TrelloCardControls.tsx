@@ -410,7 +410,7 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 	const goMine = () => setMode("mine");
 	const goBoard = () => setMode("board");
 	const goSettings = () => setMode("settings");
-	const goDisconnect = () => {};
+	const goDisconnect = () => dispatch(disconnectProvider(props.provider.id, "Status Panel"));
 	const noop = () => setMenuState({ open: false });
 
 	const crossPostIssueContext = React.useContext(CrossPostIssueContext);

@@ -91,11 +91,12 @@ export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProvider
 			);
 		}
 
-		return {
-			cards: request.organizationId
-				? response.body.filter(c => c.idOrganization === request.organizationId)
-				: response.body
-		};
+		const cards = request.organizationId
+			? response.body.filter(c => c.idOrganization === request.organizationId)
+			: response.body;
+		cards.forEach(card => (card.modifiedAt = new Date(card.dateLastActivity).getTime()));
+		cards.sort((a, b) => b.modifiedAt - a.modifiedAt);
+		return { cards };
 	}
 
 	@log()

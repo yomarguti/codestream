@@ -55,6 +55,8 @@ export interface TrelloCard {
 	idList: string;
 	idOrganization: string;
 	shortLink?: string;
+	dateLastActivity: string;
+	modifiedAt: number;
 }
 
 export interface TrelloFetchListsResponse {

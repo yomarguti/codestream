@@ -20,6 +20,7 @@ import { CrossPostIssueContext } from "./CodemarkForm";
 import IssueDropdown from "./CrossPostIssueControls/IssueDropdown";
 import { CSText } from "../src/components/CSText";
 import { ConfigureBranchNames } from "./ConfigureBranchNames";
+import { VideoLink } from "./Flow";
 const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.json");
 
 const StyledCheckbox = styled(Checkbox)`
@@ -189,35 +190,37 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		}
 	};
 
-	const replaceDescriptionTokens = (template, description) => {
+	const dateToken = () => {
 		const now = new Date();
-		const date = now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
+		const year = now.getFullYear();
+		const month = now.getMonth() + 1;
+		const date = now.getDate();
+		return `${year}-${month > 9 ? month : "0" + month}-${date > 9 ? date : "0" + date}`;
+	};
+
+	const replaceDescriptionTokens = (template: string, description: string = "") => {
 		return template
 			.replace(/\{id\}/g, "")
 			.replace(/\{username\}/g, derivedState.currentUserName)
 			.replace(/\{team\}/g, derivedState.teamName)
-			.replace(/\{date\}/g, date)
-			.replace(/\{description\}/g, description)
+			.replace(/\{date\}/g, dateToken())
+			.replace(/\{description\}/g, description.toLowerCase())
 			.replace(/[\s]+/g, "-")
-			.toLowerCase()
 			.substr(0, derivedState.branchMaxLength);
 	};
 
-	const replaceTicketTokens = (template, id, description) => {
-		const now = new Date();
-		const date = now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
+	const replaceTicketTokens = (template: string, id: string, description: string = "") => {
 		return template
 			.replace(/\{id\}/g, id)
 			.replace(/\{username\}/g, derivedState.currentUserName)
 			.replace(/\{team\}/g, derivedState.teamName)
-			.replace(/\{date\}/g, date)
-			.replace(/\{description\}/g, description)
+			.replace(/\{date\}/g, dateToken())
+			.replace(/\{description\}/g, description.toLowerCase())
 			.replace(/[\s]+/g, "-")
-			.toLowerCase()
 			.substr(0, derivedState.branchMaxLength);
 	};
 
-	const makeBranchName = value =>
+	const makeBranchName = (value: string) =>
 		replaceDescriptionTokens(derivedState.branchDescriptionTemplate, value);
 
 	const getBranches = async () => {
@@ -251,7 +254,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		HostApi.instance.track("Status Set", { Value: status });
 
 		if (createBranch && branch.length > 0 && derivedState.textEditorUri) {
-			if (branch === currentBranch) {
+			if (branches.includes(branch)) {
 				// FIXME -- switch to the branch
 			} else {
 				const result = await HostApi.instance.send(CreateBranchRequestType, {
@@ -291,7 +294,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		setLoading(false);
 	};
 
-	const set = (icon, label) => {
+	const set = (icon: string, label: string) => {
 		setIcon(icon);
 		setLabel(label);
 	};
@@ -500,6 +503,14 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								</Button>
 							)}
 						</ButtonRow>
+						<div style={{ marginTop: "20px", textAlign: "center" }}>
+							<div style={{ display: "inline-block" }}>
+								<VideoLink href={"step.video"}>
+									<img src="https://i.imgur.com/9IKqpzf.png" />
+									<span>How do I grab a ticket &amp; create a branch?</span>
+								</VideoLink>
+							</div>
+						</div>
 					</div>
 				</fieldset>
 			</form>
