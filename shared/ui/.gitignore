@@ -1,6 +1,5 @@
 node_modules
 dist
 protocols
-.idea
 .vscode
 .DS_Store

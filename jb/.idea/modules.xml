@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../codestream-components/codestream-components.iml" filepath="$PROJECT_DIR$/../codestream-components/codestream-components.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../codestream-lsp-agent/codestream-lsp-agent.iml" filepath="$PROJECT_DIR$/../codestream-lsp-agent/codestream-lsp-agent.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../shared/agent/agent.iml" filepath="$PROJECT_DIR$/../shared/agent/agent.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../shared/ui/ui.iml" filepath="$PROJECT_DIR$/../shared/ui/ui.iml" />
     </modules>
   </component>
 </project>
