@@ -264,96 +264,116 @@ export function GettingStarted(props: GettingStartedProps) {
 								</Tab>
 
 								<Tab onClick={handleClickTab} active={active === "1"} id="1">
-									CodeStream Flow
+									The Basics
+								</Tab>
+								<Tab onClick={handleClickTab} active={active === "2"} id="2">
+									Trunk Flow
+								</Tab>
+								<Tab onClick={handleClickTab} active={active === "3"} id="3">
+									Branch Flow
 								</Tab>
 							</Tabs>
 						) : (
 							<h2>Getting Started</h2>
 						)}
 
-						<Content active={active === "0"}>
-							<b>Let’s get you set up.</b> Follow the steps below to start coding more efficiently
-							with your team.
-							<Status>
-								<StatusCount>
-									{derivedState.completed.length} of {STEPS.length}
-								</StatusCount>{" "}
-								complete
-							</Status>
-							{derivedState.todo.map((step, index) => {
-								return (
-									<Step
-										key={step.id}
-										onMouseEnter={() => pulse(step.pulse)}
-										onMouseLeave={() => unPulse(step.pulse)}
-										onClick={e => handleClick(e, step)}
-									>
-										<StepNumber>{index + 1}</StepNumber>
-										<StepText>
-											<StepTitle>{step.title}</StepTitle>&nbsp;
-											<StepSubtext>{step.subtext}</StepSubtext>
-										</StepText>
-										<Tooltip
-											title="Watch the how-to video"
-											placement="bottomRight"
-											delay={1}
-											align={{ offset: [13, 0] }}
+						{active === "0" && (
+							<Content active>
+								<b>Let’s get you set up.</b> Follow the steps below to start coding more efficiently
+								with your team.
+								<Status>
+									<StatusCount>
+										{derivedState.completed.length} of {STEPS.length}
+									</StatusCount>{" "}
+									complete
+								</Status>
+								{derivedState.todo.map((step, index) => {
+									return (
+										<Step
+											key={step.id}
+											onMouseEnter={() => pulse(step.pulse)}
+											onMouseLeave={() => unPulse(step.pulse)}
+											onClick={e => handleClick(e, step)}
 										>
-											<a href={step.video}>
-												<YouTubeImg src="https://i.imgur.com/9IKqpzf.png" />
-											</a>
-										</Tooltip>
-									</Step>
-								);
-							})}
-							{derivedState.completed.length > 0 && <HR />}
-							{derivedState.completed.map(step => {
-								return (
-									<Step
-										key={step.id}
-										onMouseEnter={() => pulse(step.pulse)}
-										onMouseLeave={() => unPulse(step.pulse)}
-										onClick={e => handleClick(e, step)}
+											<StepNumber>{index + 1}</StepNumber>
+											<StepText>
+												<StepTitle>{step.title}</StepTitle>&nbsp;
+												<StepSubtext>{step.subtext}</StepSubtext>
+											</StepText>
+											<Tooltip
+												title="Watch the how-to video"
+												placement="bottomRight"
+												delay={1}
+												align={{ offset: [13, 0] }}
+											>
+												<a href={step.video}>
+													<YouTubeImg src="https://i.imgur.com/9IKqpzf.png" />
+												</a>
+											</Tooltip>
+										</Step>
+									);
+								})}
+								{derivedState.completed.length > 0 && <HR />}
+								{derivedState.completed.map(step => {
+									return (
+										<Step
+											key={step.id}
+											onMouseEnter={() => pulse(step.pulse)}
+											onMouseLeave={() => unPulse(step.pulse)}
+											onClick={e => handleClick(e, step)}
+										>
+											<StepNumberDone>
+												<b>{"\u2714"}</b>
+											</StepNumberDone>
+											<StepText>
+												<StepTitle>{step.done}</StepTitle>
+											</StepText>
+											<Tooltip title="Watch the how-to video" placement="bottomRight" delay={1}>
+												<a href={step.video}>
+													<YouTubeImg src="https://i.imgur.com/9IKqpzf.png" />
+												</a>
+											</Tooltip>
+										</Step>
+									);
+								})}
+								<HR />
+								<SpreadButtons>
+									<Button
+										variant="secondary"
+										size="compact"
+										onClick={() => dispatch(setUserPreference(["skipGettingStarted"], true))}
 									>
-										<StepNumberDone>
-											<b>{"\u2714"}</b>
-										</StepNumberDone>
-										<StepText>
-											<StepTitle>{step.done}</StepTitle>
-										</StepText>
-										<Tooltip title="Watch the how-to video" placement="bottomRight" delay={1}>
-											<a href={step.video}>
-												<YouTubeImg src="https://i.imgur.com/9IKqpzf.png" />
-											</a>
-										</Tooltip>
-									</Step>
-								);
-							})}
-							<HR />
-							<SpreadButtons>
-								<Button
-									variant="secondary"
-									size="compact"
-									onClick={() => dispatch(setUserPreference(["skipGettingStarted"], true))}
-								>
-									Mark all as done
-								</Button>
-								<Button
-									variant="secondary"
-									size="compact"
-									onClick={() =>
-										HostApi.instance.send(OpenUrlRequestType, {
-											url: "https://www.codestream.com/video-library"
-										})
-									}
-								>
-									Video library
-								</Button>
-							</SpreadButtons>
-						</Content>
-						<Content active={active === "1"}>
-							<Flow />
-						</Content>
+										Mark all as done
+									</Button>
+									<Button
+										variant="secondary"
+										size="compact"
+										onClick={() =>
+											HostApi.instance.send(OpenUrlRequestType, {
+												url: "https://www.codestream.com/video-library"
+											})
+										}
+									>
+										Video library
+									</Button>
+								</SpreadButtons>
+							</Content>
+						)}
+						{active === "1" && (
+							<Content active>
+								<Flow flow="adhoc" />
+							</Content>
+						)}
+						{active === "2" && (
+							<Content active>
+								<Flow flow="simplified" />
+							</Content>
+						)}
+						{active === "3" && (
+							<Content active>
+								<Flow flow="standard" />
+							</Content>
+						)}
 					</Root>
 				</div>
 			</ScrollBox>

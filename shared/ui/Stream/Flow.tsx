@@ -704,58 +704,62 @@ const FLOW_CONTENT = {
 	]
 };
 
-export const Flow = (props: { active?: number }) => {
-	const [flow, setFlow] = React.useState("standard");
+export const Flow = (props: { flow: "adhoc" | "simplified" | "standard"; active?: number }) => {
+	// const [flow, setFlow] = React.useState("standard");
 	const [active, setActive] = React.useState(props.active || 0);
 	const [rotate, setRotate] = React.useState(false);
 	const rootRef = React.useRef(null);
 	const rootDimensions = useRect(rootRef, []);
 	const scale = Math.min(rootDimensions.width / 600, 1);
 
+	const { flow } = props;
+
 	const clickAction = index => {
 		setActive(index);
 		if (flow === "simplified" && index === 3) setRotate(!rotate);
 		if (flow === "standard" && index === 3) setRotate(!rotate);
-		if (flow === "rigorous" && index === 4) setRotate(!rotate);
+		// if (flow === "rigorous" && index === 4) setRotate(!rotate);
 	};
 
+	const setFlow = () => {};
 	const clickFlow = e => {
-		setFlow(e.target.id);
+		// setFlow(e.target.id);
 		setActive(0);
 	};
 
 	const flowDescriptions = {
-		adhoc: <Desc>Examples of ad-hoc CodeStream use cases</Desc>,
-		simplified: <Desc>Rapid, trunk-based development flow</Desc>,
-		standard: <Desc>Branch-based flow with frequent code review</Desc>,
+		adhoc: (
+			<Desc>
+				Examples of ad-hoc CodeStream use cases that can help in all stages of product development.
+			</Desc>
+		),
+		simplified: (
+			<Desc>
+				Ultra-lightweight, discussion-driven, trunk-based workflow with frequent code review. Best
+				for smaller teams, or teams where work is divided into very small chunks.
+			</Desc>
+		),
+		standard: (
+			<Desc>
+				Lightweight, discussion-driven, branch-based workflow with frequent code review. Best for
+				larger teams, or teams with longer-lived feature branches.
+			</Desc>
+		),
 		rigorous: (
 			<Desc>
-				Branch-based flow with frequent pushes, frequent code review, and final signoff on GitHub
+				Branch-based flow with frequent pushes, frequent code review, and final signoff on GitHub.
 			</Desc>
 		)
 	};
 
+	// 	<p>
+	// 	CodeStream Flow is an ultra-lightweight, discussion-based workflow that supports teams and
+	// 	projects where code is reviewed and merged regularly. This guide explains how CodeStream can
+	// 	make every step of the process easier for you and your team.
+	// </p>
+
 	return (
 		<Root ref={rootRef}>
-			<p>
-				CodeStream Flow is an ultra-lightweight, discussion-based workflow that supports teams and
-				projects where code is reviewed and merged regularly. This guide explains how CodeStream can
-				make every step of the process easier for you and your team.
-			</p>
-			<Tabs>
-				<Tab onClick={clickFlow} active={flow === "adhoc"} id="adhoc">
-					Ad-hoc
-				</Tab>
-				<Tab onClick={clickFlow} active={flow === "simplified"} id="simplified">
-					Simplified
-				</Tab>
-				<Tab onClick={clickFlow} active={flow === "standard"} id="standard">
-					Standard
-				</Tab>
-				<Tab onClick={clickFlow} active={flow === "rigorous"} id="rigorous">
-					Rigorous
-				</Tab>
-			</Tabs>
 			{flowDescriptions[flow]}
 			<div
 				style={{
@@ -867,7 +871,7 @@ export const Flow = (props: { active?: number }) => {
 							<MergeLineDown />
 						</Contents>
 					)}
-					{flow === "rigorous" && (
+					{false && (
 						<Contents>
 							<GitTimeline />
 							<BranchLineDown />
