@@ -411,6 +411,10 @@ export const VideoLink = styled.a`
 	}
 `;
 
+const Desc = styled.div`
+	margin: 0 0 20px 0;
+`;
+
 const CreateBranch = (
 	<Content>
 		<h2>Start Work: Grab a Ticket &amp; Create a Branch</h2>
@@ -720,6 +724,17 @@ export const Flow = (props: { active?: number }) => {
 		setActive(0);
 	};
 
+	const flowDescriptions = {
+		adhoc: <Desc>Examples of ad-hoc CodeStream use cases</Desc>,
+		simplified: <Desc>Rapid, trunk-based development flow</Desc>,
+		standard: <Desc>Branch-based flow with frequent code review</Desc>,
+		rigorous: (
+			<Desc>
+				Branch-based flow with frequent pushes, frequent code review, and final signoff on GitHub
+			</Desc>
+		)
+	};
+
 	return (
 		<Root ref={rootRef}>
 			<p>
@@ -741,6 +756,7 @@ export const Flow = (props: { active?: number }) => {
 					Rigorous
 				</Tab>
 			</Tabs>
+			{flowDescriptions[flow]}
 			<div
 				style={{
 					transform: `scale(${scale})`,
