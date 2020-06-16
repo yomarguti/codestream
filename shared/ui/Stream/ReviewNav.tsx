@@ -319,6 +319,8 @@ export function ReviewNav(props: Props) {
 		setIsAmending(true);
 	};
 
+	const pr = () => {};
+
 	const statusButtons = () => {
 		if (!review) return null;
 		const { approvedByMe, isMine } = derivedState;
@@ -424,6 +426,14 @@ export function ReviewNav(props: Props) {
 			case "rejected":
 				return (
 					<div className={hoverButton == "actions" ? "btn-group pulse" : "btn-group"}>
+						{isMine && review.status === "approved" && (
+							<Tooltip title="Create a PR" placement="bottom">
+								<Button onClick={pr}>
+									<Icon className="narrow-icon" name="pull-request" />
+									<span className="wide-text">Create PR</span>
+								</Button>
+							</Tooltip>
+						)}
 						{isMine && (
 							<Tooltip title="Reopen & Amend Review (add code)" placement="bottom">
 								<Button onClick={amend}>
