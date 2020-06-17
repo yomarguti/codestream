@@ -308,8 +308,8 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		setLabel(label);
 	};
 
-	const clearable = same && label && label.length > 0;
-	const saveable = !same;
+	// const clearable = same && label && label.length > 0;
+	// const saveable = !same;
 
 	const handleClickEmojiButton = (event: React.SyntheticEvent) => {
 		event.persist();
@@ -324,10 +324,10 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		}
 	};
 
-	const goSettings = () => {};
-
 	const saveLabel =
-		!branch || branch == currentBranch || !createBranch
+		!label || label.length === 0
+			? "Clear Status"
+			: !branch || branch == currentBranch || !createBranch
 			? "Save Status"
 			: branches.includes(branch)
 			? "Switch Branch & Save Status"
@@ -435,6 +435,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 									className="clear"
 									onClick={() => {
 										set(":desktop_computer:", "");
+										setScmError("");
 										const input = document.getElementById("status-input");
 										if (input) input.focus();
 									}}
@@ -502,16 +503,9 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 						<div style={{ height: "5px" }}></div>
 						{scmError && <SCMError>{scmError}</SCMError>}
 						<ButtonRow>
-							{clearable && (
-								<Button onClick={clear} isLoading={loading}>
-									Clear Status
-								</Button>
-							)}
-							{saveable && (
-								<Button onClick={save} isLoading={loading}>
-									{saveLabel}
-								</Button>
-							)}
+							<Button onClick={save} isLoading={loading}>
+								{saveLabel}
+							</Button>
 						</ButtonRow>
 						<div style={{ marginTop: "20px", textAlign: "center" }}>
 							<div style={{ display: "inline-block" }}>

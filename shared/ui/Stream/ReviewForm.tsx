@@ -333,7 +333,6 @@ class ReviewForm extends React.Component<Props, State> {
 				uri = firstRepoUri = openRepos.repositories[0].folder.uri;
 			}
 		}
-		console.warn("********************************URI", uri);
 
 		if (uri) {
 			const scmInfo = await HostApi.instance.send(GetFileScmInfoRequestType, {

@@ -75,7 +75,8 @@ export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProvider
 			response = await this.get<TrelloCard[]>(
 				`/members/${this._trelloUserId}/cards?${qs.stringify({
 					cards: "open",
-					fields: "id,name,desc,url,idList,idOrganization,dateLastActivity,shortLink,idShort",
+					fields:
+						"id,name,desc,url,idList,idBoard,idOrganization,dateLastActivity,shortLink,idShort",
 					key: this.apiKey,
 					token: this.accessToken
 				})}`
@@ -84,7 +85,8 @@ export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProvider
 			response = await this.get<TrelloCard[]>(
 				`/lists/${request.listId}/cards?${qs.stringify({
 					cards: "open",
-					fields: "id,name,desc,url,idList,idOrganization,dateLastActivity,shortLink,idShort",
+					fields:
+						"id,name,desc,url,idList,idBoard,idOrganization,dateLastActivity,shortLink,idShort",
 					key: this.apiKey,
 					token: this.accessToken
 				})}`

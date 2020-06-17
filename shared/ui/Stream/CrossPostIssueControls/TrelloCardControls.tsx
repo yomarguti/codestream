@@ -16,7 +16,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { CodeStreamState } from "@codestream/webview/store";
 import { getIntegrationData } from "@codestream/webview/store/activeIntegrations/reducer";
 import { updateForProvider } from "@codestream/webview/store/activeIntegrations/actions";
-import { emptyArray, mapFilter } from "@codestream/webview/utils";
+import { emptyArray, mapFilter, keyFilter } from "@codestream/webview/utils";
 import { HostApi } from "@codestream/webview/webview-api";
 import { TrelloIntegrationData } from "@codestream/webview/store/activeIntegrations/types";
 import { setIssueProvider } from "@codestream/webview/store/context/actions";
@@ -395,11 +395,8 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 	const selectCard = React.useCallback((card?: TrelloCard) => {
 		if (card) {
 			const match = card.url.match(/\/c\/(.*?)\//);
-			const id = match ? match[1] : "unknown";
-			const branch = `feature/trello-${id}`;
 			crossPostIssueContext.setValues({
 				url: card.url,
-				branch,
 				id: card.shortLink,
 				description: card.name
 			});
@@ -415,6 +412,23 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 
 	const crossPostIssueContext = React.useContext(CrossPostIssueContext);
 
+	const filterBoardItems = () => {
+		const { filterBoards = {} } = data;
+		const items = [] as any;
+		if (!data.boards) return items;
+		data.boards.forEach(board => {
+			const b = board;
+			const checked = !!filterBoards[board.id];
+			items.push({
+				label: board.name,
+				key: board.id,
+				checked,
+				action: () => updateDataState({ filterBoards: { ...filterBoards, [b.id]: !checked } })
+			});
+		});
+		return items;
+	};
+
 	const settingsItems = [
 		{ label: "-" },
 		{
@@ -425,21 +439,27 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 				{ label: "All Cards", key: "all", checked: false }
 			]
 		},
-		{ label: "Filter by Board or List", key: "board", action: goBoard },
+		{ label: "Filter by Board", key: "board", submenu: filterBoardItems() },
 		{ label: "-" },
 		{ label: "Disconnect Trello", key: "disconnect", action: goDisconnect, icon: <Icon name="x" /> }
 	];
 
-	const cardItems = data.cards
-		? data.cards.map(card => ({
+	const cardItems = React.useMemo(() => {
+		if (!data.cards) return [];
+		const isFiltering = keyFilter(data.filterBoards || {}).length > 0;
+
+		const items = data.cards
+			.filter(card => !isFiltering || data.filterBoards[card.idBoard])
+			.map(card => ({
 				label: card.name,
 				searchLabel: card.name,
 				key: card.id,
 				action: card
-		  }))
-		: [];
-	// @ts-ignore
-	cardItems.unshift({ label: "-" }, { type: "search" });
+			}));
+		// @ts-ignore
+		items.unshift({ label: "-" }, { type: "search" });
+		return items;
+	}, [data.cards, data.filterBoards]);
 
 	return (
 		<>

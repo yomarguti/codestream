@@ -53,6 +53,7 @@ export interface TrelloCard {
 	desc: string;
 	url: string;
 	idList: string;
+	idBoard: string;
 	idOrganization: string;
 	shortLink?: string;
 	dateLastActivity: string;
