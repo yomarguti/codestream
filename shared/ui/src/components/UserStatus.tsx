@@ -7,7 +7,7 @@ import { MarkdownText } from "@codestream/webview/Stream/MarkdownText";
 
 const Root = styled.span`
 	padding-left: 10px;
-	display: flex;
+	display: inline-flex;
 	align-items: top;
 	.label {
 		color: var(--text-color-subtle);
@@ -34,7 +34,7 @@ const formatTheDate = time => {
 	return date.toLocaleString();
 };
 
-export function UserStatus(props: { user: CSUser }) {
+export function UserStatus(props: { user: CSUser; className?: string }) {
 	const { status } = props.user;
 	if (!status) return null;
 	if (!status.label && !status.icon) return null;
@@ -52,7 +52,7 @@ export function UserStatus(props: { user: CSUser }) {
 
 	return (
 		<Tooltip title={tip} placement="bottom">
-			<Root className="user-status">
+			<Root className={props.className}>
 				<span className="emoji">{emojiPlain(status.icon)}</span>
 				<span className="label">
 					<MarkdownText text={status.label} excludeParagraphWrap={true}></MarkdownText>

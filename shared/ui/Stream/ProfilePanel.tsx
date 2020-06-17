@@ -20,6 +20,7 @@ import { getCodeCollisions } from "../store/users/reducer";
 import { ChangesetFile } from "./Review/ChangesetFile";
 import { UL } from "./TeamPanel";
 import CancelButton from "./CancelButton";
+import { UserStatus } from "../src/components/UserStatus";
 
 const Root = styled.div`
 	.edit-headshot {
@@ -51,9 +52,11 @@ const Root = styled.div`
 		}
 	}
 `;
+
 const Value = styled.span`
 	padding-right: 10px;
 `;
+
 const Row = styled.div`
 	margin-bottom: 15px;
 	.icon {
@@ -70,6 +73,11 @@ const Row = styled.div`
 		color: var(--text-color) !important;
 		padding: 0 !important;
 	}
+`;
+
+const StyledUserStatus = styled(UserStatus)`
+	padding-left: 0;
+	padding-right: 10px;
 `;
 
 const RowIcon = ({ name, title, onClick }) => {
@@ -128,6 +136,7 @@ export const ProfilePanel = () => {
 	const editUsername = () => dispatch(openPanel(WebviewPanels.ChangeUsername));
 	const editEmail = () => dispatch(openPanel(WebviewPanels.ChangeEmail));
 	const editAvatar = () => dispatch(openPanel(WebviewPanels.ChangeAvatar));
+	const editStatus = () => dispatch(openPanel(WebviewPanels.Status));
 	const editFullName = () => dispatch(openPanel(WebviewPanels.ChangeFullName));
 	const editPhoneNumber = () => dispatch(openPanel(WebviewPanels.ChangePhoneNumber));
 	const editWorksOn = () => dispatch(openPanel(WebviewPanels.ChangeWorksOn));
@@ -233,6 +242,13 @@ export const ProfilePanel = () => {
 							<Headshot person={person} size={128} />
 							{isMe && <RowIcon name="pencil" title="Edit Profile Photo" onClick={editAvatar} />}
 						</div>
+						{person.status && person.status.label && (
+							<Row>
+								<MetaLabel>Status</MetaLabel>
+								<StyledUserStatus user={person} />
+								{isMe && <RowIcon name="pencil" title="Edit Status" onClick={editStatus} />}
+							</Row>
+						)}
 						<Row>
 							<MetaLabel>Username</MetaLabel>
 							<Value>@{person.username}</Value>

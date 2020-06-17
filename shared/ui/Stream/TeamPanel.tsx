@@ -66,7 +66,7 @@ export const UL = styled.ul`
 		overflow: hidden;
 		text-overflow: ellipsis;
 		.icon:not(.chevron-down) {
-			top: 2px !important;
+			// top: 2px !important;
 			margin-right: 5px;
 		}
 	}
@@ -95,6 +95,10 @@ const MapRow = styled.div`
 		flex-grow: 1;
 		padding: 3px 10px;
 	}
+`;
+
+const StyledUserStatus = styled(UserStatus)`
+	padding-left: 46px;
 `;
 
 interface Props extends ConnectedProps {}
@@ -795,7 +799,7 @@ class TeamPanel extends React.Component<Props, State> {
 												/>
 											)}
 										</li>
-										<UserStatus user={user} />
+										<StyledUserStatus user={user} />
 										{this.renderModifiedRepos(user)}
 									</>
 								))}
