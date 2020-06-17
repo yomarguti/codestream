@@ -63,6 +63,15 @@ export const NewReviewNotificationType = new NotificationType<NewReviewNotificat
 	`${IpcRoutes.Webview}/review/new`
 );
 
+export interface StartWorkNotification {
+	uri?: string;
+	source?: string;
+}
+
+export const StartWorkNotificationType = new NotificationType<StartWorkNotification, void>(
+	`${IpcRoutes.Webview}/work/start`
+);
+
 export interface ShowNextChangedFileNotification {}
 
 export const ShowNextChangedFileNotificationType = new NotificationType<

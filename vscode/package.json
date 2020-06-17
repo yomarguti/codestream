@@ -206,6 +206,11 @@
                 "category": "CodeStream"
             },
             {
+                "command": "codestream.startWork",
+                "title": "Start Work",
+                "category": "CodeStream"
+            },
+            {
                 "command": "codestream.newComment",
                 "title": "Add Comment",
                 "category": "CodeStream"
@@ -317,6 +322,15 @@
                 },
                 "key": "ctrl+shift+/ ctrl+shift+/",
                 "mac": "ctrl+/ ctrl+/",
+                "when": "codestream:status == signedIn"
+            },
+            {
+                "command": "codestream.startWork",
+                "args": {
+                    "source": "Shortcut"
+                },
+                "key": "ctrl+shift+/ w",
+                "mac": "ctrl+/ w",
                 "when": "codestream:status == signedIn"
             },
             {
@@ -516,6 +530,10 @@
                 },
                 {
                     "command": "codestream.toggle",
+                    "when": "codestream:status == signedIn"
+                },
+                {
+                    "command": "codestream.startWork",
                     "when": "codestream:status == signedIn"
                 },
                 {

@@ -82,7 +82,7 @@ export const ComposeKeybindings = {
 	comment: (
 		<span className="binding">
 			<span className="keybinding extra-pad">{modifier}</span>
-			<span className="keybinding">c</span>
+			<span className="keybinding">w</span>
 		</span>
 	),
 	link: (

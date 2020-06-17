@@ -72,6 +72,7 @@ import {
 	NewCodemarkNotificationType,
 	NewReviewNotificationType,
 	EditorSelectRangeRequestType,
+	StartWorkNotificationType,
 	WebviewPanels
 } from "../ipc/webview.protocol";
 import { OpenUrlRequestType } from "../ipc/host.protocol";
@@ -133,6 +134,9 @@ export class SimpleStream extends Component {
 		);
 		this.disposables.push(
 			HostApi.instance.on(NewReviewNotificationType, this.handleNewReviewRequest, this)
+		);
+		this.disposables.push(
+			HostApi.instance.on(StartWorkNotificationType, this.handleStartWorkRequest, this)
 		);
 
 		// this listener pays attention to when the input field resizes,
@@ -233,6 +237,11 @@ export class SimpleStream extends Component {
 		}
 		this.props.setCurrentReview("");
 		this.props.openPanel(WebviewPanels.NewReview);
+	}
+
+	handleStartWorkRequest(e) {
+		this.props.setCurrentReview("");
+		this.props.openPanel(WebviewPanels.Status);
 	}
 
 	copy(event) {

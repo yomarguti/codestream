@@ -253,6 +253,11 @@ export class Commands implements Disposable {
 		return true;
 	}
 
+	@command("startWork", { showErrorMessage: "Unable to start work" })
+	startWork() {
+		return this.startWorkRequest();
+	}
+
 	@command("newComment", { showErrorMessage: "Unable to add comment" })
 	newComment(args?: NewCodemarkCommandArgs) {
 		return this.newCodemarkRequest(CodemarkType.Comment, args);
@@ -448,7 +453,12 @@ export class Commands implements Disposable {
 	async scmNewComment() {
 		try {
 			const editor = window.activeTextEditor;
-			await Container.webview.newCodemarkRequest(CodemarkType.Comment, editor && editor.selection && !editor.selection.isEmpty ? editor : undefined, "VSC SCM", true);
+			await Container.webview.newCodemarkRequest(
+				CodemarkType.Comment,
+				editor && editor.selection && !editor.selection.isEmpty ? editor : undefined,
+				"VSC SCM",
+				true
+			);
 		} catch (ex) {
 			Logger.error(ex);
 		}
@@ -458,18 +468,34 @@ export class Commands implements Disposable {
 	async scmNewIssue() {
 		try {
 			const editor = window.activeTextEditor;
-			await Container.webview.newCodemarkRequest(CodemarkType.Issue, editor && editor.selection && !editor.selection.isEmpty ? editor : undefined, "VSC SCM", true);
+			await Container.webview.newCodemarkRequest(
+				CodemarkType.Issue,
+				editor && editor.selection && !editor.selection.isEmpty ? editor : undefined,
+				"VSC SCM",
+				true
+			);
 		} catch (ex) {
 			Logger.error(ex);
 		}
 	}
 
+	private async startWorkRequest() {
+		await Container.webview.startWorkRequest(window.activeTextEditor, "Context Menu");
+	}
+
 	private async newCodemarkRequest(type: CodemarkType, args: NewCodemarkCommandArgs = {}) {
-		await Container.webview.newCodemarkRequest(type, window.activeTextEditor, args.source || "Context Menu");
+		await Container.webview.newCodemarkRequest(
+			type,
+			window.activeTextEditor,
+			args.source || "Context Menu"
+		);
 	}
 
 	private async newReviewRequest(args: NewCodemarkCommandArgs = {}) {
-		await Container.webview.newReviewRequest(window.activeTextEditor, args.source || "Context Menu");
+		await Container.webview.newReviewRequest(
+			window.activeTextEditor,
+			args.source || "Context Menu"
+		);
 	}
 
 	private async showNextChangedFileRequest() {

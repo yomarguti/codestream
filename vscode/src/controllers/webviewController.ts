@@ -60,6 +60,7 @@ import {
 	ShowNextChangedFileRequestType,
 	ShowPreviousChangedFileRequestType,
 	ShowReviewNotificationType,
+	StartWorkNotificationType,
 	UpdateConfigurationRequestType,
 	UpdateServerUrlRequestType,
 	WebviewContext,
@@ -249,6 +250,29 @@ export class WebviewController implements Disposable {
 		if (this._webview === undefined) return;
 
 		this._webview.dispose();
+	}
+
+	@log()
+	async startWorkRequest(
+		editor: TextEditor | undefined = this._lastEditor,
+		source: string
+	): Promise<void> {
+		if (this.visible) {
+			await this._webview!.show();
+		} else {
+			await this.show();
+		}
+
+		if (!this._webview) {
+			// it's possible that the webview is closing...
+			return;
+		}
+
+		// TODO: Change this to be a request vs a notification
+		this._webview!.notify(StartWorkNotificationType, {
+			uri: editor ? editor.document.uri.toString() : undefined,
+			source: source
+		});
 	}
 
 	@log()
