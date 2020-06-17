@@ -429,21 +429,6 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 		return items;
 	};
 
-	const settingsItems = [
-		{ label: "-" },
-		{
-			label: "Assignment",
-			key: "mine",
-			submenu: [
-				{ label: "Cards Assigned to Me", key: "mine", checked: true },
-				{ label: "All Cards", key: "all", checked: false }
-			]
-		},
-		{ label: "Filter by Board", key: "board", submenu: filterBoardItems() },
-		{ label: "-" },
-		{ label: "Disconnect Trello", key: "disconnect", action: goDisconnect, icon: <Icon name="x" /> }
-	];
-
 	const cardItems = React.useMemo(() => {
 		if (!data.cards) return [];
 		const isFiltering = keyFilter(data.filterBoards || {}).length > 0;
@@ -453,13 +438,40 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 			.map(card => ({
 				label: card.name,
 				searchLabel: card.name,
+				icon: <Icon name="trello" />,
 				key: card.id,
 				action: card
-			}));
+			})) as any;
 		// @ts-ignore
-		items.unshift({ label: "-" }, { type: "search" });
+		// items.unshift({ label: "-" }, { type: "search" });
+		const settingsItems = [
+			{
+				label: "Assignment",
+				key: "mine",
+				submenu: [
+					{ label: "Cards Assigned to Me", key: "mine", checked: true },
+					{ label: "All Cards", key: "all", checked: false }
+				]
+			},
+			{ label: "Filter by Board", key: "board", submenu: filterBoardItems() },
+			{ label: "-" },
+			{
+				label: "Disconnect Trello",
+				key: "disconnect",
+				action: goDisconnect,
+				icon: <Icon name="x" />
+			}
+		];
+		items.unshift(
+			{
+				label: "Settings & Filters",
+				icon: <Icon name="gear" />,
+				submenu: settingsItems
+			},
+			{ label: "-" }
+		);
 		return items;
-	}, [data.cards, data.filterBoards]);
+	}, [data.cards, data.boards, data.filterBoards]);
 
 	return (
 		<>
@@ -470,35 +482,16 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 			>
 				{data.isLoading ? <Icon className="spin" name="sync" /> : <Icon name="chevron-down" />}
 			</span>
-			{menuState.open &&
-				(mode === "settings" ? (
-					<Menu
-						title="Settings"
-						centerTitle={true}
-						noCloseIcon={true}
-						backIcon={<Icon name="chevron-left" onClick={goMine} />}
-						align="dropdownRight"
-						target={buttonRef.current}
-						items={settingsItems}
-						dontCloseOnSelect={true}
-						action={noop}
-						limitWidth={true}
-					/>
-				) : (
-					<Menu
-						title="My Trello Cards"
-						centerTitle={true}
-						noCloseIcon={true}
-						backIcon={<Icon name="chevron-left" onClick={() => setMenuState({ open: false })} />}
-						titleIcon={<Icon name="gear" onClick={goSettings} />}
-						align="dropdownRight"
-						target={buttonRef.current}
-						items={cardItems}
-						dontCloseOnSelect={true}
-						action={selectCard}
-						limitWidth={true}
-					/>
-				))}
+			{menuState.open && (
+				<Menu
+					align="dropdownRight"
+					target={buttonRef.current}
+					items={cardItems}
+					dontCloseOnSelect={true}
+					action={selectCard}
+					limitWidth={true}
+				/>
+			)}
 		</>
 	);
 }
