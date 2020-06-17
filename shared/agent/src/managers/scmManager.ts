@@ -37,7 +37,10 @@ import {
 	GetReposScmRequest,
 	GetReposScmRequestType,
 	GetReposScmResponse,
-	RepoScmStatus
+	RepoScmStatus,
+	SwitchBranchRequest,
+	SwitchBranchRequestType,
+	SwitchBranchResponse
 } from "../protocol/agent.protocol";
 import { FileStatus } from "../protocol/api.protocol.models";
 import { FileSystem, Iterables, log, lsp, lspHandler, Strings } from "../system";
@@ -218,20 +221,45 @@ export class ScmManager {
 		const uri = URI.parse(documentUri);
 		const { git } = SessionContainer.instance();
 		let repoPath = "";
-		let result = false;
 		let gitError;
 
 		try {
 			repoPath = (await git.getRepoRoot(uri.fsPath)) || "";
 			if (repoPath !== undefined) {
-				result = await git.createBranch(repoPath, branch);
+				await git.createBranch(repoPath, branch);
 			}
 		} catch (ex) {
 			gitError = ex.toString();
 			Logger.error(ex, cc);
 			debugger;
 		}
-		return { scm: { result }, error: gitError };
+		return { scm: { result: gitError ? false : true }, error: gitError };
+	}
+
+	@lspHandler(SwitchBranchRequestType)
+	@log()
+	async switchBranch({
+		uri: documentUri,
+		branch
+	}: SwitchBranchRequest): Promise<SwitchBranchResponse> {
+		const cc = Logger.getCorrelationContext();
+
+		const uri = URI.parse(documentUri);
+		const { git } = SessionContainer.instance();
+		let repoPath = "";
+		let gitError;
+
+		try {
+			repoPath = (await git.getRepoRoot(uri.fsPath)) || "";
+			if (repoPath !== undefined) {
+				await git.switchBranch(repoPath, branch);
+			}
+		} catch (ex) {
+			gitError = ex.toString();
+			Logger.error(ex, cc);
+			debugger;
+		}
+		return { scm: { result: gitError ? false : true }, error: gitError };
 	}
 
 	@lspHandler(GetRepoScmStatusRequestType)

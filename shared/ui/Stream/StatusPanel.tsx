@@ -14,7 +14,11 @@ import { emojiPlain } from "./Markdowner";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import EmojiPicker from "./EmojiPicker";
 import { useDidMount } from "../utilities/hooks";
-import { GetBranchesRequestType, CreateBranchRequestType } from "@codestream/protocols/agent";
+import {
+	GetBranchesRequestType,
+	CreateBranchRequestType,
+	SwitchBranchRequestType
+} from "@codestream/protocols/agent";
 import Menu from "./Menu";
 import { CrossPostIssueContext } from "./CodemarkForm";
 import IssueDropdown from "./CrossPostIssueControls/IssueDropdown";
@@ -129,6 +133,13 @@ const MonoMenu = styled(InlineMenu)`
 	white-space: normal;
 `;
 
+const SCMError = styled.div`
+	margin: 20px 0 0 0;
+	font-size: smaller;
+	font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
+	white-space: pre-wrap;
+`;
+
 const EMPTY_STATUS = {
 	label: "",
 	icon: ":desktop_computer:",
@@ -160,6 +171,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 
 	const { status } = derivedState;
 	const [loading, setLoading] = useState(false);
+	const [scmError, setScmError] = useState("");
 	const [label, setLabel] = useState(status.label || "");
 	const [icon, setIcon] = useState(status.icon || ":desktop_computer:");
 	const [emojiMenuOpen, setEmojiMenuOpen] = useState(false);
@@ -254,19 +266,16 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		HostApi.instance.track("Status Set", { Value: status });
 
 		if (createBranch && branch.length > 0 && derivedState.textEditorUri) {
-			if (branches.includes(branch)) {
-				// FIXME -- switch to the branch
-			} else {
-				const result = await HostApi.instance.send(CreateBranchRequestType, {
-					branch,
-					uri: derivedState.textEditorUri
-				});
-				// FIXME handle error
-				if (result.error) {
-					console.log("ERROR FROM CREATE BRANCH: ", result.error);
-					setLoading(false);
-					return;
-				}
+			const uri = derivedState.textEditorUri;
+			const request = branches.includes(branch) ? SwitchBranchRequestType : CreateBranchRequestType;
+			const result = await HostApi.instance.send(request, { branch, uri });
+			console.warn("GOT A RESXULT OF: ", result);
+			// FIXME handle error
+			if (result.error) {
+				console.log("ERROR FROM SELECT BRANCH: ", result.error);
+				setScmError(result.error);
+				setLoading(false);
+				return;
 			}
 		}
 
@@ -280,7 +289,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		}
 
 		// @ts-ignore
-		await dispatch(setUserStatus(icon, label, expires));
+		await dispatch(setUserStatus(icon, label, null));
 		dispatch(closePanel());
 		setLoading(false);
 	};
@@ -491,6 +500,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 							)}
 						</div>
 						<div style={{ height: "5px" }}></div>
+						{scmError && <SCMError>{scmError}</SCMError>}
 						<ButtonRow>
 							{clearable && (
 								<Button onClick={clear} isLoading={loading}>
