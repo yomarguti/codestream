@@ -395,6 +395,15 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 
 		return documentMarkers;
 	}
+
+	createPullRequest(request: {}): Promise<any> {
+		throw new Error("Method not implemented.");
+	}
+
+	getRepoInfo(request: {}): Promise<any> {
+		throw new Error("Method not implemented.");
+	}
+
 	private _commentsByRepoAndPath = new Map<
 		string,
 		{ expiresAt: number; comments: Promise<PullRequestComment[]> }

@@ -100,5 +100,6 @@ export default {
 	"setPassword.setPassword": "Set Password",
 	"setPassword.help": "6+ characters",
 	"createTeam.name.label": "Team Name",
-	"oktaConfig.submitButton": "Set Host URL"
+	"oktaConfig.submitButton": "Set Host URL",
+	"pullRequest.title": "Set a title"
 };

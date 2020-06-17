@@ -65,6 +65,10 @@ export interface ThirdPartyProviderSupportsPullRequests {
 		repoId: string | undefined;
 		streamId: string | undefined;
 	}): Promise<DocumentMarker[]>;
+
+	// TODO fix these types
+	createPullRequest(request: {}): Promise<any>;
+	getRepoInfo(request: {}): Promise<any>;
 }
 
 export namespace ThirdPartyIssueProvider {

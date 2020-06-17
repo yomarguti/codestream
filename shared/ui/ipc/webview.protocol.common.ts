@@ -55,7 +55,8 @@ export enum WebviewPanels {
 	PRInfo = "pr-info",
 	Integrations = "integrations",
 	GettingStarted = "gtting-started",
-	ReviewSettings = "review-settings"
+	ReviewSettings = "review-settings",
+	NewPullRequest = "new-pull-request"
 }
 
 export interface WebviewContext {

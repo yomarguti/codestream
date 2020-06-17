@@ -1073,6 +1073,15 @@ export class GitService implements IGitService, Disposable {
 		return undefined;
 	}
 
+	async getHasModifications(repoPath: string): Promise<boolean> {
+		let data: string | undefined = undefined;
+		try {
+			const options = ["status", "-v", "--porcelain"];
+			data = await git({ cwd: repoPath }, ...options);
+		} catch {}
+		return data && data.length > 0 ? true : false;
+	}
+
 	async getStatus(
 		repoPath: string,
 		includeSaved: boolean

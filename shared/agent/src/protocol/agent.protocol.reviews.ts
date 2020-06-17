@@ -279,6 +279,61 @@ export const CheckReviewPreconditionsRequestType = new RequestType<
 	void
 >("codestream/review/checkPreconditions");
 
+export interface CheckPullRequestPreconditionsRequest {
+	reviewId: string;
+	headRefName?: string;
+	baseRefName?: string;
+}
+
+export interface CheckPullRequestPreconditionsResponse {
+	success: boolean;
+	review?: Pick<CSReview, "title" | "text">;
+	remote?: string;
+	providerId?: string;
+	pullRequestProvider?: {defaultBranch?: string, isConnected: boolean };
+	branch?: string;
+	branches?: string[];
+
+	error?: {
+		message?: string;
+		type?: "REPO_NOT_FOUND" | "HAS_LOCAL_COMMITS" | "UNKNOWN" | string;
+	};
+}
+
+export const CheckPullRequestPreconditionsRequestType = new RequestType<
+	CheckPullRequestPreconditionsRequest,
+	CheckPullRequestPreconditionsResponse,
+	void,
+	void
+>("codestream/review/pr/checkPreconditions");
+
+export interface CreatePullRequestRequest {
+	reviewId: string;
+	providerId: string;
+	title: string;
+	description?: string;
+	baseRefName: string;
+	headRefName: string;
+	remote: string;
+}
+
+export interface CreatePullRequestResponse {
+	success: boolean;
+	url?: string;
+	error?: {
+		message: string;
+		// TODO fix these
+		type: "REPO_NOT_FOUND" | "COMMIT_NOT_FOUND" | "UNKNOWN" | string;
+	};
+}
+
+export const CreatePullRequestRequestType = new RequestType<
+CreatePullRequestRequest,
+CreatePullRequestResponse,
+	void,
+	void
+>("codestream/review/pr/create");
+
 export interface StartReviewRequest {
 	reviewId: string;
 }

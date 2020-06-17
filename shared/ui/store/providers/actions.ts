@@ -62,7 +62,8 @@ export type ViewLocation =
 	| "Compose Modal"
 	| "PR Toggle"
 	| "Integrations Panel"
-	| "Status Panel";
+	| "Status Panel"
+	| "Create Pull Request Panel";
 
 export const sendIssueProviderConnected = (
 	providerId: string,

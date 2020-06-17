@@ -237,6 +237,53 @@ export class ThirdPartyProviderRegistry {
 		return response;
 	}
 
+	// TODO fix type
+	async createPullRequest(request: {
+		providerId: string,
+		title: string,
+		description?: string
+	}) {
+		const provider = getProvider(request.providerId);
+		if (provider === undefined) {
+			throw new Error(`No registered provider for '${request.providerId}'`);
+		}
+
+		const pullRequestProvider = provider as ThirdPartyIssueProvider;
+		if (
+			pullRequestProvider == null ||
+			typeof pullRequestProvider.supportsPullRequests !== "function" ||
+			!pullRequestProvider.supportsPullRequests()
+		) {
+			throw new Error(`Provider(${provider.name}) doesn't support pull requests`);
+		}
+
+		const response = await pullRequestProvider.createPullRequest(request);
+		return response;
+	}
+
+	// TODO fix type
+	async getRepoInfo(request: {
+		providerId: string,
+		remote: string
+	}) {
+		const provider = getProvider(request.providerId);
+		if (provider === undefined) {
+			throw new Error(`No registered provider for '${request.providerId}'`);
+		}
+
+		const pullRequestProvider = provider as ThirdPartyIssueProvider;
+		if (
+			pullRequestProvider == null ||
+			typeof pullRequestProvider.supportsPullRequests !== "function" ||
+			!pullRequestProvider.supportsPullRequests()
+		) {
+			throw new Error(`Provider(${provider.name}) doesn't support pull requests`);
+		}
+
+		const response = await pullRequestProvider.getRepoInfo(request);
+		return response;
+	}
+
 	getProviders(): ThirdPartyProvider[];
 	getProviders<T extends ThirdPartyProvider>(predicate: (p: ThirdPartyProvider) => p is T): T[];
 	getProviders(predicate?: (p: ThirdPartyProvider) => boolean) {

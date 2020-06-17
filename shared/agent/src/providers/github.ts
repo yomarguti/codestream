@@ -358,6 +358,109 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return documentMarkers;
 	}
 
+	@log()
+	async createPullRequest(
+		request: CreatePullRequestRequest
+	): Promise<CreatePullRequestResponse | undefined> {
+		void (await this.ensureConnected());
+
+		if (!(await this.isPRApiCompatible())) return undefined;
+
+		try {
+			const repoInfo = await this.getRepoInfo({ remote: request.remote });
+			if (!repoInfo) {
+				return {
+					error: {
+						message: `Could not query repo by remote ${request.remote}`
+					}
+				};
+			}
+			if (request.metadata && request.metadata.reviewPermalink) {
+				request.description += `\n\n\n[Changes reviewed on CodeStream](${request.metadata.reviewPermalink})`;
+				if (request.metadata.reviewers) {
+					request.description += ` by ${request.metadata.reviewers?.map(_ => _.name)?.join(", ")}`;
+				}
+				if (request.metadata.approvedAt) {
+					request.description += ` on ${new Date(
+						request.metadata.approvedAt
+					).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}`;
+				}
+			}
+			const createPullRequestResponse = await this.client.request<CreatePullRequestResponse>(
+				`mutation CreatePullRequest($repositoryId:String!, $baseRefName:String!, $headRefName:String!, $title:String!, $body:String!) {
+					__typename
+					createPullRequest(input: {repositoryId: $repositoryId, baseRefName: $baseRefName, headRefName: $headRefName, title: $title, body: $body}) {
+					  pullRequest {
+							id,
+							url
+						}
+					}
+				  }`,
+				{
+					repositoryId: repoInfo.id,
+					baseRefName: request.baseRefName,
+					title: request.title,
+					headRefName: request.headRefName,
+					body: request.description
+				}
+			);
+			// TODO filter this into a better response object
+			return createPullRequestResponse;
+		} catch (ex) {
+			Logger.error(ex, "createPullRequest");
+			return {
+				error: {
+					message:
+						ex.response && ex.response.errors ? ex.response.errors[0].message : "Unknown error"
+				}
+			};
+		}
+	}
+
+	async getRepoInfo(request: { remote: string }): Promise<GetRepoInfoResponse | undefined> {
+		try {
+			const uri = URI.parse(request.remote);
+			const split = uri.path.split("/");
+			const owner = split[1];
+			const name = split[2].replace(".git", "");
+			const response = await this.client.request<any>(
+				`query getRepoInfo($owner:String!, $name:String!) {
+				repository(owner:$owner, name:$name) {
+				   id
+				   defaultBranchRef {
+						name
+				   }
+				   pullRequests(first: 25, orderBy: {field: CREATED_AT, direction: DESC}, states: OPEN) {
+					totalCount
+					nodes {
+					  id
+					  url
+					  title
+					  state
+					  createdAt
+					  baseRefName
+					  headRefName
+					}
+				  }
+				}
+			  }
+			  `,
+				{
+					owner: owner,
+					name: name
+				}
+			);
+			return {
+				id: response.repository.id,
+				defaultBranch: response.repository.defaultBranchRef.name,
+				pullRequests: response.repository.pullRequests.nodes
+			};
+		} catch (ex) {
+			Logger.error(ex, "getRepoInfo");
+		}
+		return undefined;
+	}
+
 	private _commentsByRepoAndPath = new Map<
 		string,
 		{ expiresAt: number; comments: Promise<PullRequestComment[]> }
@@ -714,4 +817,34 @@ interface GetPullRequestsResponse {
 		remaining: number;
 		resetAt: string;
 	};
+}
+
+interface GitHubPullRequest {
+	id: string;
+	url: string;
+	baseRefName: string;
+	headRefName: string;
+}
+interface GetRepoInfoResponse {
+	id: string;
+	defaultBranch?: string;
+	pullRequests?: GitHubPullRequest[];
+}
+
+interface CreatePullRequestRequest {
+	remote: string;
+	title: string;
+	description?: string;
+	baseRefName: string;
+	headRefName: string;
+	metadata: {
+		reviewPermalink: string;
+		reviewers?: { name: string }[];
+		approvedAt?: number;
+	};
+}
+
+interface CreatePullRequestResponse {
+	url?: string;
+	error?: { message?: string };
 }

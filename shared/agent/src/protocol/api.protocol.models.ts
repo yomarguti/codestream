@@ -243,6 +243,7 @@ export interface CSReview extends CSEntity {
 	followerIds?: string[];
 	// TODO eventually make this not optional
 	permalink?: string;
+	approvedAt?: number;
 }
 
 export interface CSPost extends CSEntity {

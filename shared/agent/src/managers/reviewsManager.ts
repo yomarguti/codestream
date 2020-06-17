@@ -1,14 +1,24 @@
 "use strict";
 import { applyPatch } from "diff";
 import * as path from "path";
+import {
+	ThirdPartyIssueProvider,
+	ThirdPartyProviderSupportsPullRequests
+} from "providers/provider";
 import { MessageType } from "../api/apiProvider";
 import { Container, SessionContainer } from "../container";
 import { git } from "../git/git";
 import { Logger } from "../logger";
 import {
+	CheckPullRequestPreconditionsRequest,
+	CheckPullRequestPreconditionsRequestType,
+	CheckPullRequestPreconditionsResponse,
 	CheckReviewPreconditionsRequest,
 	CheckReviewPreconditionsRequestType,
 	CheckReviewPreconditionsResponse,
+	CreatePullRequestRequest,
+	CreatePullRequestRequestType,
+	CreatePullRequestResponse,
 	DeleteReviewRequest,
 	DeleteReviewRequestType,
 	EndReviewRequest,
@@ -41,7 +51,6 @@ import {
 	UpdateReviewResponse
 } from "../protocol/agent.protocol";
 import {
-	CSRepoChange,
 	CSReview,
 	CSReviewChangeset,
 	CSReviewCheckpoint,
@@ -470,6 +479,173 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		return {
 			success: true
 		};
+	}
+
+	@lspHandler(CheckPullRequestPreconditionsRequestType)
+	async checkPullRequestPreconditions(
+		request: CheckPullRequestPreconditionsRequest
+	): Promise<CheckPullRequestPreconditionsResponse> {
+		const { git } = SessionContainer.instance();
+		try {
+			const review = await this.getById(request.reviewId);
+			const branch = review.reviewChangesets[0].branch;
+			const repo = await git.getRepositoryById(review.reviewChangesets[0].repoId);
+			if (!repo) {
+				return {
+					success: false,
+					error: {
+						type: "REPO_NOT_FOUND"
+					}
+				};
+			}
+			const branches = await git.getBranches(repo!.path);
+			const { providerRegistry } = SessionContainer.instance();
+			const user = await this.session.api.getMe();
+
+			const localCommits = await git.getLocalCommits(repo.path);
+			if (localCommits && localCommits.length > 0) {
+				return {
+					success: false,
+					error: {
+						type: "HAS_LOCAL_COMMITS"
+					}
+				};
+			}
+
+			const localModifications = await git.getHasModifications(repo.path);
+			if (localModifications) {
+				return {
+					success: false,
+					error: {
+						type: "HAS_LOCAL_MODIFICATIONS"
+					}
+				};
+			}
+
+			const gitRemotes = await repo!.getRemotes();
+			let remoteUrl = "";
+			let providerId = "";
+			let defaultBranch = "";
+			let isConnected = false;
+			// this whole part is TODO
+			const githubRemote = gitRemotes.find(_ => _.domain === "github.com");
+			if (githubRemote) {
+				remoteUrl = githubRemote.uri.toString();
+				providerId = "github*com";
+				const providers = providerRegistry.getConnectedProviders(
+					user.user,
+					(p): p is ThirdPartyIssueProvider & ThirdPartyProviderSupportsPullRequests => {
+						const thirdPartyIssueProvider = p as ThirdPartyIssueProvider;
+						return (
+							thirdPartyIssueProvider.getConfig().id === "github*com" &&
+							thirdPartyIssueProvider &&
+							typeof thirdPartyIssueProvider.supportsPullRequests === "function" &&
+							thirdPartyIssueProvider.supportsPullRequests()
+						);
+					}
+				);
+				const provider = providers[0];
+				if (provider) {
+					isConnected = true;
+					const providerRepoInfo = await providerRegistry.getRepoInfo({
+						providerId: providerId,
+						remote: remoteUrl
+					});
+					if (providerRepoInfo) {
+						defaultBranch = providerRepoInfo.defaultBranch;
+						if (providerRepoInfo.pullRequests && request.baseRefName && request.headRefName) {
+							const existingPullRequest = providerRepoInfo.pullRequests.find((_: any) => _.baseRefName === request.baseRefName && _.headRefName === request.headRefName);
+							if (existingPullRequest) {
+								return {
+									success: false,
+									error: {
+										type: "HAS_PULL_REQUEST"
+									}
+								};
+							}
+						}
+					}
+				}
+			}
+
+			return {
+				success: true,
+				remote: remoteUrl,
+				providerId: providerId,
+				pullRequestProvider: {
+					isConnected: isConnected,
+					defaultBranch: defaultBranch
+				},
+				review: {
+					title: review.title,
+					text: review.text
+				},
+				branch: branch,
+				branches: branches!.branches
+			};
+		} catch (ex) {
+			return {
+				success: false,
+				error: {
+					message: ex.message,
+					type: "UNKNOWN"
+				}
+			};
+		}
+	}
+
+	@lspHandler(CreatePullRequestRequestType)
+	async createPullRequest(request: CreatePullRequestRequest): Promise<CreatePullRequestResponse> {
+		const { providerRegistry, users } = SessionContainer.instance();
+		try {
+			const review = await this.getById(request.reviewId);
+			const approvers: { name: string }[] = [];
+			if (review.approvedBy) {
+				for (const userId of Object.keys(review.approvedBy)) {
+					try {
+						const user = await users.getById(userId);
+						if (user) {
+							approvers.push({ name: user.username });
+						}
+					} catch {}
+				}
+			}
+
+			const data = {
+				...request,
+				metadata: {
+					reviewPermalink: review.permalink,
+					approvedAt: review.approvedAt,
+					reviewers: approvers
+				}
+			};
+			const result = await providerRegistry.createPullRequest(data);
+			if (!result || result.error) {
+				return {
+					success: false,
+					error: {
+						message: result.error.message,
+						type: "UNKNOWN"
+					}
+				};
+			}
+
+			// TODO save data to review
+
+			return {
+				success: true,
+				url: result.url
+			};
+		} catch (ex) {
+			Logger.error(ex, "createPullRequest");
+			return {
+				success: false,
+				error: {
+					message: ex.message,
+					type: "UNKNOWN"
+				}
+			};
+		}
 	}
 
 	@lspHandler(StartReviewRequestType)

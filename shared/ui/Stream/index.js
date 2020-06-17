@@ -14,6 +14,7 @@ import { ChangeFullNamePanel } from "./ChangeFullNamePanel";
 import { ChangeWorksOnPanel } from "./ChangeWorksOnPanel";
 import { ChangePhoneNumberPanel } from "./ChangePhoneNumberPanel";
 import { ChangeAvatarPanel } from "./ChangeAvatarPanel";
+import { CreatePullRequestPanel } from "./CreatePullRequestPanel";
 import { IntegrationsPanel } from "./IntegrationsPanel";
 import { ProfilePanel } from "./ProfilePanel";
 import { ReviewSettingsPanel } from "./ReviewSettingsPanel";
@@ -972,7 +973,8 @@ export class SimpleStream extends Component {
 				WebviewPanels.ChangeFullName,
 				WebviewPanels.ChangeWorksOn,
 				WebviewPanels.ChangePhoneNumber,
-				WebviewPanels.Profile
+				WebviewPanels.Profile,
+				WebviewPanels.NewPullRequest
 			].includes(activePanel) &&
 			!this.props.currentReviewId &&
 			!activePanel.startsWith("configure-provider-") &&
@@ -1082,6 +1084,9 @@ export class SimpleStream extends Component {
 					)}
 					{activePanel === WebviewPanels.ChangePassword && (
 						<ChangePasswordPanel closePanel={this.props.closePanel} />
+					)}
+					{activePanel === WebviewPanels.NewPullRequest && (
+						<CreatePullRequestPanel closePanel={this.props.closePanel} />
 					)}
 					{/* this is dead code, leaving so we know how to cleanup
 					the various props/methods they used */}

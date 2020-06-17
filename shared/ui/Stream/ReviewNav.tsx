@@ -24,6 +24,8 @@ import { Modal } from "./Modal";
 import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
 import { getReviewChangeRequests } from "../store/codemarks/reducer";
 import { ReviewForm } from "./ReviewForm";
+import { openPanel } from "../store/context/actions";
+import { WebviewPanels } from "@codestream/protocols/webview";
 
 const NavHeader = styled.div`
 	flex-grow: 0;
@@ -319,7 +321,10 @@ export function ReviewNav(props: Props) {
 		setIsAmending(true);
 	};
 
-	const pr = () => {};
+	const pr = async () => {
+		await dispatch(setCurrentReview(""));
+		dispatch(openPanel(WebviewPanels.NewPullRequest));
+	};
 
 	const statusButtons = () => {
 		if (!review) return null;
@@ -509,7 +514,7 @@ export function ReviewNav(props: Props) {
 			<Tip>
 				<Step>1</Step> Step through the changes of the review
 				<Subtext>By clicking on filenames in any order</Subtext>
-				<Button onClick={() => setHoverButton("comment")}>Next ></Button>
+				<Button onClick={() => setHoverButton("comment")}>Next &gt;</Button>
 				<b></b>
 			</Tip>
 		) : (
@@ -521,7 +526,7 @@ export function ReviewNav(props: Props) {
 			<Tip>
 				<Step>1</Step> Step through the changes of the review
 				<Subtext>By clicking on filenames in any order</Subtext>
-				<Button onClick={() => setHoverButton("comment")}>Next ></Button>
+				<Button onClick={() => setHoverButton("comment")}>Next &gt;</Button>
 				<b></b>
 			</Tip>
 		) : (
@@ -533,7 +538,7 @@ export function ReviewNav(props: Props) {
 			<Tip>
 				<Step>2</Step>Comment on changes in the left margin
 				<Subtext>You can also comment on related code as part of the review</Subtext>
-				<Button onClick={() => setHoverButton("actions")}>Next ></Button>
+				<Button onClick={() => setHoverButton("actions")}>Next &gt;</Button>
 				<b></b>
 			</Tip>
 		) : (
