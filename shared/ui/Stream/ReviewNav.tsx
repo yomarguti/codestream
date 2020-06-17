@@ -4,7 +4,10 @@ import CancelButton from "./CancelButton";
 import Tooltip from "./Tooltip";
 import { Button } from "../src/components/Button";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
-import { setCurrentReview } from "@codestream/webview/store/context/actions";
+import {
+	setCurrentReview,
+	setCurrentPullRequest
+} from "@codestream/webview/store/context/actions";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "..";
 import { fetchReview } from "@codestream/webview/store/reviews/actions";
@@ -322,6 +325,7 @@ export function ReviewNav(props: Props) {
 	};
 
 	const pr = async () => {
+		await dispatch(setCurrentPullRequest(props.reviewId));
 		await dispatch(setCurrentReview(""));
 		dispatch(openPanel(WebviewPanels.NewPullRequest));
 	};
@@ -431,7 +435,7 @@ export function ReviewNav(props: Props) {
 			case "rejected":
 				return (
 					<div className={hoverButton == "actions" ? "btn-group pulse" : "btn-group"}>
-						{isMine && review.status === "approved" && (
+						{isMine && review.pullRequestUrl == null && review.status === "approved" && (
 							<Tooltip title="Create a PR" placement="bottom">
 								<Button onClick={pr}>
 									<Icon className="narrow-icon" name="pull-request" />
@@ -439,7 +443,7 @@ export function ReviewNav(props: Props) {
 								</Button>
 							</Tooltip>
 						)}
-						{isMine && (
+						{isMine && review.pullRequestUrl == null && (
 							<Tooltip title="Reopen & Amend Review (add code)" placement="bottom">
 								<Button onClick={amend}>
 									<Icon className="narrow-icon" name="plus" />
@@ -447,12 +451,14 @@ export function ReviewNav(props: Props) {
 								</Button>
 							</Tooltip>
 						)}
-						<Tooltip title="Reopen Review" placement="bottomRight">
-							<Button variant="secondary" onClick={reopen}>
-								<Icon className="narrow-icon" name="reopen" />
-								<span className="wide-text">Reopen</span>
-							</Button>
-						</Tooltip>
+						{review.pullRequestUrl == null && (
+							<Tooltip title="Reopen Review" placement="bottomRight">
+								<Button variant="secondary" onClick={reopen}>
+									<Icon className="narrow-icon" name="reopen" />
+									<span className="wide-text">Reopen</span>
+								</Button>
+							</Tooltip>
+						)}
 						<Tooltip title="More actions" placement="bottom">
 							<Button variant="secondary">
 								<BaseReviewMenu

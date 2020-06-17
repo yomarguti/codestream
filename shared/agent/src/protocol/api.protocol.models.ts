@@ -244,6 +244,7 @@ export interface CSReview extends CSEntity {
 	// TODO eventually make this not optional
 	permalink?: string;
 	approvedAt?: number;
+	pullRequestUrl?: string;
 }
 
 export interface CSPost extends CSEntity {

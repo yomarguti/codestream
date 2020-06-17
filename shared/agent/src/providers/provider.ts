@@ -67,8 +67,10 @@ export interface ThirdPartyProviderSupportsPullRequests {
 	}): Promise<DocumentMarker[]>;
 
 	// TODO fix these types
-	createPullRequest(request: {}): Promise<any>;
+	createPullRequest(request: ProviderCreatePullRequestRequest): Promise<ProviderCreatePullRequestResponse | undefined>;
 	getRepoInfo(request: {}): Promise<any>;
+	getIsMatchingRemotePredicate(): any;
+	getRemotePaths(repo: any, _projectsByRemotePath: any): any;
 }
 
 export namespace ThirdPartyIssueProvider {
@@ -630,3 +632,37 @@ export async function getRemotePaths<R extends { path: string }>(
 		return undefined;
 	}
 }
+
+export interface ProviderPullRequestInfoResponse {
+	id: string;
+	url: string;
+	baseRefName: string;
+	headRefName: string;
+}
+
+export interface ProviderGetRepoInfoResponse {
+	id?: string;
+	defaultBranch?: string;
+	pullRequests?: ProviderPullRequestInfoResponse[];
+	error?: { message?: string; type: string };
+}
+
+export interface ProviderCreatePullRequestRequest {
+	providerId: string;
+	remote: string;
+	title: string;
+	description?: string;
+	baseRefName: string;
+	headRefName: string;
+	metadata: {
+		reviewPermalink?: string;
+		reviewers?: { name: string }[];
+		approvedAt?: number;
+	};
+}
+
+export interface ProviderCreatePullRequestResponse {
+	url?: string;
+	error?: { message?: string; type: string };
+}
+

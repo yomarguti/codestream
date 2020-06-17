@@ -48,7 +48,12 @@ import { capitalize, replaceHtml, emptyArray, mapFilter } from "@codestream/webv
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "../..";
 import { deleteReview, fetchReview } from "@codestream/webview/store/reviews/actions";
-import { setCurrentReview, setCurrentCodemark } from "@codestream/webview/store/context/actions";
+import {
+	setCurrentReview,
+	setCurrentCodemark,
+	openPanel,
+	setCurrentPullRequest
+} from "@codestream/webview/store/context/actions";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import { getReview } from "@codestream/webview/store/reviews/reducer";
 import MessageInput from "../MessageInput";
@@ -81,7 +86,8 @@ import { CommitList } from "./CommitList";
 import { SharingModal } from "../SharingModal";
 import {
 	ShowPreviousChangedFileRequestType,
-	ShowNextChangedFileRequestType
+	ShowNextChangedFileRequestType,
+	WebviewPanels
 } from "@codestream/protocols/webview";
 import { HeadshotName } from "@codestream/webview/src/components/HeadshotName";
 import { LocateRepoButton } from "../LocateRepoButton";
@@ -402,9 +408,10 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 			);
 		}
 
+		const { approvedBy = {}, creatorId, pullRequestUrl } = review;
+		const hasPullRequest = pullRequestUrl != null;
 		if (props.collapsed) {
 			items.unshift({ label: "-" });
-			const { approvedBy = {}, creatorId } = review;
 			switch (review.status) {
 				case "open": {
 					const approval = approvedBy[derivedState.currentUserId] ? unapproveItem : approveItem;
@@ -412,15 +419,43 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 					break;
 				}
 				case "approved":
-					items.unshift(reopenItem);
+					{
+						if (!hasPullRequest) {
+							items.unshift(reopenItem);
+						}
+					}
 					break;
 				case "rejected":
-					items.unshift(reopenItem);
+					{
+						if (!hasPullRequest) {
+							items.unshift(reopenItem);
+						}
+					}
 					break;
 			}
-			if (derivedState.currentUserId === creatorId) {
+			if (!hasPullRequest && derivedState.currentUserId === creatorId) {
 				items.unshift(amendItem);
 			}
+		}
+
+		if (
+			review.pullRequestUrl == null &&
+			review.status === "approved" &&
+			derivedState.currentUserId === creatorId
+		) {
+			items.unshift({
+				label: "Create a PR",
+				icon: <Icon className="narrow-icon" name="pull-request" />,
+				key: "pr",
+				action: () => {
+					const _action = async () => {
+						await dispatch(setCurrentPullRequest(review.id));
+						await dispatch(setCurrentReview(""));
+						await dispatch(openPanel(WebviewPanels.NewPullRequest));
+					};
+					_action();
+				}
+			});
 		}
 
 		return items;
@@ -618,6 +653,14 @@ const BaseReview = (props: BaseReviewProps) => {
 				)}
 
 				<MetaSection>
+					{review.pullRequestUrl && (
+						<Meta>
+							<MetaLabel>Pull Request</MetaLabel>
+							<MetaDescription>
+								<MetaDescriptionForAssignees>{review.pullRequestUrl}</MetaDescriptionForAssignees>
+							</MetaDescription>
+						</Meta>
+					)}
 					{props.review.text && (
 						<Meta>
 							<MetaLabel>Description</MetaLabel>

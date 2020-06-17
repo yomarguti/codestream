@@ -2,12 +2,12 @@
 import { applyPatch } from "diff";
 import * as path from "path";
 import {
+	getRemotePaths,
 	ThirdPartyIssueProvider,
 	ThirdPartyProviderSupportsPullRequests
-} from "providers/provider";
+} from "../providers/provider";
 import { MessageType } from "../api/apiProvider";
 import { Container, SessionContainer } from "../container";
-import { git } from "../git/git";
 import { Logger } from "../logger";
 import {
 	CheckPullRequestPreconditionsRequest,
@@ -48,7 +48,10 @@ import {
 	StartReviewResponse,
 	UpdateReviewRequest,
 	UpdateReviewRequestType,
-	UpdateReviewResponse
+	UpdateReviewResponse,
+	CheckPullRequestBranchPreconditionsRequest,
+	CheckPullRequestBranchPreconditionsRequestType,
+	CheckPullRequestBranchPreconditionsResponse
 } from "../protocol/agent.protocol";
 import {
 	CSReview,
@@ -481,14 +484,13 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		};
 	}
 
-	@lspHandler(CheckPullRequestPreconditionsRequestType)
-	async checkPullRequestPreconditions(
-		request: CheckPullRequestPreconditionsRequest
-	): Promise<CheckPullRequestPreconditionsResponse> {
+	@lspHandler(CheckPullRequestBranchPreconditionsRequestType)
+	async checkPullRequestBranchPreconditions(
+		request: CheckPullRequestBranchPreconditionsRequest
+	): Promise<CheckPullRequestBranchPreconditionsResponse> {
 		const { git } = SessionContainer.instance();
 		try {
 			const review = await this.getById(request.reviewId);
-			const branch = review.reviewChangesets[0].branch;
 			const repo = await git.getRepositoryById(review.reviewChangesets[0].repoId);
 			if (!repo) {
 				return {
@@ -498,6 +500,101 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 					}
 				};
 			}
+
+			const { providerRegistry } = SessionContainer.instance();
+			const user = await this.session.api.getMe();
+
+			const gitRemotes = await repo!.getRemotes();
+			let remoteUrl = "";
+			let providerId = "";
+
+			const providers = providerRegistry.getConnectedProviders(
+				user.user,
+				(p): p is ThirdPartyIssueProvider & ThirdPartyProviderSupportsPullRequests => {
+					const thirdPartyIssueProvider = p as ThirdPartyIssueProvider;
+					const name = thirdPartyIssueProvider.getConfig().name;
+					return name === "github" || name === "github_enterprise";
+				}
+			);
+
+			const _projectsByRemotePath = new Map(gitRemotes.map(obj => [obj.path, obj]));
+			for (const provider of providers) {
+				const remotePaths = await getRemotePaths(
+					repo,
+					provider.getIsMatchingRemotePredicate(),
+					_projectsByRemotePath
+				);
+				if (remotePaths && remotePaths.length) {
+					providerId = provider.getConfig().id;
+					// just need any url here...
+					remoteUrl = "http://foo.com/" + remotePaths[0];
+					const providerRepoInfo = await providerRegistry.getRepoInfo({
+						providerId: providerId,
+						remote: remoteUrl
+					});
+					if (providerRepoInfo) {
+						if (providerRepoInfo.pullRequests && request.baseRefName && request.headRefName) {
+							const existingPullRequest = providerRepoInfo.pullRequests.find(
+								(_: any) =>
+									_.baseRefName === request.baseRefName && _.headRefName === request.headRefName
+							);
+							if (existingPullRequest) {
+								return {
+									success: false,
+									error: {
+										type: "ALREADY_HAS_PULL_REQUEST"
+									}
+								};
+							}
+						}
+						// break out of providers loop
+						break;
+					}
+				}
+			}
+
+			return {
+				success: true,
+				remote: remoteUrl,
+				providerId: providerId
+			};
+		} catch (ex) {
+			return {
+				success: false,
+				error: {
+					message: ex.message,
+					type: "UNKNOWN"
+				}
+			};
+		}
+	}
+
+	@lspHandler(CheckPullRequestPreconditionsRequestType)
+	async checkPullRequestPreconditions(
+		request: CheckPullRequestPreconditionsRequest
+	): Promise<CheckPullRequestPreconditionsResponse> {
+		const { git } = SessionContainer.instance();
+		try {
+			const review = await this.getById(request.reviewId);
+			const repo = await git.getRepositoryById(review.reviewChangesets[0].repoId);
+
+			if (!repo) {
+				return {
+					success: false,
+					error: { type: "REPO_NOT_FOUND" }
+				};
+			}
+			// const gitRepos = Array.from(await git.getRepositories());
+			// const repos = gitRepos.find(_ => _.id === repo.id);
+			// if (!repos) {
+			// 	return {
+			// 		success: false,
+			// 		error: {
+			// 			type: "REPO_NOT_OPEN"
+			// 		}
+			// 	};
+			// }
+			const branch = review.reviewChangesets[0].branch;
 			const branches = await git.getBranches(repo!.path);
 			const { providerRegistry } = SessionContainer.instance();
 			const user = await this.session.api.getMe();
@@ -506,9 +603,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			if (localCommits && localCommits.length > 0) {
 				return {
 					success: false,
-					error: {
-						type: "HAS_LOCAL_COMMITS"
-					}
+					error: { type: "HAS_LOCAL_COMMITS" }
 				};
 			}
 
@@ -516,9 +611,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			if (localModifications) {
 				return {
 					success: false,
-					error: {
-						type: "HAS_LOCAL_MODIFICATIONS"
-					}
+					error: { type: "HAS_LOCAL_MODIFICATIONS" }
 				};
 			}
 
@@ -527,26 +620,24 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			let providerId = "";
 			let defaultBranch = "";
 			let isConnected = false;
-			// this whole part is TODO
-			const githubRemote = gitRemotes.find(_ => _.domain === "github.com");
-			if (githubRemote) {
-				remoteUrl = githubRemote.uri.toString();
-				providerId = "github*com";
-				const providers = providerRegistry.getConnectedProviders(
-					user.user,
-					(p): p is ThirdPartyIssueProvider & ThirdPartyProviderSupportsPullRequests => {
-						const thirdPartyIssueProvider = p as ThirdPartyIssueProvider;
-						return (
-							thirdPartyIssueProvider.getConfig().id === "github*com" &&
-							thirdPartyIssueProvider &&
-							typeof thirdPartyIssueProvider.supportsPullRequests === "function" &&
-							thirdPartyIssueProvider.supportsPullRequests()
-						);
-					}
-				);
-				const provider = providers[0];
-				if (provider) {
+
+			const providers = providerRegistry.getConnectedProviders(
+				user.user,
+				(p): p is ThirdPartyIssueProvider & ThirdPartyProviderSupportsPullRequests => {
+					const thirdPartyIssueProvider = p as ThirdPartyIssueProvider;
+					const name = thirdPartyIssueProvider.getConfig().name;
+					return name === "github" || name === "github_enterprise";
+				}
+			);
+			let success = false;
+			const _projectsByRemotePath = new Map(gitRemotes.map(obj => [obj.path, obj]));
+			for (const provider of providers) {
+				const remotePaths = await provider.getRemotePaths(repo, _projectsByRemotePath);
+				if (remotePaths && remotePaths.length) {
+					providerId = provider.getConfig().id;
 					isConnected = true;
+					// just need any url here...
+					remoteUrl = "http://foo.com/" + remotePaths[0];
 					const providerRepoInfo = await providerRegistry.getRepoInfo({
 						providerId: providerId,
 						remote: remoteUrl
@@ -554,22 +645,37 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 					if (providerRepoInfo) {
 						defaultBranch = providerRepoInfo.defaultBranch;
 						if (providerRepoInfo.pullRequests && request.baseRefName && request.headRefName) {
-							const existingPullRequest = providerRepoInfo.pullRequests.find((_: any) => _.baseRefName === request.baseRefName && _.headRefName === request.headRefName);
+							const existingPullRequest = providerRepoInfo.pullRequests.find(
+								(_: any) =>
+									_.baseRefName === request.baseRefName && _.headRefName === request.headRefName
+							);
 							if (existingPullRequest) {
 								return {
 									success: false,
 									error: {
-										type: "HAS_PULL_REQUEST"
+										type: "ALREADY_HAS_PULL_REQUEST"
 									}
 								};
 							}
 						}
+						success = true;
+						// break out of providers loop
+						break;
 					}
 				}
 			}
+			if (!success) {
+				// if we couldn't match a provider against a remote, that's unsupported
+				return {
+					success: false,
+					error: {
+						type: "REQUIRES_PROVIDER"
+					}
+				};
+			}
 
 			return {
-				success: true,
+				success: success,
 				remote: remoteUrl,
 				providerId: providerId,
 				pullRequestProvider: {
@@ -624,13 +730,16 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				return {
 					success: false,
 					error: {
-						message: result.error.message,
-						type: "UNKNOWN"
+						message:  result && result.error && result.error.message ? result.error.message : "",
+						type: "PROVIDER"
 					}
 				};
 			}
 
-			// TODO save data to review
+			await this.update({
+				id: review.id,
+				pullRequestUrl: result.url
+			});
 
 			return {
 				success: true,

@@ -268,7 +268,7 @@ export interface CheckReviewPreconditionsResponse {
 	success: boolean;
 	error?: {
 		message: string;
-		type: "REPO_NOT_FOUND" | "COMMIT_NOT_FOUND" | "UNKNOWN" | string;
+		type: "REPO_NOT_FOUND" | "REPO_NOT_OPEN" | "COMMIT_NOT_FOUND" | "UNKNOWN" | string;
 	};
 }
 
@@ -278,6 +278,31 @@ export const CheckReviewPreconditionsRequestType = new RequestType<
 	void,
 	void
 >("codestream/review/checkPreconditions");
+
+
+export interface CheckPullRequestBranchPreconditionsRequest {
+	reviewId: string;
+	headRefName?: string;
+	baseRefName?: string;
+}
+
+export interface CheckPullRequestBranchPreconditionsResponse {
+	success: boolean;
+	remote?: string;
+	providerId?: string;
+
+	error?: {
+		message?: string;
+		type?: "REPO_NOT_FOUND" | "ALREADY_HAS_PULL_REQUEST" | "UNKNOWN" | "PROVIDER" | string;
+	};
+}
+
+export const CheckPullRequestBranchPreconditionsRequestType = new RequestType<
+	CheckPullRequestBranchPreconditionsRequest,
+	CheckPullRequestBranchPreconditionsResponse,
+	void,
+	void
+>("codestream/review/pr/branch/checkPreconditions");
 
 export interface CheckPullRequestPreconditionsRequest {
 	reviewId: string;

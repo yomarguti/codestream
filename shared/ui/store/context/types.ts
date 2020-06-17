@@ -28,7 +28,8 @@ export enum ContextActionsType {
 	SetComposeCodemarkActive = "@context/SetComposeCodemarkActive",
 	SetSpatialViewPRCommentsToggle = "@context/SetSpatialViewPRCommentsToggle",
 	RepositionCodemark = "@context/RepositionCodemark",
-	SetCurrentReview = "@context/SetCurrentReview"
+	SetCurrentReview = "@context/SetCurrentReview",
+	SetCurrentPullRequest = "@context/SetCurrentPullRequest"
 }
 
 /**

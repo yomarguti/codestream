@@ -125,6 +125,16 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 	private _bitbucketUserId: string | undefined;
 	private _knownRepos = new Map<string, BitbucketRepo>();
 
+	async getRemotePaths(repo: any, _projectsByRemotePath: any) {
+		await this.ensureConnected();
+		const remotePaths = await getRemotePaths(
+			repo,
+			this.getIsMatchingRemotePredicate(),
+			_projectsByRemotePath
+		);
+		return remotePaths;
+	}
+
 	get displayName() {
 		return "Bitbucket";
 	}
@@ -410,7 +420,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 	>();
 
 	private _isMatchingRemotePredicate = (r: GitRemote) => r.domain === "bitbucket.org";
-	protected getIsMatchingRemotePredicate() {
+	getIsMatchingRemotePredicate() {
 		return this._isMatchingRemotePredicate;
 	}
 

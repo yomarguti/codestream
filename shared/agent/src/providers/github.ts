@@ -19,7 +19,9 @@ import {
 	GitHubBoard,
 	GitHubCreateCardRequest,
 	GitHubCreateCardResponse,
-	GitHubUser
+	GitHubUser,
+	CreatePullRequestRequest,
+	CreatePullRequestResponse
 } from "../protocol/agent.protocol";
 import { CodemarkType, CSGitHubProviderInfo, CSReferenceLocation } from "../protocol/api.protocol";
 import { Arrays, Functions, log, lspProvider, Strings } from "../system";
@@ -30,7 +32,10 @@ import {
 	REFRESH_TIMEOUT,
 	ThirdPartyIssueProviderBase,
 	ThirdPartyProviderSupportsIssues,
-	ThirdPartyProviderSupportsPullRequests
+	ThirdPartyProviderSupportsPullRequests,
+	ProviderCreatePullRequestRequest,
+	ProviderCreatePullRequestResponse,
+	ProviderGetRepoInfoResponse
 } from "./provider";
 
 interface GitHubRepo {
@@ -45,6 +50,16 @@ const diffHunkRegex = /^@@ -([\d]+)(?:,([\d]+))? \+([\d]+)(?:,([\d]+))? @@/;
 @lspProvider("github")
 export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProviderInfo>
 	implements ThirdPartyProviderSupportsIssues, ThirdPartyProviderSupportsPullRequests {
+	async getRemotePaths(repo: any, _projectsByRemotePath: any) {
+		await this.ensureConnected();
+		const remotePaths = await getRemotePaths(
+			repo,
+			this.getIsMatchingRemotePredicate(),
+			_projectsByRemotePath
+		);
+		return remotePaths;
+	}
+
 	private _githubUserId: string | undefined;
 	private _knownRepos = new Map<string, GitHubRepo>();
 
@@ -360,33 +375,27 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 	@log()
 	async createPullRequest(
-		request: CreatePullRequestRequest
-	): Promise<CreatePullRequestResponse | undefined> {
-		void (await this.ensureConnected());
-
-		if (!(await this.isPRApiCompatible())) return undefined;
-
+		request: ProviderCreatePullRequestRequest
+	): Promise<ProviderCreatePullRequestResponse | undefined> {
 		try {
-			const repoInfo = await this.getRepoInfo({ remote: request.remote });
-			if (!repoInfo) {
+			void (await this.ensureConnected());
+
+			if (!(await this.isPRApiCompatible())) {
 				return {
 					error: {
-						message: `Could not query repo by remote ${request.remote}`
+						type: "UNKNOWN"
 					}
 				};
 			}
-			if (request.metadata && request.metadata.reviewPermalink) {
-				request.description += `\n\n\n[Changes reviewed on CodeStream](${request.metadata.reviewPermalink})`;
-				if (request.metadata.reviewers) {
-					request.description += ` by ${request.metadata.reviewers?.map(_ => _.name)?.join(", ")}`;
-				}
-				if (request.metadata.approvedAt) {
-					request.description += ` on ${new Date(
-						request.metadata.approvedAt
-					).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}`;
-				}
+
+			const repoInfo = await this.getRepoInfo({ remote: request.remote });
+			if (repoInfo && repoInfo.error) {
+				return {
+					error: repoInfo.error
+				};
 			}
-			const createPullRequestResponse = await this.client.request<CreatePullRequestResponse>(
+
+			const createPullRequestResponse = await this.client.request<GitHubCreatePullRequestResponse>(
 				`mutation CreatePullRequest($repositoryId:String!, $baseRefName:String!, $headRefName:String!, $title:String!, $body:String!) {
 					__typename
 					createPullRequest(input: {repositoryId: $repositoryId, baseRefName: $baseRefName, headRefName: $headRefName, title: $title, body: $body}) {
@@ -397,32 +406,39 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					}
 				  }`,
 				{
-					repositoryId: repoInfo.id,
+					repositoryId: repoInfo!.id,
 					baseRefName: request.baseRefName,
 					title: request.title,
 					headRefName: request.headRefName,
-					body: request.description
+					body: this.createDescription(request)
 				}
 			);
-			// TODO filter this into a better response object
-			return createPullRequestResponse;
+
+			return {
+				url: createPullRequestResponse.createPullRequest.pullRequest.url
+			};
 		} catch (ex) {
-			Logger.error(ex, "createPullRequest");
+			Logger.error(ex, "GitHub: createPullRequest", {
+				remote: request.remote,
+				baseRefName: request.baseRefName,
+				headRefName: request.headRefName
+			});
+			let errorMessage =
+				ex.response && ex.response.errors ? ex.response.errors[0].message : "Unknown error";
+			errorMessage = `GitHub: ${errorMessage}`;
 			return {
 				error: {
-					message:
-						ex.response && ex.response.errors ? ex.response.errors[0].message : "Unknown error"
+					type: "PROVIDER",
+					message: errorMessage
 				}
 			};
 		}
 	}
 
-	async getRepoInfo(request: { remote: string }): Promise<GetRepoInfoResponse | undefined> {
+	async getRepoInfo(request: { remote: string }): Promise<ProviderGetRepoInfoResponse> {
 		try {
-			const uri = URI.parse(request.remote);
-			const split = uri.path.split("/");
-			const owner = split[1];
-			const name = split[2].replace(".git", "");
+			const { owner, name } = this.getOwnerFromRemote(request.remote);
+
 			const response = await this.client.request<any>(
 				`query getRepoInfo($owner:String!, $name:String!) {
 				repository(owner:$owner, name:$name) {
@@ -456,9 +472,53 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				pullRequests: response.repository.pullRequests.nodes
 			};
 		} catch (ex) {
-			Logger.error(ex, "getRepoInfo");
+			Logger.error(ex, "GitHub: getRepoInfo", {
+				remote: request.remote
+			});
+			let errorMessage =
+				ex.response && ex.response.errors ? ex.response.errors[0].message : "Unknown GitHub error";
+			errorMessage = `GitHub: ${errorMessage}`;
+			return {
+				error: {
+					type: "PROVIDER",
+					message: errorMessage
+				}
+			};
 		}
-		return undefined;
+	}
+
+	protected createDescription(request: ProviderCreatePullRequestRequest): string | undefined {
+		if (
+			!request ||
+			request.description == null ||
+			!request.metadata ||
+			!request.metadata.reviewPermalink
+		) {
+			return request.description;
+		}
+
+		request.description += `\n\n\n[Changes reviewed on CodeStream](${request.metadata.reviewPermalink})`;
+		if (request.metadata.reviewers) {
+			request.description += ` by ${request.metadata.reviewers?.map(_ => _.name)?.join(", ")}`;
+		}
+		if (request.metadata.approvedAt) {
+			request.description += ` on ${new Date(
+				request.metadata.approvedAt
+			).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}`;
+		}
+		return request.description;
+	}
+
+	protected getOwnerFromRemote(remote: string): { owner: string; name: string } {
+		// HACKitude yeah, sorry
+		const uri = URI.parse(remote);
+		const split = uri.path.split("/");
+		const owner = split[1];
+		const name = split[2].replace(".git", "");
+		return {
+			owner,
+			name
+		};
 	}
 
 	private _commentsByRepoAndPath = new Map<
@@ -468,7 +528,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	private _prsByRepo = new Map<string, { expiresAt: number; prs: Promise<GitHubPullRequest[]> }>();
 
 	private _isMatchingRemotePredicate = (r: GitRemote) => r.domain === "github.com";
-	protected getIsMatchingRemotePredicate() {
+	getIsMatchingRemotePredicate() {
 		return this._isMatchingRemotePredicate;
 	}
 
@@ -819,32 +879,11 @@ interface GetPullRequestsResponse {
 	};
 }
 
-interface GitHubPullRequest {
-	id: string;
-	url: string;
-	baseRefName: string;
-	headRefName: string;
-}
-interface GetRepoInfoResponse {
-	id: string;
-	defaultBranch?: string;
-	pullRequests?: GitHubPullRequest[];
-}
-
-interface CreatePullRequestRequest {
-	remote: string;
-	title: string;
-	description?: string;
-	baseRefName: string;
-	headRefName: string;
-	metadata: {
-		reviewPermalink: string;
-		reviewers?: { name: string }[];
-		approvedAt?: number;
+interface GitHubCreatePullRequestResponse {
+	createPullRequest: {
+		pullRequest: {
+			id: string;
+			url: string;
+		};
 	};
-}
-
-interface CreatePullRequestResponse {
-	url?: string;
-	error?: { message?: string };
 }

@@ -10,6 +10,7 @@ import {
 	ConnectThirdPartyProviderRequest,
 	ConnectThirdPartyProviderRequestType,
 	ConnectThirdPartyProviderResponse,
+	CreatePullRequestResponse,
 	CreateThirdPartyCardRequest,
 	CreateThirdPartyCardRequestType,
 	CreateThirdPartyCardResponse,
@@ -35,7 +36,7 @@ import {
 } from "../protocol/agent.protocol";
 import { CodeStreamSession } from "../session";
 import { getProvider, getRegisteredProviders, log, lsp, lspHandler } from "../system";
-import { ThirdPartyIssueProvider, ThirdPartyPostProvider, ThirdPartyProvider } from "./provider";
+import { ThirdPartyIssueProvider, ThirdPartyPostProvider, ThirdPartyProvider, ProviderCreatePullRequestResponse, ProviderCreatePullRequestRequest } from "./provider";
 
 // NOTE: You must include all new providers here, otherwise the webpack build will exclude them
 export * from "./trello";
@@ -238,11 +239,7 @@ export class ThirdPartyProviderRegistry {
 	}
 
 	// TODO fix type
-	async createPullRequest(request: {
-		providerId: string,
-		title: string,
-		description?: string
-	}) {
+	async createPullRequest(request: ProviderCreatePullRequestRequest): Promise<ProviderCreatePullRequestResponse | undefined> {
 		const provider = getProvider(request.providerId);
 		if (provider === undefined) {
 			throw new Error(`No registered provider for '${request.providerId}'`);

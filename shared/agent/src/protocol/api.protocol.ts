@@ -613,6 +613,7 @@ export interface CSUpdateReviewRequest {
 	title?: string;
 	text?: string;
 	allReviewersMustApprove?: boolean;
+	pullRequestUrl?: string;
 
 	$addToSet?: {
 		/**

@@ -2,9 +2,13 @@
 
 import { GitRemote } from "git/gitService";
 import { URI } from "vscode-uri";
+import { Logger } from "../logger";
 import { EnterpriseConfigurationData } from "../protocol/agent.protocol.providers";
 import { log, lspProvider } from "../system";
-import { GitHubProvider } from "./github";
+import {
+	GitHubProvider
+} from "./github";
+import { ProviderCreatePullRequestRequest, ProviderCreatePullRequestResponse, ProviderPullRequestInfoResponse, ProviderGetRepoInfoResponse } from './provider';
 
 @lspProvider("github_enterprise")
 export class GitHubEnterpriseProvider extends GitHubProvider {
@@ -33,7 +37,7 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 		return `${returnHost}${this.apiPath}`;
 	}
 
-	protected getIsMatchingRemotePredicate() {
+	getIsMatchingRemotePredicate() {
 		const baseUrl = this._providerInfo?.data?.baseUrl || this.getConfig().host;
 		const configDomain = baseUrl ? URI.parse(baseUrl).authority : "";
 		return (r: GitRemote) => configDomain !== "" && r.domain === configDomain;
@@ -52,6 +56,86 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 	}
 
 	@log()
+	async createPullRequest(
+		request: ProviderCreatePullRequestRequest
+	): Promise<ProviderCreatePullRequestResponse | undefined> {
+		void (await this.ensureConnected());
+
+		if (!(await this.isPRApiCompatible())) return undefined;
+
+		try {
+			const repoInfo = await this.getRepoInfo({ remote: request.remote });
+			if (repoInfo && repoInfo.error) {
+				return {
+					error: repoInfo.error
+				};
+			}
+			const { owner, name } = this.getOwnerFromRemote(request.remote);
+
+			const createPullRequestResponse = await this.post<
+				GitHubEnterprisePullRequestRequest,
+				GitHubEnterprisePullRequestResponse
+			>(`/repos/${owner}/${name}/pulls`, {
+				head: request.headRefName,
+				base: request.baseRefName,
+				title: request.title,
+				body: this.createDescription(request)
+			});
+			return {
+				url: createPullRequestResponse.body.url
+			};
+		} catch (ex) {
+			Logger.error(ex, "GitHubEnterprise: getRepoInfo", {
+				remote: request.remote,
+				head: request.headRefName,
+				base: request.baseRefName
+			});
+			return {
+				error: {
+					type: "PROVIDER",
+					message: `GitHub Enterprise: ${ex.message}`
+				}
+			};
+		}
+	}
+
+	async getRepoInfo(request: { remote: string }): Promise<ProviderGetRepoInfoResponse> {
+		try {
+			const { owner, name } = this.getOwnerFromRemote(request.remote);
+			const repoResponse = await this.get<GitHubEnterpriseRepo>(`/repos/${owner}/${name}`);
+			const pullRequestResponse = await this.get<GitHubEnterprisePullRequest[]>(
+				`/repos/${owner}/${name}/pulls?state=open`
+			);
+			const pullRequests: ProviderPullRequestInfoResponse[] = [];
+			if (pullRequestResponse) {
+				pullRequestResponse.body.map(_ => {
+					return {
+						id: _.id,
+						url: _.html_url,
+						baseRefName: _.base.ref,
+						headRefName: _.head.ref
+					};
+				});
+			}
+			return {
+				id: repoResponse.body.id,
+				defaultBranch: repoResponse.body.default_branch,
+				pullRequests: pullRequests
+			};
+		} catch (ex) {
+			Logger.error(ex, "GitHubEnterprise: getRepoInfo", {
+				remote: request.remote
+			});
+			return {
+				error: {
+					type: "PROVIDER",
+					message: `GitHub Enterprise: ${ex.message}`
+				}
+			};
+		}
+	}
+
+	@log()
 	async configure(request: EnterpriseConfigurationData) {
 		await this.session.api.setThirdPartyProviderToken({
 			providerId: this.providerConfig.id,
@@ -63,4 +147,26 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 		});
 		this.session.updateProviders();
 	}
+}
+
+interface GitHubEnterpriseRepo {
+	id: string;
+	full_name: string;
+	path: string;
+	has_issues: boolean;
+	default_branch: string;
+}
+
+interface GitHubEnterprisePullRequest {
+	id: string;
+	html_url: string;
+	base: { ref: string };
+	head: { ref: string };
+}
+
+interface GitHubEnterprisePullRequestRequest {}
+
+interface GitHubEnterprisePullRequestResponse {
+	id: string;
+	url: string;
 }

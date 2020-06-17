@@ -341,7 +341,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	>();
 
 	private _isMatchingRemotePredicate = (r: GitRemote) => r.domain === "gitlab.com";
-	protected getIsMatchingRemotePredicate() {
+	getIsMatchingRemotePredicate() {
 		return this._isMatchingRemotePredicate;
 	}
 

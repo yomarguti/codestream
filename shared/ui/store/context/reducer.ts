@@ -17,6 +17,7 @@ const initialState: ContextState = {
 	currentTeamId: "",
 	currentStreamId: "",
 	currentCodemarkId: undefined,
+	currentPullRequestReviewId: undefined,
 	isRepositioning: false,
 	issueProvider: undefined,
 	threadId: undefined,
@@ -109,6 +110,9 @@ export function reduceContext(
 
 		case ContextActionsType.SetCurrentReview:
 			return { ...state, currentReviewId: action.payload.reviewId };
+
+		case ContextActionsType.SetCurrentPullRequest:
+			return { ...state, currentPullRequestReviewId: action.payload.reviewId };
 
 		case ContextActionsType.SetProfileUser:
 			return { ...state, profileUserId: action.payload };
