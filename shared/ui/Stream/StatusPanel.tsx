@@ -186,15 +186,8 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const [branchTouched, setBranchTouched] = useState(false);
 	const [configureBranchNames, setConfigureBranchNames] = useState(false);
 
-	const showMoveIssueCheckbox = React.useMemo(() => {
-		return label && label.startsWith("http");
-	}, [label]);
-	const showCreateBranchCheckbox = React.useMemo(() => {
-		return label; // && label.startsWith("http");
-	}, [label]);
-
 	const setTheLabel = (value: string, newBranch?: string) => {
-		setLabel(value);
+		setLabel(value || "");
 
 		if (newBranch) {
 			setNewBranch(newBranch);
@@ -259,6 +252,16 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	}, [derivedState.textEditorUri]);
 
 	const same = label == status.label && icon == status.icon;
+
+	console.warn("SAME: ", same);
+	console.warn("STATUS: ", status);
+	console.warn("LABEL: ", label);
+	const showMoveIssueCheckbox = React.useMemo(() => {
+		return !same && label && label.startsWith("http");
+	}, [label, same]);
+	const showCreateBranchCheckbox = React.useMemo(() => {
+		return !same && label; // && label.startsWith("http");
+	}, [label, same]);
 
 	const save = async () => {
 		setLoading(true);
@@ -451,7 +454,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								autoFocus={true}
 								type="text"
 								onChange={e => setTheLabel(e.target.value, makeBranchName(e.target.value))}
-								placeholder="Enter description or select issue"
+								placeholder="Enter description or select ticket"
 							/>
 						</StatusInput>
 						<div style={{ paddingLeft: "6px" }}>
@@ -502,11 +505,13 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 						</div>
 						<div style={{ height: "5px" }}></div>
 						{scmError && <SCMError>{scmError}</SCMError>}
-						<ButtonRow>
-							<Button onClick={save} isLoading={loading}>
-								{saveLabel}
-							</Button>
-						</ButtonRow>
+						{!same && (
+							<ButtonRow>
+								<Button onClick={save} isLoading={loading}>
+									{saveLabel}
+								</Button>
+							</ButtonRow>
+						)}
 						<div style={{ marginTop: "20px", textAlign: "center" }}>
 							<div style={{ display: "inline-block" }}>
 								<VideoLink href={"step.video"}>

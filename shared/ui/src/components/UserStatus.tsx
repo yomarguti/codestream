@@ -36,8 +36,7 @@ const formatTheDate = time => {
 
 export function UserStatus(props: { user: CSUser; className?: string }) {
 	const { status } = props.user;
-	if (!status) return null;
-	if (!status.label && !status.icon) return null;
+	if (!status || !status.label) return null;
 	const now = new Date().getTime();
 	if (status.expires && status.expires < now) return null;
 
