@@ -1968,6 +1968,7 @@ class ReviewForm extends React.Component<Props, State> {
 									{ label: "-" },
 									{
 										label: "Remove from Review",
+										key: "remove",
 										action: () => this.removeReviewer(email)
 									}
 								] as any;
@@ -1978,12 +1979,13 @@ class ReviewForm extends React.Component<Props, State> {
 												Assign all code from <span className="highlight">{email}</span> to{" "}
 											</span>
 										),
+										key: "assign-code",
 										submenu: this.props.teamMembers
 											.filter(member => member.isRegistered)
 											.map(member => {
 												return {
 													label: <HeadshotName person={member} />,
-													key: member.id,
+													key: "assign-" + member.id,
 													action: () => this.addBlameMap(email, member.id)
 												};
 											})
@@ -1992,6 +1994,7 @@ class ReviewForm extends React.Component<Props, State> {
 								const menu = <HeadshotMenu person={person} menuItems={menuItems} />;
 								// # of times you stomped on their code
 								if (coAuthorLabels[email]) {
+									console.warn("MENU ITEMS ARE: ", menuItems);
 									return (
 										<Tooltip placement="bottom" title={coAuthorLabels[email]}>
 											<span>{menu}</span>

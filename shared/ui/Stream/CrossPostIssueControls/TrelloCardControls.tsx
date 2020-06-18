@@ -272,6 +272,8 @@ interface DropdownProps {
 	knownIssueProviderOptions: any;
 }
 
+const EMPTY_ARRAY = {};
+
 export function TrelloCardDropdown(props: React.PropsWithChildren<Props & DropdownProps>) {
 	const dispatch = useDispatch();
 	const data = useSelector((state: CodeStreamState) =>
@@ -282,8 +284,8 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props & Dropdo
 		const currentUser = state.users[state.session.userId!] as CSMe;
 
 		const workPreferences = preferences["startWork-" + props.provider.id] || {};
-		const filterBoards = workPreferences.filterBoards || {};
-		const filterAssignees = workPreferences.filterAssignees || {};
+		const filterBoards = workPreferences.filterBoards || EMPTY_ARRAY;
+		const filterAssignees = workPreferences.filterAssignees || "mine";
 		return { currentUser, filterBoards, filterAssignees };
 	});
 

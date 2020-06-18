@@ -82,6 +82,7 @@ const GitTimeline = styled.div`
 
 	.adhoc & {
 		top: 123px;
+		top: 25px;
 	}
 `;
 
@@ -159,6 +160,9 @@ const Action = styled.div`
 	border-radius: 50%;
 	background: #999;
 	top: 103px;
+	.adhoc & {
+		top: 25px;
+	}
 	z-index: 2;
 	&:before {
 		content: "";
@@ -255,7 +259,8 @@ const Comment = styled(Action)`
 	top: -6px;
 	left: -6px;
 	.adhoc & {
-		top: 102px;
+		// top: 102px;
+		top: 25px;
 		left: 120px;
 	}
 `;
@@ -265,7 +270,8 @@ const Issue = styled(Action)`
 	bottom: 0;
 	left: -6px;
 	.adhoc & {
-		top: 102px;
+		// top: 102px;
+		top: 25px;
 		bottom: auto;
 		left: 200px;
 	}
@@ -622,22 +628,41 @@ const CommentOnCode = (
 		cadence.
 		<br />
 		<br />
-		This algorithm provides for two major advantages (comments carry forward, and works across
-		branches).
+		The end result is an experience where you can always comment on the code you're looking at in
+		your editor, whether it's old code you're trying to figure out, new code you've just written, or
+		code that one of your teammates just changed.
+		<br />
+		<br />
+		One of the simplest use-cases is when you see code for the first time and don't quite grok it,
+		you can just select it and ask your teammates "how does this work?" CodeStream will even
+		at-mention the authors of the code you've selected, to make it easier to get an answer from the
+		right person.
+		<br />
+		<br />
+		CodeStream integrates into Slack and MS Teams, and your teammates can reply to your questions
+		without having to register (although we hope they do! ;)
+		<VideoLink href={"https://youtu.be/RPaIIZgaFK8"}>
+			<img src="https://i.imgur.com/9IKqpzf.png" />
+			<span>Discussing Code with CodeStream</span>
+		</VideoLink>
 	</Content>
 );
 
 const FileAnIssue = (
 	<Content>
 		<h2>Perform Ad-hoc Code Review</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-		labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-		laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-		voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
-		non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-		<VideoLink href={"step.video"}>
+		Pre-merge Code Review is a great way to maintain code quality and share information on your
+		team. CodeStream also allows you to do a code review post-merge, as you come across code smell
+		that you want to ensure gets fixed.
+		<br />
+		<br />
+		CodeStream integrates with nine popular issue tracking services such as Jira and Trello,
+		allowing you to create tickets as you come across code that needs to be fixed. It's as simple as
+		selecting the code, and clicking an icon, and CodeStream takes care of capturing all the context
+		for the assignee.
+		<VideoLink href={"https://youtu.be/lUI110T_SHY"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
-			<span>How do I grab a ticket?</span>
+			<span>Ad-hock Code Review</span>
 		</VideoLink>
 	</Content>
 );
@@ -680,8 +705,7 @@ const FLOW_CONTENT = {
 		RequestFeedback,
 		DiscussAndRefine,
 		GetFinalApproval,
-		CommitAndPush,
-		FinalThought
+		CommitAndPush
 	],
 	standard: [
 		CreateBranch,
@@ -689,8 +713,7 @@ const FLOW_CONTENT = {
 		RequestFeedback,
 		DiscussAndRefine,
 		GetFinalApproval,
-		CreatePRAndMerge,
-		FinalThought
+		CreatePRAndMerge
 	],
 	rigorous: [
 		CreateBranch,
@@ -699,8 +722,7 @@ const FLOW_CONTENT = {
 		RequestFeedback,
 		DiscussAndRefine,
 		GetPreliminaryApproval,
-		CreatePRAndRequestApproval,
-		FinalThought
+		CreatePRAndRequestApproval
 	]
 };
 
@@ -758,6 +780,8 @@ export const Flow = (props: { flow: "adhoc" | "simplified" | "standard"; active?
 	// 	make every step of the process easier for you and your team.
 	// </p>
 
+	const height = flow === "adhoc" ? 100 : flow === "simplified" ? 150 : 200;
+
 	return (
 		<Root ref={rootRef}>
 			{flowDescriptions[flow]}
@@ -767,14 +791,14 @@ export const Flow = (props: { flow: "adhoc" | "simplified" | "standard"; active?
 					position: "absolute",
 					width: "100%",
 					transformOrigin: "top left",
-					textAlign: "center"
+					textAlign: "center",
+					marginTop: flow === "simplified" ? "-50px" : 0
 				}}
 				className={flow}
 			>
 				<Diagram>
 					{flow === "adhoc" && (
 						<Contents>
-							<GitTimeline />
 							<Comment className={active === 0 ? "active" : ""} onClick={() => clickAction(0)}>
 								<Icon name="comment" />
 							</Comment>
@@ -922,8 +946,12 @@ export const Flow = (props: { flow: "adhoc" | "simplified" | "standard"; active?
 					)}
 				</Diagram>
 			</div>
-			<div style={{ marginTop: `${scale * 200}px`, textAlign: "center" }}>
-				<Carousel active={active} lastContent={6} onChange={value => clickAction(value)}>
+			<div style={{ marginTop: `${scale * height}px`, textAlign: "center" }}>
+				<Carousel
+					active={active}
+					lastContent={FLOW_CONTENT[flow].length - 1}
+					onChange={value => clickAction(value)}
+				>
 					{FLOW_CONTENT[flow][active]}
 				</Carousel>
 			</div>
