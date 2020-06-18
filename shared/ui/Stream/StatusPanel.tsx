@@ -205,6 +205,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 					providerName: status.ticketProvider,
 					title: status.label,
 					description: "",
+					idList: "",
 					moveCardLabel: "Move this card to",
 					moveCardOptions: [] as any
 			  }
@@ -249,6 +250,8 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 				const index = card.moveCardOptions.findIndex(option => option.id === card.idList);
 				const next = card.moveCardOptions[index + 1];
 				if (next) setMoveCardDestination(next);
+				else setMoveCardDestination(card.moveCardOptions[0]);
+			} else {
 			}
 		}
 
@@ -465,6 +468,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		: card.moveCardOptions.map(option => {
 				return {
 					label: option.name,
+					icon: <Icon name={card && option.id === card.idList ? "arrow-right" : "blank"} />,
 					key: option.id,
 					action: () => setMoveCardDestination(option)
 				};
@@ -578,7 +582,9 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 							{showMoveCardCheckbox && (
 								<StyledCheckbox name="move-issue" checked={moveCard} onChange={v => setMoveCard(v)}>
 									{card && card.moveCardLabel}{" "}
-									<InlineMenu items={moveCardItems}>{moveCardDestinationLabel}</InlineMenu>
+									<InlineMenu items={moveCardItems}>
+										{moveCardDestinationLabel || "make selection"}
+									</InlineMenu>
 								</StyledCheckbox>
 							)}
 						</div>
