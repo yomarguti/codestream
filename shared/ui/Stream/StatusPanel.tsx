@@ -141,6 +141,7 @@ const CardDescription = styled.div`
 	border-top: none;
 	margin-bottom: 20px;
 	margin-top: -20px;
+	background: var(--base-background-color);
 `;
 
 const EMPTY_STATUS = {
@@ -190,11 +191,18 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const [branchTouched, setBranchTouched] = useState(false);
 	const [customBranchName, setCustomBranchName] = useState("");
 	const [configureBranchNames, setConfigureBranchNames] = useState(false);
+	const [autocomplete, setAutocomplete] = useState(false);
+	const inputRef = React.useRef<HTMLInputElement>(null);
 
 	const handleChangeStatus = value => {
-		if (card) return;
+		// if (card) return;
 		setLabel(value || "");
 		setCard(undefined);
+		setAutocomplete(true);
+	};
+
+	const handleBlurStatus = () => {
+		// setAutocomplete(false);
 	};
 
 	const selectCard = card => {
@@ -202,6 +210,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			setLabel(card.title || "");
 			setCard(card);
 		}
+		setAutocomplete(false);
 	};
 
 	const dateToken = () => {
@@ -285,7 +294,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			//@ts-ignore
 			return replaceTicketTokens(derivedState.branchTicketTemplate, card.id, card.title);
 		else return replaceDescriptionTokens(derivedState.branchDescriptionTemplate, label);
-	}, [label, card, manuallySelectedBranch, customBranchName]);
+	}, [label, card, manuallySelectedBranch, customBranchName, configureBranchNames]);
 
 	const save = async () => {
 		setLoading(true);
@@ -404,7 +413,6 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	if (configureBranchNames)
 		return <ConfigureBranchNames onClose={() => setConfigureBranchNames(false)} />;
 
-	console.warn("CARD IS: ", card);
 	return (
 		<div className="full-height-panel">
 			<form className="standard-form vscroll" style={{ padding: "10px" }}>
@@ -420,7 +428,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 									<Icon name={card.providerName} />
 								</div>
 							)}
-							{!label ? (
+							{!label || (label && autocomplete) ? (
 								<CrossPostIssueContext.Provider
 									value={{
 										selectedAssignees: [],
@@ -428,7 +436,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 										setSelectedAssignees: () => {}
 									}}
 								>
-									<IssueDropdown />
+									<IssueDropdown q={label} focusInput={inputRef} />
 								</CrossPostIssueContext.Provider>
 							) : (
 								<div className="clear" onClick={clear}>
@@ -437,6 +445,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 							)}
 							<input
 								id="status-input"
+								ref={inputRef}
 								name="status"
 								value={label}
 								className="input-text control"
@@ -444,6 +453,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								disabled={card ? true : false}
 								type="text"
 								onChange={e => handleChangeStatus(e.target.value)}
+								onBlur={handleBlurStatus}
 								placeholder="Enter description or select ticket"
 							/>
 						</StatusInput>

@@ -26,6 +26,8 @@ import { disconnectProvider } from "@codestream/webview/store/providers/actions"
 
 interface Props {
 	provider: ThirdPartyProviderConfig;
+	q?: string;
+	focusInput?: React.RefObject<HTMLInputElement>;
 }
 
 export function TrelloCardControls(props: React.PropsWithChildren<Props>) {
@@ -379,6 +381,10 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 		target?: EventTarget;
 	}>({ open: false, target: undefined });
 
+	React.useEffect(() => {
+		setMenuState(state => ({ open: props.q ? true : false }));
+	}, [props.q]);
+
 	const handleClickDropdown = React.useCallback((event: React.MouseEvent) => {
 		if (data.isLoading) {
 			event.preventDefault();
@@ -436,6 +442,7 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 
 		const items = data.cards
 			.filter(card => !isFiltering || data.filterBoards[card.idBoard])
+			.filter(card => !props.q || card.name.includes(props.q))
 			.map(card => ({
 				label: card.name,
 				searchLabel: card.name,
@@ -463,16 +470,18 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 				icon: <Icon name="x" />
 			}
 		];
-		items.unshift(
-			{
-				label: "Filters & Settings",
-				icon: <Icon name="gear" />,
-				submenu: settingsItems
-			},
-			{ label: "-" }
-		);
+		if (!props.q) {
+			items.unshift(
+				{
+					label: "Filters & Settings",
+					icon: <Icon name="gear" />,
+					submenu: settingsItems
+				},
+				{ label: "-" }
+			);
+		}
 		return items;
-	}, [data.cards, data.boards, data.filterBoards]);
+	}, [data.cards, data.boards, data.filterBoards, props.q]);
 
 	return (
 		<>
@@ -483,14 +492,15 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 			>
 				{data.isLoading ? <Icon className="spin" name="sync" /> : <Icon name="chevron-down" />}
 			</span>
-			{menuState.open && (
+			{menuState.open && cardItems.length > 0 && (
 				<Menu
 					align="dropdownRight"
 					target={buttonRef.current}
 					items={cardItems}
 					dontCloseOnSelect={true}
 					action={selectCard}
-					limitWidth={true}
+					fullWidth={true}
+					focusInput={props.focusInput}
 				/>
 			)}
 		</>

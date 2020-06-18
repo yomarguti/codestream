@@ -40,6 +40,8 @@ interface Props extends ConnectedProps {
 	setIssueProvider(providerId?: string): void;
 	openPanel(...args: Parameters<typeof openPanel>): void;
 	isEditing?: boolean;
+	q?: string;
+	focusInput?: React.RefObject<HTMLInputElement>;
 }
 
 interface State {
@@ -108,7 +110,7 @@ class IssueDropdown extends React.Component<Props, State> {
 	};
 
 	renderProviderControls(providerOptions) {
-		const { issueProviderConfig } = this.props;
+		const { issueProviderConfig, q, focusInput } = this.props;
 		const providerInfo = issueProviderConfig
 			? this.getProviderInfo(issueProviderConfig.id)
 			: undefined;
@@ -123,7 +125,13 @@ class IssueDropdown extends React.Component<Props, State> {
 				);
 			}
 			case "trello": {
-				return <TrelloCardDropdown provider={providerInfo.provider}></TrelloCardDropdown>;
+				return (
+					<TrelloCardDropdown
+						provider={providerInfo.provider}
+						q={q}
+						focusInput={focusInput}
+					></TrelloCardDropdown>
+				);
 			}
 			case "asana": {
 				return (
@@ -204,6 +212,7 @@ class IssueDropdown extends React.Component<Props, State> {
 					? `${providerDisplay.displayName} - ${issueProvider.host}`
 					: providerDisplay.displayName;
 				return {
+					icon: <Icon name={providerDisplay.icon || "blank"} />,
 					value: providerId,
 					label: displayName,
 					action: providerId

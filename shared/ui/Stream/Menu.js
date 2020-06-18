@@ -13,6 +13,7 @@ import { logWarning } from "../logger";
  */
 export default class Menu extends Component {
 	disposables = [];
+	keydownListener = undefined;
 
 	constructor(props) {
 		super(props);
@@ -49,7 +50,7 @@ export default class Menu extends Component {
 				event.target.classList.remove(randomClassString);
 			}
 		};
-		if (this.el) {
+		if (this.el && !this.props.focusInput) {
 			const inputs = this.el.getElementsByTagName("input");
 			if (inputs[0]) inputs[0].focus();
 			else this.el.getElementsByClassName("focus-button")[0].focus();
@@ -68,6 +69,12 @@ export default class Menu extends Component {
 				{ source: "Menu.js", level: -1 }
 			)
 		);
+		if (this.props.focusInput && this.props.focusInput.current) {
+			this.keydownListener = this.props.focusInput.current.addEventListener(
+				"keydown",
+				this.handleKeyDown
+			);
+		}
 	}
 
 	repositionIfNecessary(loc) {
@@ -224,6 +231,9 @@ export default class Menu extends Component {
 			KeystrokeDispatcher.levelDown();
 			this.disposables.forEach(d => d.dispose());
 		}
+		if (this.props.focusInput && this.props.focusInput.current && this.keydownListener) {
+			this.props.focusInput.current.removeEventListener("keydown", this.keydownListener);
+		}
 	}
 
 	closeMenu() {
@@ -368,7 +378,8 @@ export default class Menu extends Component {
 				className={createClassString("menu-popup-body", {
 					dropdown,
 					"center-title": this.props.centerTitle,
-					"limit-width": this.props.limitWidth
+					"limit-width": this.props.limitWidth,
+					"full-width": this.props.fullWidth && !parentItem
 				})}
 			>
 				{this.props.title && !parentItem && !grandParentItem && (
