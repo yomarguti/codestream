@@ -64,6 +64,23 @@ export const ConfigureBranchNames = (props: { onClose: Function }) => {
 		props.onClose();
 	};
 
+	const Token = styled(props => {
+		return (
+			<div className={props.className}>
+				<span className="monospace">{"{" + props.text + "}"}</span>
+				{props.tip}
+			</div>
+		);
+	})`
+		padding: 2px 0;
+		color: var(--text-color-subtle);
+		.monospace {
+			color: var(--text-color-highlight);
+			display: inline-block;
+			width: 8em;
+		}
+	`;
+
 	return (
 		<Root>
 			<div className="full-height-panel">
@@ -98,7 +115,11 @@ export const ConfigureBranchNames = (props: { onClose: Function }) => {
 						</div>
 						<div style={{ margin: "30px 0 30px 0" }}>
 							<h3>Available tokens:</h3>
-							<span className="monospace">{"{username} {id} {title} {team} {date}"}</span>
+							<Token text="username" tip="Your CodeStream username" />
+							<Token text="team" tip="Your CodeStream Team name" />
+							<Token text="title" tip="The title of the ticket/card/issue" />
+							<Token text="id" tip="The id of the ticket/card/issue" />
+							<Token text="date" tip="Date in YYYY-MM-DD format" />
 						</div>
 						<div id="controls">
 							<h3>Maximum Branch Length:</h3>
