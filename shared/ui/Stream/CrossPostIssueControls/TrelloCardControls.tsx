@@ -367,18 +367,14 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 		})();
 	}, [data.currentList]);
 
-	const [mode, setMode] = React.useState("mine");
-
-	// reload "cards assigned to me"
 	React.useEffect(() => {
 		void (async () => {
-			if (mode !== "mine") return;
-
 			try {
 				updateDataState({ isLoading: true });
 				const response = await HostApi.instance.send(FetchThirdPartyCardsRequestType, {
 					providerId: props.provider.id,
-					assignedToMe: true
+					assignedToMe: true // derivedState.filterAssignees === "mine"
+					// assignedToAnyone: derivedState.filterAssignees === "all"
 				});
 				updateDataState({
 					isLoading: false,
@@ -389,7 +385,7 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 				updateDataState({ isLoading: false });
 			}
 		})();
-	}, [mode]);
+	}, [derivedState.filterAssignees]);
 
 	const [menuState, setMenuState] = React.useState<{
 		open: boolean;
@@ -413,24 +409,28 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 		}
 	}, []);
 
-	const selectCard = React.useCallback((card?: TrelloCard) => {
-		if (card) {
-			crossPostIssueContext.setValues({
-				url: card.url,
-				id: card.shortLink,
-				title: card.name,
-				description: card.desc,
-				providerName: "trello"
-			});
-		}
-		setMenuState({ open: false });
-	}, []);
+	const selectCard = React.useCallback(
+		(card?: TrelloCard) => {
+			if (card) {
+				const board = data.boards && data.boards.find(b => b.id === card.idBoard);
+				const lists = board && board.lists;
+				crossPostIssueContext.setValues({
+					url: card.url,
+					id: card.shortLink,
+					idList: card.idList,
+					title: card.name,
+					description: card.desc,
+					providerName: "trello",
+					moveCardLabel: "Move this card to",
+					moveCardOptions: lists
+				});
+			}
+			setMenuState({ open: false });
+		},
+		[data.boards]
+	);
 
-	const goMine = () => setMode("mine");
-	const goBoard = () => setMode("board");
-	const goSettings = () => setMode("settings");
 	const goDisconnect = () => dispatch(disconnectProvider(props.provider.id, "Status Panel"));
-	const noop = () => setMenuState({ open: false });
 
 	const crossPostIssueContext = React.useContext(CrossPostIssueContext);
 

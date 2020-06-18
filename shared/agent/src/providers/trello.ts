@@ -70,8 +70,27 @@ export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProvider
 
 		let response: ApiResponse<TrelloCard[]>;
 
-		// FIXME -- sort by dateLastActivity
 		if (request.assignedToMe) {
+			response = await this.get<TrelloCard[]>(
+				`/members/${this._trelloUserId}/cards?${qs.stringify({
+					cards: "open",
+					fields:
+						"id,name,desc,url,idList,idBoard,idOrganization,dateLastActivity,shortLink,idShort",
+					key: this.apiKey,
+					token: this.accessToken
+				})}`
+			);
+		} else if (request.assignedToAnyone) {
+			response = await this.get<TrelloCard[]>(
+				`/cards?${qs.stringify({
+					cards: "open",
+					fields:
+						"id,name,desc,url,idList,idBoard,idOrganization,dateLastActivity,shortLink,idShort",
+					key: this.apiKey,
+					token: this.accessToken
+				})}`
+			);
+		} else if (request.unassigned) {
 			response = await this.get<TrelloCard[]>(
 				`/members/${this._trelloUserId}/cards?${qs.stringify({
 					cards: "open",

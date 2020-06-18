@@ -191,7 +191,9 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 					url: status.ticketUrl,
 					providerName: status.ticketProvider,
 					title: status.label,
-					description: ""
+					description: "",
+					moveCardLabel: "Move this card to",
+					moveCardOptions: [] as any
 			  }
 			: undefined
 	);
@@ -229,7 +231,14 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		if (card && card.title) {
 			setLabel(card.title || "");
 			setCard(card);
+
+			if (card.moveCardOptions && card.moveCardOptions.length) {
+				const index = card.moveCardOptions.findIndex(option => option.id === card.idList);
+				const next = card.moveCardOptions[index + 1];
+				if (next) setMoveCardDestination(next);
+			}
 		}
+
 		setAutocomplete(false);
 	};
 
@@ -292,7 +301,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const same = label == status.label; // && icon == status.icon;
 
 	const showMoveCardCheckbox = React.useMemo(() => {
-		return !same && card && card.providerName;
+		return !same && card && card.moveCardOptions && card.moveCardOptions.length > 0;
 	}, [card, same]);
 	const showCreateBranchCheckbox = React.useMemo(() => {
 		return !same && label; // && label.startsWith("http");
@@ -430,6 +439,24 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		);
 	}
 
+	const setMoveCardDestination = option => {
+		setMoveCardDestinationId(option.id);
+		setMoveCardDestinationLabel(option.name);
+	};
+
+	const [moveCardDestinationId, setMoveCardDestinationId] = React.useState("");
+	const [moveCardDestinationLabel, setMoveCardDestinationLabel] = React.useState("");
+
+	const moveCardItems = !card
+		? []
+		: card.moveCardOptions.map(option => {
+				return {
+					label: option.name,
+					key: option.id,
+					action: () => setMoveCardDestination(option)
+				};
+		  });
+
 	if (configureBranchNames)
 		return <ConfigureBranchNames onClose={() => setConfigureBranchNames(false)} />;
 
@@ -515,9 +542,8 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 							)}
 							{showMoveCardCheckbox && (
 								<StyledCheckbox name="move-issue" checked={moveCard} onChange={v => setMoveCard(v)}>
-									Move this card to{" "}
-									<InlineMenu items={[{ label: "foo", key: "bar" }]}>In Progress</InlineMenu>
-									on Trello
+									{card && card.moveCardLabel}{" "}
+									<InlineMenu items={moveCardItems}>{moveCardDestinationLabel}</InlineMenu>
 								</StyledCheckbox>
 							)}
 						</div>
