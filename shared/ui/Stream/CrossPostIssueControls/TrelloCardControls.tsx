@@ -491,7 +491,7 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 				searchLabel: card.name,
 				icon: <Icon name="trello" />,
 				key: card.id,
-				action: card
+				action: { ...card }
 			})) as any;
 
 		const settingsItems = [
