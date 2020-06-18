@@ -70,6 +70,15 @@ object ReviewNotifications {
     }
 }
 
+object WorkNotifications {
+    class Start(
+        val uri: String?,
+        val source: String?
+    ) : WebViewNotification {
+        override fun getMethod() = "webview/work/start"
+    }
+}
+
 object StreamNotifications {
     class Show(
         val streamId: String,

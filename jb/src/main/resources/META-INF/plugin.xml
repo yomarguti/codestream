@@ -46,6 +46,10 @@
             <className>com.codestream.actions.CreateReview</className>
             <category>Other</category>
         </intentionAction>
+        <intentionAction>
+            <className>com.codestream.actions.StartWork</className>
+            <category>Other</category>
+        </intentionAction>
 
         <jbProtocolCommand implementation="com.codestream.commands.CodeStreamCommand"/>
     </extensions>
@@ -96,6 +100,14 @@
                 <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="R"
                                    replace-all="true"/>
                 <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="R"
+                                   replace-all="true"/>
+            </action>
+            <action id="CodeStream.StartWork" class="com.codestream.actions.StartWork" text="Start _Work"
+                    description="Start work" icon="/images/startwork.svg">
+                <keyboard-shortcut keymap="$default" first-keystroke="control shift SLASH" second-keystroke="W"/>
+                <keyboard-shortcut keymap="Mac OS X" first-keystroke="control SLASH" second-keystroke="W"
+                                   replace-all="true"/>
+                <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control SLASH" second-keystroke="W"
                                    replace-all="true"/>
             </action>
 
