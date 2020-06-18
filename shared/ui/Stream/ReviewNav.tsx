@@ -604,9 +604,9 @@ export function ReviewNav(props: Props) {
 								<div
 									style={{
 										marginTop: "50px",
-										textAlign: "right",
-										fontSize: "smaller",
+										float: "right",
 										cursor: "pointer",
+										fontSize: "smaller",
 										opacity: 0.5
 									}}
 								>
