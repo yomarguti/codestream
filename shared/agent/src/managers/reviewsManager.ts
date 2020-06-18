@@ -1,15 +1,13 @@
 "use strict";
 import { applyPatch } from "diff";
 import * as path from "path";
-import {
-	getRemotePaths,
-	ThirdPartyIssueProvider,
-	ThirdPartyProviderSupportsPullRequests
-} from "../providers/provider";
 import { MessageType } from "../api/apiProvider";
 import { Container, SessionContainer } from "../container";
 import { Logger } from "../logger";
 import {
+	CheckPullRequestBranchPreconditionsRequest,
+	CheckPullRequestBranchPreconditionsRequestType,
+	CheckPullRequestBranchPreconditionsResponse,
 	CheckPullRequestPreconditionsRequest,
 	CheckPullRequestPreconditionsRequestType,
 	CheckPullRequestPreconditionsResponse,
@@ -48,10 +46,7 @@ import {
 	StartReviewResponse,
 	UpdateReviewRequest,
 	UpdateReviewRequestType,
-	UpdateReviewResponse,
-	CheckPullRequestBranchPreconditionsRequest,
-	CheckPullRequestBranchPreconditionsRequestType,
-	CheckPullRequestBranchPreconditionsResponse
+	UpdateReviewResponse
 } from "../protocol/agent.protocol";
 import {
 	CSReview,
@@ -61,6 +56,11 @@ import {
 	CSTransformedReviewChangeset,
 	FileStatus
 } from "../protocol/api.protocol";
+import {
+	getRemotePaths,
+	ThirdPartyIssueProvider,
+	ThirdPartyProviderSupportsPullRequests
+} from "../providers/provider";
 import { log, lsp, lspHandler, Strings } from "../system";
 import { gate } from "../system/decorators/gate";
 import { xfs } from "../xfs";
@@ -573,7 +573,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	async checkPullRequestPreconditions(
 		request: CheckPullRequestPreconditionsRequest
 	): Promise<CheckPullRequestPreconditionsResponse> {
-		const { git } = SessionContainer.instance();
+		const { git, providerRegistry } = SessionContainer.instance();
 		try {
 			const review = await this.getById(request.reviewId);
 			const repo = await git.getRepositoryById(review.reviewChangesets[0].repoId);
@@ -584,19 +584,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 					error: { type: "REPO_NOT_FOUND" }
 				};
 			}
-			// const gitRepos = Array.from(await git.getRepositories());
-			// const repos = gitRepos.find(_ => _.id === repo.id);
-			// if (!repos) {
-			// 	return {
-			// 		success: false,
-			// 		error: {
-			// 			type: "REPO_NOT_OPEN"
-			// 		}
-			// 	};
-			// }
 			const branch = review.reviewChangesets[0].branch;
 			const branches = await git.getBranches(repo!.path);
-			const { providerRegistry } = SessionContainer.instance();
 			const user = await this.session.api.getMe();
 
 			const localCommits = await git.getLocalCommits(repo.path);
@@ -637,7 +626,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 					providerId = provider.getConfig().id;
 					isConnected = true;
 					// just need any url here...
-					remoteUrl = "http://foo.com/" + remotePaths[0];
+					remoteUrl = "https://example.com/" + remotePaths[0];
 					const providerRepoInfo = await providerRegistry.getRepoInfo({
 						providerId: providerId,
 						remote: remoteUrl
@@ -730,14 +719,16 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				return {
 					success: false,
 					error: {
-						message:  result && result.error && result.error.message ? result.error.message : "",
+						message: result && result.error && result.error.message ? result.error.message : "",
 						type: "PROVIDER"
 					}
 				};
 			}
 
-			await this.update({
+			const updateReviewResult = await this.update({
 				id: review.id,
+				pullRequestProviderId: request.providerId,
+				pullRequestTitle: result.title,
 				pullRequestUrl: result.url
 			});
 

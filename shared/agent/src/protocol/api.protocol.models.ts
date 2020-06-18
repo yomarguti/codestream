@@ -245,6 +245,8 @@ export interface CSReview extends CSEntity {
 	permalink?: string;
 	approvedAt?: number;
 	pullRequestUrl?: string;
+	pullRequestTitle?: string;
+	pullRequestProviderId?: string;
 }
 
 export interface CSPost extends CSEntity {

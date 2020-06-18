@@ -4,10 +4,7 @@ import CancelButton from "./CancelButton";
 import Tooltip from "./Tooltip";
 import { Button } from "../src/components/Button";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
-import {
-	setCurrentReview,
-	setCurrentPullRequest
-} from "@codestream/webview/store/context/actions";
+import { setCurrentReview, setCurrentPullRequest } from "@codestream/webview/store/context/actions";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "..";
 import { fetchReview } from "@codestream/webview/store/reviews/actions";

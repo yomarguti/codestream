@@ -19,23 +19,21 @@ import {
 	GitHubBoard,
 	GitHubCreateCardRequest,
 	GitHubCreateCardResponse,
-	GitHubUser,
-	CreatePullRequestRequest,
-	CreatePullRequestResponse
+	GitHubUser
 } from "../protocol/agent.protocol";
 import { CodemarkType, CSGitHubProviderInfo, CSReferenceLocation } from "../protocol/api.protocol";
 import { Arrays, Functions, log, lspProvider, Strings } from "../system";
 import {
 	getOpenedRepos,
 	getRemotePaths,
+	ProviderCreatePullRequestRequest,
+	ProviderCreatePullRequestResponse,
+	ProviderGetRepoInfoResponse,
 	PullRequestComment,
 	REFRESH_TIMEOUT,
 	ThirdPartyIssueProviderBase,
 	ThirdPartyProviderSupportsIssues,
-	ThirdPartyProviderSupportsPullRequests,
-	ProviderCreatePullRequestRequest,
-	ProviderCreatePullRequestResponse,
-	ProviderGetRepoInfoResponse
+	ThirdPartyProviderSupportsPullRequests
 } from "./provider";
 
 interface GitHubRepo {
@@ -400,8 +398,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					__typename
 					createPullRequest(input: {repositoryId: $repositoryId, baseRefName: $baseRefName, headRefName: $headRefName, title: $title, body: $body}) {
 					  pullRequest {
-							id,
-							url
+							number,
+							url,
+							title
 						}
 					}
 				  }`,
@@ -413,9 +412,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					body: this.createDescription(request)
 				}
 			);
-
+			const pullRequest = createPullRequestResponse.createPullRequest.pullRequest;
+			const title = `#${pullRequest.number} ${pullRequest.title}`;
 			return {
-				url: createPullRequestResponse.createPullRequest.pullRequest.url
+				url: pullRequest.url,
+				title: title
 			};
 		} catch (ex) {
 			Logger.error(ex, "GitHub: createPullRequest", {
@@ -882,7 +883,8 @@ interface GetPullRequestsResponse {
 interface GitHubCreatePullRequestResponse {
 	createPullRequest: {
 		pullRequest: {
-			id: string;
+			number: number;
+			title: string;
 			url: string;
 		};
 	};

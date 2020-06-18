@@ -67,7 +67,9 @@ export interface ThirdPartyProviderSupportsPullRequests {
 	}): Promise<DocumentMarker[]>;
 
 	// TODO fix these types
-	createPullRequest(request: ProviderCreatePullRequestRequest): Promise<ProviderCreatePullRequestResponse | undefined>;
+	createPullRequest(
+		request: ProviderCreatePullRequestRequest
+	): Promise<ProviderCreatePullRequestResponse | undefined>;
 	getRepoInfo(request: {}): Promise<any>;
 	getIsMatchingRemotePredicate(): any;
 	getRemotePaths(repo: any, _projectsByRemotePath: any): any;
@@ -663,6 +665,6 @@ export interface ProviderCreatePullRequestRequest {
 
 export interface ProviderCreatePullRequestResponse {
 	url?: string;
+	title?: string;
 	error?: { message?: string; type: string };
 }
-

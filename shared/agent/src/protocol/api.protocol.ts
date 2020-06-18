@@ -614,6 +614,8 @@ export interface CSUpdateReviewRequest {
 	text?: string;
 	allReviewersMustApprove?: boolean;
 	pullRequestUrl?: string;
+	pullRequestTitle?: string;
+	pullRequestProviderId?: string;
 
 	$addToSet?: {
 		/**

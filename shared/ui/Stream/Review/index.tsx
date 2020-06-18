@@ -87,10 +87,12 @@ import { SharingModal } from "../SharingModal";
 import {
 	ShowPreviousChangedFileRequestType,
 	ShowNextChangedFileRequestType,
-	WebviewPanels
+	WebviewPanels,
+	OpenUrlRequestType
 } from "@codestream/protocols/webview";
 import { HeadshotName } from "@codestream/webview/src/components/HeadshotName";
 import { LocateRepoButton } from "../LocateRepoButton";
+import { PROVIDER_MAPPINGS } from "../CrossPostIssueControls/types";
 
 interface RepoMetadata {
 	repoName: string;
@@ -217,6 +219,19 @@ const MetaIcons = styled.span`
 	margin-left: 5px;
 	.icon {
 		margin-left: 5px;
+	}
+`;
+
+const MetaPullRequest = styled.div`
+	background: var(--app-background-color-darker);
+	padding: 6px 6px 6px 1px;
+	a {
+		padding-left: 6px;
+		text-decoration: none;
+		color: var(--text-color-subtle) !important;
+	}
+	.icon {
+		padding-left: 5px;
 	}
 `;
 
@@ -526,6 +541,7 @@ const BaseReview = (props: BaseReviewProps) => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
+			providers: state.providers,
 			isInVscode: state.ide.name === "VSC",
 			author: state.users[props.review.creatorId]
 		};
@@ -608,6 +624,45 @@ const BaseReview = (props: BaseReviewProps) => {
 		return groups;
 	};
 
+	const renderPullRequest = () => {
+		let icon = <></>;
+		if (review.pullRequestProviderId) {
+			const provider = derivedState.providers[review.pullRequestProviderId];
+			if (provider) {
+				const providerInfo = PROVIDER_MAPPINGS[provider.name];
+				if (providerInfo && providerInfo.icon) {
+					icon = <Icon name={providerInfo.icon!} title={providerInfo.displayName}></Icon>;
+				}
+			}
+		}
+		let text = review.pullRequestTitle;
+		if (text == null) {
+			text = review.pullRequestUrl;
+		}
+		return (
+			<Meta>
+				<MetaLabel>Pull Request</MetaLabel>
+				<MetaDescription>
+					<MetaDescriptionForAssignees>
+						<MetaPullRequest>
+							{icon}
+							<a
+								href="#"
+								title="View this Pull Request"
+								onClick={e => {
+									e.preventDefault();
+									HostApi.instance.send(OpenUrlRequestType, { url: review.pullRequestUrl! });
+								}}
+							>
+								{text}
+							</a>
+						</MetaPullRequest>
+					</MetaDescriptionForAssignees>
+				</MetaDescription>
+			</Meta>
+		);
+	};
+
 	return (
 		<MinimumWidthCard {...getCardProps(props)} noCard={!props.collapsed}>
 			<CardBody>
@@ -653,14 +708,7 @@ const BaseReview = (props: BaseReviewProps) => {
 				)}
 
 				<MetaSection>
-					{review.pullRequestUrl && (
-						<Meta>
-							<MetaLabel>Pull Request</MetaLabel>
-							<MetaDescription>
-								<MetaDescriptionForAssignees>{review.pullRequestUrl}</MetaDescriptionForAssignees>
-							</MetaDescription>
-						</Meta>
-					)}
+					{review.pullRequestUrl && renderPullRequest()}
 					{props.review.text && (
 						<Meta>
 							<MetaLabel>Description</MetaLabel>

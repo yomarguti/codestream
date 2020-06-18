@@ -20,8 +20,7 @@ import {
 	DidChangeDataNotificationType
 } from "@codestream/protocols/agent";
 import { connectProvider } from "./actions";
-import { CSMe } from "../protocols/agent/api.protocol.models";
-import { isConnected, getConnectedProviderNames } from "../store/providers/reducer";
+import { isConnected } from "../store/providers/reducer";
 import { CodeStreamState } from "../store";
 import { inMillis } from "../utils";
 import { useInterval, useTimeout } from "../utilities/hooks";
@@ -42,18 +41,29 @@ const Root = styled.div`
 	}
 `;
 
+// select service
+const Step1 = props => (props.step !== 1 ? null : <div>{props.children}</div>);
+
+// service loading
+const Step2 = props => (props.step !== 2 ? null : <div>{props.children}</div>);
+
+// form
+const Step3 = props => (props.step !== 3 ? null : <div>{props.children}</div>);
+
 export const CreatePullRequestPanel = props => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { providers } = state;
 		const connectedProviders = Object.keys(providers).filter(id => isConnected(state, { id }));
-		const codeHostProviders = Object.keys(providers)
-			.filter(id => ["github", "github_enterprise"].includes(providers[id].name));
+		const codeHostProviders = Object.keys(providers).filter(id =>
+			["github", "github_enterprise"].includes(providers[id].name)
+		);
 		return {
 			providers: providers,
 			codeHostProviders: codeHostProviders,
 			reviewId: state.context.currentPullRequestReviewId,
-			isConnectedToGitHub: isConnected(state, { name: "github" })
+			isConnectedToGitHub: isConnected(state, { name: "github" }),
+			isConnectedToGitHubEnterprise: isConnected(state, { name: "github_enterprise" })
 		};
 	});
 	const [loading, setLoading] = useState(true);
@@ -69,7 +79,7 @@ export const CreatePullRequestPanel = props => {
 
 	const [currentBranch, setCurrentBranch] = useState("");
 	const [branches, setBranches] = useState([] as string[]);
-	const [providerConnected, setProviderConnected] = useState(false);
+	const [providerConnecting, setProviderConnecting] = useState(false);
 
 	// states used to create the eventual pr
 	const [prBranch, setPrBranch] = useState("");
@@ -78,20 +88,25 @@ export const CreatePullRequestPanel = props => {
 	const [prRemote, setPrRemote] = useState("");
 	const [prProviderId, setPrProviderId] = useState("");
 
-	const [isWaiting, setIsWaiting] = useState(true);
+	const [currentStep, setCurrentStep] = useState(0);
+
+	const [isWaiting, setIsWaiting] = useState(false);
 	const [propsForPrePRProviderInfoModal, setPropsForPrePRProviderInfoModal] = useState<any>();
 
 	const stopWaiting = useCallback(() => {
 		setIsWaiting(false);
 	}, [isWaiting]);
 
-	// TODO change to 30 ????
-	const waitFor = inMillis(10, "sec");
+	const waitFor = inMillis(60, "sec");
 	useTimeout(stopWaiting, waitFor);
 
 	const fetchPreconditionData = async () => {
 		setPreconditionError({ message: "", type: "" });
-		setLoading(true);
+		// already waiting on a provider auth, keep using that loading ui
+		if (currentStep != 2) {
+			setLoading(true);
+			setCurrentStep(0);
+		}
 
 		try {
 			const result = await HostApi.instance.send(CheckPullRequestPreconditionsRequestType, {
@@ -104,7 +119,6 @@ export const CreatePullRequestPanel = props => {
 					if (result.pullRequestProvider.defaultBranch) {
 						setPrBranch(result.pullRequestProvider.defaultBranch!);
 					}
-					setProviderConnected(result.pullRequestProvider.isConnected);
 				}
 
 				setPrRemote(result.remote!);
@@ -112,10 +126,11 @@ export const CreatePullRequestPanel = props => {
 				setPrText(result.review!.text!);
 				setPrProviderId(result.providerId!);
 
+				setCurrentStep(3);
 				setPreconditionError({ message: "", type: "" });
 			} else if (result && result.error && result.error.type) {
 				if (result.error.type === "REQUIRES_PROVIDER") {
-					setRequiresProvider(true);
+					setCurrentStep(1);
 				} else {
 					setPreconditionError({
 						message: result.error.message || "",
@@ -134,14 +149,11 @@ export const CreatePullRequestPanel = props => {
 	};
 
 	useEffect(() => {
-		fetchPreconditionData().then(_ => {
-			if (prProviderId) {
-				dispatch(connectProvider(prProviderId, "Create Pull Request Panel"));
-			}
-		});
-	}, [derivedState.isConnectedToGitHub, prProviderId]);
+		fetchPreconditionData();
+	}, [derivedState.isConnectedToGitHub, derivedState.isConnectedToGitHubEnterprise]);
 
 	useEffect(() => {
+		fetchPreconditionData();
 		const disposable = HostApi.instance.on(DidChangeDataNotificationType, (e: any) => {
 			if (e.type === ChangeDataType.Commits) {
 				fetchPreconditionData();
@@ -187,7 +199,9 @@ export const CreatePullRequestPanel = props => {
 				setFormState({ message: result.error.message || "", type: result.error.type || "UNKNOWN" });
 			} else {
 				setFormState({ message: "", type: "" });
-				HostApi.instance.track("Pull Request Created", {});
+				HostApi.instance.track("Pull Request Created", {
+					Service: prProviderId
+				});
 				props.closePanel();
 				dispatch(setCurrentReview(derivedState.reviewId!));
 			}
@@ -275,10 +289,12 @@ export const CreatePullRequestPanel = props => {
 							providerName: name,
 							action: () => {
 								dispatch(connectProvider(providerId, "Create Pull Request Panel"));
+								setIsWaiting(true);
 							},
-							onClose: () => { 
+							onClose: () => {
 								setPropsForPrePRProviderInfoModal(undefined);
-								setRequiresProvider(false);
+								setIsWaiting(true);
+								setCurrentStep(2);
 							}
 						});
 					};
@@ -286,7 +302,8 @@ export const CreatePullRequestPanel = props => {
 					action = () => {
 						setPrProviderId(providerId);
 						dispatch(connectProvider(providerId, "Create Pull Request Panel"));
-						setRequiresProvider(false);
+						setIsWaiting(true);
+						setCurrentStep(2);
 					};
 				}
 			}
@@ -297,12 +314,12 @@ export const CreatePullRequestPanel = props => {
 				action: action
 			};
 		});
-		const items2 = items.filter(Boolean) as any;
+		const filteredItems = items.filter(Boolean) as any;
 		if (!items.length) return undefined;
 
 		return (
 			<span>
-				<DropdownButton variant="text" items={items2}>
+				<DropdownButton variant="text" items={filteredItems}>
 					<strong>select service</strong>
 				</DropdownButton>
 			</span>
@@ -341,7 +358,7 @@ export const CreatePullRequestPanel = props => {
 					break;
 				}
 				default: {
-					messageText = "Unknown error";
+					messageText = preconditionError.message || "Unknown error";
 				}
 			}
 		}
@@ -392,7 +409,7 @@ export const CreatePullRequestPanel = props => {
 	const onClickTryAgain = (event: React.SyntheticEvent) => {
 		event.preventDefault();
 		if (prProviderId) {
-			setRequiresProvider(true);
+			setCurrentStep(1);
 		}
 	};
 
@@ -413,9 +430,17 @@ export const CreatePullRequestPanel = props => {
 	}
 
 	const providerAuthenticationMessage = () => {
+		let providerName = "Provider";
+		if (prProviderId) {
+			const provider = derivedState.providers[prProviderId];
+			const { name } = provider;
+			const display = PROVIDER_MAPPINGS[name];
+			if (display) providerName = display.displayName;
+		}
+
 		return isWaiting ? (
 			<strong>
-				Waiting for authentication <LoadingEllipsis />
+				Waiting for {providerName} authentication <LoadingEllipsis />
 			</strong>
 		) : (
 			<strong>
@@ -441,66 +466,60 @@ export const CreatePullRequestPanel = props => {
 							{!loading && preconditionError.type && preconditionErrorMessages()}
 							{!loading && formErrorMessages()}
 							{loading && <LoadingMessage>Loading repo info...</LoadingMessage>}
-							{!loading &&
-								!preconditionError.type &&
-								!providerConnected &&
-								!requiresProvider &&
-								providerAuthenticationMessage()}
-							{!loading && !preconditionError.type && !providerConnected && requiresProvider && (
+							<Step1 step={currentStep}>
 								<div>Open a pull request on {renderProviders()}</div>
-							)}
-							{!loading && !preconditionError.type && providerConnected && !requiresProvider && (
-								<>
-									<div className="small-spacer" />
-									{unexpectedError && (
-										<div className="error-message form-error">
-											<FormattedMessage
-												id="error.unexpected"
-												defaultMessage="Something went wrong! Please try again, or "
-											/>
-											<FormattedMessage id="contactSupport" defaultMessage="contact support">
-												{text => <Link href="https://help.codestream.com">{text}</Link>}
-											</FormattedMessage>
-											.
-										</div>
-									)}
-									<div className="control-group">
-										<div>
-											<span>
-												Compare <strong>{currentBranch}</strong> against{" "}
-											</span>
-											{renderBranchesDropdown()}
-										</div>
-									</div>
-									<div className="control-group">
-										<TextInput
-											name="title"
-											value={prTitle}
-											autoFocus
-											onChange={setPrTitle}
-											onValidityChanged={onValidityChanged}
-											validate={e => e != null}
+							</Step1>
+							<Step2 step={currentStep}>{providerAuthenticationMessage()}</Step2>
+							<Step3 step={currentStep}>
+								<div className="small-spacer" />
+								{unexpectedError && (
+									<div className="error-message form-error">
+										<FormattedMessage
+											id="error.unexpected"
+											defaultMessage="Something went wrong! Please try again, or "
 										/>
-										{/*<small className={cx("explainer", { "error-message": !titleValidity })}>
+										<FormattedMessage id="contactSupport" defaultMessage="contact support">
+											{text => <Link href="https://help.codestream.com">{text}</Link>}
+										</FormattedMessage>
+										.
+									</div>
+								)}
+								<div className="control-group">
+									<div>
+										<span>
+											Compare <strong>{currentBranch}</strong> against{" "}
+										</span>
+										{renderBranchesDropdown()}
+									</div>
+								</div>
+								<div className="control-group">
+									<TextInput
+										name="title"
+										value={prTitle}
+										autoFocus
+										onChange={setPrTitle}
+										onValidityChanged={onValidityChanged}
+										validate={e => e != null}
+									/>
+									{/*<small className={cx("explainer", { "error-message": !titleValidity })}>
 										<FormattedMessage id="pullRequest.title" />
 								</small> */}
-									</div>
-									<div className="control-group">
-										<textarea
-											className="input-text"
-											name="description"
-											value={prText}
-											onChange={e => setPrText(e.target.value)}
-											placeholder="Pull request description (optional)"
-										/>
-									</div>
-									<ButtonRow>
-										<Button onClick={onSubmit} isLoading={submitting}>
-											Create Pull Request
-										</Button>
-									</ButtonRow>
-								</>
-							)}
+								</div>
+								<div className="control-group">
+									<textarea
+										className="input-text"
+										name="description"
+										value={prText}
+										onChange={e => setPrText(e.target.value)}
+										placeholder="Pull request description (optional)"
+									/>
+								</div>
+								<ButtonRow>
+									<Button onClick={onSubmit} isLoading={submitting}>
+										Create Pull Request
+									</Button>
+								</ButtonRow>
+							</Step3>
 						</div>
 					</div>
 				</fieldset>

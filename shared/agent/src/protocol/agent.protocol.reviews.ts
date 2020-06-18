@@ -279,7 +279,6 @@ export const CheckReviewPreconditionsRequestType = new RequestType<
 	void
 >("codestream/review/checkPreconditions");
 
-
 export interface CheckPullRequestBranchPreconditionsRequest {
 	reviewId: string;
 	headRefName?: string;
@@ -315,7 +314,7 @@ export interface CheckPullRequestPreconditionsResponse {
 	review?: Pick<CSReview, "title" | "text">;
 	remote?: string;
 	providerId?: string;
-	pullRequestProvider?: {defaultBranch?: string, isConnected: boolean };
+	pullRequestProvider?: { defaultBranch?: string; isConnected: boolean };
 	branch?: string;
 	branches?: string[];
 
@@ -353,8 +352,8 @@ export interface CreatePullRequestResponse {
 }
 
 export const CreatePullRequestRequestType = new RequestType<
-CreatePullRequestRequest,
-CreatePullRequestResponse,
+	CreatePullRequestRequest,
+	CreatePullRequestResponse,
 	void,
 	void
 >("codestream/review/pr/create");

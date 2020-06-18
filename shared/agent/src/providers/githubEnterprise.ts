@@ -5,10 +5,13 @@ import { URI } from "vscode-uri";
 import { Logger } from "../logger";
 import { EnterpriseConfigurationData } from "../protocol/agent.protocol.providers";
 import { log, lspProvider } from "../system";
+import { GitHubProvider } from "./github";
 import {
-	GitHubProvider
-} from "./github";
-import { ProviderCreatePullRequestRequest, ProviderCreatePullRequestResponse, ProviderPullRequestInfoResponse, ProviderGetRepoInfoResponse } from './provider';
+	ProviderCreatePullRequestRequest,
+	ProviderCreatePullRequestResponse,
+	ProviderGetRepoInfoResponse,
+	ProviderPullRequestInfoResponse
+} from "./provider";
 
 @lspProvider("github_enterprise")
 export class GitHubEnterpriseProvider extends GitHubProvider {
@@ -73,16 +76,19 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 			const { owner, name } = this.getOwnerFromRemote(request.remote);
 
 			const createPullRequestResponse = await this.post<
-				GitHubEnterprisePullRequestRequest,
-				GitHubEnterprisePullRequestResponse
+				GitHubEnterpriseCreatePullRequestRequest,
+				GitHubEnterpriseCreatePullRequestResponse
 			>(`/repos/${owner}/${name}/pulls`, {
 				head: request.headRefName,
 				base: request.baseRefName,
 				title: request.title,
 				body: this.createDescription(request)
 			});
+
+			const title = `#${createPullRequestResponse.body.number} ${createPullRequestResponse.body.title}`;
 			return {
-				url: createPullRequestResponse.body.url
+				url: createPullRequestResponse.body.html_url,
+				title: title
 			};
 		} catch (ex) {
 			Logger.error(ex, "GitHubEnterprise: getRepoInfo", {
@@ -164,9 +170,15 @@ interface GitHubEnterprisePullRequest {
 	head: { ref: string };
 }
 
-interface GitHubEnterprisePullRequestRequest {}
+interface GitHubEnterpriseCreatePullRequestRequest {
+	head: string;
+	base: string;
+	title: string;
+	body?: string;
+}
 
-interface GitHubEnterprisePullRequestResponse {
-	id: string;
-	url: string;
+interface GitHubEnterpriseCreatePullRequestResponse {
+	html_url: string;
+	number: number;
+	title: string;
 }

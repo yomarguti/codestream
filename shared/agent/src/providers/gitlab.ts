@@ -30,7 +30,8 @@ import {
 	getRemotePaths,
 	PullRequestComment,
 	REFRESH_TIMEOUT,
-	ThirdPartyIssueProviderBase
+	ThirdPartyIssueProviderBase,
+	ProviderGetRepoInfoResponse
 } from "./provider";
 
 interface GitLabProject {
@@ -344,6 +345,44 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	getIsMatchingRemotePredicate() {
 		return this._isMatchingRemotePredicate;
 	}
+
+	// protected getOwnerFromRemote(remote: string): { owner: string; name: string } {
+	// 	// HACKitude yeah, sorry
+	// 	const uri = URI.parse(remote);
+	// 	const split = uri.path.split("/");
+	// 	const owner = split[1];
+	// 	const name = split[2].replace(".git", "");
+	// 	return {
+	// 		owner,
+	// 		name
+	// 	};
+	// }
+
+	// async getRepoInfo(request: { remote: string }): Promise<ProviderGetRepoInfoResponse> {
+	// 	try {
+	// 		const { owner, name } = this.getOwnerFromRemote(request.remote);
+
+	// 		let url: string | undefined = `/merge_requests?state=opened`;
+
+	// 		const apiResponse = await this.get<any[]>(url);
+	// 		return {
+	// 			id: "",
+	// 			defaultBranch: "",
+	// 			pullRequests: undefined
+	// 		};
+	// 	} catch (ex) {
+	// 		Logger.error(ex, "GitLab: getRepoInfo", {
+	// 			remote: request.remote
+	// 		});
+
+	// 		return {
+	// 			error: {
+	// 				type: "PROVIDER",
+	// 				message: ex.message
+	// 			}
+	// 		};
+	// 	}
+	// }
 
 	@log()
 	private async _getCommentsForPath(
