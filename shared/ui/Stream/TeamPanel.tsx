@@ -98,7 +98,7 @@ const MapRow = styled.div`
 `;
 
 const StyledUserStatus = styled(UserStatus)`
-	padding-left: 48px;
+	padding: 3px 20px 3px 48px;
 `;
 
 interface Props extends ConnectedProps {}
@@ -594,7 +594,9 @@ class TeamPanel extends React.Component<Props, State> {
 				>
 					<Tooltip title={title} placement="bottomRight" delay={1}>
 						<div style={{ overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
-							<Icon name="repo" /> {repoName} &nbsp; <Icon name="git-branch" /> {repo.branch}
+							<Icon name="repo" />
+							{repoName} &nbsp; <Icon name="git-branch" />
+							{repo.branch}
 							{added > 0 && <span className="added">+{added}</span>}
 							{removed > 0 && <span className="deleted">-{removed}</span>}
 							{stomp && <span className="stomped">@{stomp.stomped}</span>}
