@@ -288,11 +288,14 @@ export const IntegrationsPanel = () => {
 						)}
 						{Object.keys(derivedState.providers).length > 0 && (
 							<>
-								<h2>Active Integrations</h2>
-								<IntegrationButtons>
-									{renderConnectedProviders(derivedState.connectedProviders)}
-								</IntegrationButtons>
-
+								{derivedState.connectedProviders.length > 0 && (
+									<>
+										<h2>Active Integrations</h2>
+										<IntegrationButtons>
+											{renderConnectedProviders(derivedState.connectedProviders)}
+										</IntegrationButtons>
+									</>
+								)}
 								<h2>Code Host &amp; Issue Providers</h2>
 								<IntegrationButtons>
 									{renderProviders(derivedState.codeHostProviders)}
