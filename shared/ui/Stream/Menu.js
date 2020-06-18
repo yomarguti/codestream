@@ -70,10 +70,7 @@ export default class Menu extends Component {
 			)
 		);
 		if (this.props.focusInput && this.props.focusInput.current) {
-			this.keydownListener = this.props.focusInput.current.addEventListener(
-				"keydown",
-				this.handleKeyDown
-			);
+			this.props.focusInput.current.addEventListener("keydown", this.handleKeyDown);
 		}
 	}
 
@@ -231,8 +228,9 @@ export default class Menu extends Component {
 			KeystrokeDispatcher.levelDown();
 			this.disposables.forEach(d => d.dispose());
 		}
-		if (this.props.focusInput && this.props.focusInput.current && this.keydownListener) {
-			this.props.focusInput.current.removeEventListener("keydown", this.keydownListener);
+		if (this.props.focusInput && this.props.focusInput.current) {
+			this.props.focusInput.current.removeEventListener("keydown", this.handleKeyDown);
+			this.keydownListener = undefined;
 		}
 	}
 
@@ -474,9 +472,8 @@ export default class Menu extends Component {
 		// the "wrong" menu item. So we set a value and a timer
 		// to clear it.
 		this.programaticScrolling++;
-		document
-			.getElementById("li-item-" + key)
-			.scrollIntoView({ behavior: "smooth", block: "nearest" });
+		const element = document.getElementById("li-item-" + key);
+		if (element) element.scrollIntoView({ behavior: "smooth", block: "nearest" });
 		setTimeout(() => {
 			this.programaticScrolling--;
 		}, 750);

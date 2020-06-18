@@ -487,8 +487,6 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props & Dropdo
 		if (!data.cards) return [];
 		const isFiltering = keyFilter(derivedState.filterBoards).length > 0;
 
-		console.warn(props.knownIssueProviderOptions);
-		console.warn(props.selectedProvider);
 		const items = data.cards
 			.filter(card => !isFiltering || derivedState.filterBoards[card.idBoard])
 			.filter(card => !props.q || card.name.includes(props.q))

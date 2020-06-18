@@ -82,7 +82,6 @@ class IssueDropdown extends React.Component<Props, State> {
 		const providerInfo = issueProviderConfig
 			? this.getProviderInfo(issueProviderConfig.id)
 			: undefined;
-		console.warn("");
 		if (
 			providerInfo &&
 			issueProviderConfig &&

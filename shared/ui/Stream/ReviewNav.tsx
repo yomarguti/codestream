@@ -609,12 +609,15 @@ export function ReviewNav(props: Props) {
 										cursor: "pointer",
 										opacity: 0.5
 									}}
-									onClick={() => {
-										setHoverButton("files");
-										toggleInstructions();
-									}}
 								>
-									Show Instructions
+									<span
+										onClick={() => {
+											setHoverButton("files");
+											toggleInstructions();
+										}}
+									>
+										Show Instructions
+									</span>
 								</div>
 							)}
 						</div>
