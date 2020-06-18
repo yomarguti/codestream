@@ -242,7 +242,7 @@ export default class Menu extends Component {
 	componentDidUpdate(prevProps, prevState) {
 		if (this.state.closed && !prevState.closed) {
 			this.closeMenu();
-			this.props.action();
+			if (this.props.action) this.props.action();
 			return null;
 		}
 		if (this.props.items.length !== prevProps.items.length && !this.repositionMinimally)

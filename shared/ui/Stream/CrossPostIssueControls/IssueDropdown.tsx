@@ -223,6 +223,7 @@ class IssueDropdown extends React.Component<Props, State> {
 						align="dropdownRight"
 						target={this.state.issueProviderMenuTarget}
 						items={knownIssueProviderOptions}
+						action={() => {}}
 					/>
 				)}
 			</span>
