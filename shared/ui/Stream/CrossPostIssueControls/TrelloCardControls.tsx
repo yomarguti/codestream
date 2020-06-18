@@ -23,6 +23,8 @@ import { setIssueProvider } from "@codestream/webview/store/context/actions";
 import { CrossPostIssueContext } from "../CodemarkForm";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { disconnectProvider } from "@codestream/webview/store/providers/actions";
+import { CSMe } from "@codestream/protocols/api";
+import { setUserPreference } from "../actions";
 
 interface Props {
 	provider: ThirdPartyProviderConfig;
@@ -269,6 +271,16 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 	const data = useSelector((state: CodeStreamState) =>
 		getIntegrationData<TrelloIntegrationData>(state.activeIntegrations, props.provider.id)
 	);
+	const derivedState = useSelector((state: CodeStreamState) => {
+		const { preferences = {} } = state;
+		const currentUser = state.users[state.session.userId!] as CSMe;
+
+		const workPreferences = preferences["startWork-" + props.provider.id] || {};
+		const filterBoards = workPreferences.filterBoards || {};
+		const filterAssignees = workPreferences.filterAssignees || {};
+		return { currentUser, filterBoards, filterAssignees };
+	});
+
 	const updateDataState = React.useCallback(
 		(data: Partial<TrelloIntegrationData>) => {
 			dispatch(updateForProvider<TrelloIntegrationData>(props.provider.id, data));
@@ -277,6 +289,10 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 	);
 
 	const buttonRef = React.useRef<HTMLElement>(null);
+
+	const setPreference = (key, value) => {
+		dispatch(setUserPreference(["startWork-" + props.provider.id, key], value));
+	};
 
 	useDidMount(() => {
 		if (data.boards && data.boards.length > 0) {
@@ -435,7 +451,7 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 	);
 
 	const filterBoardItems = () => {
-		const { filterBoards = {} } = data;
+		const { filterBoards } = derivedState;
 		const items = [] as any;
 		if (!data.boards) return items;
 		data.boards.forEach(board => {
@@ -445,18 +461,31 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 				label: board.name,
 				key: board.id,
 				checked,
-				action: () => updateDataState({ filterBoards: { ...filterBoards, [b.id]: !checked } })
+				action: () => setPreference("filterBoards", { ...filterBoards, [b.id]: !checked })
 			});
 		});
+		if (keyFilter(filterBoards).length > 0) {
+			const reset = { ...filterBoards };
+			Object.keys(filterBoards).forEach(key => (reset[key] = false));
+			items.push(
+				{ label: "-" },
+				{
+					label: "Clear All",
+					key: "clear",
+					checked: false,
+					action: () => setPreference("filterBoards", reset)
+				}
+			);
+		}
 		return items;
 	};
 
 	const cardItems = React.useMemo(() => {
 		if (!data.cards) return [];
-		const isFiltering = keyFilter(data.filterBoards || {}).length > 0;
+		const isFiltering = keyFilter(derivedState.filterBoards).length > 0;
 
 		const items = data.cards
-			.filter(card => !isFiltering || data.filterBoards[card.idBoard])
+			.filter(card => !isFiltering || derivedState.filterBoards[card.idBoard])
 			.filter(card => !props.q || card.name.includes(props.q))
 			.map(card => ({
 				label: props.q ? underlineQ(card.name) : card.name,
@@ -465,15 +494,30 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 				key: card.id,
 				action: card
 			})) as any;
-		// @ts-ignore
-		// items.unshift({ label: "-" }, { type: "search" });
+
 		const settingsItems = [
 			{
 				label: "Assignment",
-				key: "mine",
+				key: "assignment",
 				submenu: [
-					{ label: "Cards Assigned to Me", key: "mine", checked: true },
-					{ label: "All Cards", key: "all", checked: false }
+					{
+						label: "Cards Assigned to Me",
+						key: "mine",
+						checked: derivedState.filterAssignees === "mine",
+						action: () => setPreference("filterAssignees", "mine")
+					},
+					{
+						label: "Unassigned cards",
+						key: "unassigned",
+						checked: derivedState.filterAssignees === "unassigned",
+						action: () => setPreference("filterAssignees", "unassigned")
+					},
+					{
+						label: "All Cards",
+						key: "all",
+						checked: derivedState.filterAssignees === "all",
+						action: () => setPreference("filterAssignees", "all")
+					}
 				]
 			},
 			{ label: "Filter by Board", key: "board", submenu: filterBoardItems() },
@@ -496,7 +540,7 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 			);
 		}
 		return items;
-	}, [data.cards, data.boards, data.filterBoards, props.q]);
+	}, [data.cards, data.boards, derivedState.filterBoards, props.q]);
 
 	return (
 		<>

@@ -7,7 +7,7 @@ import Icon from "./Icon";
 import { Checkbox } from "../src/components/Checkbox";
 import styled from "styled-components";
 import { Button } from "../src/components/Button";
-import { setUserStatus } from "./actions";
+import { setUserStatus, setUserPreference } from "./actions";
 import { closePanel } from "../store/context/actions";
 import { CSMe } from "@codestream/protocols/api";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
@@ -162,6 +162,8 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		const teamId = state.context.currentTeamId;
 		const team = state.teams[teamId];
 		const settings = team.settings || {};
+		const { preferences = {} } = state;
+		const workPreferences = preferences["startWork"] || {};
 
 		return {
 			status,
@@ -171,7 +173,11 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			textEditorUri: state.editorContext.textEditorUri,
 			branchMaxLength: settings.branchMaxLength || 40,
 			branchTicketTemplate: settings.branchTicketTemplate || "feature/ticket-{id}",
-			branchDescriptionTemplate: settings.branchDescriptionTemplate || "feature/{title}"
+			branchDescriptionTemplate: settings.branchDescriptionTemplate || "feature/{title}",
+			createBranch: Object.keys(workPreferences).includes("createBranch")
+				? workPreferences.createBranch
+				: true,
+			moveCard: Object.keys(workPreferences).includes("moveCard") ? workPreferences.moveCard : true
 		};
 	});
 
@@ -190,8 +196,8 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			: undefined
 	);
 	// const [icon, setIcon] = useState(status.icon || ":desktop_computer:");
-	const [moveIssue, setMoveIssue] = useState(true);
-	const [createBranch, setCreateBranch] = useState(true);
+	// const [moveCard, setMoveCard] = useState(true);
+	// const [createBranch, setCreateBranch] = useState(true);
 	const [manuallySelectedBranch, setManuallySelectedBranch] = useState("");
 	// const [newBranch, setNewBranch] = useState("");
 	const [currentBranch, setCurrentBranch] = useState("");
@@ -201,6 +207,12 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const [configureBranchNames, setConfigureBranchNames] = useState(false);
 	const [autocomplete, setAutocomplete] = useState(false);
 	const inputRef = React.useRef<HTMLInputElement>(null);
+
+	const { moveCard, createBranch } = derivedState;
+
+	const setMoveCard = value => dispatch(setUserPreference(["startWork", "moveCard"], value));
+	const setCreateBranch = value =>
+		dispatch(setUserPreference(["startWork", "createBranch"], value));
 
 	const handleChangeStatus = value => {
 		// if (card) return;
@@ -279,7 +291,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 
 	const same = label == status.label; // && icon == status.icon;
 
-	const showMoveIssueCheckbox = React.useMemo(() => {
+	const showMoveCardCheckbox = React.useMemo(() => {
 		return !same && card && card.providerName;
 	}, [card, same]);
 	const showCreateBranchCheckbox = React.useMemo(() => {
@@ -327,7 +339,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			}
 		}
 
-		if (showMoveIssueCheckbox && moveIssue) {
+		if (showMoveCardCheckbox && moveCard) {
 			// FIXME move the issue to the selected list
 			// const response = await HostApi.instance.send(MoveThirdPartyCardRequestType, {
 			// 	providerId: props.provider.id,
@@ -501,12 +513,8 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 									)}
 								</StyledCheckbox>
 							)}
-							{showMoveIssueCheckbox && (
-								<StyledCheckbox
-									name="move-issue"
-									checked={moveIssue}
-									onChange={v => setMoveIssue(v)}
-								>
+							{showMoveCardCheckbox && (
+								<StyledCheckbox name="move-issue" checked={moveCard} onChange={v => setMoveCard(v)}>
 									Move this card to{" "}
 									<InlineMenu items={[{ label: "foo", key: "bar" }]}>In Progress</InlineMenu>
 									on Trello
