@@ -73,7 +73,7 @@ export interface ThirdPartyProviderSupportsPullRequests {
 	createPullRequest(
 		request: ProviderCreatePullRequestRequest
 	): Promise<ProviderCreatePullRequestResponse | undefined>;
-	getRepoInfo(request: {}): Promise<any>;
+	getRepoInfo(request: ProviderGetRepoInfoRequest): Promise<ProviderGetRepoInfoResponse>;
 	getIsMatchingRemotePredicate(): any;
 	getRemotePaths(repo: any, _projectsByRemotePath: any): any;
 }
@@ -638,7 +638,12 @@ export async function getRemotePaths<R extends { path: string }>(
 	}
 }
 
-export interface ProviderPullRequestInfoResponse {
+export interface ProviderGetRepoInfoRequest {
+	providerId: string;
+	remote: string;
+}
+
+export interface ProviderPullRequestInfo {
 	id: string;
 	url: string;
 	baseRefName: string;
@@ -648,7 +653,7 @@ export interface ProviderPullRequestInfoResponse {
 export interface ProviderGetRepoInfoResponse {
 	id?: string;
 	defaultBranch?: string;
-	pullRequests?: ProviderPullRequestInfoResponse[];
+	pullRequests?: ProviderPullRequestInfo[];
 	error?: { message?: string; type: string };
 }
 

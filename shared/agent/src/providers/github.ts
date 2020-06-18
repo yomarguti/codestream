@@ -388,7 +388,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			if (!(await this.isPRApiCompatible())) {
 				return {
 					error: {
-						type: "UNKNOWN"
+						type: "UNKNOWN",
+						message: "PR Api is not compatible"
 					}
 				};
 			}

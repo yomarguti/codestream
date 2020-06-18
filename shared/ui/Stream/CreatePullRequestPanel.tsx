@@ -54,22 +54,21 @@ export const CreatePullRequestPanel = props => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { providers } = state;
-		const connectedProviders = Object.keys(providers).filter(id => isConnected(state, { id }));
 		const codeHostProviders = Object.keys(providers).filter(id =>
-			["github", "github_enterprise"].includes(providers[id].name)
+			["github", "gitlab", "github_enterprise", "gitlab_enterprise"].includes(providers[id].name)
 		);
 		return {
 			providers: providers,
 			codeHostProviders: codeHostProviders,
 			reviewId: state.context.currentPullRequestReviewId,
 			isConnectedToGitHub: isConnected(state, { name: "github" }),
-			isConnectedToGitHubEnterprise: isConnected(state, { name: "github_enterprise" })
+			isConnectedToGitLab: isConnected(state, { name: "gitlab" }),
+			isConnectedToGitHubEnterprise: isConnected(state, { name: "github_enterprise" }),
+			isConnectedToGitLabEnterprise: isConnected(state, { name: "gitlab_enterprise" })
 		};
 	});
 	const [loading, setLoading] = useState(true);
 	const [submitting, setSubmitting] = useState(false);
-
-	const [requiresProvider, setRequiresProvider] = useState(false);
 
 	const [preconditionError, setPreconditionError] = useState({ message: "", type: "" });
 	const [unexpectedError, setUnexpectedError] = useState(false);
@@ -150,7 +149,12 @@ export const CreatePullRequestPanel = props => {
 
 	useEffect(() => {
 		fetchPreconditionData();
-	}, [derivedState.isConnectedToGitHub, derivedState.isConnectedToGitHubEnterprise]);
+	}, [
+		derivedState.isConnectedToGitHub,
+		derivedState.isConnectedToGitLab,
+		derivedState.isConnectedToGitHubEnterprise,
+		derivedState.isConnectedToGitLabEnterprise
+	]);
 
 	useEffect(() => {
 		fetchPreconditionData();
@@ -259,7 +263,6 @@ export const CreatePullRequestPanel = props => {
 	const renderProviders = () => {
 		const { codeHostProviders, providers } = derivedState;
 		let items = codeHostProviders.map(providerId => {
-			// debugger;
 			const provider = providers[providerId];
 			const { name, isEnterprise, host, needsConfigure, forEnterprise } = provider;
 			const display = PROVIDER_MAPPINGS[name];
@@ -315,7 +318,7 @@ export const CreatePullRequestPanel = props => {
 			};
 		});
 		const filteredItems = items.filter(Boolean) as any;
-		if (!items.length) return undefined;
+		if (!filteredItems.length) return undefined;
 
 		return (
 			<span>

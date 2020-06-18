@@ -1,5 +1,7 @@
 "use strict";
 
+import { URI } from "vscode-uri";
+import { GitRemote } from "../git/gitService";
 import { EnterpriseConfigurationData } from "../protocol/agent.protocol.providers";
 import { log, lspProvider } from "../system";
 import { GitLabProvider } from "./gitlab";
@@ -16,6 +18,12 @@ export class GitLabEnterpriseProvider extends GitLabProvider {
 
 	get apiPath() {
 		return this.providerConfig.forEnterprise || this.providerConfig.isEnterprise ? "/api/v4" : "";
+	}
+
+	getIsMatchingRemotePredicate() {
+		const baseUrl = this._providerInfo?.data?.baseUrl || this.getConfig().host;
+		const configDomain = baseUrl ? URI.parse(baseUrl).authority : "";
+		return (r: GitRemote) => configDomain !== "" && r.domain === configDomain;
 	}
 
 	get baseUrl() {

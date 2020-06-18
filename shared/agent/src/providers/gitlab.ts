@@ -29,10 +29,12 @@ import {
 import { log, lspProvider, Strings } from "../system";
 import {
 	getRemotePaths,
+	ProviderCreatePullRequestRequest,
+	ProviderCreatePullRequestResponse,
+	ProviderGetRepoInfoResponse,
 	PullRequestComment,
 	REFRESH_TIMEOUT,
-	ThirdPartyIssueProviderBase,
-	ProviderGetRepoInfoResponse
+	ThirdPartyIssueProviderBase
 } from "./provider";
 
 interface GitLabProject {
@@ -350,43 +352,149 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return this._isMatchingRemotePredicate;
 	}
 
-	// protected getOwnerFromRemote(remote: string): { owner: string; name: string } {
-	// 	// HACKitude yeah, sorry
-	// 	const uri = URI.parse(remote);
-	// 	const split = uri.path.split("/");
-	// 	const owner = split[1];
-	// 	const name = split[2].replace(".git", "");
-	// 	return {
-	// 		owner,
-	// 		name
-	// 	};
-	// }
+	async getRemotePaths(repo: any, _projectsByRemotePath: any) {
+		await this.ensureConnected();
+		const remotePaths = await getRemotePaths(
+			repo,
+			this.getIsMatchingRemotePredicate(),
+			_projectsByRemotePath
+		);
+		return remotePaths;
+	}
 
-	// async getRepoInfo(request: { remote: string }): Promise<ProviderGetRepoInfoResponse> {
-	// 	try {
-	// 		const { owner, name } = this.getOwnerFromRemote(request.remote);
+	protected getOwnerFromRemote(remote: string): { owner: string; name: string } {
+		// HACKitude yeah, sorry
+		const uri = URI.parse(remote);
+		const split = uri.path.split("/");
+		const owner = split[1];
+		const name = split[2].replace(".git", "");
+		return {
+			owner,
+			name
+		};
+	}
 
-	// 		let url: string | undefined = `/merge_requests?state=opened`;
+	protected createDescription(request: ProviderCreatePullRequestRequest): string | undefined {
+		if (
+			!request ||
+			request.description == null ||
+			!request.metadata ||
+			!request.metadata.reviewPermalink
+		) {
+			return request.description;
+		}
 
-	// 		const apiResponse = await this.get<any[]>(url);
-	// 		return {
-	// 			id: "",
-	// 			defaultBranch: "",
-	// 			pullRequests: undefined
-	// 		};
-	// 	} catch (ex) {
-	// 		Logger.error(ex, "GitLab: getRepoInfo", {
-	// 			remote: request.remote
-	// 		});
+		request.description += `\n\n\n[Changes reviewed on CodeStream](${request.metadata.reviewPermalink})`;
+		if (request.metadata.reviewers) {
+			request.description += ` by ${request.metadata.reviewers?.map(_ => _.name)?.join(", ")}`;
+		}
+		if (request.metadata.approvedAt) {
+			request.description += ` on ${new Date(
+				request.metadata.approvedAt
+			).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}`;
+		}
+		return request.description;
+	}
 
-	// 		return {
-	// 			error: {
-	// 				type: "PROVIDER",
-	// 				message: ex.message
-	// 			}
-	// 		};
-	// 	}
-	// }
+	@log()
+	async createPullRequest(
+		request: ProviderCreatePullRequestRequest
+	): Promise<ProviderCreatePullRequestResponse | undefined> {
+		try {
+			void (await this.ensureConnected());
+
+			if (!(await this.isPRApiCompatible())) {
+				return {
+					error: {
+						type: "UNKNOWN",
+						message: "PR Api is not compatible"
+					}
+				};
+			}
+			const { owner, name } = this.getOwnerFromRemote(request.remote);
+
+			const repoInfo = await this.getRepoInfo({ remote: request.remote });
+			if (repoInfo && repoInfo.error) {
+				return {
+					error: repoInfo.error
+				};
+			}
+
+			const createPullRequestResponse = await this.post<
+				GitLabCreateMergeRequestRequest,
+				GitLabCreateMergeRequestResponse
+			>(
+				`/projects/${encodeURIComponent(`${owner}/${name}`)}/merge_requests`,
+				{
+					title: request.title,
+					source_branch: request.baseRefName,
+					target_branch: request.headRefName,
+					description: this.createDescription(request)
+				},
+				{
+					// couldn't get this post to work without
+					// this additional header
+					"Content-Type": "application/json"
+				}
+			);
+			const title = `#${createPullRequestResponse.body.iid} ${createPullRequestResponse.body.title}`;
+
+			return {
+				title: title,
+				url: createPullRequestResponse.body.web_url
+			};
+		} catch (ex) {
+			Logger.error(ex, `${this.displayName}: createPullRequest`, {
+				remote: request.remote,
+				baseRefName: request.baseRefName,
+				headRefName: request.headRefName
+			});
+			return {
+				error: {
+					type: "PROVIDER",
+					message: `${this.displayName}: ${ex.message}`
+				}
+			};
+		}
+	}
+
+	async getRepoInfo(request: { remote: string }): Promise<ProviderGetRepoInfoResponse> {
+		try {
+			const { owner, name } = this.getOwnerFromRemote(request.remote);
+
+			const projectResponse = await this.get<GitLabProjectInfoResponse>(
+				`/projects/${encodeURIComponent(`${owner}/${name}`)}`
+			);
+
+			const mergeRequestsResponse = await this.get<GitLabMergeRequestInfoResponse[]>(
+				`/projects/${encodeURIComponent(`${owner}/${name}`)}/merge_requests?state=opened`
+			);
+
+			return {
+				id: (projectResponse.body.iid || projectResponse.body.id)!.toString(),
+				defaultBranch: projectResponse.body.default_branch,
+				pullRequests: mergeRequestsResponse.body.map(_ => {
+					return {
+						id: _.iid.toString(),
+						url: _.web_url,
+						baseRefName: _.source_branch,
+						headRefName: _.target_branch
+					};
+				})
+			};
+		} catch (ex) {
+			Logger.error(ex, `${this.displayName}: getRepoInfo`, {
+				remote: request.remote
+			});
+
+			return {
+				error: {
+					type: "PROVIDER",
+					message: ex.message
+				}
+			};
+		}
+	}
 
 	@log()
 	private async _getCommentsForPath(
@@ -586,4 +694,30 @@ interface GitLabPullRequestCommentPosition {
 	position_type: string;
 	old_line?: number;
 	new_line: number;
+}
+
+interface GitLabCreateMergeRequestRequest {
+	title: string;
+	source_branch: string;
+	target_branch: string;
+	description?: string;
+}
+
+interface GitLabCreateMergeRequestResponse {
+	iid: string;
+	title: string;
+	web_url: string;
+}
+
+interface GitLabProjectInfoResponse {
+	iid?: number;
+	id?: number;
+	default_branch: string;
+}
+
+interface GitLabMergeRequestInfoResponse {
+	iid: number;
+	web_url: string;
+	source_branch: string;
+	target_branch: string;
 }

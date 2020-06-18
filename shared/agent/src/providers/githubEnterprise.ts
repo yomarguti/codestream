@@ -10,7 +10,7 @@ import {
 	ProviderCreatePullRequestRequest,
 	ProviderCreatePullRequestResponse,
 	ProviderGetRepoInfoResponse,
-	ProviderPullRequestInfoResponse
+	ProviderPullRequestInfo
 } from "./provider";
 
 @lspProvider("github_enterprise")
@@ -112,7 +112,7 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 			const pullRequestResponse = await this.get<GitHubEnterprisePullRequest[]>(
 				`/repos/${owner}/${name}/pulls?state=open`
 			);
-			const pullRequests: ProviderPullRequestInfoResponse[] = [];
+			const pullRequests: ProviderPullRequestInfo[] = [];
 			if (pullRequestResponse) {
 				pullRequestResponse.body.map(_ => {
 					return {

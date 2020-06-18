@@ -43,7 +43,8 @@ import {
 	ProviderCreatePullRequestResponse,
 	ThirdPartyIssueProvider,
 	ThirdPartyPostProvider,
-	ThirdPartyProvider
+	ThirdPartyProvider,
+	ProviderGetRepoInfoRequest
 } from "./provider";
 
 // NOTE: You must include all new providers here, otherwise the webpack build will exclude them
@@ -265,7 +266,6 @@ export class ThirdPartyProviderRegistry {
 		return response;
 	}
 
-	// TODO fix type
 	async createPullRequest(
 		request: ProviderCreatePullRequestRequest
 	): Promise<ProviderCreatePullRequestResponse | undefined> {
@@ -287,8 +287,7 @@ export class ThirdPartyProviderRegistry {
 		return response;
 	}
 
-	// TODO fix type
-	async getRepoInfo(request: { providerId: string; remote: string }) {
+	async getRepoInfo(request: ProviderGetRepoInfoRequest) {
 		const provider = getProvider(request.providerId);
 		if (provider === undefined) {
 			throw new Error(`No registered provider for '${request.providerId}'`);

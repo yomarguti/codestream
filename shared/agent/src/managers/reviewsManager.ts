@@ -513,7 +513,12 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				(p): p is ThirdPartyIssueProvider & ThirdPartyProviderSupportsPullRequests => {
 					const thirdPartyIssueProvider = p as ThirdPartyIssueProvider;
 					const name = thirdPartyIssueProvider.getConfig().name;
-					return name === "github" || name === "github_enterprise";
+					return (
+						name === "github" ||
+						name === "gitlab" ||
+						name === "github_enterprise" ||
+						name === "gitlab_enterprise"
+					);
 				}
 			);
 
@@ -527,7 +532,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				if (remotePaths && remotePaths.length) {
 					providerId = provider.getConfig().id;
 					// just need any url here...
-					remoteUrl = "http://foo.com/" + remotePaths[0];
+					remoteUrl = "https://example.com/" + remotePaths[0];
 					const providerRepoInfo = await providerRegistry.getRepoInfo({
 						providerId: providerId,
 						remote: remoteUrl
@@ -607,7 +612,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			const gitRemotes = await repo!.getRemotes();
 			let remoteUrl = "";
 			let providerId = "";
-			let defaultBranch = "";
+			let defaultBranch: string | undefined = "";
 			let isConnected = false;
 
 			const providers = providerRegistry.getConnectedProviders(
@@ -615,7 +620,12 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				(p): p is ThirdPartyIssueProvider & ThirdPartyProviderSupportsPullRequests => {
 					const thirdPartyIssueProvider = p as ThirdPartyIssueProvider;
 					const name = thirdPartyIssueProvider.getConfig().name;
-					return name === "github" || name === "github_enterprise";
+					return (
+						name === "github" ||
+						name === "gitlab" ||
+						name === "github_enterprise" ||
+						name === "gitlab_enterprise"
+					);
 				}
 			);
 			let success = false;
@@ -632,6 +642,13 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 						remote: remoteUrl
 					});
 					if (providerRepoInfo) {
+						if (providerRepoInfo.error) {
+							return {
+								success: false,
+								error: providerRepoInfo.error
+							};
+						}
+
 						defaultBranch = providerRepoInfo.defaultBranch;
 						if (providerRepoInfo.pullRequests && request.baseRefName && request.headRefName) {
 							const existingPullRequest = providerRepoInfo.pullRequests.find(
