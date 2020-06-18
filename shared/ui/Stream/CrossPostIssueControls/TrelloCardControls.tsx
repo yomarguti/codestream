@@ -28,8 +28,6 @@ import { setUserPreference } from "../actions";
 
 interface Props {
 	provider: ThirdPartyProviderConfig;
-	q?: string;
-	focusInput?: React.RefObject<HTMLInputElement>;
 }
 
 export function TrelloCardControls(props: React.PropsWithChildren<Props>) {
@@ -266,7 +264,15 @@ export function TrelloCardControls(props: React.PropsWithChildren<Props>) {
 	);
 }
 
-export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
+interface DropdownProps {
+	provider: ThirdPartyProviderConfig;
+	q?: string;
+	focusInput?: React.RefObject<HTMLInputElement>;
+	selectedProvider: any;
+	knownIssueProviderOptions: any;
+}
+
+export function TrelloCardDropdown(props: React.PropsWithChildren<Props & DropdownProps>) {
 	const dispatch = useDispatch();
 	const data = useSelector((state: CodeStreamState) =>
 		getIntegrationData<TrelloIntegrationData>(state.activeIntegrations, props.provider.id)
@@ -430,8 +436,6 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 		[data.boards]
 	);
 
-	const goDisconnect = () => dispatch(disconnectProvider(props.provider.id, "Status Panel"));
-
 	const crossPostIssueContext = React.useContext(CrossPostIssueContext);
 
 	// https://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
@@ -483,6 +487,8 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 		if (!data.cards) return [];
 		const isFiltering = keyFilter(derivedState.filterBoards).length > 0;
 
+		console.warn(props.knownIssueProviderOptions);
+		console.warn(props.selectedProvider);
 		const items = data.cards
 			.filter(card => !isFiltering || derivedState.filterBoards[card.idBoard])
 			.filter(card => !props.q || card.name.includes(props.q))
@@ -521,12 +527,7 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 			},
 			{ label: "Filter by Board", key: "board", submenu: filterBoardItems() },
 			{ label: "-" },
-			{
-				label: "Disconnect Trello",
-				key: "disconnect",
-				action: goDisconnect,
-				icon: <Icon name="x" />
-			}
+			...props.knownIssueProviderOptions
 		];
 		if (!props.q) {
 			items.unshift(

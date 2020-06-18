@@ -82,6 +82,7 @@ class IssueDropdown extends React.Component<Props, State> {
 		const providerInfo = issueProviderConfig
 			? this.getProviderInfo(issueProviderConfig.id)
 			: undefined;
+		console.warn("");
 		if (
 			providerInfo &&
 			issueProviderConfig &&
@@ -109,20 +110,19 @@ class IssueDropdown extends React.Component<Props, State> {
 		this.props.setIssueProvider(undefined);
 	};
 
-	renderProviderControls(providerOptions) {
+	renderProviderControls(selectedProvider, knownIssueProviderOptions) {
 		const { issueProviderConfig, q, focusInput } = this.props;
 		const providerInfo = issueProviderConfig
 			? this.getProviderInfo(issueProviderConfig.id)
 			: undefined;
 
-		if (!providerInfo) return providerOptions;
+		if (!providerInfo)
+			return this.renderProviderOptions(selectedProvider, knownIssueProviderOptions);
 
 		switch (providerInfo.provider.name) {
 			case "jira":
 			case "jiraserver": {
-				return (
-					<JiraCardControls provider={providerInfo.provider}>{providerOptions}</JiraCardControls>
-				);
+				return <JiraCardControls provider={providerInfo.provider}></JiraCardControls>;
 			}
 			case "trello": {
 				return (
@@ -130,55 +130,33 @@ class IssueDropdown extends React.Component<Props, State> {
 						provider={providerInfo.provider}
 						q={q}
 						focusInput={focusInput}
+						selectedProvider={selectedProvider}
+						knownIssueProviderOptions={knownIssueProviderOptions}
 					></TrelloCardDropdown>
 				);
 			}
 			case "asana": {
-				return (
-					<AsanaCardControls provider={providerInfo.provider}>{providerOptions}</AsanaCardControls>
-				);
+				return <AsanaCardControls provider={providerInfo.provider}></AsanaCardControls>;
 			}
 			case "github":
 			case "github_enterprise": {
-				return (
-					<GitHubCardControls provider={providerInfo.provider}>
-						{providerOptions}
-					</GitHubCardControls>
-				);
+				return <GitHubCardControls provider={providerInfo.provider}></GitHubCardControls>;
 			}
 			case "gitlab":
 			case "gitlab_enterprise": {
-				return (
-					<GitLabCardControls provider={providerInfo.provider}>
-						{providerOptions}
-					</GitLabCardControls>
-				);
+				return <GitLabCardControls provider={providerInfo.provider}></GitLabCardControls>;
 			}
 			case "youtrack": {
-				return (
-					<YouTrackCardControls provider={providerInfo.provider}>
-						{providerOptions}
-					</YouTrackCardControls>
-				);
+				return <YouTrackCardControls provider={providerInfo.provider}></YouTrackCardControls>;
 			}
 			case "bitbucket": {
-				return (
-					<BitbucketCardControls provider={providerInfo.provider}>
-						{providerOptions}
-					</BitbucketCardControls>
-				);
+				return <BitbucketCardControls provider={providerInfo.provider}></BitbucketCardControls>;
 			}
 			case "azuredevops": {
-				return (
-					<AzureDevOpsCardControls provider={providerInfo.provider}>
-						{providerOptions}
-					</AzureDevOpsCardControls>
-				);
+				return <AzureDevOpsCardControls provider={providerInfo.provider}></AzureDevOpsCardControls>;
 			}
 			case "slack": {
-				return (
-					<SlackCardControls provider={providerInfo.provider}>{providerOptions}</SlackCardControls>
-				);
+				return <SlackCardControls provider={providerInfo.provider}></SlackCardControls>;
 			}
 
 			default:
@@ -204,6 +182,7 @@ class IssueDropdown extends React.Component<Props, State> {
 			return null;
 		}
 
+		const selectedProviderId = providerInfo && providerInfo.provider.id;
 		const knownIssueProviderOptions = knownIssueProviders
 			.map(providerId => {
 				const issueProvider = this.props.providers![providerId];
@@ -212,26 +191,26 @@ class IssueDropdown extends React.Component<Props, State> {
 					? `${providerDisplay.displayName} - ${issueProvider.host}`
 					: providerDisplay.displayName;
 				return {
-					icon: <Icon name={providerDisplay.icon || "blank"} />,
+					// icon: <Icon name={providerDisplay.icon || "blank"} />,
+					checked: providerId == selectedProviderId,
 					value: providerId,
 					label: displayName,
-					action: providerId
+					key: providerId,
+					action: () => this.selectIssueProvider(providerId)
 				};
 			})
 			.sort((a, b) => a.label.localeCompare(b.label));
 
 		const selectedProvider =
 			providerInfo &&
-			knownIssueProviderOptions.find(provider => provider.value === providerInfo.provider.id);
-
-		const providerOptions = this.renderProviderOptions(selectedProvider, knownIssueProviderOptions);
+			knownIssueProviderOptions.find(provider => provider.value === selectedProviderId);
 
 		return (
 			<>
 				{this.state.propsForPrePRProviderInfoModal && (
 					<PrePRProviderInfoModal {...this.state.propsForPrePRProviderInfoModal} />
 				)}
-				{this.renderProviderControls(providerOptions)}
+				{this.renderProviderControls(selectedProvider, knownIssueProviderOptions)}
 			</>
 		);
 	}
@@ -245,7 +224,6 @@ class IssueDropdown extends React.Component<Props, State> {
 						align="dropdownRight"
 						target={this.state.issueProviderMenuTarget}
 						items={knownIssueProviderOptions}
-						action={this.selectIssueProvider}
 					/>
 				)}
 			</span>
@@ -324,7 +302,8 @@ class IssueDropdown extends React.Component<Props, State> {
 				});
 			} else {
 				this.setState({ isLoading: true, loadingProvider: providerInfo });
-				await this.props.connectProvider(providerInfo.provider.id, "Compose Modal");
+				const ret = await this.props.connectProvider(providerInfo.provider.id, "Compose Modal");
+				if (ret && ret.alreadyConnected) this.setState({ isLoading: false });
 			}
 		}
 	}

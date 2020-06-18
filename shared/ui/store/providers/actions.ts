@@ -43,18 +43,20 @@ export const connectProvider = (providerId: string, connectionLocation: ViewLoca
 		if (provider.hasIssues) {
 			dispatch(setIssueProvider(providerId));
 		}
-		return;
+		return { alreadyConnected: true };
 	}
 	try {
 		const api = HostApi.instance;
 		await api.send(ConnectThirdPartyProviderRequestType, { providerId });
 		if (provider.hasIssues) {
 			dispatch(sendIssueProviderConnected(providerId, connectionLocation));
-			return dispatch(setIssueProvider(providerId));
+			dispatch(setIssueProvider(providerId));
+			return {};
 		}
 	} catch (error) {
 		logError(`Failed to connect ${provider.name}: ${error}`);
 	}
+	return {};
 };
 
 export type ViewLocation =

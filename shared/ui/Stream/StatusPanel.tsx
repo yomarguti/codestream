@@ -15,7 +15,8 @@ import { useDidMount } from "../utilities/hooks";
 import {
 	GetBranchesRequestType,
 	CreateBranchRequestType,
-	SwitchBranchRequestType
+	SwitchBranchRequestType,
+	OpenUrlRequestType
 } from "@codestream/protocols/agent";
 import Menu from "./Menu";
 import { CrossPostIssueContext } from "./CodemarkForm";
@@ -55,6 +56,12 @@ const StatusInput = styled.div`
 		top: 1px;
 		padding: 8px 10px;
 	}
+	.open-card {
+		position: absolute;
+		right: 28px;
+		top: 1px;
+		padding: 8px 10px;
+	}
 	.dropdown-button {
 		cursor: pointer;
 		left: auto;
@@ -90,7 +97,7 @@ const StatusInput = styled.div`
 	.ticket-icon {
 	}
 	&.has-ticket-icon input#status-input {
-		padding: 8px 40px 8px 32px !important;
+		padding: 8px 60px 8px 32px !important;
 	}
 `;
 
@@ -142,6 +149,12 @@ const CardDescription = styled.div`
 	margin-bottom: 20px;
 	margin-top: -20px;
 	background: var(--base-background-color);
+`;
+
+const CardLink = styled.div`
+	text-align: right;
+	font-size: smaller;
+	margin: -18px 0 15px 0;
 `;
 
 const EMPTY_STATUS = {
@@ -487,7 +500,29 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								</CrossPostIssueContext.Provider>
 							) : (
 								<div className="clear" onClick={clear}>
-									<Icon name="x" className="clickable" />
+									<Icon
+										name="x"
+										title="Clear Status"
+										delay={1}
+										placement="bottom"
+										className="clickable"
+									/>
+								</div>
+							)}
+							{card && card.url && (
+								<div className="open-card">
+									<Icon
+										title="Open on Trello"
+										delay={1}
+										placement="bottom"
+										name="link-external"
+										className="clickable"
+										onClick={() =>
+											HostApi.instance.send(OpenUrlRequestType, {
+												url: card.url
+											})
+										}
+									/>
 								</div>
 							)}
 							<input
