@@ -5,7 +5,7 @@ import Icon from "./Icon";
 import Button from "./Button";
 import Headshot from "./Headshot";
 import ScrollBox from "./ScrollBox";
-import { invite, setUserInvisible } from "./actions";
+import { invite, setUserStatus } from "./actions";
 import { mapFilter, keyFilter } from "../utils";
 import { difference as _difference, sortBy as _sortBy } from "lodash-es";
 import { OpenUrlRequestType } from "../ipc/host.protocol";
@@ -98,7 +98,7 @@ const MapRow = styled.div`
 `;
 
 const StyledUserStatus = styled(UserStatus)`
-	padding-left: 46px;
+	padding-left: 48px;
 `;
 
 interface Props extends ConnectedProps {}
@@ -116,6 +116,7 @@ interface ConnectedProps {
 	teamProvider: any;
 	members: CSUser[];
 	repos: any;
+	currentUser: CSUser;
 	currentUserInvisible: false;
 	updateModifiedRepos: Function;
 	clearModifiedFiles: Function;
@@ -124,7 +125,7 @@ interface ConnectedProps {
 	xraySetting: string;
 	xrayEnabled: boolean;
 	reviewApproval: "user" | "anyone" | "all";
-	setUserInvisible: Function;
+	setUserStatus: Function;
 	openPanel: Function;
 	isCurrentUserAdmin: boolean;
 	adminIds: string[];
@@ -608,9 +609,10 @@ class TeamPanel extends React.Component<Props, State> {
 	}
 
 	toggleInvisible = async () => {
-		const { setUserInvisible, currentUserInvisible } = this.props;
+		const { setUserStatus, currentUser, currentUserInvisible } = this.props;
 		this.setState({ loadingStatus: true });
-		await setUserInvisible(!currentUserInvisible);
+		const { label = "", ticketUrl = "", ticketProvider = "" } = currentUser.status || {};
+		await setUserStatus(label, ticketUrl, ticketProvider, !currentUserInvisible);
 		await this.getScmInfoSummary();
 		this.setState({ loadingStatus: false });
 	};
@@ -1104,6 +1106,7 @@ const mapStateToProps = state => {
 		dontSuggestInvitees,
 		repos,
 		collisions,
+		currentUser: currentUser,
 		currentUserId: currentUser.id,
 		currentUserInvisible: invisible,
 		currentUserEmail: currentUser.email,
@@ -1120,7 +1123,7 @@ const ConnectedTeamPanel = connect(mapStateToProps, {
 	invite,
 	updateModifiedRepos,
 	clearModifiedFiles,
-	setUserInvisible,
+	setUserStatus,
 	openPanel
 })(TeamPanel);
 

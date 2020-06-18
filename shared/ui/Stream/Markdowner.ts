@@ -61,6 +61,9 @@ export const markdownify = (text: string, options?: { excludeParagraphWrap: bool
 						.replace(/<br>\n/g, "\n")
 						.replace(/<\/p>\n$/, "</p>")
 						.replace(/<\/p>\n/g, "</p><br/>")
+						.replace(/<ul>\n/g, "<ul>")
+						.replace(/<ol>\n/g, "<ol>")
+						.replace(/<\/li>\n/g, "</li>")
 						.replace(/<br\/><\/blockquote>/g, "</blockquote>");
 		// console.log('markdownify input/output', text, replaced);
 		if (text.trim().match(/^(:[\w_+]+:|\s)+$/))

@@ -93,12 +93,12 @@ export const ConfigureBranchNames = (props: { onClose: Function }) => {
 								className="input-text control"
 								type="text"
 								onChange={e => setBranchDescriptionTemplate(e.target.value)}
-								placeholder="Example: feature/{username}/{desription}"
+								placeholder="Example: feature/{username}/{title}"
 							/>
 						</div>
 						<div style={{ margin: "30px 0 30px 0" }}>
 							<h3>Available tokens:</h3>
-							<span className="monospace">{"{username} {id} {description} {team} {date}"}</span>
+							<span className="monospace">{"{username} {id} {title} {team} {date}"}</span>
 						</div>
 						<div id="controls">
 							<h3>Maximum Branch Length:</h3>

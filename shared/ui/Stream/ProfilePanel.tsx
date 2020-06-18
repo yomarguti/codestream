@@ -59,13 +59,13 @@ const Value = styled.span`
 
 const Row = styled.div`
 	margin-bottom: 15px;
-	.icon {
+	.row-icon {
 		margin-right: 10px;
 		opacity: 0.7;
 		visibility: hidden;
 		pointer-events: none;
 	}
-	&:hover .icon {
+	&:hover .row-icon {
 		visibility: visible;
 		pointer-events: auto;
 	}
@@ -88,7 +88,7 @@ const RowIcon = ({ name, title, onClick }) => {
 			onClick={onClick}
 			placement="bottom"
 			delay={0.5}
-			className="clickable"
+			className="clickable row-icon"
 		/>
 	);
 };

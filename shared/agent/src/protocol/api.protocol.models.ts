@@ -574,7 +574,7 @@ export interface CSUser extends CSEntity {
 	// all of the local changes on disk (i.e. not pushed)
 	modifiedRepos?: { [teamId: string]: RepoScmStatus[] };
 	modifiedReposModifiedAt?: number;
-	status?: { label: string; icon?: string; expires?: number; invisible?: boolean };
+	status?: CSMeStatus;
 
 	avatar?: {
 		image?: string;
@@ -627,9 +627,9 @@ export interface CSMePreferences {
 }
 
 export interface CSMeStatus {
-	icon: string;
 	label: string;
-	expires: number;
+	ticketUrl: string;
+	ticketProvider: string; // "trello" | "jira" ....
 	invisible?: boolean;
 }
 

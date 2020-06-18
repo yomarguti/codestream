@@ -38,4 +38,15 @@ export const MarkdownText = styled(
 	}
 	white-space: pre-wrap;
 	word-wrap: break-word;
+	// need to increase priority for the li padding
+	.codestream .stream & {
+		ul,
+		ol {
+			margin: 0;
+			padding-left: 20px;
+			li {
+				padding: 5px 0 !important;
+			}
+		}
+	}
 `;

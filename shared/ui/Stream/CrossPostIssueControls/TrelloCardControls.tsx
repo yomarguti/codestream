@@ -394,11 +394,12 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 
 	const selectCard = React.useCallback((card?: TrelloCard) => {
 		if (card) {
-			const match = card.url.match(/\/c\/(.*?)\//);
 			crossPostIssueContext.setValues({
 				url: card.url,
 				id: card.shortLink,
-				description: card.name
+				title: card.name,
+				description: card.desc,
+				providerName: "trello"
 			});
 		}
 		setMenuState({ open: false });
@@ -464,7 +465,7 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 		];
 		items.unshift(
 			{
-				label: "Settings & Filters",
+				label: "Filters & Settings",
 				icon: <Icon name="gear" />,
 				submenu: settingsItems
 			},

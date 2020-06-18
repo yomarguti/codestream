@@ -247,10 +247,10 @@ export const createPostAndCodemark = (
 	}
 };
 
-export const createPostAndReview = (attributes: NewReviewAttributes, entryPoint?: PostEntryPoint) => async (
-	dispatch,
-	getState: () => CodeStreamState
-) => {
+export const createPostAndReview = (
+	attributes: NewReviewAttributes,
+	entryPoint?: PostEntryPoint
+) => async (dispatch, getState: () => CodeStreamState) => {
 	return dispatch(
 		createReview({
 			...attributes,
@@ -506,10 +506,15 @@ export const setUserPreference = (prefPath: string[], value: any) => async dispa
 	}
 };
 
-export const setUserStatus = (icon: string, label: string, expires: number) => async dispatch => {
+export const setUserStatus = (
+	label: string,
+	ticketUrl: string,
+	ticketProvider: string,
+	invisible: boolean
+) => async dispatch => {
 	try {
 		const response = await HostApi.instance.send(UpdateStatusRequestType, {
-			status: { icon, label, expires }
+			status: { label, ticketUrl, ticketProvider, invisible }
 		});
 		dispatch(updateUser(response.user));
 	} catch (error) {
@@ -517,14 +522,15 @@ export const setUserStatus = (icon: string, label: string, expires: number) => a
 	}
 };
 
-export const setUserInvisible = (invisible: boolean) => async dispatch => {
-	try {
-		const response = await HostApi.instance.send(UpdateInvisibleRequestType, { invisible });
-		dispatch(updateUser(response.user));
-	} catch (error) {
-		logError(`Error trying to update invisible`, { message: error.message });
-	}
-};
+// use setUserStatus instead
+// export const setUserInvisible = (invisible: boolean) => async dispatch => {
+// 	try {
+// 		const response = await HostApi.instance.send(UpdateInvisibleRequestType, { invisible });
+// 		dispatch(updateUser(response.user));
+// 	} catch (error) {
+// 		logError(`Error trying to update invisible`, { message: error.message });
+// 	}
+// };
 
 export const createStream = (
 	attributes:
