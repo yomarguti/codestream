@@ -52,42 +52,21 @@ class ReviewService(private val project: Project) {
         if (reviewDiffEditor == null || diffChain == null || key != currentKey) {
             closeDiff()
             val review = agent.getReview(reviewId)
-            val title = review.title
-            val contents = agent.getAllReviewContents(GetAllReviewContentsParams(reviewId, checkpoint))
+            currentKey = key
 
-            val diffRequests = contents.repos.flatMap { repo ->
-                repo.files.map { file ->
-                    val leftContent = createReviewDiffContent(
-                        project,
-                        review.id,
-                        checkpoint,
-                        repo.repoId,
-                        ReviewDiffSide.LEFT,
-                        file.leftPath,
-                        file.left
-                    )
-                    val rightContent = createReviewDiffContent(
-                        project,
-                        review.id,
-                        checkpoint,
-                        repo.repoId,
-                        ReviewDiffSide.RIGHT,
-                        file.rightPath,
-                        file.right
-                    )
-                    SimpleDiffRequest(title, leftContent, rightContent, file.leftPath, file.rightPath).also {
-                        it.putUserData(REPO_ID, repo.repoId)
-                        it.putUserData(PATH, file.path)
-                        it.putUserData(REVIEW_DIFF, true)
-                    }
-                }
+            val changeset = review.reviewChangesets.findLast {
+                it.repoId == repoId && (checkpoint == null || it.checkpoint == checkpoint)
+            } ?: return
+
+            val files = if (checkpoint == null) changeset.modifiedFiles else changeset.modifiedFilesInCheckpoint
+            val producers = files.map { it.file }.map {
+                ReviewDiffRequestProducer(project, review, repoId, it, checkpoint)
             }
 
-            currentKey = key
-            diffChain = SimpleDiffRequestChain(diffRequests).also { chain ->
+            diffChain = SimpleDiffRequestChain.fromProducers(producers).also { chain ->
                 chain.putUserData(REVIEW_DIFF, true)
-                chain.index = diffRequests.indexOfFirst { request ->
-                    request.getUserData(REPO_ID) == repoId && request.getUserData(PATH) == path
+                chain.index = producers.indexOfFirst {
+                    it.repoId == repoId && it.path == path
                 }
             }
 
@@ -104,8 +83,8 @@ class ReviewService(private val project: Project) {
             }
         }
 
-        val index = (diffChain!!.requests as List<SimpleDiffRequestChain.DiffRequestProducerWrapper>).indexOfFirst {
-            it.request.getUserData(REPO_ID) == repoId && it.request.getUserData(PATH) == path
+        val index = (diffChain!!.requests as List<ReviewDiffRequestProducer>).indexOfFirst {
+            it.repoId == repoId && it.path == path
         }
         ApplicationManager.getApplication().invokeLater {
             val processor = reviewDiffEditor?.let { processorField.get(it) as CacheDiffRequestChainProcessor }

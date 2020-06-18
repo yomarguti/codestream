@@ -178,7 +178,8 @@ class GetAllReviewContentsResult(
 class GetReviewContentsParams(
     val reviewId: String,
     val repoId: String,
-    val path: String
+    val path: String,
+    val checkpoint: Int?
 )
 
 class GetLocalReviewContentsParams(
@@ -251,7 +252,20 @@ class Post(
 class Review(
     val id: String,
     val title: String,
-    val followerIds: List<String>?
+    val followerIds: List<String>?,
+    val reviewChangesets: List<ReviewChangeset>
+)
+
+class ReviewChangeset(
+    val repoId: String,
+    val checkpoint: Int,
+    val modifiedFiles: List<ReviewChangesetFileInfo>,
+    val modifiedFilesInCheckpoint: List<ReviewChangesetFileInfo>
+)
+
+class ReviewChangesetFileInfo(
+    val oldFile: String,
+    val file: String
 )
 
 class Stream(
