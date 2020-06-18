@@ -1964,7 +1964,6 @@ class ReviewForm extends React.Component<Props, State> {
 							</div>
 							{reviewerEmails.map(email => {
 								const person = this.makePerson(email);
-								console.warn("PERSON IS ******************", person);
 								const menuItems = [
 									{ label: "-" },
 									{

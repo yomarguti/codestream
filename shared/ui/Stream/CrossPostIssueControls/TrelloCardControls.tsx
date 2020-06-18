@@ -380,7 +380,6 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 					providerId: props.provider.id,
 					assignedToMe: true
 				});
-				console.warn("CARDS: ", response.cards);
 				updateDataState({
 					isLoading: false,
 					cards: response.cards as TrelloCard[]

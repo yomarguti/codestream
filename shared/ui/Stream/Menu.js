@@ -154,10 +154,10 @@ export default class Menu extends Component {
 	repositionSubmenuIfNecessary() {
 		if (!this._div) return;
 		const $submenus = this._div.querySelectorAll("#active-submenu");
-		console.warn("GOT SUBS: ", $submenus);
+		// console.warn("GOT SUBS: ", $submenus);
 		$submenus.forEach(($submenu, index) => {
 			if ($submenu) {
-				console.warn("IN THE LOOP DOING: ", $submenu, " INDEX: ", index);
+				// console.warn("IN THE LOOP DOING: ", $submenu, " INDEX: ", index);
 				const parentLI = $submenu.closest("li");
 				const parentUL = $submenu.closest("ul");
 				const parentRect = parentLI.getBoundingClientRect();
