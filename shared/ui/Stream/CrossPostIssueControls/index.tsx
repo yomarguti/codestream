@@ -333,7 +333,8 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 				});
 			} else {
 				this.setState({ isLoading: true, loadingProvider: providerInfo });
-				await this.props.connectProvider(providerInfo.provider.id, "Compose Modal");
+				const ret = await this.props.connectProvider(providerInfo.provider.id, "Compose Modal");
+				if (ret && ret.alreadyConnected) this.setState({ isLoading: false });
 			}
 		}
 	}

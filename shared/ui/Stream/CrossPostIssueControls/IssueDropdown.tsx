@@ -296,13 +296,13 @@ class IssueDropdown extends React.Component<Props, State> {
 						},
 						action: () => {
 							this.setState({ isLoading: true, loadingProvider: providerInfo });
-							this.props.connectProvider(providerInfo.provider.id, "Compose Modal");
+							this.props.connectProvider(providerInfo.provider.id, "Status Panel");
 						}
 					}
 				});
 			} else {
 				this.setState({ isLoading: true, loadingProvider: providerInfo });
-				const ret = await this.props.connectProvider(providerInfo.provider.id, "Compose Modal");
+				const ret = await this.props.connectProvider(providerInfo.provider.id, "Status Panel");
 				if (ret && ret.alreadyConnected) this.setState({ isLoading: false });
 			}
 		}
