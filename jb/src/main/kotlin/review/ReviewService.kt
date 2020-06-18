@@ -63,7 +63,7 @@ class ReviewService(private val project: Project) {
                 ReviewDiffRequestProducer(project, review, repoId, it, checkpoint)
             }
 
-            diffChain = SimpleDiffRequestChain.fromProducers(producers).also { chain ->
+            diffChain = ReviewDiffRequestChain(producers).also { chain ->
                 chain.putUserData(REVIEW_DIFF, true)
                 chain.index = producers.indexOfFirst {
                     it.repoId == repoId && it.path == path
