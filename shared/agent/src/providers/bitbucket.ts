@@ -17,7 +17,9 @@ import {
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
 	FetchThirdPartyCardsRequest,
-	FetchThirdPartyCardsResponse
+	FetchThirdPartyCardsResponse,
+	MoveThirdPartyCardRequest,
+	MoveThirdPartyCardResponse
 } from "../protocol/agent.protocol";
 import {
 	CodemarkType,
@@ -247,6 +249,11 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 		card = issueResponse.body;
 		card.url = card.links.html!.href;
 		return card;
+	}
+
+	@log()
+	async moveCard(request: MoveThirdPartyCardRequest): Promise<MoveThirdPartyCardResponse> {
+		return { success: false };
 	}
 
 	private async getMemberId() {

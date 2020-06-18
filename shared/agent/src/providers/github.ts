@@ -19,7 +19,9 @@ import {
 	GitHubBoard,
 	GitHubCreateCardRequest,
 	GitHubCreateCardResponse,
-	GitHubUser
+	GitHubUser,
+	MoveThirdPartyCardRequest,
+	MoveThirdPartyCardResponse
 } from "../protocol/agent.protocol";
 import { CodemarkType, CSGitHubProviderInfo, CSReferenceLocation } from "../protocol/api.protocol";
 import { Arrays, Functions, log, lspProvider, Strings } from "../system";
@@ -172,6 +174,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		);
 		return { ...response.body, url: response.body.html_url };
+	}
+
+	@log()
+	async moveCard(request: MoveThirdPartyCardRequest): Promise<MoveThirdPartyCardResponse> {
+		return { success: false };
 	}
 
 	private async getMemberId() {

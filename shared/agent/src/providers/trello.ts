@@ -7,11 +7,13 @@ import {
 	FetchThirdPartyBoardsResponse,
 	FetchThirdPartyCardsRequest,
 	FetchThirdPartyCardsResponse,
+	MoveThirdPartyCardRequest,
 	TrelloBoard,
 	TrelloCard,
 	TrelloCreateCardRequest,
 	TrelloCreateCardResponse,
-	TrelloMember
+	TrelloMember,
+	MoveThirdPartyCardResponse
 } from "../protocol/agent.protocol";
 import { CSTrelloProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
@@ -132,6 +134,21 @@ export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProvider
 				desc: data.description,
 				key: this.apiKey,
 				idMembers: (data.assignees! || []).map(a => a.id),
+				token: this.accessToken
+			})}`,
+			{}
+		);
+		return response.body;
+	}
+
+	@log()
+	async moveCard(request: MoveThirdPartyCardRequest) {
+		await this.ensureConnected();
+
+		const response = await this.put<{}, MoveThirdPartyCardResponse>(
+			`/cards/${request.cardId}?${qs.stringify({
+				idList: request.listId,
+				key: this.apiKey,
 				token: this.accessToken
 			})}`,
 			{}

@@ -16,7 +16,8 @@ import {
 	GetBranchesRequestType,
 	CreateBranchRequestType,
 	SwitchBranchRequestType,
-	OpenUrlRequestType
+	OpenUrlRequestType,
+	MoveThirdPartyCardRequestType
 } from "@codestream/protocols/agent";
 import Menu from "./Menu";
 import { CrossPostIssueContext } from "./CodemarkForm";
@@ -200,15 +201,13 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const [label, setLabel] = useState(status.label || "");
 	const [card, setCard] = useState(
 		status.ticketUrl
-			? {
+			? ({
 					url: status.ticketUrl,
 					providerName: status.ticketProvider,
 					title: status.label,
-					description: "",
-					idList: "",
 					moveCardLabel: "Move this card to",
 					moveCardOptions: [] as any
-			  }
+			  } as any)
 			: undefined
 	);
 	// const [icon, setIcon] = useState(status.icon || ":desktop_computer:");
@@ -364,13 +363,12 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			}
 		}
 
-		if (showMoveCardCheckbox && moveCard) {
-			// FIXME move the issue to the selected list
-			// const response = await HostApi.instance.send(MoveThirdPartyCardRequestType, {
-			// 	providerId: props.provider.id,
-			// 	destinationListId: FIXME
-			// 	card
-			// });
+		if (showMoveCardCheckbox && moveCard && card && moveCardDestinationId) {
+			const response = await HostApi.instance.send(MoveThirdPartyCardRequestType, {
+				providerId: card.providerId,
+				cardId: card.id,
+				listId: moveCardDestinationId
+			});
 		}
 
 		const ticketUrl = card ? card.url : "";

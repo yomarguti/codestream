@@ -30,6 +30,9 @@ import {
 	FetchThirdPartyChannelsRequest,
 	FetchThirdPartyChannelsRequestType,
 	FetchThirdPartyChannelsResponse,
+	MoveThirdPartyCardRequest,
+	MoveThirdPartyCardRequestType,
+	MoveThirdPartyCardResponse,
 	RemoveEnterpriseProviderRequest,
 	RemoveEnterpriseProviderRequestType
 } from "../protocol/agent.protocol";
@@ -198,6 +201,25 @@ export class ThirdPartyProviderRegistry {
 		}
 
 		return issueProvider.createCard(request);
+	}
+
+	@log()
+	@lspHandler(MoveThirdPartyCardRequestType)
+	moveCard(request: MoveThirdPartyCardRequest): Promise<MoveThirdPartyCardResponse> {
+		const provider = getProvider(request.providerId);
+		if (provider === undefined) {
+			throw new Error(`No registered provider for '${request.providerId}'`);
+		}
+		const issueProvider = provider as ThirdPartyIssueProvider;
+		if (
+			issueProvider == null ||
+			typeof issueProvider.supportsIssues !== "function" ||
+			!issueProvider.supportsIssues()
+		) {
+			throw new Error(`Provider(${provider.name}) doesn't support issues`);
+		}
+
+		return issueProvider.moveCard(request);
 	}
 
 	@log()

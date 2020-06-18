@@ -22,6 +22,8 @@ import {
 	FetchThirdPartyCardsResponse,
 	FetchThirdPartyChannelsRequest,
 	FetchThirdPartyChannelsResponse,
+	MoveThirdPartyCardRequest,
+	MoveThirdPartyCardResponse,
 	RemoveEnterpriseProviderRequest,
 	ThirdPartyDisconnect,
 	ThirdPartyProviderConfig
@@ -50,6 +52,7 @@ export const providerDisplayNamesByNameKey = new Map<string, string>([
 export interface ThirdPartyProviderSupportsIssues {
 	getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse>;
 	getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse>;
+	moveCard(request: MoveThirdPartyCardRequest): Promise<MoveThirdPartyCardResponse>;
 	getAssignableUsers(request: FetchAssignableUsersRequest): Promise<FetchAssignableUsersResponse>;
 	createCard(request: CreateThirdPartyCardRequest): Promise<CreateThirdPartyCardResponse>;
 }

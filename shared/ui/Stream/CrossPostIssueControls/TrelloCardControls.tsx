@@ -427,6 +427,7 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props & Dropdo
 					title: card.name,
 					description: card.desc,
 					providerName: "trello",
+					providerId: props.provider.id,
 					moveCardLabel: "Move this card to",
 					moveCardOptions: lists
 				});

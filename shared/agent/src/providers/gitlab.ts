@@ -17,7 +17,8 @@ import {
 	FetchThirdPartyBoardsResponse,
 	GitLabBoard,
 	GitLabCreateCardRequest,
-	GitLabCreateCardResponse
+	GitLabCreateCardResponse,
+	MoveThirdPartyCardRequest
 } from "../protocol/agent.protocol";
 import {
 	CodemarkType,
@@ -178,6 +179,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		);
 		return { ...response.body, url: response.body.web_url };
 	}
+
+	@log()
+	async moveCard(request: MoveThirdPartyCardRequest) {}
 
 	private async getMemberId() {
 		const userResponse = await this.get<{ id: string; [key: string]: any }>(`/user`);

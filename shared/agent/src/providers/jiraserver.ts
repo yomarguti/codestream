@@ -11,7 +11,8 @@ import {
 	JiraBoard,
 	JiraUser,
 	ReportingMessageType,
-	ThirdPartyProviderConfig
+	ThirdPartyProviderConfig,
+	MoveThirdPartyCardRequest
 } from "../protocol/agent.protocol";
 import { CSJiraServerProviderInfo } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
@@ -268,6 +269,9 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 			url: `${this.baseUrl}/browse/${response.key}`
 		};
 	}
+
+	@log()
+	async moveCard(request: MoveThirdPartyCardRequest) {}
 
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {

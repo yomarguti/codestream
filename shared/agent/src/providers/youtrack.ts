@@ -5,6 +5,7 @@ import {
 	CreateThirdPartyCardRequest,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
+	MoveThirdPartyCardRequest,
 	YouTrackBoard,
 	YouTrackConfigurationData,
 	YouTrackCreateCardRequest,
@@ -93,6 +94,9 @@ export class YouTrackProvider extends ThirdPartyIssueProviderBase<CSYouTrackProv
 		card.url = `${this.myUrl}/youtrack/issue/${card.idReadable}`;
 		return card;
 	}
+
+	@log()
+	async moveCard(request: MoveThirdPartyCardRequest) {}
 
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {

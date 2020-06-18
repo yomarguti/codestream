@@ -12,7 +12,8 @@ import {
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
 	ThirdPartyProviderBoard,
-	ThirdPartyProviderUser
+	ThirdPartyProviderUser,
+	MoveThirdPartyCardRequest
 } from "../protocol/agent.protocol";
 import { CSAzureDevOpsProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
@@ -115,6 +116,9 @@ export class AzureDevOpsProvider extends ThirdPartyIssueProviderBase<CSAzureDevO
 		card.url = response.body._links && response.body._links.html && response.body._links.html.href;
 		return card;
 	}
+
+	@log()
+	async moveCard(request: MoveThirdPartyCardRequest) {}
 
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {

@@ -11,7 +11,8 @@ import {
 	CreateThirdPartyCardRequest,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
-	ThirdPartyProviderBoard
+	ThirdPartyProviderBoard,
+	MoveThirdPartyCardRequest
 } from "../protocol/agent.protocol";
 import { CSAsanaProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
@@ -175,6 +176,9 @@ export class AsanaProvider extends ThirdPartyIssueProviderBase<CSAsanaProviderIn
 		card.url = `${this.baseUrl}/0/${card.projects[0].gid}/${card.gid}`;
 		return card;
 	}
+
+	@log()
+	async moveCard(request: MoveThirdPartyCardRequest) {}
 
 	private async getMe(): Promise<AsanaUser> {
 		const userResponse = await this.get<{ data: AsanaUser }>(`/api/1.0/users/me`);

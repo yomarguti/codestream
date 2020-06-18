@@ -146,6 +146,23 @@ export const FetchThirdPartyCardsRequestType = new RequestType<
 	void
 >("codestream/provider/cards");
 
+export interface MoveThirdPartyCardRequest {
+	providerId: string;
+	cardId: string;
+	listId: string;
+}
+
+export interface MoveThirdPartyCardResponse {
+	success: boolean;
+}
+
+export const MoveThirdPartyCardRequestType = new RequestType<
+	MoveThirdPartyCardRequest,
+	MoveThirdPartyCardResponse,
+	void,
+	void
+>("codestream/provider/cards/move");
+
 export interface CreateThirdPartyPostRequest {
 	providerId: string;
 	providerTeamId: string;
