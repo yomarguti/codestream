@@ -3,6 +3,8 @@ import React from "react";
 import { CSUser } from "@codestream/protocols/api";
 import { MarkdownText } from "@codestream/webview/Stream/MarkdownText";
 import Icon from "@codestream/webview/Stream/Icon";
+import { HostApi } from "@codestream/webview/webview-api";
+import { OpenUrlRequestType } from "../../ipc/host.protocol";
 
 const Root = styled.span`
 	padding-left: 10px;
@@ -30,6 +32,7 @@ export function UserStatus(props: { user: CSUser; className?: string }) {
 
 	const handleClick = () => {
 		if (status.ticketUrl) {
+			HostApi.instance.send(OpenUrlRequestType, { url: status.ticketUrl });
 		}
 	};
 
