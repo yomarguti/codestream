@@ -242,13 +242,6 @@ export const ProfilePanel = () => {
 							<Headshot person={person} size={128} />
 							{isMe && <RowIcon name="pencil" title="Edit Profile Photo" onClick={editAvatar} />}
 						</div>
-						{person.status && person.status.label && (
-							<Row>
-								<MetaLabel>Status</MetaLabel>
-								<StyledUserStatus user={person} />
-								{isMe && <RowIcon name="pencil" title="Edit Status" onClick={editStatus} />}
-							</Row>
-						)}
 						<Row>
 							<MetaLabel>Username</MetaLabel>
 							<Value>@{person.username}</Value>
@@ -299,10 +292,11 @@ export const ProfilePanel = () => {
 								<Value></Value>
 							</Row>
 						)}
-						{false && (
+						{person.status && person.status.label && (
 							<Row>
-								<MetaLabel>Status</MetaLabel>
-								<Value></Value>
+								<MetaLabel>Currently Working On</MetaLabel>
+								<StyledUserStatus user={person} />
+								{isMe && <RowIcon name="pencil" title="Edit Status" onClick={editStatus} />}
 							</Row>
 						)}
 						{renderModifiedRepos()}

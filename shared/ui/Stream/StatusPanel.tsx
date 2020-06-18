@@ -179,7 +179,16 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const [loading, setLoading] = useState(false);
 	const [scmError, setScmError] = useState("");
 	const [label, setLabel] = useState(status.label || "");
-	const [card, setCard] = useState();
+	const [card, setCard] = useState(
+		status.ticketUrl
+			? {
+					url: status.ticketUrl,
+					providerName: status.ticketProvider,
+					title: status.label,
+					description: ""
+			  }
+			: undefined
+	);
 	// const [icon, setIcon] = useState(status.icon || ":desktop_computer:");
 	const [moveIssue, setMoveIssue] = useState(true);
 	const [createBranch, setCreateBranch] = useState(true);
@@ -188,7 +197,6 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const [currentBranch, setCurrentBranch] = useState("");
 	const [editingBranch, setEditingBranch] = useState(false);
 	const [branches, setBranches] = useState([] as string[]);
-	const [branchTouched, setBranchTouched] = useState(false);
 	const [customBranchName, setCustomBranchName] = useState("");
 	const [configureBranchNames, setConfigureBranchNames] = useState(false);
 	const [autocomplete, setAutocomplete] = useState(false);

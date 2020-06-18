@@ -419,6 +419,21 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 
 	const crossPostIssueContext = React.useContext(CrossPostIssueContext);
 
+	// https://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
+	const escapeRegExp = string => {
+		return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
+	};
+
+	const matchQueryRegexp = React.useMemo(() => {
+		return new RegExp(escapeRegExp(props.q), "gi");
+	}, [props.q]);
+
+	const underlineQ = string => (
+		<span
+			dangerouslySetInnerHTML={{ __html: string.replace(matchQueryRegexp, "<u><b>$&</b></u>") }}
+		/>
+	);
+
 	const filterBoardItems = () => {
 		const { filterBoards = {} } = data;
 		const items = [] as any;
@@ -444,7 +459,7 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props>) {
 			.filter(card => !isFiltering || data.filterBoards[card.idBoard])
 			.filter(card => !props.q || card.name.includes(props.q))
 			.map(card => ({
-				label: card.name,
+				label: props.q ? underlineQ(card.name) : card.name,
 				searchLabel: card.name,
 				icon: <Icon name="trello" />,
 				key: card.id,
