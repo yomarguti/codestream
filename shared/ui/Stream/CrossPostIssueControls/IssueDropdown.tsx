@@ -121,7 +121,7 @@ class IssueDropdown extends React.Component<Props, State> {
 		switch (providerInfo.provider.name) {
 			case "jira":
 			case "jiraserver": {
-				return <JiraCardControls provider={providerInfo.provider}></JiraCardControls>;
+				return this.renderProviderOptions(selectedProvider, knownIssueProviderOptions);
 			}
 			case "trello": {
 				return (
@@ -135,27 +135,27 @@ class IssueDropdown extends React.Component<Props, State> {
 				);
 			}
 			case "asana": {
-				return <AsanaCardControls provider={providerInfo.provider}></AsanaCardControls>;
+				return this.renderProviderOptions(selectedProvider, knownIssueProviderOptions);
 			}
 			case "github":
 			case "github_enterprise": {
-				return <GitHubCardControls provider={providerInfo.provider}></GitHubCardControls>;
+				return this.renderProviderOptions(selectedProvider, knownIssueProviderOptions);
 			}
 			case "gitlab":
 			case "gitlab_enterprise": {
-				return <GitLabCardControls provider={providerInfo.provider}></GitLabCardControls>;
+				return this.renderProviderOptions(selectedProvider, knownIssueProviderOptions);
 			}
 			case "youtrack": {
-				return <YouTrackCardControls provider={providerInfo.provider}></YouTrackCardControls>;
+				return this.renderProviderOptions(selectedProvider, knownIssueProviderOptions);
 			}
 			case "bitbucket": {
-				return <BitbucketCardControls provider={providerInfo.provider}></BitbucketCardControls>;
+				return this.renderProviderOptions(selectedProvider, knownIssueProviderOptions);
 			}
 			case "azuredevops": {
-				return <AzureDevOpsCardControls provider={providerInfo.provider}></AzureDevOpsCardControls>;
+				return this.renderProviderOptions(selectedProvider, knownIssueProviderOptions);
 			}
 			case "slack": {
-				return <SlackCardControls provider={providerInfo.provider}></SlackCardControls>;
+				return this.renderProviderOptions(selectedProvider, knownIssueProviderOptions);
 			}
 
 			default:
