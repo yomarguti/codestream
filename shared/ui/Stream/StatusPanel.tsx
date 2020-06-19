@@ -453,7 +453,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 						</span>
 					</span>
 				),
-				key: newBranch,
+				key: "create",
 				icon: <Icon name="plus" />,
 				action: () => setManuallySelectedBranch(newBranch)
 			}
