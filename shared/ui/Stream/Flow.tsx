@@ -470,7 +470,7 @@ const RequestFeedback = (
 		With one command, request feedback on a snapshot of your repo, including uncommitted &amp;
 		unpushed code, allowing you to verify that your work-in-progress is on the right track. (You can
 		also do it the old-fashioned way by committing &amp; pushing at the end of your dev sprint, of
-		course)
+		course.)
 		<br />
 		<br />
 		Review teammates’ code in your IDE, with full source tree context, your favorite keybindings,
@@ -483,8 +483,7 @@ const RequestFeedback = (
 		CodeStream makes it easier to get feedback earlier in your dev cycle by disconnecting discussion
 		about code with commit flow. This means you can request a review on code you haven't committed
 		&amp; pushed yet, and CodeStream will take care of the mechanics of making sure your teammate
-		can see the changes you have local on your machine, by packaging up a diffset along with the
-		review object.
+		can see your changes by packaging up a diffset along with the review object.
 		<VideoLink href={"FIXME"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
 			<span>When should I request feedback?</span>
@@ -498,7 +497,7 @@ const DiscussAndRefine = (
 		Whether your code was a work-in-progress or was ready for final review, chances are pretty good
 		your teammates might have some suggestions to make it even better. Whether it's a simple
 		thumbs-up, or a tear-it-to-the-ground set of suggestions for a rewrite (hope not!), CodeStream
-		makes it easy to both given and receive feedback in real-time, using modern messaging semantics.
+		makes it easy to both give and receive feedback in real-time, using modern messaging semantics.
 		<br />
 		<br />
 		Unlike other systems, your discussion and commit cadance can be disconnected. This means you can
@@ -628,23 +627,19 @@ const GrabATicket = (
 const CommentOnCode = (
 	<Content>
 		<h2>Discuss Any Code, Anytime</h2>
-		We built CodeStream with the goal of making it easier to discuss code and collaborate with your
-		team. The two biggest hurdles to overcome were (1) creating a consistent in-editor code
-		commenting experience that was as simple as "select the code, type your comment" across all of
-		the popular editors, and (2) developing the algorithms that calculated logical positions in a
-		file across different versions, allowing us to disconnect conversation cadence from commit
-		cadence.
+		Discussing code is as simple as "select the code, type your comment", whether it's old code
+		you're trying to figure out, new code you've just written, or code that one of your teammates
+		just changed.
 		<br />
 		<br />
-		The end result is an experience where you can always comment on the code you're looking at in
-		your editor, whether it's old code you're trying to figure out, new code you've just written, or
-		code that one of your teammates just changed.
+		A simple use-cases is when you see code for the first time and don't quite grok it, just select
+		it and ask your teammates "how does this work?" CodeStream will at-mention the code authors and
+		share your comment on Slack, MS Teams, or via email, to make it easier to get an answer from the
+		right person.
 		<br />
 		<br />
-		One of the simplest use-cases is when you see code for the first time and don't quite grok it,
-		you can just select it and ask your teammates "how does this work?" CodeStream will even
-		at-mention the authors of the code you've selected, and share it on Slack or MS Teams, to make
-		it easier to get an answer from the right person.
+		Your code discussions remain connected to the lines of code being discussed via in-IDE
+		annotations, even as you merge in new code or refactor.
 		<VideoLink href={"https://youtu.be/RPaIIZgaFK8"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
 			<span>Discussing Code with CodeStream</span>
@@ -662,8 +657,8 @@ const FileAnIssue = (
 		<br />
 		CodeStream integrates with nine popular issue tracking services such as Jira and Trello,
 		allowing you to create tickets as you come across code that needs to be fixed. It's as simple as
-		selecting the code and clicking an icon, and CodeStream takes care of creating the ticket, and
-		capturing all the context for the assignee.
+		selecting the code and clicking an icon, and CodeStream takes care of creating the ticket for
+		you, and capturing all the context for the assignee.
 		<VideoLink href={"https://youtu.be/lUI110T_SHY"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
 			<span>Ad-hoc Code Review</span>
