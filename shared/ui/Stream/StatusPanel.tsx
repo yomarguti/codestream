@@ -17,7 +17,9 @@ import {
 	CreateBranchRequestType,
 	SwitchBranchRequestType,
 	OpenUrlRequestType,
-	MoveThirdPartyCardRequestType
+	MoveThirdPartyCardRequestType,
+	GetReposScmRequestType,
+	ReposScm
 } from "@codestream/protocols/agent";
 import Menu from "./Menu";
 import { CrossPostIssueContext } from "./CodemarkForm";
@@ -181,6 +183,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 
 		return {
 			status,
+			repos: state.repos,
 			invisible: status.invisible || false,
 			teamName: team.name,
 			currentUserName: state.users[state.session.userId!].username,
@@ -221,6 +224,8 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const [customBranchName, setCustomBranchName] = useState("");
 	const [configureBranchNames, setConfigureBranchNames] = useState(false);
 	const [autocomplete, setAutocomplete] = useState(false);
+	const [openRepos, setOpenRepos] = useState<ReposScm[]>([]);
+	const [repoUri, setRepoUri] = useState("");
 	const inputRef = React.useRef<HTMLInputElement>(null);
 
 	const { moveCard, createBranch } = derivedState;
@@ -290,28 +295,27 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const makeBranchName = (value: string) =>
 		replaceDescriptionTokens(derivedState.branchDescriptionTemplate, value);
 
-	const getBranches = async () => {
-		if (!derivedState.textEditorUri) return;
+	const getBranches = async (uri?: string) => {
+		if (!uri && !derivedState.textEditorUri) return;
+		if (uri) setRepoUri(uri);
 		const branchInfo = await HostApi.instance.send(GetBranchesRequestType, {
-			uri: derivedState.textEditorUri
+			// stupid TS
+			uri: uri || derivedState.textEditorUri || ""
 		});
 		if (!branchInfo.scm) return;
-		// return {
-		// 	branches: branchInfo.scm.branches,
-		// 	current: branchInfo.scm.current,
-		// 	menuItems: branchMenuItems
-		// }
+
 		setBranches(branchInfo.scm.branches);
 		setCurrentBranch(branchInfo.scm.current);
+
+		const response = await HostApi.instance.send(GetReposScmRequestType, {});
+		if (response && response.repositories) {
+			setOpenRepos(response.repositories);
+		}
 	};
 
 	useDidMount(() => {
 		getBranches();
 	});
-
-	const branchInfo = React.useMemo(async () => {
-		await getBranches();
-	}, [derivedState.textEditorUri]);
 
 	const same = label == status.label; // && icon == status.icon;
 
@@ -349,9 +353,9 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			showCreateBranchCheckbox &&
 			createBranch &&
 			branch.length > 0 &&
-			derivedState.textEditorUri
+			(repoUri || derivedState.textEditorUri)
 		) {
-			const uri = derivedState.textEditorUri;
+			const uri = repoUri || derivedState.textEditorUri || "";
 			const request = branches.includes(branch) ? SwitchBranchRequestType : CreateBranchRequestType;
 			const result = await HostApi.instance.send(request, { branch, uri });
 			// FIXME handle error
@@ -449,6 +453,24 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 				key: newBranch,
 				icon: <Icon name="plus" />,
 				action: () => setManuallySelectedBranch(newBranch)
+			}
+		);
+	}
+	if (openRepos && openRepos.length > 1) {
+		branchMenuItems.unshift(
+			{ label: "-" },
+			{
+				label: "Repository",
+				key: "repo",
+				icon: <Icon name="repo" />,
+				submenu: openRepos.map(repo => {
+					const repoId = repo.id || "";
+					return {
+						label: derivedState.repos[repoId] ? derivedState.repos[repoId].name : repo.folder.name,
+						key: repo.id,
+						action: () => getBranches(repo.folder.uri)
+					};
+				})
 			}
 		);
 	}
