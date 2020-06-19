@@ -30,7 +30,5 @@ export JB_NAME=`dirname $JB_SANDBOX`
 #
 # Note that there is no sandbox process, other than a first time install, that exeutes this hook.
 cd $JB_SANDBOX
-[ ! -d codestream-components ] && echo "CLoning codestream-components" && git clone git@github.com:teamcodestream/codestream-components
-[ ! -d codestream-lsp-agent ] && echo "Cloning codestream-lsp-agent" && git clone git@github.com:teamcodestream/codestream-lsp-agent
 
 exit 0
