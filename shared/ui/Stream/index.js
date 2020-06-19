@@ -909,9 +909,6 @@ export class SimpleStream extends Component {
 		) {
 			activePanel = WebviewPanels.Activity;
 		}
-		// if there is nothing left to complete, go to spatial view
-		if (activePanel === WebviewPanels.GettingStarted && this.props.remainingSteps === 0)
-			activePanel = WebviewPanels.Activity;
 
 		let threadId = this.props.threadId;
 		let threadPost = this.findPostById(threadId);
