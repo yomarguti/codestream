@@ -7,7 +7,15 @@ CodeStream is a developer collaboration platform that makes it incredibly easy f
 - CodeStream requires a current version of [Visual Studio Code](https://code.visualstudio.com/).
 - Your repository must be managed by Git, or a Git hosting service like GitHub.
 
-# Discuss Code Just Like Commenting on a Google Doc
+# The Code Review Tool Built for Remote Teams
+
+CodeStream's lightweight code reviews let you request a review on any code regardless of the current state of your repo, without the friction of committing, pushing or issuing a pull request. Your teammates can review your changes right in their IDE, with full file context, and with no need to set aside their current work to switch branches or pull the latest. 
+
+![Review Changes](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/animated/CodeReviewPerform.gif)
+
+CodeStream’s code reviews are so easy that you can start doing them throughout the development process instead of waiting until the end. You’re a few days into a sprint and have some work stubbed out? Maybe some work that hasn’t even been committed. Request of a review of your work-in-progress so that you can identify and resolve issues early instead of saving those gotchas for when you need to get the code merged.
+
+# Collaborate without Friction
 
 Simply select a block of code and type your question or comment. Teammates can participate in the discussion right from their IDE. 
 
@@ -16,14 +24,6 @@ Simply select a block of code and type your question or comment. Teammates can p
 You can optionally share the discussion on Slack or Microsoft Teams so teammates can participate from their chat clients as well.
 
 ![Share on Slack](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/ShareOnSlack1.png)
-
-# In-IDE Code Review
-
-CodeStream's lightweight code reviews let you request a review on any code regardless of the current state of your repo, without the friction of committing, pushing or issuing a pull request. Your teammates can review your changes right in their IDE, with full file context, and with no need to set aside their current work to switch branches or pull the latest. 
-
-![Review Changes](https://raw.githubusercontent.com/TeamCodeStream/CodeStream/master/images/animated/CodeReviewPerform.gif)
-
-CodeStream’s code reviews are so easy that you can start doing them throughout the development process instead of waiting until the end. You’re a few days into a sprint and have some work stubbed out? Maybe some work that hasn’t even been committed. Request of a review of your work-in-progress so that you can identify and resolve issues early instead of saving those gotchas for when you need to get the code merged.
 
 # Build the Knowledge Base Behind Your Codebase
 
