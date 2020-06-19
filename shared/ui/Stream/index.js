@@ -2557,7 +2557,7 @@ const mapStateToProps = state => {
 	return {
 		remainingSteps,
 		lightningCodeReviewsEnabled: isFeatureEnabled(state, "lightningCodeReviews"),
-		kickstartEnabled: true || isFeatureEnabled(state, "kickstart"),
+		kickstartEnabled: isFeatureEnabled(state, "kickstart"),
 		collisions: getCodeCollisions(state),
 		currentCodemarkId: context.currentCodemarkId,
 		currentMarkerId: context.currentMarkerId,
