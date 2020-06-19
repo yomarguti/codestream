@@ -6,6 +6,7 @@ import { useRect } from "../utilities/hooks";
 import { RadioGroup, Radio } from "../src/components/RadioGroup";
 import { Tab, Tabs } from "../src/components/Tabs";
 import { ComposeKeybindings } from "./ComposeTitles";
+import { HostApi } from "../webview-api";
 
 const Root = styled.div`
 	color: var(--text-color);
@@ -749,6 +750,13 @@ export const Flow = (props: { flow: "adhoc" | "simplified" | "standard"; active?
 		setActive(index);
 		if (flow === "simplified" && index === 3) setRotate(!rotate);
 		if (flow === "standard" && index === 3) setRotate(!rotate);
+
+		HostApi.instance.track("Flow Step Viewed", {
+			"Tour Step":
+				flow === "adhoc" ? "The Basics" : flow === "simplified" ? "Trunk Flow" : "Branch Flow",
+			"Flow Step Viewed": index
+		});
+
 		// if (flow === "rigorous" && index === 4) setRotate(!rotate);
 	};
 
