@@ -333,7 +333,13 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			//@ts-ignore
 			return replaceTicketTokens(derivedState.branchTicketTemplate, card.id, card.title);
 		else return replaceDescriptionTokens(derivedState.branchDescriptionTemplate, label);
-	}, [label, card, customBranchName]);
+	}, [
+		label,
+		card,
+		customBranchName,
+		derivedState.branchTicketTemplate,
+		derivedState.branchDescriptionTemplate
+	]);
 
 	const branch = React.useMemo(() => {
 		if (manuallySelectedBranch) return manuallySelectedBranch;
@@ -342,7 +348,14 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			//@ts-ignore
 			return replaceTicketTokens(derivedState.branchTicketTemplate, card.id, card.title);
 		else return replaceDescriptionTokens(derivedState.branchDescriptionTemplate, label);
-	}, [label, card, manuallySelectedBranch, customBranchName, configureBranchNames]);
+	}, [
+		label,
+		card,
+		manuallySelectedBranch,
+		customBranchName,
+		derivedState.branchTicketTemplate,
+		derivedState.branchDescriptionTemplate
+	]);
 
 	const save = async () => {
 		setLoading(true);
