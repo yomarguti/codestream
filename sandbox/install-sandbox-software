@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# This script is a hook called via the dt-install-sandbox-software command.
+# Do not run it directly.
+
+ -z "$1" ] && echo "Run dt-install-sandbox-software to call this script" && exit 1
+
+f [ "$1" != "--env-loaded" ]; then
+	# THIS IS DEPRACATED. To eliminate:  echo 2 >CSFE_TOP/sandbox/sandbox-version
+	[ -z "$2" ] && echo "Run dt-install-sandbox-software (version 1) to call this script" && exit 1
+	export CSFE_SANDBOX=$1  # root of the sandbox
+	export CSFE_TOP=$2      # root of the primary git project
+	SB_ENV_FILE=$3            # name of the environment file to use
+	export CSFE_NAME=`dirname $CSFE_SANDBOX`
+	[ -z "$SB_ENV_FILE" ] && SB_ENV_FILE=defaults.sh
+	. $CSFE_TOP/sandbox/$SB_ENV_FILE
+fi
+
+# Install node if specified with CSFE_NODE_VER
+[ -n "$CSFE_NODE_VER" -a ! -L $CSFE_SANDBOX/node ] && dt-get-software -V $CSFE_NODE_VER node $CSFE_SANDBOX
+
+# Install yarn if specified with CSFE_YARN_VER
+[ -n "$CSFE_YARN_VER" -a ! -L $CSFE_SANDBOX/yarn ] && dt-get-software -V $CSFE_YARN_VER yarn $CSFE_SANDBOX
+
+
+
+# Put custom one-time only software installations here (such as git clones of additional repos,
+# other software packages that will live in the sandbox, etc...).
+#
+# Note that there is no sandbox process, other than a first time install, that exeutes this hook.
+
+
+exit 0
