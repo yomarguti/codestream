@@ -88,6 +88,7 @@ export const CreatePullRequestPanel = props => {
 	const [prText, setPrText] = useState("");
 	const [prRemote, setPrRemote] = useState("");
 	const [prProviderId, setPrProviderId] = useState("");
+	const [prProviderIconName, setPrProviderIconName] = useState("");
 
 	const [currentStep, setCurrentStep] = useState(0);
 
@@ -166,6 +167,17 @@ export const CreatePullRequestPanel = props => {
 		derivedState.isConnectedToGitHubEnterprise,
 		derivedState.isConnectedToGitLabEnterprise
 	]);
+
+	useEffect(() => {
+		if (prProviderId) {
+			const provider = derivedState.providers[prProviderId];
+			const { name } = provider;
+			const display = PROVIDER_MAPPINGS[name];
+			if (display && display.icon) {
+				setPrProviderIconName(display.icon!);
+			}
+		}
+	}, [prProviderId]);
 
 	useEffect(() => {
 		fetchPreconditionData();
@@ -558,6 +570,9 @@ export const CreatePullRequestPanel = props => {
 								</div>
 								<ButtonRow>
 									<Button onClick={onSubmit} isLoading={submitting}>
+										{prProviderIconName && (
+											<Icon name={prProviderIconName} style={{ marginRight: "3px" }} />
+										)}
 										Create Pull Request
 									</Button>
 								</ButtonRow>
