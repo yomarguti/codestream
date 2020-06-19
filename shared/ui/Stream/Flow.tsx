@@ -804,7 +804,7 @@ export const Flow = (props: { flow: "adhoc" | "simplified" | "standard"; active?
 					width: "100%",
 					transformOrigin: "top left",
 					textAlign: "center",
-					marginTop: flow === "simplified" ? "-50px" : 0
+					marginTop: flow === "simplified" ? `${-50 * scale}px` : 0
 				}}
 				className={flow}
 			>
