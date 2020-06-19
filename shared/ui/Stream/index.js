@@ -98,6 +98,7 @@ import {
 } from "lodash-es";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { ComposeKeybindings } from "./ComposeTitles";
+import { Keybindings } from "./Keybindings";
 import { PRInfoModal } from "./SpatialView/PRInfoModal";
 import { STEPS } from "./GettingStarted";
 import { isConnected } from "../store/providers/reducer";
@@ -338,15 +339,12 @@ export class SimpleStream extends Component {
 		return getPost(posts, this.props.postStreamId, id);
 	}
 
-	handleClickHelpLink = () => {
-		HostApi.instance.send(OpenUrlRequestType, { url: "https://help.codestream.com" });
-	};
+	openUrl = url => HostApi.instance.send(OpenUrlRequestType, { url });
 
-	handleClickFeedbackLink = () => {
-		HostApi.instance.send(OpenUrlRequestType, {
-			url: "mailto:team@codestream.com?Subject=CodeStream Feedback"
-		});
-	};
+	handleClickHelpLink = () => this.openUrl("https://help.codestream.com");
+
+	handleClickFeedbackLink = () =>
+		this.openUrl("mailto:team@codestream.com?Subject=CodeStream Feedback");
 
 	renderIntro = nameElement => {
 		const [first, ...rest] = this.props.channelMembers
@@ -501,7 +499,37 @@ export class SimpleStream extends Component {
 		menuItems.push(
 			{ label: "Integrations", action: "integrations" },
 			{ label: "Feedback", action: "feedback" },
-			{ label: "Help", action: "help" },
+			{
+				label: "Help",
+				key: "help",
+				submenu: [
+					{
+						label: "Documentation",
+						key: "documentation",
+						action: () => this.openUrl("https://help.codestream.com")
+					},
+					{
+						label: "Video Library",
+						key: "videos",
+						action: () => this.openUrl("https://www.codestream.com/video-library")
+					},
+					{
+						label: "Keybindings",
+						key: "keybindings",
+						action: () => this.setState({ showKeybindings: true })
+					},
+					{
+						label: "Getting Started Guide",
+						key: "getting-started",
+						action: () => this.props.openPanel(WebviewPanels.GettingStarted)
+					},
+					{
+						label: "Report an Issue",
+						key: "issue",
+						action: () => this.openUrl("https://github.com/TeamCodeStream/codestream/issues")
+					}
+				]
+			},
 			{ label: "-" }
 		);
 
@@ -855,7 +883,17 @@ export class SimpleStream extends Component {
 	render() {
 		const { configs, umis, postStreamPurpose, providerInfo = {} } = this.props;
 		let { activePanel } = this.props;
-		const { searchBarOpen, q } = this.state;
+		const { searchBarOpen, q, showKeybindings } = this.state;
+
+		if (showKeybindings)
+			return (
+				<Keybindings onClick={() => this.setState({ showKeybindings: false })}>
+					<div style={{ textAlign: "right" }}>
+						<CancelButton onClick={() => this.setState({ showKeybindings: false })} />
+					</div>
+				</Keybindings>
+			);
+
 		const isConfigurationPanel =
 			activePanel && activePanel.match(/^configure\-(provider|enterprise)-/);
 		// if we're conducting a review, we need the compose functionality of spatial view

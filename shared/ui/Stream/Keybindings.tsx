@@ -2,11 +2,13 @@ import React, { PropsWithChildren } from "react";
 import ComposeTitles from "./ComposeTitles";
 import { FeatureFlag } from "./FeatureFlag";
 
-interface Props {}
+interface Props {
+	onClick?: any;
+}
 
 export const Keybindings = (props: PropsWithChildren<Props>) => {
 	return (
-		<div key="no-codemarks" className="no-codemarks-container">
+		<div key="no-codemarks" className="no-codemarks-container" onClick={props.onClick}>
 			<div className="no-codemarks">
 				{props.children}
 				<div className="keybindings">
