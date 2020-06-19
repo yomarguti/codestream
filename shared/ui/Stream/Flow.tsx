@@ -440,7 +440,7 @@ const CreateBranch = (
 		a ticket without leaving your IDE, and your status is shared automatically with your team.
 		<VideoLink href={"FIXME"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
-			<span>How-to: Grab a Ticket &amp; Create a Branch</span>
+			<span>Grab a Ticket &amp; Create a Branch</span>
 		</VideoLink>
 	</Content>
 );
@@ -459,7 +459,7 @@ const StartWritingCode = (
 		Slack, MS Teams, or email.
 		<VideoLink href={"FIXME"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
-			<span>If I ask comments on my branch, how do my teammates see them?</span>
+			<span>If I ask comments on my local branch, how do my teammates see them?</span>
 		</VideoLink>
 	</Content>
 );
@@ -502,8 +502,8 @@ const DiscussAndRefine = (
 		<br />
 		Unlike other systems, your discussion and commit cadance can be disconnected. This means you can
 		share, review, and discuss code without worrying about committing it first.
-		<VideoLink href={"FIXME"}>
-			<img src="https://youtu.be/2AyqT4z5Omc" />
+		<VideoLink href={"https://youtu.be/2AyqT4z5Omc"}>
+			<img src="https://i.imgur.com/9IKqpzf.png" />
 			<span>Code Review Walkthrough</span>
 		</VideoLink>
 	</Content>
@@ -557,7 +557,7 @@ const CreatePRAndMerge = (
 		stress-free.
 		<VideoLink href={"FIXME"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
-			<span>How do I connect to my source host provider?</span>
+			<span>How do I connect to my code host provider?</span>
 		</VideoLink>
 	</Content>
 );
@@ -678,7 +678,7 @@ const GrabAPermalink = (
 		CodeStream's permalinks allow you to select a block of code and share a link to it, and that
 		link will stay <b>live</b>, pointing to the right locaion within your codebase, even as your
 		code evolves and you merge new code in.
-		<VideoLink href={""}>
+		<VideoLink href={"FIXME"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
 			<span>How do live permalinks work?</span>
 		</VideoLink>
