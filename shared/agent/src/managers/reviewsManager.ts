@@ -524,13 +524,14 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 			const _projectsByRemotePath = new Map(gitRemotes.map(obj => [obj.path, obj]));
 			for (const provider of providers) {
+				if (provider.getConfig().id !== request.providerId) continue;
+
 				const remotePaths = await getRemotePaths(
 					repo,
 					provider.getIsMatchingRemotePredicate(),
 					_projectsByRemotePath
 				);
 				if (remotePaths && remotePaths.length) {
-					providerId = provider.getConfig().id;
 					// just need any url here...
 					remoteUrl = "https://example.com/" + remotePaths[0];
 					const providerRepoInfo = await providerRegistry.getRepoInfo({
@@ -631,10 +632,21 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				}
 			);
 			let success = false;
+			let foundOne = false;
 			const _projectsByRemotePath = new Map(gitRemotes.map(obj => [obj.path, obj]));
 			for (const provider of providers) {
 				const remotePaths = await provider.getRemotePaths(repo, _projectsByRemotePath);
 				if (remotePaths && remotePaths.length) {
+					if (foundOne) {
+						// if we've already found one matching remote,
+						// and there's another that matches... stop processing
+						// we will have to let the user choose which provider
+						// they want to connect to
+						providerId = "";
+						isConnected = false;
+						success = false;
+						break;
+					}
 					providerId = provider.getConfig().id;
 					isConnected = true;
 					// just need any url here...
@@ -666,13 +678,13 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 							}
 						}
 						success = true;
-						// break out of providers loop -- take the first one!
-						break;
+						foundOne = true;
 					}
 				}
 			}
 			if (!success) {
-				// if we couldn't match a provider against a remote, that's unsupported
+				// if we couldn't match a provider against a remote or there are multiple
+				// we need the user to choose which provider.
 				return {
 					success: false,
 					error: {

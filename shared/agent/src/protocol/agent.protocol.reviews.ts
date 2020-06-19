@@ -281,6 +281,7 @@ export const CheckReviewPreconditionsRequestType = new RequestType<
 
 export interface CheckPullRequestBranchPreconditionsRequest {
 	reviewId: string;
+	providerId: string;
 	headRefName?: string;
 	baseRefName?: string;
 }

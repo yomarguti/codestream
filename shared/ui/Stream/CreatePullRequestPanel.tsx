@@ -255,6 +255,7 @@ export const CreatePullRequestPanel = props => {
 					HostApi.instance
 						.send(CheckPullRequestBranchPreconditionsRequestType, {
 							reviewId: derivedState.reviewId!,
+							providerId: prProviderId,
 							baseRefName: _,
 							headRefName: currentBranch
 						})

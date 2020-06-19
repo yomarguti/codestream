@@ -224,7 +224,6 @@ const MetaIcons = styled.span`
 `;
 
 const MetaPullRequest = styled.div`
-	background: var(--app-background-color-darker);
 	padding: 6px 6px 6px 1px;
 	a {
 		padding-left: 6px;
@@ -232,7 +231,7 @@ const MetaPullRequest = styled.div`
 		color: var(--text-color-subtle) !important;
 	}
 	.icon {
-		padding-left: 5px;
+		vertical-align: middle;
 	}
 `;
 
