@@ -545,13 +545,13 @@ export class SimpleStream extends Component {
 		if (!plusMenuOpen) return null;
 
 		const menuItems = [];
-		if (this.props.flowEnabled) {
+		if (this.props.kickstartEnabled) {
 			menuItems.push(
 				{
 					icon: <Icon name="ticket" />,
 					label: "Start Work",
 					action: () => this.setActivePanel(WebviewPanels.Status),
-					shortcut: ComposeKeybindings.branch,
+					shortcut: ComposeKeybindings.work,
 					key: "work"
 				}
 				// { label: "-" }
@@ -587,19 +587,6 @@ export class SimpleStream extends Component {
 				key: "review"
 			});
 		}
-
-		// if (this.props.flowEnabled) {
-		// 	menuItems.push(
-		// 		// { label: "-" },
-		// 		{
-		// 			icon: <Icon name="pull-request" />,
-		// 			label: "Create PR",
-		// 			action: () => this.setActivePanel(WebviewPanels.Status),
-		// 			shortcut: ComposeKeybindings.pr,
-		// 			key: "merge"
-		// 		}
-		// 	);
-		// }
 
 		return (
 			<Menu
@@ -2570,7 +2557,7 @@ const mapStateToProps = state => {
 	return {
 		remainingSteps,
 		lightningCodeReviewsEnabled: isFeatureEnabled(state, "lightningCodeReviews"),
-		flowEnabled: true || isFeatureEnabled(state, "flow"),
+		kickstartEnabled: true || isFeatureEnabled(state, "kickstart"),
 		collisions: getCodeCollisions(state),
 		currentCodemarkId: context.currentCodemarkId,
 		currentMarkerId: context.currentMarkerId,

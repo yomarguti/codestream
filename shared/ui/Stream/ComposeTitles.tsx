@@ -47,6 +47,17 @@ const ComposeTitles = {
 			</span>{" "}
 		</span>
 	),
+	work: (
+		<span className="compose-title">
+			<span className="binding">
+				<span className="keybinding extra-pad">{modifier}</span>
+				<span className="keybinding">w</span>
+			</span>
+			<span className="function">
+				Start Work <sup style={{ color: "var(--text-color-highlight)" }}>NEW</sup>
+			</span>{" "}
+		</span>
+	),
 	about: (
 		<span className="compose-title">
 			Get Info<span className="keybinding extra-pad">{modifier}</span>
@@ -82,7 +93,7 @@ export const ComposeKeybindings = {
 	comment: (
 		<span className="binding">
 			<span className="keybinding extra-pad">{modifier}</span>
-			<span className="keybinding">w</span>
+			<span className="keybinding">c</span>
 		</span>
 	),
 	link: (
@@ -103,10 +114,10 @@ export const ComposeKeybindings = {
 			<span className="keybinding">r</span>
 		</span>
 	),
-	branch: (
+	work: (
 		<span className="binding">
 			<span className="keybinding extra-pad">{modifier}</span>
-			<span className="keybinding">b</span>
+			<span className="keybinding">w</span>
 		</span>
 	),
 	pr: (

@@ -189,16 +189,23 @@ class IssueDropdown extends React.Component<Props, State> {
 				const displayName = issueProvider.isEnterprise
 					? `${providerDisplay.displayName} - ${issueProvider.host}`
 					: providerDisplay.displayName;
+				const supported = providerId === "trello*com";
 				return {
 					// icon: <Icon name={providerDisplay.icon || "blank"} />,
 					checked: providerId == selectedProviderId,
 					value: providerId,
-					label: displayName,
+					label: displayName + (supported ? "" : " (soon!)"),
+					disabled: !supported,
 					key: providerId,
 					action: () => this.selectIssueProvider(providerId)
 				};
 			})
-			.sort((a, b) => a.label.localeCompare(b.label));
+			.sort((a, b) =>
+				a.disabled === b.disabled ? a.label.localeCompare(b.label) : a.disabled ? 1 : -1
+			);
+		const index = knownIssueProviderOptions.findIndex(i => i.disabled);
+		// @ts-ignore
+		knownIssueProviderOptions.splice(index, 0, { label: "-" });
 
 		const selectedProvider =
 			providerInfo &&

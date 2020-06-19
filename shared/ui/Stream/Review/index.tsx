@@ -93,6 +93,7 @@ import {
 import { HeadshotName } from "@codestream/webview/src/components/HeadshotName";
 import { LocateRepoButton } from "../LocateRepoButton";
 import { PROVIDER_MAPPINGS } from "../CrossPostIssueControls/types";
+import { isFeatureEnabled } from "@codestream/webview/store/apiVersioning/reducer";
 
 interface RepoMetadata {
 	repoName: string;
@@ -295,7 +296,8 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 			currentUser: state.users[state.session.userId!],
 			author: state.users[props.review.creatorId],
 			userIsFollowing: (props.review.followerIds || []).includes(state.session.userId!),
-			statusLabel
+			statusLabel,
+			cr2prEnabled: isFeatureEnabled(state, "cr2pr")
 		};
 	}, shallowEqual);
 	const [shareModalOpen, setShareModalOpen] = React.useState(false);
@@ -454,6 +456,7 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 		}
 
 		if (
+			derivedState.cr2prEnabled &&
 			review.pullRequestUrl == null &&
 			review.status === "approved" &&
 			derivedState.currentUserId === creatorId

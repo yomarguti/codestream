@@ -26,6 +26,7 @@ import { getReviewChangeRequests } from "../store/codemarks/reducer";
 import { ReviewForm } from "./ReviewForm";
 import { openPanel } from "../store/context/actions";
 import { WebviewPanels } from "@codestream/protocols/webview";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 
 const NavHeader = styled.div`
 	flex-grow: 0;
@@ -213,7 +214,8 @@ export function ReviewNav(props: Props) {
 			currentCodemarkId: state.context.currentCodemarkId,
 			isInVscode: state.ide.name === "VSC",
 			approvedByMe: approvedBy[currentUserId] ? true : false,
-			isMine: currentUserId === (review ? review.creatorId : "")
+			isMine: currentUserId === (review ? review.creatorId : ""),
+			cr2prEnabled: isFeatureEnabled(state, "cr2pr")
 		};
 	}, shallowEqual);
 
@@ -432,14 +434,17 @@ export function ReviewNav(props: Props) {
 			case "rejected":
 				return (
 					<div className={hoverButton == "actions" ? "btn-group pulse" : "btn-group"}>
-						{isMine && review.pullRequestUrl == null && review.status === "approved" && (
-							<Tooltip title="Create a PR" placement="bottom">
-								<Button onClick={pr}>
-									<Icon className="narrow-icon" name="pull-request" />
-									<span className="wide-text">Create PR</span>
-								</Button>
-							</Tooltip>
-						)}
+						{derivedState.cr2prEnabled &&
+							isMine &&
+							review.pullRequestUrl == null &&
+							review.status === "approved" && (
+								<Tooltip title="Create a PR" placement="bottom">
+									<Button onClick={pr}>
+										<Icon className="narrow-icon" name="pull-request" />
+										<span className="wide-text">Create PR</span>
+									</Button>
+								</Tooltip>
+							)}
 						{isMine && review.pullRequestUrl == null && (
 							<Tooltip title="Reopen & Amend Review (add code)" placement="bottom">
 								<Button onClick={amend}>

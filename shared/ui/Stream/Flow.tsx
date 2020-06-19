@@ -430,14 +430,14 @@ const CreateBranch = (
 		<br />
 		<br />
 		When you create a branch in your project, you're creating an environment where you can try out
-		new ideas. Changes you make on a branch don't affect the master branch, so you're free to
+		new ideas. Changes you make on a branch don't affect the main branch, so you're free to
 		experiment and commit changes, safe in the knowledge that your branch won't be merged until it's
-		ready to be reviewed by someone you're collaborating with.
-		<h3>Show Me How</h3>
-		[] Menu Item
+		been reviewed by someone you're collaborating with.
 		<br />
-		[] Keybinding
-		<VideoLink href={"step.video"}>
+		<br />
+		CodeStream makes it easy to get started by integrating with your issue provider, so you can grab
+		a ticket without leaving your IDE, and your status is shared automatically with your team.
+		<VideoLink href={"FIXME"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
 			<span>How-to: Grab a Ticket &amp; Create a Branch</span>
 		</VideoLink>
@@ -447,7 +447,7 @@ const CreateBranch = (
 const StartWritingCode = (
 	<Content>
 		<h2>Begin Writing Code</h2>
-		Once your branch has been created, it's time to start making changes. Whenever you add, edit, or
+		Once you've grabbed a ticket, it's time to start making changes. Whenever you add, edit, or
 		delete a file, you can share those changes with your teammates to get feedback.
 		<br />
 		<br />
@@ -456,15 +456,9 @@ const StartWritingCode = (
 		question with the team, so no context switch is required for you or your teammates. Your
 		teammates can participate in this discussion directly in their IDE, or via integrations with
 		Slack, MS Teams, or email.
-		<h3>Exclusive</h3>
-		<Icon name="broadcast" /> Live View shares your changes in real-time... (Xray)
-		<VideoLink href={"step.video"}>
+		<VideoLink href={"FIXME"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
 			<span>If I ask comments on my branch, how do my teammates see them?</span>
-		</VideoLink>
-		<VideoLink href={"step.video"}>
-			<img src="https://i.imgur.com/9IKqpzf.png" />
-			<span>What is Live View?</span>
 		</VideoLink>
 	</Content>
 );
@@ -472,18 +466,25 @@ const StartWritingCode = (
 const RequestFeedback = (
 	<Content>
 		<h2>Request Feedback from Your Team</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-		labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-		laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-		voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
-		non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		With one command, request feedback on a snapshot of your repo, including uncommitted &amp;
+		unpushed code, allowing you to verify that your work-in-progress is on the right track. (You can
+		also do it the old-fashioned way by committing &amp; pushing at the end of your dev sprint, of
+		course)
+		<br />
+		<br />
+		Review teammates’ code in your IDE, with full source tree context, your favorite keybindings,
+		jump-to-definition, and the environment you're used to.
+		<br />
+		<br />
+		Comments on reviews are visible in your IDE as source code annotations after merging, creating a
+		historical record of discussions and decisions.
 		<h3>Exclusive</h3>
 		CodeStream makes it easier to get feedback earlier in your dev cycle by disconnecting discussion
 		about code with commit flow. This means you can request a review on code you haven't committed
 		&amp; pushed yet, and CodeStream will take care of the mechanics of making sure your teammate
 		can see the changes you have local on your machine, by packaging up a diffset along with the
 		review object.
-		<VideoLink href={"step.video"}>
+		<VideoLink href={"FIXME"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
 			<span>When should I request feedback?</span>
 		</VideoLink>
@@ -493,17 +494,17 @@ const RequestFeedback = (
 const DiscussAndRefine = (
 	<Content>
 		<h2>Discuss and Refine Your Changes</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-		labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-		laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-		voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
-		non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-		<h3>Exclusive</h3>
-		Unlike other systems, your discussion and commit cadance are disconnected. This means you can
-		share and review code without worrying about committing it first.
-		<VideoLink href={"step.video"}>
-			<img src="https://i.imgur.com/9IKqpzf.png" />
-			<span>How do I add fixes to the issues my teammates report?</span>
+		Whether your code was a work-in-progress or was ready for final review, chances are pretty good
+		your teammates might have some suggestions to make it even better. Whether it's a simple
+		thumbs-up, or a tear-it-to-the-ground set of suggestions for a rewrite (hope not!), CodeStream
+		makes it easy to both given and receive feedback in real-time, using modern messaging semantics.
+		<br />
+		<br />
+		Unlike other systems, your discussion and commit cadance can be disconnected. This means you can
+		share, review, and discuss code without worrying about committing it first.
+		<VideoLink href={"FIXME"}>
+			<img src="https://youtu.be/2AyqT4z5Omc" />
+			<span>Code Review Walkthrough</span>
 		</VideoLink>
 	</Content>
 );
@@ -511,106 +512,112 @@ const DiscussAndRefine = (
 const GetFinalApproval = (
 	<Content>
 		<h2>Get Final Approval</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-		labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-		laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-		voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
-		non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-		<h3>Exclusive</h3>
-		<Icon name="checked-checkbox" /> Reviewers are based on a variety of ...
-		<VideoLink href={"step.video"}>
+		CodeStream's code reviews can be reviewed by multiple people, with assignment based on changed
+		code, round-robin, or random chance. You can set things up where everyone on the team has to
+		give the thumbs-up, or the first person who approves the review wins.
+		<br />
+		<br />
+		However your team works, CodeStream provides the tools to make it easy and transparent, sharing
+		every status change with the team through the Acitivty feed, at-mentions, and configurable
+		notifications.
+		<VideoLink href={"FIXME"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
 			<span>How are reviewers assigned?</span>
 		</VideoLink>
 	</Content>
 );
 
-const GetPreliminaryApproval = (
-	<Content>
-		<h2>Get Preliminary Approval</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-		labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-		laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-		voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
-		non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-		<h3>Exclusive</h3>
-		<Icon name="checked-checkbox" /> Reviewers are based on a variety of ...
-		<VideoLink href={"step.video"}>
-			<img src="https://i.imgur.com/9IKqpzf.png" />
-			<span>How are reviewers assigned?</span>
-		</VideoLink>
-	</Content>
-);
+// const GetPreliminaryApproval = (
+// 	<Content>
+// 		<h2>Get Preliminary Approval</h2>
+// 		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+// 		labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+// 		laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
+// 		voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
+// 		non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+// 		<h3>Exclusive</h3>
+// 		<Icon name="checked-checkbox" /> Reviewers are based on a variety of ...
+// 		<VideoLink href={"FIXME"}>
+// 			<img src="https://i.imgur.com/9IKqpzf.png" />
+// 			<span>How are reviewers assigned?</span>
+// 		</VideoLink>
+// 	</Content>
+// );
 
 const CreatePRAndMerge = (
 	<Content>
 		<h2>Create a PR and Merge</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-		labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-		laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-		voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
-		non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-		<h3>Exclusive</h3>
-		<Icon name="mark-github" /> CodeStream works with the on-prem and cloud-based versions of
-		GitHub, GitLab, and BitBucket.
-		<VideoLink href={"step.video"}>
+		Once you get final approval, it's time to publish your changes. CodeStream integrates with your
+		PR provider, whether it's GitHub, BitBucket or GitLab, cloud-based or on-prem. Creating a PR is
+		a simple two-click process, capturing the context and history of your development workflow, from
+		grabbing a ticket, through discussion and review, until final approval.
+		<br />
+		<br />
+		Once the PR is created, final signoff should be a breeze, so code can be merged in on-time and
+		stress-free.
+		<VideoLink href={"FIXME"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
 			<span>How do I connect to my source host provider?</span>
 		</VideoLink>
 	</Content>
 );
 
-const CreatePRAndRequestApproval = (
-	<Content>
-		<h2>Create a PR and Request Final Approval</h2>A PR will be created which references the
-		changes, discussion, and approvals on CodeStream, making the final PR approval a walk in the
-		park.
-		<h3>Exclusive</h3>
-		<Icon name="mark-github" /> CodeStream works with the on-prem and cloud-based versions of
-		GitHub, GitLab, and BitBucket.
-		<VideoLink href={"step.video"}>
-			<img src="https://i.imgur.com/9IKqpzf.png" />
-			<span>How do I connect to my source host provider?</span>
-		</VideoLink>
-	</Content>
-);
+// const CreatePRAndRequestApproval = (
+// 	<Content>
+// 		<h2>Create a PR and Request Final Approval</h2>A PR will be created which references the
+// 		changes, discussion, and approvals on CodeStream, making the final PR approval a walk in the
+// 		park.
+// 		<h3>Exclusive</h3>
+// 		<Icon name="mark-github" /> CodeStream works with the on-prem and cloud-based versions of
+// 		GitHub, GitLab, and BitBucket.
+// 		<VideoLink href={"FIXME"}>
+// 			<img src="https://i.imgur.com/9IKqpzf.png" />
+// 			<span>How do I connect to my source host provider?</span>
+// 		</VideoLink>
+// 	</Content>
+// );
+
+const twitterUrl =
+	"https://twitter.com/intent/tweet?ref_src=twsrc%5Etfw&related=twitterapi%2Ctwitter&tw_p=tweetbutton&via=teamcodestream";
 
 const FinalThought = (
 	<Content>
 		<h2>Final Thought</h2>
-		We built CodeStream with the goal of making it easier to discuss code and collaborate with your
-		team. The two biggest hurdles to overcome were (1) creating a consistent in-editor code
-		commenting experience that was as simple as "select the code, type your comment" across all of
-		the popular editors, and (2) developing the algorithms that calculated logical positions in a
-		file across different versions, allowing us to disconnect conversation cadence from commit
-		cadence.
+		There are many different ways that CodeStream can be used, and it's worth noting that you can
+		mix-and-match different strategies if that suits your team. For larger features, go ahead and
+		create a branch to contain your changes, but even for one-line fixes, CodeStream makes it easy
+		to get a quick second set of eyes on it before you merge directly to master and push.
 		<br />
 		<br />
-		This algorithm provides for two major advantages (comments carry forward, and works across
-		branches).
+		If you've read this far, we'd love to hear your feedback and how CodeStream can help your team
+		succeed.
+		<br />
+		<br />
+		<a href="mailto:pez@codestream.com?Subject=CodeStream+Feedback">Email the CEO</a> or{" "}
+		<a href={twitterUrl}>Let us know on Twitter</a>
 	</Content>
 );
 
 const CommitAndPush = (
 	<Content>
 		<h2>Commit &amp; Push</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-		labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-		laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-		voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
-		non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		Trunk-based development means there isn't a lot of ceremony between review approval and getting
+		code merged in. Once your teammates give you the thumbs-up, you can do any final commits, push
+		your code, and move on to the next project. CodeStream updates your status automatically to let
+		you know you've finished. Congrats!
 	</Content>
 );
 
 const GrabATicket = (
 	<Content>
 		<h2>Start Work: Grab a Ticket</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-		labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-		laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-		voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
-		non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-		<VideoLink href={"step.video"}>
+		If your team uses Jira, Trello, GitHub or a similar service, CodeStream makes it easy to get to
+		work by grabbing a ticket that's assigned to you, and sharing your status with the team. When
+		you request a code review, it is automatically joined to the ticket so your teammates understand
+		the context of your changes. Down the road, you can connect the dots in reverse, going from code
+		to commit to review to ticket, to get a better understanding not only of what changed, but also
+		why.
+		<VideoLink href={"FIXME"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
 			<span>How do I grab a ticket?</span>
 		</VideoLink>
@@ -635,12 +642,8 @@ const CommentOnCode = (
 		<br />
 		One of the simplest use-cases is when you see code for the first time and don't quite grok it,
 		you can just select it and ask your teammates "how does this work?" CodeStream will even
-		at-mention the authors of the code you've selected, to make it easier to get an answer from the
-		right person.
-		<br />
-		<br />
-		CodeStream integrates into Slack and MS Teams, and your teammates can reply to your questions
-		without having to register (although we hope they do! ;)
+		at-mention the authors of the code you've selected, and share it on Slack or MS Teams, to make
+		it easier to get an answer from the right person.
 		<VideoLink href={"https://youtu.be/RPaIIZgaFK8"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
 			<span>Discussing Code with CodeStream</span>
@@ -651,18 +654,18 @@ const CommentOnCode = (
 const FileAnIssue = (
 	<Content>
 		<h2>Perform Ad-hoc Code Review</h2>
-		Pre-merge Code Review is a great way to maintain code quality and share information on your
+		Pre-merge code review is a great way to maintain code quality and share information on your
 		team. CodeStream also allows you to do a code review post-merge, as you come across code smell
 		that you want to ensure gets fixed.
 		<br />
 		<br />
 		CodeStream integrates with nine popular issue tracking services such as Jira and Trello,
 		allowing you to create tickets as you come across code that needs to be fixed. It's as simple as
-		selecting the code, and clicking an icon, and CodeStream takes care of capturing all the context
-		for the assignee.
+		selecting the code and clicking an icon, and CodeStream takes care of creating the ticket, and
+		capturing all the context for the assignee.
 		<VideoLink href={"https://youtu.be/lUI110T_SHY"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
-			<span>Ad-hock Code Review</span>
+			<span>Ad-hoc Code Review</span>
 		</VideoLink>
 	</Content>
 );
@@ -670,14 +673,18 @@ const FileAnIssue = (
 const GrabAPermalink = (
 	<Content>
 		<h2>Share Code Anywhere</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-		labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-		laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-		voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
-		non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-		<VideoLink href={"step.video"}>
+		Technical discussion is often spread across different services: project management, team chat,
+		documentation wikis and code hosts just to name a few. Until now, if you wanted to share a block
+		of code that would still refer to the same location in your codebase over time, you were pretty
+		much out of luck.
+		<br />
+		<br />
+		CodeStream's permalinks allow you to select a block of code and share a link to it, and that
+		link will stay <b>live</b>, pointing to the right locaion within your codebase, even as your
+		code evolves and you merge new code in.
+		<VideoLink href={""}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
-			<span>How do I grab a ticket?</span>
+			<span>How do live permalinks work?</span>
 		</VideoLink>
 	</Content>
 );
@@ -685,14 +692,15 @@ const GrabAPermalink = (
 const CheckTeamStatus = (
 	<Content>
 		<h2>Check Your Teammates' Status</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-		labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-		laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-		voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
-		non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-		<VideoLink href={"step.video"}>
+		Live View allows you to (optionally) see your teammates’ local changes at-a-glance, and
+		highlights potential merge conflicts pre-commit.
+		<br />
+		<br />
+		As your teammates create new branches, grab tickets, and make progress writing code, everything
+		is shared on one team dashboard giving you unprecedented visibility into who is working on what.
+		<VideoLink href={"https://youtu.be/h5KI3svlq-0"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
-			<span>How do I grab a ticket?</span>
+			<span>CodeStream Live View</span>
 		</VideoLink>
 	</Content>
 );
@@ -713,17 +721,18 @@ const FLOW_CONTENT = {
 		RequestFeedback,
 		DiscussAndRefine,
 		GetFinalApproval,
-		CreatePRAndMerge
-	],
-	rigorous: [
-		CreateBranch,
-		StartWritingCode,
-		CommitAndPush,
-		RequestFeedback,
-		DiscussAndRefine,
-		GetPreliminaryApproval,
-		CreatePRAndRequestApproval
+		CreatePRAndMerge,
+		FinalThought
 	]
+	// rigorous: [
+	// 	CreateBranch,
+	// 	StartWritingCode,
+	// 	CommitAndPush,
+	// 	RequestFeedback,
+	// 	DiscussAndRefine,
+	// 	GetPreliminaryApproval,
+	// 	CreatePRAndRequestApproval
+	// ]
 };
 
 export const Flow = (props: { flow: "adhoc" | "simplified" | "standard"; active?: number }) => {

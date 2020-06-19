@@ -217,7 +217,7 @@ export function GettingStarted(props: GettingStartedProps) {
 		return {
 			todo: STEPS.filter(step => !step.isComplete(user, state)),
 			completed: STEPS.filter(step => step.isComplete(user, state)),
-			flowEnabled: true //isFeatureEnabled(state, "flow")
+			kickstartEnabled: isFeatureEnabled(state, "kickstart")
 		};
 	}, shallowEqual);
 
@@ -257,7 +257,7 @@ export function GettingStarted(props: GettingStartedProps) {
 				<div className="vscroll">
 					<Root>
 						<ComposeArea id="compose-gutter" />
-						{derivedState.flowEnabled ? (
+						{derivedState.kickstartEnabled ? (
 							<Tabs>
 								<Tab onClick={handleClickTab} active={active === "0"} id="0">
 									Getting Started
