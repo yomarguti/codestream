@@ -38,7 +38,7 @@ export function UserStatus(props: { user: CSUser; className?: string }) {
 
 	return (
 		<Root className={props.className + (status.ticketUrl ? " has-link" : "")} onClick={handleClick}>
-			{status.ticketProvider && <Icon name={status.ticketProvider} />}
+			{status.ticketProvider ? <Icon name={status.ticketProvider} /> : <Icon name="ticket" />}
 			<MarkdownText text={status.label} excludeParagraphWrap={true}></MarkdownText>
 		</Root>
 	);
