@@ -832,8 +832,9 @@ export class GitService implements IGitService, Disposable {
 			);
 
 			let commits = GitLogParser.parse(data2.trim(), repoPath);
-			let hasCommitsExclusiveToThisBranch = false;
+			let hasCommitsExclusiveToThisBranch = true;
 			if (commits === undefined || commits.size === 0) {
+				hasCommitsExclusiveToThisBranch = false;
 				// if we didn't find unique commits on the branch we resort to git log
 				const data3 = await git(
 					{ cwd: repoPath },
@@ -848,8 +849,6 @@ export class GitService implements IGitService, Disposable {
 				if (commits === undefined || commits.size === 0) {
 					return undefined;
 				}
-			} else {
-				hasCommitsExclusiveToThisBranch = true;
 			}
 
 			let localCommits: string[] | undefined = undefined;
