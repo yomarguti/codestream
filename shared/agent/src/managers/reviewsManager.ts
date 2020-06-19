@@ -524,7 +524,9 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 			const _projectsByRemotePath = new Map(gitRemotes.map(obj => [obj.path, obj]));
 			for (const provider of providers) {
-				if (provider.getConfig().id !== request.providerId) continue;
+				const id = provider.getConfig().id;
+				providerId = id;
+				if (providerId !== request.providerId) continue;
 
 				const remotePaths = await getRemotePaths(
 					repo,
