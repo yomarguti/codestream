@@ -81,9 +81,9 @@ function Build-AgentAndWebview {
 
 	& npm run $(if ($CI) { "bundle:ci" } else { "bundle" })
 	if ($LastExitCode -ne 0) {
-		throw "Bundling agent & webview failed"
+		throw "Bundling webview failed"
 	}
-	Write-Log "Bundling agent & webview completed"
+	Write-Log "Bundling webview completed"
 
 	Write-Log "Packaging agent..."
 
@@ -96,7 +96,7 @@ function Build-AgentAndWebview {
 		throw "Creating packaged artifacts failed, ensure the agent has been built"
 	}
 
-	Copy-Item -Path ..\..\ui\agent\dist\agent-pkg-win-x86.exe -Destination src\CodeStream.VisualStudio\dist\agent.exe -Force
+	Copy-Item -Path ..\shared\agent\dist\agent-pkg-win-x86.exe -Destination src\CodeStream.VisualStudio\dist\agent.exe -Force
 	if ($LastExitCode -ne 0) {
 		throw "Copying packaged artifacts failed"
 	}
