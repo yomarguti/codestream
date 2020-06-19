@@ -347,7 +347,10 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const save = async () => {
 		setLoading(true);
 
-		HostApi.instance.track("Status Set", { Value: status });
+		HostApi.instance.track("Work Started", {
+			"Branch Created": createBranch,
+			"Ticket Selected": card ? card.providerName : ""
+		});
 
 		if (
 			showCreateBranchCheckbox &&
