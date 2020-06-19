@@ -72,10 +72,11 @@ export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProvider
 
 		let response: ApiResponse<TrelloCard[]>;
 
-		if (request.assignedToMe) {
+		if (true || request.assignedToMe) {
 			response = await this.get<TrelloCard[]>(
 				`/members/${this._trelloUserId}/cards?${qs.stringify({
 					cards: "open",
+					filter: "open",
 					fields:
 						"id,name,desc,url,idList,idBoard,idOrganization,dateLastActivity,shortLink,idShort",
 					key: this.apiKey,
@@ -84,24 +85,38 @@ export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProvider
 			);
 		} else if (request.assignedToAnyone) {
 			response = await this.get<TrelloCard[]>(
-				`/cards?${qs.stringify({
-					cards: "open",
-					fields:
-						"id,name,desc,url,idList,idBoard,idOrganization,dateLastActivity,shortLink,idShort",
-					key: this.apiKey,
-					token: this.accessToken
-				})}`
-			);
-		} else if (request.unassigned) {
-			response = await this.get<TrelloCard[]>(
 				`/members/${this._trelloUserId}/cards?${qs.stringify({
 					cards: "open",
+					filter: "open",
 					fields:
 						"id,name,desc,url,idList,idBoard,idOrganization,dateLastActivity,shortLink,idShort",
 					key: this.apiKey,
 					token: this.accessToken
 				})}`
 			);
+			response.body = [];
+			const bodies = (
+				await Promise.all(
+					// @ts-ignore
+					request.filterBoards.map(boardId => {
+						const innerResponse = this.get<TrelloCard[]>(
+							`/boards/${boardId}/cards?${qs.stringify({
+								cards: "open",
+								fields:
+									"id,name,desc,url,idList,idBoard,idOrganization,dateLastActivity,shortLink,idShort",
+								key: this.apiKey,
+								token: this.accessToken
+							})}`
+						);
+						return innerResponse;
+					})
+				)
+			).forEach(resp => {
+				// @ts-ignore
+				if (!response) response = resp;
+				// @ts-ignore
+				else response.body = response.body.concat(resp.body);
+			});
 		} else {
 			response = await this.get<TrelloCard[]>(
 				`/lists/${request.listId}/cards?${qs.stringify({

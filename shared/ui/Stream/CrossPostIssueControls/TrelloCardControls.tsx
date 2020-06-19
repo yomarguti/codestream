@@ -284,9 +284,9 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props & Dropdo
 		const currentUser = state.users[state.session.userId!] as CSMe;
 
 		const workPreferences = preferences["startWork-" + props.provider.id] || {};
-		const filterBoards = workPreferences.filterBoards || EMPTY_ARRAY;
+		const filterLists = workPreferences.filterLists || EMPTY_ARRAY;
 		const filterAssignees = workPreferences.filterAssignees || "mine";
-		return { currentUser, filterBoards, filterAssignees };
+		return { currentUser, filterLists, filterAssignees };
 	});
 
 	const updateDataState = React.useCallback(
@@ -377,12 +377,18 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props & Dropdo
 
 	React.useEffect(() => {
 		void (async () => {
+			// only allow to filter by all if you've selected boards to filter by
+			const filterAssignees =
+				derivedState.filterAssignees === "all" && keyFilter(derivedState.filterLists).length > 0
+					? "all"
+					: "mine";
 			try {
 				updateDataState({ isLoading: true });
 				const response = await HostApi.instance.send(FetchThirdPartyCardsRequestType, {
 					providerId: props.provider.id,
-					assignedToMe: true // derivedState.filterAssignees === "mine"
-					// assignedToAnyone: derivedState.filterAssignees === "all"
+					assignedToMe: filterAssignees === "mine",
+					assignedToAnyone: filterAssignees === "all",
+					filterLists: keyFilter(derivedState.filterLists)
 				});
 				updateDataState({
 					isLoading: false,
@@ -393,7 +399,7 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props & Dropdo
 				updateDataState({ isLoading: false });
 			}
 		})();
-	}, [derivedState.filterAssignees]);
+	}, [derivedState.filterAssignees, derivedState.filterLists]);
 
 	const [menuState, setMenuState] = React.useState<{
 		open: boolean;
@@ -457,41 +463,54 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props & Dropdo
 	);
 
 	const filterBoardItems = () => {
-		const { filterBoards } = derivedState;
+		const { filterLists } = derivedState;
 		const items = [] as any;
 		if (!data.boards) return items;
 		data.boards.forEach(board => {
 			const b = board;
-			const checked = !!filterBoards[board.id];
+			let boardChecked = false;
+			const submenu = board.lists.map(list => {
+				const l = list;
+				const checked = !!filterLists[list.id];
+				if (checked) boardChecked = true;
+				return {
+					label: list.name,
+					key: list.id,
+					checked,
+					action: () => setPreference("filterLists", { ...filterLists, [l.id]: !checked })
+				};
+			});
 			items.push({
 				label: board.name,
 				key: board.id,
-				checked,
-				action: () => setPreference("filterBoards", { ...filterBoards, [b.id]: !checked })
+				checked: boardChecked,
+				action: () => {},
+				// action: () => setPreference("filterLists", { ...filterLists, [b.id]: !checked }),
+				submenu
 			});
 		});
-		if (keyFilter(filterBoards).length > 0) {
-			const reset = { ...filterBoards };
-			Object.keys(filterBoards).forEach(key => (reset[key] = false));
-			items.push(
-				{ label: "-" },
-				{
-					label: "Clear All",
-					key: "clear",
-					checked: false,
-					action: () => setPreference("filterBoards", reset)
-				}
-			);
-		}
+		// if (keyFilter(filterLists).length > 0) {
+		// 	const reset = { ...filterLists };
+		// 	Object.keys(filterLists).forEach(key => (reset[key] = false));
+		// 	items.push(
+		// 		{ label: "-" },
+		// 		{
+		// 			label: "Clear All",
+		// 			key: "clear",
+		// 			checked: false,
+		// 			action: () => setPreference("filterLists", reset)
+		// 		}
+		// 	);
+		// }
 		return items;
 	};
 
 	const cardItems = React.useMemo(() => {
 		if (!data.cards) return [];
-		const isFiltering = keyFilter(derivedState.filterBoards).length > 0;
+		const isFiltering = keyFilter(derivedState.filterLists).length > 0;
 
 		const items = data.cards
-			.filter(card => !isFiltering || derivedState.filterBoards[card.idBoard])
+			.filter(card => !isFiltering || derivedState.filterLists[card.idList])
 			.filter(card => !props.q || card.name.includes(props.q))
 			.map(card => ({
 				label: props.q ? underlineQ(card.name) : card.name,
@@ -501,47 +520,54 @@ export function TrelloCardDropdown(props: React.PropsWithChildren<Props & Dropdo
 				action: { ...card }
 			})) as any;
 
-		const settingsItems = [
-			{
-				label: "Assignment",
-				key: "assignment",
-				submenu: [
-					{
-						label: "Cards Assigned to Me",
-						key: "mine",
-						checked: derivedState.filterAssignees === "mine",
-						action: () => setPreference("filterAssignees", "mine")
-					},
-					{
-						label: "Unassigned cards",
-						key: "unassigned",
-						checked: derivedState.filterAssignees === "unassigned",
-						action: () => setPreference("filterAssignees", "unassigned")
-					},
-					{
-						label: "All Cards",
-						key: "all",
-						checked: derivedState.filterAssignees === "all",
-						action: () => setPreference("filterAssignees", "all")
-					}
-				]
-			},
-			{ label: "Filter by Board", key: "board", submenu: filterBoardItems() },
-			{ label: "-" },
-			...props.knownIssueProviderOptions
-		];
+		// const settingsItems = [
+		// 	{
+		// 		label: "Assignment",
+		// 		key: "assignment",
+		// 		submenu: [
+		// 			{
+		// 				label: "Cards Assigned to Me",
+		// 				key: "mine",
+		// 				checked: derivedState.filterAssignees === "mine",
+		// 				action: () => setPreference("filterAssignees", "mine")
+		// 			},
+		// 			{
+		// 				label: "Unassigned cards",
+		// 				key: "unassigned",
+		// 				checked: derivedState.filterAssignees === "unassigned",
+		// 				action: () => setPreference("filterAssignees", "unassigned")
+		// 			},
+		// 			{
+		// 				label: "All Cards",
+		// 				key: "all",
+		// 				checked: derivedState.filterAssignees === "all",
+		// 				action: () => setPreference("filterAssignees", "all")
+		// 			}
+		// 		]
+		// 	},
+		// 	{ label: "Filter by Board & List", key: "board", submenu: filterBoardItems() },
+		// 	{ label: "-" },
+		// 	...props.knownIssueProviderOptions
+		// ];
 		if (!props.q) {
 			items.unshift(
 				{
-					label: "Filters & Settings",
-					icon: <Icon name="gear" />,
-					submenu: settingsItems
+					label: "Filter by Board & List",
+					icon: <Icon name="filter" />,
+					key: "filters",
+					submenu: filterBoardItems()
 				},
+				// {
+				// 	label: "Settings",
+				// 	icon: <Icon name="gear" />,
+				// 	key: "settings",
+				// 	submenu: props.knownIssueProviderOptions
+				// },
 				{ label: "-" }
 			);
 		}
 		return items;
-	}, [data.cards, data.boards, derivedState.filterBoards, props.q]);
+	}, [data.cards, data.boards, derivedState.filterLists, props.q]);
 
 	return (
 		<>
