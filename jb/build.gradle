@@ -59,8 +59,8 @@ patchPluginXml {
 
 idea {
     module {
-        excludeDirs.add(file("src/main/resources/agent"))
-        excludeDirs.add(file("src/main/resources/webview"))
+        excludeDirs += file("src/main/resources/agent")
+        excludeDirs += file("src/main/resources/webview")
     }
 }
 
