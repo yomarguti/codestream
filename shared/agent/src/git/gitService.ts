@@ -832,6 +832,7 @@ export class GitService implements IGitService, Disposable {
 			);
 
 			let commits = GitLogParser.parse(data2.trim(), repoPath);
+			let hasCommitsExclusiveToThisBranch = false;
 			if (commits === undefined || commits.size === 0) {
 				// if we didn't find unique commits on the branch we resort to git log
 				const data3 = await git(
@@ -847,6 +848,8 @@ export class GitService implements IGitService, Disposable {
 				if (commits === undefined || commits.size === 0) {
 					return undefined;
 				}
+			} else {
+				hasCommitsExclusiveToThisBranch = true;
 			}
 
 			let localCommits: string[] | undefined = undefined;
@@ -867,7 +870,14 @@ export class GitService implements IGitService, Disposable {
 
 			let ret: { sha: string; info: {}; localOnly: boolean }[] = [];
 			commits.forEach((val, key) => {
-				ret.push({ sha: key, info: val, localOnly: !localCommits || localCommits.includes(key) });
+				ret.push({
+					sha: key,
+					info: val,
+					// !localCommits means that the command to find local commits failed, so we
+					// were not able to find any. for instance, when there is not an up-stream configured
+					localOnly:
+						hasCommitsExclusiveToThisBranch && (!localCommits || localCommits.includes(key))
+				});
 			});
 
 			if (prevEndCommit) {

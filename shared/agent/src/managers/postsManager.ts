@@ -1104,10 +1104,13 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 		review = response.review!;
 
-		trackReviewPostCreation(review, totalExcludedFilesCount,
+		trackReviewPostCreation(
+			review,
+			totalExcludedFilesCount,
 			reviewChangesetsSizeInBytes,
 			request.entryPoint,
-			request.addedUsers);
+			request.addedUsers
+		);
 		await resolveCreatePostResponse(response!);
 		return {
 			stream,
@@ -1230,7 +1233,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			? (await git.getParentCommitShas(scm.repoPath, scm.commits[scm.commits.length - 1].sha))[0]
 			: latestCommitSha;
 
-		if (baseSha == null) {
+		if (!baseSha) {
 			throw new Error("Could not determine newest pushed commit for review creation");
 		}
 		Logger.log("baseSha is: " + baseSha);
@@ -1260,6 +1263,9 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		} else if (newestCommitNotInReview == null) {
 			if (oldestCommitInReview != null) {
 				const parent = await git.getCommit(scm.repoPath, oldestCommitInReview.sha + "^");
+				if (!parent) {
+					throw new Error(`Cannot determine the parent of sha ${oldestCommitInReview.sha}`);
+				}
 				leftBaseSha = parent!.ref;
 				leftBaseAuthor = parent!.author;
 				leftDiffs = [];
