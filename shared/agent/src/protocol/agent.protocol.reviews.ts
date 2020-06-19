@@ -293,6 +293,7 @@ export interface CheckPullRequestBranchPreconditionsResponse {
 	error?: {
 		message?: string;
 		type?: "REPO_NOT_FOUND" | "ALREADY_HAS_PULL_REQUEST" | "UNKNOWN" | "PROVIDER" | string;
+		url?: string;
 	};
 }
 
@@ -317,10 +318,15 @@ export interface CheckPullRequestPreconditionsResponse {
 	pullRequestProvider?: { defaultBranch?: string; isConnected: boolean };
 	branch?: string;
 	branches?: string[];
-
+	warning?: {
+		message?: string;
+		type?: "ALREADY_HAS_PULL_REQUEST" | string;
+		url?: string;
+	};
 	error?: {
 		message?: string;
 		type?: "REPO_NOT_FOUND" | "HAS_LOCAL_COMMITS" | "UNKNOWN" | string;
+		url?: string;
 	};
 }
 
@@ -345,9 +351,10 @@ export interface CreatePullRequestResponse {
 	success: boolean;
 	url?: string;
 	error?: {
-		message: string;
 		// TODO fix these
 		type: "REPO_NOT_FOUND" | "COMMIT_NOT_FOUND" | "UNKNOWN" | string;
+		message: string;
+		url?: string;
 	};
 }
 

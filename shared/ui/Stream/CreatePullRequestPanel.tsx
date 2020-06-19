@@ -27,6 +27,8 @@ import { useInterval, useTimeout } from "../utilities/hooks";
 import { setCurrentReview, openPanel } from "../store/context/actions";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { PrePRProviderInfoModal } from "./PrePRProviderInfoModal";
+import Icon from "./Icon";
+import { OpenUrlRequestType } from "@codestream/protocols/webview";
 
 export const ButtonRow = styled.div`
 	text-align: center;
@@ -70,10 +72,10 @@ export const CreatePullRequestPanel = props => {
 	const [loading, setLoading] = useState(true);
 	const [submitting, setSubmitting] = useState(false);
 
-	const [preconditionError, setPreconditionError] = useState({ message: "", type: "" });
+	const [preconditionError, setPreconditionError] = useState({ message: "", type: "", url: "" });
 	const [unexpectedError, setUnexpectedError] = useState(false);
 
-	const [formState, setFormState] = useState({ message: "", type: "" });
+	const [formState, setFormState] = useState({ message: "", type: "", url: "" });
 	const [titleValidity, setTitleValidity] = useState(true);
 
 	const [currentBranch, setCurrentBranch] = useState("");
@@ -100,7 +102,7 @@ export const CreatePullRequestPanel = props => {
 	useTimeout(stopWaiting, waitFor);
 
 	const fetchPreconditionData = async () => {
-		setPreconditionError({ message: "", type: "" });
+		setPreconditionError({ type: "", message: "", url: "" });
 		// already waiting on a provider auth, keep using that loading ui
 		if (currentStep != 2) {
 			setLoading(true);
@@ -114,10 +116,8 @@ export const CreatePullRequestPanel = props => {
 			if (result && result.success) {
 				setCurrentBranch(result.branch!);
 				setBranches(result.branches!);
-				if (result.pullRequestProvider) {
-					if (result.pullRequestProvider.defaultBranch) {
-						setPrBranch(result.pullRequestProvider.defaultBranch!);
-					}
+				if (result.pullRequestProvider && result.pullRequestProvider.defaultBranch) {
+					setPrBranch(result.pullRequestProvider.defaultBranch!);
 				}
 
 				setPrRemote(result.remote!);
@@ -126,14 +126,25 @@ export const CreatePullRequestPanel = props => {
 				setPrProviderId(result.providerId!);
 
 				setCurrentStep(3);
-				setPreconditionError({ message: "", type: "" });
+				if (result.warning && result.warning.type) {
+					// if we get a warning, show the error, but continue
+					// to show the form, this is most likely a PR already exists
+					setPreconditionError({
+						type: result.warning.type,
+						message: result.warning.message || "",
+						url: result.warning.url || ""
+					});
+				} else {
+					setPreconditionError({ type: "", message: "", url: "" });
+				}
 			} else if (result && result.error && result.error.type) {
 				if (result.error.type === "REQUIRES_PROVIDER") {
 					setCurrentStep(1);
 				} else {
 					setPreconditionError({
+						type: result.error.type || "UNKNOWN",
 						message: result.error.message || "",
-						type: result.error.type || "UNKNOWN"
+						url: result.error.url || ""
 					});
 				}
 			}
@@ -168,7 +179,7 @@ export const CreatePullRequestPanel = props => {
 		};
 	}, []);
 
-	const isTitleValid = (title: string) => title != null;
+	const isTitleValid = (title: string) => title != null && title !== "";
 
 	const onValidityChanged = useCallback((field: string, validity: boolean) => {
 		switch (field) {
@@ -187,8 +198,8 @@ export const CreatePullRequestPanel = props => {
 		if (!titleValidity) return;
 
 		setSubmitting(true);
-		setFormState({ message: "", type: "" });
-		setPreconditionError({ message: "", type: "" });
+		setFormState({ message: "", type: "", url: "" });
+		setPreconditionError({ message: "", type: "", url: "" });
 		try {
 			const result = await HostApi.instance.send(CreatePullRequestRequestType, {
 				reviewId: derivedState.reviewId!,
@@ -200,9 +211,13 @@ export const CreatePullRequestPanel = props => {
 				remote: prRemote
 			});
 			if (result.error) {
-				setFormState({ message: result.error.message || "", type: result.error.type || "UNKNOWN" });
+				setFormState({
+					message: result.error.message || "",
+					type: result.error.type || "UNKNOWN",
+					url: result.error.url || ""
+				});
 			} else {
-				setFormState({ message: "", type: "" });
+				setFormState({ message: "", type: "", url: "" });
 				HostApi.instance.track("Pull Request Created", {
 					Service: prProviderId
 				});
@@ -232,11 +247,16 @@ export const CreatePullRequestPanel = props => {
 							headRefName: currentBranch
 						})
 						.then((result: CheckPullRequestBranchPreconditionsResponse) => {
-							setFormState({ message: "", type: "" });
+							setPreconditionError({ type: "", message: "", url: "" });
+							setFormState({ type: "", message: "", url: "" });
 							if (result && result.error) {
-								setFormState({ message: result.error.message!, type: result.error.type! });
+								setFormState({
+									type: result.error.type || "UNKNOWN",
+									message: result.error.message || "",
+									url: result.error.url || ""
+								});
 							} else {
-								setFormState({ message: "", type: "" });
+								setFormState({ type: "", message: "", url: "" });
 							}
 						});
 				}
@@ -312,7 +332,12 @@ export const CreatePullRequestPanel = props => {
 			}
 
 			return {
-				label: displayName,
+				label: (
+					<span>
+						{display.icon ? <Icon name={display.icon} style={{ marginRight: "4px" }} /> : undefined}
+						{displayName}
+					</span>
+				),
 				key: providerId,
 				action: action
 			};
@@ -330,89 +355,100 @@ export const CreatePullRequestPanel = props => {
 	};
 
 	const preconditionErrorMessages = () => {
-		let messageText;
-		if (preconditionError) {
-			switch (preconditionError.type) {
-				// TODO move these into en.js
-				case "REPO_NOT_FOUND": {
-					messageText = "Repo not found";
-					break;
-				}
-				case "REPO_NOT_OPEN": {
-					messageText = "Repo not currently open";
-					break;
-				}
-				case "HAS_LOCAL_COMMITS": {
-					messageText =
-						"A PR can’t be created because the code review includes local commits. Push your changes and then try again.";
-					break;
-				}
-				case "HAS_LOCAL_MODIFICATIONS": {
-					messageText =
-						"A PR can’t be created because the code review includes uncommitted changes. Commit and push your changes and then try again.";
-					break;
-				}
-				case "ALREADY_HAS_PULL_REQUEST": {
-					messageText = "There is already an open PR for this branch";
-					break;
-				}
-				case "PROVIDER": {
-					messageText = preconditionError.message || "Unknown provider error";
-					break;
-				}
-				default: {
-					messageText = preconditionError.message || "Unknown error";
-				}
+		if (preconditionError && preconditionError.type) {
+			let preconditionErrorMessageElement = getErrorElement(
+				preconditionError.type,
+				preconditionError.message,
+				preconditionError.url
+			);
+			if (preconditionErrorMessageElement) {
+				return <div className="error-message form-error">{preconditionErrorMessageElement}</div>;
 			}
 		}
-		return <div className="error-message form-error">{messageText}</div>;
+		return undefined;
 	};
 
 	const formErrorMessages = () => {
 		if (!formState || !formState.type) return undefined;
 
-		let messageText;
-		if (formState.type) {
-			switch (formState.type) {
-				// TODO move these into en.js
-				case "REPO_NOT_FOUND": {
-					messageText = "Repo not found";
-					break;
-				}
-				case "REPO_NOT_OPEN": {
-					messageText = "Repo not currently open";
-					break;
-				}
-				case "HAS_LOCAL_COMMITS": {
-					messageText =
-						"A PR can’t be created because the code review includes local commits. Push your changes and then try again.";
-					break;
-				}
-				case "HAS_LOCAL_MODIFICATIONS": {
-					messageText =
-						"A PR can’t be created because the code review includes uncommitted changes. Commit and push your changes and then try again.";
-					break;
-				}
-				case "ALREADY_HAS_PULL_REQUEST": {
-					messageText = "There is already an open PR for this branch";
-					break;
-				}
-				case "PROVIDER": {
-					messageText = formState.message || "Unknown provider error";
-					break;
-				}
-				default: {
-					messageText = "Unknown error";
-				}
-			}
+		let formErrorMessageElement = getErrorElement(formState.type, formState.message, formState.url);
+		if (formErrorMessageElement) {
+			return <div className="error-message form-error">{formErrorMessageElement}</div>;
 		}
-		return <div className="error-message form-error">{messageText}</div>;
+		return undefined;
 	};
 
+	const getErrorElement = (type, message, url) => {
+		let messageElement = <></>;
+		switch (type) {
+			// TODO move these into en.js
+			case "REPO_NOT_FOUND": {
+				messageElement = <span>Repo not found</span>;
+				break;
+			}
+			case "REPO_NOT_OPEN": {
+				messageElement = <span>Repo not currently open</span>;
+				break;
+			}
+			case "HAS_LOCAL_COMMITS": {
+				messageElement = (
+					<span>
+						A PR can’t be created because the code review includes local commits. Push your changes
+						and then <Link onClick={onClickTryAgain}>try again</Link>
+					</span>
+				);
+				break;
+			}
+			case "HAS_LOCAL_MODIFICATIONS": {
+				messageElement = (
+					<span>
+						A PR can’t be created because the code review includes uncommitted changes. Commit and
+						push your changes and then <Link onClick={onClickTryAgain}>try again</Link>.
+					</span>
+				);
+				break;
+			}
+			case "ALREADY_HAS_PULL_REQUEST": {
+				if (url) {
+					messageElement = (
+						<span>
+							There is already an{" "}
+							<a
+								href="#"
+								title="View this Pull Request"
+								onClick={e => {
+									e.preventDefault();
+									HostApi.instance.send(OpenUrlRequestType, {
+										url: url!
+									});
+								}}
+							>
+								open PR
+							</a>{" "}
+							for this branch
+						</span>
+					);
+				} else {
+					messageElement = <span>There is already an open PR for this branch</span>;
+				}
+				break;
+			}
+			case "PROVIDER": {
+				messageElement = <span>{message || "Unknown provider error"}</span>;
+				break;
+			}
+			default: {
+				messageElement = <span>{message || "Unknown error"}</span>;
+			}
+		}
+		return messageElement;
+	};
 	const onClickTryAgain = (event: React.SyntheticEvent) => {
 		event.preventDefault();
 		if (prProviderId) {
 			setCurrentStep(1);
+		} else {
+			fetchPreconditionData();
 		}
 	};
 
@@ -499,14 +535,17 @@ export const CreatePullRequestPanel = props => {
 									<TextInput
 										name="title"
 										value={prTitle}
+										placeholder="Pull request title"
 										autoFocus
 										onChange={setPrTitle}
 										onValidityChanged={onValidityChanged}
-										validate={e => e != null}
+										validate={isTitleValid}
 									/>
-									{/*<small className={cx("explainer", { "error-message": !titleValidity })}>
-										<FormattedMessage id="pullRequest.title" />
-								</small> */}
+									{!titleValidity && (
+										<small className={cx("explainer", { "error-message": !titleValidity })}>
+											<FormattedMessage id="pullRequest.title" />
+										</small>
+									)}
 								</div>
 								<div className="control-group">
 									<textarea

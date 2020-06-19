@@ -374,28 +374,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		};
 	}
 
-	protected createDescription(request: ProviderCreatePullRequestRequest): string | undefined {
-		if (
-			!request ||
-			request.description == null ||
-			!request.metadata ||
-			!request.metadata.reviewPermalink
-		) {
-			return request.description;
-		}
-
-		request.description += `\n\n\n[Changes reviewed on CodeStream](${request.metadata.reviewPermalink})`;
-		if (request.metadata.reviewers) {
-			request.description += ` by ${request.metadata.reviewers?.map(_ => _.name)?.join(", ")}`;
-		}
-		if (request.metadata.approvedAt) {
-			request.description += ` on ${new Date(
-				request.metadata.approvedAt
-			).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}`;
-		}
-		return request.description;
-	}
-
 	@log()
 	async createPullRequest(
 		request: ProviderCreatePullRequestRequest

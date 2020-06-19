@@ -547,7 +547,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 								return {
 									success: false,
 									error: {
-										type: "ALREADY_HAS_PULL_REQUEST"
+										type: "ALREADY_HAS_PULL_REQUEST",
+										url: existingPullRequest.url
 									}
 								};
 							}
@@ -579,6 +580,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		request: CheckPullRequestPreconditionsRequest
 	): Promise<CheckPullRequestPreconditionsResponse> {
 		const { git, providerRegistry } = SessionContainer.instance();
+		let warning = undefined;
 		try {
 			const review = await this.getById(request.reviewId);
 			const repo = await git.getRepositoryById(review.reviewChangesets[0].repoId);
@@ -650,22 +652,21 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 						}
 
 						defaultBranch = providerRepoInfo.defaultBranch;
-						if (providerRepoInfo.pullRequests && request.baseRefName && request.headRefName) {
-							const existingPullRequest = providerRepoInfo.pullRequests.find(
-								(_: any) =>
-									_.baseRefName === request.baseRefName && _.headRefName === request.headRefName
-							);
-							if (existingPullRequest) {
-								return {
-									success: false,
-									error: {
-										type: "ALREADY_HAS_PULL_REQUEST"
-									}
-								};
+						if (providerRepoInfo.pullRequests) {
+							if (defaultBranch && branch) {
+								const existingPullRequest = providerRepoInfo.pullRequests.find(
+									(_: any) => _.baseRefName === defaultBranch && _.headRefName === branch
+								);
+								if (existingPullRequest) {
+									warning = {
+										type: "ALREADY_HAS_PULL_REQUEST",
+										url: existingPullRequest.url
+									};
+								}
 							}
 						}
 						success = true;
-						// break out of providers loop
+						// break out of providers loop -- take the first one!
 						break;
 					}
 				}
@@ -693,7 +694,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 					text: review.text
 				},
 				branch: branch,
-				branches: branches!.branches
+				branches: branches!.branches,
+				warning: warning
 			};
 		} catch (ex) {
 			return {
