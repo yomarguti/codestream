@@ -23,8 +23,4 @@ export VSCSB_NAME=`dirname $VSCSB_SANDBOX`
 # Install yarn if specified with VSCSB_YARN_VER
 [ -n "$VSCSB_YARN_VER" -a ! -L $VSCSB_SANDBOX/yarn ] && dt-get-software -V $VSCSB_YARN_VER yarn $VSCSB_SANDBOX
 
-cd $VSCSB_SANDBOX
-[ ! -d codestream-components ] && echo "CLoning codestream-components" && git clone git@github.com:teamcodestream/codestream-components
-[ ! -d codestream-lsp-agent ] && echo "Cloning codestream-lsp-agent" && git clone git@github.com:teamcodestream/codestream-lsp-agent
-
 exit 0
