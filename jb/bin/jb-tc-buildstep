@@ -15,7 +15,7 @@ import buildUtils
 assetExtensionList = ['zip']
 
 # 2. add any additional repos to be included (do not include primary repo)
-additionalRepos = ['codestream-components', 'codestream-lsp-agent']
+additionalRepos = []
 
 # 3. choose the build type (npm, intellijPlugin, custom)
 buildType = buildUtils.buildType.intellijPlugin
