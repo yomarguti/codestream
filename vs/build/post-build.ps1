@@ -2,10 +2,8 @@ param([string] $checkoutDir = $pwd, [string] $assetEnv = "", [string] $buildNumb
 
 Write-Host '**** The script is running in directory' (Get-Location)
 
-$codestreamVsDir = $checkoutDir + '\vs-codestream'
-$codestreamComponentsDir = $checkoutDir + '\codestream-components'
-$codestreamLspAgentDir = $checkoutDir + '\codestream-lsp-agent'
-$buildDir = $checkoutDir + '\vs-codestream\build'
+$codestreamVsDir = $checkoutDir + '\codestream\vs'
+$buildDir = $checkoutDir + '\codestream\vs\build'
 $assetDir = $buildDir + '\artifacts\x86\Release'
 
 Write-Host '**** changing to buildDir' $buildDir
@@ -27,10 +25,6 @@ $assetsBaseName = 'codestream-vs-' + $assetVer
 $commitIds = @{}
 cd $codestreamVsDir
 $commitIds.codestream_vs = git rev-parse HEAD
-cd $codestreamComponentsDir
-$commitIds.codestream_components = git rev-parse HEAD
-cd $codestreamLspAgentDir
-$commitIds.codestream_lsp_agent = git rev-parse HEAD
 
 $assetInfo = @{}
 $assetInfo.assetEnvironment = $assetEnv
