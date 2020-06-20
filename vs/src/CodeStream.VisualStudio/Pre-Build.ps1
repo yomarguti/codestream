@@ -5,34 +5,40 @@ param(
 [string] $TargetDir
 )
 Write-Host ""
-Write-Host "VS Pre-Build.ps1 Starting..."
+Write-Host "CS4VS Pre-Build.ps1 Starting..."
+Write-Host ""
 Write-Host ""
 
 Write-Host "ProjectDir=$($ProjectDir)"
 Write-Host "SolutionDir=$($SolutionDir)"
 Write-Host "TargetDir=$($TargetDir)"
-$LicenseFile = "$($SolutionDir)..\licenses\$($ConfigurationName)\teamdev.licenses"
+$LicenseFile = (Join-Path "$($SolutionDir)" "..\licenses\$($ConfigurationName)\teamdev.licenses" | Resolve-Path).Path
 Write-Host "LicenseFile=$($LicenseFile)"
 $LocalLicenseFile = "$($ProjectDir)teamdev.licenses"
 Write-Host "LocalLicenseFile=$($LocalLicenseFile)"
+Write-Host ""
+Write-Host ""
 
-Write-Host "local license file '$($LocalLicenseFile)'..."
+
+Write-Host "Possible deleting old local license file '$($LocalLicenseFile)'..."
 if ((Test-Path -Path $LocalLicenseFile)) {	
 	Remove-Item $LocalLicenseFile -Force
-	Write-Host "Deleting old licenses completed."
+	Write-Host "Deleted old local license completed."
 }
 else {
-	Write-Host "NOT deleting old licenses (doesn't exist) '$($ProjectDir)teamdev.licenses'..."
+	Write-Host "NOT deleting old local license (doesn't exist) '$($ProjectDir)teamdev.licenses'..."
 }
 
-Write-Host "Copying license to src..."
+Write-Host "Copying license to local license..."
 if (!(Test-Path -Path $LicenseFile)) {
- 	Write-Host "LicenseFile not found LicenseFile=$($LicenseFile)"
+ 	Write-Host "Actual LicenseFile not found LicenseFile=$($LicenseFile)"
  	exit 1
 }
 Copy-Item $LicenseFile -Destination $ProjectDir
 Write-Host "Copying licenses completed."
 
 Write-Host ""
+Write-Host ""
 Write-Host "VS Pre-Build.ps1 Completed"
+Write-Host ""
 Write-Host ""
