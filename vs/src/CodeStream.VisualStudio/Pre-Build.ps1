@@ -14,9 +14,12 @@ Write-Host "SolutionDir=$($SolutionDir)"
 Write-Host "TargetDir=$($TargetDir)"
 
 $Joined = Join-Path "$($SolutionDir)" "..\licenses\$($ConfigurationName)"
-Write-Host $Joined
+Write-Host "joined" $Joined
+Write-Host "resolved" (($Joined | Resolve-Path).Path)
 $LicenseFile = (($Joined | Resolve-Path).Path) + "\teamdev.licenses"
-if ((Test-Path -Path "$($LicenseFile)")) {
+Test-Path -Path "$($LicenseFile)"
+
+if (Test-Path -Path "$($LicenseFile)") {
 	Write-Host "LicenseFile=$($LicenseFile) (exists)"
 }
 else {
@@ -29,7 +32,7 @@ Write-Host ""
 Write-Host ""
 
 Write-Host "Possibly deleting old local license file '$($LocalLicenseFile)'..."
-if ((Test-Path -Path "$($LocalLicenseFile)")) {	
+if (Test-Path -Path "$($LocalLicenseFile)") {	
 	Remove-Item "$($LocalLicenseFile)" -Force
 	Write-Host "Deleted old local license completed."
 }
