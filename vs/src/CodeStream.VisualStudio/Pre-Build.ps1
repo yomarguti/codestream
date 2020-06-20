@@ -12,7 +12,9 @@ Write-Host ""
 Write-Host "ProjectDir=$($ProjectDir)"
 Write-Host "SolutionDir=$($SolutionDir)"
 Write-Host "TargetDir=$($TargetDir)"
-$LicenseFile = (Join-Path "$($SolutionDir)" "..\licenses\$($ConfigurationName)\teamdev.licenses" | Resolve-Path).Path
+$Joined = Join-Path "$($SolutionDir)" "..\licenses\$($ConfigurationName)" "teamdev.licenses"
+Write-Host $Joined
+$LicenseFile = ($Joined | Resolve-Path).Path
 Write-Host "LicenseFile=$($LicenseFile)"
 $LocalLicenseFile = "$($ProjectDir)teamdev.licenses"
 Write-Host "LocalLicenseFile=$($LocalLicenseFile)"
