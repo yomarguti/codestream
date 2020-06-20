@@ -4,7 +4,7 @@ $computer = 'tc.codestream.us'
 $username = 'web'
 $homeDir = 'C:\Users\Administrator'
 $keyfile = $homeDir + '\.ssh\id_rsa'
-$localLicenseFile = $checkoutDir + '\codestream\vs\licenses\Release\teamdev.licenses'
+$localLicenseFile = $checkoutDir + '\vs\licenses\Release\teamdev.licenses'
 $remoteLicenseFile = '/home/web/.codestream/licenses/teamdev/DotNetBrowser/runtime/teamdev.licenses'
 $localVSCETokenFile = $homeDir + '\.vsce'
 $remoteVSCETokenFile = '/home/web/.codestream/microsoft/vsce-credentials'
@@ -14,6 +14,8 @@ Write-Host 'PSScriptRoot  : ' $PSScriptRoot
 Write-Host 'Build Number  : ' $env:BUILD_NUMBER
 Write-Host 'Build Counter : ' $env:TCBUILD_COUNTER
 Write-Host 'Asset-Env     : ' $assetEnv
+Write-Host 'localLicenseFile: ' $localLicenseFile
+Write-Host 'remoteLicenseFile: ' $remoteLicenseFile
 
 $cred = new-object -typename System.Management.Automation.PSCredential $username, (new-object System.Security.SecureString)
 

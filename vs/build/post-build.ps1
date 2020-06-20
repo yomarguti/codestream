@@ -2,8 +2,8 @@ param([string] $checkoutDir = $pwd, [string] $assetEnv = "", [string] $buildNumb
 
 Write-Host '**** The script is running in directory' (Get-Location)
 
-$codestreamVsDir = $checkoutDir + '\codestream\vs'
-$buildDir = $checkoutDir + '\codestream\vs\build'
+$codestreamVsDir = $checkoutDir + '\vs'
+$buildDir = $checkoutDir + '\vs\build'
 $assetDir = $buildDir + '\artifacts\x86\Release'
 
 Write-Host '**** changing to buildDir' $buildDir
