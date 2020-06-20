@@ -743,8 +743,8 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
-	async createBranch(repoPath: string, branch: string): Promise<undefined> {
-		await git({ cwd: repoPath }, "checkout", "-b", branch);
+	async createBranch(repoPath: string, branch: string, fromBranch?: string): Promise<undefined> {
+		await git({ cwd: repoPath }, "checkout", "-b", branch, fromBranch);
 		return;
 	}
 
