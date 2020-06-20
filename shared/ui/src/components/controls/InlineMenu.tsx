@@ -28,6 +28,7 @@ const TextButton = styled.span`
 		transform: scale(0.7);
 		margin-left: 2px;
 		margin-right: 5px;
+		white-space: nowrap;
 	}
 	&:focus {
 		margin: -3px;

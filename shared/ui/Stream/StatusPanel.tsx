@@ -112,27 +112,6 @@ const ButtonRow = styled.div`
 	}
 `;
 
-const Examples = styled.div`
-	padding: 5px 0 20px 0;
-	div {
-		cursor: pointer;
-		padding: 3px 8px;
-		font-weight: bold;
-		.time {
-			font-weight: normal;
-			opacity: 0.5;
-		}
-		.icon {
-			display: inline-block;
-			width: 20px;
-		}
-		&:hover {
-			background: var(--base-background-color);
-			color: var(--text-color-highlight);
-		}
-	}
-`;
-
 const MonoMenu = styled(InlineMenu)`
 	font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
 	white-space: normal;
@@ -226,6 +205,8 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const [autocomplete, setAutocomplete] = useState(false);
 	const [openRepos, setOpenRepos] = useState<ReposScm[]>([]);
 	const [repoUri, setRepoUri] = useState("");
+	const [currentRepoId, setCurrentRepoId] = useState("");
+	const [fromBranch, setFromBranch] = useState("");
 	const inputRef = React.useRef<HTMLInputElement>(null);
 
 	const { moveCard, createBranch } = derivedState;
@@ -306,6 +287,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 
 		setBranches(branchInfo.scm.branches);
 		setCurrentBranch(branchInfo.scm.current);
+		setCurrentRepoId(branchInfo.scm.repoId);
 
 		const response = await HostApi.instance.send(GetReposScmRequestType, {});
 		if (response && response.repositories) {
@@ -373,7 +355,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		) {
 			const uri = repoUri || derivedState.textEditorUri || "";
 			const request = branches.includes(branch) ? SwitchBranchRequestType : CreateBranchRequestType;
-			const result = await HostApi.instance.send(request, { branch, uri });
+			const result = await HostApi.instance.send(request, { branch, uri, fromBranch });
 			// FIXME handle error
 			if (result.error) {
 				console.warn("ERROR FROM SET BRANCH: ", result.error);
@@ -440,10 +422,19 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		};
 	};
 
+	const makeFromMenuItem = (branch: string) => {
+		const iconName = branch == currentBranch ? "arrow-right" : "blank";
+		return {
+			label: <span className="monospace">{branch}</span>,
+			key: branch,
+			icon: <Icon name={iconName} />,
+			action: () => setFromBranch(branch)
+		};
+	};
+
 	const branchMenuItems = branches.map(branch => makeMenuItem(branch, false)) as any;
 	if (newBranch) {
 		branchMenuItems.unshift(
-			{ label: "-" },
 			{
 				label: "Edit Branch Name",
 				key: "edit",
@@ -468,13 +459,23 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 				),
 				key: "create",
 				icon: <Icon name="plus" />,
-				action: () => setManuallySelectedBranch(newBranch)
+				action: () => setManuallySelectedBranch(newBranch),
+				submenu: [
+					{
+						label: "Create Branch From....",
+						disabled: true,
+						noHover: true,
+						icon: <Icon name="blank" />
+					},
+					{ label: "-" },
+					...branches.map(branch => makeFromMenuItem(branch))
+				]
 			}
 		);
 	}
+
 	if (openRepos && openRepos.length > 1) {
 		branchMenuItems.unshift(
-			{ label: "-" },
 			{
 				label: "Repository",
 				key: "repo",
@@ -482,12 +483,14 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 				submenu: openRepos.map(repo => {
 					const repoId = repo.id || "";
 					return {
+						icon: <Icon name={repo.id === currentRepoId ? "arrow-right" : "blank"} />,
 						label: derivedState.repos[repoId] ? derivedState.repos[repoId].name : repo.folder.name,
 						key: repo.id,
 						action: () => getBranches(repo.folder.uri)
 					};
 				})
-			}
+			},
+			{ label: "-" }
 		);
 	}
 
@@ -609,9 +612,14 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 											style={{ width: "200px" }}
 										/>
 									) : (
-										<MonoMenu title="Branch" items={branchMenuItems}>
-											{branch}
-										</MonoMenu>
+										<>
+											<MonoMenu items={branchMenuItems}>{branch}</MonoMenu>
+											{fromBranch && fromBranch !== currentBranch && (
+												<div>
+													from <span className="highlight monospace">{fromBranch}</span>
+												</div>
+											)}
+										</>
 									)}
 								</StyledCheckbox>
 							)}

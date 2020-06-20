@@ -1209,6 +1209,11 @@
 				.icon .icon {
 					margin-right: 5px;
 				}
+				&.has-submenu {
+					> .label {
+						margin-right: 30px;
+					}
+				}
 			}
 			&.compact li.menu-item {
 				padding: 1px 10px;
@@ -1227,7 +1232,7 @@
 			}
 			li.menu-item.hover > span.label,
 			li.menu-item.hover > .icon,
-			li.menu-item.hover .triangle-right {
+			li.menu-item.hover > .triangle-right {
 				// color: white;
 				color: var(--button-foreground-color);
 			}
@@ -1250,22 +1255,10 @@
 				font-weight: 700;
 				padding-right: 5px;
 			}
-			.submenu .icon.triangle-right {
-				float: right;
-				margin-left: 10px;
-				white-space: nowrap;
-			}
-		}
-
-		x.file-info {
-			font-size: 12px;
-			color: @text-color-subtle;
-			&.conflict {
-				color: @text-color-warning;
-			}
-			.icon {
-				display: inline-block;
-				transform: scale(0.7);
+			.icon.triangle-right {
+				position: absolute;
+				right: 20px;
+				// margin-right: -20px;
 			}
 		}
 

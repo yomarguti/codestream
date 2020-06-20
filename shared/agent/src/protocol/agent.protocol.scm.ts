@@ -11,6 +11,7 @@ export interface GetBranchesResponse {
 	scm?: {
 		branches: string[];
 		current: string;
+		repoId: string;
 	};
 	error?: string;
 }
@@ -24,6 +25,7 @@ export const GetBranchesRequestType = new RequestType<
 export interface CreateBranchRequest {
 	uri: string;
 	branch: string;
+	fromBranch?: string;
 }
 export interface CreateBranchResponse {
 	scm?: {
@@ -41,6 +43,7 @@ export const CreateBranchRequestType = new RequestType<
 export interface SwitchBranchRequest {
 	uri: string;
 	branch: string;
+	fromBranch?: string; // never used
 }
 export interface SwitchBranchResponse {
 	scm?: {

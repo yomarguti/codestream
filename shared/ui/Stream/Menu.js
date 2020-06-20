@@ -289,7 +289,8 @@ export default class Menu extends Component {
 					"menu-item": true,
 					disabled: item.disabled,
 					hover: selected && !item.noHover && !item.customHover,
-					"custom-hover": selected && item.customHover
+					"custom-hover": selected && item.customHover,
+					"has-submenu": item.submenu ? true : false
 				})}
 				id={`li-item-${key}`}
 				key={key}
@@ -300,12 +301,12 @@ export default class Menu extends Component {
 				{item.icon && <span className="icon">{item.icon}</span>}
 				{item.checked === false && <span className="checkmark"> </span>}
 				{item.checked === true && <span className="checkmark">✔</span>}
+				{item.submenu && <Icon name="triangle-right" className="triangle-right" />}
 				{item.label && <span className="label">{item.label}</span>}
 				{item.shortcut && <span className="shortcut">{item.shortcut}</span>}
 				{item.disabled && <span className="disabled">{item.disabled}</span>}
 				{item.submenu && (
 					<span className="submenu">
-						<Icon name="triangle-right" className="triangle-right" />
 						{selected && this.renderSubmenu(item, parentItem, grandParentItem)}
 					</span>
 				)}

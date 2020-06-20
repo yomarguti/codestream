@@ -196,25 +196,32 @@ export class ScmManager {
 		let repoPath = "";
 		let result: { branches: string[]; current: string } | undefined = undefined;
 		let gitError;
+		let repoId = "";
 
 		try {
 			repoPath = (await git.getRepoRoot(uri.fsPath)) || "";
 			if (repoPath !== undefined) {
 				result = await git.getBranches(repoPath);
+				const repo = await git.getRepositoryByFilePath(repoPath);
+				repoId = repo ? repo.id || "" : "";
 			}
 		} catch (ex) {
 			gitError = ex.toString();
 			Logger.error(ex, cc);
 			debugger;
 		}
-		return { scm: result || { branches: [], current: "" }, error: gitError };
+		return {
+			scm: result ? { ...result, repoId } : { branches: [], current: "", repoId },
+			error: gitError
+		};
 	}
 
 	@lspHandler(CreateBranchRequestType)
 	@log()
 	async createBranch({
 		uri: documentUri,
-		branch
+		branch,
+		fromBranch
 	}: CreateBranchRequest): Promise<CreateBranchResponse> {
 		const cc = Logger.getCorrelationContext();
 
@@ -226,7 +233,7 @@ export class ScmManager {
 		try {
 			repoPath = (await git.getRepoRoot(uri.fsPath)) || "";
 			if (repoPath !== undefined) {
-				await git.createBranch(repoPath, branch);
+				await git.createBranch(repoPath, branch, fromBranch);
 			}
 		} catch (ex) {
 			gitError = ex.toString();
