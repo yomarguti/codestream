@@ -33,6 +33,14 @@ Get-SCPFile -ComputerName $computer -LocalFile $localVSCETokenFile -RemoteFile $
 Write-Host 'Here is the license file:'
 Get-ChildItem $localLicenseFile
 
+if (!(Test-Path -Path $localLicenseFile)) {
+    Write-Host "localLicenseFile not found ($localLicenseFile)"
+    exit 1
+}
+else {
+    Write-Host "localLicenseFile exists ($localLicenseFile)"
+}
+
 Write-Host '************ npm install -g lightercollective'
 & npm install -g lightercollective
 
