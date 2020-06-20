@@ -1,5 +1,11 @@
 # Change Log
 
+## [7.4.2] - 2020-6-20
+
+### Added
+
+- Adds a more granular Help submenu 
+
 ## [7.4.1] - 2020-6-9
 
 ### Fixed

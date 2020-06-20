@@ -1,5 +1,14 @@
 # Change Log
 
+## [7.4.2] - 2020-6-20
+
+### Added
+
+- Adds the ability to create a pull request on GitHub or GitLab (cloud or on-prem) once a code review has been approved
+- Adds a more granular Help submenu 
+- If your CodeStream email doesn't match your git email, you can now map your git email to your CodeStream email
+- Code ownership can also be reassigned as part of assigning reviewers in a code review 
+
 ## [7.4.1] - 2020-6-9
 
 ### Fixed
