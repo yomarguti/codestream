@@ -174,9 +174,11 @@ export const ProfilePanel = () => {
 						style={{ overflow: "hidden", whiteSpace: "nowrap", paddingLeft: "0" }}
 					>
 						<div style={{ overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
-							<Icon name="repo" /> {repoName} &nbsp; <Icon name="git-branch" /> {repo.branch}
+							<Icon name="repo" />
+							{repoName} &nbsp; <Icon name="git-branch" />
+							{repo.branch}
 						</div>
-						<div style={{ padding: "5px 0 10px 25px" }}>
+						<div style={{ padding: "5px 0 10px 20px" }}>
 							{modifiedFiles.map(f => {
 								const className = collisions.userRepoFiles[
 									person.id + ":" + repo.repoId + ":" + f.file
