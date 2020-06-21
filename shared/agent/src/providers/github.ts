@@ -157,7 +157,19 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 	@log()
 	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
-		return { cards: [] };
+		// const data = request.data; // as GitHubCreateCardRequest;
+		const { body } = await this.get<any[]>("/issues");
+		const cards = body.map(card => {
+			return {
+				id: card.id,
+				url: card.html_url,
+				title: card.title,
+				modifiedAt: new Date(card.updated_at).getTime(),
+				tokenId: card.number,
+				body: card.body
+			};
+		});
+		return { cards };
 	}
 
 	@log()

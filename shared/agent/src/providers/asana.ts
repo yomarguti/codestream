@@ -12,7 +12,10 @@ import {
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
 	ThirdPartyProviderBoard,
-	MoveThirdPartyCardRequest
+	MoveThirdPartyCardRequest,
+	FetchThirdPartyCardsRequest,
+	FetchThirdPartyCardsResponse,
+	AsanaCard
 } from "../protocol/agent.protocol";
 import { CSAsanaProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
@@ -149,6 +152,57 @@ export class AsanaProvider extends ThirdPartyIssueProviderBase<CSAsanaProviderIn
 		}
 
 		return projects;
+	}
+
+	private async getWorkspaceTasks(workspace: AsanaWorkspace): Promise<AsanaCard[]> {
+		let cards: AsanaCard[] = [];
+
+		try {
+			let apiResponse = await this.get<{ data: AsanaCard[]; next_page: any }>(
+				`/api/1.0/tasks?${qs.stringify({
+					opt_fields: "url,name,modified_at,notes",
+					workspace: workspace.gid,
+					assignee: this._asanaUser?.gid,
+					completed_since: "now",
+					archived: false,
+					limit: 100
+				})}`
+			);
+			cards = apiResponse.body.data;
+
+			let nextPage: string | undefined;
+			while ((nextPage = this.nextPage(apiResponse.body))) {
+				apiResponse = await this.get<{ data: AsanaCard[]; next_page: any }>(nextPage);
+				cards = cards.concat(apiResponse.body.data);
+			}
+		} catch (err) {
+			Logger.error(err);
+			debugger;
+		}
+
+		return cards;
+	}
+
+	@log()
+	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
+		const workspaces = await this.getWorkspaces();
+		let tasks: AsanaCard[] = [];
+		for (const workspace of workspaces) {
+			const workspaceTasks = await this.getWorkspaceTasks(workspace);
+			tasks = tasks.concat(workspaceTasks);
+		}
+
+		const cards = tasks.map(task => {
+			return {
+				id: task.gid,
+				url: task.url,
+				title: task.name,
+				modifiedAt: new Date(task.modified_at).getTime(),
+				tokenId: task.gid,
+				body: task.notes
+			};
+		});
+		return { cards };
 	}
 
 	@log()

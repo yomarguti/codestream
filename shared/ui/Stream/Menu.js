@@ -206,6 +206,8 @@ export default class Menu extends Component {
 							$submenu.style.left = "auto";
 							$submenu.style.right = 20 + parentRectRightEdge - window.innerWidth + "px";
 							$submenu.style.top = parentLI.offsetTop + 16 + "px";
+							// $submenu.style.right = "5px";
+							// $submenu.style.top = parentLI.offsetTop + 26 + "px";
 						}
 					}
 				}
@@ -275,7 +277,7 @@ export default class Menu extends Component {
 	}
 
 	renderItem = (item, parentItem, grandParentItem, grandGrandParentItem, index) => {
-		if (item.label === "-") return <hr key={this.count++} />;
+		if (item.label === "-") return <hr key={"hr-" + this.count++} />;
 		if (item.fragment) return item.fragment;
 		const key = this.calculateKey(item, parentItem, grandParentItem, grandGrandParentItem);
 		let selected = key === this.state.selected || (this.state.selected + "").startsWith(key + "/");

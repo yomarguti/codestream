@@ -8,16 +8,20 @@ import {
 	CreateThirdPartyCardRequest,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
+	FetchThirdPartyCardsRequest,
+	FetchThirdPartyCardsResponse,
 	JiraBoard,
+	JiraCard,
 	JiraUser,
-	ReportingMessageType,
-	MoveThirdPartyCardRequest
+	MoveThirdPartyCardRequest,
+	ReportingMessageType
 } from "../protocol/agent.protocol";
 import { CSJiraProviderInfo } from "../protocol/api.protocol";
 import { Iterables, log, lspProvider } from "../system";
 import { ThirdPartyIssueProviderBase } from "./provider";
 
-type AccessibleResourcesResponse = { id: string; name: string }[];
+type AccessibleResourcesResponse = { id: string; name: string; url: string }[];
+
 interface JiraProject {
 	id: string;
 	name: string;
@@ -35,8 +39,16 @@ interface JiraProjectMeta extends JiraProject {
 interface JiraProjectsMetaResponse {
 	projects: JiraProjectMeta[];
 }
+
 interface ProjectSearchResponse {
 	values: JiraProject[];
+	nextPage?: string;
+	isLast: boolean;
+	total: number;
+}
+
+interface CardSearchResponse {
+	issues: JiraCard[];
 	nextPage?: string;
 	isLast: boolean;
 	total: number;
@@ -51,6 +63,7 @@ interface CreateJiraIssueResponse {
 @lspProvider("jira")
 export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo> {
 	private _urlAddon = "";
+	private _webUrl = "";
 	private boards: JiraBoard[] = [];
 	private domain?: string;
 
@@ -92,6 +105,7 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 		}
 
 		this._urlAddon = `/ex/jira/${response.body[0].id}`;
+		this._webUrl = response.body[0].url;
 		this.domain = response.body[0].name.replace(/ /g, "");
 
 		Logger.debug(`Jira: api url for ${this.domain} is ${this._urlAddon}`);
@@ -217,6 +231,75 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 			return board as JiraBoard;
 		});
 		return boards;
+	}
+
+	@log()
+	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
+		// /rest/api/2/search?jql=assignee=currentuser()
+
+		try {
+			Logger.debug("Jira: fetching projects");
+			const jiraCards: JiraCard[] = [];
+			let nextPage: string | undefined = `/rest/api/2/search?${qs.stringify({
+				jql: "assignee=currentuser() AND status!=Closed",
+				fields: "summary,description,updated"
+			})}`;
+
+			while (nextPage !== undefined) {
+				try {
+					const { body }: { body: CardSearchResponse } = await this.get<CardSearchResponse>(
+						nextPage
+					);
+
+					// Logger.debug("GOT CARDS: " + JSON.stringify(body, null, 4));
+					jiraCards.push(...body.issues);
+
+					Logger.debug(`Jira: is last page? ${body.isLast} - nextPage ${body.nextPage}`);
+					if (body.nextPage) {
+						nextPage = body.nextPage.substring(body.nextPage.indexOf("/rest/api/2"));
+					} else {
+						Logger.debug("Jira: there are no more projects");
+						nextPage = undefined;
+					}
+				} catch (e) {
+					Container.instance().errorReporter.reportMessage({
+						type: ReportingMessageType.Error,
+						message: "Jira: Error fetching jira projects",
+						source: "agent",
+						extra: {
+							message: e.message
+						}
+					});
+					Logger.error(e);
+					Logger.debug("Jira: Stopping project search");
+					nextPage = undefined;
+				}
+			}
+
+			Logger.debug(`Jira: total cards: ${jiraCards.length}`);
+			const cards = jiraCards.map(card => {
+				const { fields = {} } = card;
+				return {
+					id: card.id,
+					url: `${this._webUrl}/browse/${card.key}`,
+					title: fields.summary,
+					modifiedAt: new Date(fields.updated).getTime(),
+					tokenId: card.key,
+					body: fields.description
+				};
+			});
+			return { cards };
+		} catch (error) {
+			debugger;
+			Container.instance().errorReporter.reportMessage({
+				type: ReportingMessageType.Error,
+				message: "Jira: Error fetching jira cards",
+				source: "agent",
+				extra: { message: error.message }
+			});
+			Logger.error(error, "Error fetching jira cards");
+			return { cards: [] };
+		}
 	}
 
 	@log()

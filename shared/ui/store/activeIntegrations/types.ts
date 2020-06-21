@@ -36,10 +36,6 @@ export interface TrelloIntegrationData extends ActiveIntegrationData {
 	cards?: TrelloCard[];
 	currentBoard?: TrelloBoard;
 	currentList?: TrelloList;
-	mode?: "settings" | "browse" | "mine";
-	filterBoards: {
-		[id: string]: boolean;
-	};
 }
 
 export interface JiraIntegrationData extends ActiveIntegrationData {

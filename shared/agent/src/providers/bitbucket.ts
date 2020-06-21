@@ -19,7 +19,8 @@ import {
 	FetchThirdPartyCardsRequest,
 	FetchThirdPartyCardsResponse,
 	MoveThirdPartyCardRequest,
-	MoveThirdPartyCardResponse
+	MoveThirdPartyCardResponse,
+	ThirdPartyProviderCard
 } from "../protocol/agent.protocol";
 import {
 	CodemarkType,
@@ -38,6 +39,7 @@ import {
 	ThirdPartyProviderSupportsIssues,
 	ThirdPartyProviderSupportsPullRequests
 } from "./provider";
+import { forOwn, identity } from "lodash-es";
 
 interface BitbucketRepo {
 	uuid: string;
@@ -126,6 +128,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 	implements ThirdPartyProviderSupportsIssues, ThirdPartyProviderSupportsPullRequests {
 	private _bitbucketUserId: string | undefined;
 	private _knownRepos = new Map<string, BitbucketRepo>();
+	private _reposWithIssues: BitbucketRepo[] = [];
 
 	async getRemotePaths(repo: any, _projectsByRemotePath: any) {
 		await this.ensureConnected();
@@ -158,7 +161,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 	}
 
 	@log()
-	async getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
+	async getBoards(request?: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
 		void (await this.ensureConnected());
 
 		const openRepos = await getOpenedRepos<BitbucketRepo>(
@@ -199,6 +202,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 				debugger;
 			}
 			bitbucketRepos = bitbucketRepos.filter(r => r.has_issues);
+			this._reposWithIssues = [...bitbucketRepos];
 			boards = bitbucketRepos.map(r => {
 				return {
 					...r,
@@ -215,7 +219,27 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 
 	@log()
 	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
-		return { cards: [] };
+		const cards: ThirdPartyProviderCard[] = [];
+		if (this._reposWithIssues.length === 0) await this.getBoards();
+		await Promise.all(
+			this._reposWithIssues.map(async repo => {
+				const { body } = await this.get<{ uuid: string; [key: string]: any }>(
+					`/repositories/${repo.full_name}/issues`
+				);
+				// @ts-ignore
+				body.values.forEach(card => {
+					cards.push({
+						id: card.id,
+						url: card.links.html.href,
+						title: card.title,
+						modifiedAt: new Date(card.updated_on).getTime(),
+						tokenId: card.id,
+						body: card.content ? card.content.raw : ""
+					});
+				});
+			})
+		);
+		return { cards };
 	}
 
 	@log()

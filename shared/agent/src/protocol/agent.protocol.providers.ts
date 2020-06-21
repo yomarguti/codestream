@@ -7,7 +7,7 @@ import { CSMarkerLocations } from "./api.protocol";
 
 export interface ThirdPartyProviderConfig {
 	id: string;
-	name: string;
+	name: string; // e.g. "trello"
 	host: string;
 	apiHost?: string;
 	isEnterprise?: boolean;
@@ -18,6 +18,7 @@ export interface ThirdPartyProviderConfig {
 	needsConfigure?: boolean;
 	oauthData?: { [key: string]: any };
 	scopes?: string[];
+	canFilterByAssignees?: boolean;
 }
 
 export interface ThirdPartyDisconnect {
@@ -125,7 +126,12 @@ export const FetchThirdPartyBoardsRequestType = new RequestType<
 
 export interface ThirdPartyProviderCard {
 	id: string;
-	name: string;
+	title: string;
+	body: string;
+	url: string;
+	modifiedAt: number;
+	tokenId: string;
+	idList?: string;
 	apiIdentifier?: string;
 	[key: string]: any;
 }

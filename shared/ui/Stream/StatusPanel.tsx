@@ -21,10 +21,7 @@ import {
 	GetReposScmRequestType,
 	ReposScm
 } from "@codestream/protocols/agent";
-import Menu from "./Menu";
-import { CrossPostIssueContext } from "./CodemarkForm";
 import IssueDropdown from "./CrossPostIssueControls/IssueDropdown";
-import { CSText } from "../src/components/CSText";
 import { ConfigureBranchNames } from "./ConfigureBranchNames";
 import { VideoLink } from "./Flow";
 import { MarkdownText } from "./MarkdownText";
@@ -139,6 +136,16 @@ const CardLink = styled.div`
 	margin: -18px 0 15px 0;
 `;
 
+export interface IStartWorkIssueContext {
+	setValues(values: any): void;
+	card?: any;
+}
+
+export const StartWorkIssueContext = React.createContext<IStartWorkIssueContext>({
+	card: undefined,
+	setValues: () => {}
+});
+
 const EMPTY_STATUS = {
 	label: "",
 	ticketUrl: "",
@@ -182,10 +189,10 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const [scmError, setScmError] = useState("");
 	const [label, setLabel] = useState(status.label || "");
 	const [card, setCard] = useState(
-		status.ticketUrl
+		status.ticketProvider
 			? ({
 					url: status.ticketUrl,
-					providerName: status.ticketProvider,
+					providerIcon: status.ticketProvider,
 					title: status.label,
 					moveCardLabel: "Move this card to",
 					moveCardOptions: [] as any
@@ -262,9 +269,10 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			.substr(0, derivedState.branchMaxLength);
 	};
 
-	const replaceTicketTokens = (template: string, id: string, title: string = "") => {
+	const replaceTicketTokens = (template: string, card) => {
+		const { tokenId, title } = card;
 		return template
-			.replace(/\{id\}/g, id)
+			.replace(/\{id\}/g, tokenId)
 			.replace(/\{username\}/g, derivedState.currentUserName)
 			.replace(/\{team\}/g, derivedState.teamName)
 			.replace(/\{date\}/g, dateToken())
@@ -313,7 +321,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		if (customBranchName) return customBranchName;
 		if (card)
 			//@ts-ignore
-			return replaceTicketTokens(derivedState.branchTicketTemplate, card.id, card.title);
+			return replaceTicketTokens(derivedState.branchTicketTemplate, card);
 		else return replaceDescriptionTokens(derivedState.branchDescriptionTemplate, label);
 	}, [
 		label,
@@ -328,7 +336,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		if (customBranchName) return customBranchName;
 		if (card)
 			//@ts-ignore
-			return replaceTicketTokens(derivedState.branchTicketTemplate, card.id, card.title);
+			return replaceTicketTokens(derivedState.branchTicketTemplate, card);
 		else return replaceDescriptionTokens(derivedState.branchDescriptionTemplate, label);
 	}, [
 		label,
@@ -344,7 +352,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 
 		HostApi.instance.track("Work Started", {
 			"Branch Created": createBranch,
-			"Ticket Selected": card ? card.providerName : ""
+			"Ticket Selected": card ? card.providerIcon : ""
 		});
 
 		if (
@@ -374,7 +382,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		}
 
 		const ticketUrl = card ? card.url : "";
-		const ticketProvider = card ? card.providerName : "";
+		const ticketProvider = card ? card.providerIcon : "";
 		await dispatch(setUserStatus(label, ticketUrl, ticketProvider, derivedState.invisible));
 		dispatch(closePanel());
 		setLoading(false);
@@ -502,20 +510,22 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const [moveCardDestinationId, setMoveCardDestinationId] = React.useState("");
 	const [moveCardDestinationLabel, setMoveCardDestinationLabel] = React.useState("");
 
-	const moveCardItems = !card
-		? []
-		: card.moveCardOptions.map(option => {
-				return {
-					label: option.name,
-					icon: <Icon name={card && option.id === card.idList ? "arrow-right" : "blank"} />,
-					key: option.id,
-					action: () => setMoveCardDestination(option)
-				};
-		  });
+	const moveCardItems =
+		!card || !card.moveCardOptions
+			? []
+			: card.moveCardOptions.map(option => {
+					return {
+						label: option.name,
+						icon: <Icon name={card && option.id === card.idList ? "arrow-right" : "blank"} />,
+						key: option.id,
+						action: () => setMoveCardDestination(option)
+					};
+			  });
 
 	if (configureBranchNames)
 		return <ConfigureBranchNames onClose={() => setConfigureBranchNames(false)} />;
 
+	console.warn("BODY", card && card.body);
 	return (
 		<div className="full-height-panel">
 			<form className="standard-form vscroll" style={{ padding: "10px" }}>
@@ -525,22 +535,16 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 				</div>
 				<fieldset className="form-body" style={{ padding: "10px" }}>
 					<div id="controls">
-						<StatusInput className={card && card.providerName ? "has-ticket-icon" : ""}>
-							{card && card.providerName && (
+						<StatusInput className={card && card.providerIcon ? "has-ticket-icon" : ""}>
+							{card && card.providerIcon && (
 								<div className="ticket-icon">
-									<Icon name={card.providerName} />
+									<Icon name={card.providerIcon} />
 								</div>
 							)}
 							{!label || (label && autocomplete) ? (
-								<CrossPostIssueContext.Provider
-									value={{
-										selectedAssignees: [],
-										setValues: values => selectCard(values),
-										setSelectedAssignees: () => {}
-									}}
-								>
+								<StartWorkIssueContext.Provider value={{ setValues: values => selectCard(values) }}>
 									<IssueDropdown q={label} focusInput={inputRef} />
-								</CrossPostIssueContext.Provider>
+								</StartWorkIssueContext.Provider>
 							) : (
 								<div className="clear" onClick={clear}>
 									<Icon
@@ -582,9 +586,9 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								placeholder="Enter description or select ticket"
 							/>
 						</StatusInput>
-						{card && card.description && (
+						{card && card.body && (
 							<CardDescription>
-								<MarkdownText text={card.description} />
+								<MarkdownText text={card.body.replace(/\[Open in IDE\].*/, "")} />
 							</CardDescription>
 						)}
 						<div style={{ paddingLeft: "6px" }}>

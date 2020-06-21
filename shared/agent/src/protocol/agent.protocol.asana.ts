@@ -70,3 +70,8 @@ export interface AsanaList {
 	id: string;
 	name: string;
 }
+
+export interface AsanaCard {
+	id: string;
+	[key: string]: any;
+}

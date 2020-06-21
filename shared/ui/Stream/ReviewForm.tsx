@@ -1994,7 +1994,7 @@ class ReviewForm extends React.Component<Props, State> {
 								const menu = <HeadshotMenu person={person} menuItems={menuItems} />;
 								// # of times you stomped on their code
 								if (coAuthorLabels[email]) {
-									console.warn("MENU ITEMS ARE: ", menuItems);
+									// console.warn("MENU ITEMS ARE: ", menuItems);
 									return (
 										<Tooltip placement="bottom" title={coAuthorLabels[email]}>
 											<span>{menu}</span>

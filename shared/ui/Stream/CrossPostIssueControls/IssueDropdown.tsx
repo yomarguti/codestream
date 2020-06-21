@@ -1,25 +1,36 @@
 import React from "react";
-import { connect } from "react-redux";
+import { connect, useDispatch, useSelector } from "react-redux";
 import { connectProvider, getUserProviderInfo } from "../../store/providers/actions";
 import { openPanel, setIssueProvider } from "../../store/context/actions";
 import Icon from "../Icon";
 import Menu from "../Menu";
-import { AsanaCardControls } from "./AsanaCardControls";
-import { BitbucketCardControls } from "./BitbucketCardControls";
-import { GitHubCardControls } from "./GitHubCardControls";
-import { GitLabCardControls } from "./GitLabCardControls";
-import { JiraCardControls } from "./JiraCardControls";
-import { SlackCardControls } from "./SlackCardControls";
-import { TrelloCardControls, TrelloCardDropdown } from "./TrelloCardControls";
-import { YouTrackCardControls } from "./YouTrackCardControls";
-import { AzureDevOpsCardControls } from "./AzureDevOpsCardControls";
 import { ProviderDisplay, PROVIDER_MAPPINGS } from "./types";
-import { ThirdPartyProviderConfig, ThirdPartyProviders } from "@codestream/protocols/agent";
+import {
+	ThirdPartyProviderConfig,
+	ThirdPartyProviders,
+	FetchThirdPartyBoardsRequestType,
+	TrelloBoard,
+	TrelloList,
+	FetchThirdPartyCardsRequestType,
+	ThirdPartyProviderCard,
+	TrelloCard
+} from "@codestream/protocols/agent";
 import { CSMe } from "@codestream/protocols/api";
 import { PrePRProviderInfoModalProps, PrePRProviderInfoModal } from "../PrePRProviderInfoModal";
 import { CodeStreamState } from "@codestream/webview/store";
 import { getConnectedProviderNames } from "@codestream/webview/store/providers/reducer";
 import { updateForProvider } from "@codestream/webview/store/activeIntegrations/actions";
+import { getIntegrationData } from "@codestream/webview/store/activeIntegrations/reducer";
+import {
+	TrelloIntegrationData,
+	ActiveIntegrationData
+} from "@codestream/webview/store/activeIntegrations/types";
+import { setUserPreference } from "../actions";
+import { useDidMount } from "@codestream/webview/utilities/hooks";
+import { HostApi } from "../..";
+import { keyFilter } from "@codestream/webview/utils";
+import { StartWorkIssueContext } from "../StatusPanel";
+import { PreferencesActionsType } from "@codestream/webview/store/preferences/types";
 
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
@@ -32,6 +43,8 @@ interface ConnectedProps {
 	currentUser: CSMe;
 	issueProviderConfig?: ThirdPartyProviderConfig;
 	providers: ThirdPartyProviders;
+	disabledProviders: { [key: string]: boolean };
+	setUserPreference?: Function;
 }
 
 interface Props extends ConnectedProps {
@@ -109,60 +122,6 @@ class IssueDropdown extends React.Component<Props, State> {
 		this.props.setIssueProvider(undefined);
 	};
 
-	renderProviderControls(selectedProvider, knownIssueProviderOptions) {
-		const { issueProviderConfig, q, focusInput } = this.props;
-		const providerInfo = issueProviderConfig
-			? this.getProviderInfo(issueProviderConfig.id)
-			: undefined;
-
-		if (!providerInfo)
-			return this.renderProviderOptions(selectedProvider, knownIssueProviderOptions);
-
-		switch (providerInfo.provider.name) {
-			case "jira":
-			case "jiraserver": {
-				return this.renderProviderOptions(selectedProvider, knownIssueProviderOptions);
-			}
-			case "trello": {
-				return (
-					<TrelloCardDropdown
-						provider={providerInfo.provider}
-						q={q}
-						focusInput={focusInput}
-						selectedProvider={selectedProvider}
-						knownIssueProviderOptions={knownIssueProviderOptions}
-					></TrelloCardDropdown>
-				);
-			}
-			case "asana": {
-				return this.renderProviderOptions(selectedProvider, knownIssueProviderOptions);
-			}
-			case "github":
-			case "github_enterprise": {
-				return this.renderProviderOptions(selectedProvider, knownIssueProviderOptions);
-			}
-			case "gitlab":
-			case "gitlab_enterprise": {
-				return this.renderProviderOptions(selectedProvider, knownIssueProviderOptions);
-			}
-			case "youtrack": {
-				return this.renderProviderOptions(selectedProvider, knownIssueProviderOptions);
-			}
-			case "bitbucket": {
-				return this.renderProviderOptions(selectedProvider, knownIssueProviderOptions);
-			}
-			case "azuredevops": {
-				return this.renderProviderOptions(selectedProvider, knownIssueProviderOptions);
-			}
-			case "slack": {
-				return this.renderProviderOptions(selectedProvider, knownIssueProviderOptions);
-			}
-
-			default:
-				return null;
-		}
-	}
-
 	render() {
 		const { issueProviderConfig } = this.props;
 		const providerInfo = issueProviderConfig
@@ -189,10 +148,10 @@ class IssueDropdown extends React.Component<Props, State> {
 				const displayName = issueProvider.isEnterprise
 					? `${providerDisplay.displayName} - ${issueProvider.host}`
 					: providerDisplay.displayName;
-				const supported = providerId === "trello*com";
+				const supported = providerDisplay.supportsStartWork;
 				return {
 					// icon: <Icon name={providerDisplay.icon || "blank"} />,
-					checked: providerId == selectedProviderId,
+					checked: this.providerIsConnected(providerId) && !this.providerIsDisabled(providerId),
 					value: providerId,
 					label: displayName + (supported ? "" : " (soon!)"),
 					disabled: !supported,
@@ -207,16 +166,23 @@ class IssueDropdown extends React.Component<Props, State> {
 		// @ts-ignore
 		knownIssueProviderOptions.splice(index, 0, { label: "-" });
 
-		const selectedProvider =
-			providerInfo &&
-			knownIssueProviderOptions.find(provider => provider.value === selectedProviderId);
+		const activeProviders = knownIssueProviders
+			.filter(id => this.providerIsConnected(id) && !this.providerIsDisabled(id))
+			.map(id => this.props.providers![id]);
+
+		const { q, focusInput } = this.props;
 
 		return (
 			<>
 				{this.state.propsForPrePRProviderInfoModal && (
 					<PrePRProviderInfoModal {...this.state.propsForPrePRProviderInfoModal} />
 				)}
-				{this.renderProviderControls(selectedProvider, knownIssueProviderOptions)}
+				<CardDropdown
+					providers={activeProviders}
+					q={q}
+					focusInput={focusInput}
+					knownIssueProviderOptions={knownIssueProviderOptions}
+				></CardDropdown>
 			</>
 		);
 	}
@@ -249,16 +215,31 @@ class IssueDropdown extends React.Component<Props, State> {
 		}));
 	};
 
+	providerIsDisabled = providerId => this.props.disabledProviders[providerId];
+
 	selectIssueProvider = providerId => {
+		const { setUserPreference } = this.props;
 		this.setState({ issueProviderMenuOpen: false });
 		if (!providerId) return;
 		if (providerId === "codestream") {
 			this.props.setIssueProvider(undefined);
 			return;
 		}
-		const issueProvider = this.props.providers![providerId];
-		const providerDisplay = PROVIDER_MAPPINGS[issueProvider.name];
-		this.onChangeProvider({ provider: issueProvider, display: providerDisplay });
+
+		if (this.providerIsDisabled(providerId)) {
+			// if it's disabled, enable it
+			if (setUserPreference)
+				setUserPreference(["startWork", "disabledProviders", providerId], false);
+		} else if (this.providerIsConnected(providerId)) {
+			// if it's conected and not disabled, disable it
+			if (setUserPreference)
+				setUserPreference(["startWork", "disabledProviders", providerId], true);
+		} else {
+			// otherwise we need to connect
+			const issueProvider = this.props.providers![providerId];
+			const providerDisplay = PROVIDER_MAPPINGS[issueProvider.name];
+			this.onChangeProvider({ provider: issueProvider, display: providerDisplay });
+		}
 	};
 
 	async onChangeProvider(providerInfo: ProviderInfo) {
@@ -349,17 +330,20 @@ class IssueDropdown extends React.Component<Props, State> {
 }
 
 const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
-	const { users, session, context, providers } = state;
+	const { users, session, context, providers, preferences } = state;
 	const currentIssueProviderConfig = context.issueProvider
 		? providers[context.issueProvider]
 		: undefined;
+
+	const workPreferences = preferences.startWork || {};
 
 	return {
 		currentUser: users[session.userId!] as CSMe,
 		currentTeamId: context.currentTeamId,
 		providers,
 		issueProviderConfig: currentIssueProviderConfig,
-		connectedProviderNames: getConnectedProviderNames(state)
+		connectedProviderNames: getConnectedProviderNames(state),
+		disabledProviders: workPreferences.disabledProviders || {}
 	};
 };
 
@@ -367,5 +351,335 @@ export default connect(mapStateToProps, {
 	connectProvider,
 	setIssueProvider,
 	openPanel,
-	updateForProvider
+	updateForProvider,
+	setUserPreference
 })(IssueDropdown);
+
+interface DropdownProps {
+	providers: ThirdPartyProviderConfig[];
+	q?: string;
+	focusInput?: React.RefObject<HTMLInputElement>;
+	knownIssueProviderOptions: any;
+}
+
+const EMPTY_ARRAY = {};
+
+export function CardDropdown(props: React.PropsWithChildren<DropdownProps>) {
+	const dispatch = useDispatch();
+	const data = useSelector((state: CodeStreamState) => state.activeIntegrations);
+	const derivedState = useSelector((state: CodeStreamState) => {
+		const { preferences = {} } = state;
+		const currentUser = state.users[state.session.userId!] as CSMe;
+		const startWorkPreferences = preferences.startWork || {};
+		const providerIds = props.providers.map(provider => provider.id).join(":");
+		return { currentUser, startWorkPreferences, providerIds };
+	});
+
+	const [isLoading, setIsLoading] = React.useState(false);
+	const [loadedBoards, setLoadedBoards] = React.useState(0);
+	const [loadedCards, setLoadedCards] = React.useState(0);
+	const [menuState, setMenuState] = React.useState<{
+		open: boolean;
+		target?: EventTarget;
+	}>({ open: false, target: undefined });
+
+	React.useEffect(() => {
+		setMenuState(state => ({ open: props.q ? true : false }));
+	}, [props.q]);
+
+	const getFilterLists = providerId => {
+		const prefs = derivedState.startWorkPreferences[providerId] || {};
+		return prefs.filterLists || EMPTY_ARRAY;
+	};
+
+	const getFilterBoards = providerId => {
+		const prefs = derivedState.startWorkPreferences[providerId] || {};
+		return prefs.filterBoards || EMPTY_ARRAY;
+	};
+
+	const getFilterAssignees = providerId => {
+		const prefs = derivedState.startWorkPreferences[providerId] || {};
+		return prefs.filterAssignees || "mine";
+	};
+
+	const updateDataState = (providerId, data) => dispatch(updateForProvider(providerId, data));
+
+	const buttonRef = React.useRef<HTMLElement>(null);
+
+	const setPreference = (providerId, key, value) => {
+		dispatch(setUserPreference(["startWork", providerId, key], value));
+	};
+
+	React.useEffect(() => {
+		// if (data.boards && data.boards.length > 0) return;
+
+		if (!isLoading) setIsLoading(true);
+
+		let isValid = true;
+
+		const fetchBoards = async () => {
+			if (!isValid) return;
+
+			await Promise.all(
+				props.providers.map(async provider => {
+					const response = await HostApi.instance.send(FetchThirdPartyBoardsRequestType, {
+						providerId: provider.id
+					});
+					updateDataState(provider.id, { boards: response.boards });
+				})
+			);
+			setLoadedBoards(loadedBoards + 1);
+		};
+
+		fetchBoards();
+
+		return () => {
+			isValid = false;
+		};
+	}, [derivedState.providerIds]);
+
+	React.useEffect(() => {
+		void (async () => {
+			setIsLoading(true);
+			await Promise.all(
+				props.providers.map(async provider => {
+					const boardIds = keyFilter(getFilterBoards(provider.id));
+					try {
+						// only allow to filter by all if you've selected boards to filter by
+						const filterAssigneesSetting =
+							getFilterAssignees(provider.id) === "all" &&
+							keyFilter(getFilterLists(provider.id)).length > 0
+								? "all"
+								: "mine";
+						const response = await HostApi.instance.send(FetchThirdPartyCardsRequestType, {
+							providerId: provider.id,
+							data: {
+								assignedToMe: filterAssigneesSetting === "mine",
+								assignedToAnyone: filterAssigneesSetting === "all",
+								filterBoards: keyFilter(getFilterBoards(provider.id)),
+								filterLists: keyFilter(getFilterLists(provider.id))
+							}
+						});
+						updateDataState(provider.id, {
+							cards: response.cards
+						});
+					} catch (error) {
+						console.warn("Error Loading Cards: ", error);
+					} finally {
+					}
+				})
+			);
+
+			setIsLoading(false);
+			setLoadedCards(loadedCards + 1);
+		})();
+	}, [loadedBoards, derivedState.startWorkPreferences]);
+
+	const handleClickDropdown = React.useCallback((event: React.MouseEvent) => {
+		if (isLoading) {
+			event.preventDefault();
+			dispatch(setIssueProvider(undefined));
+			setIsLoading(false);
+		} else {
+			event.stopPropagation();
+			// @ts-ignore
+			const target = event.target.closest(".dropdown-button");
+			setMenuState(state => ({ open: !state.open }));
+		}
+	}, []);
+
+	const selectCard = React.useCallback(
+		(card?: ThirdPartyProviderCard) => {
+			if (card) {
+				const { provider } = card;
+				const providerDisplay = PROVIDER_MAPPINGS[provider.name];
+				const pData = data[provider.id] || {};
+				// @ts-ignore
+				const board = pData.boards && pData.boards.find(b => b.id === card.idBoard);
+				const lists = board && board.lists;
+				startWorkIssueContext.setValues({
+					...card,
+					providerIcon: providerDisplay.icon,
+					providerName: providerDisplay.displayName,
+					providerId: provider.id,
+					moveCardLabel: `Move this ${providerDisplay.cardLabel} to`,
+					moveCardOptions: lists
+				});
+			}
+			setMenuState({ open: false });
+		},
+		[data.boards]
+	);
+
+	const startWorkIssueContext = React.useContext(StartWorkIssueContext);
+
+	// https://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
+	const escapeRegExp = string => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
+	const queryRegexp = React.useMemo(() => new RegExp(escapeRegExp(props.q), "gi"), [props.q]);
+
+	const underlineQ = string => (
+		<span dangerouslySetInnerHTML={{ __html: string.replace(queryRegexp, "<u><b>$&</b></u>") }} />
+	);
+
+	const filterBoardItems = provider => {
+		const filterLists = getFilterLists(provider.id);
+		const filterBoards = getFilterBoards(provider.id);
+		const items = [] as any;
+		const pData = data[provider.id] || {};
+		// @ts-ignore
+		if (!pData.boards) return items;
+		// @ts-ignore
+		pData.boards.forEach(board => {
+			const b = board;
+			let boardChecked = false;
+			const lists = board.lists;
+			if (lists) {
+				const submenu = board.lists.map(list => {
+					const l = list;
+					const checked = !!filterLists[list.id];
+					if (checked) boardChecked = true;
+					return {
+						label: list.name,
+						key: list.id,
+						checked,
+						action: () =>
+							setPreference(provider.id, "filterLists", { ...filterLists, [l.id]: !checked })
+					};
+				});
+				items.push({
+					label: board.name,
+					key: board.id,
+					checked: boardChecked,
+					action: () => {},
+					submenu
+				});
+			} else {
+				const checked = !!filterBoards[b.id];
+				items.push({
+					label: board.name,
+					key: board.id,
+					checked,
+					action: () =>
+						setPreference(provider.id, "filterBoards", { ...filterBoards, [b.id]: !checked })
+				});
+			}
+		});
+		return items;
+	};
+
+	const filterByBoardList = provider => {
+		const providerDisplay = PROVIDER_MAPPINGS[provider.name];
+		return {
+			label: `Filter ${providerDisplay.displayName} by ${providerDisplay.boardLabelCaps} & ${providerDisplay.listLabelCaps}`,
+			icon: <Icon name={providerDisplay.icon} />,
+			key: "filters-" + provider.name,
+			submenu: filterBoardItems(provider)
+		};
+	};
+
+	const cardItems = React.useMemo(() => {
+		const items = [] as any;
+		const lowerQ = (props.q || "").toLocaleLowerCase();
+		props.providers.forEach(provider => {
+			const filterLists = getFilterLists(provider.id);
+			const isFiltering = keyFilter(filterLists).length > 0;
+			const providerDisplay = PROVIDER_MAPPINGS[provider.name];
+
+			const pData = data[provider.id] || {};
+			// @ts-ignore
+			const cards = pData.cards || [];
+			items.push(
+				...(cards
+					// @ts-ignore
+					.filter(card => !isFiltering || filterLists[card.idList])
+					.filter(card => !props.q || card.title.toLocaleLowerCase().includes(lowerQ))
+					.map(card => ({
+						label: props.q ? underlineQ(card.title) : card.title,
+						searchLabel: card.title,
+						icon: providerDisplay.icon && <Icon name={providerDisplay.icon} />,
+						key: "card-" + card.id,
+						modifiedAt: card.modifiedAt,
+						action: { ...card, provider }
+					})) as any)
+			);
+		});
+
+		items.sort((a, b) => b.modifiedAt - a.modifiedAt);
+
+		if (!props.q) {
+			items.unshift({ label: "-" });
+			// if (props.provider.canFilterByAssignees) {
+			// 	items.unshift({
+			// 		label: "Filter by Assignee",
+			// 		icon: <Icon name="filter" />,
+			// 		key: "assignment",
+			// 		submenu: [
+			// 			{
+			// 				label: `${derivedState.providerDisplay.cardLabel} Assigned to Me`,
+			// 				key: "mine",
+			// 				checked: derivedState.filterAssignees === "mine",
+			// 				action: () => setPreference("filterAssignees", "mine")
+			// 			},
+			// 			{
+			// 				label: `Unassigned ${derivedState.providerDisplay.cardLabel}`,
+			// 				key: "unassigned",
+			// 				checked: derivedState.filterAssignees === "unassigned",
+			// 				action: () => setPreference("filterAssignees", "unassigned")
+			// 			},
+			// 			{
+			// 				label: `All ${derivedState.providerDisplay.cardLabel}`,
+			// 				key: "all",
+			// 				checked: derivedState.filterAssignees === "all",
+			// 				action: () => setPreference("filterAssignees", "all")
+			// 			}
+			// 		]
+			// 	});
+			// }
+			// const submenu = [] as any;
+			// props.providers.forEach(provider => {
+			// 	submenu.push(filterByBoardList(provider));
+			// });
+			// submenu.push(
+			// 	{ label: "-" },
+			// 	{
+			// 		label: "Connect another Service",
+			// 		key: "connect",
+			// 		submenu: props.knownIssueProviderOptions
+			// 	}
+			// );
+
+			props.providers.forEach(provider => {
+				const providerDisplay = PROVIDER_MAPPINGS[provider.name];
+				if (providerDisplay.hasFilters) items.unshift(filterByBoardList(provider));
+			});
+			items.unshift({
+				label: `Connected Services`,
+				icon: <Icon name="gear" />,
+				key: "settings",
+				submenu: props.knownIssueProviderOptions
+			});
+		}
+		return items;
+	}, [loadedCards, derivedState.startWorkPreferences, props.q]);
+
+	return (
+		<span
+			className={`dropdown-button ${menuState.open ? "selected" : ""}`}
+			onClick={handleClickDropdown}
+			ref={buttonRef}
+		>
+			{isLoading ? <Icon className="spin" name="sync" /> : <Icon name="chevron-down" />}
+			{menuState.open && cardItems.length > 0 && (
+				<Menu
+					align="dropdownRight"
+					target={buttonRef.current}
+					items={cardItems}
+					dontCloseOnSelect={true}
+					action={selectCard}
+					fullWidth={true}
+					focusInput={props.focusInput}
+				/>
+			)}
+		</span>
+	);
+}

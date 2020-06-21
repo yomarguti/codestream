@@ -49,13 +49,14 @@ export interface TrelloList {
 
 export interface TrelloCard {
 	id: string;
+	tokenId: string;
 	name: string;
 	desc: string;
 	url: string;
 	idList: string;
 	idBoard: string;
 	idOrganization: string;
-	shortLink?: string;
+	shortLink: string;
 	dateLastActivity: string;
 	modifiedAt: number;
 }

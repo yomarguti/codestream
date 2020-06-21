@@ -72,7 +72,7 @@ export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProvider
 
 		let response: ApiResponse<TrelloCard[]>;
 
-		if (true || request.assignedToMe) {
+		if (true || request.data.assignedToMe) {
 			response = await this.get<TrelloCard[]>(
 				`/members/${this._trelloUserId}/cards?${qs.stringify({
 					cards: "open",
@@ -83,7 +83,7 @@ export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProvider
 					token: this.accessToken
 				})}`
 			);
-		} else if (request.assignedToAnyone) {
+		} else if (request.data.assignedToAnyone) {
 			response = await this.get<TrelloCard[]>(
 				`/members/${this._trelloUserId}/cards?${qs.stringify({
 					cards: "open",
@@ -129,11 +129,21 @@ export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProvider
 			);
 		}
 
-		const cards = request.organizationId
+		const cards = (request.organizationId
 			? response.body.filter(c => c.idOrganization === request.organizationId)
-			: response.body;
-		cards.forEach(card => (card.modifiedAt = new Date(card.dateLastActivity).getTime()));
-		cards.sort((a, b) => b.modifiedAt - a.modifiedAt);
+			: response.body
+		).map(card => {
+			return {
+				id: card.id,
+				title: card.name,
+				body: card.desc,
+				url: card.url,
+				modifiedAt: new Date(card.dateLastActivity).getTime(),
+				tokenId: card.shortLink,
+				idList: card.idList,
+				idBoard: card.idBoard
+			};
+		});
 		return { cards };
 	}
 

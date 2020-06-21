@@ -46,7 +46,7 @@ export const PrePRProviderInfoModal = (props: PrePRProviderInfoModalProps) => {
 				<BoxedContent title={`${displayName} Integration`}>
 					<CSText as="h3">
 						<strong>
-							<Icon name="bug" /> Issue Tracking
+							<Icon name="issue" /> Issue Tracking
 						</strong>
 					</CSText>
 					<CSText>
@@ -56,12 +56,12 @@ export const PrePRProviderInfoModal = (props: PrePRProviderInfoModalProps) => {
 					<Spacer />
 					<CSText as="h3">
 						<strong>
-							<Icon name="comment" /> Pull Requests
+							<Icon name="pull-request" /> Pull Requests
 						</strong>
 					</CSText>
 					<CSText>
-						Display comments on pull requests right along side the code blocks they refer
-						to. {props.helpText ? `(${props.helpText})` : null}
+						Display comments on pull requests right alongside the code blocks they refer to.{" "}
+						{props.helpText ? `(${props.helpText})` : null}
 					</CSText>
 					<Spacer />
 					<Button fillParent prependIcon={<Icon name={icon!} />} onClick={onClickConnect}>

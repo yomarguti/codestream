@@ -1,5 +1,5 @@
 "use strict";
-import { ThirdPartyProviderBoard } from "./agent.protocol";
+import { ThirdPartyProviderBoard, ThirdPartyProviderCard } from "./agent.protocol";
 
 export interface JiraUser {
 	accountId: string;
@@ -14,6 +14,8 @@ export interface JiraBoard extends ThirdPartyProviderBoard {
 	issueTypes: string[];
 }
 
+export interface JiraCard extends ThirdPartyProviderCard {}
+
 export interface JiraFetchBoardsResponse {
 	boards: JiraBoard[];
 }
@@ -23,7 +25,7 @@ export interface CreateJiraCardRequest {
 	description: string;
 	project: string;
 	issueType: string;
-	assignees: [{ accountId?: string, name?: string }];
+	assignees: [{ accountId?: string; name?: string }];
 }
 
 export interface CreateJiraCardResponse {

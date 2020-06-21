@@ -40,8 +40,8 @@ export const MarkdownText = styled(
 	word-wrap: break-word;
 	// need to increase priority for the li padding
 	.codestream .stream & {
-		ul,
-		ol {
+		ul:not(.linenums),
+		ol:not(.linenums) {
 			margin: 0;
 			padding-left: 20px;
 			li {
