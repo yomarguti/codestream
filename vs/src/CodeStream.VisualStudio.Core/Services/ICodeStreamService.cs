@@ -11,6 +11,7 @@ namespace CodeStream.VisualStudio.Core.Services {
 		Task ChangeActiveEditorAsync(Uri uri, ActiveTextEditor activeTextEditor = null);
 		Task ChangeCaretAsync(Uri uri, List<Range> visibleRange, int cursorLine, int lineCount);
 		Task NewCodemarkAsync(Uri uri, Range range, CodemarkType codemarkType, string source, CancellationToken? cancellationToken = null);
+		Task StartWorkAsync(string source, Uri uri = null, CancellationToken? cancellationToken = null);
 		Task ShowCodemarkAsync(string codemarkId, string filePath, CancellationToken? cancellationToken = null);
 		Task EditorSelectionChangedNotificationAsync(Uri uri,
 			EditorState editorState,

@@ -40,4 +40,19 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public const string MethodName = "webview/codemark/new";
 		public override string Method => MethodName;
 	}
+
+	public class StartWorkNotification {
+		public StartWorkNotification(string source, Uri uri = null) {
+			Source = source;
+			Uri = uri?.ToString();
+		}
+
+		public string Source { get; }
+		public string Uri { get; }
+	}
+
+	public class StartWorkNotificationType : NotificationType<StartWorkNotification> {
+		public const string MethodName = "webview/work/start";
+		public override string Method => MethodName;
+	}
 }

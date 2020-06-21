@@ -93,6 +93,7 @@ namespace CodeStream.VisualStudio.Packages {
 					new WebViewReloadCommand(),
 					new WebViewToggleCommand(),
 					new AuthenticationCommand(_componentModel),
+					new StartWorkCommand(),
 					userCommand
 				};
 				await JoinableTaskFactory.SwitchToMainThreadAsync();

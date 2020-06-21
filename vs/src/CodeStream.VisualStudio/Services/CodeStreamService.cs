@@ -181,5 +181,20 @@ namespace CodeStream.VisualStudio.Services {
 
 			await Task.CompletedTask;
 		}
+
+		public async Task StartWorkAsync(string source, Uri uri = null, CancellationToken? cancellationToken = null) {
+			if (IsReady) {
+				try {
+					_ = BrowserService.NotifyAsync(new StartWorkNotificationType {
+						Params = new StartWorkNotification(source, uri)
+					});
+				}
+				catch (Exception ex) {
+					Log.Error(ex, $"{nameof(StartWorkAsync)} Uri={uri}");
+				}
+			}
+
+			await Task.CompletedTask;
+		}
 	}
 }

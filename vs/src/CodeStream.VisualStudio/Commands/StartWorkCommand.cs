@@ -1,32 +1,25 @@
-﻿using System;
-using System.Threading;
-using CodeStream.VisualStudio.Core;
+﻿using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Packages;
 using CodeStream.VisualStudio.Core.Services;
 using CodeStream.VisualStudio.Core.Vssdk.Commands;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
+using System;
+using System.Threading;
 
 namespace CodeStream.VisualStudio.Commands {
-	internal abstract class AddCodemarkCommandBase : VsCommandBase {
-		private static readonly ILogger Log = LogManager.ForContext<AddCodemarkCommandBase>();
+	public class StartWorkCommand : VsCommandBase {
+		private static readonly ILogger Log = LogManager.ForContext<StartWorkCommand>();
 
-		protected AddCodemarkCommandBase(Guid commandSet, int commandId) : base(commandSet, commandId) { }
-		protected abstract CodemarkType CodemarkType { get; }
-
+		public StartWorkCommand() : base(PackageGuids.guidWebViewPackageShortcutCmdSet, PackageIds.StartWorkCommandId) { }
 		protected override void ExecuteUntyped(object parameter) {
 			try {
 				var codeStreamService = (Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<ICodeStreamService>();
 				if (codeStreamService == null || !codeStreamService.IsReady) return;
 
 				var componentModel = (IComponentModel)Package.GetGlobalService(typeof(SComponentModel));
-				var editorService = componentModel.GetService<IEditorService>();
-				var activeTextEditor = editorService.GetActiveTextEditorSelection();
-				if (activeTextEditor == null) return;
-
 				bool requiredActivation = false;
 				ThreadHelper.JoinableTaskFactory.Run(async delegate {
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
@@ -40,12 +33,12 @@ namespace CodeStream.VisualStudio.Commands {
 							else {
 								Log.Warning("Could not activate tool window");
 							}
-						}						
+						}
 					}
 					catch (Exception ex) {
-						Log.Error(ex, "NewCodemarkAsync");
+						Log.Error(ex, nameof(StartWorkCommand));
 					}
-				});			
+				});
 
 				var sessionService = componentModel.GetService<ISessionService>();
 
@@ -63,9 +56,10 @@ namespace CodeStream.VisualStudio.Commands {
 							else if (CommandSet == PackageGuids.guidWebViewPackageShortcutCmdSet) {
 								source = "Shortcut";
 							}
+							var editorService = componentModel.GetService<IEditorService>();
+							var activeTextEditor = editorService.GetActiveTextEditorSelection();
 
-							await codeStreamService.NewCodemarkAsync(activeTextEditor.Uri, activeTextEditor.Range,
-								CodemarkType, source,
+							await codeStreamService.StartWorkAsync(source, activeTextEditor?.Uri,
 								cancellationToken: CancellationToken.None);
 						}
 						catch (Exception ex) {
@@ -75,18 +69,12 @@ namespace CodeStream.VisualStudio.Commands {
 					});
 				}
 				catch (Exception ex) {
-					Log.Error(ex, "NewCodemarkAsync");
+					Log.Error(ex, "StartWorkAsync");
 				}
-
 			}
 			catch (Exception ex) {
-				Log.Error(ex, nameof(AddCodemarkCommandBase));
+				Log.Error(ex, nameof(StartWorkCommand));
 			}
-		}
-
-		protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e) {
-			var session = (Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<ISessionService>();
-			sender.Visible = session?.IsReady == true;
 		}
 	}
 }
