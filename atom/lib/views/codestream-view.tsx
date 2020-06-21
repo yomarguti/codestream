@@ -55,6 +55,7 @@ import {
 	ShellPromptFolderRequestType,
 	ShellPromptFolderResponse,
 	ShowCodemarkNotificationType,
+	StartWorkNotificationType,
 	UpdateConfigurationRequest,
 	UpdateConfigurationRequestType,
 	UpdateConfigurationResponse,
@@ -679,6 +680,15 @@ export class CodestreamView {
 		const range = Editor.getCurrentSelectionRange(editor);
 		this.sendNotification(NewCodemarkNotificationType, { type, uri, range, source });
 		editor.setSelectedBufferRange(Convert.lsRangeToAtomRange(range));
+	}
+
+	startWorkRequest(source?: string) {
+		const editor = atom.workspace.getActiveTextEditor();
+		let uri;
+		if (editor) {
+			uri = Editor.getUri(editor);	 
+		}
+		this.sendNotification(StartWorkNotificationType, { source, uri });		
 	}
 
 	handleProtocolRequest(uri: string) {

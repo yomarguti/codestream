@@ -163,6 +163,13 @@ class CodestreamPackage {
 			});
 		};
 
+		const sendStartWorkRequest = (entry: "Context Menu" | "Shortcut") => {
+			const view = Container.viewController.getMainView();
+			view.show().then(() => {
+				view.startWorkRequest(entry);
+			});
+		};
+
 		this.loggedInCommandsSubscription = new CompositeDisposable(
 			// context menu options
 			atom.commands.add("atom-workspace", "codestream:context-create-comment", {
@@ -189,6 +196,10 @@ class CodestreamPackage {
 			atom.commands.add("atom-workspace", "codestream:keymap-get-permalink", {
 				hiddenInCommandPalette: true,
 				didDispatch: () => sendNewCodemarkRequest(CodemarkType.Link, "Shortcut")
+			}),
+			atom.commands.add("atom-workspace", "codestream:start-work", {
+				hiddenInCommandPalette: true,
+				didDispatch: () => sendStartWorkRequest("Shortcut")
 			}),
 			atom.commands.add("atom-workspace", "codestream:keymap-copy-permalink", {
 				hiddenInCommandPalette: true,
