@@ -91,7 +91,7 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 				title: title
 			};
 		} catch (ex) {
-			Logger.error(ex, "GitHubEnterprise: getRepoInfo", {
+			Logger.error(ex, `${this.displayName}: getRepoInfo`, {
 				remote: request.remote,
 				head: request.headRefName,
 				base: request.baseRefName
@@ -99,7 +99,7 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 			return {
 				error: {
 					type: "PROVIDER",
-					message: `GitHub Enterprise: ${ex.message}`
+					message: `${this.displayName}: ${ex.message}`
 				}
 			};
 		}
@@ -129,13 +129,13 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 				pullRequests: pullRequests
 			};
 		} catch (ex) {
-			Logger.error(ex, "GitHubEnterprise: getRepoInfo", {
+			Logger.error(ex, `${this.displayName}: getRepoInfo`, {
 				remote: request.remote
 			});
 			return {
 				error: {
 					type: "PROVIDER",
-					message: `GitHub Enterprise: ${ex.message}`
+					message: `${this.displayName}: ${ex.message}`
 				}
 			};
 		}

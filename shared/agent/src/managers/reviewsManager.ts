@@ -517,7 +517,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 						name === "github" ||
 						name === "gitlab" ||
 						name === "github_enterprise" ||
-						name === "gitlab_enterprise"
+						name === "gitlab_enterprise" ||
+						name === "bitbucket"
 					);
 				}
 			);
@@ -629,7 +630,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 						name === "github" ||
 						name === "gitlab" ||
 						name === "github_enterprise" ||
-						name === "gitlab_enterprise"
+						name === "gitlab_enterprise" ||
+						name === "bitbucket"
 					);
 				}
 			);

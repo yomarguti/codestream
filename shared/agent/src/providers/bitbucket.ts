@@ -33,13 +33,15 @@ import {
 	ApiResponse,
 	getOpenedRepos,
 	getRemotePaths,
+	ProviderCreatePullRequestRequest,
+	ProviderCreatePullRequestResponse,
+	ProviderPullRequestInfo,
 	PullRequestComment,
 	REFRESH_TIMEOUT,
 	ThirdPartyIssueProviderBase,
 	ThirdPartyProviderSupportsIssues,
 	ThirdPartyProviderSupportsPullRequests
 } from "./provider";
-import { forOwn, identity } from "lodash-es";
 
 interface BitbucketRepo {
 	uuid: string;
@@ -123,22 +125,16 @@ interface GetPullRequestsResponse extends BitbucketValues<BitbucketPullRequest[]
 
 interface GetPullRequestCommentsResponse extends BitbucketValues<BitbucketPullRequestComment[]> {}
 
+/**
+ * BitBucket provider
+ * @see https://developer.atlassian.com/bitbucket/api/2/reference/
+ */
 @lspProvider("bitbucket")
 export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketProviderInfo>
 	implements ThirdPartyProviderSupportsIssues, ThirdPartyProviderSupportsPullRequests {
 	private _bitbucketUserId: string | undefined;
 	private _knownRepos = new Map<string, BitbucketRepo>();
 	private _reposWithIssues: BitbucketRepo[] = [];
-
-	async getRemotePaths(repo: any, _projectsByRemotePath: any) {
-		await this.ensureConnected();
-		const remotePaths = await getRemotePaths(
-			repo,
-			this.getIsMatchingRemotePredicate(),
-			_projectsByRemotePath
-		);
-		return remotePaths;
-	}
 
 	get displayName() {
 		return "Bitbucket";
@@ -437,12 +433,116 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 		return documentMarkers;
 	}
 
-	createPullRequest(request: {}): Promise<any> {
-		throw new Error("Method not implemented.");
+	async getRemotePaths(repo: any, _projectsByRemotePath: any) {
+		await this.ensureConnected();
+		const remotePaths = await getRemotePaths(
+			repo,
+			this.getIsMatchingRemotePredicate(),
+			_projectsByRemotePath
+		);
+		return remotePaths;
 	}
 
-	getRepoInfo(request: {}): Promise<any> {
-		throw new Error("Method not implemented.");
+	protected getOwnerFromRemote(remote: string): { owner: string; name: string } {
+		// HACKitude yeah, sorry
+		const uri = URI.parse(remote);
+		const split = uri.path.split("/");
+		const owner = split[1];
+		const name = split[2].replace(".git", "");
+		return {
+			owner,
+			name
+		};
+	}
+
+	async createPullRequest(
+		request: ProviderCreatePullRequestRequest
+	): Promise<ProviderCreatePullRequestResponse | undefined> {
+		void (await this.ensureConnected());
+
+		try {
+			const repoInfo = await this.getRepoInfo({ remote: request.remote });
+			if (repoInfo && repoInfo.error) {
+				return {
+					error: repoInfo.error
+				};
+			}
+			const { owner, name } = this.getOwnerFromRemote(request.remote);
+			const createPullRequestResponse = await this.post<
+				BitBucketCreatePullRequestRequest,
+				BitBucketCreatePullRequestResponse
+			>(`/repositories/${owner}/${name}/pullrequests`, {
+				source: { branch: { name: request.headRefName } },
+				destination: { branch: { name: request.baseRefName } },
+				title: request.title,
+				description: this.createDescription(request)
+			});
+
+			const title = `#${createPullRequestResponse.body.id} ${createPullRequestResponse.body.title}`;
+			return {
+				url: createPullRequestResponse.body.links.html.href,
+				title: title
+			};
+		} catch (ex) {
+			Logger.error(ex, `${this.displayName}: createPullRequest`, {
+				remote: request.remote,
+				head: request.headRefName,
+				base: request.baseRefName
+			});
+			let message = ex.message;
+			if (message.indexOf("credentials lack one or more required privilege scopes") > -1) {
+				message +=
+					"\n\nYou may need to disconnect and reconnect your Bitbucket for CodeStream integration to create your first Pull Request.";
+			}
+			return {
+				error: {
+					type: "PROVIDER",
+					message: `${this.displayName}: ${message}`
+				}
+			};
+		}
+	}
+
+	async getRepoInfo(request: { remote: string }): Promise<any> {
+		try {
+			const { owner, name } = this.getOwnerFromRemote(request.remote);
+			const repoResponse = await this.get<BitBucketRepo>(`/repositories/${owner}/${name}`);
+			const pullRequestResponse = await this.get<BitBucketPullRequest>(
+				`/repositories/${owner}/${name}/pullrequests?state=OPEN`
+			);
+			let pullRequests: ProviderPullRequestInfo[] = [];
+			if (pullRequestResponse && pullRequestResponse.body && pullRequestResponse.body.values) {
+				pullRequests = pullRequestResponse.body.values.map(_ => {
+					return {
+						id: _.id,
+						url: _.links!.html!.href,
+						baseRefName: _.destination.branch.name,
+						headRefName: _.source.branch.name
+					};
+				});
+			}
+			return {
+				id: repoResponse.body.uuid,
+				defaultBranch:
+					repoResponse.body &&
+					repoResponse.body.mainbranch &&
+					repoResponse.body.mainbranch.name &&
+					repoResponse.body.mainbranch.type === "branch"
+						? repoResponse.body.mainbranch.name
+						: undefined,
+				pullRequests: pullRequests
+			};
+		} catch (ex) {
+			Logger.error(ex, `${this.displayName}: getRepoInfo`, {
+				remote: request.remote
+			});
+			return {
+				error: {
+					type: "PROVIDER",
+					message: `${this.displayName}: ${ex.message}`
+				}
+			};
+		}
 	}
 
 	private _commentsByRepoAndPath = new Map<
@@ -587,4 +687,53 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 		}
 		return comments;
 	}
+}
+
+interface BitBucketCreatePullRequestRequest {
+	source: {
+		branch: {
+			name: string;
+		};
+	};
+
+	destination: {
+		branch: {
+			name: string;
+		};
+	};
+	title: string;
+	description?: string;
+}
+
+interface BitBucketCreatePullRequestResponse {
+	id: string;
+	links: { html: { href: string } };
+	number: number;
+	title: string;
+}
+
+interface BitBucketRepo {
+	uuid: string;
+	mainbranch?: {
+		name?: string;
+		type?: string;
+	};
+}
+
+interface BitBucketPullRequest {
+	values: {
+		id: string;
+		source: {
+			branch: {
+				name: string;
+			};
+		};
+
+		destination: {
+			branch: {
+				name: string;
+			};
+		};
+		links: { html: { href: string } };
+	}[];
 }

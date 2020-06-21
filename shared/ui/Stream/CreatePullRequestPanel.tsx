@@ -57,7 +57,9 @@ export const CreatePullRequestPanel = props => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { providers } = state;
 		const codeHostProviders = Object.keys(providers).filter(id =>
-			["github", "gitlab", "github_enterprise", "gitlab_enterprise"].includes(providers[id].name)
+			["github", "gitlab", "github_enterprise", "gitlab_enterprise", "bitbucket"].includes(
+				providers[id].name
+			)
 		);
 		return {
 			providers: providers,
@@ -66,7 +68,8 @@ export const CreatePullRequestPanel = props => {
 			isConnectedToGitHub: isConnected(state, { name: "github" }),
 			isConnectedToGitLab: isConnected(state, { name: "gitlab" }),
 			isConnectedToGitHubEnterprise: isConnected(state, { name: "github_enterprise" }),
-			isConnectedToGitLabEnterprise: isConnected(state, { name: "gitlab_enterprise" })
+			isConnectedToGitLabEnterprise: isConnected(state, { name: "gitlab_enterprise" }),
+			isConnectedToBitBucket: isConnected(state, { name: "bitbucket" })
 		};
 	});
 	const [loading, setLoading] = useState(true);
@@ -165,7 +168,8 @@ export const CreatePullRequestPanel = props => {
 		derivedState.isConnectedToGitHub,
 		derivedState.isConnectedToGitLab,
 		derivedState.isConnectedToGitHubEnterprise,
-		derivedState.isConnectedToGitLabEnterprise
+		derivedState.isConnectedToGitLabEnterprise,
+		derivedState.isConnectedToBitBucket
 	]);
 
 	useEffect(() => {
@@ -447,7 +451,13 @@ export const CreatePullRequestPanel = props => {
 				break;
 			}
 			case "PROVIDER": {
-				messageElement = <span>{message || "Unknown provider error"}</span>;
+				messageElement = (
+					<span
+						dangerouslySetInnerHTML={{
+							__html: message.replace(/\n/g, "<br />") || "Unknown provider error"
+						}}
+					/>
+				);
 				break;
 			}
 			default: {
