@@ -309,13 +309,17 @@ export interface CheckPullRequestPreconditionsRequest {
 	reviewId: string;
 	headRefName?: string;
 	baseRefName?: string;
+	providerId?: string;
 }
 
 export interface CheckPullRequestPreconditionsResponse {
 	success: boolean;
 	review?: Pick<CSReview, "title" | "text">;
-	remote?: string;
+	remoteUrl?: string;
+	remoteBranch?: string;
 	providerId?: string;
+	remotes?: any[];
+	origins?: string[];
 	pullRequestProvider?: { defaultBranch?: string; isConnected: boolean };
 	branch?: string;
 	branches?: string[];
@@ -346,15 +350,15 @@ export interface CreatePullRequestRequest {
 	baseRefName: string;
 	headRefName: string;
 	remote: string;
+	remoteName?: string;
 }
 
 export interface CreatePullRequestResponse {
 	success: boolean;
 	url?: string;
 	error?: {
-		// TODO fix these
 		type: "REPO_NOT_FOUND" | "COMMIT_NOT_FOUND" | "UNKNOWN" | string;
-		message: string;
+		message?: string;
 		url?: string;
 	};
 }

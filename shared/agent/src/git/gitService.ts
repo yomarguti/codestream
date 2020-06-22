@@ -1314,6 +1314,38 @@ export class GitService implements IGitService, Disposable {
 		return this._repositories.setKnownRepository(repos);
 	}
 
+	async getBranchRemote(repoPath: string, branch: string): Promise<string | undefined> {
+		try {
+			const data = await git({ cwd: repoPath }, "rev-parse", "--abbrev-ref", `${branch}@{u}`);
+			return data.trim();
+		} catch {
+			return undefined;
+		}
+	}
+
+	async setBranchRemote(
+		repoPath: string,
+		remoteName: string,
+		branch: string
+	): Promise<string | undefined> {
+		try {
+			const data = await git({ cwd: repoPath }, "push", "-u", remoteName, branch);
+			return data.trim();
+		} catch {
+			return undefined;
+		}
+	}
+
+	// mondo useful for prototyping ;)
+	// async run(repoPath: string, command: string) {
+	// 	try {
+	// 		const data = await git({ cwd: repoPath }, ...command.split(" "));
+	// 		return data.trim();
+	// 	} catch {
+	// 		return undefined;
+	// 	}
+	// }
+
 	private _normalizePath(path: string): string {
 		const cygwinMatch = cygwinRegex.exec(path);
 		if (cygwinMatch != null) {

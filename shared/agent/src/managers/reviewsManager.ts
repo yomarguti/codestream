@@ -3,6 +3,7 @@ import { applyPatch } from "diff";
 import * as path from "path";
 import { MessageType } from "../api/apiProvider";
 import { Container, SessionContainer } from "../container";
+import { GitRemote } from "../git/gitService";
 import { Logger } from "../logger";
 import {
 	CheckPullRequestBranchPreconditionsRequest,
@@ -65,6 +66,7 @@ import { log, lsp, lspHandler, Strings } from "../system";
 import { gate } from "../system/decorators/gate";
 import { xfs } from "../xfs";
 import { CachedEntityManagerBase, Id } from "./entityManager";
+import { GitWarnings } from "git/git";
 
 const uriRegexp = /codestream-diff:\/\/(\w+)\/(\w+)\/(\w+)\/(\w+)\/(.+)/;
 
@@ -504,7 +506,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			const { providerRegistry } = SessionContainer.instance();
 			const user = await this.session.api.getMe();
 
-			const gitRemotes = await repo!.getRemotes();
+			const remotes = await repo!.getRemotes();
 			let remoteUrl = "";
 			let providerId = "";
 
@@ -523,7 +525,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				}
 			);
 
-			const _projectsByRemotePath = new Map(gitRemotes.map(obj => [obj.path, obj]));
+			const _projectsByRemotePath = new Map(remotes.map(obj => [obj.path, obj]));
 			for (const provider of providers) {
 				const id = provider.getConfig().id;
 				if (id !== request.providerId) continue;
@@ -585,25 +587,16 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	): Promise<CheckPullRequestPreconditionsResponse> {
 		const { git, providerRegistry } = SessionContainer.instance();
 		let warning = undefined;
+		let remotes: GitRemote[] | undefined;
+		let repo;
 		try {
 			const review = await this.getById(request.reviewId);
-			const repo = await git.getRepositoryById(review.reviewChangesets[0].repoId);
+			repo = await git.getRepositoryById(review.reviewChangesets[0].repoId);
 
 			if (!repo) {
 				return {
 					success: false,
 					error: { type: "REPO_NOT_FOUND" }
-				};
-			}
-			const branch = review.reviewChangesets[0].branch;
-			const branches = await git.getBranches(repo!.path);
-			const user = await this.session.api.getMe();
-
-			const localCommits = await git.getLocalCommits(repo.path);
-			if (localCommits && localCommits.length > 0) {
-				return {
-					success: false,
-					error: { type: "HAS_LOCAL_COMMITS" }
 				};
 			}
 
@@ -615,11 +608,22 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				};
 			}
 
-			const gitRemotes = await repo!.getRemotes();
+			const localCommits = await git.getLocalCommits(repo.path);
+			if (localCommits && localCommits.length > 0) {
+				return {
+					success: false,
+					error: { type: "HAS_LOCAL_COMMITS" }
+				};
+			}
+
+			const branch = review.reviewChangesets[0].branch;
+			const branches = await git.getBranches(repo!.path);
+			const user = await this.session.api.getMe();
+			remotes = await repo!.getRemotes();
 			let remoteUrl = "";
 			let providerId = "";
 			let defaultBranch: string | undefined = "";
-			let isConnected = false;
+			let isProviderConnected = false;
 
 			const providers = providerRegistry.getConnectedProviders(
 				user.user,
@@ -637,9 +641,9 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			);
 			let success = false;
 			let foundOne = false;
-			const _projectsByRemotePath = new Map(gitRemotes.map(obj => [obj.path, obj]));
+			const projectsByRemotePath = new Map(remotes.map(obj => [obj.path, obj]));
 			for (const provider of providers) {
-				const remotePaths = await provider.getRemotePaths(repo, _projectsByRemotePath);
+				const remotePaths = await provider.getRemotePaths(repo, projectsByRemotePath);
 				if (remotePaths && remotePaths.length) {
 					if (foundOne) {
 						// if we've already found one matching remote,
@@ -647,12 +651,13 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 						// we will have to let the user choose which provider
 						// they want to connect to
 						providerId = "";
-						isConnected = false;
+						isProviderConnected = false;
+						remoteUrl = "";
 						success = false;
 						break;
 					}
 					providerId = provider.getConfig().id;
-					isConnected = true;
+					isProviderConnected = true;
 					// just need any url here...
 					remoteUrl = "https://example.com/" + remotePaths[0];
 					const providerRepoInfo = await providerRegistry.getRepoInfo({
@@ -697,12 +702,27 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				};
 			}
 
+			let originNames;
+			let remoteBranch;
+			const branchRemote = await git.getBranchRemote(repo.path, branch);
+			if (!branchRemote) {
+				warning = {
+					type: "REQUIRES_UPSTREAM"
+				};
+				originNames = remotes && remotes.length ? remotes.map(_ => _.name) : [];
+			} else {
+				remoteBranch = branchRemote;
+			}
+
 			return {
 				success: success,
-				remote: remoteUrl,
+				remoteUrl: remoteUrl,
 				providerId: providerId,
+				remotes: remotes,
+				origins: originNames,
+				remoteBranch: remoteBranch,
 				pullRequestProvider: {
-					isConnected: isConnected,
+					isConnected: isProviderConnected,
 					defaultBranch: defaultBranch
 				},
 				review: {
@@ -726,7 +746,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 	@lspHandler(CreatePullRequestRequestType)
 	async createPullRequest(request: CreatePullRequestRequest): Promise<CreatePullRequestResponse> {
-		const { providerRegistry, users } = SessionContainer.instance();
+		const { git, providerRegistry, users } = SessionContainer.instance();
 		try {
 			const review = await this.getById(request.reviewId);
 			const approvers: { name: string }[] = [];
@@ -738,6 +758,27 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 							approvers.push({ name: user.username });
 						}
 					} catch {}
+				}
+			}
+
+			if (request.remoteName) {
+				const review = await this.getById(request.reviewId);
+				const repo = await git.getRepositoryById(review.reviewChangesets[0].repoId);
+				if (!repo) {
+					return {
+						success: false,
+						error: { type: "REPO_NOT_FOUND" }
+					};
+				}
+
+				const result = await git.setBranchRemote(
+					repo.path,
+					request.remoteName,
+					request.headRefName
+				);
+
+				if (result) {
+					Logger.debug(result);
 				}
 			}
 

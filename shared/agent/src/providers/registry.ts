@@ -327,6 +327,8 @@ export class ThirdPartyProviderRegistry {
 			throw new Error(`Provider(${provider.name}) doesn't support pull requests`);
 		}
 
+		// TODO clean it up remote here
+
 		const response = await pullRequestProvider.getRepoInfo(request);
 		return response;
 	}

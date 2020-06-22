@@ -679,6 +679,11 @@ export async function getRemotePaths<R extends { path: string }>(
 export interface ProviderGetRepoInfoRequest {
 	providerId: string;
 	remote: string;
+	// TODO
+	// remoteIdentifier: {
+	// 	owner: string;
+	// 	name: string;
+	// };
 }
 
 export interface ProviderPullRequestInfo {
