@@ -1979,7 +1979,7 @@ class ReviewForm extends React.Component<Props, State> {
 										action: () => this.removeReviewer(email)
 									}
 								] as any;
-								if (!person.isRegistered) {
+								if (!person.isRegistered && this.props.isCurrentUserAdmin) {
 									menuItems.push({
 										label: (
 											<span>
