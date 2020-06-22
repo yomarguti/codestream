@@ -457,7 +457,7 @@ const StartWritingCode = (
 		question with the team, so no context switch is required for you or your teammates. Your
 		teammates can participate in this discussion directly in their IDE, or via integrations with
 		Slack, MS Teams, or email.
-		<VideoLink href={"FIXME"}>
+		<VideoLink href={"https://www.youtube.com/watch?v=RPaIIZgaFK8"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
 			<span>If I ask comments on my local branch, how do my teammates see them?</span>
 		</VideoLink>
@@ -484,7 +484,7 @@ const RequestFeedback = (
 		about code with commit flow. This means you can request a review on code you haven't committed
 		&amp; pushed yet, and CodeStream will take care of the mechanics of making sure your teammate
 		can see your changes by packaging up a diffset along with the review object.
-		<VideoLink href={"FIXME"}>
+		<VideoLink href={"https://youtu.be/2AyqT4z5Omc"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
 			<span>When should I request feedback?</span>
 		</VideoLink>
@@ -502,7 +502,7 @@ const DiscussAndRefine = (
 		<br />
 		Unlike other systems, your discussion and commit cadance can be disconnected. This means you can
 		share, review, and discuss code without worrying about committing it first.
-		<VideoLink href={"https://youtu.be/2AyqT4z5Omc"}>
+		<VideoLink href={"FIXME"} style={{ display: "none" }}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
 			<span>Code Review Walkthrough</span>
 		</VideoLink>
@@ -520,7 +520,7 @@ const GetFinalApproval = (
 		However your team works, CodeStream provides the tools to make it easy and transparent, sharing
 		every status change with the team through the Acitivty feed, at-mentions, and configurable
 		notifications.
-		<VideoLink href={"FIXME"}>
+		<VideoLink href={"FIXME"} style={{ display: "none" }}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
 			<span>How are reviewers assigned?</span>
 		</VideoLink>
@@ -555,7 +555,7 @@ const CreatePRAndMerge = (
 		<br />
 		Once the PR is created, final signoff should be a breeze, so code can be merged in on-time and
 		stress-free.
-		<VideoLink href={"FIXME"}>
+		<VideoLink href={"FIXME"} style={{ display: "none" }}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
 			<span>How do I connect to my code host provider?</span>
 		</VideoLink>
@@ -617,7 +617,7 @@ const GrabATicket = (
 		the context of your changes. Down the road, you can connect the dots in reverse, going from code
 		to commit to review to ticket, to get a better understanding not only of what changed, but also
 		why.
-		<VideoLink href={"FIXME"}>
+		<VideoLink href={"FIXME"} style={{ display: "none" }}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
 			<span>How do I grab a ticket?</span>
 		</VideoLink>
@@ -678,7 +678,7 @@ const GrabAPermalink = (
 		CodeStream's permalinks allow you to select a block of code and share a link to it, and that
 		link will stay <b>live</b>, pointing to the right locaion within your codebase, even as your
 		code evolves and you merge new code in.
-		<VideoLink href={"FIXME"}>
+		<VideoLink href={"FIXME"} style={{ display: "none" }}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
 			<span>How do live permalinks work?</span>
 		</VideoLink>

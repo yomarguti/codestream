@@ -2075,10 +2075,8 @@ class CodemarkForm extends React.Component<Props, State> {
 					{this.renderTags()}
 					{this.renderCodeBlocks()}
 					{this.props.multiLocation && <div style={{ height: "10px" }} />}
-					{this.renderEmailAuthors()}
-					{commentType !== "link" && this.props.teamProvider === "codestream"
-						? this.renderSharingControls()
-						: this.renderCrossPostMessage(commentType)}
+					{commentType !== "link" && this.renderEmailAuthors()}
+					{commentType !== "link" && this.renderSharingControls()}
 					{this.props.currentReviewId && this.renderRequireChange()}
 					{true && (
 						<div
