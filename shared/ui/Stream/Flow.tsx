@@ -486,7 +486,7 @@ const RequestFeedback = (
 		can see your changes by packaging up a diffset along with the review object.
 		<VideoLink href={"https://youtu.be/2AyqT4z5Omc"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
-			<span>When should I request feedback?</span>
+			<span>Code Review Walkthrough</span>
 		</VideoLink>
 	</Content>
 );
@@ -504,7 +504,7 @@ const DiscussAndRefine = (
 		share, review, and discuss code without worrying about committing it first.
 		<VideoLink href={"FIXME"} style={{ display: "none" }}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
-			<span>Code Review Walkthrough</span>
+			<span>Updating a Code Review to Address Changes</span>
 		</VideoLink>
 	</Content>
 );
