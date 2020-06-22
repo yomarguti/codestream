@@ -18,7 +18,9 @@ import {
 	GitLabBoard,
 	GitLabCreateCardRequest,
 	GitLabCreateCardResponse,
-	MoveThirdPartyCardRequest
+	MoveThirdPartyCardRequest,
+	FetchThirdPartyCardsRequest,
+	FetchThirdPartyCardsResponse
 } from "../protocol/agent.protocol";
 import {
 	CodemarkType,
@@ -182,8 +184,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return { ...response.body, url: response.body.web_url };
 	}
 
+	// FIXME
 	@log()
 	async moveCard(request: MoveThirdPartyCardRequest) {}
+
+	@log()
+	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
+		// FIXME
+		return { cards: [] };
+	}
 
 	private async getMemberId() {
 		const userResponse = await this.get<{ id: string; [key: string]: any }>(`/user`);

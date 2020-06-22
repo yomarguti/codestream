@@ -112,7 +112,8 @@ const ButtonRow = styled.div`
 	text-align: center;
 	margin-top: 20px;
 	button {
-		width: 18em;
+		white-space: nowrap;
+		width: 16em;
 	}
 `;
 
