@@ -190,8 +190,25 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	@log()
 	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
-		// FIXME
-		return { cards: [] };
+		await this.ensureConnected();
+
+		const { body } = await this.get<any[]>(
+			`/issues?${qs.stringify({
+				state: "opened",
+				scope: "assigned_to_me"
+			})}`
+		);
+		const cards = body.map(card => {
+			return {
+				id: card.id,
+				url: card.web_url,
+				title: card.title,
+				modifiedAt: new Date(card.updated_at).getTime(),
+				tokenId: card.iid,
+				body: card.description
+			};
+		});
+		return { cards };
 	}
 
 	private async getMemberId() {

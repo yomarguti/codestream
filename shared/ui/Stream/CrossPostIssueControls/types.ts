@@ -50,7 +50,14 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		helpUrl:
 			"https://help.github.com/en/enterprise/2.15/user/articles/creating-a-personal-access-token-for-the-command-line"
 	},
-	gitlab: { displayName: "GitLab", icon: "gitlab" },
+	gitlab: {
+		displayName: "GitLab",
+		icon: "gitlab",
+		boardLabel: "repo",
+		listLabel: "type",
+		cardLabel: "issue",
+		supportsStartWork: true
+	},
 	gitlab_enterprise: {
 		displayName: "GitLab Self-Managed",
 		shortDisplayName: "GitLab",

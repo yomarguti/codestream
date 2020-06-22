@@ -346,7 +346,10 @@ export function GettingStarted(props: GettingStartedProps) {
 									<Button
 										variant="secondary"
 										size="compact"
-										onClick={() => dispatch(setUserPreference(["skipGettingStarted"], true))}
+										onClick={() => {
+											dispatch(setUserPreference(["skipGettingStarted"], true));
+											dispatch(openPanel(WebviewPanels.Activity));
+										}}
 									>
 										Mark all as done
 									</Button>

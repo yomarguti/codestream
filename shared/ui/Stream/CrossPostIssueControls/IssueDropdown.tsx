@@ -9,28 +9,18 @@ import {
 	ThirdPartyProviderConfig,
 	ThirdPartyProviders,
 	FetchThirdPartyBoardsRequestType,
-	TrelloBoard,
-	TrelloList,
 	FetchThirdPartyCardsRequestType,
-	ThirdPartyProviderCard,
-	TrelloCard
+	ThirdPartyProviderCard
 } from "@codestream/protocols/agent";
 import { CSMe } from "@codestream/protocols/api";
 import { PrePRProviderInfoModalProps, PrePRProviderInfoModal } from "../PrePRProviderInfoModal";
 import { CodeStreamState } from "@codestream/webview/store";
 import { getConnectedProviderNames } from "@codestream/webview/store/providers/reducer";
 import { updateForProvider } from "@codestream/webview/store/activeIntegrations/actions";
-import { getIntegrationData } from "@codestream/webview/store/activeIntegrations/reducer";
-import {
-	TrelloIntegrationData,
-	ActiveIntegrationData
-} from "@codestream/webview/store/activeIntegrations/types";
 import { setUserPreference } from "../actions";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "../..";
 import { keyFilter } from "@codestream/webview/utils";
 import { StartWorkIssueContext } from "../StatusPanel";
-import { PreferencesActionsType } from "@codestream/webview/store/preferences/types";
 
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
