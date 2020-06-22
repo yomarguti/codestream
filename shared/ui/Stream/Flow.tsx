@@ -438,7 +438,7 @@ const CreateBranch = (
 		<br />
 		CodeStream makes it easy to get started by integrating with your issue provider, so you can grab
 		a ticket without leaving your IDE, and your status is shared automatically with your team.
-		<VideoLink href={"FIXME"}>
+		<VideoLink href={"https://youtu.be/4MHv8hta02s"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
 			<span>Grab a Ticket &amp; Create a Branch</span>
 		</VideoLink>
