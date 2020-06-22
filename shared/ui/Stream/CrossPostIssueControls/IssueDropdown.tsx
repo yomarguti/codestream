@@ -370,7 +370,7 @@ export function CardDropdown(props: React.PropsWithChildren<DropdownProps>) {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { preferences = {} } = state;
 		const currentUser = state.users[state.session.userId!] as CSMe;
-		const startWorkPreferences = preferences.startWork || {};
+		const startWorkPreferences = preferences.startWork || EMPTY_ARRAY;
 		const providerIds = props.providers.map(provider => provider.id).join(":");
 		return { currentUser, startWorkPreferences, providerIds };
 	});

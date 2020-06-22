@@ -185,7 +185,8 @@ export class ThirdPartyProviderRegistry {
 			throw new Error(`Provider(${provider.name}) doesn't support issues`);
 		}
 
-		return issueProvider.getCards(request);
+		if (issueProvider.getCards) return issueProvider.getCards(request);
+		else return Promise.resolve({ cards: [] });
 	}
 
 	@log()
