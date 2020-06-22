@@ -554,7 +554,7 @@ export const CreatePullRequestPanel = props => {
 				<div className="panel-header">
 					<CancelButton onClick={props.closePanel} />
 				</div>
-				<fieldset className="form-body" style={{ width: "35em", padding: "20px 0" }}>
+				<fieldset className="form-body" style={{ width: "85%", padding: "20px 0" }}>
 					<div className="outline-box">
 						<h3>Open a Pull Request</h3>
 						<div id="controls">
