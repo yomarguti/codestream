@@ -15,12 +15,12 @@ import {
 	DocumentMarker,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
+	FetchThirdPartyCardsRequest,
+	FetchThirdPartyCardsResponse,
 	GitLabBoard,
 	GitLabCreateCardRequest,
 	GitLabCreateCardResponse,
-	MoveThirdPartyCardRequest,
-	FetchThirdPartyCardsRequest,
-	FetchThirdPartyCardsResponse
+	MoveThirdPartyCardRequest
 } from "../protocol/agent.protocol";
 import {
 	CodemarkType,
