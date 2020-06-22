@@ -428,6 +428,9 @@ export interface CSBitbucketProviderInfo {
 	expiresAt: number;
 	userId: string;
 	hosts: { [host: string]: CSBitbucketProviderInfo };
+	data?: {
+		scopes?: string;
+	};
 }
 
 export interface CSGitHubProviderInfo {

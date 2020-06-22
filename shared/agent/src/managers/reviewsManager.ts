@@ -50,6 +50,8 @@ import {
 	UpdateReviewResponse
 } from "../protocol/agent.protocol";
 import {
+	CSBitbucketProviderInfo,
+	CSMe,
 	CSReview,
 	CSReviewChangeset,
 	CSReviewCheckpoint,
@@ -60,13 +62,13 @@ import {
 import {
 	getRemotePaths,
 	ThirdPartyIssueProvider,
+	ThirdPartyProvider,
 	ThirdPartyProviderSupportsPullRequests
 } from "../providers/provider";
 import { log, lsp, lspHandler, Strings } from "../system";
 import { gate } from "../system/decorators/gate";
 import { xfs } from "../xfs";
 import { CachedEntityManagerBase, Id } from "./entityManager";
-import { GitWarnings } from "git/git";
 
 const uriRegexp = /codestream-diff:\/\/(\w+)\/(\w+)\/(\w+)\/(\w+)\/(.+)/;
 
@@ -581,11 +583,36 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		}
 	}
 
+	private async isProviderConnected(
+		providerId: string,
+		provider: ThirdPartyProvider,
+		user: CSMe,
+		teamId: string
+	) {
+		if (!user || !user.providerInfo) return false;
+		const teamProviderInfo = user.providerInfo[teamId];
+		if (!teamProviderInfo) return false;
+		if (providerId === "bitbucket*org") {
+			const bitbucket = teamProviderInfo["bitbucket"] as CSBitbucketProviderInfo;
+			// require old apps reconnect to get the PR write scope
+			if (
+				bitbucket &&
+				bitbucket.data &&
+				bitbucket.data.scopes &&
+				bitbucket.data.scopes.indexOf("pullrequest:write") === -1
+			) {
+				await provider.disconnect({});
+				return false;
+			}
+		}
+		return true;
+	}
+
 	@lspHandler(CheckPullRequestPreconditionsRequestType)
 	async checkPullRequestPreconditions(
 		request: CheckPullRequestPreconditionsRequest
 	): Promise<CheckPullRequestPreconditionsResponse> {
-		const { git, providerRegistry } = SessionContainer.instance();
+		const { git, providerRegistry, session } = SessionContainer.instance();
 		let warning = undefined;
 		let remotes: GitRemote[] | undefined;
 		let repo;
@@ -625,7 +652,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			let defaultBranch: string | undefined = "";
 			let isProviderConnected = false;
 
-			const providers = providerRegistry.getConnectedProviders(
+			const connectedProviders = providerRegistry.getConnectedProviders(
 				user.user,
 				(p): p is ThirdPartyIssueProvider & ThirdPartyProviderSupportsPullRequests => {
 					const thirdPartyIssueProvider = p as ThirdPartyIssueProvider;
@@ -642,7 +669,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			let success = false;
 			let foundOne = false;
 			const projectsByRemotePath = new Map(remotes.map(obj => [obj.path, obj]));
-			for (const provider of providers) {
+			for (const provider of connectedProviders) {
 				const remotePaths = await provider.getRemotePaths(repo, projectsByRemotePath);
 				if (remotePaths && remotePaths.length) {
 					if (foundOne) {
@@ -657,7 +684,15 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 						break;
 					}
 					providerId = provider.getConfig().id;
-					isProviderConnected = true;
+					isProviderConnected = await this.isProviderConnected(
+						providerId,
+						provider,
+						user.user,
+						session.teamId
+					);
+					if (!isProviderConnected) {
+						break;
+					}
 					// just need any url here...
 					remoteUrl = "https://example.com/" + remotePaths[0];
 					const providerRepoInfo = await providerRegistry.getRepoInfo({
