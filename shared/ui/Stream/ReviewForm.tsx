@@ -1123,10 +1123,17 @@ class ReviewForm extends React.Component<Props, State> {
 												<b>{currentUser.email}</b> vs. <b>{currentUserScmEmail}</b>), which impairs
 												CodeStream's ability to identify which commits are yours. Please{" "}
 												<a onClick={this.goSetEmail}>update your email address</a> so that they
-												match, or{" "}
-												<a onClick={() => this.addBlameMap(currentUserScmEmail, currentUser.id)}>
-													claim code written by {currentUserScmEmail} as yours
-												</a>
+												match
+												{this.props.isCurrentUserAdmin && (
+													<>
+														, or{" "}
+														<a
+															onClick={() => this.addBlameMap(currentUserScmEmail, currentUser.id)}
+														>
+															claim code written by {currentUserScmEmail} as yours
+														</a>
+													</>
+												)}
 												.
 											</CSText>
 										</span>
