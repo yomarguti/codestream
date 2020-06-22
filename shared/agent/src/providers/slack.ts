@@ -8,14 +8,17 @@ import {
 	CreateThirdPartyPostResponse,
 	FetchThirdPartyChannelsRequest,
 	FetchThirdPartyChannelsResponse,
-	ThirdPartyDisconnect
+	ThirdPartyDisconnect,
+	UpdateThirdPartyStatusRequest,
+	UpdateThirdPartyStatusResponse
 } from "../protocol/agent.protocol";
 import { CSMarkerLocations, CSSlackProviderInfo, StreamType } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
-import { ThirdPartyPostProviderBase } from "./provider";
+import { ThirdPartyPostProviderBase, ThirdPartyProviderSupportsStatus } from "./provider";
 
 @lspProvider("slack")
-export class SlackProvider extends ThirdPartyPostProviderBase<CSSlackProviderInfo> {
+export class SlackProvider extends ThirdPartyPostProviderBase<CSSlackProviderInfo>
+	implements ThirdPartyProviderSupportsStatus {
 	get displayName() {
 		return "Slack";
 	}
@@ -131,6 +134,22 @@ export class SlackProvider extends ThirdPartyPostProviderBase<CSSlackProviderInf
 		return {
 			channels: channels
 		};
+	}
+
+	// this needs the users.profile:write scope
+	@log()
+	async updateStatus(
+		request: UpdateThirdPartyStatusRequest
+	): Promise<UpdateThirdPartyStatusResponse> {
+		await this.ensureConnected();
+		this._lastTeamId = request.providerTeamId;
+
+		const slackClient = this.getClient(request.providerTeamId);
+		if (!slackClient) {
+			return { status: undefined };
+		}
+		const status = await slackClient.updateStatus(request);
+		return status;
 	}
 
 	@log()

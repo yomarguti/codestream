@@ -215,6 +215,8 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 
 	@log()
 	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
+		void (await this.ensureConnected());
+
 		const cards: ThirdPartyProviderCard[] = [];
 		if (this._reposWithIssues.length === 0) await this.getBoards();
 		await Promise.all(

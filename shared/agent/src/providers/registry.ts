@@ -34,7 +34,10 @@ import {
 	MoveThirdPartyCardRequestType,
 	MoveThirdPartyCardResponse,
 	RemoveEnterpriseProviderRequest,
-	RemoveEnterpriseProviderRequestType
+	RemoveEnterpriseProviderRequestType,
+	UpdateThirdPartyStatusRequestType,
+	UpdateThirdPartyStatusRequest,
+	UpdateThirdPartyStatusResponse
 } from "../protocol/agent.protocol";
 import { CodeStreamSession } from "../session";
 import { getProvider, getRegisteredProviders, log, lsp, lspHandler } from "../system";
@@ -243,6 +246,28 @@ export class ThirdPartyProviderRegistry {
 		}
 
 		return postProvider.getChannels(request);
+	}
+
+	@log()
+	@lspHandler(UpdateThirdPartyStatusRequestType)
+	async updateStatus(
+		request: UpdateThirdPartyStatusRequest
+	): Promise<UpdateThirdPartyStatusResponse> {
+		const provider = getProvider(request.providerId);
+		if (provider === undefined) {
+			throw new Error(`No registered provider for '${request.providerId}'`);
+		}
+
+		const statusProvider = provider as ThirdPartyPostProvider;
+		if (
+			statusProvider == null ||
+			typeof statusProvider.supportsStatus !== "function" ||
+			!statusProvider.supportsStatus()
+		) {
+			throw new Error(`Provider(${provider.name}) doesn't support updating status`);
+		}
+
+		return statusProvider.updateStatus(request);
 	}
 
 	@log()

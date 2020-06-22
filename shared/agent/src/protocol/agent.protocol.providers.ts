@@ -169,6 +169,25 @@ export const MoveThirdPartyCardRequestType = new RequestType<
 	void
 >("codestream/provider/cards/move");
 
+export interface UpdateThirdPartyStatusRequest {
+	providerId: string;
+	providerTeamId: string;
+	text: string;
+	icon?: string;
+	expires?: number;
+}
+
+export interface UpdateThirdPartyStatusResponse {
+	status: any;
+}
+
+export const UpdateThirdPartyStatusRequestType = new RequestType<
+	UpdateThirdPartyStatusRequest,
+	UpdateThirdPartyStatusResponse,
+	void,
+	void
+>("codestream/provider/status/update");
+
 export interface CreateThirdPartyPostRequest {
 	providerId: string;
 	providerTeamId: string;

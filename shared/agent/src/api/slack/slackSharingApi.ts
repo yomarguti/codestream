@@ -8,9 +8,9 @@ import {
 	WebClient,
 	WebClientEvent
 } from "@slack/web-api";
-import { Agent as HttpsAgent } from "https";
+import { Agent as HttpsAgent, request } from "https";
 import HttpsProxyAgent from "https-proxy-agent";
-import { uniq } from "lodash-es";
+import { uniq, method } from "lodash-es";
 import { Container, SessionContainer } from "../../container";
 import { Logger, TraceLevel } from "../../logger";
 import {
@@ -19,7 +19,9 @@ import {
 	CreateSharedExternalPostRequest,
 	FetchStreamsRequest,
 	FetchStreamsResponse,
-	FetchUsersResponse
+	FetchUsersResponse,
+	UpdateThirdPartyStatusRequest,
+	UpdateThirdPartyStatusResponse
 } from "../../protocol/agent.protocol";
 import {
 	CSChannelStream,
@@ -51,6 +53,9 @@ import {
 	toSlackReviewPostBlocks,
 	UserMaps
 } from "./slackSharingApi.adapters";
+import { error } from "util";
+import { group } from "console";
+import async from "async";
 
 interface DeferredStreamRequest<TResult> {
 	action(): Promise<TResult>;
@@ -71,6 +76,7 @@ type SlackMethods =
 	| "chat.postMessage"
 	| "conversations.info"
 	| "groups.info"
+	| "users.profile.set"
 	| "users.info";
 
 export class SlackSharingApiProvider {
@@ -172,10 +178,10 @@ export class SlackSharingApiProvider {
 			const slackUsers = (await this.fetchUsers()).users;
 
 			const userMaps = {
-				slackUsernamesById : new Map(),
+				slackUsernamesById: new Map(),
 				slackUserIdsByUsername: new Map(),
 				slackUserIdsByEmail: new Map(),
-				codeStreamUsersByUsername : new Map(),
+				codeStreamUsersByUsername: new Map(),
 				codeStreamUsersByUserId: new Map()
 			};
 
@@ -286,15 +292,10 @@ export class SlackSharingApiProvider {
 				// Set the fallback (notification) content for the message
 				text = `${codemark.title || ""}${
 					codemark.title && codemark.text ? `\n\n` : ""
-					}${codemark.text || ""}`;
+				}${codemark.text || ""}`;
 			} else if (request.review != null) {
 				const review = request.review;
-				blocks = toSlackReviewPostBlocks(
-					review,
-					userMaps,
-					repoHash,
-					this._slackUserId
-				);
+				blocks = toSlackReviewPostBlocks(review, userMaps, repoHash, this._slackUserId);
 				// Set the fallback (notification) content for the message
 				text = `${review.title || ""}${review.title && review.text ? `\n\n` : ""}${review.text ||
 					""}`;
@@ -312,7 +313,12 @@ export class SlackSharingApiProvider {
 			const { ok, error, message } = response as WebAPICallResult & { message?: any; ts?: any };
 			if (!ok) throw new Error(error);
 
-			const post = await fromSlackPost(message, channelId, userMaps.slackUsernamesById, this._codestreamTeamId);
+			const post = await fromSlackPost(
+				message,
+				channelId,
+				userMaps.slackUsernamesById,
+				this._codestreamTeamId
+			);
 			const { postId } = fromSlackPostId(post.id, post.streamId);
 			createdPostId = postId;
 
@@ -331,13 +337,36 @@ export class SlackSharingApiProvider {
 		}
 	}
 
+	@log()
+	async updateStatus(
+		request: UpdateThirdPartyStatusRequest
+	): Promise<UpdateThirdPartyStatusResponse> {
+		try {
+			const response = await this.slackApiCall("users.profile.set", {
+				profile: {
+					status_text: request.text,
+					status_emoji: request.icon || ":desktop_computer:",
+					status_expiration: 0
+				}
+			});
+
+			const { ok, error } = response as WebAPICallResult;
+			if (!ok) throw new Error(error);
+
+			return {
+				status: ok
+			};
+		} finally {
+		}
+	}
+
 	@log({
 		exit: (r: FetchStreamsResponse) =>
 			`\n${r.streams
 				.map(
 					s =>
 						`\t${s.id} = ${s.name}${s.priority == null ? "" : `, p=${s.priority}`}${
-						s.type === StreamType.Direct ? `, closed=${s.isClosed}` : ""
+							s.type === StreamType.Direct ? `, closed=${s.isClosed}` : ""
 						}`
 				)
 				.join("\n")}\ncompleted`
@@ -365,7 +394,7 @@ export class SlackSharingApiProvider {
 				Logger.log(
 					cc,
 					`Fetched page; cursor=${response.response_metadata &&
-					response.response_metadata.next_cursor}`
+						response.response_metadata.next_cursor}`
 				);
 
 				conversations.push(...data);
@@ -448,7 +477,7 @@ export class SlackSharingApiProvider {
 					Logger.warn(
 						cc,
 						`TIMEOUT ${timeoutMs / 1000}s exceeded while fetching stream '${
-						deferred.stream.id
+							deferred.stream.id
 						}' in the background`
 					);
 
@@ -521,7 +550,7 @@ export class SlackSharingApiProvider {
 				Logger.log(
 					cc,
 					`Fetched page; cursor=${response.response_metadata &&
-					response.response_metadata.next_cursor}`
+						response.response_metadata.next_cursor}`
 				);
 
 				channels.push(...data);
@@ -533,10 +562,10 @@ export class SlackSharingApiProvider {
 		const streams = [];
 		let pending:
 			| {
-				action(): Promise<CSChannelStream>;
-				id: string;
-				name: string;
-			}[]
+					action(): Promise<CSChannelStream>;
+					id: string;
+					name: string;
+			  }[]
 			| undefined;
 
 		let counts;
@@ -632,7 +661,7 @@ export class SlackSharingApiProvider {
 				Logger.log(
 					cc,
 					`Fetched page; cursor=${response.response_metadata &&
-					response.response_metadata.next_cursor}`
+						response.response_metadata.next_cursor}`
 				);
 
 				groups.push(...data);
@@ -643,11 +672,11 @@ export class SlackSharingApiProvider {
 		const streams = [];
 		let pending:
 			| {
-				action(): Promise<CSChannelStream | CSDirectStream>;
-				grouping: number;
-				id: string;
-				priority: number;
-			}[]
+					action(): Promise<CSChannelStream | CSDirectStream>;
+					grouping: number;
+					id: string;
+					priority: number;
+			  }[]
 			| undefined;
 		let counts;
 		let s;
@@ -765,7 +794,7 @@ export class SlackSharingApiProvider {
 				Logger.log(
 					cc,
 					`Fetched page; cursor=${response.response_metadata &&
-					response.response_metadata.next_cursor}`
+						response.response_metadata.next_cursor}`
 				);
 
 				ims.push(...data);
@@ -777,10 +806,10 @@ export class SlackSharingApiProvider {
 		const streams = [];
 		let pending:
 			| {
-				action(): Promise<CSDirectStream>;
-				id: string;
-				priority: number;
-			}[]
+					action(): Promise<CSDirectStream>;
+					id: string;
+					priority: number;
+			  }[]
 			| undefined;
 		let counts;
 		let s;
@@ -937,7 +966,7 @@ export class SlackSharingApiProvider {
 			Logger.log(
 				cc,
 				`Fetched page; cursor=${response.response_metadata &&
-				response.response_metadata.next_cursor}`
+					response.response_metadata.next_cursor}`
 			);
 
 			members.push(...data);
@@ -957,11 +986,11 @@ export class SlackSharingApiProvider {
 		args: false,
 		prefix: (context, method, request) =>
 			`${context.prefix} ${method}(${
-			request != null
-				? Logger.toLoggable(request, (key, value) =>
-					logFilterKeys.has(key) ? `<${key}>` : Logger.sanitize(key, value)
-				)
-				: ""
+				request != null
+					? Logger.toLoggable(request, (key, value) =>
+							logFilterKeys.has(key) ? `<${key}>` : Logger.sanitize(key, value)
+					  )
+					: ""
 			})`
 	})
 	protected async slackApiCall<
@@ -1010,7 +1039,12 @@ export class SlackSharingApiProvider {
 			return response as TResponse;
 		} catch (ex) {
 			Logger.error(ex, cc, ex.data != null ? JSON.stringify(ex.data) : undefined);
-			if (ex.data && ex.data.response_metadata && ex.data.response_metadata.messages && ex.data.response_metadata.messages.length) {
+			if (
+				ex.data &&
+				ex.data.response_metadata &&
+				ex.data.response_metadata.messages &&
+				ex.data.response_metadata.messages.length
+			) {
 				ex.message = `${ex.message}. ${ex.data.response_metadata.messages.join(",")}`;
 			}
 			throw ex;
@@ -1021,11 +1055,11 @@ export class SlackSharingApiProvider {
 		args: false,
 		prefix: (context, method, request) =>
 			`${context.prefix} ${method}(${
-			request != null
-				? Logger.toLoggable(request, (key, value) =>
-					logFilterKeys.has(key) ? `<${key}>` : Logger.sanitize(key, value)
-				)
-				: ""
+				request != null
+					? Logger.toLoggable(request, (key, value) =>
+							logFilterKeys.has(key) ? `<${key}>` : Logger.sanitize(key, value)
+					  )
+					: ""
 			})`
 	})
 	protected async slackApiCallPaginated<
@@ -1043,7 +1077,7 @@ export class SlackSharingApiProvider {
 		}
 	}
 
-	async dispose() { }
+	async dispose() {}
 }
 
 const logFilterKeys = new Set(["text", "attachments"]);

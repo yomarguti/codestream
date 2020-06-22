@@ -19,12 +19,19 @@ import {
 	OpenUrlRequestType,
 	MoveThirdPartyCardRequestType,
 	GetReposScmRequestType,
-	ReposScm
+	ReposScm,
+	UpdateThirdPartyStatusRequestType
 } from "@codestream/protocols/agent";
 import IssueDropdown from "./CrossPostIssueControls/IssueDropdown";
 import { ConfigureBranchNames } from "./ConfigureBranchNames";
 import { VideoLink } from "./Flow";
 import { MarkdownText } from "./MarkdownText";
+import {
+	getProviderConfig,
+	isConnected,
+	getConnectedSharingTargets
+} from "../store/providers/reducer";
+import { SharingAttributes } from "./SharingControls";
 
 const StyledCheckbox = styled(Checkbox)`
 	color: var(--text-color-subtle);
@@ -165,7 +172,22 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		const team = state.teams[teamId];
 		const settings = team.settings || {};
 		const { preferences = {} } = state;
-		const workPreferences = preferences["startWork"] || {};
+		const workPrefs = preferences["startWork"] || {};
+
+		const currentTeamId = state.context.currentTeamId;
+		const preferencesForTeam = state.preferences[currentTeamId] || {};
+
+		// this is what we've persisted in the server as the last selection the user made
+		const lastShareAttributes: SharingAttributes | undefined =
+			preferencesForTeam.lastShareAttributes;
+
+		const shareTargets = getConnectedSharingTargets(state);
+		const selectedShareTarget = shareTargets.find(
+			target =>
+				target.teamId ===
+				(state.context.shareTargetTeamId ||
+					(lastShareAttributes && lastShareAttributes.providerTeamId))
+		);
 
 		return {
 			status,
@@ -177,10 +199,13 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			branchMaxLength: settings.branchMaxLength || 40,
 			branchTicketTemplate: settings.branchTicketTemplate || "feature/ticket-{id}",
 			branchDescriptionTemplate: settings.branchDescriptionTemplate || "feature/{title}",
-			createBranch: Object.keys(workPreferences).includes("createBranch")
-				? workPreferences.createBranch
-				: true,
-			moveCard: Object.keys(workPreferences).includes("moveCard") ? workPreferences.moveCard : true
+			createBranch: Object.keys(workPrefs).includes("createBranch") ? workPrefs.createBranch : true,
+			moveCard: Object.keys(workPrefs).includes("moveCard") ? workPrefs.moveCard : true,
+			updateSlack: Object.keys(workPrefs).includes("updateSlack") ? workPrefs.updateSlack : true,
+			slackConfig: getProviderConfig(state, "slack"),
+			// msTeamsConfig: getProviderConfig(state, "msteams"),
+			isConnectedToSlack: isConnected(state, { name: "slack" }),
+			selectedShareTarget: selectedShareTarget || shareTargets[0]
 		};
 	});
 
@@ -199,11 +224,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			  } as any)
 			: undefined
 	);
-	// const [icon, setIcon] = useState(status.icon || ":desktop_computer:");
-	// const [moveCard, setMoveCard] = useState(true);
-	// const [createBranch, setCreateBranch] = useState(true);
 	const [manuallySelectedBranch, setManuallySelectedBranch] = useState("");
-	// const [newBranch, setNewBranch] = useState("");
 	const [currentBranch, setCurrentBranch] = useState("");
 	const [editingBranch, setEditingBranch] = useState(false);
 	const [branches, setBranches] = useState([] as string[]);
@@ -216,21 +237,17 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const [fromBranch, setFromBranch] = useState("");
 	const inputRef = React.useRef<HTMLInputElement>(null);
 
-	const { moveCard, createBranch } = derivedState;
+	const { moveCard, updateSlack, createBranch } = derivedState;
 
+	const setUpdateSlack = value => dispatch(setUserPreference(["startWork", "updateSlack"], value));
 	const setMoveCard = value => dispatch(setUserPreference(["startWork", "moveCard"], value));
 	const setCreateBranch = value =>
 		dispatch(setUserPreference(["startWork", "createBranch"], value));
 
 	const handleChangeStatus = value => {
-		// if (card) return;
 		setLabel(value || "");
 		setCard(undefined);
 		setAutocomplete(true);
-	};
-
-	const handleBlurStatus = () => {
-		// setAutocomplete(false);
 	};
 
 	const selectCard = card => {
@@ -281,9 +298,6 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			.substr(0, derivedState.branchMaxLength);
 	};
 
-	const makeBranchName = (value: string) =>
-		replaceDescriptionTokens(derivedState.branchDescriptionTemplate, value);
-
 	const getBranches = async (uri?: string) => {
 		if (!uri && !derivedState.textEditorUri) return;
 		if (uri) setRepoUri(uri);
@@ -315,6 +329,10 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const showCreateBranchCheckbox = React.useMemo(() => {
 		return !same && label; // && label.startsWith("http");
 	}, [label, same]);
+	const showUpdateSlackCheckbox = React.useMemo(() => {
+		return false;
+		// return !same && label && derivedState.isConnectedToSlack;
+	}, [label, same, derivedState.isConnectedToSlack]);
 
 	const newBranch = React.useMemo(() => {
 		// setNewBranch(newBranch);
@@ -378,6 +396,16 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 				providerId: card.providerId,
 				cardId: card.id,
 				listId: moveCardDestinationId
+			});
+		}
+
+		const { slackConfig } = derivedState;
+		if (slackConfig && showUpdateSlackCheckbox && updateSlack) {
+			const response = await HostApi.instance.send(UpdateThirdPartyStatusRequestType, {
+				providerId: slackConfig.id,
+				providerTeamId: derivedState.selectedShareTarget.teamId,
+				text: label,
+				icon: ":desktop_computer:"
 			});
 		}
 
@@ -582,7 +610,6 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								disabled={card ? true : false}
 								type="text"
 								onChange={e => handleChangeStatus(e.target.value)}
-								onBlur={handleBlurStatus}
 								placeholder="Enter description or select ticket"
 							/>
 						</StatusInput>
@@ -633,6 +660,15 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 									<InlineMenu items={moveCardItems}>
 										{moveCardDestinationLabel || "make selection"}
 									</InlineMenu>
+								</StyledCheckbox>
+							)}
+							{showUpdateSlackCheckbox && (
+								<StyledCheckbox
+									name="update-slack"
+									checked={updateSlack}
+									onChange={v => setUpdateSlack(v)}
+								>
+									Update my status on Slack
 								</StyledCheckbox>
 							)}
 						</div>

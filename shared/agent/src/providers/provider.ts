@@ -26,7 +26,9 @@ import {
 	MoveThirdPartyCardResponse,
 	RemoveEnterpriseProviderRequest,
 	ThirdPartyDisconnect,
-	ThirdPartyProviderConfig
+	ThirdPartyProviderConfig,
+	UpdateThirdPartyStatusRequest,
+	UpdateThirdPartyStatusResponse
 } from "../protocol/agent.protocol";
 import { CSMe, CSProviderInfos } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
@@ -60,6 +62,10 @@ export interface ThirdPartyProviderSupportsIssues {
 export interface ThirdPartyProviderSupportsPosts {
 	createPost(request: CreateThirdPartyPostRequest): Promise<CreateThirdPartyPostResponse>;
 	getChannels(request: FetchThirdPartyChannelsRequest): Promise<FetchThirdPartyChannelsResponse>;
+}
+
+export interface ThirdPartyProviderSupportsStatus {
+	updateStatus(request: UpdateThirdPartyStatusRequest): Promise<UpdateThirdPartyStatusResponse>;
 }
 
 export interface ThirdPartyProviderSupportsPullRequests {
@@ -101,6 +107,11 @@ export namespace ThirdPartyPostProvider {
 	): provider is ThirdPartyPostProvider & ThirdPartyProviderSupportsPosts {
 		return (provider as any).createPost !== undefined;
 	}
+	export function supportsStatus(
+		provider: ThirdPartyProvider
+	): provider is ThirdPartyProvider & ThirdPartyProviderSupportsStatus {
+		return (provider as any).updateStatus !== undefined;
+	}
 }
 
 export interface ThirdPartyProvider {
@@ -121,6 +132,7 @@ export interface ThirdPartyIssueProvider extends ThirdPartyProvider {
 
 export interface ThirdPartyPostProvider extends ThirdPartyProvider {
 	supportsSharing(): this is ThirdPartyPostProvider & ThirdPartyProviderSupportsPosts;
+	supportsStatus(): this is ThirdPartyPostProvider & ThirdPartyProviderSupportsStatus;
 }
 
 export interface ApiResponse<T> {
@@ -567,6 +579,9 @@ export abstract class ThirdPartyPostProviderBase<
 > extends ThirdPartyProviderBase<TProviderInfo> implements ThirdPartyPostProvider {
 	supportsSharing(): this is ThirdPartyPostProvider & ThirdPartyProviderSupportsPosts {
 		return ThirdPartyPostProvider.supportsSharing(this);
+	}
+	supportsStatus(): this is ThirdPartyPostProvider & ThirdPartyProviderSupportsStatus {
+		return ThirdPartyPostProvider.supportsStatus(this);
 	}
 }
 
