@@ -524,6 +524,11 @@ export class SimpleStream extends Component {
 						action: () => this.props.openPanel(WebviewPanels.GettingStarted)
 					},
 					{
+						label: "What's New",
+						key: "whats-new",
+						action: () => this.openUrl("https://www.codestream.com/blog")
+					},
+					{
 						label: "Report an Issue",
 						key: "issue",
 						action: () => this.openUrl("https://github.com/TeamCodeStream/codestream/issues")
@@ -881,7 +886,7 @@ export class SimpleStream extends Component {
 	// to be able to animate between the two streams, since they will both be
 	// visible during the transition
 	render() {
-		const { configs, umis, postStreamPurpose, providerInfo = {} } = this.props;
+		const { configs, umis, postStreamPurpose, remainingSteps, providerInfo = {} } = this.props;
 		let { activePanel } = this.props;
 		const { searchBarOpen, q, showKeybindings } = this.state;
 
@@ -893,6 +898,9 @@ export class SimpleStream extends Component {
 					</div>
 				</Keybindings>
 			);
+
+		if (activePanel === WebviewPanels.LandingRedirect)
+			activePanel = remainingSteps > 0 ? WebviewPanels.GettingStarted : WebviewPanels.Activity;
 
 		const isConfigurationPanel =
 			activePanel && activePanel.match(/^configure\-(provider|enterprise)-/);

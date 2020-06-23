@@ -22,8 +22,7 @@ const initialState: ContextState = {
 	issueProvider: undefined,
 	threadId: undefined,
 
-	// https://trello.com/c/iz2WghVy/3706-experiment-turn-off-getting-started-temporarily
-	panelStack: [WebviewPanels.GettingStarted], // default view is the "in this file" view
+	panelStack: [WebviewPanels.LandingRedirect],
 	// panelStack: [WebviewPanels.CodemarksForFile],
 
 	hasFocus: true, // we assume we start with the focus when codestream initializes

@@ -52,9 +52,10 @@ export enum WebviewPanels {
 	ChangePhoneNumber = "change-phone-number",
 	ChangeWorksOn = "change-works-on",
 	ChangeAvatar = "change-avatar",
+	LandingRedirect = "landing-redirect", // new customers and signins go here
 	PRInfo = "pr-info",
 	Integrations = "integrations",
-	GettingStarted = "gtting-started",
+	GettingStarted = "gtting-started", // this is a typo but now baked into user data, so let's just leave it
 	ReviewSettings = "review-settings",
 	NewPullRequest = "new-pull-request"
 }
