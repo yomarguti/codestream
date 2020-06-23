@@ -48,7 +48,11 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		icon: "mark-github",
 		urlPlaceholder: "https://git.myorg.com",
 		helpUrl:
-			"https://help.github.com/en/enterprise/2.15/user/articles/creating-a-personal-access-token-for-the-command-line"
+			"https://help.github.com/en/enterprise/2.15/user/articles/creating-a-personal-access-token-for-the-command-line",
+		boardLabel: "repo",
+		listLabel: "type",
+		cardLabel: "issue",
+		supportsStartWork: true
 	},
 	gitlab: {
 		displayName: "GitLab",
@@ -63,7 +67,11 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		shortDisplayName: "GitLab",
 		icon: "gitlab",
 		urlPlaceholder: "https://gitlab.myorg.com",
-		helpUrl: "https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html"
+		helpUrl: "https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html",
+		boardLabel: "repo",
+		listLabel: "type",
+		cardLabel: "issue",
+		supportsStartWork: true
 	},
 	jira: {
 		displayName: "Jira",
