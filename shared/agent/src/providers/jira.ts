@@ -14,7 +14,8 @@ import {
 	JiraCard,
 	JiraUser,
 	MoveThirdPartyCardRequest,
-	ReportingMessageType
+	ReportingMessageType,
+	ThirdPartyProviderCard
 } from "../protocol/agent.protocol";
 import { CSJiraProviderInfo } from "../protocol/api.protocol";
 import { Iterables, log, lspProvider } from "../system";
@@ -236,13 +237,14 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 	@log()
 	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
 		// /rest/api/2/search?jql=assignee=currentuser()
+		// https://developer.atlassian.com/server/jira/platform/jira-rest-api-examples/
 
 		try {
-			Logger.debug("Jira: fetching projects");
+			Logger.debug("Jira: fetching cards");
 			const jiraCards: JiraCard[] = [];
 			let nextPage: string | undefined = `/rest/api/2/search?${qs.stringify({
 				jql: "assignee=currentuser() AND status!=Closed",
-				fields: "summary,description,updated"
+				fields: "summary,description,updated,subtasks"
 			})}`;
 
 			while (nextPage !== undefined) {
@@ -258,35 +260,50 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 					if (body.nextPage) {
 						nextPage = body.nextPage.substring(body.nextPage.indexOf("/rest/api/2"));
 					} else {
-						Logger.debug("Jira: there are no more projects");
+						Logger.debug("Jira: there are no more cards");
 						nextPage = undefined;
 					}
 				} catch (e) {
 					Container.instance().errorReporter.reportMessage({
 						type: ReportingMessageType.Error,
-						message: "Jira: Error fetching jira projects",
+						message: "Jira: Error fetching jira cards",
 						source: "agent",
 						extra: {
 							message: e.message
 						}
 					});
 					Logger.error(e);
-					Logger.debug("Jira: Stopping project search");
+					Logger.debug("Jira: Stopping card search");
 					nextPage = undefined;
 				}
 			}
 
 			Logger.debug(`Jira: total cards: ${jiraCards.length}`);
-			const cards = jiraCards.map(card => {
+			const cards: ThirdPartyProviderCard[] = [];
+			jiraCards.forEach(card => {
 				const { fields = {} } = card;
-				return {
+				cards.push({
 					id: card.id,
 					url: `${this._webUrl}/browse/${card.key}`,
 					title: fields.summary,
 					modifiedAt: new Date(fields.updated).getTime(),
 					tokenId: card.key,
 					body: fields.description
-				};
+				});
+				if (fields.subtasks && fields.subtasks.length) {
+					// @ts-ignore
+					fields.subtasks.forEach(subtask => {
+						const { fields = {} } = subtask;
+						cards.push({
+							id: `${card.id}:${subtask.id}`,
+							url: `${this._webUrl}/browse/${subtask.key}`,
+							title: fields.summary,
+							modifiedAt: new Date(card.fields.updated).getTime(),
+							tokenId: subtask.key,
+							body: fields.description
+						});
+					});
+				}
 			});
 			return { cards };
 		} catch (error) {
