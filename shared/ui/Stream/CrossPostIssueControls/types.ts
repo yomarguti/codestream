@@ -101,12 +101,20 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 	youtrack: {
 		displayName: "YouTrack",
 		icon: "youtrack",
-		getUrl: "https://www.jetbrains.com/youtrack/download/get_youtrack.html"
+		getUrl: "https://www.jetbrains.com/youtrack/download/get_youtrack.html",
+		boardLabel: "project",
+		listLabel: "type",
+		cardLabel: "issue",
+		supportsStartWork: true
 	},
 	azuredevops: {
 		displayName: "Azure DevOps",
 		icon: "azuredevops",
-		getUrl: "https://azure.microsoft.com/en-us/services/devops"
+		getUrl: "https://azure.microsoft.com/en-us/services/devops",
+		boardLabel: "project",
+		listLabel: "list",
+		cardLabel: "work item",
+		supportsStartWork: true
 	},
 	slack: { displayName: "Slack", icon: "slack", groupName: "Workspace" },
 	msteams: { displayName: "Microsoft Teams", icon: "msteams", groupName: "Organization" }

@@ -21,6 +21,12 @@ export interface YouTrackBoard {
 	shortName: string;
 }
 
+export interface YouTrackCard {
+	id: string;
+	name: string;
+	[kay: string]: any;
+}
+
 export interface YouTrackFetchBoardsResponse {
 	boards: YouTrackBoard[];
 }

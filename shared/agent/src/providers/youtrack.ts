@@ -1,12 +1,16 @@
 "use strict";
 import * as qs from "querystring";
 import { MessageType } from "../api/apiProvider";
+import { Logger } from "../logger";
 import {
 	CreateThirdPartyCardRequest,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
+	FetchThirdPartyCardsRequest,
+	FetchThirdPartyCardsResponse,
 	MoveThirdPartyCardRequest,
 	YouTrackBoard,
+	YouTrackCard,
 	YouTrackConfigurationData,
 	YouTrackCreateCardRequest,
 	YouTrackCreateCardResponse,
@@ -70,6 +74,34 @@ export class YouTrackProvider extends ThirdPartyIssueProviderBase<CSYouTrackProv
 					id: board.id,
 					name: board.name,
 					singleAssignee: true
+				};
+			})
+		};
+	}
+
+	@log()
+	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
+		// have to force connection here because we need accessToken to even create our request
+		await this.ensureConnected();
+		const response = await this.get<YouTrackCard[]>(
+			`/issues?${qs.stringify({
+				fields: "id,idReadable,modified,summary,description",
+				query: "for: me"
+			})}`
+		);
+		const url =
+			(this._providerInfo && this._providerInfo.data && this._providerInfo.data.baseUrl) || "";
+
+		return {
+			cards: response.body.map(card => {
+				// Logger.warn("GOT A CARD: " + JSON.stringify(card, null, 4));
+				return {
+					id: card.id,
+					url: `${url}/youtrack/issue/${card.idReadable}`,
+					title: card.summary,
+					modifiedAt: card.modified * 1000,
+					tokenId: card.idReadable,
+					body: card.description
 				};
 			})
 		};

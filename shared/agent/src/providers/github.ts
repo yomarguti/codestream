@@ -21,7 +21,8 @@ import {
 	GitHubCreateCardResponse,
 	GitHubUser,
 	MoveThirdPartyCardRequest,
-	MoveThirdPartyCardResponse
+	MoveThirdPartyCardResponse,
+	ThirdPartyProviderCard
 } from "../protocol/agent.protocol";
 import { CodemarkType, CSGitHubProviderInfo, CSReferenceLocation } from "../protocol/api.protocol";
 import { Arrays, Functions, log, lspProvider, Strings } from "../system";
@@ -157,9 +158,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 	@log()
 	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
+		void (await this.ensureConnected());
+
 		// const data = request.data; // as GitHubCreateCardRequest;
 		const { body } = await this.get<any[]>("/issues");
-		const cards = body.map(card => {
+		const cards: ThirdPartyProviderCard[] = body.map(card => {
 			return {
 				id: card.id,
 				url: card.html_url,

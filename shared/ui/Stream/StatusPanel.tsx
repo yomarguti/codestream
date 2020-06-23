@@ -554,7 +554,6 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	if (configureBranchNames)
 		return <ConfigureBranchNames onClose={() => setConfigureBranchNames(false)} />;
 
-	console.warn("BODY", card && card.body);
 	return (
 		<div className="full-height-panel">
 			<form className="standard-form vscroll" style={{ padding: "10px" }}>
@@ -588,7 +587,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 							{card && card.url && (
 								<div className="open-card">
 									<Icon
-										title="Open on Trello"
+										title={`Open on ${card.providerName}`}
 										delay={1}
 										placement="bottom"
 										name="link-external"

@@ -13,6 +13,12 @@ export interface AzureDevOpsProject {
 	name: string;
 }
 
+export interface AzureDevOpsCard {
+	id: string;
+	name: string;
+	[key: string]: string;
+}
+
 export interface AzureDevOpsTeam {
 	id: string;
 	name: string;

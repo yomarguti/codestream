@@ -13,7 +13,11 @@ import {
 	FetchThirdPartyBoardsResponse,
 	ThirdPartyProviderBoard,
 	ThirdPartyProviderUser,
-	MoveThirdPartyCardRequest
+	MoveThirdPartyCardRequest,
+	FetchThirdPartyCardsRequest,
+	FetchThirdPartyCardsResponse,
+	ThirdPartyProviderCard,
+	AzureDevOpsCard
 } from "../protocol/agent.protocol";
 import { CSAzureDevOpsProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
@@ -73,6 +77,50 @@ export class AzureDevOpsProvider extends ThirdPartyIssueProviderBase<CSAzureDevO
 			debugger;
 		}
 		return { boards };
+	}
+
+	@log()
+	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
+		await this.ensureConnected();
+
+		let cards: ThirdPartyProviderCard[] = [];
+		try {
+			const wiql =
+				"Select [Id] " +
+				"From WorkItems " +
+				"Where [Work Item Type] = 'Bug' " +
+				"And [System.State] <> 'Closed' " +
+				"Order By [State] Asc, [Changed Date] Desc";
+
+			const { body } = (await this.post(
+				`/_apis/wit/wiql?${qs.stringify({
+					query: wiql,
+					"api-version": "5.0"
+				})}`,
+				{ query: wiql },
+				{ "Content-Type": "application/json" }
+			)) as any;
+			// Logger.log("GOT A REPSONSE OF : ", JSON.stringify(body, null, 4));
+			if (body && body.workItems) {
+				// @ts-ignore
+				cards = body.workItems.map(workItem => {
+					// Logger.log("AZURE ITEM: ", JSON.stringify(workItem, null, 4));
+					return {
+						id: workItem.id,
+						url: workItem.html_url,
+						// @ts-ignore
+						title: workItem.fields["System.Title"],
+						modifiedAt: new Date(workItem.updated_at).getTime(),
+						tokenId: workItem.number,
+						body: workItem.body
+					};
+				});
+			}
+		} catch (err) {
+			Logger.error(err);
+			debugger;
+		}
+		return { cards: [] };
 	}
 
 	@log()
