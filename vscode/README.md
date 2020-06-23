@@ -1,6 +1,6 @@
 <p align="center" style="background:#EF0104;">  
   <img src="https://raw.githubusercontent.com/TeamCodeStream/codestream/master/images/ProductHuntCat1.png" alt="Product Hunt" style="width:60px;vertical-align:middle;" />
-Now live on Product Hunt. Check out our cool Code Review launch video. <a href="https://codestream.com/ph" style="background:#fff; padding:2px 4px; font-size:.9em; border-radius:3px">Go</a>
+Now live on Product Hunt. Check out our cool Code Review launch video. <a href="https://codestream.com/ph" style="background:#fff; padding:2px 12px; font-size:.9em; border-radius:3px">Go</a>
 </p>
 
 # CodeStream
