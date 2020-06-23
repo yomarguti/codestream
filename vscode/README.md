@@ -1,7 +1,4 @@
-<p align="center" style="background:#EF0104;">  
-  <img src="https://raw.githubusercontent.com/TeamCodeStream/codestream/master/images/ProductHuntCat1.png" alt="Product Hunt" style="width:60px;vertical-align:middle;" />
-Now live on Product Hunt. Check out our cool Code Review launch video. <a href="https://codestream.com/ph" style="background:#fff; padding:2px 12px; font-size:.9em; border-radius:3px">Go</a>
-</p>
+[![Now live on Product Hunt. Check out our cool Code Review launch video."](https://raw.githubusercontent.com/TeamCodeStream/codestream/master/images/ProductHuntTopHat.png)](https://codestream.com/ph)
 
 # CodeStream
 
