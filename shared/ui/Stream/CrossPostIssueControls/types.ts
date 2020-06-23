@@ -113,8 +113,7 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		getUrl: "https://azure.microsoft.com/en-us/services/devops",
 		boardLabel: "project",
 		listLabel: "list",
-		cardLabel: "work item",
-		supportsStartWork: true
+		cardLabel: "work item"
 	},
 	slack: { displayName: "Slack", icon: "slack", groupName: "Workspace" },
 	msteams: { displayName: "Microsoft Teams", icon: "msteams", groupName: "Organization" }

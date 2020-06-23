@@ -86,12 +86,14 @@ export class AzureDevOpsProvider extends ThirdPartyIssueProviderBase<CSAzureDevO
 		let cards: ThirdPartyProviderCard[] = [];
 		try {
 			const wiql =
-				"Select [Id] " +
+				"Select ID, Title, Description, State, [Team Project] " +
 				"From WorkItems " +
-				"Where [Work Item Type] = 'Bug' " +
-				"And [System.State] <> 'Closed' " +
-				"Order By [State] Asc, [Changed Date] Desc";
+				"Where State <> 'Closed' " +
+				"And [Assigned To] = @Me ";
+			// "Order By [State] Asc, [Changed Date] Desc";
 
+			// "Where [Work Item Type] = 'Bug' " +
+			// "And [System.State] <> 'Closed' " +
 			const { body } = (await this.post(
 				`/_apis/wit/wiql?${qs.stringify({
 					query: wiql,
@@ -100,16 +102,16 @@ export class AzureDevOpsProvider extends ThirdPartyIssueProviderBase<CSAzureDevO
 				{ query: wiql },
 				{ "Content-Type": "application/json" }
 			)) as any;
-			// Logger.log("GOT A REPSONSE OF : ", JSON.stringify(body, null, 4));
+			Logger.log("GOT A REPSONSE OF : ", JSON.stringify(body, null, 4));
 			if (body && body.workItems) {
 				// @ts-ignore
 				cards = body.workItems.map(workItem => {
-					// Logger.log("AZURE ITEM: ", JSON.stringify(workItem, null, 4));
+					Logger.log("AZURE ITEM: ", JSON.stringify(workItem, null, 4));
 					return {
-						id: workItem.id,
+						id: workItem.ID,
 						url: workItem.html_url,
 						// @ts-ignore
-						title: workItem.fields["System.Title"],
+						// title: workItem.fields["System.Title"],
 						modifiedAt: new Date(workItem.updated_at).getTime(),
 						tokenId: workItem.number,
 						body: workItem.body
