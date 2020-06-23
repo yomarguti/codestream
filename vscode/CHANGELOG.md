@@ -2,9 +2,13 @@
 
 ## [8.0.1] - 2020-6-24
 
-### Changed
+### Added
 
-- Update to CodeStream's marketplace page
+- Adds "Start Work" support for Jira subtasks
+
+### Fixed
+
+- Fixes an issue that caused you to land on Getting Started after every reload or sign-in
 
 ## [8.0.0] - 2020-6-22
 
