@@ -4,7 +4,7 @@
 
 ### Added
 
-- Adds "Start Work" support for Jira subtasks
+- Adds "Start Work" support for GitHub Enterprise, Gitlab Self-Managed, and Jira subtasks
 
 ### Fixed
 
