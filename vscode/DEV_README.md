@@ -5,10 +5,8 @@ New to VSCode/Codestream? Look for a novice debugging examples at the end of thi
 ### Getting the code
 
 ```
-git clone git@github.com:TeamCodeStream/vscode-codestream.git (ssh)
+git clone https://github.com/TeamCodeStream/codestream.git
 ```
-
-👉 **NOTE!** Make sure to clone the `vscode-codestream` repository into a folder that is a sibling of the `codestream-component` and `codestream-lsp-agent` repositories
 
 Versions
 
@@ -16,21 +14,42 @@ Versions
 - [NodeJS](https://nodejs.org/en/), 10.15.3 (Nov 2019)
 - [npm](https://npmjs.com/), 6.11.3 (Dec 2019)
 
+### Before you begin...
+The CodeStream clients all live in a single git mono-repo. Each IDE has their own tools for generating builds and VS Code is no different!
+
+CodeStream for VS Code uses Language Server Protocol (LSP) to communicate with the IDE. Along with the .vsix artifact created from packagin CodeStream for VS Code, there is an _agent_ executable that must also be built and shipped with the CodeStream extension. Therefore, the agent must be built before you can locally build or debug the extension.
+
+
 ### Build
 
-From a terminal, where you have cloned the repository, execute the following command to build the agent from scratch:
+From a terminal, where you have cloned the repository, execute the following command to build the agent and CodeStream for VS Code extension from scratch:
 
 ```
+cd vscode
 npm run rebuild
 ```
 
 👉 **NOTE!** This will run a complete rebuild of the extension, webview, and agent.
 
-Or to just run a quick build, use:
+To just run a quick build of the extension, use:
 
 ```
+cd vscode
 npm run build
 ```
+
+To just run a quick build of the agent, use:
+
+```
+cd shared/agent
+npm run build
+```
+
+### In short...
+`npm install --no-save`... needs to be run for shared/ui, shared/agent, vscode
+
+`npm run build`... needs to be run for shared/agent _then_ vscode
+
 
 ##### Ubuntu 18.04: 'pushd not found'
 
@@ -53,15 +72,21 @@ script-shell=/bin/bash
 During development you can use a watcher to automatically updating your running builds on editor code changes. From a terminal, where you have cloned the repository, execute the following command:
 
 ```
+cd vscode
 npm run watch
 ```
 
 It will do an initial full build and then watch for file changes, compiling those changes incrementally, enabling a fast, iterative coding experience.
 
-To watch the extension and agent, use the following in separate terminals :
+To watch the extension and agent, from a terminal, where you have cloned the repository, use the following in separate terminals :
 
 ```
+cd vscode
 npm run watch
+```
+
+```
+cd shared/agent
 npm run watch
 ```
 
@@ -76,6 +101,7 @@ task watch
 👉 **Tip!** If you only want to watch for changes in the webview you can execute the following command:
 
 ```
+cd vscode
 npm run webview:watch
 ```
 
@@ -103,9 +129,22 @@ To lint the code as you make changes you can install the [ESLint](https://market
 
 ### Testing
 
-To run the unit tests (currently only for the agent) run the following from a terminal:
+To run the agent unit tests run the following from a terminal:
 
 ```
+cd shared/agent
+npm run test-acceptance
+```
+or
+
+```
+cd shared/agent
+npm run test-unit
+```
+
+To run the webview unit tests run the following from a terminal:
+```
+cd shared/ui
 npm run test
 ```
 
@@ -116,12 +155,14 @@ Note: In many cases, you can use a pre-built .vsix file (see below)
 To generate a production bundle (without packaging) run the following from a terminal:
 
 ```
+cd vscode
 npm run bundle
 ```
 
 To generate a VSIX (installation package) run the following from a terminal:
 
 ```
+cd vscode
 npm run bundle
 npm run pack
 ```
@@ -256,7 +297,7 @@ Typically I develop/debug against prod (so I open a folder or something other th
 
 #### Debug logs
 
-https://github.com/TeamCodeStream/CodeStream/wiki/Instructions-for-finding-CodeStream-log-files
+https://docs.codestream.com/userguide/faq/client-logs/
 
 ### Learning the codebase
 
