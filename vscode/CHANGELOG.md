@@ -1,5 +1,11 @@
 # Change Log
 
+## [8.0.1] - 2020-6-24
+
+### Changed
+
+- Update to CodeStream's marketplace page
+
 ## [8.0.0] - 2020-6-22
 
 ### Added

@@ -1,3 +1,8 @@
+<p align="center" style="background:#EF0104;">  
+  <img src="https://raw.githubusercontent.com/TeamCodeStream/codestream/master/images/ProductHuntCat1.png" alt="Product Hunt" style="width:60px;vertical-align:middle;" />
+Now live on Product Hunt. Check out our cool Code Review launch video. <a href="https://codestream.com/ph" style="background:#fff; padding:2px 4px; font-size:.9em; border-radius:3px">Go</a>
+</p>
+
 # CodeStream
 
 CodeStream is a developer collaboration platform that makes it incredibly easy for development teams, especially remote teams, to discuss and review code in a more natural and contextual way. CodeStream not only makes discussions easier, by allowing them to happen in your IDE, in context, but also preserves the institutional knowledge that is currently being lost in Slack channels and emails. 
@@ -45,7 +50,7 @@ As developers write code, whether editing existing files or creating new files, 
 
 #### Where are messages stored?
 
-Your team’s codemarks, which include the message text and the code snippet, are stored in the cloud on CodeStream’s servers. CodeStream uses best practices when it comes to [security](https://www.codestream.com/security), but if your team has stringent infosec requirements we also offer an [on-prem solution](https://github.com/TeamCodeStream/onprem-install/wiki).
+Your team’s codemarks, which include the message text and the code snippet, are stored in the cloud on CodeStream’s servers. CodeStream uses best practices when it comes to [security](https://www.codestream.com/security), but if your team has stringent infosec requirements we also offer an [on-prem solution](https://docs.codestream.com/onprem/).
 
 #### What access to Git does CodeStream require?
 
@@ -57,7 +62,7 @@ Codestream is free to try for 30 days for teams of all sizes. CodeStream is free
 
 # Help & Feedback
 
-Check out our [wiki](https://github.com/TeamCodeStream/CodeStream/wiki) for more information on getting started with CodeStream. Please follow [@teamcodestream](http://twitter.com/teamcodestream) for product updates and to share feedback and questions. You can also email us at support@codestream.com.
+Check out our [user guide](https://docs.codestream.com/userguide/) for more information on getting started with CodeStream. Please follow [@teamcodestream](http://twitter.com/teamcodestream) for product updates and to share feedback and questions. You can also email us at support@codestream.com.
 
 <p align="center">
   <br />
