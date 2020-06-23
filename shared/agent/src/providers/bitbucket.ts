@@ -176,7 +176,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 					name: r.full_name,
 					apiIdentifier: r.full_name,
 					path: r.path,
-					signelAssignee: true // bitbucket issues only allow one assignee
+					singleAssignee: true // bitbucket issues only allow one assignee
 				}));
 		} else {
 			let bitbucketRepos: BitbucketRepo[] = [];
