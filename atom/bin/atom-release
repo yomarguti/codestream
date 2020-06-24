@@ -32,14 +32,23 @@ echo -n "Go (y/N)? "; read ans
 echo npm run bundle
 npm run bundle || exit 1
 
+# This pushes up the new release but with the package.json version
+# set to that of the existing release in the marketplace
 echo npm run pack $marketRelease --commit-and-push
 npm run pack $marketRelease --commit-and-push || exit 1
 
 # Sanity check....
 if [ -d /Applications/Atom.app ]; then
+	# this resets our local atom installation to what we're about
+	# to publish
 	(cd ../../atom-client && apm uninstall codestream && apm link) || exit 1
+
+	# This installs atom-client - but we never published the new release
+	# so I don't understand how this is sanity checking the code
+	# we're about to publish...?????
 	echo apm install --production teamcodestream/atom-client
 	apm install --production teamcodestream/atom-client || exit 1
+
 	echo "Santity check..."
 	open /Applications/Atom.app
 	echo -n "Press ENTER to continue" && read
