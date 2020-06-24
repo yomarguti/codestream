@@ -1,5 +1,11 @@
 # Change Log
 
+## [8.0.2] - 2020-6-24
+
+### Changed
+
+- Ignore untracked files when creating a pull request from a code review
+
 ## [8.0.1] - 2020-6-24
 
 ### Added
