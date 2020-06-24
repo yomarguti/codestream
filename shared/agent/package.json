@@ -19,7 +19,7 @@
     },
     "main": "./dist/agent",
     "scripts": {
-        "build": "webpack --env.development",
+        "build": "./node_modules/.bin/webpack --env.development",
         "bundle": "npm install --no-save && webpack --env.production",
         "bundle:ci": "npm run clean:ci && npm run bundle",
         "clean": "git clean -Xdf -e !node_modules -e !node_modules/**/*",

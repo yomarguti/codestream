@@ -70,3 +70,7 @@ export ATOM_PIDS=$ATOM_SANDBOX/pid    # pid files directory
 # Defines the run-time environment (usually 'local', 'qa', 'pd', 'prod')
 # Used for configuring a sandbox for a specific environment at run-time.
 [ -z "$ATOM_ENV" ] && export ATOM_ENV=local
+
+# Multiple installations - mono-repo and individual - have the same repo root ($REPO_ROOT/.git/)
+. $ATOM_SANDBOX/sb.info
+export ATOM_REPO_ROOT=$ATOM_SANDBOX/$SB_REPO_ROOT
