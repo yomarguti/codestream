@@ -902,6 +902,8 @@ export class SimpleStream extends Component {
 		if (activePanel === WebviewPanels.LandingRedirect)
 			activePanel = remainingSteps > 0 ? WebviewPanels.GettingStarted : WebviewPanels.Activity;
 
+		// this is the fix
+
 		const isConfigurationPanel =
 			activePanel && activePanel.match(/^configure\-(provider|enterprise)-/);
 		// if we're conducting a review, we need the compose functionality of spatial view
