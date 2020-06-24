@@ -607,6 +607,7 @@ export const CreatePullRequestPanel = props => {
 									<textarea
 										className="input-text"
 										name="description"
+										rows={4}
 										value={prText}
 										onChange={e => setPrText(e.target.value)}
 										placeholder="Pull request description (optional)"
