@@ -1,5 +1,3 @@
-[![Now live on Product Hunt. Check out our cool Code Review launch video."](https://raw.githubusercontent.com/TeamCodeStream/codestream/master/images/ProductHuntTopHat.png)](https://codestream.com/ph)
-
 # CodeStream
 
 CodeStream is a developer collaboration platform that makes it incredibly easy for development teams, especially remote teams, to discuss and review code in a more natural and contextual way. CodeStream not only makes discussions easier, by allowing them to happen in your IDE, in context, but also preserves the institutional knowledge that is currently being lost in Slack channels and emails. 
