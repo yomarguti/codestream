@@ -125,6 +125,7 @@ export class TelemetryService {
 			Logger.debug(`Telemetry identify ${this._distinctId}`);
 			this._segmentInstance.identify({
 				userId: this._distinctId,
+				anonymousId: this._anonymousId,
 				traits: props
 			});
 			this._segmentInstance.flush();
