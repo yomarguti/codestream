@@ -35,6 +35,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import git4idea.config.GitVcsSettings
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
@@ -266,7 +267,8 @@ class AgentService(private val project: Project) : Disposable {
             settings.proxySupport,
             settings.serverUrl,
             settings.disableStrictSSL,
-            settings.traceLevel.value
+            settings.traceLevel.value,
+            GitVcsSettings.getInstance(project).pathToGit
         )
     }
 

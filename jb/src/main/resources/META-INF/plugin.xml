@@ -133,5 +133,6 @@
     </actions>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends>Git4Idea</depends>
     <idea-version since-build="192.4488"/>
 </idea-plugin>
