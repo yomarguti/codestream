@@ -20,6 +20,7 @@ class InitializationOptions(
     val serverUrl: String,
     val disableStrictSSL: Boolean,
     val traceLevel: String,
+    val gitPath: String?,
     val recordRequests: Boolean = RECORD_REQUESTS
 )
 

@@ -80,6 +80,8 @@ intellij {
     intellij.updateSinceUntilBuild false
     // Run on a locally installed IDE, different from the build dependency specified via type/version
     intellij.alternativeIdePath idePath
+
+    plugins = ['git4idea']
 }
 
 runIde {
