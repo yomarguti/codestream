@@ -466,6 +466,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 					// @ts-ignore
 					const board = pData.boards && pData.boards.find(b => b.id === card.idBoard);
 					const lists = board && board.lists;
+					// console.warn("SETTINGS VALUES: ", pData, card);
 					startWorkIssueContext.setValues({
 						...card,
 						providerIcon: providerDisplay.icon,
@@ -481,7 +482,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 				}
 			}
 		},
-		[data.boards]
+		[loadedBoards, loadedCards]
 	);
 
 	const startWorkIssueContext = React.useContext(StartWorkIssueContext);

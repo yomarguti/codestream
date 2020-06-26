@@ -7,7 +7,7 @@ import { Checkbox } from "../src/components/Checkbox";
 import styled from "styled-components";
 import { Button } from "../src/components/Button";
 import { setUserStatus, setUserPreference } from "./actions";
-import { closePanel, openPanel } from "../store/context/actions";
+import { openPanel } from "../store/context/actions";
 import { CSMe } from "@codestream/protocols/api";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { useDidMount } from "../utilities/hooks";
@@ -45,56 +45,11 @@ const StatusInput = styled.div`
 	position: relative;
 	margin: 7px 0 20px 0;
 	width: 100%;
-	.dropdown-button {
-		position: absolute;
-		left: 1px;
-		top: 1px;
-		// border-right: 1px solid var(--base-border-color);
-		font-size: 18px;
-		line-height: 20px;
-		display: flex;
-		width: 34px;
-		height: calc(100% - 2px);
-		align-items: center;
-		justify-content: center;
-		.icon {
-			margin: 2px 2px -2px -2px;
-		}
-	}
 	.clear {
 		position: absolute;
 		right: 2px;
 		top: 1px;
 		padding: 8px 10px;
-	}
-	.open-card {
-		position: absolute;
-		right: 28px;
-		top: 1px;
-		padding: 8px 10px;
-	}
-	.dropdown-button {
-		cursor: pointer;
-		left: auto;
-		right: 1px;
-		align-items: center;
-		justify-content: center;
-		border-left: 1px solid var(--base-border-color);
-		border-right: none;
-		.icon {
-			margin: 4px 0 0 -2px;
-			&.spin {
-				margin: -2px 0 0 -1px;
-			}
-		}
-		&:hover {
-			background: var(--app-background-color);
-			color: var(--text-color-highlight);
-		}
-		&.selected {
-			background: var(--button-background-color);
-			color: var(--button-foreground-color);
-		}
 	}
 	input#status-input {
 		border: 1px solid var(--base-border-color);
@@ -111,9 +66,6 @@ const StatusInput = styled.div`
 		transform: scale(1.25);
 		padding: 3px 8px 3px 3px;
 		vertical-align: -2px;
-	}
-	&.has-ticket-icon input#status-input {
-		padding: 8px 60px 8px 32px !important;
 	}
 `;
 
@@ -403,6 +355,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const same = label == status.label; // && icon == status.icon;
 
 	const showMoveCardCheckbox = React.useMemo(() => {
+		// console.warn("RECALCULATING SHOW CHECKBOX: ", card);
 		return card && card.moveCardOptions && card.moveCardOptions.length > 0;
 	}, [card, label]);
 	const showCreateBranchCheckbox = React.useMemo(() => {
@@ -698,7 +651,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								<form className="codemark-form standard-form vscroll">
 									<fieldset className="form-body" style={{ padding: "0px" }}>
 										<div id="controls">
-											<StatusInput className={card && card.providerIcon ? "has-ticket-icon" : ""}>
+											<StatusInput>
 												{card.id ? (
 													<CardTitle>
 														{card && card.providerIcon && (
