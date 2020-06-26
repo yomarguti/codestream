@@ -179,7 +179,7 @@ const Docs = styled.div`
 	}
 `;
 
-const CurrentStatus = styled.div`
+const StatusSection = styled.div`
 	padding: 10px 20px 15px 20px;
 	.icon {
 		margin-right: 5px;
@@ -404,7 +404,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 
 	const showMoveCardCheckbox = React.useMemo(() => {
 		return card && card.moveCardOptions && card.moveCardOptions.length > 0;
-	}, [card]);
+	}, [card, label]);
 	const showCreateBranchCheckbox = React.useMemo(() => {
 		return label; // && label.startsWith("http");
 	}, [label]);
@@ -640,7 +640,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			<ScrollBox>
 				<div className="channel-list vscroll">
 					{status && status.label && (
-						<CurrentStatus>
+						<StatusSection>
 							<Tooltip title="Clear work item" placement="bottom" delay={1}>
 								<RoundedLink onClick={clearAndSave}>
 									<Icon className="padded-icon" name="minus-circle" />
@@ -672,9 +672,9 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 									</div>
 								)}
 							</Row>
-						</CurrentStatus>
+						</StatusSection>
 					)}
-					<CurrentStatus>
+					<StatusSection>
 						<Tooltip
 							title={
 								<>
@@ -691,7 +691,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 						</Tooltip>
 						<H4>Work in progress</H4>
 						<ModifiedRepos id={derivedState.currentUserId} />
-					</CurrentStatus>
+					</StatusSection>
 					{card && (
 						<Popup>
 							<Dialog className="codemark-form-container">
