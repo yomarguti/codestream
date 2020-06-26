@@ -54,15 +54,7 @@ export const MustSetPassword = (props: MustSetPasswordProps) => {
 				<fieldset className="form-body">
 					<BoxedContent title="Set a password">
 						<p>
-							CodeStream now requires you to sign in with email address (
-							<strong>{props.email}</strong>) and password, instead of Slack or MS Teams. Please set
-							a password below.
-						</p>
-						<p>
-							Note that you are still able to share codemarks to Slack and MS Teams.{" "}
-							<Link href="https://github.com/TeamCodeStream/CodeStream/wiki/Why-do-I-need-to-set-a-password%3F">
-								More information.
-							</Link>
+							Enter a password below.
 						</p>
 						<div id="controls">
 							<div className="control-group">
