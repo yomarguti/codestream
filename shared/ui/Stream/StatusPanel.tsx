@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import CancelButton from "./CancelButton";
 import { CodeStreamState } from "../store";
 import { HostApi } from "../webview-api";
 import Icon from "./Icon";
@@ -24,7 +23,6 @@ import {
 } from "@codestream/protocols/agent";
 import IssueDropdown, { Row } from "./CrossPostIssueControls/IssueDropdown";
 import { ConfigureBranchNames } from "./ConfigureBranchNames";
-import { VideoLink, Flow } from "./Flow";
 import { MarkdownText } from "./MarkdownText";
 import {
 	getProviderConfig,
@@ -35,8 +33,6 @@ import { SharingAttributes } from "./SharingControls";
 import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import { PanelHeader } from "../src/components/PanelHeader";
 import ScrollBox from "./ScrollBox";
-import { Tabs, Tab } from "../src/components/Tabs";
-import { Content } from "../src/components/Carousel";
 import { WebviewPanels } from "../ipc/webview.protocol.common";
 import { ModifiedRepos } from "./ModifiedRepos";
 import Tooltip from "./Tooltip";
@@ -319,8 +315,6 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const [repoUri, setRepoUri] = useState("");
 	const [currentRepoId, setCurrentRepoId] = useState("");
 	const [fromBranch, setFromBranch] = useState("");
-	const [showDocumentation, setShowDocumentation] = useState(false);
-	const [activeTab, setActiveTab] = useState("1");
 	const inputRef = React.useRef<HTMLInputElement>(null);
 
 	const { moveCard, updateSlack, createBranch } = derivedState;
@@ -819,8 +813,8 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 
 					<div style={{ margin: "0" }}>
 						<Docs>
-							<span onClick={() => setShowDocumentation(!showDocumentation)}>
-								<Icon className={showDocumentation ? "rotate" : ""} name="chevron-right" />
+							<span onClick={() => dispatch(openPanel(WebviewPanels.Flow))}>
+								<Icon name="chevron-right" />
 								CodeStream Flow <sup className="highlight">new!</sup>
 							</span>
 							<span
@@ -832,36 +826,6 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								Getting Started
 							</span>
 						</Docs>
-						{showDocumentation && (
-							<div style={{ padding: "0 20px" }}>
-								<Tabs style={{ marginTop: 0 }}>
-									<Tab onClick={e => setActiveTab(e.target.id)} active={activeTab === "1"} id="1">
-										The Basics
-									</Tab>
-									<Tab onClick={e => setActiveTab(e.target.id)} active={activeTab === "2"} id="2">
-										Trunk Flow
-									</Tab>
-									<Tab onClick={e => setActiveTab(e.target.id)} active={activeTab === "3"} id="3">
-										Branch Flow
-									</Tab>
-								</Tabs>
-								{activeTab === "1" && (
-									<Content active>
-										<Flow flow="adhoc" />
-									</Content>
-								)}
-								{activeTab === "2" && (
-									<Content active>
-										<Flow flow="simplified" />
-									</Content>
-								)}
-								{activeTab === "3" && (
-									<Content active>
-										<Flow flow="standard" />
-									</Content>
-								)}
-							</div>
-						)}
 					</div>
 				</div>
 			</ScrollBox>

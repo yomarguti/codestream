@@ -1,12 +1,15 @@
-import React, { PropsWithChildren, createElement } from "react";
+import React from "react";
 import { Carousel, Content } from "../src/components/Carousel";
 import styled from "styled-components";
 import Icon from "./Icon";
 import { useRect } from "../utilities/hooks";
-import { RadioGroup, Radio } from "../src/components/RadioGroup";
 import { Tab, Tabs } from "../src/components/Tabs";
-import { ComposeKeybindings } from "./ComposeTitles";
 import { HostApi } from "../webview-api";
+import { PanelHeader } from "../src/components/PanelHeader";
+import ScrollBox from "./ScrollBox";
+import CancelButton from "./CancelButton";
+import { closePanel } from "./actions";
+import { useDispatch, useSelector } from "react-redux";
 
 const Root = styled.div`
 	color: var(--text-color);
@@ -729,6 +732,52 @@ const FLOW_CONTENT = {
 	// 	GetPreliminaryApproval,
 	// 	CreatePRAndRequestApproval
 	// ]
+};
+
+export const FlowPanel = () => {
+	const dispatch = useDispatch();
+	const [activeTab, setActiveTab] = React.useState("1");
+	return (
+		<div className="panel full-height">
+			<PanelHeader title="CodeStream Flow">
+				<CancelButton onClick={() => dispatch(closePanel())} />
+				<div style={{ height: "5px" }} />
+			</PanelHeader>
+			<ScrollBox>
+				<div className="channel-list vscroll">
+					<div style={{ padding: "20px" }}>
+						<Tabs style={{ marginTop: 0 }}>
+							<Tab onClick={e => setActiveTab(e.target.id)} active={activeTab === "1"} id="1">
+								The Basics
+							</Tab>
+							<Tab onClick={e => setActiveTab(e.target.id)} active={activeTab === "2"} id="2">
+								Trunk Flow
+							</Tab>
+							<Tab onClick={e => setActiveTab(e.target.id)} active={activeTab === "3"} id="3">
+								Branch Flow
+							</Tab>
+						</Tabs>
+						{activeTab === "1" && (
+							<Content active>
+								<Flow flow="adhoc" />
+							</Content>
+						)}
+						{activeTab === "2" && (
+							<Content active>
+								<Flow flow="simplified" />
+							</Content>
+						)}
+						{activeTab === "3" && (
+							<Content active>
+								<Flow flow="standard" />
+							</Content>
+						)}
+						<div style={{ height: "100px" }} />
+					</div>
+				</div>
+			</ScrollBox>
+		</div>
+	);
 };
 
 export const Flow = (props: { flow: "adhoc" | "simplified" | "standard"; active?: number }) => {

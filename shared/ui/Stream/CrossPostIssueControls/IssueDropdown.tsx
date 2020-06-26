@@ -27,6 +27,7 @@ import { SmartFormattedList } from "../SmartFormattedList";
 import { Provider, IntegrationButtons } from "../IntegrationsPanel";
 import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
 import Tooltip from "../Tooltip";
+import { WebviewPanels } from "@codestream/protocols/webview";
 
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
@@ -174,8 +175,12 @@ class IssueDropdown extends React.Component<Props, State> {
 			else
 				return (
 					<ConnectIssueProviders>
+						<RoundedLink onClick={() => this.props.openPanel(WebviewPanels.GettingStarted)}>
+							<Icon name="arrow-right" />
+							Skip This Step
+						</RoundedLink>
 						<H4>Connect your Issue Provider(s)</H4>
-						<div style={{ height: "5px" }} />
+						<div style={{ height: "20px" }} />
 						<IntegrationButtons>
 							{knownIssueProviderOptions.map(item => {
 								if (item.disabled) return null;

@@ -99,6 +99,7 @@ import {
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { ComposeKeybindings } from "./ComposeTitles";
 import { Keybindings } from "./Keybindings";
+import { FlowPanel } from "./Flow";
 import { PRInfoModal } from "./SpatialView/PRInfoModal";
 import { STEPS } from "./GettingStarted";
 import { isConnected } from "../store/providers/reducer";
@@ -524,6 +525,11 @@ export class SimpleStream extends Component {
 						action: () => this.props.openPanel(WebviewPanels.GettingStarted)
 					},
 					{
+						label: "CodeStream Flow",
+						key: "flow",
+						action: () => this.props.openPanel(WebviewPanels.Flow)
+					},
+					{
 						label: "What's New",
 						key: "whats-new",
 						action: () => this.openUrl("https://www.codestream.com/blog")
@@ -811,7 +817,7 @@ export class SimpleStream extends Component {
 					onClick={e => this.setActivePanel(WebviewPanels.Status)}
 					id="global-nav-status-label"
 				>
-					<Tooltip title="Work Items" placement="bottom">
+					<Tooltip title="Your Work Items" placement="bottom">
 						<span>
 							<Icon name="inbox" />
 						</span>
@@ -855,7 +861,7 @@ export class SimpleStream extends Component {
 					onClick={this.goSearch}
 					id="global-nav-search-label"
 				>
-					<Icon name="search" title="Filter &amp; Search" placement="bottomRight" />
+					<Icon name="search" title="Filter &amp; Search" placement="bottom" />
 				</label>
 				<label
 					className={cx({ selected: selected(WebviewPanels.People) })}
@@ -1019,6 +1025,7 @@ export class SimpleStream extends Component {
 				WebviewPanels.ChangeWorksOn,
 				WebviewPanels.ChangePhoneNumber,
 				WebviewPanels.Profile,
+				WebviewPanels.Flow,
 				WebviewPanels.NewPullRequest
 			].includes(activePanel) &&
 			!this.props.currentReviewId &&
@@ -1105,6 +1112,7 @@ export class SimpleStream extends Component {
 							setMultiLocation={this.setMultiLocation}
 						/>
 					)}
+					{activePanel === WebviewPanels.Flow && <FlowPanel />}
 					{activePanel === WebviewPanels.NewReview && <ReviewForm />}
 					{activePanel === WebviewPanels.Integrations && <IntegrationsPanel />}
 					{activePanel === WebviewPanels.ReviewSettings && <ReviewSettingsPanel />}
