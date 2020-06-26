@@ -49,10 +49,7 @@ interface Props extends ConnectedProps {
 	updateForProvider(...args: Parameters<typeof updateForProvider>): any;
 	setIssueProvider(providerId?: string): void;
 	openPanel(...args: Parameters<typeof openPanel>): void;
-	show: "issues" | "settings";
 	isEditing?: boolean;
-	q?: string;
-	focusInput?: React.RefObject<HTMLInputElement>;
 }
 
 interface State {
@@ -168,34 +165,6 @@ class IssueDropdown extends React.Component<Props, State> {
 			.filter(id => this.providerIsConnected(id) && !this.providerIsDisabled(id))
 			.map(id => this.props.providers![id]);
 
-		const { q, focusInput } = this.props;
-
-		if (activeProviders.length === 0) {
-			if (this.props.show === "settings") return null;
-			else
-				return (
-					<ConnectIssueProviders>
-						<RoundedLink onClick={() => this.props.openPanel(WebviewPanels.GettingStarted)}>
-							<Icon name="arrow-right" />
-							Skip This Step
-						</RoundedLink>
-						<H4>Connect your Issue Provider(s)</H4>
-						<div style={{ height: "20px" }} />
-						<IntegrationButtons>
-							{knownIssueProviderOptions.map(item => {
-								if (item.disabled) return null;
-								return (
-									<Provider key={item.key} onClick={item.action}>
-										{item.providerIcon}
-										{item.label}
-									</Provider>
-								);
-							})}
-						</IntegrationButtons>
-					</ConnectIssueProviders>
-				);
-		}
-
 		return (
 			<>
 				{this.state.propsForPrePRProviderInfoModal && (
@@ -203,9 +172,6 @@ class IssueDropdown extends React.Component<Props, State> {
 				)}
 				<IssueList
 					providers={activeProviders}
-					q={q}
-					focusInput={focusInput}
-					show={this.props.show}
 					knownIssueProviderOptions={knownIssueProviderOptions}
 				></IssueList>
 			</>
@@ -392,10 +358,7 @@ export function Issue(props) {
 
 interface IssueListProps {
 	providers: ThirdPartyProviderConfig[];
-	q?: string;
-	focusInput?: React.RefObject<HTMLInputElement>;
 	knownIssueProviderOptions: any;
-	show: "issues" | "settings";
 }
 
 const EMPTY_ARRAY = {};
@@ -523,13 +486,13 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 
 	const startWorkIssueContext = React.useContext(StartWorkIssueContext);
 
-	// https://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
-	const escapeRegExp = string => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
-	const queryRegexp = React.useMemo(() => new RegExp(escapeRegExp(props.q), "gi"), [props.q]);
+	// // https://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
+	// const escapeRegExp = string => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
+	// const queryRegexp = React.useMemo(() => new RegExp(escapeRegExp(props.q), "gi"), [props.q]);
 
-	const underlineQ = string => (
-		<span dangerouslySetInnerHTML={{ __html: string.replace(queryRegexp, "<u><b>$&</b></u>") }} />
-	);
+	// const underlineQ = string => (
+	// 	<span dangerouslySetInnerHTML={{ __html: string.replace(queryRegexp, "<u><b>$&</b></u>") }} />
+	// );
 
 	const filterBoardItems = provider => {
 		const filterLists = getFilterLists(provider.id);
@@ -590,7 +553,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 
 	const { cards, canFilter } = React.useMemo(() => {
 		const items = [] as any;
-		const lowerQ = (props.q || "").toLocaleLowerCase();
+		// const lowerQ = (props.q || "").toLocaleLowerCase();
 		let canFilter = false;
 		props.providers.forEach(provider => {
 			const filterLists = getFilterLists(provider.id);
@@ -613,7 +576,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 					// .filter(card => !props.q || card.title.toLocaleLowerCase().includes(lowerQ))
 					.map(card => ({
 						...card,
-						label: props.q ? underlineQ(card.title) : card.title,
+						label: card.title, //props.q ? underlineQ(card.title) : card.title,
 						searchLabel: card.title,
 						icon: providerDisplay.icon && <Icon name={providerDisplay.icon} />,
 						key: "card-" + card.id,
@@ -626,7 +589,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 		items.sort((a, b) => b.modifiedAt - a.modifiedAt);
 
 		return { cards: items, canFilter };
-	}, [loadedCards, derivedState.startWorkPreferences, props.q]);
+	}, [loadedCards, derivedState.startWorkPreferences]);
 
 	const menuItems = React.useMemo(() => {
 		// if (props.provider.canFilterByAssignees) {
@@ -688,80 +651,103 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 			value={props.providers.map(provider => PROVIDER_MAPPINGS[provider.name].displayName)}
 		/>
 	);
-	if (props.show === "issues") {
+
+	if (props.providers.length === 0) {
 		return (
-			<IssueRows>
-				<div className="filters" style={{ padding: "0 20px 5px 20px" }}>
-					<H4>
-						{!firstLoad && (
-							<Tooltip title="For ad-hoc work" placement="bottom" delay={1}>
-								<RoundedLink
-									className="buttonish"
-									key="add"
-									onClick={() => selectCard({ title: "" })}
-								>
-									<Icon name="plus" />
-									New item
-								</RoundedLink>
-							</Tooltip>
-						)}
-						My Assignments
-					</H4>
-					Show{" "}
-					{canFilter ? (
-						<Filter
-							title="Filter Items"
-							selected={"selectedLabel"}
-							labels={{ selectedLabel }}
-							items={[{ label: "-" }, ...menuItems.filters]}
-							align="bottomLeft"
-							dontCloseOnSelect
-						/>
-					) : (
-						"items "
+			<ConnectIssueProviders>
+				<Tooltip title="For ad-hoc work" placement="bottom" delay={1}>
+					<RoundedLink className="buttonish" key="add" onClick={() => selectCard({ title: "" })}>
+						<Icon name="plus" />
+						New Work Item
+					</RoundedLink>
+				</Tooltip>
+				<H4>Connect your Issue Provider(s)</H4>
+				<div style={{ height: "20px" }} />
+				<IntegrationButtons>
+					{props.knownIssueProviderOptions.map(item => {
+						if (item.disabled) return null;
+						return (
+							<Provider key={item.key} onClick={item.action}>
+								{item.providerIcon}
+								{item.label}
+							</Provider>
+						);
+					})}
+				</IntegrationButtons>
+			</ConnectIssueProviders>
+		);
+	}
+
+	return (
+		<IssueRows>
+			<div className="filters" style={{ padding: "0 20px 5px 20px" }}>
+				<H4>
+					{!firstLoad && (
+						<Tooltip title="For ad-hoc work" placement="bottom" delay={1}>
+							<RoundedLink
+								className="buttonish"
+								key="add"
+								onClick={() => selectCard({ title: "" })}
+							>
+								<Icon name="plus" />
+								New item
+							</RoundedLink>
+						</Tooltip>
 					)}
-					from{" "}
+					My Assignments
+				</H4>
+				Show{" "}
+				{canFilter ? (
 					<Filter
-						title="Select Providers"
-						selected={"providersLabel"}
-						labels={{ providersLabel }}
-						items={[{ label: "-" }, ...menuItems.services]}
+						title="Filter Items"
+						selected={"selectedLabel"}
+						labels={{ selectedLabel }}
+						items={[{ label: "-" }, ...menuItems.filters]}
 						align="bottomLeft"
 						dontCloseOnSelect
 					/>
-					{isLoading && <Icon className="spin smaller fixed" name="sync" />}
-				</div>{" "}
-				{firstLoad && <LoadingMessage align="left">Loading...</LoadingMessage>}
-				{cards.map(card => (
-					<Row key={card.key} onClick={() => selectCard(card)}>
-						<div>{card.icon}</div>
-						<div>{card.label}</div>
-						<div className="icons">
-							{card.body && <Icon name="description" />}
-							{card.url && (
-								<Icon
-									title={`Open on web`}
-									delay={1}
-									placement="bottomRight"
-									name="link-external"
-									className="clickable"
-									onClick={e => {
-										e.stopPropagation();
-										e.preventDefault();
-										HostApi.instance.send(OpenUrlRequestType, {
-											url: card.url
-										});
-									}}
-								/>
-							)}
-						</div>
-					</Row>
-				))}
-			</IssueRows>
-		);
-	} else {
-		return null;
-	}
+				) : (
+					"items "
+				)}
+				from{" "}
+				<Filter
+					title="Select Providers"
+					selected={"providersLabel"}
+					labels={{ providersLabel }}
+					items={[{ label: "-" }, ...menuItems.services]}
+					align="bottomLeft"
+					dontCloseOnSelect
+				/>
+				{isLoading && <Icon className="spin smaller fixed" name="sync" />}
+			</div>{" "}
+			{firstLoad && <LoadingMessage align="left">Loading...</LoadingMessage>}
+			{cards.map(card => (
+				<Row key={card.key} onClick={() => selectCard(card)}>
+					<div>{card.icon}</div>
+					<div>{card.label}</div>
+					<div className="icons">
+						{card.body && <Icon name="description" />}
+						{card.url && (
+							<Icon
+								title={`Open on web`}
+								delay={1}
+								placement="bottomRight"
+								name="link-external"
+								className="clickable"
+								onClick={e => {
+									e.stopPropagation();
+									e.preventDefault();
+									HostApi.instance.send(OpenUrlRequestType, {
+										url: card.url
+									});
+								}}
+							/>
+						)}
+					</div>
+				</Row>
+			))}
+		</IssueRows>
+	);
 }
 
 export const Row = styled.div`

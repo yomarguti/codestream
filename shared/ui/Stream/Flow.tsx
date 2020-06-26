@@ -772,7 +772,6 @@ export const FlowPanel = () => {
 								<Flow flow="standard" />
 							</Content>
 						)}
-						<div style={{ height: "100px" }} />
 					</div>
 				</div>
 			</ScrollBox>

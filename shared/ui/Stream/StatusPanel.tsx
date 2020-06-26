@@ -142,6 +142,7 @@ const SCMError = styled.div`
 	font-size: smaller;
 	font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
 	white-space: pre-wrap;
+	color: var(--font-color-highlight);
 `;
 
 const CardDescription = styled.div`
@@ -639,60 +640,58 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			<ScrollBox>
 				<div className="channel-list vscroll">
 					{status && status.label && (
-						<>
-							<CurrentStatus>
-								<Tooltip title="Clear work item" placement="bottom" delay={1}>
-									<RoundedLink onClick={clearAndSave}>
-										<Icon className="padded-icon" name="minus-circle" />
-										<span className="wide-text">Clear</span>
-									</RoundedLink>
-								</Tooltip>
-								<H4>Current work item</H4>
-								<Row className="no-hover wide">
-									<div>
-										<Icon className="ticket" name={status.ticketProvider || "ticket"} />
+						<CurrentStatus>
+							<Tooltip title="Clear work item" placement="bottom" delay={1}>
+								<RoundedLink onClick={clearAndSave}>
+									<Icon className="padded-icon" name="minus-circle" />
+									<span className="wide-text">Clear</span>
+								</RoundedLink>
+							</Tooltip>
+							<H4>Current work item</H4>
+							<Row className="no-hover wide">
+								<div>
+									<Icon className="ticket" name={status.ticketProvider || "ticket"} />
+								</div>
+								<div>{status.label}</div>
+								{status.ticketUrl && (
+									<div className="icons">
+										<Icon
+											title={`Open on web`}
+											delay={1}
+											placement="bottomRight"
+											name="link-external"
+											className="clickable link-external"
+											onClick={e => {
+												e.stopPropagation();
+												e.preventDefault();
+												HostApi.instance.send(OpenUrlRequestType, {
+													url: status.ticketUrl
+												});
+											}}
+										/>
 									</div>
-									<div>{status.label}</div>
-									{status.ticketUrl && (
-										<div className="icons">
-											<Icon
-												title={`Open on web`}
-												delay={1}
-												placement="bottomRight"
-												name="link-external"
-												className="clickable link-external"
-												onClick={e => {
-													e.stopPropagation();
-													e.preventDefault();
-													HostApi.instance.send(OpenUrlRequestType, {
-														url: status.ticketUrl
-													});
-												}}
-											/>
-										</div>
-									)}
-								</Row>
-							</CurrentStatus>
-							<CurrentStatus>
-								<Tooltip
-									title={
-										<>
-											Watch the <a href="https://youtu.be/2AyqT4z5Omc">video guide</a>
-										</>
-									}
-									placement="bottom"
-									delay={1}
-								>
-									<RoundedLink onClick={() => dispatch(openPanel(WebviewPanels.NewReview))}>
-										<Icon className="padded-icon" name="review" />
-										<span className="wide-text">Request Review</span>
-									</RoundedLink>
-								</Tooltip>
-								<H4>Work in progress</H4>
-								<ModifiedRepos id={derivedState.currentUserId} />
-							</CurrentStatus>
-						</>
+								)}
+							</Row>
+						</CurrentStatus>
 					)}
+					<CurrentStatus>
+						<Tooltip
+							title={
+								<>
+									Watch the <a href="https://youtu.be/2AyqT4z5Omc">video guide</a>
+								</>
+							}
+							placement="bottom"
+							delay={1}
+						>
+							<RoundedLink onClick={() => dispatch(openPanel(WebviewPanels.NewReview))}>
+								<Icon className="padded-icon" name="review" />
+								<span className="wide-text">Request Review</span>
+							</RoundedLink>
+						</Tooltip>
+						<H4>Work in progress</H4>
+						<ModifiedRepos id={derivedState.currentUserId} />
+					</CurrentStatus>
 					{card && (
 						<Popup>
 							<Dialog className="codemark-form-container">
@@ -806,10 +805,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 						</Popup>
 					)}
 					<StartWorkIssueContext.Provider value={{ setValues: values => selectCard(values) }}>
-						<IssueDropdown q={label} focusInput={inputRef} show="settings" />
-					</StartWorkIssueContext.Provider>
-					<StartWorkIssueContext.Provider value={{ setValues: values => selectCard(values) }}>
-						<IssueDropdown q="" focusInput={inputRef} show="issues" />
+						<IssueDropdown />
 					</StartWorkIssueContext.Provider>
 
 					<div style={{ margin: "0" }}>
