@@ -217,7 +217,7 @@ export function GettingStarted(props: GettingStartedProps) {
 		return {
 			todo: STEPS.filter(step => !step.isComplete(user, state)),
 			completed: STEPS.filter(step => step.isComplete(user, state)),
-			kickstartEnabled: isFeatureEnabled(state, "kickstart")
+			kickstartEnabled: false //isFeatureEnabled(state, "kickstart")
 		};
 	}, shallowEqual);
 
@@ -267,7 +267,6 @@ export function GettingStarted(props: GettingStartedProps) {
 								<Tab onClick={handleClickTab} active={active === "0"} id="0">
 									Getting Started
 								</Tab>
-
 								<Tab onClick={handleClickTab} active={active === "1"} id="1">
 									The Basics
 								</Tab>

@@ -107,7 +107,7 @@ export default class Menu extends Component {
 					this._div.style.left = left + "px";
 					this._div.style.right = "auto";
 				}
-			} else if (align === "dropdownLeft" || align === "botomLeft") {
+			} else if (align === "dropdownLeft" || align === "bottomLeft") {
 				this._div.style.top = rect.bottom + "px";
 				const left = rect.left - parseFloat(computedStyle.paddingRight);
 				this._div.style.left = left + "px";

@@ -21,7 +21,7 @@ import { Button } from "../src/components/Button";
 import { DropdownButton } from "./Review/DropdownButton";
 import { PrePRProviderInfoModal } from "./PrePRProviderInfoModal";
 
-const Provider = styled(Button)`
+export const Provider = styled(Button)`
 	width: 100%;
 	justify-content: left;
 	text-align: left;
@@ -60,9 +60,9 @@ const IntegrationGroups = styled.div`
 	}
 `;
 
-const IntegrationButtons = styled.div`
+export const IntegrationButtons = styled.div`
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(12em, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(13em, 1fr));
 	column-gap: 15px;
 	row-gap: 10px;
 	margin-bottom: 40px;

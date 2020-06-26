@@ -792,7 +792,7 @@ export class SimpleStream extends Component {
 		return (
 			<nav className="inline" id="global-nav">
 				{/* turn this off for GettingStarted experiment */}
-				{this.props.remainingSteps > 0 && (
+				{false && this.props.remainingSteps > 0 && (
 					<label
 						className={cx({ selected: selected(WebviewPanels.GettingStarted) })}
 						onClick={e => this.setActivePanel(WebviewPanels.GettingStarted)}
@@ -806,6 +806,17 @@ export class SimpleStream extends Component {
 						</Tooltip>
 					</label>
 				)}
+				<label
+					className={cx({ selected: selected(WebviewPanels.Status) })}
+					onClick={e => this.setActivePanel(WebviewPanels.Status)}
+					id="global-nav-status-label"
+				>
+					<Tooltip title="Work Items" placement="bottom">
+						<span>
+							<Icon name="inbox" />
+						</span>
+					</Tooltip>
+				</label>
 				<label
 					className={cx({ selected: selected(WebviewPanels.CodemarksForFile) })}
 					onClick={e => this.setActivePanel(WebviewPanels.CodemarksForFile)}
@@ -831,12 +842,20 @@ export class SimpleStream extends Component {
 					</Tooltip>
 				</label>
 				<label
+					style={{ display: "none" }}
 					onClick={this.togglePlusMenu}
 					className={cx({ active: plusMenuOpen })}
 					id="global-nav-plus-label"
 				>
 					<Icon name="plus" title="Create..." placement="bottom" />
 					{this.renderPlusMenu()}
+				</label>
+				<label
+					className={cx({ selected: selected(WebviewPanels.FilterSearch) })}
+					onClick={this.goSearch}
+					id="global-nav-search-label"
+				>
+					<Icon name="search" title="Filter &amp; Search" placement="bottomRight" />
 				</label>
 				<label
 					className={cx({ selected: selected(WebviewPanels.People) })}
@@ -849,13 +868,6 @@ export class SimpleStream extends Component {
 							{this.props.collisions.nav && <Icon name="alert" className="nav-conflict" />}
 						</span>
 					</Tooltip>
-				</label>
-				<label
-					className={cx({ selected: selected(WebviewPanels.FilterSearch) })}
-					onClick={this.goSearch}
-					id="global-nav-search-label"
-				>
-					<Icon name="search" title="Filter &amp; Search" placement="bottomRight" />
 				</label>
 				<label
 					onClick={this.toggleMenu}
@@ -900,7 +912,8 @@ export class SimpleStream extends Component {
 			);
 
 		if (activePanel === WebviewPanels.LandingRedirect)
-			activePanel = remainingSteps > 0 ? WebviewPanels.GettingStarted : WebviewPanels.Activity;
+			// activePanel = remainingSteps > 0 ? WebviewPanels.GettingStarted : WebviewPanels.Activity;
+			activePanel = WebviewPanels.Activity;
 
 		// this is the fix
 
@@ -997,7 +1010,7 @@ export class SimpleStream extends Component {
 				"create-channel",
 				"create-dm",
 				"public-channels",
-				WebviewPanels.Status,
+				// WebviewPanels.Status,
 				WebviewPanels.ChangePassword,
 				WebviewPanels.ChangeEmail,
 				WebviewPanels.ChangeAvatar,

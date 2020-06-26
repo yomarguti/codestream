@@ -25,6 +25,7 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		boardLabel: "project",
 		listLabel: "section",
 		cardLabel: "task",
+		hasFilters: true,
 		supportsStartWork: true
 	},
 	bitbucket: {
@@ -41,6 +42,7 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		boardLabel: "repo",
 		listLabel: "type",
 		cardLabel: "issue",
+		hasFilters: true,
 		supportsStartWork: true
 	},
 	github_enterprise: {

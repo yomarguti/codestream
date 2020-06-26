@@ -169,6 +169,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				title: card.title,
 				modifiedAt: new Date(card.updated_at).getTime(),
 				tokenId: card.number,
+				idBoard: card.repository ? card.repository.id : "",
+				comments: card.comments,
 				body: card.body
 			};
 		});

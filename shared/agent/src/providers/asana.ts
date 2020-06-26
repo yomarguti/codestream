@@ -157,10 +157,11 @@ export class AsanaProvider extends ThirdPartyIssueProviderBase<CSAsanaProviderIn
 	private async getWorkspaceTasks(workspace: AsanaWorkspace): Promise<AsanaCard[]> {
 		let cards: AsanaCard[] = [];
 
+		// https://developers.asana.com/docs/tasks
 		try {
 			let apiResponse = await this.get<{ data: AsanaCard[]; next_page: any }>(
 				`/api/1.0/tasks?${qs.stringify({
-					opt_fields: "url,name,modified_at,notes",
+					opt_fields: "url,name,modified_at,notes,memberships.section.gid,comments",
 					workspace: workspace.gid,
 					assignee: this._asanaUser?.gid,
 					completed_since: "now",
@@ -180,7 +181,9 @@ export class AsanaProvider extends ThirdPartyIssueProviderBase<CSAsanaProviderIn
 			debugger;
 		}
 
-		return cards;
+		return cards.map(card => {
+			return { ...card, workspaceGid: workspace.gid };
+		});
 	}
 
 	@log()
@@ -192,16 +195,20 @@ export class AsanaProvider extends ThirdPartyIssueProviderBase<CSAsanaProviderIn
 			tasks = tasks.concat(workspaceTasks);
 		}
 
+		// Logger.log("ASANA: ", JSON.stringify(tasks, null, 4));
 		const cards = tasks.map(task => {
+			const { memberships = [] } = task;
 			return {
 				id: task.gid,
-				url: task.url,
+				url: `${this.baseUrl}/0/${task.workspaceGid}/${task.gid}`,
 				title: task.name,
 				modifiedAt: new Date(task.modified_at).getTime(),
+				idList: memberships[0] && memberships[0].section ? memberships[0].section.gid : "",
 				tokenId: task.gid,
 				body: task.notes
 			};
 		});
+		Logger.log("ASANA: ", JSON.stringify(cards, null, 4));
 		return { cards };
 	}
 

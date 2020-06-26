@@ -1,7 +1,7 @@
 import React from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
 import { connectProvider, getUserProviderInfo } from "../../store/providers/actions";
-import { openPanel, setIssueProvider } from "../../store/context/actions";
+import { openPanel, setIssueProvider, setCodemarkTypeFilter } from "../../store/context/actions";
 import Icon from "../Icon";
 import Menu from "../Menu";
 import { ProviderDisplay, PROVIDER_MAPPINGS } from "./types";
@@ -10,7 +10,7 @@ import {
 	ThirdPartyProviders,
 	FetchThirdPartyBoardsRequestType,
 	FetchThirdPartyCardsRequestType,
-	ThirdPartyProviderCard
+	OpenUrlRequestType
 } from "@codestream/protocols/agent";
 import { CSMe } from "@codestream/protocols/api";
 import { PrePRProviderInfoModalProps, PrePRProviderInfoModal } from "../PrePRProviderInfoModal";
@@ -20,7 +20,13 @@ import { updateForProvider } from "@codestream/webview/store/activeIntegrations/
 import { setUserPreference } from "../actions";
 import { HostApi } from "../..";
 import { keyFilter } from "@codestream/webview/utils";
-import { StartWorkIssueContext } from "../StatusPanel";
+import { StartWorkIssueContext, RoundedLink, H4 } from "../StatusPanel";
+import styled from "styled-components";
+import Filter from "../Filter";
+import { SmartFormattedList } from "../SmartFormattedList";
+import { Provider, IntegrationButtons } from "../IntegrationsPanel";
+import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
+import Tooltip from "../Tooltip";
 
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
@@ -42,6 +48,7 @@ interface Props extends ConnectedProps {
 	updateForProvider(...args: Parameters<typeof updateForProvider>): any;
 	setIssueProvider(providerId?: string): void;
 	openPanel(...args: Parameters<typeof openPanel>): void;
+	show: "issues" | "settings";
 	isEditing?: boolean;
 	q?: string;
 	focusInput?: React.RefObject<HTMLInputElement>;
@@ -140,7 +147,7 @@ class IssueDropdown extends React.Component<Props, State> {
 					: providerDisplay.displayName;
 				const supported = providerDisplay.supportsStartWork;
 				return {
-					// icon: <Icon name={providerDisplay.icon || "blank"} />,
+					providerIcon: <Icon name={providerDisplay.icon || "blank"} />,
 					checked: this.providerIsConnected(providerId) && !this.providerIsDisabled(providerId),
 					value: providerId,
 					label: displayName + (supported ? "" : " (soon!)"),
@@ -152,9 +159,9 @@ class IssueDropdown extends React.Component<Props, State> {
 			.sort((a, b) =>
 				a.disabled === b.disabled ? a.label.localeCompare(b.label) : a.disabled ? 1 : -1
 			);
-		const index = knownIssueProviderOptions.findIndex(i => i.disabled);
+		// const index = knownIssueProviderOptions.findIndex(i => i.disabled);
 		// @ts-ignore
-		knownIssueProviderOptions.splice(index, 0, { label: "-" });
+		// knownIssueProviderOptions.splice(index, 0, { label: "-" });
 
 		const activeProviders = knownIssueProviders
 			.filter(id => this.providerIsConnected(id) && !this.providerIsDisabled(id))
@@ -162,17 +169,40 @@ class IssueDropdown extends React.Component<Props, State> {
 
 		const { q, focusInput } = this.props;
 
+		if (activeProviders.length === 0) {
+			if (this.props.show === "settings") return null;
+			else
+				return (
+					<ConnectIssueProviders>
+						<H4>Connect your Issue Provider(s)</H4>
+						<div style={{ height: "5px" }} />
+						<IntegrationButtons>
+							{knownIssueProviderOptions.map(item => {
+								if (item.disabled) return null;
+								return (
+									<Provider key={item.key} onClick={item.action}>
+										{item.providerIcon}
+										{item.label}
+									</Provider>
+								);
+							})}
+						</IntegrationButtons>
+					</ConnectIssueProviders>
+				);
+		}
+
 		return (
 			<>
 				{this.state.propsForPrePRProviderInfoModal && (
 					<PrePRProviderInfoModal {...this.state.propsForPrePRProviderInfoModal} />
 				)}
-				<CardDropdown
+				<IssueList
 					providers={activeProviders}
 					q={q}
 					focusInput={focusInput}
+					show={this.props.show}
 					knownIssueProviderOptions={knownIssueProviderOptions}
-				></CardDropdown>
+				></IssueList>
 			</>
 		);
 	}
@@ -345,16 +375,27 @@ export default connect(mapStateToProps, {
 	setUserPreference
 })(IssueDropdown);
 
-interface DropdownProps {
+export function Issue(props) {
+	const { card } = props;
+	return (
+		<div onClick={props.onClick} style={{ padding: "2px 0" }}>
+			{card.icon}
+			{card.label}
+		</div>
+	);
+}
+
+interface IssueListProps {
 	providers: ThirdPartyProviderConfig[];
 	q?: string;
 	focusInput?: React.RefObject<HTMLInputElement>;
 	knownIssueProviderOptions: any;
+	show: "issues" | "settings";
 }
 
 const EMPTY_ARRAY = {};
 
-export function CardDropdown(props: React.PropsWithChildren<DropdownProps>) {
+export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 	const dispatch = useDispatch();
 	const data = useSelector((state: CodeStreamState) => state.activeIntegrations);
 	const derivedState = useSelector((state: CodeStreamState) => {
@@ -368,23 +409,17 @@ export function CardDropdown(props: React.PropsWithChildren<DropdownProps>) {
 	const [isLoading, setIsLoading] = React.useState(false);
 	const [loadedBoards, setLoadedBoards] = React.useState(0);
 	const [loadedCards, setLoadedCards] = React.useState(0);
-	const [menuState, setMenuState] = React.useState<{
-		open: boolean;
-		target?: EventTarget;
-	}>({ open: false, target: undefined });
 
-	React.useEffect(() => {
-		setMenuState(state => ({ open: props.q ? true : false }));
-	}, [props.q]);
-
-	const getFilterLists = providerId => {
+	const getFilterLists = (providerId: string) => {
 		const prefs = derivedState.startWorkPreferences[providerId] || {};
-		return prefs.filterLists || EMPTY_ARRAY;
+		const lists = prefs.filterLists ? { ...prefs.filterLists } : EMPTY_ARRAY;
+		return lists;
 	};
 
-	const getFilterBoards = providerId => {
+	const getFilterBoards = (providerId: string) => {
 		const prefs = derivedState.startWorkPreferences[providerId] || {};
-		return prefs.filterBoards || EMPTY_ARRAY;
+		const boards = prefs.filterBoards ? { ...prefs.filterBoards } : EMPTY_ARRAY;
+		return boards;
 	};
 
 	const getFilterAssignees = providerId => {
@@ -393,8 +428,6 @@ export function CardDropdown(props: React.PropsWithChildren<DropdownProps>) {
 	};
 
 	const updateDataState = (providerId, data) => dispatch(updateForProvider(providerId, data));
-
-	const buttonRef = React.useRef<HTMLElement>(null);
 
 	const setPreference = (providerId, key, value) => {
 		dispatch(setUserPreference(["startWork", providerId, key], value));
@@ -430,25 +463,15 @@ export function CardDropdown(props: React.PropsWithChildren<DropdownProps>) {
 
 	React.useEffect(() => {
 		void (async () => {
+			if (!loadedBoards) return;
+
 			setIsLoading(true);
+
 			await Promise.all(
 				props.providers.map(async provider => {
-					const boardIds = keyFilter(getFilterBoards(provider.id));
 					try {
-						// only allow to filter by all if you've selected boards to filter by
-						const filterAssigneesSetting =
-							getFilterAssignees(provider.id) === "all" &&
-							keyFilter(getFilterLists(provider.id)).length > 0
-								? "all"
-								: "mine";
 						const response = await HostApi.instance.send(FetchThirdPartyCardsRequestType, {
-							providerId: provider.id,
-							data: {
-								assignedToMe: filterAssigneesSetting === "mine",
-								assignedToAnyone: filterAssigneesSetting === "all",
-								filterBoards: keyFilter(getFilterBoards(provider.id)),
-								filterLists: keyFilter(getFilterLists(provider.id))
-							}
+							providerId: provider.id
 						});
 						updateDataState(provider.id, {
 							cards: response.cards
@@ -463,40 +486,32 @@ export function CardDropdown(props: React.PropsWithChildren<DropdownProps>) {
 			setIsLoading(false);
 			setLoadedCards(loadedCards + 1);
 		})();
-	}, [loadedBoards, derivedState.startWorkPreferences]);
-
-	const handleClickDropdown = React.useCallback((event: React.MouseEvent) => {
-		if (isLoading) {
-			event.preventDefault();
-			dispatch(setIssueProvider(undefined));
-			setIsLoading(false);
-		} else {
-			event.stopPropagation();
-			// @ts-ignore
-			const target = event.target.closest(".dropdown-button");
-			setMenuState(state => ({ open: !state.open }));
-		}
-	}, []);
+	}, [loadedBoards]);
 
 	const selectCard = React.useCallback(
-		(card?: ThirdPartyProviderCard) => {
+		(card?) => {
 			if (card) {
 				const { provider } = card;
-				const providerDisplay = PROVIDER_MAPPINGS[provider.name];
-				const pData = data[provider.id] || {};
-				// @ts-ignore
-				const board = pData.boards && pData.boards.find(b => b.id === card.idBoard);
-				const lists = board && board.lists;
-				startWorkIssueContext.setValues({
-					...card,
-					providerIcon: providerDisplay.icon,
-					providerName: providerDisplay.displayName,
-					providerId: provider.id,
-					moveCardLabel: `Move this ${providerDisplay.cardLabel} to`,
-					moveCardOptions: lists
-				});
+				if (provider) {
+					const providerDisplay = PROVIDER_MAPPINGS[provider.name];
+					const pData = data[provider.id] || {};
+					// @ts-ignore
+					const board = pData.boards && pData.boards.find(b => b.id === card.idBoard);
+					const lists = board && board.lists;
+					startWorkIssueContext.setValues({
+						...card,
+						providerIcon: providerDisplay.icon,
+						providerToken: providerDisplay.icon,
+						providerName: providerDisplay.displayName,
+						providerId: provider.id,
+						moveCardLabel: `Move this ${providerDisplay.cardLabel} to`,
+						moveCardOptions: lists
+					});
+				} else {
+					// creating a new card/issue
+					startWorkIssueContext.setValues({ ...card });
+				}
 			}
-			setMenuState({ open: false });
 		},
 		[data.boards]
 	);
@@ -526,31 +541,32 @@ export function CardDropdown(props: React.PropsWithChildren<DropdownProps>) {
 			if (lists) {
 				const submenu = board.lists.map(list => {
 					const l = list;
-					const checked = !!filterLists[list.id];
+					const checked = !!filterLists[list.id || "_"];
 					if (checked) boardChecked = true;
 					return {
 						label: list.name,
 						key: list.id,
 						checked,
 						action: () =>
-							setPreference(provider.id, "filterLists", { ...filterLists, [l.id]: !checked })
+							setPreference(provider.id, "filterLists", { ...filterLists, [l.id || "_"]: !checked })
 					};
 				});
 				items.push({
 					label: board.name,
-					key: board.id,
+					key: "board-" + board.id,
 					checked: boardChecked,
 					action: () => {},
 					submenu
 				});
 			} else {
 				const checked = !!filterBoards[b.id];
+				console.warn("GOT: ", checked, " from ", b, " and ", filterBoards);
 				items.push({
 					label: board.name,
-					key: board.id,
+					key: "board-" + board.id,
 					checked,
 					action: () =>
-						setPreference(provider.id, "filterBoards", { ...filterBoards, [b.id]: !checked })
+						setPreference(provider.id, "filterBoards", { ...filterBoards, [b.id || "_"]: !checked })
 				});
 			}
 		});
@@ -560,116 +576,234 @@ export function CardDropdown(props: React.PropsWithChildren<DropdownProps>) {
 	const filterByBoardList = provider => {
 		const providerDisplay = PROVIDER_MAPPINGS[provider.name];
 		return {
-			label: `Filter ${providerDisplay.displayName} by ${providerDisplay.boardLabelCaps} & ${providerDisplay.listLabelCaps}`,
+			label: `${providerDisplay.displayName} Filter`,
 			icon: <Icon name={providerDisplay.icon} />,
 			key: "filters-" + provider.name,
 			submenu: filterBoardItems(provider)
 		};
 	};
 
-	const cardItems = React.useMemo(() => {
+	const { cards, canFilter } = React.useMemo(() => {
 		const items = [] as any;
 		const lowerQ = (props.q || "").toLocaleLowerCase();
+		let canFilter = false;
 		props.providers.forEach(provider => {
 			const filterLists = getFilterLists(provider.id);
-			const isFiltering = keyFilter(filterLists).length > 0;
+			const isFilteringLists = keyFilter(filterLists).length > 0;
+			const filterBoards = getFilterBoards(provider.id);
+			const isFilteringBoards = keyFilter(filterBoards).length > 0;
 			const providerDisplay = PROVIDER_MAPPINGS[provider.name];
+			canFilter = canFilter || providerDisplay.hasFilters || false;
 
 			const pData = data[provider.id] || {};
 			// @ts-ignore
 			const cards = pData.cards || [];
+
+			// console.warn("COMPARING: ", cards, " TO ", filterLists);
 			items.push(
 				...(cards
 					// @ts-ignore
-					.filter(card => !isFiltering || filterLists[card.idList])
-					.filter(card => !props.q || card.title.toLocaleLowerCase().includes(lowerQ))
+					.filter(card => !isFilteringLists || filterLists[card.idList || "_"])
+					.filter(card => !isFilteringBoards || filterBoards[card.idBoard || "_"])
+					// .filter(card => !props.q || card.title.toLocaleLowerCase().includes(lowerQ))
 					.map(card => ({
+						...card,
 						label: props.q ? underlineQ(card.title) : card.title,
 						searchLabel: card.title,
 						icon: providerDisplay.icon && <Icon name={providerDisplay.icon} />,
 						key: "card-" + card.id,
 						modifiedAt: card.modifiedAt,
-						action: { ...card, provider }
+						provider
 					})) as any)
 			);
 		});
 
 		items.sort((a, b) => b.modifiedAt - a.modifiedAt);
 
-		if (!props.q) {
-			items.unshift({ label: "-" });
-			// if (props.provider.canFilterByAssignees) {
-			// 	items.unshift({
-			// 		label: "Filter by Assignee",
-			// 		icon: <Icon name="filter" />,
-			// 		key: "assignment",
-			// 		submenu: [
-			// 			{
-			// 				label: `${derivedState.providerDisplay.cardLabel} Assigned to Me`,
-			// 				key: "mine",
-			// 				checked: derivedState.filterAssignees === "mine",
-			// 				action: () => setPreference("filterAssignees", "mine")
-			// 			},
-			// 			{
-			// 				label: `Unassigned ${derivedState.providerDisplay.cardLabel}`,
-			// 				key: "unassigned",
-			// 				checked: derivedState.filterAssignees === "unassigned",
-			// 				action: () => setPreference("filterAssignees", "unassigned")
-			// 			},
-			// 			{
-			// 				label: `All ${derivedState.providerDisplay.cardLabel}`,
-			// 				key: "all",
-			// 				checked: derivedState.filterAssignees === "all",
-			// 				action: () => setPreference("filterAssignees", "all")
-			// 			}
-			// 		]
-			// 	});
-			// }
-			// const submenu = [] as any;
-			// props.providers.forEach(provider => {
-			// 	submenu.push(filterByBoardList(provider));
-			// });
-			// submenu.push(
-			// 	{ label: "-" },
-			// 	{
-			// 		label: "Connect another Service",
-			// 		key: "connect",
-			// 		submenu: props.knownIssueProviderOptions
-			// 	}
-			// );
-
-			props.providers.forEach(provider => {
-				const providerDisplay = PROVIDER_MAPPINGS[provider.name];
-				if (providerDisplay.hasFilters) items.unshift(filterByBoardList(provider));
-			});
-			items.unshift({
-				label: `Connected Services`,
-				icon: <Icon name="gear" />,
-				key: "settings",
-				submenu: props.knownIssueProviderOptions
-			});
-		}
-		return items;
+		return { cards: items, canFilter };
 	}, [loadedCards, derivedState.startWorkPreferences, props.q]);
 
-	return (
-		<span
-			className={`dropdown-button ${menuState.open ? "selected" : ""}`}
-			onClick={handleClickDropdown}
-			ref={buttonRef}
-		>
-			{isLoading ? <Icon className="spin" name="sync" /> : <Icon name="chevron-down" />}
-			{menuState.open && cardItems.length > 0 && (
-				<Menu
-					align="dropdownRight"
-					target={buttonRef.current}
-					items={cardItems}
-					dontCloseOnSelect={true}
-					action={selectCard}
-					fullWidth={true}
-					focusInput={props.focusInput}
-				/>
-			)}
-		</span>
+	const menuItems = React.useMemo(() => {
+		// if (props.provider.canFilterByAssignees) {
+		// 	items.unshift({
+		// 		label: "Filter by Assignee",
+		// 		icon: <Icon name="filter" />,
+		// 		key: "assignment",
+		// 		submenu: [
+		// 			{
+		// 				label: `${derivedState.providerDisplay.cardLabel} Assigned to Me`,
+		// 				key: "mine",
+		// 				checked: derivedState.filterAssignees === "mine",
+		// 				action: () => setPreference("filterAssignees", "mine")
+		// 			},
+		// 			{
+		// 				label: `Unassigned ${derivedState.providerDisplay.cardLabel}`,
+		// 				key: "unassigned",
+		// 				checked: derivedState.filterAssignees === "unassigned",
+		// 				action: () => setPreference("filterAssignees", "unassigned")
+		// 			},
+		// 			{
+		// 				label: `All ${derivedState.providerDisplay.cardLabel}`,
+		// 				key: "all",
+		// 				checked: derivedState.filterAssignees === "all",
+		// 				action: () => setPreference("filterAssignees", "all")
+		// 			}
+		// 		]
+		// 	});
+		// }
+		// const submenu = [] as any;
+		// props.providers.forEach(provider => {
+		// 	submenu.push(filterByBoardList(provider));
+		// });
+		// submenu.push(
+		// 	{ label: "-" },
+		// 	{
+		// 		label: "Connect another Service",
+		// 		key: "connect",
+		// 		submenu: props.knownIssueProviderOptions
+		// 	}
+		// );
+
+		const items = { filters: [], services: [] } as any;
+		props.providers.forEach(provider => {
+			const providerDisplay = PROVIDER_MAPPINGS[provider.name];
+			if (providerDisplay.hasFilters) items.filters.unshift(filterByBoardList(provider));
+		});
+		if (items.filters.length === 1) items.filters = items.filters[0].submenu;
+
+		items.services = props.knownIssueProviderOptions;
+
+		return items;
+	}, [loadedCards, derivedState.startWorkPreferences]);
+
+	const firstLoad = cards.length == 0 && isLoading;
+	const selectedLabel = canFilter ? "selected items" : "my items";
+	const providersLabel = (
+		<SmartFormattedList
+			value={props.providers.map(provider => PROVIDER_MAPPINGS[provider.name].displayName)}
+		/>
 	);
+	if (props.show === "issues") {
+		return (
+			<IssueRows>
+				<div className="filters" style={{ padding: "0 20px 5px 20px" }}>
+					<H4>
+						{!firstLoad && (
+							<Tooltip title="For ad-hoc work" placement="bottom" delay={1}>
+								<RoundedLink
+									className="buttonish"
+									key="add"
+									onClick={() => selectCard({ title: "" })}
+								>
+									<Icon name="plus" />
+									New item
+								</RoundedLink>
+							</Tooltip>
+						)}
+						My Assignments
+					</H4>
+					Show{" "}
+					{canFilter ? (
+						<Filter
+							title="Filter Items"
+							selected={"selectedLabel"}
+							labels={{ selectedLabel }}
+							items={[{ label: "-" }, ...menuItems.filters]}
+							align="bottomLeft"
+							dontCloseOnSelect
+						/>
+					) : (
+						"items "
+					)}
+					from{" "}
+					<Filter
+						title="Select Providers"
+						selected={"providersLabel"}
+						labels={{ providersLabel }}
+						items={[{ label: "-" }, ...menuItems.services]}
+						align="bottomLeft"
+						dontCloseOnSelect
+					/>
+					{isLoading && <Icon className="spin smaller fixed" name="sync" />}
+				</div>{" "}
+				{firstLoad && <LoadingMessage align="left">Loading...</LoadingMessage>}
+				{cards.map(card => (
+					<Row key={card.key} onClick={() => selectCard(card)}>
+						<div>{card.icon}</div>
+						<div>{card.label}</div>
+						<div className="icons">
+							{card.body && <Icon name="description" />}
+							{card.url && (
+								<Icon
+									title={`Open on web`}
+									delay={1}
+									placement="bottomRight"
+									name="link-external"
+									className="clickable"
+									onClick={e => {
+										e.stopPropagation();
+										e.preventDefault();
+										HostApi.instance.send(OpenUrlRequestType, {
+											url: card.url
+										});
+									}}
+								/>
+							)}
+						</div>
+					</Row>
+				))}
+			</IssueRows>
+		);
+	} else {
+		return null;
+	}
 }
+
+export const Row = styled.div`
+	display: flex;
+	&:not(.no-hover) {
+		cursor: pointer;
+	}
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	width: 100%;
+	padding: 0 15px 0 20px;
+	&.wide {
+		padding: 0;
+	}
+	&.disabled {
+		opacity: 0.5;
+	}
+	> div {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		padding: 3px 5px 3px 0;
+		&:nth-child(0) {
+			flex-shrink: 10;
+		}
+		&:nth-child(2) {
+			flex-shrink: 10;
+		}
+	}
+	.icons {
+		margin-left: auto;
+		.icon {
+			margin-left: 10px;
+		}
+	}
+	&:not(.disabled):not(.no-hover):hover {
+		background: var(--app-background-color-hover);
+	}
+`;
+
+export const IssueRows = styled.div`
+	border-top: 1px solid var(--base-border-color);
+	padding-top: 15px;
+	padding-bottom: 20px;
+`;
+
+const ConnectIssueProviders = styled.div`
+	border-top: 1px solid var(--base-border-color);
+	padding: 20px 20px 0 20px;
+`;

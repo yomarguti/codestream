@@ -8,7 +8,7 @@ import { Checkbox } from "../src/components/Checkbox";
 import styled from "styled-components";
 import { Button } from "../src/components/Button";
 import { setUserStatus, setUserPreference } from "./actions";
-import { closePanel } from "../store/context/actions";
+import { closePanel, openPanel } from "../store/context/actions";
 import { CSMe } from "@codestream/protocols/api";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { useDidMount } from "../utilities/hooks";
@@ -22,9 +22,9 @@ import {
 	ReposScm,
 	UpdateThirdPartyStatusRequestType
 } from "@codestream/protocols/agent";
-import IssueDropdown from "./CrossPostIssueControls/IssueDropdown";
+import IssueDropdown, { Row } from "./CrossPostIssueControls/IssueDropdown";
 import { ConfigureBranchNames } from "./ConfigureBranchNames";
-import { VideoLink } from "./Flow";
+import { VideoLink, Flow } from "./Flow";
 import { MarkdownText } from "./MarkdownText";
 import {
 	getProviderConfig,
@@ -32,6 +32,14 @@ import {
 	getConnectedSharingTargets
 } from "../store/providers/reducer";
 import { SharingAttributes } from "./SharingControls";
+import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
+import { PanelHeader } from "../src/components/PanelHeader";
+import ScrollBox from "./ScrollBox";
+import { Tabs, Tab } from "../src/components/Tabs";
+import { Content } from "../src/components/Carousel";
+import { WebviewPanels } from "../ipc/webview.protocol.common";
+import { ModifiedRepos } from "./ModifiedRepos";
+import Tooltip from "./Tooltip";
 
 const StyledCheckbox = styled(Checkbox)`
 	color: var(--text-color-subtle);
@@ -39,8 +47,8 @@ const StyledCheckbox = styled(Checkbox)`
 
 const StatusInput = styled.div`
 	position: relative;
-	margin-bottom: 20px;
-	.ticket-icon,
+	margin: 7px 0 20px 0;
+	width: 100%;
 	.dropdown-button {
 		position: absolute;
 		left: 1px;
@@ -97,23 +105,34 @@ const StatusInput = styled.div`
 		font-size: 14px !important;
 		// padding: 8px 40px 8px 42px !important;
 		padding: 8px 40px 8px 10px !important;
+		width: 100%;
 		&::placeholder {
 			font-size: 14px !important;
 		}
 	}
 	.ticket-icon {
+		display: inline-block;
+		transform: scale(1.25);
+		padding: 3px 8px 3px 3px;
+		vertical-align: -2px;
 	}
 	&.has-ticket-icon input#status-input {
 		padding: 8px 60px 8px 32px !important;
 	}
 `;
 
+const CardTitle = styled.div`
+	font-size: 16px;
+	position: relative;
+`;
+
 const ButtonRow = styled.div`
-	text-align: center;
-	margin-top: 20px;
+	text-align: right;
+	margin-top: 10px;
 	button {
-		white-space: nowrap;
-		width: 16em;
+		margin: 10px 0 0 10px;
+		// white-space: nowrap;
+		// width: 16em;
 	}
 `;
 
@@ -130,18 +149,84 @@ const SCMError = styled.div`
 `;
 
 const CardDescription = styled.div`
-	padding: 10px;
-	border: 1px solid var(--base-border-color);
-	border-top: none;
-	margin-bottom: 20px;
-	margin-top: -20px;
-	background: var(--base-background-color);
+	// padding: 10px;
+	// border: 1px solid var(--base-border-color);
+	margin: -10px 0 20px 0;
+	// background: var(--app-background-color);
 `;
 
 const CardLink = styled.div`
 	text-align: right;
 	font-size: smaller;
 	margin: -18px 0 15px 0;
+`;
+
+const Docs = styled.div`
+	cursor: pointer;
+	margin-bottom: 30px;
+	border-top: 1px solid var(--base-border-color);
+	padding: 15px 20px;
+	span:hover {
+		color: var(--text-color-highlight);
+	}
+	.icon {
+		display: inline-block;
+		margin-right: 5px;
+		transition: transform 0.1s;
+	}
+	.icon.rotate {
+		transform: rotate(90deg);
+	}
+	.getting-started {
+		float: right;
+	}
+`;
+
+const CurrentStatus = styled.div`
+	padding: 10px 20px 15px 20px;
+	.icon {
+		margin-right: 5px;
+		&.ticket,
+		&.link-external {
+			margin-right: 0;
+		}
+	}
+	border-top: 1px solid var(--base-border-color);
+`;
+
+export const H4 = styled.h4`
+	color: var(--text-color-highlight);
+	font-weight: 400;
+	font-size: 16px;
+	margin: 0 0 5px 0;
+	&.padded {
+		padding: 0 20px;
+	}
+`;
+
+export const RoundedLink = styled.a`
+	float: right;
+	text-decoration: none !important;
+	.narrow-icon {
+		margin-right: 5px;
+	}
+	.octicon-minus-circle {
+		margin-top: -1px;
+	}
+	background: transparent;
+	color: var(--text-color);
+	&:hover {
+		color: var(--text-color-highlight);
+		background: rgba(127, 127, 127, 0.3);
+	}
+	background: rgba(127, 127, 127, 0.15);
+	border: 1px solid var(--base-border-color);
+	padding: 3px 8px 3px 4px;
+	font-size: 12px;
+	border-radius: 13px;
+	.icon {
+		margin-right: 4px;
+	}
 `;
 
 export interface IStartWorkIssueContext {
@@ -195,6 +280,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			repos: state.repos,
 			invisible: status.invisible || false,
 			teamName: team.name,
+			currentUserId: state.session.userId!,
 			currentUserName: state.users[state.session.userId!].username,
 			textEditorUri: state.editorContext.textEditorUri,
 			branchMaxLength: settings.branchMaxLength || 40,
@@ -214,28 +300,27 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const [loading, setLoading] = useState(false);
 	const [scmError, setScmError] = useState("");
 	const [label, setLabel] = useState(status.label || "");
-	const [card, setCard] = useState(
-		status.ticketProvider
-			? ({
-					url: status.ticketUrl,
-					providerIcon: status.ticketProvider,
-					title: status.label,
-					moveCardLabel: "Move this card to",
-					moveCardOptions: [] as any
-			  } as any)
-			: undefined
-	);
+	const [card, setCard] = useState<any>();
+	// status.ticketProvider
+	// 	? ({
+	// 			url: status.ticketUrl,
+	// 			providerIcon: status.ticketProvider,
+	// 			title: status.label,
+	// 			moveCardLabel: "Move this card to",
+	// 			moveCardOptions: [] as any
+	// 	  } as any)
 	const [manuallySelectedBranch, setManuallySelectedBranch] = useState("");
 	const [currentBranch, setCurrentBranch] = useState("");
 	const [editingBranch, setEditingBranch] = useState(false);
 	const [branches, setBranches] = useState([] as string[]);
 	const [customBranchName, setCustomBranchName] = useState("");
 	const [configureBranchNames, setConfigureBranchNames] = useState(false);
-	const [autocomplete, setAutocomplete] = useState(false);
 	const [openRepos, setOpenRepos] = useState<ReposScm[]>([]);
 	const [repoUri, setRepoUri] = useState("");
 	const [currentRepoId, setCurrentRepoId] = useState("");
 	const [fromBranch, setFromBranch] = useState("");
+	const [showDocumentation, setShowDocumentation] = useState(false);
+	const [activeTab, setActiveTab] = useState("1");
 	const inputRef = React.useRef<HTMLInputElement>(null);
 
 	const { moveCard, updateSlack, createBranch } = derivedState;
@@ -247,12 +332,10 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 
 	const handleChangeStatus = value => {
 		setLabel(value || "");
-		setCard(undefined);
-		setAutocomplete(true);
 	};
 
 	const selectCard = card => {
-		if (card && card.title) {
+		if (card) {
 			setLabel(card.title || "");
 			setCard(card);
 
@@ -264,8 +347,6 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			} else {
 			}
 		}
-
-		setAutocomplete(false);
 	};
 
 	const dateToken = () => {
@@ -288,13 +369,14 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	};
 
 	const replaceTicketTokens = (template: string, card) => {
-		const { tokenId, title } = card;
+		const { tokenId, title, providerToken } = card;
 		return template
 			.replace(/\{id\}/g, tokenId)
 			.replace(/\{username\}/g, derivedState.currentUserName)
 			.replace(/\{team\}/g, derivedState.teamName)
 			.replace(/\{date\}/g, dateToken())
 			.replace(/\{title\}/g, title.toLowerCase())
+			.replace(/\{provider\}/g, providerToken)
 			.replace(/[\s]+/g, "-")
 			.substr(0, derivedState.branchMaxLength);
 	};
@@ -331,16 +413,14 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		return !same && label; // && label.startsWith("http");
 	}, [label, same]);
 	const showUpdateSlackCheckbox = React.useMemo(() => {
-		return false;
-		// return !same && label && derivedState.isConnectedToSlack;
+		// return false;
+		return !same && label && derivedState.isConnectedToSlack;
 	}, [label, same, derivedState.isConnectedToSlack]);
 
 	const newBranch = React.useMemo(() => {
 		// setNewBranch(newBranch);
 		if (customBranchName) return customBranchName;
-		if (card)
-			//@ts-ignore
-			return replaceTicketTokens(derivedState.branchTicketTemplate, card);
+		if (card && card.id) return replaceTicketTokens(derivedState.branchTicketTemplate, card);
 		else return replaceDescriptionTokens(derivedState.branchDescriptionTemplate, label);
 	}, [
 		label,
@@ -353,9 +433,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const branch = React.useMemo(() => {
 		if (manuallySelectedBranch) return manuallySelectedBranch;
 		if (customBranchName) return customBranchName;
-		if (card)
-			//@ts-ignore
-			return replaceTicketTokens(derivedState.branchTicketTemplate, card);
+		if (card && card.id) return replaceTicketTokens(derivedState.branchTicketTemplate, card);
 		else return replaceDescriptionTokens(derivedState.branchDescriptionTemplate, label);
 	}, [
 		label,
@@ -413,7 +491,8 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		const ticketUrl = card ? card.url : "";
 		const ticketProvider = card ? card.providerIcon : "";
 		await dispatch(setUserStatus(label, ticketUrl, ticketProvider, derivedState.invisible));
-		dispatch(closePanel());
+		// dispatch(closePanel());
+		clear();
 		setLoading(false);
 	};
 
@@ -421,18 +500,16 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		setLabel("");
 		setCard(undefined);
 		setScmError("");
-		const input = document.getElementById("status-input");
-		if (input) input.focus();
 	};
 
+	const clearAndSave = () => dispatch(setUserStatus("", "", "", derivedState.invisible));
+
 	const saveLabel =
-		!label || label.length === 0
-			? "Clear Status"
-			: !branch || branch == currentBranch || !createBranch
-			? "Save Status"
+		!branch || branch == currentBranch || !createBranch
+			? "Start Work"
 			: branches.includes(branch)
-			? "Switch Branch & Save Status"
-			: "Create Branch & Save Status";
+			? "Switch Branch & Start Work"
+			: "Create Branch & Start Work";
 
 	const useBranchLabel =
 		branch == currentBranch
@@ -552,146 +629,262 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			  });
 
 	if (configureBranchNames)
-		return <ConfigureBranchNames onClose={() => setConfigureBranchNames(false)} />;
+		return (
+			<Popup>
+				<ConfigureBranchNames onClose={() => setConfigureBranchNames(false)} />
+			</Popup>
+		);
 
+	// <CreateCodemarkIcons mode=selectOnly/>
 	return (
-		<div className="full-height-panel">
-			<form className="standard-form vscroll" style={{ padding: "10px" }}>
-				<div className="panel-header">
-					What are you working on?
-					<CancelButton onClick={props.closePanel} placement="left" />
-				</div>
-				<fieldset className="form-body" style={{ padding: "10px" }}>
-					<div id="controls">
-						<StatusInput className={card && card.providerIcon ? "has-ticket-icon" : ""}>
-							{card && card.providerIcon && (
-								<div className="ticket-icon">
-									<Icon name={card.providerIcon} />
-								</div>
-							)}
-							{!label || (label && autocomplete) ? (
-								<StartWorkIssueContext.Provider value={{ setValues: values => selectCard(values) }}>
-									<IssueDropdown q={label} focusInput={inputRef} />
-								</StartWorkIssueContext.Provider>
-							) : (
-								<div className="clear" onClick={clear}>
-									<Icon
-										name="x"
-										title="Clear Status"
-										delay={1}
-										placement="bottom"
-										className="clickable"
-									/>
-								</div>
-							)}
-							{card && card.url && (
-								<div className="open-card">
-									<Icon
-										title={`Open on ${card.providerName}`}
-										delay={1}
-										placement="bottom"
-										name="link-external"
-										className="clickable"
-										onClick={() =>
-											HostApi.instance.send(OpenUrlRequestType, {
-												url: card.url
-											})
-										}
-									/>
-								</div>
-							)}
-							<input
-								id="status-input"
-								ref={inputRef}
-								name="status"
-								value={label}
-								className="input-text control"
-								autoFocus={true}
-								disabled={card ? true : false}
-								type="text"
-								onChange={e => handleChangeStatus(e.target.value)}
-								placeholder="Enter description or select ticket"
-							/>
-						</StatusInput>
-						{card && card.body && (
-							<CardDescription>
-								<MarkdownText text={card.body.replace(/\[Open in IDE\].*/, "")} />
-							</CardDescription>
-						)}
-						<div style={{ paddingLeft: "6px" }}>
-							{showCreateBranchCheckbox && (
-								<StyledCheckbox
-									name="create-branch"
-									checked={createBranch}
-									onChange={v => setCreateBranch(v)}
-								>
-									{useBranchLabel}{" "}
-									{editingBranch ? (
-										<input
-											id="branch-input"
-											name="branch"
-											value={customBranchName || branch}
-											className="input-text control"
-											autoFocus={true}
-											type="text"
-											onChange={e => setCustomBranchName(e.target.value)}
-											placeholder="Enter branch name"
-											onBlur={() => setEditingBranch(false)}
-											onKeyPress={e => {
-												if (e.key == "Enter") setEditingBranch(false);
-											}}
-											style={{ width: "200px" }}
-										/>
-									) : (
-										<>
-											<MonoMenu items={branchMenuItems}>{branch}</MonoMenu>
-											{fromBranch && fromBranch !== currentBranch && (
-												<div>
-													from <span className="highlight monospace">{fromBranch}</span>
-												</div>
-											)}
-										</>
+		<div className="panel full-height">
+			<PanelHeader title="Work Items">
+				<div style={{ height: "5px" }} />
+			</PanelHeader>
+			<ScrollBox>
+				<div className="channel-list vscroll">
+					{status && status.label && (
+						<>
+							<CurrentStatus>
+								<Tooltip title="Clear work item" placement="bottom" delay={1}>
+									<RoundedLink onClick={clearAndSave}>
+										<Icon className="padded-icon" name="minus-circle" />
+										<span className="wide-text">Clear</span>
+									</RoundedLink>
+								</Tooltip>
+								<H4>Current work item</H4>
+								<Row className="no-hover wide">
+									<div>
+										<Icon className="ticket" name={status.ticketProvider || "ticket"} />
+									</div>
+									<div>{status.label}</div>
+									{status.ticketUrl && (
+										<div className="icons">
+											<Icon
+												title={`Open on web`}
+												delay={1}
+												placement="bottomRight"
+												name="link-external"
+												className="clickable link-external"
+												onClick={e => {
+													e.stopPropagation();
+													e.preventDefault();
+													HostApi.instance.send(OpenUrlRequestType, {
+														url: status.ticketUrl
+													});
+												}}
+											/>
+										</div>
 									)}
-								</StyledCheckbox>
-							)}
-							{showMoveCardCheckbox && (
-								<StyledCheckbox name="move-issue" checked={moveCard} onChange={v => setMoveCard(v)}>
-									{card && card.moveCardLabel}{" "}
-									<InlineMenu items={moveCardItems}>
-										{moveCardDestinationLabel || "make selection"}
-									</InlineMenu>
-								</StyledCheckbox>
-							)}
-							{showUpdateSlackCheckbox && (
-								<StyledCheckbox
-									name="update-slack"
-									checked={updateSlack}
-									onChange={v => setUpdateSlack(v)}
+								</Row>
+							</CurrentStatus>
+							<CurrentStatus>
+								<Tooltip
+									title={
+										<>
+											Watch the <a href="https://youtu.be/2AyqT4z5Omc">video guide</a>
+										</>
+									}
+									placement="bottom"
+									delay={1}
 								>
-									Update my status on Slack
-								</StyledCheckbox>
-							)}
-						</div>
-						<div style={{ height: "5px" }}></div>
-						{scmError && <SCMError>{scmError}</SCMError>}
-						{!same && (
-							<ButtonRow>
-								<Button onClick={save} isLoading={loading}>
-									{saveLabel}
-								</Button>
-							</ButtonRow>
-						)}
-						<div style={{ marginTop: "20px", textAlign: "center", display: "none" }}>
-							<div style={{ display: "inline-block" }}>
-								<VideoLink href={"step.video"}>
-									<img src="https://i.imgur.com/9IKqpzf.png" />
-									<span>How do I grab a ticket &amp; create a branch?</span>
-								</VideoLink>
+									<RoundedLink onClick={() => dispatch(openPanel(WebviewPanels.NewReview))}>
+										<Icon className="padded-icon" name="review" />
+										<span className="wide-text">Request Review</span>
+									</RoundedLink>
+								</Tooltip>
+								<H4>Work in progress</H4>
+								<ModifiedRepos id={derivedState.currentUserId} />
+							</CurrentStatus>
+						</>
+					)}
+					{card && (
+						<Popup>
+							<Dialog className="codemark-form-container">
+								<form className="codemark-form standard-form vscroll">
+									<fieldset className="form-body" style={{ padding: "0px" }}>
+										<div id="controls">
+											<StatusInput className={card && card.providerIcon ? "has-ticket-icon" : ""}>
+												{card.id ? (
+													<CardTitle>
+														{card && card.providerIcon && (
+															<Icon className="ticket-icon" name={card.providerIcon} />
+														)}
+														{card.label}
+													</CardTitle>
+												) : (
+													<input
+														id="status-input"
+														ref={inputRef}
+														name="status"
+														value={label}
+														className="input-text control"
+														autoFocus={true}
+														type="text"
+														onChange={e => handleChangeStatus(e.target.value)}
+														placeholder="Title"
+													/>
+												)}
+											</StatusInput>
+											{card && card.body && (
+												<CardDescription>
+													<MarkdownText text={card.body.replace(/\[Open in IDE\].*/, "")} />
+												</CardDescription>
+											)}
+											<div style={{ paddingLeft: "0px" }}>
+												{showCreateBranchCheckbox && (
+													<StyledCheckbox
+														name="create-branch"
+														checked={createBranch}
+														onChange={v => setCreateBranch(v)}
+													>
+														{useBranchLabel}{" "}
+														{editingBranch ? (
+															<input
+																id="branch-input"
+																name="branch"
+																value={customBranchName || branch}
+																className="input-text control"
+																autoFocus={true}
+																type="text"
+																onChange={e => setCustomBranchName(e.target.value)}
+																placeholder="Enter branch name"
+																onBlur={() => setEditingBranch(false)}
+																onKeyPress={e => {
+																	if (e.key == "Enter") setEditingBranch(false);
+																}}
+																style={{ width: "200px" }}
+															/>
+														) : (
+															<>
+																<MonoMenu items={branchMenuItems}>{branch}</MonoMenu>
+																{fromBranch && fromBranch !== currentBranch && (
+																	<div>
+																		from <span className="highlight monospace">{fromBranch}</span>
+																	</div>
+																)}
+															</>
+														)}
+													</StyledCheckbox>
+												)}
+												{showMoveCardCheckbox && (
+													<StyledCheckbox
+														name="move-issue"
+														checked={moveCard}
+														onChange={v => setMoveCard(v)}
+													>
+														{card && card.moveCardLabel}{" "}
+														<InlineMenu items={moveCardItems}>
+															{moveCardDestinationLabel || "make selection"}
+														</InlineMenu>
+													</StyledCheckbox>
+												)}
+												{showUpdateSlackCheckbox && (
+													<StyledCheckbox
+														name="update-slack"
+														checked={updateSlack}
+														onChange={v => setUpdateSlack(v)}
+													>
+														Update my status on Slack
+													</StyledCheckbox>
+												)}
+											</div>
+											<div style={{ height: "5px" }}></div>
+											{scmError && <SCMError>{scmError}</SCMError>}
+											<ButtonRow>
+												<Button onClick={clear} variant="secondary">
+													Cancel
+												</Button>
+												<Button
+													onClick={save}
+													isLoading={loading}
+													variant={label.length ? "primary" : "secondary"}
+													disabled={!label.length}
+												>
+													{saveLabel}
+												</Button>
+											</ButtonRow>
+										</div>
+									</fieldset>
+								</form>
+							</Dialog>
+						</Popup>
+					)}
+					<StartWorkIssueContext.Provider value={{ setValues: values => selectCard(values) }}>
+						<IssueDropdown q={label} focusInput={inputRef} show="settings" />
+					</StartWorkIssueContext.Provider>
+					<StartWorkIssueContext.Provider value={{ setValues: values => selectCard(values) }}>
+						<IssueDropdown q="" focusInput={inputRef} show="issues" />
+					</StartWorkIssueContext.Provider>
+
+					<div style={{ margin: "0" }}>
+						<Docs>
+							<span onClick={() => setShowDocumentation(!showDocumentation)}>
+								<Icon className={showDocumentation ? "rotate" : ""} name="chevron-right" />
+								CodeStream Flow <sup className="highlight">new!</sup>
+							</span>
+							<span
+								style={{ display: "none" }}
+								className="getting-started"
+								onClick={() => dispatch(openPanel(WebviewPanels.GettingStarted))}
+							>
+								<Icon name="dashboard" />
+								Getting Started
+							</span>
+						</Docs>
+						{showDocumentation && (
+							<div style={{ padding: "0 20px" }}>
+								<Tabs style={{ marginTop: 0 }}>
+									<Tab onClick={e => setActiveTab(e.target.id)} active={activeTab === "1"} id="1">
+										The Basics
+									</Tab>
+									<Tab onClick={e => setActiveTab(e.target.id)} active={activeTab === "2"} id="2">
+										Trunk Flow
+									</Tab>
+									<Tab onClick={e => setActiveTab(e.target.id)} active={activeTab === "3"} id="3">
+										Branch Flow
+									</Tab>
+								</Tabs>
+								{activeTab === "1" && (
+									<Content active>
+										<Flow flow="adhoc" />
+									</Content>
+								)}
+								{activeTab === "2" && (
+									<Content active>
+										<Flow flow="simplified" />
+									</Content>
+								)}
+								{activeTab === "3" && (
+									<Content active>
+										<Flow flow="standard" />
+									</Content>
+								)}
 							</div>
-						</div>
+						)}
 					</div>
-				</fieldset>
-			</form>
+				</div>
+			</ScrollBox>
 		</div>
 	);
 };
+
+const Popup = styled.div`
+	z-index: 5;
+	text-align: center;
+	position: absolute;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	background: var(--app-background-color);
+	padding: 20px 20px 0 20px;
+`;
+
+const Dialog = styled.div`
+	padding: 5px 5px 15px 5px;
+	text-align: left;
+	// max-width: 500px;
+	width: 100%;
+	margin: 0 auto;
+	display: inline-block;
+`;

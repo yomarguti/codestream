@@ -133,6 +133,7 @@ export interface ThirdPartyProviderCard {
 	tokenId: string;
 	idList?: string;
 	apiIdentifier?: string;
+	comments?: number;
 	[key: string]: any;
 }
 

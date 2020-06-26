@@ -2,12 +2,13 @@ import { PropsWithChildren } from "react";
 import React from "react";
 import styled, { CSSProperties } from "styled-components";
 import Icon from "../../Stream/Icon";
+import CancelButton from "@codestream/webview/Stream/CancelButton";
 
 interface TabProps {
-	active: boolean;
+	active?: boolean;
 	children: React.ReactNode;
 	disabled?: boolean;
-	onClick: any;
+	onClick?: any;
 	id: string;
 	className?: string;
 }
@@ -42,6 +43,11 @@ export const Tab = styled((props: PropsWithChildren<TabProps>) => {
 	color: ${props => (props.active ? "var(--text-color-highlight)" : "var(--text-color-subtle)")};
 	font-weight: ${props => (props.active ? "bold" : "normal")};
 	margin-bottom: -1px;
+	&.cancel {
+		text-align: right;
+		margin-left: auto;
+		flex-grow: 10;
+	}
 	@media only screen and (max-width: 450px) {
 		font-size: 14px;
 	}

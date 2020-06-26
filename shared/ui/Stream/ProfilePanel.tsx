@@ -21,6 +21,7 @@ import { ChangesetFile } from "./Review/ChangesetFile";
 import { UL } from "./TeamPanel";
 import CancelButton from "./CancelButton";
 import { UserStatus } from "../src/components/UserStatus";
+import { ModifiedRepos } from "./ModifiedRepos";
 
 const Root = styled.div`
 	.edit-headshot {
@@ -150,79 +151,6 @@ export const ProfilePanel = () => {
 
 	const emailRef = React.useRef<HTMLTextAreaElement>(null);
 
-	const renderModifiedRepos = () => {
-		const { repos, teamId, currentUserEmail, collisions, xrayEnabled } = derivedState;
-		const { modifiedRepos, modifiedReposModifiedAt } = person;
-
-		if (!xrayEnabled) return null;
-		if (!modifiedRepos || !modifiedRepos[teamId] || !modifiedRepos[teamId].length) return null;
-
-		const modified = modifiedRepos[teamId]
-			.map(repo => {
-				const { repoId = "", authors, modifiedFiles } = repo;
-				if (modifiedFiles.length === 0) return null;
-				const repoName = repos[repoId] ? repos[repoId].name : "";
-				const added = modifiedFiles.reduce((total, f) => total + f.linesAdded, 0);
-				const removed = modifiedFiles.reduce((total, f) => total + f.linesRemoved, 0);
-				const stomp =
-					person.email === currentUserEmail
-						? null
-						: (authors || []).find(a => a.email === currentUserEmail && a.stomped > 0);
-				return (
-					<li
-						className="status row-with-icon-actions"
-						style={{ overflow: "hidden", whiteSpace: "nowrap", paddingLeft: "0" }}
-					>
-						<div style={{ overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
-							<Icon name="repo" />
-							{repoName} &nbsp; <Icon name="git-branch" />
-							{repo.branch}
-						</div>
-						<div style={{ padding: "5px 0 10px 20px" }}>
-							{modifiedFiles.map(f => {
-								const className = collisions.userRepoFiles[
-									person.id + ":" + repo.repoId + ":" + f.file
-								]
-									? "file-has-conflict"
-									: "";
-								return <ChangesetFile className={className} noHover={true} key={f.file} {...f} />;
-							})}
-						</div>
-						{stomp && (
-							<div style={{ paddingTop: "5px" }}>
-								<span className="stomped" style={{ paddingLeft: 0 }}>
-									@{stomp.stomped}
-								</span>{" "}
-								= includes {stomp.stomped} change
-								{stomp.stomped > 1 ? "s" : ""} to code you wrote
-							</div>
-						)}
-						{collisions.userRepos[person.id + ":" + repo.repoId] && (
-							<div style={{ paddingTop: "5px" }}>
-								<Icon name="alert" className="conflict" /> = possible merge conflict
-							</div>
-						)}
-					</li>
-				);
-			})
-			.filter(Boolean);
-
-		if (modified.length > 0) {
-			return (
-				<>
-					<MetaLabel>Local Modifications</MetaLabel>
-					<UL>{modified}</UL>
-					{modifiedReposModifiedAt && modifiedReposModifiedAt[teamId] && (
-						<div style={{ color: "var(--text-color-subtle)" }}>
-							Updated
-							<Timestamp relative time={modifiedReposModifiedAt[teamId]} />
-						</div>
-					)}
-				</>
-			);
-		} else return null;
-	};
-
 	const title = (
 		<Row style={{ margin: 0 }}>
 			<Value>{person.fullName}</Value>
@@ -301,7 +229,8 @@ export const ProfilePanel = () => {
 								{isMe && <RowIcon name="pencil" title="Edit Status" onClick={editStatus} />}
 							</Row>
 						)}
-						{renderModifiedRepos()}
+						<MetaLabel>Local Modifications</MetaLabel>
+						<ModifiedRepos id={person.id} showModifiedAt />
 					</div>
 				</ScrollBox>
 			</div>

@@ -141,6 +141,7 @@ interface ConnectedProps {
 	newPostEntryPoint?: string;
 	blameMap?: { [email: string]: string };
 	isCurrentUserAdmin: boolean;
+	statusLabel: string;
 }
 
 interface State {
@@ -403,6 +404,11 @@ class ReviewForm extends React.Component<Props, State> {
 		if (isEditing && !isAmending) return;
 
 		this.setState({ mountedTimestamp: new Date().getTime() });
+		if (!isEditing) {
+			if (this.props.statusLabel) {
+				this.setState({ title: this.props.statusLabel, titleTouched: true });
+			}
+		}
 
 		this.getUserInfo();
 		if (isAmending) this.getScmInfoForRepo();
@@ -2167,7 +2173,7 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 
 	const adminIds = team.adminIds || [];
 	const isCurrentUserAdmin = adminIds.includes(session.userId!);
-
+	const statusLabel = user && user.status && user.status.label ? user.status.label : "";
 	return {
 		unsavedFiles: unsavedFiles,
 		reviewsByCommit,
@@ -2191,7 +2197,8 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		inviteUsersOnTheFly,
 		newPostEntryPoint: context.newPostEntryPoint,
 		blameMap,
-		isCurrentUserAdmin
+		isCurrentUserAdmin,
+		statusLabel
 	};
 };
 

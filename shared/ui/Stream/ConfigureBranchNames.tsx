@@ -30,6 +30,7 @@ const Root = styled.div`
 	h3 {
 		margin: 10px 0 5px 0;
 	}
+	text-align: left;
 `;
 export const ConfigureBranchNames = (props: { onClose: Function }) => {
 	const dispatch = useDispatch();
@@ -120,6 +121,7 @@ export const ConfigureBranchNames = (props: { onClose: Function }) => {
 							<Token text="title" tip="The title of the ticket/card/issue" />
 							<Token text="id" tip="The id of the ticket/card/issue" />
 							<Token text="date" tip="Date in YYYY-MM-DD format" />
+							<Token text="provider" tip="The issue provider (trello, jira, etc)" />
 						</div>
 						<div id="controls">
 							<h3>Maximum Branch Length:</h3>

@@ -60,7 +60,7 @@ export const Carousel = styled((props: PropsWithChildren<CarouselProps>) => {
 	);
 })`
 	display: flex;
-	margin: 20px 0 20px 0;
+	margin: 20px;
 	position: relative;
 	padding: 0 40px;
 	text-align: left;

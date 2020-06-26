@@ -19,7 +19,14 @@ export class SimpleFilter extends Component {
 				{labels[selected]}
 				<Icon name="chevron-down" className="triangle-down" />
 				{menuOpen && (
-					<Menu items={items} target={menuTarget} action={this.menuAction} align="center" />
+					<Menu
+						items={items}
+						target={menuTarget}
+						action={this.menuAction}
+						align={this.props.align || "center"}
+						title={this.props.title}
+						dontCloseOnSelect={this.props.dontCloseOnSelect}
+					/>
 				)}
 			</span>
 		);
@@ -38,7 +45,4 @@ export class SimpleFilter extends Component {
 	};
 }
 
-export default connect(
-	null,
-	{ setUserPreference }
-)(SimpleFilter);
+export default connect(null, { setUserPreference })(SimpleFilter);
