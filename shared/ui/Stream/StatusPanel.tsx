@@ -206,7 +206,8 @@ export const RoundedLink = styled.a`
 	.narrow-icon {
 		margin-right: 5px;
 	}
-	.octicon-minus-circle {
+	.octicon-minus-circle,
+	.octicon-arrow-right {
 		margin-top: -1px;
 	}
 	background: transparent;
@@ -401,15 +402,15 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const same = label == status.label; // && icon == status.icon;
 
 	const showMoveCardCheckbox = React.useMemo(() => {
-		return !same && card && card.moveCardOptions && card.moveCardOptions.length > 0;
-	}, [card, same]);
+		return card && card.moveCardOptions && card.moveCardOptions.length > 0;
+	}, [card]);
 	const showCreateBranchCheckbox = React.useMemo(() => {
-		return !same && label; // && label.startsWith("http");
-	}, [label, same]);
+		return label; // && label.startsWith("http");
+	}, [label]);
 	const showUpdateSlackCheckbox = React.useMemo(() => {
 		// return false;
-		return !same && label && derivedState.isConnectedToSlack;
-	}, [label, same, derivedState.isConnectedToSlack]);
+		return label && derivedState.isConnectedToSlack;
+	}, [label, derivedState.isConnectedToSlack]);
 
 	const newBranch = React.useMemo(() => {
 		// setNewBranch(newBranch);
