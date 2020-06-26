@@ -283,6 +283,9 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	};
 
 	const selectCard = card => {
+		// make sure we've got the most up-to-date set of branches
+		getBranches();
+
 		if (card) {
 			setLabel(card.title || "");
 			setCard(card);
