@@ -11,6 +11,7 @@ import { H4 } from "./StatusPanel";
 import { setCurrentReview } from "../store/context/actions";
 import { useDidMount } from "../utilities/hooks";
 import { bootstrapReviews } from "../store/reviews/actions";
+import Tooltip from "./Tooltip";
 
 export function OpenReviews() {
 	const dispatch = useDispatch();
@@ -51,11 +52,15 @@ export function OpenReviews() {
 							<Icon name="review" />
 						</div>
 						<div>
-							<MarkdownText text={review.title} excludeParagraphWrap />
-							<MarkdownText text={review.text} excludeParagraphWrap className="subtle" />
+							<span>{review.title}</span>
+							<span className="subtle">{review.text}</span>
 						</div>
 						<div className="icons">
-							<Headshot person={creator} />
+							<Tooltip title={creator && creator.fullName}>
+								<span>
+									<Headshot person={creator} />
+								</span>
+							</Tooltip>
 						</div>
 					</Row>
 				);

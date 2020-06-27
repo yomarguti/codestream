@@ -29,6 +29,7 @@ import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessag
 import Tooltip from "../Tooltip";
 import { WebviewPanels } from "@codestream/protocols/webview";
 import { MarkdownText } from "../MarkdownText";
+import { Headshot } from "@codestream/webview/src/components/Headshot";
 
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
@@ -798,6 +799,9 @@ export const Row = styled.div`
 		display: inline-block;
 		padding-left: 15px;
 		opacity: 0.5;
+	}
+	${Headshot} {
+		top: 1px;
 	}
 `;
 
