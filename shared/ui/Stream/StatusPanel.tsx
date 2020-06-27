@@ -6,7 +6,7 @@ import Icon from "./Icon";
 import { Checkbox } from "../src/components/Checkbox";
 import styled from "styled-components";
 import { Button } from "../src/components/Button";
-import { setUserStatus, setUserPreference } from "./actions";
+import { setUserStatus, setUserPreference, connectProvider } from "./actions";
 import { openPanel } from "../store/context/actions";
 import { CSMe } from "@codestream/protocols/api";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
@@ -225,6 +225,11 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 					(lastShareAttributes && lastShareAttributes.providerTeamId))
 		);
 
+		const isConnectedToSlack = isConnected(state, { name: "slack" }, "users.profile:write");
+		const updateSlack = Object.keys(workPrefs).includes("updateSlack")
+			? workPrefs.updateSlack
+			: true;
+
 		return {
 			status,
 			repos: state.repos,
@@ -238,27 +243,21 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			branchDescriptionTemplate: settings.branchDescriptionTemplate || "feature/{title}",
 			createBranch: Object.keys(workPrefs).includes("createBranch") ? workPrefs.createBranch : true,
 			moveCard: Object.keys(workPrefs).includes("moveCard") ? workPrefs.moveCard : true,
-			updateSlack: Object.keys(workPrefs).includes("updateSlack") ? workPrefs.updateSlack : true,
+			updateSlack: isConnectedToSlack ? updateSlack : false,
 			slackConfig: getProviderConfig(state, "slack"),
 			// msTeamsConfig: getProviderConfig(state, "msteams"),
-			isConnectedToSlack: isConnected(state, { name: "slack" }),
+			isConnectedToSlack,
 			selectedShareTarget: selectedShareTarget || shareTargets[0]
 		};
 	});
 
+	console.warn("SLACK CONNECTED? ", derivedState.isConnectedToSlack);
 	const { status } = derivedState;
 	const [loading, setLoading] = useState(false);
 	const [scmError, setScmError] = useState("");
 	const [label, setLabel] = useState(status.label || "");
 	const [card, setCard] = useState<any>();
-	// status.ticketProvider
-	// 	? ({
-	// 			url: status.ticketUrl,
-	// 			providerIcon: status.ticketProvider,
-	// 			title: status.label,
-	// 			moveCardLabel: "Move this card to",
-	// 			moveCardOptions: [] as any
-	// 	  } as any)
+	const [loadingSlack, setLoadingSlack] = useState(false);
 	const [manuallySelectedBranch, setManuallySelectedBranch] = useState("");
 	const [currentBranch, setCurrentBranch] = useState("");
 	const [editingBranch, setEditingBranch] = useState(false);
@@ -273,7 +272,15 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 
 	const { moveCard, updateSlack, createBranch } = derivedState;
 
-	const setUpdateSlack = value => dispatch(setUserPreference(["startWork", "updateSlack"], value));
+	const setUpdateSlack = value => {
+		if (!derivedState.isConnectedToSlack) {
+			setLoadingSlack(true);
+			dispatch(connectProvider(derivedState.slackConfig!.id, "Status Panel"));
+		} else {
+			dispatch(setUserPreference(["startWork", "updateSlack"], value));
+		}
+	};
+
 	const setMoveCard = value => dispatch(setUserPreference(["startWork", "moveCard"], value));
 	const setCreateBranch = value =>
 		dispatch(setUserPreference(["startWork", "createBranch"], value));
@@ -355,22 +362,17 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		getBranches();
 	});
 
-	const same = label == status.label; // && icon == status.icon;
-
 	const showMoveCardCheckbox = React.useMemo(() => {
-		// console.warn("RECALCULATING SHOW CHECKBOX: ", card);
 		return card && card.moveCardOptions && card.moveCardOptions.length > 0;
 	}, [card, label]);
 	const showCreateBranchCheckbox = React.useMemo(() => {
-		return label; // && label.startsWith("http");
+		return label;
 	}, [label]);
 	const showUpdateSlackCheckbox = React.useMemo(() => {
-		// return false;
-		return label && derivedState.isConnectedToSlack;
+		return label;
 	}, [label, derivedState.isConnectedToSlack]);
 
 	const newBranch = React.useMemo(() => {
-		// setNewBranch(newBranch);
 		if (customBranchName) return customBranchName;
 		if (card && card.id) return replaceTicketTokens(derivedState.branchTicketTemplate, card);
 		else return replaceDescriptionTokens(derivedState.branchDescriptionTemplate, label);
@@ -443,7 +445,6 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		const ticketUrl = card ? card.url : "";
 		const ticketProvider = card ? card.providerIcon : "";
 		await dispatch(setUserStatus(label, ticketUrl, ticketProvider, derivedState.invisible));
-		// dispatch(closePanel());
 		clear();
 		setLoading(false);
 	};
@@ -733,6 +734,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 													<StyledCheckbox
 														name="update-slack"
 														checked={updateSlack}
+														loading={loadingSlack && !derivedState.isConnectedToSlack}
 														onChange={v => setUpdateSlack(v)}
 													>
 														Update my status on Slack

@@ -36,7 +36,11 @@ function isNameOption(o: ProviderPropertyOption): o is { name: string } {
 	return (o as any).name != undefined;
 }
 
-export const isConnected = (state: CodeStreamState, option: ProviderPropertyOption) => {
+export const isConnected = (
+	state: CodeStreamState,
+	option: ProviderPropertyOption,
+	requiredScope?: string // ONLY WORKS FOR SLACK AND MSTEAMS
+) => {
 	const currentUser = state.users[state.session.userId!] as CSMe;
 	const { currentTeamId } = state.context;
 
@@ -66,6 +70,11 @@ export const isConnected = (state: CodeStreamState, option: ProviderPropertyOpti
 
 				if (["slack", "msteams"].includes(providerName)) {
 					const infoPerTeam = (info as any).multiple as { [key: string]: CSProviderInfos };
+					if (requiredScope) {
+						// @ts-ignore
+						if (Object.values(infoPerTeam)[0].data.scope.indexOf(requiredScope) === -1)
+							return false;
+					}
 					if (infoPerTeam && Object.values(infoPerTeam).some(i => i.accessToken != undefined))
 						return true;
 				}
