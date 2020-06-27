@@ -438,7 +438,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			const response = await HostApi.instance.send(UpdateThirdPartyStatusRequestType, {
 				providerId: slackConfig.id,
 				providerTeamId: derivedState.selectedShareTarget.teamId,
-				text: label,
+				text: "Working on: " + label,
 				icon: ":desktop_computer:"
 			});
 		}
