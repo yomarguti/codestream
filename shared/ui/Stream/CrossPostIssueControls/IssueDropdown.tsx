@@ -28,6 +28,7 @@ import { Provider, IntegrationButtons } from "../IntegrationsPanel";
 import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
 import Tooltip from "../Tooltip";
 import { WebviewPanels } from "@codestream/protocols/webview";
+import { MarkdownText } from "../MarkdownText";
 
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
@@ -725,9 +726,11 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 			{cards.map(card => (
 				<Row key={card.key} onClick={() => selectCard(card)}>
 					<div>{card.icon}</div>
-					<div>{card.label}</div>
+					<div>
+						{card.label}
+						<span className="subtle">{card.body}</span>
+					</div>
 					<div className="icons">
-						{card.body && <Icon name="description" />}
 						{card.url && (
 							<Icon
 								title={`Open on web`}
@@ -771,21 +774,30 @@ export const Row = styled.div`
 		overflow: hidden;
 		text-overflow: ellipsis;
 		padding: 3px 5px 3px 0;
-		&:nth-child(0) {
-			flex-shrink: 10;
+		&:nth-child(1) {
+			flex-shrink: 0;
 		}
 		&:nth-child(2) {
-			flex-shrink: 10;
+			flex-grow: 10;
+		}
+		&:nth-child(3) {
+			flex-shrink: 0;
 		}
 	}
 	.icons {
 		margin-left: auto;
+		text-align: right;
 		.icon {
 			margin-left: 10px;
 		}
 	}
 	&:not(.disabled):not(.no-hover):hover {
 		background: var(--app-background-color-hover);
+	}
+	span.subtle {
+		display: inline-block;
+		padding-left: 15px;
+		opacity: 0.5;
 	}
 `;
 

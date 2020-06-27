@@ -36,6 +36,7 @@ import ScrollBox from "./ScrollBox";
 import { WebviewPanels } from "../ipc/webview.protocol.common";
 import { ModifiedRepos } from "./ModifiedRepos";
 import Tooltip from "./Tooltip";
+import { OpenReviews } from "./OpenReviews";
 
 const StyledCheckbox = styled(Checkbox)`
 	color: var(--text-color-subtle);
@@ -131,7 +132,7 @@ const Docs = styled.div`
 	}
 `;
 
-const StatusSection = styled.div`
+export const StatusSection = styled.div`
 	padding: 10px 20px 15px 20px;
 	.icon {
 		margin-right: 5px;
@@ -594,6 +595,119 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			<PanelHeader title="Work Items">
 				<div style={{ height: "5px" }} />
 			</PanelHeader>
+			{card && (
+				<Popup>
+					<Dialog className="codemark-form-container">
+						<form className="codemark-form standard-form vscroll">
+							<fieldset className="form-body" style={{ padding: "0px" }}>
+								<div id="controls">
+									<StatusInput>
+										{card.id ? (
+											<CardTitle>
+												{card && card.providerIcon && (
+													<Icon className="ticket-icon" name={card.providerIcon} />
+												)}
+												{card.label}
+											</CardTitle>
+										) : (
+											<input
+												id="status-input"
+												ref={inputRef}
+												name="status"
+												value={label}
+												className="input-text control"
+												autoFocus={true}
+												type="text"
+												onChange={e => handleChangeStatus(e.target.value)}
+												placeholder="Title"
+											/>
+										)}
+									</StatusInput>
+									{card && card.body && (
+										<CardDescription>
+											<MarkdownText text={card.body.replace(/\[Open in IDE\].*/, "")} />
+										</CardDescription>
+									)}
+									<div style={{ paddingLeft: "0px" }}>
+										{showCreateBranchCheckbox && (
+											<StyledCheckbox
+												name="create-branch"
+												checked={createBranch}
+												onChange={v => setCreateBranch(v)}
+											>
+												{useBranchLabel}{" "}
+												{editingBranch ? (
+													<input
+														id="branch-input"
+														name="branch"
+														value={customBranchName || branch}
+														className="input-text control"
+														autoFocus={true}
+														type="text"
+														onChange={e => setCustomBranchName(e.target.value)}
+														placeholder="Enter branch name"
+														onBlur={() => setEditingBranch(false)}
+														onKeyPress={e => {
+															if (e.key == "Enter") setEditingBranch(false);
+														}}
+														style={{ width: "200px" }}
+													/>
+												) : (
+													<>
+														<MonoMenu items={branchMenuItems}>{branch}</MonoMenu>
+														{fromBranch && fromBranch !== currentBranch && (
+															<div>
+																from <span className="highlight monospace">{fromBranch}</span>
+															</div>
+														)}
+													</>
+												)}
+											</StyledCheckbox>
+										)}
+										{showMoveCardCheckbox && (
+											<StyledCheckbox
+												name="move-issue"
+												checked={moveCard}
+												onChange={v => setMoveCard(v)}
+											>
+												{card && card.moveCardLabel}{" "}
+												<InlineMenu items={moveCardItems}>
+													{moveCardDestinationLabel || "make selection"}
+												</InlineMenu>
+											</StyledCheckbox>
+										)}
+										{showUpdateSlackCheckbox && (
+											<StyledCheckbox
+												name="update-slack"
+												checked={updateSlack}
+												loading={loadingSlack && !derivedState.isConnectedToSlack}
+												onChange={v => setUpdateSlack(v)}
+											>
+												Update my status on Slack
+											</StyledCheckbox>
+										)}
+									</div>
+									<div style={{ height: "5px" }}></div>
+									{scmError && <SCMError>{scmError}</SCMError>}
+									<ButtonRow>
+										<Button onClick={clear} variant="secondary">
+											Cancel
+										</Button>
+										<Button
+											onClick={save}
+											isLoading={loading}
+											variant={label.length ? "primary" : "secondary"}
+											disabled={!label.length}
+										>
+											{saveLabel}
+										</Button>
+									</ButtonRow>
+								</div>
+							</fieldset>
+						</form>
+					</Dialog>
+				</Popup>
+			)}
 			<ScrollBox>
 				<div className="channel-list vscroll">
 					{status && status.label && (
@@ -649,119 +763,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 						<H4>Work in progress</H4>
 						<ModifiedRepos id={derivedState.currentUserId} />
 					</StatusSection>
-					{card && (
-						<Popup>
-							<Dialog className="codemark-form-container">
-								<form className="codemark-form standard-form vscroll">
-									<fieldset className="form-body" style={{ padding: "0px" }}>
-										<div id="controls">
-											<StatusInput>
-												{card.id ? (
-													<CardTitle>
-														{card && card.providerIcon && (
-															<Icon className="ticket-icon" name={card.providerIcon} />
-														)}
-														{card.label}
-													</CardTitle>
-												) : (
-													<input
-														id="status-input"
-														ref={inputRef}
-														name="status"
-														value={label}
-														className="input-text control"
-														autoFocus={true}
-														type="text"
-														onChange={e => handleChangeStatus(e.target.value)}
-														placeholder="Title"
-													/>
-												)}
-											</StatusInput>
-											{card && card.body && (
-												<CardDescription>
-													<MarkdownText text={card.body.replace(/\[Open in IDE\].*/, "")} />
-												</CardDescription>
-											)}
-											<div style={{ paddingLeft: "0px" }}>
-												{showCreateBranchCheckbox && (
-													<StyledCheckbox
-														name="create-branch"
-														checked={createBranch}
-														onChange={v => setCreateBranch(v)}
-													>
-														{useBranchLabel}{" "}
-														{editingBranch ? (
-															<input
-																id="branch-input"
-																name="branch"
-																value={customBranchName || branch}
-																className="input-text control"
-																autoFocus={true}
-																type="text"
-																onChange={e => setCustomBranchName(e.target.value)}
-																placeholder="Enter branch name"
-																onBlur={() => setEditingBranch(false)}
-																onKeyPress={e => {
-																	if (e.key == "Enter") setEditingBranch(false);
-																}}
-																style={{ width: "200px" }}
-															/>
-														) : (
-															<>
-																<MonoMenu items={branchMenuItems}>{branch}</MonoMenu>
-																{fromBranch && fromBranch !== currentBranch && (
-																	<div>
-																		from <span className="highlight monospace">{fromBranch}</span>
-																	</div>
-																)}
-															</>
-														)}
-													</StyledCheckbox>
-												)}
-												{showMoveCardCheckbox && (
-													<StyledCheckbox
-														name="move-issue"
-														checked={moveCard}
-														onChange={v => setMoveCard(v)}
-													>
-														{card && card.moveCardLabel}{" "}
-														<InlineMenu items={moveCardItems}>
-															{moveCardDestinationLabel || "make selection"}
-														</InlineMenu>
-													</StyledCheckbox>
-												)}
-												{showUpdateSlackCheckbox && (
-													<StyledCheckbox
-														name="update-slack"
-														checked={updateSlack}
-														loading={loadingSlack && !derivedState.isConnectedToSlack}
-														onChange={v => setUpdateSlack(v)}
-													>
-														Update my status on Slack
-													</StyledCheckbox>
-												)}
-											</div>
-											<div style={{ height: "5px" }}></div>
-											{scmError && <SCMError>{scmError}</SCMError>}
-											<ButtonRow>
-												<Button onClick={clear} variant="secondary">
-													Cancel
-												</Button>
-												<Button
-													onClick={save}
-													isLoading={loading}
-													variant={label.length ? "primary" : "secondary"}
-													disabled={!label.length}
-												>
-													{saveLabel}
-												</Button>
-											</ButtonRow>
-										</div>
-									</fieldset>
-								</form>
-							</Dialog>
-						</Popup>
-					)}
+					<OpenReviews />
 					<StartWorkIssueContext.Provider value={{ setValues: values => selectCard(values) }}>
 						<IssueDropdown />
 					</StartWorkIssueContext.Provider>
@@ -789,14 +791,14 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 };
 
 const Popup = styled.div`
-	z-index: 5;
+	z-index: 35;
 	text-align: center;
 	position: absolute;
-	top: 0;
+	top: 0px;
 	width: 100%;
 	height: 100%;
 	background: var(--app-background-color);
-	padding: 20px 20px 0 20px;
+	padding: 40px 20px 0 20px;
 `;
 
 const Dialog = styled.div`

@@ -48,6 +48,14 @@ export function getByStatus(state: CodeStreamState, status?: string): CSReview[]
 	return getAllReviews(state).filter(review => review.status === status);
 }
 
+export function getByStatusAndReviewer(
+	state: CodeStreamState,
+	status: string,
+	reviewerId: string
+): CSReview[] {
+	return getByStatus(state, status).filter(review => review.reviewers.includes(reviewerId));
+}
+
 const getReviews = (state: CodeStreamState) => state.reviews.reviews;
 
 export const getAllReviews = createSelector(getReviews, (reviews: Index<CSReview>) =>
@@ -73,7 +81,7 @@ export function getAllByCommit(state: CodeStreamState): { [commit: string]: CSRe
 	getAllReviews(state).forEach(review => {
 		if (!review.reviewChangesets) logWarning("No changesets for: ", review);
 		(review.reviewChangesets || []).forEach(changeset => {
-			(changeset.commits || []).forEach(commit => (ret[commit.sha] = review));			
+			(changeset.commits || []).forEach(commit => (ret[commit.sha] = review));
 		});
 	});
 	return ret;
