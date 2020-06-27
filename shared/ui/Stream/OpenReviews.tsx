@@ -18,13 +18,13 @@ export function OpenReviews() {
 		const { session, users } = state;
 
 		const currentUserId = session.userId!;
-		const teammates = userSelectors.getTeamMates(state);
+		const teamMembers = userSelectors.getTeamMembers(state);
 		const reviews = reviewSelectors.getByStatusAndReviewer(state, "open", currentUserId);
 
 		return {
 			reviews,
 			currentUserId,
-			teammates,
+			teamMembers,
 			currentUsername: users[session.userId!].username
 		};
 	});
@@ -37,14 +37,14 @@ export function OpenReviews() {
 		}
 	});
 
-	const { reviews, teammates } = derivedState;
+	const { reviews, teamMembers } = derivedState;
 
 	if (reviews.length == 0) return null;
 	return (
 		<IssueRows>
 			<H4 style={{ paddingLeft: "20px" }}>Open Reviews</H4>
 			{reviews.map(review => {
-				const creator = teammates.find(user => user.id === review.creatorId);
+				const creator = teamMembers.find(user => user.id === review.creatorId);
 				return (
 					<Row onClick={() => dispatch(setCurrentReview(review.id))}>
 						<div>
