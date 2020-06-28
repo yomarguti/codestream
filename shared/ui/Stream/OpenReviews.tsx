@@ -3,11 +3,11 @@ import { useDispatch, useSelector } from "react-redux";
 import * as reviewSelectors from "../store/reviews/reducer";
 import * as userSelectors from "../store/users/reducer";
 import { CodeStreamState } from "../store";
-import { Row, IssueRows } from "./CrossPostIssueControls/IssueDropdown";
+import { Row } from "./CrossPostIssueControls/IssueDropdown";
 import Icon from "./Icon";
 import { MarkdownText } from "./MarkdownText";
 import { Headshot } from "../src/components/Headshot";
-import { H4 } from "./StatusPanel";
+import { H4, WideStatusSection } from "./StatusPanel";
 import { setCurrentReview } from "../store/context/actions";
 import { useDidMount } from "../utilities/hooks";
 import { bootstrapReviews } from "../store/reviews/actions";
@@ -42,14 +42,16 @@ export function OpenReviews() {
 
 	if (reviews.length == 0) return null;
 	return (
-		<IssueRows>
+		<WideStatusSection>
 			<H4 style={{ paddingLeft: "20px" }}>Open Reviews</H4>
 			{reviews.map(review => {
 				const creator = teamMembers.find(user => user.id === review.creatorId);
 				return (
 					<Row onClick={() => dispatch(setCurrentReview(review.id))}>
 						<div>
-							<Icon name="review" />
+							<Tooltip title={creator && creator.fullName} placement="bottomLeft">
+								<Headshot person={creator} />
+							</Tooltip>
 						</div>
 						<div>
 							<span>{review.title}</span>
@@ -57,14 +59,12 @@ export function OpenReviews() {
 						</div>
 						<div className="icons">
 							<Tooltip title={creator && creator.fullName}>
-								<span>
-									<Headshot person={creator} />
-								</span>
+								<span></span>
 							</Tooltip>
 						</div>
 					</Row>
 				);
 			})}
-		</IssueRows>
+		</WideStatusSection>
 	);
 }

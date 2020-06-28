@@ -59,7 +59,7 @@ export function getByStatusAndReviewer(
 const getReviews = (state: CodeStreamState) => state.reviews.reviews;
 
 export const getAllReviews = createSelector(getReviews, (reviews: Index<CSReview>) =>
-	Object.values(reviews)
+	Object.values(reviews).filter(review => !review.deactivated)
 );
 
 export const teamHasReviews = createSelector(getReviews, (reviews: Index<CSReview>) => {

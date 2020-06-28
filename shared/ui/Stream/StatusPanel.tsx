@@ -113,7 +113,6 @@ const CardLink = styled.div`
 
 const Docs = styled.div`
 	cursor: pointer;
-	margin-bottom: 30px;
 	border-top: 1px solid var(--base-border-color);
 	padding: 15px 20px;
 	span:hover {
@@ -133,7 +132,7 @@ const Docs = styled.div`
 `;
 
 export const StatusSection = styled.div`
-	padding: 10px 20px 15px 20px;
+	padding: 15px 20px 15px 20px;
 	.icon {
 		margin-right: 5px;
 		&.ticket,
@@ -144,6 +143,11 @@ export const StatusSection = styled.div`
 	border-top: 1px solid var(--base-border-color);
 `;
 
+export const WideStatusSection = styled(StatusSection)`
+	padding-left: 0;
+	padding-right: 0;
+`;
+
 export const H4 = styled.h4`
 	color: var(--text-color-highlight);
 	font-weight: 400;
@@ -151,6 +155,15 @@ export const H4 = styled.h4`
 	margin: 0 0 5px 0;
 	&.padded {
 		padding: 0 20px;
+	}
+	.toggle {
+		opacity: 0;
+		margin: 0 5px 0 -13px;
+		vertical-align: -1px;
+		transition: opacity 0.1s;
+	}
+	&:hover .toggle {
+		opacity: 1;
 	}
 `;
 
@@ -252,7 +265,6 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		};
 	});
 
-	console.warn("SLACK CONNECTED? ", derivedState.isConnectedToSlack);
 	const { status } = derivedState;
 	const [loading, setLoading] = useState(false);
 	const [scmError, setScmError] = useState("");
@@ -589,9 +601,9 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			</Popup>
 		);
 
-	// <CreateCodemarkIcons mode=selectOnly/>
 	return (
 		<div className="panel full-height">
+			<CreateCodemarkIcons narrow />
 			<PanelHeader title="Work Items">
 				<div style={{ height: "5px" }} />
 			</PanelHeader>
@@ -712,13 +724,16 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 				<div className="channel-list vscroll">
 					{status && status.label && (
 						<StatusSection>
-							<Tooltip title="Clear work item" placement="bottom" delay={1}>
+							<Tooltip title="Clear work item" delay={1}>
 								<RoundedLink onClick={clearAndSave}>
 									<Icon className="padded-icon" name="minus-circle" />
 									<span className="wide-text">Clear</span>
 								</RoundedLink>
 							</Tooltip>
-							<H4>Current work item</H4>
+							<H4>
+								<Icon className="toggle" name="chevron-down" />
+								Current Assignment
+							</H4>
 							<Row className="no-hover wide">
 								<div>
 									<Icon className="ticket" name={status.ticketProvider || "ticket"} />
@@ -752,7 +767,6 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 									Watch the <a href="https://youtu.be/2AyqT4z5Omc">video guide</a>
 								</>
 							}
-							placement="bottom"
 							delay={1}
 						>
 							<RoundedLink onClick={() => dispatch(openPanel(WebviewPanels.NewReview))}>
@@ -760,7 +774,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								<span className="wide-text">Request Review</span>
 							</RoundedLink>
 						</Tooltip>
-						<H4>Work in progress</H4>
+						<H4>Work In Progress</H4>
 						<ModifiedRepos id={derivedState.currentUserId} />
 					</StatusSection>
 					<OpenReviews />

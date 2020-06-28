@@ -225,7 +225,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 			})
 			.sort((a, b) => a.label.localeCompare(b.label));
 		knownIssueProviderOptions.unshift(
-			{ label: "CodeStream only", value: "codestream", action: "codestream" },
+			{ label: "CodeStream", value: "codestream", action: "codestream" },
 			{ label: "-", value: "", action: "" }
 		);
 		const selectedProvider =
@@ -247,7 +247,7 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 	renderProviderOptions = (selectedProvider, knownIssueProviderOptions) => {
 		return (
 			<span className="channel-label" onClick={this.switchIssueProvider}>
-				{selectedProvider ? selectedProvider.label : "CodeStream Only (click for options)"}
+				{selectedProvider ? selectedProvider.label : "CodeStream (click for options)"}
 				<Icon name="chevron-down" />
 				{this.state.issueProviderMenuOpen && (
 					<Menu

@@ -36,6 +36,10 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		cardLabel: "issue",
 		supportsStartWork: true
 	},
+	codestream: {
+		displayName: "CodeStream",
+		icon: "codestream"
+	},
 	github: {
 		displayName: "GitHub",
 		icon: "mark-github",

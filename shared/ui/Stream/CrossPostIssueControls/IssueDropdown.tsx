@@ -1,7 +1,12 @@
 import React from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
 import { connectProvider, getUserProviderInfo } from "../../store/providers/actions";
-import { openPanel, setIssueProvider, setCodemarkTypeFilter } from "../../store/context/actions";
+import {
+	openPanel,
+	setIssueProvider,
+	setCodemarkTypeFilter,
+	setCurrentCodemark
+} from "../../store/context/actions";
 import Icon from "../Icon";
 import Menu from "../Menu";
 import { ProviderDisplay, PROVIDER_MAPPINGS } from "./types";
@@ -10,9 +15,10 @@ import {
 	ThirdPartyProviders,
 	FetchThirdPartyBoardsRequestType,
 	FetchThirdPartyCardsRequestType,
-	OpenUrlRequestType
+	OpenUrlRequestType,
+	CodemarkPlus
 } from "@codestream/protocols/agent";
-import { CSMe } from "@codestream/protocols/api";
+import { CSMe, CodemarkType, CodemarkStatus } from "@codestream/protocols/api";
 import { PrePRProviderInfoModalProps, PrePRProviderInfoModal } from "../PrePRProviderInfoModal";
 import { CodeStreamState } from "@codestream/webview/store";
 import { getConnectedProviderNames } from "@codestream/webview/store/providers/reducer";
@@ -20,16 +26,22 @@ import { updateForProvider } from "@codestream/webview/store/activeIntegrations/
 import { setUserPreference } from "../actions";
 import { HostApi } from "../..";
 import { keyFilter } from "@codestream/webview/utils";
-import { StartWorkIssueContext, RoundedLink, H4 } from "../StatusPanel";
+import {
+	StartWorkIssueContext,
+	RoundedLink,
+	H4,
+	StatusSection,
+	WideStatusSection
+} from "../StatusPanel";
 import styled from "styled-components";
 import Filter from "../Filter";
 import { SmartFormattedList } from "../SmartFormattedList";
 import { Provider, IntegrationButtons } from "../IntegrationsPanel";
 import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
 import Tooltip from "../Tooltip";
-import { WebviewPanels } from "@codestream/protocols/webview";
-import { MarkdownText } from "../MarkdownText";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
+import * as codemarkSelectors from "../../store/codemarks/reducer";
+import { useDidMount } from "@codestream/webview/utilities/hooks";
 
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
@@ -373,7 +385,11 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const startWorkPreferences = preferences.startWork || EMPTY_ARRAY;
 		const providerIds = props.providers.map(provider => provider.id).join(":");
-		return { currentUser, startWorkPreferences, providerIds };
+		const skipConnect = preferences.skipConnectIssueProviders;
+
+		const csIssues = codemarkSelectors.getMyOpenIssues(state.codemarks, state.session.userId!);
+
+		return { currentUser, startWorkPreferences, providerIds, csIssues, skipConnect };
 	});
 
 	const [isLoading, setIsLoading] = React.useState(false);
@@ -392,10 +408,13 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 		return boards;
 	};
 
-	const getFilterAssignees = providerId => {
-		const prefs = derivedState.startWorkPreferences[providerId] || {};
-		return prefs.filterAssignees || "mine";
-	};
+	const codemarkState = useSelector((state: CodeStreamState) => state.codemarks);
+
+	useDidMount(() => {
+		if (!codemarkState.bootstrapped) {
+			// dispatch(bootstrapCodemarks());
+		}
+	});
 
 	const updateDataState = (providerId, data) => dispatch(updateForProvider(providerId, data));
 
@@ -471,7 +490,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 					// console.warn("SETTINGS VALUES: ", pData, card);
 					startWorkIssueContext.setValues({
 						...card,
-						providerIcon: providerDisplay.icon,
+						providerIcon: provider.id === "codestream" ? "issue" : providerDisplay.icon,
 						providerToken: providerDisplay.icon,
 						providerName: providerDisplay.displayName,
 						providerId: provider.id,
@@ -589,10 +608,21 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 			);
 		});
 
+		derivedState.csIssues.forEach(issue => {
+			items.push({
+				...issue,
+				label: issue.title,
+				key: "card-" + issue.id,
+				icon: <Icon name="issue" />,
+				provider: { id: "codestream", name: "codestream" },
+				body: issue.text
+			});
+		});
+
 		items.sort((a, b) => b.modifiedAt - a.modifiedAt);
 
 		return { cards: items, canFilter };
-	}, [loadedCards, derivedState.startWorkPreferences]);
+	}, [loadedCards, derivedState.startWorkPreferences, derivedState.csIssues]);
 
 	const menuItems = React.useMemo(() => {
 		// if (props.provider.canFilterByAssignees) {
@@ -655,103 +685,118 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 		/>
 	);
 
-	if (props.providers.length === 0) {
-		return (
-			<ConnectIssueProviders>
-				<Tooltip title="For ad-hoc work" placement="bottom" delay={1}>
-					<RoundedLink className="buttonish" key="add" onClick={() => selectCard({ title: "" })}>
-						<Icon name="plus" />
-						New Work Item
-					</RoundedLink>
-				</Tooltip>
-				<H4>Connect your Issue Provider(s)</H4>
-				<div style={{ height: "20px" }} />
-				<IntegrationButtons>
-					{props.knownIssueProviderOptions.map(item => {
-						if (item.disabled) return null;
-						return (
-							<Provider key={item.key} onClick={item.action}>
-								{item.providerIcon}
-								{item.label}
-							</Provider>
-						);
-					})}
-				</IntegrationButtons>
-			</ConnectIssueProviders>
-		);
-	}
-
 	return (
-		<IssueRows>
-			<div className="filters" style={{ padding: "0 20px 5px 20px" }}>
-				<H4>
-					{!firstLoad && (
-						<Tooltip title="For ad-hoc work" placement="bottom" delay={1}>
-							<RoundedLink
-								className="buttonish"
-								key="add"
-								onClick={() => selectCard({ title: "" })}
-							>
-								<Icon name="plus" />
-								New item
-							</RoundedLink>
-						</Tooltip>
-					)}
-					My Assignments
-				</H4>
-				Show{" "}
-				{canFilter ? (
-					<Filter
-						title="Filter Items"
-						selected={"selectedLabel"}
-						labels={{ selectedLabel }}
-						items={[{ label: "-" }, ...menuItems.filters]}
-						align="bottomLeft"
-						dontCloseOnSelect
-					/>
-				) : (
-					"items "
-				)}
-				from{" "}
-				<Filter
-					title="Select Providers"
-					selected={"providersLabel"}
-					labels={{ providersLabel }}
-					items={[{ label: "-" }, ...menuItems.services]}
-					align="bottomLeft"
-					dontCloseOnSelect
-				/>
-				{isLoading && <Icon className="spin smaller fixed" name="sync" />}
-			</div>{" "}
-			{firstLoad && <LoadingMessage align="left">Loading...</LoadingMessage>}
-			{cards.map(card => (
-				<Row key={card.key} onClick={() => selectCard(card)}>
-					<div>{card.icon}</div>
-					<div>
-						{card.label}
-						<span className="subtle">{card.body}</span>
-					</div>
-					<div className="icons">
-						{card.url && (
-							<Icon
-								title={`Open on web`}
-								delay={1}
-								placement="bottomRight"
-								name="link-external"
-								className="clickable"
-								onClick={e => {
-									e.stopPropagation();
-									e.preventDefault();
-									HostApi.instance.send(OpenUrlRequestType, {
-										url: card.url
-									});
-								}}
-							/>
+		<>
+			{props.providers.length === 0 && !derivedState.skipConnect && (
+				<StatusSection>
+					<Tooltip title="Connect later on the Integrations page" delay={1}>
+						<RoundedLink
+							onClick={() => dispatch(setUserPreference(["skipConnectIssueProviders"], true))}
+						>
+							<Icon name="x-circle" />
+							Skip This
+						</RoundedLink>
+					</Tooltip>
+					<H4>Connect your Issue Provider(s)</H4>
+					<div style={{ height: "20px" }} />
+					<IntegrationButtons style={{ marginBottom: "10px" }}>
+						{props.knownIssueProviderOptions.map(item => {
+							if (item.disabled) return null;
+							return (
+								<Provider key={item.key} onClick={item.action}>
+									{item.providerIcon}
+									{item.label}
+								</Provider>
+							);
+						})}
+					</IntegrationButtons>
+				</StatusSection>
+			)}
+			<WideStatusSection>
+				<div className="filters" style={{ padding: "0 20px 0 20px" }}>
+					<H4>
+						{!firstLoad && (
+							<Tooltip title="For ad-hoc work" delay={1}>
+								<RoundedLink onClick={() => selectCard({ title: "" })}>
+									<Icon name="plus" />
+									New Item
+								</RoundedLink>
+							</Tooltip>
 						)}
-					</div>
-				</Row>
-			))}
-		</IssueRows>
+						My Assignments
+					</H4>
+					{props.providers.length > 0 && (
+						<div style={{ paddingBottom: "5px" }}>
+							Show{" "}
+							{canFilter ? (
+								<Filter
+									title="Filter Items"
+									selected={"selectedLabel"}
+									labels={{ selectedLabel }}
+									items={[{ label: "-" }, ...menuItems.filters]}
+									align="bottomLeft"
+									dontCloseOnSelect
+								/>
+							) : (
+								"items "
+							)}
+							from{" "}
+							<Filter
+								title="Select Providers"
+								selected={"providersLabel"}
+								labels={{ providersLabel }}
+								items={[{ label: "-" }, ...menuItems.services]}
+								align="bottomLeft"
+								dontCloseOnSelect
+							/>
+							{isLoading && <Icon className="spin smaller fixed" name="sync" />}
+						</div>
+					)}
+				</div>
+				{firstLoad && <LoadingMessage align="left">Loading...</LoadingMessage>}
+				{cards.map(card => (
+					<Row key={card.key} onClick={() => selectCard(card)}>
+						<div>{card.icon}</div>
+						<div>
+							{card.label}
+							<span className="subtle">{card.body}</span>
+						</div>
+						<div className="icons">
+							{card.url && (
+								<Icon
+									title={`Open on web`}
+									delay={1}
+									placement="bottomRight"
+									name="link-external"
+									className="clickable"
+									onClick={e => {
+										e.stopPropagation();
+										e.preventDefault();
+										HostApi.instance.send(OpenUrlRequestType, {
+											url: card.url
+										});
+									}}
+								/>
+							)}
+							{card.provider.id === "codestream" && (
+								<Icon
+									title={`View Issue Details`}
+									delay={1}
+									placement="bottomRight"
+									name="link-external"
+									className="clickable"
+									onClick={e => {
+										e.stopPropagation();
+										e.preventDefault();
+										dispatch(setCurrentCodemark(card.id));
+									}}
+								/>
+							)}
+						</div>
+					</Row>
+				))}
+			</WideStatusSection>
+		</>
 	);
 }
 
@@ -777,6 +822,9 @@ export const Row = styled.div`
 		padding: 3px 5px 3px 0;
 		&:nth-child(1) {
 			flex-shrink: 0;
+			.icon {
+				margin: 0;
+			}
 		}
 		&:nth-child(2) {
 			flex-grow: 10;
@@ -812,6 +860,5 @@ export const IssueRows = styled.div`
 `;
 
 const ConnectIssueProviders = styled.div`
-	border-top: 1px solid var(--base-border-color);
-	padding: 20px 20px 0 20px;
+	padding: 0 20px 0 20px;
 `;

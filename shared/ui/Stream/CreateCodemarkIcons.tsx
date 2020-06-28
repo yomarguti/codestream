@@ -13,7 +13,11 @@ import {
 } from "../ipc/webview.protocol";
 import { range } from "../utils";
 import { CodemarkType } from "@codestream/protocols/api";
-import { setCurrentCodemark, setComposeCodemarkActive, setNewPostEntry } from "../store/context/actions";
+import {
+	setCurrentCodemark,
+	setComposeCodemarkActive,
+	setNewPostEntry
+} from "../store/context/actions";
 import {
 	getCurrentSelection,
 	getVisibleRanges,
@@ -25,7 +29,9 @@ import { CodeStreamState } from "../store";
 import ComposeTitles from "./ComposeTitles";
 import { canCreateCodemark } from "../store/codemarks/actions";
 
-interface Props {}
+interface Props {
+	narrow?: boolean;
+}
 
 export const CreateCodemarkIcons = (props: Props) => {
 	const dispatch = useDispatch();
@@ -88,7 +94,8 @@ export const CreateCodemarkIcons = (props: Props) => {
 			metrics: editorContext.metrics || {},
 			openIconsOnLine,
 			composeCodemarkActive: context.composeCodemarkActive,
-			activePanel: context.panelStack && context.panelStack.length ? context.panelStack[0] : undefined
+			activePanel:
+				context.panelStack && context.panelStack.length ? context.panelStack[0] : undefined
 		};
 	};
 
@@ -180,7 +187,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 		}
 
 		dispatch(setComposeCodemarkActive(type));
-		dispatch(setNewPostEntry(postEntry || derivedState.activePanel))
+		dispatch(setNewPostEntry(postEntry || derivedState.activePanel));
 		dispatch(setCurrentCodemark());
 	};
 	const mapLine0ToVisibleRange = fromLineNum0 => {
@@ -207,7 +214,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 			<div
 				onMouseEnter={() => onMouseEnterHoverIcon(lineNum0)}
 				onMouseLeave={() => onMouseLeaveHoverIcon(lineNum0)}
-				className={cx("hover-plus", { hover, open, narrow: derivedState.currentReviewId })}
+				className={cx("hover-plus", { hover, open, narrow: props.narrow })}
 				key={lineNum0}
 				style={{ top }}
 			>

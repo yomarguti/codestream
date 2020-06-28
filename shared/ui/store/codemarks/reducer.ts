@@ -4,7 +4,7 @@ import { ActionType } from "../common";
 import * as actions from "./actions";
 import { CodemarksActionsTypes, CodemarksState } from "./types";
 import { CodemarkPlus } from "@codestream/protocols/agent";
-import { CodemarkType, CSReview } from "@codestream/protocols/api";
+import { CodemarkType, CSReview, CodemarkStatus } from "@codestream/protocols/api";
 import { CodeStreamState } from "..";
 import { getThreadPosts } from "../posts/reducer";
 import { isPending } from "../posts/types";
@@ -41,6 +41,17 @@ export function getByType(state: CodemarksState, type?: string): CodemarkPlus[] 
 	if (!type) return Object.values(state);
 
 	return Object.values(state).filter(codemark => codemark.type === type);
+}
+
+export function getMyOpenIssues(state: CodemarksState, assigneeId: string): CodemarkPlus[] {
+	return Object.values(state).filter(
+		codemark =>
+			codemark.type === CodemarkType.Issue &&
+			codemark.status !== CodemarkStatus.Closed &&
+			!codemark.externalProvider &&
+			(codemark.assignees || []).includes(assigneeId) &&
+			!codemark.deactivated
+	);
 }
 
 function isNotLinkType(codemark: CodemarkPlus) {
