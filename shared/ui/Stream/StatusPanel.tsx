@@ -775,7 +775,10 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 							</RoundedLink>
 						</Tooltip>
 						<H4>Work In Progress</H4>
-						<ModifiedRepos id={derivedState.currentUserId} />
+						<ModifiedRepos
+							id={derivedState.currentUserId}
+							defaultText="No diffs. As you write code, changes will appear here."
+						/>
 					</StatusSection>
 					<OpenReviews />
 					<StartWorkIssueContext.Provider value={{ setValues: values => selectCard(values) }}>

@@ -4,14 +4,15 @@ import styled from "styled-components";
 import { includes as _includes, sortBy as _sortBy, last as _last } from "lodash-es";
 import { CodeStreamState } from "../store";
 import Icon from "./Icon";
-import { MetaLabel } from "./Codemark/BaseCodemark";
 import Timestamp from "./Timestamp";
 import { getCodeCollisions } from "../store/users/reducer";
 import { ChangesetFile } from "./Review/ChangesetFile";
-import { UL } from "./TeamPanel";
-import { HostApi } from "..";
 
-export const ModifiedRepos = (props: { id: string; showModifiedAt?: boolean }) => {
+export const ModifiedRepos = (props: {
+	id: string;
+	showModifiedAt?: boolean;
+	defaultText?: string;
+}) => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { session, users, teams, context } = state;
 		const person = users[props.id];
@@ -99,7 +100,7 @@ export const ModifiedRepos = (props: { id: string; showModifiedAt?: boolean }) =
 	if (modified.length > 0) {
 		return (
 			<>
-				{modified}
+				{modified.length > 0 ? modified : props.defaultText}
 				{props.showModifiedAt && modifiedReposModifiedAt && modifiedReposModifiedAt[teamId] && (
 					<div style={{ color: "var(--text-color-subtle)" }}>
 						Updated
