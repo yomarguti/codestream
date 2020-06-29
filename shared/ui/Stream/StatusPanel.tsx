@@ -336,6 +336,7 @@ export const StatusPanel = () => {
 		} else {
 			clearAndSave();
 		}
+		setLoadingSlack(false);
 	};
 
 	const dateToken = () => {
@@ -502,9 +503,11 @@ export const StatusPanel = () => {
 		setLabel("");
 		setCard(undefined);
 		setScmError("");
+		setLoadingSlack(false);
 	};
 
 	const clearAndSave = () => {
+		setLoadingSlack(false);
 		dispatch(setUserStatus("", "", "", "", derivedState.invisible));
 		// FIXME clear out slack status
 	};
@@ -842,7 +845,7 @@ export const StatusPanel = () => {
 						<Docs>
 							<span onClick={() => dispatch(openPanel(WebviewPanels.Flow))}>
 								<Icon name="chevron-right" />
-								CodeStream Flow <sup className="highlight">new!</sup>
+								CodeStream Howto <sup className="highlight">new!</sup>
 							</span>
 							<span
 								style={{ display: "none" }}
