@@ -194,6 +194,18 @@ export const RoundedLink = styled.a`
 	}
 `;
 
+const RepoInfo = styled.div`
+	padding: 0 0 10px 3px;
+`;
+
+const IconLabel = styled.span`
+	white-space: nowrap;
+	padding-right: 10px;
+	.icon {
+		margin-right: 5px;
+	}
+`;
+
 export interface IStartWorkIssueContext {
 	setValues(values: any): void;
 	card?: any;
@@ -283,6 +295,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const [openRepos, setOpenRepos] = useState<ReposScm[]>([]);
 	const [repoUri, setRepoUri] = useState("");
 	const [currentRepoId, setCurrentRepoId] = useState("");
+	const [currentRepoName, setCurrentRepoName] = useState("");
 	const [fromBranch, setFromBranch] = useState("");
 	const inputRef = React.useRef<HTMLInputElement>(null);
 
@@ -367,6 +380,9 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		setBranches(branchInfo.scm.branches);
 		setCurrentBranch(branchInfo.scm.current);
 		setCurrentRepoId(branchInfo.scm.repoId);
+		const repoId = branchInfo.scm.repoId;
+		const repoName = derivedState.repos[repoId] ? derivedState.repos[repoId].name : "repo";
+		setCurrentRepoName(repoName);
 
 		const response = await HostApi.instance.send(GetReposScmRequestType, {});
 		if (response && response.repositories) {
@@ -661,65 +677,73 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 											<MarkdownText text={card.body.replace(/\[Open in IDE\].*/, "")} />
 										</CardDescription>
 									)}
-									<div style={{ paddingLeft: "0px" }}>
-										{showCreateBranchCheckbox && (
-											<StyledCheckbox
-												name="create-branch"
-												checked={createBranch}
-												onChange={v => setCreateBranch(v)}
-											>
-												{useBranchLabel}{" "}
-												{editingBranch ? (
-													<input
-														id="branch-input"
-														name="branch"
-														value={customBranchName || branch}
-														className="input-text control"
-														autoFocus={true}
-														type="text"
-														onChange={e => setCustomBranchName(e.target.value)}
-														placeholder="Enter branch name"
-														onBlur={() => setEditingBranch(false)}
-														onKeyPress={e => {
-															if (e.key == "Enter") setEditingBranch(false);
-														}}
-														style={{ width: "200px" }}
-													/>
-												) : (
-													<>
-														<MonoMenu items={branchMenuItems}>{branch}</MonoMenu>
-														{fromBranch && fromBranch !== currentBranch && (
-															<div>
-																from <span className="highlight monospace">{fromBranch}</span>
-															</div>
-														)}
-													</>
-												)}
-											</StyledCheckbox>
-										)}
-										{showMoveCardCheckbox && (
-											<StyledCheckbox
-												name="move-issue"
-												checked={moveCard}
-												onChange={v => setMoveCard(v)}
-											>
-												{card && card.moveCardLabel}{" "}
-												<InlineMenu items={moveCardItems}>
-													{moveCardDestinationLabel || "make selection"}
-												</InlineMenu>
-											</StyledCheckbox>
-										)}
-										{showUpdateSlackCheckbox && (
-											<StyledCheckbox
-												name="update-slack"
-												checked={updateSlack}
-												loading={loadingSlack && !derivedState.isConnectedToSlack}
-												onChange={v => setUpdateSlack(v)}
-											>
-												Update my status on Slack
-											</StyledCheckbox>
-										)}
-									</div>
+									<RepoInfo>
+										<IconLabel>
+											<Icon name="repo" />
+											{currentRepoName}
+										</IconLabel>
+										<IconLabel>
+											<Icon name="git-branch" />
+											{currentBranch}
+										</IconLabel>
+									</RepoInfo>
+									{showCreateBranchCheckbox && (
+										<StyledCheckbox
+											name="create-branch"
+											checked={createBranch}
+											onChange={v => setCreateBranch(v)}
+										>
+											{useBranchLabel}{" "}
+											{editingBranch ? (
+												<input
+													id="branch-input"
+													name="branch"
+													value={customBranchName || branch}
+													className="input-text control"
+													autoFocus={true}
+													type="text"
+													onChange={e => setCustomBranchName(e.target.value)}
+													placeholder="Enter branch name"
+													onBlur={() => setEditingBranch(false)}
+													onKeyPress={e => {
+														if (e.key == "Enter") setEditingBranch(false);
+													}}
+													style={{ width: "200px" }}
+												/>
+											) : (
+												<>
+													<MonoMenu items={branchMenuItems}>{branch}</MonoMenu>
+													{fromBranch && fromBranch !== currentBranch && (
+														<div>
+															from <span className="highlight monospace">{fromBranch}</span>
+														</div>
+													)}
+												</>
+											)}
+										</StyledCheckbox>
+									)}
+									{showMoveCardCheckbox && (
+										<StyledCheckbox
+											name="move-issue"
+											checked={moveCard}
+											onChange={v => setMoveCard(v)}
+										>
+											{card && card.moveCardLabel}{" "}
+											<InlineMenu items={moveCardItems}>
+												{moveCardDestinationLabel || "make selection"}
+											</InlineMenu>
+										</StyledCheckbox>
+									)}
+									{showUpdateSlackCheckbox && (
+										<StyledCheckbox
+											name="update-slack"
+											checked={updateSlack}
+											loading={loadingSlack && !derivedState.isConnectedToSlack}
+											onChange={v => setUpdateSlack(v)}
+										>
+											Update my status on Slack
+										</StyledCheckbox>
+									)}
 									<div style={{ height: "5px" }}></div>
 									{scmError && <SCMError>{scmError}</SCMError>}
 									<ButtonRow>

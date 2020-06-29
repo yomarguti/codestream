@@ -847,8 +847,12 @@ export const Row = styled.div`
 		margin-left: auto;
 		text-align: right;
 		.icon {
-			margin-left: 10px;
+			margin-left: 5px;
+			display: none;
 		}
+	}
+	&:hover .icons .icon {
+		display: inline-block;
 	}
 	&:not(.disabled):not(.no-hover):hover {
 		background: var(--app-background-color-hover);

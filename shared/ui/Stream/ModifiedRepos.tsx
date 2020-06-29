@@ -9,6 +9,7 @@ import { getCodeCollisions } from "../store/users/reducer";
 import { ChangesetFile } from "./Review/ChangesetFile";
 import { HostApi } from "..";
 import { ReviewShowLocalDiffRequestType } from "../ipc/host.protocol.review";
+import * as userSelectors from "../store/users/reducer";
 
 const IconLabel = styled.span`
 	white-space: nowrap;
@@ -30,10 +31,12 @@ export const ModifiedRepos = (props: {
 		const team = teams[context.currentTeamId];
 		const xraySetting = team.settings ? team.settings.xray : "";
 		const xrayEnabled = xraySetting !== "off";
+		const userNamesById = userSelectors.getUsernamesById(state);
 
 		return {
 			person,
 			isMe: person ? person.id === session.userId : false,
+			userNamesById,
 			repos: state.repos,
 			teamId: state.context.currentTeamId,
 			currentUserEmail: me.email,
@@ -71,6 +74,8 @@ export const ModifiedRepos = (props: {
 		// setState({			currentFile: path		});
 	};
 
+	const nameList = ids => ids.map(id => derivedState.userNamesById[id]).join(", ");
+
 	const modified = modifiedRepos[teamId]
 		.map(repo => {
 			const { repoId = "", authors, modifiedFiles } = repo;
@@ -102,6 +107,8 @@ export const ModifiedRepos = (props: {
 							const className = hasConflict ? "file-has-conflict wide" : "wide";
 							const onClick = isMe ? () => clickFile(repoId, f.file) : undefined;
 							const selected = selectedFile === repoId + ":" + f.file;
+							const tooltip =
+								isMe && hasConflict ? nameList(hasConflict) + " is editing" : undefined;
 							return (
 								<ChangesetFile
 									icon={<Icon className="file-icon" name={selected ? "arrow-right" : "blank"} />}
@@ -109,6 +116,7 @@ export const ModifiedRepos = (props: {
 									onClick={onClick}
 									noHover={!onClick}
 									key={f.file}
+									tooltip={tooltip}
 									{...f}
 								/>
 							);

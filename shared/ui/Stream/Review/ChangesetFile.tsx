@@ -1,6 +1,7 @@
 import React from "react";
 import { ReviewChangesetFileInfo, FileStatus } from "@codestream/protocols/api";
 import styled from "styled-components";
+import Tooltip from "../Tooltip";
 
 interface Props {
 	className?: string;
@@ -8,6 +9,7 @@ interface Props {
 	selected?: boolean;
 	noHover?: boolean;
 	icon?: any;
+	tooltip?: any;
 }
 
 export const ChangesetFile = styled((props: ReviewChangesetFileInfo & Props) => {
@@ -23,9 +25,11 @@ export const ChangesetFile = styled((props: ReviewChangesetFileInfo & Props) => 
 			onClick={props.onClick}
 		>
 			{props.icon}
-			<span className="file-info ellipsis-left">
-				<bdi dir="ltr">{props.file}</bdi>
-			</span>
+			<Tooltip title={props.tooltip} placement="bottom" delay={1}>
+				<span className="file-info ellipsis-left">
+					<bdi dir="ltr">{props.file}</bdi>
+				</span>
+			</Tooltip>
 			{linesAdded > 0 && <span className="added">+{linesAdded} </span>}
 			{linesRemoved > 0 && <span className="deleted">-{linesRemoved}</span>}
 			{status === FileStatus.untracked && <span className="added">new </span>}
