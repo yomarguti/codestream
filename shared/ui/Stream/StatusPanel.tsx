@@ -812,10 +812,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 									<span className="wide-text">Clear</span>
 								</RoundedLink>
 							</Tooltip>
-							<H4>
-								<Icon className="toggle" name="chevron-down" />
-								Current Assignment
-							</H4>
+							<H4>Current Assignment</H4>
 							<Row className="no-hover wide">
 								<div>
 									<Icon className="ticket" name={status.ticketProvider || "ticket"} />
