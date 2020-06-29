@@ -51,7 +51,9 @@ export function OpenReviews() {
 					<Row onClick={() => dispatch(setCurrentReview(review.id))}>
 						<div>
 							<Tooltip title={creator && creator.fullName} placement="bottomLeft">
-								<Headshot person={creator} />
+								<span>
+									<Headshot person={creator} />
+								</span>
 							</Tooltip>
 						</div>
 						<div>
