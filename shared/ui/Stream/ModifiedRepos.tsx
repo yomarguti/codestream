@@ -75,7 +75,10 @@ export const ModifiedRepos = (props: {
 
 	const modified = modifiedRepos[teamId]
 		.map(repo => {
-			const { repoId = "", authors, modifiedFiles } = repo;
+			const { repoId = "", authors } = repo;
+			const modifiedFiles = repo.modifiedFiles.filter(
+				f => props.showUntracked || f.status !== FileStatus.untracked
+			);
 			if (modifiedFiles.length === 0) return null;
 			const repoName = repos[repoId] ? repos[repoId].name : "";
 			const added = modifiedFiles.reduce((total, f) => total + f.linesAdded, 0);
@@ -98,7 +101,6 @@ export const ModifiedRepos = (props: {
 					</div>
 					<div style={{ margin: "0 -20px 0 -20px", padding: "5px 0 10px 0" }}>
 						{modifiedFiles.map(f => {
-							if (!props.showUntracked && f.status === FileStatus.untracked) return null;
 							const hasConflict = isMe
 								? collisions.repoFiles[`${repo.repoId}:${f.file}`]
 								: collisions.userRepoFiles[`${person.id}:${repo.repoId}:${f.file}`];
