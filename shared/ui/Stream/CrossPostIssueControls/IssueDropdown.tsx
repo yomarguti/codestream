@@ -769,12 +769,19 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 							<span className="subtle">{card.body}</span>
 						</div>
 						<div className="icons">
+							<Icon
+								name="arrow-right"
+								className="clickable"
+								title="Start working on item"
+								placement="bottomRight"
+								delay={1}
+							/>
 							{card.url && (
 								<Icon
 									title={`Open on web`}
 									delay={1}
 									placement="bottomRight"
-									name="link-external"
+									name="globe"
 									className="clickable"
 									onClick={e => {
 										e.stopPropagation();
@@ -790,7 +797,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 									title={`View Issue Details`}
 									delay={1}
 									placement="bottomRight"
-									name="link-external"
+									name="details"
 									className="clickable"
 									onClick={e => {
 										e.stopPropagation();
@@ -847,7 +854,7 @@ export const Row = styled.div`
 		margin-left: auto;
 		text-align: right;
 		.icon {
-			margin-left: 5px;
+			// margin-left: 5px;
 			display: none;
 		}
 	}

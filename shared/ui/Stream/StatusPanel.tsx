@@ -767,6 +767,43 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			)}
 			<ScrollBox>
 				<div className="channel-list vscroll">
+					<OpenReviews />
+					<StatusSection>
+						<Tooltip
+							title={
+								<>
+									Works with local WIPs too.
+									<br />
+									Watch the{" "}
+									<a
+										onClick={() =>
+											HostApi.instance.send(OpenUrlRequestType, {
+												url: "https://youtu.be/2AyqT4z5Omc"
+											})
+										}
+									>
+										video guide
+									</a>
+								</>
+							}
+							delay={1}
+						>
+							<RoundedLink
+								onClick={() => {
+									dispatch(setNewPostEntry("Work Items"));
+									dispatch(openPanel(WebviewPanels.NewReview));
+								}}
+							>
+								<Icon className="padded-icon" name="review" />
+								<span className="wide-text">Request Review</span>
+							</RoundedLink>
+						</Tooltip>
+						<H4>Work In Progress</H4>
+						<ModifiedRepos
+							id={derivedState.currentUserId}
+							defaultText="No diffs. As you write code, changes will appear here."
+						/>
+					</StatusSection>{" "}
 					{status && status.label && (
 						<StatusSection>
 							<Tooltip title="Clear work item" delay={1}>
@@ -805,45 +842,9 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 							</Row>
 						</StatusSection>
 					)}
-					<StatusSection>
-						<Tooltip
-							title={
-								<>
-									Watch the{" "}
-									<a
-										onClick={() =>
-											HostApi.instance.send(OpenUrlRequestType, {
-												url: "https://youtu.be/2AyqT4z5Omc"
-											})
-										}
-									>
-										video guide
-									</a>
-								</>
-							}
-							delay={1}
-						>
-							<RoundedLink
-								onClick={() => {
-									dispatch(setNewPostEntry("Work Items"));
-									dispatch(openPanel(WebviewPanels.NewReview));
-								}}
-							>
-								<Icon className="padded-icon" name="review" />
-								<span className="wide-text">Request Review</span>
-							</RoundedLink>
-						</Tooltip>
-						<H4>Work In Progress</H4>
-						<ModifiedRepos
-							id={derivedState.currentUserId}
-							defaultText="No diffs. As you write code, changes will appear here."
-						/>
-					</StatusSection>
-					<OpenReviews />
 					<StartWorkIssueContext.Provider value={{ setValues: values => selectCard(values) }}>
 						<IssueDropdown selectedCardId={status.ticketId} />
 					</StartWorkIssueContext.Provider>
-
 					<div style={{ margin: "0" }}>
 						<Docs>
 							<span onClick={() => dispatch(openPanel(WebviewPanels.Flow))}>
