@@ -19,7 +19,11 @@ export const plural = (word: string, count: number, many?: string): string => {
 	}
 };
 
-export const distanceOfTimeInWords = (time: number, relativeToNow: boolean = true): string => {
+export const distanceOfTimeInWords = (
+	time: number,
+	relativeToNow: boolean = true,
+	abbreviated?: boolean
+): string => {
 	const now = new Date().getTime();
 	let seconds: number = Math.floor((now - time) / 1000);
 	const isAgo: boolean = seconds >= 0;
@@ -33,15 +37,15 @@ export const distanceOfTimeInWords = (time: number, relativeToNow: boolean = tru
 
 	if (seconds < MINUTE) {
 		// 1 minute
-		when = `${seconds} ${plural("second", seconds)}`;
+		when = `${seconds} ${plural(abbreviated ? "sec" : "second", seconds)}`;
 	} else if (seconds < HOUR) {
 		// 1 hour
 		distance = Math.floor(seconds / 60);
-		when = `${distance} ${plural("minute", distance)}`;
+		when = `${distance} ${plural(abbreviated ? "min" : "minute", distance)}`;
 	} else if (seconds < DAY) {
 		// 1 day
 		distance = Math.round(seconds / (60 * 60));
-		when = `${distance} ${plural("hour", distance)}`;
+		when = `${distance} ${plural(abbreviated ? "hr" : "hour", distance)}`;
 	} else if (seconds < WEEK) {
 		// 1 week
 		distance = Math.round(seconds / (60 * 60 * 24));
@@ -49,14 +53,14 @@ export const distanceOfTimeInWords = (time: number, relativeToNow: boolean = tru
 	} else if (seconds < MONTH) {
 		// 1 month
 		distance = Math.round(seconds / (60 * 60 * 24 * 7));
-		when = `${distance} ${plural("week", distance)}`;
+		when = `${distance} ${plural(abbreviated ? "wk" : "week", distance)}`;
 	} else if (seconds < YEAR) {
 		// # 1 year
 		distance = Math.round(seconds / (60 * 60 * 24 * (365 / 12)));
-		when = `${distance} ${plural("month", distance)}`;
+		when = `${distance} ${plural(abbreviated ? "month" : "month", distance)}`;
 	} else {
 		distance = Math.round(seconds / (60 * 60 * 24 * 365));
-		when = `${distance} ${plural("year", distance)}`;
+		when = `${distance} ${plural(abbreviated ? "yr" : "year", distance)}`;
 	}
 
 	if (!relativeToNow) {
@@ -114,6 +118,7 @@ interface Props {
 	className?: string;
 	time: number;
 	edited?: boolean;
+	abbreviated?: boolean;
 }
 
 const StyledTime = styled.time`
@@ -138,7 +143,7 @@ export default function Timestamp(props: PropsWithChildren<Props>) {
 	if (props.relative)
 		return (
 			<StyledTime className={props.className}>
-				{distanceOfTimeInWords(props.time)}
+				{distanceOfTimeInWords(props.time, true, props.abbreviated)}
 				{edited}
 			</StyledTime>
 		);

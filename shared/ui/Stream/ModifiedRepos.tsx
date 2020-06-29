@@ -7,10 +7,15 @@ import Icon from "./Icon";
 import Timestamp from "./Timestamp";
 import { getCodeCollisions } from "../store/users/reducer";
 import { ChangesetFile } from "./Review/ChangesetFile";
+import { HostApi } from "..";
+import { ReviewShowLocalDiffRequestType } from "../ipc/host.protocol.review";
 
 const IconLabel = styled.span`
 	white-space: nowrap;
 	padding-right: 10px;
+	.icon {
+		margin-right: 5px;
+	}
 `;
 
 export const ModifiedRepos = (props: {
@@ -48,12 +53,20 @@ export const ModifiedRepos = (props: {
 	if (!modifiedRepos || !modifiedRepos[teamId] || !modifiedRepos[teamId].length) return null;
 
 	// FIXME we want to be able to show the diff here
-	// const showLocalDiff = (path) => {
-	// 	HostApi.instance.send(ShowLocalDiffRequestType, {
-	// 		path,
-	// 	});
-	// 	// setState({			currentFile: path		});
-	// }
+	const clickFile = (repoId, path) => {
+		HostApi.instance.send(ReviewShowLocalDiffRequestType, {
+			path,
+			repoId,
+			includeSaved: true,
+			includeStaged: true,
+			baseSha: ""
+		});
+		// HostApi.instance.send(ShowLocalDiffRequestType, {
+		// repoPath
+		// file,
+		// });
+		// setState({			currentFile: path		});
+	};
 
 	const modified = modifiedRepos[teamId]
 		.map(repo => {
@@ -78,14 +91,24 @@ export const ModifiedRepos = (props: {
 							{repo.branch}
 						</IconLabel>
 					</div>
-					<div style={{ padding: "5px 0 10px 20px" }}>
+					<div style={{ margin: "0 -20px 0 -20px", padding: "5px 0 10px 0" }}>
 						{modifiedFiles.map(f => {
-							const className = collisions.userRepoFiles[
-								person.id + ":" + repo.repoId + ":" + f.file
-							]
-								? "file-has-conflict"
-								: "";
-							return <ChangesetFile className={className} noHover={true} key={f.file} {...f} />;
+							const hasConflict = isMe
+								? collisions.repoFiles[`${repo.repoId}:${f.file}`]
+								: collisions.userRepoFiles[`${person.id}:${repo.repoId}:${f.file}`];
+							const className = hasConflict ? "file-has-conflict wide" : "wide";
+							const onClick = isMe ? () => clickFile(repoId, f.file) : undefined;
+							const selected = false;
+							return (
+								<ChangesetFile
+									icon={<Icon className="file-icon" name={selected ? "arrow-right" : "blank"} />}
+									className={className}
+									onClick={onClick}
+									noHover={!onClick}
+									key={f.file}
+									{...f}
+								/>
+							);
 						})}
 					</div>
 					{stomp && (

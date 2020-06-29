@@ -185,9 +185,11 @@ export const getCodeCollisions = createSelector(
 					if (myModified[repo.repoId + ":" + fileRecord.file]) {
 						collisions.nav = true;
 						collisions.users[user.id] = true;
-						collisions.userRepos[user.id + ":" + repo.repoId] = true;
-						collisions.userRepoFiles[user.id + ":" + repo.repoId + ":" + fileRecord.file] = true;
-						collisions.repoFiles[repo.repoId + ":" + fileRecord.file] = true;
+						collisions.userRepos[`${user.id}:${repo.repoId}`] = true;
+						collisions.userRepoFiles[`${user.id}:${repo.repoId}:${fileRecord.file}`] = true;
+						const key = `${repo.repoId}:${fileRecord.file}`;
+						if (!collisions.repoFiles[key]) collisions.repoFiles[key] = [];
+						collisions.repoFiles[key].push(user.id);
 					}
 				});
 			});

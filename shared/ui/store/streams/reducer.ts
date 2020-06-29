@@ -131,7 +131,7 @@ export const getDMName = (stream, users, currentUserId) => {
 	if (stream.name) return stream.name;
 	if (stream.type === "direct") {
 		// if it's a direct message w/myself, then use my name, otherwise exclude myself
-		if (false && stream.memberIds.length === 1 && stream.memberIds[0] === currentUserId) {
+		if (stream.memberIds.length === 1 && stream.memberIds[0] === currentUserId) {
 			return makeDirectMessageStreamName([currentUserId], users) + " (you)";
 		}
 		const withoutMe = (stream.memberIds || []).filter(id => id !== currentUserId);

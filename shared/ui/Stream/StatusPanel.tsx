@@ -468,7 +468,10 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 		setScmError("");
 	};
 
-	const clearAndSave = () => dispatch(setUserStatus("", "", "", derivedState.invisible));
+	const clearAndSave = () => {
+		dispatch(setUserStatus("", "", "", derivedState.invisible));
+		// FIXME clear out slack status
+	};
 
 	const saveLabel =
 		!branch || branch == currentBranch || !createBranch

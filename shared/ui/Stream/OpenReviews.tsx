@@ -12,6 +12,7 @@ import { setCurrentReview } from "../store/context/actions";
 import { useDidMount } from "../utilities/hooks";
 import { bootstrapReviews } from "../store/reviews/actions";
 import Tooltip from "./Tooltip";
+import Timestamp from "./Timestamp";
 
 export function OpenReviews() {
 	const dispatch = useDispatch();
@@ -58,9 +59,7 @@ export function OpenReviews() {
 							<span className="subtle">{review.text}</span>
 						</div>
 						<div className="icons">
-							<Tooltip title={creator && creator.fullName}>
-								<span></span>
-							</Tooltip>
+							<Timestamp time={review.createdAt} relative abbreviated />
 						</div>
 					</Row>
 				);
