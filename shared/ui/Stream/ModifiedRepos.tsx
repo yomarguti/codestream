@@ -10,6 +10,7 @@ import { ChangesetFile } from "./Review/ChangesetFile";
 import { HostApi } from "..";
 import { ReviewShowLocalDiffRequestType } from "../ipc/host.protocol.review";
 import * as userSelectors from "../store/users/reducer";
+import { FileStatus } from "@codestream/protocols/api";
 
 const IconLabel = styled.span`
 	white-space: nowrap;
@@ -21,6 +22,7 @@ const IconLabel = styled.span`
 
 export const ModifiedRepos = (props: {
 	id: string;
+	showUntracked?: boolean;
 	showModifiedAt?: boolean;
 	defaultText?: string;
 }) => {
@@ -96,6 +98,7 @@ export const ModifiedRepos = (props: {
 					</div>
 					<div style={{ margin: "0 -20px 0 -20px", padding: "5px 0 10px 0" }}>
 						{modifiedFiles.map(f => {
+							if (!props.showUntracked && f.status === FileStatus.untracked) return null;
 							const hasConflict = isMe
 								? collisions.repoFiles[`${repo.repoId}:${f.file}`]
 								: collisions.userRepoFiles[`${person.id}:${repo.repoId}:${f.file}`];
