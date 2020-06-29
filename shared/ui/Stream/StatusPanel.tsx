@@ -7,7 +7,7 @@ import { Checkbox } from "../src/components/Checkbox";
 import styled from "styled-components";
 import { Button } from "../src/components/Button";
 import { setUserStatus, setUserPreference, connectProvider } from "./actions";
-import { openPanel } from "../store/context/actions";
+import { openPanel, setNewPostEntry } from "../store/context/actions";
 import { CSMe } from "@codestream/protocols/api";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { useDidMount } from "../utilities/hooks";
@@ -253,6 +253,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			teamName: team.name,
 			currentUserId: state.session.userId!,
 			currentUserName: state.users[state.session.userId!].username,
+			webviewFocused: state.context.hasFocus,
 			textEditorUri: state.editorContext.textEditorUri,
 			branchMaxLength: settings.branchMaxLength || 40,
 			branchTicketTemplate: settings.branchTicketTemplate || "feature/ticket-{id}",
@@ -290,7 +291,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const setUpdateSlack = value => {
 		if (!derivedState.isConnectedToSlack) {
 			setLoadingSlack(true);
-			dispatch(connectProvider(derivedState.slackConfig!.id, "Status Panel"));
+			dispatch(connectProvider(derivedState.slackConfig!.id, "Work Items"));
 		} else {
 			dispatch(setUserPreference(["startWork", "updateSlack"], value));
 		}
@@ -375,6 +376,8 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 
 	useDidMount(() => {
 		getBranches();
+		if (derivedState.webviewFocused)
+			HostApi.instance.track("Page Viewed", { "Page Name": "Work Items Tab" });
 	});
 
 	const showMoveCardCheckbox = React.useMemo(() => {
@@ -416,44 +419,54 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	const save = async () => {
 		setLoading(true);
 
-		HostApi.instance.track("Work Started", {
-			"Branch Created": createBranch,
-			"Ticket Selected": card ? card.providerIcon : ""
-		});
-
-		if (
+		const { slackConfig } = derivedState;
+		const createTheBranchNow =
 			showCreateBranchCheckbox &&
 			createBranch &&
 			branch.length > 0 &&
-			(repoUri || derivedState.textEditorUri)
-		) {
-			const uri = repoUri || derivedState.textEditorUri || "";
-			const request = branches.includes(branch) ? SwitchBranchRequestType : CreateBranchRequestType;
-			const result = await HostApi.instance.send(request, { branch, uri, fromBranch });
-			// FIXME handle error
-			if (result.error) {
-				console.warn("ERROR FROM SET BRANCH: ", result.error);
-				setScmError(result.error);
-				setLoading(false);
-				return;
+			(repoUri || derivedState.textEditorUri);
+		const moveTheCardNow = showMoveCardCheckbox && moveCard && card && moveCardDestinationId;
+		const updateSlackNow = slackConfig && showUpdateSlackCheckbox && updateSlack;
+		try {
+			if (createTheBranchNow) {
+				const uri = repoUri || derivedState.textEditorUri || "";
+				const request = branches.includes(branch)
+					? SwitchBranchRequestType
+					: CreateBranchRequestType;
+				const result = await HostApi.instance.send(request, { branch, uri, fromBranch });
+				// FIXME handle error
+				if (result.error) {
+					console.warn("ERROR FROM SET BRANCH: ", result.error);
+					setScmError(result.error);
+					setLoading(false);
+					return;
+				}
 			}
-		}
 
-		if (showMoveCardCheckbox && moveCard && card && moveCardDestinationId) {
-			const response = await HostApi.instance.send(MoveThirdPartyCardRequestType, {
-				providerId: card.providerId,
-				cardId: card.id,
-				listId: moveCardDestinationId
-			});
-		}
+			if (moveTheCardNow) {
+				const response = await HostApi.instance.send(MoveThirdPartyCardRequestType, {
+					providerId: card.providerId,
+					cardId: card.id,
+					listId: moveCardDestinationId
+				});
+			}
 
-		const { slackConfig } = derivedState;
-		if (slackConfig && showUpdateSlackCheckbox && updateSlack) {
-			const response = await HostApi.instance.send(UpdateThirdPartyStatusRequestType, {
-				providerId: slackConfig.id,
-				providerTeamId: derivedState.selectedShareTarget.teamId,
-				text: "Working on: " + label,
-				icon: ":desktop_computer:"
+			if (slackConfig && updateSlackNow) {
+				const response = await HostApi.instance.send(UpdateThirdPartyStatusRequestType, {
+					providerId: slackConfig.id,
+					providerTeamId: derivedState.selectedShareTarget.teamId,
+					text: "Working on: " + label,
+					icon: ":desktop_computer:"
+				});
+			}
+		} catch (e) {
+			console.warn("ERROR: " + e);
+		} finally {
+			HostApi.instance.track("Work Started", {
+				"Branch Created": createTheBranchNow,
+				"Ticket Selected": card ? card.providerIcon : "",
+				"Ticket Moved": moveTheCardNow,
+				"Status Set": updateSlackNow
 			});
 		}
 
@@ -777,7 +790,12 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 							}
 							delay={1}
 						>
-							<RoundedLink onClick={() => dispatch(openPanel(WebviewPanels.NewReview))}>
+							<RoundedLink
+								onClick={() => {
+									dispatch(setNewPostEntry("Work Items"));
+									dispatch(openPanel(WebviewPanels.NewReview));
+								}}
+							>
 								<Icon className="padded-icon" name="review" />
 								<span className="wide-text">Request Review</span>
 							</RoundedLink>

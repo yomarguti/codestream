@@ -35,7 +35,14 @@ export enum ContextActionsType {
 /**
  * This can also be any Titled Cased panel name
  */
-export type PostEntryPoint = "Stream" | "Global Nav" | "Spatial View" | "VSC SCM" | string | undefined;
+export type PostEntryPoint =
+	| "Stream"
+	| "Global Nav"
+	| "Spatial View"
+	| "VSC SCM"
+	| "Work Items"
+	| string
+	| undefined;
 
 export interface ContextState extends WebviewContext {
 	channelFilter: string;
