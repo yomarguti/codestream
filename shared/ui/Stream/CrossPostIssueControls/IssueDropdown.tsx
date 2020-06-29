@@ -64,6 +64,7 @@ interface Props extends ConnectedProps {
 	setIssueProvider(providerId?: string): void;
 	openPanel(...args: Parameters<typeof openPanel>): void;
 	isEditing?: boolean;
+	selectedCardId: string;
 }
 
 interface State {
@@ -187,6 +188,7 @@ class IssueDropdown extends React.Component<Props, State> {
 				<IssueList
 					providers={activeProviders}
 					knownIssueProviderOptions={knownIssueProviderOptions}
+					selectedCardId={this.props.selectedCardId}
 				></IssueList>
 			</>
 		);
@@ -373,6 +375,7 @@ export function Issue(props) {
 interface IssueListProps {
 	providers: ThirdPartyProviderConfig[];
 	knownIssueProviderOptions: any;
+	selectedCardId: string;
 }
 
 const EMPTY_ARRAY = {};
@@ -622,7 +625,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 		items.sort((a, b) => b.modifiedAt - a.modifiedAt);
 
 		return { cards: items, canFilter };
-	}, [loadedCards, derivedState.startWorkPreferences, derivedState.csIssues]);
+	}, [loadedCards, derivedState.startWorkPreferences, derivedState.csIssues, props.selectedCardId]);
 
 	const menuItems = React.useMemo(() => {
 		// if (props.provider.canFilterByAssignees) {
@@ -755,8 +758,12 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 				</div>
 				{firstLoad && <LoadingMessage align="left">Loading...</LoadingMessage>}
 				{cards.map(card => (
-					<Row key={card.key} onClick={() => selectCard(card)}>
-						<div>{card.icon}</div>
+					<Row
+						key={card.key}
+						onClick={() => selectCard(card)}
+						className={card.id === props.selectedCardId ? "selected" : ""}
+					>
+						<div>{card.id === props.selectedCardId ? <Icon name="arrow-right" /> : card.icon}</div>
 						<div>
 							{card.label}
 							<span className="subtle">{card.body}</span>
@@ -810,6 +817,9 @@ export const Row = styled.div`
 	text-overflow: ellipsis;
 	width: 100%;
 	padding: 0 15px 0 20px;
+	&.selected {
+		color: var(--text-color-highlight);
+	}
 	&.wide {
 		padding: 0;
 	}

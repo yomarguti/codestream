@@ -143,6 +143,7 @@ export const StatusSection = styled.div`
 	border-top: 1px solid var(--base-border-color);
 `;
 
+// @ts-ignore
 export const WideStatusSection = styled(StatusSection)`
 	padding-left: 0;
 	padding-right: 0;
@@ -205,6 +206,7 @@ export const StartWorkIssueContext = React.createContext<IStartWorkIssueContext>
 
 const EMPTY_STATUS = {
 	label: "",
+	ticketId: "",
 	ticketUrl: "",
 	ticketProvider: "",
 	invisible: false
@@ -455,9 +457,12 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 			});
 		}
 
+		const ticketId = card ? card.id : "";
 		const ticketUrl = card ? card.url : "";
 		const ticketProvider = card ? card.providerIcon : "";
-		await dispatch(setUserStatus(label, ticketUrl, ticketProvider, derivedState.invisible));
+		await dispatch(
+			setUserStatus(label, ticketId, ticketUrl, ticketProvider, derivedState.invisible)
+		);
 		clear();
 		setLoading(false);
 	};
@@ -469,7 +474,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 	};
 
 	const clearAndSave = () => {
-		dispatch(setUserStatus("", "", "", derivedState.invisible));
+		dispatch(setUserStatus("", "", "", "", derivedState.invisible));
 		// FIXME clear out slack status
 	};
 
@@ -785,7 +790,7 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 					</StatusSection>
 					<OpenReviews />
 					<StartWorkIssueContext.Provider value={{ setValues: values => selectCard(values) }}>
-						<IssueDropdown />
+						<IssueDropdown selectedCardId={status.ticketId} />
 					</StartWorkIssueContext.Provider>
 
 					<div style={{ margin: "0" }}>

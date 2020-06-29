@@ -46,6 +46,8 @@ export const ModifiedRepos = (props: {
 
 	if (!derivedState.person) return null;
 
+	const [selectedFile, setSelectedFile] = React.useState("");
+
 	const { repos, teamId, currentUserEmail, collisions, xrayEnabled } = derivedState;
 	const { modifiedRepos, modifiedReposModifiedAt } = person;
 
@@ -54,6 +56,7 @@ export const ModifiedRepos = (props: {
 
 	// FIXME we want to be able to show the diff here
 	const clickFile = (repoId, path) => {
+		setSelectedFile(repoId + ":" + path);
 		HostApi.instance.send(ReviewShowLocalDiffRequestType, {
 			path,
 			repoId,
@@ -98,7 +101,7 @@ export const ModifiedRepos = (props: {
 								: collisions.userRepoFiles[`${person.id}:${repo.repoId}:${f.file}`];
 							const className = hasConflict ? "file-has-conflict wide" : "wide";
 							const onClick = isMe ? () => clickFile(repoId, f.file) : undefined;
-							const selected = false;
+							const selected = selectedFile === repoId + ":" + f.file;
 							return (
 								<ChangesetFile
 									icon={<Icon className="file-icon" name={selected ? "arrow-right" : "blank"} />}

@@ -613,8 +613,9 @@ class TeamPanel extends React.Component<Props, State> {
 	toggleInvisible = async () => {
 		const { setUserStatus, currentUser, currentUserInvisible } = this.props;
 		this.setState({ loadingStatus: true });
-		const { label = "", ticketUrl = "", ticketProvider = "" } = currentUser.status || {};
-		await setUserStatus(label, ticketUrl, ticketProvider, !currentUserInvisible);
+		const { label = "", ticketId = "", ticketUrl = "", ticketProvider = "" } =
+			currentUser.status || {};
+		await setUserStatus(label, ticketId, ticketUrl, ticketProvider, !currentUserInvisible);
 		await this.getScmInfoSummary();
 		this.setState({ loadingStatus: false });
 	};

@@ -634,6 +634,7 @@ export interface CSMePreferences {
 
 export interface CSMeStatus {
 	label: string;
+	ticketId: string;
 	ticketUrl: string;
 	ticketProvider: string; // "trello" | "jira" ....
 	invisible?: boolean;

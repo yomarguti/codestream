@@ -508,13 +508,14 @@ export const setUserPreference = (prefPath: string[], value: any) => async dispa
 
 export const setUserStatus = (
 	label: string,
+	ticketId: string,
 	ticketUrl: string,
 	ticketProvider: string,
 	invisible: boolean
 ) => async dispatch => {
 	try {
 		const response = await HostApi.instance.send(UpdateStatusRequestType, {
-			status: { label, ticketUrl, ticketProvider, invisible }
+			status: { label, ticketId, ticketUrl, ticketProvider, invisible }
 		});
 		dispatch(updateUser(response.user));
 	} catch (error) {
