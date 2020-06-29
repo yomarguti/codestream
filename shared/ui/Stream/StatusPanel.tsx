@@ -403,8 +403,11 @@ export const StatusPanel = () => {
 		return card && card.moveCardOptions && card.moveCardOptions.length > 0;
 	}, [card, label]);
 	const showCreateBranchCheckbox = React.useMemo(() => {
-		return label;
-	}, [label]);
+		return label && branches && branches.length > 0;
+	}, [label, branches]);
+	const showSelectRepo = React.useMemo(() => {
+		return !(branches && branches.length > 0);
+	}, [branches]);
 	const showUpdateSlackCheckbox = React.useMemo(() => {
 		return label;
 	}, [label, derivedState.isConnectedToSlack]);
@@ -682,16 +685,45 @@ export const StatusPanel = () => {
 											<MarkdownText text={card.body.replace(/\[Open in IDE\].*/, "")} />
 										</CardDescription>
 									)}
-									<RepoInfo>
-										<IconLabel>
-											<Icon name="repo" />
-											{currentRepoName}
-										</IconLabel>
-										<IconLabel>
-											<Icon name="git-branch" />
-											{currentBranch}
-										</IconLabel>
-									</RepoInfo>
+									{showSelectRepo ? (
+										<RepoInfo>
+											{openRepos && openRepos.length ? (
+												<IconLabel>
+													<Icon name="repo" />
+													<InlineMenu
+														items={openRepos.map(repo => {
+															const repoId = repo.id || "";
+															return {
+																label: derivedState.repos[repoId]
+																	? derivedState.repos[repoId].name
+																	: repo.folder.name,
+																key: repo.id,
+																action: () => getBranches(repo.folder.uri)
+															};
+														})}
+													>
+														Select a repository to create branch
+													</InlineMenu>
+												</IconLabel>
+											) : (
+												<IconLabel>
+													<Icon name="alert" />
+													Please open a file from a repository to create a branch
+												</IconLabel>
+											)}
+										</RepoInfo>
+									) : (
+										<RepoInfo>
+											<IconLabel>
+												<Icon name="repo" />
+												{currentRepoName}
+											</IconLabel>
+											<IconLabel>
+												<Icon name="git-branch" />
+												{currentBranch}
+											</IconLabel>
+										</RepoInfo>
+									)}
 									{showCreateBranchCheckbox && (
 										<StyledCheckbox
 											name="create-branch"
