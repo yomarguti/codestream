@@ -817,7 +817,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 									title={`View Issue Details`}
 									delay={1}
 									placement="bottomRight"
-									name="details"
+									name="description"
 									className="clickable"
 									onClick={e => {
 										e.stopPropagation();
