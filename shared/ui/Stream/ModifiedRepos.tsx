@@ -8,6 +8,11 @@ import Timestamp from "./Timestamp";
 import { getCodeCollisions } from "../store/users/reducer";
 import { ChangesetFile } from "./Review/ChangesetFile";
 
+const IconLabel = styled.span`
+	white-space: nowrap;
+	padding-right: 10px;
+`;
+
 export const ModifiedRepos = (props: {
 	id: string;
 	showModifiedAt?: boolean;
@@ -63,10 +68,15 @@ export const ModifiedRepos = (props: {
 					: (authors || []).find(a => a.email === currentUserEmail && a.stomped > 0);
 			return (
 				<div>
-					<div style={{ overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
-						<Icon name="repo" />
-						{repoName} &nbsp; <Icon name="git-branch" />
-						{repo.branch}
+					<div>
+						<IconLabel>
+							<Icon name="repo" />
+							{repoName}
+						</IconLabel>{" "}
+						<IconLabel>
+							<Icon name="git-branch" />
+							{repo.branch}
+						</IconLabel>
 					</div>
 					<div style={{ padding: "5px 0 10px 20px" }}>
 						{modifiedFiles.map(f => {
