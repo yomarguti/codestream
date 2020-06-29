@@ -919,7 +919,7 @@ export class SimpleStream extends Component {
 
 		if (activePanel === WebviewPanels.LandingRedirect)
 			// activePanel = remainingSteps > 0 ? WebviewPanels.GettingStarted : WebviewPanels.Activity;
-			activePanel = WebviewPanels.Activity;
+			activePanel = WebviewPanels.Status;
 
 		// this is the fix
 
@@ -1182,9 +1182,7 @@ export class SimpleStream extends Component {
 					{activePanel === WebviewPanels.Notifications && (
 						<NotificationsPanel closePanel={this.props.closePanel} />
 					)}
-					{activePanel === WebviewPanels.Status && (
-						<StatusPanel closePanel={this.props.closePanel} />
-					)}
+					{activePanel === WebviewPanels.Status && <StatusPanel />}
 					{(activePanel === WebviewPanels.People || activePanel === "invite") && (
 						<TeamPanel
 							activePanel={activePanel}

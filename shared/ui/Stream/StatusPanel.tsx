@@ -224,7 +224,7 @@ const EMPTY_STATUS = {
 	invisible: false
 };
 
-export const StatusPanel = (props: { closePanel: Function }) => {
+export const StatusPanel = () => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
