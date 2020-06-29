@@ -71,8 +71,11 @@ export const isConnected = (
 				if (["slack", "msteams"].includes(providerName)) {
 					const infoPerTeam = (info as any).multiple as { [key: string]: CSProviderInfos };
 					if (requiredScope) {
-						// @ts-ignore
-						if (Object.values(infoPerTeam)[0].data.scope.indexOf(requiredScope) === -1)
+						if (
+							Object.values(infoPerTeam)[0] &&
+							// @ts-ignore
+							Object.values(infoPerTeam)[0].data.scope.indexOf(requiredScope) === -1
+						)
 							return false;
 					}
 					if (infoPerTeam && Object.values(infoPerTeam).some(i => i.accessToken != undefined))
