@@ -333,6 +333,8 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 				else setMoveCardDestination(card.moveCardOptions[0]);
 			} else {
 			}
+		} else {
+			clearAndSave();
 		}
 	};
 
@@ -806,12 +808,6 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 					</StatusSection>{" "}
 					{status && status.label && (
 						<StatusSection>
-							<Tooltip title="Clear work item" delay={1}>
-								<RoundedLink onClick={clearAndSave}>
-									<Icon className="padded-icon" name="minus-circle" />
-									<span className="wide-text">Clear</span>
-								</RoundedLink>
-							</Tooltip>
 							<H4>Current Assignment</H4>
 							<Row className="no-hover wide">
 								<div>
@@ -820,11 +816,14 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 								<div>{status.label}</div>
 								{status.ticketUrl && (
 									<div className="icons">
+										<Tooltip title="Clear work item" placement="bottomLeft" delay={1}>
+											<Icon onClick={clearAndSave} className="clickable" name="x-circle" />
+										</Tooltip>
 										<Icon
 											title={`Open on web`}
 											delay={1}
 											placement="bottomRight"
-											name="link-external"
+											name="globe"
 											className="clickable link-external"
 											onClick={e => {
 												e.stopPropagation();

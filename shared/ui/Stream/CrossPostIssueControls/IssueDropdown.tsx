@@ -504,6 +504,8 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 					// creating a new card/issue
 					startWorkIssueContext.setValues({ ...card });
 				}
+			} else {
+				startWorkIssueContext.setValues(undefined);
 			}
 		},
 		[loadedBoards, loadedCards]
@@ -769,13 +771,28 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 							<span className="subtle">{card.body}</span>
 						</div>
 						<div className="icons">
-							<Icon
-								name="arrow-right"
-								className="clickable"
-								title="Start working on item"
-								placement="bottomRight"
-								delay={1}
-							/>
+							{card.id === props.selectedCardId ? (
+								<Icon
+									name="x-circle"
+									className="clickable"
+									title="Clear working on item"
+									placement="bottomRight"
+									delay={1}
+									onClick={e => {
+										e.stopPropagation();
+										e.preventDefault();
+										selectCard();
+									}}
+								/>
+							) : (
+								<Icon
+									name="arrow-right"
+									className="clickable"
+									title="Start working on item"
+									placement="bottomRight"
+									delay={1}
+								/>
+							)}
 							{card.url && (
 								<Icon
 									title={`Open on web`}
@@ -857,6 +874,7 @@ export const Row = styled.div`
 			// margin-left: 5px;
 			display: none;
 		}
+		padding-left: 2.5px;
 	}
 	&:hover .icons .icon {
 		display: inline-block;
