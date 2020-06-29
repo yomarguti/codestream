@@ -807,11 +807,11 @@ export const StatusPanel = () => {
 									<Icon name={status.ticketProvider || "ticket"} />
 								</div>
 								<div>{status.label}</div>
-								{status.ticketUrl && (
-									<div className="icons">
-										<Tooltip title="Clear work item" placement="bottomLeft" delay={1}>
-											<Icon onClick={() => clearAndSave()} className="clickable" name="x-circle" />
-										</Tooltip>
+								<div className="icons">
+									<Tooltip title="Clear work item" placement="bottomLeft" delay={1}>
+										<Icon onClick={() => clearAndSave()} className="clickable" name="x-circle" />
+									</Tooltip>
+									{status.ticketUrl && (
 										<Icon
 											title={`Open on web`}
 											delay={1}
@@ -826,8 +826,8 @@ export const StatusPanel = () => {
 												});
 											}}
 										/>
-									</div>
-								)}
+									)}
+								</div>
 							</Row>
 						)}
 						<ModifiedRepos
