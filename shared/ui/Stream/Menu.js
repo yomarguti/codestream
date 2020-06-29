@@ -189,10 +189,12 @@ export default class Menu extends Component {
 					}
 				} else {
 					// sub-submenus are relative to the submenu parent
-					const parentRectRightEdge = parentRect.width + 20;
+					const parentRectLeftEdge = parentRect.left;
+					const parentRectRightEdge = parentRect.right;
+					const parentRectRightEdgeRelative = parentRect.width;
 
 					// line it up optimistically....
-					$submenu.style.left = parentRectRightEdge - 11 + "px";
+					$submenu.style.left = parentRectRightEdgeRelative - 11 + "px";
 
 					// check to see if it's off the screen to the right
 					const tooFarRight = parentRect.right + rect.width > window.innerWidth;
@@ -201,13 +203,18 @@ export default class Menu extends Component {
 						// the 20px is for 10px padding times two
 						$submenu.style.left = 31 - rect.width + "px";
 						// check again to see if it's too far left now
-						if (19 - rect.width + parentRect.left < 0) {
+						const a = 19 - rect.width + parentRect.left;
+						const tooFarLeft = parentRectLeftEdge - rect.width - 19;
+						if (tooFarLeft < 0) {
 							// if it is, just put it on the right edge of the screen
 							$submenu.style.left = "auto";
 							$submenu.style.right = 20 + parentRectRightEdge - window.innerWidth + "px";
 							$submenu.style.top = parentLI.offsetTop + 16 + "px";
 							// $submenu.style.right = "5px";
 							// $submenu.style.top = parentLI.offsetTop + 26 + "px";
+							if (rect.width > parentRect.width - 20) {
+								$submenu.style.width = parentRect.width - 20 + "px";
+							}
 						}
 					}
 				}
