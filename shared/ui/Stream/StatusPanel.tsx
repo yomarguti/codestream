@@ -216,7 +216,7 @@ export const StartWorkIssueContext = React.createContext<IStartWorkIssueContext>
 	setValues: () => {}
 });
 
-const EMPTY_STATUS = {
+export const EMPTY_STATUS = {
 	label: "",
 	ticketId: "",
 	ticketUrl: "",
@@ -801,23 +801,16 @@ export const StatusPanel = () => {
 							</RoundedLink>
 						</Tooltip>
 						<H4>Work In Progress</H4>
-						<ModifiedRepos
-							id={derivedState.currentUserId}
-							defaultText="No diffs. As you write code, changes will appear here."
-						/>
-					</StatusSection>{" "}
-					{status && status.label && (
-						<StatusSection>
-							<H4>Current Assignment</H4>
-							<Row className="no-hover wide">
+						{status && status.label && (
+							<Row style={{ marginBottom: "5px" }} className="no-hover wide">
 								<div>
-									<Icon className="ticket" name={status.ticketProvider || "ticket"} />
+									<Icon name={status.ticketProvider || "ticket"} />
 								</div>
 								<div>{status.label}</div>
 								{status.ticketUrl && (
 									<div className="icons">
 										<Tooltip title="Clear work item" placement="bottomLeft" delay={1}>
-											<Icon onClick={clearAndSave} className="clickable" name="x-circle" />
+											<Icon onClick={() => clearAndSave()} className="clickable" name="x-circle" />
 										</Tooltip>
 										<Icon
 											title={`Open on web`}
@@ -836,8 +829,12 @@ export const StatusPanel = () => {
 									</div>
 								)}
 							</Row>
-						</StatusSection>
-					)}
+						)}
+						<ModifiedRepos
+							id={derivedState.currentUserId}
+							defaultText="No diffs. As you write code, changes will appear here."
+						/>
+					</StatusSection>
 					<StartWorkIssueContext.Provider value={{ setValues: values => selectCard(values) }}>
 						<IssueDropdown selectedCardId={status.ticketId} />
 					</StartWorkIssueContext.Provider>

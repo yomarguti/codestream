@@ -31,7 +31,8 @@ import {
 	RoundedLink,
 	H4,
 	StatusSection,
-	WideStatusSection
+	WideStatusSection,
+	EMPTY_STATUS
 } from "../StatusPanel";
 import styled from "styled-components";
 import Filter from "../Filter";
@@ -391,8 +392,10 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 		const skipConnect = preferences.skipConnectIssueProviders;
 
 		const csIssues = codemarkSelectors.getMyOpenIssues(state.codemarks, state.session.userId!);
+		let status =
+			currentUser.status && "label" in currentUser.status ? currentUser.status : EMPTY_STATUS;
 
-		return { currentUser, startWorkPreferences, providerIds, csIssues, skipConnect };
+		return { status, currentUser, startWorkPreferences, providerIds, csIssues, skipConnect };
 	});
 
 	const [isLoading, setIsLoading] = React.useState(false);
@@ -881,6 +884,9 @@ export const Row = styled.div`
 	}
 	&:hover .icons .icon {
 		display: inline-block;
+	}
+	&:hover time {
+		display: none;
 	}
 	&:not(.disabled):not(.no-hover):hover {
 		background: var(--app-background-color-hover);

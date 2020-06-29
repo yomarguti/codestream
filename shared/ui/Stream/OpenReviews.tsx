@@ -61,6 +61,13 @@ export function OpenReviews() {
 							<span className="subtle">{review.text}</span>
 						</div>
 						<div className="icons">
+							<Icon
+								name="review"
+								className="clickable"
+								title="Review Changes"
+								placement="bottomLeft"
+								delay={1}
+							/>
 							<Timestamp time={review.createdAt} relative abbreviated />
 						</div>
 					</Row>
