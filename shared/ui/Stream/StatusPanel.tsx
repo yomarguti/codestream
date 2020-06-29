@@ -809,7 +809,16 @@ export const StatusPanel = (props: { closePanel: Function }) => {
 						<Tooltip
 							title={
 								<>
-									Watch the <a href="https://youtu.be/2AyqT4z5Omc">video guide</a>
+									Watch the{" "}
+									<a
+										onClick={() =>
+											HostApi.instance.send(OpenUrlRequestType, {
+												url: "https://youtu.be/2AyqT4z5Omc"
+											})
+										}
+									>
+										video guide
+									</a>
 								</>
 							}
 							delay={1}

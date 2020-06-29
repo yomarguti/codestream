@@ -67,11 +67,6 @@ export const ModifiedRepos = (props: {
 			includeStaged: true,
 			baseSha: ""
 		});
-		// HostApi.instance.send(ShowLocalDiffRequestType, {
-		// repoPath
-		// file,
-		// });
-		// setState({			currentFile: path		});
 	};
 
 	const nameList = ids => ids.map(id => derivedState.userNamesById[id]).join(", ");
