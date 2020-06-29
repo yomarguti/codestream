@@ -696,7 +696,10 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 				<StatusSection>
 					<Tooltip title="Connect later on the Integrations page">
 						<RoundedLink
-							onClick={() => dispatch(setUserPreference(["skipConnectIssueProviders"], true))}
+							onClick={() => {
+								HostApi.instance.track("Skipped Provider Connect", {});
+								dispatch(setUserPreference(["skipConnectIssueProviders"], true));
+							}}
 						>
 							<Icon name="x-circle" />
 							Skip This
