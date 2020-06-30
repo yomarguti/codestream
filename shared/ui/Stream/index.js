@@ -600,8 +600,8 @@ export class SimpleStream extends Component {
 					shortcut: ComposeKeybindings.work,
 					subtext: "Grab a ticket & create a branch",
 					key: "work"
-				}
-				// { label: "-" }
+				},
+				{ label: "-" }
 			);
 		}
 
@@ -615,6 +615,7 @@ export class SimpleStream extends Component {
 					shortcut: ComposeKeybindings.comment,
 					key: "comment"
 				},
+				{ label: "-" },
 				{
 					icon: <Icon name="issue" />,
 					label: "Create Issue",
@@ -627,7 +628,7 @@ export class SimpleStream extends Component {
 		}
 
 		if (this.props.lightningCodeReviewsEnabled) {
-			// if (menuItems.length > 0) menuItems.push({ label: "-" });
+			if (menuItems.length > 0) menuItems.push({ label: "-" });
 			menuItems.push({
 				icon: <Icon name="review" />,
 				label: "Request a Code Review",

@@ -1396,5 +1396,5 @@ const ViewSelectors = styled.div`
 	padding-bottom: 5px;
 	border-top: 1px solid var(--base-border-color);
 	text-align: right;
-	padding-right: 70px;
+	padding-right: 60px;
 `;
