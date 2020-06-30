@@ -144,7 +144,7 @@ export const ModifiedRepos = (props: {
 		})
 		.filter(Boolean);
 
-	if (modified.length > 0) {
+	if (modified.length > 0 || props.defaultText) {
 		return (
 			<>
 				{modified.length > 0 ? modified : props.defaultText}
