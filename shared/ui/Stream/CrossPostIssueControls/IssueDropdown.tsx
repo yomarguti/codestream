@@ -926,6 +926,7 @@ const ConnectIssueProviders = styled.div`
 `;
 
 const Linkish = styled.span`
+	text-decoration: underline;
 	cursor: pointer;
 	:hover {
 		color: var(--text-color-highlight);
