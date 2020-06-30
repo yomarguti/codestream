@@ -62,17 +62,24 @@ const StatusInput = styled.div`
 			font-size: 14px !important;
 		}
 	}
-	.ticket-icon {
-		display: inline-block;
-		transform: scale(1.25);
-		padding: 3px 8px 3px 3px;
-		vertical-align: -2px;
-	}
 `;
 
-const CardTitle = styled.div`
+const CardTitle = styled.span`
 	font-size: 16px;
 	position: relative;
+	padding-left: 28px;
+	line-height: 20px;
+	display: inline-block;
+	.icon {
+		margin-left: -28px;
+		display: inline-block;
+		transform: scale(1.25);
+		padding: 0 8px 0 1px;
+		vertical-align: -2px;
+	}
+	& + & {
+		margin-left: 20px;
+	}
 `;
 
 const ButtonRow = styled.div`
@@ -101,7 +108,7 @@ const SCMError = styled.div`
 const CardDescription = styled.div`
 	// padding: 10px;
 	// border: 1px solid var(--base-border-color);
-	margin: -10px 0 20px 0;
+	margin: -5px 0 20px 28px;
 	// background: var(--app-background-color);
 `;
 
@@ -204,6 +211,11 @@ const IconLabel = styled.span`
 	.icon {
 		margin-right: 5px;
 	}
+`;
+
+const HR = styled.div`
+	border-top: 1px solid var(--base-border-color);
+	margin: 0 0 20px 0;
 `;
 
 export interface IStartWorkIssueContext {
@@ -685,6 +697,7 @@ export const StatusPanel = () => {
 											<MarkdownText text={card.body.replace(/\[Open in IDE\].*/, "")} />
 										</CardDescription>
 									)}
+									<HR />
 									{showSelectRepo ? (
 										<RepoInfo>
 											{openRepos && openRepos.length ? (
@@ -714,14 +727,14 @@ export const StatusPanel = () => {
 										</RepoInfo>
 									) : (
 										<RepoInfo>
-											<IconLabel>
+											<CardTitle>
 												<Icon name="repo" />
 												{currentRepoName}
-											</IconLabel>
-											<IconLabel>
+											</CardTitle>
+											<CardTitle>
 												<Icon name="git-branch" />
 												{currentBranch}
-											</IconLabel>
+											</CardTitle>
 										</RepoInfo>
 									)}
 									{showCreateBranchCheckbox && (
