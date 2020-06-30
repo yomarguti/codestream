@@ -399,7 +399,9 @@ export const StatusPanel = () => {
 		const repoName = derivedState.repos[repoId] ? derivedState.repos[repoId].name : "repo";
 		setCurrentRepoName(repoName);
 
-		const response = await HostApi.instance.send(GetReposScmRequestType, {});
+		const response = await HostApi.instance.send(GetReposScmRequestType, {
+			inEditorOnly: true
+		});
 		if (response && response.repositories) {
 			setOpenRepos(response.repositories);
 		}

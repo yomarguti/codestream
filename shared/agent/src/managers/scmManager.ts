@@ -110,13 +110,16 @@ export class ScmManager {
 
 	@lspHandler(GetReposScmRequestType)
 	@log()
-	async getRepos({}: GetReposScmRequest): Promise<GetReposScmResponse> {
+	async getRepos(request?: GetReposScmRequest): Promise<GetReposScmResponse> {
 		const cc = Logger.getCorrelationContext();
 		let gitError;
 		let repositories;
 		try {
 			const { git } = SessionContainer.instance();
 			repositories = Array.from(await git.getRepositories());
+			if (request && request.inEditorOnly && repositories) {
+				repositories = repositories.filter(_ => _.isInWorkspace);
+			}
 		} catch (ex) {
 			gitError = ex.toString();
 			Logger.error(ex, cc);
@@ -139,14 +142,12 @@ export class ScmManager {
 
 	@lspHandler(GetRepoScmStatusesRequestType)
 	@log()
-	async getRepoStatuses({
-		currentUserEmail
-	}: GetRepoScmStatusesRequest): Promise<GetRepoScmStatusesResponse> {
+	async getRepoStatuses(request: GetRepoScmStatusesRequest): Promise<GetRepoScmStatusesResponse> {
 		const cc = Logger.getCorrelationContext();
 		let gitError;
 		let modifiedRepos: RepoScmStatus[] = [];
 		try {
-			const openRepos = await this.getRepos({});
+			const openRepos = await this.getRepos(request);
 			const { repositories = [] } = openRepos;
 			// below, only return repos that we know about (aka have repoIds)
 			// @ts-ignore
@@ -161,7 +162,7 @@ export class ScmManager {
 								startCommit: "local",
 								includeStaged: true,
 								includeSaved: true,
-								currentUserEmail
+								currentUserEmail: request.currentUserEmail
 							});
 							return response;
 						})

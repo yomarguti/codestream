@@ -168,7 +168,7 @@ export class GitRepositories {
 			if (URI.parse(f.uri).scheme !== "file") continue;
 
 			// Search for and add all repositories (nested and/or submodules)
-			const repositories = await this.repositorySearch(f, this.session.workspace);
+			const repositories = await this.repositorySearch(f, this.session.workspace, initializing);
 			allAddedRepositories = [...allAddedRepositories, ...repositories];
 		}
 
@@ -431,7 +431,8 @@ export class GitRepositories {
 
 	private async repositorySearch(
 		folder: WorkspaceFolder,
-		workspace: any = null
+		workspace: any = null,
+		initializing: boolean = false
 	): Promise<GitRepository[]> {
 		// const workspace = this.session.workspace;
 		const folderUri = URI.parse(folder.uri);
@@ -457,7 +458,7 @@ export class GitRepositories {
 		} catch {}
 		if (rootPath) {
 			Logger.log(`Repository found in '${rootPath}'`);
-			const repo = new GitRepository(rootPath, true, folder, remoteToRepoMap);
+			const repo = new GitRepository(rootPath, true, folder, remoteToRepoMap, initializing);
 			await repo.ensureSearchComplete();
 			repositories.push(repo);
 		}
@@ -540,7 +541,7 @@ export class GitRepositories {
 			if (!rp) continue;
 
 			Logger.log(`Repository found in '${rp}'`);
-			const repo = new GitRepository(rp, false, folder, remoteToRepoMap);
+			const repo = new GitRepository(rp, false, folder, remoteToRepoMap, initializing);
 			await repo.ensureSearchComplete();
 			repositories.push(repo);
 		}

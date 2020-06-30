@@ -13,7 +13,8 @@ export class GitRepository {
 		public readonly path: string,
 		public readonly root: boolean,
 		public readonly folder: WorkspaceFolder,
-		knownRepos: Map<string, CSRepository>
+		knownRepos: Map<string, CSRepository>,
+		public readonly isInWorkspace: boolean
 	) {
 		this.normalizedPath = (this.path.endsWith("/") ? this.path : `${this.path}/`).toLowerCase();
 

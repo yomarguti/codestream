@@ -136,6 +136,11 @@ export const GetRepoScmStatusRequestType = new RequestType<
 
 export interface GetRepoScmStatusesRequest {
 	currentUserEmail: string;
+	/**
+	 * Set this flag to only return repos that a user has open in their workspace
+	 * (rather than including any repos that might have been later dynamically added)
+	 */
+	inEditorOnly?: boolean;
 }
 export interface GetRepoScmStatusesResponse {
 	scm?: RepoScmStatus[];
@@ -158,7 +163,13 @@ export interface ReposScm {
 	root?: boolean;
 }
 
-export interface GetReposScmRequest {}
+export interface GetReposScmRequest {
+	/**
+	 * Set this flag to only return repos that a user has open in their workspace
+	 * (rather than including any repos that might have been later dynamically added)
+	 */
+	inEditorOnly?: boolean;
+}
 
 export interface GetReposScmResponse {
 	repositories?: ReposScm[];
