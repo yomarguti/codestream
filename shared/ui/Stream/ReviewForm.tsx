@@ -325,7 +325,9 @@ class ReviewForm extends React.Component<Props, State> {
 		this.setState({ isLoadingScm: true });
 
 		let firstRepoUri: string = "";
-		const openRepos = await HostApi.instance.send(GetReposScmRequestType, {});
+		const openRepos = await HostApi.instance.send(GetReposScmRequestType, {
+			inEditorOnly: true
+		});
 		if (openRepos && openRepos.repositories) {
 			this.setState({ openRepos: openRepos.repositories });
 			if (!uri && openRepos.repositories.length) {
@@ -364,7 +366,9 @@ class ReviewForm extends React.Component<Props, State> {
 		this.setState({ isLoadingScm: true });
 		const { editingReview } = this.props;
 
-		const openRepos = await HostApi.instance.send(GetReposScmRequestType, {});
+		const openRepos = await HostApi.instance.send(GetReposScmRequestType, {
+			inEditorOnly: true
+		});
 		if (editingReview && openRepos && openRepos.repositories) {
 			const { reviewChangesets } = editingReview;
 			const lastChangeset = reviewChangesets[reviewChangesets.length - 1];
