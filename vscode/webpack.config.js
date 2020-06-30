@@ -11,6 +11,8 @@ const TerserPlugin = require("terser-webpack-plugin");
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 const CircularDependencyPlugin = require("circular-dependency-plugin");
 const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
+const HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin');
+const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 
 module.exports = function(env, argv) {
 	env = env || {};
@@ -188,6 +190,7 @@ function getWebviewConfig(env) {
 		new HtmlPlugin({
 			template: "index.html",
 			filename: path.resolve(__dirname, "webview.html"),
+			inlineSource: ".(js|css)$",
 			inject: true,
 			minify: env.production
 				? {
@@ -201,6 +204,7 @@ function getWebviewConfig(env) {
 				  }
 				: false
 		}),
+		new HtmlWebpackInlineSourcePlugin(),
 		new ForkTsCheckerPlugin({
 			async: false,
 			useTypescriptIncrementalApi: false
@@ -234,7 +238,8 @@ function getWebviewConfig(env) {
 					terserOptions: {
 						ecma: 8
 					}
-				})
+				}),
+				new OptimizeCSSAssetsPlugin({})
 			],
 			splitChunks: {
 				cacheGroups: {

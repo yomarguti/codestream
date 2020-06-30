@@ -665,17 +665,6 @@ export class WebviewController implements Disposable {
 
 				break;
 			}
-			case WebviewRequiresResuscitationNotificationType.method: {
-				if (this._resuscitations <= 9) {
-					Logger.warn(`resuscitating, attempt: ${this._resuscitations + 1}`);
-					this._resuscitations++;
-					this.closeWebview();
-					this.show();
-				} else {
-					Logger.error(new Error("no longer resuscitating"));
-				}
-				break;
-			}
 			default: {
 				debugger;
 				throw new Error(`Unhandled webview notification: ${e.method}`);
@@ -1025,24 +1014,11 @@ export class WebviewController implements Disposable {
 		return editorContext;
 	}
 
-	private resuscitationBackoff(html: string) {
-		if (this._resuscitations > 1) {
-			// this begins as 1... update the variable in the js that is multiplied by
-			// the timeout... it will now wait 1000 * this._resuscitations before trying to reload
-			html = html.replace(
-				/\/\*<delay>\*\/(\d+)\/\*<\/delay>\*\//,
-				() => `/*<delay>*/${Math.floor(this._resuscitations)}/*</delay>*/`
-			);
-		}
-		return html;
-	}
-
 	private _html: string | undefined;
 	private async getHtml(): Promise<string> {
-		let content;
 		// When we are debugging avoid any caching so that we can change the html and have it update without reloading
 		if (Logger.isDebugging) {
-			content = await new Promise<string>((resolve, reject) => {
+			this._html = await new Promise<string>((resolve, reject) => {
 				fs.readFile(Container.context.asAbsolutePath("webview.html"), "utf8", (err, data) => {
 					if (err) {
 						reject(err);
@@ -1052,55 +1028,14 @@ export class WebviewController implements Disposable {
 				});
 			});
 		} else {
-			if (this._html !== undefined) {
-				return this.resuscitationBackoff(this._html);
-			}
 			const doc = await workspace.openTextDocument(
 				Container.context.asAbsolutePath("webview.html")
 			);
-			content = doc.getText();
+			this._html = doc.getText();
 		}
 
-		// super HACK ahead...
-		// there's a bug in vscode where its vscode-resource file scheme is not always present.
-		// this HACK listens for a `window` property that is set inside one of the
-		// codestream external js scripts. when that script loads, the variable will be present.
-		this._html = content.replace(
-			"</body>",
-			`<script>(function() {
-			var i = 1;
-			var delay = /*<delay>*/1/*</delay>*/;
-			var retry = delay * 1000;
-			setTimeout(function() {
-				var interval = setInterval(function() {
-					if (window.codestreamInitialized) {
-						console.log("heartbeat:success", i);
-						clearInterval(interval);
-					}
-					else if (i >= 20) {
-						console.error("heartbeat:failed after " +delay+ " attempts, with delay "+retry+"ms");
-						try {
-							const vscode = acquireVsCodeApi();
-							vscode.postMessage({method: "host/requiresResuscitation"});
-						}
-						catch (err) {
-							console.log(err);
-						}
-						finally {
-							clearInterval(interval);
-							i = 0;
-						}
-					}
-					else {
-						i++;
-					}
-				}, 10);
-			}, retry);
-		})()
-	</script></body>`
-		);
+	return this._html;
 
-		return this.resuscitationBackoff(this._html);
 	}
 
 	private notifyActiveEditorChanged(e: TextEditor | undefined) {
@@ -1189,12 +1124,3 @@ export class WebviewController implements Disposable {
 	}
 }
 
-interface WebviewRequiresResuscitationNotification {}
-/**
- * only for VSC, used to handle a workaround for the webview not loading
- * because of an issue with vscode-resource://.
- */
-const WebviewRequiresResuscitationNotificationType = new NotificationType<
-	WebviewRequiresResuscitationNotification,
-	void
->(`${IpcRoutes.Host}/requiresResuscitation`);
