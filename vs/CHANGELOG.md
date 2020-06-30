@@ -1,5 +1,25 @@
 # Change Log
 
+## [8.1.0] - 2020-7-1
+
+### Added
+
+- Adds a new Work Items tab that summarizes everything on your plate, including open code reviews, your work in progress, and your backlog from your issue tracker
+
+### Changed
+
+- The + menu has moved from the top navigation to the bottom-right of the CodeStream pane
+
+## [8.0.1] - 2020-6-23
+
+### Added
+
+- Adds "Start Work" support for GitHub Enterprise, Gitlab Self-Managed, and Jira subtasks
+
+### Fixed
+
+- Fixes an issue that caused you to land on Getting Started after every reload or sign-in
+
 ## [8.0.0] - 2020-6-22
 
 ### Added
