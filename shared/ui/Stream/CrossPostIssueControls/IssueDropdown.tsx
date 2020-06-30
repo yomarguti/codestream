@@ -43,6 +43,7 @@ import Tooltip from "../Tooltip";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
 import * as codemarkSelectors from "../../store/codemarks/reducer";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
+import Timestamp from "../Timestamp";
 
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;

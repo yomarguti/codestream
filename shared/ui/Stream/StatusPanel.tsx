@@ -676,7 +676,7 @@ export const StatusPanel = () => {
 												autoFocus={true}
 												type="text"
 												onChange={e => handleChangeStatus(e.target.value)}
-												placeholder="Title"
+												placeholder="Enter Description"
 											/>
 										)}
 									</StatusInput>
