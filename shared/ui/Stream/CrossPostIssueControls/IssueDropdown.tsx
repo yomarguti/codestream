@@ -703,7 +703,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 
 	return (
 		<>
-			<WideStatusSection>
+			<WideStatusSection id="start-work-div">
 				<div className="filters" style={{ padding: "0 20px 0 20px" }}>
 					<H4>
 						<Tooltip title="For ad-hoc work" delay={1}>

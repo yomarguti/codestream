@@ -105,7 +105,7 @@ import {
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { ComposeKeybindings } from "./ComposeTitles";
 import { Keybindings } from "./Keybindings";
-import { FlowPanel } from "./Flow";
+import { FlowPanel, VideoLink } from "./Flow";
 import { PRInfoModal } from "./SpatialView/PRInfoModal";
 import { STEPS } from "./GettingStarted";
 import { isConnected } from "../store/providers/reducer";
@@ -248,10 +248,17 @@ export class SimpleStream extends Component {
 		this.props.openPanel(WebviewPanels.NewReview);
 	}
 
-	handleStartWorkRequest(e) {
+	handleStartWorkRequest = e => {
 		this.props.setCurrentReview("");
+		if (this.props.activePanel === WebviewPanels.Status) {
+			const div = document.getElementById("start-work-div");
+			if (div) div.classList.add("highlight-pulse");
+			setTimeout(() => {
+				div.classList.remove("highlight-pulse");
+			}, 1000);
+		}
 		this.props.openPanel(WebviewPanels.Status);
-	}
+	};
 
 	copy(event) {
 		let selectedText = window.getSelection().toString();
@@ -596,7 +603,7 @@ export class SimpleStream extends Component {
 				{
 					icon: <Icon name="ticket" />,
 					label: "Start Work",
-					action: () => this.setActivePanel(WebviewPanels.Status),
+					action: this.handleStartWorkRequest,
 					shortcut: ComposeKeybindings.work,
 					subtext: "Grab a ticket & create a branch",
 					key: "work"
@@ -1112,17 +1119,23 @@ export class SimpleStream extends Component {
 					{activePanel === WebviewPanels.Activity && <ActivityPanel />}
 					{activePanel === WebviewPanels.PRInfo && <PRInfoModal onClose={this.props.closePanel} />}
 					{activePanel === WebviewPanels.NewComment && (
-						<CodemarkForm
-							commentType="comment"
-							streamId={this.props.postStreamId}
-							onSubmit={this.submitNoCodeCodemark}
-							onClickClose={this.props.closePanel}
-							collapsed={false}
-							positionAtLocation={false}
-							multiLocation={true}
-							dontAutoSelectLine={true}
-							setMultiLocation={this.setMultiLocation}
-						/>
+						<>
+							<CodemarkForm
+								commentType="comment"
+								streamId={this.props.postStreamId}
+								onSubmit={this.submitNoCodeCodemark}
+								onClickClose={this.props.closePanel}
+								collapsed={false}
+								positionAtLocation={false}
+								multiLocation={true}
+								dontAutoSelectLine={true}
+								setMultiLocation={this.setMultiLocation}
+							/>
+							<VideoLink href={"https://youtu.be/RPaIIZgaFK8"}>
+								<img src="https://i.imgur.com/9IKqpzf.png" />
+								<span>Discussing Code with CodeStream</span>
+							</VideoLink>
+						</>
 					)}
 					{activePanel === WebviewPanels.NewIssue && (
 						<CodemarkForm
