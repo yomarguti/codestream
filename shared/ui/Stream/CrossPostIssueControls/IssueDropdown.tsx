@@ -235,14 +235,18 @@ class IssueDropdown extends React.Component<Props, State> {
 			return;
 		}
 
+		// if (setUserPreference) setUserPreference(["skipConnectIssueProviders"], false);
+
 		if (this.providerIsDisabled(providerId)) {
 			// if it's disabled, enable it
 			if (setUserPreference)
 				setUserPreference(["startWork", "disabledProviders", providerId], false);
 		} else if (this.providerIsConnected(providerId)) {
 			// if it's conected and not disabled, disable it
-			if (setUserPreference)
+			if (setUserPreference) {
 				setUserPreference(["startWork", "disabledProviders", providerId], true);
+				// setUserPreference(["skipConnectIssueProviders"], false);
+			}
 		} else {
 			// otherwise we need to connect
 			const issueProvider = this.props.providers![providerId];
@@ -688,28 +692,29 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 
 	const firstLoad = cards.length == 0 && isLoading;
 	const selectedLabel = canFilter ? "selected items" : "my items";
-	const providersLabel = (
-		<SmartFormattedList
-			value={props.providers.map(provider => PROVIDER_MAPPINGS[provider.name].displayName)}
-		/>
-	);
+	const providersLabel =
+		props.providers.length === 0 ? (
+			"CodeStream"
+		) : (
+			<SmartFormattedList
+				value={props.providers.map(provider => PROVIDER_MAPPINGS[provider.name].displayName)}
+			/>
+		);
 
 	return (
 		<>
 			<WideStatusSection>
 				<div className="filters" style={{ padding: "0 20px 0 20px" }}>
 					<H4>
-						{!firstLoad && (
-							<Tooltip title="For ad-hoc work" delay={1}>
-								<RoundedLink onClick={() => selectCard({ title: "" })}>
-									<Icon name="plus" />
-									New Item
-								</RoundedLink>
-							</Tooltip>
-						)}
+						<Tooltip title="For ad-hoc work" delay={1}>
+							<RoundedLink onClick={() => selectCard({ title: "" })}>
+								<Icon name="plus" />
+								New Item
+							</RoundedLink>
+						</Tooltip>
 						What are you working on?
 					</H4>
-					{props.providers.length > 0 ? (
+					{props.providers.length > 0 || derivedState.skipConnect ? (
 						<div style={{ paddingBottom: "5px" }}>
 							Show{" "}
 							{canFilter ? (
@@ -750,14 +755,18 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 								align="bottomLeft"
 								dontCloseOnSelect
 							/>
-							{isLoading && <Icon className="spin smaller fixed" name="sync" />}
+							{isLoading && !firstLoad && <Icon className="spin smaller fixed" name="sync" />}
 						</div>
-					) : derivedState.skipConnect ? null : (
+					) : (
 						<>
 							<span>
 								Connect your issue provider(s), or{" "}
 								<Tooltip title="Connect later on the Integrations page">
-									<Linkish>skip this step</Linkish>
+									<Linkish
+										onClick={() => dispatch(setUserPreference(["skipConnectIssueProviders"], true))}
+									>
+										skip this step
+									</Linkish>
 								</Tooltip>
 							</span>
 							<div style={{ height: "10px" }} />
