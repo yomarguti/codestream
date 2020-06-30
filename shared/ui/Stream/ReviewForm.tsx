@@ -357,7 +357,11 @@ class ReviewForm extends React.Component<Props, State> {
 				if (callback && typeof callback === "function") callback();
 			}
 		} else {
-			this.setState({ isLoadingScm: false, scmError: true });
+			this.setState({
+				isLoadingScm: false,
+				scmError: true,
+				scmErrorMessage: "Please open a repository"
+			});
 			if (callback && typeof callback === "function") callback();
 		}
 	}
