@@ -421,7 +421,8 @@ export const StatusPanel = () => {
 		return !(branches && branches.length > 0);
 	}, [branches]);
 	const showUpdateSlackCheckbox = React.useMemo(() => {
-		return label;
+		return false; // until our app gets approved
+		// return label;
 	}, [label, derivedState.isConnectedToSlack]);
 
 	const newBranch = React.useMemo(() => {
