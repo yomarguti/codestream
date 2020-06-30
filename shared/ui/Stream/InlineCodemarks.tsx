@@ -1306,7 +1306,7 @@ const mapStateToProps = (state: CodeStreamState) => {
 	);
 
 	return {
-		showFeedbackSmiley: context.showFeedbackSmiley,
+		showFeedbackSmiley: false, // context.showFeedbackSmiley,
 		hasPRProvider,
 		currentStreamId: context.currentStreamId,
 		currentReviewId: context.currentReviewId,
@@ -1396,4 +1396,5 @@ const ViewSelectors = styled.div`
 	padding-bottom: 5px;
 	border-top: 1px solid var(--base-border-color);
 	text-align: right;
+	padding-right: 50px;
 `;

@@ -121,6 +121,19 @@ export default class Menu extends Component {
 				// normal case: reposition centrally
 				else this._div.style.left = left + "px";
 				this._div.style.top = rect.bottom + "px";
+			} else if (align === "popupRight") {
+				this._div.style.top = rect.bottom - this._div.offsetHeight + "px";
+				const right = window.innerWidth - rect.right - parseFloat(computedStyle.paddingRight);
+				this._div.style.left = "auto";
+				this._div.style.right = right + "px";
+
+				// // check to see if we're too far left
+				// if (right + this._div.offsetWidth > window.innerWidth) {
+				// 	this._div.style.top = rect.bottom + "px";
+				// 	const left = rect.left - parseFloat(computedStyle.paddingRight);
+				// 	this._div.style.left = left + "px";
+				// 	this._div.style.right = "auto";
+				// }
 			} else {
 				// right
 				const left = rect.right - this._div.offsetWidth + 5;
@@ -130,7 +143,7 @@ export default class Menu extends Component {
 			// check to make sure the menu doesn't display
 			// off the bottom of the screen
 			const tooFar = rect.top + this._div.offsetHeight + 35 - window.innerHeight;
-			if (tooFar > 0) {
+			if (tooFar > 0 && align !== "popupRight") {
 				// if we're a dropdown, alter the height
 				if (align.startsWith("bottom") || align.startsWith("dropdown")) {
 					const height = window.innerHeight - rect.bottom - 50;
@@ -313,6 +326,7 @@ export default class Menu extends Component {
 				{item.submenu && <Icon name="triangle-right" className="triangle-right" />}
 				{item.label && <span className="label">{item.label}</span>}
 				{item.shortcut && <span className="shortcut">{item.shortcut}</span>}
+				{item.subtext && <div className="subtext">{item.subtext}</div>}
 				{item.disabled && <span className="disabled">{item.disabled}</span>}
 				{item.submenu && (
 					<span className="submenu">
@@ -388,11 +402,17 @@ export default class Menu extends Component {
 			!parentItem &&
 			!grandParentItem &&
 			!grandGrandParentItem;
+		const popup =
+			(this.props.align || "").match(/^popup/) &&
+			!parentItem &&
+			!grandParentItem &&
+			!grandGrandParentItem;
 
 		return (
 			<div
 				className={createClassString("menu-popup-body", {
 					dropdown,
+					popup,
 					"center-title": this.props.centerTitle,
 					"limit-width": this.props.limitWidth,
 					"full-width": this.props.fullWidth && !parentItem

@@ -99,7 +99,8 @@ import {
 	filter as _filter,
 	includes as _includes,
 	last as _last,
-	sortBy as _sortBy
+	sortBy as _sortBy,
+	findLastIndex
 } from "lodash-es";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { ComposeKeybindings } from "./ComposeTitles";
@@ -597,6 +598,7 @@ export class SimpleStream extends Component {
 					label: "Start Work",
 					action: () => this.setActivePanel(WebviewPanels.Status),
 					shortcut: ComposeKeybindings.work,
+					subtext: "Grab a ticket & create a branch",
 					key: "work"
 				}
 				// { label: "-" }
@@ -609,12 +611,14 @@ export class SimpleStream extends Component {
 					icon: <Icon name="comment" />,
 					label: "Add Comment",
 					action: this.newComment,
+					subtext: "Comment on code & share to slack",
 					shortcut: ComposeKeybindings.comment,
 					key: "comment"
 				},
 				{
 					icon: <Icon name="issue" />,
 					label: "Create Issue",
+					subtext: "Perform ad-hoc code review",
 					action: this.newIssue,
 					shortcut: ComposeKeybindings.issue,
 					key: "issue"
@@ -627,6 +631,7 @@ export class SimpleStream extends Component {
 			menuItems.push({
 				icon: <Icon name="review" />,
 				label: "Request a Code Review",
+				subtext: "Get feedback on your WIP",
 				action: this.newReview,
 				shortcut: ComposeKeybindings.review,
 				key: "review"
@@ -634,12 +639,7 @@ export class SimpleStream extends Component {
 		}
 
 		return (
-			<Menu
-				items={menuItems}
-				target={menuTarget}
-				action={this.plusMenuAction}
-				align="dropdownRight"
-			/>
+			<Menu items={menuItems} target={menuTarget} action={this.plusMenuAction} align="popupRight" />
 		);
 	}
 
@@ -802,94 +802,112 @@ export class SimpleStream extends Component {
 
 		const selected = panel => activePanel === panel; // && !plusMenuOpen && !menuOpen;
 		return (
-			<nav className="inline" id="global-nav">
-				{/* turn this off for GettingStarted experiment */}
-				{false && this.props.remainingSteps > 0 && (
+			<>
+				<nav className="inline" id="global-nav">
+					{/* turn this off for GettingStarted experiment */}
+					{false && this.props.remainingSteps > 0 && (
+						<label
+							className={cx({ selected: selected(WebviewPanels.GettingStarted) })}
+							onClick={e => this.setActivePanel(WebviewPanels.GettingStarted)}
+							id="global-nav-getting-started-label"
+						>
+							<Tooltip title="Getting Started" placement="bottom">
+								<span>
+									<Icon name="dashboard" />
+									<div className="mentions-badge">{this.props.remainingSteps}</div>
+								</span>
+							</Tooltip>
+						</label>
+					)}
 					<label
-						className={cx({ selected: selected(WebviewPanels.GettingStarted) })}
-						onClick={e => this.setActivePanel(WebviewPanels.GettingStarted)}
-						id="global-nav-getting-started-label"
+						className={cx({ selected: selected(WebviewPanels.Status) })}
+						onClick={e => this.setActivePanel(WebviewPanels.Status)}
+						id="global-nav-status-label"
 					>
-						<Tooltip title="Getting Started" placement="bottom">
+						<Tooltip title="Your Work Items" placement="bottom">
 							<span>
-								<Icon name="dashboard" />
-								<div className="mentions-badge">{this.props.remainingSteps}</div>
+								<Icon name="inbox" />
 							</span>
 						</Tooltip>
 					</label>
-				)}
+					<label
+						className={cx({ selected: selected(WebviewPanels.CodemarksForFile) })}
+						onClick={e => this.setActivePanel(WebviewPanels.CodemarksForFile)}
+						id="global-nav-file-label"
+					>
+						<Tooltip title="Codemarks In Current File" placement="bottom">
+							<span>
+								<Icon name="file" />
+								{hasFileConflict && <Icon name="alert" className="nav-conflict" />}
+							</span>
+						</Tooltip>
+					</label>
+					<label
+						className={cx({ selected: selected(WebviewPanels.Activity) })}
+						onClick={e => this.setActivePanel(WebviewPanels.Activity)}
+						id="global-nav-activity-label"
+					>
+						<Tooltip title="Activity Feed" placement="bottom">
+							<span>
+								<Icon name="activity" />
+								{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
+							</span>
+						</Tooltip>
+					</label>
+					<label
+						className={cx({ selected: selected(WebviewPanels.FilterSearch) })}
+						onClick={this.goSearch}
+						id="global-nav-search-label"
+					>
+						<Icon name="search" title="Filter &amp; Search" placement="bottom" />
+					</label>
+					<label
+						className={cx({ selected: selected(WebviewPanels.People) })}
+						onClick={e => this.setActivePanel(WebviewPanels.People)}
+						id="global-nav-team-label"
+					>
+						<Tooltip title="Your Team" placement="bottom">
+							<span>
+								<Icon name="team" />
+								{this.props.collisions.nav && <Icon name="alert" className="nav-conflict" />}
+							</span>
+						</Tooltip>
+					</label>
+					<label
+						onClick={this.toggleMenu}
+						className={cx({ active: menuOpen })}
+						id="global-nav-more-label"
+					>
+						<Icon name="kebab-horizontal" title="More..." placement="bottomRight" />
+						{this.renderMenu()}
+					</label>
+				</nav>
 				<label
-					className={cx({ selected: selected(WebviewPanels.Status) })}
-					onClick={e => this.setActivePanel(WebviewPanels.Status)}
-					id="global-nav-status-label"
-				>
-					<Tooltip title="Your Work Items" placement="bottom">
-						<span>
-							<Icon name="inbox" />
-						</span>
-					</Tooltip>
-				</label>
-				<label
-					className={cx({ selected: selected(WebviewPanels.CodemarksForFile) })}
-					onClick={e => this.setActivePanel(WebviewPanels.CodemarksForFile)}
-					id="global-nav-file-label"
-				>
-					<Tooltip title="Codemarks In Current File" placement="bottom">
-						<span>
-							<Icon name="file" />
-							{hasFileConflict && <Icon name="alert" className="nav-conflict" />}
-						</span>
-					</Tooltip>
-				</label>
-				<label
-					className={cx({ selected: selected(WebviewPanels.Activity) })}
-					onClick={e => this.setActivePanel(WebviewPanels.Activity)}
-					id="global-nav-activity-label"
-				>
-					<Tooltip title="Activity Feed" placement="bottom">
-						<span>
-							<Icon name="activity" />
-							{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
-						</span>
-					</Tooltip>
-				</label>
-				<label
-					style={{ display: "none" }}
 					onClick={this.togglePlusMenu}
-					className={cx({ active: plusMenuOpen })}
+					style={{
+						position: "fixed",
+						display: "flex",
+						justifyContent: "center",
+						alignItems: "center",
+						bottom: "15px",
+						right: "15px",
+						display: "flex",
+						background: "var(--button-background-color)",
+						color: "var(--button-foreground-color)",
+						width: "40px",
+						height: "40px",
+						borderRadius: "20px",
+						cursor: "pointer",
+						boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)",
+						zIndex: 50
+					}}
+					className={cx({ active: this.state.plusMenuOpen })}
 					id="global-nav-plus-label"
 				>
-					<Icon name="plus" title="Create..." placement="bottom" />
+					<Icon name="plus" />
 					{this.renderPlusMenu()}
 				</label>
-				<label
-					className={cx({ selected: selected(WebviewPanels.FilterSearch) })}
-					onClick={this.goSearch}
-					id="global-nav-search-label"
-				>
-					<Icon name="search" title="Filter &amp; Search" placement="bottom" />
-				</label>
-				<label
-					className={cx({ selected: selected(WebviewPanels.People) })}
-					onClick={e => this.setActivePanel(WebviewPanels.People)}
-					id="global-nav-team-label"
-				>
-					<Tooltip title="Your Team" placement="bottom">
-						<span>
-							<Icon name="team" />
-							{this.props.collisions.nav && <Icon name="alert" className="nav-conflict" />}
-						</span>
-					</Tooltip>
-				</label>
-				<label
-					onClick={this.toggleMenu}
-					className={cx({ active: menuOpen })}
-					id="global-nav-more-label"
-				>
-					<Icon name="kebab-horizontal" title="More..." placement="bottomRight" />
-					{this.renderMenu()}
-				</label>
-			</nav>
+			</>
 		);
 	}
 
