@@ -25,7 +25,7 @@ export const ModifiedRepos = (props: {
 	id: string;
 	showUntracked?: boolean;
 	showModifiedAt?: boolean;
-	defaultText?: string;
+	defaultText?: string | React.ReactNode;
 	onlyRepos?: string[];
 }) => {
 	const derivedState = useSelector((state: CodeStreamState) => {

@@ -884,7 +884,11 @@ export const StatusPanel = () => {
 						<ModifiedRepos
 							id={derivedState.currentUserId}
 							onlyRepos={openRepos ? openRepos.filter(_ => _.id).map(_ => _.id!) : undefined}
-							defaultText="No diffs. As you write code, changes will appear here."
+							defaultText={
+								<span className="subtle">
+									No diffs. As you write code, changes will appear here.
+								</span>
+							}
 						/>
 					</StatusSection>
 					<StartWorkIssueContext.Provider value={{ setValues: values => selectCard(values) }}>
