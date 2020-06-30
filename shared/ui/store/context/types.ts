@@ -40,7 +40,7 @@ export type PostEntryPoint =
 	| "Global Nav"
 	| "Spatial View"
 	| "VSC SCM"
-	| "Work Items"
+	| "Status"
 	| string
 	| undefined;
 

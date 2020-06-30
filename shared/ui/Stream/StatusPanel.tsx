@@ -316,7 +316,7 @@ export const StatusPanel = () => {
 	const setUpdateSlack = value => {
 		if (!derivedState.isConnectedToSlack) {
 			setLoadingSlack(true);
-			dispatch(connectProvider(derivedState.slackConfig!.id, "Work Items"));
+			dispatch(connectProvider(derivedState.slackConfig!.id, "Status"));
 		} else {
 			dispatch(setUserPreference(["startWork", "updateSlack"], value));
 		}
@@ -410,7 +410,7 @@ export const StatusPanel = () => {
 	useDidMount(() => {
 		getBranches();
 		if (derivedState.webviewFocused)
-			HostApi.instance.track("Page Viewed", { "Page Name": "Work Items Tab" });
+			HostApi.instance.track("Page Viewed", { "Page Name": "Status Tab" });
 	});
 
 	const showMoveCardCheckbox = React.useMemo(() => {
@@ -843,7 +843,7 @@ export const StatusPanel = () => {
 						>
 							<RoundedLink
 								onClick={() => {
-									dispatch(setNewPostEntry("Work Items"));
+									dispatch(setNewPostEntry("Status"));
 									dispatch(openPanel(WebviewPanels.NewReview));
 								}}
 							>
