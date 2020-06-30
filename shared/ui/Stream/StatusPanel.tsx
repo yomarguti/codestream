@@ -74,7 +74,7 @@ const CardTitle = styled.span`
 		margin-left: -28px;
 		display: inline-block;
 		transform: scale(1.25);
-		padding: 0 8px 0 1px;
+		padding: 0 8px 0 3px;
 		vertical-align: -2px;
 	}
 	& + & {
@@ -202,7 +202,7 @@ export const RoundedLink = styled.a`
 `;
 
 const RepoInfo = styled.div`
-	padding: 0 0 10px 3px;
+	padding: 0 0 10px 0px;
 `;
 
 const IconLabel = styled.span`

@@ -735,20 +735,37 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 								</RoundedLink>
 							</Tooltip>
 						)}
-						My Assignments
+						What are you working on?
 					</H4>
 					{props.providers.length > 0 && (
 						<div style={{ paddingBottom: "5px" }}>
 							Show{" "}
 							{canFilter ? (
-								<Filter
-									title="Filter Items"
-									selected={"selectedLabel"}
-									labels={{ selectedLabel }}
-									items={[{ label: "-" }, ...menuItems.filters]}
-									align="bottomLeft"
-									dontCloseOnSelect
-								/>
+								<Tooltip
+									defaultVisible
+									trigger={["click"]}
+									title={
+										cards.length > 50 ? (
+											<div>
+												Too many items?
+												<br />
+												Filter them here
+											</div>
+										) : (
+											undefined
+										)
+									}
+									placement="bottom"
+								>
+									<Filter
+										title="Filter Items"
+										selected={"selectedLabel"}
+										labels={{ selectedLabel }}
+										items={[{ label: "-" }, ...menuItems.filters]}
+										align="bottomLeft"
+										dontCloseOnSelect
+									/>
+								</Tooltip>
 							) : (
 								"items "
 							)}
@@ -767,71 +784,64 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 				</div>
 				{firstLoad && <LoadingMessage align="left">Loading...</LoadingMessage>}
 				{cards.map(card => (
-					<Row
-						key={card.key}
-						onClick={() => selectCard(card)}
-						className={card.id === props.selectedCardId ? "selected" : ""}
-					>
-						<div>{card.id === props.selectedCardId ? <Icon name="arrow-right" /> : card.icon}</div>
-						<div>
-							{card.label}
-							<span className="subtle">{card.body}</span>
-						</div>
-						<div className="icons">
-							{card.id === props.selectedCardId ? (
-								<Icon
-									name="x-circle"
-									className="clickable"
-									title="Clear working on item"
-									placement="bottomRight"
-									delay={1}
-									onClick={e => {
-										e.stopPropagation();
-										e.preventDefault();
-										selectCard();
-									}}
-								/>
-							) : (
-								<Icon
-									name="arrow-right"
-									className="clickable"
-									title="Start working on item"
-									placement="bottomRight"
-									delay={1}
-								/>
-							)}
-							{card.url && (
-								<Icon
-									title={`Open on web`}
-									delay={1}
-									placement="bottomRight"
-									name="globe"
-									className="clickable"
-									onClick={e => {
-										e.stopPropagation();
-										e.preventDefault();
-										HostApi.instance.send(OpenUrlRequestType, {
-											url: card.url
-										});
-									}}
-								/>
-							)}
-							{card.provider.id === "codestream" && (
-								<Icon
-									title={`View Issue Details`}
-									delay={1}
-									placement="bottomRight"
-									name="description"
-									className="clickable"
-									onClick={e => {
-										e.stopPropagation();
-										e.preventDefault();
-										dispatch(setCurrentCodemark(card.id));
-									}}
-								/>
-							)}
-						</div>
-					</Row>
+					<Tooltip title="Click to start work on this item" delay={1} placement="bottom">
+						<Row
+							key={card.key}
+							onClick={() => selectCard(card)}
+							className={card.id === props.selectedCardId ? "selected" : ""}
+						>
+							<div>
+								{card.id === props.selectedCardId ? <Icon name="arrow-right" /> : card.icon}
+							</div>
+							<div>
+								{card.label}
+								<span className="subtle">{card.body}</span>
+							</div>
+							<div className="icons">
+								{card.id === props.selectedCardId && (
+									<Icon
+										name="x-circle"
+										className="clickable"
+										onClick={e => {
+											e.stopPropagation();
+											e.preventDefault();
+											selectCard();
+										}}
+									/>
+								)}
+								{card.url && (
+									<Icon
+										title={`Open on web`}
+										delay={1}
+										placement="bottomRight"
+										name="globe"
+										className="clickable"
+										onClick={e => {
+											e.stopPropagation();
+											e.preventDefault();
+											HostApi.instance.send(OpenUrlRequestType, {
+												url: card.url
+											});
+										}}
+									/>
+								)}
+								{card.provider.id === "codestream" && (
+									<Icon
+										title={`View Issue Details`}
+										delay={1}
+										placement="bottomRight"
+										name="description"
+										className="clickable"
+										onClick={e => {
+											e.stopPropagation();
+											e.preventDefault();
+											dispatch(setCurrentCodemark(card.id));
+										}}
+									/>
+								)}
+							</div>
+						</Row>
+					</Tooltip>
 				))}
 			</WideStatusSection>
 		</>
@@ -891,6 +901,7 @@ export const Row = styled.div`
 	}
 	&:not(.disabled):not(.no-hover):hover {
 		background: var(--app-background-color-hover);
+		color: var(--text-color-highlight);
 	}
 	span.subtle {
 		display: inline-block;
