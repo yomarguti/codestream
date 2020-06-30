@@ -883,6 +883,7 @@ export const StatusPanel = () => {
 						)}
 						<ModifiedRepos
 							id={derivedState.currentUserId}
+							onlyRepos={openRepos ? openRepos.filter(_ => _.id).map(_ => _.id!) : undefined}
 							defaultText="No diffs. As you write code, changes will appear here."
 						/>
 					</StatusSection>

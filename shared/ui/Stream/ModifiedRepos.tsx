@@ -26,7 +26,7 @@ export const ModifiedRepos = (props: {
 	showUntracked?: boolean;
 	showModifiedAt?: boolean;
 	defaultText?: string;
-	onlyRepo?: string;
+	onlyRepos?: string[];
 }) => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { session, users, teams, context } = state;
@@ -77,7 +77,7 @@ export const ModifiedRepos = (props: {
 
 	const modified = modifiedRepos[teamId]
 		.map(repo => {
-			if (props.onlyRepo && props.onlyRepo !== repo.repoId) return null;
+			if (props.onlyRepos && repo.repoId && !props.onlyRepos.includes(repo.repoId)) return null;
 			const { repoId = "", authors } = repo;
 			const modifiedFiles = repo.modifiedFiles.filter(
 				f => props.showUntracked || f.status !== FileStatus.untracked
