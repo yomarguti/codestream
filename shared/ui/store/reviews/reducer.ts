@@ -53,7 +53,7 @@ export function getByStatusAndReviewer(
 	status: string,
 	reviewerId: string
 ): CSReview[] {
-	return getByStatus(state, status).filter(review => review.reviewers.includes(reviewerId));
+	return getByStatus(state, status).filter(review => (review.reviewers || []).includes(reviewerId));
 }
 
 const getReviews = (state: CodeStreamState) => state.reviews.reviews;
