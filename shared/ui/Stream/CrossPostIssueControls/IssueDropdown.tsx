@@ -761,7 +761,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 						<>
 							<span>
 								Connect your issue provider(s), or{" "}
-								<Tooltip title="Connect later on the Integrations page">
+								<Tooltip title="Connect later on the Integrations page" placement="top">
 									<Linkish
 										onClick={() => dispatch(setUserPreference(["skipConnectIssueProviders"], true))}
 									>
