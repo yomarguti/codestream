@@ -93,7 +93,7 @@ export class SocketClusterConnection implements BroadcasterConnection {
 			setTimeout(this._confirmConnection.bind(this), 0);
 		}, 5000);
 
-		this._debug("Authorizing the connection...");
+		this._debug(`Authorizing the connection, host=${this._options!.host} port=${this._options!.port}...`);
 		try {
 			await this._confirmAuth();
 		} catch (error) {
