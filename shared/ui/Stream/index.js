@@ -88,7 +88,12 @@ import { logout, switchToTeam } from "../store/session/actions";
 import { CodemarkView } from "./CodemarkView";
 import { Review } from "./Review";
 
-import { setCurrentStream, setNewPostEntry, setCurrentReview } from "../store/context/actions";
+import {
+	setCurrentStream,
+	setNewPostEntry,
+	setCurrentReview,
+	setProfileUser
+} from "../store/context/actions";
 import { getTeamProvider } from "../store/teams/reducer";
 import {
 	filter as _filter,
@@ -459,7 +464,8 @@ export class SimpleStream extends Component {
 			submenu: [
 				{ label: youText, action: "", noHover: true, disabled: true },
 				{ label: "-" },
-				{ label: "Profile Photo", action: "avatar" },
+				{ label: "My Profile", action: "profile" },
+				{ label: "Change Profile Photo", action: "avatar" },
 				{ label: "Change Email", action: "email" },
 				{ label: "Change Username", action: "username" },
 				{ label: "Change Full Name", action: "full-name" },
@@ -1447,6 +1453,10 @@ export class SimpleStream extends Component {
 				return this.setActivePanel(WebviewPanels.Integrations);
 			case "email":
 				return this.setActivePanel(WebviewPanels.ChangeEmail);
+			case "profile": {
+				this.props.setProfileUser(this.props.currentUserId);
+				return this.setActivePanel(WebviewPanels.Profile);
+			}
 			case "avatar":
 				return this.setActivePanel(WebviewPanels.ChangeAvatar);
 			case "username":
@@ -2715,6 +2725,7 @@ export default connect(mapStateToProps, {
 	...actions,
 	setCurrentReview,
 	setCurrentStream,
+	setProfileUser,
 	editCodemark,
 	setNewPostEntry,
 	logout,

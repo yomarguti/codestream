@@ -696,34 +696,6 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 
 	return (
 		<>
-			{props.providers.length === 0 && !derivedState.skipConnect && (
-				<StatusSection>
-					<Tooltip title="Connect later on the Integrations page">
-						<RoundedLink
-							onClick={() => {
-								HostApi.instance.track("Skipped Provider Connect", {});
-								dispatch(setUserPreference(["skipConnectIssueProviders"], true));
-							}}
-						>
-							<Icon name="x-circle" />
-							Skip This
-						</RoundedLink>
-					</Tooltip>
-					<H4>Connect your Issue Provider(s)</H4>
-					<div style={{ height: "20px" }} />
-					<IntegrationButtons style={{ marginBottom: "10px" }}>
-						{props.knownIssueProviderOptions.map(item => {
-							if (item.disabled) return null;
-							return (
-								<Provider key={item.key} onClick={item.action}>
-									{item.providerIcon}
-									{item.label}
-								</Provider>
-							);
-						})}
-					</IntegrationButtons>
-				</StatusSection>
-			)}
 			<WideStatusSection>
 				<div className="filters" style={{ padding: "0 20px 0 20px" }}>
 					<H4>
@@ -737,7 +709,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 						)}
 						What are you working on?
 					</H4>
-					{props.providers.length > 0 && (
+					{props.providers.length > 0 ? (
 						<div style={{ paddingBottom: "5px" }}>
 							Show{" "}
 							{canFilter ? (
@@ -780,6 +752,27 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 							/>
 							{isLoading && <Icon className="spin smaller fixed" name="sync" />}
 						</div>
+					) : derivedState.skipConnect ? null : (
+						<>
+							<span>
+								Connect your issue provider(s), or{" "}
+								<Tooltip title="Connect later on the Integrations page">
+									<Linkish>skip this step</Linkish>
+								</Tooltip>
+							</span>
+							<div style={{ height: "10px" }} />
+							<IntegrationButtons style={{ marginBottom: "10px" }}>
+								{props.knownIssueProviderOptions.map(item => {
+									if (item.disabled) return null;
+									return (
+										<Provider key={item.key} onClick={item.action}>
+											{item.providerIcon}
+											{item.label}
+										</Provider>
+									);
+								})}
+							</IntegrationButtons>
+						</>
 					)}
 				</div>
 				{firstLoad && <LoadingMessage align="left">Loading...</LoadingMessage>}
@@ -921,4 +914,11 @@ export const IssueRows = styled.div`
 
 const ConnectIssueProviders = styled.div`
 	padding: 0 20px 0 20px;
+`;
+
+const Linkish = styled.span`
+	cursor: pointer;
+	:hover {
+		color: var(--text-color-highlight);
+	}
 `;

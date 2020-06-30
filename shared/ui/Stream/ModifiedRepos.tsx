@@ -11,6 +11,7 @@ import { HostApi } from "..";
 import { ReviewShowLocalDiffRequestType } from "../ipc/host.protocol.review";
 import * as userSelectors from "../store/users/reducer";
 import { FileStatus } from "@codestream/protocols/api";
+import { ReposScm } from "@codestream/protocols/agent";
 
 const IconLabel = styled.span`
 	white-space: nowrap;
@@ -25,6 +26,7 @@ export const ModifiedRepos = (props: {
 	showUntracked?: boolean;
 	showModifiedAt?: boolean;
 	defaultText?: string;
+	onlyRepo?: string;
 }) => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { session, users, teams, context } = state;
@@ -75,6 +77,7 @@ export const ModifiedRepos = (props: {
 
 	const modified = modifiedRepos[teamId]
 		.map(repo => {
+			if (props.onlyRepo && props.onlyRepo !== repo.repoId) return null;
 			const { repoId = "", authors } = repo;
 			const modifiedFiles = repo.modifiedFiles.filter(
 				f => props.showUntracked || f.status !== FileStatus.untracked

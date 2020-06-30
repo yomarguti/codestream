@@ -879,6 +879,7 @@ export const StatusPanel = () => {
 							</Row>
 						)}
 						<ModifiedRepos
+							onlyRepo={currentRepoId}
 							id={derivedState.currentUserId}
 							defaultText="No diffs. As you write code, changes will appear here."
 						/>
