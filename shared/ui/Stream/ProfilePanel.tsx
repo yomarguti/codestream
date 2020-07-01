@@ -137,7 +137,6 @@ export const ProfilePanel = () => {
 	const editUsername = () => dispatch(openPanel(WebviewPanels.ChangeUsername));
 	const editEmail = () => dispatch(openPanel(WebviewPanels.ChangeEmail));
 	const editAvatar = () => dispatch(openPanel(WebviewPanels.ChangeAvatar));
-	const editStatus = () => dispatch(openPanel(WebviewPanels.Status));
 	const editFullName = () => dispatch(openPanel(WebviewPanels.ChangeFullName));
 	const editPhoneNumber = () => dispatch(openPanel(WebviewPanels.ChangePhoneNumber));
 	const editWorksOn = () => dispatch(openPanel(WebviewPanels.ChangeWorksOn));
@@ -226,7 +225,6 @@ export const ProfilePanel = () => {
 							<Row>
 								<MetaLabel>Currently Working On</MetaLabel>
 								<StyledUserStatus user={person} />
-								{isMe && <RowIcon name="pencil" title="Edit Status" onClick={editStatus} />}
 							</Row>
 						)}
 						<MetaLabel>Local Modifications</MetaLabel>

@@ -98,7 +98,10 @@ const MapRow = styled.div`
 `;
 
 const StyledUserStatus = styled(UserStatus)`
-	padding: 3px 5px 3px 48px;
+	padding: 3px 20px 3px 48px;
+	&:hover {
+		background: var(--app-background-color-hover);
+	}
 `;
 
 interface Props extends ConnectedProps {}
@@ -806,14 +809,6 @@ class TeamPanel extends React.Component<Props, State> {
 											)}
 										</li>
 										<StyledUserStatus user={user} />
-										{currentUserId == user.id && user.status && user.status.label && (
-											<Icon
-												className="edit clickable"
-												name="pencil"
-												title="Edit Status"
-												onClick={() => this.props.openPanel(WebviewPanels.Status)}
-											/>
-										)}
 										{this.renderModifiedRepos(user)}
 									</>
 								))}
