@@ -1080,6 +1080,9 @@ export class SimpleStream extends Component {
 
 		return (
 			<div id="stream-root" className={streamClass}>
+
+				<OfflineBanner />
+
 				<ModalRoot />
 				{this.state.propsForPrePRProviderInfoModal && (
 					<PrePRProviderInfoModal {...this.state.propsForPrePRProviderInfoModal} />
@@ -1341,7 +1344,6 @@ export class SimpleStream extends Component {
 									]}
 								</div>
 							</div>
-							<OfflineBanner />
 							<div className="shadow-overlay">
 								<div className={unreadsAboveClass} type="above" onClick={this.handleClickUnreads}>
 									&uarr; Unread Messages &uarr;
