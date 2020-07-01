@@ -12,7 +12,7 @@ import {
 } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 import { SessionContainer } from "../container";
-import { Logger } from "../logger";
+import { Logger, TraceLevel } from "../logger";
 import { MarkersManager } from "../managers/markersManager";
 import { MatchReposRequest, RepoMap } from "../protocol/agent.protocol.repos";
 import { CSRepository } from "../protocol/api.protocol";
@@ -322,6 +322,11 @@ export class GitRepositories {
 	}
 
 	/**
+	 * Collection of repo paths to an array of relative branch path refs
+	 * This is used to dynamically add watchers
+	 */
+	private _dynamicRefsByRepo = new Map<string, string[]>();
+	/**
 	 * File watchers, could be an fs.FSWatcher or chokidar.FSWatcher
 	 */
 	private _monitors: { dispose(): Promise<void> }[] = [];
@@ -333,6 +338,8 @@ export class GitRepositories {
 			await monitor.dispose();
 		}
 		this._monitors = [];
+
+		const { git } = SessionContainer.instance();
 
 		const repos = this._repositoryTree.values();
 		for (const repo of repos) {
@@ -357,35 +364,130 @@ export class GitRepositories {
 				// thanks gitlens!
 				// https://github.com/eamodio/vscode-gitlens/blob/master/src/git/models/repository.ts#L133
 				// FETCH_HEAD can also be modified with other git commands, creating an infinite loop, watch out!
-				const paths = [
+
+				/**
+				 * Instead of watching all the paths below AND all heads/remotes (which could be huge)
+				 * we will only list to the default set below as well as the current local branch (and its remote if it exists)
+				 *
+				 * As the user creates branches or pushes local branches, we will dynamically watch those
+				 * new paths in a just-in-time manner. This is done to eliminate any wholesale watching
+				 * of ref/heads and/or ref/remotes. In turn, this should greatly reduce the # of
+				 * file system watchers needed.
+				 *
+				 */
+
+				const watchPaths = [
 					".git/config",
 					".git/index",
 					".git/HEAD",
 					".git/refs/stash",
-					".git/refs/heads/**",
-					".git/refs/remotes/**",
-					// there's the possibility for way too many tags for the watcher to be useful
-					// ".git/refs/tags/**",
 					".gitignore"
-				].map(_ => path.join(repo.path, _));
-				const watcher = chokidar.watch(paths, {
-					// don't allow chokidar watcher to fire changes on initialization
-					// (fires lots of `add` and `addDir` events that we do not need
-					// as they can cause extensions to overload their ipc message queues)
-					ignoreInitial: true
-				});
-				watcher.on("all", (eventName: string, path: string /*, stats: fs.Stats | undefined*/) => {
-					Logger.debug(`git watch changed: ${eventName}:${path}`);
-					this._onGitChanged.fire({
-						type: eventName,
-						path: path,
-						repo: {
-							id: repo.id,
-							normalizedPath: repo.normalizedPath,
-							path: repo.path
+				];
+				// try to add the current branch and its remote version (if any)
+				const currentGitBranch = await git.getCurrentBranch(repo.path);
+				let currentGitBranchRemote;
+				if (currentGitBranch) {
+					watchPaths.push(`.git/refs/heads/${currentGitBranch}`);
+					currentGitBranchRemote = await git.getBranchRemote(repo.path, currentGitBranch);
+					if (currentGitBranchRemote) {
+						watchPaths.push(`.git/refs/remotes/${currentGitBranchRemote}`);
+					}
+				}
+				const mappedWatchPaths = watchPaths.map(_ => path.join(repo.path, _));
+				const watcher = chokidar
+					.watch(mappedWatchPaths, {
+						// don't allow chokidar watcher to fire changes on initialization
+						// (fires lots of `add` and `addDir` events that we do not need
+						// as they can cause extensions to overload their ipc message queues)
+						ignoreInitial: true
+					})
+					.on("ready", () => {
+						if (Logger.level === TraceLevel.Debug) {
+							const watched = watcher.getWatched();
+							Logger.debug(`git path watch: (initial) ${JSON.stringify(watched, null, 4)}`);
 						}
-					} as CommitsChangedData);
-				});
+					})
+					.on("error", error => Logger.error(error, 'git path watch: on("error")'))
+					.on("all", async (eventName: string, path1: string /*, stats: fs.Stats | undefined*/) => {
+						Logger.debug(`git path watch: on("all"): ${eventName}:${path1}`);
+						try {
+							if (Logger.level === TraceLevel.Debug) {
+								Logger.debug(
+									`git path watch: total paths for ${repo.path} ${JSON.stringify(
+										this._dynamicRefsByRepo.get(repo.path)
+									)}`
+								);
+								// this is flaky:
+								// https://github.com/paulmillr/chokidar/issues/542
+								// const watched = watcher.getWatched();
+								// Logger.debug(`git path watch: (latest) ${JSON.stringify(watched, null, 4)}`);
+							}
+						} catch (ex) {
+							Logger.error(ex, "git path watch: failed to log watched items");
+						}
+
+						this._onGitChanged.fire({
+							type: eventName,
+							path: path1,
+							repo: {
+								id: repo.id,
+								normalizedPath: repo.normalizedPath,
+								path: repo.path
+							}
+						} as CommitsChangedData);
+
+						if (eventName === "change") {
+							let pathsToAdd: string[] = [];
+							try {
+								const currentGitBranch = await git.getCurrentBranch(repo.path);
+								if (!currentGitBranch) return;
+
+								const currentGitBranchRemote = await git.getBranchRemote(
+									repo.path,
+									currentGitBranch
+								);
+
+								let dynamicRefs = this._dynamicRefsByRepo.get(repo.path);
+								if (!dynamicRefs || dynamicRefs == null) {
+									// if there are no dynamic refs for this repo
+									// initialize it with empty
+									this._dynamicRefsByRepo.set(repo.path, []);
+									// then assign the local variable
+									dynamicRefs = this._dynamicRefsByRepo.get(repo.path)!;
+								}
+								// skip if we already have the local branch AND
+								// there isn't a remote OR there is, and it's already tracked
+								if (
+									dynamicRefs.indexOf(".git/refs/heads/" + currentGitBranch) > -1 &&
+									(!currentGitBranchRemote ||
+										(currentGitBranchRemote &&
+											dynamicRefs.indexOf(".git/refs/remotes/" + currentGitBranchRemote))) > -1
+								) {
+									return;
+								}
+								// add the local branch AND the remote ref, if we have one
+								pathsToAdd = [`.git/refs/heads/${currentGitBranch}`];
+								if (currentGitBranchRemote) {
+									pathsToAdd.push(`.git/refs/remotes/${currentGitBranchRemote}`);
+								}
+								Logger.debug(`git path watch: adding ${pathsToAdd.length} paths...`);
+
+								// using a Set for unique-ness
+								this._dynamicRefsByRepo.set(repo.path, [
+									...new Set([...dynamicRefs, ...pathsToAdd])
+								]);
+
+								// watched paths are de-duped by chokidar
+								const watchedPaths = pathsToAdd.map(_ => path.join(repo.path, _));
+								watcher.add(watchedPaths);
+								// https://github.com/paulmillr/chokidar/issues/542
+								// const watched = watcher.getWatched();
+							} catch (err) {
+								Logger.error(err, `git path watch: error, toAdd=${pathsToAdd}`);
+							}
+						}
+					});
+
 				this._monitors.push({
 					dispose() {
 						return watcher.close();

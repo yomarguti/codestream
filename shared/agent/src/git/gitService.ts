@@ -1317,7 +1317,7 @@ export class GitService implements IGitService, Disposable {
 	async getBranchRemote(repoPath: string, branch: string): Promise<string | undefined> {
 		try {
 			const data = await git({ cwd: repoPath }, "rev-parse", "--abbrev-ref", `${branch}@{u}`);
-			return data.trim();
+			return data ? data.trim() : undefined;
 		} catch {
 			return undefined;
 		}
