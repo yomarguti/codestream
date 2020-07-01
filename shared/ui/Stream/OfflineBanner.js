@@ -11,7 +11,7 @@ class OfflineBanner extends PureComponent {
 						<div className="content">
 							<FormattedMessage
 								id="offlineBanner.offline.main"
-								defaultMessage="We’re having problems connecting to CodeStream! Hold tight, we’ll keep trying..."
+								defaultMessage="We’re having problems connecting to CodeStream. Hold tight, we’ll keep trying..."
 							/>
 						</div>
 					</div>
