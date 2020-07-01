@@ -1217,7 +1217,8 @@
 				}
 				.checkmark {
 					display: inline-block;
-					width: 16px;
+					padding-left: 2.5px;
+					width: 21px; // 16px for standard icon plus 5 for padding
 				}
 				.icon .icon {
 					margin-right: 5px;
@@ -1240,6 +1241,8 @@
 					opacity: 1;
 					.keybinding {
 						color: var(--text-color-highlight);
+						color: var(--button-foreground-color);
+						background-color: rgba(128, 128, 128, 1);
 					}
 				}
 			}

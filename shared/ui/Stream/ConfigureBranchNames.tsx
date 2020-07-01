@@ -91,7 +91,7 @@ export const ConfigureBranchNames = (props: { onClose: Function }) => {
 					</div>
 					<fieldset className="form-body" style={{ padding: "10px" }}>
 						<div id="controls">
-							<h3>When creating a branch from a ticket:</h3>
+							<h3>Branch Name Template:</h3>
 							<input
 								name="branchTicketTemplate"
 								value={branchTicketTemplate}
@@ -102,7 +102,7 @@ export const ConfigureBranchNames = (props: { onClose: Function }) => {
 								placeholder="Example: feature/jira-{id}"
 							/>
 						</div>
-						<br />
+						{/*<br />
 						<div id="controls">
 							<h3>When creating a branch from a description:</h3>
 							<input
@@ -113,7 +113,7 @@ export const ConfigureBranchNames = (props: { onClose: Function }) => {
 								onChange={e => setBranchDescriptionTemplate(e.target.value)}
 								placeholder="Example: feature/{username}/{title}"
 							/>
-						</div>
+						</div>*/}
 						<div style={{ margin: "30px 0 30px 0" }}>
 							<h3>Available tokens:</h3>
 							<Token text="username" tip="Your CodeStream username" />
@@ -135,7 +135,7 @@ export const ConfigureBranchNames = (props: { onClose: Function }) => {
 						</div>
 						<div style={{ height: "20px" }} />
 						<ButtonRow>
-							<Button onClick={save}>Save Branch Templates</Button>
+							<Button onClick={save}>Save Branch Template</Button>
 							<p>This is a team setting.</p>
 						</ButtonRow>
 					</fieldset>

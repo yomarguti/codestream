@@ -29,6 +29,7 @@ import { keyFilter } from "@codestream/webview/utils";
 import {
 	StartWorkIssueContext,
 	RoundedLink,
+	RoundedSearchLink,
 	H4,
 	StatusSection,
 	WideStatusSection,
@@ -44,6 +45,8 @@ import { Headshot } from "@codestream/webview/src/components/Headshot";
 import * as codemarkSelectors from "../../store/codemarks/reducer";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import Timestamp from "../Timestamp";
+import { Modal } from "../Modal";
+import { Button } from "@codestream/webview/src/components/Button";
 
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
@@ -406,6 +409,11 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 	const [isLoading, setIsLoading] = React.useState(false);
 	const [loadedBoards, setLoadedBoards] = React.useState(0);
 	const [loadedCards, setLoadedCards] = React.useState(0);
+	const [addingCustomFilterForProvider, setAddingCustomFilterForProvider] = React.useState("");
+	const [newCustomFilter, setNewCustomFilter] = React.useState("");
+	const [queryOpen, setQueryOpen] = React.useState(false);
+	const [query, setQuery] = React.useState("");
+	const [reload, setReload] = React.useState(1);
 
 	const getFilterLists = (providerId: string) => {
 		const prefs = derivedState.startWorkPreferences[providerId] || {};
@@ -416,6 +424,12 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 	const getFilterBoards = (providerId: string) => {
 		const prefs = derivedState.startWorkPreferences[providerId] || {};
 		const boards = prefs.filterBoards ? { ...prefs.filterBoards } : EMPTY_ARRAY;
+		return boards;
+	};
+
+	const getFilterCustom = (providerId: string) => {
+		const prefs = derivedState.startWorkPreferences[providerId] || {};
+		const boards = prefs.filterCustom ? { ...prefs.filterCustom } : EMPTY_ARRAY;
 		return boards;
 	};
 
@@ -459,7 +473,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 		return () => {
 			isValid = false;
 		};
-	}, [derivedState.providerIds]);
+	}, [derivedState.providerIds, reload]);
 
 	React.useEffect(() => {
 		void (async () => {
@@ -521,19 +535,51 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 
 	const startWorkIssueContext = React.useContext(StartWorkIssueContext);
 
-	// // https://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
-	// const escapeRegExp = string => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
-	// const queryRegexp = React.useMemo(() => new RegExp(escapeRegExp(props.q), "gi"), [props.q]);
+	// https://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
+	const escapeRegExp = string => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
+	const queryRegexp = React.useMemo(() => new RegExp(escapeRegExp(query), "gi"), [query]);
 
-	// const underlineQ = string => (
-	// 	<span dangerouslySetInnerHTML={{ __html: string.replace(queryRegexp, "<u><b>$&</b></u>") }} />
-	// );
+	const underlineQ = string => (
+		<span dangerouslySetInnerHTML={{ __html: string.replace(queryRegexp, "<u><b>$&</b></u>") }} />
+	);
 
 	const filterBoardItems = provider => {
 		const filterLists = getFilterLists(provider.id);
 		const filterBoards = getFilterBoards(provider.id);
+		const filterCustom = getFilterCustom(provider.id);
 		const items = [] as any;
 		const pData = data[provider.id] || {};
+
+		const providerDisplay = PROVIDER_MAPPINGS[provider.name];
+		if (providerDisplay.hasCustomFilters) {
+			items.push(
+				{
+					icon: <Icon name="plus" />,
+					label: "Custom Filter...",
+					key: "add-custom",
+					action: () => setAddingCustomFilterForProvider(provider.id)
+				},
+				{ label: "-" }
+			);
+			Object.keys(filterCustom).forEach((filter: any) => {
+				const checked = filterCustom[filter];
+				items.push({
+					checked,
+					label: filter,
+					key: "customer-filter-" + filter,
+					action: () => {
+						Object.keys(filterCustom).forEach((filter: any) => {
+							filterCustom[filter] = false;
+						});
+						setPreference(provider.id, "filterCustom", { ...filterCustom, [filter]: !checked });
+					}
+				});
+			});
+			if (Object.keys(filterCustom).length > 0) {
+				items.push({ label: "-" });
+			}
+		}
+
 		// @ts-ignore
 		if (!pData.boards) return items;
 		// @ts-ignore
@@ -563,7 +609,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 				});
 			} else {
 				const checked = !!filterBoards[b.id];
-				console.warn("GOT: ", checked, " from ", b, " and ", filterBoards);
+				// console.warn("GOT: ", checked, " from ", b, " and ", filterBoards);
 				items.push({
 					label: board.name,
 					key: "board-" + board.id,
@@ -588,7 +634,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 
 	const { cards, canFilter } = React.useMemo(() => {
 		const items = [] as any;
-		// const lowerQ = (props.q || "").toLocaleLowerCase();
+		const lowerQ = (query || "").toLocaleLowerCase();
 		let canFilter = false;
 		props.providers.forEach(provider => {
 			const filterLists = getFilterLists(provider.id);
@@ -608,10 +654,10 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 					// @ts-ignore
 					.filter(card => !isFilteringLists || filterLists[card.idList || "_"])
 					.filter(card => !isFilteringBoards || filterBoards[card.idBoard || "_"])
-					// .filter(card => !props.q || card.title.toLocaleLowerCase().includes(lowerQ))
+					.filter(card => !query || card.title.toLocaleLowerCase().includes(lowerQ))
 					.map(card => ({
 						...card,
-						label: card.title, //props.q ? underlineQ(card.title) : card.title,
+						label: query ? underlineQ(card.title) : card.title,
 						searchLabel: card.title,
 						icon: providerDisplay.icon && <Icon name={providerDisplay.icon} />,
 						key: "card-" + card.id,
@@ -690,8 +736,18 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 		return items;
 	}, [loadedCards, derivedState.startWorkPreferences]);
 
+	const saveCustomFilter = () => {
+		if (!addingCustomFilterForProvider) return;
+		const filterCustom = getFilterCustom(addingCustomFilterForProvider || "");
+		setPreference(addingCustomFilterForProvider, "filterCustom", {
+			...filterCustom,
+			[newCustomFilter]: true
+		});
+		setAddingCustomFilterForProvider("");
+	};
+
 	const firstLoad = cards.length == 0 && isLoading;
-	const selectedLabel = canFilter ? "selected items" : "my items";
+	const selectedLabel = canFilter ? "items assigned to you" : "items assigned to you";
 	const providersLabel =
 		props.providers.length === 0 ? (
 			"CodeStream"
@@ -701,6 +757,33 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 			/>
 		);
 
+	if (addingCustomFilterForProvider) {
+		return (
+			<Modal verticallyCenter onClose={() => setAddingCustomFilterForProvider("")}>
+				<div className="onboarding-page">
+					<form className="standard-form" onSubmit={saveCustomFilter}>
+						<fieldset className="form-body">
+							<h1>Custom Filter</h1>
+							<input
+								type="text"
+								className="input-text control"
+								autoFocus
+								onChange={e => setNewCustomFilter(e.target.value)}
+								placeholder="Enter Custom Filter"
+								style={{ marginBottom: "5px" }}
+							/>
+							<div className="subtle">Example: is:open is:issue author:@me</div>
+							<div style={{ textAlign: "center", paddingTop: "30px" }}>
+								<Button onClick={saveCustomFilter}>
+									&nbsp;&nbsp;&nbsp;&nbsp;Save&nbsp;&nbsp;&nbsp;&nbsp;
+								</Button>
+							</div>
+						</fieldset>
+					</form>
+				</div>
+			</Modal>
+		);
+	}
 	return (
 		<>
 			<WideStatusSection id="start-work-div">
@@ -712,6 +795,37 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 								New Item
 							</RoundedLink>
 						</Tooltip>
+						<RoundedSearchLink className={queryOpen ? "" : "collapsed"}>
+							<Icon
+								name="search"
+								onClick={() => {
+									setQueryOpen(true);
+									document.getElementById("search-input")!.focus();
+								}}
+							/>
+							<span className="accordion">
+								<Icon
+									name="x"
+									onClick={() => {
+										setQuery("");
+										setQueryOpen(false);
+									}}
+								/>
+								<input
+									autoFocus
+									id="search-input"
+									type="text"
+									value={query}
+									onChange={e => setQuery(e.target.value)}
+									onKeyDown={e => {
+										if (e.key == "Escape") {
+											setQuery("");
+											setQueryOpen(false);
+										}
+									}}
+								/>
+							</span>
+						</RoundedSearchLink>
 						What are you working on?
 					</H4>
 					{props.providers.length > 0 || derivedState.skipConnect ? (
@@ -755,7 +869,15 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 								align="bottomLeft"
 								dontCloseOnSelect
 							/>
-							{isLoading && !firstLoad && <Icon className="spin smaller fixed" name="sync" />}
+							{!firstLoad && (
+								<Tooltip title="Reload" delay={1}>
+									<Icon
+										onClick={() => setReload(reload + 1)}
+										className={`smaller fixed ${isLoading ? "spin" : ""}`}
+										name="sync"
+									/>
+								</Tooltip>
+							)}
 						</div>
 					) : (
 						<>

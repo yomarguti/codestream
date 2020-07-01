@@ -16,6 +16,7 @@ export interface ProviderDisplay {
 	// FIXME -- temp this should come from the server
 	supportsStartWork?: boolean;
 	hasFilters?: boolean;
+	hasCustomFilters?: boolean;
 }
 
 export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
@@ -47,6 +48,7 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		listLabel: "type",
 		cardLabel: "issue",
 		hasFilters: true,
+		// hasCustomFilters: true,
 		supportsStartWork: true
 	},
 	github_enterprise: {

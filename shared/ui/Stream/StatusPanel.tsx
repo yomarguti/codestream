@@ -201,6 +201,46 @@ export const RoundedLink = styled.a`
 	}
 `;
 
+export const RoundedSearchLink = styled(RoundedLink)`
+	margin-right: 5px;
+	padding: 3px 3px 3px 3px;
+	&.collapsed {
+		padding: 3px 4px 3px 4px;
+	}
+	.icon {
+		margin-right: 0;
+	}
+	display: flex;
+	.accordion {
+		display: inline-block;
+		width: 130px;
+		transition: width 0.1s;
+		overflow: hidden;
+		white-space: nowrap;
+		height: 16px;
+		line-height: 16px;
+		margin: 0;
+		#search-input {
+			width: 90px;
+			background: transparent !important;
+			font-size: 13px !important;
+			padding: 0 5px !important;
+			margin: 0 0 !important;
+			&:focus {
+				outline: none;
+			}
+		}
+		.icon {
+			float: right;
+			vertical-align: -1px;
+			margin-right: 4px;
+		}
+	}
+	&.collapsed .accordion {
+		width: 0;
+	}
+`;
+
 const RepoInfo = styled.div`
 	padding: 0 0 10px 0px;
 `;
@@ -280,7 +320,7 @@ export const StatusPanel = () => {
 			webviewFocused: state.context.hasFocus,
 			textEditorUri: state.editorContext.textEditorUri,
 			branchMaxLength: settings.branchMaxLength || 40,
-			branchTicketTemplate: settings.branchTicketTemplate || "feature/ticket-{id}",
+			branchTicketTemplate: settings.branchTicketTemplate || "feature/ticket-{id}-{title}",
 			branchDescriptionTemplate: settings.branchDescriptionTemplate || "feature/{title}",
 			createBranch: Object.keys(workPrefs).includes("createBranch") ? workPrefs.createBranch : true,
 			moveCard: Object.keys(workPrefs).includes("moveCard") ? workPrefs.moveCard : true,
@@ -359,19 +399,25 @@ export const StatusPanel = () => {
 		return `${year}-${month > 9 ? month : "0" + month}-${date > 9 ? date : "0" + date}`;
 	};
 
-	const replaceDescriptionTokens = (template: string, title: string = "") => {
-		return template
-			.replace(/\{id\}/g, "")
-			.replace(/\{username\}/g, derivedState.currentUserName)
-			.replace(/\{team\}/g, derivedState.teamName)
-			.replace(/\{date\}/g, dateToken())
-			.replace(/\{title\}/g, title.toLowerCase())
-			.replace(/[\s]+/g, "-")
-			.substr(0, derivedState.branchMaxLength);
-	};
+	// const replaceDescriptionTokens = (template: string, title: string = "") => {
+	// 	return template
+	// 		.replace(/\{id\}/g, "")
+	// 		.replace(/\{username\}/g, derivedState.currentUserName)
+	// 		.replace(/\{team\}/g, derivedState.teamName)
+	// 		.replace(/\{date\}/g, dateToken())
+	// 		.replace(/\{title\}/g, title.toLowerCase())
+	// 		.replace(/[\s]+/g, "-")
+	// 		.substr(0, derivedState.branchMaxLength);
+	// };
 
-	const replaceTicketTokens = (template: string, card) => {
-		const { tokenId, title, providerToken } = card;
+	const replaceTicketTokens = (template: string, card, title: string = "") => {
+		let tokenId = "";
+		let providerToken = "";
+		if (card && card.tokenId) {
+			tokenId = card.tokenId;
+			title = card.title;
+			providerToken = card.providerToken;
+		}
 		return template
 			.replace(/\{id\}/g, tokenId)
 			.replace(/\{username\}/g, derivedState.currentUserName)
@@ -429,8 +475,8 @@ export const StatusPanel = () => {
 
 	const newBranch = React.useMemo(() => {
 		if (customBranchName) return customBranchName;
-		if (card && card.id) return replaceTicketTokens(derivedState.branchTicketTemplate, card);
-		else return replaceDescriptionTokens(derivedState.branchDescriptionTemplate, label);
+		return replaceTicketTokens(derivedState.branchTicketTemplate, card, label);
+		// else return replaceDescriptionTokens(derivedState.branchDescriptionTemplate, label);
 	}, [
 		label,
 		card,
@@ -442,8 +488,8 @@ export const StatusPanel = () => {
 	const branch = React.useMemo(() => {
 		if (manuallySelectedBranch) return manuallySelectedBranch;
 		if (customBranchName) return customBranchName;
-		if (card && card.id) return replaceTicketTokens(derivedState.branchTicketTemplate, card);
-		else return replaceDescriptionTokens(derivedState.branchDescriptionTemplate, label);
+		return replaceTicketTokens(derivedState.branchTicketTemplate, card, label);
+		// else return replaceDescriptionTokens(derivedState.branchDescriptionTemplate, label);
 	}, [
 		label,
 		card,

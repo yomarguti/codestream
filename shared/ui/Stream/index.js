@@ -411,7 +411,8 @@ export class SimpleStream extends Component {
 				return {
 					key: team.id,
 					label: team.name,
-					icon: isCurrentTeam ? <Icon name="check" /> : undefined,
+					// icon: isCurrentTeam ? <Icon name="check" /> : undefined,
+					checked: isCurrentTeam,
 					noHover: isCurrentTeam,
 					action: () => {
 						if (isCurrentTeam) return;
@@ -427,6 +428,7 @@ export class SimpleStream extends Component {
 					{ label: "-" },
 					{
 						key: "create-team",
+						icon: <Icon name="plus" />,
 						label: "Create New Team",
 						action: () => {
 							this.setState({ showCreateTeamModal: true });
