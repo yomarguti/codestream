@@ -1080,9 +1080,7 @@ export class SimpleStream extends Component {
 
 		return (
 			<div id="stream-root" className={streamClass}>
-
 				<OfflineBanner />
-
 				<ModalRoot />
 				{this.state.propsForPrePRProviderInfoModal && (
 					<PrePRProviderInfoModal {...this.state.propsForPrePRProviderInfoModal} />
