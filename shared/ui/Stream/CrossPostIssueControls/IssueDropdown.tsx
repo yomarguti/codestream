@@ -319,12 +319,12 @@ class IssueDropdown extends React.Component<Props, State> {
 			provider.name,
 			this.props.currentTeamId
 		);
+		if (!providerInfo) return;
+		if (providerInfo.accessToken) return { provider, display };
+		if (!provider.isEnterprise) return undefined;
+		if (!providerInfo!.hosts) return undefined;
+		providerInfo = providerInfo!.hosts[provider.id];
 		if (!providerInfo) return undefined;
-		if (provider.isEnterprise) {
-			if (!providerInfo.hosts) return undefined;
-			providerInfo = providerInfo.hosts[provider.id];
-		}
-		if (!providerInfo.accessToken) return undefined;
 		return { provider, display };
 	}
 
@@ -332,12 +332,12 @@ class IssueDropdown extends React.Component<Props, State> {
 		const provider = this.props.providers ? this.props.providers[providerId] : undefined;
 		const { currentUser } = this.props;
 		if (!provider || currentUser.providerInfo == undefined) return false;
-		let providerInfo = currentUser.providerInfo[this.props.currentTeamId][provider.name];
+		let providerInfo = getUserProviderInfo(currentUser, provider.name, this.props.currentTeamId);
 		if (!providerInfo) return false;
 		if (providerInfo.accessToken) return true;
 		if (!provider.isEnterprise) return false;
-		if (!providerInfo!.hosts) return false;
-		providerInfo = providerInfo!.hosts![provider.id];
+		if (!providerInfo.hosts) return false;
+		providerInfo = providerInfo.hosts[provider.id];
 		return providerInfo && !!providerInfo.accessToken;
 	}
 }
