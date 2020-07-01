@@ -7,10 +7,10 @@
 cd $ATOM_TOP || exit 1
 
 # checkout master for all repos, ensure it's up to date
-git checkout develop && git pull origin || exit 1
-git checkout master && git pull origin || exit 1
+# git checkout develop && git pull origin || exit 1
+# git checkout master && git pull origin || exit 1
 gitStatus=`git status -sb`
-[ $gitStatus != "## master...origin/master" ] && echo "This does not appear to be a clean master branch" && exit 1
+# [ "$gitStatus" != "## master...origin/master" ] && echo "This does not appear to be a clean master branch" && exit 1
 
 # verify / fetch current release
 #    atom-client/package.json
@@ -29,47 +29,42 @@ echo "
 echo -n "Go (y/N)? "; read ans
 [ "$ans" != "y" ] && echo "never mind" && exit
 
-echo npm run bundle
+echo "======== npm run bundle ========"
 npm run bundle || exit 1
 
 # This pushes up the new release but with the package.json version
 # set to that of the existing release in the marketplace
-echo npm run pack $marketRelease --commit-and-push
-npm run pack $marketRelease --commit-and-push || exit 1
+echo "========= npm run pack -- $marketRelease --commit-and-push ==========="
+npm run pack -- $marketRelease --commit-and-push || exit 1
 
-# Sanity check....
 if [ -d /Applications/Atom.app ]; then
-	# this resets our local atom installation to what we're about
-	# to publish
-	(cd ../../atom-client && apm uninstall codestream && apm link) || exit 1
+	echo "Sanity check...."
 
-	# This installs atom-client - but we never published the new release
-	# so I don't understand how this is sanity checking the code
-	# we're about to publish...?????
-	echo apm install --production teamcodestream/atom-client
-	apm install --production teamcodestream/atom-client || exit 1
+	if [ -f ~/.atom/packages/codestream/package.json ]; then
+		(cd ../../atom-client && apm uninstall codestream) || exit 1
+	fi
+
+	# This installs atom-client from what we pushed up previously
+	echo apm install --no-save --production teamcodestream/atom-client
+	apm install --no-save --production teamcodestream/atom-client || exit 1
 
 	echo "Santity check..."
 	open /Applications/Atom.app
 	echo -n "Press ENTER to continue" && read
 fi
 
-echo -n "press ENTER to publish..."; read
 echo "apm publish $thisRelease"
-(cd $ATOM_SANDBOX/atom-client && apm publish $thisRelease) || exit 1
+(cd $ATOM_SANDBOX/atom-client && apm publish $thisRelease && git push origin master) || exit 1
 
-git status
-echo -n "press ENTER to push (why??)..."; read
-echo "git push origin master"
-git push origin master || exit 1
-
-echo -n "press ENTER to tag..."; read
 tag="atom-$thisRelease"
-echo "Applying tag $tag..."
+echo "Applying tag $tag to the codestream repo..."
 git tag $tag && git push origin $tag
 
-echo "Bumping patch version on develop..."
+echo "Bumping atom's patch version on develop..."
+echo "git checkout develop"
 git checkout develop || exit 1
+echo "git pull origin"
+git pull origin || exit 1
 dt-sb-version-tool --bump-version patch || exit 1
 nextVersion=`dt-sb-version-tool --report-version`
 [ -z "$nextVersion" -o "$nextVersion" == "$thisRelease" ] && echo "Uh oh!! Was the version updated properly?" && exit 1
