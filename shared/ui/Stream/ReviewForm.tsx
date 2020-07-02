@@ -1947,7 +1947,7 @@ class ReviewForm extends React.Component<Props, State> {
 									key="title-text"
 									type="text"
 									name="title"
-									className="input-text control"
+									className="input-text control clearable"
 									tabIndex={0}
 									value={this.state.title}
 									onChange={e => this.setState({ title: e.target.value, titleTouched: true })}
@@ -1955,6 +1955,17 @@ class ReviewForm extends React.Component<Props, State> {
 									ref={ref => (this._titleInput = ref)}
 									onKeyDown={this.handleKeyDown}
 								/>
+								{this.state.title && (
+									<Icon
+										style={{ position: "absolute", right: "10px", top: "5px" }}
+										name="x"
+										className="clear-text clickable"
+										onClick={() => {
+											this.setState({ title: "", titleTouched: true });
+											this.focus();
+										}}
+									/>
+								)}
 							</div>
 							{this.renderTextHelp()}
 							{this.renderMessageInput()}
