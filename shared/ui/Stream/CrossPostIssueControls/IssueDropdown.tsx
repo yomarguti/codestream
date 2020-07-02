@@ -922,7 +922,12 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 				</div>
 				{firstLoad && <LoadingMessage align="left">Loading...</LoadingMessage>}
 				{cards.map(card => (
-					<Tooltip title="Click to start work on this item" delay={1} placement="bottom">
+					<Tooltip
+						key={"tt-" + card.key}
+						title="Click to start work on this item"
+						delay={1}
+						placement="bottom"
+					>
 						<Row
 							key={card.key}
 							onClick={() => selectCard(card)}

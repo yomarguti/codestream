@@ -5,7 +5,6 @@ import * as userSelectors from "../store/users/reducer";
 import { CodeStreamState } from "../store";
 import { Row } from "./CrossPostIssueControls/IssueDropdown";
 import Icon from "./Icon";
-import { MarkdownText } from "./MarkdownText";
 import { Headshot } from "../src/components/Headshot";
 import { H4, WideStatusSection } from "./StatusPanel";
 import { setCurrentReview } from "../store/context/actions";
@@ -41,14 +40,17 @@ export function OpenReviews() {
 
 	const { reviews, teamMembers } = derivedState;
 
+	const sortedReviews = [...reviews];
+	sortedReviews.sort((a, b) => b.createdAt - a.createdAt);
+
 	if (reviews.length == 0) return null;
 	return (
 		<WideStatusSection>
 			<H4 style={{ paddingLeft: "20px" }}>Open Reviews</H4>
-			{reviews.map(review => {
+			{sortedReviews.map(review => {
 				const creator = teamMembers.find(user => user.id === review.creatorId);
 				return (
-					<Row onClick={() => dispatch(setCurrentReview(review.id))}>
+					<Row key={"review-" + review.id} onClick={() => dispatch(setCurrentReview(review.id))}>
 						<div>
 							<Tooltip title={creator && creator.fullName} placement="bottomLeft">
 								<span>

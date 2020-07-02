@@ -91,7 +91,7 @@ export const ModifiedRepos = (props: {
 					? null
 					: (authors || []).find(a => a.email === currentUserEmail && a.stomped > 0);
 			return (
-				<div>
+				<div key={"repo-" + repoId}>
 					<div>
 						<IconLabel>
 							<Icon name="repo" />
