@@ -800,7 +800,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				key: "view",
 				action: () =>
 					HostApi.instance.send(OpenUrlRequestType, {
-						url: "https://docs.codestream.com/userguide/features/filter-and-search/"
+						url: "https://docs.codestream.com/userguide/features/filter-and-search/#advanced-search-syntax"
 					})
 			}
 		].filter(item => this.props.lightningCodeReviewsEnabled || !item.lightningOnly);
