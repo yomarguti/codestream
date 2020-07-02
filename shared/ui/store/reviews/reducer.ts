@@ -48,12 +48,14 @@ export function getByStatus(state: CodeStreamState, status?: string): CSReview[]
 	return getAllReviews(state).filter(review => review.status === status);
 }
 
-export function getByStatusAndReviewer(
+export function getByStatusAndUser(
 	state: CodeStreamState,
 	status: string,
-	reviewerId: string
+	userId: string
 ): CSReview[] {
-	return getByStatus(state, status).filter(review => (review.reviewers || []).includes(reviewerId));
+	return getByStatus(state, status).filter(
+		review => review.creatorId === userId || (review.reviewers || []).includes(userId)
+	);
 }
 
 const getReviews = (state: CodeStreamState) => state.reviews.reviews;

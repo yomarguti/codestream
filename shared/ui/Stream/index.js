@@ -793,7 +793,7 @@ export class SimpleStream extends Component {
 	}
 
 	renderNavIcons() {
-		const { activePanel, configs, umis, postStreamPurpose, providerInfo = {} } = this.props;
+		const { activePanel, configs, umis, currentReviewId, providerInfo = {} } = this.props;
 		const { menuOpen, plusMenuOpen } = this.state;
 
 		// this would be nice, but unfortunately scm is only loaded on spatial view so we can't
@@ -955,8 +955,6 @@ export class SimpleStream extends Component {
 		if (activePanel === WebviewPanels.LandingRedirect)
 			// activePanel = remainingSteps > 0 ? WebviewPanels.GettingStarted : WebviewPanels.Activity;
 			activePanel = WebviewPanels.Status;
-
-		// this is the fix
 
 		const isConfigurationPanel =
 			activePanel && activePanel.match(/^configure\-(provider|enterprise)-/);

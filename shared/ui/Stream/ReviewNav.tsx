@@ -29,12 +29,12 @@ import { WebviewPanels } from "@codestream/protocols/webview";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 
 const NavHeader = styled.div`
-	flex-grow: 0;
-	flex-shrink: 0;
-	display: flex;
-	align-items: flex-start;
+	// flex-grow: 0;
+	// flex-shrink: 0;
+	// display: flex;
+	// align-items: flex-start;
 	padding: 10px 10px 10px 15px;
-	justify-content: center;
+	// justify-content: center;
 	width: 100%;
 	${Header} {
 		margin-bottom: 0;
@@ -51,11 +51,24 @@ const NavHeader = styled.div`
 			font-size: 12px;
 		}
 	}
+	.cancel-button {
+		cursor: pointer;
+		position: absolute;
+		right: 12px;
+		top: 10px;
+		padding: 5px 8px 5px 8px;
+		z-index: 30;
+		:hover {
+			color: var(--text-color-highlight);
+			background-color: var(--base-background-color);
+		}
+	}
 `;
 
 const Nav = styled.div`
 	white-space: nowrap;
 	margin-left: auto;
+	margin: 10px 0 0 20px;
 	z-index: 50;
 	&.pulse {
 		opacity: 1 !important;
@@ -411,22 +424,6 @@ export function ReviewNav(props: Props) {
 								/>
 							</Button>
 						</Tooltip>
-						<Tooltip
-							title={
-								<>
-									Exit Review{" "}
-									<span className="binding">
-										<span className="keybinding">ESC</span>
-									</span>
-								</>
-							}
-							placement="bottomRight"
-						>
-							<Button variant="secondary" onClick={exit}>
-								<Icon className="narrow-icon" name="x" />
-								<span className="wide-text">Exit</span>
-							</Button>
-						</Tooltip>
 					</div>
 				);
 			// case "closed":
@@ -438,7 +435,7 @@ export function ReviewNav(props: Props) {
 							isMine &&
 							review.pullRequestUrl == null &&
 							review.status === "approved" && (
-								<Tooltip title="Create a PR" placement="bottom">
+								<Tooltip title="Create a PR" placement="bottomLeft">
 									<Button onClick={pr}>
 										<Icon className="narrow-icon" name="pull-request" />
 										<span className="wide-text">Create PR</span>
@@ -446,7 +443,7 @@ export function ReviewNav(props: Props) {
 								</Tooltip>
 							)}
 						{isMine && review.pullRequestUrl == null && (
-							<Tooltip title="Reopen & Amend Review (add code)" placement="bottom">
+							<Tooltip title="Reopen & Amend Review (add code)" placement="bottomLeft">
 								<Button onClick={amend}>
 									<Icon className="narrow-icon" name="plus" />
 									<span className="wide-text">Amend</span>
@@ -454,7 +451,7 @@ export function ReviewNav(props: Props) {
 							</Tooltip>
 						)}
 						{review.pullRequestUrl == null && (
-							<Tooltip title="Reopen Review" placement="bottomRight">
+							<Tooltip title="Reopen Review" placement="bottomLeft">
 								<Button variant="secondary" onClick={reopen}>
 									<Icon className="narrow-icon" name="reopen" />
 									<span className="wide-text">Reopen</span>
@@ -468,22 +465,6 @@ export function ReviewNav(props: Props) {
 									setIsEditing={setIsEditing}
 									setIsAmending={setIsAmending}
 								/>
-							</Button>
-						</Tooltip>
-						<Tooltip
-							title={
-								<>
-									Exit Review{" "}
-									<span className="binding">
-										<span className="keybinding">ESC</span>
-									</span>
-								</>
-							}
-							placement="bottomRight"
-						>
-							<Button variant="secondary" onClick={exit}>
-								<Icon className="narrow-icon" name="x" />
-								<span className="wide-text">Exit</span>
 							</Button>
 						</Tooltip>
 					</div>
@@ -579,12 +560,14 @@ export function ReviewNav(props: Props) {
 					setIsEditing={setIsEditing}
 					setIsAmending={setIsAmending}
 				>
-					<Nav className={hoverButton == "actions" ? "pulse" : ""}>
-						<TourTip title={actionsTip} placement="bottomRight">
-							{statusButtons()}
-						</TourTip>
-					</Nav>
+					<></>
 				</BaseReviewHeader>
+				<Nav className={hoverButton == "actions" ? "pulse" : ""}>
+					<TourTip title={actionsTip} placement="bottomRight">
+						{statusButtons()}
+					</TourTip>
+				</Nav>
+				<CancelButton title="Exit Review" onClick={exit} />
 			</NavHeader>
 			{props.composeOpen ? null : (
 				<div className="scroll-container">

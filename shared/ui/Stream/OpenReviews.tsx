@@ -21,7 +21,7 @@ export function OpenReviews() {
 
 		const currentUserId = session.userId!;
 		const teamMembers = userSelectors.getTeamMembers(state);
-		const reviews = reviewSelectors.getByStatusAndReviewer(state, "open", currentUserId);
+		const reviews = reviewSelectors.getByStatusAndUser(state, "open", currentUserId);
 
 		return {
 			reviews,

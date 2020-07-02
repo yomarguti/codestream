@@ -25,18 +25,21 @@ export default function CancelButton({
 
 	useDidMount(() => {
 		let disposable;
-		if (onClick && typeof onClick === 'function') {
-			disposable = KeystrokeDispatcher.onKeyDown("Escape", event => {
-				// don't allow cancel if the MessageInput div is the target, unless it's empty				
-				const d = document.getElementById("input-div");
-				if (event.target === d && d.innerHTML != "") {
-					return;
-				}
+		if (onClick && typeof onClick === "function") {
+			disposable = KeystrokeDispatcher.onKeyDown(
+				"Escape",
+				event => {
+					// don't allow cancel if the MessageInput div is the target, unless it's empty
+					const d = document.getElementById("input-div");
+					if (event.target === d && d.innerHTML != "") {
+						return;
+					}
 
-				onClick(event);
-			}, { source: "CancelButton.js", level: -1 });
-		}
-		else {
+					onClick(event);
+				},
+				{ source: "CancelButton.js", level: -1 }
+			);
+		} else {
 			logWarning("CancelButton missing onClick handler");
 		}
 
@@ -61,13 +64,15 @@ export default function CancelButton({
 					}}
 					className="control-button cancel"
 					type="submit"
-					onClick={onClick}>{title || "Cancel"}</Button>
+					onClick={onClick}
+				>
+					{title || "Cancel"}
+				</Button>
 			</Tooltip>
 		);
-	}
-	else {
+	} else {
 		return (
-			<span className="align-right-button" onClick={onClick}>
+			<span className="align-right-button cancel-button" onClick={onClick}>
 				<Tooltip title={tip} placement={placement}>
 					<span>
 						<Icon name="x" className={className} />
