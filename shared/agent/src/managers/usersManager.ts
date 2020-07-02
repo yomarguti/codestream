@@ -95,7 +95,7 @@ export class UsersManager extends CachedEntityManagerBase<CSUser> {
 			if (user) ret.unshift({ id: user.id, email: user.email, username: user.username });
 			else ret.push({ email });
 		});
-		return ret;
+		return ret.filter(author => !author.email.toLocaleLowerCase().includes("noreply"));
 	}
 
 	protected async fetchById(userId: Id): Promise<CSUser> {
