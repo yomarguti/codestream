@@ -424,6 +424,22 @@ export function ReviewNav(props: Props) {
 								/>
 							</Button>
 						</Tooltip>
+						<Tooltip
+							title={
+								<>
+									Exit Review{" "}
+									<span className="binding">
+										<span className="keybinding">ESC</span>
+									</span>
+								</>
+							}
+							placement="bottom"
+						>
+							<Button variant="secondary" onClick={exit}>
+								<Icon className="narrow-icon" name="x" />
+								<span className="wide-text">Exit</span>
+							</Button>
+						</Tooltip>
 					</div>
 				);
 			// case "closed":
@@ -465,6 +481,22 @@ export function ReviewNav(props: Props) {
 									setIsEditing={setIsEditing}
 									setIsAmending={setIsAmending}
 								/>
+							</Button>
+						</Tooltip>
+						<Tooltip
+							title={
+								<>
+									Exit Review{" "}
+									<span className="binding">
+										<span className="keybinding">ESC</span>
+									</span>
+								</>
+							}
+							placement="bottom"
+						>
+							<Button variant="secondary" onClick={exit}>
+								<Icon className="narrow-icon" name="x" />
+								<span className="wide-text">Exit</span>
 							</Button>
 						</Tooltip>
 					</div>
