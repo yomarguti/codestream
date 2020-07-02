@@ -870,13 +870,11 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 								dontCloseOnSelect
 							/>
 							{!firstLoad && (
-								<Tooltip title="Reload" delay={1}>
-									<Icon
-										onClick={() => setReload(reload + 1)}
-										className={`smaller fixed ${isLoading ? "spin" : ""}`}
-										name="sync"
-									/>
-								</Tooltip>
+								<Icon
+									onClick={() => setReload(reload + 1)}
+									className={`smaller fixed ${isLoading ? "spin" : "spinnable"}`}
+									name="sync"
+								/>
 							)}
 						</div>
 					) : (
