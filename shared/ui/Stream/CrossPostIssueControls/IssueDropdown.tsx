@@ -671,16 +671,18 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 			);
 		});
 
-		derivedState.csIssues.forEach(issue => {
-			items.push({
-				...issue,
-				label: issue.title,
-				key: "card-" + issue.id,
-				icon: <Icon name="issue" />,
-				provider: { id: "codestream", name: "codestream" },
-				body: issue.text
-			});
-		});
+		items.push(
+			...(derivedState.csIssues
+				.filter(issue => !query || issue.title.toLocaleLowerCase().includes(lowerQ))
+				.map(issue => ({
+					...issue,
+					label: query ? underlineQ(issue.title) : issue.title,
+					key: "card-" + issue.id,
+					icon: <Icon name="issue" />,
+					provider: { id: "codestream", name: "codestream" },
+					body: issue.text
+				})) as any)
+		);
 
 		items.sort((a, b) => b.modifiedAt - a.modifiedAt);
 
