@@ -1407,6 +1407,9 @@ export class Codemark extends React.Component<Props, State> {
 									<div className="author">
 										<Headshot person={author} />
 										{author.username}
+										<span className="verb">
+											{codemark.type === "issue" ? " opened an issue " : ""}
+										</span>
 										<Timestamp relative time={codemark.createdAt} />
 									</div>
 									<div className="right" style={{ alignItems: "center" }}>
