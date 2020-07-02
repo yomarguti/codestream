@@ -639,13 +639,14 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 		let canFilter = false;
 		let cardLabel = "issue";
 		props.providers.forEach(provider => {
-			const filterLists = getFilterLists(provider.id);
-			const isFilteringLists = keyFilter(filterLists).length > 0;
-			const filterBoards = getFilterBoards(provider.id);
-			const isFilteringBoards = keyFilter(filterBoards).length > 0;
 			const providerDisplay = PROVIDER_MAPPINGS[provider.name];
 			canFilter = canFilter || providerDisplay.hasFilters || false;
 			if (providerDisplay.cardLabel) cardLabel = providerDisplay.cardLabel;
+
+			const filterLists = getFilterLists(provider.id);
+			const isFilteringLists = providerDisplay.hasFilters && keyFilter(filterLists).length > 0;
+			const filterBoards = getFilterBoards(provider.id);
+			const isFilteringBoards = providerDisplay.hasFilters && keyFilter(filterBoards).length > 0;
 
 			const pData = data[provider.id] || {};
 			// @ts-ignore

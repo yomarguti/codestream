@@ -1656,9 +1656,9 @@ class CodemarkForm extends React.Component<Props, State> {
 											className="clickable"
 											onClick={e => this.editLocation(index, e)}
 										/>
-										{numCodeBlocks > 1 && (
+										{numCodeBlocks > 0 && (
 											<Icon
-												title="Delete Range"
+												title="Remove Range"
 												placement="bottomRight"
 												name="x"
 												className="clickable"
@@ -1792,7 +1792,7 @@ class CodemarkForm extends React.Component<Props, State> {
 								<span>Discussing Code with CodeStream</span>
 							</VideoLink>
 						)}
-						{commentType === "issue" && !codeBlocks[0] && (
+						{false && commentType === "issue" && !codeBlocks[0] && (
 							<VideoLink href={"https://youtu.be/lUI110T_SHY"}>
 								<img src="https://i.imgur.com/9IKqpzf.png" />
 								<span>Ad-hoc Code Review</span>
