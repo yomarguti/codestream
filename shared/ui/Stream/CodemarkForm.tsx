@@ -84,6 +84,7 @@ import { confirmPopup } from "./Confirm";
 import { openPanel, setUserPreference } from "./actions";
 import CancelButton from "./CancelButton";
 import { VideoLink } from "./Flow";
+import { PanelHeader } from "../src/components/PanelHeader";
 
 export interface ICrossPostIssueContext {
 	setSelectedAssignees(any: any): void;
@@ -328,6 +329,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				const isEmpty = isRangeEmpty(textEditorSelection);
 				if (isEmpty && dontAutoSelectLine) {
 					this.focus();
+					this.setState({ liveLocation: 0 });
 				} else {
 					const range = isEmpty ? forceAsLine(textEditorSelection) : textEditorSelection;
 					if (isEmpty) this.selectRangeInEditor(textEditorUri, range);
@@ -1642,14 +1644,14 @@ class CodemarkForm extends React.Component<Props, State> {
 									<div className="code-buttons">
 										<Icon
 											title={"Jump to this range in " + file}
-											placement="bottom"
+											placement="bottomRight"
 											name="link-external"
 											className="clickable"
 											onClick={e => this.jumpToLocation(index, e)}
 										/>
 										<Icon
 											title="Select new range"
-											placement="bottom"
+											placement="bottomRight"
 											name="select"
 											className="clickable"
 											onClick={e => this.editLocation(index, e)}
@@ -1657,7 +1659,7 @@ class CodemarkForm extends React.Component<Props, State> {
 										{numCodeBlocks > 1 && (
 											<Icon
 												title="Delete Range"
-												placement="bottom"
+												placement="bottomRight"
 												name="x"
 												className="clickable"
 												onClick={e => this.deleteLocation(index, e)}
@@ -1774,15 +1776,23 @@ class CodemarkForm extends React.Component<Props, State> {
 			return (
 				<div className="full-height-codemark-form">
 					<CancelButton onClick={this.cancelCompose} />
+					<PanelHeader title={commentType === "comment" ? "Add a Comment" : "Open an Issue"}>
+						{this.state.liveLocation > -1 && (
+							<div className="filters" style={{ padding: 0 }}>
+								Select code in your editor to add it to this{" "}
+								{commentType === "comment" ? "comment" : "issue"}.
+							</div>
+						)}
+					</PanelHeader>
 					<span className="plane-container">
 						<div className="codemark-form-container">{this.renderCodemarkForm()}</div>
-						{commentType === "comment" && (
+						{commentType === "comment" && !codeBlocks[0] && (
 							<VideoLink href={"https://youtu.be/RPaIIZgaFK8"}>
 								<img src="https://i.imgur.com/9IKqpzf.png" />
 								<span>Discussing Code with CodeStream</span>
 							</VideoLink>
 						)}
-						{commentType === "issue" && (
+						{commentType === "issue" && !codeBlocks[0] && (
 							<VideoLink href={"https://youtu.be/lUI110T_SHY"}>
 								<img src="https://i.imgur.com/9IKqpzf.png" />
 								<span>Ad-hoc Code Review</span>
