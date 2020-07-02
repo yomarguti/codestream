@@ -633,10 +633,11 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 		};
 	};
 
-	const { cards, canFilter } = React.useMemo(() => {
+	const { cards, canFilter, cardLabel } = React.useMemo(() => {
 		const items = [] as any;
 		const lowerQ = (query || "").toLocaleLowerCase();
 		let canFilter = false;
+		let cardLabel = "issue";
 		props.providers.forEach(provider => {
 			const filterLists = getFilterLists(provider.id);
 			const isFilteringLists = keyFilter(filterLists).length > 0;
@@ -644,6 +645,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 			const isFilteringBoards = keyFilter(filterBoards).length > 0;
 			const providerDisplay = PROVIDER_MAPPINGS[provider.name];
 			canFilter = canFilter || providerDisplay.hasFilters || false;
+			if (providerDisplay.cardLabel) cardLabel = providerDisplay.cardLabel;
 
 			const pData = data[provider.id] || {};
 			// @ts-ignore
@@ -681,7 +683,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 
 		items.sort((a, b) => b.modifiedAt - a.modifiedAt);
 
-		return { cards: items, canFilter };
+		return { cards: items, canFilter, cardLabel };
 	}, [loadedCards, derivedState.startWorkPreferences, derivedState.csIssues, props.selectedCardId]);
 
 	const menuItems = React.useMemo(() => {
@@ -748,7 +750,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 	};
 
 	const firstLoad = cards.length == 0 && isLoading;
-	const selectedLabel = canFilter ? "items assigned to you" : "items assigned to you";
+	const selectedLabel = cardLabel + "s assigned to you";
 	const providersLabel =
 		props.providers.length === 0 ? (
 			"CodeStream"
@@ -788,18 +790,22 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 	return (
 		<>
 			<WideStatusSection id="start-work-div">
+				<div className="instructions">
+					<Icon name="light-bulb" />
+					CodeStream Flow starts with grabbing a ticket and creating a branch.
+				</div>
 				<div className="filters" style={{ padding: "0 20px 0 20px" }}>
 					<H4>
 						<Tooltip title="Create a ticket" placement="bottom" delay={1}>
 							<RoundedLink onClick={() => dispatch(openPanel(WebviewPanels.NewIssue))}>
 								<Icon name="plus" />
-								New Item
+								New {cardLabel}
 							</RoundedLink>
 						</Tooltip>
-						<Tooltip title="For ad-hoc work" placement="bottom" delay={1}>
+						<Tooltip title="For untracked work" placement="bottom" delay={1}>
 							<RoundedLink onClick={() => selectCard({ title: "" })}>
 								<Icon name="plus" />
-								Ad-Hoc
+								Ad-hoc Work
 							</RoundedLink>
 						</Tooltip>
 						<RoundedSearchLink className={queryOpen ? "" : "collapsed"}>
@@ -865,7 +871,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 									/>
 								</Tooltip>
 							) : (
-								"items "
+								selectedLabel + " "
 							)}
 							from{" "}
 							<Filter

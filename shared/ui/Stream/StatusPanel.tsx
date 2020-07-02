@@ -154,6 +154,14 @@ export const StatusSection = styled.div`
 		}
 	}
 	border-top: 1px solid var(--base-border-color);
+	.instructions {
+		display: none;
+		padding: 0 20px 20px 20px;
+		text-align: center;
+	}
+	&.show-instructions .instructions {
+		display: block;
+	}
 `;
 
 // @ts-ignore
@@ -184,6 +192,7 @@ export const H4 = styled.h4`
 export const RoundedLink = styled.a`
 	float: right;
 	text-decoration: none !important;
+	text-transform: capitalize;
 	.narrow-icon {
 		margin-right: 5px;
 	}
@@ -947,7 +956,7 @@ export const StatusPanel = () => {
 							onlyRepos={openRepos ? openRepos.filter(_ => _.id).map(_ => _.id!) : undefined}
 							defaultText={
 								<span className="subtle">
-									No diffs. As you write code, changes will appear here.
+									As you write code, files that have changed will appear here.
 								</span>
 							}
 						/>
