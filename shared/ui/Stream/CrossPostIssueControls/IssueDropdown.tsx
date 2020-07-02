@@ -47,6 +47,7 @@ import { useDidMount } from "@codestream/webview/utilities/hooks";
 import Timestamp from "../Timestamp";
 import { Modal } from "../Modal";
 import { Button } from "@codestream/webview/src/components/Button";
+import { WebviewPanels } from "@codestream/protocols/webview";
 
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
@@ -789,10 +790,16 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 			<WideStatusSection id="start-work-div">
 				<div className="filters" style={{ padding: "0 20px 0 20px" }}>
 					<H4>
-						<Tooltip title="For ad-hoc work" placement="bottomRight" delay={1}>
-							<RoundedLink onClick={() => selectCard({ title: "" })}>
+						<Tooltip title="Create a ticket" placement="bottom" delay={1}>
+							<RoundedLink onClick={() => dispatch(openPanel(WebviewPanels.NewIssue))}>
 								<Icon name="plus" />
 								New Item
+							</RoundedLink>
+						</Tooltip>
+						<Tooltip title="For ad-hoc work" placement="bottom" delay={1}>
+							<RoundedLink onClick={() => selectCard({ title: "" })}>
+								<Icon name="plus" />
+								Ad-Hoc
 							</RoundedLink>
 						</Tooltip>
 						<RoundedSearchLink className={queryOpen ? "" : "collapsed"}>

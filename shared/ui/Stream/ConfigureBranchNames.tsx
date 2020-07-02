@@ -86,9 +86,6 @@ export const ConfigureBranchNames = (props: { onClose: Function }) => {
 		<Root>
 			<div className="full-height-panel">
 				<form className="standard-form vscroll">
-					<div className="panel-header">
-						<CancelButton onClick={props.onClose} placement="left" />
-					</div>
 					<fieldset className="form-body" style={{ padding: "10px" }}>
 						<div id="controls">
 							<h3>Branch Name Template:</h3>

@@ -5,7 +5,7 @@ import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
 import Tooltip from "./Tooltip";
 import ScrollBox from "./ScrollBox";
 import Icon from "./Icon";
-import { useDidMount } from '../utilities/hooks';
+import { useDidMount } from "../utilities/hooks";
 
 const noopElement = document.createElement("span");
 
@@ -33,20 +33,22 @@ const ModalWrapper = styled.div`
 	z-index: 3000;
 	left: 0;
 	background-color: var(--app-background-color);
+	// background-color: rgba(0, 0, 0, 0.25);
+	// backdrop-filter: brightness(50%);
 	padding: 0;
 	overflow: auto;
 
 	div.children {
 		height: 100%;
-		padding: 20px;
+		padding: 50px 20px;
 
 		&.vcenter {
 			height: inherit;
 			display: flex;
 			flex-direction: column;
 			justify-content: center;
-			min-width: 350px;
-			max-width: 450px;
+			// min-width: 350px;
+			// max-width: 450px;
 			margin: 0 auto;
 			padding: 0 20px;
 		}
@@ -73,16 +75,21 @@ export function Modal(props: PropsWithChildren<ModalProps>) {
 	const [context] = React.useState<ModalContextType>(() => ({ zIndex: 3000 }));
 	const disposables: { dispose(): void }[] = [];
 
-	useDidMount(() => {		
+	useDidMount(() => {
 		if (props.onClose) {
 			disposables.push(
 				KeystrokeDispatcher.withLevel(),
-				KeystrokeDispatcher.onKeyDown("Escape", (event: KeyboardEvent) => {
-				if (props.onClose) {				
-					event.stopPropagation();
-					props.onClose(event);
-				}
-			}, { source: "Modal.tsx", level: -1 }));
+				KeystrokeDispatcher.onKeyDown(
+					"Escape",
+					(event: KeyboardEvent) => {
+						if (props.onClose) {
+							event.stopPropagation();
+							props.onClose(event);
+						}
+					},
+					{ source: "Modal.tsx", level: -1 }
+				)
+			);
 		}
 
 		return () => {
@@ -90,13 +97,21 @@ export function Modal(props: PropsWithChildren<ModalProps>) {
 		};
 	});
 
+	const checkClose = e => {
+		if (e.target.id === "modal-children" && props.onClose) props.onClose(e);
+	};
+
 	return createPortal(
 		<ModalContext.Provider value={context}>
 			<ModalWrapper>
 				{props.onClose && <CancelButton onClick={props.onClose} />}
 				<ScrollBox>
 					<div className="vscroll">
-						<div className={props.verticallyCenter ? "vcenter children" : "children"}>
+						<div
+							onClick={checkClose}
+							id="modal-children"
+							className={props.verticallyCenter ? "vcenter children" : "children"}
+						>
 							{props.children}
 						</div>
 					</div>
@@ -127,7 +142,7 @@ const CancelButton = styled(function(props: { onClick: (e: any) => void }) {
 })`
 	cursor: pointer;
 	position: absolute;
-	right: 7px;
+	right: 12px;
 	top: 10px;
 	padding: 5px 8px 5px 8px;
 	z-index: 30;

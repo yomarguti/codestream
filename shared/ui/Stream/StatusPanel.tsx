@@ -37,6 +37,7 @@ import { WebviewPanels } from "../ipc/webview.protocol.common";
 import { ModifiedRepos } from "./ModifiedRepos";
 import Tooltip from "./Tooltip";
 import { OpenReviews } from "./OpenReviews";
+import { Modal } from "./Modal";
 
 const StyledCheckbox = styled(Checkbox)`
 	color: var(--text-color-subtle);
@@ -79,6 +80,11 @@ const CardTitle = styled.span`
 	}
 	& + & {
 		margin-left: 20px;
+	}
+	a {
+		display: block;
+		font-size: 13px;
+		margin-top: 10px;
 	}
 `;
 
@@ -194,6 +200,7 @@ export const RoundedLink = styled.a`
 	background: rgba(127, 127, 127, 0.15);
 	border: 1px solid var(--base-border-color);
 	padding: 3px 8px 3px 4px;
+	margin-left: 5px;
 	font-size: 12px;
 	border-radius: 13px;
 	.icon {
@@ -202,7 +209,6 @@ export const RoundedLink = styled.a`
 `;
 
 export const RoundedSearchLink = styled(RoundedLink)`
-	margin-right: 5px;
 	padding: 3px 3px 3px 3px;
 	&.collapsed {
 		padding: 3px 4px 3px 4px;
@@ -700,21 +706,19 @@ export const StatusPanel = () => {
 					};
 			  });
 
-	if (configureBranchNames)
-		return (
-			<Popup>
-				<ConfigureBranchNames onClose={() => setConfigureBranchNames(false)} />
-			</Popup>
-		);
-
 	return (
 		<div className="panel full-height">
 			<CreateCodemarkIcons narrow />
 			<PanelHeader title="Work Items">
 				<div style={{ height: "5px" }} />
 			</PanelHeader>
-			{card && (
-				<Popup>
+			{configureBranchNames && (
+				<Modal onClose={() => setConfigureBranchNames(false)}>
+					<ConfigureBranchNames onClose={() => setConfigureBranchNames(false)} />
+				</Modal>
+			)}
+			{card && !configureBranchNames && (
+				<Modal onClose={clear}>
 					<Dialog className="codemark-form-container">
 						<form className="codemark-form standard-form vscroll">
 							<fieldset className="form-body" style={{ padding: "0px" }}>
@@ -722,10 +726,21 @@ export const StatusPanel = () => {
 									<StatusInput>
 										{card.id ? (
 											<CardTitle>
-												{card && card.providerIcon && (
+												{card.providerIcon && (
 													<Icon className="ticket-icon" name={card.providerIcon} />
 												)}
 												{card.label}
+												{card.url && (
+													<a
+														onClick={() =>
+															HostApi.instance.send(OpenUrlRequestType, {
+																url: card.url
+															})
+														}
+													>
+														{card.url}
+													</a>
+												)}
 											</CardTitle>
 										) : (
 											<input
@@ -862,7 +877,7 @@ export const StatusPanel = () => {
 							</fieldset>
 						</form>
 					</Dialog>
-				</Popup>
+				</Modal>
 			)}
 			<ScrollBox>
 				<div className="channel-list vscroll">
