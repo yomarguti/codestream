@@ -68,7 +68,7 @@ const NavHeader = styled.div`
 const Nav = styled.div`
 	white-space: nowrap;
 	margin-left: auto;
-	margin: 10px 0 5px 20px;
+	margin: 15px 0 5px 20px;
 	z-index: 50;
 	&.pulse {
 		opacity: 1 !important;

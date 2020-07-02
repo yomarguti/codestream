@@ -325,6 +325,7 @@ export const StatusPanel = () => {
 			? workPrefs.updateSlack
 			: true;
 
+		const adminIds = team.adminIds || [];
 		return {
 			status,
 			repos: state.repos,
@@ -343,7 +344,8 @@ export const StatusPanel = () => {
 			slackConfig: getProviderConfig(state, "slack"),
 			// msTeamsConfig: getProviderConfig(state, "msteams"),
 			isConnectedToSlack,
-			selectedShareTarget: selectedShareTarget || shareTargets[0]
+			selectedShareTarget: selectedShareTarget || shareTargets[0],
+			isCurrentUserAdmin: adminIds.includes(state.session.userId!)
 		};
 	});
 
@@ -646,7 +648,9 @@ export const StatusPanel = () => {
 				label: "Configure Branch Naming",
 				key: "configure",
 				icon: <Icon name="gear" />,
-				action: () => setConfigureBranchNames(true)
+				action: () => setConfigureBranchNames(true),
+				disabled: !derivedState.isCurrentUserAdmin,
+				subtext: derivedState.isCurrentUserAdmin || "Disabled: admin only"
 			},
 			{ label: "-" },
 			{
