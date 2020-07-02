@@ -752,17 +752,21 @@ export const StatusPanel = () => {
 												)}
 											</CardTitle>
 										) : (
-											<input
-												id="status-input"
-												ref={inputRef}
-												name="status"
-												value={label}
-												className="input-text control"
-												autoFocus={true}
-												type="text"
-												onChange={e => handleChangeStatus(e.target.value)}
-												placeholder="Enter Description"
-											/>
+											<>
+												<H4>What are you working on?</H4>
+												<div style={{ height: "10px" }} />
+												<input
+													id="status-input"
+													ref={inputRef}
+													name="status"
+													value={label}
+													className="input-text control"
+													autoFocus={true}
+													type="text"
+													onChange={e => handleChangeStatus(e.target.value)}
+													placeholder="Enter Description"
+												/>
+											</>
 										)}
 									</StatusInput>
 									{card && card.body && (
@@ -770,7 +774,7 @@ export const StatusPanel = () => {
 											<MarkdownText text={card.body.replace(/\[Open in IDE\].*/, "")} />
 										</CardDescription>
 									)}
-									<HR />
+									{card && card.title && <HR />}
 									{showSelectRepo ? (
 										<RepoInfo>
 											{openRepos && openRepos.length ? (
