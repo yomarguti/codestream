@@ -897,7 +897,7 @@ export class SimpleStream extends Component {
 					onClick={this.togglePlusMenu}
 					style={{
 						position: "fixed",
-						display: "flex",
+						display: plusMenuOpen ? "none" : "flex",
 						justifyContent: "center",
 						alignItems: "center",
 						bottom: "15px",
