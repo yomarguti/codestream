@@ -83,6 +83,7 @@ import { Link } from "./Link";
 import { confirmPopup } from "./Confirm";
 import { openPanel, setUserPreference } from "./actions";
 import CancelButton from "./CancelButton";
+import { VideoLink } from "./Flow";
 
 export interface ICrossPostIssueContext {
 	setSelectedAssignees(any: any): void;
@@ -1680,7 +1681,7 @@ class CodemarkForm extends React.Component<Props, State> {
 										this.focus();
 									}}
 								>
-									Cancel
+									Done
 								</div>
 							</div>
 						</div>
@@ -1772,8 +1773,21 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (this.props.multiLocation) {
 			return (
 				<div className="full-height-codemark-form">
+					<CancelButton onClick={this.cancelCompose} />
 					<span className="plane-container">
 						<div className="codemark-form-container">{this.renderCodemarkForm()}</div>
+						{commentType === "comment" && (
+							<VideoLink href={"https://youtu.be/RPaIIZgaFK8"}>
+								<img src="https://i.imgur.com/9IKqpzf.png" />
+								<span>Discussing Code with CodeStream</span>
+							</VideoLink>
+						)}
+						{commentType === "issue" && (
+							<VideoLink href={"https://youtu.be/lUI110T_SHY"}>
+								<img src="https://i.imgur.com/9IKqpzf.png" />
+								<span>Ad-hoc Code Review</span>
+							</VideoLink>
+						)}
 					</span>
 				</div>
 			);

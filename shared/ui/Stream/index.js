@@ -252,6 +252,7 @@ export class SimpleStream extends Component {
 		this.props.setCurrentReview("");
 		if (this.props.activePanel === WebviewPanels.Status) {
 			const div = document.getElementById("start-work-div");
+			if (div) div.classList.add("show-instructions");
 			if (div) div.classList.add("highlight-pulse");
 			setTimeout(() => {
 				div.classList.remove("highlight-pulse");
@@ -1134,10 +1135,6 @@ export class SimpleStream extends Component {
 								dontAutoSelectLine={true}
 								setMultiLocation={this.setMultiLocation}
 							/>
-							<VideoLink href={"https://youtu.be/RPaIIZgaFK8"}>
-								<img src="https://i.imgur.com/9IKqpzf.png" />
-								<span>Discussing Code with CodeStream</span>
-							</VideoLink>
 						</>
 					)}
 					{activePanel === WebviewPanels.NewIssue && (

@@ -1127,6 +1127,7 @@ class ReviewForm extends React.Component<Props, State> {
 
 					return (
 						<div className={cx({ "full-height-codemark-form": !isAmending })}>
+							{!isAmending && <CancelButton onClick={this.confirmCancel} />}
 							<span className={cx({ "plane-container": !isAmending })}>
 								{currentUserScmEmail && currentUserScmEmail !== currentUser.email && !mappedMe && (
 									<EmailWarning>
