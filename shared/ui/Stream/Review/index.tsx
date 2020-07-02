@@ -745,7 +745,7 @@ const BaseReview = (props: BaseReviewProps) => {
 						</MetaRow>
 					)}
 					{!props.collapsed && hasChangeRequests && (
-						<Meta>
+						<Meta id="change-requests">
 							<MetaLabel>Change Requests</MetaLabel>
 							<MetaDescriptionForAssignees>
 								{props.changeRequests!.map(codemark => {

@@ -68,7 +68,7 @@ const NavHeader = styled.div`
 const Nav = styled.div`
 	white-space: nowrap;
 	margin-left: auto;
-	margin: 10px 0 0 20px;
+	margin: 10px 0 5px 20px;
 	z-index: 50;
 	&.pulse {
 		opacity: 1 !important;
@@ -87,7 +87,8 @@ const Nav = styled.div`
 				margin-left: 0;
 			}
 			.narrow-icon {
-				display: none;
+				// display: none;
+				margin-right: 5px;
 			}
 		}
 	}
@@ -131,11 +132,12 @@ const Root = styled.div`
 	}
 
 	// prefer icons to text
-	@media only screen and (max-width: 30000px) {
+	@media only screen and (max-width: 430px) {
 		.btn-group {
 			button {
 				.narrow-icon {
 					display: block;
+					margin: 0;
 				}
 				.wide-text {
 					display: none;
@@ -342,6 +344,16 @@ export function ReviewNav(props: Props) {
 		dispatch(openPanel(WebviewPanels.NewPullRequest));
 	};
 
+	const highlightChanges = () => {
+		const $changeDiv = document.getElementById("change-requests");
+		if ($changeDiv) {
+			$changeDiv.classList.add("highlight-pulse");
+			setTimeout(() => {
+				$changeDiv.classList.remove("highlight-pulse");
+			}, 1000);
+		}
+	};
+
 	const statusButtons = () => {
 		if (!review) return null;
 		const { approvedByMe, isMine } = derivedState;
@@ -351,6 +363,33 @@ export function ReviewNav(props: Props) {
 			case "open":
 				return (
 					<div className={hoverButton == "actions" ? "btn-group pulse" : "btn-group"}>
+						{numOpenChangeRequests > 0 && !approvedByMe && (
+							<Tooltip
+								title={
+									<>
+										{numOpenChangeRequests} Pending Change Request
+										{numOpenChangeRequests > 1 ? "s" : ""}
+									</>
+								}
+								placement="bottom"
+							>
+								<Button variant="primary" onClick={highlightChanges}>
+									<div
+										className="narrow-icon"
+										style={{
+											display: "inline-block",
+											height: "16px",
+											minWidth: "16px",
+											lineHeight: "16px",
+											textAlign: "center"
+										}}
+									>
+										{numOpenChangeRequests}
+									</div>
+									<span className="wide-text">Pending</span>
+								</Button>
+							</Tooltip>
+						)}
 						{isMine && (
 							<Tooltip title="Amend Review (add code)" placement="bottom">
 								<Button onClick={amend}>
@@ -372,6 +411,7 @@ export function ReviewNav(props: Props) {
 							>
 								<Button variant="secondary" onClick={reopen}>
 									<Icon className="narrow-icon" name="diff-removed" />
+									<span className="wide-text">Withdraw</span>
 								</Button>
 							</Tooltip>
 						)}
@@ -379,33 +419,7 @@ export function ReviewNav(props: Props) {
 							<Tooltip title="Approve Review" placement="bottom">
 								<Button variant="success" onClick={approve}>
 									<Icon className="narrow-icon" name="thumbsup" />
-								</Button>
-							</Tooltip>
-						)}
-						{numOpenChangeRequests > 0 && !approvedByMe && (
-							<Tooltip
-								title={
-									<>
-										{numOpenChangeRequests} Pending Change Request
-										{numOpenChangeRequests > 1 ? "s" : ""}
-										<br />
-										Click to force-approve
-									</>
-								}
-								placement="bottom"
-							>
-								<Button variant="primary" onClick={approve}>
-									<div
-										style={{
-											display: "block",
-											height: "16px",
-											minWidth: "16px",
-											lineHeight: "16px",
-											textAlign: "center"
-										}}
-									>
-										{numOpenChangeRequests}
-									</div>
+									<span className="wide-text">Approve</span>
 								</Button>
 							</Tooltip>
 						)}
@@ -436,8 +450,7 @@ export function ReviewNav(props: Props) {
 							placement="bottom"
 						>
 							<Button variant="secondary" onClick={exit}>
-								<Icon className="narrow-icon" name="x" />
-								<span className="wide-text">Exit</span>
+								<Icon name="x" />
 							</Button>
 						</Tooltip>
 					</div>
@@ -451,7 +464,7 @@ export function ReviewNav(props: Props) {
 							isMine &&
 							review.pullRequestUrl == null &&
 							review.status === "approved" && (
-								<Tooltip title="Create a PR" placement="bottomLeft">
+								<Tooltip title="Create a PR" placement="bottom">
 									<Button onClick={pr}>
 										<Icon className="narrow-icon" name="pull-request" />
 										<span className="wide-text">Create PR</span>
@@ -459,7 +472,7 @@ export function ReviewNav(props: Props) {
 								</Tooltip>
 							)}
 						{isMine && review.pullRequestUrl == null && (
-							<Tooltip title="Reopen & Amend Review (add code)" placement="bottomLeft">
+							<Tooltip title="Reopen & Amend Review (add code)" placement="bottom">
 								<Button onClick={amend}>
 									<Icon className="narrow-icon" name="plus" />
 									<span className="wide-text">Amend</span>
@@ -467,7 +480,7 @@ export function ReviewNav(props: Props) {
 							</Tooltip>
 						)}
 						{review.pullRequestUrl == null && (
-							<Tooltip title="Reopen Review" placement="bottomLeft">
+							<Tooltip title="Reopen Review" placement="bottom">
 								<Button variant="secondary" onClick={reopen}>
 									<Icon className="narrow-icon" name="reopen" />
 									<span className="wide-text">Reopen</span>
@@ -495,8 +508,7 @@ export function ReviewNav(props: Props) {
 							placement="bottom"
 						>
 							<Button variant="secondary" onClick={exit}>
-								<Icon className="narrow-icon" name="x" />
-								<span className="wide-text">Exit</span>
+								<Icon name="x" />
 							</Button>
 						</Tooltip>
 					</div>
