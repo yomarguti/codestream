@@ -6,11 +6,16 @@
 
 cd $ATOM_TOP || exit 1
 
-# checkout master for all repos, ensure it's up to date
-# git checkout develop && git pull origin || exit 1
-# git checkout master && git pull origin || exit 1
+. $DT_TOP/lib/parse_opts.sh || exit 1
+parse_defaults \
+	interactiveMode   '--yes|-y'             0  1  \
+	sanityCheck       '--no-sanity-check'    0  1  \
+	forceExec         '-f'                   1  0
+parse_options "$@"
+[ $forceExec -eq 0  -a  $sanityCheck -eq 1  -a  $interactiveMode -eq 1 ] && echo "usage: `basename $0`  -f | { [--yes] [--no-sanity-check] }" >&2 && exit 1
+
 gitStatus=`git status -sb`
-# [ "$gitStatus" != "## master...origin/master" ] && echo "This does not appear to be a clean master branch" && exit 1
+[ "$gitStatus" != "## master...origin/master" ] && echo "This does not appear to be a clean master branch" && exit 1
 
 # verify / fetch current release
 #    atom-client/package.json
@@ -22,12 +27,14 @@ thisRelease=`get-json-property -j package.json -p version`
 [ -z "$thisRelease" ] && echo "Could not determine release from package.json"
 
 echo "
-	marketRelease = $marketRelease
-	thisRelease =  $thisRelease
+	marketRelease:  $marketRelease
+	thisRelease:    $thisRelease
 "
 
-echo -n "Go (y/N)? "; read ans
-[ "$ans" != "y" ] && echo "never mind" && exit
+if [ $interactiveMode -eq 1 ]; then
+	echo -n "Go (y/N)? "; read ans
+	[ "$ans" != "y" ] && echo "never mind" && exit 0
+fi
 
 echo "======== npm run bundle ========"
 npm run bundle || exit 1
@@ -37,7 +44,7 @@ npm run bundle || exit 1
 echo "========= npm run pack -- $marketRelease --commit-and-push ==========="
 npm run pack -- $marketRelease --commit-and-push || exit 1
 
-if [ -d /Applications/Atom.app ]; then
+if [ $sanityCheck -eq 1 && -d /Applications/Atom.app ]; then
 	echo "Sanity check...."
 
 	if [ -f ~/.atom/packages/codestream/package.json ]; then
@@ -51,6 +58,10 @@ if [ -d /Applications/Atom.app ]; then
 	echo "Santity check..."
 	open /Applications/Atom.app
 	echo -n "Press ENTER to continue" && read
+
+elif [ $sanityCheck -eq 1 ]; then
+	echo "Atom does not to be installed on this machine"
+	echo -n "Press ENTER to continue" && read
 fi
 
 echo "apm publish $thisRelease"
@@ -61,14 +72,17 @@ echo "Applying tag $tag to the codestream repo..."
 git tag $tag && git push origin $tag
 
 echo "Bumping atom's patch version on develop..."
-echo "git checkout develop"
-git checkout develop || exit 1
-echo "git pull origin"
-git pull origin || exit 1
+tmpDir=/tmp/bumpver$$
+mkdir $tmpDir || exit 1
+echo "clone codestream repo into $tmpDir"
+cd $tmpDir
+git clone  --depth 1 --branch develop git@github.com:teamcodestream/codestream.git || exit 1
+cd codestream/atom || exit 1
 dt-sb-version-tool --bump-version patch || exit 1
 nextVersion=`dt-sb-version-tool --report-version`
 [ -z "$nextVersion" -o "$nextVersion" == "$thisRelease" ] && echo "Uh oh!! Was the version updated properly?" && exit 1
-git commit -am "Auto-bump of Atom version to $nextVersion following marketplace release" || exit 1
+git commit -am "Auto-bump of Atom version to $nextVersion" || exit 1
 git push origin develop || exit 1
+/bin/rm -rf $tmpDir
 
 exit 0
