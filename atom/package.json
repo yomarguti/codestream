@@ -117,11 +117,11 @@
 	},
 	"scripts": {
 		"lint": "eslint --fix --ext .ts \"lib/!(components{**,*}){**/**,*}\"",
-		"dave": "./bin/dave",
 		"analyze:bundle": "webpack --env.analyzeBundle",
 		"pretty": "prettier --config .prettierrc.js --write \"lib/!(components{**,*}){**/**,*}\" package.json .prettierrc.js",
 		"ui:install": "cd ../shared/ui && /bin/rm -rf node_modules && apm install --no-save && git checkout -- package-lock.json",
 		"atom:install": "/bin/rm -rf node_modules && apm install --no-save && git checkout -- package-lock.json",
+		"dave": "npm run bundle && { [ -d ~/.atom/packages/codestream ] && apm uninstall codestream || echo; } && apm link",
 		"bundle": "npm run agent:bundle && npm run ui:install && npm run atom:install && npm run build:prod",
 		"agent:build": "cd ../shared/agent && npm run build",
 		"agent:bundle": "cd ../shared/agent && npm run bundle",
