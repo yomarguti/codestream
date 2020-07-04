@@ -290,7 +290,7 @@
 
 - Fixes an issue with the "Open & Assigned to Me" filter not including issue codemarks
 
-# [6.3.0] - 2020-3-10
+## [6.3.0] - 2020-3-10
 
 ### Added
 
@@ -310,7 +310,6 @@
 ### Changed
 
 - Shortened the gutter marker tool tips to 80 characters max
-
 
 ## [6.2.0] - 2020-2-19
 
