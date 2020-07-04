@@ -85,4 +85,6 @@ git commit -am "Auto-bump of Atom version to $nextVersion" || exit 1
 git push origin develop || exit 1
 /bin/rm -rf $tmpDir
 
+dt-notify-ops -m ":atom_symbol: = :rocket:" -w development
+
 exit 0
