@@ -20,16 +20,22 @@ gitStatus=`git status -sb`
 # verify / fetch current release
 #    atom-client/package.json
 #    atom marketplace (https://www.atom.io/api/packages/codestream)
+#    change log
 marketRelease=`get-json-property -j https://www.atom.io/api/packages/codestream -p releases.latest`
 [ -z "$marketRelease" ] && echo "Could not get release from atom marketplace. Aborting" && exit 1
 
 thisRelease=`get-json-property -j package.json -p version`
 [ -z "$thisRelease" ] && echo "Could not determine release from package.json"
 
+changeLogRelease=`dt-sb-changelog-tool --latest-version`
+
 echo "
-	marketRelease:  $marketRelease
-	thisRelease:    $thisRelease
+	marketRelease:      $marketRelease
+	thisRelease:        $thisRelease
+	changeLogRelease:   $changeLogRelease
 "
+
+[ "$changeLogRelease" != "$thisRelease" ] && echo "Latest ChangeLog entry does not match this release" >&2 && exit 1
 
 if [ $interactiveMode -eq 1 ]; then
 	echo -n "Go (y/N)? "; read ans
