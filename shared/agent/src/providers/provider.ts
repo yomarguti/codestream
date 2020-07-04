@@ -508,6 +508,7 @@ export abstract class ThirdPartyProviderBase<
 	private async handleErrorResponse(response: Response): Promise<Error> {
 		let message = response.statusText;
 		let data;
+		Logger.debug("Error Response: ", JSON.stringify(response, null, 4));
 		if (response.status >= 400 && response.status < 500) {
 			try {
 				data = await response.json();

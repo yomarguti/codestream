@@ -3,6 +3,7 @@ import { GitRemote, GitRepository } from "git/gitService";
 import { GraphQLClient } from "graphql-request";
 import { Response } from "node-fetch";
 import * as paths from "path";
+import * as qs from "querystring";
 import { URI } from "vscode-uri";
 import { MarkerLocation } from "../api/extensions";
 import { SessionContainer } from "../container";
@@ -160,21 +161,32 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
 		void (await this.ensureConnected());
 
-		// const data = request.data; // as GitHubCreateCardRequest;
-		const { body } = await this.get<any[]>("/issues");
-		const cards: ThirdPartyProviderCard[] = body.map(card => {
-			return {
-				id: card.id,
-				url: card.html_url,
-				title: card.title,
-				modifiedAt: new Date(card.updated_at).getTime(),
-				tokenId: card.number,
-				idBoard: card.repository ? card.repository.id : "",
-				comments: card.comments,
-				body: card.body
-			};
-		});
-		return { cards };
+		try {
+			const url = request.customFilter
+				? `/search/issues?${qs.stringify({
+						q: request.customFilter,
+						sort: "updated"
+				  })}`
+				: "/issues";
+			const result = await this.get<any>(url);
+			const items = request.customFilter ? result.body.items : result.body;
+			const cards: ThirdPartyProviderCard[] = items.map((card: any) => {
+				return {
+					id: card.id,
+					url: card.html_url,
+					title: card.title,
+					modifiedAt: new Date(card.updated_at).getTime(),
+					tokenId: card.number,
+					idBoard: card.repository ? card.repository.id : "",
+					comments: card.comments,
+					body: card.body
+				};
+			});
+			return { cards };
+		} catch (e) {
+			Logger.log("Error from GitHub: ", JSON.stringify(e, null, 4));
+			return { cards: [] };
+		}
 	}
 
 	@log()

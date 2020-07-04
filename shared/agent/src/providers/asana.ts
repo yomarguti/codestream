@@ -208,7 +208,7 @@ export class AsanaProvider extends ThirdPartyIssueProviderBase<CSAsanaProviderIn
 				body: task.notes
 			};
 		});
-		Logger.log("ASANA: ", JSON.stringify(cards, null, 4));
+		// Logger.log("ASANA: ", JSON.stringify(cards, null, 4));
 		return { cards };
 	}
 

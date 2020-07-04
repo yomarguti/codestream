@@ -17,6 +17,9 @@ export interface ProviderDisplay {
 	supportsStartWork?: boolean;
 	hasFilters?: boolean;
 	hasCustomFilters?: boolean;
+	customFilterDefault?: string;
+	customFilterExample?: string;
+	customFilterHelp?: string;
 }
 
 export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
@@ -47,8 +50,12 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		boardLabel: "repo",
 		listLabel: "type",
 		cardLabel: "issue",
-		hasFilters: true,
-		// hasCustomFilters: true,
+		// hasFilters: true,
+		hasCustomFilters: true,
+		customFilterDefault: "assignee:@me is:open ",
+		customFilterExample: "Example: is:open milestone:jan assignee:@me",
+		customFilterHelp:
+			'See <a href="https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests">Searching issues</a> for a detailed list of qualifiers.',
 		supportsStartWork: true
 	},
 	github_enterprise: {

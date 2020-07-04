@@ -388,7 +388,8 @@ interface IssueListProps {
 	selectedCardId: string;
 }
 
-const EMPTY_ARRAY = {};
+const EMPTY_HASH = {};
+const EMPTY_CUSTOM_FILTERS = { selected: "", filters: {} };
 
 export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 	const dispatch = useDispatch();
@@ -396,7 +397,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { preferences = {} } = state;
 		const currentUser = state.users[state.session.userId!] as CSMe;
-		const startWorkPreferences = preferences.startWork || EMPTY_ARRAY;
+		const startWorkPreferences = preferences.startWork || EMPTY_HASH;
 		const providerIds = props.providers.map(provider => provider.id).join(":");
 		const skipConnect = preferences.skipConnectIssueProviders;
 
@@ -410,7 +411,9 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 	const [isLoading, setIsLoading] = React.useState(false);
 	const [loadedBoards, setLoadedBoards] = React.useState(0);
 	const [loadedCards, setLoadedCards] = React.useState(0);
-	const [addingCustomFilterForProvider, setAddingCustomFilterForProvider] = React.useState("");
+	const [addingCustomFilterForProvider, setAddingCustomFilterForProvider] = React.useState<
+		ThirdPartyProviderConfig | undefined
+	>();
 	const [newCustomFilter, setNewCustomFilter] = React.useState("");
 	const [queryOpen, setQueryOpen] = React.useState(false);
 	const [query, setQuery] = React.useState("");
@@ -418,20 +421,23 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 
 	const getFilterLists = (providerId: string) => {
 		const prefs = derivedState.startWorkPreferences[providerId] || {};
-		const lists = prefs.filterLists ? { ...prefs.filterLists } : EMPTY_ARRAY;
+		const lists = prefs.filterLists ? { ...prefs.filterLists } : EMPTY_HASH;
 		return lists;
 	};
 
 	const getFilterBoards = (providerId: string) => {
 		const prefs = derivedState.startWorkPreferences[providerId] || {};
-		const boards = prefs.filterBoards ? { ...prefs.filterBoards } : EMPTY_ARRAY;
+		const boards = prefs.filterBoards ? { ...prefs.filterBoards } : EMPTY_HASH;
 		return boards;
 	};
 
 	const getFilterCustom = (providerId: string) => {
 		const prefs = derivedState.startWorkPreferences[providerId] || {};
-		const boards = prefs.filterCustom ? { ...prefs.filterCustom } : EMPTY_ARRAY;
-		return boards;
+		const custom =
+			prefs.filterCustom && prefs.filterCustom.filters
+				? { ...prefs.filterCustom }
+				: EMPTY_CUSTOM_FILTERS;
+		return custom;
 	};
 
 	const codemarkState = useSelector((state: CodeStreamState) => state.codemarks);
@@ -484,8 +490,10 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 
 			await Promise.all(
 				props.providers.map(async provider => {
+					const filterCustom = getFilterCustom(provider.id);
 					try {
 						const response = await HostApi.instance.send(FetchThirdPartyCardsRequestType, {
+							customFilter: filterCustom.selected,
 							providerId: provider.id
 						});
 						updateDataState(provider.id, {
@@ -544,7 +552,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 		<span dangerouslySetInnerHTML={{ __html: string.replace(queryRegexp, "<u><b>$&</b></u>") }} />
 	);
 
-	const filterBoardItems = provider => {
+	const filterMenuItemsSubmenu = provider => {
 		const filterLists = getFilterLists(provider.id);
 		const filterBoards = getFilterBoards(provider.id);
 		const filterCustom = getFilterCustom(provider.id);
@@ -553,100 +561,146 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 
 		const providerDisplay = PROVIDER_MAPPINGS[provider.name];
 		if (providerDisplay.hasCustomFilters) {
-			items.push(
-				{
-					icon: <Icon name="plus" />,
-					label: "Custom Filter...",
-					key: "add-custom",
-					action: () => setAddingCustomFilterForProvider(provider.id)
-				},
-				{ label: "-" }
-			);
-			Object.keys(filterCustom).forEach((filter: any) => {
-				const checked = filterCustom[filter];
+			const activeFilters = keyFilter(filterCustom.filters);
+			activeFilters.forEach((filter: any) => {
+				const checked = filterCustom.selected === filter;
 				items.push({
 					checked,
 					label: filter,
 					key: "customer-filter-" + filter,
 					action: () => {
-						Object.keys(filterCustom).forEach((filter: any) => {
-							filterCustom[filter] = false;
-						});
-						setPreference(provider.id, "filterCustom", { ...filterCustom, [filter]: !checked });
+						setPreference(provider.id, "filterCustom", { selected: filter });
+						setLoadedBoards(loadedBoards + 1);
 					}
 				});
 			});
-			if (Object.keys(filterCustom).length > 0) {
+			if (items.length > 0) {
 				items.push({ label: "-" });
+			}
+			items.push({
+				icon: <Icon name="plus" />,
+				label: "Create Custom Filter...",
+				key: "add-custom",
+				action: () => {
+					setNewCustomFilter(providerDisplay.customFilterDefault || "");
+					setAddingCustomFilterForProvider(provider);
+				}
+			});
+			if (activeFilters.length > 0) {
+				items.push({
+					icon: <Icon name="trash" />,
+					label: "Delete Custom Filter",
+					key: "delete-custom",
+					submenu: activeFilters.map((filter: any) => {
+						return {
+							label: filter,
+							key: "delete-customer-filter-" + filter,
+							action: () => {
+								const selected = filterCustom.selected;
+								setPreference(provider.id, "filterCustom", {
+									filters: { [filter]: false },
+									// reset selected if we're deleting the selected one
+									selected: selected === filter ? "" : selected
+								});
+								if (selected === filter) setLoadedBoards(loadedBoards + 1);
+							}
+						};
+					})
+				});
 			}
 		}
 
 		// @ts-ignore
-		if (!pData.boards) return items;
-		// @ts-ignore
-		pData.boards.forEach(board => {
-			const b = board;
-			let boardChecked = false;
-			const lists = board.lists;
-			if (lists) {
-				const submenu = board.lists.map(list => {
-					const l = list;
-					const checked = !!filterLists[list.id || "_"];
-					if (checked) boardChecked = true;
-					return {
-						label: list.name,
-						key: list.id,
+		if (providerDisplay.hasFilters && pData.boards) {
+			if (items.length > 0) {
+				items.push({ label: "-" });
+			}
+			// @ts-ignore
+			pData.boards.forEach(board => {
+				const b = board;
+				let boardChecked = false;
+				const lists = board.lists;
+				if (lists) {
+					const submenu = board.lists.map(list => {
+						const l = list;
+						const checked = !!filterLists[list.id || "_"];
+						if (checked) boardChecked = true;
+						return {
+							label: list.name,
+							key: list.id,
+							checked,
+							action: () =>
+								setPreference(provider.id, "filterLists", {
+									...filterLists,
+									[l.id || "_"]: !checked
+								})
+						};
+					});
+					items.push({
+						label: board.name,
+						key: "board-" + board.id,
+						checked: boardChecked,
+						action: () => {},
+						submenu
+					});
+				} else {
+					const checked = !!filterBoards[b.id];
+					// console.warn("GOT: ", checked, " from ", b, " and ", filterBoards);
+					items.push({
+						label: board.name,
+						key: "board-" + board.id,
 						checked,
 						action: () =>
-							setPreference(provider.id, "filterLists", { ...filterLists, [l.id || "_"]: !checked })
-					};
-				});
-				items.push({
-					label: board.name,
-					key: "board-" + board.id,
-					checked: boardChecked,
-					action: () => {},
-					submenu
-				});
-			} else {
-				const checked = !!filterBoards[b.id];
-				// console.warn("GOT: ", checked, " from ", b, " and ", filterBoards);
-				items.push({
-					label: board.name,
-					key: "board-" + board.id,
-					checked,
-					action: () =>
-						setPreference(provider.id, "filterBoards", { ...filterBoards, [b.id || "_"]: !checked })
-				});
-			}
-		});
+							setPreference(provider.id, "filterBoards", {
+								...filterBoards,
+								[b.id || "_"]: !checked
+							})
+					});
+				}
+			});
+		}
+
 		return items;
 	};
 
-	const filterByBoardList = provider => {
+	const filterMenuItemsForProvider = provider => {
 		const providerDisplay = PROVIDER_MAPPINGS[provider.name];
 		return {
 			label: `${providerDisplay.displayName} Filter`,
 			icon: <Icon name={providerDisplay.icon} />,
 			key: "filters-" + provider.name,
-			submenu: filterBoardItems(provider)
+			submenu: filterMenuItemsSubmenu(provider)
 		};
 	};
 
-	const { cards, canFilter, cardLabel } = React.useMemo(() => {
+	const { cards, canFilter, cardLabel, selectedLabel } = React.useMemo(() => {
 		const items = [] as any;
 		const lowerQ = (query || "").toLocaleLowerCase();
+		const numConnectedProviders = props.providers.length;
 		let canFilter = false;
 		let cardLabel = "issue";
+		let selectedLabel = "issues assigned to you";
 		props.providers.forEach(provider => {
 			const providerDisplay = PROVIDER_MAPPINGS[provider.name];
-			canFilter = canFilter || providerDisplay.hasFilters || false;
+			canFilter =
+				canFilter || providerDisplay.hasFilters || providerDisplay.hasCustomFilters || false;
 			if (providerDisplay.cardLabel) cardLabel = providerDisplay.cardLabel;
 
 			const filterLists = getFilterLists(provider.id);
 			const isFilteringLists = providerDisplay.hasFilters && keyFilter(filterLists).length > 0;
 			const filterBoards = getFilterBoards(provider.id);
 			const isFilteringBoards = providerDisplay.hasFilters && keyFilter(filterBoards).length > 0;
+			const filterCustom = getFilterCustom(provider.id);
+			const isFilteringCustom = providerDisplay.hasCustomFilters && filterCustom.selected;
+
+			if (isFilteringCustom) {
+				// if we have more than one connected provider, we don't want
+				// the label to be misleading in terms of what you're filtering on
+				if (numConnectedProviders > 1) selectedLabel = cardLabel + "s";
+				else selectedLabel = `${cardLabel}s matching ${filterCustom.selected}`;
+			} else {
+				selectedLabel = `${cardLabel}s assigned to you`;
+			}
 
 			const pData = data[provider.id] || {};
 			// @ts-ignore
@@ -658,11 +712,16 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 					// @ts-ignore
 					.filter(card => !isFilteringLists || filterLists[card.idList || "_"])
 					.filter(card => !isFilteringBoards || filterBoards[card.idBoard || "_"])
-					.filter(card => !query || card.title.toLocaleLowerCase().includes(lowerQ))
+					.filter(
+						card =>
+							!query ||
+							card.title.toLocaleLowerCase().includes(lowerQ) ||
+							card.body.toLocaleLowerCase().includes(lowerQ)
+					)
 					.map(card => ({
 						...card,
 						label: query ? underlineQ(card.title) : card.title,
-						searchLabel: card.title,
+						body: query ? underlineQ(card.body) : card.body,
 						icon: providerDisplay.icon && <Icon name={providerDisplay.icon} />,
 						key: "card-" + card.id,
 						modifiedAt: card.modifiedAt,
@@ -673,20 +732,25 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 
 		items.push(
 			...(derivedState.csIssues
-				.filter(issue => !query || issue.title.toLocaleLowerCase().includes(lowerQ))
+				.filter(
+					issue =>
+						!query ||
+						issue.title.toLocaleLowerCase().includes(lowerQ) ||
+						issue.text.toLocaleLowerCase().includes(lowerQ)
+				)
 				.map(issue => ({
 					...issue,
 					label: query ? underlineQ(issue.title) : issue.title,
+					body: query ? underlineQ(issue.text) : issue.text,
 					key: "card-" + issue.id,
 					icon: <Icon name="issue" />,
-					provider: { id: "codestream", name: "codestream" },
-					body: issue.text
+					provider: { id: "codestream", name: "codestream" }
 				})) as any)
 		);
 
 		items.sort((a, b) => b.modifiedAt - a.modifiedAt);
 
-		return { cards: items, canFilter, cardLabel };
+		return { cards: items, canFilter, cardLabel, selectedLabel };
 	}, [loadedCards, derivedState.startWorkPreferences, derivedState.csIssues, props.selectedCardId]);
 
 	const menuItems = React.useMemo(() => {
@@ -719,7 +783,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 		// }
 		// const submenu = [] as any;
 		// props.providers.forEach(provider => {
-		// 	submenu.push(filterByBoardList(provider));
+		// 	submenu.push(filterMenuItemsForProvider(provider));
 		// });
 		// submenu.push(
 		// 	{ label: "-" },
@@ -733,7 +797,8 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 		const items = { filters: [], services: [] } as any;
 		props.providers.forEach(provider => {
 			const providerDisplay = PROVIDER_MAPPINGS[provider.name];
-			if (providerDisplay.hasFilters) items.filters.unshift(filterByBoardList(provider));
+			if (providerDisplay.hasFilters || providerDisplay.hasCustomFilters)
+				items.filters.unshift(filterMenuItemsForProvider(provider));
 		});
 		if (items.filters.length === 1) items.filters = items.filters[0].submenu;
 
@@ -743,17 +808,18 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 	}, [loadedCards, derivedState.startWorkPreferences]);
 
 	const saveCustomFilter = () => {
-		if (!addingCustomFilterForProvider) return;
-		const filterCustom = getFilterCustom(addingCustomFilterForProvider || "");
-		setPreference(addingCustomFilterForProvider, "filterCustom", {
-			...filterCustom,
-			[newCustomFilter]: true
+		const id = addingCustomFilterForProvider ? addingCustomFilterForProvider.id : "";
+		setPreference(id, "filterCustom", {
+			filters: {
+				[newCustomFilter]: true
+			},
+			selected: newCustomFilter
 		});
-		setAddingCustomFilterForProvider("");
+		setLoadedBoards(loadedBoards + 1);
+		setAddingCustomFilterForProvider(undefined);
 	};
 
 	const firstLoad = cards.length == 0 && isLoading;
-	const selectedLabel = cardLabel + "s assigned to you";
 	const providersLabel =
 		props.providers.length === 0 ? (
 			"CodeStream"
@@ -764,8 +830,9 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 		);
 
 	if (addingCustomFilterForProvider) {
+		const providerDisplay = PROVIDER_MAPPINGS[addingCustomFilterForProvider.name];
 		return (
-			<Modal verticallyCenter onClose={() => setAddingCustomFilterForProvider("")}>
+			<Modal verticallyCenter onClose={() => setAddingCustomFilterForProvider(undefined)}>
 				<div className="onboarding-page">
 					<form className="standard-form" onSubmit={saveCustomFilter}>
 						<fieldset className="form-body">
@@ -774,11 +841,15 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 								type="text"
 								className="input-text control"
 								autoFocus
+								value={newCustomFilter}
 								onChange={e => setNewCustomFilter(e.target.value)}
 								placeholder="Enter Custom Filter"
 								style={{ marginBottom: "5px" }}
 							/>
-							<div className="subtle">Example: is:open is:issue author:@me</div>
+							<div style={{ margin: "10px 0" }} className="subtle">
+								{providerDisplay.customFilterExample}
+							</div>
+							<span dangerouslySetInnerHTML={{ __html: providerDisplay.customFilterHelp || "" }} />
 							<div style={{ textAlign: "center", paddingTop: "30px" }}>
 								<Button onClick={saveCustomFilter}>
 									&nbsp;&nbsp;&nbsp;&nbsp;Save&nbsp;&nbsp;&nbsp;&nbsp;
@@ -1049,10 +1120,15 @@ export const Row = styled.div`
 	span.subtle {
 		display: inline-block;
 		padding-left: 15px;
-		opacity: 0.5;
+		color: var(--text-color-subtle);
+		opacity: 0.75;
 	}
 	${Headshot} {
 		top: 1px;
+	}
+	// matches for search query
+	span > u > b {
+		color: var(--text-color-highlight);
 	}
 `;
 
