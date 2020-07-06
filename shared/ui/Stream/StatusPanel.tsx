@@ -7,7 +7,7 @@ import { Checkbox } from "../src/components/Checkbox";
 import styled from "styled-components";
 import { Button } from "../src/components/Button";
 import { setUserStatus, setUserPreference, connectProvider } from "./actions";
-import { openPanel, setNewPostEntry } from "../store/context/actions";
+import { openPanel, setNewPostEntry, setCurrentCodemark } from "../store/context/actions";
 import { CSMe } from "@codestream/protocols/api";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { useDidMount } from "../utilities/hooks";
@@ -752,6 +752,18 @@ export const StatusPanel = () => {
 														}
 													>
 														{card.url}
+													</a>
+												)}
+												{card.providerId === "codestream" && (
+													<a
+														onClick={e => {
+															e.stopPropagation();
+															e.preventDefault();
+															clear();
+															dispatch(setCurrentCodemark(card.id));
+														}}
+													>
+														Show Issue Details
 													</a>
 												)}
 											</CardTitle>

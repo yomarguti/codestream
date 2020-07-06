@@ -415,6 +415,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 		ThirdPartyProviderConfig | undefined
 	>();
 	const [newCustomFilter, setNewCustomFilter] = React.useState("");
+	const [newCustomFilterName, setNewCustomFilterName] = React.useState("");
 	const [queryOpen, setQueryOpen] = React.useState(false);
 	const [query, setQuery] = React.useState("");
 	const [reload, setReload] = React.useState(1);
@@ -431,6 +432,8 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 		return boards;
 	};
 
+	// the keys are the filter text (e.g. "assignee:@me milestone:jan")
+	// and the values are the optional label that the user created
 	const getFilterCustom = (providerId: string) => {
 		const prefs = derivedState.startWorkPreferences[providerId] || {};
 		const custom =
@@ -566,7 +569,8 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 				const checked = filterCustom.selected === filter;
 				items.push({
 					checked,
-					label: filter,
+					label: filterCustom.filters[filter],
+					subtext: filterCustom.filters[filter] == filter ? null : filter,
 					key: "customer-filter-" + filter,
 					action: () => {
 						setPreference(provider.id, "filterCustom", { selected: filter });
@@ -583,6 +587,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 				key: "add-custom",
 				action: () => {
 					setNewCustomFilter(providerDisplay.customFilterDefault || "");
+					setNewCustomFilterName("");
 					setAddingCustomFilterForProvider(provider);
 				}
 			});
@@ -593,7 +598,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 					key: "delete-custom",
 					submenu: activeFilters.map((filter: any) => {
 						return {
-							label: filter,
+							label: filterCustom.filters[filter],
 							key: "delete-customer-filter-" + filter,
 							action: () => {
 								const selected = filterCustom.selected;
@@ -697,7 +702,8 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 				// if we have more than one connected provider, we don't want
 				// the label to be misleading in terms of what you're filtering on
 				if (numConnectedProviders > 1) selectedLabel = cardLabel + "s";
-				else selectedLabel = `${cardLabel}s matching ${filterCustom.selected}`;
+				else
+					selectedLabel = `${cardLabel}s matching ${filterCustom.filters[filterCustom.selected]}`;
 			} else {
 				selectedLabel = `${cardLabel}s assigned to you`;
 			}
@@ -811,7 +817,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 		const id = addingCustomFilterForProvider ? addingCustomFilterForProvider.id : "";
 		setPreference(id, "filterCustom", {
 			filters: {
-				[newCustomFilter]: true
+				[newCustomFilter]: newCustomFilterName || newCustomFilter
 			},
 			selected: newCustomFilter
 		});
@@ -850,6 +856,14 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 								{providerDisplay.customFilterExample}
 							</div>
 							<span dangerouslySetInnerHTML={{ __html: providerDisplay.customFilterHelp || "" }} />
+							<input
+								type="text"
+								className="input-text control"
+								value={newCustomFilterName}
+								onChange={e => setNewCustomFilterName(e.target.value)}
+								placeholder="Name Your Custom Filter (optional)"
+								style={{ margin: "20px 0 5px 0" }}
+							/>
 							<div style={{ textAlign: "center", paddingTop: "30px" }}>
 								<Button onClick={saveCustomFilter}>
 									&nbsp;&nbsp;&nbsp;&nbsp;Save&nbsp;&nbsp;&nbsp;&nbsp;
