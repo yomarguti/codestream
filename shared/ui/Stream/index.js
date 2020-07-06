@@ -893,31 +893,33 @@ export class SimpleStream extends Component {
 						{this.renderMenu()}
 					</label>
 				</nav>
-				<label
-					onClick={this.togglePlusMenu}
-					style={{
-						position: "fixed",
-						display: plusMenuOpen ? "none" : "flex",
-						justifyContent: "center",
-						alignItems: "center",
-						bottom: "15px",
-						right: "15px",
-						display: "flex",
-						background: "var(--button-background-color)",
-						color: "var(--button-foreground-color)",
-						width: "40px",
-						height: "40px",
-						borderRadius: "20px",
-						cursor: "pointer",
-						boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)",
-						zIndex: 50
-					}}
-					className={cx({ active: this.state.plusMenuOpen })}
-					id="global-nav-plus-label"
-				>
-					<Icon name="plus" />
-					{this.renderPlusMenu()}
-				</label>
+				{!this.props.composeCodemarkActive && (
+					<label
+						onClick={this.togglePlusMenu}
+						style={{
+							position: "fixed",
+							display: plusMenuOpen ? "none" : "flex",
+							justifyContent: "center",
+							alignItems: "center",
+							bottom: "15px",
+							right: "15px",
+							display: "flex",
+							background: "var(--button-background-color)",
+							color: "var(--button-foreground-color)",
+							width: "40px",
+							height: "40px",
+							borderRadius: "20px",
+							cursor: "pointer",
+							boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)",
+							zIndex: 50
+						}}
+						className={cx({ active: this.state.plusMenuOpen })}
+						id="global-nav-plus-label"
+					>
+						<Icon name="plus" />
+						{this.renderPlusMenu()}
+					</label>
+				)}
 			</>
 		);
 	}
