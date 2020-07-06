@@ -126,10 +126,15 @@ class IssueDropdown extends React.Component<Props, State> {
 	}
 
 	renderLoading() {
+		const { isLoading, loadingProvider } = this.state;
+
+		if (!isLoading) return null;
+
 		return (
-			<span className="dropdown-button" onClick={this.cancelLoading}>
-				<Icon className="spin" name="sync" />
-			</span>
+			<LoadingMessage align="left">
+				Authenticating with {loadingProvider!.display.displayName}... (check your web browser){" "}
+				<a onClick={this.cancelLoading}>cancel</a>
+			</LoadingMessage>
 		);
 	}
 
@@ -143,8 +148,6 @@ class IssueDropdown extends React.Component<Props, State> {
 		const providerInfo = issueProviderConfig
 			? this.getProviderInfo(issueProviderConfig.id)
 			: undefined;
-
-		if (this.state.isLoading) return this.renderLoading();
 
 		if (!this.props.providers || !Object.keys(this.props.providers).length) return null;
 
@@ -195,6 +198,7 @@ class IssueDropdown extends React.Component<Props, State> {
 					providers={activeProviders}
 					knownIssueProviderOptions={knownIssueProviderOptions}
 					selectedCardId={this.props.selectedCardId}
+					loadingMessage={this.state.isLoading ? this.renderLoading() : null}
 				></IssueList>
 			</>
 		);
@@ -386,6 +390,7 @@ interface IssueListProps {
 	providers: ThirdPartyProviderConfig[];
 	knownIssueProviderOptions: any;
 	selectedCardId: string;
+	loadingMessage?: React.ReactNode;
 }
 
 const EMPTY_HASH = {};
@@ -399,7 +404,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const startWorkPreferences = preferences.startWork || EMPTY_HASH;
 		const providerIds = props.providers.map(provider => provider.id).join(":");
-		const skipConnect = preferences.skipConnectIssueProviders;
+		const skipConnect = false; // preferences.skipConnectIssueProviders;
 
 		const csIssues = codemarkSelectors.getMyOpenIssues(state.codemarks, state.session.userId!);
 		let status =
@@ -929,7 +934,9 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 						</RoundedSearchLink>
 						What are you working on?
 					</H4>
-					{props.providers.length > 0 || derivedState.skipConnect ? (
+					{props.loadingMessage ? (
+						<div style={{ margin: "0 -20px" }}>{props.loadingMessage}</div>
+					) : props.providers.length > 0 || derivedState.skipConnect ? (
 						<div style={{ paddingBottom: "5px" }}>
 							Show{" "}
 							{canFilter ? (
@@ -1150,10 +1157,6 @@ export const IssueRows = styled.div`
 	border-top: 1px solid var(--base-border-color);
 	padding-top: 15px;
 	padding-bottom: 20px;
-`;
-
-const ConnectIssueProviders = styled.div`
-	padding: 0 20px 0 20px;
 `;
 
 const Linkish = styled.span`
