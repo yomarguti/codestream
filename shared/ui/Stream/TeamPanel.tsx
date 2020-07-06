@@ -801,9 +801,16 @@ class TeamPanel extends React.Component<Props, State> {
 													placement="bottom"
 													loading={loadingStatus}
 													title={
-														currentUserInvisible
-															? "Live View: off (not sharing local changes with teammates)"
-															: "Live View: on (sharing local changes with teammates)"
+														<div>
+															Live View: {currentUserInvisible ? "OFF" : "ON"}
+															<div style={{ height: "8px" }} />
+															{currentUserInvisible ? "not " : ""}sharing local changes
+															<br />
+															with teammates.{" "}
+															<a href="http://docs.codestream.com/userguide/features/team-live-view/">
+																learn more
+															</a>
+														</div>
 													}
 												/>
 											)}
