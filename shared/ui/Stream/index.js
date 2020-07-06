@@ -31,7 +31,7 @@ import { CreateTeamPage } from "./CreateTeamPage";
 import Icon from "./Icon";
 import Menu from "./Menu";
 import CancelButton from "./CancelButton";
-import Tooltip from "./Tooltip";
+import Tooltip, { TipTitle, placeArrowTopRight } from "./Tooltip";
 import OfflineBanner from "./OfflineBanner";
 import ConfigureAzureDevOpsPanel from "./ConfigureAzureDevOpsPanel";
 import ConfigureYouTrackPanel from "./ConfigureYouTrackPanel";
@@ -835,7 +835,18 @@ export class SimpleStream extends Component {
 						onClick={e => this.setActivePanel(WebviewPanels.Status)}
 						id="global-nav-status-label"
 					>
-						<Tooltip title="Your Work Items" placement="bottom">
+						<Tooltip
+							delay={1}
+							title={
+								<TipTitle>
+									<h1>Your Tasks</h1>
+									Assigned issues and code reviews.
+									<br />
+									This is home base for getting work done.
+								</TipTitle>
+							}
+							placement="bottom"
+						>
 							<span>
 								<Icon name="inbox" />
 							</span>
@@ -846,7 +857,22 @@ export class SimpleStream extends Component {
 						onClick={e => this.setActivePanel(WebviewPanels.CodemarksForFile)}
 						id="global-nav-file-label"
 					>
-						<Tooltip title="Codemarks In Current File" placement="bottom">
+						<Tooltip
+							delay={1}
+							title={
+								<TipTitle>
+									<h1>Comments In Current File</h1>
+									We call these <i>Codemarks</i>
+									<a
+										className="learn-more"
+										href="http://docs.codestream.com/userguide/gettingStarted/code-discussion-with-codemarks/"
+									>
+										learn more
+									</a>
+								</TipTitle>
+							}
+							placement="bottom"
+						>
 							<span>
 								<Icon name="file" />
 								{hasFileConflict && <Icon name="alert" className="nav-conflict" />}
@@ -858,7 +884,22 @@ export class SimpleStream extends Component {
 						onClick={e => this.setActivePanel(WebviewPanels.Activity)}
 						id="global-nav-activity-label"
 					>
-						<Tooltip title="Activity Feed" placement="bottom">
+						<Tooltip
+							delay={1}
+							title={
+								<TipTitle>
+									<h1>Activity Feed</h1>
+									Latest comments and content.
+									<a
+										className="learn-more"
+										href="http://docs.codestream.com/userguide/features/activity-feed/"
+									>
+										learn more
+									</a>
+								</TipTitle>
+							}
+							placement="bottom"
+						>
 							<span>
 								<Icon name="activity" />
 								{!this.props.muteAll && <span className={umisClass}>{totalUMICount}</span>}
@@ -870,14 +911,51 @@ export class SimpleStream extends Component {
 						onClick={this.goSearch}
 						id="global-nav-search-label"
 					>
-						<Icon name="search" title="Filter &amp; Search" placement="bottom" />
+						<Icon
+							name="search"
+							delay={1}
+							title={
+								<TipTitle>
+									<h1>Filter &amp; Search</h1>
+									Search code comments, code reviews,
+									<br />
+									and codestream content.
+									<a
+										className="learn-more"
+										href="http://docs.codestream.com/userguide/features/filter-and-search/"
+									>
+										learn more
+									</a>
+								</TipTitle>
+							}
+							placement="bottomRight"
+							onPopupAlign={placeArrowTopRight}
+						/>
 					</label>
 					<label
 						className={cx({ selected: selected(WebviewPanels.People) })}
 						onClick={e => this.setActivePanel(WebviewPanels.People)}
 						id="global-nav-team-label"
 					>
-						<Tooltip title="Your Team" placement="bottom">
+						<Tooltip
+							delay={1}
+							title={
+								<TipTitle>
+									<h1>Your Team</h1>
+									View status and local changes
+									<br />
+									from your teammates.
+									<a
+										className="learn-more"
+										href="http://docs.codestream.com/userguide/features/team-live-view/"
+									>
+										learn more
+									</a>
+								</TipTitle>
+							}
+							placement="bottomRight"
+							onPopupAlign={placeArrowTopRight}
+						>
 							<span>
 								<Icon name="team" />
 								{this.props.collisions.nav && <Icon name="alert" className="nav-conflict" />}
@@ -889,7 +967,12 @@ export class SimpleStream extends Component {
 						className={cx({ active: menuOpen })}
 						id="global-nav-more-label"
 					>
-						<Icon name="kebab-horizontal" title="More..." placement="bottomRight" />
+						<Icon
+							name="kebab-horizontal"
+							delay={1}
+							title="More Actions..."
+							placement="bottomRight"
+						/>
 						{this.renderMenu()}
 					</label>
 				</nav>

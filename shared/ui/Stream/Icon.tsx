@@ -20,6 +20,7 @@ interface Props {
 	muted?: boolean;
 	loading?: boolean;
 	onClick?(event: React.SyntheticEvent): any;
+	onPopupAlign?: any;
 }
 
 const Icon = React.forwardRef<any, Props>((props, ref) => {
@@ -50,6 +51,7 @@ const Icon = React.forwardRef<any, Props>((props, ref) => {
 				placement={props.placement}
 				align={props.align}
 				delay={props.delay}
+				onPopupAlign={props.onPopupAlign}
 			>
 				<span>{iconImage}</span>
 			</Tooltip>

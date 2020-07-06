@@ -722,7 +722,7 @@ export const StatusPanel = () => {
 	return (
 		<div className="panel full-height">
 			<CreateCodemarkIcons narrow />
-			<PanelHeader title="Work Items">
+			<PanelHeader title="Tasks">
 				<div style={{ height: "5px" }} />
 			</PanelHeader>
 			{configureBranchNames && (
