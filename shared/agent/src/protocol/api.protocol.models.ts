@@ -629,6 +629,7 @@ export interface CSMePreferences {
 	telemetryOptOut?: boolean;
 	notifications?: CSNotificationPreference;
 	notificationDelivery?: CSNotificationDeliveryPreference;
+	skipWallToWallBanner?: boolean;
 	[key: string]: any;
 }
 

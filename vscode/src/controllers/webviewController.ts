@@ -35,6 +35,7 @@ import {
 	HostDidChangeConfigNotificationType,
 	HostDidChangeEditorSelectionNotificationType,
 	HostDidChangeEditorVisibleRangesNotificationType,
+	HostDidChangeVisibleEditorsNotificationType,
 	HostDidLogoutNotificationType,
 	HostDidReceiveRequestNotificationType,
 	InsertTextRequestType,
@@ -221,6 +222,10 @@ export class WebviewController implements Disposable {
 	}
 
 	private onVisibleEditorsChanged(e: TextEditor[]) {
+		if (this._webview) {
+			this._webview.notify(HostDidChangeVisibleEditorsNotificationType, { count: e.length });
+		}
+
 		// If the last editor is still in the visible list do nothing
 		if (this._lastEditor !== undefined && e.includes(this._lastEditor)) return;
 
@@ -1008,7 +1013,8 @@ export class WebviewController implements Disposable {
 				textEditorUri: this._lastEditor.document.uri.toString(),
 				textEditorVisibleRanges: Editor.toSerializableRange(this._lastEditor.visibleRanges),
 				textEditorSelections: Editor.toEditorSelections(this._lastEditor.selections),
-				textEditorLineCount: this._lastEditor.document.lineCount
+				textEditorLineCount: this._lastEditor.document.lineCount,
+				visibleEditorCount: window.visibleTextEditors.length
 			};
 		}
 		return editorContext;
@@ -1034,8 +1040,7 @@ export class WebviewController implements Disposable {
 			this._html = doc.getText();
 		}
 
-	return this._html;
-
+		return this._html;
 	}
 
 	private notifyActiveEditorChanged(e: TextEditor | undefined) {
@@ -1123,4 +1128,3 @@ export class WebviewController implements Disposable {
 		} catch {}
 	}
 }
-

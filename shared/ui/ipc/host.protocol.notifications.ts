@@ -27,6 +27,14 @@ export const HostDidChangeActiveEditorNotificationType = new NotificationType<
 	void
 >(`${IpcRoutes.Webview}/editor/didChangeActive`);
 
+export interface HostDidChangeVisibleEditorsNotification {
+	count: number;
+}
+export const HostDidChangeVisibleEditorsNotificationType = new NotificationType<
+	HostDidChangeVisibleEditorsNotification,
+	void
+>(`${IpcRoutes.Webview}/editors/didChangeVisible`);
+
 export type HostDidChangeConfigNotification = Partial<WebviewConfigs>;
 export const HostDidChangeConfigNotificationType = new NotificationType<
 	HostDidChangeConfigNotification,

@@ -90,6 +90,7 @@ export interface EditorContext {
 	textEditorSelections?: EditorSelection[];
 	metrics?: EditorMetrics;
 	textEditorLineCount?: number;
+	visibleEditorCount?: number; // only populated (and used) by vscode
 }
 
 export interface WebviewConfigs {

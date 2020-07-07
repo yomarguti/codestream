@@ -17,7 +17,8 @@ import {
 	ShowReviewNotificationType,
 	ShowStreamNotificationType,
 	WebviewDidInitializeNotificationType,
-	WebviewPanels
+	WebviewPanels,
+	HostDidChangeVisibleEditorsNotificationType
 } from "./ipc/webview.protocol";
 import { createCodeStreamStore } from "./store";
 import { HostApi } from "./webview-api";
@@ -68,7 +69,7 @@ import { moveCursorToLine } from "./Stream/CodemarkView";
 import { setMaintenanceMode } from "./store/session/actions";
 import { updateModifiedRepos } from "./store/users/actions";
 import { logWarning } from "./logger";
-import { fetchReview } from './store/reviews/actions';
+import { fetchReview } from "./store/reviews/actions";
 
 export { HostApi };
 
@@ -208,6 +209,10 @@ function listenForEvents(store) {
 			};
 		}
 		store.dispatch(setEditorContext(context));
+	});
+
+	api.on(HostDidChangeVisibleEditorsNotificationType, async params => {
+		store.dispatch(setEditorContext({ visibleEditorCount: params.count }));
 	});
 
 	api.on(HostDidChangeFocusNotificationType, ({ focused }) => {
