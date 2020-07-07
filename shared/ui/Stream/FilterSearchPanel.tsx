@@ -925,7 +925,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 					<div>
 						<p>
 							Code Reviews are the building blocks of your team’s process.{" "}
-							<a href="https://docs.codestream.com/userguide/gettingStarted/code-review/">
+							<a href="https://docs.codestream.com/userguide/workflow/review-code/">
 								Learn more about how to use code review.
 							</a>
 						</p>

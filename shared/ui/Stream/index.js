@@ -871,7 +871,7 @@ export class SimpleStream extends Component {
 									We call these <i>Codemarks</i>
 									<a
 										className="learn-more"
-										href="http://docs.codestream.com/userguide/gettingStarted/code-discussion-with-codemarks/"
+										href="https://docs.codestream.com/userguide/workflow/discuss-code/"
 									>
 										learn more
 									</a>

@@ -443,7 +443,7 @@ export class SimpleKnowledgePanel extends Component {
 					<div>
 						<p>
 							Codemarks are the building blocks of your team’s knowledge base.{" "}
-							<a href="https://docs.codestream.com/userguide/gettingStarted/code-discussion-with-codemarks/">
+							<a href="https://docs.codestream.com/userguide/workflow/discuss-code/">
 								Learn more about how to use codemarks.
 							</a>
 						</p>

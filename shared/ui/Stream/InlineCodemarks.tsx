@@ -522,7 +522,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						<h3>No file open.</h3>
 						<p>
 							Open a source file to to start discussing code with your teammates!{" "}
-							<a href="https://docs.codestream.com/userguide/gettingStarted/code-discussion-with-codemarks/">
+							<a href="https://docs.codestream.com/userguide/workflow/discuss-code/">
 								View guide.
 							</a>
 						</p>
@@ -598,7 +598,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			return (
 				<Keybindings>
 					Discuss code by selecting a range and clicking an icon, or use a shortcut below (
-					<a href="https://docs.codestream.com/userguide/gettingStarted/code-discussion-with-codemarks/">
+					<a href="https://docs.codestream.com/userguide/workflow/discuss-code/">
 						show me how
 					</a>
 					).
