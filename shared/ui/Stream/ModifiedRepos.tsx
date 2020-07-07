@@ -12,6 +12,7 @@ import { ReviewShowLocalDiffRequestType } from "../ipc/host.protocol.review";
 import * as userSelectors from "../store/users/reducer";
 import { FileStatus } from "@codestream/protocols/api";
 import { ReposScm } from "@codestream/protocols/agent";
+import { Row } from "./CrossPostIssueControls/IssueDropdown";
 
 const IconLabel = styled.span`
 	white-space: nowrap;
@@ -62,14 +63,14 @@ export const ModifiedRepos = (props: {
 	if (!modifiedRepos || !modifiedRepos[teamId] || !modifiedRepos[teamId].length) return null;
 
 	// FIXME we want to be able to show the diff here
-	const clickFile = (repoId, path) => {
+	const clickFile = (repoId, path, baseSha) => {
 		setSelectedFile(repoId + ":" + path);
 		HostApi.instance.send(ReviewShowLocalDiffRequestType, {
 			path,
 			repoId,
 			includeSaved: true,
 			includeStaged: true,
-			baseSha: ""
+			baseSha
 		});
 	};
 
@@ -90,6 +91,7 @@ export const ModifiedRepos = (props: {
 				person.email === currentUserEmail
 					? null
 					: (authors || []).find(a => a.email === currentUserEmail && a.stomped > 0);
+			console.warn("REPO", repo);
 			return (
 				<div key={"repo-" + repoId}>
 					<div>
@@ -108,10 +110,12 @@ export const ModifiedRepos = (props: {
 								? collisions.repoFiles[`${repo.repoId}:${f.file}`]
 								: collisions.userRepoFiles[`${person.id}:${repo.repoId}:${f.file}`];
 							const className = hasConflict ? "file-has-conflict wide" : "wide";
-							const onClick = isMe ? () => clickFile(repoId, f.file) : undefined;
+							const onClick = isMe ? () => clickFile(repoId, f.file, repo.startCommit) : undefined;
 							const selected = selectedFile === repoId + ":" + f.file;
-							const tooltip =
-								isMe && hasConflict ? nameList(hasConflict) + " is editing" : undefined;
+							const vs = repo.startCommit ? repo.startCommit.substr(0, 8) : "HEAD";
+							let tooltip = isMe ? `Click to diff vs. last push: ${vs}` : undefined;
+							if (isMe && hasConflict) tooltip += " (" + nameList(hasConflict) + " is editing)";
+
 							return (
 								<ChangesetFile
 									icon={<Icon className="file-icon" name={selected ? "arrow-right" : "blank"} />}
@@ -125,6 +129,24 @@ export const ModifiedRepos = (props: {
 							);
 						})}
 					</div>
+					{repo.commits && repo.commits.length > 0 && (
+						<div style={{ margin: "0 -20px 0 -20px", padding: "5px 0 10px 0" }}>
+							{(repo.commits || []).map(c => {
+								const commit = c as any;
+								return (
+									<Row key={commit.sha}>
+										<div style={{ paddingLeft: "20px" }}>
+											<Icon name="git-commit-vertical" />
+										</div>
+										<div>{commit.info.shortMessage}</div>
+										<div className="icons">
+											<span className="monospace">{commit.sha.substr(0, 8)}</span>
+										</div>
+									</Row>
+								);
+							})}
+						</div>
+					)}
 					{stomp && (
 						<div style={{ paddingTop: "5px" }}>
 							<span className="stomped" style={{ paddingLeft: 0 }}>
