@@ -1419,7 +1419,7 @@ export class Codemark extends React.Component<Props, State> {
 											</span>
 										)}
 										{this.renderStatus(codemark, menuItems)}
-										{this.renderKeybinding(codemark)}
+										{/* this.renderKeybinding(codemark) */}
 										{menuOpen && (
 											<Menu items={menuItems} target={menuTarget} action={this.handleSelectMenu} />
 										)}

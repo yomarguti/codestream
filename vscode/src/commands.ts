@@ -308,74 +308,74 @@ export class Commands implements Disposable {
 		return env.clipboard.writeText(response.linkUrl);
 	}
 
-	@command("gotoCodemark0", {
-		args: ([args]) => [{ ...(args || {}), index: 0 }],
-		showErrorMessage: "Unable to jump to codemark #0"
-	})
-	@command("gotoCodemark1", {
-		args: ([args]) => [{ ...(args || {}), index: 1 }],
-		showErrorMessage: "Unable to jump to codemark #1"
-	})
-	@command("gotoCodemark2", {
-		args: ([args]) => [{ ...(args || {}), index: 2 }],
-		showErrorMessage: "Unable to jump to codemark #2"
-	})
-	@command("gotoCodemark3", {
-		args: ([args]) => [{ ...(args || {}), index: 3 }],
-		showErrorMessage: "Unable to jump to codemark #3"
-	})
-	@command("gotoCodemark4", {
-		args: ([args]) => [{ ...(args || {}), index: 4 }],
-		showErrorMessage: "Unable to jump to codemark #4"
-	})
-	@command("gotoCodemark5", {
-		args: ([args]) => [{ ...(args || {}), index: 5 }],
-		showErrorMessage: "Unable to jump to codemark #5"
-	})
-	@command("gotoCodemark6", {
-		args: ([args]) => [{ ...(args || {}), index: 6 }],
-		showErrorMessage: "Unable to jump to codemark #6"
-	})
-	@command("gotoCodemark7", {
-		args: ([args]) => [{ ...(args || {}), index: 7 }],
-		showErrorMessage: "Unable to jump to codemark #7"
-	})
-	@command("gotoCodemark8", {
-		args: ([args]) => [{ ...(args || {}), index: 8 }],
-		showErrorMessage: "Unable to jump to codemark #8"
-	})
-	@command("gotoCodemark9", {
-		args: ([args]) => [{ ...(args || {}), index: 9 }],
-		showErrorMessage: "Unable to jump to codemark #9"
-	})
-	async gotoCodemark(args?: GotoCodemarkCommandArgs) {
-		if (args === undefined) return;
+	// @command("gotoCodemark0", {
+	// 	args: ([args]) => [{ ...(args || {}), index: 0 }],
+	// 	showErrorMessage: "Unable to jump to codemark #0"
+	// })
+	// @command("gotoCodemark1", {
+	// 	args: ([args]) => [{ ...(args || {}), index: 1 }],
+	// 	showErrorMessage: "Unable to jump to codemark #1"
+	// })
+	// @command("gotoCodemark2", {
+	// 	args: ([args]) => [{ ...(args || {}), index: 2 }],
+	// 	showErrorMessage: "Unable to jump to codemark #2"
+	// })
+	// @command("gotoCodemark3", {
+	// 	args: ([args]) => [{ ...(args || {}), index: 3 }],
+	// 	showErrorMessage: "Unable to jump to codemark #3"
+	// })
+	// @command("gotoCodemark4", {
+	// 	args: ([args]) => [{ ...(args || {}), index: 4 }],
+	// 	showErrorMessage: "Unable to jump to codemark #4"
+	// })
+	// @command("gotoCodemark5", {
+	// 	args: ([args]) => [{ ...(args || {}), index: 5 }],
+	// 	showErrorMessage: "Unable to jump to codemark #5"
+	// })
+	// @command("gotoCodemark6", {
+	// 	args: ([args]) => [{ ...(args || {}), index: 6 }],
+	// 	showErrorMessage: "Unable to jump to codemark #6"
+	// })
+	// @command("gotoCodemark7", {
+	// 	args: ([args]) => [{ ...(args || {}), index: 7 }],
+	// 	showErrorMessage: "Unable to jump to codemark #7"
+	// })
+	// @command("gotoCodemark8", {
+	// 	args: ([args]) => [{ ...(args || {}), index: 8 }],
+	// 	showErrorMessage: "Unable to jump to codemark #8"
+	// })
+	// @command("gotoCodemark9", {
+	// 	args: ([args]) => [{ ...(args || {}), index: 9 }],
+	// 	showErrorMessage: "Unable to jump to codemark #9"
+	// })
+	// async gotoCodemark(args?: GotoCodemarkCommandArgs) {
+	// 	if (args === undefined) return;
 
-		Container.agent.telemetry.track("Codemark Clicked", { "Codemark Location": "Shortcut" });
-		const response = await Container.agent.documentMarkers.getDocumentFromKeyBinding(args.index);
-		if (response == null) return;
+	// 	Container.agent.telemetry.track("Codemark Clicked", { "Codemark Location": "Shortcut" });
+	// 	const response = await Container.agent.documentMarkers.getDocumentFromKeyBinding(args.index);
+	// 	if (response == null) return;
 
-		const uri = Uri.parse(response.textDocument.uri);
+	// 	const uri = Uri.parse(response.textDocument.uri);
 
-		await Editor.selectRange(
-			uri,
-			new Range(
-				response.range.start.line,
-				response.range.start.character,
-				response.range.start.line,
-				response.range.start.character
-			),
-			undefined,
-			{
-				preserveFocus: false
-			}
-		);
+	// 	await Editor.selectRange(
+	// 		uri,
+	// 		new Range(
+	// 			response.range.start.line,
+	// 			response.range.start.character,
+	// 			response.range.start.line,
+	// 			response.range.start.character
+	// 		),
+	// 		undefined,
+	// 		{
+	// 			preserveFocus: false
+	// 		}
+	// 	);
 
-		await Container.webview.openCodemark(response.marker.codemarkId, {
-			onlyWhenVisible: true,
-			sourceUri: uri
-		});
-	}
+	// 	await Container.webview.openCodemark(response.marker.codemarkId, {
+	// 		onlyWhenVisible: true,
+	// 		sourceUri: uri
+	// 	});
+	// }
 
 	@command("openCodemark", { showErrorMessage: "Unable to open comment" })
 	async openCodemark(args: OpenCodemarkCommandArgs): Promise<void> {
