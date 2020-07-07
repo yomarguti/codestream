@@ -116,7 +116,11 @@ export const ModifiedRepos = (props: {
 					</div>
 					<div style={{ margin: "0 -20px 0 -20px", padding: "5px 0 10px 0" }}>
 						<div className="related-label" style={{ paddingLeft: "40px", paddingTop: "5px" }}>
-							Modified Files (vs. {repo.startCommit ? repo.startCommit.substr(0, 8) : "HEAD"})
+							Modified Files (vs.{" "}
+							<span className="monospace no-transform">
+								{repo.startCommit ? repo.startCommit.substr(0, 8) : "HEAD"}
+							</span>
+							)
 						</div>
 						{modifiedFiles.map(f => {
 							const hasConflict = isMe

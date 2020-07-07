@@ -288,6 +288,7 @@ export const Reply = (props: ReplyProps) => {
 					numMarkers={numMarkers}
 					jumpToMarker={false}
 					selected={true}
+					disableHighlightOnHover={true}
 					disableDiffCheck={true}
 				/>
 			</ReviewMarkerActionsWrapper>

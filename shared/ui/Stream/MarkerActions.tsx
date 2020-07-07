@@ -62,6 +62,7 @@ interface InheritedProps {
 	jumpToMarkerId?: string;
 	selected: boolean;
 	disableDiffCheck?: boolean;
+	disableHighlightOnHover?: boolean;
 }
 
 type Props = InheritedProps & ConnectedProps & IntlProps;
@@ -488,11 +489,15 @@ class MarkerActions extends React.Component<Props, State> {
 		if (!this.props.selected) return;
 
 		// if we're looking at a review, don't try to highlight the code.
-		// the logica about state.textDocumentUri assumes a traditional
+		// the logic about state.textDocumentUri assumes a traditional
 		// codemark which has been clicked on, so too much breaks from a UI
 		// perspective, for little gain.
 		// https://trello.com/c/Q0aNjRVh/3717-prevent-vsc-from-switching-to-file-when-its-not-open-in-a-separate-pane
 		if (this.props.currentReviewId) return;
+
+		// there are cases we know that we don't want to highlight on
+		// hover, for example in the activity feed
+		if (this.props.disableHighlightOnHover) return;
 
 		if (!highlight && this._highlightDisposable) {
 			this._highlightDisposable.dispose();
