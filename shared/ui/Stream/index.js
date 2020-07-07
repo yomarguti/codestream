@@ -252,11 +252,14 @@ export class SimpleStream extends Component {
 		this.props.setCurrentReview("");
 		if (this.props.activePanel === WebviewPanels.Status) {
 			const div = document.getElementById("start-work-div");
-			if (div) div.classList.add("show-instructions");
-			if (div) div.classList.add("highlight-pulse");
-			setTimeout(() => {
-				div.classList.remove("highlight-pulse");
-			}, 1000);
+			if (div) {
+				div.classList.add("show-instructions");
+				div.classList.add("highlight-pulse");
+				div.scrollIntoView({ behavior: "smooth" });
+				setTimeout(() => {
+					div.classList.remove("highlight-pulse");
+				}, 1000);
+			}
 		}
 		this.props.openPanel(WebviewPanels.Status);
 	};
@@ -837,6 +840,7 @@ export class SimpleStream extends Component {
 					>
 						<Tooltip
 							delay={1}
+							trigger={["hover"]}
 							title={
 								<TipTitle>
 									<h1>Your Tasks</h1>
@@ -859,6 +863,7 @@ export class SimpleStream extends Component {
 					>
 						<Tooltip
 							delay={1}
+							trigger={["hover"]}
 							title={
 								<TipTitle>
 									<h1>Comments In Current File</h1>
@@ -886,10 +891,13 @@ export class SimpleStream extends Component {
 					>
 						<Tooltip
 							delay={1}
+							trigger={["hover"]}
 							title={
 								<TipTitle>
 									<h1>Activity Feed</h1>
-									Latest comments and content.
+									Latest comments, issues,
+									<br />
+									code reviews and replies.
 									<a
 										className="learn-more"
 										href="http://docs.codestream.com/userguide/features/activity-feed/"
@@ -914,6 +922,7 @@ export class SimpleStream extends Component {
 						<Icon
 							name="search"
 							delay={1}
+							trigger={["hover"]}
 							title={
 								<TipTitle>
 									<h1>Filter &amp; Search</h1>
@@ -939,6 +948,7 @@ export class SimpleStream extends Component {
 					>
 						<Tooltip
 							delay={1}
+							trigger={["hover"]}
 							title={
 								<TipTitle>
 									<h1>Your Team</h1>
@@ -970,6 +980,7 @@ export class SimpleStream extends Component {
 						<Icon
 							name="kebab-horizontal"
 							delay={1}
+							trigger={["hover"]}
 							title="More Actions..."
 							placement="bottomRight"
 						/>

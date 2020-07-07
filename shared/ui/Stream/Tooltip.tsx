@@ -38,6 +38,7 @@ interface Props {
 }
 
 export type Placement = RCT.Placement;
+export type Trigger = RCT.Trigger;
 
 export default function Tooltip(props: Props) {
 	// TODO: deprecate `title` for `content`

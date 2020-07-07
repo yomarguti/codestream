@@ -209,11 +209,16 @@ export const RoundedLink = styled.a`
 	background: rgba(127, 127, 127, 0.15);
 	border: 1px solid var(--base-border-color);
 	padding: 3px 8px 3px 4px;
-	margin-left: 5px;
+	margin: 0 0 2px 5px;
 	font-size: 12px;
 	border-radius: 13px;
 	.icon {
-		margin-right: 4px;
+		margin-right: 2px;
+	}
+	@media only screen and (max-width: 450px) {
+		.wide-text {
+			display: none;
+		}
 	}
 `;
 
@@ -938,7 +943,7 @@ export const StatusPanel = () => {
 								}}
 							>
 								<Icon className="padded-icon" name="review" />
-								<span className="wide-text">Request Review</span>
+								<span className="wide-text">Request </span>Review
 							</RoundedLink>
 						</Tooltip>
 						<H4>Work In Progress</H4>

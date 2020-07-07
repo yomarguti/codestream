@@ -25,7 +25,7 @@ import {
 } from "@codestream/protocols/agent";
 import { CSUser } from "@codestream/protocols/api";
 import { ChangesetFile } from "./Review/ChangesetFile";
-import Tooltip from "./Tooltip";
+import Tooltip, { TipTitle } from "./Tooltip";
 import { DocumentData } from "../protocols/agent/agent.protocol.notifications";
 import { updateModifiedRepos, clearModifiedFiles } from "../store/users/actions";
 import { CSText } from "../src/components/CSText";
@@ -801,16 +801,18 @@ class TeamPanel extends React.Component<Props, State> {
 													placement="bottom"
 													loading={loadingStatus}
 													title={
-														<div>
-															Live View: {currentUserInvisible ? "OFF" : "ON"}
-															<div style={{ height: "8px" }} />
-															{currentUserInvisible ? "not " : ""}sharing local changes
+														<TipTitle>
+															<h1>Live View: {currentUserInvisible ? "OFF" : "ON"}</h1>
+															{currentUserInvisible ? "Not sharing" : "Sharing"} local changes
 															<br />
-															with teammates.{" "}
-															<a href="http://docs.codestream.com/userguide/features/team-live-view/">
+															with teammates.
+															<a
+																className="learn-more"
+																href="http://docs.codestream.com/userguide/features/team-live-view/"
+															>
 																learn more
 															</a>
-														</div>
+														</TipTitle>
 													}
 												/>
 											)}

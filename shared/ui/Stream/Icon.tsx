@@ -2,7 +2,7 @@ import React from "react";
 import createClassString from "classnames";
 import Icons8 from "./Icons8";
 import octicons from "@primer/octicons";
-import Tooltip, { Placement } from "./Tooltip";
+import Tooltip, { Placement, Trigger } from "./Tooltip";
 
 interface Props {
 	// this name can come from one of two sources; either
@@ -21,6 +21,7 @@ interface Props {
 	loading?: boolean;
 	onClick?(event: React.SyntheticEvent): any;
 	onPopupAlign?: any;
+	trigger?: Trigger[];
 }
 
 const Icon = React.forwardRef<any, Props>((props, ref) => {
@@ -52,6 +53,7 @@ const Icon = React.forwardRef<any, Props>((props, ref) => {
 				align={props.align}
 				delay={props.delay}
 				onPopupAlign={props.onPopupAlign}
+				trigger={props.trigger}
 			>
 				<span>{iconImage}</span>
 			</Tooltip>

@@ -892,13 +892,14 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 						<Tooltip title="Create a ticket" placement="bottom" delay={1}>
 							<RoundedLink onClick={() => dispatch(openPanel(WebviewPanels.NewIssue))}>
 								<Icon name="plus" />
-								New {cardLabel}
+								<span className="wide-text">New </span>
+								{cardLabel}
 							</RoundedLink>
 						</Tooltip>
 						<Tooltip title="For untracked work" placement="bottom" delay={1}>
 							<RoundedLink onClick={() => selectCard({ title: "" })}>
 								<Icon name="plus" />
-								Ad-hoc Work
+								Ad-hoc<span className="wide-text"> Work</span>
 							</RoundedLink>
 						</Tooltip>
 						<RoundedSearchLink className={queryOpen ? "" : "collapsed"}>
@@ -980,7 +981,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 							{!firstLoad && (
 								<Icon
 									onClick={() => setReload(reload + 1)}
-									className={`smaller fixed ${isLoading ? "spin" : "spinnable"}`}
+									className={`smaller fixed clickable ${isLoading ? "spin" : "spinnable"}`}
 									name="sync"
 								/>
 							)}
