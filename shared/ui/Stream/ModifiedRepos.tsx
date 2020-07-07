@@ -22,6 +22,8 @@ const IconLabel = styled.span`
 	}
 `;
 
+foo();
+
 const Repo = styled.div`
 	.row-with-icon-actions {
 		padding-top: 3px;
