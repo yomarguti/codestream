@@ -661,25 +661,16 @@ export const StatusPanel = () => {
 			{
 				label: (
 					<span>
-						Create{" "}
+						Branch of of{" "}
 						<span className="monospace highlight">
-							<b>{newBranch}</b>
+							<b>{currentBranch}</b>
 						</span>
 					</span>
 				),
 				key: "create",
-				icon: <Icon name="plus" />,
+				icon: <Icon name="git-branch" />,
 				action: () => setManuallySelectedBranch(newBranch),
-				submenu: [
-					{
-						label: "Create Branch From....",
-						disabled: true,
-						noHover: true,
-						icon: <Icon name="blank" />
-					},
-					{ label: "-" },
-					...branches.map(branch => makeFromMenuItem(branch))
-				]
+				submenu: [...branches.map(branch => makeFromMenuItem(branch))]
 			}
 		);
 	}
