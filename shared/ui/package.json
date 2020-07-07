@@ -15,6 +15,7 @@
 	"author": "akonwi",
 	"license": "UNLICENSED",
 	"dependencies": {
+		"@formatjs/intl-listformat": "3.0.2",
 		"@primer/octicons": "9.1.1",
 		"classnames": "2.2.6",
 		"code-prettify": "git:github.com/TeamCodeStream/code-prettify.git#62943684566f616b403ac354a1b5a094344c85bc",

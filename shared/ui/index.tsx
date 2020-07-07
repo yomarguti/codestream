@@ -1,3 +1,4 @@
+import "@formatjs/intl-listformat/polyfill-locales";
 import React from "react";
 import { render } from "react-dom";
 import Container from "./Container";
