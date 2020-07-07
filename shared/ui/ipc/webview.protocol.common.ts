@@ -61,6 +61,23 @@ export enum WebviewPanels {
 	Flow = "flow"
 }
 
+// this is for mixpanel and maps the values from WebviewPanels to their
+// corresponding human-readable names
+export const WebviewPanelNames = {
+	activity: "Activity",
+	"codemarks-for-file": "Spatial View",
+	"filter-search": "Filter & Search",
+	"new-comment": "NewComment",
+	"new-issue": "New Issue",
+	"new-review": "New Review",
+	people: "People",
+	profile: "Profile",
+	review: "Review",
+	status: "Status",
+	"landing-redirect": "Landing Redirect",
+	"gtting-started": "Getting Started" // this is a typo but now baked into user data, so let's just leave it
+};
+
 export interface WebviewContext {
 	currentTeamId: string;
 	currentStreamId?: string;

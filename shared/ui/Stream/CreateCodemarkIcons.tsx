@@ -9,7 +9,8 @@ import {
 	EditorHighlightRangeRequestType,
 	MaxRangeValue,
 	EditorSelection,
-	NewCodemarkNotificationType
+	NewCodemarkNotificationType,
+	WebviewPanelNames
 } from "../ipc/webview.protocol";
 import { range } from "../utils";
 import { CodemarkType } from "@codestream/protocols/api";
@@ -81,6 +82,9 @@ export const CreateCodemarkIcons = (props: Props) => {
 			openIconsOnLine = -1;
 		}
 
+		const activePanel =
+			context.panelStack && context.panelStack.length ? context.panelStack[0] : "";
+
 		return {
 			// viewInline: context.codemarksFileViewStyle === "inline",
 			textEditorUri: editorContext.textEditorUri,
@@ -94,8 +98,8 @@ export const CreateCodemarkIcons = (props: Props) => {
 			metrics: editorContext.metrics || {},
 			openIconsOnLine,
 			composeCodemarkActive: context.composeCodemarkActive,
-			activePanel:
-				context.panelStack && context.panelStack.length ? context.panelStack[0] : undefined
+			activePanel,
+			activePanelName: WebviewPanelNames[activePanel]
 		};
 	};
 
@@ -187,7 +191,11 @@ export const CreateCodemarkIcons = (props: Props) => {
 		}
 
 		dispatch(setComposeCodemarkActive(type));
-		dispatch(setNewPostEntry(postEntry || derivedState.activePanel));
+		dispatch(
+			setNewPostEntry(
+				postEntry || derivedState.activePanelName || `unknown: ${derivedState.activePanel}`
+			)
+		);
 		dispatch(setCurrentCodemark());
 	};
 	const mapLine0ToVisibleRange = fromLineNum0 => {
