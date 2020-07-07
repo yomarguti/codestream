@@ -22,6 +22,16 @@ const IconLabel = styled.span`
 	}
 `;
 
+const Repo = styled.div`
+	.row-with-icon-actions {
+		padding-top: 3px;
+		padding-bottom: 3px;
+		&.ellipsis-left-container {
+			height: 1.65em;
+		}
+	}
+`;
+
 export const ModifiedRepos = (props: {
 	id: string;
 	showUntracked?: boolean;
@@ -91,9 +101,8 @@ export const ModifiedRepos = (props: {
 				person.email === currentUserEmail
 					? null
 					: (authors || []).find(a => a.email === currentUserEmail && a.stomped > 0);
-			console.warn("REPO", repo);
 			return (
-				<div key={"repo-" + repoId}>
+				<Repo key={"repo-" + repoId}>
 					<div>
 						<IconLabel>
 							<Icon name="repo" />
@@ -105,6 +114,9 @@ export const ModifiedRepos = (props: {
 						</IconLabel>
 					</div>
 					<div style={{ margin: "0 -20px 0 -20px", padding: "5px 0 10px 0" }}>
+						<div className="related-label" style={{ paddingLeft: "40px", paddingTop: "5px" }}>
+							Modified Files (vs. {repo.startCommit ? repo.startCommit.substr(0, 8) : "HEAD"})
+						</div>
 						{modifiedFiles.map(f => {
 							const hasConflict = isMe
 								? collisions.repoFiles[`${repo.repoId}:${f.file}`]
@@ -130,7 +142,10 @@ export const ModifiedRepos = (props: {
 						})}
 					</div>
 					{repo.commits && repo.commits.length > 0 && (
-						<div style={{ margin: "0 -20px 0 -20px", padding: "5px 0 10px 0" }}>
+						<div style={{ margin: "0 -20px 0 -20px", padding: "0 0 10px 0" }}>
+							<div className="related-label" style={{ paddingLeft: "40px" }}>
+								Local Commits
+							</div>
 							{(repo.commits || []).map(c => {
 								const commit = c as any;
 								return (
@@ -161,7 +176,7 @@ export const ModifiedRepos = (props: {
 							<Icon name="alert" className="conflict" /> = possible merge conflict
 						</div>
 					)}
-				</div>
+				</Repo>
 			);
 		})
 		.filter(Boolean);
