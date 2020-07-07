@@ -29,7 +29,8 @@ export function WallToWallBanner(props: Props) {
 				<div id="wall-to-wall-banner">
 					<div className="content">
 						<Icon name="x" className="cancel-button clickable" onClick={setSkip} />
-						CodeStream works best next to an editor window. <a href="">Learn more</a>.
+						CodeStream works best next to an editor window.{" "}
+						<a href="https://docs.codestream.com/userguide/faq/cspane-in-vsc/">Learn more</a>.
 					</div>
 				</div>
 			</div>

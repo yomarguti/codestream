@@ -848,6 +848,12 @@ export class SimpleStream extends Component {
 									Assigned issues and code reviews.
 									<br />
 									This is home base for getting work done.
+									<a
+										className="learn-more"
+										href="https://docs.codestream.com/userguide/features/tasks"
+									>
+										learn more
+									</a>
 								</TipTitle>
 							}
 							placement="bottom"
