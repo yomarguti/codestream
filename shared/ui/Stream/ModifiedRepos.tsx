@@ -70,7 +70,8 @@ export const ModifiedRepos = (props: {
 	const { modifiedRepos, modifiedReposModifiedAt } = person;
 
 	if (!xrayEnabled) return null;
-	if (!modifiedRepos || !modifiedRepos[teamId] || !modifiedRepos[teamId].length) return null;
+	if (!modifiedRepos || !modifiedRepos[teamId] || !modifiedRepos[teamId].length)
+		return props.defaultText ? <span>{props.defaultText}</span> : null;
 
 	// FIXME we want to be able to show the diff here
 	const clickFile = (repoId, path, baseSha) => {

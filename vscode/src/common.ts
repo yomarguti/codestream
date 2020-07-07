@@ -1,4 +1,4 @@
-"user strict"; 
+"user strict";
 import { commands } from "vscode";
 import { BuiltInCommands } from "./constants";
 
