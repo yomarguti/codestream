@@ -367,6 +367,10 @@ class CodemarkForm extends React.Component<Props, State> {
 	componentDidUpdate(prevProps: Props) {
 		const { isEditing, textEditorSelection, textEditorUri } = this.props;
 
+		const commentType = this.getCommentType();
+
+		// this if statement, if true, will update the selection that the
+		// compose form is pointing to
 		if (
 			// make sure there an actual selection, not just a cursor
 			this.isNonzeroSelection(textEditorSelection) &&
@@ -374,13 +378,21 @@ class CodemarkForm extends React.Component<Props, State> {
 			!this.rangesAreEqual(prevProps.textEditorSelection, textEditorSelection) &&
 			// make sure the range didn't change because we switched editors(files)
 			prevProps.textEditorUri == textEditorUri &&
+			// if we're editing, do nothing
 			!isEditing &&
+			// if we are doing a permalink, do nothing
 			!this.state.linkURI &&
+			commentType !== "link" &&
+			// only update if we have a live location
 			this.state.liveLocation >= 0
 		) {
 			this.getScmInfoForSelection(textEditorUri!, forceAsLine(textEditorSelection!));
 			this.props.onDidChangeSelection && this.props.onDidChangeSelection(textEditorSelection!);
 			// this.setState({ addingLocation: false });
+		}
+
+		if (prevProps.commentType !== this.props.commentType) {
+			this.setState({});
 		}
 
 		// if you switch files while the compose form is open, make
@@ -390,7 +402,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (prevProps.textEditorUri !== textEditorUri) {
 			// if you're creating a permalink, just cancel it and move on
 			// otherwise, go to multi-location mode
-			if (this.getCommentType() === "link") this.cancelCompose();
+			if (commentType === "link") this.cancelCompose();
 			else this.addLocation();
 		}
 
@@ -566,7 +578,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	getCommentType = () => {
 		const { editingCodemark } = this.props;
-		return editingCodemark ? editingCodemark.type : this.state.type;
+		return editingCodemark ? editingCodemark.type : this.props.commentType || "comment";
 	};
 
 	setCommentType = (type: string) => {
@@ -1387,8 +1399,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	}
 
 	getTitleLabel() {
-		const { editingCodemark } = this.props;
-		const commentType = editingCodemark ? editingCodemark.type : this.state.type;
+		const commentType = this.getCommentType();
 		return commentType === "issue"
 			? "issue in "
 			: commentType === "question"
@@ -1741,7 +1752,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		const { codeBlocks, scmError } = this.state;
 		const { editingCodemark, currentReviewId } = this.props;
 
-		const commentType = editingCodemark ? editingCodemark.type : this.state.type || "comment";
+		const commentType = this.getCommentType();
 
 		// if you are conducting a review, and somehow are able to try to
 		// create an issue or a permalink, stop the user from doing that
@@ -1921,7 +1932,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	renderCodemarkForm() {
 		const { editingCodemark, currentUser } = this.props;
-		const commentType = editingCodemark ? editingCodemark.type : this.state.type || "comment";
+		const commentType = this.getCommentType();
 
 		const titlePlaceholder =
 			commentType === "issue"
@@ -2053,7 +2064,8 @@ class CodemarkForm extends React.Component<Props, State> {
 							</div>
 						)}
 						{this.renderTextHelp()}
-						{this.state.linkURI &&
+						{commentType === "link" &&
+							this.state.linkURI &&
 							this.state.isPermalinkPublic && [
 								<div key="permalink-warning" className="permalink-warning">
 									<Icon name="alert" />
@@ -2061,15 +2073,16 @@ class CodemarkForm extends React.Component<Props, State> {
 									quoted code snippet.
 								</div>
 							]}
-						{this.state.linkURI && [
-							<textarea
-								key="link-offscreen"
-								ref={this.permalinkRef}
-								value={this.state.linkURI}
-								style={{ position: "absolute", left: "-9999px" }}
-							/>,
-							<input type="text" className="permalink" value={this.state.linkURI} />
-						]}
+						{commentType === "link" &&
+							this.state.linkURI && [
+								<textarea
+									key="link-offscreen"
+									ref={this.permalinkRef}
+									value={this.state.linkURI}
+									style={{ position: "absolute", left: "-9999px" }}
+								/>,
+								<input type="text" className="permalink" value={this.state.linkURI} />
+							]}
 						{commentType === "link" && !this.state.linkURI && (
 							<div id="privacy-controls" className="control-group" key="1">
 								<div className="public-private-hint" key="privacy-hint">
@@ -2141,7 +2154,11 @@ class CodemarkForm extends React.Component<Props, State> {
 									className="control-button"
 									type="submit"
 									loading={this.state.isLoading}
-									onClick={this.state.linkURI ? this.copyPermalink : this.handleClickSubmit}
+									onClick={
+										commentType === "link" && this.state.linkURI
+											? this.copyPermalink
+											: this.handleClickSubmit
+									}
 									disabled={hasError}
 								>
 									{commentType === "link"

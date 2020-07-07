@@ -105,6 +105,8 @@
 		padding: 10px 60px;
 		box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.75);
 		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+		opacity: 0;
+		animation: fade-in 4s ease 1 forwards;
 		a {
 			color: white;
 			font-weight: bold;
@@ -115,6 +117,14 @@
 			&:hover {
 				color: white !important;
 			}
+		}
+	}
+	@keyframes fade-in {
+		50% {
+			opacity: 0;
+		}
+		100% {
+			opacity: 1;
 		}
 	}
 
