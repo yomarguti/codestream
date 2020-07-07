@@ -174,7 +174,7 @@ export class ScmManager {
 					return { ...status.scm };
 				});
 			modifiedRepos.forEach(repo => {
-				delete repo.commits;
+				if (repo.commits) repo.commits = repo.commits.filter(commit => commit.localOnly);
 			});
 		} catch (ex) {
 			gitError = ex.toString();
