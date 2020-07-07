@@ -64,11 +64,6 @@ class CreateIssue : NewCodemark(CodemarkType.ISSUE) {
     override fun getIcon(flags: Int) = IconLoader.getIcon("/images/marker-issue.svg")
 }
 
-class CreateBookmark : NewCodemark(CodemarkType.BOOKMARK) {
-    override fun getText() = "Create bookmark"
-    override fun getIcon(flags: Int) = IconLoader.getIcon("/images/marker-bookmark.svg")
-}
-
 class GetPermalink : NewCodemark(CodemarkType.LINK) {
     override fun getText() = "Get permalink"
     override fun getIcon(flags: Int) = IconLoader.getIcon("/images/marker-permalink.svg")

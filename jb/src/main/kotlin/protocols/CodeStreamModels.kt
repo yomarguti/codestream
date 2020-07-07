@@ -7,12 +7,6 @@ enum class CodemarkType {
     COMMENT,
     @SerializedName("issue")
     ISSUE,
-    @SerializedName("bookmark")
-    BOOKMARK,
-    @SerializedName("question")
-    QUESTION,
-    @SerializedName("trap")
-    TRAP,
     @SerializedName("link")
     LINK
 }
