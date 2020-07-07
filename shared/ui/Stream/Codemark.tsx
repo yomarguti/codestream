@@ -1288,7 +1288,7 @@ export class Codemark extends React.Component<Props, State> {
 			};
 		});
 
-		menuItems.push({ label: "Set Keybinding", action: "set-keybinding", submenu: submenu });
+		// menuItems.push({ label: "Set Keybinding", action: "set-keybinding", submenu: submenu });
 
 		const description =
 			codemark.title && codemark.text ? this.renderTextLinkified(codemark.text) : null;
