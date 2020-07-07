@@ -388,7 +388,10 @@ class CodemarkForm extends React.Component<Props, State> {
 		// switching to multi-location mode, which shows the codeblock
 		// and exactly what you're commenting on
 		if (prevProps.textEditorUri !== textEditorUri) {
-			this.addLocation();
+			// if you're creating a permalink, just cancel it and move on
+			// otherwise, go to multi-location mode
+			if (this.getCommentType() === "link") this.cancelCompose();
+			else this.addLocation();
 		}
 
 		const prevProviderHost = prevProps.issueProvider ? prevProps.issueProvider.host : undefined;
@@ -560,6 +563,11 @@ class CodemarkForm extends React.Component<Props, State> {
 	// 	this.setState({ menuOpen: false });
 	// 	if (type) this.setCommentType(type);
 	// }
+
+	getCommentType = () => {
+		const { editingCodemark } = this.props;
+		return editingCodemark ? editingCodemark.type : this.state.type;
+	};
 
 	setCommentType = (type: string) => {
 		if (this.props.editingCodemark) return;
@@ -1725,7 +1733,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		};
 	}
 
-	cancelCompose = (e: Event) => {
+	cancelCompose = (e?: Event) => {
 		this.props.onClickClose && this.props.onClickClose(e);
 	};
 

@@ -150,4 +150,4 @@ export const mapFileScmErrorForTelemetry = (error: string) => {
 	if (error === ScmError.NoGit) return "GitNotFound";
 	if (error === ScmError.NoRemotes) return "NoRemotes";
 	return "Unknown";
-}
+};
