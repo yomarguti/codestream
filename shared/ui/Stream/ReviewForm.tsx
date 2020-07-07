@@ -1368,6 +1368,21 @@ class ReviewForm extends React.Component<Props, State> {
 		}
 	};
 
+	dimBelow = (id?: string) => {
+		const $rows = document.getElementsByClassName("row-with-icon-actions");
+		let seen = false;
+		for (let i = 0; i < $rows.length; i++) {
+			if ($rows[i].classList.contains("muted")) {
+				if (!seen) $rows[i].classList.add("litup");
+				else $rows[i].classList.remove("litup");
+			} else {
+				if (seen) $rows[i].classList.add("dimmed");
+				else $rows[i].classList.remove("dimmed");
+			}
+			if ($rows[i].id === id) seen = true;
+		}
+	};
+
 	renderChange(
 		id: string,
 		onOff: boolean,
@@ -1375,14 +1390,22 @@ class ReviewForm extends React.Component<Props, State> {
 		title: string,
 		message: string | ReactElement,
 		onClick,
-		tooltip?: string | ReactElement
+		tooltip?: string | ReactElement,
+		dimBelow?: boolean
 	) {
 		return (
 			<Tooltip key={id} title={tooltip || ""} placement="top" delay={1} align={{ offset: [0, 5] }}>
 				<div
+					id={"row-" + id}
 					className={`row-with-icon-actions ${onOff ? "" : "muted"}`}
 					style={{ display: "flex", alignItems: "center" }}
 					onClick={onClick}
+					onMouseEnter={() => {
+						dimBelow && this.dimBelow("row-" + id);
+					}}
+					onMouseLeave={() => {
+						dimBelow && this.dimBelow();
+					}}
 				>
 					<input
 						type="checkbox"
@@ -1566,7 +1589,8 @@ class ReviewForm extends React.Component<Props, State> {
 							</div>
 						</div>
 					)}
-				</div>
+				</div>,
+				true
 			)
 		);
 	}
