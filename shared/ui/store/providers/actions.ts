@@ -106,7 +106,7 @@ export const configureProvider = (
 			}
 		});
 
-		// for some providers (namely YouTrack), configuring is as good as connecting,
+		// for some providers (YouTrack and enterprise providers with PATs), configuring is as good as connecting,
 		// since we allow the user to set their own access token
 		if (setConnectedWhenConfigured && provider.hasIssues) {
 			dispatch(sendIssueProviderConnected(providerId, connectionLocation));

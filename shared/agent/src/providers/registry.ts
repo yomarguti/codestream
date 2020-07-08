@@ -63,6 +63,7 @@ export * from "./gitlab";
 export * from "./gitlabEnterprise";
 export * from "./asana";
 export * from "./bitbucket";
+export * from "./bitbucketServer";
 export * from "./youtrack";
 export * from "./azuredevops";
 export * from "./slack";

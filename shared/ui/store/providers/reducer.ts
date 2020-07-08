@@ -53,7 +53,8 @@ export const isConnected = (
 		switch (providerName) {
 			case "jiraserver":
 			case "github_enterprise":
-			case "gitlab_enterprise": {
+			case "gitlab_enterprise": 
+			case "bitbucket_server": {
 				// enterprise/on-prem providers need the `hosts` validated
 				return (
 					info != undefined &&

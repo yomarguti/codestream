@@ -136,7 +136,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		for (const gitRepo of gitRepos) {
 			const remotes = await git.getRepoRemotes(gitRepo.path);
 			for (const remote of remotes) {
-				if (remote.domain === "gitlab.com" && !openProjects.has(remote.path)) {
+				if (this.getIsMatchingRemotePredicate()(remote) && !openProjects.has(remote.path)) {
 					let gitlabProject = this._projectsByRemotePath.get(remote.path);
 
 					if (!gitlabProject) {
@@ -218,6 +218,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	private nextPage(response: Response): string | undefined {
 		const linkHeader = response.headers.get("Link") || "";
+		if (linkHeader.trim().length === 0) return undefined;
 		const links = linkHeader.split(",");
 		for (const link of links) {
 			const [rawUrl, rawRel] = link.split(";");

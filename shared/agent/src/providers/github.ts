@@ -113,7 +113,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		void (await this.ensureConnected());
 
 		const openReposMap = await getOpenedRepos<GitHubRepo>(
-			r => r.domain === "github.com",
+			this.getIsMatchingRemotePredicate(),
 			p => this.get<GitHubRepo>(`/repos/${p}`),
 			this._knownRepos
 		);
@@ -128,31 +128,33 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				path: r.path
 			}));
 
-		const userRepos: { [key: string]: string }[] = [];
-		try {
-			let url: string | undefined = "/user/repos";
-			do {
-				const apiResponse = await this.get<{ [key: string]: string }[]>(url);
-				userRepos.push(...apiResponse.body);
-				url = this.nextPage(apiResponse.response);
-			} while (url);
-		} catch (err) {
-			Logger.error(err);
-			debugger;
+		if (boards.length === 0) {
+			const userRepos: { [key: string]: string }[] = [];
+			try {
+				let url: string | undefined = "/user/repos";
+				do {
+					const apiResponse = await this.get<{ [key: string]: string }[]>(url);
+					userRepos.push(...apiResponse.body);
+					url = this.nextPage(apiResponse.response);
+				} while (url);
+			} catch (err) {
+				Logger.error(err);
+				debugger;
+			}
+			userRepos.sort((b1, b2) => b1.full_name.localeCompare(b2.full_name));
+			boards.push(
+				...userRepos
+					.filter(r => r.has_issues && !boards.find(b => b.id === r.id))
+					.map(repo => {
+						return {
+							...repo,
+							id: repo.id,
+							name: repo.full_name,
+							apiIdentifier: repo.full_name
+						};
+					})
+			);
 		}
-		userRepos.sort((b1, b2) => b1.full_name.localeCompare(b2.full_name));
-		boards.push(
-			...userRepos
-				.filter(r => r.has_issues && !boards.find(b => b.id === r.id))
-				.map(repo => {
-					return {
-						...repo,
-						id: repo.id,
-						name: repo.full_name,
-						apiIdentifier: repo.full_name
-					};
-				})
-		);
 
 		return {
 			boards
@@ -227,6 +229,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 	private nextPage(response: Response): string | undefined {
 		const linkHeader = response.headers.get("Link") || "";
+		if (linkHeader.trim().length === 0) return undefined;
 		const links = linkHeader.split(",");
 		for (const link of links) {
 			const [rawUrl, rawRel] = link.split(";");

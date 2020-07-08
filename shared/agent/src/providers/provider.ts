@@ -39,6 +39,7 @@ import { Functions, Strings } from "../system";
 export const providerDisplayNamesByNameKey = new Map<string, string>([
 	["asana", "Asana"],
 	["bitbucket", "Bitbucket"],
+	["bitbucket_server", "Bitbucket Server"],
 	["github", "GitHub"],
 	["github_enterprise", "GitHub Enterprise"],
 	["gitlab", "GitLab"],
@@ -332,7 +333,6 @@ export abstract class ThirdPartyProviderBase<
 	private async ensureConnectedCore(request?: { providerTeamId?: string }) {
 		const { user } = await SessionContainer.instance().users.getMe();
 		this._providerInfo = this.getProviderInfo(user);
-
 		if (this._providerInfo === undefined) {
 			throw new Error(`You must authenticate with ${this.displayName} first.`);
 		}

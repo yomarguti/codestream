@@ -79,7 +79,7 @@ export const IntegrationsPanel = () => {
 		const connectedProviders = Object.keys(providers).filter(id => isConnected(state, { id }));
 		const codeHostProviders = Object.keys(providers)
 			.filter(id =>
-				["github", "github_enterprise", "bitbucket", "gitlab", "gitlab_enterprise"].includes(
+				["github", "github_enterprise", "bitbucket", "bitbucket_server", "gitlab", "gitlab_enterprise"].includes(
 					providers[id].name
 				)
 			)

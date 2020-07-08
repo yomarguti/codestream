@@ -429,6 +429,7 @@ export interface CSBitbucketProviderInfo {
 	userId: string;
 	hosts: { [host: string]: CSBitbucketProviderInfo };
 	data?: {
+		baseUrl?: string;
 		scopes?: string;
 	};
 }
