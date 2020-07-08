@@ -1201,6 +1201,9 @@ const ReviewForReview = (props: PropsWithReview) => {
 								editingReview={review}
 								onClose={() => props.setIsAmending && props.setIsAmending(false)}
 							/>
+							{/* spacer div that allows this to scroll all the way to the top.
+							 * note that it's not 100vh so that at least *some* content is always visible */}
+							<div style={{ height: "80vh" }} />
 						</InputContainer>
 					)}
 				</Footer>

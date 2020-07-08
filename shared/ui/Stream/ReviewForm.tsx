@@ -229,7 +229,7 @@ class ReviewForm extends React.Component<Props, State> {
 		isAmending: false
 	};
 	_titleInput: HTMLElement | null = null;
-	_amendingDiv: HTMLElement | null = null;
+	_formDiv: HTMLElement | null = null;
 	insertTextAtCursor?: Function;
 	focusOnMessageInput?: Function;
 	permalinkRef = React.createRef<HTMLTextAreaElement>();
@@ -435,8 +435,11 @@ class ReviewForm extends React.Component<Props, State> {
 		this.focus();
 
 		if (isAmending) {
-			const vscroll = this._amendingDiv && this._amendingDiv.closest(".vscroll");
-			if (vscroll) vscroll.scrollTo({ top: 1000000, left: 0, behavior: "smooth" });
+			// https://github.com/iamdustan/smoothscroll/issues/28#issuecomment-638768782
+			setTimeout(() => {
+				if (this._formDiv)
+					this._formDiv.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
+			}, 0);
 		}
 	}
 
@@ -1937,7 +1940,7 @@ class ReviewForm extends React.Component<Props, State> {
 		const showChanges = (!isEditing || isAmending) && !isLoadingScm && !scmError && !branchError;
 
 		return (
-			<form className="standard-form review-form" key="form">
+			<form className="standard-form review-form" key="form" ref={ref => (this._formDiv = ref)}>
 				<fieldset className="form-body">
 					{!isAmending && (
 						<div id="controls" className="control-group" key="controls1">
@@ -1997,7 +2000,7 @@ class ReviewForm extends React.Component<Props, State> {
 					)}
 					{!isAmending && this.renderTags()}
 					{isAmending && (
-						<div ref={ref => (this._amendingDiv = ref)}>
+						<div>
 							<div key="headshot" className="headline-flex">
 								<div key="padded" style={{ paddingRight: "7px" }}>
 									<Headshot person={currentUser} />
