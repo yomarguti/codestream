@@ -38,6 +38,7 @@ import Tooltip from "./Tooltip";
 import { OpenReviews } from "./OpenReviews";
 import { Modal } from "./Modal";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 
 const StyledCheckbox = styled(Checkbox)`
 	color: var(--text-color-subtle);
@@ -350,7 +351,8 @@ export const StatusPanel = () => {
 			// msTeamsConfig: getProviderConfig(state, "msteams"),
 			isConnectedToSlack,
 			selectedShareTarget: selectedShareTarget || shareTargets[0],
-			isCurrentUserAdmin: adminIds.includes(state.session.userId!)
+			isCurrentUserAdmin: adminIds.includes(state.session.userId!),
+			shareToSlackSupported: isFeatureEnabled(state, "shareStatusToSlack")
 		};
 	});
 
@@ -493,9 +495,8 @@ export const StatusPanel = () => {
 		return !(branches && branches.length > 0);
 	}, [branches]);
 	const showUpdateSlackCheckbox = React.useMemo(() => {
-		return false; // until our app gets approved
-		// return label;
-	}, [label, derivedState.isConnectedToSlack]);
+		return label && derivedState.shareToSlackSupported;
+	}, [label, derivedState.shareToSlackSupported]);
 
 	const newBranch = React.useMemo(() => {
 		if (customBranchName) return customBranchName;
