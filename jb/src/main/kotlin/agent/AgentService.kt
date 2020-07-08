@@ -35,6 +35,8 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import git4idea.config.GitExecutableManager
+import git4idea.config.GitVcsApplicationSettings
 import git4idea.config.GitVcsSettings
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.future.await
@@ -259,6 +261,15 @@ class AgentService(private val project: Project) : Disposable {
 
     private fun initializationOptions(): InitializationOptions? {
         val settings = ServiceManager.getService(ApplicationSettingsService::class.java)
+        val gitProjectSettings = GitVcsSettings.getInstance(project)
+        val gitApplicationSettings = GitVcsApplicationSettings.getInstance()
+        val gitApplicationDetectedPath = GitExecutableManager.getInstance().pathToGit
+        val gitApplicationSavedPath = gitApplicationSettings.savedPathToGit
+        val gitProjectDetectedPath = GitExecutableManager.getInstance().getPathToGit(project)
+        val gitProjectPath = gitProjectSettings.pathToGit
+
+        val gitPath = gitProjectPath ?: gitProjectDetectedPath ?: gitApplicationSavedPath ?: gitApplicationDetectedPath
+
         return InitializationOptions(
             settings.extensionInfo,
             Ide(),
@@ -268,7 +279,7 @@ class AgentService(private val project: Project) : Disposable {
             settings.serverUrl,
             settings.disableStrictSSL,
             settings.traceLevel.value,
-            GitVcsSettings.getInstance(project).pathToGit
+            gitPath
         )
     }
 

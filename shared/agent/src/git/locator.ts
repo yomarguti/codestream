@@ -5,22 +5,40 @@ import { findExecutable, runCommand } from "./shell";
 export interface GitLocation {
 	path: string;
 	version: string;
+	isWsl: boolean;
+	wslDistro?: string;
 }
 
 function parseVersion(raw: string): string {
 	return raw.replace(/^git version /, "");
 }
 
+const wslRegex = /\\\\wsl\$\\(.+?)\\.+/;
+
 async function findSpecificGit(path: string): Promise<GitLocation> {
-	const version = await runCommand(path, ["--version"]);
-	// If needed, let's update our path to avoid the search on every command
-	if (!path || path === "git") {
-		path = findExecutable(path, ["--version"]).cmd;
+	let isWsl = false;
+	let wslDistro;
+	let version = "";
+
+	const wslMatch = wslRegex.exec(path);
+	if (wslMatch) {
+		wslDistro = wslMatch[1];
+		path = findExecutable("wsl", []).cmd;
+		version = await runCommand(path, ["-d", wslDistro, "git", "--version"]);
+		isWsl = true;
+	} else {
+		version = await runCommand(path, ["--version"]);
+		if (!path || path === "git") {
+			// If needed, let's update our path to avoid the search on every command
+			path = findExecutable(path, ["--version"]).cmd;
+		}
 	}
 
 	return {
 		path,
-		version: parseVersion(version.trim())
+		version: parseVersion(version.trim()),
+		isWsl,
+		wslDistro
 	};
 }
 
