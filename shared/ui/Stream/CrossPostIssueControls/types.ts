@@ -46,11 +46,7 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		shortDisplayName: "Bitbucket",
 		icon: "bitbucket",
 		urlPlaceholder: "https://bitbucket.myorg.com",
-		helpUrl: "https://confluence.atlassian.com/bitbucketserver/personal-access-tokens-939515499.html",
-		boardLabel: "project",
-		listLabel: "list",
-		cardLabel: "issue",
-		supportsStartWork: true
+		helpUrl: "https://confluence.atlassian.com/bitbucketserver/personal-access-tokens-939515499.html"
 	},
 	codestream: {
 		displayName: "CodeStream",
