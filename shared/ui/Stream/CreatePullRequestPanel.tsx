@@ -58,9 +58,14 @@ export const CreatePullRequestPanel = props => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { providers } = state;
 		const codeHostProviders = Object.keys(providers).filter(id =>
-			["github", "gitlab", "github_enterprise", "gitlab_enterprise", "bitbucket"].includes(
-				providers[id].name
-			)
+			[
+				"github",
+				"gitlab",
+				"github_enterprise",
+				"gitlab_enterprise",
+				"bitbucket",
+				"bitbucket_server"
+			].includes(providers[id].name)
 		);
 		return {
 			providers: providers,
@@ -70,7 +75,8 @@ export const CreatePullRequestPanel = props => {
 			isConnectedToGitLab: isConnected(state, { name: "gitlab" }),
 			isConnectedToGitHubEnterprise: isConnected(state, { name: "github_enterprise" }),
 			isConnectedToGitLabEnterprise: isConnected(state, { name: "gitlab_enterprise" }),
-			isConnectedToBitBucket: isConnected(state, { name: "bitbucket" })
+			isConnectedToBitbucket: isConnected(state, { name: "bitbucket" }),
+			isConnectedToBitbucketServer: isConnected(state, { name: "bitbucket_server" })
 		};
 	});
 	const [loading, setLoading] = useState(true);
@@ -180,7 +186,8 @@ export const CreatePullRequestPanel = props => {
 		derivedState.isConnectedToGitLab,
 		derivedState.isConnectedToGitHubEnterprise,
 		derivedState.isConnectedToGitLabEnterprise,
-		derivedState.isConnectedToBitBucket
+		derivedState.isConnectedToBitbucket,
+		derivedState.isConnectedToBitbucketServer
 	]);
 
 	useEffect(() => {

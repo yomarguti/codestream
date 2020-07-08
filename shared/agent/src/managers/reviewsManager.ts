@@ -522,7 +522,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 						name === "gitlab" ||
 						name === "github_enterprise" ||
 						name === "gitlab_enterprise" ||
-						name === "bitbucket"
+						name === "bitbucket" ||
+						name === "bitbucket_server"
 					);
 				}
 			);
@@ -654,15 +655,16 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 			const connectedProviders = providerRegistry.getConnectedProviders(
 				user.user,
-				(p): p is ThirdPartyIssueProvider & ThirdPartyProviderSupportsPullRequests => {
-					const thirdPartyIssueProvider = p as ThirdPartyIssueProvider;
-					const name = thirdPartyIssueProvider.getConfig().name;
+				(p): p is ThirdPartyProvider & ThirdPartyProviderSupportsPullRequests => {
+					const thirdPartyProvider = p as ThirdPartyProvider;
+					const name = thirdPartyProvider.getConfig().name;
 					return (
 						name === "github" ||
 						name === "gitlab" ||
 						name === "github_enterprise" ||
 						name === "gitlab_enterprise" ||
-						name === "bitbucket"
+						name === "bitbucket" ||
+						name === "bitbucket_server"
 					);
 				}
 			);

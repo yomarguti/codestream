@@ -484,6 +484,14 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 		// HACKitude yeah, sorry
 		const uri = URI.parse(remote);
 		const split = uri.path.split("/");
+		if (split[1] === "scm") {
+			const owner = split[2];
+			const name = split[3].replace(".git", "");
+			return {
+				owner,
+				name
+			};
+		}
 		const owner = split[1];
 		const name = split[2].replace(".git", "");
 		return {
@@ -506,18 +514,38 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 			}
 			const { owner, name } = this.getOwnerFromRemote(request.remote);
 			const createPullRequestResponse = await this.post<
-				BitBucketCreatePullRequestRequest,
-				BitBucketCreatePullRequestResponse
-			>(`/repositories/${owner}/${name}/pullrequests`, {
-				source: { branch: { name: request.headRefName } },
-				destination: { branch: { name: request.baseRefName } },
+				BitbucketServerCreatePullRequestRequest,
+				BitbucketServerCreatePullRequestResponse
+			>(`/projects/${owner}/repos/${name}/pull-requests`, {
+				fromRef: {
+					id: request.headRefName,
+					repository: {
+						project: {
+							key: repoInfo.project.key
+						},
+						slug: name
+					}
+				},
+				toRef: {
+					id: request.baseRefName,
+					repository: {
+						project: {
+							key: repoInfo.project.key
+						},
+						slug: name
+					}
+				},
 				title: request.title,
 				description: this.createDescription(request)
 			});
 
 			const title = `#${createPullRequestResponse.body.id} ${createPullRequestResponse.body.title}`;
 			return {
-				url: createPullRequestResponse.body.links.html.href,
+				url:
+					createPullRequestResponse.body.links.self &&
+					createPullRequestResponse.body.links.self.length
+						? createPullRequestResponse.body.links.self[0].href
+						: undefined,
 				title: title
 			};
 		} catch (ex) {
@@ -526,15 +554,11 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 				head: request.headRefName,
 				base: request.baseRefName
 			});
-			let message = ex.message;
-			if (message.indexOf("credentials lack one or more required privilege scopes") > -1) {
-				message +=
-					"\n\nYou may need to disconnect and reconnect your Bitbucket for CodeStream integration to create your first Pull Request.";
-			}
+
 			return {
 				error: {
 					type: "PROVIDER",
-					message: `${this.displayName}: ${message}`
+					message: `${this.displayName}: ${ex.message}`
 				}
 			};
 		}
@@ -543,30 +567,35 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 	async getRepoInfo(request: { remote: string }): Promise<any> {
 		try {
 			const { owner, name } = this.getOwnerFromRemote(request.remote);
-			const repoResponse = await this.get<BitBucketRepo>(`/repositories/${owner}/${name}`);
-			const pullRequestResponse = await this.get<BitBucketPullRequest>(
-				`/repositories/${owner}/${name}/pullrequests?state=OPEN`
+			const repoResponse = await this.get<BitbucketServerRepo>(`/projects/${owner}/repos/${name}`);
+			const defaultBranchResponse = await this.get<BitbucketServerBranch>(
+				`/projects/${owner}/repos/${name}/branches/default`
+			);
+
+			const defaultBranchName = defaultBranchResponse
+				? defaultBranchResponse.body.displayId
+				: undefined;
+
+			const pullRequestResponse = await this.get<any>(
+				`/projects/${owner}/repos/${name}/pull-requests?state=OPEN`
 			);
 			let pullRequests: ProviderPullRequestInfo[] = [];
 			if (pullRequestResponse && pullRequestResponse.body && pullRequestResponse.body.values) {
-				pullRequests = pullRequestResponse.body.values.map(_ => {
+				pullRequests = pullRequestResponse.body.values.map((_: any) => {
 					return {
 						id: _.id,
-						url: _.links!.html!.href,
-						baseRefName: _.destination.branch.name,
-						headRefName: _.source.branch.name
+						url: _.links!.self[0]!.href,
+						baseRefName: _.toRef.displayId,
+						headRefName: _.fromRef.displayId
 					};
 				});
 			}
 			return {
-				id: repoResponse.body.uuid,
-				defaultBranch:
-					repoResponse.body &&
-					repoResponse.body.mainbranch &&
-					repoResponse.body.mainbranch.name &&
-					repoResponse.body.mainbranch.type === "branch"
-						? repoResponse.body.mainbranch.name
-						: undefined,
+				id: repoResponse.body.id,
+				project: {
+					key: repoResponse.body.project.key
+				},
+				defaultBranch: defaultBranchName,
 				pullRequests: pullRequests
 			};
 		} catch (ex) {
@@ -730,51 +759,49 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 	}
 }
 
-interface BitBucketCreatePullRequestRequest {
-	source: {
-		branch: {
-			name: string;
+interface BitbucketServerCreatePullRequestRequest {
+	fromRef: {
+		id: string;
+		repository: {
+			project: {
+				key: string;
+			};
+			slug: string;
 		};
 	};
-
-	destination: {
-		branch: {
-			name: string;
+	toRef: {
+		id: string;
+		repository: {
+			project: {
+				key: string;
+			};
+			slug: string;
 		};
 	};
 	title: string;
 	description?: string;
 }
 
-interface BitBucketCreatePullRequestResponse {
+interface BitbucketServerCreatePullRequestResponse {
 	id: string;
-	links: { html: { href: string } };
+	links: { self: { href: string }[] };
 	number: number;
 	title: string;
 }
 
-interface BitBucketRepo {
-	uuid: string;
+interface BitbucketServerBranch {
+	displayId: string;
+	type: string;
+	isDefault: boolean;
+}
+
+interface BitbucketServerRepo {
+	id: string;
+	project: {
+		key: string;
+	};
 	mainbranch?: {
 		name?: string;
 		type?: string;
 	};
-}
-
-interface BitBucketPullRequest {
-	values: {
-		id: string;
-		source: {
-			branch: {
-				name: string;
-			};
-		};
-
-		destination: {
-			branch: {
-				name: string;
-			};
-		};
-		links: { html: { href: string } };
-	}[];
 }
