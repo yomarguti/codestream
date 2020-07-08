@@ -23,8 +23,8 @@ import {
 	RestartRequiredNotificationType,
 	TelemetryRequest,
 	TelemetryRequestType,
-	OpenUrlRequestType,
-	OpenUrlRequest
+	AgentOpenUrlRequestType,
+	AgentOpenUrlRequest
 } from "@codestream/protocols/agent";
 import { CompositeDisposable, Disposable } from "atom";
 import { Convert, LanguageClientConnection } from "atom-languageclient";
@@ -167,9 +167,7 @@ export class AgentConnection implements Disposable {
 		return this._didChangeApiVersionCompatibility.add(cb);
 	}
 
-	onDidChangeServerUrl(
-		cb: (event: DidChangeServerUrlNotification) => void
-	) {
+	onDidChangeServerUrl(cb: (event: DidChangeServerUrlNotification) => void) {
 		return this._didChangeServerUrl.add(cb);
 	}
 
@@ -316,7 +314,7 @@ export class AgentConnection implements Disposable {
 				.map(dir => ({ uri: Convert.pathToUri(dir.getPath()), name: dir.getBaseName() }))
 		);
 
-		rpc.onRequest(OpenUrlRequestType.method, (params: OpenUrlRequest) => {
+		rpc.onRequest(AgentOpenUrlRequestType.method, (params: AgentOpenUrlRequest) => {
 			shell.openExternal(params.url);
 		});
 
@@ -395,9 +393,7 @@ export class AgentConnection implements Disposable {
 			)
 		);
 		connection.onCustom(DidChangeServerUrlNotificationType.method, notification => {
-			this._didChangeServerUrl.push(
-				notification as DidChangeServerUrlNotification
-			);
+			this._didChangeServerUrl.push(notification as DidChangeServerUrlNotification);
 		});
 		connection.onCustom(DidEncounterMaintenanceModeNotificationType.method, notification =>
 			this._didEncounterMaintenanceMode.push(
