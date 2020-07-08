@@ -663,7 +663,7 @@ export const StatusPanel = () => {
 			{
 				label: (
 					<span>
-						Branch of of{" "}
+						Branch off of{" "}
 						<span className="monospace highlight">
 							<b>{currentBranch}</b>
 						</span>
