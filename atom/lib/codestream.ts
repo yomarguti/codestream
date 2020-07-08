@@ -1,11 +1,9 @@
 import {
 	ChangeDataType,
-	CreateDocumentMarkerPermalinkRequestType,
-	GetDocumentFromKeyBindingRequestType
+	CreateDocumentMarkerPermalinkRequestType
 } from "@codestream/protocols/agent";
 import { CodemarkType } from "@codestream/protocols/api";
 import { CompositeDisposable, Disposable } from "atom";
-import { Convert } from "atom-languageclient";
 import { FileLogger, LOG_DIR } from "logger";
 import { SplitDiffService } from "types/package-services/split-diff";
 import { Debug, Echo, Editor, Listener } from "utils";
