@@ -8,20 +8,8 @@ import { Logger } from "../logger";
 import { Markerish, MarkerLocationManager } from "../managers/markerLocationManager";
 import { MAX_RANGE_VALUE } from "../markerLocation/calculator";
 import {
-	BitbucketBoard,
-	BitbucketCard,
-	BitbucketCreateCardRequest,
-	BitbucketCreateCardResponse,
-	CreateThirdPartyCardRequest,
 	DocumentMarker,
 	EnterpriseConfigurationData,
-	FetchThirdPartyBoardsRequest,
-	FetchThirdPartyBoardsResponse,
-	FetchThirdPartyCardsRequest,
-	FetchThirdPartyCardsResponse,
-	MoveThirdPartyCardRequest,
-	MoveThirdPartyCardResponse,
-	ThirdPartyProviderCard
 } from "../protocol/agent.protocol";
 import {
 	CodemarkType,
@@ -187,57 +175,6 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 		this._knownRepos = new Map<string, BitbucketServerRepo>();
 	}
 
-	/*
-	@log()
-	async getBoards(request?: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
-		void (await this.ensureConnected());
-
-		const openRepos = await getOpenedRepos<BitbucketServerRepo>(
-			this.getIsMatchingRemotePredicate(),
-			p => this.getRepoByPath(p),
-			this._knownRepos
-		);
-
-		let boards: BitbucketBoard[];
-		if (openRepos.size > 0) {
-			const bitbucketRepos = Array.from(openRepos.values());
-			boards = bitbucketRepos
-//				.filter(r => r.has_issues)
-				.map(r => ({
-					id: r.id,
-					name: r.name,
-					apiIdentifier: r.name,
-					path: '', //r.path,
-					singleAssignee: true // bitbucket issues only allow one assignee
-				}));
-		} else {
-			this._repos = [];
-			try {
-				let apiResponse = await this.get<BitbucketValues<BitbucketServerRepo[]>>('/repos');
-				this._repos = apiResponse.body.values;
-				while (!apiResponse.body.isLastPage) {
-					apiResponse = await this.get<BitbucketValues<BitbucketServerRepo[]>>(
-						`/repos?${qs.stringify({ start: apiResponse.body.nextPageStart! })}`
-					);
-					this._repos.push(...apiResponse.body.values);
-				}
-			} catch (err) {
-				Logger.error(err);
-				debugger;
-			}
-			boards = this._repos.map(r => {
-				return {
-					...r,
-					apiIdentifier: r.name,
-					singleAssignee: true // bitbucket issues only allow one assignee
-				};
-			});
-		}
-
-		return { boards };
-	}
-	*/
-
 	getRepoByPath(path: string) {
 		const parts = path.split("/");
 		if (parts.length > 1) {
@@ -247,108 +184,6 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 		}
 	}
 
-	/*
-	@log()
-	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
-		void (await this.ensureConnected());
-
-		const cards: ThirdPartyProviderCard[] = [];
-		if (this._repos.length === 0) await this.getBoards();
-		await Promise.all(
-			this._repos.map(async repo => {
-				const { body } = await this.get<{ uuid: string; [key: string]: any }>(
-					`/repositories/${repo.name}/issues`
-				);
-				// @ts-ignore
-				body.values.forEach(card => {
-					cards.push({
-						id: card.id,
-						url: card.links.html.href,
-						title: card.title,
-						modifiedAt: new Date(card.updated_on).getTime(),
-						tokenId: card.id,
-						body: card.content ? card.content.raw : ""
-					});
-				});
-			})
-		);
-		return { cards };
-	}
-
-	@log()
-	async createCard(request: CreateThirdPartyCardRequest) {
-		void (await this.ensureConnected());
-
-		const data = request.data as BitbucketCreateCardRequest;
-		const cardData: { [key: string]: any } = {
-			title: data.title,
-			content: {
-				raw: data.description,
-				markup: "markdown"
-			}
-		};
-		if (data.assignee) {
-			cardData.assignee = { uuid: data.assignee.uuid };
-		}
-		const response = await this.post<{}, BitbucketCreateCardResponse>(
-			`/repositories/${data.repoName}/issues`,
-			cardData
-		);
-		let card = response.body;
-		let issueResponse;
-		try {
-			const strippedPath = card.links.self.href.split(this.baseUrl)[1];
-			issueResponse = await this.get<BitbucketCard>(strippedPath);
-		} catch (err) {
-			Logger.error(err);
-			return card;
-		}
-		card = issueResponse.body;
-		card.url = card.links.html!.href;
-		return card;
-	}
-
-	@log()
-	async moveCard(request: MoveThirdPartyCardRequest): Promise<MoveThirdPartyCardResponse> {
-		return { success: false };
-	}
-
-	private async getMemberId() {
-		const userResponse = await this.get<{ uuid: string; [key: string]: any }>(`/user`);
-
-		return userResponse.body.uuid;
-	}
-
-	@log()
-	async getAssignableUsers(request: { boardId: string }) {
-		void (await this.ensureConnected());
-		try {
-			const repoResponse = await this.get<BitbucketRepo>(`/repositories/${request.boardId}`);
-			if (repoResponse.body.owner.type === "team") {
-				let members: BitbucketUser[] = [];
-				let apiResponse = await this.get<BitbucketValues<BitbucketUser[]>>(
-					`/users/${repoResponse.body.owner.username}/members`
-				);
-				members = apiResponse.body.values;
-				while (!apiResponse.body.isLastPage) {
-					apiResponse = await this.get<BitbucketValues<BitbucketUser[]>>(apiResponse.body.next);
-					members = members.concat(apiResponse.body.values);
-				}
-
-				return {
-					users: members.map(u => ({ ...u, id: u.account_id, displayName: u.display_name }))
-				};
-			} else {
-				const userResponse = await this.get<BitbucketUser>("/user");
-				const user = userResponse.body;
-				return { users: [{ ...user, id: user.account_id, displayName: user.display_name }] };
-			}
-		} catch (ex) {
-			Logger.error(ex);
-			return { users: [] };
-		}
-	}
-	*/
 
 	@log()
 	async getPullRequestDocumentMarkers({
@@ -700,62 +535,6 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 		filePath: string
 	): Promise<PullRequestComment[]> {
 		return [];
-		/*
-		const comments: PullRequestComment[] = [];
-		let nextPage: string | undefined = pr.links.comments.href.replace(this.baseUrl, "");
-
-		while (nextPage) {
-			const commentsResponse: ApiResponse<GetPullRequestCommentsResponse> = await this.get(
-				`${nextPage}?${qs.stringify({
-					q: `inline.path="${filePath}"`,
-					fields:
-						"values.inline.*,values.content.raw,values.user.nickname,values.user.account_id,values.links.html.href,values.created_on,values.links.code.href,values.id"
-				})}`
-			);
-			comments.push(
-				...Arrays.filterMap(commentsResponse.body.values, comment => {
-					if (comment.inline.outdated) return undefined;
-
-					const [source, destination] = comment.links.code.href
-						.match(/\:([^\/][\d\S]+)\?/)![1]
-						.split("..");
-
-					const [commit, line] = comment.inline.from
-						? [destination, comment.inline.from]
-						: [source, comment.inline.to];
-
-					if (line == null) return undefined;
-
-					return {
-						commit,
-						id: comment.id,
-						text: comment.content.raw,
-						code: "",
-						author: { ...comment.user, id: comment.user.account_id },
-						line: Number(line),
-						path: comment.inline.path,
-						url: comment.links.html.href,
-						createdAt: new Date(comment.created_on).getTime(),
-						pullRequest: {
-							id: pr.id,
-							title: pr.title,
-							url: pr.links.html.href,
-							isOpen: pr.state === "OPEN",
-							targetBranch: pr.destination.branch.name,
-							sourceBranch: pr.source.branch.name
-						}
-					};
-				})
-			);
-
-			if (commentsResponse.body.next) {
-				nextPage = commentsResponse.body.next.replace(this.baseUrl, "");
-			} else {
-				nextPage = undefined;
-			}
-		}
-		return comments;
-		*/
 	}
 }
 
