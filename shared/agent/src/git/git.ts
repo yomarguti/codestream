@@ -1,7 +1,7 @@
 "use strict";
 import { Logger } from "../logger";
 import { Strings } from "../system";
-import { findGitPath } from "./locator";
+import { findGitPath, GitLocation } from "./locator";
 import { CommandOptions, runCommand } from "./shell";
 
 export const GitErrors = {
@@ -58,6 +58,9 @@ export async function git(
 		// Fixes https://github.com/eamodio/vscode-gitlens/issues/73 & https://github.com/eamodio/vscode-gitlens/issues/161
 		// See https://stackoverflow.com/questions/4144417/how-to-handle-asian-characters-in-file-names-in-git-on-os-x
 		args.splice(0, 0, "-c", "core.quotepath=false", "-c", "color.ui=false");
+		if (isWslGit()) {
+			args.unshift("-d", wslDistro(), "git");
+		}
 
 		promise = runCommand(gitPath(), args, runOpts);
 
@@ -109,23 +112,40 @@ function gitPath(): string {
 	return _gitPath;
 }
 
+let _isWsl = false;
+function isWslGit(): boolean {
+	return _isWsl;
+}
+
+let _wslDistro: string | undefined;
+function wslDistro(): string | undefined {
+	return _wslDistro;
+}
+
 export async function setGitPath(path: string): Promise<void> {
 	try {
-		_gitPath = await setOrFindGitPath(path);
+		const gitInfo = await setOrFindGitPath(path);
+		_gitPath = gitInfo.path;
+		_isWsl = gitInfo.isWsl;
+		_wslDistro = gitInfo.wslDistro;
 	} catch (ex) {
 		Logger.error(ex);
 	}
 }
 
-async function setOrFindGitPath(gitPath?: string): Promise<string> {
+async function setOrFindGitPath(gitPath?: string): Promise<GitLocation> {
 	const start = process.hrtime();
 	const gitInfo = await findGitPath(gitPath);
 
-	Logger.log(
-		`Git found: ${gitInfo.version} @ ${
-			gitInfo.path === "git" ? "PATH" : gitInfo.path
-		} \u2022 ${Strings.getDurationMilliseconds(start)} ms`
-	);
+	if (gitInfo.isWsl) {
+		Logger.log(`Git found: ${gitInfo.path} git \u2022 ${Strings.getDurationMilliseconds(start)} ms`)
+	} else {
+		Logger.log(
+			`Git found: ${gitInfo.version} @ ${
+				gitInfo.path === "git" ? "PATH" : gitInfo.path
+			} \u2022 ${Strings.getDurationMilliseconds(start)} ms`
+		);
+	}
 
-	return gitInfo.path;
+	return gitInfo;
 }
