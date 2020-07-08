@@ -1153,6 +1153,11 @@ export const Row = styled.div`
 	&:hover time {
 		display: none;
 	}
+	.status {
+		color: var(--text-color-subtle);
+		opacity: 0.75;
+		padding-left: 10px;
+	}
 	&:hover .status {
 		display: none;
 	}
