@@ -918,11 +918,12 @@ export const StatusPanel = () => {
 									<br />
 									Watch the{" "}
 									<a
-										onClick={() =>
+										onClick={() => {
 											HostApi.instance.send(OpenUrlRequestType, {
 												url: "https://youtu.be/2AyqT4z5Omc"
-											})
-										}
+											});
+											HostApi.instance.track("Viewed Review Video");
+										}}
 									>
 										video guide
 									</a>
