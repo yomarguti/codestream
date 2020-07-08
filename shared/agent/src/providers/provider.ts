@@ -20,6 +20,8 @@ import {
 	FetchThirdPartyBoardsResponse,
 	FetchThirdPartyCardsRequest,
 	FetchThirdPartyCardsResponse,
+	FetchThirdPartyCardWorkflowRequest,
+	FetchThirdPartyCardWorkflowResponse,
 	FetchThirdPartyChannelsRequest,
 	FetchThirdPartyChannelsResponse,
 	MoveThirdPartyCardRequest,
@@ -28,9 +30,7 @@ import {
 	ThirdPartyDisconnect,
 	ThirdPartyProviderConfig,
 	UpdateThirdPartyStatusRequest,
-	UpdateThirdPartyStatusResponse,
-	FetchThirdPartyCardWorkflowRequest,
-	FetchThirdPartyCardWorkflowResponse
+	UpdateThirdPartyStatusResponse
 } from "../protocol/agent.protocol";
 import { CSMe, CSProviderInfos } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";

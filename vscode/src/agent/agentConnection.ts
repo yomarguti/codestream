@@ -87,8 +87,8 @@ import {
 	UpdateStreamMembershipResponse,
 	GetReviewRequestType,
 	GetReviewContentsLocalRequestType,
-	OpenUrlRequest,
-	OpenUrlRequestType,
+	AgentOpenUrlRequest,
+	AgentOpenUrlRequestType,
 	FetchReviewsRequestType
 } from "@codestream/protocols/agent";
 import {
@@ -189,8 +189,8 @@ export class CodeStreamAgentConnection implements Disposable {
 		return this._onDidStart.event;
 	}
 
-	private _onOpenUrl = new EventEmitter<OpenUrlRequest>();
-	get onOpenUrl(): Event<OpenUrlRequest> {
+	private _onOpenUrl = new EventEmitter<AgentOpenUrlRequest>();
+	get onOpenUrl(): Event<AgentOpenUrlRequest> {
 		return this._onOpenUrl.event;
 	}
 
@@ -1014,7 +1014,7 @@ export class CodeStreamAgentConnection implements Disposable {
 			DidChangeServerUrlNotificationType,
 			this.onServerUrlChanged.bind(this)
 		);
-		this._client.onRequest(OpenUrlRequestType, e => this._onOpenUrl.fire(e));
+		this._client.onRequest(AgentOpenUrlRequestType, e => this._onOpenUrl.fire(e));
 		this._onDidStart.fire();
 		return this._client.initializeResult! as AgentInitializeResult;
 	}

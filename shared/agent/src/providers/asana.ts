@@ -2,6 +2,7 @@
 import * as qs from "querystring";
 import { Logger } from "../logger";
 import {
+	AsanaCard,
 	AsanaCreateCardRequest,
 	AsanaCreateCardResponse,
 	AsanaList,
@@ -11,11 +12,10 @@ import {
 	CreateThirdPartyCardRequest,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
-	ThirdPartyProviderBoard,
-	MoveThirdPartyCardRequest,
 	FetchThirdPartyCardsRequest,
 	FetchThirdPartyCardsResponse,
-	AsanaCard
+	MoveThirdPartyCardRequest,
+	ThirdPartyProviderBoard
 } from "../protocol/agent.protocol";
 import { CSAsanaProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";

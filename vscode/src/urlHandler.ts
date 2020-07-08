@@ -1,5 +1,5 @@
 import { env, Uri } from "vscode";
-import { OpenUrlRequestType } from "@codestream/protocols/agent";
+import { AgentOpenUrlRequestType } from "@codestream/protocols/agent";
 import { Container } from "./container";
 
 export async function openUrl(url: string) {
@@ -8,6 +8,6 @@ export async function openUrl(url: string) {
 	if (env && env.remoteName && env.remoteName !== undefined) {
 		await env.openExternal(Uri.parse(url));
 	} else {
-		await Container.agent.sendRequest(OpenUrlRequestType, { url: url });
+		await Container.agent.sendRequest(AgentOpenUrlRequestType, { url: url });
 	}
 }

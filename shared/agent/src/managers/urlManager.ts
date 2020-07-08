@@ -1,12 +1,12 @@
 import { Logger } from "../logger";
-import { OpenUrlRequest, OpenUrlRequestType } from "../protocol/agent.protocol";
+import { AgentOpenUrlRequest, AgentOpenUrlRequestType } from "../protocol/agent.protocol";
 import { lsp, lspHandler } from "../system";
 import { openUrl } from "../system/openUrl";
 
 @lsp
 export class UrlManager {
-	@lspHandler(OpenUrlRequestType)
-	async openUrl(request: OpenUrlRequest) {
+	@lspHandler(AgentOpenUrlRequestType)
+	async openUrl(request: AgentOpenUrlRequest) {
 		const cc = Logger.getCorrelationContext();
 		try {
 			await openUrl(request.url);

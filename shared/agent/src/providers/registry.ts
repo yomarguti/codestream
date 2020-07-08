@@ -47,10 +47,10 @@ import { getProvider, getRegisteredProviders, log, lsp, lspHandler } from "../sy
 import {
 	ProviderCreatePullRequestRequest,
 	ProviderCreatePullRequestResponse,
+	ProviderGetRepoInfoRequest,
 	ThirdPartyIssueProvider,
 	ThirdPartyPostProvider,
-	ThirdPartyProvider,
-	ProviderGetRepoInfoRequest
+	ThirdPartyProvider
 } from "./provider";
 
 // NOTE: You must include all new providers here, otherwise the webpack build will exclude them

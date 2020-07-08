@@ -15,9 +15,9 @@ import { Container, SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import { isDirective, resolve } from "../../managers/operations";
 import {
+	AgentOpenUrlRequestType,
 	ChangeDataType,
 	DidChangeDataNotificationType,
-	OpenUrlRequestType,
 	ReportingMessageType,
 	UpdateInvisibleRequest
 } from "../../protocol/agent.protocol";
@@ -1747,7 +1747,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			const query = Object.keys(params)
 				.map(param => `${param}=${encodeURIComponent(params[param])}`)
 				.join("&");
-			void SessionContainer.instance().session.agent.sendRequest(OpenUrlRequestType, {
+			void SessionContainer.instance().session.agent.sendRequest(AgentOpenUrlRequestType, {
 				url: `${this.baseUrl}/no-auth/provider-auth/${providerConfig.name}?${query}`
 			});
 			// this response is never used.

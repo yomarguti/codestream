@@ -2,6 +2,7 @@
 import * as qs from "querystring";
 import { Logger } from "../logger";
 import {
+	AzureDevOpsCard,
 	AzureDevOpsConfigurationData,
 	AzureDevOpsCreateCardRequest,
 	AzureDevOpsCreateCardResponse,
@@ -11,13 +12,12 @@ import {
 	CreateThirdPartyCardRequest,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
-	ThirdPartyProviderBoard,
-	ThirdPartyProviderUser,
-	MoveThirdPartyCardRequest,
 	FetchThirdPartyCardsRequest,
 	FetchThirdPartyCardsResponse,
+	MoveThirdPartyCardRequest,
+	ThirdPartyProviderBoard,
 	ThirdPartyProviderCard,
-	AzureDevOpsCard
+	ThirdPartyProviderUser
 } from "../protocol/agent.protocol";
 import { CSAzureDevOpsProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";

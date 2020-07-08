@@ -8,7 +8,7 @@ import {
 	DidChangeDocumentMarkersNotification,
 	isLoginFailResponse,
 	LoginSuccessResponse,
-	OpenUrlRequest,
+	AgentOpenUrlRequest,
 	PasswordLoginRequestType,
 	TokenLoginRequestType,
 	Unreads
@@ -176,7 +176,7 @@ export class CodeStreamSession implements Disposable {
 			Container.agent.onDidEncounterMaintenanceMode(() => {
 				this.logout();
 			}),
-			Container.agent.onOpenUrl(async (params: OpenUrlRequest) => {
+			Container.agent.onOpenUrl(async (params: AgentOpenUrlRequest) => {
 				await openUrl(params.url);
 			})
 		);

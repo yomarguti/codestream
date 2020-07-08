@@ -17,15 +17,15 @@ import {
 	FetchThirdPartyBoardsResponse,
 	FetchThirdPartyCardsRequest,
 	FetchThirdPartyCardsResponse,
+	FetchThirdPartyCardWorkflowRequest,
+	FetchThirdPartyCardWorkflowResponse,
 	GitHubBoard,
 	GitHubCreateCardRequest,
 	GitHubCreateCardResponse,
 	GitHubUser,
 	MoveThirdPartyCardRequest,
 	MoveThirdPartyCardResponse,
-	ThirdPartyProviderCard,
-	FetchThirdPartyCardWorkflowRequest,
-	FetchThirdPartyCardWorkflowResponse
+	ThirdPartyProviderCard
 } from "../protocol/agent.protocol";
 import { CodemarkType, CSGitHubProviderInfo, CSReferenceLocation } from "../protocol/api.protocol";
 import { Arrays, Functions, log, lspProvider, Strings } from "../system";

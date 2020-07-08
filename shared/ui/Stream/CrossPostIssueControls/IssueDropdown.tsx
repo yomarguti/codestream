@@ -9,9 +9,8 @@ import {
 	ThirdPartyProviderConfig,
 	ThirdPartyProviders,
 	FetchThirdPartyBoardsRequestType,
-	FetchThirdPartyCardsRequestType,
-	FetchThirdPartyCardWorkflowRequestType,
-	OpenUrlRequestType
+	FetchThirdPartyCardsRequestType
+	// FetchThirdPartyCardWorkflowRequestType
 } from "@codestream/protocols/agent";
 import { CSMe } from "@codestream/protocols/api";
 import { PrePRProviderInfoModalProps, PrePRProviderInfoModal } from "../PrePRProviderInfoModal";
@@ -40,7 +39,7 @@ import * as codemarkSelectors from "../../store/codemarks/reducer";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { Modal } from "../Modal";
 import { Button } from "@codestream/webview/src/components/Button";
-import { WebviewPanels } from "@codestream/protocols/webview";
+import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
 
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;

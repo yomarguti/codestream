@@ -2,11 +2,11 @@
 import { sortBy } from "lodash-es";
 import { SessionContainer } from "../container";
 import {
+	AgentOpenUrlRequestType,
 	CreateThirdPartyPostRequest,
 	CreateThirdPartyPostResponse,
 	FetchThirdPartyChannelsRequest,
 	FetchThirdPartyChannelsResponse,
-	OpenUrlRequestType,
 	ThirdPartyDisconnect
 } from "../protocol/agent.protocol";
 import { MSTeamsProviderInfo } from "../protocol/api.protocol";
@@ -33,9 +33,9 @@ export class MSTeamsProvider extends ThirdPartyPostProviderBase<MSTeamsProviderI
 	private _multiProviderInfo: MSTeamsProviderInfo | undefined;
 
 	onConnecting() {
-		void (SessionContainer.instance().session.agent.sendRequest(OpenUrlRequestType, {
+		void SessionContainer.instance().session.agent.sendRequest(AgentOpenUrlRequestType, {
 			url: "https://teams.microsoft.com/l/app/7cf49ab7-8b65-4407-b494-f02b525eef2b"
-		}));
+		});
 	}
 	protected async onConnected(providerInfo: MSTeamsProviderInfo) {
 		this._multiProviderInfo = providerInfo;

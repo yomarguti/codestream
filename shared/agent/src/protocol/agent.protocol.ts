@@ -207,11 +207,11 @@ export const TelemetryRequestType = new RequestType<TelemetryRequest, void, void
 	"codestream/telemetry"
 );
 
-export interface OpenUrlRequest {
+export interface AgentOpenUrlRequest {
 	url: string;
 }
 
-export const OpenUrlRequestType = new RequestType<OpenUrlRequest, void, void, void>(
+export const AgentOpenUrlRequestType = new RequestType<AgentOpenUrlRequest, void, void, void>(
 	"codestream/url/open"
 );
 
