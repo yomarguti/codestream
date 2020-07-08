@@ -21,6 +21,7 @@
 
 ### Fixed
 
+- Overall performance improvements when opening files
 - Fixes an issue with a source file opening when you hover over a code block in the activity, while CodeStream resides in the editor group
 - Fixes an issue with creating a codemark when opening the form while the permalink form is still in view
 - Fixes an issue with the Loading spinner display when connecting to an issue tracking service via the Tasks tab
