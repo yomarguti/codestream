@@ -42,7 +42,7 @@ export function JiraCardControls(
 		crossPostIssueContext.setValues({
 			codeDelimiterStyle: CodeDelimiterStyles.CODE_BRACE
 		});
-		if (data.projects && data.projects.length > 0) {
+		if (data.projects && data.projects.length > 0 && data.currentProject) {
 			const project = data.currentProject || data.projects[0];
 			crossPostIssueContext.setValues({
 				boardId: project.id,

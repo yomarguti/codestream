@@ -42,7 +42,7 @@ export function AzureDevOpsCardControls(
 			codeDelimiterStyle: CodeDelimiterStyles.HTML_MARKUP
 		});
 
-		if (data.projects && data.projects.length > 0) {
+		if (data.projects && data.projects.length > 0 && data.currentProject) {
 			crossPostIssueContext.setValues({
 				board: data.currentProject || data.projects[0]
 			});

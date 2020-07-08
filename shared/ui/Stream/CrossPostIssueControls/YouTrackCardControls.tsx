@@ -42,7 +42,7 @@ export function YouTrackCardControls(
 			codeDelimiterStyle: CodeDelimiterStyles.TRIPLE_BACK_QUOTE
 		});
 
-		if (data.projects && data.projects.length > 0) {
+		if (data.projects && data.projects.length > 0 && data.currentProject) {
 			// set a board value for the card
 			crossPostIssueContext.setValues({
 				board: data.currentProject || data.projects[0]
