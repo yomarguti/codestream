@@ -88,6 +88,7 @@ import { getFileScmError } from "../store/editorContext/reducer";
 import { logout, switchToTeam } from "../store/session/actions";
 import { CodemarkView } from "./CodemarkView";
 import { Review } from "./Review";
+import { Link } from "./Link";
 
 import {
 	setCurrentStream,
@@ -848,12 +849,12 @@ export class SimpleStream extends Component {
 									Assigned issues and code reviews.
 									<br />
 									This is home base for getting work done.
-									<a
+									<Link
 										className="learn-more"
 										href="https://docs.codestream.com/userguide/features/tasks"
 									>
 										learn more
-									</a>
+									</Link>
 								</TipTitle>
 							}
 							placement="bottom"
@@ -875,12 +876,12 @@ export class SimpleStream extends Component {
 								<TipTitle>
 									<h1>Comments In Current File</h1>
 									We call these <i>Codemarks</i>
-									<a
+									<Link
 										className="learn-more"
 										href="https://docs.codestream.com/userguide/workflow/discuss-code/"
 									>
 										learn more
-									</a>
+									</Link>
 								</TipTitle>
 							}
 							placement="bottom"
@@ -905,12 +906,12 @@ export class SimpleStream extends Component {
 									Latest comments, issues,
 									<br />
 									code reviews and replies.
-									<a
+									<Link
 										className="learn-more"
 										href="http://docs.codestream.com/userguide/features/activity-feed/"
 									>
 										learn more
-									</a>
+									</Link>
 								</TipTitle>
 							}
 							placement="bottom"
@@ -936,12 +937,12 @@ export class SimpleStream extends Component {
 									Search code comments, code reviews,
 									<br />
 									and codestream content.
-									<a
+									<Link
 										className="learn-more"
 										href="http://docs.codestream.com/userguide/features/filter-and-search/"
 									>
 										learn more
-									</a>
+									</Link>
 								</TipTitle>
 							}
 							placement="bottomRight"
@@ -962,12 +963,12 @@ export class SimpleStream extends Component {
 									View status and local changes
 									<br />
 									from your teammates.
-									<a
+									<Link
 										className="learn-more"
 										href="http://docs.codestream.com/userguide/features/team-live-view/"
 									>
 										learn more
-									</a>
+									</Link>
 								</TipTitle>
 							}
 							placement="bottomRight"
@@ -2568,7 +2569,7 @@ export class SimpleStream extends Component {
 					message: () => (
 						<span>
 							{warning.message + " "}
-							<a href="https://docs.codestream.com/userguide/faq/git-issues/">Learn more</a>
+							<Link href="https://docs.codestream.com/userguide/faq/git-issues/">Learn more</Link>
 						</span>
 					),
 					centered: true,
@@ -2660,7 +2661,7 @@ export class SimpleStream extends Component {
 					message: () => (
 						<span>
 							{warning.message + " "}
-							<a href="https://docs.codestream.com/userguide/faq/git-issues/">Learn more</a>
+							<Link href="https://docs.codestream.com/userguide/faq/git-issues/">Learn more</Link>
 						</span>
 					),
 					centered: true,
