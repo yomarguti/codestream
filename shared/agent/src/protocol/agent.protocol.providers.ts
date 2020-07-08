@@ -153,6 +153,23 @@ export const FetchThirdPartyCardsRequestType = new RequestType<
 	void
 >("codestream/provider/cards");
 
+export interface FetchThirdPartyCardWorkflowRequest {
+	providerId: string;
+	cardId: string;
+	[key: string]: any;
+}
+
+export interface FetchThirdPartyCardWorkflowResponse {
+	workflow: { id: string; name: string }[];
+}
+
+export const FetchThirdPartyCardWorkflowRequestType = new RequestType<
+	FetchThirdPartyCardWorkflowRequest,
+	FetchThirdPartyCardWorkflowResponse,
+	void,
+	void
+>("codestream/provider/cards/workflow");
+
 export interface MoveThirdPartyCardRequest {
 	providerId: string;
 	cardId: string;

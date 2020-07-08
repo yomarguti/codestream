@@ -8,12 +8,12 @@ import {
 	FetchThirdPartyCardsRequest,
 	FetchThirdPartyCardsResponse,
 	MoveThirdPartyCardRequest,
+	MoveThirdPartyCardResponse,
 	TrelloBoard,
 	TrelloCard,
 	TrelloCreateCardRequest,
 	TrelloCreateCardResponse,
-	TrelloMember,
-	MoveThirdPartyCardResponse
+	TrelloMember
 } from "../protocol/agent.protocol";
 import { CSTrelloProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
@@ -22,6 +22,7 @@ import { ApiResponse, ThirdPartyIssueProviderBase } from "./provider";
 @lspProvider("trello")
 export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProviderInfo> {
 	private _trelloUserId: string | undefined;
+	private _listNames: { [id: string]: string } = {};
 
 	get displayName() {
 		return "Trello";
@@ -58,11 +59,16 @@ export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProvider
 			})}`
 		);
 
-		return {
-			boards: request.organizationId
-				? response.body.filter(b => b.idOrganization === request.organizationId)
-				: response.body
-		};
+		const boards = request.organizationId
+			? response.body.filter(b => b.idOrganization === request.organizationId)
+			: response.body;
+
+		boards.forEach(board => {
+			board.lists.forEach(list => {
+				this._listNames[list.id] = list.name;
+			});
+		});
+		return { boards };
 	}
 
 	@log()
@@ -141,6 +147,7 @@ export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProvider
 				modifiedAt: new Date(card.dateLastActivity).getTime(),
 				tokenId: card.shortLink,
 				idList: card.idList,
+				listName: this._listNames[card.idList],
 				idBoard: card.idBoard
 			};
 		});

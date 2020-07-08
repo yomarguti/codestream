@@ -401,7 +401,9 @@ export const StatusPanel = () => {
 			setCard(card);
 
 			if (card.moveCardOptions && card.moveCardOptions.length) {
-				const index = card.moveCardOptions.findIndex(option => option.id === card.idList);
+				const index = card.moveCardOptions.findIndex(option =>
+					option.to ? option.to.id === card.idList : option.id === card.idList
+				);
 				const next = card.moveCardOptions[index + 1];
 				if (next) setMoveCardDestination(next);
 				else setMoveCardDestination(card.moveCardOptions[0]);
@@ -707,9 +709,10 @@ export const StatusPanel = () => {
 		!card || !card.moveCardOptions
 			? []
 			: card.moveCardOptions.map(option => {
+					const selected = option.to ? option.to.id === card.idList : option.id === card.idList;
 					return {
 						label: option.name,
-						icon: <Icon name={card && option.id === card.idList ? "arrow-right" : "blank"} />,
+						icon: <Icon name={selected ? "arrow-right" : "blank"} />,
 						key: option.id,
 						action: () => setMoveCardDestination(option)
 					};

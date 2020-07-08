@@ -20,7 +20,9 @@ import {
 	FetchThirdPartyCardsResponse,
 	MoveThirdPartyCardRequest,
 	MoveThirdPartyCardResponse,
-	ThirdPartyProviderCard
+	ThirdPartyProviderCard,
+	FetchThirdPartyCardWorkflowRequest,
+	FetchThirdPartyCardWorkflowResponse
 } from "../protocol/agent.protocol";
 import {
 	CodemarkType,
@@ -211,6 +213,13 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 		}
 
 		return { boards };
+	}
+
+	// FIXME -- implement this
+	async getCardWorkflow(
+		request: FetchThirdPartyCardWorkflowRequest
+	): Promise<FetchThirdPartyCardWorkflowResponse> {
+		return { workflow: [] };
 	}
 
 	@log()

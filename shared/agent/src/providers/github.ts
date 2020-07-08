@@ -23,7 +23,9 @@ import {
 	GitHubUser,
 	MoveThirdPartyCardRequest,
 	MoveThirdPartyCardResponse,
-	ThirdPartyProviderCard
+	ThirdPartyProviderCard,
+	FetchThirdPartyCardWorkflowRequest,
+	FetchThirdPartyCardWorkflowResponse
 } from "../protocol/agent.protocol";
 import { CodemarkType, CSGitHubProviderInfo, CSReferenceLocation } from "../protocol/api.protocol";
 import { Arrays, Functions, log, lspProvider, Strings } from "../system";
@@ -155,6 +157,13 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return {
 			boards
 		};
+	}
+
+	// FIXME -- implement this
+	async getCardWorkflow(
+		request: FetchThirdPartyCardWorkflowRequest
+	): Promise<FetchThirdPartyCardWorkflowResponse> {
+		return { workflow: [] };
 	}
 
 	@log()

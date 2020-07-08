@@ -8,11 +8,17 @@ import {
 	CreateThirdPartyCardRequest,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
+	FetchThirdPartyCardsRequest,
+	FetchThirdPartyCardsResponse,
+	FetchThirdPartyCardWorkflowRequest,
+	FetchThirdPartyCardWorkflowResponse,
 	JiraBoard,
+	JiraCard,
 	JiraUser,
+	MoveThirdPartyCardRequest,
 	ReportingMessageType,
-	ThirdPartyProviderConfig,
-	MoveThirdPartyCardRequest
+	ThirdPartyProviderCard,
+	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
 import { CSJiraServerProviderInfo } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
@@ -89,6 +95,13 @@ interface CreateJiraIssueResponse {
 	id: string;
 	key: string;
 	self: string;
+}
+
+interface CardSearchResponse {
+	issues: JiraCard[];
+	nextPage?: string;
+	isLast: boolean;
+	total: number;
 }
 
 @lspProvider("jiraserver")
@@ -238,6 +251,118 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 		return boards;
 	}
 
+	// https://community.atlassian.com/t5/Jira-Questions/How-to-get-all-Jira-statuses-from-a-workflow-of-an-issue-by/qaq-p/461172
+	@log()
+	async getCardWorkflow(
+		request: FetchThirdPartyCardWorkflowRequest
+	): Promise<FetchThirdPartyCardWorkflowResponse> {
+		Logger.debug("Jira Server: fetching workflow for card: " + request.cardId);
+		try {
+			const response = await this._callWithOauth(`/rest/api/2/issue/${request.cardId}/transitions`);
+			Logger.debug("GOT RESPONSE: ", JSON.stringify(response, null, 4));
+			return { workflow: response.transitions };
+		} catch (error) {
+			Container.instance().errorReporter.reportMessage({
+				type: ReportingMessageType.Error,
+				message: "Jira Server: Error fetching issue workflow for projects",
+				source: "agent",
+				extra: { message: error.message }
+			});
+			Logger.error(error, "Jira Server: Error fetching card workflow");
+			return { workflow: [] };
+		}
+	}
+
+	@log()
+	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
+		// /rest/api/2/search?jql=assignee=currentuser()
+		// https://developer.atlassian.com/server/jira/platform/jira-rest-api-examples/
+
+		try {
+			Logger.debug("Jira: fetching cards");
+			const jiraCards: JiraCard[] = [];
+			let nextPage: string | undefined = `/rest/api/2/search?${qs.stringify({
+				jql: "assignee=currentuser() AND status!=Closed",
+				expand: "transitions",
+				fields: "summary,description,updated,subtasks,status"
+			})}`;
+
+			while (nextPage !== undefined) {
+				try {
+					const result = (await this._callWithOauth(nextPage)) as CardSearchResponse;
+
+					// Logger.debug("GOT RESULT: " + JSON.stringify(result, null, 4));
+					jiraCards.push(...result.issues);
+
+					Logger.debug(`Jira: is last page? ${result.isLast} - nextPage ${result.nextPage}`);
+					if (result.nextPage) {
+						nextPage = result.nextPage.substring(result.nextPage.indexOf("/rest/api/2"));
+					} else {
+						Logger.debug("Jira: there are no more cards");
+						nextPage = undefined;
+					}
+				} catch (e) {
+					Container.instance().errorReporter.reportMessage({
+						type: ReportingMessageType.Error,
+						message: "Jira: Error fetching jira cards",
+						source: "agent",
+						extra: {
+							message: e.message
+						}
+					});
+					Logger.error(e);
+					Logger.debug("Jira: Stopping card search");
+					nextPage = undefined;
+				}
+			}
+
+			Logger.debug(`Jira: total cards: ${jiraCards.length}`);
+			const cards: ThirdPartyProviderCard[] = [];
+			jiraCards.forEach(card => {
+				const { fields = {} } = card;
+				cards.push({
+					id: card.id,
+					url: `${this.baseUrl}/browse/${card.key}`,
+					title: fields.summary,
+					modifiedAt: new Date(fields.updated).getTime(),
+					tokenId: card.key,
+					body: fields.description,
+					idList: fields.status ? fields.status.id : "",
+					listName: fields.status ? fields.status.name : "",
+					lists: card.transitions
+				});
+				if (fields.subtasks && fields.subtasks.length) {
+					// @ts-ignore
+					fields.subtasks.forEach(subtask => {
+						const { fields = {} } = subtask;
+						cards.push({
+							id: `${card.id}:${subtask.id}`,
+							url: `${this.baseUrl}/browse/${subtask.key}`,
+							title: fields.summary,
+							modifiedAt: new Date(card.fields.updated).getTime(),
+							tokenId: subtask.key,
+							body: fields.description,
+							idList: fields.status ? fields.status.id : "",
+							listName: fields.status ? fields.status.name : "",
+							lists: card.transitions
+						});
+					});
+				}
+			});
+			return { cards };
+		} catch (error) {
+			debugger;
+			Container.instance().errorReporter.reportMessage({
+				type: ReportingMessageType.Error,
+				message: "Jira: Error fetching jira cards",
+				source: "agent",
+				extra: { message: error.message }
+			});
+			Logger.error(error, "Error fetching jira cards");
+			return { cards: [] };
+		}
+	}
+
 	@log()
 	async createCard(request: CreateThirdPartyCardRequest) {
 		const data = request.data as CreateJiraCardRequest;
@@ -271,7 +396,30 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 	}
 
 	@log()
-	async moveCard(request: MoveThirdPartyCardRequest) {}
+	async moveCard(request: MoveThirdPartyCardRequest) {
+		try {
+			Logger.debug("Jira Server: moving card");
+			const response = await this._callWithOauth(
+				`/rest/api/2/issue/${request.cardId}/transitions`,
+				"POST",
+				{
+					transition: { id: request.listId }
+				}
+			);
+			// Logger.debug("Got a response: " + JSON.stringify(response, null, 4));
+			return response;
+		} catch (error) {
+			debugger;
+			Container.instance().errorReporter.reportMessage({
+				type: ReportingMessageType.Error,
+				message: "Jira Server: Error moving jira card",
+				source: "agent",
+				extra: { message: error.message }
+			});
+			Logger.error(error, "Error moving jira card");
+			return {};
+		}
+	}
 
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {

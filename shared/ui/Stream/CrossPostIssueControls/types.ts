@@ -15,6 +15,7 @@ export interface ProviderDisplay {
 
 	// FIXME -- temp this should come from the server
 	supportsStartWork?: boolean;
+	hasCardBasedWorkflow?: boolean;
 	hasFilters?: boolean;
 	hasCustomFilters?: boolean;
 	customFilterDefault?: string;
@@ -94,7 +95,8 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		boardLabel: "project",
 		listLabel: "type",
 		cardLabel: "ticket",
-		supportsStartWork: true
+		supportsStartWork: true,
+		hasCardBasedWorkflow: true
 	},
 	jiraserver: {
 		displayName: "Jira Server",
@@ -102,7 +104,9 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		urlPlaceholder: "https://jira.myorg.com",
 		boardLabel: "project",
 		listLabel: "type",
-		cardLabel: "ticket"
+		cardLabel: "ticket",
+		supportsStartWork: true,
+		hasCardBasedWorkflow: true
 	},
 	trello: {
 		displayName: "Trello",

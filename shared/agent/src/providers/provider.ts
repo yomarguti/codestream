@@ -28,7 +28,9 @@ import {
 	ThirdPartyDisconnect,
 	ThirdPartyProviderConfig,
 	UpdateThirdPartyStatusRequest,
-	UpdateThirdPartyStatusResponse
+	UpdateThirdPartyStatusResponse,
+	FetchThirdPartyCardWorkflowRequest,
+	FetchThirdPartyCardWorkflowResponse
 } from "../protocol/agent.protocol";
 import { CSMe, CSProviderInfos } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
@@ -54,6 +56,9 @@ export const providerDisplayNamesByNameKey = new Map<string, string>([
 export interface ThirdPartyProviderSupportsIssues {
 	getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse>;
 	getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse>;
+	getCardWorkflow(
+		request: FetchThirdPartyCardWorkflowRequest
+	): Promise<FetchThirdPartyCardWorkflowResponse>;
 	moveCard(request: MoveThirdPartyCardRequest): Promise<MoveThirdPartyCardResponse>;
 	getAssignableUsers(request: FetchAssignableUsersRequest): Promise<FetchAssignableUsersResponse>;
 	createCard(request: CreateThirdPartyCardRequest): Promise<CreateThirdPartyCardResponse>;

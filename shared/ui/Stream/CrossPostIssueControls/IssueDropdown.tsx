@@ -1,12 +1,7 @@
 import React from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
 import { connectProvider, getUserProviderInfo } from "../../store/providers/actions";
-import {
-	openPanel,
-	setIssueProvider,
-	setCodemarkTypeFilter,
-	setCurrentCodemark
-} from "../../store/context/actions";
+import { openPanel, setIssueProvider, setCurrentCodemark } from "../../store/context/actions";
 import Icon from "../Icon";
 import Menu from "../Menu";
 import { ProviderDisplay, PROVIDER_MAPPINGS } from "./types";
@@ -15,10 +10,10 @@ import {
 	ThirdPartyProviders,
 	FetchThirdPartyBoardsRequestType,
 	FetchThirdPartyCardsRequestType,
-	OpenUrlRequestType,
-	CodemarkPlus
+	FetchThirdPartyCardWorkflowRequestType,
+	OpenUrlRequestType
 } from "@codestream/protocols/agent";
-import { CSMe, CodemarkType, CodemarkStatus } from "@codestream/protocols/api";
+import { CSMe } from "@codestream/protocols/api";
 import { PrePRProviderInfoModalProps, PrePRProviderInfoModal } from "../PrePRProviderInfoModal";
 import { CodeStreamState } from "@codestream/webview/store";
 import { getConnectedProviderNames } from "@codestream/webview/store/providers/reducer";
@@ -31,7 +26,6 @@ import {
 	RoundedLink,
 	RoundedSearchLink,
 	H4,
-	StatusSection,
 	WideStatusSection,
 	EMPTY_STATUS
 } from "../StatusPanel";
@@ -44,7 +38,6 @@ import Tooltip from "../Tooltip";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
 import * as codemarkSelectors from "../../store/codemarks/reducer";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
-import Timestamp from "../Timestamp";
 import { Modal } from "../Modal";
 import { Button } from "@codestream/webview/src/components/Button";
 import { WebviewPanels } from "@codestream/protocols/webview";
@@ -414,6 +407,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 	});
 
 	const [isLoading, setIsLoading] = React.useState(false);
+	const [isLoadingCard, setIsLoadingCard] = React.useState("");
 	const [loadedBoards, setLoadedBoards] = React.useState(0);
 	const [loadedCards, setLoadedCards] = React.useState(0);
 	const [addingCustomFilterForProvider, setAddingCustomFilterForProvider] = React.useState<
@@ -520,7 +514,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 	}, [loadedBoards]);
 
 	const selectCard = React.useCallback(
-		(card?) => {
+		async (card?) => {
 			if (card) {
 				const { provider } = card;
 				if (provider) {
@@ -528,8 +522,20 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 					const pData = data[provider.id] || {};
 					// @ts-ignore
 					const board = pData.boards && pData.boards.find(b => b.id === card.idBoard);
-					const lists = board && board.lists;
 					// console.warn("SETTINGS VALUES: ", pData, card);
+					let { idList } = card;
+					let moveCardOptions = board && board.lists;
+					if (providerDisplay.hasCardBasedWorkflow) {
+						// setIsLoadingCard(card.id);
+						// const response = await HostApi.instance.send(FetchThirdPartyCardWorkflowRequestType, {
+						// 	providerId: provider.id,
+						// 	cardId: card.id
+						// });
+						// moveCardOptions = response.workflow;
+
+						// setIsLoadingCard("");
+						moveCardOptions = card.lists;
+					}
 					startWorkIssueContext.setValues({
 						...card,
 						providerIcon: provider.id === "codestream" ? "issue" : providerDisplay.icon,
@@ -537,7 +543,8 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 						providerName: providerDisplay.displayName,
 						providerId: provider.id,
 						moveCardLabel: `Move this ${providerDisplay.cardLabel} to`,
-						moveCardOptions: lists
+						moveCardOptions,
+						idList
 					});
 				} else {
 					// creating a new card/issue
@@ -557,7 +564,9 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 	const queryRegexp = React.useMemo(() => new RegExp(escapeRegExp(query), "gi"), [query]);
 
 	const underlineQ = string => (
-		<span dangerouslySetInnerHTML={{ __html: string.replace(queryRegexp, "<u><b>$&</b></u>") }} />
+		<span
+			dangerouslySetInnerHTML={{ __html: (string || "").replace(queryRegexp, "<u><b>$&</b></u>") }}
+		/>
 	);
 
 	const filterMenuItemsSubmenu = provider => {
@@ -726,8 +735,8 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 					.filter(
 						card =>
 							!query ||
-							card.title.toLocaleLowerCase().includes(lowerQ) ||
-							card.body.toLocaleLowerCase().includes(lowerQ)
+							(card.title || "").toLocaleLowerCase().includes(lowerQ) ||
+							(card.body || "").toLocaleLowerCase().includes(lowerQ)
 					)
 					.map(card => ({
 						...card,
@@ -746,8 +755,8 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 				.filter(
 					issue =>
 						!query ||
-						issue.title.toLocaleLowerCase().includes(lowerQ) ||
-						issue.text.toLocaleLowerCase().includes(lowerQ)
+						(issue.title || "").toLocaleLowerCase().includes(lowerQ) ||
+						(issue.text || "").toLocaleLowerCase().includes(lowerQ)
 				)
 				.map(issue => ({
 					...issue,
@@ -1027,13 +1036,20 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 							className={card.id === props.selectedCardId ? "selected" : ""}
 						>
 							<div>
-								{card.id === props.selectedCardId ? <Icon name="arrow-right" /> : card.icon}
+								{card.id === isLoadingCard ? (
+									<Icon name="sync" className="spin" />
+								) : card.id === props.selectedCardId ? (
+									<Icon name="arrow-right" />
+								) : (
+									card.icon
+								)}
 							</div>
 							<div>
 								{card.label}
 								<span className="subtle">{card.body}</span>
 							</div>
 							<div className="icons">
+								{card.listName && <span className="status">{card.listName}</span>}
 								{card.id === props.selectedCardId && (
 									<Icon
 										name="x-circle"
@@ -1132,7 +1148,13 @@ export const Row = styled.div`
 	&:hover .icons .icon {
 		display: inline-block;
 	}
+	&:hover > div:nth-child(3) {
+		min-width: 30px;
+	}
 	&:hover time {
+		display: none;
+	}
+	&:hover .status {
 		display: none;
 	}
 	&:not(.disabled):not(.no-hover):hover {

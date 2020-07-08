@@ -27,6 +27,9 @@ import {
 	FetchThirdPartyCardsRequest,
 	FetchThirdPartyCardsRequestType,
 	FetchThirdPartyCardsResponse,
+	FetchThirdPartyCardWorkflowRequest,
+	FetchThirdPartyCardWorkflowRequestType,
+	FetchThirdPartyCardWorkflowResponse,
 	FetchThirdPartyChannelsRequest,
 	FetchThirdPartyChannelsRequestType,
 	FetchThirdPartyChannelsResponse,
@@ -35,8 +38,8 @@ import {
 	MoveThirdPartyCardResponse,
 	RemoveEnterpriseProviderRequest,
 	RemoveEnterpriseProviderRequestType,
-	UpdateThirdPartyStatusRequestType,
 	UpdateThirdPartyStatusRequest,
+	UpdateThirdPartyStatusRequestType,
 	UpdateThirdPartyStatusResponse
 } from "../protocol/agent.protocol";
 import { CodeStreamSession } from "../session";
@@ -187,6 +190,28 @@ export class ThirdPartyProviderRegistry {
 
 		if (issueProvider.getCards) return issueProvider.getCards(request);
 		else return Promise.resolve({ cards: [] });
+	}
+
+	@log()
+	@lspHandler(FetchThirdPartyCardWorkflowRequestType)
+	fetchCardWorkflow(
+		request: FetchThirdPartyCardWorkflowRequest
+	): Promise<FetchThirdPartyCardWorkflowResponse> {
+		const provider = getProvider(request.providerId);
+		if (provider === undefined) {
+			throw new Error(`No registered provider for '${request.providerId}'`);
+		}
+		const issueProvider = provider as ThirdPartyIssueProvider;
+		if (
+			issueProvider == null ||
+			typeof issueProvider.supportsIssues !== "function" ||
+			!issueProvider.supportsIssues()
+		) {
+			throw new Error(`Provider(${provider.name}) doesn't support issues`);
+		}
+
+		if (issueProvider.getCardWorkflow) return issueProvider.getCardWorkflow(request);
+		else return Promise.resolve({ workflow: [] });
 	}
 
 	@log()

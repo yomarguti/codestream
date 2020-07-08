@@ -244,7 +244,8 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 			const jiraCards: JiraCard[] = [];
 			let nextPage: string | undefined = `/rest/api/2/search?${qs.stringify({
 				jql: "assignee=currentuser() AND status!=Closed",
-				fields: "summary,description,updated,subtasks"
+				expand: "transitions",
+				fields: "summary,description,updated,subtasks,status"
 			})}`;
 
 			while (nextPage !== undefined) {
@@ -288,7 +289,10 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 					title: fields.summary,
 					modifiedAt: new Date(fields.updated).getTime(),
 					tokenId: card.key,
-					body: fields.description
+					body: fields.description,
+					idList: fields.status ? fields.status.id : "",
+					listName: fields.status ? fields.status.name : "",
+					lists: card.transitions
 				});
 				if (fields.subtasks && fields.subtasks.length) {
 					// @ts-ignore
@@ -300,7 +304,10 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 							title: fields.summary,
 							modifiedAt: new Date(card.fields.updated).getTime(),
 							tokenId: subtask.key,
-							body: fields.description
+							body: fields.description,
+							idList: fields.status ? fields.status.id : "",
+							listName: fields.status ? fields.status.name : "",
+							lists: card.transitions
 						});
 					});
 				}
@@ -350,7 +357,26 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 	}
 
 	@log()
-	async moveCard(request: MoveThirdPartyCardRequest) {}
+	async moveCard(request: MoveThirdPartyCardRequest) {
+		try {
+			Logger.debug("Jira: moving card");
+			const response = await this.post(`/rest/api/2/issue/${request.cardId}/transitions`, {
+				transition: { id: request.listId }
+			});
+			// Logger.debug("Got a response: " + JSON.stringify(response, null, 4));
+			return response;
+		} catch (error) {
+			debugger;
+			Container.instance().errorReporter.reportMessage({
+				type: ReportingMessageType.Error,
+				message: "Jira: Error moving jira card",
+				source: "agent",
+				extra: { message: error.message }
+			});
+			Logger.error(error, "Error moving jira card");
+			return {};
+		}
+	}
 
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {
