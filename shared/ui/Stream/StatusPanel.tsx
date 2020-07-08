@@ -15,7 +15,6 @@ import {
 	GetBranchesRequestType,
 	CreateBranchRequestType,
 	SwitchBranchRequestType,
-	OpenUrlRequestType,
 	MoveThirdPartyCardRequestType,
 	GetReposScmRequestType,
 	ReposScm,
@@ -38,6 +37,7 @@ import { ModifiedRepos } from "./ModifiedRepos";
 import Tooltip from "./Tooltip";
 import { OpenReviews } from "./OpenReviews";
 import { Modal } from "./Modal";
+import { OpenUrlRequestType } from "@codestream/protocols/webview";
 
 const StyledCheckbox = styled(Checkbox)`
 	color: var(--text-color-subtle);
