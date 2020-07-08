@@ -123,7 +123,8 @@ export class StatusBarController implements Disposable {
 				break;
 
 			case SessionStatus.SignedIn:
-				let label = Container.session.user.name;
+				// let label = Container.session.user.name;
+				let label = `CodeStream - ${  Container.session.user.name}`;
 				let tooltip = "Toggle CodeStream";
 				if (!Container.session.hasSingleTeam()) {
 					label += ` - ${Container.session.team.name}`;
