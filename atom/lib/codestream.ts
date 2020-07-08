@@ -221,45 +221,6 @@ class CodestreamPackage {
 				}
 			})
 		);
-		for (let i = 0; i < 9; i++) {
-			const count = i + 1;
-			this.subscriptions.add(
-				atom.commands.add("atom-workspace", `codestream:go-to-codemark-${count}`, async () => {
-					const response = await Container.session.agent.request(
-						GetDocumentFromKeyBindingRequestType,
-						{
-							key: count
-						}
-					);
-
-					if (!response) return;
-
-					const { textDocument, range, marker } = response;
-
-					Container.session.agent.telemetry({
-						eventName: "Codemark Clicked",
-						properties: { "Codemark Location": "Shortcut" }
-					});
-
-					const atomRange = Convert.lsRangeToAtomRange(range);
-					const file = Convert.uriToPath(textDocument.uri);
-
-					const manipulator = Container.editorManipulator;
-					const editor = await manipulator.open(file);
-
-					if (editor) {
-						await manipulator.highlight(true, file, atomRange);
-						manipulator.scrollIntoView(editor, atomRange.start.row);
-						Container.viewController
-							.getMainView()
-							.showCodemark(marker.codemarkId, textDocument.uri);
-					} else {
-						// if the file couldn't be opened, don't provide the uri to the webview
-						Container.viewController.getMainView().showCodemark(marker.codemarkId);
-					}
-				})
-			);
-		}
 	}
 
 	async consumeStatusBar(statusBar: StatusBar) {
