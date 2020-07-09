@@ -70,25 +70,30 @@ elif [ $sanityCheck -eq 1 ]; then
 	echo -n "Press ENTER to continue" && read
 fi
 
-echo "apm publish $thisRelease"
+echo -e "\napm publish $thisRelease"
 (cd $ATOM_SANDBOX/atom-client && apm publish $thisRelease && git push origin master) || exit 1
 
 tag="atom-$thisRelease"
-echo "Applying tag $tag to the codestream repo..."
+echo -e "\nApplying tag $tag to the codestream repo..."
 git tag $tag && git push origin $tag
 
-echo "Bumping atom's patch version on develop..."
+echo -e "\nBumping atom's patch version on develop..."
 tmpDir=/tmp/bumpver$$
 mkdir $tmpDir || exit 1
-echo "clone codestream repo into $tmpDir"
-cd $tmpDir
-git clone  --depth 1 --branch develop git@github.com:teamcodestream/codestream.git || exit 1
-cd codestream/atom || exit 1
-dt-sb-version-tool --bump-version patch || exit 1
-nextVersion=`dt-sb-version-tool --report-version`
-[ -z "$nextVersion" -o "$nextVersion" == "$thisRelease" ] && echo "Uh oh!! Was the version updated properly?" && exit 1
-git commit -am "Auto-bump of Atom version to $nextVersion" || exit 1
-git push origin develop || exit 1
+(
+	echo "clone codestream repo into $tmpDir"
+	cd $tmpDir
+	echo git clone  --depth 1 --branch develop git@github.com:teamcodestream/codestream.git
+	git clone  --depth 1 --branch develop git@github.com:teamcodestream/codestream.git || exit 1
+	cd codestream/atom || exit 1
+	echo dt-sb-version-tool --bump-version patch
+	dt-sb-version-tool --bump-version patch || exit 1
+	nextVersion=`dt-sb-version-tool --report-version`
+	[ -z "$nextVersion" -o "$nextVersion" == "$thisRelease" ] && echo "Uh oh!! Was the version updated properly?" && exit 1
+	echo "nextVersion = $nextVersion"
+	git commit -am "Auto-bump of Atom version to $nextVersion" || exit 1
+	git push origin develop || exit 1
+)
 /bin/rm -rf $tmpDir
 
 dt-notify-ops -m ":atom_symbol: = :rocket:" -w development
