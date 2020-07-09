@@ -1629,9 +1629,13 @@ class ReviewForm extends React.Component<Props, State> {
 		// go on the left side, but without the <bdi> component
 		// the punctuation would be messed up (such as filenames
 		// beginning with a period)
+		const excluded = this.excluded(file);
 		let className = "row-with-icon-actions monospace ellipsis-left-container";
 		if (file === currentFile) {
 			className += " selected-simple";
+		}
+		if (excluded) {
+			className += " excluded-file";
 		}
 		return (
 			<div key={file} className={className} onClick={() => this.showLocalDiff(file)}>
@@ -1645,7 +1649,7 @@ class ReviewForm extends React.Component<Props, State> {
 				{status === FileStatus.copied && <span className="added">copied </span>}
 				{status === FileStatus.unmerged && <span className="deleted">conflict </span>}
 				{status === FileStatus.deleted && <span className="deleted">deleted </span>}
-				{this.excluded(file) ? (
+				{excluded ? (
 					<span className="actions">
 						<Icon
 							name="plus"
