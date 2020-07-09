@@ -15,6 +15,7 @@ const val SPACE_ENCODED: String = "%20"
 const val COLON_ENCODED: String = "%3A"
 const val HASH_ENCODED: String = "%23"
 const val URI_FILE_BEGIN = "file:"
+const val WINDOWS_NETWORK_FILE_BEGIN = "file:////"
 const val URI_PATH_SEP: Char = '/'
 const val URI_VALID_FILE_BEGIN: String = "file:///"
 
@@ -22,8 +23,9 @@ fun sanitizeURI(uri: String?): String? {
     if (uri == null) {
         return null
     }
-
-    if (!uri.startsWith(URI_FILE_BEGIN)) {
+    if (uri.startsWith(WINDOWS_NETWORK_FILE_BEGIN)) {
+        return uri
+    } else if (!uri.startsWith(URI_FILE_BEGIN)) {
         // LOG.warn("Malformed uri : " + uri)
         return uri // Probably not an uri
     } else {
