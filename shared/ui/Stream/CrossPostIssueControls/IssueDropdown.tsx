@@ -396,7 +396,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const startWorkPreferences = preferences.startWork || EMPTY_HASH;
 		const providerIds = props.providers.map(provider => provider.id).join(":");
-		const skipConnect = false; // preferences.skipConnectIssueProviders;
+		const skipConnect = preferences.skipConnectIssueProviders;
 
 		const csIssues = codemarkSelectors.getMyOpenIssues(state.codemarks, state.session.userId!);
 		let status =
