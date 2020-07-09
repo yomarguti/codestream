@@ -70,7 +70,7 @@ export const markdownify = (text: string, options?: { excludeParagraphWrap: bool
 			return "<span class='only-emoji'>" + replaced + "</span>";
 		else return replaced;
 	} catch (error) {
-		logError(`Error rendering markdown: ${error.message}`);
+		logError(`Error rendering markdown: ${error.message} orig text is ${text}`);
 		return text;
 	}
 };
