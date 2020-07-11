@@ -1227,7 +1227,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		// otherwise, use the start commit if specified by the user.
 		// otherwise, use the parent of the first commit of this branch (the fork point)
 		// if that doesn't exist, use HEAD
-		const baseSha = pushedCommit
+		const baseSha = (pushedCommit && !amendingReviewId)
 			? pushedCommit.sha
 			: scm.commits && scm.commits.length > 0
 			? (await git.getParentCommitShas(scm.repoPath, scm.commits[scm.commits.length - 1].sha))[0]
