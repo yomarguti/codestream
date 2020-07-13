@@ -573,7 +573,7 @@ export const StatusPanel = () => {
 			HostApi.instance.track("Work Started", {
 				"Branch Created": createTheBranchNow,
 				"Ticket Selected": card ? card.providerIcon : "",
-				"Ticket Moved": moveTheCardNow,
+				"Ticket Moved": moveTheCardNow ? true : false,
 				"Status Set": updateSlackNow
 			});
 		}
