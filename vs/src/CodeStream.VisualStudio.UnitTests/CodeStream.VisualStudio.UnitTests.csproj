@@ -219,6 +219,7 @@
     <Compile Include="Extensions\ColorExtensionsTest.cs" />
     <Compile Include="Extensions\DynamicExtensionsTests.cs" />
     <Compile Include="Extensions\JsonExtensionsTests.cs" />
+    <Compile Include="Extensions\StringExtensionsTest.cs" />
     <Compile Include="Extensions\UriExtensionsTests.cs" />
     <Compile Include="LanguageServer\CustomCamelCasePropertyNamesContractResolverTests.cs" />
     <Compile Include="LanguageServer\ExtensionsTest.cs" />

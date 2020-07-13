@@ -107,7 +107,7 @@ namespace CodeStream.VisualStudio.Core {
 			// normally I wouldn't condone having a ctor with side-effects, especially not
 			// one that starts a process, but since this is a static ctor (only fires once) and is
 			// essentially a static class of semi-primitive types that all others rely on, it's ok.
-			VisualStudioDisplayName = TryGetDisplayNameFromProcess(fileVersionInfo.FileName) ?? VisualStudioName;
+			VisualStudioDisplayName = (TryGetDisplayNameFromProcess(fileVersionInfo.FileName) ?? VisualStudioName).ToAplhaNumericPlusSafe();
 
 			string logYear = null; ;
 			if (VisualStudioVersion.Major == 15) {
