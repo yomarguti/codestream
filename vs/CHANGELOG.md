@@ -1,5 +1,11 @@
 # Change Log
 
+## [8.1.3] - 2020-7-13
+
+### Fixed
+
+- Fixes an issue where you'd get an endless spinner trying to enter an invitation code
+
 ## [8.1.2] - 2020-7-9
 
 ### Added
