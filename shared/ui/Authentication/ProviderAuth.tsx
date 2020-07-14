@@ -26,7 +26,7 @@ export const ProviderAuth = (connect(undefined) as any)((props: Props) => {
 		setIsWaiting(false);
 	}, [isWaiting]);
 
-	const waitFor = inMillis(30, "sec");
+	const waitFor = inMillis(300, "sec"); // changed to hopefully avoid timeouts
 	useTimeout(stopWaiting, waitFor);
 
 	const onClickGoToSignup = (event: React.SyntheticEvent) => {
