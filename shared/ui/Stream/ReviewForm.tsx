@@ -1862,6 +1862,7 @@ class ReviewForm extends React.Component<Props, State> {
 			authorsBlameData,
 			openRepos,
 			isLoadingScm,
+			isReloadingScm,
 			scmError,
 			scmErrorMessage
 		} = this.state;
@@ -2151,7 +2152,7 @@ class ReviewForm extends React.Component<Props, State> {
 										}}
 										className={cx("control-button", { cancel: !this.state.title })}
 										type="submit"
-										loading={this.state.isLoading}
+										loading={isReloadingScm || this.state.isLoading}
 										onClick={this.handleClickSubmit}
 									>
 										{isAmending ? "Amend" : "Submit"}
