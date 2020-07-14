@@ -213,12 +213,12 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public string CreatorName { get; set; }
 		public string CommitHashWhenCreated { get; set; }
 		public CsCodemark Codemark { get; set; }
-		public ExternalContent ExternalContent { get; set; }		 
+		public ExternalContent ExternalContent { get; set; }
 		public Range Range { get; set; }
 		public string Summary { get; set; }
 		public string SummaryMarkdown { get; set; }
 		public CodemarkType Type { get; set; }
-		public string File { get; set ; }
+		public string File { get; set; }
 		public string RepoId { get; set; }
 	}
 
@@ -628,4 +628,5 @@ namespace CodeStream.VisualStudio.Core.Models {
 	public class FetchStreamsResponse {
 		public List<CsStream> Streams { get; set; }
 	}
+	 
 }

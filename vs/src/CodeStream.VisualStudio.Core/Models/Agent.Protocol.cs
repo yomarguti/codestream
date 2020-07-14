@@ -52,7 +52,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 	}
 
 	public class UserSession {
-		public string UserId { get; set; }		
+		public string UserId { get; set; }
 	}
 
 	public class Services {
@@ -103,7 +103,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 	}
 
 	public class BootstrapAuthenticatedResponse : BootstrapPartialResponseAnonymous {
-		public EditorContext EditorContext { get; set; }		
+		public EditorContext EditorContext { get; set; }
 	}
 
 	public class BootstrapRequestType : RequestType<BootstrapAuthenticatedResponse> {
@@ -121,7 +121,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public bool? DisableStrictSSL { get; }
 	}
 
-	public class SetServerUrlResponse {	}
+	public class SetServerUrlResponse { }
 
 	public class SetServerUrlRequestType : RequestType<SetServerUrlResponse> {
 		public static string MethodName = "codestream/set-server";
@@ -138,4 +138,61 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public const string MethodName = "codestream/url/open";
 		public override string Method => MethodName;
 	}
+
+	public class GetReviewContentsRequest {
+		public string ReviewId { get; set; }
+		public int? Checkpoint { get; set; }
+		public string RepoId { get; set; }
+		public string Path { get; set; }
+	}
+
+	public class GetReviewContentsResponse {
+		public string Left { get; set; }
+		public string Right { get; set; }
+		public bool? FileNotIncludedInReview { get; set; }
+		public string error { get; set; }
+	}
+
+	public class GetReviewContentsRequestType : RequestType<GetReviewContentsRequest> {
+		public const string MethodName = "codestream/review/contents";
+		public override string Method => MethodName;
+	}
+
+
+	public class GetReviewContentsLocalRequest {
+		public string RepoId { get; set; }
+		public string Path { get; set; }
+		public string EditingReviewId { get; set; }
+		public string BaseSha { get; set; }
+		public string RightVersion { get; set; }
+	}
+
+	public class GetReviewContentsLocalRequestType : RequestType<GetReviewContentsLocalRequest> {
+		public const string MethodName = "codestream/review/contentsLocal";
+		public override string Method => MethodName;
+	}
+
+	public class GetReviewContentsLocalResponse {
+		public string Left { get; set; }
+		public string Right { get; set; }
+		public bool? FileNotIncludedInReview { get; set; }
+		public string Error { get; set; }
+	}
+
+	public class CSReview {
+		public string Title { get; set; }
+	}
+	public class GetReviewRequest {
+		public string ReviewId { get; set; }
+	}
+
+	public class GetReviewResponse {
+		public CSReview Review { get; set; }
+	}
+
+	public class GetReviewRequestType : RequestType<GetReviewRequest> {
+		public const string MethodName = "codestream/review";
+		public override string Method => MethodName;
+	}
+
 }

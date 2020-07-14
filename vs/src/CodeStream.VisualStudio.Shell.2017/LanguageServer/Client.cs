@@ -7,6 +7,7 @@ using CodeStream.VisualStudio.Core.Services;
 using Microsoft;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.LanguageServer.Client;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Threading;
 using Newtonsoft.Json;
 using Serilog;
@@ -71,6 +72,29 @@ namespace CodeStream.VisualStudio.Shell._2017.LanguageServer {
 		public IEnumerable<string> FilesToWatch => null;
 
 		public object MiddleLayer => null;
+		//// MiddleLayer2017Provider.Instance;
+
+		//private class MiddleLayer2017Provider {
+		//	internal readonly static MiddleLayer2017Provider Instance = new MiddleLayer2017Provider();
+		//	private MiddleLayerProvider _middleLayerProvider;
+		//	private MiddleLayer2017Provider() {
+		//		_middleLayerProvider = new MiddleLayerProvider(Log);
+		//	}
+
+		//	public bool CanHandle(string methodName) => _middleLayerProvider.CanHandle(methodName);
+
+		//	public Task HandleNotificationAsync(string methodName, JToken methodParam, Func<JToken, Task> sendNotification) {
+		//		return _middleLayerProvider.HandleNotificationAsync(methodName, methodParam, sendNotification);
+		//	}
+
+		//	public Task<JToken> HandleRequestAsync(string methodName, JToken methodParam, Func<JToken, Task<JToken>> sendRequest) {
+		//		return _middleLayerProvider.HandleRequestAsync(methodName, methodParam, sendRequest);
+		//	}
+
+		//	public Task<SymbolInformation[]> RequestWorkspaceSymbols(WorkspaceSymbolParams param, Func<WorkspaceSymbolParams, Task<SymbolInformation[]>> sendRequest) {
+		//		throw new NotImplementedException();
+		//	}
+		//}
 
 		public object CustomMessageTarget {
 			get {

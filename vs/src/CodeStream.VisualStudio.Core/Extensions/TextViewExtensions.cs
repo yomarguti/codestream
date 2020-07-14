@@ -9,12 +9,40 @@ using Microsoft.VisualStudio.Text.Formatting;
 
 namespace CodeStream.VisualStudio.Core.Extensions {
 	public static class TextViewExtensions {
+		/// <summary>
+		/// DIFF roles do not have CodeStream margins
+		/// </summary>
+		/// <param name="wpfTextView"></param>
+		/// <returns></returns>
+		public static bool HasValidMarginRoles(this IWpfTextView wpfTextView) => wpfTextView.Roles.HasValidMarginRoles();
 
-		public static bool HasValidRoles(this IWpfTextView wpfTextView) => wpfTextView.Roles.HasValidRoles();
+		/// <summary>
+		/// Currently the same as margin roles
+		/// </summary>
+		/// <param name="wpfTextView"></param>
+		/// <returns></returns>
+		public static bool HasValidTaggerRoles(this IWpfTextView wpfTextView) => wpfTextView.Roles.HasValidMarginRoles();
 
-		public static bool HasValidRoles(this ITextViewRoleSet roles) {
-			return roles.ContainsAll(TextViewRoles.DefaultRoles) &&
-				   roles.Intersect(TextViewRoles.InvalidRoles).Any() == false;
+		/// <summary>
+		/// Roles for a document
+		/// </summary>
+		/// <param name="wpfTextView"></param>
+		/// <returns></returns>
+		public static bool HasValidDocumentRoles(this IWpfTextView wpfTextView) => wpfTextView.Roles.HasValidDocumentRoles();
+
+		public static bool HasValidDocumentRoles(this ITextViewRoleSet roles) {
+			return roles.ContainsAll(TextViewRoles.DefaultDocumentRoles) &&
+				   roles.Intersect(TextViewRoles.InvalidDocumentRoles).Any() == false;
+		}
+
+		/// <summary>
+		/// DIFF roles do not have CodeStream margins
+		/// </summary>
+		/// <param name="roles"></param>
+		/// <returns></returns>
+		public static bool HasValidMarginRoles(this ITextViewRoleSet roles) {
+			return roles.ContainsAll(TextViewRoles.DefaultDocumentRoles) &&
+				   roles.Intersect(TextViewRoles.InvalidMarginRoles).Any() == false;
 		}
 
 		public static Tuple<ITextSnapshotLine, ITextSnapshotLine> GetLinesFromRange(this IWpfTextView wpfTextView, int start, int end) {

@@ -76,6 +76,7 @@
     <Compile Include="Commands\AddCodemarkCommands.cs" />
     <Compile Include="Commands\AuthenticationCommand.cs" />
     <Compile Include="Commands\StartWorkCommand.cs" />
+    <Compile Include="Commands\RequestCodeReviewCommand.cs" />
     <Compile Include="Commands\UserCommand.cs" />
     <Compile Include="Commands\WebViewDevToolsCommand.cs" />
     <Compile Include="Commands\WebViewReloadCommand.cs" />

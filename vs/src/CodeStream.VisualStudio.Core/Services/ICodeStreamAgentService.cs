@@ -29,5 +29,13 @@ namespace CodeStream.VisualStudio.Core.Services {
 		Task<FetchStreamsResponse> FetchStreamsAsync(FetchStreamsRequest request);
 		Task TrackAsync(string key, TelemetryProperties properties = null);
 		Task SetServerUrlAsync(string serverUrl, bool? disableStrictSSL);
+		Task<GetReviewContentsResponse> GetReviewContentsAsync(string reviewId, int? checkpoint, string repoId, string path);
+		Task<GetReviewContentsLocalResponse> GetReviewContentsLocalAsync(
+			string repoId,
+			string path,
+			string editingReviewId,
+			string baseSha,
+			string rightVersion);
+		Task<GetReviewResponse> GetReviewAsync(string reviewId);
 	}
 }

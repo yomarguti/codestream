@@ -94,10 +94,9 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 				if (areMarkerGlyphsVisible != _sessionService.AreMarkerGlyphsVisible) {
 					_sessionService.AreMarkerGlyphsVisible = areMarkerGlyphsVisible;
 					_eventAggregator.Publish(new MarkerGlyphVisibilityEvent { IsVisible = areMarkerGlyphsVisible });
-					if (!_sessionService.LastActiveFileUrl.IsNullOrWhiteSpace()) {
-						try {
-							var codeStreamService = _componentModel?.GetService<ICodeStreamService>();
-							codeStreamService?.ChangeActiveEditorAsync(new Uri(_sessionService.LastActiveFileUrl));
+					if (_sessionService.LastActiveFileUri != null) {
+						try {							
+							_componentModel?.GetService<ICodeStreamService>()?.ChangeActiveEditorAsync(_sessionService.LastActiveFileUri);
 						}
 						catch (Exception ex) {
 							Log.Warning(ex, nameof(WebViewControl_IsVisibleChanged));
@@ -136,6 +135,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 							using (Log.CriticalOperation(nameof(InitializeCore), Serilog.Events.LogEventLevel.Debug)) {
 								var router = new WebViewRouter(
 									_componentModel,
+									_componentModel.GetService<ICodeStreamService>(),
 									_componentModel.GetService<IWebviewUserSettingsService>(),
 									_componentModel.GetService<ISessionService>(),
 									_componentModel.GetService<ICodeStreamAgentService>(),

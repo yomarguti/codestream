@@ -44,9 +44,9 @@ namespace CodeStream.VisualStudio.Core.Services {
 
 		void Send(IRequestType message);
 		void Send(IAbstractMessageType message);
-		void Notify(INotificationType message);
-		Task NotifyAsync(INotificationType message);
-		void EnqueueNotification(INotificationType message);
+		void Notify<T>(INotificationType<T> message);
+		Task NotifyAsync<T>(INotificationType<T> message);
+		void EnqueueNotification<T>(INotificationType<T> message);
 		T GetItem<T>(string name);
 		void SetIsReloading();
 		void SetZoomInBackground(double zoomPercentage);

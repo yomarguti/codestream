@@ -76,11 +76,13 @@ namespace CodeStream.VisualStudio.Packages {
 						new AddCodemarkIssueCommand(_sessionService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
 						new AddCodemarkPermalinkCommand(_sessionService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
 						new AddCodemarkPermalinkInstantCommand(_sessionService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+						new RequestCodeReviewCommand(_sessionService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
 
 						new AddCodemarkCommentCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),
 						new AddCodemarkIssueCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),
 						new AddCodemarkPermalinkCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),
 						new AddCodemarkPermalinkInstantCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),
+						new RequestCodeReviewCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),
 
 						new WebViewReloadCommand(_sessionService),
 						new WebViewToggleCommand(),

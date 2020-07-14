@@ -1,4 +1,5 @@
 ﻿using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Models;
 using Microsoft.VisualStudio.Text;
 
 namespace CodeStream.VisualStudio.Core.UI.Extensions {
@@ -10,18 +11,18 @@ namespace CodeStream.VisualStudio.Core.UI.Extensions {
 		/// <param name="textBuffer"></param>
 		/// <param name="textDocument"></param>
 		/// <returns></returns>
-		public static bool TryGetTextDocument(this ITextDocumentFactoryService textDocumentFactoryService, ITextBuffer textBuffer, out ITextDocument textDocument) {
+		public static bool TryGetTextDocument(this ITextDocumentFactoryService textDocumentFactoryService, ITextBuffer textBuffer, out IVirtualTextDocument textDocument) {
 			textDocument = null;
 			if (!textDocumentFactoryService.TryGetTextDocument(textBuffer, out ITextDocument td)) {
 				return false;
 			}
 
-			textDocument = td;
+			textDocument = VirtualTextDocument.FromTextDocument(td);
 			if (textDocument == null) {
 				return false;
 			}
-			//	if (textDocument.FilePath.EqualsIgnoreCase("temp.txt")) return false;
-			return !textDocument.FilePath.EndsWithIgnoreCase(Core.Constants.CodeStreamCodeStream);
+			
+			return !td.FilePath.EndsWithIgnoreCase(Core.Constants.CodeStreamCodeStream);
 		}
 	}
 }

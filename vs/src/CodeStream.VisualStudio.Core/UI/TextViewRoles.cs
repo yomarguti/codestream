@@ -6,14 +6,18 @@ namespace CodeStream.VisualStudio.Core.UI {
 		/// <summary>
 		/// Only get textViews that we care about
 		/// </summary>
-		public static readonly List<string> DefaultRoles = new List<string> {
+		public static readonly List<string> DefaultDocumentRoles = new List<string> {
 			PredefinedTextViewRoles.Interactive,
 			PredefinedTextViewRoles.Document,
 			PredefinedTextViewRoles.PrimaryDocument,
 			PredefinedTextViewRoles.Editable
 		};
 
-		public static readonly List<string> InvalidRoles = new List<string> {
+		public static readonly List<string> InvalidDocumentRoles = new List<string> {
+			"LEFTDIFF"
+		};
+
+		public static readonly List<string> InvalidMarginRoles = new List<string> {
 			"DIFF"
 		};
 	}

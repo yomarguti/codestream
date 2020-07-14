@@ -3,8 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
-using System.Runtime.InteropServices;
 using CodeStream.VisualStudio.Core.Services;
+using CodeStream.VisualStudio.Core.Models;
 
 namespace CodeStream.VisualStudio.Services {
 	 
@@ -16,9 +16,9 @@ namespace CodeStream.VisualStudio.Services {
 			new Dictionary<string, List<IWpfTextView>>(StringComparer.InvariantCultureIgnoreCase);
 		private static readonly object Locker = new object();
 
-		public bool TryGetValue(string key, out IWpfTextView wpfTextView) {
+		public bool TryGetValue(IVirtualTextDocument key, out IWpfTextView wpfTextView) {
 			lock (Locker) {
-				if (Items.TryGetValue(key, out List<IWpfTextView> textViews)) {
+				if (Items.TryGetValue(key.Id, out List<IWpfTextView> textViews)) {
 					if (textViews.Count() == 1) {
 						wpfTextView = textViews[0];
 					}
@@ -32,22 +32,22 @@ namespace CodeStream.VisualStudio.Services {
 			}
 		}
 
-		public void Add(string key, IWpfTextView wpfTextView) {
+		public void Add(IVirtualTextDocument key, IWpfTextView wpfTextView) {
 			lock (Locker) {
-				if (!Items.TryGetValue(key, out List<IWpfTextView> textViews)) {
+				if (!Items.TryGetValue(key.Id, out List<IWpfTextView> textViews)) {
 					textViews = new List<IWpfTextView>();
-					Items.Add(key, textViews);
+					Items.Add(key.Id, textViews);
 				}
 				textViews.Add(wpfTextView);
 			}
 		}
 
-		public void Remove(string key, IWpfTextView wpfTextView) {
+		public void Remove(IVirtualTextDocument key, IWpfTextView wpfTextView) {
 			lock (Locker) {
-				if (Items.TryGetValue(key, out List<IWpfTextView> textViews)) {
+				if (Items.TryGetValue(key.Id, out List<IWpfTextView> textViews)) {
 					textViews.Remove(wpfTextView);
 					if (!textViews.Any()) {
-						Items.Remove(key);
+						Items.Remove(key.Id);
 					}
 				}
 			}

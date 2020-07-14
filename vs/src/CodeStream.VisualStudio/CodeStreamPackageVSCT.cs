@@ -43,6 +43,7 @@ namespace CodeStream.VisualStudio {
 		public const int AddCodemarkPermalinkCommandId = 0x0403;
 		public const int AddCodemarkPermalinkInstantCommandId = 0x0413;
 		public const int StartWorkCommandId = 0x0423;
+		public const int RequestCodeReviewCommandId = 0x0433;
 		public const int logo = 0x0001;
 		public const int auth = 0x0002;
 		public const int user = 0x0003;

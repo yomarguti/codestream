@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Windows.Threading;
@@ -10,7 +11,7 @@ using CodeStream.VisualStudio.Core.LanguageServer;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Services;
-using Microsoft;
+using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
@@ -23,6 +24,7 @@ namespace CodeStream.VisualStudio {
 		private static readonly ILogger Log = LogManager.ForContext<WebViewRouter>();
 
 		private readonly IComponentModel _componentModel;
+		private readonly ICodeStreamService _codeStreamService;
 		private readonly IWebviewUserSettingsService _webviewUserSettingsService;
 		private readonly ISessionService _sessionService;
 		private readonly ICodeStreamAgentService _codeStreamAgent;
@@ -35,6 +37,7 @@ namespace CodeStream.VisualStudio {
 
 		public WebViewRouter(
 			IComponentModel componentModel,
+			ICodeStreamService codestreamService,
 			IWebviewUserSettingsService webviewUserSettingsService,
 			ISessionService sessionService,
 			ICodeStreamAgentService codeStreamAgent,
@@ -45,6 +48,7 @@ namespace CodeStream.VisualStudio {
 			IEditorService editorService,
 			IAuthenticationServiceFactory authenticationServiceFactory) {
 			_componentModel = componentModel;
+			_codeStreamService = codestreamService;
 			_webviewUserSettingsService = webviewUserSettingsService;
 			_sessionService = sessionService;
 			_codeStreamAgent = codeStreamAgent;
@@ -191,8 +195,7 @@ namespace CodeStream.VisualStudio {
 												try {
 													var marker = message.Params["marker"].ToObject<CsMarker>();
 													var documentFromMarker = await _codeStreamAgent.GetDocumentFromMarkerAsync(new DocumentFromMarkerRequest(marker));
-													var filePath = documentFromMarker.TextDocument.Uri;
-													var fileUri = filePath.ToUri();
+													var fileUri = documentFromMarker.TextDocument.Uri.ToUri();
 
 													await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 													var wpfTextView = await _ideService.OpenEditorAtLineAsync(fileUri, documentFromMarker.Range, true);
@@ -286,7 +289,7 @@ namespace CodeStream.VisualStudio {
 												bool result = false;
 												var @params = message.Params.ToObject<EditorHighlightRangeRequest>();
 												if (@params != null) {
-													var activeTextView = _editorService.GetActiveTextEditor(@params.Uri.ToUri());
+													var activeTextView = _editorService.GetActiveTextEditorFromUri(@params.Uri.ToUri());
 													if (activeTextView != null) {
 														await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 														//don't reveal on highlight -- for big ranges it will cause bad behavior with the scrolling
@@ -466,6 +469,77 @@ namespace CodeStream.VisualStudio {
 											}
 											break;
 										}
+									case ReviewShowDiffRequestType.MethodName: {
+											var @params = message.Params.ToObject<ReviewShowDiffRequest>();
+											await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+											using (var scope = _browserService.CreateScope(message)) {
+												if (@params != null) {
+													var reviewContents = await _codeStreamAgent.GetReviewContentsAsync(@params.ReviewId, @params.Checkpoint, @params.RepoId, @params.Path);
+													if (reviewContents != null) {
+														var review = await _codeStreamAgent.GetReviewAsync(@params.ReviewId);
+														if (review != null) {
+
+															string update = "";
+															if (@params.Checkpoint.HasValue && @params.Checkpoint > 0) {
+																update = $" (Update #{@params.Checkpoint})";
+															}
+															string title = $"{@params.Path} @ {review.Review.Title.Truncate(25)}{update}";
+															_ideService.DiffTextBlocks(@params.Path, reviewContents.Left, reviewContents.Right, title, new Data() {
+																Scheme = "codestream-diff",
+																PathParts = new List<string> {
+																	@params.ReviewId,
+																	@params.Checkpoint.HasValue ? @params.Checkpoint.ToString() : "undefined",
+																	@params.RepoId
+																}
+															});
+														}
+													}
+												}
+												scope.FulfillRequest();
+											}
+											break;
+										}
+									case ReviewShowLocalDiffRequestType.MethodName: {
+											var @params = message.Params.ToObject<ReviewShowLocalDiffRequest>();
+
+											using (var scope = _browserService.CreateScope(message)) {
+												if (@params != null) {
+													var reviewContents = await _codeStreamAgent.GetReviewContentsLocalAsync(@params.RepoId, @params.Path, @params.EditingReviewId,
+														@params.BaseSha, @params.IncludeSaved.HasValue && @params.IncludeSaved.Value
+															? "saved"
+															: @params.IncludeStaged.HasValue && @params.IncludeStaged.Value
+																? "staged" : "head");
+													if (reviewContents != null) {
+														await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+														_ideService.DiffTextBlocks(@params.Path, reviewContents.Left, reviewContents.Right, $"{@params.Path.Truncate(25)} review changes");
+													}
+												}
+												scope.FulfillRequest();
+											}
+											break;
+										}
+									case ReviewCloseDiffRequestType.MethodName: {
+											using (var scope = _browserService.CreateScope(message)) {
+												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+												_ideService.TryCloseDiffs();
+												scope.FulfillRequest();
+											}
+											break;
+										}
+									case ShowNextChangedFileRequestType.MethodName: {
+											using (var scope = _browserService.CreateScope(message)) {
+												await _codeStreamService.NextChangedFileAsync();
+												scope.FulfillRequest();
+											}
+											break;
+										}
+									case ShowPreviousChangedFileRequestType.MethodName: {
+											using (var scope = _browserService.CreateScope(message)) {
+												await _codeStreamService.PreviousChangedFileAsync();
+												scope.FulfillRequest();
+											}
+											break;
+										}
 									default: {
 											Log.Warning($"Unhandled Target={target} Method={message.Method}");
 											break;
@@ -486,5 +560,7 @@ namespace CodeStream.VisualStudio {
 
 			await System.Threading.Tasks.Task.CompletedTask;
 		}
+
+
 	}
 }

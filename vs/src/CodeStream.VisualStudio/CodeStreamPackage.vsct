@@ -161,6 +161,16 @@
 					<LocCanonicalName>CodeStream.CopyPermalinkToClipboard</LocCanonicalName>
 				</Strings>
 			</Button>
+			<Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="RequestCodeReviewCommandId" type="Button">
+				<Icon guid="guidImagesCommands" id="review" />
+				<CommandFlag>DynamicVisibility</CommandFlag>
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<Strings>
+					<ButtonText>Request a Code Review</ButtonText>
+					<CanonicalName>CodeStream.RequestCodeReview</CanonicalName>
+					<LocCanonicalName>CodeStream.RequestCodeReview</LocCanonicalName>
+				</Strings>
+			</Button>		
 
 			<Button guid="guidWebViewPackageShortcutCmdSet" id="AddCodemarkCommentCommandId" type="Button">
 				<Icon guid="guidImages" id="logo" />
@@ -208,10 +218,19 @@
 					<LocCanonicalName>CodeStream.StartWorkShortcut</LocCanonicalName>
 				</Strings>
 			</Button>
+			<Button guid="guidWebViewPackageShortcutCmdSet" id="RequestCodeReviewCommandId" type="Button">
+				<CommandFlag>DynamicVisibility</CommandFlag>
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<Strings>
+					<ButtonText>Request a Code Review</ButtonText>
+					<CanonicalName>CodeStream.RequestCodeReviewShortcut</CanonicalName>
+					<LocCanonicalName>CodeStream.RequestCodeReviewShortcut</LocCanonicalName>
+				</Strings>
+			</Button>
 		</Buttons>
 		<Bitmaps>
 			<Bitmap guid="guidImages" href="Resources\Sprites.png" usedList="logo, auth, user, empty4, empty5, empty6" />
-			<Bitmap guid="guidImagesCommands" href="Resources\CommandsSprites.png" usedList="comment, issue, bookmark, permalink, instantPermalink" />
+			<Bitmap guid="guidImagesCommands" href="Resources\CommandsSprites.png" usedList="comment, issue, bookmark, permalink, instantPermalink, review" />
 		</Bitmaps>
 	</Commands>
 
@@ -230,6 +249,8 @@
 					editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" mod2="Shift" key2="p" />
 		<KeyBinding guid="guidWebViewPackageShortcutCmdSet" id="StartWorkCommandId"
 					editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" key2="w" />
+		<KeyBinding guid="guidWebViewPackageShortcutCmdSet" id="RequestCodeReviewCommandId"
+					editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" mod2="Shift" key2="r" />
 	</KeyBindings>
 
 	<CommandPlacements>
@@ -254,6 +275,9 @@
 			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextCommandGroup"/>
 		</CommandPlacement>
 		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkInstantCommandId" priority="0x0005" >
+			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextCommandGroup"/>
+		</CommandPlacement>
+		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="RequestCodeReviewCommandId" priority="0x0006" >
 			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextCommandGroup"/>
 		</CommandPlacement>
 	</CommandPlacements>
@@ -298,6 +322,7 @@
 			<IDSymbol name="AddCodemarkIssueCommandId" value="0x0401" />
 			<IDSymbol name="AddCodemarkPermalinkCommandId" value="0x0403" />
 			<IDSymbol name="AddCodemarkPermalinkInstantCommandId" value="0x0413" />
+			<IDSymbol name="RequestCodeReviewCommandId" value="0x0433" />
 		</GuidSymbol>
 		 
 		<GuidSymbol name="guidWebViewPackageShortcutCmdSet" value="{A72BBF5D-23D2-4A8A-939E-12C4651DD341}">
@@ -307,6 +332,7 @@
 			<IDSymbol name="AddCodemarkPermalinkCommandId" value="0x0403" />
 			<IDSymbol name="AddCodemarkPermalinkInstantCommandId" value="0x0413" />
 			<IDSymbol name="StartWorkCommandId" value="0x0423" />
+			<IDSymbol name="RequestCodeReviewCommandId" value="0x0433" />
 		</GuidSymbol>
 
 		<GuidSymbol name="guidImages" value="{f2c8ef6d-3257-4e0a-8ae0-ef6298dd22c5}" >
@@ -322,7 +348,8 @@
 			<IDSymbol name="issue" value="2" />
 			<IDSymbol name="bookmark" value="3" />
 			<IDSymbol name="permalink" value="4" />
-			<IDSymbol name="instantPermalink" value="5" />			
+			<IDSymbol name="instantPermalink" value="5" />
+			<IDSymbol name="review" value="6" />
 		</GuidSymbol>
 	</Symbols>
 </CommandTable>

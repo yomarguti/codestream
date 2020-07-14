@@ -57,10 +57,10 @@ namespace CodeStream.VisualStudio.Services {
 			Log.Debug(nameof(SetRpcAsync));
 			_rpc = rpc;
 
-			try {	
+			try {
 				var initializationResult = await InitializeAsync();
 				Log.Verbose(initializationResult?.ToString());
-				_sessionService.SetAgentConnected();				
+				_sessionService.SetAgentConnected();
 			}
 			catch (Exception ex) {
 				Log.Fatal(ex, nameof(SetRpcAsync));
@@ -92,7 +92,7 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null) {
-			if (!_sessionService.IsAgentReady) {				
+			if (!_sessionService.IsAgentReady) {
 				if (Log.IsDebugEnabled()) {
 					try {
 #if DEBUG
@@ -384,6 +384,37 @@ namespace CodeStream.VisualStudio.Services {
 
 		public Task SetServerUrlAsync(string serverUrl, bool? disableStrictSSL) {
 			return SendCoreAsync<JToken>(SetServerUrlRequestType.MethodName, new SetServerUrlRequest(serverUrl, disableStrictSSL));
+		}
+
+		public Task<GetReviewContentsResponse> GetReviewContentsAsync(string reviewId, int? checkpoint, string repoId, string path) {
+			return SendCoreAsync<GetReviewContentsResponse>(GetReviewContentsRequestType.MethodName, new GetReviewContentsRequest() {
+				ReviewId = reviewId,
+				Checkpoint = checkpoint,
+				RepoId = repoId,
+				Path = path
+			});
+		}
+
+		public Task<GetReviewContentsLocalResponse> GetReviewContentsLocalAsync(
+			string repoId,
+			string path,
+			string editingReviewId,
+			string baseSha,
+			string rightVersion) {
+			return SendCoreAsync<GetReviewContentsLocalResponse>(GetReviewContentsLocalRequestType.MethodName,
+				new GetReviewContentsLocalRequest() {
+					RepoId = repoId,
+					Path = path,
+					EditingReviewId = editingReviewId,
+					BaseSha = baseSha,
+					RightVersion = rightVersion
+				});
+		}
+
+		public Task<GetReviewResponse> GetReviewAsync(string reviewId) {
+			return SendCoreAsync<GetReviewResponse>(GetReviewRequestType.MethodName, new GetReviewRequest() {
+				ReviewId = reviewId
+			});
 		}
 	}
 }

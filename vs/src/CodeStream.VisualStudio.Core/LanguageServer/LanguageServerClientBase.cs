@@ -56,7 +56,6 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 
 		public object CustomMessageTargetBase { get; }
 
-
 		public object InitializationOptionsBase {
 			get {
 				var settingsManager = SettingsServiceFactory.GetOrCreate(nameof(LanguageServerClientBase));
@@ -90,8 +89,6 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 				return initializationOptions;
 			}
 		}
-
-
 
 		protected async Task OnAttachedForCustomMessageAsync() {
 			try {

@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Services;
 using CodeStream.VisualStudio.Core.UI;
 using CodeStream.VisualStudio.Core.UI.Extensions;
-using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Serilog;
 
@@ -16,16 +14,16 @@ namespace CodeStream.VisualStudio.UI {
 	public class DocumentMarkerManager : IDisposable {
 		private readonly ICodeStreamAgentService _agentService;
 		private readonly IWpfTextView _wpfTextView;
-		private readonly ITextDocument _textDocument;
+		private readonly IVirtualTextDocument _virtualTextDocument;
 		bool _disposed = false;
 		private DocumentMarkersResponse _markers;
 
 		private static readonly ILogger Log = LogManager.ForContext<DocumentMarkerManager>();
 
-		public DocumentMarkerManager(ICodeStreamAgentService agentService, IWpfTextView wpfTextView, ITextDocument textDocument) {
+		public DocumentMarkerManager(ICodeStreamAgentService agentService, IWpfTextView wpfTextView, IVirtualTextDocument virtualTextDocument) {
 			_agentService = agentService;
 			_wpfTextView = wpfTextView;
-			_textDocument = textDocument;
+			_virtualTextDocument = virtualTextDocument;
 		}
 
 		/// <summary>
@@ -45,7 +43,7 @@ namespace CodeStream.VisualStudio.UI {
 		/// <param name="forceUpdate">When set to true, ignores if the collection is empty</param>
 		/// <returns></returns>
 		public async System.Threading.Tasks.Task<bool> TrySetMarkersAsync(bool forceUpdate = false) {
-			Uri fileUri = null;
+			Uri uri = null;
 			bool result = false;
 			using (var metrics = Log.WithMetrics($"{nameof(DocumentMarkerManager)}:{nameof(TrySetMarkersAsync)}")) {
 				try {
@@ -54,13 +52,13 @@ namespace CodeStream.VisualStudio.UI {
 						return false;
 					}
 
-					fileUri = _textDocument.FilePath.ToUri();
-					if (fileUri == null) {
-						Log.Verbose($"Could not parse file path as uri={_textDocument.FilePath}");
+					uri = _virtualTextDocument.Uri;
+					if (uri == null) {
+						Log.Verbose($"Could not get virtual text document");
 						return false;
 					}
 
-					_markers = await _agentService.GetMarkersForDocumentAsync(fileUri, true);
+					_markers = await _agentService.GetMarkersForDocumentAsync(uri, true);
 					bool? previousResult = null;
 					if (_markers?.Markers.AnySafe() == true || forceUpdate) {
 						if (_wpfTextView.Properties.TryGetProperty(PropertyNames
@@ -69,7 +67,7 @@ namespace CodeStream.VisualStudio.UI {
 						}
 						_wpfTextView.Properties.RemovePropertySafe(PropertyNames.DocumentMarkers);
 						_wpfTextView.Properties.AddProperty(PropertyNames.DocumentMarkers, _markers?.Markers);
-						Log.Verbose($"Setting Markers({_markers?.Markers.Count}) for {fileUri}");
+						Log.Verbose($"Setting Markers({_markers?.Markers.Count}) for {uri}");
 
 						var current = _markers?.Markers.Any() == true;
 						if (previousResult == true && current == false) {
@@ -87,7 +85,7 @@ namespace CodeStream.VisualStudio.UI {
 					}
 				}
 				catch (OverflowException ex) {
-					Log.Error(ex, fileUri?.ToString());
+					Log.Error(ex, uri?.ToString());
 				}
 				catch (Exception ex) {
 					Log.Error(ex, nameof(TrySetMarkersAsync));

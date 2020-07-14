@@ -27,7 +27,7 @@ namespace CodeStream.VisualStudio.Core.Extensions {
 			return Uri.TryCreate(Uri.UnescapeDataString(uriString), uriKind, out Uri result) ? result : null;
 		}
 		/// <summary>
-		/// Local path seems to return a string like /c:/foo
+		/// Local path seems to return a string like /c:/foo, this strips the leading forward slash
 		/// </summary>
 		/// <param name="uri"></param>
 		/// <returns></returns>

@@ -26,7 +26,7 @@ namespace CodeStream.VisualStudio.Services {
 		/// Also known as Spatial view
 		/// </summary>
 		public bool IsCodemarksForFileVisible { get; set; }
-		public string LastActiveFileUrl { get; set; }
+		public Uri LastActiveFileUri { get; set; }
 		public bool? WebViewDidInitialize { get; set; }
 		public ProjectType? ProjectType { get; set; }
 

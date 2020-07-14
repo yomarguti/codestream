@@ -45,7 +45,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 				var containerMarginAsVerticalScrollBar = containerMargin as IVerticalScrollBar;
 				if (containerMarginAsVerticalScrollBar == null) return null;
 
-				if (!wpfTextViewHost.TextView.HasValidRoles()) return null;
+				if (!wpfTextViewHost.TextView.HasValidMarginRoles()) return null;
 				if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService,
 					wpfTextViewHost.TextView.TextBuffer, out var textDocument)) return null;
 

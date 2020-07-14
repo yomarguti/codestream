@@ -8,14 +8,14 @@
 		public static string DocumentMarkerManager = $"{Prefix}{nameof(DocumentMarkerManager)}";
 		public static string TextViewMarginProviders = $"{Prefix}{nameof(TextViewMarginProviders)}";
 		public static string TextViewState = $"{Prefix}{nameof(TextViewState)}";
-		public static string TextViewFilePath = $"{Prefix}{nameof(TextViewFilePath)}";
+		public static string TextViewDocument = $"{Prefix}{nameof(TextViewDocument)}";		
 		public static string TextViewEvents = $"{Prefix}{nameof(TextViewEvents)}";
 		public static string TextViewLocalEvents = $"{Prefix}{nameof(TextViewLocalEvents)}";
 		public static string AdornmentManager = $"{Prefix}{nameof(AdornmentManager)}";		
 		public static string TextViewLayoutChangedSubject = $"{Prefix}{nameof(TextViewLayoutChangedSubject)}";
 		public static string CaretPositionChangedSubject = $"{Prefix}{nameof(CaretPositionChangedSubject)}";
 		public static string TextSelectionChangedSubject = $"{Prefix}{nameof(TextSelectionChangedSubject)}";
-
+		public static string IsReviewDiff = $"{Prefix}{nameof(IsReviewDiff)}";
 		public const string TextViewCreationListenerLayerName = "CodeStreamHighlightColor";
 	}
 }

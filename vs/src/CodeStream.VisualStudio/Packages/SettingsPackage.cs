@@ -133,7 +133,7 @@ namespace CodeStream.VisualStudio.Packages {
 						_settingsManager.DialogPage.PropertyChanged -= DialogPage_PropertyChanged;
 					}
 				}
-				catch (Exception ex) {
+				catch (Exception) {
 
 				}
 			}

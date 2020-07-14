@@ -26,7 +26,7 @@ namespace CodeStream.VisualStudio.UI.Taggers {
 		public ITagger<T> CreateTagger<T>(ITextView textView, ITextBuffer buffer) where T : ITag {
 			var wpfTextView = textView as IWpfTextView;
 			if (wpfTextView == null || textView.TextBuffer != buffer) return null;
-			if (!wpfTextView.HasValidRoles()) return null;
+			if (!wpfTextView.HasValidTaggerRoles()) return null;
 			if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, textView.TextBuffer, out var textDocument)) return null;
 
 			var sessionService = (Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel)?.GetService<ISessionService>();

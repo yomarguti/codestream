@@ -5,6 +5,9 @@ using System.Text.RegularExpressions;
 
 namespace CodeStream.VisualStudio.Core.Extensions {
 	public static class StringExtensions {
+		private static Regex _alphaNumericPlus = new Regex(@"[^a-zA-Z0-9\s\-_]", RegexOptions.Compiled);
+		private static Regex _normalizeLineEndings = new Regex(@"\r\n|\n\r|\n|\r", RegexOptions.Compiled);
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsNullOrWhiteSpace(this string s) => string.IsNullOrWhiteSpace(s);
 
@@ -17,9 +20,7 @@ namespace CodeStream.VisualStudio.Core.Extensions {
 			str?.EndsWith(value, true, CultureInfo.InvariantCulture) == true;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool AsBool(this string s) => s != null && Convert.ToBoolean(s);
-
-		private static Regex _alphaNumericPlus = new Regex(@"[^a-zA-Z0-9\s\-_]", RegexOptions.Compiled);
+		public static bool AsBool(this string s) => s != null && Convert.ToBoolean(s);		
 
 		/// <summary>
 		/// Removes non-alpha numeric characters from a string (allows spaces, hyphens, underbars)
@@ -31,5 +32,14 @@ namespace CodeStream.VisualStudio.Core.Extensions {
 			str.IsNullOrWhiteSpace() ?
 			str :
 			_alphaNumericPlus.Replace(str, string.Empty);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string Truncate(this string value, int maxLength, bool withEllipses = true) {
+			if (string.IsNullOrWhiteSpace(value)) return value;
+			return value.Length <= maxLength ? value : value.Substring(0, maxLength) + (withEllipses ? "..." : "");
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string NormalizeLineEndings(this string str) =>  _normalizeLineEndings.Replace(str, "\r\n");		
 	}
 }

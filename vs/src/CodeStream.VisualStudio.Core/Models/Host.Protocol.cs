@@ -66,6 +66,9 @@ namespace CodeStream.VisualStudio.Core.Models {
 	}
 
 	public class OpenUrlRequest {
+		/// <summary>
+		/// This is an http/https url
+		/// </summary>
 		public string Url { get; set; }
 	}
 

@@ -24,7 +24,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 		private readonly IComponentModel _componentModel;
 		private readonly ITextBuffer _textBuffer;
 		private readonly ITextView _textView;
-		private readonly ITextDocument _textDocument;
+		private readonly IVirtualTextDocument _virtualTextDocument;
 
 		private readonly object _currentLock = new object();
 		private IEnumerable<SuggestedActionSet> _current;
@@ -34,11 +34,11 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 		public CodemarkSuggestedActionsSource(IComponentModel componentModel,
 			ITextView textView,
 			ITextBuffer textBuffer,
-			ITextDocument textDocument) {
+			IVirtualTextDocument virtualTextDocument) {
 			_componentModel = componentModel;
 			_textBuffer = textBuffer;
 			_textView = textView;
-			_textDocument = textDocument;
+			_virtualTextDocument = virtualTextDocument;
 			_sessionService = _componentModel.GetService<ISessionService>();
 		}
 
@@ -93,9 +93,10 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 				return new[] {
 					new SuggestedActionSet(
 						actions: new ISuggestedAction[] {
-							new CodemarkCommentSuggestedAction(_componentModel, _textDocument, editorState),
-							new CodemarkIssueSuggestedAction(_componentModel, _textDocument, editorState),
-							new CodemarkPermalinkSuggestedAction(_componentModel, _textDocument, editorState)
+							new CodemarkCommentSuggestedAction(_componentModel, wpfTextView, _virtualTextDocument, editorState),
+							new CodemarkIssueSuggestedAction(_componentModel, wpfTextView, _virtualTextDocument, editorState),
+							new CodemarkPermalinkSuggestedAction(_componentModel, wpfTextView, _virtualTextDocument, editorState),
+							new CreateReviewSuggestedAction(_componentModel, wpfTextView, _virtualTextDocument, editorState)
 						},
 						categoryName: null,
 						title: null,
@@ -118,34 +119,96 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 	}
 
 	internal class CodemarkCommentSuggestedAction : CodemarkSuggestedActionBase {
-		public CodemarkCommentSuggestedAction(IComponentModel componentModel, ITextDocument textDocument, EditorState textSelection) : base(componentModel, textDocument, textSelection) { }
+		public CodemarkCommentSuggestedAction(IComponentModel componentModel, IWpfTextView wpfTextView, IVirtualTextDocument textDocument, EditorState textSelection) : base(componentModel, wpfTextView, textDocument, textSelection) { }
 		protected override CodemarkType CodemarkType => CodemarkType.Comment;
 		public override string DisplayText { get; } = $"Add Comment";
 	}
 
 	internal class CodemarkIssueSuggestedAction : CodemarkSuggestedActionBase {
-		public CodemarkIssueSuggestedAction(IComponentModel componentModel, ITextDocument textDocument, EditorState textSelection) : base(componentModel, textDocument, textSelection) { }
+		public CodemarkIssueSuggestedAction(IComponentModel componentModel, IWpfTextView wpfTextView, IVirtualTextDocument textDocument, EditorState textSelection) : base(componentModel, wpfTextView, textDocument, textSelection) { }
 		protected override CodemarkType CodemarkType => CodemarkType.Issue;
 		public override string DisplayText { get; } = $"Create Issue";
 	}
 
 	internal class CodemarkPermalinkSuggestedAction : CodemarkSuggestedActionBase {
-		public CodemarkPermalinkSuggestedAction(IComponentModel componentModel, ITextDocument textDocument, EditorState textSelection) : base(componentModel, textDocument, textSelection) { }
+		public CodemarkPermalinkSuggestedAction(IComponentModel componentModel, IWpfTextView wpfTextView, IVirtualTextDocument textDocument, EditorState textSelection) : base(componentModel, wpfTextView, textDocument, textSelection) { }
 		protected override CodemarkType CodemarkType => CodemarkType.Link;
 		public override string DisplayText { get; } = $"Get Permalink";
+	}
+
+	internal class CreateReviewSuggestedAction : ISuggestedAction {
+		private readonly IComponentModel _componentModel;
+		private readonly EditorState _textSelection;
+		private readonly IVirtualTextDocument _virtualTextDocument;
+		
+		public CreateReviewSuggestedAction(IComponentModel componentModel, IWpfTextView wpfTextView, IVirtualTextDocument virtualTextDocument,
+			EditorState textSelection){
+			_componentModel = componentModel;
+			_virtualTextDocument = virtualTextDocument;
+			_textSelection = textSelection;
+		}
+		
+		public string DisplayText { get; } = $"Request a Code Review";
+
+		public bool HasActionSets => false;
+
+		public ImageMoniker IconMoniker => default(ImageMoniker);
+
+		public string IconAutomationText => null;
+
+		public string InputGestureText => null;
+
+		public bool HasPreview => false;
+
+		public Task<IEnumerable<SuggestedActionSet>> GetActionSetsAsync(CancellationToken cancellationToken) {
+			return System.Threading.Tasks.Task.FromResult<IEnumerable<SuggestedActionSet>>(null);
+		}
+
+		public Task<object> GetPreviewAsync(CancellationToken cancellationToken) {
+			return System.Threading.Tasks.Task.FromResult<object>(null);
+		}
+
+		public void Invoke(CancellationToken cancellationToken) {
+			if (_virtualTextDocument == null) return;
+
+			var codeStreamService = _componentModel?.GetService<ICodeStreamService>();
+			if (codeStreamService == null) return;
+
+			ThreadHelper.JoinableTaskFactory.Run(async delegate {
+				try {
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+					var toolWindowProvider = Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
+					toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);					
+					 _ = codeStreamService.NewReviewAsync(_virtualTextDocument.Uri, "Lightbulb Menu", cancellationToken: cancellationToken);
+				}
+				catch (Exception ex) {
+					Log.Error(ex, nameof(CodemarkSuggestedActionBase));
+				}
+			});
+		}
+
+		public void Dispose() { }
+
+		public bool TryGetTelemetryId(out Guid telemetryId) {
+			// This is a sample action and doesn't participate in LightBulb telemetry  
+			telemetryId = Guid.Empty;
+			return false;
+		}
 	}
 
 	internal abstract class CodemarkSuggestedActionBase : ISuggestedAction {
 		private static readonly ILogger Log = LogManager.ForContext<CodemarkSuggestedActionBase>();
 
+		private readonly IWpfTextView _wpfTextView;
 		private readonly EditorState _textSelection;
-		private readonly ITextDocument _textDocument;
+		private readonly IVirtualTextDocument _virtualTextDocument;
 		protected IComponentModel ComponentModel { get; private set; }
 		protected abstract CodemarkType CodemarkType { get; }
 
-		protected CodemarkSuggestedActionBase(IComponentModel componentModel, ITextDocument textDocument, EditorState textSelection) {
+		protected CodemarkSuggestedActionBase(IComponentModel componentModel, IWpfTextView wpfTextView, IVirtualTextDocument virtualTextDocument, EditorState textSelection) {
 			ComponentModel = componentModel;
-			_textDocument = textDocument;
+			_wpfTextView = wpfTextView;
+			_virtualTextDocument = virtualTextDocument;
 			_textSelection = textSelection;
 		}
 
@@ -154,7 +217,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 		}
 
 		public void Invoke(CancellationToken cancellationToken) {
-			if (_textDocument == null) return;
+			if (_virtualTextDocument == null) return;
 
 			var codeStreamService = ComponentModel?.GetService<ICodeStreamService>();
 			if (codeStreamService == null) return;
@@ -165,7 +228,7 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 					var toolWindowProvider = Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
 					toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
 
-					_ = codeStreamService.NewCodemarkAsync(_textDocument.FilePath.ToUri(), _textSelection.Range, CodemarkType, "Lightbulb Menu", cancellationToken: cancellationToken);
+					_ = codeStreamService.NewCodemarkAsync(_virtualTextDocument.Uri, _textSelection.Range, CodemarkType, "Lightbulb Menu", cancellationToken: cancellationToken);
 				}
 				catch (Exception ex) {
 					Log.Error(ex, nameof(CodemarkSuggestedActionBase));

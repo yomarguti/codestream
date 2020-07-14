@@ -11,7 +11,8 @@ namespace CodeStream.VisualStudio.Core.Services {
 		EditorState GetEditorState(IWpfTextView wpfTextView);
 		EditorContext GetEditorContext();
 		ActiveTextEditorSelection GetActiveTextEditorSelection();
-		ActiveTextEditor GetActiveTextEditor(Uri uri = null);
+		ActiveTextEditor GetActiveTextEditor();
+		ActiveTextEditor GetActiveTextEditorFromUri(Uri uri);
 		ActiveTextEditor GetActiveTextEditor(ITextDocumentFactoryService textDocumentFactoryService,
 			IWpfTextView wpfTextView);
 	}

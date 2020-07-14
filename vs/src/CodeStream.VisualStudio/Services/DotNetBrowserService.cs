@@ -415,7 +415,6 @@ namespace CodeStream.VisualStudio.Services {
 			});
 		}
 
-
 		/// <summary>
 		/// Loads the Webview. Requires the UI thread
 		/// </summary>
@@ -581,15 +580,15 @@ namespace CodeStream.VisualStudio.Services {
 
 		public void Send(IAbstractMessageType message) => SendInternal(message);
 		public void Send(IRequestType message) => SendInternal(message);
-		public void Notify(INotificationType message) => SendInternal(message);
-		public void EnqueueNotification(INotificationType message) => SendInternal(message, true);
+		public void Notify<T>(INotificationType<T> message) => SendInternal(message);
+		public void EnqueueNotification<T>(INotificationType<T> message) => SendInternal(message, true);
 
 		/// <summary>
 		/// Sends the notification on a background thread
 		/// </summary>
 		/// <param name="message"></param>
 		/// <returns></returns>
-		public System.Threading.Tasks.Task NotifyAsync(INotificationType message) {
+		public System.Threading.Tasks.Task NotifyAsync<T>(INotificationType<T> message) {
 			return System.Threading.Tasks.Task.Factory.StartNew(() => {
 				SendInternal(message);
 			}, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Current);
@@ -662,7 +661,6 @@ namespace CodeStream.VisualStudio.Services {
 			}
 			return harness;
 		}
-
 
 		#region DialogHandlers
 

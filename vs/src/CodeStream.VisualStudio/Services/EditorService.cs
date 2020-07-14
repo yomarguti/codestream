@@ -1,4 +1,10 @@
-﻿using Microsoft;
+﻿using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Core.Managers;
+using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Services;
+using CodeStream.VisualStudio.Core.UI.Extensions;
+using Microsoft;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
@@ -8,12 +14,6 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using Serilog;
 using System;
 using System.ComponentModel.Composition;
-using CodeStream.VisualStudio.Core.Extensions;
-using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Core.Managers;
-using CodeStream.VisualStudio.Core.Models;
-using CodeStream.VisualStudio.Core.Services;
-using CodeStream.VisualStudio.Core.UI.Extensions;
 
 namespace CodeStream.VisualStudio.Services {
 
@@ -41,62 +41,79 @@ namespace CodeStream.VisualStudio.Services {
 		public ActiveTextEditor GetActiveTextEditor(ITextDocumentFactoryService textDocumentFactoryService, IWpfTextView wpfTextView) {
 			try {
 				if (textDocumentFactoryService == null || wpfTextView == null) return null;
-				if (!textDocumentFactoryService.TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument)) {
+				if (!TextDocumentExtensions.TryGetTextDocument(textDocumentFactoryService, wpfTextView.TextBuffer, out var textDocument)) {
 					return null;
 				}
 
 				return new ActiveTextEditor(wpfTextView,
-					textDocument.FilePath,
-					textDocument.FilePath.ToUri(),
+					textDocument.FileName,
+					textDocument.Uri,
 					wpfTextView.TextSnapshot.LineCount);
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(GetActiveTextEditor));
 			}
-
 			return null;
 		}
 
-		/// <summary>
-		/// Gets the active wpfTextView based on the provided uri (if provided)
-		/// </summary>
-		/// <param name="uri"></param>
-		/// <returns></returns>
-		public ActiveTextEditor GetActiveTextEditor(Uri uri = null) {
+		private ActiveTextEditor GetActiveTextEditorCore(IWpfTextView wpfTextView) {
 			try {
-				IWpfTextView wpfTextView = null;
-				if (uri != null) {
-					var textViewCache = _componentModel.GetService<IWpfTextViewCache>();
-					if (!textViewCache.TryGetValue(uri.ToLocalPath(), out wpfTextView)) {
-						// wasn't in cache... try to get it?
-						wpfTextView = GetActiveWpfTextView();
-					}
-				}
-				else {
-					wpfTextView = GetActiveWpfTextView();
-				}
-
 				if (wpfTextView == null) {
 					Log.Verbose($"{nameof(wpfTextView)} is null");
 					return null;
 				}
-				;
-				if (!_componentModel.GetService<ITextDocumentFactoryService>().TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument)) {
+
+				if (!TextDocumentExtensions.TryGetTextDocument(_componentModel.GetService<ITextDocumentFactoryService>(), wpfTextView.TextBuffer, out IVirtualTextDocument virtualTextDocument)) {
 					return null;
 				}
 
 				return new ActiveTextEditor(wpfTextView,
-					textDocument.FilePath,
-					textDocument.FilePath.ToUri(),
+					virtualTextDocument.FileName,
+					virtualTextDocument.Uri,
 					wpfTextView.TextSnapshot.LineCount);
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(GetActiveTextEditor));
 			}
-
 			return null;
 		}
 
+		/// <summary>
+		/// Gets the active wpfTextView (if any)
+		/// </summary>
+		/// <returns></returns>
+		public ActiveTextEditor GetActiveTextEditor() {
+			try {
+				return GetActiveTextEditorCore(GetActiveWpfTextView());
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(GetActiveTextEditor));
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// Gets the active wpfTextView based on the provided uri
+		/// </summary>
+		/// <param name="uri"></param>
+		/// <returns>the ActiveTextEditor if that uri is part of an open document</returns>
+		public ActiveTextEditor GetActiveTextEditorFromUri(Uri uri) {
+			try {
+				var textViewCache = _componentModel.GetService<IWpfTextViewCache>();
+				if (textViewCache.TryGetValue(VirtualTextDocument.FromUri(uri), out IWpfTextView wpfTextView) && wpfTextView != null) {
+					return GetActiveTextEditorCore(wpfTextView);
+				}
+			}
+			catch (Exception ex) {
+				Log.Error(ex, $"{nameof(GetActiveTextEditorFromUri)} {uri}");
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// Gets the active wpfTextView from IVsEditorAdaptersFactoryService
+		/// </summary>
+		/// <returns></returns>
 		private IWpfTextView GetActiveWpfTextView() {
 			try {
 				var textView = GetActiveView();
@@ -105,9 +122,8 @@ namespace CodeStream.VisualStudio.Services {
 					: _componentModel.GetService<IVsEditorAdaptersFactoryService>()?.GetWpfTextView(textView);
 			}
 			catch (Exception ex) {
-				Log.Error(ex, nameof(GetActiveTextEditor));
+				Log.Error(ex, nameof(GetActiveWpfTextView));
 			}
-
 			return null;
 		}
 
@@ -119,9 +135,8 @@ namespace CodeStream.VisualStudio.Services {
 				return editor.GetWpfTextView(textView);
 			}
 			catch (Exception ex) {
-				Log.Error(ex, nameof(GetActiveTextEditor));
+				Log.Error(ex, nameof(GetActiveWpfTextView));
 			}
-
 			return null;
 		}
 
@@ -133,7 +148,6 @@ namespace CodeStream.VisualStudio.Services {
 			catch (Exception ex) {
 				Log.Warning(ex, nameof(GetActiveEditorState));
 			}
-
 			return null;
 		}
 
@@ -147,7 +161,6 @@ namespace CodeStream.VisualStudio.Services {
 			catch (Exception ex) {
 				Log.Warning(ex, nameof(GetActiveEditorState));
 			}
-
 			view = null;
 			return null;
 		}
@@ -172,7 +185,6 @@ namespace CodeStream.VisualStudio.Services {
 			catch (Exception ex) {
 				Log.Warning(ex, nameof(GetActiveEditorState));
 			}
-
 			view = null;
 			return null;
 		}
@@ -208,15 +220,14 @@ namespace CodeStream.VisualStudio.Services {
 			catch (Exception ex) {
 				Log.Warning(ex, nameof(GetActiveEditorSelectedRange));
 			}
-
 			view = null;
 			return null;
 		}
 
-		private ActiveTextEditor ToActiveTextEditor(IWpfTextView wpfTextView, ITextDocument textDocument) {
+		private ActiveTextEditor ToActiveTextEditor(IWpfTextView wpfTextView, IVirtualTextDocument virtualTextDocument) {
 			return new ActiveTextEditor(wpfTextView,
-				textDocument.FilePath,
-				textDocument.FilePath.ToUri(),
+				virtualTextDocument.FileName,
+				virtualTextDocument.Uri,
 				wpfTextView.TextSnapshot.LineCount);
 		}
 
@@ -224,14 +235,13 @@ namespace CodeStream.VisualStudio.Services {
 			try {
 				var wpfTextView = GetActiveWpfTextView(textView);
 				if (wpfTextView == null) return null;
-				if (!_componentModel.GetService<ITextDocumentFactoryService>().TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument)) return null;
+				if (!TextDocumentExtensions.TryGetTextDocument(_componentModel.GetService<ITextDocumentFactoryService>(), wpfTextView.TextBuffer, out var textDocument)) return null;
 
 				return ToActiveTextEditor(wpfTextView, textDocument);
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(GetActiveTextEditor));
 			}
-
 			return null;
 		}
 
@@ -251,7 +261,7 @@ namespace CodeStream.VisualStudio.Services {
 			if (activeTextEditor != null) {
 				try {
 					editorContext = new EditorContext {
-						ActiveFile = activeTextEditor.FilePath,
+						ActiveFile = activeTextEditor.FileName,
 						TextEditorVisibleRanges = activeTextEditor.WpfTextView?.ToVisibleRangesSafe(),
 						TextEditorUri = activeTextEditor.Uri?.ToString(),
 						TextEditorSelections = editorState.ToEditorSelectionsSafe(),
@@ -271,7 +281,6 @@ namespace CodeStream.VisualStudio.Services {
 					Metrics = ThemeManager.CreateEditorMetrics()
 				};
 			}
-
 			return editorContext;
 		}
 
@@ -283,15 +292,14 @@ namespace CodeStream.VisualStudio.Services {
 				var wpfTextView = _componentModel.GetService<IVsEditorAdaptersFactoryService>()?.GetWpfTextView(view);
 				if (wpfTextView == null) return null;
 
-				if (!_componentModel.GetService<ITextDocumentFactoryService>()
-					.TryGetTextDocument(wpfTextView.TextBuffer, out var textDocument)) return null;
+				if (!TextDocumentExtensions.TryGetTextDocument(_componentModel.GetService<ITextDocumentFactoryService>(),
+					wpfTextView.TextBuffer, out var textDocument)) return null;
 
-				return new ActiveTextEditorSelection(textDocument.FilePath.ToUri(), range);
+				return new ActiveTextEditorSelection(textDocument.Uri, range);
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(ActiveTextEditorSelection));
 			}
-
 			return null;
 		}
 	}

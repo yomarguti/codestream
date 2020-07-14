@@ -21,15 +21,15 @@ namespace CodeStream.VisualStudio.Core.Models {
 	public class ActiveTextEditor : ICanHighlightRange, ICanSelectRange {
 		private static readonly ILogger Log = LogManager.ForContext<ActiveTextEditor>();
 
-		public ActiveTextEditor(IWpfTextView wpfTextView, string filePath, Uri uri, int? totalLines) {
+		public ActiveTextEditor(IWpfTextView wpfTextView, string fileName, Uri uri, int? totalLines) {
 			WpfTextView = wpfTextView;
-			FilePath = filePath;
+			FileName = fileName;
 			Uri = uri;
 			TotalLines = totalLines;
 		}
 
 		public IWpfTextView WpfTextView { get; }
-		public string FilePath { get; }
+		public string FileName { get; }
 		public Uri Uri { get; }
 		public int? TotalLines { get; }
 
@@ -44,7 +44,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 				ThreadHelper.ThrowIfNotOnUIThread();
 				var adornmentManager = this.GetHighlightAdornmentManager();
 				if (adornmentManager == null) {
-					Log.LocalWarning($"{nameof(adornmentManager)}:{nameof(Highlight)} not found for FilePath={FilePath} Uri={Uri}");
+					Log.LocalWarning($"{nameof(adornmentManager)}:{nameof(Highlight)} not found for FileName={FileName} Uri={Uri}");
 					return false;
 				}
 
@@ -62,7 +62,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public void RemoveAllHighlights() {
 			var adornmentManager = this.GetHighlightAdornmentManager();
 			if (adornmentManager == null) {
-				Log.LocalWarning($"{nameof(adornmentManager)}:{nameof(RemoveAllHighlights)} not found for FilePath={FilePath} Uri={Uri}");
+				Log.LocalWarning($"{nameof(adornmentManager)}:{nameof(RemoveAllHighlights)} not found for FileName={FileName} Uri={Uri}");
 				return;
 			}
 
@@ -101,7 +101,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 						activePoint = new VirtualSnapshotPoint(new SnapshotPoint(WpfTextView.TextSnapshot, endPosition));
 					}
 					WpfTextView.Selection.Select(anchorPoint, activePoint);
-					log += $"Selecting {nameof(FilePath)}={FilePath} From {anchorPoint} to {activePoint}";
+					log += $"Selecting {nameof(FileName)}={FileName} From {anchorPoint} to {activePoint}";
 
 					var span = new SnapshotSpan(WpfTextView.TextSnapshot, Span.FromBounds(rangeLines.Item1.Start, rangeLines.Item2.End));
 					WpfTextView.ViewScroller.EnsureSpanVisible(span, EnsureSpanVisibleOptions.MinimumScroll);

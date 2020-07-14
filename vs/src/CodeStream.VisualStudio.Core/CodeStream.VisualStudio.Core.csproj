@@ -92,6 +92,7 @@
     <Compile Include="Constants.cs" />
     <Compile Include="ContentTypes.cs" />
     <Compile Include="LanguageServer\ILanguageServerClientManager.cs" />
+    <Compile Include="LanguageServer\MiddleLayerProvider.cs" />
     <Compile Include="Logging\CodeStreamSink.cs" />
     <Compile Include="Logging\CustomOutputPaneSink.cs" />
     <Compile Include="Logging\EmptyLogger.cs" />
@@ -105,11 +106,15 @@
     <Compile Include="Logging\Sanitizer\SecretsSanitizingFormatRule.cs" />
     <Compile Include="Logging\Sanitizer\TextProcessor.cs" />
     <Compile Include="Logging\TraceLevel.cs" />
+    <Compile Include="Models\CodeStreamDiffUri.cs" />
+    <Compile Include="Models\Host.Protocol.Review.cs" />
     <Compile Include="Models\IOptions.cs" />
+    <Compile Include="Models\IVirtualTextDocument.cs" />
     <Compile Include="Models\OpenEditorResult.cs" />
     <Compile Include="Models\Placement.cs" />
     <Compile Include="Models\Position.cs" />
     <Compile Include="Models\SessionSignedOutReason.cs" />
+    <Compile Include="Models\VirtualTextDocument.cs" />
     <Compile Include="Models\Webview.Protocol.Shell.cs" />
     <Compile Include="Packages\ToolWindowProvider.cs" />
     <Compile Include="Process\Node.cs" />

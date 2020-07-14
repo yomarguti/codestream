@@ -17,6 +17,7 @@ namespace CodeStream.VisualStudio.UnitTests {
 			var codeStreamAgentServiceMock = new Mock<ICodeStreamAgentService>();
 			var router = new WebViewRouter(
 				null,
+				new Mock<ICodeStreamService>().Object,
 				new Mock<IWebviewUserSettingsService>().Object,				
 				new Mock<ISessionService>().Object,
 				codeStreamAgentServiceMock.Object,

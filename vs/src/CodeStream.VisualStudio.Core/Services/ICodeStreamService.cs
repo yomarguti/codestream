@@ -13,6 +13,9 @@ namespace CodeStream.VisualStudio.Core.Services {
 		Task NewCodemarkAsync(Uri uri, Range range, CodemarkType codemarkType, string source, CancellationToken? cancellationToken = null);
 		Task StartWorkAsync(string source, Uri uri = null, CancellationToken? cancellationToken = null);
 		Task ShowCodemarkAsync(string codemarkId, string filePath, CancellationToken? cancellationToken = null);
+		Task NewReviewAsync(Uri uri, string source, CancellationToken? cancellationToken = null);
+		Task NextChangedFileAsync();
+		Task PreviousChangedFileAsync();
 		Task EditorSelectionChangedNotificationAsync(Uri uri,
 			EditorState editorState,
 			List<Range> visibleRanges,

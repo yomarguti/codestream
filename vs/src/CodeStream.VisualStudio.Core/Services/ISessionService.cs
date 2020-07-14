@@ -1,6 +1,7 @@
 ﻿using CodeStream.VisualStudio.Core.Models;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
+using System;
 
 namespace CodeStream.VisualStudio.Core.Services {
 	public interface ISessionService {
@@ -19,7 +20,7 @@ namespace CodeStream.VisualStudio.Core.Services {
 		bool IsCodemarksForFileVisible { get; set; }
 		bool IsWebViewVisible { get; set; }
 		bool AreMarkerGlyphsVisible { get; set; }
-		string LastActiveFileUrl { get; set; }
+		Uri LastActiveFileUri { get; set; }
 
 		/// <summary>
 		/// Session is ready when the agent has loaded and the user has logged in

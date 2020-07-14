@@ -52,7 +52,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 
 		public IWpfTextViewMargin CreateMargin(IWpfTextViewHost wpfTextViewHost, IWpfTextViewMargin parent) {
 			try {
-				if (wpfTextViewHost == null || !wpfTextViewHost.TextView.HasValidRoles()) return null;
+				if (wpfTextViewHost == null || !wpfTextViewHost.TextView.HasValidMarginRoles()) return null;
 				if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService,
 					wpfTextViewHost.TextView.TextBuffer, out var textDocument)) {
 					return null;

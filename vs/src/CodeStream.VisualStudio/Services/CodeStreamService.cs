@@ -3,6 +3,7 @@ using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Managers;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Services;
+using CodeStream.VisualStudio.Core.UI.Extensions;
 using Microsoft;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
@@ -11,11 +12,13 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Threading;
-using CodeStream.VisualStudio.Core.UI.Extensions;
 using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Services {
 
+	/// <summary>
+	/// Facade over various services
+	/// </summary>
 	[Export(typeof(ICodeStreamService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
 	public class CodeStreamService : ICodeStreamService {
@@ -80,7 +83,7 @@ namespace CodeStream.VisualStudio.Services {
 					Assumes.Present(componentModel);
 
 					var editorService = componentModel.GetService<IEditorService>();
-					await ChangeActiveEditorAsync(uri, editorService.GetActiveTextEditor(uri));
+					await ChangeActiveEditorAsync(uri, editorService.GetActiveTextEditorFromUri(uri));
 				}
 				catch (Exception ex) {
 					Log.Error(ex, $"{nameof(ChangeActiveEditorAsync)} Uri={uri}");
@@ -148,7 +151,7 @@ namespace CodeStream.VisualStudio.Services {
 			if (IsReady && !codemarkId.IsNullOrWhiteSpace()) {
 				_ = BrowserService.NotifyAsync(new ShowCodemarkNotificationType {
 					Params = new ShowCodemarkNotification {
-						CodemarkId = codemarkId,						
+						CodemarkId = codemarkId,
 						SourceUri = filePath != null ? Core.LanguageServer.Extensions.ToLspUriString(filePath) : null,
 					}
 				});
@@ -171,6 +174,7 @@ namespace CodeStream.VisualStudio.Services {
 
 			return Task.CompletedTask;
 		}
+
 
 		public async Task NewCodemarkAsync(Uri uri, Range range, CodemarkType codemarkType, string source, CancellationToken? cancellationToken = null) {
 			if (IsReady) {
@@ -196,6 +200,47 @@ namespace CodeStream.VisualStudio.Services {
 				}
 				catch (Exception ex) {
 					Log.Error(ex, $"{nameof(StartWorkAsync)} Uri={uri}");
+				}
+			}
+
+			await Task.CompletedTask;
+		}
+
+		public async Task NewReviewAsync(Uri uri, string source, CancellationToken? cancellationToken = null) {
+			if (IsReady) {
+				try {
+					_ = BrowserService.NotifyAsync(new NewReviewNotificationType {
+						Params = new NewReviewNotification(uri, source)
+					});
+				}
+				catch (Exception ex) {
+					Log.Error(ex, $"{nameof(NewReviewAsync)} Uri={uri}");
+				}
+			}
+
+			await Task.CompletedTask;
+		}
+
+		public async Task NextChangedFileAsync() {
+			if (IsReady) {
+				try {
+					_ = BrowserService.NotifyAsync(new ShowNextChangedFileNotificationType());
+				}
+				catch (Exception ex) {
+					Log.Error(ex, $"{nameof(NextChangedFileAsync)}");
+				}
+			}
+
+			await Task.CompletedTask;
+		}
+
+		public async Task PreviousChangedFileAsync() {
+			if (IsReady) {
+				try {
+					_ = BrowserService.NotifyAsync(new ShowPreviousChangedFileNotificationType());
+				}
+				catch (Exception ex) {
+					Log.Error(ex, $"{nameof(PreviousChangedFileAsync)}");
 				}
 			}
 

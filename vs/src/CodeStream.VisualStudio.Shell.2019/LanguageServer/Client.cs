@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Threading;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Serilog;
 using StreamJsonRpc;
 using System;
@@ -17,9 +18,6 @@ using System.ComponentModel.Composition;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
-using Package = Microsoft.VisualStudio.Shell.Package;
 
 namespace CodeStream.VisualStudio.Shell._2019.LanguageServer {
 
@@ -31,7 +29,11 @@ namespace CodeStream.VisualStudio.Shell._2019.LanguageServer {
 	[Export(typeof(ICodestreamLanguageClient))]
 	[Export(typeof(ILanguageClient))]
 	[Guid(Guids.LanguageClientId)]
-	public partial class Client : LanguageServerClientBase, ILanguageClient, ICodestreamLanguageClient, ILanguageClientCustomMessage, IDisposable {
+	public partial class Client : LanguageServerClientBase,
+	ILanguageClient,
+	ICodestreamLanguageClient,
+	ILanguageClientCustomMessage,
+	IDisposable {
 		private static readonly ILogger Log = LogManager.ForContext<LanguageServerClient2019>();
 		private bool _disposed;
 		private JsonRpc _rpc;
@@ -74,7 +76,25 @@ namespace CodeStream.VisualStudio.Shell._2019.LanguageServer {
 
 		public IEnumerable<string> FilesToWatch => null;
 
-		public object MiddleLayer => null;
+		public object MiddleLayer => MiddleLayer2019Provider.Instance;
+
+		private class MiddleLayer2019Provider : ILanguageClientMiddleLayer {
+			internal readonly static MiddleLayer2019Provider Instance = new MiddleLayer2019Provider();
+			private MiddleLayerProvider _middleLayerProvider;
+			private MiddleLayer2019Provider() {
+				_middleLayerProvider = new MiddleLayerProvider(Log);
+			}
+
+			public bool CanHandle(string methodName) => _middleLayerProvider.CanHandle(methodName);
+
+			public Task HandleNotificationAsync(string methodName, JToken methodParam, Func<JToken, Task> sendNotification) {
+				return _middleLayerProvider.HandleNotificationAsync(methodName, methodParam, sendNotification);
+			}
+
+			public Task<JToken> HandleRequestAsync(string methodName, JToken methodParam, Func<JToken, Task<JToken>> sendRequest) {
+				return _middleLayerProvider.HandleRequestAsync(methodName, methodParam, sendRequest);
+			}
+		}
 
 		public object CustomMessageTarget {
 			get {
@@ -165,7 +185,7 @@ namespace CodeStream.VisualStudio.Shell._2019.LanguageServer {
 				Log.Fatal(ex, nameof(OnLoadedAsync));
 			}
 		}
-		 
+
 		public async Task AttachForCustomMessageAsync(JsonRpc rpc) {
 			await Task.Yield();
 			_rpc = rpc;

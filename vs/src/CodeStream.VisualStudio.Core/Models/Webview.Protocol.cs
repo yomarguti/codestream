@@ -55,4 +55,33 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public const string MethodName = "webview/work/start";
 		public override string Method => MethodName;
 	}
+
+	public class NewReviewNotification {
+		public NewReviewNotification(Uri uri, string source) {
+			Uri = uri?.ToString();
+			Source = source;
+		}
+		public string Uri { get; }
+		public string Source { get; }
+	}
+
+	public class NewReviewNotificationType : NotificationType<NewReviewNotification> {
+
+		public const string MethodName = "webview/review/new";
+		public override string Method => MethodName;
+	}
+
+	public class ShowNextChangedFileNotification { }
+	public class ShowNextChangedFileNotificationType : NotificationType<ShowNextChangedFileNotification> {
+
+		public const string MethodName = "webview/showChangedFile/next";
+		public override string Method => MethodName;
+	}
+
+	public class ShowPreviousChangedFileNotification { }
+	public class ShowPreviousChangedFileNotificationType : NotificationType<ShowPreviousChangedFileNotification> {
+
+		public const string MethodName = "webview/showChangedFile/previous";
+		public override string Method => MethodName;
+	}
 }

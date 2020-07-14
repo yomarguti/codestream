@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Windows.Documents;
 using CodeStream.VisualStudio.Core.Models;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -23,10 +25,17 @@ namespace CodeStream.VisualStudio.Core.Services {
 		System.Threading.Tasks.Task GetClipboardTextValueAsync(int millisecondsTimeout, Action<string> callback, Regex clipboardMatcher = null);
 
 		void CompareFiles(string filePath1, string filePath2, ITextBuffer file2Replacement, Microsoft.VisualStudio.Text.Span location, string content, bool isFile1Temp = false, bool isFile2Temp = false);
+		void DiffTextBlocks(string filePath, string left, string right, string title = null, IPathData data = null);
 		string CreateTempFile(string originalFilePath, string content);
 		//	string CreateDiffTempFile(string originalFile, string content, Range range);
 		void RemoveTempFileSafe(string fileName);
 		CurrentTextViews GetCurrentTextViews();
-		CommonFileDialog FolderPrompt(string message, string initialDirectory = null, bool multiSelect = false);
+		CommonFileDialog FolderPrompt(string message, string initialDirectory = null, bool multiSelect = false);		
+		void TryCloseDiffs();
+	}
+
+	public interface IPathData {
+		string Scheme { get; set; }
+		List<string> PathParts { get; set; }
 	}
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.Composition;
 using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.UI.Extensions;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -27,10 +28,10 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 
 		public ISuggestedActionsSource CreateSuggestedActionsSource(ITextView textView, ITextBuffer textBuffer) {
 			if (textBuffer == null || textView == null) return null;
-			if (!TextDocumentExtensions.TryGetTextDocument(_textDocumentFactoryService, textBuffer, out var textDocument)) return null;
+			if (!TextDocumentExtensions.TryGetTextDocument(_textDocumentFactoryService, textBuffer, out IVirtualTextDocument virtualTextDocument)) return null;
 
 			return new CodemarkSuggestedActionsSource((IComponentModel)_serviceProvider.GetService(typeof(SComponentModel)),
-				textView, textBuffer, textDocument);
+				textView, textBuffer, virtualTextDocument);
 		}
 	}
 }

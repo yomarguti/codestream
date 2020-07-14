@@ -40,6 +40,8 @@ namespace CodeStream.VisualStudio.Core.Models {
 
 	public interface INotificationType : IAbstractMessageType { }
 
+	public interface INotificationType<T> : IAbstractMessageType { }
+
 	public interface IRequestType : IAbstractMessageType { }
 
 	public interface IAbstractMessageType<T> : IAbstractMessageType {
@@ -87,7 +89,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 	public abstract class RequestType<T> : AbstractMessageType<T>, IRequestType { }
 
 	[DebuggerDisplay("Method={Method}")]
-	public abstract class NotificationType<T> : AbstractMessageType<T>, INotificationType { }
+	public abstract class NotificationType<T> : AbstractMessageType<T>, INotificationType<T> { }
 
 	public static class CustomNotificationPayload {
 		public static string Create(string method, JToken token) {
