@@ -30,6 +30,11 @@ const TextButton = styled.span`
 		margin-right: 5px;
 		white-space: nowrap;
 	}
+	&.big-chevron {
+		.octicon-chevron-down {
+			transform: scale(1);
+		}
+	}
 	&:focus {
 		margin: -3px;
 		border: 3px solid transparent;
