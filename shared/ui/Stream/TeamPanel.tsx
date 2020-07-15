@@ -115,7 +115,7 @@ interface ConnectedProps {
 	invite: Function;
 	invited: any[];
 	teamName: string;
-	teamPlan: any;
+	companyPlan: any;
 	companyMemberCount: number;
 	teamProvider: any;
 	members: CSUser[];
@@ -400,8 +400,8 @@ class TeamPanel extends React.Component<Props, State> {
 		const { newMemberEmail, newMemberName, isInviting } = this.state;
 
 		if (
-			this.props.teamPlan &&
-			this.props.teamPlan === "FREEPLAN" &&
+			this.props.companyPlan &&
+			this.props.companyPlan === "FREEPLAN" &&
 			(this.props.companyMemberCount || 0) >= 5
 		) {
 			return this.renderInviteDisabled();

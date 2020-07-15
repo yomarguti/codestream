@@ -1332,7 +1332,7 @@ export class SimpleStream extends Component {
 							setActivePanel={this.setActivePanel}
 							isCodeStreamTeam={this.props.isCodeStreamTeam}
 							teamProvider={this.props.teamProvider}
-							teamPlan={this.props.team.plan}
+							companyPlan={this.props.company.plan}
 							companyMemberCount={this.props.team.companyMemberCount}
 						/>
 					)}
@@ -2704,6 +2704,7 @@ const sum = (total, num) => total + Math.round(num);
 const mapStateToProps = state => {
 	const {
 		capabilities,
+		companies,
 		configs,
 		connectivity,
 		context,
@@ -2719,6 +2720,7 @@ const mapStateToProps = state => {
 	} = state;
 
 	const team = teams[context.currentTeamId];
+	const company = companies[team.companyId];
 	const teamProvider = getTeamProvider(team);
 	const teamMembers = getTeamMembers(state);
 
@@ -2816,6 +2818,7 @@ const mapStateToProps = state => {
 			"name"
 		),
 		team: team,
+		company: company,
 		teamProvider: teamProvider,
 		isCodeStreamTeam: true /*teamProvider === "codestream",*/, // this should always be true now, even for SSO sign-in
 		channelMembers,

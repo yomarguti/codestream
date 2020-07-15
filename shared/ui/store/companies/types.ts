@@ -6,6 +6,6 @@ export interface CompaniesState {
 
 export enum CompaniesActionsType {
 	Bootstrap = "@companies/Bootstrap",
-	Add = "ADD_TEAMS", // legacy - required for handling pubnub updates
+	Add = "ADD_COMPANIES",
 	Update = "@companies/Update"
 }
