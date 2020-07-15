@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
@@ -175,14 +176,37 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 			if (codeStreamService == null) return;
 
 			ThreadHelper.JoinableTaskFactory.Run(async delegate {
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
 				try {
-					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 					var toolWindowProvider = Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
-					toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);					
-					 _ = codeStreamService.NewReviewAsync(_virtualTextDocument.Uri, "Lightbulb Menu", cancellationToken: cancellationToken);
+					if (!toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid)) {
+						if (toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid) == true) {
+						}
+						else {
+							Log.Warning("Could not activate tool window");
+						}
+					}
+					var sessionService = _componentModel.GetService<ISessionService>();
+					if (sessionService.WebViewDidInitialize == true) {
+						_ = codeStreamService.NewReviewAsync(_virtualTextDocument.Uri, "Lightbulb Menu", cancellationToken: cancellationToken);
+					}
+					else {
+						var eventAggregator = _componentModel.GetService<IEventAggregator>();
+						IDisposable d = null;
+						d = eventAggregator.GetEvent<WebviewDidInitializeEvent>().Subscribe(e => {
+							try {
+								_ = codeStreamService.NewReviewAsync(_virtualTextDocument.Uri, "Lightbulb Menu", cancellationToken: cancellationToken);
+								d.Dispose();
+							}
+							catch (Exception ex) {
+								Log.Error(ex, $"{nameof(CreateReviewSuggestedAction)} event");
+							}
+						});
+					}
 				}
 				catch (Exception ex) {
-					Log.Error(ex, nameof(CodemarkSuggestedActionBase));
+					Log.Error(ex, nameof(CreateReviewSuggestedAction));
 				}
 			});
 		}
@@ -223,12 +247,33 @@ namespace CodeStream.VisualStudio.UI.SuggestedActions {
 			if (codeStreamService == null) return;
 
 			ThreadHelper.JoinableTaskFactory.Run(async delegate {
-				try {
-					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-					var toolWindowProvider = Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
-					toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
+				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-					_ = codeStreamService.NewCodemarkAsync(_virtualTextDocument.Uri, _textSelection.Range, CodemarkType, "Lightbulb Menu", cancellationToken: cancellationToken);
+				try {
+					var toolWindowProvider = Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
+					if (!toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid)) {
+						if (toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid) == true) {
+						}
+						else {
+							Log.Warning("Could not activate tool window");
+						}
+					}
+					var sessionService = ComponentModel.GetService<ISessionService>();
+					if (sessionService.WebViewDidInitialize == true) {
+						_ = codeStreamService.NewCodemarkAsync(_virtualTextDocument.Uri, _textSelection.Range, CodemarkType, "Lightbulb Menu", cancellationToken: cancellationToken);
+					}
+					else {
+						var eventAggregator = ComponentModel.GetService<IEventAggregator>();
+						IDisposable d = null;
+						d = eventAggregator.GetEvent<WebviewDidInitializeEvent>().Subscribe(e => {
+							try {
+								_ = codeStreamService.NewCodemarkAsync(_virtualTextDocument.Uri, _textSelection.Range, CodemarkType, "Lightbulb Menu", cancellationToken: cancellationToken); d.Dispose();
+							}
+							catch (Exception ex) {
+								Log.Error(ex, $"{nameof(CodemarkSuggestedActionBase)} event");
+							}
+						});
+					}
 				}
 				catch (Exception ex) {
 					Log.Error(ex, nameof(CodemarkSuggestedActionBase));
