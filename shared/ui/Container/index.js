@@ -30,7 +30,8 @@ const mapStateToProps = state => {
 		company: team ? state.companies[team.companyId] : undefined,
 		versioning: state.versioning,
 		apiVersioning: state.apiVersioning,
-		ide: state.ide && state.ide.name ? state.ide.name : undefined
+		ide: state.ide && state.ide.name ? state.ide.name : undefined,
+		serverUrl: state.configs.serverUrl
 	};
 };
 
@@ -139,16 +140,17 @@ const Root = connect(mapStateToProps)(props => {
 			</RoadBlock>
 		);
 	if (!props.loggedIn) return <UnauthenticatedRoutes />;
-	if (props.company && props.company.plan === "TRIALEXPIRED")
+	if (props.company && props.company.plan === "TRIALEXPIRED") {
+		const upgradeLink = `${props.serverUrl}/web/subscription/upgrade/${props.company.id}`;
 		return (
 			<RoadBlock title="Trial Expired">
 				<p>
-					Your free-trial period is over. If you would like to purchase CodeStream for your team,
-					please contact <a href="mailto:sales@codestream.com">sales@codestream.com</a> to discuss
-					service plans and pricing options.
+					Your free-trial period is over. <a href={upgradeLink}>Upgrade your plan</a> if you'd like
+					to continue to use CodeStream.
 				</p>
 			</RoadBlock>
 		);
+	}
 	if (props.versioning && props.versioning.type === VersioningActionsType.UpgradeRecommended)
 		return (
 			<Dismissable
