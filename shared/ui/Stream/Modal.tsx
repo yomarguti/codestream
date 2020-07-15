@@ -98,7 +98,8 @@ export function Modal(props: PropsWithChildren<ModalProps>) {
 	});
 
 	const checkClose = e => {
-		if (e.target.id === "modal-children" && props.onClose) props.onClose(e);
+		return; // closing when clicking the field is too disruptive w/menus
+		// if (e.target.id === "modal-children" && props.onClose) props.onClose(e);
 	};
 
 	return createPortal(
