@@ -49,7 +49,7 @@ const Contents = styled.div`
 	right: 0;
 `;
 
-const GitTimeline = styled.div`
+export const GitTimeline = styled.div`
 	position: absolute;
 	top: 30px;
 	width: 100%;
@@ -90,7 +90,7 @@ const GitTimeline = styled.div`
 	}
 `;
 
-const BranchLineDown = styled.div`
+export const BranchLineDown = styled.div`
 	position: absolute;
 	width: 3px;
 	background: #999;
@@ -99,7 +99,7 @@ const BranchLineDown = styled.div`
 	left: 70px;
 `;
 
-const BranchCurve = styled.div`
+export const BranchCurve = styled.div`
 	position: absolute;
 	top: 75px;
 	left: 70px;
@@ -112,7 +112,7 @@ const BranchCurve = styled.div`
 	transform: rotate(225deg);
 `;
 
-const BranchLineAcross = styled.div`
+export const BranchLineAcross = styled.div`
 	position: absolute;
 	height: 3px;
 	width: 186px;
@@ -207,7 +207,7 @@ const Action = styled.div`
 	}
 `;
 
-const GitBranch = styled(Action)`
+export const GitBranch = styled(Action)`
 	top: 10px;
 	left: 52px;
 	.icon {
