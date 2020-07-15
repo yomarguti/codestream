@@ -65,32 +65,40 @@ export const NewUserEntry = (connect(mapStateToProps) as any)((props: Props) => 
 		<div className="onboarding-page">
 			<form className="standard-form">
 				<fieldset className="form-body">
-					<div className="outline-box2">
-						<h2>Try CodeStream, for free</h2>
-						<div id="controls">
-							<JoinTeam />
-							<Button className="row-button" onClick={onClickCreateTeam}>
-								<Icon name="plus" className="extra-pad" />
-								<div className="copy">
-									Create a team
-									<div className="small">Get your dev team on CodeStream</div>
-								</div>
-								<Icon name="chevron-right" />
-							</Button>
-						</div>
+					<div className="outline-box">
+						<h3>Try CodeStream with your team, for free</h3>
+						<p>Create a brand-new team for you and your teammates.</p>
+						<Button className="row-button" onClick={onClickCreateTeam}>
+							<Icon name="plus" />
+							<div className="copy">Sign Up and Create a Team</div>
+						</Button>
+					</div>
+					<div style={{ height: "25px" }}></div>
+					<JoinTeam />
+					<div style={{ height: "25px" }}></div>
+					<div className="outline-box">
+						<h3>Already have an account?</h3>
+						<Button className="row-button" onClick={onClickLogin}>
+							<Icon name="sign-in" />
+							<div className="copy">Sign In</div>
+						</Button>
+					</div>
+					<div style={{ margin: "30px 20px 0 20px" }}>
+						<p>
+							<Icon name="light-bulb" /> &nbsp;<b>What’s a CodeStream team?</b>
+						</p>
+						Each organization that uses CodeStream has teams of their own. Teams are where all of
+						their code discussions are kept, and they can only be joined by invitation.
 					</div>
 					<div id="controls">
 						<div className="footer">
 							<div>
-								<p>
-									Already have an account? <Link onClick={onClickLogin}>Sign In</Link>
-								</p>
-							</div>
-							<div>
 								<p style={{ opacity: 0.5, fontSize: ".9em", textAlign: "center" }}>
 									CodeStream Version {props.pluginVersion}
 									<br />
-									Connected to {props.whichServer}. <br />
+									Connected to {props.whichServer}.
+								</p>
+								<p style={{ opacity: 1, fontSize: ".9em", textAlign: "center" }}>
 									{!props.onPrem && (
 										<a href="https://docs.codestream.com/userguide/faq/on-prem/">
 											Looking for on-prem?

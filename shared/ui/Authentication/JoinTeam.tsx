@@ -12,6 +12,7 @@ import { LoginResult } from "@codestream/protocols/api";
 import { FormattedMessage } from "react-intl";
 import { SignupType } from "./actions";
 import { UpdateServerUrlRequestType } from "../ipc/host.protocol";
+import Icon from "../Stream/Icon";
 
 const errorToMessageId = {
 	[LoginResult.InvalidToken]: "confirmation.invalid",
@@ -114,13 +115,14 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 
 	const errorId = error && (errorToMessageId[error] || errorToMessageId.UNKNOWN);
 	return (
-		<form className="standard-form" style={{ padding: "20px 0 0 0" }} onSubmit={onClickJoin}>
+		<form className="standard-form" style={{ padding: "0 0 0 0" }} onSubmit={onClickJoin}>
 			<fieldset className="form-body" style={{ padding: 0 }}>
 				<div className="outline-box">
-					<h3>Were you invited?</h3>
+					<h3>Is your team already on CodeStream?</h3>
 					<div id="controls">
 						<div className="control-group">
-							<div className="two-col" style={{ display: "flex", marginTop: "15px" }}>
+							<p>Use your invitation code to connect with your teammates.</p>
+							<div className="two-col" style={{ display: "flex" }}>
 								<div style={{ width: "100%" }}>
 									<TextInput
 										value={inviteCode}
