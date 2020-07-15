@@ -875,7 +875,9 @@ export function toSlackPostBlocks(
 					type: "plain_text",
 					text: "Open in IDE"
 				},
-				url: `${codemark.permalink}?ide=default&src=${encodeURIComponent(providerDisplayNamesByNameKey.get("slack") || "")}&marker=${marker.id}`
+				url: `${codemark.permalink}?ide=default&src=${encodeURIComponent(
+					providerDisplayNamesByNameKey.get("slack") || ""
+				)}&marker=${marker.id}`
 			});
 
 			if (url !== undefined && url.url) {
@@ -930,7 +932,9 @@ export function toSlackPostBlocks(
 				type: "plain_text",
 				text: "Open in IDE"
 			},
-			url: `${codemark.permalink}?ide=default&src=${encodeURIComponent(providerDisplayNamesByNameKey.get("slack") || "")}`
+			url: `${codemark.permalink}?ide=default&src=${encodeURIComponent(
+				providerDisplayNamesByNameKey.get("slack") || ""
+			)}`
 		});
 
 		blocks.push(actions);
@@ -1037,13 +1041,23 @@ export function toSlackReviewPostBlocks(
 		}
 	}
 	if (modifiedFiles && modifiedFiles.length) {
+		const modifiedFilesList = modifiedFiles.join("\n");
+		// 9 = ```*2 + ...
+		const contentLength = modifiedFilesList.length + 9;
+		const isTruncated = contentLength > slackBlockTextCodeMax;
 		blocks.push({
 			type: "section",
 			text: {
 				type: "mrkdwn",
-				text: `\`\`\`${modifiedFiles.join("\n")}\`\`\``
+				text: `\`\`\`${modifiedFilesList.substring(0, slackBlockTextCodeMax - 9)}${
+					isTruncated ? "..." : ""
+				}\`\`\``
 			}
 		});
+
+		if (isTruncated) {
+			blocks.push(blockTruncated());
+		}
 	}
 
 	let counter = 0;
@@ -1075,7 +1089,9 @@ export function toSlackReviewPostBlocks(
 				type: "plain_text",
 				text: "Open in IDE"
 			},
-			url: `${permalink}?ide=default&src=${encodeURIComponent(providerDisplayNamesByNameKey.get("slack") || "")}`
+			url: `${permalink}?ide=default&src=${encodeURIComponent(
+				providerDisplayNamesByNameKey.get("slack") || ""
+			)}`
 		});
 
 		blocks.push(actions);
