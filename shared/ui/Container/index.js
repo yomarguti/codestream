@@ -19,16 +19,20 @@ import { errorDismissed } from "@codestream/webview/store/connectivity/actions";
 import { ThemeProvider } from "styled-components";
 import { darkTheme, createTheme } from "../src/themes";
 
-const mapStateToProps = state => ({
-	bootstrapped: state.bootstrapped,
-	connectivityError: state.connectivity.error,
-	loggedIn: Boolean(state.session.userId),
-	inMaintenanceMode: Boolean(state.session.inMaintenanceMode),
-	team: state.teams[state.context.currentTeamId],
-	versioning: state.versioning,
-	apiVersioning: state.apiVersioning,
-	ide: state.ide && state.ide.name ? state.ide.name : undefined
-});
+const mapStateToProps = state => {
+	const team = state.teams[state.context.currentTeamId];
+	return {
+		bootstrapped: state.bootstrapped,
+		connectivityError: state.connectivity.error,
+		loggedIn: Boolean(state.session.userId),
+		inMaintenanceMode: Boolean(state.session.inMaintenanceMode),
+		team: team,
+		company: team ? state.companies[team.companyId] : undefined,
+		versioning: state.versioning,
+		apiVersioning: state.apiVersioning,
+		ide: state.ide && state.ide.name ? state.ide.name : undefined
+	};
+};
 
 const getIdeInstallationInstructions = props => {
 	let specifics;
@@ -135,7 +139,7 @@ const Root = connect(mapStateToProps)(props => {
 			</RoadBlock>
 		);
 	if (!props.loggedIn) return <UnauthenticatedRoutes />;
-	if (props.team && props.team.plan === "TRIALEXPIRED")
+	if (props.company && props.company.plan === "TRIALEXPIRED")
 		return (
 			<RoadBlock title="Trial Expired">
 				<p>
