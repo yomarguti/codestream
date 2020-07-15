@@ -836,7 +836,9 @@ export class SimpleStream extends Component {
 						</label>
 					)}
 					<label
-						className={cx({ selected: selected(WebviewPanels.Status) })}
+						className={cx({
+							selected: selected(WebviewPanels.Status) || selected(WebviewPanels.LandingRedirect)
+						})}
 						onClick={e => this.setActivePanel(WebviewPanels.Status)}
 						id="global-nav-status-label"
 					>
