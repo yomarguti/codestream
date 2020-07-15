@@ -110,6 +110,7 @@ interface ConnectedProps {
 	isCodeStreamTeam: boolean;
 	webviewFocused: boolean;
 	teamId: string;
+	companyId: string;
 	activePanel: WebviewPanels;
 	invite: Function;
 	invited: any[];
@@ -137,6 +138,7 @@ interface ConnectedProps {
 	multipleReviewersApprove: boolean;
 	emailSupported: boolean;
 	blameMap: { [email: string]: string };
+	serverUrl: string;
 }
 
 interface State {
@@ -379,10 +381,10 @@ class TeamPanel extends React.Component<Props, State> {
 	};
 
 	renderInviteDisabled = () => {
+		const upgradeLink = `${this.props.serverUrl}/web/subscription/upgrade/${this.props.companyId}`;
 		return (
 			<div style={{ padding: "30px", textAlign: "center" }}>
-				Contact <a href="mailto:sales@codestream.com">sales@codestream.com</a> to upgrade your plan
-				if you'd like to invite more teammates.
+				<a href={upgradeLink}>Upgrade your plan</a> if you'd like to invite more teammates.
 				<br />
 				<br />
 			</div>
@@ -1063,8 +1065,9 @@ class TeamPanel extends React.Component<Props, State> {
 }
 
 const mapStateToProps = state => {
-	const { users, context, teams, repos, session } = state;
+	const { users, context, teams, companies, repos, session, configs } = state;
 	const team = teams[context.currentTeamId];
+	const company = companies[team.companyId];
 	const teamProvider = getTeamProvider(team);
 
 	const memberIds = _difference(team.memberIds, team.removedMemberIds || []);
@@ -1112,6 +1115,7 @@ const mapStateToProps = state => {
 
 	return {
 		teamId: team.id,
+		companyId: company.id,
 		teamName: team.name,
 		xraySetting,
 		reviewApproval,
@@ -1130,7 +1134,8 @@ const mapStateToProps = state => {
 		webviewFocused: context.hasFocus,
 		xrayEnabled,
 		multipleReviewersApprove,
-		emailSupported
+		emailSupported,
+		serverUrl: configs.serverUrl
 	};
 };
 
