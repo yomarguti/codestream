@@ -364,7 +364,10 @@ const htmlEscapeCharMap = {
  * @param  {string} text
  */
 export function escapeHtml(text: string) {
-	const result = text.replace(/[&<>"']/g, c => htmlEscapeCharMap[c]).replace(/\n/g, "<br/>");
+	const result = text
+		.replace(/[&<>"']/g, c => htmlEscapeCharMap[c])
+		.replace(/\r\n/g, "<br/>")
+		.replace(/\n/g, "<br/>");
 	// console.log("escapeHtml input/output", text, result);
 	return result;
 }
