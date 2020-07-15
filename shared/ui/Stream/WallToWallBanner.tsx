@@ -1,10 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
-import { HostApi } from "../webview-api";
 import Icon from "./Icon";
-import { CSMe } from "@codestream/protocols/api";
-import CancelButton from "./CancelButton";
 import { setUserPreference } from "./actions";
 
 interface Props {}
