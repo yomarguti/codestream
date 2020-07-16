@@ -25,14 +25,14 @@ if ($WhatIfPreference.IsPresent -eq $True) {
 }
 else {
     iex $gitCommand
-    if ($LastExitCode -ne 0) {
+    if ($LastExitCode -ne $null -and $LastExitCode -ne 0) {
 		exit 1
 	}
 
     Write-Host "git tag complete"
 
     iex $gitPushCommand
-    if ($LastExitCode -ne 0) {
+    if ($LastExitCode -ne $null -and $LastExitCode -ne 0) {
 		exit 1
 	}
     Write-Host "git push complete"
