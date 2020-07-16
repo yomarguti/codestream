@@ -22,9 +22,8 @@ import {
 import Menu from "./Menu";
 import { CrossPostIssueContext } from "./CodemarkForm";
 import IssueDropdown from "./CrossPostIssueControls/IssueDropdown";
-import { CSText } from "../src/components/CSText";
-import { ButtonRow } from "./ChangeUsernamePanel";
-const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.json");
+import { ButtonRow } from "./StatusPanel";
+import { Card } from "../src/components/Card";
 
 const Root = styled.div`
 	h3 {
@@ -32,6 +31,7 @@ const Root = styled.div`
 	}
 	text-align: left;
 `;
+
 export const ConfigureBranchNames = (props: { onClose: Function }) => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
@@ -87,19 +87,21 @@ export const ConfigureBranchNames = (props: { onClose: Function }) => {
 			<div className="full-height-panel">
 				<form className="standard-form vscroll">
 					<fieldset className="form-body" style={{ padding: "10px" }}>
-						<div id="controls">
-							<h3>Branch Name Template:</h3>
-							<input
-								name="branchTicketTemplate"
-								value={branchTicketTemplate}
-								className="input-text control"
-								autoFocus
-								type="text"
-								onChange={e => setBranchTicketTemplate(e.target.value)}
-								placeholder="Example: feature/jira-{id}"
-							/>
-						</div>
-						{/*<br />
+						<Card>
+							<div style={{ padding: "0 10px 10px 10px" }}>
+								<div id="controls">
+									<h3>Branch Name Template:</h3>
+									<input
+										name="branchTicketTemplate"
+										value={branchTicketTemplate}
+										className="input-text control"
+										autoFocus
+										type="text"
+										onChange={e => setBranchTicketTemplate(e.target.value)}
+										placeholder="Example: feature/jira-{id}"
+									/>
+								</div>
+								{/*<br />
 						<div id="controls">
 							<h3>When creating a branch from a description:</h3>
 							<input
@@ -111,30 +113,45 @@ export const ConfigureBranchNames = (props: { onClose: Function }) => {
 								placeholder="Example: feature/{username}/{title}"
 							/>
 						</div>*/}
-						<div style={{ margin: "30px 0 30px 0" }}>
-							<h3>Available tokens:</h3>
-							<Token text="username" tip="Your CodeStream username" />
-							<Token text="team" tip="Your CodeStream Team name" />
-							<Token text="title" tip="The title of the ticket/card/issue" />
-							<Token text="id" tip="The id of the ticket/card/issue" />
-							<Token text="date" tip="Date in YYYY-MM-DD format" />
-							<Token text="provider" tip="The issue provider (trello, jira, etc)" />
-						</div>
-						<div id="controls">
-							<h3>Maximum Branch Length:</h3>
-							<input
-								name="branchMaxLength"
-								value={branchMaxLength}
-								className="input-text control"
-								type="text"
-								onChange={e => setBranchMaxLength(e.target.value.replace(/\D/g, ""))}
-							/>
-						</div>
-						<div style={{ height: "20px" }} />
-						<ButtonRow>
-							<Button onClick={save}>Save Branch Template</Button>
-							<p>This is a team setting.</p>
-						</ButtonRow>
+								<div style={{ margin: "30px 0 30px 0" }}>
+									<h3>Available tokens:</h3>
+									<Token text="username" tip="Your CodeStream username" />
+									<Token text="team" tip="Your CodeStream Team name" />
+									<Token text="title" tip="The title of the ticket/card/issue" />
+									<Token text="id" tip="The id of the ticket/card/issue" />
+									<Token text="date" tip="Date in YYYY-MM-DD format" />
+									<Token text="provider" tip="The issue provider (trello, jira, etc)" />
+								</div>
+								<div id="controls">
+									<h3>Maximum Branch Length:</h3>
+									<input
+										name="branchMaxLength"
+										value={branchMaxLength}
+										className="input-text control"
+										type="text"
+										onChange={e => setBranchMaxLength(e.target.value.replace(/\D/g, ""))}
+									/>
+								</div>
+								<div style={{ height: "20px" }} />
+								<ButtonRow>
+									<div
+										style={{
+											float: "left",
+											textAlign: "left",
+											marginTop: "10px",
+											fontSize: "smaller"
+										}}
+									>
+										This is a<br />
+										team setting.
+									</div>
+									<Button variant="secondary" onClick={() => props.onClose()}>
+										Cancel
+									</Button>
+									<Button onClick={save}>Save Branch Template</Button>
+								</ButtonRow>
+							</div>
+						</Card>
 					</fieldset>
 				</form>
 			</div>

@@ -39,9 +39,11 @@ import { OpenReviews } from "./OpenReviews";
 import { Modal } from "./Modal";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { GitTimeline, BranchLineDown, BranchCurve, BranchLineAcross, GitBranch } from "./Flow";
 
 const StyledCheckbox = styled(Checkbox)`
 	color: var(--text-color-subtle);
+	margin-bottom: 10px;
 `;
 
 const StatusInput = styled.div`
@@ -70,8 +72,10 @@ const CardTitle = styled.span`
 	font-size: 16px;
 	position: relative;
 	padding-left: 28px;
+	padding-right: 28px;
 	line-height: 20px;
 	display: inline-block;
+	width: 100%;
 	.icon {
 		margin-left: -28px;
 		display: inline-block;
@@ -82,14 +86,18 @@ const CardTitle = styled.span`
 	& + & {
 		margin-left: 20px;
 	}
-	a {
-		display: block;
-		font-size: 13px;
-		margin-top: 10px;
+	.link-to-ticket {
+		position: absolute;
+		top: 0;
+		right: 0;
+		.icon {
+			padding-right: 0;
+			margin-left: 0;
+		}
 	}
 `;
 
-const ButtonRow = styled.div`
+export const ButtonRow = styled.div`
 	text-align: right;
 	margin-top: 10px;
 	button {
@@ -102,6 +110,9 @@ const ButtonRow = styled.div`
 const MonoMenu = styled(InlineMenu)`
 	font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
 	white-space: normal;
+	> .icon {
+		margin-right: 5px;
+	}
 `;
 
 const SCMError = styled.div`
@@ -210,7 +221,7 @@ export const RoundedLink = styled.a`
 	background: rgba(127, 127, 127, 0.15);
 	border: 1px solid var(--base-border-color);
 	padding: 3px 8px 3px 4px;
-	margin: 0 0 2px 5px;
+	margin: -3px 0 2px 5px;
 	font-size: 12px;
 	border-radius: 13px;
 	.icon {
@@ -262,21 +273,55 @@ export const RoundedSearchLink = styled(RoundedLink)`
 	}
 `;
 
-const RepoInfo = styled.div`
-	padding: 0 0 10px 0px;
-`;
-
-const IconLabel = styled.span`
-	white-space: nowrap;
-	padding-right: 10px;
-	.icon {
-		margin-right: 5px;
-	}
-`;
-
 const HR = styled.div`
 	border-top: 1px solid var(--base-border-color);
 	margin: 0 0 20px 0;
+`;
+
+const BranchDiagram = styled.div`
+	transition: height 0.2s, opacity 0.4s;
+	height: 110px;
+	overflow: hidden;
+	&.closed {
+		height: 0;
+		opacity: 0;
+	}
+	margin: 0 0 0 30px;
+	// background: #000;
+	position: relative;
+	${GitTimeline} {
+		width: 100px;
+		&:after {
+			display: none;
+		}
+	}
+	${GitBranch} {
+		margin-left: -20px;
+	}
+	${BranchLineDown} {
+		height: 10px;
+		margin-left: -20px;
+	}
+	${BranchLineAcross} {
+		top: 82px;
+		margin-left: -20px;
+		width: 25px;
+	}
+	${BranchCurve} {
+		top: 35px;
+		margin-left: -20px;
+	}
+	.base-branch {
+		position: absolute;
+		top: 20px;
+		left: 110px;
+	}
+	.local-branch {
+		position: absolute;
+		top: 72px;
+		left: 110px;
+	}
+}
 `;
 
 export interface IStartWorkIssueContext {
@@ -456,26 +501,31 @@ export const StatusPanel = () => {
 	};
 
 	const getBranches = async (uri?: string) => {
-		if (!uri && !derivedState.textEditorUri) return;
-		if (uri) setRepoUri(uri);
-		const branchInfo = await HostApi.instance.send(GetBranchesRequestType, {
-			// stupid TS
-			uri: uri || derivedState.textEditorUri || ""
-		});
-		if (!branchInfo.scm) return;
-
-		setBranches(branchInfo.scm.branches);
-		setCurrentBranch(branchInfo.scm.current);
-		setCurrentRepoId(branchInfo.scm.repoId);
-		const repoId = branchInfo.scm.repoId;
-		const repoName = derivedState.repos[repoId] ? derivedState.repos[repoId].name : "repo";
-		setCurrentRepoName(repoName);
-
 		const response = await HostApi.instance.send(GetReposScmRequestType, {
 			inEditorOnly: true
 		});
 		if (response && response.repositories) {
 			setOpenRepos(response.repositories);
+		}
+
+		if (!uri && !derivedState.textEditorUri) return;
+		if (uri) {
+			setRepoUri(uri);
+		}
+
+		const branchInfo = await HostApi.instance.send(GetBranchesRequestType, {
+			// stupid TS
+			uri: uri || derivedState.textEditorUri || ""
+		});
+
+		if (branchInfo.scm) {
+			setBranches(branchInfo.scm.branches);
+			setFromBranch("");
+			setCurrentBranch(branchInfo.scm.current);
+			setCurrentRepoId(branchInfo.scm.repoId);
+			const repoId = branchInfo.scm.repoId;
+			const repoName = derivedState.repos[repoId] ? derivedState.repos[repoId].name : "repo";
+			setCurrentRepoName(repoName);
 		}
 	};
 
@@ -643,7 +693,7 @@ export const StatusPanel = () => {
 		};
 	};
 
-	const branchMenuItems = branches.map(branch => makeMenuItem(branch, false)) as any;
+	const branchMenuItems = [] as any; //branches.map(branch => makeMenuItem(branch, false)) as any;
 	if (newBranch) {
 		branchMenuItems.unshift(
 			{
@@ -659,44 +709,36 @@ export const StatusPanel = () => {
 				action: () => setConfigureBranchNames(true),
 				disabled: !derivedState.isCurrentUserAdmin,
 				subtext: derivedState.isCurrentUserAdmin || "Disabled: admin only"
-			},
-			{ label: "-" },
-			{
-				label: (
-					<span>
-						Branch off of{" "}
-						<span className="monospace highlight">
-							<b>{currentBranch}</b>
-						</span>
-					</span>
-				),
-				key: "create",
-				icon: <Icon name="git-branch" />,
-				action: () => setManuallySelectedBranch(newBranch),
-				submenu: [...branches.map(branch => makeFromMenuItem(branch))]
 			}
+			// { label: "-" },
+			// {
+			// 	label: (
+			// 		<span>
+			// 			Branch off of{" "}
+			// 			<span className="monospace highlight">
+			// 				<b>{currentBranch}</b>
+			// 			</span>
+			// 		</span>
+			// 	),
+			// 	key: "create",
+			// 	icon: <Icon name="git-branch" />,
+			// 	action: () => setManuallySelectedBranch(newBranch),
+			// 	submenu: [...branches.map(branch => makeFromMenuItem(branch))]
+			// }
 		);
 	}
 
-	if (openRepos && openRepos.length > 1) {
-		branchMenuItems.unshift(
-			{
-				label: "Repository",
-				key: "repo",
-				icon: <Icon name="repo" />,
-				submenu: openRepos.map(repo => {
-					const repoId = repo.id || "";
-					return {
-						icon: <Icon name={repo.id === currentRepoId ? "arrow-right" : "blank"} />,
-						label: derivedState.repos[repoId] ? derivedState.repos[repoId].name : repo.folder.name,
-						key: repo.id,
-						action: () => getBranches(repo.folder.uri)
-					};
-				})
-			},
-			{ label: "-" }
-		);
-	}
+	const baseBranchMenuItems = branches.map(branch => makeFromMenuItem(branch));
+
+	const repoMenuItems = (openRepos || []).map(repo => {
+		const repoId = repo.id || "";
+		return {
+			icon: <Icon name={repo.id === currentRepoId ? "arrow-right" : "blank"} />,
+			label: derivedState.repos[repoId] ? derivedState.repos[repoId].name : repo.folder.name,
+			key: repo.id,
+			action: () => getBranches(repo.folder.uri)
+		};
+	});
 
 	const setMoveCardDestination = option => {
 		setMoveCardDestinationId(option.id);
@@ -726,11 +768,11 @@ export const StatusPanel = () => {
 				<div style={{ height: "5px" }} />
 			</PanelHeader>
 			{configureBranchNames && (
-				<Modal onClose={() => setConfigureBranchNames(false)}>
+				<Modal translucent onClose={() => setConfigureBranchNames(false)}>
 					<ConfigureBranchNames onClose={() => setConfigureBranchNames(false)} />
 				</Modal>
 			)}
-			{card && !configureBranchNames && (
+			{card && (
 				<Modal onClose={clear}>
 					<Dialog className="codemark-form-container">
 						<form className="codemark-form standard-form vscroll">
@@ -744,27 +786,27 @@ export const StatusPanel = () => {
 												)}
 												{card.label}
 												{card.url && (
-													<a
+													<div
+														className="link-to-ticket"
 														onClick={() =>
 															HostApi.instance.send(OpenUrlRequestType, {
 																url: card.url
 															})
 														}
 													>
-														{card.url}
-													</a>
+														<Icon className="clickable" name="globe" />
+													</div>
 												)}
 												{card.providerId === "codestream" && (
-													<a
+													<div
+														className="link-to-ticket"
 														onClick={e => {
-															e.stopPropagation();
-															e.preventDefault();
 															clear();
 															dispatch(setCurrentCodemark(card.id));
 														}}
 													>
-														Show Issue Details
-													</a>
+														<Icon className="clickable" name="description" />
+													</div>
 												)}
 											</CardTitle>
 										) : (
@@ -791,80 +833,6 @@ export const StatusPanel = () => {
 										</CardDescription>
 									)}
 									{card && card.title && <HR />}
-									{showSelectRepo ? (
-										<RepoInfo>
-											{openRepos && openRepos.length ? (
-												<IconLabel>
-													<Icon name="repo" />
-													<InlineMenu
-														items={openRepos.map(repo => {
-															const repoId = repo.id || "";
-															return {
-																label: derivedState.repos[repoId]
-																	? derivedState.repos[repoId].name
-																	: repo.folder.name,
-																key: repo.id,
-																action: () => getBranches(repo.folder.uri)
-															};
-														})}
-													>
-														Select a repository to create branch
-													</InlineMenu>
-												</IconLabel>
-											) : (
-												<IconLabel>
-													<Icon name="alert" />
-													Please open a file from a repository to create a branch
-												</IconLabel>
-											)}
-										</RepoInfo>
-									) : (
-										<RepoInfo>
-											<CardTitle>
-												<Icon name="repo" />
-												{currentRepoName}
-											</CardTitle>
-											<CardTitle>
-												<Icon name="git-branch" />
-												{currentBranch}
-											</CardTitle>
-										</RepoInfo>
-									)}
-									{showCreateBranchCheckbox && (
-										<StyledCheckbox
-											name="create-branch"
-											checked={createBranch}
-											onChange={v => setCreateBranch(v)}
-										>
-											{useBranchLabel}{" "}
-											{editingBranch ? (
-												<input
-													id="branch-input"
-													name="branch"
-													value={customBranchName || branch}
-													className="input-text control"
-													autoFocus={true}
-													type="text"
-													onChange={e => setCustomBranchName(e.target.value)}
-													placeholder="Enter branch name"
-													onBlur={() => setEditingBranch(false)}
-													onKeyPress={e => {
-														if (e.key == "Enter") setEditingBranch(false);
-													}}
-													style={{ width: "200px" }}
-												/>
-											) : (
-												<>
-													<MonoMenu items={branchMenuItems}>{branch}</MonoMenu>
-													{fromBranch && fromBranch !== currentBranch && (
-														<div>
-															from <span className="highlight monospace">{fromBranch}</span>
-														</div>
-													)}
-												</>
-											)}
-										</StyledCheckbox>
-									)}
 									{showMoveCardCheckbox && (
 										<StyledCheckbox
 											name="move-issue"
@@ -876,6 +844,62 @@ export const StatusPanel = () => {
 												{moveCardDestinationLabel || "make selection"}
 											</InlineMenu>
 										</StyledCheckbox>
+									)}
+									{showCreateBranchCheckbox && (
+										<>
+											<StyledCheckbox
+												name="create-branch"
+												checked={createBranch}
+												onChange={v => setCreateBranch(v)}
+											>
+												Set up a branch in{" "}
+												<MonoMenu items={repoMenuItems}>
+													<Icon name="repo" />
+													{currentRepoName}
+												</MonoMenu>
+											</StyledCheckbox>
+											<BranchDiagram className={createBranch ? "open" : "closed"}>
+												<GitTimeline />
+												<BranchLineDown />
+												<BranchCurve />
+												<BranchLineAcross />
+												<GitBranch className="no-hover">
+													<Icon name="git-branch" />
+												</GitBranch>
+												<div className="base-branch">
+													<MonoMenu items={baseBranchMenuItems}>
+														<Tooltip title="Base Branch" align={{ offset: [15, 0] }}>
+															<span>{fromBranch || currentBranch}</span>
+														</Tooltip>
+													</MonoMenu>
+												</div>
+												<div className="local-branch">
+													{editingBranch ? (
+														<input
+															id="branch-input"
+															name="branch"
+															value={customBranchName || branch}
+															className="input-text control"
+															autoFocus={true}
+															type="text"
+															onChange={e => setCustomBranchName(e.target.value)}
+															placeholder="Enter branch name"
+															onBlur={() => setEditingBranch(false)}
+															onKeyPress={e => {
+																if (e.key == "Enter") setEditingBranch(false);
+															}}
+															style={{ width: "200px" }}
+														/>
+													) : (
+														<MonoMenu items={branchMenuItems}>
+															<Tooltip title="Local Branch" align={{ offset: [15, 0] }}>
+																<span>{branch}</span>
+															</Tooltip>
+														</MonoMenu>
+													)}
+												</div>
+											</BranchDiagram>
+										</>
 									)}
 									{showUpdateSlackCheckbox && (
 										<StyledCheckbox

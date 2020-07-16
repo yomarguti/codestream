@@ -38,6 +38,14 @@ const ModalWrapper = styled.div`
 	padding: 0;
 	overflow: auto;
 
+	&.translucent {
+		background: rgba(255, 255, 255, 0.8);
+		backdrop-filter: blur(1px);
+		.vscode-dark & {
+			background: rgba(0, 0, 0, 0.6);
+			backdrop-filter: contrast(0.5) blur(1px);
+		}
+	}
 	div.children {
 		height: 100%;
 		padding: 50px 20px;
@@ -68,6 +76,7 @@ export const ModalContext = React.createContext<ModalContextType>({
 export interface ModalProps {
 	onClose?: (e: any) => void;
 	verticallyCenter?: boolean;
+	translucent?: boolean;
 }
 
 export function Modal(props: PropsWithChildren<ModalProps>) {
@@ -104,7 +113,7 @@ export function Modal(props: PropsWithChildren<ModalProps>) {
 
 	return createPortal(
 		<ModalContext.Provider value={context}>
-			<ModalWrapper>
+			<ModalWrapper className={props.translucent ? "translucent" : ""}>
 				{props.onClose && <CancelButton onClick={props.onClose} />}
 				<ScrollBox>
 					<div className="vscroll">
