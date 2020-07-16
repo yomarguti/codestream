@@ -27,7 +27,7 @@ $pat = (Get-Content -Raw -Path $localVSCETokenFile | ConvertFrom-Json).publisher
 if ($LastExitCode -ne 0) {
     exit 1
 }
-Write-Host "Got PAT Length=$($path.Length)"
+Write-Host "Got PAT Length=$($pat.Length)"
 
 $path = (& "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -products 'Microsoft.VisualStudio.Product.BuildTools' -latest -property installationPath)
 Write-Host $path
