@@ -1398,7 +1398,14 @@ class ReviewForm extends React.Component<Props, State> {
 		dimBelow?: boolean
 	) {
 		return (
-			<Tooltip key={id} title={tooltip || ""} placement="top" delay={1} align={{ offset: [0, 5] }}>
+			<Tooltip
+				key={id}
+				title={tooltip || ""}
+				placement="top"
+				delay={1}
+				trigger={["hover"]}
+				align={{ offset: [0, 5] }}
+			>
 				<div
 					id={"row-" + id}
 					className={`row-with-icon-actions ${onOff ? "" : "muted"}`}
