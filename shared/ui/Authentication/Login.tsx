@@ -6,7 +6,7 @@ import Button from "../Stream/Button";
 import { authenticate, startSSOSignin } from "./actions";
 import { CodeStreamState } from "../store";
 import { goToNewUserEntry, goToForgotPassword, goToOktaConfig } from "../store/context/actions";
-import { supportsIntegrations } from "../store/configs/actions";
+import { isOnPrem, supportsIntegrations } from "../store/configs/actions";
 
 const isPasswordInvalid = password => password.length === 0;
 const isEmailInvalid = email => {
@@ -285,12 +285,10 @@ class Login extends React.Component<Props, State> {
 const ConnectedLogin = connect<ConnectedProps, any, any, CodeStreamState>(
 	(state, props) => {
 		const { serverUrl } = state.configs;
-		const match = serverUrl.match(/^https?:\/\/(.+)\.codestream\.(us|com)/);
-		const oktaEnabled = !match || match[1] === "oppr" || match[1] === "opbeta";
 		return {
 			initialEmail: props.email !== undefined ? props.email : state.configs.email,
 			supportsIntegrations: supportsIntegrations(state.configs),
-			oktaEnabled
+			oktaEnabled: isOnPrem(serverUrl)
 		};
 	},
 	{ authenticate, goToNewUserEntry, startSSOSignin, goToForgotPassword, goToOktaConfig }
