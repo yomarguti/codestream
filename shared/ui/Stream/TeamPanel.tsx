@@ -43,6 +43,7 @@ import { UserStatus } from "../src/components/UserStatus";
 import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import { SelectPeople } from "../src/components/SelectPeople";
 import { HeadshotName } from "../src/components/HeadshotName";
+import { InlineMenu } from "../src/components/controls/InlineMenu";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -770,6 +771,7 @@ class TeamPanel extends React.Component<Props, State> {
 		) : (
 			this.props.teamName
 		);
+		const authors2 = [{ label: "foo", value: "foo" }];
 		return (
 			<div className="panel full-height team-panel">
 				<CreateCodemarkIcons />
@@ -1022,18 +1024,30 @@ class TeamPanel extends React.Component<Props, State> {
 								)}
 								{addingBlameMap && (
 									<MapRow>
-										<div>
+										<div style={{ position: "relative" }}>
 											<input
-												style={{ width: "100%" }}
+												style={{ width: "100%", paddingRight: "30px !important" }}
 												className="input-text"
 												id="blame-map-email"
 												type="text"
 												value={this.state.blameMapEmail}
 												onChange={this.onBlameMapEmailChange}
-												onBlur={this.onBlameMapEmailBlur}
 												placeholder="Email..."
 												autoFocus={true}
 											/>
+											{suggested.length && (
+												<div style={{ position: "absolute", right: "15px", top: "7px" }}>
+													<InlineMenu
+														className="big-chevron"
+														items={suggested.map(suggestion => {
+															return {
+																label: suggestion.email,
+																action: () => this.setState({ blameMapEmail: suggestion.email })
+															};
+														})}
+													></InlineMenu>
+												</div>
+											)}
 										</div>
 										<div>
 											{EMAIL_REGEX.test(this.state.blameMapEmail) && (
@@ -1051,6 +1065,7 @@ class TeamPanel extends React.Component<Props, State> {
 										</div>
 									</MapRow>
 								)}
+								<div style={{ height: "50px" }} />
 							</div>
 						)}
 						<br />

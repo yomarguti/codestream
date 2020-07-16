@@ -1010,7 +1010,8 @@ export class ScmManager {
 		const cc = Logger.getCorrelationContext();
 		const committers: { [email: string]: string } = {};
 		const { git } = SessionContainer.instance();
-		const since = 60 * 60 * 24 * 60; // two months
+		const oneDay = 60 * 60 * 24;
+		const since = oneDay * 180; // six months
 		let gitError;
 		try {
 			const openRepos = await this.getRepos({});
