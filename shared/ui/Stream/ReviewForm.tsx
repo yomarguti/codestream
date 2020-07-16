@@ -93,6 +93,7 @@ import { MetaCheckboxWithHoverIcon } from "./Review";
 import ignore from "ignore";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { HeadshotName } from "../src/components/HeadshotName";
+import { FloatingLoadingMessage } from "../src/components/FloatingLoadingMessage";
 
 interface Props extends ConnectedProps {
 	editingReview?: CSReview;
@@ -1131,7 +1132,7 @@ class ReviewForm extends React.Component<Props, State> {
 					return (
 						<div className={cx({ "full-height-codemark-form": !isAmending })}>
 							{!isAmending && <CancelButton onClick={this.confirmCancel} />}
-							<span className={cx({ "plane-container": !isAmending })}>
+							<div className={cx({ "review-container": !isAmending })}>
 								{currentUserScmEmail && currentUserScmEmail !== currentUser.email && !mappedMe && (
 									<EmailWarning>
 										<Icon name="alert" className="conflict" />
@@ -1195,7 +1196,7 @@ class ReviewForm extends React.Component<Props, State> {
 										</CSText>
 									</>
 								)}
-							</span>
+							</div>
 						</div>
 					);
 				}}
@@ -1712,9 +1713,7 @@ class ReviewForm extends React.Component<Props, State> {
 					Changed Files
 					{this.props.isAmending && " - Since Last Update"}
 					&nbsp;&nbsp;
-					{(isLoadingScm || isReloadingScm) && (
-						<Icon style={{ margin: "-2px 0" }} className="spin" name="sync" />
-					)}
+					{isLoadingScm && <Icon style={{ margin: "-2px 0" }} className="spin" name="sync" />}
 				</div>
 				{changedFiles}
 			</div>
@@ -2121,6 +2120,9 @@ class ReviewForm extends React.Component<Props, State> {
 								</span>
 							</SelectPeople>
 						</div>
+					)}
+					{isReloadingScm && !isLoadingScm && (
+						<FloatingLoadingMessage>Recalculating Diffs...</FloatingLoadingMessage>
 					)}
 					{isAmending && false && this.renderPreviousCheckpoints()}
 					{showChanges && this.renderChangedFiles()}
