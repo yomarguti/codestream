@@ -396,7 +396,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const startWorkPreferences = preferences.startWork || EMPTY_HASH;
 		const providerIds = props.providers.map(provider => provider.id).join(":");
-		const skipConnect = preferences.skipConnectIssueProviders;
+		const skipConnect = false; //preferences.skipConnectIssueProviders;
 
 		const csIssues = codemarkSelectors.getMyOpenIssues(state.codemarks, state.session.userId!);
 		let status =
@@ -910,37 +910,39 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 								Ad-hoc<span className="wide-text"> Work</span>
 							</RoundedLink>
 						</Tooltip>
-						<RoundedSearchLink className={queryOpen ? "" : "collapsed"}>
-							<Icon
-								name="search"
-								onClick={() => {
-									setQueryOpen(true);
-									document.getElementById("search-input")!.focus();
-								}}
-							/>
-							<span className="accordion">
+						{cards.length > 0 && (
+							<RoundedSearchLink className={queryOpen ? "" : "collapsed"}>
 								<Icon
-									name="x"
+									name="search"
 									onClick={() => {
-										setQuery("");
-										setQueryOpen(false);
+										setQueryOpen(true);
+										document.getElementById("search-input")!.focus();
 									}}
 								/>
-								<input
-									autoFocus
-									id="search-input"
-									type="text"
-									value={query}
-									onChange={e => setQuery(e.target.value)}
-									onKeyDown={e => {
-										if (e.key == "Escape") {
+								<span className="accordion">
+									<Icon
+										name="x"
+										onClick={() => {
 											setQuery("");
 											setQueryOpen(false);
-										}
-									}}
-								/>
-							</span>
-						</RoundedSearchLink>
+										}}
+									/>
+									<input
+										autoFocus
+										id="search-input"
+										type="text"
+										value={query}
+										onChange={e => setQuery(e.target.value)}
+										onKeyDown={e => {
+											if (e.key == "Escape") {
+												setQuery("");
+												setQueryOpen(false);
+											}
+										}}
+									/>
+								</span>
+							</RoundedSearchLink>
+						)}
 						What are you working on?
 					</H4>
 					{props.loadingMessage ? (
@@ -997,7 +999,8 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 					) : (
 						<>
 							<span>
-								Connect your issue provider(s), or{" "}
+								Connect your issue provider(s) to make it easy to manage tasks, create branches, and
+								connect tasks to commits &amp; PRs, or{" "}
 								<Tooltip title="Connect later on the Integrations page" placement="top">
 									<Linkish
 										onClick={() => dispatch(setUserPreference(["skipConnectIssueProviders"], true))}
