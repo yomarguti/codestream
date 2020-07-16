@@ -12,13 +12,22 @@ $assetDir = $buildDir + '\artifacts\x86\Release'
 $asset = $assetDir + '\codestream-vs-' + $buildNumber + '.vsix'
 Write-Host 'Here is the VSIX file (' $asset '):'
 Get-ChildItem $asset
+if ($LastExitCode -ne 0) {
+    exit 1
+}
 
 $assetInfo = $assetDir + '\codestream-vs-' + $buildNumber + '.info'
 Write-Host 'Here is the VSIX file (' $assetInfo '):'
 Get-ChildItem $assetInfo
+if ($LastExitCode -ne 0) {
+    exit 1
+}
 
 $pat = (Get-Content -Raw -Path $localVSCETokenFile | ConvertFrom-Json).publishers.Where({$_.Name -eq "CodeStream"}).pat
-Write-Host "Got PAT"
+if ($LastExitCode -ne 0) {
+    exit 1
+}
+Write-Host "Got PAT Length=$($path.Length)"
 
 $path = (& "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -products 'Microsoft.VisualStudio.Product.BuildTools' -latest -property installationPath)
 Write-Host $path
@@ -33,4 +42,7 @@ else {
     # https://docs.microsoft.com/en-us/visualstudio/extensibility/walkthrough-publishing-a-visual-studio-extension-via-command-line?view=vs-2019
     #  -ignoreWarnings "VSIXValidatorWarning01,VSIXValidatorWarning02"
     & $exe publish -payload $asset -publishManifest "$($vsDir)\publishManifest.json" -personalAccessToken $pat
+    if ($LastExitCode -ne 0) {
+		exit 1
+	}
 }

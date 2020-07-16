@@ -14,9 +14,10 @@ $commitId = (Get-Content -Raw -Path $assetInfo | ConvertFrom-Json).repoCommitId.
 
 # uses .net version parsing!
 $v = [System.Version]::Parse((Get-Content -Raw -Path $assetInfo | ConvertFrom-Json).version)
-$version = $"$($v.Major).$($v.Minor).$($v.Build)"
+$version = "$($v.Major).$($v.Minor).$($v.Build)"
 
-$gitCommand = "git tag -a vs-$version $commitId"
+$gitCommand = "git tag vs-$version"
+$gitPushCommand = "git push origin vs-$version"
  
 if ($WhatIfPreference.IsPresent -eq $True) {
     Write-Host "would have run: $gitCommand"
@@ -24,7 +25,15 @@ if ($WhatIfPreference.IsPresent -eq $True) {
 }
 else {
     iex $gitCommand
+    if ($LastExitCode -ne 0) {
+		exit 1
+	}
+
     Write-Host "git tag complete"
-    git push
+
+    iex $gitPushCommand
+    if ($LastExitCode -ne 0) {
+		exit 1
+	}
     Write-Host "git push complete"
 }
