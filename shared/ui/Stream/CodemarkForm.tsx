@@ -1493,7 +1493,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			<div className="add-location">
 				<Tooltip
 					placement="topRight"
-					title="Codemarks can refer to one or more blocks of code, even across files."
+					title="Comments can refer to multiple blocks of code, even across files."
 					delay={1}
 				>
 					<span onClick={e => this.addLocation()}>
