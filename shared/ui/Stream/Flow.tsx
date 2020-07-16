@@ -185,7 +185,7 @@ const Action = styled.div`
 	}
 	transition: transform ease-out 0.2s;
 	&.active,
-	&:hover {
+	&:hover:not(.no-hover) {
 		z-index: 3;
 		background: var(--button-background-color);
 		color: var(--button-foreground-color);
