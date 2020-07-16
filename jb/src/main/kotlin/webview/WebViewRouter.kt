@@ -24,6 +24,7 @@ import com.codestream.protocols.webview.UpdateServerUrlRequest
 import com.codestream.reviewService
 import com.codestream.settings.ApplicationSettingsService
 import com.codestream.settingsService
+import com.codestream.system.SPACE_ENCODED
 import com.codestream.webViewService
 import com.github.salomonbrys.kotson.fromJson
 import com.github.salomonbrys.kotson.get
@@ -247,7 +248,7 @@ class WebViewRouter(val project: Project) {
 
     private fun openUrl(message: WebViewMessage) {
         val request = gson.fromJson<OpenUrlRequest>(message.params!!)
-        BrowserUtil.browse(request.url)
+        BrowserUtil.browse(request.url.replace(" ", SPACE_ENCODED))
     }
 
     private fun parse(json: String): WebViewMessage {
