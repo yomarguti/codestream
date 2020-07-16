@@ -22,7 +22,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { CSText } from "../src/components/CSText";
 import { useDidMount } from "../utilities/hooks";
 import { Loading } from "../Container/Loading";
-import { supportsIntegrations } from "../store/configs/actions";
+import { isOnPrem, supportsIntegrations } from "../store/configs/actions";
 
 const isPasswordValid = (password: string) => password.length >= 6;
 export const isEmailValid = (email: string) => {
@@ -48,11 +48,9 @@ export const Signup = (props: Props) => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { serverUrl } = state.configs;
-		const match = serverUrl.match(/^https?:\/\/(.+)\.codestream\.(us|com)/);
-		const oktaEnabled = !match || match[1] === "oppr" || match[1] === "opbeta";
 		return {
 			supportsIntegrations: supportsIntegrations(state.configs),
-			oktaEnabled
+			oktaEnabled: isOnPrem(serverUrl)
 		};
 	});
 	const [email, setEmail] = useState(props.email || "");

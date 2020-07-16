@@ -43,6 +43,7 @@ import { UserStatus } from "../src/components/UserStatus";
 import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import { SelectPeople } from "../src/components/SelectPeople";
 import { HeadshotName } from "../src/components/HeadshotName";
+import { isOnPrem } from "../store/configs/actions";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -139,6 +140,7 @@ interface ConnectedProps {
 	emailSupported: boolean;
 	blameMap: { [email: string]: string };
 	serverUrl: string;
+	isOnPrem: boolean;
 }
 
 interface State {
@@ -384,7 +386,17 @@ class TeamPanel extends React.Component<Props, State> {
 		const upgradeLink = `${this.props.serverUrl}/web/subscription/upgrade/${this.props.companyId}`;
 		return (
 			<div style={{ padding: "30px", textAlign: "center" }}>
-				<a href={upgradeLink}>Upgrade your plan</a> if you'd like to invite more teammates.
+				{this.props.isOnPrem && (
+					<div>
+						Contact <a href="mailto:sales@codestream.com">sales@codestream.com</a> to upgrade your
+						plan if you'd like to invite more teammates.
+					</div>
+				)}
+				{!this.props.isOnPrem && (
+					<div>
+						<a href={upgradeLink}>Upgrade your plan</a> if you'd like to invite more teammates.
+					</div>
+				)}
 				<br />
 				<br />
 			</div>
@@ -1135,7 +1147,8 @@ const mapStateToProps = state => {
 		xrayEnabled,
 		multipleReviewersApprove,
 		emailSupported,
-		serverUrl: configs.serverUrl
+		serverUrl: configs.serverUrl,
+		isOnPrem: isOnPrem(configs.serverUrl)
 	};
 };
 

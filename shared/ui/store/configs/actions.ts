@@ -12,3 +12,8 @@ export const supportsIntegrations = (configs: Partial<ConfigsState>) => {
 		return false;
 	}
 };
+
+export const isOnPrem = serverUrl => {
+	const match = serverUrl.match(/^https?:\/\/(.+)\.codestream\.(us|com)/);
+	return !match || match[1] === "oppr" || match[1] === "opbeta";
+};
