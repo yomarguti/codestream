@@ -19,17 +19,20 @@ interface foo {
 
 const Root = styled.div<{ noMargin?: boolean }>`
 	display: flex;
+	width: auto;
 	margin-bottom: ${props => (props.noMargin ? "0" : "5px")};
 	align-items: center;
 	> div {
 		text-align: center;
 		flex: 1 1 20px;
 	}
-	label {
+	> span {
 		display: inline-block;
+		flex: 100 1;
+	}
+	label {
 		padding-top: 1px !important;
 		padding-bottom: 0 !important;
-		flex: 100 1;
 	}
 	input,
 	label {
@@ -62,9 +65,11 @@ export function Checkbox(props: PropsWithChildren<Props>) {
 					/>
 				)}
 			</div>
-			<label htmlFor={htmlFor} onClick={onClickLabel}>
-				{props.children}
-			</label>
+			<span>
+				<label htmlFor={htmlFor} onClick={onClickLabel}>
+					{props.children}
+				</label>
+			</span>
 		</Root>
 	);
 }
