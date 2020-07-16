@@ -9,7 +9,6 @@ import { DispatchProp } from "../store/common";
 import { HostApi } from "../webview-api";
 import { SignupType } from "./actions";
 import { JoinTeam } from "./JoinTeam";
-import { isOnPrem } from "../store/configs/actions";
 
 interface ConnectedProps {
 	pluginVersion: string;
