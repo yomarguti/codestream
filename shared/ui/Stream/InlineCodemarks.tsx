@@ -80,7 +80,7 @@ import { PanelHeader } from "../src/components/PanelHeader";
 import * as fs from "../utilities/fs";
 import { FileInfo } from "./FileInfo";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
-import { supportsIntegrations } from "../store/configs/actions";
+import { supportsIntegrations } from "../store/configs/reducer";
 import { Keybindings } from "./Keybindings";
 import { setNewPostEntry } from "../store/context/actions";
 
@@ -522,9 +522,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						<h3>No file open.</h3>
 						<p>
 							Open a source file to to start discussing code with your teammates!{" "}
-							<a href="https://docs.codestream.com/userguide/workflow/discuss-code/">
-								View guide.
-							</a>
+							<a href="https://docs.codestream.com/userguide/workflow/discuss-code/">View guide.</a>
 						</p>
 					</div>
 				</div>
@@ -598,9 +596,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			return (
 				<Keybindings>
 					Discuss code by selecting a range and clicking an icon, or use a shortcut below (
-					<a href="https://docs.codestream.com/userguide/workflow/discuss-code/">
-						show me how
-					</a>
+					<a href="https://docs.codestream.com/userguide/workflow/discuss-code/">show me how</a>
 					).
 					<br />
 					<br />

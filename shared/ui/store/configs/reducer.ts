@@ -1,6 +1,7 @@
 import { ActionType } from "../common";
 import * as actions from "./actions";
 import { ConfigsActionsType, ConfigsState } from "./types";
+import * as url from "url";
 
 type ConfigsActions = ActionType<typeof actions>;
 
@@ -18,3 +19,17 @@ export function reduceConfigs(state = initialState, { type, payload }: ConfigsAc
 			return { ...initialState, ...state };
 	}
 }
+
+export const supportsIntegrations = (configs: Partial<ConfigsState>) => {
+	if (!configs.serverUrl || url.parse(configs.serverUrl).protocol === "https:") {
+		return true;
+	} else {
+		return false;
+	}
+};
+
+export const isOnPrem = (configs: Partial<ConfigsState>) => {
+	const { serverUrl } = configs;
+	const match = serverUrl!.match(/^https?:\/\/(.+)\.codestream\.(us|com)/);
+	return !match || match[1] === "oppr" || match[1] === "opbeta";
+};

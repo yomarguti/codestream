@@ -18,7 +18,7 @@ import { ApiVersioningActionsType } from "../store/apiVersioning/types";
 import { errorDismissed } from "@codestream/webview/store/connectivity/actions";
 import { ThemeProvider } from "styled-components";
 import { darkTheme, createTheme } from "../src/themes";
-import { isOnPrem } from "../store/configs/actions";
+import { isOnPrem } from "../store/configs/reducer";
 
 const mapStateToProps = state => {
 	const team = state.teams[state.context.currentTeamId];
@@ -33,7 +33,7 @@ const mapStateToProps = state => {
 		apiVersioning: state.apiVersioning,
 		ide: state.ide && state.ide.name ? state.ide.name : undefined,
 		serverUrl: state.configs.serverUrl,
-		isOnPrem: isOnPrem(state.configs.serverUrl)
+		isOnPrem: isOnPrem(state.configs)
 	};
 };
 
@@ -146,14 +146,13 @@ const Root = connect(mapStateToProps)(props => {
 		const upgradeLink = `${props.serverUrl}/web/subscription/upgrade/${props.company.id}`;
 		return (
 			<RoadBlock title="Trial Expired">
-				{props.isOnPrem && (
+				{props.isOnPrem ? (
 					<p>
 						Your free-trial period is over. If you would like to purchase CodeStream for your team,
 						- please contact <a href="mailto:sales@codestream.com">sales@codestream.com</a> to
 						discuss - service plans and pricing options.{" "}
 					</p>
-				)}
-				{!props.isOnPrem && (
+				) : (
 					<p>
 						Your free-trial period is over. <a href={upgradeLink}>Upgrade your plan</a> if you'd
 						like to continue to use CodeStream.
