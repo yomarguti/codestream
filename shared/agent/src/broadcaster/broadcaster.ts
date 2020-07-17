@@ -80,6 +80,13 @@ export interface MessageEvent {
 	message: any;
 }
 
+interface PartialMessage {
+	fullMessageId: string;
+	part: number;
+	totalParts: number;
+	message: string;
+}
+
 // one of the statuses emitted in BroadcasterStatus above
 export enum BroadcasterStatusType {
 	Connected = "Connected", // indicates all channels have been successfully subscribed to as requested
@@ -131,10 +138,11 @@ export class Broadcaster {
 	private _simulateOffline: boolean = false;
 	private _aborted: boolean = false;
 	private _numResubscribes: number = 0;
-	private _debug: (msg: string, info?: any) => void = () => {};
+	private _debug: (msg: string, info?: any) => void = () => { };
 	private _activeFailures: string[] = [];
 	private _messagesReceived: { [key: string]: number } = {};
 	private _initializationStartedAt: number = 0;
+	private _partialMessages: { [fullMessageId: string]: PartialMessage[] } = {};
 
 	// call to receive status updates
 	get onDidStatusChange(): Event<BroadcasterStatus> {
@@ -149,7 +157,7 @@ export class Broadcaster {
 	constructor(
 		private readonly _api: ApiProvider,
 		private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined
-	) {}
+	) { }
 
 	// initialize BroadcasterConnection
 	async initialize(options: BroadcasterInitializer): Promise<Disposable> {
@@ -318,9 +326,32 @@ export class Broadcaster {
 			if (messageId) {
 				this._messagesReceived[messageId] = Date.now();
 			}
-			this.emitMessages([event.message]);
+			const fullMessage = this._processPartial(event.message);
+			if (fullMessage) {
+				this.emitMessages([fullMessage]);
+			}
 		}
 		this.cleanUpMessagesReceived();
+	}
+
+	// process partial messages, split into multiple pieces in case the full message was too big
+	// for the underlying implementation
+	_processPartial(message: any) {
+		if (typeof message !== "object" || !message.fullMessageId) return message;
+		const partialMessage = message as PartialMessage;
+		this._partialMessages[message.fullMessageId] = this._partialMessages[message.fullMessageId] || new Array(partialMessage.totalParts);
+		const partialMessages = this._partialMessages[message.fullMessageId];
+		partialMessages[partialMessage.part] = partialMessage;
+		if (partialMessages.findIndex(msg => !msg) !== -1) return false;
+		const fullMessage = partialMessages.map(m => m.message as string).join("");
+		delete this._partialMessages[message.fullMessageId];
+		try {
+			return JSON.parse(fullMessage);
+		} catch (error) {
+			this._debug(
+				`Unable to parse constructed message ${message.fullMessageId}, dropping: ${error.message}`
+			);
+		}
 	}
 
 	// simulate a subscription timeout on the next subscription event, for testing
@@ -485,7 +516,9 @@ export class Broadcaster {
 			// we want to make sure we get messages received in that time, in fact we'll be generous and pick up
 			// any messages issued since ten seconds before initialization
 			since = this._initializationStartedAt - 10000;
-			this._debug(`No messages have been received yet, looks like fresh session, retrieve history since ${since}`);
+			this._debug(
+				`No messages have been received yet, looks like fresh session, retrieve history since ${since}`
+			);
 			/*
 			// assume a fresh session, with no catch up necessary
 			this._debug("No messages have been received yet, assume fresh session");
