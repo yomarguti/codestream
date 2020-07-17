@@ -16,7 +16,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 			}
 			else {
 				Uri = _textDocument.FilePath.ToUri();
-				Id = Uri.ToLocalPath();
+				Id = Uri?.ToLocalPath();
 				FileName = Path.GetFileName(_textDocument.FilePath);
 				SupportsMarkers = SupportsMargins = true;
 			}
