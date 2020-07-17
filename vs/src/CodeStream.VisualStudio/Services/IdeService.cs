@@ -637,16 +637,12 @@ namespace CodeStream.VisualStudio.Services {
 
 		public void DiffTextBlocks(string filePath, string leftContent, string rightContent, string title = null, IPathData data = null) {
 			ThreadHelper.ThrowIfNotOnUIThread();
-			if (leftContent.IsNullOrWhiteSpace() || rightContent.IsNullOrWhiteSpace()) {
-				if (leftContent.IsNullOrWhiteSpace()) {
-					Log.Debug($"Missing {nameof(leftContent)}");
-					return;
-				}
+			if (leftContent.IsNullOrWhiteSpace()) {
+				leftContent = string.Empty;
+			}
 
-				if (rightContent.IsNullOrWhiteSpace()) {
-					Log.Debug($"Missing {nameof(rightContent)}");
-					return;
-				}
+			if (rightContent.IsNullOrWhiteSpace()) {
+				rightContent = string.Empty;
 			}
 
 			var filePath1 = CreateTempFileFromData(filePath, leftContent, "left", data);
@@ -672,19 +668,20 @@ namespace CodeStream.VisualStudio.Services {
 
 				var diffViewer = GetDiffViewer(frame);
 				diffViewer.Properties.AddProperty(PropertyNames.IsReviewDiff, true);
+				diffViewer.ViewMode = DifferenceViewMode.SideBySide;
 
-				var leftText = diffViewer.LeftView.TextBuffer.CurrentSnapshot.GetText();
-				var rightText = diffViewer.RightView.TextBuffer.CurrentSnapshot.GetText();
+				//var leftText = diffViewer.LeftView.TextBuffer.CurrentSnapshot.GetText();
+				//var rightText = diffViewer.RightView.TextBuffer.CurrentSnapshot.GetText();
 
-				if (leftText.Length == 0) {
-					diffViewer.ViewMode = DifferenceViewMode.RightViewOnly;
-				}
-				else if (rightText.Length == 0) {
-					diffViewer.ViewMode = DifferenceViewMode.LeftViewOnly;
-				}
-				else if (leftText == rightText) {
-					diffViewer.ViewMode = DifferenceViewMode.RightViewOnly;
-				}
+				//if (leftText.Length == 0) {
+				//	diffViewer.ViewMode = DifferenceViewMode.RightViewOnly;
+				//}
+				//else if (rightText.Length == 0) {
+				//	diffViewer.ViewMode = DifferenceViewMode.LeftViewOnly;
+				//}
+				//else if (leftText == rightText) {
+				//	diffViewer.ViewMode = DifferenceViewMode.RightViewOnly;
+				//}
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(DiffTextBlocks));
@@ -708,7 +705,7 @@ namespace CodeStream.VisualStudio.Services {
 							iVsWindowFrame.CloseFrame((uint)__FRAMECLOSE.FRAMECLOSE_NoSave);
 						}
 					}
-					catch(Exception ex) {
+					catch (Exception ex) {
 						Log.Warning(ex, "Close DiffViewer");
 					}
 				}
