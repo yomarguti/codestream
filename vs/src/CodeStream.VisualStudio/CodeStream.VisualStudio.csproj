@@ -115,6 +115,7 @@
     <Compile Include="Services\WpfTextViewCache.cs" />
     <Compile Include="UI\DiffViewCreationListener.cs" />
     <Compile Include="UI\DocumentMarkerManager.cs" />
+    <Compile Include="UI\Extensions\AnimationExtensions.cs" />
     <Compile Include="UI\Glyphs\DocumentMarkGlyphFactory.cs" />
     <Compile Include="UI\Glyphs\DocumentMarkGlyphFactoryProvider.cs" />
     <Compile Include="UI\Glyphs\DocumentMarkGlyphTag.cs" />

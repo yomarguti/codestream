@@ -9,6 +9,7 @@ using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Packages;
 using CodeStream.VisualStudio.Core.Services;
+using CodeStream.VisualStudio.UI.Extensions;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Serilog;
 
@@ -18,6 +19,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		private static readonly ILogger Log = LogManager.ForContext<DocumentMark>();
 		private static int _defaultHeight = 19;
 		private readonly DocumentMarkViewModel _viewModel;
+		private static int FadeInDefault = 200;
 
 		public DocumentMark(DocumentMarkViewModel viewModel) {
 			//Default height used for repositioning in the margin
@@ -29,6 +31,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			if (_viewModel.Marker?.Codemark?.Color.IsNullOrWhiteSpace() == true) {
 				color = "blue";
 			}
+			this.FadeIn(FadeInDefault);
 
 			ImageUri = $"pack://application:,,,/CodeStream.VisualStudio;component/Resources/Assets/marker-{_viewModel.Marker.Type}-{color}.png";
 		}
