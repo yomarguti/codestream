@@ -191,7 +191,7 @@ export class CodestreamView {
 	private async initializeWebview() {
 		this.webview.src = await this.getWebviewSrc();
 		this.webview.preload = asAbsolutePath("dist/webview/preload.js");
-		this.webview.plugins = "true";
+		this.webview.plugins = true;
 
 		this.webview.classList.add("codestream-webview", "native-key-bindings");
 		this.webview.addEventListener("dom-ready", async () => {
@@ -471,12 +471,12 @@ export class CodestreamView {
 				}
 			}
 			case ShellPromptFolderRequestType.method: {
-				const result = remote.dialog.showOpenDialog({
+				const result = await remote.dialog.showOpenDialog({
 					title: message.params.message,
 					properties: ["openDirectory"]
 				});
 				const response: ShellPromptFolderResponse = {
-					path: result && result.length ? result[0] : undefined
+					path: result.filePaths && result.filePaths.length ? result.filePaths[0] : undefined
 				};
 				return { params: response };
 			}
@@ -499,7 +499,10 @@ export class CodestreamView {
 				const { serverUrl, disableStrictSSL } = message.params;
 				await Container.configs.set("serverUrl", serverUrl);
 				await Container.configs.set("disableStrictSSL", disableStrictSSL);
-				await this.session.agent.sendRequest(SetServerUrlRequestType.method, { serverUrl, disableStrictSSL });
+				await this.session.agent.sendRequest(SetServerUrlRequestType.method, {
+					serverUrl,
+					disableStrictSSL
+				});
 				return { params: {} };
 			}
 			case EditorHighlightRangeRequestType.method: {
@@ -686,9 +689,9 @@ export class CodestreamView {
 		const editor = atom.workspace.getActiveTextEditor();
 		let uri;
 		if (editor) {
-			uri = Editor.getUri(editor);	 
+			uri = Editor.getUri(editor);
 		}
-		this.sendNotification(StartWorkNotificationType, { source, uri });		
+		this.sendNotification(StartWorkNotificationType, { source, uri });
 	}
 
 	handleProtocolRequest(uri: string) {
