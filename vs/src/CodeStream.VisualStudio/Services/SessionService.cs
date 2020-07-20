@@ -73,10 +73,6 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public void Logout(SessionSignedOutReason reason) {
-			if (reason != SessionSignedOutReason.MaintenanceMode) {
-				WebViewDidInitialize = false;
-			}
-
 			User = null;
 			State = null;
 			TeamId = null;
