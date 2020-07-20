@@ -81,6 +81,7 @@ interface JiraProject {
 
 interface IssueTypeDescriptor {
 	name: string;
+	iconUrl: string;
 	fields: { [name: string]: { required: boolean; hasDefaultValue: boolean } };
 }
 
@@ -233,6 +234,8 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 								attributes.required &&
 								!attributes.hasDefaultValue
 						);
+
+						board.issueTypeIcons[type.name] = type.iconUrl;
 
 						if (type.fields.assignee === undefined) {
 							board.assigneesDisabled = true;

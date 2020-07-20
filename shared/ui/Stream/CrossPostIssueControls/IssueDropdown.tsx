@@ -1253,6 +1253,8 @@ export const Row = styled.div`
 		color: var(--text-color-highlight);
 	}
 	.issue-type-icon {
+		width: 16px;
+		height: 16px;
 		vertical-align: -3px;
 	}
 	.selected-icon {
