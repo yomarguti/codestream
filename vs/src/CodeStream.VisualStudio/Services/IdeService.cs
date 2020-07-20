@@ -1,4 +1,4 @@
-using CodeStream.VisualStudio.Core;
+﻿using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Logging.Instrumentation;
@@ -616,7 +616,8 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		private string CreateTempFileFromData(string filePath, string content, string direction, IPathData data = null) {
-			var pathParts = (data.PathParts ?? new List<string>()).Concat(new List<string>() {
+			List<string> parts = data?.PathParts.AnySafe() == true ? data.PathParts : new List<string>();
+			var pathParts = parts.Concat(new List<string>() {
 				direction,
 				"codestream-diff"
 			});
