@@ -38,9 +38,9 @@ export function CodeStreamIssueControls(props: React.PropsWithChildren<any>) {
 	})();
 
 	return (
-		<>
+		<div className="loading-boards">
 			{assigneesInput}
 			<span className="connect-issue-label">Create an issue on {props.children}</span>
-		</>
+		</div>
 	);
 }

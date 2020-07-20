@@ -199,10 +199,11 @@ export function JiraCardControls(
 
 	if (data.isLoading) {
 		return (
-			<>
+			<div className="loading-boards">
 				{assigneesInput}
 				<span>
-					<Icon className="spin" name="sync" /> Syncing projects...
+					<Icon className="spin" name="sync" />
+					Syncing projects...
 				</span>
 				<a
 					style={{ marginLeft: "5px" }}
@@ -214,34 +215,24 @@ export function JiraCardControls(
 				>
 					cancel
 				</a>
-			</>
+			</div>
 		);
 	}
+
+	const issueTypeIcon = issueType => {
+		if (data.currentProject && data.currentProject.issueTypeIcons) {
+			const iconUrl = data.currentProject.issueTypeIcons[issueType];
+			if (iconUrl) return <img className="issue-type-icon" src={iconUrl} />;
+		}
+		return null;
+	};
 
 	return (
 		<>
 			{assigneesInput}
 			<div className="checkbox-row">
 				<input type="checkbox" checked onChange={_ => dispatch(setIssueProvider(undefined))} />
-				{" Add a "}
-				<span className="channel-label" onClick={handleClickIssueType}>
-					{data.currentIssueType}
-					<Icon name="chevron-down" />
-					{issueTypeMenuState.open && (
-						<Menu
-							align="center"
-							compact={true}
-							target={issueTypeMenuState.target}
-							items={
-								data.currentProject
-									? data.currentProject.issueTypes.map(it => ({ label: it, action: it }))
-									: []
-							}
-							action={selectIssueType}
-						/>
-					)}
-				</span>
-				{" on "}
+				{" In project "}
 				<span className="channel-label" onClick={handleClickProject}>
 					{data.currentProject && data.currentProject.name}
 					<Icon name="chevron-down" />
@@ -256,6 +247,29 @@ export function JiraCardControls(
 								action: project
 							}))}
 							action={selectProject}
+						/>
+					)}
+				</span>
+				{" add a "}
+				<span className="channel-label" onClick={handleClickIssueType}>
+					{issueTypeIcon(data.currentIssueType)}
+					{data.currentIssueType}
+					<Icon name="chevron-down" />
+					{issueTypeMenuState.open && (
+						<Menu
+							align="center"
+							compact={true}
+							target={issueTypeMenuState.target}
+							items={
+								data.currentProject
+									? data.currentProject.issueTypes.map(it => ({
+											label: it,
+											icon: issueTypeIcon(it),
+											action: it
+									  }))
+									: []
+							}
+							action={selectIssueType}
 						/>
 					)}
 				</span>

@@ -184,10 +184,11 @@ export function TrelloCardControls(props: React.PropsWithChildren<Props>) {
 
 	if (data.isLoading)
 		return (
-			<>
+			<div className="loading-boards">
 				{assigneesInput}
 				<span>
-					<Icon className="spin" name="sync" /> Fetching boards...
+					<Icon className="spin" name="sync" />
+					Fetching boards...
 				</span>
 				<a
 					style={{ marginLeft: "5px" }}
@@ -199,7 +200,7 @@ export function TrelloCardControls(props: React.PropsWithChildren<Props>) {
 				>
 					cancel
 				</a>
-			</>
+			</div>
 		);
 
 	const boardItems = (data.boards || emptyArray).map(board => ({

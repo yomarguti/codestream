@@ -159,10 +159,11 @@ export function YouTrackCardControls(
 
 	if (data.isLoading) {
 		return (
-			<>
+			<div className="loading-boards">
 				{assigneesInput}
 				<span>
-					<Icon className="spin" name="sync" /> Syncing projects...
+					<Icon className="spin" name="sync" />
+					Syncing projects...
 				</span>
 				<a
 					style={{ marginLeft: "5px" }}
@@ -174,7 +175,7 @@ export function YouTrackCardControls(
 				>
 					cancel
 				</a>
-			</>
+			</div>
 		);
 	}
 

@@ -72,7 +72,7 @@ export function SlackCardControls(props: React.PropsWithChildren<Props>) {
 			updateDataState({
 				isLoading: false,
 				boards: response.channels as SlackChannel[],
-				currentBoard: newCurrentBoard,
+				currentBoard: newCurrentBoard
 				//currentList: newCurrentList
 			});
 
@@ -110,7 +110,7 @@ export function SlackCardControls(props: React.PropsWithChildren<Props>) {
 		setBoardMenuState({ open: false });
 		if (board) {
 			updateDataState({
-				currentBoard: board,
+				currentBoard: board
 				//currentList: board.lists[0]
 			});
 			// crossPostIssueContext.setValues({
@@ -185,10 +185,11 @@ export function SlackCardControls(props: React.PropsWithChildren<Props>) {
 
 	if (data.isLoading)
 		return (
-			<>
+			<div className="loading-boards">
 				{assigneesInput}
 				<span>
-					<Icon className="spin" name="sync" /> Fetching boards...
+					<Icon className="spin" name="sync" />
+					Fetching boards...
 				</span>
 				<a
 					style={{ marginLeft: "5px" }}
@@ -200,7 +201,7 @@ export function SlackCardControls(props: React.PropsWithChildren<Props>) {
 				>
 					cancel
 				</a>
-			</>
+			</div>
 		);
 
 	const boardItems = (data.boards || emptyArray).map(board => ({
@@ -208,7 +209,7 @@ export function SlackCardControls(props: React.PropsWithChildren<Props>) {
 		key: board.id,
 		action: board
 	}));
-	const listItems =[];
+	const listItems = [];
 	//  data.currentBoard
 	// 	? data.currentBoard.map(list => ({
 	// 			label: list.name,
