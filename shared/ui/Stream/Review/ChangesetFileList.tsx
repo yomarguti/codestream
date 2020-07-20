@@ -28,6 +28,7 @@ export const ChangesetFileList = (props: {
 	noOnClick?: boolean;
 	showRepoLabels?: boolean;
 	checkpoint?: number;
+	withTelemetry?: boolean;
 }) => {
 	const { review, noOnClick, loading, checkpoint } = props;
 	const dispatch = useDispatch<Dispatch>();
@@ -101,6 +102,11 @@ export const ChangesetFileList = (props: {
 		visitedFiles[review.id + ":" + checkpoint][visitedKey] = NOW;
 		visitedFiles[review.id + ":" + checkpoint]._latest = index;
 		localStore.set(VISITED_REVIEW_FILES, visitedFiles);
+		if (props.withTelemetry && review.id) {
+			HostApi.instance.track("Review Diff Viewed", {
+				"Review ID": review.id
+			});
+		}
 	};
 
 	const nextFile = () => {

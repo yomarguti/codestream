@@ -968,7 +968,14 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 							</RoundedLink>
 						</Tooltip>
 						<Tooltip title="For untracked work" placement="bottom" delay={1}>
-							<RoundedLink onClick={() => selectCard({ title: "" })}>
+							<RoundedLink
+								onClick={() => {
+									selectCard({ title: "" });
+									HostApi.instance.track("StartWork Form Opened", {
+										"Opened Via": "Ad-Hoc Button"
+									});
+								}}
+							>
 								<Icon name="plus" />
 								Ad-hoc<span className="wide-text"> Work</span>
 							</RoundedLink>
@@ -1097,7 +1104,12 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 					>
 						<Row
 							key={card.key}
-							onClick={() => selectCard(card)}
+							onClick={() => {
+								selectCard(card);
+								HostApi.instance.track("StartWork Form Opened", {
+									"Opened Via": "Selected Ticket"
+								});
+							}}
 							className={card.id === props.selectedCardId ? "selected" : ""}
 						>
 							<div>

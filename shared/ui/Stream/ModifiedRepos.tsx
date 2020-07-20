@@ -13,6 +13,7 @@ import * as userSelectors from "../store/users/reducer";
 import { FileStatus } from "@codestream/protocols/api";
 import { ReposScm } from "@codestream/protocols/agent";
 import { Row } from "./CrossPostIssueControls/IssueDropdown";
+import { useDidMount } from "../utilities/hooks";
 
 const IconLabel = styled.span`
 	white-space: nowrap;
@@ -38,6 +39,7 @@ export const ModifiedRepos = (props: {
 	showModifiedAt?: boolean;
 	defaultText?: string | React.ReactNode;
 	onlyRepos?: string[];
+	withTelemetry?: boolean;
 }) => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { session, users, teams, context } = state;
@@ -84,6 +86,39 @@ export const ModifiedRepos = (props: {
 			baseSha
 		});
 	};
+
+	useDidMount(() => {
+		if (props.withTelemetry) {
+			try {
+				const reposWithModifiedFiles = modifiedRepos[teamId]
+					.map(repo => {
+						if (
+							props.onlyRepos &&
+							props.onlyRepos.length &&
+							repo.repoId &&
+							!props.onlyRepos.includes(repo.repoId)
+						)
+							return undefined;
+						return repo.modifiedFiles.filter(
+							f => props.showUntracked || f.status !== FileStatus.untracked
+						).length === 0
+							? undefined
+							: repo;
+					})
+					.filter(Boolean);
+				if (reposWithModifiedFiles && reposWithModifiedFiles.length) {
+					HostApi.instance.track("WIP Rendered", {
+						"Repo Count": reposWithModifiedFiles.length,
+						"Branch Names": reposWithModifiedFiles
+							.map(repo => (repo ? repo.branch : undefined))
+							.filter(Boolean)
+					});
+				}
+			} catch (error) {
+				console.warn("Error sending telemetry: ", error);
+			}
+		}
+	});
 
 	const nameList = ids => ids.map(id => derivedState.userNamesById[id]).join(", ");
 

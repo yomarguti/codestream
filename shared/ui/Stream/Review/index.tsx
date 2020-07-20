@@ -853,6 +853,7 @@ const BaseReview = (props: BaseReviewProps) => {
 										checkpoint={checkpoint}
 										loading={props.headerError ? false : !props.canStartReview}
 										noOnClick={!props.canStartReview}
+										withTelemetry={true}
 									/>
 								</MetaDescriptionForAssignees>
 							</Meta>

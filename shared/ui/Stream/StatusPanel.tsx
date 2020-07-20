@@ -1030,6 +1030,7 @@ export const StatusPanel = () => {
 						<ModifiedRepos
 							id={derivedState.currentUserId}
 							onlyRepos={openRepos ? openRepos.filter(_ => _.id).map(_ => _.id!) : undefined}
+							withTelemetry={true}
 							defaultText={
 								<span className="subtle">
 									As you write code, files that have changed will appear here.
