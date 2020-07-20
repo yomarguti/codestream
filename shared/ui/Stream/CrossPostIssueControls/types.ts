@@ -18,7 +18,6 @@ export interface ProviderDisplay {
 	hasCardBasedWorkflow?: boolean;
 	hasFilters?: boolean;
 	hasCustomFilters?: boolean;
-	customFilterDefault?: string;
 	customFilterExample?: string;
 	customFilterHelp?: string;
 }
@@ -46,7 +45,8 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		shortDisplayName: "Bitbucket",
 		icon: "bitbucket",
 		urlPlaceholder: "https://bitbucket.myorg.com",
-		helpUrl: "https://confluence.atlassian.com/bitbucketserver/personal-access-tokens-939515499.html"
+		helpUrl:
+			"https://confluence.atlassian.com/bitbucketserver/personal-access-tokens-939515499.html"
 	},
 	codestream: {
 		displayName: "CodeStream",
@@ -60,7 +60,6 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		cardLabel: "issue",
 		// hasFilters: true,
 		hasCustomFilters: true,
-		customFilterDefault: "assignee:@me is:open ",
 		customFilterExample: "Example: is:open milestone:jan assignee:@me",
 		customFilterHelp:
 			'See <a href="https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests">Searching issues</a> for a detailed list of qualifiers.',
@@ -75,6 +74,10 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		boardLabel: "repo",
 		listLabel: "type",
 		cardLabel: "issue",
+		hasCustomFilters: true,
+		customFilterExample: "Example: is:open milestone:jan assignee:@me",
+		customFilterHelp:
+			'See <a href="https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests">Searching issues</a> for a detailed list of qualifiers.',
 		supportsStartWork: true
 	},
 	gitlab: {
@@ -103,6 +106,10 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		listLabel: "type",
 		cardLabel: "ticket",
 		supportsStartWork: true,
+		hasCustomFilters: true,
+		customFilterExample: "Example: assignee=currentuser() AND status!=Closed",
+		customFilterHelp:
+			'See <a href="https://confluence.atlassian.com/jirasoftwareserver/advanced-searching-939938733.html">Jira Advanced Searching</a> for documentation on JQL.',
 		hasCardBasedWorkflow: true
 	},
 	jiraserver: {

@@ -30,6 +30,7 @@ interface JiraProject {
 
 interface IssueTypeDescriptor {
 	name: string;
+	iconUrl: string;
 	fields: { [name: string]: { required: boolean; hasDefaultValue: boolean } };
 }
 
@@ -55,11 +56,39 @@ interface CardSearchResponse {
 	total: number;
 }
 
+// this doesn't work because of a JIRA bug
+// https://community.atlassian.com/t5/Jira-questions/Paging-is-broken-for-user-search-queries/qaq-p/712071
+// interface UserSearchResponse {
+// 	users: JiraUser[];
+// 	nextPage?: string;
+// 	isLast: boolean;
+// 	total: number;
+// }
+
 interface CreateJiraIssueResponse {
 	id: string;
 	key: string;
 	self: string;
 }
+
+export const makeCardFromJira = (card: any, webUrl: string, parentId?: string) => {
+	const { fields = {} } = card;
+	return {
+		id: card.id,
+		url: `${webUrl}/browse/${card.key}`,
+		title: `${card.key} ${fields.summary}`,
+		modifiedAt: new Date(fields.updated).getTime(),
+		tokenId: card.key,
+		body: fields.description,
+		idList: fields.status ? fields.status.id : "",
+		listName: fields.status ? fields.status.name : "",
+		lists: card.transitions,
+		priorityName: fields.priority ? fields.priority.name : "",
+		priorityIcon: fields.priority ? fields.priority.iconUrl : "",
+		typeIcon: fields.issuetype ? fields.issuetype.iconUrl : "",
+		parentId
+	};
+};
 
 @lspProvider("jira")
 export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo> {
@@ -201,7 +230,7 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 
 	private getCompatibleBoards(meta: JiraProjectsMetaResponse) {
 		const boards = meta.projects.map(project => {
-			const board: Partial<JiraBoard> = { id: project.id, name: project.name };
+			const board: Partial<JiraBoard> = { id: project.id, name: project.name, issueTypeIcons: {} };
 
 			const issueTypes = Array.from(
 				Iterables.filterMap(project.issuetypes, type => {
@@ -215,6 +244,8 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 								attributes.required &&
 								!attributes.hasDefaultValue
 						);
+
+						board.issueTypeIcons[type.name] = type.iconUrl;
 
 						if (type.fields.assignee === undefined) {
 							board.assigneesDisabled = true;
@@ -243,9 +274,9 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 			Logger.debug("Jira: fetching cards");
 			const jiraCards: JiraCard[] = [];
 			let nextPage: string | undefined = `/rest/api/2/search?${qs.stringify({
-				jql: "assignee=currentuser() AND status!=Closed",
-				expand: "transitions",
-				fields: "summary,description,updated,subtasks,status"
+				jql: request.customFilter || "assignee=currentuser() AND status!=Closed",
+				expand: "transitions,names",
+				fields: "summary,description,updated,subtasks,status,issuetype,priority"
 			})}`;
 
 			while (nextPage !== undefined) {
@@ -283,32 +314,14 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 			const cards: ThirdPartyProviderCard[] = [];
 			jiraCards.forEach(card => {
 				const { fields = {} } = card;
-				cards.push({
-					id: card.id,
-					url: `${this._webUrl}/browse/${card.key}`,
-					title: fields.summary,
-					modifiedAt: new Date(fields.updated).getTime(),
-					tokenId: card.key,
-					body: fields.description,
-					idList: fields.status ? fields.status.id : "",
-					listName: fields.status ? fields.status.name : "",
-					lists: card.transitions
-				});
+				cards.push(makeCardFromJira(card, this._webUrl));
 				if (fields.subtasks && fields.subtasks.length) {
 					// @ts-ignore
 					fields.subtasks.forEach(subtask => {
-						const { fields = {} } = subtask;
-						cards.push({
-							id: `${card.id}:${subtask.id}`,
-							url: `${this._webUrl}/browse/${subtask.key}`,
-							title: fields.summary,
-							modifiedAt: new Date(card.fields.updated).getTime(),
-							tokenId: subtask.key,
-							body: fields.description,
-							idList: fields.status ? fields.status.id : "",
-							listName: fields.status ? fields.status.name : "",
-							lists: card.transitions
-						});
+						const tempCard = makeCardFromJira(subtask, this._webUrl, card.id);
+						// for sorting purposes
+						tempCard.modifiedAt = card.modifiedAt;
+						cards.push(tempCard);
 					});
 				}
 			});
@@ -378,11 +391,14 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 		}
 	}
 
+	// apparently there's no way to get more than 1000 users
+	// https://community.atlassian.com/t5/Jira-questions/Paging-is-broken-for-user-search-queries/qaq-p/712071
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {
 		const { body } = await this.get<JiraUser[]>(
 			`/rest/api/2/user/assignable/search?${qs.stringify({
-				project: request.boardId
+				project: request.boardId,
+				maxResults: 1000
 			})}`
 		);
 		return { users: body.map(u => ({ ...u, id: u.accountId })) };

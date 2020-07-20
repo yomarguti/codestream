@@ -40,6 +40,9 @@ import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { Modal } from "../Modal";
 import { Button } from "@codestream/webview/src/components/Button";
 import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
+import { Card } from "@codestream/webview/src/components/Card";
+import { ButtonRow } from "../StatusPanel";
+import { Dialog } from "@codestream/webview/src/components/Dialog";
 
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
@@ -417,6 +420,8 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 	const [queryOpen, setQueryOpen] = React.useState(false);
 	const [query, setQuery] = React.useState("");
 	const [reload, setReload] = React.useState(1);
+	const [testCards, setTestCards] = React.useState<any[]>([]);
+	const [loadingTest, setLoadingTest] = React.useState(false);
 
 	const getFilterLists = (providerId: string) => {
 		const prefs = derivedState.startWorkPreferences[providerId] || {};
@@ -537,6 +542,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 					}
 					startWorkIssueContext.setValues({
 						...card,
+						label: card.title,
 						providerIcon: provider.id === "codestream" ? "issue" : providerDisplay.icon,
 						providerToken: providerDisplay.icon,
 						providerName: providerDisplay.displayName,
@@ -599,7 +605,6 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 				label: "Create Custom Filter...",
 				key: "add-custom",
 				action: () => {
-					setNewCustomFilter(providerDisplay.customFilterDefault || "");
 					setNewCustomFilterName("");
 					setAddingCustomFilterForProvider(provider);
 				}
@@ -715,8 +720,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 				// if we have more than one connected provider, we don't want
 				// the label to be misleading in terms of what you're filtering on
 				if (numConnectedProviders > 1) selectedLabel = cardLabel + "s";
-				else
-					selectedLabel = `${cardLabel}s matching ${filterCustom.filters[filterCustom.selected]}`;
+				else selectedLabel = `${filterCustom.filters[filterCustom.selected]}`;
 			} else {
 				selectedLabel = `${cardLabel}s assigned to you`;
 			}
@@ -743,7 +747,6 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 						body: query ? underlineQ(card.body) : card.body,
 						icon: providerDisplay.icon && <Icon name={providerDisplay.icon} />,
 						key: "card-" + card.id,
-						modifiedAt: card.modifiedAt,
 						provider
 					})) as any)
 			);
@@ -838,6 +841,18 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 		setAddingCustomFilterForProvider(undefined);
 	};
 
+	const testCustomFilter = async () => {
+		setTestCards([]);
+		setLoadingTest(true);
+		const id = addingCustomFilterForProvider ? addingCustomFilterForProvider.id : "";
+		const response = await HostApi.instance.send(FetchThirdPartyCardsRequestType, {
+			customFilter: newCustomFilter,
+			providerId: id
+		});
+		setLoadingTest(false);
+		setTestCards(response.cards as any);
+	};
+
 	const firstLoad = cards.length == 0 && isLoading;
 	const providersLabel =
 		props.providers.length === 0 ? (
@@ -848,14 +863,20 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 			/>
 		);
 
-	if (addingCustomFilterForProvider) {
+	const closeCustomFilter = () => {
+		setAddingCustomFilterForProvider(undefined);
+		setNewCustomFilter("");
+		setNewCustomFilterName("");
+	};
+
+	const renderCustomFilter = () => {
+		if (!addingCustomFilterForProvider) return null;
 		const providerDisplay = PROVIDER_MAPPINGS[addingCustomFilterForProvider.name];
 		return (
-			<Modal verticallyCenter onClose={() => setAddingCustomFilterForProvider(undefined)}>
-				<div className="onboarding-page">
-					<form className="standard-form" onSubmit={saveCustomFilter}>
+			<Modal translucent>
+				<Dialog title="Create a Custom Filter" onClose={closeCustomFilter}>
+					<form className="standard-form">
 						<fieldset className="form-body">
-							<h1>Custom Filter</h1>
 							<input
 								type="text"
 								className="input-text control"
@@ -863,11 +884,8 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 								value={newCustomFilter}
 								onChange={e => setNewCustomFilter(e.target.value)}
 								placeholder="Enter Custom Filter"
-								style={{ marginBottom: "5px" }}
 							/>
-							<div style={{ margin: "10px 0" }} className="subtle">
-								{providerDisplay.customFilterExample}
-							</div>
+							<div style={{ margin: "10px 0" }}>{providerDisplay.customFilterExample}</div>
 							<span dangerouslySetInnerHTML={{ __html: providerDisplay.customFilterHelp || "" }} />
 							<input
 								type="text"
@@ -875,21 +893,66 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 								value={newCustomFilterName}
 								onChange={e => setNewCustomFilterName(e.target.value)}
 								placeholder="Name Your Custom Filter (optional)"
-								style={{ margin: "20px 0 5px 0" }}
+								style={{ margin: "20px 0 15px 0" }}
 							/>
-							<div style={{ textAlign: "center", paddingTop: "30px" }}>
-								<Button onClick={saveCustomFilter}>
+							<ButtonRow>
+								<Button
+									disabled={newCustomFilter.length == 0}
+									variant="secondary"
+									isLoading={loadingTest}
+									onClick={testCustomFilter}
+								>
+									&nbsp;&nbsp;&nbsp;&nbsp;Test&nbsp;&nbsp;&nbsp;&nbsp;
+								</Button>
+								<Button disabled={newCustomFilter.length == 0} onClick={saveCustomFilter}>
 									&nbsp;&nbsp;&nbsp;&nbsp;Save&nbsp;&nbsp;&nbsp;&nbsp;
 								</Button>
-							</div>
+							</ButtonRow>
+							{testCards.length > 0 && (
+								<div style={{ width: "460px", margin: "20px -20px 0 -20px" }}>
+									<h3
+										style={{
+											padding: "20px 0 0 20px",
+											borderTop: "1px solid var(--base-border-color)"
+										}}
+									>
+										{testCards.length} total results
+									</h3>
+									{testCards.map(card => (
+										<Row
+											key={card.key}
+											onClick={() => selectCard(card)}
+											className={card.id === props.selectedCardId ? "selected" : ""}
+										>
+											<div>
+												{card.parentId && (
+													<span style={{ display: "inline-block", width: "20px" }}>&nbsp;</span>
+												)}
+												{card.id === isLoadingCard ? (
+													<Icon name="sync" className="spin" />
+												) : card.typeIcon ? (
+													<img className="issue-type-icon" src={card.typeIcon} />
+												) : (
+													card.icon
+												)}
+											</div>
+											<div>
+												{card.title}
+												<span className="subtle">{card.body}</span>
+											</div>
+										</Row>
+									))}
+								</div>
+							)}
 						</fieldset>
 					</form>
-				</div>
+				</Dialog>
 			</Modal>
 		);
-	}
+	};
 	return (
 		<>
+			{renderCustomFilter()}
 			<WideStatusSection id="start-work-div">
 				<div className="instructions">
 					<Icon name="light-bulb" />
@@ -910,7 +973,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 								Ad-hoc<span className="wide-text"> Work</span>
 							</RoundedLink>
 						</Tooltip>
-						{cards.length > 0 && (
+						{(cards.length > 0 || query) && (
 							<RoundedSearchLink className={queryOpen ? "" : "collapsed"}>
 								<Icon
 									name="search"
@@ -981,7 +1044,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 							)}
 							from{" "}
 							<Filter
-								title="Select Providers"
+								title={<>{isLoading && <Icon name="sync" className="spin" />}Select Providers</>}
 								selected={"providersLabel"}
 								labels={{ providersLabel }}
 								items={[{ label: "-" }, ...menuItems.services]}
@@ -1038,10 +1101,16 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 							className={card.id === props.selectedCardId ? "selected" : ""}
 						>
 							<div>
+								{card.parentId && (
+									<span style={{ display: "inline-block", width: "20px" }}>&nbsp;</span>
+								)}
+								{card.id === props.selectedCardId && (
+									<Icon name="arrow-right" className="selected-icon" />
+								)}
 								{card.id === isLoadingCard ? (
 									<Icon name="sync" className="spin" />
-								) : card.id === props.selectedCardId ? (
-									<Icon name="arrow-right" />
+								) : card.typeIcon ? (
+									<img className="issue-type-icon" src={card.typeIcon} />
 								) : (
 									card.icon
 								)}
@@ -1104,6 +1173,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 
 export const Row = styled.div`
 	display: flex;
+	position: relative;
 	&:not(.no-hover) {
 		cursor: pointer;
 	}
@@ -1114,6 +1184,7 @@ export const Row = styled.div`
 	padding: 0 15px 0 20px;
 	&.selected {
 		color: var(--text-color-highlight);
+		font-weight: bold;
 	}
 	&.wide {
 		padding: 0;
@@ -1180,6 +1251,14 @@ export const Row = styled.div`
 	// matches for search query
 	span > u > b {
 		color: var(--text-color-highlight);
+	}
+	.issue-type-icon {
+		vertical-align: -3px;
+	}
+	.selected-icon {
+		position: absolute !important;
+		left: 2px;
+		top: 3px;
 	}
 `;
 

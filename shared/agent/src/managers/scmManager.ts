@@ -201,10 +201,12 @@ export class ScmManager {
 
 		try {
 			repoPath = (await git.getRepoRoot(uri.fsPath)) || "";
-			if (repoPath !== undefined) {
+			if (repoPath.length) {
 				result = await git.getBranches(repoPath);
 				const repo = await git.getRepositoryByFilePath(repoPath);
 				repoId = repo ? repo.id || "" : "";
+			} else {
+				gitError = `Unable to locate repo for ${uri.fsPath}`;
 			}
 		} catch (ex) {
 			gitError = ex.toString();

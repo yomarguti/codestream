@@ -24,6 +24,7 @@ import { CSJiraServerProviderInfo } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
 import { Iterables, log, lspProvider } from "../system";
 import { ThirdPartyIssueProviderBase } from "./provider";
+import { makeCardFromJira } from "./jira";
 
 export type jsonCallback = (
 	err?: { statusCode: number; data?: any },
@@ -282,9 +283,9 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 			Logger.debug("Jira: fetching cards");
 			const jiraCards: JiraCard[] = [];
 			let nextPage: string | undefined = `/rest/api/2/search?${qs.stringify({
-				jql: "assignee=currentuser() AND status!=Closed",
-				expand: "transitions",
-				fields: "summary,description,updated,subtasks,status"
+				jql: request.customFilter || "assignee=currentuser() AND status!=Closed",
+				expand: "transitions,names",
+				fields: "summary,description,updated,subtasks,status,issuetype,priority"
 			})}`;
 
 			while (nextPage !== undefined) {
@@ -320,32 +321,14 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 			const cards: ThirdPartyProviderCard[] = [];
 			jiraCards.forEach(card => {
 				const { fields = {} } = card;
-				cards.push({
-					id: card.id,
-					url: `${this.baseUrl}/browse/${card.key}`,
-					title: fields.summary,
-					modifiedAt: new Date(fields.updated).getTime(),
-					tokenId: card.key,
-					body: fields.description,
-					idList: fields.status ? fields.status.id : "",
-					listName: fields.status ? fields.status.name : "",
-					lists: card.transitions
-				});
+				cards.push(makeCardFromJira(card, this.baseUrl));
 				if (fields.subtasks && fields.subtasks.length) {
 					// @ts-ignore
 					fields.subtasks.forEach(subtask => {
-						const { fields = {} } = subtask;
-						cards.push({
-							id: `${card.id}:${subtask.id}`,
-							url: `${this.baseUrl}/browse/${subtask.key}`,
-							title: fields.summary,
-							modifiedAt: new Date(card.fields.updated).getTime(),
-							tokenId: subtask.key,
-							body: fields.description,
-							idList: fields.status ? fields.status.id : "",
-							listName: fields.status ? fields.status.name : "",
-							lists: card.transitions
-						});
+						const tempCard = makeCardFromJira(subtask, this.baseUrl, card.id);
+						// for sorting purposes
+						tempCard.modifiedAt = card.modifiedAt;
+						cards.push(tempCard);
 					});
 				}
 			});
@@ -421,6 +404,8 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 		}
 	}
 
+	// apparently there's no way to get more than 1000 users
+	// https://community.atlassian.com/t5/Jira-questions/Paging-is-broken-for-user-search-queries/qaq-p/712071
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {
 		const board = (this.boards || []).find(board => board.id === request.boardId);
@@ -429,7 +414,8 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 		}
 		const result = (await this._callWithOauth(
 			`/rest/api/2/user/assignable/search?${qs.stringify({
-				project: board.key
+				project: board.key,
+				maxResults: 1000
 			})}`
 		)) as JiraUser[];
 		return { users: result.map(u => ({ ...u, id: u.accountId })) };

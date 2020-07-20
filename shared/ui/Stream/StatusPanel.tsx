@@ -76,7 +76,8 @@ const CardTitle = styled.span`
 	line-height: 20px;
 	display: inline-block;
 	width: 100%;
-	.icon {
+	.icon,
+	.ticket-icon {
 		margin-left: -28px;
 		display: inline-block;
 		transform: scale(1.25);
@@ -324,6 +325,18 @@ const BranchDiagram = styled.div`
 }
 `;
 
+const Priority = styled.div`
+	// margin: 5px 0;
+	margin: -5px 0 20px 28px;
+	img {
+		width: 16px;
+		height: 16px;
+		margin-left: 5px;
+		transform: scale(1.25);
+		vertical-align: -2px;
+	}
+`;
+
 export interface IStartWorkIssueContext {
 	setValues(values: any): void;
 	card?: any;
@@ -513,12 +526,21 @@ export const StatusPanel = () => {
 			setRepoUri(uri);
 		}
 
-		const branchInfo = await HostApi.instance.send(GetBranchesRequestType, {
-			// stupid TS
+		let branchInfo = await HostApi.instance.send(GetBranchesRequestType, {
 			uri: uri || derivedState.textEditorUri || ""
 		});
 
-		if (branchInfo.scm) {
+		// didn't find scm info for the current editor URI
+		// try to get it from one of the open repos in your editor
+		if (!branchInfo.scm || branchInfo.error) {
+			if (response.repositories && response.repositories.length) {
+				branchInfo = await HostApi.instance.send(GetBranchesRequestType, {
+					uri: response.repositories[0].folder.uri
+				});
+			}
+		}
+
+		if (branchInfo.scm && !branchInfo.error) {
 			setBranches(branchInfo.scm.branches);
 			setFromBranch("");
 			setCurrentBranch(branchInfo.scm.current);
@@ -768,7 +790,7 @@ export const StatusPanel = () => {
 				<div style={{ height: "5px" }} />
 			</PanelHeader>
 			{configureBranchNames && (
-				<Modal translucent onClose={() => setConfigureBranchNames(false)}>
+				<Modal translucent verticallyCenter>
 					<ConfigureBranchNames onClose={() => setConfigureBranchNames(false)} />
 				</Modal>
 			)}
@@ -781,9 +803,11 @@ export const StatusPanel = () => {
 									<StatusInput>
 										{card.id ? (
 											<CardTitle>
-												{card.providerIcon && (
+												{card.typeIcon ? (
+													<img className="ticket-icon" src={card.typeIcon} />
+												) : card.providerIcon ? (
 													<Icon className="ticket-icon" name={card.providerIcon} />
-												)}
+												) : null}
 												{card.label}
 												{card.url && (
 													<div
@@ -794,7 +818,7 @@ export const StatusPanel = () => {
 															})
 														}
 													>
-														<Icon className="clickable" name="globe" />
+														<Icon title="Open on web" className="clickable" name="globe" />
 													</div>
 												)}
 												{card.providerId === "codestream" && (
@@ -827,6 +851,13 @@ export const StatusPanel = () => {
 											</>
 										)}
 									</StatusInput>
+									{(card.priorityName || card.priorityIcon) && (
+										<Priority>
+											<b>Priority: </b>
+											{card.priorityName}
+											{card.priorityIcon && <img src={card.priorityIcon} />}
+										</Priority>
+									)}
 									{card && card.body && (
 										<CardDescription>
 											<MarkdownText text={card.body.replace(/\[Open in IDE\].*/, "")} />

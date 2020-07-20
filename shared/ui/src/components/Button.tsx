@@ -109,7 +109,7 @@ export const ButtonRoot = styled.button<ButtonProps>(props => {
 	return `
 	width: ${props.fillParent ? "100%" : "max-content"};
 	${getColors(props.variant)}
-	cursor: ${props.isLoading ? "default" : "pointer"};
+	cursor: ${props.isLoading || props.disabled ? "default" : "pointer"};
 	display: inline-flex;
 	align-items: center;
 	justify-content: center ${props.isLoading ? "!important" : ""};
@@ -119,6 +119,7 @@ export const ButtonRoot = styled.button<ButtonProps>(props => {
 	// white-space: nowrap;
 	z-index: 0;
 	text-shadow: none;
+	opacity: ${props.disabled ? 0.5 : 1};
 
 	${getFontSize(props.size, props.variant)}
 	${getPadding(props.size, props.variant)}

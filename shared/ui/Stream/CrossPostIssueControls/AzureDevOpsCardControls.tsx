@@ -153,10 +153,11 @@ export function AzureDevOpsCardControls(
 
 	if (data.isLoading) {
 		return (
-			<>
+			<div className="loading-boards">
 				{assigneesInput}
 				<span>
-					<Icon className="spin" name="sync" /> Syncing projects...
+					<Icon className="spin" name="sync" />
+					Syncing projects...
 				</span>
 				<a
 					style={{ marginLeft: "5px" }}
@@ -168,7 +169,7 @@ export function AzureDevOpsCardControls(
 				>
 					cancel
 				</a>
-			</>
+			</div>
 		);
 	}
 

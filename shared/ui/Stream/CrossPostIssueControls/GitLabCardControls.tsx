@@ -143,10 +143,11 @@ export function GitLabCardControls(
 
 	if (data.isLoading)
 		return (
-			<>
+			<div className="loading-boards">
 				{assigneesInput}
 				<span>
-					<Icon className="spin" name="sync" /> Fetching repositories...
+					<Icon className="spin" name="sync" />
+					Fetching repositories...
 				</span>
 				<a
 					style={{ marginLeft: "5px" }}
@@ -158,7 +159,7 @@ export function GitLabCardControls(
 				>
 					cancel
 				</a>
-			</>
+			</div>
 		);
 
 	return (

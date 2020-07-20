@@ -185,10 +185,11 @@ export function AsanaCardControls(
 
 	if (data.isLoading)
 		return (
-			<>
+			<div className="loading-boards">
 				{assigneesInput}
 				<span>
-					<Icon className="spin" name="sync" /> Fetching boards...
+					<Icon className="spin" name="sync" />
+					Fetching boards...
 				</span>
 				<a
 					style={{ marginLeft: "5px" }}
@@ -200,7 +201,7 @@ export function AsanaCardControls(
 				>
 					cancel
 				</a>
-			</>
+			</div>
 		);
 
 	const boardItems = (data.boards || emptyArray).map(board => ({
