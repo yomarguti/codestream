@@ -1014,31 +1014,14 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 						<div style={{ paddingBottom: "5px" }}>
 							Show{" "}
 							{canFilter ? (
-								<Tooltip
-									defaultVisible
-									trigger={["click"]}
-									title={
-										cards.length > 50 ? (
-											<div>
-												Too many items?
-												<br />
-												Filter them here
-											</div>
-										) : (
-											undefined
-										)
-									}
-									placement="bottom"
-								>
-									<Filter
-										title="Filter Items"
-										selected={"selectedLabel"}
-										labels={{ selectedLabel }}
-										items={[{ label: "-" }, ...menuItems.filters]}
-										align="bottomLeft"
-										dontCloseOnSelect
-									/>
-								</Tooltip>
+								<Filter
+									title="Filter Items"
+									selected={"selectedLabel"}
+									labels={{ selectedLabel }}
+									items={[{ label: "-" }, ...menuItems.filters]}
+									align="bottomLeft"
+									dontCloseOnSelect
+								/>
 							) : (
 								selectedLabel + " "
 							)}

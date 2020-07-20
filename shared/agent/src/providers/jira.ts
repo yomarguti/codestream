@@ -73,6 +73,10 @@ interface CreateJiraIssueResponse {
 
 export const makeCardFromJira = (card: any, webUrl: string, parentId?: string) => {
 	const { fields = {} } = card;
+	const subtasks =
+		fields.subtasks && fields.subtasks.length
+			? fields.subtasks.map((subtask: any) => makeCardFromJira(subtask, webUrl, card.id))
+			: [];
 	return {
 		id: card.id,
 		url: `${webUrl}/browse/${card.key}`,
@@ -86,6 +90,7 @@ export const makeCardFromJira = (card: any, webUrl: string, parentId?: string) =
 		priorityName: fields.priority ? fields.priority.name : "",
 		priorityIcon: fields.priority ? fields.priority.iconUrl : "",
 		typeIcon: fields.issuetype ? fields.issuetype.iconUrl : "",
+		subtasks,
 		parentId
 	};
 };
@@ -269,6 +274,8 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
 		// /rest/api/2/search?jql=assignee=currentuser()
 		// https://developer.atlassian.com/server/jira/platform/jira-rest-api-examples/
+		// why don't we get assignees for subtasks?
+		// https://community.atlassian.com/t5/Jira-questions/Can-you-use-the-JIRA-REST-API-to-show-more-subtask-fields/qaq-p/816963
 
 		try {
 			Logger.debug("Jira: fetching cards");
@@ -276,7 +283,7 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 			let nextPage: string | undefined = `/rest/api/2/search?${qs.stringify({
 				jql: request.customFilter || "assignee=currentuser() AND status!=Closed",
 				expand: "transitions,names",
-				fields: "summary,description,updated,subtasks,status,issuetype,priority"
+				fields: "summary,description,updated,subtasks,status,issuetype,priority,assignee"
 			})}`;
 
 			while (nextPage !== undefined) {
@@ -312,19 +319,7 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 
 			Logger.debug(`Jira: total cards: ${jiraCards.length}`);
 			const cards: ThirdPartyProviderCard[] = [];
-			jiraCards.forEach(card => {
-				const { fields = {} } = card;
-				cards.push(makeCardFromJira(card, this._webUrl));
-				if (fields.subtasks && fields.subtasks.length) {
-					// @ts-ignore
-					fields.subtasks.forEach(subtask => {
-						const tempCard = makeCardFromJira(subtask, this._webUrl, card.id);
-						// for sorting purposes
-						tempCard.modifiedAt = card.modifiedAt;
-						cards.push(tempCard);
-					});
-				}
-			});
+			jiraCards.forEach(card => cards.push(makeCardFromJira(card, this._webUrl)));
 			return { cards };
 		} catch (error) {
 			debugger;

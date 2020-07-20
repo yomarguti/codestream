@@ -23,8 +23,8 @@ import {
 import { CSJiraServerProviderInfo } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
 import { Iterables, log, lspProvider } from "../system";
-import { ThirdPartyIssueProviderBase } from "./provider";
 import { makeCardFromJira } from "./jira";
+import { ThirdPartyIssueProviderBase } from "./provider";
 
 export type jsonCallback = (
 	err?: { statusCode: number; data?: any },
@@ -288,7 +288,7 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 			let nextPage: string | undefined = `/rest/api/2/search?${qs.stringify({
 				jql: request.customFilter || "assignee=currentuser() AND status!=Closed",
 				expand: "transitions,names",
-				fields: "summary,description,updated,subtasks,status,issuetype,priority"
+				fields: "summary,description,updated,subtasks,status,issuetype,priority,assignee"
 			})}`;
 
 			while (nextPage !== undefined) {
@@ -322,19 +322,7 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 
 			Logger.debug(`Jira: total cards: ${jiraCards.length}`);
 			const cards: ThirdPartyProviderCard[] = [];
-			jiraCards.forEach(card => {
-				const { fields = {} } = card;
-				cards.push(makeCardFromJira(card, this.baseUrl));
-				if (fields.subtasks && fields.subtasks.length) {
-					// @ts-ignore
-					fields.subtasks.forEach(subtask => {
-						const tempCard = makeCardFromJira(subtask, this.baseUrl, card.id);
-						// for sorting purposes
-						tempCard.modifiedAt = card.modifiedAt;
-						cards.push(tempCard);
-					});
-				}
-			});
+			jiraCards.forEach(card => cards.push(makeCardFromJira(card, this.baseUrl)));
 			return { cards };
 		} catch (error) {
 			debugger;
