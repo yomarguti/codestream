@@ -1031,7 +1031,7 @@ class ReviewForm extends React.Component<Props, State> {
 
 		return (
 			<div className="related">
-				<div className="related-label">This Update Addresses</div>
+				<div className="related-label">This Update Addresses Change Request</div>
 				<MetaDescriptionForAssignees>
 					{openIssues.map(codemark => {
 						if (codemark.status === CodemarkStatus.Closed) return null;
