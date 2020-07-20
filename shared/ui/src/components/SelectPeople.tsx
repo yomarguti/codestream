@@ -73,7 +73,11 @@ class SelectPeople extends React.Component<Props, State> {
 				checked: this.props.multiSelect ? selected : undefined,
 				value: person.username,
 				key: person.id,
-				icon: <Headshot display="inline-block" person={person} />,
+				icon: (
+					<span style={{ paddingLeft: "5px" }}>
+						<Headshot size={20} display="inline-block" person={person} />
+					</span>
+				),
 				action: () => onChange(person)
 			};
 		}) as any;
