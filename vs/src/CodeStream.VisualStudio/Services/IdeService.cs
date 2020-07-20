@@ -1,4 +1,4 @@
-﻿using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Logging.Instrumentation;
@@ -229,7 +229,7 @@ namespace CodeStream.VisualStudio.Services {
 			var span = new SnapshotSpan(wpfTextView.TextSnapshot, Span.FromBounds(lines.Item1.Start, lines.Item2.End));
 			if (wpfTextView.InLayout) return null;
 
-			wpfTextView.ViewScroller.EnsureSpanVisible(span, EnsureSpanVisibleOptions.AlwaysCenter);
+			wpfTextView.ViewScroller.EnsureSpanVisible(span, EnsureSpanVisibleOptions.MinimumScroll);
 			return span;
 		}
 
