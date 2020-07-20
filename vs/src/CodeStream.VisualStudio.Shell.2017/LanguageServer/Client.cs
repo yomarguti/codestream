@@ -164,20 +164,25 @@ namespace CodeStream.VisualStudio.Shell._2017.LanguageServer {
 
 		public async Task OnLoadedAsync() {
 			try {
-				using (Log.CriticalOperation($"{nameof(OnLoadedAsync)}")) {
+				var prefix = $"{nameof(OnLoadedAsync)}";
+				using (Log.CriticalOperation(prefix)) {
 					// ReSharper disable once PossibleNullReferenceException
 					await StartAsync?.InvokeAsync(this, EventArgs.Empty);
+					Log.Verbose($"{prefix} StartAsync done");
 					_hasStartedOnce = true;
 					Interlocked.Exchange(ref _state, 1);
 
 					if (_solutionEventListener == null) {
 						var componentModel = ServiceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+						Log.Verbose($"{prefix} componentModel isNull={componentModel == null}");
 						Assumes.Present(componentModel);
+						Log.Verbose($"{prefix} componentModel present");
 
 						_solutionEventListener = componentModel.GetService<ISolutionEventsListener>();
+						Log.Verbose($"{prefix} _solutionEventListener isNull={_solutionEventListener == null}...");
 						_solutionEventListener.Closed += SolutionOrFolder_Closed;
 						_solutionEventListener.Opened += SolutionOrFolder_Opened;
-						Log.Verbose($"set {nameof(_solutionEventListener)}");
+						Log.Verbose($"{prefix} {nameof(_solutionEventListener)} present");
 					}
 				}
 			}
