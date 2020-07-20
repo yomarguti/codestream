@@ -807,6 +807,13 @@ const describeStatusChange = (action: CSReviewStatus) => {
 	}
 };
 
+const toStatusTelemetryNames = (status: CSReviewStatus) => {
+	if (status === "approved") return "Approved";
+	if (status === "rejected") return "Rejected";
+	if (status === "open") return "Reopened";
+	return undefined;
+};
+
 export const setReviewStatus = (reviewId: string, status: CSReviewStatus) => async dispatch => {
 	try {
 		const response = await HostApi.instance.send(UpdateReviewRequestType, {
@@ -821,6 +828,14 @@ export const setReviewStatus = (reviewId: string, status: CSReviewStatus) => asy
 				`/me ${describeStatusChange(status)} this review`
 			)
 		);
+		try {
+			HostApi.instance.track("Review State Updated", {
+				"Review ID": reviewId,
+				"Review State": toStatusTelemetryNames(status)
+			});
+		} catch (err) {
+			logError(`failed to track review status change: ${err}`, { reviewId, status });
+		}
 
 		return dispatch(updateReviews([response.review]));
 	} catch (error) {
