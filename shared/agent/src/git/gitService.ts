@@ -744,6 +744,27 @@ export class GitService implements IGitService, Disposable {
 	}
 
 	async createBranch(repoPath: string, branch: string, fromRef?: string): Promise<undefined> {
+		// attempt to replace illegal chars according to
+		// https://stackoverflow.com/questions/3651860/which-characters-are-illegal-within-a-branch-name
+		if (branch) {
+			branch = branch
+				// 1.
+				.replace(/\/\./g, "/")
+				// 2. ignored since --allow-onelevel might be set
+				// 3.
+				.replace(/\.\.+/g, ".")
+				// 4 & 5 & 10
+				.replace(/[\?\*\[\ \~\:\^\\]/g, "-")
+				// 6.
+				.replace(/^\//, "")
+				.replace(/\/$/, "")
+				.replace(/\/\/+/g, "/")
+				// 7.
+				.replace(/\.$/, "")
+				// 8.
+				.replace(/\@\{/g, "at{");
+			// 9. just throw the error, no idea what to replace it with
+		}
 		if (fromRef) await git({ cwd: repoPath }, "checkout", "-b", branch, fromRef);
 		else await git({ cwd: repoPath }, "checkout", "-b", branch);
 		return;
