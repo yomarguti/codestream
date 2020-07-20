@@ -72,7 +72,6 @@ export const NotificationsPanel = props => {
 							selectedValue={derivedState.notificationPreference}
 							onChange={handleChange}
 							loading={loading}
-							disabled={!derivedState.emailSupported}
 						>
 							<Radio value="all">Automatically follow all new codemarks and reviews</Radio>
 							<Radio value="involveMe">
@@ -89,7 +88,6 @@ export const NotificationsPanel = props => {
 									selectedValue={derivedState.notificationDeliveryPreference}
 									onChange={handleChangeDelivery}
 									loading={loadingDelivery}
-									disabled={!derivedState.emailSupported}
 								>
 									<Radio value={CSNotificationDeliveryPreference.All}>Email &amp; Desktop</Radio>
 									<Radio value={CSNotificationDeliveryPreference.EmailOnly}>Email only</Radio>
