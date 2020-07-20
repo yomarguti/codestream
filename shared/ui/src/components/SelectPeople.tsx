@@ -57,7 +57,7 @@ class SelectPeople extends React.Component<Props, State> {
 	};
 
 	render() {
-		const { value, title, children, teamMembers, onChange, labelExtras = {} } = this.props;
+		const { value, title, children, teamMembers, onChange } = this.props;
 		const items = teamMembers.map(person => {
 			const selected = value.find(v => {
 				if (typeof v === "string") return v === person.email;
@@ -65,15 +65,15 @@ class SelectPeople extends React.Component<Props, State> {
 			})
 				? true
 				: false;
-			const label = person.fullName
-				? `${person.fullName} (@${person.username})`
-				: `${person.username} (${person.email})`;
+			const { fullName = "", username = "", email = "" } = person;
 			return {
-				label: label + (labelExtras[person.id] ? " - " + labelExtras[person.id] : ""),
-				searchLabel: label,
+				label: fullName ? username : email,
+				subtle: fullName || username,
+				searchLabel: [fullName, username, email].join(":"),
 				checked: this.props.multiSelect ? selected : undefined,
 				value: person.username,
 				key: person.id,
+				icon: <Headshot display="inline-block" person={person} />,
 				action: () => onChange(person)
 			};
 		}) as any;

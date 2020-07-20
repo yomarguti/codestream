@@ -1943,6 +1943,11 @@ class ReviewForm extends React.Component<Props, State> {
 					searchLabel: email,
 					checked: this.state.reviewerEmails.includes(email),
 					key: email,
+					icon: (
+						<span style={{ paddingLeft: "5px" }}>
+							<Headshot size={20} display="inline-block" person={{ email }} />
+						</span>
+					),
 					action: () => this.toggleReviewerEmail(email)
 				});
 			});
@@ -2078,7 +2083,6 @@ class ReviewForm extends React.Component<Props, State> {
 								value={reviewerEmails}
 								onChange={this.toggleReviewer}
 								multiSelect={true}
-								labelExtras={coAuthorLabels}
 								extraItems={unregisteredAuthorItems}
 							>
 								<span className="icon-button">
@@ -2119,7 +2123,6 @@ class ReviewForm extends React.Component<Props, State> {
 								value={reviewerEmails}
 								onChange={this.toggleReviewer}
 								multiSelect={true}
-								labelExtras={coAuthorLabels}
 								extraItems={unregisteredAuthorItems}
 							>
 								<span className="icon-button">

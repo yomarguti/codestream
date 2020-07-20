@@ -320,10 +320,10 @@ export default class Menu extends Component {
 				onClick={event => this.handleClickItem(event, item)}
 			>
 				{item.floatRight && <span className="float-right">{item.floatRight.label}</span>}
-				{item.icon && <span className="icon">{item.icon}</span>}
 				{item.checked === false && <span className="checkmark"> </span>}
 				{item.checked === true && <span className="checkmark">✔</span>}
 				{item.checked === "dot" && <span className="checkmark">&middot;</span>}
+				{item.icon && <span className="icon">{item.icon}</span>}
 				{item.submenu && <Icon name="triangle-right" className="triangle-right" />}
 				{item.label && <span className="label">{item.label}</span>}
 				{item.subtle && <span className="subtle">{item.subtle}</span>}
