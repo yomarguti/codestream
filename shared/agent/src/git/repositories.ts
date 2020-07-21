@@ -160,7 +160,9 @@ export class GitRepositories {
 				removed: []
 			} as WorkspaceFoldersChangeEvent;
 
-			Logger.log(`Starting repository search in ${e.added.length} folders`);
+			Logger.log(
+				`onWorkspaceFoldersChanged: Starting repository search in ${e.added.length} folders`
+			);
 		}
 
 		let allAddedRepositories: GitRepository[] = [];
@@ -192,7 +194,7 @@ export class GitRepositories {
 				const repoMatches = await this.session.api.matchRepos(repoInfo);
 				for (let i = 0; i < repoMatches.repos.length; i++) {
 					Logger.debug(
-						`Git repo ${orderedUnassignedRepos[i].path} matched to ${repoMatches.repos[i].id}:${repoMatches.repos[i].name}`
+						`onWorkspaceFoldersChanged: Git repo ${orderedUnassignedRepos[i].path} matched to ${repoMatches.repos[i].id}:${repoMatches.repos[i].name}`
 					);
 					orderedUnassignedRepos[i].setKnownRepository(repoMatches.repos[i]);
 				}
@@ -284,16 +286,21 @@ export class GitRepositories {
 				name: path.basename(repo.path)
 			});
 
-			Logger.debug(`repositorySearch found ${repositories.length} repos`);
+			Logger.debug(
+				`setKnownRepositoryCore: repositorySearch found ${
+					repositories.length
+				} repos (${repositories?.map(_ => _.path)})`
+			);
+
 			for (const r of repositories) {
 				if (!r.id) {
-					Logger.debug(`Skipping ${r.path} (no id)`);
+					Logger.debug(`setKnownRepositoryCore: Skipping ${r.path} (no id)`);
 					continue;
 				}
 
 				this._repositoryTree.set(r.path, r);
 				found[r.id] = true;
-				Logger.debug(`Added ${r.path} id=${r.id}`);
+				Logger.debug(`setKnownRepositoryCore: Added ${r.path} id=${r.id}`);
 			}
 		}
 		return found;
@@ -301,7 +308,7 @@ export class GitRepositories {
 
 	private async repositorySearchByDocument(document: { uri: string }) {
 		const dir = path.dirname(document.uri.toString());
-		Logger.log(`Starting repository search by file in ${dir} folder`);
+		Logger.log(`repositorySearchByDocument: Starting repository search by file in ${dir} folder`);
 		let found;
 		if (URI.parse(document.uri).scheme === "file") {
 			// Search for and add all repositories (nested and/or submodules)
@@ -310,7 +317,11 @@ export class GitRepositories {
 				name: path.basename(document.uri)
 			});
 
-			Logger.log(`repositorySearch found ${repositories.length} repos`);
+			Logger.log(
+				`repositorySearchByDocument: repositorySearch found ${
+					repositories.length
+				} repos (${repositories?.map(_ => _.path)})`
+			);
 			found = repositories && repositories.length;
 			for (const r of repositories) {
 				this._repositoryTree.set(r.path, r);
@@ -548,7 +559,9 @@ export class GitRepositories {
 
 		const remoteToRepoMap = await this.getKnownRepositories();
 
-		Logger.log(`Searching for repositories (depth=${depth}) in '${folderUri.fsPath}' ...`);
+		Logger.log(
+			`repositorySearch: Searching for repositories (depth=${depth}) in '${folderUri.fsPath}' ...`
+		);
 
 		const start = process.hrtime();
 
@@ -559,7 +572,7 @@ export class GitRepositories {
 			rootPath = await this._git.getRepoRoot(folderUri.fsPath);
 		} catch {}
 		if (rootPath) {
-			Logger.log(`Repository found in '${rootPath}'`);
+			Logger.log(`repositorySearch: Repository found in '${rootPath}'`);
 			const repo = new GitRepository(rootPath, true, folder, remoteToRepoMap, initializing);
 			await repo.ensureSearchComplete();
 			repositories.push(repo);
@@ -567,7 +580,7 @@ export class GitRepositories {
 
 		if (depth <= 0) {
 			Logger.log(
-				`Searching for repositories (depth=${depth}) in '${
+				`repositorySearch: Searching for repositories (depth=${depth}) in '${
 					folderUri.fsPath
 				}' took ${Strings.getDurationMilliseconds(start)} ms`
 			);
@@ -617,14 +630,14 @@ export class GitRepositories {
 				/EPERM: operation not permitted, scandir/i.test(ex.message || "")
 			) {
 				Logger.log(
-					`Searching for repositories (depth=${depth}) in '${folderUri.fsPath}' FAILED${
-						ex.message ? ` (${ex.message})` : ""
-					}`
+					`repositorySearch: Searching for repositories (depth=${depth}) in '${
+						folderUri.fsPath
+					}' FAILED${ex.message ? ` (${ex.message})` : ""}`
 				);
 			} else {
 				Logger.error(
 					ex,
-					`Searching for repositories (depth=${depth}) in '${folderUri.fsPath}' FAILED`
+					`repositorySearch: Searching for repositories (depth=${depth}) in '${folderUri.fsPath}' FAILED`
 				);
 			}
 
@@ -642,14 +655,14 @@ export class GitRepositories {
 			} catch {}
 			if (!rp) continue;
 
-			Logger.log(`Repository found in '${rp}'`);
+			Logger.log(`repositorySearch: Repository found in '${rp}'`);
 			const repo = new GitRepository(rp, false, folder, remoteToRepoMap, initializing);
 			await repo.ensureSearchComplete();
 			repositories.push(repo);
 		}
 
 		Logger.log(
-			`Searching for repositories (depth=${depth}) in '${
+			`repositorySearch: Searching for repositories (depth=${depth}) in '${
 				folderUri.fsPath
 			}' took ${Strings.getDurationMilliseconds(start)} ms`
 		);
