@@ -8,7 +8,7 @@ import styled from "styled-components";
 import { Button } from "../src/components/Button";
 import { setUserStatus, setUserPreference, connectProvider } from "./actions";
 import { openPanel, setNewPostEntry, setCurrentCodemark } from "../store/context/actions";
-import { CSMe } from "@codestream/protocols/api";
+import { CSMe, FileStatus } from "@codestream/protocols/api";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { useDidMount } from "../utilities/hooks";
 import {
@@ -397,6 +397,9 @@ export const StatusPanel = () => {
 			teamName: team.name,
 			currentUserId: state.session.userId!,
 			currentUserName: state.users[state.session.userId!].username,
+			modifiedReposByTeam: currentUser.modifiedRepos
+				? currentUser.modifiedRepos[teamId]
+				: undefined,
 			webviewFocused: state.context.hasFocus,
 			textEditorUri: state.editorContext.textEditorUri,
 			branchMaxLength: settings.branchMaxLength || 40,
@@ -513,7 +516,7 @@ export const StatusPanel = () => {
 			.substr(0, derivedState.branchMaxLength);
 	};
 
-	const getBranches = async (uri?: string) => {
+	const getBranches = async (uri?: string): Promise<{ openRepos?: ReposScm[] }> => {
 		const response = await HostApi.instance.send(GetReposScmRequestType, {
 			inEditorOnly: true
 		});
@@ -521,7 +524,11 @@ export const StatusPanel = () => {
 			setOpenRepos(response.repositories);
 		}
 
-		if (!uri && !derivedState.textEditorUri) return;
+		if (!uri && !derivedState.textEditorUri) {
+			return {
+				openRepos: response ? response.repositories : []
+			};
+		}
 		if (uri) {
 			setRepoUri(uri);
 		}
@@ -549,10 +556,34 @@ export const StatusPanel = () => {
 			const repoName = derivedState.repos[repoId] ? derivedState.repos[repoId].name : "repo";
 			setCurrentRepoName(repoName);
 		}
+		return {
+			openRepos: response ? response.repositories : []
+		};
 	};
 
 	useDidMount(() => {
-		getBranches();
+		getBranches().then(_ => {
+			try {
+				if (_.openRepos !== undefined && derivedState.modifiedReposByTeam) {
+					const onlyOpenRepos = _.openRepos.filter(_ => _.id).map(_ => _.id!);
+					const openReposWithModifiedFiles = derivedState.modifiedReposByTeam
+						.map(repo => {
+							if (repo.repoId && !onlyOpenRepos.includes(repo.repoId)) return undefined;
+							return repo.modifiedFiles.filter(f => f.status !== FileStatus.untracked).length === 0
+								? undefined
+								: repo;
+						})
+						.filter(Boolean);
+					if (openReposWithModifiedFiles && openReposWithModifiedFiles.length) {
+						HostApi.instance.track("WIP Rendered", {
+							"Repo Count": openReposWithModifiedFiles.length
+						});
+					}
+				}
+			} catch (err) {
+				console.warn(err);
+			}
+		});
 		if (derivedState.webviewFocused)
 			HostApi.instance.track("Page Viewed", { "Page Name": "Status Tab" });
 	});
@@ -1030,7 +1061,6 @@ export const StatusPanel = () => {
 						<ModifiedRepos
 							id={derivedState.currentUserId}
 							onlyRepos={openRepos ? openRepos.filter(_ => _.id).map(_ => _.id!) : undefined}
-							withTelemetry={true}
 							defaultText={
 								<span className="subtle">
 									As you write code, files that have changed will appear here.
