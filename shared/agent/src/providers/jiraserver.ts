@@ -219,7 +219,12 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 
 	private getCompatibleBoards(meta: JiraProjectsMetaResponse) {
 		const boards = meta.projects.map(project => {
-			const board: Partial<JiraBoard> = { id: project.id, name: project.name, key: project.key };
+			const board: Partial<JiraBoard> = {
+				id: project.id,
+				name: project.name,
+				key: project.key,
+				issueTypeIcons: {}
+			};
 
 			const issueTypes = Array.from(
 				Iterables.filterMap(project.issuetypes, type => {
