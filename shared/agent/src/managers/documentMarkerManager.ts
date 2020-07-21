@@ -435,6 +435,7 @@ export class DocumentMarkerManager {
 		uri: URI;
 		streamId: string | undefined;
 	}): Promise<DocumentMarker[]> {
+		const cc = Logger.getCorrelationContext();
 		const user = await this.getMe();
 
 		const { providerRegistry } = SessionContainer.instance();
@@ -453,6 +454,10 @@ export class DocumentMarkerManager {
 
 		const { git } = SessionContainer.instance();
 		const repo = await git.getRepositoryByFilePath(uri.fsPath);
+		if (!repo) {
+			Logger.warn(cc, `Could not find repository in ${uri.fsPath}`);
+			return [];
+		}
 
 		const markers = [];
 		const requests = providers.map(p =>
