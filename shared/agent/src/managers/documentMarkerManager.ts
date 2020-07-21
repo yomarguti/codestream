@@ -455,7 +455,6 @@ export class DocumentMarkerManager {
 		const { git } = SessionContainer.instance();
 		const repo = await git.getRepositoryByFilePath(uri.fsPath);
 		if (!repo) {
-			Logger.warn(cc, `Could not find repository in ${uri.fsPath}`);
 			return [];
 		}
 

@@ -1243,6 +1243,8 @@ export class GitService implements IGitService, Disposable {
 			repo = await this._repositories.getByFilePath(fileOrFolderPath);
 		}
 
+		if (!repo) Logger.warn(`Could not find git repository for ${fileOrFolderPath}`);
+
 		return repo;
 	}
 
