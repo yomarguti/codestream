@@ -1022,23 +1022,21 @@ export class WebviewController implements Disposable {
 
 	private _html: string | undefined;
 	private async getHtml(): Promise<string> {
-		// When we are debugging avoid any caching so that we can change the html and have it update without reloading
-		if (Logger.isDebugging) {
-			this._html = await new Promise<string>((resolve, reject) => {
-				fs.readFile(Container.context.asAbsolutePath("webview.html"), "utf8", (err, data) => {
-					if (err) {
-						reject(err);
-					} else {
-						resolve(data);
-					}
-				});
-			});
-		} else {
-			const doc = await workspace.openTextDocument(
-				Container.context.asAbsolutePath("webview.html")
-			);
-			this._html = doc.getText();
+		// NOTE: if you use workspace.openTextDocument, it will put the webview.html into
+		// the lsp document cache, use fs.readFile instead
+
+		if (!Logger.isDebugging && this._html) {
+			return this._html;
 		}
+		this._html = await new Promise<string>((resolve, reject) => {
+			fs.readFile(Container.context.asAbsolutePath("webview.html"), "utf8", (err, data) => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve(data);
+				}
+			});
+		});
 
 		return this._html;
 	}
