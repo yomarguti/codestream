@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import React, { PropsWithChildren } from "react";
 import Icon from "@codestream/webview/Stream/Icon";
+import cx from "classnames";
 
 interface Props extends PropsWithChildren<{}> {
 	className?: string;
@@ -33,7 +34,11 @@ const Root = styled.div<Props>`
 export const FloatingLoadingMessage = React.forwardRef(
 	(props: Props, ref: React.Ref<HTMLDivElement>) => {
 		return (
-			<Root align={props.align} ref={ref} className={props.className}>
+			<Root
+				align={props.align}
+				ref={ref}
+				className={cx("floating-loading-message", props.className)}
+			>
 				<div>
 					<Icon className="spin" name="sync" />
 					{props.children}

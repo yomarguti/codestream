@@ -34,3 +34,12 @@
 	--scrollbar-thumb: --cs--scrollbar-color--;
 	--scrollbar-thumb-hover: --cs--scrollbar-color-hover--;
 }
+
+/* style overrides & polyfills */
+.floating-loading-message {
+	background-color: var(--app-background-color-darker); 
+}
+.floating-loading-message div {
+	box-shadow: none;
+	border-radius: 0px !important;
+}
