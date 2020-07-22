@@ -50,7 +50,7 @@ npm run bundle || exit 1
 echo "========= npm run pack -- $marketRelease --commit-and-push ==========="
 npm run pack -- $marketRelease --commit-and-push || exit 1
 
-if [ $sanityCheck -eq 1 && -d /Applications/Atom.app ]; then
+if [ $sanityCheck -eq 1  -a  -d /Applications/Atom.app ]; then
 	echo "Sanity check...."
 
 	if [ -f ~/.atom/packages/codestream/package.json ]; then
