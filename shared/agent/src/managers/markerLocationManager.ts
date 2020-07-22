@@ -141,10 +141,10 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			markers = await SessionContainer.instance().markers.getByStreamId(fileStreamId, true);
 		}
 
-		const currentCommitHash = await git.getFileCurrentRevision(filePath);
+		const fileCurrentCommitHash = await git.getFileCurrentRevision(filePath);
 		const currentCommitLocations = await this.getCommitLocations(
 			filePath,
-			currentCommitHash,
+			fileCurrentCommitHash,
 			fileStreamId,
 			markers
 		);
@@ -153,6 +153,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		Logger.log(`MARKERS: classifying locations`);
 		Logger.log(`MARKERS: found ${markers.length} markers - retrieving current locations`);
 
+		const repoCurrentCommitHash = await git.getRepoHeadRevision(repoRoot);
 		const {
 			committedLocations,
 			uncommittedLocations,
@@ -161,7 +162,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			repoRoot,
 			markers,
 			currentCommitLocations.locations,
-			currentCommitHash
+			repoCurrentCommitHash
 		);
 
 		const doc = documents.get(documentUri);
@@ -179,12 +180,12 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		}
 
 		const currentCommitText =
-			currentCommitHash && (await git.getFileContentForRevision(filePath, currentCommitHash));
+			fileCurrentCommitHash && (await git.getFileContentForRevision(filePath, fileCurrentCommitHash));
 
 		if (Object.keys(committedLocations).length) {
 			Logger.log(`MARKERS: calculating current location for committed locations`);
 			if (currentCommitText === undefined) {
-				throw new Error(`Could not retrieve contents for ${filePath}@${currentCommitHash}`);
+				throw new Error(`Could not retrieve contents for ${filePath}@${fileCurrentCommitHash}`);
 			}
 			const diff = structuredPatch(
 				filePath,
@@ -235,7 +236,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		if (Object.keys(futureReferences).length) {
 			Logger.log(`MARKERS: calculating current location for future references`);
 			if (currentCommitText === undefined) {
-				throw new Error(`Could not retrieve contents for ${filePath}@${currentCommitHash}`);
+				throw new Error(`Could not retrieve contents for ${filePath}@${fileCurrentCommitHash}`);
 			}
 			for (const id in futureReferences) {
 				const referenceLocation = futureReferences[id];
