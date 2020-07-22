@@ -12,7 +12,7 @@ cd $ATOM_SANDBOX || exit 1
 [ -d atom-client ] && echo "Removing pre-existing atom client" && /bin/rm -rf atom-client
 
 echo "Shallow clonling atom client and re-populating"
-git clone --branch master --depth 1 https://github.com/teamcodestream/atom-client
+git clone --branch master --depth 1 git@github.com:teamcodestream/atom-client
 
 cd atom-client
 
