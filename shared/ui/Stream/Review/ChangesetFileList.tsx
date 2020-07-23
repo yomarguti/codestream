@@ -11,9 +11,7 @@ import { Dispatch } from "../../store/common";
 import Icon from "../Icon";
 import { safe } from "@codestream/webview/utils";
 import { getById } from "@codestream/webview/store/repos/reducer";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
 import {
-	ShowNextChangedFileRequestType,
 	ShowNextChangedFileNotificationType,
 	ShowPreviousChangedFileNotificationType
 } from "@codestream/protocols/webview";

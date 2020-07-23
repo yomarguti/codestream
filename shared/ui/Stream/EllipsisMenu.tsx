@@ -122,7 +122,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 							await HostApi.instance.send(DeleteUserRequestType, {
 								userId: currentUserId!
 							});
-							logout();
+							dispatch(logout());
 						}
 					}
 				]
@@ -306,7 +306,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				{ label: "Change Full Name", action: () => popup(WebviewModals.ChangeFullName) },
 				// { label: "Change Password", action: "password" },
 				{ label: "-" },
-				{ label: "Sign Out", action: () => logout() },
+				{ label: "Sign Out", action: () => dispatch(logout()) },
 				{ label: "-" },
 				{
 					label: "Other Actions",
