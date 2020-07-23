@@ -5,21 +5,11 @@ import { CodeStreamState } from "../store";
 import { HostApi } from "../webview-api";
 import { Button } from "../src/components/Button";
 import styled from "styled-components";
+import { Dialog } from "../src/components/Dialog";
+import { closeModal } from "./actions";
+import { ButtonRow } from "./ChangeUsername";
 
-const ButtonRow = styled.div`
-	text-align: center;
-	margin-top: 20px;
-	button {
-		width: 18em;
-	}
-`;
-const Root = styled.div`
-	input[type="text"] {
-		margin-bottom: 20px;
-	}
-`;
-
-export const ChangePasswordPanel = props => {
+export const ChangePassword = props => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {};
@@ -38,12 +28,8 @@ export const ChangePasswordPanel = props => {
 	};
 
 	return (
-		<Root className="full-height-panel">
-			<form className="standard-form vscroll">
-				<div className="panel-header">
-					<CancelButton onClick={props.closePanel} />
-					<span className="panel-title">Change Password</span>
-				</div>
+		<Dialog title="Change Password" onClose={() => dispatch(closeModal())}>
+			<form className="standard-form">
 				<fieldset className="form-body" style={{ width: "18em" }}>
 					<div id="controls">
 						<input
@@ -79,6 +65,6 @@ export const ChangePasswordPanel = props => {
 					</div>
 				</fieldset>
 			</form>
-		</Root>
+		</Dialog>
 	);
 };

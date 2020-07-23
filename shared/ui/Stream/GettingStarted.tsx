@@ -6,8 +6,8 @@ import { Dispatch } from "../store/common";
 import Tooltip from "./Tooltip";
 import { ComposeArea } from "./ReviewNav";
 import { CSMe } from "@codestream/protocols/api";
-import { openPanel } from "../store/context/actions";
-import { WebviewPanels } from "@codestream/protocols/webview";
+import { openPanel, openModal } from "../store/context/actions";
+import { WebviewPanels, WebviewModals } from "@codestream/protocols/webview";
 import { isConnected } from "../store/providers/reducer";
 import { setUserPreference } from "./actions";
 import { Button } from "../src/components/Button";
@@ -147,7 +147,7 @@ export const STEPS = [
 		done: "Added profile photo",
 		pulse: "global-nav-more-label",
 		video: "https://youtu.be/-HBWfm9P96k",
-		panel: WebviewPanels.ChangeAvatar,
+		modal: WebviewModals.ChangeAvatar,
 		isComplete: user => user.avatar
 	},
 	{
@@ -238,6 +238,7 @@ export function GettingStarted(props: GettingStartedProps) {
 		if (e && e.target && e.target.closest(".icon")) return;
 		unPulse(step.pulse);
 		if (step.panel) dispatch(openPanel(step.panel));
+		if (step.modal) dispatch(openModal(step.modal));
 	};
 
 	const [active, setActive] = React.useState("0");

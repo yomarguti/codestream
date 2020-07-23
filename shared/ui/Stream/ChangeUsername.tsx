@@ -1,6 +1,5 @@
 import React, { useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import CancelButton from "./CancelButton";
 import { HostApi } from "../webview-api";
 import { Button } from "../src/components/Button";
 import styled from "styled-components";
@@ -13,21 +12,18 @@ import { CodeStreamState } from "../store";
 import { CSMe } from "@codestream/protocols/api";
 import { Link } from "./Link";
 import { UpdateUserRequestType } from "@codestream/protocols/agent";
+import { Dialog } from "../src/components/Dialog";
+import { closeModal } from "./actions";
 
 export const ButtonRow = styled.div`
 	text-align: center;
 	margin-top: 20px;
 	button {
-		width: 18em;
-	}
-`;
-const Root = styled.div`
-	#controls {
-		padding-top: 10px;
+		width: 100%;
 	}
 `;
 
-export const ChangeUsernamePanel = props => {
+export const ChangeUsername = props => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
@@ -59,7 +55,7 @@ export const ChangeUsernamePanel = props => {
 		try {
 			await HostApi.instance.send(UpdateUserRequestType, { username });
 			HostApi.instance.track("Username Changed", {});
-			props.closePanel();
+			dispatch(closeModal());
 		} catch (error) {
 			logError(`Unexpected error during change username: ${error}`, { username });
 			setUnexpectedError(true);
@@ -69,51 +65,45 @@ export const ChangeUsernamePanel = props => {
 	};
 
 	return (
-		<Root className="full-height-panel">
-			<form className="standard-form vscroll">
-				<div className="panel-header">
-					<CancelButton onClick={props.closePanel} />
-				</div>
+		<Dialog title="Change Username" onClose={() => dispatch(closeModal())}>
+			<form className="standard-form">
 				<fieldset className="form-body" style={{ width: "18em", padding: "20px 0" }}>
-					<div className="outline-box">
-						<h3>Change Username</h3>
-						<div id="controls">
-							<div className="small-spacer" />
-							{unexpectedError && (
-								<div className="error-message form-error">
-									<FormattedMessage
-										id="error.unexpected"
-										defaultMessage="Something went wrong! Please try again, or "
-									/>
-									<FormattedMessage id="contactSupport" defaultMessage="contact support">
-										{text => <Link href="https://help.codestream.com">{text}</Link>}
-									</FormattedMessage>
-									.
-								</div>
-							)}
-							<div className="control-group">
-								<label>Username</label>
-								<TextInput
-									name="username"
-									value={username}
-									autoFocus
-									onChange={setUsername}
-									onValidityChanged={onValidityChanged}
-									validate={isUsernameValid}
+					<div id="controls">
+						<div className="small-spacer" />
+						{unexpectedError && (
+							<div className="error-message form-error">
+								<FormattedMessage
+									id="error.unexpected"
+									defaultMessage="Something went wrong! Please try again, or "
 								/>
-								<small className={cx("explainer", { "error-message": !usernameValidity })}>
-									<FormattedMessage id="signUp.username.help" />
-								</small>
+								<FormattedMessage id="contactSupport" defaultMessage="contact support">
+									{text => <Link href="https://help.codestream.com">{text}</Link>}
+								</FormattedMessage>
+								.
 							</div>
-							<ButtonRow>
-								<Button onClick={onSubmit} isLoading={loading}>
-									Save Username
-								</Button>
-							</ButtonRow>
+						)}
+						<div className="control-group">
+							<label>Username</label>
+							<TextInput
+								name="username"
+								value={username}
+								autoFocus
+								onChange={setUsername}
+								onValidityChanged={onValidityChanged}
+								validate={isUsernameValid}
+							/>
+							<small className={cx("explainer", { "error-message": !usernameValidity })}>
+								<FormattedMessage id="signUp.username.help" />
+							</small>
 						</div>
+						<ButtonRow>
+							<Button onClick={onSubmit} isLoading={loading}>
+								Save Username
+							</Button>
+						</ButtonRow>
 					</div>
 				</fieldset>
 			</form>
-		</Root>
+		</Dialog>
 	);
 };

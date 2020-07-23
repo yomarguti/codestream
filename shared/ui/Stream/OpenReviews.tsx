@@ -25,8 +25,7 @@ export function OpenReviews() {
 		return {
 			reviews,
 			currentUserId,
-			teamMembers,
-			currentUsername: users[session.userId!].username
+			teamMembers
 		};
 	});
 
@@ -43,38 +42,40 @@ export function OpenReviews() {
 	const sortedReviews = [...reviews];
 	sortedReviews.sort((a, b) => b.createdAt - a.createdAt);
 
-	if (reviews.length == 0) return null;
-	return (
-		<WideStatusSection>
-			<H4 style={{ paddingLeft: "20px" }}>Open Reviews</H4>
-			{sortedReviews.map(review => {
-				const creator = teamMembers.find(user => user.id === review.creatorId);
-				return (
-					<Row key={"review-" + review.id} onClick={() => dispatch(setCurrentReview(review.id))}>
-						<div>
-							<Tooltip title={creator && creator.fullName} placement="bottomLeft">
-								<span>
-									<Headshot person={creator} />
-								</span>
-							</Tooltip>
-						</div>
-						<div>
-							<span>{review.title}</span>
-							<span className="subtle">{review.text}</span>
-						</div>
-						<div className="icons">
-							<Icon
-								name="review"
-								className="clickable"
-								title="Review Changes"
-								placement="bottomLeft"
-								delay={1}
-							/>
-							<Timestamp time={review.createdAt} relative abbreviated />
-						</div>
-					</Row>
-				);
-			})}
-		</WideStatusSection>
-	);
+	return React.useMemo(() => {
+		if (reviews.length == 0) return null;
+		return (
+			<WideStatusSection>
+				<H4 style={{ paddingLeft: "20px" }}>Open Reviews</H4>
+				{sortedReviews.map(review => {
+					const creator = teamMembers.find(user => user.id === review.creatorId);
+					return (
+						<Row key={"review-" + review.id} onClick={() => dispatch(setCurrentReview(review.id))}>
+							<div>
+								<Tooltip title={creator && creator.fullName} placement="bottomLeft">
+									<span>
+										<Headshot person={creator} />
+									</span>
+								</Tooltip>
+							</div>
+							<div>
+								<span>{review.title}</span>
+								<span className="subtle">{review.text}</span>
+							</div>
+							<div className="icons">
+								<Icon
+									name="review"
+									className="clickable"
+									title="Review Changes"
+									placement="bottomLeft"
+									delay={1}
+								/>
+								<Timestamp time={review.createdAt} relative abbreviated />
+							</div>
+						</Row>
+					);
+				})}
+			</WideStatusSection>
+		);
+	}, [reviews, teamMembers]);
 }

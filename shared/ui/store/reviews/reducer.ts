@@ -48,17 +48,21 @@ export function getByStatus(state: CodeStreamState, status?: string): CSReview[]
 	return getAllReviews(state).filter(review => review.status === status);
 }
 
-export function getByStatusAndUser(
-	state: CodeStreamState,
-	status: string,
-	userId: string
-): CSReview[] {
-	return getByStatus(state, status).filter(
-		review => review.creatorId === userId || (review.reviewers || []).includes(userId)
-	);
-}
-
 const getReviews = (state: CodeStreamState) => state.reviews.reviews;
+
+export const getByStatusAndUser = createSelector(
+	getReviews,
+	(a, status) => status,
+	(a, b, userId) => userId,
+	(reviews, status, userId) => {
+		return Object.values(reviews).filter(
+			review =>
+				!review.deactivated &&
+				review.status === status &&
+				(review.creatorId === userId || (review.reviewers || []).includes(userId))
+		);
+	}
+);
 
 export const getAllReviews = createSelector(getReviews, (reviews: Index<CSReview>) =>
 	Object.values(reviews).filter(review => !review.deactivated)

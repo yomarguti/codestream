@@ -11,6 +11,8 @@ import { switchToTeam } from "../store/session/actions";
 import { CSTeam } from "@codestream/protocols/api";
 import { CreateTeamRequest } from "@codestream/protocols/agent";
 import { wait } from "../utils";
+import { Dialog } from "../src/components/Dialog";
+import { closeModal } from "./actions";
 
 const Header = styled.h3`
 	text-align: center;
@@ -103,8 +105,7 @@ export function CreateTeamPage() {
 	};
 
 	return (
-		<div>
-			<Header>Create a Team</Header>
+		<Dialog title="Create a Team" onClose={() => dispatch(closeModal())}>
 			<form className="standard-form" onSubmit={onSubmit}>
 				<fieldset className="form-body">
 					<div id="controls">
@@ -164,6 +165,6 @@ export function CreateTeamPage() {
 					</div>
 				</fieldset>
 			</form>
-		</div>
+		</Dialog>
 	);
 }

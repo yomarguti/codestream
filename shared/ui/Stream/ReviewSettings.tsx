@@ -3,14 +3,15 @@ import { useDispatch, useSelector } from "react-redux";
 import CancelButton from "./CancelButton";
 import { CodeStreamState } from "../store";
 import { RadioGroup, Radio } from "../src/components/RadioGroup";
-import { closePanel } from "./actions";
+import { closePanel, closeModal } from "./actions";
 import { HostApi } from "../webview-api";
 import { CSReviewApprovalSetting, CSReviewAssignmentSetting } from "@codestream/protocols/api";
 import { UpdateTeamSettingsRequestType } from "@codestream/protocols/agent";
 import { getTeamSetting } from "../store/teams/reducer";
 import ScrollBox from "./ScrollBox";
+import { Dialog } from "../src/components/Dialog";
 
-export const ReviewSettingsPanel = props => {
+export const ReviewSettings = () => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const teamId = state.context.currentTeamId;
@@ -48,13 +49,9 @@ export const ReviewSettingsPanel = props => {
 	};
 
 	return (
-		<div className="panel">
+		<Dialog title="Code Review Settings" onClose={() => dispatch(closeModal())}>
 			<ScrollBox>
 				<form className="standard-form vscroll">
-					<div className="panel-header">
-						<CancelButton onClick={() => dispatch(closePanel())} />
-						<span className="panel-title">Code Review Settings</span>
-					</div>
 					<fieldset className="form-body">
 						<div id="controls">
 							<label>When a review has multiple assigned reviewers</label>
@@ -109,6 +106,6 @@ export const ReviewSettingsPanel = props => {
 					</fieldset>
 				</form>
 			</ScrollBox>
-		</div>
+		</Dialog>
 	);
 };

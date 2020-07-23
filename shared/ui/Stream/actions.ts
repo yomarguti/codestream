@@ -47,6 +47,8 @@ import { createReview, NewReviewAttributes, updateReviews } from "../store/revie
 import {
 	closePanel,
 	openPanel,
+	openModal,
+	closeModal,
 	setCodemarkAuthorFilter,
 	setCodemarkBranchFilter,
 	setChannelFilter,
@@ -75,6 +77,8 @@ import { PostsActionsType } from "../store/posts/types";
 export {
 	openPanel,
 	closePanel,
+	openModal,
+	closeModal,
 	setCodemarkAuthorFilter,
 	setCodemarkTypeFilter,
 	setCodemarkBranchFilter,

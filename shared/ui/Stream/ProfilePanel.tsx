@@ -7,11 +7,11 @@ import { CodeStreamState } from "../store";
 import { useDidMount } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import { PanelHeader } from "../src/components/PanelHeader";
-import { openPanel, closePanel } from "./actions";
+import { openPanel, closePanel, openModal } from "./actions";
 import Icon from "./Icon";
 import { Headshot } from "../src/components/Headshot";
 import { MetaLabel } from "./Codemark/BaseCodemark";
-import { WebviewPanels } from "../ipc/webview.protocol.common";
+import { WebviewPanels, WebviewModals } from "../ipc/webview.protocol.common";
 import Timestamp from "./Timestamp";
 import { getCodeCollisions } from "../store/users/reducer";
 import CancelButton from "./CancelButton";
@@ -142,12 +142,12 @@ export const ProfilePanel = () => {
 	})) as any;
 	timeZoneItems.unshift({ type: "search" }, { label: "-" });
 
-	const editUsername = () => dispatch(openPanel(WebviewPanels.ChangeUsername));
-	const editEmail = () => dispatch(openPanel(WebviewPanels.ChangeEmail));
-	const editAvatar = () => dispatch(openPanel(WebviewPanels.ChangeAvatar));
-	const editFullName = () => dispatch(openPanel(WebviewPanels.ChangeFullName));
-	const editPhoneNumber = () => dispatch(openPanel(WebviewPanels.ChangePhoneNumber));
-	const editWorksOn = () => dispatch(openPanel(WebviewPanels.ChangeWorksOn));
+	const editUsername = () => dispatch(openModal(WebviewModals.ChangeUsername));
+	const editEmail = () => dispatch(openModal(WebviewModals.ChangeEmail));
+	const editAvatar = () => dispatch(openModal(WebviewModals.ChangeAvatar));
+	const editFullName = () => dispatch(openModal(WebviewModals.ChangeFullName));
+	const editPhoneNumber = () => dispatch(openModal(WebviewModals.ChangePhoneNumber));
+	const editWorksOn = () => dispatch(openModal(WebviewModals.ChangeWorksOn));
 	const copyEmail = () => {
 		if (emailRef && emailRef.current) {
 			emailRef.current.select();

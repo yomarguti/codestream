@@ -8,8 +8,6 @@ import ScrollBox from "./ScrollBox";
 import { invite, setUserStatus } from "./actions";
 import { mapFilter, keyFilter } from "../utils";
 import { difference as _difference, sortBy as _sortBy } from "lodash-es";
-import { OpenUrlRequestType } from "../ipc/host.protocol";
-import { getTeamProvider } from "../store/teams/reducer";
 import { HostApi } from "../webview-api";
 import { WebviewPanels } from "@codestream/protocols/webview";
 import { PanelHeader } from "../src/components/PanelHeader";
@@ -119,7 +117,6 @@ interface ConnectedProps {
 	teamName: string;
 	companyPlan: any;
 	companyMemberCount: number;
-	teamProvider: any;
 	members: CSUser[];
 	repos: any;
 	currentUser: CSUser;
@@ -713,78 +710,8 @@ class TeamPanel extends React.Component<Props, State> {
 
 		const suggested = this.state.suggested.filter(u => !invitingEmails[u.email]);
 		const mappedBlame = keyFilter(blameMap);
-		const title = this.state.changingTeamName ? (
-			<input
-				className="input-text control"
-				type="text"
-				name="team-name"
-				autoFocus
-				value={this.state.newTeamName}
-				onChange={e => this.setState({ newTeamName: e.target.value })}
-				onBlur={this.saveTeamName}
-				onKeyPress={e => {
-					if (e.key == "Enter") this.saveTeamName();
-				}}
-			></input>
-		) : this.props.isCurrentUserAdmin ? (
-			<>
-				<DropdownButton
-					variant="text"
-					items={[
-						{
-							label: <span style={{ fontSize: "smaller" }}>This menu is admin-only</span>,
-							noHover: true,
-							disabled: true
-						},
-						{ label: "-" },
-						{
-							label: "Live View Settings",
-							key: "live-view-settings",
-							submenu: [
-								{
-									label: "Always On",
-									checked: xraySetting === "on",
-									action: () => this.changeXray("on")
-								},
-								{
-									label: "Always Off",
-									checked: xraySetting === "off",
-									action: () => this.changeXray("off")
-								},
-								{
-									label: "User Selectable",
-									checked: !xraySetting || xraySetting === "user",
-									action: () => this.changeXray("user")
-								},
-								{ label: "-", action: () => {} },
-								{
-									label: "What is Live View?",
-									action: () => {
-										HostApi.instance.send(OpenUrlRequestType, {
-											url: "https://docs.codestream.com/userguide/features/team-live-view/"
-										});
-									}
-								}
-							]
-						},
-						{
-							label: "Code Review Settings...",
-							key: "review-settings",
-							action: () => this.props.openPanel(WebviewPanels.ReviewSettings),
-							disabled: !this.props.multipleReviewersApprove
-						},
-						{ label: "-", action: () => {} },
-						{ label: "Change Team Name", action: this.changeTeamName },
-						{ label: "-", action: () => {} },
-						{ label: "Delete Team", action: this.deleteTeam }
-					]}
-				>
-					{this.props.teamName}
-				</DropdownButton>
-			</>
-		) : (
-			this.props.teamName
-		);
+		const title = this.props.teamName;
+
 		const authors2 = [{ label: "foo", value: "foo" }];
 		return (
 			<div className="panel full-height team-panel">
@@ -1095,7 +1022,6 @@ const mapStateToProps = state => {
 	const { users, context, teams, companies, repos, session, configs } = state;
 	const team = teams[context.currentTeamId];
 	const company = companies[team.companyId];
-	const teamProvider = getTeamProvider(team);
 
 	const memberIds = _difference(team.memberIds, team.removedMemberIds || []);
 	const teammates = mapFilter(memberIds, id => {
@@ -1118,16 +1044,13 @@ const mapStateToProps = state => {
 	const adminIds = team.adminIds;
 	const isCurrentUserAdmin = adminIds.includes(session.userId);
 
-	const invited =
-		teamProvider === "codestream"
-			? mapFilter(memberIds, id => {
-					const user = users[id as string];
-					if (!user || user.isRegistered || user.deactivated || user.externalUserId) return;
-					let email = user.email;
-					if (email) user.fullName = email.replace(/@.*/, "");
-					return user;
-			  })
-			: [];
+	const invited = mapFilter(memberIds, id => {
+		const user = users[id as string];
+		if (!user || user.isRegistered || user.deactivated || user.externalUserId) return;
+		let email = user.email;
+		if (email) user.fullName = email.replace(/@.*/, "");
+		return user;
+	});
 
 	const xraySetting = team.settings ? team.settings.xray : "";
 	const xrayEnabled = xraySetting !== "off";

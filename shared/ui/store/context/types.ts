@@ -1,4 +1,4 @@
-import { WebviewContext, WebviewPanels } from "@codestream/protocols/webview";
+import { WebviewContext, WebviewPanels, WebviewModals } from "@codestream/protocols/webview";
 import { AnyObject } from "@codestream/webview/utils";
 import { CodemarkType } from "@codestream/protocols/api";
 
@@ -13,6 +13,8 @@ export enum ContextActionsType {
 	SetContext = "@context/Set",
 	OpenPanel = "@context/OpenPanel",
 	ClosePanel = "@context/ClosePanel",
+	OpenModal = "@context/OpenModal",
+	CloseModal = "@context/CloseModal",
 	SetFocusState = "@context/SetFocusState",
 	SetCurrentStream = "@context/SetCurrentStream",
 	SetIssueProvider = "@context/SetIssueProvider",
@@ -63,6 +65,7 @@ export interface ContextState extends WebviewContext {
 	issueProvider?: string;
 	shareTargetTeamId?: string;
 	panelStack: (WebviewPanels | string)[];
+	activeModal?: WebviewModals;
 
 	showFeedbackSmiley: boolean;
 

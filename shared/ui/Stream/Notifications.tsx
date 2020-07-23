@@ -4,12 +4,13 @@ import CancelButton from "./CancelButton";
 import { CodeStreamState } from "../store";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { RadioGroup, Radio } from "../src/components/RadioGroup";
-import { setUserPreference } from "./actions";
+import { setUserPreference, closeModal } from "./actions";
 import { HostApi } from "../webview-api";
 import { CSNotificationDeliveryPreference } from "@codestream/protocols/api";
 import Icon from "./Icon";
+import { Dialog } from "../src/components/Dialog";
 
-export const NotificationsPanel = props => {
+export const Notifications = props => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const hasDesktopNotifications = state.ide.name === "VSC" || state.ide.name === "JETBRAINS";
@@ -43,12 +44,8 @@ export const NotificationsPanel = props => {
 	};
 
 	return (
-		<div className="panel configure-provider-panel">
+		<Dialog title="Notification Settings" onClose={() => dispatch(closeModal())}>
 			<form className="standard-form vscroll">
-				<div className="panel-header">
-					<CancelButton onClick={props.closePanel} />
-					<span className="panel-title">Notification Settings</span>
-				</div>
 				<fieldset className="form-body">
 					{!derivedState.emailSupported && (
 						<p
@@ -106,6 +103,6 @@ export const NotificationsPanel = props => {
 					</div>
 				</fieldset>
 			</form>
-		</div>
+		</Dialog>
 	);
 };

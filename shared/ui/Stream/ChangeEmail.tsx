@@ -1,11 +1,11 @@
 import React, { useState, useCallback, useRef } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import CancelButton from "./CancelButton";
 import { CodeStreamState } from "../store";
 import { HostApi } from "../webview-api";
 import { Button } from "../src/components/Button";
 import styled from "styled-components";
-import { ButtonRow } from "./ChangeUsernamePanel";
+import { ButtonRow } from "./ChangeUsername";
 import { UpdateUserRequestType } from "../protocols/agent/agent.protocol.users";
 import { logError, logWarning } from "../logger";
 import { FormattedMessage } from "react-intl";
@@ -16,14 +16,11 @@ import { isEmailValid } from "../Authentication/Signup";
 import { GetUserInfoRequestType } from "@codestream/protocols/agent";
 import { CSText } from "../src/components/CSText";
 import { useDidMount } from "../utilities/hooks";
+import { Dialog } from "../src/components/Dialog";
+import { closeModal } from "./actions";
 
-const Root = styled.div`
-	#controls {
-		padding-top: 10px;
-	}
-`;
-
-export const ChangeEmailPanel = props => {
+export const ChangeEmail = props => {
+	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		return { currentEmail: currentUser.email };
@@ -73,7 +70,7 @@ export const ChangeEmailPanel = props => {
 				// this means the email was changed, rather than a confirmation email issued, which means
 				// we are in an on-prem environment where email confirmation is not required ... in this
 				// case we can skip the confirmation panel
-				props.closePanel();
+				dispatch(closeModal());
 				return;
 			}
 			setPendingChange(true);
@@ -118,8 +115,6 @@ export const ChangeEmailPanel = props => {
 	const renderChangeEmail = () => {
 		return (
 			<>
-				{" "}
-				<h3>Change Email</h3>
 				<div id="controls">
 					<div className="small-spacer" />
 					{scmEmail && scmEmail !== derivedState.currentEmail && (
@@ -162,7 +157,6 @@ export const ChangeEmailPanel = props => {
 	const renderConfirmEmail = () => {
 		return (
 			<>
-				<h3>Confirm Email</h3>
 				<FormattedMessage id="confirmation.instructionsLinkEmail" tagName="p" />
 				<FormattedMessage id="confirmation.didNotReceive">
 					{text => (
@@ -176,24 +170,22 @@ export const ChangeEmailPanel = props => {
 					)}
 				</FormattedMessage>
 				<ButtonRow>
-					<Button onClick={props.closePanel}>OK</Button>
+					<Button onClick={() => dispatch(closeModal())}>OK</Button>
 				</ButtonRow>
 			</>
 		);
 	};
 
 	return (
-		<Root className="full-height-panel onboarding-page" style={{ padding: 0 }}>
-			<form className="standard-form vscroll" onSubmit={onSubmit}>
-				<div className="panel-header">
-					<CancelButton onClick={props.closePanel} />
-				</div>
+		<Dialog
+			title={pendingChange ? "Confirm Email" : "Change Email"}
+			onClose={() => dispatch(closeModal())}
+		>
+			<form className="standard-form" onSubmit={onSubmit}>
 				<fieldset className="form-body" style={{ width: "18em" }}>
-					<div className="outline-box">
-						{pendingChange ? renderConfirmEmail() : renderChangeEmail()}
-					</div>
+					{pendingChange ? renderConfirmEmail() : renderChangeEmail()}
 				</fieldset>
 			</form>
-		</Root>
+		</Dialog>
 	);
 };

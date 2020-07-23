@@ -956,7 +956,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 			<WideStatusSection id="start-work-div">
 				<div className="instructions">
 					<Icon name="light-bulb" />
-					CodeStream Flow starts with grabbing a ticket and creating a branch.
+					Start work by grabbing a ticket below, and creating a branch.
 				</div>
 				<div className="filters" style={{ padding: "0 20px 0 20px" }}>
 					<H4>

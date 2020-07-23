@@ -373,7 +373,7 @@ export interface CSCompany extends CSEntity {
 	name: string;
 	trialStartDate?: number;
 	trialEndDate?: number;
-	plan?: number;
+	plan?: string;
 }
 
 export interface CSTeam extends CSEntity {

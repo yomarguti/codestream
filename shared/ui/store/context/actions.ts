@@ -3,7 +3,7 @@ import { logError } from "../../logger";
 import { setUserPreference } from "../../Stream/actions";
 import { action } from "../common";
 import { ContextActionsType, ContextState, PostEntryPoint, Route } from "./types";
-import { WebviewPanels } from "@codestream/protocols/webview";
+import { WebviewPanels, WebviewModals } from "@codestream/protocols/webview";
 import { CodemarkType } from "@codestream/protocols/api";
 
 export const reset = () => action("RESET");
@@ -19,6 +19,18 @@ export const openPanel = (panel: string) => (dispatch, getState) => {
 };
 
 export const closePanel = () => action(ContextActionsType.ClosePanel);
+
+export const _openModal = (modal: WebviewModals) => action(ContextActionsType.OpenModal, modal);
+export const openModal = (modal: WebviewModals) => (dispatch, getState) => {
+	if (getState().context.activeModal !== modal) {
+		return dispatch(_openModal(modal));
+	}
+};
+
+export const closeModal = () => {
+	console.warn("CLOSING THE MODAL");
+	return action(ContextActionsType.CloseModal);
+};
 
 export const focus = () => action(ContextActionsType.SetFocusState, true);
 

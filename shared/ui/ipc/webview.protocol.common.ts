@@ -36,7 +36,6 @@ export enum WebviewPanels {
 	CodemarksForFile = "codemarks-for-file",
 	FilterSearch = "filter-search",
 	Invite = "invite",
-	Notifications = "notifications",
 	NewComment = "new-comment",
 	NewIssue = "new-issue",
 	NewReview = "new-review",
@@ -45,18 +44,10 @@ export enum WebviewPanels {
 	Review = "review",
 	Status = "status",
 	Tasks = "tasks",
-	ChangeUsername = "change-username",
-	ChangeEmail = "change-email",
-	ChangePassword = "change-password",
-	ChangeFullName = "change-full-name",
-	ChangePhoneNumber = "change-phone-number",
-	ChangeWorksOn = "change-works-on",
-	ChangeAvatar = "change-avatar",
 	LandingRedirect = "landing-redirect", // new customers and signins go here
 	PRInfo = "pr-info",
 	Integrations = "integrations",
 	GettingStarted = "gtting-started", // this is a typo but now baked into user data, so let's just leave it
-	ReviewSettings = "review-settings",
 	NewPullRequest = "new-pull-request",
 	Flow = "flow"
 }
@@ -78,6 +69,20 @@ export const WebviewPanelNames = {
 	"gtting-started": "Getting Started" // this is a typo but now baked into user data, so let's just leave it
 };
 
+export enum WebviewModals {
+	ChangeAvatar = "change-avatar",
+	ChangeEmail = "change-email",
+	ChangeFullName = "change-full-name",
+	ChangePassword = "change-password",
+	ChangePhoneNumber = "change-phone-number",
+	ChangeUsername = "change-username",
+	ChangeWorksOn = "change-works-on",
+	CreateTeam = "create-team",
+	Keybindings = "keybindings",
+	Notifications = "notifications",
+	ReviewSettings = "review-settings"
+}
+
 export interface WebviewContext {
 	currentTeamId: string;
 	currentStreamId?: string;
@@ -90,6 +95,7 @@ export interface WebviewContext {
 	isRepositioning?: boolean;
 	hasFocus: boolean;
 	panelStack?: (WebviewPanels | string)[];
+	activePanel?: WebviewPanels;
 }
 
 export interface SessionState {

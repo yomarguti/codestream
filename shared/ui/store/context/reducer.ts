@@ -24,6 +24,7 @@ const initialState: ContextState = {
 
 	panelStack: [WebviewPanels.LandingRedirect],
 	// panelStack: [WebviewPanels.CodemarksForFile],
+	activeModal: undefined,
 
 	hasFocus: true, // we assume we start with the focus when codestream initializes
 	channelFilter: "all",
@@ -82,14 +83,18 @@ export function reduceContext(
 			const [, ...panelStack] = state.panelStack;
 			return { ...state, panelStack };
 		}
+		case ContextActionsType.OpenModal:
+			return { ...state, activeModal: action.payload };
+		case ContextActionsType.CloseModal: {
+			console.warn("DCLOS IN RED");
+			return { ...state, activeModal: undefined };
+		}
 		case ContextActionsType.SetFocusState:
 			return { ...state, hasFocus: action.payload };
-
 		case ContextActionsType.SetChannelsMuteAll:
 			return { ...state, channelsMuteAll: action.payload };
 		case ContextActionsType.SetChannelFilter:
 			return { ...state, channelFilter: action.payload };
-
 		case ContextActionsType.SetCodemarkTagFilter:
 			return { ...state, codemarkTagFilter: action.payload };
 		case ContextActionsType.SetCodemarkBranchFilter:

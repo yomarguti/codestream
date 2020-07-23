@@ -52,6 +52,7 @@ import { getTeamMembers, getTeamTagsArray, getTeamMates } from "../store/users/r
 import MessageInput from "./MessageInput";
 import {
 	openPanel,
+	openModal,
 	closePanel,
 	createPostAndReview,
 	setUserPreference,
@@ -75,7 +76,11 @@ import { editReview, EditableAttributes } from "../store/reviews/actions";
 import { Modal } from "./Modal";
 import { FeatureFlag } from "./FeatureFlag";
 import Timestamp from "./Timestamp";
-import { ReviewShowLocalDiffRequestType, WebviewPanels } from "@codestream/protocols/webview";
+import {
+	ReviewShowLocalDiffRequestType,
+	WebviewPanels,
+	WebviewModals
+} from "@codestream/protocols/webview";
 import { Checkbox } from "../src/components/Checkbox";
 import { getAllByCommit, teamReviewCount } from "../store/reviews/reducer";
 import { setCurrentReview, setNewPostEntry } from "@codestream/webview/store/context/actions";
@@ -101,6 +106,7 @@ interface Props extends ConnectedProps {
 	isAmending?: boolean;
 	onClose?: Function;
 	openPanel: Function;
+	openModal: Function;
 	closePanel: Function;
 	setUserPreference: Function;
 	setCurrentReview: Function;
@@ -1092,7 +1098,7 @@ class ReviewForm extends React.Component<Props, State> {
 		);
 	};
 
-	goSetEmail = () => this.props.openPanel(WebviewPanels.ChangeEmail);
+	goSetEmail = () => this.props.openModal(WebviewModals.ChangeEmail);
 
 	addBlameMap = async (author: string, assigneeId: string) => {
 		await HostApi.instance.send(UpdateTeamSettingsRequestType, {
@@ -2268,6 +2274,7 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 
 const ConnectedReviewForm = connect(mapStateToProps, {
 	openPanel,
+	openModal,
 	closePanel,
 	createPostAndReview,
 	editReview,
