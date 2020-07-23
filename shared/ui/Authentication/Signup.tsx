@@ -113,6 +113,7 @@ export const Signup = (props: Props) => {
 		setInviteConflict(false);
 		setUnexpectedError(false);
 		event.preventDefault();
+		if (isLoading) return; // prevent double-clicks
 
 		onValidityChanged("email", isEmailValid(email));
 		onValidityChanged("password", isPasswordValid(password));
@@ -180,6 +181,7 @@ export const Signup = (props: Props) => {
 				}
 				case LoginResult.InviteConflict: {
 					setInviteConflict(true);
+					setIsLoading(false);
 					break;
 				}
 				default:
@@ -191,8 +193,8 @@ export const Signup = (props: Props) => {
 				inviteCode: props.inviteCode
 			});
 			setUnexpectedError(true);
+			setIsLoading(false);
 		}
-		setIsLoading(false);
 	};
 
 	const onClickGoBack = useCallback(
@@ -357,7 +359,7 @@ export const Signup = (props: Props) => {
 
 							<div className="small-spacer" />
 
-							<Button className="row-button" onClick={onSubmit}>
+							<Button className="row-button" onClick={onSubmit} loading={isLoading}>
 								<Icon name="codestream" />
 								<div className="copy">
 									<FormattedMessage id="signUp.submitButton" />
