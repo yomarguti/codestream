@@ -18,7 +18,7 @@ repositories {
 }
 
 ext {
-    jxBrowserVersion = "7.6"
+    jxBrowserVersion = "7.9"
 }
 
 dependencies {
