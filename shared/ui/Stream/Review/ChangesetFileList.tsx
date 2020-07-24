@@ -15,10 +15,11 @@ import {
 	ShowNextChangedFileNotificationType,
 	ShowPreviousChangedFileNotificationType
 } from "@codestream/protocols/webview";
+import { WriteTextFileRequestType, ReadTextFileRequestType } from "@codestream/protocols/agent";
 
-const VISITED_REVIEW_FILES = "review:changeset-file-list";
+// const VISITED_REVIEW_FILES = "review:changeset-file-list";
 const NOW = new Date().getTime(); // a rough timestamp so we know when the file was visited
-const visitedFiles = localStore.get(VISITED_REVIEW_FILES) || {};
+// const visitedFiles = localStore.get(VISITED_REVIEW_FILES) || {};
 
 export const ChangesetFileList = (props: {
 	review: ReviewPlus;
@@ -81,6 +82,42 @@ export const ChangesetFileList = (props: {
 		};
 	});
 
+	const [visitedFiles, setVisitedFiles] = React.useState({ _latest: 0 });
+
+	const visitFile = (visitedKey: string, index: number) => {
+		const newVisitedFiles = { ...visitedFiles, [visitedKey]: NOW, _latest: index };
+		saveVisitedFiles(newVisitedFiles, reviewCheckpointKey);
+		setVisitedFiles(newVisitedFiles);
+	};
+
+	// if we're looking at a specific checkpoint, save the visisted
+	// information under that key. if however we're looking at the overall
+	// changes, we want that to "reset" each time the review gets amended,
+	// so we base it on the total number of changesets
+	const reviewCheckpointKey =
+		checkpoint == undefined ? `all:${review.reviewChangesets.length}` : checkpoint;
+
+	const saveVisitedFiles = (newVisitedFiles, key) => {
+		HostApi.instance.send(WriteTextFileRequestType, {
+			path: `review-${review.id}-${key}.json`,
+			contents: JSON.stringify(newVisitedFiles, null, 4)
+		});
+	};
+
+	useEffect(() => {
+		(async () => {
+			const response = (await HostApi.instance.send(ReadTextFileRequestType, {
+				path: `review-${review.id}-${reviewCheckpointKey}.json`
+			})) as any;
+
+			try {
+				setVisitedFiles(JSON.parse(response.contents || "{}"));
+			} catch (ex) {
+				console.warn("Error parsing JSON data: ", response.contents);
+			}
+		})();
+	}, [review, reviewCheckpointKey]);
+
 	useEffect(() => {
 		const disposables = [
 			HostApi.instance.on(ShowNextChangedFileNotificationType, nextFile),
@@ -97,9 +134,8 @@ export const ChangesetFileList = (props: {
 		const changeset = derivedState.indexToChangesetMap[index];
 		const visitedKey = [changeset.repoId, f.file].join(":");
 		await dispatch(showDiff(review.id, checkpoint, changeset.repoId, f.file));
-		visitedFiles[review.id + ":" + checkpoint][visitedKey] = NOW;
-		visitedFiles[review.id + ":" + checkpoint]._latest = index;
-		localStore.set(VISITED_REVIEW_FILES, visitedFiles);
+		visitFile(visitedKey, index);
+
 		if (props.withTelemetry && review.id) {
 			HostApi.instance.track("Review Diff Viewed", {
 				"Review ID": review.id
@@ -108,25 +144,22 @@ export const ChangesetFileList = (props: {
 	};
 
 	const nextFile = () => {
-		if (!visitedFiles[review.id + ":" + checkpoint]) goFile(0);
-		else if (visitedFiles[review.id + ":" + checkpoint]._latest == null) goFile(0);
-		else goFile(visitedFiles[review.id + ":" + checkpoint]._latest + 1);
+		if (!visitedFiles) goFile(0);
+		else if (visitedFiles._latest == null) goFile(0);
+		else goFile(visitedFiles._latest + 1);
 	};
 
 	const prevFile = () => {
-		if (!visitedFiles[review.id + ":" + checkpoint]) goFile(-1);
-		else if (visitedFiles[review.id + ":" + checkpoint]._latest == null) goFile(-1);
-		else goFile(visitedFiles[review.id + ":" + checkpoint]._latest - 1);
+		if (!visitedFiles) goFile(-1);
+		else if (visitedFiles._latest == null) goFile(-1);
+		else goFile(visitedFiles._latest - 1);
 	};
 
-	const latest = visitedFiles[review.id + ":" + checkpoint]
-		? visitedFiles[review.id + ":" + checkpoint]._latest
-		: 0;
+	const latest = visitedFiles[reviewCheckpointKey] ? visitedFiles[reviewCheckpointKey]._latest : 0;
 
 	const changedFiles = React.useMemo(() => {
 		const files: any[] = [];
 
-		const reviewKey = review.id + ":" + checkpoint;
 		let index = 0;
 		for (let changeset of derivedState.changesets) {
 			if (props.showRepoLabels) {
@@ -139,7 +172,6 @@ export const ChangesetFileList = (props: {
 					);
 				}
 			}
-			const visitedFilesInReview = visitedFiles[reviewKey] || (visitedFiles[reviewKey] = {});
 			const modifiedFiles =
 				checkpoint !== undefined ? changeset.modifiedFilesInCheckpoint : changeset.modifiedFiles;
 			files.push(
@@ -149,11 +181,9 @@ export const ChangesetFileList = (props: {
 						f.file
 					}`;
 					const selected = (derivedState.matchFile || "") == uri;
-					const visited = visitedFilesInReview[visitedKey];
+					const visited = visitedFiles[visitedKey];
 					if (selected && !visited) {
-						visitedFilesInReview[visitedKey] = NOW;
-						visitedFilesInReview._latest = index;
-						localStore.set(VISITED_REVIEW_FILES, visitedFiles);
+						visitFile(visitedKey, index);
 					}
 
 					let icon;
@@ -189,7 +219,7 @@ export const ChangesetFileList = (props: {
 			);
 		}
 		return files;
-	}, [review, loading, noOnClick, derivedState.matchFile, latest, checkpoint]);
+	}, [review, loading, noOnClick, derivedState.matchFile, latest, checkpoint, visitedFiles]);
 
 	return <>{changedFiles}</>;
 };

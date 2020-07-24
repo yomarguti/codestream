@@ -9,6 +9,7 @@ import { CompaniesManager } from "./managers/companiesManager";
 import { DocumentMarkerManager } from "./managers/documentMarkerManager";
 import { FilesManager } from "./managers/filesManager";
 import { IgnoreFilesManager } from "./managers/ignoreFilesManager";
+import { TextFilesManager } from "./managers/textFilesManager";
 import { MarkerLocationManager } from "./managers/markerLocationManager";
 import { MarkersManager } from "./managers/markersManager";
 import { PostsManager } from "./managers/postsManager";
@@ -106,6 +107,11 @@ class SessionServiceContainer {
 		return this._ignoreFiles;
 	}
 
+	private readonly _textFiles: TextFilesManager;
+	get textFiles() {
+		return this._textFiles;
+	}
+
 	private readonly _reviews: ReviewsManager;
 	get reviews() {
 		return this._reviews;
@@ -128,6 +134,7 @@ class SessionServiceContainer {
 		this._repositoryMappings = new RepositoryMappingManager(session);
 		this._companies = new CompaniesManager(session);
 		this._ignoreFiles = new IgnoreFilesManager(session);
+		this._textFiles = new TextFilesManager(session);
 		this._reviews = new ReviewsManager(session);
 	}
 }
