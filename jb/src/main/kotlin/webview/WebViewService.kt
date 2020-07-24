@@ -12,10 +12,8 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.teamdev.jxbrowser.browser.Browser
-import com.teamdev.jxbrowser.browser.callback.InjectJsCallback
-import com.teamdev.jxbrowser.js.JsObject
-import com.teamdev.jxbrowser.view.swing.BrowserView
+import com.intellij.ui.jcef.JBCefApp
+import com.intellij.ui.jcef.JBCefBrowser
 import org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.charset.Charset
@@ -25,9 +23,10 @@ class WebViewService(val project: Project) : Disposable {
     private val utf8 = Charset.forName("UTF-8")
     private val logger = Logger.getInstance(WebViewService::class.java)
     private val router = WebViewRouter(project)
-    private val browser = createBrowser(router)
     private lateinit var tempDir: File
     private lateinit var extractedHtmlFile: File
+
+    val webView = createWebView(router)
 
     private val htmlFile: File get() = if (WEBVIEW_PATH != null) {
         File(WEBVIEW_PATH)
@@ -43,13 +42,9 @@ class WebViewService(val project: Project) : Disposable {
         UIManager.addPropertyChangeListener {
             if (it.propertyName == "lookAndFeel") {
                 applyStylesheet()
-                browser.navigation().loadUrl(htmlFile.url)
+                webView.loadUrl(htmlFile.url)
             }
         }
-    }
-
-    val webView: BrowserView by lazy {
-        BrowserView.newInstance(browser)
     }
 
     fun onDidInitialize(cb: () -> Unit) {
@@ -63,7 +58,7 @@ class WebViewService(val project: Project) : Disposable {
             project.settingsService?.clearWebViewContext()
         }
         applyStylesheet()
-        browser.navigation().loadUrl(htmlFile.url)
+        webView.loadUrl(htmlFile.url)
     }
 
     private fun extractAssets() {
@@ -117,53 +112,30 @@ class WebViewService(val project: Project) : Disposable {
     }
 
     private fun postMessage(message: JsonElement, force: Boolean? = false) {
-        if (router.isReady || force == true) browser.mainFrame().ifPresent {
-            it.executeJavaScript<Unit>("window.postMessage($message,'*');")
-        }
+        if (router.isReady || force == true) webView.postMessage(message)
     }
 
     override fun dispose() {
-        logger.info("Disposing JxBrowser instance")
-        browser.close()
+        webView.dispose()
     }
 
-    private fun createBrowser(router: WebViewRouter): Browser {
-        val engine = ServiceManager.getService(BrowserEngineService::class.java)
-        val browser = engine.newBrowser()
-        webviewTelemetry("JxBrowser")
-
-        browser.connectRouter(router)
-
-        return browser
+    private fun createWebView(router: WebViewRouter): WebView {
+        return try {
+            if (JBCefApp.isSupported()) {
+                logger.info("JCEF enabled")
+                JBCefWebView(JBCefBrowser(), router)
+            } else {
+                logger.info("JCEF disabled - falling back to JxBrowser")
+                val engine = ServiceManager.getService(JxBrowserEngineService::class.java)
+                JxBrowserWebView(engine.newBrowser(), router)
+            }
+        } catch (ex: Exception) {
+            logger.warn("Error initializing JCEF - falling back to JxBrowser", ex)
+            val engine = ServiceManager.getService(JxBrowserEngineService::class.java)
+            JxBrowserWebView(engine.newBrowser(), router)
+        }
     }
 
-    private fun Browser.connectRouter(router: WebViewRouter) {
-
-        set(InjectJsCallback::class.java, InjectJsCallback {
-            val frame = it.frame()
-
-            val window = frame.executeJavaScript<JsObject>("window")!!
-            window.putProperty("csRouter", router)
-
-            frame.executeJavaScript<Unit>(
-                """
-                    window.acquireHostApi = function() {
-                        return {
-                            postMessage: function(message, origin) {
-                                window.csRouter.handle(JSON.stringify(message), origin);
-                            }
-                        }
-                    }
-                    """.trimIndent()
-            )
-
-            InjectJsCallback.Response.proceed()
-        })
-    }
-
-    private fun webviewTelemetry(webviewType: String) {
-        project.agentService?.agent?.telemetry(TelemetryParams("JB Webview Created", mapOf("Webview" to webviewType)))
-    }
 }
 
 private val File.url: String

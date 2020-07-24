@@ -13,9 +13,9 @@ import com.teamdev.jxbrowser.net.callback.LoadResourceCallback
 import com.teamdev.jxbrowser.plugin.callback.AllowPluginCallback
 import java.nio.file.Paths
 
-class BrowserEngineService : Disposable {
+class JxBrowserEngineService : Disposable {
 
-    private val logger = Logger.getInstance(BrowserEngineService::class.java)
+    private val logger = Logger.getInstance(JxBrowserEngineService::class.java)
     private val engine: Engine
 
     init {

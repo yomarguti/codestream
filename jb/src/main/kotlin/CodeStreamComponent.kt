@@ -97,7 +97,7 @@ class CodeStreamComponent(val project: Project) : Disposable {
                             webViewService.load()
                             toolWindow?.component?.let { cmp ->
                                 cmp.remove(loadingLabel)
-                                cmp.add(webViewService.webView)
+                                cmp.add(webViewService.webView.component)
                             }
                         }
                     }
@@ -145,7 +145,7 @@ class CodeStreamComponent(val project: Project) : Disposable {
 
     fun show(afterShow: (() -> Unit)? = null) {
         toolWindow?.show {
-            project.webViewService?.webView?.grabFocus()
+            project.webViewService?.webView?.focus()
             afterShow?.invoke()
         }
     }
