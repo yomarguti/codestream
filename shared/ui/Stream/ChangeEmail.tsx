@@ -1,10 +1,8 @@
 import React, { useState, useCallback, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import CancelButton from "./CancelButton";
 import { CodeStreamState } from "../store";
 import { HostApi } from "../webview-api";
 import { Button } from "../src/components/Button";
-import styled from "styled-components";
 import { ButtonRow } from "./ChangeUsername";
 import { UpdateUserRequestType } from "../protocols/agent/agent.protocol.users";
 import { logError, logWarning } from "../logger";

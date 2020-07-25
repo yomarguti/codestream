@@ -206,12 +206,10 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			title: "Delete Team",
 			message:
 				"Team deletion is handled by customer service. Please send an email to support@codestream.com.",
-			centered: true,
+			centered: false,
 			buttons: [{ label: "OK", className: "control-button" }]
 		});
 	};
-
-	const changeTeamName = () => {};
 
 	const buildAdminTeamMenuItem = () => {
 		const { team, currentUserId, xraySetting } = derivedState;
@@ -255,9 +253,13 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 					action: () => dispatch(openModal(WebviewModals.ReviewSettings)),
 					disabled: !derivedState.multipleReviewersApprove
 				},
-				{ label: "-", action: () => {} },
-				{ label: "Change Team Name", action: changeTeamName },
-				{ label: "-", action: () => {} },
+				{ label: "-" },
+				{
+					label: "Change Team Name",
+					key: "change-team-name",
+					action: () => dispatch(openModal(WebviewModals.ChangeTeamName))
+				},
+				{ label: "-" },
 				{ label: "Delete Team", action: deleteTeam }
 			];
 			return {

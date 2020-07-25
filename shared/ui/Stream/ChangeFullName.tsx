@@ -1,16 +1,13 @@
 import React, { useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import CancelButton from "./CancelButton";
 import { CodeStreamState } from "../store";
 import { HostApi } from "../webview-api";
 import { Button } from "../src/components/Button";
-import styled from "styled-components";
 import { ButtonRow } from "./ChangeUsername";
 import { UpdateUserRequestType } from "../protocols/agent/agent.protocol.users";
 import { logError } from "../logger";
 import { FormattedMessage } from "react-intl";
 import { CSMe } from "@codestream/protocols/api";
-import cx from "classnames";
 import { Link } from "./Link";
 import { TextInput } from "../Authentication/TextInput";
 import { Dialog } from "../src/components/Dialog";

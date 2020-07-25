@@ -153,8 +153,6 @@ interface State {
 	inputTouched: boolean;
 	modifiedRepos: RepoScmStatus[];
 	loadingStatus: boolean;
-	changingTeamName: boolean;
-	newTeamName: string;
 	suggested: any[];
 	blameMapEmail: string;
 	addingBlameMap: boolean;
@@ -173,8 +171,6 @@ class TeamPanel extends React.Component<Props, State> {
 		newMemberEmailInvalid: false,
 		modifiedRepos: [],
 		loadingStatus: false,
-		changingTeamName: false,
-		newTeamName: "",
 		suggested: [],
 		blameMapEmail: "",
 		addingBlameMap: false
@@ -182,7 +178,6 @@ class TeamPanel extends React.Component<Props, State> {
 
 	postInviteResetState = {
 		loadingStatus: false,
-		changingTeamName: false,
 		loading: false,
 		isInviting: false,
 		newMemberEmail: "",
@@ -635,28 +630,6 @@ class TeamPanel extends React.Component<Props, State> {
 		this.setState({ loadingStatus: false });
 	};
 
-	changeTeamName = () =>
-		this.setState({ changingTeamName: true, newTeamName: this.props.teamName });
-
-	saveTeamName = async () => {
-		await HostApi.instance.send(UpdateTeamRequestType, {
-			teamId: this.props.teamId,
-			name: this.state.newTeamName
-		});
-
-		this.setState({ changingTeamName: false });
-	};
-
-	deleteTeam = () => {
-		confirmPopup({
-			title: "Delete Team",
-			message:
-				"Team deletion is handled by customer service. Please send an email to support@codestream.com.",
-			centered: true,
-			buttons: [{ label: "OK", className: "control-button" }]
-		});
-	};
-
 	changeXray = async value => {
 		await HostApi.instance.send(UpdateTeamSettingsRequestType, {
 			teamId: this.props.teamId,
@@ -710,13 +683,12 @@ class TeamPanel extends React.Component<Props, State> {
 
 		const suggested = this.state.suggested.filter(u => !invitingEmails[u.email]);
 		const mappedBlame = keyFilter(blameMap);
-		const title = this.props.teamName;
 
 		const authors2 = [{ label: "foo", value: "foo" }];
 		return (
 			<div className="panel full-height team-panel">
 				<CreateCodemarkIcons />
-				<PanelHeader title={title} />
+				<PanelHeader title={this.props.teamName} />
 				<ScrollBox>
 					<div className="vscroll">
 						<div className="section">

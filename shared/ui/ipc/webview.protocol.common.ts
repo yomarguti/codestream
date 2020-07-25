@@ -77,6 +77,7 @@ export enum WebviewModals {
 	ChangePhoneNumber = "change-phone-number",
 	ChangeUsername = "change-username",
 	ChangeWorksOn = "change-works-on",
+	ChangeTeamName = "change-team-name",
 	CreateTeam = "create-team",
 	Keybindings = "keybindings",
 	Notifications = "notifications",
