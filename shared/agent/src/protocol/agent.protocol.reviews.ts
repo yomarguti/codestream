@@ -266,6 +266,9 @@ export interface CheckReviewPreconditionsRequest {
 
 export interface CheckReviewPreconditionsResponse {
 	success: boolean;
+	repoRoots?: {
+		[repoId: string]: string;
+	};
 	error?: {
 		message: string;
 		type: "REPO_NOT_FOUND" | "REPO_NOT_OPEN" | "COMMIT_NOT_FOUND" | "UNKNOWN" | string;

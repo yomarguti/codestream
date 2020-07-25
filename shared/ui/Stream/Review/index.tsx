@@ -117,6 +117,7 @@ export interface BaseReviewProps extends CardProps {
 	repoInfoById: Map<string, RepoMetadata>;
 	headerError?: SimpleError;
 	canStartReview?: boolean;
+	repoRoots?: { [repoId: string]: string };
 	currentUserId?: string;
 	collapsed?: boolean;
 	isFollowing?: boolean;
@@ -218,6 +219,8 @@ export const MetaCheckboxWithHoverIcon = styled.div`
 
 const MetaIcons = styled.span`
 	margin-left: 5px;
+	display: inline-block;
+	height: 14px;
 	.icon {
 		margin-left: 5px;
 	}
@@ -851,7 +854,10 @@ const BaseReview = (props: BaseReviewProps) => {
 									<ChangesetFileList
 										review={review}
 										checkpoint={checkpoint}
-										loading={props.headerError ? false : !props.canStartReview}
+										repoRoots={props.repoRoots}
+										loading={
+											props.headerError && props.headerError.message ? false : !props.canStartReview
+										}
 										noOnClick={!props.canStartReview}
 										withTelemetry={true}
 									/>
@@ -1099,6 +1105,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 	const [isEditing, setIsEditing] = React.useState(false);
 	// const [isAmending, setIsAmending] = React.useState(false);
 	const [shareModalOpen, setShareModalOpen] = React.useState(false);
+	const [repoRoots, setRepoRoots] = React.useState<{ [repoId: string]: string } | undefined>();
 
 	const tags = React.useMemo(
 		() => (review.tags ? mapFilter(review.tags, id => derivedState.teamTagsById[id]) : emptyArray),
@@ -1164,6 +1171,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 		} else {
 			// need to clear the precondition error
 			setPreconditionError({ message: "", type: "" });
+			setRepoRoots(response.repoRoots);
 			setCanStartReview(true);
 		}
 	};
@@ -1238,6 +1246,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 				setIsAmending={props.setIsAmending}
 				headerError={preconditionError}
 				canStartReview={canStartReview}
+				repoRoots={repoRoots}
 				onRequiresCheckPreconditions={() => checkPreconditions()}
 			/>
 		);

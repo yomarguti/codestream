@@ -433,6 +433,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		const { git, repositoryMappings } = SessionContainer.instance();
 		const review = await this.getById(request.reviewId);
 		const diffsByRepo = await this.getAllDiffs(review.id);
+		const repoRoots: { [repoId: string]: string } = {};
 		for (const repoId in diffsByRepo) {
 			const repo = await git.getRepositoryById(repoId);
 			let repoPath;
@@ -450,6 +451,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 					}
 				};
 			}
+			repoRoots[repoId] = repoPath;
 
 			const diffs = diffsByRepo[repoId];
 			for (const d of diffs) {
@@ -484,7 +486,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		}
 
 		return {
-			success: true
+			success: true,
+			repoRoots
 		};
 	}
 

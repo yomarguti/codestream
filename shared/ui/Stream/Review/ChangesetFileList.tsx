@@ -2,7 +2,7 @@ import { CSReviewChangeset } from "@codestream/protocols/api";
 import React, { useEffect } from "react";
 import { ReviewPlus } from "@codestream/protocols/agent";
 import { HostApi } from "../..";
-import { localStore } from "../../utilities/storage";
+import * as path from "path-browserify";
 import { ChangesetFile } from "./ChangesetFile";
 import { useSelector, useDispatch } from "react-redux";
 import { CodeStreamState } from "@codestream/webview/store";
@@ -13,9 +13,11 @@ import { safe } from "@codestream/webview/utils";
 import { getById } from "@codestream/webview/store/repos/reducer";
 import {
 	ShowNextChangedFileNotificationType,
-	ShowPreviousChangedFileNotificationType
+	ShowPreviousChangedFileNotificationType,
+	EditorRevealRangeRequestType
 } from "@codestream/protocols/webview";
 import { WriteTextFileRequestType, ReadTextFileRequestType } from "@codestream/protocols/agent";
+import { Range } from "vscode-languageserver-types";
 
 // const VISITED_REVIEW_FILES = "review:changeset-file-list";
 const NOW = new Date().getTime(); // a rough timestamp so we know when the file was visited
@@ -28,6 +30,7 @@ export const ChangesetFileList = (props: {
 	showRepoLabels?: boolean;
 	checkpoint?: number;
 	withTelemetry?: boolean;
+	repoRoots?: { [repoId: string]: string };
 }) => {
 	const { review, noOnClick, loading, checkpoint } = props;
 	const dispatch = useDispatch<Dispatch>();
@@ -127,7 +130,7 @@ export const ChangesetFileList = (props: {
 		return () => disposables.forEach(disposable => disposable.dispose());
 	}, [checkpoint]);
 
-	const goFile = async index => {
+	const goDiff = async index => {
 		if (index < 0) index = derivedState.numFiles - 1;
 		if (index > derivedState.numFiles - 1) index = 0;
 		const f = derivedState.indexToFileMap[index];
@@ -144,15 +147,37 @@ export const ChangesetFileList = (props: {
 	};
 
 	const nextFile = () => {
-		if (!visitedFiles) goFile(0);
-		else if (visitedFiles._latest == null) goFile(0);
-		else goFile(visitedFiles._latest + 1);
+		if (!visitedFiles) goDiff(0);
+		else if (visitedFiles._latest == null) goDiff(0);
+		else goDiff(visitedFiles._latest + 1);
 	};
 
 	const prevFile = () => {
-		if (!visitedFiles) goFile(-1);
-		else if (visitedFiles._latest == null) goFile(-1);
-		else goFile(visitedFiles._latest - 1);
+		if (!visitedFiles) goDiff(-1);
+		else if (visitedFiles._latest == null) goDiff(-1);
+		else goDiff(visitedFiles._latest - 1);
+	};
+
+	const openFile = async index => {
+		if (index < 0) index = derivedState.numFiles - 1;
+		if (index > derivedState.numFiles - 1) index = 0;
+		const f = derivedState.indexToFileMap[index];
+		const changeset = derivedState.indexToChangesetMap[index];
+		const visitedKey = [changeset.repoId, f.file].join(":");
+
+		if (changeset.repoId && props.repoRoots) {
+			const repoRoot = props.repoRoots[changeset.repoId];
+			const response = HostApi.instance.send(EditorRevealRangeRequestType, {
+				uri: path.join(repoRoot, f.file),
+				range: Range.create(0, 0, 0, 0)
+			});
+
+			if (props.withTelemetry && review.id) {
+				HostApi.instance.track("Review File Viewed", {
+					"Review ID": review.id
+				});
+			}
+		}
 	};
 
 	const latest = visitedFiles[reviewCheckpointKey] ? visitedFiles[reviewCheckpointKey]._latest : 0;
@@ -209,8 +234,27 @@ export const ChangesetFileList = (props: {
 							onClick={async e => {
 								if (noOnClick) return;
 								e.preventDefault();
-								goFile(i);
+								goDiff(i);
 							}}
+							actionIcons={
+								!loading &&
+								!noOnClick && (
+									<div className="actions">
+										<Icon
+											name="goto-file"
+											className="clickable action"
+											title="Open File"
+											placement="left"
+											delay={1}
+											onClick={async e => {
+												e.stopPropagation();
+												e.preventDefault();
+												openFile(i);
+											}}
+										/>
+									</div>
+								)
+							}
 							key={changeset!.checkpoint + ":" + i + ":" + f.file}
 							{...f}
 						/>
