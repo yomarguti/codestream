@@ -801,24 +801,38 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				}
 			}
 
+			// if we have this, then we want to create the branch's remote
 			if (request.remoteName) {
-				const review = await this.getById(request.reviewId);
-				const repo = await git.getRepositoryById(review.reviewChangesets[0].repoId);
+				const repoId = review.reviewChangesets[0].repoId;
+				const repo = await git.getRepositoryById(repoId);
 				if (!repo) {
+					Logger.warn(`createPullRequest: repoId=${repoId} not found`);
 					return {
 						success: false,
 						error: { type: "REPO_NOT_FOUND" }
 					};
 				}
+				const branchRemote = await git.getBranchRemote(repo.path, request.headRefName);
+				if (!branchRemote) {
+					const result = await git.setBranchRemote(
+						repo.path,
+						request.remoteName,
+						request.headRefName
+					);
 
-				const result = await git.setBranchRemote(
-					repo.path,
-					request.remoteName,
-					request.headRefName
-				);
-
-				if (result) {
-					Logger.debug(result);
+					if (result) {
+						Logger.debug(result);
+					} else {
+						Logger.warn(
+							`createPullRequest: BRANCH_REMOTE_CREATION_FAILED ${repo.path} branch remote (${branchRemote}) for ${request.headRefName}`
+						);
+						return {
+							success: false,
+							error: { type: "BRANCH_REMOTE_CREATION_FAILED" }
+						};
+					}
+				} else {
+					Logger.debug(`${repo.path} branch remote (${branchRemote}) for ${request.headRefName}`);
 				}
 			}
 
@@ -830,8 +844,15 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 					reviewers: approvers
 				}
 			};
+
 			const result = await providerRegistry.createPullRequest(data);
 			if (!result || result.error) {
+				Logger.warn(
+					`createPullRequest: failed ${
+						result && result.error && result.error.message ? result.error.message : ""
+					}`
+				);
+
 				return {
 					success: false,
 					error: {
@@ -847,6 +868,10 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				pullRequestTitle: result.title,
 				pullRequestUrl: result.url
 			});
+
+			Logger.debug(
+				`createPullRequest: success for reviewId=${request.reviewId} providerId=${request.providerId} headRefName=${request.headRefName} baseRefName=${request.baseRefName}`
+			);
 
 			return {
 				success: true,

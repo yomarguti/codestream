@@ -432,6 +432,10 @@ export const CreatePullRequestPanel = props => {
 				messageElement = <span>Repo not found</span>;
 				break;
 			}
+			case "BRANCH_REMOTE_CREATION_FAILED": {
+				messageElement = <span>Could not create branch remote</span>;
+				break;
+			}
 			case "REPO_NOT_OPEN": {
 				messageElement = <span>Repo not currently open</span>;
 				break;

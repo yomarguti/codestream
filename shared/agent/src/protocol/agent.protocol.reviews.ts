@@ -360,7 +360,12 @@ export interface CreatePullRequestResponse {
 	success: boolean;
 	url?: string;
 	error?: {
-		type: "REPO_NOT_FOUND" | "COMMIT_NOT_FOUND" | "UNKNOWN" | string;
+		type:
+			| "REPO_NOT_FOUND"
+			| "COMMIT_NOT_FOUND"
+			| "BRANCH_REMOTE_CREATION_FAILED"
+			| "UNKNOWN"
+			| string;
 		message?: string;
 		url?: string;
 	};
