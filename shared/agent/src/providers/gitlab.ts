@@ -393,11 +393,18 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		// HACKitude yeah, sorry
 		const uri = URI.parse(remote);
 		const split = uri.path.split("/");
-		const owner = split[1];
-		const name = split[2].replace(".git", "");
+
+		// the project name is the last item
+		let name = split.pop();
+		// gitlab & enterprise can use project groups + subgroups
+		const owner = split.filter(_ => _ !== "" && _ != null);
+		if (name != null) {
+			name = name.replace(".git", "");
+		}
+
 		return {
-			owner,
-			name
+			owner: owner.join("/"),
+			name: name!
 		};
 	}
 
