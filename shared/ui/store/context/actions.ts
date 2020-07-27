@@ -28,7 +28,6 @@ export const openModal = (modal: WebviewModals) => (dispatch, getState) => {
 };
 
 export const closeModal = () => {
-	console.warn("CLOSING THE MODAL");
 	return action(ContextActionsType.CloseModal);
 };
 

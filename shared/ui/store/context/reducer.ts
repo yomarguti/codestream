@@ -86,7 +86,6 @@ export function reduceContext(
 		case ContextActionsType.OpenModal:
 			return { ...state, activeModal: action.payload };
 		case ContextActionsType.CloseModal: {
-			console.warn("DCLOS IN RED");
 			return { ...state, activeModal: undefined };
 		}
 		case ContextActionsType.SetFocusState:
