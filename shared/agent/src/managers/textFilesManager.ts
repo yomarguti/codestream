@@ -12,6 +12,7 @@ import {
 	WriteTextFileResponse
 } from "../protocol/agent.protocol.textFiles";
 import { log, lsp, lspHandler } from "../system";
+import { xfs } from "../xfs";
 
 @lsp
 export class TextFilesManager {
@@ -27,7 +28,7 @@ export class TextFilesManager {
 		try {
 			const file = this.textFilePath(request.path);
 			if (!fs.existsSync(file)) return {};
-			const contents = fs.readFileSync(file, "utf8");
+			const contents = await xfs.readText(file);
 			Logger.debug(`Read data ${contents} from ${file}`);
 			return { contents };
 		} catch (ex) {
@@ -42,7 +43,7 @@ export class TextFilesManager {
 		const { path, contents } = request;
 		try {
 			const file = this.textFilePath(path);
-			fs.writeFileSync(file, contents);
+			xfs.writeTextAtomic(contents, file);
 			Logger.debug(`Saved contents ${contents} to ${file}`);
 			return {
 				success: true

@@ -16,6 +16,18 @@ export namespace xfs {
 		});
 	}
 
+	export async function writeTextAtomic(text: any, destPath: string): Promise<undefined> {
+		return new Promise<undefined>((resolve, reject) => {
+			writeAtomic(destPath, text, err => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve();
+				}
+			});
+		});
+	}
+
 	export async function readJson(srcPath: string): Promise<string | undefined> {
 		const data = await xfs.readText(srcPath);
 		return data ? JSON.parse(data) : undefined;

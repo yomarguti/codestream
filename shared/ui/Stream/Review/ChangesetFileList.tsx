@@ -81,7 +81,8 @@ export const ChangesetFileList = (props: {
 			numFiles: index,
 			indexToChangesetMap,
 			indexToFileMap,
-			changesets
+			changesets,
+			maxCheckpoint: review.reviewChangesets[review.reviewChangesets.length - 1].checkpoint
 		};
 	});
 
@@ -96,9 +97,22 @@ export const ChangesetFileList = (props: {
 	// if we're looking at a specific checkpoint, save the visisted
 	// information under that key. if however we're looking at the overall
 	// changes, we want that to "reset" each time the review gets amended,
-	// so we base it on the total number of changesets
-	const reviewCheckpointKey =
-		checkpoint == undefined ? `all:${review.reviewChangesets.length}` : checkpoint;
+	// so we further base the 'all' key on the total number of changesets.
+	// one final exception to the rule is that if you look at the original
+	// review, and then later after 8 checkpoints are added, look back at
+	// "Initial Review" (which is now referred to as checkpoint 0), then
+	// those are equivalent.
+	let reviewCheckpointKey: string | number;
+	// checkpoint == undefined means we're looking at the whole review
+	if (checkpoint == undefined) {
+		// this is the case where we are in the initial review
+		if (derivedState.maxCheckpoint == 0) reviewCheckpointKey = 0;
+		// this is the case where we're looking at all the changes
+		// across multiple checkpoints
+		else reviewCheckpointKey = `all:${review.reviewChangesets.length}`;
+	} else {
+		reviewCheckpointKey = checkpoint;
+	}
 
 	const saveVisitedFiles = (newVisitedFiles, key) => {
 		HostApi.instance.send(WriteTextFileRequestType, {
