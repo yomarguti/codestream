@@ -3,10 +3,8 @@
 ### Getting the code
 
 ```
-git clone https://github.com/TeamCodeStream/codestream-lsp-agent.git
+git clone https://github.com/TeamCodeStream/codestream.git
 ```
-
-👉 **NOTE!** Make sure to clone the `codestream-lsp-agent` repository into a folder that is a sibling of the `vscode-codestream` repository
 
 Prerequisites
 
@@ -67,10 +65,3 @@ To generate a production bundle run the following from a terminal:
 ```
 npm run bundle
 ```
-
-### Debugging
-
-#### Using VS Code
-
-- Open the `codestream-lsp-agent` repository folder
-- Choose the `Attach to Agent` launch configuration from the launch dropdown in the Debug viewlet and press `F5`.

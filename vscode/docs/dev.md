@@ -15,10 +15,10 @@ Versions
 - [npm](https://npmjs.com/), 6.11.3 (Dec 2019)
 
 ### Before you begin...
+
 The CodeStream clients all live in a single git mono-repo. Each IDE has their own tools for generating builds and VS Code is no different!
 
-CodeStream for VS Code uses Language Server Protocol (LSP) to communicate with the IDE. Along with the .vsix artifact created from packagin CodeStream for VS Code, there is an _agent_ executable that must also be built and shipped with the CodeStream extension. Therefore, the agent must be built before you can locally build or debug the extension.
-
+CodeStream for VS Code uses Language Server Protocol (LSP) to communicate with the IDE. Along with the .vsix artifact created from packaging CodeStream for VS Code, there is an _agent_ executable that must also be built and shipped with the CodeStream extension. Therefore, the agent must be built before you can locally build or debug the extension.
 
 ### Build
 
@@ -46,10 +46,10 @@ npm run build
 ```
 
 ### In short...
+
 `npm install --no-save`... needs to be run for shared/ui, shared/agent, vscode
 
 `npm run build`... needs to be run for shared/agent _then_ vscode
-
 
 ##### Ubuntu 18.04: 'pushd not found'
 
@@ -135,6 +135,7 @@ To run the agent unit tests run the following from a terminal:
 cd shared/agent
 npm run test-acceptance
 ```
+
 or
 
 ```
@@ -143,6 +144,7 @@ npm run test-unit
 ```
 
 To run the webview unit tests run the following from a terminal:
+
 ```
 cd shared/ui
 npm run test
@@ -199,9 +201,9 @@ Here are the download links for pre-built vsix bundles:
 
 ### Connecting to a CodeStream backend environment (common)
 
-You'll find a number of preconfigured workspace files in the vscode-codestream base folder.
+You'll find a number of preconfigured workspace files in the codestream base folder.
 
-Most likely, you can start with [pd.code-workspace](https://pd-api.codestream.us/c/XeVt1z0FRWDASwNz/oKXkL03ESYi1xHxRM8akig) for most work. The "pd" prefix stands for "Persistent Development" and is for most on-going product development.
+Most likely, you can start with [pd.code-workspace](https://pd-api.codestream.us/c/XeVt1z0FRWDASwNz/oKXkL03ESYi1xHxRM8akig) for most work. The "pd" prefix stands for "Persistent Development" and is for most on-going product development. This only applies to CodeStream employees and contractors.
 
 ### Writing your own workspace files (less common)
 
@@ -212,7 +214,7 @@ When you need to switch between environments not covered by one of the existing 
 Use the following settings:
 
 ```json
-"codestream.serverUrl": "https://pd-api.codestream.us",
+"codestream.serverUrl": "https://api.codestream.com",
 "codestream.email": "<email>",
 "codestream.team": "<team>", // Shouldn't really be needed unless there are issues and you belong to more than 1 team
 ```
@@ -227,14 +229,14 @@ Example workspace file &mdash; save as pd.code-workspace
 		}
 	],
 	"settings": {
-		"codestream.serverUrl": "https://pd-api.codestream.us",
+		"codestream.serverUrl": "https://api.codestream.com",
 		"codestream.email": "<email>",
 		"codestream.team": "<team>" // Shouldn't really be needed unless there are issues and you belong to more than 1 team
 	}
 }
 ```
 
-#### Connects to the QA environment
+#### Connects to the QA environment (CodeStream employees & contractors)
 
 Use the following settings:
 
@@ -307,7 +309,7 @@ Looking at the database
 
 1. Get MongoDB Compass: https://www.mongodb.com/products/compass
 2. Point it to pd-api.codestream.us:27017
-3. To see the most recent database entries: OPTIONS -> Sort, enter "{createdAt : -1}"
+3. To see the most recent database entries: OPTIONS -> Sort, enter `{createdAt : -1}`
 
 ### New to VSCode example: debugging agent startup code (Novice)
 

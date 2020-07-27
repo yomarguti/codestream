@@ -3,10 +3,8 @@
 ### Getting the code
 
 ```
-git clone https://github.com/TeamCodeStream/vs-codestream.git
+git clone https://github.com/TeamCodeStream/codestream.git
 ```
-
-👉 **NOTE!** Make sure to clone the `vs-codestream` repository into a folder that is a sibling of the `vscode-codestream`, `codestream-component`, and `codestream-lsp-agent` repositories
 
 Prerequisites
 
@@ -17,24 +15,9 @@ Prerequisites
 - [npm](https://npmjs.com/), `>= 6.2.0`
 - License for [https://www.teamdev.com/dotnetbrowser](DotNetBrowser) (it must put into the git-ignored folder `\licenses\{Configuration}` where `{Configuration}` is Debug (dev license) or Release (runtime license)). It will be picked up by msbuild and put into the correct location. These licenses should _not_ be commited to source control
 
-### Releasing
-
-To create a release artifact. From PowerShell, run
-
-```
-cd build
-.\Release.ps1
-```
-
-Under the hood this calls `Bump-Version.ps1` and `Build.ps1`. These can be run separately if necessary
-
-By default `Release.ps1` will bump the Minor version of the package (the version lives in three spots: manifest, AssemblyInfo, SolutionInfo).
-
-`Build.ps1` will restore, build, unit test, and generate all output in \build\artifacts\\{Platform}\\{Configuration}. The resulting extension artifact in that directory is called `codestream-vs.vsix`
-
 ### Build (local)
 
-1. From a terminal, where you have cloned the `codestream-lsp-agent` repository, execute the following command to re-build the agent from scratch:
+1. From a terminal, where you have cloned the `codestream` repository, cd to `shared/agent` and execute the following command to re-build the agent from scratch:
 
    ```
    npm run rebuild
@@ -48,7 +31,7 @@ By default `Release.ps1` will bump the Minor version of the package (the version
 
 ### Watch (Agent only)
 
-During development you can use a watcher to make builds on changes quick and easy. From a terminal, where you have cloned the `codestream-lsp-agent` repository, execute the following command:
+During development you can use a watcher to make builds on changes quick and easy. From a terminal, where you have cloned the `codestream` repository, cd to `shared/agent` execute the following command:
 
 ```
 npm run watch
@@ -61,9 +44,10 @@ It will do an initial full build and then watch for file changes, compiling thos
 #### Using Visual Studio
 
 1. Ensure that the agent has been build or that the watcher is running (see the _Watch_ section above)
-1. Open the solution (`src/CodeStream.VisualStudio.sln`),
+1. Open the solution (`vs/src/CodeStream.VisualStudio.sln`),
 1. Press `F5` to build and run the solution. This will open a new "experimental" version of Visual Studio.
 
+NOTE: you cannot have the CodeStream for VS extension installed from the marketplace AND run an experimental debugging instance of VS (you have to uninstall the version from the store first)
 
 ### Build (CI)
 
@@ -75,6 +59,21 @@ cd build
 ```
 
 The build portion of the artifact version can be updated using `.\Bump-Version.ps1 -BuildNumber 666 -BumpBuild`. this will convert `0.1.0` to `0.1.0.666`
+
+### Releasing
+
+To create a local release artifact. From PowerShell, run
+
+```
+cd vs\build
+.\Release.ps1
+```
+
+Under the hood this calls `Bump-Version.ps1` and `Build.ps1`. These can be run separately if necessary
+
+By default `Release.ps1` will bump the Minor version of the package (the version lives in three spots: manifest, AssemblyInfo, SolutionInfo).
+
+`Build.ps1` will restore, build, unit test, and generate all output in \build\artifacts\\{Platform}\\{Configuration}. The resulting extension artifact in that directory is called `codestream-vs.vsix`
 
 ## Notes
 
@@ -102,5 +101,3 @@ Menus are attached to the VisualStudio shell with a `.vsct` file. Here, they are
 ### Tools
 
 Highly recommend installing: https://marketplace.visualstudio.com/items?itemName=MadsKristensen.ExtensibilityTools (Clearing MEF cache, VSCT support)
-
-

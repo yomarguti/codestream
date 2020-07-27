@@ -1,6 +1,9 @@
+# CodeStream for Atom
+
 ## To get started
 
 1. clone the repo
+   `git clone https://github.com/TeamCodeStream/codestream.git`
 2. `cd` into `atom`
 3. run `apm link --dev`, which tells atom to use this directory as the package source for atom windows running in dev mode.
 4. open atom in dev mode (`atom --dev path/to/project`) to debug the extension
