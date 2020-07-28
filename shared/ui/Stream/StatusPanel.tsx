@@ -40,6 +40,7 @@ import { Modal } from "./Modal";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { GitTimeline, BranchLineDown, BranchCurve, BranchLineAcross, GitBranch } from "./Flow";
+import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
 
 const StyledCheckbox = styled(Checkbox)`
 	color: var(--text-color-subtle);
@@ -447,6 +448,29 @@ export const StatusPanel = () => {
 		}
 	};
 
+	const disposables: { dispose(): void }[] = [];
+
+	const toggleEditingBranch = value => {
+		if (value) {
+			disposables.push(
+				KeystrokeDispatcher.withLevel(),
+				KeystrokeDispatcher.onKeyDown(
+					"Escape",
+					event => {
+						// event.stopPropagation();
+						toggleEditingBranch(false);
+						return false;
+					},
+					{ source: "StatusPanel.tsx", level: -1 }
+				)
+			);
+		} else {
+			disposables && disposables.forEach(_ => _.dispose());
+		}
+
+		setEditingBranch(value);
+	};
+
 	const setMoveCard = value => dispatch(setUserPreference(["startWork", "moveCard"], value));
 	const setCreateBranch = value =>
 		dispatch(setUserPreference(["startWork", "createBranch"], value));
@@ -753,7 +777,7 @@ export const StatusPanel = () => {
 				label: "Edit Branch Name",
 				key: "edit",
 				icon: <Icon name="pencil" />,
-				action: () => setEditingBranch(true)
+				action: () => toggleEditingBranch(true)
 			},
 			{
 				label: "Configure Branch Naming",
@@ -946,9 +970,9 @@ export const StatusPanel = () => {
 															type="text"
 															onChange={e => setCustomBranchName(e.target.value)}
 															placeholder="Enter branch name"
-															onBlur={() => setEditingBranch(false)}
+															onBlur={() => toggleEditingBranch(false)}
 															onKeyPress={e => {
-																if (e.key == "Enter") setEditingBranch(false);
+																if (e.key == "Enter") toggleEditingBranch(false);
 															}}
 															style={{ width: "200px" }}
 														/>
