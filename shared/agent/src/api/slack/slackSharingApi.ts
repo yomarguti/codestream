@@ -10,7 +10,7 @@ import {
 } from "@slack/web-api";
 import { Agent as HttpsAgent, request } from "https";
 import HttpsProxyAgent from "https-proxy-agent";
-import { uniq, method } from "lodash-es";
+import { uniq } from "lodash-es";
 import { Container, SessionContainer } from "../../container";
 import { Logger, TraceLevel } from "../../logger";
 import {
@@ -53,9 +53,6 @@ import {
 	toSlackReviewPostBlocks,
 	UserMaps
 } from "./slackSharingApi.adapters";
-import { error } from "util";
-import { group } from "console";
-import async from "async";
 
 interface DeferredStreamRequest<TResult> {
 	action(): Promise<TResult>;
@@ -212,7 +209,10 @@ export class SlackSharingApiProvider {
 		return this._userMaps;
 	}
 
-	@log()
+	@log({
+		prefix: (context, e: CreateSharedExternalPostRequest) =>
+			`${context.prefix}(${e.review != null ? "review" : "codemark"})`
+	})
 	async createExternalPost(request: CreateSharedExternalPostRequest): Promise<CreatePostResponse> {
 		let createdPostId;
 		try {
