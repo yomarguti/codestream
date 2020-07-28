@@ -1025,6 +1025,7 @@ export class CodeStreamSession {
 			name: user.fullName,
 			"Team ID": this._teamId,
 			"Join Method": user.joinMethod,
+			"Last Invite Type": user.lastInviteType,
 			"Plugin Version": this.versionInfo.extension.versionFormatted,
 			Endpoint: this.versionInfo.ide.name,
 			"Endpoint Detail": this.versionInfo.ide.detail,
