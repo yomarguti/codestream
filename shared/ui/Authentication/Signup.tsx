@@ -228,6 +228,34 @@ export const Signup = (props: Props) => {
 		[props.type]
 	);
 
+	const onClickGitlabSignup = useCallback(
+		(event: React.SyntheticEvent) => {
+			event.preventDefault();
+			HostApi.instance.track("Provider Auth Selected", {
+				Provider: "GitLab"
+			});
+			const info = props.inviteCode
+				? { type: SignupType.JoinTeam, inviteCode: props.inviteCode }
+				: { type: SignupType.CreateTeam };
+			return dispatch(startSSOSignin("gitlab", { ...info, fromSignup: true }));
+		},
+		[props.type]
+	);
+
+	const onClickBitbucketSignup = useCallback(
+		(event: React.SyntheticEvent) => {
+			event.preventDefault();
+			HostApi.instance.track("Provider Auth Selected", {
+				Provider: "Bitbucket"
+			});
+			const info = props.inviteCode
+				? { type: SignupType.JoinTeam, inviteCode: props.inviteCode }
+				: { type: SignupType.CreateTeam };
+			return dispatch(startSSOSignin("bitbucket", { ...info, fromSignup: true }));
+		},
+		[props.type]
+	);
+
 	const onClickOktaSignup = useCallback(
 		(event: React.SyntheticEvent) => {
 			return dispatch(goToOktaConfig({ fromSignup: true, inviteCode: props.inviteCode }));
@@ -380,6 +408,16 @@ export const Signup = (props: Props) => {
 									<div className="copy">Sign Up with GitHub</div>
 									<Icon name="chevron-right" />
 								</Button>
+								<Button className="row-button no-top-margin" onClick={onClickGitlabSignup}>
+									<Icon name="gitlab" />
+									<div className="copy">Sign Up with GitLab</div>
+									<Icon name="chevron-right" />
+								</Button>
+								<Button className="row-button no-top-margin" onClick={onClickBitbucketSignup}>
+									<Icon name="bitbucket" />
+									<div className="copy">Sign Up with Bitbucket</div>
+									<Icon name="chevron-right" />
+								</Button>
 								{derivedState.oktaEnabled && (
 									<Button className="row-button no-top-margin" onClick={onClickOktaSignup}>
 										<Icon name="okta" />
@@ -389,7 +427,7 @@ export const Signup = (props: Props) => {
 								)}
 								<div style={{ height: "15px" }} />
 								<CSText muted as="span">
-									If you use GitLab, BitBucket, or a self-managed git server, sign up with
+									If you use a self-managed git server, sign up with
 									CodeStream {derivedState.oktaEnabled ? "or Okta " : ""}above.
 								</CSText>
 							</div>

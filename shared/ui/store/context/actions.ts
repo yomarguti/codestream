@@ -127,7 +127,7 @@ export const goToNewUserEntry = (params = {}) =>
 export const goToForgotPassword = (params = {}) =>
 	action(ContextActionsType.SetRoute, { name: Route.ForgotPassword, params });
 
-export type SupportedSSOProvider = "github" | "okta";
+export type SupportedSSOProvider = "github" | "gitlab" | "bitbucket" | "okta";
 
 export const goToSSOAuth = (
 	provider: SupportedSSOProvider,
@@ -136,6 +136,8 @@ export const goToSSOAuth = (
 	params.provider = provider;
 	switch (provider) {
 		case "github":
+		case "gitlab":
+		case "bitbucket":
 		case "okta":
 			return action(ContextActionsType.SetRoute, { name: Route.ProviderAuth, params });
 		default:

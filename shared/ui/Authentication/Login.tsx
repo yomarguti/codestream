@@ -170,6 +170,16 @@ class Login extends React.Component<Props, State> {
 		this.props.startSSOSignin("github");
 	};
 
+	handleClickGitlabLogin = event => {
+		event.preventDefault();
+		this.props.startSSOSignin("gitlab");
+	};
+
+	handleClickBitbucketLogin = event => {
+		event.preventDefault();
+		this.props.startSSOSignin("bitbucket");
+	};
+
 	handleClickOktaLogin = event => {
 		event.preventDefault();
 		this.props.goToOktaConfig({});
@@ -254,6 +264,22 @@ class Login extends React.Component<Props, State> {
 										>
 											<Icon name="mark-github" />
 											<div className="copy">Sign In with GitHub</div>
+											<Icon name="chevron-right" />
+										</Button>
+										<Button
+											className="row-button no-top-margin"
+											onClick={this.handleClickGitlabLogin}
+										>
+											<Icon name="gitlab" />
+											<div className="copy">Sign In with GitLab</div>
+											<Icon name="chevron-right" />
+										</Button>
+										<Button
+											className="row-button no-top-margin"
+											onClick={this.handleClickBitbucketLogin}
+										>
+											<Icon name="bitbucket" />
+											<div className="copy">Sign In with Bitbucket</div>
 											<Icon name="chevron-right" />
 										</Button>
 										{this.props.oktaEnabled && (
