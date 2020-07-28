@@ -420,7 +420,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 	const [queryOpen, setQueryOpen] = React.useState(false);
 	const [query, setQuery] = React.useState("");
 	const [reload, setReload] = React.useState(1);
-	const [testCards, setTestCards] = React.useState<any[]>([]);
+	const [testCards, setTestCards] = React.useState<any[] | undefined>(undefined);
 	const [loadingTest, setLoadingTest] = React.useState(false);
 
 	const getFilterLists = (providerId: string) => {
@@ -842,7 +842,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 	};
 
 	const testCustomFilter = async () => {
-		setTestCards([]);
+		setTestCards(undefined);
 		setLoadingTest(true);
 		const id = addingCustomFilterForProvider ? addingCustomFilterForProvider.id : "";
 		const response = await HostApi.instance.send(FetchThirdPartyCardsRequestType, {
@@ -850,7 +850,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 			providerId: id
 		});
 		setLoadingTest(false);
-		setTestCards(response.cards as any);
+		setTestCards(response.cards || ([] as any));
 	};
 
 	const firstLoad = cards.length == 0 && isLoading;
@@ -908,7 +908,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 									&nbsp;&nbsp;&nbsp;&nbsp;Save&nbsp;&nbsp;&nbsp;&nbsp;
 								</Button>
 							</ButtonRow>
-							{testCards.length > 0 && (
+							{testCards != undefined && (
 								<div style={{ width: "460px", margin: "20px -20px 0 -20px" }}>
 									<h3
 										style={{
