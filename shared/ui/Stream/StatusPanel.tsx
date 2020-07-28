@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
 import { HostApi } from "../webview-api";
@@ -451,25 +451,25 @@ export const StatusPanel = () => {
 	const disposables: { dispose(): void }[] = [];
 
 	const toggleEditingBranch = value => {
-		if (value) {
+		setEditingBranch(value);
+	};
+
+	useEffect(() => {
+		if (editingBranch && !disposables.length) {
 			disposables.push(
 				KeystrokeDispatcher.withLevel(),
 				KeystrokeDispatcher.onKeyDown(
 					"Escape",
 					event => {
-						// event.stopPropagation();
 						toggleEditingBranch(false);
-						return false;
 					},
-					{ source: "StatusPanel.tsx", level: -1 }
+					{ source: "StatusPanel.tsx (toggleEditingBranch)", level: -1 }
 				)
 			);
 		} else {
 			disposables && disposables.forEach(_ => _.dispose());
 		}
-
-		setEditingBranch(value);
-	};
+	}, [editingBranch]);
 
 	const setMoveCard = value => dispatch(setUserPreference(["startWork", "moveCard"], value));
 	const setCreateBranch = value =>
