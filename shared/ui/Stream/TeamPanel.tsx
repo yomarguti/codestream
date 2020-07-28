@@ -948,7 +948,7 @@ class TeamPanel extends React.Component<Props, State> {
 												placeholder="Email..."
 												autoFocus={true}
 											/>
-											{suggested.length && (
+											{suggested.length > 0 && (
 												<div style={{ position: "absolute", right: "15px", top: "7px" }}>
 													<InlineMenu
 														className="big-chevron"
