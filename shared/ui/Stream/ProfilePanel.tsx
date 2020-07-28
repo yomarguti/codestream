@@ -17,8 +17,11 @@ import { getCodeCollisions } from "../store/users/reducer";
 import CancelButton from "./CancelButton";
 import { UserStatus } from "../src/components/UserStatus";
 import { ModifiedRepos } from "./ModifiedRepos";
-import { UpdateUserRequestType } from "@codestream/protocols/agent";
+import { UpdateUserRequestType, DeleteUserRequestType } from "@codestream/protocols/agent";
 import Menu from "./Menu";
+import { confirmPopup } from "./Confirm";
+import { logout } from "../store/session/actions";
+import { Button } from "../src/components/Button";
 
 const Root = styled.div`
 	.edit-headshot {
@@ -103,11 +106,13 @@ export const ProfilePanel = () => {
 
 		return {
 			person,
+			team,
 			isMe: person ? person.id === session.userId : false,
 			webviewFocused: state.context.hasFocus,
 			repos: state.repos,
 			teamId: state.context.currentTeamId,
 			currentUserEmail: me.email,
+			currentUserId: me.id,
 			collisions: getCodeCollisions(state),
 			xrayEnabled
 		};
@@ -155,6 +160,40 @@ export const ProfilePanel = () => {
 		}
 	};
 	const noop = () => {};
+	const cancelAccount = () => {
+		const { team, currentUserId } = derivedState;
+		const { adminIds } = team;
+
+		if (adminIds && adminIds.length == 1 && adminIds.includes(currentUserId!)) {
+			confirmPopup({
+				title: "Not Possible",
+				message:
+					"As the only admin on your team, you may not delete your account. Please contact customer service.",
+				centered: true,
+				buttons: [{ label: "Go Back", className: "control-button" }]
+			});
+		} else {
+			confirmPopup({
+				title: "Are you sure?",
+				message: "Deleting your CodeStream user account cannot be undone.",
+				centered: true,
+				buttons: [
+					{ label: "Go Back", className: "control-button" },
+					{
+						label: "Delete Account",
+						className: "delete",
+						wait: true,
+						action: async () => {
+							await HostApi.instance.send(DeleteUserRequestType, {
+								userId: currentUserId!
+							});
+							dispatch(logout());
+						}
+					}
+				]
+			});
+		}
+	};
 
 	const emailRef = React.useRef<HTMLTextAreaElement>(null);
 
@@ -253,6 +292,13 @@ export const ProfilePanel = () => {
 						)}
 						<MetaLabel>Local Modifications</MetaLabel>
 						<ModifiedRepos id={person.id} showModifiedAt />
+						{isMe && (
+							<div style={{ marginTop: "75px" }}>
+								<Button variant="destructive" onClick={cancelAccount}>
+									Delete your account
+								</Button>
+							</div>
+						)}
 					</div>
 				</ScrollBox>
 			</div>

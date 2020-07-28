@@ -96,40 +96,6 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		openUrl(upgradeLink);
 	};
 
-	const cancelAccount = () => {
-		const { team, currentUserId } = derivedState;
-		const { adminIds } = team;
-
-		if (adminIds && adminIds.length == 1 && adminIds.includes(currentUserId!)) {
-			confirmPopup({
-				title: "Not Possible",
-				message: "As the only admin on your team, you may not delete your account.",
-				centered: true,
-				buttons: [{ label: "Go Back", className: "control-button" }]
-			});
-		} else {
-			confirmPopup({
-				title: "Are you sure?",
-				message: "Deleting your user account cannot be undone.",
-				centered: true,
-				buttons: [
-					{ label: "Go Back", className: "control-button" },
-					{
-						label: "Cancel Account",
-						className: "delete",
-						wait: true,
-						action: async () => {
-							await HostApi.instance.send(DeleteUserRequestType, {
-								userId: currentUserId!
-							});
-							dispatch(logout());
-						}
-					}
-				]
-			});
-		}
-	};
-
 	const buildUpgradeTeamMenuItem = () => {
 		const { plan = "" } = derivedState.company;
 
@@ -308,13 +274,13 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				{ label: "Change Full Name", action: () => popup(WebviewModals.ChangeFullName) },
 				// { label: "Change Password", action: "password" },
 				{ label: "-" },
-				{ label: "Sign Out", action: () => dispatch(logout()) },
-				{ label: "-" },
-				{
-					label: "Other Actions",
-					action: "other",
-					submenu: [{ label: "Cancel My User Account", action: cancelAccount }]
-				}
+				{ label: "Sign Out", action: () => dispatch(logout()) }
+				// { label: "-" },
+				// {
+				// 	label: "Other Actions",
+				// 	action: "other",
+				// 	submenu: [{ label: "Cancel My User Account", action: cancelAccount }]
+				// }
 			]
 		},
 		{
