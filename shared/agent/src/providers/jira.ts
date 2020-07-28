@@ -158,7 +158,7 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 			const jiraBoards: JiraBoard[] = [];
 			let nextPage: string | undefined = "/rest/api/2/project/search";
 
-			while (nextPage !== undefined) {
+			while (nextPage) {
 				try {
 					const { body }: { body: ProjectSearchResponse } = await this.get<ProjectSearchResponse>(
 						nextPage
@@ -177,7 +177,7 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 				} catch (e) {
 					Container.instance().errorReporter.reportMessage({
 						type: ReportingMessageType.Error,
-						message: "Jira: Error fetching jira projects",
+						message: `Jira: Error fetching jira projects: ${nextPage}`,
 						source: "agent",
 						extra: {
 							message: e.message
