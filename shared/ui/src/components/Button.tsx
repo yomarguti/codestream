@@ -157,6 +157,7 @@ export interface ButtonProps extends PropsWithChildren<{}> {
 	onClick?: React.MouseEventHandler;
 	fillParent?: boolean;
 	className?: string;
+	tabIndex?: number;
 }
 
 export function getButtonProps<P extends ButtonProps>(props: P): ButtonProps {

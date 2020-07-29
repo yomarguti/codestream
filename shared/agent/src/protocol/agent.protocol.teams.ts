@@ -116,3 +116,20 @@ export const UpdateTeamSettingsRequestType = new RequestType<
 	void,
 	void
 >("codestream/team/settings/update");
+
+export interface AddBlameMapRequest {
+	teamId: string;
+	email: string;
+	userId: string;
+}
+
+export interface AddBlameMapResponse {
+	team: CSTeam;
+}
+
+export const AddBlameMapRequestType = new RequestType<
+	AddBlameMapRequest,
+	AddBlameMapResponse,
+	void,
+	void
+>("codestream/team/add-blame-map");

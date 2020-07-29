@@ -631,6 +631,7 @@ export interface CSMePreferences {
 	notifications?: CSNotificationPreference;
 	notificationDelivery?: CSNotificationDeliveryPreference;
 	skipWallToWallBanner?: boolean;
+	skipGitEmailCheck?: boolean;
 	[key: string]: any;
 }
 

@@ -205,7 +205,6 @@ interface State {
 	prevEndCommit: string;
 	unsavedFiles: string[];
 	commitListLength: number;
-	currentUserScmEmail: string | undefined;
 	// this is the review setting
 	allReviewersMustApprove: boolean;
 	mountedTimestamp: number;
@@ -213,14 +212,6 @@ interface State {
 	editingReviewBranch?: string;
 	addressesIssues: { [codemarkId: string]: boolean };
 }
-
-const EmailWarning = styled.div`
-	display: flex;
-	padding: 10px 0 30px 2px;
-	b {
-		color: var(--text-color-highlight);
-	}
-`;
 
 function merge(defaults: Partial<State>, review: CSReview): State {
 	return Object.entries(defaults).reduce((object, entry) => {
@@ -409,11 +400,6 @@ class ReviewForm extends React.Component<Props, State> {
 		}
 	}
 
-	private async getUserInfo() {
-		const response = await HostApi.instance.send(GetUserInfoRequestType, {});
-		this.setState({ currentUserScmEmail: response.email });
-	}
-
 	componentDidMount() {
 		const { isEditing, isAmending, textEditorUri } = this.props;
 		if (isEditing && !isAmending) return;
@@ -425,7 +411,6 @@ class ReviewForm extends React.Component<Props, State> {
 			}
 		}
 
-		this.getUserInfo();
 		if (isAmending) this.getScmInfoForRepo();
 		else {
 			this.getScmInfoForURI(textEditorUri, () => {
@@ -1098,8 +1083,6 @@ class ReviewForm extends React.Component<Props, State> {
 		);
 	};
 
-	goSetEmail = () => this.props.openModal(WebviewModals.ChangeEmail);
-
 	addBlameMap = async (author: string, assigneeId: string) => {
 		await HostApi.instance.send(UpdateTeamSettingsRequestType, {
 			teamId: this.props.teamId,
@@ -1112,11 +1095,9 @@ class ReviewForm extends React.Component<Props, State> {
 	};
 
 	render() {
-		const { repoStatus, currentUserScmEmail } = this.state;
+		const { repoStatus } = this.state;
 		const totalModifiedLines = repoStatus && repoStatus.scm ? repoStatus.scm.totalModifiedLines : 0;
 		const { currentUser, isAmending, blameMap = {} } = this.props;
-
-		const mappedMe = blameMap[(currentUserScmEmail || "").replace(/\./g, "*")];
 
 		return (
 			<FeatureFlag flag="lightningCodeReviews">
@@ -1139,31 +1120,6 @@ class ReviewForm extends React.Component<Props, State> {
 						<div className={cx({ "full-height-codemark-form": !isAmending })}>
 							{!isAmending && <CancelButton onClick={this.confirmCancel} />}
 							<div className={cx({ "review-container": !isAmending })}>
-								{currentUserScmEmail && currentUserScmEmail !== currentUser.email && !mappedMe && (
-									<EmailWarning>
-										<Icon name="alert" className="conflict" />
-										<span style={{ paddingLeft: "10px" }}>
-											<CSText as="span">
-												Your CodeStream and git commit emails don't match (
-												<b>{currentUser.email}</b> vs. <b>{currentUserScmEmail}</b>), which impairs
-												CodeStream's ability to identify which commits are yours. Please{" "}
-												<a onClick={this.goSetEmail}>update your email address</a> so that they
-												match
-												{this.props.isCurrentUserAdmin && (
-													<>
-														, or{" "}
-														<a
-															onClick={() => this.addBlameMap(currentUserScmEmail, currentUser.id)}
-														>
-															claim code written by {currentUserScmEmail} as yours
-														</a>
-													</>
-												)}
-												.
-											</CSText>
-										</span>
-									</EmailWarning>
-								)}
 								<div className="codemark-form-container">{this.renderReviewForm()}</div>
 								{this.renderExcludedFiles()}
 								<div style={{ height: "5px" }}></div>

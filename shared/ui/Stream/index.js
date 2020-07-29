@@ -76,6 +76,7 @@ import { Keybindings } from "./Keybindings";
 import { FlowPanel, VideoLink } from "./Flow";
 import { PRInfoModal } from "./SpatialView/PRInfoModal";
 import { GlobalNav } from "./GlobalNav";
+import { CheckEmailVsGit } from "./CheckEmailVsGit";
 
 const EMAIL_MATCH_REGEX = new RegExp(
 	"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*",
@@ -292,6 +293,7 @@ export class SimpleStream extends Component {
 				<OfflineBanner />
 				<WallToWallBanner />
 				<ModalRoot />
+				<CheckEmailVsGit />
 				{this.state.propsForPrePRProviderInfoModal && (
 					<PrePRProviderInfoModal {...this.state.propsForPrePRProviderInfoModal} />
 				)}

@@ -427,8 +427,8 @@ export const Signup = (props: Props) => {
 								)}
 								<div style={{ height: "15px" }} />
 								<CSText muted as="span">
-									If you use a self-managed git server, sign up with
-									CodeStream {derivedState.oktaEnabled ? "or Okta " : ""}above.
+									If you use a self-managed git server, sign up with CodeStream{" "}
+									{derivedState.oktaEnabled ? "or Okta " : ""}above.
 								</CSText>
 							</div>
 						</div>
