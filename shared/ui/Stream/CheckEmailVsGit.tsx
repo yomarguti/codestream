@@ -30,7 +30,7 @@ export const CheckEmailVsGit = () => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const team = state.teams[state.context.currentTeamId];
 		const blameMap = team.settings ? team.settings.blameMap : {};
-		const skipGitEmailCheck = false; //state.preferences.skipGitEmailCheck;
+		const skipGitEmailCheck = state.preferences.skipGitEmailCheck;
 		const addBlameMapEnabled = isFeatureEnabled(state, "addBlameMap");
 		return { currentUser, blameMap, team, skipGitEmailCheck, addBlameMapEnabled };
 	});
