@@ -1,5 +1,6 @@
 package com.codestream.webview
 
+import com.codestream.DEBUG
 import com.google.gson.JsonElement
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.diagnostic.runAndLogException
@@ -7,6 +8,9 @@ import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.ui.jcef.JBCefJSQuery
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
+import org.cef.callback.CefContextMenuParams
+import org.cef.callback.CefMenuModel
+import org.cef.handler.CefContextMenuHandlerAdapter
 import org.cef.handler.CefLoadHandlerAdapter
 import javax.swing.JComponent
 
@@ -26,6 +30,18 @@ class JBCefWebView(val jbCefBrowser: JBCefBrowser, val router: WebViewRouter) : 
 
     init {
         logger.info("Initializing JBCef WebView")
+        jbCefBrowser.jbCefClient.addContextMenuHandler(object : CefContextMenuHandlerAdapter(){
+            override fun onBeforeContextMenu(
+                browser: CefBrowser?,
+                frame: CefFrame?,
+                params: CefContextMenuParams?,
+                model: CefMenuModel?
+            ) {
+                if (!DEBUG) {
+                    model?.clear()
+                }
+            }
+        }, jbCefBrowser.cefBrowser)
         jbCefBrowser.jbCefClient.addLoadHandler(object : CefLoadHandlerAdapter() {
             override fun onLoadingStateChange(
                 browser: CefBrowser?,
