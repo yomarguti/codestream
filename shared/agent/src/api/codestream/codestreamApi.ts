@@ -1621,7 +1621,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@lspHandler(AddBlameMapRequestType)
 	async addBlameMap(request: AddBlameMapRequest) {
-		await this.put(`/add-blame-map/${request.teamId}`, { email: request.email, userId: request.userId }, this._token);
+		await this.post(
+			`/add-blame-map/${request.teamId}`,
+			{ email: request.email, userId: request.userId },
+			this._token
+		);
 	}
 
 	convertUserIdToCodeStreamUserId(id: string): string {

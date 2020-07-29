@@ -83,8 +83,8 @@ export const UL = styled.ul`
 const HR = styled.div`
 	width: 100%;
 	height: 1px;
-	border-bottom: 1px solid var(--base-border-color);
-	margin: 20px 0 0 0;
+	// border-bottom: 1px solid var(--base-border-color);
+	// margin: 20px 0 0 0;
 `;
 
 const MapRow = styled.div`
@@ -102,6 +102,11 @@ const StyledUserStatus = styled(UserStatus)`
 	&:hover {
 		background: var(--app-background-color-hover);
 	}
+`;
+
+export const Section = styled.div`
+	padding-bottom: 15px;
+	border-bottom: 1px solid var(--base-border-color);
 `;
 
 interface Props extends ConnectedProps {}
@@ -304,6 +309,13 @@ class TeamPanel extends React.Component<Props, State> {
 			.invite({ email: newMemberEmail, fullName: newMemberName, teamId: this.props.teamId })
 			.then(() => {
 				this.setState(this.postInviteResetState);
+				const div = document.getElementById("outstanding-invitations");
+				if (div) {
+					div.classList.add("highlight-pulse");
+					setTimeout(() => {
+						div.classList.remove("highlight-pulse");
+					}, 1000);
+				}
 			});
 		HostApi.instance.track("Teammate Invited", {
 			"Invitee Email Address": newMemberEmail,
@@ -691,7 +703,7 @@ class TeamPanel extends React.Component<Props, State> {
 				<PanelHeader title={this.props.teamName} />
 				<ScrollBox>
 					<div className="vscroll">
-						<div className="section">
+						<Section>
 							<UL>
 								{this.props.members.map(user => (
 									<>
@@ -737,16 +749,17 @@ class TeamPanel extends React.Component<Props, State> {
 									</>
 								))}
 							</UL>
-						</div>
-						<div className="section">
+						</Section>
+						<Section>
+							<HR />
 							<PanelHeader title="Invite a Teammate">
 								<form className="standard-form" onSubmit={this.onSubmit} style={{ padding: 0 }}>
 									{this.renderFieldset(inactive)}
 								</form>
 							</PanelHeader>
-						</div>
+						</Section>
 						{this.props.invited.length > 0 && (
-							<div className="section">
+							<Section id="outstanding-invitations">
 								<HR />
 								<PanelHeader title="Outstanding Invitations" />
 								{!this.props.emailSupported && (
@@ -833,10 +846,10 @@ class TeamPanel extends React.Component<Props, State> {
 										);
 									})}
 								</UL>
-							</div>
+							</Section>
 						)}
 						{suggested.length > 0 && (
-							<div className="section">
+							<Section>
 								<HR />
 								<PanelHeader
 									title={
@@ -865,10 +878,10 @@ class TeamPanel extends React.Component<Props, State> {
 										</li>
 									))}
 								</UL>
-							</div>
+							</Section>
 						)}
 						{(this.props.isCurrentUserAdmin || mappedBlame.length > 0) && (
-							<div className="section">
+							<Section>
 								<HR />
 								<PanelHeader
 									title={
@@ -978,9 +991,9 @@ class TeamPanel extends React.Component<Props, State> {
 										</div>
 									</MapRow>
 								)}
-								<div style={{ height: "50px" }} />
-							</div>
+							</Section>
 						)}
+						<div style={{ height: "50px" }} />
 						<br />
 						<br />
 					</div>
