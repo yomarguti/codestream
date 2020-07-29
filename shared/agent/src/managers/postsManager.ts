@@ -1006,6 +1006,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 	// this is what the webview will call to create reviews in the sharing model
 	@lspHandler(CreateShareableReviewRequestType)
+	@log()
 	async createSharingReviewPost(
 		request: CreateShareableReviewRequest
 	): Promise<CreateShareableReviewResponse> {
