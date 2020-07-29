@@ -48,6 +48,8 @@ export class FilesManager extends EntityManagerBase<CSFileStream> {
 	}
 
 	async getByPath(filePath: string): Promise<CSFileStream | undefined> {
+		const parsedPath = path.parse(filePath);
+		filePath = path.join(parsedPath.dir.toLowerCase(), parsedPath.base);
 		let id = this.idsByPath.get(filePath);
 		if (id) {
 			return this.cache.getById(id);
@@ -61,7 +63,7 @@ export class FilesManager extends EntityManagerBase<CSFileStream> {
 
 		const streams = await this.getByRepoId(repo.id);
 		for (const stream of streams) {
-			this.idsByPath.set(path.join(repo.path, stream.file), stream.id);
+			this.idsByPath.set(path.join(repo.path.toLowerCase(), stream.file), stream.id);
 		}
 
 		id = this.idsByPath.get(filePath);

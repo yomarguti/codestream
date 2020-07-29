@@ -1241,12 +1241,28 @@ export class GitService implements IGitService, Disposable {
 			const allRepos = await this.getRepositories();
 			repo = Array.from(allRepos).find(r => r.path === normalizedFsPath);
 		} else {
-			// do NOT allow folders to call this, any folder not already tracked
-			// will traverse _up_ looking for additional git repos
-			repo = await this._repositories.getByFilePath(fileOrFolderPath);
+			// do NOT allow folders to get into this path, any folder not already tracked
+			// will traverse _up_ looking for additional git repos.
+			// this is because the last part of the path will get treated as an
+			// extensionless file name!
+			const repoRoot = await this.getRepoRoot(fileOrFolderPath);
+			if (repoRoot) {
+				const parsedPath = path.parse(fileOrFolderPath);
+				const newPath = path.join(repoRoot, parsedPath.base);
+				if (newPath !== fileOrFolderPath) {
+					Logger.warn(
+						`getRepositoryByFilePath: Possible repo casing issue newPath=${newPath} vs. fileOrFolderPath=${fileOrFolderPath}`
+					);
+				}
+				repo = await this._repositories.getByFilePath(newPath);
+			} else {
+				repo = await this._repositories.getByFilePath(fileOrFolderPath);
+			}
 		}
 
-		if (!repo) Logger.warn(`Could not find git repository for ${fileOrFolderPath}`);
+		if (!repo) {
+			Logger.warn(`getRepositoryByFilePath: Could not find git repository for ${fileOrFolderPath}`);
+		}
 
 		return repo;
 	}
