@@ -596,28 +596,36 @@ export class CodeStreamSession implements Disposable {
 
 		// Update the saved e-mail on successful login
 		if (email !== Container.config.email) {
-			let target = ConfigurationTarget.Global;
+			try {
+				let target = ConfigurationTarget.Global;
 
-			// Determine where to best save the e-mail
-			const emailSetting = configuration.inspect(configuration.name("email").value);
-			// If we have an e-mail in the workspace, save it to the workspace
-			if (emailSetting !== undefined && emailSetting.workspaceValue !== undefined) {
-				target = ConfigurationTarget.Workspace;
-			} else {
-				// If we don't have an e-mail in the workspace, check if the serverUrl is in the workspace
-				const serverUrlSetting = configuration.inspect(configuration.name("serverUrl").value);
-				// If we have a serverUrl in the workspace, save the e-mail to the workspace
-				if (serverUrlSetting !== undefined && serverUrlSetting.workspaceValue !== undefined) {
+				// Determine where to best save the e-mail
+				const emailSetting = configuration.inspect(configuration.name("email").value);
+				// If we have an e-mail in the workspace, save it to the workspace
+				if (emailSetting !== undefined && emailSetting.workspaceValue !== undefined) {
 					target = ConfigurationTarget.Workspace;
+				} else {
+					// If we don't have an e-mail in the workspace, check if the serverUrl is in the workspace
+					const serverUrlSetting = configuration.inspect(configuration.name("serverUrl").value);
+					// If we have a serverUrl in the workspace, save the e-mail to the workspace
+					if (serverUrlSetting !== undefined && serverUrlSetting.workspaceValue !== undefined) {
+						target = ConfigurationTarget.Workspace;
+					}
 				}
-			}
 
-			await configuration.update(configuration.name("email").value, email, target);
+				await configuration.update(configuration.name("email").value, email, target);
+			} catch (ex) {
+				Logger.error(ex, "failed to update configuration");
+			}
 		}
 
 		if (!teamId || teamId !== response.state.teamId) {
 			teamId = response.state.teamId;
-			await Container.context.workspaceState.update(WorkspaceState.TeamId, teamId);
+			try {
+				await Container.context.workspaceState.update(WorkspaceState.TeamId, teamId);
+			} catch (ex) {
+				Logger.error(ex, "failed to update workspaceState");
+			}
 		}
 
 		this._state = new SessionState(this, teamId, response.loginResponse);
