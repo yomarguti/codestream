@@ -122,6 +122,10 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				label: "Your organization is on CodeStream's free Small Team Plan for 5 users or less.",
 				upgrade: true
 			},
+			"14DAYTRIAL": {
+				label: "Your organization is currently in a free trial period.",
+				upgrade: true
+			},
 			"30DAYTRIAL": {
 				label: "Your organization is currently in a free trial period.",
 				upgrade: true
