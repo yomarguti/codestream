@@ -1251,6 +1251,8 @@ export const Row = styled.div`
 		width: 16px;
 		height: 16px;
 		vertical-align: -3px;
+		margin-right: 0;
+		margin-left: 0;
 	}
 	.selected-icon {
 		position: absolute !important;
