@@ -43,7 +43,7 @@ export class TextFilesManager {
 		const { path, contents } = request;
 		try {
 			const file = this.textFilePath(path);
-			xfs.writeTextAtomic(contents, file);
+			await xfs.writeTextAtomic(contents, file);
 			Logger.debug(`Saved contents ${contents} to ${file}`);
 			return {
 				success: true
