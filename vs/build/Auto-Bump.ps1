@@ -14,12 +14,16 @@ iex "git clone --depth 1 https://github.com/TeamCodeStream/codestream -b $($bran
             $newVersion = (.\Get-Version.ps1).ToString()        
         popd
     $message = "Auto bump version on $($branch) to $($newVersion) for next release"
-    git commit -am $message
+    $gitCommand = "git commit -am `"$message`""
     if ($WhatIfPreference.IsPresent -eq $True) {
-        Write-Host "would have run 'git push'"
+        Write-Host "would have run 'git commit -am $message' and 'git push'"
     }
     else {
-        git push
+        iex $gitCommand
+        iex "git push"
+        if ($LastExitCode -ne $null -and $LastExitCode -ne 0) {
+            exit 1
+        }
         Write-Host "git push complete"
     }
     Write-Host $message
