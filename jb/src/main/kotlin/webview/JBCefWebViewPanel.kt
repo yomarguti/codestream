@@ -65,7 +65,8 @@ class JBCefWebViewPanel(jbCefBrowser: JBCefBrowser) : JPanel(BorderLayout()), Da
         override fun isPasteEnabled(dataContext: DataContext): Boolean = true
         override fun isPastePossible(dataContext: DataContext): Boolean = true
         override fun performPaste(dataContext: DataContext) {
-            val text = CopyPasteManager.getInstance().getContents<String>(DataFlavor.stringFlavor) ?: return
+            var text = CopyPasteManager.getInstance().getContents<String>(DataFlavor.stringFlavor) ?: return
+            text = text.replace("\n", "\\n").replace("'", "\'")
             jbCefBrowser.cefBrowser.executeJavaScript("document.execCommand('insertHTML', false, '$text');", jbCefBrowser.cefBrowser.url, 0)
         }
     }
