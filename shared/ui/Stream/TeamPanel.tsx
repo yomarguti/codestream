@@ -906,27 +906,31 @@ class TeamPanel extends React.Component<Props, State> {
 									<MapRow>
 										<div>{email.replace(/\*/g, ".")}</div>
 										<div>
-											<SelectPeople
-												title="Handled By"
-												multiSelect={false}
-												value={[]}
-												extraItems={[
-													{ label: "-" },
-													{
-														icon: <Icon name="trash" />,
-														label: "Delete Mapping",
-														key: "remove",
-														action: () => this.onBlameMapUserChange(email)
-													}
-												]}
-												onChange={person => this.onBlameMapUserChange(email, person)}
-											>
-												<HeadshotName
-													id={blameMap[email]}
-													onClick={() => {} /* noop onclick to get cursor pointer */}
-												/>
-												<Icon name="chevron-down" />
-											</SelectPeople>
+											{this.props.isCurrentUserAdmin ? (
+												<SelectPeople
+													title="Handled By"
+													multiSelect={false}
+													value={[]}
+													extraItems={[
+														{ label: "-" },
+														{
+															icon: <Icon name="trash" />,
+															label: "Delete Mapping",
+															key: "remove",
+															action: () => this.onBlameMapUserChange(email)
+														}
+													]}
+													onChange={person => this.onBlameMapUserChange(email, person)}
+												>
+													<HeadshotName
+														id={blameMap[email]}
+														onClick={() => {} /* noop onclick to get cursor pointer */}
+													/>
+													<Icon name="chevron-down" />
+												</SelectPeople>
+											) : (
+												<HeadshotName id={blameMap[email]} />
+											)}
 										</div>
 									</MapRow>
 								))}

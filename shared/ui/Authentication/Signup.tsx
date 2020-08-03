@@ -75,7 +75,8 @@ export const Signup = (props: Props) => {
 		const response = await HostApi.instance.send(GetUserInfoRequestType, {});
 		// only set this if it exists, in case there is no git configured email
 		// and the user was invited, in which case we'll use props.email
-		if (response.email) setEmail(response.email);
+		// turn off the suggestion for now.....
+		// if (response.email) setEmail(response.email);
 		setScmEmail(response.email); // to track if they used our git-based suggestion
 		setFullName(response.name);
 		setUsername(response.username);

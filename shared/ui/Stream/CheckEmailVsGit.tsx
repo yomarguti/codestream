@@ -63,8 +63,14 @@ export const CheckEmailVsGit = () => {
 		}
 	};
 
-	const onSubmit = () => {
+	const clickNo = () => {
+		HostApi.instance.track("Git Email Mismatch", { Mapped: false });
+		close();
+	};
+
+	const clickYes = () => {
 		addBlameMap(scmEmail, currentUser.id);
+		HostApi.instance.track("Git Email Mismatch", { Mapped: true });
 		close();
 	};
 
@@ -78,6 +84,7 @@ export const CheckEmailVsGit = () => {
 		setLoading(false);
 	};
 
+	console.warn("A: ", addBlameMapEnabled, " : ", scmEmail);
 	if (addBlameMapEnabled && scmEmail && !mappedMe && !skipGitEmailCheck)
 		return (
 			<Modal translucent>
@@ -89,10 +96,10 @@ export const CheckEmailVsGit = () => {
 						Is <b className="highlight">{scmEmail}</b> also you?
 					</p>
 					<ButtonRow>
-						<Button variant="secondary" onClick={close} tabIndex={0}>
+						<Button variant="secondary" onClick={clickNo} tabIndex={0}>
 							Nope, not me
 						</Button>
-						<Button onClick={onSubmit} isLoading={loading} tabIndex={0}>
+						<Button onClick={clickYes} isLoading={loading} tabIndex={0}>
 							Yes, that's me
 						</Button>
 					</ButtonRow>
