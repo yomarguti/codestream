@@ -5,6 +5,7 @@ import com.codestream.agentService
 import com.codestream.gson
 import com.codestream.protocols.agent.TelemetryParams
 import com.codestream.protocols.webview.WebViewNotification
+import com.codestream.settings.ApplicationSettingsService
 import com.codestream.settingsService
 import com.github.salomonbrys.kotson.jsonObject
 import com.google.gson.JsonElement
@@ -120,8 +121,9 @@ class WebViewService(val project: Project) : Disposable {
     }
 
     private fun createWebView(router: WebViewRouter): WebView {
+        val appSettings = ServiceManager.getService(ApplicationSettingsService::class.java)
         return try {
-            if (JBCefApp.isSupported()) {
+            if (JBCefApp.isSupported() && appSettings.jcef) {
                 logger.info("JCEF enabled")
                 JBCefWebView(JBCefBrowser(), router)
             } else {
