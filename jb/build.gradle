@@ -13,7 +13,7 @@ sourceCompatibility = 1.8
 repositories {
     jcenter()
     mavenCentral()
-    maven { url = "http://maven.teamdev.com/repository/products" }
+    maven { url = "https://europe-maven.pkg.dev/jxbrowser/releases" }
     maven { url = "https://www.jetbrains.com/intellij-repository/snapshots" }
 }
 
