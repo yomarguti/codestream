@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# special handling of jcef asset - tag and publish
+. $DT_TOP/lib/parse_opts.sh
+
+parse_defaults \
+	bearer     "--bearer"     :  "" \
+	pluginId   "--pluginId"   :  "" \
+	channel    "--channel"    :  "" \
+	tagRepo    "--no-tag"     1  0
+parse_options "$@"
+eval set -- ${PARGS_POSITIONAL[@]}
+
+infoFileCount=`ls $JB_TOP/codestream-jb-jcef-*.info|wc -l`
+[ $infoFileCount -ne 1 ] && echo "$infoFileCount info files found" >&2 && exit 1
+infoFile=`echo $JB_TOP/codestream-jb-jcef-*.info`
+echo "infoFile=$infoFile"
+
+if [ $tagRepo -eq 1 ]; then
+	commitId=`get-json-property -j $infoFile -p repoCommitId.codestream`
+	[ -z "$commitId" ] && echo "could not determine commit Id of JCEF asset" >&2 && exit 1
+	echo "JCEF commit Id=$commitId"
+	version = `get-json-property -j $infoFile -p version`
+	[ -z "$version" ] && echo "could not determine version of JCEF asset" >&2 && exit 1
+	echo "JCEF version=$version"
+	echo git tag jb-jcef-$version $commitId
+	git tag jb-jcef-$version $commitId || exit 1
+fi
+
+assetFileCount=`ls $JB_TOP/codestream-jb-jcef-*.zip|wc -l`
+[ $assetFileCount -ne 1 ] && echo "$assetFileCount assets found" >&2 && exit 1
+assetFile=`echo $JB_TOP/codestream-jb-jcef-*.zip`
+echo "assetFile=$assetFile"
+
+echo "curl --fail -i --header \"Authorization: Bearer $bearer\" -F pluginId=$pluginId -F file=@jb/$assetFile -F channel=$channel https://plugins.jetbrains.com/plugin/uploadPlugin"
+curl --fail -i --header "Authorization: Bearer $bearer" -F pluginId=$pluginId -F file=@jb/$assetFile -F channel=$channel https://plugins.jetbrains.com/plugin/uploadPlugin
