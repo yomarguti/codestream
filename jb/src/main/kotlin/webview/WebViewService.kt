@@ -125,17 +125,32 @@ class WebViewService(val project: Project) : Disposable {
         return try {
             if (JBCefApp.isSupported() && appSettings.jcef) {
                 logger.info("JCEF enabled")
-                JBCefWebView(JBCefBrowser(), router)
+                JBCefWebView(JBCefBrowser(), router).also {
+                    webviewTelemetry("JCEF")
+                }
             } else {
                 logger.info("JCEF disabled - falling back to JxBrowser")
                 val engine = ServiceManager.getService(JxBrowserEngineService::class.java)
-                JxBrowserWebView(engine.newBrowser(), router)
+                JxBrowserWebView(engine.newBrowser(), router).also {
+                    if (JBCefApp.isSupported()) {
+                        webviewTelemetry("JxBrowser - user selection")
+                    } else {
+                        webviewTelemetry("JxBrowser - JCEF not supported")
+                    }
+                }
+
             }
         } catch (ex: Exception) {
             logger.warn("Error initializing JCEF - falling back to JxBrowser", ex)
             val engine = ServiceManager.getService(JxBrowserEngineService::class.java)
-            JxBrowserWebView(engine.newBrowser(), router)
+            JxBrowserWebView(engine.newBrowser(), router).also {
+                webviewTelemetry("JxBrowser - JCEF failed")
+            }
         }
+    }
+
+    private fun webviewTelemetry(webviewType: String) {
+        project.agentService?.agent?.telemetry(TelemetryParams("JB Webview Created", mapOf("Webview" to webviewType)))
     }
 
 }
