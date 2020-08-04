@@ -1,6 +1,6 @@
 param([string] $checkoutDir = $pwd, [string] $assetEnv = "")
 
-$computer = 'tc.codestream.us'
+$computer = 'teamcity.codestream.us'
 $username = 'web'
 $homeDir = 'C:\Users\Administrator'
 $keyfile = $homeDir + '\.ssh\id_rsa'
