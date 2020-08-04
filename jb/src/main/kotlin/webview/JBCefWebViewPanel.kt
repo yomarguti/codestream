@@ -17,7 +17,7 @@ import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
 import javax.swing.JPanel
 
-class JBCefWebViewPanel(jbCefBrowser: JBCefBrowser) : JPanel(BorderLayout()), DataProvider {
+class JBCefWebViewPanel(val jbCefBrowser: JBCefBrowser) : JPanel(BorderLayout()), DataProvider {
     init {
         add(jbCefBrowser.component, BorderLayout.CENTER)
         val action =
@@ -85,5 +85,9 @@ class JBCefWebViewPanel(jbCefBrowser: JBCefBrowser) : JPanel(BorderLayout()), Da
             PlatformDataKeys.PASTE_PROVIDER.name -> myPasteProvider
             else -> null
         }
+    }
+
+    fun focus() {
+        jbCefBrowser.cefBrowser.uiComponent.requestFocus()
     }
 }
