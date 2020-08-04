@@ -1,4 +1,4 @@
-rootProject.name = 'codestream-jb'
+rootProject.name = 'codestream-jb-jcef'
 
 buildCache {
     local {
