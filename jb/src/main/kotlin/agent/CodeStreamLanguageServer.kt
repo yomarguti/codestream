@@ -2,6 +2,8 @@ package com.codestream.agent
 
 import com.codestream.protocols.agent.LoginResult
 import com.codestream.protocols.agent.LoginWithTokenParams
+import com.codestream.protocols.agent.TelemetryParams
+import com.codestream.protocols.agent.TelemetryResult
 import com.codestream.protocols.agent.TextDocumentFromKeyParams
 import com.codestream.protocols.agent.TextDocumentFromKeyResult
 import org.eclipse.lsp4j.jsonrpc.services.JsonRequest
@@ -15,4 +17,7 @@ interface CodeStreamLanguageServer : LanguageServer {
 
     @JsonRequest("codestream/textDocument/fromKey")
     fun textDocumentFromKey(params: TextDocumentFromKeyParams): CompletableFuture<TextDocumentFromKeyResult>
+
+    @JsonRequest("codestream/telemetry")
+    fun telemetry(params: TelemetryParams): CompletableFuture<TelemetryResult>
 }

@@ -1,7 +1,9 @@
 package com.codestream.webview
 
 import com.codestream.WEBVIEW_PATH
+import com.codestream.agentService
 import com.codestream.gson
+import com.codestream.protocols.agent.TelemetryParams
 import com.codestream.protocols.webview.WebViewNotification
 import com.codestream.settingsService
 import com.github.salomonbrys.kotson.jsonObject
@@ -128,6 +130,7 @@ class WebViewService(val project: Project) : Disposable {
     private fun createBrowser(router: WebViewRouter): Browser {
         val engine = ServiceManager.getService(BrowserEngineService::class.java)
         val browser = engine.newBrowser()
+        webviewTelemetry("JxBrowser")
 
         browser.connectRouter(router)
 
@@ -156,6 +159,10 @@ class WebViewService(val project: Project) : Disposable {
 
             InjectJsCallback.Response.proceed()
         })
+    }
+
+    private fun webviewTelemetry(webviewType: String) {
+        project.agentService?.agent?.telemetry(TelemetryParams("JB Webview Created", mapOf("Webview" to webviewType)))
     }
 }
 

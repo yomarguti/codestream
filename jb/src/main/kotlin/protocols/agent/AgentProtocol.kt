@@ -206,6 +206,18 @@ class TextDocumentFromKeyResult(
     val marker: JsonObject
 )
 
+class TelemetryParams(
+    val eventName: String,
+    val properties: Map<String, Any>? = null,
+    val options: TelemetryParamsOptions? = null
+)
+
+class TelemetryParamsOptions(
+    val alias: String?
+)
+
+class TelemetryResult()
+
 class SetServerUrlParams(
     val serverUrl: String,
     val disableStrictSSL: Boolean = false
