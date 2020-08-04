@@ -61,12 +61,19 @@ class JBCefWebViewPanel(jbCefBrowser: JBCefBrowser) : JPanel(BorderLayout()), Da
             jbCefBrowser.cefBrowser.executeJavaScript("document.execCommand('copy');", jbCefBrowser.cefBrowser.url, 0)
     }
 
+    val pasteSubstitutions = mapOf(
+        "\n" to "\\n",
+        "\r" to "\\r",
+        "'" to "\'"
+    )
     val myPasteProvider = object : PasteProvider {
         override fun isPasteEnabled(dataContext: DataContext): Boolean = true
         override fun isPastePossible(dataContext: DataContext): Boolean = true
         override fun performPaste(dataContext: DataContext) {
             var text = CopyPasteManager.getInstance().getContents<String>(DataFlavor.stringFlavor) ?: return
-            text = text.replace("\n", "\\n").replace("'", "\'")
+            pasteSubstitutions.forEach { (from, to) ->
+                text = text.replace(from, to)
+            }
             jbCefBrowser.cefBrowser.executeJavaScript("document.execCommand('insertHTML', false, '$text');", jbCefBrowser.cefBrowser.url, 0)
         }
     }
