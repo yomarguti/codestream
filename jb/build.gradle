@@ -6,14 +6,14 @@ plugins {
 }
 
 group "com.codestream"
-version "8.3.0"
+version "8.3.1"
 
 sourceCompatibility = 1.8
 
 repositories {
     jcenter()
     mavenCentral()
-    maven { url = "http://maven.teamdev.com/repository/products" }
+    maven { url = "https://europe-maven.pkg.dev/jxbrowser/releases" }
     maven { url = "https://www.jetbrains.com/intellij-repository/snapshots" }
 }
 
@@ -144,6 +144,7 @@ copyDebugAgent.dependsOn buildDebugDeps
 
 task buildDebugDependencies {}
 buildDebugDependencies.dependsOn buildDebugDeps, copyDebugAgent
+
 
 
 
