@@ -5,6 +5,7 @@ import com.codestream.agentService
 import com.codestream.gson
 import com.codestream.protocols.agent.TelemetryParams
 import com.codestream.protocols.webview.WebViewNotification
+import com.codestream.sessionService
 import com.codestream.settings.ApplicationSettingsService
 import com.codestream.settingsService
 import com.github.salomonbrys.kotson.jsonObject
@@ -150,7 +151,16 @@ class WebViewService(val project: Project) : Disposable {
     }
 
     private fun webviewTelemetry(webviewType: String) {
-        project.agentService?.agent?.telemetry(TelemetryParams("JB Webview Created", mapOf("Webview" to webviewType)))
+        val params = TelemetryParams("JB Webview Created", mapOf("Webview" to webviewType))
+        if (project.sessionService?.userLoggedIn != null) {
+            project.agentService?.agent?.telemetry(params)
+        } else {
+            project.sessionService?.onUserLoggedInChanged {
+                if (it != null) {
+                    project.agentService?.agent?.telemetry(params)
+                }
+            }
+        }
     }
 
 }

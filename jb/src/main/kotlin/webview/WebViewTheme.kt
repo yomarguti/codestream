@@ -30,7 +30,9 @@ class WebViewTheme(val name: String, val stylesheet: String) {
             }
             val border = JBColor.border()
             val link = JBColor.link()
-            val buttonBg = JBUI.CurrentTheme.Focus.defaultButtonColor()
+            val buttonBg = JBColor.namedColor("Button.default.startBackground",
+                JBUI.CurrentTheme.Focus.defaultButtonColor())
+
             val scrollBarBg = UIManager.getColor("ScrollBar.background")
             val scrollBarFg = UIManager.getColor("ScrollBar.foreground")
 
@@ -53,6 +55,7 @@ class WebViewTheme(val name: String, val stylesheet: String) {
             val buttonBgColor = buttonBg
             var buttonBgColorHover: Color
             var textFocusBorderColor: Color
+            val buttonFgColor = JBColor.namedColor( "Button.default.foreground", textColor)
 
             if (ColorUtil.isDark(bg)) {
                 appBgColorDarker = bg.darken(4)
@@ -121,7 +124,7 @@ body {
 
     --line-numbers-foreground-color: ${lineNumbersFgColor.rgba};
 
-    --button-foreground-color: ${textColor.rgba};
+    --button-foreground-color: ${buttonFgColor.rgba};
     --button-background-color: ${buttonBgColor.rgba};
     --button-background-color-hover: ${buttonBgColorHover.rgba};
 
