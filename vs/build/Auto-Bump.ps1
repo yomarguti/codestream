@@ -7,7 +7,7 @@ $tempDir = (New-TemporaryFile | %{ rm $_; mkdir $_ }).ToString()
 Write-Host "Created $($tempDir)"
 $branch = "develop"
 pushd $tempDir
-iex "git clone --depth 1 https://github.com/TeamCodeStream/codestream -b $($branch)"
+iex "git clone --depth 1 git@github.com:teamcodestream/codestream -b $($branch)"
     pushd codestream
         pushd vs\build
             .\Bump-Version.ps1 -BumpPatch
