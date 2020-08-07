@@ -927,7 +927,7 @@ export class ScmManager {
 					const repo = await git.getRepositoryByFilePath(uri.fsPath);
 					repoId = repo && repo.id;
 
-					if (!rev) {
+					if (!branch) {
 						const ex = new Error(`Your current branch does not have any commits yet. 
 							For further work you should add one.`);
 						Logger.error(ex, cc);
