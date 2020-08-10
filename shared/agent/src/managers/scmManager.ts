@@ -436,7 +436,7 @@ export class ScmManager {
 						.map(authorList =>
 							authorList.forEach(author => {
 								if (!authorMap[author.email]) authorMap[author.email] = { stomped: 0, commits: 0 };
-								authorMap[author.email].stomped = 1 + authorMap[author.email].stomped;
+								authorMap[author.email].stomped = author.hunks + authorMap[author.email].stomped;
 							})
 						);
 				}

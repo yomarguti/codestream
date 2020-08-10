@@ -8,6 +8,7 @@ export interface AuthorEntry {
 	date: Date;
 	email: string;
 	lines: number;
+	hunks: number;
 }
 
 export class GitAuthorParser {
@@ -34,8 +35,10 @@ export class GitAuthorParser {
 						const key = `${author.name}|${author.email}`;
 						const a = authors.get(key);
 						if (a !== undefined) {
+							a.hunks++;
 							a.lines += author.lines;
 						} else {
+							author.hunks = 1;
 							authors.set(key, author);
 						}
 					}
