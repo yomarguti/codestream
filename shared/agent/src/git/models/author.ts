@@ -3,4 +3,5 @@ export interface GitAuthor {
 	readonly date: Date;
 	readonly email: string;
 	readonly lines: number;
+	readonly hunks?: number;
 }
