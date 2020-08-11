@@ -115,6 +115,7 @@ class ReviewShowDiffRequest(
 class ReviewShowLocalDiffRequest(
     val repoId: String,
     val path: String,
+    val oldPath: String?,
     val includeSaved: Boolean,
     val includeStaged: Boolean,
     val editingReviewId: String?,

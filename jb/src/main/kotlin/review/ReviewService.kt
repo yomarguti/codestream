@@ -1,13 +1,11 @@
 package com.codestream.review
 
 import com.codestream.agentService
-import com.codestream.protocols.agent.GetAllReviewContentsParams
 import com.codestream.protocols.agent.GetLocalReviewContentsParams
 import com.codestream.protocols.agent.GetReviewContentsResult
 import com.intellij.diff.DiffDialogHints
 import com.intellij.diff.DiffManagerEx
 import com.intellij.diff.chains.DiffRequestChain
-import com.intellij.diff.chains.SimpleDiffRequestChain
 import com.intellij.diff.editor.DiffRequestProcessorEditor
 import com.intellij.diff.editor.SimpleDiffVirtualFile
 import com.intellij.diff.impl.CacheDiffRequestChainProcessor
@@ -95,6 +93,7 @@ class ReviewService(private val project: Project) {
     suspend fun showLocalDiff(
         repoId: String,
         path: String,
+        oldPath: String?,
         includeSaved: Boolean,
         includeStaged: Boolean,
         editingReviewId: String?,
@@ -111,12 +110,13 @@ class ReviewService(private val project: Project) {
             GetLocalReviewContentsParams(
                 repoId,
                 path,
+                oldPath,
                 editingReviewId,
                 baseSha,
                 rightVersion
             )
         )
-        showDiffContent("local", null, repoId, path, contents, "New Review")
+        showDiffContent("local", null, repoId, path, oldPath, contents, "New Review")
     }
 
     private fun showDiffContent(
@@ -124,14 +124,15 @@ class ReviewService(private val project: Project) {
         checkpoint: Int?,
         repoId: String,
         path: String,
+        oldPath: String?,
         contents: GetReviewContentsResult,
         title: String
     ) {
         val leftContent =
-            createReviewDiffContent(project, reviewId, checkpoint, repoId, ReviewDiffSide.LEFT, path, contents.left)
+            createReviewDiffContent(project, reviewId, checkpoint, repoId, ReviewDiffSide.LEFT, oldPath ?: path, contents.left)
         val rightContent =
             createReviewDiffContent(project, reviewId, checkpoint, repoId, ReviewDiffSide.RIGHT, path, contents.right)
-        val diffRequest = SimpleDiffRequest(title, leftContent, rightContent, path, path)
+        val diffRequest = SimpleDiffRequest(title, leftContent, rightContent, oldPath ?: path, path)
         diffRequest.putUserData(REVIEW_DIFF, true)
         val file = SimpleDiffVirtualFile(diffRequest)
         ApplicationManager.getApplication().invokeLater {

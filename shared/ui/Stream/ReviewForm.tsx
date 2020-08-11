@@ -1568,7 +1568,7 @@ class ReviewForm extends React.Component<Props, State> {
 		);
 	}
 
-	showLocalDiff(path) {
+	showLocalDiff(path, oldPath) {
 		const { repoStatus, includeSaved, includeStaged, excludedFiles, startCommit } = this.state;
 		const { editingReview } = this.props;
 		if (!repoStatus) return;
@@ -1581,6 +1581,7 @@ class ReviewForm extends React.Component<Props, State> {
 
 		HostApi.instance.send(ReviewShowLocalDiffRequestType, {
 			path,
+			oldPath,
 			repoId,
 			includeSaved: addedFileManually || (includeSaved && repoStatus.scm!.savedFiles.length > 0),
 			includeStaged: includeStaged && repoStatus.scm!.stagedFiles.length > 0,
@@ -1593,7 +1594,7 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	renderFile(fileObject, currentFile) {
-		const { file, linesAdded, linesRemoved, status } = fileObject;
+		const { file, oldFile, linesAdded, linesRemoved, status } = fileObject;
 		// https://davidwalsh.name/rtl-punctuation
 		// ellipsis-left has direction: rtl so that the ellipsis
 		// go on the left side, but without the <bdi> component
@@ -1608,7 +1609,7 @@ class ReviewForm extends React.Component<Props, State> {
 			className += " excluded-file";
 		}
 		return (
-			<div key={file} className={className} onClick={() => this.showLocalDiff(file)}>
+			<div key={file} className={className} onClick={() => this.showLocalDiff(file, oldFile)}>
 				<span className="file-info ellipsis-left">
 					<bdi dir="ltr">{file}</bdi>
 				</span>
