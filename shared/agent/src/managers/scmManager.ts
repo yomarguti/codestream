@@ -926,6 +926,14 @@ export class ScmManager {
 					rev = await git.getFileCurrentRevision(uri.fsPath);
 					const repo = await git.getRepositoryByFilePath(uri.fsPath);
 					repoId = repo && repo.id;
+					const repoHeadHash = await git.getRepoHeadRevision(repoPath);
+
+					if (!repoHeadHash) {
+						const ex = new Error(`Your current branch does not have any commits yet.
+							For further work you should add one.`);
+						Logger.error(ex, cc);
+						throw ex;
+					}
 
 					const gitRemotes = await git.getRepoRemotes(repoPath);
 					remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
