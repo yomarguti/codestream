@@ -1454,6 +1454,8 @@ class CodemarkForm extends React.Component<Props, State> {
 						range = undefined;
 					}
 					file = marker.file || "";
+				} else {
+					return this.renderAddLocation()
 				}
 			}
 
