@@ -1870,6 +1870,13 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 								login
 							  }
 							}
+							committer {
+							  avatarUrl
+							  name
+							  user {
+							    login
+							  }
+							}
 							id
 							message
 							messageBody
