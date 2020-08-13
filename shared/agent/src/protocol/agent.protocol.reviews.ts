@@ -178,6 +178,7 @@ export interface GetReviewContentsRequest {
 export interface GetReviewContentsLocalRequest {
 	repoId: string;
 	path: string;
+	oldPath?: string;
 	editingReviewId?: string;
 	baseSha: string;
 	rightVersion: string;

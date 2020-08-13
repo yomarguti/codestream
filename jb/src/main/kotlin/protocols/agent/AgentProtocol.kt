@@ -186,6 +186,7 @@ class GetReviewContentsParams(
 class GetLocalReviewContentsParams(
     val repoId: String,
     val path: String,
+    val oldPath: String?,
     val editingReviewId: String?,
     val baseSha: String,
     val rightVersion: String

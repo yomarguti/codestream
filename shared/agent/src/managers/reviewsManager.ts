@@ -171,7 +171,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			throw new Error(`Could not load repo with ID ${request.repoId}`);
 		}
 
-		const leftBasePath = path.join(repo.path, request.path);
+		const leftBasePath = path.join(repo.path, request.oldPath || request.path);
 		let leftContents;
 		if (request.editingReviewId) {
 			const latestContentsInReview = await reviews.getContents({
@@ -187,19 +187,20 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			leftContents = (await git.getFileContentForRevision(leftBasePath, request.baseSha)) || "";
 		}
 
+		const rightBasePath = path.join(repo.path, request.path);
 		let rightContents: string | undefined = "";
 		switch (request.rightVersion) {
 			case "head":
-				const revision = await git.getFileCurrentRevision(leftBasePath);
+				const revision = await git.getFileCurrentRevision(rightBasePath);
 				if (revision) {
-					rightContents = await git.getFileContentForRevision(leftBasePath, revision);
+					rightContents = await git.getFileContentForRevision(rightBasePath, revision);
 				}
 				break;
 			case "staged":
-				rightContents = await git.getFileContentForRevision(leftBasePath, "");
+				rightContents = await git.getFileContentForRevision(rightBasePath, "");
 				break;
 			case "saved":
-				rightContents = await xfs.readText(leftBasePath);
+				rightContents = await xfs.readText(rightBasePath);
 				break;
 		}
 
