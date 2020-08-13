@@ -436,7 +436,7 @@ export class ScmManager {
 						.map(authorList =>
 							authorList.forEach(author => {
 								if (!authorMap[author.email]) authorMap[author.email] = { stomped: 0, commits: 0 };
-								authorMap[author.email].stomped = 1 + authorMap[author.email].stomped;
+								authorMap[author.email].stomped = author.hunks + authorMap[author.email].stomped;
 							})
 						);
 				}
@@ -926,6 +926,14 @@ export class ScmManager {
 					rev = await git.getFileCurrentRevision(uri.fsPath);
 					const repo = await git.getRepositoryByFilePath(uri.fsPath);
 					repoId = repo && repo.id;
+					const repoHeadHash = await git.getRepoHeadRevision(repoPath);
+
+					if (!repoHeadHash) {
+						const ex = new Error(`Your current branch does not have any commits yet.
+							For further work you should add one.`);
+						Logger.error(ex, cc);
+						throw ex;
+					}
 
 					const gitRemotes = await git.getRepoRemotes(repoPath);
 					remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];

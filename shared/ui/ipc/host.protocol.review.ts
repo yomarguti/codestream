@@ -22,6 +22,7 @@ export const ReviewShowDiffRequestType = new RequestType<
 export interface ReviewShowLocalDiffRequest {
 	repoId: string;
 	path: string;
+	oldPath?: string;
 	includeSaved: boolean;
 	includeStaged: boolean;
 	editingReviewId?: string;
