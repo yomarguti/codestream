@@ -49,7 +49,7 @@ export const ButtonRow = styled.div`
 `;
 const Root = styled.div`
 	#controls {
-		// padding-top: 10px;
+		padding-top: 10px;
 	}
 	strong {
 		font-weight: normal;
@@ -62,9 +62,12 @@ const Root = styled.div`
 			color: var(--text-color-info) !important;
 		}
 	}
+	.spacer {
+		// height: 10px;
+	}
 `;
 const PRCompare = styled.div`
-	margin-top: 15px;
+	margin-top: 5px;
 	.octicon-arrow-left {
 		display: inline-block;
 		margin: 0 10px;
@@ -681,6 +684,7 @@ export const CreatePullRequestPanel = props => {
 									<b>{derivedState.currentUser.username}</b>
 									</div> 
 								*/}
+								<div className="spacer" />
 								{!loading && formErrorMessages()}
 								{loading && <LoadingMessage>Loading repo info...</LoadingMessage>}
 								<Step1 step={currentStep}>
@@ -688,7 +692,6 @@ export const CreatePullRequestPanel = props => {
 								</Step1>
 								<Step2 step={currentStep}>{providerAuthenticationMessage()}</Step2>
 								<Step3 step={currentStep}>
-									<div className="small-spacer" />
 									{unexpectedError && (
 										<div className="error-message form-error">
 											<FormattedMessage
