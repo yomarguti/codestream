@@ -283,7 +283,8 @@ export const CheckReviewPreconditionsRequestType = new RequestType<
 >("codestream/review/checkPreconditions");
 
 export interface CheckPullRequestBranchPreconditionsRequest {
-	reviewId: string;
+	reviewId?: string; // either a reviewId or repoId need to be passed in
+	repoId?: string;
 	providerId: string;
 	headRefName?: string;
 	baseRefName?: string;
@@ -358,6 +359,10 @@ export interface CreatePullRequestRequest {
 	headRefName: string;
 	remote: string;
 	remoteName?: string;
+	addresses?: {
+		title: string;
+		url: string;
+	}[];
 }
 
 export interface CreatePullRequestResponse {
