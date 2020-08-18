@@ -13,7 +13,9 @@ import { Logger } from "../logger";
 import {
 	CodeDelimiterStyles,
 	CodemarkPlus,
+	CodeStreamDiffUriData,
 	CreateCodemarkRequest,
+	CreatePassthroughCodemarkResponse,
 	CreatePostRequest,
 	CreatePostRequestType,
 	CreatePostResponse,
@@ -55,9 +57,7 @@ import {
 	ReactToPostRequestType,
 	ReactToPostResponse,
 	ReportingMessageType,
-	ReviewPlus,
-	CodeStreamDiffUriData,
-	CreatePassthroughCodemarkResponse
+	ReviewPlus
 } from "../protocol/agent.protocol";
 import {
 	CodemarkType,
@@ -73,20 +73,18 @@ import {
 	FileStatus,
 	isCSReview,
 	ProviderType,
-	StreamType,
-	CodemarkStatus
+	StreamType
 } from "../protocol/api.protocol";
 import { providerDisplayNamesByNameKey } from "../providers/provider";
 import { Arrays, debug, log, lsp, lspHandler } from "../system";
 import { Strings } from "../system/string";
+import * as csUri from "../system/uri";
 import { BaseIndex, IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { EntityCache, EntityCacheCfg } from "./cache/entityCache";
 import { EntityManagerBase, Id } from "./entityManager";
 import { MarkerLocationManager } from "./markerLocationManager";
 import { MarkerCreationDescriptor, MarkersBuilder } from "./markersBuilder";
-import * as csUri from "../system/uri";
-import { fromSlackPostAttachmentToMarker } from "api/slack/slackSharingApi.adapters";
 
 export type FetchPostsFn = (request: FetchPostsRequest) => Promise<FetchPostsResponse>;
 
@@ -916,7 +914,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 			if (parsedUri.context.pullRequest.providerId === "github*com") {
 				// lines are 1-based on GH
-				const line = request.attributes.codeBlocks[0].range.start.line + 1;
+				const startLine = request.attributes.codeBlocks[0].range.start.line + 1;
+				const endLine = request.attributes.codeBlocks[0].range.end.line + 1;
 				const diff = await git.getDiffBetweenCommits(
 					parsedUri.leftSha,
 					parsedUri.rightSha,
@@ -925,115 +924,140 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				);
 				if (diff) {
 					// https://stackoverflow.com/questions/41662127/how-to-comment-on-a-specific-line-number-on-a-pr-on-github
-					let i = 0;
-					let relativeLine = 0;
-					for (const h of diff.hunks) {
-						// can't increment for the first hunk
-						if (i !== 0) relativeLine++;
-						const linesWithMetadata = [];
-						let j = 0;
-						for (const line of h.lines) {
-							relativeLine++;
-							linesWithMetadata.push({ line: line, relativeLine: relativeLine, index: j });
-							j++;
-						}
-						(h as any).linesWithMetadata = linesWithMetadata;
-						i++;
+					// let i = 0;
+					// let relativeLine = 0;
+					// for (const h of diff.hunks) {
+					// 	// can't increment for the first hunk
+					// 	if (i !== 0) relativeLine++;
+					// 	const linesWithMetadata = [];
+					// 	let j = 0;
+					// 	for (const line of h.lines) {
+					// 		relativeLine++;
+					// 		linesWithMetadata.push({ line: line, relativeLine: relativeLine, index: j });
+					// 		j++;
+					// 	}
+					// 	(h as any).linesWithMetadata = linesWithMetadata;
+					// 	i++;
+					// }
+
+					const startingHunk = diff.hunks.find(
+						_ => startLine >= _.newStart && startLine <= _.newStart + _.newLines
+					);
+					const endingHunk = diff.hunks.find(_ => endLine <= _.newStart + _.newLines);
+					if (!startingHunk || !endingHunk) {
+						Logger.warn(
+							`Could not find hunk for startLine=${startLine} or endLine=${endLine} for ${JSON.stringify(
+								parsedUri.context
+							)}`
+						);
+						const codeBlock = request.attributes.codeBlocks[0];
+						// const builder = MarkersBuilder.newBuilder({ uri: codeBlock.uri });
+						// const descriptor = await builder.build(
+						// 	codeBlock.contents,
+						// 	codeBlock.range,
+						// 	codeBlock.scm
+						// );
+
+						const result = await providerRegistry.executeMethod({
+							method: "addComment",
+							providerId: parsedUri.context.pullRequest.providerId,
+							params: {
+								subjectId: parsedUri.context.pullRequest.id,
+								text: `${request.attributes.text || ""}\n${codeBlock.scm?.file} (Line${
+									startLine === endLine ? ` ${startLine}` : `s ${startLine}-${endLine}`
+								})`
+								// \n\`\`\`${descriptor.marker.code}\`\`\``
+							}
+						});
+						return {
+							isPassThrough: true,
+
+							pullRequest: {
+								id: parsedUri.context.pullRequest.id
+							},
+							success: result != null
+						};
 					}
 
-					const hunk = diff.hunks.find(_ => line >= _.newStart && line <= _.newStart + _.newLines);
-					if (hunk) {
-						// the line the user is asking for minus the start of this hunk
-						// that will give us the index of where it is in the hunk
-						// from there, we fetch the relativeLine which is what github needs
-						const offset = line - hunk.newStart;
-						const lineWithMetadata = (hunk as any).linesWithMetadata.find(
-							(b: any) => b.index === offset
-						);
-						if (lineWithMetadata) {
-							const result = await providerRegistry.executeMethod({
-								method: "createCommitComment",
-								providerId: parsedUri.context.pullRequest.providerId,
-								params: {
-									pullRequestId: parsedUri.context.pullRequest.id,
-									sha: parsedUri.rightSha,
-									text: request.attributes.text || "",
-									path: parsedUri.path,
-									position: lineWithMetadata.relativeLine
-								}
-							});
-							// this will create an implicit review
-							// const result = await providerRegistry.executeMethod({
-							// 	method: "createPullRequestReviewComment",
-							// 	providerId: parsedUri.context.pullRequest.providerId,
-							// 	params: {
-							// 		pullRequestId: parsedUri.context.pullRequest.id,
-							// 		text: request.attributes.text || "",
-							// 		filePath: parsedUri.path,
-							// 		position: lineWithMetadata.relativeLine
-							// 	}
-							// });
-							return {
-								isPassThrough: true,
-								// codemark: {
-								// 	creatorId: "",
-								// 	createdAt: new Date().getTime(),
-								// 	modifiedAt: new Date().getTime(),
-								// 	id: "",
-								// 	teamId: "",
-								// 	streamId: "",
-								// 	postId: "",
-								// 	fileStreamIds: [],
-								// 	type: CodemarkType.Comment,
-								// 	permalink: "",
-								// 	status: CodemarkStatus.Open,
-								// 	title: "",
-								// 	assignees: [],
-								// 	text: request.attributes.text || "",
-								// 	numReplies: 0,
-								// 	pinned: false,
-								// 	lastActivityAt: new Date().getTime(),
-								// 	lastReplyAt: 0,
-								// 	markers: [
-								// 		{
-								// 			creatorId: "",
-								// 			id: "",
-								// 			teamId: "",
-								// 			repoId: "",
-								// 			file: "",
-								// 			postId: "",
-								// 			fileStreamId: "",
-								// 			postStreamId: "",
-								// 			providerType: undefined,
-								// 			codemarkId: "",
-								// 			commitHashWhenCreated: "",
-								// 			locationWhenCreated: [0, 0, 0, 0, undefined],
-								// 			supersededByMarkerId: "",
-								// 			code: lineWithMetadata.line,
-								// 			referenceLocations: [],
-								// 			createdAt: new Date().getTime(),
-								// 			modifiedAt: new Date().getTime()
-								// 		}
-								// 	]
-								// },
-								pullRequest: {
-									id: parsedUri.context.pullRequest.id
-								},
-								success: result != null
-							};
-						} else {
-							Logger.warn(
-								`Could not find lineWithMetadata for offset=${offset} for ${JSON.stringify({
-									line: line,
-									hunk: hunk
-								})}`
-							);
+					// the line the user is asking for minus the start of this hunk
+					// that will give us the index of where it is in the hunk
+					// from there, we fetch the relativeLine which is what github needs
+					// const offset = line - hunk.newStart;
+					// const lineWithMetadata = (hunk as any).linesWithMetadata.find(
+					// 	(b: any) => b.index === offset
+					// );
+
+					const result = await providerRegistry.executeMethod({
+						method: "createCommitComment",
+						providerId: parsedUri.context.pullRequest.providerId,
+						params: {
+							pullRequestId: parsedUri.context.pullRequest.id,
+							sha: parsedUri.rightSha,
+							text: request.attributes.text || "",
+							path: parsedUri.path,
+							startLine: startLine, // lineWithMetadata.relativeLine
+							endLine: endingHunk ? endLine : undefined
 						}
-					} else {
-						Logger.warn(
-							`Could not find hunk for line=${line} for ${JSON.stringify(parsedUri.context)}`
-						);
-					}
+					});
+					// this will create an implicit review
+					// const result = await providerRegistry.executeMethod({
+					// 	method: "createPullRequestReviewComment",
+					// 	providerId: parsedUri.context.pullRequest.providerId,
+					// 	params: {
+					// 		pullRequestId: parsedUri.context.pullRequest.id,
+					// 		text: request.attributes.text || "",
+					// 		filePath: parsedUri.path,
+					// 		position: lineWithMetadata.relativeLine
+					// 	}
+					// });
+					return {
+						isPassThrough: true,
+						// codemark: {
+						// 	creatorId: "",
+						// 	createdAt: new Date().getTime(),
+						// 	modifiedAt: new Date().getTime(),
+						// 	id: "",
+						// 	teamId: "",
+						// 	streamId: "",
+						// 	postId: "",
+						// 	fileStreamIds: [],
+						// 	type: CodemarkType.Comment,
+						// 	permalink: "",
+						// 	status: CodemarkStatus.Open,
+						// 	title: "",
+						// 	assignees: [],
+						// 	text: request.attributes.text || "",
+						// 	numReplies: 0,
+						// 	pinned: false,
+						// 	lastActivityAt: new Date().getTime(),
+						// 	lastReplyAt: 0,
+						// 	markers: [
+						// 		{
+						// 			creatorId: "",
+						// 			id: "",
+						// 			teamId: "",
+						// 			repoId: "",
+						// 			file: "",
+						// 			postId: "",
+						// 			fileStreamId: "",
+						// 			postStreamId: "",
+						// 			providerType: undefined,
+						// 			codemarkId: "",
+						// 			commitHashWhenCreated: "",
+						// 			locationWhenCreated: [0, 0, 0, 0, undefined],
+						// 			supersededByMarkerId: "",
+						// 			code: lineWithMetadata.line,
+						// 			referenceLocations: [],
+						// 			createdAt: new Date().getTime(),
+						// 			modifiedAt: new Date().getTime()
+						// 		}
+						// 	]
+						// },
+						pullRequest: {
+							id: parsedUri.context.pullRequest.id
+						},
+						success: result != null
+					};
 				}
 			}
 

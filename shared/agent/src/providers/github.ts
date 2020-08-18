@@ -1055,11 +1055,26 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	// 	return true;
 	// }
 
+	_getMyPullRequestsCache = new Map<string, GetMyPullRequestsResponse[]>();
 	async getMyPullRequests(request: {
 		owner: string;
 		repo: string;
 		isOpen?: boolean;
+		force?: boolean;
 	}): Promise<GetMyPullRequestsResponse[]> {
+		const cacheKey = [request.owner, request.repo, request.isOpen].join("-");
+		if (!request.force) {
+			const cached = this._getMyPullRequestsCache.get(cacheKey);
+			if (cached) {
+				Logger.debug(`github getMyPullRequests got from cache, key=${cacheKey}`);
+				return cached!;
+			} else {
+				Logger.debug(`github getMyPullRequests cache miss, key=${cacheKey}`);
+			}
+		} else {
+			Logger.debug(`github getMyPullRequests removed from cache, key=${cacheKey}`);
+			this._getMyPullRequestsCache.delete(cacheKey);
+		}
 		let results: any = [];
 		const repoQuery =
 			request && request.owner && request.repo ? `repo:${request.owner}/${request.repo} ` : "";
@@ -1116,12 +1131,14 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		}
 
-		Logger.debug(`getMyPullRequests rateLimit=${JSON.stringify(rateLimit)}`);
+		Logger.debug(`github getMyPullRequests rateLimit=${JSON.stringify(rateLimit)}`);
 
 		results = _uniqBy(results, (_: { id: string }) => _.id);
-		return results
+		const response: GetMyPullRequestsResponse[] = results
 			.map((pr: { createdAt: string }) => ({ ...pr, createdAt: new Date(pr.createdAt).getTime() }))
 			.sort((a: { createdAt: number }, b: { createdAt: number }) => b.createdAt - a.createdAt);
+		this._getMyPullRequestsCache.set(cacheKey, response);
+		return response;
 	}
 
 	async getPullRequestIdFromUrl(request: { url: string }) {
@@ -1328,6 +1345,20 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return response;
 	}
 
+	async unresolveReviewThread(request: { threadId: string }) {
+		const response = await this.client.request<any>(
+			`mutation UnresolveReviewThread($threadId:String!) {
+				unresolveReviewThread(input: {threadId:$threadId}) {
+				  clientMutationId
+				}
+			}`,
+			{
+				threadId: request.threadId
+			}
+		);
+		return response;
+	}
+
 	async addComment(request: { subjectId: string; text: string }) {
 		const response = await this.client.request<any>(
 			`mutation AddComment($subjectId:String!,$body:String!) {
@@ -1344,6 +1375,37 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	}
 
 	async createCommitComment(request: {
+		pullRequestId: string;
+		sha: string;
+		text: string;
+		path: string;
+		startLine: number;
+		// use endLine for multi-line comments
+		endLine?: number;
+	}) {
+		// https://github.community/t/feature-commit-comments-for-a-pull-request/13986/9
+		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
+		const payload = {
+			body: request.text,
+			commit_id: request.sha,
+			side: "RIGHT",
+			path: request.path
+		} as any;
+		if (request.endLine != null && request.endLine !== request.startLine) {
+			payload.start_line = request.startLine;
+			payload.line = request.endLine;
+		} else {
+			payload.line = request.startLine;
+		}
+
+		const data = await this.post<any, any>(
+			`/repos/${ownerData.owner}/${ownerData.name}/pulls/${ownerData.pullRequestNumber}/comments`,
+			payload
+		);
+		return data.body;
+	}
+
+	async createCommitByPositionComment(request: {
 		pullRequestId: string;
 		sha: string;
 		text: string;
@@ -1598,6 +1660,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						edges {
 						  node {
 							id
+							isResolved
 							comments(first: 50) {
 							  totalCount
 							  nodes {
@@ -2185,6 +2248,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				for (const node of rsp.repository.pullRequest.timelineItems.nodes) {
 					if (node.__typename === "PullRequestReview") {
 						let replies: any = [];
+						let threadId;
+						let isResolved;
 						for (const comment of node.comments.nodes) {
 							// a parent comment has a null replyTo
 							if (
@@ -2198,6 +2263,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 									if (edge.node.comments.nodes.length > 1) {
 										for (const node1 of edge.node.comments.nodes) {
 											if (node1.id === comment.id) {
+												threadId = edge.node.id;
+												isResolved = edge.node.isResolved;
 												// find all the comments except the parent
 												replies = replies.concat(
 													edge.node.comments.nodes.filter((_: any) => _.id !== node1.id)
@@ -2205,15 +2272,28 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 												break;
 											}
 										}
+									} else if (edge.node.comments.nodes.length === 1) {
+										const node = edge.node.comments.nodes[0];
+										if (node.id === comment.id) {
+											threadId = edge.node.id;
+											isResolved = edge.node.isResolved;
+										}
 									}
 								}
 							}
 						}
-						if (replies.length) {
-							// this api always returns only 1 node/comment (with no replies)
-							// do just attach it to nodes[0]
-							node.comments.nodes[0].replies = replies;
+						// this api always returns only 1 node/comment (with no replies)
+						// do just attach it to nodes[0]
+						if (node.comments.nodes.length) {
+							node.comments.nodes[0].threadId = threadId;
+							node.comments.nodes[0].isResolved = isResolved;
+							if (replies.length) {
+								node.comments.nodes[0].replies = replies;
+							}
 						}
+						replies = null;
+						threadId = null;
+						isResolved = null;
 					}
 				}
 			}

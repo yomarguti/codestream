@@ -49,7 +49,48 @@ export const ButtonRow = styled.div`
 `;
 const Root = styled.div`
 	#controls {
-		padding-top: 10px;
+		// padding-top: 10px;
+	}
+	strong {
+		font-weight: normal;
+		color: var(--text-color-highlight);
+	}
+	a {
+		text-decoration: none;
+		color: var(--text-color-highlight);
+		&:hover {
+			color: var(--text-color-info) !important;
+		}
+	}
+`;
+const PRCompare = styled.div`
+	margin-top: 15px;
+	.octicon-arrow-left {
+		display: inline-block;
+		margin: 0 10px;
+	}
+	.octicon-git-compare {
+		margin-right: 10px;
+	}
+`;
+const PRError = styled.div`
+	padding: 15px 15px 10px 15px;
+	display: flex;
+	align-items: center;
+	> .icon {
+		flex-grow: 0;
+		flex-shrink: 0;
+		display: inline-block;
+		margin-right: 15px;
+		transform: scale(1.5);
+	}
+	> div {
+		flex-grow: 10;
+		display: flex;
+		align-items: center;
+		button {
+			margin-left: auto;
+		}
 	}
 	strong {
 		font-weight: normal;

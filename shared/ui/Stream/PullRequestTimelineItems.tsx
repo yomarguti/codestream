@@ -64,23 +64,24 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 	if (!pr || !pr.timelineItems) return null;
 
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [isResolving, setIsResolving] = useState(false);
 	const [reviewOption, setReviewOption] = useState("COMMENT");
 	const [reviewOptionText, setReviewOptionText] = useState("");
 	const [openComments, setOpenComments] = useState({});
 	const [pendingComments, setPendingComments] = useState({});
 	// const [pendingComment, setPendingComment] = useState("");
-	const submitReview = async (event?: React.SyntheticEvent) => {
-		// await HostApi.instance.send(new ExecuteThirdPartyTypedType<any, any>(), {
-		// 	method: "submitReview",
-		// 	providerId: "github*com",
-		// 	params: {
-		// 		pullRequestId: pr.id!,
-		// 		text: reviewOptionText,
-		// 		eventType: reviewOption
-		// 	}
-		// });
-		// props.fetch();
-	};
+	//const submitReview = async (event?: React.SyntheticEvent) => {
+	// await HostApi.instance.send(new ExecuteThirdPartyTypedType<any, any>(), {
+	// 	method: "submitReview",
+	// 	providerId: "github*com",
+	// 	params: {
+	// 		pullRequestId: pr.id!,
+	// 		text: reviewOptionText,
+	// 		eventType: reviewOption
+	// 	}
+	// });
+	// props.fetch();
+	//};
 
 	// const cancelReview = async (event?: React.SyntheticEvent) => {
 	// 	await HostApi.instance.send(new ExecuteThirdPartyTypedType<any, any>(), {
@@ -176,6 +177,44 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 					}
 				]
 			});
+		}
+	};
+
+	const handleResolve = async (e, threadId) => {
+		try {
+			setIsResolving(true);
+			await HostApi.instance.send(new ExecuteThirdPartyTypedType<any, any>(), {
+				method: "resolveReviewThread",
+				providerId: "github*com",
+				params: {
+					threadId: threadId
+				}
+			});
+
+			await props.fetch();
+		} catch (ex) {
+			console.warn(ex);
+		} finally {
+			setIsResolving(false);
+		}
+	};
+
+	const handleUnresolve = async (e, threadId) => {
+		try {
+			setIsResolving(true);
+			await HostApi.instance.send(new ExecuteThirdPartyTypedType<any, any>(), {
+				method: "unresolveReviewThread",
+				providerId: "github*com",
+				params: {
+					threadId: threadId
+				}
+			});
+
+			await props.fetch();
+		} catch (ex) {
+			console.warn(ex);
+		} finally {
+			setIsResolving(false);
 		}
 	};
 
@@ -290,7 +329,18 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 
 											// FIXME
 											const myComment = comment.author && comment.author.login === me;
-											const startLine = 5;
+
+											let startLine = 1;
+											if (comment.diffHunk) {
+												// this data looks like this => `@@ -234,3 +234,20 @@`
+												const match = comment.diffHunk.match("@@ (.+) (.+) @@");
+												if (match && match.length >= 2) {
+													try {
+														// the @@ line is actually not the first line... so subtract 1
+														startLine = parseInt(match[2].split(",")[0].replace("+", ""), 10) - 1;
+													} catch {}
+												}
+											}
 
 											const codeHTML = prettyPrintOne(
 												escapeHtml(comment.diffHunk),
@@ -408,7 +458,25 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 													</PRCodeCommentReply>
 													<div style={{ height: "15px" }}></div>
 													<PRButtonRow>
-														<Button variant="secondary">Resolve conversation</Button>
+														{comment.isResolved && (
+															<Button
+																variant="secondary"
+																isLoading={isResolving}
+																onClick={e => handleUnresolve(e, comment.threadId)}
+															>
+																Unresolve conversation
+															</Button>
+														)}
+
+														{!comment.isResolved && (
+															<Button
+																variant="secondary"
+																isLoading={isResolving}
+																onClick={e => handleResolve(e, comment.threadId)}
+															>
+																Resolve conversation
+															</Button>
+														)}
 													</PRButtonRow>
 												</PRThreadedCommentCard>
 											);
