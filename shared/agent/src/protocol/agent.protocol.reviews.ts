@@ -358,6 +358,10 @@ export interface CreatePullRequestRequest {
 	headRefName: string;
 	remote: string;
 	remoteName?: string;
+	addresses?: {
+		title: string;
+		url: string;
+	}[];
 }
 
 export interface CreatePullRequestResponse {

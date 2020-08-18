@@ -321,7 +321,10 @@ export const CreatePullRequestPanel = props => {
 				baseRefName: prBranch,
 				headRefName: reviewBranch,
 				remote: prRemoteUrl,
-				remoteName: prUpstreamOn && prUpstream ? prUpstream : undefined
+				remoteName: prUpstreamOn && prUpstream ? prUpstream : undefined,
+				addresses: addressesStatus
+					? [{ title: userStatus.label, url: userStatus.ticketUrl }]
+					: undefined
 			});
 			if (result.error) {
 				setFormState({

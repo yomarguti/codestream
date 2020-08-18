@@ -856,7 +856,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				metadata: {
 					reviewPermalink,
 					approvedAt,
-					reviewers: approvers
+					reviewers: approvers,
+					addresses: request.addresses
 				}
 			};
 
