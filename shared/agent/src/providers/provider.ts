@@ -586,9 +586,9 @@ export abstract class ThirdPartyIssueProviderBase<
 			}
 		}
 		if (request.metadata.addresses) {
-			request.description += "\n\n\nThis Review Addresses:\n";
+			request.description += "\n\n**This PR Addresses:**  \n";
 			request.metadata.addresses.forEach(issue => {
-				request.description += `[${issue.title}](${issue.url})\n`;
+				request.description += `[${issue.title}](${issue.url})  \n`;
 			});
 		}
 		return request.description;

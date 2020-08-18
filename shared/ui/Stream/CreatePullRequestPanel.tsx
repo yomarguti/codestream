@@ -366,12 +366,28 @@ export const CreatePullRequestPanel = props => {
 			return {
 				label: _,
 				key: _,
-				action: () => {
+				action: async () => {
 					// optimistically
 					setPrBranch(_);
+
+					let repoId: string = "";
+					if (!derivedState.reviewId) {
+						if (!derivedState.reviewId) {
+							// if we're not creating a PR from a review, then get the current
+							// repo and branch from the editor
+							const response = await HostApi.instance.send(GetReposScmRequestType, {
+								inEditorOnly: true
+							});
+
+							if (response && response.repositories) {
+								repoId = response.repositories[0].id || "";
+							}
+						}
+					}
 					HostApi.instance
 						.send(CheckPullRequestBranchPreconditionsRequestType, {
-							reviewId: derivedState.reviewId!,
+							reviewId: derivedState.reviewId,
+							repoId,
 							providerId: prProviderId,
 							baseRefName: _,
 							headRefName: reviewBranch
