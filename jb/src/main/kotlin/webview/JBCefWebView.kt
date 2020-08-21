@@ -104,6 +104,7 @@ class JBCefWebView(val jbCefBrowser: JBCefBrowser, val router: WebViewRouter) : 
     }
 
     override fun dispose() {
+        routerQuery.dispose()
         jbCefBrowser.dispose()
     }
 

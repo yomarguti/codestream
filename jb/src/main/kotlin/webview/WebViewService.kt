@@ -1,5 +1,6 @@
 package com.codestream.webview
 
+import com.codestream.ENV_DISABLE_JCEF
 import com.codestream.WEBVIEW_PATH
 import com.codestream.agentService
 import com.codestream.gson
@@ -124,7 +125,7 @@ class WebViewService(val project: Project) : Disposable {
     private fun createWebView(router: WebViewRouter): WebView {
         val appSettings = ServiceManager.getService(ApplicationSettingsService::class.java)
         return try {
-            if (JBCefApp.isSupported() && appSettings.jcef) {
+            if (!ENV_DISABLE_JCEF && appSettings.jcef && JBCefApp.isSupported()) {
                 logger.info("JCEF enabled")
                 JBCefWebView(JBCefBrowser(), router).also {
                     webviewTelemetry("JCEF")

@@ -276,7 +276,7 @@ class TeamPanel extends React.Component<Props, State> {
 	};
 
 	clearScmInfoSummary = async () => {
-		this.props.clearModifiedFiles();
+		this.props.clearModifiedFiles(this.props.teamId);
 	};
 
 	onEmailChange = event => {
@@ -730,9 +730,9 @@ class TeamPanel extends React.Component<Props, State> {
 													title={
 														<TipTitle>
 															<h1>Live View: {currentUserInvisible ? "OFF" : "ON"}</h1>
-															{currentUserInvisible ? "Not sharing" : "Sharing"} local changes
+															{currentUserInvisible ? "Not sharing" : "Sharing"} local changes with
 															<br />
-															with teammates.
+															teammates. Click to toggle.
 															<a
 																className="learn-more"
 																href="http://docs.codestream.com/userguide/features/team-live-view/"

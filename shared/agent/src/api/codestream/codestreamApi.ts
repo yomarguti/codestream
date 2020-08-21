@@ -13,7 +13,7 @@ import { ServerError } from "../../agentError";
 import { Team, User } from "../../api/extensions";
 import { Container, SessionContainer } from "../../container";
 import { Logger } from "../../logger";
-import { isDirective, resolve } from "../../managers/operations";
+import { isDirective, resolve, safeDecode, safeEncode  } from "../../managers/operations";
 import {
 	AgentOpenUrlRequestType,
 	ChangeDataType,
@@ -790,6 +790,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	async updatePreferences(request: UpdatePreferencesRequest) {
+		safeEncode(request.preferences);
 		const update = await this.put<CSMePreferences, any>(
 			"/preferences",
 			request.preferences,
@@ -1715,7 +1716,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	async getPreferences() {
-		return this.get<GetPreferencesResponse>("/preferences", this._token);
+		const preferences = await this.get<GetPreferencesResponse>("/preferences", this._token);
+		safeDecode(preferences);
+		return preferences;
 	}
 
 	@log()
