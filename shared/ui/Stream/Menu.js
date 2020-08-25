@@ -78,6 +78,10 @@ export default class Menu extends Component {
 		if (this.props && this.props.target) {
 			const align = this.props.align || "";
 			const rect = this.props.target.getBoundingClientRect();
+			if ((this.props.align || "").match(/^dropdown/)) {
+				this._div.style.minWidth = rect.width + 20 + "px";
+			}
+
 			var computedStyle = window.getComputedStyle(this._div);
 			this._div.style.top =
 				this.props.valign === "bottom" ? rect.bottom + 10 + "px" : rect.top + "px";
@@ -305,6 +309,10 @@ export default class Menu extends Component {
 			selected = false;
 		}
 
+		if (item.type === "title") {
+			return <h3>{item.title}</h3>;
+		}
+
 		return (
 			<li
 				className={createClassString({
@@ -328,6 +336,7 @@ export default class Menu extends Component {
 				{item.label && <span className="label">{item.label}</span>}
 				{item.subtle && <span className="subtle">{item.subtle}</span>}
 				{item.shortcut && <span className="shortcut">{item.shortcut}</span>}
+				{item.subtextWide && <div className="subtext-wide">{item.subtextWide}</div>}
 				{item.subtext && <div className="subtext">{item.subtext}</div>}
 				{item.disabled && <span className="disabled">{item.disabled}</span>}
 				{item.submenu && (
@@ -343,6 +352,7 @@ export default class Menu extends Component {
 						ref={ref => (this._searchInput = ref)}
 						placeholder={item.placeholder}
 						onChange={this.changeSearch}
+						autoFocus
 					/>
 				)}
 			</li>

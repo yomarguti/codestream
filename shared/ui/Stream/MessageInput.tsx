@@ -13,7 +13,8 @@ import {
 	debounceAndCollectToAnimationFrame,
 	emptyArray,
 	replaceHtml,
-	asPastedText
+	asPastedText,
+	lightOrDark
 } from "../utils";
 import { AtMentionsPopup } from "./AtMentionsPopup";
 import EmojiPicker from "./EmojiPicker";
@@ -86,7 +87,8 @@ interface Props extends ConnectedProps {
 	onChangeSelectedTags?(tag: any): any;
 	onEmptyUpArrow?(event: React.KeyboardEvent): any;
 	onDismiss?(): any;
-	onSubmit?(): any;
+	onSubmit?: any;
+	onFocus?: any;
 	selectedTags?: any;
 	toggleTag?: Function;
 	relatedCodemarkIds?: any;
@@ -485,7 +487,7 @@ export class MessageInput extends React.Component<Props, State> {
 		}
 	};
 
-	insertNewlineAtCursor() {
+	insertNewlineAtCursor = () => {
 		let sel, range;
 		sel = window.getSelection();
 
@@ -522,7 +524,7 @@ export class MessageInput extends React.Component<Props, State> {
 				cursorPosition: getCurrentCursorPosition("input-div")
 			});
 		}
-	}
+	};
 
 	// this is asynchronous so callers should provide a callback for code that depends on the completion of this
 	focus = debounceAndCollectToAnimationFrame((...cbs: Function[]) => {
@@ -969,6 +971,8 @@ export class MessageInput extends React.Component<Props, State> {
 			teamTags.map(tag => {
 				let className = "tag-menu-block";
 				if (!tag.color.startsWith("#")) className += " " + tag.color + "-background";
+				else if (lightOrDark(tag.color) === "light") className += " light";
+				if (tag.color === "yellow") className += " light";
 				return {
 					label: (
 						<span className="tag-menu-selector">
@@ -1047,7 +1051,11 @@ export class MessageInput extends React.Component<Props, State> {
 		const { placeholder, text, __onDidRender } = this.props;
 
 		__onDidRender &&
-			__onDidRender({ insertTextAtCursor: this.insertTextAtCursor, focus: this.focus });
+			__onDidRender({
+				insertTextAtCursor: this.insertTextAtCursor,
+				insertNewlineAtCursor: this.insertNewlineAtCursor,
+				focus: this.focus
+			});
 
 		return (
 			<div
@@ -1165,6 +1173,7 @@ export class MessageInput extends React.Component<Props, State> {
 						id="input-div"
 						onChange={this.handleChange}
 						onBlur={this.handleBlur}
+						onFocus={this.props.onFocus}
 						onClick={this.handleClick}
 						html={text}
 						placeholder={placeholder}

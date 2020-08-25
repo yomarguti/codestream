@@ -41,6 +41,7 @@ export enum WebviewPanels {
 	NewReview = "new-review",
 	People = "people",
 	Profile = "profile",
+	PullRequest = "pull-request",
 	Review = "review",
 	Status = "status",
 	Tasks = "tasks",
@@ -49,7 +50,8 @@ export enum WebviewPanels {
 	Integrations = "integrations",
 	GettingStarted = "gtting-started", // this is a typo but now baked into user data, so let's just leave it
 	NewPullRequest = "new-pull-request",
-	Flow = "flow"
+	Flow = "flow",
+	Tester = "tester"
 }
 
 // this is for mixpanel and maps the values from WebviewPanels to their
@@ -90,7 +92,8 @@ export interface WebviewContext {
 	threadId?: string;
 	currentCodemarkId?: string;
 	currentReviewId?: string;
-	currentPullRequestReviewId?: string;
+	createPullRequestReviewId?: string;
+	currentPullRequestId?: string;
 	profileUserId?: string;
 	currentMarkerId?: string;
 	isRepositioning?: boolean;

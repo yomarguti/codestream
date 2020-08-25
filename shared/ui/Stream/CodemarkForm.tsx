@@ -72,7 +72,7 @@ import { escapeHtml } from "../utils";
 import { CodeStreamState } from "../store";
 import { LabeledSwitch } from "../src/components/controls/LabeledSwitch";
 import { CSText } from "../src/components/CSText";
-import { NewCodemarkAttributes } from "../store/codemarks/actions";
+import { NewCodemarkAttributes, parseCodeStreamDiffUri } from "../store/codemarks/actions";
 import { SharingControls, SharingAttributes } from "./SharingControls";
 import { SmartFormattedList } from "./SmartFormattedList";
 import { Modal } from "./Modal";
@@ -150,6 +150,8 @@ interface ConnectedProps {
 	blameMap?: { [email: string]: string };
 	activePanel?: WebviewPanels;
 	inviteUsersOnTheFly: boolean;
+	currentPullRequestId?: string;
+	textEditorUriContext: any;
 }
 
 interface State {
@@ -166,6 +168,7 @@ interface State {
 	privacyMembers: { value: string; label: string }[];
 	notify: boolean;
 	isLoading: boolean;
+	isReviewLoading: boolean;
 	crossPostMessage: boolean;
 	crossPostIssueValues: Partial<CrossPostIssueValues>;
 	assignableUsers: { value: any; label: string }[];
@@ -195,6 +198,8 @@ interface State {
 	isChangeRequest: boolean;
 	unregisteredAuthors: BlameAuthor[];
 	emailAuthors: { [email: string]: boolean };
+	currentPullRequestId?: string;
+	isProviderReview?: boolean;
 }
 
 function merge(defaults: Partial<State>, codemark: CSCodemark): State {
@@ -245,7 +250,8 @@ class CodemarkForm extends React.Component<Props, State> {
 			isChangeRequest: false,
 			scmError: "",
 			unregisteredAuthors: [],
-			emailAuthors: {}
+			emailAuthors: {},
+			isReviewLoading: false
 		};
 
 		const state = props.editingCodemark
@@ -618,7 +624,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	handleClickSubmit = async (event?: React.SyntheticEvent) => {
 		event && event.preventDefault();
-		if (this.state.isLoading) return;
+		if (this.state.isLoading || this.state.isReviewLoading) return;
 		if (this.isFormInvalid()) return;
 
 		const {
@@ -688,7 +694,11 @@ class CodemarkForm extends React.Component<Props, State> {
 				? this.props.editingCodemark!.assignees
 				: (this.state.assignees as any[]).map(a => a.value);
 
-		this.setState({ isLoading: true });
+		if (this.props.currentPullRequestId && this.state.isProviderReview) {
+			this.setState({ isReviewLoading: true });
+		} else {
+			this.setState({ isLoading: true });
+		}
 
 		let parentPostId: string | undefined = undefined;
 		// all codemarks created while in a review are attached to that review
@@ -717,7 +727,8 @@ class CodemarkForm extends React.Component<Props, State> {
 				relatedCodemarkIds: keyFilter(relatedCodemarkIds),
 				parentPostId,
 				isChangeRequest: this.state.isChangeRequest,
-				addedUsers: keyFilter(this.state.emailAuthors)
+				addedUsers: keyFilter(this.state.emailAuthors),
+				isProviderReview: this.state.isProviderReview
 			};
 			if (this.props.teamProvider === "codestream") {
 				const retVal = await this.props.onSubmit({
@@ -740,8 +751,11 @@ class CodemarkForm extends React.Component<Props, State> {
 				(this.props as any).dispatch(setCurrentStream(selectedChannelId));
 			}
 		} catch (error) {
+			console.error(error);
 		} finally {
 			this.setState({ isLoading: false });
+			this.setState({ isProviderReview: false });
+			this.setState({ isReviewLoading: false });
 		}
 	};
 
@@ -845,7 +859,9 @@ class CodemarkForm extends React.Component<Props, State> {
 			}
 		}
 
-		if (
+		if (this.props.currentPullRequestId) {
+			// do something cool?
+		} else if (
 			!this.props.isEditing &&
 			this.props.shouldShare &&
 			!this._sharingAttributes &&
@@ -1083,6 +1099,9 @@ class CodemarkForm extends React.Component<Props, State> {
 	renderSharingControls = () => {
 		if (this.props.isEditing) return null;
 		if (this.props.currentReviewId) return null;
+		// don't show the sharing controls for these types of diffs
+		if (this.props.textEditorUri && this.props.textEditorUri.match("codestream-diff://-[0-9]+-"))
+			return null;
 
 		const { codeBlocks } = this.state;
 		// we only look at the first code range here because we're using it to default
@@ -1455,7 +1474,7 @@ class CodemarkForm extends React.Component<Props, State> {
 					}
 					file = marker.file || "";
 				} else {
-					return this.renderAddLocation()
+					return this.renderAddLocation();
 				}
 			}
 
@@ -1486,6 +1505,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	renderAddLocation() {
 		if (
 			!this.props.multipleMarkersEnabled ||
+			this.props.currentPullRequestId ||
 			this.props.isEditing ||
 			this.props.commentType === "link"
 		)
@@ -1559,7 +1579,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				shouldShowRelatableCodemark={codemark =>
 					this.props.editingCodemark ? codemark.id !== this.props.editingCodemark.id : true
 				}
-				onSubmit={this.handleClickSubmit}
+				onSubmit={this.props.currentPullRequestId ? undefined : this.handleClickSubmit}
 				selectedTags={this.state.selectedTags}
 				relatedCodemarkIds={this.state.relatedCodemarkIds}
 				__onDidRender={__onDidRender}
@@ -1984,6 +2004,14 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		const hasError = this.props.error != null && this.props.error !== "";
 
+		const hasPullRequestReview = !!(
+			this.state.codeBlocks &&
+			this.state.codeBlocks.length &&
+			this.state.codeBlocks[0].context &&
+			this.state.codeBlocks[0].context.pullRequest &&
+			!!this.state.codeBlocks[0].context.pullRequest.pullRequestReviewId
+		);
+
 		return [
 			<form
 				id="code-comment-form"
@@ -2150,7 +2178,10 @@ class CodemarkForm extends React.Component<Props, State> {
 										paddingLeft: "10px",
 										paddingRight: "10px",
 										// fixed width to handle the isLoading case
-										width: this.props.currentReviewId ? "auto" : "80px",
+										width:
+											this.props.currentReviewId || this.props.currentPullRequestId
+												? "auto"
+												: "80px",
 										marginRight: 0
 									}}
 									className="control-button"
@@ -2161,7 +2192,7 @@ class CodemarkForm extends React.Component<Props, State> {
 											? this.copyPermalink
 											: this.handleClickSubmit
 									}
-									disabled={hasError}
+									disabled={hasError || !!hasPullRequestReview}
 								>
 									{commentType === "link"
 										? this.state.copied
@@ -2173,9 +2204,35 @@ class CodemarkForm extends React.Component<Props, State> {
 										? "Add Comment & Request Change"
 										: this.props.currentReviewId
 										? "Add Comment to Review"
+										: this.props.currentPullRequestId
+										? "Add single comment"
 										: "Submit"}
 								</Button>
 							</Tooltip>
+							{this.props.currentPullRequestId && (
+								<Button
+									key="submit-review"
+									loading={this.state.isReviewLoading}
+									disabled={hasError}
+									onClick={e => {
+										this.setState({ isProviderReview: true }, () => {
+											this.handleClickSubmit(e);
+										});
+									}}
+									style={{
+										paddingLeft: "10px",
+										paddingRight: "10px",
+										// fixed width to handle the isReviewLoading case
+										width: this.props.currentPullRequestId ? "auto" : "80px",
+										marginRight: 0
+									}}
+									className="control-button"
+									type="submit"
+								>
+									{hasPullRequestReview && <>Add to review</>}
+									{!hasPullRequestReview && <>Start a review</>}
+								</Button>
+							)}
 							{/*
 							<span className="hint">Styling with Markdown is supported</span>
 						*/}
@@ -2263,6 +2320,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		channelStreams: channelStreams,
 		directMessageStreams: directMessageStreams,
 		issueProvider: providers[context.issueProvider!],
+		currentPullRequestId: state.context.currentPullRequestId,
 		providerInfo: (user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT,
 		teamProvider: getCurrentTeamProvider(state),
 		currentUser: user,
@@ -2271,6 +2329,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		showChannels: context.channelFilter,
 		textEditorUri: editorContext.textEditorUri,
 		textEditorSelection: getCurrentSelection(editorContext),
+		textEditorUriContext: parseCodeStreamDiffUri(editorContext.textEditorUri!),
 		teamTagsArray,
 		codemarkState: codemarks,
 		multipleMarkersEnabled: isFeatureEnabled(state, "multipleMarkers"),

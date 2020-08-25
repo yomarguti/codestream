@@ -6,17 +6,29 @@ import { Ranges } from "../api/extensions";
 import { GitNumStat } from "../git/models/numstat";
 import { Logger } from "../logger";
 import {
+	CodeStreamDiffUriData,
+	FetchForkPointRequestType,
+	FetchForkPointRequest,
+	FetchForkPointResponse
+} from "../protocol/agent.protocol";
+import {
 	BlameAuthor,
 	CoAuthors,
 	CreateBranchRequest,
 	CreateBranchRequestType,
 	CreateBranchResponse,
+	FetchAllRemotesRequest,
+	FetchAllRemotesRequestType,
+	FetchAllRemotesResponse,
 	GetBranchesRequest,
 	GetBranchesRequestType,
 	GetBranchesResponse,
 	GetCommitScmInfoRequest,
 	GetCommitScmInfoRequestType,
 	GetCommitScmInfoResponse,
+	GetFileContentsAtRevisionRequest,
+	GetFileContentsAtRevisionRequestType,
+	GetFileContentsAtRevisionResponse,
 	GetFileScmInfoRequest,
 	GetFileScmInfoRequestType,
 	GetFileScmInfoResponse,
@@ -44,10 +56,12 @@ import {
 } from "../protocol/agent.protocol";
 import { FileStatus } from "../protocol/api.protocol.models";
 import { FileSystem, Iterables, log, lsp, lspHandler, Strings } from "../system";
+import * as csUri from "../system/uri";
 import { xfs } from "../xfs";
 import { Container, SessionContainer } from "./../container";
 import { IgnoreFilesHelper } from "./ignoreFilesManager";
 import { ReviewsManager } from "./reviewsManager";
+import { GitRepository } from "git/gitService";
 
 @lsp
 export class ScmManager {
@@ -113,12 +127,16 @@ export class ScmManager {
 	async getRepos(request?: GetReposScmRequest): Promise<GetReposScmResponse> {
 		const cc = Logger.getCorrelationContext();
 		let gitError;
-		let repositories;
+		let repositories: GitRepository[] = [];
+		let branches: (string | undefined)[] = [];
 		try {
 			const { git } = SessionContainer.instance();
 			repositories = Array.from(await git.getRepositories());
 			if (request && request.inEditorOnly && repositories) {
 				repositories = repositories.filter(_ => _.isInWorkspace);
+			}
+			if (request && request.includeCurrentBranches) {
+				branches = await Promise.all(repositories.map(repo => git.getCurrentBranch(repo.path)));
 			}
 		} catch (ex) {
 			gitError = ex.toString();
@@ -127,12 +145,13 @@ export class ScmManager {
 		}
 		return {
 			repositories: repositories
-				? repositories.map(_ => {
+				? repositories.map((_, index) => {
 						return {
 							id: _.id,
 							path: _.path,
 							folder: _.folder,
-							root: _.root
+							root: _.root,
+							currentBranch: branches[index]
 						};
 				  })
 				: undefined,
@@ -191,15 +210,22 @@ export class ScmManager {
 	@log()
 	async getBranches({ uri: documentUri }: GetBranchesRequest): Promise<GetBranchesResponse> {
 		const cc = Logger.getCorrelationContext();
-
-		const uri = URI.parse(documentUri);
-		const { git } = SessionContainer.instance();
 		let repoPath = "";
 		let result: { branches: string[]; current: string } | undefined = undefined;
 		let gitError;
 		let repoId = "";
-
 		try {
+			const { git } = SessionContainer.instance();
+			if (
+				documentUri.startsWith("codestream-diff://") &&
+				csUri.Uris.isCodeStreamDiffUri(documentUri)
+			) {
+				const parsed = csUri.Uris.fromCodeStreamDiffUri<CodeStreamDiffUriData>(documentUri)!;
+				const repo = await git.getRepositoryById(parsed.repoId);
+				documentUri = paths.join(repo?.path!, parsed.path);
+			}
+			const uri = URI.parse(documentUri);
+
 			repoPath = (await git.getRepoRoot(uri.fsPath)) || "";
 			if (repoPath.length) {
 				result = await git.getBranches(repoPath);
@@ -823,10 +849,86 @@ export class ScmManager {
 	@log()
 	getRangeInfo(request: GetRangeScmInfoRequest): Promise<GetRangeScmInfoResponse> {
 		if (request.uri.startsWith("codestream-diff://")) {
+			if (csUri.Uris.isCodeStreamDiffUri(request.uri)) {
+				return this.getCodeStreamDiffRangeInfo(request);
+			}
 			return this.getDiffRangeInfo(request);
 		} else {
 			return this.getFileRangeInfo(request);
 		}
+	}
+
+	private async getCodeStreamDiffRangeInfo({
+		uri: documentUri,
+		range,
+		dirty,
+		contents,
+		skipBlame
+	}: GetRangeScmInfoRequest): Promise<GetRangeScmInfoResponse> {
+		const { git, providerRegistry } = SessionContainer.instance();
+		range = Ranges.ensureStartBeforeEnd(range);
+
+		const codeStreamDiff = csUri.Uris.fromCodeStreamDiffUri<CodeStreamDiffUriData>(documentUri);
+		if (!codeStreamDiff) throw new Error(`Could not parse codestream-diff uri ${documentUri}`);
+
+		const repo = await git.getRepositoryById(codeStreamDiff.repoId);
+		if (repo == null) throw new Error(`Could not find repo with ID ${codeStreamDiff.repoId}`);
+
+		const filePath = paths.join(repo.path, codeStreamDiff.path);
+		const uri = Strings.pathToFileURL(filePath);
+
+		if (contents == null) {
+			const versionContents =
+				(await git.getFileContentForRevision(
+					filePath,
+					codeStreamDiff.side === "left" ? codeStreamDiff.leftSha : codeStreamDiff.rightSha
+				)) || "";
+
+			const document = TextDocument.create(uri.toString(), "codestream", 0, versionContents);
+			contents = document.getText(range);
+		}
+
+		const gitRemotes = await repo.getRemotes();
+		const remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
+
+		let pullRequestReviewId;
+		let context;
+		// if we're looking at a review for a provider we support...
+		// try to lookup any possible metadata for additional context...
+		// github, for example, only allows 1 review per PR per user...
+		// so we want to know if we already have one...
+		if (codeStreamDiff.context?.pullRequest?.providerId === "github*com") {
+			if (codeStreamDiff.context?.pullRequest?.id) {
+				pullRequestReviewId = await providerRegistry.executeMethod({
+					method: "getPullRequestReviewId",
+					providerId: codeStreamDiff.context.pullRequest.providerId,
+					params: {
+						pullRequestId: codeStreamDiff.context.pullRequest.id
+					}
+				});
+				context = codeStreamDiff.context;
+				context.pullRequest!.pullRequestReviewId = pullRequestReviewId;
+			}
+		}
+
+		return {
+			// keep this as the original uri, as it is used in follow up requests
+			uri: documentUri.toString(),
+			range: range,
+			contents: contents!,
+			scm: {
+				file: codeStreamDiff.path,
+				repoPath: repo.path,
+				repoId: codeStreamDiff.repoId,
+				revision: codeStreamDiff.side === "left" ? codeStreamDiff.leftSha : codeStreamDiff.rightSha,
+				authors: [],
+				remotes,
+				branch:
+					codeStreamDiff.side === "left" ? codeStreamDiff.baseBranch : codeStreamDiff.headBranch
+			},
+			context: context,
+			error: undefined
+		};
 	}
 
 	private async getDiffRangeInfo({
@@ -1048,6 +1150,53 @@ export class ScmManager {
 		return {
 			scm: committers,
 			error: gitError
+		};
+	}
+
+	@log()
+	@lspHandler(FetchAllRemotesRequestType)
+	async fetchAllRemotes(request: FetchAllRemotesRequest): Promise<FetchAllRemotesResponse> {
+		const { git } = SessionContainer.instance();
+
+		const repo = await git.getRepositoryById(request.repoId);
+		if (!repo) throw new Error(`Could not load repo with ID ${request.repoId}`);
+
+		await git.fetchAllRemotes(repo.path);
+		return true;
+	}
+
+	@log()
+	@lspHandler(GetFileContentsAtRevisionRequestType)
+	async getFileContentsAtRevision(
+		request: GetFileContentsAtRevisionRequest
+	): Promise<GetFileContentsAtRevisionResponse> {
+		const { git } = SessionContainer.instance();
+
+		const repo = await git.getRepositoryById(request.repoId);
+		if (!repo) throw new Error(`Could not load repo with ID ${request.repoId}`);
+
+		const filePath = paths.join(repo.path, request.path);
+		if (request.fetchAllRemotes) {
+			await git.fetchAllRemotes(repo.path);
+		}
+		const contents = (await git.getFileContentForRevision(filePath, request.sha)) || "";
+		return {
+			content: contents
+		};
+	}
+
+	@log()
+	@lspHandler(FetchForkPointRequestType)
+	async getForkPointRequestType(request: FetchForkPointRequest): Promise<FetchForkPointResponse> {
+		const { git } = SessionContainer.instance();
+
+		const repo = await git.getRepositoryById(request.repoId);
+		if (!repo) throw new Error(`Could not load repo with ID ${request.repoId}`);
+
+		const forkPointSha =
+			(await git.getRepoBranchForkPoint(repo.path, request.baseSha, request.headSha)) || "";
+		return {
+			sha: forkPointSha
 		};
 	}
 }

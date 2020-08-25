@@ -24,6 +24,8 @@ import {
 	FetchThirdPartyCardWorkflowResponse,
 	FetchThirdPartyChannelsRequest,
 	FetchThirdPartyChannelsResponse,
+	FetchThirdPartyPullRequestRequest,
+	FetchThirdPartyPullRequestResponse,
 	MoveThirdPartyCardRequest,
 	MoveThirdPartyCardResponse,
 	RemoveEnterpriseProviderRequest,
@@ -88,6 +90,10 @@ export interface ThirdPartyProviderSupportsPullRequests {
 	getRepoInfo(request: ProviderGetRepoInfoRequest): Promise<ProviderGetRepoInfoResponse>;
 	getIsMatchingRemotePredicate(): any;
 	getRemotePaths(repo: any, _projectsByRemotePath: any): any;
+
+	getPullRequest(
+		request: FetchThirdPartyPullRequestRequest
+	): Promise<FetchThirdPartyPullRequestResponse>;
 }
 
 export namespace ThirdPartyIssueProvider {
@@ -129,6 +135,7 @@ export interface ThirdPartyProvider {
 	removeEnterpriseHost(request: RemoveEnterpriseProviderRequest): Promise<void>;
 	getConfig(): ThirdPartyProviderConfig;
 	isConnected(me: CSMe): boolean;
+	ensureConnected(request?: { providerTeamId?: string }): Promise<void>;
 }
 
 export interface ThirdPartyIssueProvider extends ThirdPartyProvider {
@@ -560,21 +567,29 @@ export abstract class ThirdPartyIssueProviderBase<
 			!request ||
 			request.description == null ||
 			!request.metadata ||
-			!request.metadata.reviewPermalink
+			(!request.metadata.reviewPermalink && !request.metadata.addresses)
 		) {
 			return request.description;
 		}
 
-		request.description += `\n\n\n[Changes reviewed on CodeStream](${
-			request.metadata.reviewPermalink
-		}?src=${encodeURIComponent(this.displayName)})`;
-		if (request.metadata.reviewers) {
-			request.description += ` by ${request.metadata.reviewers?.map(_ => _.name)?.join(", ")}`;
+		if (request.metadata.reviewPermalink) {
+			request.description += `\n\n\n[Changes reviewed on CodeStream](${
+				request.metadata.reviewPermalink
+			}?src=${encodeURIComponent(this.displayName)})`;
+			if (request.metadata.reviewers) {
+				request.description += ` by ${request.metadata.reviewers?.map(_ => _.name)?.join(", ")}`;
+			}
+			if (request.metadata.approvedAt) {
+				request.description += ` on ${new Date(
+					request.metadata.approvedAt
+				).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}`;
+			}
 		}
-		if (request.metadata.approvedAt) {
-			request.description += ` on ${new Date(
-				request.metadata.approvedAt
-			).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}`;
+		if (request.metadata.addresses) {
+			request.description += "\n\n**This PR Addresses:**  \n";
+			request.metadata.addresses.forEach(issue => {
+				request.description += `[${issue.title}](${issue.url})  \n`;
+			});
 		}
 		return request.description;
 	}
@@ -717,11 +732,23 @@ export interface ProviderCreatePullRequestRequest {
 		reviewPermalink?: string;
 		reviewers?: { name: string }[];
 		approvedAt?: number;
+		addresses?: { title: string; url: string }[];
 	};
 }
 
 export interface ProviderCreatePullRequestResponse {
 	url?: string;
 	title?: string;
+	id?: string;
 	error?: { message?: string; type: string };
 }
+
+// export interface ProviderGetPullRequestRequest {
+// 	pullRequestId: string;
+// 	providerId: string;
+// }
+
+// export interface ProviderGetPullRequestResponse {
+// 	pullRequestId: string;
+// 	providerId: string;
+// }

@@ -46,12 +46,12 @@ export const distanceOfTimeInWords = (
 		// 1 day
 		distance = Math.round(seconds / (60 * 60));
 		when = `${distance} ${plural(abbreviated ? "hr" : "hour", distance)}`;
-	} else if (seconds < WEEK) {
-		// 1 week
+	} else if (seconds < WEEK * 2) {
+		// 2 weeks
 		distance = Math.round(seconds / (60 * 60 * 24));
 		when = `${distance} ${plural("day", distance)}`;
-	} else if (seconds < MONTH) {
-		// 1 month
+	} else if (seconds < MONTH * 1.5) {
+		// 1.5 months
 		distance = Math.round(seconds / (60 * 60 * 24 * 7));
 		when = `${distance} ${plural(abbreviated ? "wk" : "week", distance)}`;
 	} else if (seconds < YEAR) {
@@ -66,7 +66,8 @@ export const distanceOfTimeInWords = (
 	if (!relativeToNow) {
 		return when;
 	} else if (isAgo) {
-		return `${when} ago`;
+		if (when === "1 day") return "yesterday";
+		else return `${when} ago`;
 	} else {
 		return `in ${when}`;
 	}
@@ -116,7 +117,7 @@ interface Props {
 	relative?: boolean;
 	dateOnly?: boolean;
 	className?: string;
-	time: number;
+	time: number | string;
 	edited?: boolean;
 	abbreviated?: boolean;
 }
@@ -137,19 +138,24 @@ const StyledTime = styled.time`
 
 export default function Timestamp(props: PropsWithChildren<Props>) {
 	if (!props.time) return null;
+	// allow a UTC string to be passed in
+	let time = props.time;
+	if (typeof props.time == "string" && (props.time as string).indexOf("Z") > -1) {
+		time = new Date(props.time).getTime();
+	}
 
 	const edited = props.edited ? " (edited)" : "";
 
 	if (props.relative)
 		return (
 			<StyledTime className={props.className}>
-				{distanceOfTimeInWords(props.time, true, props.abbreviated)}
+				{distanceOfTimeInWords(time as number, true, props.abbreviated)}
 				{edited}
 			</StyledTime>
 		);
 
-	const timeText = prettyTime(props.time);
-	const timeDetails = prettyDateDay(props.time);
+	const timeText = prettyTime(time);
+	const timeDetails = prettyDateDay(time);
 
 	if (props.dateOnly)
 		return (

@@ -253,6 +253,7 @@ export class GitService implements IGitService, Disposable {
 
 	async getDefaultBranch(repoPath: string, remote: string): Promise<string | undefined> {
 		try {
+			Logger.debug("IN GDB: " + remote);
 			const data = await git(
 				{ cwd: repoPath, env: { GIT_TERMINAL_PROMPT: "0" }, throwRawExceptions: true },
 				"remote",
@@ -266,7 +267,7 @@ export class GitService implements IGitService, Disposable {
 
 			return headBranchLine ? headBranchLine.split(":")[1].trim() : undefined;
 		} catch (ex) {
-			Logger.debug(ex.message);
+			Logger.debug("getDefaultBranch: " + ex.message);
 			return undefined;
 		}
 	}
@@ -565,6 +566,25 @@ export class GitService implements IGitService, Disposable {
 		);
 
 		return commits;
+	}
+
+	async getRepoBranchForkPoint(
+		repoUriOrPath: URI | string,
+		sha1: string,
+		sha2: string
+	): Promise<string | undefined> {
+		const repoPath = typeof repoUriOrPath === "string" ? repoUriOrPath : repoUriOrPath.fsPath;
+
+		let data: string | undefined;
+		try {
+			data = await git({ cwd: repoPath }, "merge-base", sha1, sha2, "--");
+			if (data) {
+				data = data.trim();
+			}
+		} catch {}
+		if (!data) return undefined;
+
+		return data;
 	}
 
 	async getRepoHeadRevision(repoUri: URI): Promise<string | undefined>;

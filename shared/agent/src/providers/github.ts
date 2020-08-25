@@ -1,9 +1,11 @@
 "use strict";
 import { GitRemote, GitRepository } from "git/gitService";
 import { GraphQLClient } from "graphql-request";
+import { uniqBy as _uniqBy } from "lodash-es";
 import { Response } from "node-fetch";
 import * as paths from "path";
 import * as qs from "querystring";
+import { CodeStreamSession } from "session";
 import { URI } from "vscode-uri";
 import { MarkerLocation } from "../api/extensions";
 import { SessionContainer } from "../container";
@@ -19,13 +21,19 @@ import {
 	FetchThirdPartyCardsResponse,
 	FetchThirdPartyCardWorkflowRequest,
 	FetchThirdPartyCardWorkflowResponse,
+	FetchThirdPartyPullRequestFilesResponse,
+	FetchThirdPartyPullRequestRequest,
+	FetchThirdPartyPullRequestResponse,
+	GetMyPullRequestsResponse,
 	GitHubBoard,
 	GitHubCreateCardRequest,
 	GitHubCreateCardResponse,
 	GitHubUser,
+	MergeMethod,
 	MoveThirdPartyCardRequest,
 	MoveThirdPartyCardResponse,
-	ThirdPartyProviderCard
+	ThirdPartyProviderCard,
+	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
 import { CodemarkType, CSGitHubProviderInfo, CSReferenceLocation } from "../protocol/api.protocol";
 import { Arrays, Functions, log, lspProvider, Strings } from "../system";
@@ -54,6 +62,13 @@ const diffHunkRegex = /^@@ -([\d]+)(?:,([\d]+))? \+([\d]+)(?:,([\d]+))? @@/;
 @lspProvider("github")
 export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProviderInfo>
 	implements ThirdPartyProviderSupportsIssues, ThirdPartyProviderSupportsPullRequests {
+	constructor(
+		public readonly session: CodeStreamSession,
+		protected readonly providerConfig: ThirdPartyProviderConfig
+	) {
+		super(session, providerConfig);
+	}
+
 	async getRemotePaths(repo: any, _projectsByRemotePath: any) {
 		await this.ensureConnected();
 		const remotePaths = await getRemotePaths(
@@ -198,6 +213,61 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			Logger.log("Error from GitHub: ", JSON.stringify(e, null, 4));
 			return { cards: [] };
 		}
+	}
+	@log()
+	async getPullRequest(
+		request: FetchThirdPartyPullRequestRequest
+	): Promise<FetchThirdPartyPullRequestResponse> {
+		await this.ensureConnected();
+		let response = {} as FetchThirdPartyPullRequestResponse;
+		let repoOwner: string;
+		let repoName: string;
+		let allTimelineItems: any = [];
+		try {
+			let timelineQueryResponse;
+			if (request.owner == null && request.repo == null) {
+				const data = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
+				repoOwner = data.owner;
+				repoName = data.name;
+			} else {
+				repoOwner = request.owner!;
+				repoName = request.repo!;
+			}
+			const pullRequestNumber = await this.getPullRequestNumber(request.pullRequestId);
+			do {
+				timelineQueryResponse = await this.pullRequestTimelineQuery(
+					repoOwner,
+					repoName,
+					pullRequestNumber,
+					timelineQueryResponse &&
+						timelineQueryResponse.repository.pullRequest &&
+						timelineQueryResponse.repository.pullRequest.timelineItems.pageInfo &&
+						timelineQueryResponse.repository.pullRequest.timelineItems.pageInfo.endCursor
+				);
+				if (timelineQueryResponse === undefined) break;
+				response = timelineQueryResponse;
+
+				allTimelineItems = allTimelineItems.concat(
+					timelineQueryResponse.repository.pullRequest.timelineItems.nodes
+				);
+			} while (timelineQueryResponse.repository.pullRequest.timelineItems.pageInfo.hasNextPage);
+		} catch (ex) {
+			Logger.error(ex);
+		}
+		if (response?.repository?.pullRequest?.timelineItems != null) {
+			response.repository.pullRequest.timelineItems.nodes = allTimelineItems;
+		}
+		response.repository.pullRequest.repoUrl = response.repository.url;
+		response.repository.pullRequest.baseUrl = response.repository.url.replace(
+			response.repository.resourcePath,
+			""
+		);
+
+		response.repository.repoOwner = repoOwner!;
+		response.repository.repoName = repoName!;
+		response.repository.pullRequest.providerId = "github*com";
+		response.repository.providerId = "github*com";
+		return response;
 	}
 
 	@log()
@@ -448,6 +518,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					createPullRequest(input: {repositoryId: $repositoryId, baseRefName: $baseRefName, headRefName: $headRefName, title: $title, body: $body}) {
 					  pullRequest {
 							number,
+							id,
 							url,
 							title
 						}
@@ -465,6 +536,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			const title = `#${pullRequest.number} ${pullRequest.title}`;
 			return {
 				url: pullRequest.url,
+				id: pullRequest.id,
 				title: title
 			};
 		} catch (ex) {
@@ -733,6 +805,1802 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		  }
 		| undefined;
 
+	private _prTimelineQueryRateLimit:
+		| {
+				limit: number;
+				cost: number;
+				remaining: number;
+				resetAt: Date;
+		  }
+		| undefined;
+
+	async getLabels(request: { owner: string; repo: string }) {
+		const query = await this.client.request<any>(
+			`query getLabels($owner:String!, $name:String!) {
+				repository(owner:$owner, name:$name) {
+				  id
+				  labels(first: 50) {
+					nodes {
+					  color
+					  name
+					  id
+					  description
+					}
+				  }
+				}
+			  }`,
+			{
+				owner: request.owner,
+				name: request.repo
+			}
+		);
+		return query.repository.labels.nodes;
+	}
+
+	async getProjects(request: { owner: string; repo: string }) {
+		const query = await this.client.request<any>(
+			`query GetProjects($owner:String!, $name:String!) {
+				repository(owner:$owner, name:$name) {
+				  id
+				  projects(first: 50) {
+					edges {
+					  node {
+						id
+						name
+					  }
+					}
+				  }
+			    }
+			  }`,
+			{
+				owner: request.owner,
+				name: request.repo
+			}
+		);
+		return query.repository.projects.edges.map((_: any) => _.node);
+	}
+
+	async getMilestones(request: { owner: string; repo: string }) {
+		const query = await this.client.request<any>(
+			`query GetMilestones($owner:String!, $name:String!) {
+				repository(owner:$owner, name:$name) {
+				  id
+				  milestones(first: 50) {
+					edges {
+					  node {
+						id
+						title
+						description
+						dueOn
+					  }
+					}
+				  }
+			    }
+			  }`,
+			{
+				owner: request.owner,
+				name: request.repo
+			}
+		);
+		return query.repository.milestones.edges.map((_: any) => _.node);
+	}
+
+	async getReviewers(request: { owner: string; repo: string }) {
+		const query = await this.client.request<any>(
+			`query FindReviewers($owner:String!, $name:String!)  {
+				repository(owner:$owner, name:$name) {
+				  id
+				  collaborators(first: 50) {
+					nodes {
+					  avatarUrl
+					  id
+					  name
+					  login
+					}
+				  }
+				}
+			  }`,
+			{
+				owner: request.owner,
+				name: request.repo
+			}
+		);
+
+		return query.repository.collaborators.nodes;
+	}
+
+	async setLabelOnPullRequest(request: { pullRequestId: string; labelId: string; onOff: boolean }) {
+		const method = request.onOff ? "addLabelsToLabelable" : "removeLabelsFromLabelable";
+		const Method = request.onOff ? "AddLabelsToLabelable" : "RemoveLabelsFromLabelable";
+		const query = `mutation ${Method}($labelableId: String!,$labelIds:String!) {
+			${method}(input: {labelableId: $labelableId, labelIds:$labelIds}) {
+				  clientMutationId
+				}
+			  }`;
+
+		const response = await this.client.request<any>(query, {
+			labelableId: request.pullRequestId,
+			labelIds: request.labelId
+		});
+		return response;
+	}
+
+	async setAssigneeOnPullRequest(request: {
+		pullRequestId: string;
+		assigneeId: string;
+		onOff: boolean;
+	}) {
+		const method = request.onOff ? "addAssigneesToAssignable" : "removeAssigneesFromAssignable";
+		const Method = request.onOff ? "AddAssigneesFromAssignable" : "RemoveAssigneesFromAssignable";
+		const query = `mutation ${Method}($assignableId: String!,$assigneeIds:String!) {
+			${method}(input: {assignableId: $assignableId, assigneeIds:$assigneeIds}) {
+				  clientMutationId
+				}
+			  }`;
+
+		const response = await this.client.request<any>(query, {
+			assignableId: request.pullRequestId,
+			assigneeIds: request.assigneeId
+		});
+		return response;
+	}
+
+	async toggleReaction(request: { subjectId: string; content: string; onOff: boolean }) {
+		const method = request.onOff ? "addReaction" : "removeReaction";
+		const Method = request.onOff ? "AddReaction" : "RemoveReaction";
+		const query = `mutation ${Method}($subjectId: String!,$content:String!) {
+			${method}(input: {subjectId: $subjectId, content:$content}) {
+				  clientMutationId
+				}
+			  }`;
+
+		const response = await this.client.request<any>(query, {
+			subjectId: request.subjectId,
+			content: request.content
+		});
+		return response;
+	}
+
+	async updatePullRequestSubscription(request: { pullRequestId: string; onOff: boolean }) {
+		const query = `mutation UpdateSubscription($subscribableId: String!,$state:String!) {
+			updateSubscription(input: {subscribableId: $subscribableId, state:$state}) {
+				  clientMutationId
+				}
+			  }`;
+
+		const response = await this.client.request<any>(query, {
+			subscribableId: request.pullRequestId,
+			state: request.onOff ? "SUBSCRIBED" : "UNSUBSCRIBED"
+		});
+		return response;
+	}
+
+	async updateIssueComment(request: { id: string; body: string }) {
+		const query = `mutation UpdateComment($id: String!, $body:String!) {
+			updateIssueComment(input: {id: $id, body:$body}) {
+				  clientMutationId
+				}
+			  }`;
+
+		const response = await this.client.request<any>(query, {
+			id: request.id,
+			body: request.body
+		});
+		return response;
+	}
+
+	async updateReviewComment(request: { id: string; body: string }) {
+		const query = `mutation UpdateComment($pullRequestReviewCommentId: String!, $body:String!) {
+			updatePullRequestReviewComment(input: {pullRequestReviewCommentId: $pullRequestReviewCommentId, body:$body}) {
+				  clientMutationId
+				}
+			  }`;
+
+		const response = await this.client.request<any>(query, {
+			pullRequestReviewCommentId: request.id,
+			body: request.body
+		});
+		return response;
+	}
+
+	async updateReview(request: { id: string; body: string }) {
+		const query = `mutation UpdateComment($pullRequestReviewId: String!, $body:String!) {
+			updatePullRequestReview(input: {pullRequestReviewId: $pullRequestReviewId, body:$body}) {
+				  clientMutationId
+				}
+			  }`;
+
+		const response = await this.client.request<any>(query, {
+			pullRequestReviewId: request.id,
+			body: request.body
+		});
+		return response;
+	}
+
+	async updatePullRequestBody(request: { id: string; body: string }) {
+		const query = `mutation UpdateComment($pullRequestId: String!, $body:String!) {
+			updatePullRequest(input: {pullRequestId: $pullRequestId, body:$body}) {
+				  clientMutationId
+				}
+			  }`;
+
+		const response = await this.client.request<any>(query, {
+			pullRequestId: request.id,
+			body: request.body
+		});
+		return response;
+	}
+
+	async addPullRequestReview(request: { pullRequestId: string }) {
+		const query = `
+		mutation AddPullRequestReview($pullRequestId:String!) {
+		addPullRequestReview(input: {pullRequestId: $pullRequestId}) {
+			clientMutationId
+			pullRequestReview {
+			  id
+			}
+		  }
+		}`;
+		const response = await this.client.request<any>(query, {
+			pullRequestId: request.pullRequestId
+		});
+		return response;
+	}
+
+	/**
+	 * Returns the reviewId (if it exists) for the specificed pull request (there can only be 1 review per pull request per user)
+	 * @param request
+	 */
+	async getPullRequestReviewId(request: { pullRequestId: string }) {
+		const metaData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
+		const query = `query GetPullRequestReviewId($owner:String!, $name:String!, $pullRequestNumber:Int!) {
+			viewer {
+			  login
+			}
+			repository(owner:$owner, name:$name) {
+			  pullRequest(number:$pullRequestNumber) {
+				reviews(states: PENDING, first: 50) {
+				  nodes {
+					id
+					createdAt
+					author {
+					  login
+					}
+				  }
+				}
+			  }
+			}
+		  }
+		  `;
+		const response = await this.client.request<any>(query, metaData);
+		if (!response) return undefined;
+
+		const user = response.viewer.login;
+		// find the first pending review
+		const lastPendingReview = response.repository?.pullRequest?.reviews?.nodes.find(
+			(_: any) => _.author.login === user
+		);
+
+		return lastPendingReview ? lastPendingReview.id : undefined;
+	}
+
+	async createPullRequestReviewComment(request: {
+		pullRequestId: string;
+		pullRequestReviewId?: string;
+		text: string;
+		filePath?: string;
+		position?: number;
+	}) {
+		let query;
+		if (request.pullRequestReviewId) {
+			query = `mutation AddPullRequestReviewComment($text:String!, $pullRequestId:String!, $pullRequestReviewId:String!, $filePath:String, $position:Int) {
+			addPullRequestReviewComment(input: {body:$text, pullRequestId:$pullRequestId, pullRequestReviewId:$pullRequestReviewId, path:$filePath, position:$position}) {
+			  clientMutationId
+			}
+		  }
+		  `;
+		} else {
+			request.pullRequestReviewId = await this.getPullRequestReviewId(request);
+			query = `mutation AddPullRequestReviewComment($text:String!, $pullRequestId:String!, $filePath:String, $position:Int) {
+				addPullRequestReviewComment(input: {body:$text, pullRequestId:$pullRequestId, path:$filePath, position:$position}) {
+				  clientMutationId
+				}
+			  }
+			  `;
+		}
+		const response = await this.client.request<any>(query, request);
+		return response;
+	}
+
+	async deletePullRequestReview(request: { pullRequestId: string; pullRequestReviewId: string }) {
+		const query = `mutation DeletePullRequestReview($pullRequestReviewId:String!) {
+			deletePullRequestReview(input: {pullRequestReviewId: $pullRequestReviewId}){
+			  clientMutationId
+			}
+		  }
+		  `;
+		const response = await this.client.request<any>(query, {
+			pullRequestReviewId: request.pullRequestReviewId
+		});
+		return response;
+	}
+
+	async submitReview(request: { pullRequestId: string; text: string; eventType: string }) {
+		if (!request.eventType) {
+			request.eventType = "COMMENT";
+		}
+		if (
+			request.eventType !== "COMMENT" &&
+			request.eventType !== "APPROVE" &&
+			// for some reason I cannot get DISMISS to work...
+			// request.eventType !== "DISMISS" &&
+			request.eventType !== "REQUEST_CHANGES"
+		) {
+			throw new Error("Invalid eventType");
+		}
+
+		const query = `mutation SubmitPullRequestReview($pullRequestId:String!, $body:String) {
+			submitPullRequestReview(input: {event: ${request.eventType}, body: $body, pullRequestId: $pullRequestId}){
+			  clientMutationId
+			}
+		  }
+		  `;
+		const response = await this.client.request<any>(query, {
+			pullRequestId: request.pullRequestId,
+			body: request.text
+		});
+		return response;
+	}
+
+	// async closePullRequest(request: { pullRequestId: string }) {
+	// 	const query = `mutation ClosePullRequest($pullRequestId: String!) {
+	// 		closePullRequest(input: {pullRequestId: $pullRequestId}) {
+	// 			  clientMutationId
+	// 			}
+	// 		  }`;
+
+	// 	const response = await this.client.request<any>(query, {
+	// 		pullRequestId: request.pullRequestId
+	// 	});
+	// 	return true;
+	// }
+
+	_getMyPullRequestsCache = new Map<string, GetMyPullRequestsResponse[]>();
+	async getMyPullRequests(request: {
+		owner: string;
+		repo: string;
+		isOpen?: boolean;
+		force?: boolean;
+	}): Promise<GetMyPullRequestsResponse[]> {
+		const cacheKey = [request.owner, request.repo, request.isOpen].join("-");
+		if (!request.force) {
+			const cached = this._getMyPullRequestsCache.get(cacheKey);
+			if (cached) {
+				Logger.debug(`github getMyPullRequests got from cache, key=${cacheKey}`);
+				return cached!;
+			} else {
+				Logger.debug(`github getMyPullRequests cache miss, key=${cacheKey}`);
+			}
+		} else {
+			Logger.debug(`github getMyPullRequests removed from cache, key=${cacheKey}`);
+			this._getMyPullRequestsCache.delete(cacheKey);
+		}
+		let results: any = [];
+		const repoQuery =
+			request && request.owner && request.repo ? `repo:${request.owner}/${request.repo} ` : "";
+		const isOpenQuery = request && request.isOpen === true ? "is:open " : "";
+
+		const query = (q: string) => `query Search {
+			rateLimit {
+				limit
+				cost
+				remaining
+				resetAt
+			}
+			search(query: "${q}", type: ISSUE, last: 100) {
+			edges {
+			  node {
+				... on PullRequest {
+					url
+					title
+					createdAt
+					author {
+					  login
+					  avatarUrl(size: 20)
+					  url
+					}
+					bodyText
+					number
+					state
+					updatedAt
+					lastEditedAt
+					id
+					headRefName
+					headRepository {
+						name
+					}
+				}
+			  }
+			}
+		  }
+		}`;
+		// NOTE: there is also `reviewed-by` which `review-requested` translates to after the user
+		// has started or completed the review.
+
+		// see: https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests
+		const promises = Promise.all([
+			this.client.request<any>(query(`${repoQuery}${isOpenQuery}is:pr author:@me`)),
+			this.client.request<any>(query(`${repoQuery}${isOpenQuery}is:pr assignee:@me`)),
+			this.client.request<any>(query(`${repoQuery}${isOpenQuery}is:pr review-requested:@me`)),
+			this.client.request<any>(query(`${repoQuery}${isOpenQuery}is:pr reviewed-by:@me`))
+		]);
+		const items = await promises;
+		let rateLimit;
+		for (const item of items) {
+			if (item && item.search && item.search.edges) {
+				results = results.concat(item.search.edges.map((_: any) => _.node));
+			}
+			if (item.rateLimit) {
+				rateLimit = item.rateLimit;
+			}
+		}
+
+		Logger.debug(`github getMyPullRequests rateLimit=${JSON.stringify(rateLimit)}`);
+
+		results = _uniqBy(results, (_: { id: string }) => _.id);
+		const response: GetMyPullRequestsResponse[] = results
+			.map((pr: { createdAt: string }) => ({ ...pr, createdAt: new Date(pr.createdAt).getTime() }))
+			.sort((a: { createdAt: number }, b: { createdAt: number }) => b.createdAt - a.createdAt);
+		this._getMyPullRequestsCache.set(cacheKey, response);
+		return response;
+	}
+
+	async getPullRequestIdFromUrl(request: { url: string }) {
+		// since we only the url for the PR -- parse it out for the
+		// data we need.
+		const uri = URI.parse(request.url);
+		const path = uri.path.split("/");
+		const owner = path[1];
+		const repo = path[2];
+		const pullRequestNumber = parseInt(path[4], 10);
+		const pullRequestInfo = await this.client.request<any>(
+			`query FindPullRequest($owner:String!,$name:String!,$pullRequestNumber:Int!) {
+					repository(owner:$owner name:$name) {
+					  pullRequest(number: $pullRequestNumber) {
+						id
+					  }
+					}
+				  }`,
+			{
+				owner: owner,
+				name: repo,
+				pullRequestNumber: pullRequestNumber
+			}
+		);
+		return pullRequestInfo.repository.pullRequest.id;
+	}
+
+	async toggleMilestoneOnPullRequest(request: {
+		pullRequestId: string;
+		milestoneId: string;
+		onOff: boolean;
+	}) {
+		const query = `mutation UpdatePullRequest($pullRequestId: String!, $milestoneId: String) {
+			updatePullRequest(input: {pullRequestId: $pullRequestId, milestoneId: $milestoneId}) {
+				  clientMutationId
+				}
+			  }`;
+
+		// remove it by setting it to null
+		const response = await this.client.request<any>(query, {
+			pullRequestId: request.pullRequestId,
+			milestoneId: request.onOff ? request.milestoneId : null
+		});
+		return response;
+	}
+
+	async toggleProjectOnPullRequest(request: {
+		pullRequestId: string;
+		projectId: string;
+		onOff: boolean;
+	}) {
+		const metadata = await this.getPullRequestMetadata(request.pullRequestId);
+		const projectIds = new Set(metadata.projectCards.map(_ => _.project.id));
+		const query = `mutation UpdatePullRequest($pullRequestId: String!, $projectIds: [String]) {
+			updatePullRequest(input: {pullRequestId: $pullRequestId, projectIds: $projectIds}) {
+				  clientMutationId
+				}
+			  }`;
+		if (request.onOff) {
+			projectIds.add(request.projectId);
+		} else {
+			projectIds.delete(request.projectId);
+		}
+
+		const response = await this.client.request<any>(query, {
+			pullRequestId: request.pullRequestId,
+			projectIds: [...projectIds]
+		});
+		return response;
+	}
+
+	async updatePullRequestTitle(request: { pullRequestId: string; title: string }) {
+		const query = `mutation UpdatePullRequest($pullRequestId: String!, $title: String) {
+			updatePullRequest(input: {pullRequestId: $pullRequestId, title: $title}) {
+				  clientMutationId
+				}
+			  }`;
+
+		const response = await this.client.request<any>(query, {
+			pullRequestId: request.pullRequestId,
+			title: request.title
+		});
+		return response;
+	}
+
+	async mergePullRequest(request: { pullRequestId: string; mergeMethod: MergeMethod }) {
+		if (!request.mergeMethod) throw new Error("InvalidMergeMethod");
+		const mergeMethods = new Set(["MERGE", "REBASE", "SQUASH"]);
+		if (!mergeMethods.has(request.mergeMethod)) throw new Error("InvalidMergeMethod");
+
+		const query = `mutation MergePullRequest($pullRequestId: String!) {
+			mergePullRequest(input: {pullRequestId: $pullRequestId, mergeMethod: ${request.mergeMethod}}) {
+				  clientMutationId
+				}
+			  }`;
+
+		const response = await this.client.request<any>(query, {
+			pullRequestId: request.pullRequestId
+		});
+		return true;
+	}
+
+	async lockPullRequest(request: { pullRequestId: string; lockReason: string }) {
+		// OFF_TOPIC, TOO_HEATED, SPAM
+		await this.client.request<any>(
+			`mutation LockPullRequest($pullRequestId: String!, $lockReason:String!) {
+				lockLockable(input: {lockableId: $pullRequestId, lockReason:$lockReason}) {
+				  clientMutationId
+				}
+			  }`,
+			{
+				pullRequestId: request.pullRequestId,
+				lockReason: request.lockReason
+			}
+		);
+
+		return true;
+	}
+
+	async unlockPullRequest(request: { pullRequestId: string }) {
+		await this.client.request<any>(
+			`mutation UnlockPullRequest($pullRequestId: String!) {
+				unlockLockable(input: {lockableId: $pullRequestId}) {
+				  clientMutationId
+				}
+			  }`,
+			{
+				pullRequestId: request.pullRequestId
+			}
+		);
+
+		return true;
+	}
+
+	async getReviewersForPullRequest(request: { pullRequestId: string }) {
+		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
+		const response = await this.client.request<any>(
+			`query GetReviewersForPullRequest($owner:String!, $name:String!, $pullRequestNumber:Int!) {
+			repository(name:$name, owner:$owner) {
+			  pullRequest(number: $pullRequestNumber) {
+				id
+				reviewRequests(first: 25) {
+				  edges {
+					node {
+					  id
+					  requestedReviewer {
+						... on User {
+						  id
+						  login
+						}
+					  }
+					}
+				  }
+				}
+			  }
+			}
+		  }`,
+			{
+				name: ownerData.name,
+				owner: ownerData.owner,
+				pullRequestNumber: ownerData.pullRequestNumber
+			}
+		);
+		return response?.repository?.pullRequest?.reviewRequests?.edges.map(
+			(_: any) => _.node.requestedReviewer.id
+		);
+	}
+
+	async addReviewerToPullRequest(request: { pullRequestId: string; userId: string }) {
+		const currentReviewers = await this.getReviewersForPullRequest(request);
+		const response = await this.client.request<any>(
+			`mutation RequestReviews($pullRequestId: String!, $userIds:[String!]!) {
+				requestReviews(input: {pullRequestId:$pullRequestId, userIds:$userIds}) {
+			  clientMutationId
+			}
+		  }`,
+			{
+				pullRequestId: request.pullRequestId,
+				userIds: (currentReviewers || []).concat(request.userId)
+			}
+		);
+		return response;
+	}
+
+	async createPullRequestCommentAndClose(request: { pullRequestId: string; text: string }) {
+		if (request.text) {
+			await this.client.request<any>(
+				`mutation AddCommentToPullRequest($pullRequestId: String!, $body:String!) {
+				addComment(input: {subjectId: $pullRequestId, body:$body}) {
+				  clientMutationId
+				}
+			  }`,
+				{
+					pullRequestId: request.pullRequestId,
+					body: request.text
+				}
+			);
+		}
+
+		await this.client.request<any>(
+			`mutation ClosePullRequest($pullRequestId: String!) {
+			closePullRequest(input: {pullRequestId: $pullRequestId}) {
+				  clientMutationId
+				}
+			}`,
+			{
+				pullRequestId: request.pullRequestId
+			}
+		);
+
+		return true;
+	}
+
+	async createPullRequestCommentAndReopen(request: { pullRequestId: string; text: string }) {
+		if (request.text) {
+			await this.client.request<any>(
+				`mutation AddCommentToPullRequest($pullRequestId: String!, $body:String!) {
+				addComment(input: {subjectId: $pullRequestId, body:$body}) {
+				  clientMutationId
+				}
+			  }`,
+				{
+					pullRequestId: request.pullRequestId,
+					body: request.text
+				}
+			);
+		}
+
+		await this.client.request<any>(
+			`mutation ReopenPullRequest($pullRequestId: String!) {
+			reopenPullRequest(input: {pullRequestId: $pullRequestId}) {
+				  clientMutationId
+				}
+			}`,
+			{
+				pullRequestId: request.pullRequestId
+			}
+		);
+
+		return true;
+	}
+
+	async resolveReviewThread(request: { threadId: string }) {
+		const response = await this.client.request<any>(
+			`mutation ResolveReviewThread($threadId:String!) {
+				resolveReviewThread(input: {threadId:$threadId}) {
+				  clientMutationId
+				}
+			}`,
+			{
+				threadId: request.threadId
+			}
+		);
+		return response;
+	}
+
+	async unresolveReviewThread(request: { threadId: string }) {
+		const response = await this.client.request<any>(
+			`mutation UnresolveReviewThread($threadId:String!) {
+				unresolveReviewThread(input: {threadId:$threadId}) {
+				  clientMutationId
+				}
+			}`,
+			{
+				threadId: request.threadId
+			}
+		);
+		return response;
+	}
+
+	async addComment(request: { subjectId: string; text: string }) {
+		const response = await this.client.request<any>(
+			`mutation AddComment($subjectId:String!,$body:String!) {
+				addComment(input: {subjectId:$subjectId, body:$body}) {
+				  clientMutationId
+				}
+			}`,
+			{
+				subjectId: request.subjectId,
+				body: request.text
+			}
+		);
+		return response;
+	}
+
+	async createCommitComment(request: {
+		pullRequestId: string;
+		sha: string;
+		text: string;
+		path: string;
+		startLine: number;
+		// use endLine for multi-line comments
+		endLine?: number;
+	}) {
+		// https://github.community/t/feature-commit-comments-for-a-pull-request/13986/9
+		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
+		const payload = {
+			body: request.text,
+			commit_id: request.sha,
+			side: "RIGHT",
+			path: request.path
+		} as any;
+		if (request.endLine != null && request.endLine !== request.startLine) {
+			payload.start_line = request.startLine;
+			payload.line = request.endLine;
+		} else {
+			payload.line = request.startLine;
+		}
+
+		const data = await this.post<any, any>(
+			`/repos/${ownerData.owner}/${ownerData.name}/pulls/${ownerData.pullRequestNumber}/comments`,
+			payload
+		);
+		return data.body;
+	}
+
+	async createCommitByPositionComment(request: {
+		pullRequestId: string;
+		sha: string;
+		text: string;
+		position: number;
+		path: string;
+	}) {
+		// https://github.community/t/feature-commit-comments-for-a-pull-request/13986/9
+		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
+		const data = await this.post<any, any>(
+			`/repos/${ownerData.owner}/${ownerData.name}/pulls/${ownerData.pullRequestNumber}/comments`,
+			{
+				body: request.text,
+				commit_id: request.sha,
+				side: "RIGHT",
+				path: request.path,
+				position: request.position
+			}
+		);
+		return data.body;
+	}
+
+	async createCommentReply(request: { pullRequestId: string; commentId: string; text: string }) {
+		// https://developer.github.com/v3/pulls/comments/#create-a-reply-for-a-review-comment
+		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
+		const data = await this.post<any, any>(
+			`/repos/${ownerData.owner}/${ownerData.name}/pulls/${ownerData.pullRequestNumber}/comments/${request.commentId}/replies`,
+			{
+				body: request.text
+			}
+		);
+		return data.body;
+	}
+
+	async createPullRequestComment(request: { pullRequestId: string; text: string }) {
+		const query = `mutation AddCommentToPullRequest($subjectId: String!, $body: String!) {
+				addComment(input: {subjectId: $subjectId, body:$body}) {
+				  clientMutationId
+				}
+			  }`;
+
+		const response = await this.client.request<any>(query, {
+			subjectId: request.pullRequestId,
+			body: request.text
+		});
+		return true;
+	}
+
+	_pullRequestIdCache: Map<
+		string,
+		{
+			pullRequestNumber: number;
+			name: string;
+			owner: string;
+		}
+	> = new Map<
+		string,
+		{
+			pullRequestNumber: number;
+			name: string;
+			owner: string;
+		}
+	>();
+
+	async getRepoOwnerFromPullRequestId(
+		pullRequestId: string
+	): Promise<{
+		pullRequestNumber: number;
+		name: string;
+		owner: string;
+	}> {
+		if (this._pullRequestIdCache.has(pullRequestId)) {
+			return this._pullRequestIdCache.get(pullRequestId)!;
+		}
+
+		const query = `query GetRepoIdFromPullRequestId($id: [ID!]!) {
+			rateLimit {
+				limit
+				cost
+				remaining
+				resetAt
+			}
+			nodes(ids: $id) {
+			  ... on PullRequest {
+				number
+				repository {
+				  name
+				  owner {
+					login
+				  }
+				}
+			  }
+			}
+		  }`;
+		const response = await this.client.request<any>(query, {
+			id: pullRequestId
+		});
+
+		const data = {
+			pullRequestNumber: response.nodes[0].number,
+			name: response.nodes[0].repository.name,
+			owner: response.nodes[0].repository.owner.login
+		};
+		this._pullRequestIdCache.set(pullRequestId, data);
+
+		return data;
+	}
+
+	async getPullRequestNumber(id: string) {
+		if (this._pullRequestIdCache.has(id)) {
+			return this._pullRequestIdCache.get(id)?.pullRequestNumber!;
+		}
+		const query = `query getNode($id: ID!) {
+			rateLimit {
+				limit
+				cost
+				remaining
+				resetAt
+			}
+			node(id: $id) {
+			 ... on PullRequest {
+				number
+			  }
+			}
+		  }`;
+		const response = await this.client.request<any>(query, {
+			id: id
+		});
+		return response.node.number;
+	}
+
+	async getPullRequestMetadata(
+		id: string
+	): Promise<{
+		number: number;
+		milestone: { id: string };
+		projectCards: {
+			id: string;
+			project: {
+				id: string;
+				name: string;
+			};
+		}[];
+	}> {
+		const query = `query($id:ID!){
+			rateLimit {
+			  limit
+			  cost
+			  remaining
+			  resetAt
+			}
+			node(id: $id) {
+			  ... on PullRequest {
+				number
+				projectCards(first: 25) {
+				  nodes {
+					id
+					project {
+					  id
+					  name
+					}
+				  }
+				}
+				milestone {
+				  id
+				}
+			  }
+			}
+		  }
+		  `;
+		const response = await this.client.request<any>(query, {
+			id: id
+		});
+		return {
+			number: response.node.number,
+			milestone: response.node.milestone,
+			projectCards:
+				response.node.projectCards && response.node.projectCards.nodes
+					? response.node.projectCards.nodes
+					: []
+		};
+	}
+
+	async getPullRequestFilesChanged(request: {
+		pullRequestId: string;
+	}): Promise<FetchThirdPartyPullRequestFilesResponse[]> {
+		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
+
+		// https://developer.github.com/v3/pulls/#list-pull-requests-files
+		const changedFiles: FetchThirdPartyPullRequestFilesResponse[] = [];
+		try {
+			let url:
+				| string
+				| undefined = `/repos/${ownerData.owner}/${ownerData.name}/pulls/${ownerData.pullRequestNumber}/files`;
+			do {
+				const apiResponse = await this.get<FetchThirdPartyPullRequestFilesResponse[]>(url);
+				changedFiles.push(...apiResponse.body);
+				url = this.nextPage(apiResponse.response);
+			} while (url);
+		} catch (err) {
+			Logger.error(err);
+			debugger;
+		}
+
+		return changedFiles;
+
+		// const data = await this.get<any>(
+		// 	`/repos/${ownerData.owner}/${ownerData.name}/pulls/${ownerData.pullRequestNumber}/files`
+		// );
+		// return data.body;
+
+		// const pullRequestReviewId = await this.getPullRequestReviewId(request);
+		// return {
+		// 	files: data.body,
+		// 	context: {
+		// 		pullRequest: {
+		// 			userCurrentReviewId: pullRequestReviewId
+		// 		}
+		// 	}
+		// };
+	}
+
+	_timelineQueryItemsString!: string;
+	get getTimelineQueryItemsString() {
+		if (this._timelineQueryItemsString) return this._timelineQueryItemsString;
+
+		// NOTE, all of the commented out timeline items below are ones
+		// we do not currently show in the UI
+		const items = [
+			// 	`... on AddedToProjectEvent {
+			// 	__typename
+			//   }`,
+			`... on AssignedEvent {
+			__typename
+			actor {
+			  login
+			  avatarUrl
+			}
+			createdAt
+			assignee {
+			  ... on User {
+				id
+				email
+				login
+			  }
+			}
+		  }`,
+			// 	`... on AutomaticBaseChangeFailedEvent {
+			// 	__typename
+			//   }`,
+			// 	`... on AutomaticBaseChangeSucceededEvent {
+			// 	__typename
+			//   }`,
+			// 	`... on BaseRefChangedEvent {
+			// 	__typename
+			//   }`,
+			// 	`... on BaseRefForcePushedEvent {
+			// 	__typename
+			//   }`,
+			`... on ClosedEvent {
+			__typename
+			actor {
+			  login
+			  avatarUrl
+			}
+			createdAt
+		  }`,
+			// 	`... on CommentDeletedEvent {
+			// 	__typename
+			// 	actor {
+			// 	  login
+			// 	  avatarUrl
+			// 	}
+			//   }`,
+			// 	`... on ConnectedEvent {
+			// 	__typename
+			//   }`,
+			`... on ConvertToDraftEvent {
+			__typename
+			actor {
+			  login
+			  avatarUrl
+			}
+		  }`,
+			// 	`... on ConvertedNoteToIssueEvent {
+			// 	__typename
+			// 	id
+			//   }`,
+			// 	`... on CrossReferencedEvent {
+			// 	__typename
+			// 	id
+			// 	actor {
+			// 	  login
+			// 	  avatarUrl
+			// 	}
+			//   }`,
+			`... on DemilestonedEvent {
+			__typename
+			actor {
+			  login
+			  avatarUrl
+			  resourcePath
+			  url
+			}
+			id
+			milestoneTitle
+			createdAt
+		  }`,
+			// 	`... on DeployedEvent {
+			// 	__typename
+			// 	id
+			//   }`,
+			// 	`... on DeploymentEnvironmentChangedEvent {
+			// 	__typename
+			// 	id
+			//   }`,
+			// 	`... on DisconnectedEvent {
+			// 	__typename
+			// 	id
+			//   }`,
+			`... on HeadRefDeletedEvent {
+			__typename
+			actor {
+			  login
+			  avatarUrl
+			}
+		  }`,
+			`... on HeadRefForcePushedEvent {
+			__typename
+			actor {
+			  login
+			  avatarUrl
+			}
+			beforeCommit {
+			  abbreviatedOid
+			}
+			afterCommit {
+			  abbreviatedOid
+			}
+			createdAt
+			ref {
+			  name
+			}
+		  }`,
+			// 	`... on HeadRefRestoredEvent {
+			// 	__typename
+			//   }`,
+			`... on IssueComment {
+			__typename
+			id
+			author {
+			  login
+			  avatarUrl
+			}
+			authorAssociation
+			body
+			bodyText
+			createdAt
+			includesCreatedEdit
+			isMinimized
+			minimizedReason
+			reactionGroups {
+			  content
+			  users(first: 10) {
+				nodes {
+				  login
+				}
+			  }
+			}
+			resourcePath
+			viewerCanUpdate
+		}`,
+			`... on LabeledEvent {
+			__typename
+			label {
+			  name
+			  description
+			  color
+			}
+			actor {
+			  login
+			  avatarUrl
+			}
+			createdAt
+		  }`,
+			`... on LockedEvent {
+			__typename
+			actor {
+			  login
+			  avatarUrl
+			}
+			lockReason
+			createdAt
+		  }`,
+			`... on MarkedAsDuplicateEvent {
+			__typename
+		  }`,
+			`... on MentionedEvent {
+			__typename
+			actor {
+			  login
+			  avatarUrl
+			}
+			createdAt
+		  }`,
+			`... on MergedEvent {
+			__typename
+			actor {
+			  login
+			  avatarUrl
+			}
+			mergeRefName
+			createdAt
+			commit {
+			  abbreviatedOid
+			}
+		  }`,
+			`... on MilestonedEvent {
+			__typename
+			actor {
+			  login
+			  avatarUrl
+			  resourcePath
+			  url
+			}
+			createdAt
+			milestoneTitle
+		  }`,
+			// 	`... on MovedColumnsInProjectEvent {
+			// 	__typename
+			//   }`,
+			// 	`... on PinnedEvent {
+			// 	__typename
+			//   }`,
+			`... on PullRequestCommit {
+			__typename
+			id
+			commit {
+			  changedFiles
+			  author {
+				avatarUrl
+				name
+				user {
+				  login
+				}
+			  }
+			  committer {
+				avatarUrl
+				name
+				user {
+				  login
+				}
+			  }
+			  id
+			  message
+			  messageBody
+			  messageHeadline
+			  messageHeadlineHTML
+			  messageBodyHTML
+			  abbreviatedOid
+			  authoredDate
+			}
+		  }`,
+			// 	`... on PullRequestCommitCommentThread {
+			// 	__typename
+			//   }`,
+			`... on PullRequestReview {
+			  id
+			__typename
+			author {
+			  login
+			  avatarUrl
+			}
+			authorAssociation
+			body
+			bodyText
+			createdAt
+			includesCreatedEdit
+			lastEditedAt
+			state
+			viewerDidAuthor
+			viewerCanUpdate
+			viewerCanReact
+			viewerCanDelete
+			reactionGroups {
+				content
+				users(first: 10) {
+				  nodes {
+					login
+				  }
+				}
+			  }
+		 	resourcePath
+			comments(first: 15) {
+			  nodes {
+				author {
+				  login
+				  avatarUrl
+				}
+				authorAssociation
+				body
+				bodyText
+				createdAt
+				databaseId
+				draftedAt
+				diffHunk
+				id
+				includesCreatedEdit
+				isMinimized
+				lastEditedAt
+				minimizedReason
+				publishedAt
+				state
+				replyTo {
+				  diffHunk
+				  id
+				  body
+				  bodyText
+				}
+				commit {
+				  message
+				  messageBody
+				  messageHeadline
+				  oid
+				}
+				editor {
+				  login
+				  avatarUrl
+				}
+				outdated
+				path
+				position
+				pullRequestReview {
+				  body
+				  bodyText
+				}
+				reactionGroups {
+				  content
+				  users(first: 10) {
+					nodes {
+					  login
+					}
+				  }
+				}
+				resourcePath
+				viewerCanUpdate
+			  }
+			}
+			authorAssociation
+			bodyHTML
+		  }`,
+			// 	`... on PullRequestReviewThread {
+			// 	__typename
+			//   }`,
+			`... on PullRequestRevisionMarker {
+			__typename
+			createdAt
+			pullRequest {
+			  state
+			}
+			lastSeenCommit {
+			  abbreviatedOid
+			  status {
+				state
+			  }
+			}
+		  }`,
+			// 	`... on ReadyForReviewEvent {
+			// 	__typename
+			//   }`,
+			`... on ReferencedEvent {
+			__typename
+			actor {
+			  login
+			  avatarUrl
+			}
+			commit {
+			  messageBody
+			  messageHeadline
+			  status {
+				state
+			  }
+			  oid
+			}
+		  }`,
+			`... on RemovedFromProjectEvent {
+			__typename
+		  }`,
+			`... on RenamedTitleEvent {
+			__typename
+			actor {
+			  login
+			  avatarUrl
+			}
+			currentTitle
+			previousTitle
+			createdAt
+		  }`,
+			`... on ReopenedEvent {
+			__typename
+			actor {
+			  login
+			  avatarUrl
+			}
+			createdAt
+		  }`,
+			`... on ReviewDismissedEvent {
+			__typename
+			actor {
+				login
+				avatarUrl
+			}
+			dismissalMessage
+			review {
+			  author {
+				login
+			  }
+			}
+		  }`,
+			// 	`... on ReviewRequestRemovedEvent {
+			// 	__typename
+			//   }`,
+			`... on ReviewRequestedEvent {
+			__typename
+			actor {
+			  login
+			  avatarUrl
+			}
+		  }`,
+			// 	`... on SubscribedEvent {
+			// 	__typename
+			//   }`,
+			// 	`... on TransferredEvent {
+			// 	__typename
+			//   }`,
+			`... on UnassignedEvent {
+			__typename
+			actor {
+			  login
+			  avatarUrl
+			}
+			createdAt
+			assignee {
+			  ... on User {
+				id
+				email
+				login
+			  }
+			}
+		  }`,
+			`... on UnlabeledEvent {
+			__typename
+			label {
+			  color
+			  name
+			  description
+			}
+			actor {
+			  login
+			  avatarUrl
+			}
+			createdAt
+		  }`,
+			`... on UnlockedEvent {
+			__typename
+			actor {
+			  login
+			  avatarUrl
+			}
+			createdAt
+		  }`
+			// 	`... on UnmarkedAsDuplicateEvent {
+			// 	__typename
+			//   }`,
+			// 	`... on UnpinnedEvent {
+			// 	__typename
+			//   }`,
+			// 	`... on UnsubscribedEvent {
+			// 	__typename
+			//   }`,
+			// 	`... on UserBlockedEvent {
+			// 	__typename
+			//   }`
+		];
+
+		this._timelineQueryItemsString = items.join("\n");
+		return this._timelineQueryItemsString;
+	}
+
+	async pullRequestTimelineQuery(
+		owner: string,
+		repo: string,
+		pullRequestNumber: number,
+		cursor?: string
+	): Promise<FetchThirdPartyPullRequestResponse | undefined> {
+		const cc = Logger.getCorrelationContext();
+
+		// If we are or will be over the rate limit, wait until it gets reset
+		if (
+			this._prTimelineQueryRateLimit !== undefined &&
+			this._prTimelineQueryRateLimit.remaining - this._prTimelineQueryRateLimit.cost < 0
+		) {
+			// TODO: Probably should send a notification to the webview here
+
+			// If we are currently paging, just give up and return what we have
+			if (cursor === undefined) return undefined;
+
+			await Functions.wait(this._prTimelineQueryRateLimit.resetAt.getTime() - new Date().getTime());
+		}
+
+		// TODO: Need to page if there are more than 100 review threads
+		try {
+			const query = `query pr($owner:String!, $name:String!, $pullRequestNumber:Int!${
+				cursor ? ", $cursor:String" : ""
+			}) {
+				rateLimit {
+				  limit
+				  cost
+				  remaining
+				  resetAt
+				}
+				viewer {
+				  id
+				  login
+				}
+				repository(name:$name, owner:$owner) {
+				  id
+				  url
+				  resourcePath
+				  pullRequest(number:$pullRequestNumber) {
+					id
+					repository {
+						name
+  						nameWithOwner
+  						url
+					}
+					body
+					baseRefName
+					baseRefOid
+					author {
+					  login
+					  avatarUrl
+					}
+					authorAssociation
+					createdAt
+					activeLockReason
+					locked
+					resourcePath
+					includesCreatedEdit
+					viewerSubscription
+					viewerDidAuthor
+					viewerCanUpdate
+					files(first: 100) {
+						totalCount
+						nodes {
+						  path
+						  deletions
+						  additions
+						}
+					}
+					reviewThreads(first: 50) {
+						edges {
+						  node {
+							id
+							isResolved
+							comments(first: 50) {
+							  totalCount
+							  nodes {
+								author {
+								  login
+								  avatarUrl
+								}
+								authorAssociation
+								body
+								bodyHTML
+								createdAt
+								id
+								includesCreatedEdit
+								isMinimized
+								minimizedReason
+								replyTo {
+								  id
+								}
+								resourcePath
+								reactionGroups {
+								  content
+								  users(first: 10) {
+								    nodes {
+									  login
+									}
+								  }
+								}
+								viewerCanUpdate
+							  }
+							}
+						  }
+						}
+					  }
+					commits(first: 100) {
+						totalCount
+						nodes {
+						  commit {
+							abbreviatedOid
+							author {
+							  avatarUrl(size: 20)
+							  name
+							  user {
+							    login
+							  }
+							}
+							committer {
+							  avatarUrl(size: 20)
+							  name
+							  user {
+							    login
+							  }
+							}
+							message
+							authoredDate
+						  }
+						}
+					  }
+					headRefName
+					headRefOid
+					labels(first: 10) {
+					  nodes {
+						color
+						description
+						name
+						id
+					  }
+					}
+					number
+					state
+					reactionGroups {
+					  content
+					  users(first: 10) {
+						nodes {
+						  login
+						}
+					  }
+					}
+					... on PullRequest {
+					  reviewRequests(first: 10) {
+						nodes {
+						  requestedReviewer {
+							... on User {
+							  id
+							  login
+							  avatarUrl
+							}
+						  }
+						}
+					  }
+					  reviews(last: 20) {
+						nodes {
+						  id
+						  comments(first:100) {
+							totalCount
+						  }
+						  author {
+							login
+							avatarUrl
+							... on User {
+								id
+							}
+						  }
+						  authorAssociation
+						  state
+						}
+					  }
+					}
+					timelineItems(first:150 ${cursor ? `,after:$cursor` : ""}) {
+					  totalCount
+					  pageInfo {
+						startCursor
+						endCursor
+						hasNextPage
+					  }
+					  __typename
+					  nodes {
+						  ${this.getTimelineQueryItemsString}
+					  }
+					}
+					milestone {
+					  title
+					  state
+					  number
+					  id
+					  description
+					}
+					participants(first: 10) {
+					  nodes {
+						login
+						avatarUrl(size: 20)
+					  }
+					}
+					assignees(first: 10) {
+					  nodes {
+						bio
+						avatarUrl(size: 20)
+						id
+						name
+						login
+					  }
+					}
+					projectCards(first: 10) {
+					  nodes {
+						id
+						note
+						state
+						project {
+						  name
+						  id
+						}
+					  }
+					}
+					mergeable
+					merged
+					mergedAt
+					title
+					url
+					updatedAt
+				  }
+				  rebaseMergeAllowed
+				  squashMergeAllowed
+				  mergeCommitAllowed
+				}
+			  }`;
+			const response = await this.client.request<any>(query, {
+				owner: owner,
+				name: repo,
+				pullRequestNumber: pullRequestNumber,
+				cursor: cursor
+			});
+
+			this._prTimelineQueryRateLimit = {
+				cost: response.rateLimit.cost,
+				limit: response.rateLimit.limit,
+				remaining: response.rateLimit.remaining,
+				resetAt: new Date(response.rateLimit.resetAt)
+			};
+			// this is sheer insanity... there's no way to get replies to parent comments
+			// as a child object of that comment. all replies are treated as `reviewThreads`
+			// and they live on the parent `pullRequest` object. below, we're stiching together
+			// comments and any replies (as a `replies` object) that might exist for those comments.
+			// MORE here: https://github.community/t/bug-v4-graphql-api-trouble-retrieving-pull-request-review-comments/13708/2
+			if (response.repository.pullRequest.timelineItems.nodes) {
+				for (const node of response.repository.pullRequest.timelineItems.nodes) {
+					if (node.__typename === "PullRequestReview") {
+						let replies: any = [];
+						let threadId;
+						let isResolved;
+						for (const comment of node.comments.nodes) {
+							// a parent comment has a null replyTo
+							if (
+								comment.replyTo == null &&
+								response.repository &&
+								response.repository.pullRequest &&
+								response.repository.pullRequest.reviewThreads &&
+								response.repository.pullRequest.reviewThreads.edges
+							) {
+								for (const edge of response.repository.pullRequest.reviewThreads.edges) {
+									if (edge.node.comments.nodes.length > 1) {
+										for (const node1 of edge.node.comments.nodes) {
+											if (node1.id === comment.id) {
+												threadId = edge.node.id;
+												isResolved = edge.node.isResolved;
+												// find all the comments except the parent
+												replies = replies.concat(
+													edge.node.comments.nodes.filter((_: any) => _.id !== node1.id)
+												);
+												break;
+											}
+										}
+									} else if (edge.node.comments.nodes.length === 1) {
+										const node = edge.node.comments.nodes[0];
+										if (node.id === comment.id) {
+											threadId = edge.node.id;
+											isResolved = edge.node.isResolved;
+										}
+									}
+								}
+							}
+						}
+						// this api always returns only 1 node/comment (with no replies)
+						// do just attach it to nodes[0]
+						if (node.comments.nodes.length) {
+							node.comments.nodes[0].threadId = threadId;
+							node.comments.nodes[0].isResolved = isResolved;
+							if (replies.length) {
+								node.comments.nodes[0].replies = replies;
+							}
+						}
+						replies = null;
+						threadId = null;
+						isResolved = null;
+					}
+				}
+			}
+			if (
+				response.repository.pullRequest.reviews &&
+				response.repository.pullRequest.reviews.nodes
+			) {
+				let nodes = response.repository.pullRequest.reviews.nodes.filter(
+					(_: any) => _.state === "PENDING"
+				);
+				nodes = response.repository.pullRequest.reviews.nodes.sort(
+					(a: any, b: any) => a.createdAt - b.createdAt
+				);
+				const myPendingReview = nodes.find((_: any) => _.author.login === response.viewer.login);
+				if (myPendingReview) {
+					// only returns your pending reviews
+					response.repository.pullRequest.pendingReview = myPendingReview;
+				}
+			}
+			response.repository.pullRequest.viewer = { ...response.viewer };
+
+			Logger.debug(
+				`pullRequestTimelineQuery rateLimit=${JSON.stringify(response.rateLimit)} cursor=${cursor}`
+			);
+			return response;
+		} catch (ex) {
+			Logger.error(ex, cc);
+
+			// If we are currently paging, just give up and return what we have
+			if (cursor !== undefined) return undefined;
+
+			throw ex;
+		}
+	}
+
 	async prQuery(
 		owner: string,
 		repo: string,
@@ -787,6 +2655,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 											author {
 												login
 											}
+											authorAssociation
+											body
 											bodyText
 											createdAt
 											url
@@ -817,20 +2687,20 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				}
 			}`;
 
-			const rsp = await this.client.request<GetPullRequestsResponse>(query, {
+			const response = await this.client.request<GetPullRequestsResponse>(query, {
 				owner: owner,
 				repo: repo,
 				cursor: cursor
 			});
 
 			this._prQueryRateLimit = {
-				cost: rsp.rateLimit.cost,
-				limit: rsp.rateLimit.limit,
-				remaining: rsp.rateLimit.remaining,
-				resetAt: new Date(rsp.rateLimit.resetAt)
+				cost: response.rateLimit.cost,
+				limit: response.rateLimit.limit,
+				remaining: response.rateLimit.remaining,
+				resetAt: new Date(response.rateLimit.resetAt)
 			};
 
-			return rsp.repository.pullRequests;
+			return response.repository.pullRequests;
 		} catch (ex) {
 			Logger.error(ex, cc);
 
@@ -913,6 +2783,7 @@ interface GitHubCreatePullRequestResponse {
 			number: number;
 			title: string;
 			url: string;
+			id: string;
 		};
 	};
 }

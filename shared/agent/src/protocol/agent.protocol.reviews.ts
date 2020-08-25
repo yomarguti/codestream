@@ -284,7 +284,8 @@ export const CheckReviewPreconditionsRequestType = new RequestType<
 >("codestream/review/checkPreconditions");
 
 export interface CheckPullRequestBranchPreconditionsRequest {
-	reviewId: string;
+	reviewId?: string; // either a reviewId or repoId need to be passed in
+	repoId?: string;
 	providerId: string;
 	headRefName?: string;
 	baseRefName?: string;
@@ -310,10 +311,12 @@ export const CheckPullRequestBranchPreconditionsRequestType = new RequestType<
 >("codestream/review/pr/branch/checkPreconditions");
 
 export interface CheckPullRequestPreconditionsRequest {
-	reviewId: string;
+	reviewId?: string;
+	repoId?: string;
 	headRefName?: string;
 	baseRefName?: string;
 	providerId?: string;
+	skipLocalModificationsCheck?: boolean;
 }
 
 export interface CheckPullRequestPreconditionsResponse {
@@ -331,11 +334,13 @@ export interface CheckPullRequestPreconditionsResponse {
 		message?: string;
 		type?: "ALREADY_HAS_PULL_REQUEST" | string;
 		url?: string;
+		id?: string;
 	};
 	error?: {
 		message?: string;
 		type?: "REPO_NOT_FOUND" | "HAS_LOCAL_COMMITS" | "UNKNOWN" | string;
 		url?: string;
+		id?: string;
 	};
 }
 
@@ -347,7 +352,9 @@ export const CheckPullRequestPreconditionsRequestType = new RequestType<
 >("codestream/review/pr/checkPreconditions");
 
 export interface CreatePullRequestRequest {
-	reviewId: string;
+	/** if a reviewId isn't provided, you must provide a repoId */
+	reviewId?: string;
+	repoId?: string;
 	providerId: string;
 	title: string;
 	description?: string;
@@ -355,11 +362,16 @@ export interface CreatePullRequestRequest {
 	headRefName: string;
 	remote: string;
 	remoteName?: string;
+	addresses?: {
+		title: string;
+		url: string;
+	}[];
 }
 
 export interface CreatePullRequestResponse {
 	success: boolean;
 	url?: string;
+	id?: string;
 	error?: {
 		type:
 			| "REPO_NOT_FOUND"
@@ -369,6 +381,7 @@ export interface CreatePullRequestResponse {
 			| string;
 		message?: string;
 		url?: string;
+		id?: string;
 	};
 }
 

@@ -4,7 +4,7 @@ import CancelButton from "./CancelButton";
 import Tooltip from "./Tooltip";
 import { Button } from "../src/components/Button";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
-import { setCurrentReview, setCurrentPullRequest } from "@codestream/webview/store/context/actions";
+import { setCurrentReview, setCreatePullRequest } from "@codestream/webview/store/context/actions";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "..";
 import { fetchReview } from "@codestream/webview/store/reviews/actions";
@@ -27,13 +27,14 @@ import { ReviewForm } from "./ReviewForm";
 import { openPanel } from "../store/context/actions";
 import { WebviewPanels } from "@codestream/protocols/webview";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { PullRequest } from "./PullRequest";
 
 const NavHeader = styled.div`
 	// flex-grow: 0;
 	// flex-shrink: 0;
 	// display: flex;
 	// align-items: flex-start;
-	padding: 10px 10px 10px 15px;
+	padding: 40px 10px 10px 15px;
 	// justify-content: center;
 	width: 100%;
 	${Header} {
@@ -41,27 +42,6 @@ const NavHeader = styled.div`
 	}
 	${BigTitle} {
 		font-size: 16px;
-		@media only screen and (max-width: 430px) {
-			font-size: 14px;
-		}
-		@media only screen and (max-width: 350px) {
-			font-size: 13px;
-		}
-		@media only screen and (max-width: 270px) {
-			font-size: 12px;
-		}
-	}
-	.cancel-button {
-		cursor: pointer;
-		position: absolute;
-		right: 12px;
-		top: 10px;
-		padding: 5px 8px 5px 8px;
-		z-index: 30;
-		:hover {
-			color: var(--text-color-highlight);
-			background-color: var(--base-background-color);
-		}
 	}
 `;
 
@@ -339,7 +319,7 @@ export function ReviewNav(props: Props) {
 	};
 
 	const pr = async () => {
-		await dispatch(setCurrentPullRequest(props.reviewId));
+		await dispatch(setCreatePullRequest(props.reviewId));
 		await dispatch(setCurrentReview(""));
 		dispatch(openPanel(WebviewPanels.NewPullRequest));
 	};
@@ -611,7 +591,6 @@ export function ReviewNav(props: Props) {
 						{statusButtons()}
 					</TourTip>
 				</Nav>
-				<CancelButton title="Exit Review" onClick={exit} />
 			</NavHeader>
 			{props.composeOpen ? null : (
 				<div className="scroll-container">

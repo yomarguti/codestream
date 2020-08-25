@@ -330,3 +330,289 @@ export interface EnterpriseConfigurationData {
 	baseUrl: string;
 	token: string;
 }
+
+export interface FetchThirdPartyPullRequestRequest {
+	providerId: string;
+	providerTeamId?: string;
+	pullRequestId: string;
+
+	/**
+	 * in the GitHub world, this is `TeamCodeStream` in https://github.com/TeamCodeStream/codestream
+	 */
+	owner?: string;
+	/**
+	 * in the GitHub world, this is `codestream` in https://github.com/TeamCodeStream/codestream
+	 */
+	repo?: string;
+}
+
+export interface FetchThirdPartyPullRequestFilesResponse {
+	sha: string;
+	filename: string;
+	status: string;
+	additions: number;
+	changes: number;
+	deletions: number;
+	patch?: string;
+}
+
+export interface FetchThirdPartyPullRequestPullRequest {
+	id: string;
+	providerId: string; // e.g. "github*com"
+	// this is the parent repo
+	repository: {
+		name: string;
+		nameWithOwner: string;
+		url: string;
+	};
+	locked: any;
+	body: string;
+	baseRefName: string;
+	baseRefOid: string;
+	author: {
+		login: string;
+		avatarUrl: string;
+	};
+	authorAssociation:
+		| "COLLABORATOR"
+		| "CONTRIBUTOR"
+		| "FIRST_TIMER"
+		| "FIRST_TIME_CONTRIBUTOR"
+		| "MEMBER"
+		| "NONE"
+		| "OWNER";
+	createdAt: string;
+	commits: {
+		totalCount: number;
+		nodes: {
+			commit: {
+				abbreviatedOid: string;
+				author: {
+					name: string;
+					avatarUrl: string;
+					user: {
+						login: string;
+					};
+				};
+				message: string;
+				authoredDate: string;
+			};
+		}[];
+	};
+	files: {
+		totalCount: number;
+		nodes: {
+			path: string;
+			additions: number;
+			deletions: number;
+		}[];
+	};
+	headRefName: string;
+	headRefOid: string;
+	labels: {
+		nodes: {
+			id: string;
+			color: string;
+			description: string;
+			name: string;
+		}[];
+	};
+	number: number;
+	state: string;
+	reviewRequests: {
+		nodes: {
+			requestedReviewer: {
+				id: string;
+				login: string;
+				avatarUrl: string;
+			};
+		}[];
+	};
+	projectCards: {
+		nodes: {
+			project: {
+				id: string;
+				name: string;
+			};
+		}[];
+	};
+	reviews: {
+		nodes: {
+			id: string;
+			author: {
+				id: string;
+				login: string;
+				avatarUrl: string;
+			};
+		}[];
+	};
+	/**
+	 * this is a single pending review for the current user (there can only be 1 at a time for
+	 * certain providers, like github)
+	 */
+	pendingReview: {
+		id: string;
+		author: {
+			login: string;
+			avatarUrl: string;
+		};
+		comments?: {
+			totalCount: number;
+		};
+	};
+	timelineItems: {
+		__typename: string;
+		totalCount: number;
+		pageInfo: {
+			startCursor: string;
+			endCursor: string;
+			hasNextPage: boolean;
+		};
+		nodes: any[];
+	};
+	milestone: {
+		title: string;
+		state: string;
+		number: number;
+		id: string;
+		description: string;
+	};
+	participants: {
+		nodes: {
+			avatarUrl: string;
+		}[];
+	};
+	assignees: {
+		nodes: {
+			avatarUrl: string;
+			id: string;
+			name: string;
+			login: string;
+		}[];
+	};
+	mergeable: string;
+	merged: boolean;
+	mergedAt: string;
+	title: string;
+	url: string;
+	repoUrl: string;
+	baseUrl: string;
+	updatedAt: string;
+	reactionGroups: any;
+	includesCreatedEdit: boolean;
+	viewerDidAuthor: boolean;
+	viewerCanUpdate: boolean;
+	viewerSubscription: string;
+
+	/** this isn't part of the GH object model, but we add it for convenience */
+	viewer: {
+		id: string;
+		login: string;
+	};
+}
+
+export interface FetchThirdPartyPullRequestRepository {
+	id: string;
+	url: string;
+	resourcePath: string;
+	rebaseMergeAllowed: boolean;
+	squashMergeAllowed: boolean;
+	mergeCommitAllowed: boolean;
+	repoOwner: string;
+	repoName: string;
+	pullRequest: FetchThirdPartyPullRequestPullRequest;
+	providerId: string;
+}
+
+export interface FetchThirdPartyPullRequestResponse {
+	rateLimit: {
+		limit: any;
+		cost: any;
+		remaining: any;
+		resetAt: any;
+	};
+	repository: FetchThirdPartyPullRequestRepository;
+}
+
+export const FetchThirdPartyPullRequestRequestType = new RequestType<
+	FetchThirdPartyPullRequestRequest,
+	FetchThirdPartyPullRequestResponse,
+	void,
+	void
+>("codestream/provider/pullrequest");
+
+export interface ExecuteThirdPartyRequest {
+	method: string;
+	providerId: string;
+	params: any;
+}
+
+export interface ExecuteThirdPartyResponse {}
+
+export const ExecuteThirdPartyRequestUntypedType = new RequestType<
+	ExecuteThirdPartyRequest,
+	ExecuteThirdPartyResponse,
+	void,
+	void
+>("codestream/provider/generic");
+
+export class ExecuteThirdPartyTypedType<Req, Res> extends RequestType<
+	ExecuteThirdPartyTypedRequest<Req>,
+	Res,
+	any,
+	any
+> {
+	constructor() {
+		super("codestream/provider/generic");
+	}
+}
+
+export interface GetMyPullRequestsRequest {
+	owner?: string;
+	name?: string;
+	/** if true, only return PRs that are open */
+	isOpen?: boolean;
+	/**
+	 * forces a re-fetch from the provider
+	 */
+	force?: boolean;
+}
+
+export interface GetMyPullRequestsResponse {
+	id: string;
+	url: string;
+	title: string;
+	createdAt: number;
+	author: {
+		login: string;
+		avatarUrl: string;
+	};
+	bodyText: string;
+	number: number;
+	state: string;
+	updatedAt: string;
+	lastEditedAt: string;
+}
+
+export type MergeMethod = "MERGE" | "SQUASH" | "REBASE";
+
+export interface MergePullRequestRequest {
+	pullRequestId: string;
+	mergeMethod: MergeMethod;
+}
+
+export interface CreatePullRequestCommentRequest {
+	pullRequestId: string;
+	text: string;
+}
+
+export interface CreatePullRequestCommentAndCloseRequest {
+	pullRequestId: string;
+	text: string;
+}
+
+export interface ExecuteThirdPartyTypedRequest<T> {
+	method: string;
+	providerId: string;
+	params?: T;
+}

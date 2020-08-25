@@ -83,6 +83,14 @@ export interface CreateShareableCodemarkRequest {
 	// codemarks can now be replies
 	parentPostId?: string;
 	isPseudoCodemark?: boolean;
+	/**
+	 * true, if this "comment" is part of a PR provider review, rather than a single comment
+	 */
+	isProviderReview?: boolean;
+	/**
+	 * the possible reviewId of
+	 */
+	pullRequestReviewId?: string;
 }
 
 export interface CreateShareableCodemarkResponse {
@@ -90,6 +98,15 @@ export interface CreateShareableCodemarkResponse {
 	post: PostPlus;
 	stream: CSDirectStream | CSChannelStream;
 	markerLocations?: CSMarkerLocations[];
+}
+
+export interface CreatePassthroughCodemarkResponse {
+	isPassThrough: boolean;
+	codemark?: CodemarkPlus;
+	pullRequest: {
+		id: string;
+	};
+	success: boolean;
 }
 
 export const CreateShareableCodemarkRequestType = new RequestType<

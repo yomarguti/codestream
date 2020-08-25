@@ -52,6 +52,9 @@ const Root = styled.div<DimensionProps & { display?: string }>`
 		width: ${props => props.size + 7}px;
 		padding-right: 10px;
 	}
+	&.left-pad {
+		width: ${props => props.size + 5}px;
+	}
 `;
 
 const Initials = styled.div<DimensionProps & { color: string }>`
@@ -181,3 +184,27 @@ export function CodeStreamHeadshot(props: Omit<HeadshotProps, "person">) {
 		</Root>
 	);
 }
+
+export interface PRHeadshotProps {
+	person: {
+		avatarUrl: string;
+		login: string;
+	};
+	size?: number;
+	hardRightBorder?: boolean;
+	display?: string;
+	onClick?: React.MouseEventHandler;
+	className?: string;
+	addThumbsUp?: boolean;
+}
+
+export const PRHeadshot = styled((props: PRHeadshotProps) => {
+	const size = props.size || 16;
+	if (!props.person) return null;
+
+	return (
+		<Root display={props.display} size={size} className={props.className} onClick={props.onClick}>
+			<Image size={size} src={props.person.avatarUrl} />
+		</Root>
+	);
+})``;

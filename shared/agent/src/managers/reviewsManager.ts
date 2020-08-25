@@ -3,7 +3,7 @@ import { applyPatch } from "diff";
 import * as path from "path";
 import { MessageType } from "../api/apiProvider";
 import { Container, SessionContainer } from "../container";
-import { GitRemote } from "../git/gitService";
+import { GitRemote, GitRepository } from "../git/gitService";
 import { Logger } from "../logger";
 import {
 	CheckPullRequestBranchPreconditionsRequest,
@@ -498,8 +498,21 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	): Promise<CheckPullRequestBranchPreconditionsResponse> {
 		const { git } = SessionContainer.instance();
 		try {
-			const review = await this.getById(request.reviewId);
-			const repo = await git.getRepositoryById(review.reviewChangesets[0].repoId);
+			let repo: GitRepository | undefined = undefined;
+			if (request.reviewId) {
+				const review = await this.getById(request.reviewId);
+				repo = await git.getRepositoryById(review.reviewChangesets[0].repoId);
+			} else if (request.repoId) {
+				repo = await git.getRepositoryById(request.repoId);
+			} else {
+				return {
+					success: false,
+					error: {
+						type: "REPO_NOT_FOUND"
+					}
+				};
+			}
+
 			if (!repo) {
 				return {
 					success: false,
@@ -620,10 +633,15 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		const { git, providerRegistry, session } = SessionContainer.instance();
 		let warning = undefined;
 		let remotes: GitRemote[] | undefined;
-		let repo;
+		let repo: any;
+		let review: CSReview | undefined = undefined;
 		try {
-			const review = await this.getById(request.reviewId);
-			repo = await git.getRepositoryById(review.reviewChangesets[0].repoId);
+			if (request.reviewId) {
+				review = await this.getById(request.reviewId);
+				repo = await git.getRepositoryById(review.reviewChangesets[0].repoId);
+			} else if (request.repoId) {
+				repo = await git.getRepositoryById(request.repoId);
+			}
 
 			if (!repo) {
 				return {
@@ -632,29 +650,31 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				};
 			}
 
-			const localModifications = await git.getHasModifications(repo.path);
-			if (localModifications) {
-				return {
-					success: false,
-					error: { type: "HAS_LOCAL_MODIFICATIONS" }
-				};
+			if (request.reviewId && !request.skipLocalModificationsCheck) {
+				const localModifications = await git.getHasModifications(repo.path);
+				if (localModifications) {
+					return {
+						success: false,
+						error: { type: "HAS_LOCAL_MODIFICATIONS" }
+					};
+				}
+
+				const localCommits = await git.getLocalCommits(repo.path);
+				if (localCommits && localCommits.length > 0) {
+					return {
+						success: false,
+						error: { type: "HAS_LOCAL_COMMITS" }
+					};
+				}
 			}
 
-			const localCommits = await git.getLocalCommits(repo.path);
-			if (localCommits && localCommits.length > 0) {
-				return {
-					success: false,
-					error: { type: "HAS_LOCAL_COMMITS" }
-				};
-			}
-
-			const branch = review.reviewChangesets[0].branch;
+			const headRefName = request.headRefName || (review && review.reviewChangesets[0].branch);
 			const branches = await git.getBranches(repo!.path);
 			const user = await this.session.api.getMe();
 			remotes = await repo!.getRemotes();
 			let remoteUrl = "";
 			let providerId = "";
-			let defaultBranch: string | undefined = "";
+			let providerRepoDefaultBranch: string | undefined = "";
 			let isProviderConnected = false;
 
 			const connectedProviders = providerRegistry.getConnectedProviders(
@@ -674,7 +694,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			);
 			let success = false;
 			let foundOne = false;
-			const projectsByRemotePath = new Map(remotes.map(obj => [obj.path, obj]));
+			const projectsByRemotePath = new Map((remotes || []).map(obj => [obj.path, obj]));
 			for (const provider of connectedProviders) {
 				const remotePaths = await provider.getRemotePaths(repo, projectsByRemotePath);
 				if (remotePaths && remotePaths.length) {
@@ -713,16 +733,18 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 							};
 						}
 
-						defaultBranch = providerRepoInfo.defaultBranch;
+						providerRepoDefaultBranch = providerRepoInfo.defaultBranch;
+						const baseRefName = request.baseRefName || providerRepoDefaultBranch;
 						if (providerRepoInfo.pullRequests) {
-							if (defaultBranch && branch) {
+							if (baseRefName && headRefName) {
 								const existingPullRequest = providerRepoInfo.pullRequests.find(
-									(_: any) => _.baseRefName === defaultBranch && _.headRefName === branch
+									(_: any) => _.baseRefName === baseRefName && _.headRefName === headRefName
 								);
 								if (existingPullRequest) {
 									warning = {
 										type: "ALREADY_HAS_PULL_REQUEST",
-										url: existingPullRequest.url
+										url: existingPullRequest.url,
+										id: existingPullRequest.id
 									};
 								}
 							}
@@ -745,7 +767,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 			let originNames;
 			let remoteBranch;
-			const branchRemote = await git.getBranchRemote(repo.path, branch);
+			const branchRemote = await git.getBranchRemote(repo.path, headRefName!);
 			if (!branchRemote) {
 				warning = {
 					type: "REQUIRES_UPSTREAM"
@@ -764,13 +786,13 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				remoteBranch: remoteBranch,
 				pullRequestProvider: {
 					isConnected: isProviderConnected,
-					defaultBranch: defaultBranch
+					defaultBranch: providerRepoDefaultBranch
 				},
 				review: {
-					title: review.title,
-					text: review.text
+					title: review ? review.title : "",
+					text: review ? review.text : ""
 				},
-				branch: branch,
+				branch: headRefName,
 				branches: branches!.branches,
 				warning: warning
 			};
@@ -789,22 +811,30 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	async createPullRequest(request: CreatePullRequestRequest): Promise<CreatePullRequestResponse> {
 		const { git, providerRegistry, users } = SessionContainer.instance();
 		try {
-			const review = await this.getById(request.reviewId);
+			let review: CSReview | undefined = undefined;
+			let repoId = request.repoId;
+			let reviewPermalink;
+			let approvedAt;
 			const approvers: { name: string }[] = [];
-			if (review.approvedBy) {
-				for (const userId of Object.keys(review.approvedBy)) {
-					try {
-						const user = await users.getById(userId);
-						if (user) {
-							approvers.push({ name: user.username });
-						}
-					} catch {}
+			if (request.reviewId) {
+				review = await this.getById(request.reviewId);
+				repoId = review.reviewChangesets[0].repoId;
+				reviewPermalink = review.permalink;
+				approvedAt = review.approvedAt;
+				if (review.approvedBy) {
+					for (const userId of Object.keys(review.approvedBy)) {
+						try {
+							const user = await users.getById(userId);
+							if (user) {
+								approvers.push({ name: user.username });
+							}
+						} catch {}
+					}
 				}
 			}
 
 			// if we have this, then we want to create the branch's remote
-			if (request.remoteName) {
-				const repoId = review.reviewChangesets[0].repoId;
+			if (request.remoteName && repoId) {
 				const repo = await git.getRepositoryById(repoId);
 				if (!repo) {
 					Logger.warn(`createPullRequest: repoId=${repoId} not found`);
@@ -840,9 +870,10 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			const data = {
 				...request,
 				metadata: {
-					reviewPermalink: review.permalink,
-					approvedAt: review.approvedAt,
-					reviewers: approvers
+					reviewPermalink,
+					approvedAt,
+					reviewers: approvers,
+					addresses: request.addresses
 				}
 			};
 
@@ -863,19 +894,22 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				};
 			}
 
-			const updateReviewResult = await this.update({
-				id: review.id,
-				pullRequestProviderId: request.providerId,
-				pullRequestTitle: result.title,
-				pullRequestUrl: result.url
-			});
+			if (review) {
+				const updateReviewResult = await this.update({
+					id: review.id,
+					pullRequestProviderId: request.providerId,
+					pullRequestTitle: result.title,
+					pullRequestUrl: result.url
+				});
 
-			Logger.debug(
-				`createPullRequest: success for reviewId=${request.reviewId} providerId=${request.providerId} headRefName=${request.headRefName} baseRefName=${request.baseRefName}`
-			);
+				Logger.debug(
+					`createPullRequest: success for reviewId=${request.reviewId} providerId=${request.providerId} headRefName=${request.headRefName} baseRefName=${request.baseRefName}`
+				);
+			}
 
 			return {
 				success: true,
+				id: result.id,
 				url: result.url
 			};
 		} catch (ex) {

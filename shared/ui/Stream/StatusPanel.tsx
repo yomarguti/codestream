@@ -254,7 +254,8 @@ export const RoundedSearchLink = styled(RoundedLink)`
 		height: 16px;
 		line-height: 16px;
 		margin: 0;
-		#search-input {
+		#search-input,
+		#pr-search-input {
 			width: 90px;
 			background: transparent !important;
 			font-size: 13px !important;
@@ -356,6 +357,8 @@ export const EMPTY_STATUS = {
 	invisible: false
 };
 
+const EMPTY_ARRAY = [];
+
 export const StatusPanel = () => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
@@ -427,10 +430,10 @@ export const StatusPanel = () => {
 	const [manuallySelectedBranch, setManuallySelectedBranch] = useState("");
 	const [currentBranch, setCurrentBranch] = useState("");
 	const [editingBranch, setEditingBranch] = useState(false);
-	const [branches, setBranches] = useState([] as string[]);
+	const [branches, setBranches] = useState(EMPTY_ARRAY as string[]);
 	const [customBranchName, setCustomBranchName] = useState("");
 	const [configureBranchNames, setConfigureBranchNames] = useState(false);
-	const [openRepos, setOpenRepos] = useState<ReposScm[]>([]);
+	const [openRepos, setOpenRepos] = useState<ReposScm[]>(EMPTY_ARRAY);
 	const [repoUri, setRepoUri] = useState("");
 	const [currentRepoId, setCurrentRepoId] = useState("");
 	const [currentRepoName, setCurrentRepoName] = useState("");
@@ -542,7 +545,8 @@ export const StatusPanel = () => {
 
 	const getBranches = async (uri?: string): Promise<{ openRepos?: ReposScm[] }> => {
 		const response = await HostApi.instance.send(GetReposScmRequestType, {
-			inEditorOnly: true
+			inEditorOnly: true,
+			includeCurrentBranches: true
 		});
 		if (response && response.repositories) {
 			setOpenRepos(response.repositories);
@@ -1020,8 +1024,17 @@ export const StatusPanel = () => {
 			)}
 			<ScrollBox>
 				<div className="channel-list vscroll">
-					<OpenReviews />
+					<OpenReviews openRepos={openRepos} />
 					<StatusSection>
+						<RoundedLink
+							onClick={() => {
+								dispatch(setNewPostEntry("Status"));
+								dispatch(openPanel(WebviewPanels.NewPullRequest));
+							}}
+						>
+							<Icon className="padded-icon" name="pull-request" />
+							<span className="wide-text">New </span>Pull Request
+						</RoundedLink>
 						<Tooltip
 							title={
 								<>
@@ -1051,7 +1064,7 @@ export const StatusPanel = () => {
 								<Icon className="padded-icon" name="review" />
 								<span className="wide-text">Request </span>Review
 							</RoundedLink>
-						</Tooltip>
+						</Tooltip>{" "}
 						<H4>Work In Progress</H4>
 						{status && status.label && (
 							<Row style={{ marginBottom: "5px" }} className="no-hover wide">

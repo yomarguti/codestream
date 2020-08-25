@@ -25,6 +25,7 @@ import { ReviewForm } from "./ReviewForm";
 import FilterSearchPanel from "./FilterSearchPanel";
 import InlineCodemarks from "./InlineCodemarks";
 import { CreateTeamPage } from "./CreateTeamPage";
+import { Tester } from "./Tester";
 import Icon from "./Icon";
 import CancelButton from "./CancelButton";
 import Tooltip, { TipTitle, placeArrowTopRight } from "./Tooltip";
@@ -225,12 +226,14 @@ export class SimpleStream extends Component {
 		let { activePanel, activeModal } = this.props;
 		const { q } = this.state;
 
+		// console.warn("RENDERING STREAM");
 		if (activePanel === WebviewPanels.LandingRedirect) activePanel = WebviewPanels.Status;
 
 		const isConfigurationPanel =
 			activePanel && activePanel.match(/^configure\-(provider|enterprise)-/);
 		// if we're conducting a review, we need the compose functionality of spatial view
 		if (this.props.currentReviewId) activePanel = WebviewPanels.CodemarksForFile;
+		if (this.props.currentPullRequestId) activePanel = WebviewPanels.CodemarksForFile;
 		if (!isConfigurationPanel && this.props.composeCodemarkActive) {
 			// don't override the activePanel if user is trying to configure a provider
 			// from the codemark (issue) form
@@ -270,7 +273,8 @@ export class SimpleStream extends Component {
 				WebviewPanels.Flow,
 				WebviewPanels.NewPullRequest
 			].includes(activePanel) &&
-			!this.props.currentReviewId &&
+			// !this.props.currentReviewId &&
+			// !this.props.currentPullRequestId &&
 			!activePanel.startsWith("configure-provider-") &&
 			!activePanel.startsWith("configure-enterprise-");
 
@@ -344,6 +348,7 @@ export class SimpleStream extends Component {
 							scrollDiv={this._contentScrollDiv}
 						/>
 					)}
+					{activePanel === WebviewPanels.Tester && <Tester />}
 					{activePanel === WebviewPanels.FilterSearch && <FilterSearchPanel />}
 					{activePanel === WebviewPanels.Activity && <ActivityPanel />}
 					{activePanel === WebviewPanels.PRInfo && <PRInfoModal onClose={this.props.closePanel} />}
@@ -808,6 +813,7 @@ const mapStateToProps = state => {
 		currentCodemarkId: context.currentCodemarkId,
 		currentMarkerId: context.currentMarkerId,
 		currentReviewId: context.currentReviewId,
+		currentPullRequestId: context.currentPullRequestId,
 		capabilities: capabilities,
 		activePanel: context.panelStack[0],
 		activeModal: context.activeModal,

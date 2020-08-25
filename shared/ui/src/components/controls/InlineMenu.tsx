@@ -18,10 +18,15 @@ export interface InlineMenuProps {
 	titleIcon?: any;
 	noCloseIcon?: boolean;
 	className?: string;
+	onOpen?: Function;
+	noChevronDown?: boolean;
 }
 
-const TextButton = styled.span`
+export const TextButton = styled.span`
 	color: ${props => props.theme.colors.textHighlight};
+	&.subtle {
+		color: var(--text-color-subtle);
+	}
 	cursor: pointer;
 	white-space: nowrap;
 	.octicon-chevron-down {
@@ -77,6 +82,7 @@ export function InlineMenu(props: InlineMenuProps) {
 				onClickCapture={e => {
 					e.preventDefault();
 					e.stopPropagation();
+					if (!isOpen && props.onOpen) props.onOpen();
 					toggleMenu(isOpen);
 				}}
 				tabIndex={0}
@@ -84,7 +90,7 @@ export function InlineMenu(props: InlineMenuProps) {
 				className={props.className}
 			>
 				{props.children}
-				<Icon name="chevron-down" />
+				{!props.noChevronDown && <Icon name="chevron-down" />}
 			</TextButton>
 		</>
 	);

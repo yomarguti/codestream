@@ -13,7 +13,9 @@ import { Logger } from "../logger";
 import {
 	CodeDelimiterStyles,
 	CodemarkPlus,
+	CodeStreamDiffUriData,
 	CreateCodemarkRequest,
+	CreatePassthroughCodemarkResponse,
 	CreatePostRequest,
 	CreatePostRequestType,
 	CreatePostResponse,
@@ -76,6 +78,7 @@ import {
 import { providerDisplayNamesByNameKey } from "../providers/provider";
 import { Arrays, debug, log, lsp, lspHandler } from "../system";
 import { Strings } from "../system/string";
+import * as csUri from "../system/uri";
 import { BaseIndex, IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { EntityCache, EntityCacheCfg } from "./cache/entityCache";
@@ -883,13 +886,168 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	@lspHandler(CreateShareableCodemarkRequestType)
 	async createSharingCodemarkPost(
 		request: CreateShareableCodemarkRequest
-	): Promise<CreateShareableCodemarkResponse> {
+	): Promise<CreateShareableCodemarkResponse | CreatePassthroughCodemarkResponse | undefined> {
 		const codemarkRequest: CreateCodemarkRequest = {
 			...request.attributes,
 			status:
 				request.attributes.type === CodemarkType.Issue ? request.attributes.status : undefined,
 			markers: []
 		};
+
+		if (
+			request.textDocuments &&
+			request.textDocuments.length &&
+			csUri.Uris.isCodeStreamDiffUri(request.textDocuments[0].uri)
+		) {
+			const { providerRegistry, git, repos } = SessionContainer.instance();
+			const parsedUri = csUri.Uris.fromCodeStreamDiffUri<CodeStreamDiffUriData>(
+				request.textDocuments[0].uri
+			);
+			if (!parsedUri) throw new Error("Could not parse uri");
+			if (parsedUri.context && parsedUri.context.pullRequest) {
+				if (parsedUri.context.pullRequest.providerId !== "github*com") {
+					throw new Error("UnsupportedProvider");
+				}
+			} else {
+				throw new Error("MissingContext");
+			}
+
+			if (parsedUri.context.pullRequest.providerId === "github*com") {
+				// lines are 1-based on GH
+				const startLine = request.attributes.codeBlocks[0].range.start.line + 1;
+				const endLine = request.attributes.codeBlocks[0].range.end.line + 1;
+				const diff = await git.getDiffBetweenCommits(
+					parsedUri.leftSha,
+					parsedUri.rightSha,
+					parsedUri.path,
+					true
+				);
+				if (diff) {
+					const startingHunk = diff.hunks.find(
+						_ => startLine >= _.newStart && startLine <= _.newStart + _.newLines
+					);
+					const endingHunk = diff.hunks.find(_ => endLine <= _.newStart + _.newLines);
+					if (!startingHunk || !endingHunk) {
+						Logger.warn(
+							`Could not find hunk for startLine=${startLine} or endLine=${endLine} for ${JSON.stringify(
+								parsedUri.context
+							)}`
+						);
+						const codeBlock = request.attributes.codeBlocks[0];
+						const repo = await repos.getById(parsedUri.repoId);
+						let remoteList: string[] | undefined;
+						if (repo && repo.remotes && repo.remotes.length) {
+							// if we have a list of remotes from the marker / repo (a.k.a. server)... use that
+							remoteList = repo.remotes.map(_ => _.normalizedUrl);
+						}
+						let remoteUrl;
+						if (remoteList) {
+							for (const remote of remoteList) {
+								remoteUrl = Marker.getRemoteCodeUrl(
+									remote,
+									parsedUri.rightSha,
+									codeBlock.scm?.file!,
+									startLine,
+									endLine
+								);
+
+								if (remoteUrl !== undefined) {
+									break;
+								}
+							}
+						}
+						let fileWithUrl;
+						if (remoteUrl) {
+							fileWithUrl = `[${codeBlock.scm?.file}](${remoteUrl.url})`;
+						} else {
+							fileWithUrl = codeBlock.scm?.file;
+						}
+
+						const result = await providerRegistry.executeMethod({
+							method: "addComment",
+							providerId: parsedUri.context.pullRequest.providerId,
+							params: {
+								subjectId: parsedUri.context.pullRequest.id,
+								text: `${request.attributes.text || ""}\n\n\`\`\`\n${codeBlock.contents}\n\`\`\`
+								\n${fileWithUrl} (Line${startLine === endLine ? ` ${startLine}` : `s ${startLine}-${endLine}`})`
+							}
+						});
+						return {
+							isPassThrough: true,
+							pullRequest: {
+								id: parsedUri.context.pullRequest.id
+							},
+							success: result != null
+						};
+					}
+
+					let result;
+					if (request.isProviderReview) {
+						// https://stackoverflow.com/questions/41662127/how-to-comment-on-a-specific-line-number-on-a-pr-on-github
+						let i = 0;
+						let relativeLine = 0;
+						for (const h of diff.hunks) {
+							// can't increment for the first hunk
+							if (i !== 0) relativeLine++;
+							const linesWithMetadata = [];
+							let j = 0;
+							for (const line of h.lines) {
+								relativeLine++;
+								linesWithMetadata.push({ line: line, relativeLine: relativeLine, index: j });
+								j++;
+							}
+							(h as any).linesWithMetadata = linesWithMetadata;
+							i++;
+						}
+						// the line the user is asking for minus the start of this hunk
+						// that will give us the index of where it is in the hunk
+						// from there, we fetch the relativeLine which is what github needs
+						const offset = startLine - startingHunk.newStart;
+						const lineWithMetadata = (startingHunk as any).linesWithMetadata.find(
+							(b: any) => b.index === offset
+						);
+						if (lineWithMetadata) {
+							result = await providerRegistry.executeMethod({
+								method: "createPullRequestReviewComment",
+								providerId: parsedUri.context.pullRequest.providerId,
+								params: {
+									pullRequestId: parsedUri.context.pullRequest.id,
+									// pullRequestReviewId will be looked up
+									text: request.attributes.text || "",
+									filePath: parsedUri.path,
+									position: lineWithMetadata.relativeLine
+								}
+							});
+						} else {
+							throw new Error("Failed to create comment");
+						}
+					} else {
+						result = await providerRegistry.executeMethod({
+							method: "createCommitComment",
+							providerId: parsedUri.context.pullRequest.providerId,
+							params: {
+								pullRequestId: parsedUri.context.pullRequest.id,
+								sha: parsedUri.rightSha,
+								text: request.attributes.text || "",
+								path: parsedUri.path,
+								startLine: startLine,
+								endLine: endingHunk ? endLine : undefined
+							}
+						});
+					}
+
+					return {
+						isPassThrough: true,
+						pullRequest: {
+							id: parsedUri.context.pullRequest.id
+						},
+						success: result != null
+					};
+				}
+			}
+
+			return undefined;
+		}
 
 		const markerCreationDescriptors: MarkerCreationDescriptor[] = [];
 		let codemark: CodemarkPlus | undefined;
@@ -1228,11 +1386,12 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		// otherwise, use the start commit if specified by the user.
 		// otherwise, use the parent of the first commit of this branch (the fork point)
 		// if that doesn't exist, use HEAD
-		const baseSha = (pushedCommit && !amendingReviewId)
-			? pushedCommit.sha
-			: scm.commits && scm.commits.length > 0
-			? (await git.getParentCommitShas(scm.repoPath, scm.commits[scm.commits.length - 1].sha))[0]
-			: latestCommitSha;
+		const baseSha =
+			pushedCommit && !amendingReviewId
+				? pushedCommit.sha
+				: scm.commits && scm.commits.length > 0
+				? (await git.getParentCommitShas(scm.repoPath, scm.commits[scm.commits.length - 1].sha))[0]
+				: latestCommitSha;
 
 		if (!baseSha) {
 			throw new Error("Could not determine newest pushed commit for review creation");
@@ -1717,7 +1876,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					anchorFormat: "[${text}](${url})"
 				};
 		}
-	}
+	};
 
 	createProviderCard = async (
 		providerCardRequest: {
@@ -1941,7 +2100,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			Logger.error(error, `failed to create a ${attributes.issueProvider.name} card:`);
 			return undefined;
 		}
-	}
+	};
 }
 
 async function resolveCreatePostResponse(response: CreatePostResponse) {

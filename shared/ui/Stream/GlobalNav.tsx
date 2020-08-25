@@ -13,7 +13,11 @@ import { STEPS } from "./GettingStarted";
 import { openPanel } from "./actions";
 import { PlusMenu } from "./PlusMenu";
 import { EllipsisMenu } from "./EllipsisMenu";
-import { setComposeCodemarkActive } from "../store/context/actions";
+import {
+	setCurrentReview,
+	setCurrentPullRequest,
+	setCreatePullRequest
+} from "../store/context/actions";
 
 const sum = (total, num) => total + Math.round(num);
 
@@ -31,14 +35,23 @@ export function GlobalNav() {
 			totalUnread: Object.values(umis.unreads).reduce(sum, 0),
 			totalMentions: Object.values(umis.mentions).reduce(sum, 0),
 			collisions: getCodeCollisions(state),
-			composeCodemarkActive: state.context.composeCodemarkActive
+			composeCodemarkActive: state.context.composeCodemarkActive,
+			currentReviewId: state.context.currentReviewId,
+			currentPullRequestId: state.context.currentPullRequestId
 		};
 	});
 
 	const [ellipsisMenuOpen, setEllipsisMenuOpen] = React.useState();
 	const [plusMenuOpen, setPlusMenuOpen] = React.useState();
 
-	const { activePanel, totalUnread, totalMentions, collisions } = derivedState;
+	const {
+		activePanel,
+		totalUnread,
+		totalMentions,
+		collisions,
+		currentReviewId,
+		currentPullRequestId
+	} = derivedState;
 
 	// this would be nice, but unfortunately scm is only loaded on spatial view so we can't
 	// rely on it here
@@ -63,7 +76,14 @@ export function GlobalNav() {
 		setPlusMenuOpen(plusMenuOpen ? undefined : event.target.closest("label"));
 	};
 
-	const selected = panel => activePanel === panel; // && !plusMenuOpen && !menuOpen;
+	const go = panel => {
+		dispatch(setCreatePullRequest());
+		dispatch(setCurrentPullRequest());
+		dispatch(setCurrentReview());
+		dispatch(openPanel(panel));
+	};
+
+	const selected = panel => activePanel === panel && !currentPullRequestId && !currentReviewId; // && !plusMenuOpen && !menuOpen;
 	return React.useMemo(() => {
 		return (
 			<>
@@ -72,7 +92,7 @@ export function GlobalNav() {
 						className={cx({
 							selected: selected(WebviewPanels.Status) || selected(WebviewPanels.LandingRedirect)
 						})}
-						onClick={e => dispatch(openPanel(WebviewPanels.Status))}
+						onClick={e => go(WebviewPanels.Status)}
 						id="global-nav-status-label"
 					>
 						<Tooltip
@@ -101,7 +121,7 @@ export function GlobalNav() {
 					</label>
 					<label
 						className={cx({ selected: selected(WebviewPanels.CodemarksForFile) })}
-						onClick={e => dispatch(openPanel(WebviewPanels.CodemarksForFile))}
+						onClick={e => go(WebviewPanels.CodemarksForFile)}
 						id="global-nav-file-label"
 					>
 						<Tooltip
@@ -129,7 +149,7 @@ export function GlobalNav() {
 					</label>
 					<label
 						className={cx({ selected: selected(WebviewPanels.Activity) })}
-						onClick={e => dispatch(openPanel(WebviewPanels.Activity))}
+						onClick={e => go(WebviewPanels.Activity)}
 						id="global-nav-activity-label"
 					>
 						<Tooltip
@@ -159,7 +179,7 @@ export function GlobalNav() {
 					</label>
 					<label
 						className={cx({ selected: selected(WebviewPanels.FilterSearch) })}
-						onClick={() => dispatch(openPanel(WebviewPanels.FilterSearch))}
+						onClick={() => go(WebviewPanels.FilterSearch)}
 						id="global-nav-search-label"
 					>
 						<Icon
@@ -186,7 +206,7 @@ export function GlobalNav() {
 					</label>
 					<label
 						className={cx({ selected: selected(WebviewPanels.People) })}
-						onClick={e => dispatch(openPanel(WebviewPanels.People))}
+						onClick={e => go(WebviewPanels.People)}
 						id="global-nav-team-label"
 					>
 						<Tooltip
@@ -272,6 +292,8 @@ export function GlobalNav() {
 		totalMentions,
 		collisions.nav,
 		derivedState.composeCodemarkActive,
+		derivedState.currentReviewId,
+		derivedState.currentPullRequestId,
 		plusMenuOpen,
 		ellipsisMenuOpen
 	]);

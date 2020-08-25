@@ -8,7 +8,8 @@ import {
 	GetRangeScmInfoResponse,
 	CrossPostIssueValues,
 	CreateShareableCodemarkRequestType,
-	CreateThirdPartyPostRequestType
+	CreateThirdPartyPostRequestType,
+	CreatePassthroughCodemarkResponse
 } from "@codestream/protocols/agent";
 import { logError } from "@codestream/webview/logger";
 import { addStreams } from "../streams/actions";
@@ -17,6 +18,7 @@ import { getConnectedProviders } from "../providers/reducer";
 import { CodeStreamState } from "..";
 import { capitalize } from "@codestream/webview/utils";
 import { isObject } from "lodash-es";
+import { URI } from "vscode-uri";
 
 export const reset = () => action("RESET");
 
@@ -57,6 +59,8 @@ export interface SharingNewCodemarkAttributes extends BaseNewCodemarkAttributes 
 	parentPostId?: string;
 	isChangeRequest?: boolean;
 	isPseudoCodemark?: boolean;
+	/** Signifies if this comment should be part of a code provider's PR review */
+	isProviderReview?: boolean;
 }
 
 export interface LegacyNewCodemarkAttributes extends BaseNewCodemarkAttributes {
@@ -94,34 +98,41 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 			mentionedUserIds: attributes.mentionedUserIds,
 			addedUsers: attributes.addedUsers,
 			parentPostId: attributes.parentPostId,
-			isPseudoCodemark: attributes.isPseudoCodemark
+			isPseudoCodemark: attributes.isPseudoCodemark,
+			isProviderReview: attributes.isProviderReview
 		});
 		if (response) {
-			const result = dispatch(addCodemarks([response.codemark]));
-			dispatch(addStreams([response.stream]));
+			let result;
+			if ((response as any).isPassThrough) {
+				// is pass through -- aka a fake "codemark" that was sent to a code provider
+				// like Github
+			} else {
+				result = dispatch(addCodemarks([response.codemark]));
+				dispatch(addStreams([response.stream]));
 
-			if (attributes.sharingAttributes) {
-				try {
-					await HostApi.instance.send(CreateThirdPartyPostRequestType, {
-						providerId: attributes.sharingAttributes.providerId,
-						channelId: attributes.sharingAttributes.channelId,
-						providerTeamId: attributes.sharingAttributes.providerTeamId,
-						text: rest.text,
-						codemark: response.codemark,
-						remotes: attributes.remotes,
-						mentionedUserIds: attributes.mentionedUserIds
-					});
-					HostApi.instance.track("Shared Codemark", {
-						Destination: capitalize(
-							getConnectedProviders(getState()).find(
-								config => config.id === attributes.sharingAttributes!.providerId
-							)!.name
-						),
-						"Codemark Status": "New"
-					});
-				} catch (error) {
-					logError("Error sharing a codemark", { message: error.toString() });
-					throw { reason: "share" } as CreateCodemarkError;
+				if (attributes.sharingAttributes) {
+					try {
+						await HostApi.instance.send(CreateThirdPartyPostRequestType, {
+							providerId: attributes.sharingAttributes.providerId,
+							channelId: attributes.sharingAttributes.channelId,
+							providerTeamId: attributes.sharingAttributes.providerTeamId,
+							text: rest.text,
+							codemark: response.codemark,
+							remotes: attributes.remotes,
+							mentionedUserIds: attributes.mentionedUserIds
+						});
+						HostApi.instance.track("Shared Codemark", {
+							Destination: capitalize(
+								getConnectedProviders(getState()).find(
+									config => config.id === attributes.sharingAttributes!.providerId
+								)!.name
+							),
+							"Codemark Status": "New"
+						});
+					} catch (error) {
+						logError("Error sharing a codemark", { message: error.toString() });
+						throw { reason: "share" } as CreateCodemarkError;
+					}
 				}
 			}
 			return result;
@@ -176,5 +187,34 @@ export const canCreateCodemark = (textEditorUri: string | undefined) => {
 	if (textEditorUri.startsWith("file://")) return true;
 	const regex = /codestream-diff:\/\/(\w+)\/(\w+)\/(\w+)\/right\/(.+)/;
 	const match = regex.exec(textEditorUri);
-	return match && match.length;
+	if (match && match.length) return true;
+
+	try {
+		const parsed = parseCodeStreamDiffUri(textEditorUri);
+		return parsed && parsed.side === "right";
+	} catch {}
+
+	return false;
+};
+
+export const parseCodeStreamDiffUri = (
+	uri?: string
+):
+	| {
+			path: string;
+			side: string;
+	  }
+	| undefined => {
+	if (!uri) return undefined;
+
+	const m = uri.match(/\/-\d\-\/(.*)\/\-\d\-/);
+	if (m && m.length) {
+		try {
+			return JSON.parse(atob(decodeURIComponent(m[1]))) as any;
+		} catch (ex) {
+			console.warn(ex);
+		}
+	}
+
+	return undefined;
 };

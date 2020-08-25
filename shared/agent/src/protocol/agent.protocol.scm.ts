@@ -161,14 +161,19 @@ export interface ReposScm {
 	*/
 	folder: { uri: string; name: string };
 	root?: boolean;
+	/**
+	 * only returned if includeCurrentBranch is set
+	 */
+	currentBranch?: string;
 }
 
 export interface GetReposScmRequest {
 	/**
 	 * Set this flag to only return repos that a user has open in their workspace
-	 * (rather than including any repos that might have been later dynamically added)
+	 * (rather than including any repos that might have been later dynamically added [and removed])
 	 */
 	inEditorOnly?: boolean;
+	includeCurrentBranches?: boolean;
 }
 
 export interface GetReposScmResponse {
@@ -236,6 +241,17 @@ export interface GetRangeScmInfoResponse {
 		branch?: string;
 	};
 	error?: string;
+	/**
+	 * Holder for additional metadata that this uri might contain, and/or
+	 * a spot to attach additional info
+	 */
+	context?: {
+		pullRequest?: {
+			id: string;
+			providerId: string;
+			pullRequestReviewId?: string;
+		};
+	};
 }
 export const GetRangeScmInfoRequestType = new RequestType<
 	GetRangeScmInfoRequest,
@@ -284,3 +300,68 @@ export const GetLatestCommittersRequestType = new RequestType<
 	void,
 	void
 >("codestream/scm/latestCommitters");
+
+export interface FetchAllRemotesRequest {
+	/**
+	 * CodeStream repositoryId
+	 * */
+	repoId: string;
+}
+
+export interface FetchAllRemotesResponse {}
+
+export const FetchAllRemotesRequestType = new RequestType<
+	FetchAllRemotesRequest,
+	FetchAllRemotesResponse,
+	void,
+	void
+>("codestream/scm/remotes");
+
+export interface GetFileContentsAtRevisionRequest {
+	/**
+	 * CodeStream repositoryId
+	 * */
+	repoId: string;
+	/**
+	 * relative file path
+	 * */
+	path: string;
+	/**
+	 * git commit sha
+	 * */
+	sha: string;
+
+	fetchAllRemotes?: boolean;
+}
+
+export interface GetFileContentsAtRevisionResponse {
+	content: string;
+	error?: string;
+}
+
+export const GetFileContentsAtRevisionRequestType = new RequestType<
+	GetFileContentsAtRevisionRequest,
+	GetFileContentsAtRevisionResponse,
+	void,
+	void
+>("codestream/scm/file/diff");
+
+export interface FetchForkPointRequest {
+	/**
+	 * CodeStream repositoryId
+	 * */
+	repoId: string;
+	baseSha: string;
+	headSha: string;
+}
+
+export interface FetchForkPointResponse {
+	sha: string;
+}
+
+export const FetchForkPointRequestType = new RequestType<
+	FetchForkPointRequest,
+	FetchForkPointResponse,
+	void,
+	void
+>("codestream/scm/forkPoint");

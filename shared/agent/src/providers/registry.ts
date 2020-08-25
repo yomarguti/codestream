@@ -1,5 +1,6 @@
 "use strict";
 import { CSMe } from "protocol/api.protocol";
+import { Logger } from "../logger";
 import {
 	AddEnterpriseProviderRequest,
 	AddEnterpriseProviderRequestType,
@@ -19,6 +20,8 @@ import {
 	DisconnectThirdPartyProviderRequest,
 	DisconnectThirdPartyProviderRequestType,
 	DisconnectThirdPartyProviderResponse,
+	ExecuteThirdPartyRequest,
+	ExecuteThirdPartyRequestUntypedType,
 	FetchAssignableUsersRequest,
 	FetchAssignableUsersRequestType,
 	FetchThirdPartyBoardsRequest,
@@ -33,6 +36,8 @@ import {
 	FetchThirdPartyChannelsRequest,
 	FetchThirdPartyChannelsRequestType,
 	FetchThirdPartyChannelsResponse,
+	FetchThirdPartyPullRequestRequest,
+	FetchThirdPartyPullRequestRequestType,
 	MoveThirdPartyCardRequest,
 	MoveThirdPartyCardRequestType,
 	MoveThirdPartyCardResponse,
@@ -50,7 +55,8 @@ import {
 	ProviderGetRepoInfoRequest,
 	ThirdPartyIssueProvider,
 	ThirdPartyPostProvider,
-	ThirdPartyProvider
+	ThirdPartyProvider,
+	ThirdPartyProviderSupportsPullRequests
 } from "./provider";
 
 // NOTE: You must include all new providers here, otherwise the webpack build will exclude them
@@ -358,6 +364,57 @@ export class ThirdPartyProviderRegistry {
 
 		const response = await pullRequestProvider.getRepoInfo(request);
 		return response;
+	}
+
+	@log()
+	@lspHandler(FetchThirdPartyPullRequestRequestType)
+	async getPullRequest(request: FetchThirdPartyPullRequestRequest) {
+		const provider = getProvider(request.providerId);
+		if (provider === undefined) {
+			throw new Error(`No registered provider for '${request.providerId}'`);
+		}
+
+		const pullRequestProvider = this.getPullRequestProvider(provider);
+		const response = await pullRequestProvider.getPullRequest(request);
+		return response;
+	}
+
+	@log({
+		prefix: (context, args) => `${context.prefix}:${args.method}`
+	})
+	@lspHandler(ExecuteThirdPartyRequestUntypedType)
+	async executeMethod(request: ExecuteThirdPartyRequest) {
+		const provider = getProvider(request.providerId);
+		if (provider === undefined) {
+			throw new Error(`No registered provider for '${request.providerId}'`);
+		}
+		let result = undefined;
+		try {
+			const pullRequestProvider = this.getPullRequestProvider(provider);
+			await pullRequestProvider.ensureConnected();
+			const response = (pullRequestProvider as any)[request.method](request.params);
+			result = await response;
+		} catch (ex) {
+			Logger.error(ex, "executeMethod failed", {
+				method: request.method
+			});
+			throw new Error(`Failed to ${request.method} ${ex.message}`);
+		}
+		return result;
+	}
+
+	private getPullRequestProvider(
+		provider: ThirdPartyProvider
+	): ThirdPartyIssueProvider & ThirdPartyProviderSupportsPullRequests {
+		const pullRequestProvider = provider as ThirdPartyIssueProvider;
+		if (
+			pullRequestProvider == null ||
+			typeof pullRequestProvider.supportsPullRequests !== "function" ||
+			!pullRequestProvider.supportsPullRequests()
+		) {
+			throw new Error(`Provider(${provider.name}) doesn't support pull requests`);
+		}
+		return pullRequestProvider;
 	}
 
 	getProviders(): ThirdPartyProvider[];

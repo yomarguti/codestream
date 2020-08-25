@@ -71,7 +71,8 @@ import {
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage,
 	WebviewPanels,
-	TraverseDiffsRequestType
+	TraverseDiffsRequestType,
+	CompareLocalFilesRequestType
 } from "@codestream/protocols/webview";
 import { gate } from "system/decorators/gate";
 import {
@@ -106,6 +107,7 @@ import { Logger } from "../logger";
 import { Functions, log } from "../system";
 import { CodeStreamWebviewPanel, toLoggableIpcMessage } from "../webviews/webviewPanel";
 import { BuiltInCommands } from "../constants";
+import * as csUri from "../system/uri";
 
 const emptyObj = {};
 
@@ -899,6 +901,14 @@ export class WebviewController implements Disposable {
 
 				break;
 			}
+			case CompareLocalFilesRequestType.method: {
+				webview.onIpcRequest(CompareLocalFilesRequestType, e, async (_type, params) => {
+					void (await Container.commands.showLocalDiff(params));
+					return emptyObj;
+				});
+
+				break;
+			}
 			case ReviewShowLocalDiffRequestType.method: {
 				webview.onIpcRequest(ReviewShowLocalDiffRequestType, e, async (_type, params) => {
 					void (await Container.commands.showReviewLocalDiff(params));
@@ -1057,6 +1067,11 @@ export class WebviewController implements Disposable {
 				case "codestream-diff":
 					const csReviewDiffInfo = Strings.parseCSReviewDiffUrl(originalUri.toString());
 					if (csReviewDiffInfo && csReviewDiffInfo.version === "right") {
+						uri = originalUri;
+						break;
+					}
+					const codeStreamDiffURi = csUri.Uris.isCodeStreamDiffUri(originalUri.toString());
+					if (codeStreamDiffURi) {
 						uri = originalUri;
 					}
 					break;

@@ -10,8 +10,13 @@ import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { canCreateCodemark } from "../store/codemarks/actions";
 import { HostApi } from "../webview-api";
 import { StartWorkNotificationType } from "@codestream/protocols/webview";
-import { setCurrentReview } from "../store/context/actions";
+import {
+	setCurrentReview,
+	setCurrentPullRequest,
+	setCreatePullRequest
+} from "../store/context/actions";
 import { ComposeKeybindings } from "./ComposeTitles";
+import { getPRLabel } from "../store/providers/reducer";
 
 interface PlusMenuProps {
 	menuTarget: any;
@@ -25,7 +30,8 @@ export function PlusMenu(props: PlusMenuProps) {
 			kickstartEnabled: isFeatureEnabled(state, "kickstart"),
 			activePanel: state.context.panelStack[0],
 			textEditorUri: state.editorContext && state.editorContext.textEditorUri,
-			lightningCodeReviewsEnabled: isFeatureEnabled(state, "lightningCodeReviews")
+			lightningCodeReviewsEnabled: isFeatureEnabled(state, "lightningCodeReviews"),
+			prLabel: getPRLabel(state)
 		};
 	});
 
@@ -37,7 +43,8 @@ export function PlusMenu(props: PlusMenuProps) {
 	});
 
 	const handleStartWorkRequest = () => {
-		dispatch(setCurrentReview(""));
+		dispatch(setCurrentPullRequest());
+		dispatch(setCurrentReview());
 		if (derivedState.activePanel === WebviewPanels.Status) {
 			const div = document.getElementById("start-work-div");
 			if (div) {
@@ -52,6 +59,13 @@ export function PlusMenu(props: PlusMenuProps) {
 		dispatch(openPanel(WebviewPanels.Status));
 	};
 
+	const go = panel => {
+		dispatch(setCreatePullRequest());
+		dispatch(setCurrentPullRequest());
+		dispatch(setCurrentReview());
+		dispatch(openPanel(panel));
+	};
+
 	const menuItems = [] as any;
 	if (derivedState.kickstartEnabled) {
 		menuItems.push(
@@ -60,7 +74,8 @@ export function PlusMenu(props: PlusMenuProps) {
 				label: "Start Work",
 				action: handleStartWorkRequest,
 				shortcut: ComposeKeybindings.work,
-				subtext: "Grab a ticket & create a branch",
+				subtextWide: "Grab a ticket & create a branch",
+
 				key: "work"
 			},
 			{ label: "-" }
@@ -72,8 +87,8 @@ export function PlusMenu(props: PlusMenuProps) {
 			{
 				icon: <Icon name="comment" />,
 				label: "Add Comment",
-				action: () => dispatch(openPanel(WebviewPanels.NewComment)),
-				subtext: "Comment on code & share to slack",
+				action: () => go(WebviewPanels.NewComment),
+				subtextWide: "Comment on code & share to slack",
 				shortcut: ComposeKeybindings.comment,
 				key: "comment"
 			},
@@ -81,8 +96,8 @@ export function PlusMenu(props: PlusMenuProps) {
 			{
 				icon: <Icon name="issue" />,
 				label: "Create Issue",
-				subtext: "Perform ad-hoc code review",
-				action: () => dispatch(openPanel(WebviewPanels.NewIssue)),
+				subtextWide: "Perform ad-hoc code review",
+				action: () => go(WebviewPanels.NewIssue),
 				shortcut: ComposeKeybindings.issue,
 				key: "issue"
 			}
@@ -94,12 +109,22 @@ export function PlusMenu(props: PlusMenuProps) {
 		menuItems.push({
 			icon: <Icon name="review" />,
 			label: "Request a Code Review",
-			subtext: "Get feedback on your WIP",
-			action: () => dispatch(openPanel(WebviewPanels.NewReview)),
+			subtextWide: "Get quick feedback on your WIP",
+			action: () => go(WebviewPanels.NewReview),
 			shortcut: ComposeKeybindings.review,
 			key: "review"
 		});
 	}
+
+	if (menuItems.length > 0) menuItems.push({ label: "-" });
+	menuItems.push({
+		icon: <Icon name="pull-request" />,
+		label: `New ${derivedState.prLabel.PullRequest}`,
+		subtextWide: `Open a ${derivedState.prLabel.PullRequest}`,
+		action: () => go(WebviewPanels.NewPullRequest),
+		shortcut: ComposeKeybindings.pr,
+		key: "pr"
+	});
 
 	return (
 		<Menu items={menuItems} target={props.menuTarget} action={props.closeMenu} align="popupRight" />

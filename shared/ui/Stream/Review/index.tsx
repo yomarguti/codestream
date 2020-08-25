@@ -13,7 +13,8 @@ import {
 	CodemarkPlus,
 	FollowReviewRequestType,
 	DidChangeDataNotification,
-	DidChangeDataNotificationType
+	DidChangeDataNotificationType,
+	ExecuteThirdPartyRequestUntypedType
 } from "@codestream/protocols/agent";
 import {
 	MinimumWidthCard,
@@ -51,8 +52,9 @@ import { deleteReview, fetchReview } from "@codestream/webview/store/reviews/act
 import {
 	setCurrentReview,
 	setCurrentCodemark,
+	setCurrentPullRequest,
 	openPanel,
-	setCurrentPullRequest
+	setCreatePullRequest
 } from "@codestream/webview/store/context/actions";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import { getReview } from "@codestream/webview/store/reviews/reducer";
@@ -217,7 +219,7 @@ export const MetaCheckboxWithHoverIcon = styled.div`
 	}
 `;
 
-const MetaIcons = styled.span`
+export const MetaIcons = styled.span`
 	margin-left: 5px;
 	display: inline-block;
 	height: 14px;
@@ -227,14 +229,18 @@ const MetaIcons = styled.span`
 `;
 
 const MetaPullRequest = styled.div`
-	padding: 6px 6px 6px 1px;
+	// padding: 6px 6px 6px 0;
 	a {
-		padding-left: 6px;
+		// padding-left: 6px;
 		text-decoration: none;
 		color: var(--text-color-subtle) !important;
+		&:hover {
+			color: var(--text-color-info) !important;
+		}
 	}
 	.icon {
-		vertical-align: middle;
+		vertical-align: 0px;
+		margin-right: 5px;
 	}
 `;
 
@@ -469,7 +475,7 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 				key: "pr",
 				action: () => {
 					const _action = async () => {
-						await dispatch(setCurrentPullRequest(review.id));
+						await dispatch(setCreatePullRequest(review.id));
 						await dispatch(setCurrentReview(""));
 						await dispatch(openPanel(WebviewPanels.NewPullRequest));
 					};
@@ -636,7 +642,7 @@ const BaseReview = (props: BaseReviewProps) => {
 			if (provider) {
 				const providerInfo = PROVIDER_MAPPINGS[provider.name];
 				if (providerInfo && providerInfo.icon) {
-					icon = <Icon name={providerInfo.icon!} title={providerInfo.displayName}></Icon>;
+					icon = <Icon name={providerInfo.icon!}></Icon>;
 				}
 			}
 		}
@@ -650,17 +656,45 @@ const BaseReview = (props: BaseReviewProps) => {
 				<MetaDescription>
 					<MetaDescriptionForAssignees>
 						<MetaPullRequest>
-							{icon}
-							<a
-								href="#"
-								title="View this Pull Request"
-								onClick={e => {
-									e.preventDefault();
-									HostApi.instance.send(OpenUrlRequestType, { url: review.pullRequestUrl! });
-								}}
-							>
-								{text}
-							</a>
+							<Tooltip title="View this Pull Request" placement="bottom" delay={1}>
+								<a
+									href="#"
+									onClick={e => {
+										e.preventDefault();
+										e.stopPropagation();
+
+										if (review.pullRequestProviderId === "github*com") {
+											HostApi.instance
+												.send(ExecuteThirdPartyRequestUntypedType, {
+													method: "getPullRequestIdFromUrl",
+													providerId: "github*com",
+													params: {
+														url: review.pullRequestUrl
+													}
+												})
+												.then((id: any) => {
+													if (id) {
+														dispatch(setCurrentReview(""));
+														dispatch(setCurrentPullRequest(id));
+													} else {
+														HostApi.instance.send(OpenUrlRequestType, {
+															url: review.pullRequestUrl!
+														});
+													}
+												})
+												.catch(e => {
+													HostApi.instance.send(OpenUrlRequestType, {
+														url: review.pullRequestUrl!
+													});
+												});
+										} else {
+										}
+									}}
+								>
+									{icon}
+									{text}
+								</a>
+							</Tooltip>
 						</MetaPullRequest>
 					</MetaDescriptionForAssignees>
 				</MetaDescription>

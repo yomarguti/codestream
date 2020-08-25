@@ -56,10 +56,10 @@ const getColors = (variant = "primary") => {
 		}
 		case "secondary": {
 			return `
-				background-color: rgba(255, 255, 255, 0.07);
+				background-color: rgba(127, 127, 127, 0.1);
 				color: var(--text-color);
 				:hover {
-					background-color: rgba(255, 255, 255, 0.09);
+					background-color: rgba(127, 127, 127, 0.15);
 					color: var(--text-color-highlight);
 				}
 			`;
@@ -86,6 +86,16 @@ const getColors = (variant = "primary") => {
 		case "warning": {
 			return `
 				background-color: #ffaa2c;
+				color: white;
+				:hover {
+					opacity: 0.85;
+				}
+			`;
+		}
+		case "merged": {
+			return `
+				background-color: #6f42c1;
+				// background-color: #b87cda;
 				color: white;
 				:hover {
 					opacity: 0.85;
@@ -145,7 +155,14 @@ const ButtonAppend = styled.div`
 	margin-left: 10px;
 `;
 
-type ButtonVariant = "primary" | "secondary" | "destructive" | "success" | "warning" | "text";
+type ButtonVariant =
+	| "primary"
+	| "secondary"
+	| "destructive"
+	| "success"
+	| "warning"
+	| "text"
+	| "merged";
 
 export interface ButtonProps extends PropsWithChildren<{}> {
 	variant?: ButtonVariant;
