@@ -1170,14 +1170,21 @@ export class ScmManager {
 	async getFileContentsAtRevision(
 		request: GetFileContentsAtRevisionRequest
 	): Promise<GetFileContentsAtRevisionResponse> {
-		const { git } = SessionContainer.instance();
+		const { git, repositoryMappings } = SessionContainer.instance();
 
 		const repo = await git.getRepositoryById(request.repoId);
-		if (!repo) throw new Error(`Could not load repo with ID ${request.repoId}`);
+		let repoPath;
+		if (repo) {
+			repoPath = repo.path;
+		} else {
+			repoPath = await repositoryMappings.getByRepoId(request.repoId);
+		}
 
-		const filePath = paths.join(repo.path, request.path);
+		if (!repoPath) throw new Error(`Could not load repo with ID ${request.repoId}`);
+
+		const filePath = paths.join(repoPath, request.path);
 		if (request.fetchAllRemotes) {
-			await git.fetchAllRemotes(repo.path);
+			await git.fetchAllRemotes(repoPath);
 		}
 		const contents = (await git.getFileContentForRevision(filePath, request.sha)) || "";
 		return {
@@ -1187,16 +1194,32 @@ export class ScmManager {
 
 	@log()
 	@lspHandler(FetchForkPointRequestType)
-	async getForkPointRequestType(request: FetchForkPointRequest): Promise<FetchForkPointResponse> {
-		const { git } = SessionContainer.instance();
+	async getForkPointRequestType(
+		request: FetchForkPointRequest
+	): Promise<FetchForkPointResponse | undefined> {
+		const cc = Logger.getCorrelationContext();
+		const { git, repositoryMappings } = SessionContainer.instance();
 
 		const repo = await git.getRepositoryById(request.repoId);
-		if (!repo) throw new Error(`Could not load repo with ID ${request.repoId}`);
+		let repoPath;
+		if (repo) {
+			repoPath = repo.path;
+		} else {
+			repoPath = await repositoryMappings.getByRepoId(request.repoId);
+		}
 
-		const forkPointSha =
-			(await git.getRepoBranchForkPoint(repo.path, request.baseSha, request.headSha)) || "";
-		return {
-			sha: forkPointSha
-		};
+		if (!repoPath) throw new Error(`Could not load repo with ID ${request.repoId}`);
+		try {
+			await git.fetchAllRemotes(repoPath);
+			const forkPointSha =
+				(await git.getRepoBranchForkPoint(repoPath, request.baseSha, request.headSha)) || "";
+			return {
+				sha: forkPointSha
+			};
+		} catch (ex) {
+			Logger.error(ex, cc);
+			debugger;
+		}
+		return undefined;
 	}
 }
