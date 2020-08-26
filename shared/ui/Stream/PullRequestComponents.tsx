@@ -1,11 +1,12 @@
 import { Button } from "../src/components/Button";
 import styled from "styled-components";
-
 import { Headshot, PRHeadshot } from "../src/components/Headshot";
 import { PRHeadshotName } from "../src/components/HeadshotName";
 import { PullRequestReactButton } from "./PullRequestReactions";
 import { TextButton } from "../src/components/controls/InlineMenu";
 import { WidthBreakpoint } from "./PullRequest";
+
+export const PENDING_BORDER_COLOR = "rgba(249, 197, 19, 0.6)";
 
 export const PRHeader = styled.div`
 	margin: 45px 15px 0 20px;
@@ -245,8 +246,25 @@ export const PRCommentCard = styled.div`
 	&.dark-header:before {
 		background: var(--base-background-color);
 	}
+	&.finish-review-dropdown:before,
 	&.no-arrow:before {
 		display: none;
+	}
+	&.finish-review-timeline {
+		position: relative;
+		.review-PENDING & {
+			border-color: ${PENDING_BORDER_COLOR};
+		}
+		.review-PENDING & .row-with-icon-actions {
+			background: rgba(255, 223, 0, 0.1);
+		}
+		&:before {
+			left: 10px;
+			top: -6px;
+			border-left: 1px solid ${PENDING_BORDER_COLOR};
+			border-top: 1px solid ${PENDING_BORDER_COLOR};
+			border-bottom: none;
+		}
 	}
 	&.green-border:before {
 		border-color: #7aba5d;
@@ -384,6 +402,16 @@ export const PRThreadedCommentCard = styled.div`
 	background: var(--app-background-color);
 	.vscode-dark & {
 		background: var(--base-background-color);
+	}
+	.review-PENDING & {
+		border-color: ${PENDING_BORDER_COLOR};
+	}
+	.review-PENDING & .row-with-icon-actions {
+		background: rgba(255, 223, 0, 0.1);
+		margin: -10px -15px !important;
+		padding: 10px 15px 3px 15px !important;
+		height: auto !important;
+		border-radius: 5px 5px 0 0;
 	}
 	border-radius: 5px;
 	padding: 10px 15px;
@@ -706,6 +734,7 @@ export const PRActionIcons = styled.div`
 	margin-left: auto;
 	align-items: top;
 	text-align: right;
+	.pending,
 	.member,
 	.author {
 		display: inline-block;
@@ -717,8 +746,12 @@ export const PRActionIcons = styled.div`
 		font-size: smaller;
 		color: var(--text-color-subtle);
 	}
-	.author {
-		margin-right: 5px;
+	.pending {
+		border-color: ${PENDING_BORDER_COLOR};
+		background: rgba(255, 223, 0, 0.1);
+	}
+	div + div {
+		margin-left: 5px;
 	}
 	.icon {
 		opacity: 0.5;
@@ -834,12 +867,12 @@ export const PRReviewer = styled.div`
 export const PRCloneURLButtons = styled.div`
 	display: inline-flex;
 	border-radius: 5px;
-	overflow: hidden;	
+	overflow: hidden;
 	margin-right: 5px;
-	> button { 
+	> button {
 		margin-left: 1px;
 	}
-`
+`;
 export const PRCloneURL = styled.div`
 	display: flex;
 	flex: 1;
@@ -847,11 +880,11 @@ export const PRCloneURL = styled.div`
 	justify-content: space-between;
 	border: 1px solid var(--base-border-color);
 	border-radius: 5px;
-	padding: 5px 0 5px 10px;	
-	.icon { 
+	padding: 5px 0 5px 10px;
+	.icon {
 		margin: 0 10px;
 	}
-`
+`;
 
 export const PRCloneURLWrapper = styled.div`
 	display: flex;
@@ -861,19 +894,19 @@ export const PRCloneURLWrapper = styled.div`
 			margin-bottom: 1em;
 		}
 	}
-`
+`;
 
 export const PRCopyableTerminal = styled.div`
 	position: relative;
-    code {
-    	width: 100%;
-    }
-    pre {
-    	width: 100%;
-    }
-    .icon {
+	code {
+		width: 100%;
+	}
+	pre {
+		width: 100%;
+	}
+	.icon {
 		position: absolute !important;
-    	top: 10px;
-    	right: 10px;    
-    }
-`
+		top: 10px;
+		right: 10px;
+	}
+`;

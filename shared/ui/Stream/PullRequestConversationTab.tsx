@@ -47,7 +47,7 @@ import {
 	PRCloneURLWrapper
 } from "./PullRequestComponents";
 import { ButtonRow } from "./StatusPanel";
-import { PullRequestTimelineItems } from "./PullRequestTimelineItems";
+import { PullRequestTimelineItems, GHOST } from "./PullRequestTimelineItems";
 import { DropdownButton } from "./Review/DropdownButton";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { LoadingMessage } from "../src/components/LoadingMessage";
@@ -91,13 +91,23 @@ const AUTHOR_ASSOCIATION_MAP = {
 	OWNER: ["Owner", "Author is the owner of the repository."]
 };
 
-export const PRAuthorBadges = (props: { pr: FetchThirdPartyPullRequestPullRequest; node: any }) => {
-	const { pr, node } = props;
+export const PRAuthorBadges = (props: {
+	pr: FetchThirdPartyPullRequestPullRequest;
+	node: any;
+	isPending?: boolean;
+}) => {
+	const { pr, node, isPending } = props;
 
 	const badges: any[] = [];
 
-	if (node.author.login === pr.author.login) {
-		const isMe = node.author.login === pr.viewer.login;
+	if (isPending) {
+		badges.push(<div className="pending">Pending</div>);
+	}
+
+	const nodeAuthor = node.author || GHOST;
+	const prAuthor = pr.author || GHOST;
+	if (prAuthor.login === nodeAuthor.login) {
+		const isMe = nodeAuthor.login === pr.viewer.login;
 		badges.push(
 			<Tooltip
 				key="author"

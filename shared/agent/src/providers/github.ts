@@ -1209,6 +1209,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					  avatarUrl(size: 20)
 					  url
 					}
+					body
 					bodyText
 					number
 					state
@@ -1825,9 +1826,23 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			// 	`... on BaseRefChangedEvent {
 			// 	__typename
 			//   }`,
-			// 	`... on BaseRefForcePushedEvent {
-			// 	__typename
-			//   }`,
+			`... on BaseRefForcePushedEvent {
+			__typename
+			actor {
+			  login
+			  avatarUrl
+			}
+			beforeCommit {
+			  abbreviatedOid
+			}
+			afterCommit {
+			  abbreviatedOid
+			}
+			createdAt
+			ref {
+			  name
+			}
+		  }`,
 			`... on ClosedEvent {
 			__typename
 			actor {
@@ -1926,6 +1941,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			authorAssociation
 			body
 			bodyText
+			bodyHTML
 			createdAt
 			includesCreatedEdit
 			isMinimized
@@ -2045,6 +2061,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			authorAssociation
 			body
 			bodyText
+			bodyHTML
 			createdAt
 			includesCreatedEdit
 			lastEditedAt
@@ -2071,6 +2088,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				authorAssociation
 				body
 				bodyText
+				bodyHTML
 				createdAt
 				databaseId
 				draftedAt
@@ -2087,6 +2105,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				  id
 				  body
 				  bodyText
+				  bodyHTML
 				}
 				commit {
 				  message
@@ -2104,6 +2123,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				pullRequestReview {
 				  body
 				  bodyText
+				  bodyHTML
 				}
 				reactionGroups {
 				  content
@@ -2306,6 +2326,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
   						url
 					}
 					body
+					bodyHTML
 					baseRefName
 					baseRefOid
 					author {
@@ -2657,6 +2678,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 											authorAssociation
 											body
 											bodyText
+											bodyHTML
 											createdAt
 											url
 											path

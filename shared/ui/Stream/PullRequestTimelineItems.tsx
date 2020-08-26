@@ -24,38 +24,39 @@ import Icon from "./Icon";
 import { MarkdownText } from "./MarkdownText";
 import {
 	FetchThirdPartyPullRequestPullRequest,
-	ExecuteThirdPartyTypedType,
-	CreatePullRequestCommentRequest
+	ExecuteThirdPartyTypedType
 } from "@codestream/protocols/agent";
 import Tag from "./Tag";
 import { Link } from "./Link";
 import { PRHeadshotName } from "../src/components/HeadshotName";
 import { PRAuthorBadges } from "./PullRequestConversationTab";
-import { prettyPrintOne } from "code-prettify";
-import { escapeHtml } from "../utils";
 import * as Path from "path-browserify";
 import MessageInput from "./MessageInput";
 import { Button } from "../src/components/Button";
 import { PullRequestReactButton, PullRequestReactions } from "./PullRequestReactions";
 import { HostApi } from "../webview-api";
-import { RadioGroup, Radio } from "../src/components/RadioGroup";
 import { useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
 import { CSMe } from "@codestream/protocols/api";
 import { SmartFormattedList } from "./SmartFormattedList";
 import { confirmPopup } from "./Confirm";
 import { PullRequestCommentMenu } from "./PullRequestCommentMenu";
-import { setEditorContext } from "../store/editorContext/actions";
-import { markdownify } from "./Markdowner";
 import { PullRequestMinimizedComment } from "./PullRequestMinimizedComment";
 import { PullRequestPatch } from "./PullRequestPatch";
+import { PullRequestFinishReview } from "./PullRequestFinishReview";
+
+export const GHOST = {
+	login: "ghost",
+	avatarUrl:
+		"https://avatars2.githubusercontent.com/u/10137?s=460&u=b1951d34a583cf12ec0d3b0781ba19be97726318&v=4"
+};
 
 const ReviewIcons = {
 	APPROVED: <Icon name="check" className="circled green" />,
 	CHANGES_REQUESTED: <Icon name="plus-minus" className="circled red" />,
 	COMMENTED: <Icon name="eye" className="circled" />,
 	DISMISSED: <Icon name="x" className="circled" />,
-	PENDING: <Icon name="blank" className="circled" />
+	PENDING: <Icon name="eye" className="circled" />
 };
 
 interface Props {
@@ -380,8 +381,12 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 									</Button>
 								</PRButtonRow>
 							</>
-						) : pr.body ? (
-							<MarkdownText text={pr.body} excludeParagraphWrap />
+						) : pr.bodyHTML || pr.body ? (
+							<MarkdownText
+								text={pr.bodyHTML ? pr.bodyHTML : pr.body}
+								isHtml={pr.bodyHTML ? true : false}
+								excludeParagraphWrap
+							/>
 						) : (
 							<i>No description provided.</i>
 						)}
@@ -398,12 +403,13 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 			</PRComment>
 
 			{timelineNodes.map((item, index) => {
-				// console.warn("TIMELINE ITEM: ", item);
+				const author = item.author || GHOST;
+				// console.warn("ITEM: ", index, item);
 				switch (item.__typename) {
 					case "IssueComment":
 						return (
 							<PRComment key={index}>
-								<PRHeadshot key={index} size={40} person={item.author} />
+								<PRHeadshot key={index} size={40} person={author} />
 								<PRCommentCard className={`dark-header${item.isMinimized ? " no-arrow" : ""}`}>
 									{item.isMinimized && !expandedComments[item.id] ? (
 										<PullRequestMinimizedComment
@@ -414,7 +420,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 										<>
 											<PRCommentHeader>
 												<div>
-													<PRAuthor>{item.author.login}</PRAuthor> commented{" "}
+													<PRAuthor>{author.login}</PRAuthor> commented{" "}
 													<Timestamp time={item.createdAt!} relative />
 													{item.includesCreatedEdit ? <> • edited</> : ""}
 												</div>
@@ -463,7 +469,11 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 														</PRButtonRow>
 													</>
 												) : (
-													<MarkdownText text={item.body} excludeParagraphWrap />
+													<MarkdownText
+														text={item.bodyHTML ? item.bodyHTML : item.bodyText}
+														isHtml={item.bodyHTML ? true : false}
+														excludeParagraphWrap
+													/>
 												)}
 											</PRCommentBody>
 											<PullRequestReactions
@@ -481,21 +491,29 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 					case "PullRequestReview": {
 						const reviewIcon = ReviewIcons[item.state];
 						return (
-							<PRComment key={index}>
+							<PRComment key={index} className={`review-${item.state}`}>
 								<PRTimelineItem key={index}>
-									<PRHeadshot key={index} size={40} person={item.author} />
+									<PRHeadshot key={index} size={40} person={author} />
 									{reviewIcon}
 									<PRTimelineItemBody>
-										<PRAuthor>{item.author.login}</PRAuthor>{" "}
+										<PRAuthor>{author.login}</PRAuthor>{" "}
 										{item.state === "APPROVED" && "approved this review"}
 										{item.state === "CHANGES_REQUESTED" && "requested changes"}
 										{item.state === "COMMENTED" && "reviewed"}
 										{item.state === "DISMISSED" && "dismissed this review"}
-										{item.state === "PENDING" && "left a pending review"}
+										{item.state === "PENDING" && "started a review"}
 										<Timestamp time={item.createdAt!} relative />
 									</PRTimelineItemBody>
 								</PRTimelineItem>
-								{item.body && (
+								{item.state === "PENDING" && (
+									<PullRequestFinishReview
+										pr={pr}
+										mode="timeline"
+										fetch={fetch}
+										setIsLoadingMessage={setIsLoadingMessage}
+									/>
+								)}
+								{item.bodyHTML && (
 									<PRActionCommentCard className="dark-header">
 										{item.isMinimized && !expandedComments[item.id] ? (
 											<PullRequestMinimizedComment
@@ -506,7 +524,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 											<>
 												<PRCommentHeader>
 													<div>
-														<PRAuthor>{item.author.login}</PRAuthor> commented{" "}
+														<PRAuthor>{author.login}</PRAuthor> commented{" "}
 														<Timestamp time={item.createdAt!} relative />
 														{item.includesCreatedEdit ? <> • edited</> : ""}
 													</div>
@@ -556,7 +574,11 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 															</PRButtonRow>
 														</>
 													) : (
-														<MarkdownText text={item.body} excludeParagraphWrap />
+														<MarkdownText
+															text={item.bodyHTML ? item.bodyHTML : item.bodyText}
+															isHtml={item.bodyHTML ? true : false}
+															excludeParagraphWrap
+														/>
 													)}
 												</PRCommentBody>
 												<PullRequestReactions
@@ -601,11 +623,12 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 												}
 											}
 
-											const codeHTML = prettyPrintOne(
-												escapeHtml(comment.diffHunk),
-												extension,
-												startLine
-											);
+											// [BC] not used???
+											// const codeHTML = prettyPrintOne(
+											// 	escapeHtml(comment.diffHunk),
+											// 	extension,
+											// 	startLine
+											// );
 
 											let insertText: Function;
 											let insertNewline: Function;
@@ -654,13 +677,17 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 																	<PRHeadshot
 																		key={commentIndex}
 																		size={30}
-																		person={comment.author}
+																		person={comment.author || GHOST}
 																	/>
 																	<PRThreadedCommentHeader>
-																		{item.author.login}
+																		{author.login}
 																		<Timestamp time={comment.createdAt} />
 																		<PRActionIcons>
-																			<PRAuthorBadges pr={pr} node={comment} />
+																			<PRAuthorBadges
+																				pr={pr}
+																				node={comment}
+																				isPending={item.state === "PENDING"}
+																			/>
 																			<PullRequestReactButton
 																				pr={pr}
 																				targetId={comment.id}
@@ -703,7 +730,11 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 																			</PRButtonRow>
 																		</>
 																	) : (
-																		<MarkdownText text={comment.body} excludeParagraphWrap />
+																		<MarkdownText
+																			text={comment.bodyHTML ? comment.bodyHTML : comment.bodyText}
+																			isHtml={comment.bodyHTML ? true : false}
+																			excludeParagraphWrap
+																		/>
 																	)}
 																</>
 															)}
@@ -730,9 +761,13 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 																return (
 																	<div key={i}>
 																		<PRCodeCommentBody>
-																			<PRHeadshot key={c.id + i} size={30} person={c.author} />
+																			<PRHeadshot
+																				key={c.id + i}
+																				size={30}
+																				person={c.author || GHOST}
+																			/>
 																			<PRThreadedCommentHeader>
-																				<b>{c.author.login}</b>
+																				<b>{(c.author || GHOST).login}</b>
 																				<Timestamp time={c.createdAt} />
 																				{c.includesCreatedEdit ? <> • edited</> : ""}
 																				<PRActionIcons>
@@ -781,7 +816,11 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 																					</PRButtonRow>
 																				</>
 																			) : (
-																				<MarkdownText text={c.body} excludeParagraphWrap />
+																				<MarkdownText
+																					text={c.bodyHTML ? c.bodyHTML : c.bodyText}
+																					isHtml={c.bodyHTML ? true : false}
+																					excludeParagraphWrap
+																				/>
 																			)}
 																		</PRCodeCommentBody>
 																		<PullRequestReactions
@@ -795,67 +834,71 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 																);
 															})}
 													</PRCodeComment>
-													<PRCodeCommentReply>
-														<Headshot key={index} size={30} person={derivedState.currentUser} />
+													{item.state !== "PENDING" && (
+														<>
+															<PRCodeCommentReply>
+																<Headshot key={index} size={30} person={derivedState.currentUser} />
 
-														<div
-															style={{
-																margin: "0 0 0 40px",
-																border: "1px solid var(--base-border-color)"
-															}}
-															className={openComments[comment.databaseId] ? "open-comment" : ""}
-															onClick={e => handleTextInputFocus(comment.databaseId)}
-														>
-															<MessageInput
-																multiCompose
-																text={pendingComments[comment.databaseId] || ""}
-																placeholder="Reply..."
-																onChange={e => handleTextInputChanged(e, comment.databaseId)}
-																onSubmit={e => handleComment(e, comment.databaseId)}
-																__onDidRender={__onDidRender}
-															/>
-														</div>
-														{openComments[comment.databaseId] && (
-															<PRButtonRow>
-																<Button
-																	variant="secondary"
-																	onClick={e => handleCancelComment(e, comment.databaseId)}
+																<div
+																	style={{
+																		margin: "0 0 0 40px",
+																		border: "1px solid var(--base-border-color)"
+																	}}
+																	className={openComments[comment.databaseId] ? "open-comment" : ""}
+																	onClick={e => handleTextInputFocus(comment.databaseId)}
 																>
-																	Cancel
-																</Button>
+																	<MessageInput
+																		multiCompose
+																		text={pendingComments[comment.databaseId] || ""}
+																		placeholder="Reply..."
+																		onChange={e => handleTextInputChanged(e, comment.databaseId)}
+																		onSubmit={e => handleComment(e, comment.databaseId)}
+																		__onDidRender={__onDidRender}
+																	/>
+																</div>
+																{openComments[comment.databaseId] && (
+																	<PRButtonRow>
+																		<Button
+																			variant="secondary"
+																			onClick={e => handleCancelComment(e, comment.databaseId)}
+																		>
+																			Cancel
+																		</Button>
 
-																<Button
-																	variant="primary"
-																	isLoading={isSubmitting}
-																	onClick={e => handleComment(e, comment.databaseId)}
-																>
-																	Comment
-																</Button>
+																		<Button
+																			variant="primary"
+																			isLoading={isSubmitting}
+																			onClick={e => handleComment(e, comment.databaseId)}
+																		>
+																			Comment
+																		</Button>
+																	</PRButtonRow>
+																)}
+															</PRCodeCommentReply>
+															<div style={{ height: "15px" }}></div>
+															<PRButtonRow className="align-left border-top">
+																{comment.isResolved && (
+																	<Button
+																		variant="secondary"
+																		isLoading={isResolving}
+																		onClick={e => handleUnresolve(e, comment.threadId)}
+																	>
+																		Unresolve conversation
+																	</Button>
+																)}
+
+																{!comment.isResolved && (
+																	<Button
+																		variant="secondary"
+																		isLoading={isResolving}
+																		onClick={e => handleResolve(e, comment.threadId)}
+																	>
+																		Resolve conversation
+																	</Button>
+																)}
 															</PRButtonRow>
-														)}
-													</PRCodeCommentReply>
-													<div style={{ height: "15px" }}></div>
-													<PRButtonRow className="align-left border-top">
-														{comment.isResolved && (
-															<Button
-																variant="secondary"
-																isLoading={isResolving}
-																onClick={e => handleUnresolve(e, comment.threadId)}
-															>
-																Unresolve conversation
-															</Button>
-														)}
-
-														{!comment.isResolved && (
-															<Button
-																variant="secondary"
-																isLoading={isResolving}
-																onClick={e => handleResolve(e, comment.threadId)}
-															>
-																Resolve conversation
-															</Button>
-														)}
-													</PRButtonRow>
+														</>
+													)}
 												</PRThreadedCommentCard>
 											);
 										})}
@@ -1126,16 +1169,17 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 							</PRTimelineItem>
 						);
 					}
-					case "HeadRefForcePushedEvent": {
+					case "HeadRefForcePushedEvent":
+					case "BaseRefForcePushedEvent": {
 						return (
 							<PRTimelineItem key={index} className="tall">
 								<Icon name="milestone" className="circled" />
 								<PRTimelineItemBody>
 									<PRHeadshotName key={index} person={item.actor} />
-									force-pushed the
+									force-pushed the{" "}
 									{item.ref && item.ref.name && <PRBranch>{item.ref.name}</PRBranch>} branch from{" "}
 									<PRBranch>{item.beforeCommit.abbreviatedOid}</PRBranch> to{" "}
-									<PRBranch>{item.afterCommit.abbreviatedOid}</PRBranch>
+									<PRBranch>{item.afterCommit.abbreviatedOid}</PRBranch> on
 									<Timestamp time={item.createdAt!} relative />
 								</PRTimelineItemBody>
 							</PRTimelineItem>
