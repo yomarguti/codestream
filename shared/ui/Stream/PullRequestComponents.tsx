@@ -608,7 +608,7 @@ export const PRSection = styled.div`
 		.icon.settings {
 			float: right;
 			display: inline-block;
-			transform: scale(0.7);
+			transform: scale(0.8);
 			opacity: 0.7;
 		}
 	}
@@ -776,6 +776,10 @@ export const PRCodeCommentPatch = styled.div`
 	margin: 10px -15px 15px -15px;
 	border-top: 1px solid var(--base-border-color);
 	border-bottom: 1px solid var(--base-border-color);
+	.codemark.inline & {
+		margin 10px 0;
+		border: 1px solid var(--base-border-color);
+	}
 `;
 
 export const PRCodeCommentBody = styled.div`
@@ -851,11 +855,22 @@ export const PRReviewer = styled.div`
 		flex-grow: 10;
 		margin-left: auto;
 		text-align: right;
+		.icon {
+			display: inline-block;
+			transform: scale(0.8);
+			margin-left: 5px;
+		}
+		.approved {
+			color: #66aa66;
+		}
+		.rejected {
+			color: #cc3366;
+		}
 		b {
 			display: inline-block;
 			width: 8px;
 			height: 8px;
-			margin: 6px 3px 0 0;
+			margin: 6px 4px 0 0;
 			border-radius: 4px;
 			&.pending {
 				background: #dbab09;
@@ -908,5 +923,25 @@ export const PRCopyableTerminal = styled.div`
 		position: absolute !important;
 		top: 10px;
 		right: 10px;
+	}
+`;
+
+export const PRResolveConflictsRow = styled.div`
+	display: flex;
+	align-items: center;
+	button {
+		flex-grow: 0;
+		flex-shrink: 0;
+		margin-left: auto;
+	}
+	.middle {
+		margin: 0 10px;
+	}
+`;
+
+export const PRHeadshots = styled.div`
+	margin-bottom: -5px;
+	${PRHeadshot} {
+		margin: 0 5px 5px 0;
 	}
 `;

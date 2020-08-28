@@ -4,6 +4,7 @@ import { ParsedDiff } from "diff";
 import * as fs from "fs";
 import { groupBy, last, orderBy } from "lodash-es";
 import sizeof from "object-sizeof";
+import * as path from "path";
 import { TextDocumentIdentifier } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
@@ -83,8 +84,7 @@ import { BaseIndex, IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { EntityCache, EntityCacheCfg } from "./cache/entityCache";
 import { EntityManagerBase, Id } from "./entityManager";
-import { MarkerLocationManager } from "./markerLocationManager";
-import { MarkerCreationDescriptor, MarkersBuilder } from "./markersBuilder";
+import { MarkersBuilder } from "./markersBuilder";
 
 export type FetchPostsFn = (request: FetchPostsRequest) => Promise<FetchPostsResponse>;
 
@@ -903,23 +903,26 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			const parsedUri = csUri.Uris.fromCodeStreamDiffUri<CodeStreamDiffUriData>(
 				request.textDocuments[0].uri
 			);
-			if (!parsedUri) throw new Error("Could not parse uri");
+			if (!parsedUri) throw new Error(`Could not parse uri ${request.textDocuments[0].uri}`);
 			if (parsedUri.context && parsedUri.context.pullRequest) {
 				if (parsedUri.context.pullRequest.providerId !== "github*com") {
-					throw new Error("UnsupportedProvider");
+					throw new Error(`UnsupportedProvider ${parsedUri.context.pullRequest.providerId}`);
 				}
 			} else {
-				throw new Error("MissingContext");
+				throw new Error("missingContext");
 			}
 
 			if (parsedUri.context.pullRequest.providerId === "github*com") {
+				// get the git repo, so we can use the repo root
+				const gitRepo = await git.getRepositoryById(parsedUri.repoId);
 				// lines are 1-based on GH
 				const startLine = request.attributes.codeBlocks[0].range.start.line + 1;
 				const endLine = request.attributes.codeBlocks[0].range.end.line + 1;
+				// get the diff hunk between the two shas
 				const diff = await git.getDiffBetweenCommits(
 					parsedUri.leftSha,
 					parsedUri.rightSha,
-					parsedUri.path,
+					path.join(gitRepo ? gitRepo.path : "", parsedUri.path),
 					true
 				);
 				if (diff) {
@@ -928,6 +931,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					);
 					const endingHunk = diff.hunks.find(_ => endLine <= _.newStart + _.newLines);
 					if (!startingHunk || !endingHunk) {
+						// if we couldn't find a hunk, we're going to go down the path of using
+						// a "code fence" aka ``` for showing the code comment
 						Logger.warn(
 							`Could not find hunk for startLine=${startLine} or endLine=${endLine} for ${JSON.stringify(
 								parsedUri.context
@@ -974,9 +979,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						});
 						return {
 							isPassThrough: true,
-							pullRequest: {
-								id: parsedUri.context.pullRequest.id
-							},
+							pullRequest: parsedUri.context.pullRequest,
 							success: result != null
 						};
 					}
@@ -984,6 +987,15 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					let result;
 					if (request.isProviderReview) {
 						// https://stackoverflow.com/questions/41662127/how-to-comment-on-a-specific-line-number-on-a-pr-on-github
+						// according to github:
+						/**
+						 * The position value equals the number of lines down from the first "@@" hunk header in the file you want to add a comment.
+						 * The line just below the "@@" line is position 1, the next line is position 2, and so on.
+						 * The position in the diff continues to increase through lines of whitespace and additional hunks until the beginning of a new file.
+						 *
+						 * see: https://docs.github.com/en/rest/reference/pulls#create-a-review-for-a-pull-request
+						 */
+
 						let i = 0;
 						let relativeLine = 0;
 						for (const h of diff.hunks) {
@@ -1002,10 +1014,21 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						// the line the user is asking for minus the start of this hunk
 						// that will give us the index of where it is in the hunk
 						// from there, we fetch the relativeLine which is what github needs
-						const offset = startLine - startingHunk.newStart;
-						const lineWithMetadata = (startingHunk as any).linesWithMetadata.find(
-							(b: any) => b.index === offset
-						);
+						let offset: number;
+						let lineWithMetadata;
+						if (startLine === endLine) {
+							// is a single line if startLine === endLine
+							offset = startLine - startingHunk.newStart;
+							lineWithMetadata = (startingHunk as any).linesWithMetadata.find(
+								(b: any) => b.index === offset
+							);
+						} else {
+							// it is a range
+							offset = endLine - endingHunk.newStart;
+							lineWithMetadata = (endingHunk as any).linesWithMetadata.find(
+								(b: any) => b.index === offset
+							);
+						}
 						if (lineWithMetadata) {
 							result = await providerRegistry.executeMethod({
 								method: "createPullRequestReviewComment",
@@ -1019,9 +1042,10 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 								}
 							});
 						} else {
-							throw new Error("Failed to create comment");
+							throw new Error("Failed to create review comment");
 						}
 					} else {
+						// is a single comment against a commit
 						result = await providerRegistry.executeMethod({
 							method: "createCommitComment",
 							providerId: parsedUri.context.pullRequest.providerId,
@@ -1038,9 +1062,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 					return {
 						isPassThrough: true,
-						pullRequest: {
-							id: parsedUri.context.pullRequest.id
-						},
+						pullRequest: parsedUri.context.pullRequest,
 						success: result != null
 					};
 				}
@@ -1049,21 +1071,23 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			return undefined;
 		}
 
-		const markerCreationDescriptors: MarkerCreationDescriptor[] = [];
 		let codemark: CodemarkPlus | undefined;
 
 		for (const codeBlock of request.attributes.codeBlocks) {
 			if (!codeBlock.range) continue;
-			const builder = MarkersBuilder.newBuilder({ uri: codeBlock.uri });
-			const descriptor = await builder.build(codeBlock.contents, codeBlock.range, codeBlock.scm);
-			markerCreationDescriptors.push(descriptor);
-			codemarkRequest.markers!.push(descriptor.marker);
+			const createMarkerRequest = await MarkersBuilder.buildCreateMarkerRequest(
+				{ uri: codeBlock.uri },
+				codeBlock.contents,
+				codeBlock.range,
+				codeBlock.scm
+			);
+			codemarkRequest.markers!.push(createMarkerRequest);
 
 			if (!codemarkRequest.remoteCodeUrl) {
-				codemarkRequest.remoteCodeUrl = descriptor.marker.remoteCodeUrl;
+				codemarkRequest.remoteCodeUrl = createMarkerRequest.remoteCodeUrl;
 			}
 			if (!codemarkRequest.remotes) {
-				codemarkRequest.remotes = descriptor.marker.remotes;
+				codemarkRequest.remotes = createMarkerRequest.remotes;
 			}
 		}
 
@@ -1098,16 +1122,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		});
 
 		const { markers } = response!;
-		if (markers) {
-			Logger.log(`createSharingCodemarkPost: will save uncommitted locations`);
-			MarkerLocationManager.saveUncommittedLocations(
-				markers,
-				markerCreationDescriptors.map(descriptor => descriptor.uncommittedBacktrackedLocation)
-			).then(() => {
-				Logger.log("Uncommitted locations saved to local cache");
-			});
-		}
-
 		codemark = response.codemark!;
 
 		if (request.attributes.crossPostIssueValues) {
@@ -1714,22 +1728,23 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			markers: []
 		};
 
-		const markerCreationDescriptors: MarkerCreationDescriptor[] = [];
-
 		codemarkRequest.streamId = streamId;
 		Logger.log(`createPostWithMarker: preparing descriptors for ${markers.length} markers`);
 		for (const m of markers) {
 			if (!m.range) continue;
-			const builder = MarkersBuilder.newBuilder(m.documentId);
-			const descriptor = await builder.build(m.code, m.range, m.source);
-			markerCreationDescriptors.push(descriptor);
-			codemarkRequest.markers!.push(descriptor.marker);
+			const createMarkerRequest = await MarkersBuilder.buildCreateMarkerRequest(
+				m.documentId,
+				m.code,
+				m.range,
+				m.source
+			);
+			codemarkRequest.markers!.push(createMarkerRequest);
 
 			if (!codemarkRequest.remoteCodeUrl) {
-				codemarkRequest.remoteCodeUrl = descriptor.marker.remoteCodeUrl;
+				codemarkRequest.remoteCodeUrl = createMarkerRequest.remoteCodeUrl;
 			}
 			if (!codemarkRequest.remotes) {
-				codemarkRequest.remotes = descriptor.marker.remotes;
+				codemarkRequest.remotes = createMarkerRequest.remotes;
 			}
 		}
 
@@ -1748,17 +1763,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				textDocuments
 			);
 			Logger.log(`createPostWithMarker: post creation completed`);
-
-			const { markers } = response!;
-			if (markers) {
-				Logger.log(`createPostWithMarker: will save uncommitted locations`);
-				MarkerLocationManager.saveUncommittedLocations(
-					markers,
-					markerCreationDescriptors.map(descriptor => descriptor.uncommittedBacktrackedLocation)
-				).then(() => {
-					Logger.log("Uncommitted locations saved to local cache");
-				});
-			}
 
 			response.codemark!.markers = response.markers || [];
 			Logger.log(`createPostWithMarker: returning`);

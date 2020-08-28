@@ -7,30 +7,23 @@ import { CSMe } from "@codestream/protocols/api";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import Icon from "./Icon";
 import Timestamp from "./Timestamp";
-import MessageInput from "./MessageInput";
 import Tooltip from "./Tooltip";
-import { Headshot, PRHeadshot } from "../src/components/Headshot";
+import { PRHeadshot } from "../src/components/Headshot";
 import { PRHeadshotName } from "../src/components/HeadshotName";
 import Tag from "./Tag";
 import { HostApi } from "../webview-api";
 import {
-	CreatePullRequestCommentAndCloseRequest,
-	CreatePullRequestCommentRequest,
 	ExecuteThirdPartyTypedType,
 	MergeMethod,
 	MergePullRequestRequest,
 	FetchThirdPartyPullRequestPullRequest
 } from "@codestream/protocols/agent";
-import { markdownify } from "./Markdowner";
 import {
-	PRAuthor,
 	PRContent,
 	PRConversation,
 	PRComment,
 	PRCommentCard,
 	PRCommentHeader,
-	PRActionIcons,
-	PRCommentBody,
 	PRStatusHeadshot,
 	PRIconButton,
 	PRFoot,
@@ -44,9 +37,10 @@ import {
 	PRCloneURLButtons,
 	PRCloneURL,
 	PRCopyableTerminal,
-	PRCloneURLWrapper
+	PRCloneURLWrapper,
+	PRResolveConflictsRow,
+	PRHeadshots
 } from "./PullRequestComponents";
-import { ButtonRow } from "./StatusPanel";
 import { PullRequestTimelineItems, GHOST } from "./PullRequestTimelineItems";
 import { DropdownButton } from "./Review/DropdownButton";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
@@ -55,10 +49,10 @@ import styled from "styled-components";
 import { Modal } from "./Modal";
 import { Dialog } from "../src/components/Dialog";
 import { Link } from "./Link";
-import { PullRequestReactButton, PullRequestReactions } from "./PullRequestReactions";
 import { setUserPreference } from "./actions";
-import { PullRequestCommentMenu } from "./PullRequestCommentMenu";
 import copy from "copy-to-clipboard";
+import { PullRequestBottomComment } from "./PullRequestBottomComment";
+import { reduce as _reduce, groupBy as _groupBy, map as _map } from "lodash-es";
 
 const Circle = styled.div`
 	width: 12px;
@@ -87,7 +81,8 @@ const AUTHOR_ASSOCIATION_MAP = {
 		"Author has not previously committed to the repository."
 	],
 	MEMBER: ["Member", "Author is a member of the organization that owns the repository."],
-	NONE: ["None", "Author has no association with the repository."],
+	// as per https://trello.com/c/P14tmDQQ/4528-dont-show-none-badge don't show "None"
+	// NONE: ["None", "Author has no association with the repository."],
 	OWNER: ["Owner", "Author is the owner of the repository."]
 };
 
@@ -168,15 +163,12 @@ export const PullRequestConversationTab = (props: {
 		};
 	});
 
-	const [text, setText] = useState("");
 	const [availableLabels, setAvailableLabels] = useState(EMPTY_ARRAY);
 	const [availableReviewers, setAvailableReviewers] = useState(EMPTY_ARRAY);
 	const [availableAssignees, setAvailableAssignees] = useState(EMPTY_ARRAY);
 	const [availableProjects, setAvailableProjects] = useState<[] | undefined>();
 	const [availableMilestones, setAvailableMilestones] = useState<[] | undefined>();
 	const [availableIssues, setAvailableIssues] = useState(EMPTY_ARRAY);
-	const [isLoadingComment, setIsLoadingComment] = useState(false);
-	const [isLoadingCommentAndClose, setIsLoadingCommentAndClose] = useState(false);
 	const [isLocking, setIsLocking] = useState(false);
 	const [isLockingReason, setIsLockingReason] = useState("");
 	const [isLoadingLocking, setIsLoadingLocking] = useState(false);
@@ -185,10 +177,10 @@ export const PullRequestConversationTab = (props: {
 	const [cloneURLType, setCloneURLType] = useState("https");
 	const [cloneURL, setCloneURL] = useState(`${pr.repository.url}.git`);
 
-	const __onDidRender = ({ insertTextAtCursor, insertNewlineAtCursor, focus }) => {
-		insertText = insertTextAtCursor;
-		insertNewline = insertNewlineAtCursor;
-		focusOnMessageInput = focus;
+	const __onDidRender = functions => {
+		insertText = functions.insertTextAtCursor;
+		insertNewline = functions.insertNewlineAtCursor;
+		focusOnMessageInput = functions.focus;
 	};
 
 	const quote = text => {
@@ -200,57 +192,17 @@ export const PullRequestConversationTab = (props: {
 			});
 	};
 
-	const onCommentClick = async (event?: React.SyntheticEvent) => {
-		setIsLoadingComment(true);
-		await HostApi.instance.send(
-			new ExecuteThirdPartyTypedType<CreatePullRequestCommentRequest, any>(),
-			{
-				method: "createPullRequestComment",
-				providerId: pr.providerId,
-				params: {
-					pullRequestId: derivedState.currentPullRequestId!,
-					text: text
-				}
+	const setIsDraftPullRequest = async (onOff: boolean) => {
+		setIsLoadingMessage("Updating...");
+		await HostApi.instance.send(new ExecuteThirdPartyTypedType<any, boolean>(), {
+			method: "setIsDraftPullRequest",
+			providerId: pr.providerId,
+			params: {
+				pullRequestId: derivedState.currentPullRequestId!,
+				onOff
 			}
-		);
-		setText("");
-		fetch().then(() => setIsLoadingComment(false));
-	};
-
-	const onCommentAndCloseClick = async e => {
-		setIsLoadingMessage("Closing...");
-		setIsLoadingCommentAndClose(true);
-		await HostApi.instance.send(
-			new ExecuteThirdPartyTypedType<CreatePullRequestCommentAndCloseRequest, any>(),
-			{
-				method: "createPullRequestCommentAndClose",
-				providerId: pr.providerId,
-				params: {
-					pullRequestId: derivedState.currentPullRequestId!,
-					text: text
-				}
-			}
-		);
-		setText("");
-		fetch().then(() => setIsLoadingCommentAndClose(false));
-	};
-
-	const onCommentAndReopenClick = async e => {
-		setIsLoadingMessage("Reopening...");
-		setIsLoadingCommentAndClose(true);
-		await HostApi.instance.send(
-			new ExecuteThirdPartyTypedType<CreatePullRequestCommentAndCloseRequest, any>(),
-			{
-				method: "createPullRequestCommentAndReopen",
-				providerId: pr.providerId,
-				params: {
-					pullRequestId: derivedState.currentPullRequestId!,
-					text: text
-				}
-			}
-		);
-		setText("");
-		fetch().then(() => setIsLoadingCommentAndClose(false));
+		});
+		fetch();
 	};
 
 	const mergePullRequest = async (options: { mergeMethod: MergeMethod }) => {
@@ -323,18 +275,39 @@ export const PullRequestConversationTab = (props: {
 	var reviewersHash: any = {};
 	// the list of reviewers isn't in a single spot...
 	// these are reviews that have been requested (though not started)
+
+	// these are in-progress reviews
+	if (pr.reviews && pr.reviews.nodes) {
+		// group by author
+		const gb = _groupBy(pr.reviews.nodes, _ => _.author.id);
+		// then convert to hash... key is the author,
+		// value is the last review
+		const map = _map(gb, (values, key) => {
+			const last = values.sort(
+				(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+			)[0] as any;
+			return {
+				key: key,
+				value: { ...last, ...last.author }
+			};
+		});
+		// reduce to create the correct object structure
+		reviewersHash = _reduce(
+			map,
+			function(obj, param) {
+				obj[param.key] = param.value;
+				return obj;
+			},
+			{}
+		);
+	}
+
 	pr.reviewRequests &&
 		pr.reviewRequests.nodes.reduce((map, obj) => {
 			map[obj.requestedReviewer.id] = {
 				...obj.requestedReviewer,
 				isPending: true
 			};
-			return map;
-		}, reviewersHash);
-	// these are in-progress reviews
-	pr.reviews &&
-		pr.reviews.nodes.reduce((map, obj) => {
-			map[obj.author.id] = { ...obj, ...obj.author };
 			return map;
 		}, reviewersHash);
 
@@ -385,6 +358,7 @@ export const PullRequestConversationTab = (props: {
 		// fetch();
 	};
 	const addReviewer = async id => {
+		setIsLoadingMessage("Requesting Review...");
 		await HostApi.instance.send(new ExecuteThirdPartyTypedType<any, any>(), {
 			method: "addReviewerToPullRequest",
 			providerId: pr.providerId,
@@ -771,12 +745,29 @@ export const PullRequestConversationTab = (props: {
 				)}
 
 				<PRComment>
-					{/* 
-<PRStatusIcon>
-	<Icon name={statusIcon}  />
-</PRStatusIcon>
-*/}
-					{!pr.merged && pr.mergeable === "MERGEABLE" && pr.state !== "CLOSED" && (
+					{pr.isDraft ? (
+						<PRCommentCard>
+							<PRStatusHeadshot className="gray-background">
+								<Icon name="git-merge" />
+							</PRStatusHeadshot>
+							<PRResolveConflictsRow>
+								<PRIconButton className="gray-background">
+									<Icon name="alert" />
+								</PRIconButton>
+								<div className="middle">
+									<h1>This pull request is still a work in progress</h1>
+									Draft pull requests cannot be merged
+								</div>
+								<Button
+									className="no-wrap"
+									variant="secondary"
+									onClick={() => setIsDraftPullRequest(true)}
+								>
+									Ready for review
+								</Button>
+							</PRResolveConflictsRow>
+						</PRCommentCard>
+					) : !pr.merged && pr.mergeable === "MERGEABLE" && pr.state !== "CLOSED" ? (
 						<PRCommentCard className="green-border dark-header">
 							<PRStatusHeadshot className="green-background">
 								<Icon name="git-merge" />
@@ -803,43 +794,6 @@ export const PullRequestConversationTab = (props: {
 							</PRCommentHeader>
 							<div style={{ padding: "5px 0" }}>
 								<PRButtonRow className="align-left">
-									{/*
-						<Tooltip
-							title={
-								<span>
-									All commits from this branch will be added to the base branch via
-									a merge commit.
-									{!ghRepo.mergeCommitAllowed && (
-										<>
-											<br />
-											<small>Not enabled for this repository</small>
-										</>
-									)}
-								</span>
-							}
-							placement="bottomRight"
-							delay={1}
-						>
-							<Button
-								disabled={!ghRepo.mergeCommitAllowed}
-								onClick={e => mergePullRequest({ mergeMethod: "MERGE" })}
-							>
-								Create a merge commit
-							</Button>
-						</Tooltip>
-						<Button
-							disabled={!ghRepo.squashMergeAllowed}
-							onClick={e => mergePullRequest({ mergeMethod: "SQUASH" })}
-						>
-							Squash and merge
-						</Button>
-						<Button
-							disabled={!ghRepo.rebaseMergeAllowed}
-							onClick={e => mergePullRequest({ mergeMethod: "REBASE" })}
-						>
-							Rebase and merge
-						</Button>
-						*/}
 									<DropdownButton
 										items={[
 											{
@@ -898,18 +852,17 @@ export const PullRequestConversationTab = (props: {
 								</PRButtonRow>
 							</div>
 						</PRCommentCard>
-					)}
-					{!pr.merged && pr.mergeable === "CONFLICTING" && (
+					) : !pr.merged && pr.mergeable === "CONFLICTING" ? (
 						<PRCommentCard>
 							<PRStatusHeadshot className="gray-background">
 								<Icon name="git-merge" />
 							</PRStatusHeadshot>
 							<div style={{ padding: "5px 0" }}>
-								<div style={{ display: "flex" }}>
+								<PRResolveConflictsRow>
 									<PRIconButton className="gray-background">
 										<Icon name="alert" />
 									</PRIconButton>
-									<div style={{ marginLeft: "10px", marginRight: "10px" }}>
+									<div className="middle">
 										<h1>This branch has conflicts that must be resolved</h1>
 									</div>
 									<Button
@@ -921,7 +874,7 @@ export const PullRequestConversationTab = (props: {
 									>
 										Resolve conflicts
 									</Button>
-								</div>
+								</PRResolveConflictsRow>
 								<div>
 									<p>
 										Use the <Link href={`${pr.url}/conflicts`}>web editor</Link> or the{" "}
@@ -984,7 +937,7 @@ export const PullRequestConversationTab = (props: {
 										<CopyableTerminal
 											code={
 												`git fetch origin\n` +
-												`git checkout -b ${pr.repository.name} origin/${pr.repository.name}\n` +
+												`git checkout -b ${pr.headRefName} origin/${pr.headRefName}\n` +
 												`git merge ${pr.baseRefName}`
 											}
 										/>
@@ -994,7 +947,7 @@ export const PullRequestConversationTab = (props: {
 										<CopyableTerminal
 											code={
 												`git checkout ${pr.baseRefName}\n` +
-												`git merge --no-ff ${pr.repository.name}\n` +
+												`git merge --no-ff ${pr.headRefName}\n` +
 												`git push origin ${pr.baseRefName}`
 											}
 										/>
@@ -1002,8 +955,7 @@ export const PullRequestConversationTab = (props: {
 								)}
 							</div>
 						</PRCommentCard>
-					)}
-					{!pr.merged && pr.mergeable !== "CONFLICTING" && pr.state === "CLOSED" && (
+					) : !pr.merged && pr.mergeable !== "CONFLICTING" && pr.state === "CLOSED" ? (
 						<PRCommentCard>
 							<PRStatusHeadshot className="gray-background">
 								<Icon name="git-merge" />
@@ -1014,9 +966,7 @@ export const PullRequestConversationTab = (props: {
 								has unmerged commits.
 							</div>
 						</PRCommentCard>
-					)}
-					{/* !pr.merged && pr.state === "CLOSED" && <div>Pull request is closed</div> */}
-					{pr.merged && (
+					) : pr.merged ? (
 						<PRCommentCard>
 							<PRStatusHeadshot className="pr-purple-background">
 								<Icon name="git-merge" />
@@ -1027,83 +977,14 @@ export const PullRequestConversationTab = (props: {
 								deleted.
 							</div>
 						</PRCommentCard>
-					)}
+					) : null}
 				</PRComment>
-				<PRComment>
-					<Headshot size={40} person={derivedState.currentUser}></Headshot>
-					<PRCommentCard className="add-comment">
-						<div style={{ margin: "5px 0 0 0", border: "1px solid var(--base-border-color)" }}>
-							<MessageInput
-								multiCompose
-								text={text}
-								placeholder="Add Comment..."
-								onChange={setText}
-								onSubmit={onCommentClick}
-								__onDidRender={__onDidRender}
-							/>
-						</div>
-						<ButtonRow>
-							{pr.state === "CLOSED" ? (
-								<div style={{ textAlign: "right", flexGrow: 1 }}>
-									<Button
-										disabled={pr.merged}
-										isLoading={isLoadingCommentAndClose}
-										onClick={onCommentAndReopenClick}
-										variant="secondary"
-									>
-										{text ? "Reopen and comment" : "Reopen pull request"}
-									</Button>
-
-									<Tooltip
-										title={
-											<span>
-												Submit Comment
-												<span className="keybinding extra-pad">
-													{navigator.appVersion.includes("Macintosh") ? "⌘" : "Alt"} ENTER
-												</span>
-											</span>
-										}
-										placement="bottomRight"
-										delay={1}
-									>
-										<Button isLoading={isLoadingComment} onClick={onCommentClick} disabled={!text}>
-											Comment
-										</Button>
-									</Tooltip>
-								</div>
-							) : (
-								<div style={{ textAlign: "right", flexGrow: 1 }}>
-									{!pr.merged && (
-										<Button
-											isLoading={isLoadingCommentAndClose}
-											onClick={onCommentAndCloseClick}
-											variant="secondary"
-										>
-											<Icon name="issue-closed" className="red-color margin-right" />
-											{text ? "Close and comment" : "Close pull request"}
-										</Button>
-									)}
-									<Tooltip
-										title={
-											<span>
-												Submit Comment
-												<span className="keybinding extra-pad">
-													{navigator.appVersion.includes("Macintosh") ? "⌘" : "Alt"} ENTER
-												</span>
-											</span>
-										}
-										placement="bottomRight"
-										delay={1}
-									>
-										<Button isLoading={isLoadingComment} onClick={onCommentClick} disabled={!text}>
-											Comment
-										</Button>
-									</Tooltip>
-								</div>
-							)}
-						</ButtonRow>
-					</PRCommentCard>
-				</PRComment>
+				<PullRequestBottomComment
+					pr={pr}
+					fetch={fetch}
+					setIsLoadingMessage={setIsLoadingMessage}
+					__onDidRender={__onDidRender}
+				/>
 			</div>
 			<PRSidebar>
 				<PRSection>
@@ -1114,6 +995,7 @@ export const PullRequestConversationTab = (props: {
 							onOpen={fetchAvailableReviewers}
 							title="Request up to 15 reviewers"
 							noChevronDown
+							noFocusOnSelect
 						>
 							<Icon name="gear" className="settings clickable" onClick={() => {}} />
 							Reviewers
@@ -1123,30 +1005,47 @@ export const PullRequestConversationTab = (props: {
 						? reviewers.map((_, index) => (
 								<PRReviewer key={index}>
 									<PRHeadshotName key={_.avatarUrl} person={_} size={20} />
-									{_.isPending && (
-										<Tooltip placement="top" content={"Awaiting requested review from " + _.login}>
-											<div className="status">
+									<div className="status">
+										{_.isPending && (
+											<Tooltip placement="top" title={"Awaiting requested review from " + _.login}>
 												<b className="pending" />
-											</div>
-										</Tooltip>
-									)}
-									{/*	{_.state === "APPROVED" && (
-										<>
-											<Tooltip placement="top" content={"Re-request review"}>
-												<div className="status">
-													<div className="status">
-														<b onClick={e => addReviewer(_.id)}>↺</b>
-													</div>
-												</div>
-									</Tooltip>
-											<Tooltip placement="top" content={_.login + " approved these changes"}>
-												<div className="status">
-													<b>✓</b>
-												</div>
 											</Tooltip>
-										</>
-									)}*/}
-									<br />
+										)}
+										{_.state === "CHANGES_REQUESTED" && (
+											<>
+												<Tooltip placement="top" title={"Re-request review"}>
+													<Icon name="refresh" onClick={e => addReviewer(_.id)} />
+												</Tooltip>
+												<Tooltip placement="top" title={_.login + " requested changes"}>
+													<Icon name="file-diff" className="rejected" />
+												</Tooltip>
+											</>
+										)}
+										{_.state === "COMMENTED" && (
+											<>
+												{_.login !== pr.viewer.login && (
+													<Tooltip placement="top" title={"Re-request review"}>
+														<Icon name="refresh" onClick={e => addReviewer(_.id)} />
+													</Tooltip>
+												)}
+												<Tooltip placement="top" title={_.login + " left review comments"}>
+													<Icon name="comment" />
+												</Tooltip>
+											</>
+										)}
+										{_.state === "APPROVED" && (
+											<>
+												{_.login !== pr.viewer.login && (
+													<Tooltip placement="top" title={"Re-request review"}>
+														<Icon name="refresh" onClick={e => addReviewer(_.id)} />
+													</Tooltip>
+												)}
+												<Tooltip placement="top" title={_.login + " approved these changes"}>
+													<Icon name="check" className="approved" />
+												</Tooltip>
+											</>
+										)}
+									</div>
 								</PRReviewer>
 						  ))
 						: "No reviewers"}
@@ -1159,6 +1058,7 @@ export const PullRequestConversationTab = (props: {
 							onOpen={fetchAvailableAssignees}
 							title="Assign up to 10 people to this pull request"
 							noChevronDown
+							noFocusOnSelect
 						>
 							<Icon name="gear" className="settings clickable" onClick={() => {}} />
 							Assignees
@@ -1186,6 +1086,7 @@ export const PullRequestConversationTab = (props: {
 							onOpen={fetchAvailableLabels}
 							title="Apply labels to this pull request"
 							noChevronDown
+							noFocusOnSelect
 						>
 							<Icon name="gear" className="settings clickable" />
 							Labels
@@ -1205,6 +1106,7 @@ export const PullRequestConversationTab = (props: {
 							onOpen={fetchAvailableProjects}
 							title="Projects"
 							noChevronDown
+							noFocusOnSelect
 						>
 							<Icon name="gear" className="settings clickable" onClick={() => {}} />
 							Projects
@@ -1226,6 +1128,7 @@ export const PullRequestConversationTab = (props: {
 							onOpen={fetchAvailableMilestones}
 							title="Set milestone"
 							noChevronDown
+							noFocusOnSelect
 						>
 							<Icon name="gear" className="settings clickable" onClick={() => {}} />
 							Milestone
@@ -1242,6 +1145,7 @@ export const PullRequestConversationTab = (props: {
 							onOpen={fetchAvailableIssues}
 							title="Link an issue from this repository"
 							noChevronDown
+							noFocusOnSelect
 						>
 							<Icon name="gear" className="settings clickable" onClick={() => {}} />
 							Linked Issues
@@ -1259,11 +1163,11 @@ export const PullRequestConversationTab = (props: {
 					</h1>
 					{pr.viewerSubscription === "SUBSCRIBED" ? (
 						<>
-							<Button variant="secondary" onClick={toggleSubscription}>
+							<Button variant="secondary" className="no-wrap" onClick={toggleSubscription}>
 								<Icon name="mute" /> <span className="wide-text">Unsubscribe</span>
 							</Button>
 							<span className="wide-text">
-								You’re receiving notifications because you’re subscribed to this pull request.
+								You’re receiving notifications because you’re watching this repository.
 							</span>
 						</>
 					) : (
@@ -1279,10 +1183,12 @@ export const PullRequestConversationTab = (props: {
 				</PRSection>
 				<PRSection>
 					<h1>{participantsLabel}</h1>
-					{pr.participants &&
-						pr.participants.nodes.map((_: any) => (
-							<PRHeadshot display="inline-block" key={_.avatarUrl} person={_} size={20} />
-						))}
+					<PRHeadshots>
+						{pr.participants &&
+							pr.participants.nodes.map((_: any) => (
+								<PRHeadshot display="inline-block" key={_.avatarUrl} person={_} size={20} />
+							))}
+					</PRHeadshots>
 				</PRSection>
 				<PRSection style={{ borderBottom: "none" }}>
 					{pr.viewerCanUpdate && (

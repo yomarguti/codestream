@@ -366,6 +366,7 @@ export interface FetchThirdPartyPullRequestPullRequest {
 		url: string;
 	};
 	locked: any;
+	activeLockReason: "OFF_TOPIC" | "SPAM" | "TOO_HEATED" | "RESOLVED";
 	body: string;
 	bodyHTML: string;
 	baseRefName: string;
@@ -420,6 +421,7 @@ export interface FetchThirdPartyPullRequestPullRequest {
 	};
 	number: number;
 	state: string;
+	isDraft: boolean;
 	reviewRequests: {
 		nodes: {
 			requestedReviewer: {
@@ -428,6 +430,9 @@ export interface FetchThirdPartyPullRequestPullRequest {
 				avatarUrl: string;
 			};
 		}[];
+	};
+	reviewThreads: {
+		edges: any[];
 	};
 	projectCards: {
 		nodes: {
@@ -440,6 +445,7 @@ export interface FetchThirdPartyPullRequestPullRequest {
 	reviews: {
 		nodes: {
 			id: string;
+			createdAt: string;
 			author: {
 				id: string;
 				login: string;
@@ -533,6 +539,10 @@ export interface FetchThirdPartyPullRequestResponse {
 		resetAt: any;
 	};
 	repository: FetchThirdPartyPullRequestRepository;
+	viewer: {
+		id: string;
+		login: string;
+	};
 }
 
 export const FetchThirdPartyPullRequestRequestType = new RequestType<

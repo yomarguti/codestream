@@ -16,11 +16,10 @@ import { useDidMount } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import {
 	FetchThirdPartyPullRequestPullRequest,
-	FetchThirdPartyPullRequestRequestType,
-	FetchThirdPartyPullRequestResponse,
 	GetReposScmRequestType,
 	ReposScm,
-	ExecuteThirdPartyTypedType
+	ExecuteThirdPartyTypedType,
+	SwitchBranchRequestType
 } from "@codestream/protocols/agent";
 import {
 	PRHeader,
@@ -51,6 +50,11 @@ import MessageInput from "./MessageInput";
 import { RadioGroup, Radio } from "../src/components/RadioGroup";
 import Tooltip from "./Tooltip";
 import { PullRequestFinishReview } from "./PullRequestFinishReview";
+import {
+	getPullRequestConversationsFromProvider,
+	clearPullRequestFiles,
+	getPullRequestConversations
+} from "../store/providerPullRequests/actions";
 
 export const WidthBreakpoint = "630px";
 
@@ -104,12 +108,15 @@ export const PullRequest = () => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const team = state.teams[state.context.currentTeamId];
 		return {
+			providerPullRequests: state.providerPullRequests.pullRequests,
 			reviewsState: state.reviews,
 			reviews: reviewSelectors.getAllReviews(state),
 			currentUser,
 			currentPullRequestId: state.context.currentPullRequestId,
 			composeCodemarkActive: state.context.composeCodemarkActive,
-			team
+			team,
+			textEditorUri: state.editorContext.textEditorUri,
+			reposState: state.repos
 		};
 	});
 
@@ -129,24 +136,90 @@ export const PullRequest = () => {
 		await dispatch(setCurrentPullRequest());
 	};
 
-	const fetch = async (message?: string) => {
-		if (message) setIsLoadingMessage(message);
-		setIsLoadingPR(true);
-		const r = (await HostApi.instance.send(FetchThirdPartyPullRequestRequestType, {
-			providerId: "github*com",
-			pullRequestId: derivedState.currentPullRequestId!
-		})) as FetchThirdPartyPullRequestResponse;
-		setGhRepo(r.repository);
-		setPr(r.repository.pullRequest);
-		setTitle(r.repository.pullRequest.title);
+	const _assignState = pr => {
+		if (!pr) return;
+		setGhRepo(pr.repository);
+		setPr(pr.repository.pullRequest);
+		setTitle(pr.repository.pullRequest.title);
 		setEditingTitle(false);
 		setSavingTitle(false);
 		setIsLoadingPR(false);
 		setIsLoadingMessage("");
 	};
 
+	// FIXME this shouldn't be hard-coded
+	const providerId = "github*com";
+
+	useEffect(() => {
+		const providerPullRequests = derivedState.providerPullRequests[providerId];
+		if (providerPullRequests) {
+			let data = providerPullRequests[derivedState.currentPullRequestId!];
+			if (data) {
+				_assignState(data.conversations);
+			}
+		}
+	}, [derivedState.providerPullRequests]);
+
+	const initialFetch = async (message?: string) => {
+		if (message) setIsLoadingMessage(message);
+		setIsLoadingPR(true);
+
+		const response = (await dispatch(
+			getPullRequestConversations(providerId, derivedState.currentPullRequestId!)
+		)) as any;
+		_assignState(response);
+		if (response) {
+			HostApi.instance.track("PR Clicked", {
+				Host: response.providerId
+			});
+		}
+	};
+
+	/**
+	 * Called after an action that requires us to re-fetch from the provider
+	 * @param message
+	 */
+	const fetch = async (message?: string) => {
+		if (message) setIsLoadingMessage(message);
+		setIsLoadingPR(true);
+
+		const response = (await dispatch(
+			getPullRequestConversationsFromProvider(pr!.providerId, derivedState.currentPullRequestId!)
+		)) as any;
+		_assignState(response);
+	};
+
+	/**
+	 * This is called when a user clicks the "reload" button.
+	 * with a "hard-reload" we need to refresh the conversation and file data
+	 * @param message
+	 */
+	const reload = async (message?: string) => {
+		if (message) setIsLoadingMessage(message);
+		setIsLoadingPR(true);
+		const response = (await dispatch(
+			getPullRequestConversationsFromProvider(pr!.providerId, derivedState.currentPullRequestId!)
+		)) as any;
+		_assignState(response);
+
+		// just clear the files data -- it will be fetched if necessary (since it has its own api call)
+		dispatch(clearPullRequestFiles(providerId, derivedState.currentPullRequestId!));
+	};
+
 	const checkout = async () => {
-		//
+		if (!pr) return;
+		const currentRepo = Object.values(derivedState.reposState).find(
+			_ => _.name === pr.repository.name
+		);
+		const result = await HostApi.instance.send(SwitchBranchRequestType, {
+			branch: pr!.headRefName,
+			repoId: currentRepo ? currentRepo.id : ""
+		});
+		if (result.error) {
+			console.warn("ERROR FROM SET BRANCH: ", result.error);
+			return;
+		}
+		fetch("Reloading...");
 	};
 
 	const saveTitle = async () => {
@@ -194,11 +267,33 @@ export const PullRequest = () => {
 		};
 	}, [derivedState.reviews]);
 
+	const numComments = React.useMemo(() => {
+		if (!pr || !pr.timelineItems || !pr.timelineItems.nodes) return 0;
+		const reducer = (accumulator, node) => {
+			let count = 0;
+			if (!node || !node.__typename) return accumulator;
+			const typename = node.__typename;
+			if (typename && typename.indexOf("Comment") > -1) count = 1;
+			if (typename === "PullRequestReview") {
+				// pullrequestreview can have a top-level comment,
+				// and multiple comment threads.
+				if (node.body) count++; // top-level comment (optional)
+				count += node.comments.nodes.length; // threads
+				node.comments.nodes.forEach(c => {
+					// each thread can have replies
+					if (c.replies) count += c.replies.length;
+				});
+			}
+			return count + accumulator;
+		};
+		return pr.timelineItems.nodes.reduce(reducer, 0);
+	}, [pr]);
+
 	useDidMount(() => {
 		if (!derivedState.reviewsState.bootstrapped) {
 			dispatch(bootstrapReviews());
 		}
-		fetch();
+		initialFetch();
 	});
 
 	console.warn("PR: ", pr);
@@ -256,7 +351,9 @@ export const PullRequest = () => {
 					<PRStatus>
 						<PRStatusButton
 							variant={
-								pr.state === "OPEN"
+								pr.isDraft
+									? "neutral"
+									: pr.state === "OPEN"
 									? "success"
 									: pr.state === "MERGED"
 									? "merged"
@@ -266,7 +363,7 @@ export const PullRequest = () => {
 							}
 						>
 							<Icon name={statusIcon} />
-							{pr.state && pr.state.toLowerCase()}
+							{pr.isDraft ? "Draft" : pr.state ? pr.state.toLowerCase() : ""}
 						</PRStatusButton>
 						<PRStatusMessage>
 							<PRAuthor>{pr.author.login}</PRAuthor>
@@ -343,7 +440,7 @@ export const PullRequest = () => {
 										title="Reload"
 										trigger={["hover"]}
 										delay={1}
-										onClick={() => fetch("Reloading...")}
+										onClick={() => reload("Reloading...")}
 										placement="bottom"
 										className={`${isLoadingPR ? "spin" : ""}`}
 										name="refresh"
@@ -363,13 +460,7 @@ export const PullRequest = () => {
 								<Tab onClick={e => setActiveTab(1)} active={activeTab == 1}>
 									<Icon name="comment" />
 									<span className="wide-text">Conversation</span>
-									<PRBadge>
-										{pr.timelineItems && pr.timelineItems.nodes
-											? pr.timelineItems.nodes.filter(
-													_ => _.__typename && _.__typename.indexOf("Comment") > -1
-											  ).length
-											: 0}
-									</PRBadge>
+									<PRBadge>{numComments}</PRBadge>
 								</Tab>
 								<Tab onClick={e => setActiveTab(2)} active={activeTab == 2}>
 									<Icon name="git-commit" />

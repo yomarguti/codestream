@@ -232,6 +232,8 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				},
 				{ label: "-" },
 				{ label: "Delete Team", action: deleteTeam }
+				// { label: "-" },
+				// { label: "Export Data", action: () => go(WebviewPanels.Export) }
 			];
 			return {
 				label: "Team Admin",

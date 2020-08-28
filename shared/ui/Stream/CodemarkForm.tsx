@@ -152,6 +152,7 @@ interface ConnectedProps {
 	inviteUsersOnTheFly: boolean;
 	currentPullRequestId?: string;
 	textEditorUriContext: any;
+	textEditorUriHasPullRequestContext: boolean;
 }
 
 interface State {
@@ -700,6 +701,21 @@ class CodemarkForm extends React.Component<Props, State> {
 			this.setState({ isLoading: true });
 		}
 
+		if (this.props.currentPullRequestId) {
+			const { textEditorUriContext } = this.props;
+			const providerId =
+				textEditorUriContext &&
+				textEditorUriContext.context &&
+				textEditorUriContext.context.pullRequest
+					? textEditorUriContext.context.pullRequest.providerId
+					: "";
+			HostApi.instance.track("PR Comment Added", {
+				Host: providerId,
+				"Comment Type": "Review Comment",
+				"Started Review": this.state.isProviderReview
+			});
+		}
+
 		let parentPostId: string | undefined = undefined;
 		// all codemarks created while in a review are attached to that review
 		if (this.props.currentReviewId) {
@@ -859,7 +875,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			}
 		}
 
-		if (this.props.currentPullRequestId) {
+		if (this.props.textEditorUriHasPullRequestContext) {
 			// do something cool?
 		} else if (
 			!this.props.isEditing &&
@@ -2004,7 +2020,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		const hasError = this.props.error != null && this.props.error !== "";
 
-		const hasPullRequestReview = !!(
+		const hasExistingPullRequestReview = !!(
 			this.state.codeBlocks &&
 			this.state.codeBlocks.length &&
 			this.state.codeBlocks[0].context &&
@@ -2179,7 +2195,7 @@ class CodemarkForm extends React.Component<Props, State> {
 										paddingRight: "10px",
 										// fixed width to handle the isLoading case
 										width:
-											this.props.currentReviewId || this.props.currentPullRequestId
+											this.props.currentReviewId || this.props.textEditorUriHasPullRequestContext
 												? "auto"
 												: "80px",
 										marginRight: 0
@@ -2192,7 +2208,7 @@ class CodemarkForm extends React.Component<Props, State> {
 											? this.copyPermalink
 											: this.handleClickSubmit
 									}
-									disabled={hasError || !!hasPullRequestReview}
+									disabled={hasError || !!hasExistingPullRequestReview}
 								>
 									{commentType === "link"
 										? this.state.copied
@@ -2204,12 +2220,12 @@ class CodemarkForm extends React.Component<Props, State> {
 										? "Add Comment & Request Change"
 										: this.props.currentReviewId
 										? "Add Comment to Review"
-										: this.props.currentPullRequestId
+										: this.props.textEditorUriHasPullRequestContext
 										? "Add single comment"
 										: "Submit"}
 								</Button>
 							</Tooltip>
-							{this.props.currentPullRequestId && (
+							{this.props.textEditorUriHasPullRequestContext && (
 								<Button
 									key="submit-review"
 									loading={this.state.isReviewLoading}
@@ -2223,14 +2239,14 @@ class CodemarkForm extends React.Component<Props, State> {
 										paddingLeft: "10px",
 										paddingRight: "10px",
 										// fixed width to handle the isReviewLoading case
-										width: this.props.currentPullRequestId ? "auto" : "80px",
+										width: "auto",
 										marginRight: 0
 									}}
 									className="control-button"
 									type="submit"
 								>
-									{hasPullRequestReview && <>Add to review</>}
-									{!hasPullRequestReview && <>Start a review</>}
+									{hasExistingPullRequestReview && <>Add to review</>}
+									{!hasExistingPullRequestReview && <>Start a review</>}
 								</Button>
 							)}
 							{/*
@@ -2305,6 +2321,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 	const blameMap = team.settings ? team.settings.blameMap : {};
 	const inviteUsersOnTheFly =
 		isFeatureEnabled(state, "emailSupport") && isFeatureEnabled(state, "inviteUsersOnTheFly");
+	const textEditorUriContext = parseCodeStreamDiffUri(editorContext.textEditorUri!);
 
 	return {
 		channel,
@@ -2329,7 +2346,13 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		showChannels: context.channelFilter,
 		textEditorUri: editorContext.textEditorUri,
 		textEditorSelection: getCurrentSelection(editorContext),
-		textEditorUriContext: parseCodeStreamDiffUri(editorContext.textEditorUri!),
+		textEditorUriContext: textEditorUriContext,
+		textEditorUriHasPullRequestContext: !!(
+			textEditorUriContext &&
+			textEditorUriContext.context &&
+			textEditorUriContext.context.pullRequest &&
+			textEditorUriContext.context.pullRequest.id
+		),
 		teamTagsArray,
 		codemarkState: codemarks,
 		multipleMarkersEnabled: isFeatureEnabled(state, "multipleMarkers"),
