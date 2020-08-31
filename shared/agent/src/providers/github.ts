@@ -2734,9 +2734,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				pullRequestNumber
 			}
 		);
-		return {
-			commits: query.repository.pullRequest.commits.nodes.map((_: any) => _.commit)
-		};
+		return query.repository.pullRequest.commits.nodes.map((_: any) => _.commit);
 	}
 
 	async prQuery(

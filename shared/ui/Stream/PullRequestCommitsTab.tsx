@@ -111,8 +111,7 @@ export const PullRequestCommitsTab = props => {
 	const [commits, setCommits] = useState<any>({});
 
 	const _mapData = data => {
-		// const commitsByDay = groupBy(data.repository.pullRequest.commits.nodes, _ => {
-		const commitsByDay = groupBy(data.commits, _ => {
+		const commitsByDay = groupBy(data, _ => {
 			return new Intl.DateTimeFormat("en", {
 				day: "numeric",
 				month: "short",

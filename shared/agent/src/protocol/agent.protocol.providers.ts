@@ -548,30 +548,28 @@ export interface FetchThirdPartyPullRequestCommitsRequest {
 }
 
 export interface FetchThirdPartyPullRequestCommitsResponse {
-	commits: {
-		abbreviatedOid: string;
-		author: {
-			name: string;
-			avatarUrl: string;
-			user: {
-				login: string;
-			};
+	abbreviatedOid: string;
+	author: {
+		name: string;
+		avatarUrl: string;
+		user: {
+			login: string;
 		};
-		committer: {
-			avatarUrl: string;
-			name: string;
-			user: {
-				login: string;
-			};
+	};
+	committer: {
+		avatarUrl: string;
+		name: string;
+		user: {
+			login: string;
 		};
-		message: string;
-		authoredDate: string;
-	}[];
+	};
+	message: string;
+	authoredDate: string;
 }
 
 export const FetchThirdPartyPullRequestCommitsType = new RequestType<
 	FetchThirdPartyPullRequestCommitsRequest,
-	FetchThirdPartyPullRequestCommitsResponse,
+	FetchThirdPartyPullRequestCommitsResponse[],
 	void,
 	void
 >("codestream/provider/pullrequestcommits");

@@ -206,7 +206,7 @@ export const getPullRequestCommits = (providerId: string, id: string) => async (
 		const provider = state.providerPullRequests.pullRequests[providerId];
 		if (provider) {
 			const pr = provider[id];
-			if (pr && pr.commits && pr.commits) {
+			if (pr && pr.commits && pr.commits.length) {
 				console.log(`fetched pullRequest commits from store providerId=${providerId} id=${id}`);
 				return pr.commits;
 			}
