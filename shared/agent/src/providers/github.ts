@@ -21,6 +21,8 @@ import {
 	FetchThirdPartyCardsResponse,
 	FetchThirdPartyCardWorkflowRequest,
 	FetchThirdPartyCardWorkflowResponse,
+	FetchThirdPartyPullRequestCommitsRequest,
+	FetchThirdPartyPullRequestCommitsResponse,
 	FetchThirdPartyPullRequestFilesResponse,
 	FetchThirdPartyPullRequestRequest,
 	FetchThirdPartyPullRequestResponse,
@@ -2462,27 +2464,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					  }
 					commits(first: 100) {
 						totalCount
-						nodes {
-						  commit {
-							abbreviatedOid
-							author {
-							  avatarUrl(size: 20)
-							  name
-							  user {
-							    login
-							  }
-							}
-							committer {
-							  avatarUrl(size: 20)
-							  name
-							  user {
-							    login
-							  }
-							}
-							message
-							authoredDate
-						  }
-						}
 					  }
 					headRefName
 					headRefOid
@@ -2695,6 +2676,67 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 			throw ex;
 		}
+	}
+
+	async getPullRequestCommits(
+		request: FetchThirdPartyPullRequestCommitsRequest
+	): Promise<FetchThirdPartyPullRequestCommitsResponse> {
+		const data = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
+		const pullRequestNumber = await this.getPullRequestNumber(request.pullRequestId);
+
+		const query = await this.client.request<any>(
+			`query pr($owner: String!, $name: String!, $pullRequestNumber: Int!) {
+				  rateLimit {
+					limit
+					cost
+					remaining
+					resetAt
+				  }
+				  repository(name: $name, owner: $owner) {
+					id
+					pullRequest(number: $pullRequestNumber) {
+					  id
+					  repository {
+						name
+						nameWithOwner
+						url
+					  }
+					  commits(first: 250) {
+						totalCount
+						nodes {
+						  commit {
+							abbreviatedOid
+							author {
+							  avatarUrl(size: 20)
+							  name
+							  user {
+								login
+							  }
+							}
+							committer {
+							  avatarUrl(size: 20)
+							  name
+							  user {
+								login
+							  }
+							}
+							message
+							authoredDate
+						  }
+						}
+					  }
+					}
+				  }
+				}`,
+			{
+				owner: data.owner,
+				name: data.name,
+				pullRequestNumber
+			}
+		);
+		return {
+			commits: query.repository.pullRequest.commits.nodes.map((_: any) => _.commit)
+		};
 	}
 
 	async prQuery(

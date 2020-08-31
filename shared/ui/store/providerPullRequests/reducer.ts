@@ -71,11 +71,11 @@ export function reduceProviderPullRequests(
 				pullRequests: newState
 			};
 		}
-		case ProviderPullRequestActionsTypes.AddPullRequestFiles: {
+		case ProviderPullRequestActionsTypes.AddPullRequestCommits: {
 			const newState = createNewObject(state, action);
 			newState[action.payload.providerId][action.payload.id] = {
 				...newState[action.payload.providerId][action.payload.id],
-				files: action.payload.pullRequestFiles
+				commits: action.payload.pullRequestCommits
 			};
 			return {
 				myPullRequests: { ...state.myPullRequests },
