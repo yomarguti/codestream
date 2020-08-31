@@ -53,6 +53,8 @@ import { setUserPreference } from "./actions";
 import copy from "copy-to-clipboard";
 import { PullRequestBottomComment } from "./PullRequestBottomComment";
 import { reduce as _reduce, groupBy as _groupBy, map as _map } from "lodash-es";
+import { removeFromMyPullRequests } from "../store/providerPullRequests/actions";
+import { PullRequestReviewStatus } from "./PullRequestReviewStatus";
 
 const Circle = styled.div`
 	width: 12px;
@@ -219,7 +221,9 @@ export const PullRequestConversationTab = (props: {
 				}
 			}
 		);
-		fetch();
+		fetch().then(_ => {
+			dispatch(removeFromMyPullRequests(pr.providerId, derivedState.currentPullRequestId!));
+		});
 	};
 
 	const lockPullRequest = async () => {
@@ -272,17 +276,30 @@ export const PullRequestConversationTab = (props: {
 	const numParticpants = ((pr.participants && pr.participants.nodes) || []).length;
 	const participantsLabel = `${numParticpants} Participant${numParticpants == 1 ? "" : "s"}`;
 
-	var reviewersHash: any = {};
+	var finishedReviewsHash: any = {};
 	// the list of reviewers isn't in a single spot...
-	// these are reviews that have been requested (though not started)
 
-	// these are in-progress reviews
+	// these are completed reviews
 	if (pr.reviews && pr.reviews.nodes) {
 		// group by author
 		const gb = _groupBy(pr.reviews.nodes, _ => _.author.id);
 		// then convert to hash... key is the author,
 		// value is the last review
 		const map = _map(gb, (values, key) => {
+			const requestedChanges = values.find(review => review.state === "CHANGES_REQUESTED");
+			if (requestedChanges) {
+				return {
+					key: key,
+					value: { ...requestedChanges, ...requestedChanges.author }
+				};
+			}
+			const approval = values.find(review => review.state === "APPROVED");
+			if (approval) {
+				return {
+					key: key,
+					value: { ...approval, ...approval.author }
+				};
+			}
 			const last = values.sort(
 				(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
 			)[0] as any;
@@ -292,7 +309,7 @@ export const PullRequestConversationTab = (props: {
 			};
 		});
 		// reduce to create the correct object structure
-		reviewersHash = _reduce(
+		finishedReviewsHash = _reduce(
 			map,
 			function(obj, param) {
 				obj[param.key] = param.value;
@@ -302,6 +319,9 @@ export const PullRequestConversationTab = (props: {
 		);
 	}
 
+	const finishedReviews = Object.values(finishedReviewsHash);
+
+	// these are reviews that have been requested (though not started)
 	pr.reviewRequests &&
 		pr.reviewRequests.nodes.reduce((map, obj) => {
 			map[obj.requestedReviewer.id] = {
@@ -309,10 +329,10 @@ export const PullRequestConversationTab = (props: {
 				isPending: true
 			};
 			return map;
-		}, reviewersHash);
+		}, finishedReviewsHash);
 
-	const reviewers = Object.keys(reviewersHash).map(key => {
-		const val = reviewersHash[key];
+	const reviewers = Object.keys(finishedReviewsHash).map(key => {
+		const val = finishedReviewsHash[key];
 		return { ...val, id: key };
 	}) as { id: string; login: string; avatarUrl: string; isPending: boolean; state: string }[];
 
@@ -337,7 +357,14 @@ export const PullRequestConversationTab = (props: {
 				subtle: _.name,
 				searchLabel: `${_.login}:${_.name}`,
 				key: _.id,
-				action: () => (_.isPending ? removeReviewer(_.id) : addReviewer(_.id))
+				action: () => {
+					const reviewer = (reviewers || []).find(r => r.id === _.id);
+					if (reviewer && reviewer.isPending) {
+						removeReviewer(_.id);
+					} else {
+						addReviewer(_.id);
+					}
+				}
 			})) as any;
 			menuItems.unshift({ type: "search", placeholder: "Type or choose a name" });
 			return menuItems;
@@ -347,15 +374,16 @@ export const PullRequestConversationTab = (props: {
 	}, [availableReviewers, pr]);
 
 	const removeReviewer = async id => {
-		// await HostApi.instance.send(new ExecuteThirdPartyTypedType<any, any>(), {
-		// 	method: "removeReviewerFromPullRequest",
-		// 	providerId: pr.providerId,
-		// 	params: {
-		// 		pullRequestId: pr.id,
-		// 		userId: id
-		// 	}
-		// });
-		// fetch();
+		setIsLoadingMessage("Removing Reviewer...");
+		await HostApi.instance.send(new ExecuteThirdPartyTypedType<any, any>(), {
+			method: "removeReviewerFromPullRequest",
+			providerId: pr.providerId,
+			params: {
+				pullRequestId: pr.id,
+				userId: id
+			}
+		});
+		fetch();
 	};
 	const addReviewer = async id => {
 		setIsLoadingMessage("Requesting Review...");
@@ -750,6 +778,7 @@ export const PullRequestConversationTab = (props: {
 							<PRStatusHeadshot className="gray-background">
 								<Icon name="git-merge" />
 							</PRStatusHeadshot>
+							<PullRequestReviewStatus pr={pr} finishedReviews={finishedReviews} />
 							<PRResolveConflictsRow>
 								<PRIconButton className="gray-background">
 									<Icon name="alert" />
@@ -772,6 +801,7 @@ export const PullRequestConversationTab = (props: {
 							<PRStatusHeadshot className="green-background">
 								<Icon name="git-merge" />
 							</PRStatusHeadshot>
+							<PullRequestReviewStatus pr={pr} finishedReviews={finishedReviews} />
 							<PRCommentHeader>
 								<div style={{ display: "flex", marginTop: "10px" }}>
 									<PRIconButton className="green-background">
@@ -852,11 +882,12 @@ export const PullRequestConversationTab = (props: {
 								</PRButtonRow>
 							</div>
 						</PRCommentCard>
-					) : !pr.merged && pr.mergeable === "CONFLICTING" ? (
+					) : !pr.merged && (pr.mergeable === "CONFLICTING" || pr.mergeable === "UNKNOWN") ? (
 						<PRCommentCard>
 							<PRStatusHeadshot className="gray-background">
 								<Icon name="git-merge" />
 							</PRStatusHeadshot>
+							<PullRequestReviewStatus pr={pr} finishedReviews={finishedReviews} />
 							<div style={{ padding: "5px 0" }}>
 								<PRResolveConflictsRow>
 									<PRIconButton className="gray-background">
@@ -864,6 +895,10 @@ export const PullRequestConversationTab = (props: {
 									</PRIconButton>
 									<div className="middle">
 										<h1>This branch has conflicts that must be resolved</h1>
+										<p>
+											Use the <Link href={`${pr.url}/conflicts`}>web editor</Link> or the{" "}
+											<Link onClick={toggleClInstructions}>command line</Link> to resolve conflicts.
+										</p>
 									</div>
 									<Button
 										className="no-wrap"
@@ -875,12 +910,6 @@ export const PullRequestConversationTab = (props: {
 										Resolve conflicts
 									</Button>
 								</PRResolveConflictsRow>
-								<div>
-									<p>
-										Use the <Link href={`${pr.url}/conflicts`}>web editor</Link> or the{" "}
-										<Link onClick={toggleClInstructions}>command line</Link> to resolve conflicts.
-									</p>
-								</div>
 								{clInstructionsIsOpen && (
 									<div>
 										<hr />
@@ -921,7 +950,7 @@ export const PullRequestConversationTab = (props: {
 												</Button>
 											</PRCloneURLButtons>
 											<PRCloneURL>
-												<div className="clone-url">{cloneURL}</div>
+												<input type="text" value={cloneURL} disabled={true} />
 												<Icon
 													title="Copy"
 													placement="bottom"

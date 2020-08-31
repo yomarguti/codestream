@@ -12,6 +12,7 @@ export interface ThirdPartyProviderConfig {
 	apiHost?: string;
 	isEnterprise?: boolean;
 	forEnterprise?: boolean;
+	hasCodeHosting?: boolean;
 	hasIssues?: boolean;
 	hasSharing?: boolean;
 	supportsAuth?: boolean;
@@ -446,6 +447,7 @@ export interface FetchThirdPartyPullRequestPullRequest {
 		nodes: {
 			id: string;
 			createdAt: string;
+			state: string;
 			author: {
 				id: string;
 				login: string;
@@ -515,6 +517,7 @@ export interface FetchThirdPartyPullRequestPullRequest {
 	viewer: {
 		id: string;
 		login: string;
+		avatarUrl: string;
 	};
 }
 
@@ -542,6 +545,7 @@ export interface FetchThirdPartyPullRequestResponse {
 	viewer: {
 		id: string;
 		login: string;
+		avatarUrl: string;
 	};
 }
 
@@ -594,6 +598,12 @@ export interface GetMyPullRequestsResponse {
 	url: string;
 	title: string;
 	createdAt: number;
+	baseRefName: string;
+	headRefName: string;
+	headRepository: {
+		name: string;
+		nameWithOwner: string;
+	};
 	author: {
 		login: string;
 		avatarUrl: string;
@@ -601,6 +611,7 @@ export interface GetMyPullRequestsResponse {
 	bodyText: string;
 	number: number;
 	state: string;
+	isDraft: boolean;
 	updatedAt: string;
 	lastEditedAt: string;
 }

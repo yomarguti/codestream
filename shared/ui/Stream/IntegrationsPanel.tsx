@@ -50,13 +50,14 @@ const ProviderDropdown = styled(DropdownButton)`
 `;
 
 const IntegrationGroups = styled.div`
-	padding: 0 10px 20px 20px;
 	.title {
 		top: -16px !important;
 	}
 	h2 {
 		margin-top: 0;
 		font-size: 16px !important;
+		font-weight: 400;
+		padding-left: 20px;
 	}
 `;
 
@@ -65,7 +66,10 @@ export const IntegrationButtons = styled.div`
 	grid-template-columns: repeat(auto-fill, minmax(13em, 1fr));
 	column-gap: 15px;
 	row-gap: 10px;
-	margin-bottom: 40px;
+	margin-bottom: 15px;
+	padding: 0 20px 20px 20px;
+	border-bottom: 1px solid var(--base-border-color);
+	align-items: start;
 `;
 
 export const IntegrationsPanel = () => {
@@ -79,9 +83,14 @@ export const IntegrationsPanel = () => {
 		const connectedProviders = Object.keys(providers).filter(id => isConnected(state, { id }));
 		const codeHostProviders = Object.keys(providers)
 			.filter(id =>
-				["github", "github_enterprise", "bitbucket", "bitbucket_server", "gitlab", "gitlab_enterprise"].includes(
-					providers[id].name
-				)
+				[
+					"github",
+					"github_enterprise",
+					"bitbucket",
+					"bitbucket_server",
+					"gitlab",
+					"gitlab_enterprise"
+				].includes(providers[id].name)
 			)
 			.filter(id => !connectedProviders.includes(id));
 		const issueProviders = Object.keys(providers)
@@ -135,7 +144,7 @@ export const IntegrationsPanel = () => {
 						}
 					];
 					return (
-						<ProviderDropdown key={providerId} items={items}>
+						<ProviderDropdown key={providerId} items={items} variant="success">
 							{display.icon && <Icon name={display.icon} />}
 							{shareTarget.teamName}
 						</ProviderDropdown>
@@ -160,7 +169,7 @@ export const IntegrationsPanel = () => {
 				});
 			}
 			return (
-				<ProviderDropdown key={providerId} items={items}>
+				<ProviderDropdown key={providerId} items={items} variant="success">
 					{display.icon && <Icon name={display.icon} />}
 					{displayName}
 				</ProviderDropdown>
@@ -252,6 +261,7 @@ export const IntegrationsPanel = () => {
 					<Provider
 						key={providerId}
 						onClick={() => dispatch(connectProvider(providerId, "Integrations Panel"))}
+						variant="success"
 					>
 						{display.icon && <Icon name={display.icon} />}
 						{display.displayName}

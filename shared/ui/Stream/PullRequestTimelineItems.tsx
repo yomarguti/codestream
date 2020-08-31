@@ -39,7 +39,6 @@ import { useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
 import { CSMe } from "@codestream/protocols/api";
 import { SmartFormattedList } from "./SmartFormattedList";
-import { confirmPopup } from "./Confirm";
 import { PullRequestCommentMenu } from "./PullRequestCommentMenu";
 import { PullRequestMinimizedComment } from "./PullRequestMinimizedComment";
 import { PullRequestPatch } from "./PullRequestPatch";
@@ -248,6 +247,9 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 							<PullRequestCommentMenu
 								pr={pr}
 								node={pr}
+								nodeType={"ROOT_COMMENT"}
+								fetch={fetch}
+								setIsLoadingMessage={setIsLoadingMessage}
 								setEdit={setEditingComment}
 								quote={props.quote}
 							/>
@@ -318,7 +320,11 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 													/>
 													<PullRequestCommentMenu
 														pr={pr}
+														fetch={fetch}
+														setIsLoadingMessage={setIsLoadingMessage}
 														node={item}
+														nodeType="ISSUE_COMMENT"
+														viewerCanDelete={item.viewerCanDelete}
 														setEdit={setEditingComment}
 														quote={props.quote}
 													/>
@@ -406,9 +412,14 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 														/>
 														<PullRequestCommentMenu
 															pr={pr}
+															fetch={fetch}
+															setIsLoadingMessage={setIsLoadingMessage}
 															node={item}
+															nodeType="REVIEW"
+															viewerCanDelete={item.viewerCanDelete && item.state === "PENDING"}
 															setEdit={setEditingComment}
 															quote={props.quote}
+															isPending={item.state === "PENDING"}
 														/>
 													</PRActionIcons>
 												</PRCommentHeader>
@@ -544,9 +555,14 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 																			/>
 																			<PullRequestCommentMenu
 																				pr={pr}
+																				fetch={fetch}
+																				setIsLoadingMessage={setIsLoadingMessage}
 																				node={comment}
+																				nodeType="REVIEW_COMMENT"
+																				viewerCanDelete={comment.viewerCanDelete}
 																				setEdit={setEditingComment}
 																				quote={quote}
+																				isPending={item.state === "PENDING"}
 																			/>
 																		</PRActionIcons>
 																	</PRThreadedCommentHeader>
@@ -612,9 +628,14 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 																					/>
 																					<PullRequestCommentMenu
 																						pr={pr}
+																						fetch={fetch}
+																						setIsLoadingMessage={setIsLoadingMessage}
 																						node={c}
+																						nodeType="REVIEW_COMMENT"
+																						viewerCanDelete={c.viewerCanDelete}
 																						setEdit={setEditingComment}
 																						quote={quote}
+																						isPending={item.state === "PENDING"}
 																					/>
 																				</PRActionIcons>
 																			</PRThreadedCommentHeader>
@@ -658,8 +679,8 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 																__onDidRender={__onDidRender}
 															/>
 															<div style={{ height: "15px" }}></div>
-															<PRButtonRow className="align-left border-top">
-																{comment.isResolved && (
+															{comment.isResolved && comment.viewerCanUnresolve && (
+																<PRButtonRow className="align-left border-top">
 																	<Button
 																		variant="secondary"
 																		isLoading={isResolving}
@@ -667,9 +688,10 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 																	>
 																		Unresolve conversation
 																	</Button>
-																)}
-
-																{!comment.isResolved && (
+																</PRButtonRow>
+															)}
+															{!comment.isResolved && comment.viewerCanResolve && (
+																<PRButtonRow className="align-left border-top">
 																	<Button
 																		variant="secondary"
 																		isLoading={isResolving}
@@ -677,8 +699,8 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 																	>
 																		Resolve conversation
 																	</Button>
-																)}
-															</PRButtonRow>
+																</PRButtonRow>
+															)}
 														</>
 													)}
 												</PRThreadedCommentCard>
@@ -961,7 +983,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 									force-pushed the{" "}
 									{item.ref && item.ref.name && <PRBranch>{item.ref.name}</PRBranch>} branch from{" "}
 									<PRBranch>{item.beforeCommit.abbreviatedOid}</PRBranch> to{" "}
-									<PRBranch>{item.afterCommit.abbreviatedOid}</PRBranch> on
+									<PRBranch>{item.afterCommit.abbreviatedOid}</PRBranch>
 									<Timestamp time={item.createdAt!} relative />
 								</PRTimelineItemBody>
 							</PRTimelineItem>

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { CodeStreamState } from "../store";
 import Icon from "./Icon";
 import styled from "styled-components";
@@ -12,11 +12,12 @@ import {
 	CreatePullRequestCommentRequest,
 	CreatePullRequestCommentAndCloseRequest
 } from "@codestream/protocols/agent";
-import { Headshot } from "../src/components/Headshot";
+import { Headshot, PRHeadshot } from "../src/components/Headshot";
 import MessageInput from "./MessageInput";
 import { CSMe } from "@codestream/protocols/api";
 import { ButtonRow } from "./StatusPanel";
 import { Button } from "../src/components/Button";
+import { removeFromMyPullRequests } from "../store/providerPullRequests/actions";
 
 interface Props {
 	pr: FetchThirdPartyPullRequestPullRequest;
@@ -27,6 +28,7 @@ interface Props {
 }
 
 export const PullRequestBottomComment = styled((props: Props) => {
+	const dispatch = useDispatch();
 	const { pr, fetch, setIsLoadingMessage } = props;
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
@@ -40,8 +42,7 @@ export const PullRequestBottomComment = styled((props: Props) => {
 	const trackComment = type => {
 		HostApi.instance.track("PR Comment Added", {
 			Host: pr.providerId,
-			"Comment Type": type,
-			"Started Review": false
+			"Comment Type": type
 		});
 	};
 
@@ -79,7 +80,10 @@ export const PullRequestBottomComment = styled((props: Props) => {
 			}
 		);
 		setText("");
-		fetch().then(() => setIsLoadingCommentAndClose(false));
+		fetch().then(() => {
+			dispatch(removeFromMyPullRequests(pr.providerId, derivedState.currentPullRequestId!));
+			setIsLoadingCommentAndClose(false);
+		});
 	};
 
 	const onCommentAndReopenClick = async e => {
@@ -110,7 +114,7 @@ export const PullRequestBottomComment = styled((props: Props) => {
 
 	return (
 		<PRComment>
-			<Headshot size={40} person={derivedState.currentUser}></Headshot>
+			<PRHeadshot size={40} person={pr.viewer}></PRHeadshot>
 			<PRCommentCard className="add-comment">
 				{pr.locked ? (
 					<>

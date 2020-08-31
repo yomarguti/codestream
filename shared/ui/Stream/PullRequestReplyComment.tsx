@@ -12,7 +12,7 @@ import MessageInput from "./MessageInput";
 import { CSMe } from "@codestream/protocols/api";
 import { Button } from "../src/components/Button";
 import { confirmPopup } from "./Confirm";
-import { Headshot } from "../src/components/Headshot";
+import { Headshot, PRHeadshot } from "../src/components/Headshot";
 
 interface Props {
 	pr: FetchThirdPartyPullRequestPullRequest;
@@ -42,8 +42,7 @@ export const PullRequestReplyComment = styled((props: Props) => {
 
 			HostApi.instance.track("PR Comment Added", {
 				Host: pr.providerId,
-				"Comment Type": "ReviewReply",
-				"Started Review": false
+				"Comment Type": "Review Reply"
 			});
 
 			await HostApi.instance.send(new ExecuteThirdPartyTypedType<any, any>(), {
@@ -95,7 +94,7 @@ export const PullRequestReplyComment = styled((props: Props) => {
 
 	return (
 		<PRCodeCommentReply>
-			<Headshot size={30} person={derivedState.currentUser} />
+			<PRHeadshot size={30} person={pr.viewer} />
 
 			<div
 				style={{

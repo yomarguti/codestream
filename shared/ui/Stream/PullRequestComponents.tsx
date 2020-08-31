@@ -10,6 +10,15 @@ export const PENDING_BORDER_COLOR = "rgba(249, 197, 19, 0.6)";
 
 export const PRHeader = styled.div`
 	margin: 45px 15px 0 20px;
+	.open-external {
+		margin-left: 5px;
+		vertical-align: 3px;
+		font-size: 12px;
+		display: none;
+	}
+	&:hover .open-external {
+		display: inline-block;
+	}
 `;
 
 export const PRTitle = styled.div`
@@ -48,7 +57,6 @@ export const PRActionButtons = styled.div`
 		border-left: 1px solid var(--base-border-color);
 	}
 	.icon {
-		cursor: pointer;
 		vertical-align: 2px;
 		display: inline-block;
 		font-size: 11px !important; // to match the spinnable icon
@@ -57,11 +65,15 @@ export const PRActionButtons = styled.div`
 		padding: 8px !important;
 		width: auto !important;
 		height: auto !important;
-		&:hover {
-			opacity: 1;
-			background: var(--button-background-color) !important;
-			color: var(--button-foreground-color) !important;
-		}
+	}
+	> span:not(.disabled) .icon:hover {
+		cursor: pointer;
+		opacity: 1;
+		background: var(--button-background-color) !important;
+		color: var(--button-foreground-color) !important;
+	}
+	> span.disabled .icon {
+		opacity: 0.25;
 	}
 	.cancel-button {
 		opacity: 1 !important;
@@ -321,9 +333,12 @@ export const PRActionCommentCard = styled.div`
 // this is the "Finish your review" button
 export const PRSubmitReviewButton = styled.div`
 	position: relative;
+	float: right;
+	margin-left: auto;
+	margin-top: -10px;
 	> button {
 		margin-left: 10px;
-		// border-radius: 5px;
+		border-radius: 5px;
 		white-space: nowrap;
 		${PRBadge} {
 			line-height: 1.42857143 !important;
@@ -767,7 +782,9 @@ export const PRIconButton = styled.div`
 	width: 30px;
 	height: 30px;
 	border-radius: 15px;
-	.icon {
+	&.gray-background .icon,
+	&.red-background .icon,
+	&.green-background .icon {
 		color: white;
 	}
 `;
@@ -839,7 +856,6 @@ export const PRStatus = styled.div`
 			flex-grow: 0;
 			margin-right: auto;
 		}
-		${PRSubmitReviewButton},
 		${PRActionButtons} {
 			order: 3;
 			// max-width: 40%;
@@ -858,6 +874,8 @@ export const PRReviewer = styled.div`
 		.icon {
 			display: inline-block;
 			transform: scale(0.8);
+		}
+		.icon + .icon {
 			margin-left: 5px;
 		}
 		.approved {
@@ -895,7 +913,11 @@ export const PRCloneURL = styled.div`
 	justify-content: space-between;
 	border: 1px solid var(--base-border-color);
 	border-radius: 5px;
-	padding: 5px 0 5px 10px;
+	padding: 5px 0 5px 5px;
+	input {
+		flex: 1;
+		background: none !important;
+	}
 	.icon {
 		margin: 0 10px;
 	}
@@ -928,7 +950,7 @@ export const PRCopyableTerminal = styled.div`
 
 export const PRResolveConflictsRow = styled.div`
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	button {
 		flex-grow: 0;
 		flex-shrink: 0;

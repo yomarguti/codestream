@@ -1227,6 +1227,12 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					url
 					title
 					createdAt
+					baseRefName
+					headRefName
+					headRepository {
+						name
+						nameWithOwner
+					}
 					author {
 					  login
 					  avatarUrl(size: 20)
@@ -1236,6 +1242,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					bodyText
 					number
 					state
+					isDraft
 					updatedAt
 					lastEditedAt
 					id
@@ -1243,7 +1250,15 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					headRepository {
 						name
 					}
-				}
+					labels(first: 10) {
+						nodes {
+						  color
+						  description
+						  name
+						  id
+						}
+					  }
+				  }
 			  }
 			}
 		  }
@@ -1259,17 +1274,15 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			this.client.request<any>(query(`${repoQuery}${isOpenQuery}is:pr reviewed-by:@me`))
 		]);
 		const items = await promises;
-		let rateLimit;
+
 		for (const item of items) {
 			if (item && item.search && item.search.edges) {
 				results = results.concat(item.search.edges.map((_: any) => _.node));
 			}
 			if (item.rateLimit) {
-				rateLimit = item.rateLimit;
+				Logger.debug(`github getMyPullRequests rateLimit=${JSON.stringify(item.rateLimit)}`);
 			}
 		}
-
-		Logger.debug(`github getMyPullRequests rateLimit=${JSON.stringify(rateLimit)}`);
 
 		results = _uniqBy(results, (_: { id: string }) => _.id);
 		const response: GetMyPullRequestsResponse[] = results
@@ -1277,6 +1290,24 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			.sort((a: { createdAt: number }, b: { createdAt: number }) => b.createdAt - a.createdAt);
 		this._getMyPullRequestsCache.set(cacheKey, response);
 		return response;
+	}
+
+	async getPullRequestLastUpdated(request: { pullRequestId: string }) {
+		const response = await this.client.request<any>(
+			`query GetPullRequestLastUpdated($pullRequestId:ID!) {
+					node(id:$pullRequestId) {
+						... on PullRequest {
+							updatedAt
+						  }
+						}
+				  }`,
+			{
+				pullRequestId: request.pullRequestId
+			}
+		);
+		return {
+			updatedAt: response && response.node ? response.node.updatedAt : undefined
+		};
 	}
 
 	async getPullRequestIdFromUrl(request: { url: string }) {
@@ -1461,6 +1492,22 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return response;
 	}
 
+	async removeReviewerFromPullRequest(request: { pullRequestId: string; userId: string }) {
+		const currentReviewers = await this.getReviewersForPullRequest(request);
+		const response = await this.client.request<any>(
+			`mutation RequestReviews($pullRequestId: String!, $userIds:[String!]!) {
+				requestReviews(input: {pullRequestId:$pullRequestId, userIds:$userIds}) {
+			  clientMutationId
+			}
+		  }`,
+			{
+				pullRequestId: request.pullRequestId,
+				userIds: (currentReviewers || []).filter((_: string) => _ !== request.userId)
+			}
+		);
+		return response;
+	}
+
 	async createPullRequestCommentAndClose(request: { pullRequestId: string; text: string }) {
 		if (request.text) {
 			await this.client.request<any>(
@@ -1637,6 +1684,24 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		const response = await this.client.request<any>(query, {
 			subjectId: request.pullRequestId,
 			body: request.text
+		});
+		return true;
+	}
+
+	async deletePullRequestComment(request: {
+		id: string;
+		type: "ISSUE_COMMENT" | "REVIEW_COMMENT";
+	}) {
+		const method =
+			request.type === "ISSUE_COMMENT" ? "deleteIssueComment" : "deletePullRequestReviewComment";
+		const query = `mutation DeleteCommentFromPullRequest($id: String!) {
+				${method}(input: {id: $id}) {
+				  clientMutationId
+				}
+			  }`;
+
+		await this.client.request<any>(query, {
+			id: request.id
 		});
 		return true;
 	}
@@ -1979,6 +2044,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 			resourcePath
 			viewerCanUpdate
+			viewerCanReact
+			viewerCanDelete
 		}`,
 			`... on LabeledEvent {
 			__typename
@@ -2158,6 +2225,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				}
 				resourcePath
 				viewerCanUpdate
+				viewerCanReact
+				viewerCanDelete
 			  }
 			}
 			authorAssociation
@@ -2336,6 +2405,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				viewer {
 				  id
 				  login
+				  avatarUrl
 				}
 				repository(name:$name, owner:$owner) {
 				  id
@@ -2379,6 +2449,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						  node {
 							id
 							isResolved
+							viewerCanResolve
+							viewerCanUnresolve
 							comments(first: 50) {
 							  totalCount
 							  nodes {
@@ -2407,6 +2479,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 								  }
 								}
 								viewerCanUpdate
+								viewerCanReact
+								viewerCanDelete
 							  }
 							}
 						  }
@@ -2583,12 +2657,16 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						let replies: any = [];
 						let threadId;
 						let isResolved;
+						let viewerCanResolve;
+						let viewerCanUnresolve;
 						for (const reviewThread of response.repository.pullRequest.reviewThreads.edges) {
 							if (reviewThread.node.comments.nodes.length > 1) {
 								for (const reviewThreadComment of reviewThread.node.comments.nodes) {
 									if (reviewThreadComment.id === comment.id) {
 										threadId = reviewThread.node.id;
 										isResolved = reviewThread.node.isResolved;
+										viewerCanResolve = reviewThread.node.viewerCanResolve;
+										viewerCanUnresolve = reviewThread.node.viewerCanUnresolve;
 										// find all the comments except the parent
 										replies = replies.concat(
 											reviewThread.node.comments.nodes.filter(
@@ -2603,12 +2681,16 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 								if (reviewThreadComment.id === comment.id) {
 									threadId = reviewThread.node.id;
 									isResolved = reviewThread.node.isResolved;
+									viewerCanResolve = reviewThread.node.viewerCanResolve;
+									viewerCanUnresolve = reviewThread.node.viewerCanUnresolve;
 								}
 							}
 						}
 						if (timelineItem.comments.nodes.length) {
 							comment.threadId = threadId;
 							comment.isResolved = isResolved;
+							comment.viewerCanResolve = viewerCanResolve;
+							comment.viewerCanUnresolve = viewerCanUnresolve;
 							if (replies.length) {
 								comment.replies = replies;
 							}
@@ -2780,6 +2862,8 @@ interface GitHubPullRequest {
 		nodes: {
 			id: string;
 			isResolved: boolean;
+			viewerCanResolve: boolean;
+			viewerCanUnresolve: boolean;
 			comments: {
 				totalCount: number;
 				nodes: {
