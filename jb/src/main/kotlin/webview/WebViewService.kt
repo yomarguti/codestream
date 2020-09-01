@@ -12,7 +12,6 @@ import com.codestream.settingsService
 import com.github.salomonbrys.kotson.jsonObject
 import com.google.gson.JsonElement
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
@@ -30,7 +29,7 @@ class WebViewService(val project: Project) : Disposable {
     private lateinit var tempDir: File
     private lateinit var extractedHtmlFile: File
 
-    lateinit var webView: WebView
+    val webView = createWebView(router)
 
     private val htmlFile: File get() = if (WEBVIEW_PATH != null) {
         File(WEBVIEW_PATH)
@@ -40,10 +39,6 @@ class WebViewService(val project: Project) : Disposable {
 
     init {
         logger.info("Initializing WebViewService for project ${project.basePath}")
-        ApplicationManager.getApplication().invokeLater {
-            webView = createWebView(router)
-        }
-
         extractAssets()
         applyStylesheet()
 
