@@ -61,12 +61,14 @@ class WebViewService(val project: Project) : Disposable {
     }
 
     fun load(resetContext: Boolean = false) {
-        logger.info("Loading WebView")
-        if (resetContext) {
-            project.settingsService?.clearWebViewContext()
+        ApplicationManager.getApplication().invokeLater {
+            logger.info("Loading WebView")
+            if (resetContext) {
+                project.settingsService?.clearWebViewContext()
+            }
+            applyStylesheet()
+            webView.loadUrl(htmlFile.url)
         }
-        applyStylesheet()
-        webView.loadUrl(htmlFile.url)
     }
 
     private fun extractAssets() {
