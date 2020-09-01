@@ -26,16 +26,20 @@ import { LocateRepoButton } from "./LocateRepoButton";
 import { Link } from "./Link";
 import { Meta, MetaLabel } from "./Codemark/BaseCodemark";
 import { MetaIcons } from "./Review";
+import { CompareFilesProps } from "./PullRequestFilesChangedList";
 
 // const VISITED_REVIEW_FILES = "review:changeset-file-list";
 const NOW = new Date().getTime(); // a rough timestamp so we know when the file was visited
 // const visitedFiles = localStore.get(VISITED_REVIEW_FILES) || {};
 
-export const PullRequestFilesChanged = (props: {
-	pr: FetchThirdPartyPullRequestPullRequest;
+interface Props extends CompareFilesProps {
 	filesChanged: any[];
+	isLoading: boolean;
+	pr?: FetchThirdPartyPullRequestPullRequest;
 	withTelemetry?: boolean;
-}) => {
+}
+
+export const PullRequestFilesChanged = (props: Props) => {
 	const { pr, filesChanged } = props;
 	// const dispatch = useDispatch<Dispatch>();
 	const [repoId, setRepoId] = useState("");
@@ -54,7 +58,7 @@ export const PullRequestFilesChanged = (props: {
 			userId,
 			repos: state.repos,
 			// TODO more solid filtering
-			currentRepo: Object.values(state.repos).find(_ => _.name === props.pr.repository.name),
+			currentRepo: Object.values(state.repos).find(_ => _.name === props.repositoryName),
 			numFiles: props.filesChanged.length,
 			isInVscode: state.ide.name === "VSC"
 		};
@@ -76,7 +80,7 @@ export const PullRequestFilesChanged = (props: {
 
 	const saveVisitedFiles = (newVisitedFiles, key) => {
 		HostApi.instance.send(WriteTextFileRequestType, {
-			path: `pr-${pr.id}.json`,
+			path: `${props.baseRef}-${props.headRef}.json`,
 			contents: JSON.stringify(newVisitedFiles, null, 4)
 		});
 	};
@@ -88,8 +92,8 @@ export const PullRequestFilesChanged = (props: {
 				try {
 					const forkPointResponse = await HostApi.instance.send(FetchForkPointRequestType, {
 						repoId: derivedState.currentRepo!.id!,
-						baseSha: props.pr.baseRefOid,
-						headSha: props.pr.headRefOid
+						baseSha: props.baseRef,
+						headSha: props.headRef
 					});
 					if (forkPointResponse && forkPointResponse.sha) {
 						setForkPointSha(forkPointResponse.sha);
@@ -108,7 +112,7 @@ export const PullRequestFilesChanged = (props: {
 	useEffect(() => {
 		(async () => {
 			const response = (await HostApi.instance.send(ReadTextFileRequestType, {
-				path: `pr-${pr.id}.json`
+				path: `${props.baseRef}-${props.headRef}.json`
 			})) as any;
 
 			try {
@@ -138,18 +142,20 @@ export const PullRequestFilesChanged = (props: {
 				const visitedKey = [f.file].join(":");
 
 				const request = {
-					baseBranch: props.pr.baseRefName,
+					baseBranch: props.baseRefName,
 					baseSha: forkPointSha,
-					headBranch: props.pr.headRefName,
-					headSha: props.pr.headRefOid,
+					headBranch: props.headRefName,
+					headSha: props.headRef,
 					filePath: f.file,
 					repoId: derivedState.currentRepo!.id!,
-					context: {
-						pullRequest: {
-							providerId: pr.providerId,
-							id: pr.id
-						}
-					}
+					context: pr
+						? {
+								pullRequest: {
+									providerId: pr.providerId,
+									id: pr.id
+								}
+						  }
+						: undefined
 				};
 				try {
 					await HostApi.instance.send(CompareLocalFilesRequestType, request);
@@ -159,7 +165,7 @@ export const PullRequestFilesChanged = (props: {
 
 				visitFile(visitedKey, index);
 
-				if (props.withTelemetry && pr.id) {
+				if (props.withTelemetry && pr && pr.id) {
 					HostApi.instance.track("Review Diff Viewed", {
 						"PR ID": pr.id
 					});
@@ -210,7 +216,7 @@ export const PullRequestFilesChanged = (props: {
 			setErrorMessage("Could not open file");
 		}
 
-		if (props.withTelemetry && pr.id) {
+		if (props.withTelemetry && pr && pr.id) {
 			HostApi.instance.track("PR File Viewed", {
 				"PR ID": pr.id
 			});
@@ -287,7 +293,7 @@ export const PullRequestFilesChanged = (props: {
 		return files;
 	}, [pr, loading, derivedState.matchFile, latest, visitedFiles, forkPointSha]);
 
-	if (!derivedState.currentRepo) {
+	if (pr && !derivedState.currentRepo) {
 		return (
 			<div style={{ marginTop: "10px" }}>
 				<Icon name="alert" className="margin-right" />
@@ -304,7 +310,7 @@ export const PullRequestFilesChanged = (props: {
 		return (
 			<Meta id="changed-files">
 				<MetaLabel>
-					{pr.files.totalCount} Changed Files
+					{props.filesChanged.length} Changed Files
 					<MetaIcons>
 						<Icon
 							onClick={nextFile}

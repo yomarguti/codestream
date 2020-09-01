@@ -375,3 +375,21 @@ export const FetchForkPointRequestType = new RequestType<
 	void,
 	void
 >("codestream/scm/forkPoint");
+
+export interface DiffBranchesRequest {
+	repoId: string;
+	baseRef: string;
+	headRef: string;
+}
+
+export interface DiffBranchesResponse {
+	filesChanged?: any[];
+	error?: string;
+}
+
+export const DiffBranchesRequestType = new RequestType<
+	DiffBranchesRequest,
+	DiffBranchesResponse,
+	void,
+	void
+>("codestream/scm/branches/diff");
