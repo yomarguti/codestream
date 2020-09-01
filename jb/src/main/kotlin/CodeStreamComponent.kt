@@ -94,10 +94,12 @@ class CodeStreamComponent(val project: Project) : Disposable {
                         toolWindow!!.component.add(loadingLabel)
                         project.agentService?.onDidStart {
                             val webViewService = project.webViewService ?: return@onDidStart
-                            webViewService.load()
-                            toolWindow?.component?.let { cmp ->
-                                cmp.remove(loadingLabel)
-                                cmp.add(webViewService.webView.component)
+                            ApplicationManager.getApplication().invokeLater {
+                                webViewService.load()
+                                toolWindow?.component?.let { cmp ->
+                                    cmp.remove(loadingLabel)
+                                    cmp.add(webViewService.webView.component)
+                                }
                             }
                         }
                     }
