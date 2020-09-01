@@ -21,6 +21,8 @@ import {
 	FetchThirdPartyCardsResponse,
 	FetchThirdPartyCardWorkflowRequest,
 	FetchThirdPartyCardWorkflowResponse,
+	FetchThirdPartyPullRequestCommitsRequest,
+	FetchThirdPartyPullRequestCommitsResponse,
 	FetchThirdPartyPullRequestFilesResponse,
 	FetchThirdPartyPullRequestRequest,
 	FetchThirdPartyPullRequestResponse,
@@ -1267,13 +1269,15 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		// has started or completed the review.
 
 		// see: https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests
-		const promises = Promise.all([
+		const items = await Promise.all([
 			this.client.request<any>(query(`${repoQuery}${isOpenQuery}is:pr author:@me`)),
 			this.client.request<any>(query(`${repoQuery}${isOpenQuery}is:pr assignee:@me`)),
 			this.client.request<any>(query(`${repoQuery}${isOpenQuery}is:pr review-requested:@me`)),
 			this.client.request<any>(query(`${repoQuery}${isOpenQuery}is:pr reviewed-by:@me`))
-		]);
-		const items = await promises;
+		]).catch(ex => {
+			Logger.error(ex);
+			throw new Error(ex.response ? JSON.stringify(ex.response) : ex.message);
+		});
 
 		for (const item of items) {
 			if (item && item.search && item.search.edges) {
@@ -2488,27 +2492,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					  }
 					commits(first: 100) {
 						totalCount
-						nodes {
-						  commit {
-							abbreviatedOid
-							author {
-							  avatarUrl(size: 20)
-							  name
-							  user {
-							    login
-							  }
-							}
-							committer {
-							  avatarUrl(size: 20)
-							  name
-							  user {
-							    login
-							  }
-							}
-							message
-							authoredDate
-						  }
-						}
 					  }
 					headRefName
 					headRefOid
@@ -2616,6 +2599,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				  rebaseMergeAllowed
 				  squashMergeAllowed
 				  mergeCommitAllowed
+				  viewerPermission
 				}
 			  }`;
 			const response = (await this.client.request<any>(query, {
@@ -2729,6 +2713,65 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 			throw ex;
 		}
+	}
+
+	async getPullRequestCommits(
+		request: FetchThirdPartyPullRequestCommitsRequest
+	): Promise<FetchThirdPartyPullRequestCommitsResponse> {
+		const data = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
+		const pullRequestNumber = await this.getPullRequestNumber(request.pullRequestId);
+
+		const query = await this.client.request<any>(
+			`query pr($owner: String!, $name: String!, $pullRequestNumber: Int!) {
+				  rateLimit {
+					limit
+					cost
+					remaining
+					resetAt
+				  }
+				  repository(name: $name, owner: $owner) {
+					id
+					pullRequest(number: $pullRequestNumber) {
+					  id
+					  repository {
+						name
+						nameWithOwner
+						url
+					  }
+					  commits(first: 250) {
+						totalCount
+						nodes {
+						  commit {
+							abbreviatedOid
+							author {
+							  avatarUrl(size: 20)
+							  name
+							  user {
+								login
+							  }
+							}
+							committer {
+							  avatarUrl(size: 20)
+							  name
+							  user {
+								login
+							  }
+							}
+							message
+							authoredDate
+						  }
+						}
+					  }
+					}
+				  }
+				}`,
+			{
+				owner: data.owner,
+				name: data.name,
+				pullRequestNumber
+			}
+		);
+		return query.repository.pullRequest.commits.nodes.map((_: any) => _.commit);
 	}
 
 	async prQuery(

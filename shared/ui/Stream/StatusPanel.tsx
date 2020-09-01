@@ -261,15 +261,15 @@ export const RoundedSearchLink = styled(RoundedLink)`
 		line-height: 16px;
 		margin: 0;
 		#search-input,
-		#pr-search-input {
-			width: 90px;
-			background: transparent !important;
-			font-size: 13px !important;
-			padding: 0 5px !important;
-			margin: 0 0 !important;
-			&:focus {
-				outline: none;
-			}
+		// #pr-search-input {
+		// 	width: 90px;
+		// 	background: transparent !important;
+		// 	font-size: 13px !important;
+		// 	padding: 0 5px !important;
+		// 	margin: 0 0 !important;
+		// 	&:focus {
+		// 		outline: none;
+		// 	}
 		}
 		.icon {
 			float: right;
@@ -559,11 +559,6 @@ export const StatusPanel = () => {
 			setOpenRepos(response.repositories);
 		}
 
-		if (!uri && !derivedState.textEditorUri) {
-			return {
-				openRepos: response ? response.repositories : []
-			};
-		}
 		if (uri) {
 			setRepoUri(uri);
 		}
@@ -579,6 +574,7 @@ export const StatusPanel = () => {
 				branchInfo = await HostApi.instance.send(GetBranchesRequestType, {
 					uri: response.repositories[0].folder.uri
 				});
+				setRepoUri(response.repositories[0].folder.uri);
 			}
 		}
 

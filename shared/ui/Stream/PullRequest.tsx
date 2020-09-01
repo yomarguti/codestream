@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
 import styled from "styled-components";
@@ -19,7 +19,9 @@ import {
 	GetReposScmRequestType,
 	ReposScm,
 	ExecuteThirdPartyTypedType,
-	SwitchBranchRequestType
+	SwitchBranchRequestType,
+	DidChangeDataNotificationType,
+	ChangeDataType
 } from "@codestream/protocols/agent";
 import {
 	PRHeader,
@@ -35,7 +37,8 @@ import {
 	PREditTitle,
 	PRActionButtons,
 	PRCommentCard,
-	PRSubmitReviewButton
+	PRSubmitReviewButton,
+	PRIAmRequested
 } from "./PullRequestComponents";
 import { LoadingMessage } from "../src/components/LoadingMessage";
 import { Modal } from "./Modal";
@@ -53,7 +56,8 @@ import { PullRequestFinishReview } from "./PullRequestFinishReview";
 import {
 	getPullRequestConversationsFromProvider,
 	clearPullRequestFiles,
-	getPullRequestConversations
+	getPullRequestConversations,
+	clearPullRequestCommits
 } from "../store/providerPullRequests/actions";
 import { confirmPopup } from "./Confirm";
 
@@ -136,6 +140,7 @@ export const PullRequest = () => {
 	const [editingTitle, setEditingTitle] = useState(false);
 	const [savingTitle, setSavingTitle] = useState(false);
 	const [title, setTitle] = useState("");
+	const [currentRepoChanged, setCurrentRepoChanged] = useState(false);
 
 	const [finishReviewOpen, setFinishReviewOpen] = useState(false);
 
@@ -209,8 +214,9 @@ export const PullRequest = () => {
 		)) as any;
 		_assignState(response);
 
-		// just clear the files data -- it will be fetched if necessary (since it has its own api call)
+		// just clear the files and commits data -- it will be fetched if necessary (since it has its own api call)
 		dispatch(clearPullRequestFiles(providerId, derivedState.currentPullRequestId!));
+		dispatch(clearPullRequestCommits(providerId, derivedState.currentPullRequestId!));
 	};
 
 	const checkout = async () => {
@@ -243,11 +249,33 @@ export const PullRequest = () => {
 		// fetch("Reloading...");
 	};
 
-	const hasRepoOpen = React.useMemo(() => {
+	const hasRepoOpen = useMemo(() => {
 		return pr && openRepos.find(_ => _.name === pr.repository.name);
 	}, [pr, openRepos]);
 
-	const cantCheckoutReason = React.useMemo(() => {
+	useEffect(() => {
+		if (!pr) return;
+
+		const _didChangeDataNotification = HostApi.instance.on(
+			DidChangeDataNotificationType,
+			(e: any) => {
+				if (e.type === ChangeDataType.Commits) {
+					getOpenRepos().then(_ => {
+						const currentOpenRepo = openRepos.find(_ => _.name === pr.repository.name);
+						setCurrentRepoChanged(
+							!!(e.data.repo && currentOpenRepo && currentOpenRepo.currentBranch == pr.headRefName)
+						);
+					});
+				}
+			}
+		);
+
+		return () => {
+			_didChangeDataNotification && _didChangeDataNotification.dispose();
+		};
+	}, [openRepos, pr]);
+
+	const cantCheckoutReason = useMemo(() => {
 		if (pr) {
 			const currentRepo = openRepos.find(_ => _.name === pr.repository.name);
 			if (!currentRepo) {
@@ -260,7 +288,7 @@ export const PullRequest = () => {
 		} else {
 			return "PR not loaded";
 		}
-	}, [pr, openRepos]);
+	}, [pr, openRepos, currentRepoChanged]);
 
 	const saveTitle = async () => {
 		setIsLoadingMessage("Saving Title...");
@@ -313,7 +341,7 @@ export const PullRequest = () => {
 		};
 	}, [derivedState.reviews]);
 
-	const numComments = React.useMemo(() => {
+	const numComments = useMemo(() => {
 		if (!pr || !pr.timelineItems || !pr.timelineItems.nodes) return 0;
 		const reducer = (accumulator, node) => {
 			let count = 0;
@@ -389,6 +417,15 @@ export const PullRequest = () => {
 		};
 	}, [pr]);
 
+	const iAmRequested = useMemo(() => {
+		if (pr) {
+			return pr.reviewRequests.nodes.find(
+				request => request.requestedReviewer.login === pr.viewer.login
+			);
+		}
+		return false;
+	}, [pr]);
+
 	console.warn("PR: ", pr);
 	// console.warn("REPO: ", ghRepo);
 	if (!pr) {
@@ -408,6 +445,22 @@ export const PullRequest = () => {
 				<CreateCodemarkIcons narrow onebutton />
 				{isLoadingMessage && <FloatingLoadingMessage>{isLoadingMessage}</FloatingLoadingMessage>}
 				<PRHeader>
+					{iAmRequested && activeTab == 1 && (
+						<PRIAmRequested>
+							<div>
+								<b>{pr.author.login}</b> requested your review on this pull request.
+							</div>
+							<Button
+								variant="success"
+								size="compact"
+								onClick={() => {
+									setActiveTab(4);
+								}}
+							>
+								Add your review
+							</Button>
+						</PRIAmRequested>
+					)}
 					<PRTitle className={editingTitle ? "editing" : ""}>
 						{editingTitle ? (
 							<PREditTitle>

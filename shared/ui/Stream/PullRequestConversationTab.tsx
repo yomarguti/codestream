@@ -276,7 +276,8 @@ export const PullRequestConversationTab = (props: {
 	const numParticpants = ((pr.participants && pr.participants.nodes) || []).length;
 	const participantsLabel = `${numParticpants} Participant${numParticpants == 1 ? "" : "s"}`;
 
-	var finishedReviewsHash: any = {};
+	var reviewsHash: any = {};
+	var opinionatedReviewsHash: any = {};
 	// the list of reviewers isn't in a single spot...
 
 	// these are completed reviews
@@ -286,20 +287,6 @@ export const PullRequestConversationTab = (props: {
 		// then convert to hash... key is the author,
 		// value is the last review
 		const map = _map(gb, (values, key) => {
-			const requestedChanges = values.find(review => review.state === "CHANGES_REQUESTED");
-			if (requestedChanges) {
-				return {
-					key: key,
-					value: { ...requestedChanges, ...requestedChanges.author }
-				};
-			}
-			const approval = values.find(review => review.state === "APPROVED");
-			if (approval) {
-				return {
-					key: key,
-					value: { ...approval, ...approval.author }
-				};
-			}
 			const last = values.sort(
 				(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
 			)[0] as any;
@@ -309,7 +296,7 @@ export const PullRequestConversationTab = (props: {
 			};
 		});
 		// reduce to create the correct object structure
-		finishedReviewsHash = _reduce(
+		reviewsHash = _reduce(
 			map,
 			function(obj, param) {
 				obj[param.key] = param.value;
@@ -317,9 +304,29 @@ export const PullRequestConversationTab = (props: {
 			},
 			{}
 		);
+		const opinionatedMap = _map(gb, (values, key) => {
+			const opinionatedReviews = values.filter(
+				review => review.state === "CHANGES_REQUESTED" || review.state === "APPROVED"
+			);
+			const last = opinionatedReviews.sort(
+				(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+			)[0] as any;
+			if (last)
+				return {
+					key: key,
+					value: { ...last, ...last.author }
+				};
+			else return {};
+		});
+		opinionatedReviewsHash = _reduce(
+			opinionatedMap,
+			function(obj, param) {
+				if (param && param.key) obj[param.key] = param.value;
+				return obj;
+			},
+			{}
+		);
 	}
-
-	const finishedReviews = Object.values(finishedReviewsHash);
 
 	// these are reviews that have been requested (though not started)
 	pr.reviewRequests &&
@@ -329,10 +336,10 @@ export const PullRequestConversationTab = (props: {
 				isPending: true
 			};
 			return map;
-		}, finishedReviewsHash);
+		}, reviewsHash);
 
-	const reviewers = Object.keys(finishedReviewsHash).map(key => {
-		const val = finishedReviewsHash[key];
+	const reviewers = Object.keys(reviewsHash).map(key => {
+		const val = reviewsHash[key];
 		return { ...val, id: key };
 	}) as { id: string; login: string; avatarUrl: string; isPending: boolean; state: string }[];
 
@@ -778,7 +785,10 @@ export const PullRequestConversationTab = (props: {
 							<PRStatusHeadshot className="gray-background">
 								<Icon name="git-merge" />
 							</PRStatusHeadshot>
-							<PullRequestReviewStatus pr={pr} finishedReviews={finishedReviews} />
+							<PullRequestReviewStatus
+								pr={pr}
+								opinionatedReviews={Object.values(opinionatedReviewsHash)}
+							/>
 							<PRResolveConflictsRow>
 								<PRIconButton className="gray-background">
 									<Icon name="alert" />
@@ -801,7 +811,10 @@ export const PullRequestConversationTab = (props: {
 							<PRStatusHeadshot className="green-background">
 								<Icon name="git-merge" />
 							</PRStatusHeadshot>
-							<PullRequestReviewStatus pr={pr} finishedReviews={finishedReviews} />
+							<PullRequestReviewStatus
+								pr={pr}
+								opinionatedReviews={Object.values(opinionatedReviewsHash)}
+							/>
 							<PRCommentHeader>
 								<div style={{ display: "flex", marginTop: "10px" }}>
 									<PRIconButton className="green-background">
@@ -811,83 +824,100 @@ export const PullRequestConversationTab = (props: {
 										{mergeMethod === "REBASE" ? (
 											<>
 												<h1>This branch has no conflicts with the base branch when rebasing</h1>
-												<p>Rebase and merge can be performed automatically.</p>
+												{ghRepo.viewerPermission === "READ" ? (
+													<p>
+														Only those with write access to this repository can merge pull requests.
+													</p>
+												) : (
+													<p>Rebase and merge can be performed automatically.</p>
+												)}
 											</>
 										) : (
 											<>
 												<h1>This branch has no conflicts with the base branch</h1>
-												<p>Merging can be performed automatically.</p>
+												{ghRepo.viewerPermission === "READ" ? (
+													<p>
+														Only those with write access to this repository can merge pull requests.
+													</p>
+												) : (
+													<p>Merging can be performed automatically.</p>
+												)}
 											</>
 										)}
 									</div>
 								</div>
 							</PRCommentHeader>
-							<div style={{ padding: "5px 0" }}>
-								<PRButtonRow className="align-left">
-									<DropdownButton
-										items={[
-											{
-												key: "MERGE",
-												label: "Create a merge commit",
-												subtext: (
-													<span>
-														All commits from this branch will be added to
-														<br />
-														the base branch via a merge commit.
-														{!ghRepo.mergeCommitAllowed && (
-															<>
-																<br />
-																<small>Not enabled for this repository</small>
-															</>
-														)}
-													</span>
-												),
-												disabled: !ghRepo.mergeCommitAllowed,
-												onSelect: () => setMergeMethod("MERGE"),
-												action: () => mergePullRequest({ mergeMethod: "MERGE" })
-											},
-											{
-												key: "SQUASH",
-												label: "Squash and merge",
-												subtext: (
-													<span>
-														The commits from this branch will be combined
-														<br />
-														into one commit in the base branch.
-													</span>
-												),
-												disabled: !ghRepo.squashMergeAllowed,
-												onSelect: () => setMergeMethod("SQUASH"),
-												action: () => mergePullRequest({ mergeMethod: "SQUASH" })
-											},
-											{
-												key: "REBASE",
-												label: "Rebase and merge",
-												subtext: (
-													<span>
-														The commits from this branch will be rebased
-														<br />
-														and added to the base branch.
-													</span>
-												),
-												disabled: !ghRepo.rebaseMergeAllowed,
-												onSelect: () => setMergeMethod("REBASE"),
-												action: () => mergePullRequest({ mergeMethod: "REBASE" })
-											}
-										]}
-										selectedKey={derivedState.defaultMergeMethod}
-										variant="success"
-										splitDropdown
-									/>
-								</PRButtonRow>
-							</div>
+							{ghRepo.viewerPermission !== "READ" && (
+								<div style={{ padding: "5px 0" }}>
+									<PRButtonRow className="align-left">
+										<DropdownButton
+											items={[
+												{
+													key: "MERGE",
+													label: "Create a merge commit",
+													subtext: (
+														<span>
+															All commits from this branch will be added to
+															<br />
+															the base branch via a merge commit.
+															{!ghRepo.mergeCommitAllowed && (
+																<>
+																	<br />
+																	<small>Not enabled for this repository</small>
+																</>
+															)}
+														</span>
+													),
+													disabled: !ghRepo.mergeCommitAllowed,
+													onSelect: () => setMergeMethod("MERGE"),
+													action: () => mergePullRequest({ mergeMethod: "MERGE" })
+												},
+												{
+													key: "SQUASH",
+													label: "Squash and merge",
+													subtext: (
+														<span>
+															The commits from this branch will be combined
+															<br />
+															into one commit in the base branch.
+														</span>
+													),
+													disabled: !ghRepo.squashMergeAllowed,
+													onSelect: () => setMergeMethod("SQUASH"),
+													action: () => mergePullRequest({ mergeMethod: "SQUASH" })
+												},
+												{
+													key: "REBASE",
+													label: "Rebase and merge",
+													subtext: (
+														<span>
+															The commits from this branch will be rebased
+															<br />
+															and added to the base branch.
+														</span>
+													),
+													disabled: !ghRepo.rebaseMergeAllowed,
+													onSelect: () => setMergeMethod("REBASE"),
+													action: () => mergePullRequest({ mergeMethod: "REBASE" })
+												}
+											]}
+											selectedKey={derivedState.defaultMergeMethod}
+											variant="success"
+											splitDropdown
+										/>
+									</PRButtonRow>
+								</div>
+							)}
 						</PRCommentCard>
 					) : !pr.merged && (pr.mergeable === "CONFLICTING" || pr.mergeable === "UNKNOWN") ? (
 						<PRCommentCard>
 							<PRStatusHeadshot className="gray-background">
 								<Icon name="git-merge" />
 							</PRStatusHeadshot>
-							<PullRequestReviewStatus pr={pr} finishedReviews={finishedReviews} />
+							<PullRequestReviewStatus
+								pr={pr}
+								opinionatedReviews={Object.values(opinionatedReviewsHash)}
+							/>
 							<div style={{ padding: "5px 0" }}>
 								<PRResolveConflictsRow>
 									<PRIconButton className="gray-background">
