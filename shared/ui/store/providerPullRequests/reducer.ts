@@ -82,6 +82,17 @@ export function reduceProviderPullRequests(
 				pullRequests: newState
 			};
 		}
+		case ProviderPullRequestActionsTypes.ClearPullRequestCommits: {
+			const newState = createNewObject(state, action);
+			newState[action.payload.providerId][action.payload.id] = {
+				...newState[action.payload.providerId][action.payload.id],
+				commits: []
+			};
+			return {
+				myPullRequests: { ...state.myPullRequests },
+				pullRequests: newState
+			};
+		}
 		case ProviderPullRequestActionsTypes.AddPullRequestConversations: {
 			const newState = createNewObject(state, action);
 			newState[action.payload.providerId][action.payload.id] = {

@@ -180,6 +180,12 @@ export const getMyPullRequests = (providerId: string, options?: { force?: boolea
 	return undefined;
 };
 
+export const clearPullRequestCommits = (providerId: string, id: string) =>
+	action(ProviderPullRequestActionsTypes.ClearPullRequestCommits, {
+		providerId,
+		id
+	});
+
 export const getPullRequestCommitsFromProvider = (
 	providerId: string,
 	id: string
