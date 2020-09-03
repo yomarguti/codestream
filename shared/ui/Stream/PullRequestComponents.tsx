@@ -750,8 +750,9 @@ export const PRFoot = styled.div`
 
 export const PRActionIcons = styled.div`
 	margin-left: auto;
-	align-items: top;
+	align-items: flex-start;
 	text-align: right;
+	display: flex;
 	.pending,
 	.member,
 	.author {
@@ -811,6 +812,8 @@ export const PRCodeCommentBody = styled.div`
 `;
 
 export const PRCodeComment = styled.div`
+	flex-grow: 10;
+	max-width: 100%;
 	pre.code {
 		margin: 10px -16px !important;
 	}
