@@ -36,7 +36,8 @@ import {
 	ThirdPartyProviders,
 	GetDocumentFromMarkerRequestType,
 	DidEncounterMaintenanceModeNotificationType,
-	VerifyConnectivityRequestType
+	VerifyConnectivityRequestType,
+	ExecuteThirdPartyRequestUntypedType
 } from "@codestream/protocols/agent";
 import { CSApiCapabilities, CodemarkType } from "@codestream/protocols/api";
 import translations from "./translations/en";
@@ -63,7 +64,9 @@ import {
 	focus,
 	setCurrentStream,
 	setCurrentCodemark,
-	setCurrentReview
+	setCurrentReview,
+	setCurrentPullRequest,
+	setCurrentPullRequestAndBranch
 } from "./store/context/actions";
 import { URI } from "vscode-uri";
 import { moveCursorToLine } from "./Stream/CodemarkView";
@@ -366,6 +369,33 @@ function listenForEvents(store) {
 							}
 							break;
 						}
+					}
+				}
+				break;
+			}
+			case "pullRequest": {
+				switch (route.action) {
+					case "open": {
+						HostApi.instance
+							.send(ExecuteThirdPartyRequestUntypedType, {
+								method: "getPullRequestIdFromUrl",
+								providerId: "github*com",
+								params: { url: route.query.url }
+							})
+							.then((id: any) => {
+								if (id) {
+									store.dispatch(setCurrentReview(""));
+									if (route.query.checkoutBranch)
+										store.dispatch(setCurrentPullRequestAndBranch(id));
+									else store.dispatch(setCurrentPullRequest(id));
+								} else {
+									console.warn("Unable to load PR from: ", route);
+								}
+							})
+							.catch(e => {
+								console.warn("Unable to load PR from: ", route);
+							});
+						break;
 					}
 				}
 				break;
