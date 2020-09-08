@@ -630,6 +630,14 @@ export enum CSReviewAssignmentSetting {
 	Random = "random"
 }
 
+export interface PullRequestQuery {
+	providerId: string;
+	name: string;
+	query: string;
+	active: boolean;
+	limitToOpenRepos: boolean;
+}
+
 export interface CSMePreferences {
 	telemetryConsent?: boolean; // legacy
 	telemetryOptOut?: boolean;
@@ -638,6 +646,7 @@ export interface CSMePreferences {
 	skipWallToWallBanner?: boolean;
 	skipGitEmailCheck?: boolean;
 	pullRequestFilesChangedMode?: "files" | "hunks";
+	pullRequestQueries?: PullRequestQuery[];
 	[key: string]: any;
 }
 
