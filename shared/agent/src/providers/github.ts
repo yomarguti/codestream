@@ -1,5 +1,5 @@
 "use strict";
-import { GitRemote, GitRepository } from "git/gitService";
+import { GitRemoteLike, GitRepository } from "git/gitService";
 import { GraphQLClient } from "graphql-request";
 import { uniqBy as _uniqBy } from "lodash-es";
 import { Response } from "node-fetch";
@@ -104,14 +104,18 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return Promise.resolve(true);
 	}
 
+	get graphQlBaseUrl() {
+		return `${this.baseUrl}/graphql`;
+	}
+
 	private _client: GraphQLClient | undefined;
-	private get client(): GraphQLClient {
+	protected get client(): GraphQLClient {
 		if (this._client === undefined) {
 			if (!this.accessToken) {
 				throw new Error("No GitHub personal access token could be found");
 			}
 
-			this._client = new GraphQLClient(`${this.baseUrl}/graphql`, {
+			this._client = new GraphQLClient(this.graphQlBaseUrl, {
 				headers: {
 					Authorization: `Bearer ${this.accessToken}`
 				}
@@ -267,8 +271,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 		response.repository.repoOwner = repoOwner!;
 		response.repository.repoName = repoName!;
-		response.repository.pullRequest.providerId = "github*com";
-		response.repository.providerId = "github*com";
+
+		response.repository.pullRequest.providerId = this.providerConfig.id;
+		response.repository.providerId = this.providerConfig.id;
 		return response;
 	}
 
@@ -624,7 +629,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	>();
 	private _prsByRepo = new Map<string, { expiresAt: number; prs: Promise<GitHubPullRequest[]> }>();
 
-	private _isMatchingRemotePredicate = (r: GitRemote) => r.domain === "github.com";
+	private _isMatchingRemotePredicate = (r: GitRemoteLike) => r.domain === "github.com";
 	getIsMatchingRemotePredicate() {
 		return this._isMatchingRemotePredicate;
 	}
@@ -1196,7 +1201,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		repo: string;
 		isOpen?: boolean;
 		force?: boolean;
-	}): Promise<GetMyPullRequestsResponse[]> {
+	}): Promise<GetMyPullRequestsResponse[] | undefined> {
 		const cacheKey = [request.owner, request.repo, request.isOpen].join("-");
 		if (!request.force) {
 			const cached = this._getMyPullRequestsCache.get(cacheKey);
@@ -1290,7 +1295,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 		results = _uniqBy(results, (_: { id: string }) => _.id);
 		const response: GetMyPullRequestsResponse[] = results
-			.map((pr: { createdAt: string }) => ({ ...pr, createdAt: new Date(pr.createdAt).getTime() }))
+			.map((pr: { createdAt: string }) => ({
+				...pr,
+				providerId: this.providerConfig?.id,
+				createdAt: new Date(pr.createdAt).getTime()
+			}))
 			.sort((a: { createdAt: number }, b: { createdAt: number }) => b.createdAt - a.createdAt);
 		this._getMyPullRequestsCache.set(cacheKey, response);
 		return response;
@@ -2612,12 +2621,15 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				cursor: cursor
 			})) as FetchThirdPartyPullRequestResponse;
 
-			this._prTimelineQueryRateLimit = {
-				cost: response.rateLimit.cost,
-				limit: response.rateLimit.limit,
-				remaining: response.rateLimit.remaining,
-				resetAt: new Date(response.rateLimit.resetAt)
-			};
+			if (response.rateLimit) {
+				this._prTimelineQueryRateLimit = {
+					cost: response.rateLimit.cost,
+					limit: response.rateLimit.limit,
+					remaining: response.rateLimit.remaining,
+					resetAt: new Date(response.rateLimit.resetAt)
+				};
+			}
+
 			// this is sheer insanity... there's no way to get replies to parent comments
 			// as a child object of that comment. all replies are treated as `reviewThreads`
 			// and they live on the parent `pullRequest` object. below, we're stiching together

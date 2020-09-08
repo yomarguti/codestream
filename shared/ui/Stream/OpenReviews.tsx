@@ -18,7 +18,8 @@ import { HostApi } from "../webview-api";
 import {
 	GetMyPullRequestsResponse,
 	ReposScm,
-	ExecuteThirdPartyRequestUntypedType
+	ExecuteThirdPartyRequestUntypedType,
+	QueryThirdPartyRequestType
 } from "@codestream/protocols/agent";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { Button } from "../src/components/Button";
@@ -115,7 +116,9 @@ export function OpenReviews(props: Props) {
 		});
 
 		// FIXME hardcoded github
-		const isPRSupportedCodeHostConnected = isConnected(state, { name: "github" });
+		const isPRSupportedCodeHostConnected =
+			isConnected(state, { name: "github" }) || isConnected(state, { name: "github_enterprise" });
+		// FIXME make this more solid
 		const hasPRSupportedRepos = repos.filter(r => r.providerGuess === "github").length > 0;
 
 		return {
@@ -127,7 +130,7 @@ export function OpenReviews(props: Props) {
 			isPRSupportedCodeHostConnected,
 			hasPRSupportedRepos,
 			// FIXME hardcoded github
-			PRSupportedProviders: [state.providers["github*com"]]
+			PRSupportedProviders: [state.providers["github*com"], state.providers["github/enterprise"]]
 		};
 	});
 
@@ -140,14 +143,19 @@ export function OpenReviews(props: Props) {
 
 	const fetchPRs = async (options?: { force?: boolean }) => {
 		setIsLoadingPRs(true);
-		// FIXME hardcoded github
 		try {
-			const response: any = await dispatch(getMyPullRequests("github*com", options, true));
-			if (response && response.length) {
+			let _responses = [];
+			for (const _ of derivedState.PRSupportedProviders) {
+				const response: any = await dispatch(getMyPullRequests(_.id, options, true));
+				if (response && response.length) {
+					_responses = _responses.concat(response);
+				}
+			}
+			if (_responses.length) {
 				HostApi.instance.track("PR List Rendered", {
-					"PR Count": response.length
+					"PR Count": _responses.length
 				});
-				setPRs(response);
+				setPRs(_responses);
 			}
 		} catch (ex) {
 			if (ex && ex.indexOf('"message":"Bad credentials"') > -1) {
@@ -172,15 +180,27 @@ export function OpenReviews(props: Props) {
 
 	const goPR = async (url: string) => {
 		HostApi.instance
-			.send(ExecuteThirdPartyRequestUntypedType, {
-				method: "getPullRequestIdFromUrl",
-				providerId: "github*com",
-				params: { url }
+			.send(QueryThirdPartyRequestType, {
+				url: url
 			})
-			.then((id: any) => {
-				if (id) {
-					dispatch(setCurrentReview(""));
-					dispatch(setCurrentPullRequest(id));
+			.then((providerInfo: any) => {
+				if (providerInfo && providerInfo.providerId) {
+					HostApi.instance
+						.send(ExecuteThirdPartyRequestUntypedType, {
+							method: "getPullRequestIdFromUrl",
+							providerId: providerInfo.providerId,
+							params: { url }
+						})
+						.then(id => {
+							if (id) {
+								dispatch(setCurrentReview(""));
+								dispatch(setCurrentPullRequest(providerInfo.providerId, id as string));
+							} else {
+								HostApi.instance.send(OpenUrlRequestType, {
+									url
+								});
+							}
+						});
 				} else {
 					HostApi.instance.send(OpenUrlRequestType, {
 						url
@@ -359,7 +379,9 @@ export function OpenReviews(props: Props) {
 						{prs.map(pr => {
 							const selected = derivedState.repos.find(repo => {
 								return (
-									repo.currentBranch === pr.headRefName && repo.name === pr.headRepository.name
+									repo.currentBranch === pr.headRefName &&
+									pr.headRepository &&
+									repo.name === pr.headRepository.name
 								);
 							});
 							return (
@@ -372,7 +394,7 @@ export function OpenReviews(props: Props) {
 									<Row
 										key={"pr-" + pr.id}
 										className={selected ? "selected" : ""}
-										onClick={() => dispatch(setCurrentPullRequest(pr.id))}
+										onClick={() => dispatch(setCurrentPullRequest(pr.providerId, pr.id))}
 									>
 										<div>
 											{selected && <Icon name="arrow-right" className="selected-icon" />}

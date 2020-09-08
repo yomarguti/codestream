@@ -4,7 +4,7 @@ import { URI } from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
 import { User } from "../api/extensions";
 import { SessionContainer } from "../container";
-import { GitRemote, GitRepository } from "../git/gitService";
+import { GitRemote, GitRemoteLike, GitRepository } from "../git/gitService";
 import { Logger } from "../logger";
 import {
 	AddEnterpriseProviderRequest,
@@ -28,6 +28,7 @@ import {
 	FetchThirdPartyPullRequestCommitsResponse,
 	FetchThirdPartyPullRequestRequest,
 	FetchThirdPartyPullRequestResponse,
+	GetMyPullRequestsResponse,
 	MoveThirdPartyCardRequest,
 	MoveThirdPartyCardResponse,
 	RemoveEnterpriseProviderRequest,
@@ -90,7 +91,7 @@ export interface ThirdPartyProviderSupportsPullRequests {
 		request: ProviderCreatePullRequestRequest
 	): Promise<ProviderCreatePullRequestResponse | undefined>;
 	getRepoInfo(request: ProviderGetRepoInfoRequest): Promise<ProviderGetRepoInfoResponse>;
-	getIsMatchingRemotePredicate(): any;
+	getIsMatchingRemotePredicate(): (remoteLike: GitRemoteLike) => boolean;
 	getRemotePaths(repo: any, _projectsByRemotePath: any): any;
 
 	getPullRequest(
@@ -100,6 +101,12 @@ export interface ThirdPartyProviderSupportsPullRequests {
 	getPullRequestCommits(
 		request: FetchThirdPartyPullRequestCommitsRequest
 	): Promise<FetchThirdPartyPullRequestCommitsResponse>;
+	getMyPullRequests(request: {
+		owner: string;
+		repo: string;
+		isOpen?: boolean;
+		force?: boolean;
+	}): Promise<GetMyPullRequestsResponse[] | undefined>;
 }
 
 export namespace ThirdPartyIssueProvider {
@@ -115,7 +122,10 @@ export namespace ThirdPartyIssueProvider {
 	export function supportsPullRequests(
 		provider: ThirdPartyProvider
 	): provider is ThirdPartyProvider & ThirdPartyProviderSupportsPullRequests {
-		return (provider as any).getPullRequestDocumentMarkers !== undefined;
+		return (
+			(provider as any).getPullRequestDocumentMarkers !== undefined ||
+			(provider as any).getMyPullRequests !== undefined
+		);
 	}
 }
 

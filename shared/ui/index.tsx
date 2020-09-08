@@ -37,7 +37,8 @@ import {
 	GetDocumentFromMarkerRequestType,
 	DidEncounterMaintenanceModeNotificationType,
 	VerifyConnectivityRequestType,
-	ExecuteThirdPartyRequestUntypedType
+	ExecuteThirdPartyRequestUntypedType,
+	QueryThirdPartyRequestType
 } from "@codestream/protocols/agent";
 import { CSApiCapabilities, CodemarkType } from "@codestream/protocols/api";
 import translations from "./translations/en";
@@ -377,24 +378,35 @@ function listenForEvents(store) {
 				switch (route.action) {
 					case "open": {
 						HostApi.instance
-							.send(ExecuteThirdPartyRequestUntypedType, {
-								method: "getPullRequestIdFromUrl",
-								providerId: "github*com",
-								params: { url: route.query.url }
+							.send(QueryThirdPartyRequestType, {
+								url: route.query.url
 							})
-							.then((id: any) => {
-								if (id) {
-									store.dispatch(setCurrentReview(""));
-									if (route.query.checkoutBranch)
-										store.dispatch(setCurrentPullRequestAndBranch(id));
-									else store.dispatch(setCurrentPullRequest(id));
+							.then((providerInfo: any) => {
+								if (providerInfo && providerInfo.providerId) {
+									HostApi.instance
+										.send(ExecuteThirdPartyRequestUntypedType, {
+											method: "getPullRequestIdFromUrl",
+											providerId: providerInfo.providerId,
+											params: { url: route.query.url }
+										})
+										.then((id: any) => {
+											if (id) {
+												store.dispatch(setCurrentReview(""));
+												if (route.query.checkoutBranch)
+													store.dispatch(setCurrentPullRequestAndBranch(id));
+												else store.dispatch(setCurrentPullRequest(providerInfo.providerId, id));
+											} else {
+												console.warn("Unable to load PR from: ", route);
+											}
+										})
+										.catch(e => {
+											console.warn("Unable to load PR from: ", route);
+										});
 								} else {
 									console.warn("Unable to load PR from: ", route);
 								}
-							})
-							.catch(e => {
-								console.warn("Unable to load PR from: ", route);
 							});
+
 						break;
 					}
 				}
