@@ -60,24 +60,12 @@ import {
 	getPullRequestConversations,
 	clearPullRequestCommits
 } from "../store/providerPullRequests/actions";
+import { getProviderPullRequestRepo } from "../store/providerPullRequests/reducer";
 import { confirmPopup } from "./Confirm";
 
 export const WidthBreakpoint = "630px";
 
 const Root = styled.div`
-	${Tabs} {
-		margin: 10px 0;
-	}
-	${Tab} {
-		font-size: 13px;
-		white-space: nowrap;
-		padding: 0 5px 10px 5px;
-		.icon {
-			// vertical-align: -2px;
-			display: inline-block;
-			margin: 0 5px;
-		}
-	}
 	@media only screen and (max-width: ${WidthBreakpoint}) {
 		.wide-text {
 			display: none;
@@ -131,7 +119,8 @@ export const PullRequest = () => {
 			team,
 			textEditorUri: state.editorContext.textEditorUri,
 			reposState: state.repos,
-			checkoutBranch: state.context.pullRequestCheckoutBranch
+			checkoutBranch: state.context.pullRequestCheckoutBranch,
+			currentRepo: getProviderPullRequestRepo(state)
 		};
 	});
 
@@ -231,12 +220,9 @@ export const PullRequest = () => {
 	const checkout = async () => {
 		if (!pr) return;
 		setIsLoadingBranch(true);
-		const currentRepo = Object.values(derivedState.reposState).find(
-			_ => _.name === pr.repository.name
-		);
 		const result = await HostApi.instance.send(SwitchBranchRequestType, {
 			branch: pr!.headRefName,
-			repoId: currentRepo ? currentRepo.id : ""
+			repoId: derivedState.currentRepo ? derivedState.currentRepo.id : ""
 		});
 		if (result.error) {
 			console.warn("ERROR FROM SET BRANCH: ", result.error);
@@ -480,7 +466,7 @@ export const PullRequest = () => {
 	const iAmRequested = useMemo(() => {
 		if (pr) {
 			return pr.reviewRequests.nodes.find(
-				request => request.requestedReviewer.login === pr.viewer.login
+				request => request.requestedReviewer && request.requestedReviewer.login === pr.viewer.login
 			);
 		}
 		return false;
@@ -730,7 +716,7 @@ export const PullRequest = () => {
 				</PRHeader>
 				{!derivedState.composeCodemarkActive && (
 					<ScrollBox>
-						<div className="channel-list vscroll">
+						<div className="channel-list vscroll" style={{ paddingTop: "10px" }}>
 							{activeTab === 1 && (
 								<PullRequestConversationTab
 									pr={pr}
