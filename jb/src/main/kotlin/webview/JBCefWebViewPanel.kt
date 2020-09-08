@@ -15,6 +15,8 @@ import java.awt.BorderLayout
 import java.awt.datatransfer.DataFlavor
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
+import java.awt.event.MouseEvent
+import java.awt.event.MouseListener
 import javax.swing.JPanel
 
 class JBCefWebViewPanel(val jbCefBrowser: JBCefBrowser) : JPanel(BorderLayout()), DataProvider {
@@ -45,6 +47,17 @@ class JBCefWebViewPanel(val jbCefBrowser: JBCefBrowser) : JPanel(BorderLayout())
         })
 
         isFocusable = true
+
+        addMouseListener(object : MouseListener {
+            override fun mousePressed(e: MouseEvent?) {
+                focus()
+            }
+
+            override fun mouseClicked(e: MouseEvent?) {}
+            override fun mouseReleased(e: MouseEvent?) {}
+            override fun mouseEntered(e: MouseEvent?) {}
+            override fun mouseExited(e: MouseEvent?) {}
+        })
     }
 
     private val myCutProvider = object : CutProvider {
