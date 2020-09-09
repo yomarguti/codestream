@@ -634,8 +634,7 @@ export interface PullRequestQuery {
 	providerId: string;
 	name: string;
 	query: string;
-	active: boolean;
-	limitToOpenRepos: boolean;
+	hidden: boolean;
 }
 
 export interface CSMePreferences {
@@ -647,6 +646,8 @@ export interface CSMePreferences {
 	skipGitEmailCheck?: boolean;
 	pullRequestFilesChangedMode?: "files" | "hunks";
 	pullRequestQueries?: PullRequestQuery[];
+	pullRequestQueryShowAllRepos?: boolean;
+	pullRequestQueryHideLabels?: boolean;
 	[key: string]: any;
 }
 

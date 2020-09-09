@@ -624,8 +624,6 @@ export interface GetMyPullRequestsRequest {
 	owner?: string;
 	name?: string;
 	queries: string[];
-	/** if true, only return PRs that are open */
-	isOpen?: boolean;
 	/**
 	 * forces a re-fetch from the provider
 	 */
