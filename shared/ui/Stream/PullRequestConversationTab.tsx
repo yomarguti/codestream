@@ -39,7 +39,8 @@ import {
 	PRCopyableTerminal,
 	PRCloneURLWrapper,
 	PRResolveConflictsRow,
-	PRHeadshots
+	PRHeadshots,
+	PRResolveConflicts
 } from "./PullRequestComponents";
 import { PullRequestTimelineItems, GHOST } from "./PullRequestTimelineItems";
 import { DropdownButton } from "./Review/DropdownButton";
@@ -813,22 +814,56 @@ export const PullRequestConversationTab = (props: {
 								</Button>
 							</PRResolveConflictsRow>
 						</PRCommentCard>
-					) : pr.reviewDecision === "REVIEW_REQUIRED" ? (
+					) : pr.mergeStateStatus === "BLOCKED" ? (
 						<PRCommentCard>
 							<PRStatusHeadshot className="gray-background">
 								<Icon name="git-merge" />
 							</PRStatusHeadshot>
-							<div style={{ padding: "5px 0" }}>
-								<PRResolveConflictsRow>
-									<PRIconButton className="red-background">
-										<Icon name="x" />
-									</PRIconButton>
-									<div className="middle">
-										<h1>Review Required</h1>
-										Reviews are required by reviewers with write access.
-									</div>
-								</PRResolveConflictsRow>
-							</div>
+							<PRResolveConflicts>
+								{pr.reviewDecision === "REVIEW_REQUIRED" ? (
+									<>
+										<PRResolveConflictsRow>
+											<PRIconButton className="red-background">
+												<Icon name="x" />
+											</PRIconButton>
+											<div className="middle">
+												<h1>Review Required</h1>
+												Reviews are required by reviewers with write access.
+											</div>
+										</PRResolveConflictsRow>
+										<PRResolveConflictsRow>
+											<PRIconButton className="red-background">
+												<Icon name="x" />
+											</PRIconButton>
+											<div className="middle">
+												<h1>Merging is blocked</h1>
+											</div>
+										</PRResolveConflictsRow>
+									</>
+								) : ghRepo.viewerPermission === "READ" ? (
+									<PRResolveConflictsRow>
+										<PRIconButton className="red-background">
+											<Icon name="x" />
+										</PRIconButton>
+										<div className="middle">
+											<h1>Merging is blocked</h1>
+											The base branch restricts merging to authorized users.{" "}
+											<Link href="https://docs.github.com/en/github/administering-a-repository/about-protected-branches">
+												Learn more about protected branches.
+											</Link>
+										</div>
+									</PRResolveConflictsRow>
+								) : (
+									<PRResolveConflictsRow>
+										<PRIconButton className="red-background">
+											<Icon name="x" />
+										</PRIconButton>
+										<div className="middle">
+											<h1>Merging is blocked</h1>
+										</div>
+									</PRResolveConflictsRow>
+								)}
+							</PRResolveConflicts>
 						</PRCommentCard>
 					) : !pr.merged && pr.mergeable === "MERGEABLE" && pr.state !== "CLOSED" ? (
 						<PRCommentCard className="green-border dark-header">
@@ -938,7 +973,7 @@ export const PullRequestConversationTab = (props: {
 							<PRStatusHeadshot className="gray-background">
 								<Icon name="git-merge" />
 							</PRStatusHeadshot>
-							<div style={{ padding: "5px 0" }}>
+							<PRResolveConflicts>
 								<PRResolveConflictsRow>
 									<PRIconButton className="gray-background">
 										<Icon name="alert" />
@@ -965,7 +1000,7 @@ export const PullRequestConversationTab = (props: {
 										</Button>
 									)}
 								</PRResolveConflictsRow>
-							</div>
+							</PRResolveConflicts>
 						</PRCommentCard>
 					) : !pr.merged && pr.mergeable === "CONFLICTING" ? (
 						<PRCommentCard>
@@ -976,7 +1011,7 @@ export const PullRequestConversationTab = (props: {
 								pr={pr}
 								opinionatedReviews={Object.values(opinionatedReviewsHash)}
 							/>
-							<div style={{ padding: "5px 0" }}>
+							<PRResolveConflicts>
 								<PRResolveConflictsRow>
 									<PRIconButton className="gray-background">
 										<Icon name="alert" />
@@ -1070,7 +1105,7 @@ export const PullRequestConversationTab = (props: {
 										/>
 									</div>
 								)}
-							</div>
+							</PRResolveConflicts>
 						</PRCommentCard>
 					) : !pr.merged && pr.mergeable !== "CONFLICTING" && pr.state === "CLOSED" ? (
 						<PRCommentCard>
