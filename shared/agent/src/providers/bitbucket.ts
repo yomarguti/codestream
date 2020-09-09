@@ -1,5 +1,5 @@
 "use strict";
-import { GitRemote, GitRepository } from "git/gitService";
+import { GitRemoteLike, GitRepository } from "git/gitService";
 import * as paths from "path";
 import * as qs from "querystring";
 import { URI } from "vscode-uri";
@@ -20,13 +20,14 @@ import {
 	FetchThirdPartyCardsResponse,
 	FetchThirdPartyCardWorkflowRequest,
 	FetchThirdPartyCardWorkflowResponse,
-	MoveThirdPartyCardRequest,
-	MoveThirdPartyCardResponse,
-	ThirdPartyProviderCard,
+	FetchThirdPartyPullRequestCommitsRequest,
+	FetchThirdPartyPullRequestCommitsResponse,
 	FetchThirdPartyPullRequestRequest,
 	FetchThirdPartyPullRequestResponse,
-	FetchThirdPartyPullRequestCommitsRequest,
-	FetchThirdPartyPullRequestCommitsResponse
+	GetMyPullRequestsResponse,
+	MoveThirdPartyCardRequest,
+	MoveThirdPartyCardResponse,
+	ThirdPartyProviderCard
 } from "../protocol/agent.protocol";
 import {
 	CodemarkType,
@@ -343,6 +344,16 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 	}
 
 	@log()
+	getMyPullRequests(request: {
+		owner: string;
+		repo: string;
+		isOpen?: boolean | undefined;
+		force?: boolean | undefined;
+	}): Promise<GetMyPullRequestsResponse[] | undefined> {
+		throw new Error("Method not implemented.");
+	}
+
+	@log()
 	async getPullRequestDocumentMarkers({
 		uri,
 		repoId,
@@ -579,7 +590,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 		{ expiresAt: number; comments: Promise<PullRequestComment[]> }
 	>();
 
-	private _isMatchingRemotePredicate = (r: GitRemote) => r.domain === "bitbucket.org";
+	private _isMatchingRemotePredicate = (r: GitRemoteLike) => r.domain === "bitbucket.org";
 	getIsMatchingRemotePredicate() {
 		return this._isMatchingRemotePredicate;
 	}

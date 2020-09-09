@@ -109,8 +109,17 @@ export const setCurrentReview = (reviewId?: string) =>
 export const setCreatePullRequest = (reviewId?: string) =>
 	action(ContextActionsType.SetCreatePullRequest, { reviewId });
 
-export const setCurrentPullRequest = (prId?: string) =>
-	action(ContextActionsType.SetCurrentPullRequest, { prId });
+export const setCurrentPullRequest = (providerId: string, id: string) =>
+	action(ContextActionsType.SetCurrentPullRequest, { providerId, id });
+
+export const clearCurrentPullRequest = () =>
+	action(ContextActionsType.SetCurrentPullRequest, {
+		providerId: "",
+		id: ""
+	});
+
+export const setCurrentPullRequestAndBranch = (prId?: string) =>
+	action(ContextActionsType.SetCurrentPullRequestAndBranch, { prId });
 
 export const setProfileUser = (userId?: string) =>
 	action(ContextActionsType.SetProfileUser, userId);

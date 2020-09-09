@@ -26,6 +26,7 @@ import { LocateRepoButton } from "./LocateRepoButton";
 import { Link } from "./Link";
 import { Meta, MetaLabel } from "./Codemark/BaseCodemark";
 import { MetaIcons } from "./Review";
+import { getProviderPullRequestRepo } from "../store/providerPullRequests/reducer";
 
 // const VISITED_REVIEW_FILES = "review:changeset-file-list";
 const NOW = new Date().getTime(); // a rough timestamp so we know when the file was visited
@@ -41,8 +42,11 @@ export const PullRequestFilesChanged = (props: {
 	const [repoId, setRepoId] = useState("");
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const userId = state.session.userId || "";
+		const currentPullRequestId = state.context.currentPullRequest
+			? state.context.currentPullRequest.id
+			: undefined;
 		const matchFile =
-			state.context.currentPullRequestId &&
+			currentPullRequestId &&
 			state.editorContext.scmInfo &&
 			state.editorContext.scmInfo.uri &&
 			state.editorContext.scmInfo.uri.startsWith("codestream-diff://")
@@ -53,8 +57,7 @@ export const PullRequestFilesChanged = (props: {
 			matchFile,
 			userId,
 			repos: state.repos,
-			// TODO more solid filtering
-			currentRepo: Object.values(state.repos).find(_ => _.name === props.pr.repository.name),
+			currentRepo: getProviderPullRequestRepo(state),
 			numFiles: props.filesChanged.length,
 			isInVscode: state.ide.name === "VSC"
 		};
@@ -212,7 +215,7 @@ export const PullRequestFilesChanged = (props: {
 		}
 
 		const result = await HostApi.instance.send(EditorRevealRangeRequestType, {
-			uri: path.join(repoRoot, f.file),
+			uri: path.join("file://", repoRoot, f.file),
 			range: Range.create(0, 0, 0, 0)
 		});
 

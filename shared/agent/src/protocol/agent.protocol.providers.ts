@@ -488,11 +488,14 @@ export interface FetchThirdPartyPullRequestPullRequest {
 	mergeable: string;
 	merged: boolean;
 	mergedAt: string;
+	canBeRebased: string;
+	mergeStateStatus: string;
 	title: string;
 	url: string;
 	repoUrl: string;
 	baseUrl: string;
 	updatedAt: string;
+	reviewDecision?: "APPROVED" | "CHANGES_REQUESTED" | "REVIEW_REQUIRED";
 	reactionGroups: any;
 	includesCreatedEdit: boolean;
 	viewerDidAuthor: boolean;
@@ -601,6 +604,21 @@ export class ExecuteThirdPartyTypedType<Req, Res> extends RequestType<
 		super("codestream/provider/generic");
 	}
 }
+
+export interface QueryThirdPartyRequest {
+	url: string;
+}
+
+export interface QueryThirdPartyResponse {
+	providerId?: string;
+}
+
+export const QueryThirdPartyRequestType = new RequestType<
+	QueryThirdPartyRequest,
+	QueryThirdPartyResponse,
+	void,
+	void
+>("codestream/provider/query");
 
 export interface GetMyPullRequestsRequest {
 	owner?: string;

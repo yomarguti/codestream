@@ -395,10 +395,9 @@ export const CreatePullRequestPanel = props => {
 				});
 				success = true;
 				setFormState({ message: "", type: "", url: "", id: "" });
-				if (prProviderId === "github*com") {
-					// FIXME look for enterprise
+				if (result.id && (prProviderId === "github*com" || prProviderId === "github/enterprise")) {
 					props.closePanel();
-					dispatch(setCurrentPullRequest(result.id));
+					dispatch(setCurrentPullRequest(prProviderId, result.id!));
 				} else {
 					if (derivedState.reviewId) {
 						props.closePanel();
@@ -707,7 +706,19 @@ export const CreatePullRequestPanel = props => {
 				break;
 			}
 			case "BRANCH_REMOTE_CREATION_FAILED": {
-				messageElement = <span>Could not create branch remote</span>;
+				const title = "Could not create branch remote";
+				if (message) {
+					messageElement = (
+						<span>
+							{title}
+							{": "}
+							{message}
+						</span>
+					);
+				} else {
+					messageElement = <span>{title}</span>;
+				}
+
 				break;
 			}
 			case "REPO_NOT_OPEN": {
@@ -746,7 +757,7 @@ export const CreatePullRequestPanel = props => {
 								onClick={e => {
 									e.preventDefault();
 									if (id) {
-										dispatch(setCurrentPullRequest(id));
+										dispatch(setCurrentPullRequest(prProviderId, id));
 									} else {
 										HostApi.instance.send(OpenUrlRequestType, { url: url! });
 									}

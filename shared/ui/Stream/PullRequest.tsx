@@ -10,7 +10,11 @@ import { Tabs, Tab } from "../src/components/Tabs";
 import Timestamp from "./Timestamp";
 import copy from "copy-to-clipboard";
 import { Link } from "./Link";
-import { setCurrentPullRequest, setCurrentReview } from "../store/context/actions";
+import {
+	clearCurrentPullRequest,
+	setCurrentPullRequest,
+	setCurrentReview
+} from "../store/context/actions";
 import CancelButton from "./CancelButton";
 import { useDidMount } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
@@ -60,24 +64,12 @@ import {
 	getPullRequestConversations,
 	clearPullRequestCommits
 } from "../store/providerPullRequests/actions";
+import { getProviderPullRequestRepo } from "../store/providerPullRequests/reducer";
 import { confirmPopup } from "./Confirm";
 
 export const WidthBreakpoint = "630px";
 
 const Root = styled.div`
-	${Tabs} {
-		margin: 10px 0;
-	}
-	${Tab} {
-		font-size: 13px;
-		white-space: nowrap;
-		padding: 0 5px 10px 5px;
-		.icon {
-			// vertical-align: -2px;
-			display: inline-block;
-			margin: 0 5px;
-		}
-	}
 	@media only screen and (max-width: ${WidthBreakpoint}) {
 		.wide-text {
 			display: none;
@@ -126,18 +118,27 @@ export const PullRequest = () => {
 			reviewsState: state.reviews,
 			reviews: reviewSelectors.getAllReviews(state),
 			currentUser,
-			currentPullRequestId: state.context.currentPullRequestId,
+			currentPullRequestProviderId: state.context.currentPullRequest
+				? state.context.currentPullRequest.providerId
+				: undefined,
+			currentPullRequestId: state.context.currentPullRequest
+				? state.context.currentPullRequest.id
+				: undefined,
 			composeCodemarkActive: state.context.composeCodemarkActive,
 			team,
 			textEditorUri: state.editorContext.textEditorUri,
-			reposState: state.repos
+			reposState: state.repos,
+			checkoutBranch: state.context.pullRequestCheckoutBranch,
+			currentRepo: getProviderPullRequestRepo(state)
 		};
 	});
 
+	console.warn("CHECKOUT: ", derivedState.checkoutBranch);
 	const [activeTab, setActiveTab] = useState(1);
 	const [ghRepo, setGhRepo] = useState<any>(EMPTY_HASH);
 	const [isLoadingPR, setIsLoadingPR] = useState(false);
 	const [isLoadingMessage, setIsLoadingMessage] = useState("");
+	const [isLoadingBranch, setIsLoadingBranch] = useState(false);
 	const [pr, setPr] = useState<FetchThirdPartyPullRequestPullRequest | undefined>();
 	const [openRepos, setOpenRepos] = useState<ReposScmPlusName[]>(EMPTY_ARRAY);
 	const [editingTitle, setEditingTitle] = useState(false);
@@ -150,7 +151,7 @@ export const PullRequest = () => {
 	>("UNCHECKED");
 
 	const exit = async () => {
-		await dispatch(setCurrentPullRequest());
+		await dispatch(clearCurrentPullRequest());
 	};
 
 	const _assignState = pr => {
@@ -164,30 +165,35 @@ export const PullRequest = () => {
 		setIsLoadingMessage("");
 	};
 
-	// FIXME this shouldn't be hard-coded
-	const providerId = "github*com";
-
 	useEffect(() => {
-		const providerPullRequests = derivedState.providerPullRequests[providerId];
+		const providerPullRequests =
+			derivedState.providerPullRequests[derivedState.currentPullRequestProviderId!];
 		if (providerPullRequests) {
 			let data = providerPullRequests[derivedState.currentPullRequestId!];
 			if (data) {
 				_assignState(data.conversations);
 			}
 		}
-	}, [derivedState.providerPullRequests]);
+	}, [
+		derivedState.currentPullRequestProviderId,
+		derivedState.currentPullRequestId,
+		derivedState.providerPullRequests
+	]);
 
 	const initialFetch = async (message?: string) => {
 		if (message) setIsLoadingMessage(message);
 		setIsLoadingPR(true);
 
 		const response = (await dispatch(
-			getPullRequestConversations(providerId, derivedState.currentPullRequestId!)
+			getPullRequestConversations(
+				derivedState.currentPullRequestProviderId!,
+				derivedState.currentPullRequestId!
+			)
 		)) as any;
 		_assignState(response);
 		if (response) {
 			HostApi.instance.track("PR Clicked", {
-				Host: providerId
+				Host: derivedState.currentPullRequestProviderId
 			});
 		}
 	};
@@ -221,18 +227,26 @@ export const PullRequest = () => {
 		_assignState(response);
 
 		// just clear the files and commits data -- it will be fetched if necessary (since it has its own api call)
-		dispatch(clearPullRequestFiles(providerId, derivedState.currentPullRequestId!));
-		dispatch(clearPullRequestCommits(providerId, derivedState.currentPullRequestId!));
+		dispatch(
+			clearPullRequestFiles(
+				derivedState.currentPullRequestProviderId!,
+				derivedState.currentPullRequestId!
+			)
+		);
+		dispatch(
+			clearPullRequestCommits(
+				derivedState.currentPullRequestProviderId!,
+				derivedState.currentPullRequestId!
+			)
+		);
 	};
 
 	const checkout = async () => {
 		if (!pr) return;
-		const currentRepo = Object.values(derivedState.reposState).find(
-			_ => _.name === pr.repository.name
-		);
+		setIsLoadingBranch(true);
 		const result = await HostApi.instance.send(SwitchBranchRequestType, {
 			branch: pr!.headRefName,
-			repoId: currentRepo ? currentRepo.id : ""
+			repoId: derivedState.currentRepo ? derivedState.currentRepo.id : ""
 		});
 		if (result.error) {
 			console.warn("ERROR FROM SET BRANCH: ", result.error);
@@ -247,13 +261,23 @@ export const PullRequest = () => {
 				centered: false,
 				buttons: [{ label: "OK", className: "control-button" }]
 			});
+			setIsLoadingBranch(false);
 			return;
 		} else {
+			setIsLoadingBranch(false);
 			getOpenRepos();
 		}
 		// i don't think we need to reload here, do we?
 		// fetch("Reloading...");
 	};
+
+	useEffect(() => {
+		if (pr && pr.headRefName && derivedState.checkoutBranch) {
+			checkout();
+			// clear the branch flag
+			dispatch(setCurrentPullRequest(pr.providerId, pr.id));
+		}
+	}, [pr && pr.headRefName, derivedState.checkoutBranch]);
 
 	const hasRepoOpen = useMemo(() => {
 		return pr && openRepos.find(_ => _.name === pr.repository.name);
@@ -334,7 +358,7 @@ export const PullRequest = () => {
 			if (review) {
 				e.preventDefault();
 				e.stopPropagation();
-				dispatch(setCurrentPullRequest(""));
+				dispatch(clearCurrentPullRequest());
 				dispatch(setCurrentReview(review.id));
 			}
 		}
@@ -466,7 +490,7 @@ export const PullRequest = () => {
 	const iAmRequested = useMemo(() => {
 		if (pr) {
 			return pr.reviewRequests.nodes.find(
-				request => request.requestedReviewer.login === pr.viewer.login
+				request => request.requestedReviewer && request.requestedReviewer.login === pr.viewer.login
 			);
 		}
 		return false;
@@ -606,25 +630,29 @@ export const PullRequest = () => {
 									/>
 								</span>
 							)}
-							<span className={cantCheckoutReason ? "disabled" : ""}>
-								<Icon
-									title={
-										<>
-											Checkout Branch
-											{cantCheckoutReason && (
-												<div className="subtle smaller" style={{ maxWidth: "200px" }}>
-													Disabled: {cantCheckoutReason}
-												</div>
-											)}
-										</>
-									}
-									trigger={["hover"]}
-									delay={1}
-									onClick={checkout}
-									placement="bottom"
-									name="repo"
-								/>
-							</span>
+							{isLoadingBranch ? (
+								<Icon name="sync" className="spin" />
+							) : (
+								<span className={cantCheckoutReason ? "disabled" : ""}>
+									<Icon
+										title={
+											<>
+												Checkout Branch
+												{cantCheckoutReason && (
+													<div className="subtle smaller" style={{ maxWidth: "200px" }}>
+														Disabled: {cantCheckoutReason}
+													</div>
+												)}
+											</>
+										}
+										trigger={["hover"]}
+										delay={1}
+										onClick={checkout}
+										placement="bottom"
+										name="repo"
+									/>
+								</span>
+							)}
 							<span>
 								<Icon
 									title="Reload"
@@ -712,7 +740,7 @@ export const PullRequest = () => {
 				</PRHeader>
 				{!derivedState.composeCodemarkActive && (
 					<ScrollBox>
-						<div className="channel-list vscroll">
+						<div className="channel-list vscroll" style={{ paddingTop: "10px" }}>
 							{activeTab === 1 && (
 								<PullRequestConversationTab
 									pr={pr}
