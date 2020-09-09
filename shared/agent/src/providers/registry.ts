@@ -440,16 +440,22 @@ export class ThirdPartyProviderRegistry {
 					return false;
 				}
 			})) {
-				const thirdPartyIssueProvider = provider as ThirdPartyIssueProvider &
-					ThirdPartyProviderSupportsPullRequests;
-				if (
-					thirdPartyIssueProvider.getIsMatchingRemotePredicate()({
-						domain: uri.authority
-					})
-				) {
-					return {
-						providerId: provider.getConfig().id
-					};
+				try {
+					const thirdPartyIssueProvider = provider as ThirdPartyIssueProvider &
+						ThirdPartyProviderSupportsPullRequests;
+					if (
+						thirdPartyIssueProvider.getIsMatchingRemotePredicate()({
+							domain: uri.authority
+						})
+					) {
+						return {
+							providerId: provider.getConfig().id
+						};
+					}
+				} catch (err) {
+					Logger.debug(err, "queryThirdParty failed", {
+						url: request.url
+					});
 				}
 			}
 		} catch (ex) {
@@ -495,5 +501,18 @@ export class ThirdPartyProviderRegistry {
 		return this.getProviders(
 			(p): p is T => p.isConnected(user) && (predicate == null || predicate(p))
 		);
+	}
+
+	providerSupportsPullRequests(providerId?: string) {
+		try {
+			if (!providerId) return false;
+			const providers = this.getProviders().filter(
+				(_: ThirdPartyProvider) => _.getConfig().id === providerId
+			);
+			if (!providers || !providers.length) return false;
+			return this.getPullRequestProvider(providers[0]);
+		} catch {
+			return false;
+		}
 	}
 }
