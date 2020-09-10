@@ -628,6 +628,10 @@ export interface GetMyPullRequestsRequest {
 	 * forces a re-fetch from the provider
 	 */
 	force?: boolean;
+	/**
+	 * is this repo open in the IDE?
+	 */
+	isOpen?: boolean;
 }
 
 export interface GetMyPullRequestsResponse {
