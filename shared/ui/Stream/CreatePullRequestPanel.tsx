@@ -19,7 +19,8 @@ import {
 	GetReposScmRequestType,
 	GetBranchesRequestType,
 	ReposScm,
-	CheckPullRequestPreconditionsResponse
+	CheckPullRequestPreconditionsResponse,
+	GetLatestCommitScmRequestType
 } from "@codestream/protocols/agent";
 import { connectProvider } from "./actions";
 import { isConnected, getPRLabel } from "../store/providers/reducer";
@@ -185,8 +186,10 @@ export const CreatePullRequestPanel = props => {
 
 	const [reviewBranch, setReviewBranch] = useState("");
 	const [branches, setBranches] = useState([] as string[]);
+	const [remoteBranches, setRemoteBranches] = useState([] as string[]);
 	const [requiresUpstream, setRequiresUpstream] = useState(false);
 	const [origins, setOrigins] = useState([] as string[]);
+	const [latestCommit, setLatestCommit] = useState("");
 
 	// states used to create the eventual pr
 	const [prBranch, setPrBranch] = useState("");
@@ -254,6 +257,7 @@ export const CreatePullRequestPanel = props => {
 			if (result && result.success) {
 				setReviewBranch(result.branch!);
 				setBranches(result.branches!);
+				setRemoteBranches(result.remoteBranches!);
 				if (result.pullRequestProvider && result.pullRequestProvider.defaultBranch) {
 					setPrBranch(result.pullRequestProvider.defaultBranch!);
 				}
@@ -499,7 +503,7 @@ export const CreatePullRequestPanel = props => {
 	// }, [prBranch, reviewBranch]);
 
 	const renderBaseBranchesDropdown = () => {
-		const items = branches!.map(_ => {
+		const items = remoteBranches!.map(_ => {
 			return {
 				label: _,
 				key: _,
@@ -821,6 +825,30 @@ export const CreatePullRequestPanel = props => {
 		return <React.Fragment>{dots}</React.Fragment>;
 	}
 
+	const getLatestCommit = async () => {
+		const result = await HostApi.instance.send(GetLatestCommitScmRequestType, {
+			repoId: prRepoId,
+			branch: reviewBranch
+		});
+		if (result) {
+			setLatestCommit(result.shortMessage);
+		}
+	};
+
+	useEffect(() => {
+		getLatestCommit();
+	}, [selectedRepo, reviewBranch]);
+
+	const setTitleBasedOnBranch = () => {
+		setPrTitle(
+			reviewBranch.charAt(0).toUpperCase() +
+				reviewBranch
+					.slice(1)
+					.replace("-", " ")
+					.replace(/^(\w+)\//, "$1: ")
+		);
+	};
+
 	const providerAuthenticationMessage = () => {
 		let providerName = "Provider";
 		if (prProviderId) {
@@ -905,12 +933,12 @@ export const CreatePullRequestPanel = props => {
 									{loadingBranchInfo && <LoadingMessage>Loading branch info...</LoadingMessage>}
 									{(!loading && preconditionError.type) || loadingBranchInfo ? null : (
 										<div>
-											<div className="control-group">
-												{!titleValidity && (
-													<small className={cx("explainer", { "error-message": !titleValidity })}>
-														<FormattedMessage id="pullRequest.title" />
-													</small>
-												)}
+											{false && !titleValidity && (
+												<small className={cx("explainer", { "error-message": !titleValidity })}>
+													<FormattedMessage id="pullRequest.title" />
+												</small>
+											)}
+											<div key="title" className="control-group has-input-actions">
 												<TextInput
 													name="title"
 													value={prTitle}
@@ -920,6 +948,44 @@ export const CreatePullRequestPanel = props => {
 													onValidityChanged={onValidityChanged}
 													validate={isTitleValid}
 												/>
+												<div className="actions">
+													{prTitle.length > 0 && (
+														<Icon
+															name="x"
+															placement="top"
+															title="Clear Title"
+															className="clickable"
+															onClick={() => setPrTitle("")}
+														/>
+													)}
+													{userStatus.label && (
+														<Icon
+															placement="top"
+															title="Use Current Ticket"
+															name={userStatus.ticketProvider || "ticket"}
+															className="clickable"
+															onClick={() => setPrTitle(userStatus.label)}
+														/>
+													)}
+													{latestCommit && (
+														<Icon
+															placement="topRight"
+															title="Use Latest Commit Message"
+															name="git-commit"
+															className="clickable"
+															onClick={() => setPrTitle(latestCommit)}
+														/>
+													)}
+													{reviewBranch && (
+														<Icon
+															placement="top"
+															title="Use Branch Name"
+															name="git-branch"
+															className="clickable"
+															onClick={() => setTitleBasedOnBranch()}
+														/>
+													)}
+												</div>
 											</div>
 											<div className="control-group">
 												<textarea
