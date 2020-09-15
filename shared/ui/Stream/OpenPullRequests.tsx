@@ -32,6 +32,7 @@ import { ConfigurePullRequestQuery } from "./ConfigurePullRequestQuery";
 import { DEFAULT_QUERIES } from "../store/preferences/reducer";
 import { ConfigurePullRequestQuerySettings } from "./ConfigurePullRequestQuerySettings";
 import { usePrevious } from "../utilities/hooks";
+import { PullRequestQuery } from "@codestream/protocols/api";
 
 const PRSummaryName = styled.div`
 	padding: 2px 20px;
@@ -209,7 +210,8 @@ export function OpenPullRequests(props: Props) {
 				const newGroups = {};
 				console.warn("Loading the PRs...", theQueries);
 				for (const connectedProvider of derivedState.PRConnectedProviders) {
-					const queryStrings = (theQueries[connectedProvider.id] || []).map(_ => _.query);
+					const queriesByProvider: PullRequestQuery[] = theQueries[connectedProvider.id] || [];
+					const queryStrings = Object.values(queriesByProvider).map(_ => _.query);
 					console.warn("Loading the PRs... in the loop", queryStrings);
 					try {
 						const response: any = await dispatch(
@@ -237,9 +239,10 @@ export function OpenPullRequests(props: Props) {
 				console.warn("SETTING TO: ", newGroups);
 				setPullRequestGroups(newGroups);
 			} catch (ex) {
-				if (ex && ex.indexOf('"message":"Bad credentials"') > -1) {
-					// show message about re-authing?
-				}
+				console.error(ex);
+				// if (ex && ex.indexOf('"message":"Bad credentials"') > -1) {
+				// 	// show message about re-authing?
+				// }
 			} finally {
 				setIsLoadingPRs(false);
 			}
@@ -275,9 +278,10 @@ export function OpenPullRequests(props: Props) {
 				setPullRequestGroups(newGroups);
 			}
 		} catch (ex) {
-			if (ex && ex.indexOf('"message":"Bad credentials"') > -1) {
-				// show message about re-authing?
-			}
+			console.error(ex);
+			//if (ex && ex.indexOf('"message":"Bad credentials"') > -1) {
+			// show message about re-authing?
+			//}
 		} finally {
 			setIsLoadingPRGroup(undefined);
 		}
@@ -427,8 +431,8 @@ export function OpenPullRequests(props: Props) {
 					)}
 					{derivedState.PRConnectedProviders.map(connectedProvider => {
 						const providerId = connectedProvider.id;
-						const providerQueries = queries[providerId] || [];
-						return providerQueries.map((query, index) => {
+						const providerQueries: PullRequestQuery[] = queries[providerId] || [];
+						return Object.values(providerQueries).map((query: PullRequestQuery, index) => {
 							const providerGroups = pullRequestGroups[providerId];
 							const prGroup = providerGroups && providerGroups[index];
 							return (
