@@ -40,8 +40,7 @@ import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { Modal } from "../Modal";
 import { Button } from "@codestream/webview/src/components/Button";
 import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
-import { Card } from "@codestream/webview/src/components/Card";
-import { ButtonRow } from "../StatusPanel";
+import { ButtonRow } from "@codestream/webview/src/components/Dialog";
 import { Dialog } from "@codestream/webview/src/components/Dialog";
 
 interface ProviderInfo {
@@ -1003,7 +1002,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 										}}
 									/>
 									<input
-										autoFocus
+										autoFocus={queryOpen}
 										id="search-input"
 										type="text"
 										value={query}

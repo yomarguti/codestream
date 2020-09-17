@@ -1,9 +1,10 @@
 "use strict";
+import { Agent as HttpsAgent } from "https";
 import fetch, { RequestInit, Response } from "node-fetch";
 import { URI } from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
 import { User } from "../api/extensions";
-import { SessionContainer } from "../container";
+import { Container, SessionContainer } from "../container";
 import { GitRemote, GitRemoteLike, GitRepository } from "../git/gitService";
 import { Logger } from "../logger";
 import {
@@ -189,11 +190,23 @@ export abstract class ThirdPartyProviderBase<
 	private _readyPromise: Promise<void> | undefined;
 	protected _ensuringConnection: Promise<void> | undefined;
 	protected _providerInfo: TProviderInfo | undefined;
+	protected _httpsAgent: HttpsAgent | undefined;
 
 	constructor(
 		public readonly session: CodeStreamSession,
 		protected readonly providerConfig: ThirdPartyProviderConfig
-	) {}
+	) {
+		// only for on-prem installations ... if strictSSL is disabled for CodeStream,
+		// assume OK to have it disabled for third-party on-prem providers as well ...
+		// kind of insecure, but easier than other options ... so in this case (and
+		// this case only), establish our own HTTPS agent
+		if (providerConfig.forEnterprise && session.disableStrictSSL) {
+			Logger.log(`${providerConfig.name} provider will use a custom HTTPS agent with strictSSL disabled`);
+			this._httpsAgent = new HttpsAgent({
+				rejectUnauthorized: false
+			});
+		}
+	}
 
 	abstract get displayName(): string;
 	abstract get name(): string;
@@ -455,24 +468,18 @@ export abstract class ThirdPartyProviderBase<
 		const start = process.hrtime();
 
 		let traceResult;
+		let method;
+		let absoluteUrl;
 		try {
-			if (init !== undefined) {
-				if (init === undefined) {
-					init = {};
-				}
+			if (init === undefined) {
+				init = {};
+			}
+			if (this._httpsAgent) {
+				init.agent = this._httpsAgent;
 			}
 
-			// TODO: Get this to work with proxies
-			// if (this._proxyAgent !== undefined) {
-			// 	if (init === undefined) {
-			// 		init = {};
-			// 	}
-
-			// 	init.agent = this._proxyAgent;
-			// }
-
-			const method = (init && init.method) || "GET";
-			const absoluteUrl = options.absoluteUrl ? url : `${this.baseUrl}${url}`;
+			method = (init && init.method) || "GET";
+			absoluteUrl = options.absoluteUrl ? url : `${this.baseUrl}${url}`;
 
 			let json: Promise<R> | undefined;
 			let resp: Response | undefined;
@@ -488,13 +495,37 @@ export abstract class ThirdPartyProviderBase<
 
 			if (resp !== undefined && !resp.ok) {
 				traceResult = `${this.displayName}: FAILED(${retryCount}x) ${method} ${url}`;
-				throw await this.handleErrorResponse(resp);
+				const error = await this.handleErrorResponse(resp);
+				Container.instance().errorReporter.reportBreadcrumb({
+					message: "Third-party provider fetch failed",
+					category: "providerFetch",
+					data: {
+						provider: this.providerConfig.name,
+						retryCount,
+						method,
+						url,
+						errorMessage: error.message
+					}
+				});
+				throw error;
 			}
 
 			return {
 				body: await json!,
 				response: resp!
 			};
+		} catch (ex) {
+			Container.instance().errorReporter.reportBreadcrumb({
+				message: "Third-party provider fetch exception",
+				category: "providerFetch",
+				data: {
+					provider: this.providerConfig.name,
+					method,
+					url,
+					errorMessage: ex.message
+				}
+			});
+			throw ex;
 		} finally {
 			Logger.log(
 				`${traceResult}${

@@ -119,7 +119,7 @@ export type CSLocationArray = [number, number, number, number, CSLocationMeta | 
 export interface CSReferenceLocation {
 	commitHash?: string;
 	location: CSLocationArray;
-	flags: {
+	flags?: {
 		canonical?: boolean;
 		uncommitted?: boolean;
 		backtracked?: boolean;
@@ -630,6 +630,13 @@ export enum CSReviewAssignmentSetting {
 	Random = "random"
 }
 
+export interface PullRequestQuery {
+	providerId: string;
+	name: string;
+	query: string;
+	hidden: boolean;
+}
+
 export interface CSMePreferences {
 	telemetryConsent?: boolean; // legacy
 	telemetryOptOut?: boolean;
@@ -637,7 +644,12 @@ export interface CSMePreferences {
 	notificationDelivery?: CSNotificationDeliveryPreference;
 	skipWallToWallBanner?: boolean;
 	skipGitEmailCheck?: boolean;
+	skipEmailingAuthors?: boolean;
+	skipPostCreationModal?: boolean;
 	pullRequestFilesChangedMode?: "files" | "hunks";
+	pullRequestQueries?: PullRequestQuery[];
+	pullRequestQueryShowAllRepos?: boolean;
+	pullRequestQueryHideLabels?: boolean;
 	[key: string]: any;
 }
 

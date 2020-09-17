@@ -409,9 +409,12 @@ export class ThirdPartyProviderRegistry {
 		}
 		let result = undefined;
 		try {
-			const pullRequestProvider = this.getPullRequestProvider(provider);
-			await pullRequestProvider.ensureConnected();
-			const response = (pullRequestProvider as any)[request.method](request.params);
+			try {
+				await provider.ensureConnected();
+			} catch (err) {
+				Logger.error(err, `ensureConnected failed for ${request.providerId}`);
+			}
+			const response = (provider as any)[request.method](request.params);
 			result = await response;
 		} catch (ex) {
 			Logger.error(ex, "executeMethod failed", {

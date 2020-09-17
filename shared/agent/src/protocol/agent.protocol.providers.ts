@@ -372,6 +372,7 @@ export interface FetchThirdPartyPullRequestPullRequest {
 	bodyHTML: string;
 	baseRefName: string;
 	baseRefOid: string;
+	forkPointSha?: string;
 	author: {
 		login: string;
 		avatarUrl: string;
@@ -623,16 +624,20 @@ export const QueryThirdPartyRequestType = new RequestType<
 export interface GetMyPullRequestsRequest {
 	owner?: string;
 	name?: string;
-	/** if true, only return PRs that are open */
-	isOpen?: boolean;
+	queries: string[];
 	/**
 	 * forces a re-fetch from the provider
 	 */
 	force?: boolean;
+	/**
+	 * is this repo open in the IDE?
+	 */
+	isOpen?: boolean;
 }
 
 export interface GetMyPullRequestsResponse {
 	id: string;
+	providerId: string;
 	url: string;
 	title: string;
 	createdAt: number;
@@ -646,12 +651,14 @@ export interface GetMyPullRequestsResponse {
 		login: string;
 		avatarUrl: string;
 	};
+	body: string;
 	bodyText: string;
 	number: number;
 	state: string;
 	isDraft: boolean;
 	updatedAt: string;
 	lastEditedAt: string;
+	labels: { nodes: { color: string; description: string; name: string; id: string }[] };
 }
 
 export type MergeMethod = "MERGE" | "SQUASH" | "REBASE";

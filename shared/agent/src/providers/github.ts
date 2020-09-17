@@ -24,6 +24,7 @@ import {
 	FetchThirdPartyPullRequestCommitsRequest,
 	FetchThirdPartyPullRequestCommitsResponse,
 	FetchThirdPartyPullRequestFilesResponse,
+	FetchThirdPartyPullRequestPullRequest,
 	FetchThirdPartyPullRequestRequest,
 	FetchThirdPartyPullRequestResponse,
 	GetMyPullRequestsResponse,
@@ -37,7 +38,7 @@ import {
 	ThirdPartyProviderCard,
 	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
-import { CodemarkType, CSGitHubProviderInfo, CSReferenceLocation } from "../protocol/api.protocol";
+import { CodemarkType, CSGitHubProviderInfo, CSReferenceLocation, CSRepository } from "../protocol/api.protocol";
 import { Arrays, Functions, log, lspProvider, Strings } from "../system";
 import {
 	getOpenedRepos,
@@ -223,10 +224,39 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			return { cards: [] };
 		}
 	}
+
+	@log()
+	private async _getPullRequestRepo(
+		pullRequest: FetchThirdPartyPullRequestPullRequest
+	): Promise<CSRepository | undefined> {
+		let currentRepo: CSRepository | undefined = undefined;
+		const { repos } = SessionContainer.instance();
+
+		const repoName = pullRequest.repository.name.toLowerCase();
+		const repoUrl = pullRequest.repository.url.toLowerCase();
+		const allRepos = await repos.get();
+
+		let matchingRepos = allRepos.repos.filter(_ => _.name && _.name.toLowerCase() === repoName);
+		if (matchingRepos.length !== 1) {
+			matchingRepos = matchingRepos.filter(_ =>
+				_.remotes.some(r => repoUrl.indexOf(r.normalizedUrl.toLowerCase()) > -1)
+			);
+			if (matchingRepos.length === 1) {
+				currentRepo = matchingRepos[0];
+			} else {
+				console.warn(`Could not find repo for repoName=${repoName} repoUrl=${repoUrl}`);
+			}
+		} else {
+			currentRepo = matchingRepos[0];
+		}
+		return currentRepo;
+	}
+
 	@log()
 	async getPullRequest(
 		request: FetchThirdPartyPullRequestRequest
 	): Promise<FetchThirdPartyPullRequestResponse> {
+		const { scm: scmManager } = SessionContainer.instance();
 		await this.ensureConnected();
 		let response = {} as FetchThirdPartyPullRequestResponse;
 		let repoOwner: string;
@@ -262,6 +292,19 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			} while (timelineQueryResponse.repository.pullRequest.timelineItems.pageInfo.hasNextPage);
 		} catch (ex) {
 			Logger.error(ex);
+		}
+		if (response?.repository?.pullRequest) {
+			const prRepo = await this._getPullRequestRepo(response.repository.pullRequest);
+
+			if (prRepo?.id) {
+				const prForkPointSha = await scmManager.getForkPointRequestType({
+					repoId: prRepo.id,
+					baseSha: response.repository.pullRequest.baseRefOid,
+					headSha: response.repository.pullRequest.headRefOid
+				});
+
+				response.repository.pullRequest.forkPointSha = prForkPointSha?.sha;
+			}
 		}
 		if (response?.repository?.pullRequest?.timelineItems != null) {
 			response.repository.pullRequest.timelineItems.nodes = allTimelineItems;
@@ -978,6 +1021,22 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return response;
 	}
 
+	async setAssigneeOnIssue(request: { issueId: string; assigneeId: string; onOff: boolean }) {
+		const method = request.onOff ? "addAssigneesToAssignable" : "removeAssigneesFromAssignable";
+		const Method = request.onOff ? "AddAssigneesFromAssignable" : "RemoveAssigneesFromAssignable";
+		const query = `mutation ${Method}($assignableId: String!,$assigneeIds:String!) {
+			${method}(input: {assignableId: $assignableId, assigneeIds:$assigneeIds}) {
+				  clientMutationId
+				}
+			  }`;
+
+		const response = await this.client.request<any>(query, {
+			assignableId: request.issueId,
+			assigneeIds: request.assigneeId
+		});
+		return response;
+	}
+
 	async toggleReaction(request: { subjectId: string; content: string; onOff: boolean }) {
 		const method = request.onOff ? "addReaction" : "removeReaction";
 		const Method = request.onOff ? "AddReaction" : "RemoveReaction";
@@ -1202,10 +1261,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	async getMyPullRequests(request: {
 		owner: string;
 		repo: string;
+		queries: string[];
 		isOpen?: boolean;
 		force?: boolean;
 	}): Promise<GetMyPullRequestsResponse[] | undefined> {
-		const cacheKey = [request.owner, request.repo, request.isOpen].join("-");
+		const cacheKey = JSON.stringify({ ...request, providerId: this.providerConfig.id });
 		if (!request.force) {
 			const cached = this._getMyPullRequestsCache.get(cacheKey);
 			if (cached) {
@@ -1218,19 +1278,48 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			Logger.debug(`github getMyPullRequests removed from cache, key=${cacheKey}`);
 			this._getMyPullRequestsCache.delete(cacheKey);
 		}
-		let results: any = [];
-		const repoQuery =
+		let repoQuery =
 			request && request.owner && request.repo ? `repo:${request.owner}/${request.repo} ` : "";
-		const isOpenQuery = request && request.isOpen === true ? "is:open " : "";
+		if (request.isOpen) {
+			try {
+				const { scm, providerRegistry } = SessionContainer.instance();
+				const reposResponse = await scm.getRepos({ inEditorOnly: true, includeProviders: true });
+				const repos = [];
+				if (reposResponse?.repositories) {
+					for (const repo of reposResponse.repositories) {
+						if (repo.remotes) {
+							for (const remote of repo.remotes) {
+								const urlToTest = `anything://${remote.domain}/${remote.path}`;
+								const results = await providerRegistry.queryThirdParty({ url: urlToTest });
+								if (results && results.providerId === this.providerConfig.id) {
+									const ownerData = this.getOwnerFromRemote(urlToTest);
+									if (ownerData) {
+										repos.push(`${ownerData.owner}/${ownerData.name}`);
+									}
+								}
+							}
+						}
+					}
+				}
+				if (repos.length) {
+					repoQuery = repos.map(_ => `repo:${_}`).join(" ") + " ";
+				} else {
+					return [];
+				}
+			} catch (ex) {
+				Logger.error(ex);
+			}
+		}
 
-		const query = (q: string) => `query Search {
+		const queries = request.queries;
+		const buildQuery = (query: string) => `query Search {
 			rateLimit {
 				limit
 				cost
 				remaining
 				resetAt
 			}
-			search(query: "${q}", type: ISSUE, last: 100) {
+			search(query: "${query}", type: ISSUE, last: 100) {
 			edges {
 			  node {
 				... on PullRequest {
@@ -1276,35 +1365,40 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		// NOTE: there is also `reviewed-by` which `review-requested` translates to after the user
 		// has started or completed the review.
 
+		// const queries = [
+		// 	{ name: "Local PR Branches", query: `is:pr author:@me` },
+		// 	{ name: "Waiting on my Review", query: `is:pr review-requested:@me` },
+		// 	{ name: "Assigned to Me", query: `is:pr assignee:@me` },
+		// 	{ name: "Created by Me", query: `is:pr author:@me` }
+		// ];
+
 		// see: https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests
-		const items = await Promise.all([
-			this.client.request<any>(query(`${repoQuery}${isOpenQuery}is:pr author:@me`)),
-			this.client.request<any>(query(`${repoQuery}${isOpenQuery}is:pr assignee:@me`)),
-			this.client.request<any>(query(`${repoQuery}${isOpenQuery}is:pr review-requested:@me`)),
-			this.client.request<any>(query(`${repoQuery}${isOpenQuery}is:pr reviewed-by:@me`))
-		]).catch(ex => {
+		const items = await Promise.all(
+			queries.map(_ => this.client.request<any>(buildQuery(`${repoQuery}${_}`)))
+		).catch(ex => {
 			Logger.error(ex);
 			throw new Error(ex.response ? JSON.stringify(ex.response) : ex.message);
 		});
 
-		for (const item of items) {
+		const response: GetMyPullRequestsResponse[] = [];
+		items.forEach((item, index) => {
 			if (item && item.search && item.search.edges) {
-				results = results.concat(item.search.edges.map((_: any) => _.node));
+				response[index] = item.search.edges
+					.map((_: any) => _.node)
+					.filter((_: any) => _.id)
+					.map((pr: { createdAt: string }) => ({
+						...pr,
+						providerId: this.providerConfig?.id,
+						createdAt: new Date(pr.createdAt).getTime()
+					}))
+					.sort((a: { createdAt: number }, b: { createdAt: number }) => b.createdAt - a.createdAt);
 			}
 			if (item.rateLimit) {
 				Logger.debug(`github getMyPullRequests rateLimit=${JSON.stringify(item.rateLimit)}`);
 			}
-		}
-
-		results = _uniqBy(results, (_: { id: string }) => _.id);
-		const response: GetMyPullRequestsResponse[] = results
-			.map((pr: { createdAt: string }) => ({
-				...pr,
-				providerId: this.providerConfig?.id,
-				createdAt: new Date(pr.createdAt).getTime()
-			}))
-			.sort((a: { createdAt: number }, b: { createdAt: number }) => b.createdAt - a.createdAt);
-		this._getMyPullRequestsCache.set(cacheKey, response);
+		});
+		// results = _uniqBy(results, (_: { id: string }) => _.id);
+		// this._getMyPullRequestsCache.set(cacheKey, response);
 		return response;
 	}
 
@@ -1351,6 +1445,53 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		);
 		return pullRequestInfo.repository.pullRequest.id;
+	}
+
+	async getIssueIdFromUrl(request: { url: string }) {
+		// since we only have the url for the Issue -- parse it out for the
+		// data we need.
+		const uri = URI.parse(request.url);
+		const path = uri.path.split("/");
+		const owner = path[1];
+		const repo = path[2];
+		const issueNumber = parseInt(path[4], 10);
+		const issueInfo = await this.client.request<any>(
+			`query FindIssue($owner:String!,$name:String!,$issueNumber:Int!) {
+					repository(owner:$owner name:$name) {
+					  issue(number: $issueNumber) {
+						id
+						number
+						title
+						body
+					  }
+					}
+					viewer {
+						login
+						id
+					}
+				  }`,
+			{
+				owner: owner,
+				name: repo,
+				issueNumber: issueNumber
+			}
+		);
+		Logger.log("Fired off a query: ", JSON.stringify(issueInfo, null, 4));
+		// const issue = issueInfo.repository.issue;
+		// issue.viewer = issueInfo.viewer;
+		// translate to our card shape
+		const { repository, viewer } = issueInfo;
+		const { issue } = repository;
+		const card = {
+			id: issue.id,
+			tokenId: issue.number,
+			number: issue.number,
+			title: issue.title,
+			body: issue.body,
+			url: request.url,
+			providerIcon: "mark-github"
+		};
+		return { ...card, viewer: issueInfo.viewer };
 	}
 
 	async toggleMilestoneOnPullRequest(request: {

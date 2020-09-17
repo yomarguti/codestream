@@ -75,9 +75,10 @@ class JBCefWebViewPanel(val jbCefBrowser: JBCefBrowser) : JPanel(BorderLayout())
     }
 
     val pasteSubstitutions = mapOf(
+        "\\" to "\\\\",
         "\n" to "\\n",
         "\r" to "\\r",
-        "'" to "\'"
+        "'" to "\\'"
     )
     val myPasteProvider = object : PasteProvider {
         override fun isPasteEnabled(dataContext: DataContext): Boolean = true

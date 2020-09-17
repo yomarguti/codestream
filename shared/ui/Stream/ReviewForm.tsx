@@ -26,6 +26,7 @@ import {
 	CodemarkStatus,
 	FileStatus
 } from "@codestream/protocols/api";
+import { debounce as _debounce } from "lodash-es";
 import React, { ReactElement } from "react";
 import { connect } from "react-redux";
 import cx from "classnames";
@@ -124,7 +125,7 @@ interface ConnectedProps {
 		[service: string]: {};
 	};
 	currentUser: CSUser;
-	skipPostCreationModal: boolean;
+	skipPostCreationModal?: boolean;
 	teamTagsArray: any;
 	textEditorUri?: string;
 	createPostAndReview?: Function;
@@ -149,6 +150,7 @@ interface ConnectedProps {
 	blameMap?: { [email: string]: string };
 	isCurrentUserAdmin: boolean;
 	statusLabel: string;
+	statusIcon: string;
 }
 
 interface State {
@@ -406,7 +408,7 @@ class ReviewForm extends React.Component<Props, State> {
 
 		this.setState({ mountedTimestamp: new Date().getTime() });
 		if (!isEditing) {
-			if (this.props.statusLabel) {
+			if (false && this.props.statusLabel) {
 				this.setState({ title: this.props.statusLabel, titleTouched: true });
 			}
 		}
@@ -483,6 +485,18 @@ class ReviewForm extends React.Component<Props, State> {
 
 			this._disposableDidChangeDataNotification &&
 				this._disposableDidChangeDataNotification.dispose();
+			const self = this;
+			const _debouncedHandleRepoChange = _debounce(() => {
+				// if there is an error getting git info,
+				// don't bother attempting since it's an error
+
+				self.setState({ isReloadingScm: true });
+				// handle the repo change, but don't pass the textEditorUri
+				// as we don't want to switch the repo the form is pointing
+				// to in these cases
+				self.handleRepoChange();
+			}, 100);
+
 			this._disposableDidChangeDataNotification = HostApi.instance.on(
 				DidChangeDataNotificationType,
 				(e: any) => {
@@ -506,14 +520,7 @@ class ReviewForm extends React.Component<Props, State> {
 					}
 
 					if (update && !this.state.scmError) {
-						// if there is an error getting git info,
-						// don't bother attempting since it's an error
-
-						this.setState({ isReloadingScm: true });
-						// handle the repo change, but don't pass the textEditorUri
-						// as we don't want to switch the repo the form is pointing
-						// to in these cases
-						this.handleRepoChange();
+						_debouncedHandleRepoChange();
 					}
 				}
 			);
@@ -604,25 +611,6 @@ class ReviewForm extends React.Component<Props, State> {
 					this.setState({ reviewerEmails });
 				}
 
-				// if there is no title set OR there is one and a user hasn't touched it
-				// default it to a capitalized version of the branch name,
-				// with "feature/foo-bar" changed to "feature: foo bar"
-				if (
-					!isEditing &&
-					statusInfo.scm.branch &&
-					(!this.state.title || !this.state.titleTouched)
-				) {
-					const { branch } = statusInfo.scm;
-					this.setState({
-						title:
-							branch.charAt(0).toUpperCase() +
-							branch
-								.slice(1)
-								.replace("-", " ")
-								.replace(/^(\w+)\//, "$1: ")
-					});
-				}
-
 				const { excludedFiles } = this.state;
 				// default any files which are `new` to be excluded from the review
 				// but only those which haven't been explicitly set to true or false
@@ -654,6 +642,20 @@ class ReviewForm extends React.Component<Props, State> {
 			if (callback) callback();
 		}
 	}
+
+	setTitleBasedOnBranch = () => {
+		const { repoStatus } = this.state;
+		if (repoStatus && repoStatus.scm && repoStatus.scm.branch) {
+			const branch = repoStatus.scm.branch;
+			this.setTitle(
+				branch.charAt(0).toUpperCase() +
+					branch
+						.slice(1)
+						.replace("-", " ")
+						.replace(/^(\w+)\//, "$1: ")
+			);
+		}
+	};
 
 	async addIgnoreFile(filename: string) {
 		const { scm } = this.state.scmInfo;
@@ -1821,6 +1823,10 @@ class ReviewForm extends React.Component<Props, State> {
 		};
 	}
 
+	setTitle(title: string) {
+		this.setState({ title, titleTouched: true });
+	}
+
 	renderReviewForm() {
 		const { isEditing, isAmending, currentUser, repos } = this.props;
 		const {
@@ -1917,6 +1923,13 @@ class ReviewForm extends React.Component<Props, State> {
 		}
 
 		const showChanges = (!isEditing || isAmending) && !isLoadingScm && !scmError && !branchError;
+		// @ts-ignore
+		const latestCommit: { shortMessage: string } | undefined =
+			repoStatus &&
+			repoStatus.scm &&
+			repoStatus.scm.commits &&
+			repoStatus.scm.commits[0] &&
+			repoStatus.scm.commits[0].info;
 
 		return (
 			<form className="standard-form review-form" key="form" ref={ref => (this._formDiv = ref)}>
@@ -1947,13 +1960,13 @@ class ReviewForm extends React.Component<Props, State> {
 									)}
 								</div>
 							</div>
-							<div key="title" className="control-group">
+							<div key="title" className="control-group has-input-actions">
 								{this.renderTitleHelp()}
 								<input
 									key="title-text"
 									type="text"
 									name="title"
-									className="input-text control clearable"
+									className="input-text control"
 									tabIndex={0}
 									value={this.state.title}
 									onChange={e => this.setState({ title: e.target.value, titleTouched: true })}
@@ -1961,17 +1974,42 @@ class ReviewForm extends React.Component<Props, State> {
 									ref={ref => (this._titleInput = ref)}
 									onKeyDown={this.handleKeyDown}
 								/>
-								{this.state.title && (
+								<div className="actions">
+									{this.state.title && (
+										<Icon
+											name="x"
+											placement="top"
+											title="Clear Title"
+											className="clickable"
+											onClick={() => this.setTitle("")}
+										/>
+									)}
+									{this.props.statusLabel && (
+										<Icon
+											placement="top"
+											title="Use Current Ticket"
+											name={this.props.statusIcon}
+											className="clickable"
+											onClick={() => this.setTitle(this.props.statusLabel)}
+										/>
+									)}
+									{latestCommit && (
+										<Icon
+											placement="top"
+											title="Use Latest Commit Message"
+											name="git-commit"
+											className="clickable"
+											onClick={() => this.setTitle(latestCommit.shortMessage)}
+										/>
+									)}
 									<Icon
-										style={{ position: "absolute", right: "10px", top: "5px" }}
-										name="x"
-										className="clear-text clickable"
-										onClick={() => {
-											this.setState({ title: "", titleTouched: true });
-											this.focus();
-										}}
+										placement="top"
+										title="Use Branch Name"
+										name="git-branch"
+										className="clickable"
+										onClick={() => this.setTitleBasedOnBranch()}
 									/>
-								)}
+								</div>
 							</div>
 							{this.renderTextHelp()}
 							{this.renderMessageInput()}
@@ -2201,6 +2239,8 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 	const adminIds = team.adminIds || [];
 	const isCurrentUserAdmin = adminIds.includes(session.userId!);
 	const statusLabel = user && user.status && user.status.label ? user.status.label : "";
+	const statusIcon =
+		user && user.status && user.status.label ? user.status.ticketProvider || "ticket" : "";
 	return {
 		unsavedFiles: unsavedFiles,
 		reviewsByCommit,
@@ -2225,20 +2265,24 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		newPostEntryPoint: context.newPostEntryPoint,
 		blameMap,
 		isCurrentUserAdmin,
-		statusLabel
+		statusLabel,
+		statusIcon
 	};
 };
 
-const ConnectedReviewForm = connect(mapStateToProps, {
-	openPanel,
-	openModal,
-	closePanel,
-	createPostAndReview,
-	editReview,
-	setUserPreference,
-	setCurrentReview,
-	setCodemarkStatus,
-	setNewPostEntry
-})(ReviewForm);
+const ConnectedReviewForm = connect(
+	mapStateToProps,
+	{
+		openPanel,
+		openModal,
+		closePanel,
+		createPostAndReview,
+		editReview,
+		setUserPreference,
+		setCurrentReview,
+		setCodemarkStatus,
+		setNewPostEntry
+	}
+)(ReviewForm);
 
 export { ConnectedReviewForm as ReviewForm };
