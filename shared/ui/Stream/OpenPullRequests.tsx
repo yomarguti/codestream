@@ -89,7 +89,8 @@ export const PullRequestTooltip = (props: { pr: GetMyPullRequestsResponse }) => 
 	return (
 		<div>
 			<div style={{ maxWidth: "400px", padding: "10px" }}>
-				{pr.headRepository.nameWithOwner} <Timestamp time={pr.createdAt} relative />
+				{pr.headRepository && pr.headRepository.nameWithOwner}{" "}
+				<Timestamp time={pr.createdAt} relative />
 				<div style={{ marginTop: "10px" }}>
 					<div style={{ display: "flex" }}>
 						<Icon
@@ -103,7 +104,7 @@ export const PullRequestTooltip = (props: { pr: GetMyPullRequestsResponse }) => 
 								<span className="subtle">#{pr.number}</span>
 							</span>
 							<div className="subtle" style={{ margin: "2px 0 10px 0", fontSize: "larger" }}>
-								{pr.bodyText.substr(0, 300)}
+								{(pr.bodyText || "").substr(0, 300)}
 							</div>
 							<div className="monospace" style={{ fontSize: "smaller" }}>
 								<PRBranch>{pr.baseRefName}&nbsp;</PRBranch>
@@ -206,6 +207,7 @@ export function OpenPullRequests(props: Props) {
 	const fetchPRs = useCallback(
 		async (theQueries, options?: { force?: boolean }) => {
 			setIsLoadingPRs(true);
+			let count: number | undefined = undefined;
 			try {
 				const newGroups = {};
 				console.warn("Loading the PRs...", theQueries);
@@ -224,11 +226,9 @@ export function OpenPullRequests(props: Props) {
 							)
 						);
 						if (response && response.length) {
-							let count = 0;
+							count = 0;
 							response.forEach(group => (count += group.length));
-							HostApi.instance.track("PR List Rendered", {
-								"PR Count": count
-							});
+
 							console.warn("GOT SOME PULLS BACK: ", response);
 							newGroups[connectedProvider.id] = response;
 						}
@@ -245,6 +245,14 @@ export function OpenPullRequests(props: Props) {
 				// }
 			} finally {
 				setIsLoadingPRs(false);
+
+				HostApi.instance.track("PR List Rendered", {
+					"List State": count === undefined ? "No Auth" : count > 0 ? "PRs Listed" : "No PRs",
+					"PR Count": count,
+					Host: derivedState.PRConnectedProviders
+						? derivedState.PRConnectedProviders.map(_ => _.id)[0]
+						: undefined
+				});
 			}
 		},
 		[
@@ -480,6 +488,7 @@ export function OpenPullRequests(props: Props) {
 											const selected = derivedState.repos.find(repo => {
 												return (
 													repo.currentBranch === pr.headRefName &&
+													pr.headRepository &&
 													repo.name === pr.headRepository.name
 												);
 											});
@@ -493,7 +502,13 @@ export function OpenPullRequests(props: Props) {
 													<Row
 														key={"pr-" + pr.id}
 														className={selected ? "selected" : ""}
-														onClick={() => dispatch(setCurrentPullRequest(pr.providerId, pr.id))}
+														onClick={() => {
+															dispatch(setCurrentPullRequest(pr.providerId, pr.id));
+
+															HostApi.instance.track("PR Clicked", {
+																Host: pr.providerId
+															});
+														}}
 													>
 														<div>
 															{selected && <Icon name="arrow-right" className="selected-icon" />}
