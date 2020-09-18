@@ -10,6 +10,8 @@ import { LoadingMessage } from "../src/components/LoadingMessage";
 import { setUserPreference } from "./actions";
 import { PullRequestPatch } from "./PullRequestPatch";
 import { getPullRequestFiles } from "../store/providerPullRequests/actions";
+import { HostApi } from "../webview-api";
+import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
 
 const PRCommitContent = styled.div`
 	margin: 0 20px 20px 40px;
@@ -40,8 +42,11 @@ const STATUS_MAP = {
 	modified: FileStatus.modified
 };
 
-export const PullRequestFilesChangedTab = props => {
-	const { pr, ghRepo } = props;
+export const PullRequestFilesChangedTab = (props: {
+	fetch: Function;
+	pr: FetchThirdPartyPullRequestPullRequest;
+}) => {
+	const { pr } = props;
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
@@ -93,7 +98,19 @@ export const PullRequestFilesChangedTab = props => {
 			);
 			_mapData(data);
 		})();
+
+		HostApi.instance.track("PR Files Changed Tab", {
+			Host: pr.providerId
+		});
 	});
+
+	useEffect(() => {
+		if (derivedState.pullRequestFilesChangedMode === "hunks") {
+			HostApi.instance.track("PR Diff Hunks Viewed", {
+				Host: pr.providerId
+			});
+		}
+	}, [derivedState.pullRequestFilesChangedMode]);
 
 	if (isLoading)
 		return (
