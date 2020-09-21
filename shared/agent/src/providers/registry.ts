@@ -432,7 +432,6 @@ export class ThirdPartyProviderRegistry {
 	async queryThirdParty(request: QueryThirdPartyRequest) {
 		try {
 			if (!request || !request.url) return undefined;
-			if (!request.url.toLowerCase().startsWith("http")) return undefined;
 
 			const uri = URI.parse(request.url);
 			const providers = getRegisteredProviders();
