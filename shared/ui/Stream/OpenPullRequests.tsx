@@ -45,7 +45,7 @@ import { Provider, IntegrationButtons } from "./IntegrationsPanel";
 
 const Root = styled.div`
 	height: 100%;
-	${Row} {
+	.pr-row {
 		padding-left: 40px;
 		.selected-icon {
 			left: 20px;
@@ -488,7 +488,7 @@ export function OpenPullRequests(props: Props) {
 														>
 															<Row
 																key={"pr-" + pr.id}
-																className={selected ? "selected" : ""}
+																className={selected ? "pr-row selected" : "pr-row"}
 																onClick={() => {
 																	dispatch(setCurrentPullRequest(pr.providerId, pr.id));
 
