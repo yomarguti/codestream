@@ -35,6 +35,9 @@ const NOW = new Date().getTime(); // a rough timestamp so we know when the file 
 
 interface Props extends CompareFilesProps {
 	filesChanged: any[];
+	isLoading: boolean;
+	pr?: FetchThirdPartyPullRequestPullRequest;
+	withTelemetry?: boolean;
 }
 
 export const PullRequestFilesChanged = (props: Props) => {
@@ -176,7 +179,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 				visitFile(visitedKey, index);
 
 				HostApi.instance.track("PR Diff Viewed", {
-					Host: props.pr.providerId
+					Host: props.pr && props.pr.providerId
 				});
 			})(i);
 		},
@@ -225,7 +228,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 		}
 
 		HostApi.instance.track("PR File Viewed", {
-			Host: props.pr.providerId
+			Host: props.pr && props.pr.providerId
 		});
 	};
 
@@ -320,7 +323,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 			{changedFiles.length > 1 && (
 				<Meta id="changed-files">
 					<MetaLabel>
-						{pr.files.totalCount} Changed Files
+						{props.filesChanged.length} Changed Files
 						{!isDisabled && (
 							<MetaIcons>
 								<Icon
