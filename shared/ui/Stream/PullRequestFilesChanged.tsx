@@ -27,15 +27,17 @@ import { Link } from "./Link";
 import { Meta, MetaLabel } from "./Codemark/BaseCodemark";
 import { MetaIcons } from "./Review";
 import { getProviderPullRequestRepo } from "../store/providerPullRequests/reducer";
+import { CompareFilesProps } from "./PullRequestFilesChangedList";
 
 // const VISITED_REVIEW_FILES = "review:changeset-file-list";
 const NOW = new Date().getTime(); // a rough timestamp so we know when the file was visited
 // const visitedFiles = localStore.get(VISITED_REVIEW_FILES) || {};
 
-export const PullRequestFilesChanged = (props: {
-	pr: FetchThirdPartyPullRequestPullRequest;
+interface Props extends CompareFilesProps {
 	filesChanged: any[];
-}) => {
+}
+
+export const PullRequestFilesChanged = (props: Props) => {
 	const { pr, filesChanged } = props;
 	// const dispatch = useDispatch<Dispatch>();
 	const [repoId, setRepoId] = useState("");
@@ -79,7 +81,7 @@ export const PullRequestFilesChanged = (props: {
 
 	const saveVisitedFiles = (newVisitedFiles, key) => {
 		HostApi.instance.send(WriteTextFileRequestType, {
-			path: `pr-${pr.id}.json`,
+			path: `${props.baseRef}-${props.headRef}.json`,
 			contents: JSON.stringify(newVisitedFiles, null, 4)
 		});
 	};
@@ -91,8 +93,8 @@ export const PullRequestFilesChanged = (props: {
 				try {
 					const forkPointResponse = await HostApi.instance.send(FetchForkPointRequestType, {
 						repoId: derivedState.currentRepo!.id!,
-						baseSha: props.pr.baseRefOid,
-						headSha: props.pr.headRefOid
+						baseSha: props.baseRef,
+						headSha: props.headRef
 					});
 
 					if (!forkPointResponse || forkPointResponse.error) {
@@ -120,7 +122,7 @@ export const PullRequestFilesChanged = (props: {
 	useEffect(() => {
 		(async () => {
 			const response = (await HostApi.instance.send(ReadTextFileRequestType, {
-				path: `pr-${pr.id}.json`
+				path: `${props.baseRef}-${props.headRef}.json`
 			})) as any;
 
 			try {
@@ -150,18 +152,20 @@ export const PullRequestFilesChanged = (props: {
 				const visitedKey = [f.file].join(":");
 
 				const request = {
-					baseBranch: props.pr.baseRefName,
+					baseBranch: props.baseRefName,
 					baseSha: forkPointSha,
-					headBranch: props.pr.headRefName,
-					headSha: props.pr.headRefOid,
+					headBranch: props.headRefName,
+					headSha: props.headRef,
 					filePath: f.file,
 					repoId: derivedState.currentRepo!.id!,
-					context: {
-						pullRequest: {
-							providerId: pr.providerId,
-							id: pr.id
-						}
-					}
+					context: pr
+						? {
+								pullRequest: {
+									providerId: pr.providerId,
+									id: pr.id
+								}
+						  }
+						: undefined
 				};
 				try {
 					await HostApi.instance.send(CompareLocalFilesRequestType, request);
@@ -296,7 +300,7 @@ export const PullRequestFilesChanged = (props: {
 		return files;
 	}, [pr, loading, derivedState.matchFile, latest, visitedFiles, forkPointSha]);
 
-	if (!derivedState.currentRepo) {
+	if (pr && !derivedState.currentRepo) {
 		return (
 			<div style={{ marginTop: "10px" }}>
 				<Icon name="alert" className="margin-right" />
