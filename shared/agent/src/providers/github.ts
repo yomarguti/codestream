@@ -38,7 +38,12 @@ import {
 	ThirdPartyProviderCard,
 	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
-import { CodemarkType, CSGitHubProviderInfo, CSReferenceLocation, CSRepository } from "../protocol/api.protocol";
+import {
+	CodemarkType,
+	CSGitHubProviderInfo,
+	CSReferenceLocation,
+	CSRepository
+} from "../protocol/api.protocol";
 import { Arrays, Functions, log, lspProvider, Strings } from "../system";
 import {
 	getOpenedRepos,
@@ -112,19 +117,18 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	private _client: GraphQLClient | undefined;
 	protected get client(): GraphQLClient {
 		if (this._client === undefined) {
-			if (!this.accessToken) {
-				throw new Error("No GitHub personal access token could be found");
-			}
-
-			this._client = new GraphQLClient(this.graphQlBaseUrl, {
-				headers: {
-					Authorization: `Bearer ${this.accessToken}`,
-					// Add `Accept` header To access PullRequest.mergeStateStatus and PullRequest.canBeRebased schema members
-					// https://docs.github.com/en/graphql/overview/schema-previews#merge-info-preview
-					Accept: "application/vnd.github.merge-info-preview+json"
-				}
-			});
+			this._client = new GraphQLClient(this.graphQlBaseUrl);
 		}
+		if (!this.accessToken) {
+			throw new Error("No GitHub personal access token could be found");
+		}
+		// set accessToken on a per-usage basis... possible for accessToken
+		// to be revoked from the source (github.com) and a stale accessToken
+		// could be cached in the _client instance.
+		this._client.setHeaders({
+			Authorization: `Bearer ${this.accessToken}`,
+			Accept: "application/vnd.github.merge-info-preview+json"
+		});
 		return this._client;
 	}
 
@@ -297,13 +301,17 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			const prRepo = await this._getPullRequestRepo(response.repository.pullRequest);
 
 			if (prRepo?.id) {
-				const prForkPointSha = await scmManager.getForkPointRequestType({
-					repoId: prRepo.id,
-					baseSha: response.repository.pullRequest.baseRefOid,
-					headSha: response.repository.pullRequest.headRefOid
-				});
+				try {
+					const prForkPointSha = await scmManager.getForkPointRequestType({
+						repoId: prRepo.id,
+						baseSha: response.repository.pullRequest.baseRefOid,
+						headSha: response.repository.pullRequest.headRefOid
+					});
 
-				response.repository.pullRequest.forkPointSha = prForkPointSha?.sha;
+					response.repository.pullRequest.forkPointSha = prForkPointSha?.sha;
+				} catch (err) {
+					Logger.error(err, `Could not find forkPoint for repoId=${prRepo.id}`);
+				}
 			}
 		}
 		if (response?.repository?.pullRequest?.timelineItems != null) {
@@ -2758,6 +2766,16 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				  squashMergeAllowed
 				  mergeCommitAllowed
 				  viewerPermission
+				  branchProtectionRules(first:100) {
+				  	nodes {
+				  		requiredApprovingReviewCount
+				  		matchingRefs(first:100) {
+				  			nodes {
+				  				name
+				  			}
+				  		}
+				  	}
+				  }
 				}
 			  }`;
 			const response = (await this.client.request<any>(query, {
