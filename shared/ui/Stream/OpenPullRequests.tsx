@@ -122,7 +122,7 @@ const ConnectToCodeHost = styled.div`
 
 interface Props {
 	openRepos: ReposScm[];
-	state: PaneState;
+	paneState: PaneState;
 }
 
 export function OpenPullRequests(props: Props) {
@@ -193,12 +193,12 @@ export function OpenPullRequests(props: Props) {
 			let count: number | undefined = undefined;
 			try {
 				const newGroups = {};
-				console.warn("Loading the PRs...", theQueries);
+				// console.warn("Loading the PRs...", theQueries);
 				for (const connectedProvider of derivedState.PRConnectedProviders) {
 					const queriesByProvider: PullRequestQuery[] =
 						theQueries[connectedProvider.id] || DEFAULT_QUERIES[connectedProvider.id];
 					const queryStrings = Object.values(queriesByProvider).map(_ => _.query);
-					console.warn("Loading the PRs... in the loop", queryStrings);
+					// console.warn("Loading the PRs... in the loop", queryStrings);
 					try {
 						const response: any = await dispatch(
 							getMyPullRequests(
@@ -213,7 +213,7 @@ export function OpenPullRequests(props: Props) {
 							count = 0;
 							response.forEach(group => (count += group.length));
 
-							console.warn("GOT SOME PULLS BACK: ", response);
+							// console.warn("GOT SOME PULLS BACK: ", response);
 							newGroups[connectedProvider.id] = response;
 						}
 					} catch (ex) {
@@ -411,7 +411,7 @@ export function OpenPullRequests(props: Props) {
 							delay={1}
 						/>
 					</PaneHeader>
-					{props.state !== PaneState.Collapsed && (
+					{props.paneState !== PaneState.Collapsed && (
 						<PaneBody>
 							{derivedState.hasPRSupportedRepos && !derivedState.isPRSupportedCodeHostConnected && (
 								<>
