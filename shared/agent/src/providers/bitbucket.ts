@@ -349,7 +349,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 		repo: string;
 		isOpen?: boolean | undefined;
 		force?: boolean | undefined;
-	}): Promise<GetMyPullRequestsResponse[] | undefined> {
+	}): Promise<GetMyPullRequestsResponse[][] | undefined> {
 		throw new Error("Method not implemented.");
 	}
 

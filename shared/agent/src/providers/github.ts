@@ -1277,14 +1277,14 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	// 	return true;
 	// }
 
-	_getMyPullRequestsCache = new Map<string, GetMyPullRequestsResponse[]>();
+	_getMyPullRequestsCache = new Map<string, GetMyPullRequestsResponse[][]>();
 	async getMyPullRequests(request: {
 		owner: string;
 		repo: string;
 		queries: string[];
 		isOpen?: boolean;
 		force?: boolean;
-	}): Promise<GetMyPullRequestsResponse[] | undefined> {
+	}): Promise<GetMyPullRequestsResponse[][] | undefined> {
 		const cacheKey = JSON.stringify({ ...request, providerId: this.providerConfig.id });
 		if (!request.force) {
 			const cached = this._getMyPullRequestsCache.get(cacheKey);
@@ -1332,14 +1332,17 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		}
 
 		const queries = request.queries;
-		const buildQuery = (query: string) => `query Search {
+		const buildQuery = (query: string, repoQuery: string) => {
+			const limit = query === "recent" ? 5 : 100;
+			if (query === "recent") query = "is:pr";
+			return `query Search {
 			rateLimit {
 				limit
 				cost
 				remaining
 				resetAt
 			}
-			search(query: "${query}", type: ISSUE, last: 100) {
+			search(query: "${repoQuery}${query}", type: ISSUE, last: ${limit}) {
 			edges {
 			  node {
 				... on PullRequest {
@@ -1382,6 +1385,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		  }
 		}`;
+		};
 		// NOTE: there is also `reviewed-by` which `review-requested` translates to after the user
 		// has started or completed the review.
 
@@ -1394,13 +1398,13 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 		// see: https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests
 		const items = await Promise.all(
-			queries.map(_ => this.client.request<any>(buildQuery(`${repoQuery}${_}`)))
+			queries.map(_ => this.client.request<any>(buildQuery(_, repoQuery)))
 		).catch(ex => {
 			Logger.error(ex);
 			throw new Error(ex.response ? JSON.stringify(ex.response) : ex.message);
 		});
 
-		const response: GetMyPullRequestsResponse[] = [];
+		const response: GetMyPullRequestsResponse[][] = [];
 		items.forEach((item, index) => {
 			if (item && item.search && item.search.edges) {
 				response[index] = item.search.edges
@@ -1410,8 +1414,12 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						...pr,
 						providerId: this.providerConfig?.id,
 						createdAt: new Date(pr.createdAt).getTime()
-					}))
-					.sort((a: { createdAt: number }, b: { createdAt: number }) => b.createdAt - a.createdAt);
+					}));
+				if (!queries[index].match(/\bsort:/)) {
+					response[index] = response[index].sort(
+						(a: { createdAt: number }, b: { createdAt: number }) => b.createdAt - a.createdAt
+					);
+				}
 			}
 			if (item.rateLimit) {
 				Logger.debug(`github getMyPullRequests rateLimit=${JSON.stringify(item.rateLimit)}`);

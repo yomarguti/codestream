@@ -107,7 +107,7 @@ export interface ThirdPartyProviderSupportsPullRequests {
 		repo: string;
 		isOpen?: boolean;
 		force?: boolean;
-	}): Promise<GetMyPullRequestsResponse[] | undefined>;
+	}): Promise<GetMyPullRequestsResponse[][] | undefined>;
 }
 
 export namespace ThirdPartyIssueProvider {
@@ -201,7 +201,9 @@ export abstract class ThirdPartyProviderBase<
 		// kind of insecure, but easier than other options ... so in this case (and
 		// this case only), establish our own HTTPS agent
 		if (providerConfig.forEnterprise && session.disableStrictSSL) {
-			Logger.log(`${providerConfig.name} provider will use a custom HTTPS agent with strictSSL disabled`);
+			Logger.log(
+				`${providerConfig.name} provider will use a custom HTTPS agent with strictSSL disabled`
+			);
 			this._httpsAgent = new HttpsAgent({
 				rejectUnauthorized: false
 			});
