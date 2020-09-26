@@ -6,17 +6,12 @@ import { CodeStreamState } from "../store";
 import { Row } from "./CrossPostIssueControls/IssueDropdown";
 import Icon from "./Icon";
 import { PRHeadshot } from "../src/components/Headshot";
-import { setCurrentReview, setCurrentPullRequest, setNewPostEntry } from "../store/context/actions";
+import { setCurrentPullRequest, setNewPostEntry } from "../store/context/actions";
 import Tooltip from "./Tooltip";
 import Timestamp from "./Timestamp";
 import { isConnected } from "../store/providers/reducer";
 import { HostApi } from "../webview-api";
-import {
-	ReposScm,
-	GetMyPullRequestsResponse,
-	ExecuteThirdPartyRequestUntypedType,
-	QueryThirdPartyRequestType
-} from "@codestream/protocols/agent";
+import { ReposScm, GetMyPullRequestsResponse } from "@codestream/protocols/agent";
 import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
 import { Button } from "../src/components/Button";
 import { getMyPullRequests, openPullRequestByUrl } from "../store/providerPullRequests/actions";
