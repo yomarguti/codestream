@@ -295,16 +295,7 @@ export const Signup = (props: Props) => {
 										<Icon name="chevron-right" />
 									</Button>
 								)}
-								<div
-									style={{
-										textAlign: "center",
-										position: "fixed",
-										left: 0,
-										width: "100vw",
-										transform: "translateY(10px)",
-										zIndex: 5
-									}}
-								>
+								<div className="separator-label">
 									<span className="or">or</span>
 								</div>
 							</div>

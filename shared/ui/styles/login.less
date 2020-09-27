@@ -14,6 +14,14 @@
 		text-align: center;
 	}
 }
+.separator-label {
+	text-align: center;
+	position: fixed;
+	left: 0;
+	width: 100vw;
+	transform: translateY(10px);
+	z-index: 5;
+}
 
 // see https://stackoverflow.com/questions/33454533/cant-scroll-to-top-of-flex-item-that-is-overflowing-container/33455342
 .onboarding-page > div,
@@ -94,6 +102,9 @@
 	width: 100%;
 	&.no-top-margin {
 		margin-top: 10px;
+	}
+	&.zero-top-margin {
+		margin-top: 0;
 	}
 	&:hover {
 		// background-color: var(--button-background-color-hover);

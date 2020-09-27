@@ -68,7 +68,7 @@ export const NewUserEntry = (connect(mapStateToProps) as any)((props: Props) => 
 					<div className="border-bottom-box">
 						<h3>Try CodeStream with your team, for free</h3>
 						<p>Create a brand-new team for you and your teammates.</p>
-						<Button className="row-button" onClick={onClickCreateTeam}>
+						<Button className="row-button no-top-margin" onClick={onClickCreateTeam}>
 							<Icon name="plus" />
 							<div className="copy">Sign Up and Create a Team</div>
 						</Button>
@@ -76,7 +76,7 @@ export const NewUserEntry = (connect(mapStateToProps) as any)((props: Props) => 
 					<JoinTeam />
 					<div className="border-bottom-box">
 						<h3>Already have an account?</h3>
-						<Button className="row-button" onClick={onClickLogin}>
+						<Button className="row-button no-top-margin" onClick={onClickLogin}>
 							<Icon name="sign-in" />
 							<div className="copy">Sign In</div>
 						</Button>
