@@ -3,7 +3,6 @@ import Button from "../Stream/Button";
 import Icon from "../Stream/Icon";
 import { connect } from "react-redux";
 import { CodeStreamState } from "../store";
-import { Link } from "../Stream/Link";
 import { goToLogin, goToJoinTeam, goToSignup } from "../store/context/actions";
 import { DispatchProp } from "../store/common";
 import { HostApi } from "../webview-api";
