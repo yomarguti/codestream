@@ -101,6 +101,8 @@ import {
 	MuteStreamRequest,
 	OpenStreamRequest,
 	PinReplyToCodemarkRequest,
+	ProviderTokenRequest,
+	ProviderTokenRequestType,
 	ReactToPostRequest,
 	RemoveEnterpriseProviderHostRequest,
 	RenameStreamRequest,
@@ -2000,6 +2002,20 @@ export class CodeStreamApiProvider implements ApiProvider {
 			Logger.error(ex, cc);
 			throw ex;
 		}
+	}
+
+	@lspHandler(ProviderTokenRequestType)
+	async setProviderToken(request: ProviderTokenRequest) {
+		await this.post(
+			`/no-auth/provider-token/${request.provider}`,
+			{
+				token: request.token,
+				data: request.data,
+				invite_code: request.inviteCode,
+				no_signup: request.noSignup,
+				signup_token: request.signupToken
+			}
+		);
 	}
 
 	private delete<R extends object>(url: string, token?: string): Promise<R> {

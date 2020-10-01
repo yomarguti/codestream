@@ -10,6 +10,7 @@
     "bugs": {
         "url": "https://github.com/TeamCodeStream/CodeStream/issues"
     },
+    "enableProposedApi": true,
     "repository": {
         "type": "git",
         "url": "https://github.com/TeamCodeStream/CodeStream"
@@ -620,7 +621,11 @@
         "@types/node": "10.11.7",
         "@types/node-fetch": "2.5.0",
         "@types/uuid": "3.4.5",
+<<<<<<< HEAD
         "@types/vscode": "1.49.0",
+=======
+        "@types/vscode": "1.48.0",
+>>>>>>> https://trello.com/c/6c4W1oHQ - use VSCode sign-in for GitHub where possible
         "@typescript-eslint/eslint-plugin": "2.18.0",
         "@typescript-eslint/eslint-plugin-tslint": "2.18.0",
         "@typescript-eslint/parser": "2.18.0",
