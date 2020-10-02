@@ -41,6 +41,8 @@ export interface SSOAuthInfo {
 	type?: SignupType;
 	inviteCode?: string;
 	hostUrl?: string;
+	useIDEAuth?: boolean;
+	gotError?: boolean;
 }
 
 const ProviderNames = {
@@ -106,8 +108,20 @@ export const startIDESignin = (
 		if (session.otc) {
 			request.signupToken = session.otc;
 		}
-		await HostApi.instance.send(ProviderTokenRequestType, request);
-		return dispatch(goToSSOAuth(provider, { ...(info || emptyObject)}));
+		info = info || {};
+		info.useIDEAuth = true;
+		try {
+			const fail = () => {
+				info!.gotError = true;
+				return dispatch(goToSSOAuth(provider, { ...(info || emptyObject) }));
+			};
+			HostApi.instance.send(ProviderTokenRequestType, request, { alternateReject: fail });
+			return dispatch(goToSSOAuth(provider, { ...(info || emptyObject) }));
+		}
+		catch (tokenError) {
+			info.gotError = true;
+			return dispatch(goToSSOAuth(provider, { ...(info || emptyObject) }));
+		} 
 	}
 	catch (error) {
 		logError (`Unable to start VSCode ${provider} sign in: ${error}`);
