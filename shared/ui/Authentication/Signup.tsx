@@ -50,7 +50,8 @@ export const Signup = (props: Props) => {
 		return {
 			supportsIntegrations: supportsIntegrations(state.configs),
 			oktaEnabled: isOnPrem(state.configs),
-			isInVSCode: state.ide.name === "VSC"
+			isInVSCode: state.ide.name === "VSC",
+			supportsVSCodeGithubSignin: state.capabilities.vsCodeGithubSignin
 		};
 	});
 	const [email, setEmail] = useState(props.email || "");
@@ -224,7 +225,7 @@ export const Signup = (props: Props) => {
 			const info = props.inviteCode
 				? { type: SignupType.JoinTeam, inviteCode: props.inviteCode }
 				: { type: SignupType.CreateTeam };
-			if (derivedState.isInVSCode) {
+			if (derivedState.isInVSCode && derivedState.supportsVSCodeGithubSignin) {
 				return dispatch(startIDESignin("github", { ...info, fromSignup: true }));
 			} else {
 				return dispatch(startSSOSignin("github", { ...info, fromSignup: true }));

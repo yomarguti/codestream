@@ -2377,6 +2377,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 				response.error = {
 					message: resp.status.toString() + resp.statusText
 				};
+			} else {
+				response.capabilities = (await resp.json()).capabilities;
 			}
 		} catch (err) {
 			Logger.log(`Error connecting to the API server: ${err.message}`);

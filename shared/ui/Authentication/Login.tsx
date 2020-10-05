@@ -21,6 +21,7 @@ interface ConnectedProps {
 	supportsIntegrations?: boolean;
 	oktaEnabled?: boolean;
 	isInVSCode?: boolean;
+	supportsVSCodeGithubSignin?: boolean;
 }
 
 interface DispatchProps {
@@ -169,7 +170,7 @@ class Login extends React.Component<Props, State> {
 
 	handleClickGithubLogin = event => {
 		event.preventDefault();
-		if (this.props.isInVSCode) {
+		if (this.props.isInVSCode && this.props.supportsVSCodeGithubSignin) {
 			this.props.startIDESignin("github");
 		} else {
 			this.props.startSSOSignin("github");
@@ -320,7 +321,8 @@ const ConnectedLogin = connect<ConnectedProps, any, any, CodeStreamState>(
 			initialEmail: props.email !== undefined ? props.email : state.configs.email,
 			supportsIntegrations: supportsIntegrations(state.configs),
 			oktaEnabled: isOnPrem(state.configs),
-			isInVSCode: state.ide.name === 'VSC'
+			isInVSCode: state.ide.name === 'VSC',
+			supportsVSCodeGithubSignin: state.capabilities.vsCodeGithubSignin
 		};
 	},
 	{ authenticate, goToNewUserEntry, startSSOSignin, startIDESignin, goToForgotPassword, goToOktaConfig }
