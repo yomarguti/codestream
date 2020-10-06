@@ -19,7 +19,8 @@ import {
 	ShowStreamNotificationType,
 	WebviewDidInitializeNotificationType,
 	WebviewPanels,
-	HostDidChangeVisibleEditorsNotificationType
+	HostDidChangeVisibleEditorsNotificationType,
+	ShowPullRequestNotificationType
 } from "./ipc/webview.protocol";
 import { createCodeStreamStore } from "./store";
 import { HostApi } from "./webview-api";
@@ -326,6 +327,10 @@ function listenForEvents(store) {
 		store.dispatch(setCurrentReview(e.reviewId));
 	});
 
+	api.on(ShowPullRequestNotificationType, async e => {
+		store.dispatch(setCurrentPullRequest(e.providerId, e.id));
+	});
+
 	api.on(HostDidReceiveRequestNotificationType, async e => {
 		if (!e) return;
 
@@ -398,14 +403,14 @@ function listenForEvents(store) {
 													store.dispatch(setCurrentPullRequestAndBranch(id));
 												else store.dispatch(setCurrentPullRequest(providerInfo.providerId, id));
 											} else {
-												console.warn("Unable to load PR from: ", route);
+												console.error("Unable to load PR from: ", route);
 											}
 										})
 										.catch(e => {
-											console.warn("Unable to load PR from: ", route);
+											console.error("Unable to load PR from: ", route);
 										});
 								} else {
-									console.warn("Unable to load PR from: ", route);
+									console.error("Unable to load PR from: ", route);
 								}
 							});
 
@@ -454,11 +459,11 @@ function listenForEvents(store) {
 												store.dispatch(openPanel(WebviewPanels.Status));
 											});
 									} else {
-										console.warn("Unable to find issue from: ", route);
+										console.error("Unable to find issue from: ", route);
 									}
 								})
 								.catch(e => {
-									console.warn("Error: Unable to load issue from: ", route);
+									console.error("Error: Unable to load issue from: ", route);
 								});
 						}
 						break;

@@ -59,6 +59,7 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
             "unreads" -> session.didChangeUnreads(gson.fromJson(notification.data))
             "posts" -> session.didChangePosts(gson.fromJson(notification.data))
             "preferences" -> session.didChangePreferences(gson.fromJson(notification.data))
+            "pullRequests" -> session.didChangePullRequests(gson.fromJson(notification.data))
         }
     }
 
@@ -100,7 +101,7 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
     }
 
     @JsonNotification("codestream/didStartLogin")
-    fun didStartLogin(json: JsonElement) {}
+    fun didStartLogin(json: JsonElement?) {}
 
     @JsonNotification("codestream/didLogin")
     fun didLogin(json: JsonElement) {
