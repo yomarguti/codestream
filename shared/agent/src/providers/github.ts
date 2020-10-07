@@ -1113,6 +1113,47 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			throw new Error("Invalid eventType");
 		}
 
+		const existingReview = await this.client.request<any>(
+			`query ExistingReviews($pullRequestId:ID!) {
+				rateLimit {
+				cost
+				resetAt
+				remaining
+				limit
+			}
+			node(id: $pullRequestId) {
+			  ... on PullRequest {
+				id
+				reviews(last: 100) {
+				  nodes {
+					state
+					viewerDidAuthor
+				  }
+				}
+			  }
+			}
+		  }
+		  `,
+			{
+				pullRequestId: request.pullRequestId
+			}
+		);
+		if (
+			existingReview?.node?.reviews?.nodes?.length === 0 ||
+			existingReview?.node?.reviews?.nodes?.find((_: any) => _.viewerDidAuthor) == null
+		) {
+			void (await this.client.request<any>(
+				`mutation AddPullRequestReview($pullRequestId:String!) {
+				addPullRequestReview(input: {pullRequestId: $pullRequestId, body: ""}) {
+					clientMutationId
+				}
+			  }
+			  `,
+				{
+					pullRequestId: request.pullRequestId
+				}
+			));
+		}
 		const query = `mutation SubmitPullRequestReview($pullRequestId:String!, $body:String) {
 			submitPullRequestReview(input: {event: ${request.eventType}, body: $body, pullRequestId: $pullRequestId}){
 			  clientMutationId
@@ -1190,14 +1231,27 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		}
 
 		const queries = request.queries;
-		const buildQuery = (query: string) => `query Search {
+		const buildQuery = (query: string, repoQuery: string) => {
+			const limit = query === "recent" ? 5 : 100;
+			// recent is kind of a magic string, where we just look
+			// for some random PR activity to at least show you
+			// something. if you have the repo query checked, and
+			// we can query by repo, then use that. otherwise github
+			// needs at least one qualifier so we query for PRs
+			// that you were the author of
+			// https://trello.com/c/XIg6MKWy/4813-add-4th-default-pr-query-recent
+			if (query === "recent") {
+				if (repoQuery.length > 0) query = "is:pr";
+				else query = "is:pr author:@me";
+			}
+			return `query Search {
 			rateLimit {
 				limit
 				cost
 				remaining
 				resetAt
 			}
-			search(query: "${query}", type: ISSUE, last: 100) {
+			search(query: "${repoQuery}${query}", type: ISSUE, last: ${limit}) {
 			edges {
 			  node {
 				... on PullRequest {
@@ -1240,6 +1294,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		  }
 		}`;
+		};
 		// NOTE: there is also `reviewed-by` which `review-requested` translates to after the user
 		// has started or completed the review.
 
@@ -1252,7 +1307,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 		// see: https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests
 		const items = await Promise.all(
-			queries.map(_ => this.client.request<any>(buildQuery(`${repoQuery}${_}`)))
+			queries.map(_ => this.client.request<any>(buildQuery(_, repoQuery)))
 		).catch(ex => {
 			Logger.error(ex);
 			throw new Error(ex.response ? JSON.stringify(ex.response) : ex.message);
@@ -1268,8 +1323,12 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						...pr,
 						providerId: this.providerConfig?.id,
 						createdAt: new Date(pr.createdAt).getTime()
-					}))
-					.sort((a: { createdAt: number }, b: { createdAt: number }) => b.createdAt - a.createdAt);
+					}));
+				if (!queries[index].match(/\bsort:/)) {
+					response[index] = response[index].sort(
+						(a: { createdAt: number }, b: { createdAt: number }) => b.createdAt - a.createdAt
+					);
+				}
 			}
 			if (item.rateLimit) {
 				Logger.debug(`github getMyPullRequests rateLimit=${JSON.stringify(item.rateLimit)}`);
@@ -1723,6 +1782,39 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			body: request.text
 		});
 		return true;
+	}
+
+	async createPullRequestInlineComment(request: {
+		pullRequestId: string;
+		text: string;
+		rightSha: string;
+		filePath: string;
+		startLine: number;
+	}) {
+		const result = await this.createCommitComment({
+			pullRequestId: request.pullRequestId,
+			sha: request.rightSha,
+			text: request.text || "",
+			path: request.filePath,
+			startLine: request.startLine
+		});
+
+		return result;
+	}
+
+	async createPullRequestInlineReviewComment(request: {
+		pullRequestId: string;
+		text: string;
+		filePath: string;
+		startLine: number;
+	}) {
+		const result = await this.createPullRequestReviewComment({
+			pullRequestId: request.pullRequestId,
+			text: request.text || "",
+			filePath: request.filePath,
+			position: request.startLine
+		});
+		return result;
 	}
 
 	async deletePullRequestComment(request: {

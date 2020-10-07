@@ -397,6 +397,27 @@ export class GitService implements IGitService, Disposable {
 		return patches;
 	}
 
+	async diffBranches(
+		repoPath: string,
+		baseRef: string,
+		headRef?: string
+	): Promise<{ patches: ParsedDiff[]; data: string }> {
+		let data: string | undefined;
+		try {
+			const options = ["diff", "--no-ext-diff", "--no-prefix", baseRef];
+			if (headRef) options.push(headRef);
+			options.push("--");
+			data = await git({ cwd: repoPath }, ...options);
+		} catch (err) {
+			Logger.warn(`Error diffing branches ${repoPath}:${baseRef}:${headRef}`);
+			throw err;
+		}
+
+		const patches = parsePatch(data);
+		Logger.log("RETURNING PATCHES: ", JSON.stringify(patches, null, 4));
+		return { patches, data };
+	}
+
 	// this isn't technically a git operation, but we leave it here since it's
 	// pretending to be one
 	async getNewDiff(
@@ -969,6 +990,25 @@ export class GitService implements IGitService, Disposable {
 			return ret;
 		} catch {
 			return undefined;
+		}
+	}
+
+	async commitAndPush(
+		repoPath: string,
+		message: string,
+		files: string[],
+		pushAfterCommit: boolean
+	): Promise<{ success: boolean; error?: string }> {
+		try {
+			// const escapedMessage = message.replace(/\'/g, "\\'");
+			const data = await git({ cwd: repoPath }, "commit", "-m", message, ...files);
+			if (pushAfterCommit) {
+				await git({ cwd: repoPath }, "pull");
+				await git({ cwd: repoPath }, "push", "origin");
+			}
+			return { success: true };
+		} catch (err) {
+			return { success: false, error: err.message };
 		}
 	}
 

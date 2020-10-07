@@ -12,7 +12,7 @@ import {
 import {
 	Capabilities,
 	CodemarkPlus,
-	GetCodemarkSha1RequestType,
+	GetCodemarkRangeRequestType,
 	TelemetryRequestType,
 	GetDocumentFromMarkerRequestType
 } from "@codestream/protocols/agent";
@@ -28,7 +28,10 @@ import { Marker } from "./Marker";
 
 interface State {
 	hasDiff: boolean;
-	codemarkSha1: string | undefined;
+	currentContent?: string;
+	currentBranch?: string;
+	currentCommitHash?: string;
+	diff?: string;
 	warning?: string;
 	textDocumentUri: string;
 	startLine: number;
@@ -72,7 +75,6 @@ class MarkerActions extends React.Component<Props, State> {
 		super(props);
 		this.state = {
 			hasDiff: false,
-			codemarkSha1: "",
 			textDocumentUri: "",
 			startLine: 0,
 			endLine: 0,
@@ -201,14 +203,16 @@ class MarkerActions extends React.Component<Props, State> {
 		if (codemark == null || marker == null) return;
 
 		try {
-			const response = await HostApi.instance.send(GetCodemarkSha1RequestType, {
+			const response = await HostApi.instance.send(GetCodemarkRangeRequestType, {
 				codemarkId: codemark.id,
 				markerId: marker.id
 			});
+			const hasDiff = !response.success || response.currentContent !== marker.code;
 			this.setState({
-				hasDiff:
-					response.codemarkSha1 === undefined || response.codemarkSha1 !== response.documentSha1,
-				codemarkSha1: response.codemarkSha1
+				hasDiff,
+				currentContent: response.currentContent,
+				currentBranch: response.currentBranch,
+				diff: response.diff
 			});
 		} catch (error) {}
 
@@ -454,7 +458,7 @@ class MarkerActions extends React.Component<Props, State> {
 									</div>
 								</Tooltip>
 							)}
-							{canCompare && (
+							{/* canCompare && (
 								<Tooltip title="Compare current code to original" placement="bottomRight" delay={1}>
 									<div
 										className="codemark-actions-button"
@@ -463,7 +467,7 @@ class MarkerActions extends React.Component<Props, State> {
 										Compare
 									</div>
 								</Tooltip>
-							)}
+							) */}
 							{canOpenRevision && (
 								<a
 									id="open-revision-button"
@@ -471,7 +475,7 @@ class MarkerActions extends React.Component<Props, State> {
 									tabIndex={4}
 									onClick={e => this.handleClickOpenRevision(e, marker)}
 								>
-									Open Revision {ref}
+									Open {ref}
 								</a>
 							)}
 						</div>
@@ -528,7 +532,7 @@ class MarkerActions extends React.Component<Props, State> {
 	};
 
 	renderCodeblock(marker) {
-		const { scrollingCodeBlock, expandCodeBlock, warning } = this.state;
+		const { scrollingCodeBlock, expandCodeBlock, warning, hasDiff, currentContent } = this.state;
 		if (marker === undefined) return;
 
 		return (
@@ -551,7 +555,12 @@ class MarkerActions extends React.Component<Props, State> {
 				}}
 				onClick={e => !warning && this.handleClickJump(e)}
 			>
-				<Marker marker={marker} />
+				<Marker
+					marker={marker}
+					hasDiff={hasDiff && !warning}
+					currentContent={currentContent}
+					diff={this.state.diff}
+				/>
 				{warning && (
 					<div className="repo-warning">
 						<Icon name="alert" /> {this.getWarningMessage()}

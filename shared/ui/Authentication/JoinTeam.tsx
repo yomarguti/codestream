@@ -117,24 +117,22 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 	return (
 		<form className="standard-form" style={{ padding: "0 0 0 0" }} onSubmit={onClickJoin}>
 			<fieldset className="form-body" style={{ padding: 0 }}>
-				<div className="outline-box">
+				<div className="border-bottom-box">
 					<h3>Is your team already on CodeStream?</h3>
 					<div id="controls">
 						<div className="control-group">
 							<p>Use your invitation code to connect with your teammates.</p>
 							<div className="two-col" style={{ display: "flex" }}>
-								<div style={{ width: "100%" }}>
+								<div style={{ width: "100%", position: "relative" }}>
 									<TextInput
 										value={inviteCode}
 										onChange={onChange}
 										placeholder="Enter invitation code"
+										hasError={!!error}
 									/>
 									{error && (
-										<small className="explainer error-message ">
-											<FormattedMessage
-												id={errorId}
-												defaultMessage="There is an error with that code"
-											/>
+										<small className="explainer error-message" style={{ top: "8px" }}>
+											<FormattedMessage id={errorId} defaultMessage="Invalid code." />
 										</small>
 									)}
 								</div>

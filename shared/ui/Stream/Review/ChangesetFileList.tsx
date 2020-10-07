@@ -94,6 +94,12 @@ export const ChangesetFileList = (props: {
 		setVisitedFiles(newVisitedFiles);
 	};
 
+	const unVisitFile = (visitedKey: string) => {
+		const newVisitedFiles = { ...visitedFiles, [visitedKey]: false };
+		saveVisitedFiles(newVisitedFiles, reviewCheckpointKey);
+		setVisitedFiles(newVisitedFiles);
+	};
+
 	// if we're looking at a specific checkpoint, save the visisted
 	// information under that key. if however we're looking at the overall
 	// changes, we want that to "reset" each time the review gets amended,
@@ -135,6 +141,9 @@ export const ChangesetFileList = (props: {
 		})();
 	}, [review, reviewCheckpointKey]);
 
+	// we need to re-make these handlers each time visitedFiles changes, otherwise
+	// it creates a closeure over the wrong version of those variables. not sure
+	// if there is a better solution here....
 	useEffect(() => {
 		const disposables = [
 			HostApi.instance.on(ShowNextChangedFileNotificationType, nextFile),
@@ -142,7 +151,7 @@ export const ChangesetFileList = (props: {
 		];
 
 		return () => disposables.forEach(disposable => disposable.dispose());
-	}, [checkpoint]);
+	}, [visitedFiles]);
 
 	const goDiff = async index => {
 		if (index < 0) index = derivedState.numFiles - 1;
@@ -244,7 +253,23 @@ export const ChangesetFileList = (props: {
 						<ChangesetFile
 							selected={selected}
 							noHover={noOnClick}
-							icon={icon && <Icon name={icon} className={iconClass} />}
+							icon={
+								icon ? (
+									<Icon
+										onClick={
+											visited
+												? async e => {
+														e.preventDefault();
+														e.stopPropagation();
+														unVisitFile(visitedKey);
+												  }
+												: undefined
+										}
+										name={icon}
+										className={iconClass}
+									/>
+								) : null
+							}
 							onClick={async e => {
 								if (noOnClick) return;
 								e.preventDefault();

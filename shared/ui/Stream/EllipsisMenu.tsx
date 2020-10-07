@@ -1,7 +1,7 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
-import { WebviewPanels, WebviewModals } from "../ipc/webview.protocol.common";
+import { WebviewPanels, WebviewModals, WebviewPanelNames } from "../ipc/webview.protocol.common";
 import Icon from "./Icon";
 import { openPanel } from "./actions";
 import Menu from "./Menu";
@@ -9,18 +9,22 @@ import { HostApi } from "../webview-api";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { sortBy as _sortBy } from "lodash-es";
 import { logout, switchToTeam } from "../store/session/actions";
-import { EMPTY_STATUS } from "./StatusPanel";
+import { EMPTY_STATUS } from "./StartWork";
 import { MarkdownText } from "./MarkdownText";
 import { HeadshotName } from "../src/components/HeadshotName";
 import { setProfileUser, openModal } from "../store/context/actions";
 import { confirmPopup } from "./Confirm";
 import { DeleteUserRequestType, UpdateTeamSettingsRequestType } from "@codestream/protocols/agent";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { setUserPreference } from "./actions";
+import { AVAILABLE_PANES } from "./Sidebar";
 
 interface EllipsisMenuProps {
 	menuTarget: any;
 	closeMenu: any;
 }
+
+const EMPTY_HASH = {};
 
 export function EllipsisMenu(props: EllipsisMenuProps) {
 	const dispatch = useDispatch();
@@ -29,6 +33,8 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		const user = state.users[state.session.userId!];
 
 		return {
+			sidebarPanePreferences: state.preferences.sidebarPanes || EMPTY_HASH,
+			sidebarPaneOrder: state.preferences.sidebarPaneOrder || AVAILABLE_PANES,
 			userTeams: _sortBy(
 				Object.values(state.teams).filter(t => !t.deactivated),
 				"name"
@@ -235,9 +241,9 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 					action: () => dispatch(openModal(WebviewModals.ChangeTeamName))
 				},
 				{ label: "-" },
+				{ label: "Export Data", action: () => go(WebviewPanels.Export) },
+				{ label: "-" },
 				{ label: "Delete Team", action: deleteTeam }
-				// { label: "-" },
-				// { label: "Export Data", action: () => go(WebviewPanels.Export) }
 			];
 			return {
 				label: "Team Admin",
@@ -283,16 +289,24 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				{ label: "Change Email", action: () => popup(WebviewModals.ChangeEmail) },
 				{ label: "Change Username", action: () => popup(WebviewModals.ChangeUsername) },
 				{ label: "Change Full Name", action: () => popup(WebviewModals.ChangeFullName) },
-				// { label: "Change Password", action: "password" },
 				{ label: "-" },
 				{ label: "Sign Out", action: () => dispatch(logout()) }
-				// { label: "-" },
-				// {
-				// 	label: "Other Actions",
-				// 	action: "other",
-				// 	submenu: [{ label: "Cancel My User Account", action: cancelAccount }]
-				// }
 			]
+		},
+		{
+			label: "View",
+			action: "view",
+			submenu: derivedState.sidebarPaneOrder.map(id => {
+				const settings = derivedState.sidebarPanePreferences[id] || EMPTY_HASH;
+				return {
+					key: id,
+					label: WebviewPanelNames[id],
+					checked: !settings.removed,
+					action: () => {
+						dispatch(setUserPreference(["sidebarPanes", id, "removed"], !settings.removed));
+					}
+				};
+			})
 		},
 		{
 			label: "Notifications",
@@ -310,21 +324,15 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				disabled: true
 			},
 			buildUpgradeTeamMenuItem(),
-			{
-				label: `Invite people to ${derivedState.team.name}`,
-				action: () => dispatch(openPanel(WebviewPanels.People))
-			},
+			// {
+			// 	label: `Invite people to ${derivedState.team.name}`,
+			// 	action: () => dispatch(openModal(WebviewModals.Invite))
+			// },
 			buildAdminTeamMenuItem(),
 			buildSwitchTeamMenuItem(),
 			{ label: "-" }
 		].filter(Boolean)
 	);
-
-	// FIXME apiCapabilities (this moved to the + menu on global nav)
-	// menuItems.push({
-	// 	label: "Set a Status",
-	// 	action: () => this.setActivePanel(WebviewPanels.Status)
-	// });
 
 	// Feedback:
 	// - Email support
@@ -361,11 +369,11 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 					key: "keybindings",
 					action: () => dispatch(openModal(WebviewModals.Keybindings))
 				},
-				{
-					label: "Getting Started Guide",
-					key: "getting-started",
-					action: () => dispatch(openPanel(WebviewPanels.GettingStarted))
-				},
+				// {
+				// 	label: "Getting Started Guide",
+				// 	key: "getting-started",
+				// 	action: () => dispatch(openPanel(WebviewPanels.GettingStarted))
+				// },
 				{
 					label: "CodeStream Flow",
 					key: "flow",

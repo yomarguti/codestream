@@ -504,10 +504,60 @@ export const setUserPreference = (prefPath: string[], value: any) => async dispa
 			preferences: newPreference
 		});
 		// update with confirmed server response
+		// turning this off so we don't get 3 updates: one optimistically, one
+		// via API return, and one via pubnub
+		// dispatch(updatePreferences(response.preferences));
+	} catch (error) {
+		logError(`Error trying to update preferences`, { message: error.message });
+	}
+};
+
+// usage setUserPreference({"foo":true, "bar.baz.bin":"no"})
+export const setUserPreferences = (data: any) => async dispatch => {
+	const newPreference = {};
+	let newPreferencePointer = newPreference;
+	for (const key of Object.keys(data)) {
+		const prefPath = key.split(".");
+		while (prefPath.length > 1) {
+			const part = prefPath.shift()!.replace(/\./g, "*");
+			newPreferencePointer[part] = {};
+			newPreferencePointer = newPreferencePointer[part];
+		}
+		newPreferencePointer[prefPath[0].replace(/\./g, "*")] = data[key];
+	}
+
+	try {
+		// optimistically merge it into current preferences
+		dispatch(updatePreferences(newPreference));
+		const response = await HostApi.instance.send(UpdatePreferencesRequestType, {
+			preferences: newPreference
+		});
+		// update with confirmed server response
 		dispatch(updatePreferences(response.preferences));
 	} catch (error) {
 		logError(`Error trying to update preferences`, { message: error.message });
 	}
+};
+
+const EMPTY_HASH = {};
+export const setPaneCollapsed = (paneId: string, value: boolean) => async (dispatch, getState) => {
+	const { preferences } = getState();
+	let maximizedPane = "";
+	// check to see if there is a maximized panel, and if so unmaximize it
+	const panePreferences = preferences.sidebarPanes || EMPTY_HASH;
+	Object.keys(panePreferences).forEach(id => {
+		if (panePreferences[id] && panePreferences[id].maximized) {
+			dispatch(setPaneMaximized(id, false));
+			maximizedPane = id;
+		}
+	});
+	// otherwise, expand/collapse this pane
+	if (!maximizedPane || maximizedPane === paneId)
+		dispatch(setUserPreference(["sidebarPanes", paneId, "collapsed"], value));
+};
+
+export const setPaneMaximized = (panelId: string, value: boolean) => async dispatch => {
+	dispatch(setUserPreference(["sidebarPanes", panelId, "maximized"], value));
 };
 
 export const setUserStatus = (

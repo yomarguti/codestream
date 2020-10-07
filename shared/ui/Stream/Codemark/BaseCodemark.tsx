@@ -47,6 +47,7 @@ export interface BaseCodemarkProps extends CardProps {
 	// The <CardFooter/> is provided to allow overriding the container style and it must be the returned child
 	renderFooter?: (footer: typeof CardFooter) => React.ReactNode;
 	renderActions?: boolean;
+	noCard?: boolean;
 }
 
 export function BaseCodemark(props: BaseCodemarkProps) {
@@ -118,6 +119,7 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 			{!renderIssueDropdownAndMenu && renderedMenu}
 			{!renderIssueDropdownAndMenu && props.renderMenu && (
 				<KebabIcon
+					className="kebab"
 					onClickCapture={e => {
 						e.preventDefault();
 						e.stopPropagation();

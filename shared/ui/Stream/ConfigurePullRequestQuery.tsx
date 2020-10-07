@@ -1,5 +1,5 @@
 import React from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Row } from "./CrossPostIssueControls/IssueDropdown";
 import { PRHeadshot } from "../src/components/Headshot";
 import Tooltip from "./Tooltip";
@@ -15,6 +15,9 @@ import { Checkbox } from "../src/components/Checkbox";
 import { PullRequestTooltip } from "./OpenPullRequests";
 import styled from "styled-components";
 import { PullRequestQuery } from "../protocols/agent/api.protocol.models";
+import { CodeStreamState } from "../store";
+import { InlineMenu } from "../src/components/controls/InlineMenu";
+import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 
 const PRTestResults = styled.div`
 	margin: 20px -20px 0 -20px;
@@ -42,6 +45,14 @@ interface Props {
 
 export function ConfigurePullRequestQuery(props: Props) {
 	const dispatch = useDispatch();
+	const derivedState = useSelector((state: CodeStreamState) => {
+		const { preferences, providers } = state;
+
+		return {
+			providers,
+			allRepos: preferences.pullRequestQueryShowAllRepos
+		};
+	});
 
 	const defaultProviderId = React.useMemo(() => {
 		if (props.query && props.query.providerId) return props.query.providerId;
@@ -58,6 +69,15 @@ export function ConfigurePullRequestQuery(props: Props) {
 	>(undefined);
 	const [isLoading, setIsLoading] = React.useState(false);
 
+	const providerDisplayName = React.useMemo(() => {
+		if (derivedState.providers[providerIdField]) {
+			const { name } = derivedState.providers[providerIdField];
+			return PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].displayName : "";
+		} else {
+			return "";
+		}
+	}, [providerIdField]);
+
 	const fetchTestPRs = async query => {
 		setIsLoading(true);
 		setTestPRSummaries(undefined);
@@ -66,7 +86,6 @@ export function ConfigurePullRequestQuery(props: Props) {
 			const response: any = await dispatch(
 				getMyPullRequests(providerIdField, [query], props.openReposOnly, { force: true }, true)
 			);
-			console.warn("RESPONSE IS: ", response);
 			if (response && response.length) {
 				HostApi.instance.track("PR Test List Rendered", {
 					"PR Count": response.length
@@ -96,7 +115,22 @@ export function ConfigurePullRequestQuery(props: Props) {
 						<div id="controls">
 							<div style={{ margin: "20px 0" }}>
 								{!query.providerId && props.prConnectedProviders.length > 1 && (
-									<label>PR Provider: </label>
+									<>
+										<label>PR Provider: &nbsp;</label>
+										<InlineMenu
+											items={props.prConnectedProviders.map(provider => {
+												const providerDisplay = PROVIDER_MAPPINGS[provider.name];
+												return {
+													key: provider.id,
+													label: providerDisplay.displayName,
+													action: () => setProviderIdField(provider.id)
+												};
+											})}
+										>
+											{providerDisplayName}
+										</InlineMenu>
+										<div style={{ height: "10px" }} />
+									</>
 								)}
 								<input
 									autoFocus
@@ -121,6 +155,17 @@ export function ConfigurePullRequestQuery(props: Props) {
 									}}
 								/>
 								<div style={{ height: "10px" }} />
+								{!derivedState.allRepos && (
+									<Tooltip
+										title="You can change this setting by closing the dialog and clicking the gear icon"
+										placement="bottom"
+										delay={1}
+									>
+										<span className="explainer">
+											Queries are limited to repos you have open in your editor.
+										</span>
+									</Tooltip>
+								)}
 							</div>
 						</div>
 						<ButtonRow>

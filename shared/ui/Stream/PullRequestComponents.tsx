@@ -11,7 +11,7 @@ export const PENDING_BORDER_COLOR = "rgba(249, 197, 19, 0.6)";
 export const PENDING_BACKGROUND_COLOR = "rgba(255, 223, 0, 0.1)";
 
 export const PRHeader = styled.div`
-	margin: 45px 15px 0 20px;
+	margin: 35px 15px 0 20px;
 	.open-external {
 		margin-left: 5px;
 		vertical-align: 3px;
@@ -247,6 +247,9 @@ export const PRCommentCard = styled.div`
 	border-radius: 5px;
 	padding: 10px 15px;
 	margin-left: 60px;
+	&.no-headshot {
+		margin-left: 0;
+	}
 	z-index: 2;
 	h1 {
 		font-size: 15px;
@@ -1020,5 +1023,23 @@ export const PRIAmRequested = styled.div`
 	button {
 		border-radius: 5px;
 		margin-left: auto;
+	}
+`;
+
+export const PRErrorBox = styled.div`
+	margin: 10px 10px 20px 0;
+	border: 1px solid ${PENDING_BORDER_COLOR};
+	background: ${PENDING_BACKGROUND_COLOR};
+	border-radius: 5px;
+	padding: 10px;
+	display: flex;
+	align-items: center;
+	.icon.alert {
+		display: inline-block;
+		transform: scale(1.5);
+		margin: 0 10px;
+	}
+	.message {
+		margin-left: 10px;
 	}
 `;

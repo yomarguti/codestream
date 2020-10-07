@@ -512,6 +512,7 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 	return (
 		<>
 			<KebabIcon
+				className="kebab"
 				onClickCapture={e => {
 					e.preventDefault();
 					e.stopPropagation();
@@ -728,7 +729,12 @@ const BaseReview = (props: BaseReviewProps) => {
 				{props.headerError && props.headerError.message && (
 					<div
 						className="color-warning"
-						style={{ display: "flex", padding: "10px 0", whiteSpace: "normal" }}
+						style={{
+							display: "flex",
+							padding: "10px 0",
+							whiteSpace: "normal",
+							alignItems: "flex-start"
+						}}
 					>
 						<Icon name="alert" />
 						<div style={{ paddingLeft: "10px" }}>{props.headerError.message}</div>
@@ -777,7 +783,12 @@ const BaseReview = (props: BaseReviewProps) => {
 										{props.reviewers!.map(reviewer => {
 											const addThumbsUp = approvedBy[reviewer.id] ? true : false;
 											return (
-												<HeadshotName person={reviewer} highlightMe addThumbsUp={addThumbsUp} />
+												<HeadshotName
+													key={reviewer.id}
+													person={reviewer}
+													highlightMe
+													addThumbsUp={addThumbsUp}
+												/>
 											);
 										})}
 									</MetaDescriptionForTags>

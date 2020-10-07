@@ -1,4 +1,6 @@
 "use strict";
+import { createPatch, ParsedDiff, parsePatch } from "diff";
+import { xfs } from "xfs";
 import { MessageType } from "../api/apiProvider";
 import { MarkerLocation } from "../api/extensions";
 import { Container, SessionContainer } from "../container";
@@ -23,9 +25,13 @@ import {
 	FollowReviewRequest,
 	FollowReviewRequestType,
 	FollowReviewResponse,
+	GetCodemarkRangeRequest,
+	GetCodemarkRangeRequestType,
+	GetCodemarkRangeResponse,
 	GetCodemarkSha1Request,
 	GetCodemarkSha1RequestType,
 	GetCodemarkSha1Response,
+	GetRangeResponse,
 	PinReplyToCodemarkRequest,
 	PinReplyToCodemarkRequestType,
 	PinReplyToCodemarkResponse,
@@ -158,10 +164,84 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		return response;
 	}
 
+	@lspHandler(GetCodemarkRangeRequestType)
+	@log()
+	async getCodemarkRange({
+		codemarkId,
+		markerId
+	}: GetCodemarkRangeRequest): Promise<GetCodemarkRangeResponse> {
+		const cc = Logger.getCorrelationContext();
+
+		const { codemarks, files, markerLocations, scm } = SessionContainer.instance();
+		const { documents } = Container.instance();
+
+		const codemark = await codemarks.getEnrichedCodemarkById(codemarkId);
+		if (codemark === undefined) {
+			throw new Error(`No codemark could be found for Id(${codemarkId})`);
+		}
+
+		if (codemark.markers == null || codemark.markers.length === 0) {
+			Logger.warn(cc, `No markers are associated with codemark Id(${codemarkId})`);
+			return { success: false };
+		}
+
+		if (codemark.fileStreamIds.length === 0) {
+			Logger.warn(cc, `No documents are associated with codemark Id(${codemarkId})`);
+			return { success: false };
+		}
+
+		// Get the most up-to-date location for the codemark
+		const marker = markerId
+			? codemark.markers.find(m => m.id === markerId) || codemark.markers[0]
+			: codemark.markers[0];
+
+		const fileStreamId = marker.fileStreamId;
+		const uri = await files.getDocumentUri(fileStreamId);
+		if (uri === undefined) {
+			Logger.warn(cc, `No document could be loaded for codemark Id(${codemarkId})`);
+			return { success: false };
+		}
+
+		const document = documents.get(uri);
+
+		const { locations } = await markerLocations.getCurrentLocations(uri, fileStreamId, [marker]);
+
+		let documentRange: GetRangeResponse | undefined = {};
+		let diff = "";
+
+		const location = locations[marker.id];
+		if (location != null) {
+			const range = MarkerLocation.toRange(location);
+			const response = await scm.getRange({ uri: uri, range: range });
+			documentRange = response;
+			if (documentRange) {
+				diff = createPatch(marker.file, marker.code, response.currentContent || "");
+				const diffs = diff.trim().split("\n");
+				diffs.splice(0, 5);
+				let startLine = 1;
+				if (marker.locationWhenCreated && marker.locationWhenCreated.length) {
+					startLine = marker.locationWhenCreated[0];
+				} else if (marker.referenceLocations && marker.referenceLocations.length) {
+					startLine = marker.referenceLocations[0].location[0];
+				}
+				const newHeader = `@@ -${startLine},${marker.code.split("\n").length} +${range.start.line +
+					1},${(documentRange.currentContent || "").split("\n").length}`;
+				diff = `${newHeader}\n${diffs.join("\n")}`;
+			}
+		}
+
+		const response = {
+			// Normalize to /n line endings
+			...documentRange,
+			diff,
+			success: true
+		};
+
+		return response;
+	}
+
 	async getIdByPostId(postId: string): Promise<string | undefined> {
-		const codemark = (await this.getAllCached()).find(
-			c => c.postId === postId
-		);
+		const codemark = (await this.getAllCached()).find(c => c.postId === postId);
 		return codemark && codemark.id;
 	}
 
