@@ -6,12 +6,8 @@ import styled from "styled-components";
 import { PRComment, PRCommentCard } from "./PullRequestComponents";
 import Tooltip from "./Tooltip";
 import { HostApi } from "../webview-api";
-import {
-	FetchThirdPartyPullRequestPullRequest,
-	CreatePullRequestCommentAndCloseRequest,
-	ExecuteThirdPartyTypedType
-} from "@codestream/protocols/agent";
-import { Headshot, PRHeadshot } from "../src/components/Headshot";
+import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
+import { PRHeadshot } from "../src/components/Headshot";
 import MessageInput from "./MessageInput";
 import { CSMe } from "@codestream/protocols/api";
 import { ButtonRow } from "../src/components/Dialog";
@@ -143,7 +139,7 @@ export const PullRequestBottomComment = styled((props: Props) => {
 											<span>
 												Submit Comment
 												<span className="keybinding extra-pad">
-													{navigator.appVersion.includes("Macintosh") ? "⌘" : "Alt"} ENTER
+													{navigator.appVersion.includes("Macintosh") ? "⌘" : "Ctrl"} ENTER
 												</span>
 											</span>
 										}
@@ -172,7 +168,7 @@ export const PullRequestBottomComment = styled((props: Props) => {
 											<span>
 												Submit Comment
 												<span className="keybinding extra-pad">
-													{navigator.appVersion.includes("Macintosh") ? "⌘" : "Alt"} ENTER
+													{navigator.appVersion.includes("Macintosh") ? "⌘" : "Ctrl"} ENTER
 												</span>
 											</span>
 										}

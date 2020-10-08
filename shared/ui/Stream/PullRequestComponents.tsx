@@ -11,7 +11,7 @@ export const PENDING_BORDER_COLOR = "rgba(249, 197, 19, 0.6)";
 export const PENDING_BACKGROUND_COLOR = "rgba(255, 223, 0, 0.1)";
 
 export const PRHeader = styled.div`
-	margin: 45px 15px 0 20px;
+	margin: 35px 15px 0 20px;
 	.open-external {
 		margin-left: 5px;
 		vertical-align: 3px;
@@ -247,6 +247,9 @@ export const PRCommentCard = styled.div`
 	border-radius: 5px;
 	padding: 10px 15px;
 	margin-left: 60px;
+	&.no-headshot {
+		margin-left: 0;
+	}
 	z-index: 2;
 	h1 {
 		font-size: 15px;
@@ -297,6 +300,15 @@ export const PRCommentCard = styled.div`
 	&.green-border:before {
 		border-color: #7aba5d;
 	}
+`;
+
+export const PRCard = styled.div`
+	padding: 15px;
+	margin: 10px;
+	border: 1px solid;
+	border-color: var(--base-border-color);
+	border-radius: 5px;
+	font-family: var(--font-family);
 `;
 
 export const PRActionCommentCard = styled.div`
@@ -384,7 +396,9 @@ export const PRReaction = styled.div`
 	padding: 5px 15px;
 	border-right: 1px solid var(--base-border-color);
 	cursor: pointer;
+	white-space: nowrap;
 	p {
+		white-space: nowrap;
 		display: inline-block;
 		margin: 0 2px 0 0;
 		padding: 0;
@@ -472,6 +486,11 @@ export const PRThreadedCommentCard = styled.div`
 		border: 1px solid var(--base-border-color);
 		border-radius: 5px;
 	}
+	@media only screen and (max-width: 630px) {
+		${PRReactions} {
+			margin-left: -5px;
+		}
+	}
 `;
 
 export const PRConversation = styled.div`
@@ -517,7 +536,7 @@ export const PRTimelineItem = styled.div`
 		margin-left: 5px;
 		margin-right: 0;
 	}
-	.icon {
+	.icon:not(.no-flex) {
 		flex-grow: 0;
 		flex-shrink: 0;
 		margin-right: 10px;
@@ -581,6 +600,23 @@ export const PRTimelineItemBody = styled.div`
 		color: var(--text-color-highlight);
 		font-weight: bold;
 		padding-right: 5px;
+	}
+`;
+
+export const PRCodeCommentBody = styled.div`
+	font-family: var(--font-family);
+	min-height: 30px;
+	margin: 0 0 20px 0;
+	position: relative;
+	padding-left: 40px;
+	@media only screen and (max-width: 630px) {
+		padding-left: 0;
+		${PRHeadshot}, ${Headshot} {
+			display: none;
+		}
+		${PRReactions} {
+			margin-left: 0;
+		}
 	}
 `;
 
@@ -820,13 +856,6 @@ export const PRCodeCommentPatch = styled.div`
 	}
 `;
 
-export const PRCodeCommentBody = styled.div`
-	min-height: 30px;
-	margin: 0 0 20px 0;
-	position: relative;
-	padding-left: 40px;
-`;
-
 export const PRCodeComment = styled.div`
 	flex-grow: 10;
 	max-width: 100%;
@@ -847,6 +876,7 @@ export const PRCodeComment = styled.div`
 `;
 
 export const PRCodeCommentReply = styled.div`
+	font-family: var(--font-family);
 	position: relative;
 	#input-div {
 		height: 28px !important; // 2px for the border, 30px matches headshot height
@@ -1020,5 +1050,72 @@ export const PRIAmRequested = styled.div`
 	button {
 		border-radius: 5px;
 		margin-left: auto;
+	}
+`;
+
+export const PRErrorBox = styled.div`
+	margin: 10px 10px 20px 0;
+	border: 1px solid ${PENDING_BORDER_COLOR};
+	background: ${PENDING_BACKGROUND_COLOR};
+	border-radius: 5px;
+	padding: 10px;
+	display: flex;
+	align-items: center;
+	.icon.alert {
+		display: inline-block;
+		transform: scale(1.5);
+		margin: 0 10px;
+	}
+	.message {
+		margin-left: 10px;
+	}
+`;
+
+export const PRCommentsInPatch = styled.div`
+	border-top: 1px solid var(--base-border-color);
+	border-bottom: 1px solid var(--base-border-color);
+	${PRReactions} {
+		border: none;
+		margin: -5px 0 15px 35px;
+	}
+	${PRReaction} {
+		padding: 1px 8px;
+		margin: 0 5px 5px;
+		border: 1px solid var(--base-border-color);
+		border-radius: 5px;
+	}
+	${PRCard} {
+		max-width: min(600px, calc(100vw - 80px));
+	}
+	@media only screen and (max-width: 630px) {
+		${PRReactions} {
+			margin-left: -5px;
+		}
+	}
+`;
+export const PRCodeCommentReplyInput = styled.div`
+	margin: 0 0 0 40px;
+	border: 1px solid var(--base-border-color);
+	@media only screen and (max-width: 630px) {
+		margin-left: 0;
+	}
+`;
+
+export const PRCodeCommentWrapper = styled.div`
+	@media only screen and (max-width: 630px) {
+		${PRHeadshot} {
+			display: none;
+		}
+	}
+`;
+
+export const PRKebabIcon = styled.span`
+	background: var(--base-background-color);
+	padding: 0 5px;
+	display: inline-block;
+	marginleft: 5px;
+	cursor: pointer;
+	&:hover {
+		background: var(--app-background-color-hover);
 	}
 `;

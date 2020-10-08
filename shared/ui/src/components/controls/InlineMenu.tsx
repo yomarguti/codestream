@@ -8,6 +8,7 @@ interface MenuItem {
 	action?: string | (() => void);
 	key?: string;
 	default?: boolean;
+	checked?: boolean;
 }
 
 export interface InlineMenuProps {
@@ -27,6 +28,9 @@ export const TextButton = styled.span`
 	color: ${props => props.theme.colors.textHighlight};
 	&.subtle {
 		color: var(--text-color-subtle);
+		&:hover {
+			color: ${props => props.theme.colors.textHighlight};
+		}
 	}
 	cursor: pointer;
 	white-space: nowrap;
@@ -36,6 +40,13 @@ export const TextButton = styled.span`
 		margin-right: 5px;
 		white-space: nowrap;
 	}
+	.icon.inline-label {
+		display: inline-block;
+		transform: scale(0.7);
+		margin-right: 1px;
+		white-space: nowrap;
+		vertical-align: 1px;
+	}
 	&.big-chevron {
 		.octicon-chevron-down {
 			transform: scale(1);
@@ -44,6 +55,9 @@ export const TextButton = styled.span`
 	&:focus {
 		margin: -3px;
 		border: 3px solid transparent;
+	}
+	&.no-padding {
+		padding: 0 !important;
 	}
 `;
 

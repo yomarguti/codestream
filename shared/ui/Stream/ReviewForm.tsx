@@ -838,7 +838,8 @@ class ReviewForm extends React.Component<Props, State> {
 					this.props.newPostEntryPoint || "Global Nav"
 				);
 				if (createResult !== PostsActionsType.FailPendingPost) {
-					if (this.props.skipPostCreationModal) {
+					// commented out as per https://trello.com/c/LR3KD2Lj/4320-posting-comment-in-a-review-or-a-pr-leads-to-misleading-confirmation-message
+					if (true || this.props.skipPostCreationModal) {
 						this.props.closePanel();
 					} else {
 						confirmPopup({
@@ -1623,7 +1624,7 @@ class ReviewForm extends React.Component<Props, State> {
 				{status === FileStatus.unmerged && <span className="deleted">conflict </span>}
 				{status === FileStatus.deleted && <span className="deleted">deleted </span>}
 				{excluded ? (
-					<span className="actions">
+					<span className="actions opaque">
 						<Icon
 							name="plus"
 							title="Add to review"
@@ -1632,7 +1633,7 @@ class ReviewForm extends React.Component<Props, State> {
 							onClick={e => this.exclude(e, file)}
 						/>
 						<Icon
-							name="trashcan"
+							name="trash"
 							title="Exclude from future reviews"
 							placement="bottom"
 							className="clickable action"
@@ -1640,7 +1641,7 @@ class ReviewForm extends React.Component<Props, State> {
 						/>
 					</span>
 				) : (
-					<span className="actions">
+					<span className="actions opaque">
 						<Icon
 							name="x"
 							title="Exclude from review"
@@ -1858,7 +1859,7 @@ class ReviewForm extends React.Component<Props, State> {
 			coAuthorLabels[email] = label.join(", ");
 		});
 
-		const modifier = navigator.appVersion.includes("Macintosh") ? "⌘" : "Alt";
+		const modifier = navigator.appVersion.includes("Macintosh") ? "⌘" : "Ctrl";
 
 		const submitTip = (
 			<span>
@@ -1943,7 +1944,7 @@ class ReviewForm extends React.Component<Props, State> {
 								<div style={{ marginTop: "-1px" }}>
 									<b>{currentUser.username}</b>
 									<span className="subhead">
-										is {isEditing ? "editing" : "requesting"} a code review
+										is {isEditing ? "editing" : "requesting"} feedback
 										{repoMenuItems.length > 0 && <> in </>}
 									</span>
 									{repoMenuItems.length === 1 && repoName && (
@@ -1997,7 +1998,7 @@ class ReviewForm extends React.Component<Props, State> {
 										<Icon
 											placement="top"
 											title="Use Latest Commit Message"
-											name="git-commit"
+											name="git-commit-vertical"
 											className="clickable"
 											onClick={() => this.setTitle(latestCommit.shortMessage)}
 										/>
@@ -2024,7 +2025,7 @@ class ReviewForm extends React.Component<Props, State> {
 								</div>
 								<div style={{ marginTop: "-1px" }}>
 									<b>{currentUser.username}</b>
-									<span className="subhead">is amending the code review</span>
+									<span className="subhead">is amending the feedback request</span>
 								</div>
 							</div>
 							{this.renderMessageInput()}
@@ -2270,19 +2271,16 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 	};
 };
 
-const ConnectedReviewForm = connect(
-	mapStateToProps,
-	{
-		openPanel,
-		openModal,
-		closePanel,
-		createPostAndReview,
-		editReview,
-		setUserPreference,
-		setCurrentReview,
-		setCodemarkStatus,
-		setNewPostEntry
-	}
-)(ReviewForm);
+const ConnectedReviewForm = connect(mapStateToProps, {
+	openPanel,
+	openModal,
+	closePanel,
+	createPostAndReview,
+	editReview,
+	setUserPreference,
+	setCurrentReview,
+	setCodemarkStatus,
+	setNewPostEntry
+})(ReviewForm);
 
 export { ConnectedReviewForm as ReviewForm };

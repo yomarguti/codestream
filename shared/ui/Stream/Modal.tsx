@@ -6,6 +6,8 @@ import Tooltip from "./Tooltip";
 import ScrollBox from "./ScrollBox";
 import Icon from "./Icon";
 import { useDidMount } from "../utilities/hooks";
+import * as contextActions from "../store/context/actions";
+import { useDispatch } from "react-redux";
 
 const noopElement = document.createElement("span");
 
@@ -26,7 +28,7 @@ export const ModalRoot = React.memo(() => {
 	return <div id="modal-root" />;
 });
 
-const ModalWrapper = styled.div`
+const ModalWrapper = styled.div<{ noPadding?: boolean }>`
 	width: 100%;
 	height: 100%;
 	position: absolute;
@@ -39,19 +41,19 @@ const ModalWrapper = styled.div`
 	overflow: auto;
 
 	&.translucent {
-		background: rgba(255, 255, 255, 0.8);
-		backdrop-filter: blur(1px);
-		.vscode-dark & {
-			background: rgba(0, 0, 0, 0.6);
-			backdrop-filter: contrast(0.5) blur(1px);
-		}
+		// background: rgba(255, 255, 255, 0.8);
+		// backdrop-filter: blur(1px);
+		// .vscode-dark & {
+		background: transparentize(var(--sidebar-background), 0.5);
+		backdrop-filter: brightness(60%) blur(1px);
+		// }
 	}
 	&.show-global-nav {
 		top: 50px;
 	}
 	div.children {
 		height: 100%;
-		padding: 50px 20px;
+		padding: ${props => (props.noPadding ? "0" : "40px 20px")};
 
 		&.vcenter {
 			height: inherit;
@@ -84,10 +86,13 @@ export interface ModalProps {
 	verticallyCenter?: boolean;
 	translucent?: boolean;
 	showGlobalNav?: boolean;
+	noPadding?: boolean;
+	noScroll?: boolean;
 }
 
 export function Modal(props: PropsWithChildren<ModalProps>) {
-	const modalRoot = useModalRoot();
+	let modalRoot = useModalRoot();
+	const dispatch = useDispatch();
 	const [context] = React.useState<ModalContextType>(() => ({ zIndex: 3000 }));
 	const disposables: { dispose(): void }[] = [];
 
@@ -108,6 +113,14 @@ export function Modal(props: PropsWithChildren<ModalProps>) {
 			);
 		}
 
+		// check to make sure we've got the right element. if not, that's
+		// because #modal-root hasn't mounted yet so we need to
+		// trigger a re-render of the main Stream/index by invoking a blur
+		if (modalRoot.tagName === "SPAN") {
+			setTimeout(() => dispatch(contextActions.blur()), 1000);
+			dispatch(contextActions.focus());
+		}
+
 		return () => {
 			disposables && disposables.forEach(_ => _.dispose());
 		};
@@ -121,22 +134,27 @@ export function Modal(props: PropsWithChildren<ModalProps>) {
 	return createPortal(
 		<ModalContext.Provider value={context}>
 			<ModalWrapper
+				noPadding={props.noPadding}
 				className={`${props.translucent ? "translucent " : ""}${
 					props.showGlobalNav ? "show-global-nav " : ""
 				}`}
 			>
 				{props.onClose && <CancelButton onClick={props.onClose} />}
-				<ScrollBox>
-					<div className="vscroll">
-						<div
-							onClick={checkClose}
-							id="modal-children"
-							className={props.verticallyCenter ? "vcenter children" : "children"}
-						>
-							{props.children}
+				{props.noScroll ? (
+					props.children
+				) : (
+					<ScrollBox>
+						<div className="vscroll">
+							<div
+								onClick={checkClose}
+								id="modal-children"
+								className={props.verticallyCenter ? "vcenter children" : "children"}
+							>
+								{props.children}
+							</div>
 						</div>
-					</div>
-				</ScrollBox>
+					</ScrollBox>
+				)}
 			</ModalWrapper>
 		</ModalContext.Provider>,
 		modalRoot

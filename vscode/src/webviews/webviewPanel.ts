@@ -1,7 +1,6 @@
 "use strict";
 import {
 	HostDidChangeFocusNotificationType,
-	isIpcRequestMessage,
 	isIpcResponseMessage,
 	ShowStreamNotificationType,
 	WebviewIpcMessage,
@@ -9,6 +8,7 @@ import {
 	WebviewIpcRequestMessage,
 	WebviewIpcResponseMessage
 } from "@codestream/protocols/webview";
+
 import { gate } from "system/decorators/gate";
 import {
 	Disposable,
@@ -26,21 +26,18 @@ import { CodeStreamSession, StreamThread } from "../api/session";
 import { Container } from "../container";
 import { Logger, TraceLevel } from "../logger";
 import { log } from "../system";
-
-type NotificationParamsOf<NT> = NT extends NotificationType<infer N, any> ? N : never;
-type RequestParamsOf<RT> = RT extends RequestType<infer R, any, any, any> ? R : never;
-type RequestResponseOf<RT> = RT extends RequestType<any, infer R, any, any> ? R : never;
-
-export function toLoggableIpcMessage(msg: WebviewIpcMessage) {
-	if (isIpcRequestMessage(msg)) return `${msg.method}(${msg.id})`;
-	if (isIpcResponseMessage(msg)) return `response(${msg.id})`;
-
-	return msg.method;
-}
+import {
+	NotificationParamsOf,
+	RequestParamsOf,
+	RequestResponseOf,
+	toLoggableIpcMessage,
+	WebviewLike
+} from "./webviewLike";
 
 let ipcSequence = 0;
 
-export class CodeStreamWebviewPanel implements Disposable {
+export class CodeStreamWebviewPanel implements WebviewLike, Disposable {
+	type = "panel";
 	static readonly IpcQueueThreshold = 100;
 
 	private _onDidClose = new EventEmitter<void>();
@@ -69,7 +66,11 @@ export class CodeStreamWebviewPanel implements Disposable {
 	private _onIpcReadyResolver: ((cancelled: boolean) => void) | undefined;
 	private readonly _panel: WebviewPanel;
 
-	constructor(public readonly session: CodeStreamSession, private readonly _html: string) {
+	constructor(
+		public readonly session: CodeStreamSession,
+		private readonly _html: string,
+		private onInitializedCallback: Function
+	) {
 		this._ipcPending = new Map();
 
 		this._panel = window.createWebviewPanel(
@@ -94,6 +95,7 @@ export class CodeStreamWebviewPanel implements Disposable {
 			window.onDidChangeWindowState(this.onWindowStateChanged, this)
 		);
 		this._panel.webview.html = this._html;
+		this.onInitializedCallback();
 	}
 
 	dispose() {
@@ -240,6 +242,11 @@ export class CodeStreamWebviewPanel implements Disposable {
 			});
 		}
 	}
+
+	@log({
+		args: false
+	})
+	async triggerIpc() {}
 
 	private clearIpc() {
 		this._ipcQueue.length = 0;

@@ -109,7 +109,7 @@ export const EmailConfirmation = (connect() as any)((props: Props) => {
 		<div className="onboarding-page">
 			<form className="standard-form" onSubmit={onSubmit}>
 				<fieldset className="form-body">
-					<div className="outline-box">
+					<div className="border-bottom-box">
 						<h3>Check Your Email</h3>
 						<FormattedMessage id="confirmation.instructions" tagName="p" />
 						<FormattedMessage id="confirmation.didNotReceive">
@@ -143,6 +143,7 @@ export const EmailConfirmation = (connect() as any)((props: Props) => {
 								<div className="confirmation-code">
 									{digits.map((digit, index) => (
 										<TextInput
+											autoFocus={index === 0}
 											ref={element => (inputs.current[index] = element)}
 											key={index}
 											value={digit}

@@ -20,7 +20,8 @@ import {
 	GetBranchesRequestType,
 	ReposScm,
 	CheckPullRequestPreconditionsResponse,
-	GetLatestCommitScmRequestType
+	GetLatestCommitScmRequestType,
+	DiffBranchesRequestType
 } from "@codestream/protocols/agent";
 import { connectProvider } from "./actions";
 import { isConnected, getPRLabel } from "../store/providers/reducer";
@@ -35,14 +36,14 @@ import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { Checkbox } from "../src/components/Checkbox";
 import { PanelHeader } from "../src/components/PanelHeader";
 import { CSMe } from "@codestream/protocols/api";
-import Headshot from "./Headshot";
-import { EMPTY_STATUS } from "./StatusPanel";
+import { EMPTY_STATUS } from "./StartWork";
 import Tooltip from "./Tooltip";
 import { clearMyPullRequests } from "../store/providerPullRequests/actions";
 import { css } from "react-select/src/components/SingleValue";
-
-// base branch dropdown: show only pushed branches
-// base branch dropdown: try to default to fork point branch
+import { InlineMenu } from "../src/components/controls/InlineMenu";
+import { PRDiffHunks, PRDiffHunk } from "./PullRequestFilesChangedList";
+import { PullRequestPatch } from "./PullRequestPatch";
+import { PullRequestFilesChangedList } from "./PullRequestFilesChangedList";
 
 export const ButtonRow = styled.div`
 	text-align: right;
@@ -69,11 +70,18 @@ const Root = styled.div`
 			color: var(--text-color-info) !important;
 		}
 	}
+	.no-padding {
+		padding: 0;
+	}
 `;
 const PRError = styled.div`
 	padding: 15px 15px 10px 15px;
 	display: flex;
 	align-items: center;
+	justify-content: center;
+	button {
+		white-space: nowrap;
+	}
 	> .icon {
 		flex-grow: 0;
 		flex-shrink: 0;
@@ -212,6 +220,9 @@ export const CreatePullRequestPanel = props => {
 
 	const [currentStep, setCurrentStep] = useState(0);
 
+	const [isLoadingDiffs, setIsLoadingDiffs] = useState(false);
+	const [filesChanged, setFilesChanged] = useState<any[]>([]);
+
 	const [isWaiting, setIsWaiting] = useState(false);
 	const [propsForPrePRProviderInfoModal, setPropsForPrePRProviderInfoModal] = useState<any>();
 
@@ -259,12 +270,16 @@ export const CreatePullRequestPanel = props => {
 			}
 			const result = await HostApi.instance.send(CheckPullRequestPreconditionsRequestType, args);
 			if (result && result.success) {
-				setReviewBranch(result.branch!);
 				setBranches(result.branches!);
 				setRemoteBranches(result.remoteBranches!);
+
+				let newPrBranch = prBranch;
+				let newReviewBranch = args.headRefName || reviewBranch || result.branch || "";
 				if (result.pullRequestProvider && result.pullRequestProvider.defaultBranch) {
-					setPrBranch(result.pullRequestProvider.defaultBranch!);
+					newPrBranch = result.pullRequestProvider.defaultBranch;
 				}
+				setReviewBranch(newReviewBranch);
+				setPrBranch(newPrBranch);
 
 				setPrRemoteUrl(result.remoteUrl!);
 				setPrTitle(result.review!.title!);
@@ -278,6 +293,7 @@ export const CreatePullRequestPanel = props => {
 				setPrProviderId(result.providerId!);
 
 				setCurrentStep(3);
+				fetchFilesChanged(args.repoId, newPrBranch, newReviewBranch);
 				if (result.warning && result.warning.type) {
 					if (result.warning.type === "REQUIRES_UPSTREAM") {
 						setRequiresUpstream(true);
@@ -444,6 +460,7 @@ export const CreatePullRequestPanel = props => {
 		if (localPrBranch === localReviewBranch) {
 			setPreconditionError({ type: "BRANCHES_MUST_NOT_MATCH", message: "", url: "", id: "" });
 			setFormState({ type: "", message: "", url: "", id: "" });
+			setFilesChanged([]);
 			return;
 		}
 
@@ -478,7 +495,6 @@ export const CreatePullRequestPanel = props => {
 			.then((result: CheckPullRequestPreconditionsResponse) => {
 				setPreconditionError({ type: "", message: "", url: "", id: "" });
 				setFormState({ type: "", message: "", url: "", id: "" });
-				console.warn("RESULT IS: ", result);
 				if (result && result.warning && result.warning.type === "REQUIRES_UPSTREAM") {
 					setRequiresUpstream(true);
 					setOrigins(result.origins!);
@@ -505,6 +521,7 @@ export const CreatePullRequestPanel = props => {
 				} else {
 					setFormState({ type: "", message: "", url: "", id: "" });
 				}
+				fetchFilesChanged(repoId, localPrBranch, localReviewBranch);
 				setLoadingBranchInfo(false);
 			})
 			.catch(error => {
@@ -756,8 +773,8 @@ export const CreatePullRequestPanel = props => {
 			case "HAS_LOCAL_COMMITS": {
 				messageElement = (
 					<span>
-						A PR can't be created because the code review includes local commits. Push your changes
-						and then <Link onClick={onClickTryAgain}>try again</Link>
+						A PR can't be created because the feedback request includes local commits. Push your
+						changes and then <Link onClick={onClickTryAgain}>try again</Link>
 					</span>
 				);
 				break;
@@ -765,8 +782,8 @@ export const CreatePullRequestPanel = props => {
 			case "HAS_LOCAL_MODIFICATIONS": {
 				messageElement = (
 					<span>
-						A PR can't be created because the code review includes uncommitted changes. Commit and
-						push your changes and then <Link onClick={onClickTryAgain}>try again</Link>.
+						A PR can't be created because the feedback request includes uncommitted changes. Commit
+						and push your changes and then <Link onClick={onClickTryAgain}>try again</Link>.
 					</span>
 				);
 				break;
@@ -888,6 +905,43 @@ export const CreatePullRequestPanel = props => {
 		);
 	};
 
+	// const repositoryName = React.useMemo(() => {
+	// 	selectedRepo
+	// }, [review, selectedRepo]);
+
+	const fetchFilesChanged = async (repoId: string, prBranch: string, reviewBranch: string) => {
+		setIsLoadingDiffs(true);
+		const response = await HostApi.instance.send(DiffBranchesRequestType, {
+			repoId: repoId,
+			baseRef: prBranch,
+			headRef: reviewBranch
+		});
+
+		if (response.error) {
+			setFilesChanged([]);
+		} else if (response && response.filesChanged) {
+			const { patches, data } = response.filesChanged;
+			const filesChanged = patches.map(_ => {
+				return {
+					..._,
+					linesAdded: _.additions,
+					linesRemoved: _.deletions,
+					file: _.newFileName,
+					filename: _.newFileName,
+					hunks: _.hunks,
+					sha: _.sha
+				};
+			});
+			setFilesChanged(filesChanged);
+		}
+		setIsLoadingDiffs(false);
+	};
+
+	// useEffect(() => {
+	// 	if (prBranch && reviewBranch) fetchFilesChanged();
+	// 	else setFilesChanged([]);
+	// }, [prBranch, reviewBranch]);
+
 	if (propsForPrePRProviderInfoModal) {
 		return <PrePRProviderInfoModal {...propsForPrePRProviderInfoModal} />;
 	}
@@ -990,7 +1044,7 @@ export const CreatePullRequestPanel = props => {
 														<Icon
 															placement="topRight"
 															title="Use Latest Commit Message"
-															name="git-commit"
+															name="git-commit-vertical"
 															className="clickable"
 															onClick={() => setPrTitle(latestCommit)}
 														/>
@@ -1130,6 +1184,18 @@ export const CreatePullRequestPanel = props => {
 					</div>
 					{!loading && !loadingBranchInfo && preconditionError.type && preconditionErrorMessages()}
 				</div>
+				<div style={{ height: "40px" }} />
+				{filesChanged.length > 0 && (
+					<PanelHeader className="no-padding" title="Comparing Changes"></PanelHeader>
+				)}
+				<PullRequestFilesChangedList
+					isLoading={loadingBranchInfo || isLoadingDiffs}
+					filesChanged={filesChanged}
+					baseRef={prBranch}
+					headRef={reviewBranch}
+					baseRefName={prBranch}
+					headRefName={reviewBranch}
+				/>
 			</span>
 		</Root>
 	);

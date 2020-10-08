@@ -15,18 +15,15 @@ import {
 	setCurrentPullRequest,
 	setCurrentReview
 } from "../store/context/actions";
-import CancelButton from "./CancelButton";
 import { useDidMount } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import {
 	FetchThirdPartyPullRequestPullRequest,
 	GetReposScmRequestType,
 	ReposScm,
-	ExecuteThirdPartyTypedType,
 	SwitchBranchRequestType,
 	DidChangeDataNotificationType,
-	ChangeDataType,
-	FetchThirdPartyPullRequestResponse
+	ChangeDataType
 } from "@codestream/protocols/agent";
 import {
 	PRHeader,
@@ -41,12 +38,10 @@ import {
 	PRPlusMinus,
 	PREditTitle,
 	PRActionButtons,
-	PRCommentCard,
 	PRSubmitReviewButton,
 	PRIAmRequested
 } from "./PullRequestComponents";
 import { LoadingMessage } from "../src/components/LoadingMessage";
-import { Modal } from "./Modal";
 import { bootstrapReviews } from "../store/reviews/actions";
 import { PullRequestConversationTab } from "./PullRequestConversationTab";
 import { PullRequestCommitsTab } from "./PullRequestCommitsTab";
@@ -54,8 +49,6 @@ import * as reviewSelectors from "../store/reviews/reducer";
 import { PullRequestFilesChangedTab } from "./PullRequestFilesChangedTab";
 import { FloatingLoadingMessage } from "../src/components/FloatingLoadingMessage";
 import { Button } from "../src/components/Button";
-import MessageInput from "./MessageInput";
-import { RadioGroup, Radio } from "../src/components/RadioGroup";
 import Tooltip from "./Tooltip";
 import { PullRequestFinishReview } from "./PullRequestFinishReview";
 import {
@@ -140,7 +133,6 @@ export const PullRequest = () => {
 		};
 	});
 
-	console.warn("CHECKOUT: ", derivedState.checkoutBranch);
 	const [activeTab, setActiveTab] = useState(1);
 	const [ghRepo, setGhRepo] = useState<any>(EMPTY_HASH);
 	const [isLoadingPR, setIsLoadingPR] = useState(false);
@@ -231,6 +223,9 @@ export const PullRequest = () => {
 				derivedState.currentPullRequestId!
 			)
 		)) as any;
+		if (response.error) {
+			// FIXME do something with it
+		}
 		_assignState(response);
 	};
 
@@ -520,9 +515,9 @@ export const PullRequest = () => {
 	// console.warn("REPO: ", ghRepo);
 	if (!pr) {
 		return (
-			<Modal verticallyCenter showGlobalNav>
+			<div style={{ display: "flex", height: "100vh", alignItems: "center" }}>
 				<LoadingMessage>Loading Pull Request...</LoadingMessage>
-			</Modal>
+			</div>
 		);
 	} else {
 		const statusIcon = pr.state === "OPEN" || pr.state === "CLOSED" ? "pull-request" : "git-merge";
@@ -684,9 +679,6 @@ export const PullRequest = () => {
 									name="refresh"
 								/>
 							</span>
-							<span>
-								<CancelButton className="button" title="Close" onClick={exit} />
-							</span>
 						</PRActionButtons>
 					</PRStatus>
 					{derivedState.currentPullRequest &&
@@ -748,7 +740,7 @@ export const PullRequest = () => {
 										? 0
 										: pr.files.nodes
 												.map(_ => _.additions)
-												.reduce((acc, val) => acc + val)
+												.reduce((acc, val) => acc + val, 0)
 												.toString()
 												.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
 								</span>{" "}
@@ -758,7 +750,7 @@ export const PullRequest = () => {
 										? 0
 										: pr.files.nodes
 												.map(_ => _.deletions)
-												.reduce((acc, val) => acc + val)
+												.reduce((acc, val) => acc + val, 0)
 												.toString()
 												.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
 								</span>
@@ -781,7 +773,12 @@ export const PullRequest = () => {
 							)}
 							{activeTab === 2 && <PullRequestCommitsTab pr={pr} ghRepo={ghRepo} fetch={fetch} />}
 							{activeTab === 4 && (
-								<PullRequestFilesChangedTab key="files-changed" pr={pr} fetch={fetch} />
+								<PullRequestFilesChangedTab
+									key="files-changed"
+									pr={pr}
+									fetch={fetch}
+									setIsLoadingMessage={setIsLoadingMessage}
+								/>
 							)}
 						</div>
 					</ScrollBox>

@@ -8,7 +8,7 @@ import * as userSelectors from "../store/users/reducer";
 import styled from "styled-components";
 import { includes as _includes, sortBy as _sortBy, last as _last } from "lodash-es";
 import { CodeStreamState } from "../store";
-import { setCurrentCodemark, setCurrentReview } from "../store/context/actions";
+import { setCurrentCodemark, setCurrentReview, closeAllPanels } from "../store/context/actions";
 import { getActivity } from "../store/activityFeed/reducer";
 import { useDidMount, useIntersectionObserver } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
@@ -22,7 +22,7 @@ import { savePosts } from "../store/posts/actions";
 import { addOlderActivity } from "../store/activityFeed/actions";
 import { saveCodemarks } from "../store/codemarks/actions";
 import { safe, emptyArray } from "../utils";
-import { markStreamRead, setCodemarkTypeFilter } from "./actions";
+import { markStreamRead } from "./actions";
 import { CSUser, CodemarkType, CSReview } from "@codestream/protocols/api";
 import { resetLastReads } from "../store/unreads/actions";
 import { PanelHeader } from "../src/components/PanelHeader";
@@ -30,16 +30,14 @@ import { getPost, getThreadPosts } from "../store/posts/reducer";
 import Menu from "./Menu";
 import { FormattedPlural } from "react-intl";
 import { Codemark } from "./Codemark/index";
-import Filter from "./Filter";
 import { Review } from "./Review";
 import { saveReviews } from "../store/reviews/actions";
 import { Reply } from "./Posts/Reply";
 import { LoadingMessage } from "../src/components/LoadingMessage";
 import { Headshot } from "../src/components/Headshot";
-import { Card } from "../src/components/Card";
 import { ProfileLink } from "../src/components/ProfileLink";
 import { Keybindings } from "./Keybindings";
-import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
+import { Dialog } from "../src/components/Dialog";
 
 // see comment in SmartFormattedList.tsx
 const FormattedPluralAlias = FormattedPlural as any;
@@ -77,6 +75,8 @@ export const ActivityPanel = () => {
 			// apiCapabilities: state.apiVersioning.apiCapabilities
 		};
 	});
+
+	const [maximized, setMaximized] = React.useState(false);
 
 	const fetchActivity = React.useCallback(async () => {
 		const response = await HostApi.instance.send(FetchActivityRequestType, {
@@ -119,12 +119,14 @@ export const ActivityPanel = () => {
 	const renderActivity = () => {
 		if (derivedState.activity.length === 0 && !derivedState.hasMoreActivity) {
 			return (
-				<Keybindings>
-					The activity feed will let you know when your teammates create codemarks, assign issues,
-					request reviews, or add replies.
-					<br />
-					<br />
-				</Keybindings>
+				<div style={{ height: "75vh" }}>
+					<Keybindings>
+						The activity feed will let you know when your teammates create codemarks, assign issues,
+						request reviews, or add replies.
+						<br />
+						<br />
+					</Keybindings>
+				</div>
 			);
 		}
 
@@ -264,46 +266,35 @@ export const ActivityPanel = () => {
 	// 	});
 	// }
 
+	// console.warn("RENDERING ACTIVITY!");
 	return (
-		<div className="panel full-height activity-panel">
-			<CreateCodemarkIcons />
-			<PanelHeader title="Activity">
-				{/* removed as per https://teamcodestream.slack.com/archives/C7E3ED0TT/p1583288202118300
-					<div className="filters">
-						Show{" "}
-						<Filter
-							type="toggle"
-							onValue={value => dispatch(setCodemarkTypeFilter(value))}
-							selected={derivedState.codemarkTypeFilter}
-							labels={showActivityLabels}
-							items={menuItems}
-						/>
+		<Dialog
+			wide
+			noPadding
+			onMaximize={() => setMaximized(true)}
+			onMinimize={() => setMaximized(false)}
+			onClose={() => dispatch(closeAllPanels())}
+		>
+			<PanelHeader title="Activity" />
+			<div
+				style={{
+					height: maximized ? "calc(100vh - 50px)" : "calc(100vh - 120px)",
+					overflow: "hidden"
+				}}
+			>
+				<ScrollBox>
+					<div ref={rootRef} className="channel-list vscroll">
+						{renderActivity()}
+						{derivedState.hasMoreActivity &&
+							(derivedState.activity.length === 0 ? (
+								<LoadingMessage>Loading latest activity...</LoadingMessage>
+							) : (
+								<LoadingMessage ref={targetRef}>Loading more...</LoadingMessage>
+							))}
 					</div>
-				*/}
-			</PanelHeader>
-			<ScrollBox>
-				<div ref={rootRef} className="channel-list vscroll">
-					{renderActivity()}
-					{derivedState.hasMoreActivity &&
-						(derivedState.activity.length === 0 ? (
-							<LoadingMessage>Loading latest activity...</LoadingMessage>
-						) : (
-							<LoadingMessage ref={targetRef}>Loading more...</LoadingMessage>
-						))}
-				</div>
-			</ScrollBox>
-			{/*
-			<div className="view-selectors">
-				<span className="count">
-					Commits<div className="switch"></div>
-				</span>
-				<span className="count">
-					Branches<div className="switch"></div>
-				</span>
-				<Feedback />
+				</ScrollBox>
 			</div>
-			*/}
-		</div>
+		</Dialog>
 	);
 };
 
