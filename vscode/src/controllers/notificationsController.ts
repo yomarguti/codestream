@@ -30,13 +30,12 @@ export class NotificationsController implements Disposable {
 		for (const pullRequestNotification of e.pullRequestNotifications()) {
 			const actions: MessageItem[] = [{ title: "Open" }];
 
+			Container.agent.telemetry.track("Toast Notification", { Content: "PR" });
+
 			const result = await window.showInformationMessage(
 				`Pull Request "${pullRequestNotification.pullRequest.title}" ${pullRequestNotification.queryName}`,
 				...actions
 			);
-			if (!result) {
-				Container.agent.telemetry.track("Toast Notification", { Content: "PR" });
-			}
 
 			if (result === actions[0]) {
 				Container.webview.openPullRequest(
@@ -129,14 +128,13 @@ export class NotificationsController implements Disposable {
 		const actions: MessageItem[] = [{ title: "Open" }];
 
 		const toastContentType: ToastType = codemark ? "Codemark" : "Review";
+
+		Container.agent.telemetry.track("Toast Notification", { Content: toastContentType });
+
 		const result = await window.showInformationMessage(
 			`${sender !== undefined ? sender.name : "Someone"}${colon} ${text}`,
-
 			...actions
 		);
-		if (!result) {
-			Container.agent.telemetry.track("Toast Notification", { Content: toastContentType });
-		}
 
 		if (result === actions[0]) {
 			if (codemark) {
