@@ -47,7 +47,7 @@ export const connectProvider = (providerId: string, connectionLocation: ViewLoca
 	dispatch,
 	getState
 ) => {
-	const { context, users, session, providers, ide } = getState();
+	const { context, users, session, providers, ide, capabilities } = getState();
 	const provider = providers[providerId];
 	if (!provider) return;
 	const user = users[session.userId];
@@ -64,7 +64,7 @@ export const connectProvider = (providerId: string, connectionLocation: ViewLoca
 	}
 	try {
 		const api = HostApi.instance;
-		if (ide.name === "VSC" && name === "github") {
+		if (ide.name === "VSC" && name === "github" && capabilities.vsCodeGithubSignin) {
 			const result = await api.send(ConnectToIDEProviderRequestType, { provider: name });
 			dispatch(configureProvider(
 				providerId, { token: result.accessToken, data: { sessionId: result.sessionId } }, true)
