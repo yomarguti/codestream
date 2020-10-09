@@ -92,8 +92,9 @@ const Root = styled.div`
 `;
 
 export const PRInlineComment = styled.div`
-	max-width: calc(100vw - 50px);
-	padding: 0 20px;
+	// max-width: calc(100vw - 50px);
+	border-top: 1px solid var(--base-border-color);
+	border-bottom: 1px solid var(--base-border-color);
 `;
 
 export interface Hunk {
@@ -107,6 +108,7 @@ export interface Hunk {
 
 export const PullRequestPatch = (props: {
 	patch?: string;
+	mode?: string;
 	hunks?: Hunk[];
 	fetch?: Function;
 	filename: string;
@@ -175,6 +177,7 @@ export const PullRequestPatch = (props: {
 								<PRInlineComment>
 									<PullRequestInlineComment
 										pr={props.pr}
+										mode={props.mode}
 										filename={filename}
 										lineOffsetInHunk={index}
 										fetch={props.fetch}

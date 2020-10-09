@@ -1,7 +1,7 @@
 import React, { PropsWithChildren } from "react";
 import styled from "styled-components";
 import Icon from "@codestream/webview/Stream/Icon";
-import ScrollBox from "@codestream/webview/Stream/ScrollBox";
+import ScrollBox from "../../Stream/ScrollBox";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "@codestream/webview/store";
 import { WebviewPanels } from "@codestream/protocols/webview";
@@ -13,6 +13,7 @@ import {
 import Draggable from "react-draggable";
 import { DragHeaderContext } from "@codestream/webview/Stream/Sidebar";
 import cx from "classnames";
+import { HostApi } from "@codestream/webview/webview-api";
 
 export enum PaneState {
 	Open = "open",
@@ -173,12 +174,23 @@ export const PaneHeader = React.memo((props: PropsWithChildren<PaneHeaderProps>)
 			e.target.classList.contains("pane-header") ||
 			e.target.classList.contains("label") ||
 			e.target.closest(".expander")
-		)
+		) {
 			dispatch(setPaneCollapsed(props.id, !derivedState.collapsed));
+
+			HostApi.instance.track("Sidebar Adjusted", {
+				Section: props.id,
+				Adjustment: !derivedState.collapsed ? "Collapsed" : "Expanded"
+			});
+		}
 	};
 
 	const maximize = () => {
 		dispatch(setPaneMaximized(props.id, !derivedState.maximized));
+
+		HostApi.instance.track("Sidebar Adjusted", {
+			Section: props.id,
+			Adjustment: !derivedState.maximized ? "Maximized" : "Minimized"
+		});
 	};
 
 	const header = (
@@ -361,10 +373,12 @@ const PaneHeaderRoot = styled.div`
 	}
 `;
 
-interface PaneBodyProps {}
+interface PaneBodyProps {
+	className?: string;
+}
 export function PaneBody(props: PropsWithChildren<PaneBodyProps>) {
 	return (
-		<ScrollBox>
+		<ScrollBox className={props.className}>
 			<div className="vscroll">{props.children}</div>
 		</ScrollBox>
 	);

@@ -359,7 +359,13 @@ export const PullRequestFilesChanged = (props: Props) => {
 		if (props.viewMode === "tree") {
 			const tree: TernarySearchTree<any> = TernarySearchTree.forPaths();
 
-			props.filesChanged.forEach(f => tree.set(f.file, f));
+			let filesChanged = [...props.filesChanged];
+			filesChanged = filesChanged.sort((a, b) => {
+				if (b.file < a.file) return 1;
+				if (a.file < b.file) return -1;
+				return 0;
+			});
+			filesChanged.forEach(f => tree.set(f.file, f));
 			let index = 0;
 			const render = (
 				node: any,
@@ -395,6 +401,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 				if (renderSiblings) {
 					// grab all the siblings, sort them, and render them.
 					const siblings: any[] = [node];
+
 					let n = node;
 					// we don't need to check left because we sort the paths
 					// prior to inserting into the tree, so we never end up
@@ -425,9 +432,6 @@ export const PullRequestFilesChanged = (props: Props) => {
 				<span>
 					Repo <span className="monospace highlight">{pr.repository.name}</span> not found in your
 					editor. Open it, or <Link href={pr.repository.url}>clone the repo</Link>.
-					<p style={{ margin: "5px 0 0 0" }}>
-						Changes can be viewed under <Icon name="diff" /> Diff Hunks view.
-					</p>
 				</span>
 			);
 		} else {

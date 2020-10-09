@@ -423,7 +423,11 @@ export class WebviewController implements Disposable {
 	}
 
 	@log()
-	async openPullRequest(providerId: string, pullRequestId: string): Promise<void> {
+	async openPullRequest(
+		providerId: string,
+		pullRequestId: string,
+		commentId?: string
+	): Promise<void> {
 		if (!this._webview) {
 			// it's possible that the webview is closing...
 			return;
@@ -432,7 +436,8 @@ export class WebviewController implements Disposable {
 		// TODO: Change this to be a request vs a notification
 		this._webview!.notify(ShowPullRequestNotificationType, {
 			providerId,
-			id: pullRequestId
+			id: pullRequestId,
+			commentId: commentId
 		});
 	}
 
