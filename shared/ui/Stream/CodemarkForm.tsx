@@ -2298,17 +2298,7 @@ class CodemarkForm extends React.Component<Props, State> {
 					{commentType !== "link" && this.renderSharingControls()}
 					{this.props.currentReviewId && this.renderRequireChange()}
 					{true && (
-						<div
-							key="buttons"
-							className="button-group"
-							style={{
-								marginLeft: "10px",
-								marginTop: "10px",
-								float: "right",
-								width: "auto",
-								marginRight: 0
-							}}
-						>
+						<div key="buttons" className="button-group float-wrap">
 							<CancelButton
 								toolTip={cancelTip}
 								onClick={this.cancelCodemarkCompose}
@@ -2370,30 +2360,31 @@ class CodemarkForm extends React.Component<Props, State> {
 										: "Submit"}
 								</Button>
 							</Tooltip>
-							{this.props.textEditorUriHasPullRequestContext && this.state.isInsidePrChangeSet && (
-								<Button
-									key="submit-review"
-									loading={this.state.isReviewLoading}
-									disabled={hasError}
-									onClick={e => {
-										this.setState({ isProviderReview: true }, () => {
-											this.handleClickSubmit(e);
-										});
-									}}
-									style={{
-										paddingLeft: "10px",
-										paddingRight: "10px",
-										// fixed width to handle the isReviewLoading case
-										width: "auto",
-										marginRight: 0
-									}}
-									className="control-button"
-									type="submit"
-								>
-									{hasExistingPullRequestReview && <>Add to review</>}
-									{!hasExistingPullRequestReview && <>Start a review</>}
-								</Button>
-							)}
+							{this.props.textEditorUriHasPullRequestContext &&
+								(this.state.isInsidePrChangeSet || !!hasExistingPullRequestReview) && (
+									<Button
+										key="submit-review"
+										loading={this.state.isReviewLoading}
+										disabled={hasError}
+										onClick={e => {
+											this.setState({ isProviderReview: true }, () => {
+												this.handleClickSubmit(e);
+											});
+										}}
+										style={{
+											paddingLeft: "10px",
+											paddingRight: "10px",
+											// fixed width to handle the isReviewLoading case
+											width: "auto",
+											marginRight: 0
+										}}
+										className="control-button"
+										type="submit"
+									>
+										{hasExistingPullRequestReview && <>Add to review</>}
+										{!hasExistingPullRequestReview && <>Start a review</>}
+									</Button>
+								)}
 							{/*
 							<span className="hint">Styling with Markdown is supported</span>
 						*/}
