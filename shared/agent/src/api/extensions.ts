@@ -1,4 +1,5 @@
 "use strict";
+// import { Container } from "../container";
 import { Range } from "vscode-languageserver";
 import { Logger } from "../logger";
 import {
@@ -296,7 +297,7 @@ export namespace User {
 		if (me.providerInfo == null) {
 			if (name === "github") {
 				console.warn("user has no providerInfo for github");
-				/*
+				/* This breaks, for some reason, but console.warn is also "breadcrumbed" by Sentry
 				Container.instance().errorReporter.reportBreadcrumb({
 					message: "user has no providerInfo for github"
 				});
@@ -311,7 +312,7 @@ export namespace User {
 		if (!namedProvider) {
 			if (name === "github") {
 				console.warn("user has no named providerInfo for github, teamId=" + teamId);
-				/*
+				/* This breaks, for some reason, but console.warn is also "breadcrumbed" by Sentry
 				Container.instance().errorReporter.reportBreadcrumb({
 					message: "user has no named providerInfo for github",
 					data: { teamId }
@@ -324,12 +325,18 @@ export namespace User {
 		if (!host) {
 			if (name === "github") {
 				console.warn(`user has providerInfo from ${userProviderInfo ? "user" : "team"} with accessToken: ${"*".repeat(typedProvider.accessToken.length)}`);
-				/*
+				/* This breaks, for some reason, but console.warn is also "breadcrumbed" by Sentry
 				Container.instance().errorReporter.reportBreadcrumb({
 					message: "user has providerInfo",
 					data: {
-						userProviderInfo,
-						teamProviderInfo,
+						userProviderInfo: userProviderInfo && {
+							...userProviderInfo,
+							accessToken: "*".repeat((userProviderInfo as any).accessToken.length)
+						},
+						teamProviderInfo: teamProviderInfo && {
+							...teamProviderInfo,
+							accessToken: "*".repeat((teamProviderInfo as any).accessToken.length)
+						},
 						teamId
 					}
 				});
