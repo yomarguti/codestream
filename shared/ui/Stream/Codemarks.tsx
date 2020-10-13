@@ -177,11 +177,11 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 	componentDidUpdate(prevProps: Props) {
 		this._updateEmitter.emit();
 		const { codemarkDomain, textEditorUri, documentMarkers } = this.props;
-		if (codemarkDomain !== CodemarkDomainType.Team) {
-			if (String(textEditorUri).length > 0 && prevProps.textEditorUri !== textEditorUri) {
-				this.onFileChanged(false, this.onFileChangedError);
-			}
+		// if (codemarkDomain !== CodemarkDomainType.Team) {
+		if (String(textEditorUri).length > 0 && prevProps.textEditorUri !== textEditorUri) {
+			this.onFileChanged(false, this.onFileChangedError);
 		}
+		// }
 		if (
 			documentMarkers &&
 			prevProps.documentMarkers &&
@@ -458,6 +458,12 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			wrapCommentsField
 		} = this.state;
 
+		const isDiff = textEditorUri.startsWith("codestream-diff://");
+		const isFile = textEditorUri.startsWith("file://");
+
+		const dirname = fs.pathDirname(fileNameToFilterFor);
+		const dirnameNoDot = dirname === "." ? "[root]" : dirname;
+
 		const domainIcon =
 			codemarkDomain === CodemarkDomainType.File
 				? "file"
@@ -468,9 +474,11 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 				: "team";
 		const subtitle =
 			codemarkDomain === CodemarkDomainType.File
-				? fs.pathBasename(textEditorUri) || "[no file]"
+				? (fs.pathBasename(textEditorUri) || "[no file]") + (isDiff ? " [diff]" : "")
 				: codemarkDomain === CodemarkDomainType.Directory
-				? fs.pathDirname(fileNameToFilterFor) || "[no file]"
+				? isFile
+					? dirnameNoDot || "[no file]"
+					: "[no file]"
 				: codemarkDomain === CodemarkDomainType.Repo
 				? this.props.repoName || "[repository]"
 				: this.props.teamName;
@@ -478,7 +486,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 		const domainItems = [
 			{
 				label: "Current File",
-				subtle: fs.pathBasename(textEditorUri),
+				subtle: fs.pathBasename(textEditorUri) + (isDiff ? " [diff]" : ""),
 				key: "file",
 				icon: <Icon name="file" />,
 				action: () => this.switchDomain(CodemarkDomainType.File),
@@ -486,7 +494,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			},
 			{
 				label: "Current Directory",
-				subtle: fs.pathDirname(fileNameToFilterFor),
+				subtle: isFile ? dirnameNoDot : "",
 				key: "directory",
 				icon: <Icon name="directory" />,
 				action: () => this.switchDomain(CodemarkDomainType.Directory),
@@ -494,7 +502,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			},
 			{
 				label: "Current Repository",
-				subtle: this.props.repoName || "[repository]",
+				subtle: this.props.repoName || "",
 				key: "repo",
 				icon: <Icon name="repo" />,
 				action: () => this.switchDomain(CodemarkDomainType.Repo),

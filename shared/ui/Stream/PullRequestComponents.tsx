@@ -16,10 +16,10 @@ export const PRHeader = styled.div`
 		margin-left: 5px;
 		vertical-align: 3px;
 		font-size: 12px;
-		display: none;
+		visibility: hidden;
 	}
 	&:hover .open-external {
-		display: inline-block;
+		visibility: visible;
 	}
 	${Tabs} {
 		margin: 10px -15px 0 -20px;
@@ -109,7 +109,7 @@ export const PRSelectorButtons = styled.div`
 	overflow: hidden;
 	> span {
 		display: inline-block;
-		padding: 5px 10px;
+		padding: 5px;
 		&.selected,
 		&:hover {
 			background: var(--base-background-color);
@@ -157,6 +157,7 @@ export const PRStatusButton = styled(Button)`
 
 export const PRStatusMessage = styled.div`
 	flex-grow: 10;
+	word-break: break-word;
 `;
 
 export const PRAuthor = styled.span`
@@ -787,12 +788,10 @@ export const PRStatusIcon = styled.div`
 
 export const ButtonRow = styled.div`
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
-	button + button {
-		margin-left: 10px;
-	}
 	button {
-		margin-top: 10px;
+		margin: 10px 10px 0 0;
 	}
 `;
 
@@ -1127,5 +1126,44 @@ export const PRKebabIcon = styled.span`
 	cursor: pointer;
 	&:hover {
 		background: var(--app-background-color-hover);
+	}
+`;
+
+export const PRError = styled.div`
+	padding: 15px 15px 10px 15px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	button {
+		white-space: nowrap;
+	}
+	> .icon {
+		flex-grow: 0;
+		flex-shrink: 0;
+		display: inline-block;
+		margin-right: 15px;
+		transform: scale(1.5);
+	}
+	> div {
+		flex-grow: 10;
+		display: flex;
+		align-items: center;
+		button {
+			margin-left: auto;
+		}
+	}
+	strong {
+		font-weight: normal;
+		color: var(--text-color-highlight);
+	}
+	a {
+		text-decoration: none;
+		color: var(--text-color-highlight);
+		&:hover {
+			color: var(--text-color-info) !important;
+		}
+	}
+	.spacer {
+		// height: 10px;
 	}
 `;

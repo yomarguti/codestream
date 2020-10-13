@@ -360,11 +360,14 @@ export const PullRequestFilesChanged = (props: Props) => {
 			const tree: TernarySearchTree<any> = TernarySearchTree.forPaths();
 
 			let filesChanged = [...props.filesChanged];
-			filesChanged = filesChanged.sort((a, b) => {
-				if (b.file < a.file) return 1;
-				if (a.file < b.file) return -1;
-				return 0;
-			});
+			filesChanged = filesChanged
+				.sort((a, b) => {
+					if (b.file < a.file) return 1;
+					if (a.file < b.file) return -1;
+					return 0;
+				})
+				.filter(f => f.file);
+			console.warn("SETTING UP THE TREE: ", tree, filesChanged);
 			filesChanged.forEach(f => tree.set(f.file, f));
 			let index = 0;
 			const render = (
@@ -434,6 +437,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 					editor. Open it, or <Link href={pr.repository.url}>clone the repo</Link>.
 				</span>
 			);
+			setIsDisabled(true);
 		} else {
 			setRepoErrorMessage("");
 		}
