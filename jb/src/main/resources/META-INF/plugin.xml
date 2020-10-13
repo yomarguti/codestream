@@ -26,6 +26,8 @@
         <applicationConfigurable groupId="tools" displayName="CodeStream" id="preferences.CodeStreamConfigurable"
                                  instance="com.codestream.settings.CodeStreamConfigurable"/>
 
+        <searchEverywhereContributor implementation="com.codestream.search.CodeStreamSearchFactory"/>
+
         <errorHandler implementation="com.codestream.error.ErrorHandler"/>
 
         <diff.DiffExtension implementation="com.codestream.review.ReviewDiffExtension"/>

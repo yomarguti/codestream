@@ -83,6 +83,14 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 				continue;
 			}
 
+			if (
+				request.searchText != null &&
+				codemark.text != null &&
+				!(codemark.text.indexOf(request.searchText) >= 0)
+			) {
+				continue;
+			}
+
 			if (!(await this.canSeeCodemark(codemark))) {
 				continue;
 			}

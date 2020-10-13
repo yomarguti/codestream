@@ -135,6 +135,7 @@ export interface FetchCodemarksRequest {
 	streamId?: string;
 	before?: number;
 	byLastAcivityAt?: boolean;
+	searchText?: string;
 }
 export interface FetchCodemarksResponse {
 	codemarks: CodemarkPlus[];

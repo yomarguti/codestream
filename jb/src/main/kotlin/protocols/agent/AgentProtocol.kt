@@ -228,6 +228,8 @@ class SetServerUrlResult
 
 class Codemark(
     val id: String,
+    val title: String?,
+    val text: String?,
     val color: String?,
     val streamId: String,
     val postId: String?,
@@ -355,4 +357,12 @@ class GetFileContentsAtRevisionParams(
 class GetFileContentsAtRevisionResult(
     val content: String,
     val error: String?
+)
+
+class GetCodemarksParams(
+    val searchText: String
+)
+
+class GetCodemarksResult(
+    val codemarks: List<Codemark>
 )
