@@ -8,7 +8,7 @@ import { PullRequestFilesChanged } from "./PullRequestFilesChanged";
 import { FileStatus } from "@codestream/protocols/api";
 import { LoadingMessage } from "../src/components/LoadingMessage";
 import { setUserPreference } from "./actions";
-import { PullRequestPatch } from "./PullRequestPatch";
+import { PRPatchRoot, PullRequestPatch } from "./PullRequestPatch";
 import copy from "copy-to-clipboard";
 import {
 	FetchThirdPartyPullRequestPullRequest,
@@ -32,12 +32,13 @@ export const PRDiffHunks = styled.div`
 	font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
 	white-space: pre;
 	margin-right: 10px;
+	${PRPatchRoot} {
+		border-radius: 0 0 5px 5px;
+	}
 }
 `;
 
 export const PRDiffHunk = styled.div`
-	border: 1px solid var(--base-border-color);
-	border-radius: 5px;
 	margin: 0 0 20px 0;
 	h1 {
 		display: flex;
@@ -48,15 +49,17 @@ export const PRDiffHunk = styled.div`
 		margin: 0;
 		padding: 10px;
 		background: var(--base-background-color);
-		border-bottom: 1px solid var(--base-border-color);
+		border: 1px solid var(--base-border-color);
 		width: 100%;
 		overflow: hidden;
+		position: sticky;
+		top: -14px;
+		z-index: 5;
 		.filename-container {
 			overflow: hidden;
 			text-overflow: ellipsis;
 		}
 		&.hidden {
-			border-bottom: none;
 			border-radius: 5px;
 		}
 		.toggle {
@@ -134,9 +137,14 @@ export const PullRequestFilesChangedList = (props: Props) => {
 	const { filesChanged, fetch, isLoading, pr } = props;
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
+		const ideName = state.ide.name && state.ide.name.toUpperCase();
+		const requiresDiffHunkView = ideName === "VS" || ideName === "ATOM";
 		return {
 			currentRepo: getProviderPullRequestRepo(state),
-			pullRequestFilesChangedMode: state.preferences.pullRequestFilesChangedMode || "files"
+			diffSelectorEnabled: !requiresDiffHunkView,
+			pullRequestFilesChangedMode: requiresDiffHunkView
+				? "hunks"
+				: state.preferences.pullRequestFilesChangedMode || "files"
 		};
 	});
 
@@ -290,24 +298,30 @@ export const PullRequestFilesChangedList = (props: Props) => {
 	const totalFiles = filesChanged.length;
 	const totalVisitedFiles = filesChanged.filter(_ => visitedFiles[_.filename]).length;
 	const pct = totalFiles > 0 ? (100 * totalVisitedFiles) / totalFiles : 0;
+	const prProgressMarginStyle = derivedState.diffSelectorEnabled
+		? "0 10px 10px auto"
+		: "0 10px 10px 10px";
 
 	return (
 		<>
 			<div style={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}>
-				<div style={{ margin: "0 10px 10px 0", flexGrow: 2 }}>
-					<PRSelectorButtons>
-						<span className={mode == "files" ? "selected" : ""} onClick={() => setMode("files")}>
-							<Icon name="list-flat" title="List View" placement="bottom" />
-						</span>
-						<span className={mode == "tree" ? "selected" : ""} onClick={() => setMode("tree")}>
-							<Icon name="list-tree" title="Tree View" placement="bottom" />
-						</span>
-						<span className={mode == "hunks" ? "selected" : ""} onClick={() => setMode("hunks")}>
-							<Icon name="file-diff" title="Diff Hunks" placement="bottom" />
-						</span>
-					</PRSelectorButtons>
-				</div>
-				<PRProgress style={{ margin: "0 10px 10px auto", minWidth: "30px" }}>
+				{derivedState.diffSelectorEnabled && (
+					<div style={{ margin: "0 10px 10px 0", flexGrow: 2 }}>
+						<PRSelectorButtons>
+							<span className={mode == "files" ? "selected" : ""} onClick={() => setMode("files")}>
+								<Icon name="list-flat" title="List View" placement="bottom" />
+							</span>
+							<span className={mode == "tree" ? "selected" : ""} onClick={() => setMode("tree")}>
+								<Icon name="list-tree" title="Tree View" placement="bottom" />
+							</span>
+							<span className={mode == "hunks" ? "selected" : ""} onClick={() => setMode("hunks")}>
+								<Icon name="file-diff" title="Diff Hunks" placement="bottom" />
+							</span>
+						</PRSelectorButtons>
+					</div>
+				)}
+
+				<PRProgress style={{ margin: prProgressMarginStyle, minWidth: "30px" }}>
 					{totalVisitedFiles} / {totalFiles}{" "}
 					<span className="wide-text">
 						files viewed{" "}

@@ -9,11 +9,13 @@ import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/age
 import { PullRequestCodeComment } from "./PullRequestCodeComment";
 import { PRComment, PRCommentsInPatch, PRCard } from "./PullRequestComponents";
 
-const Root = styled.div`
+export const PRPatchRoot = styled.div`
 	font-size: 12px;
 	overflow-x: auto;
 	font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
 	white-space: pre;
+	border: 1px solid var(--base-border-color);
+	border-top: 0;
 	pre {
 		white-space: pre !important;
 		padding: 1px 10px !important;
@@ -118,6 +120,7 @@ export const PullRequestPatch = (props: {
 	comments?: { comment: any; review: any }[];
 	pr?: FetchThirdPartyPullRequestPullRequest;
 	setIsLoadingMessage?: Function;
+	truncateLargePatches?: boolean;
 	quote?: Function;
 }) => {
 	const { fetch, patch, filename, hunks } = props;
@@ -166,10 +169,18 @@ export const PullRequestPatch = (props: {
 	};
 
 	if (patch) {
+		const patchLength = patch.split("\n").length;
+		const patchShowContextLines = 4;
 		return (
-			<Root className={(props.className || "") + " pr-patch"}>
+			<PRPatchRoot className={(props.className || "") + " pr-patch"}>
 				<div style={{ position: "relative" }}>
 					{patch.split("\n").map((_, index) => {
+						const shouldSkipLine =
+							props.truncateLargePatches &&
+							patchLength > patchShowContextLines * 2 + 2 &&
+							index > patchShowContextLines &&
+							index < patchLength - patchShowContextLines;
+
 						if (_ === "\\ No newline at end of file") return null;
 
 						const commentForm =
@@ -179,6 +190,7 @@ export const PullRequestPatch = (props: {
 										pr={props.pr}
 										mode={props.mode}
 										filename={filename}
+										lineNumber={rightLine + 1}
 										lineOffsetInHunk={index}
 										fetch={props.fetch}
 										setIsLoadingMessage={() => {}}
@@ -196,7 +208,7 @@ export const PullRequestPatch = (props: {
 										<PRComment key={index} style={{ margin: 0 }}>
 											<PRCard>
 												<PullRequestCodeComment
-													pr={props.pr!} 
+													pr={props.pr!}
 													mode={props.mode}
 													fetch={props.fetch!}
 													setIsLoadingMessage={props.setIsLoadingMessage!}
@@ -209,6 +221,10 @@ export const PullRequestPatch = (props: {
 									))}
 								</PRCommentsInPatch>
 							);
+
+						if (shouldSkipLine && index === patchLength - patchShowContextLines - 1) {
+							return <>...</>;
+						}
 
 						if (_.indexOf("@@ ") === 0) {
 							const matches = _.match(/@@ \-(\d+).*? \+(\d+)/);
@@ -231,7 +247,9 @@ export const PullRequestPatch = (props: {
 							);
 						} else if (_.indexOf("+") === 0) {
 							rightLine++;
-							return (
+							return shouldSkipLine ? (
+								undefined
+							) : (
 								<React.Fragment key={index}>
 									<div className="line added">
 										{renderLineNum("")}
@@ -244,7 +262,9 @@ export const PullRequestPatch = (props: {
 							);
 						} else if (_.indexOf("-") === 0) {
 							leftLine++;
-							return (
+							return shouldSkipLine ? (
+								undefined
+							) : (
 								<React.Fragment key={index}>
 									<div className="line deleted">
 										{renderLineNum(leftLine)}
@@ -258,7 +278,9 @@ export const PullRequestPatch = (props: {
 						} else {
 							leftLine++;
 							rightLine++;
-							return (
+							return shouldSkipLine ? (
+								undefined
+							) : (
 								<React.Fragment key={index}>
 									<div className="line same">
 										{renderLineNum(leftLine)}
@@ -272,11 +294,11 @@ export const PullRequestPatch = (props: {
 						}
 					})}
 				</div>
-			</Root>
+			</PRPatchRoot>
 		);
 	} else if (hunks) {
 		return (
-			<Root className={(props.className || "") + " pr-patch"}>
+			<PRPatchRoot className={(props.className || "") + " pr-patch"}>
 				<div style={{ position: "relative" }}>
 					{hunks.map((hunk, index) => {
 						leftLine = hunk.oldStart - 1;
@@ -327,7 +349,7 @@ export const PullRequestPatch = (props: {
 						);
 					})}
 				</div>
-			</Root>
+			</PRPatchRoot>
 		);
 	} else return null;
 };

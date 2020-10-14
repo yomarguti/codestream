@@ -21,7 +21,6 @@ import cx from "classnames";
 import { getConnectedSupportedPullRequestHosts } from "../store/providers/reducer";
 import { getPreferences } from "../store/users/reducer";
 import { getRepos } from "../store/repos/reducer";
-import { Loading } from "../Container/Loading";
 
 const PADDING_TOP = 25;
 
@@ -97,6 +96,7 @@ export const Sidebar = React.memo(function Sidebar() {
 	const [dragging, setDragging] = useState(false);
 	const [windowSize, setWindowSize] = useState(EMPTY_SIZE);
 	const [headerDragY, setHeaderDragY] = useState(0);
+	const [dragStopCompleted, setDragStopCompleted] = useState(false);
 
 	const fetchOpenRepos = async () => {
 		const response = await HostApi.instance.send(GetReposScmRequestType, {
@@ -125,10 +125,6 @@ export const Sidebar = React.memo(function Sidebar() {
 			setWindowSize({
 				width: window.innerWidth,
 				height: window.innerHeight
-			});
-			HostApi.instance.track("Sidebar Resized", {
-				Width: window.innerWidth,
-				Height: window.innerHeight
 			});
 		}
 
@@ -272,16 +268,22 @@ export const Sidebar = React.memo(function Sidebar() {
 		}
 	};
 
-	const handleStop = (e: any, index: number) => {
+	const handleStop = () => {
 		setDragging(false);
 		if (firstIndex === undefined || secondIndex === undefined) return;
 		const firstId = positions[firstIndex].id;
 		dispatch(setUserPreference(["sidebarPanes", firstId, "size"], sizes[firstId]));
 		const secondId = positions[secondIndex].id;
 		dispatch(setUserPreference(["sidebarPanes", secondId, "size"], sizes[secondId]));
-		const currentSize = sizes[secondId];
+		setDragStopCompleted(true);
+	};
 
-		let adjustment;
+	useEffect(() => {
+		if (secondIndex === undefined || !dragStopCompleted) return;
+
+		const secondId = positions[secondIndex].id;
+		const currentSize = sizes[secondId];
+		let adjustment = "Shorter";
 		if (currentSize) {
 			const previousSize = previousSizes[secondId] || 0;
 			if (currentSize > previousSize) {
@@ -294,7 +296,8 @@ export const Sidebar = React.memo(function Sidebar() {
 			Section: secondId,
 			Adjustment: adjustment
 		});
-	};
+		setDragStopCompleted(false);
+	}, [dragStopCompleted, firstIndex, secondIndex, positions, sizes, previousSizes]);
 
 	const handleDragHeader = (e: any, id: WebviewPanels) => {
 		setHeaderDragY(e.clientY);
@@ -370,7 +373,7 @@ export const Sidebar = React.memo(function Sidebar() {
 							scale={1}
 							onStart={e => handleStart(e, index)}
 							onDrag={e => handleDrag(e, index)}
-							onStop={e => handleStop(e, index)}
+							onStop={e => handleStop()}
 						>
 							<ResizeHandle />
 						</Draggable>
