@@ -58,7 +58,8 @@ import {
 	EditorSelection,
 	EditorHighlightRangeRequestType,
 	WebviewPanels,
-	WebviewModals
+	WebviewModals,
+	EditorGetRangeSymbolsRequestType
 } from "@codestream/protocols/webview";
 import { getCurrentSelection } from "../store/editorContext/reducer";
 import Headshot from "./Headshot";
@@ -459,11 +460,16 @@ class CodemarkForm extends React.Component<Props, State> {
 	}
 
 	private async getScmInfoForSelection(uri: string, range: Range, callback?: Function) {
+		const symbolsInfoPromise = HostApi.instance.send(EditorGetRangeSymbolsRequestType, {
+			uri: uri,
+			range: range
+		});
 		const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
 			uri: uri,
 			range: range,
 			dirty: true // should this be determined here? using true to be safe
 		});
+
 		let newCodeBlocks = [...this.state.codeBlocks];
 		if (this.state.liveLocation >= 0) newCodeBlocks[this.state.liveLocation] = scmInfo;
 		else newCodeBlocks.push(scmInfo);
@@ -2503,13 +2509,10 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 	};
 };
 
-const ConnectedCodemarkForm = connect(
-	mapStateToProps,
-	{
-		openPanel,
-		openModal,
-		setUserPreference
-	}
-)(CodemarkForm);
+const ConnectedCodemarkForm = connect(mapStateToProps, {
+	openPanel,
+	openModal,
+	setUserPreference
+})(CodemarkForm);
 
 export { ConnectedCodemarkForm as CodemarkForm };

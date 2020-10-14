@@ -12,6 +12,8 @@ import com.codestream.protocols.webview.EditorRangeRevealRequest
 import com.codestream.protocols.webview.EditorRangeRevealResponse
 import com.codestream.protocols.webview.EditorRangeSelectRequest
 import com.codestream.protocols.webview.EditorRangeSelectResponse
+import com.codestream.protocols.webview.EditorRangeSymbolsRequest
+import com.codestream.protocols.webview.EditorRangeSymbolsResponse
 import com.codestream.protocols.webview.EditorScrollToRequest
 import com.codestream.protocols.webview.MarkerApplyRequest
 import com.codestream.protocols.webview.MarkerCompareRequest
@@ -106,6 +108,7 @@ class WebViewRouter(val project: Project) {
             }
             "host/editor/range/highlight" -> editorRangeHighlight(message)
             "host/editor/range/reveal" -> editorRangeReveal(message)
+            "host/editor/range/symbols" -> editorRangeSymbols(message)
             "host/editor/range/select" -> editorRangeSelect(message)
             "host/editor/scrollTo" -> editorScrollTo(message)
             "host/shell/prompt/folder" -> shellPromptFolder(message)
@@ -185,6 +188,12 @@ class WebViewRouter(val project: Project) {
         val success = project.editorService?.reveal(request.uri, request.range, request.atTop)
             ?: false
         return EditorRangeRevealResponse(success)
+    }
+
+    private suspend fun editorRangeSymbols(message: WebViewMessage): EditorRangeSymbolsResponse {
+        val request = gson.fromJson<EditorRangeSymbolsRequest>(message.params!!)
+        val symbols = project.editorService?.symbols(request.uri, request.range) ?: emptyList<String>()
+        return EditorRangeSymbolsResponse(symbols)
     }
 
     private suspend fun editorRangeSelect(message: WebViewMessage): EditorRangeSelectResponse {

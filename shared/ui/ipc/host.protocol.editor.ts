@@ -46,6 +46,22 @@ export const EditorRevealRangeRequestType = new RequestType<
 	void
 >(`${IpcRoutes.Host}/editor/range/reveal`);
 
+export interface EditorGetRangeSymbolsRequest {
+	uri: string;
+	range: Range;
+}
+
+export interface EditorGetRangeSymbolsResponse {
+	symbols: string[];
+}
+
+export const EditorGetRangeSymbolsRequestType = new RequestType<
+	EditorGetRangeSymbolsRequest,
+	EditorGetRangeSymbolsResponse,
+	void,
+	void
+>(`${IpcRoutes.Host}/editor/range/symbols`);
+
 export interface EditorSelectRangeRequest {
 	uri: string;
 	selection: EditorSelection;

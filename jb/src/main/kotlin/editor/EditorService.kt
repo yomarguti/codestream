@@ -52,6 +52,7 @@ import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.psi.PsiDocumentManager
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -478,6 +479,33 @@ class EditorService(val project: Project) {
 
             future.complete(true)
         }
+        return future.await()
+    }
+
+    suspend fun symbols(uri: String, range: Range): List<String> {
+        val future = CompletableDeferred<List<String>>()
+
+        ApplicationManager.getApplication().invokeLater {
+            val editor = FileEditorManager.getInstance(project).selectedTextEditor
+            if (editor == null) {
+                future.complete(emptyList())
+                return@invokeLater
+            }
+            val offset = editor.logicalPositionToOffset(LogicalPosition(range.start.line, range.start.character))
+            val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
+            if (psiFile == null) {
+                future.complete(emptyList())
+                return@invokeLater
+            }
+            val element = psiFile.findElementAt(offset)
+
+            if (element != null) {
+                future.complete(listOf(element.text))
+            } else {
+                future.complete(emptyList())
+            }
+        }
+
         return future.await()
     }
 

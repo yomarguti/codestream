@@ -54,7 +54,8 @@ import {
 	EditorSelectRangeRequestType,
 	StartWorkNotificationType,
 	WebviewPanels,
-	WebviewModals
+	WebviewModals,
+	EditorGetRangeSymbolsRequestType
 } from "../ipc/webview.protocol";
 import {
 	SetCodemarkPinnedRequestType,
@@ -443,6 +444,10 @@ export class SimpleStream extends PureComponent {
 						preserveFocus: true
 					});
 				}
+				const symbolsInfoPromise = HostApi.instance.send(EditorGetRangeSymbolsRequestType, {
+					uri: uri,
+					range: range
+				});
 				scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
 					uri: uri,
 					range: range,

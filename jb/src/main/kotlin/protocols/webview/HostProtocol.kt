@@ -90,6 +90,15 @@ class EditorRangeRevealResponse(
     val success: Boolean
 )
 
+class EditorRangeSymbolsRequest(
+    val uri: String,
+    val range: Range
+)
+
+class EditorRangeSymbolsResponse(
+    val symbols: List<String>
+)
+
 class EditorRangeSelectRequest(
     val uri: String,
     val selection: EditorSelection,
