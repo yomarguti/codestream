@@ -13,7 +13,7 @@ import { ServerError } from "../../agentError";
 import { Team, User } from "../../api/extensions";
 import { Container, SessionContainer } from "../../container";
 import { Logger } from "../../logger";
-import { isDirective, resolve, safeDecode, safeEncode  } from "../../managers/operations";
+import { isDirective, resolve, safeDecode, safeEncode } from "../../managers/operations";
 import {
 	AddBlameMapRequest,
 	AddBlameMapRequestType,
@@ -321,6 +321,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	get runTimeEnvironment() {
 		return this._runTimeEnvironment;
+	}
+
+	get meUser() {
+		return this._user;
 	}
 
 	setServerUrl(serverUrl: string) {
@@ -1633,10 +1637,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 			{ email: request.email, userId: request.userId },
 			this._token
 		);
-	}
-
-	convertUserIdToCodeStreamUserId(id: string): string {
-		return id;
 	}
 
 	@log()

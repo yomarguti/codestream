@@ -12,7 +12,19 @@ import {
 	FetchForkPointResponse,
 	GetLatestCommitScmRequest,
 	GetLatestCommitScmRequestType,
-	GetLatestCommitScmResponse
+	GetLatestCommitScmResponse,
+	DiffBranchesRequestType,
+	DiffBranchesRequest,
+	DiffBranchesResponse,
+	CommitAndPushRequestType,
+	CommitAndPushRequest,
+	CommitAndPushResponse,
+	GetRangeRequest,
+	GetRangeRequestType,
+	GetRangeResponse,
+	GetShaDiffsRangesRequestType,
+	GetShaDiffsRangesResponse,
+	GetShaDiffsRangesRequest
 } from "../protocol/agent.protocol";
 import {
 	BlameAuthor,
@@ -544,12 +556,35 @@ export class ScmManager {
 		reviewId
 	}: GetRepoScmStatusRequest): Promise<GetRepoScmStatusResponse> {
 		const cc = Logger.getCorrelationContext();
-		const { git, reviews } = SessionContainer.instance();
+		const { git, reviews, repositoryMappings } = SessionContainer.instance();
 
 		const review = await reviews.getById(reviewId!);
 		const uri = URI.parse(documentUri);
-		const repoPath = (await git.getRepoRoot(uri.fsPath)) || "";
-		const repo = await git.getRepositoryByFilePath(repoPath);
+
+		let repoPath = undefined;
+		let repo: GitRepository | undefined = undefined;
+		try {
+			repoPath = await git.getRepoRoot(uri.fsPath);
+			if (repoPath) {
+				repo = await git.getRepositoryByFilePath(repoPath);
+				if (!repo || repo.id !== review.reviewChangesets[0].repoId) {
+					repoPath = undefined;
+					repo = undefined;
+				}
+			}
+		} catch (ignore) {
+			repoPath = undefined;
+			repo = undefined;
+		}
+		if (!repoPath) {
+			repoPath = await repositoryMappings.getByRepoId(review.reviewChangesets[0].repoId);
+		}
+		if (!repoPath) {
+			throw new Error(
+				`Cannot determine repository path. Please open review's repository before amending it.`
+			);
+		}
+		repo = await git.getRepositoryByFilePath(repoPath);
 		if (!repo || !repo.id) throw new Error(`Cannot determine repo at ${repoPath}`);
 		const branch = await git.getCurrentBranch(repoPath);
 		if (!branch) throw new Error(`Cannot determine current branch at ${repoPath}`);
@@ -558,7 +593,7 @@ export class ScmManager {
 
 		const diffs = await reviews.getDiffs(review.id, repo.id);
 
-		const changesets = review.reviewChangesets.filter(cs => cs.repoId === repo.id);
+		const changesets = review.reviewChangesets.filter(cs => cs.repoId === repo!.id);
 
 		const modifiedFiles: GitNumStat[] = [];
 		const newestCommitInACheckpoint = changesets
@@ -1161,6 +1196,66 @@ export class ScmManager {
 		return { sha1: Strings.sha1(content) };
 	}
 
+	@lspHandler(GetShaDiffsRangesRequestType)
+	async GetShaDiffsRanges(request: GetShaDiffsRangesRequest): Promise<GetShaDiffsRangesResponse[]> {
+		const { git, repositoryMappings } = SessionContainer.instance();
+
+		const repo = await git.getRepositoryById(request.repoId);
+		let repoPath;
+		if (repo) {
+			repoPath = repo.path;
+		} else {
+			repoPath = await repositoryMappings.getByRepoId(request.repoId);
+		}
+
+		if (!repoPath) throw new Error(`Could not load repo with ID ${request.repoId}`);
+
+		const diff = await git.getDiffBetweenCommits(
+			request.baseSha,
+			request.headSha,
+			paths.join(repoPath, request.filePath),
+			false,
+			0
+		);
+
+		return diff?.hunks.map(hunk =>
+			({
+				baseLinesChanged: {
+					start: hunk.oldStart,
+					end: hunk.oldStart + hunk.oldLines - 1
+				},
+				headLinesChanged:  {
+					start: hunk.newStart,
+					end: hunk.newStart + hunk.newLines - 1
+				}
+			})
+		) || [] ;
+	}
+
+	@lspHandler(GetRangeRequestType)
+	async getRange({ uri, range }: GetRangeRequest): Promise<GetRangeResponse> {
+		// Ensure range end is >= start
+		range = Ranges.ensureStartBeforeEnd(range);
+
+		let currentContent = "";
+		let currentBranch = "";
+		let currentCommitHash = "";
+		let diff = "";
+		const document = Container.instance().documents.get(uri);
+		if (document === undefined) {
+			try {
+				currentContent = await FileSystem.range(URI.parse(uri).fsPath, range);
+			} catch (ex) {
+				Logger.error(ex);
+				return { currentCommitHash: "", currentContent: "", currentBranch: "", diff: "" };
+			}
+		} else {
+			// Normalize to /n line endings
+			currentContent = document.getText(range).replace(/\r\n/g, "\n");
+		}
+		return { currentCommitHash, currentBranch, currentContent, diff };
+	}
+
 	@lspHandler(GetLatestCommittersRequestType)
 	async getLatestCommittersAllRepos(): Promise<GetLatestCommittersResponse> {
 		const cc = Logger.getCorrelationContext();
@@ -1209,13 +1304,34 @@ export class ScmManager {
 		return { shortMessage: commit ? commit.shortMessage : "" };
 	}
 
+	@lspHandler(CommitAndPushRequestType)
+	async commitAndPush(request: CommitAndPushRequest): Promise<CommitAndPushResponse> {
+		const { git, repositoryMappings } = SessionContainer.instance();
+
+		const repo = await git.getRepositoryById(request.repoId);
+		let repoPath = "";
+		if (repo) {
+			repoPath = repo.path;
+		} else {
+			repoPath = (await repositoryMappings.getByRepoId(request.repoId)) || "";
+		}
+
+		const { success, error } = await git.commitAndPush(
+			repoPath,
+			request.message,
+			request.files,
+			request.pushAfterCommit
+		);
+		return { success, error };
+	}
+
 	@log()
 	@lspHandler(FetchAllRemotesRequestType)
 	async fetchAllRemotes(request: FetchAllRemotesRequest): Promise<FetchAllRemotesResponse> {
 		const { git } = SessionContainer.instance();
 
 		const repo = await git.getRepositoryById(request.repoId);
-		if (!repo) throw new Error(`Could not load repo with ID ${request.repoId}`);
+		if (!repo) throw new Error(`fetchAllRemotes: Could not load repo with ID ${request.repoId}`);
 
 		await git.fetchAllRemotes(repo.path);
 		return true;
@@ -1236,7 +1352,8 @@ export class ScmManager {
 			repoPath = await repositoryMappings.getByRepoId(request.repoId);
 		}
 
-		if (!repoPath) throw new Error(`Could not load repo with ID ${request.repoId}`);
+		if (!repoPath)
+			throw new Error(`getFileContentsAtRevision: Could not load repo with ID ${request.repoId}`);
 
 		const filePath = paths.join(repoPath, request.path);
 		if (request.fetchAllRemotes) {
@@ -1245,6 +1362,27 @@ export class ScmManager {
 		const contents = (await git.getFileContentForRevision(filePath, request.sha)) || "";
 		return {
 			content: contents
+		};
+	}
+
+	@log()
+	@lspHandler(DiffBranchesRequestType)
+	async diffBranches(request: DiffBranchesRequest): Promise<DiffBranchesResponse> {
+		const { git, repositoryMappings } = SessionContainer.instance();
+
+		const repo = await git.getRepositoryById(request.repoId);
+		let repoPath;
+		if (repo) {
+			repoPath = repo.path;
+		} else {
+			repoPath = await repositoryMappings.getByRepoId(request.repoId);
+		}
+
+		if (!repoPath) throw new Error(`diffBranches: Could not load repo with ID ${request.repoId}`);
+
+		const filesChanged = (await git.diffBranches(repoPath, request.baseRef, request.headRef)) || [];
+		return {
+			filesChanged
 		};
 	}
 
@@ -1264,7 +1402,14 @@ export class ScmManager {
 			repoPath = await repositoryMappings.getByRepoId(request.repoId);
 		}
 
-		if (!repoPath) throw new Error(`Could not load repo with ID ${request.repoId}`);
+		if (!repoPath) {
+			return {
+				sha: "",
+				error: {
+					type: "REPO_NOT_FOUND"
+				}
+			};
+		}
 		try {
 			const shas = [request.baseSha, request.headSha];
 			const results = await Promise.all(

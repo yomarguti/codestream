@@ -28,13 +28,14 @@ import { openPanel } from "../store/context/actions";
 import { WebviewPanels } from "@codestream/protocols/webview";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { PullRequest } from "./PullRequest";
+import { getSidebarLocation } from "../store/editorContext/reducer";
 
 const NavHeader = styled.div`
 	// flex-grow: 0;
 	// flex-shrink: 0;
 	// display: flex;
 	// align-items: flex-start;
-	padding: 40px 10px 10px 15px;
+	padding: 35px 10px 10px 15px;
 	// justify-content: center;
 	width: 100%;
 	${Header} {
@@ -91,7 +92,8 @@ const Root = styled.div`
 		${Meta},
 		${Description},
 		${ExpandedAuthor},
-		${Header} {
+		${Header},
+		.replies-to-review {
 			opacity: 0.25;
 		}
 	}
@@ -135,18 +137,20 @@ const Subtext = styled.div`
 	color: var(--text-color-subtle);
 `;
 
-export const ComposeArea = styled.div`
+export const ComposeArea = styled.div<{ side: "right" | "left" }>`
 	width: 35px;
 	height: 100%;
 	position: fixed;
-	left: -36px;
+	left: ${props => (props.side === "right" ? "-36px" : "auto")};
+	right: ${props => (props.side === "left" ? "-36px" : "auto")};
 	top: 0;
 	transition: left 0.1s;
 	// background: var(--base-background-color);
 	// border-right: 1px solid var(--base-border-color);
 	background: var(--button-background-color);
 	&.pulse {
-		left: 0;
+		left: ${props => (props.side === "right" ? "0" : "auto")};
+		right: ${props => (props.side === "left" ? "0" : "auto")};
 		z-index: 5;
 	}
 `;
@@ -154,6 +158,7 @@ export const ComposeArea = styled.div`
 export const StyledReview = styled.div``;
 
 const Tip = styled.div`
+	display: flex;
 	button {
 		margin-top: 10px;
 		float: right;
@@ -165,8 +170,8 @@ const Tip = styled.div`
 `;
 
 const Step = styled.div`
-	float: left;
 	display: flex;
+	flex-shrink: 0;
 	align-items: center;
 	justify-content: center;
 	font-size: 20px;
@@ -210,7 +215,8 @@ export function ReviewNav(props: Props) {
 			isInVscode: state.ide.name === "VSC",
 			approvedByMe: approvedBy[currentUserId] ? true : false,
 			isMine: currentUserId === (review ? review.creatorId : ""),
-			cr2prEnabled: isFeatureEnabled(state, "cr2pr")
+			cr2prEnabled: isFeatureEnabled(state, "cr2pr"),
+			sidebarLocation: getSidebarLocation(state)
 		};
 	}, shallowEqual);
 
@@ -396,7 +402,7 @@ export function ReviewNav(props: Props) {
 							</Tooltip>
 						)}
 						{numOpenChangeRequests === 0 && !approvedByMe && (
-							<Tooltip title="Approve Review" placement="bottom">
+							<Tooltip title="Approve Feedback Request" placement="bottom">
 								<Button variant="success" onClick={approve}>
 									<Icon className="narrow-icon" name="thumbsup" />
 									<span className="wide-text">Approve</span>
@@ -416,21 +422,6 @@ export function ReviewNav(props: Props) {
 									setIsEditing={setIsEditing}
 									setIsAmending={setIsAmending}
 								/>
-							</Button>
-						</Tooltip>
-						<Tooltip
-							title={
-								<>
-									Exit Review{" "}
-									<span className="binding">
-										<span className="keybinding">ESC</span>
-									</span>
-								</>
-							}
-							placement="bottom"
-						>
-							<Button variant="secondary" onClick={exit}>
-								<Icon name="x" />
 							</Button>
 						</Tooltip>
 					</div>
@@ -476,21 +467,6 @@ export function ReviewNav(props: Props) {
 								/>
 							</Button>
 						</Tooltip>
-						<Tooltip
-							title={
-								<>
-									Exit Review{" "}
-									<span className="binding">
-										<span className="keybinding">ESC</span>
-									</span>
-								</>
-							}
-							placement="bottom"
-						>
-							<Button variant="secondary" onClick={exit}>
-								<Icon name="x" />
-							</Button>
-						</Tooltip>
 					</div>
 				);
 			default:
@@ -525,10 +501,12 @@ export function ReviewNav(props: Props) {
 	const titleTip =
 		hoverButton === "files" ? (
 			<Tip>
-				<Step>1</Step> Step through the changes of the review
-				<Subtext>By clicking on filenames in any order</Subtext>
-				<Button onClick={() => setHoverButton("comment")}>Next &gt;</Button>
-				<b></b>
+				<Step>1</Step>
+				<div>
+					Step through the changes of the review
+					<Subtext>By clicking on filenames in any order</Subtext>
+					<Button onClick={() => setHoverButton("comment")}>Next &gt;</Button>
+				</div>
 			</Tip>
 		) : (
 			undefined
@@ -537,10 +515,12 @@ export function ReviewNav(props: Props) {
 	const filesTip =
 		hoverButton === "files" ? (
 			<Tip>
-				<Step>1</Step> Step through the changes of the review
-				<Subtext>By clicking on filenames in any order</Subtext>
-				<Button onClick={() => setHoverButton("comment")}>Next &gt;</Button>
-				<b></b>
+				<Step>1</Step>
+				<div>
+					Step through the changes of the review
+					<Subtext>By clicking on filenames in any order</Subtext>
+					<Button onClick={() => setHoverButton("comment")}>Next &gt;</Button>
+				</div>
 			</Tip>
 		) : (
 			undefined
@@ -549,10 +529,12 @@ export function ReviewNav(props: Props) {
 	const commentTip =
 		hoverButton === "comment" ? (
 			<Tip>
-				<Step>2</Step>Comment on changes in the left margin
-				<Subtext>You can also comment on related code as part of the review</Subtext>
-				<Button onClick={() => setHoverButton("actions")}>Next &gt;</Button>
-				<b></b>
+				<Step>2</Step>
+				<div>
+					Comment by selecting code in the right side of the diff
+					<Subtext>You can also comment on related code as part of the review</Subtext>
+					<Button onClick={() => setHoverButton("actions")}>Next &gt;</Button>
+				</div>
 			</Tip>
 		) : (
 			undefined
@@ -561,10 +543,12 @@ export function ReviewNav(props: Props) {
 	const actionsTip =
 		hoverButton === "actions" ? (
 			<Tip>
-				<Step>3</Step>Approve or reject the review when finished
-				<Subtext>Or pause to come back to it later</Subtext>
-				<Button onClick={tourDone}>Done</Button>
-				<b></b>
+				<Step>3</Step>
+				<div>
+					Approve or reject the review when finished
+					<Subtext>Or pause to come back to it later</Subtext>
+					<Button onClick={tourDone}>Done</Button>
+				</div>
 			</Tip>
 		) : (
 			undefined
@@ -573,6 +557,8 @@ export function ReviewNav(props: Props) {
 	if (isEditing) {
 		return <ReviewForm isEditing editingReview={review} onClose={() => setIsEditing(false)} />;
 	}
+
+	const { sidebarLocation } = derivedState;
 
 	return (
 		<Root className={derivedState.hideReviewInstructions ? "" : "tour-on"}>
@@ -587,7 +573,7 @@ export function ReviewNav(props: Props) {
 					<></>
 				</BaseReviewHeader>
 				<Nav className={hoverButton == "actions" ? "pulse" : ""}>
-					<TourTip title={actionsTip} placement="bottomRight">
+					<TourTip title={actionsTip} placement="bottomLeft">
 						{statusButtons()}
 					</TourTip>
 				</Nav>
@@ -635,8 +621,11 @@ export function ReviewNav(props: Props) {
 					</ScrollBox>
 				</div>
 			)}
-			<TourTip title={commentTip} placement="right">
-				<ComposeArea className={hoverButton == "comment" ? "pulse" : ""} />
+			<TourTip title={commentTip} placement={sidebarLocation === "right" ? "right" : "left"}>
+				<ComposeArea
+					side={sidebarLocation === "right" ? "right" : "left"}
+					className={hoverButton == "comment" ? "pulse" : ""}
+				/>
 			</TourTip>
 		</Root>
 	);

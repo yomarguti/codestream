@@ -21,6 +21,8 @@ export const ButtonRow = styled.div`
 		flex-grow: 1;
 		margin: 0 10px;
 		width: 100%;
+		padding: 5px 10px;
+		line-height: 1.25em;
 	}
 `;
 
@@ -89,10 +91,10 @@ export const CheckEmailVsGit = () => {
 		return (
 			<Modal translucent>
 				<Dialog title="Git Email Check" onClose={close}>
-					<p>
+					<p style={{ wordBreak: "break-word" }}>
 						You are signed in as <b className="highlight">{currentUser.email}</b>
 					</p>
-					<p>
+					<p style={{ wordBreak: "break-word" }}>
 						Is <b className="highlight">{scmEmail}</b> also you?
 					</p>
 					<ButtonRow>

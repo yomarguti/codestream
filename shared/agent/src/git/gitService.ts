@@ -1,6 +1,7 @@
 "use strict";
 import { createPatch, ParsedDiff, parsePatch } from "diff";
 import * as fs from "fs";
+import { memoize } from "lodash-es";
 import * as path from "path";
 import { CommitsChangedData, WorkspaceChangedData } from "protocol/agent.protocol";
 import { Disposable, Event } from "vscode-languageserver";
@@ -91,9 +92,17 @@ export interface IGitService extends Disposable {
 
 export class GitService implements IGitService, Disposable {
 	private _disposable: Disposable | undefined;
+	private readonly _memoizedGetDefaultBranch: (
+		repoPath: string,
+		remote: string
+	) => Promise<string | undefined>;
 	private readonly _repositories: GitRepositories;
 
 	constructor(public readonly session: CodeStreamSession) {
+		this._memoizedGetDefaultBranch = memoize(
+			this._getDefaultBranch,
+			(repoPath, remote) => `${repoPath}|${remote}`
+		);
 		this._repositories = new GitRepositories(this, session);
 	}
 
@@ -258,7 +267,10 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
-	async getDefaultBranch(repoPath: string, remote: string): Promise<string | undefined> {
+	getDefaultBranch(repoPath: string, remote: string): Promise<string | undefined> {
+		return this._memoizedGetDefaultBranch(repoPath, remote);
+	}
+	private async _getDefaultBranch(repoPath: string, remote: string): Promise<string | undefined> {
 		try {
 			Logger.debug("IN GDB: " + remote);
 			const data = await git(
@@ -297,7 +309,8 @@ export class GitService implements IGitService, Disposable {
 		initialCommitHash: string,
 		finalCommitHash: string,
 		filePath: string,
-		fetchIfCommitNotFound: boolean = false
+		fetchIfCommitNotFound: boolean = false,
+		conetxtLines: number = 3
 	): Promise<ParsedDiff | undefined> {
 		const [dir, filename] = Strings.splitPath(filePath);
 		let data;
@@ -306,6 +319,7 @@ export class GitService implements IGitService, Disposable {
 				{ cwd: dir },
 				"diff",
 				"--no-ext-diff",
+				`-U${conetxtLines}`,
 				initialCommitHash,
 				finalCommitHash,
 				"--",
@@ -383,6 +397,27 @@ export class GitService implements IGitService, Disposable {
 
 		const patches = parsePatch(data);
 		return patches;
+	}
+
+	async diffBranches(
+		repoPath: string,
+		baseRef: string,
+		headRef?: string
+	): Promise<{ patches: ParsedDiff[]; data: string }> {
+		let data: string | undefined;
+		try {
+			const options = ["diff", "--no-ext-diff", "--no-prefix", baseRef];
+			if (headRef) options.push(headRef);
+			options.push("--");
+			data = await git({ cwd: repoPath }, ...options);
+		} catch (err) {
+			Logger.warn(`Error diffing branches ${repoPath}:${baseRef}:${headRef}`);
+			throw err;
+		}
+
+		const patches = parsePatch(data);
+		Logger.log("RETURNING PATCHES: ", JSON.stringify(patches, null, 4));
+		return { patches, data };
 	}
 
 	// this isn't technically a git operation, but we leave it here since it's
@@ -957,6 +992,25 @@ export class GitService implements IGitService, Disposable {
 			return ret;
 		} catch {
 			return undefined;
+		}
+	}
+
+	async commitAndPush(
+		repoPath: string,
+		message: string,
+		files: string[],
+		pushAfterCommit: boolean
+	): Promise<{ success: boolean; error?: string }> {
+		try {
+			// const escapedMessage = message.replace(/\'/g, "\\'");
+			const data = await git({ cwd: repoPath }, "commit", "-m", message, ...files);
+			if (pushAfterCommit) {
+				await git({ cwd: repoPath }, "pull");
+				await git({ cwd: repoPath }, "push", "origin");
+			}
+			return { success: true };
+		} catch (err) {
+			return { success: false, error: err.message };
 		}
 	}
 

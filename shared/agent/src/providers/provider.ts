@@ -146,6 +146,7 @@ export namespace ThirdPartyPostProvider {
 
 export interface ThirdPartyProvider {
 	readonly name: string;
+	readonly icon: string;
 	connect(): Promise<void>;
 	configure(data: { [key: string]: any }): Promise<void>;
 	disconnect(request: ThirdPartyDisconnect): Promise<void>;
@@ -214,9 +215,21 @@ export abstract class ThirdPartyProviderBase<
 	abstract get displayName(): string;
 	abstract get name(): string;
 	abstract get headers(): { [key: string]: string };
+	get icon() {
+		return this.name;
+	}
 
 	get accessToken() {
-		return this._providerInfo && this._providerInfo.accessToken;
+		const token = this._providerInfo && this._providerInfo.accessToken;
+		if (this.providerConfig.name === "github") {
+			Container.instance().errorReporter.reportBreadcrumb({
+				message: "Got access token for GitHub",
+				data: {
+					accessToken: token ? token.length : "NONE"
+				}
+			});
+		}
+		return token;
 	}
 
 	get apiPath() {
@@ -296,6 +309,11 @@ export abstract class ThirdPartyProviderBase<
 	}
 
 	async connect() {
+		if (this.providerConfig.name === "github") {
+			Container.instance().errorReporter.reportBreadcrumb({
+				message: "Connecting to GitHub"
+			});
+		}
 		void this.onConnecting();
 
 		// FIXME - this rather sucks as a way to ensure we have the access token
@@ -307,6 +325,14 @@ export abstract class ThirdPartyProviderBase<
 				if (me == null) return;
 
 				const providerInfo = this.getProviderInfo(me);
+				if (this.providerConfig.name === "github") {
+					Container.instance().errorReporter.reportBreadcrumb({
+						message: "Got provider info for GitHub",
+						data: {
+							accessToken: this.hasAccessToken(providerInfo)
+						}
+					});
+				}
 				if (!this.hasAccessToken(providerInfo)) return;
 				resolve(providerInfo);
 			});
@@ -335,6 +361,11 @@ export abstract class ThirdPartyProviderBase<
 	protected async onDisconnected(request?: ThirdPartyDisconnect) {}
 
 	async ensureConnected(request?: { providerTeamId?: string }) {
+		if (this.providerConfig.name === "github") {
+			Container.instance().errorReporter.reportBreadcrumb({
+				message: "Ensuring connection to GitHub"
+			});
+		}
 		if (this._readyPromise !== undefined) return this._readyPromise;
 
 		if (this._providerInfo !== undefined) {
@@ -372,6 +403,14 @@ export abstract class ThirdPartyProviderBase<
 	private async ensureConnectedCore(request?: { providerTeamId?: string }) {
 		const { user } = await SessionContainer.instance().users.getMe();
 		this._providerInfo = this.getProviderInfo(user);
+		if (this.providerConfig.name === "github") {
+			Container.instance().errorReporter.reportBreadcrumb({
+				message: "Got provider info for GitHub",
+				data: {
+					accessToken: this._providerInfo?.accessToken ? this._providerInfo?.accessToken.length : "NONE"
+				}
+			});
+		}
 		if (this._providerInfo === undefined) {
 			throw new Error(`You must authenticate with ${this.displayName} first.`);
 		}

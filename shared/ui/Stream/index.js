@@ -1,11 +1,11 @@
-import React, { Component } from "react";
+import React, { PureComponent } from "react";
 import PropTypes from "prop-types";
 import { injectIntl } from "react-intl";
 import { connect } from "react-redux";
 import cx from "classnames";
 import { ActivityPanel } from "./ActivityPanel";
 import { ExportPanel } from "./ExportPanel";
-import { StatusPanel } from "./StatusPanel";
+import { Sidebar } from "./Sidebar";
 import { Notifications } from "./Notifications";
 import { ChangeEmail } from "./ChangeEmail";
 import { ChangeUsername } from "./ChangeUsername";
@@ -15,12 +15,12 @@ import { ChangeWorksOn } from "./ChangeWorksOn";
 import { ChangePhoneNumber } from "./ChangePhoneNumber";
 import { ChangeAvatar } from "./ChangeAvatar";
 import { ChangeTeamName } from "./ChangeTeamName";
+import { TeamSetup } from "./TeamSetup";
 import { CreatePullRequestPanel } from "./CreatePullRequestPanel";
 import { IntegrationsPanel } from "./IntegrationsPanel";
 import { ProfilePanel } from "./ProfilePanel";
 import { ReviewSettings } from "./ReviewSettings";
 import { GettingStarted } from "./GettingStarted";
-import { TeamPanel } from "./TeamPanel";
 import { CodemarkForm } from "./CodemarkForm";
 import { ReviewForm } from "./ReviewForm";
 import FilterSearchPanel from "./FilterSearchPanel";
@@ -31,7 +31,6 @@ import Icon from "./Icon";
 import CancelButton from "./CancelButton";
 import Tooltip, { TipTitle, placeArrowTopRight } from "./Tooltip";
 import OfflineBanner from "./OfflineBanner";
-import { WallToWallBanner } from "./WallToWallBanner";
 import ConfigureAzureDevOpsPanel from "./ConfigureAzureDevOpsPanel";
 import ConfigureYouTrackPanel from "./ConfigureYouTrackPanel";
 import ConfigureJiraServerPanel from "./ConfigureJiraServerPanel";
@@ -73,7 +72,7 @@ import {
 	setNewPostEntry,
 	setCurrentReview,
 	setCurrentPullRequest,
-	setProfileUser
+	setCurrentCodemark
 } from "../store/context/actions";
 import { last as _last, findLastIndex } from "lodash-es";
 import { Keybindings } from "./Keybindings";
@@ -81,32 +80,26 @@ import { FlowPanel, VideoLink } from "./Flow";
 import { PRInfoModal } from "./SpatialView/PRInfoModal";
 import { GlobalNav } from "./GlobalNav";
 import { CheckEmailVsGit } from "./CheckEmailVsGit";
+import { EnjoyingCodeStream } from "./EnjoyingCodeStream";
 
 const EMAIL_MATCH_REGEX = new RegExp(
 	"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*",
 	"g"
 );
 
-export class SimpleStream extends Component {
+export class SimpleStream extends PureComponent {
 	disposables = [];
 	state = {
 		composeBoxProps: {}
 	};
-	_compose = React.createRef();
 	updateEmitter = new ComponentUpdateEmitter();
 
 	static contextTypes = {
 		store: PropTypes.object
 	};
 
-	_pollingTimer;
-
 	componentDidMount() {
-		if (
-			this.props.activePanel === "main" &&
-			this.props.postStreamId != undefined &&
-			this.props.hasFocus
-		) {
+		if (this.props.activePanel === "main" && this.props.postStreamId != undefined) {
 			HostApi.instance.track("Page Viewed", { "Page Name": "Stream" });
 		}
 		this.disposables.push(
@@ -118,54 +111,11 @@ export class SimpleStream extends Component {
 		this.disposables.push(
 			HostApi.instance.on(NewPullRequestNotificationType, this.handleNewPullRequestRequest, this)
 		);
-
-		// this listener pays attention to when the input field resizes,
-		// presumably because the user has typed more than one line of text
-		// in it, and calls a function to handle the new size
-		// if (this._compose.current)
-		// 	new ResizeObserver(this.handleResizeCompose).observe(this._compose.current);
-
-		// go ahead and do resizing because some environments (VS Code) have a
-		// polyfill for ResizeObserver which won't be triggered automatically
-
-		this.startPollingReplies(false);
 	}
 
 	componentWillUnmount = () => {
-		this.stopPollingReplies();
 		this.disposables.forEach(d => d.dispose());
 	};
-
-	startPollingReplies(prefetch) {
-		if (this.props.capabilities.providerSupportsRealtimeEvents) return;
-
-		if (prefetch) {
-			this.fetchReplies();
-		}
-
-		if (this._pollingTimer !== undefined) return;
-
-		this._pollingTimer = setInterval(() => {
-			if (
-				this.props.hasFocus &&
-				this.props.threadId !== undefined &&
-				this.props.activePanel === WebviewPanels.Codemarks
-			) {
-				this.fetchReplies();
-			}
-		}, 5000);
-	}
-
-	stopPollingReplies() {
-		if (this._pollingTimer === undefined) return;
-
-		clearInterval(this._pollingTimer);
-		this._pollingTimer = undefined;
-	}
-
-	async fetchReplies() {
-		return this.props.fetchThread(this.props.postStreamId, this.props.threadId);
-	}
 
 	handleNewCodemarkRequest(e) {
 		if (e.source) {
@@ -206,6 +156,7 @@ export class SimpleStream extends Component {
 		this.props.openPanel(WebviewPanels.NewPullRequest);
 	}
 
+	// for performance debugging purposes
 	// componentWillReceiveProps(nextProps) {
 	// 	for (const index in nextProps) {
 	// 		if (nextProps[index] !== this.props[index]) {
@@ -214,22 +165,43 @@ export class SimpleStream extends Component {
 	// 	}
 	// }
 
+	// for performance debugging purposes
+	// shouldComponentUpdate(nextProps, nextState) {
+	// 	console.warn("WTF", nextProps, nextState);
+	// 	Object.entries(this.props).forEach(
+	// 		([key, val]) =>
+	// 			JSON.stringify(nextProps[key]) !== JSON.stringify(val) &&
+	// 			console.warn(`Prop '${key}' changed to ${nextProps[key]}`)
+	// 	);
+	// 	if (this.state) {
+	// 		Object.entries(this.state).forEach(
+	// 			([key, val]) =>
+	// 				JSON.stringify(nextState[key]) !== JSON.stringify(val) &&
+	// 				console.warn(`State '${key}' changed to ${nextState[key]}`)
+	// 		);
+	// 	}
+	// 	return true;
+	// }
 	componentDidUpdate(prevProps, prevState) {
 		this.updateEmitter.emit();
 		const { postStreamId } = this.props;
 
-		if (this.props.textEditorUri !== prevProps.textEditorUri) {
-			this.setState({ selection: undefined });
-		}
-
-		// when going in and out of threads, make sure the streams are all
-		// the right height
-		if (prevProps.threadId !== this.props.threadId) {
-			if (this.props.threadId) this.focusInput();
-		}
-
 		if (this.props.activePanel !== prevProps.activePanel && this.state.editingPostId)
 			this.handleDismissEdit();
+
+		// for performance debugging purposes
+		// Object.entries(this.props).forEach(
+		// 	([key, val]) =>
+		// 		JSON.stringify(prevProps[key]) !== JSON.stringify(val) &&
+		// 		console.warn(`Prop '${key}' changed to ${prevProps[key]}`)
+		// );
+		// if (this.state) {
+		// 	Object.entries(this.state).forEach(
+		// 		([key, val]) =>
+		// 			JSON.stringify(prevState[key]) !== JSON.stringify(val) &&
+		// 			console.warn(`State '${key}' changed to ${prevState[key]}`)
+		// 	);
+		// }
 	}
 
 	// return the post, if any, with the given ID
@@ -239,12 +211,12 @@ export class SimpleStream extends Component {
 	}
 
 	render() {
-		const { showHeadshots, umis, providerInfo = {} } = this.props;
+		const { showHeadshots } = this.props;
 		let { activePanel, activeModal } = this.props;
 		const { q } = this.state;
 
 		// console.warn("RENDERING STREAM");
-		if (activePanel === WebviewPanels.LandingRedirect) activePanel = WebviewPanels.Status;
+		if (activePanel === WebviewPanels.LandingRedirect) activePanel = WebviewPanels.Sidebar;
 
 		const isConfigurationPanel =
 			activePanel && activePanel.match(/^configure\-(provider|enterprise)-/);
@@ -274,10 +246,6 @@ export class SimpleStream extends Component {
 				this.state.floatCompose && activePanel !== WebviewPanels.CodemarksForFile,
 			"no-headshots": !showHeadshots
 		});
-
-		const textEditorVisibleRanges =
-			this.state.textEditorVisibleRanges || this.props.textEditorVisibleRanges;
-		const textEditorUri = this.state.textEditorUri || this.props.textEditorUri;
 
 		// these panels do not have global nav
 		let renderNav =
@@ -309,139 +277,154 @@ export class SimpleStream extends Component {
 				? activePanel.split("-")
 				: null;
 
+		// console.warn("ACTIVE: ", activePanel);
+		// status and teams panels have been deprecated
 		return (
 			<div id="stream-root" className={streamClass}>
 				<OfflineBanner />
-				<WallToWallBanner />
 				<ModalRoot />
 				<CheckEmailVsGit />
+				{/*<EnjoyingCodeStream />*/}
 				{this.state.propsForPrePRProviderInfoModal && (
 					<PrePRProviderInfoModal {...this.state.propsForPrePRProviderInfoModal} />
 				)}
 				<div id="confirm-root" />
-				{(threadId || this.props.currentCodemarkId) && (
-					<>
-						<div id="panel-blanket" />
-						{this.props.currentCodemarkId && <CodemarkView />}
-					</>
+				<GlobalNav />
+				<Sidebar />
+				{activeModal && (
+					<Modal translucent onClose={this.props.closeModal}>
+						{activeModal === WebviewModals.CreateTeam && <CreateTeamPage />}
+						{activeModal === WebviewModals.ReviewSettings && <ReviewSettings />}
+						{activeModal === WebviewModals.Notifications && <Notifications />}
+						{activeModal === WebviewModals.ChangeEmail && <ChangeEmail />}
+						{activeModal === WebviewModals.ChangeAvatar && <ChangeAvatar />}
+						{activeModal === WebviewModals.ChangeUsername && <ChangeUsername />}
+						{activeModal === WebviewModals.ChangeFullName && <ChangeFullName />}
+						{activeModal === WebviewModals.ChangeWorksOn && <ChangeWorksOn />}
+						{activeModal === WebviewModals.ChangePhoneNumber && <ChangePhoneNumber />}
+						{activeModal === WebviewModals.ChangePassword && <ChangePassword />}
+						{activeModal === WebviewModals.ChangeTeamName && <ChangeTeamName />}
+						{activeModal === WebviewModals.TeamSetup && <TeamSetup />}
+						{activeModal === WebviewModals.Keybindings && (
+							<Keybindings onClick={this.props.closeModal}>
+								<div style={{ textAlign: "right" }}>
+									<CancelButton onClick={this.props.closeModal} />
+								</div>
+							</Keybindings>
+						)}
+					</Modal>
 				)}
-				{renderNav && <GlobalNav />}
-				<div className={contentClass}>
-					{activeModal && (
-						<Modal translucent onClose={this.props.closeModal}>
-							{activeModal === WebviewModals.CreateTeam && <CreateTeamPage />}
-							{activeModal === WebviewModals.ReviewSettings && <ReviewSettings />}
-							{activeModal === WebviewModals.Notifications && <Notifications />}
-							{activeModal === WebviewModals.ChangeEmail && <ChangeEmail />}
-							{activeModal === WebviewModals.ChangeAvatar && <ChangeAvatar />}
-							{activeModal === WebviewModals.ChangeUsername && <ChangeUsername />}
-							{activeModal === WebviewModals.ChangeFullName && <ChangeFullName />}
-							{activeModal === WebviewModals.ChangeWorksOn && <ChangeWorksOn />}
-							{activeModal === WebviewModals.ChangePhoneNumber && <ChangePhoneNumber />}
-							{activeModal === WebviewModals.ChangePassword && <ChangePassword />}
-							{activeModal === WebviewModals.ChangeTeamName && <ChangeTeamName />}
-							{activeModal === WebviewModals.Keybindings && (
-								<Keybindings onClick={this.props.closeModal}>
-									<div style={{ textAlign: "right" }}>
-										<CancelButton onClick={this.props.closeModal} />
-									</div>
-								</Keybindings>
+				{activePanel === WebviewPanels.CodemarksForFile && (
+					<InlineCodemarks
+						activePanel={activePanel}
+						setActivePanel={this.setActivePanel}
+						currentUserId={this.props.currentUserId}
+						postAction={this.postAction}
+						multiCompose={this.state.multiCompose}
+						typeFilter="all"
+						focusInput={this.focusInput}
+						scrollDiv={this._contentScrollDiv}
+					/>
+				)}
+				{!activeModal &&
+					// these are all panels that have been retired, or are
+					// now a part of the sidebar
+					activePanel !== WebviewPanels.Team &&
+					activePanel !== WebviewPanels.Status &&
+					activePanel !== WebviewPanels.Codemarks &&
+					activePanel !== WebviewPanels.Invite &&
+					activePanel !== WebviewPanels.PullRequest &&
+					activePanel !== WebviewPanels.Review &&
+					activePanel !== WebviewPanels.Tasks &&
+					activePanel !== WebviewPanels.LandingRedirect &&
+					activePanel !== WebviewPanels.OpenReviews &&
+					activePanel !== WebviewPanels.OpenPullRequests &&
+					activePanel !== WebviewPanels.WorkInProgress &&
+					activePanel !== WebviewPanels.Sidebar &&
+					activePanel !== WebviewPanels.CodemarksForFile && (
+						<Modal translucent>
+							{activePanel === WebviewPanels.Tester && <Tester />}
+							{activePanel === WebviewPanels.FilterSearch && <FilterSearchPanel />}
+							{activePanel === WebviewPanels.Activity && <ActivityPanel />}
+							{activePanel === WebviewPanels.Export && <ExportPanel />}
+							{activePanel === WebviewPanels.PRInfo && (
+								<PRInfoModal onClose={this.props.closePanel} />
+							)}
+							{activePanel === WebviewPanels.NewComment && (
+								<CodemarkForm
+									commentType="comment"
+									streamId={this.props.postStreamId}
+									onSubmit={this.submitNoCodeCodemark}
+									onClickClose={this.props.closePanel}
+									collapsed={false}
+									positionAtLocation={false}
+									multiLocation={true}
+									dontAutoSelectLine={true}
+									setMultiLocation={this.setMultiLocation}
+								/>
+							)}
+							{activePanel === WebviewPanels.NewIssue && (
+								<CodemarkForm
+									commentType="issue"
+									streamId={this.props.postStreamId}
+									onSubmit={this.submitNoCodeCodemark}
+									onClickClose={this.props.closePanel}
+									collapsed={false}
+									positionAtLocation={false}
+									multiLocation={true}
+									dontAutoSelectLine={true}
+									setMultiLocation={this.setMultiLocation}
+								/>
+							)}
+							{activePanel === WebviewPanels.Flow && <FlowPanel />}
+							{activePanel === WebviewPanels.NewReview && <ReviewForm />}
+							{activePanel === WebviewPanels.Integrations && <IntegrationsPanel />}
+							{activePanel === WebviewPanels.Profile && <ProfilePanel />}
+							{activePanel === WebviewPanels.NewPullRequest && (
+								<CreatePullRequestPanel closePanel={this.props.closePanel} />
+							)}
+							{activePanel === WebviewPanels.GettingStarted && <GettingStarted />}
+							{activePanel.startsWith("configure-provider-youtrack-") && (
+								<ConfigureYouTrackPanel
+									providerId={configureProviderInfo[3]}
+									originLocation={configureProviderInfo[4]}
+								/>
+							)}
+							{activePanel.startsWith("configure-provider-azuredevops-") && (
+								<ConfigureAzureDevOpsPanel
+									providerId={configureProviderInfo[3]}
+									originLocation={configureProviderInfo[4]}
+								/>
+							)}
+							{activePanel.startsWith("configure-provider-jiraserver-") && (
+								<ConfigureJiraServerPanel
+									providerId={configureProviderInfo[3]}
+									originLocation={configureProviderInfo[4]}
+								/>
+							)}
+							{activePanel.startsWith("configure-enterprise-") && (
+								<ConfigureEnterprisePanel
+									providerId={configureProviderInfo[3]}
+									originLocation={configureProviderInfo[4]}
+								/>
 							)}
 						</Modal>
 					)}
-					{activePanel === WebviewPanels.CodemarksForFile && (
-						<InlineCodemarks
-							activePanel={activePanel}
-							setActivePanel={this.setActivePanel}
-							currentUserId={this.props.currentUserId}
-							currentUserName={this.props.currentUserName}
-							postAction={this.postAction}
-							multiCompose={this.state.multiCompose}
-							typeFilter="all"
-							textEditorUri={textEditorUri}
-							textEditorVisibleRanges={textEditorVisibleRanges}
-							selection={this.state.selection}
-							focusInput={this.focusInput}
-							scrollDiv={this._contentScrollDiv}
-						/>
-					)}
-					{activePanel === WebviewPanels.Tester && <Tester />}
-					{activePanel === WebviewPanels.FilterSearch && <FilterSearchPanel />}
-					{activePanel === WebviewPanels.Activity && <ActivityPanel />}
-					{activePanel === WebviewPanels.Export && <ExportPanel />}
-					{activePanel === WebviewPanels.PRInfo && <PRInfoModal onClose={this.props.closePanel} />}
-					{activePanel === WebviewPanels.NewComment && (
-						<CodemarkForm
-							commentType="comment"
-							streamId={this.props.postStreamId}
-							onSubmit={this.submitNoCodeCodemark}
-							onClickClose={this.props.closePanel}
-							collapsed={false}
-							positionAtLocation={false}
-							multiLocation={true}
-							dontAutoSelectLine={true}
-							setMultiLocation={this.setMultiLocation}
-						/>
-					)}
-					{activePanel === WebviewPanels.NewIssue && (
-						<CodemarkForm
-							commentType="issue"
-							streamId={this.props.postStreamId}
-							onSubmit={this.submitNoCodeCodemark}
-							onClickClose={this.props.closePanel}
-							collapsed={false}
-							positionAtLocation={false}
-							multiLocation={true}
-							dontAutoSelectLine={true}
-							setMultiLocation={this.setMultiLocation}
-						/>
-					)}
-					{activePanel === WebviewPanels.Flow && <FlowPanel />}
-					{activePanel === WebviewPanels.NewReview && <ReviewForm />}
-					{activePanel === WebviewPanels.Integrations && <IntegrationsPanel />}
-					{activePanel === WebviewPanels.Profile && <ProfilePanel />}
-					{activePanel === WebviewPanels.NewPullRequest && (
-						<CreatePullRequestPanel closePanel={this.props.closePanel} />
-					)}
-					{activePanel === WebviewPanels.GettingStarted && <GettingStarted />}
-					{activePanel === WebviewPanels.Status && <StatusPanel />}
-					{(activePanel === WebviewPanels.People || activePanel === "invite") && (
-						<TeamPanel
-							activePanel={activePanel}
-							setActivePanel={this.setActivePanel}
-							isCodeStreamTeam
-							companyPlan={this.props.company.plan}
-							companyMemberCount={this.props.team.companyMemberCount}
-						/>
-					)}
-					{activePanel.startsWith("configure-provider-youtrack-") && (
-						<ConfigureYouTrackPanel
-							providerId={configureProviderInfo[3]}
-							originLocation={configureProviderInfo[4]}
-						/>
-					)}
-					{activePanel.startsWith("configure-provider-azuredevops-") && (
-						<ConfigureAzureDevOpsPanel
-							providerId={configureProviderInfo[3]}
-							originLocation={configureProviderInfo[4]}
-						/>
-					)}
-					{activePanel.startsWith("configure-provider-jiraserver-") && (
-						<ConfigureJiraServerPanel
-							providerId={configureProviderInfo[3]}
-							originLocation={configureProviderInfo[4]}
-						/>
-					)}
-					{activePanel.startsWith("configure-enterprise-") && (
-						<ConfigureEnterprisePanel
-							providerId={configureProviderInfo[3]}
-							originLocation={configureProviderInfo[4]}
-						/>
-					)}
-				</div>
+				{this.props.currentCodemarkId && (
+					<Modal translucent onClose={() => this.props.setCurrentCodemark()}>
+						<CodemarkView />
+					</Modal>
+				)}
 			</div>
 		);
 	}
+
+	resetPanel = () => {
+		this.setActivePanel(WebviewPanels.Sidebar);
+		this.setActiveModal();
+		this.setCurrentPullRequest();
+		this.setCurrentReview();
+	};
 
 	setMultiCompose = async (value, state = {}, commentingContext) => {
 		// ugly hack -Pez
@@ -533,12 +516,6 @@ export class SimpleStream extends Component {
 		this.focusInput();
 	};
 
-	handleEditPost = event => {
-		var postDiv = event.target.closest(".post");
-		if (!postDiv) return;
-		this.setState({ editingPostId: postDiv.id });
-	};
-
 	markUnread = postId => {
 		this.props.markPostUnread(this.props.postStreamId, postId);
 	};
@@ -586,15 +563,6 @@ export class SimpleStream extends Component {
 		}
 	};
 
-	headshotInstructions = email => {
-		const message =
-			"Until we have built-in CodeStream headshots, you can edit your headshot by setting it up on Gravatar.com for " +
-			email +
-			".\n\nNote that it might take a few minutes for your headshot to appear here.";
-
-		this.submitSystemPost(message);
-	};
-
 	findMentionedUserIds = (text, users) => {
 		const mentionedUserIds = [];
 		users.forEach(user => {
@@ -606,26 +574,8 @@ export class SimpleStream extends Component {
 		return mentionedUserIds;
 	};
 
-	replacePostText = (postId, newText) => {
-		// convert the text to plaintext so there is no HTML
-		const doc = new DOMParser().parseFromString(newText, "text/html");
-		const replaceText = doc.documentElement.textContent;
-		const mentionUserIds = this.findMentionedUserIds(replaceText, this.props.teammates);
-
-		this.props.editPost(this.props.postStreamId, postId, replaceText, mentionUserIds);
-	};
-
-	editPost = id => {
-		let inputId = `input-div-${id}`;
-		if (this.props.threadId) inputId = `thread-${inputId}`;
-		let newText = document.getElementById(inputId).innerHTML.replace(/<br>/g, "\n");
-
-		this.replacePostText(id, newText);
-		this.setState({ editingPostId: null });
-	};
-
 	focusInput = () => {
-		console.log("IN FOCUS INPUT");
+		// console.log("IN FOCUS INPUT");
 		setTimeout(() => {
 			const input = document.getElementById("input-div");
 			if (input) input.focus();
@@ -669,159 +619,25 @@ export class SimpleStream extends Component {
 		}
 		return retVal;
 	};
-
-	submitCodemark = async (attributes, crossPostIssueValues, scmInfo) => {
-		if (this.state.composeBoxProps.isEditing) {
-			this.props.editCodemark(this.state.composeBoxProps.editingCodemark.id, {
-				// color: attributes.color,
-				text: attributes.text,
-				title: attributes.title,
-				assignees: attributes.assignees,
-				tags: attributes.tags,
-				relatedCodemarkIds: attributes.relatedCodemarkIds
-			});
-			return this.setMultiCompose(false);
-		} else {
-			const submit = async markers => {
-				// temporarily prevent codemarks as replies...
-				const threadId = undefined;
-				await this.props.createPost(
-					attributes.streamId,
-					threadId,
-					null,
-					{ ...attributes, markers, textEditorUri: scmInfo.uri },
-					this.findMentionedUserIds(attributes.text || "", this.props.teammates),
-					{ crossPostIssueValues }
-				);
-				if (attributes.streamId !== this.props.postStreamId) {
-					this.props.setCurrentStream(attributes.streamId);
-				} else this.setMultiCompose(false);
-				// this.setActivePanel("main");
-				safe(() => this.scrollPostsListToBottom());
-			};
-			if (!scmInfo) return submit([]);
-
-			let marker = {
-				code: scmInfo.contents,
-				range: scmInfo.range
-			};
-
-			if (scmInfo.scm) {
-				marker.file = scmInfo.scm.file;
-				marker.source = scmInfo.scm;
-			}
-			const markers = [marker];
-
-			let warning;
-			if (isNotOnDisk(scmInfo.uri))
-				warning = {
-					title: "Unsaved File",
-					message:
-						"Your teammates won't be able to see the codemark when viewing this file unless you save the file first."
-				};
-			else {
-				switch (getFileScmError(scmInfo)) {
-					case "NoRepo": {
-						warning = {
-							title: "Missing Git Info",
-							message: `This repo doesn’t appear to be tracked by Git. Your teammates won’t be able to see the codemark when viewing this source file.\n\n${uriToFilePath(
-								scmInfo.uri
-							)}`
-						};
-						break;
-					}
-					case "NoRemotes": {
-						warning = {
-							title: "No Remote URL",
-							message:
-								"This repo doesn’t have a remote URL configured. Your teammates won’t be able to see the codemark when viewing this source file."
-						};
-						break;
-					}
-					case "NoGit": {
-						warning = {
-							title: "Git could not be located",
-							message:
-								"CodeStream was unable to find the `git` command. Make sure it's installed and configured properly."
-						};
-						break;
-					}
-					default: {
-					}
-				}
-			}
-
-			if (warning) {
-				return confirmPopup({
-					title: warning.title,
-					message: () => (
-						<span>
-							{warning.message + " "}
-							<Link href="https://docs.codestream.com/userguide/faq/git-issues/">Learn more</Link>
-						</span>
-					),
-					centered: true,
-					buttons: [
-						{
-							label: "Post Anyway",
-							action: () => submit(markers)
-						},
-						{ label: "Cancel" }
-					]
-				});
-			} else submit(markers);
-		}
-	};
 }
-
-const sum = (total, num) => total + Math.round(num);
 
 /**
  * @param {Object} state
- * @param {Object} state.capabilities
  * @param {Object} state.configs
- * @param {Object} state.connectivity
  * @param {ContextState} state.context
  * @param {Object} state.editorContext
  * @param {Object} state.posts
- * @param {Object} state.providers
  * @param {Object} state.session
  * @param {Object} state.streams
  * @param {Object} state.teams
- * @param {Object} state.umis
- * @param {Object} state.users
  **/
 const mapStateToProps = state => {
-	const {
-		capabilities,
-		companies,
-		configs,
-		connectivity,
-		context,
-		providers,
-		session,
-		streams,
-		teams,
-		umis,
-		users
-	} = state;
-
-	const team = teams[context.currentTeamId];
-	const company = companies[team.companyId];
-	const teamMembers = getTeamMembers(state);
-
-	const isOffline = connectivity.offline;
+	const { configs, context, session, streams, teams } = state;
 
 	// FIXME -- eventually we'll allow the user to switch to other streams, like DMs and channels
 	const teamStream = getStreamForTeam(streams, context.currentTeamId) || {};
 	const postStream =
 		getStreamForId(streams, context.currentTeamId, context.currentStreamId) || teamStream;
-
-	const user = users[session.userId];
-
-	const providerInfo = (user.providerInfo && user.providerInfo[context.currentTeamId]) || {};
-
-	const teamMembersById = toMapBy("id", teamMembers);
 
 	// this would be nice, but unfortunately scm is only loaded on spatial view so we can't
 	// rely on it here
@@ -831,33 +647,16 @@ const mapStateToProps = state => {
 		currentCodemarkId: context.currentCodemarkId,
 		currentMarkerId: context.currentMarkerId,
 		currentReviewId: context.currentReviewId,
+		// even though we don't use hasFocus, leave this in here because of a re-render
+		// call from Modal.tsx -Pez
+		hasFocus: context.hasFocus,
 		currentPullRequestId: context.currentPullRequest ? context.currentPullRequest.id : undefined,
-		capabilities: capabilities,
 		activePanel: context.panelStack[0],
 		activeModal: context.activeModal,
 		threadId: context.threadId,
-		umis,
 		showHeadshots: configs.showHeadshots,
-		serverUrl: configs.serverUrl,
-		isOffline,
-		teammates: teamMembers,
 		postStream,
 		postStreamId: postStream.id,
-		providerInfo,
-		providers,
-		teamId: context.currentTeamId,
-		teamName: team.name || "",
-		// this would be nice, but unfortunately scm is only loaded on spatial view so we can't
-		// rely on it here
-		// currentScm: scmInfo && scmInfo.scm,
-		hasFocus: context.hasFocus,
-		currentUserId: user.id,
-		currentUserName: user.username,
-		currentUserEmail: user.email,
-		team: team,
-		company: company,
-		isInVscode: state.ide.name === "VSC",
-		textEditorUri: state.editorContext && state.editorContext.textEditorUri,
 		composeCodemarkActive: context.composeCodemarkActive
 	};
 };
@@ -867,7 +666,6 @@ export default connect(mapStateToProps, {
 	setCurrentReview,
 	setCurrentPullRequest,
 	setCurrentStream,
-	setProfileUser,
 	editCodemark,
 	setNewPostEntry
 })(injectIntl(SimpleStream));

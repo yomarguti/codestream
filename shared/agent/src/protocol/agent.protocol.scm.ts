@@ -296,6 +296,44 @@ export const GetRangeSha1RequestType = new RequestType<
 	void
 >("codestream/scm/range/sha1");
 
+export interface GetShaDiffsRangesRequest {
+	repoId: string;
+	filePath: string;
+	baseSha: string;
+	headSha: string;
+}
+
+interface linesChanged {
+	start: number;
+	end: number;
+}
+
+export interface GetShaDiffsRangesResponse {
+	baseLinesChanged: linesChanged;
+	headLinesChanged: linesChanged;
+}
+
+export const GetShaDiffsRangesRequestType = new RequestType<
+	GetShaDiffsRangesRequest,
+	GetShaDiffsRangesResponse[],
+	void,
+	void
+>("codestream/scm/sha1/ranges");
+
+export interface GetRangeRequest {
+	uri: string;
+	range: Range;
+}
+export interface GetRangeResponse {
+	currentCommitHash?: string;
+	currentBranch?: string;
+	currentContent?: string;
+	diff?: string;
+}
+export const GetRangeRequestType = new RequestType<GetRangeRequest, GetRangeResponse, void, void>(
+	"codestream/scm/range/content"
+);
+
 export interface GetUserInfoRequest {}
 export interface GetUserInfoResponse {
 	email: string;
@@ -381,7 +419,7 @@ export interface FetchForkPointResponse {
 	sha: string;
 	error?: {
 		message?: string;
-		type: "COMMIT_NOT_FOUND";
+		type: "COMMIT_NOT_FOUND" | "REPO_NOT_FOUND";
 	};
 }
 
@@ -407,3 +445,43 @@ export const GetLatestCommitScmRequestType = new RequestType<
 	void,
 	void
 >("codestream/scm/latestCommit");
+
+export interface DiffBranchesRequest {
+	repoId: string;
+	baseRef: string;
+	headRef?: string;
+}
+
+export interface DiffBranchesResponse {
+	filesChanged?: {
+		patches: any[];
+		data: string;
+	};
+	error?: string;
+}
+
+export const DiffBranchesRequestType = new RequestType<
+	DiffBranchesRequest,
+	DiffBranchesResponse,
+	void,
+	void
+>("codestream/scm/branches/diff");
+
+export interface CommitAndPushRequest {
+	repoId: string;
+	message: string;
+	files: string[];
+	pushAfterCommit: boolean;
+}
+
+export interface CommitAndPushResponse {
+	success: boolean;
+	error?: string;
+}
+
+export const CommitAndPushRequestType = new RequestType<
+	CommitAndPushRequest,
+	CommitAndPushResponse,
+	void,
+	void
+>("codestream/scm/commitAndPush");

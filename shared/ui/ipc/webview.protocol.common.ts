@@ -1,6 +1,5 @@
 import { GetFileScmInfoResponse } from "@codestream/protocols/agent";
 import { Position, Range } from "vscode-languageserver-types";
-import { EditorSelection } from "./webview.protocol";
 
 export const MaxRangeValue = 2147483647;
 
@@ -24,6 +23,12 @@ export interface EditorMetrics {
 	scrollRatio?: number;
 }
 
+export type SidebarLocation = "left" | "right" | "top" | "bottom" | "floating";
+
+export interface EditorSidebarLocation {
+	location?: SidebarLocation;
+}
+
 export interface EditorSelection extends Range {
 	// MUST be identical to Range.end
 	cursor: Position;
@@ -40,7 +45,7 @@ export enum WebviewPanels {
 	NewComment = "new-comment",
 	NewIssue = "new-issue",
 	NewReview = "new-review",
-	People = "people",
+	Team = "people",
 	Profile = "profile",
 	PullRequest = "pull-request",
 	Review = "review",
@@ -52,24 +57,32 @@ export enum WebviewPanels {
 	GettingStarted = "gtting-started", // this is a typo but now baked into user data, so let's just leave it
 	NewPullRequest = "new-pull-request",
 	Flow = "flow",
-	Tester = "tester"
+	Tester = "tester",
+	Sidebar = "sidebar",
+	OpenReviews = "open-reviews",
+	OpenPullRequests = "open-pull-requests",
+	WorkInProgress = "work-in-progress"
 }
 
 // this is for mixpanel and maps the values from WebviewPanels to their
 // corresponding human-readable names
 export const WebviewPanelNames = {
 	activity: "Activity",
-	"codemarks-for-file": "Spatial View",
 	"filter-search": "Filter & Search",
 	"new-comment": "NewComment",
 	"new-issue": "New Issue",
 	"new-review": "New Review",
-	people: "People",
+	people: "My Team",
 	profile: "Profile",
 	review: "Review",
 	status: "Status",
 	"landing-redirect": "Landing Redirect",
-	"gtting-started": "Getting Started" // this is a typo but now baked into user data, so let's just leave it
+	"gtting-started": "Getting Started", // this is a typo but now baked into user data, so let's just leave it
+	"work-in-progress": "Work in Progress",
+	"open-pull-requests": "Pull Requests",
+	"open-reviews": "Feedback Requests",
+	"codemarks-for-file": "Codemarks",
+	tasks: "Issues"
 };
 
 export enum WebviewModals {
@@ -82,9 +95,11 @@ export enum WebviewModals {
 	ChangeWorksOn = "change-works-on",
 	ChangeTeamName = "change-team-name",
 	CreateTeam = "create-team",
+	TeamSetup = "team-setup",
 	Keybindings = "keybindings",
 	Notifications = "notifications",
-	ReviewSettings = "review-settings"
+	ReviewSettings = "review-settings",
+	Invite = "invite"
 }
 
 export interface WebviewContext {
@@ -98,6 +113,7 @@ export interface WebviewContext {
 		| {
 				providerId: string;
 				id: string;
+				commentId?: string;
 		  }
 		| undefined;
 	profileUserId?: string;
@@ -125,6 +141,15 @@ export interface EditorContext {
 	metrics?: EditorMetrics;
 	textEditorLineCount?: number;
 	visibleEditorCount?: number; // only populated (and used) by vscode
+	sidebar?: {
+		location?: SidebarLocation;
+	};
+}
+
+export interface EditorLayout {
+	sidebar?: {
+		location?: SidebarLocation;
+	};
 }
 
 export interface WebviewConfigs {

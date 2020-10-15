@@ -27,7 +27,8 @@ export enum CodemarkType {
 	Trap = "trap",
 	Link = "link",
 	Review = "review",
-	Reaction = "reaction"
+	Reaction = "reaction",
+	PRComment = "prcomment"
 }
 
 export enum CodemarkStatus {
@@ -647,10 +648,14 @@ export interface CSMePreferences {
 	skipGitEmailCheck?: boolean;
 	skipEmailingAuthors?: boolean;
 	skipPostCreationModal?: boolean;
-	pullRequestFilesChangedMode?: "files" | "hunks";
+	pullRequestFilesChangedMode?: "files" | "tree" | "hunks";
 	pullRequestQueries?: PullRequestQuery[];
 	pullRequestQueryShowAllRepos?: boolean;
 	pullRequestQueryHideLabels?: boolean;
+	pullRequestView?: "auto" | "vertical" | "side-by-side";
+	hiddenPaneNodes?: {
+		[nodeId: string]: boolean;
+	};
 	[key: string]: any;
 }
 

@@ -30,6 +30,10 @@ object EditorNotifications {
     class DidChangeActive(val editor: EditorInformation?) : WebViewNotification {
         override fun getMethod() = "webview/editor/didChangeActive"
     }
+
+    class DidChangeLayout(val sidebar: Sidebar): WebViewNotification {
+        override fun getMethod() = "webview/editor/didChangeLayout"
+    }
 }
 
 object CodemarkNotifications {
@@ -90,7 +94,8 @@ object PullRequestNotifications {
 
     class Show(
         val providerId: String,
-        val id: String
+        val id: String,
+        val commentId: String? = null
     ) : WebViewNotification {
         override fun getMethod() = "webview/pullRequest/show"
     }

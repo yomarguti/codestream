@@ -10,6 +10,7 @@ import ScrollBox from "./ScrollBox";
 import CancelButton from "./CancelButton";
 import { closePanel } from "./actions";
 import { useDispatch, useSelector } from "react-redux";
+import { Dialog } from "../src/components/Dialog";
 
 const Root = styled.div`
 	color: var(--text-color);
@@ -27,7 +28,6 @@ const Root = styled.div`
 		}
 	}
 	${Carousel} {
-		display: inline-block;
 		max-width: 600px;
 	}
 `;
@@ -202,7 +202,10 @@ const Action = styled.div`
 			background: #999;
 			// background: var(--button-background-color);
 		}
-		box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+		box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+		.vscode-dark & {
+			box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+		}
 		transform: scale(1.5);
 	}
 `;
@@ -386,7 +389,10 @@ const Commit = styled.div`
 
 	.active &,
 	:hover {
-		box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+		box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+		.vscode-dark& {
+			box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+		}
 		transform: scale(1.5);
 
 		&:after {
@@ -489,7 +495,7 @@ const RequestFeedback = (
 		can see your changes by packaging up a diffset along with the review object.
 		<VideoLink href={"https://youtu.be/2AyqT4z5Omc"}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
-			<span>Code Review Walkthrough</span>
+			<span>Feedback Request Walkthrough</span>
 		</VideoLink>
 	</Content>
 );
@@ -507,7 +513,7 @@ const DiscussAndRefine = (
 		share, review, and discuss code without worrying about committing it first.
 		<VideoLink href={"FIXME"} style={{ display: "none" }}>
 			<img src="https://i.imgur.com/9IKqpzf.png" />
-			<span>Updating a Code Review to Address Changes</span>
+			<span>Updating a Feedback Request to Address Changes</span>
 		</VideoLink>
 	</Content>
 );
@@ -515,9 +521,9 @@ const DiscussAndRefine = (
 const GetFinalApproval = (
 	<Content>
 		<h2>Get Final Approval</h2>
-		CodeStream's code reviews can be reviewed by multiple people, with assignment based on changed
-		code, round-robin, or random chance. You can set things up where everyone on the team has to
-		give the thumbs-up, or the first person who approves the review wins.
+		CodeStream's feedback requests can be reviewed by multiple people, with assignment based on
+		changed code, round-robin, or random chance. You can set things up where everyone on the team
+		has to give the thumbs-up, or the first person who approves the review wins.
 		<br />
 		<br />
 		However your team works, CodeStream provides the tools to make it easy and transparent, sharing
@@ -738,44 +744,39 @@ export const FlowPanel = () => {
 	const dispatch = useDispatch();
 	const [activeTab, setActiveTab] = React.useState("1");
 	return (
-		<div className="panel full-height">
+		<Dialog maximizable wide noPadding onClose={() => dispatch(closePanel())}>
 			<PanelHeader title="CodeStream Flow">
-				<CancelButton onClick={() => dispatch(closePanel())} />
 				<div style={{ height: "5px" }} />
 			</PanelHeader>
-			<ScrollBox>
-				<div className="channel-list vscroll">
-					<div style={{ padding: "20px" }}>
-						<Tabs style={{ marginTop: 0 }}>
-							<Tab onClick={e => setActiveTab(e.target.id)} active={activeTab === "1"} id="1">
-								The Basics
-							</Tab>
-							<Tab onClick={e => setActiveTab(e.target.id)} active={activeTab === "2"} id="2">
-								Trunk Flow
-							</Tab>
-							<Tab onClick={e => setActiveTab(e.target.id)} active={activeTab === "3"} id="3">
-								Branch Flow
-							</Tab>
-						</Tabs>
-						{activeTab === "1" && (
-							<Content active>
-								<Flow flow="adhoc" />
-							</Content>
-						)}
-						{activeTab === "2" && (
-							<Content active>
-								<Flow flow="simplified" />
-							</Content>
-						)}
-						{activeTab === "3" && (
-							<Content active>
-								<Flow flow="standard" />
-							</Content>
-						)}
-					</div>
-				</div>
-			</ScrollBox>
-		</div>
+			<div style={{ padding: "20px" }}>
+				<Tabs style={{ marginTop: 0 }}>
+					<Tab onClick={e => setActiveTab(e.target.id)} active={activeTab === "1"} id="1">
+						The Basics
+					</Tab>
+					<Tab onClick={e => setActiveTab(e.target.id)} active={activeTab === "2"} id="2">
+						Trunk Flow
+					</Tab>
+					<Tab onClick={e => setActiveTab(e.target.id)} active={activeTab === "3"} id="3">
+						Branch Flow
+					</Tab>
+				</Tabs>
+				{activeTab === "1" && (
+					<Content active>
+						<Flow flow="adhoc" />
+					</Content>
+				)}
+				{activeTab === "2" && (
+					<Content active>
+						<Flow flow="simplified" />
+					</Content>
+				)}
+				{activeTab === "3" && (
+					<Content active>
+						<Flow flow="standard" />
+					</Content>
+				)}
+			</div>
+		</Dialog>
 	);
 };
 

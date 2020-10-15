@@ -27,7 +27,6 @@ const mapStateToProps = state => {
 		connectivityError: state.connectivity.error,
 		loggedIn: Boolean(state.session.userId),
 		inMaintenanceMode: Boolean(state.session.inMaintenanceMode),
-		team: team,
 		company: team ? state.companies[team.companyId] : undefined,
 		versioning: state.versioning,
 		apiVersioning: state.apiVersioning,
@@ -281,11 +280,15 @@ export default class Container extends React.Component {
 				<div id="oops">
 					<form className="standard-form">
 						<fieldset className="form-body">
-							<div className="outline-box">
+							<div className="border-bottom-box">
 								<p>
-									An unexpected error has occurred. <br />
+									<h3>An unexpected error has occurred. </h3>
 									<br />
-									<a onClick={this.handleClickReload}>Click here</a> to reload this tab.
+									<a onClick={this.handleClickReload}>Click here</a> to reload.
+									<br />
+									<br />
+									If the problem persists please contact{" "}
+									<a href="mailto:support@codestream.com">support@codestream.com</a>
 								</p>
 							</div>
 						</fieldset>

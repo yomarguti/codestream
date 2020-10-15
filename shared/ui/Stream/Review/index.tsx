@@ -512,6 +512,7 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 	return (
 		<>
 			<KebabIcon
+				className="kebab"
 				onClickCapture={e => {
 					e.preventDefault();
 					e.stopPropagation();
@@ -728,25 +729,35 @@ const BaseReview = (props: BaseReviewProps) => {
 				{props.headerError && props.headerError.message && (
 					<div
 						className="color-warning"
-						style={{ display: "flex", padding: "10px 0", whiteSpace: "normal" }}
+						style={{
+							display: "flex",
+							padding: "10px 0",
+							whiteSpace: "normal",
+							alignItems: "flex-start"
+						}}
 					>
 						<Icon name="alert" />
-						<div style={{ paddingLeft: "10px" }}>{props.headerError.message}</div>
-						{canLocateRepo && singleRepo && (
-							<LocateRepoButton
-								repoId={singleRepo.id}
-								repoName={singleRepo.repoName}
-								callback={success => {
-									if (
-										success &&
-										props.onRequiresCheckPreconditions &&
-										typeof props.onRequiresCheckPreconditions === "function"
-									) {
-										props.onRequiresCheckPreconditions(success);
-									}
-								}}
-							></LocateRepoButton>
-						)}
+						<div style={{ paddingLeft: "10px" }}>
+							{props.headerError.message}
+							{canLocateRepo && singleRepo && (
+								<>
+									<br />
+									<LocateRepoButton
+										repoId={singleRepo.id}
+										repoName={singleRepo.repoName}
+										callback={success => {
+											if (
+												success &&
+												props.onRequiresCheckPreconditions &&
+												typeof props.onRequiresCheckPreconditions === "function"
+											) {
+												props.onRequiresCheckPreconditions(success);
+											}
+										}}
+									/>
+								</>
+							)}
+						</div>
 					</div>
 				)}
 
@@ -777,7 +788,12 @@ const BaseReview = (props: BaseReviewProps) => {
 										{props.reviewers!.map(reviewer => {
 											const addThumbsUp = approvedBy[reviewer.id] ? true : false;
 											return (
-												<HeadshotName person={reviewer} highlightMe addThumbsUp={addThumbsUp} />
+												<HeadshotName
+													key={reviewer.id}
+													person={reviewer}
+													highlightMe
+													addThumbsUp={addThumbsUp}
+												/>
 											);
 										})}
 									</MetaDescriptionForTags>
@@ -1046,7 +1062,7 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 				onChange={setText}
 				onSubmit={submit}
 			/>
-			<div style={{ display: "flex" }}>
+			<div style={{ display: "flex", flexWrap: "wrap" }}>
 				<div style={{ opacity: 0.7, paddingTop: "10px" }}>
 					<Checkbox name="change-request" checked={isChangeRequest} onChange={setIsChangeRequest}>
 						Change Request (require for approval)
@@ -1058,7 +1074,7 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 							<span>
 								Submit Comment
 								<span className="keybinding extra-pad">
-									{navigator.appVersion.includes("Macintosh") ? "⌘" : "Alt"} ENTER
+									{navigator.appVersion.includes("Macintosh") ? "⌘" : "Ctrl"} ENTER
 								</span>
 							</span>
 						}
@@ -1228,7 +1244,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 			if (props.collapsed) return null;
 
 			return (
-				<Footer style={{ borderTop: "none", marginTop: 0 }}>
+				<Footer className="replies-to-review" style={{ borderTop: "none", marginTop: 0 }}>
 					{derivedState.replies.length > 0 && <MetaLabel>Activity</MetaLabel>}
 					<RepliesToPost streamId={props.review.streamId} parentPostId={props.review.postId} />
 					{InputContainer && !props.isAmending && (

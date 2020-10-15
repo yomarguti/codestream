@@ -24,6 +24,8 @@ import com.codestream.protocols.webview.EditorNotifications
 import com.codestream.protocols.webview.EditorSelection
 import com.codestream.protocols.webview.WebViewContext
 import com.codestream.review.ReviewDiffFileSystem
+import com.codestream.review.ReviewDiffSide
+import com.codestream.review.ReviewDiffVirtualFile
 import com.codestream.sessionService
 import com.codestream.settings.ApplicationSettingsService
 import com.codestream.settingsService
@@ -59,6 +61,7 @@ import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.DidChangeTextDocumentParams
 import org.eclipse.lsp4j.DidCloseTextDocumentParams
 import org.eclipse.lsp4j.DidOpenTextDocumentParams
+import org.eclipse.lsp4j.DidSaveTextDocumentParams
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent
@@ -107,11 +110,6 @@ class EditorService(val project: Project) {
                     document.addDocumentListener(DocumentSynchronizer())
                 }
             }
-            ApplicationManager.getApplication().invokeLater {
-                GlobalScope.launch {
-                    editor.renderMarkers(getDocumentMarkers(editor.document))
-                }
-            }
         }
     }
 
@@ -133,6 +131,18 @@ class EditorService(val project: Project) {
                         )
                     }
                 }
+            }
+        }
+    }
+
+    fun save(document: Document) {
+        val agentService = project.agentService ?: return
+
+        synchronized(managedDocuments) {
+            if (managedDocuments.contains(document)) {
+                agentService.agent.textDocumentService.didSave(
+                    DidSaveTextDocumentParams(document.textDocumentIdentifier)
+                )
             }
         }
     }
@@ -194,11 +204,19 @@ class EditorService(val project: Project) {
         }
     }
 
-    fun updateMarkers(document: Document) = GlobalScope.launch {
+    fun updateMarkers(document: Document) = ApplicationManager.getApplication().invokeLater {
         val editors = EditorFactory.getInstance().getEditors(document, project)
-        val markers = getDocumentMarkers(document)
-        for (editor in editors) {
-            editor.renderMarkers(markers)
+        val visibleEditors = editors
+            .filter { !it.scrollingModel.visibleArea.isEmpty }
+            .filter {
+                val reviewFile = it.document.file as? ReviewDiffVirtualFile ?: return@filter true
+                reviewFile.side == ReviewDiffSide.RIGHT
+            }
+        if (visibleEditors.isEmpty()) return@invokeLater
+
+        GlobalScope.launch {
+            val markers = getDocumentMarkers(document)
+            visibleEditors.forEach { it.renderMarkers(markers) }
         }
     }
 
@@ -317,7 +335,7 @@ class EditorService(val project: Project) {
                 null,
                 HighlighterTargetArea.EXACT_RANGE
             ).also {
-                if (showGutterIcons && marker.codemark != null) {
+                if (showGutterIcons && (marker.codemark != null || marker.externalContent != null)) {
                     it.gutterIconRenderer = GutterIconRendererImpl(this, marker)
                 }
                 it.isThinErrorStripeMark = true

@@ -39,6 +39,7 @@ const initialState: ContextState = {
 	codemarksFileViewStyle: "inline",
 	codemarksShowArchived: false,
 	codemarksShowResolved: false,
+	codemarksWrapComments: false,
 	showFeedbackSmiley: true,
 	route: { name: Route.NewUser, params: {} },
 	spatialViewShowPRComments: false,
@@ -112,6 +113,8 @@ export function reduceContext(
 			return { ...state, codemarksShowArchived: action.payload };
 		case ContextActionsType.SetCodemarksShowResolved:
 			return { ...state, codemarksShowResolved: action.payload };
+		case ContextActionsType.SetCodemarksWrapComments:
+			return { ...state, codemarksWrapComments: action.payload };
 		case ContextActionsType.SetCurrentReview:
 			return { ...state, currentReviewId: action.payload.reviewId };
 		case ContextActionsType.SetCreatePullRequest:
@@ -123,7 +126,8 @@ export function reduceContext(
 					action.payload.providerId && action.payload.id
 						? {
 								providerId: action.payload.providerId,
-								id: action.payload.id
+								id: action.payload.id,
+								commentId: action.payload.commentId
 						  }
 						: undefined,
 				pullRequestCheckoutBranch: false
@@ -138,8 +142,6 @@ export function reduceContext(
 			return { ...state, startWorkCard: action.payload.card };
 		case ContextActionsType.SetProfileUser:
 			return { ...state, profileUserId: action.payload };
-		case ContextActionsType.SetSpatialViewPRCommentsToggle:
-			return { ...state, spatialViewShowPRComments: action.payload };
 		case ContextActionsType.SetShowFeedbackSmiley:
 			return { ...state, showFeedbackSmiley: action.payload };
 		case ContextActionsType.SetIssueProvider:

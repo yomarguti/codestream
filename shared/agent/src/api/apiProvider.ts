@@ -310,6 +310,7 @@ export interface ApiProvider {
 
 	readonly teamId: string;
 	readonly userId: string;
+	readonly meUser: CSMe | undefined;
 	readonly capabilities: Capabilities;
 	readonly features: CSApiFeatures | undefined;
 	readonly runTimeEnvironment: string | undefined;
@@ -395,7 +396,9 @@ export interface ApiProvider {
 	deleteReview(request: DeleteReviewRequest): Promise<DeleteReviewResponse>;
 
 	fetchReviewDiffs(request: FetchReviewDiffsRequest): Promise<FetchReviewDiffsResponse>;
-	fetchReviewCheckpointDiffs(request: FetchReviewCheckpointDiffsRequest): Promise<FetchReviewCheckpointDiffsResponse>;
+	fetchReviewCheckpointDiffs(
+		request: FetchReviewCheckpointDiffsRequest
+	): Promise<FetchReviewCheckpointDiffsResponse>;
 
 	createChannelStream(request: CreateChannelStreamRequest): Promise<CreateChannelStreamResponse>;
 	createDirectStream(request: CreateDirectStreamRequest): Promise<CreateDirectStreamResponse>;
@@ -422,7 +425,6 @@ export interface ApiProvider {
 	fetchCompanies(request: FetchCompaniesRequest): Promise<FetchCompaniesResponse>;
 	getCompany(request: GetCompanyRequest): Promise<GetCompanyResponse>;
 
-	convertUserIdToCodeStreamUserId(id: string): string;
 	fetchUsers(request: FetchUsersRequest): Promise<FetchUsersResponse>;
 	getUser(request: GetUserRequest): Promise<GetUserResponse>;
 	inviteUser(request: InviteUserRequest): Promise<InviteUserResponse>;

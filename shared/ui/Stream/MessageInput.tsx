@@ -83,6 +83,7 @@ interface Props extends ConnectedProps {
 	quotePost?: QuotePost;
 	shouldShowRelatableCodemark?(codemark: CodemarkPlus): boolean;
 	onChange?(text: string, formatCode: boolean): any;
+	onKeypress?(event: React.KeyboardEvent): any;
 	updateTeamTag?(team: any, tag: any): any;
 	onChangeSelectedTags?(tag: any): any;
 	onEmptyUpArrow?(event: React.KeyboardEvent): any;
@@ -573,6 +574,8 @@ export class MessageInput extends React.Component<Props, State> {
 			this.setState({ isPreviewing: false });
 			this.props.onDismiss();
 		}
+
+		if (this.props.onKeypress) this.props.onKeypress(event);
 	};
 
 	// the keypress handler for tracking up and down arrow
@@ -692,22 +695,6 @@ export class MessageInput extends React.Component<Props, State> {
 		}
 	};
 
-	buildCodemarkMenuOld = () => {
-		if (!this.state.codemarkOpen) return null;
-
-		const menuItems = [
-			{ label: "Attach Codemark...", action: "attach" },
-			{ label: "Post as reply to Codemark...", action: "reply" }
-		];
-		return (
-			<Menu
-				items={menuItems}
-				action={this.codemarkMenuAction}
-				target={this.state.codemarkMenuTarget}
-			/>
-		);
-	};
-
 	buildCodemarkMenu = () => {
 		if (!this.state.codemarkOpen) return null;
 
@@ -717,6 +704,8 @@ export class MessageInput extends React.Component<Props, State> {
 		];
 
 		const { codemarks = [] } = this.props;
+		if (codemarks.length === 0) return null;
+
 		menuItems = menuItems.concat(
 			codemarks
 				.sort((a, b) => b.createdAt - a.createdAt)
@@ -751,12 +740,6 @@ export class MessageInput extends React.Component<Props, State> {
 				})
 				.filter(Boolean)
 		);
-		if (codemarks.length === 0) {
-			menuItems = menuItems.concat(
-				{ label: "-" },
-				{ label: "No Codemarks! FIXME", action: "more" }
-			);
-		}
 		// menuItems = menuItems.concat({ label: "-" }, { label: "Show More...", action: "more" });
 		return (
 			<Menu
@@ -1130,7 +1113,7 @@ export class MessageInput extends React.Component<Props, State> {
 							autoFocus={true}
 						/>
 					)}
-					{this.props.relatedCodemarkIds && (
+					{this.props.relatedCodemarkIds && this.props.codemarks.length > 0 && (
 						<Icon
 							key="codestream"
 							name="codestream"
@@ -1190,6 +1173,7 @@ export class MessageInput extends React.Component<Props, State> {
 	}
 }
 
+const EMPTY_ARRAY = [];
 const mapStateToProps = (
 	state: CodeStreamState,
 	props: Omit<Props, keyof ConnectedProps>
@@ -1200,7 +1184,7 @@ const mapStateToProps = (
 		currentTeam,
 		currentUserId: state.session.userId!,
 		teammates: getTeamMembers(state),
-		codemarks: codemarkSelectors.getTypeFilteredCodemarks(state) || [],
+		codemarks: codemarkSelectors.getTypeFilteredCodemarks(state) || EMPTY_ARRAY,
 		isInVscode: state.ide.name === "VSC",
 		teamTags: Boolean(props.withTags) ? getTeamTagsArray(state) : emptyArray,
 		channelStreams: getChannelStreamsForTeam(state, state.context.currentTeamId),

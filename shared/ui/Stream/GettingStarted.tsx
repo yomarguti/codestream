@@ -19,6 +19,7 @@ import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import { PanelHeader } from "../src/components/PanelHeader";
 import ScrollBox from "./ScrollBox";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { getSidebarLocation } from "../store/editorContext/reducer";
 
 const Step = styled.div`
 	position: relative;
@@ -152,11 +153,9 @@ export const STEPS = [
 	},
 	{
 		id: "createReview",
-		// title: "Ask for feedback",
-		// subtext: "on your work-in-progress, or request a formal code review.",
-		title: "Request a Code Review",
+		title: "Request Feedback",
 		subtext: "to get feedback on your work-in-progress, or final code review.",
-		done: "Requested a Code Review",
+		done: "Requested Feedback",
 		pulse: "global-nav-plus-label",
 		video: "https://www.youtube.com/watch?v=2AyqT4z5Omc",
 		panel: WebviewPanels.NewReview,
@@ -179,7 +178,7 @@ export const STEPS = [
 		done: "Invited teammates",
 		pulse: "global-nav-team-label",
 		video: "https://www.youtube.com/watch?v=h5KI3svlq-0",
-		panel: WebviewPanels.People,
+		modal: WebviewModals.Invite,
 		isComplete: user => user.numUsersInvited > 0
 	},
 	{
@@ -217,7 +216,8 @@ export function GettingStarted(props: GettingStartedProps) {
 		return {
 			todo: STEPS.filter(step => !step.isComplete(user, state)),
 			completed: STEPS.filter(step => step.isComplete(user, state)),
-			kickstartEnabled: false //isFeatureEnabled(state, "kickstart")
+			kickstartEnabled: false, //isFeatureEnabled(state, "kickstart")
+			sidebarLocation: getSidebarLocation(state)
 		};
 	}, shallowEqual);
 
@@ -262,7 +262,10 @@ export function GettingStarted(props: GettingStartedProps) {
 			<ScrollBox>
 				<div className="vscroll">
 					<Root>
-						<ComposeArea id="compose-gutter" />
+						<ComposeArea
+							side={derivedState.sidebarLocation === "right" ? "right" : "left"}
+							id="compose-gutter"
+						/>
 						{derivedState.kickstartEnabled ? (
 							<Tabs>
 								<Tab onClick={handleClickTab} active={active === "0"} id="0">

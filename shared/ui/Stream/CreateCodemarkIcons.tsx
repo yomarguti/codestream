@@ -23,7 +23,8 @@ import {
 	getCurrentSelection,
 	getVisibleRanges,
 	getLine0ForEditorLine,
-	getVisibleLineCount
+	getVisibleLineCount,
+	getSidebarLocation
 } from "../store/editorContext/reducer";
 import { setEditorContext, changeSelection } from "../store/editorContext/actions";
 import { CodeStreamState } from "../store";
@@ -101,7 +102,8 @@ export const CreateCodemarkIcons = (props: Props) => {
 			openIconsOnLine,
 			composeCodemarkActive: context.composeCodemarkActive,
 			activePanel,
-			activePanelName: WebviewPanelNames[activePanel]
+			activePanelName: WebviewPanelNames[activePanel],
+			sidebarLocation: getSidebarLocation(state)
 		};
 	};
 
@@ -193,11 +195,14 @@ export const CreateCodemarkIcons = (props: Props) => {
 		}
 
 		dispatch(setComposeCodemarkActive(type));
-		dispatch(
-			setNewPostEntry(
-				postEntry || derivedState.activePanelName || `unknown: ${derivedState.activePanel}`
-			)
-		);
+		let postEntryName = postEntry || derivedState.activePanelName;
+		if (!postEntryName && derivedState.activePanel === "sidebar") {
+			postEntryName = "Hover Icons";
+		}
+		if (!postEntryName) {
+			postEntryName = `unknown: ${derivedState.activePanel}`;
+		}
+		dispatch(setNewPostEntry(postEntryName));
 		dispatch(setCurrentCodemark());
 	};
 	const mapLine0ToVisibleRange = fromLineNum0 => {
@@ -220,8 +225,47 @@ export const CreateCodemarkIcons = (props: Props) => {
 		// we only add the title properties (which add tooltips)
 		// when you mouse over them for performance reasons. adding
 		// tool tips on each one slowed things down a lot. -Pez
-		const { currentReviewId, currentPullRequestId } = derivedState;
+		const { currentReviewId, currentPullRequestId, sidebarLocation } = derivedState;
 		const showNonComments = !currentReviewId && !currentPullRequestId;
+
+		let icons = [
+			{
+				key: "comment",
+				title: ComposeTitles.comment,
+				codemarkType: CodemarkType.Comment,
+				offset: [-3, 10],
+				isVisible: () => true
+			},
+			{
+				key: "issue",
+				title: ComposeTitles.issue,
+				codemarkType: CodemarkType.Issue,
+				offset: [-3, 10],
+				isVisible: () => showNonComments
+			},
+			// {
+			// 	key: "thumbsup",
+			// 	title: ComposeTitles.react,
+			// 	codemarkType: CodemarkType.Reaction,
+			// 	offset: [3, 10],
+			// 	isVisible: () => true
+			// },
+			{
+				key: "link",
+				title: ComposeTitles.link,
+				codemarkType: CodemarkType.Link,
+				offset: [-3, 10],
+				isVisible: () => showNonComments
+			}
+		];
+		let right = "";
+		if (sidebarLocation === "left") {
+			icons.reverse();
+			right = "0px";
+		}
+		const shownIcons = icons.filter(_ => _.isVisible());
+		const width = `${shownIcons.length * 40}px`;
+
 		return (
 			<div
 				onMouseEnter={() => onMouseEnterHoverIcon(lineNum0)}
@@ -233,52 +277,23 @@ export const CreateCodemarkIcons = (props: Props) => {
 					onebutton: props.onebutton
 				})}
 				key={lineNum0}
-				style={{ top }}
+				style={{ top: top, right: right, width: width }}
 			>
 				{(hover || open) && (
 					<>
-						<Icon
-							key="comment"
-							onClick={e => handleClickPlus(e, CodemarkType.Comment, lineNum0)}
-							name="comment"
-							title={ComposeTitles.comment}
-							placement="bottomLeft"
-							align={{ offset: [-3, 10] }}
-							delay={1}
-						/>
-						{showNonComments && (
-							<Icon
-								onClick={e => handleClickPlus(e, CodemarkType.Issue, lineNum0)}
-								name="issue"
-								key="issue"
-								title={ComposeTitles.issue}
-								placement="bottomLeft"
-								align={{ offset: [-3, 10] }}
-								delay={1}
-							/>
-						)}
-						{false && (
-							<Icon
-								onClick={e => handleClickPlus(e, CodemarkType.Reaction, lineNum0)}
-								name="thumbsup"
-								key="thumbsup"
-								title={ComposeTitles.react}
-								placement="bottomLeft"
-								align={{ offset: [3, 10] }}
-								delay={1}
-							/>
-						)}
-						{showNonComments && (
-							<Icon
-								onClick={e => handleClickPlus(e, CodemarkType.Link, lineNum0)}
-								name="link"
-								key="link"
-								title={ComposeTitles.link}
-								placement="bottomLeft"
-								align={{ offset: [-3, 10] }}
-								delay={1}
-							/>
-						)}
+						{shownIcons.map(icon => {
+							return (
+								<Icon
+									key={icon.key}
+									onClick={e => handleClickPlus(e, icon.codemarkType, lineNum0)}
+									name={icon.key}
+									title={icon.title}
+									placement="bottomLeft"
+									align={{ offset: [-3, 10] }}
+									delay={1}
+								/>
+							);
+						})}
 					</>
 				)}
 			</div>
@@ -329,7 +344,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 			return renderIconRow(iconsOnLine0, top, false, false);
 		// suppress compose icon, editor selections is 1 when just cursor is in file
 		else return renderIconRow(iconsOnLine0, top, false, true);
-	} else {
+	} else if (false && (derivedState.currentPullRequestId || derivedState.currentReviewId)) {
 		// const heightPerLine = (window.innerHeight - 22) / (numLinesVisible + 2);
 		return (
 			<>
@@ -342,5 +357,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 				})}
 			</>
 		);
+	} else {
+		return null;
 	}
 };

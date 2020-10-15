@@ -3,7 +3,11 @@ package com.codestream
 import com.codestream.agent.ModuleListenerImpl
 import com.codestream.editor.EditorFactoryListenerImpl
 import com.codestream.editor.FileEditorManagerListenerImpl
+import com.codestream.protocols.webview.EditorNotifications
+import com.codestream.editor.VirtualFileListenerImpl
 import com.codestream.protocols.webview.FocusNotifications
+import com.codestream.protocols.webview.Sidebar
+import com.codestream.protocols.webview.SidebarLocation
 import com.codestream.settings.ApplicationSettingsService
 import com.codestream.system.CodeStreamDiffURLStreamHandler
 import com.codestream.workaround.ToolWindowManagerWorkaround
@@ -16,7 +20,10 @@ import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
+import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.wm.ToolWindow
+import com.intellij.openapi.wm.ToolWindowAnchor
+import com.intellij.openapi.wm.ToolWindowType
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.openapi.wm.ex.ToolWindowManagerListener
 import com.intellij.util.ui.UIUtil
@@ -46,6 +53,7 @@ class CodeStreamComponent(val project: Project) : Disposable {
         CodeStreamDiffURLStreamHandler
         initDebugMonitors()
         initEditorFactoryListener()
+        initVirtualFileListener()
         initMessageBusSubscriptions()
         showToolWindowOnFirstRun()
         ApplicationManager.getApplication().invokeLater {
@@ -73,6 +81,13 @@ class CodeStreamComponent(val project: Project) : Disposable {
         if (project.isDisposed) return
         EditorFactory.getInstance().addEditorFactoryListener(
             EditorFactoryListenerImpl(project), this
+        )
+    }
+
+    private fun initVirtualFileListener() {
+        if (project.isDisposed) return
+        VirtualFileManager.getInstance().addVirtualFileListener(
+            VirtualFileListenerImpl(project), this
         )
     }
 
@@ -109,6 +124,7 @@ class CodeStreamComponent(val project: Project) : Disposable {
                     override fun stateChanged() {
                         isVisible = toolWindow?.isVisible ?: false
                         updateWebViewFocus()
+                        updateSidebar()
                     }
                 }
             )
@@ -166,6 +182,28 @@ class CodeStreamComponent(val project: Project) : Disposable {
         project.webViewService?.postNotification(
             FocusNotifications.DidChange(isFocused && isVisible)
         )
+    }
+
+    private var oldSidebarLocation: SidebarLocation? = null
+    private fun updateSidebar() {
+        val tw = toolWindow ?: return
+        val sidebarLocation = when (tw.type) {
+            ToolWindowType.FLOATING -> SidebarLocation.FLOATING
+            ToolWindowType.WINDOWED -> SidebarLocation.FLOATING
+            else -> when(tw.anchor?.toString()) {
+                ToolWindowAnchor.LEFT.toString() -> SidebarLocation.LEFT
+                ToolWindowAnchor.RIGHT.toString() -> SidebarLocation.RIGHT
+                ToolWindowAnchor.TOP.toString() -> SidebarLocation.TOP
+                ToolWindowAnchor.BOTTOM.toString() -> SidebarLocation.BOTTOM
+                else -> SidebarLocation.FLOATING
+            }
+        }
+        if (sidebarLocation != oldSidebarLocation) {
+            project.webViewService?.postNotification(
+                EditorNotifications.DidChangeLayout(Sidebar(sidebarLocation))
+            )
+            oldSidebarLocation = sidebarLocation
+        }
     }
 
     override fun dispose() {

@@ -4,22 +4,21 @@ import { Headshot, PRHeadshot } from "../src/components/Headshot";
 import { PRHeadshotName } from "../src/components/HeadshotName";
 import { PullRequestReactButton } from "./PullRequestReactions";
 import { TextButton } from "../src/components/controls/InlineMenu";
-import { WidthBreakpoint } from "./PullRequest";
 import { Tabs, Tab } from "../src/components/Tabs";
 
 export const PENDING_BORDER_COLOR = "rgba(249, 197, 19, 0.6)";
 export const PENDING_BACKGROUND_COLOR = "rgba(255, 223, 0, 0.1)";
 
 export const PRHeader = styled.div`
-	margin: 45px 15px 0 20px;
+	margin: 35px 15px 0 20px;
 	.open-external {
 		margin-left: 5px;
 		vertical-align: 3px;
 		font-size: 12px;
-		display: none;
+		visibility: hidden;
 	}
 	&:hover .open-external {
-		display: inline-block;
+		visibility: visible;
 	}
 	${Tabs} {
 		margin: 10px -15px 0 -20px;
@@ -49,6 +48,9 @@ export const PRTitle = styled.div`
 			color: var(--text-color-info);
 			opacity: 1;
 		}
+	}
+	@media only screen and (max-width: 500px) {
+		font-size: 18px;
 	}
 `;
 
@@ -109,7 +111,7 @@ export const PRSelectorButtons = styled.div`
 	overflow: hidden;
 	> span {
 		display: inline-block;
-		padding: 5px 10px;
+		padding: 5px;
 		&.selected,
 		&:hover {
 			background: var(--base-background-color);
@@ -157,6 +159,7 @@ export const PRStatusButton = styled(Button)`
 
 export const PRStatusMessage = styled.div`
 	flex-grow: 10;
+	word-break: break-word;
 `;
 
 export const PRAuthor = styled.span`
@@ -247,6 +250,9 @@ export const PRCommentCard = styled.div`
 	border-radius: 5px;
 	padding: 10px 15px;
 	margin-left: 60px;
+	&.no-headshot {
+		margin-left: 0;
+	}
 	z-index: 2;
 	h1 {
 		font-size: 15px;
@@ -297,6 +303,16 @@ export const PRCommentCard = styled.div`
 	&.green-border:before {
 		border-color: #7aba5d;
 	}
+`;
+
+export const PRCard = styled.div`
+	padding: 15px;
+	margin: 15px;
+	border: 1px solid;
+	border-color: var(--base-border-color);
+	border-radius: 5px;
+	font-family: var(--font-family);
+	background: var(--base-background-color);
 `;
 
 export const PRActionCommentCard = styled.div`
@@ -384,7 +400,9 @@ export const PRReaction = styled.div`
 	padding: 5px 15px;
 	border-right: 1px solid var(--base-border-color);
 	cursor: pointer;
+	white-space: nowrap;
 	p {
+		white-space: nowrap;
 		display: inline-block;
 		margin: 0 2px 0 0;
 		padding: 0;
@@ -472,6 +490,11 @@ export const PRThreadedCommentCard = styled.div`
 		border: 1px solid var(--base-border-color);
 		border-radius: 5px;
 	}
+	@media only screen and (max-width: ${props => props.theme.breakpoint}) {
+		${PRReactions} {
+			margin-left: -5px;
+		}
+	}
 `;
 
 export const PRConversation = styled.div`
@@ -486,6 +509,10 @@ export const PRConversation = styled.div`
 		height: 100%;
 		width: 2px;
 		background: var(--base-border-color);
+	}
+
+	time {
+		white-space: nowrap;
 	}
 `;
 
@@ -517,7 +544,7 @@ export const PRTimelineItem = styled.div`
 		margin-left: 5px;
 		margin-right: 0;
 	}
-	.icon {
+	.icon:not(.no-flex) {
 		flex-grow: 0;
 		flex-shrink: 0;
 		margin-right: 10px;
@@ -573,6 +600,9 @@ export const PRTimelineItem = styled.div`
 	.left-pad {
 		padding-left: 5px;
 	}
+	.break-word {
+		word-break: break-word;
+	}
 `;
 
 export const PRTimelineItemBody = styled.div`
@@ -584,6 +614,23 @@ export const PRTimelineItemBody = styled.div`
 	}
 `;
 
+export const PRCodeCommentBody = styled.div`
+	font-family: var(--font-family);
+	min-height: 30px;
+	margin: 0 0 20px 0;
+	position: relative;
+	padding-left: 40px;
+	@media only screen and (max-width: ${props => props.theme.breakpoint}) {
+		padding-left: 0;
+		${PRHeadshot}, ${Headshot} {
+			display: none;
+		}
+		${PRReactions} {
+			margin-left: 0;
+		}
+	}
+`;
+
 export const PRContent = styled.div`
 	padding: 0 20px 20px 20px;
 	display: flex;
@@ -592,7 +639,8 @@ export const PRContent = styled.div`
 		flex-grow: 10;
 		max-width: 75vw;
 	}
-	@media only screen and (max-width: 630px) {
+		@media only screen and (max-width: ${props => props.theme.breakpoint}) {
+
 		flex-direction: column;
 		.main-content {
 			order: 2;
@@ -669,7 +717,7 @@ export const PRSidebar = styled.div`
 	flex-grow: 0;
 	display: flex;
 	flex-direction: column;
-	@media only screen and (max-width: 630px) {
+	@media only screen and (max-width: ${props => props.theme.breakpoint}) {
 		flex-direction: row;
 		flex-wrap: wrap;
 		width: auto;
@@ -705,6 +753,7 @@ export const PRCommentHeader = styled.div`
 	border-bottom: 1px solid var(--base-border-color);
 	background: var(--base-background-color);
 	display: flex;
+	flex-wrap: wrap;
 	align-items: top;
 	border-radius: 4px 4px 0 0;
 `;
@@ -715,6 +764,7 @@ export const PRCommentBody = styled.div`
 
 export const PRThreadedCommentHeader = styled.div`
 	display: flex;
+	flex-wrap: wrap;
 	align-items: top;
 	margin-bottom: 8px;
 	// padding: 10px 15px 10px 15px;
@@ -741,12 +791,10 @@ export const PRStatusIcon = styled.div`
 
 export const ButtonRow = styled.div`
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
-	button + button {
-		margin-left: 10px;
-	}
 	button {
-		margin-top: 10px;
+		margin: 10px 10px 0 0;
 	}
 `;
 
@@ -820,13 +868,6 @@ export const PRCodeCommentPatch = styled.div`
 	}
 `;
 
-export const PRCodeCommentBody = styled.div`
-	min-height: 30px;
-	margin: 0 0 20px 0;
-	position: relative;
-	padding-left: 40px;
-`;
-
 export const PRCodeComment = styled.div`
 	flex-grow: 10;
 	max-width: 100%;
@@ -847,6 +888,7 @@ export const PRCodeComment = styled.div`
 `;
 
 export const PRCodeCommentReply = styled.div`
+	font-family: var(--font-family);
 	position: relative;
 	#input-div {
 		height: 28px !important; // 2px for the border, 30px matches headshot height
@@ -869,7 +911,7 @@ export const PRStatus = styled.div`
 	align-items: center;
 	margin: 10px 0 20px 0;
 
-	@media only screen and (max-width: 450px) {
+	@media only screen and (max-width: 500px) {
 		flex-wrap: wrap;
 		${PRStatusMessage} {
 			order: 1;
@@ -951,7 +993,7 @@ export const PRCloneURL = styled.div`
 
 export const PRCloneURLWrapper = styled.div`
 	display: flex;
-	@media only screen and (max-width: 630px) {
+	@media only screen and (max-width: ${props => props.theme.breakpoint}) {
 		flex-direction: column;
 		${PRCloneURLButtons} {
 			margin-bottom: 1em;
@@ -1020,5 +1062,111 @@ export const PRIAmRequested = styled.div`
 	button {
 		border-radius: 5px;
 		margin-left: auto;
+	}
+`;
+
+export const PRErrorBox = styled.div`
+	margin: 10px 10px 20px 0;
+	border: 1px solid ${PENDING_BORDER_COLOR};
+	background: ${PENDING_BACKGROUND_COLOR};
+	border-radius: 5px;
+	padding: 10px;
+	display: flex;
+	align-items: center;
+	.icon.alert {
+		display: inline-block;
+		transform: scale(1.5);
+		margin: 0 10px;
+	}
+	.message {
+		margin-left: 10px;
+	}
+`;
+
+export const PRCommentsInPatch = styled.div`
+	border-top: 1px solid var(--base-border-color);
+	border-bottom: 1px solid var(--base-border-color);
+	${PRReactions} {
+		border: none;
+		margin: -5px 0 15px 35px;
+	}
+	${PRReaction} {
+		padding: 1px 8px;
+		margin: 0 5px 5px;
+		border: 1px solid var(--base-border-color);
+		border-radius: 5px;
+	}
+	${PRCard} {
+		max-width: min(600px, calc(100vw - 80px));
+	}
+	@media only screen and (max-width: ${props => props.theme.breakpoint}) {
+		${PRReactions} {
+			margin-left: -5px;
+		}
+	}
+`;
+export const PRCodeCommentReplyInput = styled.div`
+	margin: 0 0 0 40px;
+	border: 1px solid var(--base-border-color);
+	@media only screen and (max-width: ${props => props.theme.breakpoint}) {
+		margin-left: 0;
+	}
+`;
+
+export const PRCodeCommentWrapper = styled.div`
+	@media only screen and (max-width: ${props => props.theme.breakpoint}) {
+		${PRHeadshot} {
+			display: none;
+		}
+	}
+`;
+
+export const PRKebabIcon = styled.span`
+	background: var(--base-background-color);
+	padding: 0 5px;
+	display: inline-block;
+	marginleft: 5px;
+	cursor: pointer;
+	&:hover {
+		background: var(--app-background-color-hover);
+	}
+`;
+
+export const PRError = styled.div`
+	padding: 15px 15px 10px 15px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	button {
+		white-space: nowrap;
+	}
+	> .icon {
+		flex-grow: 0;
+		flex-shrink: 0;
+		display: inline-block;
+		margin-right: 15px;
+		transform: scale(1.5);
+	}
+	> div {
+		flex-grow: 10;
+		display: flex;
+		align-items: center;
+		button {
+			margin-left: auto;
+		}
+	}
+	strong {
+		font-weight: normal;
+		color: var(--text-color-highlight);
+	}
+	a {
+		text-decoration: none;
+		color: var(--text-color-highlight);
+		&:hover {
+			color: var(--text-color-info) !important;
+		}
+	}
+	.spacer {
+		// height: 10px;
 	}
 `;

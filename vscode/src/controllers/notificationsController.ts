@@ -4,7 +4,10 @@ import { Disposable, MessageItem, window } from "vscode";
 import { Post, PostsChangedEvent } from "../api/session";
 import { Container } from "../container";
 import { CodemarkPlus, ReviewPlus } from "../protocols/agent/agent.protocol";
+import { Functions } from "../system";
 import { vslsUrlRegex } from "./liveShareController";
+
+type ToastType = "PR" | "Review" | "Codemark";
 
 export class NotificationsController implements Disposable {
 	private _disposable: Disposable;
@@ -28,6 +31,8 @@ export class NotificationsController implements Disposable {
 		for (const pullRequestNotification of e.pullRequestNotifications()) {
 			const actions: MessageItem[] = [{ title: "Open" }];
 
+			Container.agent.telemetry.track("Toast Notification", { Content: "PR" });
+
 			const result = await window.showInformationMessage(
 				`Pull Request "${pullRequestNotification.pullRequest.title}" ${pullRequestNotification.queryName}`,
 				...actions
@@ -38,6 +43,7 @@ export class NotificationsController implements Disposable {
 					pullRequestNotification.pullRequest.providerId,
 					pullRequestNotification.pullRequest.id
 				);
+				Container.agent.telemetry.track("Toast Clicked", { Content: "PR" });
 			}
 
 			return;
@@ -50,11 +56,12 @@ export class NotificationsController implements Disposable {
 
 		if (!user.wantsToastNotifications()) return;
 
-		for (const post of e.items()) {
-			// Don't show notifications for deleted, edited (if edited it isn't the first time its been seen), has replies (same as edited), has reactions, or was posted by the current user
-			if (!post.isNew() || post.senderId === user.id) {
-				continue;
-			}
+		// Don't show notifications for deleted, edited (if edited it isn't the first time its been seen),
+		// has replies (same as edited), has reactions, or was posted by the current user
+		const items = Functions.uniqueBy(e.items(), (_: Post) => _.id).filter(
+			_ => _.senderId !== user.id && _.isNew()
+		);
+		for (const post of items) {
 			let codemark;
 			let review;
 			const parentPost = await post.parentPost();
@@ -122,16 +129,22 @@ export class NotificationsController implements Disposable {
 		// TODO: Need to better deal with formatted text for notifications
 		const actions: MessageItem[] = [{ title: "Open" }];
 
+		const toastContentType: ToastType = codemark ? "Codemark" : "Review";
+
+		Container.agent.telemetry.track("Toast Notification", { Content: toastContentType });
+
 		const result = await window.showInformationMessage(
 			`${sender !== undefined ? sender.name : "Someone"}${colon} ${text}`,
 			...actions
 		);
+
 		if (result === actions[0]) {
 			if (codemark) {
 				Container.webview.openCodemark(codemark.id);
 			} else if (review) {
 				Container.webview.openReview(review.id);
 			}
+			Container.agent.telemetry.track("Toast Clicked", { Content: toastContentType });
 		}
 	}
 }

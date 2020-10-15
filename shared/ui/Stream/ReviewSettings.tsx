@@ -10,6 +10,7 @@ import { UpdateTeamSettingsRequestType } from "@codestream/protocols/agent";
 import { getTeamSetting } from "../store/teams/reducer";
 import ScrollBox from "./ScrollBox";
 import { Dialog } from "../src/components/Dialog";
+import { Link } from "./Link";
 
 export const ReviewSettings = () => {
 	const dispatch = useDispatch();
@@ -49,12 +50,12 @@ export const ReviewSettings = () => {
 	};
 
 	return (
-		<Dialog title="Code Review Settings" onClose={() => dispatch(closeModal())}>
+		<Dialog title="Feedback Request Settings" onClose={() => dispatch(closeModal())}>
 			<ScrollBox>
 				<form className="standard-form vscroll">
 					<fieldset className="form-body">
 						<div id="controls">
-							<label>When a review has multiple assigned reviewers</label>
+							<label>When a feedback request has multiple assigned reviewers</label>
 							<RadioGroup
 								name="approval"
 								selectedValue={loadingApproval || derivedState.reviewApproval}
@@ -70,7 +71,7 @@ export const ReviewSettings = () => {
 								</Radio>
 							</RadioGroup>
 							<div style={{ height: "20px" }}></div>
-							<label>Review Assignment: Suggested Reviewers</label>
+							<label>Suggested Reviewers</label>
 							<RadioGroup
 								name="delivery"
 								selectedValue={loadingAssignment || derivedState.reviewAssignment}
@@ -98,9 +99,9 @@ export const ReviewSettings = () => {
 							<p>&nbsp;</p>
 
 							<p>
-								<a href="https://docs.codestream.com/userguide/features/managing-the-team/#code-review-assignment--approval">
-									Learn more about Code Review Assignment
-								</a>
+								<Link href="https://docs.codestream.com/userguide/features/managing-the-team/#code-review-assignment--approval">
+									Learn more about Feedback Request Assignment
+								</Link>
 							</p>
 						</div>
 					</fieldset>

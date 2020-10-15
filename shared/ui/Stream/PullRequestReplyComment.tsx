@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
 import styled from "styled-components";
-import { PRButtonRow, PRCodeCommentReply } from "./PullRequestComponents";
+import { PRButtonRow, PRCodeCommentReply, PRCodeCommentReplyInput } from "./PullRequestComponents";
 import { HostApi } from "../webview-api";
 import {
 	ExecuteThirdPartyTypedType,
@@ -17,7 +17,7 @@ import { api } from "../store/providerPullRequests/actions";
 
 interface Props {
 	pr: FetchThirdPartyPullRequestPullRequest;
-	setIsLoadingMessage: Function;
+	mode?: string;
 	fetch: Function;
 	className?: string;
 	databaseId: string;
@@ -26,17 +26,8 @@ interface Props {
 }
 
 export const PullRequestReplyComment = styled((props: Props) => {
-	const { pr, fetch, setIsLoadingMessage, databaseId } = props;
+	const { pr, fetch, databaseId } = props;
 	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
-		const currentUser = state.users[state.session.userId!] as CSMe;
-		return {
-			currentUser,
-			currentPullRequestId: state.context.currentPullRequest
-				? state.context.currentPullRequest.id
-				: undefined
-		};
-	});
 
 	const [text, setText] = useState("");
 	const [open, setOpen] = useState(props.isOpen);
@@ -49,7 +40,15 @@ export const PullRequestReplyComment = styled((props: Props) => {
 
 			HostApi.instance.track("PR Comment Added", {
 				Host: pr.providerId,
-				"Comment Type": "Review Reply"
+				"Comment Type": "Single Reply",
+				"Diff View":
+					props.mode === "files"
+						? "List View"
+						: props.mode === "hunks"
+						? "Diff Hunks"
+						: props.mode === "tree"
+						? "Tree View"
+						: "Unknown"
 			});
 
 			await dispatch(
@@ -100,14 +99,7 @@ export const PullRequestReplyComment = styled((props: Props) => {
 		<PRCodeCommentReply>
 			<PRHeadshot size={30} person={pr.viewer} />
 
-			<div
-				style={{
-					margin: "0 0 0 40px",
-					border: "1px solid var(--base-border-color)"
-				}}
-				className={open ? "open-comment" : ""}
-				onClick={() => setOpen(true)}
-			>
+			<PRCodeCommentReplyInput className={open ? "open-comment" : ""} onClick={() => setOpen(true)}>
 				<MessageInput
 					multiCompose
 					text={text}
@@ -116,7 +108,7 @@ export const PullRequestReplyComment = styled((props: Props) => {
 					onSubmit={handleComment}
 					__onDidRender={stuff => props.__onDidRender(stuff)}
 				/>
-			</div>
+			</PRCodeCommentReplyInput>
 			{open && (
 				<PRButtonRow>
 					<Button variant="secondary" onClick={handleCancelComment}>

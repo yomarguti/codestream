@@ -25,7 +25,8 @@ import { FilterQuery } from "../store/preferences/types";
 import { getSavedSearchFilters } from "../store/preferences/reducer";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { Button } from "../src/components/Button";
-import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
+import { closePanel } from "../store/context/actions";
+import { Dialog } from "../src/components/Dialog";
 
 const SearchBar = styled.div`
 	display: flex;
@@ -144,6 +145,7 @@ const RESULTS_PAGE_SIZE = 50;
 
 interface DispatchProps {
 	setUserPreference: (...args: Parameters<typeof setUserPreference>) => Promise<any>;
+	closePanel: Function;
 }
 
 interface ConnectedProps {
@@ -180,6 +182,7 @@ interface State {
 	displayItems: AnyObject;
 	totalItems: number;
 	resultsPage: number;
+	maximized: boolean;
 }
 
 export class SimpleFilterSearchPanel extends Component<Props, State> {
@@ -209,7 +212,8 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 			filters: { text: "" },
 			displayItems: {},
 			totalItems: 0,
-			resultsPage: 1
+			resultsPage: 1,
+			maximized: false
 		};
 	}
 
@@ -271,7 +275,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 							})}
 						>
 							<div className="header" onClick={e => this.toggleSection(e, section)}>
-								<Icon name="chevron-right" className="triangle-right" />
+								<Icon name="chevron-right-thin" className="triangle-right" />
 								<span className="clickable">
 									{sectionLabel} ({results.length})
 								</span>
@@ -282,7 +286,11 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				{this.state.expanded[section] && (
 					<>
 						{displayResults.map(r => (
-							<SearchResult result={r} query={this.state.filters.text} />
+							<SearchResult
+								result={r}
+								query={this.state.filters.text}
+								fullTitle={this.state.maximized}
+							/>
 						))}
 						{hasMore && (
 							<tr>
@@ -341,6 +349,10 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 		if (text.match(/\b(is|type):comment\b/)) {
 			filters.type = "comment";
 			text = text.replace(/\s*(is|type):comment\s*/, " ");
+		}
+		if (text.match(/\b(is|type):fr\b/)) {
+			filters.type = "review";
+			text = text.replace(/\s*(is|type):fr\s*/, " ");
 		}
 		if (text.match(/\b(is|type):cr\b/)) {
 			filters.type = "review";
@@ -480,6 +492,8 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 		const filters = this.getFilters(query);
 		const { usernameMap } = this.props;
 
+		const q = (filters.text || "").toLocaleLowerCase();
+
 		// sort by most recent first
 		this.props.items.forEach(item => {
 			if (item.deactivated) return null;
@@ -559,7 +573,6 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 			if (filters.createdOn && !sameDay(new Date(item.createdAt), filters.createdOn)) return null;
 
 			const title = item.title;
-			const q = filters.text;
 
 			if (
 				q &&
@@ -757,7 +770,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 
 		const filterItems = [
 			{
-				label: "Open Issues and Code Reviews",
+				label: "Open Issues and Feedback Requests",
 				key: "open",
 				action: () => this.props.setQuery("is:open"),
 				lightningOnly: true
@@ -768,9 +781,9 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				action: () => this.props.setQuery("is:issue author:@me")
 			},
 			{
-				label: "Your Code Reviews",
+				label: "Your Feedback Requests",
 				key: "reviews",
-				action: () => this.props.setQuery("is:cr author:@me "),
+				action: () => this.props.setQuery("is:fr author:@me "),
 				lightningOnly: true
 			},
 			{
@@ -811,13 +824,19 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 
 		// console.log("FILTERS: ", filters);
 		return (
-			<div className="panel full-height reviews-panel">
-				<CreateCodemarkIcons />
+			<Dialog
+				maximizable
+				wide
+				noPadding
+				onMaximize={() => this.setState({ maximized: true })}
+				onMinimize={() => this.setState({ maximized: false })}
+				onClose={() => this.props.closePanel()}
+			>
 				<PanelHeader title="Filter &amp; Search">
 					<SearchBar className="search-bar">
 						<FiltersButton items={filterItems}>
 							Filters
-							<Icon name="chevron-down" />
+							<Icon name="chevron-down-thin" />
 						</FiltersButton>
 						<div className="search-input">
 							<Icon name="search" className="search" />
@@ -850,7 +869,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 								className="input-text control"
 								type="text"
 								onChange={e => this.props.setQuery(e.target.value)}
-								placeholder="Search comments, issues and code reviews"
+								placeholder="Search comments, issues and feedback requests"
 								autoFocus
 							/>
 						</div>
@@ -894,31 +913,38 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 					})}
 					{this.state.savingFilter && this.renderSaveFilter()}
 				</PanelHeader>
-				<ScrollBox>
-					<div className="channel-list vscroll" style={{ paddingTop: "10px" }}>
-						{this.state.totalItems > 0 && (
-							<table style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse" }}>
-								<tbody>
-									{/* the first row sets the width of the columns with table-layout: fixed */}
-									<tr style={{ height: "1px" }}>
-										<td style={{ width: "40px", padding: "0" }}></td>
-										<td style={{ width: "75%", padding: "0" }}></td>
-										<td style={{ width: "25%", padding: "0" }}></td>
-										<td style={{ width: "40px", padding: "0" }}></td>
-									</tr>
-									{this.sections.map(section => {
-										return this.renderSection(section, this.state.displayItems[section] || []);
-									})}
-								</tbody>
-							</table>
-						)}
-						{!this.state.totalItems && (
-							<div className="no-matches">No results match your search.</div>
-						)}
-						<ProTip />
-					</div>
-				</ScrollBox>
-			</div>
+				<div
+					style={{
+						height: this.state.maximized ? "calc(100vh - 100px)" : "calc(100vh - 200px)",
+						overflow: "hidden"
+					}}
+				>
+					<ScrollBox>
+						<div className="channel-list vscroll" style={{ paddingTop: "10px" }}>
+							{this.state.totalItems > 0 && (
+								<table style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse" }}>
+									<tbody>
+										{/* the first row sets the width of the columns with table-layout: fixed */}
+										<tr style={{ height: "1px" }}>
+											<td style={{ width: "40px", padding: "0" }}></td>
+											<td style={{ width: "75%", padding: "0" }}></td>
+											<td style={{ width: "25%", padding: "0" }}></td>
+											<td style={{ width: "40px", padding: "0" }}></td>
+										</tr>
+										{this.sections.map(section => {
+											return this.renderSection(section, this.state.displayItems[section] || []);
+										})}
+									</tbody>
+								</table>
+							)}
+							{!this.state.totalItems && (
+								<div className="no-matches">No results match your search.</div>
+							)}
+							<ProTip />
+						</div>
+					</ScrollBox>
+				</div>
+			</Dialog>
 		);
 	}
 
@@ -928,9 +954,9 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				<div className="getting-started">
 					<div>
 						<p>
-							Code Reviews are the building blocks of your team’s process.{" "}
-							<a href="https://docs.codestream.com/userguide/workflow/review-code/">
-								Learn more about how to use code review.
+							Feedback Requests are the building blocks of your team’s process.{" "}
+							<a href="https://docs.codestream.com/userguide/workflow/feedback-requests/">
+								Learn more about how to use feedback requests.
 							</a>
 						</p>
 					</div>
@@ -978,5 +1004,5 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 };
 
 export default withSearchableItems(
-	connect(mapStateToProps, { setUserPreference })(SimpleFilterSearchPanel)
+	connect(mapStateToProps, { closePanel, setUserPreference })(SimpleFilterSearchPanel)
 );

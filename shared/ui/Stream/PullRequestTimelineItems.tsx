@@ -11,26 +11,25 @@ import {
 	PRTimelineItemBody,
 	PRBranch,
 	PRActionCommentCard,
-	PRCodeCommentBody,
 	PRCodeComment,
 	PRThreadedCommentCard,
-	PRCodeCommentReply,
-	PRThreadedCommentHeader,
-	PRButtonRow,
-	PRCodeCommentPatch
+	PRCodeCommentPatch,
+	PRKebabIcon
 } from "./PullRequestComponents";
 import React, { PropsWithChildren, useCallback, useState } from "react";
 import { PRHeadshot, Headshot } from "../src/components/Headshot";
 import Timestamp from "./Timestamp";
 import Icon from "./Icon";
 import { MarkdownText } from "./MarkdownText";
-import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
+import {
+	FetchThirdPartyPullRequestPullRequest,
+	GetReposScmRequestType
+} from "@codestream/protocols/agent";
 import Tag from "./Tag";
 import { Link } from "./Link";
 import { PRHeadshotName } from "../src/components/HeadshotName";
 import { PRAuthorBadges } from "./PullRequestConversationTab";
 import * as Path from "path-browserify";
-import { Button } from "../src/components/Button";
 import { PullRequestReactButton, PullRequestReactions } from "./PullRequestReactions";
 import { HostApi } from "../webview-api";
 import { useDispatch, useSelector } from "react-redux";
@@ -42,8 +41,12 @@ import { PullRequestMinimizedComment } from "./PullRequestMinimizedComment";
 import { PullRequestPatch } from "./PullRequestPatch";
 import { PullRequestFinishReview } from "./PullRequestFinishReview";
 import { PullRequestEditingComment } from "./PullRequestEditingComment";
-import { PullRequestReplyComment } from "./PullRequestReplyComment";
 import { api } from "../store/providerPullRequests/actions";
+import { PullRequestCodeComment } from "./PullRequestCodeComment";
+import * as path from "path-browserify";
+import { Range } from "vscode-languageserver-types";
+import { EditorRevealRangeRequestType } from "@codestream/protocols/webview";
+import Tooltip from "./Tooltip";
 
 export const GHOST = {
 	login: "ghost",
@@ -71,7 +74,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 	if (!pr || !pr.timelineItems) return null;
 	const dispatch = useDispatch();
 
-	const [isResolving, setIsResolving] = useState(false);
 	const [reviewOption, setReviewOption] = useState("COMMENT");
 	const [reviewOptionText, setReviewOptionText] = useState("");
 	const [openComments, setOpenComments] = useState({});
@@ -173,40 +175,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 		}
 	};
 
-	const handleResolve = async (e, threadId) => {
-		try {
-			setIsResolving(true);
-			await dispatch(
-				api("resolveReviewThread", {
-					threadId: threadId
-				})
-			);
-
-			await props.fetch();
-		} catch (ex) {
-			console.warn(ex);
-		} finally {
-			setIsResolving(false);
-		}
-	};
-
-	const handleUnresolve = async (e, threadId) => {
-		try {
-			setIsResolving(true);
-			await dispatch(
-				api("unresolveReviewThread", {
-					threadId: threadId
-				})
-			);
-
-			await props.fetch();
-		} catch (ex) {
-			console.warn(ex);
-		} finally {
-			setIsResolving(false);
-		}
-	};
-
 	const handleOnChangeReviewOptions = (value: string) => {
 		setReviewOption(value);
 	};
@@ -218,6 +186,8 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 			currentRepo: getProviderPullRequestRepo(state)
 		};
 	});
+
+	const [currentRepoRoot, setCurrentRepoRoot] = React.useState("");
 
 	const timelineNodes = pr.timelineItems.nodes;
 	return (
@@ -481,31 +451,34 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 												}
 											}
 
-											// [BC] not used???
-											// const codeHTML = prettyPrintOne(
-											// 	escapeHtml(comment.diffHunk),
-											// 	extension,
-											// 	startLine
-											// );
-
-											let insertText: Function;
-											let insertNewline: Function;
-											let focusOnMessageInput: Function;
-
-											const __onDidRender = functions => {
-												insertText = functions.insertTextAtCursor;
-												insertNewline = functions.insertNewlineAtCursor;
-												focusOnMessageInput = functions.focus;
-											};
-
-											const quote = text => {
-												if (!insertText) return;
-												handleTextInputFocus(comment.databaseId);
-												focusOnMessageInput &&
-													focusOnMessageInput(() => {
-														insertText && insertText(text.replace(/^/gm, "> "));
-														insertNewline && insertNewline();
+											const openFile = async filePath => {
+												let repoRoot = currentRepoRoot;
+												if (!repoRoot) {
+													const response = await HostApi.instance.send(GetReposScmRequestType, {
+														inEditorOnly: false
 													});
+													if (!response.repositories) return;
+													const currentRepoInfo = response.repositories.find(
+														r => r.id === derivedState.currentRepo!.id
+													);
+													if (currentRepoInfo) {
+														setCurrentRepoRoot(currentRepoInfo.path);
+														repoRoot = currentRepoInfo.path;
+													}
+												}
+
+												const result = await HostApi.instance.send(EditorRevealRangeRequestType, {
+													uri: path.join("file://", repoRoot, filePath),
+													range: Range.create(startLine, 0, startLine, 0)
+												});
+
+												// if (!result.success) {
+												// 	setErrorMessage("Could not open file");
+												// }
+
+												HostApi.instance.track("PR File Viewed From Timeline", {
+													Host: props.pr && props.pr.providerId
+												});
 											};
 
 											const goDiff = async filePath => {
@@ -526,207 +499,71 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 											return (
 												<PRThreadedCommentCard key={commentIndex}>
 													<PRCodeComment>
-														<div className="row-with-icon-actions monospace ellipsis-left-container no-hover">
+														<div className="row-with-icon-actions monospace ellipsis-left-container no-hover with-action-icons">
 															<Icon name="file" />
 															<span className="file-info ellipsis-left">
-																<bdi
-																	dir="ltr"
-																	className={pr.forkPointSha ? "link" : ""}
-																	onClick={
-																		pr.forkPointSha
-																			? async e => {
-																					e.preventDefault();
-																					goDiff(comment.path);
-																			  }
-																			: undefined
-																	}
-																>
-																	{comment.path}
-																</bdi>
+																<Tooltip title="Open Diff" placement="bottom" delay={1}>
+																	<bdi
+																		dir="ltr"
+																		className={pr.forkPointSha ? "link" : ""}
+																		onClick={
+																			pr.forkPointSha
+																				? async e => {
+																						e.preventDefault();
+																						goDiff(comment.path);
+																				  }
+																				: undefined
+																		}
+																	>
+																		{comment.path}
+																	</bdi>
+																</Tooltip>
 															</span>
+															<div className="actions" style={{ right: 0 }}>
+																<Link
+																	href={pr.url.replace(
+																		/\/pull\/\d+$/,
+																		`/blob/${pr.headRefOid}/${comment.path}`
+																	)}
+																>
+																	<Icon
+																		title="Open File on Remote"
+																		placement="bottom"
+																		name="link-external"
+																		className="clickable margin-right"
+																	/>
+																</Link>
+																<Icon
+																	name="goto-file"
+																	className="clickable"
+																	title="Open Local File"
+																	placement="bottom"
+																	delay={1}
+																	onClick={async e => {
+																		e.stopPropagation();
+																		e.preventDefault();
+																		openFile(comment.path);
+																	}}
+																/>
+															</div>
 														</div>
 														<PRCodeCommentPatch>
-															<PullRequestPatch patch={comment.diffHunk} filename={comment.path} />
-														</PRCodeCommentPatch>
-														<PRCodeCommentBody>
-															{comment.isMinimized && !expandedComments[comment.id] ? (
-																<PullRequestMinimizedComment
-																	reason={item.minimizedReason}
-																	onClick={() => expandComment(comment.id)}
-																/>
-															) : (
-																<>
-																	<PRHeadshot
-																		key={commentIndex}
-																		size={30}
-																		person={comment.author || GHOST}
-																	/>
-																	<PRThreadedCommentHeader>
-																		{author.login}
-																		<Timestamp time={comment.createdAt} />
-																		<PRActionIcons>
-																			<PRAuthorBadges
-																				pr={pr}
-																				node={comment}
-																				isPending={item.state === "PENDING"}
-																			/>
-																			<PullRequestReactButton
-																				pr={pr}
-																				targetId={comment.id}
-																				setIsLoadingMessage={setIsLoadingMessage}
-																				fetch={fetch}
-																				reactionGroups={comment.reactionGroups}
-																			/>
-																			<PullRequestCommentMenu
-																				pr={pr}
-																				fetch={fetch}
-																				setIsLoadingMessage={setIsLoadingMessage}
-																				node={comment}
-																				nodeType="REVIEW_COMMENT"
-																				viewerCanDelete={comment.viewerCanDelete}
-																				setEdit={setEditingComment}
-																				quote={quote}
-																				isPending={item.state === "PENDING"}
-																			/>
-																		</PRActionIcons>
-																	</PRThreadedCommentHeader>
-																	{editingComments[comment.id] ? (
-																		<PullRequestEditingComment
-																			pr={pr}
-																			fetch={fetch}
-																			setIsLoadingMessage={setIsLoadingMessage}
-																			id={comment.id}
-																			type={"REVIEW_COMMENT"}
-																			text={pendingComments[comment.id]}
-																			done={() => doneEditingComment(comment.id)}
-																		/>
-																	) : (
-																		<MarkdownText
-																			text={comment.bodyHTML ? comment.bodyHTML : comment.bodyText}
-																			isHtml={comment.bodyHTML ? true : false}
-																			excludeParagraphWrap
-																		/>
-																	)}
-																</>
-															)}
-														</PRCodeCommentBody>
-														<PullRequestReactions
-															pr={pr}
-															targetId={comment.id}
-															setIsLoadingMessage={setIsLoadingMessage}
-															fetch={fetch}
-															reactionGroups={comment.reactionGroups}
-														/>
-														{comment.replies &&
-															comment.replies.map((c, i) => {
-																if (c.isMinimized && !expandedComments[c.id]) {
-																	return (
-																		<PullRequestMinimizedComment
-																			reason={c.minimizedReason}
-																			className="threaded"
-																			onClick={() => expandComment(c.id)}
-																		/>
-																	);
-																}
-
-																return (
-																	<div key={i}>
-																		<PRCodeCommentBody>
-																			<PRHeadshot
-																				key={c.id + i}
-																				size={30}
-																				person={c.author || GHOST}
-																			/>
-																			<PRThreadedCommentHeader>
-																				<b>{(c.author || GHOST).login}</b>
-																				<Timestamp time={c.createdAt} />
-																				{c.includesCreatedEdit ? <> • edited</> : ""}
-																				<PRActionIcons>
-																					<PRAuthorBadges pr={pr} node={c} />
-																					<PullRequestReactButton
-																						pr={pr}
-																						targetId={c.id}
-																						setIsLoadingMessage={setIsLoadingMessage}
-																						fetch={fetch}
-																						reactionGroups={c.reactionGroups}
-																					/>
-																					<PullRequestCommentMenu
-																						pr={pr}
-																						fetch={fetch}
-																						setIsLoadingMessage={setIsLoadingMessage}
-																						node={c}
-																						nodeType="REVIEW_COMMENT"
-																						viewerCanDelete={c.viewerCanDelete}
-																						setEdit={setEditingComment}
-																						quote={quote}
-																						isPending={item.state === "PENDING"}
-																					/>
-																				</PRActionIcons>
-																			</PRThreadedCommentHeader>
-																			{editingComments[c.id] ? (
-																				<PullRequestEditingComment
-																					pr={pr}
-																					fetch={fetch}
-																					setIsLoadingMessage={setIsLoadingMessage}
-																					id={c.id}
-																					type={"REVIEW_COMMENT"}
-																					text={pendingComments[c.id]}
-																					done={() => doneEditingComment(c.id)}
-																				/>
-																			) : (
-																				<MarkdownText
-																					text={c.bodyHTML ? c.bodyHTML : c.bodyText}
-																					isHtml={c.bodyHTML ? true : false}
-																					excludeParagraphWrap
-																				/>
-																			)}
-																		</PRCodeCommentBody>
-																		<PullRequestReactions
-																			pr={pr}
-																			targetId={c.id}
-																			setIsLoadingMessage={setIsLoadingMessage}
-																			fetch={fetch}
-																			reactionGroups={c.reactionGroups}
-																		/>
-																	</div>
-																);
-															})}
-													</PRCodeComment>
-													{item.state !== "PENDING" && (
-														<>
-															<PullRequestReplyComment
-																pr={pr}
-																fetch={fetch}
-																setIsLoadingMessage={setIsLoadingMessage}
-																databaseId={comment.databaseId}
-																isOpen={openComments[comment.databaseId]}
-																__onDidRender={__onDidRender}
+															<PullRequestPatch
+																patch={comment.diffHunk}
+																filename={comment.path}
+																truncateLargePatches
 															/>
-															<div style={{ height: "15px" }}></div>
-															{comment.isResolved && comment.viewerCanUnresolve && (
-																<PRButtonRow className="align-left border-top">
-																	<Button
-																		variant="secondary"
-																		isLoading={isResolving}
-																		onClick={e => handleUnresolve(e, comment.threadId)}
-																	>
-																		Unresolve conversation
-																	</Button>
-																</PRButtonRow>
-															)}
-															{!comment.isResolved && comment.viewerCanResolve && (
-																<PRButtonRow className="align-left border-top">
-																	<Button
-																		variant="secondary"
-																		isLoading={isResolving}
-																		onClick={e => handleResolve(e, comment.threadId)}
-																	>
-																		Resolve conversation
-																	</Button>
-																</PRButtonRow>
-															)}
-														</>
-													)}
+														</PRCodeCommentPatch>
+														<PullRequestCodeComment
+															pr={pr}
+															fetch={fetch}
+															setIsLoadingMessage={setIsLoadingMessage}
+															item={item}
+															comment={comment}
+															author={author}
+															skipResolvedCheck
+														/>
+													</PRCodeComment>
 												</PRThreadedCommentCard>
 											);
 										})}
@@ -785,7 +622,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 									)}
 
 									<PRTimelineItemBody>
-										<div className="monospace left-pad">
+										<div className="monospace left-pad break-word">
 											<Link
 												href={`${pr.url}/commits/${item.commit.abbreviatedOid}`}
 												className="monospace"
@@ -808,6 +645,60 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 									</div>
 								</PRTimelineItem>
 							</div>
+						);
+					}
+					case "ReferencedEvent": {
+						const commitUrl = pr.url.replace(
+							/\/pull\/\d+$/,
+							`/commit/${item.commit.abbreviatedOid}`
+						);
+						const { author, committer } = item.commit;
+						return (
+							<>
+								<PRTimelineItem key={index} className="tall">
+									<Icon name="cross-reference" className="circled" />
+									<PRTimelineItemBody>
+										<PRHeadshotName key={index} person={item.actor} />
+										added a commit that referenced this pull request
+										<Timestamp time={item.createdAt!} relative />
+										<div style={{ display: "flex", alignItems: "flex-start", marginTop: "10px" }}>
+											<PRHeadshot key={index} size={20} person={author} />
+											{committer && author.name !== committer.name && (
+												<PRHeadshot className="left-pad" size={20} person={committer} />
+											)}
+											<div className="monospace left-pad">
+												<Link href={commitUrl} className="monospace">
+													<MarkdownText
+														excludeParagraphWrap
+														excludeOnlyEmoji
+														text={item.commit.messageHeadline || ""}
+													/>
+												</Link>
+												<PRKebabIcon onClick={() => expandComment(item.commit.abbreviatedOid)}>
+													<Icon name="kebab-horizontal" className="no-flex clickable" />
+												</PRKebabIcon>
+
+												{expandedComments[item.commit.abbreviatedOid] && (
+													<>
+														<br />
+														<br />
+														<MarkdownText
+															excludeParagraphWrap
+															excludeOnlyEmoji
+															text={item.commit.messageBody || ""}
+														/>
+													</>
+												)}
+											</div>
+											<div className="monospace sha">
+												<Link href={commitUrl} className="monospace">
+													{item.commit.abbreviatedOid}
+												</Link>
+											</div>
+										</div>
+									</PRTimelineItemBody>
+								</PRTimelineItem>
+							</>
 						);
 					}
 					case "AssignedEvent": {

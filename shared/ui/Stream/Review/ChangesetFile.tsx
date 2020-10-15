@@ -2,6 +2,8 @@ import React from "react";
 import { ReviewChangesetFileInfo, FileStatus } from "@codestream/protocols/api";
 import styled from "styled-components";
 import Tooltip from "../Tooltip";
+import cx from "classnames";
+import { pathBasename } from "@codestream/webview/utilities/fs";
 
 interface Props {
 	className?: string;
@@ -11,24 +13,30 @@ interface Props {
 	icon?: any;
 	actionIcons?: any;
 	tooltip?: any;
+	depth?: number;
+	viewMode?: "files" | "tree";
+	badge?: React.ReactNode;
 }
 
 export const ChangesetFile = styled((props: ReviewChangesetFileInfo & Props) => {
 	const { linesAdded, linesRemoved, status } = props;
 
+	const filename = props.viewMode === "tree" ? pathBasename(props.file) : props.file;
 	return (
 		<div
-			className={`${props.className} ${props.selected ? "selected" : ""} ${
-				props.noHover ? "no-hover" : ""
-			} ${
-				props.icon ? "with-file-icon" : ""
-			} row-with-icon-actions monospace ellipsis-left-container`}
+			className={cx("row-with-icon-actions ellipsis-left-container", props.className, {
+				selected: props.selected,
+				"no-hover": props.noHover,
+				"with-file-icon": props.icon,
+				"with-action-icons": !!props.actionIcons
+			})}
 			onClick={props.onClick}
+			style={props.depth ? { paddingLeft: `${props.depth * 12}px` } : {}}
 		>
 			{props.icon}
 			<Tooltip title={props.tooltip} placement="bottom" delay={1}>
 				<span className="file-info ellipsis-left">
-					<bdi dir="ltr">{props.file}</bdi>
+					<bdi dir="ltr">{filename}</bdi>
 				</span>
 			</Tooltip>
 			{linesAdded > 0 && <span className="added">+{linesAdded} </span>}
@@ -38,6 +46,7 @@ export const ChangesetFile = styled((props: ReviewChangesetFileInfo & Props) => 
 			{status === FileStatus.copied && <span className="added">copied </span>}
 			{status === FileStatus.unmerged && <span className="deleted">conflict </span>}
 			{status === FileStatus.deleted && <span className="deleted">deleted </span>}
+			{props.badge}
 			{props.actionIcons}
 		</div>
 	);
