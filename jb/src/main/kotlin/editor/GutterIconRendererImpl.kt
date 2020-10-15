@@ -25,34 +25,7 @@ class GutterIconRendererImpl(val editor: Editor, val marker: DocumentMarker) : G
         return true
     }
 
-    override fun getClickAction(): AnAction = object : AnAction() {
-        override fun actionPerformed(e: AnActionEvent) {
-            val project = editor.project ?: return
-            marker.codemark?.let {
-                project.codeStream?.show {
-                    project.webViewService?.postNotification(
-                        CodemarkNotifications.Show(
-                            it.id,
-                            editor.document.uri
-                        )
-                    )
-                }
-                telemetry(project, TelemetryEvent.CODEMARK_CLICKED)
-            }
-            marker.externalContent?.let {
-                it.provider?.let { provider ->
-                    project.webViewService?.postNotification(
-                        PullRequestNotifications.Show(
-                            provider.id,
-                            it.externalId,
-                            it.externalChildId
-                        )
-                    )
-                }
-                telemetry(project, TelemetryEvent.PR_CLICKED)
-            }
-        }
-    }
+    override fun getClickAction(): AnAction = GutterIconAction(editor, marker)
 
     override fun getTooltipText(): String? {
         return marker.summary
@@ -74,9 +47,38 @@ class GutterIconRendererImpl(val editor: Editor, val marker: DocumentMarker) : G
     }
 }
 
+class GutterIconAction(val editor: Editor, val marker: DocumentMarker) : AnAction() {
+    override fun actionPerformed(e: AnActionEvent) {
+        val project = editor.project ?: return
+        marker.codemark?.let {
+            project.codeStream?.show {
+                project.webViewService?.postNotification(
+                    CodemarkNotifications.Show(
+                        it.id,
+                        editor.document.uri
+                    )
+                )
+            }
+            telemetry(project, TelemetryEvent.CODEMARK_CLICKED)
+        }
+        marker.externalContent?.let {
+            it.provider?.let { provider ->
+                project.webViewService?.postNotification(
+                    PullRequestNotifications.Show(
+                        provider.id,
+                        it.externalId,
+                        it.externalChildId
+                    )
+                )
+            }
+            telemetry(project, TelemetryEvent.PR_CLICKED)
+        }
+    }
+}
+
 private enum class TelemetryEvent(val value: String, val properties: Map<String, String>) {
-    CODEMARK_CLICKED("Codemark Clicked", mapOf("Codemark Location" to "Source File")),
-    PR_CLICKED("PullRequest Clicked", mapOf("PullRequest Location" to "Source File"))
+    CODEMARK_CLICKED("Codemark Clicked", mapOf("Codemark Location" to "Source File", "Comment Location" to "Diff Gutter")),
+    PR_CLICKED("PR Comment Clicked", mapOf("PullRequest Location" to "Source File", "Comment Location" to "Diff Gutter"))
 }
 
 private fun telemetry(project: Project, event: TelemetryEvent) {
