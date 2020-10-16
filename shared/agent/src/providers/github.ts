@@ -83,6 +83,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	}
 
 	async getRemotePaths(repo: any, _projectsByRemotePath: any) {
+		// TODO don't need this ensureConnected -- doesn't hit api
 		await this.ensureConnected();
 		const remotePaths = await getRemotePaths(
 			repo,
@@ -1473,6 +1474,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	async getMyPullRequests(
 		request: GetMyPullRequestsRequest
 	): Promise<GetMyPullRequestsResponse[][] | undefined> {
+		void (await this.ensureConnected());
+
 		Container.instance().errorReporter.reportBreadcrumb({
 			message: "Getting my GitHub pull requests...",
 			data: {
