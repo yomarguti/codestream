@@ -10,7 +10,6 @@
     "bugs": {
         "url": "https://github.com/TeamCodeStream/CodeStream/issues"
     },
-    "enableProposedApi": true,
     "repository": {
         "type": "git",
         "url": "https://github.com/TeamCodeStream/CodeStream"
