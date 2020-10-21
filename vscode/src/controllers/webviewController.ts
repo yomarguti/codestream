@@ -1269,7 +1269,7 @@ export class WebviewController implements Disposable {
 	private async disconnectFromGitHub () {
 		if (this._providerSessionIds.github) {
 			Logger.log(`Disconnected from GitHub session ${this._providerSessionIds.github}`);
-			await authentication.logout("github", this._providerSessionIds.github);
+			// await authentication.logout("github", this._providerSessionIds.github);
 			delete this._providerSessionIds.github;
 		}
 	}
