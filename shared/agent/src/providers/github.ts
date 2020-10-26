@@ -7,11 +7,13 @@ import * as qs from "querystring";
 import { CodeStreamSession } from "session";
 import { URI } from "vscode-uri";
 import { Container, SessionContainer } from "../container";
+import { MarkerLocation } from "../api/extensions";
 import { Logger, TraceLevel } from "../logger";
 import {
 	CreateThirdPartyCardRequest,
 	DidChangePullRequestCommentsNotificationType,
 	DocumentMarker,
+	EnterpriseConfigurationData,
 	FetchReposResponse,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
@@ -37,6 +39,7 @@ import {
 	ThirdPartyProviderCard,
 	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
+
 import {
 	CodemarkType,
 	CSGitHubProviderInfo,
@@ -74,9 +77,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		protected readonly providerConfig: ThirdPartyProviderConfig
 	) {
 		super(session, providerConfig);
-		Container.instance().errorReporter.reportBreadcrumb({
-			message: "Constructing GitHub"
-		});
 	}
 
 	async getRemotePaths(repo: any, _projectsByRemotePath: any) {
@@ -137,9 +137,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	private _client: GraphQLClient | undefined;
 	protected get client(): GraphQLClient {
 		if (this._client === undefined) {
-			Container.instance().errorReporter.reportBreadcrumb({
-				message: "Getting new GitHub GraphSQL client..."
-			});
 			this._client = new GraphQLClient(this.graphQlBaseUrl);
 		}
 		if (!this.accessToken) {
@@ -175,10 +172,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	};
 
 	async query<T = any>(query: string, variables: any = undefined) {
-		Container.instance().errorReporter.reportBreadcrumb({
-			message: "GitHub query",
-			data: { query }
-		});
 		const response = await this.client.request<any>(query, variables);
 
 		try {
@@ -233,10 +226,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	}
 
 	async mutate<T>(query: string, variables: any = undefined) {
-		Container.instance().errorReporter.reportBreadcrumb({
-			message: "GitHub mutate",
-			data: { query }
-		});
 		const response = await this.client.request<T>(query, variables);
 		if (Logger.level === TraceLevel.Debug) {
 			try {
@@ -387,6 +376,16 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		}
 
 		return response;
+	}
+
+	@log()
+	async configure(request: EnterpriseConfigurationData) {
+		await this.session.api.setThirdPartyProviderToken({
+			providerId: this.providerConfig.id,
+			token: request.token,
+			data: request.data
+		});
+		this.session.updateProviders();
 	}
 
 	@log()
@@ -1473,14 +1472,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	): Promise<GetMyPullRequestsResponse[][] | undefined> {
 		void (await this.ensureConnected());
 
-		Container.instance().errorReporter.reportBreadcrumb({
-			message: "Getting my GitHub pull requests...",
-			data: {
-				accessToken: this._providerInfo?.accessToken
-					? this._providerInfo?.accessToken.length
-					: "NONE"
-			}
-		});
 		// const cacheKey = JSON.stringify({ ...request, providerId: this.providerConfig.id });
 		// if (!request.force) {
 		// 	const cached = this._getMyPullRequestsCache.get(cacheKey);
