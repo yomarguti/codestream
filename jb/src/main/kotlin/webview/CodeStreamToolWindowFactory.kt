@@ -23,7 +23,7 @@ class CodeStreamToolWindowFactory : ToolWindowFactory, DumbAware {
             webViewService.load()
             ApplicationManager.getApplication().invokeLater {
                 csPanel.remove(loadingLabel)
-                csPanel.add(webViewService.webView)
+                csPanel.add(webViewService.webView.component)
             }
         }
 
