@@ -1,20 +1,19 @@
 "use strict";
 import { GitRemoteLike, GitRepository } from "git/gitService";
 import { GraphQLClient } from "graphql-request";
-import { uniqBy as _uniqBy } from "lodash-es";
 import { Response } from "node-fetch";
 import * as paths from "path";
 import * as qs from "querystring";
 import { CodeStreamSession } from "session";
 import { URI } from "vscode-uri";
-import { MarkerLocation } from "../api/extensions";
 import { Container, SessionContainer } from "../container";
+import { MarkerLocation } from "../api/extensions";
 import { Logger, TraceLevel } from "../logger";
-import { Markerish, MarkerLocationManager } from "../managers/markerLocationManager";
-import { findBestMatchingLine, MAX_RANGE_VALUE } from "../markerLocation/calculator";
 import {
 	CreateThirdPartyCardRequest,
+	DidChangePullRequestCommentsNotificationType,
 	DocumentMarker,
+	EnterpriseConfigurationData,
 	FetchReposResponse,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
@@ -40,6 +39,7 @@ import {
 	ThirdPartyProviderCard,
 	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
+
 import {
 	CodemarkType,
 	CSGitHubProviderInfo,
@@ -77,9 +77,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		protected readonly providerConfig: ThirdPartyProviderConfig
 	) {
 		super(session, providerConfig);
-		Container.instance().errorReporter.reportBreadcrumb({
-			message: "Constructing GitHub"
-		});
 	}
 
 	async getRemotePaths(repo: any, _projectsByRemotePath: any) {
@@ -140,9 +137,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	private _client: GraphQLClient | undefined;
 	protected get client(): GraphQLClient {
 		if (this._client === undefined) {
-			Container.instance().errorReporter.reportBreadcrumb({
-				message: "Getting new GitHub GraphSQL client..."
-			});
 			this._client = new GraphQLClient(this.graphQlBaseUrl);
 		}
 		if (!this.accessToken) {
@@ -178,10 +172,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	};
 
 	async query<T = any>(query: string, variables: any = undefined) {
-		Container.instance().errorReporter.reportBreadcrumb({
-			message: "GitHub query",
-			data: { query }
-		});
 		const response = await this.client.request<any>(query, variables);
 
 		try {
@@ -236,10 +226,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	}
 
 	async mutate<T>(query: string, variables: any = undefined) {
-		Container.instance().errorReporter.reportBreadcrumb({
-			message: "GitHub mutate",
-			data: { query }
-		});
 		const response = await this.client.request<T>(query, variables);
 		if (Logger.level === TraceLevel.Debug) {
 			try {
@@ -390,6 +376,16 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		}
 
 		return response;
+	}
+
+	@log()
+	async configure(request: EnterpriseConfigurationData) {
+		await this.session.api.setThirdPartyProviderToken({
+			providerId: this.providerConfig.id,
+			token: request.token,
+			data: request.data
+		});
+		this.session.updateProviders();
 	}
 
 	@log()
@@ -1476,14 +1472,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	): Promise<GetMyPullRequestsResponse[][] | undefined> {
 		void (await this.ensureConnected());
 
-		Container.instance().errorReporter.reportBreadcrumb({
-			message: "Getting my GitHub pull requests...",
-			data: {
-				accessToken: this._providerInfo?.accessToken
-					? this._providerInfo?.accessToken.length
-					: "NONE"
-			}
-		});
 		// const cacheKey = JSON.stringify({ ...request, providerId: this.providerConfig.id });
 		// if (!request.force) {
 		// 	const cached = this._getMyPullRequestsCache.get(cacheKey);
@@ -2057,6 +2045,12 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			`/repos/${ownerData.owner}/${ownerData.name}/pulls/${ownerData.pullRequestNumber}/comments`,
 			payload
 		);
+
+		this._pullRequestCache.delete(request.pullRequestId);
+		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
+			pullRequestId: request.pullRequestId
+		});
+
 		return data.body;
 	}
 
@@ -2123,6 +2117,12 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			startLine: request.startLine
 		});
 
+		this._pullRequestCache.delete(request.pullRequestId);
+		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
+			pullRequestId: request.pullRequestId,
+			filePath: request.filePath
+		});
+
 		return result;
 	}
 
@@ -2138,11 +2138,19 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			filePath: request.filePath,
 			position: request.position
 		});
+
+		this._pullRequestCache.delete(request.pullRequestId);
+		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
+			pullRequestId: request.pullRequestId,
+			filePath: request.filePath
+		});
+
 		return result;
 	}
 
 	async deletePullRequestComment(request: {
 		id: string;
+		pullRequestId: string;
 		type: "ISSUE_COMMENT" | "REVIEW_COMMENT";
 	}) {
 		const method =
@@ -2156,6 +2164,13 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		await this.mutate<any>(query, {
 			id: request.id
 		});
+
+		this._pullRequestCache.delete(request.pullRequestId);
+		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
+			pullRequestId: request.pullRequestId,
+			commentId: request.id
+		});
+
 		return true;
 	}
 

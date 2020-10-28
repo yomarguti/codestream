@@ -105,22 +105,6 @@ class CodeStreamComponent(val project: Project) : Disposable {
             it.subscribe(
                 ToolWindowManagerListener.TOPIC,
                 object : ToolWindowManagerListener {
-                    override fun toolWindowRegistered(id: String) {
-                        if (id != CODESTREAM_TOOL_WINDOW_ID) return
-                        val loadingLabel = JLabel("Loading...", IconLoader.getIcon("/images/codestream.svg"), JLabel.CENTER)
-                        toolWindow!!.component.add(loadingLabel)
-                        project.agentService?.onDidStart {
-                            val webViewService = project.webViewService ?: return@onDidStart
-                            ApplicationManager.getApplication().invokeLater {
-                                webViewService.load()
-                                toolWindow?.component?.let { cmp ->
-                                    cmp.remove(loadingLabel)
-                                    cmp.add(webViewService.webView.component)
-                                }
-                            }
-                        }
-                    }
-
                     override fun stateChanged() {
                         isVisible = toolWindow?.isVisible ?: false
                         updateWebViewFocus()

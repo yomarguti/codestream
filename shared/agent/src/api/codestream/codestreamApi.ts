@@ -17,8 +17,11 @@ import { isDirective, resolve, safeDecode, safeEncode } from "../../managers/ope
 import {
 	AddBlameMapRequest,
 	AddBlameMapRequestType,
+	AddMarkerResponse,
 	AgentOpenUrlRequestType,
 	ChangeDataType,
+	DeleteMarkerRequest,
+	DeleteMarkerResponse,
 	DidChangeDataNotificationType,
 	ReportingMessageType,
 	UpdateInvisibleRequest
@@ -101,6 +104,8 @@ import {
 	MuteStreamRequest,
 	OpenStreamRequest,
 	PinReplyToCodemarkRequest,
+	ProviderTokenRequest,
+	ProviderTokenRequestType,
 	ReactToPostRequest,
 	RemoveEnterpriseProviderHostRequest,
 	RenameStreamRequest,
@@ -134,6 +139,8 @@ import {
 	VerifyConnectivityResponse
 } from "../../protocol/agent.protocol";
 import {
+	CSAddMarkerRequest,
+	CSAddMarkerResponse,
 	CSAddProviderHostRequest,
 	CSAddProviderHostResponse,
 	CSAddReferenceLocationRequest,
@@ -965,6 +972,23 @@ export class CodeStreamApiProvider implements ApiProvider {
 			request.newMarker,
 			this._token
 		);
+	}
+
+	@log()
+	addMarker(request: {
+		codemarkId: string;
+		newMarker: CreateMarkerRequest;
+	}): Promise<AddMarkerResponse> {
+		return this.put<CSAddMarkerRequest, CSAddMarkerResponse>(
+			`/codemarks/${request.codemarkId}/add-markers`,
+			{ markers: [request.newMarker] },
+			this._token
+		);
+	}
+
+	@log()
+	deleteMarker(request: DeleteMarkerRequest): Promise<DeleteMarkerResponse> {
+		return this.delete<{}>(`/markers/${request.markerId}`, this._token);
 	}
 
 	@log()
@@ -2002,6 +2026,20 @@ export class CodeStreamApiProvider implements ApiProvider {
 		}
 	}
 
+	@lspHandler(ProviderTokenRequestType)
+	async setProviderToken(request: ProviderTokenRequest) {
+		await this.post(
+			`/no-auth/provider-token/${request.provider}`,
+			{
+				token: request.token,
+				data: request.data,
+				invite_code: request.inviteCode,
+				no_signup: request.noSignup,
+				signup_token: request.signupToken
+			}
+		);
+	}
+
 	private delete<R extends object>(url: string, token?: string): Promise<R> {
 		let resp = undefined;
 		if (resp === undefined) {
@@ -2361,6 +2399,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 				response.error = {
 					message: resp.status.toString() + resp.statusText
 				};
+			} else {
+				response.capabilities = (await resp.json()).capabilities;
 			}
 		} catch (err) {
 			Logger.log(`Error connecting to the API server: ${err.message}`);
