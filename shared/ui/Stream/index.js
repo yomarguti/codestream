@@ -292,7 +292,7 @@ export class SimpleStream extends PureComponent {
 				<GlobalNav />
 				<Sidebar />
 				{activeModal && (
-					<Modal translucent onClose={this.props.closeModal}>
+					<Modal translucent>
 						{activeModal === WebviewModals.CreateTeam && <CreateTeamPage />}
 						{activeModal === WebviewModals.ReviewSettings && <ReviewSettings />}
 						{activeModal === WebviewModals.Notifications && <Notifications />}
@@ -661,11 +661,15 @@ const mapStateToProps = state => {
 	};
 };
 
-export default connect(mapStateToProps, {
-	...actions,
-	setCurrentReview,
-	setCurrentPullRequest,
-	setCurrentStream,
-	editCodemark,
-	setNewPostEntry
-})(injectIntl(SimpleStream));
+export default connect(
+	mapStateToProps,
+	{
+		...actions,
+		setCurrentReview,
+		setCurrentPullRequest,
+		setCurrentStream,
+		setCurrentCodemark,
+		editCodemark,
+		setNewPostEntry
+	}
+)(injectIntl(SimpleStream));

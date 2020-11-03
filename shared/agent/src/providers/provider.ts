@@ -203,7 +203,7 @@ export abstract class ThirdPartyProviderBase<
 		// assume OK to have it disabled for third-party on-prem providers as well ...
 		// kind of insecure, but easier than other options ... so in this case (and
 		// this case only), establish our own HTTPS agent
-		if (providerConfig.forEnterprise && session.disableStrictSSL) {
+		if ((providerConfig.forEnterprise || providerConfig.isEnterprise) && session.disableStrictSSL) {
 			Logger.log(
 				`${providerConfig.name} provider will use a custom HTTPS agent with strictSSL disabled`
 			);
@@ -925,6 +925,12 @@ export interface ProviderGetRepoInfoResponse {
 	id?: string;
 	defaultBranch?: string;
 	pullRequests?: ProviderPullRequestInfo[];
+	error?: { message?: string; type: string };
+}
+
+export interface ProviderGetForkedReposResponse {
+	parent?: any;
+	forks?: any[];
 	error?: { message?: string; type: string };
 }
 
