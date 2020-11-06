@@ -29,6 +29,17 @@ interface AzureDevOpsProfile {
 	[key: string]: any;
 }
 
+interface AzureDevOpsWorkItem {
+	id: number;
+	url: string;
+	fields: {
+		"System.Title": string;
+		"System.ChangedDate": string;
+		"System.Description": string;
+		"System.TeamProject": string;
+	};
+}
+
 @lspProvider("azuredevops")
 export class AzureDevOpsProvider extends ThirdPartyIssueProviderBase<CSAzureDevOpsProviderInfo> {
 	private _user: AzureDevOpsProfile | undefined;
@@ -72,6 +83,9 @@ export class AzureDevOpsProvider extends ThirdPartyIssueProviderBase<CSAzureDevO
 					singleAssignee: true
 				};
 			});
+			boards.sort((a, b) => {
+				return a.name.localeCompare(b.name);
+			});
 		} catch (err) {
 			Logger.error(err);
 			debugger;
@@ -86,43 +100,44 @@ export class AzureDevOpsProvider extends ThirdPartyIssueProviderBase<CSAzureDevO
 		let cards: ThirdPartyProviderCard[] = [];
 		try {
 			const wiql =
-				"Select ID, Title, Description, State, [Team Project] " +
+				"Select ID, System.Title, System.Description, State, [Team Project] " +
 				"From WorkItems " +
 				"Where State <> 'Closed' " +
-				"And [Assigned To] = @Me ";
-			// "Order By [State] Asc, [Changed Date] Desc";
-
-			// "Where [Work Item Type] = 'Bug' " +
-			// "And [System.State] <> 'Closed' " +
+				"And [Assigned To] = @Me " +
+				"Order By [Changed Date] Desc";
 			const { body } = (await this.post(
 				`/_apis/wit/wiql?${qs.stringify({
-					query: wiql,
 					"api-version": "5.0"
 				})}`,
 				{ query: wiql },
 				{ "Content-Type": "application/json" }
-			)) as any;
-			Logger.debug("GOT A RESPONSE OF : ", JSON.stringify(body, null, 4));
+			)) as { body: { workItems: AzureDevOpsWorkItem[] } };
 			if (body && body.workItems) {
-				// @ts-ignore
-				cards = body.workItems.map(workItem => {
-					Logger.debug("AZURE ITEM: ", JSON.stringify(workItem, null, 4));
-					return {
-						id: workItem.ID,
-						url: workItem.html_url,
-						// @ts-ignore
-						// title: workItem.fields["System.Title"],
-						modifiedAt: new Date(workItem.updated_at).getTime(),
-						tokenId: workItem.number,
-						body: workItem.body
-					};
-				});
+				const ids = body.workItems.map(workItem => workItem.id);
+				const response = (await this.get(
+					`/_apis/wit/workitems?${qs.stringify({
+						ids: ids.join(","),
+						"api-version": "5.0"
+					})}`
+				)) as { body: { count: number; value: AzureDevOpsWorkItem[] } };
+				if (response.body && response.body.value) {
+					cards = response.body.value.map(workItem => {
+						return {
+							id: workItem.id.toString(),
+							tokenId: workItem.id.toString(),
+							url: `${this.baseUrl}/${workItem.fields["System.TeamProject"]}/_workitems/edit/${workItem.id}`,
+							title: workItem.fields["System.Title"],
+							modifiedAt: new Date(workItem.fields["System.ChangedDate"]).getTime(),
+							body: workItem.fields["System.Description"]
+						};
+					});
+				}
 			}
 		} catch (err) {
 			Logger.error(err);
 			debugger;
 		}
-		return { cards: [] };
+		return { cards };
 	}
 
 	@log()
@@ -210,6 +225,9 @@ export class AzureDevOpsProvider extends ThirdPartyIssueProviderBase<CSAzureDevO
 			Logger.error(ex);
 			debugger;
 		}
+		users.sort((a, b) => {
+			return a.displayName.localeCompare(b.displayName);
+		});
 		return { users };
 	}
 

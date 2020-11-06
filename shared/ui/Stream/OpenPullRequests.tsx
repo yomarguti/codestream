@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
-import * as userSelectors from "../store/users/reducer";
 import * as providerSelectors from "../store/providers/reducer";
 import { CodeStreamState } from "../store";
 import { Row } from "./CrossPostIssueControls/IssueDropdown";
@@ -45,7 +44,7 @@ import {
 } from "../src/components/Pane";
 import { Provider, IntegrationButtons } from "./IntegrationsPanel";
 import { usePrevious } from "../utilities/hooks";
-
+import { getMyPullRequests as getMyPullRequestsSelector } from "../store/providerPullRequests/reducer";
 const Root = styled.div`
 	height: 100%;
 	.pr-row {
@@ -133,16 +132,17 @@ const e: ThirdPartyProviderConfig[] = [];
 export const OpenPullRequests = React.memo((props: Props) => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
-		const { session, preferences, repos } = state;
+		const { preferences, repos } = state;
 
 		const queries = preferences.pullRequestQueries || DEFAULT_QUERIES;
 
 		const prSupportedProviders = providerSelectors.getSupportedPullRequestHosts(state);
 		const prConnectedProviders = providerSelectors.getConnectedSupportedPullRequestHosts(state);
-
+		const myPullRequests = getMyPullRequestsSelector(state);
 		return {
 			repos,
 			queries,
+			myPullRequests,
 			isPRSupportedCodeHostConnected: prConnectedProviders.length > 0,
 			PRSupportedProviders: prSupportedProviders,
 			PRConnectedProviders: prConnectedProviders,
@@ -181,6 +181,22 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		dispatch(setUserPreference(["pullRequestQueries", providerId], [...queries]));
 		// dispatch(setUserPreference(["pullRequestQueries"], null));
 	};
+
+	useEffect(() => {
+		for (const connectedProvider of derivedState.PRConnectedProviders) {
+			const providerId = connectedProvider.id;
+			if (derivedState.myPullRequests) {
+				const providerPullRequests =
+					derivedState.myPullRequests && derivedState.myPullRequests[providerId];
+				if (providerPullRequests && providerPullRequests.data === undefined) {
+					// refetch PRs if something has nuked them
+					fetchPRs(derivedState.queries, {
+						force: true
+					});
+				}
+			}
+		}
+	}, [derivedState.myPullRequests, derivedState.PRConnectedProviders]);
 
 	useEffect(() => {
 		const disposable = HostApi.instance.on(DidChangeDataNotificationType, (e: any) => {

@@ -123,14 +123,14 @@ export class SimpleStream extends PureComponent {
 			this.props.setNewPostEntry(e.source);
 		}
 		if (e.uri) {
-			if (this.props.activePanel === WebviewPanels.CodemarksForFile) return;
+			if (this.props.activePanel === WebviewPanels.Sidebar) return;
 			if (!canCreateCodemark(e.uri)) return;
 
 			// re-emit the notification after switching to spatial view
 			this.updateEmitter.enqueue(() => {
 				HostApi.instance.emit(NewCodemarkNotificationType.method, e);
 			});
-			this.props.openPanel(WebviewPanels.CodemarksForFile);
+			this.props.openPanel(WebviewPanels.Sidebar);
 		} else {
 			this.props.openPanel(e.type === "issue" ? WebviewPanels.NewIssue : WebviewPanels.NewComment);
 		}
@@ -292,7 +292,7 @@ export class SimpleStream extends PureComponent {
 				<GlobalNav />
 				<Sidebar />
 				{activeModal && (
-					<Modal translucent onClose={this.props.closeModal}>
+					<Modal translucent>
 						{activeModal === WebviewModals.CreateTeam && <CreateTeamPage />}
 						{activeModal === WebviewModals.ReviewSettings && <ReviewSettings />}
 						{activeModal === WebviewModals.Notifications && <Notifications />}
@@ -661,11 +661,15 @@ const mapStateToProps = state => {
 	};
 };
 
-export default connect(mapStateToProps, {
-	...actions,
-	setCurrentReview,
-	setCurrentPullRequest,
-	setCurrentStream,
-	editCodemark,
-	setNewPostEntry
-})(injectIntl(SimpleStream));
+export default connect(
+	mapStateToProps,
+	{
+		...actions,
+		setCurrentReview,
+		setCurrentPullRequest,
+		setCurrentStream,
+		setCurrentCodemark,
+		editCodemark,
+		setNewPostEntry
+	}
+)(injectIntl(SimpleStream));

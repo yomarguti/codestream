@@ -32,6 +32,7 @@ class JBCefWebView(val jbCefBrowser: JBCefBrowser, val router: WebViewRouter) : 
 
     init {
         logger.info("Initializing JBCef WebView")
+        jbCefBrowser.cefBrowser.createImmediately()
         jbCefBrowser.jbCefClient.addContextMenuHandler(object : CefContextMenuHandlerAdapter(){
             override fun onBeforeContextMenu(
                 browser: CefBrowser?,
