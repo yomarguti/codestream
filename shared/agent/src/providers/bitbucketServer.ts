@@ -352,7 +352,11 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 					key: repoResponse.body.project.key
 				},
 				defaultBranch: defaultBranchName,
-				pullRequests: pullRequests
+				pullRequests: pullRequests,
+				metadata: {
+					method: "getRepoMetadata",
+					providerDisplayName: this.displayName
+				}
 			};
 		} catch (ex) {
 			Logger.error(ex, `${this.displayName}: getRepoMetadata`, {

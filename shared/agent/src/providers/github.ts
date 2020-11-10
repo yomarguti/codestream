@@ -785,7 +785,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			return {
 				id: response.repository.id,
 				defaultBranch: response.repository.defaultBranchRef.name,
-				pullRequests: response.repository.pullRequests.nodes
+				pullRequests: response.repository.pullRequests.nodes,
+				metadata: {
+					method: "getRepoMetadata",
+					providerDisplayName: this.displayName
+				}
 			};
 		} catch (ex) {
 			Logger.error(ex, "GitHub: getRepoMetadataq", {

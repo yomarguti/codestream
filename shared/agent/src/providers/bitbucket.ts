@@ -483,7 +483,11 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 					repoResponse.body.mainbranch.type === "branch"
 						? repoResponse.body.mainbranch.name
 						: undefined,
-				pullRequests: pullRequests
+				pullRequests: pullRequests,
+				metadata: {
+					method: "getRepoMetadata",
+					providerDisplayName: this.displayName
+				}
 			};
 		} catch (ex) {
 			Logger.error(ex, `${this.displayName}: getRepoMetadata`, {

@@ -935,6 +935,7 @@ export interface ProviderGetRepoInfoResponse {
 	id?: string;
 	defaultBranch?: string;
 	pullRequests?: ProviderPullRequestInfo[];
+	metadata?: any;
 	error?: { message?: string; type: string };
 }
 
