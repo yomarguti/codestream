@@ -262,7 +262,7 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 		void (await this.ensureConnected());
 
 		try {
-			const repoInfo = await this.getRepoInfo({ remote: request.remote });
+			const repoInfo = await this.getRepoMetadata({ remote: request.remote });
 			if (repoInfo && repoInfo.error) {
 				return {
 					error: repoInfo.error
@@ -320,7 +320,7 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 		}
 	}
 
-	async getRepoInfo(request: { remote: string }): Promise<any> {
+	async getRepoMetadata(request: { remote: string }): Promise<any> {
 		try {
 			const { owner, name } = this.getOwnerFromRemote(request.remote);
 			const repoResponse = await this.get<BitbucketServerRepo>(`/projects/${owner}/repos/${name}`);
@@ -355,7 +355,7 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 				pullRequests: pullRequests
 			};
 		} catch (ex) {
-			Logger.error(ex, `${this.displayName}: getRepoInfo`, {
+			Logger.error(ex, `${this.displayName}: getRepoMetadata`, {
 				remote: request.remote
 			});
 			return {

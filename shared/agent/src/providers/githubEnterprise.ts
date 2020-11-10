@@ -104,7 +104,7 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 		if (!(await this.isPRApiCompatible())) return undefined;
 
 		try {
-			const repoInfo = await this.getRepoInfo({ remote: request.remote });
+			const repoInfo = await this.getRepoMetadata({ remote: request.remote });
 			if (repoInfo && repoInfo.error) {
 				return {
 					error: repoInfo.error
@@ -143,7 +143,7 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 		}
 	}
 
-	async getRepoInfo(request: { remote: string }): Promise<ProviderGetRepoInfoResponse> {
+	async getRepoMetadata(request: { remote: string }): Promise<ProviderGetRepoInfoResponse> {
 		try {
 			const { owner, name } = this.getOwnerFromRemote(request.remote);
 			const repoResponse = await this.get<GitHubEnterpriseRepo>(`/repos/${owner}/${name}`);
@@ -167,7 +167,7 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 				pullRequests: pullRequests
 			};
 		} catch (ex) {
-			Logger.error(ex, `${this.displayName}: getRepoInfo`, {
+			Logger.error(ex, `${this.displayName}: getRepoMetadata`, {
 				remote: request.remote
 			});
 			return {

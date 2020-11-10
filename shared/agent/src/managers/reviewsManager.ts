@@ -586,7 +586,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 					if (remotePaths && remotePaths.length) {
 						// just need any url here...
 						remoteUrl = "https://example.com/" + remotePaths[0];
-						const providerRepoInfo = await providerRegistry.getRepoInfo({
+						const providerRepoInfo = await providerRegistry.getRepoMetadata({
 							providerId: providerId,
 							remote: remoteUrl
 						});
@@ -693,7 +693,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 			if (providerRepo?.provider) {
 				remoteUrl = "https://example.com/" + providerRepo.remotePaths[0];
-				const providerRepoInfo = await providerRegistry.getRepoInfo({
+				const providerRepoInfo = await providerRegistry.getRepoMetadata({
 					providerId: providerRepo.providerId,
 					remote: remoteUrl
 				});

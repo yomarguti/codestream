@@ -467,7 +467,7 @@ export class ThirdPartyProviderRegistry {
 		return response;
 	}
 
-	async getRepoInfo(request: ProviderGetRepoInfoRequest) {
+	async getRepoMetadata(request: ProviderGetRepoInfoRequest) {
 		const provider = getProvider(request.providerId);
 		if (provider === undefined) {
 			throw new Error(`No registered provider for '${request.providerId}'`);
@@ -484,7 +484,7 @@ export class ThirdPartyProviderRegistry {
 
 		// TODO clean it up remote here
 
-		const response = await pullRequestProvider.getRepoInfo(request);
+		const response = await pullRequestProvider.getRepoMetadata(request);
 		return response;
 	}
 

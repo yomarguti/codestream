@@ -693,7 +693,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				};
 			}
 
-			const repoInfo = await this.getRepoInfo({ remote: request.remote });
+			const repoInfo = await this.getRepoMetadata({ remote: request.remote });
 			if (repoInfo && repoInfo.error) {
 				return {
 					error: repoInfo.error
@@ -745,7 +745,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		}
 	}
 
-	async getRepoInfo(request: { remote: string }): Promise<ProviderGetRepoInfoResponse> {
+	async getRepoMetadata(request: { remote: string }): Promise<ProviderGetRepoInfoResponse> {
 		try {
 			const { owner, name } = this.getOwnerFromRemote(request.remote);
 
@@ -788,7 +788,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				pullRequests: response.repository.pullRequests.nodes
 			};
 		} catch (ex) {
-			Logger.error(ex, "GitHub: getRepoInfo", {
+			Logger.error(ex, "GitHub: getRepoMetadataq", {
 				remote: request.remote
 			});
 			let errorMessage =
@@ -878,7 +878,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				forks
 			};
 		} catch (ex) {
-			Logger.error(ex, "GitHub: getRepoInfo", {
+			Logger.error(ex, "GitHub: getRepoMetadata", {
 				remote: request.remote
 			});
 			let errorMessage =

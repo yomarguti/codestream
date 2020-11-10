@@ -325,7 +325,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			}
 			const { owner, name } = this.getOwnerFromRemote(request.remote);
 
-			const repoInfo = await this.getRepoInfo({ remote: request.remote });
+			const repoInfo = await this.getRepoMetadata({ remote: request.remote });
 			if (repoInfo && repoInfo.error) {
 				return {
 					error: repoInfo.error
@@ -370,7 +370,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		}
 	}
 
-	async getRepoInfo(request: { remote: string }): Promise<ProviderGetRepoInfoResponse> {
+	async getRepoMetadata(request: { remote: string }): Promise<ProviderGetRepoInfoResponse> {
 		try {
 			const { owner, name } = this.getOwnerFromRemote(request.remote);
 
@@ -395,7 +395,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				})
 			};
 		} catch (ex) {
-			Logger.error(ex, `${this.displayName}: getRepoInfo`, {
+			Logger.error(ex, `${this.displayName}: getRepoMetadata`, {
 				remote: request.remote
 			});
 
