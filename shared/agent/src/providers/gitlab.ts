@@ -374,10 +374,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		try {
 			const { owner, name } = this.getOwnerFromRemote(request.remote);
 
+			// TODO better logging here for failed requests
 			const projectResponse = await this.get<GitLabProjectInfoResponse>(
 				`/projects/${encodeURIComponent(`${owner}/${name}`)}`
 			);
 
+			// TODO better logging here for failed requests
 			const mergeRequestsResponse = await this.get<GitLabMergeRequestInfoResponse[]>(
 				`/projects/${encodeURIComponent(`${owner}/${name}`)}/merge_requests?state=opened`
 			);
@@ -390,7 +392,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						id: _.iid.toString(),
 						url: _.web_url,
 						baseRefName: _.target_branch,
-						headRefName: _.source_branch
+						headRefName: _.source_branch,
+						metadata: {
+							method: "getRepoMetadata",
+							providerDisplayName: this.displayName
+						}
 					};
 				})
 			};
