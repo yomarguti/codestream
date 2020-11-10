@@ -516,11 +516,17 @@
             ],
             "editor/context": [
                 {
+                    "submenu": "codestream.editor.context",
+                    "group": "9_zcodestream"
+                }
+            ],
+            "codestream.editor.context": [
+                {
                     "command": "codestream.newComment",
                     "when": "codestream:status == signedIn",
                     "group": "9_zcodestream@1"
-                },
-                {
+				},
+				{
                     "command": "codestream.newIssue",
                     "when": "codestream:status == signedIn",
                     "group": "9_zcodestream@2"
@@ -539,7 +545,7 @@
                     "command": "codestream.newPullRequest",
                     "when": "codestream:status == signedIn",
                     "group": "9_zcodestream@7"
-                }
+                } 
             ],
             "view/title": [
                 {
@@ -563,7 +569,13 @@
                     "group": "navigation"
                 }
             ]
-        }
+		},
+		"submenus": [
+			{
+				"id": "codestream.editor.context",
+				"label": "CodeStream"
+			}
+		]
     },
     "activationEvents": [
         "*"
@@ -620,7 +632,7 @@
         "@types/node": "10.11.7",
         "@types/node-fetch": "2.5.0",
         "@types/uuid": "3.4.5",
-        "@types/vscode": "1.49.0",
+        "@types/vscode": "1.50.0",
         "@typescript-eslint/eslint-plugin": "2.18.0",
         "@typescript-eslint/eslint-plugin-tslint": "2.18.0",
         "@typescript-eslint/parser": "2.18.0",
