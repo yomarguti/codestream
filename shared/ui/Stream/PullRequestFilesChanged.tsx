@@ -235,27 +235,35 @@ export const PullRequestFilesChanged = (props: Props) => {
 				inEditorOnly: false
 			});
 			if (!response.repositories) return;
-			const currentRepoInfo = response.repositories.find(
-				r => r.id === pr ? derivedState.currentRepo!.id : props.repoId!
-			);
-			if (currentRepoInfo) {
-				setCurrentRepoRoot(currentRepoInfo.path);
-				repoRoot = currentRepoInfo.path;
+			const repoIdToCheck = props.repoId
+				? props.repoId
+				: derivedState.currentRepo
+				? derivedState.currentRepo.id
+				: undefined;
+			if (repoIdToCheck) {
+				const currentRepoInfo = response.repositories.find(r => r.id === repoIdToCheck);
+				if (currentRepoInfo) {
+					setCurrentRepoRoot(currentRepoInfo.path);
+					repoRoot = currentRepoInfo.path;
+				}
 			}
 		}
+		if (repoRoot) {
+			const result = await HostApi.instance.send(EditorRevealRangeRequestType, {
+				uri: path.join("file://", repoRoot, f.file),
+				range: Range.create(0, 0, 0, 0)
+			});
 
-		const result = await HostApi.instance.send(EditorRevealRangeRequestType, {
-			uri: path.join("file://", repoRoot, f.file),
-			range: Range.create(0, 0, 0, 0)
-		});
-
-		if (!result.success) {
-			setErrorMessage("Could not open file");
+			if (!result.success) {
+				setErrorMessage("Could not open file");
+			} else {
+				HostApi.instance.track("PR File Viewed", {
+					Host: props.pr && props.pr.providerId
+				});
+			}
+		} else {
+			setErrorMessage("Could not find a repo");
 		}
-
-		HostApi.instance.track("PR File Viewed", {
-			Host: props.pr && props.pr.providerId
-		});
 	};
 
 	const renderFile = (f, index, depth) => {

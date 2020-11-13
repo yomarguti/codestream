@@ -97,7 +97,7 @@ export interface ThirdPartyProviderSupportsPullRequests {
 	): Promise<ProviderCreatePullRequestResponse | undefined>;
 	getRepoInfo(request: ProviderGetRepoInfoRequest): Promise<ProviderGetRepoInfoResponse>;
 	getIsMatchingRemotePredicate(): (remoteLike: GitRemoteLike) => boolean;
-	getRemotePaths(repo: any, _projectsByRemotePath: any): any;
+	getRemotePaths(repo: GitRepository, _projectsByRemotePath: any): any;
 
 	getPullRequest(
 		request: FetchThirdPartyPullRequestRequest
@@ -512,7 +512,7 @@ export abstract class ThirdPartyProviderBase<
 			}
 
 			if (resp !== undefined && !resp.ok) {
-				traceResult = `${this.displayName}: FAILED(${retryCount}x) ${method} ${url}`;
+				traceResult = `${this.displayName}: FAILED(${retryCount}x) ${method} ${absoluteUrl}`;
 				const error = await this.handleErrorResponse(resp);
 				throw error;
 			}

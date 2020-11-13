@@ -36,7 +36,8 @@ import {
 	setCurrentReview,
 	openPanel,
 	setCurrentPullRequest,
-	setCurrentRepo
+	setCurrentRepo,
+	closeAllPanels
 } from "../store/context/actions";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { PrePRProviderInfoModal } from "./PrePRProviderInfoModal";
@@ -118,6 +119,8 @@ export const CreatePullRequestPanel = props => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { providers, context } = state;
+
+		const supportedPullRequestViewProviders = ["github*com", "github/enterprise"];
 		const codeHostProviders = Object.keys(providers).filter(id =>
 			[
 				"github",
@@ -135,6 +138,7 @@ export const CreatePullRequestPanel = props => {
 		return {
 			repos: state.repos,
 			currentUser,
+			supportedPullRequestViewProviders,
 			userStatus: status,
 			providers: providers,
 			codeHostProviders: codeHostProviders,
@@ -231,11 +235,15 @@ export const CreatePullRequestPanel = props => {
 				// if we're not creating a PR from a review, then get the current
 				// repo and branch from the editor
 				const response = await HostApi.instance.send(GetReposScmRequestType, {
-					inEditorOnly: true
+					inEditorOnly: true,
+					includeConnectedProviders: true
 				});
 
 				if (response && response.repositories && response.repositories.length) {
-					let panelRepo = selectedRepo || response.repositories[0];
+					let panelRepo =
+						selectedRepo ||
+						response.repositories.find(_ => _.providerId) ||
+						response.repositories[0];
 					if (derivedState.currentRepo && derivedState.currentRepo.id) {
 						const currentRepoId = derivedState.currentRepo.id;
 						const currentRepo = response.repositories.find(_ => _.id === currentRepoId);
@@ -260,6 +268,7 @@ export const CreatePullRequestPanel = props => {
 			}
 			const result = await HostApi.instance.send(CheckPullRequestPreconditionsRequestType, args);
 			if (result && result.success) {
+				args.repoId = result.repoId!;
 				setBranches(result.branches!);
 				setRemoteBranches(result.remoteBranches!);
 
@@ -272,7 +281,7 @@ export const CreatePullRequestPanel = props => {
 				setPrBranch(newPrBranch);
 
 				setPrRemoteUrl(result.remoteUrl!);
-				setPrTitle(result.review!.title!);
+				if (result.review && result.review.title) changePRTitle(result.review.title);
 
 				const template = result.pullRequestTemplate || "";
 				setNumLines(Math.max(template.split("\n").length, 8));
@@ -375,6 +384,11 @@ export const CreatePullRequestPanel = props => {
 		};
 	}, []);
 
+	const changePRTitle = (title: string) => {
+		setPrTitle(title);
+		setTitleValidity(isTitleValid(title));
+	};
+
 	const isTitleValid = (title: string) => title != null && title !== "";
 
 	const onValidityChanged = useCallback((field: string, validity: boolean) => {
@@ -390,8 +404,7 @@ export const CreatePullRequestPanel = props => {
 	const onSubmit = async (event: React.SyntheticEvent) => {
 		setUnexpectedError(false);
 		pauseDataNotifications.current = true;
-		onValidityChanged("title", isTitleValid(prTitle));
-		if (!titleValidity) return;
+		if (!isTitleValid(prTitle)) return;
 
 		let success = false;
 		setSubmitting(true);
@@ -480,11 +493,13 @@ export const CreatePullRequestPanel = props => {
 				repoId = selectedRepo.id;
 			} else {
 				const response = await HostApi.instance.send(GetReposScmRequestType, {
-					inEditorOnly: true
+					inEditorOnly: true,
+					includeConnectedProviders: true
 				});
 
 				if (response && response.repositories) {
-					repoId = response.repositories[0].id || "";
+					const providerRepo = response.repositories.find(_ => _.providerId);
+					repoId = providerRepo ? providerRepo.id || "" : response.repositories[0].id || "";
 				}
 			}
 		}
@@ -527,7 +542,7 @@ export const CreatePullRequestPanel = props => {
 				} else {
 					setFormState({ type: "", message: "", url: "", id: "" });
 				}
-				fetchFilesChanged(repoId, localPrBranch, localReviewBranch);
+				fetchFilesChanged(result.repoId!, localPrBranch, localReviewBranch);
 				setLoadingBranchInfo(false);
 			})
 			.catch(error => {
@@ -603,14 +618,19 @@ export const CreatePullRequestPanel = props => {
 		const items = remoteBranches!.map(_ => {
 			return {
 				label: _,
+				searchLabel: _,
 				key: _,
 				action: async () => {
 					setPrBranch(_);
 					checkPullRequestBranchPreconditions(_, reviewBranch);
 				}
 			};
-		});
+		}) as any;
 		if (items.length === 0) return undefined;
+		if (items.length >= 10) {
+			items.unshift({ label: "-" });
+			items.unshift({ type: "search", placeholder: "Search...", action: "search" });
+		}
 		return (
 			<span>
 				<DropdownButton variant="secondary" items={items}>
@@ -625,11 +645,16 @@ export const CreatePullRequestPanel = props => {
 		const items = baseForkedRepo.refs.nodes.map(_ => {
 			return {
 				label: _.name,
+				searchLabel: _.name,
 				key: _.name,
 				action: () => setPrBranch(_.name)
 			};
 		});
 		if (items.length === 0) return null;
+		if (items.length >= 10) {
+			items.unshift({ label: "-" });
+			items.unshift({ type: "search", placeholder: "Search...", action: "search" });
+		}
 		return (
 			<span>
 				<DropdownButton variant="secondary" items={items}>
@@ -645,14 +670,19 @@ export const CreatePullRequestPanel = props => {
 		const items = branches!.map(_ => {
 			return {
 				label: _,
+				searchLabel: _,
 				key: _,
 				action: async () => {
 					setReviewBranch(_);
 					checkPullRequestBranchPreconditions(prBranch, _);
 				}
 			};
-		});
+		}) as any;
 		if (items.length === 0) return undefined;
+		if (items.length >= 10) {
+			items.unshift({ label: "-" });
+			items.unshift({ type: "search", placeholder: "Search...", action: "search" });
+		}
 		return (
 			<DropdownButton variant="secondary" items={items}>
 				<span className="subtle">compare:</span> <strong>{reviewBranch}</strong>
@@ -665,11 +695,16 @@ export const CreatePullRequestPanel = props => {
 		const items = headForkedRepo.refs.nodes.map(_ => {
 			return {
 				label: _.name,
+				searchLabel: _.name,
 				key: _.name,
 				action: () => setReviewBranch(_.name)
 			};
 		});
 		if (items.length === 0) return null;
+		if (items.length >= 10) {
+			items.unshift({ label: "-" });
+			items.unshift({ type: "search", placeholder: "Search...", action: "search" });
+		}
 		return (
 			<DropdownButton variant="secondary" items={items}>
 				<span className="subtle">compare:</span> <strong>{reviewBranch}</strong>
@@ -684,15 +719,18 @@ export const CreatePullRequestPanel = props => {
 			const repoName = _.id && derivedState.repos[_.id] ? derivedState.repos[_.id].name : _.path;
 			return {
 				label: repoName,
+				searchLabel: repoName,
 				key: _.folder.uri,
 				action: async () => {
-					// optimistically
-					// setPrBranch(_);
 					setSelectedRepo(_);
 				}
 			};
-		});
+		}) as any;
 		if (items.length === 0) return undefined;
+		if (items.length >= 10) {
+			items.unshift({ label: "-" });
+			items.unshift({ type: "search", placeholder: "Search...", action: "search" });
+		}
 		if (
 			derivedState.repos &&
 			selectedRepo &&
@@ -717,18 +755,24 @@ export const CreatePullRequestPanel = props => {
 			const repoName = repo.nameWithOwner;
 			return {
 				label: repoName,
+				searchLabel: repoName,
 				key: repo.id,
 				action: () => setBaseForkedRepo(repo)
 			};
-		});
+		}) as any;
 		if (parentRepo) {
 			items.unshift({
 				label: parentRepo.nameWithOwner,
+				searchLabel: parentRepo.nameWithOwner,
 				key: parentRepo.id,
 				action: () => setBaseForkedRepo(parentRepo)
 			});
 		}
 		if (items.length === 0) return null;
+		if (items.length >= 10) {
+			items.unshift({ label: "-" });
+			items.unshift({ type: "search", placeholder: "Search...", action: "search" });
+		}
 		return (
 			<span>
 				<DropdownButton variant="secondary" items={items}>
@@ -743,18 +787,24 @@ export const CreatePullRequestPanel = props => {
 			const repoName = repo.nameWithOwner;
 			return {
 				label: repoName,
+				searchLabel: repoName,
 				key: repo.id,
 				action: () => setHeadForkedRepo(repo)
 			};
-		});
+		}) as any;
 		if (parentRepo) {
 			items.unshift({
 				label: parentRepo.nameWithOwner,
+				searchLabel: parentRepo.nameWithOwner,
 				key: parentRepo.id,
 				action: () => setHeadForkedRepo(parentRepo)
 			});
 		}
 		if (items.length === 0) return null;
+		if (items.length >= 10) {
+			items.unshift({ label: "-" });
+			items.unshift({ type: "search", placeholder: "Search...", action: "search" });
+		}
 		return (
 			<span>
 				<DropdownButton variant="secondary" items={items}>
@@ -953,7 +1003,12 @@ export const CreatePullRequestPanel = props => {
 							<Button
 								onClick={e => {
 									e.preventDefault();
-									if (id) {
+									if (
+										id &&
+										prProviderId &&
+										derivedState.supportedPullRequestViewProviders.find(_ => _ === prProviderId)
+									) {
+										dispatch(closeAllPanels());
 										dispatch(setCurrentPullRequest(prProviderId, id));
 									} else {
 										HostApi.instance.send(OpenUrlRequestType, { url: url! });
@@ -1181,7 +1236,7 @@ export const CreatePullRequestPanel = props => {
 									{loadingBranchInfo && <LoadingMessage>Loading branch info...</LoadingMessage>}
 									{(!loading && preconditionError.type) || loadingBranchInfo ? null : (
 										<div>
-											{false && !titleValidity && (
+											{!titleValidity && (
 												<small className={cx("explainer", { "error-message": !titleValidity })}>
 													<FormattedMessage id="pullRequest.title" />
 												</small>
@@ -1203,7 +1258,7 @@ export const CreatePullRequestPanel = props => {
 															placement="top"
 															title="Clear Title"
 															className="clickable"
-															onClick={() => setPrTitle("")}
+															onClick={() => changePRTitle("")}
 														/>
 													)}
 													{userStatus.label && (
@@ -1212,7 +1267,7 @@ export const CreatePullRequestPanel = props => {
 															title="Use Current Ticket"
 															name={userStatus.ticketProvider || "ticket"}
 															className="clickable"
-															onClick={() => setPrTitle(userStatus.label)}
+															onClick={() => changePRTitle(userStatus.label)}
 														/>
 													)}
 													{latestCommit && (
@@ -1221,7 +1276,7 @@ export const CreatePullRequestPanel = props => {
 															title="Use Latest Commit Message"
 															name="git-commit-vertical"
 															className="clickable"
-															onClick={() => setPrTitle(latestCommit)}
+															onClick={() => changePRTitle(latestCommit)}
 														/>
 													)}
 													{reviewBranch && (

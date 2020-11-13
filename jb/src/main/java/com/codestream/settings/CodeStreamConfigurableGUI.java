@@ -4,9 +4,6 @@ import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.EnumComboBoxModel;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import java.awt.event.ItemEvent;
 
 import static com.codestream.settings.ApplicationSettingsServiceKt.API_PROD;
 
@@ -23,6 +20,7 @@ public class CodeStreamConfigurableGUI {
     private JComboBox proxySupport;
     private JCheckBox proxyStrictSSL;
     private JCheckBox jcef;
+    private JCheckBox showNewCodemarkGutterIconOnHover;
 
     public JPanel getRootPanel() {
         return rootPanel;
@@ -58,6 +56,10 @@ public class CodeStreamConfigurableGUI {
 
     public JCheckBox getShowMarkers() {
         return showMarkers;
+    }
+
+    public JCheckBox getShowNewCodemarkGutterIconOnHover() {
+        return showNewCodemarkGutterIconOnHover;
     }
 
     public JComboBox<ProxySupport> getProxySupport() {
