@@ -126,15 +126,31 @@ export class ThirdPartyProviderRegistry {
 		const providersPullRequests: ProviderPullRequests[] = [];
 
 		for (const provider of providers) {
-			const pullRequests = await provider.getMyPullRequests({
-				queries: PR_QUERIES.map(_ => _.query)
-			});
-
-			if (pullRequests) {
-				providersPullRequests.push({
-					providerName: provider.name,
-					queriedPullRequests: pullRequests
+			try {
+				const pullRequests = await provider.getMyPullRequests({
+					queries: PR_QUERIES.map(_ => _.query)
 				});
+
+				if (pullRequests) {
+					providersPullRequests.push({
+						providerName: provider.name,
+						queriedPullRequests: pullRequests
+					});
+				}
+			} catch (ex) {
+				const errorString = typeof ex === "string" ? ex : ex.message;
+				if (
+					errorString &&
+					(errorString.indexOf("ENOTFOUND") > -1 ||
+						errorString.indexOf("ETIMEDOUT") > -1 ||
+						errorString.indexOf("EAI_AGAIN") > -1 ||
+						errorString.indexOf("ECONNRESET") > -1 ||
+						errorString.indexOf("ENETDOWN") > -1)
+				) {
+					// ignore network related errors.
+					return;
+				}
+				throw ex;
 			}
 		}
 
@@ -638,5 +654,28 @@ export class ThirdPartyProviderRegistry {
 		} catch {
 			return false;
 		}
+	}
+
+	/**
+	 * Given a user, return if there are any providers connected
+	 * that support PullRequest creation
+	 *
+	 * @param user
+	 */
+	async getConnectedPullRequestProviders(user: CSMe) {
+		const connectedProviders = this.getConnectedProviders(user, (p): p is ThirdPartyProvider &
+			ThirdPartyProviderSupportsPullRequests => {
+			const thirdPartyProvider = p as ThirdPartyProvider;
+			const name = thirdPartyProvider.getConfig().name;
+			return (
+				name === "github" ||
+				name === "gitlab" ||
+				name === "github_enterprise" ||
+				name === "gitlab_enterprise" ||
+				name === "bitbucket" ||
+				name === "bitbucket_server"
+			);
+		});
+		return connectedProviders;
 	}
 }
