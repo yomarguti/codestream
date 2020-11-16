@@ -246,11 +246,6 @@ export class CodeStreamSession {
 			})
 		);
 
-		setTimeout(() => {
-			console.warn('TIME TO CRASH!!!');
-			throw new Error('TIME TO CRASH!!!');
-		}, 20000);
-
 		this._environment = this.getEnvironment(this._options.serverUrl);
 		Container.initialize(agent, this);
 
