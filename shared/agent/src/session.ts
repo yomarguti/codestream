@@ -36,6 +36,7 @@ import { DocumentEventHandler } from "./documentEventHandler";
 import { setGitPath } from "./git/git";
 import { Logger } from "./logger";
 import {
+	AgentInitializedNotificationType,
 	ApiRequestType,
 	ApiVersionCompatibility,
 	BaseAgentOptions,
@@ -244,6 +245,11 @@ export class CodeStreamSession {
 				resolve();
 			})
 		);
+
+		setTimeout(() => {
+			console.warn('TIME TO CRASH!!!');
+			throw new Error('TIME TO CRASH!!!');
+		}, 20000);
 
 		this._environment = this.getEnvironment(this._options.serverUrl);
 		Container.initialize(agent, this);
