@@ -86,6 +86,7 @@ export * from "./azuredevops";
 export * from "./slack";
 export * from "./msteams";
 export * from "./okta";
+export * from "./clubhouse";
 
 const PR_QUERIES = [
 	{
@@ -194,7 +195,7 @@ export class ThirdPartyProviderRegistry {
 		});
 
 		return newProvidersPRs;
-	};
+	}
 
 	private fireNewPRsNotifications(providersPRs: ProviderPullRequests[]) {
 		const prNotificationMessages: PullRequestsChangedData[] = [];
@@ -583,23 +584,29 @@ export class ThirdPartyProviderRegistry {
 				try {
 					const thirdPartyIssueProvider = provider as ThirdPartyIssueProvider &
 						ThirdPartyProviderSupportsPullRequests;
-					if (
-						thirdPartyIssueProvider.getIsMatchingRemotePredicate()({
-							domain: uri.authority
-						})
-					) {
+					let isConnected;
+					try {
+						// this can throw -- ignore failures
+						await provider.ensureConnected();
+						isConnected = true;
+					} catch {}
+					if (!isConnected) continue;
+
+					const fn = thirdPartyIssueProvider.getIsMatchingRemotePredicate();
+					if (fn && fn({ domain: uri.authority })) {
 						return {
 							providerId: provider.getConfig().id
 						};
 					}
 				} catch (err) {
-					Logger.debug(err, "queryThirdParty failed", {
+					// only warn the log here as `fn` might fail.
+					Logger.warn(err, "provider queryThirdParty failed", {
 						url: request.url
 					});
 				}
 			}
 		} catch (ex) {
-			Logger.error(ex, "queryThirdParty failed", {
+			Logger.error(ex, "generic queryThirdParty failed", {
 				url: request.url
 			});
 		}
