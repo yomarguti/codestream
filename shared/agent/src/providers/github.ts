@@ -708,11 +708,18 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				};
 			}
 
-			const repoInfo = await this.getRepoInfo({ remote: request.remote });
-			if (repoInfo && repoInfo.error) {
-				return {
-					error: repoInfo.error
-				};
+			let repositoryId = "";
+			if (request.providerRepositoryId) {
+				repositoryId = request.providerRepositoryId;
+			} else {
+				const repoInfo = await this.getRepoInfo({ remote: request.remote });
+				if (repoInfo && repoInfo.id) {
+					repositoryId = repoInfo.id;
+				} else {
+					return {
+						error: repoInfo.error
+					};
+				}
 			}
 
 			const createPullRequestResponse = await this.mutate<GitHubCreatePullRequestResponse>(
@@ -728,7 +735,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					}
 				  }`,
 				{
-					repositoryId: repoInfo!.id,
+					repositoryId: repositoryId,
 					baseRefName: request.baseRefName,
 					title: request.title,
 					headRefName: request.headRefName,
@@ -818,7 +825,10 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		}
 	}
 
-	async getForkedRepos(request: { remote: string }): Promise<ProviderGetForkedReposResponse> {
+	async getForkedRepos(
+		request: { remote: string },
+		recurseFailsafe?: boolean
+	): Promise<ProviderGetForkedReposResponse> {
 		try {
 			const { owner, name } = this.getOwnerFromRemote(request.remote);
 
@@ -834,6 +844,10 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				   		id
 						name
 						nameWithOwner
+						parent {
+							id
+							nameWithOwner
+						}
 						defaultBranchRef {
 							name
 						}
@@ -859,6 +873,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 								id
 								name
 								nameWithOwner
+								owner {
+									login
+								}
 								defaultBranchRef {
 									name
 								}
@@ -883,6 +900,21 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					name: name
 				}
 			);
+
+			// if this is a fork, get the forks of the parent
+			if (response.repository.parent && !recurseFailsafe) {
+				Logger.log("Getting parent forked repos");
+				const result = await this.getForkedRepos(
+					// this use of "example.com" is just to provide the URL parser something to parse
+					{ remote: "https://example.com/" + response.repository.parent.nameWithOwner },
+					true
+				);
+				return {
+					parent: result.parent,
+					forks: result.forks
+				};
+			}
+
 			const forks = response.repository.forks.nodes.sort((a: any, b: any) => {
 				if (b.nameWithOwner < a.nameWithOwner) return 1;
 				if (a.nameWithOwner < b.nameWithOwner) return -1;
@@ -1882,7 +1914,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					remaining
 					limit
 				}
-				repository(owner:$owner name:$name) {
+				repository(owner:$owner, name:$name) {
 					pullRequest(number: $pullRequestNumber) {
 						id
 					  }
@@ -1894,7 +1926,12 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				pullRequestNumber: pullRequestNumber
 			}
 		);
-		return pullRequestInfo.repository.pullRequest.id;
+		try {
+			return pullRequestInfo.repository.pullRequest.id;
+		} catch (ex) {
+			Logger.warn(ex, "Ensure you have the correct scopes");
+			throw ex;
+		}
 	}
 
 	async getIssueIdFromUrl(request: { url: string }) {
@@ -2254,7 +2291,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				position: request.position!
 			} as any;
 		} else {
-			// enterprise 2.20.X and beyon allows this
+			// enterprise 2.20.X and beyond allows this
 			// https://docs.github.com/en/enterprise-server@2.20/rest/reference/pulls#create-a-review-comment-for-a-pull-request
 			payload = {
 				body: request.text,
@@ -2346,12 +2383,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			path: request.filePath,
 			startLine: request.startLine,
 			position: request.position
-		});
-
-		this._pullRequestCache.delete(request.pullRequestId);
-		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
-			pullRequestId: request.pullRequestId,
-			filePath: request.filePath
 		});
 
 		return result;

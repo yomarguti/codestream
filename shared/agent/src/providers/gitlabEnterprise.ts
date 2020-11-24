@@ -1,7 +1,7 @@
 "use strict";
 
 import { URI } from "vscode-uri";
-import { GitRemote, GitRemoteLike } from "../git/gitService";
+import { GitRemoteLike } from "../git/gitService";
 import { EnterpriseConfigurationData } from "../protocol/agent.protocol.providers";
 import { log, lspProvider } from "../system";
 import { GitLabProvider } from "./gitlab";
@@ -18,6 +18,16 @@ export class GitLabEnterpriseProvider extends GitLabProvider {
 
 	get apiPath() {
 		return this.providerConfig.forEnterprise || this.providerConfig.isEnterprise ? "/api/v4" : "";
+	}
+
+	get headers() {
+		// Certain GitLab self-managed servers do not accept
+		// the Authorization header but rather use a PRIVATE-TOKEN
+		// header. See https://docs.gitlab.com/ee/api/#oauth2-tokens
+		// and https://docs.gitlab.com/11.11/ee/api/README.html
+		return {
+			"PRIVATE-TOKEN": this.accessToken!
+		};
 	}
 
 	getIsMatchingRemotePredicate() {

@@ -61,7 +61,8 @@ export const providerDisplayNamesByNameKey = new Map<string, string>([
 	["azuredevops", "Azure DevOps"],
 	["slack", "Slack"],
 	["msteams", "Microsoft Teams"],
-	["okta", "Okta"]
+	["okta", "Okta"],
+	["clubhouse", "Clubhouse"]
 ]);
 
 export interface ThirdPartyProviderSupportsIssues {
@@ -946,7 +947,8 @@ export interface ProviderGetForkedReposResponse {
 
 export interface ProviderCreatePullRequestRequest {
 	providerId: string;
-	remote: string;
+	providerRepositoryId?: string /* for use across forks */;
+	remote: string /* to look up the repo ID on the provider */;
 	title: string;
 	description?: string;
 	baseRefName: string;
