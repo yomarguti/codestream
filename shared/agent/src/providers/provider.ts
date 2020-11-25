@@ -484,6 +484,10 @@ export abstract class ThirdPartyProviderBase<
 		init: RequestInit,
 		options: { [key: string]: any } = {}
 	): Promise<ApiResponse<R>> {
+		if (this._providerInfo && this._providerInfo.tokenError) {
+			throw new Error("Access token invalid");
+		}
+
 		const start = process.hrtime();
 
 		let traceResult;

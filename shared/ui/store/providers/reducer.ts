@@ -80,7 +80,8 @@ export const getPRLabelForProvider = (provider: string): LabelHash => {
 export const isConnected = (
 	state: CodeStreamState,
 	option: ProviderPropertyOption,
-	requiredScope?: string // ONLY WORKS FOR SLACK AND MSTEAMS
+	requiredScope?: string, // ONLY WORKS FOR SLACK AND MSTEAMS
+	accessTokenError?: { accessTokenError?: any }
 ) => {
 	return isConnectedSelectorFriendly(
 		state.users,
@@ -88,7 +89,8 @@ export const isConnected = (
 		state.session,
 		state.providers,
 		option,
-		requiredScope
+		requiredScope,
+		accessTokenError
 	);
 };
 
@@ -102,7 +104,8 @@ export const isConnectedSelectorFriendly = (
 	session: SessionState,
 	providers: ProvidersState,
 	option: ProviderPropertyOption,
-	requiredScope?: string // ONLY WORKS FOR SLACK AND MSTEAMS
+	requiredScope?: string, // ONLY WORKS FOR SLACK AND MSTEAMS
+	accessTokenError?: { accessTokenError?: any }
 ) => {
 	const currentUser = users[session.userId!] as CSMe;
 
@@ -122,15 +125,21 @@ export const isConnectedSelectorFriendly = (
 					info != undefined &&
 					info.hosts != undefined &&
 					Object.keys(info.hosts).some(host => {
-						return providers[host] != undefined && info.hosts![host].accessToken != undefined;
+						const isConnected = providers[host] != undefined && info.hosts![host].accessToken != undefined;
+						if (isConnected && accessTokenError) {
+							accessTokenError.accessTokenError = info.hosts![host].tokenError;
+						}
+						return isConnected;
 					})
 				);
 			}
 			default: {
 				// is there an accessToken for the provider?
 				if (info == undefined) return false;
-				if (info.accessToken != undefined) return true;
-
+				if (info.accessToken != undefined) {
+					if (accessTokenError) accessTokenError.accessTokenError = info.tokenError;
+					return true;
+				}
 				if (["slack", "msteams"].includes(providerName)) {
 					const infoPerTeam = (info as any).multiple as { [key: string]: CSProviderInfos };
 					if (requiredScope) {
@@ -141,8 +150,15 @@ export const isConnectedSelectorFriendly = (
 						)
 							return false;
 					}
-					if (infoPerTeam && Object.values(infoPerTeam).some(i => i.accessToken != undefined))
+					if (infoPerTeam && Object.values(infoPerTeam).some(i => {
+						const isConnected = i.accessToken != undefined;
+						if (isConnected && accessTokenError) {
+							accessTokenError.accessTokenError = i.tokenError;
+						}
+						return isConnected;
+					})) {
 						return true;
+					}
 				}
 				return false;
 			}
@@ -153,18 +169,34 @@ export const isConnectedSelectorFriendly = (
 		if (infoForProvider == undefined) return false;
 
 		if (!providerConfig.isEnterprise) {
-			if (infoForProvider.accessToken) return true;
-			const infoPerTeam = (infoForProvider as any).multiple as { [key: string]: CSProviderInfos };
-			if (infoPerTeam && Object.values(infoPerTeam).some(i => i.accessToken != undefined))
+			if (infoForProvider.accessToken) {
+				if (accessTokenError) {
+					accessTokenError.accessTokenError = infoForProvider.tokenError;
+				}
 				return true;
+			}
+			const infoPerTeam = (infoForProvider as any).multiple as { [key: string]: CSProviderInfos };
+			if (infoPerTeam && Object.values(infoPerTeam).some(i => {
+				const isConnected = i.accessToken != undefined;
+				if (isConnected && accessTokenError) {
+					accessTokenError.accessTokenError = i.tokenError;
+				}
+				return isConnected;
+			})) {
+				return true;
+			}
 			return false;
 		}
 
-		return !!(
+		const isConnected = !!(
 			infoForProvider.hosts &&
 			infoForProvider.hosts[providerConfig.id] &&
 			infoForProvider.hosts[providerConfig.id].accessToken
 		);
+		if (isConnected && accessTokenError) {
+			accessTokenError.accessTokenError = infoForProvider.hosts![providerConfig.id].tokenError;
+		}
+		return isConnected;
 	}
 };
 

@@ -180,7 +180,28 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	};
 
 	async query<T = any>(query: string, variables: any = undefined) {
-		const response = await (await this.client()).request<any>(query, variables);
+		if (this._providerInfo && this._providerInfo.tokenError) {
+			throw new Error("Access token invalid");
+		}
+
+		let response;
+		try {
+			response = await (await this.client()).request<any>(query, variables);
+		}
+		catch (ex) {
+			if (ex.response && ex.response.message === "Bad credentials") {
+				this.session.api.setThirdPartyProviderInfo({
+					providerId: this.providerConfig.id,
+					data: {
+						tokenError: {
+							error: ex,
+							occurredAt: Date.now()
+						}
+					}
+				});
+			}
+			throw ex;
+		}
 
 		try {
 			if (Logger.level === TraceLevel.Debug && response && response.rateLimit) {

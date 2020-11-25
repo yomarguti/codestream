@@ -43,7 +43,7 @@ export const configureAndConnectProvider = (
 	}
 };
 
-export const connectProvider = (providerId: string, connectionLocation: ViewLocation) => async (
+export const connectProvider = (providerId: string, connectionLocation: ViewLocation, force?: boolean) => async (
 	dispatch,
 	getState
 ) => {
@@ -56,7 +56,7 @@ export const connectProvider = (providerId: string, connectionLocation: ViewLoca
 	if (providerInfo && isEnterprise) {
 		providerInfo = (providerInfo.hosts || {})[id];
 	}
-	if (providerInfo && providerInfo.accessToken) {
+	if (!force && providerInfo && providerInfo.accessToken) {
 		if (provider.hasIssues) {
 			dispatch(setIssueProvider(providerId));
 		}
@@ -92,7 +92,8 @@ export type ViewLocation =
 	| "Status"
 	| "Sidebar"
 	| "Create Pull Request Panel"
-	| "Issues Section";
+	| "Issues Section"
+	| "Provider Error Banner";
 
 export const sendIssueProviderConnected = (
 	providerId: string,
