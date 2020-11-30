@@ -105,7 +105,12 @@ export const isConnectedSelectorFriendly = (
 	providers: ProvidersState,
 	option: ProviderPropertyOption,
 	requiredScope?: string, // ONLY WORKS FOR SLACK AND MSTEAMS
-	accessTokenError?: { accessTokenError?: any }
+
+	// if the parameter below is provided, it is a container for the token error...
+	// basically acts like an additional return value that avoids changing the call signature for this method
+	// if filled, it indicates that the provider is technically connected (we have an access token),
+	// but the access token has come back from the provider as invalid
+	accessTokenError?: { accessTokenError?: any } 
 ) => {
 	const currentUser = users[session.userId!] as CSMe;
 
@@ -127,6 +132,7 @@ export const isConnectedSelectorFriendly = (
 					Object.keys(info.hosts).some(host => {
 						const isConnected = providers[host] != undefined && info.hosts![host].accessToken != undefined;
 						if (isConnected && accessTokenError) {
+							// see comment on accessTokenError in the method parameters, above
 							accessTokenError.accessTokenError = info.hosts![host].tokenError;
 						}
 						return isConnected;
@@ -137,6 +143,7 @@ export const isConnectedSelectorFriendly = (
 				// is there an accessToken for the provider?
 				if (info == undefined) return false;
 				if (info.accessToken != undefined) {
+					// see comment on accessTokenError in the method parameters, above
 					if (accessTokenError) accessTokenError.accessTokenError = info.tokenError;
 					return true;
 				}
@@ -153,6 +160,7 @@ export const isConnectedSelectorFriendly = (
 					if (infoPerTeam && Object.values(infoPerTeam).some(i => {
 						const isConnected = i.accessToken != undefined;
 						if (isConnected && accessTokenError) {
+							// see comment on accessTokenError in the method parameters, above
 							accessTokenError.accessTokenError = i.tokenError;
 						}
 						return isConnected;
@@ -171,6 +179,7 @@ export const isConnectedSelectorFriendly = (
 		if (!providerConfig.isEnterprise) {
 			if (infoForProvider.accessToken) {
 				if (accessTokenError) {
+					// see comment on accessTokenError in the method parameters, above
 					accessTokenError.accessTokenError = infoForProvider.tokenError;
 				}
 				return true;
@@ -179,6 +188,7 @@ export const isConnectedSelectorFriendly = (
 			if (infoPerTeam && Object.values(infoPerTeam).some(i => {
 				const isConnected = i.accessToken != undefined;
 				if (isConnected && accessTokenError) {
+					// see comment on accessTokenError in the method parameters, above
 					accessTokenError.accessTokenError = i.tokenError;
 				}
 				return isConnected;
@@ -194,6 +204,7 @@ export const isConnectedSelectorFriendly = (
 			infoForProvider.hosts[providerConfig.id].accessToken
 		);
 		if (isConnected && accessTokenError) {
+			// see comment on accessTokenError in the method parameters, above
 			accessTokenError.accessTokenError = infoForProvider.hosts![providerConfig.id].tokenError;
 		}
 		return isConnected;

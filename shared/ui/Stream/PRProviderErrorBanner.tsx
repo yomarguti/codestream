@@ -5,7 +5,7 @@ import { isConnected } from "../store/providers/reducer";
 import { CodeStreamState } from "../store";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import Button from "../Stream/Button";
-import { connectProvider, disconnectProvider, ViewLocation } from "../store/providers/actions";
+import { configureAndConnectProvider, disconnectProvider } from "../store/providers/actions";
 
 const Root = styled.div`
 	position: absolute;
@@ -39,10 +39,14 @@ export const PRProviderErrorBanner = () => {
 					"gitlab_enterprise"
 				].includes(providers[id].name)
 			);
+
+		// look for any code host providers that are technically connected (we have an access token for them),
+		// but the access token has been shown (by requests to the provider) to be invalid
 		const tokenError: { accessTokenError?: any } = { };
 		const failedProviderId = codeHostProviders.find(id => {
 			return isConnected(state, { id }, undefined, tokenError) && tokenError.accessTokenError;
 		});
+
 		return {
 			supportsReauth: capabilities.providerReauth,
 			offline: connectivity.offline,
@@ -53,7 +57,7 @@ export const PRProviderErrorBanner = () => {
 	
 	const onClickReauthorize = event => {
 		event.preventDefault();
-		dispatch(connectProvider(derivedState.failedProvider!.id, "Provider Error Banner", true));
+		dispatch(configureAndConnectProvider(derivedState.failedProvider!.id, "Provider Error Banner", true));
 	};
 
 	const onClickIgnore = event => {
