@@ -138,6 +138,10 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 		const prSupportedProviders = providerSelectors.getSupportedPullRequestHosts(state);
 		const prConnectedProviders = providerSelectors.getConnectedSupportedPullRequestHosts(state);
+		const prConnectedProvidersWithoutErrors = prConnectedProviders.filter(
+			_ => !_.hasAccessTokenError
+		);
+
 		const myPullRequests = getMyPullRequestsSelector(state);
 		return {
 			repos,
@@ -146,6 +150,8 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			isPRSupportedCodeHostConnected: prConnectedProviders.length > 0,
 			PRSupportedProviders: prSupportedProviders,
 			PRConnectedProviders: prConnectedProviders,
+			PRConnectedProvidersWithoutErrors: prConnectedProvidersWithoutErrors,
+			PRConnectedProvidersWithoutErrorsCount: prConnectedProvidersWithoutErrors.length,
 			openReposOnly: !preferences.pullRequestQueryShowAllRepos,
 			showLabels: !preferences.pullRequestQueryHideLabels
 		};
@@ -176,6 +182,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	>(undefined);
 	const [configureQuerySettings, setConfigureQuerySettings] = React.useState(false);
 	const previousConfigureQuerySettings = usePrevious(configureQuerySettings);
+	const previousPRConnectedProvidersWithoutErrorsCount = usePrevious<number>(
+		derivedState.PRConnectedProvidersWithoutErrorsCount
+	);
 
 	const setQueries = (providerId, queries) => {
 		dispatch(setUserPreference(["pullRequestQueries", providerId], [...queries]));
@@ -215,6 +224,16 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			fetchPRs(derivedState.queries, { force: true });
 		}
 	}, [derivedState.openReposOnly, derivedState.showLabels]);
+
+	useEffect(() => {
+		if (
+			previousPRConnectedProvidersWithoutErrorsCount != null &&
+			previousPRConnectedProvidersWithoutErrorsCount + 1 ===
+				derivedState.PRConnectedProvidersWithoutErrorsCount
+		) {
+			fetchPRs(derivedState.queries, { force: true });
+		}
+	}, [derivedState.PRConnectedProvidersWithoutErrorsCount]);
 
 	const fetchPRs = useCallback(
 		async (theQueries, options?: { force?: boolean }) => {

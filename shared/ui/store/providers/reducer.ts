@@ -110,7 +110,7 @@ export const isConnectedSelectorFriendly = (
 	// basically acts like an additional return value that avoids changing the call signature for this method
 	// if filled, it indicates that the provider is technically connected (we have an access token),
 	// but the access token has come back from the provider as invalid
-	accessTokenError?: { accessTokenError?: any } 
+	accessTokenError?: { accessTokenError?: any }
 ) => {
 	const currentUser = users[session.userId!] as CSMe;
 
@@ -130,7 +130,8 @@ export const isConnectedSelectorFriendly = (
 					info != undefined &&
 					info.hosts != undefined &&
 					Object.keys(info.hosts).some(host => {
-						const isConnected = providers[host] != undefined && info.hosts![host].accessToken != undefined;
+						const isConnected =
+							providers[host] != undefined && info.hosts![host].accessToken != undefined;
 						if (isConnected && accessTokenError) {
 							// see comment on accessTokenError in the method parameters, above
 							accessTokenError.accessTokenError = info.hosts![host].tokenError;
@@ -157,14 +158,17 @@ export const isConnectedSelectorFriendly = (
 						)
 							return false;
 					}
-					if (infoPerTeam && Object.values(infoPerTeam).some(i => {
-						const isConnected = i.accessToken != undefined;
-						if (isConnected && accessTokenError) {
-							// see comment on accessTokenError in the method parameters, above
-							accessTokenError.accessTokenError = i.tokenError;
-						}
-						return isConnected;
-					})) {
+					if (
+						infoPerTeam &&
+						Object.values(infoPerTeam).some(i => {
+							const isConnected = i.accessToken != undefined;
+							if (isConnected && accessTokenError) {
+								// see comment on accessTokenError in the method parameters, above
+								accessTokenError.accessTokenError = i.tokenError;
+							}
+							return isConnected;
+						})
+					) {
 						return true;
 					}
 				}
@@ -185,14 +189,17 @@ export const isConnectedSelectorFriendly = (
 				return true;
 			}
 			const infoPerTeam = (infoForProvider as any).multiple as { [key: string]: CSProviderInfos };
-			if (infoPerTeam && Object.values(infoPerTeam).some(i => {
-				const isConnected = i.accessToken != undefined;
-				if (isConnected && accessTokenError) {
-					// see comment on accessTokenError in the method parameters, above
-					accessTokenError.accessTokenError = i.tokenError;
-				}
-				return isConnected;
-			})) {
+			if (
+				infoPerTeam &&
+				Object.values(infoPerTeam).some(i => {
+					const isConnected = i.accessToken != undefined;
+					if (isConnected && accessTokenError) {
+						// see comment on accessTokenError in the method parameters, above
+						accessTokenError.accessTokenError = i.tokenError;
+					}
+					return isConnected;
+				})
+			) {
 				return true;
 			}
 			return false;
@@ -303,8 +310,23 @@ export const getConnectedSupportedPullRequestHosts = createSelector(
 	(users: UsersState, currentTeamId: string, session: SessionState, providers: ProvidersState) => {
 		return Object.values(providers)
 			.filter(_ => _.id === "github*com" || _.id === "github/enterprise")
-			.filter(_ =>
-				isConnectedSelectorFriendly(users, currentTeamId, session, providers, { id: _.id })
-			);
+			.map(_ => {
+				let obj: { accessTokenError?: boolean } = {};
+				const value = isConnectedSelectorFriendly(
+					users,
+					currentTeamId,
+					session,
+					providers,
+					{ id: _.id },
+					undefined,
+					obj
+				);
+				return {
+					..._,
+					hasAccessTokenError: !!obj.accessTokenError,
+					isConnected: value
+				};
+			})
+			.filter(_ => _.isConnected);
 	}
 );
