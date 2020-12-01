@@ -6,6 +6,7 @@ import * as paths from "path";
 import * as qs from "querystring";
 import { CodeStreamSession } from "session";
 import { URI } from "vscode-uri";
+import { InternalError, ReportSuppressedMessages } from "../agentError";
 import { SessionContainer } from "../container";
 import { Logger, TraceLevel } from "../logger";
 import {
@@ -181,7 +182,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 	async query<T = any>(query: string, variables: any = undefined) {
 		if (this._providerInfo && this._providerInfo.tokenError) {
-			throw new Error("Access token invalid");
+			throw new InternalError(ReportSuppressedMessages.AccessTokenInvalid);
 		}
 
 		let response;
@@ -200,7 +201,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					}
 				});
 			}
-			throw ex;
+			throw new InternalError(ReportSuppressedMessages.AccessTokenInvalid, { error: ex });
 		}
 
 		try {

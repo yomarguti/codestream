@@ -2,6 +2,7 @@
 import { Agent as HttpsAgent } from "https";
 import fetch, { RequestInit, Response } from "node-fetch";
 import { URI } from "vscode-uri";
+import { InternalError, ReportSuppressedMessages } from "../agentError";
 import { MessageType } from "../api/apiProvider";
 import { MarkerLocation, User } from "../api/extensions";
 import { SessionContainer } from "../container";
@@ -485,7 +486,7 @@ export abstract class ThirdPartyProviderBase<
 		options: { [key: string]: any } = {}
 	): Promise<ApiResponse<R>> {
 		if (this._providerInfo && this._providerInfo.tokenError) {
-			throw new Error("Access token invalid");
+			throw new InternalError(ReportSuppressedMessages.AccessTokenInvalid);
 		}
 
 		const start = process.hrtime();
