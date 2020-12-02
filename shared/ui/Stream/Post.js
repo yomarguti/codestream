@@ -532,7 +532,7 @@ class Post extends React.Component {
 		if (title)
 			return (
 				<div className="title">
-					{icon} <MarkdownText text={title} excludeParagraphWrap={true} />
+					{icon} <MarkdownText text={title} inline={true} />
 					{this.renderCodeBlockFile()}
 				</div>
 			);
@@ -680,7 +680,7 @@ class Post extends React.Component {
 		if (matches)
 			return (
 				<span className="emote">
-					<MarkdownText text={matches[1]} excludeParagraphWrap={true} />{" "}
+					<MarkdownText text={matches[1]} inline={true} />{" "}
 				</span>
 			);
 		if (type === "question") return <span className="emote">has a question</span>;
@@ -694,14 +694,10 @@ class Post extends React.Component {
 		const { codemark, editing } = this.props;
 		if (editing) return this.renderTextEditing(post);
 		else if ((post.text || "").match(/^\/me\s/)) return null;
-		else
-			return [
-				<MarkdownText
-					text={(codemark && codemark.text) || post.text}
-					excludeParagraphWrap={true}
-				/>,
-				<br />
-			]; // unfortunately need to account for legacy slack codemarks that don't have text
+		else {
+			// unfortunately need to account for legacy slack codemarks that don't have text
+			return [<MarkdownText text={(codemark && codemark.text) || post.text} />, <br />];
+		}
 	};
 
 	getEditInputId = () => {

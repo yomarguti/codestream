@@ -37,6 +37,8 @@ export interface TrackingBranch {
 	shortName?: string;
 }
 
+export const EMPTY_TREE_SHA = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
+
 export interface IGitService extends Disposable {
 	getFileAuthors(uri: URI, options?: BlameOptions): Promise<GitAuthor[]>;
 	getFileAuthors(path: string, options?: BlameOptions): Promise<GitAuthor[]>;
@@ -1473,6 +1475,46 @@ export class GitService implements IGitService, Disposable {
 			fs.existsSync(path.join(repoPath, ".git", "rebase-merge")) ||
 			fs.existsSync(path.join(repoPath, ".git", "rebase-apply"))
 		);
+	}
+
+	async getConfig(repoPath: string, key: string): Promise<string | undefined> {
+		try {
+			const data = await git({ cwd: repoPath }, "config", key);
+			return data.trim();
+		} catch (err) {
+			Logger.warn(err);
+			return undefined;
+		}
+	}
+
+	async findAncestor(
+		repoPath: string,
+		sha: string,
+		limit: number,
+		predicate: (c: GitCommit) => Boolean
+	): Promise<GitCommit | undefined> {
+		const commitsData = await git(
+			{ cwd: repoPath },
+			"log",
+			sha,
+			"--first-parent",
+			`-n${limit}`,
+			"--skip=1",
+			`--format='${GitLogParser.defaultFormat}`,
+			"--"
+		);
+		const commits = GitLogParser.parse(commitsData.trim(), repoPath);
+		if (commits === undefined || commits.size === 0) {
+			return undefined;
+		}
+
+		for (const commit of commits.values()) {
+			if (predicate(commit)) {
+				return commit;
+			}
+		}
+
+		return undefined;
 	}
 
 	// mondo useful for prototyping ;)

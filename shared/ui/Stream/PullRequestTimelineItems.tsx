@@ -14,7 +14,8 @@ import {
 	PRCodeComment,
 	PRThreadedCommentCard,
 	PRCodeCommentPatch,
-	PRKebabIcon
+	PRKebabIcon,
+	PRIconOutdated
 } from "./PullRequestComponents";
 import React, { PropsWithChildren, useCallback, useState } from "react";
 import { PRHeadshot, Headshot } from "../src/components/Headshot";
@@ -236,7 +237,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 							<MarkdownText
 								text={pr.bodyHTML ? pr.bodyHTML : pr.body}
 								isHtml={pr.bodyHTML ? true : false}
-								excludeParagraphWrap
+								inline
 							/>
 						) : (
 							<i>No description provided.</i>
@@ -311,7 +312,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 													<MarkdownText
 														text={item.bodyHTML ? item.bodyHTML : item.bodyText}
 														isHtml={item.bodyHTML ? true : false}
-														excludeParagraphWrap
+														inline
 													/>
 												)}
 											</PRCommentBody>
@@ -405,7 +406,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 														<MarkdownText
 															text={item.bodyHTML ? item.bodyHTML : item.bodyText}
 															isHtml={item.bodyHTML ? true : false}
-															excludeParagraphWrap
+															inline
 														/>
 													)}
 												</PRCommentBody>
@@ -519,6 +520,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 																	</bdi>
 																</Tooltip>
 															</span>
+															{comment.outdated && <PRIconOutdated>Outdated</PRIconOutdated>}
 															<div className="actions" style={{ right: 0 }}>
 																<Link
 																	href={pr.url.replace(
@@ -629,11 +631,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 												href={`${pr.url}/commits/${item.commit.abbreviatedOid}`}
 												className="monospace"
 											>
-												<MarkdownText
-													excludeParagraphWrap
-													excludeOnlyEmoji
-													text={item.commit.message || ""}
-												/>
+												<MarkdownText inline excludeOnlyEmoji text={item.commit.message || ""} />
 											</Link>
 										</div>
 									</PRTimelineItemBody>
@@ -671,7 +669,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 											<div className="monospace left-pad">
 												<Link href={commitUrl} className="monospace">
 													<MarkdownText
-														excludeParagraphWrap
+														inline
 														excludeOnlyEmoji
 														text={item.commit.messageHeadline || ""}
 													/>
@@ -685,7 +683,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 														<br />
 														<br />
 														<MarkdownText
-															excludeParagraphWrap
+															inline
 															excludeOnlyEmoji
 															text={item.commit.messageBody || ""}
 														/>

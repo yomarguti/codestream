@@ -3,7 +3,7 @@ import { applyPatch } from "diff";
 import * as path from "path";
 import { MessageType } from "../api/apiProvider";
 import { Container, SessionContainer } from "../container";
-import { GitRemote, GitRepository } from "../git/gitService";
+import { EMPTY_TREE_SHA, GitRemote, GitRepository } from "../git/gitService";
 import { Logger } from "../logger";
 import {
 	CheckPullRequestBranchPreconditionsRequest,
@@ -100,6 +100,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	}
 
 	@lspHandler(FetchReviewsRequestType)
+	@log()
 	async get(request?: FetchReviewsRequest): Promise<FetchReviewsResponse> {
 		let reviews = await this.getAllCached();
 		if (request != null) {
@@ -136,36 +137,27 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	async getAllDiffs(
 		reviewId: string
 	): Promise<{ [repoId: string]: { checkpoint: CSReviewCheckpoint; diff: CSReviewDiffs }[] }> {
-		const diffs = new Map<
-			string,
-			{ [repoId: string]: { checkpoint: CSReviewCheckpoint; diff: CSReviewDiffs }[] }
-		>();
 		const responses = await this.getReviewCheckpointDiffsResponses(reviewId);
 
-		if (responses && responses.length) {
-			const result: {
-				[repoId: string]: { checkpoint: CSReviewCheckpoint; diff: CSReviewDiffs }[];
-			} = {};
-			if (responses.length === 1 && responses[0].checkpoint === undefined) {
-				const response = responses[0];
-				result[response.repoId].push({ checkpoint: 0, diff: response.diffs });
-			} else {
-				for (const response of responses) {
-					if (!result[response.repoId]) {
-						result[response.repoId] = [];
-					}
-					result[response.repoId].push({ checkpoint: response.checkpoint, diff: response.diffs });
-				}
-			}
-			diffs.set(reviewId, result);
-		}
-
-		const diffsByRepo = diffs.get(reviewId);
-		if (!diffsByRepo) {
+		if (!responses || !responses.length) {
 			throw new Error(`Cannot find diffs for review ${reviewId}`);
 		}
 
-		return diffsByRepo;
+		const result: {
+			[repoId: string]: { checkpoint: CSReviewCheckpoint; diff: CSReviewDiffs }[];
+		} = {};
+		if (responses.length === 1 && responses[0].checkpoint === undefined) {
+			const response = responses[0];
+			result[response.repoId] = [{ checkpoint: 0, diff: response.diffs }];
+		} else {
+			for (const response of responses) {
+				if (!result[response.repoId]) {
+					result[response.repoId] = [];
+				}
+				result[response.repoId].push({ checkpoint: response.checkpoint, diff: response.diffs });
+			}
+		}
+		return result;
 	}
 
 	private async getReviewCheckpointDiffsResponses(reviewId: string) {
@@ -425,6 +417,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	}
 
 	@lspHandler(UpdateReviewRequestType)
+	@log()
 	async update(request: UpdateReviewRequest): Promise<UpdateReviewResponse> {
 		let isAmending = false;
 		let reviewChangesets: CSTransformedReviewChangeset[] = [];
@@ -456,14 +449,17 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	}
 
 	@lspHandler(DeleteReviewRequestType)
+	@log()
 	delete(request: DeleteReviewRequest) {
 		return this.session.api.deleteReview(request);
 	}
 
 	@lspHandler(CheckReviewPreconditionsRequestType)
+	@log()
 	async checkReviewPreconditions(
 		request: CheckReviewPreconditionsRequest
 	): Promise<CheckReviewPreconditionsResponse> {
+		Logger.log(`Checking preconditions for review ${request.reviewId}`);
 		const { git, repositoryMappings } = SessionContainer.instance();
 		const review = await this.getById(request.reviewId);
 		const diffsByRepo = await this.getAllDiffs(review.id);
@@ -477,6 +473,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				repoPath = repo.path;
 			}
 			if (repoPath == null) {
+				Logger.log(`Cannot perform review ${request.reviewId}: REPO_NOT_FOUND`);
 				return {
 					success: false,
 					error: {
@@ -489,9 +486,13 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 			const diffs = diffsByRepo[repoId];
 			for (const d of diffs) {
-				let leftCommit = await git.getCommit(repoPath, d.diff.leftBaseSha);
-				let rightCommit = await git.getCommit(repoPath, d.diff.rightBaseSha);
-				if (leftCommit == null || rightCommit == null) {
+				const { leftBaseSha, rightBaseSha } = d.diff;
+				let leftCommit = await git.getCommit(repoPath, leftBaseSha);
+				let rightCommit = await git.getCommit(repoPath, rightBaseSha);
+				if (
+					(leftBaseSha !== EMPTY_TREE_SHA && leftCommit == null) ||
+					(rightBaseSha !== EMPTY_TREE_SHA && rightCommit == null)
+				) {
 					const didFetch = await git.fetchAllRemotes(repoPath);
 					if (didFetch) {
 						leftCommit = leftCommit || (await git.getCommit(repoPath, d.diff.leftBaseSha));
@@ -501,6 +502,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 				function missingCommitError(sha: string, author: string) {
 					const shortSha = sha.substr(0, 8);
+					Logger.log(`Cannot perform review ${request.reviewId}: COMMIT_NOT_FOUND ${shortSha}`);
 					return {
 						success: false,
 						error: {
@@ -510,15 +512,16 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 					};
 				}
 
-				if (leftCommit == null) {
+				if (leftBaseSha !== EMPTY_TREE_SHA && leftCommit == null) {
 					return missingCommitError(d.diff.leftBaseSha, d.diff.leftBaseAuthor);
 				}
-				if (rightCommit == null) {
+				if (rightBaseSha !== EMPTY_TREE_SHA && rightCommit == null) {
 					return missingCommitError(d.diff.rightBaseSha, d.diff.rightBaseAuthor);
 				}
 			}
 		}
 
+		Logger.log(`Review ${request.reviewId} preconditions check successful`);
 		return {
 			success: true,
 			repoRoots
@@ -526,6 +529,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	}
 
 	@lspHandler(CheckPullRequestBranchPreconditionsRequestType)
+	@log()
 	async checkPullRequestBranchPreconditions(
 		request: CheckPullRequestBranchPreconditionsRequest
 	): Promise<CheckPullRequestBranchPreconditionsResponse> {
@@ -630,6 +634,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	}
 
 	@lspHandler(CheckPullRequestPreconditionsRequestType)
+	@log()
 	async checkPullRequestPreconditions(
 		request: CheckPullRequestPreconditionsRequest
 	): Promise<CheckPullRequestPreconditionsResponse> {
@@ -808,6 +813,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	}
 
 	@lspHandler(CreatePullRequestRequestType)
+	@log()
 	async createPullRequest(request: CreatePullRequestRequest): Promise<CreatePullRequestResponse> {
 		const { git, providerRegistry, users } = SessionContainer.instance();
 		try {
@@ -946,6 +952,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	}
 
 	@lspHandler(StartReviewRequestType)
+	@log()
 	async startReview(request: StartReviewRequest): Promise<StartReviewResponse> {
 		return {
 			success: true
@@ -953,6 +960,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	}
 
 	@lspHandler(PauseReviewRequestType)
+	@log()
 	async pauseReview(request: PauseReviewRequest): Promise<PauseReviewResponse> {
 		return {
 			success: true
@@ -960,6 +968,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	}
 
 	@lspHandler(EndReviewRequestType)
+	@log()
 	async endReview(request: EndReviewRequest): Promise<EndReviewResponse> {
 		return {
 			success: true
