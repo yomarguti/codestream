@@ -726,7 +726,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 				};
 
 				const userPreferencesBefore = JSON.stringify(me.preferences);
-	
+
 				e.data = await SessionContainer.instance().users.resolve(e, {
 					onlyIfNeeded: true
 				});
@@ -740,14 +740,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 						this._unreads !== undefined &&
 						!Objects.shallowEquals(lastReads, this._user.lastReads || {})
 					) {
-						Container.instance().errorReporter.reportBreadcrumb({
-							message: "Computing lastReads from user message",
-							category: "unreads",
-							data: {
-								lastReads: me.lastReads,
-								prevLastReads: this._user.lastReads
-							}
-						});
 						this._unreads.compute(me.lastReads);
 					}
 					if (!this._preferences) {

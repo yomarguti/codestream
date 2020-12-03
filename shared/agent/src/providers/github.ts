@@ -36,6 +36,7 @@ import {
 	MergeMethod,
 	MoveThirdPartyCardRequest,
 	MoveThirdPartyCardResponse,
+	ThirdPartyDisconnect,
 	ThirdPartyProviderCard,
 	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
@@ -164,6 +165,13 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		this._knownRepos = new Map<string, GitHubRepo>();
 	}
 
+	@log()
+	async onDisconnected(request?: ThirdPartyDisconnect) {
+		// delete the graphql client so it will be reconstructed if a new token is applied
+		delete this._client;
+		super.onDisconnected(request);
+	}
+
 	async ensureInitialized() {}
 
 	_queryLogger: {
@@ -182,6 +190,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 	async query<T = any>(query: string, variables: any = undefined) {
 		if (this._providerInfo && this._providerInfo.tokenError) {
+			delete this._client;
 			throw new InternalError(ReportSuppressedMessages.AccessTokenInvalid);
 		}
 
@@ -190,7 +199,24 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			response = await (await this.client()).request<any>(query, variables);
 		}
 		catch (ex) {
-			if (ex.response && ex.response.message === "Bad credentials") {
+			if (
+				(
+					ex.response &&
+					ex.response.message === "Bad credentials"
+				) ||
+				(
+					ex.response &&
+					ex.response.errors instanceof Array &&
+					ex.response.errors.find((e: any) => e.type === "FORBIDDEN")
+				) ||
+				(
+					this.providerConfig.id === "github/enterprise" &&
+					ex.response.error &&
+					ex.response.error.toLowerCase().indexOf("cookies must be enabled to use github") > -1
+				)
+			 ) {
+				// we know about this error, and we want to give the user a chance to correct it
+				// (but throwing up a banner), rather than logging the error to sentry
 				this.session.api.setThirdPartyProviderInfo({
 					providerId: this.providerConfig.id,
 					data: {
@@ -200,8 +226,12 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						}
 					}
 				});
+				delete this._client;
+				throw new InternalError(ReportSuppressedMessages.AccessTokenInvalid, { error: ex });
+			} else {
+				// this is an unexpected error, throw the exception normally
+				throw ex;
 			}
-			throw new InternalError(ReportSuppressedMessages.AccessTokenInvalid, { error: ex });
 		}
 
 		try {
@@ -1849,15 +1879,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			Logger.error(ex);
 			let errString;
 			if (ex.response) {
-				if (
-					this.providerConfig.id === "github/enterprise" &&
-					ex.response.error &&
-					ex.response.error.toLowerCase().indexOf("cookies must be enabled to use github") > -1
-				) {
-					errString = "Please ensure your GitHub Enterprise url is configured correctly.";
-				} else {
-					errString = JSON.stringify(ex.response);
-				}
+				errString = JSON.stringify(ex.response);
 			} else {
 				errString = ex.message;
 			}
