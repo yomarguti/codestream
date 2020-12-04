@@ -1269,8 +1269,21 @@ export class WebviewController implements Disposable {
 	private async disconnectFromGitHub () {
 		if (this._providerSessionIds.github) {
 			Logger.log(`Disconnected from GitHub session ${this._providerSessionIds.github}`);
-			// await authentication.logout("github", this._providerSessionIds.github);
+
+			// We need to logout of the VSCode/GitHub session here, so that VSCode throws away the token,
+			// and if the token is invalid or revoked, a new one will be fetched if the user tries to re-auth again.
+			// Note that this logout() method is undocumented (I looked at the VSCode-GitHub extension to figure out what to call),
+			// and it is not in the typings file for the authentication namespace ... so we're cheating here
+			// If the VSCode engine is updated, this may cease to work
+			if (typeof (authentication as any).logout === "function") {
+				Logger.log(`Disconnecting from GitHub, session ${this._providerSessionIds.github}`);
+				await (authentication as any).logout("github", this._providerSessionIds.github);
+			} else {
+				Logger.log("logout() method not detected in VSCode engine, unable to invalidate GitHub session");
+			}
 			delete this._providerSessionIds.github;
+		} else {
+			Logger.log("No session for github to disconnect");
 		}
 	}
 }

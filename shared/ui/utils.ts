@@ -384,6 +384,9 @@ export function escapeHtml(text: string) {
  */
 export function replaceHtml(text: string) {
 	const domParser = new DOMParser();
+	//input text's newlines will be created with <div> or <br> tags
+	//remove extra \n or \r\n to remove double lines later in markdown
+	text = text.replace(/\r\n/g, "").replace(/\n/g, "");
 	// contentEditable renders a blank line as "<div><br></div>""
 	// and a line with only "foo" as "<div>foo</div>"
 	// both of those things result in newlines, so we convert them to \n
@@ -413,7 +416,7 @@ export function asPastedText(text: string) {
 	// (don't want to fence seemingly empty text)
 	const lines = text.split("\n").length;
 	if (lines > 1 && !text.match(/^\S/m) && text.match(/(.|\s)*\S(.|\s)*/))
-		text = "```" + text + "```";
+		text = "```\n" + text + "\n```";
 
 	// console.log("asPastedText result=", text);
 	return text;

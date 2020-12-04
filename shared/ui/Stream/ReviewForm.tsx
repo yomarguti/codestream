@@ -1405,7 +1405,7 @@ class ReviewForm extends React.Component<Props, State> {
 						{/* headshot */}
 						<span
 							dangerouslySetInnerHTML={{
-								__html: markdownify(title, { excludeOnlyEmoji: true, excludeParagraphWrap: true })
+								__html: markdownify(title, { excludeOnlyEmoji: true, inline: true })
 							}}
 						/>
 					</label>
@@ -1526,7 +1526,7 @@ class ReviewForm extends React.Component<Props, State> {
 					<>
 						<div className="related-label">
 							<br />
-							Pushed Commits
+							{localCommits.length ? "Pushed " : ""}Commits
 						</div>
 						{this.renderCommitList(remoteCommits, excludeCommit)}
 					</>
@@ -2284,20 +2284,17 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 	};
 };
 
-const ConnectedReviewForm = connect(
-	mapStateToProps,
-	{
-		openPanel,
-		openModal,
-		closePanel,
-		createPostAndReview,
-		editReview,
-		setUserPreference,
-		setCurrentReview,
-		setCurrentRepo,
-		setCodemarkStatus,
-		setNewPostEntry
-	}
-)(ReviewForm);
+const ConnectedReviewForm = connect(mapStateToProps, {
+	openPanel,
+	openModal,
+	closePanel,
+	createPostAndReview,
+	editReview,
+	setUserPreference,
+	setCurrentReview,
+	setCurrentRepo,
+	setCodemarkStatus,
+	setNewPostEntry
+})(ReviewForm);
 
 export { ConnectedReviewForm as ReviewForm };

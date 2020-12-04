@@ -108,6 +108,9 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
     @JsonNotification("codestream/didStartLogin")
     fun didStartLogin(json: JsonElement?) {}
 
+    @JsonNotification("codestream/didFailLogin")
+    fun didFailLogin(json: JsonElement?) {}
+
     @JsonNotification("codestream/didLogin")
     fun didLogin(json: JsonElement) {
         val notification = gson.fromJson<DidLoginNotification>(json)
@@ -140,7 +143,9 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
     }
 
     override fun workspaceFolders(): CompletableFuture<MutableList<WorkspaceFolder>> {
-        return CompletableFuture.completedFuture(project.workspaceFolders.toMutableList())
+        val folders = project.workspaceFolders.toMutableList()
+        logger.info("Workspace folders: ${folders.joinToString()}")
+        return CompletableFuture.completedFuture(folders)
     }
 
     override fun configuration(configurationParams: ConfigurationParams): CompletableFuture<List<Any>> {

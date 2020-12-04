@@ -642,23 +642,30 @@ export class CodeStreamSession {
 
 	public async getWorkspaceFolders() {
 		if (this.agent.supportsWorkspaces) {
+			Logger.log("getWorkspaceFolders: workspaces supported");
 			return (await this.workspace.getWorkspaceFolders()) || [];
 		}
 
-		return new Promise<WorkspaceFolder[] | null>(resolve => {
-			if (this.agent.rootUri) {
-				const uri =
-					this.agent.rootUri[this.agent.rootUri.length - 1] === "/"
-						? this.agent.rootUri.substring(0, this.agent.rootUri.length - 1)
-						: this.agent.rootUri;
-				resolve([
-					{
-						uri: uri,
-						name: path.basename(this.agent.rootUri)
-					}
-				]);
-			} else {
-				resolve([]);
+		Logger.log("getWorkspaceFolders: workspaces not supported");
+		return new Promise<WorkspaceFolder[] | null>((resolve, reject) => {
+			try {
+				if (this.agent.rootUri) {
+					const uri =
+						this.agent.rootUri[this.agent.rootUri.length - 1] === "/"
+							? this.agent.rootUri.substring(0, this.agent.rootUri.length - 1)
+							: this.agent.rootUri;
+					resolve([
+						{
+							uri: uri,
+							name: path.basename(this.agent.rootUri)
+						}
+					]);
+				} else {
+					resolve([]);
+				}
+			} catch (e) {
+				Logger.error(e);
+				reject(e);
 			}
 		});
 	}
@@ -798,12 +805,16 @@ export class CodeStreamSession {
 
 		const cc = Logger.getCorrelationContext();
 
-		// after initializing, wait for the initial search of git repositories to complete,
-		// otherwise newly matched repos might be returned to the webview before the bootstrap
-		// request can be processed, resulting in bad repo data known by the webview
-		// see https://trello.com/c/1IjQLhzh - Colin
 		SessionContainer.initialize(this);
-		await SessionContainer.instance().git.ensureSearchComplete();
+		try {
+			// after initializing, wait for the initial search of git repositories to complete,
+			// otherwise newly matched repos might be returned to the webview before the bootstrap
+			// request can be processed, resulting in bad repo data known by the webview
+			// see https://trello.com/c/1IjQLhzh - Colin
+			await SessionContainer.instance().git.ensureSearchComplete();
+		} catch (e) {
+			Logger.error(e, cc);
+		}
 
 		// re-register to acknowledge lsp handlers from newly instantiated classes
 		registerDecoratedHandlers(this.agent);

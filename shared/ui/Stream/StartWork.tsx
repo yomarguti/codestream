@@ -372,6 +372,7 @@ export const StartWork = (props: Props) => {
 			: true;
 
 		const adminIds = team.adminIds || [];
+		const defaultBranchTicketTemplate = "feature/{title}";
 		return {
 			status,
 			repos: state.repos,
@@ -385,7 +386,8 @@ export const StartWork = (props: Props) => {
 			webviewFocused: state.context.hasFocus,
 			textEditorUri: state.editorContext.textEditorUri,
 			branchMaxLength: settings.branchMaxLength || 40,
-			branchTicketTemplate: settings.branchTicketTemplate || "feature/{title}",
+			defaultBranchTicketTemplate,
+			branchTicketTemplate: settings.branchTicketTemplate || defaultBranchTicketTemplate,
 			createBranch: Object.keys(workPrefs).includes("createBranch") ? workPrefs.createBranch : true,
 			moveCard: Object.keys(workPrefs).includes("moveCard") ? workPrefs.moveCard : true,
 			updateSlack: isConnectedToSlack ? updateSlack : false,
@@ -478,6 +480,7 @@ export const StartWork = (props: Props) => {
 			title = card.title;
 			providerToken = card.providerToken;
 		}
+
 		return template
 			.replace(/\{id\}/g, tokenId)
 			.replace(/\{username\}/g, derivedState.currentUserName)
@@ -485,6 +488,8 @@ export const StartWork = (props: Props) => {
 			.replace(/\{date\}/g, dateToken())
 			.replace(/\{title\}/g, title.toLowerCase())
 			.replace(/\{provider\}/g, providerToken)
+			.replace(/["\\|<>\*\?:]/g, "")
+			.trim()
 			.replace(/[\s]+/g, "-")
 			.substr(0, derivedState.branchMaxLength);
 	};
@@ -565,12 +570,18 @@ export const StartWork = (props: Props) => {
 
 	const newBranch = React.useMemo(() => {
 		if (customBranchName) return customBranchName;
-		return replaceTicketTokens(derivedState.branchTicketTemplate, card, label);
+		return (
+			replaceTicketTokens(derivedState.branchTicketTemplate, card, label) ||
+			replaceTicketTokens(derivedState.defaultBranchTicketTemplate, card, label)
+		);
 	}, [label, card, customBranchName, derivedState.branchTicketTemplate]);
 
 	const branch = React.useMemo(() => {
 		if (customBranchName) return customBranchName;
-		return replaceTicketTokens(derivedState.branchTicketTemplate, card, label);
+		return (
+			replaceTicketTokens(derivedState.branchTicketTemplate, card, label) ||
+			replaceTicketTokens(derivedState.defaultBranchTicketTemplate, card, label)
+		);
 	}, [label, card, customBranchName, derivedState.branchTicketTemplate]);
 
 	const save = async () => {

@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/node";
 import { Severity } from "@sentry/node";
 import * as os from "os";
+import { ReportSuppressedMessages } from "./agentError";
 import { Team } from "./api/extensions";
 import { SessionContainer } from "./container";
 import {
@@ -21,7 +22,8 @@ export class ErrorReporter {
 				dsn: "https://7c34949981cc45848fc4e3548363bb17@sentry.io/1314159",
 				release: session.versionInfo.extension.versionFormatted,
 				environment: session.environment,
-				maxBreadcrumbs: 500
+				maxBreadcrumbs: 500,
+				maxValueLength: 500
 			});
 
 			Sentry.configureScope(scope => {
@@ -30,6 +32,20 @@ export class ErrorReporter {
 				scope.setTag("ideDetail", session.versionInfo.ide.detail);
 				scope.setExtra("ideVersion", session.versionInfo.ide.version);
 				scope.setTag("source", "agent");
+
+				// we purposefully intercept certain errors, and don't send them to Sentry
+				// would be better to actually get the original exception here, and not have to rely on the
+				// exception message, but sadly, Sentry doesn't seem to give us the original exception
+				// for rejects promises
+				const suppressMessages = Object.values(ReportSuppressedMessages).map(v => v as string);
+				scope.addEventProcessor(event => {
+					if (event.exception?.values?.find(value => {
+						return value.value && suppressMessages.indexOf(value.value) !== -1;
+					})) {
+						return null;
+					}
+					return event;
+				});
 			});
 
 			session.onDidChangeSessionStatus(event => {
