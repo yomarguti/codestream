@@ -77,6 +77,7 @@ export const IntegrationsPanel = () => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { providers, teams, context, session, users } = state;
 		const team = teams[context.currentTeamId];
+		const teamSettings = team.settings || {};
 		const user = users[session.userId!];
 		const currentUserIsAdmin = (team.adminIds || []).includes(user.id);
 
@@ -92,12 +93,16 @@ export const IntegrationsPanel = () => {
 					"gitlab_enterprise"
 				].includes(providers[id].name)
 			)
-			.filter(id => !connectedProviders.includes(id));
+			.filter(id => !connectedProviders.includes(id))
+			.filter(id => !teamSettings.limitCodeHost || teamSettings.codeHostProviders[id]);
 		const issueProviders = Object.keys(providers)
 			.filter(id => providers[id].hasIssues)
 			.filter(id => !codeHostProviders.includes(id))
-			.filter(id => !connectedProviders.includes(id));
-		const messagingProviders = Object.keys(providers).filter(id => providers[id].hasSharing);
+			.filter(id => !connectedProviders.includes(id))
+			.filter(id => !teamSettings.limitIssues || teamSettings.issuesProviders[id]);
+		const messagingProviders = Object.keys(providers)
+			.filter(id => providers[id].hasSharing)
+			.filter(id => !teamSettings.limitMessaging || teamSettings.messagingProviders[id]);
 		const sharingTargets = getConnectedSharingTargets(state);
 
 		return {
