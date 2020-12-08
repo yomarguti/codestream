@@ -47,7 +47,6 @@ const Form = styled.form`
 const PreConfigure = styled.div`
 	display: flex;
 	align-items: center;
-	margin: 10px 0 0 0;
 `;
 
 const HR = styled.div`
@@ -414,10 +413,10 @@ export function TeamSetup(props: Props) {
 						{openRepos && openRepos.length > 0 && (
 							<>
 								<HR />
-								<h3>Auto-Add Teammates</h3>
+								<h3>Repo-based Team Assignment</h3>
 								<p className="explainer">
-									Add a <code>.codestream</code> file to your repo so when teammates install
-									CodeStream they will be automatically added to your team
+									When teammates install CodeStream they will be automatically added to your team
+									when they open configured repos
 									<Link href="https://docs.codestream.com/userguide/features/myteam-section/">
 										<Icon name="info" className="clickable" title="More info" />
 									</Link>
