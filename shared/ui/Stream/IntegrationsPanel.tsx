@@ -78,6 +78,9 @@ export const IntegrationsPanel = () => {
 		const { providers, teams, context, session, users } = state;
 		const team = teams[context.currentTeamId];
 		const teamSettings = team.settings || {};
+		const teamCodeHostProviders = teamSettings.codeHostProviders || {};
+		const teamIssuesProviders = teamSettings.issuesProviders || {};
+		const teamMessagingProviders = teamSettings.messagingProviders || {};
 		const user = users[session.userId!];
 		const currentUserIsAdmin = (team.adminIds || []).includes(user.id);
 
@@ -94,15 +97,15 @@ export const IntegrationsPanel = () => {
 				].includes(providers[id].name)
 			)
 			.filter(id => !connectedProviders.includes(id))
-			.filter(id => !teamSettings.limitCodeHost || teamSettings.codeHostProviders[id]);
+			.filter(id => !teamSettings.limitCodeHost || teamCodeHostProviders[id]);
 		const issueProviders = Object.keys(providers)
 			.filter(id => providers[id].hasIssues)
 			.filter(id => !codeHostProviders.includes(id))
 			.filter(id => !connectedProviders.includes(id))
-			.filter(id => !teamSettings.limitIssues || teamSettings.issuesProviders[id]);
+			.filter(id => !teamSettings.limitIssues || teamIssuesProviders[id]);
 		const messagingProviders = Object.keys(providers)
 			.filter(id => providers[id].hasSharing)
-			.filter(id => !teamSettings.limitMessaging || teamSettings.messagingProviders[id]);
+			.filter(id => !teamSettings.limitMessaging || teamMessagingProviders[id]);
 		const sharingTargets = getConnectedSharingTargets(state);
 
 		return {

@@ -287,9 +287,9 @@ export const SharingControls = React.memo(
 		]);
 
 		const { teamSettings } = derivedState;
-		const showSlack = !teamSettings.limitMessaging || teamSettings.messagingProviders["slack*com"];
-		const showTeams =
-			!teamSettings.limitMessaging || teamSettings.messagingProviders["login*microsoftonline*com"];
+		const providers = teamSettings.messagingProviders || {};
+		const showSlack = !teamSettings.limitMessaging || providers["slack*com"];
+		const showTeams = !teamSettings.limitMessaging || providers["login*microsoftonline*com"];
 
 		const shareProviderMenuItems = React.useMemo(() => {
 			const targetItems = derivedState.shareTargets.map(target => ({

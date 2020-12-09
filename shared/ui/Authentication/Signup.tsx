@@ -102,8 +102,8 @@ export const Signup = (props: Props) => {
 			if (response && response.limitAuthentication) {
 				setLimitAuthentication(true);
 				setAuthenticationProviders(response.authenticationProviders);
-				console.warn("Response: ", response);
 			}
+			console.warn("Response: ", response);
 		} catch (e) {
 			console.warn("Got an error: ", e);
 		}
@@ -298,6 +298,12 @@ export const Signup = (props: Props) => {
 
 	if (!bootstrapped || isInitializing) return <Loading />;
 
+	const showOr =
+		!limitAuthentication ||
+		(authenticationProviders["email"] &&
+			(authenticationProviders["github*com"] ||
+				authenticationProviders["gitlab*com"] ||
+				authenticationProviders["bitbucket*org"]));
 	return (
 		<div className="onboarding-page">
 			{derivedState.supportsIntegrations && (
@@ -333,7 +339,7 @@ export const Signup = (props: Props) => {
 										<Icon name="chevron-right" />
 									</Button>
 								)}
-								{!limitAuthentication && (
+								{showOr && (
 									<div className="separator-label">
 										<span className="or">or</span>
 									</div>
@@ -349,15 +355,12 @@ export const Signup = (props: Props) => {
 						<div className="border-bottom-box">
 							<h3>Create an Account</h3>
 							{wasInvited && (
-								<React.Fragment>
-									<br />
-									<p>
-										Create an account to join the <strong>{props.teamName}</strong> team.
-									</p>
-								</React.Fragment>
+								<p className="explainer">
+									Create an account to join the <strong>{props.teamName}</strong> team.
+								</p>
 							)}
+							{!wasInvited && <div className="small-spacer" />}
 							<div id="controls">
-								<div className="small-spacer" />
 								{unexpectedError && (
 									<div className="error-message form-error">
 										<FormattedMessage

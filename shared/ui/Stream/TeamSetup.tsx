@@ -71,6 +71,7 @@ const CODE_HOSTS = [
 
 const EMPTY_ARRAY = [];
 const EMPTY_HASH = {};
+const EMPTY_HASH_AJ = {};
 
 interface PickerProps {
 	key: string;
@@ -154,13 +155,15 @@ export function TeamSetup(props: Props) {
 			messagingSettings,
 			issuesSettings,
 
+			autoJoinRepos: teamSettings["autoJoinRepos"] || EMPTY_HASH_AJ,
+
 			currentTeam: team,
 			currentUser: user,
 			currentTeamId: state.context.currentTeamId,
 			serverUrl: state.configs.serverUrl,
 			company: state.companies[team.companyId] || {},
 			team,
-			xray: team.settings ? team.settings.xray : "on",
+			xray: team.settings ? team.settings.xray || "user" : "user",
 			multipleReviewersApprove: isFeatureEnabled(state, "multipleReviewersApprove"),
 			repos: state.repos
 		};
@@ -168,8 +171,7 @@ export function TeamSetup(props: Props) {
 	const { team, providers } = derivedState;
 
 	const [isLoading, setIsLoading] = useState(false);
-	const [recommended, setRecommended] = useState(true);
-	const [configure, setConfigure] = useState(true);
+	const [autoJoinReposField, setAutoJoinReposField] = useState(derivedState.autoJoinRepos);
 	const [teamName, setTeamName] = useState(derivedState.team.name);
 	const [teamNameValidity, setTeamNameValidity] = useState(true);
 	const [limitAuthenticationField, setLimitAuthenticationField] = useState(
@@ -207,7 +209,7 @@ export function TeamSetup(props: Props) {
 
 	useDidMount(() => {
 		fetchOpenRepos();
-		HostApi.instance.track("TeamSetup Rendered", {});
+		// HostApi.instance.track("TeamSetup Rendered", {});
 	});
 
 	const authenticationItems = mapFilter(derivedState.codeHostProviders, id => {
@@ -354,7 +356,8 @@ export function TeamSetup(props: Props) {
 						: {},
 					codeHostProviders: limitCodeHostField ? { ...codeHostProvidersField } : {},
 					messagingProviders: limitMessagingField ? { ...messagingProvidersField } : {},
-					issuesProviders: limitIssuesField ? { ...issuesProvidersField } : {}
+					issuesProviders: limitIssuesField ? { ...issuesProvidersField } : {},
+					autoJoinRepos: { ...autoJoinReposField }
 				}
 			});
 
@@ -434,9 +437,14 @@ export function TeamSetup(props: Props) {
 										: repo.folder.name;
 									return (
 										<Checkbox
-											name="configure"
-											checked={configure}
-											onChange={() => setConfigure(!configure)}
+											name={`configure-${repoId}`}
+											checked={autoJoinReposField[repoId]}
+											onChange={() =>
+												setAutoJoinReposField({
+													...autoJoinReposField,
+													[repoId]: !autoJoinReposField[repoId]
+												})
+											}
 										>
 											Add people who open <b>{repoName}</b> to <b>{team.name}</b>
 										</Checkbox>
