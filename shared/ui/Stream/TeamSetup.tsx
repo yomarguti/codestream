@@ -437,6 +437,7 @@ export function TeamSetup(props: Props) {
 										: repo.folder.name;
 									return (
 										<Checkbox
+											key={`configure-${repoId}`}
 											name={`configure-${repoId}`}
 											checked={autoJoinReposField[repoId]}
 											onChange={() =>

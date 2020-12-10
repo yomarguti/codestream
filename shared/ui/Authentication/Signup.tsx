@@ -96,9 +96,9 @@ export const Signup = (props: Props) => {
 	const getTeamAuthInfo = async teamId => {
 		setIsInitializing(true);
 		try {
-			const response = await Server.get<TeamAuthSettings>(
-				`/no-auth/teams/:${teamId}/auth-settings`
-			);
+			const url = `/no-auth/teams/${teamId}/auth-settings`;
+			console.warn("Request: ", url);
+			const response = await Server.get<TeamAuthSettings>(url);
 			if (response && response.limitAuthentication) {
 				setLimitAuthentication(true);
 				setAuthenticationProviders(response.authenticationProviders);
