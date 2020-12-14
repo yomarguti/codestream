@@ -42,6 +42,8 @@ class GutterIconRendererImpl(val editor: Editor, val marker: DocumentMarker) : G
         if (marker.codemark !== null) {
             if (marker.type == "issue") {
                 tooltip += "<img src='${getIconLink("issue")}'>"
+            } else if(marker.codemark.reviewId !== null) {
+                tooltip += "<img src='${getIconLink("fr")}'>"
             } else {
                 tooltip += "<img src='${getIconLink("comment")}'>"
             }
