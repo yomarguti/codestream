@@ -65,11 +65,25 @@ interface GitHubRepo {
 	has_issues: boolean;
 }
 
-enum GitHubExceptionType {
-	Unknown = "UNKNOWN",
-	Credentials = "CREDENTIALS",
-	Connection = "CONNECTION"
-};
+interface Directives {
+	directives: {
+		type:
+			| "addNode"
+			| "addNodes"
+			| "addReaction"
+			| "removeNode"
+			| "removeReaction"
+			| "resolveReviewThread"
+			| "unresolveReviewThread"
+			| "updateNode"
+			| "updatePullRequest"
+			| "updatePullRequestReview"
+			| "updatePullRequestReviewers"
+			| "updatePullRequestReviewComment"
+			| "updatePullRequestReviewCommentNode";
+		data: any;
+	}[];
+}
 
 const diffHunkRegex = /^@@ -([\d]+)(?:,([\d]+))? \+([\d]+)(?:,([\d]+))? @@/;
 
@@ -186,7 +200,12 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			fns: any;
 		};
 		graphQlApi: {
-			rateLimit?: { remaining: number; resetAt: string; resetInMinutes: number };
+			rateLimit?: {
+				remaining: number;
+				resetAt: string;
+				resetInMinutes: number;
+				last?: { name: string; cost: number };
+			};
 			fns: any;
 		};
 	} = {
@@ -194,38 +213,36 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		restApi: { fns: {} }
 	};
 
-	_isKnownException (ex: any): GitHubExceptionType {
-		if ((
-			ex.message &&
-			ex.message.match(/reason: connect ECONNREFUSED/)
-		) ||
-		(
-			ex.message &&
-			ex.message.match(/reason: getaddrinfo ENOTFOUND/)
-		) ||
-		(
-			ex.message &&
-			ex.message.match(/GraphQL Error \(Code: 404\)/)
-		) ||
-		(
-			this.providerConfig.id === "github/enterprise" &&
-			ex.response &&
-			ex.response.error &&
-			ex.response.error.toLowerCase().indexOf("cookies must be enabled to use github") > -1
-		)) {
-			return GitHubExceptionType.Connection
-		} else if ((
-			ex.response &&
-			ex.response.message === "Bad credentials"
-		) ||
-		(
-			ex.response &&
-			ex.response.errors instanceof Array &&
-			ex.response.errors.find((e: any) => e.type === "FORBIDDEN")
-		)) {
-			return GitHubExceptionType.Credentials;
+	_isSuppressedException(ex: any): ReportSuppressedMessages | undefined {
+		const networkErrors = [
+			"ENOTFOUND",
+			"ETIMEDOUT",
+			"EAI_AGAIN",
+			"ECONNRESET",
+			"ECONNREFUSED",
+			"ENETDOWN",
+			"socket disconnected before secure"
+		];
+
+		if (ex.message && networkErrors.some(e => ex.message.match(new RegExp(e)))) {
+			return ReportSuppressedMessages.NetworkError;
+		} else if (
+			(ex.message && ex.message.match(/GraphQL Error \(Code: 404\)/)) ||
+			(this.providerConfig.id === "github/enterprise" &&
+				ex.response &&
+				ex.response.error &&
+				ex.response.error.toLowerCase().indexOf("cookies must be enabled to use github") > -1)
+		) {
+			return ReportSuppressedMessages.ConnectionError;
+		} else if (
+			(ex.response && ex.response.message === "Bad credentials") ||
+			(ex.response &&
+				ex.response.errors instanceof Array &&
+				ex.response.errors.find((e: any) => e.type === "FORBIDDEN"))
+		) {
+			return ReportSuppressedMessages.AccessTokenInvalid;
 		} else {
-			return GitHubExceptionType.Unknown;
+			return undefined;
 		}
 	}
 
@@ -238,24 +255,27 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		let response;
 		try {
 			response = await (await this.client()).request<any>(query, variables);
-		}
-		catch (ex) {
-			const exType = this._isKnownException(ex);
-			if (exType !== GitHubExceptionType.Unknown) {
-				// we know about this error, and we want to give the user a chance to correct it
-				// (but throwing up a banner), rather than logging the error to sentry
-				this.session.api.setThirdPartyProviderInfo({
-					providerId: this.providerConfig.id,
-					data: {
-						tokenError: {
-							error: ex,
-							occurredAt: Date.now(),
-							isConnectionError: exType === GitHubExceptionType.Connection
+		} catch (ex) {
+			Logger.warn("GitHub query caught:", ex);
+			const exType = this._isSuppressedException(ex);
+			if (exType !== undefined) {
+				if (exType !== ReportSuppressedMessages.NetworkError) {
+					// we know about this error, and we want to give the user a chance to correct it
+					// (but throwing up a banner), rather than logging the error to sentry
+					this.session.api.setThirdPartyProviderInfo({
+						providerId: this.providerConfig.id,
+						data: {
+							tokenError: {
+								error: ex,
+								occurredAt: Date.now(),
+								isConnectionError: exType === ReportSuppressedMessages.ConnectionError
+							}
 						}
-					}
-				});
-				delete this._client;
-				throw new InternalError(ReportSuppressedMessages.AccessTokenInvalid, { error: ex });
+					});
+					delete this._client;
+				}
+				// this throws the error but won't log to sentry (for ordinary network errors that seem temporary)
+				throw new InternalError(exType, { error: ex });
 			} else {
 				// this is an unexpected error, throw the exception normally
 				throw ex;
@@ -291,7 +311,10 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						functionName = "unknown";
 						Logger.warn(err);
 					}
-
+					this._queryLogger.graphQlApi.rateLimit.last = {
+						name: functionName,
+						cost: response.rateLimit.cost
+					};
 					if (!this._queryLogger.graphQlApi.fns[functionName]) {
 						this._queryLogger.graphQlApi.fns[functionName] = {
 							count: 1,
@@ -337,7 +360,18 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						Logger.warn(err);
 						functionName = "unknown";
 					}
-
+					if (!this._queryLogger.graphQlApi.rateLimit) {
+						this._queryLogger.graphQlApi.rateLimit = {
+							remaining: -1,
+							resetAt: "",
+							resetInMinutes: -1
+						};
+					}
+					this._queryLogger.graphQlApi.rateLimit.last = {
+						name: functionName,
+						// mutate costs are 1
+						cost: 1
+					};
 					if (!this._queryLogger.graphQlApi.fns[functionName]) {
 						this._queryLogger.graphQlApi.fns[functionName] = {
 							count: 1
@@ -1346,18 +1380,30 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return query.repository.collaborators.nodes;
 	}
 
-	async setIsDraftPullRequest(request: { pullRequestId: string; isDraft: boolean }) {
-		if (!request.isDraft) {
+	async markPullRequestReadyForReview(request: {
+		pullRequestId: string;
+		isReady: boolean;
+	}): Promise<Directives | undefined> {
+		if (request.isReady) {
 			const query = `mutation MarkPullRequestReadyForReview($pullRequestId:ID!) {
 				markPullRequestReadyForReview(input: {pullRequestId: $pullRequestId}) {
 					  clientMutationId
+					  pullRequest{
+						isDraft
+						updatedAt
+						state
+					  }
 					}
 				  }`;
 
 			const response = await this.mutate<any>(query, {
 				pullRequestId: request.pullRequestId
 			});
-			return response;
+			return {
+				directives: [
+					{ type: "updatePullRequest", data: response.markPullRequestReadyForReview.pullRequest }
+				]
+			};
 		} else {
 			// const query = `mutation UpdateDraft($pullRequestId:ID!, $isDraft:Boolean!) {
 			// 	updatePullRequest(input: {pullRequestId: $pullRequestId, isDraft:$isDraft}) {
@@ -1373,12 +1419,63 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		}
 	}
 
-	async setLabelOnPullRequest(request: { pullRequestId: string; labelId: string; onOff: boolean }) {
+	async setLabelOnPullRequest(request: {
+		pullRequestId: string;
+		labelId: string;
+		onOff: boolean;
+	}): Promise<Directives> {
 		const method = request.onOff ? "addLabelsToLabelable" : "removeLabelsFromLabelable";
 		const Method = request.onOff ? "AddLabelsToLabelable" : "RemoveLabelsFromLabelable";
 		const query = `mutation ${Method}($labelableId: ID!,$labelIds:[ID!]!) {
 			${method}(input: {labelableId:$labelableId, labelIds:$labelIds}) {
-				  clientMutationId
+				clientMutationId
+				labelable {
+					... on PullRequest {
+					  updatedAt
+					  labels(first: 10) {
+						nodes {
+						  color
+						  description
+						  name
+						  id
+						}
+					  }
+					  timelineItems(last: 1, itemTypes: [LABELED_EVENT, UNLABELED_EVENT]) {
+						nodes {
+						  ... on LabeledEvent {
+							__typename
+							id
+							actor {
+							  login
+							  avatarUrl
+							}
+							label {
+							  id
+							  name
+							  description
+							  color
+							}
+							createdAt
+						  }
+						  ... on UnlabeledEvent {
+							id
+							__typename
+							actor {
+							  login
+							  avatarUrl
+							}
+							label {
+							  id
+							  name
+							  description
+							  color
+							}
+							createdAt
+						  }
+						}
+					  }
+					}
+				  }
 				}
 			  }`;
 
@@ -1386,19 +1483,81 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			labelableId: request.pullRequestId,
 			labelIds: request.labelId
 		});
-		return response;
+
+		return {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: {
+						labels: response[method].labelable.labels,
+						updatedAt: response[method].labelable.updatedAt
+					}
+				},
+				{ type: "addNode", data: response[method].labelable.timelineItems.nodes[0] }
+			]
+		};
 	}
 
 	async setAssigneeOnPullRequest(request: {
 		pullRequestId: string;
 		assigneeId: string;
 		onOff: boolean;
-	}) {
+	}): Promise<Directives> {
 		const method = request.onOff ? "addAssigneesToAssignable" : "removeAssigneesFromAssignable";
 		const Method = request.onOff ? "AddAssigneesFromAssignable" : "RemoveAssigneesFromAssignable";
 		const query = `mutation ${Method}($assignableId:ID!, $assigneeIds:[ID!]!) {
 			${method}(input: {assignableId:$assignableId, assigneeIds:$assigneeIds}) {
 				  clientMutationId
+				  assignable {
+					assignees(first: 10) {
+					  nodes {
+						bio
+						avatarUrl(size: 20)
+						id
+						name
+						login
+					  }
+					}
+					... on PullRequest {
+					  id
+					  timelineItems(last: 1, itemTypes: [ASSIGNED_EVENT, UNASSIGNED_EVENT]) {
+						  nodes {
+							... on AssignedEvent {
+							  __typename
+							  id
+							  actor {
+								login
+								avatarUrl
+							  }
+							  createdAt
+							  assignee {
+								... on User {
+								  id
+								  email
+								  login
+								}
+							  }
+							}
+							... on UnassignedEvent {
+							  __typename
+							  id
+							  actor {
+								login
+								avatarUrl
+							  }
+							  createdAt
+							  assignee {
+								... on User {
+								  id
+								  email
+								  login
+								}
+							  }
+							}
+						}
+					  }
+					}
+				  }
 				}
 			  }`;
 
@@ -1406,10 +1565,25 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			assignableId: request.pullRequestId,
 			assigneeIds: request.assigneeId
 		});
-		return response;
+		return {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: {
+						assignees: response[method].assignable.assignees,
+						updatedAt: response[method].assignable.updatedAt
+					}
+				},
+				{
+					type: "addNode",
+					data: response[method].assignable.timelineItems.nodes[0]
+				}
+			]
+		};
 	}
 
 	async setAssigneeOnIssue(request: { issueId: string; assigneeId: string; onOff: boolean }) {
+		// does not require return directives
 		const method = request.onOff ? "addAssigneesToAssignable" : "removeAssigneesFromAssignable";
 		const Method = request.onOff ? "AddAssigneesFromAssignable" : "RemoveAssigneesFromAssignable";
 		const query = `mutation ${Method}($assignableId: ID!,$assigneeIds:[ID!]!) {
@@ -1425,12 +1599,52 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return response;
 	}
 
-	async toggleReaction(request: { subjectId: string; content: string; onOff: boolean }) {
+	async toggleReaction(request: {
+		subjectId: string;
+		content: string;
+		onOff: boolean;
+	}): Promise<Directives> {
 		const method = request.onOff ? "addReaction" : "removeReaction";
 		const Method = request.onOff ? "AddReaction" : "RemoveReaction";
 		const query = `mutation ${Method}($subjectId: ID!, $content:ReactionContent!) {
 			${method}(input: {subjectId: $subjectId, content:$content}) {
 				  clientMutationId
+				  subject {
+					... on PullRequestReviewComment {
+						__typename
+						id
+					}
+					... on PullRequestReview {
+						__typename
+						id
+					}
+					... on IssueComment {
+						__typename
+						id
+					}
+					... on CommitComment {
+						__typename
+						id
+					}
+					... on TeamDiscussionComment {
+						__typename
+						id
+					}
+					... on PullRequest {
+						__typename
+						id
+					}
+					... on Issue {
+						__typename
+						id
+					}
+					}
+					reaction {
+					content
+					user {
+						login
+					}
+					}
 				}
 			  }`;
 
@@ -1438,13 +1652,31 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			subjectId: request.subjectId,
 			content: request.content
 		});
-		return response;
+
+		return {
+			directives: [
+				{
+					type: request.onOff ? "addReaction" : "removeReaction",
+					data: response[method]
+				}
+			]
+		};
 	}
 
-	async updatePullRequestSubscription(request: { pullRequestId: string; onOff: boolean }) {
+	async updatePullRequestSubscription(request: {
+		pullRequestId: string;
+		onOff: boolean;
+	}): Promise<Directives> {
 		const query = `mutation UpdateSubscription($subscribableId:ID!, $state:SubscriptionState!) {
 			updateSubscription(input: {subscribableId: $subscribableId, state:$state}) {
 				  clientMutationId
+				   subscribable {
+					... on PullRequest {
+						id
+						updatedAt
+						viewerSubscription
+						}
+					}
 				}
 			  }`;
 
@@ -1452,13 +1684,24 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			subscribableId: request.pullRequestId,
 			state: request.onOff ? "SUBSCRIBED" : "UNSUBSCRIBED"
 		});
-		return response;
+		return {
+			directives: [
+				{ type: "updatePullRequest", data: response.updateSubscription.subscribable.pullRequest }
+			]
+		};
 	}
 
-	async updateIssueComment(request: { id: string; body: string }) {
+	async updateIssueComment(request: { id: string; body: string }): Promise<Directives> {
 		const query = `mutation UpdateComment($id:ID!, $body:String!) {
 			updateIssueComment(input: {id: $id, body:$body}) {
-				  clientMutationId
+				clientMutationId
+				issueComment {
+					id,
+					includesCreatedEdit,
+					body,
+					bodyHTML,
+					bodyText
+					}
 				}
 			  }`;
 
@@ -1466,27 +1709,64 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			id: request.id,
 			body: request.body
 		});
-		return response;
+
+		return {
+			directives: [
+				{
+					type: "updateNode",
+					data: response.updateIssueComment.issueComment
+				}
+			]
+		};
 	}
 
-	async updateReviewComment(request: { id: string; body: string }) {
-		const query = `mutation UpdateComment($pullRequestReviewCommentId:ID!, $body:String!) {
-			updatePullRequestReviewComment(input: {pullRequestReviewCommentId: $pullRequestReviewCommentId, body:$body}) {
-				  clientMutationId
+	async updateReviewComment(request: { id: string; body: string }): Promise<Directives> {
+		const query = `mutation UpdateComment($pullRequestReviewCommentId: ID!, $body: String!) {
+			updatePullRequestReviewComment(input: {pullRequestReviewCommentId: $pullRequestReviewCommentId, body: $body}) {
+			  clientMutationId
+			  pullRequestReviewComment {
+				id
+				includesCreatedEdit
+				body
+				bodyHTML
+				bodyText
+				pullRequestReview {
+				  id
 				}
-			  }`;
+			  }
+			}
+		  }
+		  `;
 
 		const response = await this.mutate<any>(query, {
 			pullRequestReviewCommentId: request.id,
 			body: request.body
 		});
-		return response;
+		return {
+			directives: [
+				{
+					type: "updatePullRequestReviewComment",
+					data: response.updatePullRequestReviewComment.pullRequestReviewComment
+				},
+				{
+					type: "updatePullRequestReviewCommentNode",
+					data: response.updatePullRequestReviewComment.pullRequestReviewComment
+				}
+			]
+		};
 	}
 
-	async updateReview(request: { id: string; body: string }) {
+	async updateReview(request: { id: string; body: string }): Promise<Directives> {
 		const query = `mutation UpdateComment($pullRequestReviewId:ID!, $body:String!) {
 			updatePullRequestReview(input: {pullRequestReviewId: $pullRequestReviewId, body:$body}) {
 				  clientMutationId
+				     pullRequestReview {
+						bodyText
+						bodyHTML
+						body
+						includesCreatedEdit
+						id
+					}
 				}
 			  }`;
 
@@ -1494,13 +1774,27 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			pullRequestReviewId: request.id,
 			body: request.body
 		});
-		return response;
+		return {
+			directives: [
+				{
+					type: "updatePullRequestReview",
+					data: response.updatePullRequestReview.pullRequestReview
+				}
+			]
+		};
 	}
 
-	async updatePullRequestBody(request: { id: string; body: string }) {
+	async updatePullRequestBody(request: { id: string; body: string }): Promise<Directives> {
 		const query = `mutation UpdateComment($pullRequestId:ID!, $body:String!) {
 			updatePullRequest(input: {pullRequestId: $pullRequestId, body:$body}) {
 				  clientMutationId
+				    pullRequest {
+						body
+						bodyHTML
+						bodyText
+						includesCreatedEdit
+						updatedAt
+					}
 				}
 			  }`;
 
@@ -1508,7 +1802,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			pullRequestId: request.id,
 			body: request.body
 		});
-		return response;
+		return {
+			directives: [{ type: "updatePullRequest", data: response.updatePullRequest.pullRequest }]
+		};
 	}
 
 	async addPullRequestReview(request: {
@@ -1520,6 +1816,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			};
 		};
 	}> {
+		// TODO add directives
 		const query = `
 		mutation AddPullRequestReview($pullRequestId:ID!) {
 		addPullRequestReview(input: {pullRequestId: $pullRequestId}) {
@@ -1687,6 +1984,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		// used with old servers
 		pullRequestReviewId?: string;
 	}) {
+		// TODO add directives
 		if (!request.eventType) {
 			request.eventType = "COMMENT";
 		}
@@ -1726,19 +2024,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 		return response;
 	}
-
-	// async closePullRequest(request: { pullRequestId: string }) {
-	// 	const query = `mutation ClosePullRequest($pullRequestId:ID!) {
-	// 		closePullRequest(input: {pullRequestId: $pullRequestId}) {
-	// 			  clientMutationId
-	// 			}
-	// 		  }`;
-
-	// 	const response = await this.mutate<any>(query, {
-	// 		pullRequestId: request.pullRequestId
-	// 	});
-	// 	return true;
-	// }
 
 	/**
 	 * Returns a string only if it satisfies the current version (GHE only)
@@ -1817,6 +2102,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				if (repos.length) {
 					repoQuery = repos.map(_ => `repo:${_}`).join(" ") + " ";
 				} else {
+					Logger.log(`getMyPullRequests: request.isOpen=true, but no repos found, returning empty`);
 					return [];
 				}
 			} catch (ex) {
@@ -2061,10 +2347,48 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		pullRequestId: string;
 		milestoneId: string;
 		onOff: boolean;
-	}) {
+	}): Promise<Directives> {
 		const query = `mutation UpdatePullRequest($pullRequestId:ID!, $milestoneId: ID) {
 			updatePullRequest(input: {pullRequestId: $pullRequestId, milestoneId: $milestoneId}) {
 				  clientMutationId
+				  pullRequest {
+					updatedAt
+					milestone {
+					  id
+					  title
+					  state
+					  description
+					  number
+					}
+					timelineItems(last: 1, itemTypes: [MILESTONED_EVENT,DEMILESTONED_EVENT]) {
+					  nodes {
+						  ... on MilestonedEvent {
+							__typename
+							id
+							actor {
+								login
+								avatarUrl
+								resourcePath
+								url
+							}
+							createdAt
+							milestoneTitle
+						}
+						... on DemilestonedEvent {
+						  __typename
+						  id
+						  actor {
+							login
+							avatarUrl
+							resourcePath
+							url
+						  }
+						  milestoneTitle
+						  createdAt
+						}
+					  }
+					}
+				  }
 				}
 			  }`;
 
@@ -2073,19 +2397,41 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			pullRequestId: request.pullRequestId,
 			milestoneId: request.onOff ? request.milestoneId : null
 		});
-		return response;
+		return {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: { milestone: response.updatePullRequest.pullRequest.milestone }
+				},
+				{ type: "addNode", data: response.updatePullRequest.pullRequest.timelineItems.nodes[0] }
+			]
+		};
 	}
 
 	async toggleProjectOnPullRequest(request: {
 		pullRequestId: string;
 		projectId: string;
 		onOff: boolean;
-	}) {
+	}): Promise<Directives> {
 		const metadata = await this.getPullRequestMetadata(request.pullRequestId);
 		const projectIds = new Set(metadata.projectCards.map(_ => _.project.id));
 		const query = `mutation UpdatePullRequest($pullRequestId:ID!, $projectIds: [ID!]) {
 			updatePullRequest(input: {pullRequestId: $pullRequestId, projectIds: $projectIds}) {
 				  clientMutationId
+				  pullRequest {
+					updatedAt
+					projectCards(first: 10) {
+						nodes {
+						  id
+						  note
+						  state
+						  project {
+							name
+							id
+						  }
+						}
+					  }
+				  }
 				}
 			  }`;
 		if (request.onOff) {
@@ -2098,13 +2444,30 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			pullRequestId: request.pullRequestId,
 			projectIds: [...projectIds]
 		});
-		return response;
+		return {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: {
+						projectCards: response.updatePullRequest.pullRequest.projectCards,
+						updatedAt: response.updatePullRequest.pullRequest.updatedAt
+					}
+				}
+			]
+		};
 	}
 
-	async updatePullRequestTitle(request: { pullRequestId: string; title: string }) {
+	async updatePullRequestTitle(request: {
+		pullRequestId: string;
+		title: string;
+	}): Promise<Directives> {
 		const query = `mutation UpdatePullRequest($pullRequestId:ID!, $title: String) {
 			updatePullRequest(input: {pullRequestId: $pullRequestId, title: $title}) {
 				  clientMutationId
+				  pullRequest {
+					title
+					updatedAt
+				  }
 				}
 			  }`;
 
@@ -2112,10 +2475,20 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			pullRequestId: request.pullRequestId,
 			title: request.title
 		});
-		return response;
+		return {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: response.updatePullRequest.pullRequest
+				}
+			]
+		};
 	}
 
-	async mergePullRequest(request: { pullRequestId: string; mergeMethod: MergeMethod }) {
+	async mergePullRequest(request: {
+		pullRequestId: string;
+		mergeMethod: MergeMethod;
+	}): Promise<Directives> {
 		if (!request.mergeMethod) throw new Error("InvalidMergeMethod");
 		const mergeMethods = new Set(["MERGE", "REBASE", "SQUASH"]);
 		if (!mergeMethods.has(request.mergeMethod)) throw new Error("InvalidMergeMethod");
@@ -2123,21 +2496,110 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		const query = `mutation MergePullRequest($pullRequestId:ID!) {
 			mergePullRequest(input: {pullRequestId: $pullRequestId, mergeMethod: ${request.mergeMethod}}) {
 				  clientMutationId
+				  pullRequest {
+					state
+					mergeable
+					merged
+					mergedAt
+					updatedAt
+					timelineItems(last: 10) {
+					  nodes {
+						... on ReferencedEvent {
+						  id
+						  __typename
+						  actor {
+							login
+							avatarUrl
+						  }
+						  commit {
+							messageBody
+							messageHeadline
+							status {
+							  state
+							}
+							oid
+							abbreviatedOid
+							author {
+							  avatarUrl
+							  name
+							  user {
+								login
+							  }
+							}
+							committer {
+							  avatarUrl
+							  name
+							  user {
+								login
+							  }
+							}
+						  }
+						}
+						... on MergedEvent {
+						  __typename
+						  id
+						  actor {
+							login
+							avatarUrl
+						  }
+						  mergeRefName
+						  createdAt
+						  commit {
+							abbreviatedOid
+						  }
+						}
+						... on ClosedEvent {
+						  __typename
+						  id
+						  actor {
+							login
+							avatarUrl
+						  }
+						  createdAt
+						}
+					  }
+					}
+				  }
 				}
 			  }`;
 		const response = await this.mutate<any>(query, {
 			pullRequestId: request.pullRequestId
 		});
 
-		return true;
+		const pullRequestData = {
+			canBeRebased: false,
+			mergeStateStatus: "UNKNOWN",
+			mergeable: response.mergePullRequest.pullRequest.mergeable,
+			merged: response.mergePullRequest.pullRequest.merged,
+			mergedAt: response.mergePullRequest.pullRequest.mergedAt,
+			state: response.mergePullRequest.pullRequest.state,
+			updatedAt: response.mergePullRequest.pullRequest.updatedAt
+		};
+
+		return {
+			directives: [
+				{ type: "updatePullRequest", data: pullRequestData },
+				{ type: "addNodes", data: response.mergePullRequest.pullRequest.timelineItems.nodes }
+			]
+		};
 	}
 
-	async lockPullRequest(request: { pullRequestId: string; lockReason: string }) {
+	async lockPullRequest(request: {
+		pullRequestId: string;
+		lockReason: string;
+	}): Promise<Directives> {
 		// OFF_TOPIC, TOO_HEATED, SPAM
-		await this.mutate<any>(
+		const response = await this.mutate<any>(
 			`mutation LockPullRequest($lockableId:ID!, $lockReason:LockReason) {
 				lockLockable(input: {lockableId:$lockableId, lockReason:$lockReason}) {
 				  clientMutationId
+				  lockedRecord {
+					... on PullRequest {
+					  locked
+					  activeLockReason
+					  updatedAt
+					}
+				  }
 				}
 			  }`,
 			{
@@ -2146,14 +2608,28 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		);
 
-		return true;
+		return {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: response.lockLockable.lockedRecord
+				}
+			]
+		};
 	}
 
-	async unlockPullRequest(request: { pullRequestId: string }) {
-		await this.mutate<any>(
+	async unlockPullRequest(request: { pullRequestId: string }): Promise<Directives> {
+		const response = await this.mutate<any>(
 			`mutation UnlockPullRequest($pullRequestId:ID!) {
 				unlockLockable(input: {lockableId: $pullRequestId}) {
 				  clientMutationId
+				  unlockedRecord {
+					... on PullRequest {
+					  locked
+					  activeLockReason
+					  updatedAt
+					}
+				  }
 				}
 			  }`,
 			{
@@ -2161,7 +2637,14 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		);
 
-		return true;
+		return {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: response.unlockLockable.unlockedRecord
+				}
+			]
+		};
 	}
 
 	async getReviewersForPullRequest(request: { pullRequestId: string }) {
@@ -2184,6 +2667,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					  requestedReviewer {
 						... on User {
 						  id
+						  avatarUrl
 						  login
 						}
 					  }
@@ -2204,12 +2688,51 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		);
 	}
 
-	async addReviewerToPullRequest(request: { pullRequestId: string; userId: string }) {
+	async addReviewerToPullRequest(request: {
+		pullRequestId: string;
+		userId: string;
+	}): Promise<Directives> {
 		const currentReviewers = await this.getReviewersForPullRequest(request);
 		const response = await this.mutate<any>(
 			`mutation RequestReviews($pullRequestId:ID!, $userIds:[ID!]!) {
 				requestReviews(input: {pullRequestId:$pullRequestId, userIds:$userIds}) {
 			  clientMutationId
+			  pullRequest {
+				updatedAt
+				reviewRequests(last: 10) {
+				  nodes {
+					requestedReviewer {
+					  ... on User {
+						id
+						avatarUrl
+						login
+						email
+					  }
+					}
+				  }
+				}
+				timelineItems(last: 1, itemTypes: REVIEW_REQUESTED_EVENT) {
+				  nodes {
+					... on ReviewRequestedEvent {
+					  __typename
+					  id
+					  actor {
+						login
+						avatarUrl
+					  }
+					  createdAt
+					  requestedReviewer {
+						... on User {
+						  id
+						  avatarUrl
+						  login
+						  avatarUrl
+						}
+					  }
+					}
+				  }
+				}
+			  }
 			}
 		  }`,
 			{
@@ -2217,15 +2740,48 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				userIds: (currentReviewers || []).concat(request.userId)
 			}
 		);
-		return response;
+		return {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: { updatedAt: response.requestReviews.pullRequest.updatedAt }
+				},
+				{
+					type: "updatePullRequestReviewers",
+					data: response.requestReviews.pullRequest.reviewRequests.nodes
+				},
+				{
+					type: "addNode",
+					data: response.requestReviews.pullRequest.timelineItems.nodes[0]
+				}
+			]
+		};
 	}
 
-	async removeReviewerFromPullRequest(request: { pullRequestId: string; userId: string }) {
+	async removeReviewerFromPullRequest(request: {
+		pullRequestId: string;
+		userId: string;
+	}): Promise<Directives> {
 		const currentReviewers = await this.getReviewersForPullRequest(request);
 		const response = await this.mutate<any>(
 			`mutation RequestReviews($pullRequestId:ID!, $userIds:[ID!]!) {
 				requestReviews(input: {pullRequestId:$pullRequestId, userIds:$userIds}) {
 			  clientMutationId
+			  pullRequest {
+				updatedAt
+				reviewRequests(last: 10) {
+				  nodes {
+					requestedReviewer {
+					  ... on User {
+						id
+						avatarUrl
+						login
+						email
+					  }
+					}
+				  }
+				}
+			  }
 			}
 		  }`,
 			{
@@ -2233,15 +2789,63 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				userIds: (currentReviewers || []).filter((_: string) => _ !== request.userId)
 			}
 		);
-		return response;
+		return {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: { updatedAt: response.requestReviews.pullRequest.updatedAt }
+				},
+				{
+					type: "updatePullRequestReviewers",
+					data: response.requestReviews.pullRequest.reviewRequests.nodes
+				}
+			]
+		};
 	}
 
-	async createPullRequestCommentAndClose(request: { pullRequestId: string; text: string }) {
+	async createPullRequestCommentAndClose(request: {
+		pullRequestId: string;
+		text: string;
+	}): Promise<Directives> {
+		const directives: any = [];
+		const response = { directives: directives };
 		if (request.text) {
-			await this.mutate<any>(
+			const response1 = await this.mutate<any>(
 				`mutation AddCommentToPullRequest($pullRequestId:ID!, $body:String!) {
 				addComment(input: {subjectId: $pullRequestId, body:$body}) {
 				  clientMutationId
+				  timelineEdge {
+					node {
+					  ... on IssueComment {
+						__typename
+						id
+						author {
+						  login
+						  avatarUrl
+						}
+						authorAssociation
+						body
+						bodyText
+						bodyHTML
+						createdAt
+						includesCreatedEdit
+						isMinimized
+						minimizedReason
+						reactionGroups {
+						  content
+						  users(first: 10) {
+							nodes {
+							  login
+							}
+						  }
+						}
+						resourcePath
+						viewerCanUpdate
+						viewerCanReact
+						viewerCanDelete
+					  }
+					}
+				  }
 				}
 			  }`,
 				{
@@ -2249,12 +2853,37 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					body: request.text
 				}
 			);
+
+			directives.push({
+				type: "addNode",
+				data: response1.addComment.timelineEdge.node
+			});
 		}
 
-		await this.mutate<any>(
+		const response2 = await this.mutate<any>(
 			`mutation ClosePullRequest($pullRequestId:ID!) {
 			closePullRequest(input: {pullRequestId: $pullRequestId}) {
 				  clientMutationId
+				  pullRequest {
+					state
+					mergeable
+					merged
+					mergedAt
+					updatedAt
+					timelineItems(last: 10) {
+						nodes {
+						  ... on ClosedEvent {
+							__typename
+							id
+							actor {
+							  login
+							  avatarUrl
+							}
+							createdAt
+						  }
+						}
+					  }
+				  }
 				}
 			}`,
 			{
@@ -2262,15 +2891,67 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		);
 
-		return true;
+		directives.push({
+			type: "updatePullRequest",
+			data: {
+				mergeable: response2.closePullRequest.pullRequest.mergeable,
+				merged: response2.closePullRequest.pullRequest.merged,
+				mergedAt: response2.closePullRequest.pullRequest.mergedAt,
+				state: response2.closePullRequest.pullRequest.state,
+				updatedAt: response2.closePullRequest.pullRequest.updatedAt
+			}
+		});
+		directives.push({
+			type: "addNodes",
+			data: response2.closePullRequest.pullRequest.timelineItems.nodes
+		});
+
+		return response;
 	}
 
-	async createPullRequestCommentAndReopen(request: { pullRequestId: string; text: string }) {
+	async createPullRequestCommentAndReopen(request: {
+		pullRequestId: string;
+		text: string;
+	}): Promise<Directives> {
+		const directives: any = [];
+		const response = { directives: directives };
 		if (request.text) {
-			await this.mutate<any>(
+			const response1 = await this.mutate<any>(
 				`mutation AddCommentToPullRequest($pullRequestId:ID!, $body:String!) {
 				addComment(input: {subjectId: $pullRequestId, body:$body}) {
 				  clientMutationId
+				  timelineEdge {
+					node {
+					  ... on IssueComment {
+						__typename
+						id
+						author {
+						  login
+						  avatarUrl
+						}
+						authorAssociation
+						body
+						bodyText
+						bodyHTML
+						createdAt
+						includesCreatedEdit
+						isMinimized
+						minimizedReason
+						reactionGroups {
+						  content
+						  users(first: 10) {
+							nodes {
+							  login
+							}
+						  }
+						}
+						resourcePath
+						viewerCanUpdate
+						viewerCanReact
+						viewerCanDelete
+					  }
+					}
+				  }
 				}
 			  }`,
 				{
@@ -2278,51 +2959,129 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					body: request.text
 				}
 			);
+
+			directives.push({
+				type: "addNode",
+				data: response1.addComment.timelineEdge.node
+			});
 		}
 
-		await this.mutate<any>(
+		const response2 = await this.mutate<any>(
 			`mutation ReopenPullRequest($pullRequestId:ID!) {
 			reopenPullRequest(input: {pullRequestId: $pullRequestId}) {
 				  clientMutationId
+				  pullRequest {
+					state
+					mergeable
+					merged
+					mergedAt
+					updatedAt
+					timelineItems(last: 1) {
+						nodes {
+						  ... on ReopenedEvent {
+							id
+							__typename
+							actor {
+							  login
+							  avatarUrl
+							}
+							createdAt
+						  }
+						}
+					  }
+				  }
 				}
 			}`,
 			{
 				pullRequestId: request.pullRequestId
 			}
 		);
+		directives.push({
+			type: "updatePullRequest",
+			data: {
+				mergeable: response2.reopenPullRequest.pullRequest.mergeable,
+				merged: response2.reopenPullRequest.pullRequest.merged,
+				mergedAt: response2.reopenPullRequest.pullRequest.mergedAt,
+				state: response2.reopenPullRequest.pullRequest.state,
+				updatedAt: response2.reopenPullRequest.pullRequest.updatedAt
+			}
+		});
+		directives.push({
+			type: "addNodes",
+			data: response2.reopenPullRequest.pullRequest.timelineItems.nodes
+		});
 
-		return true;
+		return response;
 	}
 
-	async resolveReviewThread(request: { threadId: string }) {
+	async resolveReviewThread(request: { threadId: string }): Promise<Directives> {
 		const response = await this.mutate<any>(
 			`mutation ResolveReviewThread($threadId:ID!) {
 				resolveReviewThread(input: {threadId:$threadId}) {
 				  clientMutationId
+				  thread {
+					isResolved
+					viewerCanResolve
+					viewerCanUnresolve
+					id
+				  }
 				}
 			}`,
 			{
 				threadId: request.threadId
 			}
 		);
-		return response;
+		const thread = response.resolveReviewThread.thread;
+		return {
+			directives: [
+				{
+					type: "resolveReviewThread",
+					data: {
+						isResolved: thread.isResolved,
+						viewerCanResolve: thread.viewerCanResolve,
+						viewerCanUnresolve: thread.viewerCanUnresolve,
+						threadId: thread.id
+					}
+				}
+			]
+		};
 	}
 
-	async unresolveReviewThread(request: { threadId: string }) {
+	async unresolveReviewThread(request: { threadId: string }): Promise<Directives> {
 		const response = await this.mutate<any>(
 			`mutation UnresolveReviewThread($threadId:ID!) {
 				unresolveReviewThread(input: {threadId:$threadId}) {
 				  clientMutationId
+				  thread {
+					isResolved
+					viewerCanResolve
+					viewerCanUnresolve
+					id
+				  }
 				}
 			}`,
 			{
 				threadId: request.threadId
 			}
 		);
-		return response;
+		const thread = response.unresolveReviewThread.thread;
+		return {
+			directives: [
+				{
+					type: "unresolveReviewThread",
+					data: {
+						isResolved: thread.isResolved,
+						viewerCanResolve: thread.viewerCanResolve,
+						viewerCanUnresolve: thread.viewerCanUnresolve,
+						threadId: thread.id
+					}
+				}
+			]
+		};
 	}
 
 	async addComment(request: { subjectId: string; text: string }) {
+		// does not require return directives
 		const response = await this.mutate<any>(
 			`mutation AddComment($subjectId:ID!,$body:String!) {
 				addComment(input: {subjectId:$subjectId, body:$body}) {
@@ -2423,19 +3182,76 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return data.body;
 	}
 
-	async createPullRequestComment(request: { pullRequestId: string; text: string }) {
+	async createPullRequestComment(request: {
+		pullRequestId: string;
+		text: string;
+	}): Promise<Directives> {
+		// TODO move all that added code into a shared location
 		const query = `mutation AddCommentToPullRequest($subjectId:ID!, $body:String!) {
 				addComment(input: {subjectId: $subjectId, body:$body}) {
-				  clientMutationId
-				}
-			  }`;
+					clientMutationId
+					commentEdge {
+						node {
+						  pullRequest {
+							updatedAt
+						  }
+						}
+					  }
+				   		timelineEdge {
+							node {
+								... on IssueComment {
+									__typename
+									id
+									author {
+										login
+										avatarUrl
+									}
+									authorAssociation
+									body
+									bodyText
+									bodyHTML
+									createdAt
+									includesCreatedEdit
+									isMinimized
+									minimizedReason
+									reactionGroups {
+										content
+										users(first: 1) {
+												nodes {
+													login
+												}
+											}
+									}
+									resourcePath
+									viewerCanUpdate
+									viewerCanReact
+									viewerCanDelete
+								}
+							}
+						}
+					}
+			  	}`;
 
 		const response = await this.mutate<any>(query, {
 			subjectId: request.pullRequestId,
 			body: request.text
 		});
 
-		return true;
+		// NOTE must use the commentEdge to get the PR
+		// and not from the subject, as the subject data is stale
+		// at this point
+		return {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: response.addComment.commentEdge.node.pullRequest
+				},
+				{
+					type: "addNode",
+					data: response.addComment.timelineEdge.node
+				}
+			]
+		};
 	}
 
 	async createPullRequestInlineComment(request: {
@@ -2478,7 +3294,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		id: string;
 		pullRequestId: string;
 		type: "ISSUE_COMMENT" | "REVIEW_COMMENT";
-	}) {
+	}): Promise<Directives | undefined> {
 		const method =
 			request.type === "ISSUE_COMMENT" ? "deleteIssueComment" : "deletePullRequestReviewComment";
 
@@ -2498,7 +3314,20 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			commentId: request.id
 		});
 
-		return true;
+		if (request.type === "ISSUE_COMMENT") {
+			return {
+				directives: [
+					{
+						type: "removeNode",
+						data: {
+							id: request.id
+						}
+					}
+				]
+			};
+		}
+		// TODO for other types
+		return undefined;
 	}
 
 	_pullRequestIdCache: Map<
@@ -2687,6 +3516,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			//   }`,
 			`... on AssignedEvent {
 			__typename
+			id
 			actor {
 			  login
 			  avatarUrl
@@ -2711,6 +3541,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			//   }`,
 			`... on BaseRefForcePushedEvent {
 			__typename
+			id
 			actor {
 			  login
 			  avatarUrl
@@ -2728,6 +3559,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		  }`,
 			`... on ClosedEvent {
 			__typename
+			id
 			actor {
 			  login
 			  avatarUrl
@@ -2746,11 +3578,13 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			//   }`,
 			this._transform(`[... on ConvertToDraftEvent {
 				__typename
+				id
+				createdAt
 				actor {
 				  login
 				  avatarUrl
 				}
-			  }:>2.20.0]`),
+			  }:>=2.21.0]`),
 			// 	`... on ConvertedNoteToIssueEvent {
 			// 	__typename
 			// 	id
@@ -2765,13 +3599,13 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			//   }`,
 			`... on DemilestonedEvent {
 			__typename
+			id
 			actor {
 			  login
 			  avatarUrl
 			  resourcePath
 			  url
 			}
-			id
 			milestoneTitle
 			createdAt
 		  }`,
@@ -2789,6 +3623,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			//   }`,
 			`... on HeadRefDeletedEvent {
 			__typename
+			id
 			actor {
 			  login
 			  avatarUrl
@@ -2796,6 +3631,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		  }`,
 			`... on HeadRefForcePushedEvent {
 			__typename
+			id
 			actor {
 			  login
 			  avatarUrl
@@ -2844,6 +3680,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		}`,
 			`... on LabeledEvent {
 			__typename
+			id
 			label {
 			  name
 			  description
@@ -2857,6 +3694,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		  }`,
 			`... on LockedEvent {
 			__typename
+			id
 			actor {
 			  login
 			  avatarUrl
@@ -2866,9 +3704,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		  }`,
 			`... on MarkedAsDuplicateEvent {
 			__typename
+			id
 		  }`,
 			`... on MentionedEvent {
 			__typename
+			id
 			actor {
 			  login
 			  avatarUrl
@@ -2877,6 +3717,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		  }`,
 			`... on MergedEvent {
 			__typename
+			id
 			actor {
 			  login
 			  avatarUrl
@@ -2889,6 +3730,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		  }`,
 			`... on MilestonedEvent {
 			__typename
+			id
 			actor {
 			  login
 			  avatarUrl
@@ -2937,8 +3779,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			// 	__typename
 			//   }`,
 			`... on PullRequestReview {
-			  id
 			__typename
+			id
 			author {
 			  login
 			  avatarUrl
@@ -3043,11 +3885,18 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			  }
 			}
 		  }`,
-			// 	`... on ReadyForReviewEvent {
-			// 	__typename
-			//   }`,
+			this._transform(`[... on ReadyForReviewEvent {
+			__typename
+			id
+			createdAt
+			actor {
+			  login
+			  avatarUrl
+			}
+		  }:>=2.21.0]`),
 			`... on ReferencedEvent {
 			__typename
+			id
 			actor {
 			  login
 			  avatarUrl
@@ -3076,11 +3925,12 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			  }
 			}
 		  }`,
-			`... on RemovedFromProjectEvent {
-			__typename
-		  }`,
+			// 	`... on RemovedFromProjectEvent {
+			// 	__typename
+			//   }`,
 			`... on RenamedTitleEvent {
 			__typename
+			id
 			actor {
 			  login
 			  avatarUrl
@@ -3091,6 +3941,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		  }`,
 			`... on ReopenedEvent {
 			__typename
+			id
 			actor {
 			  login
 			  avatarUrl
@@ -3099,6 +3950,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		  }`,
 			`... on ReviewDismissedEvent {
 			__typename
+			id
 			actor {
 				login
 				avatarUrl
@@ -3115,6 +3967,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			//   }`,
 			`... on ReviewRequestedEvent {
 			__typename
+			id
 			actor {
 			  login
 			  avatarUrl
@@ -3136,6 +3989,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			//   }`,
 			`... on UnassignedEvent {
 			__typename
+			id
 			actor {
 			  login
 			  avatarUrl
@@ -3151,6 +4005,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		  }`,
 			`... on UnlabeledEvent {
 			__typename
+			id
 			label {
 			  color
 			  name
@@ -3164,6 +4019,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		  }`,
 			`... on UnlockedEvent {
 			__typename
+			id
 			actor {
 			  login
 			  avatarUrl

@@ -60,10 +60,11 @@ import {
 } from "../store/providerPullRequests/actions";
 import {
 	getCurrentProviderPullRequest,
-	getProviderPullRequestRepo
+	getCurrentProviderPullRequestLastUpdated,
+	getProviderPullRequestRepo,
+	isAnHourOld
 } from "../store/providerPullRequests/reducer";
 import { confirmPopup } from "./Confirm";
-import { Modal } from "./Modal";
 import { PullRequestFileComments } from "./PullRequestFileComments";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { getPreferences } from "../store/users/reducer";
@@ -115,6 +116,7 @@ export const PullRequest = () => {
 		const team = state.teams[state.context.currentTeamId];
 		const providerPullRequests = state.providerPullRequests.pullRequests;
 		const currentPullRequest = getCurrentProviderPullRequest(state);
+		const providerPullRequestLastUpdated = getCurrentProviderPullRequestLastUpdated(state);
 		return {
 			viewPreference: getPreferences(state).pullRequestView || "auto",
 			providerPullRequests: providerPullRequests,
@@ -131,6 +133,7 @@ export const PullRequest = () => {
 				? state.context.currentPullRequest.commentId
 				: undefined,
 			currentPullRequest: currentPullRequest,
+			currentPullRequestLastUpdated: providerPullRequestLastUpdated,
 			composeCodemarkActive: state.context.composeCodemarkActive,
 			team,
 			textEditorUri: state.editorContext.textEditorUri,
@@ -223,7 +226,13 @@ export const PullRequest = () => {
 		if (providerPullRequests) {
 			let data = providerPullRequests[derivedState.currentPullRequestId!];
 			if (data) {
-				_assignState(data.conversations);
+				if (isAnHourOld(data.conversationsLastFetch)) {
+					console.warn(`pr id=${derivedState.currentPullRequestId} is too old, resetting`);
+					// setPR to undefined to trigger loader
+					setPr(undefined);
+				} else {
+					_assignState(data.conversations);
+				}
 			}
 		}
 	}, [
@@ -334,10 +343,6 @@ export const PullRequest = () => {
 		}
 	}, [pr && pr.headRefName, derivedState.checkoutBranch]);
 
-	const hasRepoOpen = useMemo(() => {
-		return pr && openRepos.find(_ => _.name === pr.repository.name);
-	}, [pr, openRepos]);
-
 	useEffect(() => {
 		if (!pr) return;
 
@@ -378,9 +383,8 @@ export const PullRequest = () => {
 	const saveTitle = async () => {
 		setIsLoadingMessage("Saving Title...");
 		setSavingTitle(true);
-
 		await dispatch(api("updatePullRequestTitle", { title }));
-		fetch();
+		setSavingTitle(false);
 	};
 
 	const getOpenRepos = async () => {
@@ -460,15 +464,26 @@ export const PullRequest = () => {
 	});
 
 	const _checkMergeabilityStatus = async () => {
-		if (!pr) return undefined;
+		if (
+			!derivedState.currentPullRequest ||
+			!derivedState.currentPullRequest.conversations ||
+			!derivedState.currentPullRequest.conversations.repository ||
+			!derivedState.currentPullRequest.conversations.repository.pullRequest
+		)
+			return undefined;
 		try {
 			const response = (await dispatch(
 				api("getPullRequestLastUpdated", {}, { preventClearError: true })
 			)) as any;
-			if (pr && response && response.mergeable !== pr.mergeable) {
+			if (
+				derivedState.currentPullRequest &&
+				response &&
+				response.mergeable !==
+					derivedState.currentPullRequest.conversations.repository.pullRequest.mergeable
+			) {
 				console.log(
 					"getPullRequestLastUpdated is updating (mergeable)",
-					pr.mergeable,
+					derivedState.currentPullRequest.conversations.repository.pullRequest.mergeable,
 					response.mergeable
 				);
 				reload();
@@ -479,62 +494,80 @@ export const PullRequest = () => {
 		}
 		return undefined;
 	};
+
 	const checkMergeabilityStatus = useCallback(() => {
 		_checkMergeabilityStatus();
-	}, [pr, derivedState.currentPullRequestId]);
+	}, [derivedState.currentPullRequest, derivedState.currentPullRequestId]);
 
 	let interval;
 	let intervalCounter = 0;
 	useEffect(() => {
 		interval && clearInterval(interval);
-		if (pr) {
-			if (autoCheckedMergeability === "UNCHECKED" && pr.mergeable === "UNKNOWN") {
-				console.log("PullRequest pr mergeable is UNKNOWN");
-				setTimeout(() => {
-					_checkMergeabilityStatus().then(_ => {
-						setAutoCheckedMergeability(_ ? "CHECKED" : "UNKNOWN");
-					});
-				}, 5000);
-			}
-			interval = setInterval(async () => {
-				if (intervalCounter >= 120) {
-					interval && clearInterval(interval);
-					intervalCounter = 0;
-					console.warn(`stopped getPullRequestLastUpdated interval counter=${intervalCounter}`);
-					return;
-				}
-				try {
-					const response = (await dispatch(
-						api(
-							"getPullRequestLastUpdated",
-							{},
-							{ preventClearError: true, preventErrorReporting: true }
-						)
-					)) as any;
-					if (pr && response && response.updatedAt !== pr.updatedAt) {
-						console.log(
-							"getPullRequestLastUpdated is updating",
-							response.updatedAt,
-							pr.updatedAt,
-							intervalCounter
-						);
-						intervalCounter = 0;
-						reload();
-						clearInterval(interval);
-					} else {
-						intervalCounter++;
-					}
-				} catch (ex) {
-					console.error(ex);
-					interval && clearInterval(interval);
-				}
-			}, 60000); //60000 === 1 minute
+		if (!derivedState.currentPullRequest) return;
+
+		if (
+			autoCheckedMergeability === "UNCHECKED" ||
+			(derivedState.currentPullRequest.conversations &&
+				derivedState.currentPullRequest.conversations.repository &&
+				derivedState.currentPullRequest.conversations.repository.pullRequest &&
+				derivedState.currentPullRequest.conversations.repository.pullRequest.mergeable ===
+					"UNKNOWN")
+		) {
+			console.log("PullRequest pr mergeable is UNKNOWN");
+			setTimeout(() => {
+				_checkMergeabilityStatus().then(_ => {
+					setAutoCheckedMergeability(_ ? "CHECKED" : "UNKNOWN");
+				});
+			}, 5000);
 		}
+		interval = setInterval(async () => {
+			// checks for 1 hour
+			if (intervalCounter >= 60) {
+				interval && clearInterval(interval);
+				intervalCounter = 0;
+				console.warn(`stopped getPullRequestLastUpdated interval counter=${intervalCounter}`);
+				return;
+			}
+			try {
+				const response = (await dispatch(
+					api(
+						"getPullRequestLastUpdated",
+						{},
+						{ preventClearError: true, preventErrorReporting: true }
+					)
+				)) as any;
+				if (
+					derivedState.currentPullRequest &&
+					response &&
+					response.updatedAt !== derivedState.currentPullRequestLastUpdated
+				) {
+					console.warn(
+						"getPullRequestLastUpdated is updating",
+						response.updatedAt,
+						derivedState.currentPullRequestLastUpdated,
+						intervalCounter
+					);
+					intervalCounter = 0;
+					reload();
+					clearInterval(interval);
+				} else {
+					intervalCounter++;
+					console.log("incrementing counter", intervalCounter);
+				}
+			} catch (ex) {
+				console.error(ex);
+				interval && clearInterval(interval);
+			}
+		}, 60000); //60000 === 1 minute interval
 
 		return () => {
 			interval && clearInterval(interval);
 		};
-	}, [pr, autoCheckedMergeability]);
+	}, [
+		derivedState.currentPullRequestLastUpdated,
+		derivedState.currentPullRequest,
+		autoCheckedMergeability
+	]);
 
 	const iAmRequested = useMemo(() => {
 		if (pr) {

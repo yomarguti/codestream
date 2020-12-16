@@ -137,49 +137,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 		});
 	};
 
-	const handleEdit = async (id: string, type: "PR" | "ISSUE" | "REVIEW" | "REVIEW_COMMENT") => {
-		setIsLoadingMessage("Updating Comment...");
-		try {
-			const value = pendingComments[id];
-			if (value == null) return;
-
-			await dispatch(
-				api(
-					type === "REVIEW_COMMENT"
-						? "updateReviewComment"
-						: type === "ISSUE"
-						? "updateIssueComment"
-						: type === "PR"
-						? "updatePullRequestBody"
-						: "updateReview",
-					{
-						id,
-						body: value
-					}
-				)
-			);
-
-			fetch().then(() => {
-				setPendingComments({
-					...pendingComments,
-					[id]: undefined
-				});
-				setEditingComments({
-					...editingComments,
-					[id]: false
-				});
-			});
-		} catch (ex) {
-			console.warn(ex);
-		} finally {
-			setIsLoadingMessage();
-		}
-	};
-
-	const handleOnChangeReviewOptions = (value: string) => {
-		setReviewOption(value);
-	};
-
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		return {
@@ -208,7 +165,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 								pr={pr}
 								targetId={pr.id}
 								setIsLoadingMessage={setIsLoadingMessage}
-								fetch={fetch}
 								reactionGroups={pr.reactionGroups}
 							/>
 							<PullRequestCommentMenu
@@ -226,7 +182,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 						{editingComments[pr.id] ? (
 							<PullRequestEditingComment
 								pr={pr}
-								fetch={fetch}
 								setIsLoadingMessage={setIsLoadingMessage}
 								id={pr.id}
 								type={"PR"}
@@ -248,7 +203,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 						pr={pr}
 						targetId={pr.id}
 						setIsLoadingMessage={setIsLoadingMessage}
-						fetch={fetch}
 						reactionGroups={pr.reactionGroups}
 					/>
 				</PRCommentCard>
@@ -282,7 +236,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 														pr={pr}
 														targetId={item.id}
 														setIsLoadingMessage={setIsLoadingMessage}
-														fetch={fetch}
 														reactionGroups={item.reactionGroups}
 													/>
 													<PullRequestCommentMenu
@@ -301,7 +254,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 												{editingComments[item.id] ? (
 													<PullRequestEditingComment
 														pr={pr}
-														fetch={fetch}
 														setIsLoadingMessage={setIsLoadingMessage}
 														id={item.id}
 														type={"ISSUE"}
@@ -320,7 +272,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 												pr={pr}
 												targetId={item.id}
 												setIsLoadingMessage={setIsLoadingMessage}
-												fetch={fetch}
 												reactionGroups={item.reactionGroups}
 											/>
 										</>
@@ -374,7 +325,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 															pr={pr}
 															targetId={item.id}
 															setIsLoadingMessage={setIsLoadingMessage}
-															fetch={fetch}
 															reactionGroups={item.reactionGroups}
 														/>
 														<PullRequestCommentMenu
@@ -395,7 +345,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 													{editingComments[item.id] ? (
 														<PullRequestEditingComment
 															pr={pr}
-															fetch={fetch}
 															setIsLoadingMessage={setIsLoadingMessage}
 															id={item.id}
 															type={"REVIEW"}
@@ -414,7 +363,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 													pr={pr}
 													targetId={item.id}
 													setIsLoadingMessage={setIsLoadingMessage}
-													fetch={fetch}
 													reactionGroups={item.reactionGroups}
 												/>
 											</>
@@ -883,6 +831,30 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 								<PRTimelineItemBody>
 									<PRHeadshotName key={index} person={item.actor} />
 									removed milestone <b>{item.milestoneTitle}</b>
+									<Timestamp time={item.createdAt!} relative />
+								</PRTimelineItemBody>
+							</PRTimelineItem>
+						);
+					}
+					case "ConvertToDraftEvent": {
+						return (
+							<PRTimelineItem key={index} className="tall">
+								<Icon name="circle" className="circled" />
+								<PRTimelineItemBody>
+									<PRHeadshotName key={index} person={item.actor} />
+									marked this pull request as draft
+									<Timestamp time={item.createdAt!} relative />
+								</PRTimelineItemBody>
+							</PRTimelineItem>
+						);
+					}
+					case "ReadyForReviewEvent": {
+						return (
+							<PRTimelineItem key={index} className="tall">
+								<Icon name="eye" className="circled" />
+								<PRTimelineItemBody>
+									<PRHeadshotName key={index} person={item.actor} />
+									marked this pull request as ready for review
 									<Timestamp time={item.createdAt!} relative />
 								</PRTimelineItemBody>
 							</PRTimelineItem>

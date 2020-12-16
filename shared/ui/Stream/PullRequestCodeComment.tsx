@@ -49,7 +49,7 @@ interface Props {
 }
 
 export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
-	const { item, comment, author, fetch, setIsLoadingMessage, pr } = props;
+	const { item, comment, author, setIsLoadingMessage, pr } = props;
 	const dispatch = useDispatch();
 
 	const [openComments, setOpenComments] = useState({});
@@ -95,8 +95,6 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 					threadId: threadId
 				})
 			);
-
-			await props.fetch();
 		} catch (ex) {
 			console.warn(ex);
 		} finally {
@@ -112,8 +110,6 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 					threadId: threadId
 				})
 			);
-
-			await props.fetch();
 		} catch (ex) {
 			console.warn(ex);
 		} finally {
@@ -180,7 +176,6 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 									pr={pr}
 									targetId={comment.id}
 									setIsLoadingMessage={setIsLoadingMessage}
-									fetch={props.fetch}
 									reactionGroups={comment.reactionGroups}
 								/>
 								<PullRequestCommentMenu
@@ -199,7 +194,6 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 						{editingComments[comment.id] ? (
 							<PullRequestEditingComment
 								pr={pr}
-								fetch={props.fetch}
 								setIsLoadingMessage={setIsLoadingMessage}
 								id={comment.id}
 								type={"REVIEW_COMMENT"}
@@ -220,7 +214,6 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 				pr={pr}
 				targetId={comment.id}
 				setIsLoadingMessage={setIsLoadingMessage}
-				fetch={props.fetch}
 				reactionGroups={comment.reactionGroups}
 			/>
 			{comment.replies &&
@@ -249,7 +242,6 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 											pr={pr}
 											targetId={c.id}
 											setIsLoadingMessage={setIsLoadingMessage}
-											fetch={props.fetch}
 											reactionGroups={c.reactionGroups}
 										/>
 										<PullRequestCommentMenu
@@ -268,7 +260,6 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 								{editingComments[c.id] ? (
 									<PullRequestEditingComment
 										pr={pr}
-										fetch={props.fetch}
 										setIsLoadingMessage={setIsLoadingMessage}
 										id={c.id}
 										type={"REVIEW_COMMENT"}
@@ -287,7 +278,6 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 								pr={pr}
 								targetId={c.id}
 								setIsLoadingMessage={setIsLoadingMessage}
-								fetch={props.fetch}
 								reactionGroups={c.reactionGroups}
 							/>
 						</div>

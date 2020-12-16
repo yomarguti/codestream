@@ -22,6 +22,7 @@ import {
 	setCurrentPullRequestAndBranch,
 	setCurrentReview
 } from "../context/actions";
+import { isAnHourOld } from "./reducer";
 
 export const reset = () => action("RESET");
 
@@ -71,6 +72,13 @@ export const clearPullRequestError = (providerId: string, id: string) =>
 		providerId,
 		id,
 		undefined
+	});
+
+export const handleDirectives = (providerId: string, id: string, data: any) =>
+	action(ProviderPullRequestActionsTypes.HandleDirectives, {
+		providerId,
+		id,
+		data
 	});
 
 const _getPullRequestConversationsFromProvider = async (providerId: string, id: string) => {
@@ -137,16 +145,22 @@ export const getPullRequestConversations = (providerId: string, id: string) => a
 		if (provider) {
 			const pr = provider[id];
 			if (pr && pr.conversations) {
-				console.log(
-					`fetched pullRequest conversations from store providerId=${providerId} id=${id}`
-				);
-				return pr.conversations;
+				if (isAnHourOld(pr.conversationsLastFetch)) {
+					console.warn(
+						`stale pullRequest conversations from store providerId=${providerId} id=${id}, re-fetching...`
+					);
+				} else {
+					console.log(
+						`fetched pullRequest conversations from store providerId=${providerId} id=${id}`
+					);
+					return pr.conversations;
+				}
 			}
 		}
 
 		const responses = await _getPullRequestConversationsFromProvider(providerId, id);
-		dispatch(_addPullRequestConversations(providerId, id, responses.conversations));
-		dispatch(_addPullRequestCollaborators(providerId, id, responses.collaborators));
+		await dispatch(_addPullRequestConversations(providerId, id, responses.conversations));
+		await dispatch(_addPullRequestCollaborators(providerId, id, responses.collaborators));
 		return responses.conversations;
 	} catch (error) {
 		logError(`failed to get pullRequest conversations: ${error}`, { providerId, id });
@@ -399,11 +413,11 @@ export const api = <T = any, R = any>(
 		| "getProjects"
 		| "getReviewers"
 		| "lockPullRequest"
+		| "markPullRequestReadyForReview"
 		| "mergePullRequest"
 		| "removeReviewerFromPullRequest"
 		| "resolveReviewThread"
 		| "setAssigneeOnPullRequest"
-		| "setIsDraftPullRequest"
 		| "setIssueOnPullRequest"
 		| "setLabelOnPullRequest"
 		| "submitReview"
@@ -442,13 +456,20 @@ export const api = <T = any, R = any>(
 
 		params = params || {};
 		if (!params.pullRequestId) params.pullRequestId = pullRequestId;
-		const response = await HostApi.instance.send(new ExecuteThirdPartyTypedType<T, R>(), {
+		const response = (await HostApi.instance.send(new ExecuteThirdPartyTypedType<T, R>(), {
 			method: method,
 			providerId: providerId,
 			params: params
-		});
+		})) as any;
 		if (response && (!options || (options && !options.preventClearError))) {
 			dispatch(clearPullRequestError(providerId, pullRequestId));
+		}
+
+		if (response && response.directives) {
+			dispatch(handleDirectives(providerId, pullRequestId, response.directives));
+			return {
+				handled: true
+			};
 		}
 		return response as R;
 	} catch (error) {
