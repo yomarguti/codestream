@@ -1,5 +1,6 @@
 "use strict";
 import { CodeStreamAgent } from "agent";
+import { RepositoryLocator } from "./git/repositoryLocator";
 import { DocumentManager } from "./documentManager";
 import { ErrorReporter } from "./errorReporter";
 import { GitService } from "./git/gitService";
@@ -16,6 +17,7 @@ import { RepositoryMappingManager } from "./managers/repositoryMappingManager";
 import { ReposManager } from "./managers/reposManager";
 import { ReviewsManager } from "./managers/reviewsManager";
 import { ScmManager } from "./managers/scmManager";
+import { ServerManager } from "./managers/serverManager";
 import { StreamsManager } from "./managers/streamsManager";
 import { TeamsManager } from "./managers/teamsManager";
 import { TelemetryManager } from "./managers/telemetryManager";
@@ -25,6 +27,7 @@ import { UrlManager } from "./managers/urlManager";
 import { UsersManager } from "./managers/usersManager";
 import { ThirdPartyProviderRegistry } from "./providers/registry";
 import { CodeStreamSession } from "./session";
+import { GitServiceLite } from "./git/gitServiceLite";
 
 class SessionServiceContainer {
 	private readonly _git: GitService;
@@ -118,7 +121,8 @@ class SessionServiceContainer {
 	}
 
 	constructor(public readonly session: CodeStreamSession) {
-		this._git = new GitService(session);
+		const cinstance = Container.instance();
+		this._git = new GitService(session, cinstance.repositoryLocator, cinstance.gitServiceLite);
 		this._scm = new ScmManager();
 		this._files = new FilesManager(session);
 		this._markerLocations = new MarkerLocationManager(session);
@@ -141,13 +145,25 @@ class SessionServiceContainer {
 
 class ServiceContainer {
 	// TODO: [EA] I think we should try to rework this to avoid the need of the session here
-	constructor(public readonly agent: CodeStreamAgent, session: CodeStreamSession) {
+	constructor(public readonly agent: CodeStreamAgent, private session: CodeStreamSession) {
 		this._documents = agent.documents;
+		this._gitServiceLite = new GitServiceLite(session);
+		this._repositoryLocator = new RepositoryLocator(session, this._gitServiceLite);
 		this._unauthenticatedScm = new UnauthenticatedScmManager();
-
+		this._server = new ServerManager(session);
 		this._errorReporter = new ErrorReporter(session);
 		this._telemetry = new TelemetryManager(session);
 		this._urls = new UrlManager();
+	}
+
+	private readonly _gitServiceLite: GitServiceLite;
+	get gitServiceLite() {
+		return this._gitServiceLite;
+	}
+
+	private readonly _repositoryLocator: RepositoryLocator;
+	get repositoryLocator() {
+		return this._repositoryLocator;
 	}
 
 	private readonly _unauthenticatedScm: UnauthenticatedScmManager;
@@ -173,6 +189,11 @@ class ServiceContainer {
 	private readonly _urls: UrlManager;
 	get urls() {
 		return this._urls;
+	}
+
+	private readonly _server: ServerManager;
+	get server(): ServerManager {
+		return this._server;
 	}
 }
 

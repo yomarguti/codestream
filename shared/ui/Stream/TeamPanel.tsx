@@ -8,7 +8,7 @@ import { invite, setUserStatus } from "./actions";
 import { mapFilter, keyFilter } from "../utils";
 import { difference as _difference, sortBy as _sortBy } from "lodash-es";
 import { HostApi } from "../webview-api";
-import { WebviewPanels, WebviewModals } from "@codestream/protocols/webview";
+import { WebviewPanels, WebviewModals, OpenUrlRequestType } from "@codestream/protocols/webview";
 import {
 	RepoScmStatus,
 	KickUserRequestType,
@@ -16,7 +16,7 @@ import {
 	UpdateTeamAdminRequestType,
 	GetLatestCommittersRequestType
 } from "@codestream/protocols/agent";
-import { CSUser } from "@codestream/protocols/api";
+import { CSTeam, CSUser } from "@codestream/protocols/api";
 import { ChangesetFile } from "./Review/ChangesetFile";
 import Tooltip, { TipTitle } from "./Tooltip";
 import { CSText } from "../src/components/CSText";
@@ -39,6 +39,7 @@ import { PaneHeader, Pane, PaneBody, PaneNode, PaneNodeName } from "../src/compo
 import { Modal } from "./Modal";
 import { Dialog } from "../src/components/Dialog";
 import { PaneState } from "../src/components/Pane";
+import { switchToTeam } from "../store/session/actions";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -141,16 +142,19 @@ interface ConnectedProps {
 	setUserStatus: Function;
 	openPanel: Function;
 	openModal: Function;
+	switchToTeam: Function;
 	isCurrentUserAdmin: boolean;
 	adminIds: string[];
 	collisions: any;
 	dontSuggestInvitees: any;
 	multipleReviewersApprove: boolean;
 	emailSupported: boolean;
+	autoJoinSupported: boolean;
 	blameMap: { [email: string]: string };
 	serverUrl: string;
 	isOnPrem: boolean;
 	hiddenPaneNodes: { [nodeId: string]: boolean };
+	userTeams: CSTeam[];
 }
 
 interface State {
@@ -616,12 +620,100 @@ class TeamPanel extends React.Component<Props, State> {
 		this.setState({ blameMapEmail: "", addingBlameMap: false });
 	};
 
+	deleteTeam = () => {
+		confirmPopup({
+			title: "Delete Team",
+			message:
+				"Team deletion is handled by customer service. Please send an email to support@codestream.com.",
+			centered: false,
+			buttons: [{ label: "OK", className: "control-button" }]
+		});
+	};
+
 	render() {
-		const { currentUserId, currentUserInvisible, xraySetting, blameMap, collisions } = this.props;
+		const { currentUserId, teamId, userTeams, blameMap, collisions, xraySetting } = this.props;
 		const { invitingEmails, loadingStatus, addingBlameMap } = this.state;
 
 		const suggested = this.state.suggested.filter(u => !invitingEmails[u.email]);
 		const mappedBlame = keyFilter(blameMap);
+
+		const teamMenuItems = userTeams.map(team => {
+			const isCurrentTeam = team.id === teamId;
+			return {
+				key: team.id,
+				label: team.name,
+				// icon: isCurrentTeam ? <Icon name="check" /> : undefined,
+				checked: isCurrentTeam,
+				noHover: isCurrentTeam,
+				action: () => {
+					if (!isCurrentTeam) this.props.switchToTeam(team.id);
+				}
+			};
+		}) as any;
+
+		teamMenuItems.push(
+			{ label: "-" },
+			{
+				key: "create-team",
+				icon: <Icon name="plus" />,
+				label: "Create New Team",
+				action: () => {
+					this.props.openModal(WebviewModals.CreateTeam);
+				}
+			}
+		);
+
+		const settingsMenuItems = [
+			{
+				label: "Change Team Name",
+				key: "change-team-name",
+				action: () => this.props.openModal(WebviewModals.ChangeTeamName)
+			},
+			{ label: "-" },
+			{
+				label: "Onboarding Settings...",
+				key: "onboarding-settings",
+				action: () => this.props.openModal(WebviewModals.TeamSetup),
+				disabled: !this.props.autoJoinSupported
+			},
+			{
+				label: "Feedback Request Settings...",
+				key: "review-settings",
+				action: () => this.props.openModal(WebviewModals.ReviewSettings)
+			},
+			{
+				label: "Live View Settings",
+				key: "live-view-settings",
+				submenu: [
+					{
+						label: "Always On",
+						checked: xraySetting === "on",
+						action: () => this.changeXray("on")
+					},
+					{
+						label: "Always Off",
+						checked: xraySetting === "off",
+						action: () => this.changeXray("off")
+					},
+					{
+						label: "User Selectable",
+						checked: !xraySetting || xraySetting === "user",
+						action: () => this.changeXray("user")
+					},
+					{ label: "-", action: () => {} },
+					{
+						label: "What is Live View?",
+						action: () => {
+							HostApi.instance.send(OpenUrlRequestType, {
+								url: "https://docs.codestream.com/userguide/features/myteam-section/"
+							});
+						}
+					}
+				]
+			},
+			{ label: "-" },
+			{ label: "Delete Team", action: () => this.deleteTeam() }
+		];
 
 		return (
 			<>
@@ -644,7 +736,18 @@ class TeamPanel extends React.Component<Props, State> {
 				)}
 				<PaneHeader
 					title="My Team"
-					subtitle={this.props.teamName}
+					subtitle={
+						<>
+							<InlineMenu
+								key="team-display-options"
+								className="subtle no-padding"
+								noFocusOnSelect
+								items={teamMenuItems}
+							>
+								{this.props.teamName}
+							</InlineMenu>
+						</>
+					}
 					id={WebviewPanels.Team}
 					warning={
 						collisions.nav.length > 0 ? (
@@ -664,14 +767,26 @@ class TeamPanel extends React.Component<Props, State> {
 						placement="bottom"
 						delay={1}
 					/>
-					{/*					<Icon
-						onClick={() => this.props.openModal(WebviewModals.TeamSetup)}
-						name="gear"
-						title="Team Settings"
-						placement="bottom"
-						delay={1}
-					/>
-*/}
+					{this.props.isCurrentUserAdmin && (
+						<InlineMenu
+							key="team-display-options"
+							className="subtle no-padding"
+							noFocusOnSelect
+							noChevronDown
+							items={settingsMenuItems}
+						>
+							<Icon name="gear" title="Team Settings" placement="bottom" delay={1} />
+						</InlineMenu>
+					)}
+					{this.props.isCurrentUserAdmin && (
+						<Icon
+							onClick={() => this.props.openPanel(WebviewPanels.Export)}
+							name="export"
+							title="Export Data"
+							placement="bottom"
+							delay={1}
+						/>
+					)}
 				</PaneHeader>
 				{this.props.paneState !== PaneState.Collapsed && (
 					<PaneBody className="team-pane-body">
@@ -722,7 +837,7 @@ class TeamPanel extends React.Component<Props, State> {
 									<UL>
 										{this.props.invited.map(user => {
 											const body = encodeURIComponent(
-												`1. Download and install CodeStream: https://www.codestream.com/roadmap\n\n2. Click “Join an existing team" and paste in your invitation code: ${user.inviteCode}\n\n`
+												`1. Download and install CodeStream: https://www.codestream.com/roadmap\n\n2. Paste in your invitation code: ${user.inviteCode}\n\n`
 											);
 											const subject = "Invitation to CodeStream";
 											const title = user.inviteCode ? (
@@ -943,6 +1058,7 @@ class TeamPanel extends React.Component<Props, State> {
 }
 
 const EMPTY_HASH = {};
+const EMPTY_HASH_2 = {};
 
 const mapStateToProps = state => {
 	const { users, context, teams, companies, repos, session, configs, preferences } = state;
@@ -988,6 +1104,7 @@ const mapStateToProps = state => {
 	const dontSuggestInvitees = team.settings ? team.settings.dontSuggestInvitees || {} : {};
 	const multipleReviewersApprove = isFeatureEnabled(state, "multipleReviewersApprove");
 	const emailSupported = isFeatureEnabled(state, "emailSupport");
+	const autoJoinSupported = isFeatureEnabled(state, "autoJoin");
 
 	return {
 		teamId: team.id,
@@ -1010,9 +1127,14 @@ const mapStateToProps = state => {
 		xrayEnabled,
 		multipleReviewersApprove,
 		emailSupported,
+		autoJoinSupported,
 		serverUrl: configs.serverUrl,
 		isOnPrem: isOnPrem(configs),
-		hiddenPaneNodes: preferences.hiddenPaneNodes || EMPTY_HASH
+		hiddenPaneNodes: preferences.hiddenPaneNodes || EMPTY_HASH_2,
+		userTeams: _sortBy(
+			Object.values(teams).filter((t: any) => !t.deactivated),
+			"name"
+		) as CSTeam[]
 	};
 };
 
@@ -1020,7 +1142,8 @@ const ConnectedTeamPanel = connect(mapStateToProps, {
 	invite,
 	setUserStatus,
 	openPanel,
-	openModal
+	openModal,
+	switchToTeam
 })(TeamPanel);
 
 export { ConnectedTeamPanel as TeamPanel };

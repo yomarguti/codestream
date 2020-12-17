@@ -181,7 +181,7 @@ export const PullRequestConversationTab = (props: {
 	const [availableAssignees, setAvailableAssignees] = useState(EMPTY_ARRAY);
 	const [availableProjects, setAvailableProjects] = useState<[] | undefined>();
 	const [availableMilestones, setAvailableMilestones] = useState<[] | undefined>();
-	const [availableIssues, setAvailableIssues] = useState(EMPTY_ARRAY);
+	// const [availableIssues, setAvailableIssues] = useState(EMPTY_ARRAY);
 	const [isLocking, setIsLocking] = useState(false);
 	const [isLockingReason, setIsLockingReason] = useState("");
 	const [isLoadingLocking, setIsLoadingLocking] = useState(false);
@@ -205,14 +205,13 @@ export const PullRequestConversationTab = (props: {
 			});
 	};
 
-	const setIsDraftPullRequest = async (onOff: boolean) => {
+	const markPullRequestReadyForReview = async (onOff: boolean) => {
 		setIsLoadingMessage("Updating...");
 		await dispatch(
-			api("setIsDraftPullRequest", {
-				onOff
+			api("markPullRequestReadyForReview", {
+				isReady: onOff
 			})
 		);
-		fetch();
 	};
 
 	const mergePullRequest = useCallback(
@@ -226,9 +225,7 @@ export const PullRequestConversationTab = (props: {
 				})
 			)) as any;
 			if (response) {
-				fetch().then(_ => {
-					dispatch(removeFromMyPullRequests(pr.providerId, derivedState.currentPullRequestId!));
-				});
+				dispatch(removeFromMyPullRequests(pr.providerId, derivedState.currentPullRequestId!));
 			}
 		},
 		[
@@ -257,24 +254,18 @@ export const PullRequestConversationTab = (props: {
 				break;
 		}
 
-		await dispatch(
-			api("lockPullRequest", {
-				lockReason: reason
-			})
-		);
-		fetch().then(() => {
-			setIsLocking(false);
-			setIsLoadingLocking(false);
-		});
+		await dispatch(api("lockPullRequest", { lockReason: reason }));
+
+		setIsLocking(false);
+		setIsLoadingLocking(false);
 	};
 
 	const unlockPullRequest = async () => {
 		setIsLoadingLocking(true);
 		await dispatch(api("unlockPullRequest", {}));
-		fetch().then(() => {
-			setIsLocking(false);
-			setIsLoadingLocking(false);
-		});
+
+		setIsLocking(false);
+		setIsLoadingLocking(false);
 	};
 
 	const numParticpants = ((pr.participants && pr.participants.nodes) || []).length;
@@ -403,7 +394,7 @@ export const PullRequestConversationTab = (props: {
 		} else {
 			return [{ label: <LoadingMessage>Loading Reviewers...</LoadingMessage>, noHover: true }];
 		}
-	}, [availableReviewers, pr]);
+	}, [derivedState.currentPullRequest, availableReviewers, pr]);
 
 	const removeReviewer = async id => {
 		setIsLoadingMessage("Removing Reviewer...");
@@ -412,7 +403,6 @@ export const PullRequestConversationTab = (props: {
 				userId: id
 			})
 		);
-		fetch();
 	};
 	const addReviewer = async id => {
 		setIsLoadingMessage("Requesting Review...");
@@ -422,7 +412,6 @@ export const PullRequestConversationTab = (props: {
 				userId: id
 			})
 		);
-		fetch();
 	};
 
 	const fetchAvailableAssignees = async (e?) => {
@@ -472,7 +461,7 @@ export const PullRequestConversationTab = (props: {
 		} else {
 			return [{ label: <LoadingMessage>Loading Assignees...</LoadingMessage>, noHover: true }];
 		}
-	}, [availableAssignees, pr]);
+	}, [derivedState.currentPullRequest, availableAssignees, pr]);
 
 	const toggleAssignee = async (id: string, onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Adding Assignee..." : "Removing Assignee...");
@@ -482,7 +471,6 @@ export const PullRequestConversationTab = (props: {
 				onOff
 			})
 		);
-		fetch();
 	};
 
 	const fetchAvailableLabels = async (e?) => {
@@ -519,7 +507,7 @@ export const PullRequestConversationTab = (props: {
 		} else {
 			return [{ label: <LoadingMessage>Loading Labels...</LoadingMessage>, noHover: true }];
 		}
-	}, [availableLabels, pr]);
+	}, [derivedState.currentPullRequest, availableLabels, pr]);
 
 	const setLabel = async (id: string, onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Adding Label..." : "Removing Label...");
@@ -529,7 +517,6 @@ export const PullRequestConversationTab = (props: {
 				onOff
 			})
 		);
-		fetch();
 	};
 
 	const fetchAvailableProjects = async (e?) => {
@@ -565,17 +552,16 @@ export const PullRequestConversationTab = (props: {
 		} else {
 			return [{ label: <LoadingMessage>Loading Projects...</LoadingMessage>, noHover: true }];
 		}
-	}, [availableProjects, pr]);
+	}, [derivedState.currentPullRequest, availableProjects, pr]);
 
 	const setProject = async (id: string, onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Adding to Project..." : "Removing from Project...");
-		await dispatch(
+		dispatch(
 			api("toggleProjectOnPullRequest", {
 				projectId: id,
 				onOff
 			})
 		);
-		fetch();
 	};
 
 	const fetchAvailableMilestones = async (e?) => {
@@ -616,17 +602,16 @@ export const PullRequestConversationTab = (props: {
 		} else {
 			return [{ label: <LoadingMessage>Loading Milestones...</LoadingMessage>, noHover: true }];
 		}
-	}, [availableMilestones, pr]);
+	}, [derivedState.currentPullRequest, availableMilestones, pr]);
 
 	const setMilestone = async (id: string, onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Adding Milestone..." : "Clearing Milestone...");
-		await dispatch(
+		dispatch(
 			api("toggleMilestoneOnPullRequest", {
 				milestoneId: id,
 				onOff
 			})
 		);
-		fetch();
 	};
 
 	// const fetchAvailableIssues = async (e?) => {
@@ -660,18 +645,18 @@ export const PullRequestConversationTab = (props: {
 	// 	}
 	// }, [availableIssues, pr]);
 
-	const setIssue = async (id: string, onOff: boolean) => {
-		setIsLoadingMessage(onOff ? "Adding Issue..." : "Removing Issue...");
-		await dispatch(
-			api("setIssueOnPullRequest", {
-				owner: ghRepo.repoOwner,
-				repo: ghRepo.repoName,
-				issueId: id,
-				onOff
-			})
-		);
-		fetch();
-	};
+	// const setIssue = async (id: string, onOff: boolean) => {
+	// 	setIsLoadingMessage(onOff ? "Adding Issue..." : "Removing Issue...");
+	// 	await dispatch(
+	// 		api("setIssueOnPullRequest", {
+	// 			owner: ghRepo.repoOwner,
+	// 			repo: ghRepo.repoName,
+	// 			issueId: id,
+	// 			onOff
+	// 		})
+	// 	);
+	// 	fetch();
+	// };
 
 	const toggleSubscription = async () => {
 		const onOff = pr.viewerSubscription === "SUBSCRIBED" ? false : true;
@@ -683,7 +668,6 @@ export const PullRequestConversationTab = (props: {
 				onOff
 			})
 		);
-		fetch();
 	};
 
 	const requiredApprovingReviewCount = useMemo(() => {
@@ -822,7 +806,7 @@ export const PullRequestConversationTab = (props: {
 								<Button
 									className="no-wrap"
 									variant="secondary"
-									onClick={() => setIsDraftPullRequest(true)}
+									onClick={() => markPullRequestReadyForReview(true)}
 								>
 									Ready for review
 								</Button>
@@ -1126,7 +1110,6 @@ export const PullRequestConversationTab = (props: {
 				</PRComment>
 				<PullRequestBottomComment
 					pr={pr}
-					fetch={fetch}
 					setIsLoadingMessage={setIsLoadingMessage}
 					__onDidRender={__onDidRender}
 				/>

@@ -5,7 +5,11 @@ import { CodeStreamState } from "../store";
 import { Row } from "./CrossPostIssueControls/IssueDropdown";
 import Icon from "./Icon";
 import { PRHeadshot } from "../src/components/Headshot";
-import { setCurrentPullRequest, setNewPostEntry } from "../store/context/actions";
+import {
+	setCreatePullRequest,
+	setCurrentPullRequest,
+	setNewPostEntry
+} from "../store/context/actions";
 import Tooltip from "./Tooltip";
 import Timestamp from "./Timestamp";
 import { isConnected } from "../store/providers/reducer";
@@ -30,7 +34,7 @@ import { setUserPreference, openPanel } from "./actions";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { confirmPopup } from "./Confirm";
 import { ConfigurePullRequestQuery } from "./ConfigurePullRequestQuery";
-import { DEFAULT_QUERIES } from "../store/preferences/reducer";
+import { DEFAULT_QUERIES, getSavedPullRequestQueries } from "../store/preferences/reducer";
 import { ConfigurePullRequestQuerySettings } from "./ConfigurePullRequestQuerySettings";
 import { PullRequestQuery } from "@codestream/protocols/api";
 import { configureAndConnectProvider } from "../store/providers/actions";
@@ -127,6 +131,8 @@ interface Props {
 	paneState: PaneState;
 }
 
+const EMPTY_HASH = {} as any;
+
 let hasRenderedOnce = false;
 const e: ThirdPartyProviderConfig[] = [];
 export const OpenPullRequests = React.memo((props: Props) => {
@@ -134,15 +140,23 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { preferences, repos } = state;
 
-		const queries = preferences.pullRequestQueries || DEFAULT_QUERIES;
+		const team = state.teams[state.context.currentTeamId];
+		const teamSettings = team.settings ? team.settings : EMPTY_HASH;
 
-		const prSupportedProviders = providerSelectors.getSupportedPullRequestHosts(state);
+		const queries = getSavedPullRequestQueries(state);
+
+		const prSupportedProviders = providerSelectors
+			.getSupportedPullRequestHosts(state)
+			.filter(
+				provider => !teamSettings.limitCodeHost || teamSettings.codeHostProviders[provider.id]
+			);
 		const prConnectedProviders = providerSelectors.getConnectedSupportedPullRequestHosts(state);
 		const prConnectedProvidersWithErrors = prConnectedProviders.filter(_ => _.hasAccessTokenError);
 
 		const myPullRequests = getMyPullRequestsSelector(state);
 		return {
 			repos,
+			teamSettings,
 			queries,
 			myPullRequests,
 			isPRSupportedCodeHostConnected: prConnectedProviders.length > 0,
@@ -456,6 +470,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 						)}
 						<Icon
 							onClick={() => {
+								dispatch(setCreatePullRequest());
 								dispatch(setNewPostEntry("Status"));
 								dispatch(openPanel(WebviewPanels.NewPullRequest));
 							}}

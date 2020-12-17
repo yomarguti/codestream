@@ -324,8 +324,8 @@ export class DocumentMarkerManager {
 
 				const location: CSLocationArray = [gotoLine, 0, gotoLine, 0, undefined];
 				documentMarkers.push({
-					createdAt: comment.createdAt,
-					modifiedAt: comment.createdAt,
+					createdAt: +new Date(comment.createdAt),
+					modifiedAt: +new Date(comment.createdAt),
 					id: comment.id,
 					file: comment.path,
 					repoId: "",
@@ -339,7 +339,7 @@ export class DocumentMarkerManager {
 					range: MarkerLocation.toRangeFromArray(location),
 					location: MarkerLocation.fromArray(location, comment.id),
 					summary: summary,
-					summaryMarkdown: `\n\n${Strings.escapeMarkdown(summary, { quoted: true })}`,
+					summaryMarkdown: `${Strings.escapeMarkdown(summary, { quoted: false })}`,
 					type: CodemarkType.Comment,
 					externalContent: {
 						provider: { name: provider.name, id: pr.providerId, icon: provider.icon },
@@ -405,7 +405,7 @@ export class DocumentMarkerManager {
 				range: MarkerLocation.toRangeFromArray(canonicalLocation.location),
 				location: MarkerLocation.fromArray(canonicalLocation.location, marker.id),
 				summary: summary,
-				summaryMarkdown: `\n\n${Strings.escapeMarkdown(summary, { quoted: true })}`,
+				summaryMarkdown: `${Strings.escapeMarkdown(summary, { quoted: false })}`,
 				type: codemark.type
 			});
 		}
@@ -522,7 +522,7 @@ export class DocumentMarkerManager {
 								range: MarkerLocation.toRange(location),
 								location: location,
 								summary: summary,
-								summaryMarkdown: `\n\n${Strings.escapeMarkdown(summary, { quoted: true })}`,
+								summaryMarkdown: `${Strings.escapeMarkdown(summary, { quoted: false })}`,
 								type: codemark.type
 							});
 							Logger.log(
@@ -535,7 +535,7 @@ export class DocumentMarkerManager {
 								markersNotLocated.push({
 									...marker,
 									summary: summary,
-									summaryMarkdown: `\n\n${Strings.escapeMarkdown(summary, { quoted: true })}`,
+									summaryMarkdown: `${Strings.escapeMarkdown(summary, { quoted: false })}`,
 									creatorName: (creator && creator.username) || "Unknown",
 									codemark: codemark,
 									notLocatedReason: missingLocation.reason,
@@ -550,7 +550,7 @@ export class DocumentMarkerManager {
 								markersNotLocated.push({
 									...marker,
 									summary: summary,
-									summaryMarkdown: `\n\n${Strings.escapeMarkdown(summary, { quoted: true })}`,
+									summaryMarkdown: `${Strings.escapeMarkdown(summary, { quoted: false })}`,
 									creatorName: (creator && creator.username) || "Unknown",
 									codemark: codemark,
 									notLocatedReason: MarkerNotLocatedReason.UNKNOWN

@@ -641,9 +641,21 @@ export class CodeStreamSession {
 	}
 
 	public async getWorkspaceFolders() {
+		if (this._options.workspaceFolders) {
+			Logger.log(
+				`getWorkspaceFolders: ${this._options.workspaceFolders.length} preconfigured folders found`
+			);
+			return this._options.workspaceFolders;
+		}
+
 		if (this.agent.supportsWorkspaces) {
-			Logger.log("getWorkspaceFolders: workspaces supported");
-			return (await this.workspace.getWorkspaceFolders()) || [];
+			try {
+				Logger.log("getWorkspaceFolders: workspaces supported");
+				return (await this.workspace.getWorkspaceFolders()) || [];
+			} catch (ex) {
+				// if you're here, ensure you've waited for the agent to be ready
+				debugger;
+			}
 		}
 
 		Logger.log("getWorkspaceFolders: workspaces not supported");

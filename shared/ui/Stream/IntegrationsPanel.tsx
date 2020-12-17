@@ -62,12 +62,12 @@ const IntegrationGroups = styled.div`
 	}
 `;
 
-export const IntegrationButtons = styled.div<{ noBorder?: boolean }>`
+export const IntegrationButtons = styled.div<{ noBorder?: boolean; noPadding?: boolean }>`
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(13em, 1fr));
 	column-gap: 15px;
 	row-gap: 10px;
-	padding: 0 20px 20px 20px;
+	padding: ${props => (props.noPadding ? "0" : "0 20px 20px 20px")};
 	border-bottom: ${props => (props.noBorder ? "none" : "1px solid var(--base-border-color)")};
 	align-items: start;
 `;
@@ -77,6 +77,10 @@ export const IntegrationsPanel = () => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { providers, teams, context, session, users } = state;
 		const team = teams[context.currentTeamId];
+		const teamSettings = team.settings || {};
+		const teamCodeHostProviders = teamSettings.codeHostProviders || {};
+		const teamIssuesProviders = teamSettings.issuesProviders || {};
+		const teamMessagingProviders = teamSettings.messagingProviders || {};
 		const user = users[session.userId!];
 		const currentUserIsAdmin = (team.adminIds || []).includes(user.id);
 
@@ -92,12 +96,16 @@ export const IntegrationsPanel = () => {
 					"gitlab_enterprise"
 				].includes(providers[id].name)
 			)
-			.filter(id => !connectedProviders.includes(id));
+			.filter(id => !connectedProviders.includes(id))
+			.filter(id => !teamSettings.limitCodeHost || teamCodeHostProviders[id]);
 		const issueProviders = Object.keys(providers)
 			.filter(id => providers[id].hasIssues)
 			.filter(id => !codeHostProviders.includes(id))
-			.filter(id => !connectedProviders.includes(id));
-		const messagingProviders = Object.keys(providers).filter(id => providers[id].hasSharing);
+			.filter(id => !connectedProviders.includes(id))
+			.filter(id => !teamSettings.limitIssues || teamIssuesProviders[id]);
+		const messagingProviders = Object.keys(providers)
+			.filter(id => providers[id].hasSharing)
+			.filter(id => !teamSettings.limitMessaging || teamMessagingProviders[id]);
 		const sharingTargets = getConnectedSharingTargets(state);
 
 		return {

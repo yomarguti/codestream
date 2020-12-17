@@ -137,7 +137,8 @@ export function reduceProviderPullRequests(
 			const newState = createNewObject(state, action);
 			newState[action.payload.providerId][action.payload.id] = {
 				...newState[action.payload.providerId][action.payload.id],
-				conversations: action.payload.pullRequest
+				conversations: action.payload.pullRequest,
+				conversationsLastFetch: Date.now()
 			};
 			return {
 				myPullRequests: { ...state.myPullRequests },
@@ -161,6 +162,159 @@ export function reduceProviderPullRequests(
 				...newState[action.payload.providerId][action.payload.id]
 			};
 			newState[action.payload.providerId][action.payload.id].error = action.payload.error;
+			return {
+				myPullRequests: { ...state.myPullRequests },
+				pullRequests: newState
+			};
+		}
+		case ProviderPullRequestActionsTypes.HandleDirectives: {
+			const newState = { ...state.pullRequests };
+			let providerId = action.payload.providerId;
+			let id = action.payload.id;
+			newState[providerId] = newState[action.payload.providerId] || {};
+			newState[providerId][id] = {
+				...newState[providerId][id]
+			};
+			if (newState[providerId][id] && newState[providerId][id].conversations) {
+				const pr = newState[providerId][id].conversations.repository.pullRequest;
+				for (const directive of action.payload.data) {
+					if (directive.type === "addReaction") {
+						if (directive.data.subject.__typename === "PullRequest") {
+							pr.reactionGroups
+								.find(_ => _.content === directive.data.reaction.content)
+								.users.nodes.push(directive.data.reaction.user);
+						} else {
+							const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.subject.id);
+							if (node) {
+								node.reactionGroups
+									.find(_ => _.content === directive.data.reaction.content)
+									.users.nodes.push(directive.data.reaction.user);
+							}
+						}
+					} else if (directive.type === "removeReaction") {
+						if (directive.data.subject.__typename === "PullRequest") {
+							pr.reactionGroups.find(
+								_ => _.content === directive.data.reaction.content
+							).users.nodes = pr.reactionGroups
+								.find(_ => _.content === directive.data.reaction.content)
+								.users.nodes.filter(_ => _.login !== directive.data.reaction.user.login);
+						} else {
+							const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.subject.id);
+							if (node) {
+								node.reactionGroups.find(
+									_ => _.content === directive.data.reaction.content
+								).users.nodes = node.reactionGroups
+									.find(_ => _.content === directive.data.reaction.content)
+									.users.nodes.filter(_ => _.login !== directive.data.reaction.user.login);
+							}
+						}
+					} else if (directive.type === "removeNode") {
+						pr.timelineItems.nodes = pr.timelineItems.nodes.filter(_ => _.id !== directive.data.id);
+					} else if (directive.type === "updateNode") {
+						const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
+						if (node) {
+							for (const key in directive.data) {
+								node[key] = directive.data[key];
+							}
+						}
+					} else if (directive.type === "addNode") {
+						if (!directive.data.id) continue;
+						const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
+						if (!node) {
+							pr.timelineItems.nodes.push(directive.data);
+						}
+					} else if (directive.type === "addNodes") {
+						for (const newNode of directive.data) {
+							if (!newNode.id) continue;
+							const node = pr.timelineItems.nodes.find((_: any) => _.id === newNode.id);
+							if (!node) {
+								pr.timelineItems.nodes.push(newNode);
+							}
+						}
+					} else if (directive.type === "updatePullRequestReviewComment") {
+						let done = false;
+						for (const edge of pr.reviewThreads.edges) {
+							if (!edge.node.comments) continue;
+							for (const comment of edge.node.comments.nodes) {
+								if (comment.id === directive.data.id) {
+									for (const key in directive.data) {
+										comment[key] = directive.data[key];
+									}
+									done = true;
+								}
+								if (done) break;
+							}
+							if (done) break;
+						}
+					} else if (directive.type === "updatePullRequestReviewCommentNode") {
+						const node = pr.timelineItems.nodes.find(
+							_ => _.id === directive.data.pullRequestReview.id
+						);
+						if (node && node.comments) {
+							for (const comment of node.comments.nodes) {
+								if (comment.id !== directive.data.id) continue;
+								for (const key in directive.data) {
+									comment[key] = directive.data[key];
+								}
+								break;
+							}
+						}
+					} else if (directive.type === "updatePullRequestReview") {
+						const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
+						if (node) {
+							for (const key in directive.data) {
+								node[key] = directive.data[key];
+							}
+						}
+					} else if (directive.type === "updatePullRequestReviewers") {
+						pr.reviewRequests.nodes.length = 0;
+						for (const data of directive.data) {
+							pr.reviewRequests.nodes.push(data);
+						}
+					} else if (directive.type === "updatePullRequest") {
+						for (const key in directive.data) {
+							if (directive.data[key] && Array.isArray(directive.data[key].nodes)) {
+								// clear out the array, but keep its reference
+								pr[key].nodes.length = 0;
+								for (const n of directive.data[key].nodes) {
+									pr[key].nodes.push(n);
+								}
+							} else {
+								pr[key] = directive.data[key];
+							}
+						}
+					} else if (
+						directive.type === "resolveReviewThread" ||
+						directive.type === "unresolveReviewThread"
+					) {
+						const nodeWrapper = pr.reviewThreads.edges.find(
+							_ => _.node.id === directive.data.threadId
+						);
+						if (nodeWrapper && nodeWrapper.node) {
+							for (const key in directive.data) {
+								nodeWrapper.node[key] = directive.data[key];
+							}
+						}
+
+						const reviews = pr.timelineItems.nodes.filter(
+							_ => _.__typename === "PullRequestReview"
+						);
+						if (reviews) {
+							for (const review of reviews) {
+								for (const comment of review.comments.nodes) {
+									if (comment.threadId !== directive.data.threadId) continue;
+
+									for (const key in directive.data) {
+										comment[key] = directive.data[key];
+									}
+
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
 			return {
 				myPullRequests: { ...state.myPullRequests },
 				pullRequests: newState
@@ -198,7 +352,18 @@ export const getCurrentProviderPullRequest = createSelector(
 		return undefined;
 	}
 );
-
+export const getCurrentProviderPullRequestLastUpdated = createSelector(
+	getCurrentProviderPullRequest,
+	providerPullRequest => {
+		if (!providerPullRequest) return undefined;
+		return providerPullRequest &&
+			providerPullRequest.conversations &&
+			providerPullRequest.conversations.repository &&
+			providerPullRequest.conversations.repository.pullRequest
+			? providerPullRequest.conversations.repository.pullRequest.updatedAt
+			: undefined;
+	}
+);
 /**
  *  Attempts to get a CS repo for the current PR
  */
@@ -214,7 +379,13 @@ export const getProviderPullRequestRepo = createSelector(
 			const repoUrl = currentPr.conversations.repository.url.toLowerCase();
 
 			let matchingRepos = repos.filter(_ =>
-				_.remotes.some(r => r.normalizedUrl && repoUrl.indexOf(r.normalizedUrl.toLowerCase()) > -1)
+				_.remotes.some(
+					r =>
+						r.normalizedUrl &&
+						r.normalizedUrl.length > 2 &&
+						r.normalizedUrl.match(/([a-zA-Z0-9]+)/) &&
+						repoUrl.indexOf(r.normalizedUrl.toLowerCase()) > -1
+				)
 			);
 			if (matchingRepos.length === 1) {
 				currentRepo = matchingRepos[0];
@@ -246,3 +417,7 @@ export const getProviderPullRequestCollaborators = createSelector(
 		return currentPr ? currentPr.collaborators : [];
 	}
 );
+
+export const isAnHourOld = conversationsLastFetch => {
+	return conversationsLastFetch > 0 && Date.now() - conversationsLastFetch > 60 * 60 * 1000;
+};

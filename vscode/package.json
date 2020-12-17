@@ -2,7 +2,7 @@
     "name": "codestream",
     "displayName": "CodeStream: GitHub, GitLab, Bitbucket PRs and Code Review",
     "description": "GitHub pull requests and code reviews in your IDE. Eliminate context-switching between tools. Also integrates with GitLab, Bitbucket, Slack, Teams, Jira, Trello and more.",
-    "version": "10.1.3",
+    "version": "10.2.0",
     "author": "CodeStream",
     "publisher": "CodeStream",
     "license": "UNLICENSED",
@@ -522,23 +522,13 @@
                 },
                 {
                     "command": "codestream.newIssue",
-                    "when": "codestream:status == signedIn",
+                    "when": "codestream:status == signedIn && resourceScheme == file",
                     "group": "9_zcodestream@2"
                 },
                 {
                     "command": "codestream.newPermalink",
-                    "when": "codestream:status == signedIn",
+                    "when": "codestream:status == signedIn && resourceScheme == file",
                     "group": "9_zcodestream@4"
-                },
-                {
-                    "command": "codestream.newReview",
-                    "when": "codestream:status == signedIn",
-                    "group": "9_zcodestream@6"
-                },
-                {
-                    "command": "codestream.newPullRequest",
-                    "when": "codestream:status == signedIn",
-                    "group": "9_zcodestream@7"
                 }
             ],
             "view/title": [

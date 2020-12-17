@@ -1,5 +1,20 @@
 # Change Log
 
+## [10.2.0] - 2020-12-17
+
+### Added
+
+- Adds new onboarding settings for team admins that allow people to join teams based on repository access, and allow admins to restrict integration and authentication options
+- Adds a warning if you have local changes when trying to create a pull request
+- Adds new gear menu to header of the My Team section to access team settings and administration
+
+### Fixed
+
+- Fixes an issue where some users would run into GitHub rate limiting issues when working with pull requests
+- Fixes an issue where the markdown preview for commenting in a pull request was always empty
+- Fixes an issue where adding multiple code blocks to a codemark would result in some not getting added
+- Fixes an issue where a GitHub disconnect banner would incorrectly appear due to lack of internet connectivity
+
 ## [10.1.2] - 2020-12-4
 
 ### Added
@@ -32,7 +47,6 @@
 
 - Improves the UX on the form to submit a review in a pull request by making it clear that the Cancel button is for cancelling the review, and not dismissing the form
 - Clarifies that when commenting on code outside of the changeset in a pull request, while a review is pending, the comment is added at the PR level and not included in the review
-
 
 ### Fixed
 
@@ -70,7 +84,7 @@
 
 ### Changed
 
-- After creating a pull request, when you then close it you are brought to the CodeStream sidebar instead of back to the Open a Pull Request page 
+- After creating a pull request, when you then close it you are brought to the CodeStream sidebar instead of back to the Open a Pull Request page
 - Provide more guidance for users trying to sign up/in with GitLab regarding the need to have a public primary email on GitLab
 - The "Work in Progress" section is now more performant, with reduced api requests
 
@@ -886,7 +900,7 @@ Note that CodeStream 10.0 requires VS Code version 1.50.
 ### Added
 
 - Add the ability to have multiple blocks of code, even across files/repos, associated with a single codemark
-- Adds the ability to create issues on GitLab Enterprise
+- Adds the ability to create issues on GitLab Self-Managed
 
 ### Changed
 
