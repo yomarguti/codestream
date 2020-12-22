@@ -65,6 +65,9 @@ export const setChannelFilter = (value: string) => async dispatch => {
 export const setChannelsMuteAll = (enabled: boolean) =>
 	action(ContextActionsType.SetChannelsMuteAll, enabled);
 
+export const setIsFirstPageview = (value: boolean) =>
+	action(ContextActionsType.SetIsFirstPageview, value);
+
 export const setCodemarkTagFilter = (value: string) =>
 	action(ContextActionsType.SetCodemarkTagFilter, value);
 
@@ -136,6 +139,8 @@ export const clearCurrentPullRequest = () =>
 		id: "",
 		commentId: ""
 	});
+
+export const setOnboardStep = (step: number) => action(ContextActionsType.SetOnboardStep, { step });
 
 export const setStartWorkCard = (card: any) =>
 	action(ContextActionsType.SetStartWorkCard, { card });

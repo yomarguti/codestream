@@ -69,10 +69,10 @@ import { getFileScmError } from "../store/editorContext/reducer";
 import { CodemarkView } from "./CodemarkView";
 import { Review } from "./Review";
 import { Link } from "./Link";
-
 import {
 	setCurrentStream,
 	setNewPostEntry,
+	setIsFirstPageview,
 	setCurrentReview,
 	setCurrentPullRequest,
 	setCurrentCodemark
@@ -84,6 +84,7 @@ import { PRInfoModal } from "./SpatialView/PRInfoModal";
 import { GlobalNav } from "./GlobalNav";
 import { CheckEmailVsGit } from "./CheckEmailVsGit";
 import { EnjoyingCodeStream } from "./EnjoyingCodeStream";
+import { getTestGroup } from "../store/context/reducer";
 
 const EMAIL_MATCH_REGEX = new RegExp(
 	"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*",
@@ -102,6 +103,13 @@ export class SimpleStream extends PureComponent {
 	};
 
 	componentDidMount() {
+		const { isFirstPageview, onboardingTestGroup } = this.props;
+
+		if (isFirstPageview && onboardingTestGroup === "tour") {
+			this.props.openPanel(WebviewPanels.Onboard);
+		}
+		this.props.setIsFirstPageview(false);
+
 		if (this.props.activePanel === "main" && this.props.postStreamId != undefined) {
 			HostApi.instance.track("Page Viewed", { "Page Name": "Stream" });
 		}
@@ -214,12 +222,13 @@ export class SimpleStream extends PureComponent {
 	}
 
 	render() {
-		const { showHeadshots } = this.props;
+		const { showHeadshots, isFirstPageview } = this.props;
 		let { activePanel, activeModal } = this.props;
 		const { q } = this.state;
 
-		// console.warn("RENDERING STREAM");
 		if (activePanel === WebviewPanels.LandingRedirect) activePanel = WebviewPanels.Sidebar;
+
+		if (isFirstPageview) return null;
 
 		const isConfigurationPanel =
 			activePanel && activePanel.match(/^configure\-(provider|enterprise)-/);
@@ -292,13 +301,17 @@ export class SimpleStream extends PureComponent {
 				<OfflineBanner />
 				<PRProviderErrorBanner />
 				<ModalRoot />
-				<CheckEmailVsGit />
+
+				{/* don't want to show the check email if you're onboarding */}
+				{activePanel !== WebviewPanels.Onboard && <CheckEmailVsGit />}
+
 				{/*<EnjoyingCodeStream />*/}
+
 				{this.state.propsForPrePRProviderInfoModal && (
 					<PrePRProviderInfoModal {...this.state.propsForPrePRProviderInfoModal} />
 				)}
 				<div id="confirm-root" />
-				<GlobalNav />
+				{activePanel !== WebviewPanels.Onboard && <GlobalNav />}
 				{activePanel === WebviewPanels.Onboard ? <Onboard /> : <Sidebar />}
 				{activeModal && (
 					<Modal translucent>
@@ -500,7 +513,6 @@ export class SimpleStream extends PureComponent {
 		}
 	};
 
-	// dead code
 	setActivePanel = panel => {
 		this.props.openPanel(panel);
 	};
@@ -633,7 +645,7 @@ export class SimpleStream extends PureComponent {
  * @param {Object} state.teams
  **/
 const mapStateToProps = state => {
-	const { configs, context, session, streams, teams } = state;
+	const { configs, context, session, streams, companies } = state;
 
 	// FIXME -- eventually we'll allow the user to switch to other streams, like DMs and channels
 	const teamStream = getStreamForTeam(streams, context.currentTeamId) || {};
@@ -644,6 +656,7 @@ const mapStateToProps = state => {
 	// rely on it here
 	// const { scmInfo } = state.editorContext;
 
+	// console.warn("COMP: ", companies);
 	return {
 		currentCodemarkId: context.currentCodemarkId,
 		currentMarkerId: context.currentMarkerId,
@@ -658,7 +671,9 @@ const mapStateToProps = state => {
 		showHeadshots: configs.showHeadshots,
 		postStream,
 		postStreamId: postStream.id,
-		composeCodemarkActive: context.composeCodemarkActive
+		composeCodemarkActive: context.composeCodemarkActive,
+		isFirstPageview: context.isFirstPageview,
+		onboardingTestGroup: getTestGroup(state, "onboard")
 	};
 };
 
@@ -669,5 +684,6 @@ export default connect(mapStateToProps, {
 	setCurrentStream,
 	setCurrentCodemark,
 	editCodemark,
-	setNewPostEntry
+	setNewPostEntry,
+	setIsFirstPageview
 })(injectIntl(SimpleStream));

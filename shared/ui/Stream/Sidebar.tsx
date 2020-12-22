@@ -97,6 +97,7 @@ export const Sidebar = React.memo(function Sidebar() {
 	const [dragging, setDragging] = useState(false);
 	const [windowSize, setWindowSize] = useState(EMPTY_SIZE);
 	const [headerDragY, setHeaderDragY] = useState(0);
+	const [initialRender, setInitialRender] = useState(true);
 
 	const fetchOpenRepos = async () => {
 		const response = await HostApi.instance.send(GetReposScmRequestType, {
@@ -107,6 +108,9 @@ export const Sidebar = React.memo(function Sidebar() {
 		if (response && response.repositories) {
 			setOpenRepos(response.repositories);
 		}
+		requestAnimationFrame(() => {
+			setInitialRender(false);
+		});
 	};
 
 	useDidMount(() => {
@@ -174,7 +178,7 @@ export const Sidebar = React.memo(function Sidebar() {
 
 	const maximizedPane = panes.find(p => p.maximized && !p.removed);
 	const collapsed = pane => {
-		if (maximizedPane) return pane.id !== maximizedPane.id;
+		if (maximizedPane) return pane.id !== maximizedPane.id && !pane.removed;
 		else return pane.collapsed && !pane.removed;
 	};
 
@@ -344,7 +348,7 @@ export const Sidebar = React.memo(function Sidebar() {
 
 	// console.warn("Rendering sidebar: ", dragging);
 	return (
-		<Root className={dragging ? "" : "animate-height"}>
+		<Root className={dragging || initialRender ? "" : "animate-height"}>
 			<CreateCodemarkIcons />
 			{/*<ExtensionTitle>CodeStream</ExtensionTitle>*/}
 			<Panels>
