@@ -31,11 +31,14 @@ export enum ContextActionsType {
 	SetComposeCodemarkActive = "@context/SetComposeCodemarkActive",
 	RepositionCodemark = "@context/RepositionCodemark",
 	SetCurrentReview = "@context/SetCurrentReview",
+	SetCurrentReviewOptions = "@context/SetCurrentReviewOptions",
 	SetCurrentRepo = "@context/SetCurrentRepo",
 	SetCreatePullRequest = "@context/SetCreatePullRequest",
 	SetCurrentPullRequest = "@context/SetCurrentPullRequest",
 	SetCurrentPullRequestAndBranch = "@context/SetCurrentPullRequestAndBranch",
-	SetStartWorkCard = "@context/SetStartWorkCard"
+	SetStartWorkCard = "@context/SetStartWorkCard",
+	SetOnboardStep = "@context/SetOnboardStep",
+	SetIsFirstPageview = "@context/SetIsFirstPageview"
 }
 
 /**

@@ -98,6 +98,7 @@ import {
 	LoginResult
 } from "./protocol/api.protocol";
 import { log, memoize, registerDecoratedHandlers, registerProviders } from "./system";
+import { testGroups } from "./testGroups";
 
 // FIXME: Must keep this in sync with vscode-codestream/src/api/session.ts
 const envRegex = /https?:\/\/((?:(\w+)-)?api|localhost)\.codestream\.(?:us|com)(?::\d+$)?/i;
@@ -867,6 +868,18 @@ export class CodeStreamSession {
 			});
 		});
 
+		// this needs to happen before initializing telemetry, because super-properties are dependent
+		if (this.apiCapabilities.testGroups) {
+			const company = await this.setCompanyTestGroups();
+			if (company) {
+				// replace company object in the response, so the test groups are correct
+				// for telemetry, and also what we send back to the webview
+				const index = response.companies.findIndex(c => c.id === company.id);
+				response.companies.splice(index, 1);
+				response.companies.push(company);
+			}
+		}
+
 		// Initialize tracking
 		this.initializeTelemetry(response.user, currentTeam, response.companies);
 
@@ -1075,6 +1088,11 @@ export class CodeStreamSession {
 					props["company"]["trialStart_at"] = new Date(company.trialStartDate).toISOString();
 					props["company"]["trialEnd_at"] = new Date(company.trialEndDate).toISOString();
 				}
+				if (company.testGroups) {
+					props["AB Test"] = Object.keys(company.testGroups).map(
+						key => `${key}|${company.testGroups![key]}`
+					);
+				}
 			}
 		}
 
@@ -1125,6 +1143,30 @@ export class CodeStreamSession {
 				this._apiCapabilities[key] = capability;
 			}
 		}
+	}
+
+	async setCompanyTestGroups() {
+		const team = await SessionContainer.instance().teams.getByIdFromCache(this.teamId);
+		if (!team) return;
+		const company = await SessionContainer.instance().companies.getByIdFromCache(team.companyId);
+		if (!company) return;
+
+		// for each test, check if our company has been assigned a group, if not,
+		// generate a random group assignment from the possible choices and ping the server
+		const set: { [key: string]: string } = {};
+		const companyTestGroups = company.testGroups || {};
+		for (let testName in testGroups) {
+			if (!companyTestGroups[testName]) {
+				const { choices } = testGroups[testName];
+				const which = Math.floor(Math.random() * choices.length);
+				set[testName] = choices[which];
+			}
+		}
+
+		if (Object.keys(set).length > 0) {
+			return this.api.setCompanyTestGroups(company.id, set);
+		}
+		return undefined;
 	}
 
 	dispose() {

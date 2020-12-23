@@ -114,6 +114,9 @@ export interface WebviewContext {
 	};
 	currentCodemarkId?: string;
 	currentReviewId?: string;
+	currentReviewOptions?: {
+		includeLatestCommit?: boolean;
+	};
 	createPullRequestReviewId?: string;
 	currentPullRequest?:
 		| {
@@ -126,9 +129,12 @@ export interface WebviewContext {
 	currentMarkerId?: string;
 	isRepositioning?: boolean;
 	hasFocus: boolean;
+	/** the first page seen after registration */
+	isFirstPageview?: boolean;
 	panelStack?: (WebviewPanels | string)[];
 	activePanel?: WebviewPanels;
 	startWorkCard?: any;
+	onboardStep: number;
 }
 
 export interface SessionState {

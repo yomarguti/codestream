@@ -68,6 +68,7 @@ export interface NewReviewNotification {
 	uri?: string;
 	range?: Range;
 	source?: string;
+	includeLatestCommit?: boolean;
 }
 
 export interface NewPullRequestNotification {

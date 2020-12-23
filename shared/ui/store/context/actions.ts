@@ -65,6 +65,9 @@ export const setChannelFilter = (value: string) => async dispatch => {
 export const setChannelsMuteAll = (enabled: boolean) =>
 	action(ContextActionsType.SetChannelsMuteAll, enabled);
 
+export const setIsFirstPageview = (value: boolean) =>
+	action(ContextActionsType.SetIsFirstPageview, value);
+
 export const setCodemarkTagFilter = (value: string) =>
 	action(ContextActionsType.SetCodemarkTagFilter, value);
 
@@ -118,8 +121,21 @@ export const setCurrentStream = (streamId?: string, threadId?: string) => (dispa
 	}
 };
 
-export const setCurrentReview = (reviewId?: string) =>
+export const _setCurrentReview = (reviewId?: string) =>
 	action(ContextActionsType.SetCurrentReview, { reviewId });
+
+export const _setCurrentReviewOptions = (options: any) =>
+	action(ContextActionsType.SetCurrentReviewOptions, { options });
+
+export const setCurrentReview = (reviewId?: string) => (dispatch, getState) => {
+	if (!reviewId) {
+		dispatch(_setCurrentReviewOptions(undefined));
+	}
+	return dispatch(_setCurrentReview(reviewId));
+};
+
+export const setCurrentReviewOptions = (options: any) =>
+	action(ContextActionsType.SetCurrentReviewOptions, { options });
 
 export const setCurrentRepo = (id?: string, path?: string) =>
 	action(ContextActionsType.SetCurrentRepo, { id, path });
@@ -136,6 +152,8 @@ export const clearCurrentPullRequest = () =>
 		id: "",
 		commentId: ""
 	});
+
+export const setOnboardStep = (step: number) => action(ContextActionsType.SetOnboardStep, { step });
 
 export const setStartWorkCard = (card: any) =>
 	action(ContextActionsType.SetStartWorkCard, { card });

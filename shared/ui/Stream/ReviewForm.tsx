@@ -136,6 +136,7 @@ interface ConnectedProps {
 	};
 	currentUser: CSUser;
 	skipPostCreationModal?: boolean;
+	currentReviewOptions?: any;
 	teamTagsArray: any;
 	textEditorUri?: string;
 	createPostAndReview?: Function;
@@ -496,6 +497,15 @@ class ReviewForm extends React.Component<Props, State> {
 				return;
 			}
 
+			if (!statusInfo.scm) {
+				this.setState({
+					isLoadingScm: false,
+					isReloadingScm: false,
+					scmError: true,
+					scmErrorMessage: "Unable to retrieve Git repository information"
+				});
+			}
+
 			this._disposableDidChangeDataNotification &&
 				this._disposableDidChangeDataNotification.dispose();
 			const self = this;
@@ -540,16 +550,33 @@ class ReviewForm extends React.Component<Props, State> {
 
 			this.setState({ repoStatus: statusInfo, repoUri: uri, currentFile: "" });
 			if (!startCommit && statusInfo.scm && statusInfo.scm.startCommit) {
-				this.setChangeStart(statusInfo.scm.startCommit);
-
+				let limitedLength: number | undefined = undefined;
+				if (
+					this.props.currentReviewOptions &&
+					this.props.currentReviewOptions.includeLatestCommit &&
+					statusInfo.scm.commits &&
+					statusInfo.scm.commits.length > 1 &&
+					statusInfo.scm.commits[0].info
+				) {
+					this.setChangeStart(statusInfo.scm.commits[1].sha, () => this.handleRepoChange());
+					this.setState({ title: statusInfo.scm.commits[0].info.message });
+					// only show this 1 commit
+					limitedLength = 1;
+				} else {
+					this.setChangeStart(statusInfo.scm.startCommit);
+				}
 				if (statusInfo.scm.commits) {
 					const commitListLength = statusInfo.scm.commits.findIndex(
 						// @ts-ignore
 						commit => commit.info.email !== currentUser.email
 					);
-					// show at least 5 commits, but if the 6th+ commit isn't mine,
-					// hide it behind a "show more" button
-					if (commitListLength >= 5) this.setState({ commitListLength });
+					if (commitListLength) {
+						// show only commits from the user logged in (limited to 10)
+						this.setState({ commitListLength: Math.min(commitListLength, limitedLength || 10) });
+					} else {
+						// show last 10 commits from any author, since none of them are from the user logged in
+						this.setState({ commitListLength: Math.min(10, statusInfo.scm.commits.length) });
+					}
 				}
 			}
 			// if (isAmending && statusInfo.scm && statusInfo.scm.branch !== this.state.editingReviewBranch) {
@@ -1540,7 +1567,7 @@ class ReviewForm extends React.Component<Props, State> {
 						style={{ marginTop: "5px", cursor: "pointer" }}
 						onClick={e => this.setState({ commitListLength: this.state.commitListLength + 10 })}
 					>
-						Show More
+						Show Earlier Commits
 					</div>
 				)}
 			</div>
@@ -1939,6 +1966,10 @@ class ReviewForm extends React.Component<Props, State> {
 			});
 		}
 
+		const hasChanges =
+			repoStatus &&
+			repoStatus.scm &&
+			repoStatus.scm.modifiedFiles.filter(f => !this.excluded(f.file)).length;
 		const showChanges = (!isEditing || isAmending) && !isLoadingScm && !scmError && !branchError;
 		// @ts-ignore
 		const latestCommit: { shortMessage: string } | undefined =
@@ -2182,6 +2213,7 @@ class ReviewForm extends React.Component<Props, State> {
 										}}
 										className={cx("control-button", { cancel: !this.state.title })}
 										type="submit"
+										disabled={!hasChanges}
 										loading={isReloadingScm || this.state.isLoading}
 										onClick={this.handleClickSubmit}
 									>
@@ -2274,6 +2306,7 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		providerInfo: (user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT,
 		currentUser: user,
 		skipPostCreationModal,
+		currentReviewOptions: state.context.currentReviewOptions,
 		textEditorUri: editorContext.textEditorUri,
 		teamTagsArray,
 		repos,
