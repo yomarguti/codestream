@@ -58,7 +58,8 @@ class CodeStreamCheckinHandlerFactory : VcsCheckinHandlerFactory(GitVcs.getKey()
                             ReviewNotifications.New(
                                 null,
                                 Range(),
-                                "JB Commit Dialog"
+                                "JB Commit Dialog",
+                                true
                             )
                         )
                     }
