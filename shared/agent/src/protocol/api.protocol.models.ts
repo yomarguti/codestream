@@ -685,6 +685,13 @@ export interface PullRequestQuery {
 	hidden: boolean;
 }
 
+export interface FetchRequestQuery {
+	name: string;
+	query: string;
+	hidden: boolean;
+	limit?: number;
+}
+
 export interface CSMePreferences {
 	telemetryConsent?: boolean; // legacy
 	telemetryOptOut?: boolean;
@@ -696,9 +703,13 @@ export interface CSMePreferences {
 	skipPostCreationModal?: boolean;
 	pullRequestFilesChangedMode?: "files" | "tree" | "hunks";
 	pullRequestQueries?: PullRequestQuery[];
+	fetchRequestQueries?: FetchRequestQuery[];
 	pullRequestQueryShowAllRepos?: boolean;
 	pullRequestQueryHideLabels?: boolean;
 	pullRequestView?: "auto" | "vertical" | "side-by-side";
+	issueReposDefaultBranch?: {
+		[repoId: string]: string;
+	};
 	hiddenPaneNodes?: {
 		[nodeId: string]: boolean;
 	};
