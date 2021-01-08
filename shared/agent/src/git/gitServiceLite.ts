@@ -6,9 +6,10 @@ import { URI } from "vscode-uri";
 import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
 import { Strings } from "../system";
-import { git } from "./git";
+import { git, isWslGit } from "./git";
 
 const cygwinRegex = /\/cygdrive\/([a-zA-Z])/;
+const wslRegex = /(\\\\wsl\$\\.+?)\\.*/;
 /**
  * Class to allow for some basic git operations that has no dependency on a user session
  *
@@ -110,9 +111,10 @@ export class GitServiceLite {
 			}
 		}
 
+		const wslPrefix = isWslGit() ? this._getWslPrefix(filePath) : undefined;
 		try {
 			const data = (await git({ cwd: cwd }, "rev-parse", "--show-toplevel")).trim();
-			const repoRoot = data === "" ? undefined : this._normalizePath(data);
+			const repoRoot = data === "" ? undefined : this._normalizePath(data, wslPrefix);
 
 			if (repoRoot === undefined) {
 				return undefined;
@@ -162,7 +164,16 @@ export class GitServiceLite {
 		}
 	}
 
-	_normalizePath(path: string): string {
+	_getWslPrefix(path: string): string | undefined {
+		const wslMatch = wslRegex.exec(path);
+		if (wslMatch != null) {
+			const [, prefix] = wslMatch;
+			return prefix;
+		}
+		return undefined;
+	}
+
+	_normalizePath(path: string, wslPrefix: string | undefined = undefined): string {
 		const cygwinMatch = cygwinRegex.exec(path);
 		if (cygwinMatch != null) {
 			const [, drive] = cygwinMatch;
@@ -172,6 +183,11 @@ export class GitServiceLite {
 			Logger.debug(`Cygwin git path sanitized: ${path} -> ${sanitized}`);
 			return sanitized;
 		}
+
+		if (wslPrefix) {
+			return wslPrefix + path.trim().replace(/\//g, "\\");
+		}
+
 		// Make sure to normalize: https://github.com/git-for-windows/git/issues/2478
 		return Strings.normalizePath(path.trim());
 	}
