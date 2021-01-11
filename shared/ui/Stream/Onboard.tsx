@@ -485,7 +485,19 @@ export const Onboard = React.memo(function Onboard(props: { type: "tour" | "educ
 							</div>
 						</Step>
 
-						{props.type === "tour" && (
+						{props.type === "educate" ? (
+							<>
+								<ThreeWays className={className(1)} skip={skip} />
+								<CodeComments
+									className={className(2)}
+									skip={skip}
+									showNextMessagingStep={showNextMessagingStep}
+									setShowNextMessagingStep={setShowNextMessagingStep}
+								/>
+								<FeedbackRequests className={className(3)} skip={skip} />
+								<PullRequests className={className(4)} skip={skip} />
+							</>
+						) : (
 							<>
 								<ConnectCodeHostProvider className={className(1)} skip={skip} />
 								<ConnectIssueProvider className={className(2)} skip={skip} />
@@ -497,19 +509,6 @@ export const Onboard = React.memo(function Onboard(props: { type: "tour" | "educ
 								/>
 								<InviteTeammates className={className(4)} skip={skip} positionDots={positionDots} />
 								<CreateCodemark className={className(CODEMARK_STEP)} skip={skip} />
-							</>
-						)}
-						{props.type === "educate" && (
-							<>
-								<ThreeWays className={className(1)} skip={skip} />
-								<CodeComments
-									className={className(2)}
-									skip={skip}
-									showNextMessagingStep={showNextMessagingStep}
-									setShowNextMessagingStep={setShowNextMessagingStep}
-								/>
-								<FeedbackRequests className={className(3)} skip={skip} />
-								<PullRequests className={className(4)} skip={skip} />
 							</>
 						)}
 
@@ -925,9 +924,7 @@ const InviteTeammates = (props: { className: string; skip: Function; positionDot
 		new Array(50).fill(true)
 	);
 	const [sendingInvites, setSendingInvites] = useState(false);
-	const [inviteSuggestedField, setInviteSuggestedField] = useState<{ [email: string]: boolean }>(
-		{}
-	);
+	const [skipSuggestedField, setSkipSuggestedField] = useState<{ [email: string]: boolean }>({});
 	const [suggestedInvitees, setSuggestedInvitees] = useState<any[]>([]);
 
 	useDidMount(() => {
@@ -1004,7 +1001,7 @@ const InviteTeammates = (props: { className: string; skip: Function; positionDot
 		while (index <= suggestedInvitees.length) {
 			if (suggestedInvitees[index]) {
 				const email = suggestedInvitees[index].email;
-				if (inviteSuggestedField[email]) await inviteEmail(email, "Onboarding Suggestion");
+				if (!skipSuggestedField[email]) await inviteEmail(email, "Onboarding Suggestion");
 			}
 			index++;
 		}
@@ -1034,11 +1031,11 @@ const InviteTeammates = (props: { className: string; skip: Function; positionDot
 								return (
 									<Checkbox
 										name={user.email}
-										checked={inviteSuggestedField[user.email]}
+										checked={!skipSuggestedField[user.email]}
 										onChange={() => {
-											setInviteSuggestedField({
-												...inviteSuggestedField,
-												[user.email]: !inviteSuggestedField[user.email]
+											setSkipSuggestedField({
+												...skipSuggestedField,
+												[user.email]: !skipSuggestedField[user.email]
 											});
 										}}
 									>
