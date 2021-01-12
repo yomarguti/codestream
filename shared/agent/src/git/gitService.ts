@@ -206,6 +206,8 @@ export class GitService implements IGitService, Disposable {
 		uriOrPath: URI | string,
 		options: { ref?: string; contents?: string; startLine?: number; endLine?: number } = {}
 	): Promise<string> {
+		if (options.ref === EMPTY_TREE_SHA) return "";
+
 		const [dir, filename] = Strings.splitPath(
 			typeof uriOrPath === "string" ? uriOrPath : uriOrPath.fsPath
 		);
@@ -425,7 +427,6 @@ export class GitService implements IGitService, Disposable {
 		}
 
 		const patches = parsePatch(data);
-		Logger.log("RETURNING PATCHES: ", JSON.stringify(patches, null, 4));
 		return { patches, data };
 	}
 
@@ -934,16 +935,11 @@ export class GitService implements IGitService, Disposable {
 		destBranchName: string
 	): Promise<{ success: boolean; error?: string }> {
 		try {
-			const data = await git({ cwd: repoPath }, "branch", "--show-current");
+			const data = await git({ cwd: repoPath }, "rev-parse", "--abbrev-ref", "HEAD");
 			if (data.trim() === destBranchName) {
 				await git({ cwd: repoPath }, "pull");
 			} else {
-				await git(
-					{cwd: repoPath},
-					"fetch",
-					remoteName,
-					`${sourceBranchName}:${destBranchName}`
-				);
+				await git({ cwd: repoPath }, "fetch", remoteName, `${sourceBranchName}:${destBranchName}`);
 			}
 			return { success: true };
 		} catch (err) {
@@ -1227,6 +1223,8 @@ export class GitService implements IGitService, Disposable {
 		includeStaged: boolean,
 		ref: string = "HEAD"
 	): Promise<GitAuthor[]> {
+		if (ref === EMPTY_TREE_SHA) return [];
+
 		try {
 			let data: string | undefined;
 			try {
@@ -1433,14 +1431,18 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
-	async getBranchCommitsStatus(repoPath: string, remoteBranch: string, branch: string): Promise<string> {
+	async getBranchCommitsStatus(
+		repoPath: string,
+		remoteBranch: string,
+		branch: string
+	): Promise<string> {
 		try {
-			const data = +await git(
+			const data = +(await git(
 				{ cwd: repoPath },
 				"rev-list",
 				`${remoteBranch}..${branch}`,
 				"--count"
-			);
+			));
 
 			if (data > 0) {
 				return (0 - data).toString();
