@@ -1,4 +1,4 @@
-import React, { useState, useReducer, useCallback, useMemo } from "react";
+import React, { useState, useReducer, useCallback, useMemo, FunctionComponent } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { CodeStreamState } from "../store";
@@ -17,7 +17,10 @@ import {
 	MergeMethod,
 	FetchThirdPartyPullRequestPullRequest,
 	DidChangeDataNotificationType,
-	ChangeDataType
+	ChangeDataType,
+	CheckRun,
+	StatusContext,
+	CheckConclusionState
 } from "@codestream/protocols/agent";
 import {
 	PRContent,
@@ -40,9 +43,9 @@ import {
 	PRCloneURL,
 	PRCopyableTerminal,
 	PRCloneURLWrapper,
-	PRResolveConflictsRow,
 	PRHeadshots,
-	PRResolveConflicts
+	PRCommentCardRowsWrapper,
+	PRCommentCardRow
 } from "./PullRequestComponents";
 import { PullRequestTimelineItems, GHOST } from "./PullRequestTimelineItems";
 import { DropdownButton } from "./Review/DropdownButton";
@@ -75,6 +78,44 @@ const UL = styled.ul`
 		margin: 5px 0;
 	}
 	margin: 20px 0;
+`;
+
+const StatusMetaRow = styled.div`
+	flex: 1;
+	.titleRow {
+		display: flex;
+	}
+	.middle {
+		flex: 1;
+	}
+	.checkRuns {
+		padding-top: 10px;
+		.checkRun {
+			display: flex;
+			align-items: center;
+			border-top: 1px solid;
+			border-color: var(--base-border-color);
+			padding: 3px 0;
+			${PRIconButton} {
+				margin-right: 10px;
+			}
+			.details {
+				margin-left: 10px;
+			}
+			.description {
+				flex: 1;
+				display: block;
+			}
+			.appIcon {
+				display: block;
+				margin-right: 8px;
+				width: 20px;
+				height: 20px;
+				border-radius: 6px;
+				overflow: hidden;
+			}
+		}
+	}
 `;
 
 // https://docs.github.com/en/graphql/reference/enums#commentauthorassociation
@@ -686,6 +727,8 @@ export const PullRequestConversationTab = (props: {
 	}, [ghRepo, pr]);
 
 	// console.warn("ASSI: ", assigneeMenuItems);
+
+	const lastCommit = pr.commits.nodes[0].commit;
 	return (
 		<PRContent>
 			{isLocking && (
@@ -801,111 +844,117 @@ export const PullRequestConversationTab = (props: {
 								pr={pr}
 								opinionatedReviews={Object.values(opinionatedReviewsHash)}
 							/>
-							<PRResolveConflictsRow>
-								<PRIconButton className="gray-background">
-									<Icon name="alert" />
-								</PRIconButton>
-								<div className="middle">
-									<h1>This pull request is still a work in progress</h1>
-									Draft pull requests cannot be merged
-								</div>
-								<Button
-									className="no-wrap"
-									variant="secondary"
-									onClick={() => markPullRequestReadyForReview(true)}
-								>
-									Ready for review
-								</Button>
-							</PRResolveConflictsRow>
+							<PRCommentCardRowsWrapper>
+								{lastCommit.statusCheckRollup && <CommitCheckSuite commit={lastCommit} />}
+								<PRCommentCardRow>
+									<PRIconButton className="gray-background">
+										<Icon name="alert" />
+									</PRIconButton>
+									<div className="middle">
+										<h1>This pull request is still a work in progress</h1>
+										Draft pull requests cannot be merged
+									</div>
+									<Button
+										className="no-wrap"
+										variant="secondary"
+										onClick={() => markPullRequestReadyForReview(true)}
+									>
+										Ready for review
+									</Button>
+								</PRCommentCardRow>
+							</PRCommentCardRowsWrapper>
 						</PRCommentCard>
 					) : pr.mergeStateStatus === "BLOCKED" ? (
 						<PRCommentCard>
 							<PRStatusHeadshot className="gray-background">
 								<Icon name="git-merge" />
 							</PRStatusHeadshot>
-							{pr.reviewDecision === "REVIEW_REQUIRED" ? (
-								<PRResolveConflicts>
-									<PRResolveConflictsRow>
-										<PRIconButton className="red-background">
-											<Icon name="x" />
-										</PRIconButton>
-										<div className="middle">
-											<h1>Review Required</h1>
-											{requiredApprovingReviewCount ? (
-												<>
-													At least {requiredApprovingReviewCount} approving review
-													{requiredApprovingReviewCount > 1 ? "s" : ""} are required by reviewers
-													with write access.{" "}
-													<Link href="https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-request-reviews">
-														Learn more.
-													</Link>
-												</>
-											) : (
-												<>Reviews are required by reviewers with write access.</>
-											)}
-										</div>
-									</PRResolveConflictsRow>
-									<PullRequestReviewStatus
-										pr={pr}
-										opinionatedReviews={Object.values(opinionatedReviewsHash)}
-									/>
-									<PRResolveConflictsRow>
-										<PRIconButton className="red-background">
-											<Icon name="x" />
-										</PRIconButton>
-										<div className="middle">
-											<h1>Merging is blocked</h1>
-											{requiredApprovingReviewCount && (
-												<>
-													Merging can be performed automatically with {requiredApprovingReviewCount}{" "}
-													approving review{requiredApprovingReviewCount > 1 ? "s" : ""}.
-												</>
-											)}
-										</div>
-									</PRResolveConflictsRow>
-									{ghRepo.viewerPermission === "ADMIN" && (
-										<Merge
-											ghRepo={ghRepo}
-											action={mergePullRequest}
-											onSelect={setMergeMethod}
-											defaultMergeMethod={derivedState.defaultMergeMethod}
-											mergeText="As an administrator, you may still merge this pull request."
+							<PRCommentCardRowsWrapper>
+								{lastCommit.statusCheckRollup && <CommitCheckSuite commit={lastCommit} />}
+								{pr.reviewDecision === "REVIEW_REQUIRED" ? (
+									<>
+										<PRCommentCardRow>
+											<PRIconButton className="red-background">
+												<Icon name="x" />
+											</PRIconButton>
+											<div className="middle">
+												<h1>Review Required</h1>
+												{requiredApprovingReviewCount ? (
+													<>
+														At least {requiredApprovingReviewCount} approving review
+														{requiredApprovingReviewCount > 1 ? "s" : ""} are required by reviewers
+														with write access.{" "}
+														<Link href="https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-request-reviews">
+															Learn more.
+														</Link>
+													</>
+												) : (
+													<>Reviews are required by reviewers with write access.</>
+												)}
+											</div>
+										</PRCommentCardRow>
+										<PullRequestReviewStatus
+											pr={pr}
+											opinionatedReviews={Object.values(opinionatedReviewsHash)}
 										/>
-									)}
-								</PRResolveConflicts>
-							) : ghRepo.viewerPermission === "READ" ? (
-								<PRResolveConflicts>
-									<PRResolveConflictsRow>
+										<PRCommentCardRow>
+											<PRIconButton className="red-background">
+												<Icon name="x" />
+											</PRIconButton>
+											<div className="middle">
+												<h1>Merging is blocked</h1>
+												{requiredApprovingReviewCount && (
+													<>
+														Merging can be performed automatically with{" "}
+														{requiredApprovingReviewCount} approving review
+														{requiredApprovingReviewCount > 1 ? "s" : ""}.
+													</>
+												)}
+											</div>
+										</PRCommentCardRow>
+										{ghRepo.viewerPermission === "ADMIN" && (
+											<Merge
+												ghRepo={ghRepo}
+												action={mergePullRequest}
+												onSelect={setMergeMethod}
+												defaultMergeMethod={derivedState.defaultMergeMethod}
+												mergeText="As an administrator, you may still merge this pull request."
+											/>
+										)}
+									</>
+								) : ghRepo.viewerPermission === "READ" ? (
+									<>
+										<PRCommentCardRow>
+											<PRIconButton className="red-background">
+												<Icon name="x" />
+											</PRIconButton>
+											<div className="middle">
+												<h1>Merging is blocked</h1>
+												The base branch restricts merging to authorized users.{" "}
+												<Link href="https://docs.github.com/en/github/administering-a-repository/about-protected-branches">
+													Learn more about protected branches.
+												</Link>
+											</div>
+										</PRCommentCardRow>
+									</>
+								) : (
+									<PRCommentCardRow>
 										<PRIconButton className="red-background">
 											<Icon name="x" />
 										</PRIconButton>
 										<div className="middle">
 											<h1>Merging is blocked</h1>
-											The base branch restricts merging to authorized users.{" "}
-											<Link href="https://docs.github.com/en/github/administering-a-repository/about-protected-branches">
-												Learn more about protected branches.
-											</Link>
 										</div>
-									</PRResolveConflictsRow>
-								</PRResolveConflicts>
-							) : (
-								<PRResolveConflicts>
-									<PRResolveConflictsRow>
-										<PRIconButton className="red-background">
-											<Icon name="x" />
-										</PRIconButton>
-										<div className="middle">
-											<h1>Merging is blocked</h1>
-										</div>
-									</PRResolveConflictsRow>
-								</PRResolveConflicts>
-							)}
+									</PRCommentCardRow>
+								)}
+							</PRCommentCardRowsWrapper>
 						</PRCommentCard>
 					) : !pr.merged && pr.mergeable === "MERGEABLE" && pr.state !== "CLOSED" ? (
 						<PRCommentCard className="green-border dark-header">
 							<PRStatusHeadshot className="green-background">
 								<Icon name="git-merge" />
 							</PRStatusHeadshot>
+							{lastCommit.statusCheckRollup && <CommitCheckSuite commit={lastCommit} />}
 							<PullRequestReviewStatus
 								pr={pr}
 								opinionatedReviews={Object.values(opinionatedReviewsHash)}
@@ -956,8 +1005,9 @@ export const PullRequestConversationTab = (props: {
 							<PRStatusHeadshot className="gray-background">
 								<Icon name="git-merge" />
 							</PRStatusHeadshot>
-							<PRResolveConflicts>
-								<PRResolveConflictsRow>
+							<PRCommentCardRowsWrapper>
+								{lastCommit.statusCheckRollup && <CommitCheckSuite commit={lastCommit} />}
+								<PRCommentCardRow>
 									<PRIconButton className="gray-background">
 										<Icon name="alert" />
 									</PRIconButton>
@@ -982,8 +1032,8 @@ export const PullRequestConversationTab = (props: {
 											Check status
 										</Button>
 									)}
-								</PRResolveConflictsRow>
-							</PRResolveConflicts>
+								</PRCommentCardRow>
+							</PRCommentCardRowsWrapper>
 						</PRCommentCard>
 					) : !pr.merged && pr.mergeable === "CONFLICTING" ? (
 						<PRCommentCard>
@@ -994,8 +1044,9 @@ export const PullRequestConversationTab = (props: {
 								pr={pr}
 								opinionatedReviews={Object.values(opinionatedReviewsHash)}
 							/>
-							<PRResolveConflicts>
-								<PRResolveConflictsRow>
+							<PRCommentCardRowsWrapper>
+								{lastCommit.statusCheckRollup && <CommitCheckSuite commit={lastCommit} />}
+								<PRCommentCardRow>
 									<PRIconButton className="gray-background">
 										<Icon name="alert" />
 									</PRIconButton>
@@ -1015,7 +1066,7 @@ export const PullRequestConversationTab = (props: {
 									>
 										Resolve conflicts
 									</Button>
-								</PRResolveConflictsRow>
+								</PRCommentCardRow>
 								{clInstructionsIsOpen && (
 									<div>
 										<hr />
@@ -1088,7 +1139,7 @@ export const PullRequestConversationTab = (props: {
 										/>
 									</div>
 								)}
-							</PRResolveConflicts>
+							</PRCommentCardRowsWrapper>
 						</PRCommentCard>
 					) : !pr.merged && pr.mergeable !== "CONFLICTING" && pr.state === "CLOSED" ? (
 						<PRCommentCard>
@@ -1418,6 +1469,154 @@ const Merge = (props: {
 	);
 };
 
+const CommitCheckSuite = (props: { commit: any }) => {
+	const [isChecksOpen, toggleChecks] = useReducer((open: boolean) => !open, false);
+
+	const { commit } = props;
+	if (!commit.statusCheckRollup) {
+		return <></>;
+	}
+
+	const statusTitle = React.useMemo(() => {
+		switch (commit.statusCheckRollup.state) {
+			case "SUCCESS":
+				return "All checks have passed";
+			case "ERROR":
+			case "FAILURE":
+				return "Some checks were not successful";
+			case "EXPECTED":
+			case "PENDING":
+				return "Some checks haven’t completed yet";
+		}
+		return "";
+	}, [commit]);
+
+	const CheckSuiteStatusIcon = () => {
+		switch (commit.statusCheckRollup.state) {
+			case "SUCCESS":
+				return (
+					<PRIconButton className="green-background">
+						<Icon name="check" />
+					</PRIconButton>
+				);
+			case "ERROR":
+			case "FAILURE":
+				return (
+					<PRIconButton className="red-background">
+						<Icon name="x" />
+					</PRIconButton>
+				);
+			case "EXPECTED":
+			case "PENDING":
+				return (
+					<PRIconButton className="yellow-background">
+						<Icon name="check" />
+					</PRIconButton>
+				);
+			default:
+				return <></>;
+		}
+	};
+
+	const checksData = React.useMemo(() => {
+		return getChecksData(commit.statusCheckRollup.contexts.nodes);
+	}, [commit]);
+
+	const statusMeta = React.useMemo(() => {
+		if (checksData.length === 0) {
+			return "";
+		}
+		let status = "";
+		const checkStatuses = {
+			success: {
+				count: 0,
+				title: "successful"
+			},
+			inProgress: {
+				count: 0,
+				title: "in progress"
+			},
+			failure: {
+				count: 0,
+				title: "failing"
+			},
+			pending: {
+				count: 0,
+				title: "pending"
+			},
+			queued: {
+				count: 0,
+				title: "queued"
+			}
+		};
+		checksData.map(checkData => {
+			if (checkStatuses[checkData.state]) {
+				checkStatuses[checkData.state].count++;
+			}
+		});
+
+		const statuses = Object.entries(checkStatuses)
+			.filter(([, statusType]) => statusType.count > 0)
+			.map(([, statusType]) => `${statusType.count} ${statusType.title}`);
+
+		if (statuses.length === 1) {
+			status = `${statuses[0]} checks`;
+		} else if (statuses.length === 2) {
+			status = `${statuses.join(" and ")} checks`;
+		} else {
+			statuses[statuses.length - 1] = `and ${statuses[statuses.length - 1]}`;
+			status = `${statuses.join(", ")} checks`;
+		}
+
+		return status;
+	}, [commit]);
+
+	return (
+		<PRCommentCardRow>
+			<StatusMetaRow>
+				<div className="titleRow">
+					<CheckSuiteStatusIcon />
+					<div className="middle">
+						<div style={{ float: "right" }}>
+							<Link onClick={toggleChecks}>{isChecksOpen ? "Hide" : "Show"} all checks</Link>
+						</div>
+						<h1>{statusTitle}</h1>
+						{statusMeta}
+					</div>
+				</div>
+				{isChecksOpen && (
+					<div className="checkRuns">
+						{checksData.map(checkData => (
+							<CommitCheckRun checkData={checkData} />
+						))}
+					</div>
+				)}
+			</StatusMetaRow>
+		</PRCommentCardRow>
+	);
+};
+
+const CommitCheckRun = (props: { checkData: CheckData }) => {
+	const { checkData } = props;
+
+	return (
+		<div className="checkRun">
+			<PRIconButton>
+				{checkData.statusIcon && (
+					<Icon name={checkData.statusIcon.name} className={checkData.statusIcon.className} />
+				)}
+			</PRIconButton>
+			{checkData.appIcon && (
+				<Icon src={checkData.appIcon.src} title={checkData.appIcon.title} className="appIcon" />
+			)}
+			{checkData.Description && <>{checkData.Description}</>}
+			<Link href={checkData.detailsLink} className="details">
+				Details
+			</Link>
+		</div>
+	);
+};
+
 const CopyableTerminal = (props: any) => {
 	return (
 		<PRCopyableTerminal>
@@ -1434,3 +1633,176 @@ const CopyableTerminal = (props: any) => {
 		</PRCopyableTerminal>
 	);
 };
+
+const getChecksData = (statusChecks: (CheckRun | StatusContext)[]) => {
+	let checksData: CheckData[] = [];
+	statusChecks.map(statusCheck => {
+		const checkData = {} as CheckData;
+
+		if (statusCheck.__typename === "CheckRun") {
+			const check = statusCheck as CheckRun;
+			let description: JSX.Element | string = "";
+			switch (check.status) {
+				case "QUEUED":
+					checkData.state = "queued";
+					description = <i>In progress — This check has started...</i>;
+					break;
+				case "IN_PROGRESS":
+					checkData.state = "inProgress";
+					description = <i>Queued — Waiting to run this check...</i>;
+					break;
+				case "COMPLETED":
+					let formattedDuration;
+					if (check.startedAt && check.completedAt) {
+						formattedDuration = getCheckDuration(check.startedAt, check.completedAt);
+					}
+
+					switch (check.conclusion) {
+						case "SUCCESS":
+							checkData.state = "success";
+							description = (
+								<span>{formattedDuration > "" ? `Successful in ${formattedDuration}` : ""}</span>
+							);
+							break;
+						case "FAILURE":
+							checkData.state = "failure";
+							description = (
+								<span>{formattedDuration > "" ? `Failing after ${formattedDuration}` : ""}</span>
+							);
+							break;
+						case "CANCELLED":
+							checkData.state = "failure";
+							break;
+						default:
+							checkData.state = "undefined";
+							break;
+					}
+					break;
+				default:
+					checkData.state = "undefined";
+					break;
+			}
+
+			checkData.appIcon = {
+				src: check.checkSuite.app.logoUrl,
+				title: `@${check.checkSuite.app.slug} generated this status`
+			};
+			checkData.Description = (
+				<div className="description">
+					<strong style={{ marginRight: "8px" }}>{check.name}</strong> {description}{" "}
+					{check.title && <> — {check.title}</>}
+				</div>
+			);
+			checkData.detailsLink = check.detailsUrl;
+		}
+
+		if (statusCheck.__typename === "StatusContext") {
+			const check = statusCheck as StatusContext;
+			switch (check.state) {
+				case "EXPECTED":
+					checkData.state = "expected";
+					break;
+				case "ERROR":
+					checkData.state = "failure";
+					break;
+				case "FAILURE":
+					checkData.state = "failure";
+					break;
+				case "PENDING":
+					checkData.state = "pending";
+					break;
+				case "SUCCESS":
+					checkData.state = "success";
+					break;
+				default:
+					checkData.state = "undefined";
+					break;
+			}
+
+			checkData.appIcon = {
+				src: check.avatarUrl,
+				title: ` generated this status`
+			};
+			checkData.Description = (
+				<div className="description">
+					<strong>{check.context}</strong>
+					{check.description && <> — {check.description}</>}
+				</div>
+			);
+			checkData.detailsLink = check.targetUrl;
+		}
+
+		switch (checkData.state) {
+			case "failure":
+				checkData.statusIcon = {
+					name: "x",
+					className: "red-color"
+				};
+				break;
+			case "inProgress":
+				checkData.statusIcon = {
+					name: "dot-fill",
+					className: "yellow-color"
+				};
+				break;
+			case "pending":
+				checkData.statusIcon = {
+					name: "dot-fill",
+					className: "yellow-color"
+				};
+				break;
+			case "queued":
+				checkData.statusIcon = {
+					name: "dot-fill",
+					className: "yellow-color"
+				};
+				break;
+			case "success":
+				checkData.statusIcon = {
+					name: "check",
+					className: "green-color"
+				};
+				break;
+			case "expected":
+				checkData.statusIcon = {
+					name: "dot-fill",
+					className: "yellow-color"
+				};
+				break;
+			case "undefined":
+			default:
+				checkData.statusIcon = {
+					name: "dot-fill",
+					className: "yellow-color"
+				};
+				break;
+		}
+
+		checksData.push(checkData);
+	});
+	return checksData;
+};
+
+const getCheckDuration = (startedAt, completedAt): string => {
+	const startTime = new Date(startedAt);
+	const endTime = new Date(completedAt);
+	const duration = endTime.getTime() - startTime.getTime();
+	const minutes = Math.floor(duration / 60000);
+	const seconds = ((duration % 60000) / 1000).toFixed(0);
+
+	return minutes > 0 ? `${minutes}m` : `${seconds}s`;
+};
+
+interface CheckData {
+	state: "queued" | "inProgress" | "failure" | "success" | "pending" | "expected" | "undefined";
+	statusIcon: {
+		name: string;
+		className: string;
+	};
+	appIcon: {
+		src: string;
+		title: string;
+	};
+	Description: JSX.Element;
+	detailsLink: string;
+}
