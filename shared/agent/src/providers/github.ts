@@ -164,7 +164,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	protected _client: GraphQLClient | undefined;
 	protected async client(): Promise<GraphQLClient> {
 		if (this._client === undefined) {
-			this._client = new GraphQLClient(this.graphQlBaseUrl);
+			const options: { [key: string]: any } = {};
+			if (this._httpsAgent) {
+				options.agent = this._httpsAgent;
+			}
+			this._client = new GraphQLClient(this.graphQlBaseUrl, options);
 		}
 		if (!this.accessToken) {
 			throw new Error("Could not get a GitHub personal access token");
@@ -3793,6 +3797,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			  messageBodyHTML
 			  abbreviatedOid
 			  authoredDate
+			  ${this._transform(`[statusCheckRollup {
+			  	state
+			  }:>=2.21.0]`)}
 			}
 		  }`,
 			// 	`... on PullRequestCommitCommentThread {
@@ -4184,9 +4191,46 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						  }
 						}
 					  }
-					commits(first: 100) {
+					commits(last: 1) {
 						totalCount
-					  }
+						${this._transform(`[
+							nodes {
+							  commit {
+								statusCheckRollup {
+									state
+									contexts(first: 100) {
+										nodes {
+											... on CheckRun {
+												__typename
+												conclusion
+												status
+												name
+												title
+												detailsUrl
+												startedAt
+												completedAt
+												checkSuite {
+												  app {
+													logoUrl(size: 40)
+													slug
+												  }
+												}
+											}
+											... on StatusContext {
+												__typename
+												avatarUrl(size: 40)
+												context
+												description
+												state
+												targetUrl
+											}
+										}
+									}
+								}
+							  }						
+							}:>=2.21.0]`)
+						}
+					}
 					headRefName
 					headRefOid
 					labels(first: 10) {

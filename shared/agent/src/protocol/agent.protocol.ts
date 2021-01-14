@@ -275,14 +275,15 @@ export interface CodeStreamDiffUriData {
 export interface UploadFileRequest {
 	path: string;
 	name: string;
-	type: string;
+	mimetype: string;
 	size: number;
+	buffer?: any;
 }
 
 export interface UploadFileResponse {
 	url: string;
 	name: string;
-	type: string;
+	mimetype: string;
 	size: number;
 }
 
