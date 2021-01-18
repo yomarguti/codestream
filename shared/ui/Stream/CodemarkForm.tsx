@@ -1123,7 +1123,8 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 
 	pinImage = (filename: string, url: string, event?: React.SyntheticEvent) => {
-		this.insertTextAtCursor && this.insertTextAtCursor(`![${filename}](${url})`);
+		this.insertTextAtCursor &&
+			this.insertTextAtCursor(`![${filename}](${url.replace(/ /g, "%20")})`);
 	};
 
 	selectLocation = (action: "add" | "edit" | "delete") => {
