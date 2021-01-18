@@ -1456,7 +1456,8 @@ class CodemarkForm extends React.Component<Props, State> {
 					this.replaceAttachment(file, index);
 				}
 				HostApi.instance.track("File Attached", {
-					"File Type": file.type
+					"File Type": file.type,
+					Parent: "codemark"
 				});
 			} catch (e) {
 				console.warn("Error uploading file: ", e);
