@@ -1423,8 +1423,6 @@ class CodemarkForm extends React.Component<Props, State> {
 		const { attachments } = this.state;
 		let index = attachments.length;
 
-		HostApi.instance.track("File Attached", {});
-
 		[...files].forEach(file => {
 			file.status = "uploading";
 		});
@@ -1457,6 +1455,9 @@ class CodemarkForm extends React.Component<Props, State> {
 					file.status = "error";
 					this.replaceAttachment(file, index);
 				}
+				HostApi.instance.track("File Attached", {
+					"File Type": file.type
+				});
 			} catch (e) {
 				console.warn("Error uploading file: ", e);
 				file.status = "error";
