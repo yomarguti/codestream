@@ -42,7 +42,6 @@ import { PrePRProviderInfoModal } from "./PrePRProviderInfoModal";
 import * as actions from "./actions";
 import { canCreateCodemark, editCodemark } from "../store/codemarks/actions";
 import { ComponentUpdateEmitter, safe, toMapBy, isNotOnDisk, uriToFilePath } from "../utils";
-import { confirmPopup } from "./Confirm";
 import { ModalRoot, Modal } from "./Modal";
 import { getPostsForStream, getPost } from "../store/posts/reducer";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
@@ -316,7 +315,11 @@ export class SimpleStream extends PureComponent {
 				)}
 				<div id="confirm-root" />
 				{activePanel !== WebviewPanels.Onboard && <GlobalNav />}
-				{activePanel === WebviewPanels.Onboard ? <Onboard /> : <Sidebar />}
+				{activePanel === WebviewPanels.Onboard ? (
+					<Onboard type={this.props.onboardingTestGroup} />
+				) : (
+					<Sidebar />
+				)}
 				{activeModal && (
 					<Modal translucent>
 						{activeModal === WebviewModals.CreateTeam && <CreateTeamPage />}

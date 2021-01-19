@@ -3,12 +3,7 @@ import {
 	FetchThirdPartyPullRequestPullRequest,
 	ExecuteThirdPartyTypedType
 } from "../protocols/agent/agent.protocol.providers";
-import {
-	PRCommentCard,
-	ButtonRow,
-	PRResolveConflictsRow,
-	PRIconButton
-} from "./PullRequestComponents";
+import { PRCommentCard, ButtonRow, PRIconButton } from "./PullRequestComponents";
 import MessageInput from "./MessageInput";
 import { RadioGroup, Radio } from "../src/components/RadioGroup";
 import { useDispatch, useSelector } from "react-redux";
@@ -67,6 +62,24 @@ export const Donut = styled.div<{ degrees: number }>`
 	/* fixes a minor clipping issue in Chrome */
 	background-origin: border-box;
 	background-image: conic-gradient(#7aba5d ${props => props.degrees}deg, #d73a4a 0);
+	mask: radial-gradient(circle, transparent 10px, white 10px);
+`;
+
+export const ColorDonut = styled.div<{ green: number; red: number; yellow: number; gray: number }>`
+	width: 30px;
+	height: 30px;
+	border-radius: 50%;
+	position: relative;
+
+	/* fixes a minor clipping issue in Chrome */
+	background-origin: border-box;
+	background-image: conic-gradient(
+		#7aba5d 0 ${props => props.green}deg,
+		#d73a4a ${props => props.green}deg ${props => props.green + props.red}deg,
+		yellow ${props => props.green + props.red}deg
+			${props => props.green + props.red + props.yellow}deg,
+		gray ${props => props.green + props.red + props.yellow}deg 360deg
+	);
 	mask: radial-gradient(circle, transparent 10px, white 10px);
 `;
 

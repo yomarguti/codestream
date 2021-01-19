@@ -22,7 +22,9 @@ import {
 	CheckPullRequestPreconditionsResponse,
 	GetLatestCommitScmRequestType,
 	DiffBranchesRequestType,
-	ExecuteThirdPartyRequestUntypedType
+	ExecuteThirdPartyRequestUntypedType,
+	FetchRemoteBranchRequestType,
+	FetchBranchCommitsStatusRequestType
 } from "@codestream/protocols/agent";
 import { connectProvider } from "./actions";
 import { isConnected, getPRLabel } from "../store/providers/reducer";
@@ -141,7 +143,8 @@ export const CreatePullRequestPanel = props => {
 			isConnectedToGitLabEnterprise: isConnected(state, { name: "gitlab_enterprise" }),
 			isConnectedToBitbucketServer: isConnected(state, { name: "bitbucket_server" }),
 			prLabel: getPRLabel(state),
-			currentRepo: context.currentRepo
+			currentRepo: context.currentRepo,
+			ideName: state.ide.name
 		};
 	});
 	const { userStatus, reviewId, prLabel } = derivedState;
@@ -149,6 +152,7 @@ export const CreatePullRequestPanel = props => {
 	const [loading, setLoading] = useState(true);
 	const [loadingBranchInfo, setLoadingBranchInfo] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
+	const [pullSubmitting, setPullSubmitting] = useState(false);
 
 	const [preconditionError, setPreconditionError] = useState({
 		message: "",
@@ -204,6 +208,11 @@ export const CreatePullRequestPanel = props => {
 	const [baseForkedRepo, setBaseForkedRepo] = useState<any>(undefined);
 	const [headForkedRepo, setHeadForkedRepo] = useState<any>(undefined);
 
+	const [commitsBehindOrigin, setCommitsBehindOrigin] = useState(0);
+	const [unexpectedPullError, setUnexpectedPullError] = useState(false);
+
+	const fetchPreconditionDataRef = useRef((isRepoUpdate?: boolean) => {});
+
 	const stopWaiting = useCallback(() => {
 		setIsWaiting(false);
 	}, [isWaiting]);
@@ -211,7 +220,7 @@ export const CreatePullRequestPanel = props => {
 	const waitFor = inMillis(60, "sec");
 	useTimeout(stopWaiting, waitFor);
 
-	const fetchPreconditionData = async () => {
+	const fetchPreconditionData = async (isRepoUpdate = false) => {
 		setFormState({ type: "", message: "", url: "", id: "" });
 		setPreconditionError({ type: "", message: "", url: "", id: "" });
 		// already waiting on a provider auth, keep using that loading ui
@@ -221,8 +230,19 @@ export const CreatePullRequestPanel = props => {
 		}
 
 		try {
-			const args = { reviewId: derivedState.reviewId, repoId: "", headRefName: "" };
-			if (!derivedState.reviewId) {
+			const args: { [k: string]: any } = {
+				reviewId: derivedState.reviewId,
+				repoId: "",
+				headRefName: ""
+			};
+			if (isRepoUpdate && prBranch && reviewBranch && selectedRepo && prProviderId) {
+				// if we're updating data, we must get branches and repo from state
+				args.providerId = prProviderId;
+				args.repoId = selectedRepo.id;
+				args.baseRefName = prBranch;
+				args.headRefName = reviewBranch;
+				args.skipLocalModificationsCheck = true;
+			} else if (!derivedState.reviewId) {
 				// if we're not creating a PR from a review, then get the current
 				// repo and branch from the editor
 				const response = await HostApi.instance.send(GetReposScmRequestType, {
@@ -262,6 +282,7 @@ export const CreatePullRequestPanel = props => {
 				args.repoId = result.repoId!;
 				setBranches(result.branches!);
 				setRemoteBranches(result.remoteBranches!);
+				setCommitsBehindOrigin(+result.commitsBehindOriginHeadBranch!);
 
 				let newPrBranch = prBranch;
 				let newReviewBranch = args.headRefName || reviewBranch || result.branch || "";
@@ -303,6 +324,7 @@ export const CreatePullRequestPanel = props => {
 				) {
 					setPreconditionError({ type: "BRANCHES_MUST_NOT_MATCH", message: "", url: "", id: "" });
 					setFormState({ type: "", message: "", url: "", id: "" });
+					setCommitsBehindOrigin(+result.commitsBehindOriginHeadBranch!);
 				} else {
 					setPreconditionError({ type: "", message: "", url: "", id: "" });
 				}
@@ -332,6 +354,7 @@ export const CreatePullRequestPanel = props => {
 			setLoading(false);
 		}
 	};
+	fetchPreconditionDataRef.current = fetchPreconditionData;
 
 	useEffect(() => {
 		// prevent this from firing if we haven't mounted yet
@@ -367,7 +390,7 @@ export const CreatePullRequestPanel = props => {
 		const disposable = HostApi.instance.on(DidChangeDataNotificationType, (e: any) => {
 			if (pauseDataNotifications.current) return;
 			if (e.type === ChangeDataType.Commits) {
-				fetchPreconditionData();
+				fetchPreconditionDataRef.current(true);
 			}
 		});
 		return () => {
@@ -419,7 +442,8 @@ export const CreatePullRequestPanel = props => {
 				remoteName: prUpstreamOn && prUpstream ? prUpstream : undefined,
 				addresses: addressesStatus
 					? [{ title: userStatus.label, url: userStatus.ticketUrl }]
-					: undefined
+					: undefined,
+				ideName: derivedState.ideName
 			});
 			if (result.error) {
 				setFormState({
@@ -469,6 +493,24 @@ export const CreatePullRequestPanel = props => {
 					}
 				});
 			}, 100);
+		}
+	};
+
+	const onPullSubmit = async (event: React.SyntheticEvent) => {
+		setUnexpectedPullError(false);
+		setPullSubmitting(true);
+
+		try {
+			await HostApi.instance.send(FetchRemoteBranchRequestType, {
+				repoId: prRepoId,
+				branchName: prBranch
+			});
+		} catch (error) {
+			logError(error, {});
+			logError(`Unexpected error during branch pulling : ${error}`, {});
+			setUnexpectedPullError(true);
+		} finally {
+			setPullSubmitting(false);
 		}
 	};
 
@@ -695,6 +737,30 @@ export const CreatePullRequestPanel = props => {
 			<DropdownButton variant="secondary" items={items}>
 				<span className="subtle">compare:</span> <strong>{reviewBranch}</strong>
 			</DropdownButton>
+		);
+	};
+
+	const renderPullButton = () => {
+		return (
+			<div style={{ marginBottom: "10px" }}>
+				<Icon name="info" /> {commitsBehindOrigin} commit
+				{commitsBehindOrigin > 1 ? "s" : ""} behind base origin{" "}
+				<Button onClick={onPullSubmit} isLoading={pullSubmitting}>
+					Pull
+				</Button>
+				{unexpectedPullError && (
+					<div className="error-message form-error" style={{ marginBottom: "10px" }}>
+						<FormattedMessage
+							id="error.unexpected"
+							defaultMessage="Something went wrong! Please try again, or pull origin manually, or "
+						/>
+						<FormattedMessage id="contactSupport" defaultMessage="contact support">
+							{text => <Link href="https://help.codestream.com">{text}</Link>}
+						</FormattedMessage>
+						.
+					</div>
+				)}
+			</div>
 		);
 	};
 
@@ -1102,6 +1168,19 @@ export const CreatePullRequestPanel = props => {
 		getLatestCommit();
 	}, [selectedRepo, reviewBranch]);
 
+	useEffect(() => {
+		fetchBranchCommitsStatus();
+	}, [prBranch, reviewBranch]);
+
+	const fetchBranchCommitsStatus = async () => {
+		const commitsStatus = await HostApi.instance.send(FetchBranchCommitsStatusRequestType, {
+			repoId: prRepoId,
+			branchName: prBranch || reviewBranch
+		});
+
+		setCommitsBehindOrigin(+commitsStatus.commitsBehindOrigin);
+	};
+
 	const setTitleBasedOnBranch = () => {
 		setPrTitle(
 			reviewBranch.charAt(0).toUpperCase() +
@@ -1430,7 +1509,10 @@ export const CreatePullRequestPanel = props => {
 				</div>
 				<div style={{ height: "40px" }} />
 				{filesChanged.length > 0 && (
-					<PanelHeader className="no-padding" title="Comparing Changes"></PanelHeader>
+					<>
+						<PanelHeader className="no-padding" title="Comparing Changes"></PanelHeader>
+						{commitsBehindOrigin > 0 && renderPullButton()}
+					</>
 				)}
 				{!acrossForks && (
 					<PullRequestFilesChangedList

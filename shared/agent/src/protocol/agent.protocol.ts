@@ -272,6 +272,28 @@ export interface CodeStreamDiffUriData {
 	};
 }
 
+export interface UploadFileRequest {
+	path: string;
+	name: string;
+	mimetype: string;
+	size: number;
+	buffer?: any;
+}
+
+export interface UploadFileResponse {
+	url: string;
+	name: string;
+	mimetype: string;
+	size: number;
+}
+
+export const UploadFileRequestType = new RequestType<
+	UploadFileRequest,
+	UploadFileResponse,
+	void,
+	void
+>("codestream/upload/file");
+
 export const CodeStreamApiGetRequestType = new RequestType<any, any, void, void>(
 	"codestream/api/get"
 );

@@ -136,6 +136,8 @@ import {
 	UpdateTeamSettingsRequestType,
 	UpdateTeamTagRequestType,
 	UpdateUserRequest,
+	UploadFileRequest,
+	UploadFileRequestType,
 	VerifyConnectivityResponse
 } from "../../protocol/agent.protocol";
 import {
@@ -265,6 +267,7 @@ import {
 import { CodeStreamPreferences } from "../preferences";
 import { BroadcasterEvents } from "./events";
 import { CodeStreamUnreads } from "./unreads";
+import FormData from "form-data";
 
 @lsp
 export class CodeStreamApiProvider implements ApiProvider {
@@ -2065,6 +2068,37 @@ export class CodeStreamApiProvider implements ApiProvider {
 		});
 	}
 
+	@lspHandler(UploadFileRequestType)
+	async uploadFile(request: UploadFileRequest) {
+		const formData = new FormData();
+		if (request.buffer) {
+			const base64String = request.buffer;
+			// string off dataUri / content info from base64 string
+			var bareString = "";
+			var commaIndex = base64String.indexOf(",");
+			if (commaIndex == -1) {
+				bareString = base64String;
+			} else {
+				bareString = base64String.substring(commaIndex + 1);
+			}
+			formData.append("file", Buffer.from(bareString, "base64"), {
+				filename: request.name,
+				contentType: request.mimetype
+			});
+		} else {
+			formData.append("file", require("fs").createReadStream(request.path));
+		}
+		const url = `${this.baseUrl}/upload-file/${this.teamId}`;
+		const headers = new Headers({
+			Authorization: `Bearer ${this._token}`
+		});
+
+		// note, this bypasses the built-in fetch wrapper and calls node fetch directly,
+		// because we're not dealing with json data in the request
+		const response = await fetch(url, { method: "post", body: formData, headers });
+		return await response.json();
+	}
+
 	async delete<R extends object>(url: string, token?: string): Promise<R> {
 		if (!token && url.indexOf("/no-auth/") === -1) token = this._token;
 		let resp = undefined;
@@ -2119,7 +2153,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 		const start = process.hrtime();
 
 		const sanitizedUrl = CodeStreamApiProvider.sanitizeUrl(url);
-
 		let traceResult;
 		try {
 			if (init !== undefined || token !== undefined) {

@@ -37,6 +37,7 @@ export interface InviteUserRequest {
 		serverUrl: string;
 		disableStrictSSL: boolean;
 	};
+	inviteType?: string;
 }
 
 export interface InviteUserResponse {
@@ -61,6 +62,7 @@ export interface UpdateUserRequest {
 		image?: string;
 		image48?: string;
 	};
+	hasGitLens?: boolean;
 }
 
 export interface UpdateUserResponse {
