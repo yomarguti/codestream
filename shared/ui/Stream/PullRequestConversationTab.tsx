@@ -60,8 +60,9 @@ import copy from "copy-to-clipboard";
 import { PullRequestBottomComment } from "./PullRequestBottomComment";
 import { reduce as _reduce, groupBy as _groupBy, map as _map } from "lodash-es";
 import { api } from "../store/providerPullRequests/actions";
-import { PullRequestReviewStatus } from "./PullRequestReviewStatus";
+import { ColorDonut, PullRequestReviewStatus } from "./PullRequestReviewStatus";
 import { autoCheckedMergeabilityStatus } from "./PullRequest";
+import cx from "classnames";
 
 const Circle = styled.div`
 	width: 12px;
@@ -89,13 +90,19 @@ const StatusMetaRow = styled.div`
 		flex: 1;
 	}
 	.checkRuns {
-		padding-top: 10px;
+		margin: 10px -15px 0 -15px;
+		max-height: 0;
+		overflow-y: auto;
+		transition: max-height 0.2s;
+		&.expanded {
+			max-height: 231px;
+		}
 		.checkRun {
 			display: flex;
 			align-items: center;
 			border-top: 1px solid;
 			border-color: var(--base-border-color);
-			padding: 3px 0;
+			padding: 3px 15px;
 			${PRIconButton} {
 				margin-right: 10px;
 			}
@@ -113,6 +120,7 @@ const StatusMetaRow = styled.div`
 				height: 20px;
 				border-radius: 6px;
 				overflow: hidden;
+				background-color: #fff;
 			}
 		}
 	}
@@ -199,7 +207,7 @@ export const PullRequestConversationTab = (props: {
 		const skipGitEmailCheck = state.preferences.skipGitEmailCheck;
 		const addBlameMapEnabled = isFeatureEnabled(state, "addBlameMap");
 		const currentPullRequest = getCurrentProviderPullRequest(state);
-		const { preferences } = state;
+		const { preferences, ide } = state;
 
 		return {
 			defaultMergeMethod: preferences.lastPRMergeMethod || "SQUASH",
@@ -216,7 +224,8 @@ export const PullRequestConversationTab = (props: {
 				currentPullRequest.conversations.repository.pullRequest,
 			team,
 			skipGitEmailCheck,
-			addBlameMapEnabled
+			addBlameMapEnabled,
+			isInVscode: ide.name === "VSC"
 		};
 	});
 	const { pr } = derivedState;
@@ -325,7 +334,7 @@ export const PullRequestConversationTab = (props: {
 	// these are completed reviews
 	if (pr.reviews && pr.reviews.nodes) {
 		// group by author
-		const gb = _groupBy(pr.reviews.nodes, _ => _.author.id);
+		const gb = _groupBy(pr.reviews.nodes, _ => (_.author || GHOST).id);
 		// then convert to hash... key is the author,
 		// value is the last review
 		const map = _map(gb, (values, key) => {
@@ -870,7 +879,6 @@ export const PullRequestConversationTab = (props: {
 								<Icon name="git-merge" />
 							</PRStatusHeadshot>
 							<PRCommentCardRowsWrapper>
-								{lastCommit.statusCheckRollup && <CommitCheckSuite commit={lastCommit} />}
 								{pr.reviewDecision === "REVIEW_REQUIRED" ? (
 									<>
 										<PRCommentCardRow>
@@ -878,7 +886,7 @@ export const PullRequestConversationTab = (props: {
 												<Icon name="x" />
 											</PRIconButton>
 											<div className="middle">
-												<h1>Review Required</h1>
+												<h1 className="red-color">Review Required</h1>
 												{requiredApprovingReviewCount ? (
 													<>
 														At least {requiredApprovingReviewCount} approving review
@@ -897,12 +905,13 @@ export const PullRequestConversationTab = (props: {
 											pr={pr}
 											opinionatedReviews={Object.values(opinionatedReviewsHash)}
 										/>
+										{lastCommit.statusCheckRollup && <CommitCheckSuite commit={lastCommit} />}
 										<PRCommentCardRow>
 											<PRIconButton className="red-background">
 												<Icon name="x" />
 											</PRIconButton>
 											<div className="middle">
-												<h1>Merging is blocked</h1>
+												<h1 className="red-color">Merging is blocked</h1>
 												{requiredApprovingReviewCount && (
 													<>
 														Merging can be performed automatically with{" "}
@@ -924,12 +933,13 @@ export const PullRequestConversationTab = (props: {
 									</>
 								) : ghRepo.viewerPermission === "READ" ? (
 									<>
+										{lastCommit.statusCheckRollup && <CommitCheckSuite commit={lastCommit} />}
 										<PRCommentCardRow>
 											<PRIconButton className="red-background">
 												<Icon name="x" />
 											</PRIconButton>
 											<div className="middle">
-												<h1>Merging is blocked</h1>
+												<h1 className="red-color">Merging is blocked</h1>
 												The base branch restricts merging to authorized users.{" "}
 												<Link href="https://docs.github.com/en/github/administering-a-repository/about-protected-branches">
 													Learn more about protected branches.
@@ -938,14 +948,17 @@ export const PullRequestConversationTab = (props: {
 										</PRCommentCardRow>
 									</>
 								) : (
-									<PRCommentCardRow>
-										<PRIconButton className="red-background">
-											<Icon name="x" />
-										</PRIconButton>
-										<div className="middle">
-											<h1>Merging is blocked</h1>
-										</div>
-									</PRCommentCardRow>
+									<>
+										{lastCommit.statusCheckRollup && <CommitCheckSuite commit={lastCommit} />}
+										<PRCommentCardRow>
+											<PRIconButton className="red-background">
+												<Icon name="x" />
+											</PRIconButton>
+											<div className="middle">
+												<h1 className="red-color">Merging is blocked</h1>
+											</div>
+										</PRCommentCardRow>
+									</>
 								)}
 							</PRCommentCardRowsWrapper>
 						</PRCommentCard>
@@ -1341,31 +1354,33 @@ export const PullRequestConversationTab = (props: {
 					None yet
 				</PRSection>
 				*/}
-				<PRSection>
-					<h1>
-						{/* <Icon name="gear" className="settings clickable" onClick={() => {}} /> */}
-						Notifications
-					</h1>
-					{pr.viewerSubscription === "SUBSCRIBED" ? (
-						<>
-							<Button variant="secondary" className="no-wrap" onClick={toggleSubscription}>
-								<Icon name="mute" /> <span className="wide-text">Unsubscribe</span>
-							</Button>
-							<span className="wide-text">
-								You’re receiving notifications because you’re watching this repository.
-							</span>
-						</>
-					) : (
-						<>
-							<Button variant="secondary" onClick={toggleSubscription}>
-								<Icon name="unmute" /> <span className="wide-text">Subscribe</span>
-							</Button>
-							<span className="wide-text">
-								You’re not receiving notifications from this pull request.
-							</span>
-						</>
-					)}
-				</PRSection>
+				{!derivedState.isInVscode && (
+					<PRSection>
+						<h1>
+							{/* <Icon name="gear" className="settings clickable" onClick={() => {}} /> */}
+							Notifications
+						</h1>
+						{pr.viewerSubscription === "SUBSCRIBED" ? (
+							<>
+								<Button variant="secondary" className="no-wrap" onClick={toggleSubscription}>
+									<Icon name="mute" /> <span className="wide-text">Unsubscribe</span>
+								</Button>
+								<span className="wide-text">
+									You’re receiving notifications because you’re watching this repository.
+								</span>
+							</>
+						) : (
+							<>
+								<Button variant="secondary" onClick={toggleSubscription}>
+									<Icon name="unmute" /> <span className="wide-text">Subscribe</span>
+								</Button>
+								<span className="wide-text">
+									You’re not receiving notifications from this pull request.
+								</span>
+							</>
+						)}
+					</PRSection>
+				)}
 				<PRSection>
 					<h1>{participantsLabel}</h1>
 					<PRHeadshots>
@@ -1470,12 +1485,93 @@ const Merge = (props: {
 };
 
 const CommitCheckSuite = (props: { commit: any }) => {
-	const [isChecksOpen, toggleChecks] = useReducer((open: boolean) => !open, false);
+	const [isChecksOpen, toggleChecks] = useReducer((open: boolean) => !open, true);
 
 	const { commit } = props;
 	if (!commit.statusCheckRollup) {
 		return <></>;
 	}
+
+	const checksData = React.useMemo(() => {
+		return getChecksData(commit.statusCheckRollup.contexts.nodes);
+	}, [commit]);
+
+	const statusMeta = React.useMemo(() => {
+		let status = "";
+		const checkStatuses = {
+			success: {
+				count: 0,
+				title: "successful"
+			},
+			inProgress: {
+				count: 0,
+				title: "in progress"
+			},
+			cancel: {
+				count: 0,
+				title: "cancelled"
+			},
+			failure: {
+				count: 0,
+				title: "failing"
+			},
+			actionRequired: {
+				count: 0,
+				title: "action required"
+			},
+			error: {
+				count: 0,
+				title: "errored"
+			},
+			pending: {
+				count: 0,
+				title: "pending"
+			},
+			queued: {
+				count: 0,
+				title: "queued"
+			},
+			neutral: {
+				count: 0,
+				title: "neutral"
+			},
+			skipped: {
+				count: 0,
+				title: "skipped"
+			},
+			total: {
+				count: 0,
+				title: "total"
+			}
+		};
+
+		// if (checksData.length === 0) {
+		// 	return {label: "", data: checkStatuses};
+		// }
+
+		checksData.map(checkData => {
+			if (checkStatuses[checkData.state]) {
+				checkStatuses[checkData.state].count++;
+				if (checkData.state !== "skipped") checkStatuses.total.count++;
+			}
+		});
+
+		const statuses = Object.entries(checkStatuses)
+			.filter(([, statusType]) => statusType.count > 0 && statusType.title !== "total")
+			.map(([, statusType]) => `${statusType.count} ${statusType.title}`);
+
+		const statusLabel = checkStatuses.total.count > 1 ? "checks" : "check";
+		if (statuses.length === 1) {
+			status = `${statuses[0]} ${statusLabel}`;
+		} else if (statuses.length === 2) {
+			status = `${statuses.join(" and ")} ${statusLabel}`;
+		} else {
+			statuses[statuses.length - 1] = `and ${statuses[statuses.length - 1]}`;
+			status = `${statuses.join(", ")} ${statusLabel}`;
+		}
+
+		return { label: status, data: checkStatuses };
+	}, [commit]);
 
 	const statusTitle = React.useMemo(() => {
 		switch (commit.statusCheckRollup.state) {
@@ -1483,10 +1579,31 @@ const CommitCheckSuite = (props: { commit: any }) => {
 				return "All checks have passed";
 			case "ERROR":
 			case "FAILURE":
-				return "Some checks were not successful";
+				const failureChecks =
+					statusMeta.data.failure.count +
+					statusMeta.data.error.count +
+					statusMeta.data.actionRequired.count;
+				const totalChecks = statusMeta.data.total.count;
+				return failureChecks === totalChecks
+					? "All checks have failed"
+					: "Some checks were not successful";
 			case "EXPECTED":
 			case "PENDING":
 				return "Some checks haven’t completed yet";
+		}
+		return "";
+	}, [commit]);
+
+	const statusTitleColor = React.useMemo(() => {
+		switch (commit.statusCheckRollup.state) {
+			case "SUCCESS":
+				return "";
+			case "ERROR":
+			case "FAILURE":
+				return "red";
+			case "EXPECTED":
+			case "PENDING":
+				return "gray";
 		}
 		return "";
 	}, [commit]);
@@ -1501,6 +1618,22 @@ const CommitCheckSuite = (props: { commit: any }) => {
 				);
 			case "ERROR":
 			case "FAILURE":
+				const totalChecks = statusMeta.data.total.count;
+				const successChecks = statusMeta.data.success.count;
+				const failureChecks =
+					statusMeta.data.failure.count +
+					statusMeta.data.error.count +
+					statusMeta.data.actionRequired.count;
+				const pendingChecks = statusMeta.data.pending.count;
+				const neutralChecks = statusMeta.data.neutral.count;
+				const totalDonutChecks = successChecks + failureChecks + pendingChecks + neutralChecks;
+				if (totalChecks > failureChecks && totalDonutChecks > 0) {
+					const green = (360 * successChecks) / totalDonutChecks;
+					const red = (360 * failureChecks) / totalDonutChecks;
+					const yellow = (360 * pendingChecks) / totalDonutChecks;
+					const gray = (360 * neutralChecks) / totalDonutChecks;
+					return <ColorDonut green={green} red={red} yellow={yellow} gray={gray} />;
+				}
 				return (
 					<PRIconButton className="red-background">
 						<Icon name="x" />
@@ -1518,59 +1651,6 @@ const CommitCheckSuite = (props: { commit: any }) => {
 		}
 	};
 
-	const checksData = React.useMemo(() => {
-		return getChecksData(commit.statusCheckRollup.contexts.nodes);
-	}, [commit]);
-
-	const statusMeta = React.useMemo(() => {
-		if (checksData.length === 0) {
-			return "";
-		}
-		let status = "";
-		const checkStatuses = {
-			success: {
-				count: 0,
-				title: "successful"
-			},
-			inProgress: {
-				count: 0,
-				title: "in progress"
-			},
-			failure: {
-				count: 0,
-				title: "failing"
-			},
-			pending: {
-				count: 0,
-				title: "pending"
-			},
-			queued: {
-				count: 0,
-				title: "queued"
-			}
-		};
-		checksData.map(checkData => {
-			if (checkStatuses[checkData.state]) {
-				checkStatuses[checkData.state].count++;
-			}
-		});
-
-		const statuses = Object.entries(checkStatuses)
-			.filter(([, statusType]) => statusType.count > 0)
-			.map(([, statusType]) => `${statusType.count} ${statusType.title}`);
-
-		if (statuses.length === 1) {
-			status = `${statuses[0]} checks`;
-		} else if (statuses.length === 2) {
-			status = `${statuses.join(" and ")} checks`;
-		} else {
-			statuses[statuses.length - 1] = `and ${statuses[statuses.length - 1]}`;
-			status = `${statuses.join(", ")} checks`;
-		}
-
-		return status;
-	}, [commit]);
-
 	return (
 		<PRCommentCardRow>
 			<StatusMetaRow>
@@ -1580,12 +1660,12 @@ const CommitCheckSuite = (props: { commit: any }) => {
 						<div style={{ float: "right" }}>
 							<Link onClick={toggleChecks}>{isChecksOpen ? "Hide" : "Show"} all checks</Link>
 						</div>
-						<h1>{statusTitle}</h1>
-						{statusMeta}
+						<h1 className={`${statusTitleColor}-color`}>{statusTitle}</h1>
+						{statusMeta.label}
 					</div>
 				</div>
 				{isChecksOpen && (
-					<div className="checkRuns">
+					<div className={cx("checkRuns", { expanded: isChecksOpen })}>
 						{checksData.map(checkData => (
 							<CommitCheckRun checkData={checkData} />
 						))}
@@ -1606,8 +1686,16 @@ const CommitCheckRun = (props: { checkData: CheckData }) => {
 					<Icon name={checkData.statusIcon.name} className={checkData.statusIcon.className} />
 				)}
 			</PRIconButton>
-			{checkData.appIcon && (
-				<Icon src={checkData.appIcon.src} title={checkData.appIcon.title} className="appIcon" />
+			{checkData.appIcon && checkData.appIcon.src && (
+				<Icon
+					src={
+						checkData.appIcon.src.match(/^http/)
+							? checkData.appIcon.src
+							: `https://github.com${checkData.appIcon.src}`
+					}
+					title={checkData.appIcon.title}
+					className="appIcon"
+				/>
 			)}
 			{checkData.Description && <>{checkData.Description}</>}
 			<Link href={checkData.detailsLink} className="details">
@@ -1671,7 +1759,19 @@ const getChecksData = (statusChecks: (CheckRun | StatusContext)[]) => {
 							);
 							break;
 						case "CANCELLED":
-							checkData.state = "failure";
+							description = (
+								<span>{formattedDuration > "" ? `Cancelled after ${formattedDuration}` : ""}</span>
+							);
+							checkData.state = "cancel";
+							break;
+						case "NEUTRAL":
+							checkData.state = "neutral";
+							break;
+						case "SKIPPED":
+							checkData.state = "skipped";
+							break;
+						case "ACTION_REQUIRED":
+							checkData.state = "actionRequired";
 							break;
 						default:
 							checkData.state = "undefined";
@@ -1683,16 +1783,21 @@ const getChecksData = (statusChecks: (CheckRun | StatusContext)[]) => {
 					break;
 			}
 
-			checkData.appIcon = {
-				src: check.checkSuite.app.logoUrl,
-				title: `@${check.checkSuite.app.slug} generated this status`
-			};
+			if (check.checkSuite.app) {
+				checkData.appIcon = {
+					src: check.checkSuite.app.logoUrl,
+					title: `@${check.checkSuite.app.slug} generated this status`
+				};
+			} else {
+				checkData.appIcon = { src: "", title: "" };
+			}
 			checkData.Description = (
 				<div className="description">
 					<strong style={{ marginRight: "8px" }}>{check.name}</strong> {description}{" "}
 					{check.title && <> — {check.title}</>}
 				</div>
 			);
+			checkData.sortBy = check.name;
 			checkData.detailsLink = check.detailsUrl;
 		}
 
@@ -1703,7 +1808,7 @@ const getChecksData = (statusChecks: (CheckRun | StatusContext)[]) => {
 					checkData.state = "expected";
 					break;
 				case "ERROR":
-					checkData.state = "failure";
+					checkData.state = "error";
 					break;
 				case "FAILURE":
 					checkData.state = "failure";
@@ -1730,9 +1835,12 @@ const getChecksData = (statusChecks: (CheckRun | StatusContext)[]) => {
 				</div>
 			);
 			checkData.detailsLink = check.targetUrl;
+			checkData.sortBy = check.context;
 		}
 
 		switch (checkData.state) {
+			case "actionRequired":
+			case "error":
 			case "failure":
 				checkData.statusIcon = {
 					name: "x",
@@ -1769,6 +1877,18 @@ const getChecksData = (statusChecks: (CheckRun | StatusContext)[]) => {
 					className: "yellow-color"
 				};
 				break;
+			case "neutral":
+				checkData.statusIcon = {
+					name: "dot-fill",
+					className: "gray-color"
+				};
+				break;
+			case "cancel":
+				checkData.statusIcon = {
+					name: "stop",
+					className: "gray-color"
+				};
+				break;
 			case "undefined":
 			default:
 				checkData.statusIcon = {
@@ -1780,6 +1900,10 @@ const getChecksData = (statusChecks: (CheckRun | StatusContext)[]) => {
 
 		checksData.push(checkData);
 	});
+
+	// github sorts by status by section.... i think. commenting out because this clearly isn't correct
+	// checksData.sort((a, b) => (a.sortBy || "").localeCompare(b.sortBy || ""));
+
 	return checksData;
 };
 
@@ -1794,7 +1918,19 @@ const getCheckDuration = (startedAt, completedAt): string => {
 };
 
 interface CheckData {
-	state: "queued" | "inProgress" | "failure" | "success" | "pending" | "expected" | "undefined";
+	state:
+		| "queued"
+		| "inProgress"
+		| "failure"
+		| "error"
+		| "cancel"
+		| "success"
+		| "pending"
+		| "expected"
+		| "neutral"
+		| "skipped"
+		| "actionRequired"
+		| "undefined";
 	statusIcon: {
 		name: string;
 		className: string;
@@ -1803,6 +1939,7 @@ interface CheckData {
 		src: string;
 		title: string;
 	};
+	sortBy: string;
 	Description: JSX.Element;
 	detailsLink: string;
 }

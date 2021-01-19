@@ -23,7 +23,8 @@ import {
 	CSStream,
 	CSUser,
 	StreamType,
-	CSMe
+	CSMe,
+	Attachment
 } from "@codestream/protocols/api";
 import cx from "classnames";
 import * as paths from "path-browserify";
@@ -105,11 +106,7 @@ export const CrossPostIssueContext = React.createContext<ICrossPostIssueContext>
 	setValues: () => {}
 });
 
-export interface AttachedFile {
-	name: string;
-	mimetype: string;
-	size: number;
-	url?: string;
+export interface AttachmentField extends Attachment {
 	status?: "uploading" | "error" | "uploaded";
 	error?: string;
 }
@@ -214,7 +211,7 @@ interface State {
 		[index: number]: boolean;
 	};
 	relatedCodemarkIds?: any;
-	attachments: AttachedFile[];
+	attachments: AttachmentField[];
 	addingLocation?: boolean;
 	editingLocation: number;
 	liveLocation: number;
@@ -839,14 +836,14 @@ class CodemarkForm extends React.Component<Props, State> {
 				parentPostId,
 				isChangeRequest: this.state.isChangeRequest,
 				addedUsers: keyFilter(this.state.emailAuthors),
-				isProviderReview: this.state.isProviderReview,
-				attachments
+				isProviderReview: this.state.isProviderReview
 			};
 			if (this.props.teamProvider === "codestream") {
 				const retVal = await this.props.onSubmit({
 					...baseAttributes,
 					sharingAttributes: this.props.shouldShare ? this._sharingAttributes : undefined,
-					accessMemberIds: this.state.privacyMembers.map(m => m.value)
+					accessMemberIds: this.state.privacyMembers.map(m => m.value),
+					files: attachments
 				});
 				// if you're making a markerless codemark it won't appear on spatial view, the form
 				// will just kind of disappear.  similarly, if you prior panel was *not* spatial view
@@ -1126,7 +1123,8 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 
 	pinImage = (filename: string, url: string, event?: React.SyntheticEvent) => {
-		this.insertTextAtCursor && this.insertTextAtCursor(`![${filename}](${url})`);
+		this.insertTextAtCursor &&
+			this.insertTextAtCursor(`![${filename}](${url.replace(/ /g, "%20")})`);
 	};
 
 	selectLocation = (action: "add" | "edit" | "delete") => {
@@ -1322,7 +1320,7 @@ class CodemarkForm extends React.Component<Props, State> {
 						) : file.status === "error" ? (
 							<Icon name="alert" className="spinnable" />
 						) : (
-							<Icon name="file" className="spinnable" />
+							<Icon name="paperclip" className="spinnable" />
 						);
 					const isImage = (file.mimetype || "").startsWith("image");
 					const imageInjected =
@@ -1426,8 +1424,6 @@ class CodemarkForm extends React.Component<Props, State> {
 		const { attachments } = this.state;
 		let index = attachments.length;
 
-		HostApi.instance.track("File Attached", {});
-
 		[...files].forEach(file => {
 			file.status = "uploading";
 		});
@@ -1460,6 +1456,10 @@ class CodemarkForm extends React.Component<Props, State> {
 					file.status = "error";
 					this.replaceAttachment(file, index);
 				}
+				HostApi.instance.track("File Attached", {
+					"File Type": file.type,
+					Parent: "codemark"
+				});
 			} catch (e) {
 				console.warn("Error uploading file: ", e);
 				file.status = "error";

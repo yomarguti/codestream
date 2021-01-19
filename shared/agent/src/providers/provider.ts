@@ -5,7 +5,7 @@ import { URI } from "vscode-uri";
 import { InternalError, ReportSuppressedMessages } from "../agentError";
 import { MessageType } from "../api/apiProvider";
 import { MarkerLocation, User } from "../api/extensions";
-import { SessionContainer } from "../container";
+import { Container, SessionContainer } from "../container";
 import { GitRemote, GitRemoteLike, GitRepository } from "../git/gitService";
 import { Logger } from "../logger";
 import { Markerish, MarkerLocationManager } from "../managers/markerLocationManager";
@@ -21,6 +21,7 @@ import {
 	DocumentMarkerExternalContent,
 	FetchAssignableUsersRequest,
 	FetchAssignableUsersResponse,
+	FetchDocumentMarkersResponse,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
 	FetchThirdPartyCardsRequest,
@@ -607,6 +608,15 @@ export abstract class ThirdPartyProviderBase<
 export abstract class ThirdPartyIssueProviderBase<
 	TProviderInfo extends CSProviderInfos = CSProviderInfos
 > extends ThirdPartyProviderBase<TProviderInfo> implements ThirdPartyIssueProvider {
+	private _pullRequestDocumentMarkersCache = new Map<
+		string,
+		{ documentVersion: number; promise: Promise<DocumentMarker[]> }
+	>();
+
+	protected invalidatePullRequestDocumentMarkersCache() {
+		this._pullRequestDocumentMarkersCache.clear();
+	}
+
 	supportsIssues(): this is ThirdPartyIssueProvider & ThirdPartyProviderSupportsIssues {
 		return ThirdPartyIssueProvider.supportsIssues(this);
 	}
@@ -645,6 +655,28 @@ export abstract class ThirdPartyIssueProviderBase<
 			});
 			if (foundOneWithUrl) request.description += addressesText;
 		}
+		const codeStreamLink =
+			"https://codestream.com/?utm_source=cs&utm_medium=pr&utm_campaign=github";
+		let createdFrom = "";
+		switch (request.ideName) {
+			case "VSC":
+				createdFrom = "from VS Code";
+				break;
+			case "JETBRAINS":
+				createdFrom = "from JetBrains";
+				break;
+			case "VS":
+				createdFrom = "from Visual Studio";
+				break;
+			case "ATOM":
+				createdFrom = "from Atom";
+				break;
+		}
+		let codeStreamAttribution = `Created ${createdFrom} using [CodeStream](${codeStreamLink})`;
+		if (["github*com", "github/enterprise"].includes(request.providerId)) {
+			codeStreamAttribution = `<sup> ${codeStreamAttribution}</sup>`;
+		}
+		request.description += `\n\n${codeStreamAttribution}`;
 		return request.description;
 	}
 
@@ -665,7 +697,37 @@ export abstract class ThirdPartyIssueProviderBase<
 		return undefined;
 	}
 
-	protected async getPullRequestDocumentMarkersCore({
+	protected getPullRequestDocumentMarkersCore(params: {
+		uri: URI;
+		repoId: string | undefined;
+		streamId: string;
+	}): Promise<DocumentMarker[]> {
+		const { documents } = Container.instance();
+		const uriAsString = params.uri.toString(true);
+		const doc = documents.get(uriAsString);
+		const cached = this._pullRequestDocumentMarkersCache.get(uriAsString);
+
+		if (cached && doc && cached.documentVersion === doc.version) {
+			Logger.log(
+				`${this.displayName}.getPullRequestDocumentMarkers: returning cached document markers for ${uriAsString} v${doc.version}`
+			);
+			return cached.promise;
+		}
+
+		Logger.log(
+			`${this.displayName}.getPullRequestDocumentMarkers: calculating document markers for ${uriAsString} v${doc?.version}`
+		);
+		const promise = this._getPullRequestDocumentMarkersCore(params);
+		if (doc?.version !== undefined) {
+			this._pullRequestDocumentMarkersCache.set(uriAsString, {
+				documentVersion: doc.version,
+				promise
+			});
+		}
+		return promise;
+	}
+
+	protected async _getPullRequestDocumentMarkersCore({
 		uri,
 		repoId,
 		streamId
@@ -966,6 +1028,7 @@ export interface ProviderCreatePullRequestRequest {
 		approvedAt?: number;
 		addresses?: { title: string; url: string }[];
 	};
+	ideName?: string;
 }
 
 export interface ProviderCreatePullRequestResponse {
