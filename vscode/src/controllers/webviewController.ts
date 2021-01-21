@@ -17,7 +17,6 @@ import {
 	DidChangeVersionCompatibilityNotificationType,
 	DidEncounterMaintenanceModeNotificationType,
 	ReportingMessageType,
-	UserDidCommitNotification,
 	VersionCompatibility
 } from "@codestream/protocols/agent";
 import { CodemarkType, CSApiCapabilities } from "@codestream/protocols/api";
@@ -81,7 +80,8 @@ import {
 	ShowPullRequestNotificationType,
 	WebviewPanels,
 	SidebarLocation,
-	HostDidChangeLayoutNotificationType
+	HostDidChangeLayoutNotificationType,
+	NewPullRequestBranch
 } from "@codestream/protocols/webview";
 import { gate } from "system/decorators/gate";
 import {
@@ -356,7 +356,8 @@ export class WebviewController implements Disposable {
 	@log()
 	async newPullRequestRequest(
 		editor: TextEditor | undefined = this._lastEditor,
-		source: string
+		source: string,
+		branch?: NewPullRequestBranch
 	): Promise<void> {
 		if (this.visible) {
 			await this._webview!.show();
@@ -373,7 +374,8 @@ export class WebviewController implements Disposable {
 		this._webview!.notify(NewPullRequestNotificationType, {
 			uri: editor ? editor.document.uri.toString() : undefined,
 			range: editor ? Editor.toSerializableRange(editor.selection) : undefined,
-			source: source
+			source: source,
+			branch: branch
 		});
 	}
 
@@ -536,7 +538,6 @@ export class WebviewController implements Disposable {
 				(...args) => this.onDocumentMarkersChanged(webview, ...args),
 				this
 			),
-			Container.agent.onUserDidCommit((...args) => this.onUserDidCommit(...args), this),
 			window.onDidChangeTextEditorSelection(
 				Functions.debounce<(e: TextEditorSelectionChangeEvent) => any>(
 					(...args) => this.onEditorSelectionChanged(webview, ...args),
@@ -670,13 +671,6 @@ export class WebviewController implements Disposable {
 		webview.notify(DidChangeDocumentMarkersNotificationType, e);
 	}
 
-	private onUserDidCommit(e: UserDidCommitNotification) {
-		if (Container.config.requestFeedbackOnCommit) {
-			Logger.log(`User committed ${e.sha} - opening feedback request form`);
-			this.newReviewRequest(undefined, "VSC Commit Detected", true);
-		}
-	}
-
 	private async onEditorSelectionChanged(webview: WebviewLike, e: TextEditorSelectionChangeEvent) {
 		if (e.textEditor !== this._lastEditor || !this.isSupportedEditor(e.textEditor)) return;
 
@@ -710,8 +704,9 @@ export class WebviewController implements Disposable {
 		if (
 			csRangeDiffInfo &&
 			(csRangeDiffInfo.reviewId === "local" || csRangeDiffInfo.version !== "right")
-		)
+		) {
 			return false;
+		}
 
 		return true;
 	}
