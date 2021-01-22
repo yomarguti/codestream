@@ -118,6 +118,7 @@ export interface WebviewContext {
 	currentReviewId?: string;
 	currentReviewOptions?: {
 		includeLatestCommit?: boolean;
+		showAutoReviewToggle?: boolean;
 	};
 	createPullRequestReviewId?: string;
 	createPullRequestOptions?: NewPullRequestBranch;
@@ -176,6 +177,7 @@ export interface WebviewConfigs {
 	email?: string;
 	serverUrl: string;
 	team?: string;
+	requestFeedbackOnCommit: boolean;
 }
 
 export interface IpcHost {
