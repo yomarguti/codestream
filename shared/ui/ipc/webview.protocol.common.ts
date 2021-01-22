@@ -118,7 +118,6 @@ export interface WebviewContext {
 	currentReviewId?: string;
 	currentReviewOptions?: {
 		includeLatestCommit?: boolean;
-		showAutoReviewToggle?: boolean;
 	};
 	createPullRequestReviewId?: string;
 	createPullRequestOptions?: NewPullRequestBranch;
