@@ -156,8 +156,10 @@ export class SimpleStream extends PureComponent {
 		this.props.setCurrentReview("");
 		this.props.setCurrentPullRequest("");
 		this.props.setNewPullRequestOptions(undefined);
-		if (e && e.includeLatestCommit) {
-			this.props.setCurrentReviewOptions({ includeLatestCommit: e.includeLatestCommit });
+		if (e) {
+			this.props.setCurrentReviewOptions({
+				includeLatestCommit: e.includeLatestCommit
+			});
 		}
 		this.props.openPanel(WebviewPanels.NewReview);
 	}

@@ -81,6 +81,7 @@ import { PullRequestPatch } from "./PullRequestPatch";
 import MarkerActions from "./MarkerActions";
 import { MarkdownText } from "./MarkdownText";
 import { AddReactionIcon, Reactions } from "./Reactions";
+import { Attachments } from "./Attachments";
 
 interface State {
 	hover: boolean;
@@ -590,7 +591,8 @@ export class Codemark extends React.Component<Props, State> {
 			if (
 				target.tagName === "A" ||
 				target.closest(".post.reply") ||
-				target.closest(".external-provider")
+				target.closest(".external-provider") ||
+				target.closest(".icon-wrapper")
 			)
 				return false;
 		}
@@ -961,59 +963,6 @@ export class Codemark extends React.Component<Props, State> {
 
 		return null;
 	}
-
-	renderAttachments = post => {
-		if (!post) return null;
-		if (post.files && post.files.length > 0) {
-			return (
-				<div className="related">
-					<div className="related-label">Attachments</div>
-
-					{post.files.map((file, index) => {
-						// console.log(file);
-						//<img src={preview.url} width={preview.width} height={preview.height} />
-						const { mimetype = "", url, name } = file;
-						const isImage = mimetype.startsWith("image");
-						return (
-							<div
-								key={index}
-								className="attachment clickable"
-								onClick={e => {
-									e.preventDefault();
-									HostApi.instance.send(OpenUrlRequestType, { url });
-								}}
-							>
-								<span>
-									<Icon name="paperclip" />
-								</span>
-								<span>{name}</span>
-								<span>
-									<Icon name="download" className="clickable" />
-								</span>
-							</div>
-						);
-
-						// if (mimetype.startsWith("image")) {
-						// 	return (
-						// 		<div className="thumbnail">
-						// 			<Link href={url}>
-						// 				<img src={url} />
-						// 			</Link>
-						// 		</div>
-						// 	);
-						// } else {
-						// 	return (
-						// 		<div className="attachment">
-						// 			<Link href={url}>{name}</Link>
-						// 		</div>
-						// 	);
-						// }
-					})}
-				</div>
-			);
-		}
-		return null;
-	};
 
 	renderReplyCount = post => {
 		let message = "";
@@ -1608,7 +1557,7 @@ export class Codemark extends React.Component<Props, State> {
 									</div>
 								)}
 								{this.renderTagsAndAssigneesSelected(codemark)}
-								{this.renderAttachments(this.props.post)}
+								{this.props.post && <Attachments post={this.props.post} />}
 								{description && (
 									<div className="related">
 										<div className="related-label">Description</div>

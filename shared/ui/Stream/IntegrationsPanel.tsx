@@ -97,15 +97,18 @@ export const IntegrationsPanel = () => {
 				].includes(providers[id].name)
 			)
 			.filter(id => !connectedProviders.includes(id))
-			.filter(id => !teamSettings.limitCodeHost || teamCodeHostProviders[id]);
+			.filter(id => !teamSettings.limitCodeHost || teamCodeHostProviders[id])
+			.sort((a, b) => providers[a].name.localeCompare(providers[b].name));
 		const issueProviders = Object.keys(providers)
 			.filter(id => providers[id].hasIssues)
 			.filter(id => !codeHostProviders.includes(id))
 			.filter(id => !connectedProviders.includes(id))
-			.filter(id => !teamSettings.limitIssues || teamIssuesProviders[id]);
+			.filter(id => !teamSettings.limitIssues || teamIssuesProviders[id])
+			.sort((a, b) => providers[a].name.localeCompare(providers[b].name));
 		const messagingProviders = Object.keys(providers)
 			.filter(id => providers[id].hasSharing)
-			.filter(id => !teamSettings.limitMessaging || teamMessagingProviders[id]);
+			.filter(id => !teamSettings.limitMessaging || teamMessagingProviders[id])
+			.sort((a, b) => providers[a].name.localeCompare(providers[b].name));
 		const sharingTargets = getConnectedSharingTargets(state);
 
 		return {

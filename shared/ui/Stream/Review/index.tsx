@@ -59,7 +59,7 @@ import {
 } from "@codestream/webview/store/context/actions";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import { getReview } from "@codestream/webview/store/reviews/reducer";
-import MessageInput from "../MessageInput";
+import MessageInput, { AttachmentField } from "../MessageInput";
 import styled from "styled-components";
 import Button from "../Button";
 import {
@@ -99,6 +99,7 @@ import { PROVIDER_MAPPINGS } from "../CrossPostIssueControls/types";
 import { isFeatureEnabled } from "@codestream/webview/store/apiVersioning/reducer";
 import { getPost } from "../../store/posts/reducer";
 import { AddReactionIcon, Reactions } from "../Reactions";
+import { Attachments } from "../Attachments";
 
 interface RepoMetadata {
 	repoName: string;
@@ -781,6 +782,7 @@ const BaseReview = (props: BaseReviewProps) => {
 							<Reactions className="reactions no-pad-left" post={props.post} />
 						</div>
 					)}
+					{!props.collapsed && props.post && <Attachments post={props.post as CSPost} />}
 					{!props.collapsed && (hasTags || hasReviewers) && (
 						<MetaRow>
 							{hasTags && (
@@ -976,6 +978,13 @@ const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 						/>
 					</span>
 				)}
+				{props.post && props.post.files && props.post.files.length > 0 && (
+					<Tooltip title="Show attachments" placement="bottom">
+						<span className="detail-icon">
+							<Icon name="paperclip" /> {props.post.files.length}
+						</span>
+					</Tooltip>
+				)}
 				{props.review.numReplies > 0 && (
 					<Tooltip title="Show replies" placement="bottom">
 						<span className="detail-icon">
@@ -1022,6 +1031,7 @@ const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: string }) => {
 	const dispatch = useDispatch<Dispatch>();
 	const [text, setText] = React.useState("");
+	const [attachments, setAttachments] = React.useState<AttachmentField[]>([]);
 	const [isChangeRequest, setIsChangeRequest] = React.useState(false);
 	const [isLoading, setIsLoading] = React.useState(false);
 	const teamMates = useSelector((state: CodeStreamState) => getTeamMates(state));
@@ -1043,7 +1053,8 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 					accessMemberIds: [],
 					isChangeRequest: true,
 					tags: [],
-					isPseudoCodemark: true
+					isPseudoCodemark: true,
+					files: attachments
 				})
 			);
 		} else {
@@ -1055,7 +1066,8 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 					null,
 					findMentionedUserIds(teamMates, text),
 					{
-						entryPoint: "Review"
+						entryPoint: "Review",
+						files: attachments
 					}
 				)
 			);
@@ -1063,6 +1075,7 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 		}
 		setIsLoading(false);
 		setText("");
+		setAttachments([]);
 	};
 
 	return (
@@ -1073,6 +1086,9 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 				placeholder="Add Comment..."
 				onChange={setText}
 				onSubmit={submit}
+				attachments={attachments}
+				attachmentContainerType="reply"
+				setAttachments={setAttachments}
 			/>
 			<div style={{ display: "flex", flexWrap: "wrap" }}>
 				<div style={{ opacity: 0.7, paddingTop: "10px" }}>
