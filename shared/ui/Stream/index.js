@@ -75,6 +75,7 @@ import {
 	setCurrentReview,
 	setCurrentReviewOptions,
 	setCurrentPullRequest,
+	setNewPullRequestOptions,
 	setCurrentCodemark
 } from "../store/context/actions";
 import { last as _last, findLastIndex } from "lodash-es";
@@ -154,8 +155,11 @@ export class SimpleStream extends PureComponent {
 		}
 		this.props.setCurrentReview("");
 		this.props.setCurrentPullRequest("");
-		if (e && e.includeLatestCommit) {
-			this.props.setCurrentReviewOptions({ includeLatestCommit: e.includeLatestCommit });
+		this.props.setNewPullRequestOptions(undefined);
+		if (e) {
+			this.props.setCurrentReviewOptions({
+				includeLatestCommit: e.includeLatestCommit
+			});
 		}
 		this.props.openPanel(WebviewPanels.NewReview);
 	}
@@ -167,6 +171,7 @@ export class SimpleStream extends PureComponent {
 		}
 		this.props.setCurrentReview("");
 		this.props.setCurrentPullRequest("");
+		this.props.setNewPullRequestOptions({ branch: e.branch });
 		this.props.openPanel(WebviewPanels.NewPullRequest);
 	}
 
@@ -444,6 +449,7 @@ export class SimpleStream extends PureComponent {
 		this.setActivePanel(WebviewPanels.Sidebar);
 		this.setActiveModal();
 		this.setCurrentPullRequest();
+		this.props.setNewPullRequestOptions(undefined);
 		this.setCurrentReview();
 	};
 
@@ -689,6 +695,7 @@ export default connect(mapStateToProps, {
 	setCurrentReview,
 	setCurrentReviewOptions,
 	setCurrentPullRequest,
+	setNewPullRequestOptions,
 	setCurrentStream,
 	setCurrentCodemark,
 	editCodemark,

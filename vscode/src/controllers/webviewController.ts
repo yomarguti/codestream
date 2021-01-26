@@ -80,7 +80,8 @@ import {
 	ShowPullRequestNotificationType,
 	WebviewPanels,
 	SidebarLocation,
-	HostDidChangeLayoutNotificationType
+	HostDidChangeLayoutNotificationType,
+	NewPullRequestBranch
 } from "@codestream/protocols/webview";
 import { gate } from "system/decorators/gate";
 import {
@@ -355,7 +356,8 @@ export class WebviewController implements Disposable {
 	@log()
 	async newPullRequestRequest(
 		editor: TextEditor | undefined = this._lastEditor,
-		source: string
+		source: string,
+		branch?: NewPullRequestBranch
 	): Promise<void> {
 		if (this.visible) {
 			await this._webview!.show();
@@ -372,7 +374,8 @@ export class WebviewController implements Disposable {
 		this._webview!.notify(NewPullRequestNotificationType, {
 			uri: editor ? editor.document.uri.toString() : undefined,
 			range: editor ? Editor.toSerializableRange(editor.selection) : undefined,
-			source: source
+			source: source,
+			branch: branch
 		});
 	}
 
@@ -651,11 +654,13 @@ export class WebviewController implements Disposable {
 	private onConfigurationChanged(webview: WebviewLike, e: ConfigurationChangeEvent) {
 		if (
 			configuration.changed(e, configuration.name("traceLevel").value) ||
-			configuration.changed(e, configuration.name("showAvatars").value)
+			configuration.changed(e, configuration.name("showAvatars").value) ||
+			configuration.changed(e, configuration.name("requestFeedbackOnCommit").value)
 		) {
 			webview.notify(HostDidChangeConfigNotificationType, {
 				debug: Logger.isDebugging,
-				showHeadshots: Container.config.showAvatars
+				showHeadshots: Container.config.showAvatars,
+				requestFeedbackOnCommit: Container.config.requestFeedbackOnCommit
 			});
 		}
 	}
@@ -698,7 +703,12 @@ export class WebviewController implements Disposable {
 		if (uri.scheme !== "file" && uri.scheme !== "codestream-diff") return false;
 
 		const csRangeDiffInfo = Strings.parseCSReviewDiffUrl(uri.toString());
-		if (csRangeDiffInfo && (csRangeDiffInfo.reviewId === "local" || csRangeDiffInfo.version !== "right")) return false;
+		if (
+			csRangeDiffInfo &&
+			(csRangeDiffInfo.reviewId === "local" || csRangeDiffInfo.version !== "right")
+		) {
+			return false;
+		}
 
 		return true;
 	}
@@ -1129,7 +1139,8 @@ export class WebviewController implements Disposable {
 		const currentTeamId = this.session.signedIn ? this.session.team.id : undefined;
 		return {
 			session: {
-				userId: userId
+				userId: userId,
+				machineId: env.machineId
 			},
 			capabilities: this.session.capabilities,
 			configs: {
@@ -1137,6 +1148,7 @@ export class WebviewController implements Disposable {
 				email: Container.config.email,
 				serverUrl: this.session.serverUrl,
 				showHeadshots: Container.config.showAvatars,
+				requestFeedbackOnCommit: Container.config.requestFeedbackOnCommit,
 				team: Container.config.team
 			},
 			env: this.session.environment,

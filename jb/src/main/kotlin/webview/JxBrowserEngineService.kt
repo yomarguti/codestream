@@ -57,7 +57,11 @@ class JxBrowserEngineService : Disposable {
                 LoadResourceCallback.Response.load()
             } else {
                 if (it.resourceType() == ResourceType.MAIN_FRAME) {
-                    BrowserUtil.browse(it.url())
+                    try {
+                        BrowserUtil.browse(it.url())
+                    } catch (e: Exception) {
+                        logger.warn(e)
+                    }
                 }
                 LoadResourceCallback.Response.cancel()
             }

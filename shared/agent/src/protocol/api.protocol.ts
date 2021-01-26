@@ -105,6 +105,7 @@ export interface CSRegisterRequest {
 	companyName?: string;
 	wantLink?: boolean;
 	inviteCode?: string;
+	machineId?: string;
 }
 
 export interface CSRegisterResponse {
@@ -553,6 +554,7 @@ export interface CSCreateReviewRequest {
 	externalProviderUrl?: string;
 	externalProviderHost?: string;
 	remoteCodeUrl?: { name: string; url: string };
+	files?: Attachment[];
 	// threadUrl?: string;
 }
 

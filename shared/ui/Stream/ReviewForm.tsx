@@ -9,7 +9,6 @@ import {
 	ReposScm,
 	DidChangeDataNotificationType,
 	ChangeDataType,
-	GetUserInfoRequestType,
 	UpdateReviewResponse,
 	CodemarkPlus,
 	TelemetryRequestType,
@@ -26,6 +25,7 @@ import {
 	CodemarkStatus,
 	FileStatus
 } from "@codestream/protocols/api";
+import { LabeledSwitch } from "@codestream/webview/src/components/controls/LabeledSwitch";
 import { debounce as _debounce } from "lodash-es";
 import React, { ReactElement } from "react";
 import { connect } from "react-redux";
@@ -51,7 +51,7 @@ import { Headshot } from "@codestream/webview/src/components/Headshot";
 import HeadshotMenu from "@codestream/webview/src/components/HeadshotMenu";
 import { SelectPeople } from "@codestream/webview/src/components/SelectPeople";
 import { getTeamMembers, getTeamTagsArray, getTeamMates } from "../store/users/reducer";
-import MessageInput from "./MessageInput";
+import MessageInput, { AttachmentField } from "./MessageInput";
 import {
 	openPanel,
 	openModal,
@@ -81,7 +81,7 @@ import Timestamp from "./Timestamp";
 import {
 	ReviewShowLocalDiffRequestType,
 	WebviewPanels,
-	WebviewModals
+	UpdateConfigurationRequestType
 } from "@codestream/protocols/webview";
 import { Checkbox } from "../src/components/Checkbox";
 import { getAllByCommit, teamReviewCount } from "../store/reviews/reducer";
@@ -163,6 +163,9 @@ interface ConnectedProps {
 	statusLabel: string;
 	statusIcon: string;
 	currentRepoPath?: string;
+	isInVscode: boolean;
+	isAutoFREnabled: boolean;
+	requestFeedbackOnCommit: boolean;
 }
 
 interface State {
@@ -225,6 +228,10 @@ interface State {
 	currentFile?: string;
 	editingReviewBranch?: string;
 	addressesIssues: { [codemarkId: string]: boolean };
+	requestFeedbackOnCommit: boolean;
+	showRequestFeedbackOnCommitToggle: boolean;
+	attachments: AttachmentField[];
+	isDragging: number;
 }
 
 function merge(defaults: Partial<State>, review: CSReview): State {
@@ -278,7 +285,9 @@ class ReviewForm extends React.Component<Props, State> {
 			commitListLength: 10,
 			allReviewersMustApprove: false,
 			currentFile: "",
-			addressesIssues: {}
+			addressesIssues: {},
+			attachments: [],
+			isDragging: 0
 		};
 
 		const state = props.editingReview
@@ -415,14 +424,24 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	componentDidMount() {
-		const { isEditing, isAmending, textEditorUri, currentRepoPath } = this.props;
+		const {
+			isEditing,
+			isAmending,
+			textEditorUri,
+			currentRepoPath,
+			isInVscode,
+			requestFeedbackOnCommit,
+			isAutoFREnabled
+		} = this.props;
 		if (isEditing && !isAmending) return;
 
 		this.setState({ mountedTimestamp: new Date().getTime() });
-		if (!isEditing) {
-			if (false && this.props.statusLabel) {
-				this.setState({ title: this.props.statusLabel, titleTouched: true });
-			}
+		if (!isEditing && !isAmending) {
+			const isRequestingFeedbackOnCommit =
+				this.props.currentReviewOptions && this.props.currentReviewOptions.includeLatestCommit;
+			const showRequestFeedbackOnCommitToggle =
+				isInVscode && isAutoFREnabled && (isRequestingFeedbackOnCommit || !requestFeedbackOnCommit);
+			this.setState({ showRequestFeedbackOnCommitToggle });
 		}
 
 		if (isAmending) this.getScmInfoForRepo();
@@ -742,7 +761,8 @@ class ReviewForm extends React.Component<Props, State> {
 			allReviewersMustApprove,
 			includeSaved,
 			includeStaged,
-			reviewerEmails
+			reviewerEmails,
+			attachments
 		} = this.state;
 
 		// FIXME first, process the email-only reviewers
@@ -870,7 +890,8 @@ class ReviewForm extends React.Component<Props, State> {
 							includeStaged: includeStaged && scm!.stagedFiles.length > 0,
 							checkpoint: 0
 						}
-					]
+					],
+					files: attachments
 				} as any;
 
 				const { type: createResult } = await this.props.createPostAndReview(
@@ -934,6 +955,8 @@ class ReviewForm extends React.Component<Props, State> {
 			this.props.setNewPostEntry(undefined);
 		}
 	};
+
+	setAttachments = (attachments: AttachmentField[]) => this.setState({ attachments });
 
 	isFormInvalid = () => {
 		const { text, title } = this.state;
@@ -1122,6 +1145,9 @@ class ReviewForm extends React.Component<Props, State> {
 				selectedTags={this.state.selectedTags}
 				__onDidRender={__onDidRender}
 				autoFocus={isAmending ? true : false}
+				attachments={this.state.attachments}
+				attachmentContainerType="review"
+				setAttachments={this.setAttachments}
 			/>
 		);
 	};
@@ -1166,6 +1192,28 @@ class ReviewForm extends React.Component<Props, State> {
 						>
 							{!isAmending && <CancelButton onClick={this.confirmCancel} />}
 							<div className={cx({ "review-container": !isAmending })}>
+								{this.state.showRequestFeedbackOnCommitToggle && (
+									<div style={{ margin: "-30px 30px 10px 0", display: "flex" }}>
+										<span className="subhead muted">Auto-prompt for feedback when committing </span>
+										<span
+											key="toggle-auto-fr"
+											className="headline-flex"
+											style={{ display: "inline-block", marginLeft: "10px" }}
+										>
+											<LabeledSwitch
+												key="auto-feedback-toggle"
+												on={this.props.requestFeedbackOnCommit}
+												offLabel="No"
+												onLabel="Yes"
+												onChange={this.toggleRequestFeedbackOnCommitEnabled}
+												height={20}
+												width={60}
+											/>
+										</span>
+									</div>
+								)}
+								<div style={{ height: "5px" }}></div>
+
 								<div className="codemark-form-container">{this.renderReviewForm()}</div>
 								{this.renderExcludedFiles()}
 								<div style={{ height: "5px" }}></div>
@@ -1178,6 +1226,7 @@ class ReviewForm extends React.Component<Props, State> {
 										</CSText>
 									</>
 								)}
+
 								{!this.props.isEditing && totalModifiedLines > 200 && (
 									<div style={{ display: "flex", padding: "10px 0 0 2px" }}>
 										<Icon name="alert" muted />
@@ -1871,8 +1920,16 @@ class ReviewForm extends React.Component<Props, State> {
 		this.setState({ title, titleTouched: true });
 	}
 
+	toggleRequestFeedbackOnCommitEnabled = (requestFeedbackOnCommit: boolean) => {
+		HostApi.instance.send(UpdateConfigurationRequestType, {
+			name: "requestFeedbackOnCommit",
+			value: requestFeedbackOnCommit
+		});
+		this.setState({ requestFeedbackOnCommit });
+	};
+
 	renderReviewForm() {
-		const { isEditing, isAmending, currentUser, repos } = this.props;
+		const { isEditing, isAmending, currentUser, repos, requestFeedbackOnCommit } = this.props;
 		const {
 			repoStatus,
 			repoName,
@@ -1883,7 +1940,8 @@ class ReviewForm extends React.Component<Props, State> {
 			isLoadingScm,
 			isReloadingScm,
 			scmError,
-			scmErrorMessage
+			scmErrorMessage,
+			showRequestFeedbackOnCommitToggle
 		} = this.state;
 
 		// coAuthorLabels are a mapping from teamMate ID to the # of edits represented in
@@ -2061,6 +2119,7 @@ class ReviewForm extends React.Component<Props, State> {
 							</div>
 							{this.renderTextHelp()}
 							{this.renderMessageInput()}
+							<div style={{ clear: "both" }} />
 						</div>
 					)}
 					{!isAmending && this.renderTags()}
@@ -2076,6 +2135,7 @@ class ReviewForm extends React.Component<Props, State> {
 								</div>
 							</div>
 							{this.renderMessageInput()}
+							<div style={{ clear: "both" }} />
 							{this.renderAddressesIssues()}
 						</div>
 					)}
@@ -2255,7 +2315,17 @@ class ReviewForm extends React.Component<Props, State> {
 const EMPTY_OBJECT = {};
 
 const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
-	const { context, editorContext, users, teams, session, preferences, repos, documents } = state;
+	const {
+		context,
+		editorContext,
+		users,
+		teams,
+		session,
+		preferences,
+		repos,
+		documents,
+		ide
+	} = state;
 	const user = users[session.userId!] as CSMe;
 	const channel = context.currentStreamId
 		? getStreamForId(state.streams, context.currentTeamId, context.currentStreamId) ||
@@ -2317,7 +2387,10 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		isCurrentUserAdmin,
 		statusLabel,
 		statusIcon,
-		currentRepoPath: context.currentRepo && context.currentRepo.path
+		currentRepoPath: context.currentRepo && context.currentRepo.path,
+		isInVscode: ide.name === "VSC",
+		isAutoFREnabled: isFeatureEnabled(state, "autoFR"),
+		requestFeedbackOnCommit: state.configs.requestFeedbackOnCommit
 	};
 };
 

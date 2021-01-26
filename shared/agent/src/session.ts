@@ -25,7 +25,6 @@ import {
 	RTMessage
 } from "./api/apiProvider";
 import { CodeStreamApiProvider } from "./api/codestream/codestreamApi";
-import { Team, User } from "./api/extensions";
 import {
 	ApiVersionCompatibilityChangedEvent,
 	VersionCompatibilityChangedEvent,
@@ -33,10 +32,9 @@ import {
 } from "./api/middleware/versionMiddleware";
 import { Container, SessionContainer } from "./container";
 import { DocumentEventHandler } from "./documentEventHandler";
-import { setGitPath } from "./git/git";
+import { GitRepository } from "./git/models/repository";
 import { Logger } from "./logger";
 import {
-	AgentInitializedNotificationType,
 	ApiRequestType,
 	ApiVersionCompatibility,
 	BaseAgentOptions,
@@ -70,13 +68,13 @@ import {
 	RegisterUserRequest,
 	RegisterUserRequestType,
 	ReportingMessageType,
-	RestartRequiredNotificationType,
 	SetServerUrlRequest,
 	SetServerUrlRequestType,
 	ThirdPartyProviders,
 	TokenLoginRequest,
 	TokenLoginRequestType,
 	UIStateRequestType,
+	UserDidCommitNotificationType,
 	VerifyConnectivityRequestType,
 	VerifyConnectivityResponse,
 	VersionCompatibility
@@ -156,6 +154,10 @@ export interface VersionInfo {
 		name: string;
 		version: string;
 		detail: string;
+	};
+
+	machine?: {
+		machineId?: string;
 	};
 }
 
@@ -633,7 +635,8 @@ export class CodeStreamSession {
 	get versionInfo(): Readonly<VersionInfo> {
 		return {
 			extension: { ...this._options.extension },
-			ide: { ...this._options.ide }
+			ide: { ...this._options.ide },
+			machine: { machineId: this._options.machineId }
 		};
 	}
 
@@ -849,7 +852,7 @@ export class CodeStreamSession {
 		);
 
 		SessionContainer.instance().git.onRepositoryCommitHashChanged(repo => {
-			SessionContainer.instance().markerLocations.flushUncommittedLocations(repo);
+			this.repositoryCommitHashChanged(repo);
 		});
 
 		SessionContainer.instance().git.onRepositoryChanged(data => {
@@ -1165,6 +1168,27 @@ export class CodeStreamSession {
 			return this.api.setCompanyTestGroups(company.id, set);
 		}
 		return undefined;
+	}
+
+	private async repositoryCommitHashChanged(repo: GitRepository) {
+		if (!this.apiCapabilities.autoFR) {
+			return;
+		}
+		SessionContainer.instance().markerLocations.flushUncommittedLocations(repo);
+		const { git } = SessionContainer.instance();
+		const commit = await git.getCommit(repo.path, "HEAD");
+		const userEmail = await git.getConfig(repo.path, "user.email");
+		const twentySeconds = 20 * 1000;
+		if (
+			userEmail !== undefined &&
+			userEmail === commit?.email &&
+			commit.authorDate !== undefined &&
+			new Date().getTime() - commit.authorDate.getTime() < twentySeconds
+		) {
+			this.agent.sendNotification(UserDidCommitNotificationType, {
+				sha: commit.ref
+			});
+		}
 	}
 
 	dispose() {

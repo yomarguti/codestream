@@ -1,5 +1,6 @@
 import { GetFileScmInfoResponse } from "@codestream/protocols/agent";
 import { Position, Range } from "vscode-languageserver-types";
+import { NewPullRequestBranch } from "./webview.protocol";
 
 export const MaxRangeValue = 2147483647;
 
@@ -119,6 +120,7 @@ export interface WebviewContext {
 		includeLatestCommit?: boolean;
 	};
 	createPullRequestReviewId?: string;
+	createPullRequestOptions?: NewPullRequestBranch;
 	currentPullRequest?:
 		| {
 				providerId: string;
@@ -144,6 +146,7 @@ export interface SessionState {
 	otc?: string;
 	userId?: string;
 	inMaintenanceMode?: boolean;
+	machineId?: string;
 }
 
 export interface EditorContext {
@@ -173,6 +176,7 @@ export interface WebviewConfigs {
 	email?: string;
 	serverUrl: string;
 	team?: string;
+	requestFeedbackOnCommit: boolean;
 }
 
 export interface IpcHost {
