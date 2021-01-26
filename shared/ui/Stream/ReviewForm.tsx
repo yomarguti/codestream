@@ -9,7 +9,6 @@ import {
 	ReposScm,
 	DidChangeDataNotificationType,
 	ChangeDataType,
-	GetUserInfoRequestType,
 	UpdateReviewResponse,
 	CodemarkPlus,
 	TelemetryRequestType,
@@ -82,7 +81,6 @@ import Timestamp from "./Timestamp";
 import {
 	ReviewShowLocalDiffRequestType,
 	WebviewPanels,
-	WebviewModals,
 	UpdateConfigurationRequestType
 } from "@codestream/protocols/webview";
 import { Checkbox } from "../src/components/Checkbox";
@@ -166,6 +164,7 @@ interface ConnectedProps {
 	statusIcon: string;
 	currentRepoPath?: string;
 	isInVscode: boolean;
+	isAutoFREnabled: boolean;
 	requestFeedbackOnCommit: boolean;
 }
 
@@ -431,7 +430,8 @@ class ReviewForm extends React.Component<Props, State> {
 			textEditorUri,
 			currentRepoPath,
 			isInVscode,
-			requestFeedbackOnCommit
+			requestFeedbackOnCommit,
+			isAutoFREnabled
 		} = this.props;
 		if (isEditing && !isAmending) return;
 
@@ -440,7 +440,7 @@ class ReviewForm extends React.Component<Props, State> {
 			const isRequestingFeedbackOnCommit =
 				this.props.currentReviewOptions && this.props.currentReviewOptions.includeLatestCommit;
 			const showRequestFeedbackOnCommitToggle =
-				isInVscode && (isRequestingFeedbackOnCommit || !requestFeedbackOnCommit);
+				isInVscode && isAutoFREnabled && (isRequestingFeedbackOnCommit || !requestFeedbackOnCommit);
 			this.setState({ showRequestFeedbackOnCommitToggle });
 		}
 
@@ -1192,6 +1192,28 @@ class ReviewForm extends React.Component<Props, State> {
 						>
 							{!isAmending && <CancelButton onClick={this.confirmCancel} />}
 							<div className={cx({ "review-container": !isAmending })}>
+								{this.state.showRequestFeedbackOnCommitToggle && (
+									<div style={{ margin: "-30px 30px 10px 0", display: "flex" }}>
+										<span className="subhead muted">Auto-prompt for feedback when committing </span>
+										<span
+											key="toggle-auto-fr"
+											className="headline-flex"
+											style={{ display: "inline-block", marginLeft: "10px" }}
+										>
+											<LabeledSwitch
+												key="auto-feedback-toggle"
+												on={this.props.requestFeedbackOnCommit}
+												offLabel="No"
+												onLabel="Yes"
+												onChange={this.toggleRequestFeedbackOnCommitEnabled}
+												height={20}
+												width={60}
+											/>
+										</span>
+									</div>
+								)}
+								<div style={{ height: "5px" }}></div>
+
 								<div className="codemark-form-container">{this.renderReviewForm()}</div>
 								{this.renderExcludedFiles()}
 								<div style={{ height: "5px" }}></div>
@@ -1202,29 +1224,6 @@ class ReviewForm extends React.Component<Props, State> {
 											<SmartFormattedList value={this.state.reviewerEmails} /> will be notified via
 											email
 										</CSText>
-									</>
-								)}
-
-								{this.state.showRequestFeedbackOnCommitToggle && (
-									<>
-										<span className="subhead muted">
-											Auto-prompt for feedback when committing:{" "}
-										</span>
-										<span
-											key="toggle-auto-fr"
-											className="headline-flex"
-											style={{ display: "inline-block" }}
-										>
-											<LabeledSwitch
-												key="auto-feedback-toggle"
-												on={this.props.requestFeedbackOnCommit}
-												offLabel="No"
-												onLabel="Yes"
-												onChange={this.toggleRequestFeedbackOnCommitEnabled}
-												height={20}
-												width={64}
-											/>
-										</span>
 									</>
 								)}
 
@@ -2390,6 +2389,7 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		statusIcon,
 		currentRepoPath: context.currentRepo && context.currentRepo.path,
 		isInVscode: ide.name === "VSC",
+		isAutoFREnabled: isFeatureEnabled(state, "autoFR"),
 		requestFeedbackOnCommit: state.configs.requestFeedbackOnCommit
 	};
 };
