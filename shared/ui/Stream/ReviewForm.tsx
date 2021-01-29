@@ -165,7 +165,7 @@ interface ConnectedProps {
 	currentRepoPath?: string;
 	isInVscode: boolean;
 	isAutoFREnabled: boolean;
-	requestFeedbackOnCommit: boolean;
+	requestFeedbackOnCommit?: boolean;
 }
 
 interface State {
@@ -2273,7 +2273,7 @@ class ReviewForm extends React.Component<Props, State> {
 										}}
 										className={cx("control-button", { cancel: !this.state.title })}
 										type="submit"
-										disabled={!hasChanges}
+										disabled={isEditing ? false : !hasChanges}
 										loading={isReloadingScm || this.state.isLoading}
 										onClick={this.handleClickSubmit}
 									>

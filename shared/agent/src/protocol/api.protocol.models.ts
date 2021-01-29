@@ -179,6 +179,7 @@ export interface ReviewChangesetFileInfo {
 	statusX?: FileStatus;
 	statusY?: FileStatus;
 	reviewStatus?: { [reviewerId: string]: "visited" | "current" };
+	repoId?: string;
 }
 
 export interface CSReviewDiffs {
