@@ -1,18 +1,13 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { CodeStreamState } from "../store";
 import styled from "styled-components";
 import { PRButtonRow, PRCodeCommentReply, PRCodeCommentReplyInput } from "./PullRequestComponents";
 import { HostApi } from "../webview-api";
-import {
-	ExecuteThirdPartyTypedType,
-	FetchThirdPartyPullRequestPullRequest
-} from "@codestream/protocols/agent";
+import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
 import MessageInput from "./MessageInput";
-import { CSMe } from "@codestream/protocols/api";
 import { Button } from "../src/components/Button";
 import { confirmPopup } from "./Confirm";
-import { Headshot, PRHeadshot } from "../src/components/Headshot";
+import { PRHeadshot } from "../src/components/Headshot";
 import { api } from "../store/providerPullRequests/actions";
 import { replaceHtml } from "../utils";
 
@@ -22,12 +17,13 @@ interface Props {
 	fetch: Function;
 	className?: string;
 	databaseId: string;
+	parentId: string;
 	isOpen: boolean;
 	__onDidRender: Function;
 }
 
 export const PullRequestReplyComment = styled((props: Props) => {
-	const { pr, fetch, databaseId } = props;
+	const { pr, fetch, databaseId, parentId } = props;
 	const dispatch = useDispatch();
 
 	const [text, setText] = useState("");
@@ -56,14 +52,13 @@ export const PullRequestReplyComment = styled((props: Props) => {
 			await dispatch(
 				api("createCommentReply", {
 					commentId: databaseId,
+					parentId: parentId,
 					text: replaceHtml(text)
 				})
 			);
 
-			fetch().then(() => {
-				setText("");
-				setOpen(false);
-			});
+			setText("");
+			setOpen(false);
 		} catch (ex) {
 			console.warn(ex);
 		} finally {

@@ -203,6 +203,17 @@ export function reduceProviderPullRequests(
 						if (!node) {
 							pr.timelineItems.nodes.push(directive.data);
 						}
+					} else if (directive.type === "addLegacyCommentReply") {
+						for (const node of pr.timelineItems.nodes) {
+							if (!node.comments) continue;
+							for (const comment of node.comments.nodes) {
+								if (directive.data._inReplyToId === comment.databaseId) {
+									if (!comment.replies) comment.replies = [];
+									comment.replies.push(directive.data);
+									break;
+								}
+							}
+						}
 					} else if (directive.type === "addNodes") {
 						for (const newNode of directive.data) {
 							if (!newNode.id) continue;
