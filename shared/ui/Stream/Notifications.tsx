@@ -42,9 +42,8 @@ export const Notifications = props => {
 		setLoading(false);
 	};
 
-	const handleChangeFRReminders = async (value: boolean) => {
+	const handleChangeReviewReminders = async (value: boolean) => {
 		setLoadingReminderDelivery(true);
-		HostApi.instance.track("FR Reminder Preference Change", { Value: value });
 		// @ts-ignore
 		await dispatch(setUserPreference(["reviewReminderDelivery"], value));
 		setLoadingReminderDelivery(false);
@@ -96,16 +95,18 @@ export const Notifications = props => {
 								Don't automatically follow any codemarks or feedback requests
 							</Radio>
 						</RadioGroup>
-						<div style={{ marginTop: "20px" }}>
-							<Checkbox
-								name="frReminders"
-								checked={derivedState.reviewReminderDelivery}
-								onChange={handleChangeFRReminders}
-								loading={loadingReminderDelivery}
-							>
-								Notify me about outstanding feedback requests
-							</Checkbox>
-						</div>
+						{false && ( // disabling this till we're ready
+							<div style={{ marginTop: "20px" }}>
+								<Checkbox
+									name="frReminders"
+									checked={derivedState.reviewReminderDelivery}
+									onChange={handleChangeReviewReminders}
+									loading={loadingReminderDelivery}
+								>
+									Notify me about outstanding feedback requests
+								</Checkbox>
+							</div>
+						)}
 						{derivedState.hasDesktopNotifications && derivedState.notificationDeliverySupported && (
 							<div style={{ marginTop: "20px" }}>
 								<p className="explainer">Deliver notifications via:</p>
