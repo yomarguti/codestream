@@ -22,7 +22,10 @@ import { PullRequestFinishReview } from "./PullRequestFinishReview";
 import { Checkbox } from "../src/components/Checkbox";
 import { HostApi } from "../webview-api";
 import { Link } from "./Link";
-import { getProviderPullRequestRepo } from "../store/providerPullRequests/reducer";
+import {
+	getCurrentProviderPullRequest,
+	getProviderPullRequestRepo
+} from "../store/providerPullRequests/reducer";
 import { EditorRevealRangeRequestType } from "@codestream/protocols/webview";
 import * as path from "path-browserify";
 import { Range } from "vscode-languageserver-types";
@@ -142,6 +145,7 @@ export const PullRequestFilesChangedList = (props: Props) => {
 		const ideName = state.ide.name && state.ide.name.toUpperCase();
 		const requiresDiffHunkView = ideName === "VS" || ideName === "ATOM";
 		return {
+			currentPullRequest: getCurrentProviderPullRequest(state),
 			currentRepo: getProviderPullRequestRepo(state),
 			diffSelectorEnabled: !requiresDiffHunkView,
 			pullRequestFilesChangedMode: requiresDiffHunkView
@@ -210,8 +214,10 @@ export const PullRequestFilesChangedList = (props: Props) => {
 
 	const commentMap = React.useMemo(() => {
 		const map = {} as any;
-		const reviews = pr
-			? pr.timelineItems.nodes.filter(node => node.__typename === "PullRequestReview")
+		const reviews = derivedState.currentPullRequest
+			? derivedState.currentPullRequest.conversations.repository.pullRequest.timelineItems.nodes.filter(
+					node => node.__typename === "PullRequestReview"
+			  )
 			: [];
 		reviews.forEach(review => {
 			if (review.comments) {
@@ -222,7 +228,7 @@ export const PullRequestFilesChangedList = (props: Props) => {
 			}
 		});
 		return map;
-	}, [pr]);
+	}, [derivedState.currentPullRequest]);
 
 	if (isLoading || isLoadingVisited)
 		return (

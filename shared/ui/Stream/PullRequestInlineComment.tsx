@@ -18,7 +18,6 @@ interface Props {
 	lineNumber: number;
 	lineOffsetInHunk: number;
 	setIsLoadingMessage: Function;
-	fetch: Function;
 	__onDidRender: Function;
 	className?: string;
 	onClose: Function;
@@ -26,7 +25,7 @@ interface Props {
 
 export const PullRequestInlineComment = styled((props: Props) => {
 	const dispatch = useDispatch();
-	const { pr, filename, fetch, lineNumber, lineOffsetInHunk, setIsLoadingMessage } = props;
+	const { pr, filename, lineNumber, lineOffsetInHunk, setIsLoadingMessage } = props;
 
 	const [text, setText] = useState("");
 	const [isLoadingSingleComment, setIsLoadingSingleComment] = useState(false);
@@ -64,7 +63,6 @@ export const PullRequestInlineComment = styled((props: Props) => {
 		);
 		setText("");
 
-		fetch();
 		setIsLoadingSingleComment(false);
 		props.onClose();
 	};
@@ -83,7 +81,6 @@ export const PullRequestInlineComment = styled((props: Props) => {
 		);
 		setText("");
 
-		fetch();
 		setIsLoadingStartReview(false);
 		props.onClose();
 	};

@@ -17,8 +17,8 @@ import {
 	PRKebabIcon,
 	PRIconOutdated
 } from "./PullRequestComponents";
-import React, { PropsWithChildren, useCallback, useState } from "react";
-import { PRHeadshot, Headshot } from "../src/components/Headshot";
+import React, { PropsWithChildren, useState } from "react";
+import { PRHeadshot } from "../src/components/Headshot";
 import Timestamp from "./Timestamp";
 import Icon from "./Icon";
 import { MarkdownText } from "./MarkdownText";
@@ -42,7 +42,6 @@ import { PullRequestMinimizedComment } from "./PullRequestMinimizedComment";
 import { PullRequestPatch } from "./PullRequestPatch";
 import { PullRequestFinishReview } from "./PullRequestFinishReview";
 import { PullRequestEditingComment } from "./PullRequestEditingComment";
-import { api } from "../store/providerPullRequests/actions";
 import { PullRequestCodeComment } from "./PullRequestCodeComment";
 import * as path from "path-browserify";
 import { Range } from "vscode-languageserver-types";
@@ -73,40 +72,11 @@ interface Props {
 export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 	const { pr, setIsLoadingMessage, fetch } = props;
 	if (!pr || !pr.timelineItems) return null;
-	const dispatch = useDispatch();
 
-	const [reviewOption, setReviewOption] = useState("COMMENT");
-	const [reviewOptionText, setReviewOptionText] = useState("");
 	const [openComments, setOpenComments] = useState({});
 	const [pendingComments, setPendingComments] = useState({});
 	const [editingComments, setEditingComments] = useState({});
 	const [expandedComments, setExpandedComments] = useState({});
-
-	// const [pendingComment, setPendingComment] = useState("");
-	// const submitReview = async (event?: React.SyntheticEvent) => {
-	// 	await dispatch(api(
-	// 		"submitReview",
-
-	// 		{
-	// 			text: reviewOptionText,
-	// 			eventType: reviewOption
-	// 		}
-	// 	));
-	// 	props.fetch();
-	// };
-
-	// const cancelReview = async (event?: React.SyntheticEvent) => {
-	// 	await dispatch(api(
-	// 		"submitReview",
-
-	// 		{
-	// 			text: reviewOptionText,
-	// 			eventType: "DISMISS"
-	// 		}
-	// 	));
-
-	// 	props.fetch();
-	// };
 
 	const doneEditingComment = id => {
 		setEditingComments({ ...editingComments, [id]: false });

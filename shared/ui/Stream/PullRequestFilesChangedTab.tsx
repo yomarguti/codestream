@@ -6,26 +6,30 @@ import { FileStatus } from "@codestream/protocols/api";
 import { LoadingMessage } from "../src/components/LoadingMessage";
 import { getPullRequestFiles } from "../store/providerPullRequests/actions";
 import { PullRequestFilesChangedList } from "./PullRequestFilesChangedList";
-import { HostApi } from "../webview-api";
 import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
+import { getCurrentProviderPullRequest } from "../store/providerPullRequests/reducer";
 
 const STATUS_MAP = {
 	modified: FileStatus.modified
 };
 
 export const PullRequestFilesChangedTab = (props: {
-	pr: FetchThirdPartyPullRequestPullRequest;
+	//pr: FetchThirdPartyPullRequestPullRequest;
 	fetch: Function;
 	setIsLoadingMessage: Function;
 }) => {
-	const { pr } = props;
+	//const { pr } = props;
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
+			currentPullRequest: getCurrentProviderPullRequest(state),
 			providerPullRequests: state.providerPullRequests.pullRequests,
 			pullRequestFilesChangedMode: state.preferences.pullRequestFilesChangedMode || "files",
 			currentPullRequestId: state.context.currentPullRequest
 				? state.context.currentPullRequest.id
+				: undefined,
+			currentPullRequestProviderId: state.context.currentPullRequest
+				? state.context.currentPullRequest.providerId
 				: undefined
 		};
 	});
@@ -50,20 +54,29 @@ export const PullRequestFilesChangedTab = (props: {
 	};
 
 	useEffect(() => {
+		if (!derivedState.currentPullRequestProviderId) return;
 		// re-render if providerPullRequests changes
 		(async () => {
 			const data = await dispatch(
-				getPullRequestFiles(pr.providerId, derivedState.currentPullRequestId!)
+				getPullRequestFiles(
+					derivedState.currentPullRequestProviderId!,
+					derivedState.currentPullRequestId!
+				)
 			);
 			_mapData(data);
 		})();
-	}, [derivedState.providerPullRequests]);
+	}, [derivedState.currentPullRequestProviderId, derivedState.providerPullRequests]);
 
 	useDidMount(() => {
+		if (!derivedState.currentPullRequestProviderId) return;
+
 		setIsLoading(true);
 		(async () => {
 			const data = await dispatch(
-				getPullRequestFiles(pr.providerId, derivedState.currentPullRequestId!)
+				getPullRequestFiles(
+					derivedState.currentPullRequestProviderId!,
+					derivedState.currentPullRequestId!
+				)
 			);
 			_mapData(data);
 		})();
@@ -76,7 +89,15 @@ export const PullRequestFilesChangedTab = (props: {
 			</div>
 		);
 
+	if (
+		!derivedState.currentPullRequest ||
+		!derivedState.currentPullRequest.conversations ||
+		!derivedState.currentPullRequest.conversations.repository ||
+		!derivedState.currentPullRequest.conversations.repository.pullRequest
+	)
+		return null;
 	if (!filesChanged || !filesChanged.length) return null;
+	const pr = derivedState.currentPullRequest.conversations.repository.pullRequest;
 	return (
 		<div style={{ position: "relative", margin: "0 0 20px 20px" }}>
 			<PullRequestFilesChangedList

@@ -158,7 +158,13 @@ export function reduceProviderPullRequests(
 			if (newState[providerId][id] && newState[providerId][id].conversations) {
 				const pr = newState[providerId][id].conversations.repository.pullRequest;
 				for (const directive of action.payload.data) {
-					if (directive.type === "addReaction") {
+					if (directive.type === "addNode") {
+						if (!directive.data.id) continue;
+						const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
+						if (!node) {
+							pr.timelineItems.nodes.push(directive.data);
+						}
+					} else if (directive.type === "addReaction") {
 						if (directive.data.subject.__typename === "PullRequest") {
 							pr.reactionGroups
 								.find(_ => _.content === directive.data.reaction.content)
@@ -169,6 +175,16 @@ export function reduceProviderPullRequests(
 								node.reactionGroups
 									.find(_ => _.content === directive.data.reaction.content)
 									.users.nodes.push(directive.data.reaction.user);
+							}
+						}
+					} else if (directive.type === "addReview") {
+						if (!directive.data) continue;
+						pr.reviews.nodes.push(directive.data);
+					} else if (directive.type === "addReviewThreads") {
+						if (!directive.data || !directive.data.length) continue;
+						for (const d of directive.data) {
+							if (pr.reviewThreads.edges.find(_ => _.id === d.id) == null) {
+								pr.reviewThreads.edges.push(d);
 							}
 						}
 					} else if (directive.type === "removeReaction") {
@@ -196,12 +212,6 @@ export function reduceProviderPullRequests(
 							for (const key in directive.data) {
 								node[key] = directive.data[key];
 							}
-						}
-					} else if (directive.type === "addNode") {
-						if (!directive.data.id) continue;
-						const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
-						if (!node) {
-							pr.timelineItems.nodes.push(directive.data);
 						}
 					} else if (directive.type === "addLegacyCommentReply") {
 						for (const node of pr.timelineItems.nodes) {

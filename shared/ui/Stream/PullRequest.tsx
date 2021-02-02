@@ -909,10 +909,9 @@ export const PullRequest = () => {
 									/>
 								)}
 								{activeTab === 2 && <PullRequestCommitsTab pr={pr} ghRepo={ghRepo} fetch={fetch} />}
-								{activeTab === 4 && (
+								{activeTab === 4 && derivedState.currentPullRequest && (
 									<PullRequestFilesChangedTab
 										key="files-changed"
-										pr={pr}
 										fetch={fetch}
 										setIsLoadingMessage={setIsLoadingMessage}
 									/>

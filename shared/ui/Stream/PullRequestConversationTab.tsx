@@ -670,50 +670,6 @@ export const PullRequestConversationTab = (props: {
 		);
 	};
 
-	// const fetchAvailableIssues = async (e?) => {
-	// 	const issues = (await dispatch(
-	// 		api("getIssues", {
-	// 			owner: ghRepo.repoOwner,
-	// 			repo: ghRepo.repoName
-	// 		})
-	// 	)) as any;
-	// 	setAvailableIssues(issues);
-	// };
-
-	// const issueMenuItems = React.useMemo(() => {
-	// 	if (availableIssues && availableIssues.length) {
-	// 		const existingIssueIds = pr.issues ? pr.issues.nodes.map(_ => _.id) : [];
-	// 		const menuItems = availableIssues.map((_: any) => {
-	// 			const checked = existingIssueIds.includes(_.id);
-	// 			return {
-	// 				checked,
-	// 				label: <>{_.name}</>,
-	// 				searchLabel: _.name,
-	// 				key: _.id,
-	// 				subtext: <div style={{ maxWidth: "250px", whiteSpace: "normal" }}>{_.description}</div>,
-	// 				action: () => setIssue(_.id, !checked)
-	// 			};
-	// 		}) as any;
-	// 		menuItems.unshift({ type: "search", placeholder: "Filter" });
-	// 		return menuItems;
-	// 	} else {
-	// 		return [{ label: <LoadingMessage>Loading Issues...</LoadingMessage>, noHover: true }];
-	// 	}
-	// }, [availableIssues, pr]);
-
-	// const setIssue = async (id: string, onOff: boolean) => {
-	// 	setIsLoadingMessage(onOff ? "Adding Issue..." : "Removing Issue...");
-	// 	await dispatch(
-	// 		api("setIssueOnPullRequest", {
-	// 			owner: ghRepo.repoOwner,
-	// 			repo: ghRepo.repoName,
-	// 			issueId: id,
-	// 			onOff
-	// 		})
-	// 	);
-	// 	fetch();
-	// };
-
 	const toggleSubscription = async () => {
 		const onOff = pr.viewerSubscription === "SUBSCRIBED" ? false : true;
 		setIsLoadingMessage(onOff ? "Subscribing..." : "Unsubscribing...");
@@ -734,8 +690,6 @@ export const PullRequestConversationTab = (props: {
 			return rules ? rules.requiredApprovingReviewCount : undefined;
 		}
 	}, [ghRepo, pr]);
-
-	// console.warn("ASSI: ", assigneeMenuItems);
 
 	const lastCommit =
 		pr &&

@@ -125,11 +125,9 @@ export const PullRequestPatch = (props: {
 	truncateLargePatches?: boolean;
 	quote?: Function;
 }) => {
-	const { fetch, patch, filename, hunks } = props;
-
+	const { patch, filename, hunks } = props;
 	const [commentOpen, setCommentOpen] = React.useState<boolean[]>([]);
 
-	let startLine: number;
 	let leftLine: number;
 	let rightLine: number;
 	let width;
@@ -186,7 +184,7 @@ export const PullRequestPatch = (props: {
 						if (_ === "\\ No newline at end of file") return null;
 
 						const commentForm =
-							props.pr && props.fetch && commentOpen[index] ? (
+							props.pr && commentOpen[index] ? (
 								<PRInlineComment>
 									<PullRequestInlineComment
 										pr={props.pr}
@@ -194,7 +192,6 @@ export const PullRequestPatch = (props: {
 										filename={filename}
 										lineNumber={rightLine + 1}
 										lineOffsetInHunk={index}
-										fetch={props.fetch}
 										setIsLoadingMessage={() => {}}
 										__onDidRender={() => {}}
 										onClose={() => closeComment(index)}

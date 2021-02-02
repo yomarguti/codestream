@@ -11,6 +11,7 @@ import { FileStatus } from "@codestream/protocols/api";
 import { CodeStreamState } from "../store";
 import styled from "styled-components";
 import { Modal } from "./Modal";
+import { getCurrentProviderPullRequest } from "../store/providerPullRequests/reducer";
 
 const Root = styled.div`
 	background: var(--app-background-color);
@@ -34,11 +35,12 @@ interface Props {
 }
 
 export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
-	const { quote, fetch, setIsLoadingMessage, pr } = props;
+	const { quote, pr } = props;
 	const dispatch = useDispatch();
 
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
+			currentPullRequest: getCurrentProviderPullRequest(state),
 			providerPullRequests: state.providerPullRequests.pullRequests,
 			pullRequestFilesChangedMode: state.preferences.pullRequestFilesChangedMode || "files",
 			currentPullRequestId: state.context.currentPullRequest
@@ -78,12 +80,12 @@ export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
 		})();
 	}, [derivedState.providerPullRequests]);
 
-	const openFile = file => {};
-
 	const commentMap = React.useMemo(() => {
 		const map = {} as any;
-		const reviews = pr
-			? pr.timelineItems.nodes.filter(node => node.__typename === "PullRequestReview")
+		const reviews = derivedState.currentPullRequest
+			? derivedState.currentPullRequest.conversations.repository.pullRequest.timelineItems.nodes.filter(
+					node => node.__typename === "PullRequestReview"
+			  )
 			: [];
 		reviews.forEach(review => {
 			if (!review.comments) return;
@@ -95,7 +97,7 @@ export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
 			});
 		});
 		return map;
-	}, [pr]);
+	}, [derivedState.currentPullRequest]);
 
 	if (!filename) return null;
 
@@ -127,16 +129,16 @@ export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
 					</h1>
 					{fileInfo && (
 						<PullRequestPatch
-							pr={pr}
+							pr={derivedState.currentPullRequest}
 							patch={fileInfo.patch}
 							hunks={fileInfo.hunks}
 							filename={filename}
+							fetch={props.fetch}
 							canComment
 							comments={commentMap[filename]}
 							commentId={props.commentId}
 							setIsLoadingMessage={props.setIsLoadingMessage}
 							quote={quote}
-							fetch={props.fetch!}
 						/>
 					)}
 				</PRDiffHunk>
