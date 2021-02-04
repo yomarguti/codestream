@@ -29,7 +29,14 @@ import { PostEntryPoint } from "../store/context/types";
 import { PRInfoModal } from "./SpatialView/PRInfoModal";
 import { isConnected } from "../store/providers/reducer";
 import * as fs from "../utilities/fs";
-import { PaneHeader, NoContent, PaneState, PaneBody } from "../src/components/Pane";
+import {
+	PaneHeader,
+	NoContent,
+	PaneState,
+	PaneBody,
+	PaneNode,
+	PaneNodeName
+} from "../src/components/Pane";
 import { Modal } from "./Modal";
 import { Dialog, ButtonRow } from "../src/components/Dialog";
 import { Checkbox } from "../src/components/Checkbox";
@@ -41,12 +48,14 @@ import { withSearchableItems, WithSearchableItemsProps } from "./withSearchableI
 import { ReposState } from "../store/repos/types";
 import { getActiveCodemarks } from "../store/codemarks/reducer";
 import { CSMarker } from "@codestream/protocols/api";
+import { PanelHeader } from "../src/components/PanelHeader";
 
 export enum CodemarkDomainType {
 	File = "file",
 	Directory = "directory",
 	Repo = "repo",
-	Team = "team"
+	Team = "team",
+	Branch = "branch"
 }
 
 export enum CodemarkSortType {
@@ -72,9 +81,13 @@ interface ConnectedProps {
 	hasPRProvider?: boolean;
 	showPRComments?: boolean;
 	showHidden: boolean;
+	showResolved: boolean;
+	showReviews: boolean;
 	wrapComments: boolean;
+	hideTags: boolean;
 	fileNameToFilterFor?: string;
 	scmInfo?: GetFileScmInfoResponse;
+	currentBranch: string;
 	textEditorUri?: string;
 	documentMarkers?: (DocumentMarker | MarkerNotLocated)[];
 	numHidden?: number;
@@ -85,6 +98,7 @@ interface ConnectedProps {
 	repos: ReposState;
 	codemarks: CodemarkPlus[];
 	count: number;
+	hiddenPaneNodes: { [nodeId: string]: boolean };
 }
 
 interface DispatchProps {
@@ -98,7 +112,6 @@ interface DispatchProps {
 		...args: Parameters<typeof setCurrentCodemark>
 	) => ReturnType<typeof setCurrentCodemark>;
 	setUserPreference: any;
-	setUserPreferences: Function;
 	openPanel: (...args: Parameters<typeof openPanel>) => ReturnType<typeof openPanel>;
 	setNewPostEntry: Function;
 }
@@ -110,10 +123,6 @@ interface State {
 	showConfiguationModal: boolean;
 	isLoading: boolean;
 	problem: ScmError | undefined;
-	showHiddenField: boolean | undefined;
-	showPRCommentsField: boolean | undefined;
-	codemarkSortTypeField: CodemarkSortType | undefined;
-	wrapCommentsField: boolean | undefined;
 	pendingPRConnection: boolean | undefined;
 }
 
@@ -134,10 +143,6 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			showConfiguationModal: false,
 			isLoading: props.documentMarkers ? props.documentMarkers.length === 0 : true,
 			problem: props.scmInfo && getFileScmError(props.scmInfo),
-			showHiddenField: props.showHidden,
-			showPRCommentsField: props.showPRComments,
-			wrapCommentsField: props.wrapComments,
-			codemarkSortTypeField: props.codemarkSortType || CodemarkSortType.File,
 			pendingPRConnection: false
 		};
 
@@ -170,8 +175,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 	}
 
 	onFileChangedError(error: string) {
-		if (!error) return;
-		HostApi.instance.track("Spatial Error State", { "Error State": error });
+		// unused
 	}
 
 	componentDidUpdate(prevProps: Props) {
@@ -366,6 +370,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			case CodemarkDomainType.File:
 				return this.renderCodemarksFile();
 			case CodemarkDomainType.Directory:
+			case CodemarkDomainType.Branch:
 			case CodemarkDomainType.Repo:
 			case CodemarkDomainType.Team:
 				return this.renderCodemarksFromSearch();
@@ -375,9 +380,31 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 	};
 
 	renderCodemarksFromSearch = () => {
-		const { codemarks } = this.props;
+		const { codemarks, hiddenPaneNodes } = this.props;
 		if (codemarks.length === 0) return this.renderNoCodemarks();
 		// if (this.state.isLoading) return null;
+		const open = codemarks.filter(codemark => codemark.pinned && codemark.status !== "closed");
+		const closed = codemarks.filter(codemark => codemark.pinned && codemark.status === "closed");
+		const archived = codemarks.filter(codemark => !codemark.pinned);
+		return (
+			<>
+				<PaneNode>
+					<PaneNodeName id="codemarks/open" title="Open" count={open.length} />
+					{!hiddenPaneNodes["codemarks/open"] && this.renderCodemarksSearchList(open)}
+				</PaneNode>
+				<PaneNode>
+					<PaneNodeName id="codemarks/closed" title="Resolved" count={closed.length} />
+					{!hiddenPaneNodes["codemarks/closed"] && this.renderCodemarksSearchList(closed)}
+				</PaneNode>
+				<PaneNode>
+					<PaneNodeName id="codemarks/archived" title="Archived" count={archived.length} />
+					{!hiddenPaneNodes["codemarks/archived"] && this.renderCodemarksSearchList(archived)}
+				</PaneNode>
+			</>
+		);
+	};
+
+	renderCodemarksSearchList = codemarks => {
 		return codemarks.map(codemark => {
 			this.renderedCodemarks[codemark.id] = true;
 			return (
@@ -387,6 +414,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 					codemark={codemark as CodemarkPlus}
 					displayType="collapsed"
 					wrap={this.props.wrapComments}
+					hideTags={this.props.hideTags}
 					marker={{} as MarkerNotLocated}
 					highlightCodeInTextEditor
 					postAction={() => {}}
@@ -397,8 +425,32 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 	};
 
 	renderCodemarksFile = () => {
-		const { documentMarkers = [], showHidden, codemarkSortType: codemarkSortType } = this.props;
+		const { documentMarkers = [] } = this.props;
 		if (documentMarkers.length === 0) return this.renderNoCodemarks();
+		const pinned = documentMarkers.filter(m => m.codemark && m.codemark.pinned);
+		const open = pinned.filter(m => m.codemark && m.codemark.status !== "closed");
+		const closed = pinned.filter(m => m.codemark && m.codemark.status === "closed");
+		const archived = documentMarkers.filter(m => m.codemark && !m.codemark.pinned);
+		return (
+			<>
+				<PaneNode>
+					<PaneNodeName id="codemarks/open" title="Open" count={open.length} />
+					{!this.props.hiddenPaneNodes["codemarks/open"] && this.renderCodemarksList(open)}
+				</PaneNode>
+				<PaneNode>
+					<PaneNodeName id="codemarks/closed" title="Resolved" count={closed.length} />
+					{!this.props.hiddenPaneNodes["codemarks/closed"] && this.renderCodemarksList(closed)}
+				</PaneNode>
+				<PaneNode>
+					<PaneNodeName id="codemarks/archived" title="Archived" count={archived.length} />
+					{!this.props.hiddenPaneNodes["codemarks/archived"] && this.renderCodemarksList(archived)}
+				</PaneNode>
+			</>
+		);
+	};
+
+	renderCodemarksList = documentMarkers => {
+		const { showHidden, codemarkSortType: codemarkSortType } = this.props;
 		if (this.state.isLoading) return null;
 		const codemarksInList = {};
 		let codemarkSortFn;
@@ -428,9 +480,9 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 				}
 
 				const hidden =
-					(!showHidden && codemark && (!codemark.pinned || codemark.status === "closed")) ||
+					(!showHidden && codemark && !codemark.pinned) ||
 					(docMarker.externalContent && !this.props.showPRComments);
-				if (hidden) return null;
+				// if (hidden) return null;
 
 				return (
 					<Codemark
@@ -439,6 +491,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 						codemark={docMarker.codemark}
 						displayType="collapsed"
 						wrap={this.props.wrapComments}
+						hideTags={this.props.hideTags}
 						marker={docMarker}
 						hidden={hidden}
 						highlightCodeInTextEditor
@@ -450,13 +503,20 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 	};
 
 	render() {
-		const { fileNameToFilterFor = "", textEditorUri = "", codemarkDomain, count } = this.props;
 		const {
-			showHiddenField,
-			showPRCommentsField,
-			codemarkSortTypeField,
-			wrapCommentsField
-		} = this.state;
+			fileNameToFilterFor = "",
+			textEditorUri = "",
+			codemarkDomain,
+			count,
+			setUserPreference,
+			showHidden,
+			showResolved,
+			showReviews,
+			showPRComments,
+			wrapComments,
+			hideTags,
+			codemarkSortType
+		} = this.props;
 
 		const isDiff = textEditorUri.startsWith("codestream-diff://");
 		const isFile = textEditorUri.startsWith("file://");
@@ -469,6 +529,8 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 				? "file"
 				: codemarkDomain === CodemarkDomainType.Directory
 				? "directory"
+				: codemarkDomain === CodemarkDomainType.Branch
+				? "git-branch"
 				: codemarkDomain === CodemarkDomainType.Repo
 				? "repo"
 				: "team";
@@ -479,6 +541,8 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 				? isFile
 					? dirnameNoDot || "[no file]"
 					: "[no file]"
+				: codemarkDomain === CodemarkDomainType.Branch
+				? this.props.currentBranch || "[branch]"
 				: codemarkDomain === CodemarkDomainType.Repo
 				? this.props.repoName || "[repository]"
 				: this.props.teamName;
@@ -501,6 +565,14 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 				checked: codemarkDomain === CodemarkDomainType.Directory
 			},
 			{
+				label: "Current Branch",
+				subtle: this.props.currentBranch || "",
+				key: "branch",
+				icon: <Icon name="git-branch" />,
+				action: () => this.switchDomain(CodemarkDomainType.Branch),
+				checked: codemarkDomain === CodemarkDomainType.Branch
+			},
+			{
 				label: "Current Repository",
 				subtle: this.props.repoName || "",
 				key: "repo",
@@ -518,77 +590,91 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			}
 		];
 
+		const settingsMenuItems = [
+			{
+				label: "Wrap multi-line comments",
+				key: "wrap-comments",
+				checked: wrapComments,
+				action: () => setUserPreference(["codemarksWrapComments"], !wrapComments)
+			},
+			{
+				label: "Show Tags",
+				key: "show-tags",
+				checked: !hideTags,
+				action: () => setUserPreference(["codemarksHideTags"], !hideTags)
+			},
+			{ label: "-" },
+			{
+				label: "Sort comments by...",
+				key: "sort-codemarks",
+				checked: false,
+				submenu: [
+					{
+						label: "Date",
+						key: "date",
+						checked: codemarkSortType === CodemarkSortType.CreatedAt,
+						action: () => setUserPreference(["codemarkSortType"], CodemarkSortType.CreatedAt)
+					},
+					{
+						label: "Line Number",
+						key: "file",
+						checked: codemarkSortType === CodemarkSortType.File,
+						action: () => setUserPreference(["codemarkSortType"], CodemarkSortType.File)
+					}
+				]
+			},
+			{ label: "-" },
+			{
+				label: "Show icons in editor gutter",
+				key: "show-icons",
+				checked: false,
+				submenu: [
+					{
+						label: "Pull Request comments",
+						key: "show-prs",
+						checked: this.props.hasPRProvider
+							? this.state.pendingPRConnection
+								? true
+								: !!showPRComments
+							: false,
+
+						action: () => {
+							if (!this.props.hasPRProvider) {
+								this.setState({ showPRInfoModal: true });
+								this.setState({ pendingPRConnection: true });
+							} else {
+								this.setState({ pendingPRConnection: false });
+								setUserPreference(["codemarksShowPRComments"], !showPRComments);
+								// this.setState({ showPRCommentsField: !showPRCommentsField });
+							}
+						}
+					},
+					{
+						label: "Feedback Request comments",
+						key: "show-reviews",
+						checked: showReviews,
+						action: () => setUserPreference(["codemarksHideReviews"], showReviews)
+					},
+					{ label: "-" },
+					{
+						label: "Resolved codemarks",
+						key: "show-resolved",
+						checked: showResolved,
+						action: () => setUserPreference(["codemarksHideResolved"], showResolved)
+					},
+					{
+						label: "Archived codemarks",
+						key: "show-hidden",
+						checked: showHidden,
+						action: () => setUserPreference(["codemarksShowArchived"], !showHidden)
+					}
+				]
+			}
+		];
+
 		// console.warn("RENDERING CODEMARKS");
 		return (
 			<>
-				{this.state.showConfiguationModal && (
-					<Modal translucent>
-						<Dialog
-							title="Codemark Settings"
-							onClose={() => this.setState({ showConfiguationModal: false })}
-						>
-							<div className="standard-form">
-								<fieldset className="form-body">
-									<div id="controls">
-										<div style={{ margin: "20px 0" }}>
-											<Checkbox
-												name="wrap-comments"
-												checked={wrapCommentsField}
-												onChange={() => this.setState({ wrapCommentsField: !wrapCommentsField })}
-											>
-												Wrap multi-line comments
-											</Checkbox>
-											<Checkbox
-												name="show-hidden"
-												checked={showHiddenField}
-												onChange={() => this.setState({ showHiddenField: !showHiddenField })}
-											>
-												Show hidden/archived codemarks
-											</Checkbox>
-											<Checkbox
-												name="show-pr-comments"
-												checked={
-													this.props.hasPRProvider
-														? this.state.pendingPRConnection
-															? true
-															: !!showPRCommentsField
-														: false
-												}
-												onChange={() => {
-													if (!this.props.hasPRProvider) {
-														this.setState({ showPRInfoModal: true });
-														this.setState({ pendingPRConnection: true });
-													} else {
-														this.setState({ pendingPRConnection: false });
-														this.setState({ showPRCommentsField: !showPRCommentsField });
-													}
-												}}
-											>
-												Show comments from Pull Requests
-											</Checkbox>
-											<Checkbox
-												name="sort-codemarks"
-												checked={codemarkSortTypeField === CodemarkSortType.CreatedAt}
-												onChange={e =>
-													this.setState({
-														codemarkSortTypeField: e
-															? CodemarkSortType.CreatedAt
-															: CodemarkSortType.File
-													})
-												}
-											>
-												Sort comments by date
-											</Checkbox>
-										</div>
-									</div>
-									<ButtonRow>
-										<Button onClick={this.saveSettings}>Save Settings</Button>
-									</ButtonRow>
-								</fieldset>
-							</div>
-						</Dialog>
-					</Modal>
-				)}
 				{this.state.showPRInfoModal && (
 					<PRInfoModal
 						onClose={() => {
@@ -646,16 +732,15 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 						delay={1}
 						tabIndex={1}
 					/>
-					<Icon
-						onClick={() =>
-							this.setState({ showConfiguationModal: !this.state.showConfiguationModal })
-						}
-						name="gear"
-						title="Configure"
-						placement="bottom"
-						delay={1}
-						tabIndex={1}
-					/>
+					<InlineMenu
+						key="settings-menu"
+						className="subtle no-padding"
+						noFocusOnSelect
+						noChevronDown
+						items={settingsMenuItems}
+					>
+						<Icon name="gear" title="Settings" placement="bottom" delay={1} />
+					</InlineMenu>
 				</PaneHeader>
 				{this.props.paneState !== PaneState.Collapsed && (
 					<PaneBody>{this.renderCodemarks()}</PaneBody>
@@ -663,34 +748,10 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			</>
 		);
 	}
-
-	saveSettings = async () => {
-		const {
-			showHiddenField,
-			showPRCommentsField,
-			codemarkSortTypeField,
-			wrapCommentsField
-		} = this.state;
-
-		let preferences = {
-			codemarksShowArchived: !!showHiddenField,
-			codemarksWrapComments: !!wrapCommentsField,
-			codemarkSortType: codemarkSortTypeField
-		} as any;
-		if (this.props.hasPRProvider) {
-			preferences.codemarksShowPRComments = !!showPRCommentsField;
-		} else {
-			preferences.codemarksShowPRComments = false;
-		}
-		await this.props.setUserPreferences(preferences);
-		if (this.props.hasPRProvider) {
-			this.props.fetchDocumentMarkers(this.props.textEditorUri!, !showPRCommentsField);
-		}
-		this.setState({ showConfiguationModal: false });
-	};
 }
 
 const EMPTY_ARRAY = [];
+const EMPTY_HASH_2 = {};
 
 const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 	const { context, repos, editorContext, documentMarkers, preferences, teams } = state;
@@ -712,12 +773,16 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		if (repoId && repos[repoId]) repoName = repos[repoId].name;
 	}
 
-	const codemarkDomain: CodemarkDomainType = preferences.codemarkDomain || CodemarkDomainType.File;
+	const codemarkDomain: CodemarkDomainType = preferences.codemarkDomain || CodemarkDomainType.Repo;
 	const codemarkSortType: CodemarkSortType = preferences.codemarkSortType || CodemarkSortType.File;
+	const showHidden = preferences.codemarksShowArchived || false;
+	const showResolved = preferences.codemarksHideResolved ? false : true;
+	const showReviews = preferences.codemarksHideReviews ? false : true;
+	let currentBranch = scmInfo && scmInfo.scm ? scmInfo.scm.branch || "" : "";
 
 	let codemarksToRender = EMPTY_ARRAY as CodemarkPlus[];
 	if (scmInfo && codemarkDomain !== CodemarkDomainType.File) {
-		const { items = [], showHidden } = props;
+		const { items = [] } = props;
 		const { scm = {} as any } = scmInfo as GetFileScmInfoResponse;
 		const { repoId } = scm;
 		const currentDirectory = fs.pathDirname(scm.file || "");
@@ -749,13 +814,12 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 
 		codemarksToRender = getActiveCodemarks(state)
 			.filter(codemark => {
-				const hidden =
-					//@ts-ignore
-					!showHidden && codemark && (!codemark.pinned || codemark.status === "closed");
-				if (hidden) return false;
+				const hidden = !showHidden && codemark && !codemark.pinned;
+				// if (hidden) return false;
 
 				if (
 					codemarkDomain === CodemarkDomainType.Repo ||
+					codemarkDomain === CodemarkDomainType.Branch ||
 					codemarkDomain === CodemarkDomainType.Directory
 				) {
 					if (!((codemark as any).markers || []).find(marker => marker.repoId === repoId))
@@ -765,6 +829,14 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 					if (
 						!((codemark as any).markers || []).find(marker =>
 							fs.pathDirname(marker.file || "").startsWith(currentDirectory)
+						)
+					)
+						return false;
+				}
+				if (codemarkDomain === CodemarkDomainType.Branch) {
+					if (
+						!((codemark as any).markers || []).find(
+							marker => marker.branchWhenCreated == currentBranch
 						)
 					)
 						return false;
@@ -784,17 +856,22 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		hasPRProvider,
 		currentStreamId: context.currentStreamId,
 		showHidden: preferences.codemarksShowArchived || false,
+		showResolved,
+		showReviews,
 		wrapComments: preferences.codemarksWrapComments || false,
+		hideTags: preferences.codemarksHideTags || false,
 		showPRComments: hasPRProvider && preferences.codemarksShowPRComments,
 		fileNameToFilterFor: editorContext.activeFile,
 		scmInfo: editorContext.scmInfo,
+		currentBranch,
 		textEditorUri: editorContext.textEditorUri,
 		documentMarkers: docMarkers,
 		codemarks: codemarksToRender,
 		count,
 		numHidden,
 		codemarkDomain,
-		codemarkSortType
+		codemarkSortType,
+		hiddenPaneNodes: preferences.hiddenPaneNodes || EMPTY_HASH_2
 	};
 };
 export default withSearchableItems(
@@ -804,7 +881,6 @@ export default withSearchableItems(
 		setCurrentCodemark,
 		setEditorContext,
 		setNewPostEntry,
-		setUserPreference,
-		setUserPreferences
+		setUserPreference
 	})(SimpleCodemarksForFile)
 );
