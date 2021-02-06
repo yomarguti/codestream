@@ -212,11 +212,27 @@ export abstract class ThirdPartyProviderBase<
 		public readonly session: CodeStreamSession,
 		protected readonly providerConfig: ThirdPartyProviderConfig
 	) {
-		// only for on-prem installations ... if strictSSL is disabled for CodeStream,
-		// assume OK to have it disabled for third-party on-prem providers as well ...
-		// kind of insecure, but easier than other options ... so in this case (and
-		// this case only), establish our own HTTPS agent
+		// if we are connecting with https, and if strictSSL is disabled for CodeStream,
+		// assume OK to have it disabled for third-party providers as well,
+		// with the one exception of on-prem CodeStream, for whom it is only disabled
+		// for self-hosted providers ...
+		// ... so in this case, establish our own HTTPS agent
 		const info = url.parse(this.baseUrl);
+		if (
+			info.protocol === "https:" &&
+			session.disableStrictSSL &&
+			(session.runTimeEnvironment !== "onprem" ||
+				providerConfig.forEnterprise ||
+				providerConfig.isEnterprise)
+		) {
+			Logger.log(
+				`${providerConfig.name} provider will use a custom HTTPS agent with strictSSL disabled`
+			);
+			this._httpsAgent = new HttpsAgent({
+				rejectUnauthorized: false
+			});
+		}
+
 		if (
 			info.protocol === "https:" &&
 			(providerConfig.forEnterprise || providerConfig.isEnterprise) &&
@@ -366,7 +382,6 @@ export abstract class ThirdPartyProviderBase<
 			await this.refreshToken(request);
 			return;
 		}
-
 		if (this._ensuringConnection === undefined) {
 			this._ensuringConnection = this.ensureConnectedCore(request);
 		}
@@ -661,8 +676,9 @@ export abstract class ThirdPartyIssueProviderBase<
 			});
 			if (foundOneWithUrl) request.description += addressesText;
 		}
-		const codeStreamLink =
-			`https://codestream.com/?utm_source=cs&utm_medium=pr&utm_campaign=${encodeURI(request.providerId)}`;
+		const codeStreamLink = `https://codestream.com/?utm_source=cs&utm_medium=pr&utm_campaign=${encodeURI(
+			request.providerId
+		)}`;
 		let createdFrom = "";
 		switch (request.ideName) {
 			case "VSC":
