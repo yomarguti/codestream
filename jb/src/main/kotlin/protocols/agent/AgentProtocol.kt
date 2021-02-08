@@ -128,7 +128,11 @@ enum class TraceLevel(val value: String) {
     DEBUG("debug")
 }
 
-class DocumentMarkersParams(val textDocument: TextDocument)
+class ReviewCoverageParams(val textDocument: TextDocument)
+
+class ReviewCoverageResult(val reviewIds: List<String?>)
+
+class DocumentMarkersParams(val textDocument: TextDocument, val applyFilters: Boolean)
 
 class DocumentMarkersResult(val markers: List<DocumentMarker>, val markersNotLocated: Any)
 

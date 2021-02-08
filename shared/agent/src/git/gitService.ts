@@ -90,7 +90,10 @@ export interface IGitService extends Disposable {
 	//   resolveRef(uriOrPath: Uri | string, ref: string): Promise<string | undefined> {
 
 	getCommittersForRepo(repoPath: string, since: number): Promise<{ [email: string]: string }>;
-	getLastCommittersForRepo(repoPath: string, since: number): Promise<{ email: string, name: string }[]>;
+	getLastCommittersForRepo(
+		repoPath: string,
+		since: number
+	): Promise<{ email: string; name: string }[]>;
 }
 
 export class GitService implements IGitService, Disposable {
@@ -229,6 +232,19 @@ export class GitService implements IGitService, Disposable {
 		}
 
 		return git({ cwd: dir, stdin: stdin }, ...params, "--", filename);
+	}
+
+	async getCommitShaByLine(uriOrPath: URI | string): Promise<string[]> {
+		const [dir, filename] = Strings.splitPath(
+			typeof uriOrPath === "string" ? uriOrPath : uriOrPath.fsPath
+		);
+
+		const data = await git({ cwd: dir }, "blame", "-l", filename);
+
+		return data
+			.trim()
+			.split("\n")
+			.map(line => line.substr(0, 40));
 	}
 
 	async getFileCurrentRevision(uri: URI): Promise<string | undefined>;
@@ -1422,8 +1438,8 @@ export class GitService implements IGitService, Disposable {
 	async getLastCommittersForRepo(
 		repoPath: string,
 		since: number
-	): Promise<{ email: string, name: string }[]> {
-		const result: { email: string, name: string }[] = [];
+	): Promise<{ email: string; name: string }[]> {
+		const result: { email: string; name: string }[] = [];
 		try {
 			// this should be populated by something like
 			// git log --pretty=format:"%an|%aE" | sort -u
@@ -1436,7 +1452,7 @@ export class GitService implements IGitService, Disposable {
 				.forEach(line => {
 					const [name, email] = line.split("|");
 					if (!result.find(author => author.email === email)) {
-						result.push({name, email});
+						result.push({ name, email });
 					}
 				});
 		} catch {}
