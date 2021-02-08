@@ -68,14 +68,16 @@ const dir = argv["output-directory"];
 const convertIcon = async (icon, color, filename = dir + icon.name + ".png", type = "png") => {
 	const viewBox = icon.viewBox || (icon.options ? icon.options.viewBox : "0 0 16 16");
 
+	const iconPath = icon.path.replace(/currentColor/g, color);
+
 	let imageContents;
 	if (type === "png") {
-		const svgTag = `<svg width="${argv.size}" height="${argv.size}" fill="${color}" viewBox="${viewBox}">`;
-		const svgString = svgTag + icon.path + "</svg>";
-		imageContents = await convert(svgString, {});
+		const svgTag = `<svg fill="${color}" viewBox="${viewBox}">`;
+		const svgString = svgTag + iconPath + "</svg>";
+		imageContents = await convert(svgString, { height: 32, width: 32 });
 	} else if (type === "svg") {
 		const svgTag = `<svg xmlns="http://www.w3.org/2000/svg" fill="${color}" viewBox="${viewBox}">`;
-		imageContents = `${svgTag}\n    ${icon.path}\n</svg>`;
+		imageContents = `${svgTag}\n    ${iconPath}\n</svg>`;
 	} else {
 		return console.log("Uknown image type: ", type);
 	}
