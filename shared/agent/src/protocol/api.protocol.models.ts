@@ -285,8 +285,9 @@ export interface CSPost extends CSEntity {
 		createdAt: number;
 		providerId: "slack" | "msteams";
 		teamId: string;
-		channelName: string;
+		teamName: string;
 		channelId: string;
+		channelName: string;
 		postId: string;
 	}[];
 }
