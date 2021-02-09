@@ -94,7 +94,7 @@ export interface CSLoginResponse {
 	teamId?: string;
 	capabilities?: CSApiCapabilities;
 	features?: CSApiFeatures;
-	runTimeEnvironment?: string;
+	runtimeEnvironment?: string;
 }
 
 export interface CSRegisterRequest {
@@ -292,7 +292,9 @@ export interface CSMarkPostUnreadResponse {}
 
 export interface CSSetCodemarkPinnedRequest {}
 
-export interface CSSetCodemarkPinnedResponse {}
+export interface CSSetCodemarkPinnedResponse {
+	codemark: CSCodemark;
+}
 
 export interface CSPinReplyToCodemarkRequest {
 	codemarkId: string;

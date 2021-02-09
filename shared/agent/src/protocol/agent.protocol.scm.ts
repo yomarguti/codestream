@@ -97,6 +97,7 @@ export interface GetRepoScmStatusRequest {
 	includeStaged: boolean;
 	currentUserEmail: string;
 	skipAuthorsCalculation?: boolean;
+	includeLatestCommit?: boolean;
 }
 
 export interface CoAuthors {
@@ -460,6 +461,7 @@ export interface GetFileContentsAtRevisionRequest {
 }
 
 export interface GetFileContentsAtRevisionResponse {
+	repoRoot: string;
 	content: string;
 	error?: string;
 }

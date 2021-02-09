@@ -34,7 +34,8 @@ export class DocMarker {
 
 	get color(): string {
 		// TODO: -- Use a setting
-		return "blue";
+		return !this.pinned ? "gray" : this.status === "closed" ? "purple" : "green";
+		// return "blue";
 	}
 
 	get creatorName() {
@@ -86,7 +87,9 @@ export class DocMarker {
 	}
 
 	get pinned() {
-		return (this._entity.codemark && this._entity.codemark.pinned) || false;
+		// internal codemarks have the pinned property set
+		// external markers (from github PRs, etc default to pinned)
+		return this._entity.codemark ? this._entity.codemark.pinned : false;
 	}
 
 	get type(): string {

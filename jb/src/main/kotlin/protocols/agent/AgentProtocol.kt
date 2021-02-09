@@ -90,7 +90,8 @@ enum class NotificationDeliveryPreference(val value: String) {
 
 class CSPreferences(
     val mutedStreams: Map<String, Boolean>?,
-    val notificationDelivery: String?
+    val notificationDelivery: String?,
+    val reviewCreateOnCommit: Boolean?
 )
 
 class CSTeam(
@@ -127,7 +128,11 @@ enum class TraceLevel(val value: String) {
     DEBUG("debug")
 }
 
-class DocumentMarkersParams(val textDocument: TextDocument)
+class ReviewCoverageParams(val textDocument: TextDocument)
+
+class ReviewCoverageResult(val reviewIds: List<String?>)
+
+class DocumentMarkersParams(val textDocument: TextDocument, val applyFilters: Boolean)
 
 class DocumentMarkersResult(val markers: List<DocumentMarker>, val markersNotLocated: Any)
 
@@ -207,6 +212,7 @@ class GetLocalReviewContentsParams(
 )
 
 class GetReviewContentsResult(
+    val repoRoot: String?,
     val leftPath: String,
     val rightPath: String,
     val left: String,
@@ -368,6 +374,7 @@ class GetFileContentsAtRevisionParams(
 )
 
 class GetFileContentsAtRevisionResult(
+    val repoRoot: String,
     val content: String,
     val error: String?
 )

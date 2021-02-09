@@ -213,8 +213,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 	componentDidMount() {
 		this._mounted = true;
-		if (this.props.webviewFocused)
-			HostApi.instance.track("Page Viewed", { "Page Name": "Spatial View" });
 		const mutationObserver = new MutationObserver(() => this.repositionCodemarks());
 		mutationObserver.observe(document.getElementById("stream-root")!, {
 			childList: true,
@@ -253,9 +251,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	onFileChangedError(error: string) {
-		if (!error) return;
-		HostApi.instance.track("Spatial Error State", { "Error State": error });
-	}
+		// unused
+   }
 
 	// componentWillReceiveProps(nextProps) {
 	// 	Object.keys(nextProps)
@@ -1391,7 +1388,7 @@ const mapStateToProps = (state: CodeStreamState) => {
 		viewHeadshots: configs.showHeadshots,
 		showLabelText: false, //configs.showLabelText,
 		showHidden: context.codemarksShowArchived || false,
-		showPRComments: hasPRProvider && preferences.codemarksShowPRComments,
+		showPRComments: hasPRProvider && !!preferences.codemarksShowPRComments,
 		fileNameToFilterFor: editorContext.activeFile,
 		scmInfo: editorContext.scmInfo,
 		textEditorUri: editorContext.textEditorUri,

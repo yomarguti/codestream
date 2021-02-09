@@ -87,6 +87,7 @@ import {
 	CSMarker,
 	CSMarkerLocations,
 	CSMe,
+	CSMePreferences,
 	CSPost,
 	CSRegisterResponse,
 	CSRepository,
@@ -170,6 +171,11 @@ export class CodeStreamSession {
 	private _onDidChangeCurrentUser = new Emitter<CSMe>();
 	get onDidChangeCurrentUser(): Event<CSMe> {
 		return this._onDidChangeCurrentUser.event;
+	}
+
+	private _onDidChangePreferences = new Emitter<CSMePreferences>();
+	get onDidChangePreferences(): Event<CSMePreferences> {
+		return this._onDidChangePreferences.event;
 	}
 
 	private _onDidChangeMarkerLocations = new Emitter<CSMarkerLocations[]>();
@@ -468,6 +474,7 @@ export class CodeStreamSession {
 				});
 				break;
 			case MessageType.Preferences:
+				this._onDidChangePreferences.fire(e.data);
 				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: ChangeDataType.Preferences,
 					data: e.data
@@ -577,6 +584,11 @@ export class CodeStreamSession {
 	private _environment: CodeStreamEnvironment | string = CodeStreamEnvironment.Unknown;
 	get environment() {
 		return this._environment;
+	}
+
+	private _runTimeEnvironment: string = "prod";
+	get runTimeEnvironment() {
+		return this._runTimeEnvironment;
 	}
 
 	get disableStrictSSL(): boolean {
@@ -800,6 +812,7 @@ export class CodeStreamSession {
 		this._codestreamAccessToken = token.value;
 		this._teamId = (this._options as any).teamId = token.teamId;
 		this._codestreamUserId = response.user.id;
+		this._runTimeEnvironment = response.runtimeEnvironment || "prod";
 
 		const currentTeam = response.teams.find(t => t.id === this._teamId)!;
 		this.registerApiCapabilities(response.capabilities || {}, currentTeam);

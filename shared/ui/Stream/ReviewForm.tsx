@@ -46,7 +46,6 @@ import Button from "./Button";
 import Tag from "./Tag";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
-import { sortBy as _sortBy } from "lodash-es";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
 import HeadshotMenu from "@codestream/webview/src/components/HeadshotMenu";
 import { SelectPeople } from "@codestream/webview/src/components/SelectPeople";
@@ -70,7 +69,7 @@ import { EditorRevealRangeRequestType } from "../ipc/host.protocol.editor";
 import { Range } from "vscode-languageserver-types";
 import { PostsActionsType } from "../store/posts/types";
 import { URI } from "vscode-uri";
-import { logError, logWarning } from "../logger";
+import { logError } from "../logger";
 import { DocumentData } from "../protocols/agent/agent.protocol.notifications";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { LoadingMessage } from "../src/components/LoadingMessage";
@@ -163,9 +162,9 @@ interface ConnectedProps {
 	statusLabel: string;
 	statusIcon: string;
 	currentRepoPath?: string;
-	isInVscode: boolean;
+	ideSupportsCreateReviewOnCommit: boolean;
 	isAutoFREnabled: boolean;
-	requestFeedbackOnCommit?: boolean;
+	createReviewOnCommit?: boolean;
 }
 
 interface State {
@@ -228,8 +227,8 @@ interface State {
 	currentFile?: string;
 	editingReviewBranch?: string;
 	addressesIssues: { [codemarkId: string]: boolean };
-	requestFeedbackOnCommit: boolean;
-	showRequestFeedbackOnCommitToggle: boolean;
+	createReviewOnCommit: boolean;
+	showCreateReviewOnCommitToggle: boolean;
 	attachments: AttachmentField[];
 	isDragging: number;
 }
@@ -429,19 +428,21 @@ class ReviewForm extends React.Component<Props, State> {
 			isAmending,
 			textEditorUri,
 			currentRepoPath,
-			isInVscode,
-			requestFeedbackOnCommit,
+			ideSupportsCreateReviewOnCommit,
+			createReviewOnCommit,
 			isAutoFREnabled
 		} = this.props;
 		if (isEditing && !isAmending) return;
 
 		this.setState({ mountedTimestamp: new Date().getTime() });
 		if (!isEditing && !isAmending) {
-			const isRequestingFeedbackOnCommit =
+			const isCreatingReviewOnCommit =
 				this.props.currentReviewOptions && this.props.currentReviewOptions.includeLatestCommit;
-			const showRequestFeedbackOnCommitToggle =
-				isInVscode && isAutoFREnabled && (isRequestingFeedbackOnCommit || !requestFeedbackOnCommit);
-			this.setState({ showRequestFeedbackOnCommitToggle });
+			const showCreateReviewOnCommitToggle =
+				ideSupportsCreateReviewOnCommit &&
+				isAutoFREnabled &&
+				(isCreatingReviewOnCommit || !createReviewOnCommit);
+			this.setState({ showCreateReviewOnCommitToggle: showCreateReviewOnCommitToggle });
 		}
 
 		if (isAmending) this.getScmInfoForRepo();
@@ -487,6 +488,8 @@ class ReviewForm extends React.Component<Props, State> {
 				editingReview
 			} = this.props;
 			const { includeSaved, includeStaged, startCommit, prevEndCommit } = this.state;
+			const includeLatestCommit =
+				this.props.currentReviewOptions && this.props.currentReviewOptions.includeLatestCommit;
 
 			const uri = repoUri || this.state.repoUri;
 			let statusInfo: GetRepoScmStatusResponse;
@@ -498,7 +501,8 @@ class ReviewForm extends React.Component<Props, State> {
 					includeSaved,
 					currentUserEmail: currentUser.email,
 					prevEndCommit,
-					reviewId: editingReview && editingReview.id
+					reviewId: editingReview && editingReview.id,
+					includeLatestCommit
 				});
 			} catch (e) {
 				logError(e);
@@ -570,20 +574,20 @@ class ReviewForm extends React.Component<Props, State> {
 			this.setState({ repoStatus: statusInfo, repoUri: uri, currentFile: "" });
 			if (!startCommit && statusInfo.scm && statusInfo.scm.startCommit) {
 				let limitedLength: number | undefined = undefined;
+
+				this.setChangeStart(statusInfo.scm.startCommit);
+
 				if (
-					this.props.currentReviewOptions &&
-					this.props.currentReviewOptions.includeLatestCommit &&
+					includeLatestCommit &&
 					statusInfo.scm.commits &&
 					statusInfo.scm.commits.length > 1 &&
 					statusInfo.scm.commits[0].info
 				) {
-					this.setChangeStart(statusInfo.scm.commits[1].sha, () => this.handleRepoChange());
 					this.setState({ title: statusInfo.scm.commits[0].info.message });
 					// only show this 1 commit
 					limitedLength = 1;
-				} else {
-					this.setChangeStart(statusInfo.scm.startCommit);
 				}
+
 				if (statusInfo.scm.commits) {
 					const commitListLength = statusInfo.scm.commits.findIndex(
 						// @ts-ignore
@@ -1192,20 +1196,20 @@ class ReviewForm extends React.Component<Props, State> {
 						>
 							{!isAmending && <CancelButton onClick={this.confirmCancel} />}
 							<div className={cx({ "review-container": !isAmending })}>
-								{this.state.showRequestFeedbackOnCommitToggle && (
+								{this.state.showCreateReviewOnCommitToggle && (
 									<div style={{ margin: "-30px 30px 10px 0", display: "flex" }}>
 										<span className="subhead muted">Auto-prompt for feedback when committing </span>
 										<span
-											key="toggle-auto-fr"
+											key="toggle-review-create-on-commit"
 											className="headline-flex"
 											style={{ display: "inline-block", marginLeft: "10px" }}
 										>
 											<LabeledSwitch
-												key="auto-feedback-toggle"
-												on={this.props.requestFeedbackOnCommit}
+												key="review-create-on-commit-toggle"
+												on={this.props.createReviewOnCommit}
 												offLabel="No"
 												onLabel="Yes"
-												onChange={this.toggleRequestFeedbackOnCommitEnabled}
+												onChange={this.toggleCreateReviewOnCommitEnabled}
 												height={20}
 												width={60}
 											/>
@@ -1920,16 +1924,13 @@ class ReviewForm extends React.Component<Props, State> {
 		this.setState({ title, titleTouched: true });
 	}
 
-	toggleRequestFeedbackOnCommitEnabled = (requestFeedbackOnCommit: boolean) => {
-		HostApi.instance.send(UpdateConfigurationRequestType, {
-			name: "requestFeedbackOnCommit",
-			value: requestFeedbackOnCommit
-		});
-		this.setState({ requestFeedbackOnCommit });
+	toggleCreateReviewOnCommitEnabled = (value: boolean) => {
+		this.props.setUserPreference(["reviewCreateOnCommit"], value);
+		this.setState({ createReviewOnCommit: value });
 	};
 
 	renderReviewForm() {
-		const { isEditing, isAmending, currentUser, repos, requestFeedbackOnCommit } = this.props;
+		const { isEditing, isAmending, currentUser, repos } = this.props;
 		const {
 			repoStatus,
 			repoName,
@@ -1940,8 +1941,7 @@ class ReviewForm extends React.Component<Props, State> {
 			isLoadingScm,
 			isReloadingScm,
 			scmError,
-			scmErrorMessage,
-			showRequestFeedbackOnCommitToggle
+			scmErrorMessage
 		} = this.state;
 
 		// coAuthorLabels are a mapping from teamMate ID to the # of edits represented in
@@ -2388,9 +2388,9 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		statusLabel,
 		statusIcon,
 		currentRepoPath: context.currentRepo && context.currentRepo.path,
-		isInVscode: ide.name === "VSC",
+		ideSupportsCreateReviewOnCommit: ide.name === "JETBRAINS" || ide.name === "VSC",
 		isAutoFREnabled: isFeatureEnabled(state, "autoFR"),
-		requestFeedbackOnCommit: state.configs.requestFeedbackOnCommit
+		createReviewOnCommit: state.preferences.reviewCreateOnCommit !== false
 	};
 };
 

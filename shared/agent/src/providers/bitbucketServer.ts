@@ -1,5 +1,6 @@
 "use strict";
 import { GitRemoteLike, GitRepository } from "git/gitService";
+import { toRepoName } from "../git/utils";
 import * as paths from "path";
 import * as qs from "querystring";
 import { URI } from "vscode-uri";
@@ -7,7 +8,7 @@ import { SessionContainer } from "../container";
 import { Logger } from "../logger";
 import { Markerish, MarkerLocationManager } from "../managers/markerLocationManager";
 import { MAX_RANGE_VALUE } from "../markerLocation/calculator";
-import { DocumentMarker, EnterpriseConfigurationData } from "../protocol/agent.protocol";
+import { DocumentMarker, ProviderConfigurationData } from "../protocol/agent.protocol";
 import {
 	CodemarkType,
 	CSBitbucketProviderInfo,
@@ -176,7 +177,7 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 	}
 
 	@log()
-	async configure(request: EnterpriseConfigurationData) {
+	async configure(request: ProviderConfigurationData) {
 		await this.session.api.setThirdPartyProviderToken({
 			providerId: this.providerConfig.id,
 			host: request.host,
@@ -242,14 +243,14 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 		// Kerberos-enabled path /kerberos-scm/*
 		if (split[1] === "scm" || split[1] === "kerberos-scm") {
 			const owner = split[2];
-			const name = split[3].replace(".git", "");
+			const name = toRepoName(split[3]);
 			return {
 				owner,
 				name
 			};
 		}
 		const owner = split[1];
-		const name = split[2].replace(".git", "");
+		const name = toRepoName(split[2]);
 		return {
 			owner,
 			name

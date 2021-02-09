@@ -46,20 +46,24 @@ const positionStyleMap: { [key: string]: string } = {
 
 const buildDecoration = (position: string, type: string, color: string, _status: string) => {
 	const pngPath = Container.context.asAbsolutePath(`assets/images/marker-${type}-${color}.png`);
-	const pngBase64 = fs.readFileSync(pngPath, { encoding: "base64" });
-	const pngInlineUrl = `data:image/png;base64,${pngBase64}`;
+	try {
+		const pngBase64 = fs.readFileSync(pngPath, { encoding: "base64" });
+		const pngInlineUrl = `data:image/png;base64,${pngBase64}`;
 
-	return {
-		contentText: "",
-		height: "16px",
-		width: "16px",
+		return {
+			contentText: "",
+			height: "16px",
+			width: "16px",
 
-		textDecoration: `none; background-image: url(${pngInlineUrl}); background-position: center; background-repeat: no-repeat; background-size: contain; ${positionStyleMap[position]}`
-	};
+			textDecoration: `none; background-image: url(${pngInlineUrl}); background-position: center; background-repeat: no-repeat; background-size: contain; ${positionStyleMap[position]}`
+		};
+	} catch (e) {
+		return;
+	}
 };
 
 const MarkerPositions = ["inline", "overlay"];
-const MarkerTypes = ["comment", "question", "issue", "trap", "bookmark"];
+const MarkerTypes = ["comment", "question", "issue", "trap", "bookmark", "prcomment"];
 const MarkerColors = ["blue", "green", "yellow", "orange", "red", "purple", "aqua", "gray"];
 const MarkerStatuses = ["open", "closed"];
 const MarkerHighlights: { [key: string]: string } = {
@@ -141,9 +145,19 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 				this.disable();
 				break;
 
-			case SessionStatus.SignedIn:
+			case SessionStatus.SignedIn: {
+				const preferences = Container.session.user.preferences;
+				if (preferences) {
+					this._lastPreferences = {
+						codemarksShowPRComments: !!preferences.codemarksShowPRComments,
+						codemarksHideReviews: !!preferences.codemarksHideReviews,
+						codemarksHideResolved: !!preferences.codemarksHideResolved,
+						codemarksShowArchived: !!preferences.codemarksShowArchived
+					};
+				}
 				this.ensure();
 				break;
+			}
 		}
 	}
 
@@ -188,9 +202,12 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 					for (const color of MarkerColors) {
 						for (const status of MarkerStatuses) {
 							const key = `${position}-${type}-${color}-${status}`;
-							decorationTypes[key] = window.createTextEditorDecorationType({
-								before: buildDecoration(position, type, color, status)
-							});
+							const before = buildDecoration(position, type, color, status);
+							if (before) {
+								decorationTypes[key] = window.createTextEditorDecorationType({
+									before
+								});
+							}
 						}
 					}
 				}
@@ -218,7 +235,21 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 			Container.session.onDidChangePullRequestComments(this.onPullRequestCommentsChanged, this),
 			Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
 			window.onDidChangeVisibleTextEditors(this.onEditorVisibilityChanged, this),
-			workspace.onDidCloseTextDocument(this.onDocumentClosed, this)
+			workspace.onDidCloseTextDocument(this.onDocumentClosed, this),
+			Container.session.onDidChangePreferences(e => {
+				const preferences = e.preferences();
+				const currentPreferences = {
+					codemarksShowPRComments: !!preferences.codemarksShowPRComments,
+					codemarksHideReviews: !!preferences.codemarksHideReviews,
+					codemarksHideResolved: !!preferences.codemarksHideResolved,
+					codemarksShowArchived: !!preferences.codemarksShowArchived
+				};
+				if (JSON.stringify(currentPreferences) !== JSON.stringify(this._lastPreferences)) {
+					// set the reset flag to true if we need to re-fetch
+					this.ensure(true);
+				}
+				this._lastPreferences = currentPreferences;
+			}, this)
 		];
 
 		if (!this._suspended) {
@@ -230,6 +261,13 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 
 		this.applyToApplicableVisibleEditors();
 	}
+
+	private _lastPreferences?: {
+		codemarksShowPRComments?: boolean;
+		codemarksHideReviews?: boolean;
+		codemarksHideResolved?: boolean;
+		codemarksShowArchived?: boolean;
+	};
 
 	private async onDocumentClosed(e: TextDocument) {
 		this._markersCache.delete(e.uri.toString());
@@ -510,7 +548,7 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 
 	private async getMarkersCore(uri: Uri) {
 		try {
-			const resp = await Container.agent.documentMarkers.fetch(uri, true);
+			const resp = await Container.agent.documentMarkers.fetch(uri);
 			if (resp === undefined) return emptyArray;
 
 			return resp.markers.map(m => new DocMarker(Container.session, m));

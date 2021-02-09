@@ -358,7 +358,8 @@ export class ScmManager {
 			startCommit,
 			reviewId,
 			currentUserEmail,
-			skipAuthorsCalculation
+			skipAuthorsCalculation,
+			includeLatestCommit
 		} = request;
 
 		if (reviewId) {
@@ -420,6 +421,10 @@ export class ScmManager {
 
 					const gitRemotes = await git.getRepoRemotes(repoPath);
 					remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
+
+					if (commits && commits.length > 1 && !startCommit && includeLatestCommit) {
+						startCommit = commits[1].sha;
+					}
 
 					// if we don't have a starting point to diff against,
 					// assume that we want to diff against either the first
@@ -1375,15 +1380,12 @@ export class ScmManager {
 
 		const remoteBranch = await git.getBranchRemote(repo.path, request.branchName);
 		if (!remoteBranch) {
-			throw new Error(`fetchRemoteBranch: Couldn't find branchRemote for ${repo.path} and ${request.branchName}`);
+			throw new Error(
+				`fetchRemoteBranch: Couldn't find branchRemote for ${repo.path} and ${request.branchName}`
+			);
 		}
 
-		const { error } = await git.fetchRemoteBranch(
-			repo.path,
-			".",
-			remoteBranch,
-			request.branchName
-		);
+		const { error } = await git.fetchRemoteBranch(repo.path, ".", remoteBranch, request.branchName);
 		if (error) {
 			throw new Error(error);
 		}
@@ -1410,7 +1412,11 @@ export class ScmManager {
 		await git.fetchAllRemotes(repoPath);
 
 		const baseBranchRemote = await git.getBranchRemote(repoPath, request.branchName);
-		const commitsBehindOrigin = await git.getBranchCommitsStatus(repoPath, baseBranchRemote!, request.branchName);
+		const commitsBehindOrigin = await git.getBranchCommitsStatus(
+			repoPath,
+			baseBranchRemote!,
+			request.branchName
+		);
 
 		return {
 			commitsBehindOrigin
@@ -1442,6 +1448,7 @@ export class ScmManager {
 		}
 		const contents = (await git.getFileContentForRevision(filePath, request.sha)) || "";
 		return {
+			repoRoot: repoPath,
 			content: contents
 		};
 	}

@@ -185,6 +185,7 @@ export interface GetReviewContentsLocalRequest {
 }
 
 export interface GetReviewContentsResponse {
+	repoRoot?: string;
 	left?: string;
 	right?: string;
 	fileNotIncludedInReview?: boolean;
@@ -217,6 +218,21 @@ export interface ReviewFileContents {
 	left: string;
 	right: string;
 }
+
+export interface GetReviewCoverageRequest {
+	textDocument: TextDocumentIdentifier;
+}
+
+export interface GetReviewCoverageResponse {
+	reviewIds: (string | undefined)[];
+}
+
+export const GetReviewCoverageRequestType = new RequestType<
+	GetReviewCoverageRequest,
+	GetReviewCoverageResponse,
+	void,
+	void
+>("codestream/review/coverage");
 
 export interface ReviewRepoContents {
 	repoId: string;

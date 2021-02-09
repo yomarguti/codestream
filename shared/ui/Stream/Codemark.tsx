@@ -2,14 +2,19 @@ import cx from "classnames";
 import React from "react";
 import { connect } from "react-redux";
 import { Range } from "vscode-languageserver-protocol";
-import { fetchThread, setCodemarkStatus, setUserPreference, createPost } from "./actions";
+import {
+	fetchThread,
+	setCodemarkStatus,
+	setCodemarkPinned,
+	setUserPreference,
+	createPost
+} from "./actions";
 import Headshot from "./Headshot";
 import Tag from "./Tag";
 import Icon from "./Icon";
 import Menu from "./Menu";
 import { InjectAsComment } from "./InjectAsComment";
 import { RepositionCodemark } from "./RepositionCodemark";
-import { markdownify } from "./Markdowner";
 import Timestamp from "./Timestamp";
 import CodemarkDetails from "./CodemarkDetails";
 import {
@@ -27,10 +32,7 @@ import {
 	CodemarkStatus
 } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
-import {
-	FollowCodemarkRequestType,
-	SetCodemarkPinnedRequestType
-} from "@codestream/protocols/agent";
+import { FollowCodemarkRequestType } from "@codestream/protocols/agent";
 import { range, emptyArray, emptyObject } from "../utils";
 import {
 	getUserByCsId,
@@ -100,6 +102,7 @@ interface DispatchProps {
 	editCodemark: typeof editCodemark;
 	fetchThread: typeof fetchThread;
 	setCodemarkStatus: typeof setCodemarkStatus;
+	setCodemarkPinned: typeof setCodemarkPinned;
 	setUserPreference: typeof setUserPreference;
 	getPosts: typeof getPosts;
 	setCurrentCodemark: typeof setCurrentCodemark;
@@ -152,6 +155,7 @@ interface InheritedProps {
 	hidden?: boolean;
 	deselectCodemarks?: Function;
 	wrap?: boolean;
+	hideTags?: boolean;
 }
 
 type Props = InheritedProps & DispatchProps & ConnectedProps;
@@ -370,17 +374,8 @@ export class Codemark extends React.Component<Props, State> {
 		return <>{blocks}</>;
 	};
 
-	renderTypeIcon() {
-		const { codemark } = this.props;
-		if (!codemark) return null;
-
-		const { externalProvider } = codemark;
-		if (externalProvider) {
-			const providerDisplay = PROVIDER_MAPPINGS[externalProvider];
-			if (providerDisplay && providerDisplay.icon)
-				return <Icon name={providerDisplay.icon} className="type-icon" />;
-		}
-		switch (codemark.type) {
+	renderTypeIcon(type) {
+		switch (type) {
 			case "question":
 				return <Icon name="question" className="type-icon" />;
 			case "bookmark":
@@ -389,6 +384,8 @@ export class Codemark extends React.Component<Props, State> {
 				return <Icon name="trap" className="type-icon" />;
 			case "issue":
 				return <Icon name="issue" className="type-icon" />;
+			case "prcomment":
+				return <Icon name="pull-request" className="type-icon" />;
 			default:
 				return <Icon name="comment" className="type-icon" />;
 		}
@@ -531,6 +528,9 @@ export class Codemark extends React.Component<Props, State> {
 
 	renderStatus(codemark, menuItems = [] as any[]) {
 		const { isChangeRequest, type, status = "open" } = codemark;
+
+		// resolving codemarks down done under reply box
+		return null;
 
 		if (this.state.isInjecting) return null;
 
@@ -829,10 +829,11 @@ export class Codemark extends React.Component<Props, State> {
 		}
 		this.props.addCodemarks([updatedCodemark]);
 
-		HostApi.instance.send(SetCodemarkPinnedRequestType, {
-			codemarkId: codemark.id,
-			value
-		});
+		this.props.setCodemarkPinned(codemark, value);
+		// HostApi.instance.send(SetCodemarkPinnedRequestType, {
+		// 	codemarkId: codemark.id,
+		// 	value
+		// });
 	};
 
 	toggleLabelIndicators = (_event: React.SyntheticEvent) => {
@@ -868,8 +869,25 @@ export class Codemark extends React.Component<Props, State> {
 		});
 	};
 
+	renderPinnedTooltip() {
+		const { pinnedReplies, pinnedAuthors } = this.props;
+		if (!pinnedReplies) return null;
+		return (
+			<>
+				{pinnedReplies.map((reply, i) => {
+					return (
+						<div key={reply.id}>
+							<HeadshotName size={16} person={pinnedAuthors[i]} />
+							<MarkdownText text={reply.text} />
+						</div>
+					);
+				})}
+			</>
+		);
+	}
+
 	renderCollapsedCodemark() {
-		const { codemark, marker } = this.props;
+		const { codemark, marker, wrap, hideTags, pinnedReplies, pinnedAuthors } = this.props;
 
 		const lines: string | undefined = (() => {
 			if (!marker) return;
@@ -889,11 +907,12 @@ export class Codemark extends React.Component<Props, State> {
 			return null;
 		}
 
-		const renderedTags = this.renderTags(codemark);
+		const color = codemark.pinned ? (codemark.status === "closed" ? "purple" : "green") : "gray";
+		const renderedTags = hideTags ? null : this.renderTags(codemark);
 		return (
 			<div
 				id={`codemark-${codemark.id}`}
-				className={cx("codemark", { collapsed: !this.props.wrap, wrap: this.props.wrap })}
+				className={cx("codemark", { collapsed: !wrap, wrap: wrap })}
 				onClick={this.handleClickCodemark}
 				onMouseEnter={this.handleMouseEnterCodemark}
 				onMouseLeave={this.handleMouseLeaveCodemark}
@@ -901,13 +920,21 @@ export class Codemark extends React.Component<Props, State> {
 				<div className="contents">
 					{this.renderStatus(codemark)}
 					<div style={{ display: "flex", alignItems: "flex-start" }}>
-						<span style={{ flexGrow: 0, flexShrink: 0 }} className={codemark.color}>
-							{this.renderTypeIcon()}
+						<span style={{ flexGrow: 0, flexShrink: 0 }} className={color}>
+							{this.renderTypeIcon(codemark.type)}
 						</span>
 						<div className="body" style={{ flexGrow: 10 }}>
 							<MarkdownText text={codemark.title || codemark.text} inline={true} />
 							{renderedTags && <span className="cs-tag-container">{renderedTags}</span>}
 						</div>
+						{pinnedReplies && pinnedReplies.length > 0 && (
+							<Icon
+								title={this.renderPinnedTooltip()}
+								placement="topRight"
+								name="star"
+								className="subtle"
+							/>
+						)}
 						{codemark.numReplies > 0 && (
 							<span className="badge" style={{ marginLeft: "10px", flexGrow: 0, flexShrink: 0 }}>
 								{codemark.numReplies}
@@ -1271,6 +1298,13 @@ export class Codemark extends React.Component<Props, State> {
 
 		menuItems.push({ label: "Copy link", action: this.copyPermalink });
 
+		if (codemark.status === "closed") {
+			menuItems.push({
+				label: "Reopen",
+				action: () => this.openIssue()
+			});
+		}
+
 		if (codemark.pinned) {
 			menuItems.push({
 				label: "Archive",
@@ -1457,7 +1491,7 @@ export class Codemark extends React.Component<Props, State> {
 						<div className="header">
 							{!renderExpandedBody && type === "bookmark" ? (
 								<>
-									<span className={codemark.color}>{this.renderTypeIcon()}</span>
+									<span className={codemark.color}>{this.renderTypeIcon(codemark.type)}</span>
 									<MarkdownText text={codemark.title || codemark.text} inline={true} />
 									<div className="right">
 										<span onClick={this.handleMenuClick}>
@@ -1483,11 +1517,9 @@ export class Codemark extends React.Component<Props, State> {
 										<Timestamp relative time={codemark.createdAt} />
 									</div>
 									<div className="right" style={{ alignItems: "center" }}>
-										{type !== CodemarkType.Issue && (
-											<span onClick={this.handleMenuClick}>
-												<Icon name="kebab-vertical" className="kebab-vertical clickable" />
-											</span>
-										)}
+										<span onClick={this.handleMenuClick}>
+											<Icon name="kebab-vertical" className="kebab-vertical clickable" />
+										</span>
 										{this.renderStatus(codemark, menuItems)}
 										{this.props.post && <AddReactionIcon post={this.props.post} />}
 										{/* this.renderKeybinding(codemark) */}
@@ -1767,8 +1799,8 @@ export class Codemark extends React.Component<Props, State> {
 			//@ts-ignore
 			const range = marker.range;
 			if (range) {
-				if (range.start.line == range.end.line) return `Line ${range.start.line}`;
-				else return `Lines ${range.start.line}-${range.end.line}`;
+				if (range.start.line == range.end.line) return `Line ${range.start.line + 1}`;
+				else return `Lines ${range.start.line + 1}-${range.end.line + 1}`;
 			} else return;
 		})();
 
@@ -1798,8 +1830,8 @@ export class Codemark extends React.Component<Props, State> {
 			>
 				<div className="contents">
 					<div className="body" style={{ display: "flex", alignItems: "flex-start" }}>
-						<span style={{ flexGrow: 0, flexShrink: 0 }}>
-							<Icon name={externalContent.provider.icon || "codestream"} className="margin-right" />
+						<span style={{ flexGrow: 0, flexShrink: 0 }} className="gray">
+							{this.renderTypeIcon(marker["type"])}
 						</span>
 						<div>
 							<MarkdownText text={marker.summary} inline={true} />
@@ -2084,6 +2116,7 @@ export default connect(
 	mapStateToProps,
 	{
 		setCodemarkStatus,
+		setCodemarkPinned,
 		setUserPreference,
 		deleteCodemark,
 		editCodemark,
