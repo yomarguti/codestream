@@ -19,7 +19,7 @@ import {
 	CSReview,
 	CSStream
 } from "./api.protocol";
-import { Attachment } from "./api.protocol.models";
+import { Attachment, CSShareTarget } from "./api.protocol.models";
 
 export interface CodemarkPlus extends CSCodemark {
 	markers?: CSMarker[];
@@ -227,6 +227,28 @@ export interface UpdateCodemarkResponse {
 export const UpdateCodemarkRequestType = new RequestType<
 	UpdateCodemarkRequest,
 	UpdateCodemarkResponse,
+	void,
+	void
+>("codestream/codemark/update");
+
+export interface ShareCodemarkRequest {
+	codemarkId: string;
+	target: {
+		providerId: string;
+		teamId: string;
+		teamName: string;
+		channelId: string;
+		channelName: string;
+		postId: string;
+		url: string;
+	};
+}
+export interface ShareCodemarkResponse {
+	codemark: CodemarkPlus;
+}
+export const ShareCodemarkRequestType = new RequestType<
+	ShareCodemarkRequest,
+	ShareCodemarkResponse,
 	void,
 	void
 >("codestream/codemark/update");

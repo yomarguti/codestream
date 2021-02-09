@@ -1081,6 +1081,32 @@ export class Codemark extends React.Component<Props, State> {
 		return null;
 	};
 
+	renderShares = () => {
+		const { codemark } = this.props;
+
+		if (codemark && codemark.sharedTo && codemark.sharedTo.length > 0) {
+			return (
+				<div className="related">
+					<div className="related-label">Shared To</div>
+					{codemark.sharedTo.map(target => {
+						const providerDisplay = PROVIDER_MAPPINGS[target.providerId];
+						return (
+							<Link className="external-link" href={target.url}>
+								{providerDisplay.icon && (
+									<span>
+										<Icon name={providerDisplay.icon} />
+									</span>
+								)}
+								{target.channelName}
+							</Link>
+						);
+					})}
+				</div>
+			);
+		}
+		return null;
+	};
+
 	copyPermalink = () => {
 		if (this.permalinkRef.current) {
 			this.permalinkRef.current.select();
