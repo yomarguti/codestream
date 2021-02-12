@@ -385,10 +385,10 @@ export const Onboard = React.memo(function Onboard() {
 	let CONGRATULATIONS_STEP = 6;
 
 	if (tourType === "educate") {
-		NUM_STEPS = 6;
+		NUM_STEPS = 7;
 		CODE_HOSTS_STEP = 999;
 		CODEMARK_STEP = 999;
-		CONGRATULATIONS_STEP = 5;
+		CONGRATULATIONS_STEP = 6;
 	}
 
 	const [lastStep, setLastStep] = useState(currentStep);
@@ -515,11 +515,8 @@ export const Onboard = React.memo(function Onboard() {
 									setShowNextMessagingStep={setShowNextMessagingStep}
 								/>
 								<FeedbackRequests className={className(3)} skip={skip} />
-								<PullRequests
-									className={className(4)}
-									skip={skip}
-									connectedCodeHostProviders={derivedState.connectedCodeHostProviders}
-								/>
+								<PullRequests className={className(4)} skip={skip} />
+								<InviteTeammates className={className(5)} skip={skip} positionDots={positionDots} />
 							</>
 						) : (
 							<>
@@ -703,32 +700,37 @@ const FeedbackRequests = (props: { className: string; skip: Function }) => {
 	);
 };
 
-const PullRequests = (props: {
-	className: string;
-	skip: Function;
-	connectedCodeHostProviders: string[];
-}) => {
+const PullRequests = (props: { className: string; skip: Function }) => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { providers } = state;
 
-		const codeHostProviders = Object.keys(providers).filter(id =>
-			[
-				"github",
-				"github_enterprise",
-				"bitbucket",
-				"bitbucket_server",
-				"gitlab",
-				"gitlab_enterprise"
-			].includes(providers[id].name)
+		const connectedProviders = Object.keys(providers).filter(id => isConnected(state, { id }));
+		const codeHostProviders = Object.keys(providers)
+			.filter(id =>
+				[
+					"github",
+					"github_enterprise",
+					"bitbucket",
+					"bitbucket_server",
+					"gitlab",
+					"gitlab_enterprise"
+				].includes(providers[id].name)
+			)
+			.sort((a, b) => {
+				return providers[a].name.localeCompare(providers[b].name);
+			});
+		const connectedCodeHostProviders = codeHostProviders.filter(id =>
+			connectedProviders.includes(id)
 		);
 
 		return {
 			prLabel: getPRLabel(state),
-			codeHostProviders
+			codeHostProviders,
+			connectedCodeHostProviders
 		};
 	}, shallowEqual);
 
-	if (props.connectedCodeHostProviders.find(id => id.includes("github"))) {
+	if (derivedState.connectedCodeHostProviders.find(id => id.includes("github"))) {
 		return (
 			<Step className={props.className}>
 				<div className="body">
@@ -751,13 +753,13 @@ const PullRequests = (props: {
 				</div>
 			</Step>
 		);
-	} else if (props.connectedCodeHostProviders.length > 0) {
+	} else if (derivedState.connectedCodeHostProviders.length > 0) {
 		return (
 			<Step className={props.className}>
 				<div className="body">
-					<h3>{derivedState.prLabel["PullRequest"]}</h3>
+					<h3>{derivedState.prLabel["PullRequests"]}</h3>
 					<p className="explainer">
-						Create {derivedState.prLabel["pullrequest"]} right from your IDE, with no context
+						Create {derivedState.prLabel["pullrequests"]} right from your IDE, with no context
 						switching.
 					</p>
 					<GIF src="https://images.codestream.com/onboard/PR-GLBB.gif" />
