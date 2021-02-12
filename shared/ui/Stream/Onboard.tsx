@@ -638,7 +638,8 @@ const CodeComments = (props: {
 		const { providers } = state;
 
 		return {
-			messagingProviders: Object.keys(providers).filter(id => providers[id].hasSharing)
+			messagingProviders: Object.keys(providers).filter(id => providers[id].hasSharing),
+			img: state.ide.name === "JETBRAINS" ? "CM-JB.gif" : "CM.gif"
 		};
 	}, shallowEqual);
 
@@ -649,7 +650,7 @@ const CodeComments = (props: {
 				<p className="explainer">
 					Have a question about some code? Just select the code, click Comment, and ask!
 				</p>
-				<GIF src="https://images.codestream.com/onboard/CM.gif" />
+				<GIF src={`https://images.codestream.com/onboard/${derivedState.img}`} />
 				<br />
 				<p className="explainer">
 					Connect your messaging service so teams can be notified, and can participate, via Slack or
@@ -677,6 +678,15 @@ const CodeComments = (props: {
 };
 
 const FeedbackRequests = (props: { className: string; skip: Function }) => {
+	const derivedState = useSelector((state: CodeStreamState) => {
+		const { providers } = state;
+
+		return {
+			messagingProviders: Object.keys(providers).filter(id => providers[id].hasSharing),
+			img: state.ide.name === "JETBRAINS" ? "FR-JB.gif" : "FR.gif"
+		};
+	}, shallowEqual);
+
 	return (
 		<Step className={props.className}>
 			<div className="body">
@@ -684,7 +694,7 @@ const FeedbackRequests = (props: { className: string; skip: Function }) => {
 				<p className="explainer">
 					Get feedback on your changes with no need to commit, push, open a PR, or leave your IDE.
 				</p>
-				<GIF src="https://images.codestream.com/onboard/FR.gif" />
+				<GIF src={`https://images.codestream.com/onboard/${derivedState.img}`} />
 				<br />
 				<p className="explainer">
 					Your teammates don't need to switch branches or set aside their own work to review your
@@ -726,7 +736,9 @@ const PullRequests = (props: { className: string; skip: Function }) => {
 		return {
 			prLabel: getPRLabel(state),
 			codeHostProviders,
-			connectedCodeHostProviders
+			connectedCodeHostProviders,
+			img1: state.ide.name === "JETBRAINS" ? "PR-GH-JB.gif" : "PR-GH.gif",
+			img2: state.ide.name === "JETBRAINS" ? "PR-GLBB-JB.gif" : "PR-GLBB.gif"
 		};
 	}, shallowEqual);
 
@@ -739,7 +751,7 @@ const PullRequests = (props: { className: string; skip: Function }) => {
 						Create and review pull requests from your IDE, with full-file context, and side-by-side
 						diffs that allow you to comment anywhere in the file.
 					</p>
-					<GIF src="https://images.codestream.com/onboard/PR-GH.gif" />
+					<GIF src={`https://images.codestream.com/onboard/${derivedState.img1}`} />
 					<br />
 					<p className="explainer">
 						Your comments sync to GitHub in real time, so you can try out CodeStream before inviting
@@ -762,7 +774,7 @@ const PullRequests = (props: { className: string; skip: Function }) => {
 						Create {derivedState.prLabel["pullrequests"]} right from your IDE, with no context
 						switching.
 					</p>
-					<GIF src="https://images.codestream.com/onboard/PR-GLBB.gif" />
+					<GIF src={`https://images.codestream.com/onboard/${derivedState.img2}`} />
 					<br />
 					<CenterRow>
 						<Button size="xl" onClick={() => props.skip()}>
@@ -781,7 +793,7 @@ const PullRequests = (props: { className: string; skip: Function }) => {
 						Create and review pull requests from your IDE, with full-file context, and side-by-side
 						diffs that allow you to comment anywhere in the file.
 					</p>
-					<GIF src="https://images.codestream.com/onboard/PR-GH.gif" />
+					<GIF src={`https://images.codestream.com/onboard/${derivedState.img1}`} />
 					<br />
 					<p className="explainer">
 						Your comments sync to your code host in real time, so you can try out CodeStream before
