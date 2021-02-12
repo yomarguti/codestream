@@ -23,13 +23,14 @@ import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { configureAndConnectProvider } from "../store/providers/actions";
 import { ComposeKeybindings } from "./ComposeTitles";
 import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
-import { isConnected } from "../store/providers/reducer";
+import { getPRLabel, isConnected } from "../store/providers/reducer";
 import { TextInput } from "../Authentication/TextInput";
 import { FormattedMessage } from "react-intl";
 import { isEmailValid } from "../Authentication/Signup";
 import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
 import { TelemetryRequestType } from "@codestream/protocols/agent";
 import { setOnboardStep, setShowFeedbackSmiley } from "../store/context/actions";
+import { getTestGroup } from "../store/context/reducer";
 
 const Step = styled.div`
 	margin: 0 auto;
@@ -90,6 +91,9 @@ const Step = styled.div`
 	}
 	.explainer {
 		text-align: center;
+		&.left {
+			text-align: left;
+		}
 	}
 	&.active {
 		animation-duration: 0.75s;
@@ -309,7 +313,7 @@ const ExpandingText = styled.div`
 
 const EMPTY_ARRAY = [];
 
-export const Onboard = React.memo(function Onboard(props: { type: "tour" | "educate" }) {
+export const Onboard = React.memo(function Onboard() {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { providers } = state;
@@ -350,6 +354,7 @@ export const Onboard = React.memo(function Onboard(props: { type: "tour" | "educ
 		);
 
 		return {
+			tourType: "educate", //getTestGroup(state, "onboard") || "educate",
 			currentStep: state.context.onboardStep,
 			providers: state.providers,
 			connectedProviders,
@@ -360,21 +365,31 @@ export const Onboard = React.memo(function Onboard(props: { type: "tour" | "educ
 			messagingProviders,
 			connectedMessagingProviders,
 			teamMembers: getTeamMembers(state),
-			totalPosts: user.totalPosts || 0
+			totalPosts: user.totalPosts || 0,
+			isInVSCode: state.ide.name === "VSC",
+			isInJetBrains: state.ide.name === "JETBRAINS"
 		};
 	}, shallowEqual);
 
 	const {
+		tourType,
 		currentStep,
 		connectedCodeHostProviders,
 		connectedIssueProviders,
 		connectedMessagingProviders
 	} = derivedState;
 
-	const NUM_STEPS = 7;
-	const CODE_HOSTS_STEP = 1;
-	const CODEMARK_STEP = 5;
-	const CONGRATULATIONS_STEP = 6;
+	let NUM_STEPS = 7;
+	let CODE_HOSTS_STEP = 1;
+	let CODEMARK_STEP = 5;
+	let CONGRATULATIONS_STEP = 6;
+
+	if (tourType === "educate") {
+		NUM_STEPS = 6;
+		CODE_HOSTS_STEP = 999;
+		CODEMARK_STEP = 999;
+		CONGRATULATIONS_STEP = 5;
+	}
 
 	const [lastStep, setLastStep] = useState(currentStep);
 	// if we come back into the tour from elsewhere and currentStep is the codemark step, add icons
@@ -416,7 +431,12 @@ export const Onboard = React.memo(function Onboard(props: { type: "tour" | "educ
 	const skip = () => setStep(currentStep + 1);
 
 	const setStep = (step: number) => {
-		if (step === CODE_HOSTS_STEP && derivedState.connectedCodeHostProviders.length > 0) step = 2;
+		if (
+			tourType === "onboard" &&
+			step === CODE_HOSTS_STEP &&
+			derivedState.connectedCodeHostProviders.length > 0
+		)
+			step = 2;
 		if (step === NUM_STEPS) {
 			dispatch(setOnboardStep(0));
 			dispatch(closePanel());
@@ -485,7 +505,7 @@ export const Onboard = React.memo(function Onboard(props: { type: "tour" | "educ
 							</div>
 						</Step>
 
-						{props.type === "educate" ? (
+						{derivedState.tourType === "educate" ? (
 							<>
 								<ThreeWays className={className(1)} skip={skip} />
 								<CodeComments
@@ -495,7 +515,11 @@ export const Onboard = React.memo(function Onboard(props: { type: "tour" | "educ
 									setShowNextMessagingStep={setShowNextMessagingStep}
 								/>
 								<FeedbackRequests className={className(3)} skip={skip} />
-								<PullRequests className={className(4)} skip={skip} />
+								<PullRequests
+									className={className(4)}
+									skip={skip}
+									connectedCodeHostProviders={derivedState.connectedCodeHostProviders}
+								/>
 							</>
 						) : (
 							<>
@@ -528,10 +552,22 @@ export const Onboard = React.memo(function Onboard(props: { type: "tour" | "educ
 						</Step>
 					</fieldset>
 				</div>
-				<Dots id="dots" steps={connectedCodeHostProviders.length > 0 ? NUM_STEPS - 1 : NUM_STEPS}>
+				<Dots
+					id="dots"
+					steps={
+						tourType === "onboard" && connectedCodeHostProviders.length > 0
+							? NUM_STEPS - 1
+							: NUM_STEPS
+					}
+				>
 					{[...Array(NUM_STEPS)].map((_, index) => {
 						const selected = index === currentStep;
-						if (index === CODE_HOSTS_STEP && connectedCodeHostProviders.length > 0) return null;
+						if (
+							tourType === "onboard" &&
+							index === CODE_HOSTS_STEP &&
+							connectedCodeHostProviders.length > 0
+						)
+							return null;
 						return <Dot selected={selected} onClick={() => setStep(index)} />;
 					})}
 				</Dots>
@@ -545,11 +581,11 @@ const ThreeWays = (props: { className: string; skip: Function }) => {
 		<Step className={props.className}>
 			<div className="body">
 				<h3>3 Ways to Collaborate</h3>
-				<p className="explainer">
-					CodeStream provides different ways to collaborate depending on where you are in the
-					workflow
+				<p className="explainer left">
+					CodeStream provides different ways to collaborate depending on where you are in your
+					workflow.
 				</p>
-				<Dialog>
+				<div style={{ margin: "0 0 20px 20px" }}>
 					<DialogRow style={{ alignItems: "center" }}>
 						<OutlineNumber>1</OutlineNumber>
 						<div>
@@ -568,7 +604,8 @@ const ThreeWays = (props: { className: string; skip: Function }) => {
 							<b>Pull Requests</b> to review and merge completed work
 						</div>
 					</DialogRow>
-				</Dialog>
+				</div>
+				<p className="explainer left">Pick and choose those that work best with your team.</p>
 				<CenterRow>
 					<Button size="xl" onClick={() => props.skip()}>
 						Next
@@ -579,19 +616,17 @@ const ThreeWays = (props: { className: string; skip: Function }) => {
 	);
 };
 
-const GIF = () => {
+const GIF = (props: { src: string }) => {
 	return (
 		<div
 			style={{
 				display: "flex",
 				justifyContent: "center",
 				alignItems: "center",
-				height: "200px",
-				width: "380px",
-				opacity: 0.25
+				width: "100%"
 			}}
 		>
-			GIF goes here...
+			<img style={{ width: "100%" }} src={props.src} />
 		</div>
 	);
 };
@@ -617,9 +652,7 @@ const CodeComments = (props: {
 				<p className="explainer">
 					Have a question about some code? Just select the code, click Comment, and ask!
 				</p>
-				<Dialog>
-					<GIF />
-				</Dialog>
+				<GIF src="https://images.codestream.com/onboard/CM.gif" />
 				<br />
 				<p className="explainer">
 					Connect your messaging service so teams can be notified, and can participate, via Slack or
@@ -654,9 +687,7 @@ const FeedbackRequests = (props: { className: string; skip: Function }) => {
 				<p className="explainer">
 					Get feedback on your changes with no need to commit, push, open a PR, or leave your IDE.
 				</p>
-				<Dialog>
-					<GIF />
-				</Dialog>
+				<GIF src="https://images.codestream.com/onboard/FR.gif" />
 				<br />
 				<p className="explainer">
 					Your teammates don't need to switch branches or set aside their own work to review your
@@ -672,7 +703,11 @@ const FeedbackRequests = (props: { className: string; skip: Function }) => {
 	);
 };
 
-const PullRequests = (props: { className: string; skip: Function }) => {
+const PullRequests = (props: {
+	className: string;
+	skip: Function;
+	connectedCodeHostProviders: string[];
+}) => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { providers } = state;
 
@@ -688,32 +723,76 @@ const PullRequests = (props: { className: string; skip: Function }) => {
 		);
 
 		return {
+			prLabel: getPRLabel(state),
 			codeHostProviders
 		};
 	}, shallowEqual);
-	return (
-		<Step className={props.className}>
-			<div className="body">
-				<h3>Pull Requests</h3>
-				<p className="explainer">
-					Create and review pull requests from your IDE, with full-file context, and side-by-side
-					diffs that allow you to comment anywhere in the file.
-				</p>
-				<Dialog>
-					<GIF />
-				</Dialog>
-				<br />
-				<p className="explainer">
-					Your comments sync to GitHub in real time, so you can get started with CodeStream without
-					any of your teammates.
-				</p>
-				<IntegrationButtons noBorder noPadding>
-					<ProviderButtons providerIds={derivedState.codeHostProviders} />
-				</IntegrationButtons>
-				<SkipLink onClick={() => props.skip()}>I'll do this later</SkipLink>
-			</div>
-		</Step>
-	);
+
+	if (props.connectedCodeHostProviders.find(id => id.includes("github"))) {
+		return (
+			<Step className={props.className}>
+				<div className="body">
+					<h3>Pull Requests</h3>
+					<p className="explainer">
+						Create and review pull requests from your IDE, with full-file context, and side-by-side
+						diffs that allow you to comment anywhere in the file.
+					</p>
+					<GIF src="https://images.codestream.com/onboard/PR-GH.gif" />
+					<br />
+					<p className="explainer">
+						Your comments sync to GitHub in real time, so you can try out CodeStream before inviting
+						your teammates.
+					</p>
+					<CenterRow>
+						<Button size="xl" onClick={() => props.skip()}>
+							Next
+						</Button>
+					</CenterRow>
+				</div>
+			</Step>
+		);
+	} else if (props.connectedCodeHostProviders.length > 0) {
+		return (
+			<Step className={props.className}>
+				<div className="body">
+					<h3>{derivedState.prLabel["PullRequest"]}</h3>
+					<p className="explainer">
+						Create {derivedState.prLabel["pullrequest"]} right from your IDE, with no context
+						switching.
+					</p>
+					<GIF src="https://images.codestream.com/onboard/PR-GLBB.gif" />
+					<br />
+					<CenterRow>
+						<Button size="xl" onClick={() => props.skip()}>
+							Next
+						</Button>
+					</CenterRow>
+				</div>
+			</Step>
+		);
+	} else {
+		return (
+			<Step className={props.className}>
+				<div className="body">
+					<h3>Pull Requests</h3>
+					<p className="explainer">
+						Create and review pull requests from your IDE, with full-file context, and side-by-side
+						diffs that allow you to comment anywhere in the file.
+					</p>
+					<GIF src="https://images.codestream.com/onboard/PR-GH.gif" />
+					<br />
+					<p className="explainer">
+						Your comments sync to your code host in real time, so you can try out CodeStream before
+						inviting your teammates.
+					</p>
+					<IntegrationButtons noBorder noPadding>
+						<ProviderButtons providerIds={derivedState.codeHostProviders} />
+					</IntegrationButtons>
+					<SkipLink onClick={() => props.skip()}>I'll do this later</SkipLink>
+				</div>
+			</Step>
+		);
+	}
 };
 
 const ConnectCodeHostProvider = (props: { className: string; skip: Function }) => {
@@ -1024,9 +1103,7 @@ const InviteTeammates = (props: { className: string; skip: Function; positionDot
 				<Dialog>
 					{suggestedInvitees.length > 0 && (
 						<>
-							<p className="explainer" style={{ textAlign: "left" }}>
-								Suggestions below are based on your git history
-							</p>
+							<p className="explainer left">Suggestions below are based on your git history</p>
 							{suggestedInvitees.map(user => {
 								return (
 									<Checkbox

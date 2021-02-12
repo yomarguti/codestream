@@ -107,7 +107,7 @@ export class SimpleStream extends PureComponent {
 	componentDidMount() {
 		const { isFirstPageview, onboardingTestGroup } = this.props;
 
-		if (isFirstPageview && onboardingTestGroup === "tour") {
+		if (isFirstPageview && (onboardingTestGroup === "tour" || onboardingTestGroup === "educate")) {
 			this.props.openPanel(WebviewPanels.Onboard);
 		}
 		this.props.setIsFirstPageview(false);
