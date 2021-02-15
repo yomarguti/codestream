@@ -602,7 +602,7 @@ const ThreeWays = (props: { className: string; skip: Function }) => {
 						</div>
 					</DialogRow>
 				</div>
-				<p className="explainer left">Pick and choose those that work best with your team.</p>
+				<p className="explainer left">Pick and choose those that work best for your team.</p>
 				<CenterRow>
 					<Button size="xl" onClick={() => props.skip()}>
 						Next
@@ -654,7 +654,7 @@ const CodeComments = (props: {
 				<br />
 				<p className="explainer">
 					Connect your messaging service so teams can be notified, and can participate, via Slack or
-					Teams
+					Teams.
 				</p>
 				<IntegrationButtons noBorder noPadding>
 					<ProviderButtons
@@ -698,7 +698,7 @@ const FeedbackRequests = (props: { className: string; skip: Function }) => {
 				<br />
 				<p className="explainer">
 					Your teammates don't need to switch branches or set aside their own work to review your
-					changes
+					changes.
 				</p>
 				<CenterRow>
 					<Button size="xl" onClick={() => props.skip()}>
