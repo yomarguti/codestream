@@ -36,9 +36,9 @@ export enum CodemarkStatus {
 	Closed = "closed"
 }
 
-export interface CSShareTarget {
+export interface ShareTarget {
 	createdAt: number;
-	providerId: "slack" | "msteams";
+	providerId: string; // "slack" | "msteams";
 	teamId: string;
 	teamName: string;
 	channelId: string;
@@ -91,8 +91,6 @@ export interface CSCodemark extends CSEntity {
 
 	// review this codemark is in reply to
 	reviewId?: string;
-
-	sharedTo?: CSShareTarget[];
 }
 
 export interface CSMarkerIdentifier {
@@ -293,6 +291,7 @@ export interface CSPost extends CSEntity {
 	reviewCheckpoint?: number;
 	reviewId?: string;
 	files?: Attachment[];
+	sharedTo?: ShareTarget[];
 }
 
 export interface CSRemote {

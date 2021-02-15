@@ -274,7 +274,7 @@ export const SharingControls = React.memo(
 					providerTeamId: shareTarget.teamId,
 					providerTeamName: shareTarget.teamName,
 					channelId: selectedChannel && selectedChannel.id,
-					channelName: selectedChannel && selectedChannel.name
+					channelName: selectedChannel && formatChannelName(selectedChannel)
 				});
 				dispatch(
 					setUserPreference([derivedState.currentTeamId, "lastShareAttributes"], {

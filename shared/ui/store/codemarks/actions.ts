@@ -6,7 +6,7 @@ import {
 	AddMarkersRequest,
 	AddMarkersRequestType,
 	UpdateCodemarkRequestType,
-	ShareCodemarkRequestType,
+	UpdatePostSharingDataRequestType,
 	DeleteCodemarkRequestType,
 	GetRangeScmInfoResponse,
 	CrossPostIssueValues,
@@ -136,28 +136,33 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 				if (attributes.sharingAttributes) {
 					const { sharingAttributes } = attributes;
 					try {
-						const { post } = await HostApi.instance.send(CreateThirdPartyPostRequestType, {
-							providerId: sharingAttributes.providerId,
-							channelId: sharingAttributes.channelId,
-							providerTeamId: sharingAttributes.providerTeamId,
-							text: rest.text,
-							codemark: response.codemark,
-							remotes: attributes.remotes,
-							mentionedUserIds: attributes.mentionedUserIds
-						});
-						console.warn("GOT A POST OF: ", post);
-						if (post && post.id) {
-							const a = await HostApi.instance.send(ShareCodemarkRequestType, {
-								codemarkId: response.codemark.id,
-								target: {
-									providerId: sharingAttributes.providerId,
-									teamId: sharingAttributes.providerTeamId,
-									teamName: sharingAttributes.providerTeamName || "",
-									channelId: sharingAttributes.channelId,
-									channelName: sharingAttributes.channelName || "",
-									postId: post.id,
-									url: post.url
-								}
+						const { post, ts, permalink } = await HostApi.instance.send(
+							CreateThirdPartyPostRequestType,
+							{
+								providerId: sharingAttributes.providerId,
+								channelId: sharingAttributes.channelId,
+								providerTeamId: sharingAttributes.providerTeamId,
+								text: rest.text,
+								codemark: response.codemark,
+								remotes: attributes.remotes,
+								mentionedUserIds: attributes.mentionedUserIds
+							}
+						);
+						if (ts) {
+							const a = await HostApi.instance.send(UpdatePostSharingDataRequestType, {
+								postId: response.codemark.postId,
+								sharedTo: [
+									{
+										createdAt: post.createdAt,
+										providerId: sharingAttributes.providerId,
+										teamId: sharingAttributes.providerTeamId,
+										teamName: sharingAttributes.providerTeamName || "",
+										channelId: sharingAttributes.channelId,
+										channelName: sharingAttributes.channelName || "",
+										postId: ts,
+										url: permalink || ""
+									}
+								]
 							});
 						}
 						HostApi.instance.track("Shared Codemark", {
