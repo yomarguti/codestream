@@ -381,14 +381,18 @@ export const Onboard = React.memo(function Onboard() {
 
 	let NUM_STEPS = 7;
 	let CODE_HOSTS_STEP = 1;
+	let ISSUE_PROVIDERS_STEP = 2;
+	let MESSAGING_PROVIDERS_STEP = 3;
 	let CODEMARK_STEP = 5;
 	let CONGRATULATIONS_STEP = 6;
 
 	if (tourType === "educate") {
 		NUM_STEPS = 7;
-		CODE_HOSTS_STEP = 999;
-		CODEMARK_STEP = 999;
+		MESSAGING_PROVIDERS_STEP = 2;
+		CODE_HOSTS_STEP = 4;
 		CONGRATULATIONS_STEP = 6;
+		ISSUE_PROVIDERS_STEP = 999;
+		CODEMARK_STEP = 999;
 	}
 
 	const [lastStep, setLastStep] = useState(currentStep);
@@ -404,21 +408,22 @@ export const Onboard = React.memo(function Onboard() {
 		setTimeout(() => positionDots(), 250);
 	});
 
+	// check when you connect to a host provider
 	useEffect(() => {
 		if (connectedCodeHostProviders.length > (previousConnectedCodeHostProviders || []).length) {
-			if (currentStep === 1) setStep(currentStep + 1);
+			if (currentStep === CODE_HOSTS_STEP) setStep(currentStep + 1);
 		}
 	}, [derivedState.connectedCodeHostProviders]);
 
 	useEffect(() => {
 		if (connectedIssueProviders.length > (previousConnectedIssueProviders || []).length) {
-			if (currentStep === 2) setStep(currentStep + 1);
+			if (currentStep === ISSUE_PROVIDERS_STEP) setStep(currentStep + 1);
 		}
 	}, [derivedState.connectedIssueProviders]);
 
 	useEffect(() => {
 		if (connectedMessagingProviders.length > (previousConnectedMessagingProviders || []).length) {
-			if (currentStep === 3) setStep(currentStep + 1);
+			if (currentStep === MESSAGING_PROVIDERS_STEP) setStep(currentStep + 1);
 		}
 	}, [derivedState.connectedMessagingProviders]);
 

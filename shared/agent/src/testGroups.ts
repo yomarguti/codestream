@@ -16,5 +16,8 @@ export const testGroups: TestGroupDefs = {
 	// },
 	onboard: {
 		choices: ["educate", "sidebar"]
+	},
+	"onboard-edu": {
+		choices: ["educate", "sidebar"]
 	}
 };

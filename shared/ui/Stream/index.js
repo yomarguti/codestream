@@ -690,7 +690,7 @@ const mapStateToProps = state => {
 		postStreamId: postStream.id,
 		composeCodemarkActive: context.composeCodemarkActive,
 		isFirstPageview: context.isFirstPageview,
-		onboardingTestGroup: getTestGroup(state, "onboard")
+		onboardingTestGroup: getTestGroup(state, "onboard-edu")
 	};
 };
 
