@@ -186,7 +186,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return this._client;
 	}
 
-	async onConnected() {
+	async onConnected(providerInfo?: CSGitHubProviderInfo) {
+		super.onConnected(providerInfo);
 		this._knownRepos = new Map<string, GitHubRepo>();
 	}
 
@@ -4511,6 +4512,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 							}
 							message
 							authoredDate
+							oid
 						  }
 						}
 					  }

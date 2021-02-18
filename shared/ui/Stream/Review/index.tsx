@@ -308,8 +308,11 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 				statusLabel = "Rejected";
 				break;
 		}
+		const post =
+			review && review.postId ? getPost(state.posts, review!.streamId, review.postId) : undefined;
 
 		return {
+			post,
 			currentUserId: state.session.userId!,
 			currentUser: state.users[state.session.userId!],
 			author: state.users[props.review.creatorId],
@@ -498,7 +501,13 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 	}, [review, collapsed]);
 
 	if (shareModalOpen)
-		return <SharingModal review={props.review!} onClose={() => setShareModalOpen(false)} />;
+		return (
+			<SharingModal
+				review={props.review!}
+				post={derivedState.post}
+				onClose={() => setShareModalOpen(false)}
+			/>
+		);
 
 	if (collapsed) {
 		return (
@@ -752,7 +761,6 @@ const BaseReview = (props: BaseReviewProps) => {
 							{props.headerError.message}
 							{canLocateRepo && singleRepo && (
 								<>
-									<br />
 									<LocateRepoButton
 										repoId={singleRepo.id}
 										repoName={singleRepo.repoName}
@@ -1332,7 +1340,13 @@ const ReviewForReview = (props: PropsWithReview) => {
 		});
 
 	if (shareModalOpen)
-		return <SharingModal review={props.review!} onClose={() => setShareModalOpen(false)} />;
+		return (
+			<SharingModal
+				review={props.review!}
+				post={derivedState.post}
+				onClose={() => setShareModalOpen(false)}
+			/>
+		);
 	if (isEditing && !props.isAmending) {
 		return (
 			<ReviewForm
