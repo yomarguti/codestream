@@ -221,9 +221,12 @@ export interface CreateThirdPartyPostRequest {
 	entryPoint?: string;
 	crossPostIssueValues?: CrossPostIssueValues;
 	mentionedUserIds?: string[];
+	parentPostId?: string;
 }
 export interface CreateThirdPartyPostResponse {
 	post: any;
+	ts?: string;
+	permalink?: string;
 }
 
 export const CreateThirdPartyPostRequestType = new RequestType<
@@ -645,6 +648,7 @@ export interface FetchThirdPartyPullRequestCommitsResponse {
 	};
 	message: string;
 	authoredDate: string;
+	oid: string;
 }
 
 export const FetchThirdPartyPullRequestCommitsType = new RequestType<

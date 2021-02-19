@@ -71,6 +71,7 @@ type SlackMethods =
 	| "channels.info"
 	| "chat.meMessage"
 	| "chat.postMessage"
+	| "chat.getPermalink"
 	| "conversations.info"
 	| "groups.info"
 	| "users.profile.set"
@@ -221,6 +222,10 @@ export class SlackSharingApiProvider {
 			let text = request.text;
 			const meMessage = meMessageRegex.test(text);
 
+			const sleep = (miliseconds: number) => {
+				return new Promise(resolve => setTimeout(resolve, miliseconds));
+			};
+
 			if (text) {
 				text = toSlackPostText(text, userMaps, request.mentionedUserIds);
 			}
@@ -306,12 +311,35 @@ export class SlackSharingApiProvider {
 				text: text,
 				as_user: true,
 				unfurl_links: true,
+				thread_ts: request.parentPostId,
 				reply_broadcast: false, // parentPostId ? true : undefined --- because of slack bug (https://trello.com/c/Y48QI6Z9/919)
 				blocks: blocks !== undefined ? blocks : undefined
 			});
 
 			const { ok, error, message } = response as WebAPICallResult & { message?: any; ts?: any };
 			if (!ok) throw new Error(error);
+
+			sleep(1000); // wait for slack to be able to be called about this message
+
+			const permalinkResponse = await this.slackApiCall("chat.getPermalink", {
+				channel: channelId,
+				message_ts: message.ts
+			});
+
+			const ts = message.ts;
+			let thePermalink = "";
+
+			if (ts && !request.parentPostId) {
+				const { ok, error, permalink } = permalinkResponse as WebAPICallResult & {
+					permalink: string;
+				};
+				if (!ok) {
+					const cc = Logger.getCorrelationContext();
+					Logger.warn(cc, `Unable to get permalink for ${channelId} ${message.ts}: ${error}`);
+				} else {
+					thePermalink = permalink;
+				}
+			}
 
 			const post = await fromSlackPost(
 				message,
@@ -323,7 +351,9 @@ export class SlackSharingApiProvider {
 			createdPostId = postId;
 
 			return {
-				post: post
+				post: post,
+				ts: ts,
+				permalink: thePermalink
 			};
 		} finally {
 			if (createdPostId) {

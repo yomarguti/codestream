@@ -3,7 +3,12 @@ import * as actions from "./actions";
 import { getUserProviderInfo } from "./actions";
 import { ProvidersState, ProvidersActionsType } from "./types";
 import { CodeStreamState } from "..";
-import { CSMe, CSProviderInfos } from "@codestream/protocols/api";
+import {
+	CSMe,
+	CSMSTeamsProviderInfo,
+	CSProviderInfos,
+	CSSlackProviderInfo
+} from "@codestream/protocols/api";
 import { mapFilter, safe } from "@codestream/webview/utils";
 import { ThirdPartyProviderConfig } from "@codestream/protocols/agent";
 import { createSelector } from "reselect";
@@ -54,6 +59,7 @@ const MRLabel = {
 	PullRequests: "Merge Requests",
 	Pullrequest: "Merge request",
 	pullrequest: "merge request",
+	pullrequests: "merge requests",
 	PR: "MR",
 	PRs: "MRs",
 	pr: "mr"
@@ -64,6 +70,7 @@ const PRLabel = {
 	PullRequests: "Pull Requests",
 	Pullrequest: "Pull request",
 	pullrequest: "pull request",
+	pullrequests: "pull requests",
 	PR: "PR",
 	PRs: "PRs",
 	pr: "pr"
@@ -250,12 +257,16 @@ export const getConnectedSharingTargets = (state: CodeStreamState) => {
 
 	if (currentUser.providerInfo == undefined) return [];
 
-	const slackProviderInfo = getUserProviderInfo(currentUser, "slack", state.context.currentTeamId);
+	const slackProviderInfo = getUserProviderInfo(
+		currentUser,
+		"slack",
+		state.context.currentTeamId
+	) as CSSlackProviderInfo;
 	const msteamsProviderInfo = getUserProviderInfo(
 		currentUser,
 		"msteams",
 		state.context.currentTeamId
-	);
+	) as CSMSTeamsProviderInfo;
 
 	let teams: ThirdPartyTeam[] = [];
 

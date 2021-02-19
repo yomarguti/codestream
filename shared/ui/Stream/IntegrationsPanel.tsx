@@ -159,7 +159,7 @@ export const IntegrationsPanel = () => {
 					return (
 						<ProviderDropdown key={providerId} items={items} variant="success">
 							{display.icon && <Icon name={display.icon} />}
-							{shareTarget.teamName}
+							{display.displayName} - {shareTarget.teamName}
 						</ProviderDropdown>
 					);
 				});
@@ -276,7 +276,7 @@ export const IntegrationsPanel = () => {
 						onClick={() => dispatch(connectProvider(providerId, "Integrations Panel"))}
 					>
 						{display.icon && <Icon name={display.icon} />}
-						{`Add ${display.groupName}`}
+						{`Add ${display.displayName} ${display.groupName}`}
 					</Provider>
 				);
 			} else
@@ -307,9 +307,9 @@ export const IntegrationsPanel = () => {
 			<IntegrationGroups>
 				{Object.keys(derivedState.providers).length === 0 && (
 					<>
-						<h2>HTTPS Required</h2>
+						<h2>No Integrations Available</h2>
 						<p>
-							CodeStream integrations require a secure connection to your CodeStream server. Please
+							This version of CodeStream On-Prem is not configured for any integrations. Please
 							contact your on-prem CodeStream administrator.
 						</p>
 						<div style={{ textAlign: "center", marginBottom: "20px" }}>

@@ -1,5 +1,6 @@
 "use strict";
 import { Range, RequestType } from "vscode-languageserver-protocol";
+import { FetchThirdPartyPullRequestFilesResponse } from "./agent.protocol.providers";
 import { CSRepository, CSTeam, CSUser, ModifiedFile } from "./api.protocol";
 
 export interface GetBranchesRequest {
@@ -173,7 +174,7 @@ export interface ReposScm {
 	/**
 	 * this has a subset of what GitRemote has
 	 */
-	remotes?: { repoPath: string; path: string; domain: string }[];
+	remotes?: { repoPath: string; path: string; domain: string; webUrl: string }[];
 	/**
 	 * If this repo has a remote that is managed and connected to a provider,
 	 * return the providerId
@@ -552,3 +553,17 @@ export const CommitAndPushRequestType = new RequestType<
 	void,
 	void
 >("codestream/scm/commitAndPush");
+
+export interface GetCommitsFilesRequest {
+	repoId: string;
+	commits: string[];
+}
+
+export interface GetCommitsFilesResponse extends FetchThirdPartyPullRequestFilesResponse {}
+
+export const GetCommitsFilesRequestType = new RequestType<
+	GetCommitsFilesRequest,
+	GetCommitsFilesResponse[],
+	void,
+	void
+>("codestream/scm/commits/files");

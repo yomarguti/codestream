@@ -308,8 +308,11 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 				statusLabel = "Rejected";
 				break;
 		}
+		const post =
+			review && review.postId ? getPost(state.posts, review!.streamId, review.postId) : undefined;
 
 		return {
+			post,
 			currentUserId: state.session.userId!,
 			currentUser: state.users[state.session.userId!],
 			author: state.users[props.review.creatorId],
@@ -498,7 +501,13 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 	}, [review, collapsed]);
 
 	if (shareModalOpen)
-		return <SharingModal review={props.review!} onClose={() => setShareModalOpen(false)} />;
+		return (
+			<SharingModal
+				review={props.review!}
+				post={derivedState.post}
+				onClose={() => setShareModalOpen(false)}
+			/>
+		);
 
 	if (collapsed) {
 		return (
@@ -752,7 +761,6 @@ const BaseReview = (props: BaseReviewProps) => {
 							{props.headerError.message}
 							{canLocateRepo && singleRepo && (
 								<>
-									<br />
 									<LocateRepoButton
 										repoId={singleRepo.id}
 										repoName={singleRepo.repoName}
@@ -948,6 +956,26 @@ const BaseReview = (props: BaseReviewProps) => {
 						</Meta>
 					)}
 					{!props.collapsed && checkpoint === undefined && renderCommitList()}
+					{!props.collapsed && props.post && props.post.sharedTo && props.post.sharedTo.length > 0 && (
+						<Meta key="shared-to">
+							<MetaLabel>Shared To</MetaLabel>
+							<MetaDescriptionForAssignees>
+								{props.post.sharedTo.map(target => {
+									const providerDisplay = PROVIDER_MAPPINGS[target.providerId];
+									return (
+										<Link className="external-link" href={target.url}>
+											{providerDisplay && providerDisplay.icon && (
+												<span>
+													<Icon name={providerDisplay.icon} />
+												</span>
+											)}
+											{target.channelName}
+										</Link>
+									);
+								})}
+							</MetaDescriptionForAssignees>
+						</Meta>
+					)}
 				</MetaSection>
 				{props.collapsed && renderMetaSectionCollapsed(props)}
 			</CardBody>
@@ -1312,7 +1340,13 @@ const ReviewForReview = (props: PropsWithReview) => {
 		});
 
 	if (shareModalOpen)
-		return <SharingModal review={props.review!} onClose={() => setShareModalOpen(false)} />;
+		return (
+			<SharingModal
+				review={props.review!}
+				post={derivedState.post}
+				onClose={() => setShareModalOpen(false)}
+			/>
+		);
 	if (isEditing && !props.isAmending) {
 		return (
 			<ReviewForm
