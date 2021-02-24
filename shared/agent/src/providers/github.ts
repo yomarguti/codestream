@@ -8,7 +8,7 @@ import { CodeStreamSession } from "session";
 import { URI } from "vscode-uri";
 import { InternalError, ReportSuppressedMessages } from "../agentError";
 import { SessionContainer } from "../container";
-import { Logger, TraceLevel } from "../logger";
+import { Logger } from "../logger";
 import {
 	CreateThirdPartyCardRequest,
 	DidChangePullRequestCommentsNotificationType,
@@ -58,6 +58,7 @@ import {
 	ThirdPartyProviderSupportsPullRequests
 } from "./provider";
 import { toRepoName } from "../git/utils";
+import { performance } from "perf_hooks";
 
 interface GitHubRepo {
 	id: string;
@@ -243,6 +244,12 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		) {
 			return ReportSuppressedMessages.ConnectionError;
 		} else if (
+			(ex?.response?.message || ex?.message || "").indexOf(
+				"enabled OAuth App access restrictions"
+			) > -1
+		) {
+			return ReportSuppressedMessages.OAuthAppAccessRestrictionError;
+		} else if (
 			(ex.response && ex.response.message === "Bad credentials") ||
 			(ex.response &&
 				ex.response.errors instanceof Array &&
@@ -260,11 +267,12 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			throw new InternalError(ReportSuppressedMessages.AccessTokenInvalid);
 		}
 
+		const starting = performance.now();
 		let response;
 		try {
-			response = await (await this.client()).request<any>(query, variables);
+			response = await (await this.client()).request<T>(query, variables);
 		} catch (ex) {
-			Logger.warn("GitHub query caught:", ex);
+			Logger.warn(`GitHub query caught (elapsed=${performance.now() - starting}ms):`, ex);
 			const exType = this._isSuppressedException(ex);
 			if (exType !== undefined) {
 				if (exType !== ReportSuppressedMessages.NetworkError) {
@@ -276,7 +284,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 							tokenError: {
 								error: ex,
 								occurredAt: Date.now(),
-								isConnectionError: exType === ReportSuppressedMessages.ConnectionError
+								isConnectionError: exType === ReportSuppressedMessages.ConnectionError,
+								providerMessage:
+									exType === ReportSuppressedMessages.OAuthAppAccessRestrictionError
+										? ex?.response?.message || ex?.message
+										: null
 							}
 						}
 					});
@@ -673,8 +685,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		}
 
 		let response = {} as FetchThirdPartyPullRequestResponse;
-		let repoOwner: string;
-		let repoName: string;
+		let repoOwner: string | undefined = undefined;
+		let repoName: string | undefined = undefined;
 		let allTimelineItems: any = [];
 		try {
 			let timelineQueryResponse;
@@ -693,57 +705,69 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					repoName,
 					pullRequestNumber,
 					timelineQueryResponse &&
-						timelineQueryResponse.repository.pullRequest &&
-						timelineQueryResponse.repository.pullRequest.timelineItems.pageInfo &&
-						timelineQueryResponse.repository.pullRequest.timelineItems.pageInfo.endCursor
+						timelineQueryResponse?.repository?.pullRequest?.timelineItems?.pageInfo?.endCursor
 				);
 				if (timelineQueryResponse === undefined) break;
 				response = timelineQueryResponse;
 
-				allTimelineItems = allTimelineItems.concat(
-					timelineQueryResponse.repository.pullRequest.timelineItems.nodes
-				);
-			} while (timelineQueryResponse.repository.pullRequest.timelineItems.pageInfo.hasNextPage);
-		} catch (ex) {
-			Logger.error(ex);
-		}
-		if (response?.repository?.pullRequest) {
-			const { repos } = SessionContainer.instance();
-			const prRepo = await this.getPullRequestRepo(
-				await repos.get(),
-				response.repository.pullRequest
+				if (timelineQueryResponse?.repository?.pullRequest?.timelineItems?.nodes) {
+					allTimelineItems = allTimelineItems.concat(
+						timelineQueryResponse.repository.pullRequest.timelineItems.nodes
+					);
+				}
+			} while (
+				timelineQueryResponse?.repository?.pullRequest?.timelineItems?.pageInfo?.hasNextPage ===
+				true
 			);
 
-			if (prRepo?.id) {
-				try {
-					const prForkPointSha = await scmManager.getForkPointRequestType({
-						repoId: prRepo.id,
-						baseSha: response.repository.pullRequest.baseRefOid,
-						headSha: response.repository.pullRequest.headRefOid
-					});
+			if (response?.repository?.pullRequest) {
+				const { repos } = SessionContainer.instance();
+				const prRepo = await this.getPullRequestRepo(
+					await repos.get(),
+					response.repository.pullRequest
+				);
 
-					response.repository.pullRequest.forkPointSha = prForkPointSha?.sha;
-				} catch (err) {
-					Logger.error(err, `Could not find forkPoint for repoId=${prRepo.id}`);
+				if (prRepo?.id) {
+					try {
+						const prForkPointSha = await scmManager.getForkPointRequestType({
+							repoId: prRepo.id,
+							baseSha: response.repository.pullRequest.baseRefOid,
+							headSha: response.repository.pullRequest.headRefOid
+						});
+
+						response.repository.pullRequest.forkPointSha = prForkPointSha?.sha;
+					} catch (err) {
+						Logger.error(err, `Could not find forkPoint for repoId=${prRepo.id}`);
+					}
 				}
+
+				if (response.repository.pullRequest.timelineItems != null) {
+					response.repository.pullRequest.timelineItems.nodes = allTimelineItems;
+				}
+				response.repository.pullRequest.repoUrl = response.repository.url;
+				response.repository.pullRequest.baseUrl = response.repository.url.replace(
+					response.repository.resourcePath,
+					""
+				);
+
+				response.repository.repoOwner = repoOwner!;
+				response.repository.repoName = repoName!;
+
+				response.repository.pullRequest.providerId = this.providerConfig.id;
+				response.repository.providerId = this.providerConfig.id;
+
+				this._pullRequestCache.set(request.pullRequestId, response);
 			}
+		} catch (ex) {
+			Logger.error(ex, "getPullRequest", {
+				request: request
+			});
+			return {
+				error: {
+					message: ex.message
+				}
+			} as any;
 		}
-		if (response?.repository?.pullRequest?.timelineItems != null) {
-			response.repository.pullRequest.timelineItems.nodes = allTimelineItems;
-		}
-		response.repository.pullRequest.repoUrl = response.repository.url;
-		response.repository.pullRequest.baseUrl = response.repository.url.replace(
-			response.repository.resourcePath,
-			""
-		);
-
-		response.repository.repoOwner = repoOwner!;
-		response.repository.repoName = repoName!;
-
-		response.repository.pullRequest.providerId = this.providerConfig.id;
-		response.repository.providerId = this.providerConfig.id;
-
-		this._pullRequestCache.set(request.pullRequestId, response);
 		return response;
 	}
 
@@ -4375,11 +4399,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			// MORE here: https://github.community/t/bug-v4-graphql-api-trouble-retrieving-pull-request-review-comments/13708/2
 
 			if (
-				response.repository.pullRequest.timelineItems.nodes &&
-				response.repository &&
-				response.repository.pullRequest &&
-				response.repository.pullRequest.reviewThreads &&
-				response.repository.pullRequest.reviewThreads.edges
+				response?.repository?.pullRequest?.timelineItems?.nodes &&
+				response?.repository?.pullRequest?.reviewThreads?.edges
 			) {
 				// find all the PullRequestReview timelineItems as we will attach
 				// additional data to them
@@ -4439,8 +4460,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			// note the graphql for this.. it's the _first_ X not the _last_ X
 			// you'd think last would mean the last as in most recent, but it's actually the opposite
 			if (
-				response.repository.pullRequest.reviews &&
-				response.repository.pullRequest.reviews.nodes
+				response?.repository?.pullRequest?.reviews &&
+				response?.repository?.pullRequest?.reviews?.nodes
 			) {
 				// here we're looking for your last pending review as you can only have 1 pending review
 				// per user per PR
@@ -4452,7 +4473,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					response.repository.pullRequest.pendingReview = myPendingReview;
 				}
 			}
-			response.repository.pullRequest.viewer = { ...response.viewer };
+			if (response?.repository?.pullRequest) {
+				response.repository.pullRequest.viewer = { ...response.viewer };
+			}
 
 			Logger.debug(
 				`pullRequestTimelineQuery rateLimit=${JSON.stringify(response.rateLimit)} cursor=${cursor}`
