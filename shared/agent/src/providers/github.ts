@@ -4675,11 +4675,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		}
 	}
 
-	protected async handleErrorResponse(response: Response): Promise<Error> {
-		const ex = await super.handleErrorResponse(response);
-		this.trySetThirdPartyProviderInfo(ex);
-		return ex;
-	}
+	// protected async handleErrorResponse(response: Response): Promise<Error> {
+	// 	const ex = await super.handleErrorResponse(response);
+	// 	this.trySetThirdPartyProviderInfo(ex);
+	// 	return ex;
+	// }
 }
 
 interface GitHubPullRequest {
