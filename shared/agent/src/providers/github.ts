@@ -243,13 +243,15 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				ex.response.error.toLowerCase().indexOf("cookies must be enabled to use github") > -1)
 		) {
 			return ReportSuppressedMessages.ConnectionError;
-		} else if (
-			(ex?.response?.message || ex?.message || "").indexOf(
-				"enabled OAuth App access restrictions"
-			) > -1
-		) {
-			return ReportSuppressedMessages.OAuthAppAccessRestrictionError;
-		} else if (
+		}
+		// else if (
+		// 	(ex?.response?.message || ex?.message || "").indexOf(
+		// 		"enabled OAuth App access restrictions"
+		// 	) > -1
+		// ) {
+		// 	return ReportSuppressedMessages.OAuthAppAccessRestrictionError;
+		// }
+		else if (
 			(ex.response && ex.response.message === "Bad credentials") ||
 			(ex.response &&
 				ex.response.errors instanceof Array &&
