@@ -510,7 +510,7 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 						if (externalContent.provider.id === "github*com") {
 							message += "  $(github-inverted) ";
 						}
-						message += ` ${m.title ? m.title : "PR title is \"undefined\""} \n\n`;
+						message += m.title  ? m.title : "";
 						if (["github*com", "github/enterprise"].includes(m.externalContent.provider.id)) {
 							message += ` \n\n[__View ${typeString} \u2197__](command:codestream.openPullRequest?${encodeURIComponent(
 								JSON.stringify(viewCommandArgs)
@@ -519,7 +519,12 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 
 						if (m.externalContent.actions && m.externalContent.actions.length) {
 							m.externalContent.actions.map(action => {
-								message += ` \n\n  [${action.label}](${action.uri})`;
+								if (action.label === "Open Comment" || action.label === "Open Note") {
+									viewCommandArgs.externalUrl = action.uri;
+									message += ` \n\n[__View ${typeString} \u2197__](command:codestream.openPullRequest?${encodeURIComponent(
+										JSON.stringify(viewCommandArgs)
+									)} "View ${typeString}")`;
+								}
 							});
 						}
 

@@ -220,6 +220,7 @@ export class MessageInput extends React.Component<Props, State> {
 		if (!this.props.onChange) return;
 		if (this.state.isPasteEvent) {
 			text = text.replace(/```\s*?```/g, "```");
+			text = text.replace(/```(\s*?(<div>|<\/div>)+\s*?)*?```/g, "```");
 		}
 		this.props.onChange(text, formatCode);
 	}
