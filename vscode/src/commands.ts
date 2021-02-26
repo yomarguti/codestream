@@ -2,6 +2,7 @@ import * as paths from "path";
 import { CodemarkType, CSMarkerIdentifier, CSReviewCheckpoint } from "@codestream/protocols/api";
 import { Editor } from "extensions/editor";
 import { commands, Disposable, env, Range, Uri, ViewColumn, window, workspace } from "vscode";
+import { openUrl } from "urlHandler";
 import { SessionSignedOutReason, StreamThread } from "./api/session";
 import { TokenManager } from "./api/tokenManager";
 import { WorkspaceState } from "./common";
@@ -75,6 +76,7 @@ export interface OpenPullRequestCommandArgs {
 	// optionally open to a particular comment
 	commentId?: string;
 	sourceUri?: Uri;
+	externalUrl?: string;
 }
 
 export interface OpenReviewCommandArgs {
@@ -487,6 +489,9 @@ export class Commands implements Disposable {
 
 		Container.agent.telemetry.track("PR Comment Clicked", trackParams);
 
+		if (args.externalUrl) {
+			return openUrl(args.externalUrl);
+		}
 		return Container.webview.openPullRequest(args.providerId, args.pullRequestId, args.commentId);
 	}
 
