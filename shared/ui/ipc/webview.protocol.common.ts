@@ -64,7 +64,8 @@ export enum WebviewPanels {
 	OpenPullRequests = "open-pull-requests",
 	WorkInProgress = "work-in-progress",
 	Onboard = "onboard",
-	Commits = "commits"
+	Commits = "commits",
+	APM = "apm"
 }
 
 // this is for mixpanel and maps the values from WebviewPanels to their
@@ -86,7 +87,8 @@ export const WebviewPanelNames = {
 	"open-reviews": "Feedback Requests",
 	"codemarks-for-file": "Codemarks",
 	tasks: "Issues",
-	onboard: "Onboard"
+	onboard: "Onboard",
+	apm: "APM"
 };
 
 export enum WebviewModals {

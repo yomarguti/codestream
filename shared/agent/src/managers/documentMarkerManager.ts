@@ -468,11 +468,11 @@ export class DocumentMarkerManager {
 		for (const marker of markersForDocument) {
 			if (!marker.postId) continue; // permalinks
 			const post = await posts.getById(marker.postId);
-			if (review.postId !== post.parentPostId) continue;
 			const canonicalLocation = marker.referenceLocations.find(l => l.flags?.canonical);
 			if (canonicalLocation == null) continue;
 
 			const codemark = await codemarks.getEnrichedCodemarkById(marker.codemarkId);
+			if (codemark.type !== CodemarkType.Trap && review.postId !== post.parentPostId) continue;
 			const creator = await users.getById(marker.creatorId);
 			let summary = codemark.title || codemark.text || "";
 			if (summary.length !== 0) {

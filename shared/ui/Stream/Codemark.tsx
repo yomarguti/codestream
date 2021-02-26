@@ -385,6 +385,8 @@ export class Codemark extends React.Component<Props, State> {
 				return <Icon name="trap" className="type-icon" />;
 			case "issue":
 				return <Icon name="issue" className="type-icon" />;
+			case "apm":
+				return <Icon name="apm" className="type-icon" />;
 			case "prcomment":
 				return <Icon name="pull-request" className="type-icon" />;
 			default:

@@ -36,6 +36,8 @@ import { PRProviderErrorBanner } from "./PRProviderErrorBanner";
 import ConfigureAzureDevOpsPanel from "./ConfigureAzureDevOpsPanel";
 import ConfigureYouTrackPanel from "./ConfigureYouTrackPanel";
 import ConfigureJiraPanel from "./ConfigureJiraPanel";
+import ConfigureDatadogPanel from "./ConfigureDatadogPanel";
+import ConfigureNewRelicPanel from "./ConfigureNewRelicPanel";
 import ConfigureJiraServerPanel from "./ConfigureJiraServerPanel";
 import ConfigureEnterprisePanel from "./ConfigureEnterprisePanel";
 import ConfigureTokenProviderPanel from "./ConfigureTokenProviderPanel";
@@ -300,7 +302,9 @@ export class SimpleStream extends PureComponent {
 		const enterpriseProvider = activePanel.startsWith("configure-enterprise-");
 		const [, , providerName, providerId, origin] = configureProviderInfo || [];
 		const customConfigureProvider = providerName
-			? ["azuredevops", "youtrack", "jiraserver", "jira"].find(name => name === providerName)
+			? ["azuredevops", "youtrack", "jiraserver", "jira", "newrelic", "datadog"].find(
+					name => name === providerName
+			  )
 			: null;
 
 		// console.warn("ACTIVE: ", activePanel);
@@ -375,6 +379,7 @@ export class SimpleStream extends PureComponent {
 					activePanel !== WebviewPanels.OpenReviews &&
 					activePanel !== WebviewPanels.OpenPullRequests &&
 					activePanel !== WebviewPanels.WorkInProgress &&
+					activePanel !== WebviewPanels.APM &&
 					activePanel !== WebviewPanels.Sidebar &&
 					activePanel !== WebviewPanels.Onboard &&
 					activePanel !== WebviewPanels.CodemarksForFile && (
@@ -428,6 +433,12 @@ export class SimpleStream extends PureComponent {
 							)}
 							{customConfigureProvider === "youtrack" && (
 								<ConfigureYouTrackPanel providerId={providerId} originLocation={origin} />
+							)}
+							{customConfigureProvider === "datadog" && (
+								<ConfigureDatadogPanel providerId={providerId} originLocation={origin} />
+							)}
+							{customConfigureProvider === "newrelic" && (
+								<ConfigureNewRelicPanel providerId={providerId} originLocation={origin} />
 							)}
 							{customConfigureProvider === "azuredevops" && (
 								<ConfigureAzureDevOpsPanel providerId={providerId} originLocation={origin} />

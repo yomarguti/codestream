@@ -251,9 +251,23 @@ export const CreateCodemarkIcons = (props: Props) => {
 			// 	isVisible: () => true
 			// },
 			{
+				key: "trap",
+				title: ComposeTitles.trap,
+				codemarkType: CodemarkType.Trap,
+				offset: [-3, 10],
+				isVisible: () => showNonComments
+			},
+			{
 				key: "link",
 				title: ComposeTitles.link,
 				codemarkType: CodemarkType.Link,
+				offset: [-3, 10],
+				isVisible: () => showNonComments
+			},
+			{
+				key: "apm",
+				title: ComposeTitles.apm,
+				codemarkType: CodemarkType.APM,
 				offset: [-3, 10],
 				isVisible: () => showNonComments
 			}

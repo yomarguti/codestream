@@ -63,7 +63,7 @@ const buildDecoration = (position: string, type: string, color: string, _status:
 };
 
 const MarkerPositions = ["inline", "overlay"];
-const MarkerTypes = ["comment", "question", "issue", "trap", "bookmark", "prcomment"];
+const MarkerTypes = ["comment", "question", "issue", "trap", "bookmark", "prcomment", "apm"];
 const MarkerColors = ["blue", "green", "yellow", "orange", "red", "purple", "aqua", "gray"];
 const MarkerStatuses = ["open", "closed"];
 const MarkerHighlights: { [key: string]: string } = {
@@ -223,7 +223,8 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 			decorationTypes[`trap-highlight-${color}`] = window.createTextEditorDecorationType({
 				rangeBehavior: DecorationRangeBehavior.OpenOpen,
 				isWholeLine: true,
-				backgroundColor: MarkerHighlights[color]
+				backgroundColor: MarkerHighlights.gray
+				// backgroundColor: MarkerHighlights[color]
 			});
 		}
 
@@ -388,9 +389,10 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 				// Determine if the marker needs to be inline (i.e. part of the content or overlayed)
 				let position = "inline";
 				try {
-					position = editor.document.lineAt(start).firstNonWhitespaceCharacterIndex === 0
-						? "inline"
-						: "overlay";
+					position =
+						editor.document.lineAt(start).firstNonWhitespaceCharacterIndex === 0
+							? "inline"
+							: "overlay";
 				} catch (e) {
 					Logger.error(e);
 				}
@@ -510,7 +512,7 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 						if (externalContent.provider.id === "github*com") {
 							message += "  $(github-inverted) ";
 						}
-						message += ` ${m.title ? m.title : "PR title is \"undefined\""} \n\n`;
+						message += ` ${m.title ? m.title : 'PR title is "undefined"'} \n\n`;
 						if (["github*com", "github/enterprise"].includes(m.externalContent.provider.id)) {
 							message += ` \n\n[__View ${typeString} \u2197__](command:codestream.openPullRequest?${encodeURIComponent(
 								JSON.stringify(viewCommandArgs)

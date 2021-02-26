@@ -34,8 +34,8 @@ export class DocMarker {
 
 	get color(): string {
 		// TODO: -- Use a setting
+		// if (this.type === "trap") return !this.pinned ? "gray" : "blue";
 		return !this.pinned ? "gray" : this.status === "closed" ? "purple" : "green";
-		// return "blue";
 	}
 
 	get creatorName() {

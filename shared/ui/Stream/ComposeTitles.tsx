@@ -27,6 +27,24 @@ const ComposeTitles = {
 			<span className="function">Get Permalink</span>{" "}
 		</span>
 	),
+	apm: (
+		<span className="compose-title">
+			<span className="binding">
+				<span className="keybinding extra-pad">{modifier}</span>
+				<span className="keybinding">a</span>
+			</span>
+			<span className="function">Create APM Marker</span>{" "}
+		</span>
+	),
+	trap: (
+		<span className="compose-title">
+			<span className="binding">
+				<span className="keybinding extra-pad">{modifier}</span>
+				<span className="keybinding">t</span>
+			</span>
+			<span className="function">Create Code Trap</span>{" "}
+		</span>
+	),
 	issue: (
 		<span className="compose-title">
 			<span className="binding">

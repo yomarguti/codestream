@@ -112,11 +112,15 @@ export const IntegrationsPanel = () => {
 			.sort((a, b) => providers[a].name.localeCompare(providers[b].name));
 		const sharingTargets = getConnectedSharingTargets(state);
 
+		// const apmProviders = ["datadog"];
+		const apmProviders = ["newrelic"];
+
 		return {
 			webviewFocused: state.context.hasFocus,
 			providers,
 			codeHostProviders,
 			issueProviders,
+			apmProviders,
 			messagingProviders,
 			connectedProviders,
 			sharingTargets,
@@ -334,6 +338,19 @@ export const IntegrationsPanel = () => {
 
 						<h2>Issue Providers</h2>
 						<IntegrationButtons>{renderProviders(derivedState.issueProviders)}</IntegrationButtons>
+
+						<h2>APM Providers</h2>
+						<IntegrationButtons>
+							<Provider
+								key="newrelic"
+								onClick={() =>
+									dispatch(openPanel(`configure-provider-newrelic-newrelic-Integrations Panel`))
+								}
+							>
+								<Icon name="newrelic" />
+								New Relic
+							</Provider>
+						</IntegrationButtons>
 
 						<h2>Messaging Providers</h2>
 						<IntegrationButtons noBorder>{renderMessagingProviders()}</IntegrationButtons>

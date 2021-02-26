@@ -413,6 +413,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 		const open = pinned.filter(m => m.codemark && m.codemark.status !== "closed");
 		const closed = pinned.filter(m => m.codemark && m.codemark.status === "closed");
 		const archived = nonReviews.filter(m => m.codemark && !m.codemark.pinned);
+		console.warn("OPEN: ", open);
 		return (
 			<>
 				<PaneNode>

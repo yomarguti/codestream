@@ -84,6 +84,7 @@ import { VideoLink } from "./Flow";
 import { PanelHeader } from "../src/components/PanelHeader";
 import { ReposState } from "../store/repos/types";
 import { getDocumentFromMarker } from "./api-functions";
+import { InlineMenu } from "../src/components/controls/InlineMenu";
 
 export interface ICrossPostIssueContext {
 	setSelectedAssignees(any: any): void;
@@ -1988,7 +1989,7 @@ class CodemarkForm extends React.Component<Props, State> {
 					<PanelHeader
 						title={
 							this.props.currentReviewId
-								? "Add Comment to Review"
+								? "Add Comment to Feedback Request"
 								: this.props.textEditorUriHasPullRequestContext
 								? "Add Comment to Pull Request"
 								: commentType === "comment"
@@ -2235,6 +2236,15 @@ class CodemarkForm extends React.Component<Props, State> {
 								<CrossPostIssueControls />
 							</CrossPostIssueContext.Provider>
 						)}
+						{commentType === CodemarkType.APM && (
+							<div style={{ margin: "5px 0 15px 0" }} className="subtle">
+								Link this code to{" "}
+								<InlineMenu items={[{ label: "shopping", key: "shopping" }]}>
+									<span className="highlight">select service</span>
+								</InlineMenu>{" "}
+								on New Relic
+							</div>
+						)}
 						{(commentType === "issue" ||
 							commentType === "question" ||
 							commentType === "bookmark" ||
@@ -2406,7 +2416,7 @@ class CodemarkForm extends React.Component<Props, State> {
 										: this.state.isChangeRequest
 										? "Add Comment & Request Change"
 										: this.props.currentReviewId
-										? "Add Comment to Review"
+										? "Add Comment to Feedback Request"
 										: this.props.textEditorUriHasPullRequestContext
 										? "Add single comment"
 										: this.props.editingCodemark

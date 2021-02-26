@@ -22,7 +22,6 @@ import { OpenCodemarkCommandArgs } from "../commands";
 import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { Strings } from "../system";
 
 export class CodemarkCodeLensProvider implements CodeLensProvider, Disposable {
 	static selector: DocumentSelector = { scheme: "file" };
@@ -115,26 +114,34 @@ export class CodemarkCodeLensProvider implements CodeLensProvider, Disposable {
 		const markers = await this.getMarkers(uri);
 		if (markers == null || markers.length === 0) return [];
 
-		const lenses = markers.map<CodeLens>(m => {
-			if (m.codemarkId == null) {
-				// TODO: Add action for external content
+		const lenses = markers
+			.filter(m => m.type === "apm")
+			.map<CodeLens>(m => {
+				if (m.codemarkId == null) {
+					// TODO: Add action for external content
+					return new CodeLens(m.range, {
+						title: `Past 1 hour | reqs: ${Math.floor(Math.random() * 10000)} | avg: ${Math.floor(
+							Math.random() * 10
+						) / 10}ms | errors: ${Math.floor(Math.random() * 3)}`,
+						tooltip: "foo",
+						command: undefined!
+					});
+				}
+
+				const args: OpenCodemarkCommandArgs = {
+					codemarkId: m.codemarkId,
+					sourceUri: uri
+				};
+
 				return new CodeLens(m.range, {
-					title: `// ${m.creatorName}: ${Strings.truncate(m.summary, 60)}`,
-					command: undefined!
+					title: `Past 1 hour | reqs: ${Math.floor(Math.random() * 10000)} | avg: ${Math.floor(
+						Math.random() * 10
+					) / 10}ms | errors: ${Math.floor(Math.random() * 3)}`,
+					tooltip: "foo",
+					command: "codestream.openCodemark",
+					arguments: [args]
 				});
-			}
-
-			const args: OpenCodemarkCommandArgs = {
-				codemarkId: m.codemarkId,
-				sourceUri: uri
-			};
-
-			return new CodeLens(m.range, {
-				title: `// ${m.creatorName}: ${Strings.truncate(m.summary, 60)}`,
-				command: "codestream.openCodemark",
-				arguments: [args]
 			});
-		});
 		return lenses;
 	}
 

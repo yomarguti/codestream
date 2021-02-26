@@ -91,6 +91,9 @@ const convertIcon = async (icon, color, filename = dir + icon.name + ".png", typ
 const convertIcons = async hash => {
 	const color = argv.color ? COLOR_MAP[argv.color] || argv.color : "#898F9E";
 	const filter = _ => (argv.name ? _.name === argv.name : true);
+	Object.keys(hash).forEach(key => {
+		hash[key].name = key;
+	});
 	const array = Object.values(hash).filter(filter);
 	for (let index = 0; index < array.length; index++) {
 		await convertIcon(array[index], color);
@@ -109,7 +112,8 @@ const convertEditorIcons = async () => {
 		"pull-request",
 		"prcomment",
 		"question",
-		"trap"
+		"trap",
+		"apm"
 	];
 	const colors = ["green", "purple", "gray", "blue", "aqua", "red", "yellow", "orange"];
 	for (let index = 0; index < icons.length; index++) {
@@ -124,9 +128,13 @@ const convertEditorIcons = async () => {
 	}
 };
 
+const convertAllIcons = async () => {
+	await convertIcons(octicons);
+	await convertIcons(icons8);
+};
+
 if (argv.editor) {
 	convertEditorIcons();
 } else {
-	convertIcons(icons8);
-	convertIcons(octicons);
+	convertAllIcons();
 }
