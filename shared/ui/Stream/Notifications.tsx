@@ -25,6 +25,7 @@ export const Notifications = props => {
 			notificationDeliveryPreference:
 				state.preferences.notificationDelivery || CSNotificationDeliveryPreference.All,
 			reviewReminderDelivery: state.preferences.reviewReminderDelivery === false ? false : true,
+			weeklyEmailDelivery: state.preferences.weeklyEmailDelivery === false ? false : true,
 			hasDesktopNotifications,
 			notificationDeliverySupported,
 			emailSupported
@@ -33,6 +34,7 @@ export const Notifications = props => {
 	const [loading, setLoading] = useState(false);
 	const [loadingDelivery, setLoadingDelivery] = useState(false);
 	const [loadingReminderDelivery, setLoadingReminderDelivery] = useState(false);
+	const [loadingWeeklyEmailDelivery, setLoadingWeeklyEmailDelivery] = useState(false);
 
 	const handleChange = async (value: string) => {
 		setLoading(true);
@@ -47,6 +49,13 @@ export const Notifications = props => {
 		// @ts-ignore
 		await dispatch(setUserPreference(["reviewReminderDelivery"], value));
 		setLoadingReminderDelivery(false);
+	};
+
+	const handleChangeWeeklyEmailDelivery = async (value: boolean) => {
+		setLoadingWeeklyEmailDelivery(true);
+		// @ts-ignore
+		await dispatch(setUserPreference(["weeklyEmailDelivery"], value));
+		setLoadingWeeklyEmailDelivery(false);
 	};
 
 	const handleChangeDelivery = async (value: string) => {
@@ -103,6 +112,16 @@ export const Notifications = props => {
 								loading={loadingReminderDelivery}
 							>
 								Notify me about outstanding feedback requests
+							</Checkbox>
+						</div>
+						<div style={{ marginTop: "20px" }}>
+							<Checkbox
+								name="weeklyEmails"
+								checked={derivedState.weeklyEmailDelivery}
+								onChange={handleChangeWeeklyEmailDelivery}
+								loading={loadingWeeklyEmailDelivery}
+							>
+								Send me weekly emails summarizing my activity
 							</Checkbox>
 						</div>
 						{derivedState.hasDesktopNotifications && derivedState.notificationDeliverySupported && (

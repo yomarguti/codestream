@@ -1,3 +1,5 @@
+[![Devie Award](https://raw.githubusercontent.com/TeamCodeStream/codestream-guide/develop/docs/src/assets/images/devie_banner.png)](https://www.codestream.com/blog/winner-of-the-2021-devie-for-best-coding-tool-codestream)
+
 # CodeStream
 
 CodeStream is a developer collaboration platform that integrates essential dev tools into VS Code. Eliminate context-switching and simplify code discussion and code review by putting collaboration tools in your IDE.

@@ -12,8 +12,10 @@ import com.codestream.protocols.agent.TelemetryParams
 import com.codestream.protocols.webview.CodemarkNotifications
 import com.codestream.protocols.webview.PullRequestNotifications
 import com.codestream.review.ReviewDiffVirtualFile
+import com.codestream.system.SPACE_ENCODED
 import com.codestream.webViewService
 import com.intellij.codeInsight.highlighting.TooltipLinkHandler
+import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.editor.Editor
@@ -71,8 +73,19 @@ class GutterIconRendererImpl(val editor: Editor, val marker: DocumentMarker) : G
             if (marker.title !== null) {
                 tooltip += "${marker.title} "
             }
-            tooltip += "\n\n<a href='#pr/show/${marker.externalContent.provider?.id}" +
-                "/${marker.externalContent.externalId}/${marker.externalContent.externalChildId}'>View Comment</a>"
+            if (marker.externalContent.actions !== null) {
+                marker.externalContent.actions.map{
+                    if (it.label == "Open Comment" || it.label == "Open Note") {
+                        tooltip += "\n\n<a href='#pr/showExternal/${marker.externalContent.provider?.id}" +
+                            "/${it.uri}'>View Comment</a>"
+                    }
+                }
+            }
+            if (marker.externalContent.provider?.id == "github*com" ||
+                marker.externalContent.provider?.id == "github/enterprise") {
+                tooltip += "\n\n<a href='#pr/show/${marker.externalContent.provider?.id}" +
+                    "/${marker.externalContent.externalId}/${marker.externalContent.externalChildId}'>View Comment</a>"
+            }
             tooltip += "<hr style='margin-top: 3px; margin-bottom: 3px;'>"
             tooltip += "<a href='#codemark/link/${CodemarkType.COMMENT},${rangeString}'>Add Comment</a>"
         }
@@ -213,6 +226,20 @@ class GutterPullRequestTooltipLinkHandler : TooltipLinkHandler() {
     }
 }
 
+class GutterPullRequestTooltipExternalLinkHandler : TooltipLinkHandler() {
+    override fun handleLink(prLink: String, editor: Editor): Boolean {
+        val project = editor.project ?: return false
+
+        val prData = prLink.split("/http")
+
+        BrowserUtil.browse(("http${prData[1]}").replace(" ", SPACE_ENCODED))
+
+        telemetryPr(project, editor.document.file is ReviewDiffVirtualFile, prData[0])
+
+        return super.handleLink(prLink, editor)
+    }
+}
+
 class GutterCodemarkLinkTooltipLinkHandler : TooltipLinkHandler() {
     override fun handleLink(options: String, editor: Editor): Boolean {
         val project = editor.project ?: return false
@@ -257,7 +284,7 @@ private fun telemetryPr(project: Project, isDiff: Boolean, host: String) {
 
     val params = TelemetryParams(
         "PR Comment Clicked",
-        mapOf("Host" to host, "Codemark Location" to codemarkLocation)
+        mapOf("Host" to host, "Comment Location" to codemarkLocation)
     )
     project.agentService?.agent?.telemetry(params)
 }

@@ -49,6 +49,8 @@
                                  handlerClass="com.codestream.editor.GutterCodemarkTooltipLinkHandler"/>
         <codeInsight.linkHandler prefix="#pr/show/"
                                  handlerClass="com.codestream.editor.GutterPullRequestTooltipLinkHandler"/>
+        <codeInsight.linkHandler prefix="#pr/showExternal/"
+                                 handlerClass="com.codestream.editor.GutterPullRequestTooltipExternalLinkHandler"/>
         <codeInsight.linkHandler prefix="#codemark/link/"
                                  handlerClass="com.codestream.editor.GutterCodemarkLinkTooltipLinkHandler"/>
 
