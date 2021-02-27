@@ -90,6 +90,7 @@ export class CodemarkCodeLensProvider implements CodeLensProvider, Disposable {
 
 		this._enabledDisposable = Disposable.from(
 			languages.registerCodeLensProvider(CodemarkCodeLensProvider.selector, this),
+			languages.registerCodeLensProvider({ scheme: "codestream-diff" }, this),
 			Container.session.onDidChangeTextDocumentMarkers(this.onMarkersChanged, this)
 		);
 	}
@@ -120,9 +121,11 @@ export class CodemarkCodeLensProvider implements CodeLensProvider, Disposable {
 				if (m.codemarkId == null) {
 					// TODO: Add action for external content
 					return new CodeLens(m.range, {
-						title: `Past 1 hour | reqs: ${Math.floor(Math.random() * 10000)} | avg: ${Math.floor(
-							Math.random() * 10
-						) / 10}ms | errors: ${Math.floor(Math.random() * 3)}`,
+						title: `Env: prod | Past: 1 hour | Reqs: ${Math.floor(
+							Math.random() * 10000
+						)} | Avg: ${Math.floor(Math.random() * 20) / 10}ms | Errors: ${Math.floor(
+							Math.random() * 5
+						)}`,
 						tooltip: "foo",
 						command: undefined!
 					});
@@ -134,9 +137,11 @@ export class CodemarkCodeLensProvider implements CodeLensProvider, Disposable {
 				};
 
 				return new CodeLens(m.range, {
-					title: `Past 1 hour | reqs: ${Math.floor(Math.random() * 10000)} | avg: ${Math.floor(
-						Math.random() * 10
-					) / 10}ms | errors: ${Math.floor(Math.random() * 3)}`,
+					title: `Env: prod | Past: 1 hour | Reqs: ${Math.floor(
+						Math.random() * 10000
+					)} | Avg: ${Math.floor(Math.random() * 20) / 10}ms | Errors: ${Math.floor(
+						Math.random() * 5
+					)}`,
 					tooltip: "foo",
 					command: "codestream.openCodemark",
 					arguments: [args]
