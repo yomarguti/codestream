@@ -209,9 +209,8 @@ class MarkerActions extends React.Component<Props, State> {
 				codemarkId: codemark.id,
 				markerId: marker.id
 			});
-			const hasDiff = !response.success || response.currentContent !== marker.code;
 			this.setState({
-				hasDiff,
+				hasDiff: response.diff !== undefined,
 				currentContent: response.currentContent,
 				currentBranch: response.currentBranch,
 				diff: response.diff
