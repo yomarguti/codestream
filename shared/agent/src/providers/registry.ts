@@ -613,7 +613,7 @@ export class ThirdPartyProviderRegistry {
 					if (!isConnected) continue;
 
 					const fn = thirdPartyIssueProvider.getIsMatchingRemotePredicate();
-					if (fn && fn({ domain: uri.authority })) {
+					if (fn && fn({ domain: uri.authority, uri: uri })) {
 						const id = provider.getConfig().id;
 						Logger.log(
 							`queryThirdParty: found matching provider for ${uri.authority}. providerId=${id}`

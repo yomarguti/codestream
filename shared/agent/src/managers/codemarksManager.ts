@@ -207,33 +207,40 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		const { locations } = await markerLocations.getCurrentLocations(uri, fileStreamId, [marker]);
 
 		let documentRange: GetRangeResponse | undefined = {};
-		let diff = "";
+		let diff = undefined;
 
 		const location = locations[marker.id];
 		if (location != null) {
 			const range = MarkerLocation.toRange(location);
-			const response = await scm.getRange({ uri: uri, range: range });
-			documentRange = response;
+			documentRange = await scm.getRange({ uri: uri, range: range });
 			if (documentRange) {
-				diff = response.currentContent
-					? createPatch(marker.file, marker.code, response.currentContent)
-					: createPatch(marker.file, "", marker.code);
-				const diffs = diff.trim().split("\n");
-				diffs.splice(0, 5);
-				let startLine = 1;
-				if (marker.locationWhenCreated && marker.locationWhenCreated.length) {
-					startLine = marker.locationWhenCreated[0];
-				} else if (marker.referenceLocations && marker.referenceLocations.length) {
-					startLine = marker.referenceLocations[0].location[0];
+				const normalizedMarkerCode = Strings.normalizeFileContents(marker.code, {
+					preserveEof: true
+				});
+				const normalizedCurrentContent =
+					documentRange.currentContent &&
+					Strings.normalizeFileContents(documentRange.currentContent, { preserveEof: true });
+
+				if (normalizedMarkerCode !== normalizedCurrentContent) {
+					diff = normalizedCurrentContent
+						? createPatch(marker.file, normalizedMarkerCode, normalizedCurrentContent)
+						: createPatch(marker.file, "", normalizedMarkerCode);
+					const diffs = diff.trim().split("\n");
+					diffs.splice(0, 5);
+					let startLine = 1;
+					if (marker.locationWhenCreated && marker.locationWhenCreated.length) {
+						startLine = marker.locationWhenCreated[0];
+					} else if (marker.referenceLocations && marker.referenceLocations.length) {
+						startLine = marker.referenceLocations[0].location[0];
+					}
+					const newHeader = `@@ -${startLine},${marker.code.split("\n").length} +${range.start
+						.line + 1},${(documentRange.currentContent || "").split("\n").length}`;
+					diff = `${newHeader}\n${diffs.join("\n")}`;
 				}
-				const newHeader = `@@ -${startLine},${marker.code.split("\n").length} +${range.start.line +
-					1},${(documentRange.currentContent || "").split("\n").length}`;
-				diff = `${newHeader}\n${diffs.join("\n")}`;
 			}
 		}
 
 		const response = {
-			// Normalize to /n line endings
 			...documentRange,
 			diff,
 			success: true
