@@ -7,7 +7,7 @@ export enum GitRemoteType {
 	Push = "push"
 }
 
-export class GitRemote {
+export class GitRemote implements GitRemoteLike {
 	readonly uri: URI;
 
 	constructor(
@@ -54,4 +54,5 @@ export class GitRemote {
 
 export interface GitRemoteLike {
 	domain: string;
+	uri: URI;
 }

@@ -377,7 +377,7 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 	getIsMatchingRemotePredicate() {
 		const baseUrl = this._providerInfo?.data?.baseUrl || this.getConfig().host;
 		const configDomain = baseUrl ? URI.parse(baseUrl).authority : "";
-		return (r: GitRemoteLike) => configDomain !== "" && r.domain === configDomain;
+		return (r: GitRemoteLike) => configDomain !== "" && r.uri.authority === configDomain;
 	}
 
 	@log()
