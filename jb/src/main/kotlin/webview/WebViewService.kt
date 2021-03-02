@@ -18,6 +18,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
+import com.intellij.ui.jcef.JBCefClient
 import org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.charset.Charset
@@ -142,7 +143,14 @@ class WebViewService(val project: Project) : Disposable {
         return try {
             if (!ENV_DISABLE_JCEF && appSettings.jcef && JBCefApp.isSupported()) {
                 logger.info("JCEF enabled")
-                JBCefWebView(JBCefBrowser(), router).also {
+                val jbCefBrowser = JBCefBrowser()
+                try {
+                    // https://youtrack.jetbrains.com/issue/IDEA-243559
+                    jbCefBrowser.jbCefClient.addProperty(JBCefClient.JBCEFCLIENT_JSQUERY_POOL_SIZE_PROP, 1)
+                } catch (t: Throwable) {
+                    logger.warn(t)
+                }
+                JBCefWebView(jbCefBrowser, router).also {
                     webviewTelemetry("JCEF")
                 }
             } else {
