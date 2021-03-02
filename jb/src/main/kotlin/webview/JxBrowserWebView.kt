@@ -57,4 +57,8 @@ class JxBrowserWebView(val jxBrowser: Browser, val router: WebViewRouter) : WebV
     override fun focus() {
         component.grabFocus()
     }
+
+    override fun openDevTools() {
+        logger.warn("Open webview dev tools action is not supported in JxBrowser webviews")
+    }
 }

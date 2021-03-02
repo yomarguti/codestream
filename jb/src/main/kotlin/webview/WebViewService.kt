@@ -75,6 +75,10 @@ class WebViewService(val project: Project) : Disposable {
         }
     }
 
+    fun openDevTools() {
+        webView.openDevTools()
+    }
+
     private fun extractAssets() {
         tempDir = createTempDir("codestream")
         logger.info("Extracting webview to ${tempDir.absolutePath}")
