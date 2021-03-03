@@ -875,10 +875,22 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 								<Icon name="milestone" className="circled" />
 								<PRTimelineItemBody>
 									<PRHeadshotName key={index} person={item.actor} />
-									force-pushed the{" "}
-									{item.ref && item.ref.name && <PRBranch>{item.ref.name}</PRBranch>} branch from{" "}
-									<PRBranch>{item.beforeCommit.abbreviatedOid}</PRBranch> to{" "}
-									<PRBranch>{item.afterCommit.abbreviatedOid}</PRBranch>
+									force-pushed{" "}
+									{item.ref && item.ref.name && (
+										<>
+											the <PRBranch>{item.ref.name}</PRBranch> branch
+										</>
+									)}{" "}
+									{item.beforeCommit && (
+										<>
+											from <PRBranch>{item.beforeCommit.abbreviatedOid}</PRBranch>
+										</>
+									)}{" "}
+									{item.afterCommit && (
+										<>
+											to <PRBranch>{item.afterCommit.abbreviatedOid}</PRBranch>
+										</>
+									)}{" "}
 									<Timestamp time={item.createdAt!} relative />
 								</PRTimelineItemBody>
 							</PRTimelineItem>
