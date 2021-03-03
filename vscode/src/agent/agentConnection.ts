@@ -39,7 +39,6 @@ import {
 	FetchCodemarksRequestType,
 	FetchDocumentMarkersRequestType,
 	FetchFileStreamsRequestType,
-	FetchMarkerLocationsRequestType,
 	FetchMarkersRequestType,
 	FetchPostRepliesRequestType,
 	FetchPostsRequestType,
@@ -448,13 +447,6 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		get(markerId: string) {
 			return this._connection.sendRequest(GetMarkerRequestType, { markerId: markerId });
-		}
-
-		fetchLocations(streamId: string, commitHash: string) {
-			return this._connection.sendRequest(FetchMarkerLocationsRequestType, {
-				streamId: streamId,
-				commitHash: commitHash
-			});
 		}
 	})(this);
 

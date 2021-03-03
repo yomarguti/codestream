@@ -54,7 +54,6 @@ import {
 	DidLoginNotificationType,
 	DidLogoutNotificationType,
 	DidStartLoginNotificationType,
-	FetchMarkerLocationsRequestType,
 	GetAccessTokenRequestType,
 	GetInviteInfoRequest,
 	GetInviteInfoRequestType,
@@ -400,10 +399,6 @@ export class CodeStreamSession {
 					apiCapabilities: this.apiCapabilities
 				};
 			}
-		);
-
-		this.agent.registerHandler(FetchMarkerLocationsRequestType, r =>
-			this.api.fetchMarkerLocations(r)
 		);
 	}
 

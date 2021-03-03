@@ -35,13 +35,6 @@ export interface FetchMarkerLocationsResponse {
 	markerLocations: CSMarkerLocations;
 }
 
-export const FetchMarkerLocationsRequestType = new RequestType<
-	FetchMarkerLocationsRequest,
-	FetchMarkerLocationsResponse,
-	void,
-	void
->("codestream/marker/locations");
-
 export interface FetchMarkersRequest {
 	streamId: string;
 	commitHash?: string;
