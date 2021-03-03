@@ -131,6 +131,8 @@ export interface GetDocumentFromMarkerRequest {
 	markerId: string;
 	file?: string;
 	repoId?: string;
+	/* for debugging purposes */
+	source?: string;
 }
 export interface GetDocumentFromMarkerResponse {
 	textDocument: VersionedTextDocumentIdentifier;
