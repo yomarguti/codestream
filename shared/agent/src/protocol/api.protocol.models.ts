@@ -259,6 +259,7 @@ export interface CSReview extends CSEntity {
 	reviewChangesets: CSReviewChangeset[];
 	lastActivityAt: number;
 	followerIds?: string[];
+	codeAuthorIds?: string[];
 	// TODO eventually make this not optional
 	permalink?: string;
 	approvedAt?: number;

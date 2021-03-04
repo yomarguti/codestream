@@ -555,6 +555,7 @@ export interface CSCreateReviewRequest {
 	reviewers?: string[];
 	authorsById?: { [authorId: string]: { stomped: number; commits: number } };
 	followerIds?: string[];
+	codeAuthorIds?: string[];
 	tags?: string[];
 
 	repoChanges?: CSRepoChange[];

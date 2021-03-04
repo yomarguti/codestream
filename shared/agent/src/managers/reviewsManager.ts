@@ -1184,7 +1184,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			return;
 		}
 
-		const authorsById: { [authorId: string]: { stomped: number; commits: number } } = {};
+		const codeAuthorIds = [];
 		const followerIds = [];
 		const addedUsers = [];
 		if (commit.email) {
@@ -1199,7 +1199,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				addedUsers.push(commit.email);
 			}
 			if (author) {
-				authorsById[author.id] = { stomped: 1, commits: 1 };
+				codeAuthorIds.push(author.id);
 				followerIds.push(author.id);
 			}
 		}
@@ -1210,7 +1210,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			title: commit.shortMessage,
 			text: commit.message,
 			reviewers: [session.userId],
-			authorsById,
+			codeAuthorIds,
 			followerIds,
 			tags: [],
 			status: "open",
