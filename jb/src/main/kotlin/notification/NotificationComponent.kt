@@ -148,7 +148,7 @@ class NotificationComponent(val project: Project) {
             GlobalScope.launch {
                 val result = project.agentService?.createReviewsForUnreviewedCommits(CreateReviewsForUnreviewedCommitsParams(repoId))
                 result?.reviewIds?.firstOrNull()?.let {
-                    project.webViewService?.postNotification(ReviewNotifications.Show(it))
+                    project.webViewService?.postNotification(ReviewNotifications.Show(it, null, true))
                 }
             }
             notification.expire()
