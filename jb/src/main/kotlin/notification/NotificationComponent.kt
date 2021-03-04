@@ -4,6 +4,7 @@ import com.codestream.CODESTREAM_TOOL_WINDOW_ID
 import com.codestream.agentService
 import com.codestream.codeStream
 import com.codestream.protocols.agent.Codemark
+import com.codestream.protocols.agent.CreateReviewsForUnreviewedCommitsParams
 import com.codestream.protocols.agent.Post
 import com.codestream.protocols.agent.PullRequestNotification
 import com.codestream.protocols.agent.Review
@@ -137,6 +138,23 @@ class NotificationComponent(val project: Project) {
 
     fun showError(title: String, content: String) {
         val notification = notificationGroup.createNotification(title, null, content, NotificationType.ERROR)
+        notification.notify(project)
+    }
+
+    fun didDetectUnreviewedCommits(message: String, repoId: String) {
+        val notification = notificationGroup.createNotification("Unreviewed code", null, message, NotificationType.INFORMATION)
+
+        notification.addAction(NotificationAction.createSimple("Review") {
+            GlobalScope.launch {
+                val result = project.agentService?.createReviewsForUnreviewedCommits(CreateReviewsForUnreviewedCommitsParams(repoId))
+                result?.reviewIds?.firstOrNull()?.let {
+                    project.webViewService?.postNotification(ReviewNotifications.Show(it))
+                }
+            }
+            notification.expire()
+            // telemetry(TelemetryEvent.TOAST_CLICKED, telemetryContent)
+        })
+
         notification.notify(project)
     }
 

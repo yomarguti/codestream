@@ -1177,11 +1177,13 @@ export class CodeStreamSession {
 	}
 
 	private async repositoryCommitHashChanged(repo: GitRepository) {
+		const { git, markerLocations, reviews } = SessionContainer.instance();
+		markerLocations.flushUncommittedLocations(repo);
+		reviews.checkUnreviewedCommits(repo);
+
 		if (!this.apiCapabilities.autoFR) {
 			return;
 		}
-		SessionContainer.instance().markerLocations.flushUncommittedLocations(repo);
-		const { git } = SessionContainer.instance();
 		const commit = await git.getCommit(repo.path, "HEAD");
 		const userEmail = await git.getConfig(repo.path, "user.email");
 		const twentySeconds = 20 * 1000;

@@ -33,6 +33,7 @@ export const GetUserRequestType = new RequestType<GetUserRequest, GetUserRespons
 export interface InviteUserRequest {
 	email: string;
 	fullName?: string;
+	dontSendEmail?: boolean;
 	inviteInfo?: {
 		serverUrl: string;
 		disableStrictSSL: boolean;

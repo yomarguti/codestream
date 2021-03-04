@@ -360,6 +360,7 @@ export class ScmManager {
 			includeStaged,
 			includeSaved,
 			startCommit,
+			endCommit,
 			reviewId,
 			currentUserEmail,
 			skipAuthorsCalculation,
@@ -465,7 +466,13 @@ export class ScmManager {
 						}
 					}
 
-					modifiedFiles = await git.getNumStat(repoPath, startCommit, includeSaved, includeStaged);
+					modifiedFiles = await git.getNumStat(
+						repoPath,
+						startCommit,
+						endCommit,
+						includeSaved,
+						includeStaged
+					);
 					const ignoreFileHelper = await new IgnoreFilesHelper(repoPath).initialize();
 
 					if (modifiedFiles) {
@@ -664,6 +671,7 @@ export class ScmManager {
 		let numStatsFromNewestCommitShaInOrBeforeReview = await git.getNumStat(
 			repoPath,
 			newestCommitShaInOrBeforeReview,
+			undefined,
 			includeSaved,
 			includeStaged
 		);
@@ -747,6 +755,7 @@ export class ScmManager {
 					const numStatsFromLatestCommit = await git.getNumStat(
 						repoPath,
 						diff.latestCommitSha,
+						undefined,
 						includeSaved,
 						includeStaged
 					);
@@ -766,6 +775,7 @@ export class ScmManager {
 				const numStatsFromNewestCommitShaBeforeFirstCheckpoint = await git.getNumStat(
 					repoPath,
 					newestCommitShaBeforeFirstCheckpoint,
+					undefined,
 					includeSaved,
 					includeStaged
 				);
