@@ -651,6 +651,7 @@ export interface CSMePreferences {
 	pullRequestQueryHideLabels?: boolean;
 	pullRequestView?: "auto" | "vertical" | "side-by-side";
 	reviewCreateOnCommit?: boolean;
+	reviewCreateOnDetectUnreviewedCommits?: boolean;
 	issueReposDefaultBranch?: {
 		[repoId: string]: string;
 	};

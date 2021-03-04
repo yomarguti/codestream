@@ -1177,9 +1177,15 @@ export class CodeStreamSession {
 	}
 
 	private async repositoryCommitHashChanged(repo: GitRepository) {
-		const { git, markerLocations, reviews } = SessionContainer.instance();
+		const { git, markerLocations, reviews, users } = SessionContainer.instance();
 		markerLocations.flushUncommittedLocations(repo);
-		reviews.checkUnreviewedCommits(repo);
+
+		const me = await users.getMe();
+		if (me.user.preferences?.reviewCreateOnDetectUnreviewedCommits !== false) {
+			reviews.checkUnreviewedCommits(repo).then(unreviewedCommitCount => {
+				Logger.log(`Detected ${unreviewedCommitCount} unreviewed commits`);
+			});
+		}
 
 		if (!this.apiCapabilities.autoFR) {
 			return;

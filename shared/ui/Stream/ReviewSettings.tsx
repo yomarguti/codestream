@@ -23,6 +23,8 @@ export const ReviewSettings = () => {
 			team,
 			currentUserId,
 			createReviewOnCommit: state.preferences.reviewCreateOnCommit !== false,
+			createReviewOnDetectUnreviewedCommits:
+				state.preferences.reviewCreateOnDetectUnreviewedCommits !== false,
 			reviewApproval: getTeamSetting(team, "reviewApproval"),
 			reviewAssignment: getTeamSetting(team, "reviewAssignment")
 		};
@@ -58,6 +60,11 @@ export const ReviewSettings = () => {
 		dispatch(setUserPreference(["reviewCreateOnCommit"], value));
 	};
 
+	const changeCreateReviewOnDetectUnreviewedCommits = async (value: boolean) => {
+		HostApi.instance.track("Review Create On Detect Unreviewed Commits Changed", { Value: value });
+		dispatch(setUserPreference(["reviewCreateOnDetectUnreviewedCommits"], value));
+	};
+
 	const { team, currentUserId } = derivedState;
 	const { adminIds } = team;
 
@@ -73,6 +80,13 @@ export const ReviewSettings = () => {
 								onChange={changeCreateOnCommit}
 							>
 								Auto-prompt for feedback when committing
+							</Checkbox>
+							<Checkbox
+								checked={derivedState.createReviewOnDetectUnreviewedCommits}
+								name="createReviewOnDetectUnreviewedCommits"
+								onChange={changeCreateReviewOnDetectUnreviewedCommits}
+							>
+								Prompt to provide feedback when new unreviewed commits are detected
 							</Checkbox>
 							{adminIds && adminIds.includes(currentUserId) && (
 								<>

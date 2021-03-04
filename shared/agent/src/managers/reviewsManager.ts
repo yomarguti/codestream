@@ -1078,10 +1078,10 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 	private readonly lastUnreviewedCommitsByRepoId = new Map<string, GitCommit[]>();
 
-	async checkUnreviewedCommits(repo: GitRepository) {
+	async checkUnreviewedCommits(repo: GitRepository): Promise<number> {
 		const repoId = repo.id;
 		if (repoId == undefined) {
-			return;
+			return 0;
 		}
 		const { git, session } = SessionContainer.instance();
 		const allReviews = await this.getAllCached();
@@ -1095,7 +1095,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		);
 
 		const gitLog = await git.getLog(repo, 20);
-		if (!gitLog) return;
+		if (!gitLog) return 0;
 
 		const myEmail = await git.getConfig(repo.path, "user.email");
 		const unreviewedCommits = [];
@@ -1121,6 +1121,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				} from ${Array.from(authors).join(", ")}`
 			});
 		}
+
+		return unreviewedCommits.length;
 	}
 
 	@lspHandler(CreateReviewsForUnreviewedCommitsRequestType)
