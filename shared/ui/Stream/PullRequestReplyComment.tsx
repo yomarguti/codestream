@@ -50,6 +50,8 @@ export const PullRequestReplyComment = styled((props: Props) => {
 						? "Diff Hunks"
 						: props.mode === "tree"
 						? "Tree View"
+						: props.mode === "timeline"
+						? "Timeline"
 						: "Unknown"
 			});
 

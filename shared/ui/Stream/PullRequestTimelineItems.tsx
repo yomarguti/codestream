@@ -519,6 +519,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 															item={item}
 															comment={comment}
 															author={author}
+															mode="timeline"
 															skipResolvedCheck
 														/>
 													</PRCodeComment>
