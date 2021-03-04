@@ -1094,12 +1094,20 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			flatten(repoChangesets.map(rc => rc.commits.map(c => c.sha)))
 		);
 
-		const gitLog = await git.getLog(repo, 20);
+		const gitLog = await git.getLog(repo, 10);
 		if (!gitLog) return 0;
 
 		const myEmail = await git.getConfig(repo.path, "user.email");
 		const unreviewedCommits = [];
+		let lastAuthorEmail = undefined;
 		for (const commit of gitLog.values()) {
+			if (lastAuthorEmail === undefined) {
+				lastAuthorEmail = commit.email;
+			}
+			if (commit.email !== lastAuthorEmail) {
+				// Notify about commits from only one author. They will be grouped in a single review.
+				break;
+			}
 			if (commitShasInReviews.has(commit.ref)) {
 				break;
 			}
@@ -1146,12 +1154,12 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			if (!currentUserEmail) {
 				return { reviewIds: [] };
 			}
+
+			// All these commits are from the same author, and we want to pack them together in a single review
 			const reviewIds = [];
-			for (const commit of commits) {
-				const review = await this.createReviewForUnreviewedCommit(commit, repo, currentUserEmail);
-				if (review) {
-					reviewIds.push(review.id);
-				}
+			const review = await this.createReviewForUnreviewedCommit(commits, repo, currentUserEmail);
+			if (review) {
+				reviewIds.push(review.id);
 			}
 
 			return {
@@ -1166,15 +1174,17 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	}
 
 	private async createReviewForUnreviewedCommit(
-		commit: GitCommit,
+		commits: GitCommit[],
 		repo: GitRepository,
 		currentUserEmail: string
 	): Promise<CSReview | undefined> {
 		const { git, posts, session, scm, users } = SessionContainer.instance();
+		const newestCommit = commits[0];
+		const oldestCommit = commits[commits.length - 1];
 		const repoStatus = await scm.getRepoStatus({
 			uri: "file://" + repo.path,
-			startCommit: commit.ref + "^",
-			endCommit: commit.ref,
+			startCommit: oldestCommit.ref + "^",
+			endCommit: newestCommit.ref,
 			includeStaged: false,
 			includeSaved: false,
 			currentUserEmail
@@ -1187,16 +1197,16 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		const codeAuthorIds = [];
 		const followerIds = [];
 		const addedUsers = [];
-		if (commit.email) {
-			let author = (await users.getByEmails([commit.email], { ignoreCase: true }))[0];
+		if (newestCommit.email) {
+			let author = (await users.getByEmails([newestCommit.email], { ignoreCase: true }))[0];
 			if (!author) {
 				const inviteUserResponse = await users.inviteUser({
-					email: commit.email,
-					fullName: commit.author,
+					email: newestCommit.email,
+					fullName: newestCommit.author,
 					dontSendEmail: true
 				});
 				author = inviteUserResponse.user;
-				addedUsers.push(commit.email);
+				addedUsers.push(newestCommit.email);
 			}
 			if (author) {
 				codeAuthorIds.push(author.id);
@@ -1204,14 +1214,24 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			}
 		}
 
-		const firstAncestor = await git.findAncestor(repo.path, commit.ref, 1, () => true);
+		// people whose code was modified by the commits in the review
+		const authorsById: { [authorId: string]: { stomped: number; commits: number } } = {};
+		for (const impactedAuthor of repoStatus.scm.authors) {
+			const user = (await users.getByEmails([impactedAuthor.email], { ignoreCase: true }))[0];
+			if (user) {
+				authorsById[user.id] = impactedAuthor;
+			}
+		}
+
+		const firstAncestor = await git.findAncestor(repo.path, oldestCommit.ref, 1, () => true);
 
 		const reviewRequest: CreateReviewRequest = {
-			title: commit.shortMessage,
-			text: commit.message,
+			title: newestCommit.shortMessage,
+			text: commits.map(c => c.message).join("\n"),
 			reviewers: [session.userId],
 			codeAuthorIds,
 			followerIds,
+			authorsById,
 			tags: [],
 			status: "open",
 			markers: [],
@@ -1220,7 +1240,9 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 					repoId: repo.id,
 					checkpoint: 0,
 					branch: "",
-					commits: [repoStatus.scm.commits?.find(c => c.sha === commit.ref)!],
+					commits: commits
+						.map(commit => repoStatus?.scm?.commits?.find(c => c.sha === commit.ref))
+						.filter(Boolean) as any,
 					modifiedFiles: repoStatus.scm.modifiedFiles,
 					modifiedFilesInCheckpoint: repoStatus.scm.modifiedFiles,
 					includeSaved: false,
@@ -1229,11 +1251,11 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 						leftBaseAuthor: firstAncestor ? firstAncestor.author : "Empty Tree",
 						leftBaseSha: firstAncestor ? firstAncestor.ref : EMPTY_TREE_SHA,
 						leftDiffs: [],
-						rightBaseAuthor: commit.author,
-						rightBaseSha: commit.ref,
+						rightBaseAuthor: newestCommit.author,
+						rightBaseSha: newestCommit.ref,
 						rightDiffs: [],
 						rightReverseDiffs: [],
-						latestCommitSha: commit.ref,
+						latestCommitSha: newestCommit.ref,
 						rightToLatestCommitDiffs: [],
 						latestCommitToRightDiffs: []
 					}
