@@ -301,7 +301,7 @@
 ### Added
 
 - Adds a new VS Code-based GitHub authentication flow that is much simpler
-- Adds the ability, in a codemark with multiple code blocks, to intersperse the blocks of code in the codemark text by refencing them with `[#1]`
+- Adds the ability, in a codemark with multiple code blocks, to intersperse the blocks of code in the codemark text by referencing them with `[#1]`
 
 ### Changed
 
