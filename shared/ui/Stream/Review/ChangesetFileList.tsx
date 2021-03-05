@@ -1,4 +1,5 @@
 import { CSReviewChangeset } from "@codestream/protocols/api";
+import { useDidMount } from "@codestream/webview/utilities/hooks";
 import React, { useEffect } from "react";
 import { ReviewPlus } from "@codestream/protocols/agent";
 import { HostApi } from "../..";
@@ -72,11 +73,19 @@ export const ChangesetFileList = (props: {
 			repos: state.repos,
 			changesets,
 			filesChangedMode: preferences.reviewFilesChangedMode || "files",
+			openFirstDiff:
+				state.context.currentReviewOptions && state.context.currentReviewOptions.openFirstDiff,
 			maxCheckpoint:
 				review.reviewChangesets && review.reviewChangesets.length
 					? review.reviewChangesets[review.reviewChangesets.length - 1].checkpoint
 					: 0
 		};
+	});
+
+	useDidMount(() => {
+		if (derivedState.openFirstDiff) {
+			goDiff(0);
+		}
 	});
 
 	const mode = derivedState.filesChangedMode;

@@ -331,7 +331,7 @@ function listenForEvents(store) {
 		if (!review) {
 			await store.dispatch(fetchReview(e.reviewId));
 		}
-		store.dispatch(setCurrentReview(e.reviewId));
+		store.dispatch(setCurrentReview(e.reviewId, { openFirstDiff: e.openFirstDiff }));
 	});
 
 	api.on(ShowPullRequestNotificationType, async e => {

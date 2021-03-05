@@ -467,3 +467,18 @@ export const EndReviewRequestType = new RequestType<
 	void,
 	void
 >("codestream/review/end");
+
+export interface CreateReviewsForUnreviewedCommitsRequest {
+	repoId: string;
+}
+
+export interface CreateReviewsForUnreviewedCommitsResponse {
+	reviewIds: string[];
+}
+
+export const CreateReviewsForUnreviewedCommitsRequestType = new RequestType<
+	CreateReviewsForUnreviewedCommitsRequest,
+	CreateReviewsForUnreviewedCommitsResponse,
+	void,
+	void
+>("codestream/review/createForUnreviewedCommits");

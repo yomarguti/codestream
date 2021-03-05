@@ -575,7 +575,7 @@ function trackPostCreation(
 	});
 }
 
-function trackReviewPostCreation(
+export function trackReviewPostCreation(
 	review: ReviewPlus,
 	totalExcludedFilesCount: number,
 	reviewChangesetsSizeInBytes: number,
@@ -2168,7 +2168,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	};
 }
 
-async function resolveCreatePostResponse(response: CreatePostResponse) {
+export async function resolveCreatePostResponse(response: CreatePostResponse) {
 	const container = SessionContainer.instance();
 	if (response.codemark) {
 		await container.codemarks.resolve({

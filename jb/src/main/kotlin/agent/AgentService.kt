@@ -8,6 +8,8 @@ import com.codestream.gson
 import com.codestream.protocols.agent.CSUser
 import com.codestream.protocols.agent.CreatePermalinkParams
 import com.codestream.protocols.agent.CreatePermalinkResult
+import com.codestream.protocols.agent.CreateReviewsForUnreviewedCommitsParams
+import com.codestream.protocols.agent.CreateReviewsForUnreviewedCommitsResult
 import com.codestream.protocols.agent.DocumentMarkersParams
 import com.codestream.protocols.agent.DocumentMarkersResult
 import com.codestream.protocols.agent.GetAllReviewContentsParams
@@ -401,6 +403,13 @@ class AgentService(private val project: Project) : Disposable {
     suspend fun getFileContentsAtRevision(params: GetFileContentsAtRevisionParams): GetFileContentsAtRevisionResult {
         val json = remoteEndpoint
             .request("codestream/scm/file/diff", params)
+            .await() as JsonObject
+        return gson.fromJson(json)
+    }
+
+    suspend fun createReviewsForUnreviewedCommits(params: CreateReviewsForUnreviewedCommitsParams): CreateReviewsForUnreviewedCommitsResult {
+        val json = remoteEndpoint
+            .request("codestream/review/createForUnreviewedCommits", params)
             .await() as JsonObject
         return gson.fromJson(json)
     }

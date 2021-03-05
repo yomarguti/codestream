@@ -784,6 +784,25 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
+	async getLog(
+		repo: GitRepository,
+		limit: number = 50
+	): Promise<Map<string, GitCommit> | undefined> {
+		try {
+			const commitsData = await git(
+				{ cwd: repo.path },
+				"log",
+				`-n${limit}`,
+				`--format='${GitLogParser.defaultFormat}`,
+				"--"
+			);
+			return GitLogParser.parse(commitsData.trim(), repo.path);
+		} catch (e) {
+			Logger.error(e);
+			return undefined;
+		}
+	}
+
 	async getCommitsOnBranch(
 		repoPath: string,
 		branch: string,
@@ -933,6 +952,7 @@ export class GitService implements IGitService, Disposable {
 	async getNumStat(
 		repoPath: string,
 		startCommit: string = "HEAD",
+		endCommit: string | undefined,
 		includeSaved: boolean,
 		includeStaged: boolean
 	): Promise<GitNumStat[]> {
@@ -941,7 +961,7 @@ export class GitService implements IGitService, Disposable {
 		}
 		const options = [startCommit];
 		if (!includeSaved && !includeStaged) {
-			options.push("HEAD");
+			options.push(endCommit || "HEAD");
 		} else if (!includeSaved) {
 			options.push("--staged");
 		}

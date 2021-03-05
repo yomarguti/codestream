@@ -20,7 +20,7 @@ class ModuleListenerImpl(project: Project) : ModuleListener {
         if (module.isDisposed || project.isDisposed) return
         val existingFolders = project.workspaceFolders
         val roots = (module.moduleContentScope as? ModuleWithDependenciesScope)?.roots ?: return
-        val folders = roots.map { WorkspaceFolder(it.uri) }.filter { !existingFolders.contains(it)  }
+        val folders = roots.filter { it.uri != null }.map { WorkspaceFolder(it.uri) }.filter { !existingFolders.contains(it)  }
         if (folders.isEmpty()) return
 
         logger.info("Workspace folders added: ${folders.joinToString()}")

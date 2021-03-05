@@ -1,9 +1,11 @@
 "use strict";
+import { ParsedDiff } from "diff";
+import { flatten } from "lodash-es";
 import * as path from "path";
 import { URI } from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
 import { Container, SessionContainer } from "../container";
-import { EMPTY_TREE_SHA, GitRemote, GitRepository } from "../git/gitService";
+import { EMPTY_TREE_SHA, GitCommit, GitRemote, GitRepository } from "../git/gitService";
 import { Logger } from "../logger";
 import {
 	CheckPullRequestBranchPreconditionsRequest,
@@ -18,8 +20,13 @@ import {
 	CreatePullRequestRequest,
 	CreatePullRequestRequestType,
 	CreatePullRequestResponse,
+	CreateReviewRequest,
+	CreateReviewsForUnreviewedCommitsRequest,
+	CreateReviewsForUnreviewedCommitsRequestType,
+	CreateReviewsForUnreviewedCommitsResponse,
 	DeleteReviewRequest,
 	DeleteReviewRequestType,
+	DidDetectUnreviewedCommitsNotificationType,
 	EndReviewRequest,
 	EndReviewRequestType,
 	EndReviewResponse,
@@ -69,10 +76,11 @@ import {
 	ThirdPartyProvider,
 	ThirdPartyProviderSupportsPullRequests
 } from "../providers/provider";
-import { log, lsp, lspHandler, Strings } from "../system";
+import { Arrays, log, lsp, lspHandler, Strings } from "../system";
 import { gate } from "../system/decorators/gate";
 import { xfs } from "../xfs";
 import { CachedEntityManagerBase, Id } from "./entityManager";
+import { resolveCreatePostResponse, trackReviewPostCreation } from "./postsManager";
 import Timer = NodeJS.Timer;
 
 const uriRegexp = /codestream-diff:\/\/(\w+)\/(\w+)\/(\w+)\/(\w+)\/(.+)/;
@@ -1066,6 +1074,211 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				}
 			}
 		}
+	}
+
+	private readonly lastUnreviewedCommitsByRepoId = new Map<string, GitCommit[]>();
+
+	async checkUnreviewedCommits(repo: GitRepository): Promise<number> {
+		const repoId = repo.id;
+		if (repoId == undefined) {
+			return 0;
+		}
+		const { git, session } = SessionContainer.instance();
+		const allReviews = await this.getAllCached();
+		const repoChangesets = flatten(
+			allReviews
+				.filter(r => !r.deactivated && r.reviewChangesets)
+				.map(r => r.reviewChangesets.filter(rc => rc.repoId === repo?.id))
+		);
+		const commitShasInReviews = new Set(
+			flatten(repoChangesets.map(rc => rc.commits.map(c => c.sha)))
+		);
+
+		const gitLog = await git.getLog(repo, 10);
+		if (!gitLog) return 0;
+
+		const myEmail = await git.getConfig(repo.path, "user.email");
+		const unreviewedCommits = [];
+		let lastAuthorEmail = undefined;
+		for (const commit of gitLog.values()) {
+			if (lastAuthorEmail === undefined) {
+				lastAuthorEmail = commit.email;
+			}
+			if (commit.email !== lastAuthorEmail) {
+				// Notify about commits from only one author. They will be grouped in a single review.
+				break;
+			}
+			if (commitShasInReviews.has(commit.ref)) {
+				break;
+			}
+			if (commit.email === myEmail) {
+				break;
+			}
+			unreviewedCommits.push(commit);
+		}
+
+		this.lastUnreviewedCommitsByRepoId.set(repoId, unreviewedCommits);
+
+		const authors = new Set(unreviewedCommits.map(c => c.author));
+
+		if (unreviewedCommits.length) {
+			session.agent.sendNotification(DidDetectUnreviewedCommitsNotificationType, {
+				repoId,
+				message: `You have ${unreviewedCommits.length} unreviewed commit${
+					unreviewedCommits.length > 0 ? "s" : ""
+				} from ${Array.from(authors).join(", ")}`
+			});
+		}
+
+		return unreviewedCommits.length;
+	}
+
+	@lspHandler(CreateReviewsForUnreviewedCommitsRequestType)
+	@log()
+	async createReviewsForUnreviewedCommits(
+		request: CreateReviewsForUnreviewedCommitsRequest
+	): Promise<CreateReviewsForUnreviewedCommitsResponse> {
+		try {
+			const { git } = SessionContainer.instance();
+			const repo = await git.getRepositoryById(request.repoId);
+			if (!repo) {
+				return { reviewIds: [] };
+			}
+
+			const commits = this.lastUnreviewedCommitsByRepoId.get(request.repoId);
+			if (!commits) {
+				return { reviewIds: [] };
+			}
+
+			const currentUserEmail = await git.getConfig(repo.path, "user.email");
+			if (!currentUserEmail) {
+				return { reviewIds: [] };
+			}
+
+			// All these commits are from the same author, and we want to pack them together in a single review
+			const reviewIds = [];
+			const review = await this.createReviewForUnreviewedCommit(commits, repo, currentUserEmail);
+			if (review) {
+				reviewIds.push(review.id);
+			}
+
+			return {
+				reviewIds
+			};
+		} catch (ex) {
+			Logger.error(ex);
+			return {
+				reviewIds: []
+			};
+		}
+	}
+
+	private async createReviewForUnreviewedCommit(
+		commits: GitCommit[],
+		repo: GitRepository,
+		currentUserEmail: string
+	): Promise<CSReview | undefined> {
+		const { git, posts, session, scm, users } = SessionContainer.instance();
+		const newestCommit = commits[0];
+		const oldestCommit = commits[commits.length - 1];
+		const repoStatus = await scm.getRepoStatus({
+			uri: "file://" + repo.path,
+			startCommit: oldestCommit.ref + "^",
+			endCommit: newestCommit.ref,
+			includeStaged: false,
+			includeSaved: false,
+			currentUserEmail
+		});
+
+		if (!repo.id || !repoStatus.scm) {
+			return;
+		}
+
+		const codeAuthorIds = [];
+		const followerIds = [];
+		const addedUsers = [];
+		if (newestCommit.email) {
+			let author = (await users.getByEmails([newestCommit.email], { ignoreCase: true }))[0];
+			if (!author) {
+				const inviteUserResponse = await users.inviteUser({
+					email: newestCommit.email,
+					fullName: newestCommit.author,
+					dontSendEmail: true
+				});
+				author = inviteUserResponse.user;
+				addedUsers.push(newestCommit.email);
+			}
+			if (author) {
+				codeAuthorIds.push(author.id);
+				followerIds.push(author.id);
+			}
+		}
+
+		// people whose code was modified by the commits in the review
+		const authorsById: { [authorId: string]: { stomped: number; commits: number } } = {};
+		for (const impactedAuthor of repoStatus.scm.authors) {
+			const user = (await users.getByEmails([impactedAuthor.email], { ignoreCase: true }))[0];
+			if (user) {
+				authorsById[user.id] = impactedAuthor;
+			}
+		}
+
+		const firstAncestor = await git.findAncestor(repo.path, oldestCommit.ref, 1, () => true);
+
+		const reviewRequest: CreateReviewRequest = {
+			title: newestCommit.shortMessage,
+			text: commits.map(c => c.message).join("\n"),
+			reviewers: [session.userId],
+			codeAuthorIds,
+			followerIds,
+			authorsById,
+			tags: [],
+			status: "open",
+			markers: [],
+			reviewChangesets: [
+				{
+					repoId: repo.id,
+					checkpoint: 0,
+					branch: "",
+					commits: commits
+						.map(commit => repoStatus?.scm?.commits?.find(c => c.sha === commit.ref))
+						.filter(Boolean) as any,
+					modifiedFiles: repoStatus.scm.modifiedFiles,
+					modifiedFilesInCheckpoint: repoStatus.scm.modifiedFiles,
+					includeSaved: false,
+					includeStaged: false,
+					diffs: {
+						leftBaseAuthor: firstAncestor ? firstAncestor.author : "Empty Tree",
+						leftBaseSha: firstAncestor ? firstAncestor.ref : EMPTY_TREE_SHA,
+						leftDiffs: [],
+						rightBaseAuthor: newestCommit.author,
+						rightBaseSha: newestCommit.ref,
+						rightDiffs: [],
+						rightReverseDiffs: [],
+						latestCommitSha: newestCommit.ref,
+						rightToLatestCommitDiffs: [],
+						latestCommitToRightDiffs: []
+					}
+				}
+			]
+		};
+
+		const stream = await SessionContainer.instance().streams.getTeamStream();
+		const response = await this.session.api.createPost({
+			review: reviewRequest,
+			text: reviewRequest.title!,
+			streamId: stream.id,
+			dontSendEmail: false,
+			mentionedUserIds: [],
+			addedUsers: [],
+			files: []
+		});
+		const review = response.review!;
+
+		trackReviewPostCreation(review, 0, 0, "Review on pull", addedUsers);
+		await resolveCreatePostResponse(response);
+
+		return review;
 	}
 
 	protected async loadCache() {

@@ -421,6 +421,7 @@ export interface CSInviteUserRequest {
 	email: string;
 	teamId: string;
 	fullName?: string;
+	dontSendEmail?: boolean;
 }
 
 export interface CSInviteUserResponse {
@@ -553,6 +554,8 @@ export interface CSCreateReviewRequest {
 	status?: string;
 	reviewers?: string[];
 	authorsById?: { [authorId: string]: { stomped: number; commits: number } };
+	followerIds?: string[];
+	codeAuthorIds?: string[];
 	tags?: string[];
 
 	repoChanges?: CSRepoChange[];

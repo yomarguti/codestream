@@ -25,6 +25,7 @@ export const ShowCodemarkNotificationType = new NotificationType<ShowCodemarkNot
 // TODO: This should be a request to the webview -- not a notification
 export interface ShowReviewNotification {
 	reviewId: string;
+	openFirstDiff?: boolean;
 	sourceUri?: string;
 }
 export const ShowReviewNotificationType = new NotificationType<ShowReviewNotification, void>(

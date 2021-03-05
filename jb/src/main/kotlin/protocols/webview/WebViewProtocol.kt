@@ -60,6 +60,7 @@ object ReviewNotifications {
     class Show(
         val reviewId: String,
         val codemarkId: String? = null,
+        val openFirstDiff: Boolean? = null,
         val sourceUri: String? = null,
         val simulated: Boolean? = null
     ) : WebViewNotification {

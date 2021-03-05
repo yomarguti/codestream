@@ -202,8 +202,6 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 			return { success: false };
 		}
 
-		const document = documents.get(uri);
-
 		const { locations } = await markerLocations.getCurrentLocations(uri, fileStreamId, [marker]);
 
 		let documentRange: GetRangeResponse | undefined = {};
@@ -404,26 +402,6 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		}
 
 		this.cache.reset(response.codemarks);
-	}
-
-	private migrate(codemarks: CSCodemark[]) {
-		setImmediate(async () => {
-			for (const codemark of codemarks) {
-				try {
-					const { post } = await this.session.api.getPost({
-						streamId: codemark.streamId,
-						postId: codemark.postId
-					});
-					this.edit({
-						codemarkId: codemark.id,
-						text: post.text,
-						parentPostId: post.parentPostId
-					});
-				} catch (ex) {
-					/* ignore because we probably couldn't get the slack post */
-				}
-			}
-		});
 	}
 
 	protected getEntityName(): string {

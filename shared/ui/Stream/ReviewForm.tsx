@@ -583,7 +583,9 @@ class ReviewForm extends React.Component<Props, State> {
 					statusInfo.scm.commits.length > 1 &&
 					statusInfo.scm.commits[0].info
 				) {
-					this.setState({ title: statusInfo.scm.commits[0].info.message });
+					const splittedMessage = statusInfo.scm.commits[0].info.message.split(/(?<=^.+)\n/);
+					this.setState({ title: splittedMessage[0] ? splittedMessage[0] : "" });
+					this.setState({ text: splittedMessage[1] ? splittedMessage[1].trim() : "" });
 					// only show this 1 commit
 					limitedLength = 1;
 				}

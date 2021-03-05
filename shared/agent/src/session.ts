@@ -54,7 +54,6 @@ import {
 	DidLoginNotificationType,
 	DidLogoutNotificationType,
 	DidStartLoginNotificationType,
-	FetchMarkerLocationsRequestType,
 	GetAccessTokenRequestType,
 	GetInviteInfoRequest,
 	GetInviteInfoRequestType,
@@ -400,10 +399,6 @@ export class CodeStreamSession {
 					apiCapabilities: this.apiCapabilities
 				};
 			}
-		);
-
-		this.agent.registerHandler(FetchMarkerLocationsRequestType, r =>
-			this.api.fetchMarkerLocations(r)
 		);
 	}
 
@@ -1182,11 +1177,19 @@ export class CodeStreamSession {
 	}
 
 	private async repositoryCommitHashChanged(repo: GitRepository) {
+		const { git, markerLocations, reviews, users } = SessionContainer.instance();
+		markerLocations.flushUncommittedLocations(repo);
+
+		const me = await users.getMe();
+		if (me.user.preferences?.reviewCreateOnDetectUnreviewedCommits !== false) {
+			reviews.checkUnreviewedCommits(repo).then(unreviewedCommitCount => {
+				Logger.log(`Detected ${unreviewedCommitCount} unreviewed commits`);
+			});
+		}
+
 		if (!this.apiCapabilities.autoFR) {
 			return;
 		}
-		SessionContainer.instance().markerLocations.flushUncommittedLocations(repo);
-		const { git } = SessionContainer.instance();
 		const commit = await git.getCommit(repo.path, "HEAD");
 		const userEmail = await git.getConfig(repo.path, "user.email");
 		const twentySeconds = 20 * 1000;
