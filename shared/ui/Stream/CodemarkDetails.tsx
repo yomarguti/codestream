@@ -24,7 +24,7 @@ import { HostApi } from "../webview-api";
 import { DropdownButton } from "./Review/DropdownButton";
 import { Button } from "../src/components/Button";
 import { ButtonRow } from "../src/components/Dialog";
-import { getPost } from "../store/posts/reducer";
+import { setCurrentCodemark } from "../store/context/actions";
 
 interface State {
 	editingPostId?: string;
@@ -60,6 +60,7 @@ interface Props {
 	setCodemarkPinned(
 		...args: Parameters<typeof setCodemarkPinned>
 	): ReturnType<ReturnType<typeof setCodemarkPinned>>;
+	setCurrentCodemark: Function;
 	postAction?(...args: any[]): any;
 	setUserPreference?: Function;
 }
@@ -138,6 +139,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 			"Codemark Type": this.props.codemark.type,
 			Archived: type === "archive"
 		});
+		this.props.setCurrentCodemark();
 
 		const thing = text ? "" : " this discussion";
 		const action = type === "archive" ? "resolved & archived" : "resolved";
@@ -365,5 +367,6 @@ export default connect(mapStateToProps, {
 	createPost,
 	setCodemarkStatus,
 	setCodemarkPinned,
-	setUserPreference
+	setUserPreference,
+	setCurrentCodemark
 })(CodemarkDetails);
