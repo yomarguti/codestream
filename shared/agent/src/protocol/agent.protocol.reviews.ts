@@ -469,7 +469,7 @@ export const EndReviewRequestType = new RequestType<
 >("codestream/review/end");
 
 export interface CreateReviewsForUnreviewedCommitsRequest {
-	repoId: string;
+	sequence: number;
 }
 
 export interface CreateReviewsForUnreviewedCommitsResponse {

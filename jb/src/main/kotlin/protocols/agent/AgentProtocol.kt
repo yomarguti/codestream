@@ -386,7 +386,7 @@ class GetFileContentsAtRevisionResult(
 )
 
 class CreateReviewsForUnreviewedCommitsParams(
-    val repoId: String
+    val sequence: Int
 )
 
 class CreateReviewsForUnreviewedCommitsResult(
