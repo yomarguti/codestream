@@ -228,6 +228,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			"ECONNABORTED",
 			"ECONNRESET",
 			"ECONNREFUSED",
+			"EHOSTUNREACH",
 			"ENETDOWN",
 			"ENETUNREACH",
 			"socket disconnected before secure",
