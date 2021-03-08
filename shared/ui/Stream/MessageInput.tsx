@@ -129,7 +129,6 @@ interface Props extends ConnectedProps {
 	renderCodeBlock?(index: number, force: boolean): React.ReactNode | null;
 	renderCodeBlocks?(): React.ReactNode | null;
 	__onDidRender?(stuff: { [key: string]: any }): any; // HACKy: sneaking internals to parent
-	onPaste?(e: ClipboardEvent): void;
 }
 
 export class MessageInput extends React.Component<Props, State> {
@@ -169,9 +168,7 @@ export class MessageInput extends React.Component<Props, State> {
 				this.setState({ isPasteEvent: false });
 				// const text = e.clipboardData!.getData("text/plain");
 				// document.execCommand("insertHTML", false, text.replace(/\n/g, "<br>"));
-				if (this.props.onPaste) {
-					this.props.onPaste(e);
-				}
+				this.handlePaste(e);
 			});
 			this.disposables.push(
 				KeystrokeDispatcher.onKeyDown(
@@ -303,7 +300,7 @@ export class MessageInput extends React.Component<Props, State> {
 	};
 
 	handlePaste = e => {
-		if (!e.clipboardData || !e.clipboardData.files) return;
+		if (!e.clipboardData || !e.clipboardData.files || !e.clipboardData.files.length) return;
 
 		this.attachFiles(e.clipboardData.files);
 	};
@@ -1504,7 +1501,4 @@ const mapStateToProps = (
 	};
 };
 
-export default connect(
-	mapStateToProps,
-	{ ...actions }
-)(MessageInput);
+export default connect(mapStateToProps, { ...actions })(MessageInput);
