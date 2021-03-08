@@ -1225,7 +1225,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				const inviteUserResponse = await users.inviteUser({
 					email: newestCommit.email,
 					fullName: newestCommit.author,
-					dontSendEmail: true
+					dontSendEmail: true,
+					inviteType: "reviewAuthorNotification"
 				});
 				author = inviteUserResponse.user;
 				addedUsers.push(newestCommit.email);
@@ -1297,7 +1298,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		});
 		const review = response.review!;
 
-		trackReviewPostCreation(review, 0, 0, "Review on pull", addedUsers);
+		trackReviewPostCreation(review, 0, 0, "Commit Toast on Pull", addedUsers);
 		await resolveCreatePostResponse(response);
 
 		return review;

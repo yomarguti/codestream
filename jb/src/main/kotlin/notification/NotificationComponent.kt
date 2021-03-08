@@ -152,9 +152,10 @@ class NotificationComponent(val project: Project) {
                 }
             }
             notification.expire()
-            // telemetry(TelemetryEvent.TOAST_CLICKED, telemetryContent)
+            telemetry(TelemetryEvent.TOAST_CLICKED, "Commit")
         })
 
+        telemetry(TelemetryEvent.TOAST_NOTIFICATION, "Commit")
         notification.notify(project)
     }
 
