@@ -141,12 +141,12 @@ class NotificationComponent(val project: Project) {
         notification.notify(project)
     }
 
-    fun didDetectUnreviewedCommits(message: String, repoId: String) {
+    fun didDetectUnreviewedCommits(message: String, sequence: Int) {
         val notification = notificationGroup.createNotification("Unreviewed code", null, message, NotificationType.INFORMATION)
 
         notification.addAction(NotificationAction.createSimple("Review") {
             GlobalScope.launch {
-                val result = project.agentService?.createReviewsForUnreviewedCommits(CreateReviewsForUnreviewedCommitsParams(repoId))
+                val result = project.agentService?.createReviewsForUnreviewedCommits(CreateReviewsForUnreviewedCommitsParams(sequence))
                 result?.reviewIds?.firstOrNull()?.let {
                     project.webViewService?.postNotification(ReviewNotifications.Show(it, null, true))
                 }

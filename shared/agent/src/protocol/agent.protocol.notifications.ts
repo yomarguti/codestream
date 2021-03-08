@@ -328,7 +328,7 @@ export const UserDidCommitNotificationType = new NotificationType<UserDidCommitN
 );
 
 export interface DidDetectUnreviewedCommitsNotification {
-	repoId: string;
+	sequence: number;
 	message: string;
 }
 

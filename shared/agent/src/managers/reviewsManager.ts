@@ -1076,9 +1076,14 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		}
 	}
 
-	private readonly lastUnreviewedCommitsByRepoId = new Map<string, GitCommit[]>();
+	private unreviewedCommitCheckSeq = 0;
+	private readonly unreviewedCommitsBySeq = new Map<
+		number,
+		{ repoId: string; commits: GitCommit[] }
+	>();
 
 	async checkUnreviewedCommits(repo: GitRepository): Promise<number> {
+		const sequence = this.unreviewedCommitCheckSeq++;
 		const repoId = repo.id;
 		if (repoId == undefined) {
 			return 0;
@@ -1117,17 +1122,24 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			unreviewedCommits.push(commit);
 		}
 
-		this.lastUnreviewedCommitsByRepoId.set(repoId, unreviewedCommits);
+		this.unreviewedCommitsBySeq.set(sequence, { repoId, commits: unreviewedCommits });
 
 		const authors = new Set(unreviewedCommits.map(c => c.author));
 
 		if (unreviewedCommits.length) {
 			session.agent.sendNotification(DidDetectUnreviewedCommitsNotificationType, {
-				repoId,
+				sequence,
 				message: `You have ${unreviewedCommits.length} unreviewed commit${
 					unreviewedCommits.length > 0 ? "s" : ""
 				} from ${Array.from(authors).join(", ")}`
 			});
+		}
+
+		// clean stored data older than 50 checks ago
+		for (const storedSequence of this.unreviewedCommitsBySeq.keys()) {
+			if (storedSequence <= sequence - 50) {
+				this.unreviewedCommitsBySeq.delete(storedSequence);
+			}
 		}
 
 		return unreviewedCommits.length;
@@ -1140,13 +1152,15 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	): Promise<CreateReviewsForUnreviewedCommitsResponse> {
 		try {
 			const { git } = SessionContainer.instance();
-			const repo = await git.getRepositoryById(request.repoId);
-			if (!repo) {
+			const unreviewedCommits = this.unreviewedCommitsBySeq.get(request.sequence);
+			if (!unreviewedCommits) {
+				Logger.warn(`No unreviewed commits entry found for sequence ${request.sequence}`);
 				return { reviewIds: [] };
 			}
+			const { repoId, commits } = unreviewedCommits;
 
-			const commits = this.lastUnreviewedCommitsByRepoId.get(request.repoId);
-			if (!commits) {
+			const repo = await git.getRepositoryById(repoId);
+			if (!repo) {
 				return { reviewIds: [] };
 			}
 

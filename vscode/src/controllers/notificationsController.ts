@@ -107,7 +107,7 @@ export class NotificationsController implements Disposable {
 		);
 
 		if (result === actions[0]) {
-			const result = await Container.agent.sendRequest(CreateReviewsForUnreviewedCommitsRequestType, { repoId: notification.repoId });
+			const result = await Container.agent.sendRequest(CreateReviewsForUnreviewedCommitsRequestType, { sequence: notification.sequence });
 			const reviewId = result.reviewIds[0];
 			if (reviewId) {
 				Container.webview.openReview(reviewId, { openFirstDiff: true });
