@@ -13,7 +13,7 @@ export interface DropdownButtonProps extends ButtonProps {
 	items: {
 		label: any;
 		key?: string;
-		action?: () => void;
+		action?: (range?: any) => void;
 		buttonAction?: () => void;
 		noHover?: boolean;
 		disabled?: boolean;
@@ -26,6 +26,8 @@ export interface DropdownButtonProps extends ButtonProps {
 	splitDropdown?: boolean;
 	wrap?: boolean;
 	selectedKey?: string;
+	isMultiSelect?: boolean;
+	itemsRange?: string[];
 }
 
 // operates in two modes. if splitDropdown is false (the default), it's a dropdown menu
@@ -107,6 +109,8 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 					items={items}
 					focusOnSelect={buttonRef.current}
 					wrap={props.wrap}
+					isMultiSelect={props.isMultiSelect}
+					itemsRange={props.itemsRange}
 				/>
 			)}
 		</Root>

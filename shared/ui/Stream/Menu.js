@@ -17,7 +17,11 @@ export default class Menu extends Component {
 
 	constructor(props) {
 		super(props);
-		this.state = { selected: props.selected || "" };
+		this.state = {
+			selected: props.selected || "",
+			isShiftHolded: false,
+			itemsRange: props.itemsRange || []
+		};
 		this.el = document.createElement("div");
 		this.count = 0;
 		this.programaticScrolling = 0;
@@ -71,6 +75,10 @@ export default class Menu extends Component {
 		);
 		if (this.props.focusInput && this.props.focusInput.current) {
 			this.props.focusInput.current.addEventListener("keydown", this.handleKeyDown);
+		}
+		if (this.props.isMultiSelect) {
+			document.addEventListener("keydown", this.handleMultiSelectKeyDown);
+			document.addEventListener("keyup", this.handleMultiSelectKeyUp);
 		}
 	}
 
@@ -270,6 +278,10 @@ export default class Menu extends Component {
 			this.props.focusInput.current.removeEventListener("keydown", this.handleKeyDown);
 			this.keydownListener = undefined;
 		}
+		if (this.props.isMultiSelect) {
+			document.removeEventListener("keydown", this.handleMultiSelectKeyDown);
+			document.removeEventListener("keyup", this.handleMultiSelectKeyUp);
+		}
 	}
 
 	closeMenu() {
@@ -312,13 +324,34 @@ export default class Menu extends Component {
 		return key;
 	}
 
-	renderItem = (item, parentItem, grandParentItem, grandGrandParentItem, index) => {
+	renderItem = (item, parentItem, grandParentItem, grandGrandParentItem, keys, index) => {
 		if (item.label === "-") return <hr key={"hr-" + this.count++} />;
+		if (item.type === "static") {
+			this.count++;
+			return <li className="menu-item static">{item.label}</li>;
+		}
 		if (item.fragment) return item.fragment;
-		const key = this.calculateKey(item, parentItem, grandParentItem, grandGrandParentItem);
+		const key = keys[index];
 		let selected = key === this.state.selected || (this.state.selected + "").startsWith(key + "/");
 		if (item.type === "search") {
 			selected = false;
+		}
+		const itemIndex = keys.findIndex(_ => _ === key);
+		// default selection range
+		if (!this.state.selected && this.state.itemsRange.length >= 1 && item.inRange) {
+			const startRangeSelectedIndex = keys.findIndex(_ => _ === this.state.itemsRange.slice(0)[0]);
+			const endRangeSelectedIndex = keys.findIndex(_ => _ === this.state.itemsRange.slice(-1)[0]);
+			selected = itemIndex >= startRangeSelectedIndex && itemIndex <= endRangeSelectedIndex;
+		}
+		// current selection range
+		if (this.state.isShiftHolded && this.state.itemsRange.length === 1 && item.inRange) {
+			const startRangeSelectedIndex = keys.findIndex(_ => _ === this.state.itemsRange[0]);
+			const currentSelectedIndex = keys.findIndex(
+				_ => _ === this.state.selected || _ === (this.state.selected + "").startsWith(key + "/")
+			);
+			selected =
+				(startRangeSelectedIndex >= itemIndex && currentSelectedIndex <= itemIndex) ||
+				(currentSelectedIndex >= itemIndex && startRangeSelectedIndex <= itemIndex);
 		}
 
 		if (item.type === "title") {
@@ -332,6 +365,7 @@ export default class Menu extends Component {
 					disabled: item.disabled,
 					destructive: item.destructive,
 					hover: selected && !item.noHover && !item.customHover,
+					"range-hover": this.state.isShiftHolded,
 					"custom-hover": selected && item.customHover,
 					"has-submenu": item.submenu ? true : false
 				})}
@@ -351,6 +385,7 @@ export default class Menu extends Component {
 				{item.shortcut && <span className="shortcut">{item.shortcut}</span>}
 				{item.subtextWide && <div className="subtext-wide">{item.subtextWide}</div>}
 				{item.subtext && <div className="subtext">{item.subtext}</div>}
+				{item.subtextNoPadding && <div className="subtext-no-padding">{item.subtextNoPadding}</div>}
 				{item.disabled && <span className="disabled">{item.disabled}</span>}
 				{item.submenu && (
 					<span className="submenu">
@@ -432,6 +467,9 @@ export default class Menu extends Component {
 			!parentItem &&
 			!grandParentItem &&
 			!grandGrandParentItem;
+		const keys = itemsToRender.map(itemToRender =>
+			this.calculateKey(itemToRender, parentItem, grandParentItem, grandGrandParentItem)
+		);
 
 		return (
 			<div
@@ -455,7 +493,7 @@ export default class Menu extends Component {
 				)}
 				<ul className="compact">
 					{itemsToRender.map((item, index) =>
-						this.renderItem(item, parentItem, grandParentItem, grandGrandParentItem, index)
+						this.renderItem(item, parentItem, grandParentItem, grandGrandParentItem, keys, index)
 					)}
 				</ul>
 				<button
@@ -558,13 +596,41 @@ export default class Menu extends Component {
 		}
 	};
 
+	handleMultiSelectKeyDown = event => {
+		if (event.key === "Shift") {
+			this.setState({ isShiftHolded: true, itemsRange: [] });
+		}
+	};
+
+	handleMultiSelectKeyUp = event => {
+		if (event.key === "Shift") {
+			this.setState({ isShiftHolded: false, itemsRange: [] });
+		}
+	};
+
 	handleMouseEnter = key => {
 		if (!this.programaticScrolling) this.setState({ selected: key });
 	};
 
 	handleClickItem = async (event, item) => {
+		if (this.state.isShiftHolded && item.inRange) {
+			switch (this.state.itemsRange.length) {
+				case 0:
+					this.state.itemsRange.push(this.calculateKey(item));
+					return;
+				case 1:
+					this.state.itemsRange.push(this.calculateKey(item));
+					item.action(this.state.itemsRange);
+					this.props.action(null);
+					return;
+				default:
+					this.state.itemsRange = [this.calculateKey(item)];
+					return;
+			}
+		}
+
 		event.stopPropagation();
-		if (item.type === "search") return;
+		if (item.type === "search" || item.type === "static") return;
 
 		// when you select an item, clear out the search field
 		if (this._searchInput) {

@@ -348,14 +348,27 @@ export class GitService implements IGitService, Disposable {
 
 	async getCommitChanges(
 		repoPath: string,
-		commitHash: string
+		commitHashes: string[]
 	): Promise<ParsedDiffPatch[] | undefined> {
 		try {
-			const data = await git({ cwd: repoPath }, "diff", "--no-ext-diff", `${commitHash}^!`);
+			const options = ["diff", "--no-ext-diff", "--no-prefix"];
+			switch (commitHashes.length) {
+				case 1:
+					options.push(`${commitHashes[0]}^!`);
+					break;
+				case 2:
+					options.push(`${commitHashes[0]}..${commitHashes[1]}`);
+					break;
+				default:
+					return ;
+			}
+			const data = await git({ cwd: repoPath }, ...options);
 
 			return GitPatchParser.parse(data);
 		} catch (err) {
-			Logger.warn(`Error getting diff from ${commitHash}`);
+			Logger.warn(
+				`Error getting diff from ${commitHashes}`
+			);
 			throw err;
 		}
 	}
