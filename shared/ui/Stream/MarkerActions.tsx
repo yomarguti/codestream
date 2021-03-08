@@ -248,7 +248,7 @@ class MarkerActions extends React.Component<Props, State> {
 						});
 						this.setState({ warning: success ? undefined : "FILE_NOT_FOUND" });
 					} else {
-						this.setState({ warning: undefined });
+						// this.setState({ warning: undefined });
 					}
 				} else {
 					// assumption based on GetDocumentFromMarkerRequestType api requiring the workspace to be available
