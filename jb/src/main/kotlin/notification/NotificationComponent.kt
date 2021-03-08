@@ -152,10 +152,10 @@ class NotificationComponent(val project: Project) {
                 }
             }
             notification.expire()
-            telemetry(TelemetryEvent.TOAST_CLICKED, "Commit")
+            telemetry(TelemetryEvent.TOAST_CLICKED, "Unreviewed Commit")
         })
 
-        telemetry(TelemetryEvent.TOAST_NOTIFICATION, "Commit")
+        telemetry(TelemetryEvent.TOAST_NOTIFICATION, "Unreviewed Commit")
         notification.notify(project)
     }
 
