@@ -225,6 +225,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			"ENOTFOUND",
 			"ETIMEDOUT",
 			"EAI_AGAIN",
+			"ECONNABORTED",
 			"ECONNRESET",
 			"ECONNREFUSED",
 			"ENETDOWN",
