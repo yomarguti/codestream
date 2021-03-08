@@ -1079,7 +1079,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	private unreviewedCommitCheckSeq = 0;
 	private readonly unreviewedCommitsBySeq = new Map<
 		number,
-		{ repoId: string; commits: GitCommit[] }
+		{ repoId: string; branch?: string; commits: GitCommit[] }
 	>();
 
 	async checkUnreviewedCommits(repo: GitRepository): Promise<number> {
@@ -1122,7 +1122,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			unreviewedCommits.push(commit);
 		}
 
-		this.unreviewedCommitsBySeq.set(sequence, { repoId, commits: unreviewedCommits });
+		const branch = await git.getCurrentBranch(repo.path);
+		this.unreviewedCommitsBySeq.set(sequence, { repoId, branch, commits: unreviewedCommits });
 
 		const authors = new Set(unreviewedCommits.map(c => c.author));
 
@@ -1157,7 +1158,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				Logger.warn(`No unreviewed commits entry found for sequence ${request.sequence}`);
 				return { reviewIds: [] };
 			}
-			const { repoId, commits } = unreviewedCommits;
+			const { repoId, branch, commits } = unreviewedCommits;
 
 			const repo = await git.getRepositoryById(repoId);
 			if (!repo) {
@@ -1171,7 +1172,12 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 			// All these commits are from the same author, and we want to pack them together in a single review
 			const reviewIds = [];
-			const review = await this.createReviewForUnreviewedCommit(commits, repo, currentUserEmail);
+			const review = await this.createReviewForUnreviewedCommit(
+				commits,
+				branch,
+				repo,
+				currentUserEmail
+			);
 			if (review) {
 				reviewIds.push(review.id);
 			}
@@ -1189,10 +1195,11 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 	private async createReviewForUnreviewedCommit(
 		commits: GitCommit[],
+		branch: string | undefined,
 		repo: GitRepository,
 		currentUserEmail: string
 	): Promise<CSReview | undefined> {
-		const { git, posts, session, scm, users } = SessionContainer.instance();
+		const { git, posts, session, scm, users, teams } = SessionContainer.instance();
 		const newestCommit = commits[0];
 		const oldestCommit = commits[commits.length - 1];
 		const repoStatus = await scm.getRepoStatus({
@@ -1208,6 +1215,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			return;
 		}
 
+		const myTeam = await teams.getById(session.teamId);
 		const codeAuthorIds = [];
 		const followerIds = [];
 		const addedUsers = [];
@@ -1222,7 +1230,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				author = inviteUserResponse.user;
 				addedUsers.push(newestCommit.email);
 			}
-			if (author) {
+			if (author && !myTeam.removedMemberIds?.some(rmId => rmId === author.id)) {
 				codeAuthorIds.push(author.id);
 				followerIds.push(author.id);
 			}
@@ -1232,7 +1240,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		const authorsById: { [authorId: string]: { stomped: number; commits: number } } = {};
 		for (const impactedAuthor of repoStatus.scm.authors) {
 			const user = (await users.getByEmails([impactedAuthor.email], { ignoreCase: true }))[0];
-			if (user) {
+			if (user && !myTeam.removedMemberIds?.some(rmId => rmId === user.id)) {
 				authorsById[user.id] = impactedAuthor;
 			}
 		}
@@ -1253,7 +1261,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				{
 					repoId: repo.id,
 					checkpoint: 0,
-					branch: "",
+					branch: branch || "(no branch)",
 					commits: commits
 						.map(commit => repoStatus?.scm?.commits?.find(c => c.sha === commit.ref))
 						.filter(Boolean) as any,
