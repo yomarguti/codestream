@@ -181,24 +181,16 @@ const ComposeWrapper = styled.div.attrs(() => ({
 	}
 `;
 
-const MetaRepoInfo = styled.div`
-	display: flex;
-	flex-direction: column;
-	&:not(:last) {
-		margin-bottom: 2px;
-	}
-`;
-
-const RepoInfo = styled.div`
-	display: flex;
-	.icon {
-		margin-right: 5px;
-	}
-	span:not(:first-child) {
-		padding-left: 20px;
-	}
+const RepoInfo = styled.span`
 	span {
+		color: var(--text-color-highlight);
 		display: inline-block;
+	}
+	.icon {
+		padding-right: 5px;
+	}
+	.monospace {
+		// padding: 0 5px;
 	}
 `;
 
@@ -744,9 +736,22 @@ const BaseReview = (props: BaseReviewProps) => {
 				)}
 				{!props.collapsed && (
 					<ExpandedAuthor>
-						Opened
-						<Timestamp relative time={props.review.createdAt} /> by{" "}
 						<HeadshotName person={derivedState.author} highlightMe />
+						changes in{" "}
+						{props.repoInfo.map(r => (
+							<RepoInfo>
+								<span className="monospace">
+									<Icon name="repo" />
+									{r.repoName}
+								</span>
+								{" on "}
+								<span className="monospace">
+									<Icon name="git-branch" />
+									{r.branch}
+								</span>
+							</RepoInfo>
+						))}
+						<Timestamp relative time={props.review.createdAt} />
 					</ExpandedAuthor>
 				)}
 
@@ -863,29 +868,6 @@ const BaseReview = (props: BaseReviewProps) => {
 									);
 								})}
 							</MetaDescriptionForAssignees>
-						</Meta>
-					)}
-					{!props.collapsed && (
-						<Meta>
-							<MetaLabel>Repository</MetaLabel>
-							<MetaDescription>
-								<MetaDescriptionForAssignees>
-									{props.repoInfo.map(r => (
-										<MetaRepoInfo key={r.repoName}>
-											<RepoInfo>
-												<span>
-													<Icon name="repo" />
-													{r.repoName}
-												</span>
-												<span>
-													<Icon name="git-branch" />
-													{r.branch}
-												</span>
-											</RepoInfo>
-										</MetaRepoInfo>
-									))}
-								</MetaDescriptionForAssignees>
-							</MetaDescription>
 						</Meta>
 					)}
 					{!props.collapsed && (

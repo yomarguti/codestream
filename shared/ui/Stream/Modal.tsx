@@ -48,6 +48,9 @@ const ModalWrapper = styled.div<{ noPadding?: boolean }>`
 		backdrop-filter: brightness(60%) blur(1px);
 		// }
 	}
+	&.sidebar-background {
+		background: var(--sidebar-background);
+	}
 	&.show-global-nav {
 		top: 50px;
 	}
@@ -88,6 +91,7 @@ export interface ModalProps {
 	showGlobalNav?: boolean;
 	noPadding?: boolean;
 	noScroll?: boolean;
+	sidebarBackground?: boolean;
 }
 
 export function Modal(props: PropsWithChildren<ModalProps>) {
@@ -136,8 +140,8 @@ export function Modal(props: PropsWithChildren<ModalProps>) {
 			<ModalWrapper
 				noPadding={props.noPadding}
 				className={`${props.translucent ? "translucent " : ""}${
-					props.showGlobalNav ? "show-global-nav " : ""
-				}`}
+					props.sidebarBackground ? "sidebar-background " : ""
+				}${props.showGlobalNav ? "show-global-nav " : ""}`}
 			>
 				{props.onClose && <CancelButton onClick={props.onClose} />}
 				{props.noScroll ? (

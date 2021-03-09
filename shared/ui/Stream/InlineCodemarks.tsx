@@ -1200,7 +1200,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 		const composeOpen = composeCodemarkActive ? true : false;
 		return (
-			<Modal noScroll noPadding onClose={() => this.close()}>
+			<Modal noScroll noPadding onClose={() => this.close()} sidebarBackground={!!currentReviewId}>
 				<div style={{ overflow: "hidden" }}>
 					{currentReviewId ? (
 						<ReviewNav reviewId={currentReviewId} composeOpen={composeOpen} />

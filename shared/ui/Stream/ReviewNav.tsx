@@ -86,7 +86,6 @@ const Root = styled.div`
 	max-height: 100%;
 	display: flex;
 	flex-direction: column;
-	background: (--panel-tool-background-color);
 	&.tour-on {
 		${Nav},
 		${Meta},
