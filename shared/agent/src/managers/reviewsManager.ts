@@ -1217,7 +1217,6 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 		const myTeam = await teams.getById(session.teamId);
 		const codeAuthorIds = [];
-		const followerIds = [];
 		const addedUsers = [];
 		if (newestCommit.email) {
 			let author = (await users.getByEmails([newestCommit.email], { ignoreCase: true }))[0];
@@ -1233,7 +1232,6 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			}
 			if (author && !myTeam.removedMemberIds?.some(rmId => rmId === author.id)) {
 				codeAuthorIds.push(author.id);
-				followerIds.push(author.id);
 			}
 		}
 
@@ -1252,7 +1250,6 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			title: newestCommit.shortMessage,
 			reviewers: [session.userId],
 			codeAuthorIds,
-			followerIds,
 			authorsById,
 			tags: [],
 			status: "open",
