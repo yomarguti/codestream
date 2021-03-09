@@ -9,7 +9,7 @@ import { PubnubConnection } from "./pubnubConnection";
 import { SocketClusterConnection } from "./socketClusterConnection";
 
 export interface BroadcasterConnectionOptions {
-	withPresence?: boolean;
+	//withPresence?: boolean;
 }
 
 export interface BroadcasterConnection {
@@ -64,7 +64,7 @@ export interface BroadcasterInitializer {
 // withPresence as true
 export interface ChannelDescriptor {
 	name: string;
-	withPresence?: boolean;
+	//withPresence?: boolean;
 }
 
 // the BroadcasterConnection instance will emit a status through onStatusChange(), for some
@@ -107,7 +107,7 @@ export enum BroadcasterStatusType {
 interface SubscriptionMap {
 	[key: string]: {
 		subscribed: boolean;
-		withPresence?: boolean;
+		//withPresence?: boolean;
 	};
 }
 
@@ -138,7 +138,7 @@ export class Broadcaster {
 	private _simulateOffline: boolean = false;
 	private _aborted: boolean = false;
 	private _numResubscribes: number = 0;
-	private _debug: (msg: string, info?: any) => void = () => { };
+	private _debug: (msg: string, info?: any) => void = () => {};
 	private _activeFailures: string[] = [];
 	private _messagesReceived: { [key: string]: number } = {};
 	private _initializationStartedAt: number = 0;
@@ -157,7 +157,7 @@ export class Broadcaster {
 	constructor(
 		private readonly _api: ApiProvider,
 		private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined
-	) { }
+	) {}
 
 	// initialize BroadcasterConnection
 	async initialize(options: BroadcasterInitializer): Promise<Disposable> {
@@ -339,7 +339,8 @@ export class Broadcaster {
 	_processPartial(message: any) {
 		if (typeof message !== "object" || !message.fullMessageId) return message;
 		const partialMessage = message as PartialMessage;
-		this._partialMessages[message.fullMessageId] = this._partialMessages[message.fullMessageId] || new Array(partialMessage.totalParts);
+		this._partialMessages[message.fullMessageId] =
+			this._partialMessages[message.fullMessageId] || new Array(partialMessage.totalParts);
 		const partialMessages = this._partialMessages[message.fullMessageId];
 		partialMessages[partialMessage.part] = partialMessage;
 		if (partialMessages.findIndex(msg => !msg) !== -1) return false;
@@ -415,6 +416,10 @@ export class Broadcaster {
 			return this.subscribed();
 		}
 
+		this._debug("Broadcaster subscribing to: " + JSON.stringify(channels));
+		this._broadcasterConnection!.subscribe(channels);
+
+		/*
 		// split into channels that require presence updates and those that don't, and
 		// make a separate call to subscribe for each
 		const channelsWithPresence: string[] = [];
@@ -441,6 +446,7 @@ export class Broadcaster {
 			this._debug("Broadcaster subscribing to: " + JSON.stringify(channelsWithoutPresence));
 			this._broadcasterConnection!.subscribe(channelsWithoutPresence);
 		}
+		*/
 
 		// it sucks that we don't get a direct response when we try to
 		// subscribe to channels ... when we get a failure, we're not told which channels
@@ -459,8 +465,8 @@ export class Broadcaster {
 		for (const channel of channels) {
 			if (!this._subscriptions[channel.name]) {
 				this._subscriptions[channel.name] = {
-					subscribed: false,
-					withPresence: channel.withPresence || false
+					subscribed: false
+					//withPresence: channel.withPresence || false
 				};
 				numAdded++;
 			}

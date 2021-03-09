@@ -48,7 +48,7 @@ export interface PubnubInitializer {
 interface SubscriptionMap {
 	[key: string]: {
 		subscribed: boolean;
-		withPresence?: boolean;
+		//withPresence?: boolean;
 	};
 }
 
@@ -99,8 +99,8 @@ export class PubnubConnection implements BroadcasterConnection {
 		const subscribedChannels: string[] = [];
 		for (const channel of channels) {
 			const subscription = this._subscriptionMap[channel] || {
-				subscribed: false,
-				withPresence: !!options.withPresence
+				subscribed: false
+				//withPresence: !!options.withPresence
 			};
 			if (subscription.subscribed) {
 				subscribedChannels.push(channel);
@@ -115,14 +115,10 @@ export class PubnubConnection implements BroadcasterConnection {
 			});
 		}
 		if (unsubscribedChannels.length > 0) {
-			this._debug(
-				`Subscribing to ${JSON.stringify(unsubscribedChannels)}, withPresence=${
-					options.withPresence
-				}`
-			);
+			this._debug(`Subscribing to ${JSON.stringify(unsubscribedChannels)}`);
 			this._pubnub!.subscribe({
-				channels: unsubscribedChannels,
-				withPresence: options.withPresence
+				channels: unsubscribedChannels
+				//withPresence: options.withPresence
 			});
 		}
 	}
@@ -132,7 +128,7 @@ export class PubnubConnection implements BroadcasterConnection {
 		this._pubnub!.unsubscribe({ channels });
 	}
 
-	// add listeners for Pubnub status updates, messages, and presence updates
+	// add listeners for Pubnub status updates and messages
 	private addListener() {
 		this._listener = {
 			message: this.onMessage.bind(this),
