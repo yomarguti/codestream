@@ -1250,7 +1250,6 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 		const reviewRequest: CreateReviewRequest = {
 			title: newestCommit.shortMessage,
-			text: commits.map(c => c.message).join("\n"),
 			reviewers: [session.userId],
 			codeAuthorIds,
 			followerIds,
