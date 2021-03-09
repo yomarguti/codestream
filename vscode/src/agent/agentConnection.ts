@@ -27,6 +27,8 @@ import {
 	DidChangePullRequestCommentsNotificationType,
 	DidChangeVersionCompatibilityNotification,
 	DidChangeVersionCompatibilityNotificationType,
+	DidDetectUnreviewedCommitsNotification,
+	DidDetectUnreviewedCommitsNotificationType,
 	DidEncounterMaintenanceModeNotification,
 	DidEncounterMaintenanceModeNotificationType,
 	DidFailLoginNotificationType,
@@ -39,7 +41,6 @@ import {
 	FetchCodemarksRequestType,
 	FetchDocumentMarkersRequestType,
 	FetchFileStreamsRequestType,
-	FetchMarkerLocationsRequestType,
 	FetchMarkersRequestType,
 	FetchPostRepliesRequestType,
 	FetchPostsRequestType,
@@ -203,6 +204,11 @@ export class CodeStreamAgentConnection implements Disposable {
 	private _onUserDidCommit = new EventEmitter<UserDidCommitNotification>();
 	get onUserDidCommit(): Event<UserDidCommitNotification> {
 		return this._onUserDidCommit.event;
+	}
+
+	private _onDidDetectUnreviewedCommits = new EventEmitter<DidDetectUnreviewedCommitsNotification>();
+	get onDidDetectUnreviewedCommits(): Event<DidDetectUnreviewedCommitsNotification> {
+		return this._onDidDetectUnreviewedCommits.event;
 	}
 
 	private _onDidChangeVersion = new EventEmitter<DidChangeVersionCompatibilityNotification>();
@@ -448,13 +454,6 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		get(markerId: string) {
 			return this._connection.sendRequest(GetMarkerRequestType, { markerId: markerId });
-		}
-
-		fetchLocations(streamId: string, commitHash: string) {
-			return this._connection.sendRequest(FetchMarkerLocationsRequestType, {
-				streamId: streamId,
-				commitHash: commitHash
-			});
 		}
 	})(this);
 
@@ -943,6 +942,13 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._onUserDidCommit.fire(e);
 	}
 
+	@log({
+		prefix: (context, _e: DidDetectUnreviewedCommitsNotification) => `${context.prefix}`
+	})
+	private onUnreviewedCommitsDetected(e: DidDetectUnreviewedCommitsNotification) {
+		this._onDidDetectUnreviewedCommits.fire(e);
+	}
+
 	@log()
 	private onLogout(e: DidLogoutNotification) {
 		if (e.reason === LogoutReason.Token) {
@@ -1109,6 +1115,7 @@ export class CodeStreamAgentConnection implements Disposable {
 			this._onAgentInitialized.fire();
 		});
 		this._client.onNotification(UserDidCommitNotificationType, this.onUserCommitted.bind(this));
+		this._client.onNotification(DidDetectUnreviewedCommitsNotificationType, this.onUnreviewedCommitsDetected.bind(this));
 		this._client.onRequest(AgentOpenUrlRequestType, e => this._onOpenUrl.fire(e));
 	}
 

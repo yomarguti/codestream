@@ -116,4 +116,8 @@ class JBCefWebView(val jbCefBrowser: JBCefBrowser, val router: WebViewRouter) : 
     override fun focus() {
         component.focus()
     }
+
+    override fun openDevTools() {
+        jbCefBrowser.openDevtools()
+    }
 }

@@ -415,7 +415,7 @@ export class WebviewController implements Disposable {
 	@log()
 	async openReview(
 		reviewId: string,
-		options: { onlyWhenVisible?: boolean; sourceUri?: Uri } = {}
+		options: { onlyWhenVisible?: boolean; sourceUri?: Uri; openFirstDiff?: boolean } = {}
 	): Promise<void> {
 		if (!this.visible) {
 			if (options.onlyWhenVisible) return;
@@ -431,7 +431,8 @@ export class WebviewController implements Disposable {
 		// TODO: Change this to be a request vs a notification
 		this._webview!.notify(ShowReviewNotificationType, {
 			reviewId: reviewId,
-			sourceUri: options.sourceUri && options.sourceUri.toString()
+			sourceUri: options.sourceUri && options.sourceUri.toString(),
+			openFirstDiff: options.openFirstDiff
 		});
 	}
 

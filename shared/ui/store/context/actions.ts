@@ -127,10 +127,14 @@ export const _setCurrentReview = (reviewId?: string) =>
 export const _setCurrentReviewOptions = (options: any) =>
 	action(ContextActionsType.SetCurrentReviewOptions, { options });
 
-export const setCurrentReview = (reviewId?: string) => (dispatch, getState) => {
+export const setCurrentReview = (reviewId?: string, options?: { openFirstDiff?: boolean }) => (
+	dispatch,
+	getState
+) => {
 	if (!reviewId) {
 		dispatch(_setCurrentReviewOptions(undefined));
 	}
+	dispatch(_setCurrentReviewOptions(options));
 	return dispatch(_setCurrentReview(reviewId));
 };
 

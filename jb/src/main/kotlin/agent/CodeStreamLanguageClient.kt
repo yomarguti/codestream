@@ -6,6 +6,7 @@ import com.codestream.codeStream
 import com.codestream.editorService
 import com.codestream.extensions.workspaceFolders
 import com.codestream.gson
+import com.codestream.notificationComponent
 import com.codestream.protocols.agent.LoginResult
 import com.codestream.reviewService
 import com.codestream.sessionService
@@ -139,6 +140,11 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
         project.reviewService?.createReviewFromExternalCommit()
     }
 
+    @JsonNotification("codestream/didDetectUnreviewedCommits")
+    fun didDetectUnreviewedCommits(notification: DidDetectUnreviewedCommitsNotification) {
+        project.notificationComponent?.didDetectUnreviewedCommits(notification.message, notification.sequence)
+    }
+
     @JsonNotification("codestream/restartRequired")
     fun restartRequired(json: JsonElement) = GlobalScope.launch {
         project.agentService?.restart()
@@ -237,6 +243,8 @@ enum class LogoutReason {
 }
 
 class UserDidCommitNotification(val sha: String)
+
+class DidDetectUnreviewedCommitsNotification(val message: String, val sequence: Int)
 
 class DidChangeApiVersionCompatibilityNotification(
     val compatibility: ApiVersionCompatibility,

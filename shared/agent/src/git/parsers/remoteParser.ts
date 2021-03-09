@@ -76,7 +76,13 @@ export class GitRemoteParser {
 	}
 
 	static async parseGitUrl(url: string): Promise<[string, string, string]> {
-		const match = urlRegex.exec(url);
+		let match = urlRegex.exec(url);
+		if (match == null && url && url.indexOf(":") > -1 && url.indexOf("@") === -1) {
+			// couldn't find a match so this could be a completely aliased remote like
+			// `foo:TeamCodeStream/codestream.git` (without a scheme/prefix)
+			url = `git@${url}`;
+			match = urlRegex.exec(url);
+		}
 		if (match == null) return [emptyStr, emptyStr, emptyStr];
 
 		// if this isn't ssh, just return normal, if it is, use the ssh alias finder below
@@ -99,24 +105,24 @@ export class GitRemoteParser {
 					try {
 						if (!stdout) {
 							Logger.warn(`remoteParser: parseGitUrl err=${err} stderr=${stderr}`);
-							resolve(GitRemoteParser.matchToTuple(match));
+							resolve(GitRemoteParser.matchToTuple(match!));
 						} else {
 							const hostnameMatch = hostnameRegex.exec(stdout);
 							// passing undefined into the child process will result in "undefined" as a string for the hostname
 							if (hostnameMatch && hostnameMatch[1] && hostnameMatch[1] !== "undefined") {
-								resolve(GitRemoteParser.matchToTuple(match, hostnameMatch[1]));
+								resolve(GitRemoteParser.matchToTuple(match!, hostnameMatch[1]));
 							} else {
-								resolve(GitRemoteParser.matchToTuple(match));
+								resolve(GitRemoteParser.matchToTuple(match!));
 							}
 						}
 					} catch (ex) {
 						Logger.warn(`remoteParser: parseGitUrl ex=${ex}`);
-						resolve(GitRemoteParser.matchToTuple(match));
+						resolve(GitRemoteParser.matchToTuple(match!));
 					}
 				});
 			} catch (ex) {
 				Logger.warn(`remoteParser: parseGitUrl execFile ex=${ex}`);
-				resolve(GitRemoteParser.matchToTuple(match));
+				resolve(GitRemoteParser.matchToTuple(match!));
 			}
 		});
 	}

@@ -6,10 +6,11 @@ import {
 	EditorHighlightRangeRequest
 } from "../ipc/host.protocol.editor";
 
-export async function getDocumentFromMarker(markerId: string) {
+export async function getDocumentFromMarker(markerId: string, source?: string) {
 	try {
 		const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
-			markerId: markerId
+			markerId: markerId,
+			source: source
 		});
 
 		return response || undefined;

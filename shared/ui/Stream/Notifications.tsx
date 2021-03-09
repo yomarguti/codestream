@@ -25,6 +25,8 @@ export const Notifications = props => {
 			notificationDeliveryPreference:
 				state.preferences.notificationDelivery || CSNotificationDeliveryPreference.All,
 			reviewReminderDelivery: state.preferences.reviewReminderDelivery === false ? false : true,
+			createReviewOnDetectUnreviewedCommits:
+				state.preferences.reviewCreateOnDetectUnreviewedCommits === false ? false : true,
 			weeklyEmailDelivery: state.preferences.weeklyEmailDelivery === false ? false : true,
 			hasDesktopNotifications,
 			notificationDeliverySupported,
@@ -34,6 +36,10 @@ export const Notifications = props => {
 	const [loading, setLoading] = useState(false);
 	const [loadingDelivery, setLoadingDelivery] = useState(false);
 	const [loadingReminderDelivery, setLoadingReminderDelivery] = useState(false);
+	const [
+		loadingCreateReviewOnDetectUnreviewedCommits,
+		setLoadingCreateReviewOnDetectUnreviewedCommits
+	] = useState(false);
 	const [loadingWeeklyEmailDelivery, setLoadingWeeklyEmailDelivery] = useState(false);
 
 	const handleChange = async (value: string) => {
@@ -49,6 +55,13 @@ export const Notifications = props => {
 		// @ts-ignore
 		await dispatch(setUserPreference(["reviewReminderDelivery"], value));
 		setLoadingReminderDelivery(false);
+	};
+
+	const handleChangeCreateReviewOnDetectUnreviewedCommits = async (value: boolean) => {
+		setLoadingCreateReviewOnDetectUnreviewedCommits(true);
+		HostApi.instance.track("Review Create On Detect Unreviewed Commits Changed", { Value: value });
+		dispatch(setUserPreference(["reviewCreateOnDetectUnreviewedCommits"], value));
+		setLoadingCreateReviewOnDetectUnreviewedCommits(false);
 	};
 
 	const handleChangeWeeklyEmailDelivery = async (value: boolean) => {
@@ -112,6 +125,16 @@ export const Notifications = props => {
 								loading={loadingReminderDelivery}
 							>
 								Notify me about outstanding feedback requests
+							</Checkbox>
+						</div>
+						<div style={{ marginTop: "20px" }}>
+							<Checkbox
+								name="createReviewOnDetectUnreviewedCommits"
+								checked={derivedState.createReviewOnDetectUnreviewedCommits}
+								onChange={handleChangeCreateReviewOnDetectUnreviewedCommits}
+								loading={loadingCreateReviewOnDetectUnreviewedCommits}
+							>
+								Notify me about new unreviewed commits from teammates when I pull
 							</Checkbox>
 						</div>
 						<div style={{ marginTop: "20px" }}>

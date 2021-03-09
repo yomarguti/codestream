@@ -391,7 +391,7 @@ export function replaceHtml(text: string) {
 	// and a line with only "foo" as "<div>foo</div>"
 	// both of those things result in newlines, so we convert them to \n
 	const reconstructedText = text
-		.split("<div>")
+		.split(/<div.*?>/)
 		.map(_ => _.replace(/<\/div>/, "").replace(/<br\/?>/g, "\n"))
 		.join("\n");
 

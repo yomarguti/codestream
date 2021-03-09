@@ -21,9 +21,9 @@ interface Props {
 	setPinned: Function;
 	codemark: CodemarkPlus;
 	replies: any[];
-	marker?: CSMarker;
 	author: CSUser;
 	fetchThread: Function;
+	markerId: String;
 }
 
 const mapStateToProps = (state, props) => {
@@ -63,12 +63,14 @@ export const InjectAsComment = (connect(mapStateToProps, { fetchThread }) as any
 		const [hasPosts, setHasPosts] = useState(false);
 
 		const inject = () => {
+			const marker: CSMarker = props.codemark.markers!.find(marker => marker.id === props.markerId)!;
+			
 			HostApi.instance.send(TelemetryRequestType, {
 				eventName: "InjectAsComment",
 				properties: { "Author?": false }
 			});
 			HostApi.instance.send(InsertTextRequestType, {
-				marker: props.marker || props.codemark.markers![0],
+				marker: marker,
 				text: codemarkAsCommentString(),
 				indentAfterInsert: false // set this to true once vscode fixes their bug
 			});

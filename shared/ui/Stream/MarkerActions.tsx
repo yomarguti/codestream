@@ -2,7 +2,6 @@ import React from "react";
 import { safe } from "../utils";
 import { HostApi } from "../webview-api";
 import { LocateRepoButton } from "./LocateRepoButton";
-import Tooltip from "./Tooltip";
 import {
 	ApplyMarkerRequestType,
 	CompareMarkerRequestType,
@@ -13,8 +12,7 @@ import {
 	Capabilities,
 	CodemarkPlus,
 	GetCodemarkRangeRequestType,
-	TelemetryRequestType,
-	GetDocumentFromMarkerRequestType
+	TelemetryRequestType
 } from "@codestream/protocols/agent";
 import { injectIntl, WrappedComponentProps } from "react-intl";
 import { CodeStreamState } from "../store";
@@ -25,7 +23,7 @@ import { CSMarker } from "@codestream/protocols/api";
 import { getVisibleRanges } from "../store/editorContext/reducer";
 import { getDocumentFromMarker, highlightRange } from "./api-functions";
 import { Marker } from "./Marker";
-import cx from "classnames";
+import { debounce } from "lodash-es";
 
 interface State {
 	hasDiff: boolean;
@@ -91,6 +89,14 @@ class MarkerActions extends React.Component<Props, State> {
 	private _mounted: boolean = false;
 	private _highlightDisposable?: { dispose(): void };
 	private _jumped = false;
+	private _isJumping = false;
+
+	private _getDocumentFromMarkerDebounced = debounce(getDocumentFromMarker, 1000, {
+		leading: true
+	});
+	getDocumentFromMarkerDebounced(markerId: string, source: string) {
+		return this._getDocumentFromMarkerDebounced(markerId, source);
+	}
 
 	componentDidMount() {
 		this._mounted = true;
@@ -98,24 +104,33 @@ class MarkerActions extends React.Component<Props, State> {
 			this.jump(this.props.marker).then(success => {
 				this._jumped = true;
 				if (success) this.ensureMarkerInView();
+				this.openCodemark().then(_ => {
+					if (this.props.selected) {
+						this.startCheckingDiffs();
+					}
+				});
 			});
-
-			this.openCodemark();
+		} else if (this.props.selected) {
+			this.startCheckingDiffs();
 		}
-
-		if (this.props.selected) this.startCheckingDiffs();
 		if (this._codeBlockDiv && this._codeBlockDiv.scrollHeight > this._codeBlockDiv.offsetHeight)
 			this.setState({ scrollingCodeBlock: true });
 	}
 
+	// why do we use this? jump has the same arg as componentDidMount
 	componentDidUpdate(prevProps, prevState) {
 		if (!this.props.marker || !this.props.jumpToMarker) {
 			this._jumped = false;
 			return;
 		}
 		if (!this._jumped) {
+			if (this._isJumping) {
+				return;
+			}
+			this._isJumping = true;
 			this.jump(this.props.marker).then(success => {
 				this._jumped = true;
+				this._isJumping = false;
 				if (success) this.ensureMarkerInView();
 			});
 		}
@@ -157,9 +172,7 @@ class MarkerActions extends React.Component<Props, State> {
 
 		try {
 			if (marker.repoId) {
-				const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
-					markerId: marker.id
-				});
+				const response = await this.getDocumentFromMarkerDebounced(marker.id, "openCodemark");
 
 				if (response) {
 					const { success } = await HostApi.instance.send(EditorSelectRangeRequestType, {
@@ -209,9 +222,8 @@ class MarkerActions extends React.Component<Props, State> {
 				codemarkId: codemark.id,
 				markerId: marker.id
 			});
-			const hasDiff = !response.success || response.currentContent !== marker.code;
 			this.setState({
-				hasDiff,
+				hasDiff: response.diff !== undefined,
 				currentContent: response.currentContent,
 				currentBranch: response.currentBranch,
 				diff: response.diff
@@ -220,9 +232,7 @@ class MarkerActions extends React.Component<Props, State> {
 
 		try {
 			if (marker.repoId) {
-				const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
-					markerId: marker.id
-				});
+				const response = await this.getDocumentFromMarkerDebounced(marker.id, "checkDiffs");
 
 				if (response) {
 					if (jumpToMarker && jump) {
@@ -238,7 +248,7 @@ class MarkerActions extends React.Component<Props, State> {
 						});
 						this.setState({ warning: success ? undefined : "FILE_NOT_FOUND" });
 					} else {
-						this.setState({ warning: undefined });
+						// this.setState({ warning: undefined });
 					}
 				} else {
 					// assumption based on GetDocumentFromMarkerRequestType api requiring the workspace to be available
@@ -260,7 +270,7 @@ class MarkerActions extends React.Component<Props, State> {
 
 	jump = async (marker: CSMarker) => {
 		try {
-			const response = await getDocumentFromMarker(marker.id);
+			const response = await this.getDocumentFromMarkerDebounced(marker.id, "jump");
 			if (response) {
 				const { success } = await HostApi.instance.send(EditorSelectRangeRequestType, {
 					uri: response.textDocument.uri,
@@ -516,24 +526,26 @@ class MarkerActions extends React.Component<Props, State> {
 		}
 
 		if (this.state.textDocumentUri === this.props.textEditorUri) {
-			getDocumentFromMarker(this.props.marker.id).then(info => {
-				if (info) {
-					HostApi.instance.send(EditorHighlightRangeRequestType, {
-						uri: info.textDocument.uri,
-						range: info.range,
-						highlight
-					});
-					this._highlightDisposable = {
-						dispose() {
-							HostApi.instance.send(EditorHighlightRangeRequestType, {
-								uri: info.textDocument.uri,
-								range: info.range,
-								highlight: false
-							});
-						}
-					};
+			this.getDocumentFromMarkerDebounced(this.props.marker.id, "_toggleCodeHighlight").then(
+				info => {
+					if (info) {
+						HostApi.instance.send(EditorHighlightRangeRequestType, {
+							uri: info.textDocument.uri,
+							range: info.range,
+							highlight
+						});
+						this._highlightDisposable = {
+							dispose() {
+								HostApi.instance.send(EditorHighlightRangeRequestType, {
+									uri: info.textDocument.uri,
+									range: info.range,
+									highlight: false
+								});
+							}
+						};
+					}
 				}
-			});
+			);
 		}
 	};
 

@@ -23,7 +23,7 @@ import { updateForProvider } from "../store/activeIntegrations/actions";
 import { SlackV2IntegrationData } from "../store/activeIntegrations/types";
 import { setContext } from "../store/context/actions";
 import { safe } from "../utils";
-import { useUpdates } from "../utilities/hooks";
+import { useDidMount, useUpdates } from "../utilities/hooks";
 import { setUserPreference } from "./actions";
 import { Modal } from "./Modal";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
@@ -174,6 +174,15 @@ export const SharingControls = React.memo(
 		const [currentChannel, setCurrentChannel] = React.useState<ThirdPartyChannel | undefined>(
 			undefined
 		);
+
+		useDidMount(() => {
+			if (
+				!derivedState.selectedShareTarget ||
+				(!derivedState.isConnectedToSlack && !derivedState.isConnectedToMSTeams)
+			) {
+				dispatch(setUserPreference([derivedState.currentTeamId, "shareCodemarkEnabled"], false));
+			}
+		});
 
 		const selectedShareTargetTeamId = safe(() => derivedState.selectedShareTarget.teamId) as
 			| string

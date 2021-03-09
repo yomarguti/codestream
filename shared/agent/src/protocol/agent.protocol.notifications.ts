@@ -326,3 +326,13 @@ export interface UserDidCommitNotification {
 export const UserDidCommitNotificationType = new NotificationType<UserDidCommitNotification, void>(
 	"codestream/userDidCommit"
 );
+
+export interface DidDetectUnreviewedCommitsNotification {
+	sequence: number;
+	message: string;
+}
+
+export const DidDetectUnreviewedCommitsNotificationType = new NotificationType<
+	DidDetectUnreviewedCommitsNotification,
+	void
+>("codestream/didDetectUnreviewedCommits");

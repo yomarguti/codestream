@@ -3,7 +3,7 @@ import { PullRequestsChangedEvent } from "api/sessionEvents";
 import { Disposable, MessageItem, window } from "vscode";
 import { Post, PostsChangedEvent } from "../api/session";
 import { Container } from "../container";
-import { CodemarkPlus, ReviewPlus } from "../protocols/agent/agent.protocol";
+import { CodemarkPlus, CreateReviewsForUnreviewedCommitsRequestType, DidDetectUnreviewedCommitsNotification, ReviewPlus } from "../protocols/agent/agent.protocol";
 import { Functions } from "../system";
 import { vslsUrlRegex } from "./liveShareController";
 
@@ -15,7 +15,8 @@ export class NotificationsController implements Disposable {
 	constructor() {
 		this._disposable = Disposable.from(
 			Container.session.onDidChangePosts(this.onSessionPostsReceived, this),
-			Container.session.onDidChangePullRequests(this.onSessionPullRequestsReceived, this)
+			Container.session.onDidChangePullRequests(this.onSessionPullRequestsReceived, this),
+			Container.agent.onDidDetectUnreviewedCommits(this.onUnreviewedCommitsDetected, this)
 		);
 	}
 
@@ -92,6 +93,29 @@ export class NotificationsController implements Disposable {
 				this.showNotification(post, codemark, review, mentioned);
 			}
 		}
+	}
+
+	private async onUnreviewedCommitsDetected(notification: DidDetectUnreviewedCommitsNotification) {
+		const actions: MessageItem[] = [
+			{ title: "Review" },
+			{ title: "Ignore", isCloseAffordance: true }
+		];
+
+		Container.agent.telemetry.track("Toast Notification", { Content: "Unreviewed Commit" });
+		const result = await window.showInformationMessage(
+			`${notification.message}`,
+			...actions
+		);
+
+		if (result === actions[0]) {
+			Container.agent.telemetry.track("Toast Clicked", { Content: "Unreviewed Commit" });
+			const result = await Container.agent.sendRequest(CreateReviewsForUnreviewedCommitsRequestType, { sequence: notification.sequence });
+			const reviewId = result.reviewIds[0];
+			if (reviewId) {
+				Container.webview.openReview(reviewId, { openFirstDiff: true });
+			}
+		}
+
 	}
 
 	async showNotification(

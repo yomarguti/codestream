@@ -225,8 +225,10 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			"ENOTFOUND",
 			"ETIMEDOUT",
 			"EAI_AGAIN",
+			"ECONNABORTED",
 			"ECONNRESET",
 			"ECONNREFUSED",
+			"EHOSTUNREACH",
 			"ENETDOWN",
 			"ENETUNREACH",
 			"socket disconnected before secure",
@@ -4288,6 +4290,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						  }
 						  authorAssociation
 						  state
+						  commit {
+						  	oid
+						  }
 						}
 					  }
 					}

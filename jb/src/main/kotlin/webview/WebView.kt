@@ -9,4 +9,5 @@ interface WebView {
     fun dispose()
     fun postMessage(message: JsonElement)
     fun focus()
+    fun openDevTools()
 }

@@ -129,7 +129,6 @@ interface Props extends ConnectedProps {
 	renderCodeBlock?(index: number, force: boolean): React.ReactNode | null;
 	renderCodeBlocks?(): React.ReactNode | null;
 	__onDidRender?(stuff: { [key: string]: any }): any; // HACKy: sneaking internals to parent
-	onPaste?(e: ClipboardEvent): void;
 }
 
 export class MessageInput extends React.Component<Props, State> {
@@ -169,9 +168,7 @@ export class MessageInput extends React.Component<Props, State> {
 				this.setState({ isPasteEvent: false });
 				// const text = e.clipboardData!.getData("text/plain");
 				// document.execCommand("insertHTML", false, text.replace(/\n/g, "<br>"));
-				if (this.props.onPaste) {
-					this.props.onPaste(e);
-				}
+				this.handlePaste(e);
 			});
 			this.disposables.push(
 				KeystrokeDispatcher.onKeyDown(
@@ -240,7 +237,11 @@ export class MessageInput extends React.Component<Props, State> {
 	}
 
 	pinImage = (filename: string, url: string) => {
-		this.insertTextAtCursor(`![${filename}](${url.replace(/ /g, "%20")})`);
+		this.insertTextAtCursor(`![${filename}](${this.imageEncodedUrl(url)})`);
+	};
+
+	imageEncodedUrl = (url: string) => {
+		return url.replace(/ /g, "%20").replace(/\?/g, "%3F");
 	};
 
 	renderAttachedFiles = () => {
@@ -262,7 +263,9 @@ export class MessageInput extends React.Component<Props, State> {
 					const isImage = (file.mimetype || "").startsWith("image");
 					const text = replaceHtml(this._contentEditable!.htmlEl.innerHTML) || "";
 					const imageInjected =
-						isImage && file.url ? text.includes(`![${file.name}](${file.url})`) : false;
+						isImage && file.url
+							? text.includes(`![${file.name}](${this.imageEncodedUrl(file.url)})`)
+							: false;
 					return (
 						<Tooltip title={file.error} placement="top" delay={1}>
 							<div key={index} className="attachment">
@@ -303,7 +306,7 @@ export class MessageInput extends React.Component<Props, State> {
 	};
 
 	handlePaste = e => {
-		if (!e.clipboardData || !e.clipboardData.files) return;
+		if (!e.clipboardData || !e.clipboardData.files || !e.clipboardData.files.length) return;
 
 		this.attachFiles(e.clipboardData.files);
 	};

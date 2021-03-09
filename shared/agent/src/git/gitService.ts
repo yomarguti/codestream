@@ -348,14 +348,27 @@ export class GitService implements IGitService, Disposable {
 
 	async getCommitChanges(
 		repoPath: string,
-		commitHash: string
+		commitHashes: string[]
 	): Promise<ParsedDiffPatch[] | undefined> {
 		try {
-			const data = await git({ cwd: repoPath }, "diff", "--no-ext-diff", `${commitHash}^!`);
+			const options = ["diff", "--no-ext-diff", "--no-prefix"];
+			switch (commitHashes.length) {
+				case 1:
+					options.push(`${commitHashes[0]}^!`);
+					break;
+				case 2:
+					options.push(`${commitHashes[0]}..${commitHashes[1]}`);
+					break;
+				default:
+					return ;
+			}
+			const data = await git({ cwd: repoPath }, ...options);
 
 			return GitPatchParser.parse(data);
 		} catch (err) {
-			Logger.warn(`Error getting diff from ${commitHash}`);
+			Logger.warn(
+				`Error getting diff from ${commitHashes}`
+			);
 			throw err;
 		}
 	}
@@ -784,6 +797,25 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
+	async getLog(
+		repo: GitRepository,
+		limit: number = 50
+	): Promise<Map<string, GitCommit> | undefined> {
+		try {
+			const commitsData = await git(
+				{ cwd: repo.path },
+				"log",
+				`-n${limit}`,
+				`--format='${GitLogParser.defaultFormat}`,
+				"--"
+			);
+			return GitLogParser.parse(commitsData.trim(), repo.path);
+		} catch (e) {
+			Logger.error(e);
+			return undefined;
+		}
+	}
+
 	async getCommitsOnBranch(
 		repoPath: string,
 		branch: string,
@@ -933,6 +965,7 @@ export class GitService implements IGitService, Disposable {
 	async getNumStat(
 		repoPath: string,
 		startCommit: string = "HEAD",
+		endCommit: string | undefined,
 		includeSaved: boolean,
 		includeStaged: boolean
 	): Promise<GitNumStat[]> {
@@ -941,7 +974,7 @@ export class GitService implements IGitService, Disposable {
 		}
 		const options = [startCommit];
 		if (!includeSaved && !includeStaged) {
-			options.push("HEAD");
+			options.push(endCommit || "HEAD");
 		} else if (!includeSaved) {
 			options.push("--staged");
 		}

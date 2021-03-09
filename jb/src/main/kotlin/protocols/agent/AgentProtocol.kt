@@ -384,3 +384,11 @@ class GetFileContentsAtRevisionResult(
     val content: String,
     val error: String?
 )
+
+class CreateReviewsForUnreviewedCommitsParams(
+    val sequence: Int
+)
+
+class CreateReviewsForUnreviewedCommitsResult(
+    val reviewIds: List<String>
+)

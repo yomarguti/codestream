@@ -765,12 +765,13 @@ export class DocumentMarkerManager {
 		});
 	}
 
-	@log()
 	@lspHandler(GetDocumentFromMarkerRequestType)
+	@log()
 	async getDocumentFromMarker({
 		markerId,
 		repoId,
-		file
+		file,
+		source // for debugging
 	}: GetDocumentFromMarkerRequest): Promise<GetDocumentFromMarkerResponse | undefined> {
 		const { git, markers, markerLocations, repositoryMappings } = SessionContainer.instance();
 		const { documents } = Container.instance();
