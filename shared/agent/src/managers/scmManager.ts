@@ -1576,27 +1576,27 @@ export class ScmManager {
 		if (!repoPath) {
 			throw new Error(`Could not load repo with ID ${request.repoId}`);
 		}
+		if (request.commits.length > 1) {
+			const firstCommitAncestor = await git.findAncestor(repoPath, request.commits[0], 1, () => true);
+			request.commits[0] = firstCommitAncestor ? firstCommitAncestor.ref : EMPTY_TREE_SHA;
+		}
 
-		if (request.commits.length === 1) {
-			const commitChanges = await git.getCommitChanges(repoPath, request.commits[0]);
-			if (commitChanges) {
-				commitChanges.map(commitChange => {
-					const filename = commitChange.newFileName
-						? commitChange.newFileName.replace("b/", "")
-						: "";
-					commitChange.hunks.map(hunk => {
-						changedFiles.push({
-							sha: request.commits ? request.commits[0] : "",
-							filename,
-							status: "",
-							additions: hunk.additions,
-							changes: hunk.changes,
-							deletions: hunk.deletions,
-							patch: hunk.patch
-						});
+		const commitChanges = await git.getCommitChanges(repoPath, request.commits);
+		if (commitChanges) {
+			commitChanges.map(commitChange => {
+				const filename = commitChange.newFileName ? commitChange.newFileName.replace("b/", "") : "";
+				commitChange.hunks.map(hunk => {
+					changedFiles.push({
+						sha: request.commits ? request.commits[0] : "",
+						filename,
+						status: "",
+						additions: hunk.additions,
+						changes: hunk.changes,
+						deletions: hunk.deletions,
+						patch: hunk.patch
 					});
 				});
-			}
+			});
 		}
 
 		return changedFiles;

@@ -249,6 +249,8 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				setIsLoadingPRs(true);
 			}
 			let count: number | undefined = undefined;
+			let activePrListedCount = 0;
+			let activePrListedIndex: number | undefined = undefined;
 			try {
 				const newGroups = {};
 				setPrError("");
@@ -257,6 +259,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 					const queriesByProvider: PullRequestQuery[] =
 						theQueries[connectedProvider.id] || DEFAULT_QUERIES[connectedProvider.id];
 					const queryStrings = Object.values(queriesByProvider).map(_ => _.query);
+					activePrListedIndex = queriesByProvider.findIndex(_ => _.name === "Waiting on my Review");
 					// console.warn("Loading the PRs... in the loop", queryStrings);
 					try {
 						const response: any = await dispatch(
@@ -272,6 +275,12 @@ export const OpenPullRequests = React.memo((props: Props) => {
 							count = 0;
 							response.forEach(group => (count += group.length));
 
+							const twoWeekAgoTimestamp = +new Date(Date.now() - 12096e5);
+							if (activePrListedIndex >= 0) {
+								activePrListedCount = response[activePrListedIndex].filter(
+									activePr => activePr.createdAt > twoWeekAgoTimestamp
+								).length;
+							}
 							// console.warn("GOT SOME PULLS BACK: ", response);
 							newGroups[connectedProvider.id] = response;
 						}
@@ -293,7 +302,14 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 				if (!hasRenderedOnce) {
 					HostApi.instance.track("PR List Rendered", {
-						"List State": count === undefined ? "No Auth" : count > 0 ? "PRs Listed" : "No PRs",
+						"List State":
+							count === undefined
+								? "No Auth"
+								: count > 0
+								? activePrListedCount > 0
+									? "Active PRs Listed"
+									: "PRs Listed"
+								: "No PRs",
 						"PR Count": count,
 						Host: derivedState.PRConnectedProviders
 							? derivedState.PRConnectedProviders.map(_ => _.id)[0]

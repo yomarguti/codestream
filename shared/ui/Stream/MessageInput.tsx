@@ -237,7 +237,11 @@ export class MessageInput extends React.Component<Props, State> {
 	}
 
 	pinImage = (filename: string, url: string) => {
-		this.insertTextAtCursor(`![${filename}](${url.replace(/ /g, "%20")})`);
+		this.insertTextAtCursor(`![${filename}](${this.imageEncodedUrl(url)})`);
+	};
+
+	imageEncodedUrl = (url: string) => {
+		return url.replace(/ /g, "%20").replace(/\?/g, "%3F");
 	};
 
 	renderAttachedFiles = () => {
@@ -259,7 +263,9 @@ export class MessageInput extends React.Component<Props, State> {
 					const isImage = (file.mimetype || "").startsWith("image");
 					const text = replaceHtml(this._contentEditable!.htmlEl.innerHTML) || "";
 					const imageInjected =
-						isImage && file.url ? text.includes(`![${file.name}](${file.url})`) : false;
+						isImage && file.url
+							? text.includes(`![${file.name}](${this.imageEncodedUrl(file.url)})`)
+							: false;
 					return (
 						<Tooltip title={file.error} placement="top" delay={1}>
 							<div key={index} className="attachment">
@@ -1501,4 +1507,7 @@ const mapStateToProps = (
 	};
 };
 
-export default connect(mapStateToProps, { ...actions })(MessageInput);
+export default connect(
+	mapStateToProps,
+	{ ...actions }
+)(MessageInput);

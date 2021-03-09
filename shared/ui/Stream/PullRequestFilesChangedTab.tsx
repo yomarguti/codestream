@@ -1,5 +1,6 @@
 import { getProviderPullRequestRepo } from "@codestream/webview/store/providerPullRequests/reducer";
 import { DropdownButton } from "@codestream/webview/Stream/Review/DropdownButton";
+import { distanceOfTimeInWords } from "@codestream/webview/Stream/Timestamp";
 import React, { useState, useEffect, useMemo } from "react";
 import { useDidMount } from "../utilities/hooks";
 import { useSelector, useDispatch } from "react-redux";
@@ -14,6 +15,18 @@ import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/age
 const STATUS_MAP = {
 	modified: FileStatus.modified
 };
+
+interface DropdownItem {
+	label: any;
+	key?: string;
+	action?: (range?: any) => void;
+	type?: string;
+	inRange?: boolean;
+	floatRight?: {
+		label: string;
+	};
+	subtextNoPadding?: string;
+}
 
 export const PullRequestFilesChangedTab = (props: {
 	pr: FetchThirdPartyPullRequestPullRequest;
@@ -37,6 +50,7 @@ export const PullRequestFilesChangedTab = (props: {
 	const [filesChanged, setFilesChanged] = useState<any[]>([]);
 	const [prCommits, setPrCommits] = useState<any[]>([]);
 	const [prCommitsRange, setPrCommitsRange] = useState<string[]>([]);
+	// const [lastReviewCommitOid, setLastReviewCommitOid] = useState<string | undefined>();
 
 	const _mapData = data => {
 		const filesChanged = data.map(_ => {
@@ -108,9 +122,27 @@ export const PullRequestFilesChangedTab = (props: {
 			}
 			return pr.baseRefOid;
 		}
-		if (prCommitsRange.length > 1) return prCommitsRange[0];
+		if (prCommitsRange.length > 1) {
+			if (filesChanged.length > 0) {
+				return filesChanged[0].sha;
+			}
+			return prCommitsRange[0];
+		}
 		return pr.baseRefOid;
-	}, [prCommitsRange]);
+	}, [prCommitsRange, filesChanged]);
+	const lastReviewCommitOid = useMemo(() => {
+		if (
+			pr.reviews &&
+			pr.reviews.nodes &&
+			pr.reviews.nodes.length &&
+			prCommits &&
+			prCommits.length &&
+			prCommits.slice(-1)[0].oid !== pr.reviews.nodes.slice(-1)[0].commit.oid
+		) {
+			return pr.reviews.nodes.slice(-1)[0].commit.oid;
+		}
+		return;
+	}, [pr, prCommits]);
 
 	if (isLoading)
 		return (
@@ -122,24 +154,89 @@ export const PullRequestFilesChangedTab = (props: {
 	if (!filesChanged || !filesChanged.length) return null;
 
 	const dropdownLabel =
-		prCommitsRange.length === 0 ? "Changes from all commits" : "Changes from 1 commit";
+		prCommitsRange.length === 0
+			? "Changes from all commits"
+			: (() => {
+					let commitsInRange;
+					if (prCommitsRange.length === 1) {
+						commitsInRange = 1;
+					} else {
+						const firstCommitIndex = prCommits.findIndex(
+							commit => commit.oid === prCommitsRange[0]
+						);
+						const lastCommitIndex = prCommits.findIndex(commit => commit.oid === prCommitsRange[1]);
+						commitsInRange = Math.abs(firstCommitIndex - lastCommitIndex) + 1;
+					}
+					return `Changes from ${commitsInRange} commit${commitsInRange > 1 ? "s" : ""}`;
+			  })();
 
-	const dropdownItems = [
+	const dropdownItems: DropdownItem[] = [
 		{
-			label: "Changes from all commits",
-			action: () => {
+			label: "Show all changes",
+			action: range => {
 				setPrCommitsRange([]);
-			}
-		},
-		{ label: "-" }
+			},
+			subtextNoPadding: prCommits.length
+				? `${prCommits.length} commit${prCommits.length > 1 ? "s" : ""}`
+				: ""
+		}
 	];
+	if (lastReviewCommitOid) {
+		const lastReviewCommitIndex = prCommits.findIndex(commit => commit.oid === lastReviewCommitOid);
+		let commitsSinceLastReview = 0;
+		let startRangeOid = lastReviewCommitOid;
+		if (lastReviewCommitIndex > -1 && lastReviewCommitIndex + 1 < prCommits.length) {
+			startRangeOid = prCommits[lastReviewCommitIndex + 1].oid;
+			commitsSinceLastReview = prCommits.length - 1 - lastReviewCommitIndex;
+		}
+		dropdownItems.push({
+			label: "Show changes since your last review",
+			action: range => {
+				setPrCommitsRange([startRangeOid, prCommits.slice(-1)[0].oid]);
+			},
+			subtextNoPadding: commitsSinceLastReview
+				? `${commitsSinceLastReview} commit${commitsSinceLastReview > 1 ? "s" : ""}`
+				: ""
+		});
+	}
+	dropdownItems.push({ label: "Hold shift + click to select a range", type: "static" });
+
 	prCommits &&
 		prCommits.map(_ => {
 			dropdownItems.push({
 				label: _.message,
-				action: () => {
-					setPrCommitsRange([_.oid]);
-				}
+				floatRight: {
+					label: _.abbreviatedOid
+				},
+				subtextNoPadding: `${_.author.user.login} ${
+					_.authoredDate ? distanceOfTimeInWords(new Date(_.authoredDate).getTime()) : ""
+				}`,
+				action: range => {
+					if (range) {
+						if (range[0] === range[1]) {
+							setPrCommitsRange([range[0]]);
+							return;
+						}
+						const sortedRange = range.sort((a, b) => {
+							return (
+								prCommits.findIndex(commit => commit.oid === a) -
+								prCommits.findIndex(commit => commit.oid === b)
+							);
+						});
+						if (
+							sortedRange[0] === prCommits[0].oid &&
+							sortedRange[sortedRange.length - 1] === prCommits[prCommits.length - 1].oid
+						) {
+							setPrCommitsRange([]);
+							return;
+						}
+						setPrCommitsRange(sortedRange);
+					} else {
+						setPrCommitsRange([_.oid]);
+					}
+				},
+				inRange: true,
+				key: _.oid
 			});
 		});
 
@@ -147,7 +244,12 @@ export const PullRequestFilesChangedTab = (props: {
 		<div style={{ position: "relative", margin: "0 0 20px 20px" }}>
 			{derivedState.currentRepo && (
 				<div style={{ margin: "0 0 10px 0" }}>
-					<DropdownButton variant="text" items={dropdownItems}>
+					<DropdownButton
+						variant="text"
+						items={dropdownItems}
+						isMultiSelect={true}
+						itemsRange={prCommitsRange}
+					>
 						{dropdownLabel}
 					</DropdownButton>
 				</div>

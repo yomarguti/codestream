@@ -526,7 +526,13 @@ export function TeamSetup(props: Props) {
 					)}
 					<HR style={{ marginBottom: 0 }} />
 					<ButtonRow>
-						<Button variant="secondary" onClick={() => dispatch(closeModal())}>
+						<Button
+							variant="secondary"
+							onClick={event => {
+								event.preventDefault();
+								dispatch(closeModal());
+							}}
+						>
 							Cancel
 						</Button>
 						<Button onClick={save} isLoading={isLoading}>

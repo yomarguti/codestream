@@ -4290,6 +4290,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						  }
 						  authorAssociation
 						  state
+						  commit {
+						  	oid
+						  }
 						}
 					  }
 					}

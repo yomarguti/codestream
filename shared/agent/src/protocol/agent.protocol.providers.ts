@@ -502,6 +502,9 @@ export interface FetchThirdPartyPullRequestPullRequest {
 				login: string;
 				avatarUrl: string;
 			};
+			commit: {
+				oid: string;
+			};
 		}[];
 	};
 	/**
