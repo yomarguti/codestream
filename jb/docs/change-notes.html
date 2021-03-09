@@ -1,3 +1,27 @@
+<h4 id="10_7_0">10.7.0</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds toast notifications prompting you to review new commits from a teammate after you do a pull</li>
+    <li>Adds the ability to review changes in a pull request since your last review, or for a specific range of commits</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>When you resovle a codemark the modal is now automatically closed</li>
+    <li>When creating a feedback request from an auto-prompt, the first line of the commit message is used as the FR title and anything after a newline character goes into the description</li>
+    <li>Moved repository/branch information into the header of feedback requests</li>
+    <li>Improved support for SSH aliases to prevent "The git repository for this review is not currently open in the IDE" messages from incorrecly being displayed</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Fixes an issue with the you-don't-have-this-file warning, when you view a codemark in a file that doesn't exist in your branch, not persisting</li>
+    <li>Addresses <a href="https://github.com/TeamCodeStream/CodeStream/issues/406">#406</a> - Inject as comment inserts at wrong marker</li>
+    <li>Addresses <a href="https://github.com/TeamCodeStream/CodeStream/issues/338">#338</a> - multiline code break (newline) markdown not rendering inside code block syntax</li>
+    <li>Fixes an issue with attaching files via copy-and-paste</li>
+    <li>Fixes an issue with codemarks created on Windows showing a diff for the codeblock when there wasn't one</li>
+    <li>Fixes an issue where pull_request_template.md files in uppercase weren't being recognized when creating a PR</li>
+    <li>Fixes an issue with the inline display of images with a ? in the file name</li>
+    <li>Fixes an issue where you couldn't cancel out of the Onboarding Settings modal</li>
+</ul>
 <h4 id="10_6_1">10.6.1</h4>
 <h5>Added</h5>
 <ul>
