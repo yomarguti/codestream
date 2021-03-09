@@ -33,7 +33,7 @@ export interface SocketClusterInitializer {
 interface SubscriptionMap {
 	[key: string]: {
 		subscribed: boolean;
-		withPresence?: boolean;
+		//withPresence?: boolean;
 	};
 }
 
@@ -93,7 +93,9 @@ export class SocketClusterConnection implements BroadcasterConnection {
 			setTimeout(this._confirmConnection.bind(this), 0);
 		}, 5000);
 
-		this._debug(`Authorizing the connection, host=${this._options!.host} port=${this._options!.port}...`);
+		this._debug(
+			`Authorizing the connection, host=${this._options!.host} port=${this._options!.port}...`
+		);
 		try {
 			await this._confirmAuth();
 		} catch (error) {
@@ -159,8 +161,8 @@ export class SocketClusterConnection implements BroadcasterConnection {
 		const subscribedChannels: string[] = [];
 		for (const channel of channels) {
 			const subscription = this._subscriptions[channel] || {
-				subscribed: false,
-				withPresence: !!options.withPresence
+				subscribed: false
+				//withPresence: !!options.withPresence
 			};
 			this._subscriptions[channel] = subscription;
 			if (subscription.subscribed) {
