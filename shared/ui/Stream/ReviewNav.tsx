@@ -56,7 +56,7 @@ const Nav = styled.div`
 	}
 	.btn-group {
 		display: inline-block;
-		margin-left: 10px;
+		margin-left: 8px;
 		transition: transform 0.1s;
 		transform-origin: 50% 0%;
 		&:last-child {

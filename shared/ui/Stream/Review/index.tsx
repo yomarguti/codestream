@@ -737,7 +737,7 @@ const BaseReview = (props: BaseReviewProps) => {
 				{!props.collapsed && (
 					<ExpandedAuthor>
 						<HeadshotName person={derivedState.author} highlightMe />
-						changes in{" "}
+						made changes in{" "}
 						{props.repoInfo.map(r => (
 							<RepoInfo>
 								<span className="monospace">
