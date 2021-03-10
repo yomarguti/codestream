@@ -90,6 +90,7 @@ const convertIcon = async (icon, color, filename = dir + icon.name + ".png", typ
 
 const convertIcons = async hash => {
 	const color = argv.color ? COLOR_MAP[argv.color] || argv.color : "#898F9E";
+	Object.keys(hash).forEach(key => (hash[key].name = key));
 	const filter = _ => (argv.name ? _.name === argv.name : true);
 	const array = Object.values(hash).filter(filter);
 	for (let index = 0; index < array.length; index++) {
@@ -127,6 +128,6 @@ const convertEditorIcons = async () => {
 if (argv.editor) {
 	convertEditorIcons();
 } else {
-	convertIcons(icons8);
 	convertIcons(octicons);
+	convertIcons(icons8);
 }
