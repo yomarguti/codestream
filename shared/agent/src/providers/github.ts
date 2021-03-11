@@ -4144,8 +4144,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					activeLockReason
 					includesCreatedEdit
 					${this._transform(`
-					[isDraft:>2.20.0]
-					[reviewDecision:>2.20.0]
+					[isDraft:>=2.21.0]
+					[reviewDecision:>=2.21.0]
 					`)}
 					locked
 					resourcePath
