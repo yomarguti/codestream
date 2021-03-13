@@ -360,15 +360,13 @@ export class GitService implements IGitService, Disposable {
 					options.push(`${commitHashes[0]}..${commitHashes[1]}`);
 					break;
 				default:
-					return ;
+					return;
 			}
 			const data = await git({ cwd: repoPath }, ...options);
 
 			return GitPatchParser.parse(data);
 		} catch (err) {
-			Logger.warn(
-				`Error getting diff from ${commitHashes}`
-			);
+			Logger.warn(`Error getting diff from ${commitHashes}`);
 			throw err;
 		}
 	}
@@ -912,28 +910,33 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
-	async getLocalCommits(
-		repoPath: string
-	): Promise<{ sha: string; info: {}; localOnly: boolean }[] | undefined> {
+	async getHasLocalCommits(repoPath: string, branch?: string): Promise<boolean> {
 		try {
-			// https://stackoverflow.com/questions/2016901/viewing-unpushed-git-commits
-			const data = await git(
-				{ cwd: repoPath },
-				"log",
-				"@{push}..",
-				`--format='${GitLogParser.defaultFormat}`,
-				"--"
-			);
-			const commits = GitLogParser.parse(data.trim(), repoPath);
-			if (commits === undefined || commits.size === 0) return undefined;
-
-			const ret: { sha: string; info: {}; localOnly: boolean }[] = [];
-			commits.forEach((val, key) => {
-				ret.push({ sha: key, info: val, localOnly: true });
-			});
-			return ret;
+			if (branch) {
+				// https://stackoverflow.com/questions/2016901/viewing-unpushed-git-commits
+				const options = ["for-each-ref", '--format="%(refname:short) %(push:track)"', "refs/heads"];
+				const data = await git({ cwd: repoPath }, ...options);
+				const lines = data
+					.trim()
+					.split("\n")
+					.map(line => line.replace(/^\"/, ""));
+				const branchInfo = lines.find(line => line.startsWith(branch)) || "";
+				return branchInfo.includes("[ahead ");
+			} else {
+				// https://stackoverflow.com/questions/2016901/viewing-unpushed-git-commits
+				const data = await git(
+					{ cwd: repoPath },
+					"log",
+					"@{push}..",
+					`--format='${GitLogParser.defaultFormat}`,
+					"--"
+				);
+				const commits = GitLogParser.parse(data.trim(), repoPath);
+				if (commits === undefined || commits.size === 0) return false;
+				else return true;
+			}
 		} catch {
-			return undefined;
+			return false;
 		}
 	}
 
