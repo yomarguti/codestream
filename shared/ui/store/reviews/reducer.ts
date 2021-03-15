@@ -60,7 +60,9 @@ export const getByStatusAndUser = createSelector(
 				!review.deactivated &&
 				review.status === status &&
 				review.reviewChangesets &&
-				(review.creatorId === userId || (review.reviewers || []).includes(userId))
+				(review.creatorId === userId ||
+					(review.reviewers || []).includes(userId) ||
+					(review.codeAuthorIds || []).includes(userId))
 		);
 	}
 );
