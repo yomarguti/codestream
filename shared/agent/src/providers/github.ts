@@ -838,7 +838,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		try {
 			void (await this.ensureConnected());
 
-			if (!(await this.isPRApiCompatible())) {
+			if (!(await this.isPRCreationApiCompatible())) {
 				return {
 					error: {
 						type: "UNKNOWN",
@@ -889,14 +889,14 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				title: title
 			};
 		} catch (ex) {
-			Logger.error(ex, "GitHub: createPullRequest", {
+			Logger.error(ex, `${this.displayName}: createPullRequest`, {
 				remote: request.remote,
 				baseRefName: request.baseRefName,
 				headRefName: request.headRefName
 			});
 			let errorMessage =
 				ex.response && ex.response.errors ? ex.response.errors[0].message : "Unknown error";
-			errorMessage = `GitHub: ${errorMessage}`;
+			errorMessage = `${this.displayName}: ${errorMessage}`;
 			return {
 				error: {
 					type: "PROVIDER",

@@ -17,6 +17,10 @@ import {
 	ProviderPullRequestInfo
 } from "./provider";
 
+/**
+ * GitHub Enterprise
+ * minimum supported version is 2.19.6 https://enterprise.github.com/releases/2.19.6/notes
+ */
 @lspProvider("github_enterprise")
 export class GitHubEnterpriseProvider extends GitHubProvider {
 	private static ApiVersionString = "v3";
@@ -87,65 +91,28 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 	private _isPRApiCompatible: boolean | undefined;
 	protected async isPRApiCompatible(): Promise<boolean> {
 		if (this._isPRApiCompatible == null) {
-			const response = await this.get<{ installed_version: string }>("/meta");
-
-			const [major, minor] = response.body.installed_version.split(".").map(Number);
+			const version = await this.getVersion();
+			const [major, minor] = version.split(".").map(Number);
 			this._isPRApiCompatible = major > 2 || (major === 2 && minor >= 15);
 		}
 
 		return this._isPRApiCompatible;
 	}
 
-	@log()
-	async createPullRequest(
-		request: ProviderCreatePullRequestRequest
-	): Promise<ProviderCreatePullRequestResponse | undefined> {
-		void (await this.ensureConnected());
-
-		if (!(await this.isPRApiCompatible())) return undefined;
-
-		let owner;
-		let name;
-		try {
-			const repoInfo = await this.getRepoInfo({ remote: request.remote });
-			if (repoInfo && repoInfo.error) {
-				return {
-					error: repoInfo.error
-				};
+	private _isPRCreationApiCompatible: boolean | undefined;
+	protected async isPRCreationApiCompatible(): Promise<boolean> {
+		if (this._isPRCreationApiCompatible == null) {
+			try {
+				const version = await this.getVersion();
+				const [major, minor, patch] = version.split(".").map(Number);
+				this._isPRCreationApiCompatible = major > 2 || (major === 2 && minor >= 19 && patch >= 6);
+			} catch (ex) {
+				this._isPRCreationApiCompatible = false;
+				Logger.warn(ex);
 			}
-			({ owner, name } = this.getOwnerFromRemote(request.remote));
-
-			const createPullRequestResponse = await this.post<
-				GitHubEnterpriseCreatePullRequestRequest,
-				GitHubEnterpriseCreatePullRequestResponse
-			>(`/repos/${owner}/${name}/pulls`, {
-				head: request.headRefName,
-				base: request.baseRefName,
-				title: request.title,
-				body: this.createDescription(request)
-			});
-
-			const title = `#${createPullRequestResponse.body.number} ${createPullRequestResponse.body.title}`;
-			return {
-				url: createPullRequestResponse.body.html_url,
-				id: createPullRequestResponse.body.node_id,
-				title: title
-			};
-		} catch (ex) {
-			Logger.error(ex, `${this.displayName}: createPullRequest request`, {
-				remote: request.remote,
-				owner: owner,
-				name: name,
-				head: request.headRefName,
-				base: request.baseRefName
-			});
-			return {
-				error: {
-					type: "PROVIDER",
-					message: `${this.displayName}: ${ex.message}`
-				}
-			};
 		}
+
+		return this._isPRCreationApiCompatible;
 	}
 
 	async getRepoInfo(request: { remote: string }): Promise<ProviderGetRepoInfoResponse> {
@@ -353,18 +320,4 @@ interface GitHubEnterprisePullRequest {
 	html_url: string;
 	base: { ref: string };
 	head: { ref: string };
-}
-
-interface GitHubEnterpriseCreatePullRequestRequest {
-	head: string;
-	base: string;
-	title: string;
-	body?: string;
-}
-
-interface GitHubEnterpriseCreatePullRequestResponse {
-	html_url: string;
-	node_id: string | undefined;
-	number: number;
-	title: string;
 }
