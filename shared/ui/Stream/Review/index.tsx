@@ -563,10 +563,12 @@ const BaseReview = (props: BaseReviewProps) => {
 
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
+		const codeAuthorId = (props.review.codeAuthorIds || [])[0];
 		return {
 			providers: state.providers,
 			isInVscode: state.ide.name === "VSC",
-			author: state.users[props.review.creatorId]
+			author: state.users[props.review.creatorId],
+			codeAuthor: state.users[codeAuthorId || props.review.creatorId]
 		};
 	}, shallowEqual);
 	const [checkpoint, setCheckpoint] = React.useState<number | undefined>(undefined);
@@ -736,7 +738,7 @@ const BaseReview = (props: BaseReviewProps) => {
 				)}
 				{!props.collapsed && (
 					<ExpandedAuthor>
-						<HeadshotName person={derivedState.author} highlightMe />
+						<HeadshotName person={derivedState.codeAuthor} highlightMe />
 						made changes in{" "}
 						{props.repoInfo.map(r => (
 							<RepoInfo>
