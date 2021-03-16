@@ -109,7 +109,7 @@ export class ConfigureJiraServerPanel extends Component {
 					</div>
 					<fieldset className="form-body" disabled={inactive}>
 						<p style={{ textAlign: "center" }} className="explainer">
-							<a onClick={this.handleOldJiraServerClick}>Click here</a> if your organization uses an
+							<a onClick={this.handleOldJiraServerClick}>Click here</a> if your organization uses a
 							version of Jira Server older than v8.14.0, which does not support API tokens.
 						</p>
 						<br />
