@@ -19,7 +19,7 @@ interface Props extends DispatchProp {
 	hostUrl?: string;
 	fromSignup?: boolean;
 	useIDEAuth?: boolean;
-	gotError?: boolean;
+	gotError?: boolean | string;
 }
 
 export const ProviderAuth = (connect(undefined) as any)((props: Props) => {
@@ -108,6 +108,14 @@ export const ProviderAuth = (connect(undefined) as any)((props: Props) => {
 	const aOrAn = ["a", "e", "i", "o", "u"].find(letter => props.provider.startsWith(letter))
 		? "an"
 		: "a";
+	// HACK: this sucks ... we really should have access to the actual error info here
+	// instead of doing string matching
+	const ideAuthFailure =
+		props.gotError &&
+		typeof props.gotError === "string" &&
+		props.gotError.match("PRVD-105") &&
+		props.useIDEAuth;
+
 	return (
 		<div className="onboarding-page">
 			<form className="standard-form">
@@ -125,10 +133,14 @@ export const ProviderAuth = (connect(undefined) as any)((props: Props) => {
 								<strong>
 									Waiting for {providerCapitalized} authentication <LoadingEllipsis />
 								</strong>
+							) : { ideAuthFailure } ? (
+								<strong>
+									Account not found. Please <Link onClick={onClickGoToSignup}>sign up</Link>.
+								</strong>
 							) : (
 								<strong>
 									{props.gotError ? "Login failed" : "Login timed out"}. Please{" "}
-									<Link onClick={onClickTryAgain}>try again</Link>
+									<Link onClick={onClickTryAgain}>try again</Link>.
 								</strong>
 							)}
 						</div>
