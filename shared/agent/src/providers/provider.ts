@@ -714,6 +714,10 @@ export abstract class ThirdPartyIssueProviderBase<
 		return true;
 	}
 
+	protected async isPRCreationApiCompatible(): Promise<boolean> {
+		return true;
+	}
+
 	protected async getCommentsForPath(
 		filePath: string,
 		repo: GitRepository
