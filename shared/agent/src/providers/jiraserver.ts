@@ -161,9 +161,6 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 				null,
 				"RSA-SHA1"
 			);
-			if (this._httpsAgent) {
-				this.oauth.setAgent(this._httpsAgent);
-			}
 		}
 	}
 
@@ -183,6 +180,13 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 			} as { [key: string]: string }; // having to write this "as" is everything i hate about typescript
 		} else {
 			return {};
+		}
+	}
+
+	protected async onConnected(providerInfo?: CSJiraServerProviderInfo) {
+		await super.onConnected(providerInfo);
+		if (this.oauth && this._httpsAgent) {
+			this.oauth.setAgent(this._httpsAgent);
 		}
 	}
 
@@ -206,7 +210,7 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 		if (this._providerInfo?.isApiToken && this.providerConfig.forEnterprise) {
 			return this._providerInfo?.data?.baseUrl || "";
 		} else {
-			return "";
+			return super.baseUrl;
 		}
 	}
 
