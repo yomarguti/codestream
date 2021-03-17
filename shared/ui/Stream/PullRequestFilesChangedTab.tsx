@@ -9,7 +9,6 @@ import { FileStatus } from "@codestream/protocols/api";
 import { LoadingMessage } from "../src/components/LoadingMessage";
 import { getPullRequestCommits, getPullRequestFiles } from "../store/providerPullRequests/actions";
 import { PullRequestFilesChangedList } from "./PullRequestFilesChangedList";
-import { HostApi } from "../webview-api";
 import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
 
 const STATUS_MAP = {
