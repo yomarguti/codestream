@@ -49,7 +49,7 @@ import { CSMe } from "@codestream/protocols/api";
 import { EMPTY_STATUS } from "./StartWork";
 import Tooltip from "./Tooltip";
 import { PullRequestFilesChangedList } from "./PullRequestFilesChangedList";
-import { PRError } from "./PullRequestComponents";
+import { PRBranch, PRError } from "./PullRequestComponents";
 import { isOnPrem } from "../store/configs/reducer";
 
 export const ButtonRow = styled.div`
@@ -110,6 +110,9 @@ const Step3 = props => (props.step !== 3 ? null : <div>{props.children}</div>);
 // success! PR was created but we need to link to the web site
 const Step4 = props => (props.step !== 4 ? null : <div>{props.children}</div>);
 
+const EMPTY_ERROR = { message: "", type: "", url: "", id: "" };
+const EMPTY_WARNING = { message: "", type: "", url: "", id: "" };
+
 export const CreatePullRequestPanel = props => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
@@ -158,12 +161,8 @@ export const CreatePullRequestPanel = props => {
 	const [submitting, setSubmitting] = useState(false);
 	const [pullSubmitting, setPullSubmitting] = useState(false);
 
-	const [preconditionError, setPreconditionError] = useState({
-		message: "",
-		type: "",
-		url: "",
-		id: ""
-	});
+	const [preconditionError, setPreconditionError] = useState(EMPTY_ERROR);
+	const [preconditionWarning, setPreconditionWarning] = useState(EMPTY_WARNING);
 	const [unexpectedError, setUnexpectedError] = useState(false);
 
 	const [formState, setFormState] = useState({ message: "", type: "", url: "", id: "" });
@@ -325,26 +324,30 @@ export const CreatePullRequestPanel = props => {
 
 				setCurrentStep(3);
 				fetchFilesChanged(args.repoId, newPrBranch, newReviewBranch);
-				if (result.warning && result.warning.type) {
+
+				if (newReviewBranch === newPrBranch) {
+					setPreconditionError({ type: "BRANCHES_MUST_NOT_MATCH", message: "", url: "", id: "" });
+					setFormState({ type: "", message: "", url: "", id: "" });
+					setCommitsBehindOrigin(+result.commitsBehindOriginHeadBranch!);
+				} else if (result.warning && result.warning.type) {
 					if (result.warning.type === "REQUIRES_UPSTREAM") {
 						setRequiresUpstream(true);
 						setOrigins(result.origins!);
 						setPrUpstream(result.origins![0]);
 					} else {
-						setPreconditionError({
+						setPreconditionWarning({
 							type: result.warning.type,
 							message: result.warning.message || "",
 							url: result.warning.url || "",
 							id: result.warning.id || ""
 						});
 					}
-				} else if (
-					result.pullRequestProvider &&
-					result.pullRequestProvider.defaultBranch === result.branch
-				) {
-					setPreconditionError({ type: "BRANCHES_MUST_NOT_MATCH", message: "", url: "", id: "" });
-					setFormState({ type: "", message: "", url: "", id: "" });
-					setCommitsBehindOrigin(+result.commitsBehindOriginHeadBranch!);
+					// } else if (
+					// 	result.pullRequestProvider &&
+					// 	result.pullRequestProvider.defaultBranch === result.branch
+					// ) {
+					// 	setPreconditionError({ type: "BRANCHES_MUST_NOT_MATCH", message: "", url: "", id: "" });
+					// 	setFormState({ type: "", message: "", url: "", id: "" });
 				} else {
 					setPreconditionError({ type: "", message: "", url: "", id: "" });
 				}
@@ -444,6 +447,7 @@ export const CreatePullRequestPanel = props => {
 		setSubmitting(true);
 		setFormState({ message: "", type: "", url: "", id: "" });
 		setPreconditionError({ message: "", type: "", url: "", id: "" });
+		setPreconditionWarning({ message: "", type: "", url: "", id: "" });
 		const headRefName = acrossForks
 			? `${headForkedRepo.owner.login}:${reviewBranch}`
 			: reviewBranch;
@@ -570,6 +574,7 @@ export const CreatePullRequestPanel = props => {
 			}
 		}
 
+		console.warn("CALLING CHECK WITH: ", localReviewBranch);
 		HostApi.instance
 			.send(CheckPullRequestPreconditionsRequestType, {
 				providerId: prProviderId,
@@ -581,6 +586,7 @@ export const CreatePullRequestPanel = props => {
 			})
 			.then((result: CheckPullRequestPreconditionsResponse) => {
 				setPreconditionError({ type: "", message: "", url: "", id: "" });
+				setPreconditionWarning({ type: "", message: "", url: "", id: "" });
 				setFormState({ type: "", message: "", url: "", id: "" });
 				if (result && result.warning && result.warning.type === "REQUIRES_UPSTREAM") {
 					setRequiresUpstream(true);
@@ -599,7 +605,7 @@ export const CreatePullRequestPanel = props => {
 						id: result.error.id || ""
 					});
 				} else if (result && result.warning) {
-					setPreconditionError({
+					setPreconditionWarning({
 						type: result.warning.type || "UNKNOWN",
 						message: result.warning.message || "Unknown error.",
 						url: result.warning.url || "",
@@ -765,12 +771,17 @@ export const CreatePullRequestPanel = props => {
 
 	const renderPullButton = () => {
 		return (
-			<div style={{ marginBottom: "10px" }}>
-				<Icon name="info" /> {commitsBehindOrigin} commit
-				{commitsBehindOrigin > 1 ? "s" : ""} behind base origin{" "}
-				<Button onClick={onPullSubmit} isLoading={pullSubmitting}>
-					Pull
-				</Button>
+			<>
+				<PRError>
+					<Icon name="info" />
+					<div style={{ marginRight: "10px" }}>
+						{commitsBehindOrigin} commit
+						{commitsBehindOrigin > 1 ? "s" : ""} behind base origin
+					</div>
+					<Button onClick={onPullSubmit} isLoading={pullSubmitting}>
+						Pull
+					</Button>
+				</PRError>
 				{unexpectedPullError && (
 					<div className="error-message form-error" style={{ marginBottom: "10px" }}>
 						<FormattedMessage
@@ -783,7 +794,7 @@ export const CreatePullRequestPanel = props => {
 						.
 					</div>
 				)}
-			</div>
+			</>
 		);
 	};
 
@@ -1007,32 +1018,36 @@ export const CreatePullRequestPanel = props => {
 
 	const preconditionErrorMessages = () => {
 		if (preconditionError && preconditionError.type) {
-			let preconditionErrorMessageElement = getErrorElement(
-				preconditionError.type,
-				preconditionError.message,
-				preconditionError.url,
-				preconditionError.id
-			);
-			if (preconditionErrorMessageElement) {
+			let element = getErrorElement(preconditionError);
+			if (element) {
 				return (
 					<PRError>
-						<Icon name="alert" /> {preconditionErrorMessageElement}
+						<Icon name="alert" /> {element}
 					</PRError>
 				);
 			}
 		}
-		return undefined;
+		return null;
+	};
+
+	const preconditionWarningMessages = () => {
+		if (preconditionWarning && preconditionWarning.type) {
+			let element = getErrorElement(preconditionWarning, true);
+			if (element) {
+				return (
+					<PRError>
+						<Icon name="info" /> {element}
+					</PRError>
+				);
+			}
+		}
+		return null;
 	};
 
 	const formErrorMessages = () => {
 		if (!formState || !formState.type) return undefined;
 
-		let formErrorMessageElement = getErrorElement(
-			formState.type,
-			formState.message,
-			formState.url,
-			formState.id
-		);
+		let formErrorMessageElement = getErrorElement(formState);
 		if (formErrorMessageElement) {
 			return (
 				<PRError>
@@ -1043,7 +1058,7 @@ export const CreatePullRequestPanel = props => {
 		return undefined;
 	};
 
-	const getErrorElement = (type, message, url, id) => {
+	const getErrorElement = ({ type, message, url, id }, isWarning?: boolean) => {
 		let messageElement = <></>;
 		switch (type) {
 			case "BRANCHES_MUST_NOT_MATCH": {
@@ -1089,21 +1104,47 @@ export const CreatePullRequestPanel = props => {
 			case "HAS_LOCAL_COMMITS": {
 				messageElement = (
 					<span>
-						A PR can't be created because {reviewId ? "the feedback request" : "the compare branch"}{" "}
-						includes local commits. Push your changes and then{" "}
-						<Link onClick={onClickTryAgain}>try again</Link>.
+						{reviewId ? (
+							"This feedback request"
+						) : (
+							<span>
+								The compare branch <PRBranch>{reviewBranch}</PRBranch>
+							</span>
+						)}{" "}
+						includes local commits. Push your changes to include them in your {prLabel.pullrequest}.
 					</span>
 				);
 				break;
 			}
 			case "HAS_LOCAL_MODIFICATIONS": {
-				messageElement = (
-					<span>
-						A PR can't be created because {reviewId ? "the feedback request" : "the compare branch"}{" "}
-						includes uncommitted changes. Commit and push your changes and then{" "}
-						<Link onClick={onClickTryAgain}>try again</Link>.
-					</span>
-				);
+				if (isWarning) {
+					messageElement = (
+						<span>
+							{reviewId ? (
+								"The feedback request"
+							) : (
+								<span>
+									The compare branch <PRBranch>{reviewBranch}</PRBranch>
+								</span>
+							)}{" "}
+							includes uncommitted changes. Commit and push your changes to include them.
+						</span>
+					);
+				} else {
+					messageElement = (
+						<span>
+							A PR can't be created because{" "}
+							{reviewId ? "the feedback request" : "the compare branch"} includes uncommitted
+							changes. Commit and push your changes and then{" "}
+							<Link onClick={onClickTryAgain}>try again</Link>.
+						</span>
+					);
+				}
+				// 	<span>
+				// 	A PR can't be created because {reviewId ? "the feedback request" : "the compare branch"}{" "}
+				// 	includes uncommitted changes. Commit and push your changes and then{" "}
+				// 	<Link onClick={onClickTryAgain}>try again</Link>.
+				// </span>
 				break;
 			}
 			case "ALREADY_HAS_PULL_REQUEST": {
@@ -1283,15 +1324,22 @@ export const CreatePullRequestPanel = props => {
 	// 	else setFilesChanged([]);
 	// }, [prBranch, reviewBranch]);
 
+	const [showDiffsAnyway, setShowDiffsAnyway] = useState(false);
+
 	if (propsForPrePRProviderInfoModal) {
 		return <PrePRProviderInfoModal {...propsForPrePRProviderInfoModal} />;
 	}
+
+	const tooManyDiffs = filesChanged && filesChanged.length > 100;
+	const showDiffs = !acrossForks && (!tooManyDiffs || showDiffsAnyway);
+	const showTooMany = !acrossForks && tooManyDiffs && !showDiffsAnyway;
+
 	// console.warn("CURRENT STEP IS: ", currentStep, "PCE: ", preconditionError, "loading: ", loading);
 	return (
 		<Root className="full-height-codemark-form">
 			<PanelHeader title={`Open a ${prLabel.PullRequest}`}>
 				{reviewId ? "" : `Choose two branches to start a new ${prLabel.pullrequest}.`}
-				{!reviewId && prProviderId === "github*com" && (
+				{!reviewId && (prProviderId === "github*com" || prProviderId === "github/enterprise") && (
 					<>
 						{" "}
 						If you need to, you can also{" "}
@@ -1506,6 +1554,11 @@ export const CreatePullRequestPanel = props => {
 													</Checkbox>
 												</div>
 											)}
+											{!loading &&
+												!loadingBranchInfo &&
+												preconditionWarning.type &&
+												preconditionWarningMessages()}
+
 											<ButtonRow>
 												<Button onClick={props.closePanel} variant="secondary">
 													Cancel
@@ -1548,7 +1601,16 @@ export const CreatePullRequestPanel = props => {
 						{commitsBehindOrigin > 0 && renderPullButton()}
 					</>
 				)}
-				{!acrossForks && (
+				{showTooMany && (
+					<PRError onClick={() => setShowDiffsAnyway(true)}>
+						<Icon name="info" />
+						<div style={{ marginRight: "10px" }}>
+							{filesChanged.length} files in this diff. Displaying them may impact performance.
+						</div>
+						<Button>Show anyway</Button>
+					</PRError>
+				)}
+				{showDiffs && (
 					<PullRequestFilesChangedList
 						readOnly
 						isLoading={loadingBranchInfo || isLoadingDiffs}

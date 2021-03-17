@@ -18,6 +18,7 @@ import {
 	JiraCard,
 	JiraUser,
 	MoveThirdPartyCardRequest,
+	ProviderConfigurationData,
 	ReportingMessageType,
 	ThirdPartyProviderCard,
 	ThirdPartyProviderConfig
@@ -160,9 +161,6 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 				null,
 				"RSA-SHA1"
 			);
-			if (this._httpsAgent) {
-				this.oauth.setAgent(this._httpsAgent);
-			}
 		}
 	}
 
@@ -175,11 +173,45 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 	}
 
 	get headers() {
-		return {};
+		if (this._providerInfo && this._providerInfo.isApiToken) {
+			return {
+				Authorization: `Bearer ${this._providerInfo.accessToken}`,
+				"Content-Type": "application/json"
+			} as { [key: string]: string }; // having to write this "as" is everything i hate about typescript
+		} else {
+			return {};
+		}
+	}
+
+	protected async onConnected(providerInfo?: CSJiraServerProviderInfo) {
+		await super.onConnected(providerInfo);
+		if (this.oauth && this._httpsAgent) {
+			this.oauth.setAgent(this._httpsAgent);
+		}
 	}
 
 	async onDisconnected() {
 		this.boards = [];
+	}
+
+	@log()
+	async configure(request: ProviderConfigurationData) {
+		await this.session.api.setThirdPartyProviderToken({
+			providerId: this.providerConfig.id,
+			token: request.token,
+			data: {
+				baseUrl: request.baseUrl
+			}
+		});
+		this.session.updateProviders();
+	}
+
+	get baseUrl() {
+		if (this._providerInfo?.isApiToken && this.providerConfig.forEnterprise) {
+			return this._providerInfo?.data?.baseUrl || "";
+		} else {
+			return super.baseUrl;
+		}
 	}
 
 	@log()
@@ -189,7 +221,7 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 		body: { [key: string]: any } | undefined = undefined
 	) {
 		await this.ensureConnected();
-		return new Promise<any>((resolve, reject) => {
+		return await new Promise<any>((resolve, reject) => {
 			const url = `${this.baseUrl}${path}`;
 			this.oauth!.fetchJson(
 				method,
@@ -205,12 +237,31 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 		});
 	}
 
+	async _getJira<R extends object>(path: string): Promise<any> {
+		await this.ensureConnected();
+		if (this._providerInfo?.isApiToken) {
+			return (await this.get<R>(path)).body;
+		} else {
+			return this._callWithOauth(path);
+		}
+	}
+
+	async _postJira<RQ extends object, R extends object>(path: string, body: RQ): Promise<any> {
+		await this.ensureConnected();
+		if (this._providerInfo?.isApiToken) {
+			return (await this.post<RQ, R>(path, body)).body;
+		} else {
+			return this._callWithOauth(path, "POST", body);
+		}
+	}
+
 	@log()
 	async getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
 		if (this.boards.length > 0) return { boards: this.boards };
+		await this.ensureConnected();
 		try {
 			this.boards = [];
-			const response: JiraProject[] = await this._callWithOauth("/rest/api/2/project");
+			const response: JiraProject[] = await this._getJira<JiraProject[]>("/rest/api/2/project");
 			this.boards.push(...(await this.filterBoards(response)));
 			return { boards: this.boards };
 		} catch (error) {
@@ -229,7 +280,7 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 	private async filterBoards(projects: JiraProject[]): Promise<JiraBoard[]> {
 		Logger.debug("Jira Server: Filtering for compatible projects");
 		try {
-			const response = await this._callWithOauth(
+			const response = await this._getJira(
 				`/rest/api/2/issue/createmeta?${qs.stringify({
 					projectIds: projects.map(p => p.id).join(","),
 					expand: "projects.issuetypes.fields"
@@ -301,8 +352,7 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 	): Promise<FetchThirdPartyCardWorkflowResponse> {
 		Logger.debug("Jira Server: fetching workflow for card: " + request.cardId);
 		try {
-			const response = await this._callWithOauth(`/rest/api/2/issue/${request.cardId}/transitions`);
-			Logger.debug("GOT RESPONSE: ", JSON.stringify(response, null, 4));
+			const response = await this._getJira(`/rest/api/2/issue/${request.cardId}/transitions`);
 			return { workflow: response.transitions };
 		} catch (error) {
 			Container.instance().errorReporter.reportMessage({
@@ -334,7 +384,7 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 
 			while (nextPage !== undefined) {
 				try {
-					const result = (await this._callWithOauth(nextPage)) as CardSearchResponse;
+					const result = (await this._getJira(nextPage)) as CardSearchResponse;
 
 					// Logger.debug("GOT RESULT: " + JSON.stringify(result, null, 4));
 					jiraCards.push(...result.issues);
@@ -398,11 +448,7 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 		if (data.assignees && data.assignees.length > 0) {
 			body.fields.assignee = { name: data.assignees[0].name };
 		}
-		const response = (await this._callWithOauth(
-			"/rest/api/2/issue",
-			"POST",
-			body
-		)) as CreateJiraIssueResponse;
+		const response = (await this._postJira("/rest/api/2/issue", body)) as CreateJiraIssueResponse;
 
 		return {
 			id: response.id,
@@ -414,13 +460,9 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 	async moveCard(request: MoveThirdPartyCardRequest) {
 		try {
 			Logger.debug("Jira Server: moving card");
-			const response = await this._callWithOauth(
-				`/rest/api/2/issue/${request.cardId}/transitions`,
-				"POST",
-				{
-					transition: { id: request.listId }
-				}
-			);
+			const response = await this._postJira(`/rest/api/2/issue/${request.cardId}/transitions`, {
+				transition: { id: request.listId }
+			});
 			// Logger.debug("Got a response: " + JSON.stringify(response, null, 4));
 			return response;
 		} catch (error) {
@@ -444,7 +486,7 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 		if (!board) {
 			return { users: [] };
 		}
-		const result = (await this._callWithOauth(
+		const result = (await this._getJira(
 			`/rest/api/2/user/assignable/search?${qs.stringify({
 				project: board.key,
 				maxResults: 1000

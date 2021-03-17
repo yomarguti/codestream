@@ -1,8 +1,9 @@
 import React, { Component } from "react";
 import { injectIntl } from "react-intl";
 import { connect } from "react-redux";
-import { closePanel } from "./actions";
-import { addEnterpriseProvider, connectProvider } from "../store/providers/actions";
+import { closePanel, openPanel } from "./actions";
+import { configureProvider } from "../store/providers/actions";
+import { setIssueProvider } from "../store/context/actions";
 import CancelButton from "./CancelButton";
 import Button from "./Button";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
@@ -11,45 +12,53 @@ export class ConfigureJiraServerPanel extends Component {
 	initialState = {
 		baseUrl: "",
 		baseUrlTouched: false,
-		consumerKey: "",
-		consumerKeyTouched: false,
-		privateKey: "",
-		privateKeyTouched: false,
+		token: "",
+		tokenTouched: false,
 		formTouched: false
 	};
 
 	state = this.initialState;
-	wantProviderId = "";
 
 	componentDidMount() {
 		const el = document.getElementById("configure-provider-initial-input");
 		el && el.focus();
 	}
 
-	componentDidUpdate() {
-		if (this.wantProviderId && this.props.providers[this.wantProviderId]) {
-			this.props.connectProvider(this.wantProviderId, this.props.originLocation);
-			this.props.closePanel();
-		}
-	}
-
-	onSubmit = async e => {
+	onSubmit = e => {
 		e.preventDefault();
 		if (this.isFormInvalid()) return;
 		const { providerId } = this.props;
-		const { baseUrl, consumerKey, privateKey } = this.state;
+		const { token, baseUrl } = this.state;
+
 		let url = baseUrl.trim().toLowerCase();
 		url = url.match(/^http/) ? url : `https://${url}`;
 		url = url.replace(/\/*$/g, "");
-		const newProviderId = await this.props.addEnterpriseProvider(providerId, url, {
-			oauthData: { consumerKey, privateKey }
-		});
-		if (newProviderId) {
-			this.wantProviderId = newProviderId;
-		}
+
+		// configuring is as good as connecting, since we are letting the user
+		// set the access token ... sending the fourth argument as true here lets the
+		// configureProvider function know that they can mark Kora as connected as soon
+		// as the access token entered by the user has been saved to the server
+		this.props.configureProvider(
+			providerId,
+			{ token, baseUrl: url },
+			true,
+			this.props.originLocation
+		);
+
+		this.props.closePanel();
 	};
 
 	renderError = () => {};
+
+	onBlurToken = () => {
+		this.setState({ tokenTouched: true });
+	};
+
+	renderTokenHelp = () => {
+		const { token, tokenTouched, formTouched } = this.state;
+		if (tokenTouched || formTouched)
+			if (token.length === 0) return <small className="error-message">Required</small>;
+	};
 
 	onBlurBaseUrl = () => {
 		this.setState({ baseUrlTouched: true });
@@ -62,34 +71,26 @@ export class ConfigureJiraServerPanel extends Component {
 		}
 	};
 
-	onBlurConsumerKey = () => {
-		this.setState({ consumerKeyTouched: true });
+	onBlurBaseUrl = () => {
+		this.setState({ baseUrlTouched: true });
 	};
 
-	renderConsumerKeyHelp = () => {
-		const { consumerKey, consumerKeyTouched, formTouched } = this.state;
-		if (consumerKeyTouched || formTouched)
-			if (consumerKey.length === 0) return <small className="error-message">Required</small>;
-	};
-
-	onBlurAppPrivateKey = () => {
-		this.setState({ privateKeyTouched: true });
-	};
-
-	renderPrivateKeyHelp = () => {
-		const { privateKey, privateKeyTouched, formTouched } = this.state;
-		if (privateKeyTouched || formTouched)
-			if (privateKey.length === 0) return <small className="error-message">Required</small>;
+	renderBaseUrlHelp = () => {
+		const { baseUrl, baseUrlTouched, formTouched } = this.state;
+		if (baseUrlTouched || formTouched) {
+			if (baseUrl.length === 0) return <small className="error-message">Required</small>;
+		}
 	};
 
 	tabIndex = () => {};
 
 	isFormInvalid = () => {
-		return (
-			this.state.baseUrl.length === 0 ||
-			this.state.consumerKey.length === 0 ||
-			this.state.privateKey.length === 0
-		);
+		return this.state.baseUrl.length === 0 || this.state.token.length === 0;
+	};
+
+	handleOldJiraServerClick = e => {
+		this.props.closePanel();
+		this.props.openPanel(`configure-provider-jiraserverold-jiraserver/enterprise-JiraServerPanel`);
 	};
 
 	render() {
@@ -97,7 +98,7 @@ export class ConfigureJiraServerPanel extends Component {
 		const inactive = false;
 		const { name } = this.props.providers[providerId] || {};
 		const providerName = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].displayName : "";
-		const placeholder = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].urlPlaceholder : "";
+		const placeholder = "https://myteam.atlassian.net";
 		const getUrl = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].getUrl : "";
 		return (
 			<div className="panel configure-provider-panel">
@@ -107,22 +108,20 @@ export class ConfigureJiraServerPanel extends Component {
 						<span className="panel-title">Configure {providerName}</span>
 					</div>
 					<fieldset className="form-body" disabled={inactive}>
-						{getUrl && (
-							<p style={{ textAlign: "center" }} className="explainer">
-								Not a {providerName} customer yet? <a href={getUrl}>Get {providerName}</a>
-							</p>
-						)}
+						<p style={{ textAlign: "center" }} className="explainer">
+							<a onClick={this.handleOldJiraServerClick}>Click here</a> if your organization uses a
+							version of Jira Server older than v8.14.0, which does not support API tokens.
+						</p>
+						<br />
 						{this.renderError()}
 						<div id="controls">
-							<div id="configure-enterprise-controls" className="control-group">
+							<div id="configure-jira-controls" className="control-group">
 								<label>
 									<strong>{providerName} Base URL</strong>
 								</label>
-								<label>
-									Please provide the Base URL used by your team to access {providerName}.
-								</label>
+								<label>Please provide the URL used by your team to access Jira Server.</label>
 								<input
-									className="native-key-bindings input-text control"
+									className="input-text control"
 									type="text"
 									name="baseUrl"
 									tabIndex={this.tabIndex()}
@@ -137,44 +136,28 @@ export class ConfigureJiraServerPanel extends Component {
 								{this.renderBaseUrlHelp()}
 							</div>
 							<br />
-							<label>
-								Contact your {providerName} admin to get the consumer key and private key required
-								below, and send them a link to{" "}
-								<a href="https://docs.codestream.com/userguide/faq/jira-server-integration">
-									these instructions
-								</a>
-								.
-							</label>
-							<div id="app-clientid-controls" className="control-group">
+							<div id="token-controls" className="control-group">
 								<label>
-									<strong>Consumer Key</strong>
+									<strong>{providerName} API token</strong>
+								</label>
+								<label>
+									Please provide an{" "}
+									<a href="https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html">
+										API token
+									</a>{" "}
+									we can use to access your Jira Server projects and issues.
 								</label>
 								<input
-									className="native-key-bindings input-text control"
+									className="input-text control"
 									type="text"
-									name="consumerKey"
+									name="token"
 									tabIndex={this.tabIndex()}
-									value={this.state.consumerKey}
-									onChange={e => this.setState({ consumerKey: e.target.value })}
-									onBlur={this.onBlurConsumerKey}
-									required={this.state.consumerKeyTouched || this.state.formTouched}
+									value={this.state.token}
+									onChange={e => this.setState({ token: e.target.value })}
+									onBlur={this.onBlurToken}
+									required={this.state.tokenTouched || this.state.formTouched}
 								/>
-								{this.renderConsumerKeyHelp()}
-							</div>
-							<div id="app-clientsecret-controls" className="control-group">
-								<label>
-									<strong>Private Key</strong>
-								</label>
-								<textarea
-									className="input-text"
-									name="privateKey"
-									tabIndex={this.tabIndex()}
-									value={this.state.privateKey}
-									onChange={e => this.setState({ privateKey: e.target.value })}
-									onBlur={this.onBlurPrivateKey}
-									required={this.state.privateKeyTouched || this.state.formTouched}
-								/>
-								{this.renderPrivateKeyHelp()}
+								{this.renderTokenHelp()}
 							</div>
 							<div className="button-group">
 								<Button
@@ -204,10 +187,14 @@ export class ConfigureJiraServerPanel extends Component {
 	}
 }
 
-const mapStateToProps = ({ providers, ide }) => {
-	return { providers, isInVscode: ide.name === "VSC" };
+const mapStateToProps = ({ providers, users, session }) => {
+	const currentUser = users[session.userId];
+	return { providers, currentUser };
 };
 
-export default connect(mapStateToProps, { closePanel, addEnterpriseProvider, connectProvider })(
-	injectIntl(ConfigureJiraServerPanel)
-);
+export default connect(mapStateToProps, {
+	closePanel,
+	configureProvider,
+	openPanel,
+	setIssueProvider
+})(injectIntl(ConfigureJiraServerPanel));

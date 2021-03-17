@@ -358,13 +358,14 @@ export const ChangesetFileList = (props: {
 					// render sibling nodes at the same depth w/same dirPath
 					if (renderSiblings) {
 						// grab all the siblings, sort them, and render them.
-						const siblings: any[] = [node];
+						const siblings: any[] = [];
+						if (node) siblings.push(node);
 
 						let n = node;
 						// we don't need to check left because we sort the paths
 						// prior to inserting into the tree, so we never end up
 						// with left nodes
-						while (n.right) {
+						while (n && n.right) {
 							siblings.push(n.right);
 							n = n.right;
 						}

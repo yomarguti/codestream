@@ -164,7 +164,8 @@ export const OpenReviews = React.memo(function OpenReviews(props: Props) {
 										{!query.hidden &&
 											reviews &&
 											reviews.map((review, index) => {
-												const creator = teamMembers.find(user => user.id === review.creatorId);
+												const codeAuthorId = (review.codeAuthorIds || [])[0] || review.creatorId;
+												const codeAuthor = teamMembers.find(user => user.id === codeAuthorId);
 												return (
 													<Row
 														key={"review-" + review.id}
@@ -172,9 +173,12 @@ export const OpenReviews = React.memo(function OpenReviews(props: Props) {
 														onClick={() => dispatch(setCurrentReview(review.id))}
 													>
 														<div>
-															<Tooltip title={creator && creator.fullName} placement="bottomLeft">
+															<Tooltip
+																title={codeAuthor && codeAuthor.fullName}
+																placement="bottomLeft"
+															>
 																<span>
-																	<Headshot person={creator} />
+																	<Headshot person={codeAuthor} />
 																</span>
 															</Tooltip>
 														</div>
