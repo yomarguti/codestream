@@ -359,7 +359,9 @@ export const PullRequest = () => {
 			(e: any) => {
 				if (e.type === ChangeDataType.Commits) {
 					getOpenRepos().then(_ => {
-						const currentOpenRepo = openRepos.find(_ => _.name === pr.repository.name);
+						const currentOpenRepo = openRepos.find(
+							_ => _.name.toLowerCase() === pr.repository.name.toLowerCase()
+						);
 						setCurrentRepoChanged(
 							!!(e.data.repo && currentOpenRepo && currentOpenRepo.currentBranch == pr.headRefName)
 						);
@@ -375,7 +377,9 @@ export const PullRequest = () => {
 
 	const cantCheckoutReason = useMemo(() => {
 		if (pr) {
-			const currentRepo = openRepos.find(_ => _.name === pr.repository.name);
+			const currentRepo = openRepos.find(
+				_ => _.name.toLowerCase() === pr.repository.name.toLowerCase()
+			);
 			if (!currentRepo) {
 				return `You don't have the ${pr.repository.name} repo open in your IDE`;
 			}
