@@ -1091,7 +1091,12 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		if (repoId == undefined) {
 			return 0;
 		}
+
 		const { git, session } = SessionContainer.instance();
+		if (git.isRebasing(repo.path)) {
+			return 0;
+		}
+
 		const allReviews = await this.getAllCached();
 		const repoChangesets = flatten(
 			allReviews
