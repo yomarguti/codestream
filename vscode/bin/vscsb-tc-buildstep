@@ -66,12 +66,25 @@ elif args.action == 'tag':
 	build.tag()                               # update version info and apply tags
 elif args.action == 'release':
 	# build.release()                           # release assets to the general public
-	if not su.someValueOrNone(os.environ, 'VSCSB_NOPUBLISH'):
+	if os.path.exists(f"{os.environ['VSCSB_TMP']}/deployed.vscode-marketplace"):
+		print(f"{os.environ['VSCSB_TMP']}/deployed.vscode-marketplace EXISTS. We already published to the VSC marketplace.")
+	elif not su.someValueOrNone(os.environ, 'VSCSB_NOPUBLISH'):
 		# BAD BAD BAD BAD
 		build.execCmd("npm install --no-save")
 		vsixFile = f"{build.getDisplayVersion('full')}.vsix"
 		# build.execCmd("vscsb-publish-assets-to-cloudfront --no-prompt --asset-env prod")
 		build.execCmd(f"vsce publish --packagePath {vsixFile}")
+		build.execCmd(f"touch {os.environ['VSCSB_TMP']}/deployed.vscode-marketplace")
+	else:
+		su.printErr("VSCSB_NOPUBLISH is set - skipping this step")
+elif args.action == 'release-openvsx':
+	if not su.someValueOrNone(os.environ, 'VSCSB_NOPUBLISH'):
+		publishToken = su.someValueOrNone(os.environ, 'OPENVSX_PUBLISH_TOKEN')
+		if not publishToken:
+			su.printErr("OPENVSX_PUBLISH_TOKEN not defined")
+			exit(1)
+		build.execCmd(f"npx ovsx create-namespace CodeStream -p {publishToken}")
+		build.execCmd(f"npx ovsx publish {build.getDisplayVersion('full')}.vsix -p {publishToken}")
 	else:
 		su.printErr("VSCSB_NOPUBLISH is set - skipping this step")
 elif args.action == 'update':
