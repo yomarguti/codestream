@@ -2180,17 +2180,19 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		let linkWithCodeBlock = "";
 		if (this.state.linkURI) {
-			const codeBlock = this.state.codeBlocks[0];
 			linkWithCodeBlock += this.state.linkURI + "\n\n*";
-			const { scm, uri } = codeBlock;
-			if (scm && scm.repoId) {
-				const repo = this.props.repos[scm.repoId];
-				if (repo) linkWithCodeBlock += "[" + repo.name + "] ";
+			const codeBlock = this.state.codeBlocks[0];
+			if (codeBlock) {
+				const { scm, uri } = codeBlock;
+				if (scm && scm.repoId) {
+					const repo = this.props.repos[scm.repoId];
+					if (repo) linkWithCodeBlock += "[" + repo.name + "] ";
+				}
+				if (scm && scm.file) {
+					linkWithCodeBlock += scm.file;
+				}
+				linkWithCodeBlock += "*\n```\n" + codeBlock.contents + "\n```\n";
 			}
-			if (scm && scm.file) {
-				linkWithCodeBlock += scm.file;
-			}
-			linkWithCodeBlock += "*\n```\n" + codeBlock.contents + "\n```\n";
 		}
 
 		return [

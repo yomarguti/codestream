@@ -38,6 +38,7 @@ export interface CreateReviewChangesetsRequest
 export interface CreateReviewRequest extends Omit<CSCreateReviewRequest, "teamId"> {
 	markers?: CreateMarkerRequest[];
 	reviewChangesets?: CreateReviewChangesetsRequest[];
+	entryPoint?: string;
 }
 
 export interface CreateReviewResponse {

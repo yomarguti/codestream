@@ -1091,7 +1091,12 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		if (repoId == undefined) {
 			return 0;
 		}
+
 		const { git, session } = SessionContainer.instance();
+		if (git.isRebasing(repo.path)) {
+			return 0;
+		}
+
 		const allReviews = await this.getAllCached();
 		const repoChangesets = flatten(
 			allReviews
@@ -1249,6 +1254,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 		const firstAncestor = await git.findAncestor(repo.path, oldestCommit.ref, 1, () => true);
 
+		const entryPoint = "Commit Toast on Pull";
 		const reviewRequest: CreateReviewRequest = {
 			title: newestCommit.shortMessage,
 			reviewers: [session.userId],
@@ -1257,6 +1263,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			tags: [],
 			status: "open",
 			markers: [],
+			entryPoint,
 			reviewChangesets: [
 				{
 					repoId: repo.id,
@@ -1297,7 +1304,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		});
 		const review = response.review!;
 
-		trackReviewPostCreation(review, 0, 0, "Commit Toast on Pull", addedUsers);
+		trackReviewPostCreation(review, 0, 0, entryPoint, addedUsers);
 		await resolveCreatePostResponse(response);
 
 		return review;

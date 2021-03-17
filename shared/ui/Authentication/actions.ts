@@ -127,8 +127,8 @@ export const startIDESignin = (provider: SupportedSSOProvider, info?: SSOAuthInf
 		info = info || {};
 		info.useIDEAuth = true;
 		try {
-			const fail = () => {
-				info!.gotError = true;
+			const fail = error => {
+				info!.gotError = error;
 				return dispatch(goToSSOAuth(provider, { ...(info || emptyObject) }));
 			};
 			HostApi.instance.send(ProviderTokenRequestType, request, { alternateReject: fail });

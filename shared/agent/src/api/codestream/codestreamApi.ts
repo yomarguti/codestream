@@ -2077,7 +2077,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		const repoInfo =
 			request.repoInfo &&
 			`${request.repoInfo.teamId}|${request.repoInfo.repoId}|${request.repoInfo.commitHash}`;
-		await this.post(`/no-auth/provider-token/${request.provider}`, {
+		return this.post(`/no-auth/provider-token/${request.provider}`, {
 			token: request.token,
 			data: request.data,
 			invite_code: request.inviteCode,
