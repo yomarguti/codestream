@@ -686,7 +686,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			}
 
 			const localModifications = await git.getHasModifications(repo.path);
-			const localCommits = await git.getLocalCommits(repo.path);
+			const localCommits = await git.getHasLocalCommits(repo.path, request.headRefName);
 			if (request.reviewId && !request.skipLocalModificationsCheck) {
 				if (localModifications) {
 					return {
@@ -695,19 +695,23 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 					};
 				}
 
-				if (localCommits && localCommits.length > 0) {
+				if (localCommits) {
 					return {
 						success: false,
 						error: { type: "HAS_LOCAL_COMMITS" }
 					};
 				}
 			} else {
-				if (localModifications) {
+				const currentBranch = await git.getCurrentBranch(repo.path);
+				// if we're talking about a branch which isn't current, and we
+				// aren't talking about a FR, then we don't care if there are
+				// local uncommitted changes
+				if (localModifications && request.headRefName === currentBranch) {
 					warning = {
 						type: "HAS_LOCAL_MODIFICATIONS"
 					};
 				}
-				if (localCommits && localCommits.length > 0) {
+				if (localCommits) {
 					warning = {
 						type: "HAS_LOCAL_COMMITS"
 					};
