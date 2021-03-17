@@ -597,13 +597,13 @@ export default class Menu extends Component {
 	};
 
 	handleMultiSelectKeyDown = event => {
-		if (event.key === "Shift") {
+		if (event.key === "Shift" || event.which === 16) {
 			this.setState({ isShiftHolded: true, itemsRange: [] });
 		}
 	};
 
 	handleMultiSelectKeyUp = event => {
-		if (event.key === "Shift") {
+		if (event.key === "Shift" || event.which === 16) {
 			this.setState({ isShiftHolded: false, itemsRange: [] });
 		}
 	};
