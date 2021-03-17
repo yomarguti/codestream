@@ -764,7 +764,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 						(!Objects.shallowEquals(lastReads, this._user.lastReads || {}) ||
 							!Objects.shallowEquals(lastReadItems, this._user.lastReadItems || {}))
 					) {
-						this._unreads.compute(me.lastReads, me.lastReadItems);
+						this._unreads.compute(me.lastReads, this._user.lastReadItems);
 					}
 					if (!this._preferences) {
 						this._preferences = new CodeStreamPreferences(this._user.preferences);
@@ -1269,7 +1269,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	markItemRead(request: MarkItemReadRequest) {
 		return this.put<CSMarkItemReadRequest, CSMarkItemReadResponse>(
 			`/read-item/${request.itemId}`,
-			{ numReples: request.numReplies },
+			{ numReplies: request.numReplies },
 			this._token
 		);
 	}

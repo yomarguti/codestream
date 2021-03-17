@@ -197,28 +197,8 @@ export const OpenReviews = React.memo(function OpenReviews(props: Props) {
 															<span className="subtle">{review.text}</span>
 														</div>
 														<div className="icons">
-															{query.query === "approved" && (
-																<Icon
-																	name="pull-request"
-																	title="Create a PR"
-																	placement="bottomLeft"
-																	delay={1}
-																	onClick={async e => {
-																		e.stopPropagation();
-																		await dispatch(setCreatePullRequest(review.id));
-																		dispatch(openPanel(WebviewPanels.NewPullRequest));
-																	}}
-																/>
-															)}
-															<Icon
-																name="review"
-																className="clickable"
-																title="Review Changes"
-																placement="bottomLeft"
-																delay={1}
-															/>
 															<Timestamp time={review.createdAt} relative abbreviated />
-															{(review.numReplies > 0 || derivedState.unreadMap[review.id]) && (
+															{review.numReplies > 0 || derivedState.unreadMap[review.id] ? (
 																<span
 																	className={`badge${unreadClass}`}
 																	style={{ margin: "0 0 0 10px", flexGrow: 0, flexShrink: 0 }}
@@ -232,6 +212,8 @@ export const OpenReviews = React.memo(function OpenReviews(props: Props) {
 																		</>
 																	)}
 																</span>
+															) : (
+																<span style={{ display: "inline-block", width: "26px" }} />
 															)}
 														</div>
 													</Row>
