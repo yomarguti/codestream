@@ -133,7 +133,7 @@ export const Notifications = props => {
 								</RadioGroup>
 							</div>
 						)}
-						<h3>Other Email Notifications</h3>
+						<h3>Other Notifications</h3>
 						<div style={{ marginTop: "20px" }}>
 							<Checkbox
 								name="frReminders"
@@ -141,7 +141,7 @@ export const Notifications = props => {
 								onChange={handleChangeReviewReminders}
 								loading={loadingReminderDelivery}
 							>
-								Notify me about outstanding feedback requests
+								Sned me an email reminder for outstanding feedback requests
 							</Checkbox>
 						</div>
 						<div style={{ marginTop: "20px" }}>
