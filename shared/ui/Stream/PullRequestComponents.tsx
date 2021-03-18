@@ -120,6 +120,17 @@ export const PRSelectorButtons = styled.div`
 	> span + span {
 		border-left: 1px solid var(--base-border-color);
 	}
+	> span.label {
+		cursor: default;
+		padding-left: 10px;
+		padding-right: 10px;
+		&:hover {
+			background: var(--app-background-color);
+		}
+	}
+	a {
+		color: var(--text-color);
+	}
 `;
 
 export const PREditTitle = styled.div`
@@ -388,7 +399,10 @@ export const PRSubmitReviewButton = styled.div`
 			box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
 		}
 		width: calc(100vw - 30px);
-		max-width: 600px;
+		max-width: min(600px, calc(100vw - 80px));
+		.gitlab & {
+			max-width: min(600px, calc(100vw - 110px));
+		}
 		label {
 			color: var(--text-color-highlight);
 		}
@@ -840,6 +854,9 @@ export const PRActionIcons = styled.div`
 	.icon {
 		opacity: 0.5;
 		margin-left: 10px;
+		&.green-color {
+			opacity: 1;
+		}
 	}
 `;
 
@@ -1111,6 +1128,9 @@ export const PRCommentsInPatch = styled.div`
 	}
 	${PRCard} {
 		max-width: min(600px, calc(100vw - 80px));
+		.gitlab & {
+			max-width: min(600px, calc(100vw - 110px));
+		}
 	}
 	@media only screen and (max-width: ${props => props.theme.breakpoint}) {
 		${PRReactions} {
@@ -1183,3 +1203,5 @@ export const PRError = styled.div`
 		// height: 10px;
 	}
 `;
+
+export const PRPreamble = styled.div``;

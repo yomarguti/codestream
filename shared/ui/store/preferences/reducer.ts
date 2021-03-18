@@ -113,6 +113,34 @@ export const DEFAULT_QUERIES: { [providerId: string]: PullRequestQuery[] } = {
 			query: `recent`,
 			hidden: false
 		}
+	],
+	"gitlab*com": [
+		{
+			providerId: "gitlab*com",
+			name: "Assigned to Me",
+			query: `state:opened scope:assigned_to_me`,
+			hidden: false
+		},
+		{
+			providerId: "gitlab*com",
+			name: "Created by Me",
+			query: `state:opened scope:created_by_me`,
+			hidden: false
+		}
+	],
+	"gitlab/enterprise": [
+		{
+			providerId: "gitlab/enterprise",
+			name: "Assigned to Me",
+			query: `state:opened scope:assigned_to_me`,
+			hidden: false
+		},
+		{
+			providerId: "gitlab/enterprise",
+			name: "Created by Me",
+			query: `state:opened scope:created_by_me`,
+			hidden: false
+		}
 	]
 };
 
@@ -121,7 +149,7 @@ export const getSavedPullRequestQueriesForProvider = createSelector(
 	(_, providerId: string) => providerId,
 	(preferences, providerId) => {
 		const pullRequestQueries: PullRequestQuery[] = [];
-		const queries = preferences.pullRequestQueries7 || DEFAULT_QUERIES;
+		const queries = preferences.pullRequestQueries || DEFAULT_QUERIES;
 		// const queries = DEFAULT_QUERIES;
 		Object.keys(queries[providerId] || {}).forEach(key => {
 			pullRequestQueries[parseInt(key, 10)] = queries[providerId][key];

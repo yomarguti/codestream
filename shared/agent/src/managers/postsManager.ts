@@ -1028,7 +1028,10 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 							pullRequestId: parsedUri.context.pullRequest.id,
 							// pullRequestReviewId will be looked up
 							text: request.attributes.text || "",
+							leftSha: parsedUri.leftSha,
+							sha: parsedUri.rightSha,
 							filePath: parsedUri.path,
+							startLine: startLine,
 							position: lineWithMetadata.position
 						}
 					});
@@ -1049,6 +1052,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					providerId: parsedUri.context.pullRequest.providerId,
 					params: {
 						pullRequestId: parsedUri.context.pullRequest.id,
+						leftSha: parsedUri.leftSha,
 						sha: parsedUri.rightSha,
 						text: request.attributes.text || "",
 						path: parsedUri.path,

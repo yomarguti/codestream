@@ -87,6 +87,7 @@ import { supportsIntegrations } from "../store/configs/reducer";
 import { Keybindings } from "./Keybindings";
 import { setNewPostEntry } from "../store/context/actions";
 import { PullRequest } from "./PullRequest";
+import { PullRequest as GitLabPullRequest } from "./PullRequests/GitLab/PullRequest";
 import { Modal } from "./Modal";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1199,15 +1200,26 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		} = this.props;
 
 		const composeOpen = composeCodemarkActive ? true : false;
+		const isGitLabPR =
+			currentPullRequestId &&
+			(currentPullRequestProviderId === "gitlab*com" ||
+				currentPullRequestProviderId === "gitlab/enterprise");
 		return (
-			<Modal noScroll noPadding onClose={() => this.close()} sidebarBackground={!!currentReviewId}>
-				<div style={{ overflow: "hidden" }}>
+			<Modal
+				noScroll
+				noPadding
+				onClose={isGitLabPR ? undefined : () => this.close()}
+				sidebarBackground={!!currentReviewId}
+			>
+				<div style={{ overflow: isGitLabPR ? "visible" : "hidden" }}>
 					{currentReviewId ? (
 						<ReviewNav reviewId={currentReviewId} composeOpen={composeOpen} />
 					) : currentPullRequestId ? (
 						currentPullRequestProviderId === "github*com" ||
 						currentPullRequestProviderId === "github/enterprise" ? (
 							<PullRequest />
+						) : isGitLabPR ? (
+							<GitLabPullRequest />
 						) : (
 							<div id="oops">
 								<form className="standard-form">
@@ -1397,9 +1409,14 @@ const mapStateToProps = (state: CodeStreamState) => {
 		firstVisibleLine = textEditorVisibleRanges[0].start.line;
 	}
 
-	const hasPRProvider = ["github", "bitbucket", "gitlab"].some(name =>
-		isConnected(state, { name })
-	);
+	const hasPRProvider = [
+		"github",
+		"github_enterprise",
+		"bitbucket",
+		"bitbucket_enterprise",
+		"gitlab",
+		"gitlab_enterprise"
+	].some(name => isConnected(state, { name }));
 
 	return {
 		showFeedbackSmiley: false, // context.showFeedbackSmiley,

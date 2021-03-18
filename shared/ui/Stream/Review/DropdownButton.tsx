@@ -23,16 +23,26 @@ export interface DropdownButtonProps extends ButtonProps {
 		checked?: boolean;
 		onSelect?: () => void; // callback for when you select an item with a splitDropdown
 	}[];
+	title?: string;
+	spread?: boolean;
 	splitDropdown?: boolean;
+	splitDropdownInstantAction?: boolean;
 	wrap?: boolean;
 	selectedKey?: string;
-	isMultiSelect?: boolean;
+	noCloseIcon?: boolean;	isMultiSelect?: boolean;
 	itemsRange?: string[];
 }
 
-// operates in two modes. if splitDropdown is false (the default), it's a dropdown menu
-// if splitDropdown is true, then the chevron just changes the selection, but you have
+// operates in two modes. if splitDropdown is false (the default), it's a dropdown menu.
+// if splitDropdown is true, then the chevron is separated from the main button action,
+// and it opens the menu. selecting a menu item just changes the selection, but you have
 // to click the button to perform the action
+//
+// however -- if splitDropdownInstantAction is true, then the dropdown will:
+// a) perform the action immediately on the main button
+// b) open a menu if you click the chevron
+// c) perform the action immediately when the menu is exposed and you select an option
+// for an example, see the dropdown here: http://gitlab.codestream.us/pez/onprem-awesome-1/-/merge_requests/1
 export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProps>) {
 	const buttonRef = React.useRef<HTMLElement>(null);
 	const [menuIsOpen, toggleMenu] = React.useReducer((open: boolean) => !open, false);
@@ -55,14 +65,19 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 			}
 			item.checked = item.key === selectedKey;
 			item.action = () => {
-				setSelectedKey(item.key);
+				if (props.splitDropdownInstantAction && item.buttonAction) item.buttonAction();
+				else setSelectedKey(item.key);
 				item.onSelect && item.onSelect();
 			};
 		});
 	}
 
 	return (
-		<Root className={props.className} splitDropdown={props.splitDropdown}>
+		<Root
+			className={props.className}
+			splitDropdown={props.splitDropdown}
+			fillParent={props.fillParent}
+		>
 			{props.splitDropdown ? (
 				<>
 					<Button
@@ -78,13 +93,15 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 					</Button>
 					<Button
 						{...getButtonProps(props)}
+						isLoading={false}
 						onClick={e => {
 							e.preventDefault();
 							e.stopPropagation();
 							toggleMenu(true);
 						}}
+						narrow
 					>
-						<Icon name="chevron-down" className="chevron-down" />
+						<Icon name="chevron-down-thin" className="chevron-down" />
 					</Button>
 				</>
 			) : (
@@ -98,7 +115,7 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 					ref={buttonRef}
 				>
 					{props.children}
-					<Icon name="chevron-down" className="chevron-down" />
+					<Icon name="chevron-down-thin" className="chevron-down" />
 				</Button>
 			)}
 			{menuIsOpen && buttonRef.current && (
@@ -106,7 +123,9 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 					align={align}
 					action={maybeToggleMenu}
 					target={buttonRef.current}
+					title={props.title}
 					items={items}
+					noCloseIcon={props.noCloseIcon}
 					focusOnSelect={buttonRef.current}
 					wrap={props.wrap}
 					isMultiSelect={props.isMultiSelect}
@@ -117,16 +136,48 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 	);
 }
 
-const Root = styled.div<{ splitDropdown?: boolean }>`
-	display: inline-block;
+const Root = styled.div<{ splitDropdown?: boolean; fillParent?: boolean }>`
+	display: ${props => (props.fillParent ? "block" : "inline-block")};
 	position: relative;
-	.octicon-chevron-down {
+	.octicon-chevron-down-thin {
 		margin-left: ${props => (props.splitDropdown ? "0" : "5px")};
-		transform: scale(0.8);
+		transform: scale(0.85);
 	}
+	${props => {
+		return props.splitDropdown
+			? `	button:first-of-type {
+		border-top-right-radius: 0 !important;
+		border-bottom-right-radius: 0 !important;
+	}
+	button:last-of-type {
+		border-top-left-radius: 0 !important;
+		border-bottom-left-radius: 0 !important;
+	}
+`
+			: "";
+	}}
 	button + button {
 		// border-left: 1px solid var(--base-border-color) !important;
 		margin-left: 1px !important;
 	}
 	white-space: ${props => (props.splitDropdown ? "nowrap" : "")};
+	${props => {
+		return props.fillParent
+			? `
+			button {
+	justify-content: left;
+	text-align: left;
+	> span {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		text-align: left;
+		width: 100%;
+		.icon {
+			float: right;
+		}
+	}
+}
+`
+			: "";
+	}}
 `;

@@ -21,6 +21,9 @@ export interface ProviderDisplay {
 	customFilterExample?: string;
 	customFilterHelp?: string;
 
+	customPullRequestFilterHelpLink?: string;
+	customPullRequestFilterExample?: string;
+
 	supportsPR2CR?: boolean;
 }
 
@@ -76,6 +79,10 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		customFilterExample: "Example: is:open milestone:jan assignee:@me",
 		customFilterHelp:
 			'See <a href="https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests">Searching issues</a> for a detailed list of qualifiers.',
+		customPullRequestFilterHelpLink:
+			"https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests",
+		customPullRequestFilterExample:
+			"The variable @me can be used to specify the logged in user within a search. ",
 		supportsStartWork: true,
 		supportsPR2CR: true
 	},
@@ -92,6 +99,10 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		customFilterExample: "Example: is:open milestone:jan assignee:@me",
 		customFilterHelp:
 			'See <a href="https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests">Searching issues</a> for a detailed list of qualifiers.',
+		customPullRequestFilterExample:
+			"The variable @me can be used to specify the logged in user within a search. ",
+		customPullRequestFilterHelpLink:
+			"https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests",
 		supportsStartWork: true
 	},
 	gitlab: {
@@ -100,6 +111,8 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		boardLabel: "repo",
 		listLabel: "type",
 		cardLabel: "issue",
+		customPullRequestFilterExample: 'Example: "state:opened scope:created_by_me" ',
+		customPullRequestFilterHelpLink: "https://docs.gitlab.com/ee/api/merge_requests.html",
 		supportsStartWork: true
 	},
 	gitlab_enterprise: {
@@ -111,6 +124,8 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		boardLabel: "repo",
 		listLabel: "type",
 		cardLabel: "issue",
+		customPullRequestFilterExample: 'Example: "state:opened scope:created_by_me" ',
+		customPullRequestFilterHelpLink: "https://docs.gitlab.com/ee/api/merge_requests.html",
 		supportsStartWork: true
 	},
 	jira: {

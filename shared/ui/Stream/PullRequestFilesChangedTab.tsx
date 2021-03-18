@@ -9,7 +9,6 @@ import { FileStatus } from "@codestream/protocols/api";
 import { LoadingMessage } from "../src/components/LoadingMessage";
 import { getPullRequestCommits, getPullRequestFiles } from "../store/providerPullRequests/actions";
 import { PullRequestFilesChangedList } from "./PullRequestFilesChangedList";
-import { HostApi } from "../webview-api";
 import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
 
 const STATUS_MAP = {
@@ -92,7 +91,7 @@ export const PullRequestFilesChangedTab = (props: {
 				_mapData(data);
 			}
 		})();
-	}, [derivedState.providerPullRequests, prCommitsRange]);
+	}, [pr.providerId, derivedState.currentPullRequestId, prCommitsRange]);
 
 	useDidMount(() => {
 		setIsLoading(true);
@@ -257,7 +256,7 @@ export const PullRequestFilesChangedTab = (props: {
 			<PullRequestFilesChangedList
 				pr={pr}
 				filesChanged={filesChanged}
-				repositoryName={pr.repository.name}
+				repositoryName={pr.repository && pr.repository.name}
 				baseRef={baseRef}
 				baseRefName={commitBased ? pr.headRefName : pr.baseRefName}
 				headRef={commitBased ? prCommitsRange[prCommitsRange.length - 1] : pr.headRefOid}
