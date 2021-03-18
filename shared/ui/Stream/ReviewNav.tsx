@@ -239,9 +239,13 @@ export function ReviewNav(props: Props) {
 		await dispatch(setCurrentReview(review && review.id));
 	};
 
+	const unreadEnabled = useSelector((state: CodeStreamState) =>
+		isFeatureEnabled(state, "readItem")
+	);
+
 	const markRead = () => {
 		// @ts-ignore
-		if (review) dispatch(markItemRead(review.id, review.numReplies || 0));
+		if (review && unreadEnabled) dispatch(markItemRead(review.id, review.numReplies || 0));
 	};
 
 	useDidMount(() => {

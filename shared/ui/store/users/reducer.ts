@@ -9,6 +9,7 @@ import { difference, isString } from "lodash-es";
 import { getStreamForId } from "../streams/reducer";
 import { PreferencesState } from "../preferences/types";
 import { UnreadsState } from "../unreads/types";
+import { isFeatureEnabled } from "../apiVersioning/reducer";
 
 type UsersActions = ActionType<typeof actions>;
 
@@ -168,10 +169,10 @@ interface Readable {
 }
 
 export const isUnread = createSelector(
-	(state: CodeStreamState) => state.umis,
+	(state: CodeStreamState) => (isFeatureEnabled(state, "readItem2") ? state.umis : undefined),
 	(a: any, item: Readable) => item,
-	(umis: UnreadsState, item: Readable) => {
-		if (!item) return false;
+	(umis: UnreadsState | undefined, item: Readable) => {
+		if (!umis || !item) return false;
 		const { lastReadItems = {} } = umis;
 		const lastReadItem = lastReadItems[item.id];
 		// if we've never read the item, or if there are new replies
@@ -188,11 +189,18 @@ export const isUnread = createSelector(
 );
 
 export const unreadMap = createSelector(
-	(state: CodeStreamState) => state.umis,
+	(state: CodeStreamState) => (isFeatureEnabled(state, "readItem2") ? state.umis : undefined),
 	(a: any, items: Readable[]) => items,
-	(umis: UnreadsState, items: Readable[]) => {
-		const { lastReadItems = {} } = umis;
+	(umis: UnreadsState | undefined, items: Readable[]) => {
 		const ret = {};
+		// if it's not supported, just return false for every item
+		if (!umis) {
+			items.forEach(item => {
+				ret[item.id] = false;
+			});
+			return ret;
+		}
+		const { lastReadItems = {} } = umis;
 		items.forEach(item => {
 			if (!item) return;
 			const lastReadItem = lastReadItems[item.id];
