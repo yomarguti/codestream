@@ -161,7 +161,6 @@ interface InheritedProps {
 type Props = InheritedProps & DispatchProps & ConnectedProps;
 
 const EMPTY_OBJECT = {};
-const EMPTY_OBJECT2 = {};
 
 export class Codemark extends React.Component<Props, State> {
 	static defaultProps: Partial<Props> = {
@@ -2125,7 +2124,6 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 			: undefined;
 
 	const unread = isUnread(state, codemark!);
-	console.warn("UNREAD IS: ", unread, " for codemark ", codemark);
 	return {
 		post,
 		review,
