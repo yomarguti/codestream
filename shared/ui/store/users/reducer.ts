@@ -191,7 +191,7 @@ export const isUnread = createSelector(
 );
 
 export const unreadMap = createSelector(
-	(state: CodeStreamState) => (isFeatureEnabled(state, "readItem2") ? state.umis : undefined),
+	(state: CodeStreamState) => (isFeatureEnabled(state, "readItem") ? state.umis : undefined),
 	(a: any, items: Readable[]) => items,
 	(umis: UnreadsState | undefined, items: Readable[]) => {
 		const ret = {};
