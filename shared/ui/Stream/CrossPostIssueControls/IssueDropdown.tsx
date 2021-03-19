@@ -41,7 +41,6 @@ import { Dialog } from "@codestream/webview/src/components/Dialog";
 import { PaneHeader, PaneBody, PaneState } from "@codestream/webview/src/components/Pane";
 import { StartWork } from "../StartWork";
 import { mapFilter } from "@codestream/webview/utils";
-import { isOnPrem } from "../../store/configs/reducer";
 import { Link } from "../Link";
 
 interface ProviderInfo {
@@ -374,7 +373,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		providers,
 		issueProviderConfig: currentIssueProviderConfig,
 		disabledProviders: workPreferences.disabledProviders || EMPTY_HASH,
-		isOnPrem: isOnPrem(configs) || false
+		isOnPrem: configs.isOnPrem
 	};
 };
 

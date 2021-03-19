@@ -178,6 +178,7 @@ export interface WebviewConfigs {
 	email?: string;
 	serverUrl: string;
 	team?: string;
+	isOnPrem: boolean;
 }
 
 export interface IpcHost {
