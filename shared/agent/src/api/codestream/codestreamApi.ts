@@ -302,7 +302,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private _userId: string | undefined;
 	private _preferences: CodeStreamPreferences | undefined;
 	private _features: CSApiFeatures | undefined;
-	private _runTimeEnvironment: string | undefined;
 	private _debouncedSetModifiedReposUpdate: (request: SetModifiedReposRequest) => {};
 
 	readonly capabilities: Capabilities = {
@@ -343,10 +342,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	get features() {
 		return this._features;
-	}
-
-	get runTimeEnvironment() {
-		return this._runTimeEnvironment;
 	}
 
 	get meUser() {
@@ -539,7 +534,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 		this._user = response.user;
 		this._userId = response.user.id;
 		this._features = response.features;
-		this._runTimeEnvironment = response.runtimeEnvironment;
 
 		const token: AccessToken = {
 			email: response.user.email,
@@ -1131,7 +1125,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		// for on-prem, base the server url (and strict flag) into the invite code,
 		// so invited users have it set automatically
 		const session = SessionContainer.instance().session;
-		if (this.runTimeEnvironment === "onprem") {
+		if (session.isOnPrem) {
 			request.inviteInfo = {
 				serverUrl: this.baseUrl,
 				disableStrictSSL: session.disableStrictSSL ? true : false
@@ -1760,7 +1754,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 		// for on-prem, base the server url (and strict flag) into the invite code,
 		// so invited users have it set automatically
-		if (this.runTimeEnvironment === "onprem") {
+		if (session.isOnPrem) {
 			postUserRequest.inviteInfo = {
 				serverUrl: this.baseUrl,
 				disableStrictSSL: session.disableStrictSSL ? true : false
@@ -2498,7 +2492,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 					message: resp.status.toString() + resp.statusText
 				};
 			} else {
-				response.capabilities = (await resp.json()).capabilities;
+				const json = await resp.json();
+				response.capabilities = json.capabilities;
+				response.environment = json.runTimeEnvironment;
+				response.isOnPrem = json.isOnPrem;
 			}
 		} catch (err) {
 			Logger.log(`Error connecting to the API server: ${err.message}`);
