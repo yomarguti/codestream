@@ -3,7 +3,13 @@ import { Emitter, Event } from "vscode-languageserver";
 import { Container, SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import { Unreads } from "../../protocol/agent.protocol";
-import { CSLastReads, CSPost, CSStream, StreamType } from "../../protocol/api.protocol";
+import {
+	CSLastReadItems,
+	CSLastReads,
+	CSPost,
+	CSStream,
+	StreamType
+} from "../../protocol/api.protocol";
 import { Arrays, Functions, log } from "../../system";
 import { ApiProvider } from "../apiProvider";
 
@@ -14,7 +20,7 @@ export class CodeStreamUnreads {
 	}
 
 	private _lastReads: CSLastReads = Object.create(null);
-	private _lastReadItems: CSLastReads = Object.create(null);
+	private _lastReadItems: CSLastReadItems = Object.create(null);
 	private _mentions: { [streamId: string]: number } = Object.create(null);
 	private _unreads: { [streamId: string]: number } = Object.create(null);
 
@@ -22,7 +28,7 @@ export class CodeStreamUnreads {
 
 	private _computePromise: Promise<void> | undefined;
 	@log()
-	async compute(lastReads: CSLastReads | undefined, lastReadItems: CSLastReads | undefined) {
+	async compute(lastReads: CSLastReads | undefined, lastReadItems: CSLastReadItems | undefined) {
 		if (this._computePromise !== undefined) {
 			await this._computePromise;
 		}
@@ -98,14 +104,14 @@ export class CodeStreamUnreads {
 
 	private async computeCore(
 		lastReads: CSLastReads | undefined,
-		lastReadItems: CSLastReads | undefined
+		lastReadItems: CSLastReadItems | undefined
 	) {
 		if (lastReads === undefined) {
 			lastReads = Object.create(null) as CSLastReads;
 		}
 
 		if (lastReadItems === undefined) {
-			lastReadItems = Object.create(null) as CSLastReads;
+			lastReadItems = Object.create(null) as CSLastReadItems;
 		}
 
 		// Reset the counters

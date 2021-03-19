@@ -594,6 +594,10 @@ export interface CSLastReads {
 	[streamId: string]: number | string;
 }
 
+export interface CSLastReadItems {
+	[id: string]: number;
+}
+
 export enum CSNotificationPreference {
 	All = "all",
 	InvolveMe = "involveMe",
@@ -696,7 +700,7 @@ type CSMeProviderInfo = { slack?: CSSlackProviderInfo } & {
 
 export interface CSMe extends CSUser {
 	lastReads: CSLastReads;
-	lastReadItems: CSLastReads;
+	lastReadItems: CSLastReadItems;
 	joinMethod: string;
 	lastInviteType?: string;
 	preferences?: CSMePreferences;

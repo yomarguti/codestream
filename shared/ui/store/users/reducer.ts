@@ -165,26 +165,28 @@ export const getReadReplies = createSelector(
 interface Readable {
 	id: string;
 	numReplies: number;
-	createdAt: number;
+	modifiedAt: number;
 }
 
+const isItemUnread = (item: Readable, lastReadItem: number | undefined) => {
+	// start represents when this feature was first deployed;
+	// items before that won't have the unread badge otherwise
+	// customers will just have a "sea of blue" even though they
+	// may be up-to-date on all content
+	const start = 1616167117000;
+	if (item.modifiedAt < start) return false;
+	// if we've never read the item, or if there are new replies
+	// since the last time we read it, return true
+	return lastReadItem == undefined || item.numReplies > lastReadItem;
+};
+
 export const isUnread = createSelector(
-	(state: CodeStreamState) => (isFeatureEnabled(state, "readItem2") ? state.umis : undefined),
+	(state: CodeStreamState) => (isFeatureEnabled(state, "readItem") ? state.umis : undefined),
 	(a: any, item: Readable) => item,
 	(umis: UnreadsState | undefined, item: Readable) => {
 		if (!umis || !item) return false;
-		const { lastReadItems = {} } = umis;
-		const lastReadItem = lastReadItems[item.id];
-		// if we've never read the item, or if there are new replies
-		// since the last time we read it, return true
-		// start represents when this feature was first deployed;
-		// items before that won't have the unread badge otherwise
-		// customers will just have a "sea of blue" even though they
-		// may be up-to-date on all content
-		const start = 1613580103838;
-		if ((lastReadItem == undefined && item.createdAt > start) || item.numReplies > lastReadItem)
-			return true;
-		return false;
+		const { lastReadItems } = umis;
+		return isItemUnread(item, lastReadItems[item.id]);
 	}
 );
 
@@ -201,19 +203,8 @@ export const unreadMap = createSelector(
 			return ret;
 		}
 		const { lastReadItems = {} } = umis;
-		items.forEach(item => {
-			if (!item) return;
-			const lastReadItem = lastReadItems[item.id];
-			// if we've never read the item, or if there are new replies
-			// since the last time we read it, return true
-			// start represents when this feature was first deployed;
-			// items before that won't have the unread badge otherwise
-			// customers will just have a "sea of blue" even though they
-			// may be up-to-date on all content
-			const start = 1613580103838;
-			if ((lastReadItem == undefined && item.createdAt > start) || item.numReplies > lastReadItem)
-				ret[item.id] = true;
-			else ret[item.id] = false;
+		items.filter(Boolean).forEach(item => {
+			ret[item.id] = isItemUnread(item, lastReadItems[item.id]);
 		});
 		return ret;
 	}
