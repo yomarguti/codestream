@@ -91,7 +91,7 @@ interface ConnectedProps {
 	repoName: string;
 	repos: ReposState;
 	codemarks: CodemarkPlus[];
-	count: string;
+	count: string | number;
 	hiddenPaneNodes: { [nodeId: string]: boolean };
 	prLabel: LabelHash;
 }
@@ -830,12 +830,12 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 			.sort((a: CodemarkPlus, b: CodemarkPlus) => b.createdAt - a.createdAt);
 	}
 
-	let count: string = (codemarkDomain === CodemarkDomainType.File
-		? docMarkers.length
-		: codemarksToRender.filter(c => !c.reviewId).length
-	).toString();
+	let count: string | number =
+		codemarkDomain === CodemarkDomainType.File
+			? docMarkers.length
+			: codemarksToRender.filter(c => !c.reviewId).length;
 
-	if (props.paneState === PaneState.Collapsed) {
+	if (props.paneState === PaneState.Collapsed && count > 0) {
 		if (codemarkDomain === CodemarkDomainType.File) {
 			const nonReviews = docMarkers.filter(m => m.codemark && !m.codemark.reviewId);
 			const pinned = nonReviews.filter(m => m.codemark && m.codemark.pinned);
