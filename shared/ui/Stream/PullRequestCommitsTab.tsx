@@ -128,14 +128,6 @@ export const PullRequestCommitsTab = props => {
 		setIsLoading(false);
 	};
 
-	useEffect(() => {
-		(async () => {
-			const data = await dispatch(
-				getPullRequestCommits(pr.providerId, derivedState.currentPullRequestId!)
-			);
-			_mapData(data);
-		})();
-	}, [derivedState.providerPullRequests]);
 
 	useDidMount(() => {
 		setIsLoading(true);
