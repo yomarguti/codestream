@@ -329,6 +329,7 @@ export const UserDidCommitNotificationType = new NotificationType<UserDidCommitN
 
 export interface DidDetectUnreviewedCommitsNotification {
 	sequence: number;
+	openReviewId?: string;
 	message: string;
 }
 

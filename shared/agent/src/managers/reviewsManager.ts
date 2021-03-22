@@ -1111,11 +1111,25 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			flatten(repoChangesets.map(rc => rc.commits.map(c => c.sha)))
 		);
 
+		const openReviews = allReviews.filter(
+			r => !r.deactivated && r.status === "open" && r.reviewChangesets
+		);
+		const commitShasToOpenReviews = new Map<string, string>();
+		for (const review of openReviews) {
+			for (const rc of review.reviewChangesets) {
+				if (rc.repoId !== repo?.id) continue;
+				for (const commit of rc.commits) {
+					commitShasToOpenReviews.set(commit.sha, review.id);
+				}
+			}
+		}
+
 		const gitLog = await git.getLog(repo, 10);
 		if (!gitLog) return 0;
 
 		const myEmail = await git.getConfig(repo.path, "user.email");
 		const unreviewedCommits = [];
+		let openReviewId: string | undefined = undefined;
 		let lastAuthorEmail = undefined;
 		for (const commit of gitLog.values()) {
 			if (lastAuthorEmail === undefined) {
@@ -1123,6 +1137,13 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			}
 			if (commit.email !== lastAuthorEmail) {
 				// Notify about commits from only one author. They will be grouped in a single review.
+				break;
+			}
+			if (unreviewedCommits.length === 0 && commitShasToOpenReviews.has(commit.ref)) {
+				// Found one that belongs to an existing open review. Notify about this one and take the user
+				// to the existing review.
+				unreviewedCommits.push(commit);
+				openReviewId = commitShasToOpenReviews.get(commit.ref);
 				break;
 			}
 			if (commitShasInReviews.has(commit.ref)) {
@@ -1141,6 +1162,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 		if (unreviewedCommits.length) {
 			session.agent.sendNotification(DidDetectUnreviewedCommitsNotificationType, {
+				openReviewId,
 				sequence,
 				message: `You have ${unreviewedCommits.length} unreviewed commit${
 					unreviewedCommits.length > 0 ? "s" : ""

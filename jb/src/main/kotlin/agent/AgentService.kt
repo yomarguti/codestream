@@ -12,6 +12,8 @@ import com.codestream.protocols.agent.CreateReviewsForUnreviewedCommitsParams
 import com.codestream.protocols.agent.CreateReviewsForUnreviewedCommitsResult
 import com.codestream.protocols.agent.DocumentMarkersParams
 import com.codestream.protocols.agent.DocumentMarkersResult
+import com.codestream.protocols.agent.FollowReviewParams
+import com.codestream.protocols.agent.FollowReviewResult
 import com.codestream.protocols.agent.GetAllReviewContentsParams
 import com.codestream.protocols.agent.GetAllReviewContentsResult
 import com.codestream.protocols.agent.GetFileContentsAtRevisionParams
@@ -410,6 +412,13 @@ class AgentService(private val project: Project) : Disposable {
     suspend fun createReviewsForUnreviewedCommits(params: CreateReviewsForUnreviewedCommitsParams): CreateReviewsForUnreviewedCommitsResult {
         val json = remoteEndpoint
             .request("codestream/review/createForUnreviewedCommits", params)
+            .await() as JsonObject
+        return gson.fromJson(json)
+    }
+
+    suspend fun followReview(params: FollowReviewParams): FollowReviewResult {
+        val json = remoteEndpoint
+            .request("codestream/review/follow", params)
             .await() as JsonObject
         return gson.fromJson(json)
     }
