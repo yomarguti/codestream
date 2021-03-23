@@ -142,7 +142,7 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
 
     @JsonNotification("codestream/didDetectUnreviewedCommits")
     fun didDetectUnreviewedCommits(notification: DidDetectUnreviewedCommitsNotification) {
-        project.notificationComponent?.didDetectUnreviewedCommits(notification.message, notification.sequence)
+        project.notificationComponent?.didDetectUnreviewedCommits(notification.message, notification.sequence, notification.openReviewId)
     }
 
     @JsonNotification("codestream/restartRequired")
@@ -244,7 +244,7 @@ enum class LogoutReason {
 
 class UserDidCommitNotification(val sha: String)
 
-class DidDetectUnreviewedCommitsNotification(val message: String, val sequence: Int)
+class DidDetectUnreviewedCommitsNotification(val message: String, val sequence: Int, val openReviewId: String?)
 
 class DidChangeApiVersionCompatibilityNotification(
     val compatibility: ApiVersionCompatibility,

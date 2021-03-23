@@ -3,7 +3,7 @@ import { PullRequestsChangedEvent } from "api/sessionEvents";
 import { Disposable, MessageItem, window } from "vscode";
 import { Post, PostsChangedEvent } from "../api/session";
 import { Container } from "../container";
-import { CodemarkPlus, CreateReviewsForUnreviewedCommitsRequestType, DidDetectUnreviewedCommitsNotification, ReviewPlus } from "../protocols/agent/agent.protocol";
+import { CodemarkPlus, CreateReviewsForUnreviewedCommitsRequestType, DidDetectUnreviewedCommitsNotification, FollowReviewRequestType, ReviewPlus } from "../protocols/agent/agent.protocol";
 import { Functions } from "../system";
 import { vslsUrlRegex } from "./liveShareController";
 
@@ -109,10 +109,15 @@ export class NotificationsController implements Disposable {
 
 		if (result === actions[0]) {
 			Container.agent.telemetry.track("Toast Clicked", { Content: "Unreviewed Commit" });
-			const result = await Container.agent.sendRequest(CreateReviewsForUnreviewedCommitsRequestType, { sequence: notification.sequence });
-			const reviewId = result.reviewIds[0];
-			if (reviewId) {
-				Container.webview.openReview(reviewId, { openFirstDiff: true });
+			if (notification.openReviewId !== undefined) {
+				await Container.agent.sendRequest(FollowReviewRequestType, { id: notification.openReviewId, value: true });
+				Container.webview.openReview(notification.openReviewId, { openFirstDiff: true });
+			} else {
+				const result = await Container.agent.sendRequest(CreateReviewsForUnreviewedCommitsRequestType, { sequence: notification.sequence });
+				const reviewId = result.reviewIds[0];
+				if (reviewId) {
+					Container.webview.openReview(reviewId, { openFirstDiff: true });
+				}				
 			}
 		}
 

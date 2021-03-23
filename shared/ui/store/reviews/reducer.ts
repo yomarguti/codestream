@@ -62,7 +62,8 @@ export const getByStatusAndUser = createSelector(
 				review.reviewChangesets &&
 				(review.creatorId === userId ||
 					(review.reviewers || []).includes(userId) ||
-					(review.codeAuthorIds || []).includes(userId))
+					(review.codeAuthorIds || []).includes(userId) ||
+					(review.followerIds || []).includes(userId))
 		);
 	}
 );
