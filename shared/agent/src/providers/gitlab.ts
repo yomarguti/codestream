@@ -2545,8 +2545,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 									milestone: {
 										title: _.milestone.title,
 										url: _.milestone.web_url
-									},
-									discussion: {}
+									}
 								}
 							]
 						}
@@ -2574,7 +2573,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 									systemNoteIconName: `label-${_.action}`,
 									author: this.fromRestUser(_.user),
 									body: `${_.action === "add" ? "added" : "removed"}`,
-									discussion: {},
 									label: {
 										description: _.label.description,
 										color: _.label.color,
@@ -2606,8 +2604,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 									system: true,
 									systemNoteIconName: `merge-request-${_.state}`,
 									author: this.fromRestUser(_.user),
-									body: _.state,
-									discussion: {}
+									body: _.state
 								}
 							]
 						}
@@ -2794,7 +2791,9 @@ class GitLabReviewStore {
 						resolved: false,
 						resolvable: true,
 						systemNoteIconName: "",
-						discussion: {},
+						discussion: {
+							id: "undefined"
+						},
 						state: "PENDING",
 						body: _.text,
 						bodyText: _.text,

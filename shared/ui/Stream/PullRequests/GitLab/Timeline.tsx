@@ -180,6 +180,7 @@ const EMPTY_HASH_2 = {};
 const EMPTY_HASH_3 = {};
 
 export const Timeline = (props: Props) => {
+	const isComment = (_: DiscussionNode) => _.notes?.nodes?.find(n => !n.system && n.discussion?.id);
 	const { pr, order, filter, setIsLoadingMessage, fetch } = props;
 	let discussions = order === "oldest" ? pr.discussions.nodes : [...pr.discussions.nodes].reverse();
 	if (filter === "history") discussions = discussions.filter(_ => !isComment(_));
@@ -216,8 +217,6 @@ export const Timeline = (props: Props) => {
 		insertNewline[id] = functions.insertNewlineAtCursor;
 		focusOnMessageInput[id] = functions.focus;
 	};
-
-	const isComment = _ => _.notes && _.notes.nodes && _.notes.nodes.length;
 
 	const quote = (text, id) => {
 		if (!insertText) return;
