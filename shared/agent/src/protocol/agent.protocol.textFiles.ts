@@ -3,6 +3,7 @@ import { RequestType } from "vscode-languageserver-protocol";
 
 export interface ReadTextFileRequest {
 	path: string;
+	baseDir?: string;
 }
 
 export interface ReadTextFileResponse {
@@ -31,3 +32,11 @@ export const WriteTextFileRequestType = new RequestType<
 	void,
 	void
 >("codestream/text-files/write");
+
+export interface DeleteTextFileRequest {
+	path: string;
+}
+
+export interface DeleteTextFileResponse {
+	success?: boolean;
+}

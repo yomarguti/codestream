@@ -117,7 +117,7 @@ export class NotificationsController implements Disposable {
 				const reviewId = result.reviewIds[0];
 				if (reviewId) {
 					Container.webview.openReview(reviewId, { openFirstDiff: true });
-				}				
+				}
 			}
 		}
 

@@ -594,6 +594,10 @@ export interface CSLastReads {
 	[streamId: string]: number | string;
 }
 
+export interface CSLastReadItems {
+	[id: string]: number;
+}
+
 export enum CSNotificationPreference {
 	All = "all",
 	InvolveMe = "involveMe",
@@ -667,6 +671,13 @@ export interface CSMePreferences {
 	codemarksShowArchived?: boolean;
 
 	defaultResolveAction?: "resolve" | "archive";
+
+	// currently only supported by GitLab
+	pullRequestTimelineOrder?: "oldest" | "newest";
+	pullRequestTimelineFilter?: "all" | "history" | "comments";
+	pullRequestSquashCommits?: boolean;
+	pullRequestDeleteSourceBranch?: boolean;
+
 	[key: string]: any;
 }
 
@@ -696,6 +707,7 @@ type CSMeProviderInfo = { slack?: CSSlackProviderInfo } & {
 
 export interface CSMe extends CSUser {
 	lastReads: CSLastReads;
+	lastReadItems: CSLastReadItems;
 	joinMethod: string;
 	lastInviteType?: string;
 	preferences?: CSMePreferences;

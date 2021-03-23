@@ -59,6 +59,7 @@ import {
 } from "./provider";
 import { toRepoName } from "../git/utils";
 import { performance } from "perf_hooks";
+import { Directives } from "./directives";
 
 interface GitHubRepo {
 	id: string;
@@ -67,24 +68,10 @@ interface GitHubRepo {
 	has_issues: boolean;
 }
 
-interface Directives {
-	directives: {
-		type:
-			| "addNode"
-			| "addNodes"
-			| "addReaction"
-			| "removeNode"
-			| "removeReaction"
-			| "resolveReviewThread"
-			| "unresolveReviewThread"
-			| "updateNode"
-			| "updatePullRequest"
-			| "updatePullRequestReview"
-			| "updatePullRequestReviewers"
-			| "updatePullRequestReviewComment"
-			| "updatePullRequestReviewCommentNode";
-		data: any;
-	}[];
+export function cheese(): Function {
+	return (target: Function) => {
+		return target;
+	};
 }
 
 const diffHunkRegex = /^@@ -([\d]+)(?:,([\d]+))? \+([\d]+)(?:,([\d]+))? @@/;
@@ -163,7 +150,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	 */
 	protected _version: string | undefined;
 
-	protected _client: GraphQLClient | undefined;
 	protected async client(): Promise<GraphQLClient> {
 		if (this._client === undefined) {
 			const options: { [key: string]: any } = {};
@@ -219,51 +205,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	// 	graphQlApi: { fns: {} },
 	// 	restApi: { fns: {} }
 	// };
-
-	_isSuppressedException(ex: any): ReportSuppressedMessages | undefined {
-		const networkErrors = [
-			"ENOTFOUND",
-			"ETIMEDOUT",
-			"EAI_AGAIN",
-			"ECONNABORTED",
-			"ECONNRESET",
-			"ECONNREFUSED",
-			"EHOSTUNREACH",
-			"ENETDOWN",
-			"ENETUNREACH",
-			"socket disconnected before secure",
-			"socket hang up"
-		];
-
-		if (ex.message && networkErrors.some(e => ex.message.match(new RegExp(e)))) {
-			return ReportSuppressedMessages.NetworkError;
-		} else if (
-			(ex.message && ex.message.match(/GraphQL Error \(Code: 404\)/)) ||
-			(this.providerConfig.id === "github/enterprise" &&
-				ex.response &&
-				ex.response.error &&
-				ex.response.error.toLowerCase().indexOf("cookies must be enabled to use github") > -1)
-		) {
-			return ReportSuppressedMessages.ConnectionError;
-		}
-		// else if (
-		// 	(ex?.response?.message || ex?.message || "").indexOf(
-		// 		"enabled OAuth App access restrictions"
-		// 	) > -1
-		// ) {
-		// 	return ReportSuppressedMessages.OAuthAppAccessRestrictionError;
-		// }
-		else if (
-			(ex.response && ex.response.message === "Bad credentials") ||
-			(ex.response &&
-				ex.response.errors instanceof Array &&
-				ex.response.errors.find((e: any) => e.type === "FORBIDDEN"))
-		) {
-			return ReportSuppressedMessages.AccessTokenInvalid;
-		} else {
-			return undefined;
-		}
-	}
 
 	async query<T = any>(query: string, variables: any = undefined) {
 		if (this._providerInfo && this._providerInfo.tokenError) {
@@ -2157,25 +2098,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			request && request.owner && request.repo ? `repo:${request.owner}/${request.repo} ` : "";
 		if (request.isOpen) {
 			try {
-				const { scm, providerRegistry } = SessionContainer.instance();
-				const reposResponse = await scm.getRepos({ inEditorOnly: true, includeProviders: true });
-				const repos = [];
-				if (reposResponse?.repositories) {
-					for (const repo of reposResponse.repositories) {
-						if (repo.remotes) {
-							for (const remote of repo.remotes) {
-								const urlToTest = remote.webUrl;
-								const results = await providerRegistry.queryThirdParty({ url: urlToTest });
-								if (results && results.providerId === this.providerConfig.id) {
-									const ownerData = this.getOwnerFromRemote(urlToTest);
-									if (ownerData) {
-										repos.push(`${ownerData.owner}/${ownerData.name}`);
-									}
-								}
-							}
-						}
-					}
-				}
+				const repos = await this.getOpenedRepos();
 				if (repos.length) {
 					repoQuery = repos.map(_ => `repo:${_}`).join(" ") + " ";
 				} else {
@@ -2185,7 +2108,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					return [];
 				}
 			} catch (ex) {
-				Logger.error(ex);
+				Logger.warn(ex);
 			}
 		}
 
@@ -4654,31 +4577,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			if (cursor !== undefined) return undefined;
 
 			throw ex;
-		}
-	}
-
-	private trySetThirdPartyProviderInfo(ex: Error, exType?: ReportSuppressedMessages | undefined) {
-		if (!ex) return;
-
-		exType = exType || this._isSuppressedException(ex);
-		if (exType !== undefined && exType !== ReportSuppressedMessages.NetworkError) {
-			// we know about this error, and we want to give the user a chance to correct it
-			// (but throwing up a banner), rather than logging the error to sentry
-			this.session.api.setThirdPartyProviderInfo({
-				providerId: this.providerConfig.id,
-				data: {
-					tokenError: {
-						error: ex,
-						occurredAt: Date.now(),
-						isConnectionError: exType === ReportSuppressedMessages.ConnectionError,
-						providerMessage:
-							exType === ReportSuppressedMessages.OAuthAppAccessRestrictionError ? ex.message : null
-					}
-				}
-			});
-			if (this._client) {
-				delete this._client;
-			}
 		}
 	}
 

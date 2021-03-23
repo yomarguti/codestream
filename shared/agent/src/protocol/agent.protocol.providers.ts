@@ -357,6 +357,7 @@ export interface FetchThirdPartyPullRequestRequest {
 	 * if true, clear this PR from the cache and re-fetch from the provider
 	 */
 	force?: boolean;
+	metadata?: any;
 }
 
 export interface FetchThirdPartyPullRequestFilesResponse {
@@ -411,6 +412,7 @@ export interface StatusContext {
 
 export interface FetchThirdPartyPullRequestPullRequest {
 	id: string;
+	iid?: string;
 	providerId: string; // e.g. "github*com"
 	// this is the parent repo
 	repository: {
@@ -634,6 +636,7 @@ export const FetchThirdPartyPullRequestRequestType = new RequestType<
 export interface FetchThirdPartyPullRequestCommitsRequest {
 	providerId: string;
 	pullRequestId: string;
+	metadata?: any;
 }
 
 export interface FetchThirdPartyPullRequestCommitsResponse {
@@ -655,6 +658,7 @@ export interface FetchThirdPartyPullRequestCommitsResponse {
 	message: string;
 	authoredDate: string;
 	oid: string;
+	url?: string;
 }
 
 export const FetchThirdPartyPullRequestCommitsType = new RequestType<

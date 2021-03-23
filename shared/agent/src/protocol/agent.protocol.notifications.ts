@@ -7,6 +7,7 @@ import { ThirdPartyProviders } from "./agent.protocol.providers";
 import {
 	CSApiCapabilities,
 	CSCompany,
+	CSLastReadItems,
 	CSLastReads,
 	CSMarker,
 	CSMarkerLocations,
@@ -125,6 +126,7 @@ export interface TeamsChangedNotification {
 
 export interface Unreads {
 	lastReads: CSLastReads;
+	lastReadItems: CSLastReadItems;
 	mentions: { [streamId: string]: number };
 	unreads: { [streamId: string]: number };
 	totalMentions: number;

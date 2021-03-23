@@ -21,7 +21,10 @@ export interface ProviderDisplay {
 	customFilterExample?: string;
 	customFilterHelp?: string;
 
-	supportsPR2CR?: boolean;
+	customPullRequestFilterHelpLink?: string;
+	customPullRequestFilterExample?: string;
+
+	supportsPRManagement?: boolean;
 }
 
 export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
@@ -76,8 +79,12 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		customFilterExample: "Example: is:open milestone:jan assignee:@me",
 		customFilterHelp:
 			'See <a href="https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests">Searching issues</a> for a detailed list of qualifiers.',
+		customPullRequestFilterHelpLink:
+			"https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests",
+		customPullRequestFilterExample:
+			"The variable @me can be used to specify the logged in user within a search. ",
 		supportsStartWork: true,
-		supportsPR2CR: true
+		supportsPRManagement: true
 	},
 	github_enterprise: {
 		displayName: "GitHub Enterprise",
@@ -92,7 +99,12 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		customFilterExample: "Example: is:open milestone:jan assignee:@me",
 		customFilterHelp:
 			'See <a href="https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests">Searching issues</a> for a detailed list of qualifiers.',
-		supportsStartWork: true
+		customPullRequestFilterExample:
+			"The variable @me can be used to specify the logged in user within a search. ",
+		customPullRequestFilterHelpLink:
+			"https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests",
+		supportsStartWork: true,
+		supportsPRManagement: true
 	},
 	gitlab: {
 		displayName: "GitLab",
@@ -100,7 +112,10 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		boardLabel: "repo",
 		listLabel: "type",
 		cardLabel: "issue",
-		supportsStartWork: true
+		customPullRequestFilterExample: 'Example: "state:opened scope:created_by_me" ',
+		customPullRequestFilterHelpLink: "https://docs.gitlab.com/ee/api/merge_requests.html",
+		supportsStartWork: true,
+		supportsPRManagement: true
 	},
 	gitlab_enterprise: {
 		displayName: "GitLab Self-Managed",
@@ -111,7 +126,10 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		boardLabel: "repo",
 		listLabel: "type",
 		cardLabel: "issue",
-		supportsStartWork: true
+		customPullRequestFilterExample: 'Example: "state:opened scope:created_by_me" ',
+		customPullRequestFilterHelpLink: "https://docs.gitlab.com/ee/api/merge_requests.html",
+		supportsStartWork: true,
+		supportsPRManagement: true
 	},
 	jira: {
 		displayName: "Jira",

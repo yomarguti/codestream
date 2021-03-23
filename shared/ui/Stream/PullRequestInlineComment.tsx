@@ -49,6 +49,7 @@ export const PullRequestInlineComment = styled((props: Props) => {
 				filePath: filename,
 				startLine: lineNumber,
 				text: replaceHtml(text),
+				leftSha: pr.baseRefOid,
 				rightSha: pr.headRefOid,
 				// old servers
 				position: lineOffsetInHunk
@@ -70,7 +71,10 @@ export const PullRequestInlineComment = styled((props: Props) => {
 			api("createPullRequestInlineReviewComment", {
 				filePath: filename,
 				position: lineOffsetInHunk,
-				text: replaceHtml(text)
+				startLine: lineNumber,
+				text: replaceHtml(text),
+				leftSha: pr.baseRefOid,
+				sha: pr.headRefOid
 			})
 		);
 		setText("");
@@ -87,11 +91,12 @@ export const PullRequestInlineComment = styled((props: Props) => {
 		RESOLVED: "resolved"
 	};
 
+	const marginWidth = pr.providerId.includes("github") ? "110px" : "80px";
 	return (
 		<PRComment
 			style={{
 				margin: "15px",
-				maxWidth: "min(600px, calc(100vw - 80px))"
+				maxWidth: `min(600px, calc(100vw - ${marginWidth}))`
 			}}
 		>
 			<PRCommentCard className="no-headshot no-arrow">

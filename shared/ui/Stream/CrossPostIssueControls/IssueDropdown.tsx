@@ -1245,9 +1245,9 @@ export const Row = styled.div`
 		opacity: 0.75;
 		padding-left: 5px;
 	}
-	&:hover .status,
-	&:hover time,
-	&:hover .badge {
+	&:hover:not(.review) .status,
+	&:hover:not(.review) time,
+	&:hover:not(.review) .badge {
 		display: none;
 	}
 	@media only screen and (max-width: 350px) {
@@ -1284,34 +1284,6 @@ export const Row = styled.div`
 		position: absolute !important;
 		left: 2px;
 		top: 3px;
-	}
-	#pr-search-input {
-		margin: -3px 0 !important;
-		padding: 3px 0 !important;
-		&:focus {
-			padding: 3px 5px !important;
-		}
-		&:focus::placeholder {
-			opacity: 0 !important;
-		}
-		&:not(:focus) {
-			cursor: pointer;
-			border: none !important;
-		}
-		&::placeholder {
-			opacity: 1 !important;
-			color: var(--text-color);
-		}
-		&:hover::placeholder {
-			color: var(--text-color-highlight);
-		}
-	}
-	div.go-pr {
-		padding: 0;
-		margin-left: auto;
-		button {
-			margin-top: 0px;
-		}
 	}
 	.cs-tag {
 		margin-bottom: 0;

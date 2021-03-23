@@ -46,12 +46,56 @@ import { Provider, IntegrationButtons } from "./IntegrationsPanel";
 import { usePrevious } from "../utilities/hooks";
 import { getMyPullRequests as getMyPullRequestsSelector } from "../store/providerPullRequests/reducer";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
+import { getPRLabel } from "../store/providers/reducer";
+
 const Root = styled.div`
 	height: 100%;
 	.pr-row {
 		padding-left: 40px;
 		.selected-icon {
 			left: 20px;
+		}
+	}
+	${PaneNode} ${PaneNode} {
+		${PaneNodeName} {
+			padding-left: 40px;
+		}
+		.pr-row {
+			padding-left: 60px;
+			.selected-icon {
+				left: 40px;
+			}
+		}
+	}
+	#pr-search-input-wrapper .pr-search-input {
+		margin: -3px 0 !important;
+		padding: 3px 0 !important;
+		&:focus {
+			padding: 3px 5px !important;
+		}
+		&:focus::placeholder {
+			opacity: 0 !important;
+		}
+		&:not(:focus) {
+			cursor: pointer;
+			border: none !important;
+		}
+		&::placeholder {
+			opacity: 1 !important;
+			color: var(--text-color);
+		}
+		&:hover::placeholder {
+			color: var(--text-color-highlight);
+		}
+	}
+	${PaneNode} .pr-search {
+		padding-left: 40px;
+	}
+	div.go-pr {
+		padding: 0;
+		margin-left: auto;
+		button {
+			margin-top: 0px;
 		}
 	}
 `;
@@ -140,6 +184,7 @@ interface Props {
 }
 
 const EMPTY_HASH = {} as any;
+const EMPTY_HASH_2 = {} as any;
 
 let hasRenderedOnce = false;
 const e: ThirdPartyProviderConfig[] = [];
@@ -177,7 +222,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				preferences.pullRequestQueryShowAllRepos == null
 					? true
 					: preferences.pullRequestQueryShowAllRepos,
-			hideLabels: preferences.pullRequestQueryHideLabels
+			hideLabels: preferences.pullRequestQueryHideLabels,
+			prLabel: getPRLabel(state),
+			pullRequestProviderHidden: preferences.pullRequestProviderHidden || EMPTY_HASH_2
 		};
 	}, shallowEqual);
 
@@ -188,12 +235,14 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 	// FIXME hardcoded github
 	const hasPRSupportedRepos =
-		openReposWithName.filter(r => r.providerGuess === "github").length > 0;
+		openReposWithName.filter(r => r.providerGuess === "github" || r.providerGuess === "gitlab")
+			.length > 0;
+	// console.log(hasPRSupportedRepos, openReposWithName);
 
-	const { queries } = derivedState;
+	const { queries, PRConnectedProviders, pullRequestProviderHidden } = derivedState;
 
-	const [loadFromUrlQuery, setLoadFromUrlQuery] = React.useState("");
-	const [loadFromUrlOpen, setLoadFromUrlOpen] = React.useState(false);
+	const [loadFromUrlQuery, setLoadFromUrlQuery] = React.useState({});
+	const [loadFromUrlOpen, setLoadFromUrlOpen] = React.useState("");
 	const [prError, setPrError] = React.useState("");
 
 	const [pullRequestGroups, setPullRequestGroups] = React.useState<{
@@ -255,7 +304,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				const newGroups = {};
 				setPrError("");
 				// console.warn("Loading the PRs...", theQueries);
-				for (const connectedProvider of derivedState.PRConnectedProviders) {
+				for (const connectedProvider of PRConnectedProviders) {
 					const queriesByProvider: PullRequestQuery[] =
 						theQueries[connectedProvider.id] || DEFAULT_QUERIES[connectedProvider.id];
 					const queryStrings = Object.values(queriesByProvider).map(_ => _.query);
@@ -311,15 +360,13 @@ export const OpenPullRequests = React.memo((props: Props) => {
 									: "PRs Listed"
 								: "No PRs",
 						"PR Count": count,
-						Host: derivedState.PRConnectedProviders
-							? derivedState.PRConnectedProviders.map(_ => _.id)[0]
-							: undefined
+						Host: PRConnectedProviders ? PRConnectedProviders.map(_ => _.id)[0] : undefined
 					});
 					hasRenderedOnce = true;
 				}
 			}
 		},
-		[editingQuery, derivedState.PRConnectedProviders, derivedState.allRepos]
+		[editingQuery, PRConnectedProviders, derivedState.allRepos]
 	);
 
 	useMemo(() => {
@@ -379,9 +426,19 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 	const toggleQueryHidden = (e, providerId, index) => {
 		if (e.target.closest(".actions")) return;
-		const newQueries = [...queries[providerId]];
+		const providerQueries = queries[providerId] || DEFAULT_QUERIES[providerId];
+		const newQueries = [...providerQueries];
 		newQueries[index].hidden = !newQueries[index].hidden;
 		setQueries(providerId, newQueries);
+	};
+
+	const toggleProviderHidden = (e, providerId) => {
+		dispatch(
+			setUserPreference(
+				["pullRequestProviderHidden", providerId],
+				!pullRequestProviderHidden[providerId]
+			)
+		);
 	};
 
 	const save = (providerId: string, name: string, query: string) => {
@@ -407,12 +464,12 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		fetchPRs({ ...queries, [providerId]: newQueries }, { force: true });
 	};
 
-	const goPR = async (url: string) => {
+	const goPR = async (url: string, providerId: string) => {
 		setPrError("");
 		const response = (await dispatch(openPullRequestByUrl(url))) as { error?: string };
 
 		// fix https://trello.com/c/Gp0lsDub/4874-loading-pr-from-url-leaves-the-url-populated
-		setLoadFromUrlQuery("");
+		setLoadFromUrlQuery({ ...loadFromUrlQuery, [providerId]: "" });
 
 		if (response && response.error) {
 			setPrError(response.error);
@@ -454,7 +511,283 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 	if (!derivedState.isPRSupportedCodeHostConnected && !hasPRSupportedRepos) return null;
 
+	const renderQueryGroup = providerId => {
+		const providerQueries: PullRequestQuery[] = queries[providerId] || DEFAULT_QUERIES[providerId];
+
+		return (
+			<>
+				{derivedState.isPRSupportedCodeHostConnected && (
+					<>
+						<Row
+							key="load"
+							className={loadFromUrlOpen === providerId ? "no-hover pr-search" : "pr-search"}
+							onClick={() => {
+								setLoadFromUrlOpen(providerId);
+								document.getElementById(`pr-search-input-${providerId}`)!.focus();
+							}}
+						>
+							<div style={{ paddingRight: 0 }}>
+								<Icon name="chevron-right-thin" style={{ margin: "0 2px 0 -2px" }} />
+							</div>
+							<div id="pr-search-input-wrapper">
+								<input
+									id={`pr-search-input-${providerId}`}
+									className="pr-search-input"
+									placeholder={`Load ${derivedState.prLabel.PR} from URL`}
+									type="text"
+									style={{ background: "transparent", width: "100%" }}
+									value={loadFromUrlQuery[providerId]}
+									onChange={e =>
+										setLoadFromUrlQuery({ ...loadFromUrlQuery, [providerId]: e.target.value })
+									}
+									onKeyDown={e => {
+										if (e.key == "Escape") {
+											setLoadFromUrlQuery({ ...loadFromUrlQuery, [providerId]: "" });
+										}
+										if (e.key == "Enter") {
+											goPR(loadFromUrlQuery[providerId], providerId);
+										}
+									}}
+									onBlur={e => setLoadFromUrlOpen("")}
+								/>
+							</div>
+							{(loadFromUrlQuery[providerId] || loadFromUrlOpen === providerId) && (
+								<div className="go-pr">
+									<Button
+										className="go-pr"
+										size="compact"
+										onClick={() => goPR(loadFromUrlQuery[providerId], providerId)}
+									>
+										Go
+									</Button>
+								</div>
+							)}
+						</Row>
+						{prError && (
+							<Row id="error-row" key="pr-error" className={"no-hover wrap"}>
+								<div>
+									<Icon name="alert" />
+								</div>
+								<div title={prError}>{prError}</div>
+							</Row>
+						)}
+					</>
+				)}
+				{Object.values(providerQueries).map((query: PullRequestQuery, index) => {
+					const providerGroups = pullRequestGroups[providerId];
+					const prGroup = providerGroups && providerGroups[index];
+					const count = prGroup ? prGroup.length : 0;
+					return (
+						<PaneNode key={index}>
+							<PaneNodeName
+								onClick={e => toggleQueryHidden(e, providerId, index)}
+								title={query.name}
+								collapsed={query.hidden}
+								count={count}
+								isLoading={isLoadingPRs || index === isLoadingPRGroup}
+							>
+								<Icon
+									title="Reload Query"
+									delay={0.5}
+									placement="bottom"
+									name="refresh"
+									className="clickable"
+									onClick={() => reloadQuery(providerId, index)}
+								/>
+								<Icon
+									title="Edit Query"
+									delay={0.5}
+									placement="bottom"
+									name="pencil"
+									className="clickable"
+									onClick={() => editQuery(providerId, index)}
+								/>
+								<Icon
+									title="Delete Query"
+									delay={0.5}
+									placement="bottom"
+									name="trash"
+									className="clickable"
+									onClick={() => deleteQuery(providerId, index)}
+								/>
+							</PaneNodeName>
+							{!query.hidden &&
+								prGroup &&
+								prGroup.map((pr: any, index) => {
+									if (providerId === "github*com") {
+										const selected = openReposWithName.find(repo => {
+											return (
+												repo.currentBranch === pr.headRefName &&
+												pr.headRepository &&
+												repo.name === pr.headRepository.name
+											);
+										});
+										return (
+											<Tooltip
+												key={"pr-tt-" + pr.id + index}
+												title={<PullRequestTooltip pr={pr} />}
+												delay={1}
+												placement="top"
+											>
+												<Row
+													key={"pr-" + pr.id}
+													className={selected ? "pr-row selected" : "pr-row"}
+													onClick={() => {
+														dispatch(setCurrentPullRequest(pr.providerId, pr.id));
+
+														HostApi.instance.track("PR Clicked", {
+															Host: pr.providerId
+														});
+													}}
+												>
+													<div>
+														{selected && <Icon name="arrow-right" className="selected-icon" />}
+														<PRHeadshot person={pr.author} />
+													</div>
+													<div>
+														<span>
+															{pr.title} #{pr.number}
+														</span>
+														{pr.labels && pr.labels.nodes && pr.labels.nodes.length > 0 && (
+															<span className="cs-tag-container">
+																{pr.labels.nodes.map((_, index) => (
+																	<Tag key={index} tag={{ label: _.name, color: `#${_.color}` }} />
+																))}
+															</span>
+														)}
+														<span className="subtle">{pr.bodyText || pr.body}</span>
+													</div>
+													<div className="icons">
+														<span
+															onClick={e => {
+																e.preventDefault();
+																e.stopPropagation();
+																HostApi.instance.send(OpenUrlRequestType, {
+																	url: pr.url
+																});
+															}}
+														>
+															<Icon
+																name="globe"
+																className="clickable"
+																title="View on GitHub"
+																placement="bottomLeft"
+																delay={1}
+															/>
+														</span>
+														<Icon
+															name="review"
+															className="clickable"
+															title="Review Changes"
+															placement="bottomLeft"
+															delay={1}
+														/>
+														<Timestamp time={pr.createdAt} relative abbreviated />
+													</div>
+												</Row>
+											</Tooltip>
+										);
+									} else if (providerId === "gitlab*com" || providerId === "gitlab/enterprise") {
+										const selected = false;
+										// const selected = openReposWithName.find(repo => {
+										// 	return (
+										// 		repo.currentBranch === pr.headRefName &&
+										// 		pr.headRepository &&
+										// 		repo.name === pr.headRepository.name
+										// 	);
+										// });
+										return (
+											<Row
+												key={"pr-" + pr.base_id}
+												className={selected ? "pr-row selected" : "pr-row"}
+												onClick={() => {
+													dispatch(setCurrentPullRequest(pr.providerId, pr.id));
+
+													HostApi.instance.track("PR Clicked", {
+														Host: pr.providerId
+													});
+												}}
+											>
+												<div>
+													{selected && <Icon name="arrow-right" className="selected-icon" />}
+													<PRHeadshot
+														person={{
+															avatarUrl: pr.author.avatar_url
+														}}
+													/>
+												</div>
+												<div>
+													<span>
+														!{pr.number} {pr.title}
+													</span>
+													{pr.labels &&
+														pr.labels &&
+														pr.labels.length > 0 &&
+														!derivedState.hideLabels && (
+															<span className="cs-tag-container">
+																{pr.labels.map((_, index) => (
+																	<Tag key={index} tag={{ label: _.name, color: `${_.color}` }} />
+																))}
+															</span>
+														)}
+													<span className="subtle">{pr.description}</span>
+												</div>
+												<div className="icons">
+													<span
+														onClick={e => {
+															e.preventDefault();
+															e.stopPropagation();
+															HostApi.instance.send(OpenUrlRequestType, {
+																url: pr.web_url
+															});
+														}}
+													>
+														<Icon
+															name="globe"
+															className="clickable"
+															title="View on GitLab"
+															placement="bottomLeft"
+															delay={1}
+														/>
+													</span>
+													<Icon
+														name="review"
+														className="clickable"
+														title="Review Changes"
+														placement="bottomLeft"
+														delay={1}
+													/>
+													<Timestamp time={pr.created_at} relative abbreviated />
+													{pr.user_notes_count > 0 && (
+														<span
+															className="badge"
+															style={{ margin: "0 0 0 10px", flexGrow: 0, flexShrink: 0 }}
+														>
+															{pr.user_notes_count}
+														</span>
+													)}
+												</div>
+											</Row>
+										);
+									} else return undefined;
+								})}
+						</PaneNode>
+					);
+				})}
+			</>
+		);
+	};
+
+	const renderDisplayHost = host => {
+		return host.startsWith("http://")
+			? host.split("http://")[1]
+			: host.startsWith("https://")
+			? host.split("https://")[1]
+			: host;
+	};
+
 	// console.warn("rendering pr list...");
+	// console.warn("CONNECT: ", PRConnectedProviders);
 	return (
 		<Root>
 			{editingQuery && (
@@ -467,13 +800,13 @@ export const OpenPullRequests = React.memo((props: Props) => {
 					save={save}
 					onClose={() => setEditingQuery(undefined)}
 					openReposOnly={!derivedState.allRepos}
-					prConnectedProviders={derivedState.PRConnectedProviders}
+					prConnectedProviders={PRConnectedProviders}
 				/>
 			)}
 			{(derivedState.isPRSupportedCodeHostConnected || hasPRSupportedRepos) && (
 				<>
 					<PaneHeader
-						title="Pull Requests"
+						title={derivedState.prLabel.PullRequests}
 						id={WebviewPanels.OpenPullRequests}
 						isLoading={isLoadingPRs}
 						count={totalPRs}
@@ -495,7 +828,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 								dispatch(openPanel(WebviewPanels.NewPullRequest));
 							}}
 							name="plus"
-							title="New Pull Request"
+							title={`New ${derivedState.prLabel.PullRequest}`}
 							placement="bottom"
 							delay={1}
 						/>
@@ -522,7 +855,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 						<PaneBody>
 							{hasPRSupportedRepos && !derivedState.isPRSupportedCodeHostConnected && (
 								<>
-									<NoContent>Connect to GitHub to see your PRs</NoContent>
+									<NoContent>Connect to GitHub or GitLab to see your PRs</NoContent>
 									<IntegrationButtons noBorder>
 										{derivedState.PRSupportedProviders.map(provider => {
 											const providerDisplay = PROVIDER_MAPPINGS[provider.name];
@@ -543,203 +876,28 @@ export const OpenPullRequests = React.memo((props: Props) => {
 									</IntegrationButtons>
 								</>
 							)}
-							{derivedState.isPRSupportedCodeHostConnected && (
-								<>
-									<Row
-										key="load"
-										className={loadFromUrlOpen ? "no-hover" : ""}
-										onClick={() => {
-											setLoadFromUrlOpen(true);
-											document.getElementById("pr-search-input")!.focus();
-										}}
-									>
-										<div style={{ paddingRight: 0 }}>
-											<Icon name="chevron-right-thin" style={{ margin: "0 2px 0 -2px" }} />
-										</div>
-										<div>
-											<input
-												id="pr-search-input"
-												placeholder="Load PR from URL"
-												type="text"
-												style={{ background: "transparent", width: "100%" }}
-												value={loadFromUrlQuery}
-												onChange={e => setLoadFromUrlQuery(e.target.value)}
-												onKeyDown={e => {
-													if (e.key == "Escape") {
-														setLoadFromUrlQuery("");
-													}
-													if (e.key == "Enter") {
-														goPR(loadFromUrlQuery);
-													}
-												}}
-												onBlur={e => setLoadFromUrlOpen(false)}
-											/>
-										</div>
-										{(loadFromUrlQuery || loadFromUrlOpen) && (
-											<div className="go-pr">
-												<Button
-													className="go-pr"
-													size="compact"
-													onClick={() => goPR(loadFromUrlQuery)}
-												>
-													Go
-												</Button>
-											</div>
-										)}
-									</Row>
-									{prError && (
-										<Row id="error-row" key="pr-error" className={"no-hover wrap"}>
-											<div>
-												<Icon name="alert" />
-											</div>
-											<div title={prError}>{prError}</div>
-										</Row>
-									)}
-								</>
-							)}
-							{derivedState.PRConnectedProviders.map(connectedProvider => {
-								const providerId = connectedProvider.id;
-								const providerQueries: PullRequestQuery[] =
-									queries[providerId] || DEFAULT_QUERIES[connectedProvider.id];
-								return Object.values(providerQueries).map((query: PullRequestQuery, index) => {
-									const providerGroups = pullRequestGroups[providerId];
-									const prGroup = providerGroups && providerGroups[index];
-									const count = prGroup ? prGroup.length : 0;
-									return (
-										<PaneNode key={index}>
-											<PaneNodeName
-												onClick={e => toggleQueryHidden(e, providerId, index)}
-												title={query.name}
-												collapsed={query.hidden}
-												count={count}
-												isLoading={isLoadingPRs || index === isLoadingPRGroup}
-											>
-												<Icon
-													title="Reload Query"
-													delay={0.5}
-													placement="bottom"
-													name="refresh"
-													className="clickable"
-													onClick={() => reloadQuery(providerId, index)}
-												/>
-												<Icon
-													title="Edit Query"
-													delay={0.5}
-													placement="bottom"
-													name="pencil"
-													className="clickable"
-													onClick={() => editQuery(providerId, index)}
-												/>
-												<Icon
-													title="Delete Query"
-													delay={0.5}
-													placement="bottom"
-													name="trash"
-													className="clickable"
-													onClick={() => deleteQuery(providerId, index)}
-												/>
-											</PaneNodeName>
-											{!query.hidden &&
-												prGroup &&
-												prGroup.map((pr, index) => {
-													const selected = openReposWithName.find(repo => {
-														return (
-															repo.currentBranch === pr.headRefName &&
-															pr.headRepository &&
-															repo.name === pr.headRepository.name
-														);
-													});
-													// let numComments = pr.comments ? pr.comments.totalCount : 0;
-													// if (pr.reviews && pr.reviews.nodes) {
-													// 	pr.reviews.nodes.forEach(
-													// 		node => (numComments += node.comments.totalCount)
-													// 	);
-													// }
-													return (
-														<Tooltip
-															key={"pr-tt-" + pr.id + index}
-															title={<PullRequestTooltip pr={pr} />}
-															delay={1}
-															placement="top"
-														>
-															<Row
-																key={"pr-" + pr.id}
-																className={selected ? "pr-row selected" : "pr-row"}
-																onClick={() => {
-																	dispatch(setCurrentPullRequest(pr.providerId, pr.id));
-
-																	HostApi.instance.track("PR Clicked", {
-																		Host: pr.providerId
-																	});
-																}}
-															>
-																<div>
-																	{selected && (
-																		<Icon name="arrow-right" className="selected-icon" />
-																	)}
-																	<PRHeadshot person={pr.author} />
-																</div>
-																<div>
-																	<span>
-																		#{pr.number} {pr.title}
-																	</span>
-																	{pr.labels &&
-																		pr.labels.nodes.length > 0 &&
-																		!derivedState.hideLabels && (
-																			<span className="cs-tag-container">
-																				{pr.labels.nodes.map((_, index) => (
-																					<Tag
-																						key={index}
-																						tag={{ label: _.name, color: `#${_.color}` }}
-																					/>
-																				))}
-																			</span>
-																		)}
-																	<span className="subtle">{pr.bodyText || pr.body}</span>
-																</div>
-																<div className="icons">
-																	<span
-																		onClick={e => {
-																			e.preventDefault();
-																			e.stopPropagation();
-																			HostApi.instance.send(OpenUrlRequestType, {
-																				url: pr.url
-																			});
-																		}}
-																	>
-																		<Icon
-																			name="globe"
-																			className="clickable"
-																			title="View on GitHub"
-																			placement="bottomLeft"
-																			delay={1}
-																		/>
-																	</span>
-																	<Icon
-																		name="review"
-																		className="clickable"
-																		title="Review Changes"
-																		placement="bottomLeft"
-																		delay={1}
-																	/>
-																	<Timestamp time={pr.createdAt} relative abbreviated />
-																	{/* numComments > 0 && (
-																		<span
-																			className="badge"
-																			style={{ margin: "0 0 0 10px", flexGrow: 0, flexShrink: 0 }}
-																		>
-																			{numComments}
-																		</span>
-																	) */}
-																</div>
-															</Row>
-														</Tooltip>
-													);
-												})}
-										</PaneNode>
-									);
-								});
-							})}
+							{PRConnectedProviders.length > 1
+								? PRConnectedProviders.map((provider, index) => {
+										const providerId = provider.id;
+										const display = PROVIDER_MAPPINGS[provider.name];
+										const displayName = provider.isEnterprise
+											? `${display.displayName} - ${renderDisplayHost(provider.host)}`
+											: display.displayName;
+										const collapsed = pullRequestProviderHidden[providerId];
+										return (
+											<PaneNode key={index}>
+												<PaneNodeName
+													onClick={e => toggleProviderHidden(e, providerId)}
+													title={displayName}
+													collapsed={collapsed}
+													count={0}
+													isLoading={isLoadingPRs || index === isLoadingPRGroup}
+												></PaneNodeName>
+												{!collapsed && renderQueryGroup(provider.id)}
+											</PaneNode>
+										);
+								  })
+								: PRConnectedProviders.map(provider => renderQueryGroup(provider.id))}
 						</PaneBody>
 					)}
 				</>

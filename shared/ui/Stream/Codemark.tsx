@@ -38,7 +38,8 @@ import {
 	getUserByCsId,
 	getTeamMembers,
 	getUsernames,
-	getTeamTagsHash
+	getTeamTagsHash,
+	isUnread
 } from "../store/users/reducer";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { CodemarkForm } from "./CodemarkForm";
@@ -52,7 +53,6 @@ import { confirmPopup } from "./Confirm";
 import { getPost } from "../store/posts/reducer";
 import { getPosts } from "../store/posts/actions";
 import Tooltip from "./Tooltip";
-import { getCurrentTeamProvider } from "../store/teams/reducer";
 import { isNil } from "lodash-es";
 import { CodeStreamState } from "../store";
 import {
@@ -124,7 +124,6 @@ interface ConnectedProps {
 	pinnedReplies: CSPost[];
 	pinnedAuthors: CSUser[];
 	relatedCodemarkIds: string[];
-	isCodeStreamTeam: boolean;
 	teamTagsHash: any;
 	codeWasDeleted?: boolean;
 	codeWillExist?: boolean;
@@ -137,6 +136,7 @@ interface ConnectedProps {
 	review?: CSReview;
 	post?: CSPost;
 	moveMarkersEnabled: boolean;
+	unread: boolean;
 }
 
 export type DisplayType = "default" | "collapsed" | "activity";
@@ -159,6 +159,8 @@ interface InheritedProps {
 }
 
 type Props = InheritedProps & DispatchProps & ConnectedProps;
+
+const EMPTY_OBJECT = {};
 
 export class Codemark extends React.Component<Props, State> {
 	static defaultProps: Partial<Props> = {
@@ -910,6 +912,7 @@ export class Codemark extends React.Component<Props, State> {
 
 		const color = codemark.pinned ? (codemark.status === "closed" ? "purple" : "green") : "gray";
 		const renderedTags = hideTags ? null : this.renderTags(codemark);
+		const unread = this.props.unread ? " unread" : "";
 		return (
 			<div
 				id={`codemark-${codemark.id}`}
@@ -934,11 +937,22 @@ export class Codemark extends React.Component<Props, State> {
 								placement="topRight"
 								name="star"
 								className="subtle"
+								align={{ offset: [20, 0] }}
 							/>
 						)}
-						{codemark.numReplies > 0 && (
-							<span className="badge" style={{ marginLeft: "10px", flexGrow: 0, flexShrink: 0 }}>
-								{codemark.numReplies}
+						{(codemark.numReplies > 0 || unread) && (
+							<span
+								className={`badge${unread}`}
+								style={{ marginLeft: "10px", flexGrow: 0, flexShrink: 0 }}
+							>
+								{codemark.numReplies > 0 ? (
+									codemark.numReplies
+								) : (
+									<>
+										&nbsp;
+										<span className="dot" />
+									</>
+								)}
 							</span>
 						)}
 						{false && lines && (
@@ -1254,7 +1268,7 @@ export class Codemark extends React.Component<Props, State> {
 								placement="bottom"
 								name="comment"
 							/>{" "}
-							{this.props.isCodeStreamTeam && codemark.numReplies}
+							{codemark.numReplies}
 						</span>
 					)}
 				</div>
@@ -2109,6 +2123,7 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 			? getReview(state.reviews, codemark.reviewId)
 			: undefined;
 
+	const unread = isUnread(state, codemark!);
 	return {
 		post,
 		review,
@@ -2121,8 +2136,8 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		relatedCodemarkIds,
 		currentUser: users[session.userId!] as CSMe,
 		author: author as CSUser,
-		codemarkKeybindings: preferences.codemarkKeybindings || emptyObject,
-		isCodeStreamTeam: true /*teamProvider === "codestream",*/, // this should always be true now, even for SSO sign-in
+		codemarkKeybindings: preferences.codemarkKeybindings || EMPTY_OBJECT,
+		unread,
 		teammates: getTeamMembers(state),
 		usernames: getUsernames(state),
 		teamTagsHash,
