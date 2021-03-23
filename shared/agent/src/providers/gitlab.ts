@@ -1176,6 +1176,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		parentId: string;
 		text: string;
 	}): Promise<Directives> {
+		if (!request.parentId) throw new Error("ParentId missing");
+
 		const { id } = this.parseId(request.pullRequestId);
 		const response = await this.query<any>(
 			`mutation createNote($noteableId: NoteableID!, $discussionId: DiscussionID!, $body: String!) {
