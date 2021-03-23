@@ -592,7 +592,7 @@ export const Timeline = (props: Props) => {
 						)}
 						{!hiddenComments[note.id] &&
 							replies.map((reply, index) => printComment(reply as any, note, index + 1))}
-						{!hiddenComments[note.id] && (
+						{!hiddenComments[note.id] && note.state !== "PENDING" && (
 							<ReplyForm>
 								<PullRequestReplyComment
 									pr={(pr as unknown) as FetchThirdPartyPullRequestPullRequest}

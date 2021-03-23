@@ -888,6 +888,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		const { projectFullPath, id, iid } = this.parseId(request.pullRequestId);
 
 		await this.ensureConnected();
+		void (await this.setCurrentUser());
 
 		if (request.force) {
 			this._pullRequestCache.delete(id);
@@ -2797,7 +2798,7 @@ class GitLabReviewStore {
 						resolvable: true,
 						systemNoteIconName: "",
 						discussion: {
-							id: "undefined"
+							id: _.createdAt
 						},
 						state: "PENDING",
 						body: _.text,
