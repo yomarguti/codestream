@@ -23,6 +23,7 @@ import {
 	DeleteMarkerRequest,
 	DeleteMarkerResponse,
 	DidChangeDataNotificationType,
+	MarkItemReadRequest,
 	ReportingMessageType,
 	RepoScmStatus,
 	UpdateInvisibleRequest,
@@ -209,6 +210,8 @@ import {
 	CSJoinStreamResponse,
 	CSLoginRequest,
 	CSLoginResponse,
+	CSMarkItemReadRequest,
+	CSMarkItemReadResponse,
 	CSMarkPostUnreadRequest,
 	CSMarkPostUnreadResponse,
 	CSMe,
@@ -584,7 +587,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		if (types === undefined || types.includes(MessageType.Unreads)) {
 			this._unreads = new CodeStreamUnreads(this);
 			this._unreads.onDidChange(this.onUnreadsChanged, this);
-			this._unreads.compute(this._user!.lastReads);
+			this._unreads.compute(this._user!.lastReads, this._user!.lastReadItems);
 		}
 		if (types === undefined || types.includes(MessageType.Preferences)) {
 			this._preferences = new CodeStreamPreferences(this._user!.preferences);
@@ -741,6 +744,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 				const lastReads = {
 					...(this._unreads ? (await this._unreads.get()).lastReads : this._user!.lastReads)
 				};
+				const lastReadItems = {
+					...(this._unreads ? (await this._unreads.get()).lastReadItems : this._user!.lastReadItems)
+				};
 
 				const userPreferencesBefore = JSON.stringify(me.preferences);
 
@@ -755,9 +761,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 				try {
 					if (
 						this._unreads !== undefined &&
-						!Objects.shallowEquals(lastReads, this._user.lastReads || {})
+						(!Objects.shallowEquals(lastReads, this._user.lastReads || {}) ||
+							!Objects.shallowEquals(lastReadItems, this._user.lastReadItems || {}))
 					) {
-						this._unreads.compute(me.lastReads);
+						this._unreads.compute(me.lastReads, this._user.lastReadItems);
 					}
 					if (!this._preferences) {
 						this._preferences = new CodeStreamPreferences(this._user.preferences);
@@ -797,6 +804,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			return {
 				unreads: {
 					lastReads: {},
+					lastReadItems: {},
 					mentions: {},
 					unreads: {},
 					totalMentions: 0,
@@ -1253,6 +1261,15 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return this.put<CSMarkPostUnreadRequest, CSMarkPostUnreadResponse>(
 			`/unread/${request.postId}`,
 			request,
+			this._token
+		);
+	}
+
+	@log()
+	markItemRead(request: MarkItemReadRequest) {
+		return this.put<CSMarkItemReadRequest, CSMarkItemReadResponse>(
+			`/read-item/${request.itemId}`,
+			{ numReplies: request.numReplies },
 			this._token
 		);
 	}

@@ -1245,9 +1245,9 @@ export const Row = styled.div`
 		opacity: 0.75;
 		padding-left: 5px;
 	}
-	&:hover .status,
-	&:hover time,
-	&:hover .badge {
+	&:hover:not(.review) .status,
+	&:hover:not(.review) time,
+	&:hover:not(.review) .badge {
 		display: none;
 	}
 	@media only screen and (max-width: 350px) {
