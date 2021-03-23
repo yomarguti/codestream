@@ -906,7 +906,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				fullPath: projectFullPath,
 				iid: iid.toString()
 			};
-			let response0 = await this.query(print(mergeRequest0Query), args);
+			const text = print(mergeRequest0Query);
+			let response0 = await this.query(text, args);
 			discussions = discussions.concat(response0.project.mergeRequest.discussions.nodes);
 			if (response0.project.mergeRequest.discussions.pageInfo?.hasNextPage) {
 				let after = response0.project.mergeRequest.discussions.pageInfo.endCursor;
@@ -927,7 +928,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			}
 
-			const response1 = await this.query(print(mergeRequest1Query), args);
+			const text1 = print(mergeRequest1Query);
+			const response1 = await this.query(text1, args);
 			response = merge(
 				{
 					project: {

@@ -20,11 +20,12 @@ import { getCurrentProviderPullRequest } from "@codestream/webview/store/provide
 import { InlineMenu } from "@codestream/webview/src/components/controls/InlineMenu";
 import Tag from "../../Tag";
 import { confirmPopup } from "../../Confirm";
-import Timestamp, { distanceOfTimeInWords, workingHoursTimeEstimate } from "../../Timestamp";
+import Timestamp, { workingHoursTimeEstimate } from "../../Timestamp";
 import { PRHeadshot } from "@codestream/webview/src/components/Headshot";
 import { PRProgress, PRProgressFill, PRProgressLine } from "../../PullRequestFilesChangedList";
 import { Circle } from "../../PullRequestConversationTab";
 import Tooltip from "../../Tooltip";
+import { GitLabMergeRequest } from "@codestream/protocols/agent";
 
 const Right = styled.div`
 	width: 48px;
@@ -152,7 +153,12 @@ const EMPTY_ARRAY = [];
 const EMPTY_ARRAY_2 = [];
 const EMPTY_ARRAY_3 = [];
 
-export const RightActionBar = props => {
+export const RightActionBar = (props: {
+	pr: GitLabMergeRequest;
+	rightOpen: any;
+	setRightOpen: any;
+	setIsLoadingMessage: any;
+}) => {
 	const { pr, rightOpen, setRightOpen, setIsLoadingMessage } = props;
 	const dispatch = useDispatch();
 
@@ -271,7 +277,7 @@ export const RightActionBar = props => {
 				}
 			];
 		}
-		const reviewerIds = pr && pr.reviewers ? pr.reviewers.nodes.map(_ => _.login) : [];
+		const reviewerIds = pr?.reviewers?.nodes?.map(_ => _.login) || [];
 		if (availableReviewers && availableReviewers.length) {
 			const menuItems = (availableReviewers || []).map((_: any) => ({
 				checked: reviewerIds.includes(_.login),
@@ -594,8 +600,8 @@ export const RightActionBar = props => {
 								</Link>
 							</JustifiedRow>
 							<Subtle>
-								{pr.reviewers && pr.reviewers.nodes.length > 0 ? (
-									pr.reviewers.nodes.map((_: any, index: number) => (
+								{pr.reviewers && pr.reviewers.nodes && pr.reviewers.nodes.length > 0 ? (
+									pr.reviewers.nodes!.map((_: any, index: number) => (
 										<span key={index}>
 											<PRHeadshotName key={_.avatarUrl} person={_} size={20} />
 											<br />
@@ -606,10 +612,10 @@ export const RightActionBar = props => {
 								)}
 							</Subtle>
 						</>
-					) : pr.reviewers && pr.reviewers.nodes.length > 0 ? (
-						<Tooltip title={pr.reviewers.nodes[0].name} placement="left">
+					) : pr.reviewers && pr.reviewers.nodes && pr.reviewers.nodes.length > 0 ? (
+						<Tooltip title={pr.reviewers!.nodes[0].name} placement="left">
 							<span>
-								<PRHeadshot person={pr.reviewers.nodes[0]} size={20} />
+								<PRHeadshot person={pr.reviewers!.nodes[0]} size={20} />
 							</span>
 						</Tooltip>
 					) : (

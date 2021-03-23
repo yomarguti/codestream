@@ -41,7 +41,6 @@ query GetPullRequest($fullPath: ID!, $iid: String!) {
 			}
 			currentUserTodos(last: 50) {
 				nodes {
-					action
 					body
 					id
 					targetType

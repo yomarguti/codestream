@@ -185,6 +185,16 @@ export interface GitLabMergeRequest {
 	changesCount: number;
 	commitCount: number;
 	createdAt: string;
+	currentUserTodos?: {
+		nodes: {
+			// action throws an error on 13.9.3-ee
+			// action
+			body: string;
+			id: string;
+			targetType: string;
+			state: string;
+		}[];
+	};
 	description: string;
 	diffRefs: any;
 	discussionLocked: boolean;
@@ -215,6 +225,12 @@ export interface GitLabMergeRequest {
 	mergeableDiscussionsState: boolean;
 	mergedAt: string;
 	mergeWhenPipelineSucceeds: boolean;
+	milestone?: {
+		title: string;
+		id: string;
+		webPath: string;
+		dueDate: string;
+	};
 	number: number;
 	participants: {
 		nodes: GitLabUser[];
@@ -301,12 +317,17 @@ export interface GitLabMergeRequest {
 	};
 	resolvable: boolean;
 	resolved: boolean;
+	reviewers?: {
+		nodes?: any[];
+	};
 	sourceBranch: string;
 	state: string;
 	sourceProject: any;
+	subscribed: boolean;
 	targetBranch: string;
+	timeEstimate: number;
+	totalTimeSpent: number;
 	title: string;
-
 	upvotes: number;
 	url: string;
 	userDiscussionsCount: number;
