@@ -668,6 +668,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		request: GetMyPullRequestsRequest
 	): Promise<GetMyPullRequestsResponse[][] | undefined> {
 		void (await this.ensureConnected());
+		void (await this.setCurrentUser());
 
 		let repos: string[] = [];
 		if (request.isOpen) {
@@ -2629,8 +2630,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	private toKeyValuePair(q: string) {
 		const kvp = q.split(":");
 		let value = kvp[1];
-		if (value === "@me") {
-			value = this._currentGitlabUser!.login!;
+		if (value === "@me" && this._currentGitlabUser) {
+			value = this._currentGitlabUser.login;
 		}
 		return `${encodeURIComponent(kvp[0])}=${encodeURIComponent(value)}`;
 	}
