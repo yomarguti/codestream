@@ -9,8 +9,7 @@ import { FileStatus } from "@codestream/protocols/api";
 import { LoadingMessage } from "../src/components/LoadingMessage";
 import { getPullRequestCommits, getPullRequestFiles } from "../store/providerPullRequests/actions";
 import { PullRequestFilesChangedList } from "./PullRequestFilesChangedList";
-import { HostApi } from "../webview-api";
-import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
+import { FetchThirdPartyPullRequestCommitsResponse, FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
 
 const STATUS_MAP = {
 	modified: FileStatus.modified
@@ -48,7 +47,7 @@ export const PullRequestFilesChangedTab = (props: {
 
 	const [isLoading, setIsLoading] = useState(true);
 	const [filesChanged, setFilesChanged] = useState<any[]>([]);
-	const [prCommits, setPrCommits] = useState<any[]>([]);
+	const [prCommits, setPrCommits] = useState<FetchThirdPartyPullRequestCommitsResponse[]>([]);
 	const [prCommitsRange, setPrCommitsRange] = useState<string[]>([]);
 	// const [lastReviewCommitOid, setLastReviewCommitOid] = useState<string | undefined>();
 
@@ -201,14 +200,14 @@ export const PullRequestFilesChangedTab = (props: {
 	}
 	dropdownItems.push({ label: "Hold shift + click to select a range", type: "static" });
 
-	prCommits &&
+	prCommits && 
 		prCommits.map(_ => {
 			dropdownItems.push({
 				label: _.message,
 				floatRight: {
 					label: _.abbreviatedOid
 				},
-				subtextNoPadding: `${_.author.user.login} ${
+				subtextNoPadding: `${_.author.user?.login ? _.author.user.login : _.author.name} ${
 					_.authoredDate ? distanceOfTimeInWords(new Date(_.authoredDate).getTime()) : ""
 				}`,
 				action: range => {

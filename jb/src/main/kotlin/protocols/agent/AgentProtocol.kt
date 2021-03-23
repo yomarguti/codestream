@@ -392,3 +392,10 @@ class CreateReviewsForUnreviewedCommitsParams(
 class CreateReviewsForUnreviewedCommitsResult(
     val reviewIds: List<String>
 )
+
+class FollowReviewParams(
+    val id: String,
+    val value: Boolean
+)
+
+class FollowReviewResult()

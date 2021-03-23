@@ -11,6 +11,7 @@ import { FileStatus } from "@codestream/protocols/api";
 import { CodeStreamState } from "../store";
 import styled from "styled-components";
 import { Modal } from "./Modal";
+import { useDidMount } from '../utilities/hooks';
 
 const Root = styled.div`
 	background: var(--app-background-color);
@@ -68,17 +69,14 @@ export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
 		setIsLoading(false);
 	};
 
-	useEffect(() => {
-		// re-render if providerPullRequests changes
+	useDidMount(() => {
 		(async () => {
 			const data = await dispatch(
 				getPullRequestFiles(pr.providerId, derivedState.currentPullRequestId!)
 			);
 			_mapData(data);
 		})();
-	}, [derivedState.providerPullRequests]);
-
-	const openFile = file => {};
+	});
 
 	const commentMap = React.useMemo(() => {
 		const map = {} as any;

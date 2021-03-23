@@ -641,14 +641,14 @@ export interface FetchThirdPartyPullRequestCommitsResponse {
 	author: {
 		name: string;
 		avatarUrl: string;
-		user: {
+		user?: {
 			login: string;
 		};
 	};
 	committer: {
 		avatarUrl: string;
 		name: string;
-		user: {
+		user?: {
 			login: string;
 		};
 	};

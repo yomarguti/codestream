@@ -131,7 +131,7 @@ interface PaneHeaderProps {
 	title: string | React.ReactNode;
 	className?: string;
 	id: WebviewPanels;
-	count?: number;
+	count?: number | string;
 	subtitle?: string | React.ReactNode;
 	isLoading?: boolean;
 	warning?: React.ReactNode;
@@ -204,7 +204,8 @@ export const PaneHeader = React.memo((props: PropsWithChildren<PaneHeaderProps>)
 			<div className="label">
 				<Icon name={derivedState.stateIcon} className="expander" />
 				{props.title}
-				{props.count && props.count > 0 ? (
+				{(typeof props.count === "string" && props.count.length > 0) ||
+				(props.count && props.count > 0) ? (
 					<span className="subtle toggle-target"> ({props.count})</span>
 				) : null}
 				{!derivedState.collapsed && props.subtitle ? (
