@@ -1640,7 +1640,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 									avatarUrl
 								}
 								body
-								bodyHtml								
+								bodyHtml
 								createdAt
 								discussion {
 									id
@@ -1722,6 +1722,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				return _.notes.nodes.find((n: any) => n.id === response.createNote.note.id);
 			}
 		);
+		this.toAuthorAbsolutePathRecurse(addedNode);
 
 		return {
 			directives: [
@@ -2669,6 +2670,19 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			author.avatarUrl = `${this.baseWebUrl}${author.avatarUrl}`;
 		}
 		return author;
+	}
+
+	private toAuthorAbsolutePathRecurse(obj: any) {
+		if (!obj) return;
+		for (const k in obj) {
+			if (typeof obj[k] === "object") {
+				this.toAuthorAbsolutePathRecurse(obj[k]);
+			} else if (k === "avatarUrl") {
+				if (obj.avatarUrl.indexOf("/") === 0) {
+					obj.avatarUrl = `${this.baseWebUrl}${obj.avatarUrl}`;
+				}
+			}
+		}
 	}
 
 	private async _paginateRestResponse(url: string, map: (data: any[]) => any[]) {
