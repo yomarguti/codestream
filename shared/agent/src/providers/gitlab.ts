@@ -1516,7 +1516,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							targetBranch: body.target_branch,
 							assignees: {
 								nodes: body.assignees.map((assignee: any) => {
-									return { ...assignee, avatarUrl: this.avatarUrl(assignee.avatar_url) };
+									return {
+										...assignee,
+										login: assignee.username,
+										avatarUrl: this.avatarUrl(assignee.avatar_url)
+									};
 								})
 							},
 							milestone,

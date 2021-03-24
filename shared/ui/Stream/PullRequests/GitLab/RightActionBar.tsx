@@ -232,7 +232,7 @@ export const RightActionBar = (props: {
 				subtle: _.name,
 				searchLabel: `${_.login}:${_.name}`,
 				key: _.id,
-				action: () => setAssignee(_.login)
+				action: () => setAssignee(assigneeIds.includes(_.login) ? "" : _.login)
 			})) as any;
 			menuItems.unshift({ type: "search", placeholder: "Type or choose a name" });
 			return menuItems;
