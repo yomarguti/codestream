@@ -42,7 +42,7 @@ const Right = styled.div`
 		max-width: 100vw;
 		border-left: 1px solid (--base-border-color);
 		box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-		padding: 0 15px;
+		padding: 0;
 	}
 	a {
 		color: var(--text-color) !important;
@@ -56,12 +56,16 @@ const Right = styled.div`
 	.spin {
 		vertical-align: 3px;
 	}
+	overflow: auto;
+	&::-webkit-scrollbar {
+		display: none;
+	}
 `;
 
 const AsideBlock = styled.div`
 	height: 48px;
 	width: 100%;
-	display: flex;
+	position: relative;
 	flex-direction: column;
 	place-items: center;
 	justify-content: center;
@@ -69,14 +73,23 @@ const AsideBlock = styled.div`
 	.expanded & {
 		justify-content: inherit;
 		place-items: normal;
-		padding: 15px 0;
 		height: auto;
+		padding: 15px;
+	}
+	.expanded &.clickable {
+		cursor: pointer;
 	}
 	cursor: pointer;
 	display: flex;
 	.icon {
 		opacity: 0.7;
+		&.fixed {
+			position: absolute;
+			top: 15px;
+			right: 15px;
+		}
 	}
+	.expanded &.clickable:hover,
 	.collapsed &:hover {
 		.icon {
 			opacity: 1;
@@ -84,6 +97,7 @@ const AsideBlock = styled.div`
 		}
 		backdrop-filter: brightness(97%);
 	}
+	.vscode-dark .expanded &.clickable:hover,
 	.vscode-dark .collapsed &:hover {
 		backdrop-filter: brightness(120%);
 	}
@@ -142,9 +156,10 @@ export const ButtonRow = styled.div`
 	justify-content: stretch;
 	margin: 0 -5px;
 	button {
-		width: 50%;
+		width: calc(50% - 10px);
 		margin: 0 5px;
 		white-space: nowrap;
+		text-align: left;
 	}
 `;
 
@@ -158,6 +173,7 @@ export const RightActionBar = (props: {
 	rightOpen: any;
 	setRightOpen: any;
 	setIsLoadingMessage: any;
+	fetch: Function;
 }) => {
 	const { pr, rightOpen, setRightOpen, setIsLoadingMessage } = props;
 	const dispatch = useDispatch();
@@ -502,55 +518,91 @@ export const RightActionBar = (props: {
 		else return `${word}s`;
 	};
 
+	const [isLoading, setIsLoading] = useState(false);
+	const refresh = async () => {
+		setIsLoading(true);
+		await props.fetch("Refreshing...");
+		setIsLoading(false);
+	};
+
 	return (
 		<Right className={rightOpen ? "expanded" : "collapsed"}>
-			<AsideBlock onClick={() => !rightOpen && close()}>
-				{rightOpen ? (
-					<ButtonRow>
-						<Button variant="secondary" onClick={close}>
-							<Icon className="clickable margin-right" name="x" />
-							Close view
-						</Button>
-						<Button variant="secondary" onClick={() => setRightOpen(false)}>
+			{rightOpen ? (
+				<>
+					<AsideBlock onClick={close} className="clickable">
+						<JustifiedRow>
+							<label>Close view</label>
+							<Icon className="clickable" name="x" />
+						</JustifiedRow>
+					</AsideBlock>
+					<AsideBlock onClick={refresh} className="clickable">
+						<JustifiedRow>
+							<label>Refresh MR</label>
+							<Icon className={isLoading ? "clickable spin" : "clickable"} name="sync" />
+						</JustifiedRow>
+					</AsideBlock>
+					<AsideBlock onClick={() => setRightOpen(false)} className="clickable">
+						<JustifiedRow>
+							<label>Collapse Sidebar</label>
 							<Icon className="clickable" name="chevron-right-thin" />
-							Collapse
-						</Button>
-					</ButtonRow>
-				) : (
-					<Icon className="clickable" name="x" title="Close view" placement="left" />
-				)}
-			</AsideBlock>
-			{!rightOpen && <HR />}
-			{!rightOpen && (
-				<AsideBlock onClick={() => !rightOpen && setRightOpen(true)}>
-					<Icon
-						className="clickable"
-						title="Expand sidebar"
-						placement="left"
-						name="chevron-left-thin"
-					/>
-				</AsideBlock>
+						</JustifiedRow>
+					</AsideBlock>
+					<AsideBlock onClick={toggleToDo} className="clickable">
+						<JustifiedRow>
+							<label>{hasToDo ? "Mark as done" : "Add a to do"}</label>
+							<Icon
+								className="clickable"
+								name={hasToDo ? "checked-checkbox" : "checkbox-add"}
+								title={hasToDo ? "Mark as done" : "Add a to do"}
+								placement="left"
+							/>
+						</JustifiedRow>
+					</AsideBlock>
+				</>
+			) : (
+				<>
+					<AsideBlock>
+						<Icon
+							onClick={close}
+							className="clickable fixed"
+							name="x"
+							title="Close view"
+							placement="left"
+						/>
+					</AsideBlock>
+					<HR />
+					<AsideBlock onClick={refresh}>
+						<Icon
+							className={isLoading ? "clickable fixed spin" : "clickable fixed"}
+							title="Refresh"
+							placement="left"
+							name="sync"
+						/>
+					</AsideBlock>
+					<HR />
+					<AsideBlock onClick={() => setRightOpen(true)}>
+						<Icon
+							className="clickable fixed"
+							title="Expand sidebar"
+							placement="left"
+							name="chevron-left-thin"
+						/>
+					</AsideBlock>
+					<HR />
+					<AsideBlock onClick={() => toggleToDo()}>
+						{isLoadingToDo ? (
+							<Icon className="clickable spin" name="sync" />
+						) : (
+							<Icon
+								className="clickable fixed"
+								name={hasToDo ? "checked-checkbox" : "checkbox-add"}
+								title={hasToDo ? "Mark as done" : "Add a to do"}
+								placement="left"
+							/>
+						)}
+					</AsideBlock>
+				</>
 			)}
-			{!rightOpen && <HR />}
-			<AsideBlock onClick={() => !rightOpen && toggleToDo()}>
-				{rightOpen ? (
-					<JustifiedRow>
-						<label>To Do</label>
-						<Button isLoading={isLoadingToDo} variant="secondary" onClick={toggleToDo}>
-							{hasToDo ? "Mark as done" : "Add a to do"}
-						</Button>
-					</JustifiedRow>
-				) : isLoadingToDo ? (
-					<Icon className="clickable spin" name="sync" />
-				) : (
-					<Icon
-						className="clickable"
-						name={hasToDo ? "checked-checkbox" : "checkbox-add"}
-						title={hasToDo ? "Mark as done" : "Add a to do"}
-						placement="left"
-					/>
-				)}
-			</AsideBlock>
 			<AsideBlock onClick={() => !rightOpen && openAssignees()}>
 				{rightOpen ? (
 					<>

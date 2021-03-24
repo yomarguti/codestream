@@ -896,6 +896,7 @@ export const PullRequest = () => {
 					rightOpen={rightOpen}
 					setRightOpen={setRightOpen}
 					setIsLoadingMessage={setIsLoadingMessage}
+					fetch={fetch}
 				/>
 			</PullRequestRoot>
 		</ThemeProvider>
