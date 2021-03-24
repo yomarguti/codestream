@@ -27,6 +27,7 @@ import {
 	GitLabBoard,
 	GitLabCreateCardRequest,
 	GitLabCreateCardResponse,
+	GitLabLabel,
 	GitLabMergeRequestWrapper,
 	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
@@ -668,6 +669,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		request: GetMyPullRequestsRequest
 	): Promise<GetMyPullRequestsResponse[][] | undefined> {
 		void (await this.ensureConnected());
+		void (await this.setCurrentUser());
 
 		let repos: string[] = [];
 		if (request.isOpen) {
@@ -887,6 +889,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		const { projectFullPath, id, iid } = this.parseId(request.pullRequestId);
 
 		await this.ensureConnected();
+		void (await this.setCurrentUser());
 
 		if (request.force) {
 			this._pullRequestCache.delete(id);
@@ -905,7 +908,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				fullPath: projectFullPath,
 				iid: iid.toString()
 			};
-			let response0 = await this.query(print(mergeRequest0Query), args);
+			const text = print(mergeRequest0Query);
+			let response0 = await this.query(text, args);
 			discussions = discussions.concat(response0.project.mergeRequest.discussions.nodes);
 			if (response0.project.mergeRequest.discussions.pageInfo?.hasNextPage) {
 				let after = response0.project.mergeRequest.discussions.pageInfo.endCursor;
@@ -926,7 +930,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			}
 
-			const response1 = await this.query(print(mergeRequest1Query), args);
+			const text1 = print(mergeRequest1Query);
+			const response1 = await this.query(text1, args);
 			response = merge(
 				{
 					project: {
@@ -1173,6 +1178,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		parentId: string;
 		text: string;
 	}): Promise<Directives> {
+		if (!request.parentId) throw new Error("ParentId missing");
+
 		const { id } = this.parseId(request.pullRequestId);
 		const response = await this.query<any>(
 			`mutation createNote($noteableId: NoteableID!, $discussionId: DiscussionID!, $body: String!) {
@@ -1471,6 +1478,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		title: string;
 		description: string;
 		labels: string;
+		availableLabels: GitLabLabel[];
 		milestoneId: string;
 		assigneeId: string;
 		// deleteSourceBranch?: boolean;
@@ -1491,7 +1499,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					// squash: !!request.squashCommits
 				}
 			);
-			// Logger.log("editPullRequest response: " + JSON.stringify(body, null, 4));
+			Logger.log("editPullRequest response: " + JSON.stringify(body, null, 4));
 			const milestone = body.milestone || null;
 			if (milestone) {
 				milestone.createdAt = milestone.created_at;
@@ -1508,10 +1516,21 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							targetBranch: body.target_branch,
 							assignees: {
 								nodes: body.assignees.map((assignee: any) => {
-									return { ...assignee, avatarUrl: this.avatarUrl(assignee.avatar_url) };
+									return {
+										...assignee,
+										login: assignee.username,
+										avatarUrl: this.avatarUrl(assignee.avatar_url)
+									};
 								})
 							},
-							milestone
+							milestone,
+							labels: {
+								nodes: body.labels
+									.map((labelTitle: string) => {
+										return request.availableLabels.find(label => label.title === labelTitle);
+									})
+									.filter(Boolean)
+							}
 							// squashOnMerge: body.squash
 							// shouldRemoveSourceBranch: body.force_remove_source_branch
 						}
@@ -2086,7 +2105,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						  nodes {
 							id
 							color
-							textColor
 							title
 						  }
 						}
@@ -2545,8 +2563,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 									milestone: {
 										title: _.milestone.title,
 										url: _.milestone.web_url
-									},
-									discussion: {}
+									}
 								}
 							]
 						}
@@ -2562,29 +2579,30 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				projectFullPath
 			)}/merge_requests/${iid}/resource_label_events`,
 			data => {
-				return data.map(_ => {
-					return {
-						id: _.id,
-						createdAt: _.created_at,
-						notes: {
-							nodes: [
-								{
-									createdAt: _.created_at,
-									system: true,
-									systemNoteIconName: `label-${_.action}`,
-									author: this.fromRestUser(_.user),
-									body: `${_.action === "add" ? "added" : "removed"}`,
-									discussion: {},
-									label: {
-										description: _.label.description,
-										color: _.label.color,
-										name: _.label.name
+				return data
+					.filter(_ => _.label)
+					.map(_ => {
+						return {
+							id: _.id,
+							createdAt: _.created_at,
+							notes: {
+								nodes: [
+									{
+										createdAt: _.created_at,
+										system: true,
+										systemNoteIconName: `label-${_.action}`,
+										author: this.fromRestUser(_.user),
+										body: `${_.action === "add" ? "added" : "removed"}`,
+										label: {
+											description: _.label.description,
+											color: _.label.color,
+											title: _.label.name
+										}
 									}
-								}
-							]
-						}
-					};
-				});
+								]
+							}
+						};
+					});
 			}
 		);
 	}
@@ -2606,8 +2624,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 									system: true,
 									systemNoteIconName: `merge-request-${_.state}`,
 									author: this.fromRestUser(_.user),
-									body: _.state,
-									discussion: {}
+									body: _.state
 								}
 							]
 						}
@@ -2632,8 +2649,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	private toKeyValuePair(q: string) {
 		const kvp = q.split(":");
 		let value = kvp[1];
-		if (value === "@me") {
-			value = this._currentGitlabUser!.login!;
+		if (value === "@me" && this._currentGitlabUser) {
+			value = this._currentGitlabUser.login;
 		}
 		return `${encodeURIComponent(kvp[0])}=${encodeURIComponent(value)}`;
 	}
@@ -2794,7 +2811,9 @@ class GitLabReviewStore {
 						resolved: false,
 						resolvable: true,
 						systemNoteIconName: "",
-						discussion: {},
+						discussion: {
+							id: _.createdAt
+						},
 						state: "PENDING",
 						body: _.text,
 						bodyText: _.text,

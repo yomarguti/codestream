@@ -760,10 +760,12 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 								(_: any) => _.baseRefName === baseRefName && _.headRefName === headRefName
 							);
 							if (existingPullRequest) {
-								warning = {
-									type: "ALREADY_HAS_PULL_REQUEST",
-									url: existingPullRequest.url,
-									id: existingPullRequest.id
+								return {
+									success: false,
+									error: {
+										type: "ALREADY_HAS_PULL_REQUEST",
+										url: existingPullRequest.url
+									}
 								};
 							}
 						}

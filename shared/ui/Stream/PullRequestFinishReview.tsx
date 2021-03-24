@@ -41,6 +41,8 @@ export const PullRequestFinishReview = (props: {
 
 	const { pr, mode, fetch, setIsLoadingMessage, setFinishReviewOpen } = props;
 
+	const supportsFinishReviewTypes = !pr.providerId.includes("gitlab");
+
 	const submitReview = async e => {
 		setIsLoadingMessage("Submitting Review...");
 		setSubmittingReview(true);
@@ -91,7 +93,7 @@ export const PullRequestFinishReview = (props: {
 				/>
 				<div style={{ clear: "both" }}></div>
 			</div>
-			{!isPreviewing && (
+			{!isPreviewing && supportsFinishReviewTypes && (
 				<RadioGroup
 					name="approval"
 					selectedValue={reviewType}

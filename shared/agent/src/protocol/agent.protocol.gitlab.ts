@@ -94,7 +94,7 @@ export interface Note {
 	systemNoteIconName: string;
 	label?: {
 		color: string;
-		name: string;
+		title: string;
 	};
 	milestone?: {
 		title: string;
@@ -168,6 +168,13 @@ export interface GitLabUser {
 	id: string;
 }
 
+export interface GitLabLabel {
+	id: string;
+	color: string;
+	title: string;
+	description?: string;
+}
+
 export interface GitLabMergeRequest {
 	approvedBy: {
 		nodes: {
@@ -185,6 +192,16 @@ export interface GitLabMergeRequest {
 	changesCount: number;
 	commitCount: number;
 	createdAt: string;
+	currentUserTodos?: {
+		nodes: {
+			// action throws an error on 13.9.3-ee
+			// action
+			body: string;
+			id: string;
+			targetType: string;
+			state: string;
+		}[];
+	};
 	description: string;
 	diffRefs: any;
 	discussionLocked: boolean;
@@ -204,17 +221,18 @@ export interface GitLabMergeRequest {
 	iid: string;
 	isDraft: boolean;
 	labels: {
-		nodes: {
-			id: string;
-			color: string;
-			textColor: string;
-			title: string;
-		}[];
+		nodes: GitLabLabel[];
 	};
 	merged: boolean;
 	mergeableDiscussionsState: boolean;
 	mergedAt: string;
 	mergeWhenPipelineSucceeds: boolean;
+	milestone?: {
+		title: string;
+		id: string;
+		webPath: string;
+		dueDate: string;
+	};
 	number: number;
 	participants: {
 		nodes: GitLabUser[];
@@ -301,12 +319,17 @@ export interface GitLabMergeRequest {
 	};
 	resolvable: boolean;
 	resolved: boolean;
+	reviewers?: {
+		nodes?: any[];
+	};
 	sourceBranch: string;
 	state: string;
 	sourceProject: any;
+	subscribed: boolean;
 	targetBranch: string;
+	timeEstimate: number;
+	totalTimeSpent: number;
 	title: string;
-
 	upvotes: number;
 	url: string;
 	userDiscussionsCount: number;

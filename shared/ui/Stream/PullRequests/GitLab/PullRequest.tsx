@@ -9,7 +9,7 @@ import {
 	getPullRequestId
 } from "../../../store/providerPullRequests/reducer";
 import { LoadingMessage } from "../../../src/components/LoadingMessage";
-
+import { CreateCodemarkIcons } from "../../CreateCodemarkIcons";
 import { getPreferences } from "../../../store/users/reducer";
 import Tooltip from "../../Tooltip";
 import React, { useState, useEffect, useMemo } from "react";
@@ -620,6 +620,7 @@ export const PullRequest = () => {
 	return (
 		<ThemeProvider theme={addViewPreferencesToTheme}>
 			<PullRequestRoot className="gitlab">
+				<CreateCodemarkIcons narrow onebutton />
 				{isLoadingMessage && <FloatingLoadingMessage>{isLoadingMessage}</FloatingLoadingMessage>}
 				{isEditing && (
 					<EditPullRequest
@@ -895,6 +896,7 @@ export const PullRequest = () => {
 					rightOpen={rightOpen}
 					setRightOpen={setRightOpen}
 					setIsLoadingMessage={setIsLoadingMessage}
+					fetch={fetch}
 				/>
 			</PullRequestRoot>
 		</ThemeProvider>

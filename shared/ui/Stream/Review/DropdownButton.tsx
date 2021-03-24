@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Button, getButtonProps, ButtonProps } from "../../src/components/Button";
 import styled from "styled-components";
 import Icon from "../Icon";
@@ -28,8 +28,10 @@ export interface DropdownButtonProps extends ButtonProps {
 	splitDropdown?: boolean;
 	splitDropdownInstantAction?: boolean;
 	wrap?: boolean;
+	onOpen?: Function;
 	selectedKey?: string;
-	noCloseIcon?: boolean;	isMultiSelect?: boolean;
+	noCloseIcon?: boolean;
+	isMultiSelect?: boolean;
 	itemsRange?: string[];
 }
 
@@ -71,6 +73,12 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 			};
 		});
 	}
+
+	useEffect(() => {
+		if (menuIsOpen && props.onOpen) {
+			props.onOpen();
+		}
+	}, [menuIsOpen]);
 
 	return (
 		<Root

@@ -97,11 +97,19 @@ const PR_QUERIES: {
 } = {
 	gitlab: [
 		{
+			name: "is waiting on your review",
+			query: `state:opened reviewer_username:@me`
+		},
+		{
 			name: "was assigned to you",
 			query: `state:opened scope:assigned_to_me`
 		}
 	],
 	gitlab_enterprise: [
+		{
+			name: "is waiting on your review",
+			query: `state:opened reviewer_username:@me`
+		},
 		{
 			name: "was assigned to you",
 			query: `state:opened scope:assigned_to_me`

@@ -180,6 +180,7 @@ const EMPTY_HASH_2 = {};
 const EMPTY_HASH_3 = {};
 
 export const Timeline = (props: Props) => {
+	const isComment = (_: DiscussionNode) => _.notes?.nodes?.find(n => !n.system && n.discussion?.id);
 	const { pr, order, filter, setIsLoadingMessage, fetch } = props;
 	let discussions = order === "oldest" ? pr.discussions.nodes : [...pr.discussions.nodes].reverse();
 	if (filter === "history") discussions = discussions.filter(_ => !isComment(_));
@@ -216,8 +217,6 @@ export const Timeline = (props: Props) => {
 		insertNewline[id] = functions.insertNewlineAtCursor;
 		focusOnMessageInput[id] = functions.focus;
 	};
-
-	const isComment = _ => _.notes && _.notes.nodes && _.notes.nodes.length;
 
 	const quote = (text, id) => {
 		if (!insertText) return;
@@ -504,8 +503,10 @@ export const Timeline = (props: Props) => {
 						<Icon name="tag" className="circled" />
 						<ActionBody>
 							<b>{note.author.name}</b> @{note.author.login} {note.body} a label{" "}
-							{note.label && <Tag tag={{ label: note.label.name, color: `${note.label.color}` }} />}
-							<Timestamp relative time={note.createdAt} />
+							{note.label && (
+								<Tag tag={{ label: note.label.title, color: `${note.label.color}` }} />
+							)}
+							<Timestamp className="no-padding" relative time={note.createdAt} />
 						</ActionBody>
 					</ActionBox>
 				);
@@ -593,7 +594,7 @@ export const Timeline = (props: Props) => {
 						)}
 						{!hiddenComments[note.id] &&
 							replies.map((reply, index) => printComment(reply as any, note, index + 1))}
-						{!hiddenComments[note.id] && (
+						{!hiddenComments[note.id] && note.state !== "PENDING" && (
 							<ReplyForm>
 								<PullRequestReplyComment
 									pr={(pr as unknown) as FetchThirdPartyPullRequestPullRequest}
