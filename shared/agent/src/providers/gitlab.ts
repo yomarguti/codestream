@@ -1261,6 +1261,24 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	@log()
+	async addComment(request: { subjectId: string; text: string }): Promise<any> {
+		// // does not require return directives
+		const { id } = this.parseId(request.subjectId);
+		const response = await this.mutate(
+			`mutation CreateNote($noteableId:ID!, $body:String!){
+				createNote(input: {noteableId:$noteableId, body:$body}){
+					clientMutationId				
+		  	}
+		}`,
+			{
+				noteableId: this.toMergeRequestGid(id),
+				body: request.text
+			}
+		);
+		return response;
+	}
+
+	@log()
 	async createPullRequestReviewComment(request: {
 		pullRequestId: string;
 		pullRequestReviewId?: string;
@@ -2359,9 +2377,16 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		endLine?: number;
 		// used for old servers
 		position?: number;
+		metadata?: {
+			contents: string;
+			fileWithUrl: string;
+			startLine: number;
+			endLine: number;
+		};
 	}) {
+		let projectFullPath, id, iid;
 		try {
-			const { projectFullPath, id, iid } = this.parseId(request.pullRequestId);
+			({ projectFullPath, id, iid } = this.parseId(request.pullRequestId));
 
 			const payload = {
 				body: request.text,
@@ -2388,11 +2413,38 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 			return data.body;
 		} catch (ex) {
-			Logger.warn(`createCommitComment`, {
-				request: request,
-				error: ex
-			});
-			throw ex;
+			// lines that are _slightly_ outside the context of a diff (yet are still in the hunks)
+			// are not allowed and they return a bizzare error message...
+			// retry as a comment not attached to a line of code
+			if (ex?.message?.indexOf("must be a valid line code") > -1) {
+				Logger.warn(`createCommitCommentLineCodeError`, {
+					request: request,
+					error: ex
+				});
+				const metadata = request.metadata;
+				if (metadata) {
+					return this.addComment({
+						subjectId: request.pullRequestId,
+						text: `${request.text || ""}\n\n\`\`\`\n${metadata.contents}\n\`\`\`
+						\n${metadata.fileWithUrl} (Line${
+							metadata.startLine === metadata.endLine
+								? ` ${metadata.startLine}`
+								: `s ${metadata.startLine}-${metadata.endLine}`
+						})`
+					});
+				} else {
+					return this.addComment({
+						subjectId: request.pullRequestId,
+						text: request.text
+					});
+				}
+			} else {
+				Logger.error(ex, `createCommitComment`, {
+					request: request
+				});
+
+				throw ex;
+			}
 		}
 	}
 
