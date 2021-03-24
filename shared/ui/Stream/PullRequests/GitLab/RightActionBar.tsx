@@ -856,7 +856,13 @@ export const RightActionBar = (props: {
 							<label>Reference: </label>
 							{reference}
 						</div>
-						<Icon className="clickable" name="copy" title="Copy reference" placement="left" />
+						<Icon
+							onClick={() => copy(reference)}
+							className="clickable"
+							name="copy"
+							title="Copy reference"
+							placement="left"
+						/>
 					</JustifiedRow>
 					<div style={{ height: "10px" }} />
 					<JustifiedRow>
@@ -864,7 +870,13 @@ export const RightActionBar = (props: {
 							<label>Source branch: </label>
 							<span className="monospace">{sourceBranch}</span>
 						</div>
-						<Icon className="clickable" name="copy" title="Copy branch name" placement="left" />
+						<Icon
+							onClick={() => copy(sourceBranch)}
+							className="clickable"
+							name="copy"
+							title="Copy branch name"
+							placement="left"
+						/>
 					</JustifiedRow>
 				</AsideBlock>
 			) : (
