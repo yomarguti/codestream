@@ -172,10 +172,10 @@ export default class Menu extends Component {
 			if (tooFar > 0 && align !== "popupRight") {
 				// if we're a dropdown, alter the height
 				if (align.startsWith("bottom") || align.startsWith("dropdown")) {
-					const height = window.innerHeight - rect.bottom - 50;
-
-					const ul = this._div.getElementsByTagName("ul")[0];
-					if (ul) ul.style.maxHeight = height + "px";
+					this._div.style.top = rect.top - this._div.offsetHeight + "px";
+					// const height = window.innerHeight - rect.bottom - 50;
+					// const ul = this._div.getElementsByTagName("ul")[0];
+					// if (ul) ul.style.maxHeight = height + "px";
 				}
 				// otherwise, alter the top
 				else {
