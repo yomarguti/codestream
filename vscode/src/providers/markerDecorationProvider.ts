@@ -517,8 +517,8 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 						if (isGitHub) {
 							message += "  $(github-inverted) ";
 						}
-						message += m.title  ? m.title : "";
-						if (["github*com", "github/enterprise"].includes(m.externalContent.provider.id)) {
+						message += m.title ? m.title : "";
+						if (isGitHub || isGitLab) {
 							message += ` \n\n[__View ${typeString} \u2197__](command:codestream.openPullRequest?${encodeURIComponent(
 								JSON.stringify(viewCommandArgs)
 							)} "View ${typeString}")`;

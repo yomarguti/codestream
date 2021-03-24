@@ -342,7 +342,7 @@ export class DocumentMarkerManager {
 						creatorAvatar: comment.author ? comment.author.avatarUrl : undefined,
 						code: "",
 						fileUri: documentId.uri,
-						creatorName: comment.author ? comment.author.username : "Unknown",
+						creatorName: comment.author ? comment.author.login : "Unknown",
 						range: MarkerLocation.toRangeFromArray(location),
 						location: MarkerLocation.fromArray(location, comment.id),
 						title: pr.title,
