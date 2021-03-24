@@ -337,7 +337,7 @@ export class CodeStreamSession {
 				// for versions of api server pre 8.2.34, which did not support returning environment
 				// in connectivity response ... this code can be eliminated once we're enforcing
 				// versions higher than this
-				const [environment, isOnPrem] = this.getEnvironmentFromServerUrl(this._options.serverUrl);
+				const { environment, isOnPrem } = this.getEnvironmentFromServerUrl(this._options.serverUrl);
 				this._environment = environment;
 				this._isOnPrem = environment === "onprem" || isOnPrem;
 			} else {
@@ -601,7 +601,7 @@ export class CodeStreamSession {
 				// which is regarded as the source of truth
 				// for now, this is only needed by the error reporter initialization in errorReporter.ts
 				// we should keep it that way
-				const [environment, isOnPrem] = this.getEnvironmentFromServerUrl(this._options.serverUrl);
+				const { environment, isOnPrem } = this.getEnvironmentFromServerUrl(this._options.serverUrl);
 				this._environment = environment;
 				this._isOnPrem = isOnPrem;
 			}
@@ -1081,35 +1081,35 @@ export class CodeStreamSession {
 	//    communicated with the server, so that will be determined here
 	//
 	// In theory, this method should be called for no other reason that those given above.
-	private getEnvironmentFromServerUrl(url: string): [environment: string, isOnPrem: boolean] {
+	private getEnvironmentFromServerUrl(url: string): { environment: string; isOnPrem: boolean } {
 		const match = envRegex.exec(url);
 
 		// if no match, then our server is not a CodeStream server, meaning we are on-prem
-		if (match == null) return [CodeStreamEnvironment.Unknown, true];
+		if (match == null) return { environment: CodeStreamEnvironment.Unknown, isOnPrem: true };
 
 		// localhost translates into local development environment,
 		// whether we are on-prem or not comes from separate information
 		let [, subdomain, env] = match;
 		if (subdomain != null && subdomain.toLowerCase() === "localhost") {
-			return [CodeStreamEnvironment.Local, false];
+			return { environment: CodeStreamEnvironment.Local, isOnPrem: false };
 		}
 
 		if (env) {
 			// a match of the form <env>-api.codestream.us, like PD and QA
 			env = env.toLowerCase();
-			return [env.toLowerCase(), false];
+			return { environment: env.toLowerCase(), isOnPrem: false };
 		} else if (subdomain) {
 			// a match of the form <subdomain>.codestream.us, like OPPR, OPBETA, anything else
 			subdomain = subdomain.toLowerCase();
 			if (subdomain === "api") {
-				return [CodeStreamEnvironment.Production, false];
+				return { environment: CodeStreamEnvironment.Production, isOnPrem: false };
 			} else {
-				// the need for this goes away when delivered from the server  
-				const isOnPrem = subdomain === "opbeta" || subdomain === "oppr"; 
-				return [subdomain.toLowerCase(), isOnPrem];
+				// the need for this goes away when delivered from the server
+				const isOnPrem = subdomain === "opbeta" || subdomain === "oppr";
+				return { environment: subdomain.toLowerCase(), isOnPrem };
 			}
 		} else {
-			return [CodeStreamEnvironment.Unknown, false];
+			return { environment: CodeStreamEnvironment.Unknown, isOnPrem: false };
 		}
 	}
 
