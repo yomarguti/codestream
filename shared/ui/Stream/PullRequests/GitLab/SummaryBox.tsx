@@ -104,7 +104,9 @@ export const SummaryBox = props => {
 					/>{" "}
 					<b>into</b>{" "}
 					<Link href={`${pr.repository.url}/-/tree/${pr.targetBranch}`}>
-						<PRBranch>{pr.targetBranch}</PRBranch>
+						<PRBranch>
+							{pr.repository.name}:{pr.targetBranch}
+						</PRBranch>
 					</Link>
 				</div>
 				<div className="right">
