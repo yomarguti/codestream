@@ -27,6 +27,7 @@ import {
 	GitLabBoard,
 	GitLabCreateCardRequest,
 	GitLabCreateCardResponse,
+	GitLabLabel,
 	GitLabMergeRequestWrapper,
 	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
@@ -1477,6 +1478,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		title: string;
 		description: string;
 		labels: string;
+		availableLabels: GitLabLabel[];
 		milestoneId: string;
 		assigneeId: string;
 		// deleteSourceBranch?: boolean;
@@ -1497,7 +1499,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					// squash: !!request.squashCommits
 				}
 			);
-			// Logger.log("editPullRequest response: " + JSON.stringify(body, null, 4));
+			Logger.log("editPullRequest response: " + JSON.stringify(body, null, 4));
 			const milestone = body.milestone || null;
 			if (milestone) {
 				milestone.createdAt = milestone.created_at;
@@ -1517,7 +1519,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 									return { ...assignee, avatarUrl: this.avatarUrl(assignee.avatar_url) };
 								})
 							},
-							milestone
+							milestone,
+							labels: {
+								nodes: body.labels
+									.map((labelTitle: string) => {
+										return request.availableLabels.find(label => label.title === labelTitle);
+									})
+									.filter(Boolean)
+							}
 							// squashOnMerge: body.squash
 							// shouldRemoveSourceBranch: body.force_remove_source_branch
 						}
@@ -2092,7 +2101,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						  nodes {
 							id
 							color
-							textColor
 							title
 						  }
 						}
@@ -2567,28 +2575,30 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				projectFullPath
 			)}/merge_requests/${iid}/resource_label_events`,
 			data => {
-				return data.map(_ => {
-					return {
-						id: _.id,
-						createdAt: _.created_at,
-						notes: {
-							nodes: [
-								{
-									createdAt: _.created_at,
-									system: true,
-									systemNoteIconName: `label-${_.action}`,
-									author: this.fromRestUser(_.user),
-									body: `${_.action === "add" ? "added" : "removed"}`,
-									label: {
-										description: _.label.description,
-										color: _.label.color,
-										name: _.label.name
+				return data
+					.filter(_ => _.label)
+					.map(_ => {
+						return {
+							id: _.id,
+							createdAt: _.created_at,
+							notes: {
+								nodes: [
+									{
+										createdAt: _.created_at,
+										system: true,
+										systemNoteIconName: `label-${_.action}`,
+										author: this.fromRestUser(_.user),
+										body: `${_.action === "add" ? "added" : "removed"}`,
+										label: {
+											description: _.label.description,
+											color: _.label.color,
+											title: _.label.name
+										}
 									}
-								}
-							]
-						}
-					};
-				});
+								]
+							}
+						};
+					});
 			}
 		);
 	}

@@ -94,7 +94,7 @@ export interface Note {
 	systemNoteIconName: string;
 	label?: {
 		color: string;
-		name: string;
+		title: string;
 	};
 	milestone?: {
 		title: string;
@@ -168,6 +168,13 @@ export interface GitLabUser {
 	id: string;
 }
 
+export interface GitLabLabel {
+	id: string;
+	color: string;
+	title: string;
+	description?: string;
+}
+
 export interface GitLabMergeRequest {
 	approvedBy: {
 		nodes: {
@@ -214,12 +221,7 @@ export interface GitLabMergeRequest {
 	iid: string;
 	isDraft: boolean;
 	labels: {
-		nodes: {
-			id: string;
-			color: string;
-			textColor: string;
-			title: string;
-		}[];
+		nodes: GitLabLabel[];
 	};
 	merged: boolean;
 	mergeableDiscussionsState: boolean;

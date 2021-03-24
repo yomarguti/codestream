@@ -1,15 +1,12 @@
-import { CSMe } from "@codestream/protocols/api";
-import { FloatingLoadingMessage } from "@codestream/webview/src/components/FloatingLoadingMessage";
 import { CodeStreamState } from "@codestream/webview/store";
 
-import Tooltip from "../../Tooltip";
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import Icon from "../../Icon";
 import { Button } from "../../../src/components/Button";
 import { Link } from "../../Link";
-import { PRBranch, PRError, PRHeader, PRTitle } from "../../PullRequestComponents";
+import { PRBranch, PRError } from "../../PullRequestComponents";
 import { api } from "../../../store/providerPullRequests/actions";
 import MessageInput from "../../MessageInput";
 import { TextInput } from "@codestream/webview/Authentication/TextInput";
@@ -27,6 +24,7 @@ import { useDidMount } from "@codestream/webview/utilities/hooks";
 import Timestamp from "../../Timestamp";
 import { Circle } from "../../PullRequestConversationTab";
 import { HostApi } from "@codestream/webview/index";
+import { OpenUrlRequestType } from "../../../ipc/host.protocol";
 
 const Label = styled.div`
 	margin-top: 20px;
@@ -49,29 +47,6 @@ const Right = styled.div`
 	button {
 		margin-left: 10px;
 	}
-`;
-
-const FormRow = styled.div`
-	margin: 10px 20px;
-	display: flex;
-	align-items: flex-start;
-	> label {
-		text-align: right;
-		padding-top: 5px;
-		padding-right: 10px;
-		min-width: 20vw;
-		color: var(--text-color-highlight);
-		font-weight: bold;
-	}
-	> div {
-		flex-grow: 2;
-	}
-`;
-
-const HR = styled.div`
-	margin: 10px 0;
-	height: 1px;
-	background: var(--base-border-color);
 `;
 
 const ResponsiveRow = styled.div`
@@ -146,6 +121,7 @@ export const EditPullRequest = props => {
 				description,
 				targetBranch,
 				labels: labelsField.map(_ => _.title).join(","),
+				availableLabels: availableLabels,
 				milestoneId: milestoneField
 					? milestoneField.id.toString().replace("gid://gitlab/Milestone/", "")
 					: "",
@@ -239,7 +215,7 @@ export const EditPullRequest = props => {
 		pr.viewer && assigneesField.length === 1 && assigneesField[0].username === pr.viewer.login;
 
 	const [labelsField, setLabelsField] = useState(pr.labels ? pr.labels.nodes : []);
-	const [availableLabels, setAvailableLabels] = useState(EMPTY_ARRAY);
+	const [availableLabels, setAvailableLabels] = useState<any[] | undefined>(undefined);
 	const labelsLabel =
 		labelsField.length > 0 ? <SmartFormattedList value={labelsField.map(_ => _.title)} /> : "None";
 
@@ -276,6 +252,18 @@ export const EditPullRequest = props => {
 			}) as any;
 			menuItems.unshift({ type: "search", placeholder: "Filter labels" });
 			return menuItems;
+		} else if (availableLabels) {
+			return [
+				{
+					label: "Manage Labels",
+					action: () => {
+						HostApi.instance.send(OpenUrlRequestType, {
+							url: `${pr.repository.url}/-/labels`
+						});
+						setAvailableLabels(undefined);
+					}
+				}
+			];
 		} else {
 			return [{ label: <LoadingMessage>Loading Labels...</LoadingMessage>, noHover: true }];
 		}
@@ -423,7 +411,12 @@ export const EditPullRequest = props => {
 								<ResponsiveRow>
 									<ResponsiveLabel>Labels</ResponsiveLabel>
 									<ResponsiveValue>
-										<DropdownButton fillParent variant="secondary" items={labelMenuItems}>
+										<DropdownButton
+											fillParent
+											variant="secondary"
+											onOpen={fetchAvailableLabels}
+											items={labelMenuItems}
+										>
 											{labelsLabel}
 										</DropdownButton>
 									</ResponsiveValue>

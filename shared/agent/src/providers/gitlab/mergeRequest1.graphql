@@ -35,7 +35,6 @@ query GetPullRequest($fullPath: ID!, $iid: String!) {
 				nodes {
 					id
 					color
-					textColor
 					title
 				}
 			}

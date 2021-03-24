@@ -28,6 +28,7 @@ export interface DropdownButtonProps extends ButtonProps {
 	splitDropdown?: boolean;
 	splitDropdownInstantAction?: boolean;
 	wrap?: boolean;
+	onOpen?: Function;
 	selectedKey?: string;
 	noCloseIcon?: boolean;
 	isMultiSelect?: boolean;
@@ -74,7 +75,8 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 	}
 
 	useEffect(() => {
-		if (menuIsOpen) {
+		if (menuIsOpen && props.onOpen) {
+			props.onOpen();
 		}
 	}, [menuIsOpen]);
 

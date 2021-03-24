@@ -186,7 +186,7 @@ export const RightActionBar = (props: {
 		};
 	});
 
-	const [availableLabels, setAvailableLabels] = useState(EMPTY_ARRAY);
+	const [availableLabels, setAvailableLabels] = useState<any[] | undefined>(undefined);
 	const [availableReviewers, setAvailableReviewers] = useState(EMPTY_ARRAY_2);
 	const [supportsReviewers, setSupportsReviewers] = useState(false);
 	const [availableAssignees, setAvailableAssignees] = useState(EMPTY_ARRAY_3);
@@ -369,10 +369,10 @@ export const RightActionBar = (props: {
 					label: (
 						<>
 							<Circle style={{ backgroundColor: `${_.color}` }} />
-							{_.name}
+							{_.title}
 						</>
 					),
-					searchLabel: _.name,
+					searchLabel: _.title,
 					key: _.id,
 					subtext: <div style={{ maxWidth: "250px", whiteSpace: "normal" }}>{_.description}</div>,
 					action: () => setLabel(`gid://gitlab/ProjectLabel/${_.id}`, !checked)
@@ -380,6 +380,18 @@ export const RightActionBar = (props: {
 			}) as any;
 			menuItems.unshift({ type: "search", placeholder: "Filter labels" });
 			return menuItems;
+		} else if (availableLabels) {
+			return [
+				{
+					label: "Manage Labels",
+					action: () => {
+						HostApi.instance.send(OpenUrlRequestType, {
+							url: `${pr.repository.url}/-/labels`
+						});
+						setAvailableLabels(undefined);
+					}
+				}
+			];
 		} else {
 			return [{ label: <LoadingMessage>Loading Labels...</LoadingMessage>, noHover: true }];
 		}

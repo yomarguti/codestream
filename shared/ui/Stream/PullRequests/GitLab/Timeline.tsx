@@ -503,8 +503,10 @@ export const Timeline = (props: Props) => {
 						<Icon name="tag" className="circled" />
 						<ActionBody>
 							<b>{note.author.name}</b> @{note.author.login} {note.body} a label{" "}
-							{note.label && <Tag tag={{ label: note.label.name, color: `${note.label.color}` }} />}
-							<Timestamp relative time={note.createdAt} />
+							{note.label && (
+								<Tag tag={{ label: note.label.title, color: `${note.label.color}` }} />
+							)}
+							<Timestamp className="no-padding" relative time={note.createdAt} />
 						</ActionBody>
 					</ActionBox>
 				);
