@@ -1,6 +1,6 @@
 "use strict";
 import { NotificationType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
-import { Document, GetMyPullRequestsResponse } from "./agent.protocol";
+import { Document, CodeStreamEnvironmentInfo, GetMyPullRequestsResponse } from "./agent.protocol";
 import { LoginSuccessResponse, TokenLoginRequest } from "./agent.protocol.auth";
 import { CodemarkPlus } from "./agent.protocol.codemarks";
 import { ThirdPartyProviders } from "./agent.protocol.providers";
@@ -340,12 +340,7 @@ export const DidDetectUnreviewedCommitsNotificationType = new NotificationType<
 	void
 >("codestream/didDetectUnreviewedCommits");
 
-export interface DidSetEnvironmentNotification {
-	environment: string;
-	isOnPrem: boolean;
-}
-
 export const DidSetEnvironmentNotificationType = new NotificationType<
-	DidSetEnvironmentNotification,
+	CodeStreamEnvironmentInfo,
 	void
 >("codestream/didSetEnvironment");

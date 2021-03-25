@@ -37,30 +37,18 @@ const JoinTitle = styled.div`
 interface ConnectedProps {
 	pluginVersion: string;
 	whichServer: string;
-	onPrem: boolean;
+	isOnPrem: boolean;
 }
 
 interface Props extends ConnectedProps, DispatchProp {}
 
 const mapStateToProps = (state: CodeStreamState) => {
-	let whichServer = state.configs.serverUrl;
-	const serverMatch = whichServer.match(/^https:\/\/(.*?)\.codestream\.(us|com)(:[0-9]+)?\/?$/);
-	let onPrem = true;
-	if (serverMatch && serverMatch[1] !== "oppr" && serverMatch[1] !== "opbeta") {
-		onPrem = false;
-		whichServer = "CodeStream's cloud service";
-		if (serverMatch[1]) {
-			if (serverMatch[1] === "localhost") {
-				whichServer += ` (local)`;
-			} else {
-				const parts = serverMatch[1].split("-");
-				if (parts[0] !== "api") {
-					whichServer += ` (${parts[0].toUpperCase()})`;
-				}
-			}
-		}
+	const { serverUrl, isOnPrem, environment, isProductionCloud } = state.configs;
+	let whichServer = isOnPrem ? serverUrl : "CodeStream's cloud service";
+	if (!isProductionCloud) {
+		whichServer += ` (${environment.toUpperCase()})`;
 	}
-	return { pluginVersion: state.pluginVersion, whichServer, onPrem };
+	return { pluginVersion: state.pluginVersion, whichServer, isOnPrem };
 };
 
 export const NewUserEntry = (connect(mapStateToProps) as any)((props: Props) => {
@@ -215,7 +203,7 @@ export const NewUserEntry = (connect(mapStateToProps) as any)((props: Props) => 
 											Connected to {props.whichServer}.
 										</p>
 										<p style={{ opacity: 1, fontSize: ".9em", textAlign: "center" }}>
-											{!props.onPrem && (
+											{!props.isOnPrem && (
 												<a href="https://docs.codestream.com/userguide/faq/on-prem/">
 													Looking for on-prem?
 												</a>

@@ -93,14 +93,13 @@ export class StatusBarController implements Disposable {
 		}
 
 		let env;
-		const onprem = Container.session.isOnPrem ? " (on-prem)" : "";
 		switch (Container.session.environment) {
-			case CodeStreamEnvironment.Unknown:
 			case CodeStreamEnvironment.Production:
+			case CodeStreamEnvironment.Unknown:
 				env = "";
 				break;
 			default:
-				env = `${Container.session.environment.toUpperCase()}${onprem}: `;
+				env = `${Container.session.environment.toUpperCase()}: `;
 				break;
 		}
 

@@ -41,6 +41,7 @@ import {
 	BootstrapRequestType,
 	ChangeDataType,
 	CodeStreamEnvironment,
+	CodeStreamEnvironmentInfo,
 	ConfirmRegistrationRequest,
 	ConfirmRegistrationRequestType,
 	ConnectionStatus,
@@ -337,17 +338,17 @@ export class CodeStreamSession {
 				// for versions of api server pre 8.2.34, which did not support returning environment
 				// in connectivity response ... this code can be eliminated once we're enforcing
 				// versions higher than this
-				const { environment, isOnPrem } = this.getEnvironmentFromServerUrl(this._options.serverUrl);
-				this._environment = environment;
-				this._isOnPrem = environment === "onprem" || isOnPrem;
+				this._environmentInfo = this.getEnvironmentFromServerUrl(this._options.serverUrl);
+				Logger.warn("No environment in response, got it from server URL:", this._environmentInfo);
 			} else {
-				this._environment = response.environment;
-				this._isOnPrem = response.isOnPrem || false;
+				this._environmentInfo = {
+					environment: response.environment,
+					isOnPrem: response.isOnPrem || false,
+					isProductionCloud: response.isProductionCloud || false
+				};
+				Logger.log("Got environment from connectivity response:", this._environmentInfo);
 			}
-			this.agent.sendNotification(DidSetEnvironmentNotificationType, {
-				environment: this._environment,
-				isOnPrem: this._isOnPrem
-			});
+			this.agent.sendNotification(DidSetEnvironmentNotificationType, this._environmentInfo);
 		});
 		const versionManager = new VersionMiddlewareManager(this._api);
 		versionManager.onDidChangeCompatibility(this.onVersionCompatibilityChanged, this);
@@ -402,7 +403,6 @@ export class CodeStreamSession {
 					usersResponse,
 					preferencesResponse
 				] = await promise;
-
 				return {
 					companies: companiesResponse.companies,
 					preferences: preferencesResponse.preferences,
@@ -413,8 +413,7 @@ export class CodeStreamSession {
 					users: usersResponse.users,
 					providers: this.providers,
 					apiCapabilities: this.apiCapabilities,
-					environment: this.environment,
-					isOnPrem: this.isOnPrem
+					environmentInfo: this.environmentInfo
 				};
 			}
 		);
@@ -593,25 +592,34 @@ export class CodeStreamSession {
 		return this._codestreamAccessToken;
 	}
 
-	private _environment: CodeStreamEnvironment | string = CodeStreamEnvironment.Unknown;
-	get environment() {
-		if (this._environment === CodeStreamEnvironment.Unknown) {
+	private _environmentInfo: CodeStreamEnvironmentInfo = {
+		environment: CodeStreamEnvironment.Unknown,
+		isOnPrem: false,
+		isProductionCloud: false
+	};
+	get environmentInfo() {
+		if (this._environmentInfo.environment === CodeStreamEnvironment.Unknown) {
 			if (this._options.serverUrl) {
 				// this should only be called before we have communicated with the server,
 				// which is regarded as the source of truth
 				// for now, this is only needed by the error reporter initialization in errorReporter.ts
 				// we should keep it that way
-				const { environment, isOnPrem } = this.getEnvironmentFromServerUrl(this._options.serverUrl);
-				this._environment = environment;
-				this._isOnPrem = isOnPrem;
+				this._environmentInfo = this.getEnvironmentFromServerUrl(this._options.serverUrl);
 			}
 		}
-		return this._environment;
+		return this._environmentInfo;
 	}
 
-	private _isOnPrem: boolean = false;
+	get environment() {
+		return this.environmentInfo.environment;
+	}
+
 	get isOnPrem() {
-		return this._isOnPrem;
+		return this.environmentInfo.isOnPrem;
+	}
+
+	get isProductionCloud() {
+		return this.environmentInfo.isProductionCloud;
 	}
 
 	get disableStrictSSL(): boolean {
@@ -835,11 +843,6 @@ export class CodeStreamSession {
 		this._codestreamAccessToken = token.value;
 		this._teamId = (this._options as any).teamId = token.teamId;
 		this._codestreamUserId = response.user.id;
-		this._environment = response.runtimeEnvironment || CodeStreamEnvironment.Production;
-		this._isOnPrem =
-			response.isOnPrem === undefined // this check obsolete as of api server version 8.2.34
-				? response.runtimeEnvironment === "onprem"
-				: response.isOnPrem;
 
 		const currentTeam = response.teams.find(t => t.id === this._teamId)!;
 		this.registerApiCapabilities(response.capabilities || {}, currentTeam);
@@ -928,8 +931,7 @@ export class CodeStreamSession {
 				token: token,
 				capabilities: this.api.capabilities,
 				email: this._email!,
-				environment: this._environment,
-				isOnPrem: this._isOnPrem,
+				environmentInfo: this._environmentInfo,
 				serverUrl: this._options.serverUrl!,
 				teamId: this._teamId!,
 				userId: response.user.id
@@ -1081,35 +1083,53 @@ export class CodeStreamSession {
 	//    communicated with the server, so that will be determined here
 	//
 	// In theory, this method should be called for no other reason that those given above.
-	private getEnvironmentFromServerUrl(url: string): { environment: string; isOnPrem: boolean } {
+	private getEnvironmentFromServerUrl(url: string): CodeStreamEnvironmentInfo {
 		const match = envRegex.exec(url);
 
 		// if no match, then our server is not a CodeStream server, meaning we are on-prem
-		if (match == null) return { environment: CodeStreamEnvironment.Unknown, isOnPrem: true };
+		if (match == null) {
+			return {
+				environment: CodeStreamEnvironment.Unknown,
+				isOnPrem: true,
+				isProductionCloud: false
+			};
+		}
 
 		// localhost translates into local development environment,
 		// whether we are on-prem or not comes from separate information
 		let [, subdomain, env] = match;
 		if (subdomain != null && subdomain.toLowerCase() === "localhost") {
-			return { environment: CodeStreamEnvironment.Local, isOnPrem: false };
+			return {
+				environment: CodeStreamEnvironment.Local,
+				isOnPrem: false,
+				isProductionCloud: false
+			};
 		}
 
 		if (env) {
 			// a match of the form <env>-api.codestream.us, like PD and QA
 			env = env.toLowerCase();
-			return { environment: env.toLowerCase(), isOnPrem: false };
+			return { environment: env.toLowerCase(), isOnPrem: false, isProductionCloud: false };
 		} else if (subdomain) {
 			// a match of the form <subdomain>.codestream.us, like OPPR, OPBETA, anything else
 			subdomain = subdomain.toLowerCase();
 			if (subdomain === "api") {
-				return { environment: CodeStreamEnvironment.Production, isOnPrem: false };
+				return {
+					environment: CodeStreamEnvironment.Production,
+					isOnPrem: false,
+					isProductionCloud: true
+				};
 			} else {
 				// the need for this goes away when delivered from the server
 				const isOnPrem = subdomain === "opbeta" || subdomain === "oppr";
-				return { environment: subdomain.toLowerCase(), isOnPrem };
+				return { environment: subdomain.toLowerCase(), isOnPrem, isProductionCloud: false };
 			}
 		} else {
-			return { environment: CodeStreamEnvironment.Unknown, isOnPrem: false };
+			return {
+				environment: CodeStreamEnvironment.Unknown,
+				isOnPrem: false,
+				isProductionCloud: false
+			};
 		}
 	}
 

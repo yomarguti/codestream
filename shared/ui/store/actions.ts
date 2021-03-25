@@ -45,7 +45,6 @@ export const bootstrap = (data?: SignedInBootstrapData) => async dispatch => {
 	if (data == undefined) {
 		const api = HostApi.instance;
 		const bootstrapCore = await api.send(BootstrapInHostRequestType, undefined);
-
 		if (bootstrapCore.session.userId === undefined) {
 			dispatch(
 				bootstrapEssentials({
@@ -84,7 +83,7 @@ const bootstrapEssentials = (data: BootstrapInHostResponse) => dispatch => {
 	dispatch(sessionActions.setSession(data.session));
 	dispatch(contextActions.setContext({ hasFocus: true, ...data.context }));
 	dispatch(updateCapabilities(data.capabilities || {}));
-	dispatch(updateConfigs(data.configs));
+	dispatch(updateConfigs({ ...data.configs, ...data.environmentInfo }));
 	dispatch({ type: "@pluginVersion/Set", payload: data.version });
 	dispatch({ type: BootstrapActionType.Complete });
 

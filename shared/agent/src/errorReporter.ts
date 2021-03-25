@@ -5,7 +5,6 @@ import { ReportSuppressedMessages } from "./agentError";
 import { Team } from "./api/extensions";
 import { SessionContainer } from "./container";
 import {
-	CodeStreamEnvironment,
 	ReportBreadcrumbRequest,
 	ReportBreadcrumbRequestType,
 	ReportMessageRequest,
@@ -18,7 +17,7 @@ import { Logger } from "./logger";
 @lsp
 export class ErrorReporter {
 	constructor(session: CodeStreamSession) {
-		if (session.environment === CodeStreamEnvironment.Production) {
+		if (session.isProductionCloud) {
 			Logger.log("Initializing Sentry...");
 			Sentry.init({
 				dsn: "https://7c34949981cc45848fc4e3548363bb17@sentry.io/1314159",

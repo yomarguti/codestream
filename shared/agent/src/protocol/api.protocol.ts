@@ -1,4 +1,5 @@
 "use strict";
+import { CodeStreamEnvironmentInfo } from "./agent.protocol";
 import { CreateReviewChangesetsRequest } from "./agent.protocol.reviews";
 import { RepoScmStatus } from "./agent.protocol.scm";
 import {
@@ -94,8 +95,7 @@ export interface CSLoginResponse {
 	teamId?: string;
 	capabilities?: CSApiCapabilities;
 	features?: CSApiFeatures;
-	runtimeEnvironment?: string;
-	isOnPrem?: boolean;
+	environmentInfo: CodeStreamEnvironmentInfo;
 }
 
 export interface CSRegisterRequest {

@@ -6,7 +6,7 @@ import {
 	BaseAgentOptions,
 	BootstrapRequestType,
 	CloseStreamRequestType,
-	CodeStreamEnvironment,
+	CodeStreamEnvironmentInfo,
 	CreateChannelStreamRequestType,
 	CreateDirectStreamRequestType,
 	CreateDocumentMarkerPermalinkRequestType,
@@ -36,7 +36,6 @@ import {
 	DidLoginNotificationType,
 	DidLogoutNotification,
 	DidLogoutNotificationType,
-	DidSetEnvironmentNotification,
 	DidStartLoginNotificationType,
 	EditPostRequestType,
 	FetchCodemarksRequestType,
@@ -235,8 +234,8 @@ export class CodeStreamAgentConnection implements Disposable {
 		return this._onAgentInitialized.event;
 	}
 
-	private _onDidSetEnvironment = new EventEmitter<DidSetEnvironmentNotification>();
-	get onDidSetEnvironment(): Event<DidSetEnvironmentNotification> {
+	private _onDidSetEnvironment = new EventEmitter<CodeStreamEnvironmentInfo>();
+	get onDidSetEnvironment(): Event<CodeStreamEnvironmentInfo> {
 		return this._onDidSetEnvironment.event;
 	}
 
@@ -271,7 +270,7 @@ export class CodeStreamAgentConnection implements Disposable {
 				error: (error: Error, message: Message, count: number) => {
 					Logger.error(error, "AgentConnection.error", message.jsonrpc, count);
 
-					if (Container.session.environment !== CodeStreamEnvironment.Production) {
+					if (!Container.session.isProductionCloud) {
 						window.showErrorMessage(
 							`CodeStream Connection Error (${count})\n${error.message}\n${message.jsonrpc}`
 						);
@@ -283,7 +282,7 @@ export class CodeStreamAgentConnection implements Disposable {
 					this._restartCount++;
 					Logger.error(undefined!, "AgentConnection.closed");
 
-					if (Container.session.environment !== CodeStreamEnvironment.Production) {
+					if (!Container.session.isProductionCloud) {
 						window.showErrorMessage(
 							"CodeStream Connection Closed\nAttempting to reestablish connection..."
 						);

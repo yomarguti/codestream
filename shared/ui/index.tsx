@@ -112,7 +112,15 @@ export async function initialize(selector: string) {
 		if (resp.capabilities) {
 			store.dispatch(updateCapabilities(resp.capabilities));
 		}
-		store.dispatch(updateConfigs({ isOnPrem: resp.isOnPrem }));
+		if (resp.environment) {
+			store.dispatch(
+				updateConfigs({
+					isOnPrem: resp.isOnPrem,
+					environment: resp.environment,
+					isProductionCloud: resp.isProductionCloud
+				})
+			);
+		}
 	}
 }
 
