@@ -718,6 +718,12 @@ export const PullRequest = () => {
 								</div>
 							)}
 						</Header>
+						{!pr.sourceProject && (
+							<PRError>
+								<Icon name="alert" />
+								<div>The source project for this merge request has been removed.</div>
+							</PRError>
+						)}
 						<PRTitle>
 							{pr.title}{" "}
 							<Tooltip title="Open on GitLab" placement="top">

@@ -39,6 +39,11 @@ query GetPullRequest($fullPath: ID!, $iid: String!, $after: String) {
 				startSha
 			}
 			commitCount
+			project {
+				name
+				webUrl
+				fullPath
+			}
 			sourceProject {
 				name
 				webUrl

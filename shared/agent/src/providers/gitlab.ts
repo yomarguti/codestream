@@ -1061,12 +1061,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					response.project.mergeRequest.diffRefs && response.project.mergeRequest.diffRefs.headSha,
 				headRefName: response.project.mergeRequest.sourceBranch,
 				repository: {
-					name: response.project.mergeRequest.sourceProject.name,
-					nameWithOwner: response.project.mergeRequest.sourceProject.fullPath,
-					url: response.project.mergeRequest.sourceProject.webUrl
+					name: response.project.mergeRequest.project.name,
+					nameWithOwner: response.project.mergeRequest.project.fullPath,
+					url: response.project.mergeRequest.project.webUrl
 				},
 				number: parseInt(response.project.mergeRequest.iid, 10),
-				url: response.project.mergeRequest.sourceProject.webUrl,
+				url: response.project.mergeRequest.project.webUrl,
 				baseWebUrl: this.baseWebUrl,
 				merged: !!response.project.mergeRequest.mergedAt,
 				idComputed: mergeRequestFullId,

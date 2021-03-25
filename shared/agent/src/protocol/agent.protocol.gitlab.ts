@@ -177,6 +177,12 @@ export interface GitLabLabel {
 	description?: string;
 }
 
+interface Project {
+	name: string;
+	fullPath: string;
+	webUrl: string;
+}
+
 export interface GitLabMergeRequest {
 	approvedBy: {
 		nodes: {
@@ -296,6 +302,7 @@ export interface GitLabMergeRequest {
 			totalCount: number;
 		};
 	};
+	project: Project;
 	projectId: string;
 	/* CS providerId */
 	providerId: string;
@@ -328,7 +335,13 @@ export interface GitLabMergeRequest {
 	};
 	sourceBranch: string;
 	state: string;
-	sourceProject: any;
+	/**
+	 * it's possible that a source project can be removed
+	 *
+	 * @type {Project}
+	 * @memberof GitLabMergeRequest
+	 */
+	sourceProject?: Project;
 	subscribed: boolean;
 	targetBranch: string;
 	timeEstimate: number;
