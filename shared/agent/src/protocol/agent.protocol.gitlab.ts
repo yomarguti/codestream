@@ -190,11 +190,13 @@ export interface GitLabMergeRequest {
 	baseRefName: string;
 	baseRefOid: string;
 	changesCount: number;
-	commitCount: number;
+	/* this might not exist in all editions*/
+	commitCount?: number;
 	createdAt: string;
 	currentUserTodos?: {
 		nodes: {
-			// action throws an error on 13.9.3-ee
+			/* this might not exist in all editions (we don't actually use it)
+				throws an error on 13.9.3-ee*/
 			// action
 			body: string;
 			id: string;
@@ -332,10 +334,12 @@ export interface GitLabMergeRequest {
 	title: string;
 	upvotes: number;
 	url: string;
+	/* this might not exist in all editions*/
 	userDiscussionsCount: number;
 	userPermissions: {
 		adminMergeRequest: boolean;
-		canMerge: boolean;
+		/* this might not exist in all editions*/
+		canMerge?: boolean;
 	};
 	viewer: {
 		id: string;
@@ -348,6 +352,4 @@ export interface GitLabMergeRequest {
 	webUrl: string;
 	workInProgress: boolean;
 	baseWebUrl: string;
-	// forceRemoveSourceBranch: boolean;
-	// squashOnMerge: boolean;
 }

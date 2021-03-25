@@ -215,6 +215,9 @@ export abstract class ThirdPartyProviderBase<
 		protected readonly providerConfig: ThirdPartyProviderConfig
 	) {}
 
+	protected DEFAULT_VERSION = { version: "0.0.0", asArray: [0, 0, 0] };
+	protected _version: ProviderVersion | undefined;
+
 	async ensureInitialized() {}
 
 	abstract get displayName(): string;
@@ -1018,6 +1021,11 @@ export abstract class ThirdPartyIssueProviderBase<
 
 		return repos;
 	}
+
+	protected async getVersion(): Promise<ProviderVersion> {
+		this._version = this.DEFAULT_VERSION;
+		return this._version;
+	}
 }
 
 export abstract class ThirdPartyPostProviderBase<
@@ -1029,6 +1037,37 @@ export abstract class ThirdPartyPostProviderBase<
 	supportsStatus(): this is ThirdPartyPostProvider & ThirdPartyProviderSupportsStatus {
 		return ThirdPartyPostProvider.supportsStatus(this);
 	}
+}
+
+export interface ProviderVersion {
+	/**
+	 * Semantic version, aka X.Y.Z
+	 *
+	 * @type {string}
+	 * @memberof ProviderVersion
+	 */
+	version: string;
+	/**
+	 * version as an array
+	 *
+	 * @type {number[]}
+	 * @memberof ProviderVersion
+	 */
+	asArray: number[];
+	/**
+	 * optional revision information, GitLab has this
+	 *
+	 * @type {string}
+	 * @memberof ProviderVersion
+	 */
+	revision?: string;
+	/**
+	 * optional edition information like "ee". Gitlab has this
+	 *
+	 * @type {string}
+	 * @memberof ProviderVersion
+	 */
+	edition?: string;
 }
 
 export interface PullRequestComment {

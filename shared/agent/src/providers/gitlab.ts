@@ -51,6 +51,7 @@ import mergeRequest1Query from "./gitlab/mergeRequest1.graphql";
 import mergeRequestDiscussionQuery from "./gitlab/mergeRequestDiscussions.graphql";
 import { merge } from "lodash";
 import { parsePatch } from "diff";
+import { GraphqlQueryBuilder } from "./gitlab/graphqlQueryBuilder";
 
 interface GitLabProject {
 	path_with_namespace: any;
@@ -73,16 +74,9 @@ interface GitLabCurrentUser {
 	name: string;
 }
 
-export interface GitLabVersion {
-	version: string;
-	revision: string;
-}
-
 @lspProvider("gitlab")
 export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProviderInfo> {
-	private _gitlabUserId: string | undefined;
 	private _projectsByRemotePath = new Map<string, GitLabProject>();
-	protected _version: GitLabVersion | undefined;
 
 	get displayName() {
 		return "GitLab";
@@ -111,11 +105,13 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return `https://gitlab.com`;
 	}
 
-	private gitLabReviewStore: GitLabReviewStore;
+	private readonly gitLabReviewStore: GitLabReviewStore;
+	private readonly graphqlQueryBuilder: GraphqlQueryBuilder;
 
 	constructor(session: CodeStreamSession, providerConfig: ThirdPartyProviderConfig) {
 		super(session, providerConfig);
 		this.gitLabReviewStore = new GitLabReviewStore();
+		this.graphqlQueryBuilder = new GraphqlQueryBuilder(providerConfig.id);
 	}
 
 	async ensureInitialized() {
@@ -152,7 +148,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	async onConnected(providerInfo?: CSGitLabProviderInfo) {
 		super.onConnected(providerInfo);
-		this._gitlabUserId = await this.getMemberId();
 		this._projectsByRemotePath = new Map<string, GitLabProject>();
 	}
 
@@ -888,8 +883,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	async getPullRequest(request: { pullRequestId: string; force?: boolean }): Promise<any> {
 		const { projectFullPath, id, iid } = this.parseId(request.pullRequestId);
 
-		await this.ensureConnected();
+		void (await this.ensureConnected());
 		void (await this.setCurrentUser());
+		void (await this.getVersion());
 
 		if (request.force) {
 			this._pullRequestCache.delete(id);
@@ -908,8 +904,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				fullPath: projectFullPath,
 				iid: iid.toString()
 			};
-			const text = print(mergeRequest0Query);
-			let response0 = await this.query(text, args);
+			const queryText0 = await this.graphqlQueryBuilder.build(
+				this._version!.version!,
+				mergeRequest0Query,
+				"GetPullRequest"
+			);
+
+			// NOTE we are running TWO queries since they're kind of heavy and some GL instances
+			// have been known to crash. oops.
+			let response0 = await this.query(queryText0, args);
 			discussions = discussions.concat(response0.project.mergeRequest.discussions.nodes);
 			if (response0.project.mergeRequest.discussions.pageInfo?.hasNextPage) {
 				let after = response0.project.mergeRequest.discussions.pageInfo.endCursor;
@@ -930,8 +933,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			}
 
-			const text1 = print(mergeRequest1Query);
-			const response1 = await this.query(text1, args);
+			const queryText1 = print(mergeRequest1Query);
+			const response1 = await this.query(queryText1, args);
 			response = merge(
 				{
 					project: {
@@ -1014,13 +1017,16 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				full: response.project.mergeRequest.references.full
 			});
 
-			// NOTE the following are _supposed_ to exist on the graph results, butttt they're null
-			response.project.mergeRequest.commitCount = (
-				await this.getPullRequestCommits({
-					providerId: this.providerConfig.id,
-					pullRequestId: mergeRequestFullId
-				})
-			)?.length;
+			// NOTE the following are _supposed_ to exist on the graph results, butttt
+			// if they're null, try and fetch them from the commits
+			if (response.project.mergeRequest.commitCount == null) {
+				response.project.mergeRequest.commitCount = (
+					await this.getPullRequestCommits({
+						providerId: this.providerConfig.id,
+						pullRequestId: mergeRequestFullId
+					})
+				)?.length;
+			}
 			const filesChanged = await this.getPullRequestFilesChanged({
 				pullRequestId: mergeRequestFullId
 			});
