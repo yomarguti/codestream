@@ -880,7 +880,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	@log()
-	async getPullRequest(request: { pullRequestId: string; force?: boolean }): Promise<any> {
+	async getPullRequest(request: {
+		pullRequestId: string;
+		force?: boolean;
+	}): Promise<GitLabMergeRequestWrapper> {
 		const { projectFullPath, id, iid } = this.parseId(request.pullRequestId);
 
 		void (await this.ensureConnected());
@@ -1173,6 +1176,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			Logger.error(ex, "getMergeRequest", {
 				...request
 			});
+			return {
+				error: {
+					message: ex.message
+				}
+			} as any;
 		}
 
 		return response;

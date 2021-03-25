@@ -9,6 +9,7 @@ import {
 	getPullRequestId
 } from "../../../store/providerPullRequests/reducer";
 import { LoadingMessage } from "../../../src/components/LoadingMessage";
+import { ErrorMessage } from "../../../src/components/ErrorMessage";
 import { CreateCodemarkIcons } from "../../CreateCodemarkIcons";
 import { getPreferences } from "../../../store/users/reducer";
 import Tooltip from "../../Tooltip";
@@ -438,10 +439,11 @@ export const PullRequest = () => {
 			)
 		)) as any;
 		setGeneralError("");
-		if (response.error) {
+		if (response.error && response.error.message) {
 			setIsLoadingPR(false);
 			setIsLoadingMessage("");
-			setGeneralError(response.error);
+			setGeneralError(response.error.message);
+			console.error(response.error.message);
 		} else {
 			console.warn(response);
 			_assignState(response);
@@ -582,29 +584,30 @@ export const PullRequest = () => {
 	console.warn("PR: ", pr);
 
 	if (!pr) {
-		if (generalError) {
-			return (
-				<div style={{ display: "flex", height: "100vh", alignItems: "center" }}>
-					<div style={{ textAlign: "center" }}>Error: {generalError}</div>
+		return (
+			<div
+				style={{
+					display: "flex",
+					height: "100vh",
+					alignItems: "center",
+					background: "var(--sidebar-background)"
+				}}
+			>
+				<div style={{ position: "absolute", top: "20px", right: "20px" }}>
+					<CancelButton onClick={() => dispatch(clearCurrentPullRequest())} />
 				</div>
-			);
-		} else {
-			return (
-				<div
-					style={{
-						display: "flex",
-						height: "100vh",
-						alignItems: "center",
-						background: "var(--sidebar-background)"
-					}}
-				>
-					<div style={{ position: "absolute", top: "20px", right: "20px" }}>
-						<CancelButton onClick={() => dispatch(clearCurrentPullRequest())} />
-					</div>
-					<LoadingMessage>Loading Merge Request...</LoadingMessage>
-				</div>
-			);
-		}
+				{generalError && (
+					<ErrorMessage>
+						Error Loading Pull Request:
+						<br />
+						<div style={{ overflow: "auto", width: "100%", height: "7vh" }}>
+							{generalError.replace(/\\t/g, "     ").replace(/\\n/g, "")}
+						</div>
+					</ErrorMessage>
+				)}
+				{!generalError && <LoadingMessage>Loading Merge Request...</LoadingMessage>}
+			</div>
+		);
 	}
 
 	const bottomComment = (

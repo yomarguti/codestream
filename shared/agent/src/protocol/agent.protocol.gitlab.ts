@@ -44,7 +44,9 @@ export interface GitLabFetchListsResponse {
 }
 
 export interface GitLabMergeRequestWrapper {
-	error: any;
+	error?: {
+		message: string;
+	};
 	currentUser: {
 		name: string;
 		login: string;
