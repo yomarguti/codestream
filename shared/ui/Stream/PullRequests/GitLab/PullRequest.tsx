@@ -283,7 +283,6 @@ export const PullRequest = () => {
 		const providerPullRequestLastUpdated = getCurrentProviderPullRequestLastUpdated(state);
 		const order: "oldest" | "newest" = preferences.pullRequestTimelineOrder || "oldest";
 		const filter: "comments" | "history" | "all" = preferences.pullRequestTimelineFilter || "all";
-
 		return {
 			order,
 			filter,
@@ -302,6 +301,7 @@ export const PullRequest = () => {
 				: undefined,
 			currentPullRequest: currentPullRequest,
 			currentPullRequestLastUpdated: providerPullRequestLastUpdated,
+
 			composeCodemarkActive: state.context.composeCodemarkActive,
 			team,
 			textEditorUri: state.editorContext.textEditorUri,
@@ -310,6 +310,7 @@ export const PullRequest = () => {
 		};
 	});
 
+	const [didMount, setDidMount] = useState(false);
 	const [activeTab, setActiveTab] = useState(1);
 	const [isEditing, setIsEditing] = useState(false);
 	const [isLoadingPR, setIsLoadingPR] = useState(false);
@@ -336,13 +337,6 @@ export const PullRequest = () => {
 		...theme,
 		breakpoint: breakpoints[derivedState.viewPreference]
 	});
-
-	const saveTitle = async () => {
-		setIsLoadingMessage("Saving Title...");
-		setSavingTitle(true);
-		await dispatch(api("updatePullRequestTitle", { title }));
-		setSavingTitle(false);
-	};
 
 	const closeFileComments = () => {
 		// note we're passing no value for the 3rd argument, which clears
@@ -380,7 +374,10 @@ export const PullRequest = () => {
 		}
 	};
 
+	let interval;
+	let intervalCounter = 0;
 	useDidMount(() => {
+		interval && clearInterval(interval);
 		if (!derivedState.reviewsState.bootstrapped) {
 			dispatch(bootstrapReviews());
 		}
@@ -396,12 +393,65 @@ export const PullRequest = () => {
 					fetch("Updating...");
 				}
 			});
+			setDidMount(true);
 		});
 
 		return () => {
 			_didChangeDataNotification && _didChangeDataNotification.dispose();
 		};
 	});
+
+	useEffect(() => {
+		// don't run this until we have mounted
+		if (!didMount) return;
+
+		interval && clearInterval(interval);
+		interval = setInterval(async () => {
+			try {
+				if (intervalCounter >= 60) {
+					// two hours
+					interval && clearInterval(interval);
+					intervalCounter = 0;
+					console.warn(`stopped getPullRequestLastUpdated interval counter=${intervalCounter}`);
+					return;
+				}
+
+				const response = (await dispatch(
+					api(
+						"getPullRequestLastUpdated",
+						{},
+						{ preventClearError: true, preventErrorReporting: true }
+					)
+				)) as any;
+				if (
+					derivedState.currentPullRequest &&
+					derivedState.currentPullRequestLastUpdated &&
+					response &&
+					response.updatedAt !== derivedState.currentPullRequestLastUpdated
+				) {
+					console.warn(
+						"getPullRequestLastUpdated is updating",
+						response.updatedAt,
+						derivedState.currentPullRequestLastUpdated,
+						intervalCounter
+					);
+					intervalCounter = 0;
+					fetch();
+					clearInterval(interval);
+				} else {
+					intervalCounter++;
+					console.log("incrementing counter", intervalCounter);
+				}
+			} catch (ex) {
+				console.error(ex);
+				interval && clearInterval(interval);
+			}
+		}, 120000); //120000 === 2 minute interval
+
+		return () => {
+			interval && clearInterval(interval);
+		};
+	}, [didMount, derivedState.currentPullRequestLastUpdated, derivedState.currentPullRequest]);
 
 	useEffect(() => {
 		const providerPullRequests =

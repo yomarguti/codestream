@@ -63,6 +63,7 @@ query GetPullRequest($fullPath: ID!, $iid: String!, $after: String) {
 			forceRemoveSourceBranch
 			timeEstimate
 			totalTimeSpent
+			updatedAt
 			userPermissions {
 				adminMergeRequest
 				canMerge

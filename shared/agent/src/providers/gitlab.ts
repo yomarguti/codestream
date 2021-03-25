@@ -2606,6 +2606,30 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		};
 	}
 
+	async getPullRequestLastUpdated(request: { pullRequestId: string }) {
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
+
+		const response = await this.query<any>(
+			` 
+			query GetUpdatedAt($fullPath: ID!, $iid: String!) {
+				project(fullPath: $fullPath) {		 
+					mergeRequest(iid: $iid) {
+						updatedAt 
+					}
+				}
+			}
+			`,
+			{
+				fullPath: projectFullPath,
+				iid: iid
+			}
+		);
+
+		return {
+			updatedAt: response?.project?.mergeRequest?.updatedAt
+		};
+	}
+
 	private async getMilestoneEvents(
 		projectFullPath: string,
 		iid: string

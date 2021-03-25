@@ -347,6 +347,7 @@ export interface GitLabMergeRequest {
 	timeEstimate: number;
 	totalTimeSpent: number;
 	title: string;
+	updatedAt: string;
 	upvotes: number;
 	url: string;
 	/* this might not exist in all editions*/
