@@ -60,7 +60,7 @@ export class GraphqlQueryBuilder {
 		// for the GetPullRequest query, if the current version if <= 13.6.0 run this...
 		GetPullRequest: [
 			{
-				selector: (currentVersion: string) => semver.lte(currentVersion, "13.6.0"),
+				selector: (currentVersion: string) => semver.lt(currentVersion, "13.6.0"),
 				query: {
 					head: {
 						value: {
