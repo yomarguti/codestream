@@ -9,7 +9,9 @@ const initialState: ConfigsState = {
 	showHeadshots: true,
 	debug: false,
 	serverUrl: "",
-	isOnPrem: false
+	environment: "",
+	isOnPrem: false,
+	isProductionCloud: false
 };
 
 export function reduceConfigs(state = initialState, { type, payload }: ConfigsActions) {

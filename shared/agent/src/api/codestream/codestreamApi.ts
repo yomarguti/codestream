@@ -2494,8 +2494,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 			} else {
 				const json = await resp.json();
 				response.capabilities = json.capabilities;
-				response.environment = json.runTimeEnvironment;
+				response.environment = json.environment;
 				response.isOnPrem = json.isOnPrem;
+				response.isProductionCloud = json.isProductionCloud;
 			}
 		} catch (err) {
 			Logger.log(`Error connecting to the API server: ${err.message}`);

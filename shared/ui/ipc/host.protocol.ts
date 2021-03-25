@@ -1,7 +1,7 @@
 import {
 	ApiVersionCompatibility,
 	Capabilities,
-	CodeStreamEnvironment,
+	CodeStreamEnvironmentInfo,
 	ThirdPartyProviders,
 	Unreads,
 	VersionCompatibility
@@ -26,8 +26,7 @@ export interface BootstrapInHostResponse {
 	};
 	version: string;
 	context: Partial<WebviewContext>;
-	env?: CodeStreamEnvironment | string;
-	isOnPrem?: boolean;
+	environmentInfo?: CodeStreamEnvironmentInfo;
 	ide?: {
 		name: string | undefined;
 		detail: string | undefined;
