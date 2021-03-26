@@ -28,6 +28,7 @@ import {
 	GitLabCreateCardRequest,
 	GitLabCreateCardResponse,
 	GitLabLabel,
+	GitLabMergeRequest,
 	GitLabMergeRequestWrapper,
 	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
@@ -49,6 +50,7 @@ import { print } from "graphql";
 import mergeRequest0Query from "./gitlab/mergeRequest0.graphql";
 import mergeRequest1Query from "./gitlab/mergeRequest1.graphql";
 import mergeRequestDiscussionQuery from "./gitlab/mergeRequestDiscussions.graphql";
+import mergeRequestNoteMutation from "./gitlab/createMergeRequestNote.graphql";
 import { merge } from "lodash";
 import { parsePatch } from "diff";
 import { GraphqlQueryBuilder } from "./gitlab/graphqlQueryBuilder";
@@ -923,7 +925,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				while (true) {
 					const paginated = await this.query(paginatedQuery, {
 						...args,
-						after: after
+						after: after,
+						first: 100
 					});
 					discussions = discussions.concat(paginated.project.mergeRequest.discussions.nodes);
 					if (paginated.project.mergeRequest.discussions.pageInfo?.hasNextPage) {
@@ -1246,11 +1249,40 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	async createPullRequestThread(request: { pullRequestId: string; text: string }) {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
-		const data = await this.restPost(
-			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/discussions`,
-			{ body: request.text }
+		const data = await this.restPost<
+			{
+				body: string;
+			},
+			{
+				id: string;
+			}
+		>(`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/discussions`, {
+			body: request.text
+		});
+		const body = data.body;
+		const id = body.id;
+
+		const response = (await this.query(print(mergeRequestDiscussionQuery), {
+			fullPath: projectFullPath,
+			iid: iid.toString(),
+			last: 5
+		})) as GitLabMergeRequestWrapper;
+
+		const node = response?.project?.mergeRequest?.discussions?.nodes.find(
+			_ => _.id === `gid://gitlab/Discussion/${id}`
 		);
-		return data.body;
+		if (node) {
+			return {
+				directives: [{ type: "addNode", data: node }]
+			};
+		} else {
+			// if for some reason the id can't be found, the client can de-dupe
+			return {
+				directives: [
+					{ type: "addNodes", data: response?.project?.mergeRequest?.discussions.nodes || [] }
+				]
+			};
+		}
 	}
 
 	@log()
@@ -1648,105 +1680,26 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		let noteableId;
 
 		const { projectFullPath, id, iid } = this.parseId(request.pullRequestId);
+
 		request.projectFullPath = projectFullPath;
 		request.iid = iid;
 		noteableId = id;
 		request.noteableId = this.toMergeRequestGid(noteableId);
 
-		const response = (await this.mutate(
-			`mutation CreateNote($noteableId:ID!, $body:String!, $iid:String!){
-			createNote(input: {noteableId:$noteableId, body:$body}){
-				clientMutationId
-				note{
-					project {
-						mergeRequest(iid: $iid) {
-							discussions(last:5) {
-							nodes {
-							createdAt
-							id
-							notes {
-								nodes {
-								author {
-									name
-									login:username
-									avatarUrl
-								}
-								body
-								bodyHtml
-								createdAt
-								discussion {
-									id
-									replyId
-									createdAt
-								}
-								id
-								position {
-									x
-									y
-									newLine
-									newPath
-									oldLine
-									oldPath
-									filePath
-								}
-								project {
-									name
-								}
-								resolvable
-								resolved
-								resolvedAt
-								resolvedBy {
-									login:username
-									avatarUrl
-								}
-								system
-								systemNoteIconName
-								updatedAt
-								userPermissions {
-										adminNote
-										readNote
-										resolveNote
-										awardEmoji
-										createNote
-									}
-								}
-							}
-							replyId
-							resolvable
-							resolved
-							resolvedAt
-							resolvedBy {
-									login:username
-									avatarUrl
-								}
-							}
-						  }
-						}
-					  }
-					id
-					body
-					createdAt
-					author {
-					  login:username
-					  avatarUrl
-					}
-					updatedAt
-					userPermissions {
-					  adminNote
-					  awardEmoji
-					  createNote
-					  readNote
-					  resolveNote
-					}
-				  }
-				}
-		  }`,
-			{
-				noteableId: request.noteableId,
-				body: request.text,
-				iid: request.iid!.toString()
-			}
-		)) as any;
+		const response = (await this.mutate(print(mergeRequestNoteMutation), {
+			noteableId: request.noteableId,
+			body: request.text,
+			iid: request.iid!.toString()
+		})) as {
+			createNote: {
+				note: {
+					id: string;
+					project: {
+						mergeRequest: GitLabMergeRequest;
+					};
+				};
+			};
+		};
 
 		// find the nested node/note
 		const addedNode = response.createNote.note.project.mergeRequest.discussions.nodes.find(
@@ -1754,16 +1707,27 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				return _.notes.nodes.find((n: any) => n.id === response.createNote.note.id);
 			}
 		);
-		this.toAuthorAbsolutePathRecurse(addedNode);
 
-		return {
+		const result: Directives = {
 			directives: [
 				{
-					type: "addNode",
-					data: addedNode
+					type: "updatePullRequest",
+					data: {
+						updatedAt: response.createNote.note.project.mergeRequest.updatedAt
+					}
 				}
 			]
 		};
+
+		if (addedNode) {
+			this.toAuthorAbsolutePathRecurse(addedNode);
+			result.directives.push({
+				type: "addNode",
+				data: addedNode
+			});
+		}
+
+		return result;
 	}
 
 	async resolveReviewThread(request: {
