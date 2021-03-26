@@ -6,7 +6,7 @@ import * as paths from "path";
 import * as qs from "querystring";
 import * as nodeUrl from "url";
 import { URI } from "vscode-uri";
-import { SessionContainer } from "../container";
+import { Container, SessionContainer } from "../container";
 import { GitRemoteLike } from "../git/models/remote";
 import { GitRepository } from "../git/models/repository";
 import { ParsedDiffWithMetadata, toRepoName, translatePositionToLineNumber } from "../git/utils";
@@ -40,6 +40,7 @@ import {
 	ProviderCreatePullRequestRequest,
 	ProviderCreatePullRequestResponse,
 	ProviderGetRepoInfoResponse,
+	ProviderVersion,
 	PullRequestComment,
 	REFRESH_TIMEOUT,
 	ThirdPartyIssueProviderBase
@@ -762,6 +763,43 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return `${this.baseUrl.replace("/v4", "")}/graphql`;
 	}
 
+	protected async getVersion(): Promise<ProviderVersion> {
+		try {
+			if (this._version == null) {
+				const response = await this.get<{
+					version: string;
+					revision: string;
+				}>("/version");
+
+				const split = response.body.version.split("-");
+				const version = split[0] || "0.0.0";
+
+				this._version = {
+					version: version,
+					asArray: version.split(".").map(Number),
+					edition: split.length > 1 ? split[1] : undefined,
+					revision: response.body.revision
+				};
+
+				Logger.log(
+					`${this.providerConfig.id} getVersion - ${
+						this.providerConfig.id
+					} version=${JSON.stringify(this._version)}`
+				);
+				Container.instance().errorReporter.reportBreadcrumb({
+					message: `${this.providerConfig.id} getVersion`,
+					data: {
+						...this._version
+					}
+				});
+			}
+		} catch (ex) {
+			Logger.warn(ex, "getVersion");
+			this._version = this.DEFAULT_VERSION;
+		}
+		return this._version;
+	}
+
 	protected async client(): Promise<GraphQLClient> {
 		if (this._client === undefined) {
 			const options: { [key: string]: any } = {};
@@ -799,6 +837,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		graphQlApi: { fns: {} },
 		restApi: { fns: {} }
 	};
+
 	async query<T = any>(query: string, variables: any = undefined) {
 		if (this._providerInfo && this._providerInfo.tokenError) {
 			delete this._client;

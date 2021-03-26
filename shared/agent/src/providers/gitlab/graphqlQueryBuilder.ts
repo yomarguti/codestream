@@ -113,10 +113,10 @@ export class GraphqlQueryBuilder {
 					return keyedQuery;
 				}
 			}
-
 			let queryAsString = "";
+
 			const configurations = this.configuration[queryKey];
-			if (!configurations || !configurations.length) {
+			if (!version || version === "0.0.0" || !configurations || !configurations.length) {
 				queryAsString = print(document);
 				this.store[version] = {};
 				this.store[version][queryKey] = queryAsString;

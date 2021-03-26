@@ -1,13 +1,10 @@
 "use strict";
 
-import { Logger } from "../logger";
 import { URI } from "vscode-uri";
 import { GitRemoteLike } from "../git/gitService";
 import { ProviderConfigurationData } from "../protocol/agent.protocol.providers";
 import { log, lspProvider } from "../system";
 import { GitLabProvider } from "./gitlab";
-import { Container } from "../container";
-import { ProviderVersion } from "./provider";
 
 @lspProvider("gitlab_enterprise")
 export class GitLabEnterpriseProvider extends GitLabProvider {
@@ -60,41 +57,6 @@ export class GitLabEnterpriseProvider extends GitLabProvider {
 	async ensureInitialized() {
 		await super.ensureInitialized();
 		await this.getVersion();
-	}
-
-	protected async getVersion(): Promise<ProviderVersion> {
-		try {
-			if (this._version == null) {
-				const response = await this.get<{
-					version: string;
-					revision: string;
-				}>("/version");
-				const split = response.body.version.split("-");
-
-				let version = split[0] || "0.0.0";
-				this._version = {
-					version: version,
-					asArray: version.split(".").map(Number),
-					edition: split.length > 1 ? split[1] : undefined,
-					revision: response.body.revision
-				};
-				Logger.log(
-					`GitLabEnterprise getVersion - ${this.providerConfig.id} version=${JSON.stringify(
-						this._version
-					)}`
-				);
-				Container.instance().errorReporter.reportBreadcrumb({
-					message: `GitLabEnterprise getVersion`,
-					data: {
-						...this._version
-					}
-				});
-			}
-		} catch (ex) {
-			Logger.error(ex);
-			this._version = this.DEFAULT_VERSION;
-		}
-		return this._version;
 	}
 
 	@log()
