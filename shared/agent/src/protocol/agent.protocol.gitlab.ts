@@ -44,7 +44,9 @@ export interface GitLabFetchListsResponse {
 }
 
 export interface GitLabMergeRequestWrapper {
-	error: any;
+	error?: {
+		message: string;
+	};
 	currentUser: {
 		name: string;
 		login: string;
@@ -175,6 +177,12 @@ export interface GitLabLabel {
 	description?: string;
 }
 
+interface Project {
+	name: string;
+	fullPath: string;
+	webUrl: string;
+}
+
 export interface GitLabMergeRequest {
 	approvedBy: {
 		nodes: {
@@ -190,11 +198,13 @@ export interface GitLabMergeRequest {
 	baseRefName: string;
 	baseRefOid: string;
 	changesCount: number;
-	commitCount: number;
+	/* this might not exist in all editions*/
+	commitCount?: number;
 	createdAt: string;
 	currentUserTodos?: {
 		nodes: {
-			// action throws an error on 13.9.3-ee
+			/* this might not exist in all editions (we don't actually use it)
+				throws an error on 13.9.3-ee*/
 			// action
 			body: string;
 			id: string;
@@ -292,6 +302,7 @@ export interface GitLabMergeRequest {
 			totalCount: number;
 		};
 	};
+	project: Project;
 	projectId: string;
 	/* CS providerId */
 	providerId: string;
@@ -324,18 +335,27 @@ export interface GitLabMergeRequest {
 	};
 	sourceBranch: string;
 	state: string;
-	sourceProject: any;
+	/**
+	 * it's possible that a source project can be removed
+	 *
+	 * @type {Project}
+	 * @memberof GitLabMergeRequest
+	 */
+	sourceProject?: Project;
 	subscribed: boolean;
 	targetBranch: string;
 	timeEstimate: number;
 	totalTimeSpent: number;
 	title: string;
+	updatedAt: string;
 	upvotes: number;
 	url: string;
+	/* this might not exist in all editions*/
 	userDiscussionsCount: number;
 	userPermissions: {
 		adminMergeRequest: boolean;
-		canMerge: boolean;
+		/* this might not exist in all editions*/
+		canMerge?: boolean;
 	};
 	viewer: {
 		id: string;
@@ -348,6 +368,4 @@ export interface GitLabMergeRequest {
 	webUrl: string;
 	workInProgress: boolean;
 	baseWebUrl: string;
-	// forceRemoveSourceBranch: boolean;
-	// squashOnMerge: boolean;
 }

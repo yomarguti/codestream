@@ -39,6 +39,11 @@ query GetPullRequest($fullPath: ID!, $iid: String!, $after: String) {
 				startSha
 			}
 			commitCount
+			project {
+				name
+				webUrl
+				fullPath
+			}
 			sourceProject {
 				name
 				webUrl
@@ -58,6 +63,7 @@ query GetPullRequest($fullPath: ID!, $iid: String!, $after: String) {
 			forceRemoveSourceBranch
 			timeEstimate
 			totalTimeSpent
+			updatedAt
 			userPermissions {
 				adminMergeRequest
 				canMerge

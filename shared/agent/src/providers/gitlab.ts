@@ -51,6 +51,7 @@ import mergeRequest1Query from "./gitlab/mergeRequest1.graphql";
 import mergeRequestDiscussionQuery from "./gitlab/mergeRequestDiscussions.graphql";
 import { merge } from "lodash";
 import { parsePatch } from "diff";
+import { GraphqlQueryBuilder } from "./gitlab/graphqlQueryBuilder";
 
 interface GitLabProject {
 	path_with_namespace: any;
@@ -73,16 +74,9 @@ interface GitLabCurrentUser {
 	name: string;
 }
 
-export interface GitLabVersion {
-	version: string;
-	revision: string;
-}
-
 @lspProvider("gitlab")
 export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProviderInfo> {
-	private _gitlabUserId: string | undefined;
 	private _projectsByRemotePath = new Map<string, GitLabProject>();
-	protected _version: GitLabVersion | undefined;
 
 	get displayName() {
 		return "GitLab";
@@ -111,11 +105,13 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return `https://gitlab.com`;
 	}
 
-	private gitLabReviewStore: GitLabReviewStore;
+	private readonly gitLabReviewStore: GitLabReviewStore;
+	private readonly graphqlQueryBuilder: GraphqlQueryBuilder;
 
 	constructor(session: CodeStreamSession, providerConfig: ThirdPartyProviderConfig) {
 		super(session, providerConfig);
 		this.gitLabReviewStore = new GitLabReviewStore();
+		this.graphqlQueryBuilder = new GraphqlQueryBuilder(providerConfig.id);
 	}
 
 	async ensureInitialized() {
@@ -152,7 +148,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	async onConnected(providerInfo?: CSGitLabProviderInfo) {
 		super.onConnected(providerInfo);
-		this._gitlabUserId = await this.getMemberId();
 		this._projectsByRemotePath = new Map<string, GitLabProject>();
 	}
 
@@ -885,11 +880,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	@log()
-	async getPullRequest(request: { pullRequestId: string; force?: boolean }): Promise<any> {
+	async getPullRequest(request: {
+		pullRequestId: string;
+		force?: boolean;
+	}): Promise<GitLabMergeRequestWrapper> {
 		const { projectFullPath, id, iid } = this.parseId(request.pullRequestId);
 
-		await this.ensureConnected();
+		void (await this.ensureConnected());
 		void (await this.setCurrentUser());
+		void (await this.getVersion());
 
 		if (request.force) {
 			this._pullRequestCache.delete(id);
@@ -908,8 +907,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				fullPath: projectFullPath,
 				iid: iid.toString()
 			};
-			const text = print(mergeRequest0Query);
-			let response0 = await this.query(text, args);
+			const queryText0 = await this.graphqlQueryBuilder.build(
+				this._version!.version!,
+				mergeRequest0Query,
+				"GetPullRequest"
+			);
+
+			// NOTE we are running TWO queries since they're kind of heavy and some GL instances
+			// have been known to crash. oops.
+			let response0 = await this.query(queryText0, args);
 			discussions = discussions.concat(response0.project.mergeRequest.discussions.nodes);
 			if (response0.project.mergeRequest.discussions.pageInfo?.hasNextPage) {
 				let after = response0.project.mergeRequest.discussions.pageInfo.endCursor;
@@ -930,8 +936,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			}
 
-			const text1 = print(mergeRequest1Query);
-			const response1 = await this.query(text1, args);
+			const queryText1 = print(mergeRequest1Query);
+			const response1 = await this.query(queryText1, args);
 			response = merge(
 				{
 					project: {
@@ -1014,13 +1020,16 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				full: response.project.mergeRequest.references.full
 			});
 
-			// NOTE the following are _supposed_ to exist on the graph results, butttt they're null
-			response.project.mergeRequest.commitCount = (
-				await this.getPullRequestCommits({
-					providerId: this.providerConfig.id,
-					pullRequestId: mergeRequestFullId
-				})
-			)?.length;
+			// NOTE the following are _supposed_ to exist on the graph results, butttt
+			// if they're null, try and fetch them from the commits
+			if (response.project.mergeRequest.commitCount == null) {
+				response.project.mergeRequest.commitCount = (
+					await this.getPullRequestCommits({
+						providerId: this.providerConfig.id,
+						pullRequestId: mergeRequestFullId
+					})
+				)?.length;
+			}
 			const filesChanged = await this.getPullRequestFilesChanged({
 				pullRequestId: mergeRequestFullId
 			});
@@ -1052,12 +1061,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					response.project.mergeRequest.diffRefs && response.project.mergeRequest.diffRefs.headSha,
 				headRefName: response.project.mergeRequest.sourceBranch,
 				repository: {
-					name: response.project.mergeRequest.sourceProject.name,
-					nameWithOwner: response.project.mergeRequest.sourceProject.fullPath,
-					url: response.project.mergeRequest.sourceProject.webUrl
+					name: response.project.mergeRequest.project.name,
+					nameWithOwner: response.project.mergeRequest.project.fullPath,
+					url: response.project.mergeRequest.project.webUrl
 				},
 				number: parseInt(response.project.mergeRequest.iid, 10),
-				url: response.project.mergeRequest.sourceProject.webUrl,
+				url: response.project.mergeRequest.project.webUrl,
 				baseWebUrl: this.baseWebUrl,
 				merged: !!response.project.mergeRequest.mergedAt,
 				idComputed: mergeRequestFullId,
@@ -1167,6 +1176,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			Logger.error(ex, "getMergeRequest", {
 				...request
 			});
+			return {
+				error: {
+					message: ex.message
+				}
+			} as any;
 		}
 
 		return response;
@@ -1258,6 +1272,24 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}) {
 		const result = await this.createPullRequestReviewComment(request);
 		return result;
+	}
+
+	@log()
+	async addComment(request: { subjectId: string; text: string }): Promise<any> {
+		// // does not require return directives
+		const { id } = this.parseId(request.subjectId);
+		const response = await this.mutate(
+			`mutation CreateNote($noteableId:ID!, $body:String!){
+				createNote(input: {noteableId:$noteableId, body:$body}){
+					clientMutationId				
+		  	}
+		}`,
+			{
+				noteableId: this.toMergeRequestGid(id),
+				body: request.text
+			}
+		);
+		return response;
 	}
 
 	@log()
@@ -1640,7 +1672,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 									avatarUrl
 								}
 								body
-								bodyHtml								
+								bodyHtml
 								createdAt
 								discussion {
 									id
@@ -1722,6 +1754,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				return _.notes.nodes.find((n: any) => n.id === response.createNote.note.id);
 			}
 		);
+		this.toAuthorAbsolutePathRecurse(addedNode);
 
 		return {
 			directives: [
@@ -2358,9 +2391,16 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		endLine?: number;
 		// used for old servers
 		position?: number;
+		metadata?: {
+			contents: string;
+			fileWithUrl: string;
+			startLine: number;
+			endLine: number;
+		};
 	}) {
+		let projectFullPath, id, iid;
 		try {
-			const { projectFullPath, id, iid } = this.parseId(request.pullRequestId);
+			({ projectFullPath, id, iid } = this.parseId(request.pullRequestId));
 
 			const payload = {
 				body: request.text,
@@ -2387,11 +2427,38 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 			return data.body;
 		} catch (ex) {
-			Logger.warn(`createCommitComment`, {
-				request: request,
-				error: ex
-			});
-			throw ex;
+			// lines that are _slightly_ outside the context of a diff (yet are still in the hunks)
+			// are not allowed and they return a bizzare error message...
+			// retry as a comment not attached to a line of code
+			if (ex?.message?.indexOf("must be a valid line code") > -1) {
+				Logger.warn(`createCommitCommentLineCodeError`, {
+					request: request,
+					error: ex
+				});
+				const metadata = request.metadata;
+				if (metadata) {
+					return this.addComment({
+						subjectId: request.pullRequestId,
+						text: `${request.text || ""}\n\n\`\`\`\n${metadata.contents}\n\`\`\`
+						\n${metadata.fileWithUrl} (Line${
+							metadata.startLine === metadata.endLine
+								? ` ${metadata.startLine}`
+								: `s ${metadata.startLine}-${metadata.endLine}`
+						})`
+					});
+				} else {
+					return this.addComment({
+						subjectId: request.pullRequestId,
+						text: request.text
+					});
+				}
+			} else {
+				Logger.error(ex, `createCommitComment`, {
+					request: request
+				});
+
+				throw ex;
+			}
 		}
 	}
 
@@ -2539,6 +2606,30 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		};
 	}
 
+	async getPullRequestLastUpdated(request: { pullRequestId: string }) {
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
+
+		const response = await this.query<any>(
+			` 
+			query GetUpdatedAt($fullPath: ID!, $iid: String!) {
+				project(fullPath: $fullPath) {		 
+					mergeRequest(iid: $iid) {
+						updatedAt 
+					}
+				}
+			}
+			`,
+			{
+				fullPath: projectFullPath,
+				iid: iid
+			}
+		);
+
+		return {
+			updatedAt: response?.project?.mergeRequest?.updatedAt
+		};
+	}
+
 	private async getMilestoneEvents(
 		projectFullPath: string,
 		iid: string
@@ -2669,6 +2760,19 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			author.avatarUrl = `${this.baseWebUrl}${author.avatarUrl}`;
 		}
 		return author;
+	}
+
+	private toAuthorAbsolutePathRecurse(obj: any) {
+		if (!obj) return;
+		for (const k in obj) {
+			if (typeof obj[k] === "object") {
+				this.toAuthorAbsolutePathRecurse(obj[k]);
+			} else if (k === "avatarUrl") {
+				if (obj.avatarUrl.indexOf("/") === 0) {
+					obj.avatarUrl = `${this.baseWebUrl}${obj.avatarUrl}`;
+				}
+			}
+		}
 	}
 
 	private async _paginateRestResponse(url: string, map: (data: any[]) => any[]) {

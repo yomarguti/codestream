@@ -1,5 +1,4 @@
 "use strict";
-
 import { GitRemoteLike } from "git/gitService";
 import { GraphQLClient } from "graphql-request";
 import semver from "semver";
@@ -10,12 +9,7 @@ import { DidChangePullRequestCommentsNotificationType } from "../protocol/agent.
 import { ProviderConfigurationData } from "../protocol/agent.protocol.providers";
 import { log, lspProvider } from "../system";
 import { GitHubProvider } from "./github";
-import {
-	ProviderCreatePullRequestRequest,
-	ProviderCreatePullRequestResponse,
-	ProviderGetRepoInfoResponse,
-	ProviderPullRequestInfo
-} from "./provider";
+import { ProviderGetRepoInfoResponse, ProviderPullRequestInfo, ProviderVersion } from "./provider";
 
 /**
  * GitHub Enterprise
@@ -60,13 +54,17 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 		await this.getVersion();
 	}
 
-	protected async getVersion(): Promise<string> {
+	protected async getVersion(): Promise<ProviderVersion> {
 		try {
 			if (this._version == null) {
 				const response = await this.get<{ installed_version: string }>("/meta");
-				this._version = response.body.installed_version;
+				const installedVersion = response.body.installed_version;
+				this._version = {
+					version: installedVersion,
+					asArray: (installedVersion || "0.0.0").split(".").map(Number)
+				};
 				Logger.log(
-					`GitHubEnterprise getVersion - ${this.providerConfig.id} version=${this._version}`
+					`GitHubEnterprise getVersion - ${this.providerConfig.id} version=${this._version.version}`
 				);
 				Container.instance().errorReporter.reportBreadcrumb({
 					message: `GitHubEnterprise getVersion`,
@@ -77,7 +75,7 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 			}
 		} catch (ex) {
 			Logger.error(ex);
-			this._version = "0.0.0";
+			this._version = this.DEFAULT_VERSION;
 		}
 		return this._version;
 	}
@@ -92,7 +90,7 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 	protected async isPRApiCompatible(): Promise<boolean> {
 		if (this._isPRApiCompatible == null) {
 			const version = await this.getVersion();
-			const [major, minor] = version.split(".").map(Number);
+			const [major, minor] = version.asArray;
 			this._isPRApiCompatible = major > 2 || (major === 2 && minor >= 15);
 		}
 
@@ -104,7 +102,7 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 		if (this._isPRCreationApiCompatible == null) {
 			try {
 				const version = await this.getVersion();
-				const [major, minor, patch] = version.split(".").map(Number);
+				const [major, minor, patch] = version.asArray;
 				this._isPRCreationApiCompatible = major > 2 || (major === 2 && minor >= 19 && patch >= 6);
 			} catch (ex) {
 				this._isPRCreationApiCompatible = false;
@@ -203,7 +201,7 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 	async query<T = any>(query: string, variables: any = undefined) {
 		const v = await this.getVersion();
 		// we know that in version 2.19.6, @me doesn't work
-		if (v && semver.lt(v, "2.21.0") && query.indexOf("@me") > -1) {
+		if (v && semver.lt(v.version, "2.21.0") && query.indexOf("@me") > -1) {
 			query = query.replace(/@me/g, await this.getMe());
 		}
 		return super.query<T>(query, variables);
@@ -217,7 +215,7 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 		position?: number;
 	}) {
 		const v = await this.getVersion();
-		if (v && semver.lt(v, "2.21.0")) {
+		if (v && semver.lt(v.version, "2.21.0")) {
 			// https://docs.github.com/en/enterprise-server@2.19/graphql/reference/input-objects#addpullrequestreviewcommentinput
 			// https://docs.github.com/en/enterprise-server@2.20/graphql/reference/input-objects#addpullrequestreviewcommentinput
 			let query;
@@ -278,7 +276,7 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 
 		let response;
 		const v = await this.getVersion();
-		if (v && semver.lt(v, "2.21.0")) {
+		if (v && semver.lt(v.version, "2.21.0")) {
 			// https://docs.github.com/en/enterprise-server@2.19/graphql/reference/input-objects#submitpullrequestreviewinput
 			// https://docs.github.com/en/enterprise-server@2.20/graphql/reference/input-objects#submitpullrequestreviewinput
 			const existingReview = await this.getPendingReview(request);

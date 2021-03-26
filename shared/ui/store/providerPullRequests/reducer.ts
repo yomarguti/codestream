@@ -601,14 +601,18 @@ export const getCurrentProviderPullRequestObject = createSelector(
 
 export const getCurrentProviderPullRequestLastUpdated = createSelector(
 	getCurrentProviderPullRequest,
-	providerPullRequest => {
+	getPullRequestProviderId,
+	(providerPullRequest, providerId) => {
 		if (!providerPullRequest) return undefined;
-		return providerPullRequest &&
-			providerPullRequest.conversations &&
-			providerPullRequest.conversations.repository &&
-			providerPullRequest.conversations.repository.pullRequest
-			? providerPullRequest.conversations.repository.pullRequest.updatedAt
-			: undefined;
+		if (!providerId) return undefined;
+
+		if (providerId.indexOf("github") > -1) {
+			return providerPullRequest?.conversations?.repository?.pullRequest?.updatedAt;
+		}
+		if (providerId.indexOf("gitlab") > -1) {
+			return providerPullRequest?.conversations?.project?.mergeRequest?.updatedAt;
+		}
+		return undefined;
 	}
 );
 /**

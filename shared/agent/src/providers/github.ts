@@ -141,15 +141,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return `${this.baseUrl}/graphql`;
 	}
 
-	/**
-	 * The version of the GitHub api... note this is only set for enterprise
-	 *
-	 * @protected
-	 * @type {(string | undefined)}
-	 * @memberof GitHubProvider
-	 */
-	protected _version: string | undefined;
-
 	protected async client(): Promise<GraphQLClient> {
 		if (this._client === undefined) {
 			const options: { [key: string]: any } = {};
@@ -1999,7 +1990,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	 */
 	_transform(query: string): string {
 		if (!query) return "";
-		const v = this._version;
+		const v = this._version?.version;
 		query = query.replace(
 			/\[([\s\S]+?)\:([>=<]+)(\d+\.\d+\.\d+)\]/g,
 			(substring: string, ...args: any[]) => {
@@ -3069,7 +3060,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		// https://github.community/t/feature-commit-comments-for-a-pull-request/13986/9
 		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
 		let payload;
-		if (this._version && semver.lt(this._version, "2.20.0")) {
+		if (this._version && semver.lt(this._version.version, "2.20.0")) {
 			// old servers dont have line/start_line
 			// https://docs.github.com/en/enterprise-server@2.19/rest/reference/pulls#create-a-review-comment-for-a-pull-request-alternative
 			payload = {

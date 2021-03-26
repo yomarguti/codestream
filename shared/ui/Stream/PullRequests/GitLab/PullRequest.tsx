@@ -9,6 +9,7 @@ import {
 	getPullRequestId
 } from "../../../store/providerPullRequests/reducer";
 import { LoadingMessage } from "../../../src/components/LoadingMessage";
+import { ErrorMessage } from "../../../src/components/ErrorMessage";
 import { CreateCodemarkIcons } from "../../CreateCodemarkIcons";
 import { getPreferences } from "../../../store/users/reducer";
 import Tooltip from "../../Tooltip";
@@ -282,7 +283,6 @@ export const PullRequest = () => {
 		const providerPullRequestLastUpdated = getCurrentProviderPullRequestLastUpdated(state);
 		const order: "oldest" | "newest" = preferences.pullRequestTimelineOrder || "oldest";
 		const filter: "comments" | "history" | "all" = preferences.pullRequestTimelineFilter || "all";
-
 		return {
 			order,
 			filter,
@@ -301,6 +301,7 @@ export const PullRequest = () => {
 				: undefined,
 			currentPullRequest: currentPullRequest,
 			currentPullRequestLastUpdated: providerPullRequestLastUpdated,
+
 			composeCodemarkActive: state.context.composeCodemarkActive,
 			team,
 			textEditorUri: state.editorContext.textEditorUri,
@@ -309,6 +310,7 @@ export const PullRequest = () => {
 		};
 	});
 
+	const [didMount, setDidMount] = useState(false);
 	const [activeTab, setActiveTab] = useState(1);
 	const [isEditing, setIsEditing] = useState(false);
 	const [isLoadingPR, setIsLoadingPR] = useState(false);
@@ -335,13 +337,6 @@ export const PullRequest = () => {
 		...theme,
 		breakpoint: breakpoints[derivedState.viewPreference]
 	});
-
-	const saveTitle = async () => {
-		setIsLoadingMessage("Saving Title...");
-		setSavingTitle(true);
-		await dispatch(api("updatePullRequestTitle", { title }));
-		setSavingTitle(false);
-	};
 
 	const closeFileComments = () => {
 		// note we're passing no value for the 3rd argument, which clears
@@ -379,7 +374,10 @@ export const PullRequest = () => {
 		}
 	};
 
+	let interval;
+	let intervalCounter = 0;
 	useDidMount(() => {
+		interval && clearInterval(interval);
 		if (!derivedState.reviewsState.bootstrapped) {
 			dispatch(bootstrapReviews());
 		}
@@ -395,12 +393,65 @@ export const PullRequest = () => {
 					fetch("Updating...");
 				}
 			});
+			setDidMount(true);
 		});
 
 		return () => {
 			_didChangeDataNotification && _didChangeDataNotification.dispose();
 		};
 	});
+
+	useEffect(() => {
+		// don't run this until we have mounted
+		if (!didMount) return;
+
+		interval && clearInterval(interval);
+		interval = setInterval(async () => {
+			try {
+				if (intervalCounter >= 60) {
+					// two hours
+					interval && clearInterval(interval);
+					intervalCounter = 0;
+					console.warn(`stopped getPullRequestLastUpdated interval counter=${intervalCounter}`);
+					return;
+				}
+
+				const response = (await dispatch(
+					api(
+						"getPullRequestLastUpdated",
+						{},
+						{ preventClearError: true, preventErrorReporting: true }
+					)
+				)) as any;
+				if (
+					derivedState.currentPullRequest &&
+					derivedState.currentPullRequestLastUpdated &&
+					response &&
+					response.updatedAt !== derivedState.currentPullRequestLastUpdated
+				) {
+					console.warn(
+						"getPullRequestLastUpdated is updating",
+						response.updatedAt,
+						derivedState.currentPullRequestLastUpdated,
+						intervalCounter
+					);
+					intervalCounter = 0;
+					fetch();
+					clearInterval(interval);
+				} else {
+					intervalCounter++;
+					console.log("incrementing counter", intervalCounter);
+				}
+			} catch (ex) {
+				console.error(ex);
+				interval && clearInterval(interval);
+			}
+		}, 120000); //120000 === 2 minute interval
+
+		return () => {
+			interval && clearInterval(interval);
+		};
+	}, [didMount, derivedState.currentPullRequestLastUpdated, derivedState.currentPullRequest]);
 
 	useEffect(() => {
 		const providerPullRequests =
@@ -438,10 +489,11 @@ export const PullRequest = () => {
 			)
 		)) as any;
 		setGeneralError("");
-		if (response.error) {
+		if (response.error && response.error.message) {
 			setIsLoadingPR(false);
 			setIsLoadingMessage("");
-			setGeneralError(response.error);
+			setGeneralError(response.error.message);
+			console.error(response.error.message);
 		} else {
 			console.warn(response);
 			_assignState(response);
@@ -582,29 +634,30 @@ export const PullRequest = () => {
 	console.warn("PR: ", pr);
 
 	if (!pr) {
-		if (generalError) {
-			return (
-				<div style={{ display: "flex", height: "100vh", alignItems: "center" }}>
-					<div style={{ textAlign: "center" }}>Error: {generalError}</div>
+		return (
+			<div
+				style={{
+					display: "flex",
+					height: "100vh",
+					alignItems: "center",
+					background: "var(--sidebar-background)"
+				}}
+			>
+				<div style={{ position: "absolute", top: "20px", right: "20px" }}>
+					<CancelButton onClick={() => dispatch(clearCurrentPullRequest())} />
 				</div>
-			);
-		} else {
-			return (
-				<div
-					style={{
-						display: "flex",
-						height: "100vh",
-						alignItems: "center",
-						background: "var(--sidebar-background)"
-					}}
-				>
-					<div style={{ position: "absolute", top: "20px", right: "20px" }}>
-						<CancelButton onClick={() => dispatch(clearCurrentPullRequest())} />
-					</div>
-					<LoadingMessage>Loading Merge Request...</LoadingMessage>
-				</div>
-			);
-		}
+				{generalError && (
+					<ErrorMessage>
+						Error Loading Pull Request:
+						<br />
+						<div style={{ overflow: "auto", width: "100%", height: "7vh" }}>
+							{generalError.replace(/\\t/g, "     ").replace(/\\n/g, "")}
+						</div>
+					</ErrorMessage>
+				)}
+				{!generalError && <LoadingMessage>Loading Merge Request...</LoadingMessage>}
+			</div>
+		);
 	}
 
 	const bottomComment = (
@@ -715,6 +768,12 @@ export const PullRequest = () => {
 								</div>
 							)}
 						</Header>
+						{!pr.sourceProject && (
+							<PRError>
+								<Icon name="alert" />
+								<div>The source project for this merge request has been removed.</div>
+							</PRError>
+						)}
 						<PRTitle>
 							{pr.title}{" "}
 							<Tooltip title="Open on GitLab" placement="top">

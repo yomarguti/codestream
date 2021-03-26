@@ -955,6 +955,36 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				_ => endLine >= _.newStart && endLine <= _.newStart + _.newLines
 			);
 
+			let fileWithUrl;
+			const codeBlock = request.attributes.codeBlocks[0];
+			const repo = await repos.getById(parsedUri.repoId);
+			let remoteList: string[] | undefined;
+			if (repo && repo.remotes && repo.remotes.length) {
+				// if we have a list of remotes from the marker / repo (a.k.a. server)... use that
+				remoteList = repo.remotes.map(_ => _.normalizedUrl);
+			}
+			let remoteUrl;
+			if (remoteList) {
+				for (const remote of remoteList) {
+					remoteUrl = Marker.getRemoteCodeUrl(
+						remote,
+						parsedUri.rightSha,
+						codeBlock.scm?.file!,
+						startLine,
+						endLine
+					);
+
+					if (remoteUrl !== undefined) {
+						break;
+					}
+				}
+			}
+
+			if (remoteUrl) {
+				fileWithUrl = `[${codeBlock.scm?.file}](${remoteUrl.url})`;
+			} else {
+				fileWithUrl = codeBlock.scm?.file;
+			}
 			// only fall in here if we don't have a start OR we dont have both
 			if (!startHunk || (!startHunk && !endHunk)) {
 				// if we couldn't find a hunk, we're going to go down the path of using
@@ -964,35 +994,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						parsedUri.context
 					)}`
 				);
-				const codeBlock = request.attributes.codeBlocks[0];
-				const repo = await repos.getById(parsedUri.repoId);
-				let remoteList: string[] | undefined;
-				if (repo && repo.remotes && repo.remotes.length) {
-					// if we have a list of remotes from the marker / repo (a.k.a. server)... use that
-					remoteList = repo.remotes.map(_ => _.normalizedUrl);
-				}
-				let remoteUrl;
-				if (remoteList) {
-					for (const remote of remoteList) {
-						remoteUrl = Marker.getRemoteCodeUrl(
-							remote,
-							parsedUri.rightSha,
-							codeBlock.scm?.file!,
-							startLine,
-							endLine
-						);
-
-						if (remoteUrl !== undefined) {
-							break;
-						}
-					}
-				}
-				let fileWithUrl;
-				if (remoteUrl) {
-					fileWithUrl = `[${codeBlock.scm?.file}](${remoteUrl.url})`;
-				} else {
-					fileWithUrl = codeBlock.scm?.file;
-				}
 
 				const result = await providerRegistry.executeMethod({
 					method: "addComment",
@@ -1062,7 +1063,13 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						startLine: startLine,
 						endLine: calculatedEndLine,
 						// legacy servers will need this
-						position: lineWithMetadata?.position
+						position: lineWithMetadata?.position,
+						metadata: {
+							contents: codeBlock.contents,
+							fileWithUrl: fileWithUrl,
+							startLine: startLine,
+							endLine: endLine
+						}
 					}
 				});
 			}
