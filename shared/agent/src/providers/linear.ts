@@ -137,7 +137,8 @@ export class LinearProvider extends ThirdPartyIssueProviderBase<CSLinearProvider
 		const response = await this.query<{ teams: { nodes: LinearTeam[] } }>(
 			"query { teams { nodes { id name } } }"
 		);
-		return response.teams.nodes;
+		this._linearTeams = response.teams.nodes;
+		return this._linearTeams!;
 	}
 
 	@log()
