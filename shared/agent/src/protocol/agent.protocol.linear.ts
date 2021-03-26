@@ -20,6 +20,7 @@ export interface LinearTeam {
 	id: string;
 	name: string;
 	archivedAt?: null | string;
+	teamId: string;
 }
 
 export interface LinearProject {

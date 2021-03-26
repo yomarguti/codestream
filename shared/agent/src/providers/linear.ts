@@ -14,6 +14,7 @@ import {
 	LinearUser,
 	MoveThirdPartyCardRequest,
 	ThirdPartyDisconnect,
+	ThirdPartyProviderBoard,
 	ThirdPartyProviderCard
 } from "../protocol/agent.protocol";
 import { CSLinearProviderInfo } from "../protocol/api.protocol";
@@ -23,7 +24,7 @@ import { ThirdPartyIssueProviderBase } from "./provider";
 @lspProvider("linear")
 export class LinearProvider extends ThirdPartyIssueProviderBase<CSLinearProviderInfo> {
 	private _linearUserInfo: LinearUser | undefined;
-	private _linearTeam: LinearTeam | undefined;
+	private _linearTeams: LinearTeam[] | undefined;
 
 	get displayName() {
 		return "Linear";
@@ -132,23 +133,26 @@ export class LinearProvider extends ThirdPartyIssueProviderBase<CSLinearProvider
 	}
 
 	@log()
-	async getTeam(): Promise<LinearTeam> {
-		if (this._linearTeam) return this._linearTeam;
+	async getTeams(): Promise<LinearTeam[]> {
 		const response = await this.query<{ teams: { nodes: LinearTeam[] } }>(
 			"query { teams { nodes { id name } } }"
 		);
-		if (response.teams.nodes.length === 0) throw new Error("linear user has no teams");
-		this._linearTeam = response.teams.nodes[0];
-		return this._linearTeam!;
+		return response.teams.nodes;
 	}
 
 	@log()
 	async getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
 		await this.ensureConnected();
 
-		const team = await this.getTeam();
-		const response = await this.query<{ data: { issues: { nodes: LinearProject[] } } }>(
-			`query GetBoards($teamId: String!) {
+		let teams = await this.getTeams();
+		teams.sort((a, b) => {
+			return a.name.localeCompare(b.name);
+		});
+		let boards: ThirdPartyProviderBoard[] = [];
+		for (let team of teams) {
+			boards.push({ id: `${team.id}_`, name: `${team.name}/No Project` });
+			const response = await this.query<{ data: { issues: { nodes: LinearProject[] } } }>(
+				`query GetBoards($teamId: String!) {
 				team(id: $teamId) {
 					projects {
 						nodes {
@@ -158,21 +162,40 @@ export class LinearProvider extends ThirdPartyIssueProviderBase<CSLinearProvider
 					}
 				}
 			}`,
-			{
-				teamId: team.id
-			}
-		);
-		const projects = [{ id: "_", name: "No Project" }, ...response.team.projects.nodes];
-		return { boards: projects };
+				{
+					teamId: team.id
+				}
+			);
+
+			const projects = response.team.projects.nodes as LinearProject[];
+			projects.sort((a, b) => {
+				return a.name.localeCompare(b.name);
+			});
+
+			boards = [
+				...boards,
+				...projects.map(project => {
+					return {
+						...project,
+						id: `${team.id}_${project.id}`,
+						name: `${team.name}/${project.name}`
+					};
+				})
+			];
+		}
+		return { boards };
 	}
 
 	@log()
 	async createCard(request: CreateThirdPartyCardRequest) {
 		await this.ensureConnected();
 
-		const team = await this.getTeam();
+		if (this._linearTeams === undefined) {
+			await this.getTeams();
+		}
 		const data = request.data as LinearCreateCardRequest;
-		const projectId = data.projectId !== "_" ? data.projectId : null;
+		const id = data.projectId;
+		const [teamId, projectId] = id.split("_");
 		const assigneeId = (data.assignees && data.assignees[0] && data.assignees[0].id) || null;
 		const query = `
 			mutation CreateIssue($title:String!, $description:String!, $teamId:String!, $projectId:String, $assigneeId:String) {
@@ -198,8 +221,8 @@ export class LinearProvider extends ThirdPartyIssueProviderBase<CSLinearProvider
 		const vars: { [key: string]: string | null } = {
 			title: data.name.trim(),
 			description: data.description.trim(),
-			teamId: team.id,
-			projectId,
+			teamId: teamId,
+			projectId: projectId || null,
 			assigneeId
 		};
 		const response = await this.query<{ issueCreate: { issue: LinearIssue } }>(query, vars);
