@@ -507,7 +507,7 @@ export const RightActionBar = (props: {
 	const pct = pr.timeEstimate > 0 ? (100 * pr.totalTimeSpent) / pr.timeEstimate : 0;
 	const milestoneTooltip = React.useMemo(() => {
 		const { milestone } = pr;
-		if (!milestone) return undefined;
+		if (!milestone) return "Milestone";
 		if (milestone.dueDate)
 			return (
 				<div style={{ textAlign: "center" }}>
