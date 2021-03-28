@@ -677,6 +677,8 @@ export const PullRequest = () => {
 		</div>
 	);
 
+	const closeRight = () => setRightOpen(false);
+
 	return (
 		<ThemeProvider theme={addViewPreferencesToTheme}>
 			<PullRequestRoot className="gitlab">
@@ -689,7 +691,7 @@ export const PullRequest = () => {
 						setIsLoadingMessage={setIsLoadingMessage}
 					/>
 				)}
-				<Left>
+				<Left onClick={closeRight}>
 					<PRHeader>
 						<Header>
 							<div style={{ marginRight: "10px" }}>
