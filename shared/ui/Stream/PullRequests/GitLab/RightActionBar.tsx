@@ -78,8 +78,10 @@ const AsideBlock = styled.div`
 	}
 	.expanded &.clickable {
 		cursor: pointer;
+		label {
+			cursor: pointer;
+		}
 	}
-	cursor: pointer;
 	display: flex;
 	.icon {
 		opacity: 0.7;
@@ -88,6 +90,9 @@ const AsideBlock = styled.div`
 			top: 15px;
 			right: 15px;
 		}
+	}
+	.collapsed & {
+		cursor: pointer;
 	}
 	.expanded &.clickable:hover,
 	.collapsed &:hover {

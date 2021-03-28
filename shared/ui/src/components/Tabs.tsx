@@ -36,7 +36,6 @@ export const Tab = styled((props: PropsWithChildren<TabProps>) => {
 	font-size: 15px;
 	border: none;
 	outline: none;
-	cursor: pointer;
 	position: relative;
 	padding: 0 10px 10px 10px;
 	border-bottom: ${props => (props.active ? "1px solid var(--text-color)" : "none")};
