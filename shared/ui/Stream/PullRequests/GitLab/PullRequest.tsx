@@ -176,6 +176,9 @@ const Header = styled.div`
 	${PRActionIcons} {
 		display: inline-flex;
 	}
+	${PRStatusButton} {
+		margin-bottom: 5px;
+	}
 `;
 
 const RoundImg = styled.span`
@@ -223,6 +226,10 @@ export const FlexRow = styled.div`
 	.right {
 		margin-left: auto;
 		white-space: nowrap;
+	}
+	.row-icon {
+		flex-grow: 0;
+		flex-basis: min-content;
 	}
 	.bigger {
 		display: inline-block;
@@ -737,6 +744,7 @@ export const PullRequest = () => {
 									{pr.state === "closed" ? (
 										<DropdownButton
 											variant="secondary"
+											size="compact"
 											splitDropdown
 											splitDropdownInstantAction
 											selectedKey="edit"
@@ -750,6 +758,7 @@ export const PullRequest = () => {
 									) : (
 										<DropdownButton
 											variant="secondary"
+											size="compact"
 											splitDropdown
 											splitDropdownInstantAction
 											items={[

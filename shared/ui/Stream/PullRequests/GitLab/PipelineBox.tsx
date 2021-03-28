@@ -50,7 +50,7 @@ export const PipelineBox = (props: { pr: GitLabMergeRequest; setIsLoadingMessage
 		return (
 			<OutlineBox>
 				<FlexRow>
-					<Icon name="sync" className="spin" />
+					<Icon name="sync" className="spin row-icon" />
 					<div className="pad-left">
 						Checking pipeline status{" "}
 						<Link href={`${pr.baseWebUrl}/help/ci/troubleshooting.md`}>
@@ -67,7 +67,7 @@ export const PipelineBox = (props: { pr: GitLabMergeRequest; setIsLoadingMessage
 	return (
 		<OutlineBox>
 			<FlexRow>
-				<Link href={pipeline.webUrl}>
+				<Link href={pipeline.webUrl} className="row-icon">
 					<Icon name={iconWrapper.icon} className="bigger" />
 				</Link>
 				<div>

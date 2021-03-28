@@ -87,11 +87,67 @@ export const SummaryBox = props => {
 
 	return (
 		<OutlineBox>
-			<FlexRow>
-				<Icon name="pull-request" className="bigger" />
-				<div>
-					<b>Request to merge</b>
-					<br />
+			<FlexRow style={{ flexWrap: "nowrap" }}>
+				<Icon name="pull-request" className="bigger row-icon" />
+				<div style={{ flexGrow: 10 }}>
+					<div className="float-right">
+						<Button className="margin-right-10" variant="secondary">
+							{isLoadingBranch ? (
+								<Icon name="sync" className="spin" />
+							) : (
+								<span onClick={cantCheckoutReason ? () => {} : checkout}>
+									<Tooltip
+										title={
+											<>
+												Checkout Branch
+												{cantCheckoutReason && (
+													<div className="subtle smaller" style={{ maxWidth: "200px" }}>
+														Disabled: {cantCheckoutReason}
+													</div>
+												)}
+											</>
+										}
+										trigger={["hover"]}
+										placement="top"
+									>
+										<span>
+											<Icon className="narrow-text" name="git-branch" />
+											<span className="wide-text">Check out branch</span>
+										</span>
+									</Tooltip>
+								</span>
+							)}
+						</Button>
+						<DropdownButton
+							title="Download as"
+							noCloseIcon
+							variant="secondary"
+							narrow
+							items={[
+								{
+									label: "Email patches",
+									key: "email",
+									action: () => {
+										HostApi.instance.send(OpenUrlRequestType, {
+											url: `${pr.repository.url}/-/merge_requests/${pr.number}.patch`
+										});
+									}
+								},
+								{
+									label: "Plain diff",
+									key: "plain",
+									action: () => {
+										HostApi.instance.send(OpenUrlRequestType, {
+											url: `${pr.repository.url}/-/merge_requests/${pr.number}.diff`
+										});
+									}
+								}
+							]}
+						>
+							<Icon name="download" title="Download..." placement="top" />
+						</DropdownButton>
+					</div>
+					<b>Request to merge</b>{" "}
 					<Link href={`${pr.repository.url}/-/tree/${pr.sourceBranch}`}>
 						<PRBranch>{pr.sourceBranch}</PRBranch>
 					</Link>{" "}
@@ -108,63 +164,6 @@ export const SummaryBox = props => {
 							{pr.repository.name}:{pr.targetBranch}
 						</PRBranch>
 					</Link>
-				</div>
-				<div className="right">
-					<Button className="margin-right-10" variant="secondary">
-						{isLoadingBranch ? (
-							<Icon name="sync" className="spin" />
-						) : (
-							<span onClick={cantCheckoutReason ? () => {} : checkout}>
-								<Tooltip
-									title={
-										<>
-											Checkout Branch
-											{cantCheckoutReason && (
-												<div className="subtle smaller" style={{ maxWidth: "200px" }}>
-													Disabled: {cantCheckoutReason}
-												</div>
-											)}
-										</>
-									}
-									trigger={["hover"]}
-									placement="top"
-								>
-									<span>
-										<Icon className="narrow-text" name="git-branch" />
-										<span className="wide-text">Check out branch</span>
-									</span>
-								</Tooltip>
-							</span>
-						)}
-					</Button>
-					<DropdownButton
-						title="Download as"
-						noCloseIcon
-						variant="secondary"
-						narrow
-						items={[
-							{
-								label: "Email patches",
-								key: "email",
-								action: () => {
-									HostApi.instance.send(OpenUrlRequestType, {
-										url: `${pr.repository.url}/-/merge_requests/${pr.number}.patch`
-									});
-								}
-							},
-							{
-								label: "Plain diff",
-								key: "plain",
-								action: () => {
-									HostApi.instance.send(OpenUrlRequestType, {
-										url: `${pr.repository.url}/-/merge_requests/${pr.number}.diff`
-									});
-								}
-							}
-						]}
-					>
-						<Icon name="download" title="Download..." placement="top" />
-					</DropdownButton>
 				</div>
 			</FlexRow>
 		</OutlineBox>
