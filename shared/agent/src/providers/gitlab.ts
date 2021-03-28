@@ -1867,9 +1867,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 		if (request.text) {
 			if (request.startThread) {
-				// if (response1.directives) {
-				// directives = directives.concat(response1.directives);
-				// }
+				const response1 = await this.createPullRequestThread({ ...request });
+				if (response1.directives) {
+					directives = directives.concat(response1.directives);
+				}
 			} else {
 				const response1 = await this.createPullRequestComment({ ...request, iid: iid });
 				if (response1.directives) {
@@ -1929,9 +1930,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 		if (request.text) {
 			if (request.startThread) {
-				// if (response1.directives) {
-				// directives = directives.concat(response1.directives);
-				// }
+				const response1 = await this.createPullRequestThread({ ...request });
+				if (response1.directives) {
+					directives = directives.concat(response1.directives);
+				}
 			} else {
 				const response1 = await this.createPullRequestComment({ ...request, iid: iid });
 				if (response1.directives) {

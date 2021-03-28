@@ -180,7 +180,18 @@ export const PullRequestBottomComment = styled((props: Props) => {
 			variant="secondary"
 			key="reopen"
 		>
-			{text ? "Reopen and comment" : `Reopen ${derivedState.prLabel.pullrequest}`}
+			{text ? (
+				commentType === "thread" ? (
+					<>
+						Start thread &amp; reopen
+						<span className="wide-text"> {derivedState.prLabel.pullrequest}</span>
+					</>
+				) : (
+					"Reopen and comment"
+				)
+			) : (
+				`Reopen ${derivedState.prLabel.pullrequest}`
+			)}
 		</Button>
 	);
 
@@ -195,7 +206,7 @@ export const PullRequestBottomComment = styled((props: Props) => {
 			{text ? (
 				commentType === "thread" ? (
 					<>
-						Start thread & close
+						Start thread &amp; close
 						<span className="wide-text"> {derivedState.prLabel.pullrequest}</span>
 					</>
 				) : (
