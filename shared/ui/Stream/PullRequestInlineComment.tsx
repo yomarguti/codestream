@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { PRComment, PRCommentCard } from "./PullRequestComponents";
 import Tooltip from "./Tooltip";
@@ -10,6 +10,8 @@ import { ButtonRow } from "../src/components/Dialog";
 import { Button } from "../src/components/Button";
 import { api } from "../store/providerPullRequests/actions";
 import { replaceHtml } from "../utils";
+import { CodeStreamState } from "../store";
+import { getPRLabel } from "../store/providers/reducer";
 
 interface Props {
 	pr: FetchThirdPartyPullRequestPullRequest;
@@ -27,6 +29,12 @@ interface Props {
 export const PullRequestInlineComment = styled((props: Props) => {
 	const dispatch = useDispatch();
 	const { pr, filename, fetch, lineNumber, lineOffsetInHunk, setIsLoadingMessage } = props;
+
+	const derivedState = useSelector((state: CodeStreamState) => {
+		return {
+			prLabel: getPRLabel(state)
+		};
+	});
 
 	const [text, setText] = useState("");
 	const [isLoadingSingleComment, setIsLoadingSingleComment] = useState(false);
@@ -91,7 +99,7 @@ export const PullRequestInlineComment = styled((props: Props) => {
 		RESOLVED: "resolved"
 	};
 
-	const marginWidth = pr.providerId.includes("github") ? "110px" : "80px";
+	const marginWidth = pr.providerId.includes("gitlab") ? "110px" : "80px";
 	return (
 		<PRComment
 			style={{
@@ -144,7 +152,7 @@ export const PullRequestInlineComment = styled((props: Props) => {
 									onClick={addSingleComment}
 									disabled={(pr && pr.pendingReview != null) || !text}
 								>
-									Add single comment
+									{derivedState.prLabel.AddSingleComment}
 								</Button>
 								<Tooltip
 									title={

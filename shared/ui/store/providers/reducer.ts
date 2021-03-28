@@ -52,6 +52,7 @@ export interface LabelHash {
 	PR: string;
 	PRs: string;
 	pr: string;
+	AddSingleComment: string;
 }
 
 const MRLabel = {
@@ -62,7 +63,8 @@ const MRLabel = {
 	pullrequests: "merge requests",
 	PR: "MR",
 	PRs: "MRs",
-	pr: "mr"
+	pr: "mr",
+	AddSingleComment: "Add comment now"
 };
 
 const PRLabel = {
@@ -73,7 +75,8 @@ const PRLabel = {
 	pullrequests: "pull requests",
 	PR: "PR",
 	PRs: "PRs",
-	pr: "pr"
+	pr: "pr",
+	AddSingleComment: "Add single comment"
 };
 
 export const getPRLabel = createSelector(

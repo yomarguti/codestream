@@ -84,6 +84,7 @@ import { VideoLink } from "./Flow";
 import { PanelHeader } from "../src/components/PanelHeader";
 import { ReposState } from "../store/repos/types";
 import { getDocumentFromMarker } from "./api-functions";
+import { getPRLabel, LabelHash } from "../store/providers/reducer";
 
 export interface ICrossPostIssueContext {
 	setSelectedAssignees(any: any): void;
@@ -154,6 +155,7 @@ interface ConnectedProps {
 	textEditorUriContext: any;
 	textEditorUriHasPullRequestContext: boolean;
 	repos: ReposState;
+	prLabel: LabelHash;
 }
 
 interface State {
@@ -2410,7 +2412,7 @@ class CodemarkForm extends React.Component<Props, State> {
 										: this.props.currentReviewId
 										? "Add Comment to Review"
 										: this.props.textEditorUriHasPullRequestContext
-										? "Add single comment"
+										? this.props.prLabel.AddSingleComment
 										: this.props.editingCodemark
 										? "Save"
 										: "Submit"}
@@ -2547,7 +2549,8 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		codemarkState: codemarks,
 		multipleMarkersEnabled: isFeatureEnabled(state, "multipleMarkers"),
 		currentReviewId: context.currentReviewId,
-		inviteUsersOnTheFly
+		inviteUsersOnTheFly,
+		prLabel: getPRLabel(state)
 	};
 };
 
