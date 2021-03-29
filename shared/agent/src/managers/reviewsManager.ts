@@ -111,6 +111,19 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		};
 	}
 
+	private currentBranches = new Map<string, string | undefined>();
+
+	protected async initialize() {
+		const { git } = SessionContainer.instance();
+		this.currentBranches.clear();
+		const repos = await git.getRepositories();
+		for (const repo of repos) {
+			if (!repo.id) continue;
+			const currentBranch = await git.getCurrentBranch(repo.path, true);
+			this.currentBranches.set(repo.id, currentBranch);
+		}
+	}
+
 	@lspHandler(FetchReviewsRequestType)
 	@log()
 	async get(request?: FetchReviewsRequest): Promise<FetchReviewsResponse> {
@@ -1112,6 +1125,13 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 		const { git, session } = SessionContainer.instance();
 		if (git.isRebasing(repo.path)) {
+			return 0;
+		}
+
+		// do not trigger if the user is just switching branches
+		const currentBranch = await git.getCurrentBranch(repo.path, true);
+		if (currentBranch !== this.currentBranches.get(repoId)) {
+			this.currentBranches.set(repoId, currentBranch);
 			return 0;
 		}
 
