@@ -752,7 +752,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						})
 					);
 
-				if (!queries[index].match(/\bsort:/)) {
+				if (queries[index] && !queries[index].match(/\bsort:/)) {
 					response[index] = response[index].sort(
 						(a: { created_at: number }, b: { created_at: number }) => b.created_at - a.created_at
 					);
