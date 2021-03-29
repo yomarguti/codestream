@@ -33,6 +33,7 @@ export interface DropdownButtonProps extends ButtonProps {
 	noCloseIcon?: boolean;
 	isMultiSelect?: boolean;
 	itemsRange?: string[];
+	align?: string;
 }
 
 // operates in two modes. if splitDropdown is false (the default), it's a dropdown menu.
@@ -47,14 +48,14 @@ export interface DropdownButtonProps extends ButtonProps {
 // for an example, see the dropdown here: http://gitlab.codestream.us/pez/onprem-awesome-1/-/merge_requests/1
 export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProps>) {
 	const buttonRef = React.useRef<HTMLElement>(null);
-	const [menuIsOpen, toggleMenu] = React.useReducer((open: boolean) => !open, false);
+	const [menuIsOpen, setMenuIsOpen] = React.useState(false);
 	const [selectedKey, setSelectedKey] = React.useState(props.selectedKey);
 
 	const maybeToggleMenu = action => {
-		if (action !== "noop") toggleMenu(action);
+		if (action !== "noop") setMenuIsOpen(!menuIsOpen);
 	};
 
-	let align = props.splitDropdown ? "dropdownLeft" : "dropdownRight";
+	let align = props.align || (props.splitDropdown ? "dropdownLeft" : "dropdownRight");
 	let items = [...props.items];
 	let selectedItem;
 	let selectedAction;
@@ -65,7 +66,7 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 			if (!item.buttonAction) {
 				item.buttonAction = item.action;
 			}
-			item.checked = item.key === selectedKey;
+			if (selectedKey) item.checked = item.key === selectedKey;
 			item.action = () => {
 				if (props.splitDropdownInstantAction && item.buttonAction) item.buttonAction();
 				else setSelectedKey(item.key);
@@ -87,7 +88,7 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 			fillParent={props.fillParent}
 		>
 			{props.splitDropdown ? (
-				<>
+				<span style={{ display: "inline-block" }} ref={buttonRef}>
 					<Button
 						{...getButtonProps(props)}
 						onClick={e => {
@@ -95,7 +96,6 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 							e.stopPropagation();
 							selectedItem.buttonAction && selectedItem.buttonAction(e);
 						}}
-						ref={buttonRef}
 					>
 						{selectedItem.label}
 					</Button>
@@ -105,20 +105,20 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 						onClick={e => {
 							e.preventDefault();
 							e.stopPropagation();
-							toggleMenu(true);
+							setMenuIsOpen(!menuIsOpen);
 						}}
 						narrow
 					>
 						<Icon name="chevron-down-thin" className="chevron-down" />
 					</Button>
-				</>
+				</span>
 			) : (
 				<Button
 					{...getButtonProps(props)}
 					onClick={e => {
 						e.preventDefault();
 						e.stopPropagation();
-						toggleMenu(true);
+						setMenuIsOpen(!menuIsOpen);
 					}}
 					ref={buttonRef}
 				>

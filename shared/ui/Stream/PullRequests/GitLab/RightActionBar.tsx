@@ -78,8 +78,10 @@ const AsideBlock = styled.div`
 	}
 	.expanded &.clickable {
 		cursor: pointer;
+		label {
+			cursor: pointer;
+		}
 	}
-	cursor: pointer;
 	display: flex;
 	.icon {
 		opacity: 0.7;
@@ -88,6 +90,9 @@ const AsideBlock = styled.div`
 			top: 15px;
 			right: 15px;
 		}
+	}
+	.collapsed & {
+		cursor: pointer;
 	}
 	.expanded &.clickable:hover,
 	.collapsed &:hover {
@@ -502,7 +507,7 @@ export const RightActionBar = (props: {
 	const pct = pr.timeEstimate > 0 ? (100 * pr.totalTimeSpent) / pr.timeEstimate : 0;
 	const milestoneTooltip = React.useMemo(() => {
 		const { milestone } = pr;
-		if (!milestone) return undefined;
+		if (!milestone) return "Milestone";
 		if (milestone.dueDate)
 			return (
 				<div style={{ textAlign: "center" }}>
@@ -561,14 +566,8 @@ export const RightActionBar = (props: {
 				</>
 			) : (
 				<>
-					<AsideBlock>
-						<Icon
-							onClick={close}
-							className="clickable fixed"
-							name="x"
-							title="Close view"
-							placement="left"
-						/>
+					<AsideBlock onClick={close}>
+						<Icon className="clickable fixed" name="x" title="Close view" placement="left" />
 					</AsideBlock>
 					<HR />
 					<AsideBlock onClick={refresh}>

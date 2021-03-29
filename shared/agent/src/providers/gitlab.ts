@@ -6,7 +6,7 @@ import * as paths from "path";
 import * as qs from "querystring";
 import * as nodeUrl from "url";
 import { URI } from "vscode-uri";
-import { SessionContainer } from "../container";
+import { Container, SessionContainer } from "../container";
 import { GitRemoteLike } from "../git/models/remote";
 import { GitRepository } from "../git/models/repository";
 import { ParsedDiffWithMetadata, toRepoName, translatePositionToLineNumber } from "../git/utils";
@@ -28,6 +28,7 @@ import {
 	GitLabCreateCardRequest,
 	GitLabCreateCardResponse,
 	GitLabLabel,
+	GitLabMergeRequest,
 	GitLabMergeRequestWrapper,
 	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
@@ -39,6 +40,7 @@ import {
 	ProviderCreatePullRequestRequest,
 	ProviderCreatePullRequestResponse,
 	ProviderGetRepoInfoResponse,
+	ProviderVersion,
 	PullRequestComment,
 	REFRESH_TIMEOUT,
 	ThirdPartyIssueProviderBase
@@ -49,6 +51,7 @@ import { print } from "graphql";
 import mergeRequest0Query from "./gitlab/mergeRequest0.graphql";
 import mergeRequest1Query from "./gitlab/mergeRequest1.graphql";
 import mergeRequestDiscussionQuery from "./gitlab/mergeRequestDiscussions.graphql";
+import mergeRequestNoteMutation from "./gitlab/createMergeRequestNote.graphql";
 import { merge } from "lodash";
 import { parsePatch } from "diff";
 import { GraphqlQueryBuilder } from "./gitlab/graphqlQueryBuilder";
@@ -760,6 +763,43 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return `${this.baseUrl.replace("/v4", "")}/graphql`;
 	}
 
+	protected async getVersion(): Promise<ProviderVersion> {
+		try {
+			if (this._version == null) {
+				const response = await this.get<{
+					version: string;
+					revision: string;
+				}>("/version");
+
+				const split = response.body.version.split("-");
+				const version = split[0] || "0.0.0";
+
+				this._version = {
+					version: version,
+					asArray: version.split(".").map(Number),
+					edition: split.length > 1 ? split[1] : undefined,
+					revision: response.body.revision
+				};
+
+				Logger.log(
+					`${this.providerConfig.id} getVersion - ${
+						this.providerConfig.id
+					} version=${JSON.stringify(this._version)}`
+				);
+				Container.instance().errorReporter.reportBreadcrumb({
+					message: `${this.providerConfig.id} getVersion`,
+					data: {
+						...this._version
+					}
+				});
+			}
+		} catch (ex) {
+			Logger.warn(ex, "getVersion");
+			this._version = this.DEFAULT_VERSION;
+		}
+		return this._version;
+	}
+
 	protected async client(): Promise<GraphQLClient> {
 		if (this._client === undefined) {
 			const options: { [key: string]: any } = {};
@@ -797,6 +837,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		graphQlApi: { fns: {} },
 		restApi: { fns: {} }
 	};
+
 	async query<T = any>(query: string, variables: any = undefined) {
 		if (this._providerInfo && this._providerInfo.tokenError) {
 			delete this._client;
@@ -923,7 +964,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				while (true) {
 					const paginated = await this.query(paginatedQuery, {
 						...args,
-						after: after
+						after: after,
+						first: 100
 					});
 					discussions = discussions.concat(paginated.project.mergeRequest.discussions.nodes);
 					if (paginated.project.mergeRequest.discussions.pageInfo?.hasNextPage) {
@@ -1246,11 +1288,40 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	async createPullRequestThread(request: { pullRequestId: string; text: string }) {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
-		const data = await this.restPost(
-			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/discussions`,
-			{ body: request.text }
+		const data = await this.restPost<
+			{
+				body: string;
+			},
+			{
+				id: string;
+			}
+		>(`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/discussions`, {
+			body: request.text
+		});
+		const body = data.body;
+		const id = body.id;
+
+		const response = (await this.query(print(mergeRequestDiscussionQuery), {
+			fullPath: projectFullPath,
+			iid: iid.toString(),
+			last: 5
+		})) as GitLabMergeRequestWrapper;
+
+		const node = response?.project?.mergeRequest?.discussions?.nodes.find(
+			_ => _.id === `gid://gitlab/Discussion/${id}`
 		);
-		return data.body;
+		if (node) {
+			return {
+				directives: [{ type: "addNode", data: node }]
+			};
+		} else {
+			// if for some reason the id can't be found, the client can de-dupe
+			return {
+				directives: [
+					{ type: "addNodes", data: response?.project?.mergeRequest?.discussions.nodes || [] }
+				]
+			};
+		}
 	}
 
 	@log()
@@ -1648,105 +1719,26 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		let noteableId;
 
 		const { projectFullPath, id, iid } = this.parseId(request.pullRequestId);
+
 		request.projectFullPath = projectFullPath;
 		request.iid = iid;
 		noteableId = id;
 		request.noteableId = this.toMergeRequestGid(noteableId);
 
-		const response = (await this.mutate(
-			`mutation CreateNote($noteableId:ID!, $body:String!, $iid:String!){
-			createNote(input: {noteableId:$noteableId, body:$body}){
-				clientMutationId
-				note{
-					project {
-						mergeRequest(iid: $iid) {
-							discussions(last:5) {
-							nodes {
-							createdAt
-							id
-							notes {
-								nodes {
-								author {
-									name
-									login:username
-									avatarUrl
-								}
-								body
-								bodyHtml
-								createdAt
-								discussion {
-									id
-									replyId
-									createdAt
-								}
-								id
-								position {
-									x
-									y
-									newLine
-									newPath
-									oldLine
-									oldPath
-									filePath
-								}
-								project {
-									name
-								}
-								resolvable
-								resolved
-								resolvedAt
-								resolvedBy {
-									login:username
-									avatarUrl
-								}
-								system
-								systemNoteIconName
-								updatedAt
-								userPermissions {
-										adminNote
-										readNote
-										resolveNote
-										awardEmoji
-										createNote
-									}
-								}
-							}
-							replyId
-							resolvable
-							resolved
-							resolvedAt
-							resolvedBy {
-									login:username
-									avatarUrl
-								}
-							}
-						  }
-						}
-					  }
-					id
-					body
-					createdAt
-					author {
-					  login:username
-					  avatarUrl
-					}
-					updatedAt
-					userPermissions {
-					  adminNote
-					  awardEmoji
-					  createNote
-					  readNote
-					  resolveNote
-					}
-				  }
-				}
-		  }`,
-			{
-				noteableId: request.noteableId,
-				body: request.text,
-				iid: request.iid!.toString()
-			}
-		)) as any;
+		const response = (await this.mutate(print(mergeRequestNoteMutation), {
+			noteableId: request.noteableId,
+			body: request.text,
+			iid: request.iid!.toString()
+		})) as {
+			createNote: {
+				note: {
+					id: string;
+					project: {
+						mergeRequest: GitLabMergeRequest;
+					};
+				};
+			};
+		};
 
 		// find the nested node/note
 		const addedNode = response.createNote.note.project.mergeRequest.discussions.nodes.find(
@@ -1754,16 +1746,27 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				return _.notes.nodes.find((n: any) => n.id === response.createNote.note.id);
 			}
 		);
-		this.toAuthorAbsolutePathRecurse(addedNode);
 
-		return {
+		const result: Directives = {
 			directives: [
 				{
-					type: "addNode",
-					data: addedNode
+					type: "updatePullRequest",
+					data: {
+						updatedAt: response.createNote.note.project.mergeRequest.updatedAt
+					}
 				}
 			]
 		};
+
+		if (addedNode) {
+			this.toAuthorAbsolutePathRecurse(addedNode);
+			result.directives.push({
+				type: "addNode",
+				data: addedNode
+			});
+		}
+
+		return result;
 	}
 
 	async resolveReviewThread(request: {
@@ -1864,9 +1867,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 		if (request.text) {
 			if (request.startThread) {
-				// if (response1.directives) {
-				// directives = directives.concat(response1.directives);
-				// }
+				const response1 = await this.createPullRequestThread({ ...request });
+				if (response1.directives) {
+					directives = directives.concat(response1.directives);
+				}
 			} else {
 				const response1 = await this.createPullRequestComment({ ...request, iid: iid });
 				if (response1.directives) {
@@ -1926,9 +1930,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 		if (request.text) {
 			if (request.startThread) {
-				// if (response1.directives) {
-				// directives = directives.concat(response1.directives);
-				// }
+				const response1 = await this.createPullRequestThread({ ...request });
+				if (response1.directives) {
+					directives = directives.concat(response1.directives);
+				}
 			} else {
 				const response1 = await this.createPullRequestComment({ ...request, iid: iid });
 				if (response1.directives) {

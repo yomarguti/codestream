@@ -176,6 +176,9 @@ const Header = styled.div`
 	${PRActionIcons} {
 		display: inline-flex;
 	}
+	${PRStatusButton} {
+		margin-bottom: 5px;
+	}
 `;
 
 const RoundImg = styled.span`
@@ -223,6 +226,10 @@ export const FlexRow = styled.div`
 	.right {
 		margin-left: auto;
 		white-space: nowrap;
+	}
+	.row-icon {
+		flex-grow: 0;
+		flex-basis: min-content;
 	}
 	.bigger {
 		display: inline-block;
@@ -670,6 +677,8 @@ export const PullRequest = () => {
 		</div>
 	);
 
+	const closeRight = () => setRightOpen(false);
+
 	return (
 		<ThemeProvider theme={addViewPreferencesToTheme}>
 			<PullRequestRoot className="gitlab">
@@ -682,7 +691,7 @@ export const PullRequest = () => {
 						setIsLoadingMessage={setIsLoadingMessage}
 					/>
 				)}
-				<Left>
+				<Left onClick={closeRight}>
 					<PRHeader>
 						<Header>
 							<div style={{ marginRight: "10px" }}>
@@ -737,9 +746,11 @@ export const PullRequest = () => {
 									{pr.state === "closed" ? (
 										<DropdownButton
 											variant="secondary"
+											size="compact"
 											splitDropdown
 											splitDropdownInstantAction
 											selectedKey="edit"
+											align="dropdownRight"
 											items={[
 												{ label: "Edit", key: "edit", action: edit },
 												{ label: "Reopen", key: "reopen", action: reopen }
@@ -750,8 +761,10 @@ export const PullRequest = () => {
 									) : (
 										<DropdownButton
 											variant="secondary"
+											size="compact"
 											splitDropdown
 											splitDropdownInstantAction
+											align="dropdownRight"
 											items={[
 												{ label: "Edit", key: "edit", action: edit },
 												{

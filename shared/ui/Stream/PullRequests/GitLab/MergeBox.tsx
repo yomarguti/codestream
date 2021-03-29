@@ -58,9 +58,6 @@ export const MergeBox = props => {
 	const _defaultMergeText = `Merge branch '${derivedState.pr.headRefName}' into '${derivedState.pr.baseRefName}'\n\n${derivedState.pr.title}`;
 	const _defaultMergeTextSuffix = `See merge request ${derivedState.pr.references.full}`;
 	const { deleteBranch, squash } = derivedState;
-	if (showCommandLine) {
-		return <CommandLineInstructions pr={props.pr} onClose={() => setShowCommandLine(false)} />;
-	}
 
 	useDidMount(() => {
 		setCommitMessage(`${_defaultMergeText}\n${_defaultMergeTextSuffix}`);
@@ -105,6 +102,10 @@ export const MergeBox = props => {
 			})
 		);
 	};
+
+	if (showCommandLine) {
+		return <CommandLineInstructions pr={props.pr} onClose={() => setShowCommandLine(false)} />;
+	}
 
 	if (
 		derivedState.pr &&

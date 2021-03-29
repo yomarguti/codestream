@@ -1,9 +1,15 @@
 #import "./fragments/discussion.graphql"
 
-query GetMergeRequestDiscussions($fullPath: ID!, $iid: String!, $after: String) {
+query GetMergeRequestDiscussions(
+	$fullPath: ID!
+	$iid: String!
+	$first: Int
+	$last: Int
+	$after: String
+) {
 	project(fullPath: $fullPath) {
 		mergeRequest(iid: $iid) {
-			discussions(first: 100, after: $after) {
+			discussions(first: $first, last: $last, after: $after) {
 				pageInfo {
 					endCursor
 					hasNextPage

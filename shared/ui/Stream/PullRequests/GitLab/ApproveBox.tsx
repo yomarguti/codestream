@@ -30,7 +30,7 @@ export const ApproveBox = (props: { pr: GitLabMergeRequest }) => {
 	return (
 		<OutlineBox>
 			<FlexRow>
-				<div style={{ position: "relative" }}>
+				<div className="row-icon" style={{ position: "relative" }}>
 					<Icon name="person" className="bigger" />
 					<Icon name="check" className="overlap" />
 				</div>
