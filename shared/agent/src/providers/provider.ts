@@ -934,6 +934,7 @@ export abstract class ThirdPartyIssueProviderBase<
 			"EHOSTUNREACH",
 			"ENETDOWN",
 			"ENETUNREACH",
+			"self signed certificate in certificate chain",
 			"socket disconnected before secure",
 			"socket hang up"
 		];
