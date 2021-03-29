@@ -750,6 +750,7 @@ export const PullRequest = () => {
 											splitDropdown
 											splitDropdownInstantAction
 											selectedKey="edit"
+											align="dropdownRight"
 											items={[
 												{ label: "Edit", key: "edit", action: edit },
 												{ label: "Reopen", key: "reopen", action: reopen }
@@ -763,6 +764,7 @@ export const PullRequest = () => {
 											size="compact"
 											splitDropdown
 											splitDropdownInstantAction
+											align="dropdownRight"
 											items={[
 												{ label: "Edit", key: "edit", action: edit },
 												{

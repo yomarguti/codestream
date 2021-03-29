@@ -47,6 +47,9 @@ export default class Menu extends Component {
 				if (clickedInMenu) {
 					return;
 				}
+				if (this.props.target && this.props.target.querySelector(targetSelector) != null) {
+					return;
+				}
 				const clickedInModalRoot = modalRoot.querySelector(targetSelector) != null;
 				if (clickedInModalRoot) this.setState({ closed: true });
 			} catch {

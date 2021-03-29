@@ -218,13 +218,16 @@ export const PullRequestBottomComment = styled((props: Props) => {
 		</Button>
 	);
 
+	const spacer = <div style={{ width: "10px", display: "inline-block" }} />;
 	const buttons =
 		pr.state.toLowerCase() === "closed"
-			? [reopenButton, submitButton]
-			: [closeButton, submitButton];
+			? [reopenButton, spacer, submitButton]
+			: [closeButton, spacer, submitButton];
+
+	const isGitLab = pr.providerId.includes("gitlab");
 
 	return (
-		<PRComment>
+		<PRComment className={props.className}>
 			<PRHeadshot size={40} person={pr.viewer}></PRHeadshot>
 			<PRCommentCard className="add-comment">
 				{pr.locked ? (
@@ -260,21 +263,25 @@ export const PullRequestBottomComment = styled((props: Props) => {
 							<div style={{ clear: "both" }}></div>
 						</div>
 						{!isPreviewing && (
-							<ButtonRow>
-								<div
-									style={{
-										textAlign: pr.providerId.includes("gitlab") ? "left" : "right",
-										marginLeft: pr.providerId.includes("gitlab") ? "-10px" : 0,
-										flexGrow: 1
-									}}
-								>
-									{pr.providerId.includes("gitlab") ? [...buttons].reverse() : buttons}
-								</div>
-							</ButtonRow>
+							<div
+								style={{
+									textAlign: isGitLab ? "left" : "right",
+									flexGrow: 1,
+									flexWrap: "wrap",
+									justifyContent: "flex-end",
+									whiteSpace: "normal" // required for wrap
+								}}
+							>
+								{isGitLab ? [...buttons].reverse() : buttons}
+							</div>
 						)}
 					</>
 				)}
 			</PRCommentCard>
 		</PRComment>
 	);
-})``;
+})`
+	button {
+		margin-top: 10px !important;
+	}
+`;
