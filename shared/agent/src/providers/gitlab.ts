@@ -311,8 +311,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	async getAssignableUsers(request: { boardId: string }) {
 		await this.ensureConnected();
 
-		const response = await this.get<GitLabUser[]>(`/projects/${request.boardId}/users`);
-		return { users: response.body.map(u => ({ ...u, displayName: u.username })) };
+		const users = await this._paginateRestResponse(`/projects/${request.boardId}/users`, data => {
+			return data.map(u => ({ ...u, displayName: u.username }));
+		});
+		return { users };
 	}
 
 	@log()
