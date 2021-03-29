@@ -55,6 +55,7 @@ import mergeRequestNoteMutation from "./gitlab/createMergeRequestNote.graphql";
 import { merge } from "lodash";
 import { parsePatch } from "diff";
 import { GraphqlQueryBuilder } from "./gitlab/graphqlQueryBuilder";
+import { gate } from "../system/decorators/gate";
 
 interface GitLabProject {
 	path_with_namespace: any;
@@ -118,7 +119,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	async ensureInitialized() {
-		await this.setCurrentUser();
+		await this.getCurrentUser();
 	}
 
 	protected getPRExternalContent(comment: PullRequestComment) {
@@ -669,7 +670,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		request: GetMyPullRequestsRequest
 	): Promise<GetMyPullRequestsResponse[][] | undefined> {
 		void (await this.ensureConnected());
-		void (await this.setCurrentUser());
+		const currentUser = await this.getCurrentUser();
 
 		let repos: string[] = [];
 		if (request.isOpen) {
@@ -695,27 +696,25 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			queries.forEach(query => {
 				const exploded = query
 					.split(" ")
-					.map(q => this.toKeyValuePair(q))
+					.map(q => this.toKeyValuePair(q, currentUser))
 					.join("&");
 
 				repos.forEach(repo => {
-					promises.push(
-						this.get<any>(
-							`/projects/${encodeURIComponent(
-								repo
-							)}/merge_requests?${exploded}&with_labels_details=true`
-						)
-					);
+					const url = `/projects/${encodeURIComponent(
+						repo
+					)}/merge_requests?${exploded}&with_labels_details=true`;
+					Logger.debug(`getMyPullRequests id=${this.providerConfig.id} url=${url}`);
+					promises.push(this.get<any>(url));
 				});
 			});
 		} else {
 			promises = queries.map(query => {
-				return this.get<any>(
-					`/merge_requests?${query
-						.split(" ")
-						.map(q => this.toKeyValuePair(q))
-						.join("&")}&with_labels_details=true`
-				);
+				const url = `/merge_requests?${query
+					.split(" ")
+					.map(q => this.toKeyValuePair(q, currentUser))
+					.join("&")}&with_labels_details=true`;
+				Logger.debug(`getMyPullRequests id=${this.providerConfig.id} url=${url}`);
+				return this.get<any>(url);
 			});
 		}
 
@@ -889,11 +888,19 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return this.delete<R>(url, {}, options);
 	}
 
-	_currentGitlabUser?: GitLabCurrentUser;
+	/**
+	 * Gets the current user based on the GL providerId
+	 *
+	 * @memberof GitLabProvider
+	 */
+	_currentGitlabUsers = new Map<string, GitLabCurrentUser>();
 
-	async setCurrentUser() {
-		if (!this._currentGitlabUser) {
-			const data = await this.query<any>(`
+	@gate()
+	async getCurrentUser(): Promise<GitLabCurrentUser> {
+		let currentUser = this._currentGitlabUsers.get(this.providerConfig.id);
+		if (currentUser) return currentUser;
+
+		const data = await this.query<any>(`
 			{
 				currentUser {
 					id
@@ -902,10 +909,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					avatarUrl
 				}
 			}`);
-			this._currentGitlabUser = this.toAuthorAbsolutePath(data.currentUser);
-			Logger.log(`setCurrentUser ${JSON.stringify(this._currentGitlabUser)}`);
-		}
-		return this._currentGitlabUser;
+
+		currentUser = this.toAuthorAbsolutePath(data.currentUser);
+		this._currentGitlabUsers.set(
+			this.providerConfig.id,
+			this.toAuthorAbsolutePath(data.currentUser)
+		);
+
+		Logger.log(`getCurrentUser ${JSON.stringify(currentUser)} for id=${this.providerConfig.id}`);
+		return currentUser;
 	}
 
 	_pullRequestCache: Map<string, GitLabMergeRequestWrapper> = new Map();
@@ -934,7 +946,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		const { projectFullPath, id, iid } = this.parseId(request.pullRequestId);
 
 		void (await this.ensureConnected());
-		void (await this.setCurrentUser());
+		const currentUser = await this.getCurrentUser();
 		const providerVersion = await this.getVersion();
 
 		if (request.force) {
@@ -1186,7 +1198,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			const pendingReview = await this.gitLabReviewStore.get(new GitLabId(projectFullPath, iid));
 			if (pendingReview?.comments?.length) {
 				const commentsAsDiscussionNodes = pendingReview.comments.map(_ => {
-					return this.gitLabReviewStore.mapToDiscussionNode(_, this._currentGitlabUser!);
+					return this.gitLabReviewStore.mapToDiscussionNode(_, currentUser);
 				});
 				response.project.mergeRequest.discussions.nodes = response.project.mergeRequest.discussions.nodes.concat(
 					commentsAsDiscussionNodes
@@ -2235,6 +2247,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					useRawResponse: true
 				});
 				if (response.body === "") {
+					const currentUser = await this.getCurrentUser();
 					return {
 						directives: [
 							{
@@ -2242,7 +2255,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 								type: "removeReaction",
 								data: {
 									content: request.content,
-									login: this._currentGitlabUser?.login
+									login: currentUser?.login
 								}
 							}
 						]
@@ -2763,11 +2776,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return user;
 	}
 
-	private toKeyValuePair(q: string) {
+	private toKeyValuePair(q: string, currentUser: GitLabCurrentUser) {
 		const kvp = q.split(":");
 		let value = kvp[1];
-		if (value === "@me" && this._currentGitlabUser) {
-			value = this._currentGitlabUser.login;
+		if (value === "@me" && currentUser) {
+			value = currentUser.login;
 		}
 		return `${encodeURIComponent(kvp[0])}=${encodeURIComponent(value)}`;
 	}
@@ -2780,7 +2793,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return gid.replace("gid://gitlab/MergeRequest/", "");
 	}
 
-	private toAuthorAbsolutePath(author: any) {
+	private toAuthorAbsolutePath(author: any): GitLabCurrentUser {
 		if (author?.avatarUrl.indexOf("/") === 0) {
 			// no really great way to handle this...
 			author.avatarUrl = `${this.baseWebUrl}${author.avatarUrl}`;
