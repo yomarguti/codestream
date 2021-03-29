@@ -703,7 +703,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					const url = `/projects/${encodeURIComponent(
 						repo
 					)}/merge_requests?${exploded}&with_labels_details=true`;
-					Logger.debug(`getMyPullRequests id=${this.providerConfig.id} url=${url}`);
+					// Logger.debug(`getMyPullRequests id=${this.providerConfig.id} url=${url}`);
 					promises.push(this.get<any>(url));
 				});
 			});
@@ -713,7 +713,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					.split(" ")
 					.map(q => this.toKeyValuePair(q, currentUser))
 					.join("&")}&with_labels_details=true`;
-				Logger.debug(`getMyPullRequests id=${this.providerConfig.id} url=${url}`);
+				// Logger.debug(`getMyPullRequests id=${this.providerConfig.id} url=${url}`);
 				return this.get<any>(url);
 			});
 		}

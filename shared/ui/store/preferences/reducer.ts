@@ -118,7 +118,7 @@ export const DEFAULT_QUERIES: { [providerId: string]: PullRequestQuery[] } = {
 		{
 			providerId: "gitlab*com",
 			name: "Waiting on my Review",
-			query: `state:opened reviewer_username:@me`,
+			query: `state:opened reviewer_username:@me scope:all`,
 			hidden: false
 		},
 		{
@@ -144,7 +144,7 @@ export const DEFAULT_QUERIES: { [providerId: string]: PullRequestQuery[] } = {
 		{
 			providerId: "gitlab/enterprise",
 			name: "Waiting on my Review",
-			query: `state:opened reviewer_username:@me`,
+			query: `state:opened reviewer_username:@me scope:all`,
 			hidden: false
 		},
 		{
