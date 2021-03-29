@@ -682,7 +682,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			}
 		}
 
-		let queries = request.queries;
+		const queries = request.queries.map(query =>
+			query === "recent" ? "scope:created_by_me per_page:5" : query
+		);
 
 		let items;
 		let promises: Promise<ApiResponse<any>>[] = [];
@@ -705,9 +707,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				});
 			});
 		} else {
-			promises = queries.map(_ => {
+			promises = queries.map(query => {
 				return this.get<any>(
-					`/merge_requests?${_.split(" ")
+					`/merge_requests?${query
+						.split(" ")
 						.map(q => this.toKeyValuePair(q))
 						.join("&")}&with_labels_details=true`
 				);

@@ -132,6 +132,12 @@ export const DEFAULT_QUERIES: { [providerId: string]: PullRequestQuery[] } = {
 			name: "Created by Me",
 			query: `state:opened scope:created_by_me`,
 			hidden: false
+		},
+		{
+			providerId: "gitlab*com",
+			name: "Recent",
+			query: `recent`,
+			hidden: false
 		}
 	],
 	"gitlab/enterprise": [
@@ -151,6 +157,12 @@ export const DEFAULT_QUERIES: { [providerId: string]: PullRequestQuery[] } = {
 			providerId: "gitlab/enterprise",
 			name: "Created by Me",
 			query: `state:opened scope:created_by_me`,
+			hidden: false
+		},
+		{
+			providerId: "gitlab/enterprise",
+			name: "Recent",
+			query: `recent`,
 			hidden: false
 		}
 	]
