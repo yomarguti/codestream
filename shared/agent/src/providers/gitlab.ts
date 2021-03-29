@@ -1831,11 +1831,16 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	async deletePullRequestComment(request: {
 		id: string;
 		type: string;
+		isPending: boolean;
 		pullRequestId: string;
 	}): Promise<Directives | undefined> {
 		const noteId = request.id;
 		const { id } = this.parseId(request.pullRequestId);
-		const query = `
+
+		if (request.isPending) {
+			await this.gitLabReviewStore.deleteComment(id, request.id);
+		} else {
+			const query = `
 				mutation DestroyNote($id:ID!) {
 					destroyNote(input:{id:$id}) {
 			  			clientMutationId
@@ -1845,10 +1850,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						}
 		  			}`;
 
-		await this.mutate<any>(query, {
-			id: noteId
-		});
-
+			await this.mutate<any>(query, {
+				id: noteId
+			});
+		}
 		this._pullRequestCache.delete(id);
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
 			pullRequestId: id,
@@ -2839,6 +2844,7 @@ class GitLabReviewStore {
 				})
 			)?.contents;
 			const data = JSON.parse(current || "{}") || ({} as GitLabReview);
+			comment = { ...comment, id: new Date().getTime().toString() };
 			if (data && data.comments) {
 				data.comments.push(comment);
 			} else {
@@ -2881,7 +2887,10 @@ class GitLabReviewStore {
 			const data = await textFiles.readTextFile({
 				path: path
 			});
-			return !!data?.contents;
+			if (!data || !data.contents) return false;
+
+			const review = JSON.parse(data.contents || "{}") as GitLabReview;
+			return review?.comments?.length > 0;
 		} catch (ex) {
 			Logger.error(ex);
 		}
@@ -2907,14 +2916,26 @@ class GitLabReviewStore {
 		return false;
 	}
 
-	deleteComment() {
-		// TODO
+	async deleteComment(reviewId: string, commentId: string) {
+		const review = await this.get(reviewId);
+		if (review) {
+			review.comments = review.comments.filter(_ => _.id !== commentId);
+			const { textFiles } = SessionContainer.instance();
+			const path = this.buildPath(reviewId);
+			await textFiles.writeTextFile({
+				path: path,
+				contents: JSON.stringify(review)
+			});
+		}
+
+		return true;
 	}
 
 	mapToDiscussionNode(_: any, user: GitLabCurrentUser): DiscussionNode {
+		const id = (_.id || new Date().getTime()).toString();
 		return {
 			_pending: true,
-			id: "undefined",
+			id: id,
 			createdAt: _.createdAt,
 			resolved: false,
 			resolvable: false,
@@ -2922,7 +2943,7 @@ class GitLabReviewStore {
 				nodes: [
 					{
 						_pending: true,
-						id: "undefined",
+						id: id,
 						author: {
 							name: user.name,
 							login: user.login,
