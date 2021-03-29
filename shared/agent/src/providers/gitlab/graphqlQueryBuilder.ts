@@ -87,7 +87,8 @@ export class GraphqlQueryBuilder {
 		if (queryKey === "GetPullRequest") {
 			support = {
 				__version: providerVersion,
-				reviewers: semver.gte(version, "13.7.0")
+				reviewers: semver.gte(version, "13.7.0"),
+				approvalsRequired: semver.gte(version, "13.8.0")
 			};
 		}
 
@@ -100,6 +101,27 @@ export class GraphqlQueryBuilder {
 	configuration: { [id: string]: GraphQlQueryModifier[] } = {
 		// for the GetPullRequest query, if the current version if <= 13.6.0 run this...
 		GetPullRequest: [
+			{
+				selector: (currentVersion: string) => semver.lt(currentVersion, "13.8.0"),
+				query: {
+					head: {
+						value: {
+							key: "GetPullRequest"
+						},
+						next: {
+							value: {
+								key: "project"
+							},
+							next: {
+								value: {
+									key: "mergeRequest",
+									removals: ["approvalsRequired", "approvalsLeft"]
+								}
+							}
+						}
+					}
+				}
+			},
 			{
 				selector: (currentVersion: string) => semver.lt(currentVersion, "13.6.0"),
 				query: {

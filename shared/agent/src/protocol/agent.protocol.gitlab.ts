@@ -191,6 +191,8 @@ export interface GitLabMergeRequest {
 			login: string;
 		}[];
 	};
+	approvalsRequired?: boolean;
+	approvalsLeft?: number;
 	author: GitLabUser;
 	assignees: {
 		nodes: GitLabUser[];
@@ -378,5 +380,6 @@ export interface GitLabMergeRequest {
 		 */
 		__version: any;
 		reviewers?: boolean;
+		approvalsRequired?: boolean;
 	};
 }

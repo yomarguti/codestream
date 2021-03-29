@@ -26,6 +26,37 @@ export const ApproveBox = (props: { pr: GitLabMergeRequest }) => {
 	const approvers = props.pr.approvedBy ? props.pr.approvedBy.nodes : [];
 	const iHaveApproved = approvers.find(_ => _.login === props.pr.viewer.login);
 	const isApproved = approvers.length > 0;
+	const render = () => {
+		if (isApproved) {
+			return (
+				<>
+					<b>Merge request approved. </b>
+					Approved by{" "}
+					{approvers.map(_ => (
+						<PRHeadshotName person={_} />
+					))}
+				</>
+			);
+		}
+
+		if (props.pr.supports.approvalsRequired) {
+			if (!props.pr.approvalsRequired) {
+				return (
+					<>
+						Approval is optional{" "}
+						<Link
+							href={`${props.pr.baseWebUrl}/help/user/project/merge_requests/merge_request_approvals`}
+						>
+							<Icon name="info" title="About this feature" placement="top" />
+						</Link>
+					</>
+				);
+			} else {
+				return <>Requires approval</>;
+			}
+		}
+		return null;
+	};
 
 	return (
 		<OutlineBox>
@@ -54,26 +85,7 @@ export const ApproveBox = (props: { pr: GitLabMergeRequest }) => {
 					</>
 				)}
 
-				<div className="pad-left">
-					{isApproved ? (
-						<>
-							<b>Merge request approved. </b>
-							Approved by{" "}
-							{approvers.map(_ => (
-								<PRHeadshotName person={_} />
-							))}
-						</>
-					) : (
-						<>
-							Approval is optional{" "}
-							<Link
-								href={`${props.pr.baseWebUrl}/help/user/project/merge_requests/merge_request_approvals`}
-							>
-								<Icon name="info" title="About this feature" placement="top" />
-							</Link>
-						</>
-					)}
-				</div>
+				<div className="pad-left">{render()}</div>
 			</FlexRow>
 		</OutlineBox>
 	);
