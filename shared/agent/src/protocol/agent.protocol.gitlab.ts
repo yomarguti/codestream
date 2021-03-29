@@ -1,7 +1,5 @@
 "use strict";
 
-import { ProviderVersion } from "providers/provider";
-
 export interface GitLabCreateCardRequest {
 	repoName: string;
 	title: string;
@@ -378,7 +376,7 @@ export interface GitLabMergeRequest {
 		/**
 		 * private property, mainly for informative/debugging uses
 		 */
-		__version: ProviderVersion;
+		__version: any;
 		reviewers?: boolean;
 	};
 }
