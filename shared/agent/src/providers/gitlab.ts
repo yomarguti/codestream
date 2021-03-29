@@ -898,6 +898,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			}`);
 			this._currentGitlabUser = this.toAuthorAbsolutePath(data.currentUser);
+			Logger.log(`setCurrentUser ${JSON.stringify(this._currentGitlabUser)}`);
 		}
 		return this._currentGitlabUser;
 	}
