@@ -1,5 +1,7 @@
 "use strict";
 
+import { ProviderVersion } from "providers/provider";
+
 export interface GitLabCreateCardRequest {
 	repoName: string;
 	title: string;
@@ -368,4 +370,15 @@ export interface GitLabMergeRequest {
 	webUrl: string;
 	workInProgress: boolean;
 	baseWebUrl: string;
+
+	/**
+	 * This is a property used by CodeStream
+	 */
+	supports: {
+		/**
+		 * private property, mainly for informative/debugging uses
+		 */
+		__version: ProviderVersion;
+		reviewers?: boolean;
+	};
 }

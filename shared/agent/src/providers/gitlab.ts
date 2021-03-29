@@ -930,7 +930,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 		void (await this.ensureConnected());
 		void (await this.setCurrentUser());
-		void (await this.getVersion());
+		const providerVersion = await this.getVersion();
 
 		if (request.force) {
 			this._pullRequestCache.delete(id);
@@ -1212,6 +1212,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			// sort all the nodes
 			response.project.mergeRequest.discussions.nodes.sort((a: DiscussionNode, b: DiscussionNode) =>
 				a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0
+			);
+
+			response.project.mergeRequest.supports = this.graphqlQueryBuilder.getOrCreateSupportMatrix(
+				"GetPullRequest",
+				providerVersion
 			);
 
 			this._pullRequestCache.set(id, response);

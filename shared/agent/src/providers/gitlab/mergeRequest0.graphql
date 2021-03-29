@@ -61,6 +61,13 @@ query GetPullRequest($fullPath: ID!, $iid: String!, $after: String) {
 			userDiscussionsCount
 			discussionLocked
 			forceRemoveSourceBranch
+			reviewers {
+				nodes {
+					name
+					login: username
+					avatarUrl
+				}
+			}
 			timeEstimate
 			totalTimeSpent
 			updatedAt
