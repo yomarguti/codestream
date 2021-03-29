@@ -1183,7 +1183,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			});
 
 			// add reviews
-			const pendingReview = await this.gitLabReviewStore.get(base_id);
+			const pendingReview = await this.gitLabReviewStore.get(new GitLabId(projectFullPath, iid));
 			if (pendingReview?.comments?.length) {
 				const commentsAsDiscussionNodes = pendingReview.comments.map(_ => {
 					return this.gitLabReviewStore.mapToDiscussionNode(_, this._currentGitlabUser!);
@@ -1337,9 +1337,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	@log()
 	async getPullRequestReviewId(request: { pullRequestId: string }) {
-		const { id } = this.parseId(request.pullRequestId);
-		const existing = this.gitLabReviewStore.exists(id);
-		return existing;
+		const { iid, projectFullPath } = this.parseId(request.pullRequestId);
+		const exists = this.gitLabReviewStore.exists(new GitLabId(projectFullPath, iid));
+		return exists;
 	}
 
 	@log()
@@ -1385,9 +1385,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		leftSha?: string;
 		sha?: string;
 	}) {
-		const { id } = this.parseId(request.pullRequestId);
+		const { id, iid, projectFullPath } = this.parseId(request.pullRequestId);
 
-		this.gitLabReviewStore.add(id, {
+		this.gitLabReviewStore.add(new GitLabId(projectFullPath, iid), {
 			...request,
 			createdAt: new Date().toISOString()
 		});
@@ -1409,7 +1409,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		// used with old servers
 		pullRequestReviewId?: string;
 	}) {
-		const { id } = this.parseId(request.pullRequestId);
+		const { id, iid, projectFullPath } = this.parseId(request.pullRequestId);
 
 		// TODO add directives
 		if (!request.eventType) {
@@ -1425,7 +1425,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			throw new Error("Invalid eventType");
 		}
 
-		const existingReviewComments = await this.gitLabReviewStore.get(id);
+		const existingReviewComments = await this.gitLabReviewStore.get(
+			new GitLabId(projectFullPath, iid)
+		);
 		if (existingReviewComments?.comments?.length) {
 			for (const comment of existingReviewComments.comments) {
 				try {
@@ -1437,7 +1439,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					Logger.warn(ex, "Failed to add commit");
 				}
 			}
-			await this.gitLabReviewStore.deleteReview(id);
+			await this.gitLabReviewStore.deleteReview(new GitLabId(projectFullPath, iid));
 		}
 
 		if (request.text) {
@@ -1529,6 +1531,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	parseId(pullRequestId: string) {
 		const parsed = JSON.parse(pullRequestId);
+		// https://gitlab.com/gitlab-org/gitlab/-/blob/1cb9fe25/doc/api/README.md#id-vs-iid
+		// id - Is unique across all issues and is used for any API call
+		// iid - Is unique only in scope of a single project. When you browse issues or merge requests with the Web UI, you see the iid
 		return {
 			id: parsed.id,
 			projectFullPath: parsed.full.split("!")[0],
@@ -1835,10 +1840,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		pullRequestId: string;
 	}): Promise<Directives | undefined> {
 		const noteId = request.id;
-		const { id } = this.parseId(request.pullRequestId);
+		const { id, iid, projectFullPath } = this.parseId(request.pullRequestId);
 
 		if (request.isPending) {
-			await this.gitLabReviewStore.deleteComment(id, request.id);
+			await this.gitLabReviewStore.deleteComment(new GitLabId(projectFullPath, iid), request.id);
 		} else {
 			const query = `
 				mutation DestroyNote($id:ID!) {
@@ -2537,9 +2542,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		pullRequestId: string;
 		pullRequestReviewId: string;
 	}): Promise<any> {
-		const { id } = this.parseId(request.pullRequestId);
+		const { id, iid, projectFullPath } = this.parseId(request.pullRequestId);
 
-		await this.gitLabReviewStore.deleteReview(id);
+		await this.gitLabReviewStore.deleteReview(new GitLabId(projectFullPath, iid));
 
 		this._pullRequestCache.delete(id);
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
@@ -2826,18 +2831,32 @@ interface GitLabReview {
 	comments: any[];
 }
 
+class GitLabId {
+	constructor(private projectFullPath: string, private iid: string) {}
+
+	/**
+	 * creates a file-system safe path string
+	 *
+	 * @return {*}
+	 * @memberof GitLabId
+	 */
+	asString() {
+		return `${this.projectFullPath.replace(/\//g, "-")}-${this.iid}`.toLocaleLowerCase();
+	}
+}
+
 class GitLabReviewStore {
 	private path: string = "gitlab-review";
 	private version: string = "1.0.0";
 
-	private buildPath(reviewId: string) {
-		return this.path + "-" + reviewId + ".json";
+	private buildPath(id: GitLabId) {
+		return this.path + "-" + id.asString() + ".json";
 	}
 
-	async add(reviewId: string, comment: any) {
+	async add(id: GitLabId, comment: any) {
 		try {
 			const { textFiles } = SessionContainer.instance();
-			const path = this.buildPath(reviewId);
+			const path = this.buildPath(id);
 			const current = (
 				await textFiles.readTextFile({
 					path: path
@@ -2863,10 +2882,10 @@ class GitLabReviewStore {
 		return false;
 	}
 
-	async get(reviewId: string): Promise<GitLabReview | undefined> {
+	async get(id: GitLabId): Promise<GitLabReview | undefined> {
 		try {
 			const { textFiles } = SessionContainer.instance();
-			const path = this.buildPath(reviewId);
+			const path = this.buildPath(id);
 			const current = (
 				await textFiles.readTextFile({
 					path: path
@@ -2880,10 +2899,10 @@ class GitLabReviewStore {
 		return undefined;
 	}
 
-	async exists(reviewId: string) {
+	async exists(id: GitLabId) {
 		try {
 			const { textFiles } = SessionContainer.instance();
-			const path = this.buildPath(reviewId);
+			const path = this.buildPath(id);
 			const data = await textFiles.readTextFile({
 				path: path
 			});
@@ -2901,10 +2920,10 @@ class GitLabReviewStore {
 		// TODO
 	}
 
-	async deleteReview(reviewId: string) {
+	async deleteReview(id: GitLabId) {
 		try {
 			const { textFiles } = SessionContainer.instance();
-			const path = this.buildPath(reviewId);
+			const path = this.buildPath(id);
 			await textFiles.deleteTextFile({
 				path: path
 			});
@@ -2916,16 +2935,21 @@ class GitLabReviewStore {
 		return false;
 	}
 
-	async deleteComment(reviewId: string, commentId: string) {
-		const review = await this.get(reviewId);
+	async deleteComment(id: GitLabId, commentId: string) {
+		const review = await this.get(id);
 		if (review) {
 			review.comments = review.comments.filter(_ => _.id !== commentId);
-			const { textFiles } = SessionContainer.instance();
-			const path = this.buildPath(reviewId);
-			await textFiles.writeTextFile({
-				path: path,
-				contents: JSON.stringify(review)
-			});
+			if (review.comments.length) {
+				const { textFiles } = SessionContainer.instance();
+				const path = this.buildPath(id);
+				await textFiles.writeTextFile({
+					path: path,
+					contents: JSON.stringify(review)
+				});
+			} else {
+				// we aren't left with any comments.. just delete the file
+				await this.deleteReview(id);
+			}
 		}
 
 		return true;
