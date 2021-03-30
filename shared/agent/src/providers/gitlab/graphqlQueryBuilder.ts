@@ -10,11 +10,17 @@ import {
 	SelectionSetNode
 } from "graphql";
 import { Logger } from "../../logger";
+import { ProviderVersion } from "../../providers/provider";
 
 interface Leaf {
 	value: {
 		key: string;
-		exclusions?: string[];
+		/**
+		 * list of nodes that we will remove
+		 *
+		 * @type {string[]}
+		 */
+		removals?: string[];
 	};
 	next?: Leaf;
 }
@@ -56,9 +62,66 @@ export class GraphqlQueryBuilder {
 	 */
 	constructor(private providerId: string) {}
 
+	private versionMatrix: any = {
+		"0.0.0": {
+			emptyQueryName: {}
+		}
+	};
+
+	getOrCreateSupportMatrix(queryKey: "GetPullRequest", providerVersion: ProviderVersion): any {
+		const version = providerVersion.version;
+		if (!version || version === "0.0.0") return {};
+
+		const versionedQuery = this.versionMatrix[version];
+		if (versionedQuery) {
+			const keyedQuery = versionedQuery[queryKey];
+			if (keyedQuery) {
+				Logger.debug(
+					`GraphqlQueryStore.getOrCreateSupportMatrix ${this.providerId} version=${version} cache hit`
+				);
+				return keyedQuery;
+			}
+		}
+
+		let support = {};
+		if (queryKey === "GetPullRequest") {
+			support = {
+				__version: providerVersion,
+				reviewers: semver.gte(version, "13.7.0"),
+				approvalsRequired: semver.gte(version, "13.8.0")
+			};
+		}
+
+		this.versionMatrix[version] = this.versionMatrix[version] || {};
+		this.versionMatrix[version][queryKey] = support;
+
+		return support;
+	}
+
 	configuration: { [id: string]: GraphQlQueryModifier[] } = {
 		// for the GetPullRequest query, if the current version if <= 13.6.0 run this...
 		GetPullRequest: [
+			{
+				selector: (currentVersion: string) => semver.lt(currentVersion, "13.8.0"),
+				query: {
+					head: {
+						value: {
+							key: "GetPullRequest"
+						},
+						next: {
+							value: {
+								key: "project"
+							},
+							next: {
+								value: {
+									key: "mergeRequest",
+									removals: ["approvalsRequired", "approvalsLeft"]
+								}
+							}
+						}
+					}
+				}
+			},
 			{
 				selector: (currentVersion: string) => semver.lt(currentVersion, "13.6.0"),
 				query: {
@@ -73,13 +136,34 @@ export class GraphqlQueryBuilder {
 							next: {
 								value: {
 									key: "mergeRequest",
-									exclusions: ["commitCount", "userDiscussionsCount"]
+									removals: ["commitCount", "userDiscussionsCount"]
 								},
 								next: {
 									value: {
 										key: "userPermissions",
-										exclusions: ["canMerge"]
+										removals: ["canMerge"]
 									}
+								}
+							}
+						}
+					}
+				}
+			},
+			{
+				selector: (currentVersion: string) => semver.lt(currentVersion, "13.7.0"),
+				query: {
+					head: {
+						value: {
+							key: "GetPullRequest"
+						},
+						next: {
+							value: {
+								key: "project"
+							},
+							next: {
+								value: {
+									key: "mergeRequest",
+									removals: ["reviewers"]
 								}
 							}
 						}
@@ -152,27 +236,32 @@ export class GraphqlQueryBuilder {
 							return node.name && node.name.value === head!.value.key;
 						}) as FieldNode)?.selectionSet;
 
-						if (currentSelectionSet && head.value.exclusions) {
-							for (const exclusionName of head.value.exclusions) {
+						if (currentSelectionSet && head.value.removals) {
+							for (const removalName of head.value.removals) {
 								const exclusion = currentSelectionSet.selections?.find((_: SelectionNode) => {
 									// OMG Typescript, UGH
 									const node = _ as FieldNode;
-									return node.name.value === exclusionName;
+									return node.name.value === removalName;
 								}) as FieldNode;
 								if (exclusion) {
-									// NameNode is readonly in TS, but we're modifying it anyway
-									// comment it out with a '#'
-									(exclusion.name as any).value = `#${exclusionName}`;
+									currentSelectionSet.selections = currentSelectionSet.selections?.filter(
+										(_: SelectionNode) => {
+											// OMG Typescript, UGH
+											const node = _ as FieldNode;
+											return node.name.value !== removalName;
+										}
+									);
 									Logger.log(
 										`GraphqlQueryStore.build ${
 											this.providerId
-										} version=${version} excluding=${debugging
+										} version=${version} removing=${debugging
 											.map(_ => _.key)
-											.join(".")}.${exclusionName}`
+											.join(".")}.${removalName}`
 									);
 								}
 							}
 						}
+
 						lastSelectionSet = currentSelectionSet;
 						head = head.next as Leaf;
 					}

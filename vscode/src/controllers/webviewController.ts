@@ -1133,7 +1133,6 @@ export class WebviewController implements Disposable {
 
 	private async getBootstrap() {
 		await this.ensureSignedInOrOut();
-
 		const userId = this.session.signedIn ? this.session.userId : undefined;
 		const currentTeamId = this.session.signedIn ? this.session.team.id : undefined;
 		return {
@@ -1149,7 +1148,7 @@ export class WebviewController implements Disposable {
 				showHeadshots: Container.config.showAvatars,
 				team: Container.config.team
 			},
-			env: this.session.environment,
+			environmentInfo: this.session.environmentInfo,
 			ide: {
 				name: "VSC",
 				detail: env.appName

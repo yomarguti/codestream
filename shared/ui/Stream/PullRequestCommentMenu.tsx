@@ -49,6 +49,7 @@ export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 							await dispatch(
 								api("deletePullRequestComment", {
 									type: props.nodeType,
+									isPending: props.isPending,
 									id: node.id
 								})
 							);

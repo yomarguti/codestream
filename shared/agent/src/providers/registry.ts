@@ -98,7 +98,7 @@ const PR_QUERIES: {
 	gitlab: [
 		{
 			name: "is waiting on your review",
-			query: `state:opened reviewer_username:@me`
+			query: `state:opened reviewer_username:@me scope:all`
 		},
 		{
 			name: "was assigned to you",
@@ -108,7 +108,7 @@ const PR_QUERIES: {
 	gitlab_enterprise: [
 		{
 			name: "is waiting on your review",
-			query: `state:opened reviewer_username:@me`
+			query: `state:opened reviewer_username:@me scope:all`
 		},
 		{
 			name: "was assigned to you",

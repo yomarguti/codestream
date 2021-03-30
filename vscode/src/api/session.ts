@@ -4,6 +4,7 @@ import {
 	Capabilities,
 	ChangeDataType,
 	CodeStreamEnvironment,
+	CodeStreamEnvironmentInfo,
 	DidChangeDataNotification,
 	DidChangeDocumentMarkersNotification,
 	DidChangePullRequestCommentsNotification,
@@ -61,6 +62,7 @@ export {
 	ChannelStream,
 	ChannelStreamCreationOptions,
 	CodeStreamEnvironment,
+	CodeStreamEnvironmentInfo,
 	DirectStream,
 	DocMarker,
 	Post,
@@ -76,8 +78,6 @@ export {
 	User
 };
 
-// FIXME: Must keep this in sync with codestream-lsp-agent/src/session.ts
-const envRegex = /https?:\/\/((?:(\w+)-)?api|localhost)\.codestream\.(?:us|com)(?::\d+$)?/i;
 const instanceId = Functions.shortUuid();
 
 export interface StreamThread {
@@ -180,7 +180,8 @@ export class CodeStreamSession implements Disposable {
 	private _disposableAuthenticated: Disposable | undefined;
 
 	private _email: string | undefined;
-	private _environment: CodeStreamEnvironment | string = CodeStreamEnvironment.Unknown;
+	private _environmentInfo: CodeStreamEnvironmentInfo | undefined;
+	private _isOnPrem: boolean | undefined;
 	private _id: string | undefined;
 	private _loginPromise: Promise<LoginResult> | undefined;
 	private _state: SessionState | undefined;
@@ -212,6 +213,9 @@ export class CodeStreamSession implements Disposable {
 					await this.autoSignin();
 					disposable.dispose();
 				});
+			}),
+			Container.agent.onDidSetEnvironment(info => {
+				this._environmentInfo = info;
 			})
 		);
 
@@ -289,8 +293,28 @@ export class CodeStreamSession implements Disposable {
 		return this._id;
 	}
 
+	get environmentInfo(): CodeStreamEnvironmentInfo {
+		return (
+			this._environmentInfo || {
+				environment: CodeStreamEnvironment.Unknown,
+				isOnPrem: false,
+				isProductionCloud: false
+			}
+		);
+	}
+
 	get environment(): CodeStreamEnvironment | string {
-		return this._environment;
+		return this._environmentInfo
+			? this._environmentInfo.environment
+			: CodeStreamEnvironment.Unknown;
+	}
+
+	get isOnPrem(): boolean {
+		return this._environmentInfo ? this._environmentInfo.isOnPrem : false;
+	}
+
+	get isProductionCloud(): boolean {
+		return this._environmentInfo ? this._environmentInfo.isProductionCloud : false;
 	}
 
 	get serverUrl(): string {
@@ -298,24 +322,6 @@ export class CodeStreamSession implements Disposable {
 	}
 	setServerUrl(url: string) {
 		this._serverUrl = url;
-		this._environment = CodeStreamEnvironment.Unknown;
-
-		// FIXME: Must keep this logic in sync with codestream-lsp-agent/src/session.ts
-		const match = envRegex.exec(url);
-		if (match == null) return;
-
-		const [, subdomain, env] = match;
-		if (subdomain != null && subdomain.toLowerCase() === "localhost") {
-			this._environment = CodeStreamEnvironment.Local;
-			return;
-		}
-
-		if (env == null) {
-			this._environment = CodeStreamEnvironment.Production;
-			return;
-		}
-
-		this._environment = env.toLowerCase();
 	}
 
 	get signedIn() {
@@ -632,7 +638,6 @@ export class CodeStreamSession implements Disposable {
 		const user = response.loginResponse.user;
 		const email = user.email;
 		this._email = email;
-		this._environment = response.state.environment;
 		this._agentCapabilities = response.state.capabilities;
 
 		// Create an id for this session

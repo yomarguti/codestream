@@ -16,6 +16,7 @@ import { getPRLabel } from "../store/providers/reducer";
 interface Props {
 	pr: FetchThirdPartyPullRequestPullRequest;
 	mode?: string;
+	contents?: string;
 	filename: string;
 	lineNumber: number;
 	lineOffsetInHunk: number;
@@ -60,7 +61,14 @@ export const PullRequestInlineComment = styled((props: Props) => {
 				leftSha: pr.baseRefOid,
 				rightSha: pr.headRefOid,
 				// old servers
-				position: lineOffsetInHunk
+				position: lineOffsetInHunk,
+				metadata: {
+					contents: props.contents,
+					fileWithUrl: filename,
+					startLine: lineNumber,
+					// only single line comments
+					endLine: lineNumber
+				}
 			})
 		);
 		setText("");

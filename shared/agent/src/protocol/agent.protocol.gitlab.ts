@@ -191,6 +191,8 @@ export interface GitLabMergeRequest {
 			login: string;
 		}[];
 	};
+	approvalsRequired?: boolean;
+	approvalsLeft?: number;
 	author: GitLabUser;
 	assignees: {
 		nodes: GitLabUser[];
@@ -368,4 +370,16 @@ export interface GitLabMergeRequest {
 	webUrl: string;
 	workInProgress: boolean;
 	baseWebUrl: string;
+
+	/**
+	 * This is a property used by CodeStream
+	 */
+	supports: {
+		/**
+		 * private property, mainly for informative/debugging uses
+		 */
+		__version: any;
+		reviewers?: boolean;
+		approvalsRequired?: boolean;
+	};
 }

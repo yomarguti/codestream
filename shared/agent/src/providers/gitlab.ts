@@ -55,6 +55,7 @@ import mergeRequestNoteMutation from "./gitlab/createMergeRequestNote.graphql";
 import { merge } from "lodash";
 import { parsePatch } from "diff";
 import { GraphqlQueryBuilder } from "./gitlab/graphqlQueryBuilder";
+import { gate } from "../system/decorators/gate";
 
 interface GitLabProject {
 	path_with_namespace: any;
@@ -118,7 +119,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	async ensureInitialized() {
-		await this.setCurrentUser();
+		await this.getCurrentUser();
 	}
 
 	protected getPRExternalContent(comment: PullRequestComment) {
@@ -311,8 +312,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	async getAssignableUsers(request: { boardId: string }) {
 		await this.ensureConnected();
 
-		const response = await this.get<GitLabUser[]>(`/projects/${request.boardId}/users`);
-		return { users: response.body.map(u => ({ ...u, displayName: u.username })) };
+		const users = await this._paginateRestResponse(`/projects/${request.boardId}/users`, data => {
+			return data.map(u => ({ ...u, displayName: u.username }));
+		});
+		return { users };
 	}
 
 	@log()
@@ -667,7 +670,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		request: GetMyPullRequestsRequest
 	): Promise<GetMyPullRequestsResponse[][] | undefined> {
 		void (await this.ensureConnected());
-		void (await this.setCurrentUser());
+		const currentUser = await this.getCurrentUser();
 
 		let repos: string[] = [];
 		if (request.isOpen) {
@@ -682,7 +685,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			}
 		}
 
-		let queries = request.queries;
+		const queries = request.queries.map(query =>
+			query === "recent" ? "scope:created_by_me per_page:5" : query
+		);
 
 		let items;
 		let promises: Promise<ApiResponse<any>>[] = [];
@@ -691,26 +696,25 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			queries.forEach(query => {
 				const exploded = query
 					.split(" ")
-					.map(q => this.toKeyValuePair(q))
+					.map(q => this.toKeyValuePair(q, currentUser))
 					.join("&");
 
 				repos.forEach(repo => {
-					promises.push(
-						this.get<any>(
-							`/projects/${encodeURIComponent(
-								repo
-							)}/merge_requests?${exploded}&with_labels_details=true`
-						)
-					);
+					const url = `/projects/${encodeURIComponent(
+						repo
+					)}/merge_requests?${exploded}&with_labels_details=true`;
+					// Logger.debug(`getMyPullRequests id=${this.providerConfig.id} url=${url}`);
+					promises.push(this.get<any>(url));
 				});
 			});
 		} else {
-			promises = queries.map(_ => {
-				return this.get<any>(
-					`/merge_requests?${_.split(" ")
-						.map(q => this.toKeyValuePair(q))
-						.join("&")}&with_labels_details=true`
-				);
+			promises = queries.map(query => {
+				const url = `/merge_requests?${query
+					.split(" ")
+					.map(q => this.toKeyValuePair(q, currentUser))
+					.join("&")}&with_labels_details=true`;
+				// Logger.debug(`getMyPullRequests id=${this.providerConfig.id} url=${url}`);
+				return this.get<any>(url);
 			});
 		}
 
@@ -748,7 +752,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						})
 					);
 
-				if (!queries[index].match(/\bsort:/)) {
+				if (queries[index] && !queries[index].match(/\bsort:/)) {
 					response[index] = response[index].sort(
 						(a: { created_at: number }, b: { created_at: number }) => b.created_at - a.created_at
 					);
@@ -884,11 +888,19 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return this.delete<R>(url, {}, options);
 	}
 
-	_currentGitlabUser?: GitLabCurrentUser;
+	/**
+	 * Gets the current user based on the GL providerId
+	 *
+	 * @memberof GitLabProvider
+	 */
+	_currentGitlabUsers = new Map<string, GitLabCurrentUser>();
 
-	async setCurrentUser() {
-		if (!this._currentGitlabUser) {
-			const data = await this.query<any>(`
+	@gate()
+	async getCurrentUser(): Promise<GitLabCurrentUser> {
+		let currentUser = this._currentGitlabUsers.get(this.providerConfig.id);
+		if (currentUser) return currentUser;
+
+		const data = await this.query<any>(`
 			{
 				currentUser {
 					id
@@ -897,9 +909,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					avatarUrl
 				}
 			}`);
-			this._currentGitlabUser = this.toAuthorAbsolutePath(data.currentUser);
-		}
-		return this._currentGitlabUser;
+
+		currentUser = this.toAuthorAbsolutePath(data.currentUser);
+		this._currentGitlabUsers.set(
+			this.providerConfig.id,
+			this.toAuthorAbsolutePath(data.currentUser)
+		);
+
+		Logger.log(`getCurrentUser ${JSON.stringify(currentUser)} for id=${this.providerConfig.id}`);
+		return currentUser;
 	}
 
 	_pullRequestCache: Map<string, GitLabMergeRequestWrapper> = new Map();
@@ -928,8 +946,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		const { projectFullPath, id, iid } = this.parseId(request.pullRequestId);
 
 		void (await this.ensureConnected());
-		void (await this.setCurrentUser());
-		void (await this.getVersion());
+		const currentUser = await this.getCurrentUser();
+		const providerVersion = await this.getVersion();
 
 		if (request.force) {
 			this._pullRequestCache.delete(id);
@@ -1177,10 +1195,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			});
 
 			// add reviews
-			const pendingReview = await this.gitLabReviewStore.get(base_id);
+			const pendingReview = await this.gitLabReviewStore.get(new GitLabId(projectFullPath, iid));
 			if (pendingReview?.comments?.length) {
 				const commentsAsDiscussionNodes = pendingReview.comments.map(_ => {
-					return this.gitLabReviewStore.mapToDiscussionNode(_, this._currentGitlabUser!);
+					return this.gitLabReviewStore.mapToDiscussionNode(_, currentUser);
 				});
 				response.project.mergeRequest.discussions.nodes = response.project.mergeRequest.discussions.nodes.concat(
 					commentsAsDiscussionNodes
@@ -1211,6 +1229,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			// sort all the nodes
 			response.project.mergeRequest.discussions.nodes.sort((a: DiscussionNode, b: DiscussionNode) =>
 				a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0
+			);
+
+			response.project.mergeRequest.supports = this.graphqlQueryBuilder.getOrCreateSupportMatrix(
+				"GetPullRequest",
+				providerVersion
 			);
 
 			this._pullRequestCache.set(id, response);
@@ -1326,9 +1349,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	@log()
 	async getPullRequestReviewId(request: { pullRequestId: string }) {
-		const { id } = this.parseId(request.pullRequestId);
-		const existing = this.gitLabReviewStore.exists(id);
-		return existing;
+		const { iid, projectFullPath } = this.parseId(request.pullRequestId);
+		const exists = this.gitLabReviewStore.exists(new GitLabId(projectFullPath, iid));
+		return exists;
 	}
 
 	@log()
@@ -1374,9 +1397,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		leftSha?: string;
 		sha?: string;
 	}) {
-		const { id } = this.parseId(request.pullRequestId);
+		const { id, iid, projectFullPath } = this.parseId(request.pullRequestId);
 
-		this.gitLabReviewStore.add(id, {
+		this.gitLabReviewStore.add(new GitLabId(projectFullPath, iid), {
 			...request,
 			createdAt: new Date().toISOString()
 		});
@@ -1398,7 +1421,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		// used with old servers
 		pullRequestReviewId?: string;
 	}) {
-		const { id } = this.parseId(request.pullRequestId);
+		const { id, iid, projectFullPath } = this.parseId(request.pullRequestId);
 
 		// TODO add directives
 		if (!request.eventType) {
@@ -1414,7 +1437,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			throw new Error("Invalid eventType");
 		}
 
-		const existingReviewComments = await this.gitLabReviewStore.get(id);
+		const existingReviewComments = await this.gitLabReviewStore.get(
+			new GitLabId(projectFullPath, iid)
+		);
 		if (existingReviewComments?.comments?.length) {
 			for (const comment of existingReviewComments.comments) {
 				try {
@@ -1426,7 +1451,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					Logger.warn(ex, "Failed to add commit");
 				}
 			}
-			await this.gitLabReviewStore.deleteReview(id);
+			await this.gitLabReviewStore.deleteReview(new GitLabId(projectFullPath, iid));
 		}
 
 		if (request.text) {
@@ -1518,6 +1543,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	parseId(pullRequestId: string) {
 		const parsed = JSON.parse(pullRequestId);
+		// https://gitlab.com/gitlab-org/gitlab/-/blob/1cb9fe25/doc/api/README.md#id-vs-iid
+		// id - Is unique across all issues and is used for any API call
+		// iid - Is unique only in scope of a single project. When you browse issues or merge requests with the Web UI, you see the iid
 		return {
 			id: parsed.id,
 			projectFullPath: parsed.full.split("!")[0],
@@ -1820,11 +1848,16 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	async deletePullRequestComment(request: {
 		id: string;
 		type: string;
+		isPending: boolean;
 		pullRequestId: string;
 	}): Promise<Directives | undefined> {
 		const noteId = request.id;
-		const { id } = this.parseId(request.pullRequestId);
-		const query = `
+		const { id, iid, projectFullPath } = this.parseId(request.pullRequestId);
+
+		if (request.isPending) {
+			await this.gitLabReviewStore.deleteComment(new GitLabId(projectFullPath, iid), request.id);
+		} else {
+			const query = `
 				mutation DestroyNote($id:ID!) {
 					destroyNote(input:{id:$id}) {
 			  			clientMutationId
@@ -1834,10 +1867,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						}
 		  			}`;
 
-		await this.mutate<any>(query, {
-			id: noteId
-		});
-
+			await this.mutate<any>(query, {
+				id: noteId
+			});
+		}
 		this._pullRequestCache.delete(id);
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
 			pullRequestId: id,
@@ -2214,6 +2247,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					useRawResponse: true
 				});
 				if (response.body === "") {
+					const currentUser = await this.getCurrentUser();
 					return {
 						directives: [
 							{
@@ -2221,7 +2255,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 								type: "removeReaction",
 								data: {
 									content: request.content,
-									login: this._currentGitlabUser?.login
+									login: currentUser?.login
 								}
 							}
 						]
@@ -2521,9 +2555,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		pullRequestId: string;
 		pullRequestReviewId: string;
 	}): Promise<any> {
-		const { id } = this.parseId(request.pullRequestId);
+		const { id, iid, projectFullPath } = this.parseId(request.pullRequestId);
 
-		await this.gitLabReviewStore.deleteReview(id);
+		await this.gitLabReviewStore.deleteReview(new GitLabId(projectFullPath, iid));
 
 		this._pullRequestCache.delete(id);
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
@@ -2742,11 +2776,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return user;
 	}
 
-	private toKeyValuePair(q: string) {
+	private toKeyValuePair(q: string, currentUser: GitLabCurrentUser) {
 		const kvp = q.split(":");
 		let value = kvp[1];
-		if (value === "@me" && this._currentGitlabUser) {
-			value = this._currentGitlabUser.login;
+		if (value === "@me" && currentUser) {
+			value = currentUser.login;
 		}
 		return `${encodeURIComponent(kvp[0])}=${encodeURIComponent(value)}`;
 	}
@@ -2759,7 +2793,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return gid.replace("gid://gitlab/MergeRequest/", "");
 	}
 
-	private toAuthorAbsolutePath(author: any) {
+	private toAuthorAbsolutePath(author: any): GitLabCurrentUser {
 		if (author?.avatarUrl.indexOf("/") === 0) {
 			// no really great way to handle this...
 			author.avatarUrl = `${this.baseWebUrl}${author.avatarUrl}`;
@@ -2810,24 +2844,39 @@ interface GitLabReview {
 	comments: any[];
 }
 
+class GitLabId {
+	constructor(private projectFullPath: string, private iid: string) {}
+
+	/**
+	 * creates a file-system safe path string
+	 *
+	 * @return {*}
+	 * @memberof GitLabId
+	 */
+	asString() {
+		return `${this.projectFullPath.replace(/\//g, "-")}-${this.iid}`.toLocaleLowerCase();
+	}
+}
+
 class GitLabReviewStore {
 	private path: string = "gitlab-review";
 	private version: string = "1.0.0";
 
-	private buildPath(reviewId: string) {
-		return this.path + "-" + reviewId + ".json";
+	private buildPath(id: GitLabId) {
+		return this.path + "-" + id.asString() + ".json";
 	}
 
-	async add(reviewId: string, comment: any) {
+	async add(id: GitLabId, comment: any) {
 		try {
 			const { textFiles } = SessionContainer.instance();
-			const path = this.buildPath(reviewId);
+			const path = this.buildPath(id);
 			const current = (
 				await textFiles.readTextFile({
 					path: path
 				})
 			)?.contents;
 			const data = JSON.parse(current || "{}") || ({} as GitLabReview);
+			comment = { ...comment, id: new Date().getTime().toString() };
 			if (data && data.comments) {
 				data.comments.push(comment);
 			} else {
@@ -2846,10 +2895,10 @@ class GitLabReviewStore {
 		return false;
 	}
 
-	async get(reviewId: string): Promise<GitLabReview | undefined> {
+	async get(id: GitLabId): Promise<GitLabReview | undefined> {
 		try {
 			const { textFiles } = SessionContainer.instance();
-			const path = this.buildPath(reviewId);
+			const path = this.buildPath(id);
 			const current = (
 				await textFiles.readTextFile({
 					path: path
@@ -2863,14 +2912,17 @@ class GitLabReviewStore {
 		return undefined;
 	}
 
-	async exists(reviewId: string) {
+	async exists(id: GitLabId) {
 		try {
 			const { textFiles } = SessionContainer.instance();
-			const path = this.buildPath(reviewId);
+			const path = this.buildPath(id);
 			const data = await textFiles.readTextFile({
 				path: path
 			});
-			return !!data?.contents;
+			if (!data || !data.contents) return false;
+
+			const review = JSON.parse(data.contents || "{}") as GitLabReview;
+			return review?.comments?.length > 0;
 		} catch (ex) {
 			Logger.error(ex);
 		}
@@ -2881,10 +2933,10 @@ class GitLabReviewStore {
 		// TODO
 	}
 
-	async deleteReview(reviewId: string) {
+	async deleteReview(id: GitLabId) {
 		try {
 			const { textFiles } = SessionContainer.instance();
-			const path = this.buildPath(reviewId);
+			const path = this.buildPath(id);
 			await textFiles.deleteTextFile({
 				path: path
 			});
@@ -2896,14 +2948,31 @@ class GitLabReviewStore {
 		return false;
 	}
 
-	deleteComment() {
-		// TODO
+	async deleteComment(id: GitLabId, commentId: string) {
+		const review = await this.get(id);
+		if (review) {
+			review.comments = review.comments.filter(_ => _.id !== commentId);
+			if (review.comments.length) {
+				const { textFiles } = SessionContainer.instance();
+				const path = this.buildPath(id);
+				await textFiles.writeTextFile({
+					path: path,
+					contents: JSON.stringify(review)
+				});
+			} else {
+				// we aren't left with any comments.. just delete the file
+				await this.deleteReview(id);
+			}
+		}
+
+		return true;
 	}
 
 	mapToDiscussionNode(_: any, user: GitLabCurrentUser): DiscussionNode {
+		const id = (_.id || new Date().getTime()).toString();
 		return {
 			_pending: true,
-			id: "undefined",
+			id: id,
 			createdAt: _.createdAt,
 			resolved: false,
 			resolvable: false,
@@ -2911,7 +2980,7 @@ class GitLabReviewStore {
 				nodes: [
 					{
 						_pending: true,
-						id: "undefined",
+						id: id,
 						author: {
 							name: user.name,
 							login: user.login,

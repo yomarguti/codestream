@@ -118,7 +118,7 @@ export const DEFAULT_QUERIES: { [providerId: string]: PullRequestQuery[] } = {
 		{
 			providerId: "gitlab*com",
 			name: "Waiting on my Review",
-			query: `state:opened reviewer_username:@me`,
+			query: `state:opened reviewer_username:@me scope:all`,
 			hidden: false
 		},
 		{
@@ -131,6 +131,12 @@ export const DEFAULT_QUERIES: { [providerId: string]: PullRequestQuery[] } = {
 			providerId: "gitlab*com",
 			name: "Created by Me",
 			query: `state:opened scope:created_by_me`,
+			hidden: false
+		},
+		{
+			providerId: "gitlab*com",
+			name: "Recent",
+			query: `recent`,
 			hidden: false
 		}
 	],
@@ -138,7 +144,7 @@ export const DEFAULT_QUERIES: { [providerId: string]: PullRequestQuery[] } = {
 		{
 			providerId: "gitlab/enterprise",
 			name: "Waiting on my Review",
-			query: `state:opened reviewer_username:@me`,
+			query: `state:opened reviewer_username:@me scope:all`,
 			hidden: false
 		},
 		{
@@ -151,6 +157,12 @@ export const DEFAULT_QUERIES: { [providerId: string]: PullRequestQuery[] } = {
 			providerId: "gitlab/enterprise",
 			name: "Created by Me",
 			query: `state:opened scope:created_by_me`,
+			hidden: false
+		},
+		{
+			providerId: "gitlab/enterprise",
+			name: "Recent",
+			query: `recent`,
 			hidden: false
 		}
 	]

@@ -5,7 +5,6 @@ import { ReportSuppressedMessages } from "./agentError";
 import { Team } from "./api/extensions";
 import { SessionContainer } from "./container";
 import {
-	CodeStreamEnvironment,
 	ReportBreadcrumbRequest,
 	ReportBreadcrumbRequestType,
 	ReportMessageRequest,
@@ -13,11 +12,13 @@ import {
 } from "./protocol/agent.protocol";
 import { CodeStreamSession, SessionStatus } from "./session";
 import { lsp, lspHandler } from "./system";
+import { Logger } from "./logger";
 
 @lsp
 export class ErrorReporter {
 	constructor(session: CodeStreamSession) {
-		if (session.environment === CodeStreamEnvironment.Production) {
+		if (session.isProductionCloud) {
+			Logger.log("Initializing Sentry...");
 			Sentry.init({
 				dsn: "https://7c34949981cc45848fc4e3548363bb17@sentry.io/1314159",
 				release: session.versionInfo.extension.versionFormatted,
@@ -39,9 +40,11 @@ export class ErrorReporter {
 				// for rejects promises
 				const suppressMessages = Object.values(ReportSuppressedMessages).map(v => v as string);
 				scope.addEventProcessor(event => {
-					if (event.exception?.values?.find(value => {
-						return value.value && suppressMessages.indexOf(value.value) !== -1;
-					})) {
+					if (
+						event.exception?.values?.find(value => {
+							return value.value && suppressMessages.indexOf(value.value) !== -1;
+						})
+					) {
 						return null;
 					}
 					return event;
@@ -69,6 +72,8 @@ export class ErrorReporter {
 					});
 				});
 			});
+		} else {
+			Logger.log("Not initializing Sentry, this is not production");
 		}
 	}
 
@@ -94,5 +99,4 @@ export class ErrorReporter {
 			category: request.category
 		});
 	}
-
 }

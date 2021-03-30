@@ -746,7 +746,7 @@ export const PullRequest = () => {
 									{pr.state === "closed" ? (
 										<DropdownButton
 											variant="secondary"
-											size="compact"
+											size="compactwide"
 											splitDropdown
 											splitDropdownInstantAction
 											selectedKey="edit"
@@ -761,7 +761,7 @@ export const PullRequest = () => {
 									) : (
 										<DropdownButton
 											variant="secondary"
-											size="compact"
+											size="compactwide"
 											splitDropdown
 											splitDropdownInstantAction
 											align="dropdownRight"

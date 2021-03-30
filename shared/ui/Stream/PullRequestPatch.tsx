@@ -194,6 +194,7 @@ export const PullRequestPatch = (props: {
 										pr={props.pr}
 										mode={props.mode}
 										filename={filename}
+										contents={_}
 										lineNumber={rightLine + 1}
 										lineOffsetInHunk={index}
 										fetch={props.fetch}

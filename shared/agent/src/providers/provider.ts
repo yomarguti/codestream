@@ -346,7 +346,7 @@ export abstract class ThirdPartyProviderBase<
 		if (
 			info.protocol === "https:" &&
 			this.session.disableStrictSSL &&
-			(this.session.runTimeEnvironment !== "onprem" ||
+			(!this.session.isOnPrem ||
 				this.providerConfig.forEnterprise ||
 				this.providerConfig.isEnterprise)
 		) {
@@ -934,6 +934,7 @@ export abstract class ThirdPartyIssueProviderBase<
 			"EHOSTUNREACH",
 			"ENETDOWN",
 			"ENETUNREACH",
+			"self signed certificate in certificate chain",
 			"socket disconnected before secure",
 			"socket hang up"
 		];
