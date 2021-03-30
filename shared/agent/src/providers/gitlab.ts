@@ -2353,7 +2353,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		try {
-			const response = await this.restPut<any, any>(
+			const mergeResponse = await this.restPut<any, any>(
 				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/merge`,
 				{
 					merge_commit_message: request.message,
@@ -2362,34 +2362,38 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					should_remove_source_branch: request.deleteSourceBranch
 				}
 			);
-			if (response.body.merge_when_pipeline_succeeds) {
-				// only updating the future state..
-				return {
-					directives: [
-						{
-							type: "updatePullRequest",
-							data: {
-								state: response.body.state,
-								mergeWhenPipelineSucceeds: response.body.merge_when_pipeline_succeeds,
-								updatedAt: response.body.updated_at
-							}
-						}
-					]
-				};
-			}
-			return {
+
+			const response: Directives = {
 				directives: [
 					{
-						type: "updatePullRequest",
-						data: {
-							merged: true,
-							state: response.body.state,
-							mergedAt: response.body.merged_at,
-							updatedAt: response.body.updated_at
-						}
+						type: "addNodes",
+						data: await this.getStateEvents(projectFullPath, iid)
 					}
 				]
 			};
+
+			if (mergeResponse.body.merge_when_pipeline_succeeds) {
+				// only updating the future state..
+				response.directives.push({
+					type: "updatePullRequest",
+					data: {
+						state: mergeResponse.body.state,
+						mergeWhenPipelineSucceeds: mergeResponse.body.merge_when_pipeline_succeeds,
+						updatedAt: mergeResponse.body.updated_at
+					}
+				});
+			} else {
+				response.directives.push({
+					type: "updatePullRequest",
+					data: {
+						merged: true,
+						state: mergeResponse.body.state,
+						mergedAt: mergeResponse.body.merged_at,
+						updatedAt: mergeResponse.body.updated_at
+					}
+				});
+			}
+			return response;
 		} catch (ex) {
 			Logger.warn(ex.message, ex);
 			throw new Error("Failed to accept merge request.");
@@ -2530,8 +2534,18 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			}
 		}
 
+		const lastDiscussions = ((await this.query(print(mergeRequestDiscussionQuery), {
+			fullPath: projectFullPath,
+			iid: iid.toString(),
+			last: 3
+		})) as GitLabMergeRequestWrapper).project?.mergeRequest.discussions.nodes;
+
 		return {
 			directives: [
+				{
+					type: "addNodes",
+					data: lastDiscussions
+				},
 				{
 					type: type,
 					data:

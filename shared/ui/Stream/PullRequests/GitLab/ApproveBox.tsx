@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import Icon from "../../Icon";
 import { Button } from "@codestream/webview/src/components/Button";
@@ -15,12 +15,20 @@ export const ApproveBox = (props: { pr: GitLabMergeRequest }) => {
 	// once we can get additional approval data, we can relax/remove this
 	if (!props.pr.userPermissions?.canMerge) return null;
 
+	const [isLoading, setIsLoading] = useState(false);
 	const onApproveClick = async (e: React.MouseEvent<Element, MouseEvent>, approve: boolean) => {
-		dispatch(
-			api("togglePullRequestApproval", {
-				approve: approve
-			})
-		);
+		setIsLoading(true);
+		try {
+			await dispatch(
+				api("togglePullRequestApproval", {
+					approve: approve
+				})
+			);
+		} catch (ex) {
+			console.error(ex);
+		} finally {
+			setIsLoading(false);
+		}
 	};
 
 	const approvers = props.pr.approvedBy ? props.pr.approvedBy.nodes : [];
@@ -43,12 +51,17 @@ export const ApproveBox = (props: { pr: GitLabMergeRequest }) => {
 			if (!props.pr.approvalsRequired) {
 				return (
 					<>
-						Approval is optional{" "}
-						<Link
-							href={`${props.pr.baseWebUrl}/help/user/project/merge_requests/merge_request_approvals`}
-						>
-							<Icon name="info" title="About this feature" placement="top" />
-						</Link>
+						Approval is optional
+						{!props.pr.mergedAt && (
+							<>
+								{" "}
+								<Link
+									href={`${props.pr.baseWebUrl}/help/user/project/merge_requests/merge_request_approvals`}
+								>
+									<Icon name="info" title="About this feature" placement="top" />
+								</Link>
+							</>
+						)}
 					</>
 				);
 			} else {
@@ -78,7 +91,11 @@ export const ApproveBox = (props: { pr: GitLabMergeRequest }) => {
 								</Button>
 							</Tooltip>
 						) : (
-							<Button className="action-button" onClick={e => onApproveClick(e, !iHaveApproved)}>
+							<Button
+								isLoading={isLoading}
+								className="action-button"
+								onClick={e => onApproveClick(e, !iHaveApproved)}
+							>
 								Approve
 							</Button>
 						)}

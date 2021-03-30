@@ -186,11 +186,10 @@ export function reduceProviderPullRequests(
 								pr.approvedBy.nodes.push(d);
 							}
 						} else if (directive.type === "addNode") {
-							// if (!directive.data.id) continue;
-							// const node = pr.discussions.nodes.find(_ => _.id === directive.data.id);
-							// if (!node) {
-							pr.discussions.nodes.push(directive.data);
-							//	}
+							const node = pr.discussions.nodes.find(_ => _.id === directive.data.id);
+							if (!node) {
+								pr.discussions.nodes.push(directive.data);
+							}
 						} else if (directive.type === "addNodes") {
 							// if (!directive.data.id) continue;
 							for (const d of directive.data) {
