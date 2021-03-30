@@ -208,6 +208,7 @@ export const Timeline = (props: Props) => {
 		"milestone-add": "clock",
 		"merge-request-reopened": "reopen",
 		"merge-request-closed": "minus-circle",
+		"merge-request-merged": "git-merge",
 		"merge-request-approved": "check",
 		"merge-request-unapproved": "minus-circle"
 	};
