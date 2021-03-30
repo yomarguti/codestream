@@ -607,17 +607,19 @@ export const RightActionBar = (props: {
 					<>
 						<JustifiedRow>
 							<label>{pluralize("Assignee", pr.assignees)}</label>
-							<Link onClick={openAssignees}>
-								<InlineMenu
-									items={assigneeMenuItems}
-									onOpen={fetchAvailableAssignees}
-									title="Assign to"
-									noChevronDown
-									noFocusOnSelect
-								>
-									Edit
-								</InlineMenu>
-							</Link>
+							{pr?.userPermissions?.canMerge && (
+								<Link onClick={openAssignees}>
+									<InlineMenu
+										items={assigneeMenuItems}
+										onOpen={fetchAvailableAssignees}
+										title="Assign to"
+										noChevronDown
+										noFocusOnSelect
+									>
+										Edit
+									</InlineMenu>
+								</Link>
+							)}
 						</JustifiedRow>
 						<Subtle>
 							{pr.assignees && pr.assignees.nodes.length > 0 ? (
