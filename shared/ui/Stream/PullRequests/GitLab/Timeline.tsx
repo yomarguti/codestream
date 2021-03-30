@@ -359,12 +359,6 @@ export const Timeline = (props: Props) => {
 								onClick={() => resolveNote(note.discussion.id, !note.resolved)}
 							/>
 						)}
-						<PullRequestReactButton
-							pr={pr}
-							targetId={note.id.replace(/.*\//, "")}
-							setIsLoadingMessage={setIsLoadingMessage}
-							reactionGroups={note.reactionGroups}
-						/>
 
 						<PullRequestCommentMenu
 							pr={pr}

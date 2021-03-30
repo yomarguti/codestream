@@ -29,7 +29,7 @@ import {
 import Tag from "./Tag";
 import { Link } from "./Link";
 import { PRHeadshotName } from "../src/components/HeadshotName";
-import { PRAuthorBadges } from "./PullRequestConversationTab";
+import { PRAuthorBadges } from "./PRAuthorBadges";
 import * as Path from "path-browserify";
 import { PullRequestReactButton, PullRequestReactions } from "./PullRequestReactions";
 import { HostApi } from "../webview-api";
@@ -161,12 +161,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 						</div>
 						<PRActionIcons>
 							<PRAuthorBadges pr={pr} node={pr} />
-							<PullRequestReactButton
-								pr={pr}
-								targetId={pr.id}
-								setIsLoadingMessage={setIsLoadingMessage}
-								reactionGroups={pr.reactionGroups}
-							/>
+
 							<PullRequestCommentMenu
 								pr={pr}
 								node={pr}
@@ -232,12 +227,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 												</div>
 												<PRActionIcons>
 													<PRAuthorBadges pr={pr} node={item} />
-													<PullRequestReactButton
-														pr={pr}
-														targetId={item.id}
-														setIsLoadingMessage={setIsLoadingMessage}
-														reactionGroups={item.reactionGroups}
-													/>
+
 													<PullRequestCommentMenu
 														pr={pr}
 														fetch={fetch}
@@ -321,12 +311,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 													</div>
 													<PRActionIcons>
 														<PRAuthorBadges pr={pr} node={item} />
-														<PullRequestReactButton
-															pr={pr}
-															targetId={item.id}
-															setIsLoadingMessage={setIsLoadingMessage}
-															reactionGroups={item.reactionGroups}
-														/>
+
 														<PullRequestCommentMenu
 															pr={pr}
 															fetch={fetch}
