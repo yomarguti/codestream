@@ -314,14 +314,17 @@ export const getPullRequestCommitsFromProvider = (
 	return undefined;
 };
 
-export const getPullRequestCommits = (providerId: string, id: string) => async (
-	dispatch,
-	getState: () => CodeStreamState
-) => {
+export const getPullRequestCommits = (
+	providerId: string,
+	id: string,
+	options?: { force: true }
+) => async (dispatch, getState: () => CodeStreamState) => {
 	try {
 		const state = getState();
 		const provider = state.providerPullRequests.pullRequests[providerId];
-		if (provider) {
+		if (options?.force) {
+			console.log(`fetching new pullRequest commits from store providerId=${providerId}`);
+		} else if (provider) {
 			const exactId = getPullRequestExactId(state);
 			const pr = provider[exactId];
 			if (pr && pr.commits && pr.commits.length) {

@@ -12,6 +12,8 @@ import styled from "styled-components";
 import copy from "copy-to-clipboard";
 import { groupBy } from "lodash-es";
 import { Link } from "./Link";
+import { HostApi } from "../webview-api";
+import { ChangeDataType, DidChangeDataNotificationType } from "@codestream/protocols/agent";
 
 const PRCommitContent = styled.div`
 	margin: 0 20px 20px 20px;
@@ -142,15 +144,29 @@ export const PullRequestCommitsTab = props => {
 		setIsLoading(false);
 	};
 
+	const getData = async (options?: { force: true }) => {
+		const data = await dispatch(
+			getPullRequestCommits(pr.providerId, derivedState.currentPullRequestId!, options)
+		);
+		_mapData(data);
+	};
 
 	useDidMount(() => {
 		setIsLoading(true);
 		(async () => {
-			const data = await dispatch(
-				getPullRequestCommits(pr.providerId, derivedState.currentPullRequestId!)
-			);
-			_mapData(data);
+			getData();
 		})();
+
+		const disposable = HostApi.instance.on(DidChangeDataNotificationType, (e: any) => {
+			if (e.type === ChangeDataType.Commits) {
+				setIsLoading(true);
+				getData({ force: true });
+			}
+		});
+
+		return () => {
+			disposable.dispose();
+		};
 	});
 
 	if (isLoading)
