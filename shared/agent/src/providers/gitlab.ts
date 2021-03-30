@@ -81,6 +81,7 @@ interface GitLabCurrentUser {
 @lspProvider("gitlab")
 export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProviderInfo> {
 	private _projectsByRemotePath = new Map<string, GitLabProject>();
+	private _assignableUsersCache = new Map<string, any>();
 
 	get displayName() {
 		return "GitLab";
@@ -311,10 +312,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {
 		await this.ensureConnected();
+		const data = this._assignableUsersCache.get(request.boardId);
+		if (data) {
+			return data;
+		}
 
 		const users = await this._paginateRestResponse(`/projects/${request.boardId}/users`, data => {
 			return data.map(u => ({ ...u, displayName: u.username }));
 		});
+		this._assignableUsersCache.set(request.boardId, { users });
 		return { users };
 	}
 
