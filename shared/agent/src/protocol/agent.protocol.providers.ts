@@ -576,6 +576,11 @@ export interface FetchThirdPartyPullRequestPullRequest {
 		login: string;
 		avatarUrl: string;
 	};
+	supports?: {
+		version: {
+			version: string;
+		};
+	};
 }
 
 interface BranchProtectionRule {

@@ -378,7 +378,9 @@ export interface GitLabMergeRequest {
 		/**
 		 * private property, mainly for informative/debugging uses
 		 */
-		__version: any;
+		version: {
+			version: string;
+		};
 		reviewers?: boolean;
 		approvalsRequired?: boolean;
 	};

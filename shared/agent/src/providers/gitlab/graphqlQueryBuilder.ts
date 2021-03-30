@@ -86,7 +86,7 @@ export class GraphqlQueryBuilder {
 		let support = {};
 		if (queryKey === "GetPullRequest") {
 			support = {
-				__version: providerVersion,
+				version: providerVersion,
 				reviewers: semver.gte(version, "13.7.0"),
 				approvalsRequired: semver.gte(version, "13.8.0")
 			};
