@@ -332,6 +332,17 @@ export function reduceProviderPullRequests(
 									pr[key] = directive.data[key];
 								}
 							}
+						} else if (directive.type === "updateReviewers") {
+							if (pr.reviewers && pr.reviewers.nodes) {
+								if (pr.reviewers && !pr.reviewers.nodes) {
+									pr.reviewers.nodes = [];
+								} else {
+									pr.reviewers.nodes.length = 0;
+								}
+								for (const reviewer of directive.data) {
+									pr.reviewers.nodes.push(reviewer);
+								}
+							}
 						} else if (directive.type === "removeReaction") {
 							const group = pr.reactionGroups.find(_ => _.content === directive.data.content);
 							if (group) {

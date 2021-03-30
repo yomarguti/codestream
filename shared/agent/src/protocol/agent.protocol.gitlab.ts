@@ -333,7 +333,12 @@ export interface GitLabMergeRequest {
 	resolvable: boolean;
 	resolved: boolean;
 	reviewers?: {
-		nodes?: any[];
+		nodes?: {
+			id: number;
+			name: string;
+			login: string;
+			avatarUrl: string;
+		}[];
 	};
 	sourceBranch: string;
 	state: string;
