@@ -2838,11 +2838,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		let page: string | null = "1";
 		let results: any[] = [];
 
+		// url is only a path here and need this scheme for parsing
 		const parsed = new nodeUrl.URL(url, "codestream://");
 
 		while (true) {
 			parsed.searchParams.set("page", page);
-			const requestUrl = `${parsed.pathname}?${parsed.searchParams.toString()}`;
+			const requestUrl = `${parsed.pathname}?${parsed.searchParams.toString()}&per_page=100`;
 			const response = await this.restGet<any>(requestUrl);
 			results = results.concat(map(response.body as any[]));
 			// Logger.warn("RESPONSE: " + JSON.stringify(response.body, null, 4));
