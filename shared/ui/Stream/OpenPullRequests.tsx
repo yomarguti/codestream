@@ -614,7 +614,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 							{!query.hidden &&
 								prGroup &&
 								prGroup.map((pr: any, index) => {
-									if (providerId === "github*com") {
+									if (providerId === "github*com" || providerId === "github/enterprise") {
 										const selected = openReposWithName.find(repo => {
 											return (
 												repo.currentBranch === pr.headRefName &&
