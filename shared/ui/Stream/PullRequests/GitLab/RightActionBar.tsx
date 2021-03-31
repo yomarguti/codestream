@@ -538,7 +538,7 @@ export const RightActionBar = (props: {
 				<>
 					<AsideBlock onClick={close} className="clickable">
 						<JustifiedRow>
-							<label>Close view</label>
+							<label>Close MR view</label>
 							<Icon className="clickable" name="x" />
 						</JustifiedRow>
 					</AsideBlock>
@@ -569,7 +569,7 @@ export const RightActionBar = (props: {
 			) : (
 				<>
 					<AsideBlock onClick={close}>
-						<Icon className="clickable fixed" name="x" title="Close view" placement="left" />
+						<Icon className="clickable fixed" name="x" title="Close MR view" placement="left" />
 					</AsideBlock>
 					<HR />
 					<AsideBlock onClick={refresh}>
