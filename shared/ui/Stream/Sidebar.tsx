@@ -78,11 +78,23 @@ export const Sidebar = React.memo(function Sidebar() {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const preferences = getPreferences(state);
 		const repos = getRepos(state);
+
+		// get the preferences, or use the default
+		let sidebarPaneOrder = preferences.sidebarPaneOrder || AVAILABLE_PANES;
+		// in case someone has customized their pane order, but then we
+		// added a new pane, check to see that all available panes are
+		// represented
+		if (preferences.sidebarPaneOrder) {
+			AVAILABLE_PANES.forEach(pane => {
+				if (!sidebarPaneOrder.includes(pane)) sidebarPaneOrder.unshift(pane);
+			});
+		}
+
 		return {
 			repos,
 			removedPanes: preferences.removedPanes || EMPTY_HASH,
 			sidebarPanes: preferences.sidebarPanes || EMPTY_HASH,
-			sidebarPaneOrder: preferences.sidebarPaneOrder || AVAILABLE_PANES,
+			sidebarPaneOrder,
 			currentUserId: state.session.userId!,
 			hasPRProvider: getConnectedSupportedPullRequestHosts(state).length > 0
 		};
