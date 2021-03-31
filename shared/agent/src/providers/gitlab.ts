@@ -1348,11 +1348,13 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				_ => _.id === `gid://gitlab/Discussion/${id}`
 			);
 			if (node) {
+				this.ensureAvatarAbsolutePathRecurse(node);
 				return {
 					directives: [{ type: "addNode", data: node }]
 				};
 			} else {
 				// if for some reason the id can't be found, the client can de-dupe
+				this.ensureAvatarAbsolutePathRecurse(response?.project?.mergeRequest?.discussions || {});
 				return {
 					directives: [
 						{ type: "addNodes", data: response?.project?.mergeRequest?.discussions.nodes || [] }
@@ -1862,7 +1864,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		};
 
 		if (addedNode) {
-			this.toAuthorAbsolutePathRecurse(addedNode);
+			this.ensureAvatarAbsolutePathRecurse(addedNode);
 			result.directives.push({
 				type: "addNode",
 				data: addedNode
@@ -2894,11 +2896,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return author;
 	}
 
-	private toAuthorAbsolutePathRecurse(obj: any) {
+	private ensureAvatarAbsolutePathRecurse(obj: any) {
 		if (!obj) return;
 		for (const k in obj) {
 			if (typeof obj[k] === "object") {
-				this.toAuthorAbsolutePathRecurse(obj[k]);
+				this.ensureAvatarAbsolutePathRecurse(obj[k]);
 			} else if (k === "avatarUrl") {
 				if (obj.avatarUrl.indexOf("/") === 0) {
 					obj.avatarUrl = `${this.baseWebUrl}${obj.avatarUrl}`;
