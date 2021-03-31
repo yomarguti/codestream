@@ -18,7 +18,8 @@ interface Props {
 	mode?: string;
 	contents?: string;
 	filename: string;
-	lineNumber: number;
+	oldLineNumber?: number | undefined;
+	lineNumber?: number | undefined;
 	lineOffsetInHunk: number;
 	setIsLoadingMessage: Function;
 	fetch: Function;
@@ -29,7 +30,15 @@ interface Props {
 
 export const PullRequestInlineComment = styled((props: Props) => {
 	const dispatch = useDispatch();
-	const { pr, filename, fetch, lineNumber, lineOffsetInHunk, setIsLoadingMessage } = props;
+	const {
+		pr,
+		filename,
+		fetch,
+		oldLineNumber,
+		lineNumber,
+		lineOffsetInHunk,
+		setIsLoadingMessage
+	} = props;
 
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
@@ -56,6 +65,7 @@ export const PullRequestInlineComment = styled((props: Props) => {
 		await dispatch(
 			api("createPullRequestInlineComment", {
 				filePath: filename,
+				oldLineNumber: oldLineNumber,
 				startLine: lineNumber,
 				text: replaceHtml(text),
 				leftSha: pr.baseRefOid,
@@ -87,6 +97,7 @@ export const PullRequestInlineComment = styled((props: Props) => {
 			api("createPullRequestInlineReviewComment", {
 				filePath: filename,
 				position: lineOffsetInHunk,
+				oldLineNumber: oldLineNumber,
 				startLine: lineNumber,
 				text: replaceHtml(text),
 				leftSha: pr.baseRefOid,

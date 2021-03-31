@@ -3049,6 +3049,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return response;
 	}
 
+	@log()
 	async createCommitComment(request: {
 		pullRequestId: string;
 		sha: string;
@@ -3088,6 +3089,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				payload.line = request.startLine;
 			}
 		}
+
+		Logger.log(`createCommitComment`, {
+			payload: payload
+		});
+
 		const data = await this.restPost<any, any>(
 			`/repos/${ownerData.owner}/${ownerData.name}/pulls/${ownerData.pullRequestNumber}/comments`,
 			payload

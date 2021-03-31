@@ -108,6 +108,7 @@ export interface Note {
 	createdAt: string;
 	position: {
 		oldPath: string;
+		oldLine?: number;
 		newPath: string;
 		newLine: number;
 		diffRefs?: any;

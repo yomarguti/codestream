@@ -8,6 +8,8 @@ import { PullRequestInlineComment } from "./PullRequestInlineComment";
 import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
 import { PullRequestCodeComment } from "./PullRequestCodeComment";
 import { PRComment, PRCommentsInPatch, PRCard } from "./PullRequestComponents";
+import { CodeStreamState } from "../store";
+import { useSelector } from "react-redux";
 
 export const PRPatchRoot = styled.div`
 	font-size: 12px;
@@ -127,7 +129,16 @@ export const PullRequestPatch = (props: {
 	truncateLargePatches?: boolean;
 	quote?: Function;
 }) => {
-	const { fetch, patch, filename, hunks } = props;
+	const { patch, filename, hunks } = props;
+
+	const derivedState = useSelector((state: CodeStreamState) => {
+		return {
+			isGitLab:
+				state && state.context && state.context.currentPullRequest
+					? state.context.currentPullRequest.providerId.indexOf("gitlab") > -1
+					: false
+		};
+	});
 
 	const [commentOpen, setCommentOpen] = React.useState<boolean[]>([]);
 
@@ -187,7 +198,10 @@ export const PullRequestPatch = (props: {
 
 						if (_ === "\\ No newline at end of file") return null;
 
-						const commentForm =
+						const renderCommentForm = (
+							oldLineNumber: number | undefined = undefined,
+							type: "-" | "+" | undefined = undefined
+						) =>
 							props.pr && props.fetch && commentOpen[index] ? (
 								<PRInlineComment key={"ic-" + index}>
 									<PullRequestInlineComment
@@ -195,7 +209,20 @@ export const PullRequestPatch = (props: {
 										mode={props.mode}
 										filename={filename}
 										contents={_}
-										lineNumber={rightLine + 1}
+										// gitlab needs an old line number
+										// if commenting on non-new code
+										oldLineNumber={
+											derivedState.isGitLab
+												? oldLineNumber != null
+													? oldLineNumber
+													: undefined
+												: undefined
+										}
+										// gitlab doesn't need a lineNumber (right side or + side)
+										// if you're commenting on code that was removed
+										lineNumber={
+											derivedState.isGitLab ? (type !== "-" ? rightLine : undefined) : rightLine + 1
+										}
 										lineOffsetInHunk={index}
 										fetch={props.fetch}
 										setIsLoadingMessage={() => {}}
@@ -205,14 +232,23 @@ export const PullRequestPatch = (props: {
 								</PRInlineComment>
 							) : null;
 
-						// TODO check this out again -- there are different models for GH vs GL
-						const commentsOnLine: any[] = (props.comments || []).filter(_ =>
-							typeof _.comment.position === "number"
-								? _.comment.position == index
-								: _.comment.position.newLine == rightLine + 1
-						);
-						const comments =
-							commentsOnLine.length === 0 ? null : (
+						const renderComments = (type?: "-" | "+" | undefined) => {
+							let commentsOnLine;
+							if (derivedState.isGitLab && type === "-") {
+								// ensure we are rendering comments in the correct
+								// spot for comments that are tied to lines of code
+								// that have been removed.
+								commentsOnLine = (props.comments || []).filter(
+									_ => _.comment.position.oldLine == leftLine
+								);
+							} else {
+								commentsOnLine = (props.comments || []).filter(_ =>
+									typeof _.comment.position === "number"
+										? _.comment.position == index
+										: _.comment.position.newLine == rightLine
+								);
+							}
+							return commentsOnLine.length === 0 ? null : (
 								<PRCommentsInPatch key={"cip-" + index}>
 									{commentsOnLine.map(({ comment, review }, index) => (
 										<PRComment key={index} style={{ margin: 0 }} data-comment-id={comment.id}>
@@ -231,6 +267,7 @@ export const PullRequestPatch = (props: {
 									))}
 								</PRCommentsInPatch>
 							);
+						};
 
 						if (_.indexOf("@@ ") === 0) {
 							const matches = _.match(/@@ \-(\d+).*? \+(\d+)/);
@@ -247,8 +284,8 @@ export const PullRequestPatch = (props: {
 										{renderLineNum("")}
 										<pre className="prettyprint">{_}</pre>
 									</div>
-									{comments}
-									{commentForm}
+									{renderComments()}
+									{renderCommentForm()}
 								</React.Fragment>
 							);
 						} else if (_.indexOf("+") === 0) {
@@ -266,8 +303,8 @@ export const PullRequestPatch = (props: {
 												{renderLineNum(rightLine)}
 												{syntaxHighlight(_, index)}
 											</div>
-											{comments}
-											{commentForm}
+											{renderComments()}
+											{renderCommentForm()}
 										</React.Fragment>
 									);
 							}
@@ -286,8 +323,8 @@ export const PullRequestPatch = (props: {
 												{renderLineNum("")}
 												{syntaxHighlight(_, index)}
 											</div>
-											{comments}
-											{commentForm}
+											{renderComments("-")}
+											{renderCommentForm(leftLine, "-")}
 										</React.Fragment>
 									);
 							}
@@ -307,8 +344,8 @@ export const PullRequestPatch = (props: {
 												{renderLineNum(rightLine)}
 												{syntaxHighlight(_, index)}
 											</div>
-											{comments}
-											{commentForm}
+											{renderComments()}
+											{renderCommentForm(leftLine)}
 										</React.Fragment>
 									);
 							}
