@@ -239,7 +239,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			.length > 0;
 	// console.log(hasPRSupportedRepos, openReposWithName);
 
-	const { queries, PRConnectedProviders, pullRequestProviderHidden } = derivedState;
+	const { queries, PRConnectedProviders, pullRequestProviderHidden, prLabel } = derivedState;
 
 	const [loadFromUrlQuery, setLoadFromUrlQuery] = React.useState({});
 	const [loadFromUrlOpen, setLoadFromUrlOpen] = React.useState("");
@@ -533,7 +533,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 								<input
 									id={`pr-search-input-${providerId}`}
 									className="pr-search-input"
-									placeholder={`Load ${derivedState.prLabel.PR} from URL`}
+									placeholder={`Load ${prLabel.PR} from URL`}
 									type="text"
 									style={{ background: "transparent", width: "100%" }}
 									value={loadFromUrlQuery[providerId]}
@@ -806,7 +806,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			{(derivedState.isPRSupportedCodeHostConnected || hasPRSupportedRepos) && (
 				<>
 					<PaneHeader
-						title={derivedState.prLabel.PullRequests}
+						title={prLabel.PullRequests + (prLabel.PullRequests.includes("erge") ? " (BETA)" : "")}
 						id={WebviewPanels.OpenPullRequests}
 						isLoading={isLoadingPRs}
 						count={totalPRs}
@@ -828,7 +828,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 								dispatch(openPanel(WebviewPanels.NewPullRequest));
 							}}
 							name="plus"
-							title={`New ${derivedState.prLabel.PullRequest}`}
+							title={`New ${prLabel.PullRequest}`}
 							placement="bottom"
 							delay={1}
 						/>
