@@ -592,8 +592,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			let errorMessage =
 				ex.response && ex.response.errors
 					? ex.response.errors[0].message
-					: `Unknown ${this.providerConfig.id} error`;
-			errorMessage = `${this.providerConfig.id}: ${errorMessage}`;
+					: `Unknown ${this.providerConfig.name} error`;
+			errorMessage = `${this.providerConfig.name}: ${errorMessage}`;
 			return {
 				error: {
 					type: "PROVIDER",
