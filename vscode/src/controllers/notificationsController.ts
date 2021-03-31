@@ -39,10 +39,10 @@ export class NotificationsController implements Disposable {
 			const actions: MessageItem[] = [{ title: "Open" }];
 
 			Container.agent.telemetry.track("Toast Notification", { Content: "PR" });
-			const noun =
+			const verb =
 				pullRequestNotification.pullRequest.providerId.indexOf("gitlab") > -1 ? "Merge" : "Pull";
 			const result = await window.showInformationMessage(
-				`${noun} Request "${pullRequestNotification.pullRequest.title}" ${pullRequestNotification.queryName}`,
+				`${verb} Request "${pullRequestNotification.pullRequest.title}" ${pullRequestNotification.queryName}`,
 				...actions
 			);
 
