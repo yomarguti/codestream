@@ -910,6 +910,8 @@ export class CodeStreamSession {
 			});
 		});
 
+		SessionContainer.instance().reviews.initializeCurrentBranches();
+
 		// this needs to happen before initializing telemetry, because super-properties are dependent
 		if (this.apiCapabilities.testGroups) {
 			const company = await this.setCompanyTestGroups();

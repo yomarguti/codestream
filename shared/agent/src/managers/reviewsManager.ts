@@ -113,7 +113,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 	private currentBranches = new Map<string, string | undefined>();
 
-	protected async initialize() {
+	public async initializeCurrentBranches() {
 		const { git } = SessionContainer.instance();
 		this.currentBranches.clear();
 		const repos = await git.getRepositories();
@@ -876,9 +876,9 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				},
 				branch: headRefName,
 				branches: branches!.branches,
-				remoteBranches: remoteBranches ?
-					remoteBranches.branches.filter(_ => _.indexOf("HEAD ->") === -1) :
-					undefined,
+				remoteBranches: remoteBranches
+					? remoteBranches.branches.filter(_ => _.indexOf("HEAD ->") === -1)
+					: undefined,
 				commitsBehindOriginHeadBranch: commitsBehindOrigin,
 				warning: warning
 			};
