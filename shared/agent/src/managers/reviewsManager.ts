@@ -876,7 +876,9 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				},
 				branch: headRefName,
 				branches: branches!.branches,
-				remoteBranches: remoteBranches ? remoteBranches.branches : undefined,
+				remoteBranches: remoteBranches ?
+					remoteBranches.branches.filter(_ => _.indexOf("HEAD ->") === -1) :
+					undefined,
 				commitsBehindOriginHeadBranch: commitsBehindOrigin,
 				warning: warning
 			};
