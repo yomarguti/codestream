@@ -39,6 +39,7 @@ import {
 	getRemotePaths,
 	ProviderCreatePullRequestRequest,
 	ProviderCreatePullRequestResponse,
+	ProviderGetForkedReposResponse,
 	ProviderGetRepoInfoResponse,
 	ProviderVersion,
 	PullRequestComment,
@@ -59,13 +60,17 @@ import { gate } from "../system/decorators/gate";
 
 interface GitLabProject {
 	path_with_namespace: any;
-	id: string;
+	namespace: {
+		path: string;
+	};
+	id: number;
 	path: string;
 	issues_enabled: boolean;
+	forked_from_project?: GitLabProject;
 }
 
 interface GitLabUser {
-	id: string;
+	id: number;
 	name: string;
 	username: string;
 	avatar_url: string;
@@ -73,8 +78,12 @@ interface GitLabUser {
 
 interface GitLabCurrentUser {
 	avatarUrl: string;
-	id: string;
+	id: number;
 	login: string;
+	name: string;
+}
+
+interface GitLabBranch {
 	name: string;
 }
 
@@ -167,7 +176,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			boards = gitLabProjects
 				.filter(p => p.issues_enabled)
 				.map(p => ({
-					id: p.id,
+					id: p.id.toString(),
 					name: p.path_with_namespace,
 					path: p.path,
 					singleAssignee: true // gitlab only allows a single assignee per issue (at least it only shows one in the UI)
@@ -407,6 +416,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				};
 			}
 
+			const sourceBranch = request.headRefName.includes(":")
+				? request.headRefName.split(":")[1]
+				: request.headRefName;
+
 			const createPullRequestResponse = await this.post<
 				GitLabCreateMergeRequestRequest,
 				GitLabCreateMergeRequestResponse
@@ -414,8 +427,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				`/projects/${encodeURIComponent(`${owner}/${name}`)}/merge_requests`,
 				{
 					title: request.title,
-					source_branch: request.headRefName,
+					source_branch: sourceBranch,
 					target_branch: request.baseRefName,
+					target_project_id: request.providerRepositoryId,
 					description: this.createDescription(request)
 				},
 				{
@@ -430,7 +444,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				title: title,
 				url: createPullRequestResponse.body.web_url,
 				id: JSON.stringify({
-					full: `${owner}/${name}${createPullRequestResponse.body.reference}`,
+					full: createPullRequestResponse.body.reference,
 					id: createPullRequestResponse.body.id
 				})
 			};
@@ -516,6 +530,74 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				error: {
 					type: "PROVIDER",
 					message: ex.message
+				}
+			};
+		}
+	}
+
+	async getForkedRepos(
+		request: { remote: string },
+		recurseFailsafe?: boolean
+	): Promise<ProviderGetForkedReposResponse> {
+		try {
+			const { remote } = request;
+			const { owner, name } = this.getOwnerFromRemote(request.remote);
+
+			const projectResponse = await this.get<GitLabProject>(
+				`/projects/${encodeURIComponent(`${owner}/${name}`)}`
+			);
+			const parentProject = projectResponse.body.forked_from_project
+				? projectResponse.body.forked_from_project
+				: projectResponse.body;
+
+			const branchesByProjectId = new Map<number, GitLabBranch[]>();
+			const branchesResponse = await this.get<GitLabBranch[]>(
+				`/projects/${encodeURIComponent(parentProject.path_with_namespace)}/repository/branches`
+			);
+			branchesByProjectId.set(parentProject.id, branchesResponse.body);
+
+			const forksResponse = await this.get<GitLabProject[]>(
+				`/projects/${encodeURIComponent(parentProject.path_with_namespace)}/forks`
+			);
+			for (const project of forksResponse.body) {
+				const branchesResponse = await this.get<GitLabBranch[]>(
+					`/projects/${encodeURIComponent(project.path_with_namespace)}/repository/branches`
+				);
+				branchesByProjectId.set(project.id, branchesResponse.body);
+			}
+
+			return {
+				parent: {
+					nameWithOwner: parentProject.path_with_namespace,
+					id: parentProject.id,
+					refs: {
+						nodes: branchesByProjectId.get(parentProject.id)!.map(branch => ({ name: branch.name }))
+					}
+				},
+				forks: forksResponse.body.map(fork => ({
+					nameWithOwner: fork.path_with_namespace,
+					owner: {
+						login: fork.namespace.path
+					},
+					id: fork.id,
+					refs: {
+						nodes: branchesByProjectId.get(fork.id)!.map(branch => ({ name: branch.name }))
+					}
+				}))
+			};
+		} catch (ex) {
+			Logger.error(ex, `${this.providerConfig.id}: getForkedRepos`, {
+				remote: request.remote
+			});
+			let errorMessage =
+				ex.response && ex.response.errors
+					? ex.response.errors[0].message
+					: `Unknown ${this.providerConfig.id} error`;
+			errorMessage = `${this.providerConfig.id}: ${errorMessage}`;
+			return {
+				error: {
+					type: "PROVIDER",
+					message: errorMessage
 				}
 			};
 		}
@@ -3167,6 +3249,7 @@ interface GitLabCreateMergeRequestRequest {
 	title: string;
 	source_branch: string;
 	target_branch: string;
+	target_project_id?: string;
 	description?: string;
 }
 
@@ -3179,9 +3262,10 @@ interface GitLabCreateMergeRequestResponse {
 }
 
 interface GitLabProjectInfoResponse {
-	iid?: number;
-	id?: number;
+	iid: number;
+	id: number;
 	default_branch: string;
+	forked_from_project: GitLabProject | undefined;
 }
 
 interface GitLabMergeRequestInfoResponse {

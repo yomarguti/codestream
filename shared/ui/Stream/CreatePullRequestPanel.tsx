@@ -1357,7 +1357,7 @@ export const CreatePullRequestPanel = props => {
 		<Root className="full-height-codemark-form">
 			<PanelHeader title={`Open a ${prLabel.PullRequest}`}>
 				{reviewId ? "" : `Choose two branches to start a new ${prLabel.pullrequest}.`}
-				{!reviewId && (prProviderId === "github*com" || prProviderId === "github/enterprise") && (
+				{!reviewId && (
 					<>
 						{" "}
 						If you need to, you can also{" "}
