@@ -54,9 +54,9 @@ import mergeRequest1Query from "./gitlab/mergeRequest1.graphql";
 import mergeRequestDiscussionQuery from "./gitlab/mergeRequestDiscussions.graphql";
 import mergeRequestNoteMutation from "./gitlab/createMergeRequestNote.graphql";
 import { merge } from "lodash";
-import { parsePatch } from "diff";
 import { GraphqlQueryBuilder } from "./gitlab/graphqlQueryBuilder";
 import { gate } from "../system/decorators/gate";
+import { parsePatch } from "diff";
 
 interface GitLabProject {
 	path_with_namespace: any;
@@ -1461,6 +1461,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		pullRequestId: string;
 		text: string;
 		filePath: string;
+		oldLineNumber?: number | undefined;
 		startLine?: number;
 		position: number;
 		leftSha?: string;
@@ -1494,12 +1495,17 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		pullRequestReviewId?: string;
 		text: string;
 		filePath?: string;
+		oldLineNumber?: number | undefined;
 		startLine?: number;
 		position?: number;
 		leftSha?: string;
 		sha?: string;
 	}) {
 		const { id, iid, projectFullPath } = this.parseId(request.pullRequestId);
+
+		Logger.log(`createPullRequestReviewComment project=${projectFullPath} iid=${iid}`, {
+			request: request
+		});
 
 		this.gitLabReviewStore.add(new GitLabId(projectFullPath, iid), {
 			...request,
@@ -2567,6 +2573,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		leftSha: string;
 		rightSha: string;
 		filePath: string;
+		oldLineNumber?: number | undefined;
 		startLine: number;
 		position?: number;
 		metadata?: any;
@@ -2588,7 +2595,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		sha: string;
 		text: string;
 		path: string;
-		startLine: number;
+		oldLineNumber?: number | undefined;
+		startLine?: number | undefined;
 		// use endLine for multi-line comments
 		endLine?: number;
 		// used for old servers
@@ -2616,6 +2624,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			};
 
+			if (request.oldLineNumber != null) {
+				// seems related to this https://gitlab.com/gitlab-org/gitlab/-/issues/281143
+				(payload.position as any).old_line = request.oldLineNumber;
+			}
+
+			Logger.log(`createCommitComment project=${projectFullPath} iid=${iid}`, {
+				payload: payload
+			});
 			// https://docs.gitlab.com/ee/api/discussions.html#create-new-merge-request-thread
 			const data = await this.restPost<any, any>(
 				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/discussions`,
@@ -3175,6 +3191,7 @@ class GitLabReviewStore {
 						bodyText: _.text,
 						createdAt: _.createdAt,
 						position: {
+							oldLine: _.oldLineNumber,
 							oldPath: _.filePath,
 							newPath: _.filePath,
 							newLine: _.startLine
