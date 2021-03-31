@@ -33,6 +33,8 @@ interface PubnubHistoryResponse {
 	messages: PubnubMessage[];
 }
 
+const PING_INTERVAL = 30000;
+
 // use this interface to initialize the PubnubConnection class
 export interface PubnubInitializer {
 	subscribeKey: string; // identifies our Pubnub account, comes from pubnubKey returned with the login response from the API
@@ -48,7 +50,6 @@ export interface PubnubInitializer {
 interface SubscriptionMap {
 	[key: string]: {
 		subscribed: boolean;
-		//withPresence?: boolean;
 	};
 }
 
@@ -76,7 +77,7 @@ export class PubnubConnection implements BroadcasterConnection {
 			subscribeKey: options.subscribeKey,
 			restore: true,
 			logVerbosity: false,
-			heartbeatInterval: 30,
+			//heartbeatInterval: 30,
 			autoNetworkDetection: true,
 			proxy: options.httpsAgent instanceof HttpsProxyAgent && options.httpsAgent.proxy
 		} as Pubnub.PubnubConfig);
@@ -84,6 +85,7 @@ export class PubnubConnection implements BroadcasterConnection {
 		this._messageCallback = options.onMessage;
 		this._statusCallback = options.onStatus;
 		this.addListener();
+		this.startPinging();
 
 		return {
 			dispose: () => {
@@ -100,7 +102,6 @@ export class PubnubConnection implements BroadcasterConnection {
 		for (const channel of channels) {
 			const subscription = this._subscriptionMap[channel] || {
 				subscribed: false
-				//withPresence: !!options.withPresence
 			};
 			if (subscription.subscribed) {
 				subscribedChannels.push(channel);
@@ -118,7 +119,6 @@ export class PubnubConnection implements BroadcasterConnection {
 			this._debug(`Subscribing to ${JSON.stringify(unsubscribedChannels)}`);
 			this._pubnub!.subscribe({
 				channels: unsubscribedChannels
-				//withPresence: options.withPresence
 			});
 		}
 	}
@@ -142,6 +142,21 @@ export class PubnubConnection implements BroadcasterConnection {
 		if (this._pubnub && this._listener) {
 			this._pubnub.removeListener(this._listener);
 		}
+	}
+
+	// ping the PubNub server at regular intervals
+	// this replaces the need for their built-in heartbeat and is a free transaction, so costs us nothing
+	private startPinging() {
+		setInterval(() => {
+			(this._pubnub as any).time((status: { error: string }, response: { timetoken: string }) => {
+				if (status.error) {
+					this._debug(
+						`Server ping returned status error: ${status.error}, assuming network hiccup`
+					);
+					this.netHiccup();
+				}
+			});
+		}, PING_INTERVAL);
 	}
 
 	// when a message is received from Pubnub...
@@ -219,34 +234,10 @@ export class PubnubConnection implements BroadcasterConnection {
 		}
 	}
 
-	async confirmSubscriptions(channels: string[]): Promise<string[]> {
-		// look for the occupants of the given channels, and if we are not among
-		// them, something has gone wrong and we must resubscribe
-		let response: Pubnub.HereNowResponse;
-		let gotError = false;
-		try {
-			this._debug("Confirming subscription to: " + JSON.stringify(channels));
-			response = await this._pubnub!.hereNow({
-				channels,
-				includeUUIDs: true
-			} as Pubnub.HereNowParameters);
-		} catch (error) {
-			const message = error instanceof Error ? error.message : JSON.stringify(error);
-			this._debug("Error confirming subscriptions: " + message);
-			gotError = true;
-		}
-		let troubleChannels: string[] = [];
-		if (gotError || !response! || !response!.channels) {
-			troubleChannels = channels;
-		} else {
-			troubleChannels = channels.filter(channel => {
-				return (
-					!response.channels[channel] ||
-					!response.channels[channel].occupants.find(occupant => occupant.uuid === this._userId)
-				);
-			});
-		}
-		return troubleChannels;
+	async confirmSubscriptions(channels: string[], optimistic = false): Promise<string[] | boolean> {
+		// under the pessimistic scenario, we assume we are being called because of some network failure,
+		// and that all channels should be resubscribed to
+		return optimistic;
 	}
 
 	fetchHistory(options: BroadcasterHistoryInput): Promise<BroadcasterHistoryOutput> {

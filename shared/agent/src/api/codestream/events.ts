@@ -5,8 +5,7 @@ import { Disposable, Emitter, Event } from "vscode-languageserver";
 import {
 	Broadcaster,
 	BroadcasterStatus,
-	BroadcasterStatusType,
-	ChannelDescriptor
+	BroadcasterStatusType
 } from "../../broadcaster/broadcaster";
 import { Logger } from "../../logger";
 import { ConnectionStatus } from "../../protocol/agent.protocol";
@@ -92,13 +91,14 @@ export class BroadcasterEvents implements Disposable {
 			httpsAgent: this._options.httpsAgent
 		});
 
-		const channels: ChannelDescriptor[] = [
-			{ name: `user-${this._options.api.userId}` },
-			{ name: `team-${this._options.api.teamId}` }
+		const channels: string[] = [
+			`user-${this._options.api.userId}`,
+			`team-${this._options.api.teamId}`
 		];
 
+		// this should be deprecated
 		for (const streamId of streamIds || []) {
-			channels.push({ name: `stream-${streamId}` });
+			channels.push(`stream-${streamId}`);
 			this._subscribedStreamIds.add(streamId);
 		}
 

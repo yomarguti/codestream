@@ -33,7 +33,6 @@ export interface SocketClusterInitializer {
 interface SubscriptionMap {
 	[key: string]: {
 		subscribed: boolean;
-		//withPresence?: boolean;
 	};
 }
 
@@ -162,7 +161,6 @@ export class SocketClusterConnection implements BroadcasterConnection {
 		for (const channel of channels) {
 			const subscription = this._subscriptions[channel] || {
 				subscribed: false
-				//withPresence: !!options.withPresence
 			};
 			this._subscriptions[channel] = subscription;
 			if (subscription.subscribed) {
@@ -186,7 +184,7 @@ export class SocketClusterConnection implements BroadcasterConnection {
 		}
 	}
 
-	async confirmSubscriptions(channels: string[]): Promise<string[]> {
+	async confirmSubscriptions(channels: string[]): Promise<string[] | boolean> {
 		let gotError = false;
 		let subscriptions: string[] = [];
 		try {
