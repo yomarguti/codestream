@@ -444,7 +444,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				title: title,
 				url: createPullRequestResponse.body.web_url,
 				id: JSON.stringify({
-					full: createPullRequestResponse.body.reference,
+					full: createPullRequestResponse.body.references.full,
 					id: createPullRequestResponse.body.id
 				})
 			};
@@ -3258,6 +3258,9 @@ interface GitLabCreateMergeRequestResponse {
 	iid: string;
 	title: string;
 	reference: string;
+	references: {
+		full: string;
+	};
 	web_url: string;
 }
 
