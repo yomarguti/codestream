@@ -30,8 +30,8 @@ const iconForStatus = {
 	passed: { icon: "check-circle" },
 	success: { icon: "check-circle" },
 	failed: { icon: "x" },
-	canceled: { icon: "alert" },
-	skipped: { icon: "sad" }
+	canceled: { icon: "cancel" },
+	skipped: { icon: "double-chevron-right" }
 };
 
 export const PipelineBox = (props: { pr: GitLabMergeRequest; setIsLoadingMessage: Function }) => {

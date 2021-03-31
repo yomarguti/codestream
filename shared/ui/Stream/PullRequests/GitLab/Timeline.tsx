@@ -208,6 +208,7 @@ export const Timeline = (props: Props) => {
 		"milestone-add": "clock",
 		"merge-request-reopened": "reopen",
 		"merge-request-closed": "minus-circle",
+		"merge-request-merged": "git-merge",
 		"merge-request-approved": "check",
 		"merge-request-unapproved": "minus-circle"
 	};
@@ -358,12 +359,6 @@ export const Timeline = (props: Props) => {
 								onClick={() => resolveNote(note.discussion.id, !note.resolved)}
 							/>
 						)}
-						<PullRequestReactButton
-							pr={pr}
-							targetId={note.id.replace(/.*\//, "")}
-							setIsLoadingMessage={setIsLoadingMessage}
-							reactionGroups={note.reactionGroups}
-						/>
 
 						<PullRequestCommentMenu
 							pr={pr}

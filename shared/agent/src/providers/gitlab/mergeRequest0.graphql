@@ -65,6 +65,7 @@ query GetPullRequest($fullPath: ID!, $iid: String!, $after: String) {
 			forceRemoveSourceBranch
 			reviewers {
 				nodes {
+					id
 					name
 					login: username
 					avatarUrl

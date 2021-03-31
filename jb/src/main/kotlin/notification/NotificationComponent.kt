@@ -71,7 +71,8 @@ class NotificationComponent(val project: Project) {
             return
         }
 
-        val text = "Pull Request \"${pullRequestNotification.pullRequest.title}\" ${pullRequestNotification.queryName}"
+	    val noun = if (pullRequestNotification.pullRequest.providerId.contains("gitlab", ignoreCase = true)) "Merge" else "Pull"
+        val text = "${noun} Request \"${pullRequestNotification.pullRequest.title}\" ${pullRequestNotification.queryName}"
 
         val notification = priorityNotificationGroup.createNotification(
             null, null, text, NotificationType.INFORMATION

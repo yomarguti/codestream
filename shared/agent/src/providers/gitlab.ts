@@ -81,6 +81,7 @@ interface GitLabCurrentUser {
 @lspProvider("gitlab")
 export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProviderInfo> {
 	private _projectsByRemotePath = new Map<string, GitLabProject>();
+	private _assignableUsersCache = new Map<string, any>();
 
 	get displayName() {
 		return "GitLab";
@@ -311,10 +312,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {
 		await this.ensureConnected();
+		const data = this._assignableUsersCache.get(request.boardId);
+		if (data) {
+			return data;
+		}
 
 		const users = await this._paginateRestResponse(`/projects/${request.boardId}/users`, data => {
 			return data.map(u => ({ ...u, displayName: u.username }));
 		});
+		this._assignableUsersCache.set(request.boardId, { users });
 		return { users };
 	}
 
@@ -1013,13 +1019,19 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			);
 
 			response.project.mergeRequest.discussions.nodes = discussions;
-			this.toAuthorAbsolutePath(response.project.mergeRequest.author);
 
-			response.project.mergeRequest.assignees.nodes.forEach(node => {
-				this.toAuthorAbsolutePath(node);
-			});
-			response.project.mergeRequest.participants.nodes.forEach(node => {
-				this.toAuthorAbsolutePath(node);
+			// massage the authors to get a fully qualified url
+			this.toAuthorAbsolutePath(response.project.mergeRequest.author);
+			[
+				response.project.mergeRequest.assignees,
+				response.project.mergeRequest.participants,
+				response.project.mergeRequest.reviewers
+			].forEach(_ => {
+				if (_?.nodes) {
+					_.nodes.forEach((node: any) => {
+						this.toAuthorAbsolutePath(node);
+					});
+				}
 			});
 
 			// project settings
@@ -1482,6 +1494,63 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					data: {
 						subscribed: data.body.subscribed
 					}
+				}
+			]
+		};
+	}
+
+	@log()
+	async addReviewerToPullRequest(request: { id: number; pullRequestId: string }) {
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
+		const data = await this.restPut<{ reviewer_ids: number[] }, { reviewers: any[] }>(
+			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`,
+			{
+				reviewer_ids: [request.id]
+			}
+		);
+		const lastDiscussions = await this.getLastDiscussions(projectFullPath, iid);
+		return {
+			directives: [
+				{
+					type: "addNodes",
+					data: lastDiscussions
+				},
+				{
+					type: "updateReviewers",
+					data: data.body.reviewers.map(_ => {
+						return { ..._, login: _.username, avatarUrl: this.avatarUrl(_.avatar_url) };
+					})
+				}
+			]
+		};
+	}
+
+	@log()
+	async removeReviewerFromPullRequest(request: { id: number; pullRequestId: string }) {
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
+		const mergeRequest = await this.restGet<{ reviewers: any[] }>(
+			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`
+		);
+		const existingReviewers = (mergeRequest.body.reviewers || []).filter(_ => _.id !== request.id);
+		const data = await this.restPut<{ reviewer_ids: number[] }, { reviewers: any[] }>(
+			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`,
+			{
+				reviewer_ids: existingReviewers
+			}
+		);
+
+		const lastDiscussions = await this.getLastDiscussions(projectFullPath, iid);
+		return {
+			directives: [
+				{
+					type: "addNodes",
+					data: lastDiscussions
+				},
+				{
+					type: "updateReviewers",
+					data: data.body.reviewers.map(_ => {
+						return { ..._, login: _.username, avatarUrl: this.avatarUrl(_.avatar_url) };
+					})
 				}
 			]
 		};
@@ -2353,7 +2422,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		try {
-			const response = await this.restPut<any, any>(
+			const mergeResponse = await this.restPut<any, any>(
 				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/merge`,
 				{
 					merge_commit_message: request.message,
@@ -2362,34 +2431,38 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					should_remove_source_branch: request.deleteSourceBranch
 				}
 			);
-			if (response.body.merge_when_pipeline_succeeds) {
-				// only updating the future state..
-				return {
-					directives: [
-						{
-							type: "updatePullRequest",
-							data: {
-								state: response.body.state,
-								mergeWhenPipelineSucceeds: response.body.merge_when_pipeline_succeeds,
-								updatedAt: response.body.updated_at
-							}
-						}
-					]
-				};
-			}
-			return {
+
+			const response: Directives = {
 				directives: [
 					{
-						type: "updatePullRequest",
-						data: {
-							merged: true,
-							state: response.body.state,
-							mergedAt: response.body.merged_at,
-							updatedAt: response.body.updated_at
-						}
+						type: "addNodes",
+						data: await this.getStateEvents(projectFullPath, iid)
 					}
 				]
 			};
+
+			if (mergeResponse.body.merge_when_pipeline_succeeds) {
+				// only updating the future state..
+				response.directives.push({
+					type: "updatePullRequest",
+					data: {
+						state: mergeResponse.body.state,
+						mergeWhenPipelineSucceeds: mergeResponse.body.merge_when_pipeline_succeeds,
+						updatedAt: mergeResponse.body.updated_at
+					}
+				});
+			} else {
+				response.directives.push({
+					type: "updatePullRequest",
+					data: {
+						merged: true,
+						state: mergeResponse.body.state,
+						mergedAt: mergeResponse.body.merged_at,
+						updatedAt: mergeResponse.body.updated_at
+					}
+				});
+			}
+			return response;
 		} catch (ex) {
 			Logger.warn(ex.message, ex);
 			throw new Error("Failed to accept merge request.");
@@ -2530,8 +2603,13 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			}
 		}
 
+		const lastDiscussions = await this.getLastDiscussions(projectFullPath, iid);
 		return {
 			directives: [
+				{
+					type: "addNodes",
+					data: lastDiscussions
+				},
 				{
 					type: type,
 					data:
@@ -2667,6 +2745,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return {
 			updatedAt: response?.project?.mergeRequest?.updatedAt
 		};
+	}
+
+	private async getLastDiscussions(projectFullPath: string, iid: string, last: number = 3) {
+		const lastDiscussions = ((await this.query(print(mergeRequestDiscussionQuery), {
+			fullPath: projectFullPath,
+			iid: iid.toString(),
+			last: last
+		})) as GitLabMergeRequestWrapper).project?.mergeRequest.discussions.nodes;
+		return lastDiscussions;
 	}
 
 	private async getMilestoneEvents(
@@ -2818,11 +2905,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		let page: string | null = "1";
 		let results: any[] = [];
 
+		// url is only a path here and need this scheme for parsing
 		const parsed = new nodeUrl.URL(url, "codestream://");
 
 		while (true) {
 			parsed.searchParams.set("page", page);
-			const requestUrl = `${parsed.pathname}?${parsed.searchParams.toString()}`;
+			const requestUrl = `${parsed.pathname}?${parsed.searchParams.toString()}&per_page=100`;
 			const response = await this.restGet<any>(requestUrl);
 			results = results.concat(map(response.body as any[]));
 			// Logger.warn("RESPONSE: " + JSON.stringify(response.body, null, 4));

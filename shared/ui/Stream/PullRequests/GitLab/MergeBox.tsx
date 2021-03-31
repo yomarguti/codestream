@@ -16,6 +16,7 @@ import {
 } from "../../../store/providerPullRequests/reducer";
 import { GitLabMergeRequest, GitLabMergeRequestWrapper } from "@codestream/protocols/agent";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
+import Timestamp from "../../Timestamp";
 
 export const IconButton = styled.div`
 	flex-grow: 0;
@@ -50,6 +51,7 @@ export const MergeBox = props => {
 		};
 	});
 
+	const [isLoading, setIsLoading] = useState(false);
 	const [modifyCommit, setModifyCommit] = useState(false);
 	const [showCommandLine, setShowCommandLine] = useState(false);
 	const [commitMessage, setCommitMessage] = useState("");
@@ -74,18 +76,24 @@ export const MergeBox = props => {
 	}, [includeMergeRequestDescription, derivedState.pr && derivedState.pr.description]);
 
 	const mergePullRequest = async (e: any) => {
-		//setIsLoadingMessage("Merging...");
+		setIsLoading(true);
 		const message = derivedState.prRoot.project.mergeMethod !== "ff" ? commitMessage : undefined;
 		const mergeWhenPipelineSucceeds =
 			derivedState.pipeline && derivedState.pipeline.status === "RUNNING";
-		dispatch(
-			api("mergePullRequest", {
-				message: message,
-				deleteSourceBranch: deleteBranch,
-				squashCommits: squash,
-				mergeWhenPipelineSucceeds: mergeWhenPipelineSucceeds
-			})
-		);
+		try {
+			await dispatch(
+				api("mergePullRequest", {
+					message: message,
+					deleteSourceBranch: deleteBranch,
+					squashCommits: squash,
+					mergeWhenPipelineSucceeds: mergeWhenPipelineSucceeds
+				})
+			);
+		} catch (ex) {
+			console.error(ex);
+		} finally {
+			setIsLoading(false);
+		}
 	};
 
 	const cancelMergeWhenPipelineSucceeds = async (e: any) => {
@@ -105,6 +113,19 @@ export const MergeBox = props => {
 
 	if (showCommandLine) {
 		return <CommandLineInstructions pr={props.pr} onClose={() => setShowCommandLine(false)} />;
+	}
+
+	if (derivedState?.pr?.mergedAt) {
+		return (
+			<OutlineBox>
+				<FlexRow>
+					<Icon name="check-circle" className="bigger green-color" />
+					<div className="pad-left">
+						Merged at <Timestamp time={derivedState.pr.mergedAt} />
+					</div>
+				</FlexRow>
+			</OutlineBox>
+		);
 	}
 
 	if (
@@ -293,7 +314,12 @@ export const MergeBox = props => {
 		<OutlineBox>
 			<FlexRow>
 				<Icon name="check-circle" className={`bigger color-green`} />
-				<Button variant={colorVariant} disabled={mergeDisabled} onClick={e => mergePullRequest(e)}>
+				<Button
+					isLoading={isLoading}
+					variant={colorVariant}
+					disabled={mergeDisabled}
+					onClick={e => mergePullRequest(e)}
+				>
 					{verb}
 				</Button>
 				{!headerLabel && (

@@ -333,7 +333,12 @@ export interface GitLabMergeRequest {
 	resolvable: boolean;
 	resolved: boolean;
 	reviewers?: {
-		nodes?: any[];
+		nodes?: {
+			id: number;
+			name: string;
+			login: string;
+			avatarUrl: string;
+		}[];
 	};
 	sourceBranch: string;
 	state: string;
@@ -378,7 +383,9 @@ export interface GitLabMergeRequest {
 		/**
 		 * private property, mainly for informative/debugging uses
 		 */
-		__version: any;
+		version: {
+			version: string;
+		};
 		reviewers?: boolean;
 		approvalsRequired?: boolean;
 	};

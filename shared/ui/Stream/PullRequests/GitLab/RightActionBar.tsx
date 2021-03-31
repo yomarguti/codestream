@@ -203,13 +203,15 @@ export const RightActionBar = (props: {
 			team,
 			skipGitEmailCheck,
 			addBlameMapEnabled,
-			isInVscode: ide.name === "VSC"
+			isInVscode: ide.name === "VSC",
+			supportsReviewers:
+				currentPullRequest?.conversations?.project?.mergeRequest?.supports?.reviewers
 		};
 	});
 
 	const [availableLabels, setAvailableLabels] = useState<any[] | undefined>(undefined);
 	const [availableReviewers, setAvailableReviewers] = useState(EMPTY_ARRAY_2);
-	const [supportsReviewers, setSupportsReviewers] = useState(false);
+
 	const [availableAssignees, setAvailableAssignees] = useState(EMPTY_ARRAY_3);
 	const [availableMilestones, setAvailableMilestones] = useState<[] | undefined>();
 
@@ -306,7 +308,7 @@ export const RightActionBar = (props: {
 				subtle: _.name,
 				searchLabel: `${_.login}:${_.name}`,
 				key: _.id,
-				action: () => setReviewer(_.login, !reviewerIds.includes(_.login))
+				action: () => setReviewer(_.id, !reviewerIds.includes(_.login))
 			})) as any;
 			menuItems.unshift({ type: "search", placeholder: "Type or choose a name" });
 			return menuItems;
@@ -315,10 +317,10 @@ export const RightActionBar = (props: {
 		}
 	}, [derivedState.currentPullRequest, availableReviewers, pr]);
 
-	const setReviewer = async (login: string, onOff: boolean) => {
+	const setReviewer = async (id: number, onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Adding Reviewer..." : "Removing Reviewer...");
-		if (onOff) await dispatch(api("addReviewerToPullRequest", { login }));
-		else dispatch(api("removeReviewerFromPullRequest", { login }));
+		if (onOff) await dispatch(api("addReviewerToPullRequest", { id }));
+		else dispatch(api("removeReviewerFromPullRequest", { id }));
 	};
 
 	const fetchAvailableMilestones = async (e?) => {
@@ -607,17 +609,19 @@ export const RightActionBar = (props: {
 					<>
 						<JustifiedRow>
 							<label>{pluralize("Assignee", pr.assignees)}</label>
-							<Link onClick={openAssignees}>
-								<InlineMenu
-									items={assigneeMenuItems}
-									onOpen={fetchAvailableAssignees}
-									title="Assign to"
-									noChevronDown
-									noFocusOnSelect
-								>
-									Edit
-								</InlineMenu>
-							</Link>
+							{pr?.userPermissions?.canMerge && (
+								<Link onClick={openAssignees}>
+									<InlineMenu
+										items={assigneeMenuItems}
+										onOpen={fetchAvailableAssignees}
+										title="Assign to"
+										noChevronDown
+										noFocusOnSelect
+									>
+										Edit
+									</InlineMenu>
+								</Link>
+							)}
 						</JustifiedRow>
 						<Subtle>
 							{pr.assignees && pr.assignees.nodes.length > 0 ? (
@@ -644,7 +648,7 @@ export const RightActionBar = (props: {
 					<Icon className="clickable" name="person" title="Assignee(s)" placement="left" />
 				)}
 			</AsideBlock>
-			{supportsReviewers && (
+			{derivedState.supportsReviewers && (
 				<AsideBlock onClick={() => !rightOpen && openReviewers()}>
 					{rightOpen ? (
 						<>

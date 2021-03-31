@@ -23,7 +23,8 @@ import {
 	ReposScm,
 	SwitchBranchRequestType,
 	DidChangeDataNotificationType,
-	ChangeDataType
+	ChangeDataType,
+	FetchThirdPartyPullRequestResponse
 } from "@codestream/protocols/agent";
 import {
 	PRHeader,
@@ -259,8 +260,10 @@ export const PullRequest = () => {
 			setIsLoadingMessage("");
 			setGeneralError(response.error.message);
 			console.error(response.error.message);
+			return undefined;
 		} else {
 			_assignState(response, "initialFetch");
+			return response;
 		}
 	};
 
@@ -468,10 +471,11 @@ export const PullRequest = () => {
 			dispatch(bootstrapReviews());
 		}
 		getOpenRepos();
-		initialFetch().then(_ => {
+		initialFetch().then((_: any) => {
 			HostApi.instance.track("PR Details Viewed", {
 				Host: derivedState.currentPullRequestProviderId,
-				Source: derivedState.currentPullRequestSource
+				Source: derivedState.currentPullRequestSource,
+				"Host Version": _?.repository?.pullRequest?.supports?.version?.version || "0.0.0"
 			});
 		});
 	});
