@@ -363,6 +363,7 @@ export interface GitLabMergeRequest {
 		adminMergeRequest: boolean;
 		/* this might not exist in all editions*/
 		canMerge?: boolean;
+		canApprove?: boolean;
 	};
 	viewer: {
 		id: string;

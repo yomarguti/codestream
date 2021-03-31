@@ -309,6 +309,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return undefined;
 	}
 
+	@gate()
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {
 		await this.ensureConnected();
@@ -318,7 +319,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		}
 
 		const users = await this._paginateRestResponse(`/projects/${request.boardId}/users`, data => {
-			return data.map(u => ({ ...u, displayName: u.username }));
+			return data.map(u => ({
+				...u,
+				displayName: u.username,
+				login: u.username,
+				avatarUrl: this.avatarUrl(u.avatar_url)
+			}));
 		});
 		this._assignableUsersCache.set(request.boardId, { users });
 		return { users };
@@ -931,17 +937,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	async getReviewers(request: { pullRequestId: string }) {
 		const { projectFullPath } = this.parseId(request.pullRequestId);
 
-		const response = await this.restGet<GitLabUser[]>(
-			`/projects/${encodeURIComponent(projectFullPath)}/users`
-		);
-		return {
-			users: response.body.map(u => ({
-				...u,
-				login: u.username,
-				avatarUrl: this.avatarUrl(u.avatar_url),
-				displayName: u.name
-			}))
-		};
+		const users = await this.getAssignableUsers({ boardId: encodeURIComponent(projectFullPath) });
+		return users;
 	}
 
 	@log()
@@ -1048,6 +1045,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				project.body.only_allow_merge_if_all_discussions_are_resolved;
 			response.project.onlyAllowMergeIfPipelineSucceeds =
 				project.body.only_allow_merge_if_pipeline_succeeds;
+			const users = await this.getAssignableUsers({ boardId: encodeURIComponent(projectFullPath) });
+			response.project.mergeRequest.userPermissions.canApprove = !!users?.users.find(
+				(_: any) => _.username === response.currentUser.login
+			);
 
 			// merge request settings
 			const mergeRequest = await this.restGet<{
