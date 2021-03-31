@@ -1324,39 +1324,44 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	async createPullRequestThread(request: { pullRequestId: string; text: string }) {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
-		const data = await this.restPost<
-			{
-				body: string;
-			},
-			{
-				id: string;
+		try {
+			const data = await this.restPost<
+				{
+					body: string;
+				},
+				{
+					id: string;
+				}
+			>(`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/discussions`, {
+				body: request.text
+			});
+			const body = data.body;
+			const id = body.id;
+
+			const response = (await this.query(print(mergeRequestDiscussionQuery), {
+				fullPath: projectFullPath,
+				iid: iid.toString(),
+				last: 5
+			})) as GitLabMergeRequestWrapper;
+
+			const node = response?.project?.mergeRequest?.discussions?.nodes.find(
+				_ => _.id === `gid://gitlab/Discussion/${id}`
+			);
+			if (node) {
+				return {
+					directives: [{ type: "addNode", data: node }]
+				};
+			} else {
+				// if for some reason the id can't be found, the client can de-dupe
+				return {
+					directives: [
+						{ type: "addNodes", data: response?.project?.mergeRequest?.discussions.nodes || [] }
+					]
+				};
 			}
-		>(`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/discussions`, {
-			body: request.text
-		});
-		const body = data.body;
-		const id = body.id;
-
-		const response = (await this.query(print(mergeRequestDiscussionQuery), {
-			fullPath: projectFullPath,
-			iid: iid.toString(),
-			last: 5
-		})) as GitLabMergeRequestWrapper;
-
-		const node = response?.project?.mergeRequest?.discussions?.nodes.find(
-			_ => _.id === `gid://gitlab/Discussion/${id}`
-		);
-		if (node) {
-			return {
-				directives: [{ type: "addNode", data: node }]
-			};
-		} else {
-			// if for some reason the id can't be found, the client can de-dupe
-			return {
-				directives: [
-					{ type: "addNodes", data: response?.project?.mergeRequest?.discussions.nodes || [] }
-				]
-			};
+		} catch (ex) {
+			Logger.error(ex, "createPullRequestThread");
+			throw ex;
 		}
 	}
 
