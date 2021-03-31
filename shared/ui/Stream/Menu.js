@@ -606,7 +606,9 @@ export default class Menu extends Component {
 
 	handleMultiSelectKeyDown = event => {
 		if (event.key === "Shift" || event.which === 16) {
-			this.setState({ isShiftHolded: true, itemsRange: [] });
+			if(!this.state.isShiftHolded) {
+				this.setState({isShiftHolded: true, itemsRange: []});
+			}
 		}
 	};
 
@@ -624,15 +626,17 @@ export default class Menu extends Component {
 		if (this.state.isShiftHolded && item.inRange) {
 			switch (this.state.itemsRange.length) {
 				case 0:
-					this.state.itemsRange.push(this.calculateKey(item));
+					this.setState({itemsRange: [this.calculateKey(item)]});
 					return;
 				case 1:
-					this.state.itemsRange.push(this.calculateKey(item));
-					item.action(this.state.itemsRange);
+					const actualItemsRange = this.state.itemsRange
+					actualItemsRange.push(this.calculateKey(item));
+					this.setState({itemsRange: actualItemsRange});
+					item.action(actualItemsRange);
 					this.props.action(null);
 					return;
 				default:
-					this.state.itemsRange = [this.calculateKey(item)];
+					this.setState({itemsRange: [this.calculateKey(item)]});
 					return;
 			}
 		}
