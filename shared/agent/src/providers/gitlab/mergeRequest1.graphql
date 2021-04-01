@@ -45,7 +45,7 @@ query GetPullRequest($fullPath: ID!, $iid: String!) {
 					title
 				}
 			}
-			currentUserTodos(last: 50) {
+			currentUserTodos(state: pending, last: 1) {
 				nodes {
 					body
 					id
