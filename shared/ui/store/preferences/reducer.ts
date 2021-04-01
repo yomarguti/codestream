@@ -168,24 +168,13 @@ export const DEFAULT_QUERIES: { [providerId: string]: PullRequestQuery[] } = {
 	]
 };
 
-export const getSavedPullRequestQueriesForProvider = createSelector(
-	(state: CodeStreamState) => state.preferences,
-	(_, providerId: string) => providerId,
-	(preferences, providerId) => {
-		const pullRequestQueries: PullRequestQuery[] = [];
-		const queries = preferences.pullRequestQueries || DEFAULT_QUERIES;
-		// const queries = DEFAULT_QUERIES;
-		Object.keys(queries[providerId] || {}).forEach(key => {
-			pullRequestQueries[parseInt(key, 10)] = queries[providerId][key];
-		});
-		return pullRequestQueries.filter(q => q && q.providerId === providerId && q.query.length > 0);
-	}
-);
-
 export const getSavedPullRequestQueries = createSelector(
 	(state: CodeStreamState) => state.preferences,
 	preferences => {
-		const queries = preferences.pullRequestQueries || DEFAULT_QUERIES;
+		const queries = {
+			...DEFAULT_QUERIES,
+			...(preferences.pullRequestQueries || {})
+		};
 		let results = {};
 		// massage the data for any old data formats
 		Object.keys(queries || {}).forEach(p => {
