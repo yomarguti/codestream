@@ -3,13 +3,6 @@
 query GetPullRequest($fullPath: ID!, $iid: String!) {
 	project(fullPath: $fullPath) {
 		mergeRequest(iid: $iid) {
-			approvedBy(first: 50) {
-				nodes {
-					avatarUrl
-					name
-					login: username
-				}
-			}
 			pipelines(first: 1) {
 				nodes {
 					...pipelineFragment

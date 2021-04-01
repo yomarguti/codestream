@@ -83,26 +83,29 @@ export class GraphqlQueryBuilder {
 			}
 		}
 
-		let support = {};
+		let supports = {};
 		if (queryKey === "GetPullRequest") {
 			const isGte1380 = semver.gte(version, "13.8.0");
-			support = {
+			supports = {
 				version: providerVersion,
 				reviewers: isGte1380,
-				approvalsRequired: isGte1380
+				approvalsRequired: isGte1380,
+				approvedBy: semver.gte(version, "13.6.4")
 			};
 		}
 
 		this.versionMatrix[version] = this.versionMatrix[version] || {};
-		this.versionMatrix[version][queryKey] = support;
+		this.versionMatrix[version][queryKey] = supports;
 
-		return support;
+		return supports;
 	}
 
 	configuration: { [id: string]: GraphQlQueryModifier[] } = {
 		// for the GetPullRequest query, if the current version is << 13.8.0 run this...
 		GetPullRequest: [
 			{
+				// this was supposed to be in 13.7, but a user with 13.7.9 ran into not having it
+				// https://about.gitlab.com/releases/2020/12/22/gitlab-13-7-released/
 				selector: (currentVersion: string) => semver.lt(currentVersion, "13.8.0"),
 				query: {
 					head: {
@@ -124,7 +127,8 @@ export class GraphqlQueryBuilder {
 				}
 			},
 			{
-				selector: (currentVersion: string) => semver.lt(currentVersion, "13.6.0"),
+				// this is one of our internal GL versions
+				selector: (currentVersion: string) => semver.lt(currentVersion, "13.6.4"),
 				query: {
 					head: {
 						value: {
@@ -137,7 +141,7 @@ export class GraphqlQueryBuilder {
 							next: {
 								value: {
 									key: "mergeRequest",
-									removals: ["commitCount", "userDiscussionsCount"]
+									removals: ["approvedBy", "commitCount", "userDiscussionsCount"]
 								},
 								next: {
 									value: {
