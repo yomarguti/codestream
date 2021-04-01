@@ -36,7 +36,7 @@ const iconForStatus = {
 
 export const PipelineBox = (props: { pr: GitLabMergeRequest; setIsLoadingMessage: Function }) => {
 	const pr = props.pr;
-	const pipeline = pr?.pipelines?.nodes[0];
+	const pipeline = pr?.headPipeline;
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
 			prRoot: getCurrentProviderPullRequestRootObject(state) as GitLabMergeRequestWrapper
@@ -71,8 +71,11 @@ export const PipelineBox = (props: { pr: GitLabMergeRequest; setIsLoadingMessage
 					<Icon name={iconWrapper.icon} className="bigger" />
 				</Link>
 				<div>
-					Detached merge request pipeline <Link href={pipeline.webUrl}>#{pipeline.id}</Link>{" "}
-					{pipeline.status.toLowerCase()} for{" "}
+					Merge request pipeline{" "}
+					<Link href={pipeline.webUrl}>
+						#{pipeline.id.replace("gid://gitlab/Ci::Pipeline/", "")}
+					</Link>{" "}
+					{pipeline.detailedStatus.label} for{" "}
 					<Link href={`${pr.baseWebUrl}/${pr.repository.nameWithOwner}/-/commit/${pipeline.sha}`}>
 						{pipeline.sha!.substring(0, 8)}
 					</Link>

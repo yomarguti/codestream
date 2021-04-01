@@ -46,7 +46,7 @@ export const MergeBox = props => {
 			deleteBranch,
 			squash,
 			pr: pr,
-			pipeline: pr.pipelines && pr.pipelines.nodes && pr.pipelines.nodes[0],
+			pipeline: pr.headPipeline,
 			prRoot: getCurrentProviderPullRequestRootObject(state) as GitLabMergeRequestWrapper
 		};
 	});
