@@ -493,9 +493,10 @@ export const RightActionBar = (props: {
 		}
 	};
 
-	const hasToDo = pr.currentUserTodos
-		? pr.currentUserTodos.nodes.find(_ => _.state === "pending")
-		: false;
+	const hasToDo =
+		pr.supports.currentUserTodos && pr.currentUserTodos
+			? pr.currentUserTodos.nodes.find(_ => _.state === "pending")
+			: false;
 	const [isLoadingToDo, setIsLoadingToDo] = useState(false);
 	const toggleToDo = async () => {
 		setIsLoadingMessage(hasToDo ? "Marking as done..." : "Adding to do...");
@@ -563,17 +564,19 @@ export const RightActionBar = (props: {
 							<Icon className="clickable" name="chevron-right-thin" />
 						</JustifiedRow>
 					</AsideBlock>
-					<AsideBlock onClick={toggleToDo} className="clickable">
-						<JustifiedRow>
-							<label>{hasToDo ? "Mark as done" : "Add a to do"}</label>
-							<Icon
-								className="clickable"
-								name={hasToDo ? "checked-checkbox" : "checkbox-add"}
-								title={hasToDo ? "Mark as done" : "Add a to do"}
-								placement="left"
-							/>
-						</JustifiedRow>
-					</AsideBlock>
+					{pr.supports.currentUserTodos && (
+						<AsideBlock onClick={toggleToDo} className="clickable">
+							<JustifiedRow>
+								<label>{hasToDo ? "Mark as done" : "Add a to do"}</label>
+								<Icon
+									className="clickable"
+									name={hasToDo ? "checked-checkbox" : "checkbox-add"}
+									title={hasToDo ? "Mark as done" : "Add a to do"}
+									placement="left"
+								/>
+							</JustifiedRow>
+						</AsideBlock>
+					)}
 				</>
 			) : (
 				<>
@@ -598,19 +601,23 @@ export const RightActionBar = (props: {
 							name="chevron-left-thin"
 						/>
 					</AsideBlock>
-					<HR />
-					<AsideBlock onClick={() => toggleToDo()}>
-						{isLoadingToDo ? (
-							<Icon className="clickable spin" name="sync" />
-						) : (
-							<Icon
-								className="clickable fixed"
-								name={hasToDo ? "checked-checkbox" : "checkbox-add"}
-								title={hasToDo ? "Mark as done" : "Add a to do"}
-								placement="left"
-							/>
-						)}
-					</AsideBlock>
+					{pr.supports.currentUserTodos && (
+						<>
+							<HR />
+							<AsideBlock onClick={() => toggleToDo()}>
+								{isLoadingToDo ? (
+									<Icon className="clickable spin" name="sync" />
+								) : (
+									<Icon
+										className="clickable fixed"
+										name={hasToDo ? "checked-checkbox" : "checkbox-add"}
+										title={hasToDo ? "Mark as done" : "Add a to do"}
+										placement="left"
+									/>
+								)}
+							</AsideBlock>
+						</>
+					)}
 				</>
 			)}
 			<AsideBlock onClick={() => !rightOpen && openAssignees()}>

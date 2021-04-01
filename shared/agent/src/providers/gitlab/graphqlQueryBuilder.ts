@@ -86,11 +86,13 @@ export class GraphqlQueryBuilder {
 		let supports = {};
 		if (queryKey === "GetPullRequest") {
 			const isGte1380 = semver.gte(version, "13.8.0");
+			const isGte1364 = semver.gte(version, "13.6.4");
 			supports = {
 				version: providerVersion,
 				reviewers: isGte1380,
 				approvalsRequired: isGte1380,
-				approvedBy: semver.gte(version, "13.6.4")
+				approvedBy: isGte1364,
+				currentUserTodos: isGte1364
 			};
 		}
 
@@ -141,7 +143,12 @@ export class GraphqlQueryBuilder {
 							next: {
 								value: {
 									key: "mergeRequest",
-									removals: ["approvedBy", "commitCount", "userDiscussionsCount"]
+									removals: [
+										"approvedBy",
+										"commitCount",
+										"currentUserTodos",
+										"userDiscussionsCount"
+									]
 								},
 								next: {
 									value: {

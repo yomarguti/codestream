@@ -207,6 +207,7 @@ export interface GitLabMergeRequest {
 	/* this might not exist in all editions*/
 	commitCount?: number;
 	createdAt: string;
+	/* this might not exist in all editions*/
 	currentUserTodos?: {
 		nodes: {
 			/* this might not exist in all editions (we don't actually use it)
@@ -392,5 +393,6 @@ export interface GitLabMergeRequest {
 		reviewers?: boolean;
 		approvalsRequired?: boolean;
 		approvedBy?: boolean;
+		currentUserTodos?: boolean;
 	};
 }
