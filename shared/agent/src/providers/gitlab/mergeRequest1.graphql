@@ -3,6 +3,7 @@ query GetPullRequest($fullPath: ID!, $iid: String!) {
 		mergeRequest(iid: $iid) {
 			headPipeline {
 				id
+				path
 				sha
 				status
 				stages {

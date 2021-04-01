@@ -1151,26 +1151,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			response.project.mergeRequest.divergedCommitsCount =
 				mergeRequest.body.diverged_commits_count || 0;
 
-			// pipelines
-			const pipelines = await this.restGet<any[]>(
-				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/pipelines?ref=${
-					response.project.mergeRequest.headRefName
-				}`
-			);
-			if (
-				pipelines.body &&
-				pipelines.body.length &&
-				response.project?.mergeRequest?.pipelines &&
-				response.project?.mergeRequest?.pipelines?.nodes.length > 0
-			) {
-				const pipeline = pipelines.body[0];
-				response.project.mergeRequest.pipelines.nodes[0] = {
-					...response.project.mergeRequest.pipelines.nodes[0],
-					id: pipeline.id,
-					ref: pipeline.ref,
-					sha: pipeline.sha,
-					webUrl: pipeline.web_url
-				};
+			if (response.project?.mergeRequest?.headPipeline) {
+				response.project.mergeRequest.headPipeline.webUrl = `${this.baseWebUrl}${response.project.mergeRequest.headPipeline.path}`;
 			}
 
 			const base_id = this.fromMergeRequestGid(response.project.mergeRequest.id);
