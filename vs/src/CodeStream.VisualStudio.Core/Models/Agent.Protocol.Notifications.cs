@@ -27,17 +27,17 @@ namespace CodeStream.VisualStudio.Core.Models {
 	public class DidChangeUserPreferencesEvent {
 		public string Type { get; set; } = "preferences";
 		public DidChangeUserPreferencesData Data { get; set; }
-	} 
-	
+	}
+
 	public class DidChangeDataNotificationTypeParams {
-		 
+
 	}
 	public class DidChangeDataNotificationType : NotificationType<DidChangeDataNotificationTypeParams> {
 		private readonly JToken _token;
 
 		public DidChangeDataNotificationType(JToken token) {
 			_token = token;
-		}		 
+		}
 
 		public const string MethodName = "codestream/didChangeData";
 		public override string Method => MethodName;
@@ -169,7 +169,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public string Team { get; set; }
 		public bool? Alias { get; set; }
 	}
-	
+
 	public class RestartRequiredNotification { }
 
 	public class RestartRequiredNotificationType : NotificationType<RestartRequiredNotification> {
@@ -205,6 +205,27 @@ namespace CodeStream.VisualStudio.Core.Models {
 		private readonly JToken _token;
 
 		public DidChangeServerUrlNotificationType(JToken token) {
+			_token = token;
+		}
+
+		public override string AsJson() {
+			return CustomNotificationPayload.Create(Method, _token);
+		}
+	}
+
+	public class CodeStreamEnvironmentInfo {
+		public string Environment { get; set; } // local, prod, onprem, unknown
+		public bool IsOnPrem { get; set; }
+		public bool IsProductionCloud { get; set; }
+	}
+
+	public class DidSetEnvironmentNotificationType : NotificationType<CodeStreamEnvironmentInfo> {
+		public const string MethodName = "codestream/didSetEnvironment";
+		public override string Method => MethodName;
+
+		private readonly JToken _token;
+
+		public DidSetEnvironmentNotificationType(JToken token) {
 			_token = token;
 		}
 
