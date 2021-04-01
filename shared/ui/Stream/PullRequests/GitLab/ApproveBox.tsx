@@ -30,7 +30,8 @@ export const ApproveBox = (props: { pr: GitLabMergeRequest }) => {
 		}
 	};
 
-	const approvers = props.pr.approvedBy ? props.pr.approvedBy.nodes : [];
+	const approvers =
+		props.pr.supports?.approvedBy && props.pr.approvedBy ? props.pr.approvedBy.nodes : [];
 	const iHaveApproved = approvers.find(_ => _.login === props.pr.viewer.login);
 	const isApproved = approvers.length > 0;
 	const render = () => {
@@ -38,10 +39,14 @@ export const ApproveBox = (props: { pr: GitLabMergeRequest }) => {
 			return (
 				<>
 					<b>Merge request approved. </b>
-					Approved by{" "}
-					{approvers.map(_ => (
-						<PRHeadshotName person={_} />
-					))}
+					{approvers?.length && (
+						<>
+							Approved by{" "}
+							{approvers.map(_ => (
+								<PRHeadshotName person={_} />
+							))}
+						</>
+					)}
 				</>
 			);
 		}

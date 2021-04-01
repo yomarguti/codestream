@@ -185,7 +185,10 @@ interface Project {
 }
 
 export interface GitLabMergeRequest {
-	approvedBy: {
+	/**
+	 * this might not exist in all versions, was missing in 13.2.3
+	 */
+	approvedBy?: {
 		nodes: {
 			avatarUrl: string;
 			name: string;
@@ -390,5 +393,6 @@ export interface GitLabMergeRequest {
 		};
 		reviewers?: boolean;
 		approvalsRequired?: boolean;
+		approvedBy?: boolean;
 	};
 }
