@@ -12,8 +12,7 @@ import { GitLabMergeRequest } from "@codestream/protocols/agent";
 export const ApproveBox = (props: { pr: GitLabMergeRequest }) => {
 	const dispatch = useDispatch();
 
-	// once we can get additional approval data, we can relax/remove this
-	if (!props.pr.userPermissions?.canMerge) return null;
+	if (!props.pr.userPermissions?.canApprove) return null;
 
 	const [isLoading, setIsLoading] = useState(false);
 	const onApproveClick = async (e: React.MouseEvent<Element, MouseEvent>, approve: boolean) => {

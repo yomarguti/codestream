@@ -18,6 +18,7 @@ class CodeStreamStatusBarWidget(val project: Project) : StatusBarWidget, StatusB
 
     init {
         project.sessionService?.let {
+            it.onEnvironmentInfoChanged { refresh() }
             it.onUserLoggedInChanged { refresh() }
             it.onMentionsChanged { refresh() }
         }
@@ -49,7 +50,12 @@ class CodeStreamStatusBarWidget(val project: Project) : StatusBarWidget, StatusB
     override fun getText(): String {
         val sessionService = project.sessionService ?: return ""
 
-        val prefix = appSettings.environmentDisplayPrefix
+        val prefix = sessionService.environmentInfo.let {
+            when(it.environment) {
+                "prod", "unknown" -> "CodeStream: "
+                else -> "${it.environment.toUpperCase()}: "
+            }
+        }
 
         val userLoggedIn = sessionService.userLoggedIn ?: return "$prefix Sign in..."
         val username = if (userLoggedIn.teamsCount == 1) {

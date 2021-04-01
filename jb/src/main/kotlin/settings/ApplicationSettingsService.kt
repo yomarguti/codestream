@@ -84,28 +84,6 @@ class ApplicationSettingsService : PersistentStateComponent<ApplicationSettingsS
         get() = state.firstRun
         set(value) { state.firstRun = value }
 
-    val environmentDisplayPrefix
-        get() = when (state.serverUrl) {
-            API_PD -> "PD:"
-            API_QA -> "QA:"
-            else -> if (state.serverUrl.contains("localhost")) {
-                "Local:"
-            } else {
-                "CodeStream:"
-            }
-        }
-
-    val environmentName
-        get() = when (state.serverUrl) {
-            API_PD -> "pd"
-            API_QA -> "qa"
-            else -> if (state.serverUrl.contains("localhost")) {
-                "local"
-            } else {
-                "prod"
-            }
-        }
-
     val proxySettings
         get(): ProxySettings? {
             val httpConfig = HttpConfigurable.getInstance()

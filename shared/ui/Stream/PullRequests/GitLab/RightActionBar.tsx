@@ -26,6 +26,7 @@ import { PRProgress, PRProgressFill, PRProgressLine } from "../../PullRequestFil
 import { Circle } from "../../PullRequestConversationTab";
 import Tooltip from "../../Tooltip";
 import { GitLabMergeRequest } from "@codestream/protocols/agent";
+import cx from "classnames";
 
 const Right = styled.div`
 	width: 48px;
@@ -59,6 +60,9 @@ const Right = styled.div`
 	overflow: auto;
 	&::-webkit-scrollbar {
 		display: none;
+	}
+	&.jetbrains {
+		border-left: 1px solid var(--base-border-color);
 	}
 `;
 
@@ -204,6 +208,7 @@ export const RightActionBar = (props: {
 			skipGitEmailCheck,
 			addBlameMapEnabled,
 			isInVscode: ide.name === "VSC",
+			isInJetBrains: ide.name === "JETBRAINS",
 			supportsReviewers:
 				currentPullRequest?.conversations?.project?.mergeRequest?.supports?.reviewers
 		};
@@ -533,12 +538,16 @@ export const RightActionBar = (props: {
 	};
 
 	return (
-		<Right className={rightOpen ? "expanded" : "collapsed"}>
+		<Right
+			className={cx(rightOpen ? "expanded" : "collapsed", {
+				jetbrains: derivedState.isInJetBrains
+			})}
+		>
 			{rightOpen ? (
 				<>
 					<AsideBlock onClick={close} className="clickable">
 						<JustifiedRow>
-							<label>Close view</label>
+							<label>Close MR view</label>
 							<Icon className="clickable" name="x" />
 						</JustifiedRow>
 					</AsideBlock>
@@ -569,7 +578,7 @@ export const RightActionBar = (props: {
 			) : (
 				<>
 					<AsideBlock onClick={close}>
-						<Icon className="clickable fixed" name="x" title="Close view" placement="left" />
+						<Icon className="clickable fixed" name="x" title="Close MR view" placement="left" />
 					</AsideBlock>
 					<HR />
 					<AsideBlock onClick={refresh}>

@@ -1,6 +1,5 @@
 import React from "react";
 import styled from "styled-components";
-import CancelButton from "./CancelButton";
 import Tooltip from "./Tooltip";
 import { Button } from "../src/components/Button";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
@@ -27,7 +26,7 @@ import { ReviewForm } from "./ReviewForm";
 import { openPanel } from "../store/context/actions";
 import { WebviewPanels } from "@codestream/protocols/webview";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
-import { PullRequest } from "./PullRequest";
+import { getPRLabel } from "../store/providers/reducer";
 import { getSidebarLocation } from "../store/editorContext/reducer";
 
 const NavHeader = styled.div`
@@ -215,7 +214,8 @@ export function ReviewNav(props: Props) {
 			approvedByMe: approvedBy[currentUserId] ? true : false,
 			isMine: currentUserId === (review ? review.creatorId : ""),
 			cr2prEnabled: isFeatureEnabled(state, "cr2pr"),
-			sidebarLocation: getSidebarLocation(state)
+			sidebarLocation: getSidebarLocation(state),
+			prLabel: getPRLabel(state)
 		};
 	}, shallowEqual);
 
@@ -446,10 +446,10 @@ export function ReviewNav(props: Props) {
 							isMine &&
 							review.pullRequestUrl == null &&
 							review.status === "approved" && (
-								<Tooltip title="Create a PR" placement="top">
+								<Tooltip title={`Create a ${derivedState.prLabel.PR}`} placement="top">
 									<Button onClick={pr}>
 										<Icon className="narrow-icon" name="pull-request" />
-										<span className="wide-text">Create PR</span>
+										<span className="wide-text">Create {derivedState.prLabel.PR}</span>
 									</Button>
 								</Tooltip>
 							)}
