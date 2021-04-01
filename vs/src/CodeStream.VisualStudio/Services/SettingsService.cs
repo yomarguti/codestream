@@ -65,6 +65,7 @@ namespace CodeStream.VisualStudio.Services {
 		//	DialogPage = await OptionsDialogPage.GetLiveInstanceAsync();
 		//}
 
+		private CodeStreamEnvironmentInfo _environmentInfo;
 		public SettingsManager(IOptionsDialogPage dialogPage) {
 			DialogPage = dialogPage;
 			DialogPage.LoadSettingsFromStorage();
@@ -78,9 +79,7 @@ namespace CodeStream.VisualStudio.Services {
 
 		public Settings GetSettings() {
 			return new Settings {
-				Options = this,
-				Env = GetEnvironmentName(),
-				Version = GetEnvironmentVersionFormatted()
+				Options = this
 			};
 		}
 
@@ -162,6 +161,12 @@ namespace CodeStream.VisualStudio.Services {
 			};
 		}
 
+		public CodeStreamEnvironmentInfo GetCodeStreamEnvironmentInfo {
+			get {
+				return _environmentInfo;
+			}
+		}
+
 		/// <summary>
 		/// This is the environment dictated by the urls the user is using
 		/// </summary>
@@ -184,19 +189,17 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public string GetUsefulEnvironmentName() {
-			var envName = GetEnvironmentName();
+			var envName = _environmentInfo?.Environment ?? string.Empty;
 			switch (envName) {
-				case "unknown":
-				case "local":
-				case "prod":
-					return null;
-				default:
+				case "pd":
 					return envName.ToUpperInvariant();
+				default:
+					return null;
 			}
 		}
 
 		public string GetEnvironmentVersionFormatted() {
-			var environmentName = GetEnvironmentName();
+			var environmentName = _environmentInfo?.Environment;
 			return $"{Application.ExtensionVersionSemVer}{(environmentName != "prod" ? " (" + environmentName + ")" : "")}";
 		}
 
@@ -221,6 +224,10 @@ namespace CodeStream.VisualStudio.Services {
 		///<inheritdoc/>
 		public void ResumeNotifications() {
 			DialogPage.PauseNotifyPropertyChanged = false;
+		}
+
+		public void SetEnvironment(CodeStreamEnvironmentInfo environment) {
+			_environmentInfo = environment;
 		}
 	}
 }
