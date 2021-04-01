@@ -253,50 +253,48 @@ export interface GitLabMergeRequest {
 	participants: {
 		nodes: GitLabUser[];
 	};
-	pipelines?: {
-		nodes: {
-			id: string;
-			status:
-				| "CREATED"
-				| "WAITING_FOR_RESOURCE"
-				| "PREPARING"
-				| "PENDING"
-				| "RUNNING"
-				| "FAILED"
-				| "SUCCESS"
-				| "CANCELED"
-				| "SKIPPED"
-				| "MANUAL"
-				| "SCHEDULED"
-				| string;
-			stages: {
-				nodes: {
-					name: string;
-					detailedStatus: {
-						label: string;
-						tooltip: string;
-					};
-				}[];
-			};
-			detailedStatus: {
-				icon: string;
-				label: string;
-				text: string;
-				tooltip: string;
-			};
-			/* this is the branch ref
+	headPipeline?: {
+		id: string;
+		status:
+			| "CREATED"
+			| "WAITING_FOR_RESOURCE"
+			| "PREPARING"
+			| "PENDING"
+			| "RUNNING"
+			| "FAILED"
+			| "SUCCESS"
+			| "CANCELED"
+			| "SKIPPED"
+			| "MANUAL"
+			| "SCHEDULED"
+			| string;
+		stages: {
+			nodes: {
+				name: string;
+				detailedStatus: {
+					label: string;
+					tooltip: string;
+				};
+			}[];
+		};
+		detailedStatus: {
+			icon: string;
+			label: string;
+			text: string;
+			tooltip: string;
+		};
+		/* this is the branch ref
 			merged in from REST 
 			*/
-			sha?: string;
-			/* this is the branch ref
+		sha?: string;
+		/* this is the branch ref
 			merged in from REST 
 			*/
-			ref?: string;
-			/* link to the pipeline in the web
+		ref?: string;
+		/* link to the pipeline in the web
 			merged in from REST 
 			*/
-			webUrl?: string;
-		}[];
+		webUrl?: string;
 	};
 	pendingReview: {
 		id: string;
