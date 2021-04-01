@@ -5,6 +5,7 @@ import com.codestream.agentService
 import com.codestream.error.ErrorHandler
 import com.codestream.protocols.agent.CSPreferences
 import com.codestream.protocols.agent.CSUser
+import com.codestream.protocols.agent.EnvironmentInfo
 import com.codestream.protocols.agent.Post
 import com.codestream.protocols.agent.PullRequestNotification
 import com.codestream.protocols.agent.Stream
@@ -13,6 +14,7 @@ import com.intellij.openapi.project.Project
 import kotlin.properties.Delegates
 
 typealias UserLoggedInObserver = (UserLoggedIn?) -> Unit
+typealias EnvironmentInfoObserver = (EnvironmentInfo) -> Unit
 typealias IntObserver = (Int) -> Unit
 typealias PostsObserver = (List<Post>) -> Unit
 typealias PullRequestsObserver = (List<PullRequestNotification>) -> Unit
@@ -20,6 +22,9 @@ typealias PullRequestsObserver = (List<PullRequestNotification>) -> Unit
 class SessionService(val project: Project) {
 
     val userLoggedIn: UserLoggedIn? get() = _userLoggedIn
+    var environmentInfo: EnvironmentInfo
+        get() = _environmentInfo
+        set(value) { _environmentInfo = value }
     val isSlackTeam: Boolean get() = userLoggedIn?.team?.providerInfo?.slack != null
     val mentions: Int get() = _mentions
 
@@ -35,6 +40,7 @@ class SessionService(val project: Project) {
     }
 
     private val userLoggedInObservers = mutableListOf<UserLoggedInObserver>()
+    private val environmentInfoObservers = mutableListOf<EnvironmentInfoObserver>()
     private val unreadsObservers = mutableListOf<IntObserver>()
     private val mentionsObservers = mutableListOf<IntObserver>()
     private val postsObservers = mutableListOf<PostsObserver>()
@@ -42,6 +48,13 @@ class SessionService(val project: Project) {
 
     private var _userLoggedIn: UserLoggedIn? by Delegates.observable<UserLoggedIn?>(null) { _, _, new ->
         userLoggedInObservers.forEach { it(new) }
+    }
+
+    private var _environmentInfo: EnvironmentInfo by Delegates.observable<EnvironmentInfo>(EnvironmentInfo("unknown",
+        isOnPrem = false,
+        isProductionCloud = false
+    )) { _, _, new ->
+        environmentInfoObservers.forEach { it(new) }
     }
 
     private var _unreads: Int by Delegates.observable(0) { _, _, new ->
@@ -54,6 +67,10 @@ class SessionService(val project: Project) {
 
     fun onUserLoggedInChanged(observer: UserLoggedInObserver) {
         userLoggedInObservers += observer
+    }
+
+    fun onEnvironmentInfoChanged(observer: EnvironmentInfoObserver) {
+        environmentInfoObservers += observer
     }
 
     fun onUnreadsChanged(observer: IntObserver) {

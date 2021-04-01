@@ -7,6 +7,7 @@ import com.codestream.editorService
 import com.codestream.extensions.workspaceFolders
 import com.codestream.gson
 import com.codestream.notificationComponent
+import com.codestream.protocols.agent.EnvironmentInfo
 import com.codestream.protocols.agent.LoginResult
 import com.codestream.reviewService
 import com.codestream.sessionService
@@ -155,6 +156,11 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
 		val request = gson.fromJson<OpenUrlRequest>(json[0])
         BrowserUtil.browse(request.url)
         return CompletableFuture.completedFuture(true)
+    }
+
+    @JsonNotification("codestream/didSetEnvironment")
+    fun didSetEnvironment(environmentInfo: EnvironmentInfo) {
+        project.sessionService?.environmentInfo = environmentInfo
     }
 
     override fun workspaceFolders(): CompletableFuture<MutableList<WorkspaceFolder>> {

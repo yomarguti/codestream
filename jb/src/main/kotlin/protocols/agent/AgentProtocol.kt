@@ -59,6 +59,8 @@ class LoginState(
     val teamId: String,
     val email: String,
     val capabilities: JsonObject,
+    val environmentInfo: EnvironmentInfo,
+    val serverUrl: String,
     val token: JsonObject?
 )
 
@@ -66,6 +68,8 @@ class UserLoggedIn(val user: CSUser, val team: CSTeam, val state: LoginState, va
     val userId get() = state.userId
     val teamId get() = state.teamId
 }
+
+class EnvironmentInfo(val environment: String, val isOnPrem: Boolean, val isProductionCloud: Boolean)
 
 class CSUser(
     val id: String,
