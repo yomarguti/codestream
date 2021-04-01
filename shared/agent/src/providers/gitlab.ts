@@ -2958,7 +2958,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	private avatarUrl(url: string) {
-		return url.startsWith("/") ? `${this.baseWebUrl}${url}` : url;
+		return url?.startsWith("/") ? `${this.baseWebUrl}${url}` : url;
 	}
 
 	private fromRestUser(user: { [key: string]: any }) {
