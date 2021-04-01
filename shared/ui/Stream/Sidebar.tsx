@@ -86,7 +86,7 @@ export const Sidebar = React.memo(function Sidebar() {
 		// represented
 		if (preferences.sidebarPaneOrder) {
 			AVAILABLE_PANES.forEach(pane => {
-				if (!sidebarPaneOrder.includes(pane)) sidebarPaneOrder.unshift(pane);
+				if (!sidebarPaneOrder.includes(pane)) sidebarPaneOrder.unshift({ id: pane });
 			});
 		}
 
