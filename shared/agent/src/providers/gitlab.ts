@@ -861,41 +861,49 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return `${this.baseUrl.replace("/v4", "")}/graphql`;
 	}
 
+	private _providerVersions = new Map<string, ProviderVersion>();
+
+	@gate()
 	protected async getVersion(): Promise<ProviderVersion> {
+		let version;
 		try {
-			if (this._version == null) {
-				const response = await this.get<{
-					version: string;
-					revision: string;
-				}>("/version");
+			// a user could be connected to both GL and GL self-managed
+			version = this._providerVersions.get(this.providerConfig.id);
+			if (version) return version;
 
-				const split = response.body.version.split("-");
-				const version = split[0] || "0.0.0";
+			const response = await this.get<{
+				version: string;
+				revision: string;
+			}>("/version");
 
-				this._version = {
-					version: version,
-					asArray: version.split(".").map(Number),
-					edition: split.length > 1 ? split[1] : undefined,
-					revision: response.body.revision
-				};
+			const split = response.body.version.split("-");
+			const versionOrDefault = split[0] || "0.0.0";
+			version = {
+				version: versionOrDefault,
+				asArray: versionOrDefault.split(".").map(Number),
+				edition: split.length > 1 ? split[1] : undefined,
+				revision: response.body.revision
+			};
 
-				Logger.log(
-					`${this.providerConfig.id} getVersion - ${
-						this.providerConfig.id
-					} version=${JSON.stringify(this._version)}`
-				);
-				Container.instance().errorReporter.reportBreadcrumb({
-					message: `${this.providerConfig.id} getVersion`,
-					data: {
-						...this._version
-					}
-				});
-			}
+			Logger.log(
+				`${this.providerConfig.id} getVersion - ${this.providerConfig.id} version=${JSON.stringify(
+					version
+				)}`
+			);
+
+			Container.instance().errorReporter.reportBreadcrumb({
+				message: `${this.providerConfig.id} getVersion`,
+				data: {
+					...version
+				}
+			});
 		} catch (ex) {
 			Logger.warn(ex, "getVersion");
-			this._version = this.DEFAULT_VERSION;
+			version = this.DEFAULT_VERSION;
 		}
-		return this._version;
+
+		this._providerVersions.set(this.providerConfig.id, version);
+		return version;
 	}
 
 	protected async client(): Promise<GraphQLClient> {
@@ -1052,7 +1060,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				iid: iid.toString()
 			};
 			const queryText0 = await this.graphqlQueryBuilder.build(
-				this._version!.version!,
+				providerVersion!.version!,
 				mergeRequest0Query,
 				"GetPullRequest"
 			);
