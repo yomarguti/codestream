@@ -256,6 +256,7 @@ export interface GitLabMergeRequest {
 	};
 	headPipeline?: {
 		id: string;
+		path: string;
 		status:
 			| "CREATED"
 			| "WAITING_FOR_RESOURCE"
@@ -284,14 +285,7 @@ export interface GitLabMergeRequest {
 			text: string;
 			tooltip: string;
 		};
-		/* this is the branch ref
-			merged in from REST 
-			*/
 		sha?: string;
-		/* this is the branch ref
-			merged in from REST 
-			*/
-		ref?: string;
 		/* link to the pipeline in the web
 			merged in from REST 
 			*/
