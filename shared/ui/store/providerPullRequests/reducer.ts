@@ -175,15 +175,19 @@ export function reduceProviderPullRequests(
 						.mergeRequest as GitLabMergeRequest;
 					for (const directive of action.payload.data) {
 						if (directive.type === "addApprovedBy") {
-							for (const d of directive.data) {
-								if (!pr.approvedBy.nodes.find(_ => _.login === d.login)) {
-									pr.approvedBy.nodes.push(d);
+							if (pr.approvedBy) {
+								for (const d of directive.data) {
+									if (!pr.approvedBy.nodes.find(_ => _.login === d.login)) {
+										pr.approvedBy.nodes.push(d);
+									}
 								}
 							}
 						} else if (directive.type === "removeApprovedBy") {
-							pr.approvedBy.nodes.length = 0;
-							for (const d of directive.data) {
-								pr.approvedBy.nodes.push(d);
+							if (pr.approvedBy) {
+								pr.approvedBy.nodes.length = 0;
+								for (const d of directive.data) {
+									pr.approvedBy.nodes.push(d);
+								}
 							}
 						} else if (directive.type === "addNode") {
 							const node = pr.discussions.nodes.find(_ => _.id === directive.data.id);

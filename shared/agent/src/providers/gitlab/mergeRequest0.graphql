@@ -13,6 +13,13 @@ query GetPullRequest($fullPath: ID!, $iid: String!, $after: String) {
 		mergeRequestsFfOnlyEnabled
 		removeSourceBranchAfterMerge
 		mergeRequest(iid: $iid) {
+			approvedBy(first: 50) {
+				nodes {
+					avatarUrl
+					name
+					login: username
+				}
+			}
 			id
 			iid
 			approvalsRequired

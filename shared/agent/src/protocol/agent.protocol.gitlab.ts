@@ -108,6 +108,7 @@ export interface Note {
 	createdAt: string;
 	position: {
 		oldPath: string;
+		oldLine?: number;
 		newPath: string;
 		newLine: number;
 		diffRefs?: any;
@@ -184,7 +185,10 @@ interface Project {
 }
 
 export interface GitLabMergeRequest {
-	approvedBy: {
+	/**
+	 * this might not exist in all versions, was missing in 13.2.3
+	 */
+	approvedBy?: {
 		nodes: {
 			avatarUrl: string;
 			name: string;
@@ -203,6 +207,7 @@ export interface GitLabMergeRequest {
 	/* this might not exist in all editions*/
 	commitCount?: number;
 	createdAt: string;
+	/* this might not exist in all editions*/
 	currentUserTodos?: {
 		nodes: {
 			/* this might not exist in all editions (we don't actually use it)
@@ -249,50 +254,42 @@ export interface GitLabMergeRequest {
 	participants: {
 		nodes: GitLabUser[];
 	};
-	pipelines?: {
-		nodes: {
-			id: string;
-			status:
-				| "CREATED"
-				| "WAITING_FOR_RESOURCE"
-				| "PREPARING"
-				| "PENDING"
-				| "RUNNING"
-				| "FAILED"
-				| "SUCCESS"
-				| "CANCELED"
-				| "SKIPPED"
-				| "MANUAL"
-				| "SCHEDULED"
-				| string;
-			stages: {
-				nodes: {
-					name: string;
-					detailedStatus: {
-						label: string;
-						tooltip: string;
-					};
-				}[];
-			};
-			detailedStatus: {
-				icon: string;
-				label: string;
-				text: string;
-				tooltip: string;
-			};
-			/* this is the branch ref
+	headPipeline?: {
+		id: string;
+		path: string;
+		status:
+			| "CREATED"
+			| "WAITING_FOR_RESOURCE"
+			| "PREPARING"
+			| "PENDING"
+			| "RUNNING"
+			| "FAILED"
+			| "SUCCESS"
+			| "CANCELED"
+			| "SKIPPED"
+			| "MANUAL"
+			| "SCHEDULED"
+			| string;
+		stages: {
+			nodes: {
+				name: string;
+				detailedStatus: {
+					label: string;
+					tooltip: string;
+				};
+			}[];
+		};
+		detailedStatus: {
+			icon: string;
+			label: string;
+			text: string;
+			tooltip: string;
+		};
+		sha?: string;
+		/* link to the pipeline in the web
 			merged in from REST 
 			*/
-			sha?: string;
-			/* this is the branch ref
-			merged in from REST 
-			*/
-			ref?: string;
-			/* link to the pipeline in the web
-			merged in from REST 
-			*/
-			webUrl?: string;
-		}[];
+		webUrl?: string;
 	};
 	pendingReview: {
 		id: string;
@@ -389,5 +386,7 @@ export interface GitLabMergeRequest {
 		};
 		reviewers?: boolean;
 		approvalsRequired?: boolean;
+		approvedBy?: boolean;
+		currentUserTodos?: boolean;
 	};
 }

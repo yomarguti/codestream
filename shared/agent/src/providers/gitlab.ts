@@ -54,9 +54,9 @@ import mergeRequest1Query from "./gitlab/mergeRequest1.graphql";
 import mergeRequestDiscussionQuery from "./gitlab/mergeRequestDiscussions.graphql";
 import mergeRequestNoteMutation from "./gitlab/createMergeRequestNote.graphql";
 import { merge } from "lodash";
-import { parsePatch } from "diff";
 import { GraphqlQueryBuilder } from "./gitlab/graphqlQueryBuilder";
 import { gate } from "../system/decorators/gate";
+import { parsePatch } from "diff";
 
 interface GitLabProject {
 	path_with_namespace: any;
@@ -592,8 +592,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			let errorMessage =
 				ex.response && ex.response.errors
 					? ex.response.errors[0].message
-					: `Unknown ${this.providerConfig.id} error`;
-			errorMessage = `${this.providerConfig.id}: ${errorMessage}`;
+					: `Unknown ${this.providerConfig.name} error`;
+			errorMessage = `${this.providerConfig.name}: ${errorMessage}`;
 			return {
 				error: {
 					type: "PROVIDER",
@@ -861,41 +861,49 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return `${this.baseUrl.replace("/v4", "")}/graphql`;
 	}
 
+	private _providerVersions = new Map<string, ProviderVersion>();
+
+	@gate()
 	protected async getVersion(): Promise<ProviderVersion> {
+		let version;
 		try {
-			if (this._version == null) {
-				const response = await this.get<{
-					version: string;
-					revision: string;
-				}>("/version");
+			// a user could be connected to both GL and GL self-managed
+			version = this._providerVersions.get(this.providerConfig.id);
+			if (version) return version;
 
-				const split = response.body.version.split("-");
-				const version = split[0] || "0.0.0";
+			const response = await this.get<{
+				version: string;
+				revision: string;
+			}>("/version");
 
-				this._version = {
-					version: version,
-					asArray: version.split(".").map(Number),
-					edition: split.length > 1 ? split[1] : undefined,
-					revision: response.body.revision
-				};
+			const split = response.body.version.split("-");
+			const versionOrDefault = split[0] || "0.0.0";
+			version = {
+				version: versionOrDefault,
+				asArray: versionOrDefault.split(".").map(Number),
+				edition: split.length > 1 ? split[1] : undefined,
+				revision: response.body.revision
+			};
 
-				Logger.log(
-					`${this.providerConfig.id} getVersion - ${
-						this.providerConfig.id
-					} version=${JSON.stringify(this._version)}`
-				);
-				Container.instance().errorReporter.reportBreadcrumb({
-					message: `${this.providerConfig.id} getVersion`,
-					data: {
-						...this._version
-					}
-				});
-			}
+			Logger.log(
+				`${this.providerConfig.id} getVersion - ${this.providerConfig.id} version=${JSON.stringify(
+					version
+				)}`
+			);
+
+			Container.instance().errorReporter.reportBreadcrumb({
+				message: `${this.providerConfig.id} getVersion`,
+				data: {
+					...version
+				}
+			});
 		} catch (ex) {
 			Logger.warn(ex, "getVersion");
-			this._version = this.DEFAULT_VERSION;
+			version = this.DEFAULT_VERSION;
 		}
-		return this._version;
+
+		this._providerVersions.set(this.providerConfig.id, version);
+		return version;
 	}
 
 	protected async client(): Promise<GraphQLClient> {
@@ -1052,7 +1060,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				iid: iid.toString()
 			};
 			const queryText0 = await this.graphqlQueryBuilder.build(
-				this._version!.version!,
+				providerVersion!.version!,
 				mergeRequest0Query,
 				"GetPullRequest"
 			);
@@ -1143,26 +1151,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			response.project.mergeRequest.divergedCommitsCount =
 				mergeRequest.body.diverged_commits_count || 0;
 
-			// pipelines
-			const pipelines = await this.restGet<any[]>(
-				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/pipelines?ref=${
-					response.project.mergeRequest.headRefName
-				}`
-			);
-			if (
-				pipelines.body &&
-				pipelines.body.length &&
-				response.project?.mergeRequest?.pipelines &&
-				response.project?.mergeRequest?.pipelines?.nodes.length > 0
-			) {
-				const pipeline = pipelines.body[0];
-				response.project.mergeRequest.pipelines.nodes[0] = {
-					...response.project.mergeRequest.pipelines.nodes[0],
-					id: pipeline.id,
-					ref: pipeline.ref,
-					sha: pipeline.sha,
-					webUrl: pipeline.web_url
-				};
+			if (response.project?.mergeRequest?.headPipeline) {
+				response.project.mergeRequest.headPipeline.webUrl = `${this.baseWebUrl}${response.project.mergeRequest.headPipeline.path}`;
 			}
 
 			const base_id = this.fromMergeRequestGid(response.project.mergeRequest.id);
@@ -1461,6 +1451,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		pullRequestId: string;
 		text: string;
 		filePath: string;
+		oldLineNumber?: number | undefined;
 		startLine?: number;
 		position: number;
 		leftSha?: string;
@@ -1494,12 +1485,17 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		pullRequestReviewId?: string;
 		text: string;
 		filePath?: string;
+		oldLineNumber?: number | undefined;
 		startLine?: number;
 		position?: number;
 		leftSha?: string;
 		sha?: string;
 	}) {
 		const { id, iid, projectFullPath } = this.parseId(request.pullRequestId);
+
+		Logger.log(`createPullRequestReviewComment project=${projectFullPath} iid=${iid}`, {
+			request: request
+		});
 
 		this.gitLabReviewStore.add(new GitLabId(projectFullPath, iid), {
 			...request,
@@ -2567,6 +2563,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		leftSha: string;
 		rightSha: string;
 		filePath: string;
+		oldLineNumber?: number | undefined;
 		startLine: number;
 		position?: number;
 		metadata?: any;
@@ -2588,7 +2585,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		sha: string;
 		text: string;
 		path: string;
-		startLine: number;
+		oldLineNumber?: number | undefined;
+		startLine?: number | undefined;
 		// use endLine for multi-line comments
 		endLine?: number;
 		// used for old servers
@@ -2616,6 +2614,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			};
 
+			if (request.oldLineNumber != null) {
+				// seems related to this https://gitlab.com/gitlab-org/gitlab/-/issues/281143
+				(payload.position as any).old_line = request.oldLineNumber;
+			}
+
+			Logger.log(`createCommitComment project=${projectFullPath} iid=${iid}`, {
+				payload: payload
+			});
 			// https://docs.gitlab.com/ee/api/discussions.html#create-new-merge-request-thread
 			const data = await this.restPost<any, any>(
 				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/discussions`,
@@ -2942,7 +2948,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	private avatarUrl(url: string) {
-		return url.startsWith("/") ? `${this.baseWebUrl}${url}` : url;
+		return url?.startsWith("/") ? `${this.baseWebUrl}${url}` : url;
 	}
 
 	private fromRestUser(user: { [key: string]: any }) {
@@ -3175,6 +3181,7 @@ class GitLabReviewStore {
 						bodyText: _.text,
 						createdAt: _.createdAt,
 						position: {
+							oldLine: _.oldLineNumber,
 							oldPath: _.filePath,
 							newPath: _.filePath,
 							newLine: _.startLine
