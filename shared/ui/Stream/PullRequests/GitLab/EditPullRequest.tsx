@@ -225,7 +225,7 @@ export const EditPullRequest = props => {
 	};
 
 	const labelMenuItems = React.useMemo(() => {
-		if (availableLabels && availableLabels.length) {
+		if (availableLabels) {
 			const existingLabelIds = labelsField ? labelsField.map(_ => _.id) : [];
 			const menuItems = availableLabels.map((_: any) => {
 				const longId = `gid://gitlab/ProjectLabel/${_.id}`;
@@ -250,20 +250,22 @@ export const EditPullRequest = props => {
 					}
 				};
 			}) as any;
-			menuItems.unshift({ type: "search", placeholder: "Filter labels" });
-			return menuItems;
-		} else if (availableLabels) {
-			return [
-				{
-					label: "Manage Labels",
-					action: () => {
-						HostApi.instance.send(OpenUrlRequestType, {
-							url: `${pr.repository.url}/-/labels`
-						});
-						setAvailableLabels(undefined);
-					}
+
+			if (availableLabels.length > 5)
+				menuItems.unshift({ type: "search", placeholder: "Filter labels" });
+
+			if (availableLabels.length > 0) menuItems.push({ label: "-" });
+
+			menuItems.push({
+				label: "Manage Labels",
+				action: () => {
+					HostApi.instance.send(OpenUrlRequestType, {
+						url: `${pr.repository.url}/-/labels`
+					});
+					setAvailableLabels(undefined);
 				}
-			];
+			});
+			return menuItems;
 		} else {
 			return [{ label: <LoadingMessage>Loading Labels...</LoadingMessage>, noHover: true }];
 		}
