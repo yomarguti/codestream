@@ -1773,12 +1773,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		availableLabels: GitLabLabel[];
 		milestoneId: string;
 		assigneeId: string;
+		reviewerIds: string;
 		// deleteSourceBranch?: boolean;
 		// squashCommits?: boolean;
 	}): Promise<Directives | undefined> {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		try {
+			const updateReviewers = request.reviewerIds && request.reviewerIds.length > 0;
 			const requestBody: {
 				target_branch: string;
 				title: string;
@@ -1786,6 +1788,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				labels: string;
 				assignee_id?: string;
 				assignee_ids?: string;
+				reviewer_ids?: string;
 				milestone_id: string;
 			} = {
 				target_branch: request.targetBranch,
@@ -1799,6 +1802,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			if (request.assigneeId.includes(",")) {
 				delete requestBody.assignee_id;
 				requestBody.assignee_ids = request.assigneeId;
+			}
+			if (updateReviewers) {
+				requestBody.reviewer_ids = request.reviewerIds;
 			}
 			const { body } = await this.restPut<any, any>(
 				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`,
@@ -1828,6 +1834,17 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 									};
 								})
 							},
+							reviewers: updateReviewers
+								? {
+										nodes: body.reviewers.map((reviewer: any) => {
+											return {
+												...reviewer,
+												login: reviewer.username,
+												avatarUrl: this.avatarUrl(reviewer.avatar_url)
+											};
+										})
+								  }
+								: undefined,
 							milestone,
 							labels: {
 								nodes: body.labels

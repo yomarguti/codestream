@@ -25,6 +25,7 @@ import Timestamp from "../../Timestamp";
 import { Circle } from "../../PullRequestConversationTab";
 import { HostApi } from "@codestream/webview/index";
 import { OpenUrlRequestType } from "../../../ipc/host.protocol";
+import { getCurrentProviderPullRequest } from "@codestream/webview/store/providerPullRequests/reducer";
 
 const Label = styled.div`
 	margin-top: 20px;
@@ -100,8 +101,11 @@ let focusOnMessageInput;
 export const EditPullRequest = props => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
-		const { preferences } = state;
-		return {};
+		const currentPullRequest = getCurrentProviderPullRequest(state);
+		return {
+			supportsReviewers:
+				currentPullRequest?.conversations?.project?.mergeRequest?.supports?.reviewers
+		};
 	});
 
 	const { pr, setIsEditing } = props;
@@ -126,6 +130,10 @@ export const EditPullRequest = props => {
 					? milestoneField.id.toString().replace("gid://gitlab/Milestone/", "")
 					: "",
 				assigneeId: assigneesField
+					.filter(_ => _.id)
+					.map(_ => _.id.toString().replace("gid://gitlab/User/", ""))
+					.join(","),
+				reviewerIds: reviewersField
 					.filter(_ => _.id)
 					.map(_ => _.id.toString().replace("gid://gitlab/User/", ""))
 					.join(","),
@@ -164,12 +172,58 @@ export const EditPullRequest = props => {
 
 	useDidMount(() => {
 		fetchAvailableAssignees();
+		if (derivedState.supportsReviewers) fetchAvailableReviewers();
 		fetchAvailableMilestones();
 		fetchAvailableLabels();
 		fetchRemoteBranches();
 	});
 
 	const cancel = () => setIsEditing(false);
+
+	const [availableReviewers, setAvailableReviewers] = useState(EMPTY_ARRAY_3);
+	const fetchAvailableReviewers = async (e?) => {
+		if (availableReviewers === undefined) {
+			setAvailableReviewers([]);
+		}
+		const reviewers = (await dispatch(api("getReviewers", {}))) as any;
+		setAvailableReviewers(reviewers.users);
+	};
+
+	const [reviewersField, setReviewersField] = useState(pr.reviewers ? pr.reviewers.nodes : []);
+	const reviewersLabel =
+		reviewersField.length > 0 ? (
+			<SmartFormattedList value={reviewersField.map(_ => _.login)} />
+		) : (
+			"None"
+		);
+
+	const reviewersMenuItems = React.useMemo(() => {
+		const reviewerIds = reviewersField.map(_ => _.login);
+		if (availableReviewers && availableReviewers.length) {
+			const menuItems = (availableReviewers || []).map((_: any) => {
+				const longId = `gid://gitlab/User/${_.id}`;
+				const checked = reviewerIds.includes(_.login) || reviewerIds.includes(longId);
+				return {
+					checked,
+					label: <PRHeadshotName person={{ ..._, user: _.login }} className="no-padding" />,
+					subtle: _.name,
+					searchLabel: `${_.login}:${_.name}`,
+					key: _.id,
+					action: () => {
+						const newReviewers = [
+							...reviewersField.filter(reviewer => reviewer.id !== _.id && reviewer.id !== longId)
+						];
+						if (!checked) newReviewers.unshift(_);
+						setReviewersField(newReviewers);
+					}
+				} as any;
+			});
+			menuItems.unshift({ type: "search", placeholder: "Type or choose a name" });
+			return menuItems;
+		} else {
+			return [{ label: <LoadingMessage>Loading reviewerss...</LoadingMessage>, noHover: true }];
+		}
+	}, [availableReviewers, reviewersField]);
 
 	const [availableAssignees, setAvailableAssignees] = useState(EMPTY_ARRAY_3);
 	const fetchAvailableAssignees = async (e?) => {
@@ -402,6 +456,18 @@ export const EditPullRequest = props => {
 										</div>
 									</ResponsiveValue>
 								</ResponsiveRow>
+								{derivedState.supportsReviewers && (
+									<ResponsiveRow>
+										<ResponsiveLabel>Reviewer(s)</ResponsiveLabel>
+										<ResponsiveValue>
+											<div style={{ display: "flex", flexWrap: "wrap", alignItems: "center" }}>
+												<DropdownButton fillParent variant="secondary" items={reviewersMenuItems}>
+													{reviewersLabel}
+												</DropdownButton>
+											</div>
+										</ResponsiveValue>
+									</ResponsiveRow>
+								)}
 								<ResponsiveRow>
 									<ResponsiveLabel>Milestone</ResponsiveLabel>
 									<ResponsiveValue>
