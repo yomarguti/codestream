@@ -34,6 +34,7 @@ export const ApproveBox = (props: { pr: GitLabMergeRequest }) => {
 		props.pr.supports?.approvedBy && props.pr.approvedBy ? props.pr.approvedBy.nodes : [];
 	const iHaveApproved = approvers.find(_ => _.login === props.pr.viewer.login);
 	const isApproved = approvers.length > 0;
+
 	const render = () => {
 		if (isApproved) {
 			return (
@@ -50,30 +51,49 @@ export const ApproveBox = (props: { pr: GitLabMergeRequest }) => {
 				</>
 			);
 		}
-
+		const approvalOptional = (
+			<>
+				Approval is optional
+				{!props.pr.mergedAt && (
+					<>
+						{" "}
+						<Link
+							href={`${props.pr.baseWebUrl}/help/user/project/merge_requests/merge_request_approvals`}
+						>
+							<Icon name="info" title="About this feature" placement="top" />
+						</Link>
+					</>
+				)}
+			</>
+		);
 		if (props.pr.supports.approvalsRequired) {
 			if (!props.pr.approvalsRequired) {
-				return (
-					<>
-						Approval is optional
-						{!props.pr.mergedAt && (
-							<>
-								{" "}
-								<Link
-									href={`${props.pr.baseWebUrl}/help/user/project/merge_requests/merge_request_approvals`}
-								>
-									<Icon name="info" title="About this feature" placement="top" />
-								</Link>
-							</>
-						)}
-					</>
-				);
+				return approvalOptional;
 			} else {
 				return <>Requires approval</>;
 			}
 		}
-		return null;
+		return approvalOptional;
 	};
+
+	if (
+		// needs to check for exactly false, because it might be undefined if this endpoint doesn't exist
+		// on this GL instance
+		props.pr.approvalsAuthorCanApprove === false &&
+		props.pr.author?.login === props.pr.viewer.login
+	) {
+		return (
+			<OutlineBox>
+				<FlexRow>
+					<div className="row-icon" style={{ position: "relative" }}>
+						<Icon name="person" className="bigger" />
+						<Icon name="check" className="overlap" />
+					</div>
+					<div>{render()}</div>
+				</FlexRow>
+			</OutlineBox>
+		);
+	}
 
 	return (
 		<OutlineBox>
