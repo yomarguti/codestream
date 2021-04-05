@@ -1779,17 +1779,30 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		try {
+			const requestBody: {
+				target_branch: string;
+				title: string;
+				description: string;
+				labels: string;
+				assignee_id?: string;
+				assignee_ids?: string;
+				milestone_id: string;
+			} = {
+				target_branch: request.targetBranch,
+				title: request.title,
+				description: request.description,
+				labels: request.labels,
+				assignee_id: request.assigneeId,
+				milestone_id: request.milestoneId
+				// squash: !!request.squashCommits
+			};
+			if (request.assigneeId.includes(",")) {
+				delete requestBody.assignee_id;
+				requestBody.assignee_ids = request.assigneeId;
+			}
 			const { body } = await this.restPut<any, any>(
 				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`,
-				{
-					target_branch: request.targetBranch,
-					title: request.title,
-					description: request.description,
-					labels: request.labels,
-					assignee_id: request.assigneeId,
-					milestone_id: request.milestoneId
-					// squash: !!request.squashCommits
-				}
+				requestBody
 			);
 			Logger.log("editPullRequest response: " + JSON.stringify(body, null, 4));
 			const milestone = body.milestone || null;
