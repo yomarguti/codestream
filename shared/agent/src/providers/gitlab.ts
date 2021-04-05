@@ -1152,7 +1152,13 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				mergeRequest.body.diverged_commits_count || 0;
 
 			if (response.project?.mergeRequest?.headPipeline) {
-				response.project.mergeRequest.headPipeline.webUrl = `${this.baseWebUrl}${response.project.mergeRequest.headPipeline.path}`;
+				response.project.mergeRequest.headPipeline.gid =
+					response.project.mergeRequest.headPipeline.id;
+				response.project.mergeRequest.headPipeline.id = response.project.mergeRequest.headPipeline.id.replace(
+					"gid://gitlab/Ci::Pipeline/",
+					""
+				);
+				response.project.mergeRequest.headPipeline.webUrl = `${this.baseWebUrl}/${response.project.mergeRequest.project.fullPath}/-/pipelines/${response.project.mergeRequest.headPipeline.id}`;
 			}
 
 			const base_id = this.fromMergeRequestGid(response.project.mergeRequest.id);
