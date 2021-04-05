@@ -255,8 +255,18 @@ export interface GitLabMergeRequest {
 		nodes: GitLabUser[];
 	};
 	headPipeline?: {
+		/**
+		 * this is the numeric id from the gid
+		 */
 		id: string;
-		path: string;
+		/**
+		 * this is the gid://
+		 */
+		gid: string;
+		/* this might not exist in all editions
+			we can craft this in other ways
+		*/
+		// path: string;
 		status:
 			| "CREATED"
 			| "WAITING_FOR_RESOURCE"
@@ -287,8 +297,7 @@ export interface GitLabMergeRequest {
 		};
 		sha?: string;
 		/* link to the pipeline in the web
-			merged in from REST 
-			*/
+		this is a computed property */
 		webUrl?: string;
 	};
 	pendingReview: {

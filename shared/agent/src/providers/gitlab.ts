@@ -1152,7 +1152,13 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				mergeRequest.body.diverged_commits_count || 0;
 
 			if (response.project?.mergeRequest?.headPipeline) {
-				response.project.mergeRequest.headPipeline.webUrl = `${this.baseWebUrl}${response.project.mergeRequest.headPipeline.path}`;
+				response.project.mergeRequest.headPipeline.gid =
+					response.project.mergeRequest.headPipeline.id;
+				response.project.mergeRequest.headPipeline.id = response.project.mergeRequest.headPipeline.id.replace(
+					"gid://gitlab/Ci::Pipeline/",
+					""
+				);
+				response.project.mergeRequest.headPipeline.webUrl = `${this.baseWebUrl}/${response.project.mergeRequest.project.fullPath}/-/pipelines/${response.project.mergeRequest.headPipeline.id}`;
 			}
 
 			const base_id = this.fromMergeRequestGid(response.project.mergeRequest.id);
@@ -1767,23 +1773,42 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		availableLabels: GitLabLabel[];
 		milestoneId: string;
 		assigneeId: string;
+		reviewerIds: string;
 		// deleteSourceBranch?: boolean;
 		// squashCommits?: boolean;
 	}): Promise<Directives | undefined> {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		try {
+			const updateReviewers = request.reviewerIds && request.reviewerIds.length > 0;
+			const requestBody: {
+				target_branch: string;
+				title: string;
+				description: string;
+				labels: string;
+				assignee_id?: string;
+				assignee_ids?: string;
+				reviewer_ids?: string;
+				milestone_id: string;
+			} = {
+				target_branch: request.targetBranch,
+				title: request.title,
+				description: request.description,
+				labels: request.labels,
+				assignee_id: request.assigneeId,
+				milestone_id: request.milestoneId
+				// squash: !!request.squashCommits
+			};
+			if (request.assigneeId.includes(",")) {
+				delete requestBody.assignee_id;
+				requestBody.assignee_ids = request.assigneeId;
+			}
+			if (updateReviewers) {
+				requestBody.reviewer_ids = request.reviewerIds;
+			}
 			const { body } = await this.restPut<any, any>(
 				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`,
-				{
-					target_branch: request.targetBranch,
-					title: request.title,
-					description: request.description,
-					labels: request.labels,
-					assignee_id: request.assigneeId,
-					milestone_id: request.milestoneId
-					// squash: !!request.squashCommits
-				}
+				requestBody
 			);
 			Logger.log("editPullRequest response: " + JSON.stringify(body, null, 4));
 			const milestone = body.milestone || null;
@@ -1809,6 +1834,17 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 									};
 								})
 							},
+							reviewers: updateReviewers
+								? {
+										nodes: body.reviewers.map((reviewer: any) => {
+											return {
+												...reviewer,
+												login: reviewer.username,
+												avatarUrl: this.avatarUrl(reviewer.avatar_url)
+											};
+										})
+								  }
+								: undefined,
 							milestone,
 							labels: {
 								nodes: body.labels
