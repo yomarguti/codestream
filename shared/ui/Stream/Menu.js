@@ -614,7 +614,9 @@ export default class Menu extends Component {
 
 	handleMultiSelectKeyUp = event => {
 		if (event.key === "Shift" || event.which === 16) {
-			this.setState({ isShiftHolded: false, itemsRange: [] });
+			if(!this.state.isShiftHolded) {
+				this.setState({isShiftHolded: false, itemsRange: []});
+			}
 		}
 	};
 
