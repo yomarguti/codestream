@@ -197,6 +197,11 @@ export interface GitLabMergeRequest {
 	};
 	approvalsRequired?: boolean;
 	approvalsLeft?: number;
+	/** Decides if the MR author can approve the MR or not
+	 *
+	 * this will be undefined for older GL instances
+	 */
+	approvalsAuthorCanApprove?: boolean;
 	author: GitLabUser;
 	assignees: {
 		nodes: GitLabUser[];

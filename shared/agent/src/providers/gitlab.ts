@@ -1023,6 +1023,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	_pullRequestCache: Map<string, GitLabMergeRequestWrapper> = new Map();
+	_ignoredFeatures: Map<"approvals", boolean> = new Map();
 
 	async getReviewers(request: { pullRequestId: string }) {
 		const { projectFullPath } = this.parseId(request.pullRequestId);
@@ -1136,9 +1137,27 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			response.project.onlyAllowMergeIfPipelineSucceeds =
 				project.body.only_allow_merge_if_pipeline_succeeds;
 			const users = await this.getAssignableUsers({ boardId: encodeURIComponent(projectFullPath) });
+
+			// if you are part of the project, you will see the approve box UI
+			// from there there can be further restrictions
 			response.project.mergeRequest.userPermissions.canApprove = !!users?.users.find(
 				(_: any) => _.username === response.currentUser.login
 			);
+
+			try {
+				if (this._ignoredFeatures.get("approvals") !== true) {
+					// approval settings
+					const approvals = await this.restGet<{
+						merge_requests_author_approval: boolean;
+					}>(`/projects/${encodeURIComponent(projectFullPath)}/approvals`);
+					response.project.mergeRequest.approvalsAuthorCanApprove =
+						approvals.body.merge_requests_author_approval;
+				}
+			} catch (ex) {
+				Logger.warn("approvals", { error: ex });
+				this._ignoredFeatures.set("approvals", true);
+				Logger.log("Ignoring 'approvals'");
+			}
 
 			// merge request settings
 			const mergeRequest = await this.restGet<{
