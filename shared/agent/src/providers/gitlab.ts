@@ -785,31 +785,66 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 		let items;
 		let promises: Promise<ApiResponse<any>>[] = [];
+		const createQueryString = (query: string) =>
+			query
+				.trim()
+				.split(" ")
+				.map(kvp => this.toKeyValuePair(kvp, currentUser))
+				.join("&");
+
 		if (repos.length) {
 			// https://docs.gitlab.com/ee/api/merge_requests.html
-			queries.forEach(query => {
-				const exploded = query
-					.split(" ")
-					.map(q => this.toKeyValuePair(q, currentUser))
-					.join("&");
+			const buildUrl = (repo: string, query: string) => {
+				return `/projects/${encodeURIComponent(repo)}/merge_requests?${createQueryString(
+					query
+				)}&with_labels_details=true`;
+			};
 
-				repos.forEach(repo => {
-					const url = `/projects/${encodeURIComponent(
-						repo
-					)}/merge_requests?${exploded}&with_labels_details=true`;
-					// Logger.debug(`getMyPullRequests id=${this.providerConfig.id} url=${url}`);
-					promises.push(this.get<any>(url));
-				});
-			});
+			for (const query of queries) {
+				const splits = query.split(",");
+				if (splits.length > 1) {
+					let results: any = { body: {} };
+					const splitPromises = [];
+					for (const split of splits) {
+						for (const repo of repos) {
+							splitPromises.push(this.get<any>(buildUrl(repo, split)));
+						}
+					}
+					const resolveSplitPromises = await Promise.all(splitPromises);
+					// merge the results of the split promises so that it appears as if it's 1 query
+					results = merge(results, ...resolveSplitPromises);
+					promises.push(new Promise(resolve => resolve(results)));
+				} else {
+					splits.forEach(split => {
+						repos.forEach(repo => {
+							promises.push(this.get<any>(buildUrl(repo, split)));
+						});
+					});
+				}
+			}
 		} else {
-			promises = queries.map(query => {
-				const url = `/merge_requests?${query
-					.split(" ")
-					.map(q => this.toKeyValuePair(q, currentUser))
-					.join("&")}&with_labels_details=true`;
-				// Logger.debug(`getMyPullRequests id=${this.providerConfig.id} url=${url}`);
-				return this.get<any>(url);
-			});
+			const buildUrl = (query: string) => {
+				return `/merge_requests?${createQueryString(query)}&with_labels_details=true`;
+			};
+
+			for (const query of queries) {
+				const splits = query.split(",");
+				if (splits.length > 1) {
+					let results: any = { body: {} };
+					const splitPromises = [];
+					for (const split of splits) {
+						splitPromises.push(this.get<any>(buildUrl(split)));
+					}
+					const resolveSplitPromises = await Promise.all(splitPromises);
+					// merge the results of the split promises so that it appears as if it's 1 query
+					results = merge(results, ...resolveSplitPromises);
+					promises.push(new Promise(resolve => resolve(results)));
+				} else {
+					splits.forEach(split => {
+						promises.push(this.get<any>(buildUrl(split)));
+					});
+				}
+			}
 		}
 
 		items = await Promise.all(promises).catch(ex => {
@@ -864,7 +899,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	private _providerVersions = new Map<string, ProviderVersion>();
 
 	@gate()
-	protected async getVersion(): Promise<ProviderVersion> {
+	async getVersion(): Promise<ProviderVersion> {
 		let version;
 		try {
 			// a user could be connected to both GL and GL self-managed

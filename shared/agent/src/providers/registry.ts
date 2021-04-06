@@ -1,5 +1,6 @@
 "use strict";
 import { differenceWith } from "lodash-es";
+import semver from "semver";
 import { CSMe } from "protocol/api.protocol";
 import { URI } from "vscode-uri";
 import { SessionContainer } from "../container";
@@ -41,6 +42,8 @@ import {
 	FetchThirdPartyChannelsRequest,
 	FetchThirdPartyChannelsRequestType,
 	FetchThirdPartyChannelsResponse,
+	FetchProviderDefaultPullRequest,
+	FetchProviderDefaultPullRequestsType,
 	FetchThirdPartyPullRequestCommitsRequest,
 	FetchThirdPartyPullRequestCommitsType,
 	FetchThirdPartyPullRequestRequest,
@@ -60,6 +63,7 @@ import {
 } from "../protocol/agent.protocol";
 import { CodeStreamSession } from "../session";
 import { getProvider, getRegisteredProviders, log, lsp, lspHandler } from "../system";
+import { GitLabEnterpriseProvider } from "./gitlabEnterprise";
 import {
 	ProviderCreatePullRequestRequest,
 	ProviderCreatePullRequestResponse,
@@ -682,6 +686,139 @@ export class ThirdPartyProviderRegistry {
 
 		Logger.log(`queryThirdParty: no matching provider found for ${request.url}`);
 		return undefined;
+	}
+
+	@log()
+	@lspHandler(FetchProviderDefaultPullRequestsType)
+	async getProviderDefaultPullRequestQueries(request: FetchProviderDefaultPullRequest) {
+		const response = {
+			"github*com": [
+				{
+					providerId: "github*com",
+					name: "Waiting on my Review",
+					query: `is:pr is:open review-requested:@me`,
+					hidden: false
+				},
+				{
+					providerId: "github*com",
+					name: "Assigned to Me",
+					query: `is:pr is:open assignee:@me`,
+					hidden: false
+				},
+				{
+					providerId: "github*com",
+					name: "Created by Me",
+					query: `is:pr is:open author:@me`,
+					hidden: false
+				},
+				{
+					providerId: "github*com",
+					name: "Recent",
+					query: `recent`,
+					hidden: false
+				}
+			],
+			"github/enterprise": [
+				{
+					providerId: "github/enterprise",
+					name: "Waiting on my Review",
+					query: `is:pr is:open review-requested:@me`,
+					hidden: false
+				},
+				{
+					providerId: "github/enterprise",
+					name: "Assigned to Me",
+					query: `is:pr is:open assignee:@me`,
+					hidden: false
+				},
+				{
+					providerId: "github/enterprise",
+					name: "Created by Me",
+					query: `is:pr is:open author:@me`,
+					hidden: false
+				},
+				{
+					providerId: "github/enterprise",
+					name: "Recent",
+					query: `recent`,
+					hidden: false
+				}
+			],
+			"gitlab*com": [
+				{
+					providerId: "gitlab*com",
+					name: "Waiting on my Review",
+					query: `state:opened reviewer_username:@me scope:all`,
+					hidden: false
+				},
+				{
+					providerId: "gitlab*com",
+					name: "Assigned to Me",
+					query: `state:opened scope:assigned_to_me`,
+					hidden: false
+				},
+				{
+					providerId: "gitlab*com",
+					name: "Created by Me",
+					query: `state:opened scope:created_by_me`,
+					hidden: false
+				},
+				{
+					providerId: "gitlab*com",
+					name: "Recent",
+					query: `recent`,
+					hidden: false
+				}
+			],
+			"gitlab/enterprise": [
+				{
+					providerId: "gitlab/enterprise",
+					name: "Waiting on my Review",
+					query: `state:opened reviewer_username:@me scope:all`,
+					hidden: false
+				},
+				{
+					providerId: "gitlab/enterprise",
+					name: "Assigned to Me",
+					query: `state:opened scope:assigned_to_me`,
+					hidden: false
+				},
+				{
+					providerId: "gitlab/enterprise",
+					name: "Created by Me",
+					query: `state:opened scope:created_by_me`,
+					hidden: false
+				},
+				{
+					providerId: "gitlab/enterprise",
+					name: "Recent",
+					query: `recent`,
+					hidden: false
+				}
+			]
+		};
+		try {
+			const user = await SessionContainer.instance().session.api.meUser;
+			const providers = await this.getConnectedPullRequestProviders(user!);
+			const gitlabEnterprise = providers?.find(_ => _.getConfig().id === "gitlab/enterprise");
+			if (gitlabEnterprise) {
+				const version = await ((gitlabEnterprise as any) as GitLabEnterpriseProvider).getVersion();
+				if (version && version.version && semver.lt(version.version, "13.8.0")) {
+					// if doesn't support reviewers, change the first query
+					response["gitlab/enterprise"][0] = {
+						providerId: "gitlab/enterprise",
+						name: "All Open MRs",
+						query: `state:opened scope:all`,
+						hidden: false
+					};
+				}
+			}
+		} catch (ex) {
+			Logger.warn("getProviderDefaultPullRequestQueries", {
+				error: ex
+			});
+		}
+		return response;
 	}
 
 	private getPullRequestProvider(
