@@ -68,8 +68,13 @@ class GutterIconRendererImpl(val editor: Editor, val marker: DocumentMarker) : G
                 "<a href='#codemark/link/${CodemarkType.LINK},${rangeString}'>Get Permalink</a>"
         } else if (marker.externalContent != null) {
             tooltip += "${marker.summary} \n\n"
-            tooltip += "<b>PULL REQUEST</b> \n\n"
-            tooltip += "<img src='${getIconLink("pr")}'> &nbsp; "
+            tooltip += when(marker.externalContent.provider?.id) {
+                "github*com" -> "<b>PULL REQUEST</b> \n\n <img src='${getIconLink("pr")}'> &nbsp; "
+                "github/enterprise" -> "<b>PULL REQUEST</b> \n\n <img src='${getIconLink("pr")}'> &nbsp; "
+                "gitlab*com" -> "<b>MERGE REQUEST</b> \n\n <img src='${getIconLink("mr-gitlab")}'> &nbsp; "
+                "gitlab/enterprise" -> "<b>MERGE REQUEST</b> \n\n <img src='${getIconLink("mr-gitlab")}'> &nbsp; "
+                else -> "<b>MERGE REQUEST</b> \n\n"
+            }
             if (marker.title !== null) {
                 tooltip += "${marker.title} "
             }
@@ -82,7 +87,10 @@ class GutterIconRendererImpl(val editor: Editor, val marker: DocumentMarker) : G
                 }
             }
             if (marker.externalContent.provider?.id == "github*com" ||
-                marker.externalContent.provider?.id == "github/enterprise") {
+                marker.externalContent.provider?.id == "github/enterprise" ||
+                marker.externalContent.provider?.id == "gitlab*com" ||
+                marker.externalContent.provider?.id == "gitlab/enterprise"
+            ) {
                 tooltip += "\n\n<a href='#pr/show/${marker.externalContent.provider?.id}" +
                     "/${marker.externalContent.externalId}/${marker.externalContent.externalChildId}'>View Comment</a>"
             }
@@ -212,17 +220,23 @@ class GutterPullRequestTooltipLinkHandler : TooltipLinkHandler() {
 
         val prData = prLink.split("/")
 
-        project.webViewService?.postNotification(
-            PullRequestNotifications.Show(
-                prData[0],
-                prData[1],
-                prData[2]
+        if (prData.size > 2) {
+            val prId = prData.slice(1..prData.size-2).joinToString( separator = "/")
+            project.webViewService?.postNotification(
+                PullRequestNotifications.Show(
+                    prData[0],
+                    prId,
+                    prData[prData.size - 1]
+                )
             )
-        )
 
-        telemetryPr(project, editor.document.file is ReviewDiffVirtualFile, prData[0])
+            telemetryPr(project, editor.document.file is ReviewDiffVirtualFile, prData[0])
 
-        return super.handleLink(prLink, editor)
+            return true
+        } else {
+            throw IllegalArgumentException("Unsupported tooltip link format")
+            return false
+        }
     }
 }
 
