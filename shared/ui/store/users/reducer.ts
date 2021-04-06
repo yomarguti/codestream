@@ -166,15 +166,18 @@ interface Readable {
 	id: string;
 	numReplies: number;
 	modifiedAt: number;
+	creatorId: string;
 }
 
-const isItemUnread = (item: Readable, lastReadItem: number | undefined) => {
+const isItemUnread = (item: Readable, lastReadItem: number | undefined, userId: string) => {
 	// start represents when this feature was first deployed;
 	// items before that won't have the unread badge otherwise
 	// customers will just have a "sea of blue" even though they
 	// may be up-to-date on all content
 	const start = 1616167117000;
 	if (item.modifiedAt < start) return false;
+	// if we are the author and there are no replies, the not unread
+	if (item.creatorId == userId && item.numReplies == 0) return false;
 	// if we've never read the item, or if there are new replies
 	// since the last time we read it, return true
 	return lastReadItem == undefined || item.numReplies > lastReadItem;
@@ -182,18 +185,20 @@ const isItemUnread = (item: Readable, lastReadItem: number | undefined) => {
 
 export const isUnread = createSelector(
 	(state: CodeStreamState) => (isFeatureEnabled(state, "readItem") ? state.umis : undefined),
-	(a: any, item: Readable) => item,
-	(umis: UnreadsState | undefined, item: Readable) => {
+	(state: CodeStreamState) => state.session.userId || "",
+	(_a: any, item: Readable) => item,
+	(umis: UnreadsState | undefined, userId: string, item: Readable) => {
 		if (!umis || !item) return false;
 		const { lastReadItems } = umis;
-		return isItemUnread(item, lastReadItems[item.id]);
+		return isItemUnread(item, lastReadItems[item.id], userId);
 	}
 );
 
 export const unreadMap = createSelector(
 	(state: CodeStreamState) => (isFeatureEnabled(state, "readItem") ? state.umis : undefined),
-	(a: any, items: Readable[]) => items,
-	(umis: UnreadsState | undefined, items: Readable[]) => {
+	(state: CodeStreamState) => state.session.userId || "",
+	(_a: any, items: Readable[]) => items,
+	(umis: UnreadsState | undefined, userId: string, items: Readable[]) => {
 		const ret = {};
 		// if it's not supported, just return false for every item
 		if (!umis) {
@@ -204,7 +209,7 @@ export const unreadMap = createSelector(
 		}
 		const { lastReadItems = {} } = umis;
 		items.filter(Boolean).forEach(item => {
-			ret[item.id] = isItemUnread(item, lastReadItems[item.id]);
+			ret[item.id] = isItemUnread(item, lastReadItems[item.id], userId);
 		});
 		return ret;
 	}
