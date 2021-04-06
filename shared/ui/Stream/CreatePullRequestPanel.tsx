@@ -1039,9 +1039,24 @@ export const CreatePullRequestPanel = props => {
 			let element = getErrorElement(preconditionError);
 			if (element) {
 				return (
-					<PRError>
-						<Icon name="alert" /> {element}
-					</PRError>
+					<>
+						{(acrossForks || openRepos.length > 1) && !reviewId && (
+							<PRError>
+								<div className="control-group">
+									<PRCompare>
+										<PRDropdown>
+											{!acrossForks && <Icon name="repo" />}
+											{renderBaseReposDropdown()}
+										</PRDropdown>
+									</PRCompare>
+								</div>
+							</PRError>
+						)}
+						<PRError>
+							<Icon name="alert" />
+							{element}
+						</PRError>
+					</>
 				);
 			}
 		}
