@@ -1146,6 +1146,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			// massage the authors to get a fully qualified url
 			this.toAuthorAbsolutePath(response.project.mergeRequest.author);
 			[
+				response.project.mergeRequest.approvedBy,
 				response.project.mergeRequest.assignees,
 				response.project.mergeRequest.participants,
 				response.project.mergeRequest.reviewers
