@@ -569,6 +569,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			return {
 				parent: {
 					nameWithOwner: parentProject.path_with_namespace,
+					owner: {
+						login: parentProject.namespace.path
+					},
 					id: parentProject.id,
 					refs: {
 						nodes: branchesByProjectId.get(parentProject.id)!.map(branch => ({ name: branch.name }))
