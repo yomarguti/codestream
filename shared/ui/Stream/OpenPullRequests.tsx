@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import * as providerSelectors from "../store/providers/reducer";
 import { CodeStreamState } from "../store";
@@ -18,6 +18,7 @@ import {
 	GetMyPullRequestsResponse,
 	DidChangeDataNotificationType,
 	ChangeDataType,
+	FetchProviderDefaultPullRequestsType,
 	ThirdPartyProviderConfig
 } from "@codestream/protocols/agent";
 import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
@@ -31,7 +32,6 @@ import { setUserPreference, openPanel } from "./actions";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { confirmPopup } from "./Confirm";
 import { ConfigurePullRequestQuery } from "./ConfigurePullRequestQuery";
-import { DEFAULT_QUERIES, getSavedPullRequestQueries } from "../store/preferences/reducer";
 import { PullRequestQuery } from "@codestream/protocols/api";
 import { configureAndConnectProvider } from "../store/providers/actions";
 import {
@@ -43,7 +43,7 @@ import {
 	PaneState
 } from "../src/components/Pane";
 import { Provider, IntegrationButtons } from "./IntegrationsPanel";
-import { usePrevious } from "../utilities/hooks";
+import { useDidMount, usePrevious } from "../utilities/hooks";
 import { getMyPullRequests as getMyPullRequestsSelector } from "../store/providerPullRequests/reducer";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { getPRLabel } from "../store/providers/reducer";
@@ -190,13 +190,12 @@ let hasRenderedOnce = false;
 const e: ThirdPartyProviderConfig[] = [];
 export const OpenPullRequests = React.memo((props: Props) => {
 	const dispatch = useDispatch();
+	const mountedRef = useRef(false);
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { preferences, repos } = state;
 
 		const team = state.teams[state.context.currentTeamId];
 		const teamSettings = team.settings ? team.settings : EMPTY_HASH;
-
-		const queries = getSavedPullRequestQueries(state);
 
 		const prSupportedProviders = providerSelectors
 			.getSupportedPullRequestHosts(state)
@@ -211,7 +210,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		return {
 			repos,
 			teamSettings,
-			queries,
+			pullRequestQueries: state.preferences.pullRequestQueries,
 			myPullRequests,
 			isPRSupportedCodeHostConnected: prConnectedProviders.length > 0,
 			PRSupportedProviders: prSupportedProviders,
@@ -239,8 +238,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			.length > 0;
 	// console.log(hasPRSupportedRepos, openReposWithName);
 
-	const { queries, PRConnectedProviders, pullRequestProviderHidden, prLabel } = derivedState;
-
+	const { PRConnectedProviders, pullRequestProviderHidden, prLabel } = derivedState;
+	const [queries, setQueries] = React.useState({});
+	const [defaultQueries, setDefaultQueries] = React.useState({});
 	const [loadFromUrlQuery, setLoadFromUrlQuery] = React.useState({});
 	const [loadFromUrlOpen, setLoadFromUrlOpen] = React.useState("");
 	const [prError, setPrError] = React.useState("");
@@ -248,6 +248,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	const [pullRequestGroups, setPullRequestGroups] = React.useState<{
 		[providerId: string]: GetMyPullRequestsResponse[][];
 	}>({});
+
 	const [isLoadingPRs, setIsLoadingPRs] = React.useState(false);
 	const [isLoadingPRGroup, setIsLoadingPRGroup] = React.useState<number | undefined>(undefined);
 	const [editingQuery, setEditingQuery] = React.useState<
@@ -257,46 +258,20 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		derivedState.PRConnectedProvidersWithErrorsCount
 	);
 
-	const setQueries = (providerId, queries) => {
+	const saveQueries = (providerId, queries) => {
 		dispatch(setUserPreference(["pullRequestQueries", providerId], [...queries]));
 	};
 
-	useEffect(() => {
-		const disposable = HostApi.instance.on(DidChangeDataNotificationType, (e: any) => {
-			if (e.type === ChangeDataType.PullRequests) {
-				console.warn("OpenPullRequests: ChangeDataType.PullRequests", e);
-				setIsLoadingPRs(true);
-				setTimeout(() => {
-					// kind of a hack to ensure that the provider's search api
-					// has all the latest data after a PR is merged/opened/closed
-					fetchPRs(queries, { force: true, alreadyLoading: true });
-				}, 4000);
-			}
-		});
-		return () => {
-			disposable.dispose();
-		};
-	});
-
-	useEffect(() => {
-		fetchPRs(derivedState.queries, { force: true });
-	}, [derivedState.allRepos]);
-
-	useEffect(() => {
-		if (
-			previousPRConnectedProvidersWithErrorsCount != null &&
-			previousPRConnectedProvidersWithErrorsCount - 1 ===
-				derivedState.PRConnectedProvidersWithErrorsCount
-		) {
-			fetchPRs(derivedState.queries, { force: true });
-		}
-	}, [derivedState.PRConnectedProvidersWithErrorsCount]);
-
 	const fetchPRs = useCallback(
-		async (theQueries, options?: { force?: boolean; alreadyLoading?: boolean }) => {
+		async (
+			theQueries,
+			options?: { force?: boolean; alreadyLoading?: boolean },
+			src: string | undefined = undefined
+		) => {
 			if (!options || options.alreadyLoading !== true) {
 				setIsLoadingPRs(true);
 			}
+			console.log(`fetchPRs src=${src}`);
 			let count: number | undefined = undefined;
 			let activePrListedCount = 0;
 			let activePrListedIndex: number | undefined = undefined;
@@ -306,7 +281,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				// console.warn("Loading the PRs...", theQueries);
 				for (const connectedProvider of PRConnectedProviders) {
 					const queriesByProvider: PullRequestQuery[] =
-						theQueries[connectedProvider.id] || DEFAULT_QUERIES[connectedProvider.id];
+						theQueries[connectedProvider.id] || defaultQueries[connectedProvider.id];
 					const queryStrings = Object.values(queriesByProvider).map(_ => _.query);
 					activePrListedIndex = queriesByProvider.findIndex(_ => _.name === "Waiting on my Review");
 					// console.warn("Loading the PRs... in the loop", queryStrings);
@@ -366,14 +341,76 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				}
 			}
 		},
-		[editingQuery, PRConnectedProviders, derivedState.allRepos]
+		[defaultQueries, editingQuery, PRConnectedProviders, derivedState.allRepos]
 	);
 
+	useEffect(() => {
+		const disposable = HostApi.instance.on(DidChangeDataNotificationType, (e: any) => {
+			if (e.type === ChangeDataType.PullRequests) {
+				console.warn("OpenPullRequests: ChangeDataType.PullRequests", e);
+				setIsLoadingPRs(true);
+				setTimeout(() => {
+					// kind of a hack to ensure that the provider's search api
+					// has all the latest data after a PR is merged/opened/closed
+					fetchPRs(queries, { force: true, alreadyLoading: true }, "dataChanged");
+				}, 4000);
+			}
+		});
+		return () => {
+			disposable.dispose();
+		};
+	}, [queries]);
+
+	useDidMount(() => {
+		(async () => {
+			const defaultQueriesResponse: any = (await HostApi.instance.send(
+				FetchProviderDefaultPullRequestsType,
+				{}
+			)) as any;
+			if (defaultQueriesResponse) {
+				const queries = {
+					...defaultQueriesResponse,
+					...(derivedState.pullRequestQueries || {})
+				};
+				let results = {};
+				// massage the data for any old data formats
+				Object.keys(queries || {}).forEach(p => {
+					results[p] = [];
+					Object.values(queries[p] || {}).forEach(_ => {
+						results[p].push(_);
+					});
+				});
+				setQueries(queries);
+				setDefaultQueries(defaultQueriesResponse);
+				fetchPRs(queries, undefined, "useDidMount").then(_ => {
+					mountedRef.current = true;
+				});
+			}
+		})();
+	});
+
 	useMemo(() => {
+		if (!mountedRef.current) return;
 		if (derivedState.isPRSupportedCodeHostConnected) {
-			fetchPRs(queries);
+			fetchPRs(queries, { force: true }, "isPRSupportedCodeHostConnected");
 		}
-	}, [derivedState.isPRSupportedCodeHostConnected]);
+	}, [queries, derivedState.isPRSupportedCodeHostConnected]);
+
+	useEffect(() => {
+		if (!mountedRef.current) return;
+		fetchPRs(queries, { force: true }, "allRepos");
+	}, [queries, derivedState.allRepos]);
+
+	useEffect(() => {
+		if (!mountedRef.current) return;
+		if (
+			previousPRConnectedProvidersWithErrorsCount != null &&
+			previousPRConnectedProvidersWithErrorsCount - 1 ===
+				derivedState.PRConnectedProvidersWithErrorsCount
+		) {
+			fetchPRs(queries, { force: true }, "previousPRConnectedProvidersWithErrorsCount");
+		}
+	}, [queries, derivedState.PRConnectedProvidersWithErrorsCount]);
 
 	const addQuery = () => editQuery("", -1);
 	const editQuery = (providerId: string, index: number) => {
@@ -414,7 +451,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 					action: async () => {
 						const newQueries = [...queries[providerId]];
 						newQueries.splice(index, 1);
-						setQueries(providerId, newQueries);
+						saveQueries(providerId, newQueries);
 						const newGroups = [...pullRequestGroups[providerId]];
 						newGroups.splice(index, 1);
 						setPullRequestGroups({ ...pullRequestGroups, providerId: newGroups });
@@ -426,10 +463,10 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 	const toggleQueryHidden = (e, providerId, index) => {
 		if (e.target.closest(".actions")) return;
-		const providerQueries = queries[providerId] || DEFAULT_QUERIES[providerId];
+		const providerQueries = queries[providerId] || defaultQueries[providerId];
 		const newQueries = [...providerQueries];
 		newQueries[index].hidden = !newQueries[index].hidden;
-		setQueries(providerId, newQueries);
+		saveQueries(providerId, newQueries);
 	};
 
 	const toggleProviderHidden = (e, providerId) => {
@@ -459,9 +496,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			// it's new
 			newQueries = [...newQueries, newQuery];
 		}
-		setQueries(providerId, newQueries);
+		saveQueries(providerId, newQueries);
 		setEditingQuery(undefined);
-		fetchPRs({ ...queries, [providerId]: newQueries }, { force: true });
+		fetchPRs({ ...queries, [providerId]: newQueries }, { force: true }, "save");
 	};
 
 	const goPR = async (url: string, providerId: string) => {
@@ -511,8 +548,10 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 	if (!derivedState.isPRSupportedCodeHostConnected && !hasPRSupportedRepos) return null;
 
+	if (!queries || Object.keys(queries).length === 0) return null;
+
 	const renderQueryGroup = providerId => {
-		const providerQueries: PullRequestQuery[] = queries[providerId] || DEFAULT_QUERIES[providerId];
+		const providerQueries: PullRequestQuery[] = queries[providerId] || defaultQueries[providerId];
 
 		return (
 			<>
@@ -813,7 +852,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 					>
 						{derivedState.isPRSupportedCodeHostConnected && (
 							<Icon
-								onClick={() => fetchPRs(queries, { force: true })}
+								onClick={() => fetchPRs(queries, { force: true }, "refresh")}
 								name="refresh"
 								className={`spinnable ${isLoadingPRs ? "spin" : ""}`}
 								title="Refresh"

@@ -714,6 +714,15 @@ export const QueryThirdPartyRequestType = new RequestType<
 	void
 >("codestream/provider/query");
 
+export interface FetchProviderDefaultPullRequest {}
+export interface FetchProviderDefaultPullResponse {}
+export const FetchProviderDefaultPullRequestsType = new RequestType<
+	FetchProviderDefaultPullRequest,
+	FetchProviderDefaultPullResponse,
+	void,
+	void
+>("codestream/providers/pullrequest/queries");
+
 export interface GetMyPullRequestsRequest {
 	owner?: string;
 	repo?: string;
