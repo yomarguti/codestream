@@ -210,7 +210,9 @@ export const RightActionBar = (props: {
 			isInVscode: ide.name === "VSC",
 			isInJetBrains: ide.name === "JETBRAINS",
 			supportsReviewers:
-				currentPullRequest?.conversations?.project?.mergeRequest?.supports?.reviewers
+				currentPullRequest?.conversations?.project?.mergeRequest?.supports?.reviewers,
+			supportsMultipleAssignees: false,
+			supportsMultipleReviewers: false
 		};
 	});
 
@@ -254,14 +256,32 @@ export const RightActionBar = (props: {
 		}
 		const assigneeIds = pr.assignees.nodes.map(_ => _.login);
 		if (availableAssignees && availableAssignees.length) {
-			const menuItems = (availableAssignees || []).map((_: any) => ({
-				checked: assigneeIds.includes(_.login),
-				label: <PRHeadshotName person={{ ..._, user: _.login }} className="no-padding" />,
-				subtle: _.name,
-				searchLabel: `${_.login}:${_.name}`,
-				key: _.id,
-				action: () => setAssignee(assigneeIds.includes(_.login) ? "" : _.login)
-			})) as any;
+			const menuItems = availableAssignees.map((_: any) => {
+				const longId = `gid://gitlab/User/${_.id}`;
+				const checked = assigneeIds.includes(_.login) || assigneeIds.includes(longId);
+				return {
+					checked,
+					label: <PRHeadshotName person={{ ..._, user: _.login }} className="no-padding" />,
+					subtle: _.name,
+					searchLabel: `${_.login}:${_.name}`,
+					key: _.id,
+					action: () => {
+						if (derivedState.supportsMultipleAssignees) {
+							const newAssignees = assigneeIds.filter(id => id !== _.id && id !== longId);
+							if (!checked) newAssignees.unshift(_.login);
+							setAssignees(newAssignees);
+						} else {
+							setAssignees([_.login]);
+						}
+					}
+				} as any;
+			});
+			menuItems.unshift({
+				checked: assigneeIds.length === 0,
+				label: "Unassigned",
+				key: "unassigned",
+				action: () => setAssignees([])
+			});
 			menuItems.unshift({ type: "search", placeholder: "Type or choose a name" });
 			return menuItems;
 		} else {
@@ -269,13 +289,9 @@ export const RightActionBar = (props: {
 		}
 	}, [derivedState.currentPullRequest, availableAssignees, pr]);
 
-	const setAssignee = async (login: string) => {
-		setIsLoadingMessage("Setting Assignee to " + login + "...");
-		await dispatch(
-			api("setAssigneeOnPullRequest", {
-				login
-			})
-		);
+	const setAssignees = async (ids: string[]) => {
+		setIsLoadingMessage("Setting Assignee...");
+		dispatch(api("setAssigneeOnPullRequest", { ids }));
 	};
 
 	const fetchAvailableReviewers = async (e?) => {
@@ -307,14 +323,32 @@ export const RightActionBar = (props: {
 		}
 		const reviewerIds = pr?.reviewers?.nodes?.map(_ => _.login) || [];
 		if (availableReviewers && availableReviewers.length) {
-			const menuItems = (availableReviewers || []).map((_: any) => ({
-				checked: reviewerIds.includes(_.login),
-				label: <PRHeadshotName person={{ ..._, user: _.login }} className="no-padding" />,
-				subtle: _.name,
-				searchLabel: `${_.login}:${_.name}`,
-				key: _.id,
-				action: () => setReviewer(_.id, !reviewerIds.includes(_.login))
-			})) as any;
+			const menuItems = availableReviewers.map((_: any) => {
+				const longId = `gid://gitlab/User/${_.id}`;
+				const checked = reviewerIds.includes(_.login) || reviewerIds.includes(longId);
+				return {
+					checked,
+					label: <PRHeadshotName person={{ ..._, user: _.login }} className="no-padding" />,
+					subtle: _.name,
+					searchLabel: `${_.login}:${_.name}`,
+					key: _.id,
+					action: () => {
+						if (derivedState.supportsMultipleReviewers) {
+							const newReviewers = reviewerIds.filter(id => id !== _.id && id !== longId);
+							if (!checked) newReviewers.unshift(_.id);
+							setReviewers(newReviewers);
+						} else {
+							setReviewers([_.id]);
+						}
+					}
+				} as any;
+			});
+			menuItems.unshift({
+				checked: reviewerIds.length === 0,
+				label: "Unassigned",
+				key: "unassigned",
+				action: () => setReviewers([])
+			});
 			menuItems.unshift({ type: "search", placeholder: "Type or choose a name" });
 			return menuItems;
 		} else {
@@ -322,10 +356,9 @@ export const RightActionBar = (props: {
 		}
 	}, [derivedState.currentPullRequest, availableReviewers, pr]);
 
-	const setReviewer = async (id: number, onOff: boolean) => {
-		setIsLoadingMessage(onOff ? "Adding Reviewer..." : "Removing Reviewer...");
-		if (onOff) await dispatch(api("addReviewerToPullRequest", { id }));
-		else dispatch(api("removeReviewerFromPullRequest", { id }));
+	const setReviewers = async (ids: string[]) => {
+		setIsLoadingMessage("Updating Reviewer...");
+		dispatch(api("setReviewersOnPullRequest", { ids }));
 	};
 
 	const fetchAvailableMilestones = async (e?) => {
@@ -649,7 +682,7 @@ export const RightActionBar = (props: {
 								))
 							) : (
 								<>
-									None - <a onClick={() => setAssignee(pr.viewer.login)}>assign yourself</a>
+									None - <a onClick={() => setAssignees([pr.viewer.login])}>assign yourself</a>
 								</>
 							)}
 						</Subtle>

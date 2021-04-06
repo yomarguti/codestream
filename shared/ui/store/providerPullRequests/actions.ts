@@ -465,6 +465,7 @@ export const api = <T = any, R = any>(
 		| "setAssigneeOnPullRequest"
 		| "setIssueOnPullRequest"
 		| "setLabelOnPullRequest"
+		| "setReviewersOnPullRequest"
 		| "setWorkInProgressOnPullRequest"
 		| "submitReview"
 		| "toggleReaction"

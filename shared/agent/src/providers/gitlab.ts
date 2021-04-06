@@ -1646,45 +1646,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	@log()
-	async addReviewerToPullRequest(request: { id: number; pullRequestId: string }) {
+	async setReviewersOnPullRequest(request: { ids: string[]; pullRequestId: string }) {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 		const data = await this.restPut<{ reviewer_ids: number[] }, { reviewers: any[] }>(
 			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`,
 			{
-				reviewer_ids: [request.id]
+				reviewer_ids: request.ids
 			}
 		);
-		const lastDiscussions = await this.getLastDiscussions(projectFullPath, iid);
-		return {
-			directives: [
-				{
-					type: "addNodes",
-					data: lastDiscussions
-				},
-				{
-					type: "updateReviewers",
-					data: data.body.reviewers.map(_ => {
-						return { ..._, login: _.username, avatarUrl: this.avatarUrl(_.avatar_url) };
-					})
-				}
-			]
-		};
-	}
-
-	@log()
-	async removeReviewerFromPullRequest(request: { id: number; pullRequestId: string }) {
-		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
-		const mergeRequest = await this.restGet<{ reviewers: any[] }>(
-			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`
-		);
-		const existingReviewers = (mergeRequest.body.reviewers || []).filter(_ => _.id !== request.id);
-		const data = await this.restPut<{ reviewer_ids: number[] }, { reviewers: any[] }>(
-			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`,
-			{
-				reviewer_ids: existingReviewers
-			}
-		);
-
 		const lastDiscussions = await this.getLastDiscussions(projectFullPath, iid);
 		return {
 			directives: [
@@ -1705,7 +1674,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	@log()
 	async setAssigneeOnPullRequest(request: {
 		pullRequestId: string;
-		login: string;
+		ids: string[];
 	}): Promise<Directives | undefined> {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
@@ -1730,7 +1699,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				{
 					projectPath: projectFullPath,
 					iid: iid,
-					assignees: [request.login]
+					assignees: request.ids.length > 0 ? request.ids : [""]
 				}
 			);
 
@@ -1826,15 +1795,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		labels: string;
 		availableLabels: GitLabLabel[];
 		milestoneId: string;
-		assigneeId: string;
-		reviewerIds: string;
+		assigneeIds: string;
+		reviewerIds?: string;
 		// deleteSourceBranch?: boolean;
 		// squashCommits?: boolean;
 	}): Promise<Directives | undefined> {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		try {
-			const updateReviewers = request.reviewerIds && request.reviewerIds.length > 0;
+			const updateReviewers = request.reviewerIds != undefined;
 			const requestBody: {
 				target_branch: string;
 				title: string;
@@ -1849,16 +1818,16 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				title: request.title,
 				description: request.description,
 				labels: request.labels,
-				assignee_id: request.assigneeId,
+				assignee_id: request.assigneeIds || "0",
 				milestone_id: request.milestoneId
 				// squash: !!request.squashCommits
 			};
-			if (request.assigneeId.includes(",")) {
+			if (request.assigneeIds.includes(",")) {
 				delete requestBody.assignee_id;
-				requestBody.assignee_ids = request.assigneeId;
+				requestBody.assignee_ids = request.assigneeIds;
 			}
 			if (updateReviewers) {
-				requestBody.reviewer_ids = request.reviewerIds;
+				requestBody.reviewer_ids = request.reviewerIds || "0";
 			}
 			const { body } = await this.restPut<any, any>(
 				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`,

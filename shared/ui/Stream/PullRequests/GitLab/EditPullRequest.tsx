@@ -104,7 +104,9 @@ export const EditPullRequest = props => {
 		const currentPullRequest = getCurrentProviderPullRequest(state);
 		return {
 			supportsReviewers:
-				currentPullRequest?.conversations?.project?.mergeRequest?.supports?.reviewers
+				currentPullRequest?.conversations?.project?.mergeRequest?.supports?.reviewers,
+			supportsMultipleAssignees: false,
+			supportsMultipleReviewers: false
 		};
 	});
 
@@ -129,14 +131,16 @@ export const EditPullRequest = props => {
 				milestoneId: milestoneField
 					? milestoneField.id.toString().replace("gid://gitlab/Milestone/", "")
 					: "",
-				assigneeId: assigneesField
+				assigneeIds: assigneesField
 					.filter(_ => _.id)
 					.map(_ => _.id.toString().replace("gid://gitlab/User/", ""))
 					.join(","),
-				reviewerIds: reviewersField
-					.filter(_ => _.id)
-					.map(_ => _.id.toString().replace("gid://gitlab/User/", ""))
-					.join(","),
+				reviewerIds: derivedState.supportsReviewers
+					? reviewersField
+							.filter(_ => _.id)
+							.map(_ => _.id.toString().replace("gid://gitlab/User/", ""))
+							.join(",")
+					: undefined,
 				deleteSourceBranch,
 				squashCommits
 			})
@@ -210,13 +214,23 @@ export const EditPullRequest = props => {
 					searchLabel: `${_.login}:${_.name}`,
 					key: _.id,
 					action: () => {
-						const newReviewers = [
-							...reviewersField.filter(reviewer => reviewer.id !== _.id && reviewer.id !== longId)
-						];
-						if (!checked) newReviewers.unshift(_);
-						setReviewersField(newReviewers);
+						if (derivedState.supportsMultipleReviewers) {
+							const newReviewers = [
+								...reviewersField.filter(reviewer => reviewer.id !== _.id && reviewer.id !== longId)
+							];
+							if (!checked) newReviewers.unshift(_);
+							setReviewersField(newReviewers);
+						} else {
+							setReviewersField([{ ..._ }]);
+						}
 					}
 				} as any;
+			});
+			menuItems.unshift({
+				checked: reviewerIds.length === 0,
+				label: "Unassigned",
+				key: "unassigned",
+				action: () => setReviewersField([])
 			});
 			menuItems.unshift({ type: "search", placeholder: "Type or choose a name" });
 			return menuItems;
@@ -246,7 +260,8 @@ export const EditPullRequest = props => {
 		const assigneeIds = assigneesField.map(_ => _.login);
 		if (availableAssignees && availableAssignees.length) {
 			const menuItems = (availableAssignees || []).map((_: any) => {
-				const checked = assigneeIds.includes(_.login);
+				const longId = `gid://gitlab/User/${_.id}`;
+				const checked = assigneeIds.includes(_.login) || assigneeIds.includes(longId);
 				return {
 					checked,
 					label: <PRHeadshotName person={{ ..._, user: _.login }} className="no-padding" />,
@@ -254,9 +269,23 @@ export const EditPullRequest = props => {
 					searchLabel: `${_.login}:${_.name}`,
 					key: _.id,
 					action: () => {
-						setAssigneesField([{ ..._ }]);
+						if (derivedState.supportsMultipleAssignees) {
+							const newAssignees = [
+								...assigneesField.filter(assignee => assignee.id !== _.id && assignee.id !== longId)
+							];
+							if (!checked) newAssignees.unshift(_);
+							setAssigneesField(newAssignees);
+						} else {
+							setAssigneesField([{ ..._ }]);
+						}
 					}
 				} as any;
+			});
+			menuItems.unshift({
+				checked: assigneeIds.length === 0,
+				label: "Unassigned",
+				key: "unassigned",
+				action: () => setAssigneesField([])
 			});
 			menuItems.unshift({ type: "search", placeholder: "Type or choose a name" });
 			return menuItems;

@@ -34,6 +34,10 @@ const ActionBox = styled.div`
 	display: flex;
 	align-items: flex-start;
 
+	.circled {
+		flex-shrink: 0;
+	}
+
 	&:after {
 		content: "";
 		display: block;
