@@ -94,8 +94,11 @@ class GutterIconRendererImpl(val editor: Editor, val marker: DocumentMarker) : G
                 marker.externalContent.provider?.id == "gitlab*com" ||
                 marker.externalContent.provider?.id == "gitlab/enterprise"
             ) {
-                tooltip += "\n\n<a href='#pr/show/${marker.externalContent.provider?.id}" +
-                    "/${marker.externalContent.externalId}/${marker.externalContent.externalChildId}'>View Comment</a>"
+                val providerId = java.net.URLEncoder.encode(marker.externalContent.provider?.id, "utf-8")
+                val externalId = java.net.URLEncoder.encode(marker.externalContent.externalId, "utf-8")
+                val externalChildId = java.net.URLEncoder.encode(marker.externalContent.externalChildId, "utf-8")
+                tooltip += "\n\n<a href='#pr/show/${providerId}" +
+                    "/${externalId}/${externalChildId}'>View Comment</a>"
             }
             tooltip += "<hr style='margin-top: 3px; margin-bottom: 3px;'>"
             tooltip += "<a href='#codemark/link/${CodemarkType.COMMENT},${rangeString}'>Add Comment</a>"
@@ -227,9 +230,9 @@ class GutterPullRequestTooltipLinkHandler : TooltipLinkHandler() {
             val prId = prData.slice(1..prData.size-2).joinToString( separator = "/")
             project.webViewService?.postNotification(
                 PullRequestNotifications.Show(
-                    prData[0],
-                    prId,
-                    prData[prData.size - 1]
+                    java.net.URLDecoder.decode(prData[0]),
+                    java.net.URLDecoder.decode(prId),
+                    java.net.URLDecoder.decode(prData[prData.size - 1])
                 )
             )
 

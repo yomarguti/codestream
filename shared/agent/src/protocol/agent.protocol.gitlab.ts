@@ -375,6 +375,7 @@ export interface GitLabMergeRequest {
 		/* this might not exist in all editions*/
 		canMerge?: boolean;
 		canApprove?: boolean;
+		canAssign?: boolean;
 	};
 	viewer: {
 		id: string;

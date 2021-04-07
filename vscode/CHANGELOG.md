@@ -4,8 +4,13 @@
 
 ### Added
 
-- Adds support for managing and reviewing GitLab merge requests
+- Adds support for [managing and reviewing GitLab merge requests](http://www.codestream.com/blog/codestream-11-0-manage-gitlab-merge-requests-code-reviews-and-issues-in-vscode-jetbrains)
 - Adds blue unread-message badges in the Feedback Requests and Codemarks sections when there are new replies
+
+### Changed
+
+- Replaced the "Reject" button in feedback requests with "Request Changes"
+- Renamed the "Needs Works" section in Feedback Requests to "Changes Requested"
 
 ### Fixed
 
@@ -15,6 +20,7 @@
 - Fixes an issue where the assignees list wasn't complete when creating an issue on GitLab
 - Fixes an issue with an extraneous entry appearing in the branch dropdowns when creating a pull request
 - Fixes an issue with Shift+Click not working on Windows when trying to select a range of commits to review in a pull request
+- Fixes an issue with the Feedback menu item under the headshot menu not working
 
 ## [10.7.2] - 2021-3-23
 

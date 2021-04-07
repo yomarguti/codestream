@@ -1179,7 +1179,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 			// if you are part of the project, you will see the approve box UI
 			// from there there can be further restrictions
-			response.project.mergeRequest.userPermissions.canApprove = !!users?.users.find(
+			response.project.mergeRequest.userPermissions.canAssign = response.project.mergeRequest.userPermissions.canApprove = !!users?.users.find(
 				(_: any) => _.username === response.currentUser.login
 			);
 
@@ -1678,46 +1678,44 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	@log()
 	async setAssigneeOnPullRequest(request: {
 		pullRequestId: string;
-		ids: string[];
+		ids: number[] | undefined;
 	}): Promise<Directives | undefined> {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		try {
-			const response = await this.mutate<any>(
-				`mutation MergeRequestSetAssignees($projectPath: ID!, $iid: String!, $assignees: [String!]!) {
-				mergeRequestSetAssignees(input: {projectPath: $projectPath, iid: $iid, assigneeUsernames: $assignees}) {
-				  mergeRequest {
-					title
-					assignees(last: 100) {
-						nodes {
-						  id
-						  name
-						  login:username
-						  avatarUrl
-						}
-					  }
-				  }
+			const requestBody: {
+				assignee_id?: string;
+				assignee_ids?: string;
+			} = {};
+			if (!request.ids || !request.ids.length) {
+				requestBody.assignee_id = "0";
+			} else {
+				if (request.ids.length > 1) {
+					requestBody.assignee_ids = request.ids.join(",");
+				} else {
+					requestBody.assignee_id = request.ids[0] + "";
 				}
-			  }
-			  `,
-				{
-					projectPath: projectFullPath,
-					iid: iid,
-					assignees: request.ids.length > 0 ? request.ids : [""]
-				}
-			);
+			}
 
-			(response.mergeRequestSetAssignees.mergeRequest.assignees.nodes || []).map(
-				(assignee: any) => {
-					this.toAuthorAbsolutePath(assignee);
-				}
+			const { body } = await this.restPut<any, any>(
+				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`,
+				requestBody
 			);
 			return {
 				directives: [
 					{
 						type: "updatePullRequest",
 						data: {
-							assignees: response.mergeRequestSetAssignees.mergeRequest.assignees
+							assignees: {
+								nodes: body.assignees.map((assignee: any) => {
+									return {
+										...assignee,
+										id: `gid://gitlab/User/${assignee.id}}`,
+										login: assignee.username,
+										avatarUrl: this.avatarUrl(assignee.avatar_url)
+									};
+								})
+							}
 						}
 					}
 				]
@@ -1856,6 +1854,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 								nodes: body.assignees.map((assignee: any) => {
 									return {
 										...assignee,
+										id: `gid://gitlab/User/${assignee.id}}`,
 										login: assignee.username,
 										avatarUrl: this.avatarUrl(assignee.avatar_url)
 									};

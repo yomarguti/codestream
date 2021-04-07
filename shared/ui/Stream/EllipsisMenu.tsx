@@ -371,7 +371,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		{ label: "Integrations", action: () => dispatch(openPanel(WebviewPanels.Integrations)) },
 		{
 			label: "Feedback",
-			action: () => openUrl("mailto:team@codestream.com?Subject=CodeStream Feedback")
+			action: () => openUrl("https://github.com/TeamCodeStream/codestream/issues")
 		},
 		{
 			label: "Help",

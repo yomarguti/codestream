@@ -190,6 +190,7 @@ export const RightActionBar = (props: {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const team = state.teams[state.context.currentTeamId];
+		const teamSettings = team.settings ? team.settings : (EMPTY_HASH as any);
 		const blameMap = team.settings ? team.settings.blameMap : EMPTY_HASH;
 		const skipGitEmailCheck = state.preferences.skipGitEmailCheck;
 		const addBlameMapEnabled = isFeatureEnabled(state, "addBlameMap");
@@ -211,8 +212,8 @@ export const RightActionBar = (props: {
 			isInJetBrains: ide.name === "JETBRAINS",
 			supportsReviewers:
 				currentPullRequest?.conversations?.project?.mergeRequest?.supports?.reviewers,
-			supportsMultipleAssignees: false,
-			supportsMultipleReviewers: false
+			supportsMultipleAssignees: teamSettings.gitLabMultipleAssignees,
+			supportsMultipleReviewers: teamSettings.gitLabMultipleAssignees
 		};
 	});
 
@@ -254,11 +255,13 @@ export const RightActionBar = (props: {
 				}
 			];
 		}
-		const assigneeIds = pr.assignees.nodes.map(_ => _.login);
+		const assigneeIds = pr.assignees.nodes.map(_ =>
+			// just in case this is a number and not a string
+			parseInt((_.id + "").replace("gid://gitlab/User/", ""), 10)
+		);
 		if (availableAssignees && availableAssignees.length) {
 			const menuItems = availableAssignees.map((_: any) => {
-				const longId = `gid://gitlab/User/${_.id}`;
-				const checked = assigneeIds.includes(_.login) || assigneeIds.includes(longId);
+				const checked = assigneeIds.includes(_.id);
 				return {
 					checked,
 					label: <PRHeadshotName person={{ ..._, user: _.login }} className="no-padding" />,
@@ -267,11 +270,13 @@ export const RightActionBar = (props: {
 					key: _.id,
 					action: () => {
 						if (derivedState.supportsMultipleAssignees) {
-							const newAssignees = assigneeIds.filter(id => id !== _.id && id !== longId);
-							if (!checked) newAssignees.unshift(_.login);
+							const newAssignees = assigneeIds.filter(id => id !== _.id);
+							if (!checked) newAssignees.unshift(_.id);
 							setAssignees(newAssignees);
 						} else {
-							setAssignees([_.login]);
+							// since only single assignees are supported, if we're selecting
+							// yourself and you're already assigned, remove it
+							setAssignees(assigneeIds.includes(_.id) ? [] : [_.id]);
 						}
 					}
 				} as any;
@@ -289,7 +294,7 @@ export const RightActionBar = (props: {
 		}
 	}, [derivedState.currentPullRequest, availableAssignees, pr]);
 
-	const setAssignees = async (ids: string[]) => {
+	const setAssignees = async (ids: number[]) => {
 		setIsLoadingMessage("Setting Assignee...");
 		dispatch(api("setAssigneeOnPullRequest", { ids }));
 	};
@@ -658,7 +663,7 @@ export const RightActionBar = (props: {
 					<>
 						<JustifiedRow>
 							<label>{pluralize("Assignee", pr.assignees)}</label>
-							{pr?.userPermissions?.canMerge && (
+							{pr?.userPermissions?.canAssign && (
 								<Link onClick={openAssignees}>
 									<InlineMenu
 										items={assigneeMenuItems}
@@ -682,7 +687,14 @@ export const RightActionBar = (props: {
 								))
 							) : (
 								<>
-									None - <a onClick={() => setAssignees([pr.viewer.login])}>assign yourself</a>
+									None -{" "}
+									<a
+										onClick={() =>
+											setAssignees([parseInt(pr.viewer.id.replace("gid://gitlab/User/", ""), 10)])
+										}
+									>
+										assign yourself
+									</a>
 								</>
 							)}
 						</Subtle>
