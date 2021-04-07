@@ -308,11 +308,11 @@ export function ReviewNav(props: Props) {
 	const reject = () => {
 		confirmPopup({
 			title: "Are you sure?",
-			message: "Author will be notified you have rejected this set of changes.",
+			message: "Author will be notified you are requesting this code be re-worked.",
 			buttons: [
 				{ label: "Go Back", className: "control-button" },
 				{
-					label: "Reject Changes",
+					label: "Request Changes",
 					wait: true,
 					action: rejectConfirm,
 					className: "delete"
@@ -420,10 +420,10 @@ export function ReviewNav(props: Props) {
 								</Button>
 							</Tooltip>
 						)}
-						<Tooltip title="Require Changes" placement="top">
+						<Tooltip title="Request Changes" placement="top">
 							<Button variant="destructive" onClick={reject}>
-								<Icon className="narrow-icon" name="thumbsdown" />
-								<span className="wide-text">Reject</span>
+								<Icon className="narrow-icon" name="sync" />
+								<span className="wide-text">Request Changes</span>
 							</Button>
 						</Tooltip>
 						<Tooltip title="More actions" placement="top">

@@ -303,7 +303,7 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 				statusLabel = "Approved";
 				break;
 			case "rejected":
-				statusLabel = "Rejected";
+				statusLabel = "Changes Requested";
 				break;
 		}
 		const post =
@@ -365,7 +365,7 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 		label: "View Changes",
 		action: startReview
 	};
-	const rejectItem = { icon: <Icon name="thumbsdown" />, label: "Reject", action: reject };
+	const rejectItem = { icon: <Icon name="sync" />, label: "Request Changes", action: reject };
 	const reopenItem = { icon: <Icon name="reopen" />, label: "Reopen", action: reopen };
 	const amendItem = {
 		label: "Amend Review (add code)",

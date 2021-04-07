@@ -910,7 +910,7 @@ const describeStatusChange = (action: CSReviewStatus) => {
 		// case "pending":
 		// return "requested changes in";
 		case "rejected":
-			return "rejected";
+			return "requested changes in";
 		default:
 			return action;
 	}
