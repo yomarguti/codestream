@@ -174,7 +174,7 @@ const isItemUnread = (item: Readable, lastReadItem: number | undefined, userId: 
 	// items before that won't have the unread badge otherwise
 	// customers will just have a "sea of blue" even though they
 	// may be up-to-date on all content
-	const start = 1616167117000;
+	const start = 1617827398000;
 	if (item.modifiedAt < start) return false;
 	// if we are the author and there are no replies, the not unread
 	if (item.creatorId == userId && item.numReplies == 0) return false;
