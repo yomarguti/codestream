@@ -102,11 +102,13 @@ export const EditPullRequest = props => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const currentPullRequest = getCurrentProviderPullRequest(state);
+		const team = state.teams[state.context.currentTeamId];
+		const teamSettings = team.settings ? team.settings : (EMPTY_HASH as any);
 		return {
 			supportsReviewers:
 				currentPullRequest?.conversations?.project?.mergeRequest?.supports?.reviewers,
-			supportsMultipleAssignees: false,
-			supportsMultipleReviewers: false
+			supportsMultipleAssignees: teamSettings.gitLabMultipleAssignees,
+			supportsMultipleReviewers: teamSettings.gitLabMultipleAssignees
 		};
 	});
 
@@ -226,6 +228,7 @@ export const EditPullRequest = props => {
 					}
 				} as any;
 			});
+			menuItems.unshift({ label: "-" });
 			menuItems.unshift({
 				checked: reviewerIds.length === 0,
 				label: "Unassigned",
@@ -259,7 +262,7 @@ export const EditPullRequest = props => {
 	const assigneeMenuItems = React.useMemo(() => {
 		const assigneeIds = assigneesField.map(_ => _.login);
 		if (availableAssignees && availableAssignees.length) {
-			const menuItems = (availableAssignees || []).map((_: any) => {
+			const menuItems = availableAssignees.map((_: any) => {
 				const longId = `gid://gitlab/User/${_.id}`;
 				const checked = assigneeIds.includes(_.login) || assigneeIds.includes(longId);
 				return {
@@ -281,6 +284,7 @@ export const EditPullRequest = props => {
 					}
 				} as any;
 			});
+			menuItems.unshift({ label: "-" });
 			menuItems.unshift({
 				checked: assigneeIds.length === 0,
 				label: "Unassigned",

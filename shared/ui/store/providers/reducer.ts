@@ -371,3 +371,32 @@ export const getConnectedSupportedPullRequestHosts = createSelector(
 			.filter(_ => _.isConnected);
 	}
 );
+
+export const getConnectedGitLabHosts = createSelector(
+	(state: CodeStreamState) => state.users,
+	(state: CodeStreamState) => state.context.currentTeamId,
+	(state: CodeStreamState) => state.session,
+	(state: CodeStreamState) => state.providers,
+	(users: UsersState, currentTeamId: string, session: SessionState, providers: ProvidersState) => {
+		return Object.values(providers)
+			.filter(_ => _.id === "gitlab*com" || _.id === "gitlab/enterprise")
+			.map(_ => {
+				let obj: { accessTokenError?: boolean } = {};
+				const value = isConnectedSelectorFriendly(
+					users,
+					currentTeamId,
+					session,
+					providers,
+					{ id: _.id },
+					undefined,
+					obj
+				);
+				return {
+					..._,
+					hasAccessTokenError: !!obj.accessTokenError,
+					isConnected: value
+				};
+			})
+			.filter(_ => _.isConnected);
+	}
+);

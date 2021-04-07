@@ -190,6 +190,7 @@ export const RightActionBar = (props: {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const team = state.teams[state.context.currentTeamId];
+		const teamSettings = team.settings ? team.settings : (EMPTY_HASH as any);
 		const blameMap = team.settings ? team.settings.blameMap : EMPTY_HASH;
 		const skipGitEmailCheck = state.preferences.skipGitEmailCheck;
 		const addBlameMapEnabled = isFeatureEnabled(state, "addBlameMap");
@@ -211,8 +212,8 @@ export const RightActionBar = (props: {
 			isInJetBrains: ide.name === "JETBRAINS",
 			supportsReviewers:
 				currentPullRequest?.conversations?.project?.mergeRequest?.supports?.reviewers,
-			supportsMultipleAssignees: false,
-			supportsMultipleReviewers: false
+			supportsMultipleAssignees: teamSettings.gitLabMultipleAssignees,
+			supportsMultipleReviewers: teamSettings.gitLabMultipleAssignees
 		};
 	});
 

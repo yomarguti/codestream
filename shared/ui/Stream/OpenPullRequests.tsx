@@ -19,7 +19,8 @@ import {
 	DidChangeDataNotificationType,
 	ChangeDataType,
 	FetchProviderDefaultPullRequestsType,
-	ThirdPartyProviderConfig
+	ThirdPartyProviderConfig,
+	UpdateTeamSettingsRequestType
 } from "@codestream/protocols/agent";
 import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
 import { Button } from "../src/components/Button";
@@ -196,6 +197,8 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 		const team = state.teams[state.context.currentTeamId];
 		const teamSettings = team.settings ? team.settings : EMPTY_HASH;
+		const adminIds = team.adminIds || [];
+		const isCurrentUserAdmin = adminIds.includes(state.session.userId!);
 
 		const prSupportedProviders = providerSelectors
 			.getSupportedPullRequestHosts(state)
@@ -210,11 +213,14 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		return {
 			repos,
 			teamSettings,
+			teamId: team.id,
+			isCurrentUserAdmin,
 			pullRequestQueries: state.preferences.pullRequestQueries,
 			myPullRequests,
 			isPRSupportedCodeHostConnected: prConnectedProviders.length > 0,
 			PRSupportedProviders: prSupportedProviders,
 			PRConnectedProviders: prConnectedProviders,
+			GitLabConnectedProviders: providerSelectors.getConnectedGitLabHosts(state),
 			PRConnectedProvidersWithErrors: prConnectedProvidersWithErrors,
 			PRConnectedProvidersWithErrorsCount: prConnectedProvidersWithErrors.length,
 			allRepos:
@@ -544,7 +550,26 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			action: () =>
 				dispatch(setUserPreference(["pullRequestQueryHideLabels"], !derivedState.hideLabels))
 		}
-	];
+	] as any;
+	if (derivedState.isCurrentUserAdmin) {
+		if (derivedState.GitLabConnectedProviders.length > 0) {
+			settingsMenuItems.push({ label: "-" });
+			settingsMenuItems.push({
+				checked: derivedState.teamSettings.gitLabMultipleAssignees || false,
+				label: "Allow Multiple Assignees & Reviewers",
+				subtext: "Requires paid GitLab account",
+				key: "multiple",
+				action: () => {
+					HostApi.instance.send(UpdateTeamSettingsRequestType, {
+						teamId: derivedState.teamId,
+						settings: {
+							gitLabMultipleAssignees: !derivedState.teamSettings.gitLabMultipleAssignees
+						}
+					});
+				}
+			});
+		}
+	}
 
 	if (!derivedState.isPRSupportedCodeHostConnected && !hasPRSupportedRepos) return null;
 
