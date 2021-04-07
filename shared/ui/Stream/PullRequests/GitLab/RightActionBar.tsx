@@ -326,11 +326,13 @@ export const RightActionBar = (props: {
 				}
 			];
 		}
-		const reviewerIds = pr?.reviewers?.nodes?.map(_ => _.login) || [];
+		const reviewerIds =
+			pr?.reviewers?.nodes?.map((
+				_ // just in case this is a number and not a string
+			) => parseInt((_.id + "").replace("gid://gitlab/User/", ""), 10)) || [];
 		if (availableReviewers && availableReviewers.length) {
 			const menuItems = availableReviewers.map((_: any) => {
-				const longId = `gid://gitlab/User/${_.id}`;
-				const checked = reviewerIds.includes(_.login) || reviewerIds.includes(longId);
+				const checked = reviewerIds.includes(_.id);
 				return {
 					checked,
 					label: <PRHeadshotName person={{ ..._, user: _.login }} className="no-padding" />,
@@ -339,11 +341,11 @@ export const RightActionBar = (props: {
 					key: _.id,
 					action: () => {
 						if (derivedState.supportsMultipleReviewers) {
-							const newReviewers = reviewerIds.filter(id => id !== _.id && id !== longId);
+							const newReviewers = reviewerIds.filter(id => id !== _.id);
 							if (!checked) newReviewers.unshift(_.id);
 							setReviewers(newReviewers);
 						} else {
-							setReviewers([_.id]);
+							setReviewers(reviewerIds.includes(_.id) ? [] : [_.id]);
 						}
 					}
 				} as any;
@@ -361,7 +363,7 @@ export const RightActionBar = (props: {
 		}
 	}, [derivedState.currentPullRequest, availableReviewers, pr]);
 
-	const setReviewers = async (ids: string[]) => {
+	const setReviewers = async (ids: number[]) => {
 		setIsLoadingMessage("Updating Reviewer...");
 		dispatch(api("setReviewersOnPullRequest", { ids }));
 	};
