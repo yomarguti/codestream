@@ -659,7 +659,7 @@ export const RightActionBar = (props: {
 					<>
 						<JustifiedRow>
 							<label>{pluralize("Assignee", pr.assignees)}</label>
-							{pr?.userPermissions?.canMerge && (
+							{pr?.userPermissions?.canAssign && (
 								<Link onClick={openAssignees}>
 									<InlineMenu
 										items={assigneeMenuItems}

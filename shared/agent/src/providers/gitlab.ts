@@ -1179,7 +1179,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 			// if you are part of the project, you will see the approve box UI
 			// from there there can be further restrictions
-			response.project.mergeRequest.userPermissions.canApprove = !!users?.users.find(
+			response.project.mergeRequest.userPermissions.canAssign = response.project.mergeRequest.userPermissions.canApprove = !!users?.users.find(
 				(_: any) => _.username === response.currentUser.login
 			);
 
