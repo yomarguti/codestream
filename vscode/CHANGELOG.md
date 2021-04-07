@@ -4,7 +4,7 @@
 
 ### Added
 
-- Adds support for managing and reviewing GitLab merge requests
+- Adds support for [managing and reviewing GitLab merge requests](http://www.codestream.com/blog/codestream-11-0-manage-gitlab-merge-requests-code-reviews-and-issues-in-your-ide)
 - Adds blue unread-message badges in the Feedback Requests and Codemarks sections when there are new replies
 
 ### Fixed
