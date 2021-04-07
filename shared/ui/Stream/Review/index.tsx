@@ -68,7 +68,13 @@ import {
 	getTeamTagsHash,
 	getPreferences
 } from "@codestream/webview/store/users/reducer";
-import { createPost, setReviewStatus, setCodemarkStatus, setUserPreference } from "../actions";
+import {
+	createPost,
+	setReviewStatus,
+	setCodemarkStatus,
+	setUserPreference,
+	markItemRead
+} from "../actions";
 import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
 import { DropdownButton } from "./DropdownButton";
 import Tag from "../Tag";
@@ -1048,8 +1054,13 @@ const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 	);
 };
 
-const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: string }) => {
-	const dispatch = useDispatch<Dispatch>();
+const ReplyInput = (props: {
+	reviewId: string;
+	parentPostId: string;
+	streamId: string;
+	numReplies: number;
+}) => {
+	const dispatch = useDispatch();
 	const [text, setText] = React.useState("");
 	const [attachments, setAttachments] = React.useState<AttachmentField[]>([]);
 	const [isChangeRequest, setIsChangeRequest] = React.useState(false);
@@ -1061,6 +1072,7 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 		if (text.length === 0) return;
 
 		setIsLoading(true);
+		dispatch(markItemRead(props.reviewId, props.numReplies + 1));
 		if (isChangeRequest) {
 			await dispatch(
 				createCodemark({
@@ -1300,13 +1312,19 @@ const ReviewForReview = (props: PropsWithReview) => {
 			return (
 				<Footer className="replies-to-review" style={{ borderTop: "none", marginTop: 0 }}>
 					{derivedState.replies.length > 0 && <MetaLabel>Activity</MetaLabel>}
-					<RepliesToPost streamId={props.review.streamId} parentPostId={props.review.postId} />
+					<RepliesToPost
+						streamId={props.review.streamId}
+						parentPostId={props.review.postId}
+						itemId={props.review.id}
+						numReplies={props.review.numReplies}
+					/>
 					{InputContainer && !props.isAmending && (
 						<InputContainer>
 							<ReplyInput
 								reviewId={review.id}
 								parentPostId={review.postId}
 								streamId={review.streamId}
+								numReplies={review.numReplies}
 							/>
 						</InputContainer>
 					)}

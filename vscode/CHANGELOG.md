@@ -1,5 +1,21 @@
 # Change Log
 
+## [11.0.0] - 2021-4-7
+
+### Added
+
+- Adds support for managing and reviewing GitLab merge requests
+- Adds blue unread-message badges in the Feedback Requests and Codemarks sections when there are new replies
+
+### Fixed
+
+- Fixes an issue where Cmd + Enter submits a feedback request with no changes selected
+- Fixes an issue where you'd get prompted to review changes after changing branches
+- Fixes an issue where the Linear integration wasn't recognizing multiple teams
+- Fixes an issue where the assignees list wasn't complete when creating an issue on GitLab
+- Fixes an issue with an extraneous entry appearing in the branch dropdowns when creating a pull request
+- Fixes an issue with Shift+Click not working on Windows when trying to select a range of commits to review in a pull request
+
 ## [10.7.2] - 2021-3-23
 
 ### Changed

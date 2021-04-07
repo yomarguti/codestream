@@ -18,6 +18,7 @@ import com.intellij.codeInsight.highlighting.TooltipLinkHandler
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.markup.GutterIconRenderer
 import com.intellij.openapi.project.Project
@@ -30,6 +31,8 @@ import java.util.Arrays
 import java.util.Date
 import java.util.concurrent.TimeUnit
 import javax.swing.Icon
+
+private val logger = Logger.getInstance(GutterIconRendererImpl::class.java)
 
 class GutterIconRendererImpl(val editor: Editor, val marker: DocumentMarker) : GutterIconRenderer() {
     val id: String
@@ -234,7 +237,7 @@ class GutterPullRequestTooltipLinkHandler : TooltipLinkHandler() {
 
             return true
         } else {
-            throw IllegalArgumentException("Unsupported tooltip link format")
+            logger.error("Unsupported tooltip link format: $prLink")
             return false
         }
     }

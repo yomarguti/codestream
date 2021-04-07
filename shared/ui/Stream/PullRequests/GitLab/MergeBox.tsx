@@ -1,3 +1,4 @@
+import Tooltip from "../../Tooltip";
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Icon from "../../Icon";
@@ -309,19 +310,38 @@ export const MergeBox = props => {
 	const colorVariant: ButtonVariant =
 		derivedState.pipeline && derivedState.pipeline.status === "CANCELED"
 			? "destructive"
-			: "success";
+			: mergeDisabled
+				? "secondary"
+				: "success";
 	return (
 		<OutlineBox>
 			<FlexRow>
 				<Icon name="check-circle" className={`bigger color-green`} />
-				<Button
-					isLoading={isLoading}
-					variant={colorVariant}
-					disabled={mergeDisabled}
-					onClick={e => mergePullRequest(e)}
-				>
-					{verb}
-				</Button>
+				{mergeDisabled && (
+					<Tooltip
+					title="Rebase support coming soon"
+					placement="top"
+					>
+						<Button
+							isLoading={isLoading}
+							variant={colorVariant}
+							disabled={mergeDisabled}
+							onClick={e => mergePullRequest(e)}
+						>
+							{verb}
+						</Button>
+					</Tooltip>
+				)}
+				{!mergeDisabled && (
+					<Button
+						isLoading={isLoading}
+						variant={colorVariant}
+						disabled={mergeDisabled}
+						onClick={e => mergePullRequest(e)}
+					>
+						{verb}
+					</Button>
+				)}
 				{!headerLabel && (
 					<>
 						{derivedState.prRoot.project.removeSourceBranchAfterMerge && (
