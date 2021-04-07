@@ -471,20 +471,29 @@ export const EditPullRequest = props => {
 									<ResponsiveLabel>Assignee</ResponsiveLabel>
 									<ResponsiveValue>
 										<div style={{ display: "flex", flexWrap: "wrap", alignItems: "center" }}>
-											<DropdownButton fillParent variant="secondary" items={assigneeMenuItems}>
-												{assigneesLabel}
-											</DropdownButton>
-											{!assignedToMe && pr.viewer.login && (
-												<div style={{ paddingLeft: "10px" }}>
-													<Link
-														href=""
-														onClick={() =>
-															setAssigneesField([{ ...pr.viewer, username: pr.viewer.login }])
-														}
-													>
-														Assign to me
-													</Link>
-												</div>
+											{pr?.userPermissions?.canAssign && (
+												<>
+													<DropdownButton fillParent variant="secondary" items={assigneeMenuItems}>
+														{assigneesLabel}
+													</DropdownButton>
+													{!assignedToMe && pr.viewer.login && (
+														<div style={{ paddingLeft: "10px" }}>
+															<Link
+																href=""
+																onClick={() =>
+																	setAssigneesField([{ ...pr.viewer, username: pr.viewer.login }])
+																}
+															>
+																Assign to me
+															</Link>
+														</div>
+													)}
+												</>
+											)}
+											{!pr?.userPermissions?.canAssign && (
+												<span style={{ paddingLeft: "10px", lineHeight: "30px" }}>
+													{assigneesLabel}
+												</span>
 											)}
 										</div>
 									</ResponsiveValue>
