@@ -41,7 +41,7 @@ import { Dialog } from "@codestream/webview/src/components/Dialog";
 import { PaneHeader, PaneBody, PaneState } from "@codestream/webview/src/components/Pane";
 import { StartWork } from "../StartWork";
 import { mapFilter } from "@codestream/webview/utils";
-import { isOnPrem } from "../../store/configs/reducer";
+import { Link } from "../Link";
 
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
@@ -373,7 +373,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		providers,
 		issueProviderConfig: currentIssueProviderConfig,
 		disabledProviders: workPreferences.disabledProviders || EMPTY_HASH,
-		isOnPrem: isOnPrem(configs) || false
+		isOnPrem: configs.isOnPrem
 	};
 };
 
@@ -1094,6 +1094,12 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 									);
 								})}
 							</IntegrationButtons>
+							<IssueMissing>
+								Don't see your service?{" "}
+								<Link href="https://github.com/TeamCodeStream/codestream/issues?q=is%3Aissue+is%3Aopen+label%3A%22issue+tracker%22">
+									Let us know.
+								</Link>
+							</IssueMissing>
 						</>
 					)}
 					{firstLoad && <LoadingMessage align="left">Loading...</LoadingMessage>}
@@ -1245,9 +1251,9 @@ export const Row = styled.div`
 		opacity: 0.75;
 		padding-left: 5px;
 	}
-	&:hover .status,
-	&:hover time,
-	&:hover .badge {
+	&:hover:not(.review) .status,
+	&:hover:not(.review) time,
+	&:hover:not(.review) .badge {
 		display: none;
 	}
 	@media only screen and (max-width: 350px) {
@@ -1285,34 +1291,6 @@ export const Row = styled.div`
 		left: 2px;
 		top: 3px;
 	}
-	#pr-search-input {
-		margin: -3px 0 !important;
-		padding: 3px 0 !important;
-		&:focus {
-			padding: 3px 5px !important;
-		}
-		&:focus::placeholder {
-			opacity: 0 !important;
-		}
-		&:not(:focus) {
-			cursor: pointer;
-			border: none !important;
-		}
-		&::placeholder {
-			opacity: 1 !important;
-			color: var(--text-color);
-		}
-		&:hover::placeholder {
-			color: var(--text-color-highlight);
-		}
-	}
-	div.go-pr {
-		padding: 0;
-		margin-left: auto;
-		button {
-			margin-top: 0px;
-		}
-	}
 	.cs-tag {
 		margin-bottom: 0;
 	}
@@ -1336,4 +1314,10 @@ const Linkish = styled.span`
 	:hover {
 		color: var(--text-color-highlight);
 	}
+`;
+
+const IssueMissing = styled.div`
+	text-align: center;
+	padding: 0px 20px 0px 20px;
+	margin-top: -20px;
 `;

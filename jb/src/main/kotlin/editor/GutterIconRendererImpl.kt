@@ -18,6 +18,7 @@ import com.intellij.codeInsight.highlighting.TooltipLinkHandler
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.markup.GutterIconRenderer
 import com.intellij.openapi.project.Project
@@ -30,6 +31,8 @@ import java.util.Arrays
 import java.util.Date
 import java.util.concurrent.TimeUnit
 import javax.swing.Icon
+
+private val logger = Logger.getInstance(GutterIconRendererImpl::class.java)
 
 class GutterIconRendererImpl(val editor: Editor, val marker: DocumentMarker) : GutterIconRenderer() {
     val id: String
@@ -68,8 +71,13 @@ class GutterIconRendererImpl(val editor: Editor, val marker: DocumentMarker) : G
                 "<a href='#codemark/link/${CodemarkType.LINK},${rangeString}'>Get Permalink</a>"
         } else if (marker.externalContent != null) {
             tooltip += "${marker.summary} \n\n"
-            tooltip += "<b>PULL REQUEST</b> \n\n"
-            tooltip += "<img src='${getIconLink("pr")}'> &nbsp; "
+            tooltip += when(marker.externalContent.provider?.id) {
+                "github*com" -> "<b>PULL REQUEST</b> \n\n <img src='${getIconLink("pr")}'> &nbsp; "
+                "github/enterprise" -> "<b>PULL REQUEST</b> \n\n <img src='${getIconLink("pr")}'> &nbsp; "
+                "gitlab*com" -> "<b>MERGE REQUEST</b> \n\n <img src='${getIconLink("mr-gitlab")}'> &nbsp; "
+                "gitlab/enterprise" -> "<b>MERGE REQUEST</b> \n\n <img src='${getIconLink("mr-gitlab")}'> &nbsp; "
+                else -> "<b>MERGE REQUEST</b> \n\n"
+            }
             if (marker.title !== null) {
                 tooltip += "${marker.title} "
             }
@@ -82,9 +90,15 @@ class GutterIconRendererImpl(val editor: Editor, val marker: DocumentMarker) : G
                 }
             }
             if (marker.externalContent.provider?.id == "github*com" ||
-                marker.externalContent.provider?.id == "github/enterprise") {
-                tooltip += "\n\n<a href='#pr/show/${marker.externalContent.provider?.id}" +
-                    "/${marker.externalContent.externalId}/${marker.externalContent.externalChildId}'>View Comment</a>"
+                marker.externalContent.provider?.id == "github/enterprise" ||
+                marker.externalContent.provider?.id == "gitlab*com" ||
+                marker.externalContent.provider?.id == "gitlab/enterprise"
+            ) {
+                val providerId = java.net.URLEncoder.encode(marker.externalContent.provider?.id, "utf-8")
+                val externalId = java.net.URLEncoder.encode(marker.externalContent.externalId, "utf-8")
+                val externalChildId = java.net.URLEncoder.encode(marker.externalContent.externalChildId, "utf-8")
+                tooltip += "\n\n<a href='#pr/show/${providerId}" +
+                    "/${externalId}/${externalChildId}'>View Comment</a>"
             }
             tooltip += "<hr style='margin-top: 3px; margin-bottom: 3px;'>"
             tooltip += "<a href='#codemark/link/${CodemarkType.COMMENT},${rangeString}'>Add Comment</a>"
@@ -212,17 +226,23 @@ class GutterPullRequestTooltipLinkHandler : TooltipLinkHandler() {
 
         val prData = prLink.split("/")
 
-        project.webViewService?.postNotification(
-            PullRequestNotifications.Show(
-                prData[0],
-                prData[1],
-                prData[2]
+        if (prData.size > 2) {
+            val prId = prData.slice(1..prData.size-2).joinToString( separator = "/")
+            project.webViewService?.postNotification(
+                PullRequestNotifications.Show(
+                    java.net.URLDecoder.decode(prData[0]),
+                    java.net.URLDecoder.decode(prId),
+                    java.net.URLDecoder.decode(prData[prData.size - 1])
+                )
             )
-        )
 
-        telemetryPr(project, editor.document.file is ReviewDiffVirtualFile, prData[0])
+            telemetryPr(project, editor.document.file is ReviewDiffVirtualFile, prData[0])
 
-        return super.handleLink(prLink, editor)
+            return true
+        } else {
+            logger.error("Unsupported tooltip link format: $prLink")
+            return false
+        }
     }
 }
 

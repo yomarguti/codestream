@@ -21,7 +21,6 @@ import {
 	DocumentMarkerExternalContent,
 	FetchAssignableUsersRequest,
 	FetchAssignableUsersResponse,
-	FetchDocumentMarkersResponse,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
 	FetchThirdPartyCardsRequest,
@@ -48,6 +47,7 @@ import { CodemarkType, CSMe, CSProviderInfos, CSReferenceLocation } from "../pro
 import { CodeStreamSession } from "../session";
 import { Functions, Strings } from "../system";
 import * as url from "url";
+import { GraphQLClient } from "graphql-request";
 
 export const providerDisplayNamesByNameKey = new Map<string, string>([
 	["asana", "Asana"],
@@ -208,11 +208,15 @@ export abstract class ThirdPartyProviderBase<
 	protected _ensuringConnection: Promise<void> | undefined;
 	protected _providerInfo: TProviderInfo | undefined;
 	protected _httpsAgent: HttpsAgent | undefined;
+	protected _client: GraphQLClient | undefined;
 
 	constructor(
 		public readonly session: CodeStreamSession,
 		protected readonly providerConfig: ThirdPartyProviderConfig
 	) {}
+
+	protected DEFAULT_VERSION = { version: "0.0.0", asArray: [0, 0, 0] };
+	protected _version: ProviderVersion | undefined;
 
 	async ensureInitialized() {}
 
@@ -232,9 +236,12 @@ export abstract class ThirdPartyProviderBase<
 	}
 
 	get baseUrl() {
+		return `${this.baseWebUrl}${this.apiPath}`;
+	}
+
+	get baseWebUrl() {
 		const { host, apiHost, isEnterprise } = this.providerConfig;
-		const returnHost = isEnterprise ? host : `https://${apiHost}`;
-		return `${returnHost}${this.apiPath}`;
+		return isEnterprise ? host : `https://${apiHost}`;
 	}
 
 	async addEnterpriseHost(
@@ -339,7 +346,7 @@ export abstract class ThirdPartyProviderBase<
 		if (
 			info.protocol === "https:" &&
 			this.session.disableStrictSSL &&
-			(this.session.runTimeEnvironment !== "onprem" ||
+			(!this.session.isOnPrem ||
 				this.providerConfig.forEnterprise ||
 				this.providerConfig.isEnterprise)
 		) {
@@ -528,7 +535,11 @@ export abstract class ThirdPartyProviderBase<
 
 				if (resp.ok) {
 					traceResult = `${this.displayName}: Completed ${method} ${url}`;
-					json = resp.json() as Promise<R>;
+					if (options?.useRawResponse) {
+						json = resp.text() as any;
+					} else {
+						json = resp.json() as Promise<R>;
+					}
 				}
 			}
 
@@ -912,6 +923,110 @@ export abstract class ThirdPartyIssueProviderBase<
 
 		return documentMarkers;
 	}
+
+	protected _isSuppressedException(ex: any): ReportSuppressedMessages | undefined {
+		const networkErrors = [
+			"ENOTFOUND",
+			"ETIMEDOUT",
+			"EAI_AGAIN",
+			"ECONNRESET",
+			"ECONNREFUSED",
+			"EHOSTUNREACH",
+			"ENETDOWN",
+			"ENETUNREACH",
+			"self signed certificate in certificate chain",
+			"socket disconnected before secure",
+			"socket hang up"
+		];
+
+		if (ex.message && networkErrors.some(e => ex.message.match(new RegExp(e)))) {
+			return ReportSuppressedMessages.NetworkError;
+		} else if (ex.message && ex.message.match(/GraphQL Error \(Code: 404\)/)) {
+			return ReportSuppressedMessages.ConnectionError;
+		}
+		// else if (
+		// 	(ex?.response?.message || ex?.message || "").indexOf(
+		// 		"enabled OAuth App access restrictions"
+		// 	) > -1
+		// ) {
+		// 	return ReportSuppressedMessages.OAuthAppAccessRestrictionError;
+		// }
+		else if (
+			(ex.response && ex.response.message === "Bad credentials") ||
+			(ex.response &&
+				ex.response.errors instanceof Array &&
+				ex.response.errors.find((e: any) => e.type === "FORBIDDEN"))
+		) {
+			return ReportSuppressedMessages.AccessTokenInvalid;
+		} else {
+			return undefined;
+		}
+	}
+
+	protected trySetThirdPartyProviderInfo(ex: Error, exType?: ReportSuppressedMessages | undefined) {
+		if (!ex) return;
+
+		exType = exType || this._isSuppressedException(ex);
+		if (exType !== undefined && exType !== ReportSuppressedMessages.NetworkError) {
+			// we know about this error, and we want to give the user a chance to correct it
+			// (but throwing up a banner), rather than logging the error to sentry
+			this.session.api.setThirdPartyProviderInfo({
+				providerId: this.providerConfig.id,
+				data: {
+					tokenError: {
+						error: ex,
+						occurredAt: Date.now(),
+						isConnectionError: exType === ReportSuppressedMessages.ConnectionError,
+						providerMessage:
+							exType === ReportSuppressedMessages.OAuthAppAccessRestrictionError ? ex.message : null
+					}
+				}
+			});
+			if (this._client) {
+				delete this._client;
+			}
+		}
+	}
+
+	protected getOwnerFromRemote(remote: string): { owner: string; name: string } {
+		return {
+			owner: "",
+			name: ""
+		};
+	}
+
+	/**
+	 * Repos that are opened in the editor
+	 * @returns array of owner/repo strings
+	 */
+	protected async getOpenedRepos(): Promise<string[]> {
+		const repos: string[] = [];
+		const { scm, providerRegistry } = SessionContainer.instance();
+		const reposResponse = await scm.getRepos({ inEditorOnly: true, includeProviders: true });
+		if (!reposResponse.repositories || !reposResponse.repositories.length) return repos;
+
+		for (const repo of reposResponse.repositories) {
+			if (!repo.remotes) continue;
+
+			for (const remote of repo.remotes) {
+				const urlToTest = remote.webUrl;
+				const results = await providerRegistry.queryThirdParty({ url: urlToTest });
+				if (results && results.providerId === this.providerConfig.id) {
+					const ownerData = this.getOwnerFromRemote(urlToTest);
+					if (ownerData) {
+						repos.push(`${ownerData.owner}/${ownerData.name}`);
+					}
+				}
+			}
+		}
+
+		return repos;
+	}
+
+	protected async getVersion(): Promise<ProviderVersion> {
+		this._version = this.DEFAULT_VERSION;
+		return this._version;
+	}
 }
 
 export abstract class ThirdPartyPostProviderBase<
@@ -925,10 +1040,42 @@ export abstract class ThirdPartyPostProviderBase<
 	}
 }
 
+export interface ProviderVersion {
+	/**
+	 * Semantic version, aka X.Y.Z
+	 *
+	 * @type {string}
+	 * @memberof ProviderVersion
+	 */
+	version: string;
+	/**
+	 * version as an array
+	 *
+	 * @type {number[]}
+	 * @memberof ProviderVersion
+	 */
+	asArray: number[];
+	/**
+	 * optional revision information, GitLab has this
+	 *
+	 * @type {string}
+	 * @memberof ProviderVersion
+	 */
+	revision?: string;
+	/**
+	 * optional edition information like "ee". Gitlab has this
+	 *
+	 * @type {string}
+	 * @memberof ProviderVersion
+	 */
+	edition?: string;
+}
+
 export interface PullRequestComment {
 	author: {
 		id: string;
 		nickname: string;
+		username?: string;
 	};
 	createdAt: number;
 	id: string;

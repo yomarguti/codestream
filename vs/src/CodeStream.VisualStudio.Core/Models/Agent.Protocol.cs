@@ -95,11 +95,11 @@ namespace CodeStream.VisualStudio.Core.Models {
 	public class BootstrapPartialResponseAnonymous {
 		public Capabilities Capabilities { get; set; }
 		public Configs Configs { get; set; }
-		public string Env { get; set; }
 		public string Version { get; set; }
 		public WebviewContext Context { get; set; }
 		public UserSession Session { get; set; }
 		public Ide Ide { get; set; }
+		public CodeStreamEnvironmentInfo EnvironmentInfo { get; set; }
 	}
 
 	public class BootstrapAuthenticatedResponse : BootstrapPartialResponseAnonymous {

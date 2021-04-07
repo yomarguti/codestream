@@ -41,6 +41,7 @@ import {
 	BootstrapRequestType,
 	ChangeDataType,
 	CodeStreamEnvironment,
+	CodeStreamEnvironmentInfo,
 	ConfirmRegistrationRequest,
 	ConfirmRegistrationRequestType,
 	ConnectionStatus,
@@ -53,6 +54,7 @@ import {
 	DidFailLoginNotificationType,
 	DidLoginNotificationType,
 	DidLogoutNotificationType,
+	DidSetEnvironmentNotificationType,
 	DidStartLoginNotificationType,
 	GetAccessTokenRequestType,
 	GetInviteInfoRequest,
@@ -98,8 +100,7 @@ import {
 import { log, memoize, registerDecoratedHandlers, registerProviders } from "./system";
 import { testGroups } from "./testGroups";
 
-// FIXME: Must keep this in sync with vscode-codestream/src/api/session.ts
-const envRegex = /https?:\/\/((?:(\w+)-)?api|localhost)\.codestream\.(?:us|com)(?::\d+$)?/i;
+const envRegex = /https?:\/\/((?:(\w+)-)?api|localhost|(\w+))\.codestream\.(?:us|com)(?::\d+$)?/i;
 
 const FIRST_SESSION_TIMEOUT = 12 * 60 * 60 * 1000; // first session "times out" after 12 hours
 
@@ -254,7 +255,6 @@ export class CodeStreamSession {
 			})
 		);
 
-		this._environment = this.getEnvironment(this._options.serverUrl);
 		Container.initialize(agent, this);
 
 		const redactProxyPasswdRegex = /(http:\/\/.*:)(.*)(@.*)/gi;
@@ -333,6 +333,23 @@ export class CodeStreamSession {
 			}
 		});
 
+		this._api.verifyConnectivity().then(response => {
+			if (!response.environment) {
+				// for versions of api server pre 8.2.34, which did not support returning environment
+				// in connectivity response ... this code can be eliminated once we're enforcing
+				// versions higher than this
+				this._environmentInfo = this.getEnvironmentFromServerUrl(this._options.serverUrl);
+				Logger.warn("No environment in response, got it from server URL:", this._environmentInfo);
+			} else {
+				this._environmentInfo = {
+					environment: response.environment,
+					isOnPrem: response.isOnPrem || false,
+					isProductionCloud: response.isProductionCloud || false
+				};
+				Logger.log("Got environment from connectivity response:", this._environmentInfo);
+			}
+			this.agent.sendNotification(DidSetEnvironmentNotificationType, this._environmentInfo);
+		});
 		const versionManager = new VersionMiddlewareManager(this._api);
 		versionManager.onDidChangeCompatibility(this.onVersionCompatibilityChanged, this);
 		versionManager.onDidChangeApiCompatibility(this.onApiVersionCompatibilityChanged, this);
@@ -386,7 +403,6 @@ export class CodeStreamSession {
 					usersResponse,
 					preferencesResponse
 				] = await promise;
-
 				return {
 					companies: companiesResponse.companies,
 					preferences: preferencesResponse.preferences,
@@ -396,7 +412,8 @@ export class CodeStreamSession {
 					unreads: unreadsResponse.unreads,
 					users: usersResponse.users,
 					providers: this.providers,
-					apiCapabilities: this.apiCapabilities
+					apiCapabilities: this.apiCapabilities,
+					environmentInfo: this.environmentInfo
 				};
 			}
 		);
@@ -405,7 +422,6 @@ export class CodeStreamSession {
 	setServerUrl(options: SetServerUrlRequest) {
 		this._options.serverUrl = options.serverUrl;
 		this._options.disableStrictSSL = options.disableStrictSSL;
-		this._environment = this.getEnvironment(this._options.serverUrl);
 		this._api?.setServerUrl(this._options.serverUrl);
 		this.agent.sendNotification(DidChangeServerUrlNotificationType, {
 			serverUrl: options.serverUrl
@@ -576,14 +592,34 @@ export class CodeStreamSession {
 		return this._codestreamAccessToken;
 	}
 
-	private _environment: CodeStreamEnvironment | string = CodeStreamEnvironment.Unknown;
-	get environment() {
-		return this._environment;
+	private _environmentInfo: CodeStreamEnvironmentInfo = {
+		environment: CodeStreamEnvironment.Unknown,
+		isOnPrem: false,
+		isProductionCloud: false
+	};
+	get environmentInfo() {
+		if (this._environmentInfo.environment === CodeStreamEnvironment.Unknown) {
+			if (this._options.serverUrl) {
+				// this should only be called before we have communicated with the server,
+				// which is regarded as the source of truth
+				// for now, this is only needed by the error reporter initialization in errorReporter.ts
+				// we should keep it that way
+				this._environmentInfo = this.getEnvironmentFromServerUrl(this._options.serverUrl);
+			}
+		}
+		return this._environmentInfo;
 	}
 
-	private _runTimeEnvironment: string = "prod";
-	get runTimeEnvironment() {
-		return this._runTimeEnvironment;
+	get environment() {
+		return this.environmentInfo.environment;
+	}
+
+	get isOnPrem() {
+		return this.environmentInfo.isOnPrem;
+	}
+
+	get isProductionCloud() {
+		return this.environmentInfo.isProductionCloud;
 	}
 
 	get disableStrictSSL(): boolean {
@@ -807,7 +843,6 @@ export class CodeStreamSession {
 		this._codestreamAccessToken = token.value;
 		this._teamId = (this._options as any).teamId = token.teamId;
 		this._codestreamUserId = response.user.id;
-		this._runTimeEnvironment = response.runtimeEnvironment || "prod";
 
 		const currentTeam = response.teams.find(t => t.id === this._teamId)!;
 		this.registerApiCapabilities(response.capabilities || {}, currentTeam);
@@ -875,6 +910,8 @@ export class CodeStreamSession {
 			});
 		});
 
+		SessionContainer.instance().reviews.initializeCurrentBranches();
+
 		// this needs to happen before initializing telemetry, because super-properties are dependent
 		if (this.apiCapabilities.testGroups) {
 			const company = await this.setCompanyTestGroups();
@@ -896,7 +933,7 @@ export class CodeStreamSession {
 				token: token,
 				capabilities: this.api.capabilities,
 				email: this._email!,
-				environment: this._environment,
+				environmentInfo: this._environmentInfo,
 				serverUrl: this._options.serverUrl!,
 				teamId: this._teamId!,
 				userId: response.user.id
@@ -1039,21 +1076,63 @@ export class CodeStreamSession {
 		return this._connection.window.showWarningMessage(message, ...actions);
 	}
 
-	private getEnvironment(url: string) {
+	// having to determine environment in this way is bad ... but we keep it for two reasons:
+	// (1) to maintain compatibility with older api servers (for on-prem installs), before this
+	//    information was delivered by the api server ... once all our on-prem installs are
+	//    forced to be up to date, we can eliminate that reason
+	// (2) upon agent initialization, the error reporter (errorReporter.ts) connects to Sentry,
+	//    but only in production ... it needs to know if we are in production before we have
+	//    communicated with the server, so that will be determined here
+	//
+	// In theory, this method should be called for no other reason that those given above.
+	private getEnvironmentFromServerUrl(url: string): CodeStreamEnvironmentInfo {
 		const match = envRegex.exec(url);
-		if (match == null) return CodeStreamEnvironment.Unknown;
 
-		// FIXME: Must keep this logic in sync with vscode-codestream/src/api/session.ts
-		const [, subdomain, env] = match;
+		// if no match, then our server is not a CodeStream server, meaning we are on-prem
+		if (match == null) {
+			return {
+				environment: CodeStreamEnvironment.Unknown,
+				isOnPrem: true,
+				isProductionCloud: false
+			};
+		}
+
+		// localhost translates into local development environment,
+		// whether we are on-prem or not comes from separate information
+		let [, subdomain, env] = match;
 		if (subdomain != null && subdomain.toLowerCase() === "localhost") {
-			return CodeStreamEnvironment.Local;
+			return {
+				environment: CodeStreamEnvironment.Local,
+				isOnPrem: false,
+				isProductionCloud: false
+			};
 		}
 
-		if (env == null) {
-			return CodeStreamEnvironment.Production;
+		if (env) {
+			// a match of the form <env>-api.codestream.us, like PD and QA
+			env = env.toLowerCase();
+			return { environment: env.toLowerCase(), isOnPrem: false, isProductionCloud: false };
+		} else if (subdomain) {
+			// a match of the form <subdomain>.codestream.us, like OPPR, OPBETA, anything else
+			subdomain = subdomain.toLowerCase();
+			if (subdomain === "api") {
+				return {
+					environment: CodeStreamEnvironment.Production,
+					isOnPrem: false,
+					isProductionCloud: true
+				};
+			} else {
+				// the need for this goes away when delivered from the server
+				const isOnPrem = subdomain === "opbeta" || subdomain === "oppr";
+				return { environment: subdomain.toLowerCase(), isOnPrem, isProductionCloud: false };
+			}
+		} else {
+			return {
+				environment: CodeStreamEnvironment.Unknown,
+				isOnPrem: false,
+				isProductionCloud: false
+			};
 		}
-
-		return env.toLowerCase();
 	}
 
 	private async initializeTelemetry(user: CSMe, team: CSTeam, companies: CSCompany[]) {
@@ -1070,7 +1149,7 @@ export class CodeStreamSession {
 			Endpoint: this.versionInfo.ide.name,
 			"Endpoint Detail": this.versionInfo.ide.detail,
 			"IDE Version": this.versionInfo.ide.version,
-			Deployment: this.environment === CodeStreamEnvironment.Unknown ? "OnPrem" : "Cloud"
+			Deployment: this.isOnPrem ? "OnPrem" : "Cloud"
 		};
 
 		if (team != null) {

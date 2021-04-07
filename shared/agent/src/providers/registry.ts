@@ -1,5 +1,6 @@
 "use strict";
 import { differenceWith } from "lodash-es";
+import semver from "semver";
 import { CSMe } from "protocol/api.protocol";
 import { URI } from "vscode-uri";
 import { SessionContainer } from "../container";
@@ -41,6 +42,8 @@ import {
 	FetchThirdPartyChannelsRequest,
 	FetchThirdPartyChannelsRequestType,
 	FetchThirdPartyChannelsResponse,
+	FetchProviderDefaultPullRequest,
+	FetchProviderDefaultPullRequestsType,
 	FetchThirdPartyPullRequestCommitsRequest,
 	FetchThirdPartyPullRequestCommitsType,
 	FetchThirdPartyPullRequestRequest,
@@ -60,6 +63,7 @@ import {
 } from "../protocol/agent.protocol";
 import { CodeStreamSession } from "../session";
 import { getProvider, getRegisteredProviders, log, lsp, lspHandler } from "../system";
+import { GitLabEnterpriseProvider } from "./gitlabEnterprise";
 import {
 	ProviderCreatePullRequestRequest,
 	ProviderCreatePullRequestResponse,
@@ -89,16 +93,53 @@ export * from "./okta";
 export * from "./clubhouse";
 export * from "./linear";
 
-const PR_QUERIES = [
-	{
-		name: "is waiting on your review",
-		query: `is:pr is:open review-requested:@me -author:@me`
-	},
-	{
-		name: "was assigned to you",
-		query: `is:pr is:open assignee:@me -author:@me`
-	}
-];
+const PR_QUERIES: {
+	[Identifier: string]: {
+		name: string;
+		query: string;
+	}[];
+} = {
+	gitlab: [
+		{
+			name: "is waiting on your review",
+			query: `state:opened reviewer_username:@me scope:all`
+		},
+		{
+			name: "was assigned to you",
+			query: `state:opened scope:assigned_to_me`
+		}
+	],
+	gitlab_enterprise: [
+		{
+			name: "is waiting on your review",
+			query: `state:opened reviewer_username:@me scope:all`
+		},
+		{
+			name: "was assigned to you",
+			query: `state:opened scope:assigned_to_me`
+		}
+	],
+	github: [
+		{
+			name: "is waiting on your review",
+			query: `is:pr is:open review-requested:@me -author:@me`
+		},
+		{
+			name: "was assigned to you",
+			query: `is:pr is:open assignee:@me -author:@me`
+		}
+	],
+	github_enterprise: [
+		{
+			name: "is waiting on your review",
+			query: `is:pr is:open review-requested:@me -author:@me`
+		},
+		{
+			name: "was assigned to you",
+			query: `is:pr is:open assignee:@me -author:@me`
+		}
+	]
+};
 
 interface ProviderPullRequests {
 	providerName: string;
@@ -112,7 +153,7 @@ export class ThirdPartyProviderRegistry {
 	private _pollingInterval: NodeJS.Timer | undefined;
 
 	constructor(public readonly session: CodeStreamSession) {
-		this._pollingInterval = setInterval(this.pullRequestsStateHandler.bind(this), 60000);
+		this._pollingInterval = setInterval(this.pullRequestsStateHandler.bind(this), 120000); // every 2 minutes
 	}
 
 	private async pullRequestsStateHandler() {
@@ -124,7 +165,12 @@ export class ThirdPartyProviderRegistry {
 			ThirdPartyProviderSupportsPullRequests => {
 			const thirdPartyIssueProvider = p as ThirdPartyIssueProvider;
 			const name = thirdPartyIssueProvider.getConfig().name;
-			return name === "github" || name === "github_enterprise";
+			return (
+				name === "github" ||
+				name === "github_enterprise" ||
+				name === "gitlab" ||
+				name === "gitlab_enterprise"
+			);
 		});
 		const providersPullRequests: ProviderPullRequests[] = [];
 
@@ -135,16 +181,19 @@ export class ThirdPartyProviderRegistry {
 					Logger.debug(`pullRequestsStateHandler: ignoring ${provider.name} because of tokenError`);
 					continue;
 				}
-				const pullRequests = await provider.getMyPullRequests({
-					queries: PR_QUERIES.map(_ => _.query)
-				});
-
-				if (pullRequests) {
-					providersPullRequests.push({
-						providerName: provider.name,
-						queriedPullRequests: pullRequests
+				const queries = PR_QUERIES[provider.name];
+				if (queries.length) {
+					const pullRequests = await provider.getMyPullRequests({
+						queries: queries.map(_ => _.query)
 					});
-					succeededCount++;
+
+					if (pullRequests) {
+						providersPullRequests.push({
+							providerName: provider.name,
+							queriedPullRequests: pullRequests
+						});
+						succeededCount++;
+					}
 				}
 			} catch (ex) {
 				Logger.warn(`pullRequestsStateHandler: ${typeof ex === "string" ? ex : ex.message}`);
@@ -222,7 +271,7 @@ export class ThirdPartyProviderRegistry {
 			_.queriedPullRequests.map((pullRequests: GetMyPullRequestsResponse[], queryIndex: number) => {
 				prNotificationMessages.push(
 					...pullRequests.map(pullRequest => ({
-						queryName: PR_QUERIES[queryIndex].name,
+						queryName: PR_QUERIES[_.providerName][queryIndex].name,
 						pullRequest
 					}))
 				);
@@ -637,6 +686,139 @@ export class ThirdPartyProviderRegistry {
 
 		Logger.log(`queryThirdParty: no matching provider found for ${request.url}`);
 		return undefined;
+	}
+
+	@log()
+	@lspHandler(FetchProviderDefaultPullRequestsType)
+	async getProviderDefaultPullRequestQueries(request: FetchProviderDefaultPullRequest) {
+		const response = {
+			"github*com": [
+				{
+					providerId: "github*com",
+					name: "Waiting on my Review",
+					query: `is:pr is:open review-requested:@me`,
+					hidden: false
+				},
+				{
+					providerId: "github*com",
+					name: "Assigned to Me",
+					query: `is:pr is:open assignee:@me`,
+					hidden: false
+				},
+				{
+					providerId: "github*com",
+					name: "Created by Me",
+					query: `is:pr is:open author:@me`,
+					hidden: false
+				},
+				{
+					providerId: "github*com",
+					name: "Recent",
+					query: `recent`,
+					hidden: false
+				}
+			],
+			"github/enterprise": [
+				{
+					providerId: "github/enterprise",
+					name: "Waiting on my Review",
+					query: `is:pr is:open review-requested:@me`,
+					hidden: false
+				},
+				{
+					providerId: "github/enterprise",
+					name: "Assigned to Me",
+					query: `is:pr is:open assignee:@me`,
+					hidden: false
+				},
+				{
+					providerId: "github/enterprise",
+					name: "Created by Me",
+					query: `is:pr is:open author:@me`,
+					hidden: false
+				},
+				{
+					providerId: "github/enterprise",
+					name: "Recent",
+					query: `recent`,
+					hidden: false
+				}
+			],
+			"gitlab*com": [
+				{
+					providerId: "gitlab*com",
+					name: "Waiting on my Review",
+					query: `state:opened reviewer_username:@me scope:all`,
+					hidden: false
+				},
+				{
+					providerId: "gitlab*com",
+					name: "Assigned to Me",
+					query: `state:opened scope:assigned_to_me`,
+					hidden: false
+				},
+				{
+					providerId: "gitlab*com",
+					name: "Created by Me",
+					query: `state:opened scope:created_by_me`,
+					hidden: false
+				},
+				{
+					providerId: "gitlab*com",
+					name: "Recent",
+					query: `recent`,
+					hidden: false
+				}
+			],
+			"gitlab/enterprise": [
+				{
+					providerId: "gitlab/enterprise",
+					name: "Waiting on my Review",
+					query: `state:opened reviewer_username:@me scope:all`,
+					hidden: false
+				},
+				{
+					providerId: "gitlab/enterprise",
+					name: "Assigned to Me",
+					query: `state:opened scope:assigned_to_me`,
+					hidden: false
+				},
+				{
+					providerId: "gitlab/enterprise",
+					name: "Created by Me",
+					query: `state:opened scope:created_by_me`,
+					hidden: false
+				},
+				{
+					providerId: "gitlab/enterprise",
+					name: "Recent",
+					query: `recent`,
+					hidden: false
+				}
+			]
+		};
+		try {
+			const user = await SessionContainer.instance().session.api.meUser;
+			const providers = await this.getConnectedPullRequestProviders(user!);
+			const gitlabEnterprise = providers?.find(_ => _.getConfig().id === "gitlab/enterprise");
+			if (gitlabEnterprise) {
+				const version = await ((gitlabEnterprise as any) as GitLabEnterpriseProvider).getVersion();
+				if (version && version.version && semver.lt(version.version, "13.8.0")) {
+					// if doesn't support reviewers, change the first query
+					response["gitlab/enterprise"][0] = {
+						providerId: "gitlab/enterprise",
+						name: "All Open MRs",
+						query: `state:opened scope:all`,
+						hidden: false
+					};
+				}
+			}
+		} catch (ex) {
+			Logger.warn("getProviderDefaultPullRequestQueries", {
+				error: ex
+			});
+		}
+		return response;
 	}
 
 	private getPullRequestProvider(

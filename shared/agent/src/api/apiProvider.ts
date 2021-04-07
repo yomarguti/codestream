@@ -107,6 +107,8 @@ import {
 	KickUserResponse,
 	LeaveStreamRequest,
 	LeaveStreamResponse,
+	MarkItemReadRequest,
+	MarkItemReadResponse,
 	MarkPostUnreadRequest,
 	MarkPostUnreadResponse,
 	MarkStreamReadRequest,
@@ -317,7 +319,6 @@ export interface ApiProvider {
 	readonly meUser: CSMe | undefined;
 	readonly capabilities: Capabilities;
 	readonly features: CSApiFeatures | undefined;
-	readonly runTimeEnvironment: string | undefined;
 
 	providerType: ProviderType;
 
@@ -422,6 +423,7 @@ export interface ApiProvider {
 	joinStream(request: JoinStreamRequest): Promise<JoinStreamResponse>;
 	leaveStream(request: LeaveStreamRequest): Promise<LeaveStreamResponse>;
 	markStreamRead(request: MarkStreamReadRequest): Promise<MarkStreamReadResponse>;
+	markItemRead(request: MarkItemReadRequest): Promise<MarkItemReadResponse>;
 	muteStream(request: MuteStreamRequest): Promise<MuteStreamResponse>;
 	openStream(request: OpenStreamRequest): Promise<OpenStreamResponse>;
 	renameStream(request: RenameStreamRequest): Promise<RenameStreamResponse>;

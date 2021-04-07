@@ -78,12 +78,13 @@ import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { FormattedMessage } from "react-intl";
 import { Link } from "./Link";
 import { confirmPopup } from "./Confirm";
-import { openPanel, openModal, setUserPreference } from "./actions";
+import { openPanel, openModal, setUserPreference, markItemRead } from "./actions";
 import CancelButton from "./CancelButton";
 import { VideoLink } from "./Flow";
 import { PanelHeader } from "../src/components/PanelHeader";
 import { ReposState } from "../store/repos/types";
 import { getDocumentFromMarker } from "./api-functions";
+import { getPRLabel, LabelHash } from "../store/providers/reducer";
 
 export interface ICrossPostIssueContext {
 	setSelectedAssignees(any: any): void;
@@ -120,6 +121,9 @@ interface Props extends ConnectedProps {
 	openPanel: Function;
 	openModal: Function;
 	setUserPreference: Function;
+	markItemRead(
+		...args: Parameters<typeof markItemRead>
+	): ReturnType<ReturnType<typeof markItemRead>>;
 }
 
 interface ConnectedProps {
@@ -154,6 +158,7 @@ interface ConnectedProps {
 	textEditorUriContext: any;
 	textEditorUriHasPullRequestContext: boolean;
 	repos: ReposState;
+	prLabel: LabelHash;
 }
 
 interface State {
@@ -348,6 +353,17 @@ class CodemarkForm extends React.Component<Props, State> {
 		} = this.props;
 		const { codeBlocks } = this.state;
 
+		if (textEditorUriHasPullRequestContext) {
+			const changedPrLines = await HostApi.instance.send(GetShaDiffsRangesRequestType, {
+				repoId: textEditorUriContext.repoId,
+				filePath: textEditorUriContext.path,
+				baseSha: textEditorUriContext.leftSha,
+				headSha: textEditorUriContext.rightSha
+			});
+
+			this.setState({ changedPrLines });
+		}
+
 		if (codeBlocks.length === 1) {
 			if (isRangeEmpty(codeBlocks[0].range)) {
 				this.selectRangeInEditor(codeBlocks[0].uri, forceAsLine(codeBlocks[0].range));
@@ -372,17 +388,6 @@ class CodemarkForm extends React.Component<Props, State> {
 			}
 		}
 		// if (!multiLocation) this.focus();
-
-		if (textEditorUriHasPullRequestContext) {
-			const changedPrLines = await HostApi.instance.send(GetShaDiffsRangesRequestType, {
-				repoId: textEditorUriContext.repoId,
-				filePath: textEditorUriContext.path,
-				baseSha: textEditorUriContext.leftSha,
-				headSha: textEditorUriContext.rightSha
-			});
-
-			this.setState({ changedPrLines });
-		}
 	}
 
 	rangesAreEqual(range1?: Range, range2?: Range) {
@@ -801,7 +806,9 @@ class CodemarkForm extends React.Component<Props, State> {
 				const response = await HostApi.instance.send(GetReviewRequestType, {
 					reviewId: this.props.currentReviewId
 				});
-				parentPostId = response.review.postId;
+				const { review } = response;
+				parentPostId = review.postId;
+				this.props.markItemRead(review.id, review.numReplies + 1);
 			} catch (error) {
 				// FIXME what do we do if we don't find the review?
 			}
@@ -2410,7 +2417,7 @@ class CodemarkForm extends React.Component<Props, State> {
 										: this.props.currentReviewId
 										? "Add Comment to Review"
 										: this.props.textEditorUriHasPullRequestContext
-										? "Add single comment"
+										? this.props.prLabel.AddSingleComment
 										: this.props.editingCodemark
 										? "Save"
 										: "Submit"}
@@ -2547,13 +2554,15 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		codemarkState: codemarks,
 		multipleMarkersEnabled: isFeatureEnabled(state, "multipleMarkers"),
 		currentReviewId: context.currentReviewId,
-		inviteUsersOnTheFly
+		inviteUsersOnTheFly,
+		prLabel: getPRLabel(state)
 	};
 };
 
 const ConnectedCodemarkForm = connect(mapStateToProps, {
 	openPanel,
 	openModal,
+	markItemRead,
 	setUserPreference
 })(CodemarkForm);
 

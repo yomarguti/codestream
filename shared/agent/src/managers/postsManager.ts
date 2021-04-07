@@ -53,6 +53,9 @@ import {
 	GetPostResponse,
 	GetPostsRequest,
 	GetPostsRequestType,
+	MarkItemReadRequest,
+	MarkItemReadRequestType,
+	MarkItemReadResponse,
 	MarkPostUnreadRequest,
 	MarkPostUnreadRequestType,
 	MarkPostUnreadResponse,
@@ -952,6 +955,36 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				_ => endLine >= _.newStart && endLine <= _.newStart + _.newLines
 			);
 
+			let fileWithUrl;
+			const codeBlock = request.attributes.codeBlocks[0];
+			const repo = await repos.getById(parsedUri.repoId);
+			let remoteList: string[] | undefined;
+			if (repo && repo.remotes && repo.remotes.length) {
+				// if we have a list of remotes from the marker / repo (a.k.a. server)... use that
+				remoteList = repo.remotes.map(_ => _.normalizedUrl);
+			}
+			let remoteUrl;
+			if (remoteList) {
+				for (const remote of remoteList) {
+					remoteUrl = Marker.getRemoteCodeUrl(
+						remote,
+						parsedUri.rightSha,
+						codeBlock.scm?.file!,
+						startLine,
+						endLine
+					);
+
+					if (remoteUrl !== undefined) {
+						break;
+					}
+				}
+			}
+
+			if (remoteUrl) {
+				fileWithUrl = `[${codeBlock.scm?.file}](${remoteUrl.url})`;
+			} else {
+				fileWithUrl = codeBlock.scm?.file;
+			}
 			// only fall in here if we don't have a start OR we dont have both
 			if (!startHunk || (!startHunk && !endHunk)) {
 				// if we couldn't find a hunk, we're going to go down the path of using
@@ -961,35 +994,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 						parsedUri.context
 					)}`
 				);
-				const codeBlock = request.attributes.codeBlocks[0];
-				const repo = await repos.getById(parsedUri.repoId);
-				let remoteList: string[] | undefined;
-				if (repo && repo.remotes && repo.remotes.length) {
-					// if we have a list of remotes from the marker / repo (a.k.a. server)... use that
-					remoteList = repo.remotes.map(_ => _.normalizedUrl);
-				}
-				let remoteUrl;
-				if (remoteList) {
-					for (const remote of remoteList) {
-						remoteUrl = Marker.getRemoteCodeUrl(
-							remote,
-							parsedUri.rightSha,
-							codeBlock.scm?.file!,
-							startLine,
-							endLine
-						);
-
-						if (remoteUrl !== undefined) {
-							break;
-						}
-					}
-				}
-				let fileWithUrl;
-				if (remoteUrl) {
-					fileWithUrl = `[${codeBlock.scm?.file}](${remoteUrl.url})`;
-				} else {
-					fileWithUrl = codeBlock.scm?.file;
-				}
 
 				const result = await providerRegistry.executeMethod({
 					method: "addComment",
@@ -1028,7 +1032,10 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 							pullRequestId: parsedUri.context.pullRequest.id,
 							// pullRequestReviewId will be looked up
 							text: request.attributes.text || "",
+							leftSha: parsedUri.leftSha,
+							sha: parsedUri.rightSha,
 							filePath: parsedUri.path,
+							startLine: startLine,
 							position: lineWithMetadata.position
 						}
 					});
@@ -1049,13 +1056,20 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					providerId: parsedUri.context.pullRequest.providerId,
 					params: {
 						pullRequestId: parsedUri.context.pullRequest.id,
+						leftSha: parsedUri.leftSha,
 						sha: parsedUri.rightSha,
 						text: request.attributes.text || "",
 						path: parsedUri.path,
 						startLine: startLine,
 						endLine: calculatedEndLine,
 						// legacy servers will need this
-						position: lineWithMetadata?.position
+						position: lineWithMetadata?.position,
+						metadata: {
+							contents: codeBlock.contents,
+							fileWithUrl: fileWithUrl,
+							startLine: startLine,
+							endLine: endLine
+						}
 					}
 				});
 			}
@@ -1801,6 +1815,11 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	@lspHandler(MarkPostUnreadRequestType)
 	markPostUnread(request: MarkPostUnreadRequest): Promise<MarkPostUnreadResponse> {
 		return this.session.api.markPostUnread(request);
+	}
+
+	@lspHandler(MarkItemReadRequestType)
+	markItemRead(request: MarkItemReadRequest): Promise<MarkItemReadResponse> {
+		return this.session.api.markItemRead(request);
 	}
 
 	@lspHandler(ReactToPostRequestType)

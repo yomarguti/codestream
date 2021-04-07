@@ -52,6 +52,7 @@ export interface LabelHash {
 	PR: string;
 	PRs: string;
 	pr: string;
+	AddSingleComment: string;
 }
 
 const MRLabel = {
@@ -62,7 +63,8 @@ const MRLabel = {
 	pullrequests: "merge requests",
 	PR: "MR",
 	PRs: "MRs",
-	pr: "mr"
+	pr: "mr",
+	AddSingleComment: "Add comment now"
 };
 
 const PRLabel = {
@@ -73,14 +75,15 @@ const PRLabel = {
 	pullrequests: "pull requests",
 	PR: "PR",
 	PRs: "PRs",
-	pr: "pr"
+	pr: "pr",
+	AddSingleComment: "Add single comment"
 };
 
 export const getPRLabel = createSelector(
 	(state: CodeStreamState) => state,
 	(state: CodeStreamState): LabelHash => {
-		return isConnected(state, { name: "gitlab" }) ||
-			isConnected(state, { name: "gitlab_enterprise" })
+		return isConnected(state, { id: "gitlab*com" }) ||
+			isConnected(state, { id: "gitlab/enterprise" })
 			? MRLabel
 			: PRLabel;
 	}
@@ -325,7 +328,11 @@ export const getSupportedPullRequestHosts = createSelector(
 	(state: CodeStreamState) => state.providers,
 	(providerConfigs: ProvidersState) => {
 		return Object.values(providerConfigs).filter(
-			_ => _.id === "github*com" || _.id === "github/enterprise"
+			_ =>
+				_.id === "github*com" ||
+				_.id === "github/enterprise" ||
+				_.id === "gitlab*com" ||
+				_.id === "gitlab/enterprise"
 		);
 	}
 );
@@ -337,7 +344,42 @@ export const getConnectedSupportedPullRequestHosts = createSelector(
 	(state: CodeStreamState) => state.providers,
 	(users: UsersState, currentTeamId: string, session: SessionState, providers: ProvidersState) => {
 		return Object.values(providers)
-			.filter(_ => _.id === "github*com" || _.id === "github/enterprise")
+			.filter(
+				_ =>
+					_.id === "github*com" ||
+					_.id === "github/enterprise" ||
+					_.id === "gitlab*com" ||
+					_.id === "gitlab/enterprise"
+			)
+			.map(_ => {
+				let obj: { accessTokenError?: boolean } = {};
+				const value = isConnectedSelectorFriendly(
+					users,
+					currentTeamId,
+					session,
+					providers,
+					{ id: _.id },
+					undefined,
+					obj
+				);
+				return {
+					..._,
+					hasAccessTokenError: !!obj.accessTokenError,
+					isConnected: value
+				};
+			})
+			.filter(_ => _.isConnected);
+	}
+);
+
+export const getConnectedGitLabHosts = createSelector(
+	(state: CodeStreamState) => state.users,
+	(state: CodeStreamState) => state.context.currentTeamId,
+	(state: CodeStreamState) => state.session,
+	(state: CodeStreamState) => state.providers,
+	(users: UsersState, currentTeamId: string, session: SessionState, providers: ProvidersState) => {
+		return Object.values(providers)
+			.filter(_ => _.id === "gitlab*com" || _.id === "gitlab/enterprise")
 			.map(_ => {
 				let obj: { accessTokenError?: boolean } = {};
 				const value = isConnectedSelectorFriendly(

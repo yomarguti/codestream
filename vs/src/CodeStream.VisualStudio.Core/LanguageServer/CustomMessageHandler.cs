@@ -184,9 +184,9 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 
 		public class UserPreferencesChangedSubjectArgs {
 			public DidChangeUserPreferencesData Data { get; }
-			public UserPreferencesChangedSubjectArgs(DidChangeUserPreferencesData data ) {
-				Data = data;			 
-			}		 
+			public UserPreferencesChangedSubjectArgs(DidChangeUserPreferencesData data) {
+				Data = data;
+			}
 		}
 
 		/// <summary>
@@ -328,6 +328,20 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 				}
 				catch (Exception ex) {
 					Log.Error(ex, $"Problem with {nameof(MaintenanceModeAsync)}");
+				}
+			}
+
+			await System.Threading.Tasks.Task.CompletedTask;
+		}
+
+		[JsonRpcMethod(DidSetEnvironmentNotificationType.MethodName)]
+		public async System.Threading.Tasks.Task SetEnvironmentAsync(JToken e) {
+			using (Log.CriticalOperation($"{nameof(SetEnvironmentAsync)} Method={DidSetEnvironmentNotificationType.MethodName}", Serilog.Events.LogEventLevel.Debug)) {
+				try {
+					_settingsServiceFactory.GetOrCreate().SetEnvironment(e.ToObject<CodeStreamEnvironmentInfo>());
+				}
+				catch (Exception ex) {
+					Log.Error(ex, $"Problem with {nameof(SetEnvironmentAsync)}");
 				}
 			}
 

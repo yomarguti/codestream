@@ -88,7 +88,7 @@ export class UsersManager extends CachedEntityManagerBase<CSUser> {
 
 		const ret: BlameAuthor[] = [];
 		emails.forEach((email: string) => {
-			const user = users.find(u => u.email.toLocaleLowerCase() === email);
+			const user = users.find(u => u.email?.toLocaleLowerCase() === email);
 			if (user) ret.unshift({ id: user.id, email: user.email, username: user.username });
 			else ret.push({ email });
 		});

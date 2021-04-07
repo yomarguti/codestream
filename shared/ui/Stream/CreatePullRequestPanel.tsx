@@ -24,7 +24,8 @@ import {
 	DiffBranchesRequestType,
 	ExecuteThirdPartyRequestUntypedType,
 	FetchRemoteBranchRequestType,
-	FetchBranchCommitsStatusRequestType
+	FetchBranchCommitsStatusRequestType,
+	ReadTextFileRequestType
 } from "@codestream/protocols/agent";
 import { connectProvider } from "./actions";
 import { isConnected, getPRLabel } from "../store/providers/reducer";
@@ -50,7 +51,7 @@ import { EMPTY_STATUS } from "./StartWork";
 import Tooltip from "./Tooltip";
 import { PullRequestFilesChangedList } from "./PullRequestFilesChangedList";
 import { PRBranch, PRError } from "./PullRequestComponents";
-import { isOnPrem } from "../store/configs/reducer";
+import { InlineMenu } from "../src/components/controls/InlineMenu";
 
 export const ButtonRow = styled.div`
 	text-align: right;
@@ -118,7 +119,12 @@ export const CreatePullRequestPanel = props => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { providers, context, configs } = state;
 
-		const supportedPullRequestViewProviders = ["github*com", "github/enterprise"];
+		const supportedPullRequestViewProviders = [
+			"github*com",
+			"github/enterprise",
+			"gitlab*com",
+			"gitlab/enterprise"
+		];
 		const codeHostProviders = Object.keys(providers).filter(id =>
 			[
 				"github",
@@ -141,17 +147,17 @@ export const CreatePullRequestPanel = props => {
 			providers: providers,
 			codeHostProviders: codeHostProviders,
 			reviewId: context.createPullRequestReviewId,
-			isConnectedToGitHub: isConnected(state, { name: "github" }),
-			isConnectedToGitLab: isConnected(state, { name: "gitlab" }),
-			isConnectedToBitbucket: isConnected(state, { name: "bitbucket" }),
-			isConnectedToGitHubEnterprise: isConnected(state, { name: "github_enterprise" }),
-			isConnectedToGitLabEnterprise: isConnected(state, { name: "gitlab_enterprise" }),
-			isConnectedToBitbucketServer: isConnected(state, { name: "bitbucket_server" }),
+			isConnectedToGitHub: isConnected(state, { id: "github*com" }),
+			isConnectedToGitLab: isConnected(state, { id: "gitlab*com" }),
+			isConnectedToBitbucket: isConnected(state, { id: "bitbucket*org" }),
+			isConnectedToGitHubEnterprise: isConnected(state, { id: "github/enterprise" }),
+			isConnectedToGitLabEnterprise: isConnected(state, { id: "gitlab/enterprise" }),
+			isConnectedToBitbucketServer: isConnected(state, { id: "bitbucket/server" }),
 			prLabel: getPRLabel(state),
 			currentRepo: context.currentRepo,
 			ideName: state.ide.name,
 			newPullRequestOptions: state.context.newPullRequestOptions,
-			isOnPrem: isOnPrem(configs)
+			isOnPrem: configs.isOnPrem
 		};
 	});
 	const { userStatus, reviewId, prLabel } = derivedState;
@@ -213,6 +219,10 @@ export const CreatePullRequestPanel = props => {
 
 	const [commitsBehindOrigin, setCommitsBehindOrigin] = useState(0);
 	const [unexpectedPullError, setUnexpectedPullError] = useState(false);
+
+	const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+	const [pullRequestTemplateNames, setPullRequestTemplateNames] = useState<string[] | undefined>();
+	const [templatePath, setTemplatePath] = useState<string | undefined>("");
 
 	const fetchPreconditionDataRef = useRef((isRepoUpdate?: boolean) => {});
 
@@ -316,6 +326,8 @@ export const CreatePullRequestPanel = props => {
 
 				const template = result.pullRequestTemplate || "";
 				setNumLines(Math.max(template.split("\n").length, 8));
+				setPullRequestTemplateNames(result.pullRequestTemplateNames);
+				setTemplatePath(result.pullRequestTemplatePath);
 				let newText = result.pullRequestTemplate || "";
 				if (result.review && result.review.text) newText += result.review.text;
 				if (!prTextTouched) setPrText(newText);
@@ -441,7 +453,10 @@ export const CreatePullRequestPanel = props => {
 	const onSubmit = async (event: React.SyntheticEvent) => {
 		setUnexpectedError(false);
 		pauseDataNotifications.current = true;
-		if (!isTitleValid(prTitle)) return;
+		if (!isTitleValid(prTitle)) {
+			setTitleValidity(false);
+			return;
+		}
 
 		let success = false;
 		setSubmitting(true);
@@ -482,7 +497,10 @@ export const CreatePullRequestPanel = props => {
 				});
 				success = true;
 				setFormState({ message: "", type: "", url: "", id: "" });
-				if (result.id && (prProviderId === "github*com" || prProviderId === "github/enterprise")) {
+				if (
+					result.id &&
+					derivedState.supportedPullRequestViewProviders.find(_ => _ === prProviderId)
+				) {
 					props.closePanel();
 					dispatch(setCurrentPullRequest(prProviderId, result.id!));
 				} else {
@@ -1021,9 +1039,24 @@ export const CreatePullRequestPanel = props => {
 			let element = getErrorElement(preconditionError);
 			if (element) {
 				return (
-					<PRError>
-						<Icon name="alert" /> {element}
-					</PRError>
+					<>
+						{(acrossForks || openRepos.length > 1) && !reviewId && (
+							<PRError>
+								<div className="control-group">
+									<PRCompare>
+										<PRDropdown>
+											{!acrossForks && <Icon name="repo" />}
+											{renderBaseReposDropdown()}
+										</PRDropdown>
+									</PRCompare>
+								</div>
+							</PRError>
+						)}
+						<PRError>
+							<Icon name="alert" />
+							{element}
+						</PRError>
+					</>
 				);
 			}
 		}
@@ -1339,7 +1372,7 @@ export const CreatePullRequestPanel = props => {
 		<Root className="full-height-codemark-form">
 			<PanelHeader title={`Open a ${prLabel.PullRequest}`}>
 				{reviewId ? "" : `Choose two branches to start a new ${prLabel.pullrequest}.`}
-				{!reviewId && (prProviderId === "github*com" || prProviderId === "github/enterprise") && (
+				{!reviewId && (
 					<>
 						{" "}
 						If you need to, you can also{" "}
@@ -1421,8 +1454,6 @@ export const CreatePullRequestPanel = props => {
 													placeholder={`${prLabel.Pullrequest} title`}
 													autoFocus
 													onChange={setPrTitle}
-													onValidityChanged={onValidityChanged}
-													validate={isTitleValid}
 												/>
 												<div className="actions">
 													{prTitle.length > 0 && (
@@ -1466,6 +1497,45 @@ export const CreatePullRequestPanel = props => {
 												</div>
 											</div>
 											<div className="control-group">
+												{pullRequestTemplateNames && (
+													<div style={{ marginBottom: "10px" }}>
+														<DropdownButton
+															variant="secondary"
+															selectedKey={selectedTemplate}
+															items={pullRequestTemplateNames
+																.map(name => {
+																	const path = `${name}.md`;
+																	return {
+																		label: name,
+																		key: name,
+																		action: async () => {
+																			const response = (await HostApi.instance.send(
+																				ReadTextFileRequestType,
+																				{ path, baseDir: templatePath }
+																			)) as any;
+																			setSelectedTemplate(name);
+																			setPrText(response.contents);
+																		}
+																	} as any;
+																})
+																.concat(
+																	{
+																		label: "-"
+																	},
+																	{
+																		label: "No template",
+																		key: "__none__",
+																		action: async () => {
+																			setSelectedTemplate("__none__");
+																			setPrText("");
+																		}
+																	}
+																)}
+														>
+															Select a template
+														</DropdownButton>
+													</div>
+												)}
 												<textarea
 													className="input-text"
 													name="description"
@@ -1475,7 +1545,7 @@ export const CreatePullRequestPanel = props => {
 														setPrTextTouched(true);
 														setPrText(e.target.value);
 													}}
-													placeholder={`${prLabel.Pullrequest}  description (optional)`}
+													placeholder={`${prLabel.Pullrequest} description (optional)`}
 													style={{ resize: "vertical" }}
 												/>
 											</div>

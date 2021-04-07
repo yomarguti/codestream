@@ -25,5 +25,8 @@ namespace CodeStream.VisualStudio.Core.Services {
 		/// Resume the propertyChanged notifications
 		/// </summary>
 		void ResumeNotifications();
+
+		void SetEnvironment(CodeStreamEnvironmentInfo environment);
+		CodeStreamEnvironmentInfo GetCodeStreamEnvironmentInfo { get; }
 	}
 }

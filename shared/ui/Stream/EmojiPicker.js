@@ -78,10 +78,14 @@ export class SimpleEmojiPicker extends Component {
 
 		KeystrokeDispatcher.levelUp();
 		this.disposables.push(
-			KeystrokeDispatcher.onKeyDown("Escape", event => {
-				this.closePicker();
-				this.props.addEmoji("");
-			}, { source: "EmojiPicker.js", level: -1 }),
+			KeystrokeDispatcher.onKeyDown(
+				"Escape",
+				event => {
+					this.closePicker();
+					this.props.addEmoji("");
+				},
+				{ source: "EmojiPicker.js", level: -1 }
+			)
 		);
 	}
 
@@ -90,11 +94,9 @@ export class SimpleEmojiPicker extends Component {
 			const modalRoot = document.getElementById("modal-root");
 			this.closePicker();
 			modalRoot.removeChild(this.el);
-		}
-		catch (err) {
+		} catch (err) {
 			logWarning(err);
-		}
-		finally {
+		} finally {
 			KeystrokeDispatcher.levelDown();
 			this.disposables.forEach(d => d.dispose());
 		}
@@ -130,6 +132,7 @@ export class SimpleEmojiPicker extends Component {
 							native={true}
 							title=""
 							style={style}
+							emojisToShowFilter={this.props.emojisToShowFilter}
 						/>
 					</div>
 				)}

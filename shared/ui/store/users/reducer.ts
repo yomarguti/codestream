@@ -1,4 +1,4 @@
-import { CSUser, CSStream, StreamType } from "@codestream/protocols/api";
+import { CSUser, CSStream, StreamType, CSPost } from "@codestream/protocols/api";
 import { createSelector } from "reselect";
 import { mapFilter, toMapBy, emptyArray } from "../../utils";
 import { ActionType } from "../common";
@@ -8,6 +8,8 @@ import { CodeStreamState } from "..";
 import { difference, isString } from "lodash-es";
 import { getStreamForId } from "../streams/reducer";
 import { PreferencesState } from "../preferences/types";
+import { UnreadsState } from "../unreads/types";
+import { isFeatureEnabled } from "../apiVersioning/reducer";
 
 type UsersActions = ActionType<typeof actions>;
 
@@ -152,6 +154,65 @@ export const getStreamMembers = createSelector(
 export const getPreferences = createSelector(
 	(state: CodeStreamState) => state.preferences,
 	(preferences: PreferencesState) => preferences
+);
+
+export const getReadReplies = createSelector(
+	(state: CodeStreamState) => state.preferences,
+	(_: any, id: string) => id,
+	(preferences: PreferencesState, id: string) => (preferences.readReplies || {})[id] || 0
+);
+
+interface Readable {
+	id: string;
+	numReplies: number;
+	modifiedAt: number;
+	creatorId: string;
+}
+
+const isItemUnread = (item: Readable, lastReadItem: number | undefined, userId: string) => {
+	// start represents when this feature was first deployed;
+	// items before that won't have the unread badge otherwise
+	// customers will just have a "sea of blue" even though they
+	// may be up-to-date on all content
+	const start = 1617827398000;
+	if (item.modifiedAt < start) return false;
+	// if we are the author and there are no replies, the not unread
+	if (item.creatorId == userId && item.numReplies == 0) return false;
+	// if we've never read the item, or if there are new replies
+	// since the last time we read it, return true
+	return lastReadItem == undefined || item.numReplies > lastReadItem;
+};
+
+export const isUnread = createSelector(
+	(state: CodeStreamState) => (isFeatureEnabled(state, "readItem") ? state.umis : undefined),
+	(state: CodeStreamState) => state.session.userId || "",
+	(_a: any, item: Readable) => item,
+	(umis: UnreadsState | undefined, userId: string, item: Readable) => {
+		if (!umis || !item) return false;
+		const { lastReadItems } = umis;
+		return isItemUnread(item, lastReadItems[item.id], userId);
+	}
+);
+
+export const unreadMap = createSelector(
+	(state: CodeStreamState) => (isFeatureEnabled(state, "readItem") ? state.umis : undefined),
+	(state: CodeStreamState) => state.session.userId || "",
+	(_a: any, items: Readable[]) => items,
+	(umis: UnreadsState | undefined, userId: string, items: Readable[]) => {
+		const ret = {};
+		// if it's not supported, just return false for every item
+		if (!umis) {
+			items.forEach(item => {
+				ret[item.id] = false;
+			});
+			return ret;
+		}
+		const { lastReadItems = {} } = umis;
+		items.filter(Boolean).forEach(item => {
+			ret[item.id] = isItemUnread(item, lastReadItems[item.id], userId);
+		});
+		return ret;
+	}
 );
 
 export const getCodeCollisions = createSelector(

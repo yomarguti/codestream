@@ -6,7 +6,7 @@ import {
 	BaseAgentOptions,
 	BootstrapRequestType,
 	CloseStreamRequestType,
-	CodeStreamEnvironment,
+	CodeStreamEnvironmentInfo,
 	CreateChannelStreamRequestType,
 	CreateDirectStreamRequestType,
 	CreateDocumentMarkerPermalinkRequestType,
@@ -99,7 +99,8 @@ import {
 	UpdateUserRequest,
 	UpdateUserRequestType,
 	UserDidCommitNotificationType,
-	UserDidCommitNotification
+	UserDidCommitNotification,
+	DidSetEnvironmentNotificationType
 } from "@codestream/protocols/agent";
 import {
 	ChannelServiceType,
@@ -206,7 +207,9 @@ export class CodeStreamAgentConnection implements Disposable {
 		return this._onUserDidCommit.event;
 	}
 
-	private _onDidDetectUnreviewedCommits = new EventEmitter<DidDetectUnreviewedCommitsNotification>();
+	private _onDidDetectUnreviewedCommits = new EventEmitter<
+		DidDetectUnreviewedCommitsNotification
+	>();
 	get onDidDetectUnreviewedCommits(): Event<DidDetectUnreviewedCommitsNotification> {
 		return this._onDidDetectUnreviewedCommits.event;
 	}
@@ -229,6 +232,11 @@ export class CodeStreamAgentConnection implements Disposable {
 	private _onAgentInitialized = new EventEmitter<void>();
 	get onAgentInitialized(): Event<void> {
 		return this._onAgentInitialized.event;
+	}
+
+	private _onDidSetEnvironment = new EventEmitter<CodeStreamEnvironmentInfo>();
+	get onDidSetEnvironment(): Event<CodeStreamEnvironmentInfo> {
+		return this._onDidSetEnvironment.event;
 	}
 
 	private _client: LanguageClient | undefined;
@@ -262,7 +270,7 @@ export class CodeStreamAgentConnection implements Disposable {
 				error: (error: Error, message: Message, count: number) => {
 					Logger.error(error, "AgentConnection.error", message.jsonrpc, count);
 
-					if (Container.session.environment !== CodeStreamEnvironment.Production) {
+					if (!Container.session.isProductionCloud) {
 						window.showErrorMessage(
 							`CodeStream Connection Error (${count})\n${error.message}\n${message.jsonrpc}`
 						);
@@ -274,7 +282,7 @@ export class CodeStreamAgentConnection implements Disposable {
 					this._restartCount++;
 					Logger.error(undefined!, "AgentConnection.closed");
 
-					if (Container.session.environment !== CodeStreamEnvironment.Production) {
+					if (!Container.session.isProductionCloud) {
 						window.showErrorMessage(
 							"CodeStream Connection Closed\nAttempting to reestablish connection..."
 						);
@@ -1115,7 +1123,14 @@ export class CodeStreamAgentConnection implements Disposable {
 			this._onAgentInitialized.fire();
 		});
 		this._client.onNotification(UserDidCommitNotificationType, this.onUserCommitted.bind(this));
-		this._client.onNotification(DidDetectUnreviewedCommitsNotificationType, this.onUnreviewedCommitsDetected.bind(this));
+		this._client.onNotification(
+			DidDetectUnreviewedCommitsNotificationType,
+			this.onUnreviewedCommitsDetected.bind(this)
+		);
+		this._client.onNotification(DidSetEnvironmentNotificationType, e =>
+			this._onDidSetEnvironment.fire(e)
+		);
+
 		this._client.onRequest(AgentOpenUrlRequestType, e => this._onOpenUrl.fire(e));
 	}
 

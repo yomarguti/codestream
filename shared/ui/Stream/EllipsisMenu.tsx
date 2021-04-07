@@ -16,7 +16,6 @@ import { setProfileUser, openModal } from "../store/context/actions";
 import { confirmPopup } from "./Confirm";
 import { DeleteUserRequestType, UpdateTeamSettingsRequestType } from "@codestream/protocols/agent";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
-import { isOnPrem } from "../store/configs/reducer";
 import { setUserPreference } from "./actions";
 import { AVAILABLE_PANES } from "./Sidebar";
 import { Link } from "../Stream/Link";
@@ -33,7 +32,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const team = state.teams[state.context.currentTeamId];
 		const user = state.users[state.session.userId!];
-		const onPrem = isOnPrem(state.configs);
+		const onPrem = state.configs.isOnPrem;
 
 		return {
 			sidebarPanePreferences: state.preferences.sidebarPanes || EMPTY_HASH,
@@ -372,7 +371,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		{ label: "Integrations", action: () => dispatch(openPanel(WebviewPanels.Integrations)) },
 		{
 			label: "Feedback",
-			action: () => openUrl("mailto:team@codestream.com?Subject=CodeStream Feedback")
+			action: () => openUrl("https://github.com/TeamCodeStream/codestream/issues")
 		},
 		{
 			label: "Help",

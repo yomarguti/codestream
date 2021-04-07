@@ -24,7 +24,7 @@ import {
 	setCurrentPullRequestAndBranch,
 	setCurrentReview
 } from "../context/actions";
-import { isAnHourOld } from "./reducer";
+import { getPullRequestExactId, isAnHourOld } from "./reducer";
 
 export const reset = () => action("RESET");
 
@@ -97,15 +97,27 @@ const _getPullRequestConversationsFromProvider = async (providerId: string, id: 
 	});
 
 	let response2: FetchAssignableUsersResponse | undefined = undefined;
+	let boardId;
 	if (
 		response1 &&
 		response1.repository &&
 		response1.repository.repoOwner &&
 		response1.repository.repoName
 	) {
+		boardId = `${response1.repository.repoOwner}/${response1.repository.repoName}`;
+	} else if (
+		response1 &&
+		(response1 as any).project &&
+		(response1 as any).project.mergeRequest &&
+		(response1 as any).project.mergeRequest.repository.nameWithOwner
+	) {
+		// gitlab requires this to be encoded
+		boardId = encodeURIComponent((response1 as any).project.mergeRequest.repository.nameWithOwner);
+	}
+	if (boardId) {
 		response2 = await HostApi.instance.send(FetchAssignableUsersRequestType, {
 			providerId: providerId,
-			boardId: `${response1.repository.repoOwner}/${response1.repository.repoName}`
+			boardId: boardId
 		});
 	}
 	return {
@@ -197,10 +209,11 @@ export const getPullRequestFiles = (
 		const state = getState();
 		const provider = state.providerPullRequests.pullRequests[providerId];
 		const commitsIndex = JSON.stringify(commits);
+		let exactId = getPullRequestExactId(state);
 		if (provider) {
-			const pr = provider[id];
+			const pr = provider[exactId];
 			if (pr && pr.files && pr.files[commitsIndex] && pr.files[commitsIndex].length) {
-				console.log(`fetched pullRequest files from store providerId=${providerId} id=${id}`);
+				console.log(`fetched pullRequest files from store providerId=${providerId} id=${exactId}`);
 				return pr.files[commitsIndex];
 			}
 		}
@@ -284,12 +297,14 @@ export const clearPullRequestCommits = (providerId: string, id: string) =>
 
 export const getPullRequestCommitsFromProvider = (
 	providerId: string,
-	id: string
+	id: string,
+	metadata: any
 ) => async dispatch => {
 	try {
 		const response = await HostApi.instance.send(FetchThirdPartyPullRequestCommitsType, {
 			providerId,
-			pullRequestId: id
+			pullRequestId: id,
+			metadata: metadata
 		});
 		dispatch(_addPullRequestCommits(providerId, id, response));
 		return response;
@@ -299,17 +314,23 @@ export const getPullRequestCommitsFromProvider = (
 	return undefined;
 };
 
-export const getPullRequestCommits = (providerId: string, id: string) => async (
-	dispatch,
-	getState: () => CodeStreamState
-) => {
+export const getPullRequestCommits = (
+	providerId: string,
+	id: string,
+	options?: { force: true }
+) => async (dispatch, getState: () => CodeStreamState) => {
 	try {
 		const state = getState();
 		const provider = state.providerPullRequests.pullRequests[providerId];
-		if (provider) {
-			const pr = provider[id];
+		if (options?.force) {
+			console.log(`fetching new pullRequest commits from store providerId=${providerId}`);
+		} else if (provider) {
+			const exactId = getPullRequestExactId(state);
+			const pr = provider[exactId];
 			if (pr && pr.commits && pr.commits.length) {
-				console.log(`fetched pullRequest commits from store providerId=${providerId} id=${id}`);
+				console.log(
+					`fetched pullRequest commits from store providerId=${providerId} id=${exactId}`
+				);
 				return pr.commits;
 			}
 		}
@@ -415,13 +436,17 @@ export const clearProviderError = (
 export const api = <T = any, R = any>(
 	method:
 		| "addReviewerToPullRequest"
+		| "cancelMergeWhenPipelineSucceeds"
 		| "createCommentReply"
 		| "createPullRequestComment"
 		| "createPullRequestCommentAndClose"
 		| "createPullRequestCommentAndReopen"
-		| "deletePullRequestComment"
+		| "createPullRequestThread"
 		| "createPullRequestInlineComment"
 		| "createPullRequestInlineReviewComment"
+		| "createToDo"
+		| "deletePullRequest"
+		| "deletePullRequestComment"
 		| "deletePullRequestReview"
 		| "getIssues"
 		| "getLabels"
@@ -432,19 +457,25 @@ export const api = <T = any, R = any>(
 		| "getReviewers"
 		| "lockPullRequest"
 		| "markPullRequestReadyForReview"
+		| "markToDoDone"
 		| "mergePullRequest"
+		| "remoteBranches"
 		| "removeReviewerFromPullRequest"
 		| "resolveReviewThread"
 		| "setAssigneeOnPullRequest"
 		| "setIssueOnPullRequest"
 		| "setLabelOnPullRequest"
+		| "setReviewersOnPullRequest"
+		| "setWorkInProgressOnPullRequest"
 		| "submitReview"
 		| "toggleReaction"
 		| "toggleMilestoneOnPullRequest"
 		| "toggleProjectOnPullRequest"
+		| "togglePullRequestApproval"
 		| "unresolveReviewThread"
 		| "updateIssueComment"
 		| "unlockPullRequest"
+		| "updatePullRequest"
 		| "updatePullRequestBody"
 		| "updatePullRequestSubscription"
 		| "updatePullRequestTitle"
@@ -474,6 +505,10 @@ export const api = <T = any, R = any>(
 
 		params = params || {};
 		if (!params.pullRequestId) params.pullRequestId = pullRequestId;
+		if (currentPullRequest.metadata) {
+			params = { ...params, ...currentPullRequest.metadata };
+			params.metadata = currentPullRequest.metadata;
+		}
 		const response = (await HostApi.instance.send(new ExecuteThirdPartyTypedType<T, R>(), {
 			method: method,
 			providerId: providerId,

@@ -2,7 +2,7 @@ import React, { PropsWithChildren } from "react";
 import styled from "styled-components";
 import Icon from "@codestream/webview/Stream/Icon";
 
-type ButtonSize = "default" | "xl" | "large" | "compact" | "subcompact";
+type ButtonSize = "default" | "xl" | "large" | "compact" | "compactwide" | "subcompact";
 
 const getFontSize = (size?: ButtonSize, variant?: ButtonVariant) => {
 	if (variant == "text") return "font-size: inherit !important";
@@ -12,6 +12,8 @@ const getFontSize = (size?: ButtonSize, variant?: ButtonVariant) => {
 		case "large":
 			return "font-size: 1.15em !important;";
 		case "compact":
+			return "font-size: 12px !important;";
+		case "compactwide":
 			return "font-size: 12px !important;";
 		case "subcompact":
 			return "font-size: 12px !important;";
@@ -30,6 +32,8 @@ const getPadding = (size?: ButtonSize, variant?: ButtonVariant) => {
 			return "padding: 1px 15px;";
 		case "compact":
 			return "padding: 1px 5px;";
+		case "compactwide":
+			return "padding: 1px 8px;";
 		case "subcompact":
 			return "padding: 1px 5px;";
 		case "default":
@@ -46,6 +50,8 @@ const getLineHeight = (size?: ButtonSize, variant?: ButtonVariant) => {
 		case "large":
 			return "line-height: 2em;";
 		case "compact":
+			return "line-height: 1.6em;";
+		case "compactwide":
 			return "line-height: 1.6em;";
 		case "subcompact":
 			return "line-height: 1.4em;";
@@ -162,6 +168,7 @@ export const ButtonRoot = styled.button<ButtonProps>(props => {
 	${getFontSize(props.size, props.variant)}
 	${getPadding(props.size, props.variant)}
 	${getLineHeight(props.size, props.variant)}
+	${props.narrow ? "padding-left: 3px; padding-right: 3px;" : ""}
 	border-radius: 0;
 	border: 1px solid transparent !important;
 	outline: none !important;
@@ -187,7 +194,7 @@ const ButtonAppend = styled.div`
 	margin-left: 10px;
 `;
 
-type ButtonVariant =
+export type ButtonVariant =
 	| "primary"
 	| "secondary"
 	| "destructive"
@@ -209,6 +216,7 @@ export interface ButtonProps extends PropsWithChildren<{}> {
 	fillParent?: boolean;
 	className?: string;
 	tabIndex?: number;
+	narrow?: boolean;
 }
 
 export function getButtonProps<P extends ButtonProps>(props: P): ButtonProps {
@@ -221,7 +229,8 @@ export function getButtonProps<P extends ButtonProps>(props: P): ButtonProps {
 		prependIcon: props.prependIcon,
 		appendIcon: props.appendIcon,
 		onClick: props.onClick,
-		fillParent: props.fillParent
+		fillParent: props.fillParent,
+		narrow: props.narrow
 	};
 }
 

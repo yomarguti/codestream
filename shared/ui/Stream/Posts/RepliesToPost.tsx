@@ -5,7 +5,7 @@ import { CodeStreamState } from "@codestream/webview/store";
 import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
 import { getTeamMates, findMentionedUserIds } from "@codestream/webview/store/users/reducer";
 import React from "react";
-import { createPost, deletePost, fetchThread } from "../actions";
+import { createPost, deletePost, fetchThread, markItemRead } from "../actions";
 import { replaceHtml, mapFilter } from "@codestream/webview/utils";
 import { PostPlus } from "@codestream/protocols/agent";
 import { confirmPopup } from "../Confirm";
@@ -35,8 +35,13 @@ export const RepliesToPostContext = React.createContext({
 	setEditingPostId(postId: string) {}
 });
 
-export const RepliesToPost = (props: { streamId: string; parentPostId: string }) => {
-	const dispatch = useDispatch<Dispatch>();
+export const RepliesToPost = (props: {
+	streamId: string;
+	parentPostId: string;
+	itemId: string;
+	numReplies: number;
+}) => {
+	const dispatch = useDispatch();
 	const currentUserId = useSelector((state: CodeStreamState) => state.session.userId!);
 	const replies = useSelector((state: CodeStreamState) =>
 		getThreadPosts(state, props.streamId, props.parentPostId, true)
@@ -70,6 +75,7 @@ export const RepliesToPost = (props: { streamId: string; parentPostId: string })
 		if (newReplyText.length === 0) return;
 
 		setIsLoading(true);
+		dispatch(markItemRead(props.itemId, props.numReplies + 1));
 		await dispatch(
 			createPost(
 				props.streamId,

@@ -204,6 +204,7 @@ interface State {
 	reviewersInvalid?: boolean;
 	assigneesInvalid?: boolean;
 	sharingAttributesInvalid?: boolean;
+	changesInvalid?: boolean;
 	showAllChannels?: boolean;
 	scmInfo: GetFileScmInfoResponse;
 	repoUri?: string;
@@ -965,13 +966,15 @@ class ReviewForm extends React.Component<Props, State> {
 	setAttachments = (attachments: AttachmentField[]) => this.setState({ attachments });
 
 	isFormInvalid = () => {
-		const { text, title } = this.state;
+		const { text, title, repoStatus } = this.state;
+		const { isEditing } = this.props;
 
 		const validationState: Partial<State> = {
 			titleInvalid: false,
 			textInvalid: false,
 			reviewersInvalid: false,
-			sharingAttributesInvalid: false
+			sharingAttributesInvalid: false,
+			changesInvalid: false
 		};
 
 		let invalid = false;
@@ -980,8 +983,22 @@ class ReviewForm extends React.Component<Props, State> {
 			invalid = true;
 		}
 
+		if (!isEditing && !this.hasChanges()) {
+			validationState.changesInvalid = true;
+			invalid = true;
+		}
+
 		this.setState(validationState as State);
 		return invalid;
+	};
+
+	hasChanges = () => {
+		const { repoStatus } = this.state;
+		return (
+			repoStatus &&
+			repoStatus.scm &&
+			repoStatus.scm.modifiedFiles.filter(f => !this.excluded(f.file)).length
+		);
 	};
 
 	renderTitleHelp = () => {
@@ -2027,10 +2044,6 @@ class ReviewForm extends React.Component<Props, State> {
 			});
 		}
 
-		const hasChanges =
-			repoStatus &&
-			repoStatus.scm &&
-			repoStatus.scm.modifiedFiles.filter(f => !this.excluded(f.file)).length;
 		const showChanges = (!isEditing || isAmending) && !isLoadingScm && !scmError && !branchError;
 		// @ts-ignore
 		const latestCommit: { shortMessage: string } | undefined =
@@ -2276,7 +2289,7 @@ class ReviewForm extends React.Component<Props, State> {
 										}}
 										className={cx("control-button", { cancel: !this.state.title })}
 										type="submit"
-										disabled={isEditing ? false : !hasChanges}
+										disabled={isEditing ? false : !this.hasChanges()}
 										loading={isReloadingScm || this.state.isLoading}
 										onClick={this.handleClickSubmit}
 									>

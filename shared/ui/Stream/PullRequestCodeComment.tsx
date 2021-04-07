@@ -1,5 +1,3 @@
-import { CompareLocalFilesRequestType } from "@codestream/protocols/webview";
-import { getProviderPullRequestRepo } from "@codestream/webview/store/providerPullRequests/reducer";
 import {
 	PRActionIcons,
 	PRButtonRow,
@@ -7,8 +5,8 @@ import {
 	PRCodeCommentWrapper,
 	PRThreadedCommentHeader
 } from "./PullRequestComponents";
-import React, { PropsWithChildren, useCallback, useState } from "react";
-import { PRHeadshot, Headshot } from "../src/components/Headshot";
+import React, { PropsWithChildren, useState } from "react";
+import { PRHeadshot } from "../src/components/Headshot";
 import Timestamp from "./Timestamp";
 import Icon from "./Icon";
 import { MarkdownText } from "./MarkdownText";
@@ -163,8 +161,8 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 					<>
 						<PRHeadshot key={comment.id} size={30} person={comment.author || GHOST} />
 						<PRThreadedCommentHeader>
-							{author.login}
-							<Timestamp time={comment.createdAt} />
+							<b>{author.login}</b>
+							<Timestamp time={comment.createdAt} relative />
 							<PRActionIcons>
 								<PRAuthorBadges pr={pr} node={comment} isPending={item.state === "PENDING"} />
 								<PullRequestReactButton
@@ -197,8 +195,14 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 							/>
 						) : (
 							<MarkdownText
-								text={comment.bodyHTML ? comment.bodyHTML : comment.bodyText}
-								isHtml={comment.bodyHTML ? true : false}
+								text={
+									comment.bodyHTML
+										? comment.bodyHTML
+										: comment.bodyHtml
+										? comment.bodyHtml
+										: comment.bodyText
+								}
+								isHtml={comment.bodyHTML || comment.bodyHtml ? true : false}
 								inline
 							/>
 						)}
@@ -229,7 +233,7 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 								<PRHeadshot key={c.id + i} size={30} person={c.author || GHOST} />
 								<PRThreadedCommentHeader>
 									<b>{(c.author || GHOST).login}</b>
-									<Timestamp time={c.createdAt} />
+									<Timestamp time={c.createdAt} relative />
 									{c.includesCreatedEdit ? <> • edited</> : ""}
 									<PRActionIcons>
 										<PRAuthorBadges pr={pr} node={c} />
@@ -263,8 +267,8 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 									/>
 								) : (
 									<MarkdownText
-										text={c.bodyHTML ? c.bodyHTML : c.bodyText}
-										isHtml={c.bodyHTML ? true : false}
+										text={c.bodyHTML ? c.bodyHTML : c.bodyHtml ? c.bodyHtml : c.bodyText}
+										isHtml={c.bodyHTML || c.bodyHtml ? true : false}
 										inline
 									/>
 								)}
@@ -284,6 +288,8 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 						pr={pr}
 						mode={props.mode}
 						fetch={props.fetch}
+						/* GitLab-specific */
+						parentId={comment?.discussion?.id}
 						databaseId={comment.databaseId}
 						isOpen={openComments[comment.databaseId]}
 						__onDidRender={__onDidRender}

@@ -5,7 +5,6 @@ import { GitRemoteLike } from "../git/gitService";
 import { ProviderConfigurationData } from "../protocol/agent.protocol.providers";
 import { log, lspProvider } from "../system";
 import { GitLabProvider } from "./gitlab";
-import { Logger } from "../logger";
 
 @lspProvider("gitlab_enterprise")
 export class GitLabEnterpriseProvider extends GitLabProvider {
@@ -27,7 +26,8 @@ export class GitLabEnterpriseProvider extends GitLabProvider {
 		// header. See https://docs.gitlab.com/ee/api/#oauth2-tokens
 		// and https://docs.gitlab.com/11.11/ee/api/README.html
 		return {
-			"PRIVATE-TOKEN": this.accessToken!
+			"PRIVATE-TOKEN": this.accessToken!,
+			"Content-Type": "application/json"
 		};
 	}
 
@@ -37,7 +37,7 @@ export class GitLabEnterpriseProvider extends GitLabProvider {
 		return (r: GitRemoteLike) => configDomain !== "" && r.domain === configDomain;
 	}
 
-	get baseUrl() {
+	get baseWebUrl() {
 		const { host, apiHost, isEnterprise, forEnterprise } = this.providerConfig;
 		let returnHost;
 		if (isEnterprise) {
@@ -47,7 +47,16 @@ export class GitLabEnterpriseProvider extends GitLabProvider {
 		} else {
 			returnHost = `https://${apiHost}`;
 		}
-		return `${returnHost}${this.apiPath}`;
+		return returnHost;
+	}
+
+	get baseUrl() {
+		return `${this.baseWebUrl}${this.apiPath}`;
+	}
+
+	async ensureInitialized() {
+		await super.ensureInitialized();
+		await this.getVersion();
 	}
 
 	@log()

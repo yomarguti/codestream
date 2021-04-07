@@ -23,6 +23,7 @@ import {
 	DeleteMarkerRequest,
 	DeleteMarkerResponse,
 	DidChangeDataNotificationType,
+	MarkItemReadRequest,
 	ReportingMessageType,
 	RepoScmStatus,
 	UpdateInvisibleRequest,
@@ -209,6 +210,8 @@ import {
 	CSJoinStreamResponse,
 	CSLoginRequest,
 	CSLoginResponse,
+	CSMarkItemReadRequest,
+	CSMarkItemReadResponse,
 	CSMarkPostUnreadRequest,
 	CSMarkPostUnreadResponse,
 	CSMe,
@@ -299,7 +302,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private _userId: string | undefined;
 	private _preferences: CodeStreamPreferences | undefined;
 	private _features: CSApiFeatures | undefined;
-	private _runTimeEnvironment: string | undefined;
 	private _debouncedSetModifiedReposUpdate: (request: SetModifiedReposRequest) => {};
 
 	readonly capabilities: Capabilities = {
@@ -340,10 +342,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	get features() {
 		return this._features;
-	}
-
-	get runTimeEnvironment() {
-		return this._runTimeEnvironment;
 	}
 
 	get meUser() {
@@ -536,7 +534,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 		this._user = response.user;
 		this._userId = response.user.id;
 		this._features = response.features;
-		this._runTimeEnvironment = response.runtimeEnvironment;
 
 		const token: AccessToken = {
 			email: response.user.email,
@@ -584,7 +581,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		if (types === undefined || types.includes(MessageType.Unreads)) {
 			this._unreads = new CodeStreamUnreads(this);
 			this._unreads.onDidChange(this.onUnreadsChanged, this);
-			this._unreads.compute(this._user!.lastReads);
+			this._unreads.compute(this._user!.lastReads, this._user!.lastReadItems);
 		}
 		if (types === undefined || types.includes(MessageType.Preferences)) {
 			this._preferences = new CodeStreamPreferences(this._user!.preferences);
@@ -741,6 +738,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 				const lastReads = {
 					...(this._unreads ? (await this._unreads.get()).lastReads : this._user!.lastReads)
 				};
+				const lastReadItems = {
+					...(this._unreads ? (await this._unreads.get()).lastReadItems : this._user!.lastReadItems)
+				};
 
 				const userPreferencesBefore = JSON.stringify(me.preferences);
 
@@ -755,9 +755,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 				try {
 					if (
 						this._unreads !== undefined &&
-						!Objects.shallowEquals(lastReads, this._user.lastReads || {})
+						(!Objects.shallowEquals(lastReads, this._user.lastReads || {}) ||
+							!Objects.shallowEquals(lastReadItems, this._user.lastReadItems || {}))
 					) {
-						this._unreads.compute(me.lastReads);
+						this._unreads.compute(me.lastReads, this._user.lastReadItems);
 					}
 					if (!this._preferences) {
 						this._preferences = new CodeStreamPreferences(this._user.preferences);
@@ -797,6 +798,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			return {
 				unreads: {
 					lastReads: {},
+					lastReadItems: {},
 					mentions: {},
 					unreads: {},
 					totalMentions: 0,
@@ -1123,7 +1125,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		// for on-prem, base the server url (and strict flag) into the invite code,
 		// so invited users have it set automatically
 		const session = SessionContainer.instance().session;
-		if (this.runTimeEnvironment === "onprem") {
+		if (session.isOnPrem) {
 			request.inviteInfo = {
 				serverUrl: this.baseUrl,
 				disableStrictSSL: session.disableStrictSSL ? true : false
@@ -1253,6 +1255,15 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return this.put<CSMarkPostUnreadRequest, CSMarkPostUnreadResponse>(
 			`/unread/${request.postId}`,
 			request,
+			this._token
+		);
+	}
+
+	@log()
+	markItemRead(request: MarkItemReadRequest) {
+		return this.put<CSMarkItemReadRequest, CSMarkItemReadResponse>(
+			`/read-item/${request.itemId}`,
+			{ numReplies: request.numReplies },
 			this._token
 		);
 	}
@@ -1743,7 +1754,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 		// for on-prem, base the server url (and strict flag) into the invite code,
 		// so invited users have it set automatically
-		if (this.runTimeEnvironment === "onprem") {
+		if (session.isOnPrem) {
 			postUserRequest.inviteInfo = {
 				serverUrl: this.baseUrl,
 				disableStrictSSL: session.disableStrictSSL ? true : false
@@ -2481,7 +2492,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 					message: resp.status.toString() + resp.statusText
 				};
 			} else {
-				response.capabilities = (await resp.json()).capabilities;
+				const json = await resp.json();
+				response.capabilities = json.capabilities;
+				response.environment = json.environment;
+				response.isOnPrem = json.isOnPrem;
+				response.isProductionCloud = json.isProductionCloud;
 			}
 		} catch (err) {
 			Logger.log(`Error connecting to the API server: ${err.message}`);

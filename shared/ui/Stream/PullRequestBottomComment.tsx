@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Icon from "./Icon";
 import styled from "styled-components";
 import { PRComment, PRCommentCard } from "./PullRequestComponents";
@@ -16,9 +16,12 @@ import { ButtonRow } from "../src/components/Dialog";
 import { Button } from "../src/components/Button";
 import { api } from "../store/providerPullRequests/actions";
 import { replaceHtml } from "../utils";
+import { DropdownButton } from "./Review/DropdownButton";
+import { CodeStreamState } from "../store";
+import { getPRLabel } from "../store/providers/reducer";
 
 interface Props {
-	pr: FetchThirdPartyPullRequestPullRequest;
+	pr: FetchThirdPartyPullRequestPullRequest | any;
 	setIsLoadingMessage: Function;
 	__onDidRender: Function;
 	className?: string;
@@ -27,6 +30,12 @@ interface Props {
 export const PullRequestBottomComment = styled((props: Props) => {
 	const dispatch = useDispatch();
 	const { pr, setIsLoadingMessage } = props;
+
+	const derivedState = useSelector((state: CodeStreamState) => {
+		return {
+			prLabel: getPRLabel(state)
+		};
+	});
 
 	const [text, setText] = useState("");
 	const [isLoadingComment, setIsLoadingComment] = useState(false);
@@ -43,11 +52,9 @@ export const PullRequestBottomComment = styled((props: Props) => {
 	const onCommentClick = async (event?: React.SyntheticEvent) => {
 		setIsLoadingComment(true);
 		trackComment("Comment");
-		await dispatch(
-			api("createPullRequestComment", {
-				text: replaceHtml(text)
-			})
-		);
+		if (commentType === "thread")
+			await dispatch(api("createPullRequestThread", { text: replaceHtml(text) }));
+		else await dispatch(api("createPullRequestComment", { text: replaceHtml(text) }));
 		setText("");
 		setIsLoadingComment(false);
 	};
@@ -58,7 +65,8 @@ export const PullRequestBottomComment = styled((props: Props) => {
 		trackComment("Comment and Close");
 		await dispatch(
 			api("createPullRequestCommentAndClose", {
-				text: replaceHtml(text)
+				text: replaceHtml(text),
+				startThread: commentType === "thread"
 			})
 		);
 
@@ -78,7 +86,8 @@ export const PullRequestBottomComment = styled((props: Props) => {
 		trackComment("Comment and Reopen");
 		await dispatch(
 			api("createPullRequestCommentAndReopen", {
-				text: replaceHtml(text)
+				text: replaceHtml(text),
+				startThread: commentType === "thread"
 			})
 		);
 
@@ -99,8 +108,126 @@ export const PullRequestBottomComment = styled((props: Props) => {
 		RESOLVED: "resolved"
 	};
 
+	const [commentType, setCommentType] = useState("comment");
+	const submitButton = (
+		<Tooltip
+			title={
+				<span>
+					Submit Comment
+					<span className="keybinding extra-pad">
+						{navigator.appVersion.includes("Macintosh") ? "⌘" : "Ctrl"} ENTER
+					</span>
+				</span>
+			}
+			placement="bottomRight"
+			delay={1}
+			key="submit-tt"
+		>
+			{pr.providerId.includes("gitlab") ? (
+				<DropdownButton
+					key="gitlab-dd"
+					isLoading={isLoadingComment}
+					disabled={!text}
+					splitDropdown
+					selectedKey={commentType}
+					items={[
+						{
+							label: "Comment",
+							key: "comment",
+							checked: commentType === "comment",
+							subtext: (
+								<span>
+									Add a general comment
+									<br />
+									to this merge request.
+								</span>
+							),
+							onSelect: () => setCommentType("comment"),
+							action: () => onCommentClick()
+						},
+						{ label: "-" },
+						{
+							label: "Start thread",
+							key: "thread",
+							checked: commentType === "thread",
+							subtext: (
+								<span>
+									Discuss a specific suggestion or
+									<br />
+									question that needs to be resolved.
+								</span>
+							),
+							onSelect: () => setCommentType("thread"),
+							action: () => onCommentClick()
+						}
+					]}
+				>
+					Comment
+				</DropdownButton>
+			) : (
+				<Button isLoading={isLoadingComment} onClick={onCommentClick} disabled={!text} key="button">
+					Comment
+				</Button>
+			)}
+		</Tooltip>
+	);
+
+	const reopenButton = (
+		<Button
+			disabled={pr.merged}
+			isLoading={isLoadingCommentAndClose}
+			onClick={onCommentAndReopenClick}
+			variant="secondary"
+			key="reopen"
+		>
+			{text ? (
+				commentType === "thread" ? (
+					<>
+						Start thread &amp; reopen
+						<span className="wide-text"> {derivedState.prLabel.pullrequest}</span>
+					</>
+				) : (
+					"Reopen and comment"
+				)
+			) : (
+				`Reopen ${derivedState.prLabel.pullrequest}`
+			)}
+		</Button>
+	);
+
+	const closeButton = pr.merged ? null : (
+		<Button
+			isLoading={isLoadingCommentAndClose}
+			onClick={onCommentAndCloseClick}
+			variant="secondary"
+			key="close"
+		>
+			<Icon name="issue-closed" className="red-color margin-right" />
+			{text ? (
+				commentType === "thread" ? (
+					<>
+						Start thread &amp; close
+						<span className="wide-text"> {derivedState.prLabel.pullrequest}</span>
+					</>
+				) : (
+					"Close and comment"
+				)
+			) : (
+				`Close ${derivedState.prLabel.pullrequest}`
+			)}
+		</Button>
+	);
+
+	const spacer = <div style={{ width: "10px", display: "inline-block" }} />;
+	const buttons =
+		pr.state.toLowerCase() === "closed"
+			? [reopenButton, spacer, submitButton]
+			: [closeButton, spacer, submitButton];
+
+	const isGitLab = pr.providerId.includes("gitlab");
+
 	return (
-		<PRComment>
+		<PRComment className={props.className}>
 			<PRHeadshot size={40} person={pr.viewer}></PRHeadshot>
 			<PRCommentCard className="add-comment">
 				{pr.locked ? (
@@ -136,78 +263,25 @@ export const PullRequestBottomComment = styled((props: Props) => {
 							<div style={{ clear: "both" }}></div>
 						</div>
 						{!isPreviewing && (
-							<ButtonRow>
-								{pr.state === "CLOSED" ? (
-									<div style={{ textAlign: "right", flexGrow: 1 }}>
-										<Button
-											disabled={pr.merged}
-											isLoading={isLoadingCommentAndClose}
-											onClick={onCommentAndReopenClick}
-											variant="secondary"
-										>
-											{text ? "Reopen and comment" : "Reopen pull request"}
-										</Button>
-
-										<Tooltip
-											title={
-												<span>
-													Submit Comment
-													<span className="keybinding extra-pad">
-														{navigator.appVersion.includes("Macintosh") ? "⌘" : "Ctrl"} ENTER
-													</span>
-												</span>
-											}
-											placement="bottomRight"
-											delay={1}
-										>
-											<Button
-												isLoading={isLoadingComment}
-												onClick={onCommentClick}
-												disabled={!text}
-											>
-												Comment
-											</Button>
-										</Tooltip>
-									</div>
-								) : (
-									<div style={{ textAlign: "right", flexGrow: 1 }}>
-										{!pr.merged && (
-											<Button
-												isLoading={isLoadingCommentAndClose}
-												onClick={onCommentAndCloseClick}
-												variant="secondary"
-											>
-												<Icon name="issue-closed" className="red-color margin-right" />
-												{text ? "Close and comment" : "Close pull request"}
-											</Button>
-										)}
-										<Tooltip
-											title={
-												<span>
-													Submit Comment
-													<span className="keybinding extra-pad">
-														{navigator.appVersion.includes("Macintosh") ? "⌘" : "Ctrl"} ENTER
-													</span>
-												</span>
-											}
-											placement="bottomRight"
-											delay={1}
-										>
-											<Button
-												isLoading={isLoadingComment}
-												onClick={onCommentClick}
-												disabled={!text}
-											>
-												Comment
-											</Button>
-										</Tooltip>
-									</div>
-								)}
-							</ButtonRow>
+							<div
+								style={{
+									textAlign: isGitLab ? "left" : "right",
+									flexGrow: 1,
+									flexWrap: "wrap",
+									justifyContent: "flex-end",
+									whiteSpace: "normal" // required for wrap
+								}}
+							>
+								{isGitLab ? [...buttons].reverse() : buttons}
+							</div>
 						)}
 					</>
 				)}
 			</PRCommentCard>
 		</PRComment>
 	);
-})``;
+})`
+	button {
+		margin-top: 10px !important;
+	}
+`;

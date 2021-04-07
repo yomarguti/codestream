@@ -129,6 +129,7 @@ export interface WebviewContext {
 				commentId?: string;
 				/* defined if this was triggered by an external means (like an IDE button, etc.) */
 				source?: string;
+				metadata?: any;
 		  }
 		| undefined;
 	profileUserId?: string;
@@ -177,6 +178,9 @@ export interface WebviewConfigs {
 	email?: string;
 	serverUrl: string;
 	team?: string;
+	environment: string;
+	isOnPrem: boolean;
+	isProductionCloud: boolean;
 }
 
 export interface IpcHost {

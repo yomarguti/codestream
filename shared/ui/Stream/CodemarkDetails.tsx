@@ -13,7 +13,13 @@ import {
 	CreateThirdPartyPostRequestType,
 	PostPlus
 } from "@codestream/protocols/agent";
-import { createPost, setCodemarkStatus, setCodemarkPinned, setUserPreference } from "./actions";
+import {
+	createPost,
+	setCodemarkStatus,
+	setCodemarkPinned,
+	setUserPreference,
+	markItemRead
+} from "./actions";
 import { CSUser, CSMe, CSPost, CodemarkType } from "@codestream/protocols/api";
 import { getTeamProvider } from "../store/teams/reducer";
 import { replaceHtml } from "../utils";
@@ -54,6 +60,9 @@ interface Props {
 
 	onSubmitPost?: any;
 	createPost(...args: Parameters<typeof createPost>): ReturnType<ReturnType<typeof createPost>>;
+	markItemRead(
+		...args: Parameters<typeof markItemRead>
+	): ReturnType<ReturnType<typeof markItemRead>>;
 	setCodemarkStatus(
 		...args: Parameters<typeof setCodemarkStatus>
 	): ReturnType<ReturnType<typeof setCodemarkStatus>>;
@@ -108,7 +117,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 	handleClickPost() {}
 
 	submitReply = async () => {
-		const { codemark, createPost } = this.props;
+		const { codemark, createPost, markItemRead } = this.props;
 		const { text, formatCode, attachments } = this.state;
 		const mentionedUserIds = findMentionedUserIds(this.props.teammates, text);
 		const threadId = codemark ? codemark.postId : "";
@@ -119,6 +128,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		if (!text.length) return;
 
 		let replyText = formatCode ? "```" + text + "```" : text;
+		await markItemRead(codemark.id, codemark.numReplies + 1);
 		await createPost(codemark.streamId, threadId, replaceHtml(replyText)!, null, mentionedUserIds, {
 			entryPoint: "Codemark",
 			files: attachments
@@ -365,6 +375,7 @@ const mapStateToProps = (state: CodeStreamState, props: { codemark: CodemarkPlus
 
 export default connect(mapStateToProps, {
 	createPost,
+	markItemRead,
 	setCodemarkStatus,
 	setCodemarkPinned,
 	setUserPreference,

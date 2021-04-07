@@ -47,6 +47,9 @@ export default class Menu extends Component {
 				if (clickedInMenu) {
 					return;
 				}
+				if (this.props.target && this.props.target.querySelector(targetSelector) != null) {
+					return;
+				}
 				const clickedInModalRoot = modalRoot.querySelector(targetSelector) != null;
 				if (clickedInModalRoot) this.setState({ closed: true });
 			} catch {
@@ -73,6 +76,11 @@ export default class Menu extends Component {
 				{ source: "Menu.js", level: -1 }
 			)
 		);
+		// when a Menu is used within a MessageInput component, we want to be able
+		// to re-focus the TEXTAREA (contenteditable div) after the menu closes.
+		// we also want to be ablet to respond to keyboard events such as arrow-up
+		// or arrow-down to move the selection, when the menu itself doesn't have
+		// focus. focusInput and focus-button help make that possible
 		if (this.props.focusInput && this.props.focusInput.current) {
 			this.props.focusInput.current.addEventListener("keydown", this.handleKeyDown);
 		}
@@ -167,10 +175,10 @@ export default class Menu extends Component {
 			if (tooFar > 0 && align !== "popupRight") {
 				// if we're a dropdown, alter the height
 				if (align.startsWith("bottom") || align.startsWith("dropdown")) {
-					const height = window.innerHeight - rect.bottom - 50;
-
-					const ul = this._div.getElementsByTagName("ul")[0];
-					if (ul) ul.style.maxHeight = height + "px";
+					this._div.style.top = rect.top - this._div.offsetHeight + "px";
+					// const height = window.innerHeight - rect.bottom - 50;
+					// const ul = this._div.getElementsByTagName("ul")[0];
+					// if (ul) ul.style.maxHeight = height + "px";
 				}
 				// otherwise, alter the top
 				else {
@@ -598,13 +606,17 @@ export default class Menu extends Component {
 
 	handleMultiSelectKeyDown = event => {
 		if (event.key === "Shift" || event.which === 16) {
-			this.setState({ isShiftHolded: true, itemsRange: [] });
+			if(!this.state.isShiftHolded) {
+				this.setState({isShiftHolded: true, itemsRange: []});
+			}
 		}
 	};
 
 	handleMultiSelectKeyUp = event => {
 		if (event.key === "Shift" || event.which === 16) {
-			this.setState({ isShiftHolded: false, itemsRange: [] });
+			if(!this.state.isShiftHolded) {
+				this.setState({isShiftHolded: false, itemsRange: []});
+			}
 		}
 	};
 
@@ -616,15 +628,17 @@ export default class Menu extends Component {
 		if (this.state.isShiftHolded && item.inRange) {
 			switch (this.state.itemsRange.length) {
 				case 0:
-					this.state.itemsRange.push(this.calculateKey(item));
+					this.setState({itemsRange: [this.calculateKey(item)]});
 					return;
 				case 1:
-					this.state.itemsRange.push(this.calculateKey(item));
-					item.action(this.state.itemsRange);
+					const actualItemsRange = this.state.itemsRange
+					actualItemsRange.push(this.calculateKey(item));
+					this.setState({itemsRange: actualItemsRange});
+					item.action(actualItemsRange);
 					this.props.action(null);
 					return;
 				default:
-					this.state.itemsRange = [this.calculateKey(item)];
+					this.setState({itemsRange: [this.calculateKey(item)]});
 					return;
 			}
 		}

@@ -80,7 +80,14 @@ export interface AccessToken {
 export enum CodeStreamEnvironment {
 	Local = "local",
 	Production = "prod",
+	OnPrem = "onprem",
 	Unknown = "unknown"
+}
+
+export interface CodeStreamEnvironmentInfo {
+	environment: CodeStreamEnvironment | string;
+	isOnPrem: boolean;
+	isProductionCloud: boolean;
 }
 
 export enum TraceLevel {
@@ -129,8 +136,7 @@ export interface AgentState {
 	token: AccessToken;
 	capabilities: Capabilities;
 	email: string;
-	environment: CodeStreamEnvironment | string;
-	serverUrl: string;
+	environmentInfo: CodeStreamEnvironmentInfo;
 	teamId: string;
 	userId: string;
 }
@@ -155,6 +161,9 @@ export interface VerifyConnectivityResponse {
 	capabilities?: {
 		[key: string]: any;
 	};
+	environment?: string;
+	isOnPrem?: boolean;
+	isProductionCloud?: boolean;
 }
 
 export const VerifyConnectivityRequestType = new RequestType<

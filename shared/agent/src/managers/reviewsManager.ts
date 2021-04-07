@@ -79,6 +79,7 @@ import {
 import { Arrays, log, lsp, lspHandler, Strings } from "../system";
 import { gate } from "../system/decorators/gate";
 import { xfs } from "../xfs";
+import * as fs from "fs";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 import { resolveCreatePostResponse, trackReviewPostCreation } from "./postsManager";
 import Timer = NodeJS.Timer;
@@ -108,6 +109,19 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			version,
 			path
 		};
+	}
+
+	private currentBranches = new Map<string, string | undefined>();
+
+	public async initializeCurrentBranches() {
+		const { git } = SessionContainer.instance();
+		this.currentBranches.clear();
+		const repos = await git.getRepositories();
+		for (const repo of repos) {
+			if (!repo.id) continue;
+			const currentBranch = await git.getCurrentBranch(repo.path, true);
+			this.currentBranches.set(repo.id, currentBranch);
+		}
 	}
 
 	@lspHandler(FetchReviewsRequestType)
@@ -759,10 +773,12 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 								(_: any) => _.baseRefName === baseRefName && _.headRefName === headRefName
 							);
 							if (existingPullRequest) {
-								warning = {
-									type: "ALREADY_HAS_PULL_REQUEST",
-									url: existingPullRequest.url,
-									id: existingPullRequest.id
+								return {
+									success: false,
+									error: {
+										type: "ALREADY_HAS_PULL_REQUEST",
+										url: existingPullRequest.url
+									}
 								};
 							}
 						}
@@ -821,7 +837,16 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				(await xfs.readText(path.join(repo.path, "docs/pull_request_template.md"))) ||
 				(await xfs.readText(path.join(repo.path, "docs/PULL_REQUEST_TEMPLATE.md"))) ||
 				(await xfs.readText(path.join(repo.path, ".github/pull_request_template.md"))) ||
-				(await xfs.readText(path.join(repo.path, ".github/PULL_REQUEST_TEMPLATE.md")));
+				(await xfs.readText(path.join(repo.path, ".github/PULL_REQUEST_TEMPLATE.md"))) ||
+				(await xfs.readText(path.join(repo.path, ".gitlab/merge_request_template.md")));
+
+			let pullRequestTemplateNames: string[] = [];
+			const templatePath = path.join(repo.path, ".gitlab", "merge_request_templates");
+			if (fs.existsSync(templatePath) && fs.lstatSync(templatePath).isDirectory()) {
+				pullRequestTemplateNames = (await fs.readdirSync(templatePath))
+					.filter(filepath => filepath.endsWith(".md"))
+					.map(filepath => filepath.replace(/\.md$/, ""));
+			}
 
 			const baseBranchRemote = await git.getBranchRemote(repo.path, baseRefName!);
 			const commitsBehindOrigin = await git.getBranchCommitsStatus(
@@ -836,6 +861,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				remoteUrl: remoteUrl,
 				providerId: providerId,
 				pullRequestTemplate,
+				pullRequestTemplateNames,
+				pullRequestTemplatePath: templatePath,
 				remotes: remotes,
 				origins: originNames,
 				remoteBranch: remoteBranch,
@@ -849,7 +876,9 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				},
 				branch: headRefName,
 				branches: branches!.branches,
-				remoteBranches: remoteBranches ? remoteBranches.branches : undefined,
+				remoteBranches: remoteBranches
+					? remoteBranches.branches.filter(_ => _.indexOf("HEAD ->") === -1)
+					: undefined,
 				commitsBehindOriginHeadBranch: commitsBehindOrigin,
 				warning: warning
 			};
@@ -1098,6 +1127,13 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 		const { git, session } = SessionContainer.instance();
 		if (git.isRebasing(repo.path)) {
+			return 0;
+		}
+
+		// do not trigger if the user is just switching branches
+		const currentBranch = await git.getCurrentBranch(repo.path, true);
+		if (currentBranch !== this.currentBranches.get(repoId)) {
+			this.currentBranches.set(repoId, currentBranch);
 			return 0;
 		}
 

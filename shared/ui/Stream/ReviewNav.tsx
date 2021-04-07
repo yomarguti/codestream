@@ -1,6 +1,5 @@
 import React from "react";
 import styled from "styled-components";
-import CancelButton from "./CancelButton";
 import Tooltip from "./Tooltip";
 import { Button } from "../src/components/Button";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
@@ -11,7 +10,7 @@ import { fetchReview } from "@codestream/webview/store/reviews/actions";
 import { CodeStreamState } from "../store";
 import { getReview } from "../store/reviews/reducer";
 import { MinimumWidthCard, Meta, BigTitle, Header } from "./Codemark/BaseCodemark";
-import { setReviewStatus } from "./actions";
+import { markItemRead, setReviewStatus } from "./actions";
 import { ReviewCloseDiffRequestType } from "../ipc/host.protocol.review";
 import Icon from "./Icon";
 import { confirmPopup } from "./Confirm";
@@ -27,7 +26,7 @@ import { ReviewForm } from "./ReviewForm";
 import { openPanel } from "../store/context/actions";
 import { WebviewPanels } from "@codestream/protocols/webview";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
-import { PullRequest } from "./PullRequest";
+import { getPRLabel } from "../store/providers/reducer";
 import { getSidebarLocation } from "../store/editorContext/reducer";
 
 const NavHeader = styled.div`
@@ -215,7 +214,8 @@ export function ReviewNav(props: Props) {
 			approvedByMe: approvedBy[currentUserId] ? true : false,
 			isMine: currentUserId === (review ? review.creatorId : ""),
 			cr2prEnabled: isFeatureEnabled(state, "cr2pr"),
-			sidebarLocation: getSidebarLocation(state)
+			sidebarLocation: getSidebarLocation(state),
+			prLabel: getPRLabel(state)
 		};
 	}, shallowEqual);
 
@@ -239,13 +239,25 @@ export function ReviewNav(props: Props) {
 		await dispatch(setCurrentReview(review && review.id));
 	};
 
+	const unreadEnabled = useSelector((state: CodeStreamState) =>
+		isFeatureEnabled(state, "readItem")
+	);
+
+	const markRead = () => {
+		// @ts-ignore
+		if (review && unreadEnabled) dispatch(markItemRead(review.id, review.numReplies || 0));
+	};
+
 	useDidMount(() => {
 		let isValid = true;
 		if (review == null) {
 			dispatch(fetchReview(props.reviewId)).then(result => {
 				if (!isValid) return;
 				if (result == null) setNotFound(true);
+				markRead();
 			});
+		} else {
+			markRead();
 		}
 		// Kind of a HACK leaving this here, BUT...
 		// since <CancelButton /> uses the OLD version of Button.js
@@ -296,11 +308,11 @@ export function ReviewNav(props: Props) {
 	const reject = () => {
 		confirmPopup({
 			title: "Are you sure?",
-			message: "Author will be notified you have rejected this set of changes.",
+			message: "Author will be notified you are requesting this code be re-worked.",
 			buttons: [
 				{ label: "Go Back", className: "control-button" },
 				{
-					label: "Reject Changes",
+					label: "Request Changes",
 					wait: true,
 					action: rejectConfirm,
 					className: "delete"
@@ -408,10 +420,10 @@ export function ReviewNav(props: Props) {
 								</Button>
 							</Tooltip>
 						)}
-						<Tooltip title="Require Changes" placement="top">
+						<Tooltip title="Request Changes" placement="top">
 							<Button variant="destructive" onClick={reject}>
-								<Icon className="narrow-icon" name="thumbsdown" />
-								<span className="wide-text">Reject</span>
+								<Icon className="narrow-icon" name="sync" />
+								<span className="wide-text">Request Changes</span>
 							</Button>
 						</Tooltip>
 						<Tooltip title="More actions" placement="top">
@@ -434,10 +446,10 @@ export function ReviewNav(props: Props) {
 							isMine &&
 							review.pullRequestUrl == null &&
 							review.status === "approved" && (
-								<Tooltip title="Create a PR" placement="top">
+								<Tooltip title={`Create a ${derivedState.prLabel.PR}`} placement="top">
 									<Button onClick={pr}>
 										<Icon className="narrow-icon" name="pull-request" />
-										<span className="wide-text">Create PR</span>
+										<span className="wide-text">Create {derivedState.prLabel.PR}</span>
 									</Button>
 								</Tooltip>
 							)}

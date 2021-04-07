@@ -357,6 +357,7 @@ export interface FetchThirdPartyPullRequestRequest {
 	 * if true, clear this PR from the cache and re-fetch from the provider
 	 */
 	force?: boolean;
+	metadata?: any;
 }
 
 export interface FetchThirdPartyPullRequestFilesResponse {
@@ -411,6 +412,7 @@ export interface StatusContext {
 
 export interface FetchThirdPartyPullRequestPullRequest {
 	id: string;
+	iid?: string;
 	providerId: string; // e.g. "github*com"
 	// this is the parent repo
 	repository: {
@@ -574,6 +576,11 @@ export interface FetchThirdPartyPullRequestPullRequest {
 		login: string;
 		avatarUrl: string;
 	};
+	supports?: {
+		version: {
+			version: string;
+		};
+	};
 }
 
 interface BranchProtectionRule {
@@ -634,6 +641,7 @@ export const FetchThirdPartyPullRequestRequestType = new RequestType<
 export interface FetchThirdPartyPullRequestCommitsRequest {
 	providerId: string;
 	pullRequestId: string;
+	metadata?: any;
 }
 
 export interface FetchThirdPartyPullRequestCommitsResponse {
@@ -655,6 +663,7 @@ export interface FetchThirdPartyPullRequestCommitsResponse {
 	message: string;
 	authoredDate: string;
 	oid: string;
+	url?: string;
 }
 
 export const FetchThirdPartyPullRequestCommitsType = new RequestType<
@@ -704,6 +713,15 @@ export const QueryThirdPartyRequestType = new RequestType<
 	void,
 	void
 >("codestream/provider/query");
+
+export interface FetchProviderDefaultPullRequest {}
+export interface FetchProviderDefaultPullResponse {}
+export const FetchProviderDefaultPullRequestsType = new RequestType<
+	FetchProviderDefaultPullRequest,
+	FetchProviderDefaultPullResponse,
+	void,
+	void
+>("codestream/providers/pullrequest/queries");
 
 export interface GetMyPullRequestsRequest {
 	owner?: string;

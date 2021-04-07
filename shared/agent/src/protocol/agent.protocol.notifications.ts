@@ -1,12 +1,13 @@
 "use strict";
 import { NotificationType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
-import { Document, GetMyPullRequestsResponse } from "./agent.protocol";
+import { Document, CodeStreamEnvironmentInfo, GetMyPullRequestsResponse } from "./agent.protocol";
 import { LoginSuccessResponse, TokenLoginRequest } from "./agent.protocol.auth";
 import { CodemarkPlus } from "./agent.protocol.codemarks";
 import { ThirdPartyProviders } from "./agent.protocol.providers";
 import {
 	CSApiCapabilities,
 	CSCompany,
+	CSLastReadItems,
 	CSLastReads,
 	CSMarker,
 	CSMarkerLocations,
@@ -125,6 +126,7 @@ export interface TeamsChangedNotification {
 
 export interface Unreads {
 	lastReads: CSLastReads;
+	lastReadItems: CSLastReadItems;
 	mentions: { [streamId: string]: number };
 	unreads: { [streamId: string]: number };
 	totalMentions: number;
@@ -337,3 +339,8 @@ export const DidDetectUnreviewedCommitsNotificationType = new NotificationType<
 	DidDetectUnreviewedCommitsNotification,
 	void
 >("codestream/didDetectUnreviewedCommits");
+
+export const DidSetEnvironmentNotificationType = new NotificationType<
+	CodeStreamEnvironmentInfo,
+	void
+>("codestream/didSetEnvironment");

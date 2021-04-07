@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { PRComment, PRCommentCard } from "./PullRequestComponents";
 import Tooltip from "./Tooltip";
@@ -10,12 +10,16 @@ import { ButtonRow } from "../src/components/Dialog";
 import { Button } from "../src/components/Button";
 import { api } from "../store/providerPullRequests/actions";
 import { replaceHtml } from "../utils";
+import { CodeStreamState } from "../store";
+import { getPRLabel } from "../store/providers/reducer";
 
 interface Props {
 	pr: FetchThirdPartyPullRequestPullRequest;
 	mode?: string;
+	contents?: string;
 	filename: string;
-	lineNumber: number;
+	oldLineNumber?: number | undefined;
+	lineNumber?: number | undefined;
 	lineOffsetInHunk: number;
 	setIsLoadingMessage: Function;
 	fetch: Function;
@@ -26,7 +30,21 @@ interface Props {
 
 export const PullRequestInlineComment = styled((props: Props) => {
 	const dispatch = useDispatch();
-	const { pr, filename, fetch, lineNumber, lineOffsetInHunk, setIsLoadingMessage } = props;
+	const {
+		pr,
+		filename,
+		fetch,
+		oldLineNumber,
+		lineNumber,
+		lineOffsetInHunk,
+		setIsLoadingMessage
+	} = props;
+
+	const derivedState = useSelector((state: CodeStreamState) => {
+		return {
+			prLabel: getPRLabel(state)
+		};
+	});
 
 	const [text, setText] = useState("");
 	const [isLoadingSingleComment, setIsLoadingSingleComment] = useState(false);
@@ -47,11 +65,20 @@ export const PullRequestInlineComment = styled((props: Props) => {
 		await dispatch(
 			api("createPullRequestInlineComment", {
 				filePath: filename,
+				oldLineNumber: oldLineNumber,
 				startLine: lineNumber,
 				text: replaceHtml(text),
+				leftSha: pr.baseRefOid,
 				rightSha: pr.headRefOid,
 				// old servers
-				position: lineOffsetInHunk
+				position: lineOffsetInHunk,
+				metadata: {
+					contents: props.contents,
+					fileWithUrl: filename,
+					startLine: lineNumber,
+					// only single line comments
+					endLine: lineNumber
+				}
 			})
 		);
 		setText("");
@@ -70,7 +97,11 @@ export const PullRequestInlineComment = styled((props: Props) => {
 			api("createPullRequestInlineReviewComment", {
 				filePath: filename,
 				position: lineOffsetInHunk,
-				text: replaceHtml(text)
+				oldLineNumber: oldLineNumber,
+				startLine: lineNumber,
+				text: replaceHtml(text),
+				leftSha: pr.baseRefOid,
+				sha: pr.headRefOid
 			})
 		);
 		setText("");
@@ -87,11 +118,12 @@ export const PullRequestInlineComment = styled((props: Props) => {
 		RESOLVED: "resolved"
 	};
 
+	const marginWidth = pr.providerId.includes("gitlab") ? "110px" : "80px";
 	return (
 		<PRComment
 			style={{
 				margin: "15px",
-				maxWidth: "min(600px, calc(100vw - 80px))"
+				maxWidth: `min(600px, calc(100vw - ${marginWidth}))`
 			}}
 		>
 			<PRCommentCard className="no-headshot no-arrow">
@@ -139,7 +171,7 @@ export const PullRequestInlineComment = styled((props: Props) => {
 									onClick={addSingleComment}
 									disabled={(pr && pr.pendingReview != null) || !text}
 								>
-									Add single comment
+									{derivedState.prLabel.AddSingleComment}
 								</Button>
 								<Tooltip
 									title={

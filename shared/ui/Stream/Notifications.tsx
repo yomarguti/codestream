@@ -141,7 +141,7 @@ export const Notifications = props => {
 								onChange={handleChangeReviewReminders}
 								loading={loadingReminderDelivery}
 							>
-								Sned me an email reminder for outstanding feedback requests
+								Send me an email reminder for outstanding feedback requests
 							</Checkbox>
 						</div>
 						<div style={{ marginTop: "20px" }}>

@@ -3,7 +3,13 @@ import { PullRequestsChangedEvent } from "api/sessionEvents";
 import { Disposable, MessageItem, window } from "vscode";
 import { Post, PostsChangedEvent } from "../api/session";
 import { Container } from "../container";
-import { CodemarkPlus, CreateReviewsForUnreviewedCommitsRequestType, DidDetectUnreviewedCommitsNotification, FollowReviewRequestType, ReviewPlus } from "../protocols/agent/agent.protocol";
+import {
+	CodemarkPlus,
+	CreateReviewsForUnreviewedCommitsRequestType,
+	DidDetectUnreviewedCommitsNotification,
+	FollowReviewRequestType,
+	ReviewPlus
+} from "../protocols/agent/agent.protocol";
 import { Functions } from "../system";
 import { vslsUrlRegex } from "./liveShareController";
 
@@ -33,9 +39,10 @@ export class NotificationsController implements Disposable {
 			const actions: MessageItem[] = [{ title: "Open" }];
 
 			Container.agent.telemetry.track("Toast Notification", { Content: "PR" });
-
+			const verb =
+				pullRequestNotification.pullRequest.providerId.indexOf("gitlab") > -1 ? "Merge" : "Pull";
 			const result = await window.showInformationMessage(
-				`Pull Request "${pullRequestNotification.pullRequest.title}" ${pullRequestNotification.queryName}`,
+				`${verb} Request "${pullRequestNotification.pullRequest.title}" ${pullRequestNotification.queryName}`,
 				...actions
 			);
 
@@ -102,25 +109,27 @@ export class NotificationsController implements Disposable {
 		];
 
 		Container.agent.telemetry.track("Toast Notification", { Content: "Unreviewed Commit" });
-		const result = await window.showInformationMessage(
-			`${notification.message}`,
-			...actions
-		);
+		const result = await window.showInformationMessage(`${notification.message}`, ...actions);
 
 		if (result === actions[0]) {
 			Container.agent.telemetry.track("Toast Clicked", { Content: "Unreviewed Commit" });
 			if (notification.openReviewId !== undefined) {
-				await Container.agent.sendRequest(FollowReviewRequestType, { id: notification.openReviewId, value: true });
+				await Container.agent.sendRequest(FollowReviewRequestType, {
+					id: notification.openReviewId,
+					value: true
+				});
 				Container.webview.openReview(notification.openReviewId, { openFirstDiff: true });
 			} else {
-				const result = await Container.agent.sendRequest(CreateReviewsForUnreviewedCommitsRequestType, { sequence: notification.sequence });
+				const result = await Container.agent.sendRequest(
+					CreateReviewsForUnreviewedCommitsRequestType,
+					{ sequence: notification.sequence }
+				);
 				const reviewId = result.reviewIds[0];
 				if (reviewId) {
 					Container.webview.openReview(reviewId, { openFirstDiff: true });
-				}				
+				}
 			}
 		}
-
 	}
 
 	async showNotification(

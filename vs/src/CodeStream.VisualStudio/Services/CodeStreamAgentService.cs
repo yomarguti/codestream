@@ -256,11 +256,8 @@ namespace CodeStream.VisualStudio.Services {
 
 		public async Task<JToken> GetBootstrapAsync(Settings settings, JToken state = null, bool isAuthenticated = false) {
 			using (Log.CriticalOperation(nameof(GetBootstrapAsync), Serilog.Events.LogEventLevel.Debug)) {
-				var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
-				var ideService = componentModel?.GetService<IIdeService>();
+				var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;	
 				var settingsManager = _settingsServiceFactory.GetOrCreate(nameof(GetBootstrapAsync));
-				var vslsEnabled = ideService?.QueryExtension(ExtensionKind.LiveShare) == true;
-
 				// NOTE: this camelCaseSerializer is important because FromObject doesn't
 				// serialize using the global camelCase resolver
 
@@ -269,9 +266,7 @@ namespace CodeStream.VisualStudio.Services {
 					CodemarkApply = true,
 					CodemarkCompare = true,
 					EditorTrackVisibleRange = true,
-					Services = new Core.Models.Services {
-						Vsls = vslsEnabled
-					}
+					Services = new Core.Models.Services { }
 				}.ToJToken(), new JsonMergeSettings {
 					MergeArrayHandling = MergeArrayHandling.Union
 				});
@@ -289,7 +284,7 @@ namespace CodeStream.VisualStudio.Services {
 							ServerUrl = settingsManager.ServerUrl,
 							TraceLevel = settingsManager.GetAgentTraceLevel()
 						},
-						Env = settingsManager.GetEnvironmentName(),
+						EnvironmentInfo = settingsManager.GetCodeStreamEnvironmentInfo,
 						Version = settingsManager.GetEnvironmentVersionFormatted(),
 						Context = new WebviewContext {
 							HasFocus = true
@@ -344,8 +339,8 @@ namespace CodeStream.VisualStudio.Services {
 					Session = new UserSession {
 						UserId = state["userId"].ToString()
 					},
-					Env = settings.Env,
-					Version = settings.Version,
+					EnvironmentInfo = settingsManager.GetCodeStreamEnvironmentInfo,
+					Version = settingsManager.GetEnvironmentVersionFormatted(),
 					Ide = new Ide() {
 						Name = Application.IdeMoniker
 					}
