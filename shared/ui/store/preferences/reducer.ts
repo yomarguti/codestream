@@ -53,7 +53,7 @@ export const DEFAULT_FR_QUERIES: FetchRequestQuery[] = [
 		limit: 5
 	},
 	{
-		name: "Needs Work",
+		name: "Changes Requested",
 		hidden: false,
 		query: "rejected",
 		limit: 5
