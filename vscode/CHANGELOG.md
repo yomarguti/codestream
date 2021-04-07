@@ -1,5 +1,11 @@
 # Change Log
 
+## [11.0.1] - 2021-4-7
+
+### Fixed
+
+- Fixes an issue that would cause blue badges to appear for codemarks/feedback requests even if they didn't have unread replies
+
 ## [11.0.0] - 2021-4-7
 
 ### Added
