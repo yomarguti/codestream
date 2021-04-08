@@ -285,7 +285,8 @@ export interface GitLabMergeRequest {
 			| "MANUAL"
 			| "SCHEDULED"
 			| string;
-		stages: {
+		/* this might not exist in all editions */
+		stages?: {
 			nodes: {
 				name: string;
 				detailedStatus: {
