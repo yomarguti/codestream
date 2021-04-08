@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import Icon from "../../Icon";
 import { Button } from "@codestream/webview/src/components/Button";
 import { OutlineBox, FlexRow } from "./PullRequest";
@@ -7,7 +7,7 @@ import { CodeStreamState } from "@codestream/webview/store";
 import { Link } from "../../Link";
 import styled from "styled-components";
 import { DropdownButton } from "../../Review/DropdownButton";
-import { PRBranch } from "../../PullRequestComponents";
+import { PRBranch, PRBranchTruncated } from "../../PullRequestComponents";
 import copy from "copy-to-clipboard";
 import Tooltip from "../../Tooltip";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
@@ -15,6 +15,7 @@ import { HostApi } from "../../../webview-api";
 import { SwitchBranchRequestType } from "@codestream/protocols/agent";
 import { confirmPopup } from "../../Confirm";
 import { getProviderPullRequestRepo } from "@codestream/webview/store/providerPullRequests/reducer";
+import { pluralize } from "@codestream/webview/utilities/strings";
 
 export const Root = styled.div`
 	margin: 0 20px 10px 20px;
@@ -149,7 +150,9 @@ export const SummaryBox = props => {
 					</div>
 					<b>Request to merge</b>{" "}
 					<Link href={`${pr.repository.url}/-/tree/${pr.sourceBranch}`}>
-						<PRBranch>{pr.sourceBranch}</PRBranch>
+						<Tooltip title={pr.sourceBranch} trigger={["hover"]} placement="top">
+							<PRBranchTruncated>{pr.sourceBranch}</PRBranchTruncated>
+						</Tooltip>
 					</Link>{" "}
 					<Icon
 						name="copy"
@@ -164,6 +167,16 @@ export const SummaryBox = props => {
 							{pr.repository.name}:{pr.targetBranch}
 						</PRBranch>
 					</Link>
+					{pr.divergedCommitsCount > 0 && (
+						<>
+							<br />
+							The source branch is{" "}
+							<Link href={`${pr.url}/-/commits/${pr.targetBranch}`}>
+								{pr.divergedCommitsCount} {pluralize("commit", pr.divergedCommitsCount)} behind
+							</Link>{" "}
+							the target branch
+						</>
+					)}
 				</div>
 			</FlexRow>
 		</OutlineBox>

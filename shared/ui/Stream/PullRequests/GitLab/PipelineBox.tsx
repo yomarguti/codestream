@@ -80,25 +80,27 @@ export const PipelineBox = (props: { pr: GitLabMergeRequest; setIsLoadingMessage
 						{pipeline.sha!.substring(0, 8)}
 					</Link>
 				</div>
-				<div className="pad-left" style={{ flex: "auto", textAlign: "right" }}>
-					{pipeline.stages.nodes.map(_ => {
-						const iconWrapper = iconForStatus[_.detailedStatus.label] || { icon: "clock" };
+				{pipeline.stages && (
+					<div className="pad-left" style={{ flex: "auto", textAlign: "right" }}>
+						{pipeline.stages.nodes.map(_ => {
+							const iconWrapper = iconForStatus[_.detailedStatus.label] || { icon: "clock" };
 
-						return (
-							<Tooltip
-								placement="top"
-								delay={1}
-								trigger={["hover"]}
-								overlayStyle={{ zIndex: "3000" }}
-								title={`${_.name}: ${_.detailedStatus.tooltip}`}
-							>
-								<span>
-									<Icon name={iconWrapper.icon} style={{ paddingRight: "5px" }} />
-								</span>
-							</Tooltip>
-						);
-					})}
-				</div>
+							return (
+								<Tooltip
+									placement="top"
+									delay={1}
+									trigger={["hover"]}
+									overlayStyle={{ zIndex: "3000" }}
+									title={`${_.name}: ${_.detailedStatus.tooltip}`}
+								>
+									<span>
+										<Icon name={iconWrapper.icon} style={{ paddingRight: "5px" }} />
+									</span>
+								</Tooltip>
+							);
+						})}
+					</div>
+				)}
 			</FlexRow>
 		</OutlineBox>
 	);

@@ -1,9 +1,9 @@
 /** Returns a readable phrase of items. examples:
- * 		
+ *
  * 		['foo'] = "foo"
  * 		['foo','bar'] = "foo and bar"
  * 		['foo','bar','baz'] = "foo, bar, and baz"
- * 
+ *
  * @param  {string[]} items
  * @returns string
  */
@@ -18,11 +18,22 @@ export function phraseList(items: string[]): string {
 	for (let i = 0; i < length; i++) {
 		results += `${items[i]}`;
 		if (i < length - 1) {
-			results += ', '
+			results += ", ";
 		}
 		if (i === length - 2) {
-			results += 'and ';
+			results += "and ";
 		}
 	}
 	return results;
+}
+
+export function pluralize(
+	singularWord: string,
+	listOrNumber: { nodes?: any[] } | undefined | number
+) {
+	if (typeof listOrNumber === "number") {
+		return listOrNumber === 1 ? singularWord : `${singularWord}s`;
+	} else {
+		return listOrNumber?.nodes?.length == 1 ? singularWord : `${singularWord}s`;
+	}
 }

@@ -1,7 +1,7 @@
 {
 	"name": "codestream",
 	"main": "./dist/codestream",
-	"version": "11.0.0",
+	"version": "11.0.2",
 	"description": "GitHub pull requests and code reviews in your IDE. Eliminate context-switching between tools. Also integrates with GitLab, Bitbucket, Slack, Teams, Jira, Trello and more.",
 	"keywords": [
 		"chat",
@@ -168,7 +168,7 @@
 		"babel-loader": "8.0.6",
 		"babel-plugin-styled-components": "1.10.6",
 		"clean-webpack-plugin": "1.0.1",
-		"electron": "7.2.4",
+		"electron": "9.4.0",
 		"eslint": "6.8.0",
 		"eslint-loader": "3.0.3",
 		"eslint-plugin-import": "2.20.0",

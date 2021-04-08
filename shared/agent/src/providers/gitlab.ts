@@ -1110,9 +1110,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			discussions = discussions.concat(response0.project.mergeRequest.discussions.nodes);
 			if (response0.project.mergeRequest.discussions.pageInfo?.hasNextPage) {
 				let after = response0.project.mergeRequest.discussions.pageInfo.endCursor;
-				const paginatedQuery = print(mergeRequestDiscussionQuery);
+				const paginatedDiscussionQuery = print(mergeRequestDiscussionQuery);
 				while (true) {
-					const paginated = await this.query(paginatedQuery, {
+					const paginated = await this.query(paginatedDiscussionQuery, {
 						...args,
 						after: after,
 						first: 100
@@ -1128,7 +1128,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			}
 
-			const queryText1 = print(mergeRequest1Query);
+			const queryText1 = await this.graphqlQueryBuilder.build(
+				providerVersion!.version!,
+				mergeRequest1Query,
+				"GetPullRequest1"
+			);
+
 			const response1 = await this.query(queryText1, args);
 			response = merge(
 				{

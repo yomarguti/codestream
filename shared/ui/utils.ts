@@ -385,9 +385,23 @@ export function escapeHtml(text: string) {
  */
 export function replaceHtml(text: string) {
 	const domParser = new DOMParser();
+	/*
+	// Because this stuff is sensitive, I'm leaving this comment here, but 
+	// this code fails to account for newlines created via Shift-Enter
+
 	//input text's newlines will be created with <div> or <br> tags
 	//remove extra \n or \r\n to remove double lines later in markdown
 	text = text.replace(/\r\n/g, "").replace(/\n/g, "");
+	*/
+
+	// Instead of above, replace these legitimate newlines (presumably
+	// created with Shift-Enter) with <br> tags, which the markdowner
+	// will properly recognize as line separators ... note that "extra"
+	// lines, in my experience, get removed on render anyway, so we're
+	// not as concerned about those, and in any case, extra lines are
+	// better than losing lines - Collin
+	text = text.replace(/\r\n/g, "<br>").replace(/\n/g, "<br>");
+
 	// contentEditable renders a blank line as "<div><br></div>""
 	// and a line with only "foo" as "<div>foo</div>"
 	// both of those things result in newlines, so we convert them to \n
@@ -395,7 +409,6 @@ export function replaceHtml(text: string) {
 		.split(/<div.*?>/)
 		.map(_ => _.replace(/<\/div>/, "").replace(/<br\/?>/g, "\n"))
 		.join("\n");
-
 	const parsed = domParser.parseFromString(reconstructedText, "text/html").documentElement
 		.textContent;
 	// console.log('replaceHtml input/output', text, result);
