@@ -15,6 +15,7 @@ import { HostApi } from "../../../webview-api";
 import { SwitchBranchRequestType } from "@codestream/protocols/agent";
 import { confirmPopup } from "../../Confirm";
 import { getProviderPullRequestRepo } from "@codestream/webview/store/providerPullRequests/reducer";
+import { pluralize } from "@codestream/webview/utilities/strings";
 
 export const Root = styled.div`
 	margin: 0 20px 10px 20px;
@@ -164,6 +165,16 @@ export const SummaryBox = props => {
 							{pr.repository.name}:{pr.targetBranch}
 						</PRBranch>
 					</Link>
+					{pr.divergedCommitsCount > 0 && (
+						<>
+							<br />
+							The source branch is{" "}
+							<Link href={`${pr.url}/-/commits/${pr.targetBranch}`}>
+								{pr.divergedCommitsCount} {pluralize("commit", pr.divergedCommitsCount)} behind
+							</Link>{" "}
+							the target branch
+						</>
+					)}
 				</div>
 			</FlexRow>
 		</OutlineBox>

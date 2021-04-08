@@ -27,6 +27,7 @@ import { Circle } from "../../PullRequestConversationTab";
 import Tooltip from "../../Tooltip";
 import { GitLabMergeRequest } from "@codestream/protocols/agent";
 import cx from "classnames";
+import { pluralize } from "@codestream/webview/utilities/strings";
 
 const Right = styled.div`
 	width: 48px;
@@ -565,11 +566,6 @@ export const RightActionBar = (props: {
 			);
 		else return milestone.title;
 	}, [pr.milestone]);
-
-	const pluralize = (word: string, list) => {
-		if (list && list.nodes && list.nodes.length == 1) return word;
-		else return `${word}s`;
-	};
 
 	const [isLoading, setIsLoading] = useState(false);
 	const refresh = async () => {
