@@ -293,7 +293,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 					const queriesByProvider: PullRequestQuery[] =
 						theQueries[connectedProvider.id] || defaultQueries[connectedProvider.id];
 					const queryStrings = Object.values(queriesByProvider).map(_ => _.query);
-					activePrListedIndex = queriesByProvider.findIndex(_ => _.name === "Waiting on my Review");
+					activePrListedIndex = queriesByProvider.findIndex(
+						_ => _?.name === "Waiting on my Review"
+					);
 					// console.warn("Loading the PRs... in the loop", queryStrings);
 					try {
 						const response: any = await dispatch(
@@ -651,7 +653,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 						<PaneNode key={index}>
 							<PaneNodeName
 								onClick={e => toggleQueryHidden(e, providerId, index)}
-								title={query.name}
+								title={query?.name || "Unnamed"}
 								collapsed={query.hidden}
 								count={count}
 								isLoading={isLoadingPRs || index === isLoadingPRGroup}
@@ -689,7 +691,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 											return (
 												repo.currentBranch === pr.headRefName &&
 												pr.headRepository &&
-												repo.name === pr.headRepository.name
+												repo?.name === pr.headRepository?.name
 											);
 										});
 										return (
@@ -721,7 +723,10 @@ export const OpenPullRequests = React.memo((props: Props) => {
 														{pr.labels && pr.labels.nodes && pr.labels.nodes.length > 0 && (
 															<span className="cs-tag-container">
 																{pr.labels.nodes.map((_, index) => (
-																	<Tag key={index} tag={{ label: _.name, color: `#${_.color}` }} />
+																	<Tag
+																		key={index}
+																		tag={{ label: _?.name, color: `#${_?.color}` }}
+																	/>
 																))}
 															</span>
 														)}
@@ -796,7 +801,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 														!derivedState.hideLabels && (
 															<span className="cs-tag-container">
 																{pr.labels.map((_, index) => (
-																	<Tag key={index} tag={{ label: _.name, color: `${_.color}` }} />
+																	<Tag key={index} tag={{ label: _?.name, color: `${_?.color}` }} />
 																))}
 															</span>
 														)}
@@ -928,6 +933,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 									<NoContent>Connect to GitHub or GitLab to see your PRs</NoContent>
 									<IntegrationButtons noBorder>
 										{derivedState.PRSupportedProviders.map(provider => {
+											if (!provider) return null;
 											const providerDisplay = PROVIDER_MAPPINGS[provider.name];
 											if (providerDisplay) {
 												return (
