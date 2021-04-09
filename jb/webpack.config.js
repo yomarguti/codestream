@@ -114,7 +114,7 @@ module.exports = function(env, argv) {
 		},
 		mode: env.production ? "production" : "development",
 		node: false,
-		devtool: !env.production ? "eval-source-map" : undefined,
+		devtool: "eval-source-map",
 		output: {
 			filename: "[name].js",
 			path: path.resolve(__dirname, "src/main/resources/webview"),
