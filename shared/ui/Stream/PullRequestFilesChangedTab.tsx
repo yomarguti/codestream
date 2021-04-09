@@ -9,7 +9,10 @@ import { FileStatus } from "@codestream/protocols/api";
 import { LoadingMessage } from "../src/components/LoadingMessage";
 import { getPullRequestCommits, getPullRequestFiles } from "../store/providerPullRequests/actions";
 import { PullRequestFilesChangedList } from "./PullRequestFilesChangedList";
-import { FetchThirdPartyPullRequestCommitsResponse, FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
+import {
+	FetchThirdPartyPullRequestCommitsResponse,
+	FetchThirdPartyPullRequestPullRequest
+} from "@codestream/protocols/agent";
 
 const STATUS_MAP = {
 	modified: FileStatus.modified
@@ -200,16 +203,20 @@ export const PullRequestFilesChangedTab = (props: {
 	}
 	dropdownItems.push({ label: "Hold shift + click to select a range", type: "static" });
 
-	prCommits && 
+	prCommits &&
 		prCommits.map(_ => {
 			dropdownItems.push({
 				label: _.message,
 				floatRight: {
 					label: _.abbreviatedOid
 				},
-				subtextNoPadding: `${_.author.user?.login ? _.author.user.login : _.author.name} ${
-					_.authoredDate ? distanceOfTimeInWords(new Date(_.authoredDate).getTime()) : ""
-				}`,
+				subtextNoPadding: `${
+					_.author && _.author.user && _.author.user.login
+						? _.author.user.login
+						: _.author && _.author.name
+						? _.author.name
+						: ""
+				} ${_.authoredDate ? distanceOfTimeInWords(new Date(_.authoredDate).getTime()) : ""}`,
 				action: range => {
 					if (range) {
 						if (range[0] === range[1]) {

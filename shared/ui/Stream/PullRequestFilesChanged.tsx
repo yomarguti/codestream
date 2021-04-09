@@ -113,8 +113,8 @@ export const PullRequestFilesChanged = (props: Props) => {
 					"A commit required to perform this review was not found in the local git repository. Fetch all remotes and try again."
 				) : pr && forkPointResponse.error.type === "REPO_NOT_FOUND" ? (
 					<>
-						Repo <span className="monospace highlight">{pr.repository.name}</span> not found in your
-						editor. Open it, or <Link href={pr.repository.url}>clone the repo</Link>.
+						Repo <span className="monospace highlight">{pr.repository?.name}</span> not found in
+						your editor. Open it, or <Link href={pr.repository?.url}>clone the repo</Link>.
 					</>
 				) : (
 					<span>Could not get fork point.</span>

@@ -550,14 +550,14 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 						let i = index + 1;
 						let authors: string[] = [];
 						if (index == 0 || timelineNodes[index - 1].__typename !== "PullRequestCommit") {
-							authors.push(item.commit.author.name);
-							while (
-								timelineNodes[i] &&
-								timelineNodes[i] &&
-								timelineNodes[i].__typename === "PullRequestCommit"
-							) {
-								authors.push(timelineNodes[i].commit.author.name);
-								futureCommitCount++;
+							if (item.commit.author) {
+								authors.push(item.commit.author.name);
+							}
+							while (timelineNodes[i] && timelineNodes[i].__typename === "PullRequestCommit") {
+								if (timelineNodes[i].commit.author) {
+									authors.push(timelineNodes[i].commit.author.name);
+									futureCommitCount++;
+								}
 								i++;
 							}
 						}

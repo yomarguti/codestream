@@ -526,14 +526,14 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 						let i = index + 1;
 						let authors: string[] = [];
 						if (index == 0 || timelineNodes[index - 1].__typename !== "PullRequestCommit") {
-							authors.push(item.commit.author.name);
-							while (
-								timelineNodes[i] &&
-								timelineNodes[i] &&
-								timelineNodes[i].__typename === "PullRequestCommit"
-							) {
-								authors.push(timelineNodes[i].commit.author.name);
-								futureCommitCount++;
+							if (item.commit.author) {
+								authors.push(item.commit.author.name);
+							}
+							while (timelineNodes[i] && timelineNodes[i].__typename === "PullRequestCommit") {
+								if (timelineNodes[i].commit.author) {
+									authors.push(timelineNodes[i].commit.author.name);
+									futureCommitCount++;
+								}
 								i++;
 							}
 						}
@@ -554,7 +554,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 								<PRTimelineItem key={index}>
 									<Icon name="git-commit" />
 									<PRHeadshot key={index} size={20} person={author} />
-									{committer && author.name !== committer.name && (
+									{committer && author && author.name !== committer.name && (
 										<PRHeadshot className="left-pad" size={20} person={committer} />
 									)}
 
@@ -596,7 +596,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 										<Timestamp time={item.createdAt!} relative />
 										<div style={{ display: "flex", alignItems: "flex-start", marginTop: "10px" }}>
 											<PRHeadshot key={index} size={20} person={author} />
-											{committer && author.name !== committer.name && (
+											{committer && author && author.name !== committer.name && (
 												<PRHeadshot className="left-pad" size={20} person={committer} />
 											)}
 											<div className="monospace left-pad">
@@ -685,7 +685,12 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 								<PRTimelineItemBody>
 									<PRHeadshotName key={index} person={item.actor} />
 									added
-									<Tag tag={{ label: item.label.name, color: `#${item.label.color}` }} />
+									<Tag
+										tag={{
+											label: item.label?.name || "unknown",
+											color: `#${item.label?.color || "009aef"}`
+										}}
+									/>
 									<Timestamp time={item.createdAt!} relative />
 								</PRTimelineItemBody>
 							</PRTimelineItem>
@@ -698,7 +703,12 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 								<PRTimelineItemBody>
 									<PRHeadshotName key={index} person={item.actor} />
 									removed
-									<Tag tag={{ label: item.label.name, color: `#${item.label.color}` }} />
+									<Tag
+										tag={{
+											label: item.label?.name || "unknown",
+											color: `#${item.label?.color || "009aef"}`
+										}}
+									/>
 									<Timestamp time={item.createdAt!} relative />
 								</PRTimelineItemBody>
 							</PRTimelineItem>

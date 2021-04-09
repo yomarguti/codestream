@@ -697,7 +697,7 @@ export const RightActionBar = (props: {
 							)}
 						</Subtle>
 					</>
-				) : pr.assignees && pr.assignees.nodes.length > 0 ? (
+				) : pr.assignees && pr.assignees.nodes.length && pr.assignees.nodes[0] ? (
 					<Tooltip title={pr.assignees.nodes[0].name} placement="left">
 						<span>
 							<PRHeadshot person={pr.assignees.nodes[0]} size={20} />
@@ -738,7 +738,10 @@ export const RightActionBar = (props: {
 								)}
 							</Subtle>
 						</>
-					) : pr.reviewers && pr.reviewers.nodes && pr.reviewers.nodes.length > 0 ? (
+					) : pr.reviewers &&
+					  pr.reviewers.nodes &&
+					  pr.reviewers.nodes.length &&
+					  pr.reviewers.nodes[0] ? (
 						<Tooltip title={pr.reviewers!.nodes[0].name} placement="left">
 							<span>
 								<PRHeadshot person={pr.reviewers!.nodes[0]} size={20} />
