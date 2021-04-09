@@ -201,7 +201,7 @@ export const PullRequestCommitsTab = props => {
 								return (
 									<PRCommitCard key={index}>
 										<h1>{commit.message}</h1>
-										{author.name !== committer.name && (
+										{author && committer && author.name !== committer.name && (
 											<>
 												<PRHeadshotName className="no-padding" person={author} />
 

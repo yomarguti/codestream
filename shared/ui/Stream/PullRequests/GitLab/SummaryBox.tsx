@@ -164,7 +164,7 @@ export const SummaryBox = props => {
 					<b>into</b>{" "}
 					<Link href={`${pr.repository.url}/-/tree/${pr.targetBranch}`}>
 						<PRBranch>
-							{pr.repository.name}:{pr.targetBranch}
+							{pr.repository && pr.repository.name}:{pr.targetBranch}
 						</PRBranch>
 					</Link>
 					{pr.divergedCommitsCount > 0 && (

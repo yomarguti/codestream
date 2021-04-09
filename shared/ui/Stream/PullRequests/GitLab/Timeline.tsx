@@ -501,7 +501,7 @@ export const Timeline = (props: Props) => {
 					<ActionBox key={note.id}>
 						<Icon name="tag" className="circled" />
 						<ActionBody>
-							<b>{note.author.name}</b> @{note.author.login} {note.body} a label{" "}
+							<b>{note.author?.name}</b> @{note.author?.login} {note.body} a label{" "}
 							{note.label && (
 								<Tag tag={{ label: note.label.title, color: `${note.label.color}` }} />
 							)}
@@ -514,7 +514,7 @@ export const Timeline = (props: Props) => {
 					<ActionBox key={note.id}>
 						<Icon name={iconMap[note.systemNoteIconName] || "blank"} className="circled" />
 						<ActionBody>
-							<b>{note.author.name}</b> @{note.author.login} {note.body} merge request
+							<b>{note.author?.name}</b> @{note.author?.login} {note.body} merge request
 							<Timestamp relative time={note.createdAt} />
 						</ActionBody>
 					</ActionBox>
@@ -524,7 +524,7 @@ export const Timeline = (props: Props) => {
 					<ActionBox key={note.id}>
 						<Icon name="clock" className="circled" />
 						<ActionBody>
-							<b>{note.author.name}</b> @{note.author.login} {note.body} a milestone{" "}
+							<b>{note.author?.name}</b> @{note.author?.login} {note.body} a milestone{" "}
 							<Link href={note.milestone?.url}>%{note.milestone?.title}</Link>
 							<Timestamp relative time={note.createdAt} />
 						</ActionBody>
@@ -545,7 +545,7 @@ export const Timeline = (props: Props) => {
 					<ActionBox key={note.id}>
 						<Icon name={iconMap[note.systemNoteIconName] || "blank"} className="circled" />
 						<ActionBody>
-							<b>{note.author.name}</b> @{note.author.login} <MarkdownText inline text={label} />
+							<b>{note.author?.name}</b> @{note.author?.login} <MarkdownText inline text={label} />
 							<Timestamp relative time={note.createdAt} />
 							<div>{otherChildren}</div>
 						</ActionBody>
@@ -556,7 +556,7 @@ export const Timeline = (props: Props) => {
 				<ActionBox key={note.id}>
 					<Icon name={iconMap[note.systemNoteIconName] || "blank"} className="circled" />
 					<ActionBody>
-						<b>{note.author.name}</b> @{note.author.login} <MarkdownText inline text={label} />
+						<b>{note.author?.name}</b> @{note.author?.login} <MarkdownText inline text={label} />
 						<Timestamp relative time={note.createdAt} />
 					</ActionBody>
 				</ActionBox>
