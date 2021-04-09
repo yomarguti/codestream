@@ -221,6 +221,7 @@ export function ReviewNav(props: Props) {
 
 	const [isEditing, setIsEditing] = React.useState(false);
 	const [isAmending, setIsAmending] = React.useState(false);
+	const [isApproving, setIsApproving] = React.useState(false);
 	const [notFound, setNotFound] = React.useState(false);
 	const [hoverButton, setHoverButton] = React.useState(
 		derivedState.hideReviewInstructions ? "" : "files"
@@ -277,7 +278,7 @@ export function ReviewNav(props: Props) {
 		};
 	});
 
-	const approve = () => {
+	const approve = async () => {
 		const numOpenChangeRequests = derivedState.changeRequests.filter(r => r.status !== "closed")
 			.length;
 
@@ -300,8 +301,10 @@ export function ReviewNav(props: Props) {
 				]
 			});
 		} else {
-			dispatch(setReviewStatus(review!.id, "approved"));
+			setIsApproving(true);
+			await dispatch(setReviewStatus(review!.id, "approved"));
 			showReview();
+			setIsApproving(false);
 		}
 	};
 
@@ -414,7 +417,7 @@ export function ReviewNav(props: Props) {
 						)}
 						{numOpenChangeRequests === 0 && !approvedByMe && (
 							<Tooltip title="Approve Feedback Request" placement="top">
-								<Button variant="success" onClick={approve}>
+								<Button variant="success" onClick={approve} isLoading={isApproving}>
 									<Icon className="narrow-icon" name="thumbsup" />
 									<span className="wide-text">Approve</span>
 								</Button>
