@@ -195,7 +195,8 @@ export interface GitLabMergeRequest {
 			login: string;
 		}[];
 	};
-	approvalsRequired?: boolean;
+	// this property is part of a paid offering
+	// approvalsRequired?: boolean;
 	approvalsLeft?: number;
 	/** Decides if the MR author can approve the MR or not
 	 *
@@ -401,7 +402,7 @@ export interface GitLabMergeRequest {
 			version: string;
 		};
 		reviewers?: boolean;
-		approvalsRequired?: boolean;
+		// approvalsRequired?: boolean;
 		approvedBy?: boolean;
 		currentUserTodos?: boolean;
 	};

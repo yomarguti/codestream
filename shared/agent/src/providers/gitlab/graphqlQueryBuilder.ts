@@ -90,7 +90,7 @@ export class GraphqlQueryBuilder {
 			supports = {
 				version: providerVersion,
 				reviewers: isGte1380,
-				approvalsRequired: isGte1380,
+				// approvalsRequired: isGte1380,
 				approvedBy: isGte1364,
 				currentUserTodos: isGte1364
 			};
@@ -121,7 +121,7 @@ export class GraphqlQueryBuilder {
 							next: {
 								value: {
 									key: "mergeRequest",
-									removals: ["approvalsRequired", "approvalsLeft", "reviewers"]
+									removals: ["approvalsLeft", "reviewers"]
 								}
 							}
 						}
