@@ -1,5 +1,18 @@
 # Change Log
 
+## [11.0.2] - 2021-4-11
+
+### Fixed
+
+- Addresses [#486](https://github.com/TeamCodeStream/CodeStream/issues/486) &mdash; Unexpected error clicking on a merge request after update to 11.0
+- Addresses [#483](https://github.com/TeamCodeStream/CodeStream/issues/483) &mdash; Error loading git info when trying to ammend a feedback request
+- Addresses [#482](https://github.com/TeamCodeStream/CodeStream/issues/482) &mdash; Gitlab open merge request error field 'approvalsRequired'
+- Fixes field 'stages' doesn't exist on type 'Pipeline' on GitLab Self-Managed 13.2.3
+- Addresses [#470](https://github.com/TeamCodeStream/CodeStream/issues/470) &mdash; Shouldn't be able to submit review with zero pending comments
+- Fixes an issue with the Template dropdown incorrectly being displayed when creating a PR on GitHub
+- Fixes an issue with the display of the "source branch is X commit behind the target branch" copy in a merge request
+- Fixes an issue with line breaks getting lost in the description of a feedback request
+
 ## [11.0.1] - 2021-4-7
 
 ### Fixed
