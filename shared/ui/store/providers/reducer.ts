@@ -204,6 +204,7 @@ export const isConnectedSelectorFriendly = (
 		}
 	} else {
 		const providerConfig = providers[option.id];
+		if (!providerConfig) return false;
 		const infoForProvider = getUserProviderInfo(currentUser, providerConfig.name, currentTeamId);
 		if (infoForProvider == undefined) return false;
 

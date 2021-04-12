@@ -40,7 +40,10 @@ export class ConfigManager implements Disposable {
 			debug: atom.inDevMode(),
 			team: this.get("team"),
 			serverUrl: this.get("serverUrl"),
-			email
+			email,
+			environment: "unknown", 
+			isOnPrem: false, 
+			isProductionCloud: false
 		};
 	}
 

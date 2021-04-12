@@ -18,6 +18,7 @@ import { ApiVersioningActionsType } from "../store/apiVersioning/types";
 import { errorDismissed } from "@codestream/webview/store/connectivity/actions";
 import { ThemeProvider } from "styled-components";
 import { darkTheme, createTheme } from "../src/themes";
+import { closeAllPanels } from "../store/context/actions";
 
 const mapStateToProps = state => {
 	const team = state.teams[state.context.currentTeamId];
@@ -268,6 +269,10 @@ export default class Container extends React.Component {
 
 	handleClickReload = event => {
 		event.preventDefault();
+
+		// reset view state in case the error was tied to a piece of bad data
+		this.props.store.dispatch(closeAllPanels());
+
 		HostApi.instance.send(ReloadWebviewRequestType);
 	};
 

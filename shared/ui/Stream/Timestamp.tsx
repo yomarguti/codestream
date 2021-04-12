@@ -212,8 +212,16 @@ export default function Timestamp(props: PropsWithChildren<Props>) {
 	if (!props.time) return null;
 	// allow a UTC string to be passed in
 	let time = props.time;
-	if (typeof props.time == "string" && (props.time as string).indexOf("Z") > -1) {
-		time = new Date(props.time).getTime();
+	if (typeof props.time == "string") {
+		const timeString = props.time as string;
+		if (
+			// is a UTC string
+			timeString.indexOf("Z") > -1 ||
+			// is a local time with an offset (like 2015-03-25T12:00:00-06:30)
+			(timeString.length > 19 && (timeString[19] === "+" || timeString[19] === "-"))
+		) {
+			time = new Date(props.time).getTime();
+		}
 	}
 
 	const edited = props.edited ? " (edited)" : "";

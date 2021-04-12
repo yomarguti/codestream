@@ -16,6 +16,8 @@ import { Logger } from "./logger";
 
 @lsp
 export class ErrorReporter {
+	private _errorCache = new Set<string>();
+
 	constructor(session: CodeStreamSession) {
 		if (session.isProductionCloud) {
 			Logger.log("Initializing Sentry...");
@@ -79,6 +81,16 @@ export class ErrorReporter {
 
 	@lspHandler(ReportMessageRequestType)
 	reportMessage(request: ReportMessageRequest) {
+		const key = `${request.source}|${request.message}`;
+		if (this._errorCache.has(key)) {
+			Logger.warn("Ignoring duplicate error", {
+				key: key,
+				request: request
+			});
+			return;
+		}
+
+		this._errorCache.add(key);
 		Sentry.captureEvent({
 			level: Severity.fromString(request.type),
 			timestamp: Date.now(),

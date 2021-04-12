@@ -15,7 +15,7 @@ CodeStream is a developer collaboration platform that integrates all of your ess
 
 # Create and Review GitHub and GitLab Pull Requests in Visual Studio
 
-Create, review and merge GitHub pull requests and GitLab merge requests inside Visual Studio, with full source-tree and full file access, your favorite keybindings, built-in diff too, and code intelligence.
+Create, review and merge GitHub pull requests and GitLab merge requests inside Visual Studio, with full source-tree and full file access, your favorite keybindings, built-in diff tool, and code intelligence.
 
 ![Pull Request](https://raw.githubusercontent.com/TeamCodeStream/codestream-guide/develop/docs/src/assets/images/PullRequest-VS.png)
 

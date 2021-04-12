@@ -1497,7 +1497,7 @@ export const CreatePullRequestPanel = props => {
 												</div>
 											</div>
 											<div className="control-group">
-												{pullRequestTemplateNames && (
+												{pullRequestTemplateNames && pullRequestTemplateNames.length > 0 && (
 													<div style={{ marginBottom: "10px" }}>
 														<DropdownButton
 															variant="secondary"

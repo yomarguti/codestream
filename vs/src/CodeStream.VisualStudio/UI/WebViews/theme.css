@@ -16,6 +16,7 @@
 	--app-background-color: --cs--app-background-color--;
 	--app-background-color-darker: --cs--app-background-color-darker--;
 	--app-background-color-hover: --cs--app-background-color-hover--;
+	--sidebar-background: --cs--sidebar-background--;
 
 	--base-background-color: --cs--base-background-color--;
 	--base-border-color: --cs--base-border-color--;
@@ -37,7 +38,7 @@
 
 /* style overrides & polyfills */
 .floating-loading-message {
-	background-color: var(--app-background-color-darker); 
+	background-color: var(--app-background-color-darker);
 }
 .floating-loading-message div {
 	box-shadow: none;

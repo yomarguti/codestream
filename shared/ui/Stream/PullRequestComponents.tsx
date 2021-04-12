@@ -185,6 +185,18 @@ export const PRBranch = styled.span`
 	color: var(--text-color-highlight);
 `;
 
+export const PRBranchTruncated = styled.span`
+	display: inline-block;
+	max-width: 170px;
+	text-overflow: ellipsis;
+	margin-bottom: 3px;
+	overflow: hidden;
+	white-space: nowrap;
+	vertical-align: middle;
+	font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
+	color: var(--text-color-highlight);
+`;
+
 export const PRAction = styled.span`
 	color: var(--text-color-subtle);
 `;

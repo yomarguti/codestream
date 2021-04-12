@@ -140,7 +140,7 @@ export const PullRequestFilesChangedList = (props: Props) => {
 	const { filesChanged, fetch, isLoading, pr } = props;
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
-		const ideName = state.ide.name && state.ide.name.toUpperCase();
+		const ideName = state.ide?.name?.toUpperCase();
 		const requiresDiffHunkView = ideName === "VS" || ideName === "ATOM";
 		return {
 			currentPullRequestProviderId: state.context.currentPullRequest

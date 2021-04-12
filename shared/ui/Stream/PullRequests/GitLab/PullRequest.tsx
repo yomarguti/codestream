@@ -34,6 +34,7 @@ import {
 	PRActionIcons,
 	PRBadge,
 	PRBranch,
+	PRBranchTruncated,
 	PRError,
 	PRHeader,
 	PRPlusMinus,
@@ -135,6 +136,9 @@ export const PullRequestRoot = styled.div`
 		border-radius: 4px;
 	}
 	${PRBranch} {
+		color: var(--text-color-info);
+	}
+	${PRBranchTruncated} {
 		color: var(--text-color-info);
 	}
 	button {

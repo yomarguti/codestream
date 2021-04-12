@@ -27,6 +27,7 @@ import { Circle } from "../../PullRequestConversationTab";
 import Tooltip from "../../Tooltip";
 import { GitLabMergeRequest } from "@codestream/protocols/agent";
 import cx from "classnames";
+import { pluralize } from "@codestream/webview/utilities/strings";
 
 const Right = styled.div`
 	width: 48px;
@@ -566,11 +567,6 @@ export const RightActionBar = (props: {
 		else return milestone.title;
 	}, [pr.milestone]);
 
-	const pluralize = (word: string, list) => {
-		if (list && list.nodes && list.nodes.length == 1) return word;
-		else return `${word}s`;
-	};
-
 	const [isLoading, setIsLoading] = useState(false);
 	const refresh = async () => {
 		setIsLoading(true);
@@ -701,7 +697,7 @@ export const RightActionBar = (props: {
 							)}
 						</Subtle>
 					</>
-				) : pr.assignees && pr.assignees.nodes.length > 0 ? (
+				) : pr.assignees && pr.assignees.nodes.length && pr.assignees.nodes[0] ? (
 					<Tooltip title={pr.assignees.nodes[0].name} placement="left">
 						<span>
 							<PRHeadshot person={pr.assignees.nodes[0]} size={20} />
@@ -742,7 +738,10 @@ export const RightActionBar = (props: {
 								)}
 							</Subtle>
 						</>
-					) : pr.reviewers && pr.reviewers.nodes && pr.reviewers.nodes.length > 0 ? (
+					) : pr.reviewers &&
+					  pr.reviewers.nodes &&
+					  pr.reviewers.nodes.length &&
+					  pr.reviewers.nodes[0] ? (
 						<Tooltip title={pr.reviewers!.nodes[0].name} placement="left">
 							<span>
 								<PRHeadshot person={pr.reviewers!.nodes[0]} size={20} />

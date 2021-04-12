@@ -138,7 +138,11 @@ export const PullRequestFinishReview = (props: {
 			)}
 			{!isPreviewing && (
 				<ButtonRow>
-					<Button isLoading={submittingReview} onClick={submitReview}>
+					<Button
+						disabled={!pendingCommentCount && !supportsFinishReviewTypes}
+						isLoading={submittingReview}
+						onClick={submitReview}
+					>
 						Submit<span className="wide-text"> review</span>
 					</Button>
 					{pendingCommentCount > 0 && (

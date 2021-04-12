@@ -704,10 +704,14 @@ export class ScmManager {
 				);
 				if (latestCommitToRightDiff) {
 					// in the last checkpoint where it was included, file had uncommitted changes
-					const previousCheckpointLatestCommitContents = await git.getFileContentForRevision(
-						paths.join(repoPath, latestCommitToRightDiff.oldFileName!),
-						diff.latestCommitSha
-					);
+					const fileName =
+						latestCommitToRightDiff.oldFileName || latestCommitToRightDiff.newFileName;
+					const previousCheckpointLatestCommitContents =
+						fileName &&
+						(await git.getFileContentForRevision(
+							paths.join(repoPath, fileName),
+							diff.latestCommitSha
+						));
 					const previousCheckpointRightContents = applyPatch(
 						Strings.normalizeFileContents(previousCheckpointLatestCommitContents || ""),
 						latestCommitToRightDiff
@@ -1593,7 +1597,12 @@ export class ScmManager {
 			throw new Error(`Could not load repo with ID ${request.repoId}`);
 		}
 		if (request.commits.length > 1) {
-			const firstCommitAncestor = await git.findAncestor(repoPath, request.commits[0], 1, () => true);
+			const firstCommitAncestor = await git.findAncestor(
+				repoPath,
+				request.commits[0],
+				1,
+				() => true
+			);
 			request.commits[0] = firstCommitAncestor ? firstCommitAncestor.ref : EMPTY_TREE_SHA;
 		}
 

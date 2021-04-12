@@ -51,29 +51,30 @@ export const ApproveBox = (props: { pr: GitLabMergeRequest }) => {
 				</>
 			);
 		}
-		const approvalOptional = (
-			<>
-				Approval is optional
-				{!props.pr.mergedAt && (
-					<>
-						{" "}
-						<Link
-							href={`${props.pr.baseWebUrl}/help/user/project/merge_requests/merge_request_approvals`}
-						>
-							<Icon name="info" title="About this feature" placement="top" />
-						</Link>
-					</>
-				)}
-			</>
-		);
-		if (props.pr.supports.approvalsRequired) {
-			if (!props.pr.approvalsRequired) {
-				return approvalOptional;
-			} else {
-				return <>Requires approval</>;
-			}
-		}
-		return approvalOptional;
+		return null;
+		// const approvalOptional = (
+		// 	<>
+		// 		Approval is optional
+		// 		{!props.pr.mergedAt && (
+		// 			<>
+		// 				{" "}
+		// 				<Link
+		// 					href={`${props.pr.baseWebUrl}/help/user/project/merge_requests/merge_request_approvals`}
+		// 				>
+		// 					<Icon name="info" title="About this feature" placement="top" />
+		// 				</Link>
+		// 			</>
+		// 		)}
+		// 	</>
+		// );
+		// if (props.pr.supports.approvalsRequired) {
+		// 	if (!props.pr.approvalsRequired) {
+		// 		return approvalOptional;
+		// 	} else {
+		// 		return <>Requires approval</>;
+		// 	}
+		// }
+		// return approvalOptional;
 	};
 
 	if (
@@ -89,6 +90,13 @@ export const ApproveBox = (props: { pr: GitLabMergeRequest }) => {
 						<Icon name="person" className="bigger" />
 						<Icon name="check" className="overlap" />
 					</div>
+					<Tooltip title="This user cannot approve this merge request">
+						<span>
+							<Button className="action-button" disabled={true} variant="neutral">
+								Approve
+							</Button>
+						</span>
+					</Tooltip>
 					<div>{render()}</div>
 				</FlexRow>
 			</OutlineBox>
@@ -124,6 +132,15 @@ export const ApproveBox = (props: { pr: GitLabMergeRequest }) => {
 							</Button>
 						)}
 					</>
+				)}
+				{props.pr.merged && (
+					<Tooltip title="Merge request has already been merged">
+						<span>
+							<Button className="action-button" disabled={true} variant="neutral">
+								Approve
+							</Button>
+						</span>
+					</Tooltip>
 				)}
 
 				<div className="pad-left">{render()}</div>

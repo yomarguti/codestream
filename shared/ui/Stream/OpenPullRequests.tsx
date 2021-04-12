@@ -207,7 +207,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			);
 		const prConnectedProviders = providerSelectors.getConnectedSupportedPullRequestHosts(state);
 		const prConnectedProvidersWithErrors = prConnectedProviders.filter(_ => _.hasAccessTokenError);
-
+		const prConnectedProvidersLength = prConnectedProviders.length;
 		const myPullRequests = getMyPullRequestsSelector(state);
 
 		return {
@@ -217,9 +217,10 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			isCurrentUserAdmin,
 			pullRequestQueries: state.preferences.pullRequestQueries,
 			myPullRequests,
-			isPRSupportedCodeHostConnected: prConnectedProviders.length > 0,
+			isPRSupportedCodeHostConnected: prConnectedProvidersLength > 0,
 			PRSupportedProviders: prSupportedProviders,
 			PRConnectedProviders: prConnectedProviders,
+			PRConnectedProvidersCount: prConnectedProvidersLength,
 			GitLabConnectedProviders: providerSelectors.getConnectedGitLabHosts(state),
 			PRConnectedProvidersWithErrors: prConnectedProvidersWithErrors,
 			PRConnectedProvidersWithErrorsCount: prConnectedProvidersWithErrors.length,
@@ -263,6 +264,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	const previousPRConnectedProvidersWithErrorsCount = usePrevious<number>(
 		derivedState.PRConnectedProvidersWithErrorsCount
 	);
+	const previousPRConnectedProvidersCount = usePrevious<number>(
+		derivedState.PRConnectedProvidersCount
+	);
 
 	const saveQueries = (providerId, queries) => {
 		dispatch(setUserPreference(["pullRequestQueries", providerId], [...queries]));
@@ -289,7 +293,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 					const queriesByProvider: PullRequestQuery[] =
 						theQueries[connectedProvider.id] || defaultQueries[connectedProvider.id];
 					const queryStrings = Object.values(queriesByProvider).map(_ => _.query);
-					activePrListedIndex = queriesByProvider.findIndex(_ => _.name === "Waiting on my Review");
+					activePrListedIndex = queriesByProvider.findIndex(
+						_ => _?.name === "Waiting on my Review"
+					);
 					// console.warn("Loading the PRs... in the loop", queryStrings);
 					try {
 						const response: any = await dispatch(
@@ -367,6 +373,15 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		};
 	}, [queries]);
 
+	useEffect(() => {
+		if (!mountedRef.current) return;
+		const queries = {
+			...defaultQueries,
+			...(derivedState.pullRequestQueries || {})
+		};
+		setQueries(queries);
+	}, [derivedState.pullRequestQueries])
+
 	useDidMount(() => {
 		(async () => {
 			const defaultQueriesResponse: any = (await HostApi.instance.send(
@@ -397,10 +412,13 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 	useMemo(() => {
 		if (!mountedRef.current) return;
-		if (derivedState.isPRSupportedCodeHostConnected) {
-			fetchPRs(queries, { force: true }, "isPRSupportedCodeHostConnected");
+		if (
+			previousPRConnectedProvidersCount != null &&
+			previousPRConnectedProvidersCount + 1 === derivedState.PRConnectedProvidersCount
+		) {
+			fetchPRs(queries, { force: true }, "PRConnectedProvidersLength");
 		}
-	}, [queries, derivedState.isPRSupportedCodeHostConnected]);
+	}, [queries, derivedState.PRConnectedProvidersCount]);
 
 	useEffect(() => {
 		if (!mountedRef.current) return;
@@ -572,7 +590,6 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	}
 
 	if (!derivedState.isPRSupportedCodeHostConnected && !hasPRSupportedRepos) return null;
-
 	if (!queries || Object.keys(queries).length === 0) return null;
 
 	const renderQueryGroup = providerId => {
@@ -645,7 +662,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 						<PaneNode key={index}>
 							<PaneNodeName
 								onClick={e => toggleQueryHidden(e, providerId, index)}
-								title={query.name}
+								title={query?.name || "Unnamed"}
 								collapsed={query.hidden}
 								count={count}
 								isLoading={isLoadingPRs || index === isLoadingPRGroup}
@@ -683,7 +700,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 											return (
 												repo.currentBranch === pr.headRefName &&
 												pr.headRepository &&
-												repo.name === pr.headRepository.name
+												repo?.name === pr.headRepository?.name
 											);
 										});
 										return (
@@ -715,7 +732,10 @@ export const OpenPullRequests = React.memo((props: Props) => {
 														{pr.labels && pr.labels.nodes && pr.labels.nodes.length > 0 && (
 															<span className="cs-tag-container">
 																{pr.labels.nodes.map((_, index) => (
-																	<Tag key={index} tag={{ label: _.name, color: `#${_.color}` }} />
+																	<Tag
+																		key={index}
+																		tag={{ label: _?.name, color: `#${_?.color}` }}
+																	/>
 																))}
 															</span>
 														)}
@@ -790,7 +810,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 														!derivedState.hideLabels && (
 															<span className="cs-tag-container">
 																{pr.labels.map((_, index) => (
-																	<Tag key={index} tag={{ label: _.name, color: `${_.color}` }} />
+																	<Tag key={index} tag={{ label: _?.name, color: `${_?.color}` }} />
 																))}
 															</span>
 														)}
@@ -922,6 +942,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 									<NoContent>Connect to GitHub or GitLab to see your PRs</NoContent>
 									<IntegrationButtons noBorder>
 										{derivedState.PRSupportedProviders.map(provider => {
+											if (!provider) return null;
 											const providerDisplay = PROVIDER_MAPPINGS[provider.name];
 											if (providerDisplay) {
 												return (

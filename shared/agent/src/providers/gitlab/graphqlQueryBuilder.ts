@@ -90,7 +90,7 @@ export class GraphqlQueryBuilder {
 			supports = {
 				version: providerVersion,
 				reviewers: isGte1380,
-				approvalsRequired: isGte1380,
+				// approvalsRequired: isGte1380,
 				approvedBy: isGte1364,
 				currentUserTodos: isGte1364
 			};
@@ -121,7 +121,7 @@ export class GraphqlQueryBuilder {
 							next: {
 								value: {
 									key: "mergeRequest",
-									removals: ["approvalsRequired", "approvalsLeft", "reviewers"]
+									removals: ["reviewers"]
 								}
 							}
 						}
@@ -161,6 +161,35 @@ export class GraphqlQueryBuilder {
 					}
 				}
 			}
+		],
+		GetPullRequest1: [
+			{
+				// this is one of our internal GL versions
+				selector: (currentVersion: string) => semver.lt(currentVersion, "13.6.4"),
+				query: {
+					head: {
+						value: {
+							key: "GetPullRequest"
+						},
+						next: {
+							value: {
+								key: "project"
+							},
+							next: {
+								value: {
+									key: "mergeRequest"
+								},
+								next: {
+									value: {
+										key: "headPipeline",
+										removals: ["stages"]
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 		]
 	};
 
@@ -177,7 +206,7 @@ export class GraphqlQueryBuilder {
 	async build(
 		version: string,
 		document: DocumentNode,
-		queryKey: "GetPullRequest"
+		queryKey: "GetPullRequest" | "GetPullRequest1"
 	): Promise<string> {
 		try {
 			const versionedQuery = this.store[version];

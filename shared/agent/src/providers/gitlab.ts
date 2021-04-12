@@ -1013,6 +1013,26 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return (await this.client()).request<T>(query, variables);
 	}
 
+	async get<T extends object>(url: string): Promise<ApiResponse<T>> {
+		// override the base to add additional error handling
+		let response;
+		try {
+			response = await super.get<T>(url);
+		} catch (ex) {
+			Logger.warn(`${this.providerConfig.name} query caught:`, ex);
+			const exType = this._isSuppressedException(ex);
+			if (exType !== undefined) {
+				// this throws the error but won't log to sentry (for ordinary network errors that seem temporary)
+				throw new InternalError(exType, { error: ex });
+			} else {
+				// this is an unexpected error, throw the exception normally
+				throw ex;
+			}
+		}
+
+		return response;
+	}
+
 	async restGet<T extends object>(url: string) {
 		return this.get<T>(url);
 	}
@@ -1040,21 +1060,21 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		let currentUser = this._currentGitlabUsers.get(this.providerConfig.id);
 		if (currentUser) return currentUser;
 
-		const data = await this.query<any>(`
-			{
-				currentUser {
-					id
-					login:username
-					name
-					avatarUrl
-				}
-			}`);
+		const data = await this.restGet<{
+			id: number;
+			username: string;
+			name: string;
+			avatar_url: string;
+		}>("/user");
+		currentUser = {
+			id: data.body.id,
+			login: data.body.username,
+			name: data.body.name,
+			avatarUrl: data.body.avatar_url
+		} as GitLabCurrentUser;
 
-		currentUser = this.toAuthorAbsolutePath(data.currentUser);
-		this._currentGitlabUsers.set(
-			this.providerConfig.id,
-			this.toAuthorAbsolutePath(data.currentUser)
-		);
+		currentUser = this.toAuthorAbsolutePath(currentUser);
+		this._currentGitlabUsers.set(this.providerConfig.id, currentUser);
 
 		Logger.log(`getCurrentUser ${JSON.stringify(currentUser)} for id=${this.providerConfig.id}`);
 		return currentUser;
@@ -1110,9 +1130,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			discussions = discussions.concat(response0.project.mergeRequest.discussions.nodes);
 			if (response0.project.mergeRequest.discussions.pageInfo?.hasNextPage) {
 				let after = response0.project.mergeRequest.discussions.pageInfo.endCursor;
-				const paginatedQuery = print(mergeRequestDiscussionQuery);
+				const paginatedDiscussionQuery = print(mergeRequestDiscussionQuery);
 				while (true) {
-					const paginated = await this.query(paginatedQuery, {
+					const paginated = await this.query(paginatedDiscussionQuery, {
 						...args,
 						after: after,
 						first: 100
@@ -1128,7 +1148,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			}
 
-			const queryText1 = print(mergeRequest1Query);
+			const queryText1 = await this.graphqlQueryBuilder.build(
+				providerVersion!.version!,
+				mergeRequest1Query,
+				"GetPullRequest1"
+			);
+
 			const response1 = await this.query(queryText1, args);
 			response = merge(
 				{
@@ -1143,6 +1168,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				response0,
 				response1
 			);
+			response.currentUser = {
+				...currentUser,
+				id: `gid://gitlab/User/${currentUser.id}`
+			};
 
 			response.project.mergeRequest.discussions.nodes = discussions;
 

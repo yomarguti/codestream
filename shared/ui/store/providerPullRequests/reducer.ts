@@ -650,8 +650,11 @@ export const getProviderPullRequestRepo = createSelector(
 				repoName = currentPr.conversations.repository.repoName.toLowerCase();
 				repoUrl = currentPr.conversations.repository.url.toLowerCase();
 			} else if (providerId && providerId.indexOf("gitlab") > -1) {
+				if (!currentPr.conversations.project) {
+					console.error("Missing project name for: ", currentPr);
+				}
 				// this is for gitlab
-				repoName = currentPr.conversations.project.name.toLowerCase();
+				repoName = currentPr.conversations.project?.name?.toLowerCase();
 				repoUrl = currentPr.conversations.project.mergeRequest.webUrl.toLowerCase();
 			}
 			let matchingRepos = repos.filter(_ =>
