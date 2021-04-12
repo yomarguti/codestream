@@ -81,6 +81,7 @@ namespace CodeStream.VisualStudio.Core.Managers {
 				var colors = new List<ThemeColorMetadata>
 				{
 					new ThemeColorMetadata { Key = "app-background-color", Color = backgroundColor },
+					new ThemeColorMetadata { Key = "sidebar-background", Color = backgroundColor },
 					new ThemeColorMetadata { Key = "app-background-color-darker", Color = backgroundColor, DarkModifier = c => c.Darken(0.04f), LightModifier = c => c.Lighten(0.04f) },
 					new ThemeColorMetadata { Key = "app-background-color-hover", Color = backgroundColor, DarkModifier = c => c.Lighten(0.03f), LightModifier = c => c.Darken(0.015f) },
 

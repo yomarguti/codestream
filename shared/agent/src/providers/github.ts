@@ -45,6 +45,7 @@ import semver from "semver";
 import { CSGitHubProviderInfo, CSRepository } from "../protocol/api.protocol";
 import { Arrays, Functions, log, lspProvider, Strings } from "../system";
 import {
+	ApiResponse,
 	getOpenedRepos,
 	getRemotePaths,
 	ProviderCreatePullRequestRequest,
@@ -384,6 +385,26 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		// 		console.warn(err);
 		// 	}
 		// }
+
+		return response;
+	}
+
+	async get<T extends object>(url: string): Promise<ApiResponse<T>> {
+		// override the base to add additional error handling
+		let response;
+		try {
+			response = await super.get<T>(url);
+		} catch (ex) {
+			Logger.warn(`${this.providerConfig.name} query caught:`, ex);
+			const exType = this._isSuppressedException(ex);
+			if (exType !== undefined) {
+				// this throws the error but won't log to sentry (for ordinary network errors that seem temporary)
+				throw new InternalError(exType, { error: ex });
+			} else {
+				// this is an unexpected error, throw the exception normally
+				throw ex;
+			}
+		}
 
 		return response;
 	}

@@ -1,12 +1,6 @@
 #import "./fragments/discussion.graphql"
 
 query GetPullRequest($fullPath: ID!, $iid: String!, $after: String) {
-	currentUser {
-		name
-		login: username
-		avatarUrl
-		id
-	}
 	project(fullPath: $fullPath) {
 		name
 		mergeRequestsEnabled
@@ -22,7 +16,6 @@ query GetPullRequest($fullPath: ID!, $iid: String!, $after: String) {
 			}
 			id
 			iid
-			approvalsLeft
 			createdAt
 			sourceBranch
 			targetBranch
