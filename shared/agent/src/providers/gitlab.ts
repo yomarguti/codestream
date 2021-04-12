@@ -48,7 +48,7 @@ import {
 } from "./provider";
 import { Directives } from "./directives";
 import { CodeStreamSession } from "../session";
-import { print, StringValueNode } from "graphql";
+import { print } from "graphql";
 import mergeRequest0Query from "./gitlab/mergeRequest0.graphql";
 import mergeRequest1Query from "./gitlab/mergeRequest1.graphql";
 import mergeRequestDiscussionQuery from "./gitlab/mergeRequestDiscussions.graphql";
