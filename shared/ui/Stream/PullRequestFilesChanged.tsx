@@ -152,10 +152,10 @@ export const PullRequestFilesChanged = (props: Props) => {
 						headSha: props.headRef,
 						ref: getRef
 					});
+					handleForkPointResponse(forkPointResponse);
 				} catch (ex) {
 					console.error(ex);
-				} finally {
-					handleForkPointResponse(forkPointResponse);
+				} finally {					
 					setLoading(false);
 					setIsMounted(true);
 				}
