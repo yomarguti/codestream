@@ -195,9 +195,10 @@ export interface GitLabMergeRequest {
 			login: string;
 		}[];
 	};
-	// this property is part of a paid offering
+	/* this property is part of a paid offering */
 	// approvalsRequired?: boolean;
-	approvalsLeft?: number;
+	/* this property is part of a paid offering */
+	// approvalsLeft?: number;
 	/** Decides if the MR author can approve the MR or not
 	 *
 	 * this will be undefined for older GL instances

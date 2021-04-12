@@ -121,7 +121,7 @@ export class GraphqlQueryBuilder {
 							next: {
 								value: {
 									key: "mergeRequest",
-									removals: ["approvalsLeft", "reviewers"]
+									removals: ["reviewers"]
 								}
 							}
 						}

@@ -22,7 +22,6 @@ query GetPullRequest($fullPath: ID!, $iid: String!, $after: String) {
 			}
 			id
 			iid
-			approvalsLeft
 			createdAt
 			sourceBranch
 			targetBranch
