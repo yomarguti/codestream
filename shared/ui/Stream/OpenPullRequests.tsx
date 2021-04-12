@@ -373,6 +373,15 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		};
 	}, [queries]);
 
+	useEffect(() => {
+		if (!mountedRef.current) return;
+		const queries = {
+			...defaultQueries,
+			...(derivedState.pullRequestQueries || {})
+		};
+		setQueries(queries);
+	}, [derivedState.pullRequestQueries])
+
 	useDidMount(() => {
 		(async () => {
 			const defaultQueriesResponse: any = (await HostApi.instance.send(
