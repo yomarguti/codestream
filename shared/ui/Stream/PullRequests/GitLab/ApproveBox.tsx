@@ -90,9 +90,13 @@ export const ApproveBox = (props: { pr: GitLabMergeRequest }) => {
 						<Icon name="person" className="bigger" />
 						<Icon name="check" className="overlap" />
 					</div>
-					<Button className="action-button" disabled={true} variant="neutral">
-						Approve
-					</Button>
+					<Tooltip title="This user cannot approve this merge request">
+						<span>
+							<Button className="action-button" disabled={true} variant="neutral">
+								Approve
+							</Button>
+						</span>
+					</Tooltip>
 					<div>{render()}</div>
 				</FlexRow>
 			</OutlineBox>
@@ -130,9 +134,13 @@ export const ApproveBox = (props: { pr: GitLabMergeRequest }) => {
 					</>
 				)}
 				{props.pr.merged && (
-					<Button className="action-button" disabled={true} variant="neutral">
-						Approve
-					</Button>
+					<Tooltip title="Merge request has already been merged">
+						<span>
+							<Button className="action-button" disabled={true} variant="neutral">
+								Approve
+							</Button>
+						</span>
+					</Tooltip>
 				)}
 
 				<div className="pad-left">{render()}</div>
