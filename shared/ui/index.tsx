@@ -68,7 +68,8 @@ import {
 	setCurrentReview,
 	setCurrentPullRequest,
 	setStartWorkCard,
-	closeAllPanels
+	closeAllPanels,
+	clearCurrentPullRequest
 } from "./store/context/actions";
 import { URI } from "vscode-uri";
 import { moveCursorToLine } from "./Stream/CodemarkView";
@@ -342,10 +343,12 @@ function listenForEvents(store) {
 		if (!review) {
 			await store.dispatch(fetchReview(e.reviewId));
 		}
+		store.dispatch(clearCurrentPullRequest());
 		store.dispatch(setCurrentReview(e.reviewId, { openFirstDiff: e.openFirstDiff }));
 	});
 
 	api.on(ShowPullRequestNotificationType, async e => {
+		store.dispatch(setCurrentReview());
 		if (e.url) {
 			store.dispatch(openPullRequestByUrl(e.url, { source: e.source }));
 		} else {
