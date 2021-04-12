@@ -1,5 +1,11 @@
 # Change Log
 
+## [11.0.3] - 2021-4-12
+
+### Fixed
+
+- Addresses [#486](https://github.com/TeamCodeStream/CodeStream/issues/486) &mdash; Unexpected error clicking on a merge request after update to 11.0
+
 ## [11.0.2] - 2021-4-12
 
 ### Changed
@@ -147,7 +153,7 @@
 - Addresses [#388](https://github.com/TeamCodeStream/CodeStream/issues/388) &mdash; Codemark issue with filenames containing "+" char
 - Fixes an unexpected error when clicking on a pull request
 - Fixes an issue with the count in the heading of the Coedmarks section being incorrect when filter isn't set to the current file
-- Fixes an issue commenting in a pull request in a file in a folder that doesn't exist in your current branch 
+- Fixes an issue commenting in a pull request in a file in a folder that doesn't exist in your current branch
 - Fixes an issue with the Slack integration not appearing as a green tile on the Integrations page immediately after connecting
 - Fixes an issue with the Locate button not working in a feedback request when you don't have the given repo open
 - Fixes an issue with commenting on code in files that are symlinks
@@ -183,7 +189,7 @@
 
 ### Fixed
 
-- Addresses [#392](https://github.com/TeamCodeStream/CodeStream/issues/392) &mdash; Codemark not showing code block when created from Windows 
+- Addresses [#392](https://github.com/TeamCodeStream/CodeStream/issues/392) &mdash; Codemark not showing code block when created from Windows
 
 ## [10.4.2] - 2021-1-29
 
@@ -214,7 +220,7 @@
 
 ### Fixed
 
-- Addresses [#380](https://github.com/TeamCodeStream/CodeStream/issues/380) &mdash; Viewing a PR with status checks on GitHub Enterprise generates an error 
+- Addresses [#380](https://github.com/TeamCodeStream/CodeStream/issues/380) &mdash; Viewing a PR with status checks on GitHub Enterprise generates an error
 - Addresses [#378](https://github.com/TeamCodeStream/CodeStream/issues/378) &mdash; AggregateException thrown in VS 2019 with CodeStream installed when trying to activate IntelliSense
 - Addresses [#376](https://github.com/TeamCodeStream/CodeStream/issues/376) &mdash; Can't exit preview mode when creating a feedback request
 - Fixes an issue where you'd end up in an infinite "Fetching repo..." loop trying to create an issue on Bitbucket
@@ -258,9 +264,9 @@
 
 ### Added
 
-- Split the Feedback Requests section of the sidebar into sections for Open, Approved and Needs Work 
+- Split the Feedback Requests section of the sidebar into sections for Open, Approved and Needs Work
 - When selecting a ticket to start work, added an option to pull latest if base branch is behind origin
-- Added the ability to set a default base branch per repo when creating a feature branch  
+- Added the ability to set a default base branch per repo when creating a feature branch
 
 ## [10.2.1] - 2020-12-23
 
@@ -329,7 +335,6 @@
 - Improves the UX on the form to submit a review in a pull request by making it clear that the Cancel button is for cancelling the review, and not dismissing the form
 - Clarifies that when commenting on code outside of the changeset in a pull request, while a review is pending, the comment is added at the PR level and not included in the review
 
-
 ### Fixed
 
 - Fixes an issue where the icons for pull request comments would be displayed on the wrong line in the gutter of the diff
@@ -366,7 +371,7 @@
 
 ### Changed
 
-- After creating a pull request, when you then close it you are brought to the CodeStream sidebar instead of back to the Open a Pull Request page 
+- After creating a pull request, when you then close it you are brought to the CodeStream sidebar instead of back to the Open a Pull Request page
 - Provide more guidance for users trying to sign up/in with GitLab regarding the need to have a public primary email on GitLab
 - The "Work in Progress" section is now more performant, with reduced api requests
 
@@ -527,7 +532,7 @@
 
 ### Fixed
 
-- Fixes an issue with the repo matching strategy when viewing file diffs in a pull request 
+- Fixes an issue with the repo matching strategy when viewing file diffs in a pull request
 - Fixes an issue with an unexpected error when opening certain PRs
 - Fixes an issue with CodeStream not correctly recognizing that you're already connected to GitHub when creating a PR
 - Fixes an issue where, after opening a new repo, the list of repos didn't updating automatically when starting work on a ticket, creating a PR, or requesting a code review
