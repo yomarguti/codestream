@@ -1148,6 +1148,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				response0,
 				response1
 			);
+			response.currentUser = {
+				...currentUser,
+				id: `gid://gitlab/User/${currentUser.id}`
+			};
 
 			response.project.mergeRequest.discussions.nodes = discussions;
 

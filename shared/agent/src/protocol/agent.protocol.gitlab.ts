@@ -47,6 +47,7 @@ export interface GitLabMergeRequestWrapper {
 	error?: {
 		message: string;
 	};
+	/* mix this in from another call `id` doesn't exist on all instances */
 	currentUser: {
 		name: string;
 		login: string;
