@@ -48,7 +48,7 @@ import {
 } from "./provider";
 import { Directives } from "./directives";
 import { CodeStreamSession } from "../session";
-import { print } from "graphql";
+import { print, StringValueNode } from "graphql";
 import mergeRequest0Query from "./gitlab/mergeRequest0.graphql";
 import mergeRequest1Query from "./gitlab/mergeRequest1.graphql";
 import mergeRequestDiscussionQuery from "./gitlab/mergeRequestDiscussions.graphql";
@@ -1040,21 +1040,21 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		let currentUser = this._currentGitlabUsers.get(this.providerConfig.id);
 		if (currentUser) return currentUser;
 
-		const data = await this.query<any>(`
-			{
-				currentUser {
-					id
-					login:username
-					name
-					avatarUrl
-				}
-			}`);
+		const data = await this.restGet<{
+			id: number;
+			username: string;
+			name: string;
+			avatar_url: string;
+		}>("/user");
+		currentUser = {
+			id: data.body.id,
+			login: data.body.username,
+			name: data.body.name,
+			avatarUrl: data.body.avatar_url
+		} as GitLabCurrentUser;
 
-		currentUser = this.toAuthorAbsolutePath(data.currentUser);
-		this._currentGitlabUsers.set(
-			this.providerConfig.id,
-			this.toAuthorAbsolutePath(data.currentUser)
-		);
+		currentUser = this.toAuthorAbsolutePath(currentUser);
+		this._currentGitlabUsers.set(this.providerConfig.id, currentUser);
 
 		Logger.log(`getCurrentUser ${JSON.stringify(currentUser)} for id=${this.providerConfig.id}`);
 		return currentUser;
