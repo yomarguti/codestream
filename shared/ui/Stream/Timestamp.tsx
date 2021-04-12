@@ -117,58 +117,73 @@ export const distanceOfTimeInWords = (
 
 const prettyDateDay = function(time, abbreviated?: boolean) {
 	if (time === 0 || time === null || time === undefined) return "";
-	var now = new Date().getTime();
-	// now = this.adjustedTime(now, options.timezone_info);
-	// time = this.adjustedTime(time, options.timezone_info);
-	const ELEVEN_MONTHS = 1000 * 60 * 60 * 24 * 30 * 11;
+	try {
+		var now = new Date().getTime();
+		// now = this.adjustedTime(now, options.timezone_info);
+		// time = this.adjustedTime(time, options.timezone_info);
+		const ELEVEN_MONTHS = 1000 * 60 * 60 * 24 * 30 * 11;
 
-	// if it's within the last 11 months, there's no need to show
-	// the year since it'll be the most recent of that month.
-	// example: in january, if the date is "Dec 20" we don't
-	// need to specify the year if it's the most recent December,
-	// even though the years are different
-	if (time + ELEVEN_MONTHS > now) {
-		return new Intl.DateTimeFormat("en", {
-			day: "numeric",
-			month: "short"
-		}).format(time);
-	} else {
-		if (abbreviated) {
+		// if it's within the last 11 months, there's no need to show
+		// the year since it'll be the most recent of that month.
+		// example: in january, if the date is "Dec 20" we don't
+		// need to specify the year if it's the most recent December,
+		// even though the years are different
+		if (time + ELEVEN_MONTHS > now) {
 			return new Intl.DateTimeFormat("en", {
 				day: "numeric",
-				month: "short",
-				year: "2-digit"
-			})
-				.format(time)
-				.replace(/(\d\d)$/, `'$1`);
-		} else {
-			return new Intl.DateTimeFormat("en", {
-				day: "numeric",
-				month: "short",
-				year: "numeric"
+				month: "short"
 			}).format(time);
+		} else {
+			if (abbreviated) {
+				return new Intl.DateTimeFormat("en", {
+					day: "numeric",
+					month: "short",
+					year: "2-digit"
+				})
+					.format(time)
+					.replace(/(\d\d)$/, `'$1`);
+			} else {
+				return new Intl.DateTimeFormat("en", {
+					day: "numeric",
+					month: "short",
+					year: "numeric"
+				}).format(time);
+			}
 		}
+	} catch (ex) {
+		console.error(ex, time);
+		return "";
 	}
 };
 
 const prettyDateDayTime = function(time, abbreviated?: boolean) {
 	if (time === 0 || time === null || time === undefined) return "";
-	return new Intl.DateTimeFormat("en", {
-		day: "numeric",
-		month: "short",
-		year: "numeric",
-		hour: "numeric",
-		minute: "2-digit",
-		timeZoneName: "short"
-	}).format(time);
+	try {
+		return new Intl.DateTimeFormat("en", {
+			day: "numeric",
+			month: "short",
+			year: "numeric",
+			hour: "numeric",
+			minute: "2-digit",
+			timeZoneName: "short"
+		}).format(time);
+	} catch (ex) {
+		console.error(ex, time);
+		return "";
+	}
 };
 
 const prettyTime = function(time) {
-	var prettyTime;
-	// time = this.adjustedTime(time, options.timezone_info);
-	prettyTime = new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit" }).format(time);
-	prettyTime = prettyTime.replace(/^0:/, "12:");
-	return prettyTime;
+	try {
+		var prettyTime;
+		// time = this.adjustedTime(time, options.timezone_info);
+		prettyTime = new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit" }).format(time);
+		prettyTime = prettyTime.replace(/^0:/, "12:");
+		return prettyTime;
+	} catch (ex) {
+		console.error(ex, time);
+		return "";
+	}
 };
 
 const sameDateAs = (date1, date2) => {
@@ -217,8 +232,8 @@ export default function Timestamp(props: PropsWithChildren<Props>) {
 		if (
 			// is a UTC string
 			timeString.indexOf("Z") > -1 ||
-			// is a local time with an offset (like 2015-03-25T12:00:00-06:30)
-			(timeString.length > 19 && (timeString[19] === "+" || timeString[19] === "-"))
+			// is a local time with an offset (like 2021-03-17T17:21:42.589+11:00)
+			(timeString.indexOf("T") && (timeString.indexOf("+") > -1 || timeString.indexOf("-") > -1))
 		) {
 			time = new Date(props.time).getTime();
 		}
