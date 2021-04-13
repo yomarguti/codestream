@@ -41,8 +41,8 @@ export class ConfigManager implements Disposable {
 			team: this.get("team"),
 			serverUrl: this.get("serverUrl"),
 			email,
-			environment: "unknown", 
-			isOnPrem: false, 
+			environment: "unknown",
+			isOnPrem: false,
 			isProductionCloud: false
 		};
 	}
