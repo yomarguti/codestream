@@ -1,4 +1,5 @@
 "use strict";
+import semver from "semver";
 import { GraphQLClient } from "graphql-request";
 import { flatten, groupBy } from "lodash-es";
 import { Response } from "node-fetch";
@@ -89,8 +90,13 @@ interface GitLabBranch {
 
 @lspProvider("gitlab")
 export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProviderInfo> {
+	/** version used when a query to get the version fails */
+	private static defaultUnknownVersion = "0.0.0";
+
 	private _projectsByRemotePath = new Map<string, GitLabProject>();
 	private _assignableUsersCache = new Map<string, any>();
+	private readonly gitLabReviewStore: GitLabReviewStore;
+	private readonly graphqlQueryBuilder: GraphqlQueryBuilder;
 
 	get displayName() {
 		return "GitLab";
@@ -118,9 +124,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	get baseWebUrl() {
 		return `https://gitlab.com`;
 	}
-
-	private readonly gitLabReviewStore: GitLabReviewStore;
-	private readonly graphqlQueryBuilder: GraphqlQueryBuilder;
 
 	constructor(session: CodeStreamSession, providerConfig: ThirdPartyProviderConfig) {
 		super(session, providerConfig);
@@ -768,6 +771,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	): Promise<GetMyPullRequestsResponse[][] | undefined> {
 		void (await this.ensureConnected());
 		const currentUser = await this.getCurrentUser();
+		const currentVersion = await this.getVersion();
+		if (!currentVersion.isDefault && semver.lt(currentVersion.version, "12.0.0")) {
+			// InternalErrors don't get sent to sentry
+			throw new InternalError(`${this.displayName} ${currentVersion.version} is not yet supported`);
+		}
 
 		let repos: string[] = [];
 		if (request.isOpen) {
@@ -915,13 +923,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			}>("/version");
 
 			const split = response.body.version.split("-");
-			const versionOrDefault = split[0] || "0.0.0";
+			const versionOrDefault = split[0] || GitLabProvider.defaultUnknownVersion;
 			version = {
 				version: versionOrDefault,
 				asArray: versionOrDefault.split(".").map(Number),
 				edition: split.length > 1 ? split[1] : undefined,
-				revision: response.body.revision
-			};
+				revision: response.body.revision,
+				isDefault: versionOrDefault === GitLabProvider.defaultUnknownVersion
+			} as ProviderVersion;
 
 			Logger.log(
 				`${this.providerConfig.id} getVersion - ${this.providerConfig.id} version=${JSON.stringify(
@@ -3068,7 +3077,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	private toAuthorAbsolutePath(author: any): GitLabCurrentUser {
-		if (author?.avatarUrl.indexOf("/") === 0) {
+		if (author?.avatarUrl?.indexOf("/") === 0) {
 			// no really great way to handle this...
 			author.avatarUrl = `${this.baseWebUrl}${author.avatarUrl}`;
 		}
@@ -3081,7 +3090,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			if (typeof obj[k] === "object") {
 				this.ensureAvatarAbsolutePathRecurse(obj[k]);
 			} else if (k === "avatarUrl") {
-				if (obj.avatarUrl.indexOf("/") === 0) {
+				if (obj?.avatarUrl?.indexOf("/") === 0) {
 					obj.avatarUrl = `${this.baseWebUrl}${obj.avatarUrl}`;
 				}
 			}

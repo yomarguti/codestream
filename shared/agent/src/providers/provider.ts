@@ -215,7 +215,7 @@ export abstract class ThirdPartyProviderBase<
 		protected readonly providerConfig: ThirdPartyProviderConfig
 	) {}
 
-	protected DEFAULT_VERSION = { version: "0.0.0", asArray: [0, 0, 0] };
+	protected DEFAULT_VERSION = { version: "0.0.0", asArray: [0, 0, 0], isDefault: true };
 	protected _version: ProviderVersion | undefined;
 
 	async ensureInitialized() {}
@@ -1069,6 +1069,11 @@ export interface ProviderVersion {
 	 * @memberof ProviderVersion
 	 */
 	edition?: string;
+
+	/**
+	 * true if the version is 0.0.0
+	 */
+	isDefault?: boolean;
 }
 
 export interface PullRequestComment {
