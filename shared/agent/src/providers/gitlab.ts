@@ -3068,7 +3068,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	private toAuthorAbsolutePath(author: any): GitLabCurrentUser {
-		if (author?.avatarUrl.indexOf("/") === 0) {
+		if (author?.avatarUrl?.indexOf("/") === 0) {
 			// no really great way to handle this...
 			author.avatarUrl = `${this.baseWebUrl}${author.avatarUrl}`;
 		}
@@ -3081,7 +3081,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			if (typeof obj[k] === "object") {
 				this.ensureAvatarAbsolutePathRecurse(obj[k]);
 			} else if (k === "avatarUrl") {
-				if (obj.avatarUrl.indexOf("/") === 0) {
+				if (obj?.avatarUrl?.indexOf("/") === 0) {
 					obj.avatarUrl = `${this.baseWebUrl}${obj.avatarUrl}`;
 				}
 			}
