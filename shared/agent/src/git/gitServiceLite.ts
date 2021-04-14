@@ -57,11 +57,16 @@ export class GitServiceLite {
 
 		let data: string | undefined;
 		try {
-			data = await git({ cwd: repoPath }, "branch", "--");
+			data = await git({ cwd: repoPath }, "branch", "--sort=committerdate", "--");
 		} catch {}
 		if (!data) return [];
 
 		const branches = data.trim().split("\n");
+		if (branches.length > 6) {
+			// 3 oldest and 3 newest branches, to limit the number of git operations
+			branches.splice(3, branches.length - 6);
+		}
+
 		const commits: string[] = [];
 		await Promise.all(
 			branches.map(async branch => {
