@@ -113,7 +113,11 @@ export const CreateCodemarkIcons = (props: Props) => {
 		const disposable = HostApi.instance.on(NewCodemarkNotificationType, e => {
 			// this can fire if there's no file open yet we're on the CodemarkForFile panel
 			if (!e.uri) return;
-			handleClickPlus(undefined, e.type, undefined as any, e.source, false);
+			if (e.source === "Codemark" && e.range) {
+				handleClickPlus(undefined, e.type, e.range.start.line, e.source);
+			} else {
+				handleClickPlus(undefined, e.type, undefined as any, e.source, false);
+			}
 		});
 		return () => disposable.dispose();
 	});
