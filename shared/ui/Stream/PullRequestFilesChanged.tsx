@@ -60,10 +60,12 @@ interface Props extends CompareFilesProps {
 		[path: string]: any;
 	};
 	commitBased?: boolean;
+	accessRawDiffs?: boolean;
+	setAccessRawDiffs?: Function;
 }
 
 export const PullRequestFilesChanged = (props: Props) => {
-	const { pr, filesChanged } = props;
+	const { pr, filesChanged, accessRawDiffs, setAccessRawDiffs } = props;
 	// const dispatch = useDispatch<Dispatch>();
 	const [repoId, setRepoId] = useState("");
 	const derivedState = useSelector((state: CodeStreamState) => {
@@ -155,7 +157,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 					handleForkPointResponse(forkPointResponse);
 				} catch (ex) {
 					console.error(ex);
-				} finally {					
+				} finally {
 					setLoading(false);
 					setIsMounted(true);
 				}
@@ -471,10 +473,24 @@ export const PullRequestFilesChanged = (props: Props) => {
 				</span>
 			);
 			setIsDisabled(true);
+		} else if (pr && (pr as any).overflow && !accessRawDiffs && setAccessRawDiffs) {
+			setRepoErrorMessage(
+				<span>
+					Merge Request contains more changes than supported by GitLab's database. &nbsp;
+					<Link
+						onClick={() => {
+							setAccessRawDiffs(true);
+						}}
+					>
+						Load changes from Gitaly
+					</Link>
+					.
+				</span>
+			);
 		} else {
 			setRepoErrorMessage("");
 		}
-	}, [pr, derivedState.currentRepo]);
+	}, [pr, derivedState.currentRepo, accessRawDiffs]);
 
 	const isMacintosh = navigator.appVersion.includes("Macintosh");
 	const nextFileKeyboardShortcut = () => (isMacintosh ? `⌥ F6` : "Alt-F6");

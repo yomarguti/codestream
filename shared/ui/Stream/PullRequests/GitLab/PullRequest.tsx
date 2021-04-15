@@ -840,7 +840,10 @@ export const PullRequest = () => {
 							<Tab onClick={e => setActiveTab(4)} active={activeTab == 4}>
 								<Icon className="narrow-text" name="plus-minus" />
 								<span className="wide-text">Changes</span>
-								<PRBadge>{(pr && pr.changesCount) || 0}</PRBadge>
+								<PRBadge>
+									{(pr && pr.changesCount) || 0}
+									{pr && pr.overflow ? "+" : ""}
+								</PRBadge>
 							</Tab>
 							{pr.pendingReview ? (
 								<PRSubmitReviewButton>

@@ -52,6 +52,7 @@ export const PullRequestFilesChangedTab = (props: {
 	const [filesChanged, setFilesChanged] = useState<any[]>([]);
 	const [prCommits, setPrCommits] = useState<FetchThirdPartyPullRequestCommitsResponse[]>([]);
 	const [prCommitsRange, setPrCommitsRange] = useState<string[]>([]);
+	const [accessRawDiffs, setAccessRawDiffs] = useState(false);
 	// const [lastReviewCommitOid, setLastReviewCommitOid] = useState<string | undefined>();
 
 	const _mapData = data => {
@@ -83,18 +84,25 @@ export const PullRequestFilesChangedTab = (props: {
 						pr.providerId,
 						derivedState.currentPullRequestId!,
 						prCommitsRange,
-						derivedState.currentRepo.id
+						derivedState.currentRepo.id,
+						accessRawDiffs
 					)
 				);
 				_mapData(data);
 			} else {
 				const data = await dispatch(
-					getPullRequestFiles(pr.providerId, derivedState.currentPullRequestId!)
+					getPullRequestFiles(
+						pr.providerId,
+						derivedState.currentPullRequestId!,
+						undefined,
+						undefined,
+						accessRawDiffs
+					)
 				);
 				_mapData(data);
 			}
 		})();
-	}, [pr.providerId, derivedState.currentPullRequestId, prCommitsRange]);
+	}, [pr.providerId, derivedState.currentPullRequestId, prCommitsRange, accessRawDiffs]);
 
 	useDidMount(() => {
 		setIsLoading(true);
@@ -272,6 +280,8 @@ export const PullRequestFilesChangedTab = (props: {
 				fetch={props.fetch!}
 				setIsLoadingMessage={props.setIsLoadingMessage!}
 				commitBased={commitBased}
+				accessRawDiffs={accessRawDiffs}
+				setAccessRawDiffs={setAccessRawDiffs}
 			/>
 		</div>
 	);

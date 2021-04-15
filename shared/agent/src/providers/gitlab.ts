@@ -1102,6 +1102,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	@log()
 	async getPullRequest(request: {
 		pullRequestId: string;
+		accessRawDiffs?: boolean;
 		force?: boolean;
 	}): Promise<GitLabMergeRequestWrapper> {
 		const { projectFullPath, id, iid } = this.parseId(request.pullRequestId);
@@ -1277,10 +1278,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					})
 				)?.length;
 			}
-			const filesChanged = await this.getPullRequestFilesChanged({
+			const { filesChanged, overflow } = await this.getPullRequestFilesChangedCore({
 				pullRequestId: mergeRequestFullId
 			});
 			response.project.mergeRequest.changesCount = filesChanged?.length;
+			response.project.mergeRequest.overflow = overflow;
 
 			// awards are "reactions" aka "emojis"
 			const awards = await this.restGet<any>(
@@ -2527,15 +2529,26 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	@log()
 	async getPullRequestFilesChanged(request: {
 		pullRequestId: string;
+		accessRawDiffs?: boolean;
 	}): Promise<FetchThirdPartyPullRequestFilesResponse[]> {
-		// https://developer.github.com/v3/pulls/#list-pull-requests-files
-		const changedFiles: FetchThirdPartyPullRequestFilesResponse[] = [];
+		const response = await this.getPullRequestFilesChangedCore(request);
+		return response.filesChanged;
+	}
+
+	@log()
+	private async getPullRequestFilesChangedCore(request: {
+		pullRequestId: string;
+		accessRawDiffs?: boolean;
+	}): Promise<{ overflow?: boolean; filesChanged: FetchThirdPartyPullRequestFilesResponse[] }> {
+		const filesChanged: FetchThirdPartyPullRequestFilesResponse[] = [];
+		let overflow = false;
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		try {
+			const query = request.accessRawDiffs ? "?access_raw_diffs=true" : "";
 			const url: string | undefined = `/projects/${encodeURIComponent(
 				projectFullPath
-			)}/merge_requests/${iid}/changes`;
+			)}/merge_requests/${iid}/changes${query}`;
 
 			const apiResponse = await this.restGet<{
 				diff_refs: {
@@ -2549,6 +2562,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					new_path: string;
 					diff?: string;
 				}[];
+				overflow?: boolean;
 			}>(url);
 			const mappped: FetchThirdPartyPullRequestFilesResponse[] = apiResponse.body.changes.map(_ => {
 				return {
@@ -2562,13 +2576,17 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					diffRefs: apiResponse.body.diff_refs
 				};
 			});
-			changedFiles.push(...mappped);
+			filesChanged.push(...mappped);
+			overflow = apiResponse.body.overflow === true;
 		} catch (err) {
 			Logger.error(err);
 			debugger;
 		}
 
-		return changedFiles;
+		return {
+			overflow,
+			filesChanged
+		};
 	}
 
 	@log()
