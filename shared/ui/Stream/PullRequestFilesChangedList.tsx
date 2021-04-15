@@ -134,6 +134,8 @@ interface Props extends CompareFilesProps {
 	setIsLoadingMessage?: Function;
 	readOnly?: boolean;
 	commitBased?: boolean;
+	accessRawDiffs?: boolean;
+	setAccessRawDiffs?: Function;
 }
 
 export const PullRequestFilesChangedList = (props: Props) => {
@@ -418,6 +420,8 @@ export const PullRequestFilesChangedList = (props: Props) => {
 					toggleDirectory={toggleDirectory}
 					commentMap={commentMap}
 					commitBased={props.commitBased}
+					accessRawDiffs={props.accessRawDiffs}
+					setAccessRawDiffs={props.setAccessRawDiffs}
 				/>
 			) : (
 				<PRDiffHunks>

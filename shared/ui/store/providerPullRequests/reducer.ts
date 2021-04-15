@@ -77,6 +77,7 @@ export function reduceProviderPullRequests(
 			files[action.payload.commits] = action.payload.pullRequestFiles;
 			newState[action.payload.providerId][id] = {
 				...newState[action.payload.providerId][id],
+				accessRawDiffs: action.payload.accessRawDiffs,
 				files
 			};
 			return {

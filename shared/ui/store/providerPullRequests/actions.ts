@@ -46,13 +46,15 @@ export const _addPullRequestFiles = (
 	providerId: string,
 	id: string,
 	commits: string,
-	pullRequestFiles: any
+	pullRequestFiles: any,
+	accessRawDiffs?: boolean
 ) =>
 	action(ProviderPullRequestActionsTypes.AddPullRequestFiles, {
 		providerId,
 		id,
 		commits,
-		pullRequestFiles
+		pullRequestFiles,
+		accessRawDiffs
 	});
 
 export const _addPullRequestCommits = (providerId: string, id: string, pullRequestCommits: any) =>
@@ -203,7 +205,8 @@ export const getPullRequestFiles = (
 	providerId: string,
 	id: string,
 	commits: string[] = [],
-	repoId?: string
+	repoId?: string,
+	accessRawDiffs?: boolean
 ) => async (dispatch, getState: () => CodeStreamState) => {
 	try {
 		const state = getState();
@@ -212,7 +215,13 @@ export const getPullRequestFiles = (
 		let exactId = getPullRequestExactId(state);
 		if (provider) {
 			const pr = provider[exactId];
-			if (pr && pr.files && pr.files[commitsIndex] && pr.files[commitsIndex].length) {
+			if (
+				pr &&
+				pr.files &&
+				pr.files[commitsIndex] &&
+				pr.files[commitsIndex].length &&
+				(pr.accessRawDiffs || !accessRawDiffs)
+			) {
 				console.log(`fetched pullRequest files from store providerId=${providerId} id=${exactId}`);
 				return pr.files[commitsIndex];
 			}
@@ -228,12 +237,13 @@ export const getPullRequestFiles = (
 		} else {
 			response = await dispatch(
 				api("getPullRequestFilesChanged", {
-					pullRequestId: id
+					pullRequestId: id,
+					accessRawDiffs
 				})
 			);
 		}
 
-		dispatch(_addPullRequestFiles(providerId, id, commitsIndex, response));
+		dispatch(_addPullRequestFiles(providerId, id, commitsIndex, response, accessRawDiffs));
 		return response;
 	} catch (error) {
 		logError(`failed to get pullRequest files: ${error}`, { providerId, id });

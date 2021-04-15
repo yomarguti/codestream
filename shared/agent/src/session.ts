@@ -256,6 +256,7 @@ export class CodeStreamSession {
 		);
 
 		Container.initialize(agent, this);
+		this.logNodeEnvVariables();
 
 		const redactProxyPasswdRegex = /(http:\/\/.*:)(.*)(@.*)/gi;
 		if (
@@ -417,6 +418,15 @@ export class CodeStreamSession {
 				};
 			}
 		);
+	}
+
+	private logNodeEnvVariables() {
+		Logger.log("NODE_* environment variables:");
+		for (const prop in process.env) {
+			if (prop.startsWith("NODE_")) {
+				Logger.log(`${prop}=${process.env[prop]}`);
+			}
+		}
 	}
 
 	setServerUrl(options: SetServerUrlRequest) {

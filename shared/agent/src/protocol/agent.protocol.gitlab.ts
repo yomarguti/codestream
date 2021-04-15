@@ -259,6 +259,7 @@ export interface GitLabMergeRequest {
 		dueDate: string;
 	};
 	number: number;
+	overflow?: boolean;
 	participants: {
 		nodes: GitLabUser[];
 	};
