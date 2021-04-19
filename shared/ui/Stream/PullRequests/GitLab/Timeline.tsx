@@ -228,7 +228,7 @@ export const Timeline = (props: Props) => {
 		focusOnMessageInput &&
 			focusOnMessageInput[id] &&
 			focusOnMessageInput[id](() => {
-				insertText && insertText[id](text.replace(/^/gm, "> "));
+				insertText && insertText[id](text.replace(/^/gm, "> ") + "\n");
 				insertNewline && insertNewline[id]();
 			});
 	};

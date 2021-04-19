@@ -125,7 +125,7 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 		handleTextInputFocus(comment.databaseId);
 		focusOnMessageInput &&
 			focusOnMessageInput(() => {
-				insertText && insertText(text.replace(/^/gm, "> "));
+				insertText && insertText(text.replace(/^/gm, "> ") + "\n");
 				insertNewline && insertNewline();
 			});
 	};
