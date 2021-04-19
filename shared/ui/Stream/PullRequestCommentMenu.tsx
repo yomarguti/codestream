@@ -81,7 +81,7 @@ export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 		(node.viewerCanUpdate || (node.userPermissions && node.userPermissions.adminNote)) &&
 		setEdit
 	) {
-		items.push({ label: "-" });
+		if (items.length > 0) items.push({ label: "-" });
 		items.push({
 			label: "Edit",
 			key: "edit",

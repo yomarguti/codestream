@@ -372,14 +372,18 @@ export const Timeline = (props: Props) => {
 							nodeType="ROOT_COMMENT"
 							viewerCanDelete={note.state === "PENDING"}
 							setEdit={setEditingComment}
-							quote={text => {
-								const id = parent ? parent.id : note.id;
-								quote(text, id);
-								setOpenComments({
-									...openComments,
-									[id]: true
-								});
-							}}
+							quote={
+								isResolvable
+									? text => {
+											const id = parent ? parent.id : note.id;
+											quote(text, id);
+											setOpenComments({
+												...openComments,
+												[id]: true
+											});
+									  }
+									: undefined
+							}
 							isPending={note.state === "PENDING"}
 						/>
 					</PRActionIcons>
