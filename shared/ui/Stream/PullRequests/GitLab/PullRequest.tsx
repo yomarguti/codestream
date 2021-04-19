@@ -72,6 +72,7 @@ import CancelButton from "../../CancelButton";
 import { Timeline } from "./Timeline";
 import { PRAuthorBadges } from "../../PullRequestConversationTab";
 import { PipelineBox } from "./PipelineBox";
+import { OpenUrlRequestType } from "@codestream/protocols/webview";
 
 export const PullRequestRoot = styled.div`
 	position: absolute;
@@ -687,9 +688,17 @@ export const PullRequest = () => {
 
 	const closeRight = () => setRightOpen(false);
 
+	const hijackUserLinks = event => {
+		if (event?.target?.dataset?.referenceType === "user" && event?.target?.dataset?.user) {
+			event.preventDefault();
+			const url = pr.baseWebUrl + "/" + event.target.getAttribute("HREF");
+			HostApi.instance.send(OpenUrlRequestType, { url });
+		}
+	};
+
 	return (
 		<ThemeProvider theme={addViewPreferencesToTheme}>
-			<PullRequestRoot className="gitlab">
+			<PullRequestRoot className="gitlab" onClick={hijackUserLinks}>
 				<CreateCodemarkIcons narrow onebutton />
 				{isLoadingMessage && <FloatingLoadingMessage>{isLoadingMessage}</FloatingLoadingMessage>}
 				{isEditing && (
