@@ -470,19 +470,23 @@ export const PullRequestFilesChanged = (props: Props) => {
 				<span>
 					Repo <span className="monospace highlight">{pr.repository.name}</span> not found in your
 					editor. Open it, or <Link href={pr.repository.url}>clone the repo</Link>.
+					<p style={{ margin: "5px 0 0 0" }}>
+						Changes can be viewed under <Icon name="diff" /> Diff Hunks view.
+					</p>
 				</span>
 			);
 			setIsDisabled(true);
 		} else if (pr && (pr as any).overflow && !accessRawDiffs && setAccessRawDiffs) {
 			setRepoErrorMessage(
 				<span>
-					Merge Request contains more changes than supported by GitLab's database. &nbsp;
+					GitLab only permits the first {(pr as any).changesCount} files of this merge request to be
+					displayed.&nbsp;
 					<Link
 						onClick={() => {
 							setAccessRawDiffs(true);
 						}}
 					>
-						Load changes from Gitaly
+						Load more from Gitaly
 					</Link>
 					.
 				</span>
@@ -501,12 +505,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 			{(errorMessage || repoErrorMessage) && (
 				<PRErrorBox>
 					<Icon name="alert" className="alert" />
-					<div className="message">
-						{errorMessage || repoErrorMessage}
-						<p style={{ margin: "5px 0 0 0" }}>
-							Changes can be viewed under <Icon name="diff" /> Diff Hunks view.
-						</p>
-					</div>
+					<div className="message">{errorMessage || repoErrorMessage}</div>
 				</PRErrorBox>
 			)}
 			{changedFiles.length > 0 && (
