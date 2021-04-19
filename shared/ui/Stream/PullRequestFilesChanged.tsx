@@ -468,8 +468,8 @@ export const PullRequestFilesChanged = (props: Props) => {
 		if (pr && !derivedState.currentRepo) {
 			setRepoErrorMessage(
 				<span>
-					derivedState Repo <span className="monospace highlight">{pr.repository.name}</span> not
-					found in your editor. Open it, or <Link href={pr.repository.url}>clone the repo</Link>.
+					Repo <span className="monospace highlight">{pr.repository.name}</span> not found in your
+					editor. Open it, or <Link href={pr.repository.url}>clone the repo</Link>.
 				</span>
 			);
 			setIsDisabled(true);

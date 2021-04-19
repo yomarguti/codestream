@@ -1,18 +1,21 @@
 "use strict";
-import semver from "semver";
+import { parsePatch } from "diff";
+import { print } from "graphql";
 import { GraphQLClient } from "graphql-request";
+import { merge } from "lodash";
 import { flatten, groupBy } from "lodash-es";
 import { Response } from "node-fetch";
 import * as paths from "path";
 import * as qs from "querystring";
+import semver from "semver";
 import * as nodeUrl from "url";
 import { URI } from "vscode-uri";
+import { InternalError, ReportSuppressedMessages } from "../agentError";
 import { Container, SessionContainer } from "../container";
 import { GitRemoteLike } from "../git/models/remote";
 import { GitRepository } from "../git/models/repository";
 import { ParsedDiffWithMetadata, toRepoName, translatePositionToLineNumber } from "../git/utils";
 import { Logger } from "../logger";
-import { InternalError, ReportSuppressedMessages } from "../agentError";
 import {
 	CreateThirdPartyCardRequest,
 	DidChangePullRequestCommentsNotificationType,
@@ -34,7 +37,15 @@ import {
 	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
 import { CSGitLabProviderInfo } from "../protocol/api.protocol";
+import { CodeStreamSession } from "../session";
 import { log, lspProvider, Strings } from "../system";
+import { gate } from "../system/decorators/gate";
+import { Directives } from "./directives";
+import mergeRequestNoteMutation from "./gitlab/createMergeRequestNote.graphql";
+import { GraphqlQueryBuilder } from "./gitlab/graphqlQueryBuilder";
+import mergeRequest0Query from "./gitlab/mergeRequest0.graphql";
+import mergeRequest1Query from "./gitlab/mergeRequest1.graphql";
+import mergeRequestDiscussionQuery from "./gitlab/mergeRequestDiscussions.graphql";
 import {
 	ApiResponse,
 	getRemotePaths,
@@ -47,17 +58,6 @@ import {
 	REFRESH_TIMEOUT,
 	ThirdPartyIssueProviderBase
 } from "./provider";
-import { Directives } from "./directives";
-import { CodeStreamSession } from "../session";
-import { print } from "graphql";
-import mergeRequest0Query from "./gitlab/mergeRequest0.graphql";
-import mergeRequest1Query from "./gitlab/mergeRequest1.graphql";
-import mergeRequestDiscussionQuery from "./gitlab/mergeRequestDiscussions.graphql";
-import mergeRequestNoteMutation from "./gitlab/createMergeRequestNote.graphql";
-import { merge } from "lodash";
-import { GraphqlQueryBuilder } from "./gitlab/graphqlQueryBuilder";
-import { gate } from "../system/decorators/gate";
-import { parsePatch } from "diff";
 
 interface GitLabProject {
 	path_with_namespace: any;
@@ -1240,6 +1240,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			// merge request settings
 			const mergeRequest = await this.restGet<{
 				diverged_commits_count: number;
+				changes_count?: string;
 			}>(
 				`/projects/${encodeURIComponent(
 					projectFullPath
@@ -1278,11 +1279,20 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					})
 				)?.length;
 			}
+
 			const { filesChanged, overflow } = await this.getPullRequestFilesChangedCore({
 				pullRequestId: mergeRequestFullId
 			});
-			response.project.mergeRequest.changesCount = filesChanged?.length;
-			response.project.mergeRequest.overflow = overflow;
+			if (typeof mergeRequest.body.changes_count === "string") {
+				// The API is supposed to return overflow: true in cases like this, but this is not
+				// happening on the cloud, so we attempt to get the information form changes_count first
+				const changesCount = mergeRequest.body.changes_count;
+				response.project.mergeRequest.changesCount = parseInt(changesCount, 10) || 0;
+				response.project.mergeRequest.overflow = changesCount.indexOf("+") >= 0;
+			} else {
+				response.project.mergeRequest.changesCount = filesChanged?.length;
+				response.project.mergeRequest.overflow = overflow;
+			}
 
 			// awards are "reactions" aka "emojis"
 			const awards = await this.restGet<any>(
@@ -2577,6 +2587,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				};
 			});
 			filesChanged.push(...mappped);
+
 			overflow = apiResponse.body.overflow === true;
 		} catch (err) {
 			Logger.error(err);
