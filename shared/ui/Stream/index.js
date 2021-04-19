@@ -244,7 +244,8 @@ export class SimpleStream extends PureComponent {
 			activePanel && activePanel.match(/^configure\-(provider|enterprise)-/);
 		// if we're conducting a review, we need the compose functionality of spatial view
 		if (this.props.currentReviewId) activePanel = WebviewPanels.CodemarksForFile;
-		if (this.props.currentPullRequestId) activePanel = WebviewPanels.CodemarksForFile;
+		if (this.props.currentPullRequestId && this.props.currentPullRequestView !== "sidebar-diffs")
+			activePanel = WebviewPanels.CodemarksForFile;
 		if (!isConfigurationPanel && this.props.composeCodemarkActive) {
 			// don't override the activePanel if user is trying to configure a provider
 			// from the codemark (issue) form
@@ -688,6 +689,9 @@ const mapStateToProps = state => {
 		// call from Modal.tsx -Pez
 		hasFocus: context.hasFocus,
 		currentPullRequestId: context.currentPullRequest ? context.currentPullRequest.id : undefined,
+		currentPullRequestView: context.currentPullRequest
+			? context.currentPullRequest.view
+			: undefined,
 		activePanel: context.panelStack[0],
 		activeModal: context.activeModal,
 		threadId: context.threadId,

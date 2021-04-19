@@ -6,6 +6,7 @@ import { Row } from "./CrossPostIssueControls/IssueDropdown";
 import Icon from "./Icon";
 import { PRHeadshot } from "../src/components/Headshot";
 import {
+	clearCurrentPullRequest,
 	setCreatePullRequest,
 	setCurrentPullRequest,
 	setNewPostEntry
@@ -20,11 +21,17 @@ import {
 	ChangeDataType,
 	FetchProviderDefaultPullRequestsType,
 	ThirdPartyProviderConfig,
-	UpdateTeamSettingsRequestType
+	UpdateTeamSettingsRequestType,
+	FetchThirdPartyPullRequestPullRequest,
+	GitLabMergeRequest
 } from "@codestream/protocols/agent";
 import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
 import { Button } from "../src/components/Button";
-import { getMyPullRequests, openPullRequestByUrl } from "../store/providerPullRequests/actions";
+import {
+	getMyPullRequests,
+	getPullRequestConversationsFromProvider,
+	openPullRequestByUrl
+} from "../store/providerPullRequests/actions";
 import { PRBranch } from "./PullRequestComponents";
 import { PRHeadshotName } from "../src/components/HeadshotName";
 import styled from "styled-components";
@@ -45,9 +52,15 @@ import {
 } from "../src/components/Pane";
 import { Provider, IntegrationButtons } from "./IntegrationsPanel";
 import { useDidMount, usePrevious } from "../utilities/hooks";
-import { getMyPullRequests as getMyPullRequestsSelector } from "../store/providerPullRequests/reducer";
+import {
+	getCurrentProviderPullRequest,
+	getMyPullRequests as getMyPullRequestsSelector,
+	getPullRequestExactId,
+	getPullRequestId
+} from "../store/providerPullRequests/reducer";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { getPRLabel } from "../store/providers/reducer";
+import { PullRequestFilesChangedTab } from "./PullRequestFilesChangedTab";
 
 const Root = styled.div`
 	height: 100%;
@@ -66,6 +79,12 @@ const Root = styled.div`
 			.selected-icon {
 				left: 40px;
 			}
+		}
+		.files-changed-list-dropdown {
+			padding-left: 80px;
+		}
+		.files-changed-list .row-with-icon-actions {
+			padding-left: 100px;
 		}
 	}
 	#pr-search-input-wrapper .pr-search-input {
@@ -98,6 +117,12 @@ const Root = styled.div`
 		button {
 			margin-top: 0px;
 		}
+	}
+	.files-changed-list-dropdown {
+		padding-left: 60px;
+	}
+	.files-changed-list .row-with-icon-actions {
+		padding-left: 80px;
 	}
 `;
 
@@ -193,7 +218,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	const dispatch = useDispatch();
 	const mountedRef = useRef(false);
 	const derivedState = useSelector((state: CodeStreamState) => {
-		const { preferences, repos } = state;
+		const { preferences, repos, context } = state;
 
 		const team = state.teams[state.context.currentTeamId];
 		const teamSettings = team.settings ? team.settings : EMPTY_HASH;
@@ -209,6 +234,11 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		const prConnectedProvidersWithErrors = prConnectedProviders.filter(_ => _.hasAccessTokenError);
 		const prConnectedProvidersLength = prConnectedProviders.length;
 		const myPullRequests = getMyPullRequestsSelector(state);
+		const expandedPullRequestId =
+			context.currentPullRequest &&
+			context.currentPullRequest.view === "sidebar-diffs" &&
+			context.currentPullRequest.id;
+		const currentPullRequest = getCurrentProviderPullRequest(state);
 
 		return {
 			repos,
@@ -229,8 +259,23 @@ export const OpenPullRequests = React.memo((props: Props) => {
 					? true
 					: preferences.pullRequestQueryShowAllRepos,
 			hideLabels: preferences.pullRequestQueryHideLabels,
+			hideDiffs: preferences.pullRequestQueryHideDiffs,
 			prLabel: getPRLabel(state),
-			pullRequestProviderHidden: preferences.pullRequestProviderHidden || EMPTY_HASH_2
+			pullRequestProviderHidden: preferences.pullRequestProviderHidden || EMPTY_HASH_2,
+			expandedPullRequestId,
+			currentPullRequestProviderId: state.context.currentPullRequest
+				? state.context.currentPullRequest.providerId
+				: undefined,
+			currentPullRequestCommentId: state.context.currentPullRequest
+				? state.context.currentPullRequest.commentId
+				: undefined,
+			currentPullRequestSource: state.context.currentPullRequest
+				? state.context.currentPullRequest.source
+				: undefined,
+			currentPullRequest: currentPullRequest,
+			providerPullRequests: state.providerPullRequests.pullRequests,
+			currentPullRequestId: getPullRequestId(state),
+			currentPullRequestIdExact: getPullRequestExactId(state)
 		};
 	}, shallowEqual);
 
@@ -380,7 +425,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			...(derivedState.pullRequestQueries || {})
 		};
 		setQueries(queries);
-	}, [derivedState.pullRequestQueries])
+	}, [derivedState.pullRequestQueries]);
 
 	useDidMount(() => {
 		(async () => {
@@ -503,7 +548,6 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	};
 
 	const save = (providerId: string, name: string, query: string) => {
-		// FIXME hard-coded github
 		const newQuery = {
 			providerId,
 			name,
@@ -553,6 +597,95 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		return total;
 	}, [pullRequestGroups]);
 
+	const clickPR = pr => {
+		// if we have an expanded PR diffs in the sidebar, collapse it
+		if (pr.id === derivedState.expandedPullRequestId) {
+			dispatch(clearCurrentPullRequest());
+		} else {
+			// otherwise, either open the PR details or show the diffs,
+			// depending on the user's preference
+			const view = derivedState.hideDiffs ? "details" : "sidebar-diffs";
+			dispatch(setCurrentPullRequest(pr.providerId, pr.id, "", "", view));
+
+			HostApi.instance.track("PR Clicked", {
+				Host: pr.providerId
+			});
+		}
+	};
+
+	const [isLoadingPR, setIsLoadingPR] = React.useState("");
+
+	const fetchOnePR = async (providerId: string, pullRequestId: string, message?: string) => {
+		// if (message) setIsLoadingMessage(message);
+		setIsLoadingPR(pullRequestId);
+
+		const response = (await dispatch(
+			getPullRequestConversationsFromProvider(providerId, pullRequestId)
+		)) as any;
+	};
+
+	useEffect(() => {
+		const providerPullRequests =
+			derivedState.providerPullRequests[derivedState.currentPullRequestProviderId!];
+		if (providerPullRequests) {
+			let data = providerPullRequests[derivedState.currentPullRequestIdExact!];
+			if (data) {
+				return;
+			}
+		} else {
+			fetchOnePR(derivedState.currentPullRequestProviderId!, derivedState.currentPullRequestId);
+			console.warn(`could not find match for idExact=${derivedState.currentPullRequestIdExact}`);
+		}
+	}, [
+		derivedState.currentPullRequestProviderId,
+		derivedState.currentPullRequestIdExact,
+		derivedState.providerPullRequests
+	]);
+
+	const expandedPR: any = useMemo(() => {
+		if (!derivedState.currentPullRequest || derivedState.hideDiffs) return undefined;
+		const conversations = derivedState.currentPullRequest.conversations;
+		if (!conversations) return undefined;
+		if (conversations.project && conversations.project.mergeRequest)
+			return conversations.project.mergeRequest;
+		if (conversations.repository && conversations.repository.pullRequest)
+			return conversations.repository.pullRequest;
+		return undefined;
+	}, [derivedState.currentPullRequest, derivedState.hideDiffs]);
+
+	const renderExpanded = pr => {
+		return (
+			<>
+				<Row
+					className="pr-row"
+					onClick={() => {
+						dispatch(setCurrentPullRequest(pr.providerId, pr.id, "", "", "details"));
+
+						HostApi.instance.track("PR Clicked", {
+							Host: pr.providerId
+						});
+					}}
+				>
+					<div style={{ paddingLeft: "20px" }}>
+						<Icon name="screen-full" />
+					</div>
+					<div>View Overview &amp; Details</div>
+				</Row>
+				{expandedPR && (
+					<PullRequestFilesChangedTab
+						key="files-changed"
+						pr={expandedPR as FetchThirdPartyPullRequestPullRequest}
+						fetch={() => {
+							fetchOnePR(expandedPR.providerId, expandedPR.id);
+						}}
+						setIsLoadingMessage={() => {}}
+						sidebarView
+					/>
+				)}
+			</>
+		);
+	};
+
 	const settingsMenuItems = [
 		{
 			label: "Only show PRs from open repos",
@@ -567,6 +700,13 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			checked: !derivedState.hideLabels,
 			action: () =>
 				dispatch(setUserPreference(["pullRequestQueryHideLabels"], !derivedState.hideLabels))
+		},
+		{
+			label: "Show Diffs in Sidebar",
+			key: "show-diffs",
+			checked: !derivedState.hideDiffs,
+			action: () =>
+				dispatch(setUserPreference(["pullRequestQueryHideDiffs"], !derivedState.hideDiffs))
 		}
 	] as any;
 	if (derivedState.isCurrentUserAdmin) {
@@ -695,6 +835,12 @@ export const OpenPullRequests = React.memo((props: Props) => {
 							{!query.hidden &&
 								prGroup &&
 								prGroup.map((pr: any, index) => {
+									const expanded = pr.id === derivedState.expandedPullRequestId;
+									const chevronIcon = derivedState.hideDiffs ? null : expanded ? (
+										<Icon name="chevron-down-thin" />
+									) : (
+										<Icon name="chevron-right-thin" />
+									);
 									if (providerId === "github*com" || providerId === "github/enterprise") {
 										const selected = openReposWithName.find(repo => {
 											return (
@@ -703,74 +849,65 @@ export const OpenPullRequests = React.memo((props: Props) => {
 												repo?.name === pr.headRepository?.name
 											);
 										});
-										return (
-											<Tooltip
-												key={"pr-tt-" + pr.id + index}
-												title={<PullRequestTooltip pr={pr} />}
-												delay={1}
-												placement="top"
+										return [
+											<Row
+												key={"pr-" + pr.id}
+												className={selected ? "pr-row selected" : "pr-row"}
+												onClick={() => clickPR(pr)}
 											>
-												<Row
-													key={"pr-" + pr.id}
-													className={selected ? "pr-row selected" : "pr-row"}
-													onClick={() => {
-														dispatch(setCurrentPullRequest(pr.providerId, pr.id));
-
-														HostApi.instance.track("PR Clicked", {
-															Host: pr.providerId
-														});
-													}}
-												>
-													<div>
-														{selected && <Icon name="arrow-right" className="selected-icon" />}
-														<PRHeadshot person={pr.author} />
-													</div>
-													<div>
-														<span>
-															{pr.title} #{pr.number}
+												<div style={{ display: "flex" }}>
+													{selected && <Icon name="arrow-right" className="selected-icon" />}
+													{chevronIcon}
+													<PRHeadshot person={pr.author} />
+												</div>
+												<div>
+													<span>
+														{pr.title} #{pr.number}
+													</span>
+													{pr.labels && pr.labels.nodes && pr.labels.nodes.length > 0 && (
+														<span className="cs-tag-container">
+															{pr.labels.nodes.map((_, index) => (
+																<Tag key={index} tag={{ label: _?.name, color: `#${_?.color}` }} />
+															))}
 														</span>
-														{pr.labels && pr.labels.nodes && pr.labels.nodes.length > 0 && (
-															<span className="cs-tag-container">
-																{pr.labels.nodes.map((_, index) => (
-																	<Tag
-																		key={index}
-																		tag={{ label: _?.name, color: `#${_?.color}` }}
-																	/>
-																))}
-															</span>
-														)}
-														<span className="subtle">{pr.bodyText || pr.body}</span>
-													</div>
-													<div className="icons">
-														<span
-															onClick={e => {
-																e.preventDefault();
-																e.stopPropagation();
-																HostApi.instance.send(OpenUrlRequestType, {
-																	url: pr.url
-																});
-															}}
-														>
-															<Icon
-																name="globe"
-																className="clickable"
-																title="View on GitHub"
-																placement="bottomLeft"
-																delay={1}
-															/>
-														</span>
+													)}
+													<span className="subtle">{pr.bodyText || pr.body}</span>
+												</div>
+												<div className="icons">
+													<Icon
+														name="info"
+														placement="top"
+														title={<PullRequestTooltip pr={pr} />}
+													/>
+													<span
+														onClick={e => {
+															e.preventDefault();
+															e.stopPropagation();
+															HostApi.instance.send(OpenUrlRequestType, {
+																url: pr.url
+															});
+														}}
+													>
 														<Icon
-															name="review"
+															name="globe"
 															className="clickable"
-															title="Review Changes"
+															title="View on GitHub"
 															placement="bottomLeft"
 															delay={1}
 														/>
-														<Timestamp time={pr.createdAt} relative abbreviated />
-													</div>
-												</Row>
-											</Tooltip>
-										);
+													</span>
+													<Icon
+														name="review"
+														className="clickable"
+														title="Review Changes"
+														placement="bottomLeft"
+														delay={1}
+													/>
+													<Timestamp time={pr.createdAt} relative abbreviated />
+												</div>
+											</Row>,
+											expanded && renderExpanded(pr)
+										];
 									} else if (providerId === "gitlab*com" || providerId === "gitlab/enterprise") {
 										const selected = false;
 										// const selected = openReposWithName.find(repo => {
@@ -780,25 +917,16 @@ export const OpenPullRequests = React.memo((props: Props) => {
 										// 		repo.name === pr.headRepository.name
 										// 	);
 										// });
-										return (
+										return [
 											<Row
 												key={"pr-" + pr.base_id}
 												className={selected ? "pr-row selected" : "pr-row"}
-												onClick={() => {
-													dispatch(setCurrentPullRequest(pr.providerId, pr.id));
-
-													HostApi.instance.track("PR Clicked", {
-														Host: pr.providerId
-													});
-												}}
+												onClick={() => clickPR(pr)}
 											>
-												<div>
+												<div style={{ display: "flex" }}>
 													{selected && <Icon name="arrow-right" className="selected-icon" />}
-													<PRHeadshot
-														person={{
-															avatarUrl: pr.author.avatar_url
-														}}
-													/>
+													{chevronIcon}
+													<PRHeadshot person={{ avatarUrl: pr.author.avatar_url }} />
 												</div>
 												<div>
 													<span>
@@ -851,8 +979,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 														</span>
 													)}
 												</div>
-											</Row>
-										);
+											</Row>,
+											expanded && renderExpanded(pr)
+										];
 									} else return undefined;
 								})}
 						</PaneNode>

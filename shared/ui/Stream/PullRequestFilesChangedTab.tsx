@@ -13,6 +13,7 @@ import {
 	FetchThirdPartyPullRequestCommitsResponse,
 	FetchThirdPartyPullRequestPullRequest
 } from "@codestream/protocols/agent";
+import Icon from "./Icon";
 
 const STATUS_MAP = {
 	modified: FileStatus.modified
@@ -34,6 +35,7 @@ export const PullRequestFilesChangedTab = (props: {
 	pr: FetchThirdPartyPullRequestPullRequest;
 	fetch: Function;
 	setIsLoadingMessage: Function;
+	sidebarView?: boolean;
 }) => {
 	const { pr } = props;
 	const dispatch = useDispatch();
@@ -247,9 +249,16 @@ export const PullRequestFilesChangedTab = (props: {
 		});
 
 	return (
-		<div style={{ position: "relative", margin: "0 0 20px 20px" }}>
+		<div
+			className="files-changed-list"
+			style={{ position: "relative", margin: props.sidebarView ? "0" : "0 0 20px 20px" }}
+		>
 			{derivedState.currentRepo && (
-				<div style={{ margin: "0 0 10px 0" }}>
+				<div
+					className="files-changed-list-dropdown"
+					style={{ margin: props.sidebarView ? "0" : "0 0 10px 0" }}
+				>
+					{props.sidebarView && <Icon className="margin-right" name="plus-minus" />}
 					<DropdownButton
 						variant="text"
 						items={dropdownItems}
@@ -272,6 +281,7 @@ export const PullRequestFilesChangedTab = (props: {
 				fetch={props.fetch!}
 				setIsLoadingMessage={props.setIsLoadingMessage!}
 				commitBased={commitBased}
+				sidebarView={props.sidebarView}
 			/>
 		</div>
 	);
