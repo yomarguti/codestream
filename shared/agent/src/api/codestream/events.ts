@@ -172,8 +172,6 @@ export class BroadcasterEvents implements Disposable {
 	}
 
 	private onBroadcasterMessagesReceived(messages: { [key: string]: any }[]) {
-		this.debug("Broadcaster messages", messages);
-
 		for (const message of messages) {
 			this.fireMessage(message);
 		}

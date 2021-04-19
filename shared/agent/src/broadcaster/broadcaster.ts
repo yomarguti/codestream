@@ -284,22 +284,34 @@ export class Broadcaster {
 		this._debug("Broadcaster message received at: " + event.receivedAt);
 		if (event.receivedAt > this._lastMessageReceivedAt && !this._subscriptionsPending) {
 			this._lastMessageReceivedAt = event.receivedAt;
-			this._debug("_lastMessageReceivedAt updated");
+			this._debug(`_lastMessageReceivedAt updated to ${this._lastMessageReceivedAt}`);
 		}
 
+		this._processMessages([event.message]);
+	}
+
+	// process a received message by checking if we've already received the message, and handling
+	// any messages that were split into parts
+	_processMessages(messages: { messageId?: string; [key: string]: any }[]) {
+		const outputMessages: { [key: string]: any }[] = [];
 		// we avoid sending duplicate messages up the chain by maintaining a list of the messages
 		// we've already received, dropping duplicates to the floor
-		const { messageId } = event.message;
-		if (!messageId || !this._messagesReceived[messageId]) {
-			if (messageId) {
-				this._messagesReceived[messageId] = Date.now();
+		messages.forEach(message => {
+			const { messageId } = message;
+			if (!messageId || !this._messagesReceived[messageId]) {
+				if (messageId) {
+					this._messagesReceived[messageId] = Date.now();
+				}
+				const fullMessage = this._processPartial(message);
+				if (fullMessage) {
+					outputMessages.push(fullMessage);
+				}
+			} else {
+				this._debug(`Message ${messageId} was already received and processed, dropping`);
 			}
-			const fullMessage = this._processPartial(event.message);
-			if (fullMessage) {
-				this.emitMessages([fullMessage]);
-			}
-		}
+		});
 		this.cleanUpMessagesReceived();
+		this.emitMessages(outputMessages);
 	}
 
 	// process partial messages, split into multiple pieces in case the full message was too big
@@ -519,7 +531,7 @@ export class Broadcaster {
 			this._lastMessageReceivedAt = historyOutput.timestamp!;
 			this._debug(`${historyOutput.messages.length} messages received from history`);
 			this._debug(`_lastMessageReceivedAt updated to ${historyOutput.timestamp}`);
-			this.emitMessages(historyOutput.messages);
+			this._processMessages(historyOutput.messages);
 		}
 
 		// nothing left to do ... we are successfully subscribed to all channels!
