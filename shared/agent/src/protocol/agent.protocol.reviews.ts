@@ -235,6 +235,18 @@ export const GetReviewCoverageRequestType = new RequestType<
 	void
 >("codestream/review/coverage");
 
+export interface GetBlameRequest {
+	textDocument: TextDocumentIdentifier;
+}
+
+export interface GetBlameResponse {
+	blames: (string | undefined)[];
+}
+
+export const GetBlameRequestType = new RequestType<GetBlameRequest, GetBlameResponse, void, void>(
+	"codestream/review/blame"
+);
+
 export interface ReviewRepoContents {
 	repoId: string;
 	files: ReviewFileContents[];

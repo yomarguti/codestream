@@ -14,6 +14,7 @@ import com.codestream.extensions.selections
 import com.codestream.extensions.textDocumentIdentifier
 import com.codestream.extensions.uri
 import com.codestream.extensions.visibleRanges
+import com.codestream.protocols.agent.BlameParams
 import com.codestream.protocols.agent.DocumentMarker
 import com.codestream.protocols.agent.DocumentMarkersParams
 import com.codestream.protocols.agent.Marker
@@ -98,6 +99,7 @@ class EditorService(val project: Project) {
     private val documentMarkers = mutableMapOf<Document, List<DocumentMarker>>()
     private var spatialViewActive = project.settingsService?.webViewContext?.spatialViewVisible ?: false
     private var codeStreamVisible = project.codeStream?.isVisible ?: false
+    private val blamesByFile = mutableMapOf<String, List<String?>>()
 
     fun add(editor: Editor) {
         val reviewFile = editor.document.file as? ReviewDiffVirtualFile
@@ -122,6 +124,11 @@ class EditorService(val project: Project) {
                         DidOpenTextDocumentParams(document.textDocumentItem)
                     )
                     document.addDocumentListener(DocumentSynchronizer())
+                }
+
+                GlobalScope.launch {
+                    val identifier = document.textDocumentIdentifier ?: return@launch
+                    loadBlame(identifier.uri)
                 }
             }
         }
@@ -635,6 +642,27 @@ class EditorService(val project: Project) {
                 }
             }
         }
+    }
+
+    private suspend fun loadBlame(uri: String) {
+        var blame = blamesByFile[uri]
+        if (blame == null) {
+            val result = project.agentService?.blame(BlameParams(TextDocument(uri)))
+            if (result != null) {
+                blamesByFile[uri] = result.blames
+            }
+        }
+    }
+
+    fun getBlame(uri: String): List<String?>? {
+        val blame = blamesByFile[uri]
+        return blame.also {
+            if (it == null) GlobalScope.launch { loadBlame(uri) }
+        }
+    }
+
+    fun clearBlame(uri: String) {
+        blamesByFile.remove(uri)
     }
 
     // var count = 0

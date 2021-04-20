@@ -5,6 +5,8 @@ import com.codestream.authenticationService
 import com.codestream.extensions.baseUri
 import com.codestream.extensions.workspaceFolders
 import com.codestream.gson
+import com.codestream.protocols.agent.BlameParams
+import com.codestream.protocols.agent.BlameResult
 import com.codestream.protocols.agent.CSUser
 import com.codestream.protocols.agent.CreatePermalinkParams
 import com.codestream.protocols.agent.CreatePermalinkResult
@@ -325,6 +327,17 @@ class AgentService(private val project: Project) : Disposable {
             .request("codestream/review/coverage", params)
             .await() as JsonObject
         val result = gson.fromJson<ReviewCoverageResult>(json)
+
+        return result
+
+    }
+
+
+    suspend fun blame(params: BlameParams): BlameResult {
+        val json = remoteEndpoint
+            .request("codestream/review/blame", params)
+            .await() as JsonObject
+        val result = gson.fromJson<BlameResult>(json)
 
         return result
 

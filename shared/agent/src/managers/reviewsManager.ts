@@ -37,6 +37,9 @@ import {
 	GetAllReviewContentsRequest,
 	GetAllReviewContentsRequestType,
 	GetAllReviewContentsResponse,
+	GetBlameRequest,
+	GetBlameRequestType,
+	GetBlameResponse,
 	GetReviewContentsLocalRequest,
 	GetReviewContentsLocalRequestType,
 	GetReviewContentsRequest,
@@ -321,6 +324,27 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 		return {
 			reviewIds
+		};
+	}
+
+	@lspHandler(GetBlameRequestType)
+	@log()
+	async getBlame(request: GetBlameRequest): Promise<GetBlameResponse> {
+		const documentUri = URI.parse(request.textDocument.uri);
+		const filePath = documentUri.fsPath;
+		const { git } = SessionContainer.instance();
+		const repo = await git.getRepositoryByFilePath(filePath);
+		if (!repo) {
+			return { blames: [] };
+		}
+		const commitShas = await git.getCommitShaByLine(filePath);
+		const commits = await Promise.all(commitShas.map(sha => git.getCommitCached(repo.path, sha)));
+
+		return {
+			blames: commits.map(
+				c =>
+					c && `${c.author?.split(" ")[0]} ${c.authorDate.toLocaleDateString()} ${c.shortMessage}`
+			)
 		};
 	}
 

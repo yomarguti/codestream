@@ -46,6 +46,7 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
     @JsonNotification("codestream/didChangeDocumentMarkers")
     fun didChangeDocumentMarkers(notification: DidChangeDocumentMarkersNotification) {
         notification.textDocument.uri?.let {
+            project.editorService?.clearBlame(it)
             project.editorService?.updateMarkers(it)
         }
         project.webViewService?.postNotification("codestream/didChangeDocumentMarkers", notification)

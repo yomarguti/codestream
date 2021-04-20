@@ -30,6 +30,8 @@
 
         <diff.DiffExtension implementation="com.codestream.review.ReviewDiffExtension"/>
 
+        <editor.linePainter implementation="com.codestream.editor.BlameEditorLinePainter" />
+
         <intentionAction>
             <className>com.codestream.actions.AddComment</className>
             <category>Other</category>

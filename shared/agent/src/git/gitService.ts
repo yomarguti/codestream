@@ -665,6 +665,43 @@ export class GitService implements IGitService, Disposable {
 		Logger.log(`Could not find ref ${ref} in any remote of ${repo.path}`);
 	}
 
+	private _commitCache = new Map<string, GitCommit>();
+	private _commitCachePromise: Promise<GitCommit | undefined> | undefined;
+
+	async getCommitCached(repoUri: URI, ref: string): Promise<GitCommit | undefined>;
+	async getCommitCached(repoPath: string, ref: string): Promise<GitCommit | undefined>;
+	async getCommitCached(repoUriOrPath: URI | string, ref: string): Promise<GitCommit | undefined> {
+		if (ref === "0000000000000000000000000000000000000000") return undefined;
+		const cached = this._commitCache.get("ref");
+		if (cached) return cached;
+
+		await this._commitCachePromise;
+		return (this._commitCachePromise = new Promise<GitCommit | undefined>(async resolve => {
+			const repoPath = typeof repoUriOrPath === "string" ? repoUriOrPath : repoUriOrPath.fsPath;
+			try {
+				const data = await git(
+					{ cwd: repoPath },
+					"log",
+					"-M",
+					"-n100",
+					`--format=${GitLogParser.defaultFormat}`,
+					ref,
+					"--"
+				);
+
+				const commits = GitLogParser.parse(data.trim(), repoPath);
+				if (commits === undefined || commits.size === 0) {
+					resolve(undefined);
+				} else {
+					commits.forEach((value, key) => this._commitCache.set(key, value));
+					resolve(Iterables.first(commits.values()));
+				}
+			} catch {
+				resolve(undefined);
+			}
+		}));
+	}
+
 	async getCommit(repoUri: URI, ref: string): Promise<GitCommit | undefined>;
 	async getCommit(repoPath: string, ref: string): Promise<GitCommit | undefined>;
 	async getCommit(repoUriOrPath: URI | string, ref: string): Promise<GitCommit | undefined> {
