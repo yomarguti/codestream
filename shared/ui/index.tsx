@@ -41,7 +41,7 @@ import {
 	VerifyConnectivityRequestType,
 	ExecuteThirdPartyRequestUntypedType
 } from "@codestream/protocols/agent";
-import { CSApiCapabilities, CodemarkType } from "@codestream/protocols/api";
+import { CSApiCapabilities, CodemarkType, CSMe } from "@codestream/protocols/api";
 import translations from "./translations/en";
 import { apiUpgradeRecommended, apiUpgradeRequired } from "./store/apiVersioning/actions";
 import { getCodemark } from "./store/codemarks/reducer";
@@ -79,6 +79,8 @@ import { logWarning } from "./logger";
 import { fetchReview } from "./store/reviews/actions";
 import { openPullRequestByUrl } from "./store/providerPullRequests/actions";
 import { updateCapabilities } from "./store/capabilities/actions";
+import { confirmPopup } from "./Stream/Confirm";
+import { switchToTeam } from "./store/session/actions";
 
 export { HostApi };
 
@@ -368,7 +370,51 @@ function listenForEvents(store) {
 					switch (route.action) {
 						case "open": {
 							if (route.id) {
+								const { context, session, users } = store.getState();
 								let { codemarks } = store.getState();
+								const currentUser = session.userId ? (users[session.userId] as CSMe) : null;
+								const { currentTeamId } = context;
+								if (
+									currentUser?.teamIds.includes(currentTeamId) &&
+									route.query &&
+									route.query.teamId !== currentTeamId
+								) {
+									const teamName = route.query.teamName;
+									return confirmPopup({
+										title: "Switch teams?",
+										message: (
+											<span>
+												The codemark you are trying to view was created in{" "}
+												{teamName ? (
+													<span>
+														the <b>{teamName}</b>
+													</span>
+												) : (
+													"another"
+												)}{" "}
+												team. You'll need to switch to that team to view it.
+											</span>
+										),
+										centered: true,
+										buttons: [
+											{
+												label: "Cancel",
+												className: "control-button"
+											},
+											{
+												label: "Switch Teams",
+												className: "control-button",
+												wait: true,
+												action: () => {
+													store.dispatch(
+														switchToTeam(route.query.teamId, { codemarkId: route.id })
+													);
+												}
+											}
+										]
+									});
+								}
+
 								if (Object.keys(codemarks).length === 0) {
 									await store.dispatch(fetchCodemarks());
 									codemarks = store.getState().codemarks;
@@ -393,7 +439,48 @@ function listenForEvents(store) {
 					switch (route.action) {
 						case "open": {
 							if (route.id) {
-								const { reviews } = store.getState();
+								const { reviews, context, session, users } = store.getState();
+								const currentUser = session.userId ? (users[session.userId] as CSMe) : null;
+								const { currentTeamId } = context;
+								if (
+									currentUser?.teamIds.includes(currentTeamId) &&
+									route.query &&
+									route.query.teamId !== currentTeamId
+								) {
+									const teamName = route.query.teamName;
+									return confirmPopup({
+										title: "Switch teams?",
+										message: (
+											<span>
+												The feedback request you are trying to view was created in{" "}
+												{teamName ? (
+													<span>
+														the <b>{teamName}</b>
+													</span>
+												) : (
+													"another"
+												)}{" "}
+												team. You'll need to switch to that team to view it.
+											</span>
+										),
+										centered: true,
+										buttons: [
+											{
+												label: "Cancel",
+												className: "control-button"
+											},
+											{
+												label: "Switch Teams",
+												className: "control-button",
+												wait: true,
+												action: () => {
+													store.dispatch(switchToTeam(route.query.teamId, { reviewId: route.id }));
+												}
+											}
+										]
+									});
+								}
+
 								const review = getReview(reviews, route.id);
 								store.dispatch(closeAllPanels());
 								if (!review) {

@@ -139,6 +139,8 @@ export interface AgentState {
 	environmentInfo: CodeStreamEnvironmentInfo;
 	teamId: string;
 	userId: string;
+	codemarkId?: string;
+	reviewId?: string;
 }
 
 export interface AgentInitializeResult extends InitializeResult {

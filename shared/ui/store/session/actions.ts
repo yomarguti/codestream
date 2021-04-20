@@ -40,10 +40,13 @@ export const logout = () => async (dispatch, getState: () => CodeStreamState) =>
 	dispatch(setBootstrapped(true));
 };
 
-export const switchToTeam = (id: string) => async (dispatch, getState: () => CodeStreamState) => {
+export const switchToTeam = (
+	id: string,
+	options?: { codemarkId?: string; reviewId?: string }
+) => async (dispatch, getState: () => CodeStreamState) => {
 	const { accessToken } = await HostApi.instance.send(GetAccessTokenRequestType, {});
 
-	const { configs, context, users, session } = getState();
+	const { configs, context, users, session, codemarks } = getState();
 	const user = users[session.userId!] as CSMe;
 
 	dispatch(setBootstrapped(false));
@@ -58,7 +61,9 @@ export const switchToTeam = (id: string) => async (dispatch, getState: () => Cod
 			teamId: id,
 			providerAccess: context.chatProviderAccess as any
 		},
-		teamId: id
+		teamId: id,
+		codemarkId: options?.codemarkId,
+		reviewId: options?.reviewId
 	});
 
 	if (isLoginFailResponse(response)) {

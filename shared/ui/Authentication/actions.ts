@@ -20,8 +20,12 @@ import {
 	SupportedSSOProvider,
 	goToSignup,
 	goToLogin,
-	goToSetPassword
+	goToSetPassword,
+	setCurrentCodemark,
+	setCurrentReview
 } from "../store/context/actions";
+import { fetchCodemarks } from "../Stream/actions";
+
 import { GetActiveEditorContextRequestType } from "../ipc/host.protocol.editor";
 import {
 	BootstrapInHostRequestType,
@@ -187,10 +191,10 @@ export const authenticate = (params: PasswordLoginParams | TokenLoginRequest) =>
 	return dispatch(onLogin(response));
 };
 
-export const onLogin = (
-	response: LoginSuccessResponse,
-	isFirstPageview?: boolean
-) => async dispatch => {
+export const onLogin = (response: LoginSuccessResponse, isFirstPageview?: boolean) => async (
+	dispatch,
+	getState: () => CodeStreamState
+) => {
 	const api = HostApi.instance;
 
 	const [bootstrapData, { editorContext }, bootstrapCore] = await Promise.all([
@@ -206,9 +210,23 @@ export const onLogin = (
 			editorContext,
 			session: { ...bootstrapCore.session, userId: response.state.userId },
 			capabilities: response.state.capabilities,
-			context: { currentTeamId: response.state.teamId, isFirstPageview }
+			context: {
+				currentTeamId: response.state.teamId,
+				isFirstPageview,
+				currentCodemarkId: response.state.codemarkId
+			}
 		})
 	);
+
+	if (response.state.codemarkId) {
+		const { codemarks } = getState();
+		if (Object.keys(codemarks).length === 0) {
+			await dispatch(fetchCodemarks());
+		}
+		dispatch(setCurrentCodemark(response.state.codemarkId));
+	} else if (response.state.reviewId) {
+		dispatch(setCurrentReview(response.state.reviewId));
+	}
 };
 
 export const completeSignup = (
