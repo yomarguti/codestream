@@ -132,7 +132,7 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 				});
 			}
 			return {
-				id: repoResponse.body.id,
+				id: repoResponse.body.node_id,
 				defaultBranch: repoResponse.body.default_branch,
 				pullRequests: pullRequests
 			};
@@ -307,6 +307,7 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 
 interface GitHubEnterpriseRepo {
 	id: string;
+	node_id: string;
 	full_name: string;
 	path: string;
 	has_issues: boolean;
