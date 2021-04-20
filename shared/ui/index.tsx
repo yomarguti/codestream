@@ -377,6 +377,7 @@ function listenForEvents(store) {
 								if (
 									currentUser?.teamIds.includes(currentTeamId) &&
 									route.query &&
+									route.query.teamId &&
 									route.query.teamId !== currentTeamId
 								) {
 									const teamName = route.query.teamName;
@@ -445,6 +446,7 @@ function listenForEvents(store) {
 								if (
 									currentUser?.teamIds.includes(currentTeamId) &&
 									route.query &&
+									route.query.teamId &&
 									route.query.teamId !== currentTeamId
 								) {
 									const teamName = route.query.teamName;
