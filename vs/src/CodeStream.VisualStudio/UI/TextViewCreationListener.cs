@@ -325,11 +325,11 @@ namespace CodeStream.VisualStudio.UI {
 								wpfTextView.Properties.AddProperty(PropertyNames.AdornmentManager,
 									new HighlightAdornmentManager(wpfTextView));
 								using (metrics.Measure($"{logPrefix} ICodeStreamWpfTextViewMargin.OnSessionReady()")) {
-									wpfTextView
+									if (wpfTextView
 										.Properties
-										.GetProperty<List<ICodeStreamWpfTextViewMargin>>(PropertyNames
-											.TextViewMarginProviders)
-										.OnSessionReady();
+										.TryGetProperty(PropertyNames.TextViewMarginProviders, out List<ICodeStreamWpfTextViewMargin> margins) && margins != null) {
+										margins.OnSessionReady();
+									}
 								}
 
 								// keep this at the end -- we want this to be the first handler
@@ -342,11 +342,11 @@ namespace CodeStream.VisualStudio.UI {
 								ChangeActiveEditor(wpfTextView, metrics);
 								SetZoomLevelCore(wpfTextView.ZoomLevel, metrics);
 								using (metrics.Measure($"{logPrefix} OnMarkerChanged")) {
-									wpfTextView
+									if (wpfTextView
 										.Properties
-										.GetProperty<List<ICodeStreamWpfTextViewMargin>>(PropertyNames
-											.TextViewMarginProviders)
-										.OnMarkerChanged();
+										.TryGetProperty(PropertyNames.TextViewMarginProviders, out List<ICodeStreamWpfTextViewMargin> margins) && margins != null) {
+										margins.OnMarkerChanged();
+									}
 								}
 
 								metrics.Log($"{logPrefix} state=true");
@@ -362,7 +362,7 @@ namespace CodeStream.VisualStudio.UI {
 		}
 
 		private void SetZoomLevelCore(double zoomLevel, IMetricsBase metrics) {
-			using (metrics?.Measure($"{nameof(SetZoomLevelCore)}")) {			
+			using (metrics?.Measure($"{nameof(SetZoomLevelCore)}")) {
 				CodeStreamService?.BrowserService?.SetZoomInBackground(zoomLevel);
 			}
 		}
@@ -479,17 +479,19 @@ namespace CodeStream.VisualStudio.UI {
 
 					try {
 						using (metrics.Measure("TrySetMarkers")) {
-							await wpfTextView
+							if (wpfTextView
 								.Properties
-								.GetProperty<DocumentMarkerManager>(PropertyNames.DocumentMarkerManager)
-								?.TrySetMarkersAsync(true);
+								.TryGetProperty(PropertyNames.DocumentMarkerManager, out DocumentMarkerManager manager) && manager != null) {
+								await manager.TrySetMarkersAsync(true);
+							}
+
 						}
 						using (metrics.Measure("OnMarkerChanged")) {
-							wpfTextView
+							if (wpfTextView
 								.Properties
-								.GetProperty<List<ICodeStreamWpfTextViewMargin>>(PropertyNames
-									.TextViewMarginProviders)
-								.OnMarkerChanged();
+								.TryGetProperty(PropertyNames.TextViewMarginProviders, out List<ICodeStreamWpfTextViewMargin> margins) && margins != null) {
+								margins.OnMarkerChanged();
+							}
 						}
 					}
 					catch (Exception ex) {
