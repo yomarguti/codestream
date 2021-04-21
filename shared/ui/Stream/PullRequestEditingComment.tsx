@@ -43,7 +43,7 @@ export const PullRequestEditingComment = styled((props: Props) => {
 						? "updatePullRequestBody"
 						: "updateReview",
 					{
-						pullRequestId: pr.id,
+						pullRequestId: "idComputed" in pr ? pr.idComputed : pr.id,
 						id,
 						body: text
 					}

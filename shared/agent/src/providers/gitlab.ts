@@ -1582,7 +1582,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		const response = await this.mutate(
 			`mutation CreateNote($noteableId:ID!, $body:String!){
 				createNote(input: {noteableId:$noteableId, body:$body}){
-					clientMutationId				
+					clientMutationId
 		  	}
 		}`,
 			{
@@ -2109,6 +2109,43 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			]
 		};
+	}
+
+	@log()
+	async updateReviewComment(request: {
+		id: string;
+		body: string;
+		pullRequestId: string;
+	}): Promise<Directives> {
+		const { id, iid, projectFullPath } = this.parseId(request.pullRequestId);
+
+		const comment = await this.gitLabReviewStore.updateComment(new GitLabId(projectFullPath, iid), request.id, request.body);
+
+		if (comment) {
+			this._pullRequestCache.delete(id);
+			this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
+				pullRequestId: id,
+				filePath: comment.filePath
+			});
+
+			return {
+				directives: [
+					{
+						type: "updateDiscussionNote",
+						data: {
+							body: comment.text,
+							bodyHtml: comment.text,
+							discussion: {
+								id: request.id
+							},
+							id: request.id
+						}
+					}
+				]
+			};
+		}
+
+		return {directives: []};
 	}
 
 	@log()
@@ -2915,7 +2952,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	@log()
-	async updateIssueComment(request: { id: string; body: string }): Promise<Directives> {
+	async updateIssueComment(request: { id: string; body: string; pullRequestId: string; }): Promise<Directives> {
+		// detect if this review comment
+		if (request.id.indexOf("gitlab") === -1) {
+			return this.updateReviewComment(request);
+		}
 		const response = await this.mutate<any>(
 			`mutation UpdateNote($id: NoteID!, $body: String!) {
 			updateNote(input: {id: $id, body: $body}) {
@@ -3242,8 +3283,24 @@ class GitLabReviewStore {
 		return undefined;
 	}
 
-	updateComment() {
-		// TODO
+	async updateComment(id: GitLabId, commentId: string, text: string) {
+		const review = await this.get(id);
+		if (review) {
+			const comment = review.comments.find(_ => _.id === commentId);
+			if (comment) {
+				comment.text = text;
+				const { textFiles } = SessionContainer.instance();
+				const path = this.buildPath(id);
+				await textFiles.writeTextFile({
+					path: path,
+					contents: JSON.stringify(review)
+				});
+
+				return comment;
+			}
+		}
+
+		return false;
 	}
 
 	async deleteReview(id: GitLabId) {

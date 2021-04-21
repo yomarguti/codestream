@@ -78,7 +78,7 @@ export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 	}
 
 	if (
-		(node.viewerCanUpdate || (node.userPermissions && node.userPermissions.adminNote)) &&
+		(node.viewerCanUpdate || node.state === "PENDING" || (node.userPermissions && node.userPermissions.adminNote)) &&
 		setEdit
 	) {
 		if (items.length > 0) items.push({ label: "-" });
