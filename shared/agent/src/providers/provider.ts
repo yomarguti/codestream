@@ -1,5 +1,6 @@
 "use strict";
 import { Agent as HttpsAgent } from "https";
+import HttpsProxyAgent from "https-proxy-agent";
 import fetch, { RequestInit, Response } from "node-fetch";
 import { URI } from "vscode-uri";
 import { InternalError, ReportSuppressedMessages } from "../agentError";
@@ -207,7 +208,7 @@ export abstract class ThirdPartyProviderBase<
 	private _readyPromise: Promise<void> | undefined;
 	protected _ensuringConnection: Promise<void> | undefined;
 	protected _providerInfo: TProviderInfo | undefined;
-	protected _httpsAgent: HttpsAgent | undefined;
+	protected _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined;
 	protected _client: GraphQLClient | undefined;
 
 	constructor(
@@ -342,6 +343,10 @@ export abstract class ThirdPartyProviderBase<
 		// with the one exception of on-prem CodeStream, for whom it is only disabled
 		// for self-hosted providers ...
 		// ... so in this case, establish our own HTTPS agent
+		if (this.session.proxyAgent) {
+			this._httpsAgent = this.session.proxyAgent;
+		}
+
 		const info = url.parse(this.baseUrl);
 		if (
 			info.protocol === "https:" &&
