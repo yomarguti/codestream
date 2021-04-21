@@ -370,53 +370,10 @@ function listenForEvents(store) {
 					switch (route.action) {
 						case "open": {
 							if (route.id) {
-								const { context, session, users } = store.getState();
-								let { codemarks } = store.getState();
-								const currentUser = session.userId ? (users[session.userId] as CSMe) : null;
-								const { currentTeamId } = context;
-								if (
-									currentUser?.teamIds.includes(currentTeamId) &&
-									route.query &&
-									route.query.teamId &&
-									route.query.teamId !== currentTeamId
-								) {
-									const teamName = route.query.teamName;
-									const type = route.query.isLink === "true" ? "permalink" : "codemark";
-									return confirmPopup({
-										title: "Switch teams?",
-										message: (
-											<span>
-												The {type} you are trying to view was created in{" "}
-												{teamName ? (
-													<span>
-														the <b>{teamName}</b>
-													</span>
-												) : (
-													"another"
-												)}{" "}
-												team. You'll need to switch to that team to view it.
-											</span>
-										),
-										centered: true,
-										buttons: [
-											{
-												label: "Cancel",
-												className: "control-button"
-											},
-											{
-												label: "Switch Teams",
-												className: "control-button",
-												wait: true,
-												action: () => {
-													store.dispatch(
-														switchToTeam(route.query.teamId, { codemarkId: route.id })
-													);
-												}
-											}
-										]
-									});
-								}
+								const type = route.query.isLink ? "permalink" : "codemark";
+								if (confirmSwitchToTeam(store, route.query, type, route.id)) return;
 
+								let { codemarks } = store.getState();
 								if (Object.keys(codemarks).length === 0) {
 									await store.dispatch(fetchCodemarks());
 									codemarks = store.getState().codemarks;
@@ -441,49 +398,9 @@ function listenForEvents(store) {
 					switch (route.action) {
 						case "open": {
 							if (route.id) {
-								const { reviews, context, session, users } = store.getState();
-								const currentUser = session.userId ? (users[session.userId] as CSMe) : null;
-								const { currentTeamId } = context;
-								if (
-									currentUser?.teamIds.includes(currentTeamId) &&
-									route.query &&
-									route.query.teamId &&
-									route.query.teamId !== currentTeamId
-								) {
-									const teamName = route.query.teamName;
-									return confirmPopup({
-										title: "Switch teams?",
-										message: (
-											<span>
-												The feedback request you are trying to view was created in{" "}
-												{teamName ? (
-													<span>
-														the <b>{teamName}</b>
-													</span>
-												) : (
-													"another"
-												)}{" "}
-												team. You'll need to switch to that team to view it.
-											</span>
-										),
-										centered: true,
-										buttons: [
-											{
-												label: "Cancel",
-												className: "control-button"
-											},
-											{
-												label: "Switch Teams",
-												className: "control-button",
-												wait: true,
-												action: () => {
-													store.dispatch(switchToTeam(route.query.teamId, { reviewId: route.id }));
-												}
-											}
-										]
-									});
-								}
+								if (confirmSwitchToTeam(store, route.query, "feedback request", route.id)) return;
 
+								const { reviews } = store.getState();
 								const review = getReview(reviews, route.id);
 								store.dispatch(closeAllPanels());
 								if (!review) {
@@ -640,4 +557,69 @@ export const parseProtocol = function(uriString: string | undefined): Route | un
 		id,
 		query: parsedQuery
 	};
+};
+
+const confirmSwitchToTeam = function(
+	store: any,
+	options: { teamId: string; teamName: string },
+	type: string,
+	itemId: string
+): boolean {
+	const { context, session, users } = store.getState();
+	const currentUser = session.userId ? (users[session.userId] as CSMe) : null;
+	const { currentTeamId } = context;
+	const { teamId, teamName } = options;
+
+	if (teamId && teamId !== currentTeamId) {
+		if (currentUser?.teamIds.includes(teamId)) {
+			const switchInfo =
+				type === "feedback request" ? { reviewId: itemId } : { codemarkId: itemId };
+			confirmPopup({
+				title: "Switch teams?",
+				message: (
+					<span>
+						The {type} you are trying to view was created in{" "}
+						{teamName ? (
+							<span>
+								the <b>{teamName}</b>
+							</span>
+						) : (
+							"another"
+						)}{" "}
+						team. You'll need to switch to that team to view it.
+					</span>
+				),
+				centered: true,
+				buttons: [
+					{
+						label: "Cancel",
+						className: "control-button"
+					},
+					{
+						label: "Switch Teams",
+						className: "control-button",
+						wait: true,
+						action: () => {
+							store.dispatch(switchToTeam(teamId, switchInfo));
+						}
+					}
+				]
+			});
+			return true;
+		} else {
+			confirmPopup({
+				title: "Not a member",
+				message: <span>You aren't a member of the team that owns this {type}.</span>,
+				centered: true,
+				buttons: [
+					{
+						label: "OK",
+						className: "control-button"
+					}
+				]
+			});
+			return true;
+		}
+	}
+	return false;
 };
