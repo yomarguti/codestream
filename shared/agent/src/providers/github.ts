@@ -186,10 +186,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				// GitHub cloud doesn't report their version via the api.
 				// Instead, use a large major number so we don't fall into any bad
 				// paths when using the semver package
-				const installedVersion = "999.0.0";
 				this._version = {
-					version: installedVersion,
-					asArray: installedVersion.split(".").map(Number)
+					version: "999.0.0",
+					asArray: [999, 0, 0]
 				};
 				Logger.log(
 					`GitHub getVersion - ${this.providerConfig.id} version=${this._version.version}`
