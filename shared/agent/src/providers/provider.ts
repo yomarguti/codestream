@@ -338,15 +338,24 @@ export abstract class ThirdPartyProviderBase<
 	}
 
 	protected async onConnected(providerInfo?: TProviderInfo) {
+		// if CodeStream is connected through a proxy, then we should be too,
+		// but to make sure nothing breaks, only if the user has a preference for it
+		if (this.session.proxyAgent) {
+			const { user } = await SessionContainer.instance().users.getMe();
+			if (user.preferences?.useCodestreamProxyForIntegrations) {
+				Logger.log(
+					`${this.providerConfig.name} provider (id:"${this.providerConfig.id}") will use CodeStream's proxy agent`
+				);
+				this._httpsAgent = this.session.proxyAgent;
+				return;
+			}
+		}
+
 		// if we are connecting with https, and if strictSSL is disabled for CodeStream,
 		// assume OK to have it disabled for third-party providers as well,
 		// with the one exception of on-prem CodeStream, for whom it is only disabled
 		// for self-hosted providers ...
 		// ... so in this case, establish our own HTTPS agent
-		if (this.session.proxyAgent) {
-			this._httpsAgent = this.session.proxyAgent;
-		}
-
 		const info = url.parse(this.baseUrl);
 		if (
 			info.protocol === "https:" &&
