@@ -842,9 +842,19 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log()
 	async updateStatus(request: UpdateStatusRequest) {
-		const update = await this.put<{ status: CSMeStatus }, any>(
+		let currentStatus = {};
+		const meResponse = await this.getMe();
+		if (meResponse.user.status) {
+			currentStatus = {
+				...meResponse.user.status
+			};
+		}
+		const update = await this.put<{ status: { [teamId: string]: CSMeStatus } }, any>(
 			"/users/me",
-			{ status: request.status },
+			{ status: {
+					...currentStatus,
+					...request.status
+				} },
 			this._token
 		);
 		const [user] = (await SessionContainer.instance().users.resolve({
