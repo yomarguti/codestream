@@ -74,6 +74,7 @@ export const PullRequestBottomComment = styled((props: Props) => {
 			type: ChangeDataType.PullRequests
 		});
 		setText("");
+		setIsLoadingMessage("");
 		setTimeout(() => {
 			// create a small buffer for the provider to incorporate this change before re-fetching
 			setIsLoadingCommentAndClose(false);
@@ -95,6 +96,7 @@ export const PullRequestBottomComment = styled((props: Props) => {
 			type: ChangeDataType.PullRequests
 		});
 		setText("");
+		setIsLoadingMessage("");
 		setTimeout(() => {
 			// create a small buffer for the provider to incorporate this change before re-fetching
 			setIsLoadingCommentAndClose(false);
