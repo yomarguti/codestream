@@ -52,6 +52,7 @@ import {
 	ProviderCreatePullRequestResponse,
 	ProviderGetForkedReposResponse,
 	ProviderGetRepoInfoResponse,
+	ProviderVersion,
 	PullRequestComment,
 	REFRESH_TIMEOUT,
 	ThirdPartyIssueProviderBase,
@@ -178,6 +179,28 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	}
 
 	async ensureInitialized() {}
+
+	protected async getVersion(): Promise<ProviderVersion> {
+		try {
+			if (this._version == null) {
+				// GitHub cloud doesn't report their version via the api.
+				// Instead, use a large major number so we don't fall into any bad
+				// paths when using the semver package
+				const installedVersion = "999.0.0";
+				this._version = {
+					version: installedVersion,
+					asArray: installedVersion.split(".").map(Number)
+				};
+				Logger.log(
+					`GitHub getVersion - ${this.providerConfig.id} version=${this._version.version}`
+				);
+			}
+		} catch (ex) {
+			Logger.error(ex);
+			this._version = this.DEFAULT_VERSION;
+		}
+		return this._version;
+	}
 
 	_queryLogger: {
 		restApi: {
