@@ -12,7 +12,7 @@ import {
 } from "@codestream/protocols/agent";
 import { CodeStreamState } from "../store";
 import { HostApi } from "../webview-api";
-import { LoginResult } from "@codestream/protocols/api";
+import { CodemarkType, LoginResult } from "@codestream/protocols/api";
 import {
 	goToTeamCreation,
 	goToSSOAuth,
@@ -25,6 +25,7 @@ import {
 	setCurrentReview
 } from "../store/context/actions";
 import { fetchCodemarks } from "../Stream/actions";
+import { getCodemark } from "../store/codemarks/reducer";
 
 import { GetActiveEditorContextRequestType } from "../ipc/host.protocol.editor";
 import {
@@ -38,6 +39,7 @@ import { ChatProviderAccess } from "../store/context/types";
 import { emptyObject, uuid } from "../utils";
 import { localStore } from "../utilities/storage";
 import { setSession, setMaintenanceMode } from "../store/session/actions";
+import { moveCursorToLine } from "../Stream/api-functions";
 
 export enum SignupType {
 	JoinTeam = "joinTeam",
@@ -219,11 +221,17 @@ export const onLogin = (response: LoginSuccessResponse, isFirstPageview?: boolea
 	);
 
 	if (response.state.codemarkId) {
-		const { codemarks } = getState();
+		let { codemarks } = getState();
 		if (Object.keys(codemarks).length === 0) {
 			await dispatch(fetchCodemarks());
+			codemarks = getState().codemarks;
 		}
-		dispatch(setCurrentCodemark(response.state.codemarkId));
+		const codemark = getCodemark(codemarks, response.state.codemarkId);
+		if (codemark && codemark.type === CodemarkType.Link && codemark.markerIds?.length) {
+			moveCursorToLine(codemark!.markerIds![0]);
+		} else {
+			dispatch(setCurrentCodemark(response.state.codemarkId));
+		}
 	} else if (response.state.reviewId) {
 		dispatch(setCurrentReview(response.state.reviewId));
 	}

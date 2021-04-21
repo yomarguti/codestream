@@ -72,7 +72,7 @@ import {
 	clearCurrentPullRequest
 } from "./store/context/actions";
 import { URI } from "vscode-uri";
-import { moveCursorToLine } from "./Stream/CodemarkView";
+import { moveCursorToLine } from "./Stream/api-functions";
 import { setMaintenanceMode } from "./store/session/actions";
 import { updateModifiedReposDebounced } from "./store/users/actions";
 import { logWarning } from "./logger";
@@ -381,11 +381,12 @@ function listenForEvents(store) {
 									route.query.teamId !== currentTeamId
 								) {
 									const teamName = route.query.teamName;
+									const type = route.query.isLink === "true" ? "permalink" : "codemark";
 									return confirmPopup({
 										title: "Switch teams?",
 										message: (
 											<span>
-												The codemark you are trying to view was created in{" "}
+												The {type} you are trying to view was created in{" "}
 												{teamName ? (
 													<span>
 														the <b>{teamName}</b>
@@ -421,7 +422,7 @@ function listenForEvents(store) {
 									codemarks = store.getState().codemarks;
 								}
 								const codemark = getCodemark(codemarks, route.id);
-								if (codemark && codemark.type === CodemarkType.Link)
+								if (codemark && codemark.type === CodemarkType.Link && codemark.markerIds?.length)
 									moveCursorToLine(codemark!.markerIds![0]);
 								else {
 									const markerId =
