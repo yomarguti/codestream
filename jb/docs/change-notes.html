@@ -1,3 +1,29 @@
+<h4 id="11_0_3">11.0.3</h4>
+<h5>Added</h5>
+<ul>
+    <li>Adds the ability to edit a pending review comment in a GitLab merge request</li>
+    <li>Adds a roadblock to indicate that merge request support for GitLab Self Managed requires version 12.10.X or later</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+    <li>Ask user if they want to switch teams when clicking on a permalink for an item owned by a team other than the one you currently have selected</li>
+    <li>More efficient use of GitHub api points to prevent users from getting hit with rate-limit errors</li>
+    <li>Decrease the number of git operations being performed at extension startup</li>
+    <li>When going a quote reply in a pull/merge request, a blank line is automatically inserted before the cursor to prevent entered text from being included in the quote</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Addresses <a href="https://github.com/TeamCodeStream/CodeStream/issues/514">#514</a> - Merge request not listed when using proxy
+    <li>Addresses <a href="https://github.com/TeamCodeStream/CodeStream/issues/477">#477</a> - Add messaging when not all files in a large MR will be listed
+    <li>Fixes an issue where the issue you select via Start Work in one team, also appears in the Work In Progress section for all of your teams</li>
+    <li>Fixes an error when creating a pull request</li>
+    <li>Fixes an issue with the Open File buttons in the Changed Files section of a feedback request not working</li>
+    <li>Fixes an issue with creating a pull request on Bitbucket</li>
+    <li>Fixes an issue where collapsing/expanding sections in the Pull Requests section would cause all queries to refresh</li>
+    <li>Fixes an issue where clicking on a mention in a merge request opens a blank page</li>
+    <li>Fixes an issue where a local-changes warning would be shown when creating a pull request when there's weren't any local changes in the selected repository</li>
+    <li>Fixes an issue where clicking "Add Comment" from hover for icon in editor gutter results in the wrong code block being selected</li>
+</ul>
 <h4 id="11_0_2">11.0.2</h4>
 <h5>Fixed</h5>
 <ul>    
