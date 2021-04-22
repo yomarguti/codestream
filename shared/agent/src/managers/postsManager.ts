@@ -1256,8 +1256,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		}
 
 		const reviewChangesetsSizeInBytes = sizeof(reviewRequest.reviewChangesets);
-		if (reviewChangesetsSizeInBytes > 19 * 1024 * 1024) {
-			throw new Error("Cannot create review. Payload exceeds 19MB");
+		if (reviewChangesetsSizeInBytes > 10 * 1024 * 1024) {
+			throw new Error("Cannot create review. Payload exceeds 10MB");
 		}
 
 		// FIXME -- not sure if this is the right way to do this
