@@ -137,7 +137,7 @@ export const UpdatePreferencesRequestType = new RequestType<
 >("codestream/user/updatePreferences");
 
 export interface UpdateStatusRequest {
-	status: CSMeStatus;
+	status: { [teamId: string]: CSMeStatus };
 }
 
 export interface UpdateStatusResponse {

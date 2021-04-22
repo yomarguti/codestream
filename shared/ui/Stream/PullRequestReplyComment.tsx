@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { CodeStreamState } from "../store";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { PRButtonRow, PRCodeCommentReply, PRCodeCommentReplyInput } from "./PullRequestComponents";
 import { HostApi } from "../webview-api";
@@ -15,7 +14,6 @@ import { replaceHtml } from "../utils";
 interface Props {
 	pr: FetchThirdPartyPullRequestPullRequest;
 	mode?: string;
-	fetch: Function;
 	className?: string;
 	databaseId: string;
 	parentId?: string;
@@ -24,24 +22,13 @@ interface Props {
 }
 
 export const PullRequestReplyComment = styled((props: Props) => {
-	const { pr, fetch, databaseId, parentId } = props;
+	const { pr, databaseId, parentId } = props;
 	const dispatch = useDispatch();
 
 	const [text, setText] = useState("");
 	const [open, setOpen] = useState(props.isOpen);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isPreviewing, setIsPreviewing] = useState(false);
-
-	const derivedState = useSelector((state: CodeStreamState) => {
-		const { context } = state;
-
-		return {
-			isGitLab:
-				context.currentPullRequest && context.currentPullRequest.providerId
-					? context.currentPullRequest.providerId.indexOf("gitlab") > -1
-					: false
-		};
-	});
 
 	useEffect(() => setOpen(props.isOpen), [props.isOpen]);
 
@@ -62,16 +49,9 @@ export const PullRequestReplyComment = styled((props: Props) => {
 					text: replaceHtml(text)
 				})
 			);
-			if (derivedState.isGitLab) {
-				setText("");
-				setOpen(false);
-			} else {
-				// TODO GH doesn't support directives for this yet
-				fetch().then(() => {
-					setText("");
-					setOpen(false);
-				});
-			}
+
+			setText("");
+			setOpen(false);
 		} catch (ex) {
 			console.warn(ex);
 		} finally {

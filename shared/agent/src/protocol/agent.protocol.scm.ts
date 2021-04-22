@@ -343,9 +343,6 @@ export interface GetRangeResponse {
 	currentContent?: string;
 	diff?: string;
 }
-export const GetRangeRequestType = new RequestType<GetRangeRequest, GetRangeResponse, void, void>(
-	"codestream/scm/range/content"
-);
 
 export interface GetUserInfoRequest {}
 export interface GetUserInfoResponse {

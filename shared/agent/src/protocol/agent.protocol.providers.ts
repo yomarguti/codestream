@@ -358,6 +358,10 @@ export interface FetchThirdPartyPullRequestRequest {
 	 */
 	force?: boolean;
 	metadata?: any;
+	/**
+	 * for debugging who is calling this
+	 */
+	src?: string;
 }
 
 export interface FetchThirdPartyPullRequestFilesResponse {
@@ -484,7 +488,24 @@ export interface FetchThirdPartyPullRequestPullRequest {
 		}[];
 	};
 	reviewThreads: {
-		edges: any[];
+		edges: {
+			node: {
+				id: string;
+				isResolved: boolean;
+				viewerCanResolve: boolean;
+				viewerCanUnresolve: boolean;
+				comments: {
+					totalCount: number;
+					nodes: {
+						author: {
+							login: string;
+							avatarUrl: string;
+						};
+						id: string;
+					}[];
+				};
+			};
+		}[];
 	};
 	projectCards: {
 		nodes: {
@@ -499,6 +520,9 @@ export interface FetchThirdPartyPullRequestPullRequest {
 			id: string;
 			createdAt: string;
 			state: string;
+			comments: {
+				totalCount: number;
+			};
 			author: {
 				id: string;
 				login: string;
@@ -513,7 +537,7 @@ export interface FetchThirdPartyPullRequestPullRequest {
 	 * this is a single pending review for the current user (there can only be 1 at a time for
 	 * certain providers, like github)
 	 */
-	pendingReview: {
+	pendingReview?: {
 		id: string;
 		author: {
 			login: string;

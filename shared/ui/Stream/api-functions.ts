@@ -5,6 +5,7 @@ import {
 	EditorHighlightRangeRequestType,
 	EditorHighlightRangeRequest
 } from "../ipc/host.protocol.editor";
+import { EditorSelectRangeRequestType } from "@codestream/protocols/webview";
 
 export async function getDocumentFromMarker(markerId: string, source?: string) {
 	try {
@@ -31,5 +32,27 @@ export async function highlightRange(request: EditorHighlightRangeRequest) {
 			message: error.toString()
 		});
 		return false;
+	}
+}
+
+export async function moveCursorToLine(markerId: string) {
+	const hostApi = HostApi.instance;
+	try {
+		const response = await getDocumentFromMarker(markerId);
+
+		if (response) {
+			// Ensure we put the cursor at the right line (don't actually select the whole range)
+			hostApi.send(EditorSelectRangeRequestType, {
+				uri: response.textDocument.uri,
+				selection: {
+					start: response.range.start,
+					end: response.range.start,
+					cursor: response.range.start
+				},
+				preserveFocus: true
+			});
+		}
+	} catch (error) {
+		// TODO:
 	}
 }

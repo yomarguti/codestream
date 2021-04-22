@@ -15,12 +15,10 @@ import { getPreferences } from "../../../store/users/reducer";
 import Tooltip from "../../Tooltip";
 import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import * as reviewSelectors from "../../../store/reviews/reducer";
 import styled, { ThemeProvider } from "styled-components";
 import Icon from "../../Icon";
 import { Button } from "../../../src/components/Button";
 import { Link } from "../../Link";
-import { autoCheckedMergeabilityStatus } from "../../PullRequest";
 import { PullRequestCommitsTab } from "../../PullRequestCommitsTab";
 import {
 	ChangeDataType,
@@ -37,7 +35,6 @@ import {
 	PRBranchTruncated,
 	PRError,
 	PRHeader,
-	PRPlusMinus,
 	PRSelectorButtons,
 	PRStatusButton,
 	PRSubmitReviewButton,
@@ -72,6 +69,7 @@ import CancelButton from "../../CancelButton";
 import { Timeline } from "./Timeline";
 import { PRAuthorBadges } from "../../PullRequestConversationTab";
 import { PipelineBox } from "./PipelineBox";
+import { OpenUrlRequestType } from "@codestream/protocols/webview";
 
 export const PullRequestRoot = styled.div`
 	position: absolute;
@@ -186,26 +184,6 @@ const Header = styled.div`
 	}
 `;
 
-const RoundImg = styled.span`
-	img {
-		border-radius: 50%;
-		padding-left: 2px;
-		vertical-align: middle;
-		height: 25px;
-	}
-`;
-
-const Role = styled.span`
-	border-radius: 15px;
-	color: #666;
-	border: 1px solid #cfcfcf;
-	padding: 0px 10px 0px 10px;
-`;
-
-const Reply = styled.div`
-	background: red;
-`;
-
 export const OutlineBox = styled.div`
 	border-radius: 5px;
 	border: 1px solid var(--base-border-color);
@@ -277,6 +255,12 @@ const TabActions = styled.div`
 	margin-left: auto;
 `;
 
+const stateMap = {
+	opened: "open",
+	closed: "closed",
+	merged: "merged"
+};
+
 const EMPTY_HASH = {};
 const EMPTY_ARRAY = [];
 let insertText;
@@ -289,7 +273,6 @@ export const PullRequest = () => {
 		const { preferences } = state;
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const team = state.teams[state.context.currentTeamId];
-		const providerPullRequests = state.providerPullRequests.pullRequests;
 		const currentPullRequest = getCurrentProviderPullRequest(state);
 		const currentPullRequestIdExact = getPullRequestExactId(state);
 		const providerPullRequestLastUpdated = getCurrentProviderPullRequestLastUpdated(state);
@@ -299,9 +282,7 @@ export const PullRequest = () => {
 			order,
 			filter,
 			viewPreference: (getPreferences(state) || {}).pullRequestView || "auto",
-			providerPullRequests: providerPullRequests,
-			reviewsState: state.reviews,
-			reviews: reviewSelectors.getAllReviews(state),
+			reviewsStateBootstrapped: state.reviews.bootstrapped,
 			currentUser,
 			currentPullRequestProviderId: state.context.currentPullRequest
 				? state.context.currentPullRequest.providerId
@@ -313,7 +294,6 @@ export const PullRequest = () => {
 				: undefined,
 			currentPullRequest: currentPullRequest,
 			currentPullRequestLastUpdated: providerPullRequestLastUpdated,
-
 			composeCodemarkActive: state.context.composeCodemarkActive,
 			team,
 			textEditorUri: state.editorContext.textEditorUri,
@@ -336,9 +316,6 @@ export const PullRequest = () => {
 	const [savingTitle, setSavingTitle] = useState(false);
 	const [title, setTitle] = useState("");
 	const [finishReviewOpen, setFinishReviewOpen] = useState(false);
-	const [autoCheckedMergeability, setAutoCheckedMergeability] = useState<
-		autoCheckedMergeabilityStatus
-	>("UNCHECKED");
 
 	const breakpoints = {
 		auto: "630px",
@@ -390,7 +367,7 @@ export const PullRequest = () => {
 	let intervalCounter = 0;
 	useDidMount(() => {
 		interval && clearInterval(interval);
-		if (!derivedState.reviewsState.bootstrapped) {
+		if (!derivedState.reviewsStateBootstrapped) {
 			dispatch(bootstrapReviews());
 		}
 		let _didChangeDataNotification;
@@ -440,7 +417,13 @@ export const PullRequest = () => {
 					derivedState.currentPullRequest &&
 					derivedState.currentPullRequestLastUpdated &&
 					response &&
-					response.updatedAt !== derivedState.currentPullRequestLastUpdated
+					response.updatedAt &&
+					derivedState.currentPullRequestLastUpdated &&
+					// if more than 5 seconds "off""
+					(Date.parse(response.updatedAt) -
+						Date.parse(derivedState.currentPullRequestLastUpdated)) /
+						1000 >
+						5
 				) {
 					console.warn(
 						"getPullRequestLastUpdated is updating",
@@ -466,30 +449,8 @@ export const PullRequest = () => {
 		};
 	}, [didMount, derivedState.currentPullRequestLastUpdated, derivedState.currentPullRequest]);
 
-	useEffect(() => {
-		const providerPullRequests =
-			derivedState.providerPullRequests[derivedState.currentPullRequestProviderId!];
-		if (providerPullRequests) {
-			let data = providerPullRequests[derivedState.currentPullRequestIdExact!];
-			if (data) {
-				_assignState(data.conversations);
-			} else {
-				console.warn(`could not find match for idExact=${derivedState.currentPullRequestIdExact}`);
-			}
-		}
-	}, [
-		derivedState.currentPullRequestProviderId,
-		derivedState.currentPullRequestIdExact,
-		derivedState.providerPullRequests
-	]);
-
-	const pr: GitLabMergeRequest = useMemo(() => {
-		return derivedState.currentPullRequest &&
-			derivedState.currentPullRequest.conversations &&
-			derivedState.currentPullRequest.conversations.project
-			? derivedState.currentPullRequest.conversations.project.mergeRequest
-			: undefined;
-	}, [derivedState.currentPullRequest]);
+	const pr: GitLabMergeRequest =
+		derivedState.currentPullRequest?.conversations?.project?.mergeRequest;
 
 	const initialFetch = async (message?: string) => {
 		if (message) setIsLoadingMessage(message);
@@ -538,49 +499,23 @@ export const PullRequest = () => {
 		focusOnMessageInput = functions.focus;
 	};
 
-	const reload = async (message?: string) => {
-		// console.log("PullRequest is reloading");
-		// if (message) setIsLoadingMessage(message);
-		// setIsLoadingPR(true);
-		// const response = (await dispatch(
-		// 	getPullRequestConversationsFromProvider(
-		// 		derivedState.currentPullRequestProviderId!,
-		// 		derivedState.currentPullRequestId!
-		// 	)
-		// )) as any;
-		// _assignState(response);
-		// // just clear the files and commits data -- it will be fetched if necessary (since it has its own api call)
-		// dispatch(
-		// 	clearPullRequestFiles(
-		// 		derivedState.currentPullRequestProviderId!,
-		// 		derivedState.currentPullRequestId!
-		// 	)
-		// );
-		// dispatch(
-		// 	clearPullRequestCommits(
-		// 		derivedState.currentPullRequestProviderId!,
-		// 		derivedState.currentPullRequestId!
-		// 	)
-		// );
-	};
-
-	const numComments = useMemo(() => {
-		if (
-			!derivedState.currentPullRequest ||
-			!derivedState.currentPullRequest.conversations ||
-			!derivedState.currentPullRequest.conversations.project
-		)
-			return 0;
-		const _pr = derivedState.currentPullRequest.conversations.project.mergeRequest;
-		if (!_pr || !_pr.discussions || !_pr.discussions.nodes) return 0;
-		const reducer = (accumulator, node) => {
-			if (node && node.notes && node.notes.nodes && node.notes.nodes.length) {
-				return node.notes.nodes.length + accumulator;
-			}
-			return accumulator;
-		};
-		return _pr.discussions.nodes.reduce(reducer, 0);
-	}, [derivedState.currentPullRequest]);
+	// const numComments = useMemo(() => {
+	// 	if (
+	// 		!derivedState.currentPullRequest ||
+	// 		!derivedState.currentPullRequest.conversations ||
+	// 		!derivedState.currentPullRequest.conversations.project
+	// 	)
+	// 		return 0;
+	// 	const _pr = derivedState.currentPullRequest.conversations.project.mergeRequest;
+	// 	if (!_pr || !_pr.discussions || !_pr.discussions.nodes) return 0;
+	// 	const reducer = (accumulator, node) => {
+	// 		if (node && node.notes && node.notes.nodes && node.notes.nodes.length) {
+	// 			return node.notes.nodes.length + accumulator;
+	// 		}
+	// 		return accumulator;
+	// 	};
+	// 	return _pr.discussions.nodes.reduce(reducer, 0);
+	// }, [pr, pr?.updatedAt]);
 
 	const scrollToDiv = div => {
 		if (!div) return;
@@ -605,9 +540,6 @@ export const PullRequest = () => {
 		scrollToDiv(div);
 		setThreadIndex(threadIndex >= threads.length - 1 ? 0 : threadIndex + 1);
 	};
-
-	const statusIcon =
-		pr && (pr.state === "OPEN" || pr.state === "CLOSED") ? "pull-request" : "git-merge";
 
 	const [unresolvedThreads, resolvedThreads] = (() => {
 		if (!pr || !pr.discussions || !pr.discussions.nodes) return [0, 0];
@@ -641,11 +573,6 @@ export const PullRequest = () => {
 
 	const { order, filter } = derivedState;
 
-	const stateMap = {
-		opened: "open",
-		closed: "closed",
-		merged: "merged"
-	};
 	console.warn("PR: ", pr);
 
 	if (!pr) {
@@ -687,9 +614,17 @@ export const PullRequest = () => {
 
 	const closeRight = () => setRightOpen(false);
 
+	const hijackUserLinks = event => {
+		if (event?.target?.dataset?.referenceType === "user" && event?.target?.dataset?.user) {
+			event.preventDefault();
+			const url = pr.baseWebUrl + "/" + event.target.getAttribute("HREF");
+			HostApi.instance.send(OpenUrlRequestType, { url });
+		}
+	};
+
 	return (
 		<ThemeProvider theme={addViewPreferencesToTheme}>
-			<PullRequestRoot className="gitlab">
+			<PullRequestRoot className="gitlab" onClick={hijackUserLinks}>
 				<CreateCodemarkIcons narrow onebutton />
 				{isLoadingMessage && <FloatingLoadingMessage>{isLoadingMessage}</FloatingLoadingMessage>}
 				{isEditing && (
@@ -858,7 +793,6 @@ export const PullRequest = () => {
 										<PullRequestFinishReview
 											pr={pr}
 											mode="dropdown"
-											fetch={fetch}
 											setIsLoadingMessage={setIsLoadingMessage}
 											setFinishReviewOpen={setFinishReviewOpen}
 										/>
@@ -945,7 +879,6 @@ export const PullRequest = () => {
 										pr={pr}
 										order={order}
 										filter={filter}
-										fetch={fetch}
 										setIsLoadingMessage={setIsLoadingMessage}
 										collapseAll={collapseAll}
 									/>
@@ -957,7 +890,6 @@ export const PullRequest = () => {
 								<PullRequestFilesChangedTab
 									key="files-changed"
 									pr={pr as any}
-									fetch={fetch}
 									setIsLoadingMessage={setIsLoadingMessage}
 								/>
 							)}
@@ -966,7 +898,6 @@ export const PullRequest = () => {
 					{!derivedState.composeCodemarkActive && derivedState.currentPullRequestCommentId && (
 						<PullRequestFileComments
 							pr={pr as any}
-							fetch={fetch}
 							setIsLoadingMessage={setIsLoadingMessage}
 							commentId={derivedState.currentPullRequestCommentId}
 							quote={() => {}}

@@ -75,30 +75,20 @@ export namespace FileSystem {
 
 	export async function range(
 		path: string,
-		range?: Range,
+		range: Range,
 		encoding: HexBase64Latin1Encoding = "base64"
 	): Promise<string> {
 		let content = "";
 
 		return new Promise((resolve, reject) => {
-			if (range === undefined) {
-				fs.createReadStream(path)
-					.on("error", reject)
-					// .pipe(hash.setEncoding(encoding))
-					.once("finish", function(this: any) {
-						resolve(this.read());
-					});
-
-				return;
-			}
-
 			const startLine = range.start.line;
 			const endLine = range.end.line;
 			let count = -1;
 
+			const stream = fs.createReadStream(path);
 			const rl = readline
 				.createInterface({
-					input: fs.createReadStream(path),
+					input: stream,
 					historySize: 0,
 					crlfDelay: Infinity
 				} as any)
@@ -118,6 +108,7 @@ export namespace FileSystem {
 					}
 				})
 				.once("close", function() {
+					stream.close();
 					resolve(content);
 				});
 		});

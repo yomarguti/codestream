@@ -39,22 +39,30 @@ const formatTheDate = time => {
 export function UserStatus(props: { user: CSUser; className?: string }) {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
-		return { isMe: props.user.id === state.session.userId! };
+		const teamId = state.context.currentTeamId;
+		return {
+			isMe: props.user.id === state.session.userId!,
+			teamId
+		};
 	});
 
 	const { status } = props.user;
-	if (!status || !status.label) return null;
+	if (!status || !status[derivedState.teamId] || !status[derivedState.teamId].label) return null;
 
 	const handleClick = () => {
 		if (status.ticketUrl) {
-			HostApi.instance.send(OpenUrlRequestType, { url: status.ticketUrl });
+			HostApi.instance.send(OpenUrlRequestType, { url: status[derivedState.teamId].ticketUrl });
 		}
 	};
 
 	return (
 		<Root className={props.className}>
-			{status.ticketProvider ? <Icon name={status.ticketProvider} /> : <Icon name="ticket" />}
-			<MarkdownText text={status.label} inline={true}></MarkdownText>
+			{status.ticketProvider ? (
+				<Icon name={status[derivedState.teamId].ticketProvider} />
+			) : (
+				<Icon name="ticket" />
+			)}
+			<MarkdownText text={status[derivedState.teamId].label} inline={true}></MarkdownText>
 			<div className="icons">
 				{status.ticketUrl && <Icon name="globe" className="clickable" onClick={handleClick} />}
 				{derivedState.isMe && (

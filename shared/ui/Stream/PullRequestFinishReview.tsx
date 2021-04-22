@@ -2,32 +2,32 @@ import React, { useState } from "react";
 import { PRCommentCard, ButtonRow } from "./PullRequestComponents";
 import MessageInput from "./MessageInput";
 import { RadioGroup, Radio } from "../src/components/RadioGroup";
-import { useDispatch, useSelector } from "react-redux";
-import { CodeStreamState } from "../store";
-import { CSMe } from "../protocols/agent/api.protocol.models";
+import { useDispatch } from "react-redux";
 import { HostApi } from "..";
 import { Button } from "../src/components/Button";
 import Tooltip from "./Tooltip";
 import { api } from "../store/providerPullRequests/actions";
 import { replaceHtml } from "../utils";
+import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
 
 export const PullRequestFinishReview = (props: {
-	pr: {
-		providerId: string;
-		viewerDidAuthor: boolean;
-		pendingReview: {
-			id: string;
-			author: {
-				login: string;
-				avatarUrl: string;
-			};
-			comments?: {
-				totalCount: number;
-			};
-		};
-	};
+	pr:
+		| {
+				providerId: string;
+				viewerDidAuthor: boolean;
+				pendingReview?: {
+					id: string;
+					author: {
+						login: string;
+						avatarUrl: string;
+					};
+					comments?: {
+						totalCount: number;
+					};
+				};
+		  }
+		| FetchThirdPartyPullRequestPullRequest;
 	mode: "dropdown" | "timeline";
-	fetch: Function;
 	setIsLoadingMessage: Function;
 	setFinishReviewOpen?: Function;
 }) => {
@@ -39,7 +39,7 @@ export const PullRequestFinishReview = (props: {
 	);
 	const [isPreviewing, setIsPreviewing] = useState(false);
 
-	const { pr, mode, fetch, setIsLoadingMessage, setFinishReviewOpen } = props;
+	const { pr, mode, setIsLoadingMessage, setFinishReviewOpen } = props;
 
 	const supportsFinishReviewTypes = !pr.providerId.includes("gitlab");
 
@@ -57,7 +57,7 @@ export const PullRequestFinishReview = (props: {
 			})
 		);
 		setFinishReviewOpen && setFinishReviewOpen(false);
-		return fetch();
+		setIsLoadingMessage("");
 	};
 
 	const cancelReview = async (e, id) => {
@@ -68,7 +68,7 @@ export const PullRequestFinishReview = (props: {
 			})
 		);
 		setFinishReviewOpen && setFinishReviewOpen(false);
-		fetch();
+		setIsLoadingMessage("");
 	};
 
 	const pendingCommentCount =
@@ -146,7 +146,7 @@ export const PullRequestFinishReview = (props: {
 						Submit<span className="wide-text"> review</span>
 					</Button>
 					{pendingCommentCount > 0 && (
-						<Button variant="secondary" onClick={e => cancelReview(e, pr.pendingReview.id)}>
+						<Button variant="secondary" onClick={e => cancelReview(e, pr.pendingReview?.id)}>
 							Cancel review
 						</Button>
 					)}

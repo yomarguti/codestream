@@ -395,11 +395,13 @@ export const StartWork = (props: Props) => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
+		const teamId = state.context.currentTeamId;
 		let status =
-			currentUser.status && "label" in currentUser.status ? currentUser.status : EMPTY_STATUS;
+			currentUser.status && currentUser.status[teamId] && "label" in currentUser.status[teamId]
+				? currentUser.status[teamId]
+				: EMPTY_STATUS;
 		// const now = new Date().getTime();
 		// if (status.expires && status.expires < now) status = EMPTY_STATUS;
-		const teamId = state.context.currentTeamId;
 		const team = state.teams[teamId];
 		const settings = team.settings || {};
 		const { preferences = {} } = state;
@@ -455,7 +457,8 @@ export const StartWork = (props: Props) => {
 			issueReposDefaultBranch,
 			selectedShareTarget: selectedShareTarget || shareTargets[0],
 			isCurrentUserAdmin: adminIds.includes(state.session.userId!),
-			shareToSlackSupported: isFeatureEnabled(state, "shareStatusToSlack")
+			shareToSlackSupported: isFeatureEnabled(state, "shareStatusToSlack"),
+			teamId
 		};
 	});
 	const { card } = props;
@@ -758,7 +761,14 @@ export const StartWork = (props: Props) => {
 		const ticketUrl = card ? card.url : "";
 		const ticketProvider = card ? card.providerIcon : "";
 		await dispatch(
-			setUserStatus(label, ticketId, ticketUrl, ticketProvider, derivedState.invisible)
+			setUserStatus(
+				label,
+				ticketId,
+				ticketUrl,
+				ticketProvider,
+				derivedState.invisible,
+				derivedState.teamId
+			)
 		);
 		cancel();
 	};
@@ -773,7 +783,7 @@ export const StartWork = (props: Props) => {
 
 	const clearAndSave = () => {
 		setLoadingSlack(false);
-		dispatch(setUserStatus("", "", "", "", derivedState.invisible));
+		dispatch(setUserStatus("", "", "", "", derivedState.invisible, derivedState.teamId));
 		dispatch(setStartWorkCard(undefined));
 		// FIXME clear out slack status
 	};

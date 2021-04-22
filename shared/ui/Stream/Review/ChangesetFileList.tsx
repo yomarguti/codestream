@@ -416,8 +416,8 @@ export const ChangesetFileList = (props: {
 
 			if (f.repoId && props.repoRoots) {
 				const repoRoot = props.repoRoots[f.repoId];
-				const response = HostApi.instance.send(EditorRevealRangeRequestType, {
-					uri: path.join(repoRoot, f.file),
+				void HostApi.instance.send(EditorRevealRangeRequestType, {
+					uri: path.join("file://", repoRoot, f.file),
 					range: Range.create(0, 0, 0, 0)
 				});
 
@@ -428,7 +428,7 @@ export const ChangesetFileList = (props: {
 				}
 			}
 		},
-		[visitedFiles, filesInOrder]
+		[visitedFiles, filesInOrder, props.repoRoots]
 	);
 
 	const nextFile = React.useCallback(() => {
