@@ -52,6 +52,9 @@ export const WorkInProgress = React.memo((props: Props) => {
 			currentUser.status && currentUser.status[teamId] && "label" in currentUser.status[teamId]
 				? currentUser.status[teamId]
 				: EMPTY_STATUS;
+		let invisible =
+			(currentUser.status && currentUser.status[teamId] && currentUser.status[teamId].invisible) ||
+			false;
 
 		let linesAdded = 0;
 		let linesRemoved = 0;
@@ -77,7 +80,7 @@ export const WorkInProgress = React.memo((props: Props) => {
 			status,
 			repos: state.repos,
 			currentUserId,
-			invisible: status.invisible || false,
+			invisible,
 			xraySetting
 		};
 	}, shallowEqual);
