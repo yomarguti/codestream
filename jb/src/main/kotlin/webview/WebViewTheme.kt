@@ -91,6 +91,7 @@ class WebViewTheme(val name: String, val stylesheet: String) {
                 buttonBgColorHover = buttonBg.darken(10)
             }
 
+            val toolWindowHeaderBackground = JBColor.namedColor("ToolWindow.Header.background", baseBgColor)
             val toolWindowHeaderInactiveBackground = JBColor.namedColor("ToolWindow.Header.inactiveBackground",
                 baseBgColor)
             val toolWindowHeaderBorder = JBColor.namedColor("ToolWindow.Header.borderColor",
@@ -119,6 +120,7 @@ body {
     --app-background-color: ${appBgColor.rgba};
     --app-background-color-darker: ${appBgColorDarker.rgba};
     --app-background-color-hover: ${appBgColorHover.rgba};
+    --app-tab-backgound: ${toolWindowHeaderBackground.rgba};
 
     --base-background-color: ${baseBgColor.rgba};
     --base-border-color: ${baseBorderColor.rgba};

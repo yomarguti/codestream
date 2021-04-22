@@ -36,7 +36,7 @@ const Right = styled.div`
 	top: 0;
 	right: 0;
 	background-color: rgba(127, 127, 127, 0.1);
-	background-color: var(--sidebar-background);
+	background-color: var(--app-tab-backgound);
 	z-index: 30;
 	transition: width 0.2s;
 	&.expanded {
