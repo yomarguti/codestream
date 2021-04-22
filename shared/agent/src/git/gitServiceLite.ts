@@ -130,7 +130,7 @@ export class GitServiceLite {
 				// See: https://github.com/microsoft/WSL/issues/6464
 				repoRoot = Strings.normalizePath(data);
 			} else {
-				this._normalizePath(data, wslPrefix);
+				repoRoot = this._normalizePath(data, wslPrefix);
 			}
 
 			if (repoRoot === undefined) {
