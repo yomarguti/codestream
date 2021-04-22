@@ -41,19 +41,22 @@ const EMPTY_ARRAY = [];
 export const WorkInProgress = React.memo((props: Props) => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
-		const team = state.teams[state.context.currentTeamId];
+		const teamId = state.context.currentTeamId;
+		const team = state.teams[teamId];
 		const currentUserId = state.session.userId!;
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const { modifiedRepos = EMPTY_HASH } = currentUser;
 
 		const xraySetting = team.settings ? team.settings.xray : "";
 		let status =
-			currentUser.status && "label" in currentUser.status ? currentUser.status : EMPTY_STATUS;
+			currentUser.status && currentUser.status[teamId] && "label" in currentUser.status[teamId]
+				? currentUser.status[teamId]
+				: EMPTY_STATUS;
 
 		let linesAdded = 0;
 		let linesRemoved = 0;
 		let repoCount = 0;
-		(modifiedRepos[state.context.currentTeamId] || EMPTY_ARRAY).forEach(repo => {
+		(modifiedRepos[teamId] || EMPTY_ARRAY).forEach(repo => {
 			const files = repo.modifiedFiles || EMPTY_ARRAY;
 			if (files.length) {
 				repoCount++;
@@ -70,7 +73,7 @@ export const WorkInProgress = React.memo((props: Props) => {
 			repoCount,
 			linesAdded,
 			linesRemoved,
-			teamId: state.context.currentTeamId,
+			teamId,
 			status,
 			repos: state.repos,
 			currentUserId,
@@ -86,14 +89,16 @@ export const WorkInProgress = React.memo((props: Props) => {
 	const [loadingStatus, setLoadingStatus] = React.useState(false);
 
 	const clearAndSave = () => {
-		dispatch(setUserStatus("", "", "", "", derivedState.invisible));
+		dispatch(setUserStatus("", "", "", "", derivedState.invisible, derivedState.teamId));
 		// FIXME clear out slack status
 	};
 
 	const toggleInvisible = async () => {
 		setLoadingStatus(true);
 		const { label = "", ticketId = "", ticketUrl = "", ticketProvider = "" } = status || {};
-		await dispatch(setUserStatus(label, ticketId, ticketUrl, ticketProvider, !invisible));
+		await dispatch(
+			setUserStatus(label, ticketId, ticketUrl, ticketProvider, !invisible, derivedState.teamId)
+		);
 		await getScmInfoSummary();
 		setLoadingStatus(false);
 	};

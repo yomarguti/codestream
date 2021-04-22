@@ -2373,9 +2373,20 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 
 	const adminIds = team.adminIds || [];
 	const isCurrentUserAdmin = adminIds.includes(session.userId!);
-	const statusLabel = user && user.status && user.status.label ? user.status.label : "";
+	const statusLabel =
+		user &&
+		user.status &&
+		user.status[context.currentTeamId] &&
+		user.status[context.currentTeamId].label
+			? user.status[context.currentTeamId].label
+			: "";
 	const statusIcon =
-		user && user.status && user.status.label ? user.status.ticketProvider || "ticket" : "";
+		user &&
+		user.status &&
+		user.status[context.currentTeamId] &&
+		user.status[context.currentTeamId].label
+			? user.status[context.currentTeamId].ticketProvider || "ticket"
+			: "";
 	return {
 		unsavedFiles: unsavedFiles,
 		reviewsByCommit,

@@ -70,8 +70,11 @@ export const CommitAndPush = (props: Props) => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 		const currentUser = state.users[state.session.userId!] as CSMe;
+		const teamId = state.context.currentTeamId;
 		const status =
-			currentUser.status && "label" in currentUser.status ? currentUser.status : EMPTY_STATUS;
+			currentUser.status && currentUser.status[teamId] && "label" in currentUser.status[teamId]
+				? currentUser.status[teamId]
+				: EMPTY_STATUS;
 
 		return {
 			currentUserId: state.session.userId || "",

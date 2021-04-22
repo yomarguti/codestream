@@ -577,7 +577,7 @@ export interface CSUser extends CSEntity {
 	modifiedRepos?: { [teamId: string]: RepoScmStatus[] };
 	modifiedReposModifiedAt?: number;
 	compactModifiedRepos?: { [teamId: string]: CompactModifiedRepo[] };
-	status?: CSMeStatus;
+	status?: { [teamId: string]: CSMeStatus };
 
 	avatar?: {
 		image?: string;

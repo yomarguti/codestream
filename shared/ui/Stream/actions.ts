@@ -581,11 +581,12 @@ export const setUserStatus = (
 	ticketId: string,
 	ticketUrl: string,
 	ticketProvider: string,
-	invisible: boolean
+	invisible: boolean,
+	teamId: string
 ) => async dispatch => {
 	try {
 		const response = await HostApi.instance.send(UpdateStatusRequestType, {
-			status: { label, ticketId, ticketUrl, ticketProvider, invisible }
+			status: { [teamId]: { label, ticketId, ticketUrl, ticketProvider, invisible } }
 		});
 		dispatch(updateUser(response.user));
 	} catch (error) {
