@@ -42,13 +42,27 @@ export class ErrorReporter {
 				// for rejects promises
 				const suppressMessages = Object.values(ReportSuppressedMessages).map(v => v as string);
 				scope.addEventProcessor(event => {
-					if (
-						event.exception?.values?.find(value => {
-							return value.value && suppressMessages.indexOf(value.value) !== -1;
-						})
-					) {
-						return null;
+					if (event.exception?.values) {
+						for (const value of event.exception.values) {
+							if (value.value) {
+								if (this._errorCache.has(value.value)) {
+									Logger.warn("Ignoring duplicate error", {
+										key: value.value
+									});
+									return null;
+								} else {
+									this._errorCache.add(value.value);
+								}
+								if (suppressMessages.indexOf(value.value) !== -1) {
+									return null;
+								}
+							}
+							if (value.type === "InternalError") {
+								return null;
+							}
+						}
 					}
+
 					return event;
 				});
 			});
@@ -81,11 +95,10 @@ export class ErrorReporter {
 
 	@lspHandler(ReportMessageRequestType)
 	reportMessage(request: ReportMessageRequest) {
-		const key = `${request.source}|${request.message}`;
+		const key = `${request.message}`;
 		if (this._errorCache.has(key)) {
 			Logger.warn("Ignoring duplicate error", {
-				key: key,
-				request: request
+				key: key
 			});
 			return;
 		}

@@ -115,14 +115,12 @@ export const PullRequest = () => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const team = state.teams[state.context.currentTeamId];
-		const providerPullRequests = state.providerPullRequests.pullRequests;
 		const currentPullRequest = getCurrentProviderPullRequest(state);
 		const providerPullRequestLastUpdated = getCurrentProviderPullRequestLastUpdated(state);
 		return {
 			viewPreference: getPreferences(state).pullRequestView || "auto",
-			providerPullRequests: providerPullRequests,
-			reviewsState: state.reviews,
-			reviews: reviewSelectors.getAllReviews(state),
+			reviewsStateBootstrapped: state.reviews.bootstrapped,
+			reviewLinks: reviewSelectors.getAllReviewLinks(state),
 			currentUser,
 			currentPullRequestProviderId: state.context.currentPullRequest
 				? state.context.currentPullRequest.providerId
@@ -147,6 +145,7 @@ export const PullRequest = () => {
 		};
 	});
 
+	const pr = derivedState.currentPullRequest?.conversations?.repository?.pullRequest;
 	useEffect(() => {
 		if (!derivedState.currentPullRequestCommentId) return;
 
@@ -164,7 +163,6 @@ export const PullRequest = () => {
 	const [isLoadingMessage, setIsLoadingMessage] = useState("");
 	const [generalError, setGeneralError] = useState("");
 	const [isLoadingBranch, setIsLoadingBranch] = useState(false);
-	const [pr, setPr] = useState<FetchThirdPartyPullRequestPullRequest | undefined>();
 	const [openRepos, setOpenRepos] = useState<ReposScmPlusName[]>(EMPTY_ARRAY);
 	const [editingTitle, setEditingTitle] = useState(false);
 	const [savingTitle, setSavingTitle] = useState(false);
@@ -217,28 +215,12 @@ export const PullRequest = () => {
 		if (!pr || !pr.repository) return;
 		console.warn("_assignState src", src);
 		setGhRepo(pr.repository);
-		setPr(pr.repository.pullRequest);
 		setTitle(pr.repository.pullRequest.title);
 		setEditingTitle(false);
 		setSavingTitle(false);
 		setIsLoadingPR(false);
 		setIsLoadingMessage("");
 	};
-
-	useEffect(() => {
-		const providerPullRequests =
-			derivedState.providerPullRequests[derivedState.currentPullRequestProviderId!];
-		if (providerPullRequests) {
-			let data = providerPullRequests[derivedState.currentPullRequestId!];
-			if (data && data.conversations) {
-				_assignState(data.conversations, "useEffect");
-			}
-		}
-	}, [
-		derivedState.currentPullRequestProviderId,
-		derivedState.currentPullRequestId,
-		derivedState.providerPullRequests
-	]);
 
 	const initialFetch = async (message?: string) => {
 		if (message) setIsLoadingMessage(message);
@@ -265,23 +247,6 @@ export const PullRequest = () => {
 			_assignState(response, "initialFetch");
 			return response;
 		}
-	};
-
-	/**
-	 * Called after an action that requires us to re-fetch from the provider
-	 * @param message
-	 */
-	const fetch = async (message?: string) => {
-		if (message) setIsLoadingMessage(message);
-		setIsLoadingPR(true);
-
-		const response = (await dispatch(
-			getPullRequestConversationsFromProvider(
-				derivedState.currentPullRequestProviderId!,
-				derivedState.currentPullRequestId!
-			)
-		)) as any;
-		_assignState(response, "fetch");
 	};
 
 	/**
@@ -425,7 +390,7 @@ export const PullRequest = () => {
 
 	const linkHijacker = (e: any) => {
 		if (e && e.target.tagName === "A" && e.target.text === "Changes reviewed on CodeStream") {
-			const review = Object.values(derivedState.reviews).find(
+			const review = Object.values(derivedState.reviewLinks).find(
 				_ => _.permalink === e.target.href.replace("?src=GitHub", "")
 			);
 			if (review) {
@@ -442,7 +407,7 @@ export const PullRequest = () => {
 		return () => {
 			document.removeEventListener("click", linkHijacker);
 		};
-	}, [derivedState.reviews]);
+	}, [derivedState.reviewLinks]);
 
 	const numComments = useMemo(() => {
 		if (!pr || !pr.timelineItems || !pr.timelineItems.nodes) return 0;
@@ -464,10 +429,10 @@ export const PullRequest = () => {
 			return count + accumulator;
 		};
 		return pr.timelineItems.nodes.reduce(reducer, 0);
-	}, [pr]);
+	}, [pr, pr?.updatedAt]);
 
 	useDidMount(() => {
-		if (!derivedState.reviewsState.bootstrapped) {
+		if (!derivedState.reviewsStateBootstrapped) {
 			dispatch(bootstrapReviews());
 		}
 		getOpenRepos();
@@ -556,7 +521,13 @@ export const PullRequest = () => {
 				if (
 					derivedState.currentPullRequest &&
 					response &&
-					response.updatedAt !== derivedState.currentPullRequestLastUpdated
+					response.updatedAt &&
+					derivedState.currentPullRequestLastUpdated &&
+					// if more than 5 seconds "off""
+					(Date.parse(response.updatedAt) -
+						Date.parse(derivedState.currentPullRequestLastUpdated)) /
+						1000 >
+						5
 				) {
 					console.warn(
 						"getPullRequestLastUpdated is updating",
@@ -819,7 +790,13 @@ export const PullRequest = () => {
 										title="Reload"
 										trigger={["hover"]}
 										delay={1}
-										onClick={() => reload("Reloading...")}
+										onClick={() => {
+											if (isLoadingPR) {
+												console.warn("reloading pr, cancelling...");
+												return;
+											}
+											reload("Reloading...");
+										}}
 										placement="bottom"
 										className={`${isLoadingPR ? "spin" : ""}`}
 										name="refresh"
@@ -872,7 +849,6 @@ export const PullRequest = () => {
 										<PullRequestFinishReview
 											pr={pr}
 											mode="dropdown"
-											fetch={fetch}
 											setIsLoadingMessage={setIsLoadingMessage}
 											setFinishReviewOpen={setFinishReviewOpen}
 										/>
@@ -910,18 +886,16 @@ export const PullRequest = () => {
 								{activeTab === 1 && (
 									<PullRequestConversationTab
 										ghRepo={ghRepo}
-										fetch={fetch}
 										autoCheckedMergeability={autoCheckedMergeability}
 										checkMergeabilityStatus={checkMergeabilityStatus}
 										setIsLoadingMessage={setIsLoadingMessage}
 									/>
 								)}
-								{activeTab === 2 && <PullRequestCommitsTab pr={pr} ghRepo={ghRepo} fetch={fetch} />}
+								{activeTab === 2 && <PullRequestCommitsTab pr={pr} ghRepo={ghRepo} />}
 								{activeTab === 4 && (
 									<PullRequestFilesChangedTab
 										key="files-changed"
 										pr={pr}
-										fetch={fetch}
 										setIsLoadingMessage={setIsLoadingMessage}
 									/>
 								)}
@@ -931,7 +905,6 @@ export const PullRequest = () => {
 					{!derivedState.composeCodemarkActive && derivedState.currentPullRequestCommentId && (
 						<PullRequestFileComments
 							pr={pr}
-							fetch={fetch}
 							setIsLoadingMessage={setIsLoadingMessage}
 							commentId={derivedState.currentPullRequestCommentId}
 							quote={() => {}}

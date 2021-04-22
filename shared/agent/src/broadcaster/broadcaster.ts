@@ -8,16 +8,14 @@ import { ApiProvider } from "../api/apiProvider";
 import { PubnubConnection } from "./pubnubConnection";
 import { SocketClusterConnection } from "./socketClusterConnection";
 
-export interface BroadcasterConnectionOptions {
-	withPresence?: boolean;
-}
+export interface BroadcasterConnectionOptions {}
 
 export interface BroadcasterConnection {
 	disconnect(): void;
 	subscribe(channels: string[], options?: BroadcasterConnectionOptions): void;
 	unsubscribe(channels: string[]): void;
 	reconnect(): void;
-	confirmSubscriptions(channels: string[]): Promise<string[]>;
+	confirmSubscriptions(channels: string[]): Promise<string[] | boolean>;
 	fetchHistory(options: BroadcasterHistoryInput): Promise<BroadcasterHistoryOutput>;
 }
 
@@ -57,14 +55,6 @@ export interface BroadcasterInitializer {
 		port: string;
 		ignoreHttps?: boolean;
 	};
-}
-
-// when providing channels to subscribe to, you can provide just the channel name,
-// or if you want presence notifications, you can use this interface, specifying
-// withPresence as true
-export interface ChannelDescriptor {
-	name: string;
-	withPresence?: boolean;
 }
 
 // the BroadcasterConnection instance will emit a status through onStatusChange(), for some
@@ -107,7 +97,6 @@ export enum BroadcasterStatusType {
 interface SubscriptionMap {
 	[key: string]: {
 		subscribed: boolean;
-		withPresence?: boolean;
 	};
 }
 
@@ -126,7 +115,7 @@ export class Broadcaster {
 	private _lastMessageReceivedAt: number = 0;
 	private _messageEmitter = new Emitter<{ [key: string]: any }[]>();
 	private _statusEmitter = new Emitter<BroadcasterStatus>();
-	private _queuedChannels: ChannelDescriptor[] = [];
+	private _queuedChannels: string[] = [];
 	private _statusTimeout: NodeJS.Timer | undefined;
 	private _lastTick: number = 0;
 	private _tickInterval: NodeJS.Timer | undefined;
@@ -138,7 +127,7 @@ export class Broadcaster {
 	private _simulateOffline: boolean = false;
 	private _aborted: boolean = false;
 	private _numResubscribes: number = 0;
-	private _debug: (msg: string, info?: any) => void = () => { };
+	private _debug: (msg: string, info?: any) => void = () => {};
 	private _activeFailures: string[] = [];
 	private _messagesReceived: { [key: string]: number } = {};
 	private _initializationStartedAt: number = 0;
@@ -157,7 +146,7 @@ export class Broadcaster {
 	constructor(
 		private readonly _api: ApiProvider,
 		private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined
-	) { }
+	) {}
 
 	// initialize BroadcasterConnection
 	async initialize(options: BroadcasterInitializer): Promise<Disposable> {
@@ -212,21 +201,20 @@ export class Broadcaster {
 	}
 
 	// subscribe to the passed channels
-	subscribe(channels: (ChannelDescriptor | string)[]) {
+	subscribe(channels: string[]) {
 		this._debug("Request to subscribe to channels: " + JSON.stringify(channels));
 		if (this._aborted) {
 			this._debug("Broadcaster Connection is aborted");
 			return this.emitStatus(BroadcasterStatusType.Aborted);
 		}
-		const channelDescriptors: ChannelDescriptor[] = this.normalizeChannelDescriptors(channels);
 		// while processing subscriptions, we hold off accepting new subscriptions until processing is complete,
 		// in the meantime, queue them up ... we'll drain the queue when we've successfully subscribed
 		// to the current channels being processed
 		if (this._subscriptionsPending) {
 			this._debug("Subscriptions are pending, channels will be queued");
-			this.queueChannels(channelDescriptors);
+			this.queueChannels(channels);
 		} else {
-			this.subscribeToChannels(channelDescriptors);
+			this.subscribeToChannels(channels);
 		}
 	}
 
@@ -236,30 +224,10 @@ export class Broadcaster {
 		this.removeChannels(channels);
 	}
 
-	// turn every channel, even if specified by channel name, into a ChannelDescriptor
-	private normalizeChannelDescriptors(
-		channels: (ChannelDescriptor | string)[]
-	): ChannelDescriptor[] {
-		const normalizedChannels: ChannelDescriptor[] = [];
-		channels.forEach(channel => {
-			if (typeof channel === "string") {
-				if (channel.length > 0) {
-					normalizedChannels.push({ name: channel });
-				}
-			} else if (channel.name.length > 0) {
-				normalizedChannels.push(channel);
-			}
-		});
-		return normalizedChannels;
-	}
-
 	// we're not in a position to subscribe to these channels, queue them up for later
-	private queueChannels(channels: ChannelDescriptor[]) {
+	private queueChannels(channels: string[]) {
 		if (this._testMode) {
-			this.emitStatus(
-				BroadcasterStatusType.Queued,
-				channels.map(channel => channel.name)
-			);
+			this.emitStatus(BroadcasterStatusType.Queued, channels);
 		}
 		this._debug("Queueing: " + JSON.stringify(channels));
 		this._queuedChannels.push(...channels);
@@ -316,22 +284,34 @@ export class Broadcaster {
 		this._debug("Broadcaster message received at: " + event.receivedAt);
 		if (event.receivedAt > this._lastMessageReceivedAt && !this._subscriptionsPending) {
 			this._lastMessageReceivedAt = event.receivedAt;
-			this._debug("_lastMessageReceivedAt updated");
+			this._debug(`_lastMessageReceivedAt updated to ${this._lastMessageReceivedAt}`);
 		}
 
+		this._processMessages([event.message]);
+	}
+
+	// process a received message by checking if we've already received the message, and handling
+	// any messages that were split into parts
+	_processMessages(messages: { messageId?: string; [key: string]: any }[]) {
+		const outputMessages: { [key: string]: any }[] = [];
 		// we avoid sending duplicate messages up the chain by maintaining a list of the messages
 		// we've already received, dropping duplicates to the floor
-		const { messageId } = event.message;
-		if (!messageId || !this._messagesReceived[messageId]) {
-			if (messageId) {
-				this._messagesReceived[messageId] = Date.now();
+		messages.forEach(message => {
+			const { messageId } = message;
+			if (!messageId || !this._messagesReceived[messageId]) {
+				if (messageId) {
+					this._messagesReceived[messageId] = Date.now();
+				}
+				const fullMessage = this._processPartial(message);
+				if (fullMessage) {
+					outputMessages.push(fullMessage);
+				}
+			} else {
+				this._debug(`Message ${messageId} was already received and processed, dropping`);
 			}
-			const fullMessage = this._processPartial(event.message);
-			if (fullMessage) {
-				this.emitMessages([fullMessage]);
-			}
-		}
+		});
 		this.cleanUpMessagesReceived();
+		this.emitMessages(outputMessages);
 	}
 
 	// process partial messages, split into multiple pieces in case the full message was too big
@@ -339,7 +319,8 @@ export class Broadcaster {
 	_processPartial(message: any) {
 		if (typeof message !== "object" || !message.fullMessageId) return message;
 		const partialMessage = message as PartialMessage;
-		this._partialMessages[message.fullMessageId] = this._partialMessages[message.fullMessageId] || new Array(partialMessage.totalParts);
+		this._partialMessages[message.fullMessageId] =
+			this._partialMessages[message.fullMessageId] || new Array(partialMessage.totalParts);
 		const partialMessages = this._partialMessages[message.fullMessageId];
 		partialMessages[partialMessage.part] = partialMessage;
 		if (partialMessages.findIndex(msg => !msg) !== -1) return false;
@@ -393,7 +374,7 @@ export class Broadcaster {
 	}
 
 	// subscribe to these channels
-	private subscribeToChannels(channels: ChannelDescriptor[]) {
+	private subscribeToChannels(channels: string[]) {
 		// add them as unsubscribed, then subscribe to unsubscribed channels
 		const numAdded = this.addChannels(channels);
 		if (numAdded > 0) {
@@ -415,32 +396,18 @@ export class Broadcaster {
 			return this.subscribed();
 		}
 
-		// split into channels that require presence updates and those that don't, and
-		// make a separate call to subscribe for each
-		const channelsWithPresence: string[] = [];
-		const channelsWithoutPresence: string[] = [];
+		this._debug("Broadcaster subscribing to: " + JSON.stringify(channels));
+		this._broadcasterConnection!.subscribe(channels);
+
+		// remove these channel from list of active failures, since we are trying again
 		channels.forEach(channel => {
-			if (this._subscriptions[channel].withPresence) {
-				channelsWithPresence.push(channel);
-			} else {
-				channelsWithoutPresence.push(channel);
-			}
-			// remove this channel from list of active failures, since we are trying again
 			const index = this._activeFailures.indexOf(channel);
 			if (index !== -1) {
 				this._activeFailures.splice(index, 1);
 			}
 		});
-		if (channelsWithPresence.length > 0) {
-			this._debug(
-				"Broadcaster subscribing (with presence) to: " + JSON.stringify(channelsWithPresence)
-			);
-			this._broadcasterConnection!.subscribe(channelsWithPresence, { withPresence: true });
-		}
-		if (channelsWithoutPresence.length > 0) {
-			this._debug("Broadcaster subscribing to: " + JSON.stringify(channelsWithoutPresence));
-			this._broadcasterConnection!.subscribe(channelsWithoutPresence);
-		}
+		this._debug("Broadcaster subscribing to: " + JSON.stringify(channels));
+		this._broadcasterConnection!.subscribe(channels);
 
 		// it sucks that we don't get a direct response when we try to
 		// subscribe to channels ... when we get a failure, we're not told which channels
@@ -454,13 +421,12 @@ export class Broadcaster {
 
 	// add channels to our list of channels we know we need to subscribe to, mark them
 	// as unsubscribed unless we already know about them
-	private addChannels(channels: ChannelDescriptor[]): number {
+	private addChannels(channels: string[]): number {
 		let numAdded = 0;
 		for (const channel of channels) {
-			if (!this._subscriptions[channel.name]) {
-				this._subscriptions[channel.name] = {
-					subscribed: false,
-					withPresence: channel.withPresence || false
+			if (!this._subscriptions[channel]) {
+				this._subscriptions[channel] = {
+					subscribed: false
 				};
 				numAdded++;
 			}
@@ -565,7 +531,7 @@ export class Broadcaster {
 			this._lastMessageReceivedAt = historyOutput.timestamp!;
 			this._debug(`${historyOutput.messages.length} messages received from history`);
 			this._debug(`_lastMessageReceivedAt updated to ${historyOutput.timestamp}`);
-			this.emitMessages(historyOutput.messages);
+			this._processMessages(historyOutput.messages);
 		}
 
 		// nothing left to do ... we are successfully subscribed to all channels!
@@ -617,6 +583,13 @@ export class Broadcaster {
 			troubleChannels = [...channels];
 		} else {
 			troubleChannels = await this._broadcasterConnection!.confirmSubscriptions(channels);
+		}
+		if (troubleChannels === false) {
+			// means all channels are in doubt
+			troubleChannels = [...channels];
+		} else if (troubleChannels == true) {
+			// means confirmation is assumed
+			troubleChannels = [] as string[];
 		}
 		if (troubleChannels.length > 0) {
 			// let the client know we're experiencing difficulty, and attempt to resubscribe to

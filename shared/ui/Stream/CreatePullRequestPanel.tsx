@@ -118,6 +118,7 @@ export const CreatePullRequestPanel = props => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { providers, context, configs } = state;
+		const teamId = state.context.currentTeamId;
 
 		const supportedPullRequestViewProviders = [
 			"github*com",
@@ -137,7 +138,9 @@ export const CreatePullRequestPanel = props => {
 		);
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const status =
-			currentUser.status && "label" in currentUser.status ? currentUser.status : EMPTY_STATUS;
+			currentUser.status && currentUser.status[teamId] && "label" in currentUser.status[teamId]
+				? currentUser.status[teamId]
+				: EMPTY_STATUS;
 
 		return {
 			repos: state.repos,
@@ -236,6 +239,7 @@ export const CreatePullRequestPanel = props => {
 	const fetchPreconditionData = async (isRepoUpdate = false) => {
 		setFormState({ type: "", message: "", url: "", id: "" });
 		setPreconditionError({ type: "", message: "", url: "", id: "" });
+		setPreconditionWarning({ message: "", type: "", url: "", id: "" });
 		// already waiting on a provider auth, keep using that loading ui
 		if (currentStep != 2) {
 			setLoading(true);

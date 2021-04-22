@@ -60,10 +60,12 @@ interface Props extends CompareFilesProps {
 		[path: string]: any;
 	};
 	commitBased?: boolean;
+	accessRawDiffs?: boolean;
+	setAccessRawDiffs?: Function;
 }
 
 export const PullRequestFilesChanged = (props: Props) => {
-	const { pr, filesChanged } = props;
+	const { pr, filesChanged, accessRawDiffs, setAccessRawDiffs } = props;
 	// const dispatch = useDispatch<Dispatch>();
 	const [repoId, setRepoId] = useState("");
 	const derivedState = useSelector((state: CodeStreamState) => {
@@ -155,7 +157,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 					handleForkPointResponse(forkPointResponse);
 				} catch (ex) {
 					console.error(ex);
-				} finally {					
+				} finally {
 					setLoading(false);
 					setIsMounted(true);
 				}
@@ -466,15 +468,33 @@ export const PullRequestFilesChanged = (props: Props) => {
 		if (pr && !derivedState.currentRepo) {
 			setRepoErrorMessage(
 				<span>
-					derivedState Repo <span className="monospace highlight">{pr.repository.name}</span> not
-					found in your editor. Open it, or <Link href={pr.repository.url}>clone the repo</Link>.
+					Repo <span className="monospace highlight">{pr.repository.name}</span> not found in your
+					editor. Open it, or <Link href={pr.repository.url}>clone the repo</Link>.
+					<p style={{ margin: "5px 0 0 0" }}>
+						Changes can be viewed under <Icon name="diff" /> Diff Hunks view.
+					</p>
 				</span>
 			);
 			setIsDisabled(true);
+		} else if (pr && (pr as any).overflow && !accessRawDiffs && setAccessRawDiffs) {
+			setRepoErrorMessage(
+				<span>
+					GitLab only permits the first {(pr as any).changesCount} files of this merge request to be
+					displayed.&nbsp;
+					<Link
+						onClick={() => {
+							setAccessRawDiffs(true);
+						}}
+					>
+						Load more from Gitaly
+					</Link>
+					.
+				</span>
+			);
 		} else {
 			setRepoErrorMessage("");
 		}
-	}, [pr, derivedState.currentRepo]);
+	}, [pr, derivedState.currentRepo, accessRawDiffs]);
 
 	const isMacintosh = navigator.appVersion.includes("Macintosh");
 	const nextFileKeyboardShortcut = () => (isMacintosh ? `⌥ F6` : "Alt-F6");
@@ -485,12 +505,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 			{(errorMessage || repoErrorMessage) && (
 				<PRErrorBox>
 					<Icon name="alert" className="alert" />
-					<div className="message">
-						{errorMessage || repoErrorMessage}
-						<p style={{ margin: "5px 0 0 0" }}>
-							Changes can be viewed under <Icon name="diff" /> Diff Hunks view.
-						</p>
-					</div>
+					<div className="message">{errorMessage || repoErrorMessage}</div>
 				</PRErrorBox>
 			)}
 			{changedFiles.length > 0 && (

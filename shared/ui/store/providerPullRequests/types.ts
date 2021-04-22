@@ -45,6 +45,7 @@ export type ProviderPullRequestsState = {
 			collaborators?: any[];
 			commits?: any[];
 			error?: { message: string };
+			accessRawDiffs?: boolean;
 		}>
 	>;
 };

@@ -30,23 +30,21 @@ const EMPTY_HASH = {};
 export function EllipsisMenu(props: EllipsisMenuProps) {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
-		const team = state.teams[state.context.currentTeamId];
+		const teamId = state.context.currentTeamId;
+		const team = state.teams[teamId];
 		const user = state.users[state.session.userId!];
 		const onPrem = state.configs.isOnPrem;
 
 		return {
 			sidebarPanePreferences: state.preferences.sidebarPanes || EMPTY_HASH,
 			sidebarPaneOrder: state.preferences.sidebarPaneOrder || AVAILABLE_PANES,
-			userTeams: _sortBy(
-				Object.values(state.teams).filter(t => !t.deactivated),
-				"name"
-			),
-			currentTeamId: state.context.currentTeamId,
+			userTeams: _sortBy(Object.values(state.teams).filter(t => !t.deactivated), "name"),
+			currentTeamId: teamId,
 			serverUrl: state.configs.serverUrl,
 			company: state.companies[team.companyId] || {},
 			team,
 			currentUserId: state.session.userId,
-			currentUserStatus: user.status || EMPTY_STATUS,
+			currentUserStatus: (user.status && user.status[teamId]) || EMPTY_STATUS,
 			currentUserEmail: user.email,
 			pluginVersion: state.pluginVersion,
 			xraySetting: team.settings ? team.settings.xray : "",

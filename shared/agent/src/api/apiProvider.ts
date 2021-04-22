@@ -189,6 +189,8 @@ export type ApiProviderLoginResponse = CSLoginResponse & { token: AccessToken };
 interface BasicLoginOptions {
 	team?: string;
 	teamId?: string;
+	codemarkId?: string;
+	reviewId?: string;
 }
 
 export interface CredentialsLoginOptions extends BasicLoginOptions {

@@ -43,7 +43,7 @@ import {
 
 import semver from "semver";
 import { CSGitHubProviderInfo, CSRepository } from "../protocol/api.protocol";
-import { Arrays, Functions, log, lspProvider, Strings } from "../system";
+import { Arrays, Dates, Functions, log, lspProvider, Strings } from "../system";
 import {
 	ApiResponse,
 	getOpenedRepos,
@@ -52,6 +52,7 @@ import {
 	ProviderCreatePullRequestResponse,
 	ProviderGetForkedReposResponse,
 	ProviderGetRepoInfoResponse,
+	ProviderVersion,
 	PullRequestComment,
 	REFRESH_TIMEOUT,
 	ThirdPartyIssueProviderBase,
@@ -60,7 +61,7 @@ import {
 } from "./provider";
 import { toRepoName } from "../git/utils";
 import { performance } from "perf_hooks";
-import { Directives } from "./directives";
+import { Directive, Directives } from "./directives";
 
 interface GitHubRepo {
 	id: string;
@@ -179,24 +180,45 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 	async ensureInitialized() {}
 
-	// _queryLogger: {
-	// 	restApi: {
-	// 		rateLimit?: { remaining: number; limit: number; used: number; reset: number };
-	// 		fns: any;
-	// 	};
-	// 	graphQlApi: {
-	// 		rateLimit?: {
-	// 			remaining: number;
-	// 			resetAt: string;
-	// 			resetInMinutes: number;
-	// 			last?: { name: string; cost: number };
-	// 		};
-	// 		fns: any;
-	// 	};
-	// } = {
-	// 	graphQlApi: { fns: {} },
-	// 	restApi: { fns: {} }
-	// };
+	protected async getVersion(): Promise<ProviderVersion> {
+		try {
+			if (this._version == null) {
+				// GitHub cloud doesn't report their version via the api.
+				// Instead, use a large major number so we don't fall into any bad
+				// paths when using the semver package
+				this._version = {
+					version: "999.0.0",
+					asArray: [999, 0, 0]
+				};
+				Logger.log(
+					`GitHub getVersion - ${this.providerConfig.id} version=${this._version.version}`
+				);
+			}
+		} catch (ex) {
+			Logger.error(ex);
+			this._version = this.DEFAULT_VERSION;
+		}
+		return this._version;
+	}
+
+	_queryLogger: {
+		restApi: {
+			rateLimit?: { remaining: number; limit: number; used: number; reset: number };
+			fns: any;
+		};
+		graphQlApi: {
+			rateLimit?: {
+				remaining: number;
+				resetAt: string;
+				resetInMinutes: number;
+				last?: { name: string; cost: number };
+			};
+			fns: any;
+		};
+	} = {
+		graphQlApi: { fns: {} },
+		restApi: { fns: {} }
+	};
 
 	async query<T = any>(query: string, variables: any = undefined) {
 		if (this._providerInfo && this._providerInfo.tokenError) {
@@ -205,7 +227,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		}
 
 		const starting = performance.now();
-		let response;
+		let response: any;
 		try {
 			response = await (await this.client()).request<T>(query, variables);
 		} catch (ex) {
@@ -220,116 +242,70 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				// this is an unexpected error, throw the exception normally
 				throw ex;
 			}
+		} finally {
+			try {
+				if (response && response.rateLimit) {
+					this._queryLogger.graphQlApi.rateLimit = {
+						remaining: response.rateLimit.remaining,
+						resetAt: response.rateLimit.resetAt,
+						resetInMinutes: Math.floor(
+							(new Date(new Date(response.rateLimit.resetAt).toString()).getTime() -
+								new Date().getTime()) /
+								1000 /
+								60
+						)
+					};
+					const e = new Error();
+					if (e.stack) {
+						let functionName;
+						try {
+							functionName = e.stack
+								.split("\n")
+								.filter(
+									_ =>
+										(_.indexOf("GitHubProvider") > -1 ||
+											_.indexOf("GitHubEnterpriseProvider") > -1) &&
+										_.indexOf(".query") === -1
+								)![0]
+								.match(/GitHub[Enterprise]?Provider\.(\w+)/)![1];
+						} catch (err) {
+							functionName = "unknown";
+							Logger.warn(err);
+						}
+						this._queryLogger.graphQlApi.rateLimit.last = {
+							name: functionName,
+							cost: response.rateLimit.cost
+						};
+						if (!this._queryLogger.graphQlApi.fns[functionName]) {
+							this._queryLogger.graphQlApi.fns[functionName] = {
+								count: 1,
+								cumulativeCost: response.rateLimit.cost,
+								averageCost: response.rateLimit.cost
+							};
+						} else {
+							const existing = this._queryLogger.graphQlApi.fns[functionName];
+							existing.count++;
+							existing.cumulativeCost += response.rateLimit.cost;
+							existing.averageCost = Math.floor(existing.cumulativeCost / existing.count);
+							this._queryLogger.graphQlApi.fns[functionName] = existing;
+						}
+					}
+
+					if (response.rateLimit.remaining < 500) {
+						Logger.warn(`${this.providerConfig.id} rateLimit low ${response.rateLimit.remaining}`);
+						Logger.warn(JSON.stringify(this._queryLogger, null, 4));
+					}
+				}
+			} catch (err) {
+				Logger.warn(err);
+			}
 		}
-
-		// try {
-		// 	if (Logger.level === TraceLevel.Debug && response && response.rateLimit) {
-		// 		this._queryLogger.graphQlApi.rateLimit = {
-		// 			remaining: response.rateLimit.remaining,
-		// 			resetAt: response.rateLimit.resetAt,
-		// 			resetInMinutes: Math.floor(
-		// 				(new Date(new Date(response.rateLimit.resetAt).toString()).getTime() -
-		// 					new Date().getTime()) /
-		// 					1000 /
-		// 					60
-		// 			)
-		// 		};
-		// 		const e = new Error();
-		// 		if (e.stack) {
-		// 			let functionName;
-		// 			try {
-		// 				functionName = e.stack
-		// 					.split("\n")
-		// 					.filter(
-		// 						_ =>
-		// 							(_.indexOf("GitHubProvider") > -1 ||
-		// 								_.indexOf("GitHubEnterpriseProvider") > -1) &&
-		// 							_.indexOf(".query") === -1
-		// 					)![0]
-		// 					.match(/GitHubProvider\.(\w+)/)![1];
-		// 			} catch (err) {
-		// 				functionName = "unknown";
-		// 				Logger.warn(err);
-		// 			}
-		// 			this._queryLogger.graphQlApi.rateLimit.last = {
-		// 				name: functionName,
-		// 				cost: response.rateLimit.cost
-		// 			};
-		// 			if (!this._queryLogger.graphQlApi.fns[functionName]) {
-		// 				this._queryLogger.graphQlApi.fns[functionName] = {
-		// 					count: 1,
-		// 					cumulativeCost: response.rateLimit.cost,
-		// 					averageCost: response.rateLimit.cost
-		// 				};
-		// 			} else {
-		// 				const existing = this._queryLogger.graphQlApi.fns[functionName];
-		// 				existing.count++;
-		// 				existing.cumulativeCost += response.rateLimit.cost;
-		// 				existing.averageCost = Math.floor(existing.cumulativeCost / existing.count);
-		// 				this._queryLogger.graphQlApi.fns[functionName] = existing;
-		// 			}
-		// 		}
-
-		// 		Logger.log(JSON.stringify(this._queryLogger, null, 4));
-		// 	}
-		// } catch (err) {
-		// 	Logger.warn(err);
-		// }
 
 		return response;
 	}
 
 	async mutate<T>(query: string, variables: any = undefined) {
-		const response = await (await this.client()).request<T>(query, variables);
-		// if (Logger.level === TraceLevel.Debug) {
-		// 	try {
-		// 		const e = new Error();
-		// 		if (e.stack) {
-		// 			let functionName;
-		// 			try {
-		// 				functionName = e.stack
-		// 					.split("\n")
-		// 					.filter(
-		// 						_ =>
-		// 							(_.indexOf("GitHubProvider") > -1 ||
-		// 								_.indexOf("GitHubEnterpriseProvider") > -1) &&
-		// 							_.indexOf(".mutate") === -1
-		// 					)![0]
-		// 					.match(/GitHubProvider\.(\w+)/)![1];
-		// 			} catch (err) {
-		// 				Logger.warn(err);
-		// 				functionName = "unknown";
-		// 			}
-		// 			if (!this._queryLogger.graphQlApi.rateLimit) {
-		// 				this._queryLogger.graphQlApi.rateLimit = {
-		// 					remaining: -1,
-		// 					resetAt: "",
-		// 					resetInMinutes: -1
-		// 				};
-		// 			}
-		// 			this._queryLogger.graphQlApi.rateLimit.last = {
-		// 				name: functionName,
-		// 				// mutate costs are 1
-		// 				cost: 1
-		// 			};
-		// 			if (!this._queryLogger.graphQlApi.fns[functionName]) {
-		// 				this._queryLogger.graphQlApi.fns[functionName] = {
-		// 					count: 1
-		// 				};
-		// 			} else {
-		// 				const existing = this._queryLogger.graphQlApi.fns[functionName];
-		// 				existing.count++;
-
-		// 				this._queryLogger.graphQlApi.fns[functionName] = existing;
-		// 			}
-		// 		}
-
-		// 		Logger.log(JSON.stringify(this._queryLogger, null, 4));
-		// 	} catch (err) {
-		// 		Logger.warn(err);
-		// 	}
-		// }
-		return response;
+		return (await this.client()).request<T>(query, variables);
 	}
 
 	async restPost<T extends object, R extends object>(url: string, variables: any) {
@@ -612,9 +588,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	async getPullRequest(
 		request: FetchThirdPartyPullRequestRequest
 	): Promise<FetchThirdPartyPullRequestResponse> {
-		const { scm: scmManager } = SessionContainer.instance();
 		await this.ensureConnected();
-		const version = await this.getVersion();
 
 		if (request.force) {
 			this._pullRequestCache.delete(request.pullRequestId);
@@ -624,6 +598,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				return cached;
 			}
 		}
+
+		const { scm: scmManager } = SessionContainer.instance();
+		const version = await this.getVersion();
 
 		let response = {} as FetchThirdPartyPullRequestResponse;
 		let repoOwner: string | undefined = undefined;
@@ -1242,7 +1219,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		| undefined;
 
 	async getLabels(request: { owner: string; repo: string }) {
-		const query = await this.query<any>(
+		const response = await this.query<any>(
 			`query getLabels($owner:String!, $name:String!) {
 				rateLimit {
 					cost
@@ -1267,7 +1244,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				name: request.repo
 			}
 		);
-		return query.repository.labels.nodes;
+		return response.repository.labels.nodes;
 	}
 
 	async getProjects(request: { owner: string; repo: string }) {
@@ -1365,7 +1342,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		isReady: boolean;
 	}): Promise<Directives | undefined> {
 		if (request.isReady) {
-			const query = `mutation MarkPullRequestReadyForReview($pullRequestId:ID!) {
+			const response = await this.mutate<any>(
+				`mutation MarkPullRequestReadyForReview($pullRequestId:ID!) {
 				markPullRequestReadyForReview(input: {pullRequestId: $pullRequestId}) {
 					  clientMutationId
 					  pullRequest{
@@ -1374,16 +1352,17 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						state
 					  }
 					}
-				  }`;
+				  }`,
+				{
+					pullRequestId: request.pullRequestId
+				}
+			);
 
-			const response = await this.mutate<any>(query, {
-				pullRequestId: request.pullRequestId
-			});
-			return {
+			return this.handleResponse(request.pullRequestId, {
 				directives: [
 					{ type: "updatePullRequest", data: response.markPullRequestReadyForReview.pullRequest }
 				]
-			};
+			});
 		} else {
 			// const query = `mutation UpdateDraft($pullRequestId:ID!, $isDraft:Boolean!) {
 			// 	updatePullRequest(input: {pullRequestId: $pullRequestId, isDraft:$isDraft}) {
@@ -1464,7 +1443,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			labelIds: request.labelId
 		});
 
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
@@ -1475,7 +1454,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				},
 				{ type: "addNode", data: response[method].labelable.timelineItems.nodes[0] }
 			]
-		};
+		});
 	}
 
 	async setAssigneeOnPullRequest(request: {
@@ -1545,7 +1524,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			assignableId: request.pullRequestId,
 			assigneeIds: request.assigneeId
 		});
-		return {
+
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
@@ -1559,7 +1539,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					data: response[method].assignable.timelineItems.nodes[0]
 				}
 			]
-		};
+		});
 	}
 
 	async setAssigneeOnIssue(request: { issueId: string; assigneeId: string; onOff: boolean }) {
@@ -1580,6 +1560,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	}
 
 	async toggleReaction(request: {
+		pullRequestId: string;
 		subjectId: string;
 		content: string;
 		onOff: boolean;
@@ -1633,21 +1614,22 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			content: request.content
 		});
 
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: request.onOff ? "addReaction" : "removeReaction",
 					data: response[method]
 				}
 			]
-		};
+		});
 	}
 
 	async updatePullRequestSubscription(request: {
 		pullRequestId: string;
 		onOff: boolean;
 	}): Promise<Directives> {
-		const query = `mutation UpdateSubscription($subscribableId:ID!, $state:SubscriptionState!) {
+		const response = await this.mutate<any>(
+			`mutation UpdateSubscription($subscribableId:ID!, $state:SubscriptionState!) {
 			updateSubscription(input: {subscribableId: $subscribableId, state:$state}) {
 				  clientMutationId
 				   subscribable {
@@ -1658,21 +1640,27 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						}
 					}
 				}
-			  }`;
+			  }`,
+			{
+				subscribableId: request.pullRequestId,
+				state: request.onOff ? "SUBSCRIBED" : "UNSUBSCRIBED"
+			}
+		);
 
-		const response = await this.mutate<any>(query, {
-			subscribableId: request.pullRequestId,
-			state: request.onOff ? "SUBSCRIBED" : "UNSUBSCRIBED"
-		});
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{ type: "updatePullRequest", data: response.updateSubscription.subscribable.pullRequest }
 			]
-		};
+		});
 	}
 
-	async updateIssueComment(request: { id: string; body: string }): Promise<Directives> {
-		const query = `mutation UpdateComment($id:ID!, $body:String!) {
+	async updateIssueComment(request: {
+		pullRequestId: string;
+		id: string;
+		body: string;
+	}): Promise<Directives> {
+		const response = await this.mutate<any>(
+			`mutation UpdateComment($id:ID!, $body:String!) {
 			updateIssueComment(input: {id: $id, body:$body}) {
 				clientMutationId
 				issueComment {
@@ -1683,25 +1671,30 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					bodyText
 					}
 				}
-			  }`;
+			  }`,
+			{
+				id: request.id,
+				body: request.body
+			}
+		);
 
-		const response = await this.mutate<any>(query, {
-			id: request.id,
-			body: request.body
-		});
-
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updateNode",
 					data: response.updateIssueComment.issueComment
 				}
 			]
-		};
+		});
 	}
 
-	async updateReviewComment(request: { id: string; body: string }): Promise<Directives> {
-		const query = `mutation UpdateComment($pullRequestReviewCommentId: ID!, $body: String!) {
+	async updateReviewComment(request: {
+		pullRequestId: string;
+		id: string;
+		body: string;
+	}): Promise<Directives> {
+		const response = await this.mutate<any>(
+			`mutation UpdateComment($pullRequestReviewCommentId: ID!, $body: String!) {
 			updatePullRequestReviewComment(input: {pullRequestReviewCommentId: $pullRequestReviewCommentId, body: $body}) {
 			  clientMutationId
 			  pullRequestReviewComment {
@@ -1716,16 +1709,17 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			  }
 			}
 		  }
-		  `;
+		  `,
+			{
+				pullRequestReviewCommentId: request.id,
+				body: request.body
+			}
+		);
 
-		const response = await this.mutate<any>(query, {
-			pullRequestReviewCommentId: request.id,
-			body: request.body
-		});
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
-					type: "updatePullRequestReviewComment",
+					type: "updatePullRequestReviewThreadComment",
 					data: response.updatePullRequestReviewComment.pullRequestReviewComment
 				},
 				{
@@ -1733,11 +1727,16 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					data: response.updatePullRequestReviewComment.pullRequestReviewComment
 				}
 			]
-		};
+		});
 	}
 
-	async updateReview(request: { id: string; body: string }): Promise<Directives> {
-		const query = `mutation UpdateComment($pullRequestReviewId:ID!, $body:String!) {
+	async updateReview(request: {
+		pullRequestId: string;
+		id: string;
+		body: string;
+	}): Promise<Directives> {
+		const response = await this.mutate<any>(
+			`mutation UpdateComment($pullRequestReviewId:ID!, $body:String!) {
 			updatePullRequestReview(input: {pullRequestReviewId: $pullRequestReviewId, body:$body}) {
 				  clientMutationId
 				     pullRequestReview {
@@ -1748,24 +1747,30 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						id
 					}
 				}
-			  }`;
+			  }`,
+			{
+				pullRequestReviewId: request.id,
+				body: request.body
+			}
+		);
 
-		const response = await this.mutate<any>(query, {
-			pullRequestReviewId: request.id,
-			body: request.body
-		});
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequestReview",
 					data: response.updatePullRequestReview.pullRequestReview
 				}
 			]
-		};
+		});
 	}
 
-	async updatePullRequestBody(request: { id: string; body: string }): Promise<Directives> {
-		const query = `mutation UpdateComment($pullRequestId:ID!, $body:String!) {
+	async updatePullRequestBody(request: {
+		pullRequestId: string;
+		id: string;
+		body: string;
+	}): Promise<Directives> {
+		const response = await this.mutate<any>(
+			`mutation UpdateComment($pullRequestId:ID!, $body:String!) {
 			updatePullRequest(input: {pullRequestId: $pullRequestId, body:$body}) {
 				  clientMutationId
 				    pullRequest {
@@ -1776,18 +1781,19 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						updatedAt
 					}
 				}
-			  }`;
+			  }`,
+			{
+				pullRequestId: request.id,
+				body: request.body
+			}
+		);
 
-		const response = await this.mutate<any>(query, {
-			pullRequestId: request.id,
-			body: request.body
-		});
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [{ type: "updatePullRequest", data: response.updatePullRequest.pullRequest }]
-		};
+		});
 	}
 
-	async addPullRequestReview(request: {
+	protected async addPullRequestReview(request: {
 		pullRequestId: string;
 	}): Promise<{
 		addPullRequestReview: {
@@ -1796,19 +1802,19 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			};
 		};
 	}> {
-		// TODO add directives
-		const query = `
-		mutation AddPullRequestReview($pullRequestId:ID!) {
+		const response = await this.mutate<any>(
+			`mutation AddPullRequestReview($pullRequestId:ID!) {
 		addPullRequestReview(input: {pullRequestId: $pullRequestId}) {
 			clientMutationId
 			pullRequestReview {
 			  id
 			}
 		  }
-		}`;
-		const response = await this.mutate<any>(query, {
-			pullRequestId: request.pullRequestId
-		});
+		}`,
+			{
+				pullRequestId: request.pullRequestId
+			}
+		);
 		return response;
 	}
 
@@ -1818,7 +1824,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	 */
 	async getPullRequestReviewId(request: { pullRequestId: string }) {
 		const metaData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
-		const query = `query GetPullRequestReviewId($owner:String!, $name:String!, $pullRequestNumber:Int!) {
+
+		const response = await this.query<any>(
+			`query GetPullRequestReviewId($owner:String!, $name:String!, $pullRequestNumber:Int!) {
 			rateLimit {
 				cost
 				resetAt
@@ -1842,8 +1850,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			  }
 			}
 		  }
-		  `;
-		const response = await this.query<any>(query, metaData);
+		  `,
+			metaData
+		);
 		if (!response) return undefined;
 
 		const user = response.viewer.login;
@@ -1861,16 +1870,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		text: string;
 		filePath?: string;
 		position?: number;
-	}) {
+	}): Promise<Directives> {
+		const v = await this.getVersion();
+
 		let query;
-		if (request.pullRequestReviewId) {
-			query = `mutation AddPullRequestReviewComment($text:String!, $pullRequestId:ID!, $pullRequestReviewId:ID!, $filePath:String, $position:Int) {
-					addPullRequestReviewComment(input: {body:$text, pullRequestId:$pullRequestId, pullRequestReviewId:$pullRequestReviewId, path:$filePath, position:$position}) {
-					  clientMutationId
-					}
-				  }
-				  `;
-		} else {
+		if (!request.pullRequestReviewId) {
 			request.pullRequestReviewId = await this.getPullRequestReviewId(request);
 			if (!request.pullRequestReviewId) {
 				const result = await this.addPullRequestReview(request);
@@ -1878,42 +1882,457 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					request.pullRequestReviewId = result.addPullRequestReview.pullRequestReview.id;
 				}
 			}
+		}
+		if (v && semver.lt(v.version, "2.21.0")) {
+			query = `mutation AddPullRequestReviewComment($text:String!, $pullRequestReviewId:ID!, $filePath:String, $position:Int) {
+				addPullRequestReviewComment(input: {body:$text, pullRequestReviewId:$pullRequestReviewId, path:$filePath, position:$position}) {
+				  clientMutationId
+				}
+			  }
+			  `;
+		} else {
 			query = `mutation AddPullRequestReviewComment($text:String!, $pullRequestId:ID!, $filePath:String, $position:Int) {
-					addPullRequestReviewComment(input: {body:$text, pullRequestId:$pullRequestId, path:$filePath, position:$position}) {
-					  clientMutationId
-					}
-				  }
-				  `;
+				addPullRequestReviewComment(input: {body:$text, pullRequestId:$pullRequestId, path:$filePath, position:$position}) {
+				  clientMutationId
+				}
+			  }`;
+		}
+		void (await this.mutate<any>(query, request));
+		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
+		const graphResults = await this.fetchUpdatedReviewCommentData(ownerData);
+
+		this.mapPullRequestModel(graphResults);
+
+		const directives = [
+			{
+				type: "updatePullRequest",
+				data: {
+					updatedAt: graphResults.repository.pullRequest.updatedAt,
+					pendingReview: graphResults.repository.pullRequest.pendingReview
+				} as any
+			}
+		] as any;
+
+		if (graphResults?.repository?.pullRequest) {
+			const pr = graphResults.repository.pullRequest;
+			if (pr.reviews) {
+				const review = pr.reviews.nodes.find((_: any) => _.id === request.pullRequestReviewId);
+				directives.push({
+					type: "addReview",
+					data: review
+				});
+				directives.push({
+					type: "updateReviewCommentsCount",
+					data: review
+				});
+				if (review) {
+					directives.push({
+						type: "addReviewThreads",
+						data: pr.reviewThreads.edges
+					});
+				}
+			}
+			if (pr.timelineItems) {
+				directives.push({
+					type: "addReviewCommentNodes",
+					data: pr.timelineItems.nodes
+				});
+			}
 		}
 
-		const response = await this.mutate<any>(query, request);
-
-		this._pullRequestCache.delete(request.pullRequestId);
+		this.updateCache(request.pullRequestId, {
+			directives: directives
+		});
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
 			pullRequestId: request.pullRequestId,
 			filePath: request.filePath
 		});
-
-		return response;
+		return {
+			directives: directives
+		};
 	}
 
-	async deletePullRequestReview(request: { pullRequestId: string; pullRequestReviewId: string }) {
-		const query = `mutation DeletePullRequestReview($pullRequestReviewId:ID!) {
+	private async fetchUpdatedReviewCommentData(ownerData: {
+		owner: string;
+		name: string;
+		pullRequestNumber: number;
+	}) {
+		// while this is large, its cost is only 1
+		return this.query<any>(
+			`query pr($owner: String!, $name: String!, $pullRequestNumber: Int!) {
+				rateLimit {
+				  limit
+				  cost
+				  remaining
+				  resetAt
+				}
+				viewer {
+				  id
+				  login
+				  avatarUrl
+				}
+				repository(name: $name, owner: $owner) {
+				  id
+				  url
+				  resourcePath
+				  pullRequest(number: $pullRequestNumber) {
+					id
+					updatedAt
+					reviewThreads(last: 4) {
+					  edges {
+						node {
+						  id
+						  isResolved
+						  viewerCanResolve
+						  viewerCanUnresolve
+						  comments(last: 30) {
+							totalCount
+							nodes {
+							  author {
+								login
+								avatarUrl
+							  }
+							  authorAssociation
+							  body
+							  bodyHTML
+							  createdAt
+							  id
+							  includesCreatedEdit
+							  isMinimized
+							  minimizedReason
+							  outdated
+							  replyTo {
+								id
+							  }
+							  resourcePath
+							  reactionGroups {
+								content
+								users(first: 1) {
+								  nodes {
+									login
+								  }
+								}
+							  }
+							  viewerCanUpdate
+							  viewerCanReact
+							  viewerCanDelete
+							}
+						  }
+						}
+					  }
+					}
+					number
+					state
+					reviews(last: 10, states: [PENDING]) {
+					  nodes {
+						id
+						databaseId
+						createdAt
+						comments(last: 1) {
+						  totalCount
+						}
+						author {
+						  login
+						  avatarUrl
+						  ... on User {
+							id
+						  }
+						}
+						authorAssociation
+						state
+						commit {
+						  oid
+						}
+					  }
+					}
+					timelineItems(last: 3, itemTypes: [PULL_REQUEST_REVIEW]) {
+					  totalCount
+					  __typename
+					  nodes {
+						... on PullRequestReview {
+						  __typename
+						  id
+						  author {
+							login
+							avatarUrl
+						  }
+						  authorAssociation
+						  body
+						  bodyText
+						  bodyHTML
+						  createdAt
+						  databaseId
+						  includesCreatedEdit
+						  lastEditedAt
+						  state
+						  viewerDidAuthor
+						  viewerCanUpdate
+						  viewerCanReact
+						  viewerCanDelete
+						  reactionGroups {
+							content
+							users(last: 1) {
+							  nodes {
+								login
+							  }
+							}
+						  }
+						  resourcePath
+						  comments(last: 20) {
+							nodes {
+							  author {
+								login
+								avatarUrl
+							  }
+							  authorAssociation
+							  body
+							  bodyText
+							  bodyHTML
+							  createdAt
+							  databaseId
+							  draftedAt
+							  diffHunk
+							  id
+							  includesCreatedEdit
+							  isMinimized
+							  lastEditedAt
+							  minimizedReason
+							  publishedAt
+							  state
+							  replyTo {
+								diffHunk
+								id
+								body
+								bodyText
+								bodyHTML
+							  }
+							  commit {
+								message
+								messageBody
+								messageHeadline
+								oid
+							  }
+							  editor {
+								login
+								avatarUrl
+							  }
+							  outdated
+							  path
+							  position
+							  pullRequestReview {
+								body
+								bodyText
+								bodyHTML
+							  }
+							  reactionGroups {
+								content
+								users(last: 1) {
+								  nodes {
+									login
+								  }
+								}
+							  }
+							  resourcePath
+							  viewerCanUpdate
+							  viewerCanReact
+							  viewerCanDelete
+							}
+						  }
+						  authorAssociation
+						  bodyHTML
+						}
+					  }
+					}
+				  }
+				}
+			  }						
+			  `,
+			ownerData
+		);
+	}
+
+	private async fetchPendingReviews(ownerData: {
+		owner: string;
+		name: string;
+		pullRequestNumber: number;
+	}) {
+		// costs 1
+		return this.query<any>(
+			`query pr($owner: String!, $name: String!, $pullRequestNumber: Int!) {
+				rateLimit {
+				  limit
+				  cost
+				  remaining
+				  resetAt
+				}
+				viewer {
+					id
+					login
+					avatarUrl
+				}
+				repository(name: $name, owner: $owner) {
+				  pullRequest(number: $pullRequestNumber) {
+					reviews(states: PENDING, last: 50) {
+					  nodes {
+						id
+						databaseId
+						createdAt
+						comments(last: 2) {
+						  totalCount
+						}
+						author {
+						  login
+						  avatarUrl
+						  ... on User {
+							id
+						  }
+						}
+					  }
+					}
+				  }
+				}
+			  }			  
+			  `,
+			ownerData
+		);
+	}
+
+	/**
+	 * Maps the pull request data into a format that is easier for the client to handle
+	 *
+	 * @param {FetchThirdPartyPullRequestResponse} response
+	 * @memberof GitHubProvider
+	 */
+	mapPullRequestModel(response: FetchThirdPartyPullRequestResponse) {
+		// this is sheer insanity... there's no way to get replies to parent comments
+		// as a child object of that comment. all replies are treated as `reviewThreads`
+		// and they live on the parent `pullRequest` object. below, we're stiching together
+		// comments and any replies (as a `replies` object) that might exist for those comments.
+		// MORE here: https://github.community/t/bug-v4-graphql-api-trouble-retrieving-pull-request-review-comments/13708/2
+
+		if (
+			response.repository.pullRequest.timelineItems.nodes &&
+			response.repository &&
+			response.repository.pullRequest &&
+			response.repository.pullRequest.reviewThreads &&
+			response.repository.pullRequest.reviewThreads.edges
+		) {
+			// find all the PullRequestReview timelineItems as we will attach
+			// additional data to them
+			for (const timelineItem of response.repository.pullRequest.timelineItems.nodes.filter(
+				(_: any) => _.__typename === "PullRequestReview"
+			)) {
+				if (!timelineItem.comments) continue;
+				for (const comment of timelineItem.comments.nodes) {
+					// a parent comment has a null replyTo
+					if (comment.replyTo != null) continue;
+
+					let replies: any = [];
+					let threadId;
+					let isResolved;
+					let viewerCanResolve;
+					let viewerCanUnresolve;
+					for (const reviewThread of response.repository.pullRequest.reviewThreads.edges) {
+						if (reviewThread.node.comments.nodes.length > 1) {
+							for (const reviewThreadComment of reviewThread.node.comments.nodes) {
+								if (reviewThreadComment.id === comment.id) {
+									threadId = reviewThread.node.id;
+									isResolved = reviewThread.node.isResolved;
+									viewerCanResolve = reviewThread.node.viewerCanResolve;
+									viewerCanUnresolve = reviewThread.node.viewerCanUnresolve;
+									// find all the comments except the parent
+									replies = replies.concat(
+										reviewThread.node.comments.nodes.filter(
+											(_: any) => _.id !== reviewThreadComment.id
+										)
+									);
+									break;
+								}
+							}
+						} else if (reviewThread.node.comments.nodes.length === 1) {
+							const reviewThreadComment = reviewThread.node.comments.nodes[0];
+							if (reviewThreadComment.id === comment.id) {
+								threadId = reviewThread.node.id;
+								isResolved = reviewThread.node.isResolved;
+								viewerCanResolve = reviewThread.node.viewerCanResolve;
+								viewerCanUnresolve = reviewThread.node.viewerCanUnresolve;
+							}
+						}
+					}
+					if (timelineItem.comments.nodes.length) {
+						comment.threadId = threadId;
+						comment.isResolved = isResolved;
+						comment.viewerCanResolve = viewerCanResolve;
+						comment.viewerCanUnresolve = viewerCanUnresolve;
+						if (replies.length) {
+							comment.replies = replies;
+						}
+					}
+				}
+			}
+		}
+
+		// note the graphql for this.. it's the _first_ X not the _last_ X
+		// you'd think last would mean the last as in most recent, but it's actually the opposite
+		if (response.repository.pullRequest.reviews && response.repository.pullRequest.reviews.nodes) {
+			// here we're looking for your last pending review as you can only have 1 pending review
+			// per user per PR
+			const myPendingReview = response.repository.pullRequest.reviews.nodes.find(
+				(_: any) => _.state === "PENDING" && _.author.id === response.viewer.id
+			);
+			if (myPendingReview) {
+				// only returns your pending reviews
+				response.repository.pullRequest.pendingReview = myPendingReview;
+			}
+		}
+		response.repository.pullRequest.viewer = { ...response.viewer };
+	}
+
+	async deletePullRequestReview(request: {
+		pullRequestId: string;
+		pullRequestReviewId: string;
+	}): Promise<Directives> {
+		await this.mutate<any>(
+			`mutation DeletePullRequestReview($pullRequestReviewId:ID!) {
 			deletePullRequestReview(input: {pullRequestReviewId: $pullRequestReviewId}){
 			  clientMutationId
 			}
-		  }
-		  `;
-		const response = await this.mutate<any>(query, {
-			pullRequestReviewId: request.pullRequestReviewId
+		  }`,
+			{
+				pullRequestReviewId: request.pullRequestReviewId
+			}
+		);
+
+		const directives: Directive[] = [
+			{
+				type: "updatePullRequest",
+				data: {
+					updatedAt: Dates.toUtcIsoNow()
+				}
+			},
+			{
+				type: "removePendingReview",
+				data: null
+			},
+			{
+				type: "removePullRequestReview",
+				data: {
+					id: request.pullRequestReviewId
+				}
+			}
+		];
+
+		this.updateCache(request.pullRequestId, {
+			directives: directives
 		});
 
-		this._pullRequestCache.delete(request.pullRequestId);
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
 			pullRequestId: request.pullRequestId
 		});
 
-		return response;
+		return {
+			directives: directives
+		};
 	}
 
 	async getPendingReview(request: {
@@ -1963,7 +2382,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		eventType: string;
 		// used with old servers
 		pullRequestReviewId?: string;
-	}) {
+	}): Promise<Directives> {
 		// TODO add directives
 		if (!request.eventType) {
 			request.eventType = "COMMENT";
@@ -1977,32 +2396,290 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		) {
 			throw new Error("Invalid eventType");
 		}
-
-		const existingReview = await this.getPendingReview(request);
+		const v = await this.getVersion();
+		let existingReview = await this.getPendingReview(request);
 		if (!existingReview) {
-			void (await this.mutate<any>(
+			const existingReviewResponse = await this.mutate<any>(
 				`mutation AddPullRequestReview($pullRequestId:ID!) {
 					addPullRequestReview(input: {pullRequestId: $pullRequestId, body: ""}) {
 						clientMutationId
+						pullRequestReview {
+      						id
+    					}
 					}
 			  	}`,
 				{
 					pullRequestId: request.pullRequestId
 				}
-			));
+			);
+			existingReview = {
+				pullRequestReviewId: existingReviewResponse.addPullRequestReview.pullRequestReview.id
+			};
 		}
-		const query = `mutation SubmitPullRequestReview($pullRequestId:ID!, $body:String) {
-			submitPullRequestReview(input: {event: ${request.eventType}, body: $body, pullRequestId: $pullRequestId}){
-			  clientMutationId
-			}
-		  }
-		  `;
-		const response = await this.mutate<any>(query, {
-			pullRequestId: request.pullRequestId,
-			body: request.text
-		});
 
-		return response;
+		let submitReviewResponse;
+		if (v && semver.lt(v.version, "2.21.0")) {
+			submitReviewResponse = await this.mutate<any>(
+				`mutation SubmitPullRequestReview($pullRequestReviewId: ID!, $body: String, $eventName: PullRequestReviewEvent!) {
+				submitPullRequestReview(input: {event: $eventName, body: $body, pullRequestReviewId: $pullRequestReviewId}) {
+				  clientMutationId
+				  pullRequestReview {
+					id
+					databaseId
+					createdAt
+					comments(first: 1) {
+					  totalCount
+					}
+					author {
+					  login
+					  avatarUrl
+					  ... on User {
+						id
+					  }
+					}
+					authorAssociation
+					state
+					commit {
+					  oid
+					}
+				  }
+				}
+			  }
+			  
+		  `,
+				{
+					pullRequestReviewId: existingReview.pullRequestReviewId,
+					body: request.text,
+					eventName: request.eventType
+				}
+			);
+		} else {
+			submitReviewResponse = await this.mutate<any>(
+				`mutation SubmitPullRequestReview($pullRequestId: ID!, $body: String, $eventName: PullRequestReviewEvent!) {
+				submitPullRequestReview(input: {event: $eventName, body: $body, pullRequestId: $pullRequestId}) {
+				  clientMutationId
+				  pullRequestReview {
+					id
+					databaseId
+					createdAt
+					comments(first: 1) {
+					  totalCount
+					}
+					author {
+					  login
+					  avatarUrl
+					  ... on User {
+						id
+					  }
+					}
+					authorAssociation
+					state
+					commit {
+					  oid
+					}
+				  }
+				}
+			  }
+			  
+		  `,
+				{
+					pullRequestId: request.pullRequestId,
+					body: request.text,
+					eventName: request.eventType
+				}
+			);
+		}
+		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
+		const updatedPullRequest = (await this.query(
+			`query pr($owner: String!, $name: String!, $pullRequestNumber: Int!) {
+				rateLimit {
+				  limit
+				  cost
+				  remaining
+				  resetAt
+				}
+				repository(name: $name, owner: $owner) {
+				  pullRequest(number: $pullRequestNumber) {
+					updatedAt
+					reviewThreads(last: 20) {
+					  edges {
+						node {
+						  id
+						  isResolved
+						  viewerCanResolve
+						  viewerCanUnresolve
+						}
+					  }
+					}
+					state
+					timelineItems(last: 10, itemTypes: [PULL_REQUEST_REVIEW]) {
+					  totalCount
+					  __typename
+					  nodes {
+						... on PullRequestReview {
+							__typename
+							id
+							author {
+							  login
+							  avatarUrl
+							}
+							authorAssociation
+							body
+							bodyText
+							bodyHTML
+							createdAt
+							databaseId
+							includesCreatedEdit
+							lastEditedAt
+							state
+							viewerDidAuthor
+							viewerCanUpdate
+							viewerCanReact
+							viewerCanDelete
+							reactionGroups {
+							  content
+							  users(last: 1) {
+								nodes {
+								  login
+								}
+							  }
+							}
+							resourcePath
+							comments(last: 20) {
+							  nodes {
+								author {
+								  login
+								  avatarUrl
+								}
+								authorAssociation
+								body
+								bodyText
+								bodyHTML
+								createdAt
+								databaseId
+								draftedAt
+								diffHunk
+								id
+								includesCreatedEdit
+								isMinimized
+								lastEditedAt
+								minimizedReason
+								publishedAt
+								state
+								replyTo {
+								  diffHunk
+								  id
+								  body
+								  bodyText
+								  bodyHTML
+								}
+								commit {
+								  message
+								  messageBody
+								  messageHeadline
+								  oid
+								}
+								editor {
+								  login
+								  avatarUrl
+								}
+								outdated
+								path
+								position
+								pullRequestReview {
+								  body
+								  bodyText
+								  bodyHTML
+								}
+								reactionGroups {
+								  content
+								  users(last: 1) {
+									nodes {
+									  login
+									}
+								  }
+								}
+								resourcePath
+								viewerCanUpdate
+								viewerCanReact
+								viewerCanDelete
+							  }
+							}
+							authorAssociation
+							bodyHTML
+						  }
+					  }
+					}
+				  }
+				}
+			  }
+		  `,
+			ownerData
+		)) as {
+			repository: {
+				pullRequest: {
+					reviewThreads: {
+						edges: any[];
+					};
+					timelineItems: {
+						totalCount: string;
+						__typename: string;
+						nodes: any[];
+					};
+				};
+			};
+		};
+
+		let reviewTimelineItem =
+			existingReview &&
+			existingReview.pullRequestReviewId &&
+			updatedPullRequest.repository.pullRequest.timelineItems.nodes.find(
+				_ => _.id === existingReview!.pullRequestReviewId
+			);
+		Logger.log(reviewTimelineItem);
+		return this.handleResponse(request.pullRequestId, {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: {
+						updatedAt: Dates.toUtcIsoNow()
+					}
+				},
+				{
+					type: "addNodes",
+					data: updatedPullRequest.repository.pullRequest.timelineItems.nodes
+				},
+				{
+					type: "updateReviewThreads",
+					data: updatedPullRequest.repository.pullRequest.reviewThreads.edges
+				},
+				{
+					type: "updateReview",
+					data: submitReviewResponse.submitPullRequestReview.pullRequestReview
+				},
+				{
+					type: "reviewSubmitted",
+					data: {
+						pullRequestReview: {
+							id: existingReview.pullRequestReviewId
+						},
+						updates: {
+							body: reviewTimelineItem.body,
+							bodyHTML: reviewTimelineItem.bodyHTML,
+							bodyText: reviewTimelineItem.bodyText,
+							state: reviewTimelineItem.state
+						},
+						comments: reviewTimelineItem?.comments.nodes.map((_: any) => {
+							return {
+								id: _.id,
+								state: _.state
+							};
+						})
+					}
+				},
+				{ type: "removePendingReview", data: null }
+			]
+		});
 	}
 
 	/**
@@ -2299,7 +2976,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				issueNumber: issueNumber
 			}
 		);
-		Logger.log("Fired off a query: ", JSON.stringify(issueInfo, null, 4));
+		// Logger.log("Fired off a query: ", JSON.stringify(issueInfo, null, 4));
 		// const issue = issueInfo.repository.issue;
 		// issue.viewer = issueInfo.viewer;
 		// translate to our card shape
@@ -2371,7 +3048,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			pullRequestId: request.pullRequestId,
 			milestoneId: request.onOff ? request.milestoneId : null
 		});
-		return {
+
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
@@ -2379,7 +3057,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				},
 				{ type: "addNode", data: response.updatePullRequest.pullRequest.timelineItems.nodes[0] }
 			]
-		};
+		});
 	}
 
 	async toggleProjectOnPullRequest(request: {
@@ -2418,7 +3096,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			pullRequestId: request.pullRequestId,
 			projectIds: [...projectIds]
 		});
-		return {
+
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
@@ -2428,7 +3107,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					}
 				}
 			]
-		};
+		});
 	}
 
 	async updatePullRequestTitle(request: {
@@ -2449,14 +3128,15 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			pullRequestId: request.pullRequestId,
 			title: request.title
 		});
-		return {
+
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
 					data: response.updatePullRequest.pullRequest
 				}
 			]
-		};
+		});
 	}
 
 	async mergePullRequest(request: {
@@ -2550,12 +3230,12 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			updatedAt: response.mergePullRequest.pullRequest.updatedAt
 		};
 
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{ type: "updatePullRequest", data: pullRequestData },
 				{ type: "addNodes", data: response.mergePullRequest.pullRequest.timelineItems.nodes }
 			]
-		};
+		});
 	}
 
 	async lockPullRequest(request: {
@@ -2582,14 +3262,14 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		);
 
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
 					data: response.lockLockable.lockedRecord
 				}
 			]
-		};
+		});
 	}
 
 	async unlockPullRequest(request: { pullRequestId: string }): Promise<Directives> {
@@ -2611,14 +3291,14 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		);
 
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
 					data: response.unlockLockable.unlockedRecord
 				}
 			]
-		};
+		});
 	}
 
 	async getReviewersForPullRequest(request: { pullRequestId: string }) {
@@ -2714,7 +3394,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				userIds: (currentReviewers || []).concat(request.userId)
 			}
 		);
-		return {
+
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
@@ -2729,7 +3410,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					data: response.requestReviews.pullRequest.timelineItems.nodes[0]
 				}
 			]
-		};
+		});
 	}
 
 	async removeReviewerFromPullRequest(request: {
@@ -2763,7 +3444,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				userIds: (currentReviewers || []).filter((_: string) => _ !== request.userId)
 			}
 		);
-		return {
+
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
@@ -2774,7 +3456,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					data: response.requestReviews.pullRequest.reviewRequests.nodes
 				}
 			]
-		};
+		});
 	}
 
 	async createPullRequestCommentAndClose(request: {
@@ -2782,7 +3464,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		text: string;
 	}): Promise<Directives> {
 		const directives: any = [];
-		const response = { directives: directives };
+
 		if (request.text) {
 			const response1 = await this.mutate<any>(
 				`mutation AddCommentToPullRequest($pullRequestId:ID!, $body:String!) {
@@ -2880,7 +3562,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			data: response2.closePullRequest.pullRequest.timelineItems.nodes
 		});
 
-		return response;
+		return this.handleResponse(request.pullRequestId, {
+			directives: directives
+		});
 	}
 
 	async createPullRequestCommentAndReopen(request: {
@@ -2888,7 +3572,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		text: string;
 	}): Promise<Directives> {
 		const directives: any = [];
-		const response = { directives: directives };
+
 		if (request.text) {
 			const response1 = await this.mutate<any>(
 				`mutation AddCommentToPullRequest($pullRequestId:ID!, $body:String!) {
@@ -2985,10 +3669,15 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			data: response2.reopenPullRequest.pullRequest.timelineItems.nodes
 		});
 
-		return response;
+		return this.handleResponse(request.pullRequestId, {
+			directives: directives
+		});
 	}
 
-	async resolveReviewThread(request: { threadId: string }): Promise<Directives> {
+	async resolveReviewThread(request: {
+		pullRequestId: string;
+		threadId: string;
+	}): Promise<Directives> {
 		const response = await this.mutate<any>(
 			`mutation ResolveReviewThread($threadId:ID!) {
 				resolveReviewThread(input: {threadId:$threadId}) {
@@ -3006,7 +3695,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		);
 		const thread = response.resolveReviewThread.thread;
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "resolveReviewThread",
@@ -3018,10 +3707,13 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					}
 				}
 			]
-		};
+		});
 	}
 
-	async unresolveReviewThread(request: { threadId: string }): Promise<Directives> {
+	async unresolveReviewThread(request: {
+		pullRequestId: string;
+		threadId: string;
+	}): Promise<Directives> {
 		const response = await this.mutate<any>(
 			`mutation UnresolveReviewThread($threadId:ID!) {
 				unresolveReviewThread(input: {threadId:$threadId}) {
@@ -3039,7 +3731,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		);
 		const thread = response.unresolveReviewThread.thread;
-		return {
+
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "unresolveReviewThread",
@@ -3051,15 +3744,50 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					}
 				}
 			]
-		};
+		});
 	}
 
-	async addComment(request: { subjectId: string; text: string }) {
-		// does not require return directives
+	async addComment(request: {
+		pullRequestId: string;
+		subjectId: string;
+		text: string;
+	}): Promise<Directives> {
 		const response = await this.mutate<any>(
 			`mutation AddComment($subjectId:ID!,$body:String!) {
 				addComment(input: {subjectId:$subjectId, body:$body}) {
 				  clientMutationId
+				  timelineEdge {
+					node {
+					  ... on IssueComment {
+						__typename
+						id
+						author {
+						  login
+						  avatarUrl
+						}
+						authorAssociation
+						body
+						bodyText
+						bodyHTML
+						createdAt
+						includesCreatedEdit
+						isMinimized
+						minimizedReason
+						reactionGroups {
+						  content
+						  users(first: 1) {
+							nodes {
+							  login
+							}
+						  }
+						}
+						resourcePath
+						viewerCanUpdate
+						viewerCanReact
+						viewerCanDelete
+					  }
+					}
+				  }
 				}
 			}`,
 			{
@@ -3067,7 +3795,21 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				body: request.text
 			}
 		);
-		return response;
+
+		return this.handleResponse(request.pullRequestId, {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: {
+						updatedAt: Dates.toUtcIsoNow()
+					}
+				},
+				{
+					type: "addNode",
+					data: response.addComment.timelineEdge.node
+				}
+			]
+		});
 	}
 
 	@log()
@@ -3081,7 +3823,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		endLine?: number;
 		// used for old servers
 		position?: number;
-	}) {
+	}): Promise<Directives> {
 		// https://github.community/t/feature-commit-comments-for-a-pull-request/13986/9
 		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
 		let payload;
@@ -3120,12 +3862,53 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			payload
 		);
 
-		this._pullRequestCache.delete(request.pullRequestId);
+		const graphResults = await this.fetchUpdatedReviewCommentData(ownerData);
+		this.mapPullRequestModel(graphResults);
+
+		const directives = [
+			{
+				type: "updatePullRequest",
+				data: {
+					updatedAt: graphResults.repository.pullRequest.updatedAt
+				}
+			}
+		] as any;
+
+		if (graphResults?.repository?.pullRequest) {
+			const pr = graphResults.repository.pullRequest;
+			if (pr.reviews) {
+				const review = pr.reviews.nodes.find(
+					(_: any) => _.databaseId === data.body.pull_request_review_id
+				);
+				directives.push({
+					type: "addReview",
+					data: review
+				});
+
+				if (review) {
+					directives.push({
+						type: "addReviewThreads",
+						data: pr.reviewThreads.edges
+					});
+				}
+			}
+			if (pr.timelineItems) {
+				directives.push({
+					type: "addNodes",
+					data: pr.timelineItems.nodes
+				});
+			}
+		}
+		this.updateCache(request.pullRequestId, {
+			directives: directives
+		});
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
 			pullRequestId: request.pullRequestId
 		});
 
-		return data.body;
+		return {
+			directives: directives
+		};
 	}
 
 	async createCommitByPositionComment(request: {
@@ -3150,7 +3933,32 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return data.body;
 	}
 
-	async createCommentReply(request: { pullRequestId: string; commentId: string; text: string }) {
+	private _createReactionGroups() {
+		return [
+			"THUMBS_UP",
+			"THUMBS_DOWN",
+			"LAUGH",
+			"HOORAY",
+			"CONFUSED",
+			"HEART",
+			"ROCKET",
+			"EYES"
+		].map(type => {
+			return {
+				content: type,
+				users: {
+					nodes: []
+				}
+			};
+		});
+	}
+
+	async createCommentReply(request: {
+		pullRequestId: string;
+		parentId: string;
+		commentId: string;
+		text: string;
+	}): Promise<Directives> {
 		// https://developer.github.com/v3/pulls/comments/#create-a-reply-for-a-review-comment
 		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
 		const data = await this.restPost<any, any>(
@@ -3159,7 +3967,45 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				body: request.text
 			}
 		);
-		return data.body;
+		// GH doesn't provide a way to add comment replies via the graphQL api
+		// see https://stackoverflow.com/questions/55708085/is-there-a-way-to-reply-to-pull-request-review-comments-with-the-github-api-v4
+		// below, we're crafting a response that looks like what graphQL would give us
+		const body = data.body;
+
+		return this.handleResponse(request.pullRequestId, {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: {
+						updatedAt: Dates.toUtcIsoNow()
+					}
+				},
+				{
+					type: "addLegacyCommentReply",
+					data: {
+						// this isn't normally part of the response, but it's
+						// the databaseId of the parent comment
+						_inReplyToId: body.in_reply_to_id,
+						author: {
+							login: body.user.login,
+							avatarUrl: body.user.avatar_url
+						},
+						authorAssociation: body.author_association,
+						body: body.body,
+						bodyText: body.body,
+						createdAt: body.created_at,
+						id: body.node_id,
+						replyTo: {
+							id: body.node_id
+						},
+						reactionGroups: this._createReactionGroups(),
+						viewerCanUpdate: true,
+						viewerCanReact: true,
+						viewerCanDelete: true
+					}
+				}
+			]
+		});
 	}
 
 	async createPullRequestComment(request: {
@@ -3220,7 +4066,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		// NOTE must use the commentEdge to get the PR
 		// and not from the subject, as the subject data is stale
 		// at this point
-		return {
+
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
@@ -3231,7 +4078,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					data: response.addComment.timelineEdge.node
 				}
 			]
-		};
+		});
 	}
 
 	async createPullRequestInlineComment(request: {
@@ -3288,26 +4135,58 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			id: request.id
 		});
 
-		this._pullRequestCache.delete(request.pullRequestId);
+		const directives = [
+			{
+				type: "updatePullRequest",
+				data: {
+					updatedAt: Dates.toUtcIsoNow()
+				}
+			}
+		] as any;
+		if (request.type === "REVIEW_COMMENT") {
+			directives.push({
+				type: "removeComment",
+				data: {
+					id: request.id
+				}
+			});
+			const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
+			const pendingReviews = await this.fetchPendingReviews(ownerData);
+			const viewerId = pendingReviews?.viewer?.id;
+			const myPendingReview = pendingReviews?.repository?.pullRequest?.reviews?.nodes.find(
+				(_: any) => _.author.id === viewerId
+			);
+			if (!myPendingReview) {
+				directives.push({
+					type: "removePendingReview",
+					data: null
+				});
+			} else {
+				directives.push({
+					type: "updateReviewCommentsCount",
+					data: myPendingReview
+				});
+			}
+		} else {
+			directives.push({
+				type: "removeNode",
+				data: {
+					id: request.id
+				}
+			});
+		}
+		this.updateCache(request.pullRequestId, {
+			directives: directives
+		});
+
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
 			pullRequestId: request.pullRequestId,
 			commentId: request.id
 		});
 
-		if (request.type === "ISSUE_COMMENT") {
-			return {
-				directives: [
-					{
-						type: "removeNode",
-						data: {
-							id: request.id
-						}
-					}
-				]
-			};
-		}
-		// TODO for other types
-		return undefined;
+		return {
+			directives: directives
+		};
 	}
 
 	_pullRequestIdCache: Map<
@@ -3467,21 +4346,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		}
 
 		return changedFiles;
-
-		// const data = await this.restGet<any>(
-		// 	`/repos/${ownerData.owner}/${ownerData.name}/pulls/${ownerData.pullRequestNumber}/files`
-		// );
-		// return data.body;
-
-		// const pullRequestReviewId = await this.getPullRequestReviewId(request);
-		// return {
-		// 	files: data.body,
-		// 	context: {
-		// 		pullRequest: {
-		// 			userCurrentReviewId: pullRequestReviewId
-		// 		}
-		// 	}
-		// };
 	}
 
 	_timelineQueryItemsString!: string;
@@ -3773,6 +4637,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			bodyText
 			bodyHTML
 			createdAt
+			databaseId
 			includesCreatedEdit
 			lastEditedAt
 			state
@@ -4221,6 +5086,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					  reviews(first: 50) {
 						nodes {
 						  id
+						  databaseId
 						  createdAt
 						  comments(first:100) {
 							totalCount
@@ -4326,90 +5192,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				};
 			}
 
-			// this is sheer insanity... there's no way to get replies to parent comments
-			// as a child object of that comment. all replies are treated as `reviewThreads`
-			// and they live on the parent `pullRequest` object. below, we're stiching together
-			// comments and any replies (as a `replies` object) that might exist for those comments.
-			// MORE here: https://github.community/t/bug-v4-graphql-api-trouble-retrieving-pull-request-review-comments/13708/2
-
-			if (
-				response?.repository?.pullRequest?.timelineItems?.nodes &&
-				response?.repository?.pullRequest?.reviewThreads?.edges
-			) {
-				// find all the PullRequestReview timelineItems as we will attach
-				// additional data to them
-				for (const timelineItem of response.repository.pullRequest.timelineItems.nodes.filter(
-					(_: any) => _.__typename === "PullRequestReview"
-				)) {
-					if (!timelineItem.comments) continue;
-					for (const comment of timelineItem.comments.nodes) {
-						// a parent comment has a null replyTo
-						if (comment.replyTo != null) continue;
-
-						let replies: any = [];
-						let threadId;
-						let isResolved;
-						let viewerCanResolve;
-						let viewerCanUnresolve;
-						for (const reviewThread of response.repository.pullRequest.reviewThreads.edges) {
-							if (reviewThread.node.comments.nodes.length > 1) {
-								for (const reviewThreadComment of reviewThread.node.comments.nodes) {
-									if (reviewThreadComment.id === comment.id) {
-										threadId = reviewThread.node.id;
-										isResolved = reviewThread.node.isResolved;
-										viewerCanResolve = reviewThread.node.viewerCanResolve;
-										viewerCanUnresolve = reviewThread.node.viewerCanUnresolve;
-										// find all the comments except the parent
-										replies = replies.concat(
-											reviewThread.node.comments.nodes.filter(
-												(_: any) => _.id !== reviewThreadComment.id
-											)
-										);
-										break;
-									}
-								}
-							} else if (reviewThread.node.comments.nodes.length === 1) {
-								const reviewThreadComment = reviewThread.node.comments.nodes[0];
-								if (reviewThreadComment.id === comment.id) {
-									threadId = reviewThread.node.id;
-									isResolved = reviewThread.node.isResolved;
-									viewerCanResolve = reviewThread.node.viewerCanResolve;
-									viewerCanUnresolve = reviewThread.node.viewerCanUnresolve;
-								}
-							}
-						}
-						if (timelineItem.comments.nodes.length) {
-							comment.threadId = threadId;
-							comment.isResolved = isResolved;
-							comment.viewerCanResolve = viewerCanResolve;
-							comment.viewerCanUnresolve = viewerCanUnresolve;
-							if (replies.length) {
-								comment.replies = replies;
-							}
-						}
-					}
-				}
-			}
-
-			// note the graphql for this.. it's the _first_ X not the _last_ X
-			// you'd think last would mean the last as in most recent, but it's actually the opposite
-			if (
-				response?.repository?.pullRequest?.reviews &&
-				response?.repository?.pullRequest?.reviews?.nodes
-			) {
-				// here we're looking for your last pending review as you can only have 1 pending review
-				// per user per PR
-				const myPendingReview = response.repository.pullRequest.reviews.nodes.find(
-					(_: any) => _.state === "PENDING" && _.author.id === response.viewer.id
-				);
-				if (myPendingReview) {
-					// only returns your pending reviews
-					response.repository.pullRequest.pendingReview = myPendingReview;
-				}
-			}
-			if (response?.repository?.pullRequest) {
-				response.repository.pullRequest.viewer = { ...response.viewer };
-			}
+			this.mapPullRequestModel(response);
 
 			Logger.debug(
 				`pullRequestTimelineQuery rateLimit=${JSON.stringify(response.rateLimit)} cursor=${cursor}`
@@ -4606,6 +5389,262 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	// 	this.trySetThirdPartyProviderInfo(ex);
 	// 	return ex;
 	// }
+
+	private handleResponse(pullRequestId: string, directives: Directives) {
+		this.updateCache(pullRequestId, directives);
+
+		return directives;
+	}
+
+	private updateCache(pullRequestId: string, directives: Directives) {
+		if (!directives?.directives) {
+			Logger.warn(`Attempting to update cache without directives. id=${pullRequestId}`);
+			return;
+		}
+		const prWrapper = this._pullRequestCache.get(pullRequestId);
+		if (!prWrapper) {
+			Logger.warn(`Attempting to update cache without PR. id=${pullRequestId}`);
+			return;
+		}
+		const pr = prWrapper.repository?.pullRequest;
+		if (!pr) {
+			Logger.warn(`Attempting to update cache without PR object. id=${pullRequestId}`);
+			return;
+		}
+		/**
+		 *
+		 *  KEEP THIS IN SYNC WITH providerPullReqests/reducer.ts
+		 *
+		 */
+		for (const directive of directives.directives) {
+			if (directive.type === "addReaction") {
+				if (directive.data.subject.__typename === "PullRequest") {
+					pr.reactionGroups
+						.find((_: any) => _.content === directive.data.reaction.content)
+						.users.nodes.push(directive.data.reaction.user);
+				} else {
+					const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.subject.id);
+					if (node) {
+						node.reactionGroups
+							.find((_: any) => _.content === directive.data.reaction.content)
+							.users.nodes.push(directive.data.reaction.user);
+					}
+				}
+			} else if (directive.type === "removeReaction") {
+				if (directive.data.subject.__typename === "PullRequest") {
+					pr.reactionGroups.find(
+						(_: any) => _.content === directive.data.reaction.content
+					).users.nodes = pr.reactionGroups
+						.find((_: any) => _.content === directive.data.reaction.content)
+						.users.nodes.filter((_: any) => _.login !== directive.data.reaction.user.login);
+				} else {
+					const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.subject.id);
+					if (node) {
+						node.reactionGroups.find(
+							(_: any) => _.content === directive.data.reaction.content
+						).users.nodes = node.reactionGroups
+							.find((_: any) => _.content === directive.data.reaction.content)
+							.users.nodes.filter((_: any) => _.login !== directive.data.reaction.user.login);
+					}
+				}
+			} else if (directive.type === "removeComment") {
+				for (const node of pr.timelineItems.nodes) {
+					if (node.comments?.nodes?.length) {
+						node.comments.nodes = node.comments.nodes.filter(
+							(_: any) => _.id !== directive.data.id
+						);
+						for (const comments of node.comments.nodes) {
+							if (comments.replies) {
+								comments.replies = comments.replies.filter((_: any) => _.id !== directive.data.id);
+							}
+						}
+					}
+				}
+			} else if (directive.type === "removePullRequestReview") {
+				if (directive.data.id) {
+					pr.reviews.nodes = pr.reviews.nodes.filter(_ => _.id !== directive.data.id);
+					pr.timelineItems.nodes = pr.timelineItems.nodes.filter(_ => _.id !== directive.data.id);
+				}
+			} else if (directive.type === "removeNode") {
+				pr.timelineItems.nodes = pr.timelineItems.nodes.filter(_ => _.id !== directive.data.id);
+			} else if (directive.type === "updateNode") {
+				const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
+				if (node) {
+					for (const key in directive.data) {
+						node[key] = directive.data[key];
+					}
+				}
+			} else if (directive.type === "addNode") {
+				if (!directive.data.id) continue;
+				const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
+				if (!node) {
+					pr.timelineItems.nodes.push(directive.data);
+				}
+			} else if (directive.type === "addNodes") {
+				for (const newNode of directive.data) {
+					if (!newNode.id) continue;
+					const node = pr.timelineItems.nodes.find((_: any) => _.id === newNode.id);
+					if (!node) {
+						pr.timelineItems.nodes.push(newNode);
+					}
+				}
+			} else if (directive.type === "addReviewCommentNodes") {
+				for (const newNode of directive.data) {
+					if (!newNode.id) continue;
+					let node = pr.timelineItems.nodes.find((_: any) => _.id === newNode.id);
+					if (node) {
+						for (const c of newNode.comments.nodes) {
+							if (node.comments.nodes.find((_: any) => _.id === c.id) == null) {
+								node.comments.nodes.push(c);
+							}
+						}
+					} else {
+						pr.timelineItems.nodes.push(newNode);
+					}
+				}
+			} else if (directive.type === "addLegacyCommentReply") {
+				for (const node of pr.timelineItems.nodes) {
+					if (!node.comments) continue;
+					for (const comment of node.comments.nodes) {
+						if (directive.data._inReplyToId === comment.databaseId) {
+							if (!comment.replies) comment.replies = [];
+							comment.replies.push(directive.data);
+							break;
+						}
+					}
+				}
+			} else if (directive.type === "removePendingReview") {
+				pr.pendingReview = undefined;
+			} else if (directive.type === "addReview") {
+				if (!directive.data) continue;
+				if (pr.reviews.nodes.find(_ => _.id === directive.data.id) == null) {
+					pr.reviews.nodes.push(directive.data);
+				}
+			} else if (directive.type === "updateReviewCommentsCount") {
+				if (!directive.data) continue;
+				if (pr.pendingReview && pr.pendingReview.comments) {
+					pr.pendingReview.comments.totalCount = directive.data.comments.totalCount;
+				}
+			} else if (directive.type === "addReviewThreads") {
+				if (!directive.data) continue;
+				for (const d of directive.data) {
+					if (pr.reviewThreads.edges.find(_ => _.node.id === d.node.id) == null) {
+						pr.reviewThreads.edges.push(d);
+					}
+				}
+			} else if (directive.type === "updatePullRequestReviewThreadComment") {
+				let done = false;
+				for (const edge of pr.reviewThreads.edges) {
+					if (!edge.node.comments) continue;
+
+					for (const comment of edge.node.comments.nodes) {
+						if (comment.id === directive.data.id) {
+							for (const key in directive.data) {
+								(comment as any)[key] = directive.data[key];
+							}
+							done = true;
+						}
+						if (done) break;
+					}
+					if (done) break;
+				}
+			} else if (directive.type === "updatePullRequestReviewCommentNode") {
+				const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.pullRequestReview.id);
+				if (node && node.comments) {
+					for (const comment of node.comments.nodes) {
+						if (comment.id !== directive.data.id) continue;
+
+						for (const key in directive.data) {
+							comment[key] = directive.data[key];
+						}
+						break;
+					}
+				}
+			} else if (directive.type === "reviewSubmitted") {
+				const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.pullRequestReview.id);
+				if (node) {
+					for (const key of Object.keys(directive.data.updates)) {
+						node[key] = directive.data.updates[key];
+					}
+
+					if (node.comments) {
+						for (const comment of directive.data.comments) {
+							const existingComment = node.comments.nodes.find((_: any) => _.id === comment.id);
+							if (existingComment) {
+								existingComment.state = comment.state;
+							}
+						}
+					}
+				}
+			} else if (directive.type === "updatePullRequestReview") {
+				const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
+				if (node) {
+					for (const key in directive.data) {
+						node[key] = directive.data[key];
+					}
+				}
+			} else if (directive.type === "updatePullRequestReviewers") {
+				pr.reviewRequests.nodes.length = 0;
+				for (const data of directive.data) {
+					pr.reviewRequests.nodes.push(data);
+				}
+			} else if (directive.type === "updatePullRequest") {
+				for (const key in directive.data) {
+					if (directive.data[key] && Array.isArray(directive.data[key].nodes)) {
+						// clear out the array, but keep its reference
+						(pr as any)[key].nodes.length = 0;
+						for (const n of directive.data[key].nodes) {
+							(pr as any)[key].nodes.push(n);
+						}
+					} else {
+						(pr as any)[key] = directive.data[key];
+					}
+				}
+			} else if (directive.type === "updateReview") {
+				if (!pr.reviews?.nodes) {
+					pr.reviews.nodes = [];
+				}
+				if (pr.reviews.nodes) {
+					pr.reviews.nodes = pr.reviews.nodes.filter(_ => _.id !== directive.data.id);
+					pr.reviews.nodes.push(directive.data);
+				}
+			} else if (directive.type === "updateReviewThreads") {
+				if (pr.reviewThreads) {
+					for (const d of directive.data) {
+						const found = pr.reviewThreads.edges.find(_ => _.node.id === d.node.id);
+						if (found) {
+							found.node.viewerCanResolve = d.node.viewerCanResolve;
+						}
+					}
+				}
+			} else if (
+				directive.type === "resolveReviewThread" ||
+				directive.type === "unresolveReviewThread"
+			) {
+				const nodeWrapper = pr.reviewThreads.edges.find(_ => _.node.id === directive.data.threadId);
+				if (nodeWrapper && nodeWrapper.node) {
+					for (const key in directive.data) {
+						(nodeWrapper.node as any)[key] = directive.data[key];
+					}
+				}
+
+				const reviews = pr.timelineItems.nodes.filter(_ => _.__typename === "PullRequestReview");
+				if (reviews) {
+					for (const review of reviews) {
+						for (const comment of review.comments.nodes) {
+							if (comment.threadId !== directive.data.threadId) continue;
+
+							for (const key in directive.data) {
+								comment[key] = directive.data[key];
+							}
+
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 interface GitHubPullRequest {

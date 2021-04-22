@@ -36,12 +36,13 @@ export enum ReportSuppressedMessages {
 	OAuthAppAccessRestrictionError = "OAuth app access restriction error"
 }
 
+/**
+ * InternalErrors thrown are ignored by Sentry
+ * based on its class name (InternalError)
+ */
 export class InternalError extends AgentError {
-	public suppressReporting: boolean;
-
 	constructor(message: string, info: any = {}) {
 		super(message, info);
 		this.name = "InternalError";
-		this.suppressReporting = true;
 	}
 }

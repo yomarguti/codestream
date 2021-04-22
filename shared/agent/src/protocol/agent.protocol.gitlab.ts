@@ -259,6 +259,7 @@ export interface GitLabMergeRequest {
 		dueDate: string;
 	};
 	number: number;
+	overflow?: boolean;
 	participants: {
 		nodes: GitLabUser[];
 	};
@@ -309,7 +310,7 @@ export interface GitLabMergeRequest {
 		this is a computed property */
 		webUrl?: string;
 	};
-	pendingReview: {
+	pendingReview?: {
 		id: string;
 		author: {
 			login: string;

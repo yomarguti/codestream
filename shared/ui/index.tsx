@@ -41,7 +41,7 @@ import {
 	VerifyConnectivityRequestType,
 	ExecuteThirdPartyRequestUntypedType
 } from "@codestream/protocols/agent";
-import { CSApiCapabilities, CodemarkType } from "@codestream/protocols/api";
+import { CSApiCapabilities, CodemarkType, CSMe } from "@codestream/protocols/api";
 import translations from "./translations/en";
 import { apiUpgradeRecommended, apiUpgradeRequired } from "./store/apiVersioning/actions";
 import { getCodemark } from "./store/codemarks/reducer";
@@ -72,13 +72,15 @@ import {
 	clearCurrentPullRequest
 } from "./store/context/actions";
 import { URI } from "vscode-uri";
-import { moveCursorToLine } from "./Stream/CodemarkView";
+import { moveCursorToLine } from "./Stream/api-functions";
 import { setMaintenanceMode } from "./store/session/actions";
 import { updateModifiedReposDebounced } from "./store/users/actions";
 import { logWarning } from "./logger";
 import { fetchReview } from "./store/reviews/actions";
 import { openPullRequestByUrl } from "./store/providerPullRequests/actions";
 import { updateCapabilities } from "./store/capabilities/actions";
+import { confirmPopup } from "./Stream/Confirm";
+import { switchToTeam } from "./store/session/actions";
 
 export { HostApi };
 
@@ -368,13 +370,16 @@ function listenForEvents(store) {
 					switch (route.action) {
 						case "open": {
 							if (route.id) {
+								const type = route.query.isLink ? "permalink" : "codemark";
+								if (confirmSwitchToTeam(store, route.query, type, route.id)) return;
+
 								let { codemarks } = store.getState();
 								if (Object.keys(codemarks).length === 0) {
 									await store.dispatch(fetchCodemarks());
 									codemarks = store.getState().codemarks;
 								}
 								const codemark = getCodemark(codemarks, route.id);
-								if (codemark && codemark.type === CodemarkType.Link)
+								if (codemark && codemark.type === CodemarkType.Link && codemark.markerIds?.length)
 									moveCursorToLine(codemark!.markerIds![0]);
 								else {
 									const markerId =
@@ -393,6 +398,8 @@ function listenForEvents(store) {
 					switch (route.action) {
 						case "open": {
 							if (route.id) {
+								if (confirmSwitchToTeam(store, route.query, "feedback request", route.id)) return;
+
 								const { reviews } = store.getState();
 								const review = getReview(reviews, route.id);
 								store.dispatch(closeAllPanels());
@@ -550,4 +557,69 @@ export const parseProtocol = function(uriString: string | undefined): Route | un
 		id,
 		query: parsedQuery
 	};
+};
+
+const confirmSwitchToTeam = function(
+	store: any,
+	options: { teamId: string; teamName: string },
+	type: string,
+	itemId: string
+): boolean {
+	const { context, session, users } = store.getState();
+	const currentUser = session.userId ? (users[session.userId] as CSMe) : null;
+	const { currentTeamId } = context;
+	const { teamId, teamName } = options;
+
+	if (teamId && teamId !== currentTeamId) {
+		if (currentUser?.teamIds.includes(teamId)) {
+			const switchInfo =
+				type === "feedback request" ? { reviewId: itemId } : { codemarkId: itemId };
+			confirmPopup({
+				title: "Switch teams?",
+				message: (
+					<span>
+						The {type} you are trying to view was created in{" "}
+						{teamName ? (
+							<span>
+								the <b>{teamName}</b>
+							</span>
+						) : (
+							"another"
+						)}{" "}
+						team. You'll need to switch to that team to view it.
+					</span>
+				),
+				centered: true,
+				buttons: [
+					{
+						label: "Cancel",
+						className: "control-button"
+					},
+					{
+						label: "Switch Teams",
+						className: "control-button",
+						wait: true,
+						action: () => {
+							store.dispatch(switchToTeam(teamId, switchInfo));
+						}
+					}
+				]
+			});
+			return true;
+		} else {
+			confirmPopup({
+				title: "Not a member",
+				message: <span>You aren't a member of the team that owns this {type}.</span>,
+				centered: true,
+				buttons: [
+					{
+						label: "OK",
+						className: "control-button"
+					}
+				]
+			});
+			return true;
+		}
+	}
+	return false;
 };

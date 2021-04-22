@@ -11,15 +11,15 @@ interface CommentMenuProps {
 	node: any;
 	nodeType: "ISSUE_COMMENT" | "ROOT_COMMENT" | "REVIEW_COMMENT" | "REVIEW";
 	viewerCanDelete?: boolean;
+	parentId?: string;
 	setEdit?: Function;
 	quote?: Function;
 	isPending?: boolean;
-	fetch: Function;
 	setIsLoadingMessage: Function;
 }
 
 export const PullRequestCommentMenu = (props: CommentMenuProps) => {
-	const { pr, node, setEdit, quote, isPending, fetch, setIsLoadingMessage } = props;
+	const { pr, node, setEdit, quote, isPending, setIsLoadingMessage } = props;
 
 	// console.warn("MENU IS: ", props);
 
@@ -41,22 +41,21 @@ export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 						if (props.nodeType === "REVIEW") {
 							await dispatch(
 								api("deletePullRequestReview", {
-									pullRequestReviewId: node.id
+									pullRequestReviewId: node.id,
+									parentId: props.parentId
 								})
 							);
-							fetch();
 						} else {
 							await dispatch(
 								api("deletePullRequestComment", {
 									type: props.nodeType,
 									isPending: props.isPending,
+									parentId: props.parentId,
 									id: node.id
 								})
 							);
-							if (props.nodeType !== "ISSUE_COMMENT") {
-								fetch();
-							}
 						}
+						setIsLoadingMessage("");
 					}
 				}
 			]
@@ -78,10 +77,10 @@ export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 	}
 
 	if (
-		(node.viewerCanUpdate || (node.userPermissions && node.userPermissions.adminNote)) &&
+		(node.viewerCanUpdate || node.state === "PENDING" || (node.userPermissions && node.userPermissions.adminNote)) &&
 		setEdit
 	) {
-		items.push({ label: "-" });
+		if (items.length > 0) items.push({ label: "-" });
 		items.push({
 			label: "Edit",
 			key: "edit",

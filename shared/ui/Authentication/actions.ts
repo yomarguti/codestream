@@ -12,7 +12,7 @@ import {
 } from "@codestream/protocols/agent";
 import { CodeStreamState } from "../store";
 import { HostApi } from "../webview-api";
-import { LoginResult } from "@codestream/protocols/api";
+import { CodemarkType, LoginResult } from "@codestream/protocols/api";
 import {
 	goToTeamCreation,
 	goToSSOAuth,
@@ -20,8 +20,13 @@ import {
 	SupportedSSOProvider,
 	goToSignup,
 	goToLogin,
-	goToSetPassword
+	goToSetPassword,
+	setCurrentCodemark,
+	setCurrentReview
 } from "../store/context/actions";
+import { fetchCodemarks } from "../Stream/actions";
+import { getCodemark } from "../store/codemarks/reducer";
+
 import { GetActiveEditorContextRequestType } from "../ipc/host.protocol.editor";
 import {
 	BootstrapInHostRequestType,
@@ -34,6 +39,7 @@ import { ChatProviderAccess } from "../store/context/types";
 import { emptyObject, uuid } from "../utils";
 import { localStore } from "../utilities/storage";
 import { setSession, setMaintenanceMode } from "../store/session/actions";
+import { moveCursorToLine } from "../Stream/api-functions";
 
 export enum SignupType {
 	JoinTeam = "joinTeam",
@@ -187,10 +193,10 @@ export const authenticate = (params: PasswordLoginParams | TokenLoginRequest) =>
 	return dispatch(onLogin(response));
 };
 
-export const onLogin = (
-	response: LoginSuccessResponse,
-	isFirstPageview?: boolean
-) => async dispatch => {
+export const onLogin = (response: LoginSuccessResponse, isFirstPageview?: boolean) => async (
+	dispatch,
+	getState: () => CodeStreamState
+) => {
 	const api = HostApi.instance;
 
 	const [bootstrapData, { editorContext }, bootstrapCore] = await Promise.all([
@@ -206,9 +212,29 @@ export const onLogin = (
 			editorContext,
 			session: { ...bootstrapCore.session, userId: response.state.userId },
 			capabilities: response.state.capabilities,
-			context: { currentTeamId: response.state.teamId, isFirstPageview }
+			context: {
+				currentTeamId: response.state.teamId,
+				isFirstPageview,
+				currentCodemarkId: response.state.codemarkId
+			}
 		})
 	);
+
+	if (response.state.codemarkId) {
+		let { codemarks } = getState();
+		if (Object.keys(codemarks).length === 0) {
+			await dispatch(fetchCodemarks());
+			codemarks = getState().codemarks;
+		}
+		const codemark = getCodemark(codemarks, response.state.codemarkId);
+		if (codemark && codemark.type === CodemarkType.Link && codemark.markerIds?.length) {
+			moveCursorToLine(codemark!.markerIds![0]);
+		} else {
+			dispatch(setCurrentCodemark(response.state.codemarkId));
+		}
+	} else if (response.state.reviewId) {
+		dispatch(setCurrentReview(response.state.reviewId));
+	}
 };
 
 export const completeSignup = (

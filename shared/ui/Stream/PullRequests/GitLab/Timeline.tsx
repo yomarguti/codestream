@@ -174,7 +174,6 @@ interface Props {
 	filter: "history" | "comments" | "all";
 	order: "oldest" | "newest";
 	setIsLoadingMessage: Function;
-	fetch: Function;
 	collapseAll?: boolean;
 }
 
@@ -185,7 +184,7 @@ const EMPTY_HASH_3 = {};
 
 export const Timeline = (props: Props) => {
 	const isComment = (_: DiscussionNode) => _.notes?.nodes?.find(n => !n.system && n.discussion?.id);
-	const { pr, order, filter, setIsLoadingMessage, fetch } = props;
+	const { pr, order, filter, setIsLoadingMessage } = props;
 	let discussions = order === "oldest" ? pr.discussions.nodes : [...pr.discussions.nodes].reverse();
 	if (filter === "history") discussions = discussions.filter(_ => !isComment(_));
 	else if (filter === "comments") discussions = discussions.filter(_ => isComment(_));
@@ -228,7 +227,7 @@ export const Timeline = (props: Props) => {
 		focusOnMessageInput &&
 			focusOnMessageInput[id] &&
 			focusOnMessageInput[id](() => {
-				insertText && insertText[id](text.replace(/^/gm, "> "));
+				insertText && insertText[id](text.replace(/^/gm, "> ") + "\n");
 				insertNewline && insertNewline[id]();
 			});
 	};
@@ -366,20 +365,24 @@ export const Timeline = (props: Props) => {
 
 						<PullRequestCommentMenu
 							pr={pr}
-							fetch={fetch}
 							setIsLoadingMessage={setIsLoadingMessage}
 							node={note}
+							parentId={note.discussion?.id}
 							nodeType="ROOT_COMMENT"
 							viewerCanDelete={note.state === "PENDING"}
 							setEdit={setEditingComment}
-							quote={text => {
-								const id = parent ? parent.id : note.id;
-								quote(text, id);
-								setOpenComments({
-									...openComments,
-									[id]: true
-								});
-							}}
+							quote={
+								isResolvable
+									? text => {
+											const id = parent ? parent.id : note.id;
+											quote(text, id);
+											setOpenComments({
+												...openComments,
+												[id]: true
+											});
+									  }
+									: undefined
+							}
 							isPending={note.state === "PENDING"}
 						/>
 					</PRActionIcons>
@@ -597,7 +600,6 @@ export const Timeline = (props: Props) => {
 							<ReplyForm>
 								<PullRequestReplyComment
 									pr={(pr as unknown) as FetchThirdPartyPullRequestPullRequest}
-									fetch={fetch}
 									databaseId={note.id}
 									parentId={note.discussion.id}
 									isOpen={openComments[note.id]}

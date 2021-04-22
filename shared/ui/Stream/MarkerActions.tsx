@@ -11,6 +11,7 @@ import {
 import {
 	Capabilities,
 	CodemarkPlus,
+	DidChangeDocumentMarkersNotificationType,
 	GetCodemarkRangeRequestType,
 	TelemetryRequestType
 } from "@codestream/protocols/agent";
@@ -84,7 +85,7 @@ class MarkerActions extends React.Component<Props, State> {
 		this._codeBlockDiv = null;
 	}
 
-	private _pollingTimer?: any;
+	private _disposables: { dispose(): void }[] = [];
 	private _codeBlockDiv: HTMLPreElement | null;
 	private _mounted: boolean = false;
 	private _highlightDisposable?: { dispose(): void };
@@ -138,30 +139,21 @@ class MarkerActions extends React.Component<Props, State> {
 
 	componentWillUnmount() {
 		this._mounted = false;
-		this.stopCheckingDiffs();
-		if (this._highlightDisposable) this._highlightDisposable.dispose();
+		this._disposables.forEach(d => d.dispose());
 	}
 
 	private startCheckingDiffs() {
 		if (this.props.disableDiffCheck) return;
-		if (!this._mounted || this._pollingTimer !== undefined) return;
+		if (!this._mounted) return;
 
-		// kick off an initial check diff, then start the polling
-		this.checkDiffs(false).then(() => {
-			this._pollingTimer = setInterval(() => {
-				if (this.props.editorHasFocus) {
+		this.checkDiffs(false);
+		this._disposables.push(
+			HostApi.instance.on(DidChangeDocumentMarkersNotificationType, ({ textDocument }) => {
+				if (this.props.textEditorUri === textDocument.uri) {
 					this.checkDiffs(false);
 				}
-			}, 1000);
-		});
-	}
-
-	private stopCheckingDiffs() {
-		if (this.props.disableDiffCheck) return;
-		if (this._pollingTimer === undefined) return;
-
-		clearInterval(this._pollingTimer);
-		this._pollingTimer = undefined;
+			})
+		);
 	}
 
 	async openCodemark() {
@@ -289,7 +281,7 @@ class MarkerActions extends React.Component<Props, State> {
 						uri: response.textDocument.uri,
 						highlight: true
 					});
-					this._highlightDisposable = {
+					this._disposables.push({
 						dispose() {
 							highlightRange({
 								range: response.range,
@@ -297,7 +289,7 @@ class MarkerActions extends React.Component<Props, State> {
 								highlight: false
 							});
 						}
-					};
+					});
 				}
 				this.setState({
 					textDocumentUri: response.textDocument.uri,

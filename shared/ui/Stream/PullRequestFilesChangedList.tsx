@@ -130,14 +130,15 @@ interface Props extends CompareFilesProps {
 	filesChanged: any[];
 	isLoading: boolean;
 	pr?: FetchThirdPartyPullRequestPullRequest;
-	fetch?: Function;
 	setIsLoadingMessage?: Function;
 	readOnly?: boolean;
 	commitBased?: boolean;
+	accessRawDiffs?: boolean;
+	setAccessRawDiffs?: Function;
 }
 
 export const PullRequestFilesChangedList = (props: Props) => {
-	const { filesChanged, fetch, isLoading, pr } = props;
+	const { filesChanged, isLoading, pr } = props;
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const ideName = state.ide?.name?.toUpperCase();
@@ -261,7 +262,7 @@ export const PullRequestFilesChangedList = (props: Props) => {
 				});
 		}
 		return map;
-	}, [pr, derivedState.currentPullRequestProviderId]);
+	}, [pr?.updatedAt, derivedState.currentPullRequestProviderId]);
 
 	if (isLoading || isLoadingVisited)
 		return (
@@ -332,7 +333,7 @@ export const PullRequestFilesChangedList = (props: Props) => {
 		// handleTextInputFocus(comment.databaseId);
 		focusOnMessageInput &&
 			focusOnMessageInput(() => {
-				insertText && insertText(text.replace(/^/gm, "> "));
+				insertText && insertText(text.replace(/^/gm, "> ") + "\n");
 				insertNewline && insertNewline();
 			});
 	};
@@ -392,7 +393,6 @@ export const PullRequestFilesChangedList = (props: Props) => {
 							<PullRequestFinishReview
 								pr={pr}
 								mode="dropdown"
-								fetch={props.fetch!}
 								setIsLoadingMessage={props.setIsLoadingMessage!}
 								setFinishReviewOpen={setFinishReviewOpen}
 							/>
@@ -418,6 +418,8 @@ export const PullRequestFilesChangedList = (props: Props) => {
 					toggleDirectory={toggleDirectory}
 					commentMap={commentMap}
 					commitBased={props.commitBased}
+					accessRawDiffs={props.accessRawDiffs}
+					setAccessRawDiffs={props.setAccessRawDiffs}
 				/>
 			) : (
 				<PRDiffHunks>
@@ -498,7 +500,6 @@ export const PullRequestFilesChangedList = (props: Props) => {
 										comments={comments}
 										setIsLoadingMessage={props.setIsLoadingMessage}
 										quote={quote}
-										fetch={props.fetch!}
 									/>
 								)}
 							</PRDiffHunk>

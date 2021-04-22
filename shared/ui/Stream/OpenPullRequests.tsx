@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
+import { isEqual } from "lodash-es";
 import * as providerSelectors from "../store/providers/reducer";
 import { CodeStreamState } from "../store";
 import { Row } from "./CrossPostIssueControls/IssueDropdown";
@@ -375,12 +376,15 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 	useEffect(() => {
 		if (!mountedRef.current) return;
-		const queries = {
+		const newQueries = {
 			...defaultQueries,
 			...(derivedState.pullRequestQueries || {})
 		};
-		setQueries(queries);
-	}, [derivedState.pullRequestQueries])
+		// need to check if it was new/editing pullRequestQueries or just updating other preferences
+		if (!isEqual(queries, newQueries)) {
+			setQueries(newQueries);
+		}
+	}, [derivedState.pullRequestQueries]);
 
 	useDidMount(() => {
 		(async () => {
@@ -727,7 +731,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 													</div>
 													<div>
 														<span>
-															{pr.title} #{pr.number}
+															#{pr.number} {pr.title}
 														</span>
 														{pr.labels && pr.labels.nodes && pr.labels.nodes.length > 0 && (
 															<span className="cs-tag-container">

@@ -256,6 +256,7 @@ export class CodeStreamSession {
 		);
 
 		Container.initialize(agent, this);
+		this.logNodeEnvVariables();
 
 		const redactProxyPasswdRegex = /(http:\/\/.*:)(.*)(@.*)/gi;
 		if (
@@ -417,6 +418,15 @@ export class CodeStreamSession {
 				};
 			}
 		);
+	}
+
+	private logNodeEnvVariables() {
+		Logger.log("NODE_* environment variables:");
+		for (const prop in process.env) {
+			if (prop.startsWith("NODE_")) {
+				Logger.log(`${prop}=${process.env[prop]}`);
+			}
+		}
 	}
 
 	setServerUrl(options: SetServerUrlRequest) {
@@ -936,13 +946,15 @@ export class CodeStreamSession {
 				environmentInfo: this._environmentInfo,
 				serverUrl: this._options.serverUrl!,
 				teamId: this._teamId!,
-				userId: response.user.id
+				userId: response.user.id,
+				codemarkId: options.codemarkId,
+				reviewId: options.reviewId
 			}
 		};
 
-		setImmediate(() =>
-			this.agent.sendNotification(DidLoginNotificationType, { data: loginResponse })
-		);
+		setImmediate(() => {
+			this.agent.sendNotification(DidLoginNotificationType, { data: loginResponse });
+		});
 
 		if (!response.user.timeZone) {
 			const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;

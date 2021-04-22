@@ -57,11 +57,16 @@ export class GitServiceLite {
 
 		let data: string | undefined;
 		try {
-			data = await git({ cwd: repoPath }, "branch", "--");
+			data = await git({ cwd: repoPath }, "branch", "--sort=committerdate", "--");
 		} catch {}
 		if (!data) return [];
 
 		const branches = data.trim().split("\n");
+		if (branches.length > 6) {
+			// 3 oldest and 3 newest branches, to limit the number of git operations
+			branches.splice(3, branches.length - 6);
+		}
+
 		const commits: string[] = [];
 		await Promise.all(
 			branches.map(async branch => {
@@ -115,7 +120,18 @@ export class GitServiceLite {
 		const wslPrefix = isWslGit() ? this._getWslPrefix(filePath) : undefined;
 		try {
 			const data = (await git({ cwd: cwd }, "rev-parse", "--show-toplevel")).trim();
-			const repoRoot = data === "" ? undefined : this._normalizePath(data, wslPrefix);
+			let repoRoot;
+			if (data === "") {
+				repoRoot = undefined;
+			} else if (data.startsWith("/mnt/wsl/docker-desktop-bind-mounts/")) {
+				// Sometimes Docker mounts the current dir (not the C: drive) under something like
+				// /mnt/wsl/docker-desktop-bind-mounts/Distro/8a5edab282632443219e051e4ade2d1d5bbc671c781051bf1437897cbdfea0f1
+				// In this case there's not much we can do, so we just return the Windows path we were given
+				// See: https://github.com/microsoft/WSL/issues/6464
+				repoRoot = Strings.normalizePath(data);
+			} else {
+				this._normalizePath(data, wslPrefix);
+			}
 
 			if (repoRoot === undefined) {
 				return undefined;

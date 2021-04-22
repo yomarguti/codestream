@@ -6,7 +6,11 @@ import { createSelector } from "reselect";
 import { CodeStreamState } from "..";
 import { CSRepository } from "@codestream/protocols/api";
 import { ContextActionsType, ContextState } from "../context/types";
-import { DiscussionNode, GitLabMergeRequest } from "@codestream/protocols/agent";
+import {
+	DiscussionNode,
+	FetchThirdPartyPullRequestPullRequest,
+	GitLabMergeRequest
+} from "@codestream/protocols/agent";
 
 type ProviderPullRequestActions =
 	| ActionType<typeof actions>
@@ -77,6 +81,7 @@ export function reduceProviderPullRequests(
 			files[action.payload.commits] = action.payload.pullRequestFiles;
 			newState[action.payload.providerId][id] = {
 				...newState[action.payload.providerId][id],
+				accessRawDiffs: action.payload.accessRawDiffs,
 				files
 			};
 			return {
@@ -206,6 +211,11 @@ export function reduceProviderPullRequests(
 									pr.discussions.nodes.push(d);
 								}
 							}
+						} else if (directive.type === "addPendingReview") {
+							if (!directive.data) continue;
+							pr.pendingReview = directive.data;
+						} else if (directive.type === "removePendingReview") {
+							pr.pendingReview = undefined;
 						} else if (directive.type === "addReaction") {
 							const reaction = pr.reactionGroups.find(_ => _.content === directive.data.name);
 							if (reaction) {
@@ -220,7 +230,6 @@ export function reduceProviderPullRequests(
 							if (discussionNode) {
 								const firstNode = discussionNode?.notes?.nodes[0];
 								if (firstNode) {
-									const replies = firstNode.replies;
 									if (firstNode.replies == null) {
 										firstNode.replies = [directive.data];
 									} else if (!firstNode.replies.find(_ => _.id === directive.data.id)) {
@@ -235,7 +244,6 @@ export function reduceProviderPullRequests(
 
 							let nodeIndex = 0;
 							let nodeRemoveIndex = -1;
-							let pseudoGoto = false;
 							for (const node of pr.discussions.nodes) {
 								if (node.id === directive.data.id) {
 									// is an outer node
@@ -243,28 +251,16 @@ export function reduceProviderPullRequests(
 									break;
 								}
 								if (node.notes && node.notes.nodes.length) {
-									let noteIndex = 0;
-									for (const note of node.notes.nodes) {
-										if (note.id === directive.data.id) {
-											// if this is the first note, nuke all the replies too
-											// by removing the parent node
-											if (noteIndex === 0) {
-												nodeRemoveIndex = nodeIndex;
-												pseudoGoto = true;
-												break;
-											} else {
-												node.notes.nodes.splice(noteIndex, 1);
-												pseudoGoto = true;
-												break;
-											}
+									node.notes.nodes = node.notes.nodes.filter(_ => _.id !== directive.data.id);
+									for (const notesWithReplies of node.notes.nodes) {
+										if (notesWithReplies.replies) {
+											notesWithReplies.replies = notesWithReplies.replies.filter(
+												_ => _.id !== directive.data.id
+											);
 										}
-										noteIndex++;
 									}
 								}
 
-								if (pseudoGoto) {
-									break;
-								}
 								nodeIndex++;
 							}
 							if (nodeRemoveIndex > -1) {
@@ -281,7 +277,7 @@ export function reduceProviderPullRequests(
 										_ => _ !== "discussion" && _ !== "id"
 									);
 									for (const k of keys) {
-										note[k] = directive.data[k];
+										(note as any)[k] = directive.data[k];
 									}
 								}
 								// typescript is killing me here...
@@ -299,7 +295,7 @@ export function reduceProviderPullRequests(
 											_ => _ !== "discussion" && _ !== "id"
 										);
 										for (const k of keys) {
-											reply[k] = directive.data[k];
+											(reply as any)[k] = directive.data[k];
 										}
 									}
 								}
@@ -314,13 +310,13 @@ export function reduceProviderPullRequests(
 												let existingNote = node.notes.nodes.find(_ => _.id === note.id);
 												if (existingNote) {
 													for (const k in note) {
-														existingNote[k] = note[k];
+														(existingNote as any)[k] = note[k];
 													}
 												}
 											}
 										}
 									} else {
-										node[key] = directive.data[key];
+										(node as any)[key] = directive.data[key];
 									}
 								}
 							}
@@ -328,14 +324,20 @@ export function reduceProviderPullRequests(
 							for (const key in directive.data) {
 								if (directive.data[key] && Array.isArray(directive.data[key].nodes)) {
 									// clear out the array, but keep its reference
-									pr[key].nodes.length = 0;
+									(pr as any)[key].nodes.length = 0;
 									for (const n of directive.data[key].nodes) {
-										pr[key].nodes.push(n);
+										(pr as any)[key].nodes.push(n);
 									}
 								} else {
-									pr[key] = directive.data[key];
+									(pr as any)[key] = directive.data[key];
 								}
 							}
+						} else if (directive.type === "updateReviewCommentsCount") {
+							// ensure no negatives
+							pr.userDiscussionsCount = Math.max(
+								(pr.userDiscussionsCount || 0) + directive.data,
+								0
+							);
 						} else if (directive.type === "updateReviewers") {
 							if (pr.reviewers && pr.reviewers.nodes) {
 								if (pr.reviewers && !pr.reviewers.nodes) {
@@ -362,37 +364,65 @@ export function reduceProviderPullRequests(
 						}
 					}
 				} else if (providerId === "github*com" || providerId === "github/enterprise") {
-					const pr = newState[providerId][id].conversations.repository.pullRequest;
+					const pr = newState[providerId][id].conversations.repository
+						.pullRequest as FetchThirdPartyPullRequestPullRequest;
+					/**
+					 *
+					 *  KEEP THIS IN SYNC WITH github.ts
+					 *
+					 */
 					for (const directive of action.payload.data) {
 						if (directive.type === "addReaction") {
 							if (directive.data.subject.__typename === "PullRequest") {
 								pr.reactionGroups
-									.find(_ => _.content === directive.data.reaction.content)
+									.find((_: any) => _.content === directive.data.reaction.content)
 									.users.nodes.push(directive.data.reaction.user);
 							} else {
 								const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.subject.id);
 								if (node) {
 									node.reactionGroups
-										.find(_ => _.content === directive.data.reaction.content)
+										.find((_: any) => _.content === directive.data.reaction.content)
 										.users.nodes.push(directive.data.reaction.user);
 								}
 							}
 						} else if (directive.type === "removeReaction") {
 							if (directive.data.subject.__typename === "PullRequest") {
 								pr.reactionGroups.find(
-									_ => _.content === directive.data.reaction.content
+									(_: any) => _.content === directive.data.reaction.content
 								).users.nodes = pr.reactionGroups
-									.find(_ => _.content === directive.data.reaction.content)
-									.users.nodes.filter(_ => _.login !== directive.data.reaction.user.login);
+									.find((_: any) => _.content === directive.data.reaction.content)
+									.users.nodes.filter((_: any) => _.login !== directive.data.reaction.user.login);
 							} else {
 								const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.subject.id);
 								if (node) {
 									node.reactionGroups.find(
-										_ => _.content === directive.data.reaction.content
+										(_: any) => _.content === directive.data.reaction.content
 									).users.nodes = node.reactionGroups
-										.find(_ => _.content === directive.data.reaction.content)
-										.users.nodes.filter(_ => _.login !== directive.data.reaction.user.login);
+										.find((_: any) => _.content === directive.data.reaction.content)
+										.users.nodes.filter((_: any) => _.login !== directive.data.reaction.user.login);
 								}
+							}
+						} else if (directive.type === "removeComment") {
+							for (const node of pr.timelineItems.nodes) {
+								if (node.comments?.nodes?.length) {
+									node.comments.nodes = node.comments.nodes.filter(
+										(_: any) => _.id !== directive.data.id
+									);
+									for (const comments of node.comments.nodes) {
+										if (comments.replies) {
+											comments.replies = comments.replies.filter(
+												(_: any) => _.id !== directive.data.id
+											);
+										}
+									}
+								}
+							}
+						} else if (directive.type === "removePullRequestReview") {
+							if (directive.data.id) {
+								pr.reviews.nodes = pr.reviews.nodes.filter(_ => _.id !== directive.data.id);
+								pr.timelineItems.nodes = pr.timelineItems.nodes.filter(
+									_ => _.id !== directive.data.id
+								);
 							}
 						} else if (directive.type === "removeNode") {
 							pr.timelineItems.nodes = pr.timelineItems.nodes.filter(
@@ -419,14 +449,62 @@ export function reduceProviderPullRequests(
 									pr.timelineItems.nodes.push(newNode);
 								}
 							}
-						} else if (directive.type === "updatePullRequestReviewComment") {
+						} else if (directive.type === "addReviewCommentNodes") {
+							for (const newNode of directive.data) {
+								if (!newNode.id) continue;
+								let node = pr.timelineItems.nodes.find((_: any) => _.id === newNode.id);
+								if (node) {
+									for (const c of newNode.comments.nodes) {
+										if (node.comments.nodes.find((_: any) => _.id === c.id) == null) {
+											node.comments.nodes.push(c);
+										}
+									}
+								} else {
+									pr.timelineItems.nodes.push(newNode);
+								}
+							}
+						} else if (directive.type === "addLegacyCommentReply") {
+							for (const node of pr.timelineItems.nodes) {
+								if (!node.comments) continue;
+								for (const comment of node.comments.nodes) {
+									if (directive.data._inReplyToId === comment.databaseId) {
+										if (!comment.replies) comment.replies = [];
+										comment.replies.push(directive.data);
+										break;
+									}
+								}
+							}
+						} else if (directive.type === "removePendingReview") {
+							pr.pendingReview = undefined;
+						} else if (directive.type === "addPendingReview") {
+							if (!directive.data) continue;
+							pr.pendingReview = directive.data;
+						} else if (directive.type === "addReview") {
+							if (!directive.data) continue;
+							if (pr.reviews.nodes.find(_ => _.id === directive.data.id) == null) {
+								pr.reviews.nodes.push(directive.data);
+							}
+						} else if (directive.type === "updateReviewCommentsCount") {
+							if (!directive.data) continue;
+							if (pr.pendingReview && pr.pendingReview.comments) {
+								pr.pendingReview.comments.totalCount = directive.data.comments.totalCount;
+							}
+						} else if (directive.type === "addReviewThreads") {
+							if (!directive.data) continue;
+							for (const d of directive.data) {
+								if (pr.reviewThreads.edges.find(_ => _.node.id === d.node.id) == null) {
+									pr.reviewThreads.edges.push(d);
+								}
+							}
+						} else if (directive.type === "updatePullRequestReviewThreadComment") {
 							let done = false;
 							for (const edge of pr.reviewThreads.edges) {
 								if (!edge.node.comments) continue;
+
 								for (const comment of edge.node.comments.nodes) {
 									if (comment.id === directive.data.id) {
 										for (const key in directive.data) {
-											comment[key] = directive.data[key];
+											(comment as any)[key] = directive.data[key];
 										}
 										done = true;
 									}
@@ -441,10 +519,31 @@ export function reduceProviderPullRequests(
 							if (node && node.comments) {
 								for (const comment of node.comments.nodes) {
 									if (comment.id !== directive.data.id) continue;
+
 									for (const key in directive.data) {
 										comment[key] = directive.data[key];
 									}
 									break;
+								}
+							}
+						} else if (directive.type === "reviewSubmitted") {
+							const node = pr.timelineItems.nodes.find(
+								_ => _.id === directive.data.pullRequestReview.id
+							);
+							if (node) {
+								for (const key of Object.keys(directive.data.updates)) {
+									node[key] = directive.data.updates[key];
+								}
+
+								if (node.comments) {
+									for (const comment of directive.data.comments) {
+										const existingComment = node.comments.nodes.find(
+											(_: any) => _.id === comment.id
+										);
+										if (existingComment) {
+											existingComment.state = comment.state;
+										}
+									}
 								}
 							}
 						} else if (directive.type === "updatePullRequestReview") {
@@ -471,6 +570,23 @@ export function reduceProviderPullRequests(
 									pr[key] = directive.data[key];
 								}
 							}
+						} else if (directive.type === "updateReview") {
+							if (!pr.reviews?.nodes) {
+								pr.reviews.nodes = [];
+							}
+							if (pr.reviews.nodes) {
+								pr.reviews.nodes = pr.reviews.nodes.filter(_ => _.id !== directive.data.id);
+								pr.reviews.nodes.push(directive.data);
+							}
+						} else if (directive.type === "updateReviewThreads") {
+							if (pr.reviewThreads) {
+								for (const d of directive.data) {
+									const found = pr.reviewThreads.edges.find(_ => _.node.id === d.node.id);
+									if (found) {
+										found.node.viewerCanResolve = d.node.viewerCanResolve;
+									}
+								}
+							}
 						} else if (
 							directive.type === "resolveReviewThread" ||
 							directive.type === "unresolveReviewThread"
@@ -480,7 +596,7 @@ export function reduceProviderPullRequests(
 							);
 							if (nodeWrapper && nodeWrapper.node) {
 								for (const key in directive.data) {
-									nodeWrapper.node[key] = directive.data[key];
+									(nodeWrapper.node as any)[key] = directive.data[key];
 								}
 							}
 

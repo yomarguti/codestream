@@ -46,13 +46,15 @@ export const _addPullRequestFiles = (
 	providerId: string,
 	id: string,
 	commits: string,
-	pullRequestFiles: any
+	pullRequestFiles: any,
+	accessRawDiffs?: boolean
 ) =>
 	action(ProviderPullRequestActionsTypes.AddPullRequestFiles, {
 		providerId,
 		id,
 		commits,
-		pullRequestFiles
+		pullRequestFiles,
+		accessRawDiffs
 	});
 
 export const _addPullRequestCommits = (providerId: string, id: string, pullRequestCommits: any) =>
@@ -89,10 +91,15 @@ export const handleDirectives = (providerId: string, id: string, data: any) =>
 		data
 	});
 
-const _getPullRequestConversationsFromProvider = async (providerId: string, id: string) => {
+const _getPullRequestConversationsFromProvider = async (
+	providerId: string,
+	id: string,
+	src: string
+) => {
 	const response1 = await HostApi.instance.send(FetchThirdPartyPullRequestRequestType, {
 		providerId: providerId,
 		pullRequestId: id,
+		src: src,
 		force: true
 	});
 
@@ -144,7 +151,11 @@ export const getPullRequestConversationsFromProvider = (
 	try {
 		dispatch(clearPullRequestError(providerId, id));
 
-		const responses = await _getPullRequestConversationsFromProvider(providerId, id);
+		const responses = await _getPullRequestConversationsFromProvider(
+			providerId,
+			id,
+			"getPullRequestConversationsFromProvider"
+		);
 		dispatch(_addPullRequestConversations(providerId, id, responses.conversations));
 		dispatch(_addPullRequestCollaborators(providerId, id, responses.collaborators));
 
@@ -178,7 +189,11 @@ export const getPullRequestConversations = (providerId: string, id: string) => a
 			}
 		}
 
-		const responses = await _getPullRequestConversationsFromProvider(providerId, id);
+		const responses = await _getPullRequestConversationsFromProvider(
+			providerId,
+			id,
+			"getPullRequestConversations"
+		);
 		await dispatch(_addPullRequestConversations(providerId, id, responses.conversations));
 		await dispatch(_addPullRequestCollaborators(providerId, id, responses.collaborators));
 		return responses.conversations;
@@ -203,7 +218,8 @@ export const getPullRequestFiles = (
 	providerId: string,
 	id: string,
 	commits: string[] = [],
-	repoId?: string
+	repoId?: string,
+	accessRawDiffs?: boolean
 ) => async (dispatch, getState: () => CodeStreamState) => {
 	try {
 		const state = getState();
@@ -212,7 +228,13 @@ export const getPullRequestFiles = (
 		let exactId = getPullRequestExactId(state);
 		if (provider) {
 			const pr = provider[exactId];
-			if (pr && pr.files && pr.files[commitsIndex] && pr.files[commitsIndex].length) {
+			if (
+				pr &&
+				pr.files &&
+				pr.files[commitsIndex] &&
+				pr.files[commitsIndex].length &&
+				(pr.accessRawDiffs || !accessRawDiffs)
+			) {
 				console.log(`fetched pullRequest files from store providerId=${providerId} id=${exactId}`);
 				return pr.files[commitsIndex];
 			}
@@ -228,12 +250,13 @@ export const getPullRequestFiles = (
 		} else {
 			response = await dispatch(
 				api("getPullRequestFilesChanged", {
-					pullRequestId: id
+					pullRequestId: id,
+					accessRawDiffs
 				})
 			);
 		}
 
-		dispatch(_addPullRequestFiles(providerId, id, commitsIndex, response));
+		dispatch(_addPullRequestFiles(providerId, id, commitsIndex, response, accessRawDiffs));
 		return response;
 	} catch (error) {
 		logError(`failed to get pullRequest files: ${error}`, { providerId, id });

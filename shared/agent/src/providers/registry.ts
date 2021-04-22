@@ -197,7 +197,6 @@ export class ThirdPartyProviderRegistry {
 				}
 			} catch (ex) {
 				Logger.warn(`pullRequestsStateHandler: ${typeof ex === "string" ? ex : ex.message}`);
-				throw ex;
 			}
 		}
 		if (succeededCount > 0) {
