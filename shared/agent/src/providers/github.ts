@@ -5052,6 +5052,13 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 							}:>=3.0.0]`)}
 					}
 					headRefName
+					headRepositoryOwner {
+						login
+					}
+					headRepository {
+						isFork
+						name
+					}
 					headRefOid
 					labels(first: 10) {
 					  nodes {
@@ -5182,7 +5189,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				pullRequestNumber: pullRequestNumber,
 				cursor: cursor
 			})) as FetchThirdPartyPullRequestResponse;
-
 			if (response.rateLimit) {
 				this._prTimelineQueryRateLimit = {
 					cost: response.rateLimit.cost,

@@ -466,6 +466,13 @@ export interface FetchThirdPartyPullRequestPullRequest {
 		}[];
 	};
 	headRefName: string;
+	headRepositoryOwner?: {
+		login: string;
+	};
+	headRepository?: {
+		isFork: boolean;
+		name: string;
+	};
 	headRefOid: string;
 	labels: {
 		nodes: {
