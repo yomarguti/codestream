@@ -43,9 +43,11 @@ export const SummaryBox = props => {
 
 	const cantCheckoutReason = useMemo(() => {
 		if (pr) {
-			const currentRepo = openRepos.find(_ => _.name === pr.repository.name);
+			const currentRepo = openRepos.find(
+				_ => _?.name?.toLowerCase() === pr.repository?.name?.toLowerCase()
+			);
 			if (!currentRepo) {
-				return `You don't have the ${pr.repository.name} repo open in your IDE`;
+				return `You don't have the ${pr.repository?.name} repo open in your IDE`;
 			}
 			if (currentRepo.currentBranch == pr.headRefName) {
 				return `You are on the ${pr.headRefName} branch`;

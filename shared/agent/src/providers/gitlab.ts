@@ -1288,7 +1288,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					response.project.mergeRequest.diffRefs && response.project.mergeRequest.diffRefs.headSha,
 				headRefName: response.project.mergeRequest.sourceBranch,
 				repository: {
-					name: response.project.mergeRequest.project.name,
+					name: response.project.mergeRequest.project.path,
 					nameWithOwner: response.project.mergeRequest.project.fullPath,
 					url: response.project.mergeRequest.project.webUrl
 				},
