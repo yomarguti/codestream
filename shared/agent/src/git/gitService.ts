@@ -672,7 +672,7 @@ export class GitService implements IGitService, Disposable {
 	async getCommitCached(repoPath: string, ref: string): Promise<GitCommit | undefined>;
 	async getCommitCached(repoUriOrPath: URI | string, ref: string): Promise<GitCommit | undefined> {
 		if (ref === "0000000000000000000000000000000000000000") return undefined;
-		const cached = this._commitCache.get("ref");
+		const cached = this._commitCache.get(ref);
 		if (cached) return cached;
 
 		await this._commitCachePromise;
