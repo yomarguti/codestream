@@ -1,7 +1,7 @@
 {
 	"name": "github-enterprise",
 	"displayName": "GitHub Enterprise: Pull Requests and Code Review",
-	"description": "GitHub pull requests, GitLab merge requests, and code reviews in your IDE. Eliminate context-switching between tools. Also integrates with Bitbucket, Slack, MS Teams, Jira, Trello and more.",
+	"description": "GitHub pull requests and issues in your IDE. Eliminate context-switching between tools. Also integrates with Slack, MS Teams, Jira, Trello and more.",
 	"version": "11.0.4",
 	"author": "CodeStream",
 	"publisher": "CodeStream",
