@@ -557,6 +557,7 @@ export const PullRequest = () => {
 				onOff
 			})
 		);
+		setIsLoadingMessage("");
 	};
 
 	const edit = () => setIsEditing(true);
@@ -564,11 +565,13 @@ export const PullRequest = () => {
 	const reopen = async () => {
 		setIsLoadingMessage("Reopening...");
 		await dispatch(api("createPullRequestCommentAndReopen", { text: "" }));
+		setIsLoadingMessage("");
 	};
 
 	const close = async () => {
 		setIsLoadingMessage("Closing...");
 		await dispatch(api("createPullRequestCommentAndClose", { text: "" }));
+		setIsLoadingMessage("");
 	};
 
 	const { order, filter } = derivedState;

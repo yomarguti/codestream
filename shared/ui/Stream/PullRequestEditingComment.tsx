@@ -55,7 +55,7 @@ export const PullRequestEditingComment = styled((props: Props) => {
 		} catch (ex) {
 			console.warn(ex);
 		} finally {
-			setIsLoadingMessage();
+			setIsLoadingMessage("");
 		}
 	};
 

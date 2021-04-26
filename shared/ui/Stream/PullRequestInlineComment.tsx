@@ -73,7 +73,7 @@ export const PullRequestInlineComment = styled((props: Props) => {
 			})
 		);
 		setText("");
-
+		setIsLoadingMessage("");
 		setIsLoadingSingleComment(false);
 		props.onClose();
 	};
@@ -95,7 +95,7 @@ export const PullRequestInlineComment = styled((props: Props) => {
 			})
 		);
 		setText("");
-
+		setIsLoadingMessage("");
 		setIsLoadingStartReview(false);
 		props.onClose();
 	};

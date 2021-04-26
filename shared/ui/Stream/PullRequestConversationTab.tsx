@@ -271,6 +271,7 @@ export const PullRequestConversationTab = (props: {
 				isReady: onOff
 			})
 		);
+		setIsLoadingMessage("");
 	};
 
 	const mergePullRequest = useCallback(
@@ -288,6 +289,7 @@ export const PullRequestConversationTab = (props: {
 					type: ChangeDataType.PullRequests
 				});
 			}
+			setIsLoadingMessage("");
 		},
 		[
 			pr.providerId,
@@ -464,6 +466,8 @@ export const PullRequestConversationTab = (props: {
 				userId: id
 			})
 		);
+
+		setIsLoadingMessage("");
 	};
 	const addReviewer = async id => {
 		setIsLoadingMessage("Requesting Review...");
@@ -473,6 +477,7 @@ export const PullRequestConversationTab = (props: {
 				userId: id
 			})
 		);
+		setIsLoadingMessage("");
 	};
 
 	const fetchAvailableAssignees = async (e?) => {
@@ -532,6 +537,7 @@ export const PullRequestConversationTab = (props: {
 				onOff
 			})
 		);
+		setIsLoadingMessage("");
 	};
 
 	const fetchAvailableLabels = async (e?) => {
@@ -578,6 +584,7 @@ export const PullRequestConversationTab = (props: {
 				onOff
 			})
 		);
+		setIsLoadingMessage("");
 	};
 
 	const fetchAvailableProjects = async (e?) => {
@@ -623,6 +630,7 @@ export const PullRequestConversationTab = (props: {
 				onOff
 			})
 		);
+		setIsLoadingMessage("");
 	};
 
 	const fetchAvailableMilestones = async (e?) => {
@@ -673,6 +681,7 @@ export const PullRequestConversationTab = (props: {
 				onOff
 			})
 		);
+		setIsLoadingMessage("");
 	};
 
 	// const fetchAvailableIssues = async (e?) => {
@@ -849,11 +858,14 @@ export const PullRequestConversationTab = (props: {
 					<PRTimelineItem>
 						<PRAction>
 							Add more commits by pushing to the <PRBranch>{pr.headRefName}</PRBranch> branch{" "}
-								{pr.headRepositoryOwner?.login && pr.headRepository?.name && (
-									<>
-									 on <PRBranch>{pr.headRepositoryOwner.login}/{pr.headRepository.name}</PRBranch>
-									</>
-								)}
+							{pr.headRepositoryOwner?.login && pr.headRepository?.name && (
+								<>
+									on{" "}
+									<PRBranch>
+										{pr.headRepositoryOwner.login}/{pr.headRepository.name}
+									</PRBranch>
+								</>
+							)}
 							.
 						</PRAction>
 					</PRTimelineItem>
