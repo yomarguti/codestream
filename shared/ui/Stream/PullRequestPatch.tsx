@@ -243,7 +243,7 @@ export const PullRequestPatch = (props: {
 								commentsOnLine = (props.comments || []).filter(_ =>
 									typeof _.comment.position === "number"
 										? _.comment.position == index
-										: _.comment.position.newLine == rightLine
+										: _.comment.position?.newLine == rightLine
 								);
 							}
 							return commentsOnLine.length === 0 ? null : (
