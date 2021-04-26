@@ -180,7 +180,10 @@ export interface GitLabLabel {
 }
 
 interface Project {
+	/* Project name (Sentence case with spaces) aka "Foo Bar" */
 	name: string;
+	/* url-like project name as a path aka "foo-bar" */
+	path: string;
 	fullPath: string;
 	webUrl: string;
 }

@@ -298,6 +298,7 @@ export const RightActionBar = (props: {
 	const setAssignees = async (ids: number[]) => {
 		setIsLoadingMessage("Setting Assignee...");
 		dispatch(api("setAssigneeOnPullRequest", { ids }));
+		setIsLoadingMessage("");
 	};
 
 	const fetchAvailableReviewers = async (e?) => {
@@ -367,6 +368,7 @@ export const RightActionBar = (props: {
 	const setReviewers = async (ids: number[]) => {
 		setIsLoadingMessage("Updating Reviewer...");
 		dispatch(api("setReviewersOnPullRequest", { ids }));
+		setIsLoadingMessage("");
 	};
 
 	const fetchAvailableMilestones = async (e?) => {
@@ -419,6 +421,7 @@ export const RightActionBar = (props: {
 				milestoneId: id
 			})
 		);
+		setIsLoadingMessage("");
 	};
 
 	const fetchAvailableLabels = async (e?) => {
@@ -476,6 +479,7 @@ export const RightActionBar = (props: {
 					: pr.labels.nodes.map(_ => _.id).filter(_ => _ !== id)
 			})
 		);
+		setIsLoadingMessage("");
 	};
 
 	const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
@@ -484,6 +488,7 @@ export const RightActionBar = (props: {
 		setIsLoadingNotifications(true);
 		await dispatch(api("updatePullRequestSubscription", { onOff }));
 		setIsLoadingNotifications(false);
+		setIsLoadingMessage("");
 	};
 
 	const openAssignees = () => setRightOpen(true);
@@ -508,6 +513,7 @@ export const RightActionBar = (props: {
 						action: () => {
 							setIsLoadingMessage("Unlocking...");
 							dispatch(api("unlockPullRequest", {}));
+							setIsLoadingMessage("");
 						}
 					}
 				]
@@ -527,6 +533,7 @@ export const RightActionBar = (props: {
 						action: () => {
 							setIsLoadingMessage("Locking...");
 							dispatch(api("lockPullRequest", {}));
+							setIsLoadingMessage("");
 						}
 					}
 				]
@@ -545,6 +552,7 @@ export const RightActionBar = (props: {
 		if (hasToDo) await dispatch(api("markToDoDone", { id: hasToDo.id }));
 		else await dispatch(api("createToDo", {}));
 		setIsLoadingToDo(false);
+		setIsLoadingMessage("");
 	};
 
 	const reference = pr.url;

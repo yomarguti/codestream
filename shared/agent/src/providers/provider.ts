@@ -972,6 +972,8 @@ export abstract class ThirdPartyIssueProviderBase<
 				ex.response.errors.find((e: any) => e.type === "FORBIDDEN"))
 		) {
 			return ReportSuppressedMessages.AccessTokenInvalid;
+		} else if (ex.message && ex.message.match(/must accept the Terms of Service/)) {
+			return ReportSuppressedMessages.GitLabTermsOfService;
 		} else {
 			return undefined;
 		}

@@ -33,7 +33,9 @@ export enum ReportSuppressedMessages {
 	/* for network errors that are probably temporary */
 	NetworkError = "Network error",
 	/* OAuth app access restrictions */
-	OAuthAppAccessRestrictionError = "OAuth app access restriction error"
+	OAuthAppAccessRestrictionError = "OAuth app access restriction error",
+	/* Some GitLab configurations require users to accept a Terms of Service before they can do anything */
+	GitLabTermsOfService = "Must accept GitLab Terms of Service"
 }
 
 /**

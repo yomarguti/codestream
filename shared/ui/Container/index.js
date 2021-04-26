@@ -19,6 +19,7 @@ import { errorDismissed } from "@codestream/webview/store/connectivity/actions";
 import { ThemeProvider } from "styled-components";
 import { darkTheme, createTheme } from "../src/themes";
 import { closeAllPanels } from "../store/context/actions";
+import { WebviewErrorRequestType } from "@codestream/protocols/agent";
 
 const mapStateToProps = state => {
 	const team = state.teams[state.context.currentTeamId];
@@ -237,6 +238,13 @@ export default class Container extends React.Component {
 	_mutationObserver;
 
 	static getDerivedStateFromError(error) {
+		// note, the Error object itself doesn't seem to survive lsp
+		HostApi.instance.send(WebviewErrorRequestType, {
+			error: {
+				message: error.message,
+				stack: error.stack
+			}
+		});
 		return { hasError: true };
 	}
 

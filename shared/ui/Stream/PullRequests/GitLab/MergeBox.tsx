@@ -110,6 +110,7 @@ export const MergeBox = props => {
 				onOff
 			})
 		);
+		props.setIsLoadingMessage("");
 	};
 
 	if (showCommandLine) {
@@ -311,17 +312,14 @@ export const MergeBox = props => {
 		derivedState.pipeline && derivedState.pipeline.status === "CANCELED"
 			? "destructive"
 			: mergeDisabled
-				? "secondary"
-				: "success";
+			? "secondary"
+			: "success";
 	return (
 		<OutlineBox>
 			<FlexRow>
 				<Icon name="check-circle" className={`bigger color-green`} />
 				{mergeDisabled && (
-					<Tooltip
-					title="Rebase support coming soon"
-					placement="top"
-					>
+					<Tooltip title="Rebase support coming soon" placement="top">
 						<Button
 							isLoading={isLoading}
 							variant={colorVariant}

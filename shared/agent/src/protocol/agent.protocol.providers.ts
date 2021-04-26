@@ -466,6 +466,13 @@ export interface FetchThirdPartyPullRequestPullRequest {
 		}[];
 	};
 	headRefName: string;
+	headRepositoryOwner?: {
+		login: string;
+	};
+	headRepository?: {
+		isFork: boolean;
+		name: string;
+	};
 	headRefOid: string;
 	labels: {
 		nodes: {
@@ -828,4 +835,12 @@ export interface ProviderTokenRequest {
 
 export const ProviderTokenRequestType = new RequestType<ProviderTokenRequest, void, void, void>(
 	"codestream/provider/token"
+);
+
+export interface WebviewErrorRequest {
+	error: { message: string; stack: string };
+}
+
+export const WebviewErrorRequestType = new RequestType<WebviewErrorRequest, void, void, void>(
+	`codestream/webview/error`
 );
