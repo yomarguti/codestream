@@ -2061,7 +2061,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 								nodes: body.assignees.map((assignee: any) => {
 									return {
 										...assignee,
-										id: `gid://gitlab/User/${assignee.id}}`,
+										id: `gid://gitlab/User/${assignee.id}`,
 										login: assignee.username,
 										avatarUrl: this.avatarUrl(assignee.avatar_url)
 									};
